@@ -184,13 +184,11 @@ PROCEDURE SanityCheck () =
   END SanityCheck;
 
 PROCEDURE DumpStack () =
-  VAR
-    f := LOOPHOLE(ThreadF.GetCurrentHandlers(), Frame);
-    thread := ThreadF.MyHeapState();
+  VAR f := LOOPHOLE(ThreadF.GetCurrentHandlers(), Frame);
   BEGIN
     IF NOT DEBUG AND NOT dump_enabled THEN RETURN; END;
 
-    RTOS.LockHeap (thread^); (* disable thread switching... (you wish!) *)
+    RTOS.LockHeap (); (* disable thread switching... (you wish!) *)
 
     RTIO.PutText ("------------------ EXCEPTION HANDLER STACK ---------------------\n");
     WHILE (f # NIL) DO
@@ -233,7 +231,7 @@ PROCEDURE DumpStack () =
     RTIO.PutText ("----------------------------------------------------------------\n");
     RTIO.Flush ();
 
-    RTOS.UnlockHeap (thread^);
+    RTOS.UnlockHeap ();
   END DumpStack;
 
 PROCEDURE DumpHandles (x: ExceptionList) =

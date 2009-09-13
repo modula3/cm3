@@ -31,7 +31,7 @@ VAR gcRatio := 1.0;              (* collector work / mutator work *)
    will copy "gcRatio" pages.  Increase the ratio to keep the heap smaller;
    decrease it to spend less time in the collector. *)
 
-VAR incremental := FALSE;         (* incremental collection *)
+VAR incremental := TRUE;         (* incremental collection *)
 (* The collector can be incremental or stop-and-copy.  Incremental
    collection has much smaller interruptions of service, but takes more
    total time and more space.
@@ -48,7 +48,7 @@ VAR incremental := FALSE;         (* incremental collection *)
    Use incremental collection when the program is interactive.
    Stop-and-copy collection gives better total throughput. *)
 
-VAR generational := FALSE;        (* generational collection *)
+VAR generational := TRUE;        (* generational collection *)
 (* Generational collection causes most collections to take much less time
    than specified above, while using only a little more memory.
    Generational collection has the greatest benefit when the program has a
@@ -81,8 +81,5 @@ PROCEDURE StartBackgroundCollection();
 
 PROCEDURE StartForegroundCollection();
 (* Starts the foreground thread, if not already started *)
-
-PROCEDURE StartBench();
-PROCEDURE FinishBench();
 
 END RTCollectorSRC.

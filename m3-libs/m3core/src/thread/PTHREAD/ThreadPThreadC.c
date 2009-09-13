@@ -302,7 +302,6 @@ void ThreadPThread__pthread_cond_delete(pthread_cond_t* p)
     free(p);
 }
 
-
 int ThreadPThread__Nanosleep(timespec_t* req, timespec_t* rem)
 {
 #ifdef __INTERIX
@@ -317,6 +316,33 @@ int ThreadPThread__Nanosleep(timespec_t* req, timespec_t* rem)
 #else
     return nanosleep(req, rem);
 #endif
+}
+
+int
+ThreadPThread__pthread_cond_wait(
+    pthread_cond_t* cond,
+    pthread_mutex_t* mutex)
+{
+    return pthread_cond_wait(cond, mutex);
+}
+
+int
+ThreadPThread__pthread_cond_timedwait(
+	pthread_cond_t* cond,
+	pthread_mutex_t* mutex,
+	const timespec_t* abs)
+{
+    return pthread_cond_timedwait(cond, mutex, abs);
+}
+
+int ThreadPThread__pthread_cond_signal(pthread_cond_t* cond)
+{
+    return pthread_cond_signal(cond);
+}
+
+int ThreadPThread__pthread_cond_broadcast(pthread_cond_t* cond)
+{
+    return pthread_cond_broadcast(cond);
 }
 
 #ifdef __cplusplus

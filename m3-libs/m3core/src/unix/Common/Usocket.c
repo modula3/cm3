@@ -8,8 +8,11 @@
 extern "C" {
 #endif
 
+/* assert that *plen fits in a 32 bit signed integer, no matter
+if it is unsigned or signed, or 32 bits or 64 bits */
+
 #define ASSERT_PLEN \
-    assert((plen == NULL) || (((*plen) >= 0) && ((*plen) < (1 << 30))));
+    assert((plen == NULL) || (((*plen) >= 0) && ((*plen) < (1UL << 30))));
 
 #define ASSERT_LEN \
     assert((len >= 0) && (len < (1 << 30)));
@@ -60,40 +63,6 @@ int Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_
 }
 
 /* 3: wrap everything taking input/output socklen_t */
-
-#if !defined(__hpux) || !defined(__LP64__)
-
-int Usocket__getpeername(int s, sockaddr_t* name, m3_socklen_t* plen)
-{
-    ASSERT_PLEN
-    return getpeername(s, name, plen);
-}
-
-int Usocket__getsockname(int s, sockaddr_t* name, m3_socklen_t* plen)
-{
-    ASSERT_PLEN
-    return getsockname(s, name, plen);
-}
-
-int Usocket__accept(int s, sockaddr_t* addr, m3_socklen_t* plen)
-{
-    ASSERT_PLEN
-    return accept(s, addr, plen);
-}
-
-int Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen)
-{
-    ASSERT_PLEN
-    return getsockopt(s, level, optname, optval, plen);
-}
-
-int Usocket__recvfrom(int s, void* buf, size_t len, int flags, sockaddr_t* from, m3_socklen_t* plen)
-{
-    ASSERT_PLEN
-    return recvfrom(s, buf, len, flags, from, plen);
-}
-
-#else
 
 int Usocket__getpeername(int s, sockaddr_t* name, m3_socklen_t* plen)
 {
@@ -149,8 +118,6 @@ int Usocket__recvfrom(int s, void* buf, size_t length, int flags, sockaddr_t* ad
         return r;
     }
 }
-
-#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
