@@ -12,7 +12,7 @@ UNSAFE MODULE RTLinker EXPORTS RTLinker, RTModule;
 
 IMPORT Cstdlib, Cstring;
 IMPORT RT0, RTParams, RTDebug, RTHeapRep, RTCollectorSRC;
-IMPORT RTTypeSRC, RTSignal, ThreadF, RTHeapInfo, RTLinkerX, 
+IMPORT RTTypeSRC, RTSignal, ThreadInternal, RTHeapInfo, RTLinkerX, 
        RTIO, Word;
 
 VAR
@@ -46,7 +46,7 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     AddUnit (RTLinkerX.RTDebug_I3);
     AddUnit (RTLinkerX.RTError_I3);
     AddUnit (RTLinkerX.RTHeapRep_I3);
-    AddUnit (RTLinkerX.ThreadF_I3);
+    AddUnit (RTLinkerX.ThreadInternal_I3);
     AddUnit (RTLinkerX.RTHeapInfo_I3);
     AddUnit (RTLinkerX.RTIO_I3);
     AddUnit (RTLinkerX.RTCollectorSRC_I3);
@@ -55,7 +55,7 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     (* finally, initialize the runtime. *)
     RTSignal.InstallHandlers ();
     RTParams.Init ();
-    ThreadF.Init ();
+    ThreadInternal.Init ();
     RTHeapRep.Init ();
     RTDebug.Init ();
     RTHeapInfo.Init ();

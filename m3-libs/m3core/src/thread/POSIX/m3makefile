@@ -7,7 +7,6 @@
 %      modified on Tue May  4 10:18:56 PDT 1993 by mjordan
 %      modified on Tue Feb 11 15:07:32 PST 1992 by muller
 
-Interface ("ThreadF")
 module ("ThreadPosix")
 c_source ("ThreadPosixC")
 h_source ("ThreadPosix")

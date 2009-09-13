@@ -6,7 +6,7 @@
 
 UNSAFE MODULE RTOS;
 
-IMPORT RTMachInfo, RTSignal, ThreadF;
+IMPORT RTMachInfo, RTSignal, ThreadInternal;
 IMPORT WinBase, WinCon, WinDef;
 
 (*--------------------------------------------------- process termination ---*)
@@ -20,7 +20,7 @@ PROCEDURE Crash () =
   CONST Magic = 1 * ADRSIZE (INTEGER);  (* == offset of "fp" in this frame *)
   VAR fp: ADDRESS := ADR (fp) + Magic;  (* == my frame pointer *)
   BEGIN
-    ThreadF.SuspendOthers ();
+    ThreadInternal.SuspendOthers ();
     RTMachInfo.DumpStack (LOOPHOLE (Crash, ADDRESS), fp);
     RTSignal.RestoreHandlers (); (* so we really do crash... *)
     IF WinBase.IsDebuggerPresent () # 0 THEN
@@ -33,7 +33,7 @@ PROCEDURE Crash () =
 PROCEDURE Crash () =
   VAR ptr := LOOPHOLE(-99, UNTRACED REF INTEGER);
   BEGIN
-    ThreadF.SuspendOthers ();
+    ThreadInternal.SuspendOthers ();
     ptr^ := 99; (* try to get to the debugger... *)
     Exit (-1);
   END Crash;

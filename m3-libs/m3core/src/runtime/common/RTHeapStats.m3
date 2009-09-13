@@ -5,7 +5,7 @@
 (* Last modified on Fri May  5 08:22:31 PDT 1995 by kalsow     *)
 
 (* The code below makes the following NASTY assumption:
-      ThreadF.ProcessStacks calls its argument twice for
+      ThreadInternal.ProcessStacks calls its argument twice for
       each thread -- the first time for the stack, the
       second time for its registers. *)
 
@@ -13,7 +13,7 @@ UNSAFE MODULE RTHeapStats;
 
 IMPORT RT0, RTCollector, RTModule, RTIO, RTHeapMap, RTHeapRep, RTMisc;
 IMPORT RTOS, RTType, RTTypeSRC, RTProcedure, RTProcedureSRC, RTMachine; 
-IMPORT RTStack, ThreadF, Word, Text;
+IMPORT RTStack, ThreadInternal, Word, Text;
 FROM RTIO IMPORT PutInt, PutAddr, PutText;
 
 TYPE
@@ -96,7 +96,7 @@ PROCEDURE ReportReachable () =
     (* freeze the world *)
     RTCollector.Disable ();
     RTOS.LockHeap (); (* freeze the heap *)
-    ThreadF.SuspendOthers ();
+    ThreadInternal.SuspendOthers ();
 
     (* capture the heap limits *)
     heap_min  := LOOPHOLE (RTHeapRep.p0 * RTHeapRep.BytesPerPage, ADDRESS);
@@ -146,7 +146,7 @@ PROCEDURE ReportReachable () =
     (* thaw the world *)
     DISPOSE (visit_stack);
     DISPOSE (map);
-    ThreadF.ResumeOthers ();
+    ThreadInternal.ResumeOthers ();
     RTOS.UnlockHeap (); (* unfreeze the heap *)
     RTCollector.Enable ();
   END ReportReachable;
@@ -282,7 +282,7 @@ PROCEDURE GetThreads () =
   BEGIN
     self_id := -1;
     mark_addr := ADR (i);
-    ThreadF.ProcessStacks (GetThread);
+    ThreadInternal.ProcessStacks (GetThread);
     RTIO.PutText ("Threads: ");
     RTIO.PutInt (n_threads);
     IF (n_threads > NUMBER (threads)) THEN
