@@ -170,6 +170,12 @@ PROCEDURE StartForegroundCollection () =
     END;
   END StartForegroundCollection;
 
+PROCEDURE DisableVM() =
+BEGIN
+  (* This function does nothing and exists solely for source compatibility
+   * with older cm3. *)
+END DisableVM;
+
 (* ------------------------------- low-level allocation and collection *)
 
 (* We assume that references (values of the types ADDRESS and REFANY) are
@@ -2756,12 +2762,6 @@ PROCEDURE FinishBench() =
     RTIO.PutText ("%\n");
     RTIO.Flush ();
   END FinishBench;
-
-PROCEDURE DisableVM() =
-BEGIN
-  (* This function does nothing and exists solely for source compatibility
-   * with older cm3. *)
-END DisableVM;
 
 (*** INITIALIZATION ***)
 
