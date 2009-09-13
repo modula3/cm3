@@ -2757,6 +2757,12 @@ PROCEDURE FinishBench() =
     RTIO.Flush ();
   END FinishBench;
 
+PROCEDURE DisableVM() =
+BEGIN
+  (* This function does nothing and exists solely for source compatibility
+   * with older cm3. *)
+END DisableVM;
+
 (*** INITIALIZATION ***)
 
 PROCEDURE Init () =
