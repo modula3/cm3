@@ -1257,15 +1257,10 @@ PROCEDURE Tos (READONLY c: Context; VAR start, stop: ADDRESS) =
     END;
   END Tos;
 
-PROCEDURE GetMyFPState (reader: PROCEDURE(READONLY s: FloatMode.ThreadState)) =
+PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
   BEGIN
-    reader(self.floatState);
-  END GetMyFPState;
-
-PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
-  BEGIN
-    writer(self.floatState);
-  END SetMyFPState;
+    RETURN ADR(self.floatState);
+  END MyFPState;
 
 VAR heapState: RTHeapRep.ThreadState;
 
@@ -1461,7 +1456,7 @@ PROCEDURE PerfRunning (id: Id) =
     perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
   END PerfRunning;
 
-(*--------------------------------------------------------- ThreadInternal hooks ---*)
+(*-------------------------------------------------- ThreadInternal hooks ---*)
 
 VAR
   hooks: Hooks := NIL;
@@ -1485,7 +1480,7 @@ PROCEDURE RegisterHooks(h: Hooks; init := TRUE): Hooks RAISES {}=
     RETURN oldHooks;
   END RegisterHooks;
 
-(*--------------------------------------------------------- ThreadF ---*)
+(*--------------------------------------------------------------- ThreadF ---*)
 
 PROCEDURE MyId(): Id RAISES {}=
   BEGIN
