@@ -767,15 +767,6 @@ PROCEDURE switch_thread (<*UNUSED*> sig: INTEGER) RAISES {Alerted} =
     IF inCritical = 0 AND heapState.inCritical = 0 THEN InternalYield () END;
   END switch_thread;
 
-PROCEDURE SetSwitchingInterval (usec: CARDINAL) =
-  BEGIN
-    INC (inCritical);
-      selected_interval.tv_sec  := usec DIV 1000000;
-      selected_interval.tv_usec := usec MOD 1000000;
-    DEC (inCritical);
-    IF multipleThreads THEN StartSwitching () END;
-  END SetSwitchingInterval;
-
 (*------------------------------------------------------------- scheduler ---*)
 
 PROCEDURE CanRun (t: T) = 

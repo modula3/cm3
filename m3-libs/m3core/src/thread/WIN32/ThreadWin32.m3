@@ -695,12 +695,6 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
     RETURN res;
   END AlertJoin;
 
-(*------------------------------------------------ timer-based preemption ---*)
-
-PROCEDURE SetSwitchingInterval (<*UNUSED*> usec: CARDINAL) =
-  BEGIN
-  END SetSwitchingInterval;
-
 (*---------------------------------------------------- Scheduling support ---*)
 
 PROCEDURE Pause(n: LONGREAL) =
