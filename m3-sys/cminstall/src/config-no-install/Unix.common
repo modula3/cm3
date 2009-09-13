@@ -51,8 +51,24 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
 
 end
 
-if not defined("SYSTEM_LD")
-  SYSTEM_LD = SYSTEM_CC
+if not defined("configure_assembler")
+  proc configure_assembler() is
+  end
+end
+
+if not defined("configure_c_compiler")
+  proc configure_c_compiler() is
+  end
+end
+
+if not defined("configure_linker")
+  proc configure_linker() is
+    if defined("SYSTEM_LD")
+      return
+    end
+    configure_c_compiler()
+    SYSTEM_LD = SYSTEM_CC
+  end
 end
 
 %--------------------------------------------------------- Modula-3 backend ---
@@ -74,19 +90,20 @@ end
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files.  Note that this function
 % is only called if your program or library explicitly includes C source
-% code, the system distributed by Critical Mass does not.
+% code, the system distributed by Critical Mass did not, but
+% the current system does a fair amount for much easier porting.
 
 if not defined ("compile_c")
 
 proc compile_c(source, object, options, optimize, debug) is
 
-    %
     % hack
-    %
 
     if equal(source, "../src/runtime/SOLgnu/RTMachineASM.s")
         return assemble(source, object)
     end
+
+    configure_c_compiler()
 
     local args = options
     if M3_PROFILING args += "-pg" end
@@ -101,9 +118,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble(source, object) is
-    if defined("configure_assembler")
-        configure_assembler()
-    end
+    configure_assembler()
     return try_exec("@" & SYSTEM_ASM, source, "-o", object)
 end
 
@@ -158,15 +173,10 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         if M3_PROFILING
             pg = "-pg"
         end
+        configure_linker()
         ret_code =
-            try_exec(
-                "@" & SYSTEM_LD,
-                pg,
-                "-shared",
-                soname_opt,
-                "-o", lib_sox,
-                objects,
-                imported_libs)
+            try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt,
+                "-o", lib_sox, objects, imported_libs)
         if not equal(ret_code, 0)
             return ret_code
         end
@@ -223,13 +233,7 @@ end
 if not defined("m3_link")
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
-    local args =
-    [
-        "-o", prog,
-        options,
-        objects,
-        imported_libs,
-    ]
+    local args = [ "-o", prog, options, objects, imported_libs ]
     if M3_PROFILING
         args += "-pg"
     end
