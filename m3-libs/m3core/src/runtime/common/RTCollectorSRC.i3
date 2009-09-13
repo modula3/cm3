@@ -82,4 +82,8 @@ PROCEDURE StartBackgroundCollection();
 PROCEDURE StartForegroundCollection();
 (* Starts the foreground thread, if not already started *)
 
+PROCEDURE DisableVM();
+(* This function does nothing and is only present for source
+ * compatibility with older cm3. *)
+
 END RTCollectorSRC.
