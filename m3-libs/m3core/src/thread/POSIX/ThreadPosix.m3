@@ -10,7 +10,7 @@
 (*|      modified On Mon Apr  5 14:51:30 PDT 1993 by muller  *)
 (*|      modified on Mon Feb 22 10:08:49 PST 1993 by jdd     *)
 
-UNSAFE MODULE ThreadPosix EXPORTS Thread, ThreadF, ThreadUnsafe,
+UNSAFE MODULE ThreadPosix EXPORTS Thread, ThreadF, ThreadInternal,
 Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPosix;
 
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
@@ -1461,7 +1461,7 @@ PROCEDURE PerfRunning (id: Id) =
     perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
   END PerfRunning;
 
-(*--------------------------------------------------------- ThreadF hooks ---*)
+(*--------------------------------------------------------- ThreadInternal hooks ---*)
 
 VAR
   hooks: Hooks := NIL;
@@ -1485,6 +1485,8 @@ PROCEDURE RegisterHooks(h: Hooks; init := TRUE): Hooks RAISES {}=
     RETURN oldHooks;
   END RegisterHooks;
 
+(*--------------------------------------------------------- ThreadF ---*)
+
 PROCEDURE MyId(): Id RAISES {}=
   BEGIN
     RETURN self.id;
@@ -1492,7 +1494,7 @@ PROCEDURE MyId(): Id RAISES {}=
 
 (*-------------------------------------------------------- initialization ---*)
 
-PROCEDURE Init()=
+PROCEDURE Init() =
   VAR xx: INTEGER;
   BEGIN
     inCritical := 1;

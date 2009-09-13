@@ -22,7 +22,7 @@ UNSAFE MODULE FloatMode (* FOR IRIX5 *);
        doesn't cause floating-point exceptions)
 *)
 
-IMPORT FPU, Usignal, ThreadF, Word, RTError;
+IMPORT FPU, Usignal, ThreadInternal, Word, RTError;
 
 TYPE RM  = RoundingMode;
 TYPE MRM = FPU.RoundingMode;
@@ -54,7 +54,7 @@ PROCEDURE GetFlags(): SET OF Flag =
       ExtractFlags (status, state, flags);
     END Get;
   BEGIN
-    ThreadF.GetMyFPState(Get);
+    ThreadInternal.GetMyFPState(Get);
     RETURN flags;
   END GetFlags;
 
@@ -142,7 +142,7 @@ PROCEDURE SetFlags(s: SET OF Flag): SET OF Flag =
       END;
     END Set;
   BEGIN
-    ThreadF.SetMyFPState(Set);
+    ThreadInternal.SetMyFPState(Set);
     RETURN flags;
   END SetFlags;
 
@@ -164,7 +164,7 @@ PROCEDURE ClearFlag(f: Flag) =
       state.sticky [f] := FALSE;
     END Set;
   BEGIN
-    ThreadF.SetMyFPState(Set);
+    ThreadInternal.SetMyFPState(Set);
   END ClearFlag;
 
 TYPE
@@ -243,7 +243,7 @@ PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
       EVAL FPU.SetStatus (LOOPHOLE (status, INTEGER));
     END Set;
   BEGIN
-    ThreadF.SetMyFPState(Set);
+    ThreadInternal.SetMyFPState(Set);
   END SetBehavior;
 
 PROCEDURE GetBehavior(f: Flag): Behavior =
@@ -253,7 +253,7 @@ PROCEDURE GetBehavior(f: Flag): Behavior =
       behavior := state.behavior [f];
     END Get;
   BEGIN
-    ThreadF.GetMyFPState(Get);
+    ThreadInternal.GetMyFPState(Get);
     RETURN behavior;
   END GetBehavior;
 
