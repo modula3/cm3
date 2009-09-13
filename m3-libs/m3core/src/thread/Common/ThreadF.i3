@@ -9,7 +9,7 @@
 
 INTERFACE ThreadF;
 
-(*-------------------------------------------------- showthreads support ---*)
+(*--------------------------------------------------- showthreads support ---*)
 
 TYPE
   State = {
@@ -29,7 +29,5 @@ TYPE
 
 PROCEDURE MyId(): Id RAISES {};
 (* return Id of caller *)
-
-(*--------------------------------------------------------------------------*)
 
 END ThreadF.

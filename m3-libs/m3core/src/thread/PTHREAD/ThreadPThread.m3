@@ -995,6 +995,55 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     END;
   END ProcessStacks;
 
+PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
+  (* LL=0 *)
+  VAR
+    me := GetActivation();
+    act: Activation;
+    acks: int;
+  BEGIN
+    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
+
+    ProcessMe(me, p);
+
+    act := me.next;
+    WHILE act # me DO
+      (* stop *)
+      LOOP
+        IF StopThread(act) THEN EXIT END;
+        IF SignalThread(act, ActState.Stopping) THEN
+          WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
+          IF acks > 0 THEN
+            WHILE sem_wait() # 0 DO
+              <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
+            END;
+            EXIT;
+          END;
+        END;
+        CommonSleep();
+      END;
+      (* process *)
+      ProcessOther(act, p);
+      (* start *)
+      LOOP
+        IF StartThread(act) THEN EXIT END;
+        IF SignalThread(act, ActState.Starting) THEN
+          WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
+          IF acks > 0 THEN
+            WHILE sem_wait() # 0 DO
+              <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
+            END;
+            EXIT;
+          END;
+        END;
+        CommonSleep();
+      END;
+      act := act.next;
+    END;
+
+    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+  END ProcessEachStack;
+
 PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu *)
   VAR
@@ -1277,17 +1326,11 @@ PROCEDURE MyId (): Id RAISES {} =
     RETURN self.id;
   END MyId;
 
-PROCEDURE GetMyFPState (reader: PROCEDURE(READONLY s: FloatMode.ThreadState)) =
+PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
   VAR me := GetActivation();
   BEGIN
-    reader(me.floatState);
-  END GetMyFPState;
-
-PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
-  VAR me := GetActivation();
-  BEGIN
-    writer(me.floatState);
-  END SetMyFPState;
+    RETURN ADR(me.heapState);
+  END MyFPState;
 
 PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
   VAR me := GetActivation();
@@ -1314,8 +1357,7 @@ PROCEDURE Die (lineno: INTEGER; msg: TEXT) =
 
 (*------------------------------------------------------ ShowThread hooks ---*)
 
-VAR
-  perfW : RTPerfTool.Handle;
+VAR perfW : RTPerfTool.Handle;
 
 PROCEDURE PerfStart () =
   BEGIN
