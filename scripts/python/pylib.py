@@ -783,7 +783,7 @@ def IsCygwinBinary(a):
     a = a.replace("/", "\\")
     a = _ConvertFromCygwinPath(a)
     #print("a is " + a)
-    return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
+    return (os.system("findstr 2>&1 >" + os.devnull + " /m cygwin1.dll \"" + a + "\"") == 0)
 
 #-----------------------------------------------------------------------------
 
@@ -2592,7 +2592,7 @@ def SetupEnvironment():
 def CheckForLinkSwitch(Switch):
     EnvName = "USE_" + Switch
     EnvValue = "0"
-    if os.system("link | findstr /i /c:\" /" + Switch + "\" > nul") == 0:
+    if os.system("link | findstr /i /c:\" /" + Switch + "\" >" + os.devnull) == 0:
         EnvValue = "1"
     os.environ[EnvName] = EnvValue
     print("set " + EnvName + "=" + EnvValue)
