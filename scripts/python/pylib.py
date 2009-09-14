@@ -2801,7 +2801,9 @@ def MakeMSIWithWix(input):
                 SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
                 break
 
-    command = "candle " + ConvertPathForWin32(input) + ".wxs -out " + ConvertPathForWin32(input) + ".wixobj"
+    command = "candle " + ConvertPathForWin32(input) + ".wxs -out " + ConvertPathForWin32(input) + ".wixobj" + " 2>&1"
+    if os.name == "posix":
+        command = command.replace("\\", "\\\\")
     print(command)
     os.system(command)
     DeleteFile(input + ".msi")
@@ -2818,7 +2820,9 @@ the sources are placed. Please read the files found in the license directory."""
 {\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", "\\par\n")
 + "}")
 
-    command = "light -out " + ConvertPathForWin32(input) + ".msi " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license)
+    command = "light -out " + ConvertPathForWin32(input) + ".msi " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license) + " 2>&1"
+    if os.name == "posix":
+        command = command.replace("\\", "\\\\")
     print(command)
     os.system(command)
 
