@@ -146,6 +146,19 @@ def _ConvertFromCygwinPath(a):
         a = "c:\\cygwin\\" + a
     return a
 
+def GetFullPath(a):
+    # find what separator it as (might be ambiguous)
+    if a.find("/") != -1:
+        sep = "/"
+    elif a.find("\\") != -1:
+        sep = "\\"
+    # convert to what Python expects, both due to ambiguity
+    a = a.replace("/", os.path.sep)
+    a = a.replace("\\", os.path.sep)
+    a = os.path.abspath(a)          # have Python do the work
+    a = a.replace(os.path.sep, sep) # put back the original separators
+    return a
+
 def ConvertPathForWin32(a):
     return _ConvertFromCygwinPath(a)
 
@@ -2738,7 +2751,7 @@ def MakeMSIWithWix(input):
         for a in os.listdir(dir):
             b = os.path.join(dir, a)
             if isdir(b):
-                wix.write("""<Directory Id='d%d' Name='%s'>\n""" % (state.dirID, a))
+                wix.write("""<Directory Id='d%d' Name='%s'>\n""" % (state.dirID, ConvertPathForWin32(a)))
                 state.dirID += 1
                 HandleDir(state, b) # recursion!
                 wix.write("</Directory>\n")
@@ -2748,7 +2761,7 @@ def MakeMSIWithWix(input):
                 if state.componentID == 1:
                     wix.write("""<Environment Id="envPath" Action="set" Name="PATH" Part="last" Permanent="no" Separator=";" Value='[INSTALLDIR]bin'/>\n""")
 
-                wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, b))
+                wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, ConvertPathForWin32(b)))
                 state.fileID += 1
                 wix.write("</Component>\n")
 
