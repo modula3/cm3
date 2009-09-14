@@ -38,6 +38,7 @@ def IsInterix():
     return os.name == "posix" and os.uname()[0].lower().startswith("interix")
 
 env_OS = getenv("OS")
+
 if env_OS == "Windows_NT" and not IsInterix():
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
@@ -54,6 +55,10 @@ if env_OS == "Windows_NT" and not IsInterix():
     #    print("set PATHEXT=.;%PATHEXT%")
 else:
     from os import uname
+
+#-----------------------------------------------------------------------------
+
+_Program = os.path.basename(sys.argv[0])
 
 #-----------------------------------------------------------------------------
 
@@ -135,8 +140,23 @@ def _ConvertFromCygwinPath(a):
         return a
     a = a.replace("/", "\\")
     #a = a.replace("\\", "/")
-    if (a.find("\\cygdrive\\") == 0):
+    if a.startswith("\\cygdrive\\"):
         a = a[10] + ":" + a[11:]
+    elif a.startswith("\\home\\elego\\"):
+        a = "c:\\cygwin\\" + a
+    return a
+
+def GetFullPath(a):
+    # find what separator it as (might be ambiguous)
+    if a.find("/") != -1:
+        sep = "/"
+    elif a.find("\\") != -1:
+        sep = "\\"
+    # convert to what Python expects, both due to ambiguity
+    a = a.replace("/", os.path.sep)
+    a = a.replace("\\", os.path.sep)
+    a = os.path.abspath(a)          # have Python do the work
+    a = a.replace(os.path.sep, sep) # put back the original separators
     return a
 
 def ConvertPathForWin32(a):
@@ -776,25 +796,26 @@ def IsCygwinBinary(a):
     a = a.replace("/", "\\")
     a = _ConvertFromCygwinPath(a)
     #print("a is " + a)
-    return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
+    return (os.system("findstr 2>&1 >" + os.devnull + " /m cygwin1.dll \"" + a + "\"") == 0)
 
 #-----------------------------------------------------------------------------
 
-if IsCygwinBinary(CM3):
-    CM3IsCygwin = True
-    def ConvertPathForCM3(a):
-        return _ConvertToCygwinPath(a)
-else:
-    CM3IsCygwin = False
-    def ConvertPathForCM3(a):
-        return _ConvertFromCygwinPath(a)
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    if IsCygwinBinary(CM3):
+        CM3IsCygwin = True
+        def ConvertPathForCM3(a):
+            return _ConvertToCygwinPath(a)
+    else:
+        CM3IsCygwin = False
+        def ConvertPathForCM3(a):
+            return _ConvertFromCygwinPath(a)
 
 #-----------------------------------------------------------------------------
 #
 # reflect what we decided back into the environment
 #
-
-_Program = os.path.basename(sys.argv[0])
 
 if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
@@ -811,73 +832,85 @@ if _Program != "make-msi.py":
 # define build and ship programs for Critical Mass Modula-3
 #
 
-DEFS = "-DROOT=%(Q)s%(Root)s%(Q)s"
-DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
-DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
-DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
-
-NativeRoot = Root
-#Root = ConvertPathForCM3(Root).replace("\\", "\\\\")
-Root = ConvertPathForCM3(Root).replace("\\", "/")
-DEFS = (DEFS % vars())
-Root = NativeRoot
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    DEFS = "-DROOT=%(Q)s%(Root)s%(Q)s"
+    DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
+    DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
+    DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
+    
+    NativeRoot = Root
+    #Root = ConvertPathForCM3(Root).replace("\\", "\\\\")
+    Root = ConvertPathForCM3(Root).replace("\\", "/")
+    DEFS = (DEFS % vars())
+    Root = NativeRoot
 
 #-----------------------------------------------------------------------------
 # Make sure these variables all start with a space if they are non-empty.
 #
 
-if BuildArgs:
-    BuildArgs = " " + BuildArgs
-
-if CleanArgs:
-    CleanArgs = " " + CleanArgs
-
-if ShipArgs:
-    ShipArgs = " " + ShipArgs
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    if BuildArgs:
+        BuildArgs = " " + BuildArgs
+    
+    if CleanArgs:
+        CleanArgs = " " + CleanArgs
+    
+    if ShipArgs:
+        ShipArgs = " " + ShipArgs
 
 #-----------------------------------------------------------------------------
 # form the various commands we might run
 #
 
-CM3_BuildLocal = CM3_BuildLocal or BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
-CM3_CleanLocal = CM3_CleanLocal or CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
-CM3_BuildGlobal = CM3_BuildGlobal or BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
-CM3_CleanGlobal = CM3_CleanGlobal or CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
-CM3_Ship = CM3_Ship or Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    CM3_BuildLocal = CM3_BuildLocal or BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
+    CM3_CleanLocal = CM3_CleanLocal or CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
+    CM3_BuildGlobal = CM3_BuildGlobal or BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
+    CM3_CleanGlobal = CM3_CleanGlobal or CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
+    CM3_Ship = CM3_Ship or Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
 
 # other commands
 
-if os.name == "nt":
-    RealClean = RealClean or "if exist %(Config)s rmdir /q/s %(Config)s"
-else:
-    RealClean = RealClean or "rm -rf %(Config)s"
-
-RealClean = (RealClean % vars())
+    if os.name == "nt":
+        RealClean = RealClean or "if exist %(Config)s rmdir /q/s %(Config)s"
+    else:
+        RealClean = RealClean or "rm -rf %(Config)s"
+    
+    RealClean = (RealClean % vars())
 
 #-----------------------------------------------------------------------------
 # choose the compiler to use
 # pm3/dec/m3build is not tested and likely cm3 is all that works (heavily used)
 #
 
-if SearchPath(CM3):
-    BuildLocal = CM3_BuildLocal
-    CleanLocal = CM3_CleanLocal
-    BuildGlobal = CM3_BuildGlobal
-    CleanGlobal = CM3_CleanGlobal
-    Ship = CM3_Ship
-else:
-    if (not BuildLocal) or (not BuildGlobal) or (not Ship):
-        File = __file__
-        sys.stderr.write(
-            "%(File)s: %(CM3)s or %(M3Build)s not found in your path, don't know how to compile\n"
-            % vars())
-        sys.exit(1)
-
-BuildLocal = BuildLocal.strip() % vars()
-CleanLocal = CleanLocal.strip() % vars()
-BuildGlobal = BuildGlobal.strip() % vars()
-CleanGlobal = CleanGlobal.strip() % vars()
-Ship = Ship.strip() % vars()
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    if SearchPath(CM3):
+        BuildLocal = CM3_BuildLocal
+        CleanLocal = CM3_CleanLocal
+        BuildGlobal = CM3_BuildGlobal
+        CleanGlobal = CM3_CleanGlobal
+        Ship = CM3_Ship
+    else:
+        if (not BuildLocal) or (not BuildGlobal) or (not Ship):
+            File = __file__
+            sys.stderr.write(
+                "%(File)s: %(CM3)s or %(M3Build)s not found in your path, don't know how to compile\n"
+                % vars())
+            sys.exit(1)
+    
+    BuildLocal = BuildLocal.strip() % vars()
+    CleanLocal = CleanLocal.strip() % vars()
+    BuildGlobal = BuildGlobal.strip() % vars()
+    CleanGlobal = CleanGlobal.strip() % vars()
+    Ship = Ship.strip() % vars()
 
 #-----------------------------------------------------------------------------
 
@@ -1352,52 +1385,58 @@ def Boot():
 #-----------------------------------------------------------------------------
 # map action names to code and possibly other data
 
-ActionInfo = {
-    "build":
-    {
-        "Commands": [_BuildLocalFunction],
-    },
-    "buildlocal":
-    {
-        "Commands": [_BuildLocalFunction],
-    },
-    "buildglobal":
-    {
-        "Commands": [_BuildGlobalFunction, _ShipFunction],
-    },
-    "buildship":
-    {
-        "Commands": [_BuildGlobalFunction, _ShipFunction],
-    },
-    "ship":
-    {
-        "Commands": [_ShipFunction],
-    },
-    "clean":
-    {
-        "Commands": [_CleanLocalFunction],
-        "KeepGoing": True,
-    },
-    "cleanlocal":
-    {
-        "Commands": [_CleanLocalFunction],
-        "KeepGoing": True,
-    },
-    "cleanglobal":
-    {
-        "Commands": [_CleanGlobalFunction],
-        "KeepGoing": True,
-    },
-    "realclean":
-    {
-        "Commands": [_RealCleanFunction],
-        "KeepGoing": True,
-    },
-}
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    ActionInfo = {
+        "build":
+        {
+            "Commands": [_BuildLocalFunction],
+        },
+        "buildlocal":
+        {
+            "Commands": [_BuildLocalFunction],
+        },
+        "buildglobal":
+        {
+            "Commands": [_BuildGlobalFunction, _ShipFunction],
+        },
+        "buildship":
+        {
+            "Commands": [_BuildGlobalFunction, _ShipFunction],
+        },
+        "ship":
+        {
+            "Commands": [_ShipFunction],
+        },
+        "clean":
+        {
+            "Commands": [_CleanLocalFunction],
+            "KeepGoing": True,
+        },
+        "cleanlocal":
+        {
+            "Commands": [_CleanLocalFunction],
+            "KeepGoing": True,
+        },
+        "cleanglobal":
+        {
+            "Commands": [_CleanGlobalFunction],
+            "KeepGoing": True,
+        },
+        "realclean":
+        {
+            "Commands": [_RealCleanFunction],
+            "KeepGoing": True,
+        },
+    }
 
 #-----------------------------------------------------------------------------
 
-BuildAll = getenv("CM3_ALL") or False
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    BuildAll = getenv("CM3_ALL") or False
 
 def _FilterPackage(Package):
     PackageConditions = {
@@ -1427,458 +1466,461 @@ def FilterPackages(Packages):
 
 #-----------------------------------------------------------------------------
 
-PackageSets = {
-#
-# These lists are deliberately in a jumbled order
-# in order to depend on OrderPackages working.
-#
-# This needs to be still further data driven,
-# and a full ordering is not necessarily, only
-# a partial ordering -- stuff can be build in parallel.
-#
-    "min" :
-        [
-        "import-libs",
-        "libm3",
-        "m3core",
-        ],
-
-    "std" :
-        [
-
-    # demo programs
-
-        "cube",
-        "calculator",
-        "fisheye",
-        "mentor",
-
-    # system / compiler libraries and tools
-
-        "m3quake",
-        "m3middle",
-        "m3scanner",
-        "m3tools",
-        "m3cgcat",
-        "m3cggen",
-        "m3cc",
-        "m3objfile",
-        "m3linker",
-        "m3back",
-        "m3staloneback",
-        "m3front",
-        "cm3",
-        "m3gdb",
-        "m3bundle",
-        "mklib",
-        "fix_nl",
-        "libdump",
-        "windowsResources",
-        "cm3ide",
-
-    # more useful quasi-standard libraries
-
-        "arithmetic",
-        "bitvector",
-        "digraph",
-        "parseparams",
-        "realgeometry",
-        "set",
-        "slisp",
-        "sortedtableextras",
-        "table-list",
-        "tempfiles",
-        "tcl",
-        "tcp",
-        "udp",
-        "libsio",
-        "libbuf",
-        "debug",
-        "listfuncs",
-        "embutils",
-        "m3tk-misc",
-        "http",
-        "binIO",
-        "deepcopy",
-        "sgml",
-        "commandrw",
-
-        # some CM3 communication extensions
-
-        "tapi",
-        "serial",
-
-        # tools
-
-        "m3tk",
-        "mtex",
-        "m3totex",
-        "m3tohtml",
-        "m3scan",
-        "m3markup",
-        "m3browser",
-        "cmpdir",
-        "cmpfp",
-        "dirfp",
-        "uniq",
-        "pp",
-        # "kate"   # can be shipped only on systems with KDE
-        # "nedit",
-
-        # network objects -- distributed programming
-
-        "netobj",
-        "netobjd",
-        "stubgen",
-        "events",
-        "rdwr",
-        "sharedobj",
-        "sharedobjgen",
-
-        # database packages
-
-        "odbc",
-        "postgres95",
-        "db",
-        "smalldb",
-        "stable",
-        "stablegen",
-
-        # the standard graphical user interface: trestle and formsvbt
-
-        "X11R4",
-        "ui",
-        "PEX",
-        "vbtkit",
-        "cmvbt",
-        "jvideo",
-        "videovbt",
-        "web",
-        "formsvbtpixmaps",
-        "formsvbt",
-        "formsview",
-        "formsedit",
-        "codeview",
-        "mg",
-        "mgkit",
-        "opengl",
-        "anim3D",
-        "zeus",
-        "m3zume",
-
-        # obliq
-        "synloc",
-        "synex",
-        "metasyn",
-        "obliqrt",
-        "obliqparse",
-        "obliqprint",
-        "obliq",
-        "obliqlibemb",
-        "obliqlibm3",
-        "obliqlibui",
-        "obliqlibanim",
-        "obliqlib3D",
-        "obliqsrvstd",
-        "obliqsrvui",
-        "obliqbinmin",
-        "obliqbinstd",
-        "obliqbinui",
-        "obliqbinanim",
-        "visualobliq",
-        "vocgi",
-        "voquery",
-        "vorun",
-
-        # more graphics depending on obliq
-
-        "webvbt",
-
-        # more tools
-
-        "recordheap",
-        "rehearsecode",
-        "replayheap",
-        "showheap",
-        "shownew",
-        "showthread",
-
-        # The Juno-2 graphical constraint based editor
-
-        "pkl-fonts",
-        "juno-machine",
-        "juno-compiler",
-        "juno-app",
-
-        "deckscape",
-        "webscape",
-        "webcat",
-
-        "import-libs",
-        "m3core",
-        "libm3",
-        "sysutils",
-
-        ],
-
-
-    "all": # in order
-        [
-    # backend
-        "m3cc",
-
-    # base libraries
-
-        "import-libs",
-        "m3core",
-        "libm3",
-        "windowsResources",
-        "sysutils",
-        "patternmatching",
-
-    # system / compiler libraries and tools
-
-        "m3middle",
-        "m3objfile",
-        "m3linker",
-        "m3back",
-        "m3staloneback",
-        "m3front",
-        "m3quake",
-        "cm3",
-        "m3scanner",
-        "m3tools",
-        "m3cgcat",
-        "m3cggen",
-
-        "m3gdb",
-        "m3bundle",
-        "mklib",
-        "fix_nl",
-        "libdump",
-
-    # more useful quasi-standard libraries
-
-        "arithmetic",
-        "bitvector",
-        "digraph",
-        "parseparams",
-        "realgeometry",
-        "set",
-        "slisp",
-        "sortedtableextras",
-        "table-list",
-        "tempfiles",
-        "tcl",
-        "tcp",
-        "udp",
-        "libsio",
-        "libbuf",
-        "debug",
-        "listfuncs",
-        "embutils",
-        "m3tk-misc",
-        "http",
-        "binIO",
-        "deepcopy",
-        "sgml",
-        "commandrw",
-
-        "cm3ide",
-
-        # some CM3 communication extensions
-
-        "tapi",
-        "serial",
-
-        # tools
-
-        "m3tk",
-        "mtex",
-        "m3totex",
-        "m3tohtml",
-        "m3scan",
-        "m3markup",
-        "m3browser",
-        "cmpdir",
-        "cmpfp",
-        "dirfp",
-        "uniq",
-        # "kate"   # can be shipped only on systems with KDE
-        # "nedit",
-
-        # network objects -- distributed programming
-
-        "netobj",
-        "netobjd",
-        "stubgen",
-        "events",
-        "rdwr",
-        "sharedobj",
-        "sharedobjgen",
-
-        # database packages
-
-        "odbc",
-        "postgres95",
-        "db",
-        "smalldb",
-        "stable",
-        "stablegen",
-
-        # the standard graphical user interface: trestle and formsvbt
-
-        "X11R4",
-        "ui",
-        "PEX",
-        "vbtkit",
-        "cmvbt",
-        "jvideo",
-        "videovbt",
-        "web",
-        "formsvbtpixmaps",
-        "formsvbt",
-        "formsview",
-        "formsedit",
-        "codeview",
-        "mg",
-        "mgkit",
-        "opengl",
-        "anim3D",
-        "zeus",
-        "m3zume",
-
-        # obliq
-        "synloc",
-        "synex",
-        "metasyn",
-        "obliqrt",
-        "obliqparse",
-        "obliqprint",
-        "obliq",
-        "obliqlibemb",
-        "obliqlibm3",
-        "obliqlibui",
-        "obliqlibanim",
-        "obliqlib3D",
-        "obliqsrvstd",
-        "obliqsrvui",
-        "obliqbinmin",
-        "obliqbinstd",
-        "obliqbinui",
-        "obliqbinanim",
-        "visualobliq",
-        "vocgi",
-        "voquery",
-        "vorun",
-
-        # more graphics depending on obliq
-
-        "webvbt",
-
-        # more tools
-
-        "recordheap",
-        "rehearsecode",
-        "replayheap",
-        "showheap",
-        "shownew",
-        "showthread",
-
-        # The Juno-2 graphical constraint based editor
-
-        "pkl-fonts",
-        "juno-machine",
-        "juno-compiler",
-        "juno-app",
-
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    PackageSets = {
+    #
+    # These lists are deliberately in a jumbled order
+    # in order to depend on OrderPackages working.
+    #
+    # This needs to be still further data driven,
+    # and a full ordering is not necessarily, only
+    # a partial ordering -- stuff can be build in parallel.
+    #
+        "min" :
+            [
+            "import-libs",
+            "libm3",
+            "m3core",
+            ],
+    
+        "std" :
+            [
+    
         # demo programs
-
-        "cube",
-        "calculator",
-        "fisheye",
-        "mentor",
-
-        "cit_common",
-        "m3tmplhack",
-        "cit_util",
-        "term",
-        "deepcopy",
-        "paneman",
-        "paneman/kemacs",
-        "drawcontext",
-        "drawcontext/dcpane",
-        "drawcontext/kgv",
-        "hack",
-        "m3browserhack",
-        "parserlib/ktoklib",
-        "parserlib/klexlib",
-        "parserlib/kyacclib",
-        "parserlib/ktok",
-        "parserlib/klex",
-        "parserlib/kyacc",
-        "parserlib/kext",
-        "parserlib/parserlib",
-        #"parserlib/parserlib/test",
-        "pp",
-        #"kate",
-        "sgml",
-
-        "deckscape",
-        "webscape",
-        "webcat",
-        ],
-}
-
-PackageSets_CoreBaseCommon = [
-    "import-libs",
-    "m3core",
-    "libm3",
-    "windowsResources",
-    "sysutils",
-    "m3middle",
-    "m3quake",
-    "m3scanner",
-    "m3tools",
-    "m3cgcat",
-    "m3cggen",
-    "m3gdb",
-    "m3bundle",
-    "mklib",
-    "fix_nl",
-    "libdump",
-    "bitvector",
-    "digraph",
-    "parseparams",
-    "realgeometry",
-    "set",
-    "slisp",
-    "sortedtableextras",
-    "table-list",
-    "tempfiles",
-    "tcl",
-    ]
-
-PackageSets["core"] = PackageSets_CoreBaseCommon
-PackageSets["base"] = PackageSets_CoreBaseCommon
-
-PackageSets["core"] += [
-    "patternmatching",
-    "m3objfile",
-    "m3linker",
-    "m3back",
-    "m3staloneback",
-    "m3cc",
-    "cm3",
-    "m3front",
-    "m3gdb",
-    ]
-
-PackageSets["base"] += [
-    "tcp",
-    "tapi",
-    "serial",
-    ]
+    
+            "cube",
+            "calculator",
+            "fisheye",
+            "mentor",
+    
+        # system / compiler libraries and tools
+    
+            "m3quake",
+            "m3middle",
+            "m3scanner",
+            "m3tools",
+            "m3cgcat",
+            "m3cggen",
+            "m3cc",
+            "m3objfile",
+            "m3linker",
+            "m3back",
+            "m3staloneback",
+            "m3front",
+            "cm3",
+            "m3gdb",
+            "m3bundle",
+            "mklib",
+            "fix_nl",
+            "libdump",
+            "windowsResources",
+            "cm3ide",
+    
+        # more useful quasi-standard libraries
+    
+            "arithmetic",
+            "bitvector",
+            "digraph",
+            "parseparams",
+            "realgeometry",
+            "set",
+            "slisp",
+            "sortedtableextras",
+            "table-list",
+            "tempfiles",
+            "tcl",
+            "tcp",
+            "udp",
+            "libsio",
+            "libbuf",
+            "debug",
+            "listfuncs",
+            "embutils",
+            "m3tk-misc",
+            "http",
+            "binIO",
+            "deepcopy",
+            "sgml",
+            "commandrw",
+    
+            # some CM3 communication extensions
+    
+            "tapi",
+            "serial",
+    
+            # tools
+    
+            "m3tk",
+            "mtex",
+            "m3totex",
+            "m3tohtml",
+            "m3scan",
+            "m3markup",
+            "m3browser",
+            "cmpdir",
+            "cmpfp",
+            "dirfp",
+            "uniq",
+            "pp",
+            # "kate"   # can be shipped only on systems with KDE
+            # "nedit",
+    
+            # network objects -- distributed programming
+    
+            "netobj",
+            "netobjd",
+            "stubgen",
+            "events",
+            "rdwr",
+            "sharedobj",
+            "sharedobjgen",
+    
+            # database packages
+    
+            "odbc",
+            "postgres95",
+            "db",
+            "smalldb",
+            "stable",
+            "stablegen",
+    
+            # the standard graphical user interface: trestle and formsvbt
+    
+            "X11R4",
+            "ui",
+            "PEX",
+            "vbtkit",
+            "cmvbt",
+            "jvideo",
+            "videovbt",
+            "web",
+            "formsvbtpixmaps",
+            "formsvbt",
+            "formsview",
+            "formsedit",
+            "codeview",
+            "mg",
+            "mgkit",
+            "opengl",
+            "anim3D",
+            "zeus",
+            "m3zume",
+    
+            # obliq
+            "synloc",
+            "synex",
+            "metasyn",
+            "obliqrt",
+            "obliqparse",
+            "obliqprint",
+            "obliq",
+            "obliqlibemb",
+            "obliqlibm3",
+            "obliqlibui",
+            "obliqlibanim",
+            "obliqlib3D",
+            "obliqsrvstd",
+            "obliqsrvui",
+            "obliqbinmin",
+            "obliqbinstd",
+            "obliqbinui",
+            "obliqbinanim",
+            "visualobliq",
+            "vocgi",
+            "voquery",
+            "vorun",
+    
+            # more graphics depending on obliq
+    
+            "webvbt",
+    
+            # more tools
+    
+            "recordheap",
+            "rehearsecode",
+            "replayheap",
+            "showheap",
+            "shownew",
+            "showthread",
+    
+            # The Juno-2 graphical constraint based editor
+    
+            "pkl-fonts",
+            "juno-machine",
+            "juno-compiler",
+            "juno-app",
+    
+            "deckscape",
+            "webscape",
+            "webcat",
+    
+            "import-libs",
+            "m3core",
+            "libm3",
+            "sysutils",
+    
+            ],
+    
+    
+        "all": # in order
+            [
+        # backend
+            "m3cc",
+    
+        # base libraries
+    
+            "import-libs",
+            "m3core",
+            "libm3",
+            "windowsResources",
+            "sysutils",
+            "patternmatching",
+    
+        # system / compiler libraries and tools
+    
+            "m3middle",
+            "m3objfile",
+            "m3linker",
+            "m3back",
+            "m3staloneback",
+            "m3front",
+            "m3quake",
+            "cm3",
+            "m3scanner",
+            "m3tools",
+            "m3cgcat",
+            "m3cggen",
+    
+            "m3gdb",
+            "m3bundle",
+            "mklib",
+            "fix_nl",
+            "libdump",
+    
+        # more useful quasi-standard libraries
+    
+            "arithmetic",
+            "bitvector",
+            "digraph",
+            "parseparams",
+            "realgeometry",
+            "set",
+            "slisp",
+            "sortedtableextras",
+            "table-list",
+            "tempfiles",
+            "tcl",
+            "tcp",
+            "udp",
+            "libsio",
+            "libbuf",
+            "debug",
+            "listfuncs",
+            "embutils",
+            "m3tk-misc",
+            "http",
+            "binIO",
+            "deepcopy",
+            "sgml",
+            "commandrw",
+    
+            "cm3ide",
+    
+            # some CM3 communication extensions
+    
+            "tapi",
+            "serial",
+    
+            # tools
+    
+            "m3tk",
+            "mtex",
+            "m3totex",
+            "m3tohtml",
+            "m3scan",
+            "m3markup",
+            "m3browser",
+            "cmpdir",
+            "cmpfp",
+            "dirfp",
+            "uniq",
+            # "kate"   # can be shipped only on systems with KDE
+            # "nedit",
+    
+            # network objects -- distributed programming
+    
+            "netobj",
+            "netobjd",
+            "stubgen",
+            "events",
+            "rdwr",
+            "sharedobj",
+            "sharedobjgen",
+    
+            # database packages
+    
+            "odbc",
+            "postgres95",
+            "db",
+            "smalldb",
+            "stable",
+            "stablegen",
+    
+            # the standard graphical user interface: trestle and formsvbt
+    
+            "X11R4",
+            "ui",
+            "PEX",
+            "vbtkit",
+            "cmvbt",
+            "jvideo",
+            "videovbt",
+            "web",
+            "formsvbtpixmaps",
+            "formsvbt",
+            "formsview",
+            "formsedit",
+            "codeview",
+            "mg",
+            "mgkit",
+            "opengl",
+            "anim3D",
+            "zeus",
+            "m3zume",
+    
+            # obliq
+            "synloc",
+            "synex",
+            "metasyn",
+            "obliqrt",
+            "obliqparse",
+            "obliqprint",
+            "obliq",
+            "obliqlibemb",
+            "obliqlibm3",
+            "obliqlibui",
+            "obliqlibanim",
+            "obliqlib3D",
+            "obliqsrvstd",
+            "obliqsrvui",
+            "obliqbinmin",
+            "obliqbinstd",
+            "obliqbinui",
+            "obliqbinanim",
+            "visualobliq",
+            "vocgi",
+            "voquery",
+            "vorun",
+    
+            # more graphics depending on obliq
+    
+            "webvbt",
+    
+            # more tools
+    
+            "recordheap",
+            "rehearsecode",
+            "replayheap",
+            "showheap",
+            "shownew",
+            "showthread",
+    
+            # The Juno-2 graphical constraint based editor
+    
+            "pkl-fonts",
+            "juno-machine",
+            "juno-compiler",
+            "juno-app",
+    
+            # demo programs
+    
+            "cube",
+            "calculator",
+            "fisheye",
+            "mentor",
+    
+            "cit_common",
+            "m3tmplhack",
+            "cit_util",
+            "term",
+            "deepcopy",
+            "paneman",
+            "paneman/kemacs",
+            "drawcontext",
+            "drawcontext/dcpane",
+            "drawcontext/kgv",
+            "hack",
+            "m3browserhack",
+            "parserlib/ktoklib",
+            "parserlib/klexlib",
+            "parserlib/kyacclib",
+            "parserlib/ktok",
+            "parserlib/klex",
+            "parserlib/kyacc",
+            "parserlib/kext",
+            "parserlib/parserlib",
+            #"parserlib/parserlib/test",
+            "pp",
+            #"kate",
+            "sgml",
+    
+            "deckscape",
+            "webscape",
+            "webcat",
+            ],
+    }
+    
+    PackageSets_CoreBaseCommon = [
+        "import-libs",
+        "m3core",
+        "libm3",
+        "windowsResources",
+        "sysutils",
+        "m3middle",
+        "m3quake",
+        "m3scanner",
+        "m3tools",
+        "m3cgcat",
+        "m3cggen",
+        "m3gdb",
+        "m3bundle",
+        "mklib",
+        "fix_nl",
+        "libdump",
+        "bitvector",
+        "digraph",
+        "parseparams",
+        "realgeometry",
+        "set",
+        "slisp",
+        "sortedtableextras",
+        "table-list",
+        "tempfiles",
+        "tcl",
+        ]
+    
+    PackageSets["core"] = PackageSets_CoreBaseCommon
+    PackageSets["base"] = PackageSets_CoreBaseCommon
+    
+    PackageSets["core"] += [
+        "patternmatching",
+        "m3objfile",
+        "m3linker",
+        "m3back",
+        "m3staloneback",
+        "m3cc",
+        "cm3",
+        "m3front",
+        "m3gdb",
+        ]
+    
+    PackageSets["base"] += [
+        "tcp",
+        "tapi",
+        "serial",
+        ]
 
 #-----------------------------------------------------------------------------
 
@@ -2584,7 +2626,7 @@ def SetupEnvironment():
 def CheckForLinkSwitch(Switch):
     EnvName = "USE_" + Switch
     EnvValue = "0"
-    if os.system("link | findstr /i /c:\" /" + Switch + "\" > nul") == 0:
+    if os.system("link | findstr /i /c:\" /" + Switch + "\" >" + os.devnull) == 0:
         EnvValue = "1"
     os.environ[EnvName] = EnvValue
     print("set " + EnvName + "=" + EnvValue)
@@ -2709,7 +2751,7 @@ def MakeMSIWithWix(input):
         for a in os.listdir(dir):
             b = os.path.join(dir, a)
             if isdir(b):
-                wix.write("""<Directory Id='d%d' Name='%s'>\n""" % (state.dirID, a))
+                wix.write("""<Directory Id='d%d' Name='%s'>\n""" % (state.dirID, ConvertPathForWin32(a)))
                 state.dirID += 1
                 HandleDir(state, b) # recursion!
                 wix.write("</Directory>\n")
@@ -2719,7 +2761,7 @@ def MakeMSIWithWix(input):
                 if state.componentID == 1:
                     wix.write("""<Environment Id="envPath" Action="set" Name="PATH" Part="last" Permanent="no" Separator=";" Value='[INSTALLDIR]bin'/>\n""")
 
-                wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, b))
+                wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, ConvertPathForWin32(b)))
                 state.fileID += 1
                 wix.write("</Component>\n")
 
@@ -2728,7 +2770,7 @@ def MakeMSIWithWix(input):
     wix.write("</Directory>\n")
     wix.write("</Directory>\n")
 
-    wix.write("<Feature Id='Complete' Title='Modula-3' Description='everything.' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>\n")
+    wix.write("<Feature Id='Complete' Title='Modula-3' Description='everything' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>\n")
 
     for a in range(0, state.componentID):
         wix.write("<ComponentRef Id='c%d'/>\n" % a)
@@ -2750,6 +2792,8 @@ def MakeMSIWithWix(input):
 
     wix.close()
 
+    print("SearchPath candle light")
+
     if not SearchPath("candle") or not SearchPath("light"):
         for a in GetProgramFiles():
             b = os.path.join(ConvertPathForPython(a), "Windows Installer XML v3", "bin")
@@ -2757,11 +2801,12 @@ def MakeMSIWithWix(input):
                 SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
                 break
 
-    command = "candle " + input + ".wxs -out " + input + ".wixobj"
+    command = "candle " + ConvertPathForWin32(input) + ".wxs -out " + ConvertPathForWin32(input) + ".wixobj" + " 2>&1"
+    if os.name == "posix":
+        command = command.replace("\\", "\\\\")
     print(command)
     os.system(command)
-    a = input + ".msi"
-    DeleteFile(a)
+    DeleteFile(input + ".msi")
 
     # This is similar to the toplevel README in the source tree.
     licenseText = \
@@ -2775,7 +2820,9 @@ the sources are placed. Please read the files found in the license directory."""
 {\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", "\\par\n")
 + "}")
 
-    command = "light -out " + a + " " + input + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + license
+    command = "light -out " + ConvertPathForWin32(input) + ".msi " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license) + " 2>&1"
+    if os.name == "posix":
+        command = command.replace("\\", "\\\\")
     print(command)
     os.system(command)
 
