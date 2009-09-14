@@ -9,16 +9,6 @@
 UNSAFE INTERFACE ThreadInternal;
 
 IMPORT FloatMode, RTHeapRep;
-FROM ThreadF IMPORT Id, State;
-FROM Thread IMPORT T;
-
-(*---------------------------------------------------------------------------*)
-(* This part of the interface bridges SchedulerPosix and ThreadWin32 *)
-
-PROCEDURE PerfChanged (id: Id; s: State);
-PROCEDURE PerfRunning (id: Id);
-PROCEDURE XTestAlert (self: T): BOOLEAN;
-VAR perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
 
 (*--------------------------------------------- garbage collector support ---*)
 

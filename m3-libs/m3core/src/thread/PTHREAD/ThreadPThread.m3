@@ -21,9 +21,7 @@ CONST
   WAIT_UNIT = 1000000; (* one million nanoseconds, one thousandth of a second *)
   RETRY_INTERVAL = 10000000; (* 10 million nanoseconds, one hundredth of a second *)
 
-VAR
-  stack_grows_down: BOOLEAN;
-  nextId: CARDINAL := 1;
+VAR stack_grows_down: BOOLEAN;
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "Mutex Pthread-1.0" OBJECT
@@ -33,14 +31,11 @@ REVEAL
     release := UnlockMutex;
   END;
 
-  Condition = BRANDED "Thread.Condition Pthread-1.0" OBJECT
-    mutex: pthread_mutex_t := NIL;
+  Condition = MUTEX BRANDED "Thread.Condition Pthread-1.0" OBJECT
     waiters: T := NIL;                  (* LL = mutex *)
   END;
 
-  T = BRANDED "Thread.T Pthread-1.6" OBJECT
-    (* protects our state *)
-    mutex: pthread_mutex_t := NIL;
+  T = MUTEX BRANDED "Thread.T Pthread-1.6" OBJECT
     (* a place to park while waiting *)
     cond: pthread_cond_t := NIL;
 
@@ -63,9 +58,6 @@ REVEAL
     completed: BOOLEAN := FALSE;
     (* wait here to join *)
     join: Condition;
-
-    (* unique Id of this thread *)
-    id: Id := 0;
   END;
 
 TYPE
@@ -147,28 +139,23 @@ PROCEDURE InitMutex (m: Mutex) =
   END InitMutex;
 
 PROCEDURE LockMutex (m: Mutex) =
-  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), "LockMutex called from a non-Modula-3 thread");
-    END;
     IF m.mutex = NIL THEN InitMutex(m) END;
-    IF perfOn THEN PerfChanged(self.id, State.locking) END;
+    IF perfOn THEN PerfChanged(State.locking) END;
     WITH r = pthread_mutex_lock(m.mutex) DO
       IF r # 0 THEN
         RTError.MsgI(ThisFile(), ThisLine(),
                      "Thread client error: pthread_mutex_lock error: ", r);
       END;
     END;
-    IF perfOn THEN PerfRunning(self.id) END;
+    IF perfOn THEN PerfRunning() END;
   END LockMutex;
 
 PROCEDURE UnlockMutex (m: Mutex) =
   (* LL = m *)
-  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), "UnlockMutex called from a non-Modula-3 thread");
+    IF m.mutex = NIL THEN
+      Die(ThisLine(), "Mutex already locked");
     END;
     WITH r = pthread_mutex_unlock(m.mutex) DO
       IF r # 0 THEN
@@ -180,40 +167,14 @@ PROCEDURE UnlockMutex (m: Mutex) =
 
 (*---------------------------------------- Condition variables and Alerts ---*)
 
-PROCEDURE CleanCondition (r: REFANY) =
-  VAR c := NARROW(r, Condition);
-  BEGIN
-    pthread_mutex_delete(c.mutex);
-    c.mutex := NIL;
-  END CleanCondition;
-
-PROCEDURE InitCondition (c: Condition) =
-  VAR mutex := pthread_mutex_new();
-  BEGIN
-    WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
-    IF c.mutex = NIL THEN (* We won the race. *)
-      IF mutex = NIL THEN (* But we failed. *)
-        WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
-        RTE.Raise (RTE.T.OutOfMemory);
-      ELSE (* We won the race and succeeded. *)
-        c.mutex := mutex;
-        WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
-        RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
-      END;
-    ELSE (* another thread beat us in the race, ok *)
-      WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
-      pthread_mutex_delete(mutex);
-    END;
-  END InitCondition;
-
-PROCEDURE XWait (self: T; mutex: pthread_mutex_t;
-                 c: Condition; alertable: BOOLEAN)
+PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
   RAISES {Alerted} =
   (* LL = m *)
   VAR next, prev: T;
   BEGIN
-    IF c.mutex = NIL THEN InitCondition(c) END;
-
+    IF m.mutex = NIL THEN InitMutex(m) END;
+    IF c.mutex = NIL THEN InitMutex(c) END;
+    IF perfOn THEN PerfChanged(State.waiting) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
     <*ASSERT self.waitingOn = NIL*>
     <*ASSERT self.nextWaiter = NIL*>
@@ -224,7 +185,7 @@ PROCEDURE XWait (self: T; mutex: pthread_mutex_t;
     c.waiters := self;
     WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
 
-    WITH r = pthread_mutex_unlock(mutex) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
     LOOP
       IF alertable AND self.alerted THEN
         self.alerted := FALSE;
@@ -242,16 +203,18 @@ PROCEDURE XWait (self: T; mutex: pthread_mutex_t;
         WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
         self.nextWaiter := NIL;
         self.waitingOn := NIL;
-        WITH r = pthread_mutex_lock(mutex) DO <*ASSERT r=0*> END;
         WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_lock(m.mutex) DO <*ASSERT r=0*> END;
+        IF perfOn THEN PerfRunning() END;
         RAISE Alerted;
       END;
       WITH r = pthread_cond_wait(self.cond, self.mutex) DO <*ASSERT r=0*> END;
       IF self.waitingOn = NIL THEN
         <*ASSERT self.waitingOn = NIL*>
         <*ASSERT self.nextWaiter = NIL*>
-        WITH r = pthread_mutex_lock(mutex) DO <*ASSERT r=0*> END;
         WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_lock(m.mutex) DO <*ASSERT r=0*> END;
+        IF perfOn THEN PerfRunning() END;
         RETURN;
       END;
     END;
@@ -264,13 +227,7 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
     IF self = NIL THEN
       Die(ThisLine(), "AlertWait called from non-Modula-3 thread");
     END;
-    IF m.mutex = NIL THEN InitMutex(m) END;
-    TRY
-      IF perfOn THEN PerfChanged(self.id, State.waiting) END;
-      XWait(self, m.mutex, c, alertable := TRUE);
-    FINALLY
-      IF perfOn THEN PerfRunning(self.id) END;
-    END;
+    XWait(self, m, c, alertable := TRUE);
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
@@ -281,17 +238,11 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
     IF self = NIL THEN
       Die(ThisLine(), "Wait called from non-Modula-3 thread");
     END;
-    IF m.mutex = NIL THEN InitMutex(m) END;
-    TRY
-      IF perfOn THEN PerfChanged(self.id, State.waiting) END;
-      XWait(self, m.mutex, c, alertable := FALSE);
-    FINALLY
-      IF perfOn THEN PerfRunning(self.id) END;
-    END;
+    XWait(self, m, c, alertable := FALSE);
   END Wait;
 
 PROCEDURE DequeueHead(c: Condition) =
-  (* LL = c.mutex *)
+  (* LL = c *)
   VAR t := c.waiters;
   BEGIN
     WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
@@ -304,7 +255,7 @@ PROCEDURE DequeueHead(c: Condition) =
 
 PROCEDURE Signal (c: Condition) =
   BEGIN
-    IF c.mutex = NIL THEN InitCondition(c) END;
+    IF c.mutex = NIL THEN InitMutex(c) END;
     WITH r = pthread_mutex_lock(c.mutex) DO <*ASSERT r=0*> END;
     IF c.waiters # NIL THEN DequeueHead(c) END;
     WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
@@ -312,7 +263,7 @@ PROCEDURE Signal (c: Condition) =
 
 PROCEDURE Broadcast (c: Condition) =
   BEGIN
-    IF c.mutex = NIL THEN InitCondition(c) END;
+    IF c.mutex = NIL THEN InitMutex(c) END;
     WITH r = pthread_mutex_lock(c.mutex) DO <*ASSERT r=0*> END;
     WHILE c.waiters # NIL DO DequeueHead(c) END;
     WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
@@ -401,9 +352,9 @@ PROCEDURE Self (): T =
     IF allThreads = NIL THEN RETURN NIL END;
     me := pthread_getspecific_activations();
     IF me = NIL THEN RETURN NIL END;
-    WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock_slots() DO <*ASSERT r=0*> END;
       t := slots[me.slot];
-    WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock_slots() DO <*ASSERT r=0*> END;
     IF (t.act # me) THEN Die(ThisLine(), "thread with bad slot!") END;
     RETURN t;
   END Self;
@@ -412,19 +363,19 @@ PROCEDURE AssignSlot (t: T) =
   (* LL = 0, cause we allocate stuff with NEW! *)
   VAR n: CARDINAL;  new_slots: REF ARRAY OF T;
   BEGIN
-    WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock_slots() DO <*ASSERT r=0*> END;
 
       (* make sure we have room to register this guy *)
       IF (slots = NIL) THEN
-        WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_unlock_slots() DO <*ASSERT r=0*> END;
           slots := NEW (REF ARRAY OF T, 20);
-        WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_lock_slots() DO <*ASSERT r=0*> END;
       END;
       IF (n_slotted >= LAST (slots^)) THEN
         n := NUMBER (slots^);
-        WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_unlock_slots() DO <*ASSERT r=0*> END;
           new_slots := NEW (REF ARRAY OF T, n+n);
-        WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_lock_slots() DO <*ASSERT r=0*> END;
         IF (n = NUMBER (slots^)) THEN
           (* we won any races that may have occurred. *)
           SUBARRAY (new_slots^, 0, n) := slots^;
@@ -434,7 +385,7 @@ PROCEDURE AssignSlot (t: T) =
              and the new table has room for us. *)
         ELSE
           (* ouch, the new table is full too!   Bail out and retry *)
-          WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+          WITH r = pthread_mutex_unlock_slots() DO <*ASSERT r=0*> END;
           AssignSlot (t);
         END;
       END;
@@ -449,13 +400,13 @@ PROCEDURE AssignSlot (t: T) =
       t.act.slot := next_slot;
       slots [next_slot] := t;
 
-    WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock_slots() DO <*ASSERT r=0*> END;
   END AssignSlot;
 
 PROCEDURE FreeSlot (t: T) =
   (* LL = 0 *)
   BEGIN
-    WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock_slots() DO <*ASSERT r=0*> END;
 
       DEC (n_slotted);
       WITH z = slots [t.act.slot] DO
@@ -464,7 +415,7 @@ PROCEDURE FreeSlot (t: T) =
       END;
       t.act.slot := 0;
 
-    WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock_slots() DO <*ASSERT r=0*> END;
   END FreeSlot;
 
 PROCEDURE DumpThread (t: T) =
@@ -480,7 +431,6 @@ PROCEDURE DumpThread (t: T) =
     RTIO.PutText("  alerted:    "); RTIO.PutInt(ORD(t.alerted));   RTIO.PutChar('\n');
     RTIO.PutText("  completed:  "); RTIO.PutInt(ORD(t.completed)); RTIO.PutChar('\n');
     RTIO.PutText("  join:       "); RTIO.PutAddr(LOOPHOLE(t.join, ADDRESS)); RTIO.PutChar('\n');
-    RTIO.PutText("  id:         "); RTIO.PutInt(t.id);             RTIO.PutChar('\n');
     RTIO.Flush();
   END DumpThread;
 
@@ -559,9 +509,11 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
 PROCEDURE RunThread (me: Activation) =
   VAR self: T;  cl: Closure;
   BEGIN
-    WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+    IF perfOn THEN PerfChanged(State.alive) END;
+
+    WITH r = pthread_mutex_lock_slots() DO <*ASSERT r=0*> END;
       self := slots [me.slot];
-    WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock_slots() DO <*ASSERT r=0*> END;
 
     (* Let parent know we are running *)
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
@@ -571,9 +523,9 @@ PROCEDURE RunThread (me: Activation) =
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
 
     (* Run the user-level code. *)
-    IF perfOn THEN PerfRunning(self.id) END;
+    IF perfOn THEN PerfRunning() END;
     self.result := cl.apply();
-    IF perfOn THEN PerfChanged(self.id, State.dying) END;
+    IF perfOn THEN PerfChanged(State.dying) END;
 
     (* Join *)
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
@@ -581,11 +533,12 @@ PROCEDURE RunThread (me: Activation) =
     Broadcast(self.join);
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
 
-    IF perfOn THEN PerfDeleted(self.id) END;
+    IF perfOn THEN PerfChanged(State.dead) END;
 
     (* we're dying *)
     RTHeapRep.FlushThreadState(me.heapState);
 
+    IF perfOn THEN PerfDeleted() END;
     FreeSlot(self);  (* note: needs self.act ! *)
     (* Since we're no longer slotted, we cannot touch traced refs. *)
 
@@ -614,9 +567,6 @@ PROCEDURE Fork (closure: Closure): T =
 
     WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
       t.closure := closure;
-      t.id := nextId;  INC(nextId);
-      IF perfOn THEN PerfChanged(t.id, State.alive) END;
-
       act.next := allThreads;
       act.prev := allThreads.prev;
       act.size := size;
@@ -638,48 +588,19 @@ PROCEDURE Fork (closure: Closure): T =
   END Fork;
 
 PROCEDURE Join (t: T): REFANY =
-  <*FATAL Alerted*>
-  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), "Join called from non-Modula-3 thread");
+    LOCK t DO
+      WHILE NOT t.completed DO Wait(t, t.join) END;
     END;
-    TRY
-      IF perfOn THEN PerfChanged(self.id, State.waiting) END;
-      WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
-      LOOP
-        IF t.completed THEN
-          IF perfOn THEN PerfChanged(t.id, State.dead) END;
-          RETURN t.result;
-        END;
-        XWait(self, t.mutex, t.join, alertable := FALSE);
-      END;
-    FINALLY
-      WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
-      IF perfOn THEN PerfRunning(self.id) END;
-    END;
+    RETURN t.result;
   END Join;
 
 PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
-  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), "AlertJoin called from non-Modula-3 thread");
+    LOCK t DO
+      WHILE NOT t.completed DO AlertWait(t, t.join) END;
     END;
-    TRY
-      IF perfOn THEN PerfChanged(self.id, State.waiting) END;
-      WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
-      LOOP
-        IF t.completed THEN
-          IF perfOn THEN PerfChanged(t.id, State.dead) END;
-          RETURN t.result;
-        END;
-        XWait(self, t.mutex, t.join, alertable := TRUE);
-      END;
-    FINALLY
-      WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
-      IF perfOn THEN PerfRunning(self.id) END;
-    END;
+    RETURN t.result;
   END AlertJoin;
 
 (*---------------------------------------------------- Scheduling support ---*)
@@ -705,7 +626,7 @@ PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
   BEGIN
     IF n <= 0.0d0 THEN RETURN END;
     ToNTime(Time.Now() + n, until);
-
+    IF perfOn THEN PerfChanged(State.pausing) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
     <*ASSERT self.waitingOn = NIL*>
     <*ASSERT self.nextWaiter = NIL*>
@@ -714,11 +635,13 @@ PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
       IF alertable AND self.alerted THEN
         self.alerted := FALSE;
         WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
+        IF perfOn THEN PerfRunning() END;
         RAISE Alerted;
       END;
       WITH r = pthread_cond_timedwait(self.cond, self.mutex, until) DO
         IF r = Uerror.ETIMEDOUT THEN
           WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
+          IF perfOn THEN PerfRunning() END;
           RETURN;
         END;
         <*ASSERT r=0*>
@@ -733,12 +656,7 @@ PROCEDURE Pause (n: LONGREAL) =
     IF self = NIL THEN
       Die(ThisLine(), "Pause called from a non-Modula-3 thread");
     END;
-    TRY
-      IF perfOn THEN PerfChanged(self.id, State.pausing) END;
-      XPause(self, n, alertable := FALSE);
-    FINALLY
-      IF perfOn THEN PerfRunning(self.id) END;
-    END;
+    XPause(self, n, alertable := FALSE);
   END Pause;
 
 PROCEDURE AlertPause (n: LONGREAL) RAISES {Alerted} =
@@ -747,12 +665,7 @@ PROCEDURE AlertPause (n: LONGREAL) RAISES {Alerted} =
     IF self = NIL THEN
       Die(ThisLine(), "AlertPause called from a non-Modula-3 thread");
     END;
-    TRY
-      IF perfOn THEN PerfChanged(self.id, State.pausing) END;
-      XPause(self, n, alertable := TRUE);
-    FINALLY
-      IF perfOn THEN PerfRunning(self.id) END;
-    END;
+    XPause(self, n, alertable := TRUE);
   END AlertPause;
 
 PROCEDURE Yield () =
@@ -778,10 +691,10 @@ PROCEDURE IOWait (fd: CARDINAL; read: BOOLEAN;
   VAR self := Self();
   BEGIN
     TRY
-      IF perfOn THEN PerfChanged(self.id, State.blocking) END;
+      IF perfOn THEN PerfChanged(State.blocking) END;
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := FALSE);
     FINALLY
-      IF perfOn THEN PerfRunning(self.id) END;
+      IF perfOn THEN PerfRunning() END;
     END;
   END IOWait;
 
@@ -791,10 +704,10 @@ PROCEDURE IOAlertWait (fd: CARDINAL; read: BOOLEAN;
   VAR self := Self();
   BEGIN
     TRY
-      IF perfOn THEN PerfChanged(self.id, State.blocking) END;
+      IF perfOn THEN PerfChanged(State.blocking) END;
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := TRUE);
     FINALLY
-      IF perfOn THEN PerfRunning(self.id) END;
+      IF perfOn THEN PerfRunning() END;
     END;
   END IOAlertWait;
 
@@ -1321,9 +1234,12 @@ PROCEDURE SignalHandler (sig: int) =
 (*----------------------------------------------------------- misc. stuff ---*)
 
 PROCEDURE MyId (): Id RAISES {} =
-  VAR self := Self();
+  VAR me := GetActivation();
   BEGIN
-    RETURN self.id;
+    IF me = NIL
+      THEN RETURN 0
+      ELSE RETURN me.slot;
+    END;
   END MyId;
 
 PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
@@ -1357,7 +1273,9 @@ PROCEDURE Die (lineno: INTEGER; msg: TEXT) =
 
 (*------------------------------------------------------ ShowThread hooks ---*)
 
-VAR perfW : RTPerfTool.Handle;
+VAR
+  perfW : RTPerfTool.Handle;
+  perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
 
 PROCEDURE PerfStart () =
   BEGIN
@@ -1379,24 +1297,27 @@ CONST
 TYPE
   TE = ThreadEvent.Kind;
 
-PROCEDURE PerfChanged (id: Id; s: State) =
-  VAR e := ThreadEvent.T {kind := TE.Changed, id := id, state := s};
+PROCEDURE PerfChanged (s: State) =
+  VAR
+    e := ThreadEvent.T {kind := TE.Changed, id := MyId(), state := s};
   BEGIN
     WITH r = pthread_mutex_lock_perf() DO <*ASSERT r=0*> END;
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
     WITH r = pthread_mutex_unlock_perf() DO <*ASSERT r=0*> END;
   END PerfChanged;
 
-PROCEDURE PerfDeleted (id: Id) =
-  VAR e := ThreadEvent.T {kind := TE.Deleted, id := id};
+PROCEDURE PerfDeleted () =
+  VAR
+    e := ThreadEvent.T {kind := TE.Deleted, id := MyId()};
   BEGIN
     WITH r = pthread_mutex_lock_perf() DO <*ASSERT r=0*> END;
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
     WITH r = pthread_mutex_unlock_perf() DO <*ASSERT r=0*> END;
   END PerfDeleted;
 
-PROCEDURE PerfRunning (id: Id) =
-  VAR e := ThreadEvent.T {kind := TE.Running, id := id};
+PROCEDURE PerfRunning () =
+  VAR
+    e := ThreadEvent.T {kind := TE.Running, id := MyId()};
   BEGIN
     WITH r = pthread_mutex_lock_perf() DO <*ASSERT r=0*> END;
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
@@ -1419,7 +1340,6 @@ PROCEDURE Init ()=
 
     (* cm, activeMu, slotMu: initialized statically *)
     self := CreateT(me);
-    self.id := nextId;  INC(nextId);
 
     stack_grows_down := ADR(xx) > XX();
 
@@ -1427,7 +1347,7 @@ PROCEDURE Init ()=
       me.stackbase := ADR(xx);
     WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
     PerfStart();
-    IF perfOn THEN PerfRunning(self.id) END;
+    IF perfOn THEN PerfRunning() END;
     IF RTParams.IsPresent("backgroundgc") THEN
       RTCollectorSRC.StartBackgroundCollection();
     END;

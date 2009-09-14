@@ -81,11 +81,11 @@ PROCEDURE pthread_mutex_unlock_active():int;
 
 (* mutex "slot" *)
 
-<*EXTERNAL "ThreadPThread__pthread_mutex_lock_slot"*>
-PROCEDURE pthread_mutex_lock_slot():int;
+<*EXTERNAL "ThreadPThread__pthread_mutex_lock_slots"*>
+PROCEDURE pthread_mutex_lock_slots():int;
 
-<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_slot"*>
-PROCEDURE pthread_mutex_unlock_slot():int;
+<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_slots"*>
+PROCEDURE pthread_mutex_unlock_slots():int;
 
 
 (* mutex "init" *)
