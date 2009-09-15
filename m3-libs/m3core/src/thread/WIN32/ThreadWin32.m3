@@ -93,6 +93,9 @@ TYPE
     END;
 
 (*----------------------------------------------------------------- Mutex ---*)
+(* Note: {Unlock,Lock}Mutex are the routines called directly by
+   the compiler.  Acquire and Release are the routines exported through
+   the Thread interface *)
          
 PROCEDURE Acquire (m: Mutex) =
   BEGIN
@@ -107,7 +110,7 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE LockMutex (m: Mutex) =
   VAR self := Self();  wait := FALSE;  next, prev: T;
   BEGIN
-    IF self = NIL THEN Die(ThisLine(), "LockMutex called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "Acquire called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.locking) END;
 
     EnterCriticalSection_cm();
@@ -148,7 +151,7 @@ PROCEDURE LockMutex (m: Mutex) =
 PROCEDURE UnlockMutex(m: Mutex) =
   VAR self := Self();  prevCount: LONG;  next: T;
   BEGIN
-    IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "Release called from non-Modula-3 thread") END;
     EnterCriticalSection_cm();
 
       (* Make sure I'm allowed to release this mutex. *)
@@ -526,10 +529,10 @@ PROCEDURE RunThread (me: Activation): HANDLE =
       self := slots [me.slot];
     LeaveCriticalSection_slotMu();
 
-    LOCK threadMu DO
-      cl := self.closure;
+    LockMutex(threadMu);
+    cl := self.closure;
       self.id := nextId;  INC (nextId);
-    END;
+    UnlockMutex(threadMu);
 
     IF (cl = NIL) THEN
       Die (ThisLine(), "NIL closure passed to Thread.Fork!");
@@ -557,13 +560,13 @@ PROCEDURE RunThread (me: Activation): HANDLE =
       LeaveCriticalSection_slotMu();
     END;
 
-    LOCK threadMu DO
+    LockMutex(threadMu);
       (* mark "self" done and clean it up a bit *)
       self.result := res;
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
       IF perfOn THEN PerfChanged(self.id, State.dying) END;
-    END;
+    UnlockMutex(threadMu);
 
     IF perfOn THEN PerfDeleted(self.id) END;
 
@@ -668,7 +671,7 @@ PROCEDURE Fork(closure: Closure): T =
 PROCEDURE Join(t: T): REFANY =
   VAR res: REFANY;
   BEGIN
-    LOCK threadMu DO
+    LockMutex(threadMu);
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
       WHILE NOT t.completed DO Wait(threadMu, t.cond) END;
       res := t.result;
@@ -676,14 +679,15 @@ PROCEDURE Join(t: T): REFANY =
       t.joined := TRUE;
       t.cond := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
-    END;
+    UnlockMutex(threadMu);
     RETURN res;
   END Join;
 
 PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
   VAR res: REFANY;
   BEGIN
-    LOCK threadMu DO
+    LockMutex(threadMu);
+    TRY
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
       WHILE NOT t.completed DO AlertWait(threadMu, t.cond) END;
       res := t.result;
@@ -691,6 +695,8 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
       t.joined := TRUE;
       t.cond := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
+    FINALLY
+      UnlockMutex(threadMu);
     END;
     RETURN res;
   END AlertJoin;
@@ -994,7 +1000,8 @@ PROCEDURE Init() =
     self := CreateT(me);
     self.id := nextId;  INC (nextId);
 
-    heapCond := NEW(Condition);
+    mutex := NEW(MUTEX);
+    condition := NEW(Condition);
 
     me.stackbase := InitialStackBase (ADR (self));
     IF me.stackbase = NIL THEN Choke(ThisLine()); END;
@@ -1040,8 +1047,10 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
    and collector. *)
 
 VAR
-  inCritical := 0;      (* LL = cs *)
-  heapCond: Condition;
+  inCritical := 0;     (* LL = cs *)
+  do_signal := FALSE;  (* LL = cs *)
+  mutex: MUTEX;
+  condition: Condition;
 
 PROCEDURE LockHeap () =
   BEGIN
@@ -1050,38 +1059,22 @@ PROCEDURE LockHeap () =
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
+  VAR sig := FALSE;
   BEGIN
     DEC(inCritical);
+    IF (inCritical = 0) AND (do_signal) THEN sig := TRUE; do_signal := FALSE; END;
     LeaveCriticalSection_cs();
+    IF (sig) THEN Broadcast(condition); END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
-  VAR self := Self();
   BEGIN
-    EnterCriticalSection_cm();
-
-    <* ASSERT( (self.waitingOn=NIL) AND (self.nextWaiter=NIL) ) *>
-    self.waitingOn := heapCond;
-    self.nextWaiter := heapCond.waiters;
-    heapCond.waiters := self;
-    LeaveCriticalSection_cm();
-
-    DEC(inCritical);
-    <*ASSERT inCritical = 0*>
-    LeaveCriticalSection_cs();
-
-    IF WaitForSingleObject(self.waitSema, INFINITE) # 0 THEN
-      Choke(ThisLine());
-    END;
-
-    EnterCriticalSection_cs();
-    <*ASSERT inCritical = 0*>
-    INC(inCritical);
+    LOCK mutex DO Wait(mutex, condition); END;
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
   BEGIN
-    Broadcast(heapCond);
+    do_signal := TRUE;
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
