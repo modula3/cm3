@@ -76,6 +76,11 @@ PROCEDURE LeaveCriticalSection_cs();
 <*EXTERNAL ThreadWin32__InitC*>
 PROCEDURE InitC();
 
-(*---------------------------------------------------------------------------*)
+(*----------------------------------------------------- for SchedulerPosix --*)
+
+PROCEDURE PerfChanged (id: Id; s: State);
+PROCEDURE PerfRunning (id: Id);
+PROCEDURE XTestAlert (self: T): BOOLEAN;
+VAR perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
 
 END ThreadWin32.

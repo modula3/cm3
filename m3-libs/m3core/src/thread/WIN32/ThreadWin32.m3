@@ -1111,12 +1111,5 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
     GetActivation().frame := frame;
   END PopEFrame;
 
-(*----------------------------------------------------- for SchedulerPosix --*)
-
-PROCEDURE PerfChanged (id: Id; s: State);
-PROCEDURE PerfRunning (id: Id);
-PROCEDURE XTestAlert (self: T): BOOLEAN;
-VAR perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
-
 BEGIN
 END ThreadWin32.
