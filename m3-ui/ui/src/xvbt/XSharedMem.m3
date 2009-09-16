@@ -7,9 +7,9 @@
 
 UNSAFE MODULE XSharedMem;
 
-IMPORT Completion, Compl, ComplSeq, Ctypes, Picture, PictureRep, IP, M3toC,
-       Point, Rect, Text, TrestleComm, VBT, X, XClient, XClientExt,
-       XClientF, XPicture, TrestleOnX, XScreenType, XShm, Unix, Unetdb;
+IMPORT Completion, Compl, ComplSeq, Ctypes, Picture, PictureRep,
+       Point, Rect, TrestleComm, VBT, X, XClient, XClientExt,
+       XClientF, XPicture, TrestleOnX, XScreenType, XShm;
 
 (* New() exported by XSharedFree *)
 
@@ -26,7 +26,7 @@ REVEAL
 PROCEDURE InitXClient (v: XClient.T) RAISES {TrestleComm.Failure} =
   BEGIN
     TRY
-      IF SameHost(v) AND XShm.QueryExtension(v.dpy) = X.True THEN
+      IF XShm.QueryExtension(v.dpy) = X.True THEN
         v.shmEventBase := XShm.GetEventBase(v.dpy);
         v.wf := NEW(WaitFor, seq := NEW(ComplSeq.T).init(),
                     timeout := FALSE, timelimit := -1);
@@ -79,60 +79,6 @@ PROCEDURE MakeCompletion (<*UNUSED*> im: T): Completion.T =
   BEGIN
     RETURN Completion.New();
   END MakeCompletion;
-
-(* }}} *)
-(* {{{ -- host name stuff -- *)
-
-(* This is a clone of IP.GetHostAddr that returns
-   TRUE if IP.GetHostAddr is likely to succeed and
-   FALSE if IP.GetHostAddr is likely to fail. *)
-VAR mu := NEW(MUTEX);
-
-PROCEDURE PredictIPGetHostAddrSuccess(): BOOLEAN =
-  VAR hname: ARRAY [0..255] OF CHAR;
-      hostent: Unetdb.struct_hostent;
-  BEGIN
-    LOCK mu DO
-      RETURN (Unix.gethostname(ADR(hname[0]), BYTESIZE(hname)) = 0)
-        AND (Unetdb.gethostbyname(ADR(hname[0]), ADR(hostent)) # NIL);
-    END;
-  END PredictIPGetHostAddrSuccess;
-
-(* return TRUE if server and client are on same host *)
-PROCEDURE SameHost (trsl: XClient.T): BOOLEAN =
-  VAR
-    display                 := DisplayHost(trsl);
-    displayAddr: IP.Address;
-
-  BEGIN
-    IF display = NIL THEN RETURN TRUE; END;
-
-    TRY
-      IF NOT IP.GetHostByName(display, displayAddr) THEN RETURN FALSE; END;
-
-      (* IP.GetHostAddr can return a fatal exception; try to avoid that
-         by predicting its success. *)
-      IF NOT PredictIPGetHostAddrSuccess() THEN
-        RETURN FALSE;
-      END;
-
-      RETURN displayAddr = IP.GetHostAddr();
-    EXCEPT
-    | IP.Error => RETURN FALSE;
-    END;
-  END SameHost;
-
-PROCEDURE DisplayHost (trsl: XClient.T): TEXT =
-  (* return NIL if host is local *)
-  VAR display := M3toC.CopyStoT(X.XDisplayString(trsl.dpy));
-  BEGIN
-    WITH ix = Text.FindChar(display, ':') DO
-      IF ix <= 0 THEN RETURN NIL; END;
-      display := Text.Sub(display, 0, ix);
-    END;
-    IF Text.Equal(display, "local") THEN display := NIL; END;
-    RETURN display;
-  END DisplayHost;
 
 (* }}} *)
 (* {{{ -- WaitFor -- *)
