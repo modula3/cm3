@@ -442,7 +442,9 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
       IF (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj)) THEN
         np := AllocCopy(dataSize, def.dataAlignment, pureCopy);
         IF (np = NIL) THEN
-          RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
+          (* promote as if large so we can bail out gracefully *)
+          PromotePage(page, PromoteReason.LargePure);
+          RETURN;
         END;
         WITH nh = HeaderOf(np) DO
           RTMisc.Copy(hdr, nh, BYTESIZE(Header) + dataSize);
@@ -452,7 +454,9 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
       ELSE
         np := AllocCopy(dataSize, def.dataAlignment, impureCopy);
         IF (np = NIL) THEN
-          RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
+          (* promote as if large so we can bail out gracefully *)
+          PromotePage(page, PromoteReason.LargeImpure);
+          RETURN;
         END;
         WITH nh = HeaderOf(np) DO
           RTMisc.Copy(hdr, nh, BYTESIZE(Header) + dataSize);
