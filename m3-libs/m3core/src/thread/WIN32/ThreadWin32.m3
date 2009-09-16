@@ -1069,7 +1069,15 @@ PROCEDURE UnlockHeap () =
 
 PROCEDURE WaitHeap () =
   BEGIN
-    LOCK mutex DO Wait(mutex, condition); END;
+    LOCK mutex DO
+      DEC(inCritical);
+      <*ASSERT inCritical = 0*>
+      LeaveCriticalSection_cs();
+      Wait(mutex, condition);
+      EnterCriticalSection_cs();
+      <*ASSERT inCritical = 0*>
+      INC(inCritical);
+    END;
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
