@@ -16,7 +16,7 @@ UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
 
 IMPORT RT0, RTHeapEvent, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
-IMPORT Word, Thread, ThreadInternal, RuntimeError;
+IMPORT Word, Thread, ThreadInternal;
 IMPORT TextLiteral AS TextLit, RTLinker, Time;
 
 FROM RT0 IMPORT Typecode, TypeDefn;
