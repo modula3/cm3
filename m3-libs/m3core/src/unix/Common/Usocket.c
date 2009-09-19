@@ -17,8 +17,6 @@ if it is unsigned or signed, or 32 bits or 64 bits */
 #define ASSERT_LEN \
     assert((len >= 0) && (len < (1 << 30)));
 
-/* multi-part experiment */
-
 /* 1: wrap everything */
 
 int Usocket__listen(int s, int backlog)
@@ -58,7 +56,25 @@ int Usocket__sendto(int s, void* msg, size_t length, int flags, sockaddr_t* dest
 
 int Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len)
 {
+#ifdef __CYGWIN__
+    struct linger b;
+    struct { int onoff, linger; }* a;
+#endif
+
     ASSERT_LEN
+
+#ifdef __CYGWIN__
+    if (optname == SO_LINGER && optval != NULL && len == sizeof(*a))
+    {
+        a = optval;
+        optval = &b;
+        ZeroMemory(&b, sizeof(b));
+        len = sizeof(b);
+        b.l_onoff= a->onoff;
+        b.l_linger = a->linger;
+    }
+#endif
+
     return setsockopt(s, level, optname, optval, len);
 }
 
@@ -98,12 +114,43 @@ int Usocket__accept(int s, sockaddr_t* addr, m3_socklen_t* plen)
 }
 
 int Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen)
+/*
+Posix says l_onoff and l_linger are int, but they aren't on Cygwin.
+As usual Posix does not mandate the order of the fields or that there aren't
+all fields, but all known implementations have no additional fields and use
+the same order. This is checked in UnixC.c in Unix__Assertions.
+*/
 {
     ASSERT_PLEN
     {
+        int r;
         socklen_t len = plen ? *plen : 0;
-        int r = getsockopt(s, level, optname, optval, plen ? &len : 0);
+
+#ifdef __CYGWIN__
+        struct { int onoff, linger; }* a = { 0 };
+        struct linger b;
+
+        if (optname == SO_LINGER && optval != NULL && len == sizeof(*a))
+        {
+            a = optval;
+            optval = &b;
+            ZeroMemory(&b, sizeof(b));
+            len = sizeof(b);
+        }
+#endif
+
+        r = getsockopt(s, level, optname, optval, plen ? &len : 0);
         if (plen) *plen = len;
+
+#ifdef __CYGWIN__
+        if (a)
+        {
+            assert(len == sizeof(b));
+            *plen = sizeof(*a);
+            a->onoff = b.l_onoff;
+            a->linger = b.l_linger;
+        }
+#endif
         return r;
     }
 }

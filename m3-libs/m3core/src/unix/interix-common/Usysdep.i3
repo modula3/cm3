@@ -13,13 +13,6 @@ CONST
   MAX_FDSET = 1024; (* header says 4096 but that doesn't work and 1024 does *)
 
 TYPE
-(* INTERFACE Usocket; *)
-
-  struct_linger = RECORD
-    l_onoff: int;
-    l_linger: int;
-  END;
-
 (* INTERFACE Utime; *)
 
   struct_timeval = RECORD
