@@ -63,12 +63,26 @@ void Unix__Assertions(void)
 
 #endif
 
+#if !defined(__CYGWIN__) && !defined(_WIN32)
+/* Verify assumptions in Usocket.c */
+{
+    struct { int onoff, linger; }* a = 0;
+    struct linger* b = 0;
+    assert(sizeof(*a) == sizeof(*b));
+    assert(sizeof(a->onoff) == sizeof(b->l_onoff));
+    assert(sizeof(a->linger) == sizeof(b->l_linger));
+    assert(&a->onoff == &b->l_onoff);
+    assert(&a->linger == &b->l_linger);
+}
+#endif
+
     assert(CHAR_BIT == 8);
     assert(sizeof(short) == 2);
     assert(sizeof(int) == 4);
     assert((sizeof(long) == 4) || (sizeof(long) == 8));
     assert((sizeof(void*) == 4) || (sizeof(void*) == 8));
     assert((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
+    assert(sizeof(ptrdiff_t) == sizeof(size_t));
     assert(sizeof(void*) == sizeof(size_t));
 #ifndef _WIN64
     assert(sizeof(void*) == sizeof(long));
