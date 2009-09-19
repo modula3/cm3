@@ -8,34 +8,6 @@
 
 
 readonly _DateImpls = {
-  "AMD64_DARWIN": "DateBsd",
-  "AMD64_FREEBSD": "DateBsd",
-  "AMD64_OPENBSD": "DateBsd",
-  "AMD64_NETBSD": "DateBsd",
-  "AMD64_LINUX": "DateBsd",
-  "ARM_DARWIN" : "DateBsd",
-  "FreeBSD4"   : "DateBsd",
-  "I386_INTERIX" : "DatePosix",
-  "LINUXLIBC6" : "DateBsd",
-  "NT386"      : "DatePosix",
-  "NT386GNU"   : "DatePosix",
-  "SOLgnu"     : "DatePosix",
-  "SOLsun"     : "DatePosix",
-  "SPARC32_LINUX" : "DateBsd",
-  "SPARC64_LINUX" : "DateBsd",
-  "SPARC64_SOLARIS" : "DatePosix",
-  "I386_DARWIN": "DateBsd",
-  "PPC_DARWIN" : "DateBsd",
-  "PPC_LINUX"  : "DateBsd",
-  "NetBSD2_i386"  : "DateBsd",
-
-  "I386_OPENBSD" : "DateBsd",
-  "MIPS64_OPENBSD" : "DateBsd",
-  "SPARC64_OPENBSD" : "DateBsd",
-  "PPC32_OPENBSD" : "DateBsd",
-  "PA32_HPUX" : "DatePosix",
-  "PA64_HPUX" : "DatePosix",
-
   "CYGWIN"  : "DatePosix",
   "DARWIN"  : "DateBsd",
   "FREEBSD" : "DateBsd",
@@ -48,14 +20,5 @@ readonly _DateImpls = {
   "SOLARIS" : "DatePosix",
 }
 
-if defined("TARGET_OS")
-  implementation (_DateImpls {TARGET_OS})
-else
-if _DateImpls contains TARGET
-  implementation (_DateImpls {TARGET})
-else
-  error (format ("time/POSIX: unsupported platform: \"%s\"%s", TARGET, CR))
-end
-end
-
+implementation (_DateImpls {TARGET_OS})
 Module("TimePosix")

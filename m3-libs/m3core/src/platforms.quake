@@ -1,0 +1,36 @@
+_TARGET_OS = {
+  "AMD64_DARWIN"  : "DARWIN",
+  "AMD64_FREEBSD" : "FREEBSD",
+  "AMD64_LINUX"   : "LINUX",
+  "AMD64_NETBSD"  : "NETBSD",
+  "AMD64_OPENBSD" : "OPENBSD",
+  "ARM_DARWIN"    : "DARWIN",
+  "FreeBSD4"      : "FREEBSD",
+  "I386_DARWIN"   : "DARWIN",
+  "I386_INTERIX"  : "INTERIX",
+  "I386_OPENBSD"  : "OPENBSD",
+  "LINUXLIBC6"    : "LINUX",
+  "MIPS64_OPENBSD" : "OPENBSD",
+  "NetBSD2_i386"  : "NETBSD",
+  "NT386"         : "NT",
+  "NT386GNU"      : "CYGWIN",
+  "PA32_HPUX"     : "HPUX",
+  "PA64_HPUX"     : "HPUX",
+  "PPC_DARWIN"    : "DARWIN",
+  "PPC_LINUX"     : "LINUX",
+  "PPC32_OPENBSD" : "OPENBSD",
+  "SOLgnu"        : "SOLARIS",
+  "SOLsun"        : "SOLARIS",
+  "SPARC32_LINUX" : "LINUX",
+  "SPARC64_LINUX" : "LINUX",
+  "SPARC64_OPENBSD" : "OPENBSD",
+  "SPARC64_SOLARIS" : "SOLARIS",
+}{TARGET}
+
+if defined("TARGET_OS")
+  if not equal(TARGET_OS, _TARGET_OS)
+    error("TARGET_OS and _TARGET_OS should be equal but they are " & TARGET_OS & " and " & _TARGET_OS)
+  end
+else
+  TARGET_OS = _TARGET_OS
+end
