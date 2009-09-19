@@ -4,7 +4,6 @@
 
 INTERFACE Usysdep;
 
-FROM Cstdint IMPORT int32_t;
 FROM Ctypes IMPORT int;
 
 CONST
@@ -14,13 +13,6 @@ CONST
     MAX_FDSET = 1024;
 
 TYPE
-(* INTERFACE Usocket; *)
-
-    struct_linger = RECORD
-        l_onoff: int32_t;
-        l_linger: int32_t;
-    END;
-
 (* INTERFACE Utime; *)
 
     struct_timeval = RECORD

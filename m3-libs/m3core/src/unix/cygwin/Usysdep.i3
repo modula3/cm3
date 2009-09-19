@@ -8,7 +8,7 @@ INTERFACE Usysdep;
 
 IMPORT Ctypes;
 FROM Ctypes IMPORT int, const_char_star, char_star_star, char, unsigned_int;
-FROM Cstdint IMPORT uint8_t, uint16_t, uint32_t, int32_t;
+FROM Cstdint IMPORT uint8_t, uint32_t, int32_t;
 
 (* This is the only system that uses this. *)
 (* CONST *)
@@ -22,13 +22,6 @@ CONST
   MAX_FDSET = 1024;
 
 TYPE
-(* INTERFACE Usocket; *)
-
-  struct_linger = RECORD
-    l_onoff: uint16_t;
-    l_linger: uint16_t;
-  END;
-
 (* INTERFACE Utime; *)
 
 TYPE

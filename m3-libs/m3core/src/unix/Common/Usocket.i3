@@ -7,7 +7,7 @@ INTERFACE Usocket;
 FROM Ctypes IMPORT int, void_star, const_void_star, const_char_star, char_star;
 FROM Cstddef IMPORT size_t;
 FROM Uin IMPORT struct_sockaddr_in;
-IMPORT Usysdep, Utypes, Uin;
+IMPORT Utypes, Uin;
 
 (* CONST *)
 
@@ -118,9 +118,17 @@ IMPORT Usysdep, Utypes, Uin;
 
 TYPE
   struct_sockaddr_un = Uin.struct_sockaddr_un;
-  struct_linger = Usysdep.struct_linger;
   socklen_t = Utypes.socklen_t;
   socklen_t_star = UNTRACED REF socklen_t;
+
+(* Structure used for manipulating linger option.
+   This is the same on all platforms, except Cygwin (and NT).
+   We use a copying wrapper for Cygwin.
+ *)
+  struct_linger = RECORD
+    l_onoff: int;		(* option on/off *)
+    l_linger: int;		(* linger time *)
+  END;
 
 <*EXTERNAL "Usocket__accept"*>
 PROCEDURE accept(s: int; addr: UNTRACED REF struct_sockaddr_in; addrlen: socklen_t_star) : int RAISES {};
