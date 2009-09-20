@@ -2,7 +2,7 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-<*EXTERNAL*> INTERFACE Uexec;
+INTERFACE Uexec;
 
 FROM Ctypes IMPORT int, const_char_star, char_star_star;
 FROM Utypes IMPORT pid_t;

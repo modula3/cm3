@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-<*EXTERNAL*> INTERFACE UtimeInternal;
+INTERFACE UtimeInternal;
 
 IMPORT UTtime;
 FROM Utime IMPORT time_t;
