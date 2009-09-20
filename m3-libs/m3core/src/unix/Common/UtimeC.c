@@ -61,7 +61,8 @@ m3_time_t Utime__get_altzone(void)
 #ifdef __sun
     return altzone;
 #else
-    return Utime__get_timezone(); /* ? */
+    /* based on Python's timemodule */
+    return Utime__get_timezone() - 3600;
 #endif
 }
 
