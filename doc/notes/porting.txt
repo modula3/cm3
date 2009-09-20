@@ -41,23 +41,25 @@ including the Modula-3 compiler itself.
 fairly full featured machine, including a C compiler, Python interpreter, make.
 We can target smaller "embedded" systems (phones), but that is not covered here.
 
+
  -- section high level --
 
 At a high level, what we will do is:
- - add support to your native cm3 for targeting the new system (Target.m3)
+ - add support to your native cm3 for targeting the new system (m3-sys/m3middle/src/Target.m3)
  - rebuild cm3 (scripts/python/upgrade.py)
  - build a cm3cg that targets the new system (cd m3-sys/m3cc; cm3 -DM3CC_TARGET=NEWTARGET)
- - add support to m3core and libm3 to the new system
+ - add support to m3core and libm3 for the new system
  - do a build of m3core, libm3, and the pieces that make up cm3, BUT stopping
    at the output of assembly -- not running the assembler and linker
    (scripts/python/boot1.py NEWTARGET)
  - package up (tar/gzip) the assembly files, as well as some .c files
    (done by boot1.py, sitting in the current working directory)
- - copy that to the target system (e.g.: scp)
+ - copy that to the target system (scp or ftp)
  - unpackage (untar/gzip)
  - make
  - giving us cm3
  - use that cm3 to then build the entire system on the new target
+
 
  -- section lots of requirements and steps --
 
@@ -135,7 +137,7 @@ At a high level, what we will do is:
    it from source -- or at least cm3 and cm3cg, such as:
      scripts/python/do-cm3-std.py realclean
      scripts/python/upgrade.py
-     scripts/python/do-cm3-std.py realclean
+     scripts/python/do-cm3-std.py realclean skipgcc
      scripts/python/do-cm3-std.py buildship
 
 
