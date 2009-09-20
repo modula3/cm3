@@ -236,7 +236,7 @@ At a high level, what we will do is:
  - Login to the new target.
 
  - gzip -cd cm3-boot-NEWTARGET-1.tar.gz | tar xf -
-   cd cm3-boot-NEWTARGET-1.tar.gz
+   cd cm3-boot-NEWTARGET-1
    make
    # or if you don't have make, try ./make.sh
 
