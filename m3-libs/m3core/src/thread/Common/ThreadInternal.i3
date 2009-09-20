@@ -31,7 +31,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS));
 (* Feature:  Windows threads not created by Thread.Fork are not suspended
     or resumed, and their stacks are not processed. *)
 
-PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS));
+(*PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS));*)
 (* Apply p to each thread stack, with [start..stop) being the limits
    of the stack.  Each thread is suspended individually.  ProcessEachStack
    exists solely for the garbage collector.  *)
@@ -40,7 +40,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS));
 
 (* access to the saved floating point state for the current thread. *)
 
-PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState;
+(*PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState;*)
 
 (*---------------------------------------------------- exception delivery ---*)
 
