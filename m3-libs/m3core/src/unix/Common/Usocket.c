@@ -136,7 +136,7 @@ int Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_
 Posix says l_onoff and l_linger are int, but they aren't on Cygwin.
 As usual Posix does not mandate the order of the fields or that there aren't
 all fields, but all known implementations have no additional fields and use
-the same order. This is checked in UnixC.c in Unix__Assertions.
+the same order. This is checked in Usocket__Assertions.
 */
 {
     ASSERT_PLEN
