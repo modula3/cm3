@@ -279,7 +279,7 @@ write_pkg_report() {
       echo "  <td class=\"tl\">build failed</td>"
     fi
     echo "  <td class=\"small\"><pre>"
-    if FOLD="`find_exe fold /usr/bin`/fold" ; then
+    if FOLD="`find_exe fold /usr/bin`/fold"; then
       quote_xml "`echo "$errlines" | ${FOLD} -s -w 64`"
     else
       quote_xml "$errlines"
@@ -377,7 +377,7 @@ End
 
 make_date
 
-for PKG in ${PKGS} ; do
+for PKG in ${PKGS}; do
   echo "=== package ${PKG} ==="
   tres="not supported on ${TARGET}"
   terr=""
