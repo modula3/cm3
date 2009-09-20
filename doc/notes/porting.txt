@@ -12,7 +12,7 @@ Our portability rests on some large pillars:
   Posix-compliance of target, including pthreads.
     Plus NT/Win32 targets are supported (so far just NT/x86)
     If pthreads aren't supported (djgpp), there is a good chance for an alternative, with a little more work.
-  gcc backend support for the target
+  gcc support for the target
 
 
 In the past, a large tedious error-prone part of porting was "rewriting /usr/include in Modula-3".
