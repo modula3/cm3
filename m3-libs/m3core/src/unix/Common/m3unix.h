@@ -286,7 +286,6 @@ m3_time_t Utime__mktime(tm_t* tm);
 char* Utime__ctime(const m3_time_t* m);
 tm_t* Utime__localtime(const m3_time_t* m);
 tm_t* Utime__gmtime(const m3_time_t* m);
-char* Utime__ctime_r(const m3_time_t* m, char* buffer);
 tm_t* Utime__localtime_r(const m3_time_t* clock, tm_t* result);
 tm_t* Utime__gmtime_r(const m3_time_t* clock, tm_t* result);
 int Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old);
