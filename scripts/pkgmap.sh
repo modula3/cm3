@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42.2.16 2009-09-20 04:24:29 jkrell Exp $
+# $Id: pkgmap.sh,v 1.42.2.17 2009-09-20 04:27:58 jkrell Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ]; then
@@ -369,7 +369,7 @@ End
     if [ type $cc >/dev/null 2>&1 ]; then
       $cc date.c -o m3date
       if [ -x m3date ]; then
-          return
+        return
       fi
     fi
   end
