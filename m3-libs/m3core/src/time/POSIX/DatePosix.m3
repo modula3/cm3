@@ -14,6 +14,12 @@ REVEAL TimeZone = BRANDED "Date.TimeZone" REF INTEGER;
 
 CONST Unknown = "[Unknown zone]";
 
+VAR mu := NEW(Thread.Mutex);
+(* There is some data that it is not clear how to manage.
+   Specifically struct tm's timezone (not used here) and the global timezone and tzname variables,
+   therefore serialize their use. It is not clear if the _r functions are actually reentrant,
+   even though that is their whole point. *)
+
 PROCEDURE FromTime(t: Time.T; z: TimeZone := NIL): T =
   VAR
     date : T;
@@ -21,28 +27,31 @@ PROCEDURE FromTime(t: Time.T; z: TimeZone := NIL): T =
     tm   : Utime.struct_tm;
   BEGIN
     tv := TimePosix.ToUtime(t);
-    IF (z = NIL) OR (z^ = 0)
-      THEN EVAL Utime.localtime_r (tv.tv_sec, ADR (tm));
-      ELSE EVAL Utime.gmtime_r (tv.tv_sec, ADR(tm));
-    END;
 
-    date.year    := tm.tm_year + 1900;
-    date.month   := VAL(tm.tm_mon, Month);
-    date.day     := tm.tm_mday;
-    date.hour    := tm.tm_hour;
-    date.minute  := tm.tm_min;
-    date.second  := tm.tm_sec;
-    date.weekDay := VAL(tm.tm_wday, WeekDay);
+    LOCK mu DO
+      IF (z = NIL) OR (z^ = 0)
+        THEN EVAL Utime.localtime_r (tv.tv_sec, ADR (tm));
+        ELSE EVAL Utime.gmtime_r (tv.tv_sec, ADR(tm));
+      END;
 
-    IF tm.tm_isdst = 0 THEN
-      date.offset := Utime.get_timezone();
-      date.zone   := M3toC.CopyStoT (Utime.get_tzname(0));
-    ELSIF tm.tm_isdst > 0 AND Utime.get_daylight() # 0 THEN
-      date.offset := Utime.get_altzone();
-      date.zone   := M3toC.CopyStoT (Utime.get_tzname(1));
-    ELSE
-      date.offset := 0;
-      date.zone   := Unknown;
+      date.year    := tm.tm_year + 1900;
+      date.month   := VAL(tm.tm_mon, Month);
+      date.day     := tm.tm_mday;
+      date.hour    := tm.tm_hour;
+      date.minute  := tm.tm_min;
+      date.second  := tm.tm_sec;
+      date.weekDay := VAL(tm.tm_wday, WeekDay);
+
+      IF tm.tm_isdst = 0 THEN
+        date.offset := Utime.get_timezone();
+        date.zone   := M3toC.CopyStoT (Utime.get_tzname(0));
+      ELSIF tm.tm_isdst > 0 AND Utime.get_daylight() # 0 THEN
+        date.offset := Utime.get_altzone();
+        date.zone   := M3toC.CopyStoT (Utime.get_tzname(1));
+      ELSE
+        date.offset := 0;
+        date.zone   := Unknown;
+      END;
     END;
 
     RETURN date;
