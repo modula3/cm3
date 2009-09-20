@@ -64,7 +64,7 @@ T FromUtime(ANSI(const timeval_t*) tv)
     return ((T)tv->tv_sec) + ((T)tv->tv_usec) / (T)M;
 }
 
-static T ComputeGrainOnce()
+static T ComputeGrainOnce(ANSI(void))
 {
   /* Determine value of "Grain" experimentally.  Note that
      this will fail if this thread is descheduled for a tick during the
@@ -78,7 +78,7 @@ static T ComputeGrainOnce()
     }
 }
 
-T ComputeGrain()
+T ComputeGrain(ANSI(void))
 {
 /* I have seen the value vary so let's go for a
 few times in a row instead of just one or two.
