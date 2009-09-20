@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-<*EXTERNAL*> INTERFACE Uugid;
+INTERFACE Uugid;
 
 FROM Utypes IMPORT gid_t, uid_t;
 FROM Ctypes IMPORT int;

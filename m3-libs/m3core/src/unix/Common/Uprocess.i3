@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-<*EXTERNAL*> INTERFACE Uprocess;
+INTERFACE Uprocess;
 
 FROM Ctypes IMPORT int;
 

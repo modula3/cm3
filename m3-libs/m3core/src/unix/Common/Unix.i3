@@ -2,7 +2,7 @@
 (* All rights reserved.                                               *)
 (* See the file COPYRIGHT for a full description.                     *)
 
-<*EXTERNAL*> INTERFACE Unix;
+INTERFACE Unix;
 
 FROM Cstddef IMPORT size_t;
 FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
