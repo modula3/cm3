@@ -4,60 +4,10 @@
 
 include_dir ("Common")
 
-% NOTE: cm3 should TARGET_ENDIAN
-% And all the target-dependent pieces should be closer together.
+include_dir({ "LITTLE":"little-endian", "BIG":"big-endian"}{TARGET_ENDIAN})
 
-readonly _CSupportPieces = {
-  "AMD64_DARWIN": [ "little-endian" ],
-  "AMD64_FREEBSD": [ "little-endian" ],
-  "AMD64_LINUX": [ "little-endian" ],
-  "AMD64_NETBSD": [ "little-endian" ],
-  "AMD64_OPENBSD": [ "little-endian" ],
-  "ARM_DARWIN": [ "little-endian" ],
-  "FreeBSD4"   : [ "little-endian" ],
-  "I386_DARWIN": [ "little-endian" ],
-  "I386_INTERIX": [ "little-endian" ],
-  "I386_OPENBSD": [ "little-endian" ],
-  "LINUXLIBC6" : [ "little-endian" ],
-  "MIPS32_IRIX" : [ "big-endian" ],
-  "MIPS64_IRIX" : [ "big-endian" ],
-  "MIPS64_OPENBSD" : [ "big-endian" ],
-  "NetBSD2_i386" : [ "little-endian" ],
-  "NT386"      : [ "little-endian" ],
-  "NT386GNU"   : [ "little-endian" ],
-  "PA32_HPUX"  : [ "big-endian" ],
-  "PA64_HPUX"  : [ "big-endian" ],
-  "PPC_DARWIN" : [ "big-endian" ],
-  "PPC_LINUX"  : [ "big-endian" ],
-  "PPC32_OPENBSD"  : [ "big-endian" ],
-  "SOLgnu"     : [ "big-endian" ],
-  "SOLsun"     : [ "big-endian" ],
-  "SPARC32_LINUX": [ "big-endian" ],
-  "SPARC64_LINUX": [ "big-endian" ],
-  "SPARC64_OPENBSD": [ "big-endian" ],
-  "SPARC64_SOLARIS": [ "big-endian" ],
-}
-
-if defined ("TARGET_ENDIAN")
-  if equal (TARGET_ENDIAN, "BIG")
-    include_dir ("big-endian")
-  else
-    include_dir ("little-endian")
-  end
-  if FileExists (path() & "/" & TARGET & "/m3makefile")
-    include_dir (TARGET)
-  end
-else
-
-if _CSupportPieces contains TARGET
-  local pieces = _CSupportPieces {TARGET}
-  foreach f in pieces
-    include_dir (f)
-  end
-else
-  error (format ("csupport: unsupported platform: \"%s\"%s", TARGET, CR))
-end
-
+if FileExists (path() & "/" & TARGET & "/m3makefile")
+  include_dir (TARGET)
 end
 
 include_dir ("libgcc")
