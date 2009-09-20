@@ -2,16 +2,16 @@
 # $Id$
 
 #set -x
-if [ -n "$ROOT" -a -d "$ROOT" ] ; then
+if [ -n "$ROOT" -a -d "$ROOT" ]; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
   root="${ROOT}"; export root
 else
   root=`pwd`
-  while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do
+  while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ]; do
     root=`dirname $root`
   done
   sysinfo="$root/scripts/sysinfo.sh"
-  if [ ! -f "$sysinfo" ] ; then
+  if [ ! -f "$sysinfo" ]; then
     echo "scripts/sysinfo.sh not found" 1>&2
     exit 1
   fi
@@ -50,19 +50,19 @@ exec_cmd() {
 
 PKGS=""
 RARGS=""
-while [ -n "$1" ] ; do
+while [ -n "$1" ]; do
   case "$1" in
     -*)
-      if [ x-k = x"$1" ] ; then
+      if [ x-k = x"$1" ]; then
         KEEP_GOING="yes"
-      elif [ x-n = x"$1" ] ; then
+      elif [ x-n = x"$1" ]; then
         NO_ACTION="yes"
-      elif [ x-report = x"$1" ] ; then
+      elif [ x-report = x"$1" ]; then
         REPORT="yes"
-      elif [ x-l = x"$1" ] ; then
+      elif [ x-l = x"$1" ]; then
         LIST_ONLY="yes"
-      elif [ x-c = x"$1" ] ; then
-        if [ -z "${PKG_ACTION}" ] ; then
+      elif [ x-c = x"$1" ]; then
+        if [ -z "${PKG_ACTION}" ]; then
           PKG_ACTION="$2"
         else
           PKG_ACTION="${PKG_ACTION}; $2"
@@ -75,15 +75,15 @@ while [ -n "$1" ] ; do
       shift
     ;;
     *)
-      if [ -d "$ROOT/$1" ] ; then
+      if [ -d "$ROOT/$1" ]; then
         PKGS="${PKGS} $ROOT/$1"
-      elif [ -d "$1" ] ; then
+      elif [ -d "$1" ]; then
         PKGS="${PKGS} $1"
       else
         p=`pkgpath $1`
-        if [ -d "$p" ] ; then
+        if [ -d "$p" ]; then
           PKGS="${PKGS} $p"
-        elif [ -n "$p" -a -d "$ROOT/$p" ] ; then
+        elif [ -n "$p" -a -d "$ROOT/$p" ]; then
           PKGS="${PKGS} $ROOT/$p"
         else
           echo " *** cannot find package $1 / $p" 1>&2
@@ -113,17 +113,17 @@ if [ -n "${REPORT}" ]; then
   YELLOWPKGS=""
 fi
 
-if [ -z "$PKG_ACTION" ] ; then
+if [ -z "$PKG_ACTION" ]; then
   echo "no PKG_ACTION defined, aborting" 1>&2
   exit 1
 fi
 
-if [ -z "${PKGS}" ] ; then
+if [ -z "${PKGS}" ]; then
   echo "no packages" 1>&2
   exit 1
 fi
 
-if [ "yes" = "$LIST_ONLY" ] ; then
+if [ "yes" = "$LIST_ONLY" ]; then
   listpkgs ${PKGS}
   exit 0
 fi
@@ -238,10 +238,10 @@ write_pkg_report() {
   # evaluate package build status
   pname=`echo $1 | sed -e 's;/;-;g'`
   errlines=`egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/${TARGET}/stdout.log"`
-  if [ "$2" = "0" ] ; then
+  if [ "$2" = "0" ]; then
     echo "<tr class=\"bggreen\">" >> "${R}"
     bgt="bggreen"
-  elif [ "$2" = "2" ] ; then
+  elif [ "$2" = "2" ]; then
     echo "<tr class=\"bgyellow\">" >> "${R}"
     bgt="bgyellow"
   else
@@ -271,9 +271,9 @@ write_pkg_report() {
   # write table fields for build and test part
   (
     echo "  <td class=\"tl\">$1</td>"
-    if [ "$2" = "0" ] ; then
+    if [ "$2" = "0" ]; then
       echo "  <td class=\"tl\">build OK</td>"
-    elif [ "$2" = "2" ] ; then
+    elif [ "$2" = "2" ]; then
       echo "  <td class=\"tl\">not supported on ${TARGET}</td>"
     else
       echo "  <td class=\"tl\">build failed</td>"
@@ -298,9 +298,9 @@ write_pkg_report() {
   ) >> "${R}"
   (
     echo "  <testcase name=\"$1\" time=\"$5\">"
-    if [ "$2" = "0" ] ; then
+    if [ "$2" = "0" ]; then
       echo "  build OK"
-    elif [ "$2" = "2" ] ; then
+    elif [ "$2" = "2" ]; then
       echo "  not supported on ${TARGET} (skipped)"
       echo "  <skipped type=\"NEX\" message=\"not supported on ${TARGET}\"/>"
     else
@@ -383,7 +383,7 @@ for PKG in ${PKGS} ; do
   terr=""
   mkdir -p "${PKG}/${TARGET}"
   STDOUTLOG="${PKG}/${TARGET}/stdout.log"
-  if [ "${REPORT}" = "yes" ] ; then
+  if [ "${REPORT}" = "yes" ]; then
     rm -f "${STDOUTLOG}"
     if UsePackage `basename "${PKG}"` || [ "${CM3_ALL}" = yes ]; then
       pstart=`./m3date +%s`
@@ -471,13 +471,13 @@ for PKG in ${PKGS} ; do
     ERRS=`write_pkg_report "${PKG}" "${res}" "${tres}" "${terr}" "${ptime}" "${ttime}"`
     pall=`expr $pall + 1`
   fi
-  if [ "$res" != "0" -a "$res" != "2" ] ; then
-    if [ "${KEEP_GOING}" != "yes" ] ; then
+  if [ "$res" != "0" -a "$res" != "2" ]; then
+    if [ "${KEEP_GOING}" != "yes" ]; then
       echo " *** execution of $PKG_ACTION failed ***" 
       exit 1
     fi
   fi
-  if [ "$res" != "0" -a "${KEEP_GOING}" = "yes" ] ; then
+  if [ "$res" != "0" -a "${KEEP_GOING}" = "yes" ]; then
     echo " ==> $PKG_ACTION returned $res"
   else
     echo " ==> ${PKG} done"
