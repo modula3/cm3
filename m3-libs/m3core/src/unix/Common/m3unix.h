@@ -219,6 +219,11 @@ typedef int m3_socklen_t;
 typedef unsigned m3_socklen_t;
 #endif
 
+typedef struct {
+/* verified to exactly match struct linger in UnixC.c, except for Cygwin */
+    int onoff;
+    int linger;
+} m3_linger_t;
 
 int Usocket__listen(int s, int backlog);
 int Usocket__shutdown(int s, int how);
@@ -242,15 +247,70 @@ int Umman__mprotect(ADDRESS addr, size_t len, int prot);
 ADDRESS Umman__mmap(ADDRESS addr, size_t len, int prot, int flags, int fd, m3_off_t off);
 int Umman__munmap(ADDRESS addr, size_t len);
 
+/* somewhat idealized, but ideally we'd use INT64 here */
+typedef INTEGER m3_time_t;
+
+typedef struct {
+/* verified to exactly match struct timezone in UnixC.c */
+    int minuteswest;
+    int dsttime;
+} m3_timezone_t;
+
+typedef struct {
+/* somewhat idealized, but ideally we'd use INT64 here */
+    INTEGER sec;
+    INTEGER usec; /* microsec */
+} m3_timeval_t;
+
+typedef struct {
+/* somewhat idealized, but ideally we'd use INT64 here */
+    INTEGER sec;
+    INTEGER nsec; /* nanosec */
+} m3_timespec_t;
+
+typedef struct {
+/* This is what all systems do, but without the "m3_". */
+    m3_timeval_t interval;
+    m3_timeval_t value;
+} m3_itimerval_t;
 
 
-void UtimeC__dummy(void);
-time_t Utime__get_timezone(void);
-time_t Utime__get_altzone(void);
+m3_time_t Utime__get_timezone(void);
+m3_time_t Utime__get_altzone(void);
 int Utime__get_daylight(void);
 const char* Utime__get_tzname(unsigned a);
+int Utime__gettimeofday(m3_timeval_t* m3t);
+int Utime__getitimer(int which, m3_itimerval_t* m3t);
+m3_time_t Utime__time(m3_time_t* tloc);
+m3_time_t Utime__mktime(tm_t* tm);
+char* Utime__ctime(const m3_time_t* m);
+tm_t* Utime__localtime(const m3_time_t* m);
+tm_t* Utime__gmtime(const m3_time_t* m);
+char* Utime__ctime_r(const m3_time_t* m, char* buffer);
+tm_t* Utime__localtime_r(const m3_time_t* clock, tm_t* result);
+tm_t* Utime__gmtime_r(const m3_time_t* clock, tm_t* result);
+int Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old);
+int Utime__nanosleep(const m3_timespec_t* m3req, m3_timespec_t* m3rem);
+void Utime__tzset(void);
+int Unix__utimes(const char* file, const m3_timeval_t* tvp);
+int Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, m3_timeval_t* timeout);
+
+
+/* Some compilers don't like this, will adjust as needed. */
+#if 1
+#define M3PASTE_(a, b) a ## b
+#define M3PASTE(a, b) M3PASTE_(a, b)
+#define M3_STATIC_ASSERT(expr) typedef char M3PASTE(m3_static_assert, __LINE__)[(expr)?1:-1]
+#else
+#define M3_STATIC_ASSERT(expr) assert(expr)
+#endif
+
+#define M3_FIELD_SIZE(type, field) (sizeof((type*)0)->field)
+#define M3_SIZE_THROUGH_FIELD(type, field) (offsetof(type, field) + M3_FIELD_SIZE(type, field))
 
 void Unix__Assertions(void);
+void Usocket__Assertions(void);
+void Utime__Assertions(void);
 
 
 int Unix__open(const char* path, int flags, m3_mode_t mode);
