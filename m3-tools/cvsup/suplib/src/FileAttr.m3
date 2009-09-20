@@ -759,7 +759,7 @@ PROCEDURE Install(fa: T; to: Pathname.T; from: Pathname.T := NIL): BOOLEAN
 	VAR
 	  times: ARRAY [0..1] OF Utime.struct_timeval;
 	BEGIN
-	  EVAL Utime.gettimeofday(times[0], NIL);  (* Access time. *)
+	  EVAL Utime.gettimeofday(times[0]);  (* Access time. *)
 	  times[1].tv_sec := ORD(fa.stat.st_mtime);
 	  times[1].tv_usec := 0;
 	  EVAL Unix.utimes(fromStr, ADR(times));
