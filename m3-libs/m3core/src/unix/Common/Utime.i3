@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-<*EXTERNAL*> INTERFACE Utime;
+INTERFACE Utime;
 
 IMPORT Utypes;
 FROM Ctypes IMPORT char_star, const_char_star, int;
