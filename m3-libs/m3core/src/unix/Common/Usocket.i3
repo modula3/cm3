@@ -121,11 +121,11 @@ TYPE
   socklen_t = Utypes.socklen_t;
   socklen_t_star = UNTRACED REF socklen_t;
 
+  struct_linger = RECORD
 (* Structure used for manipulating linger option.
    This is the same on all platforms, except Cygwin (and NT).
    We use a copying wrapper for Cygwin.
  *)
-  struct_linger = RECORD
     l_onoff: int;		(* option on/off *)
     l_linger: int;		(* linger time *)
   END;

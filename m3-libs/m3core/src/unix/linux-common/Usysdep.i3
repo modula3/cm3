@@ -14,12 +14,6 @@ CONST
 
 TYPE
 (* INTERFACE Utime; *)
-
-  struct_timeval = RECORD
-    tv_sec: INTEGER;
-    tv_usec: INTEGER;
-  END;
-
   struct_tm = RECORD
     tm_sec:   int;
     tm_min:   int;
@@ -33,9 +27,5 @@ TYPE
     tm_gmtoff:INTEGER;
     tm_zone:  char_star;
   END;
-
-(* INTERFACE Utypes; *)
-
-  time_t = INTEGER; (* ideally always 64 bits *)
 
 END Usysdep.

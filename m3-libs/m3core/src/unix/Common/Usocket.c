@@ -17,7 +17,32 @@ if it is unsigned or signed, or 32 bits or 64 bits */
 #define ASSERT_LEN \
     assert((len >= 0) && (len < (1 << 30)));
 
-/* 1: wrap everything */
+void Usocket__Assertions(void)
+{
+#ifndef _WIN32
+    /* assert that struct linger is literally { int l_onoff, l_linger },
+    those types (or at least sizes), that order, no padding, except on Cygwin */
+    
+    typedef struct linger T;
+    typedef m3_linger_t M;
+    
+    M3_STATIC_ASSERT(sizeof(M) == 8);
+    M3_STATIC_ASSERT(offsetof(M, onoff) == 0);
+    M3_STATIC_ASSERT(M3_FIELD_SIZE(M, onoff) == 4);
+    M3_STATIC_ASSERT(offsetof(M, linger) == 4);
+    M3_STATIC_ASSERT(M3_FIELD_SIZE(M, linger) == 4);
+    M3_STATIC_ASSERT(sizeof(T) == (M3_FIELD_SIZE(T, l_onoff) + M3_FIELD_SIZE(T, l_linger)));
+#ifndef __CYGWIN__
+    M3_STATIC_ASSERT(sizeof(T) == 8);
+    M3_STATIC_ASSERT(offsetof(T, l_onoff) == 0);
+    M3_STATIC_ASSERT(M3_FIELD_SIZE(T, l_onoff) == 4);
+    M3_STATIC_ASSERT(offsetof(T, l_linger) == 4);
+    M3_STATIC_ASSERT(M3_FIELD_SIZE(T, l_linger) == 4);
+#endif
+#endif
+}
+
+/* wrap everything */
 
 int Usocket__listen(int s, int backlog)
 {
@@ -34,7 +59,7 @@ int Usocket__socket(int af, int type, int protocol)
     return socket(af, type, protocol);
 }
 
-/* 2: wrap everything taking input socklen_t */
+/* wrap everything taking input socklen_t */
 
 int Usocket__bind(int s, sockaddr_t* name, m3_socklen_t len)
 {
@@ -56,29 +81,22 @@ int Usocket__sendto(int s, void* msg, size_t length, int flags, sockaddr_t* dest
 
 int Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len)
 {
-#ifdef __CYGWIN__
-    struct linger b;
-    struct { int onoff, linger; }* a;
-#endif
-
     ASSERT_LEN
-
 #ifdef __CYGWIN__
-    if (optname == SO_LINGER && optval != NULL && len == sizeof(*a))
+    if (optname == SO_LINGER && optval != NULL)
     {
-        a = optval;
-        optval = &b;
-        ZeroMemory(&b, sizeof(b));
-        len = sizeof(b);
-        b.l_onoff= a->onoff;
+        struct linger b;
+        m3_linger_t* a = (m3_linger_t*)optval;
+        assert(len == sizeof(*a))
+        b.l_onoff = a->onoff;
         b.l_linger = a->linger;
+        return setsockopt(s, level, optname, &b, sizeof(b));
     }
 #endif
-
     return setsockopt(s, level, optname, optval, len);
 }
 
-/* 3: wrap everything taking input/output socklen_t */
+/* wrap everything taking input/output socklen_t */
 
 int Usocket__getpeername(int s, sockaddr_t* name, m3_socklen_t* plen)
 {
@@ -127,14 +145,17 @@ the same order. This is checked in UnixC.c in Unix__Assertions.
         socklen_t len = plen ? *plen : 0;
 
 #ifdef __CYGWIN__
-        struct { int onoff, linger; }* a = { 0 };
+        m3_linger_t* a = { 0 };
         struct linger b;
 
-        if (optname == SO_LINGER && optval != NULL && len == sizeof(*a))
+        if (optname == SO_LINGER && optval != NULL)
         {
-            a = optval;
+            assert(plen);
+            assert(len == sizeof(*a));
+            a = (m3_linger_t*)optval;
             optval = &b;
             ZeroMemory(&b, sizeof(b));
+            ZeroMemory(a, sizeof(*a));
             len = sizeof(b);
         }
 #endif
