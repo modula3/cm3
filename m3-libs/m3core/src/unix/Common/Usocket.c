@@ -12,10 +12,10 @@ extern "C" {
 if it is unsigned or signed, or 32 bits or 64 bits */
 
 #define ASSERT_PLEN \
-    assert((plen == NULL) || (((*plen) >= 0) && ((*plen) < (1UL << 30))));
+    assert((plen == NULL) || (((*plen) >= 0) && ((*plen) < (m3_socklen_t)(1UL << 30))));
 
 #define ASSERT_LEN \
-    assert((len >= 0) && (len < (1 << 30)));
+    assert((len >= 0) && (len < (m3_socklen_t)(1UL << 30)));
 
 void Usocket__Assertions(void)
 {
