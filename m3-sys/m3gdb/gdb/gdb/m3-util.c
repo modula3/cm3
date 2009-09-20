@@ -3006,16 +3006,15 @@ m3_set_derived_target_info ( void )
 
 enum m3_target_typ
 m3_target_pure ( char * name )
-  { if ( strcmp ( name, "NT386/" ) == 0 )           { return TARGET_NT386; }
-    if ( strcmp ( name, "ALPHA_OSF/" ) == 0 )       { return TARGET_64; }
-    if ( strcmp ( name, "AMD64_DARWIN/" ) == 0 )    { return TARGET_64; }
-    if ( strcmp ( name, "AMD64_FREEBSD/" ) == 0 )   { return TARGET_64; }
-    if ( strcmp ( name, "AMD64_LINUX/" ) == 0 )     { return TARGET_64; }
-    if ( strcmp ( name, "PA64_HPUX/" ) == 0 )       { return TARGET_64; }
-    if ( strcmp ( name, "MIPS64_OPENBSD/" ) == 0 )  { return TARGET_64; }
-    if ( strcmp ( name, "SPARC64_OPENBSD/" ) == 0 ) { return TARGET_64; }
-    if ( strcmp ( name, "SPARC64_LINUX/" ) == 0 )   { return TARGET_64; }
-    if ( strcmp ( name, "SPARC64_SOLARIS/" ) == 0 ) { return TARGET_64; }
+  { if (strstr(name, "NT386")) { return TARGET_NT386; }
+    /* This is crude but very likely to always be correct.
+    There is a 32bit mode on HP-UX/IA64 and ALPHA_NT is 32bit,
+    but these are hypothetical and unlikely to materialize
+    and could have "32" put in their names, and ALPHA_NT
+    would unlikely support m3gdb. */
+    if (strstr(name, "32"))    { return TARGET_OTHER; }
+    if (strstr(name, "ALPHA")) { return TARGET_64; }
+    if (strstr(name, "64" ))   { return TARGET_64; }
 
     /* FIXME: Positively check for all M3 compiler target names, or at
               least all those in m3middle/src/Target.m3 that cause a call on
