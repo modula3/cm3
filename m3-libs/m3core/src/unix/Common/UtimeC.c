@@ -189,15 +189,6 @@ tm_t* Utime__gmtime(const m3_time_t* m)
 }
 
 #ifndef _WIN32
-#ifndef __sun /* Solaris ctime_r is different than Posix. */
-
-char* Utime__ctime_r(const m3_time_t* m, char* buffer)
-{
-    time_t t = m ? *m : 0;
-    return ctime_r(m ? &t : 0, buffer);
-}
-
-#endif /* __sun */
 
 tm_t* Utime__localtime_r(const m3_time_t* m3t, tm_t* result)
 {

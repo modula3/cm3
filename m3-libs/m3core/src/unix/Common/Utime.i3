@@ -56,7 +56,6 @@ TYPE
 <*EXTERNAL "Utime__localtime"*>PROCEDURE localtime (clock: (*const*) UNTRACED REF time_t): struct_tm_star;
 <*EXTERNAL "Utime__gmtime"*>PROCEDURE gmtime (clock: (*const*) UNTRACED REF time_t): struct_tm_star;
 
-<*EXTERNAL "Utime__ctime_r"*>PROCEDURE ctime_r (READONLY clock: time_t; buffer: char_star): char_star;
 <*EXTERNAL "Utime__localtime_r"*>PROCEDURE localtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_star;
 <*EXTERNAL "Utime__gmtime_r"*>PROCEDURE gmtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_star;
 
