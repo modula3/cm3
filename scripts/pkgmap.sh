@@ -348,13 +348,28 @@ fi
 M3GDB=yes
 OK=yes
 
-cat >date.c <<End
- #include <stdio.h>
- #include <time.h>
- int main() { printf("%lu\n", (unsigned long)time(NULL)); return 0; }
+make_date() {
+  cat >date.c <<End
+    #include <stdio.h>
+    #include <time.h>
+    int main()
+    {
+      printf("%lu\n", (unsigned long)time(NULL));
+      return 0;
+    }
 End
+  rm m3date
+  for cc in /opt/SUNWspro/bin/cc /usr/sfw/bin/gcc /usr/bin/cc /usr/bin/gcc cc gcc; do
+    if [ type $cc >/dev/null 2>&1 ]; then
+      $cc date.c -o m3date
+      if [ -x m3date ]; then
+          return
+      fi
+    fi
+  end
+}
 
-cc date.c -o ./m3date
+make_date
 
 for PKG in ${PKGS}; do
   echo "=== package ${PKG} ==="
