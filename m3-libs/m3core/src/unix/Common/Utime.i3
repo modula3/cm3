@@ -35,7 +35,7 @@ TYPE
 
   time_t = Usysdep.time_t;
 
-<*EXTERNAL "Utime__gettimeofday"*>PROCEDURE gettimeofday (VAR t: struct_timeval; z: UNTRACED REF struct_timezone := NIL): int32_t;
+<*EXTERNAL "Utime__gettimeofday"*>PROCEDURE gettimeofday (VAR t: struct_timeval): int32_t;
 <*EXTERNAL "Utime__getitimer"*>PROCEDURE getitimer (which: int32_t; VAR value: struct_itimerval): int32_t;
 
 <*EXTERNAL "Utime__time"*>PROCEDURE time (tloc: UNTRACED REF time_t): time_t;
