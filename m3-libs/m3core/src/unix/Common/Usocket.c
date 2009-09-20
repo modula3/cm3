@@ -87,7 +87,7 @@ int Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_
     {
         struct linger b;
         m3_linger_t* a = (m3_linger_t*)optval;
-        assert(len == sizeof(*a))
+        assert(len == sizeof(*a));
         b.l_onoff = a->onoff;
         b.l_linger = a->linger;
         return setsockopt(s, level, optname, &b, sizeof(b));
