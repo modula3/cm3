@@ -63,11 +63,6 @@ int Utime__gettimeofday (timeval_t* t, timezone_t* z)
     return gettimeofday(t, z);
 }
 
-int Utime__settimeofday (timeval_t* t, timezone_t* z)
-{
-    return settimeofday(t, z);
-}
-
 int Utime__getitimer(int which, itimerval_t* value)
 {
     return getitimer(which, value);
