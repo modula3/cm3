@@ -160,18 +160,18 @@ At a high level, what we will do is:
    I will try to cover them all below.
 
         Searching for 'AMD64_LINUX'...
-        m3-libs/libm3/src/platforms.quake
-        m3-libs/m3core/src/platforms.quake
-        m3-libs/m3core/src/thread.quake
-        m3-libs/m3core/src/float/m3makefile
+        m3-sys/m3middle/src/Target.i3 -- critical
+        m3-sys/m3middle/src/Target.m3 -- critical
+        m3-libs/libm3/src/platforms.quake -- optional, you can just manage the config file instead
+        m3-libs/m3core/src/platforms.quake -- optional, you can just manage the config file instead
+        m3-libs/m3core/src/thread.quake -- optional, default is to only support pthreads
+        m3-libs/m3core/src/float/m3makefile -- optional, currently all targets accept a default based on endian
         m3-libs/m3core/src/runtime/POSIX/m3makefile
         m3-libs/m3core/src/unix/m3makefile
         m3-libs/m3core/src/unix/Common/m3makefile
         m3-sys/cminstall/src/config-no-install/AMD64_LINUX
-        m3-sys/m3cc/src/platforms.quake
+        m3-sys/m3cc/src/platforms.quake -- necessary for cross builds
         m3-sys/m3gdb/src/platforms.quake
-        m3-sys/m3middle/src/Target.i3
-        m3-sys/m3middle/src/Target.m3
 
  - We use an internal scripting language called "quake" to author, basically, pieces of makefiles.
    You will need to be somewhat comfortable with it.
