@@ -116,6 +116,7 @@ PROCEDURE fork (): pid_t;
 
 (* Do not wrap vfork in C; doing so violates the Posix standard, because
  callers of vfork cannot return without calling exec or _exit. *)
+<*EXTERNAL*>
 PROCEDURE vfork (): pid_t;
 
 
