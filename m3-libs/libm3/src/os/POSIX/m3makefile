@@ -35,34 +35,6 @@ interface("FSPosixC")
 c_source("FSPosixC")
 
 local readonly DefaultOSName = {
-    "AMD64_DARWIN" : "Darwin",
-    "AMD64_FREEBSD" : "FreeBSD",
-    "AMD64_LINUX" : "Linux",
-    "AMD64_NETBSD" : "NetBSD",
-    "AMD64_OPENBSD" : "OpenBSD",
-    "ARM_DARWIN" : "Darwin",
-    "FreeBSD4" : "FreeBSD",
-    "I386_DARWIN" : "Darwin",
-    "I386_INTERIX" : "Interix",
-    "I386_OPENBSD" : "OpenBSD",
-    "LINUXLIBC6" : "Linux",
-    "MIPS64_OPENBSD" : "OpenBSD",
-    "NetBSD2_i386" : "NetBSD",
-    "NT386" : "Win32",
-    "NT386GNU" : "Cygwin",
-    "PA32_HPUX" : "HPUX",
-    "PA64_HPUX" : "HPUX",
-    "PPC_DARWIN" : "Darwin",
-    "PPC_LINUX" : "Linux",
-    "PPC32_OPENBSD" : "OpenBSD",
-    "SOLgnu" : "Solaris",
-    "SOLsun" : "Solaris",
-    "SPARC32_LINUX" : "Linux",
-    "SPARC64_LINUX" : "Linux",
-    "SPARC64_OPENBSD" : "OpenBSD",
-    "SPARC64_SOLARIS" : "Solaris",
-
-
     "AIX" : "AIX",
     "CYGWIN" : "Cygwin",
     "DARWIN" : "Darwin",
@@ -79,35 +51,9 @@ local readonly DefaultOSName = {
     "TRU64" : "Digital Unix",
 }
 
+% a lowercase primitive here would be good
+
 local readonly DefaultArch = {
-    "AMD64_DARWIN" : "AMD64",
-    "AMD64_FREEBSD" : "AMD64",
-    "AMD64_LINUX" : "AMD64",
-    "AMD64_NETBSD" : "AMD64",
-    "AMD64_OPENBSD" : "AMD64",
-    "ARM_DARWIN" : "arm",
-    "FreeBSD4" : "i686",
-    "I386_DARWIN" : "i686",
-    "I386_INTERIX" : "i686",
-    "I386_OPENBSD" : "i686",
-    "LINUXLIBC6" : "i686",
-    "MIPS64_OPENBSD" : "mips64",
-    "NetBSD2_i386" : "i686",
-    "NT386" : "i686",
-    "NT386GNU" : "i686",
-    "PA32_HPUX" : "hppa",
-    "PA64_HPUX" : "hppa64",
-    "PPC_DARWIN" : "ppc",
-    "PPC_LINUX" : "ppc",
-    "PPC32_OPENBSD" : "ppc",
-    "SOLgnu" : "sparc",
-    "SOLsun" : "sparc",
-    "SPARC32_LINUX" : "sparc",
-    "SPARC64_LINUX" : "sparc64",
-    "SPARC64_OPENBSD" : "sparc64",
-    "SPARC64_SOLARIS" : "sparc64",
-
-
     "ALPHA" : "alpha",
     "AMD64" : "AMD64",
     "ARM" : "arm",
@@ -135,17 +81,8 @@ local readonly proc MakeInterfaceForConstant(Name, Value) is
     cp_if(Name & ".i3.tmp", Name & ".i3")
 end
 
-if defined("TARGET_OS")
-    MakeInterfaceForConstant("OSConfigPosix_DefaultOSName", "\"" & DefaultOSName{TARGET_OS} & "\"")
-else
-    MakeInterfaceForConstant("OSConfigPosix_DefaultOSName", "\"" & DefaultOSName{TARGET} & "\"")
-end
-
-if defined("TARGET_ARCH")
-    MakeInterfaceForConstant("OSConfigPosix_DefaultArch", "\"" & DefaultArch{TARGET_ARCH} & "\"")
-else
-    MakeInterfaceForConstant("OSConfigPosix_DefaultArch", "\"" & DefaultArch{TARGET} & "\"")
-end
+MakeInterfaceForConstant("OSConfigPosix_DefaultOSName", "\"" & DefaultOSName{TARGET_OS} & "\"")
+MakeInterfaceForConstant("OSConfigPosix_DefaultArch", "\"" & DefaultArch{TARGET_ARCH} & "\"")
 
 if equal(TARGET, "ALPHA_OSF") or equal(TARGET, "DS3100")
     MakeInterfaceForConstant("SocketPosix_IsUltrixOrOSF", "TRUE")
