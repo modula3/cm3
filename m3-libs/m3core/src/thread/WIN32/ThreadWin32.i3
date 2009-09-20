@@ -8,6 +8,8 @@
 UNSAFE INTERFACE ThreadWin32;
 
 FROM WinDef IMPORT BOOL (* int *);
+FROM Thread IMPORT T;
+FROM ThreadF IMPORT Id, State;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
 
