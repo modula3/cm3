@@ -58,9 +58,9 @@ const char* Utime__get_tzname(unsigned a)
 
 #ifndef _WIN32
 
-int Utime__gettimeofday (timeval_t* t, timezone_t* z)
+int Utime__gettimeofday(timeval_t* t)
 {
-    return gettimeofday(t, z);
+    return gettimeofday(t, NULL);
 }
 
 int Utime__getitimer(int which, itimerval_t* value)
