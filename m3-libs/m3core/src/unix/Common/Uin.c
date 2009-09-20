@@ -1,4 +1,5 @@
 #include "m3unix.h"
+#include <arpa/inet.h>
 
 #ifdef __cplusplus
 extern "C" {
