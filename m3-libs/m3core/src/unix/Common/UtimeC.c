@@ -22,7 +22,7 @@ void Utime__Assertions(void)
     { typedef timeval_t T;
       M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, tv_sec) + M3_FIELD_SIZE(T, tv_usec)); }
 
-    /* verify timezone) is exactly as we expect */
+    /* verify timezone is exactly as we expect */
     { typedef m3_timezone_t M;
       typedef timezone_t T;
       M3_STATIC_ASSERT(sizeof(T) == sizeof(M));
