@@ -363,7 +363,7 @@ End
     if [ type $cc >/dev/null 2>&1 ]; then
       $cc date.c -o m3date
       if [ -x m3date ]; then
-          return
+        return
       fi
     fi
   end
