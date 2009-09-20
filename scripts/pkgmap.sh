@@ -354,6 +354,14 @@ fi
 M3GDB=yes
 OK=yes
 
+cat >date.c <<End
+ #include <stdio.h>
+ #include <time.h>
+ int main() { printf("%lu\n", (unsigned long)time(NULL)); return 0; }
+End
+
+cc date.c -o ./m3date
+
 for PKG in ${PKGS} ; do
   echo "=== package ${PKG} ==="
   tres="not supported on ${TARGET}"
@@ -363,10 +371,10 @@ for PKG in ${PKGS} ; do
   if [ "${REPORT}" = "yes" ] ; then
     rm -f "${STDOUTLOG}"
     if UsePackage `basename "${PKG}"` || [ "${CM3_ALL}" = yes ]; then
-      pstart=`date +%s`
+      pstart=`./m3date +%s`
       exec_cmd "$PKG" > "${STDOUTLOG}" 2>&1
       res=$?
-      pend=`date +%s`
+      pend=`./m3date +%s`
       ptime=`expr \( $pend - $pstart \) \* 1000 + 500`
       ptime=`echo "scale=3; ${ptime} / 1000" | bc`
       cat "${STDOUTLOG}"
@@ -399,9 +407,9 @@ for PKG in ${PKGS} ; do
             LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${PKG}/${TARGET}"
             DYLD_LIBRARY_PATH="$LD_LIBRARY_PATH"
             export LD_LIBRARY_PATH DYLD_LIBRARY_PATH
-            tstart=`date +%s`
+            tstart=`./m3date +%s`
             tres=`cm3 -build -override -DTEST -DRUN -DROOT="${ROOT}" 2> stderr`
-            tend=`date +%s`
+            tend=`./m3date +%s`
             ttime=`expr \( $tend - $tstart \) \* 1000 + 500`
             ttime=`echo "scale=3; ${ttime} / 1000" | bc`
             terr=`cat stderr`
