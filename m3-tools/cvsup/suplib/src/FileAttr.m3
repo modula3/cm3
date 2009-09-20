@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FileAttr.m3,v 1.6 2009-04-12 04:50:41 jkrell Exp $ *)
+ * $Id: FileAttr.m3,v 1.7 2009-09-20 07:44:16 jkrell Exp $ *)
 
 UNSAFE MODULE FileAttr EXPORTS FileAttr, FileAttrRep;
 
@@ -759,7 +759,7 @@ PROCEDURE Install(fa: T; to: Pathname.T; from: Pathname.T := NIL): BOOLEAN
 	VAR
 	  times: ARRAY [0..1] OF Utime.struct_timeval;
 	BEGIN
-	  EVAL Utime.gettimeofday(times[0], NIL);  (* Access time. *)
+	  EVAL Utime.gettimeofday(times[0]);  (* Access time. *)
 	  times[1].tv_sec := ORD(fa.stat.st_mtime);
 	  times[1].tv_usec := 0;
 	  EVAL Unix.utimes(fromStr, ADR(times));
