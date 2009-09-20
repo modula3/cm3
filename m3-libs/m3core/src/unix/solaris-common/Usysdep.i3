@@ -12,18 +12,11 @@ CONST
     X64 = ORD(BITSIZE(INTEGER) = 64);
 
 (* INTERFACE Unix; *)
-
     MaxPathLen = 1024;
     MAX_FDSET = (X32 * 1024) + (X64 * 65536);
 
 TYPE
 (* INTERFACE Utime; *)
-
-    struct_timeval = RECORD
-        tv_sec: INTEGER;
-        tv_usec: INTEGER;
-    END;
-
     struct_tm = RECORD
         tm_sec:   int;
         tm_min:   int;
@@ -35,9 +28,5 @@ TYPE
         tm_yday:  int;
         tm_isdst: int;
     END;
-
-(* INTERFACE Utypes; *)
-
-    time_t = INTEGER; (* ideally always 64 bits *)
 
 END Usysdep.
