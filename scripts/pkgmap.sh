@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42.2.20 2009-09-21 21:17:42 jkrell Exp $
+# $Id: pkgmap.sh,v 1.42.2.21 2009-09-21 21:19:22 jkrell Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ]; then
@@ -356,8 +356,8 @@ if [ -n "${REPORT}" ]; then
 #include <time.h>
 int main()
 {
-printf("%lu\n", (unsigned long)time(NULL));
-return 0;
+  printf("%lu\n", (unsigned long)time(NULL));
+  return 0;
 }
 End
     rm -f m3date m3date.exe
