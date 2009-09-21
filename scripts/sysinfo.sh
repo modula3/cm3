@@ -28,7 +28,7 @@ header() {
 # Arguments are filename and default pathname.
 # Check for argument count and protect against passing a path as a
 # filename. Try to not mangle pathnames with spaces.
-# 
+ 
 find_exe() {
   if [ $# -eq 2 -a `basename "$1"` = "$1" ] ; then
     file="$1"
@@ -55,6 +55,7 @@ qgrep() {
 
 #-----------------------------------------------------------------------------
 # abstraction functions
+
 cygpath() {
   echo "$2"
 }
