@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42.2.17 2009-09-20 04:27:58 jkrell Exp $
+# $Id: pkgmap.sh,v 1.42.2.18 2009-09-21 20:28:45 jkrell Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ]; then
@@ -372,7 +372,7 @@ End
         return
       fi
     fi
-  end
+  done
 }
 
 make_date
