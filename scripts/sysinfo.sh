@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.84 2009-08-25 09:37:45 jkrell Exp $
+# $Id: sysinfo.sh,v 1.85 2009-09-21 20:03:58 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -28,7 +28,7 @@ header() {
 # Arguments are filename and default pathname.
 # Check for argument count and protect against passing a path as a
 # filename. Try to not mangle pathnames with spaces.
-# 
+ 
 find_exe() {
   if [ $# -eq 2 -a `basename "$1"` = "$1" ] ; then
     file="$1"
@@ -55,6 +55,7 @@ qgrep() {
 
 #-----------------------------------------------------------------------------
 # abstraction functions
+
 cygpath() {
   echo "$2"
 }
