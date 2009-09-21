@@ -372,7 +372,7 @@ End
         return
       fi
     fi
-  end
+  done
 }
 
 make_date
