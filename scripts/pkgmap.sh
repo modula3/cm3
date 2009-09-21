@@ -364,7 +364,7 @@ make_date() {
       return 0;
     }
 End
-  rm m3date
+  rm -f m3date m3date.exe
   for cc in /opt/SUNWspro/bin/cc /usr/sfw/bin/gcc /usr/bin/cc /usr/bin/gcc cc gcc; do
     if [ type $cc >/dev/null 2>&1 ]; then
       $cc date.c -o m3date
@@ -375,7 +375,9 @@ End
   done
 }
 
-make_date
+if [ "${REPORT}" = "yes" ]; then
+  make_date
+fi
 
 for PKG in ${PKGS}; do
   echo "=== package ${PKG} ==="
