@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.50 2009-09-21 20:28:11 jkrell Exp $
+# $Id: pkgmap.sh,v 1.51 2009-09-21 21:19:44 jkrell Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ]; then
@@ -343,33 +343,32 @@ write_pkg_report() {
 
 if [ -n "${REPORT}" ]; then
   report_header
+
+  make_date() {
+    cat >date.c <<End
+#include <stdio.h>
+#include <time.h>
+int main()
+{
+  printf("%lu\n", (unsigned long)time(NULL));
+  return 0;
+}
+End
+    rm -f m3date m3date.exe
+    for cc in /opt/SUNWspro/bin/cc /usr/sfw/bin/gcc /usr/bin/cc /usr/bin/gcc cc gcc; do
+      if [ type $cc >/dev/null 2>&1 ]; then
+        $cc date.c -o m3date
+        if [ -x m3date ]; then
+          return
+        fi
+      fi
+    done
+  }
+  make_date
 fi
 
 M3GDB=yes
 OK=yes
-
-make_date() {
-  cat >date.c <<End
-    #include <stdio.h>
-    #include <time.h>
-    int main()
-    {
-      printf("%lu\n", (unsigned long)time(NULL));
-      return 0;
-    }
-End
-  rm m3date
-  for cc in /opt/SUNWspro/bin/cc /usr/sfw/bin/gcc /usr/bin/cc /usr/bin/gcc cc gcc; do
-    if [ type $cc >/dev/null 2>&1 ]; then
-      $cc date.c -o m3date
-      if [ -x m3date ]; then
-        return
-      fi
-    fi
-  done
-}
-
-make_date
 
 for PKG in ${PKGS}; do
   echo "=== package ${PKG} ==="
