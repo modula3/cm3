@@ -356,8 +356,8 @@ if [ -n "${REPORT}" ]; then
 #include <time.h>
 int main()
 {
-printf("%lu\n", (unsigned long)time(NULL));
-return 0;
+  printf("%lu\n", (unsigned long)time(NULL));
+  return 0;
 }
 End
     rm -f m3date m3date.exe
