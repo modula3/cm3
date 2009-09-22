@@ -58,30 +58,27 @@ else
     M3CC_TARGET = TARGET
 end end
 
-if not defined ("M3CC_BUILD")   M3CC_BUILD  = TARGET     end
+if not defined ("M3CC_BUILD") M3CC_BUILD  = TARGET end
 
-
-proc SameUnderlyingPlatform (x, y) is
-    if equal(x, y)
-        return TRUE
-    end
-    if equal(x, "SOLgnu") and equal(y, "SOLsun")
-        return TRUE
-    end
-    if equal(x, "SOLsun") and equal(y, "SOLgnu")
-        return TRUE
-    end
-    return FALSE
+proc NormalizePlatform(a) is
+  if equal(a, "SOLgnu") or equal(a, "SOLsun")
+    a = "SPARC32_SOLARIS"
+  end
+  return a
 end
 
-local Native = SameUnderlyingPlatform (M3CC_HOST, M3CC_TARGET) and SameUnderlyingPlatform (M3CC_HOST, M3CC_BUILD)
+nHOST = NormalizePlatform(M3CC_HOST)
+nTARGET = NormalizePlatform(M3CC_TARGET)
+nBUILD = NormalizePlatform(M3CC_BUILD)
+
+Native = equal(nHOST, nTARGET) and equal(nHOST, nBUILD)
 
 proc FileExists (a) is
     return not stale (a, a)
 end
 
-if Native and (equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun") or equal(TARGET, "SPARC32_SOLARIS")
-        or equal(TARGET, "SPARC64_SOLARIS") or equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS"))
+if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLARIS")
+       or equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS"))
 
     local ccs = ""
     local sfw = ""
