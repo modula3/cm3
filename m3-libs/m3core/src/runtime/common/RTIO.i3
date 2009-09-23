@@ -25,7 +25,7 @@ PROCEDURE PutString (s: ADDRESS);
 (* Write the null terminated string beginning at "s". *)
 
 PROCEDURE PutText (t: TEXT);
-(* Write text "t" on file "f". *)
+(* Write text "t". *)
 
 PROCEDURE PutInt (i: INTEGER;  width := 0);
 (* Convert integer "i" to decimal digits and write it right-justified
