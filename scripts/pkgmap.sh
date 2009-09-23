@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.51 2009-09-21 21:19:44 jkrell Exp $
+# $Id: pkgmap.sh,v 1.52 2009-09-23 12:08:45 jkrell Exp $
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ]; then
@@ -356,15 +356,20 @@ int main()
 End
     rm -f m3date m3date.exe
     for cc in /opt/SUNWspro/bin/cc /usr/sfw/bin/gcc /usr/bin/cc /usr/bin/gcc cc gcc; do
-      if [ type $cc >/dev/null 2>&1 ]; then
+      echo type $cc
+      if type $cc; then
+        echo "$cc date.c -o m3date"
         $cc date.c -o m3date
         if [ -x m3date ]; then
           return
         fi
       fi
     done
+    echo "no C compiler found"
+    exit 1
   }
   make_date
+  M3DATE=`pwd`/m3date
 fi
 
 M3GDB=yes
@@ -379,10 +384,10 @@ for PKG in ${PKGS}; do
   if [ "${REPORT}" = "yes" ]; then
     rm -f "${STDOUTLOG}"
     if UsePackage `basename "${PKG}"` || [ "${CM3_ALL}" = yes ]; then
-      pstart=`./m3date +%s`
+      pstart=`$M3DATE +%s`
       exec_cmd "$PKG" > "${STDOUTLOG}" 2>&1
       res=$?
-      pend=`./m3date +%s`
+      pend=`$M3DATE +%s`
       ptime=`expr \( $pend - $pstart \) \* 1000 + 500`
       ptime=`echo "scale=3; ${ptime} / 1000" | bc`
       cat "${STDOUTLOG}"
@@ -415,9 +420,9 @@ for PKG in ${PKGS}; do
             LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${PKG}/${TARGET}"
             DYLD_LIBRARY_PATH="$LD_LIBRARY_PATH"
             export LD_LIBRARY_PATH DYLD_LIBRARY_PATH
-            tstart=`./m3date +%s`
+            tstart=`$M3DATE +%s`
             tres=`cm3 -build -override -DTEST -DRUN -DROOT="${ROOT}" 2> stderr`
-            tend=`./m3date +%s`
+            tend=`$M3DATE +%s`
             ttime=`expr \( $tend - $tstart \) \* 1000 + 500`
             ttime=`echo "scale=3; ${ttime} / 1000" | bc`
             terr=`cat stderr`
