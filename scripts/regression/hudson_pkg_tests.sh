@@ -18,21 +18,28 @@ cd ${WS}/cm3/scripts/regression || {
 }
 
 CM3CG=${WS}/../cm3-m3cc-${TARGET}/cm3/m3-sys/m3cc/${TARGET}/cm3cg
-if [ -x "${CM3CG}" ]; then
-  echo "checking for working pre-built cm3cg in ${CM3CG}"
-  cp -p "${CM3CG}" ${WS}/cm3cg
-  if ${WS}/cm3cg --version; then
-    echo "using PREBUILT_CM3CG=${WS}/cm3cg"
-    export PREBUILT_CM3CG=${WS}/cm3cg
+if [ "$CLEAN" = "false" ]; then
+  if [ -x "${CM3CG}" ]; then
+    echo "checking for working pre-built cm3cg in ${CM3CG}"
+    cp -p "${CM3CG}" ${WS}/cm3cg
+    if ${WS}/cm3cg --version; then
+      echo "using PREBUILT_CM3CG=${WS}/cm3cg"
+      PREBUILT_CM3CG=${WS}/cm3cg
+      OMIT_GCC=yes
+      export PREBUILT_CM3CG OMIT_GCC
+    else
+      echo "NOT using ${WS}/cm3cg"
+    fi
   else
-    echo "NOT using ${WS}/cm3cg"
+    echo "no executable ${CM3CG}"
   fi
-else
-  echo "no executable ${CM3CG}"
 fi
 . ./defs.sh
 
-[ -n "$CLEAN" ] && ${WS}/cm3/scripts/do-cm3-all.sh realclean
+[ "$CLEAN" = "true" ] && {
+  OMIT_GCC=
+  ${WS}/cm3/scripts/do-cm3-all.sh realclean
+}
 [ "${WS}/cm3/scripts/pkginfo.txt" -nt "${WS}/cm3/scripts/PKGS" ] && {
   echo "deleting outdated packages cache ${WS}/cm3/scripts/PKGS"
   rm -f "${WS}/cm3/scripts/PKGS"
