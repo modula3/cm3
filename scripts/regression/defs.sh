@@ -54,6 +54,15 @@ COVERSION=${COVERSION:-"-P -r release_branch_cm3_5_8"} # version to checkout, de
 # CMINSTALL: set this to override the installer binary (full path)
 # NOCLEAN: set to avoid cleaning for re-starts
 
+if [ -n "$CLEAN" ]; then # Hudson CLEAN support
+  if [ "$CLEAN" = "true"]; then
+    unset NOCLEAN
+  else
+    NOCLEAN=yes
+    export NOCLEAN
+  fi
+fi
+
 # last release for installation
 LASTREL=${LASTREL:-5.4.0}
 
@@ -513,6 +522,90 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   }
   echo " >>> OK build_${1}_${BSET}_lastok ${DS} ${WS} ${INSTROOT_LOK}"
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 release build done"
+}
+
+test_build_system()
+{
+  cm3config ${INSTROOT_CUR}
+  prependpath ${INSTROOT_CUR}/bin
+  LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
+  DYLD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+  INSTALLROOT=${INSTROOT_CUR}
+  export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
+
+  if type cm3; then
+    cm3 -version
+  else
+    echo "cm3 not found" 1>&2
+    exit 1
+  fi
+
+  # checkout must have been done before
+  if cd "${WS}/cm3"; then
+    true
+  else
+    echo "cannot cd to ${WS}/cm3" 1>2
+    exit 1
+  fi
+
+  echo " === build core system with current compiler"
+  BUILDSCRIPT="./scripts/do-cm3-${BSET}.sh"
+  if [ -z "$NOCLEAN" ]; then
+    $BUILDSCRIPT realclean || exit 1
+  fi
+  if $BUILDSCRIPT buildship; then
+    echo " >>> OK build_system ${DS} ${WS}"
+    if ./scripts/isntall-cm3-compiler.sh upgrade; then
+      echo "compiler upgraded successfully"
+      cm3 -version
+    else
+      echo "compiler upgrade failed" 1>&2
+      exit 1
+    fi
+  else
+    echo " === perform cm3 upgrade"
+    UPGRADE_CM3_CFG=yes ./scripts/upgrade.sh || exit 1
+    echo " >>> OK build_upgrade ${DS} ${WS}"
+  fi
+
+  echo " === build intermediate lastok in ${INSTROOT_LOK}.$$"
+  [ -d ${INSTROOT_LOK} ] && cp -pR ${INSTROOT_LOK}   ${INSTROOT_LOK}.$$
+  if [ -d ${INSTROOT_LOK}.$$ ]; then
+    cp -pR ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
+  else
+    mv ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
+  fi
+
+  if [ -d ${INSTROOT_LOK} -a -d ${INSTROOT_POK} ]; then
+    echo " === remove previous ok version at ${INSTROOT_POK}"
+    rm -rf ${INSTROOT_POK}
+  fi
+
+  echo " === move last ok version at ${INSTROOT_LOK} to previous ok version"
+  if [ -d "${INSTROOT_LOK}" ]; then
+    mv ${INSTROOT_LOK} ${INSTROOT_POK}
+    cm3config ${INSTROOT_POK}
+  else
+    echo " === no installation in ${INSTROOT_LOK}"
+  fi
+
+  echo " === update last ok from ${INSTROOT_CUR}"
+  mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+    sleep 30
+    echo "update of ${INSTROOT_LOK} failed... trying to restore..."
+    [ -d ${INSTROOT_POK} -a ! -d ${INSTROOT_LOK} ] && \
+    mv ${INSTROOT_POK} ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+      echo "restore of ${INSTROOT_LOK} failed!" 1>&2
+    }
+    # try again later...
+    sleep 30
+    [ -d ${INSTROOT_POK} -a ! -d ${INSTROOT_LOK} ] && \
+    mv ${INSTROOT_POK} ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+      echo "HELP: restore of ${INSTROOT_LOK} failed!" 1>&2
+    }
+  }
+  echo " >>> OK build_system ${DS} ${WS} ${INSTROOT_LOK}"
+  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 build done"
 }
 
 test_build_core_lastok()
