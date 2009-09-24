@@ -3,6 +3,7 @@ m3cc core front m3gnudevtool
 m3core base core front min std
 libm3 base core front min std
 windowsResources std core
+parseparams base core std
 patternmatching core std
 sysutils core std front
 unittest core std
@@ -23,17 +24,16 @@ m3bundle base core std
 mklib base core front std
 fix_nl tool std
 libdump tool std
+tempfiles base core std
 arithmetic std math
 unittest-numeric std math
 bitvector base core std
 digraph base core std
-parseparams base core std
 realgeometry base core std
 set base core std
 slisp base core std
 sortedtableextras base core std
 table-list base core std
-tempfiles base core std
 tcl std
 tcp base core std comm
 cm3ide std core
