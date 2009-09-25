@@ -40,7 +40,7 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int);
 PROCEDURE IsDesignator (t: T): BOOLEAN;
 (* TRUE iff t is a designator *)
 
-PROCEDURE IsWritable (t: T; lhs: BOOLEAN): BOOLEAN;
+PROCEDURE IsWritable (t: T; traced: BOOLEAN): BOOLEAN;
 (* TRUE iff t is a writable designator *)
 
 PROCEDURE IsZeroes (t: T): BOOLEAN;
@@ -74,11 +74,11 @@ PROCEDURE Prep (t: T);
 PROCEDURE Compile (t: T);
 (* emits code to evaluate the expression onto the top of stack *)
 
-PROCEDURE PrepLValue (t: T; lhs: BOOLEAN);
-PROCEDURE CompileLValue (t: T; lhs: BOOLEAN);
+PROCEDURE PrepLValue (t: T; traced: BOOLEAN);
+PROCEDURE CompileLValue (t: T; traced: BOOLEAN);
 (* emits code to evaluate 't's L-value into s0.A. *)
 
-PROCEDURE CompileAddress (t: T; lhs: BOOLEAN);
+PROCEDURE CompileAddress (t: T; traced: BOOLEAN);
 (* emits code to evaluate 't's byte address onto the top of stack.
    Use PrepLValue to prep these expressions. *)
 

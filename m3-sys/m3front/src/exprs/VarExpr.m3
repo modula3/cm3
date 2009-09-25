@@ -80,7 +80,7 @@ PROCEDURE Compile (p: P) =
     Variable.Load (p.v);
   END Compile;
 
-PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: P; <*UNUSED*> traced: BOOLEAN) =
   BEGIN
     Variable.LoadLValue (p.v);
   END CompileLV;

@@ -20,7 +20,7 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
 
 PROCEDURE Prep (ce: CallExpr.T) =
   BEGIN
-    Expr.PrepLValue (ce.args[0], lhs := TRUE);
+    Expr.PrepLValue (ce.args[0], traced := FALSE);
     IF (NUMBER (ce.args^) > 1) THEN Expr.Prep (ce.args[1]); END;
   END Prep;
 
@@ -58,7 +58,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
       END;
     END;
 
-    Expr.CompileLValue (lhs, lhs := TRUE);
+    Expr.CompileLValue (lhs, traced := FALSE);
     lvalue := CG.Pop ();
     CG.Push (lvalue);
 

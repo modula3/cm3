@@ -224,10 +224,10 @@ PROCEDURE NeedsAddress (<*UNUSED*> p: P) =
 
 PROCEDURE Prep (p: P) =
   BEGIN
-    PrepLV (p, lhs := FALSE);
+    PrepLV (p, traced := FALSE);
   END Prep;
 
-PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
+PROCEDURE PrepLV (p: P;  traced: BOOLEAN) =
   VAR
     info: Type.Info;
     field: Field.Info;
@@ -243,7 +243,7 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
      * been prepped and compiled -- save it.
      *)
     IF p.do_direct THEN
-      <* ASSERT NOT lhs *>               (* CHECK ME? *)
+      <* ASSERT NOT traced *>             (* CHECK ME? *)
       p.tmp := CG.Pop ();
     ELSE
       t1 := CG.Declare_temp (info.size, info.alignment,
@@ -274,10 +274,10 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
 
 PROCEDURE Compile (p: P) =
   BEGIN
-    CompileLV (p, lhs := FALSE);
+    CompileLV (p, traced := FALSE);
   END Compile;
 
-PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: P; <*UNUSED*> traced: BOOLEAN) =
   VAR info: Type.Info;  offset: INTEGER;
   BEGIN
     IF (p.is_const) THEN

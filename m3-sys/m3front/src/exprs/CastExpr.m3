@@ -207,8 +207,8 @@ PROCEDURE Prep (p: P) =
         Expr.Prep (e);
     | Kind.D_to_A =>
         INC (p.tmp_cnt);
-        Expr.PrepLValue (e, lhs := FALSE);
-        Expr.CompileAddress (e, lhs := FALSE);
+        Expr.PrepLValue (e, traced := FALSE);
+        Expr.CompileAddress (e, traced := FALSE);
         p.tmp := BuildArray (p, sz);
     | Kind.S_to_A =>
         INC (p.tmp_cnt);
@@ -228,7 +228,7 @@ PROCEDURE Prep (p: P) =
         CG.Load_addr_of (t1, 0, z_align);
         p.tmp := BuildArray (p, sz);
     | Kind.D_to_S =>
-        Expr.PrepLValue (e, lhs := FALSE);
+        Expr.PrepLValue (e, traced := FALSE);
     | Kind.S_to_S =>
         Expr.Prep (e);
     | Kind.V_to_S =>
@@ -273,7 +273,7 @@ PROCEDURE Compile (p: P) =
       Kind.V_to_A =>
         PushTmp (p, t_align);
     | Kind.D_to_S =>
-        Expr.CompileAddress (e, lhs := FALSE);
+        Expr.CompileAddress (e, traced := FALSE);
         CG.Boost_alignment (t_align);
     | Kind.S_to_S =>
         Expr.Compile (e);
@@ -326,7 +326,7 @@ PROCEDURE BuildArray (p: P;  src_size: INTEGER): CG.Var =
     RETURN array;
   END BuildArray;
 
-PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
+PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
   VAR
     e  := p.expr;
     u  := Expr.TypeOf (e);
@@ -355,12 +355,12 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
       Kind.D_to_V,
       Kind.S_to_V,
       Kind.V_to_V =>
-        Expr.PrepLValue (p.expr, lhs);
+        Expr.PrepLValue (p.expr, traced);
 
     | Kind.D_to_A =>
         INC (p.tmp_cnt);
-        Expr.PrepLValue (e, lhs);
-        Expr.CompileLValue (e, lhs);
+        Expr.PrepLValue (e, traced);
+        Expr.CompileLValue (e, traced);
         p.tmp := BuildArray (p, sz);
     | Kind.S_to_A =>
         INC (p.tmp_cnt);
@@ -388,7 +388,7 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
     END;
   END PrepLV;
 
-PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
   VAR
     e  := p.expr;
     u  := Expr.TypeOf (e);
@@ -414,7 +414,7 @@ PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
       Kind.D_to_V,
       Kind.S_to_V,
       Kind.V_to_V =>
-        Expr.CompileLValue (p.expr, lhs);
+        Expr.CompileLValue (p.expr, traced);
         CG.Boost_alignment (t_align);
 
     | Kind.D_to_A,

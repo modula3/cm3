@@ -27,7 +27,7 @@ PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
        OR Type.IsEqual (t, ObjectRef.T, NIL)
        OR Type.IsEqual (t, ObjectAdr.T, NIL) THEN
       Error.Msg ("DISPOSE: must be applied to a fixed reference type");
-    ELSIF NOT Expr.IsWritable (ce.args[0], lhs := TRUE) THEN
+    ELSIF NOT Expr.IsWritable (ce.args[0], traced := FALSE) THEN
       Error.Msg ("DISPOSE: must be applied to a writable designator");
     ELSIF NOT info.isTraced THEN
       Expr.NeedsAddress (ce.args[0]);
@@ -44,16 +44,16 @@ PROCEDURE Prep (ce: CallExpr.T) =
     proc: Procedure.T;
     info: Type.Info;
   BEGIN
-    Expr.PrepLValue (e, lhs := TRUE);
+    Expr.PrepLValue (e, traced := FALSE);
     t := Type.CheckInfo (t, info);
     IF info.isTraced THEN
-      Expr.CompileLValue (e, lhs := TRUE);
+      Expr.CompileLValue (e, traced := FALSE);
       CG.Load_nil ();
       CG.Store_indirect (CG.Type.Addr, 0, Target.Address.size);
     ELSE
       proc := RunTyme.LookUpProc (PHook [Type.IsSubtype (t, ObjectAdr.T)]);
       Procedure.StartCall (proc);
-      Expr.CompileAddress (e, lhs := TRUE);
+      Expr.CompileAddress (e, traced := FALSE);
       CG.Pop_param (CG.Type.Addr);
       Procedure.EmitCall (proc);
     END;
