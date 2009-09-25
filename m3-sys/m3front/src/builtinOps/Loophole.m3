@@ -48,14 +48,14 @@ PROCEDURE Compile (ce: CallExpr.T) =
     Expr.Compile (ce.args[0]);
   END Compile;
 
-PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
+PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
   BEGIN
-    Expr.PrepLValue (ce.args[0], lhs);
+    Expr.PrepLValue (ce.args[0], traced);
   END PrepLV;
 
-PROCEDURE CompileLV (ce: CallExpr.T; lhs: BOOLEAN) =
+PROCEDURE CompileLV (ce: CallExpr.T; traced: BOOLEAN) =
   BEGIN
-    Expr.CompileLValue (ce.args[0], lhs);
+    Expr.CompileLValue (ce.args[0], traced);
   END CompileLV;
 
 PROCEDURE IsWritable (ce: CallExpr.T;  lhs: BOOLEAN): BOOLEAN =

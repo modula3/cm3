@@ -305,7 +305,7 @@ PROCEDURE Prep (p: P) =
         (* skip *)
     | Class.cFIELD =>
         IF Expr.IsDesignator (p.expr)
-          THEN Expr.PrepLValue (p.expr, lhs := FALSE);
+          THEN Expr.PrepLValue (p.expr, traced := FALSE);
           ELSE Expr.Prep (p.expr);
         END;
         Field.Split (p.obj, field);
@@ -384,7 +384,7 @@ PROCEDURE Compile (p: P) =
         END;
         Field.Split (p.obj, field);
         IF Expr.IsDesignator (p.expr)
-          THEN Expr.CompileLValue (p.expr, lhs := FALSE);
+          THEN Expr.CompileLValue (p.expr, traced := FALSE);
           ELSE Expr.Compile (p.expr);
         END;
         CG.Add_offset (field.offset);
@@ -431,7 +431,7 @@ PROCEDURE Compile (p: P) =
     END;
  END Compile;
 
-PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
+PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
     CASE p.class OF
@@ -441,12 +441,12 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
         (* skip *)
     | Class.cFIELD =>
         IF Expr.IsDesignator (p.expr)
-          THEN Expr.PrepLValue (p.expr, lhs);
+          THEN Expr.PrepLValue (p.expr, traced);
           ELSE Expr.Prep (p.expr);
         END;
     | Class.cOBJFIELD =>
         Expr.Prep (p.expr);
-        IF lhs AND Host.doGenGC THEN
+        IF traced AND Host.doGenGC THEN
           EVAL Type.CheckInfo (p.type, info);
           IF NOT info.isTraced THEN RETURN END;
           EVAL Type.CheckInfo (Expr.TypeOf (p.expr), info);
@@ -464,7 +464,7 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
     END;
   END PrepLV;
 
-PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: P;  traced: BOOLEAN) =
   VAR obj_offset, obj_align: INTEGER;  field: Field.Info;
   BEGIN
     CASE p.class OF
@@ -476,12 +476,12 @@ PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
         END;
     | Class.cFIELD =>
         Field.Split (p.obj, field);
-        Expr.CompileLValue (p.expr, lhs);
+        Expr.CompileLValue (p.expr, traced);
         CG.Add_offset (field.offset);
     | Class.cOBJFIELD =>
         Field.Split (p.obj, field);
         IF p.temp # NIL THEN
-          <*ASSERT lhs*>
+          <*ASSERT traced*>
           CG.Push (p.temp);
           CG.Free (p.temp);
           p.temp := NIL;

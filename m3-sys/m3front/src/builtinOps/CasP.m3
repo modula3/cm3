@@ -32,7 +32,7 @@ PROCEDURE DoCheck (name: TEXT; ce: CallExpr.T) =
     END;
     IF (NOT Expr.IsDesignator (e)) THEN
       Error.Txt (name, "first argument must be a variable");
-    ELSIF (NOT Expr.IsWritable (e, lhs := TRUE)) THEN
+    ELSIF (NOT Expr.IsWritable (e, traced := FALSE)) THEN
       Error.Txt (name, "first argument must be writable");
     ELSE
       Expr.NeedsAddress (e);
@@ -55,7 +55,7 @@ PROCEDURE DoCheck (name: TEXT; ce: CallExpr.T) =
 
 PROCEDURE Prep (ce: CallExpr.T) =
   BEGIN
-    Expr.PrepLValue (ce.args[0], lhs := TRUE);
+    Expr.PrepLValue (ce.args[0], traced := FALSE);
     Expr.Prep (ce.args[1]);
     Expr.Prep (ce.args[2]);
   END Prep;
@@ -63,7 +63,7 @@ PROCEDURE Prep (ce: CallExpr.T) =
 PROCEDURE Compile (ce: CallExpr.T) =
   VAR lhs := ce.args[0];
   BEGIN
-    Expr.CompileAddress (lhs, lhs := TRUE); CG.Force ();
+    Expr.CompileAddress (lhs, traced := FALSE); CG.Force ();
     Expr.Compile (ce.args[1]); CG.Force ();
     Expr.Compile (ce.args[2]); CG.Force ();
     CG.CasP (Type.CGType (Expr.TypeOf (lhs), in_memory := TRUE),

@@ -165,7 +165,7 @@ PROCEDURE NeedsAddress (p: P) =
 PROCEDURE Prep (p: P) =
   VAR info: Type.Info;
   BEGIN
-    PrepLV (p, lhs := FALSE);
+    PrepLV (p, traced := FALSE);
     EVAL Type.CheckInfo (p.type, info);
     IF Host.doIncGC AND info.isTraced THEN
       CASE info.class OF
@@ -179,12 +179,12 @@ PROCEDURE Prep (p: P) =
     END
   END Prep;
 
-PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
+PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
   VAR e := Expr.ConstValue (p.biased_b);
   BEGIN
     IF (e # NIL) THEN p.biased_b := e; END;
     IF Expr.IsDesignator (p.a)
-      THEN Expr.PrepLValue (p.a, lhs);
+      THEN Expr.PrepLValue (p.a, traced);
       ELSE Expr.Prep (p.a);
     END;
     Expr.Prep (p.biased_b);
@@ -202,7 +202,7 @@ PROCEDURE Compile (p: P) =
     END
   END Compile;
 
-PROCEDURE CompileLV (p: P; lhs := FALSE) =
+PROCEDURE CompileLV (p: P; traced := FALSE) =
   VAR
     ti, te    : Type.T;
     subscript : INTEGER;
@@ -220,7 +220,7 @@ PROCEDURE CompileLV (p: P; lhs := FALSE) =
     <* ASSERT b *>
 
     IF Expr.IsDesignator (p.a)
-      THEN Expr.CompileLValue (p.a, lhs);
+      THEN Expr.CompileLValue (p.a, traced);
       ELSE Expr.Compile (p.a);
     END;
 

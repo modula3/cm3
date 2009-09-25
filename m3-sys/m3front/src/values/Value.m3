@@ -277,7 +277,7 @@ PROCEDURE Init (t: T;  name: M3ID.T;  c: Class) =
     t.class      := c;
     t.checked    := FALSE;
     t.readonly   := FALSE;
-    t.lhs        := FALSE;
+    t.traced     := FALSE;
     t.external   := FALSE;
     t.unused     := FALSE;
     t.obsolete   := FALSE;
@@ -379,9 +379,9 @@ PROCEDURE IsImported (t: T): BOOLEAN =
     RETURN (t # NIL) AND (t.imported);
   END IsImported;
 
-PROCEDURE IsWritable (t: T;  lhs: BOOLEAN): BOOLEAN =
+PROCEDURE IsWritable (t: T;  traced: BOOLEAN): BOOLEAN =
   BEGIN
-    IF lhs THEN t.lhs := TRUE END;
+    IF traced THEN t.traced := TRUE END;
     RETURN NOT t.readonly;
   END IsWritable;
 

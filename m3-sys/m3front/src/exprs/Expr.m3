@@ -145,26 +145,26 @@ PROCEDURE Compile (t: T) =
     t.compile ();
   END Compile;
 
-PROCEDURE PrepLValue (t: T; lhs: BOOLEAN) =
+PROCEDURE PrepLValue (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     Type.Compile (t.type);
     <* ASSERT t.checked *>
-    t.prepLV (lhs);
+    t.prepLV (traced);
   END PrepLValue;
 
-PROCEDURE CompileLValue (t: T; lhs: BOOLEAN) =
+PROCEDURE CompileLValue (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     <* ASSERT t.checked *>
-    t.compileLV (lhs);
+    t.compileLV (traced);
   END CompileLValue;
 
-PROCEDURE CompileAddress (t: T; lhs: BOOLEAN) =
+PROCEDURE CompileAddress (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     <* ASSERT t.checked *>
-    t.compileLV (lhs);
+    t.compileLV (traced);
     CG.Check_byte_aligned ();
   END CompileAddress;
 
@@ -303,7 +303,7 @@ PROCEDURE NoCompile (<*UNUSED*> t: T) =
     <*ASSERT FALSE*>
   END NoCompile;
 
-PROCEDURE NotLValue (<*UNUSED*> t: T; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE NotLValue (<*UNUSED*> t: T; <*UNUSED*> traced: BOOLEAN) =
   BEGIN
     <* ASSERT FALSE *>
   END NotLValue;

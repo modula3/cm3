@@ -48,7 +48,7 @@ PROCEDURE Parse (): Stmt.T =
   END Parse;
 
 PROCEDURE CheckMethod (p: P;  VAR cs: Stmt.CheckState) =
-  VAR tlhs: Type.T;
+  VAR tlhs: Type.T;  rhs_info: Type.Info;
   BEGIN
     Expr.TypeCheck (p.lhs, cs);
     Expr.TypeCheck (p.rhs, cs);
@@ -56,19 +56,25 @@ PROCEDURE CheckMethod (p: P;  VAR cs: Stmt.CheckState) =
     tlhs := Expr.TypeOf (p.lhs);
     IF  NOT Expr.IsDesignator (p.lhs) THEN
       Error.Msg ("left-hand side is not a designator");
-    ELSIF NOT Expr.IsWritable (p.lhs, lhs := TRUE) THEN
-      Error.Msg ("left-hand side is read-only");
+    ELSE
+      EVAL Type.CheckInfo (Expr.TypeOf (p.rhs), rhs_info);
+      IF NOT Expr.IsWritable (p.lhs, rhs_info.isTraced) THEN
+        Error.Msg ("left-hand side is read-only");
+      END;
     END;
 
     Check (tlhs, p.rhs, cs);
   END CheckMethod;
 
 PROCEDURE Compile (p: P): Stmt.Outcomes =
-  VAR tlhs := Expr.TypeOf (p.lhs);
+  VAR
+    tlhs := Expr.TypeOf (p.lhs);
+    rhs_info: Type.Info;
   BEGIN
-    Expr.PrepLValue (p.lhs, lhs := TRUE);
+    EVAL Type.CheckInfo (Expr.TypeOf (p.rhs), rhs_info);
+    Expr.PrepLValue (p.lhs, traced := rhs_info.isTraced);
     PrepForEmit (tlhs, p.rhs, initializing := FALSE);
-    Expr.CompileLValue (p.lhs, lhs := TRUE);
+    Expr.CompileLValue (p.lhs, traced := rhs_info.isTraced);
     DoEmit (tlhs, p.rhs);
     Expr.NoteWrite (p.lhs);
     RETURN Stmt.Outcomes {Stmt.Outcome.FallThrough};
@@ -350,7 +356,7 @@ PROCEDURE AssignRecord (tlhs: Type.T;  rhs: Expr.T;
   BEGIN
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Expr.IsDesignator (rhs)
-      THEN Expr.CompileLValue (rhs, lhs := FALSE);
+      THEN Expr.CompileLValue (rhs, traced := FALSE);
       ELSE Expr.Compile (rhs);
     END;
     CG.Copy (lhs_info.size, overlap := FALSE);
@@ -362,7 +368,7 @@ PROCEDURE AssignSet (tlhs: Type.T;  rhs: Expr.T;
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Type.IsStructured (tlhs) THEN
       IF Expr.IsDesignator (rhs)
-        THEN Expr.CompileLValue (rhs, lhs := FALSE);
+        THEN Expr.CompileLValue (rhs, traced := FALSE);
         ELSE Expr.Compile (rhs);
       END;
       CG.Copy (lhs_info.size, overlap := FALSE);
@@ -397,7 +403,7 @@ PROCEDURE AssignArray (tlhs: Type.T;  e_rhs: Expr.T;
     (* capture the lhs & rhs pointers *)
     IF (openRHS) OR (openLHS) THEN lhs := CG.Pop (); END;
     IF Expr.IsDesignator (e_rhs)
-      THEN Expr.CompileLValue (e_rhs, lhs := FALSE);
+      THEN Expr.CompileLValue (e_rhs, traced := FALSE);
       ELSE Expr.Compile (e_rhs);
     END;
     IF (openRHS) OR (openLHS) THEN rhs := CG.Pop (); END;
@@ -563,7 +569,7 @@ PROCEDURE DoCheckRecord (tlhs: Type.T;  rhs: Expr.T) =
   BEGIN
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Expr.IsDesignator (rhs)
-      THEN Expr.CompileLValue (rhs, lhs := FALSE);
+      THEN Expr.CompileLValue (rhs, traced := FALSE);
       ELSE Expr.Compile (rhs);
     END;
   END DoCheckRecord;
@@ -573,7 +579,7 @@ PROCEDURE DoCheckSet (tlhs: Type.T;  rhs: Expr.T) =
     AssertSameSize (tlhs, Expr.TypeOf (rhs));
     IF Type.IsStructured (tlhs) THEN
       IF Expr.IsDesignator (rhs)
-        THEN Expr.CompileLValue (rhs, lhs := FALSE);
+        THEN Expr.CompileLValue (rhs, traced := FALSE);
         ELSE Expr.Compile (rhs);
       END;
     ELSE (* small set *)
@@ -590,7 +596,7 @@ PROCEDURE DoCheckArray (tlhs: Type.T;  e_rhs: Expr.T) =
   BEGIN
     (* evaluate the right-hand side *)
     IF Expr.IsDesignator (e_rhs)
-      THEN Expr.CompileLValue (e_rhs, lhs := FALSE);
+      THEN Expr.CompileLValue (e_rhs, traced := FALSE);
       ELSE Expr.Compile (e_rhs);
     END;
 
