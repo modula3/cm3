@@ -204,12 +204,12 @@ PROCEDURE Compile (p: P) =
     END
   END Compile;
 
-PROCEDURE PrepLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE PrepLV (p: P; <*UNUSED*> traced: BOOLEAN) =
   BEGIN
     IF (p.value = NIL) THEN Resolve (p) END;
   END PrepLV;
 
-PROCEDURE CompileLV (p: P; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: P; <*UNUSED*> traced: BOOLEAN) =
   BEGIN
     IF p.tmp = NIL THEN
       CASE Value.ClassOf (p.value) OF
