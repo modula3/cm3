@@ -379,7 +379,7 @@ fi
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   RSYNC=${RSYNC:-"rsync -vu"}
   type rsync || RSYNC=scp
-  while [ $? != 0 ]; do
+  false; while [ $? != 0 ]; do
     $RSYNC ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
     # Can we just list these on the previous line, or only if they exist?
     for ext in msi deb; do
