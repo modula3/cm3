@@ -106,7 +106,7 @@ if [ -n "${REPORT}" ]; then
   RW="${WORKSPACE}/cm3-pkg-report-${TARGET}.html"
   RJW="${WORKSPACE}/cm3-pkg-report-${TARGET}.xml"
   RJTW="${WORKSPACE}/cm3-pkg-test-report-${TARGET}.xml"
-  R2="`basename ${R} .html`.part2}"
+  R2="`basename ${R} .html`.part2"
   ERRS=""
   REDPKGS=""
   GREENPKGS=""
