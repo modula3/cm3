@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-doc-dist.sh,v 1.3 2009-06-07 16:03:50 wagner Exp $
+# $Id: make-doc-dist.sh,v 1.4 2009-09-27 13:09:43 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -42,7 +42,7 @@ cd "${ROOT}" || exit 1
 /bin/ls -1d doc/src_reports/*.ps >> .tar-exclude
 /bin/ls -1d doc/src_reports/*.ps.gz >> .tar-exclude
 echo "building exclude list..."
-find doc \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
+$FIND doc \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
           -name '*.rej'  -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
           \( -name 'CVS' -a -type d \) \) -print | \
   sed -e 's;^./;;' >> .tar-exclude
