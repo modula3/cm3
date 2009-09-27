@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.34 2009-09-27 00:24:28 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.35 2009-09-27 00:24:47 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -357,7 +357,7 @@ if type python; then
       mv "$INSTALLROOT.msi" "$STAGE/cm3-$DS.msi"
     fi
   else
-    if echo $TARGET | grep >/dev/null; then
+    if echo $TARGET | grep LINUX >/dev/null; then
       if [ -x "$ROOT/scripts/python/make-deb.py" ]; then
         echo "work in progress"
         # python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
