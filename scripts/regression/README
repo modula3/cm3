@@ -60,4 +60,3 @@ Now you can do
 or
 # BUILD_REL=lastok ./tinderbox-build.sh ./cm3.build
 as above. We do it nightly in a cron job.
-
