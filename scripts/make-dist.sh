@@ -357,7 +357,7 @@ if type python; then
       mv "$INSTALLROOT.msi" "$STAGE/cm3-$DS.msi"
     fi
   else
-    if echo $TARGET | grep >/dev/null; then
+    if echo $TARGET | grep LINUX >/dev/null; then
       if [ -x "$ROOT/scripts/python/make-deb.py" ]; then
         echo "work in progress"
         # python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
