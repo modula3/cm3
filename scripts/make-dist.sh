@@ -350,6 +350,9 @@ done
 
 set -x
 
+# cleanup after previous failed runs of package making
+rm -rf $STAGE/usr/local/cm3
+
 if type python; then
   if [ "x$TARGET" = "xNT386" ]; then
     python "$ROOT/scripts/python/make-msi.py" "$INSTALLROOT"
