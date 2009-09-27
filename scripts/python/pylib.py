@@ -2943,7 +2943,7 @@ def MakeDebianPackage(input, prefix):
     os.chdir("./debian")
     architecture = DebianArchitecture.get(Target)
     control = (
-      "Package: cm3-" + TARGET + "-" + CM3VERSION + newline
+      "Package: cm3-" + Target + "-" + CM3VERSION + newline
     + "Version: 1.0" + newline
     + "Maintainer: somebody@somewhere.com" + newline
     + "Architecture: " + architecture + newline
