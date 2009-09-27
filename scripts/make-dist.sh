@@ -28,9 +28,11 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
+DS=${DS:-"pre-RC4"}; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
+COLLDEPS="${ROOT}/www/releng/collection-deps.txt"
 
 cd "${ROOT}" || exit 1
 
@@ -205,19 +207,37 @@ support tools like m3bundle and some general useful libraries.
 </ul>
 '
 
+#
+# Windows setup is one constant setup.cmd, with a setup.txt
+# next to it, containing relative directories from $ROOT.
+# Unix setup is a generated install.sh at least for now.
+#
+
 cd "${ROOT}"
 for c in ${PKG_COLLECTIONS}; do
+  rm -f setup.txt
   P=`fgrep " $c" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
   PKGS=""
   for x in $P; do
+    p="$x"
     if [ -d "$x" ] ; then
       PKGS="${PKGS} $x"
+      echo "$x" >> setup.txt
     else
       p=`pkgpath $x`
       if [ -d "$p" ] ; then
         PKGS="${PKGS} $p"
+        echo "$p" >> setup.txt
       else
         echo " *** cannot find package $x / $p" 1>&2
+        exit 1
+      fi
+    fi
+    m3ship="${p}/${TARGET}/.M3SHIP"
+    if [ -f ${m3ship} ]; then
+      if res=`egrep '/home|/var|/tmp' ${m3ship}`; then
+        echo "${m3ship} seems to be broken:" 1>&2
+        echo "${res}" 1>&2
         exit 1
       fi
     fi
@@ -232,32 +252,7 @@ for c in ${PKG_COLLECTIONS}; do
     echo "done"
   ) > install.sh
   chmod 755 install.sh
-  echo "making setup.cmd"
-  (
-    echo 'REM ---BEGIN---'
-    echo '@echo off'
-    printf 'for %%%%p in ('
-    for p in ${PKGS}; do
-      printf "%s; " ${p}
-    done
-    echo ') do call :ShipIt %%p'
-    cat <<EOF
-goto End
- 
-:ShipIt
-echo ...shipping %1...
-pushd %1
-cm3 -ship %SHIPARGS%
-popd
-echo.
-goto :EOF
- 
-:End
-echo done
-@echo on
-REM ---END---
-EOF
-  ) > setup.cmd
+  cp -p $ROOT/scripts/win/setup.cmd $ROOT/setup.cmd
   chmod 755 setup.cmd
   (
     echo "<html>"
@@ -320,12 +315,27 @@ EOF
       --exclude '*/CVS/*' --exclude '*/CVS' --exclude '*~' \
       --exclude '*.tar.*' --exclude '*.tgz' --exclude "*/${TARGET}/gcc" \
       --exclude "*/${TARGET}/*/*" \
-      -czf "${ARCHIVE}" collection-${c}.html install.sh setup.cmd ${PKGS}
+      -czf "${ARCHIVE}" collection-${c}.html install.sh setup.txt setup.cmd ${PKGS}
       ls -l "${ARCHIVE}"
   fi
 done
 
 set -x
+
+if type python; then
+  if [ "x$TARGET" = "xNT386" ]; then
+    python "$ROOT/scripts/python/make-msi.py" "$INSTALLROOT"
+    mv "$INSTALLROOT.msi" "$STAGE/cm3-$TARGET-$DS.msi"
+  else
+    python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
+    mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-$DS.deb"
+  fi
+else
+  echo "python not available, skipping .msi and .deb creation"
+fi
+
+echo "hostname=`hostname`"
+echo "SHIPRC=$SHIPRC"
 
 if [ `hostname` = 'birch' ]; then
   ARCHIVE="${STAGE}/cm3-scripts-${CM3VERSION}-${DS}.tgz"
@@ -338,9 +348,23 @@ if [ `hostname` = 'birch' ]; then
     -czf "${ARCHIVE}" doc www
   ls -l "${ARCHIVE}"
 fi
+
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
-  scp ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+  RSYNC=${RSYNC:-"rsync -vu"}
+  type rsync || RSYNC=scp
+  false; while [ $? != 0 ]; do
+    $RSYNC ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+  done
+  for ext in msi deb; do
+    if [ -r "$STAGE/cm3-$TARGET-$DS.$ext" ]; then
+      false; while [ $? != 0 ]; do
+        $RSYNC "$STAGE/cm3-$TARGET-$DS.$ext" $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+      done
+    fi
+  done
   if [ `hostname` = 'birch' ]; then
-    scp collection-*.html $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+    false; while [ $? != 0 ]; do
+      $RSYNC collection-*.html $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+    done
   fi
 fi
