@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.74.2.18 2009-08-29 05:57:33 jkrell Exp $
+# $Id: sysinfo.sh,v 1.74.2.19 2009-09-27 19:09:38 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -50,7 +50,7 @@ header() {
 # Arguments are filename and default pathname.
 # Check for argument count and protect against passing a path as a
 # filename. Try to not mangle pathnames with spaces.
-# 
+ 
 find_exe() {
   if [ $# -eq 2 -a `basename "$1"` = "$1" ] ; then
     file="$1"
@@ -77,6 +77,7 @@ qgrep() {
 
 #-----------------------------------------------------------------------------
 # abstraction functions
+
 cygpath() {
   echo "$2"
 }
@@ -147,8 +148,6 @@ CM3_GDB=${CM3_GDB:-yes}
 #
 CM3_INSTALL=${CM3_INSTALL:-`dirname \`find_exe cm3 /usr/local/cm3/\ \``}
 CM3=${CM3:-cm3}
-M3BUILD=${M3BUILD:-m3build}
-M3SHIP=${M3SHIP:-m3ship}
 EXE=""
 SL="/"
 
@@ -307,7 +306,6 @@ if [ "${M3OSTYPE}" = "WIN32" ] ; then
 else
   CM3ROOT="${ROOT}"
 fi
-
 
 #-----------------------------------------------------------------------------
 # elego customizations
