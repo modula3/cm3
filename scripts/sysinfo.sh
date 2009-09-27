@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.85 2009-09-21 20:03:58 jkrell Exp $
+# $Id: sysinfo.sh,v 1.86 2009-09-27 13:11:49 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -337,6 +337,8 @@ debug "CM3ROOT     = $CM3ROOT"
 debug "CM3VERSION  = $CM3VERSION"
 debug "CM3VERSIONNUM = $CM3VERSIONNUM"
 debug "CM3LASTCHANGED = $CM3LASTCHANGED"
+debug "FIND = $FIND"
+debug "EGREP = $EGREP"
 
 export ROOT M3GDB M3OSTYPE TARGET GCC_BACKEND INSTALLROOT PKGSDB
 export GREP TMPDIR EXE SL CM3VERSION TAR
