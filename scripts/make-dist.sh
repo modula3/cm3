@@ -361,7 +361,7 @@ if type python; then
       if [ -x "$ROOT/scripts/python/make-deb.py" ]; then
         echo "work in progress"
         # python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
-        # mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-$DS.msi"
+        # mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-$DS.deb"
       fi
     fi
   fi
