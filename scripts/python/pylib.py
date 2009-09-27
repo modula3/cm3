@@ -2910,7 +2910,7 @@ DebianArchitecture = {
   "SPARC32_LINUX" : "sparc",
   "SPARC64_LINUX" : "sparc" }
 
-def MakeDebianPackage(name, input, output, prefix):
+def MakeDebianPackage(input, prefix):
 #
 # .deb file format:
 # an ar archive containing (I think the order matters):
@@ -2922,11 +2922,18 @@ def MakeDebianPackage(name, input, output, prefix):
 #     payload
 # User has no choice where the install goes.
 #
-    compresser = "lzma"
-    compressed_extension = "lzma"
+    if SearchPath("lzma"):
+        compresser = "lzma"
+        compressed_extension = "lzma"
+    elif isfile("/home/jkrell/bin/lzma"):
+        compresser = "/home/jkrell/bin/lzma"
+        compressed_extension = "lzma"
+    else:
+        compresser = "gzip"
+        compressed_extension = "gz"
     # while testing, gzip is much faster
-    #compresser = "gzip"
-    #compressed_extension = "gz"
+    compresser = "gzip"
+    compressed_extension = "gz"
     print("cd " + input)
     os.chdir(input)
     CreateDirectory("./debian")
@@ -2936,7 +2943,7 @@ def MakeDebianPackage(name, input, output, prefix):
     os.chdir("./debian")
     architecture = DebianArchitecture.get(Target)
     open("./control", "w").write(
-      "Package: cm3-" + name + newline
+      "Package: cm3-" + TARGET + "-" + CM3VERSION + newline
     + "Version: 1.0" + newline
     + "Maintainer: somebody@somewhere.com" + newline
     + "Architecture: " + architecture + newline
