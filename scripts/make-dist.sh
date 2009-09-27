@@ -381,12 +381,13 @@ if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   type rsync || RSYNC=scp
   false; while [ $? != 0 ]; do
     $RSYNC ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
-    # Can we just list these on the previous line, or only if they exist?
-    for ext in msi deb; do
-      if [ -r "$STAGE/cm3-$TARGET-$DS.$ext" ]; then
+  done
+  for ext in msi deb; do
+    if [ -r "$STAGE/cm3-$TARGET-$DS.$ext" ]; then
+      false; while [ $? != 0 ]; do
         $RSYNC "$STAGE/cm3-$TARGET-$DS.$ext" $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
-      fi
-    done
+      done
+    fi
   done
   if [ `hostname` = 'birch' ]; then
     false; while [ $? != 0 ]; do
