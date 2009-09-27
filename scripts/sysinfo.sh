@@ -1,9 +1,31 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.86 2009-09-27 13:11:49 jkrell Exp $
+# $Id: sysinfo.sh,v 1.87 2009-09-27 19:08:11 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
+#-----------------------------------------------------------------------------
+# mark that we have run (or are about to)
+
 SYSINFO_DONE="yes"
+
+#-----------------------------------------------------------------------------
+# determine $root
+
+if [ -n "$ROOT" -a -d "$ROOT" ] ; then
+  sysinfo="$ROOT/scripts/sysinfo.sh"
+  root="${ROOT}"; export root
+else
+  root=`pwd`
+  while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do
+    root=`dirname $root`
+  done
+  sysinfo="$root/scripts/sysinfo.sh"
+  if [ ! -f "$sysinfo" ] ; then
+    echo "scripts/sysinfo.sh not found" 1>&2
+    exit 1
+  fi
+  export root
+fi
 
 #-----------------------------------------------------------------------------
 # output functions
@@ -91,9 +113,6 @@ find_in_list() {
 
 #-----------------------------------------------------------------------------
 
-UNAME=${UNAME:-`uname`}
-UNAMEM=${UNAMEM:=`uname -m`}
-
 PRJ_ROOT=${PRJ_ROOT:-${HOME}/work}
 
 #-----------------------------------------------------------------------------
@@ -117,7 +136,6 @@ CM3LASTCHANGED=${CM3LASTCHANGED:-${default_CM3LASTCHANGED}}
 
 find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
 find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
-
 
 CM3_GCC_BACKEND=yes
 CM3_GDB=${CM3_GDB:-yes}
@@ -170,11 +188,13 @@ fi
 
 #-----------------------------------------------------------------------------
 # evaluate uname information
-case "${UNAME}" in
+
+CM3_OSTYPE=POSIX
+
+case "`uname`" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
     if [ x$TARGET = xNT386GNU ] ; then
-      CM3_OSTYPE=POSIX
       CM3_TARGET=NT386GNU
     else
       CM3_OSTYPE=WIN32
@@ -195,83 +215,68 @@ case "${UNAME}" in
   ;;
 
   NT386GNU*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=NT386GNU
   ;;
 
   FreeBSD*)
-    CM3_OSTYPE=POSIX
-    if [ "`uname -m`" = i386 ] ; then
-      case "`uname -r`" in
-        1*) CM3_TARGET=FreeBSD;;
-        2*) CM3_TARGET=FreeBSD2;;
-        3*) CM3_TARGET=FreeBSD3;;
-        4*) CM3_TARGET=FreeBSD4;;
-        *) CM3_TARGET=FreeBSD4;;
-      esac
-    else
-      CM3_TARGET=FBSD_ALPHA
-    fi
+    case "`uname -p`" in
+      amd64)    CM3_TARGET=${CM3_TARGET:-AMD64_FREEBSD};;
+      i*86)     CM3_TARGET=${CM3_TARGET:-FreeBSD4};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
   ;;
 
   Darwin*)
-    CM3_OSTYPE=POSIX
-    # detect the m3 platform (Darwin runs on ppc and ix86
     case "`uname -p`" in
       powerpc*)
-        CM3_TARGET=PPC_DARWIN;;
+        CM3_TARGET=${CM3_TARGET:-PPC_DARWIN};;
       i[3456]86*)
-        CM3_TARGET=I386_DARWIN;;
+        if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
+          CM3_TARGET=${CM3_TARGET:-AMD64_DARWIN}
+        else
+          CM3_TARGET=${CM3_TARGET:-I386_DARWIN}
+        fi
+        ;;
+      *) echo "$0 does not know about `uname -a`"
+         exit 1;;
     esac
   ;;
 
   SunOS*)
-    CM3_OSTYPE=POSIX
-    CM3_TARGET=${CM3_TARGET:-"SOLgnu"}
-    #CM3_TARGET=${CM3_TARGET:-"SOLsun"}
+    CM3_TARGET=${CM3_TARGET:-SOLgnu}
+    #CM3_TARGET=${CM3_TARGET:-SOLsun}
   ;;
 
   Interix*)
-    CM3_OSTYPE=POSIX
-    CM3_TARGET=I386_INTERIX
+    CM3_TARGET=${CM3_TARGET:-I386_INTERIX}
   ;;
 
   Linux*)
-    CM3_OSTYPE=POSIX
-    if [ "${UNAMEM}" = "ppc" ] ; then
-      CM3_TARGET=PPC_LINUX
-    elif [ "${UNAMEM}" = "x86_64" ] ; then
-      CM3_TARGET=AMD64_LINUX
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC32_LINUX
-    else
-      CM3_TARGET=LINUXLIBC6
-    fi
+    case "`uname -m`" in
+      ppc*)    CM3_TARGET=${CM3_TARGET:-PPC_LINUX};;
+      x86_64)  CM3_TARGET=${CM3_TARGET:-AMD64_LINUX};;
+      sparc64) CM3_TARGET=${CM3_TARGET:-SPARC32_LINUX};;
+      i*86)    CM3_TARGET=${CM3_TARGET:-LINUXLIBC6};;
+      *)       echo "$0 does not know about `uname -a`"
+               exit 1;;
+    esac
   ;;
 
   NetBSD*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
   ;;
 
   OpenBSD*)
-    CM3_OSTYPE=POSIX
-    ARCH=`arch -s`
-    if [ "${UNAMEM}" = "macppc" ] ; then
-      CM3_TARGET=PPC32_OPENBSD
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC64_OPENBSD
-    elif [ "${ARCH}" = "mips64" ] ; then
-      CM3_TARGET=MIPS64_OPENBSD
-    elif [ "${ARCH}" = "i386" ] ; then
-      CM3_TARGET=I386_OPENBSD
-    else
-      echo Update $0 for ${ARCH}
-      exit 1
-    fi
+    case "`uname -m`" in
+      macppc)   CM3_TARGET=${CM3_TARGET:-PPC32_OPENBSD};;
+      sparc64)  CM3_TARGET=${CM3_TARGET:-SPARC64_OPENBSD};;
+      mips64)   CM3_TARGET=${CM3_TARGET:-MIPS64_OPENBSD};;
+      i386)     CM3_TARGET=${CM3_TARGET:-I386_OPENBSD};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
   ;;
-
-  # more need to be added here, I haven't got all the platform info ready
 
 esac
 
