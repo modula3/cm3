@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.44 2009-09-27 12:53:27 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.45 2009-09-27 18:41:51 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -349,6 +349,9 @@ EOF
 done
 
 set -x
+
+# cleanup after previous failed runs of package making
+rm -rf $STAGE/usr/local/cm3
 
 if type python; then
   if [ "x$TARGET" = "xNT386" ]; then
