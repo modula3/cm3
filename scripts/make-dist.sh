@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.40 2009-09-27 09:57:36 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.41 2009-09-27 09:58:17 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -385,7 +385,7 @@ fi
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   RSYNC=${RSYNC:-"rsync -vu"}
   type rsync || RSYNC=scp
-  false; while [ $? != 0 ]; do
+  while [ $? != 0 ]; do
     $RSYNC ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
     # Can we just list these on the previous line, or only if they exist?
     for ext in msi deb; do
