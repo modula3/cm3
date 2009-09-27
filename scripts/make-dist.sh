@@ -393,7 +393,7 @@ if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
       if [ -r "$STAGE/cm3-$TARGET-$DS.$ext" ]; then
         $RSYNC "$STAGE/cm3-$TARGET-$DS.$ext" $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
       fi
-    do
+    done
   done
   if [ `hostname` = 'birch' ]; then
     false; while [ $? != 0 ]; do
