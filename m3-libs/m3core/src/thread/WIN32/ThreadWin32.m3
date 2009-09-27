@@ -867,6 +867,12 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     UNTIL (act = allThreads);
   END ProcessStacks;
 
+PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
+  BEGIN
+    (* experimental, unimplemented here *)
+    <*ASSERT FALSE*>
+  END start;
+
 PROCEDURE VerifySP (start, stop: ADDRESS): ADDRESS =
   (* Apparently, Win95 will lie about a thread's stack pointer! *)
   (* Verify that the claimed stack pages are really readable... *)
@@ -913,6 +919,12 @@ PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState =
   BEGIN
     RETURN ADR(me.heapState);
   END MyHeapState;
+
+PROCEDURE MyFPState(): UNTRACED REF FloatMode.ThreadState =
+  VAR me := GetActivation();
+  BEGIN
+    RETURN ADR(me.floatState);
+  END MyFPState;
 
 PROCEDURE DisableSwitching () =
   BEGIN
