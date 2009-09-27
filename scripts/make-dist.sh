@@ -359,9 +359,8 @@ if type python; then
   else
     if echo $TARGET | grep LINUX >/dev/null; then
       if [ -x "$ROOT/scripts/python/make-deb.py" ]; then
-        echo "work in progress"
-        # python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
-        # mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-$DS.deb"
+        python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
+        mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-$DS.deb"
       fi
     fi
   fi
