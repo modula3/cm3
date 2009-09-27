@@ -2942,12 +2942,14 @@ def MakeDebianPackage(input, prefix):
     open("./debian-binary", "w").write("2.0" + newline)
     os.chdir("./debian")
     architecture = DebianArchitecture.get(Target)
-    open("./control", "w").write(
+    control = (
       "Package: cm3-" + TARGET + "-" + CM3VERSION + newline
     + "Version: 1.0" + newline
     + "Maintainer: somebody@somewhere.com" + newline
     + "Architecture: " + architecture + newline
     + "Description: good stuff" + newline)
+    print("control:" + control)
+    open("./control", "w").write(control)
 
     command = "tar cfz ../control.tar.gz ."    
     print(command)
