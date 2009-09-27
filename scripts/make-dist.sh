@@ -350,15 +350,23 @@ done
 
 set -x
 
-if [ "x$TARGET" = "xNT386" ]; then
-  if [ -x "$ROOT/scripts/python/make-msi.py" ]; then
-    if type python; then
+if type python; then
+  if [ "x$TARGET" = "xNT386" ]; then
+    if [ -x "$ROOT/scripts/python/make-msi.py" ]; then
       python "$ROOT/scripts/python/make-msi.py" "$INSTALLROOT"
       mv "$INSTALLROOT.msi" "$STAGE/cm3-$DS.msi"
-    else
-      echo "python not available, skipping .msi creation"
+    fi
+  else
+    if echo $TARGET | grep >/dev/null; then
+      if [ -x "$ROOT/scripts/python/make-deb.py" ]; then
+        echo "work in progress"
+        # python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
+        # mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-$DS.msi"
+      fi
     fi
   fi
+else
+  echo "python not available, skipping .msi and .deb creation"
 fi
 
 echo "hostname=`hostname`"
