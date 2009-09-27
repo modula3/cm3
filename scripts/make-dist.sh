@@ -352,17 +352,11 @@ set -x
 
 if type python; then
   if [ "x$TARGET" = "xNT386" ]; then
-    if [ -x "$ROOT/scripts/python/make-msi.py" ]; then
-      python "$ROOT/scripts/python/make-msi.py" "$INSTALLROOT"
-      mv "$INSTALLROOT.msi" "$STAGE/cm3-$TARGET-$DS.msi"
-    fi
+    python "$ROOT/scripts/python/make-msi.py" "$INSTALLROOT"
+    mv "$INSTALLROOT.msi" "$STAGE/cm3-$TARGET-$DS.msi"
   else
-    if echo $TARGET | grep LINUX >/dev/null; then
-      if [ -x "$ROOT/scripts/python/make-deb.py" ]; then
-        python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
-        mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-$DS.deb"
-      fi
-    fi
+    python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
+    mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-$DS.deb"
   fi
 else
   echo "python not available, skipping .msi and .deb creation"
