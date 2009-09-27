@@ -42,7 +42,7 @@ cd "${ROOT}" || exit 1
 /bin/ls -1d doc/src_reports/*.ps >> .tar-exclude
 /bin/ls -1d doc/src_reports/*.ps.gz >> .tar-exclude
 echo "building exclude list..."
-find doc \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
+$FIND doc \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
           -name '*.rej'  -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
           \( -name 'CVS' -a -type d \) \) -print | \
   sed -e 's;^./;;' >> .tar-exclude
