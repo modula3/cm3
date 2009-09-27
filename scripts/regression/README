@@ -43,10 +43,10 @@ This will install into "~/work".
 
 Now you can invoke the whole checkout, build and test cycle, using the
 last release binary distribution as base, with
-# ./tinderbox-build.sh cm3.build
+# ./tinderbox-build.sh ./cm3.build
 
 If you want to use the last sucessfully built version as base, invoke
-# BUILD_REL=lastok ./tinderbox-build.sh cm3.build
+# BUILD_REL=lastok ./tinderbox-build.sh ./cm3.build
 
 By default, this will just output the results to stdout.
 If you'd like to contribute your test results to the elego tinderbox server,
@@ -56,8 +56,7 @@ Next you need to uncomment right line of the "tinderbox_mailer"-function in cm3.
 Now make sure you have set up passwordless ssh to modula3.elegosoft.com and tinderbox.elego.de. I needed to change my your ~/.ssh/config.
 
 Now you can do
-# ./tinderbox-build.sh cm3.build
+# ./tinderbox-build.sh ./cm3.build
 or
-# BUILD_REL=lastok ./tinderbox-build.sh cm3.build
+# BUILD_REL=lastok ./tinderbox-build.sh ./cm3.build
 as above. We do it nightly in a cron job.
-
