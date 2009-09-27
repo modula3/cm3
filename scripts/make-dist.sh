@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.35 2009-09-27 00:24:47 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.36 2009-09-27 00:37:11 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -354,7 +354,7 @@ if type python; then
   if [ "x$TARGET" = "xNT386" ]; then
     if [ -x "$ROOT/scripts/python/make-msi.py" ]; then
       python "$ROOT/scripts/python/make-msi.py" "$INSTALLROOT"
-      mv "$INSTALLROOT.msi" "$STAGE/cm3-$DS.msi"
+      mv "$INSTALLROOT.msi" "$STAGE/cm3-$TARGET-$DS.msi"
     fi
   else
     if echo $TARGET | grep LINUX >/dev/null; then
@@ -388,10 +388,12 @@ if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   type rsync || RSYNC=scp
   false; while [ $? != 0 ]; do
     $RSYNC ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
-    # Can we just list this on the previous line, or only if it exists?
-    if [ -r "$STAGE/cm3-$DS.msi" ]; then
-      $RSYNC "$STAGE/cm3-$DS.msi" $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
-    fi
+    # Can we just list these on the previous line, or only if it exists?
+    for ext in msi deb; do
+      if [ -r "$STAGE/cm3-$TARGET-$DS.$ext" ]; then
+        $RSYNC "$STAGE/cm3-$TARGET-$DS.$ext" $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+      fi
+    do
   done
   if [ `hostname` = 'birch' ]; then
     false; while [ $? != 0 ]; do
