@@ -534,6 +534,11 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     UNTIL t = me;
   END ProcessStacks;
 
+PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
+  BEGIN
+    ProcessStacks(p);
+  END start;
+
 (*------------------------------------------------- I/O and Timer support ---*)
 
 PROCEDURE Pause(n: LONGREAL)=
