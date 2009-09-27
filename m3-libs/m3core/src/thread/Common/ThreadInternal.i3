@@ -8,7 +8,7 @@
 
 UNSAFE INTERFACE ThreadInternal;
 
-IMPORT (*FloatMode, *)RTHeapRep;
+IMPORT FloatMode, RTHeapRep;
 
 (*--------------------------------------------- garbage collector support ---*)
 
