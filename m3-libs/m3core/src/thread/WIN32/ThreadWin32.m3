@@ -8,7 +8,7 @@
 UNSAFE MODULE ThreadWin32 EXPORTS
 Thread, ThreadF, Scheduler, ThreadInternal, RTOS, RTHooks, ThreadWin32;
 
-IMPORT RTError, WinGDI, RTParams;
+IMPORT RTError, WinGDI, RTParams, FloatMode;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess;
 FROM Compiler IMPORT ThisFile, ThisLine;
@@ -90,6 +90,7 @@ TYPE
 
       (* thread state *)
       heapState: RTHeapRep.ThreadState;
+      floatState: FloatMode.ThreadState;
     END;
 
 (*----------------------------------------------------------------- Mutex ---*)
@@ -864,11 +865,11 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     UNTIL (act = allThreads);
   END ProcessStacks;
 
-PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessEachStack (<*UNUSED*>p: PROCEDURE (start, stop: ADDRESS)) =
   BEGIN
     (* experimental, unimplemented here *)
     <*ASSERT FALSE*>
-  END start;
+  END ProcessEachStack;
 
 PROCEDURE VerifySP (start, stop: ADDRESS): ADDRESS =
   (* Apparently, Win95 will lie about a thread's stack pointer! *)
