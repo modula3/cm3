@@ -1,3 +1,1 @@
-override ("synloc", ROOT & "/m3-obliq")
-override ("obliqrt", ROOT & "/m3-obliq")
-override ("formsvbt", ROOT & "/m3-ui")
+include(ROOT & "/m3overrides")
