@@ -17,7 +17,14 @@ cd ${WS}/cm3/scripts/regression || {
   exit 1
 }
 
-CM3CG=${WS}/../cm3-m3cc-${TARGET}/cm3/m3-sys/m3cc/${TARGET}/cm3cg
+case "${WS}" in
+  *workspace)
+    CM3CG=${WS}/../../cm3-m3cc-${TARGET}/workspace/cm3/m3-sys/m3cc/${TARGET}/cm3cg
+  ;;
+  *)
+    CM3CG=${WS}/../cm3-m3cc-${TARGET}/cm3/m3-sys/m3cc/${TARGET}/cm3cg
+  ;;
+esac
 if [ "$CLEAN" = "false" ]; then
   if [ -x "${CM3CG}" ]; then
     echo "checking for working pre-built cm3cg in ${CM3CG}"
