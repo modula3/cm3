@@ -553,7 +553,7 @@ test_build_system()
   fi
   if $BUILDSCRIPT buildship; then
     echo " >>> OK build_system ${DS} ${WS}"
-    if ./scripts/isntall-cm3-compiler.sh upgrade; then
+    if ./scripts/install-cm3-compiler.sh upgrade; then
       echo "compiler upgraded successfully"
       cm3 -version
     else
