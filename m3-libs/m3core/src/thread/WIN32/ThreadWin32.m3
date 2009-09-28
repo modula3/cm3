@@ -144,7 +144,7 @@ PROCEDURE LockMutex (m: Mutex) =
       END;
     END;
 
-    IF perfOn THEN PerfChanged(self.id, State.alive) END;
+    IF perfOn THEN PerfRunning(self.id) END;
 
   END LockMutex;
 
@@ -213,11 +213,12 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
     self.nextWaiter := c.waiters;
     c.waiters := self;
     LeaveCriticalSection_cm();
-    UnlockMutex(m);
+    m.release();
+    IF perfOn THEN PerfChanged(self.id, State.waiting) END;
     IF WaitForSingleObject(self.waitSema, INFINITE) # 0 THEN
       Choke(ThisLine());
     END;
-    LockMutex(m);
+    m.acquire();
   END InnerWait;
 
 PROCEDURE InnerTestAlert(self: T) RAISES {Alerted} =
@@ -237,7 +238,6 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   VAR self := Self();
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
-    IF perfOn THEN PerfChanged(self.id, State.waiting) END;
     EnterCriticalSection_cm();
     InnerTestAlert(self);
     self.alertable := TRUE;
@@ -245,7 +245,6 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
     EnterCriticalSection_cm();
     InnerTestAlert(self);
     LeaveCriticalSection_cm();
-    IF perfOn THEN PerfChanged(self.id, State.alive) END;
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
@@ -253,10 +252,8 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   VAR self := Self();
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
-    IF perfOn THEN PerfChanged(self.id, State.waiting) END;
     EnterCriticalSection_cm();
     InnerWait(m, c, self);
-    IF perfOn THEN PerfChanged(self.id, State.alive) END;
   END Wait;
 
 PROCEDURE DequeueHead(c: Condition) =
@@ -744,7 +741,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
       END;
       LeaveCriticalSection_cm();
     END;
-    IF perfOn THEN PerfChanged(self.id, State.alive) END;
+    IF perfOn THEN PerfRunning(self.id) END;
   END AlertPause;
 
 PROCEDURE Yield() =
