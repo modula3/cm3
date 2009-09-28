@@ -6,14 +6,14 @@
 % Last modified on Mon Dec 20 14:14:04 PST 1993 by kalsow
 %      modified on Tue Aug 24 17:03:14 PDT 1993 by wobber
 
-import(netobj)
-import(tcp)
-import(libm3)
+import("netobj")
+import("tcp")
+import("libm3")
 
-interface(EchoRW)
-implementation(Echo)
-netobj(EchoRW,T)
+interface("EchoRW")
+implementation("Echo")
+netobj("EchoRW", "T")
 
-program(echotest)
+program("echotest")
 
 

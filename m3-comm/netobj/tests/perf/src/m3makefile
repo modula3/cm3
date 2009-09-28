@@ -8,18 +8,18 @@
 
 if AT_SRC m3_option("-O") end
 
-import(netobj)
-import(tcp)
-import(libm3)
+import("netobj")
+import("tcp")
+import("libm3")
 
-interface(Test)
-module(XRd)
-implementation(NetObjTest)
-netobj(Test,T)
-netobj(Test,Return)
+interface("Test")
+module("XRd")
+implementation("NetObjTest")
+netobj("Test","T")
+netobj("Test,Return")
 
 build_standalone()
 
-program(test)
+program("test")
 
 
