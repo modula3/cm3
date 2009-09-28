@@ -1,8 +1,1 @@
-% Copyright (C) 1992, Digital Equipment Corporation
-% All rights reserved.
-% See the file COPYRIGHT for a full description.
-%
-% Last modified on Fri Feb  4 09:47:38 PST 2000 by heydon
-
-
 include(ROOT & "/m3overrides")
