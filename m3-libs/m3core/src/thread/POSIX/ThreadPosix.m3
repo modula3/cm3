@@ -334,7 +334,7 @@ PROCEDURE XWait (m: Mutex; c: Condition) RAISES {Alerted} =
   BEGIN
     TRY
       INC (inCritical);
-        EVAL XRelease (m);
+        m.release();
         ICannotRun (State.waiting);
         self.waitingForCondition := c;
         self.nextWaiting := c.waitingForMe;
@@ -342,7 +342,7 @@ PROCEDURE XWait (m: Mutex; c: Condition) RAISES {Alerted} =
       DEC (inCritical);
       InternalYield ();
     FINALLY
-      LockMutex (m);
+      m.acquire();
     END;
   END XWait;
 
@@ -454,7 +454,7 @@ PROCEDURE UnlockMutex (m: Mutex) =
     INC (inCritical);
       waiters := XRelease (m);
     DEC (inCritical);
-    IF waiters THEN
+    IF waiters AND inCritical = 0 THEN
       self.alertable := FALSE;
       InternalYield ();
     END;

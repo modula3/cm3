@@ -154,9 +154,7 @@ PROCEDURE LockMutex (m: Mutex) =
 PROCEDURE UnlockMutex (m: Mutex) =
   (* LL = m *)
   BEGIN
-    IF m.mutex = NIL THEN
-      Die(ThisLine(), "Mutex already locked");
-    END;
+    IF m.mutex = NIL THEN InitMutex(m) END;
     WITH r = pthread_mutex_unlock(m.mutex) DO
       IF r # 0 THEN
         RTError.MsgI(ThisFile(), ThisLine(),
@@ -172,9 +170,7 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
   (* LL = m *)
   VAR next, prev: T;
   BEGIN
-    IF m.mutex = NIL THEN InitMutex(m) END;
     IF c.mutex = NIL THEN InitMutex(c) END;
-    IF perfOn THEN PerfChanged(State.waiting) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
     <*ASSERT self.waitingOn = NIL*>
     <*ASSERT self.nextWaiter = NIL*>
@@ -185,7 +181,8 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
     c.waiters := self;
     WITH r = pthread_mutex_unlock(c.mutex) DO <*ASSERT r=0*> END;
 
-    WITH r = pthread_mutex_unlock(m.mutex) DO <*ASSERT r=0*> END;
+    m.release();
+    IF perfOn THEN PerfChanged(State.waiting) END;
     LOOP
       IF alertable AND self.alerted THEN
         self.alerted := FALSE;
@@ -204,8 +201,7 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
         self.nextWaiter := NIL;
         self.waitingOn := NIL;
         WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
-        WITH r = pthread_mutex_lock(m.mutex) DO <*ASSERT r=0*> END;
-        IF perfOn THEN PerfRunning() END;
+        m.acquire();
         RAISE Alerted;
       END;
       WITH r = pthread_cond_wait(self.cond, self.mutex) DO <*ASSERT r=0*> END;
@@ -213,8 +209,7 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
         <*ASSERT self.waitingOn = NIL*>
         <*ASSERT self.nextWaiter = NIL*>
         WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
-        WITH r = pthread_mutex_lock(m.mutex) DO <*ASSERT r=0*> END;
-        IF perfOn THEN PerfRunning() END;
+        m.acquire();
         RETURN;
       END;
     END;
