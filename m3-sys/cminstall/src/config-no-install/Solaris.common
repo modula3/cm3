@@ -87,6 +87,7 @@ SYSTEM_LIBS = {
     % "ODBC"     : [ ],
     "MOTIF"      : [ "-lXm" ],
     "X11"        : [ "-lXaw", "-lXmu", "-lXext", "-lXt", "-lX11" ],
+    "Z"          : [ "-lz" ],
     "TCP"        : [ ]
 }
 
