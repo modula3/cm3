@@ -54,13 +54,11 @@ COVERSION=${COVERSION:-"-P -r release_branch_cm3_5_8"} # version to checkout, de
 # CMINSTALL: set this to override the installer binary (full path)
 # NOCLEAN: set to avoid cleaning for re-starts
 
-if [ -n "$CLEAN" ]; then # Hudson CLEAN support
-  if [ "$CLEAN" = "true"]; then
-    unset NOCLEAN
-  else
-    NOCLEAN=yes
-    export NOCLEAN
-  fi
+if [ "x$CLEAN" = "xtrue" ]; then # Hudson CLEAN support
+  unset NOCLEAN
+else
+  NOCLEAN=yes
+  export NOCLEAN
 fi
 
 # last release for installation
