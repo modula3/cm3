@@ -322,7 +322,6 @@ PROCEDURE PaintViewWithShadows (v: T) =
     r := Rect.Inset(stripe, v.shadowPixels);
     ShadowPaint.Border(v, Region.Full, v.shadow, Shadow.Style.Raised,
       r, stripe);
-    <* ASSERT v.shadow # NIL *>
     VBT.PaintTint(v, r, v.shadow.bg);
   END PaintViewWithShadows;
 
@@ -711,27 +710,29 @@ PROCEDURE Rescreen (         v : T;
                     READONLY cd: VBT.RescreenRec)
   RAISES {} =
   BEGIN
-    InitShadow(v, cd.st);
+    LOCK v.mu DO
+      InitShadow(v, cd.st);
 
-    v.stripeW.pixels :=
-      ROUND(VBT.MMToPixels(v, v.stripeW.millimeters, Axis.T.Hor));
-    v.stripeE.pixels :=
-      ROUND(VBT.MMToPixels(v, v.stripeE.millimeters, Axis.T.Hor));
-    v.stripeN.pixels :=
-      ROUND(VBT.MMToPixels(v, v.stripeN.millimeters, Axis.T.Ver));
-    v.stripeS.pixels :=
-      ROUND(VBT.MMToPixels(v, v.stripeS.millimeters, Axis.T.Ver));
+      v.stripeW.pixels :=
+          ROUND(VBT.MMToPixels(v, v.stripeW.millimeters, Axis.T.Hor));
+      v.stripeE.pixels :=
+          ROUND(VBT.MMToPixels(v, v.stripeE.millimeters, Axis.T.Hor));
+      v.stripeN.pixels :=
+          ROUND(VBT.MMToPixels(v, v.stripeN.millimeters, Axis.T.Ver));
+      v.stripeS.pixels :=
+          ROUND(VBT.MMToPixels(v, v.stripeS.millimeters, Axis.T.Ver));
 
-    v.scrollMargin.pixels :=
-      ROUND(VBT.MMToPixels(
-        v, v.scrollMargin.millimeters, Axis.Other[v.axis]));
+      v.scrollMargin.pixels :=
+          ROUND(VBT.MMToPixels(
+                    v, v.scrollMargin.millimeters, Axis.Other[v.axis]));
 
-    v.stripeWidth.pixels :=
-      ROUND(VBT.MMToPixels(
-        v, v.stripeWidth.millimeters, Axis.Other[v.axis]));
+      v.stripeWidth.pixels :=
+          ROUND(VBT.MMToPixels(
+                    v, v.stripeWidth.millimeters, Axis.Other[v.axis]));
 
-    v.minStripeLen.pixels :=
-      ROUND(VBT.MMToPixels(v, v.minStripeLen.millimeters, v.axis));
+      v.minStripeLen.pixels :=
+          ROUND(VBT.MMToPixels(v, v.minStripeLen.millimeters, v.axis));
+    END;
     VBT.NewShape(v);
   END Rescreen;
 
