@@ -1,4 +1,1 @@
-override ("m3quake", ROOT & "/m3-sys")
-override ("netobj", ROOT & "/m3-comm")
-override ("sharedobj", ROOT & "/m3-comm")
-override ("synloc", ROOT & "/m3-obliq")
+include(ROOT & "/m3overrides")
