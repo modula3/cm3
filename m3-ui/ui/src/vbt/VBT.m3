@@ -19,7 +19,7 @@ IMPORT Word, Thread, Rect, Point, Axis, Path, Trapezoid, Region, Pixmap,
        Cursor, Font, PaintOp, ScrnPixmap, BatchRep, ScrnFont, ScrnPaintOp,
        Text, VBTClass, VBTRep, TextWr, Cstring, PaintExt, PaintPrivate,
        Pickle, TextRd, PropertyV, PathPrivate, TextIntTbl, Wr, Rd,
-       Palette, PlttFrnds, RTParams;
+       Palette, PlttFrnds, RTParams, MutexRep;
 
 PROCEDURE CopyBytes (src, dst: ADDRESS; n: INTEGER) =
   BEGIN
@@ -1191,17 +1191,31 @@ PROCEDURE Capture (v: T; READONLY clip: Rect.T; VAR (*out*) br: Region.T):
   END Capture;
 
 TYPE
-  Mutex = OBJECT
-            holder      : Thread.T := NIL;
-            waitingForMe: Thread.T := NIL;
-          END;
+  Mutex = MUTEX OBJECT
+    holder: Thread.T := NIL;
+  OVERRIDES
+    acquire := PedanticAcquire;
+    release := PedanticRelease;
+  END;
+
+PROCEDURE PedanticAcquire(m: Mutex) =
+  BEGIN
+    MUTEX.acquire(m);
+    m.holder := Thread.Self();
+  END PedanticAcquire;
+
+PROCEDURE PedanticRelease(m: Mutex) =
+  BEGIN
+    m.holder := NIL;
+    MUTEX.release(m);
+  END PedanticRelease;
 
 VAR pedantic := RTParams.IsPresent("CheckShape");
 
 PROCEDURE NewShape (v: T) RAISES {} =
   BEGIN
     IF pedantic AND v.st # NIL
-         AND LOOPHOLE(mu, Mutex).holder # Thread.Self() THEN
+         AND NARROW(mu, Mutex).holder # Thread.Self() THEN
       Crash()
     END;
     LOCK v DO
@@ -1415,7 +1429,10 @@ VAR
   sel, mct := AtomTable{0, NEW(TextIntTbl.Default).init(), NEW(TextSeq, 0)};
 
 BEGIN
-  mu := NEW(MUTEX);
+  IF pedantic
+    THEN mu := NEW(Mutex);
+    ELSE mu := NEW(MUTEX);
+  END;
   NilSel := GetSelection("NilSel");
   Forgery := GetSelection("Forgery");
   KBFocus := GetSelection("KBFocus");
