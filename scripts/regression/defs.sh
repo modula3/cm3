@@ -547,7 +547,7 @@ test_build_system()
   fi
 
   echo " === build core system with current compiler"
-  BUILDSCRIPT="./scripts/do-cm3-${BSET}.sh"
+  BUILDSCRIPT="./scripts/do-cm3-core.sh"
   if [ -z "$NOCLEAN" ]; then
     $BUILDSCRIPT realclean || exit 1
   fi
