@@ -32,8 +32,7 @@ if [ "$CLEAN" = "false" ]; then
     if ${WS}/cm3cg --version; then
       echo "using PREBUILT_CM3CG=${WS}/cm3cg"
       PREBUILT_CM3CG=${WS}/cm3cg
-      OMIT_GCC=yes
-      export PREBUILT_CM3CG OMIT_GCC
+      export PREBUILT_CM3CG
     else
       echo "NOT using ${WS}/cm3cg"
     fi
