@@ -513,7 +513,7 @@ PROCEDURE RunThread (me: Activation) =
       Broadcast(self.join); (* let everybody know that "self" is done *)
     END;
 
-    IF perfOn THEN PerfDeleted(self.id) END;
+    IF perfOn THEN PerfChanged(self.id, State.dead) END;
 
     (* we're dying *)
     RTHeapRep.FlushThreadState(me.heapState);
@@ -521,6 +521,7 @@ PROCEDURE RunThread (me: Activation) =
     IF CloseHandle(self.waitSema) = 0 THEN Choke(ThisLine()) END;
     self.waitSema := NIL;
 
+    IF perfOn THEN PerfDeleted(self.id) END;
     FreeSlot(self);  (* note: needs self.act ! *)
     (* Since we're no longer slotted, we cannot touch traced refs. *)
 
@@ -586,7 +587,6 @@ PROCEDURE Join(t: T): REFANY =
       t.result := NIL;
       t.joined := TRUE;
       t.join := NIL;
-      IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
     RETURN res;
   END Join;
