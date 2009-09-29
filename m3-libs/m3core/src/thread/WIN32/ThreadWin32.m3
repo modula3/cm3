@@ -108,7 +108,7 @@ PROCEDURE LockMutex (m: Mutex) =
     IF self = NIL THEN Die(ThisLine(), "LockMutex called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.locking) END;
 
-    EnterCriticalSection_cm();
+    EnterCriticalSection_giant();
 
       self.alertable := FALSE;
       IF m.holder = NIL THEN
@@ -130,7 +130,7 @@ PROCEDURE LockMutex (m: Mutex) =
         END;
       END;
 
-    LeaveCriticalSection_cm();
+    LeaveCriticalSection_giant();
 
     IF wait THEN
       (* I didn't get the mutex, I need to wait for my turn... *)
@@ -147,7 +147,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
   VAR self := Self(); next: T;
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
-    EnterCriticalSection_cm();
+    EnterCriticalSection_giant();
 
       (* Make sure I'm allowed to release this mutex. *)
       IF m.holder = self THEN
@@ -171,7 +171,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
         END;
       END;
 
-    LeaveCriticalSection_cm();
+    LeaveCriticalSection_giant();
   END UnlockMutex;
 
 (**********
@@ -207,7 +207,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
     self.waitingOn := c;
     self.nextWaiter := c.waiters;
     c.waiters := self;
-    LeaveCriticalSection_cm();
+    LeaveCriticalSection_giant();
     m.release();
     IF perfOn THEN PerfChanged(self.id, State.waiting) END;
     IF WaitForSingleObject(self.waitSema, INFINITE) # 0 THEN
@@ -223,7 +223,7 @@ PROCEDURE InnerTestAlert(self: T) RAISES {Alerted} =
   BEGIN
     IF self.alerted THEN
       self.alerted := FALSE;
-      LeaveCriticalSection_cm();
+      LeaveCriticalSection_giant();
       RAISE Alerted
     END;
   END InnerTestAlert;
@@ -233,13 +233,13 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   VAR self := Self();
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
-    EnterCriticalSection_cm();
+    EnterCriticalSection_giant();
     InnerTestAlert(self);
     self.alertable := TRUE;
     InnerWait(m, c, self);
-    EnterCriticalSection_cm();
+    EnterCriticalSection_giant();
     InnerTestAlert(self);
-    LeaveCriticalSection_cm();
+    LeaveCriticalSection_giant();
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
@@ -247,7 +247,7 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   VAR self := Self();
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
-    EnterCriticalSection_cm();
+    EnterCriticalSection_giant();
     InnerWait(m, c, self);
   END Wait;
 
@@ -266,23 +266,23 @@ PROCEDURE DequeueHead(c: Condition) =
 
 PROCEDURE Signal (c: Condition) =
   BEGIN
-    EnterCriticalSection_cm();
+    EnterCriticalSection_giant();
     IF c.waiters # NIL THEN DequeueHead(c) END;
-    LeaveCriticalSection_cm();
+    LeaveCriticalSection_giant();
   END Signal;
 
 PROCEDURE Broadcast (c: Condition) =
   BEGIN
-    EnterCriticalSection_cm();
+    EnterCriticalSection_giant();
     WHILE c.waiters # NIL DO DequeueHead(c) END;
-    LeaveCriticalSection_cm();
+    LeaveCriticalSection_giant();
   END Broadcast;
 
 PROCEDURE Alert(t: T) =
     VAR prev, next: T;
   BEGIN
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
-    EnterCriticalSection_cm();
+    EnterCriticalSection_giant();
     t.alerted := TRUE;
     IF t.alertable THEN
       (* Dequeue from any CV and unblock from the semaphore *)
@@ -305,15 +305,15 @@ PROCEDURE Alert(t: T) =
         Choke(ThisLine());
       END;
     END;
-    LeaveCriticalSection_cm();
+    LeaveCriticalSection_giant();
   END Alert;
 
 PROCEDURE XTestAlert (self: T): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    EnterCriticalSection_cm();
+    EnterCriticalSection_giant();
     result := self.alerted; IF result THEN self.alerted := FALSE END;
-    LeaveCriticalSection_cm();
+    LeaveCriticalSection_giant();
     RETURN result;
   END XTestAlert;
 
@@ -633,13 +633,13 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
     WHILE amount > 0.0D0 DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
-      EnterCriticalSection_cm();
+      EnterCriticalSection_giant();
       InnerTestAlert(self);
       self.alertable := TRUE;
       <* ASSERT(self.waitingOn = NIL) *>
-      LeaveCriticalSection_cm();
+      LeaveCriticalSection_giant();
       EVAL WaitForSingleObject(self.waitSema, ROUND(thisTime*1000.0D0));
-      EnterCriticalSection_cm();
+      EnterCriticalSection_giant();
       self.alertable := FALSE;
       IF self.alerted THEN
         (* Sadly, the alert might have happened after we timed out on the
@@ -648,7 +648,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
         EVAL WaitForSingleObject(self.waitSema, 0);
         InnerTestAlert(self);
       END;
-      LeaveCriticalSection_cm();
+      LeaveCriticalSection_giant();
     END;
     IF perfOn THEN PerfRunning(self.id) END;
   END AlertPause;
