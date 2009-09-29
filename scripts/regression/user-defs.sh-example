@@ -13,4 +13,3 @@
 # workspace -- where to CVS checkout to
 # If it is unique, then CVS checkout does more and is less reliable.
 # WS=${HOME}/work/cm3-ws/${TESTHOSTNAME:-`hostname | sed -e 's/\..*//'`}-${MONTH_DS}
-
