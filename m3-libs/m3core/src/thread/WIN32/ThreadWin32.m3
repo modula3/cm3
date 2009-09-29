@@ -798,7 +798,7 @@ PROCEDURE VerifySP (start, stop: ADDRESS): ADDRESS =
       END;
  
       (* is this chunk readable? *)
-      IF info.Protect # PAGE_READWRITE
+      IF (info.Protect # PAGE_READWRITE)
         AND (info.Protect # PAGE_READONLY) THEN
         (* nope, return the base of the last good chunk *)
         INC (info.BaseAddress, info.RegionSize);
