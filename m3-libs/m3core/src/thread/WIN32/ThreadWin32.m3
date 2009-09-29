@@ -637,7 +637,7 @@ PROCEDURE Fork(closure: Closure): T =
         act := t.act;
         act.handle := CreateThread(NIL, stack_size, ThreadBase,
                          act, CREATE_SUSPENDED, ADR(id));
-        LeaveCriticalSection_activeMu();
+        EnterCriticalSection_activeMu();
           act.next := allThreads;
           act.prev := allThreads.prev;
           allThreads.prev.next := act;
