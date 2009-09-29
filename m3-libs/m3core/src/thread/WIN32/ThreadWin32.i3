@@ -61,10 +61,10 @@ PROCEDURE LeaveCriticalSection_perfMu();
 (* These procedures provide synchronization primitives for the allocator
    and collector. *)
 
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_cs"*>
-PROCEDURE EnterCriticalSection_cs();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_cs"*>
-PROCEDURE LeaveCriticalSection_cs();
+<*EXTERNAL "ThreadWin32__EnterCriticalSection_heap"*>
+PROCEDURE EnterCriticalSection_heap();
+<*EXTERNAL "ThreadWin32__LeaveCriticalSection_heap"*>
+PROCEDURE LeaveCriticalSection_heap();
 
 (*---------------------------------------------------------------------------*)
 
