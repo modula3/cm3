@@ -39,12 +39,11 @@ build_standalone ()
 library ("test")
 
 % include floating point pieces from m3core
-M3TESTS = "yes"
-if defined ("ROOT")
-  include ("../../../m3-libs/m3core/src/float/m3makefile")
-else
-  include (PKG_INSTALL & "/m3core/src/float/m3makefile")
-end
+%if defined ("ROOT")
+%  include ("../../../m3-libs/m3core/src/float/m3makefile")
+%else
+%  include (PKG_INSTALL & "/m3core/src/float/m3makefile")
+%end
 
 proc File64(Path) is
   if equal (WORD_SIZE, "64BITS") and FileExists (Path & "64")
@@ -448,14 +447,14 @@ p_test ("p1", "p112", "local revelation that a type is an object")
 p_test ("p1", "p113", "FIRST/LAST of REAL")
 p_test ("p1", "p114", "array expressions")
 p_test ("p1", "p115", "reuse of open array conversion within an expression")
-if _FloatPieces contains "IEEE-default"
-  p_test ("p1", "p116", "IEEE floating point tests from Xerox PARC")
-else
+%if _FloatPieces contains "IEEE-default"
+%  p_test ("p1", "p116", "IEEE floating point tests from Xerox PARC")
+%else
   % In all IEEE-default configurations, the FloatMode interface is not
   % implemented (all procedure raise exceptions). In this case we run
   % a stripped-down set of tests.
   p_test ("p1", "p116b", "default IEEE floating point tests from Xerox PARC")
-end
+%end
 p_test ("p1", "p117", "SUBARRAY (LOOPHOLE)")
 p_test ("p1", "p118", "LAST (REAL)")
 p_test ("p1", "p119", "small exception arguments (big-endian problem)")
