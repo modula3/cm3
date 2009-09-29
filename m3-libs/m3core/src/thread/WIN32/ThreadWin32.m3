@@ -25,9 +25,6 @@ FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
 VAR
   default_stack: DWORD := 8192;
 
-  threadMu: Mutex;
-    (* Global lock for internal fields of Thread.T *)
-
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
       waiters: T := NIL;
@@ -44,16 +41,16 @@ REVEAL
         (* LL = cm; List of threads waiting on this CV. *)
     END;
 
-  T = BRANDED "Thread.T Win32-1.0" OBJECT
+  T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
       act: Activation := NIL;
-        (* LL = threadMu;  live thread data *)
+        (* LL = Self();  live thread data *)
       closure: Closure := NIL;
-        (* LL = threadMu *)
+        (* LL = Self() *)
       result: REFANY := NIL;
-        (* LL = threadMu;  if not self.completed, used only by self;
+        (* LL = Self();  if not self.completed, used only by self;
            if self.completed, read-only. *)
       cond: Condition;
-        (* LL = threadMu; wait here to join *)
+        (* LL = Self(); wait here to join *)
       waitingOn: Condition := NIL;
         (* LL = cm; CV that we're blocked on *)
       nextWaiter: T := NIL;
@@ -65,11 +62,11 @@ REVEAL
       alerted: BOOLEAN := FALSE;
         (* LL = cm; the alert flag, of course *)
       completed: BOOLEAN := FALSE;
-        (* LL = threadMu; indicates that "result" is set *)
+        (* LL = Self(); indicates that "result" is set *)
       joined: BOOLEAN := FALSE;
-        (* LL = threadMu; "Join" or "AlertJoin" has already returned *)
+        (* LL = Self(); "Join" or "AlertJoin" has already returned *)
       id: Id;
-        (* LL = threadMu; unique ID of this thread *)
+        (* LL = Self(); unique ID of this thread *)
     END;
 
 TYPE
@@ -509,11 +506,11 @@ PROCEDURE RunThread (me: Activation) =
     self.result := self.closure.apply();
     IF perfOn THEN PerfChanged(self.id, State.dying) END;
 
-    LockMutex(threadMu);
+    LOCK self DO
       (* mark "self" done and clean it up a bit *)
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
-    UnlockMutex(threadMu);
+    END;
 
     IF perfOn THEN PerfDeleted(self.id) END;
 
@@ -583,32 +580,29 @@ PROCEDURE Fork(closure: Closure): T =
 PROCEDURE Join(t: T): REFANY =
   VAR res: REFANY;
   BEGIN
-    LockMutex(threadMu);
+    LOCK t DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
-      WHILE NOT t.completed DO Wait(threadMu, t.cond) END;
+      WHILE NOT t.completed DO Wait(t, t.cond) END;
       res := t.result;
       t.result := NIL;
       t.joined := TRUE;
       t.cond := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
-    UnlockMutex(threadMu);
+    END;
     RETURN res;
   END Join;
 
 PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
   VAR res: REFANY;
   BEGIN
-    LockMutex(threadMu);
-    TRY
+    LOCK t DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
-      WHILE NOT t.completed DO AlertWait(threadMu, t.cond) END;
+      WHILE NOT t.completed DO AlertWait(t, t.cond) END;
       res := t.result;
       t.result := NIL;
       t.joined := TRUE;
       t.cond := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
-    FINALLY
-      UnlockMutex(threadMu);
     END;
     RETURN res;
   END AlertJoin;
@@ -887,7 +881,7 @@ TYPE
   TE = ThreadEvent.Kind;
 
 PROCEDURE PerfChanged (id: Id; s: State) =
-  (* LL = threadMu *)
+  (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Changed, id := id, state := s};
   BEGIN
     EnterCriticalSection_perfMu();
@@ -896,7 +890,7 @@ PROCEDURE PerfChanged (id: Id; s: State) =
   END PerfChanged;
 
 PROCEDURE PerfDeleted (id: Id) =
-  (* LL = threadMu *)
+  (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Deleted, id := id};
   BEGIN
     EnterCriticalSection_perfMu();
@@ -905,7 +899,7 @@ PROCEDURE PerfDeleted (id: Id) =
   END PerfDeleted;
 
 PROCEDURE PerfRunning (id: Id) =
-  (* LL = threadMu *)
+  (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Running, id := id};
   BEGIN
     EnterCriticalSection_perfMu();
@@ -920,7 +914,6 @@ PROCEDURE Init() =
     self: T;
     me := InitActivations();
   BEGIN
-    threadMu := NEW(Mutex);
     self := CreateT(me);
     self.id := GetCurrentThreadId();
 
