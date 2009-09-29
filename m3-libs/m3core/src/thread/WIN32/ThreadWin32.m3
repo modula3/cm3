@@ -111,16 +111,16 @@ PROCEDURE LockMutex (m: Mutex) =
     EnterCriticalSection_cm();
 
       self.alertable := FALSE;
-      IF (m.holder = NIL) THEN
+      IF m.holder = NIL THEN
         m.holder := self;  (* I get it! *)
-      ELSIF (m.holder = self) THEN
+      ELSIF m.holder = self THEN
         Die(ThisLine(), "Attempt to lock mutex already locked by self");
       ELSE
         (* somebody else already has the mutex locked.  We'll need to wait *)
         wait := TRUE;
         self.nextWaiter := NIL;
         next := m.waiters;
-        IF (next = NIL) THEN
+        IF next = NIL THEN
           m.waiters := self;
         ELSE
           (* put me at the end of the list of waiters.*)
@@ -378,7 +378,7 @@ PROCEDURE Self (): T =
     EnterCriticalSection_slotMu();
       t := slots[me.slot];
     LeaveCriticalSection_slotMu();
-    IF (t.act # me) THEN Die (ThisLine(), "thread with bad slot!"); END;
+    IF t.act # me THEN Die (ThisLine(), "thread with bad slot!"); END;
     RETURN t;
   END Self;
 
@@ -389,21 +389,21 @@ PROCEDURE AssignSlot (t: T) =
     EnterCriticalSection_slotMu();
 
       (* make sure we have room to register this guy *)
-      IF (slots = NIL) THEN
+      IF slots = NIL THEN
         LeaveCriticalSection_slotMu();
           slots := NEW (REF ARRAY OF T, 20);
         EnterCriticalSection_slotMu();
       END;
-      IF (n_slotted >= LAST (slots^)) THEN
+      IF n_slotted >= LAST (slots^) THEN
         n := NUMBER (slots^);
         LeaveCriticalSection_slotMu();
           new_slots := NEW (REF ARRAY OF T, n+n);
         EnterCriticalSection_slotMu();
-        IF (n = NUMBER (slots^)) THEN
+        IF n = NUMBER (slots^) THEN
           (* we won any races that may have occurred. *)
           SUBARRAY (new_slots^, 0, n) := slots^;
           slots := new_slots;
-        ELSIF (n_slotted < LAST (slots^)) THEN
+        ELSIF n_slotted < LAST (slots^) THEN
           (* we lost a race while allocating a new slot table,
              and the new table has room for us. *)
         ELSE
@@ -416,7 +416,7 @@ PROCEDURE AssignSlot (t: T) =
       (* look for an empty slot *)
       WHILE (slots [next_slot] # NIL) DO
         INC (next_slot);
-        IF (next_slot >= NUMBER (slots^)) THEN next_slot := 1; END;
+        IF next_slot >= NUMBER (slots^) THEN next_slot := 1; END;
       END;
 
       INC (n_slotted);
@@ -433,7 +433,7 @@ PROCEDURE FreeSlot (t: T) =
     
       DEC (n_slotted);
       WITH z = slots [t.act.slot] DO
-        IF (z # t) THEN Die (ThisLine(), "unslotted thread!"); END;
+        IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
       t.act.slot := 0;
@@ -710,7 +710,7 @@ PROCEDURE SuspendOthers () =
     EnterCriticalSection_activeMu();
 
     INC (suspend_cnt);
-    IF (suspend_cnt = 1) THEN StopWorld(me) END;
+    IF suspend_cnt = 1 THEN StopWorld(me) END;
   END SuspendOthers;
 
 PROCEDURE StopWorld (me: Activation) =
@@ -740,7 +740,7 @@ PROCEDURE ResumeOthers () =
   VAR act: Activation;  me := GetActivation();
   BEGIN
     DEC (suspend_cnt);
-    IF (suspend_cnt = 0) THEN
+    IF suspend_cnt = 0 THEN
       act := me.next;
       WHILE (act # me) DO
         IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
@@ -758,7 +758,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   VAR act := allThreads;  context: ThreadContext.CONTEXT;  fixed_SP: ADDRESS;
   BEGIN
     REPEAT
-      IF (act.stackbase # NIL) THEN
+      IF act.stackbase # NIL THEN
         context.ContextFlags := UserRegs;
         IF GetThreadContext(act.handle, ADR(context))=0 THEN Choke(ThisLine()) END;
         fixed_SP := LOOPHOLE (context.Esp, ADDRESS);
@@ -788,7 +788,7 @@ PROCEDURE VerifySP (start, stop: ADDRESS): ADDRESS =
   BEGIN
     info.BaseAddress := LOOPHOLE (stop-1, ADDRESS);
     LOOP
-      IF (info.BaseAddress <= start) THEN
+      IF info.BaseAddress <= start THEN
         info.BaseAddress := start;
         EXIT;
       END;
@@ -798,7 +798,7 @@ PROCEDURE VerifySP (start, stop: ADDRESS): ADDRESS =
       END;
  
       (* is this chunk readable? *)
-      IF (info.Protect # PAGE_READWRITE)
+      IF info.Protect # PAGE_READWRITE
         AND (info.Protect # PAGE_READONLY) THEN
         (* nope, return the base of the last good chunk *)
         INC (info.BaseAddress, info.RegionSize);
@@ -979,9 +979,9 @@ PROCEDURE UnlockHeap () =
   VAR sig := FALSE;
   BEGIN
     DEC(inCritical);
-    IF (inCritical = 0) AND (do_signal) THEN sig := TRUE; do_signal := FALSE; END;
+    IF (inCritical = 0) AND do_signal THEN sig := TRUE; do_signal := FALSE; END;
     LeaveCriticalSection_cs();
-    IF (sig) THEN Broadcast(condition); END;
+    IF sig THEN Broadcast(condition); END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
