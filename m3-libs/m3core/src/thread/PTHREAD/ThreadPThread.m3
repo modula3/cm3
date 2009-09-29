@@ -502,7 +502,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   END ThreadBase;
 
 PROCEDURE RunThread (me: Activation) =
-  VAR self: T;  cl: Closure;
+  VAR self: T;
   BEGIN
     IF perfOn THEN PerfChanged(State.alive) END;
 
@@ -510,16 +510,9 @@ PROCEDURE RunThread (me: Activation) =
       self := slots [me.slot];
     WITH r = pthread_mutex_unlock_slots() DO <*ASSERT r=0*> END;
 
-    (* Let parent know we are running *)
-    WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
-    cl := self.closure;
-    self.closure := NIL;
-    WITH r = pthread_cond_signal(self.cond) DO <*ASSERT r=0*> END;
-    WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
-
     (* Run the user-level code. *)
     IF perfOn THEN PerfRunning() END;
-    self.result := cl.apply();
+    self.result := self.closure.apply();
     IF perfOn THEN PerfChanged(State.dying) END;
 
     (* Join *)
@@ -554,6 +547,7 @@ PROCEDURE Fork (closure: Closure): T =
     t := CreateT(act);
     size := defaultStackSize;
   BEGIN
+    t.closure := closure;
     (* determine the initial size of the stack for this thread *)
     TYPECASE closure OF
     | SizedClosure (scl) => size := scl.stackSize;
@@ -561,7 +555,6 @@ PROCEDURE Fork (closure: Closure): T =
     END;
 
     WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
-      t.closure := closure;
       act.next := allThreads;
       act.prev := allThreads.prev;
       act.size := size;
@@ -574,11 +567,6 @@ PROCEDURE Fork (closure: Closure): T =
         END;
       END;
     WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
-    WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
-    WHILE t.closure # NIL DO
-      WITH r = pthread_cond_wait(t.cond, t.mutex) DO <*ASSERT r=0*> END;
-    END;
-    WITH r = pthread_mutex_unlock(t.mutex) DO <*ASSERT r=0*> END;
     RETURN t;
   END Fork;
 
