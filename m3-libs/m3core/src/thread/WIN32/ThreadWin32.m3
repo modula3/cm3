@@ -460,7 +460,7 @@ PROCEDURE CheckSlot (t: T) =
 (*------------------------------------------------------------ Fork, Join ---*)
 
 CONST
-  MaxIdle = 10;
+  MaxIdle = 0;
 
 VAR (* LL=activeMu *)
   allThreads  : Activation := NIL;  (* global list of active threads *)
@@ -588,7 +588,7 @@ PROCEDURE RunThread (me: Activation): HANDLE =
       (* Since we're no longer slotted, we cannot touch traced refs. *)
 
       (* remove ourself from the list of active threads *)
-      LeaveCriticalSection_activeMu();
+      EnterCriticalSection_activeMu();
         IF allThreads = me THEN allThreads := me.next; END;
         me.next.prev := me.prev;
         me.prev.next := me.next;
@@ -636,7 +636,7 @@ PROCEDURE Fork(closure: Closure): T =
         act := t.act;
         act.handle := CreateThread(NIL, stack_size, ThreadBase,
                          act, CREATE_SUSPENDED, ADR(id));
-        LeaveCriticalSection_activeMu();
+        EnterCriticalSection_activeMu();
           act.next := allThreads;
           act.prev := allThreads.prev;
           allThreads.prev.next := act;
@@ -801,7 +801,7 @@ PROCEDURE SuspendOthers () =
   VAR me := GetActivation();
   BEGIN
     <*ASSERT me # NIL*>
-    LeaveCriticalSection_activeMu();
+    EnterCriticalSection_activeMu();
 
     INC (suspend_cnt);
     IF (suspend_cnt = 1) THEN StopWorld(me) END;
