@@ -9,7 +9,7 @@ UNSAFE INTERFACE ThreadWin32;
 
 FROM WinDef IMPORT BOOL (* int *);
 FROM Thread IMPORT T;
-FROM ThreadF IMPORT Id, State;
+FROM ThreadF IMPORT State;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
 
@@ -73,8 +73,8 @@ PROCEDURE InitC();
 
 (*----------------------------------------------------- for SchedulerPosix --*)
 
-PROCEDURE PerfChanged (id: Id; s: State);
-PROCEDURE PerfRunning (id: Id);
+PROCEDURE PerfChanged (s: State);
+PROCEDURE PerfRunning ();
 PROCEDURE XTestAlert (self: T): BOOLEAN;
 VAR perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
 

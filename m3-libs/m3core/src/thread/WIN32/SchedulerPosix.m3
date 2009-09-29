@@ -25,7 +25,7 @@ PROCEDURE IOWait (fd: CARDINAL; read: BOOLEAN;
   VAR self := Self();
   BEGIN
     TRY
-      IF perfOn THEN PerfChanged(MyId(), State.blocking) END;
+      IF perfOn THEN PerfChanged(State.blocking) END;
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := FALSE);
     FINALLY
       IF perfOn THEN PerfRunning(MyId()) END;
@@ -38,7 +38,7 @@ PROCEDURE IOAlertWait (fd: CARDINAL; read: BOOLEAN;
   VAR self := Self();
   BEGIN
     TRY
-      IF perfOn THEN PerfChanged(MyId(), State.blocking) END;
+      IF perfOn THEN PerfChanged(State.blocking) END;
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := TRUE);
     FINALLY
       IF perfOn THEN PerfRunning(MyId()) END;
