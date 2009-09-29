@@ -53,7 +53,7 @@ REVEAL
         (* LL = threadMu;  if not self.completed, used only by self;
            if self.completed, read-only. *)
       cond: Condition;
-        (* LL = threadMu; wait here to join, or for rebirth *)
+        (* LL = threadMu; wait here to join *)
       waitingOn: Condition := NIL;
         (* LL = cm; CV that we're blocked on *)
       nextWaiter: T := NIL;
