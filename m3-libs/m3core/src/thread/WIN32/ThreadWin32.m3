@@ -105,7 +105,7 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE LockMutex (m: Mutex) =
   VAR self := Self();  wait := FALSE;  next, prev: T;
   BEGIN
-    IF self = NIL THEN Die(ThisLine(), "Acquire called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "LockMutex called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(self.id, State.locking) END;
 
     EnterCriticalSection_cm();
@@ -146,7 +146,7 @@ PROCEDURE LockMutex (m: Mutex) =
 PROCEDURE UnlockMutex(m: Mutex) =
   VAR self := Self(); next: T;
   BEGIN
-    IF self = NIL THEN Die(ThisLine(), "Release called from non-Modula-3 thread") END;
+    IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
     EnterCriticalSection_cm();
 
       (* Make sure I'm allowed to release this mutex. *)
