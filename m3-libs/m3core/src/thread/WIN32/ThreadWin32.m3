@@ -49,7 +49,7 @@ REVEAL
       result: REFANY := NIL;
         (* LL = Self();  if not self.completed, used only by self;
            if self.completed, read-only. *)
-      cond: Condition;
+      join: Condition;
         (* LL = Self(); wait here to join *)
       waitingOn: Condition := NIL;
         (* LL = giant; CV that we're blocked on *)
@@ -464,7 +464,7 @@ PROCEDURE CreateT (act: Activation): T =
   VAR t := NEW(T, act := act);
   BEGIN
     t.waitSema := CreateSemaphore(NIL, 0, 1, NIL);
-    t.cond     := NEW(Condition);
+    t.join     := NEW(Condition);
     AssignSlot (t);
     RETURN t;
   END CreateT;
@@ -509,7 +509,7 @@ PROCEDURE RunThread (me: Activation) =
     LOCK self DO
       (* mark "self" done and clean it up a bit *)
       self.completed := TRUE;
-      Broadcast(self.cond); (* let everybody know that "self" is done *)
+      Broadcast(self.join); (* let everybody know that "self" is done *)
     END;
 
     IF perfOn THEN PerfDeleted(self.id) END;
@@ -582,11 +582,11 @@ PROCEDURE Join(t: T): REFANY =
   BEGIN
     LOCK t DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
-      WHILE NOT t.completed DO Wait(t, t.cond) END;
+      WHILE NOT t.completed DO Wait(t, t.join) END;
       res := t.result;
       t.result := NIL;
       t.joined := TRUE;
-      t.cond := NIL;
+      t.join := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
     RETURN res;
@@ -597,11 +597,11 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
   BEGIN
     LOCK t DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
-      WHILE NOT t.completed DO AlertWait(t, t.cond) END;
+      WHILE NOT t.completed DO AlertWait(t, t.join) END;
       res := t.result;
       t.result := NIL;
       t.joined := TRUE;
-      t.cond := NIL;
+      t.join := NIL;
       IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
     RETURN res;
