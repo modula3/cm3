@@ -589,7 +589,7 @@ PROCEDURE RunThread (me: Activation): HANDLE =
       (* Since we're no longer slotted, we cannot touch traced refs. *)
 
       (* remove ourself from the list of active threads *)
-      LeaveCriticalSection_activeMu();
+      EnterCriticalSection_activeMu();
         IF allThreads = me THEN allThreads := me.next; END;
         me.next.prev := me.prev;
         me.prev.next := me.next;
@@ -799,7 +799,7 @@ PROCEDURE SuspendOthers () =
   VAR me := GetActivation();
   BEGIN
     <*ASSERT me # NIL*>
-    LeaveCriticalSection_activeMu();
+    EnterCriticalSection_activeMu();
 
     INC (suspend_cnt);
     IF (suspend_cnt = 1) THEN StopWorld(me) END;
