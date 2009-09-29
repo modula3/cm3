@@ -26,7 +26,7 @@ void __cdecl ThreadWin32__EnterCriticalSection_##name(void) {EnterCriticalSectio
 void __cdecl ThreadWin32__LeaveCriticalSection_##name(void) {LeaveCriticalSection(&ThreadWin32__##name);}
 
 CRITSEC(activeMu)
-CRITSEC(cm)
+CRITSEC(giant)
 CRITSEC(heap)
 CRITSEC(perfMu)
 CRITSEC(slotMu)
@@ -52,7 +52,7 @@ void __cdecl ThreadWin32__InitC(void)
 {
     assert(ThreadWin32__threadIndex == TLS_OUT_OF_INDEXES);
     InitializeCriticalSection(&ThreadWin32__activeMu);
-    InitializeCriticalSection(&ThreadWin32__cm);
+    InitializeCriticalSection(&ThreadWin32__giant);
     InitializeCriticalSection(&ThreadWin32__heap);
     InitializeCriticalSection(&ThreadWin32__perfMu);
     InitializeCriticalSection(&ThreadWin32__slotMu);
