@@ -17,14 +17,13 @@ FROM WinNT IMPORT HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     GetCurrentProcess, DuplicateHandle, GetCurrentThread, CreateSemaphore,
     CloseHandle, CreateThread, ResumeThread, Sleep, SuspendThread,
-    GetThreadContext, VirtualQuery, GetLastError, CREATE_SUSPENDED;
+    GetThreadContext, VirtualQuery, GetLastError, CREATE_SUSPENDED,
+    GetCurrentThreadId;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
 
 VAR
   default_stack: DWORD := 8192;
-
-  nextId: Id := 1;
 
   threadMu: Mutex;
     (* Global lock for internal fields of Thread.T *)
@@ -499,31 +498,21 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   END ThreadBase;
 
 PROCEDURE RunThread (me: Activation) =
-  VAR self: T;  cl: Closure; res: REFANY;
+  VAR self: T;
   BEGIN
     EnterCriticalSection_slotMu();
       self := slots [me.slot];
     LeaveCriticalSection_slotMu();
 
-    LockMutex(threadMu);
-    cl := self.closure;
-      self.id := nextId;  INC (nextId);
-    UnlockMutex(threadMu);
-
-    IF (cl = NIL) THEN
-      Die (ThisLine(), "NIL closure passed to Thread.Fork!");
-    END;
-
     (* Run the user-level code. *)
     IF perfOn THEN PerfRunning(self.id) END;
-    res := cl.apply();
+    self.result := self.closure.apply();
+    IF perfOn THEN PerfChanged(self.id, State.dying) END;
 
     LockMutex(threadMu);
       (* mark "self" done and clean it up a bit *)
-      self.result := res;
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
-      IF perfOn THEN PerfChanged(self.id, State.dying) END;
     UnlockMutex(threadMu);
 
     IF perfOn THEN PerfDeleted(self.id) END;
@@ -539,7 +528,7 @@ PROCEDURE RunThread (me: Activation) =
 
     (* remove ourself from the list of active threads *)
     EnterCriticalSection_activeMu();
-      IF allThreads = me THEN allThreads := me.next; END;
+      <*ASSERT allThreads # me*>
       me.next.prev := me.prev;
       me.prev.next := me.next;
       me.next := NIL;
@@ -571,6 +560,7 @@ PROCEDURE Fork(closure: Closure): T =
     act := t.act;
     act.handle := CreateThread(NIL, stack_size, ThreadBase,
                      act, CREATE_SUSPENDED, ADR(id));
+    t.id := id;
     EnterCriticalSection_activeMu();
       act.next := allThreads;
       act.prev := allThreads.prev;
@@ -932,7 +922,7 @@ PROCEDURE Init() =
   BEGIN
     threadMu := NEW(Mutex);
     self := CreateT(me);
-    self.id := nextId;  INC (nextId);
+    self.id := GetCurrentThreadId();
 
     mutex := NEW(MUTEX);
     condition := NEW(Condition);
