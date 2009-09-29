@@ -28,7 +28,6 @@ void __cdecl ThreadWin32__LeaveCriticalSection_##name(void) {LeaveCriticalSectio
 CRITSEC(activeMu)
 CRITSEC(cm)
 CRITSEC(cs)
-CRITSEC(idleMu)
 CRITSEC(perfMu)
 CRITSEC(slotMu)
 
@@ -55,7 +54,6 @@ void __cdecl ThreadWin32__InitC(void)
     InitializeCriticalSection(&ThreadWin32__activeMu);
     InitializeCriticalSection(&ThreadWin32__cm);
     InitializeCriticalSection(&ThreadWin32__cs);
-    InitializeCriticalSection(&ThreadWin32__idleMu);
     InitializeCriticalSection(&ThreadWin32__perfMu);
     InitializeCriticalSection(&ThreadWin32__slotMu);
     ThreadWin32__threadIndex = TlsAlloc();
