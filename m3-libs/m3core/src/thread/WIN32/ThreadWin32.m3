@@ -28,9 +28,9 @@ VAR
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
       waiters: T := NIL;
-        (* LL = cm; List of threads waiting on this mutex. *)
+        (* LL = giant; List of threads waiting on this mutex. *)
       holder: T := NIL;
-        (* LL = cm; The thread currently holding this mutex. *)
+        (* LL = giant; The thread currently holding this mutex. *)
     OVERRIDES
       acquire := LockMutex;
       release := UnlockMutex;
@@ -38,7 +38,7 @@ REVEAL
 
   Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
       waiters: T := NIL;
-        (* LL = cm; List of threads waiting on this CV. *)
+        (* LL = giant; List of threads waiting on this CV. *)
     END;
 
   T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
@@ -52,15 +52,15 @@ REVEAL
       cond: Condition;
         (* LL = Self(); wait here to join *)
       waitingOn: Condition := NIL;
-        (* LL = cm; CV that we're blocked on *)
+        (* LL = giant; CV that we're blocked on *)
       nextWaiter: T := NIL;
-        (* LL = cm; queue of threads waiting on the same CV *)
+        (* LL = giant; queue of threads waiting on the same CV *)
       waitSema: HANDLE := NIL;
         (* binary semaphore for blocking during "Wait" *)
       alertable: BOOLEAN := FALSE;
-        (* LL = cm; distinguishes between "Wait" and "AlertWait" *)
+        (* LL = giant; distinguishes between "Wait" and "AlertWait" *)
       alerted: BOOLEAN := FALSE;
-        (* LL = cm; the alert flag, of course *)
+        (* LL = giant; the alert flag, of course *)
       completed: BOOLEAN := FALSE;
         (* LL = Self(); indicates that "result" is set *)
       joined: BOOLEAN := FALSE;
@@ -201,7 +201,7 @@ PROCEDURE DumpSlots () =
 (*---------------------------------------- Condition variables and Alerts ---*)
 
 PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
-    (* LL = cm+m on entry; LL = m on exit *)
+    (* LL = giant+m on entry; LL = m on exit *)
   BEGIN
     <* ASSERT( (self.waitingOn=NIL) AND (self.nextWaiter=NIL) ) *>
     self.waitingOn := c;
@@ -217,8 +217,8 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
   END InnerWait;
 
 PROCEDURE InnerTestAlert(self: T) RAISES {Alerted} =
-  (* LL = cm on entry; LL = cm on normal exit, 0 on exception exit *)
-  (* If self.alerted, clear "alerted", leave cm and raise
+  (* LL = giant on entry; LL = giant on normal exit, 0 on exception exit *)
+  (* If self.alerted, clear "alerted", leave giant and raise
      "Alerted". *)
   BEGIN
     IF self.alerted THEN
@@ -252,7 +252,7 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   END Wait;
 
 PROCEDURE DequeueHead(c: Condition) =
-  (* LL = cm *)
+  (* LL = giant *)
   VAR t: T;
   BEGIN
     t := c.waiters; c.waiters := t.nextWaiter;
@@ -643,7 +643,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
       self.alertable := FALSE;
       IF self.alerted THEN
         (* Sadly, the alert might have happened after we timed out on the
-           semaphore and before we entered "cm". In that case, we need to
+           semaphore and before we entered "giant". In that case, we need to
            decrement the semaphore's count *)
         EVAL WaitForSingleObject(self.waitSema, 0);
         InnerTestAlert(self);
@@ -681,26 +681,26 @@ PROCEDURE IncDefaultStackSize(inc: CARDINAL)=
    they could trigger indefinite invocations of the fault handler. *)
 
 (* In versions of SuspendOthers prior to the addition of the incremental
-   collector, it acquired 'cm' to guarantee that no suspended thread held it.
+   collector, it acquired 'giant' to guarantee that no suspended thread held it.
    That way when the collector tried to acquire a mutex or signal a
-   condition, it wouldn't deadlock with the suspended thread that held cm.
+   condition, it wouldn't deadlock with the suspended thread that held giant.
    
    With the VM-synchronized, incremental collector this design is inadequate.
    Here's a deadlock that occurred:
-      Thread.Broadcast held cm,
+      Thread.Broadcast held giant,
       then it touched its condition argument,
       the page containing the condition was protected by the collector,
       another thread started running the page fault handler,
       the handler called SuspendOthers,
-      SuspendOthers tried to acquire cm.
+      SuspendOthers tried to acquire giant.
 
-   So, SuspendOthers doesn't grab "cm" before shutting down the other
+   So, SuspendOthers doesn't grab "giant" before shutting down the other
    threads.  If the collector tries to use any of the thread functions
-   that acquire "cm", it'll be deadlocked.
+   that acquire "giant", it'll be deadlocked.
 *)
 
 VAR
-  suspend_cnt: CARDINAL := 0;  (* LL = cm *)
+  suspend_cnt: CARDINAL := 0;  (* LL = giant *)
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu". *)
@@ -964,8 +964,8 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
    and collector. *)
 
 VAR
-  inCritical := 0;     (* LL = cs *)
-  do_signal := FALSE;  (* LL = cs *)
+  inCritical := 0;     (* LL = heap *)
+  do_signal := FALSE;  (* LL = heap *)
   mutex: MUTEX;
   condition: Condition;
 
@@ -977,8 +977,7 @@ PROCEDURE LockHeap () =
 
 PROCEDURE UnlockHeap () =
   VAR sig := FALSE;
-  BEGIN
-   
+  BEGIN   
     DEC(inCritical);
     IF (inCritical = 0) AND do_signal THEN sig := TRUE; do_signal := FALSE; END;
     LeaveCriticalSection_heap();
