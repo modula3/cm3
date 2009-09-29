@@ -41,11 +41,9 @@ library ("test")
 % include floating point pieces from m3core
 M3TESTS = "yes"
 if defined ("ROOT")
-  include (".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & 
-           SL & "src" & SL & "float" & SL & "m3makefile")
+  include ("../../../m3-libs/m3core/src/float/m3makefile")
 else
-  include (PKG_INSTALL & SL & "m3core" & 
-           SL & "src" & SL & "float" & SL & "m3makefile")
+  include (PKG_INSTALL & "/m3core/src/float/m3makefile")
 end
 
 proc File64(Path) is
@@ -61,8 +59,8 @@ if not defined ("LIB_ONLY")
 %
 
 proc compare_file (dir, OutputPath) is
-  local ExpectedPath = dir & SL & OutputPath
-  OutputPath = dir & SL & BUILD_DIR & SL & OutputPath
+  local ExpectedPath = dir & "/" & OutputPath
+  OutputPath = dir & "/" & BUILD_DIR & "/" & OutputPath
 
   %write ("compare OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
   if stale (OutputPath, OutputPath)
@@ -95,7 +93,7 @@ proc compare_file (dir, OutputPath) is
 end
 
 if defined ("LOG_CMPS")
-  ComparisonLogFilePath = PACKAGE_DIR & SL & "m3tests-" & datestamp() & ".diffs"
+  ComparisonLogFilePath = PACKAGE_DIR & "/m3tests-" & datestamp() & ".diffs"
   fs_rmfile(ComparisonLogFilePath)
 end
 
@@ -104,8 +102,8 @@ proc FileExists(x) is
 end
 
 proc cmp_file (dir, file) is
-  local ExpectedPath = dir & SL & file
-  local OutputPath = dir & SL & BUILD_DIR & SL & file
+  local ExpectedPath = dir & "/" & file
+  local OutputPath = dir & "/" & BUILD_DIR & "/" & file
 
   ExpectedPath = File64(ExpectedPath)
 
@@ -151,9 +149,9 @@ proc cmp_file (dir, file) is
 end
 
 %NOW = "-" & datetime()
-report = PACKAGE_DIR & SL & "m3tests.html"
-jureport = PACKAGE_DIR & SL & "m3tests-results.xml.new"
-juxreport = PACKAGE_DIR & SL & "m3tests-results.xml"
+report = PACKAGE_DIR & "/m3tests.html"
+jureport = PACKAGE_DIR & "/m3tests-results.xml.new"
+juxreport = PACKAGE_DIR & "/m3tests-results.xml"
 
 if defined("HTML")
   > report in
@@ -244,25 +242,25 @@ html(["      <tbody>", CR])
 
 readonly proc run_test (class, group, uid, comment, should_run) is
 
-  local dir = ".." & SL & "src" & SL & group & SL & uid
-  fs_rmrec (dir & SL & BUILD_DIR)
+  local dir = "../src" & "/" & group & "/" & uid
+  fs_rmrec (dir & "/" & BUILD_DIR)
   tstart = compress (q_exec_get ("date '+%s'")[1]) % second resolution only
   %write (tstart, CR)
 
   if defined ("_all") or defined (class) or defined ("_" & uid)
     write ("--- ", uid, " --- ", comment, CR)
-    fs_mkdir (dir & SL & BUILD_DIR)
-    exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", ">" & BUILD_DIR & SL & "stdout.build.raw 2>" & BUILD_DIR & SL & "stderr.build.raw")
+    fs_mkdir (dir & "/" & BUILD_DIR)
+    exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", ">" & BUILD_DIR & "/stdout.build.raw 2>" & BUILD_DIR & "/stderr.build.raw")
 
-    NormalizeFile (dir & SL & BUILD_DIR & SL & "stdout.build")
-    NormalizeFile (dir & SL & BUILD_DIR & SL & "stderr.build")
+    NormalizeFile (dir & "/" & BUILD_DIR & "/stdout.build")
+    NormalizeFile (dir & "/" & BUILD_DIR & "/stderr.build")
 
     if defined ("CAPTURE_BUILD")
       if not cmp_file (dir, "stdout.build")
-        cp_if (dir & SL & BUILD_DIR & SL & "stdout.build", dir & SL & "stdout.build")
+        cp_if (dir & "/" & BUILD_DIR & "/stdout.build", dir & "/stdout.build")
       end
       if not cmp_file (dir, "stderr.build")
-        cp_if (dir & SL & BUILD_DIR & SL & "stderr.build", dir & SL & "stderr.build")
+        cp_if (dir & "/" & BUILD_DIR & "/stderr.build", dir & "/stderr.build")
       end
     end
 
@@ -315,7 +313,7 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     html (["</pre></td></tr>", CR])
 
     if not defined ("keep")
-      fs_rmrec (dir & SL & BUILD_DIR)
+      fs_rmrec (dir & "/" & BUILD_DIR)
     end
   end
 end
