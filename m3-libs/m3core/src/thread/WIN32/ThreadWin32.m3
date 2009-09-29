@@ -497,6 +497,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 PROCEDURE RunThread (me: Activation) =
   VAR self: T;
   BEGIN
+    IF perfOn THEN PerfChanged(GetCurrentThreadId(), State.alive) END;
     EnterCriticalSection_slotMu();
       self := slots [me.slot];
     LeaveCriticalSection_slotMu();
@@ -571,8 +572,6 @@ PROCEDURE Fork(closure: Closure): T =
     IF (act.handle = NIL) OR (act.next = NIL) OR (act.prev = NIL) THEN Choke(ThisLine()) END;
 
     IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
-
-    IF perfOn THEN PerfChanged(t.id, State.alive) END;
 
     RETURN t
   END Fork;
