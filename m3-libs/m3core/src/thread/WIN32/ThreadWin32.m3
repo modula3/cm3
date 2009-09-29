@@ -461,7 +461,7 @@ PROCEDURE CheckSlot (t: T) =
 (*------------------------------------------------------------ Fork, Join ---*)
 
 CONST
-  MaxIdle = 10;
+  MaxIdle = 0; (* The idle thread mechanism is buggy. *)
 
 VAR (* LL=activeMu *)
   allThreads  : Activation := NIL;  (* global list of active threads *)
