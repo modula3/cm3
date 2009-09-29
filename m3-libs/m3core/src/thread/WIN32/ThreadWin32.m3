@@ -36,7 +36,7 @@ REVEAL
       release := UnlockMutex;
     END;
 
-  Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
+  Condition = MUTEX BRANDED "Thread.Condition Win32-1.0" OBJECT
       waiters: T := NIL;
         (* LL = giant; List of threads waiting on this CV. *)
     END;
@@ -202,9 +202,11 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
     (* LL = giant+m on entry; LL = m on exit *)
   BEGIN
     <* ASSERT( (self.waitingOn=NIL) AND (self.nextWaiter=NIL) ) *>
+
     self.waitingOn := c;
     self.nextWaiter := c.waiters;
     c.waiters := self;
+
     LeaveCriticalSection_giant();
     m.release();
     IF perfOn THEN PerfChanged(State.waiting) END;
@@ -528,11 +530,12 @@ PROCEDURE RunThread (me: Activation) =
       <*ASSERT allThreads # me*>
       me.next.prev := me.prev;
       me.prev.next := me.next;
-      me.next := NIL;
-      me.prev := NIL;
-      IF CloseHandle(me.handle) = 0 THEN Choke(ThisLine()) END;
-      me.handle := NIL;
     LeaveCriticalSection_activeMu();
+
+    me.next := NIL;
+    me.prev := NIL;
+    IF CloseHandle(me.handle) = 0 THEN Choke(ThisLine()) END;
+    me.handle := NIL;
 
   END RunThread;
 
