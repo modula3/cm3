@@ -156,7 +156,8 @@ PROCEDURE PushPixmap (hdc  : WinDef.HDC;
     END;
 
     IF op >= 0 AND st.optable # NIL AND op < NUMBER(st.optable^) AND
-       pst.pmtable # NIL AND pm < NUMBER (pst.pmtable^) THEN
+       pst.pmtable # NIL AND pm < NUMBER (pst.pmtable^) AND
+       pst.pmtable[pm].hbmp # NIL THEN
       WITH tbl = st.optable[op] DO
         ctxt.rop2 := WinGDI.SetROP2 (hdc, tbl.rop2);
         <* ASSERT ctxt.rop2 # 0 *>
