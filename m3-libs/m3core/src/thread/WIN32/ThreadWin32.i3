@@ -32,13 +32,6 @@ PROCEDURE LeaveCriticalSection_activeMu();
        which is called by the collector's page fault handler. *)
 
 
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_idleMu"*>
-PROCEDURE EnterCriticalSection_idleMu();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_idleMu"*>
-PROCEDURE LeaveCriticalSection_idleMu();
-    (* Global lock for list of idle threads *)
-
-
 <*EXTERNAL "ThreadWin32__EnterCriticalSection_slotMu"*>
 PROCEDURE EnterCriticalSection_slotMu();
 <*EXTERNAL "ThreadWin32__LeaveCriticalSection_slotMu"*>
