@@ -971,16 +971,17 @@ VAR
 
 PROCEDURE LockHeap () =
   BEGIN
-    EnterCriticalSection_cs();
+    EnterCriticalSection_heap();
     INC(inCritical);
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
   VAR sig := FALSE;
   BEGIN
+   
     DEC(inCritical);
     IF (inCritical = 0) AND do_signal THEN sig := TRUE; do_signal := FALSE; END;
-    LeaveCriticalSection_cs();
+    LeaveCriticalSection_heap();
     IF sig THEN Broadcast(condition); END;
   END UnlockHeap;
 
@@ -989,9 +990,9 @@ PROCEDURE WaitHeap () =
     LOCK mutex DO
       DEC(inCritical);
       <*ASSERT inCritical = 0*>
-      LeaveCriticalSection_cs();
+      LeaveCriticalSection_heap();
       Wait(mutex, condition);
-      EnterCriticalSection_cs();
+      EnterCriticalSection_heap();
       <*ASSERT inCritical = 0*>
       INC(inCritical);
     END;
