@@ -136,6 +136,6 @@ end
 %
 % workaround
 %
-if equal(TARGET, "PPC_DARWIN") or equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN")
+if equal(TARGET, "PPC_DARWIN") or equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN") or equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun")
   SYSTEM_LIBS{"LIBC"} += "-lz"
 end
