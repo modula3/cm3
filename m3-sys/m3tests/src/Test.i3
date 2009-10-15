@@ -17,10 +17,6 @@ TYPE
     d := ARRAY [1..10] OF LONGREAL {0.0d0, 0.5d0, 1.0d0, 2.0d0, -1.0d0, -3.0d0, 12.34d0, -124.456d0, 1000.0d0, -10000.0d0};
     f := ARRAY [1..10] OF     REAL {0.0e0, 0.5e0, 1.0e0, 2.0e0, -1.0e0, -3.5e0, 12.34e0, -124.456e0, 1000.0e0, -10000.0e0};
     sizes : RECORD
-      (* keep these sorted by name for easier human comprehension *)
-      linger := BYTESIZE(Usysdep.struct_linger);
-      time := BYTESIZE(Usysdep.time_t);
-      timeval := BYTESIZE(Usysdep.struct_timeval);
       tm := BYTESIZE(Usysdep.struct_tm);
     END;
     align := 0.0d0;
