@@ -81,6 +81,8 @@ static const PVOID t;
 
 #else
 
+/* disabled */
+
 #define LOG(f) /* nothing */
 
 #endif
