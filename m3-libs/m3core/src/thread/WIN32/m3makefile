@@ -4,6 +4,8 @@
 
 Interface ("ThreadContext")
 module ("ThreadWin32")
+interface ("ThreadDebugWin32")
+c_source("ThreadDebugWin32")
 c_source("ThreadWin32C")
 if equal (OS_TYPE, "POSIX")   
     implementation("SchedulerPosix")   
