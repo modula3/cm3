@@ -41,7 +41,7 @@ static LONG ThreadDebugWin32__LogCounter;
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
 #ifndef ReadTimeStampCounter
-unsigned __int64 ReadTimeStampCounter(VOID)
+static unsigned __int64 ReadTimeStampCounter(VOID)
 {
     __asm {
         _emit 0xF
