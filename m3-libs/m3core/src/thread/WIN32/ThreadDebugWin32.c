@@ -14,19 +14,14 @@ dt -oca m3core!ThreadDebugWin32__Log
 #pragma warning(disable:4127) /* expression is constant */
 #pragma warning(disable:4100) /* unused parameter */
 #endif
+
 #include <windows.h>
-WINBASEAPI
-BOOL
-WINAPI
-IsDebuggerPresent(
-    VOID
-    );
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if 1
+#if 0
     
 /* enabled */
 
@@ -85,8 +80,6 @@ static const PVOID m;
 static const PVOID t;
 
 #else
-
-/* disabled */
 
 #define LOG(f) /* nothing */
 
