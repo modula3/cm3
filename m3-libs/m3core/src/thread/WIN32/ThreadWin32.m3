@@ -988,6 +988,7 @@ VAR
 
 PROCEDURE LockHeap () =
   BEGIN
+    IF debug THEN ThreadDebugWin32.LockHeap(); END;
     EnterCriticalSection_heap();
     INC(inCritical);
   END LockHeap;
@@ -995,6 +996,7 @@ PROCEDURE LockHeap () =
 PROCEDURE UnlockHeap () =
   VAR sig := FALSE;
   BEGIN   
+    IF debug THEN ThreadDebugWin32.UnlockHeap(); END;
     DEC(inCritical);
     IF (inCritical = 0) AND do_signal THEN sig := TRUE; do_signal := FALSE; END;
     LeaveCriticalSection_heap();
@@ -1003,6 +1005,7 @@ PROCEDURE UnlockHeap () =
 
 PROCEDURE WaitHeap () =
   BEGIN
+    IF debug THEN ThreadDebugWin32.WaitHeap(); END;
     LOCK mutex DO
       DEC(inCritical);
       <*ASSERT inCritical = 0*>
@@ -1016,7 +1019,10 @@ PROCEDURE WaitHeap () =
 
 PROCEDURE BroadcastHeap () =
   BEGIN
-    do_signal := TRUE;
+    IF debug THEN ThreadDebugWin32.BroadcastHeap(); END;
+    EnterCriticalSection_heap();
+      do_signal := TRUE;
+    LeaveCriticalSection_heap();
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)

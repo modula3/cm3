@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 #if 0
-    
+
 /* enabled */
 
 typedef struct _ThreadDebugWin32__LogEntry_t {
@@ -35,7 +35,7 @@ typedef struct _ThreadDebugWin32__LogEntry_t {
     PVOID t; /* thread */
 } ThreadDebugWin32__LogEntry_t;
 
-static ThreadDebugWin32__LogEntry_t ThreadDebugWin32__Log[4000]; /* size can be tuned for the scenario */
+static ThreadDebugWin32__LogEntry_t ThreadDebugWin32__Log[28000]; /* size can be tuned for the scenario */
 static LONG ThreadDebugWin32__LogCounter;
 
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
@@ -55,19 +55,21 @@ static const char UnlockMutex[] = "UnlockMutex";
 
 static VOID ThreadDebugWin32__LogEntry(PCSTR function, PVOID c, PVOID m, PVOID t)
 {
-    const UINT Skip = 1201000; /* tuned for the scenario to debug */
-    UINT Counter = (UINT)InterlockedIncrement(&ThreadDebugWin32__LogCounter);
-    if (Counter > Skip)
+    if (function != LockMutex && function != UnlockMutex)
     {
-        /*if (function != LockMutex && function != UnlockMutex)*/
+        const UINT Skip = 0; /* tuned for the scenario to debug */
+        UINT Counter = (UINT)InterlockedIncrement(&ThreadDebugWin32__LogCounter) - 1;
+        if (Counter > Skip)
         {
-            ThreadDebugWin32__LogEntry_t* entry = &ThreadDebugWin32__Log[(Counter - Skip) % NUMBER_OF(ThreadDebugWin32__Log)];
-            entry->tm = (UINT)ReadTimeStampCounter();
-            entry->tid = GetCurrentThreadId();
-            entry->f = function;
-            entry->c = c;
-            entry->m = m;
-            entry->t = t;
+            {
+                ThreadDebugWin32__LogEntry_t* entry = &ThreadDebugWin32__Log[(Counter - Skip) % NUMBER_OF(ThreadDebugWin32__Log)];
+                entry->tm = (UINT)ReadTimeStampCounter();
+                entry->tid = GetCurrentThreadId();
+                entry->f = function;
+                entry->c = c;
+                entry->m = m;
+                entry->t = t;
+            }
         }
     }
 }
@@ -165,6 +167,26 @@ VOID __cdecl ThreadDebugWin32__RunThread(VOID)
 VOID __cdecl ThreadDebugWin32__Fork(VOID)
 {
     LOG("Fork");
+}
+
+VOID __cdecl ThreadDebugWin32__LockHeap(VOID)
+{
+    LOG("LockHeap");
+}
+
+VOID __cdecl ThreadDebugWin32__UnlockHeap(VOID)
+{
+    LOG("UnlockHeap");
+}
+
+VOID __cdecl ThreadDebugWin32__WaitHeap(VOID)
+{
+    LOG("WaitHeap");
+}
+
+VOID __cdecl ThreadDebugWin32__BroadcastHeap(VOID)
+{
+    LOG("BroadcastHeap");
 }
 
 #ifdef __cplusplus

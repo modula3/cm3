@@ -50,4 +50,16 @@ PROCEDURE Fork();
 <*EXTERNAL ThreadDebugWin32__RunThread*>
 PROCEDURE RunThread();
 
+<*EXTERNAL ThreadDebugWin32__LockHeap*>
+PROCEDURE LockHeap();
+
+<*EXTERNAL ThreadDebugWin32__UnlockHeap*>
+PROCEDURE UnlockHeap();
+
+<*EXTERNAL ThreadDebugWin32__WaitHeap*>
+PROCEDURE WaitHeap();
+
+<*EXTERNAL ThreadDebugWin32__BroadcastHeap*>
+PROCEDURE BroadcastHeap();
+
 END ThreadDebugWin32.
