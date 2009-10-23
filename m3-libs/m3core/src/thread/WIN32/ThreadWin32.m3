@@ -940,6 +940,8 @@ PROCEDURE Init() =
     me.stackbase := InitialStackBase (ADR (self));
     IF me.stackbase = NIL THEN Choke(ThisLine()); END;
 
+    DEC(inCritical);
+
     PerfStart();
     IF perfOn THEN PerfChanged(State.alive) END;
 
@@ -981,7 +983,7 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
    and collector. *)
 
 VAR
-  inCritical := 0;     (* LL = heap *)
+  inCritical := 1;     (* LL = heap *)
   do_signal := FALSE;  (* LL = heap *)
   mutex: MUTEX;
   condition: Condition;
