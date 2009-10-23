@@ -12,6 +12,9 @@ Interface ("ThreadF")
 Interface ("Scheduler")
 if equal (OS_TYPE, "POSIX")
     Interface ("SchedulerPosix")
+else
+    interface ("ThreadDebug")
+    c_source("ThreadDebug")
 end
 Interface ("MutexRep")
 Interface ("ThreadEvent")

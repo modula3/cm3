@@ -10,7 +10,7 @@ Thread, ThreadF, Scheduler, ThreadInternal, RTOS, RTHooks, ThreadWin32;
 
 IMPORT RTError, WinGDI, RTParams, FloatMode;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
-IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebugWin32;
+IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM WinNT IMPORT HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
     MEMORY_BASIC_INFORMATION, PAGE_READWRITE, PAGE_READONLY;
@@ -22,7 +22,7 @@ FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
 
 (*--------------------------------------------------------------------------*)
 
-CONST debug = FALSE; (* controls calls to ThreadDebugWin32 *)
+CONST debug = FALSE; (* controls calls to ThreadDebug *)
 
 (*----------------------------------------- Exceptions, types and globals ---*)
 
@@ -107,7 +107,7 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE LockMutex (m: Mutex) =
   VAR self := Self();  wait := FALSE;  next, prev: T;
   BEGIN
-    IF debug THEN ThreadDebugWin32.LockMutex(m); END;
+    IF debug THEN ThreadDebug.LockMutex(m); END;
     IF self = NIL THEN Die(ThisLine(), "LockMutex called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(State.locking) END;
 
@@ -149,7 +149,7 @@ PROCEDURE LockMutex (m: Mutex) =
 PROCEDURE UnlockMutex(m: Mutex) =
   VAR self := Self(); next: T;
   BEGIN
-    IF debug THEN ThreadDebugWin32.UnlockMutex(m); END;
+    IF debug THEN ThreadDebug.UnlockMutex(m); END;
     IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
     EnterCriticalSection_giant();
 
@@ -207,7 +207,7 @@ PROCEDURE DumpSlots () =
 PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
     (* LL = giant+m on entry; LL = m on exit *)
   BEGIN
-    IF debug THEN ThreadDebugWin32.InnerWait(m, c, self); END;
+    IF debug THEN ThreadDebug.InnerWait(m, c, self); END;
     <* ASSERT( (self.waitingOn=NIL) AND (self.nextWaiter=NIL) ) *>
 
     self.waitingOn := c;
@@ -228,7 +228,7 @@ PROCEDURE InnerTestAlert(self: T) RAISES {Alerted} =
   (* If self.alerted, clear "alerted", leave giant and raise
      "Alerted". *)
   BEGIN
-    IF debug THEN ThreadDebugWin32.InnerTestAlert(self); END;
+    IF debug THEN ThreadDebug.InnerTestAlert(self); END;
     IF self.alerted THEN
       self.alerted := FALSE;
       LeaveCriticalSection_giant();
@@ -240,7 +240,7 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
   VAR self := Self();
   BEGIN
-    IF debug THEN ThreadDebugWin32.AlertWait(m, c); END;
+    IF debug THEN ThreadDebug.AlertWait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
     EnterCriticalSection_giant();
     InnerTestAlert(self);
@@ -255,7 +255,7 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   (* LL = m *)
   VAR self := Self();
   BEGIN
-    IF debug THEN ThreadDebugWin32.Wait(m, c); END;
+    IF debug THEN ThreadDebug.Wait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
     EnterCriticalSection_giant();
     InnerWait(m, c, self);
@@ -265,7 +265,7 @@ PROCEDURE DequeueHead(c: Condition) =
   (* LL = giant *)
   VAR t: T;
   BEGIN
-    IF debug THEN ThreadDebugWin32.DequeueHead(c); END;
+    IF debug THEN ThreadDebug.DequeueHead(c); END;
     t := c.waiters; c.waiters := t.nextWaiter;
     t.nextWaiter := NIL;
     t.waitingOn := NIL;
@@ -277,7 +277,7 @@ PROCEDURE DequeueHead(c: Condition) =
 
 PROCEDURE Signal (c: Condition) =
   BEGIN
-    IF debug THEN ThreadDebugWin32.Signal(c); END;
+    IF debug THEN ThreadDebug.Signal(c); END;
     EnterCriticalSection_giant();
     IF c.waiters # NIL THEN DequeueHead(c) END;
     LeaveCriticalSection_giant();
@@ -285,7 +285,7 @@ PROCEDURE Signal (c: Condition) =
 
 PROCEDURE Broadcast (c: Condition) =
   BEGIN
-    IF debug THEN ThreadDebugWin32.Broadcast(c); END;
+    IF debug THEN ThreadDebug.Broadcast(c); END;
     EnterCriticalSection_giant();
     WHILE c.waiters # NIL DO DequeueHead(c) END;
     LeaveCriticalSection_giant();
@@ -294,7 +294,7 @@ PROCEDURE Broadcast (c: Condition) =
 PROCEDURE Alert(t: T) =
     VAR prev, next: T;
   BEGIN
-    IF debug THEN ThreadDebugWin32.Alert(t); END;
+    IF debug THEN ThreadDebug.Alert(t); END;
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
     EnterCriticalSection_giant();
     t.alerted := TRUE;
@@ -325,7 +325,7 @@ PROCEDURE Alert(t: T) =
 PROCEDURE XTestAlert (self: T): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    IF debug THEN ThreadDebugWin32.XTestAlert(self); END;
+    IF debug THEN ThreadDebug.XTestAlert(self); END;
     EnterCriticalSection_giant();
     result := self.alerted; IF result THEN self.alerted := FALSE END;
     LeaveCriticalSection_giant();
@@ -335,7 +335,7 @@ PROCEDURE XTestAlert (self: T): BOOLEAN =
 PROCEDURE TestAlert(): BOOLEAN =
   VAR self := Self();
   BEGIN
-    IF debug THEN ThreadDebugWin32.TestAlert(); END;
+    IF debug THEN ThreadDebug.TestAlert(); END;
     IF self = NIL
       (* Not created by Fork; not alertable *)
       THEN RETURN FALSE
@@ -513,7 +513,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 PROCEDURE RunThread (me: Activation) =
   VAR self: T;
   BEGIN
-    IF debug THEN ThreadDebugWin32.RunThread(); END;
+    IF debug THEN ThreadDebug.RunThread(); END;
     IF perfOn THEN PerfChanged(State.alive) END;
     EnterCriticalSection_slotMu();
       self := slots [me.slot];
@@ -562,7 +562,7 @@ PROCEDURE Fork(closure: Closure): T =
     stack_size: DWORD;
     act: Activation := NIL;
   BEGIN
-    IF debug THEN ThreadDebugWin32.Fork(); END;
+    IF debug THEN ThreadDebug.Fork(); END;
     (* determine the initial size of the stack for this thread *)
     stack_size := default_stack;
     TYPECASE closure OF
@@ -598,7 +598,7 @@ PROCEDURE Fork(closure: Closure): T =
 PROCEDURE Join(t: T): REFANY =
   VAR res: REFANY;
   BEGIN
-    IF debug THEN ThreadDebugWin32.Join(t); END;
+    IF debug THEN ThreadDebug.Join(t); END;
     LOCK t DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
       WHILE NOT t.completed DO Wait(t, t.join) END;
@@ -613,7 +613,7 @@ PROCEDURE Join(t: T): REFANY =
 PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
   VAR res: REFANY;
   BEGIN
-    IF debug THEN ThreadDebugWin32.AlertJoin(t); END;
+    IF debug THEN ThreadDebug.AlertJoin(t); END;
     LOCK t DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
       WHILE NOT t.completed DO AlertWait(t, t.join) END;
@@ -988,7 +988,7 @@ VAR
 
 PROCEDURE LockHeap () =
   BEGIN
-    IF debug THEN ThreadDebugWin32.LockHeap(); END;
+    IF debug THEN ThreadDebug.LockHeap(); END;
     EnterCriticalSection_heap();
     INC(inCritical);
   END LockHeap;
@@ -996,7 +996,7 @@ PROCEDURE LockHeap () =
 PROCEDURE UnlockHeap () =
   VAR sig := FALSE;
   BEGIN   
-    IF debug THEN ThreadDebugWin32.UnlockHeap(); END;
+    IF debug THEN ThreadDebug.UnlockHeap(); END;
     DEC(inCritical);
     IF (inCritical = 0) AND do_signal THEN sig := TRUE; do_signal := FALSE; END;
     LeaveCriticalSection_heap();
@@ -1005,7 +1005,7 @@ PROCEDURE UnlockHeap () =
 
 PROCEDURE WaitHeap () =
   BEGIN
-    IF debug THEN ThreadDebugWin32.WaitHeap(); END;
+    IF debug THEN ThreadDebug.WaitHeap(); END;
     LOCK mutex DO
       DEC(inCritical);
       <*ASSERT inCritical = 0*>
@@ -1019,7 +1019,7 @@ PROCEDURE WaitHeap () =
 
 PROCEDURE BroadcastHeap () =
   BEGIN
-    IF debug THEN ThreadDebugWin32.BroadcastHeap(); END;
+    IF debug THEN ThreadDebug.BroadcastHeap(); END;
     EnterCriticalSection_heap();
       do_signal := TRUE;
     LeaveCriticalSection_heap();
