@@ -23,7 +23,7 @@ dt -oca m3core!ThreadDebugWin32__Log
 extern "C" {
 #endif
 
-#if 1
+#if 0
 
 /* enabled */
 
