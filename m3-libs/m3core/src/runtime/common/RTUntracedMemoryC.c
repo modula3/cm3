@@ -43,11 +43,10 @@ void* RTUntracedMemory__AllocZ ANSI((size_t count)) KR((count) size_t count;)
 void* RTUntracedMemory__AllocZV ANSI((size_t count, size_t size)) KR((count, size) size_t count COMMA size;)
 /* ZV = zeroed vector = calloc */
 {
-#ifdef _WIN32
-    size_t a;
     size_t max = (~(size_t)0);
     if ((count > 1) && (size > 1) && count > max / size) /* implies count * size > max */
         return 0;
+#ifdef _WIN32
     return WIN(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, count));
 #else
     return calloc(count, size);
