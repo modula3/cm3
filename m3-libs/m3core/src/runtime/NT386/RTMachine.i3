@@ -9,8 +9,6 @@
 
 INTERFACE RTMachine;
 
-IMPORT Word;
-
 (*------------------------------------------------------------------ heap ---*)
 
 (* The heap page size is machine-dependent, since it might depend on the
