@@ -109,17 +109,17 @@ int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
 int ThreadPThread__sem_getvalue(int* value) { return sem_getvalue(&ackSem, value); }
 int ThreadPThread__sigsuspend(void)         { return sigsuspend(&mask); }
 
-int ThreadPThread__SuspendThread (m3_pthread mt)
+int ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
   return 0;
 }
 
-int ThreadPThread__RestartThread (m3_pthread mt)
+int ThreadPThread__RestartThread (m3_pthread_t mt)
 {
   return 0;
 }
 
-void *ThreadPThread__ProcessState (m3_pthread mt, void *sp,
+void *ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
 				   void (*p)(void *start, void *end))
 {
   /* Full context is in the signal handler frame so no need to process */
