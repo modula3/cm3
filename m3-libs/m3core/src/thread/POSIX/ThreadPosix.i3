@@ -18,9 +18,19 @@ PROCEDURE allow_sigvtalrm();
 <*EXTERNAL ThreadPosix__disallow_sigvtalrm*>
 PROCEDURE disallow_sigvtalrm();
 
-<*EXTERNAL ThreadPosix__InitC*>
-PROCEDURE InitC();
-(* There is already ThreadInternal.Init exported by the same module that
-   exports this interface, so we chose an arbitrary different name here. *)
+<*EXTERNAL ThreadPosix__MakeContext*>
+PROCEDURE MakeContext(p: PROCEDURE(); size: CARDINAL): ADDRESS;
+
+<*EXTERNAL ThreadPosix__GetContext*>
+PROCEDURE GetContext(c: ADDRESS);
+
+<*EXTERNAL ThreadPosix__SwapContext*>
+PROCEDURE SwapContext(from, to: ADDRESS);
+
+<*EXTERNAL ThreadPosix__DisposeContext*>
+PROCEDURE DisposeContext(VAR c: ADDRESS);
+
+<*EXTERNAL ThreadPosix__ProcessContext*>
+PROCEDURE ProcessContext(c, s: ADDRESS; p: PROCEDURE(start, stop: ADDRESS));
 
 END ThreadPosix.

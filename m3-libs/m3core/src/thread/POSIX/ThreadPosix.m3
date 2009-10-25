@@ -14,9 +14,9 @@ UNSAFE MODULE ThreadPosix EXPORTS Thread, ThreadF, ThreadInternal,
 Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPosix;
 
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
-       RTError, RTMisc, RTParams, RTPerfTool, RTProcedureSRC,
-       RTProcess, RTThread, RTIO, ThreadEvent, Time, TimePosix,
-       Unix, Utime, Word, Uexec;
+       RTError, RTParams, RTPerfTool, RTProcedureSRC,
+       RTProcess, RTIO, ThreadEvent, Time, TimePosix,
+       Unix, Utime, Uexec;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 
@@ -110,7 +110,11 @@ REVEAL
 
     (* where we carry our work. The first thread runs on the
        original C program stack and its context.stack is NIL *)
-    context : Context;
+    handlers:    ADDRESS := NIL;
+    errno:       INTEGER := 0;
+    stackbase:   ADDRESS := NIL;
+    context:     ADDRESS := NIL;
+    stack:       ADDRESS := NIL;
 
     (* if state = blocking, the descriptors we are waiting on *)
     select : SelectRec := SelectRec{};
@@ -118,9 +122,6 @@ REVEAL
     (* state that is available to the floating point routines *)
     floatState : FloatMode.ThreadState;
   END;
-
-TYPE
-  IntPtr = UNTRACED REF INTEGER;
 
 (*------------------------------------------------------ mutual exclusion ---*)
 
@@ -189,7 +190,6 @@ VAR
   (* we start the heavy machinery only when we have more than one thread *)
   multipleThreads: BOOLEAN := FALSE;
 
-  topThread: T;       (* the thread in which Main runs *)
   pausedThreads : T;
   selected_interval:= UTime{0, 100 * 1000};
 
@@ -274,10 +274,8 @@ PROCEDURE Fork (cl: Closure): T =
       self.next.previous := t;
       self.next := t;
 
-      InitContext (t.context, stack_size);
+      t.context := MakeContext (RunThread, stack_size);
       CanRun (t);
-
-      IF hooks # NIL THEN hooks.fork (t) END;
     DEC (inCritical);
     RETURN t;
   END Fork;
@@ -515,21 +513,17 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
      hence the extensive use of LOOPHOLE. *)
   VAR
     me := LOOPHOLE(LOOPHOLE(ADR(self), UNTRACED REF ADDRESS)^, T);
-    t: T; start, stop: ADDRESS;
+    t: T;
   BEGIN
     (* flush thread state *)
     RTHeapRep.FlushThreadState(heapState);
 
     (* save my state *)
-    EVAL RTThread.Save (me.context.buf);
+    GetContext(me.context);
 
     t := me;
     REPEAT
-      Tos (t.context, start, stop);	 (* process the stack *)
-      p (start, stop);
-      WITH z = t.context.buf DO		 (* process the registers *)
-        p (ADR (z), ADR (z) + ADRSIZE (z))
-      END;
+      ProcessContext(t.context, t.stackbase, p);
       t := LOOPHOLE(LOOPHOLE(ADR(t.next), UNTRACED REF ADDRESS)^, T);
     UNTIL t = me;
   END ProcessStacks;
@@ -537,7 +531,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
 PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
   BEGIN
     ProcessStacks(p);
-  END start;
+  END ProcessEachStack;
 
 (*------------------------------------------------- I/O and Timer support ---*)
 
@@ -927,7 +921,6 @@ BEGIN
         | State.dying, State.dead =>
             (* remove this guy from the ring *)
             IF perfOn THEN PerfDeleted (t.id); END;
-      	    IF hooks # NIL THEN hooks.die (t) END;
             VAR tmp := t.previous; BEGIN
               IF (t = from) THEN from := tmp END;
               t.next.previous := tmp;
@@ -954,7 +947,7 @@ BEGIN
     IF t.state = State.alive AND (scanned OR NOT someBlocking) THEN
       IF perfOn THEN PerfRunning (t.id); END;
       (* At least one thread wants to run; transfer to it *)
-      Transfer (self.context, t.context, t);
+      Transfer (self, t);
       IF (dead_stacks # NIL) THEN FreeDeadStacks () END;
       do_alert := self.alertable AND self.alertPending;
       self.alertable := FALSE;
@@ -1001,12 +994,10 @@ PROCEDURE FreeDeadStacks () =
   (* blow away any dead stacks *)
   VAR x: T;  t: T := dead_stacks;
   BEGIN
+    dead_stacks := NIL;
     WHILE (t # NIL) DO
       <*ASSERT t # self*>
-      IF (t.context.stack.words # NIL) THEN
-        RTThread.FreeStack (t.context.stack);
-        t.context.stack.words := NIL;
-      END;
+      DisposeContext (t.context);
       x := t;
       t := t.next;
       x.next := NIL;
@@ -1027,28 +1018,8 @@ PROCEDURE WaitProcess (pid: int; VAR status: int): int =
 
 (*-------------------------------------------------- low-level coroutines ---*)
 
-CONST
-  seal = 123456;
+VAR self: T;  (* the currently running thread *)
 
-TYPE
-  Context = RECORD 
-    stack:       RTThread.Stack;
-    stackTop:    ADDRESS;
-    stackBottom: ADDRESS;
-    handlers:    ADDRESS;
-    errno:       INTEGER;
-    buf:         RTThread.State;
-  END;
-
-VAR
-  self: T;  (* the currently running thread *)
-
-VAR
-  modelFrame: UNTRACED REF ARRAY OF Word.T;
-  modelFrameLoc: ADDRESS;
-  modelSP : ADDRESS;
-  modelBuf : RTThread.State;
-  
 (* The general strategy is:
    - at initialization time, get an idea of what the stack frame and 
      environment for a routine is; this is done by 
@@ -1063,83 +1034,13 @@ VAR
      closure).
 *)
 
-PROCEDURE InitTopContext (VAR c: Context;  stackbase: ADDRESS) =
-  CONST STACK_SLOP = 8 * ADRSIZE (INTEGER);
-  VAR env: RTThread.State;
-  BEGIN
-    (* The first thread runs on the original stack, we don't want any checks *)
-    c.stack.words := NIL;
-    c.stack.first := NIL;
-    c.stack.last  := NIL;
-    c.handlers    := NIL;
-    c.errno       := 0;
-    IF stack_grows_down THEN
-      c.stackTop    := NIL;
-      c.stackBottom := stackbase + STACK_SLOP;
-    ELSE
-      c.stackTop    := LOOPHOLE (LAST (INTEGER), ADDRESS);
-      c.stackBottom := stackbase - STACK_SLOP;
-    END;
-    
-    (* determine what should go in the stack of future threads *)
-    WITH i = RTThread.Save (env) DO
-      <* ASSERT i = 0 *> END;
-    DetermineContext (RTThread.SP (env));
-
-  END InitTopContext;
-
-PROCEDURE DetermineContext (oldSP: ADDRESS) =
-  (* This routine looks at the stack frame for this call and takes
-     it as a model for the frame to put in the stacks of forked
-     threads. It also saves the jmp_buf at the beginning of the 
-     call in a global; that jmp_buf will be (after updating the 
-     stack pointer) for forked threads *)
-  BEGIN
-    
-    IF debug THEN
-      OutAddr("DetermineContext: oldSP = ", oldSP);
-    END;
-    IF (RTThread.Save (modelBuf) = 0) THEN
-      (* first time through; this part is executed only once to determine
-         the model *)
-      
-      modelSP := RTThread.SP (modelBuf);
-      
-      (* Copy the frame (plus pad) to modelStack and
-         remember where that should go in the new stacks *)
-      
-      RTThread.FlushStackCache ();
-
-      IF debug THEN
-        OutAddr("modelSP:    ", modelSP);
-        OutAddr("oldSP:      ", oldSP);
-        OutInt("frame size: ", ABS (modelSP - oldSP));
-      END;
-      modelFrame := NEW (UNTRACED REF ARRAY OF Word.T,
-                         ABS (modelSP - oldSP) DIV ADRSIZE (Word.T)
-                         + 1 + RTThread.FramePadBottom + RTThread.FramePadTop);
-                                               
-      IF stack_grows_down THEN
-        (* <* ASSERT oldSP > modelSP *> *)
-        modelFrameLoc := modelSP - RTThread.FramePadTop * ADRSIZE(Word.T);
-      ELSE
-        (* <* ASSERT oldSP < modelSP *> *)
-        modelFrameLoc := oldSP - RTThread.FramePadBottom * ADRSIZE (Word.T);
-      END;
-
-      EVAL Cstring.memcpy (ADR (modelFrame [0]), modelFrameLoc,
-                           NUMBER (modelFrame^) * BYTESIZE (Word.T));
-      
-    ELSE 
-      (* we are starting the execution of a forked thread *)
-      StartThread ();
-    END;
-  END DetermineContext;
-
-PROCEDURE StartThread () =
+PROCEDURE RunThread () =
   <*FATAL Alerted*>
+  VAR xx: INTEGER;
   BEGIN
-    Cerrno.SetErrno(self.context.errno);
+    self.stackbase := ADR(xx);
+    handlerStack := self.handlers;
+    Cerrno.SetErrno(self.errno);
     allow_sigvtalrm ();
     DEC (inCritical);
 
@@ -1161,106 +1062,21 @@ PROCEDURE StartThread () =
     END;
     InternalYield ();
     <* ASSERT FALSE *>
-  END StartThread;
+  END RunThread;
 
-PROCEDURE InitContext (VAR c: Context;  size: INTEGER) =
-  VAR
-    offset, SPinFrame: INTEGER;
-    frameLoad: ADDRESS;
+PROCEDURE Transfer (from, to: T) =
   BEGIN
-    (* allocate a new stack *)
-    RTThread.GetStack (size, c.stack);
-    
-    (* initialize the context fields *)
-    IF stack_grows_down THEN
-      c.stackTop    := c.stack.first;
-      c.stackBottom := c.stack.last - ADRSIZE (Word.T);
-    ELSE
-      c.stackTop    := c.stack.last - ADRSIZE (Word.T);
-      c.stackBottom := c.stack.first;
-    END;
-    c.handlers    := NIL;
-    c.errno       := Cerrno.GetErrno();
-    
-    (* mark the ends of the stack for a sanity check *)
-    LOOPHOLE (c.stackTop, IntPtr)^ := seal;
-    LOOPHOLE (c.stackBottom, IntPtr)^ := seal;
-
-    IF stack_grows_down THEN
-      SPinFrame := RTThread.FramePadTop * ADRSIZE (Word.T);
-      frameLoad := RTMisc.Align (c.stack.last - 2 * ADRSIZE (Word.T)
-                       - NUMBER (modelFrame^) * ADRSIZE (Word.T)
-                       - RTThread.StackFrameAlignment + 1 + SPinFrame,
-                       RTThread.StackFrameAlignment) - SPinFrame;
-    ELSE
-      SPinFrame := (NUMBER (modelFrame^) - RTThread.FramePadBottom)
-                       * ADRSIZE (Word.T);
-      frameLoad := RTMisc.Align (c.stack.first + ADRSIZE (Word.T) + SPinFrame,
-                                 RTThread.StackFrameAlignment) - SPinFrame;
-    END;
-    offset := (frameLoad + SPinFrame) - modelSP;
-    EVAL Cstring.memcpy (frameLoad, ADR (modelFrame [0]),
-                         NUMBER (modelFrame^) * BYTESIZE (Word.T));
-    RTThread.UpdateFrameForNewSP (frameLoad + SPinFrame, offset);
-
-    c.buf := modelBuf;
-    RTThread.UpdateStateForNewSP (c.buf, offset);
-  END InitContext;
-
-PROCEDURE Transfer (VAR from, to: Context;  new_self: T) =
-  BEGIN
-    IF (from.stack.words # NIL)
-      AND (LOOPHOLE (from.stackTop, IntPtr)^ # seal
-           OR LOOPHOLE (from.stackBottom, IntPtr)^ # seal) THEN
-      SmashedStack (self);
-    END;
-
-    IF (to.stack.words # NIL)
-      AND (LOOPHOLE (to.stackTop, IntPtr)^ # seal
-           OR LOOPHOLE (to.stackBottom, IntPtr)^ # seal) THEN
-      SmashedStack (new_self);
-    END;
-
-    (*********
-    <* ASSERT (from.stack.words = NIL)
-                OR (LOOPHOLE (from.stackTop, IntPtr)^ = seal
-                AND LOOPHOLE (from.stackBottom, IntPtr)^ = seal) *>
-    
-    <* ASSERT (to.stack.words = NIL)
-                OR (LOOPHOLE (to.stackTop, IntPtr)^ = seal
-                AND LOOPHOLE (to.stackBottom, IntPtr)^ = seal) *>
-    **********)
-
-    IF (ADR (from) # ADR (to)) THEN
+    IF from # to THEN
       disallow_sigvtalrm ();
+      from.handlers := handlerStack;
       from.errno := Cerrno.GetErrno();
-      self := new_self;
-      RTThread.Transfer (from.buf, to.buf);
+      self := to;
+      SwapContext(from.context, to.context);
+      handlerStack := from.handlers;
       Cerrno.SetErrno(from.errno);
       allow_sigvtalrm ();
     END;
   END Transfer;
-
-PROCEDURE SmashedStack (t: T) =
-  BEGIN
-    DumpEverybody ();
-    OutT ("*** Thread #");
-    OutI (t.id, 0);
-    OutT ("'s stack overflowed its limits.\n");
-    OutT ("*** Use Thread.IncDefaultStackSize to get bigger stacks.\n");
-    RTError.Msg (ThisFile(), ThisLine(), "corrupt thread stack");
-  END SmashedStack;
-
-PROCEDURE Tos (READONLY c: Context; VAR start, stop: ADDRESS) =
-  BEGIN
-    IF stack_grows_down THEN
-      start := RTThread.SP (c.buf);
-      stop  := c.stackBottom - ADRSIZE (Word.T);
-    ELSE
-      start := c.stackBottom + ADRSIZE (Word.T);
-      stop  := RTThread.SP (c.buf);
-    END;
-  END Tos;
 
 PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
   BEGIN
@@ -1461,30 +1277,6 @@ PROCEDURE PerfRunning (id: Id) =
     perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
   END PerfRunning;
 
-(*-------------------------------------------------- ThreadInternal hooks ---*)
-
-VAR
-  hooks: Hooks := NIL;
-
-PROCEDURE RegisterHooks(h: Hooks; init := TRUE): Hooks RAISES {}=
-  VAR
-    oldHooks: Hooks; 
-    t: T;
-  BEGIN
-    INC (inCritical);
-      oldHooks := hooks;
-      hooks := h;
-      IF init AND hooks # NIL THEN
-      	t := self;
-      	REPEAT 
-      	  hooks.fork (t);
-          t := t.next;
-      	UNTIL (t = self);
-      END;
-    DEC (inCritical);
-    RETURN oldHooks;
-  END RegisterHooks;
-
 (*--------------------------------------------------------------- ThreadF ---*)
 
 PROCEDURE MyId(): Id RAISES {}=
@@ -1498,20 +1290,20 @@ PROCEDURE Init() =
   VAR xx: INTEGER;
   BEGIN
     inCritical := 1;
-      topThread := NEW (T, state := State.alive, id := nextId);
+      self := NEW (T, state := State.alive, id := nextId,
+                   stackbase := ADR(xx),
+                   context := MakeContext(NIL, 0));
       heapCond := NEW (Condition);
-      FloatMode.InitThread (topThread.floatState);
+      FloatMode.InitThread (self.floatState);
 
       INC (nextId);
     
       stack_grows_down := ADR (xx) > QQ();
-      InitTopContext (topThread.context, ADR(xx));
-      self := topThread;
 
       pausedThreads := NIL;
 
-      topThread.next := topThread;
-      topThread.previous := topThread;
+      self.next := self;
+      self.previous := self;
 
       gMaxActiveFDSet := 1;
       gMaxFDSet := 1;
@@ -1554,6 +1346,7 @@ PROCEDURE UnlockHeap () =
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
+  <*FATAL Alerted*>
   BEGIN
     self.alertable := FALSE;
     ICannotRun (State.waiting);
@@ -1574,14 +1367,16 @@ PROCEDURE BroadcastHeap () =
 
 (*--------------------------------------------- exception handling support --*)
 
+VAR handlerStack: ADDRESS;
+
 PROCEDURE GetCurrentHandlers (): ADDRESS=
   BEGIN
-    RETURN self.context.handlers;
+    RETURN handlerStack;
   END GetCurrentHandlers;
 
 PROCEDURE SetCurrentHandlers (h: ADDRESS)=
   BEGIN
-    self.context.handlers := h;
+    handlerStack := h;
   END SetCurrentHandlers;
 
 (*RTHooks.PushEFrame*)
@@ -1589,38 +1384,17 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
   TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
   VAR f := LOOPHOLE (frame, Frame);
   BEGIN
-    f.next := self.context.handlers;
-    self.context.handlers := f;
+    f.next := handlerStack;
+    handlerStack := f;
   END PushEFrame;
 
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
-    self.context.handlers := frame;
+    handlerStack := frame;
   END PopEFrame;
-
-(*------------------------------------------------------------- debugging ---*)
-
-PROCEDURE OutAddr(s: TEXT; a: ADDRESS) =
-  BEGIN
-    IF NOT debug THEN RETURN END;
-    RTIO.PutText(s);
-    RTIO.PutAddr(a);
-    RTIO.PutText("\r\n");
-    RTIO.Flush();
-  END OutAddr;
-
-PROCEDURE OutInt(s: TEXT; a: INTEGER) =
-  BEGIN 
-    IF NOT debug THEN RETURN END;
-    RTIO.PutText(s);
-    RTIO.PutInt(a);
-    RTIO.PutText("\r\n");
-    RTIO.Flush();
-  END OutInt;
 
 VAR debug := RTParams.IsPresent ("debugthreads");
 
 BEGIN
-  InitC();
 END ThreadPosix.

@@ -5,10 +5,11 @@
 #include "m3unix.h"
 #include <stdlib.h>
 #include <pthread.h>
+#include <setjmp.h>
 
 #ifdef __APPLE__
 /* MacOSX diverges in a good way and therefore many functions
-in this file are just stubs for it, that other code dynamically choses
+in this file are just stubs for it, that other code dynamically chooses
 not to call (statically, but the compiler can't or won't tell). */
 #define APPLE_ASSERT_FALSE assert(0 && "MacOS X should not get here.");
 #else
@@ -108,15 +109,134 @@ int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
 int ThreadPThread__sem_getvalue(int* value) { return sem_getvalue(&ackSem, value); }
 int ThreadPThread__sigsuspend(void)         { return sigsuspend(&mask); }
 
+int ThreadPThread__SuspendThread (m3_pthread mt)
+{
+  return 0;
+}
+
+int ThreadPThread__RestartThread (m3_pthread mt)
+{
+  return 0;
+}
+
+void *ThreadPThread__ProcessState (m3_pthread mt, void *sp,
+				   void (*p)(void *start, void *end))
+{
+  /* Full context is in the signal handler frame so no need to process */
+  return sp;
+}
+
 #else /* Apple */
 
-void SetupHandlers(void)                { APPLE_ASSERT_FALSE }
+void SetupHandlers(void)                {}
 void ThreadPThread__sem_wait(void)      { APPLE_ASSERT_FALSE }
 void ThreadPThread__sem_post(void)      { APPLE_ASSERT_FALSE }
 void ThreadPThread__sem_getvalue(void)  { APPLE_ASSERT_FALSE }
 void ThreadPThread__sigsuspend(void)    { APPLE_ASSERT_FALSE }
 
+#include <mach/mach.h>
+#include <mach/thread_act.h>
+
+int ThreadPThread__SuspendThread (m3_pthread_t mt)
+{
+  pthread_t t = PTHREAD_FROM_M3(mt);
+  mach_port_t mach_thread = pthread_mach_thread_np(t);
+  if (thread_suspend(mach_thread) != KERN_SUCCESS) abort();
+  return thread_abort_safely(mach_thread) == KERN_SUCCESS;
+}
+
+int
+ThreadPThread__RestartThread (m3_pthread_t mt)
+{
+  pthread_t t = PTHREAD_FROM_M3(mt);
+  mach_port_t mach_thread = pthread_mach_thread_np(t);
+  if (thread_resume(mach_thread) != KERN_SUCCESS) abort();
+  return 1;
+}
+
+void *
+ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
+			     void (*p)(void *start, void *end))
+{
+  pthread_t t = PTHREAD_FROM_M3(mt);
+  mach_port_t mach_thread = pthread_mach_thread_np(t);
+#if defined(__ppc__)
+  ppc_thread_state_t state;
+  mach_msg_type_number_t thread_state_count = PPC_THREAD_STATE_COUNT;
+  if (thread_get_state(mach_thread, PPC_THREAD_STATE,
+		       (thread_state_t)&state, &thread_state_count)
+      != KERN_SUCCESS) abort();
+  if (thread_state_count != PPC_THREAD_STATE_COUNT) abort();
+#if __DARWIN_UNIX03
+  sp = (void *)(state.__r1 - C_RED_ZONE);
+#else
+  sp = (void *)(state.r1 - C_RED_ZONE);
+#endif
+#elif defined(__ppc64__)
+  ppc_thread_state64_t state;
+  mach_msg_type_number_t thread_state_count = PPC_THREAD_STATE64_COUNT;
+  if (thread_get_state(mach_thread, PPC_THREAD_STATE64,
+		       (thread_state_t)&state, &thread_state_count)
+      != KERN_SUCCESS) abort();
+  if (thread_state_count != PPC_THREAD_STATE64_COUNT) abort();
+#if __DARWIN_UNIX03
+  sp = (void *)(state.__r1 - C_RED_ZONE);
+#else
+  sp = (void *)(state.r1 - C_RED_ZONE);
+#endif
+#elif defined(__i386__)
+  i386_thread_state_t state;
+  mach_msg_type_number_t thread_state_count = i386_THREAD_STATE_COUNT;
+  if (thread_get_state(mach_thread, i386_THREAD_STATE,
+		       (thread_state_t)&state, &thread_state_count)
+      != KERN_SUCCESS) abort();
+  if (thread_state_count != i386_THREAD_STATE_COUNT) abort();
+#if __DARWIN_UNIX03
+  sp = (void *)(state.__esp);
+#else
+  sp = (void *)(state.esp);
+#endif
+#elif defined(__x86_64__)
+  x86_thread_state64_t state;
+  mach_msg_type_number_t thread_state_count = x86_THREAD_STATE64_COUNT;
+  if (thread_get_state(mach_thread, x86_THREAD_STATE64,
+		       (thread_state_t)&state, &thread_state_count)
+      != KERN_SUCCESS) abort();
+  if (thread_state_count != x86_THREAD_STATE64_COUNT) abort();
+#if __DARWIN_UNIX03
+  sp = (void *)(state.__rsp - 128);
+#else
+  sp = (void *)(state.rsp - 128);
+#endif
+#elif defined(__arm__)
+  mach_msg_type_number_t thread_state_count = ARM_THREAD_STATE_COUNT;
+  if (thread_get_state(mach_thread, ARM_THREAD_STATE,
+		       state, &thread_state_count)
+      != KERN_SUCCESS) abort();
+  if (thread_state_count != ARM_THREAD_STATE_COUNT) abort();
+  sp = (void *)(state.r13);
+#endif
+  p(&state, (char *)&state + sizeof(state));
+  return sp;
+}
+
 #endif /* Apple */
+
+void *
+ThreadPThread__ProcessRegisters(void (*p)(void *start, void *stop))
+{
+  jmp_buf buf;
+
+  if (p) {
+    setjmp(buf);
+    p(&buf, (char *)&buf + sizeof(buf));
+  }
+#ifdef __sparc
+  return ThreadPThread__FlushWindows();
+#else
+  return NULL;
+#endif
+}
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
 typedef void* (*start_routine_t)(void*);
