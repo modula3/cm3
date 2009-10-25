@@ -9,3 +9,6 @@
 
 module ("ThreadPThread")
 c_source ("ThreadPThreadC")
+if equal (TARGET, "SOLsun") or equal (TARGET, "SOLgnu")
+  s_source ("ThreadPThread")
+end
