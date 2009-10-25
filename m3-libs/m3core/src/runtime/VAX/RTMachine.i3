@@ -9,23 +9,6 @@
 
 INTERFACE RTMachine;
 
-(*--------------------------------------------------------- thread state ---*)
-
-TYPE
-  State = ARRAY [0..17] OF INTEGER;
-  (* The machine state is saved in a "State".  This type is really
-     opaque to the client, i.e. it does not need to be an array. *)
-
-<*EXTERNAL "WildSetjmp" *>
-PROCEDURE SaveState (VAR s: State): INTEGER;
-(* Capture the currently running thread's state *)
-
-CONST
-  FramePadBottom = 2;
-  FramePadTop    = 0;
-  (* Additional padding words from above and below an existing
-     thread's stack pointer to copy when creating a new thread *)
-
 (*------------------------------------------------------------------ heap ---*)
 
 (* The heap page size used to be machine-dependent, since it could depend
