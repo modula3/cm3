@@ -222,7 +222,7 @@ ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
 
 #endif /* Apple */
 
-void* ThreadPThread__FlushWindows(void);
+void* RTMachine__SaveRegsInStack(void);
 
 void *
 ThreadPThread__ProcessRegisters(void (*p)(void *start, void *stop))
@@ -234,7 +234,7 @@ ThreadPThread__ProcessRegisters(void (*p)(void *start, void *stop))
     p(&buf, (char *)&buf + sizeof(buf));
   }
 #ifdef __sparc
-  return ThreadPThread__FlushWindows();
+  return RTMachine__SaveRegsInStack();
 #else
   return NULL;
 #endif
