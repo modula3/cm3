@@ -1035,7 +1035,7 @@ PROCEDURE CopySome (): BOOLEAN =
       IF cleanTo < impureCopy.next THEN
         VAR ptr := impureCopy.next;
         BEGIN
-          CleanBetween(cleanTo, ptr, originalPage.desc.clean);
+          CleanBetween(cleanTo, ptr, originalPage);
           cleanTo := ptr;
         END;
       ELSE
@@ -1049,7 +1049,7 @@ PROCEDURE CopySome (): BOOLEAN =
 
     IF originalPage # NIL THEN
       (* originalPage is now in the stack; mark it not gray *)
-      CleanBetween(cleanTo, originalLimit, originalPage.desc.clean);
+      CleanBetween(cleanTo, originalLimit, originalPage);
       CleanDesc(originalPage.desc);
       IF perfOn THEN PerfChange(originalPage); END;
     END;
@@ -1060,7 +1060,7 @@ PROCEDURE CopySome (): BOOLEAN =
 PROCEDURE CleanPage (page: RefPage) =
   BEGIN
     <*ASSERT NOT page.desc.pure*>
-    CleanBetween(page + ADRSIZE(PageHdr), page + BytesPerPage, page.desc.clean);
+    CleanBetween(page + ADRSIZE(PageHdr), page + BytesPerPage, page);
     CleanDesc(page.desc);
     IF perfOn THEN PerfChange(page); END;
   END CleanPage;
@@ -1078,7 +1078,7 @@ PROCEDURE CleanDesc (VAR d: Desc) =
     END;
   END CleanDesc;
 
-PROCEDURE CleanBetween (h, he: RefHeader; clean: BOOLEAN) =
+PROCEDURE CleanBetween (h, he: RefHeader; page: RefPage) =
   BEGIN
     WHILE h < he DO
       <* ASSERT Word.And (LOOPHOLE (h, INTEGER), 3) = 0 *>
@@ -1089,8 +1089,9 @@ PROCEDURE CleanBetween (h, he: RefHeader; clean: BOOLEAN) =
         h.markb := FALSE;
         RTHeapMap.WalkRef (h, mover);
         h.gray := FALSE;
+      ELSIF h.dirty THEN
+        <*ASSERT NOT page.desc.clean*>
       END;
-      h.dirty := NOT clean;
       INC(h, ADRSIZE(Header) + ReferentSize(h));
     END;
   END CleanBetween;
@@ -2216,8 +2217,9 @@ PROCEDURE CheckLoadTracedRef (ref: REFANY) =
      The fast-path inline guard for this operation has already noticed that the
      target of the reference was gray.  We now scan the target object to make it
      black, so that it is guaranteed to contain no white references.
-     This preserves the black mutator invariant that permits unbarriered access
-     to heap state. *)
+     This preserves the strong tricolor invariant (no pointers from black to
+     white) where the mutator and the objects directly referred to from the
+     mutator are black. *)
   VAR p := Word.RightShift (LOOPHOLE(ref, Word.T), LogBytesPerPage);
   BEGIN
     INC(checkLoadTracedRef);		 (* race, so only approximate *)
@@ -2227,7 +2229,7 @@ PROCEDURE CheckLoadTracedRef (ref: REFANY) =
         RTOS.LockHeap();
         CollectorOn();
         (* just clean this object *)
-        CleanBetween (h, h + ADRSIZE(Header), page.desc.clean);
+        CleanBetween (h, h + ADRSIZE(Header), page);
       FINALLY
         CollectorOff();
         RTOS.UnlockHeap();
