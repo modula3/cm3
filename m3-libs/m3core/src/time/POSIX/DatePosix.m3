@@ -8,7 +8,7 @@
 
 UNSAFE MODULE DatePosix EXPORTS Date;
 
-IMPORT Time, M3toC, Utime, TimePosix;
+IMPORT Time, M3toC, Utime, TimePosix, Thread;
 
 REVEAL TimeZone = BRANDED "Date.TimeZone" REF INTEGER;
 
