@@ -10,11 +10,19 @@ The users of sigaction() vary as to which flags they use.
 Some use BSD sigvec which is similar to sigaction.
 */
 
+#define _XOPEN_SOURCE
+#define _BSD_SOURCE
+#define _XPG4_2
+
 #include "ThreadPosix.h"
+#include <stdlib.h>
+#include <unistd.h>
 #include <signal.h>
 #include <assert.h>
 #include <setjmp.h>
 #include <stddef.h>
+#include <ucontext.h>
+#include <sys/mman.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -26,9 +34,14 @@ extern "C" {
 #define setup_sigvtalrm     ThreadPosix__setup_sigvtalrm
 #define allow_sigvtalrm     ThreadPosix__allow_sigvtalrm
 #define disallow_sigvtalrm  ThreadPosix__disallow_sigvtalrm
+#define MakeContext         ThreadPosix__MakeContext
+#define GetContext          ThreadPosix__GetContext
+#define SwapContext         ThreadPosix__SwapContext
+#define DisposeContext      ThreadPosix__DisposeContext
+#define ProcessContext      ThreadPosix__ProcessContext
 #define InitC               ThreadPosix__InitC
 
-static sigset_t ThreadSwitchSignal;
+static sigset_t *ThreadSwitchSignal = NULL;
 
 #ifdef __CYGWIN__
 #define SIG_TIMESLICE SIGALRM
@@ -38,29 +51,93 @@ static sigset_t ThreadSwitchSignal;
 
 void setup_sigvtalrm(SignalHandler1 handler)
 {
-    /* This should really use sigaction, right? */
-    void (*old)(int) = signal(SIG_TIMESLICE, handler);
-    assert(old != SIG_ERR);
+  static sigset_t tick;
+  struct sigaction act, oact;
+
+  sigemptyset(&tick);
+  sigaddset(&tick, SIG_TIMESLICE);
+  ThreadSwitchSignal = &tick;
+
+  act.sa_handler = handler;
+  act.sa_flags = SA_RESTART;
+  sigemptyset(&(act.sa_mask));
+  if (sigaction (SIG_TIMESLICE, &act, &oact)) abort();
 }
 
 void allow_sigvtalrm(void)
 {
-    int i = sigprocmask(SIG_UNBLOCK, &ThreadSwitchSignal, NULL);
+    int i = sigprocmask(SIG_UNBLOCK, ThreadSwitchSignal, NULL);
     assert(i == 0);
 }
 
 void disallow_sigvtalrm(void)
 {
-    int i = sigprocmask(SIG_BLOCK, &ThreadSwitchSignal, NULL);
+    int i = sigprocmask(SIG_BLOCK, ThreadSwitchSignal, NULL);
     assert(i == 0);
 }
 
-void InitC(void)
+typedef struct {
+  stack_t ss;
+  ucontext_t uc;
+} Context;
+
+void *
+MakeContext (void (*p)(void), int words)
 {
-    int i = sigemptyset(&ThreadSwitchSignal);
-    assert(i == 0);
-    i = sigaddset(&ThreadSwitchSignal, SIG_TIMESLICE);
-    assert(i == 0);
+  Context *c = calloc (1, sizeof(Context));
+  size_t size = words * sizeof(void *);
+  int pagesize = getpagesize();
+  char *sp;
+  int pages;
+
+  if (size <= 0) return c;
+  if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
+  pages = (size + pagesize - 1) / pagesize + 2;
+  size = pages * pagesize;
+  sp = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+  c->ss.ss_sp = sp;
+  c->ss.ss_size = size;
+  if (mprotect(sp, pagesize, PROT_NONE)) abort();
+  if (mprotect(sp + size - pagesize, pagesize, PROT_NONE)) abort();
+
+  if (getcontext(&(c->uc))) abort();
+  c->uc.uc_stack.ss_sp = sp + pagesize;
+  c->uc.uc_stack.ss_size = size - 2 * pagesize;
+  c->uc.uc_link = 0;
+  makecontext(&(c->uc), p, 0);
+  return c;
+}
+
+void GetContext (Context *c)
+{
+  if (getcontext(&(c->uc))) abort();
+}
+
+void SwapContext (Context *from, Context *to)
+{
+  if (swapcontext(&(from->uc), &(to->uc))) abort();
+}
+
+void DisposeContext (Context **c)
+{
+  if (munmap((*c)->ss.ss_sp, (*c)->ss.ss_size)) abort();
+  free(*c);
+  *c = NULL;
+}
+
+void
+ProcessContext(Context *c, void *stack,
+	       void (*p) (void *start, void *stop))
+{
+  if (stack < c->uc.uc_stack.ss_sp)
+    p(stack, c->uc.uc_stack.ss_sp);
+  else
+    p(c->uc.uc_stack.ss_sp, stack);
+#ifdef __APPLE__
+  p(&(c->uc.uc_mcontext[0]), &(c->uc.uc_mcontext[1]));
+#else
+  p(&c[0], &c[1]);
+#endif
 }
 
 #ifdef __cplusplus

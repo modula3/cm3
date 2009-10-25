@@ -6,7 +6,7 @@ UNSAFE MODULE ThreadPThread EXPORTS Thread, ThreadF, ThreadInternal,
 Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep,
-       RTCollectorSRC, RTError, RTHeapRep, RTIO, RTMachine, RTParams,
+       RTCollectorSRC, RTError, RTHeapRep, RTIO, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched,
        Uerror, Uexec;
@@ -907,7 +907,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
       (* stop *)
       LOOP
         IF StopThread(act) THEN EXIT END;
-        IF SignalThread(act, ActState.Stopping) THEN
+        IF SignalThread(act) THEN
           WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
           IF acks > 0 THEN
             WHILE sem_wait() # 0 DO
@@ -923,7 +923,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
       (* start *)
       LOOP
         IF StartThread(act) THEN EXIT END;
-        IF SignalThread(act, ActState.Starting) THEN
+        IF SignalThread(act) THEN
           WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
           IF acks > 0 THEN
             WHILE sem_wait() # 0 DO
@@ -944,59 +944,47 @@ PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu *)
   VAR
     sp: ADDRESS;
-    state: RTMachine.State;
     xx: INTEGER;
   BEGIN
     <*ASSERT me.state # ActState.Stopped*>
     IF DEBUG THEN
       RTIO.PutText("Processing act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
-    (* process my registers *)
-    IF RTMachine.SaveRegsInStack # NIL
-      THEN sp := RTMachine.SaveRegsInStack();
-      ELSE sp := ADR(xx);
-    END;
     RTHeapRep.FlushThreadState(me.heapState);
+    (* process registers explicitly *)
+    sp := ProcessRegisters(p);
+    IF sp = NIL THEN sp := ADR(xx) END;
+    (* or in my stack *)
     IF stack_grows_down
       THEN p(sp, me.stackbase);
       ELSE p(me.stackbase, sp);
     END;
-    EVAL RTMachine.SaveState(state);
-    WITH z = state DO p(ADR(z), ADR(z) + ADRSIZE(z)) END;
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu *)
-  VAR
-    sp: ADDRESS;
-    state: RTMachine.ThreadState;
+  VAR sp: ADDRESS;
   BEGIN
     <*ASSERT act.state = ActState.Stopped*>
     IF DEBUG THEN
       RTIO.PutText("Processing act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
     END;
     IF act.stackbase = NIL THEN RETURN END;
-    IF RTMachine.GetState # NIL THEN
-      (* process explicit state *)
-      sp := RTMachine.GetState(act.handle, state);
-    ELSE
-      (* assume registers are saved in suspended thread's stack *)
-      sp := act.sp;
-    END;
     RTHeapRep.FlushThreadState(act.heapState);
+    (* process registers explicitly *)
+    sp := ProcessState(act.handle, act.sp, p);
+    (* or in my stack *)
     IF stack_grows_down
       THEN p(sp, act.stackbase);
       ELSE p(act.stackbase, sp);
     END;
-    WITH z = state DO p(ADR(z), ADR(z) + ADRSIZE(z)) END;
   END ProcessOther;
 
 (* Signal based suspend/resume *)
 
-PROCEDURE SignalThread(act: Activation; state: ActState): BOOLEAN =
+PROCEDURE SignalThread(act: Activation): BOOLEAN =
   BEGIN
     IF SIG_SUSPEND = 0 THEN RETURN FALSE END;
-    SetState(act, state);
     LOOP
       WITH z = Upthread.kill(act.handle, SIG_SUSPEND) DO
         IF z = 0 THEN RETURN TRUE END;
@@ -1009,12 +997,11 @@ PROCEDURE SignalThread(act: Activation; state: ActState): BOOLEAN =
 PROCEDURE StopThread (act: Activation): BOOLEAN =
   BEGIN
     <*ASSERT act.state # ActState.Stopped*>
-    IF RTMachine.SuspendThread = NIL THEN RETURN FALSE END;
     SetState(act, ActState.Stopping);
-    IF NOT RTMachine.SuspendThread(act.handle) THEN RETURN FALSE END;
+    IF NOT SuspendThread(act.handle) THEN RETURN FALSE END;
     IF act.heapState.inCritical # 0 THEN
-      RTMachine.RestartThread(act.handle);
-      RETURN FALSE;
+      IF RestartThread(act.handle) THEN RETURN FALSE END;
+      <*ASSERT FALSE*>
     END;
     act.state := ActState.Stopped;
     RETURN TRUE;
@@ -1022,10 +1009,9 @@ PROCEDURE StopThread (act: Activation): BOOLEAN =
 
 PROCEDURE StartThread (act: Activation): BOOLEAN =
   BEGIN
-    <*ASSERT act.state = ActState.Stopped*>
-    IF RTMachine.RestartThread = NIL THEN RETURN FALSE END;
+    <*ASSERT act.state # ActState.Started*>
     SetState(act, ActState.Starting);
-    RTMachine.RestartThread(act.handle);
+    IF NOT RestartThread(act.handle) THEN RETURN FALSE END;
     act.state := ActState.Started;
     RETURN TRUE;
   END StartThread;
@@ -1052,7 +1038,7 @@ PROCEDURE StopWorld () =
         IF act.state # ActState.Stopped THEN
           IF StopThread(act) THEN
             (* good *)
-          ELSIF SignalThread(act, ActState.Stopping) THEN
+          ELSIF SignalThread(act) THEN
             INC(nLive);
           ELSE
             (* try again *)
@@ -1074,7 +1060,7 @@ PROCEDURE StopWorld () =
         WHILE act # me DO
           IF act.state = ActState.Stopped THEN
             (* good *)
-          ELSIF SignalThread(act, ActState.Stopping) THEN
+          ELSIF SignalThread(act) THEN
             INC(newlySent);
           ELSE
             <*ASSERT FALSE*>
@@ -1132,7 +1118,7 @@ PROCEDURE StartWorld () =
         IF act.state # ActState.Started THEN
           IF StartThread(act) THEN
             (* good *)
-          ELSIF SignalThread(act, ActState.Starting) THEN
+          ELSIF SignalThread(act) THEN
             INC(nDead);
           ELSE
             (* try again *)
@@ -1154,7 +1140,7 @@ PROCEDURE StartWorld () =
         WHILE act # me DO
           IF act.state = ActState.Started THEN
             (* good *)
-          ELSIF SignalThread(act, ActState.Starting) THEN
+          ELSIF SignalThread(act) THEN
             INC(newlySent);
           ELSE
             <*ASSERT FALSE*>
@@ -1200,10 +1186,8 @@ PROCEDURE SignalHandler (sig: int) =
     IF me # NIL
       AND me.state = ActState.Stopping
       AND me.heapState.inCritical = 0 THEN
-      IF RTMachine.SaveRegsInStack # NIL
-        THEN me.sp := RTMachine.SaveRegsInStack();
-        ELSE me.sp := ADR(xx);
-      END;
+      me.sp := ProcessRegisters(NIL);
+      IF me.sp = NIL THEN me.sp := ADR(xx) END;
       me.state := ActState.Stopped;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
       REPEAT EVAL sigsuspend() UNTIL me.state = ActState.Starting;
@@ -1315,11 +1299,7 @@ PROCEDURE Init ()=
     self: T;
     me := InitActivations();
   BEGIN
-    IF RTMachine.SuspendThread = NIL OR RTMachine.RestartThread = NIL THEN
-      <*ASSERT RTMachine.SuspendThread = NIL*>
-      <*ASSERT RTMachine.RestartThread = NIL*>
-      SetupHandlers();
-    END;
+    SetupHandlers();
 
     (* cm, activeMu, slotMu: initialized statically *)
     self := CreateT(me);
