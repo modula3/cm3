@@ -11,24 +11,6 @@
 INTERFACE RTMachine;
 
 IMPORT Uucontext;
-FROM Upthread IMPORT pthread_t;
-
-(*--------------------------------------------------------- thread state ---*)
-
-TYPE
-  State = Uucontext.ucontext_t;
-  (* The machine state is saved in a "State".  This type is really
-     opaque to the client, i.e. it does not need to be an array. *)
-
-<*EXTERNAL "getcontext" *>
-PROCEDURE SaveState (VAR s: State): INTEGER;
-(* Capture the currently running thread's state *)
-
-CONST
-  FramePadBottom = 2;
-  FramePadTop    = 0;
-  (* Additional padding words from above and below an existing
-     thread's stack pointer to copy when creating a new thread *)
 
 (*------------------------------------------------------------------ heap ---*)
 
@@ -75,18 +57,5 @@ TYPE
     ctxt    : Uucontext.ucontext_t;
     lock    : INTEGER;       (* to ensure that ctxt isn't overrun!! *)
   END;
-
-(*------------------------------------------------------ pthreads support ---*)
-
-<*EXTERNAL RTMachine__SaveRegsInStack*>
-PROCEDURE SaveRegsInStack(): ADDRESS;
-
-(* Full context is in the signal handler frame so no need for state here. *)
-TYPE ThreadState = RECORD END;
-
-CONST
-  SuspendThread: PROCEDURE(t: pthread_t): BOOLEAN = NIL;
-  RestartThread: PROCEDURE(t: pthread_t) = NIL;
-  GetState: PROCEDURE(t: pthread_t; VAR state: ThreadState): ADDRESS = NIL;
 
 END RTMachine.

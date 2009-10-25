@@ -8,8 +8,5 @@
 
 Interface      ("RTMachine")
 implementation ("RTSignal")
-implementation ("RTThread")
-c_source       ("RTThreadC")
-s_source       ("_fpsetjmp")
 
 

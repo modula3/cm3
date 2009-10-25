@@ -11,7 +11,6 @@
 INTERFACE RTMachine;
 
 IMPORT Uucontext;
-FROM Upthread IMPORT pthread_t;
 
 (*--------------------------------------------------------- thread state ---*)
 
@@ -58,15 +57,5 @@ CONST
 
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
 TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
-
-(*------------------------------------------------------ pthreads support ---*)
-
-TYPE ThreadState = RECORD END;
-
-CONST
-  SuspendThread: PROCEDURE(t: pthread_t): BOOLEAN = NIL;
-  RestartThread: PROCEDURE(t: pthread_t) = NIL;
-  GetState: PROCEDURE(t: pthread_t; VAR state: ThreadState): ADDRESS = NIL;
-  SaveRegsInStack: PROCEDURE(): ADDRESS = NIL;
 
 END RTMachine.

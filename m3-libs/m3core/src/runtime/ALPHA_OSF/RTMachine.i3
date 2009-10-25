@@ -10,24 +10,7 @@
 
 INTERFACE RTMachine;
 
-IMPORT Csetjmp, Usignal;
-
-(*--------------------------------------------------------- thread state ---*)
-
-TYPE
-  State = Csetjmp.jmp_buf;
-  (* The machine state is saved in a "State".  This type is really
-     opaque to the client, i.e. it does not need to be an array. *)
-
-<*EXTERNAL "_setjmp" *>
-PROCEDURE SaveState (VAR s: State): INTEGER;
-(* Capture the currently running thread's state *)
-
-CONST
-  FramePadBottom = 20;
-  FramePadTop    = 20;
-  (* Additional padding words from above and below an existing
-     thread's stack pointer to copy when creating a new thread *)
+IMPORT Usignal;
 
 (*------------------------------------------------------------------ heap ---*)
 
