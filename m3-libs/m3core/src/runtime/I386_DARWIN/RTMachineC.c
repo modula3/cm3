@@ -14,7 +14,7 @@ RTMachine__SuspendThread (m3_pthread_t mt)
 }
 
 void *
-RTMachine__GetState (pthread_t mt, i386_thread_state_t *state)
+RTMachine__GetState (m3_pthread_t mt, i386_thread_state_t *state)
 {
   pthread_t t = PTHREAD_FROM_M3(mt);
   mach_port_t mach_thread = pthread_mach_thread_np(t);
@@ -31,7 +31,7 @@ RTMachine__GetState (pthread_t mt, i386_thread_state_t *state)
 }
 
 void
-RTMachine__RestartThread (pthread_t mt)
+RTMachine__RestartThread (m3_pthread_t mt)
 {
   pthread_t t = PTHREAD_FROM_M3(mt);
   mach_port_t mach_thread = pthread_mach_thread_np(t);
