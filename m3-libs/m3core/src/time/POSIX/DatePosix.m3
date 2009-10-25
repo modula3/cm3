@@ -8,13 +8,13 @@
 
 UNSAFE MODULE DatePosix EXPORTS Date;
 
-IMPORT Time, M3toC, Utime, TimePosix, Thread;
+IMPORT Time, M3toC, Utime, TimePosix;
 
 REVEAL TimeZone = BRANDED "Date.TimeZone" REF INTEGER;
 
 CONST Unknown = "[Unknown zone]";
 
-VAR mu := NEW(Thread.Mutex);
+VAR mu := NEW(MUTEX);
 (* There is some data that it is not clear how to manage.
    Specifically struct tm's timezone (not used here) and the global timezone and tzname variables,
    therefore serialize their use. It is not clear if the _r functions are actually reentrant,
