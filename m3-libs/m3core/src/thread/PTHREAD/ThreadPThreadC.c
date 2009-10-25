@@ -222,6 +222,8 @@ ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
 
 #endif /* Apple */
 
+void* ThreadPThread__FlushWindows(void);
+
 void *
 ThreadPThread__ProcessRegisters(void (*p)(void *start, void *stop))
 {
