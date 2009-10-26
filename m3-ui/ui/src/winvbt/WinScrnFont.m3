@@ -341,7 +341,7 @@ PROCEDURE DetermineFontNames () =
 
       (* release the desktop device context *)
       status := WinUser.ReleaseDC (hwnd, er.hdc);
-      <* ASSERT status = 1 *>
+      <* ASSERT status = True *>
     END;
   END DetermineFontNames;
 
@@ -497,18 +497,18 @@ PROCEDURE LogFontToScrnFont (READONLY lf: WinGDI.LOGFONT): ScrnFont.T =
         <* ASSERT oldFont # NIL *>
         status := WinGDI.GetTextMetrics (hdc, LOOPHOLE (ADR(tm),
                                                         WinGDI.LPTEXTMETRIC));
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
 
         WITH first = tm.tmFirstChar, last = tm.tmLastChar DO
           abcs := NEW (REF ARRAY OF WinGDI.ABC, last - first + 1);
           status := WinGDI.GetCharABCWidths (hdc, first, last, ADR(abcs[0]));
-          IF (status # True) THEN GetFakeABCs (hdc, first, last, abcs); END;
+          IF status = False THEN GetFakeABCs (hdc, first, last, abcs); END;
         END;
 
         oldFont := WinGDI.SelectObject (hdc, oldFont);
         <* ASSERT oldFont = hfont *>
         status := WinUser.ReleaseDC (hwnd, hdc);
-        <* ASSERT status = 1 *>
+        <* ASSERT status = True *>
       END;
     END;
 
