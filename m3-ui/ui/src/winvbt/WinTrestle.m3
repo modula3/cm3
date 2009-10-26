@@ -2445,7 +2445,7 @@ PROCEDURE MessengerApply (<*UNUSED*> cl: Thread.Closure): REFANY =
     trsl.timerId := WinUser.SetTimer (trsl.hwnd, 1, 100, NIL);
 
     (* start the message loop for all windows belonging to this Trestle *)
-    WHILE WinUser.GetMessage (ADR(msg), NIL, 0, 0) # 0 DO
+    WHILE WinUser.GetMessage (ADR(msg), NIL, 0, 0) = True DO
       EVAL WinUser.TranslateMessage (ADR(msg));
       EVAL WinUser.DispatchMessage (ADR(msg));
     END;
