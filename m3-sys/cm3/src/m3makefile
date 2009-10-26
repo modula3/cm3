@@ -9,9 +9,9 @@
 % remove_m3_option ("-gui")
 % m3_option ("-times")
 
-cp_if("../../../m3-libs/m3core/src/unix/Common/UnixLink.c", ".")
-cp_if("../../../m3-libs/m3core/src/unix/Common/m3unix.h", ".")
-cp_if("../src/cm3unix.c", ".")
+cp_if(".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "unix" & SL & "Common" & SL & "UnixLink.c", ".")
+cp_if(".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & SL & "src" & SL & "unix" & SL & "Common" & SL & "m3unix.h", ".")
+cp_if(".." & SL & "src" & SL & "cm3unix.c", ".")
 derived_c("cm3unix")
 
 import ("libm3")
