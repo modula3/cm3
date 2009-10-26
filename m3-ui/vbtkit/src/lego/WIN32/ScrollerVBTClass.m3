@@ -628,6 +628,7 @@ PROCEDURE Rescreen (                      v : T;
                     <* UNUSED *> READONLY cd: VBT.RescreenRec)
   RAISES {} =
   BEGIN
+   LOCK v.mu DO
     IF v.needToComputePixels
     THEN
        v.stripeW.pixels :=
@@ -666,6 +667,7 @@ PROCEDURE Rescreen (                      v : T;
     v.minStripeLen.pixels :=
       ROUND(VBT.MMToPixels(v, v.minStripeLen.millimeters, v.axis));
     VBT.NewShape(v);
+   END;
   END Rescreen;
 
 PROCEDURE Shape (v: T; ax: Axis.T; <* UNUSED *> n: CARDINAL):
