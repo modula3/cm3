@@ -8,7 +8,7 @@
 (*      modified on Sat Aug 22 23:32:17 PDT 1992 by myers                    *)
 <* PRAGMA LL *>
 
-MODULE Juno EXPORTS Main;
+UNSAFE MODULE Juno EXPORTS Main;
 
 IMPORT Source, Drawing, Editor, EditorUI, SaveState, PublicView, CurrCmd;
 IMPORT   Marquee, View, JunoError, JunoWM, ToolBox, DblBufferVBT, Drag;
@@ -23,7 +23,7 @@ IMPORT Trestle, TrestleComm, VBT, VBTClass, Filter, Split, HVSplit, ZSplit;
 IMPORT   Axis, PackSplit, PaintOp, TextVBT, Rect, Point, Font;
 IMPORT FS, RegularFile, Pathname, FileRd, FileWr, Pipe, Process, OSError, Lex;
 IMPORT   Rd, Wr, Stdio, Text, TextRd, TextWr, Thread, Atom, Rsrc, Fmt, Params;
-IMPORT   NetObj, Pickle, TextList, TextListSort, Env, RTParams;
+IMPORT   NetObj, Pickle, TextList, TextListSort, Env;
 
 <* FATAL Wr.Failure, Rd.Failure, Thread.Alerted *>
 <* FATAL FormsVBT.Error, FormsVBT.Unimplemented *>
@@ -2179,9 +2179,7 @@ BEGIN
     FVFilter.MakeActive(w, "background");
     IF NOT writepkl THEN
       checkpointThread := Thread.Fork(NEW(CheckpointClosure, w := w));
-      IF NOT RTParams.IsPresent("no-trestle-await-delete") THEN
-        Trestle.AwaitDelete(startup);
-      END;
+      Trestle.AwaitDelete(startup);
     ELSE
       <* FATAL OSError.E, Pickle.Error *>
       VAR wr := FileWr.Open("big.pkl"); BEGIN
