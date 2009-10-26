@@ -14,8 +14,6 @@ IMPORT Cursor, Point, Rect, ScrnCursor, ScrnPixmap, Text, TrestleComm,
 
 CONST
   False = 0;
-  True  = 1;
-
 
 TYPE
   T = ScrnCursor.T BRANDED OBJECT
@@ -147,9 +145,9 @@ PROCEDURE Load (                      self: Oracle;
           <* ASSERT hcursor # NIL *>
 
           status := WinGDI.DeleteObject (hbmMask);
-          <* ASSERT status = True *>
+          <* ASSERT status # False *>
           status := WinGDI.DeleteObject (hbmColor);
-          <* ASSERT status = True *>
+          <* ASSERT status # False *>
 
           RETURN NEW (T, id := LOOPHOLE (hcursor, INTEGER));
         END;
