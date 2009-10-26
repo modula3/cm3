@@ -752,7 +752,6 @@ PROCEDURE InstallOffscreen(
     v: VBT.T;
     width, height: CARDINAL;
     st: VBT.ScreenType) RAISES {TrestleComm.Failure} =
-  <*FATAL FatalError*>
   VAR trsl: T; ch: VBT.T; a: App; BEGIN
     IF NOT RootChild(v, trsl, ch) OR ch.st # NIL THEN Crash() END;
     WHILE st # NIL AND ISTYPE(st, VBTRep.OffscreenType) DO
