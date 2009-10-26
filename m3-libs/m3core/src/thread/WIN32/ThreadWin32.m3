@@ -1046,19 +1046,19 @@ PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
    and collector. *)
 
 VAR
-  inCritical := 0;      (* LL = cs *)
+  inCritical := 0;      (* LL = heap *)
   heapCond: Condition;
 
 PROCEDURE LockHeap () =
   BEGIN
-    EnterCriticalSection_cs();
+    EnterCriticalSection_heap();
     INC(inCritical);
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
   BEGIN
     DEC(inCritical);
-    LeaveCriticalSection_cs();
+    LeaveCriticalSection_heap();
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
@@ -1074,13 +1074,13 @@ PROCEDURE WaitHeap () =
 
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
-    LeaveCriticalSection_cs();
+    LeaveCriticalSection_heap();
 
     IF WaitForSingleObject(self.waitSema, INFINITE) # 0 THEN
       Choke(ThisLine());
     END;
 
-    EnterCriticalSection_cs();
+    EnterCriticalSection_heap();
     <*ASSERT inCritical = 0*>
     INC(inCritical);
   END WaitHeap;
