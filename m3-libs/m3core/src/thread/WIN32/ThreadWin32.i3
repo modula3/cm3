@@ -13,10 +13,10 @@ FROM WinDef IMPORT BOOL (* int *);
 
 (* critical sections: Enter, Leave *)
 
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_cm"*>
-PROCEDURE EnterCriticalSection_cm();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_cm"*>
-PROCEDURE LeaveCriticalSection_cm();
+<*EXTERNAL "ThreadWin32__EnterCriticalSection_giant"*>
+PROCEDURE EnterCriticalSection_giant();
+<*EXTERNAL "ThreadWin32__LeaveCriticalSection_giant"*>
+PROCEDURE LeaveCriticalSection_giant();
     (* Global lock for internals of Mutex and Condition *)
 
 
