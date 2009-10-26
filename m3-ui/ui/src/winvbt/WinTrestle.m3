@@ -144,7 +144,7 @@ PROCEDURE SetShape (trsl: T; v: VBT.T) =
     LOCK trsl DO
       (* Determine the current size of the window. *)
       status := WinUser.GetClientRect (ur.hwnd, ADR(rect));
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
     END;
 
     sizeChange := width # rect.right - rect.left OR
@@ -284,7 +284,7 @@ PROCEDURE PaintBatch (self: T;  v: VBT.T;  ba: Batch.T) =
     END;
 
     status := WinGDI.GdiFlush();
-    <* ASSERT status = True *>
+    <* ASSERT status # False *>
   END PaintBatch;
 ************************************)
 
@@ -350,10 +350,10 @@ PROCEDURE Capture (            self: T;
                                (* nXSrc   *) rect.west,
                                (* nYSrc   *) rect.north,
                                (* dwRop   *) WinGDI.SRCCOPY);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
 
       status := WinGDI.DeleteDC (dstDc);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
 
       RETURN WinScrnPixmap.NewPixmap (v.st, dstBmp, rect, v.st.depth);
     END;
@@ -790,13 +790,13 @@ PROCEDURE CaptureScreen (              self: T;
                                (* nXSrc   *) rect.west,
                                (* nYSrc   *) rect.north,
                                (* dwRop   *) WinGDI.SRCCOPY);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
 
       status := WinUser.ReleaseDC (hwnd, srcDc);
       <* ASSERT status = True *>
 
       status := WinGDI.DeleteDC (dstDc);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
 
       RETURN WinScrnPixmap.NewPixmap (st, dstBmp, rect, st.depth);
     END;
@@ -938,7 +938,7 @@ PROCEDURE NorthWest (ch: Child): Point.T =
     screenPos := WinDef.POINT {0, 0};
   BEGIN
     status := WinUser.ClientToScreen (ch.hwnd, ADR (screenPos));
-    <* ASSERT status = True *>
+    <* ASSERT status # False *>
     RETURN Point.T {screenPos.x, screenPos.y};
   END NorthWest;
 
@@ -1391,7 +1391,7 @@ PROCEDURE DeleteVBT (ur: Child) =
       ELSE
         (* make sure Windows gets rid of this guy too! *)
         status := WinUser.PostMessage (ur.hwnd, WinUser.WM_CLOSE, 0, 0);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
       END;
     END;
   END DeleteVBT;
@@ -1420,11 +1420,11 @@ PROCEDURE FreeGDIObjects (ur: Child) =
         hbmp := WinGDI.GetCurrentObject (ur.hdc, WinGDI.OBJ_BITMAP);
         IF (hbmp # NIL) THEN
           status := WinGDI.DeleteObject (hbmp);
-          <* ASSERT status = True *>
+          <* ASSERT status # False *>
         END;
 
         status := WinGDI.DeleteDC (ur.hdc);
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
       END;
       ur.hdc := NIL;
     END;
@@ -1432,7 +1432,7 @@ PROCEDURE FreeGDIObjects (ur: Child) =
     IF (ur.hpal # NIL) THEN
       (**** WinScrnColorMap.DefaultPalette returns a single global one...
       status := WinGDI.DeleteObject (ur.hpal);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
       ******************************************************************)
       ur.hpal := NIL;
     END;
@@ -1471,7 +1471,7 @@ PROCEDURE OverlapVBT (ur       : Child;
       (* The VBT is already mapped onto the screen *)
       status := WinUser.SetWindowPos (ur.hwnd, WinUser.HWND_TOP,
                                       nw.h, nw.v, 0, 0, Flags[knownPos]);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
     ELSE
       (* The VBT is not yet mapped onto the screen *)
       CreateVBT (ur, trsl.screen, nw, iconic := FALSE);
@@ -1583,7 +1583,7 @@ PROCEDURE PaintBatchVBT (ur: Child;  self: T;  v: VBT.T;  ba: Batch.T) =
     END;
 
     status := WinGDI.GdiFlush();
-    <* ASSERT status = True *>
+    <* ASSERT status # False *>
   END PaintBatchVBT;
 
 PROCEDURE PaintVBT (hwnd: WinDef.HWND) =
@@ -1644,9 +1644,9 @@ PROCEDURE PaintVBT (hwnd: WinDef.HWND) =
     (*** If the VBT is already deleted, bail out ***)
     IF (v = NIL) THEN RETURN; END;
 
-    IF WinUser.GetUpdateRect (hwnd, ADR(r), False) = True THEN
+    IF WinUser.GetUpdateRect (hwnd, ADR(r), False) # False THEN
       status := WinUser.ValidateRect (hwnd, ADR(r));
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
       rgn := Region.FromRect (ToRect (r));
       LOCK VBT.mu DO  VBTClass.Repaint (v, rgn);  END;
     END;
@@ -1664,7 +1664,7 @@ PROCEDURE MoveVBT (hwnd: WinDef.HWND) =
     IF (v = NIL) THEN RETURN; END;
 
     status := WinUser.GetClientRect (hwnd, ADR(rc));
-    <* ASSERT status = True *>
+    <* ASSERT status # False *>
     new := ToRect (rc);
     LOCK VBT.mu DO
       IF v.domain # new THEN
@@ -1725,7 +1725,7 @@ PROCEDURE QueryVBTPalette (hwnd: WinDef.HWND) =
       <* ASSERT oldPal # NIL *>
 
       status := WinGDI.UnrealizeObject (ur.hpal);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
 
       numCols := WinGDI.RealizePalette (ur.hdc);
       <* ASSERT numCols # WinGDI.GDI_ERROR *>
@@ -1846,7 +1846,7 @@ PROCEDURE ButtonEvent (hwnd  : WinDef.HWND;
                    - VBT.Buttons;
   BEGIN
     status := WinUser.ClientToScreen (hwnd, ADR (screenPos));
-    <* ASSERT status = True *>
+    <* ASSERT status # False *>
 
     (* If "hwnd" refers to the window that has captured the mouse (as opposed
        to the topmost window beneath the mouse cursor), we determine what
@@ -1859,7 +1859,7 @@ PROCEDURE ButtonEvent (hwnd  : WinDef.HWND;
           hwnd := topHwnd;
           clientPos := screenPos;
           status := WinUser.ScreenToClient (hwnd, ADR (clientPos));
-          <* ASSERT status = True *>
+          <* ASSERT status # False *>
         END;
       END;
     END;
@@ -1889,7 +1889,7 @@ PROCEDURE ButtonEvent (hwnd  : WinDef.HWND;
         cd.clickType := VBT.ClickType.LastUp;
         trsl.mouseFocus := NIL;
         status := WinUser.ReleaseCapture ();
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
       ELSE
         cd.clickType := VBT.ClickType.OtherUp
       END;
@@ -2028,7 +2028,7 @@ PROCEDURE SetCursorPosition (x, y: INTEGER;  hwnd: WinDef.HWND;
     r      : WinDef.RECT;
     status := WinUser.GetClientRect (hwnd, ADR (r));
   BEGIN
-    <* ASSERT status = True *>
+    <* ASSERT status # False *>
     cp.pt.h      := x;
     cp.pt.v      := y;
     cp.screen    := DesktopID;
@@ -2044,7 +2044,7 @@ PROCEDURE TimerTick (hwnd: WinDef.HWND) =
   BEGIN
     IF trsl.mouseFocus = NIL THEN
       status := WinUser.GetCursorPos (ADR (screenPos));
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
       lParam := LOOPHOLE (WinDef.POINTS {screenPos.x, screenPos.y}, WinDef.LPARAM);
       DeliverMousePos (hwnd, lParam, 0);
     END;
@@ -2115,7 +2115,7 @@ PROCEDURE DeliverMousePos (hwnd  : WinDef.HWND;
   BEGIN
     IF hwnd # trsl.hwnd THEN
       status := WinUser.ClientToScreen (hwnd, ADR (screenPos));
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
     END;
 
     LOCK trsl DO
@@ -2138,7 +2138,7 @@ PROCEDURE DeliverMousePos (hwnd  : WinDef.HWND;
         IF (ur.hwnd # NIL) AND (ur.ch # NIL) THEN
           clientPos := screenPos;
           status := WinUser.ScreenToClient (ur.hwnd, ADR (clientPos));
-          <* ASSERT status = True *>
+          <* ASSERT status # False *>
           MouseMotion (ur.hwnd, ur.ch, clientPos, wParam);
         END;
       END;
@@ -2445,7 +2445,7 @@ PROCEDURE MessengerApply (<*UNUSED*> cl: Thread.Closure): REFANY =
     trsl.timerId := WinUser.SetTimer (trsl.hwnd, 1, 100, NIL);
 
     (* start the message loop for all windows belonging to this Trestle *)
-    WHILE WinUser.GetMessage (ADR(msg), NIL, 0, 0) = True DO
+    WHILE WinUser.GetMessage (ADR(msg), NIL, 0, 0) # 0 DO
       EVAL WinUser.TranslateMessage (ADR(msg));
       EVAL WinUser.DispatchMessage (ADR(msg));
     END;
