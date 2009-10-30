@@ -5,26 +5,28 @@ REM Version History
 REM ---------------
 REM v1.0, 07/29/2009, R.Coleburn
 REM v1.1, 08/02/2009, R.Coleburn, min is not sufficient, use m3front
+REM v1.2, 08/03/2009, R.Coleburn, change cm3.cfg to replace HOST by "NT386"
+REM v1.3, 10/29/2009, R.Coleburn, adapt to work with new cm3CommandShell.CMD.
 REM ===========================================================================
 
 :Init
 :----
 REM Initialize variables.
-set CM3_Answ=
-set CM3_Arg=
-set CM3_CM3Args=-realclean -clean -build -ship
-set CM3_CM3Failure=
-set CM3_Group=min
-set CM3_PkgInfo=
-set CM3_PkgPath=
-set CM3_PkgTree=
-set CM3_TMP1=%~dp0
-set CM3_TempFile=
-set CM3_NoPause=TRUE
-set CM3_Verbose=FALSE
-set CM3_CfgDone=FALSE
-set CM3_Repeat=1
-set CM3_DO=
+set _cm3_Answ=
+set _cm3_Arg=
+set _cm3_CM3Args=-realclean -clean -build -ship
+set _cm3_CM3Failure=
+set _cm3_Group=min
+set _cm3_PkgInfo=
+set _cm3_PkgPath=
+set _cm3_PkgTree=
+set _cm3_TMP1=%~dp0
+set _cm3_TempFile=
+set _cm3_NoPause=TRUE
+set _cm3_Verbose=FALSE
+set _cm3_CfgDone=FALSE
+set _cm3_Repeat=1
+set _cm3_DO=
 
 
 
@@ -40,8 +42,8 @@ shift
 :ExamineArg1
 if "%1"=="" goto ArgEnd
 if /I "%1"=="HELP" goto Help
-if /I "%1"=="NOPAUSE" set CM3_NoPause=TRUE& goto NextArg
-if /I "%1"=="VERBOSE" set CM3_Verbose=TRUE& goto NextArg
+if /I "%1"=="NOPAUSE" set _cm3_NoPause=TRUE& goto NextArg
+if /I "%1"=="VERBOSE" set _cm3_Verbose=TRUE& goto NextArg
 if /I "%1"=="-P" goto Arg_P
 echo ERROR:  Unknown or unsupported argument:  %1
 goto Usage
@@ -50,7 +52,7 @@ goto Usage
 rem we've seen -P, now get the path
 shift
 if "%1"=="" echo ERROR:  Missing path after -P argument. & goto Usage
-set CM3_PkgInfo=%1
+set _cm3_PkgInfo=%1
 goto NextArg
 
 :ArgEnd
@@ -63,7 +65,7 @@ rem no more parameters, so make sure we've got the minimum required
 REM Identify this script.
 echo.
 echo =============== ---------------------------------
-echo  RCC_upgradeCM3, v1.10, 8/02/2009, Randy Coleburn
+echo  RCC_upgradeCM3, v1.3, 10/29/2009, Randy Coleburn
 echo =============== ---------------------------------
 echo.
 
@@ -88,93 +90,94 @@ goto END
 :FoundRoot
 echo CM3 Root = %CM3_ROOT%
 echo.
-set CM3_DO=%CM3_TMP1%do-cm3.cmd
-if not exist "%CM3_DO%" echo ERROR:  Missing script "%CM3_DO%" & goto END
+set _cm3_DO=%_cm3_TMP1%do-cm3.cmd
+if not exist "%_cm3_DO%" echo ERROR:  Missing script "%_cm3_DO%" & goto END
 echo Copying .CMD scripts and documentation to %CM3_ROOT%\bin ...
-for %%f in (Documentation_cm3Proj.pdf Documentation_CM3SetupCmdEnv.pdf Documentation_CM3StartIDE.pdf) do if exist "..\%%f" copy /y "..\%%f" "%CM3_ROOT%\bin"
-for %%f in (Documentation_cm3Proj.htm Documentation_CM3SetupCmdEnv.htm Documentation_CM3StartIDE.htm) do if exist "..\%%f" copy /y "..\%%f" "%CM3_ROOT%\bin"
-for %%f in (cm3Proj.cmd cm3SetupCmdEnv.cmd cm3StartIDE.CMD) do if exist "..\%%f" copy /y "..\%%f" "%CM3_ROOT%\bin"
-for %%f in (cm3Proj.cmd cm3SetupCmdEnv.cmd cm3StartIDE.CMD) do if not exist "%CM3_ROOT%\bin\%%f" goto FatalSetupCM3
+for %%f in (Documentation_cm3Proj.pdf Documentation_cm3CommandShell.pdf Documentation_CM3StartIDE.pdf) do if exist "..\..\doc\%%f" copy /y "..\..\doc\%%f" "%CM3_ROOT%\bin"
+for %%f in (Documentation_cm3Proj.htm Documentation_cm3CommandShell.htm Documentation_CM3StartIDE.htm) do if exist "..\..\doc\%%f" copy /y "..\..\doc\%%f" "%CM3_ROOT%\bin"
+for %%f in (cm3CommandShell.CMD cm3StartIDE.CMD cm3Proj.cmd) do if exist "..\..\install\windows\%%f" copy /y "..\..\install\windows\%%f" "%CM3_ROOT%\bin"
+for %%f in (cm3CommandShell.CMD cm3StartIDE.CMD cm3Proj.cmd) do if not exist "%CM3_ROOT%\bin\%%f" goto FatalSetupCM3
 echo.
+if /I "%_cm3_CommandReady%"=="TRUE" goto FindPkgInfo
 echo Setting up environment variables for CM3 ...
 echo.
-call c:\cm3\bin\cm3SetupCmdEnv.CMD
+call c:\cm3\bin\cm3CommandShell.CMD SameWindow
 @echo off
-if /I not "%CM3_DoneSetup%"=="TRUE" goto FatalSetupCM3
+if /I not "%_cm3_CommandReady%"=="TRUE" goto FatalSetupCM3
 
 
 
 :FindPkgInfo
 :-----------
-REM Cause CM3_PkgInfo to represent the path to PkgInfo.txt.
+REM Cause _cm3_PkgInfo to represent the path to PkgInfo.txt.
 rem ---first check to see if user-specified -P option is valid
-if not "%CM3_PkgInfo%"=="" call :FN_PkgInfo %CM3_PkgInfo%
-if not "%CM3_PkgInfo%"=="" if exist "%CM3_PkgInfo%" call :FN_FullPath %CM3_PkgInfo% CM3_PkgInfo & goto FindSourceTree
-if not "%CM3_PkgInfo%"=="" goto NoPkgInfo
+if not "%_cm3_PkgInfo%"=="" call :FN_PkgInfo %_cm3_PkgInfo%
+if not "%_cm3_PkgInfo%"=="" if exist "%_cm3_PkgInfo%" call :FN_FullPath %_cm3_PkgInfo% _cm3_PkgInfo & goto FindSourceTree
+if not "%_cm3_PkgInfo%"=="" goto NoPkgInfo
 
 rem ---next, see if located in current directory
-if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt CM3_PkgInfo
-if not "%CM3_PkgInfo%"=="" if exist "%CM3_PkgInfo%" goto FindSourceTree
+if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _cm3_PkgInfo
+if not "%_cm3_PkgInfo%"=="" if exist "%_cm3_PkgInfo%" goto FindSourceTree
 
 rem ---next, see if located in parent of current directory
 pushd ..
-if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt CM3_PkgInfo
+if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _cm3_PkgInfo
 popd
-if not "%CM3_PkgInfo%"=="" if exist "%CM3_PkgInfo%" goto FindSourceTree
+if not "%_cm3_PkgInfo%"=="" if exist "%_cm3_PkgInfo%" goto FindSourceTree
 
 rem ---next, see if located in grandparent of current directory
 pushd ..
 cd ..
-if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt CM3_PkgInfo
+if exist ".\PkgInfo.txt" call :FN_FullPath .\PkgInfo.txt _cm3_PkgInfo
 popd
-if not "%CM3_PkgInfo%"=="" if exist "%CM3_PkgInfo%" goto FindSourceTree
+if not "%_cm3_PkgInfo%"=="" if exist "%_cm3_PkgInfo%" goto FindSourceTree
 
 :NoPkgInfo
 echo ERROR:  Unable to locate PkgInfo.txt file.
 goto END
 
 :FN_PkgInfo
-rem ensure CM3_PkgInfo points to a file, not a path
+rem ensure _cm3_PkgInfo points to a file, not a path
 rem echo dp=%~dp1
 rem echo nx=%~nx1
 if /I "%~nx1"=="PKGINFO.TXT" goto :EOF
-set CM3_PkgInfo=%~dp1
-if not "%~nx1"=="" set CM3_PkgInfo=%CM3_PkgInfo%%~nx1\
-set CM3_PkgInfo=%CM3_PkgInfo%PkgInfo.txt
-rem echo %CM3_PkgInfo%
+set _cm3_PkgInfo=%~dp1
+if not "%~nx1"=="" set _cm3_PkgInfo=%_cm3_PkgInfo%%~nx1\
+set _cm3_PkgInfo=%_cm3_PkgInfo%PkgInfo.txt
+rem echo %_cm3_PkgInfo%
 goto :EOF
 
 
 
 :FindSourceTree
 :--------------
-REM Locate the package source tree and store in CM3_PkgTree.
-set CM3_PkgTree=
+REM Locate the package source tree and store in _cm3_PkgTree.
+set _cm3_PkgTree=
 
-rem --- first try parent of %CM3_PkgInfo%
-call :FN_DriveAndPathOnly %CM3_PkgInfo% CM3_PkgTree
-pushd %CM3_PkgTree%
+rem --- first try parent of %_cm3_PkgInfo%
+call :FN_DriveAndPathOnly %_cm3_PkgInfo% _cm3_PkgTree
+pushd %_cm3_PkgTree%
 cd ..
-set CM3_PkgTree=%CD%\
+set _cm3_PkgTree=%CD%\
 popd
-if exist "%CM3_PkgTree%m3-sys\cm3\src" goto Prepare
+if exist "%_cm3_PkgTree%m3-sys\cm3\src" goto Prepare
 
 rem --- next try current directory
-set CM3_PkgTree=%CD%\
-if exist "%CM3_PkgTree%m3-sys\cm3\src" goto Prepare
+set _cm3_PkgTree=%CD%\
+if exist "%_cm3_PkgTree%m3-sys\cm3\src" goto Prepare
 
 rem --- next try parent of current directory
 pushd ..
-set CM3_PkgTree=%CD%\
+set _cm3_PkgTree=%CD%\
 popd
-if exist "%CM3_PkgTree%m3-sys\cm3\src" goto Prepare
+if exist "%_cm3_PkgTree%m3-sys\cm3\src" goto Prepare
 
 rem --- next try grandparent of current directory
 pushd ..
 cd ..
-set CM3_PkgTree=%CD%\
+set _cm3_PkgTree=%CD%\
 popd
-if exist "%CM3_PkgTree%m3-sys\cm3\src" goto Prepare
+if exist "%_cm3_PkgTree%m3-sys\cm3\src" goto Prepare
 
 echo ERROR:  Unable to locate package source tree.
 goto END
@@ -183,15 +186,15 @@ goto END
 
 :Prepare
 :-------
-if /I not "%CM3_CfgDone%"=="TRUE" call :FN_UpdateConfig
+if /I not "%_cm3_CfgDone%"=="TRUE" call :FN_UpdateConfig
 echo Creating config ...
 if not exist "%CM3_ROOT%\bin\config" mkdir %CM3_ROOT%\bin\config
 if not exist "%CM3_ROOT%\bin\config" echo ERROR:  Unable to create folder "%CM3_ROOT%\bin\config" & goto END
-copy /y %CM3_PkgTree%m3-sys\cminstall\src\config-no-install\* %CM3_ROOT%\bin\config
+copy /y %_cm3_PkgTree%m3-sys\cminstall\src\config-no-install\* %CM3_ROOT%\bin\config
 if errorlevel 1 echo ERROR:  Problem copying files. & goto END
 if exist "%CM3_ROOT%\bin\cm3.cfg" del /f %CM3_ROOT%\bin\cm3.cfg
 echo INSTALL_ROOT = path() ^& "/..">%CM3_ROOT%\bin\cm3.cfg
-echo include(path() ^& "/config/" ^& HOST)>>%CM3_ROOT%\bin\cm3.cfg
+echo include(path() ^& "/config/NT386")>>%CM3_ROOT%\bin\cm3.cfg
 echo.
 echo %CM3_ROOT%\bin\cm3.cfg
 echo -------------------
@@ -202,21 +205,21 @@ echo ========================================================================
 echo STAGE-1:  Building CM3 Compiler
 echo ========================================================================
 echo.
-call %CM3_DO% front -realclean -clean -build -ship nopause
+call %_cm3_DO% front -realclean -clean -build -ship nopause
 @echo off
 echo.
 echo ========================================================================
 echo STAGE-2:  REPEATING BUILD to Ensure New Compiler Is Used to Build Itself
 echo ========================================================================
 echo.
-call %CM3_DO% front -realclean -clean -build -ship nopause
+call %_cm3_DO% front -realclean -clean -build -ship nopause
 @echo off
 echo.
 echo ========================================================================
 echo STAGE-3:  Building minimal distribution "min"
 echo ========================================================================
 echo.
-call %CM3_DO% min -realclean -clean -build -ship nopause
+call %_cm3_DO% min -realclean -clean -build -ship nopause
 @echo off
 echo.
 echo ========================================================================
@@ -227,10 +230,10 @@ goto END
 :FN_UpdateConfig
 :---------------
 echo Removing obsolete configuration files from %CM3_ROOT%\bin ...
-for %%f in (%CM3_PkgTree%m3-sys\cminstall\src\config-no-install\*) do call :Zap %%f %CM3_ROOT%\bin
-for %%f in (%CM3_PkgTree%m3-sys\cminstall\src\config\*) do call :Zap %%f %CM3_ROOT%\bin
+for %%f in (%_cm3_PkgTree%m3-sys\cminstall\src\config-no-install\*) do call :Zap %%f %CM3_ROOT%\bin
+for %%f in (%_cm3_PkgTree%m3-sys\cminstall\src\config\*) do call :Zap %%f %CM3_ROOT%\bin
 echo.
-set CM3_CfgDone=TRUE
+set _cm3_CfgDone=TRUE
 goto :EOF
 
 :Zap
@@ -242,7 +245,7 @@ goto :EOF
 
 :FatalSetupCM3
 :-------------
-echo ERROR:  Unable to successfully run "c:\cm3\bin\cm3SetupCmdEnv.CMD"
+echo ERROR:  Unable to successfully run "c:\cm3\bin\cm3CommandShell.CMD"
 echo         Please edit this .CMD file to provide correct path.
 goto END
 
@@ -312,59 +315,59 @@ echo.
 :---
 REM Remove environment variables and temporary files, then exit.
 
-rem echo CM3_Answ=%CM3_Answ%
-set CM3_Answ=
+rem echo _cm3_Answ=%_cm3_Answ%
+set _cm3_Answ=
 
-rem echo CM3_Arg=%CM3_Arg%
-set CM3_Arg=
+rem echo _cm3_Arg=%_cm3_Arg%
+set _cm3_Arg=
 
-rem echo CM3_CfgDone=%CM3_CfgDone%
-set CM3_CfgDone=
+rem echo _cm3_CfgDone=%_cm3_CfgDone%
+set _cm3_CfgDone=
 
-rem echo CM3_CM3Args=%CM3_CM3Args%
-set CM3_CM3Args=
+rem echo _cm3_CM3Args=%_cm3_CM3Args%
+set _cm3_CM3Args=
 
-rem echo CM3_CM3Failure=%CM3_CM3Failure%
-set CM3_CM3Failure=
+rem echo _cm3_CM3Failure=%_cm3_CM3Failure%
+set _cm3_CM3Failure=
 
-rem echo CM3_DO=%CM3_DO%
-set CM3_DO=
+rem echo _cm3_DO=%_cm3_DO%
+set _cm3_DO=
 
-rem echo CM3_ErrLog=%CM3_ErrLog%
-if "%CM3_ErrLog%"=="" goto E1
-if exist %CM3_ErrLog% del %CM3_ErrLog%
-set CM3_ErrLog=
+rem echo _cm3_ErrLog=%_cm3_ErrLog%
+if "%_cm3_ErrLog%"=="" goto E1
+if exist %_cm3_ErrLog% del %_cm3_ErrLog%
+set _cm3_ErrLog=
 :E1
 
-rem echo CM3_Group=%CM3_Group%
-set CM3_Group=
+rem echo _cm3_Group=%_cm3_Group%
+set _cm3_Group=
 
-rem echo CM3_NoPause=%CM3_NoPause%
-set CM3_NoPause=
+rem echo _cm3_NoPause=%_cm3_NoPause%
+set _cm3_NoPause=
 
-rem echo CM3_PkgInfo=%CM3_PkgInfo%
-set CM3_PkgInfo=
+rem echo _cm3_PkgInfo=%_cm3_PkgInfo%
+set _cm3_PkgInfo=
 
-rem echo CM3_PkgPath=%CM3_PkgPath%
-set CM3_PkgPath=
+rem echo _cm3_PkgPath=%_cm3_PkgPath%
+set _cm3_PkgPath=
 
-rem echo CM3_PkgTree=%CM3_PkgTree%
-set CM3_PkgTree=
+rem echo _cm3_PkgTree=%_cm3_PkgTree%
+set _cm3_PkgTree=
 
-rem echo CM3_TMP1=%CM3_TMP1%
-set CM3_TMP1=
+rem echo _cm3_TMP1=%_cm3_TMP1%
+set _cm3_TMP1=
 
-rem echo CM3_Repeat=%CM3_Repeat%
-set CM3_Repeat=
+rem echo _cm3_Repeat=%_cm3_Repeat%
+set _cm3_Repeat=
 
-rem echo CM3_TempFile=%CM3_TempFile%
-if "%CM3_TempFile%"=="" goto E2
-if exist %CM3_TempFile% del %CM3_TempFile%
-set CM3_TempFile=
+rem echo _cm3_TempFile=%_cm3_TempFile%
+if "%_cm3_TempFile%"=="" goto E2
+if exist %_cm3_TempFile% del %_cm3_TempFile%
+set _cm3_TempFile=
 :E2
 
-rem echo CM3_Verbose=%CM3_Verbose%
-set CM3_Verbose=
+rem echo _cm3_Verbose=%_cm3_Verbose%
+set _cm3_Verbose=
 
 echo ===END do-cm3===
 echo on
