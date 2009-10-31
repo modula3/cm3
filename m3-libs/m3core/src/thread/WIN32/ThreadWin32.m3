@@ -214,8 +214,8 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
     self.nextWaiter := c.waiters;
     c.waiters := self;
 
-    m.release();
     LeaveCriticalSection_giant();
+    m.release();
     IF perfOn THEN PerfChanged(State.waiting) END;
     IF WaitForSingleObject(self.waitSema, INFINITE) # 0 THEN
       Choke(ThisLine());
