@@ -12,7 +12,7 @@
 
 INTERFACE RTTypeSRC;
 
-IMPORT RT0;
+IMPORT RT0, Ctypes;
 
 PROCEDURE TypeName (ref: REFANY): TEXT;
 (* = TypecodeName (TYPECODE (ref)) *)
@@ -22,6 +22,8 @@ PROCEDURE TypecodeName (tc: RT0.Typecode): TEXT;
    heuristic is to consider, in order, "named typecells", brands, arrays,
    object-subtypes, objects, and procedures.  If all else fails, it returns
    "<?>". *)
+
+PROCEDURE TypecodeToCharStar (tc: RT0.Typecode): Ctypes.char_star;
 
 PROCEDURE FindType (id: INTEGER): RT0.TypeDefn;
 (* Returns the type descriptor with UID id.  If no such type exists,
