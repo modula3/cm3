@@ -1703,6 +1703,7 @@ BEGIN
   RTIO.PutText("\n  typecode:"); RTIO.PutHex(h.typecode);
   RTIO.PutText("\n  dirty:"); RTIO.PutText(BoolToStr[h.dirty]);
   RTIO.PutText("\n  gray:"); RTIO.PutText(BoolToStr[h.gray]);
+  RTIO.PutText("\n  weak:"); RTIO.PutText(BoolToStr[h.weak]);
   RTIO.PutText("\n  marka:"); RTIO.PutText(BoolToStr[h.marka]);
   RTIO.PutText("\n  markb:"); RTIO.PutText(BoolToStr[h.markb]);
   RTIO.PutText("\n  spare:"); RTIO.PutHex(h.spare);
