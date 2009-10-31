@@ -16,7 +16,7 @@ UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
 
 IMPORT RT0, RTHeapEvent, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
-IMPORT Word, Thread, ThreadInternal;
+IMPORT Word, Thread, ThreadInternal, RTTypeSRC, Ctypes;
 IMPORT TextLiteral AS TextLit, RTLinker, Time;
 
 FROM RT0 IMPORT Typecode, TypeDefn;
@@ -1695,12 +1695,27 @@ PROCEDURE SanityCheck (<*UNUSED*> self: MonitorClosure) =
 
 CONST BoolToStr = ARRAY [FALSE..TRUE] OF TEXT {"False", "True"};
 
+PROCEDURE IsTypecodeValid(tc: INTEGER): BOOLEAN =
+BEGIN
+  RETURN 0 <= tc AND tc <= RTType.MaxTypecode();
+END IsTypecodeValid;
+
+PROCEDURE TypecodeToCharStar(tc: INTEGER): Ctypes.char_star =
+BEGIN
+  IF NOT IsTypecodeValid(tc) THEN
+    tc := RT0.NilTypecode;
+  END;
+  RETURN RTTypeSRC.TypecodeToCharStar(tc);
+END TypecodeToCharStar;
+
 PROCEDURE PrintHeader(h: RefHeader) =
 BEGIN
   RTIO.PutText("header @");
   RTIO.PutAddr(h);
   RTIO.PutText("\n  forwarded:"); RTIO.PutText(BoolToStr[h.forwarded]);
   RTIO.PutText("\n  typecode:"); RTIO.PutHex(h.typecode);
+  RTIO.PutText(" ");
+  RTIO.PutString(TypecodeToCharStar(h.typecode));
   RTIO.PutText("\n  dirty:"); RTIO.PutText(BoolToStr[h.dirty]);
   RTIO.PutText("\n  gray:"); RTIO.PutText(BoolToStr[h.gray]);
   RTIO.PutText("\n  weak:"); RTIO.PutText(BoolToStr[h.weak]);

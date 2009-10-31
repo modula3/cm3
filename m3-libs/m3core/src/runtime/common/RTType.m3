@@ -91,10 +91,14 @@ PROCEDURE TypeName (ref: REFANY): TEXT =
   END TypeName;
 
 PROCEDURE TypecodeName (tc: Typecode): TEXT =
-  VAR t := Get (tc);
   BEGIN
-    RETURN TypeDefnToName (t);
+    RETURN TypeDefnToName (Get (tc));
   END TypecodeName;
+
+PROCEDURE TypecodeToCharStar (tc: Typecode): Ctypes.char_star =
+  BEGIN
+    RETURN LOOPHOLE (Get (tc).name, Ctypes.char_star);
+  END TypecodeToCharStar;
 
 PROCEDURE TypeDefnToName (t: RT0.TypeDefn): TEXT =
   BEGIN
