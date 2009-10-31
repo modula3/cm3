@@ -1693,48 +1693,75 @@ PROCEDURE SanityCheck (<*UNUSED*> self: MonitorClosure) =
     <* ASSERT p = p1 *>
   END SanityCheck;
 
-PROCEDURE RefSanityCheck (<*UNUSED*>v: RTHeapMap.Visitor;  cp  : ADDRESS) =
+CONST BoolToStr = ARRAY [FALSE..TRUE] OF TEXT {"False", "True"};
+
+PROCEDURE PrintHeader(h: RefHeader) =
+BEGIN
+  RTIO.PutText("header @");
+  RTIO.PutAddr(h);
+  RTIO.PutText("\n  forwarded:"); RTIO.PutText(BoolToStr[h.forwarded]);
+  RTIO.PutText("\n  typecode:"); RTIO.PutHex(h.typecode);
+  RTIO.PutText("\n  dirty:"); RTIO.PutText(BoolToStr[h.dirty]);
+  RTIO.PutText("\n  gray:"); RTIO.PutText(BoolToStr[h.gray]);
+  RTIO.PutText("\n  marka:"); RTIO.PutText(BoolToStr[h.marka]);
+  RTIO.PutText("\n  markb:"); RTIO.PutText(BoolToStr[h.markb]);
+  RTIO.PutText("\n  spare:"); RTIO.PutHex(h.spare);
+END PrintHeader;
+
+PROCEDURE SanityCheckHelper (cp: ADDRESS; checkGeneration: BOOLEAN) =
   VAR ref := LOOPHOLE(cp, UNTRACED REF RefReferent)^;
+      p: Page;
+      d: Desc;
+      h: RefHeader;
+      tc: INTEGER;
   BEGIN
-    IF ref # NIL THEN
-      VAR
-        h  := HeaderOf(ref);
-        tc := h.typecode;
-      BEGIN
-        (* the compiler generates Text.T that are not in the traced heap *)
-        IF tc # RT0.TextLitTypecode THEN
-          WITH p = ReferentToPage(ref), d = PageToRef(p).desc DO
-            <*ASSERT d.space = Space.Current*>
-          END;
-          <* ASSERT (0 <= tc AND tc <= RTType.MaxTypecode())
-                      OR tc = Fill_1_type
-                      OR tc = Fill_N_type *>
-        END;
-      END;
+    IF ref = NIL THEN
+      RETURN;
     END;
+    h  := HeaderOf(ref);
+    tc := h.typecode;
+    (* the compiler generates Text.T that are not in the traced heap *)
+    IF tc = RT0.TextLitTypecode THEN
+      RETURN;
+    END;
+    p := ReferentToPage(ref);
+    d := PageToRef(p).desc;
+    IF    (NOT (d.space = Space.Current))
+       OR (NOT ((NOT checkGeneration) OR d.generation = Generation.Older))
+       OR (NOT ((0 <= tc AND tc <= RTType.MaxTypecode())
+                OR tc = Fill_1_type
+                OR tc = Fill_N_type)) THEN
+      RTIO.PutText("BYTESIZE(Desc):"); RTIO.PutHex(BYTESIZE(Desc));
+      RTIO.PutText("\nBYTESIZE(Header):"); RTIO.PutHex(BYTESIZE(Header));
+      RTIO.PutText("\nref:"); RTIO.PutAddr(ref);
+      RTIO.PutText("\npage:"); RTIO.PutHex(p);
+      RTIO.PutText("\nRTType.MaxTypecode:"); RTIO.PutHex(RTType.MaxTypecode());
+      RTIO.PutText("\nFill_1_type:"); RTIO.PutHex(Fill_1_type);
+      RTIO.PutText("\nFill_N_type:"); RTIO.PutHex(Fill_N_type);
+      RTIO.PutText("\n");
+      PrintHeader(h);
+      RTIO.PutText("\ndesc @");
+      RTIO.PutAddr(ADR(PageToRef(p).desc));
+      RTIO.PutText("\n");
+      PrintDesc(p);
+      RTIO.Flush();
+    END;
+    <* ASSERT d.space = Space.Current *>
+    <* ASSERT (NOT checkGeneration) OR d.generation = Generation.Older *>
+    <* ASSERT (0 <= tc AND tc <= RTType.MaxTypecode())
+              OR tc = Fill_1_type
+              OR tc = Fill_N_type *>
+  END SanityCheckHelper;
+
+PROCEDURE RefSanityCheck (<*UNUSED*>v: RTHeapMap.Visitor;  cp  : ADDRESS) =
+  BEGIN
+    SanityCheckHelper(cp, FALSE);
   END RefSanityCheck;
 
 PROCEDURE CleanOlderRefSanityCheck (<*UNUSED*> v: RTHeapMap.Visitor;
                                     cp: ADDRESS) =
-  VAR ref := LOOPHOLE(cp, UNTRACED REF RefReferent)^;
   BEGIN
-    IF ref # NIL THEN
-      VAR
-        h  := HeaderOf(ref);
-        tc := h.typecode;
-      BEGIN
-        (* the compiler generates Text.T that are not in the traced heap *)
-        IF tc # RT0.TextLitTypecode THEN
-          WITH p = ReferentToPage(ref), d = PageToRef(p).desc DO
-            <* ASSERT d.space = Space.Current *>
-            <* ASSERT d.generation = Generation.Older *>
-          END;
-          <* ASSERT (0 <= tc AND tc <= RTType.MaxTypecode())
-                      OR tc = Fill_1_type
-                      OR tc = Fill_N_type *>
-        END;
-      END;
-    END;
+    SanityCheckHelper(cp, TRUE);
   END CleanOlderRefSanityCheck;
 
 <*UNUSED*>
