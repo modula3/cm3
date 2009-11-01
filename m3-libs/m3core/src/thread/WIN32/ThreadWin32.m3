@@ -621,7 +621,6 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
       t.result := NIL;
       t.joined := TRUE;
       t.join := NIL;
-      IF perfOn THEN PerfChanged(State.dead) END;
     END;
     RETURN res;
   END AlertJoin;
