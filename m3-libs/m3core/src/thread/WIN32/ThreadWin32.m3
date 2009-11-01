@@ -561,6 +561,7 @@ PROCEDURE Fork(closure: Closure): T =
     t: T := NIL;
     stack_size: DWORD;
     act: Activation := NIL;
+    id: DWORD;
   BEGIN
     IF debug THEN ThreadDebug.Fork(); END;
     (* determine the initial size of the stack for this thread *)
@@ -576,8 +577,7 @@ PROCEDURE Fork(closure: Closure): T =
     t := CreateT(NEW(Activation));
     t.closure := closure;
     act := t.act;
-    act.handle := CreateThread(NIL, stack_size, ThreadBase,
-                     act, CREATE_SUSPENDED, NIL);
+    act.handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
     EnterCriticalSection_activeMu();
       act.next := allThreads;
       act.prev := allThreads.prev;
