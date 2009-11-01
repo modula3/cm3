@@ -12,7 +12,7 @@ IMPORT RTError, WinGDI, RTParams;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT HANDLE, LONG, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
+FROM WinNT IMPORT HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
     MEMORY_BASIC_INFORMATION, PAGE_READWRITE, PAGE_READONLY;
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     GetCurrentProcess, DuplicateHandle, GetCurrentThread, CreateSemaphore,
@@ -146,7 +146,7 @@ PROCEDURE LockMutex (m: Mutex) =
   END LockMutex;
 
 PROCEDURE UnlockMutex(m: Mutex) =
-  VAR self := Self();  prevCount: LONG;  next: T;
+  VAR self := Self(); next: T;
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
     EnterCriticalSection_giant();
@@ -168,7 +168,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
         m.waiters := next.nextWaiter;
         next.nextWaiter := NIL;
         m.holder := next;
-        IF ReleaseSemaphore(next.waitSema, 1, ADR(prevCount)) = 0 THEN
+        IF ReleaseSemaphore(next.waitSema, 1, NIL) = 0 THEN
           Choke(ThisLine());
         END;
       END;
@@ -258,13 +258,13 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
 
 PROCEDURE DequeueHead(c: Condition) =
   (* LL = giant *)
-  VAR t: T; prevCount: LONG;
+  VAR t: T;
   BEGIN
     t := c.waiters; c.waiters := t.nextWaiter;
     t.nextWaiter := NIL;
     t.waitingOn := NIL;
     t.alertable := FALSE;
-    IF ReleaseSemaphore(t.waitSema, 1, ADR(prevCount)) = 0 THEN
+    IF ReleaseSemaphore(t.waitSema, 1, NIL) = 0 THEN
       Choke(ThisLine());
     END;
   END DequeueHead;
@@ -284,7 +284,7 @@ PROCEDURE Broadcast (c: Condition) =
   END Broadcast;
 
 PROCEDURE Alert(t: T) =
-    VAR prevCount: LONG; prev, next: T;
+    VAR prev, next: T;
   BEGIN
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
     EnterCriticalSection_giant();
@@ -306,7 +306,7 @@ PROCEDURE Alert(t: T) =
         t.waitingOn := NIL;
       END;
       t.alertable := FALSE;
-      IF ReleaseSemaphore(t.waitSema, 1, ADR(prevCount)) = 0 THEN
+      IF ReleaseSemaphore(t.waitSema, 1, NIL) = 0 THEN
         Choke(ThisLine());
       END;
     END;
@@ -606,7 +606,6 @@ PROCEDURE Fork(closure: Closure): T =
   VAR
     t: T := NIL;
     id, stack_size: DWORD;
-    prevCount: LONG;
     new_born: BOOLEAN;
     act: Activation := NIL;
   BEGIN
@@ -655,7 +654,7 @@ PROCEDURE Fork(closure: Closure): T =
     IF new_born THEN
       IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
     ELSE
-      IF ReleaseSemaphore(t.waitSema, 1, ADR(prevCount)) = 0 THEN
+      IF ReleaseSemaphore(t.waitSema, 1, NIL) = 0 THEN
         Choke(ThisLine());
       END;
     END;
