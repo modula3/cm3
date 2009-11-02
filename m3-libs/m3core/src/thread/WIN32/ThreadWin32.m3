@@ -351,24 +351,6 @@ VAR (* LL = slotMu *)
   next_slot := 1;
   slots     : REF ARRAY OF T;  (* NOTE: we don't use slots[0]. *)
 
-PROCEDURE InitActivations (): Activation =
-  VAR me := NEW(Activation);
-  BEGIN
-    InitC();
-    IF TlsSetValue_threadIndex(LOOPHOLE (me, SIZE_T)) = 0 THEN
-      Choke(ThisLine());
-    END;
-    IF DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
-            ADR(me.handle), 0, 0, DUPLICATE_SAME_ACCESS) = 0 THEN
-      Choke(ThisLine());
-    END;
-    me.next := me;
-    me.prev := me;
-    <* ASSERT allThreads = NIL *>
-    allThreads := me;
-    RETURN me;
-  END InitActivations;
-
 PROCEDURE SetActivation (act: Activation) =
   (* LL = 0 *)
   BEGIN
@@ -935,8 +917,19 @@ PROCEDURE PerfRunning () =
 PROCEDURE Init() =
   VAR
     self: T;
-    me := InitActivations();
+    me := NEW(Activation);
   BEGIN
+    InitC();
+    SetActivation(me);
+    IF DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
+            ADR(me.handle), 0, 0, DUPLICATE_SAME_ACCESS) = 0 THEN
+      Choke(ThisLine());
+    END;
+    me.next := me;
+    me.prev := me;
+    <* ASSERT allThreads = NIL *>
+    allThreads := me;
+
     self := CreateT(me);
 
     mutex := NEW(MUTEX);
