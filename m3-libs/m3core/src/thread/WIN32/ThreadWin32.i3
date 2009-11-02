@@ -7,7 +7,7 @@
 
 UNSAFE INTERFACE ThreadWin32;
 
-FROM WinDef IMPORT BOOL (* int *);
+FROM WinDef IMPORT LONG, BOOL(*int*);
 FROM Thread IMPORT T;
 FROM ThreadF IMPORT State;
 
@@ -70,6 +70,15 @@ PROCEDURE LeaveCriticalSection_heap();
 
 <*EXTERNAL ThreadWin32__InitC*>
 PROCEDURE InitC();
+
+<*EXTERNAL ThreadWin32__InterlockedIncrement*>
+PROCEDURE InterlockedIncrement(VAR a: LONG);
+
+<*EXTERNAL ThreadWin32__InterlockedDecrement*>
+PROCEDURE InterlockedDecrement(VAR a: LONG);
+
+<*EXTERNAL ThreadWin32__InterlockedRead*>
+PROCEDURE InterlockedRead(VAR a: LONG): LONG;
 
 (*----------------------------------------------------- for SchedulerPosix --*)
 
