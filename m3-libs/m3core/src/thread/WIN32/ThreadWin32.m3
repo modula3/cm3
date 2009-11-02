@@ -705,7 +705,7 @@ PROCEDURE SuspendOthers () =
     EnterCriticalSection_activeMu();
 
     INC (suspend_cnt);
-    IF suspend_cnt = 0 THEN
+    IF suspend_cnt # 1 THEN
       RETURN
     END;
     me := GetActivation();
