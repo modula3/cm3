@@ -945,6 +945,7 @@ PROCEDURE Init() =
     me.stackbase := InitialStackBase (ADR (self));
     IF me.stackbase = NIL THEN Choke(ThisLine()); END;
 
+    <*ASSERT inCritical = 1*>
     DEC(inCritical);
 
     PerfStart();
