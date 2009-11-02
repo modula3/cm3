@@ -5,11 +5,11 @@
 (* This interface exists to bridge SchedulerPosix to WIN32 threads *)
 INTERFACE ThreadInternal;
 
-FROM ThreadF IMPORT Id, State;
+FROM ThreadF IMPORT State;
 FROM Thread IMPORT T;
 
-PROCEDURE PerfChanged (id: Id; s: State);
-PROCEDURE PerfRunning (id: Id);
+PROCEDURE PerfChanged (s: State);
+PROCEDURE PerfRunning ();
 PROCEDURE XTestAlert (self: T): BOOLEAN;
 
 VAR

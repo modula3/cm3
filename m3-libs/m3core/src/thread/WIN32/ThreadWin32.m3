@@ -17,14 +17,13 @@ FROM WinNT IMPORT LONG, HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     GetCurrentProcess, DuplicateHandle, GetCurrentThread, CreateSemaphore,
     CloseHandle, CreateThread, ResumeThread, Sleep, SuspendThread,
-    GetThreadContext, VirtualQuery, GetLastError, CREATE_SUSPENDED;
+    GetThreadContext, VirtualQuery, GetLastError, CREATE_SUSPENDED,
+    GetCurrentThreadId;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
 
 VAR
   default_stack: DWORD := 8192;
-
-  nextId: Id := 1;
 
   threadMu: Mutex;
     (* Global lock for internal fields of Thread.T *)
@@ -69,8 +68,6 @@ REVEAL
         (* LL = threadMu; indicates that "result" is set *)
       joined: BOOLEAN := FALSE;
         (* LL = threadMu; "Join" or "AlertJoin" has already returned *)
-      id: Id;
-        (* LL = threadMu; unique ID of this thread *)
     END;
 
 TYPE
@@ -107,7 +104,7 @@ PROCEDURE LockMutex (m: Mutex) =
   VAR self := Self();  wait := FALSE;  next, prev: T;
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "LockMutex called from non-Modula-3 thread") END;
-    IF perfOn THEN PerfChanged(self.id, State.locking) END;
+    IF perfOn THEN PerfChanged(State.locking) END;
 
     EnterCriticalSection_giant();
 
@@ -140,7 +137,7 @@ PROCEDURE LockMutex (m: Mutex) =
       END;
     END;
 
-    IF perfOn THEN PerfChanged(self.id, State.alive) END;
+    IF perfOn THEN PerfRunning() END;
 
   END LockMutex;
 
@@ -233,7 +230,7 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   VAR self := Self();
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
-    IF perfOn THEN PerfChanged(self.id, State.waiting) END;
+    IF perfOn THEN PerfChanged(State.waiting) END;
     EnterCriticalSection_giant();
     InnerTestAlert(self);
     self.alertable := TRUE;
@@ -241,7 +238,7 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
     EnterCriticalSection_giant();
     InnerTestAlert(self);
     LeaveCriticalSection_giant();
-    IF perfOn THEN PerfChanged(self.id, State.alive) END;
+    IF perfOn THEN PerfChanged(State.alive) END;
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
@@ -249,10 +246,10 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   VAR self := Self();
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
-    IF perfOn THEN PerfChanged(self.id, State.waiting) END;
+    IF perfOn THEN PerfChanged(State.waiting) END;
     EnterCriticalSection_giant();
     InnerWait(m, c, self);
-    IF perfOn THEN PerfChanged(self.id, State.alive) END;
+    IF perfOn THEN PerfChanged(State.alive) END;
   END Wait;
 
 PROCEDURE DequeueHead(c: Condition) =
@@ -505,13 +502,13 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 PROCEDURE RunThread (me: Activation) =
   VAR self: T;  cl: Closure; res: REFANY;
   BEGIN
+    IF perfOn THEN PerfChanged(State.alive) END;
     EnterCriticalSection_slotMu();
       self := slots [me.slot];
     LeaveCriticalSection_slotMu();
 
     LOCK threadMu DO
       cl := self.closure;
-      self.id := nextId;  INC (nextId);
     END;
 
     IF cl = NIL THEN
@@ -519,7 +516,7 @@ PROCEDURE RunThread (me: Activation) =
     END;
 
     (* Run the user-level code. *)
-    IF perfOn THEN PerfRunning(self.id) END;
+    IF perfOn THEN PerfRunning() END;
     res := cl.apply();
 
     LOCK threadMu DO
@@ -527,10 +524,10 @@ PROCEDURE RunThread (me: Activation) =
       self.result := res;
       self.completed := TRUE;
       Broadcast(self.cond); (* let everybody know that "self" is done *)
-      IF perfOn THEN PerfChanged(self.id, State.dying) END;
+      IF perfOn THEN PerfChanged(State.dying) END;
     END;
 
-    IF perfOn THEN PerfDeleted(self.id) END;
+    IF perfOn THEN PerfDeleted() END;
 
     (* we're dying *)
     RTHeapRep.FlushThreadState(me.heapState);
@@ -588,8 +585,6 @@ PROCEDURE Fork(closure: Closure): T =
     IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
     InterlockedDecrement(act.suspendCount);
 
-    IF perfOn THEN PerfChanged(t.id, State.alive) END;
-
     RETURN t;
   END Fork;
 
@@ -603,7 +598,6 @@ PROCEDURE Join(t: T): REFANY =
       t.result := NIL;
       t.joined := TRUE;
       t.cond := NIL;
-      IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
     RETURN res;
   END Join;
@@ -618,7 +612,6 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
       t.result := NIL;
       t.joined := TRUE;
       t.cond := NIL;
-      IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
     RETURN res;
   END AlertJoin;
@@ -650,7 +643,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
     IF n <= 0.0d0 THEN RETURN END;
-    IF perfOn THEN PerfChanged(self.id, State.pausing) END;
+    IF perfOn THEN PerfChanged(State.pausing) END;
     amount := n;
     WHILE amount > 0.0D0 DO
       thisTime := MIN (Limit, amount);
@@ -672,7 +665,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
       END;
       LeaveCriticalSection_giant();
     END;
-    IF perfOn THEN PerfChanged(self.id, State.alive) END;
+    IF perfOn THEN PerfChanged(State.alive) END;
   END AlertPause;
 
 PROCEDURE Yield() =
@@ -836,9 +829,8 @@ PROCEDURE VerifySP (start, stop: ADDRESS): ADDRESS =
 (*------------------------------------------------------------ misc. stuff ---*)
 
 PROCEDURE MyId(): Id RAISES {}=
-  VAR self := Self ();
   BEGIN
-    RETURN self.id;
+    RETURN GetCurrentThreadId();
   END MyId;
 
 PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState =
@@ -895,27 +887,27 @@ CONST
 TYPE
   TE = ThreadEvent.Kind;
 
-PROCEDURE PerfChanged (id: Id; s: State) =
+PROCEDURE PerfChanged (s: State) =
   (* LL = threadMu *)
-  VAR e := ThreadEvent.T {kind := TE.Changed, id := id, state := s};
+  VAR e := ThreadEvent.T {kind := TE.Changed, id := GetCurrentThreadId(), state := s};
   BEGIN
     EnterCriticalSection_perfMu();
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
     LeaveCriticalSection_perfMu();
   END PerfChanged;
 
-PROCEDURE PerfDeleted (id: Id) =
+PROCEDURE PerfDeleted () =
   (* LL = threadMu *)
-  VAR e := ThreadEvent.T {kind := TE.Deleted, id := id};
+  VAR e := ThreadEvent.T {kind := TE.Deleted, id := GetCurrentThreadId()};
   BEGIN
     EnterCriticalSection_perfMu();
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
     LeaveCriticalSection_perfMu();
   END PerfDeleted;
 
-PROCEDURE PerfRunning (id: Id) =
+PROCEDURE PerfRunning () =
   (* LL = threadMu *)
-  VAR e := ThreadEvent.T {kind := TE.Running, id := id};
+  VAR e := ThreadEvent.T {kind := TE.Running, id := GetCurrentThreadId()};
   BEGIN
     EnterCriticalSection_perfMu();
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
@@ -931,7 +923,6 @@ PROCEDURE Init() =
   BEGIN
     threadMu := NEW(Mutex);
     self := CreateT(me);
-    self.id := nextId;  INC (nextId);
 
     heapCond := NEW(Condition);
 
@@ -939,7 +930,7 @@ PROCEDURE Init() =
     IF me.stackbase = NIL THEN Choke(ThisLine()); END;
 
     PerfStart();
-    IF perfOn THEN PerfChanged(self.id, State.alive) END;
+    IF perfOn THEN PerfChanged(State.alive) END;
 
     IF RTParams.IsPresent("backgroundgc") THEN
       RTCollectorSRC.StartBackgroundCollection();
