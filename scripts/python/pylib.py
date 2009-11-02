@@ -2897,18 +2897,27 @@ def RestoreSkel(prefix):
 
 DebianArchitecture = {
   "LINUXLIBC6" : "i386",
-  "I386_LINUX" : "i386",
-  "IA64_LINUX" : "ia64",
-  "ALPHA_LINUX" : "alpha",
-  "AMD64_LINUX" : "amd64",
-  "PA32_LINUX" : "hppa",
-  "PA64_LINUX" : "hppa",
-  "MIPS32_LINUX" : "mips",
-  "MIPS64_LINUX" : "mips",
-  "PPC_LINUX" : "powerpc",
-  "PPC64_LINUX" : "ppc",
-  "SPARC32_LINUX" : "sparc",
-  "SPARC64_LINUX" : "sparc" }
+  "FreeBSD4" : "i386",
+  "NetBSD2_i386" : "i386",
+  "NT386" : "i386",
+  "NT386GNU" : "i386",
+  "NT386MINGNU" : "i386",
+  "I386" : "i386",
+  "IA64" : "ia64",
+  "ALPHA" : "alpha",
+  "AMD64" : "amd64",
+  "PA32" : "hppa",
+  "PA64" : "hppa",
+  "MIPS32" : "mips",
+  "MIPS64" : "mips",
+  "PPC" : "powerpc",
+  "PPC64" : "ppc",
+  "SOLsun" : "sparc",
+  "SOLgnu" : "sparc",
+  "SPARC" : "sparc",
+  "SPARC32" : "sparc",
+  "SPARC64" : "sparc",
+  }
 
 def MakeDebianPackage(name, input, output, prefix):
 #
@@ -2934,7 +2943,7 @@ def MakeDebianPackage(name, input, output, prefix):
     newline = "\012" # take no chances
     open("./debian-binary", "w").write("2.0" + newline)
     os.chdir("./debian")
-    architecture = DebianArchitecture.get(Target)
+    architecture = DebianArchitecture.get(Target) or DebianArchitecture.get(Target[:Target.index("_")])
     open("./control", "w").write(
       "Package: cm3-" + name + newline
     + "Version: 1.0" + newline
