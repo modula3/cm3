@@ -503,7 +503,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   END ThreadBase;
 
 PROCEDURE RunThread (me: Activation) =
-  VAR self, next_self: T;  cl: Closure; res: REFANY;
+  VAR self: T;  cl: Closure; res: REFANY;
   BEGIN
     EnterCriticalSection_slotMu();
       self := slots [me.slot];
@@ -521,8 +521,6 @@ PROCEDURE RunThread (me: Activation) =
     (* Run the user-level code. *)
     IF perfOn THEN PerfRunning(self.id) END;
     res := cl.apply();
-
-    next_self := NIL;
 
     LOCK threadMu DO
       (* mark "self" done and clean it up a bit *)
