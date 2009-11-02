@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.45 2009-09-27 18:41:51 jkrell Exp $
+# $Id: make-dist.sh,v 1.26.2.46 2009-11-02 23:24:02 wagner Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -28,7 +28,7 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
-DS=${DS:-"pre-RC4"}; export DS
+DS=${DS:-"RC4"}; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
