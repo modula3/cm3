@@ -205,6 +205,7 @@ TYPE
        GC could see incoherent object state in the pool's page. *)
     inCritical : INTEGER := 0;
     pool := AllocPool { pure := FALSE, note := Note.Allocated };
+    suspended := FALSE; (* LL=activeMu *)
   END;
 
 (* Flush cached thread state, on GC flip and thread death *)
