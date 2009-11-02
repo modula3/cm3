@@ -95,8 +95,7 @@ PROCEDURE MinDefaultStackSize(min: CARDINAL);
    greater of "min" and the current default stack size. *)
 
 PROCEDURE IncDefaultStackSize(inc: CARDINAL);
-(* Increment the default stack size for newly forked threads by "inc".
-   *)
+(* Increment the default stack size for newly forked threads by "inc". *)
 
 TYPE
   SizedClosure = Closure OBJECT stackSize: CARDINAL := 0 END;
