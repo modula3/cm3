@@ -40,7 +40,7 @@ REVEAL
       release := UnlockMutex;
     END;
 
-  Condition = MUTEX BRANDED "Thread.Condition Win32-1.0" OBJECT
+  Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
       waiters: T := NIL;
         (* LL = giant; List of threads waiting on this CV. *)
     END;
