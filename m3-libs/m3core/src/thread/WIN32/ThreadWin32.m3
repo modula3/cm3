@@ -25,9 +25,6 @@ FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
 VAR
   default_stack: DWORD := 8192;
 
-  threadMu: Mutex;
-    (* Global lock for internal fields of Thread.T *)
-
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
       waiters: T := NIL;
@@ -44,16 +41,16 @@ REVEAL
         (* LL = giant; List of threads waiting on this CV. *)
     END;
 
-  T = BRANDED "Thread.T Win32-1.0" OBJECT
+  T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
       act: Activation := NIL;
-        (* LL = threadMu;  live thread data *)
+        (* LL = Self();  live thread data *)
       closure: Closure := NIL;
-        (* LL = threadMu *)
+        (* LL = Self() *)
       result: REFANY := NIL;
-        (* LL = threadMu;  if not self.completed, used only by self;
+        (* LL = Self();  if not self.completed, used only by self;
            if self.completed, read-only. *)
       cond: Condition;
-        (* LL = threadMu; wait here to join, or for rebirth *)
+        (* LL = Self(); wait here to join, or for rebirth *)
       waitingOn: Condition := NIL;
         (* LL = giant; CV that we're blocked on *)
       nextWaiter: T := NIL;
@@ -65,9 +62,9 @@ REVEAL
       alerted: BOOLEAN := FALSE;
         (* LL = giant; the alert flag, of course *)
       completed: BOOLEAN := FALSE;
-        (* LL = threadMu; indicates that "result" is set *)
+        (* LL = Self(); indicates that "result" is set *)
       joined: BOOLEAN := FALSE;
-        (* LL = threadMu; "Join" or "AlertJoin" has already returned *)
+        (* LL = Self(); "Join" or "AlertJoin" has already returned *)
     END;
 
 TYPE
@@ -507,7 +504,7 @@ PROCEDURE RunThread (me: Activation) =
       self := slots [me.slot];
     LeaveCriticalSection_slotMu();
 
-    LOCK threadMu DO
+    LOCK self DO
       cl := self.closure;
     END;
 
@@ -519,7 +516,7 @@ PROCEDURE RunThread (me: Activation) =
     IF perfOn THEN PerfRunning() END;
     res := cl.apply();
 
-    LOCK threadMu DO
+    LOCK self DO
       (* mark "self" done and clean it up a bit *)
       self.result := res;
       self.completed := TRUE;
@@ -591,9 +588,9 @@ PROCEDURE Fork(closure: Closure): T =
 PROCEDURE Join(t: T): REFANY =
   VAR res: REFANY;
   BEGIN
-    LOCK threadMu DO
+    LOCK t DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
-      WHILE NOT t.completed DO Wait(threadMu, t.cond) END;
+      WHILE NOT t.completed DO Wait(t, t.cond) END;
       res := t.result;
       t.result := NIL;
       t.joined := TRUE;
@@ -605,9 +602,9 @@ PROCEDURE Join(t: T): REFANY =
 PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
   VAR res: REFANY;
   BEGIN
-    LOCK threadMu DO
+    LOCK t DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
-      WHILE NOT t.completed DO AlertWait(threadMu, t.cond) END;
+      WHILE NOT t.completed DO AlertWait(t, t.cond) END;
       res := t.result;
       t.result := NIL;
       t.joined := TRUE;
@@ -888,7 +885,7 @@ TYPE
   TE = ThreadEvent.Kind;
 
 PROCEDURE PerfChanged (s: State) =
-  (* LL = threadMu *)
+  (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Changed, id := GetCurrentThreadId(), state := s};
   BEGIN
     EnterCriticalSection_perfMu();
@@ -897,7 +894,7 @@ PROCEDURE PerfChanged (s: State) =
   END PerfChanged;
 
 PROCEDURE PerfDeleted () =
-  (* LL = threadMu *)
+  (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Deleted, id := GetCurrentThreadId()};
   BEGIN
     EnterCriticalSection_perfMu();
@@ -906,7 +903,7 @@ PROCEDURE PerfDeleted () =
   END PerfDeleted;
 
 PROCEDURE PerfRunning () =
-  (* LL = threadMu *)
+  (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Running, id := GetCurrentThreadId()};
   BEGIN
     EnterCriticalSection_perfMu();
@@ -921,7 +918,6 @@ PROCEDURE Init() =
     self: T;
     me := InitActivations();
   BEGIN
-    threadMu := NEW(Mutex);
     self := CreateT(me);
 
     heapCond := NEW(Condition);
