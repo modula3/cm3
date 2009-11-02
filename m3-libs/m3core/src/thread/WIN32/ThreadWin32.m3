@@ -83,7 +83,7 @@ TYPE
         (* LL = activeMu; base of thread stack for use by GC *)
       slot: INTEGER;
         (* LL = slotMu;  index into global array of active, slotted threads *)
-      suspended := FALSE; (* LL=activeMu *)
+      suspended := TRUE; (* LL=activeMu *)
 
       (* thread state *)
       heapState: RTHeapRep.ThreadState;
@@ -584,14 +584,16 @@ PROCEDURE Fork(closure: Closure): T =
       act.prev := allThreads.prev;
       allThreads.prev.next := act;
       allThreads.prev := act;
+
+      (* last minute sanity checking *)
+      CheckSlot (t);
+      act := t.act;
+      IF (act.handle = NIL) OR (act.next = NIL) OR (act.prev = NIL) THEN Choke(ThisLine()) END;
+
+      IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
+      act.suspended := FALSE;
+
     LeaveCriticalSection_activeMu();
-
-    (* last minute sanity checking *)
-    CheckSlot (t);
-    act := t.act;
-    IF (act.handle = NIL) OR (act.next = NIL) OR (act.prev = NIL) THEN Choke(ThisLine()) END;
-
-    IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
 
     RETURN t
   END Fork;
