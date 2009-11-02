@@ -383,33 +383,36 @@ PROCEDURE Self (): T =
 
 PROCEDURE AssignSlot (t: T) =
   (* LL = 0, cause we allocate stuff with NEW! *)
-  VAR n: CARDINAL;  new_slots: REF ARRAY OF T;
+  VAR n: CARDINAL;  old_slots, new_slots: REF ARRAY OF T;
+      retry := TRUE;
   BEGIN
     EnterCriticalSection_slotMu();
+      WHILE retry DO
+        retry := FALSE;
 
-      (* make sure we have room to register this guy *)
-      IF slots = NIL THEN
-        LeaveCriticalSection_slotMu();
-          slots := NEW (REF ARRAY OF T, 20);
-        EnterCriticalSection_slotMu();
-      END;
-      IF n_slotted >= LAST (slots^) THEN
-        n := NUMBER (slots^);
-        LeaveCriticalSection_slotMu();
-          new_slots := NEW (REF ARRAY OF T, n+n);
-        EnterCriticalSection_slotMu();
-        IF n = NUMBER (slots^) THEN
-          (* we won any races that may have occurred. *)
-          SUBARRAY (new_slots^, 0, n) := slots^;
-          slots := new_slots;
-        ELSIF n_slotted < LAST (slots^) THEN
-          (* we lost a race while allocating a new slot table,
-             and the new table has room for us. *)
-        ELSE
-          (* ouch, the new table is full too!   Bail out and retry *)
+        (* make sure we have room to register this guy *)
+        IF slots = NIL THEN
           LeaveCriticalSection_slotMu();
-          AssignSlot (t);
-          RETURN;
+            slots := NEW (REF ARRAY OF T, 20);
+          EnterCriticalSection_slotMu();
+        END;
+        IF n_slotted >= LAST (slots^) THEN
+          old_slots := slots;
+          n := NUMBER (old_slots^);
+          LeaveCriticalSection_slotMu();
+            new_slots := NEW (REF ARRAY OF T, n+n);
+          EnterCriticalSection_slotMu();
+          IF old_slots = slots THEN
+            (* we won any races that may have occurred. *)
+            SUBARRAY (new_slots^, 0, n) := slots^;
+            slots := new_slots;
+          ELSIF n_slotted < LAST (slots^) THEN
+            (* we lost a race while allocating a new slot table,
+               and the new table has room for us. *)
+          ELSE
+            (* ouch, the new table is full too!   Bail out and retry *)
+            retry := TRUE;
+          END;
         END;
       END;
      
