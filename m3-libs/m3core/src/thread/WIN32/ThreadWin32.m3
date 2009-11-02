@@ -83,7 +83,7 @@ TYPE
         (* LL = activeMu; base of thread stack for use by GC *)
       slot: INTEGER;
         (* LL = slotMu;  index into global array of active, slotted threads *)
-      suspendCount: INTEGER := 1; (* LL = activeMu *)
+      suspendCount := 1; (* LL = activeMu *)
 
       (* thread state *)
       heapState: RTHeapRep.ThreadState;
