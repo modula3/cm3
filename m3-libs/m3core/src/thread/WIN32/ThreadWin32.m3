@@ -738,7 +738,7 @@ PROCEDURE StopWorld (me: Activation) =
     act := me.next;
   BEGIN
     LOOP
-      WHILE (nLive = 0) AND (act # me) DO
+      WHILE act # me DO
         IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
         IF act.heapState.inCritical # 0 THEN
           IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
