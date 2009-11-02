@@ -574,7 +574,6 @@ PROCEDURE Fork(closure: Closure): T =
     ELSE (*skip*)
     END;
 
-    (* try the cache for a thread *)
     t := CreateT(NEW(Activation));
     t.closure := closure;
     act := t.act;
@@ -594,7 +593,7 @@ PROCEDURE Fork(closure: Closure): T =
     IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
     InterlockedDecrement(act.suspendCount);
 
-    RETURN t
+    RETURN t;
   END Fork;
 
 PROCEDURE Join(t: T): REFANY =
@@ -735,9 +734,8 @@ PROCEDURE SuspendOthers () =
 
 PROCEDURE StopWorld (me: Activation) =
   (* LL=activeMu *)
-  VAR
-    nLive := 0;
-    act := me.next;
+  VAR nLive := 0;
+      act := me.next;
   BEGIN
     LOOP
       WHILE act # me DO
