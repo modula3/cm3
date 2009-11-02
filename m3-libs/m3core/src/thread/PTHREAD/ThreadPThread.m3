@@ -382,6 +382,7 @@ PROCEDURE AssignSlot (t: T) =
           (* ouch, the new table is full too!   Bail out and retry *)
           WITH r = pthread_mutex_unlock_slots() DO <*ASSERT r=0*> END;
           AssignSlot (t);
+          RETURN;
         END;
       END;
 
