@@ -739,10 +739,14 @@ PROCEDURE StopWorld (me: Activation) =
   BEGIN
     LOOP
       WHILE act # me DO
-        IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-        IF act.heapState.inCritical # 0 THEN
-          IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-          INC(nLive);
+        IF NOT act.heapState.suspended THEN
+          IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
+          IF act.heapState.inCritical # 0 THEN
+            IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
+            INC(nLive);
+          ELSE
+            act.heapState.suspended := TRUE;
+          END;
         END;
         act := act.next;
       END;
@@ -760,8 +764,10 @@ PROCEDURE ResumeOthers () =
     DEC (suspend_cnt);
     IF suspend_cnt = 0 THEN
       act := me.next;
-      WHILE (act # me) DO
+      WHILE act # me DO
+        <*ASSERT act.heapState.suspended*>
         IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
+        act.heapState.suspended := FALSE;
         act := act.next;
       END;
     END;
