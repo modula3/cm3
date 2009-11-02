@@ -531,12 +531,11 @@ PROCEDURE RunThread (me: Activation) =
   END RunThread;
 
 PROCEDURE Fork(closure: Closure): T =
-  VAR
-    t: T;
-    stack_size: DWORD;
-    act: Activation;
-    id: DWORD;
-    handle: HANDLE;
+  VAR t: T;
+      stack_size: DWORD;
+      act: Activation;
+      id: DWORD;
+      handle: HANDLE;
   BEGIN
     IF debug THEN ThreadDebug.Fork(); END;
 
