@@ -698,21 +698,20 @@ VAR
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu". *)
-  VAR me := GetActivation();
+  VAR me: Activation;
+      act: Activation;
+      nLive := 0;
   BEGIN
-    <*ASSERT me # NIL*>
     EnterCriticalSection_activeMu();
 
     INC (suspend_cnt);
-    IF suspend_cnt = 1 THEN StopWorld(me) END;
-  END SuspendOthers;
-
-PROCEDURE StopWorld (me: Activation) =
-  (* LL=activeMu *)
-  VAR nLive := 0;
-      act := me.next;
-  BEGIN
+    IF suspend_cnt = 0 THEN
+      RETURN
+    END;
+    me := GetActivation();
     LOOP
+      act := me.next;
+      nLive := 0;
       WHILE act # me DO
         IF act.suspendCount = 0 THEN
           IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
@@ -725,19 +724,21 @@ PROCEDURE StopWorld (me: Activation) =
         END;
         act := act.next;
       END;
-      IF nLive = 0 THEN EXIT END;
+      IF nLive = 0 THEN
+        RETURN
+      END;
       Sleep(1);
-      act := me.next;
-      nLive := 0;
     END;
-  END StopWorld;
+  END SuspendOthers;
 
 PROCEDURE ResumeOthers () =
   (* LL=activeMu.  Always preceded by SuspendOthers. *)
-  VAR act: Activation;  me := GetActivation();
+  VAR act: Activation;
+      me: Activation;
   BEGIN
     DEC (suspend_cnt);
     IF suspend_cnt = 0 THEN
+      me := GetActivation();
       act := me.next;
       WHILE act # me DO
         <*ASSERT act.suspendCount > 0*>
@@ -932,7 +933,7 @@ PROCEDURE Init() =
     IF me.stackbase = NIL THEN Choke(ThisLine()); END;
 
     <*ASSERT inCritical = 1*>
-    DEC(inCritical);
+    inCritical := 0;
 
     PerfStart();
     IF perfOn THEN PerfChanged(State.alive) END;
