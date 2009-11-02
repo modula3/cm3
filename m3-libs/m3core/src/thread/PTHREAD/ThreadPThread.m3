@@ -31,8 +31,9 @@ REVEAL
     release := UnlockMutex;
   END;
 
-  Condition = MUTEX BRANDED "Thread.Condition Pthread-1.0" OBJECT
-    waiters: T := NIL;                  (* LL = mutex *)
+  Condition = BRANDED "Thread.Condition Pthread-1.0" OBJECT
+    mutex: pthread_mutex_t := NIL;
+    waiters: T := NIL;                   (* LL = mutex *)
   END;
 
   T = MUTEX BRANDED "Thread.T Pthread-1.6" OBJECT
@@ -143,10 +144,7 @@ PROCEDURE LockMutex (m: Mutex) =
     IF m.mutex = NIL THEN InitMutex(m) END;
     IF perfOn THEN PerfChanged(State.locking) END;
     WITH r = pthread_mutex_lock(m.mutex) DO
-      IF r # 0 THEN
-        RTError.MsgI(ThisFile(), ThisLine(),
-                     "Thread client error: pthread_mutex_lock error: ", r);
-      END;
+      IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
     IF perfOn THEN PerfRunning() END;
   END LockMutex;
@@ -156,10 +154,7 @@ PROCEDURE UnlockMutex (m: Mutex) =
   BEGIN
     IF m.mutex = NIL THEN InitMutex(m) END;
     WITH r = pthread_mutex_unlock(m.mutex) DO
-      IF r # 0 THEN
-        RTError.MsgI(ThisFile(), ThisLine(),
-                     "Thread client error: pthread_mutex_unlock error: ", r);
-      END;
+      IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
   END UnlockMutex;
 
@@ -562,10 +557,7 @@ PROCEDURE Fork (closure: Closure): T =
       allThreads.prev.next := act;
       allThreads.prev := act;
       WITH r = thread_create(act.handle, size * ADRSIZE(Word.T), ThreadBase, act) DO
-        IF r # 0 THEN
-          RTError.MsgI(ThisFile(), ThisLine(),
-                       "Thread client error: Fork failed with error: ", r);
-        END;
+        IF r # 0 THEN DieI(ThisLine(), r) END;
       END;
     WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
     RETURN t;
@@ -655,11 +647,7 @@ PROCEDURE AlertPause (n: LONGREAL) RAISES {Alerted} =
 PROCEDURE Yield () =
   BEGIN
     WITH r = Usched.yield() DO
-      IF r # 0 THEN
-        RTError.MsgI(ThisFile(), ThisLine(),
-                     "Thread client error: Yield failed with error: ",
-                     Cerrno.GetErrno());
-      END;
+      IF r # 0 THEN DieI(ThisLine(), Cerrno.GetErrno()) END;
     END;
   END Yield;
 
@@ -1237,6 +1225,11 @@ PROCEDURE EnableSwitching () =
 PROCEDURE Die (lineno: INTEGER; msg: TEXT) =
   BEGIN
     RTError.Msg (ThisFile(), lineno, "Thread client error: ", msg);
+  END Die;
+
+PROCEDURE DieI (lineno: INTEGER; i: INTEGER) =
+  BEGIN
+    RTError.MsgI (ThisFile(), lineno, "Thread client error: ", i);
   END Die;
 
 (*------------------------------------------------------ ShowThread hooks ---*)
