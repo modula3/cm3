@@ -8,7 +8,7 @@
 UNSAFE MODULE ThreadWin32 EXPORTS
 Thread, ThreadF, Scheduler, ThreadInternal, RTOS, RTHooks, ThreadWin32;
 
-IMPORT RTError, WinGDI, RTParams, FloatMode;
+IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
@@ -440,17 +440,6 @@ PROCEDURE FreeSlot (t: T) =
     LeaveCriticalSection_slotMu();
   END FreeSlot;
 
-PROCEDURE CheckSlot (t: T) =
-  (* LL = 0 *)
-  VAR me := t.act;
-  BEGIN
-    <*ASSERT me # NIL *>
-    <*ASSERT me.slot > 0 *>
-    EnterCriticalSection_slotMu();
-       <*ASSERT slots[me.slot] = t *>
-    LeaveCriticalSection_slotMu();
-  END CheckSlot;
-
 (*------------------------------------------------------------ Fork, Join ---*)
 
 VAR (* LL=activeMu *)
@@ -567,16 +556,15 @@ PROCEDURE Fork(closure: Closure): T =
     t.closure := closure;
     act := t.act;
     act.handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
+    IF act.handle = NIL THEN
+      RuntimeError.Raise(RuntimeError.T.SystemError);
+    END;
     EnterCriticalSection_activeMu();
       act.next := allThreads;
       act.prev := allThreads.prev;
       allThreads.prev.next := act;
       allThreads.prev := act;
     LeaveCriticalSection_activeMu();
-
-    (* last minute sanity checking *)
-    CheckSlot (t);
-    IF act.handle = NIL THEN Choke(ThisLine()) END;
 
     IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
     InterlockedDecrement(act.suspendCount);
