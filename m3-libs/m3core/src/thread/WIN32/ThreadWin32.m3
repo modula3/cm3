@@ -470,10 +470,6 @@ PROCEDURE CreateT (act: Activation): T =
 (* ThreadBase calls RunThread after finding (approximately) where
    its stack begins.  This dance ensures that all of ThreadMain's
    traced references are within the stack scanned by the collector.
-
-   It is important that ThreadBase's stack frame doesn't contain traced
-   references. Otherwise, while it waited for its rebirth signal each reference
-   would pin a heap page.
 *)
 
 <*WINAPI*>
