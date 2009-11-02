@@ -60,40 +60,6 @@ void __cdecl ThreadWin32__InitC(void)
     assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
 }
 
-#ifndef MemoryBarrier
-static void MemoryBarrier(void)
-{
-#ifdef _M_IX86
-    LONG Barrier;
-    __asm {
-        xchg Barrier, eax
-    }
-#else
-#error
-#endif
-}
-#define MemoryBarrier MemoryBarrier
-#endif
-
-void __cdecl ThreadWin32__InterlockedIncrement(volatile long* a)
-{
-    InterlockedIncrement(a);
-}
-
-void __cdecl ThreadWin32__InterlockedDecrement(volatile long* a)
-{
-    InterlockedDecrement(a);
-}
-
-void __cdecl ThreadWin32__InterlockedRead(volatile long* a)
-{ /* based on Boost */
-    long b;
-    MemoryBarrier();
-    b = *a;
-    MemoryBarrier();
-    return b;
-}
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
