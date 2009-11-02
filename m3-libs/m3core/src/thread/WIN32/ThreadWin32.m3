@@ -540,11 +540,13 @@ PROCEDURE RunThread (me: Activation) =
       IF allThreads = me THEN allThreads := me.next; END;
       me.next.prev := me.prev;
       me.prev.next := me.next;
-      me.next := NIL;
-      me.prev := NIL;
-      IF CloseHandle(me.handle) = 0 THEN Choke(ThisLine()) END;
-      me.handle := NIL;
     LeaveCriticalSection_activeMu();
+
+    me.next := NIL;
+    me.prev := NIL;
+    IF CloseHandle(me.handle) = 0 THEN Choke(ThisLine()) END;
+    me.handle := NIL;
+
   END RunThread;
 
 PROCEDURE Fork(closure: Closure): T =
