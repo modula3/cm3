@@ -63,10 +63,14 @@ void __cdecl ThreadWin32__InitC(void)
 #ifndef MemoryBarrier
 static void MemoryBarrier(void)
 {
+#ifdef _M_IX86
     LONG Barrier;
     __asm {
         xchg Barrier, eax
     }
+#else
+#error
+#endif
 }
 #define MemoryBarrier MemoryBarrier
 #endif
