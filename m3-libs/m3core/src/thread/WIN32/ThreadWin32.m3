@@ -12,7 +12,7 @@ IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT LONG, HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
+FROM WinNT IMPORT HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
     MEMORY_BASIC_INFORMATION, PAGE_READWRITE, PAGE_READONLY;
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     GetCurrentProcess, DuplicateHandle, GetCurrentThread, CreateSemaphore,
@@ -83,7 +83,7 @@ TYPE
         (* LL = activeMu; base of thread stack for use by GC *)
       slot: INTEGER;
         (* LL = slotMu;  index into global array of active, slotted threads *)
-      suspendCount: LONG := 1;
+      suspendCount: INTEGER := 1; (* LL = activeMu *)
 
       (* thread state *)
       heapState: RTHeapRep.ThreadState;
@@ -428,15 +428,16 @@ PROCEDURE AssignSlot (t: T) =
 
 PROCEDURE FreeSlot (t: T) =
   (* LL = 0 *)
+  VAR act := t.act;
   BEGIN
     EnterCriticalSection_slotMu();
     
       DEC (n_slotted);
-      WITH z = slots [t.act.slot] DO
+      WITH z = slots [act.slot] DO
         IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
-      t.act.slot := 0;
+      act.slot := 0;
 
     LeaveCriticalSection_slotMu();
   END FreeSlot;
@@ -531,18 +532,17 @@ PROCEDURE RunThread (me: Activation) =
 
 PROCEDURE Fork(closure: Closure): T =
   VAR
-    t: T := NIL;
+    t: T;
     stack_size: DWORD;
-    act: Activation := NIL;
+    act: Activation;
     id: DWORD;
+    handle: HANDLE;
   BEGIN
     IF debug THEN ThreadDebug.Fork(); END;
 
     <*ASSERT allThreads # NIL*>
     <*ASSERT allThreads.next # NIL*>
     <*ASSERT allThreads.prev # NIL*>
-
-    IF (act.handle = NIL) OR (act.next = NIL) OR (act.prev = NIL) THEN Choke(ThisLine()) END;
 
     (* determine the initial size of the stack for this thread *)
     stack_size := default_stack;
@@ -553,23 +553,22 @@ PROCEDURE Fork(closure: Closure): T =
     ELSE (*skip*)
     END;
 
-    t := CreateT(NEW(Activation));
-    t.closure := closure;
-    act := t.act;
-    act.handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
-    IF act.handle = NIL THEN
+    act := NEW(Activation);
+    handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
+    IF handle = NIL THEN
       RuntimeError.Raise(RuntimeError.T.SystemError);
     END;
+    act.handle := handle;
+    t := CreateT(act);
+    t.closure := closure;
     EnterCriticalSection_activeMu();
       act.next := allThreads;
       act.prev := allThreads.prev;
       allThreads.prev.next := act;
       allThreads.prev := act;
+      IF ResumeThread(handle) = -1 THEN Choke(ThisLine()) END;
+      DEC(act.suspendCount);
     LeaveCriticalSection_activeMu();
-
-    IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
-    InterlockedDecrement(act.suspendCount);
-
     RETURN t;
   END Fork;
 
@@ -716,13 +715,13 @@ PROCEDURE StopWorld (me: Activation) =
   BEGIN
     LOOP
       WHILE act # me DO
-        IF InterlockedRead(act.suspendCount) = 0 THEN
+        IF act.suspendCount = 0 THEN
           IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
           IF act.heapState.inCritical # 0 THEN
             IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
             INC(nLive);
           ELSE
-            InterlockedIncrement(act.suspendCount);
+            INC(act.suspendCount);
           END;
         END;
         act := act.next;
@@ -742,9 +741,9 @@ PROCEDURE ResumeOthers () =
     IF suspend_cnt = 0 THEN
       act := me.next;
       WHILE act # me DO
-        <*ASSERT InterlockedRead(act.suspendCount) > 0*>
+        <*ASSERT act.suspendCount > 0*>
         IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-        InterlockedDecrement(act.suspendCount);
+        DEC(act.suspendCount);
         act := act.next;
       END;
     END;
