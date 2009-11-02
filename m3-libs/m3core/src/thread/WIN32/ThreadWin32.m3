@@ -48,8 +48,6 @@ REVEAL
   T = BRANDED "Thread.T Win32-1.0" OBJECT
       act: Activation := NIL;
         (* LL = threadMu;  live thread data *)
-      nextIdle: T := NIL;
-        (* LL = idleMu; global list of idle threads *)
       closure: Closure := NIL;
         (* LL = threadMu *)
       result: REFANY := NIL;
@@ -459,15 +457,8 @@ PROCEDURE CheckSlot (t: T) =
 
 (*------------------------------------------------------------ Fork, Join ---*)
 
-CONST
-  MaxIdle = 0;
-
 VAR (* LL=activeMu *)
   allThreads  : Activation := NIL;  (* global list of active threads *)
-
-VAR (* LL=idleMu *)
-  idleThreads : T          := NIL;  (* global list of idle threads *)
-  nIdle       : INTEGER    := 0;
 
 PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
@@ -485,10 +476,8 @@ PROCEDURE CreateT (act: Activation): T =
    its stack begins.  This dance ensures that all of ThreadMain's
    traced references are within the stack scanned by the collector.
 
-   If RunThread decides to put itself on the idle list, it returns
-   a Win32 semaphore that ThreadBase waits on.  It's important that
-   ThreadBase's stack frame doesn't contain traced references.
-   Otherwise, while it waited for its rebirth signal each reference
+   It is important that ThreadBase's stack frame doesn't contain traced
+   references. Otherwise, while it waited for its rebirth signal each reference
    would pin a heap page.
 *)
 
@@ -496,30 +485,23 @@ PROCEDURE CreateT (act: Activation): T =
 PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   VAR
     me       : Activation   := param;
-    waitSema : HANDLE       := NIL;
   BEGIN
     SetActivation (me);
     (* We need to establish this binding before this thread touches any
        traced references.  Otherwise, it may trigger a heap page fault,
        which would call SuspendOthers, which requires an Activation. *)
 
-    LOOP
-      me.stackbase := ADR (me); (* enable GC scanning of this stack *)
-      waitSema := RunThread (me);
-      me.stackbase := NIL; (* disable GC scanning of my stack *)
-      EVAL WinGDI.GdiFlush ();  (* help out Trestle *)
-      IF waitSema = NIL THEN EXIT; END;
-      IF WaitForSingleObject(waitSema, INFINITE) # 0 THEN
-        Choke(ThisLine());
-      END;
-    END;
+    me.stackbase := ADR (me); (* enable GC scanning of this stack *)
+    RunThread (me);
+    me.stackbase := NIL; (* disable GC scanning of my stack *)
+    EVAL WinGDI.GdiFlush ();  (* help out Trestle *)
 
     <*ASSERT me # allThreads*>
     DISPOSE (me);
     RETURN 0;
   END ThreadBase;
 
-PROCEDURE RunThread (me: Activation): HANDLE =
+PROCEDURE RunThread (me: Activation) =
   VAR self, next_self: T;  cl: Closure; res: REFANY;
   BEGIN
     EnterCriticalSection_slotMu();
@@ -540,22 +522,6 @@ PROCEDURE RunThread (me: Activation): HANDLE =
     res := cl.apply();
 
     next_self := NIL;
-    IF nIdle < MaxIdle THEN
-      (* apparently the cache isn't full, although we don't hold idleMu
-         so we can't be certain, we're committed now.  Hopefully we'll
-         be reborn soon... *)
-
-      (* transplant the active guts of "self" into "next_self" *)
-      next_self          := NEW(T);
-      next_self.act      := me;
-      next_self.waitSema := self.waitSema;
-      next_self.cond     := self.cond;
-
-      (* hijack "self"s entry in the slot table *)
-      EnterCriticalSection_slotMu();
-        slots[me.slot] := next_self;
-      LeaveCriticalSection_slotMu();
-    END;
 
     LOCK threadMu DO
       (* mark "self" done and clean it up a bit *)
@@ -567,46 +533,31 @@ PROCEDURE RunThread (me: Activation): HANDLE =
 
     IF perfOn THEN PerfDeleted(self.id) END;
 
-    IF next_self # NIL THEN
-      (* we're going to be reborn! *)
-      (* put "next_self" on the list of idle threads *)
-      EnterCriticalSection_idleMu();
-        next_self.nextIdle := idleThreads;
-        idleThreads := next_self;
-        INC(nIdle);
-      LeaveCriticalSection_idleMu();
-      (* let the rebirth loop in ThreadBase know where to wait... *)
-      RETURN next_self.waitSema;
-    ELSE
-      (* we're dying *)
-      RTHeapRep.FlushThreadState(me.heapState);
+    (* we're dying *)
+    RTHeapRep.FlushThreadState(me.heapState);
 
-      IF CloseHandle(self.waitSema) = 0 THEN Choke(ThisLine()) END;
-      self.waitSema := NIL;
+    IF CloseHandle(self.waitSema) = 0 THEN Choke(ThisLine()) END;
+    self.waitSema := NIL;
 
-      FreeSlot(self);  (* note: needs self.act ! *)
-      (* Since we're no longer slotted, we cannot touch traced refs. *)
+    FreeSlot(self);  (* note: needs self.act ! *)
+    (* Since we're no longer slotted, we cannot touch traced refs. *)
 
-      (* remove ourself from the list of active threads *)
-      EnterCriticalSection_activeMu();
-        IF allThreads = me THEN allThreads := me.next; END;
-        me.next.prev := me.prev;
-        me.prev.next := me.next;
-        me.next := NIL;
-        me.prev := NIL;
-        IF CloseHandle(me.handle) = 0 THEN Choke(ThisLine()) END;
-        me.handle := NIL;
-      LeaveCriticalSection_activeMu();
-
-      RETURN NIL; (* let the rebirth loop know we're dying. *)
-    END;
+    (* remove ourself from the list of active threads *)
+    EnterCriticalSection_activeMu();
+      IF allThreads = me THEN allThreads := me.next; END;
+      me.next.prev := me.prev;
+      me.prev.next := me.next;
+      me.next := NIL;
+      me.prev := NIL;
+      IF CloseHandle(me.handle) = 0 THEN Choke(ThisLine()) END;
+      me.handle := NIL;
+    LeaveCriticalSection_activeMu();
   END RunThread;
 
 PROCEDURE Fork(closure: Closure): T =
   VAR
     t: T := NIL;
     id, stack_size: DWORD;
-    new_born: BOOLEAN;
     act: Activation := NIL;
   BEGIN
     (* determine the initial size of the stack for this thread *)
@@ -618,31 +569,16 @@ PROCEDURE Fork(closure: Closure): T =
     ELSE (*skip*)
     END;
 
-    (* try the cache for a thread *)
-    EnterCriticalSection_idleMu();
-      IF nIdle > 0 THEN
-        new_born := FALSE;
-        <* ASSERT(idleThreads # NIL) *>
-        DEC(nIdle);
-        t := idleThreads;
-        idleThreads := t.nextIdle;
-        t.nextIdle := NIL;
-      ELSE (* empty cache => we need a fresh thread *)
-        new_born := TRUE;
-        LeaveCriticalSection_idleMu();
-          t := CreateT(NEW(Activation));
-        EnterCriticalSection_idleMu();
-        act := t.act;
-        act.handle := CreateThread(NIL, stack_size, ThreadBase,
-                         act, CREATE_SUSPENDED, ADR(id));
-        EnterCriticalSection_activeMu();
-          act.next := allThreads;
-          act.prev := allThreads.prev;
-          allThreads.prev.next := act;
-          allThreads.prev := act;
-        LeaveCriticalSection_activeMu();
-      END;
-    LeaveCriticalSection_idleMu();
+    t := CreateT(NEW(Activation));
+    act := t.act;
+    act.handle := CreateThread(NIL, stack_size, ThreadBase,
+                     act, CREATE_SUSPENDED, ADR(id));
+    EnterCriticalSection_activeMu();
+      act.next := allThreads;
+      act.prev := allThreads.prev;
+      allThreads.prev.next := act;
+      allThreads.prev := act;
+    LeaveCriticalSection_activeMu();
 
     t.closure := closure;
 
@@ -651,17 +587,11 @@ PROCEDURE Fork(closure: Closure): T =
     act := t.act;
     IF (act.handle = NIL) OR (act.next = NIL) OR (act.prev = NIL) THEN Choke(ThisLine()) END;
 
-    IF new_born THEN
-      IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
-    ELSE
-      IF ReleaseSemaphore(t.waitSema, 1, NIL) = 0 THEN
-        Choke(ThisLine());
-      END;
-    END;
+    IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
 
     IF perfOn THEN PerfChanged(t.id, State.alive) END;
 
-    RETURN t
+    RETURN t;
   END Fork;
 
 PROCEDURE Join(t: T): REFANY =
