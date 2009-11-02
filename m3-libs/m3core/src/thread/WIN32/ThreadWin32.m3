@@ -547,6 +547,13 @@ PROCEDURE Fork(closure: Closure): T =
     id: DWORD;
   BEGIN
     IF debug THEN ThreadDebug.Fork(); END;
+
+    <*ASSERT allThreads # NIL*>
+    <*ASSERT allThreads.next # NIL*>
+    <*ASSERT allThreads.prev # NIL*>
+
+    IF (act.handle = NIL) OR (act.next = NIL) OR (act.prev = NIL) THEN Choke(ThisLine()) END;
+
     (* determine the initial size of the stack for this thread *)
     stack_size := default_stack;
     TYPECASE closure OF
@@ -569,8 +576,7 @@ PROCEDURE Fork(closure: Closure): T =
 
     (* last minute sanity checking *)
     CheckSlot (t);
-    act := t.act;
-    IF (act.handle = NIL) OR (act.next = NIL) OR (act.prev = NIL) THEN Choke(ThisLine()) END;
+    IF act.handle = NIL THEN Choke(ThisLine()) END;
 
     IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
     InterlockedDecrement(act.suspendCount);
