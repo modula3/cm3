@@ -87,6 +87,7 @@ TYPE
       (* thread state *)
       heapState: RTHeapRep.ThreadState;
       floatState: FloatMode.ThreadState;
+      suspended := FALSE; (* LL=activeMu *)
     END;
 
 (*----------------------------------------------------------------- Mutex ---*)
@@ -739,13 +740,13 @@ PROCEDURE StopWorld (me: Activation) =
   BEGIN
     LOOP
       WHILE act # me DO
-        IF NOT act.heapState.suspended THEN
+        IF NOT act.suspended THEN
           IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
           IF act.heapState.inCritical # 0 THEN
             IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
             INC(nLive);
           ELSE
-            act.heapState.suspended := TRUE;
+            act.suspended := TRUE;
           END;
         END;
         act := act.next;
@@ -765,9 +766,9 @@ PROCEDURE ResumeOthers () =
     IF suspend_cnt = 0 THEN
       act := me.next;
       WHILE act # me DO
-        <*ASSERT act.heapState.suspended*>
+        <*ASSERT act.suspended*>
         IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-        act.heapState.suspended := FALSE;
+        act.suspended := FALSE;
         act := act.next;
       END;
     END;
