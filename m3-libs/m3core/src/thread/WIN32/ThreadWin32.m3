@@ -390,6 +390,7 @@ PROCEDURE AssignSlot (t: T) =
           (* ouch, the new table is full too!   Bail out and retry *)
           LeaveCriticalSection_slotMu();
           AssignSlot (t);
+          RETURN;
         END;
       END;
      
