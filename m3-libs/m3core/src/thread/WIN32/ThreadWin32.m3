@@ -12,7 +12,7 @@ IMPORT RTError, WinGDI, RTParams;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
+FROM WinNT IMPORT LONG, HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
     MEMORY_BASIC_INFORMATION, PAGE_READWRITE, PAGE_READONLY;
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     GetCurrentProcess, DuplicateHandle, GetCurrentThread, CreateSemaphore,
@@ -85,6 +85,7 @@ TYPE
         (* LL = activeMu; base of thread stack for use by GC *)
       slot: INTEGER;
         (* LL = slotMu;  index into global array of active, slotted threads *)
+      suspendCount: LONG := 1;
 
       (* thread state *)
       heapState: RTHeapRep.ThreadState;
@@ -571,8 +572,7 @@ PROCEDURE Fork(closure: Closure): T =
 
     t := CreateT(NEW(Activation));
     act := t.act;
-    act.handle := CreateThread(NIL, stack_size, ThreadBase,
-                     act, CREATE_SUSPENDED, ADR(id));
+    act.handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
     EnterCriticalSection_activeMu();
       act.next := allThreads;
       act.prev := allThreads.prev;
@@ -588,6 +588,7 @@ PROCEDURE Fork(closure: Closure): T =
     IF (act.handle = NIL) OR (act.next = NIL) OR (act.prev = NIL) THEN Choke(ThisLine()) END;
 
     IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
+    InterlockedDecrement(act.suspendCount);
 
     IF perfOn THEN PerfChanged(t.id, State.alive) END;
 
@@ -738,16 +739,19 @@ PROCEDURE SuspendOthers () =
 
 PROCEDURE StopWorld (me: Activation) =
   (* LL=activeMu *)
-  VAR
-    nLive := 0;
-    act := me.next;
+  VAR nLive := 0;
+      act := me.next;
   BEGIN
     LOOP
       WHILE act # me DO
-        IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-        IF act.heapState.inCritical # 0 THEN
-          IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-          INC(nLive);
+        IF InterlockedRead(act.suspendCount) = 0 THEN
+          IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
+          IF act.heapState.inCritical # 0 THEN
+            IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
+            INC(nLive);
+          ELSE
+            InterlockedIncrement(act.suspendCount);
+          END;
         END;
         act := act.next;
       END;
@@ -765,8 +769,10 @@ PROCEDURE ResumeOthers () =
     DEC (suspend_cnt);
     IF suspend_cnt = 0 THEN
       act := me.next;
-      WHILE (act # me) DO
+      WHILE act # me DO
+        <*ASSERT InterlockedRead(act.suspendCount) > 0*>
         IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
+        InterlockedDecrement(act.suspendCount);
         act := act.next;
       END;
     END;
