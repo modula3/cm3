@@ -50,7 +50,7 @@ REVEAL
         (* LL = Self();  if not self.completed, used only by self;
            if self.completed, read-only. *)
       cond: Condition;
-        (* LL = Self(); wait here to join, or for rebirth *)
+        (* LL = Self(); wait here to join *)
       waitingOn: Condition := NIL;
         (* LL = giant; CV that we're blocked on *)
       nextWaiter: T := NIL;
