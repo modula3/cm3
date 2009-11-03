@@ -91,20 +91,10 @@ PROCEDURE TypeName (ref: REFANY): TEXT =
   END TypeName;
 
 PROCEDURE TypecodeName (tc: Typecode): TEXT =
+  VAR t := Get (tc);
   BEGIN
-    RETURN TypeDefnToName (Get (tc));
+    RETURN TypeDefnToName (t);
   END TypecodeName;
-
-PROCEDURE TypecodeToCharStar (tc: Typecode): Ctypes.char_star =
-  BEGIN
-    RETURN LOOPHOLE (Get (tc).name, Ctypes.char_star);
-  END TypecodeToCharStar;
-
-PROCEDURE TypeDefnToName (t: RT0.TypeDefn): TEXT =
-  BEGIN
-    IF (t.name = NIL) THEN RETURN "<anon type>"; END;
-    RETURN M3toC.CopyStoT (LOOPHOLE (t.name, Ctypes.char_star));
-  END TypeDefnToName;
 
 (*--------------------------------------------------------------- RTHooks ---*)
 
