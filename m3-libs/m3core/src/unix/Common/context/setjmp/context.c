@@ -76,8 +76,8 @@ int getcontext(ucontext_t* context)
     volatile char a[65];
 #endif
     sigprocmask(SIG_SETMASK, NULL, &context->uc_sigmask);
-    setjmp(context->uc_mcontext.jb);
-    context->uc_stack.ss_sp = &context;
+    if (!setjmp(context->uc_mcontext.jb))
+        context->uc_stack.ss_sp = &context;
     return 0;
 }
 
