@@ -96,6 +96,12 @@ PROCEDURE TypecodeName (tc: Typecode): TEXT =
     RETURN TypeDefnToName (t);
   END TypecodeName;
 
+PROCEDURE TypeDefnToName (t: RT0.TypeDefn): TEXT =
+  BEGIN
+    IF (t.name = NIL) THEN RETURN "<anon type>"; END;
+    RETURN M3toC.CopyStoT (LOOPHOLE (t.name, Ctypes.char_star));
+  END TypeDefnToName;
+
 (*--------------------------------------------------------------- RTHooks ---*)
 
 PROCEDURE CheckIsType (ref: REFANY;  type: ADDRESS(*RT0.TypeDefn*)): INTEGER =
