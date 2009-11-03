@@ -526,7 +526,11 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
 
     t := me;
     REPEAT
-      ProcessContext(t.context, t.stackbase, p);
+      (* t.stackbase = NIL means the thread isn't fully initialized
+         yet, hasn't run, has nothing interesting on its stack. *)
+      IF t.stackbase # NIL THEN
+        ProcessContext(t.context, t.stackbase, p);
+      END;
       t := LOOPHOLE(LOOPHOLE(ADR(t.next), UNTRACED REF ADDRESS)^, T);
     UNTIL t = me;
   END ProcessStacks;
