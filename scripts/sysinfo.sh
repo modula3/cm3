@@ -98,9 +98,10 @@ find_in_list() {
         for a in $2; do
             for b in $a ${a}.exe; do
                 if type $b >/dev/null 2>/dev/null; then
-                    echo $1=$b
+                    # These echos break m3-sys/cm3/version.quake
+                    # echo $1=$b
                     eval $1=$b
-                    echo export $1
+                    # echo export $1
                     export $1
                     return
                 fi
