@@ -77,6 +77,7 @@ int getcontext(ucontext_t* context)
 #endif
     sigprocmask(SIG_SETMASK, NULL, &context->uc_sigmask);
     setjmp(context->uc_mcontext.jb);
+    context->uc_stack.ss_sp = &context;
     return 0;
 }
 
