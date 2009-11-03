@@ -10,17 +10,12 @@ The users of sigaction() vary as to which flags they use.
 Some use BSD sigvec which is similar to sigaction.
 */
 
-#ifdef __OpenBSD__
 #define _XOPEN_SOURCE 500
-#else
-#define _XOPEN_SOURCE
-#endif
 #define _BSD_SOURCE
 #define _XPG4_2
+#define _DARWIN_C_SOURCE
 
-#ifdef __OpenBSD__
 #include "m3unix.h"
-#endif
 #include "ThreadPosix.h"
 #include <string.h>
 #include <stdlib.h>
@@ -40,8 +35,6 @@ Some use BSD sigvec which is similar to sigaction.
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-#define ZeroMemory(a,b) (memset((a), 0, (b)))
 
 #define SignalHandler1      ThreadPosix__SignalHandler1
 #define setup_sigvtalrm     ThreadPosix__setup_sigvtalrm
