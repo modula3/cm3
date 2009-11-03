@@ -240,6 +240,9 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
     if defined("POSITION_INDEPENDENT_EXECUTABLE")
         args += POSITION_INDEPENDENT_EXECUTABLE
     end
+    if not shared and defined("LINK_STATIC")
+        args += LINK_STATIC
+    end
     return try_exec("@" & SYSTEM_LD, args)
 end
 
