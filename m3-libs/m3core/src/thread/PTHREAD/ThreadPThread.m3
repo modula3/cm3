@@ -31,7 +31,8 @@ REVEAL
     release := UnlockMutex;
   END;
 
-  Condition = MUTEX BRANDED "Thread.Condition Pthread-1.0" OBJECT
+  Condition = BRANDED "Thread.Condition Pthread-1.0" OBJECT
+    mutex: pthread_mutex_t := NIL;
     waiters: T := NIL;                   (* LL = mutex *)
   END;
 
