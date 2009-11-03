@@ -107,6 +107,7 @@ REVEAL
     (* This condition is signaled then the thread terminates;
        other threads that want to join can just wait for it *)
     endCondition: Condition;
+    joined: BOOLEAN := FALSE;
 
     (* where we carry our work. The first thread runs on the
        original C program stack and its context.stack is NIL *)
@@ -300,6 +301,10 @@ PROCEDURE XJoin (t: T): REFANY RAISES {Alerted} =
   VAR c: Condition;
   BEGIN
     INC (inCritical);
+      IF t.joined THEN
+        DumpEverybody ();
+        RTError.Msg(ThisFile(), ThisLine(), "attempt to join with thread twice");
+      END;
       WHILE (t.state # State.dying) AND (t.state # State.dead) DO
         (*** INLINE Wait (inCritical, t.endCondition) ***)
         c := t.endCondition;
@@ -307,9 +312,14 @@ PROCEDURE XJoin (t: T): REFANY RAISES {Alerted} =
         self.waitingForCondition := c;
         self.nextWaiting := c.waitingForMe;
         c.waitingForMe := self;
-        DEC (inCritical);
+        TRY
+          t.joined := TRUE;
+          DEC (inCritical);
           InternalYield ();
-        INC (inCritical);
+          INC (inCritical);
+        FINALLY
+          IF inCritical = 0 THEN t.joined := FALSE END;
+        END;
       END;
       t.state := State.dead;
       IF perfOn THEN PerfChanged (t.id, State.dead); END;
