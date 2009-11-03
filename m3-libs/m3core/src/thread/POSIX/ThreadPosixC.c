@@ -39,8 +39,6 @@ Some use BSD sigvec which is similar to sigaction.
 extern "C" {
 #endif
 
-#define ZeroMemory(address, size) (memset((address), 0, (size)))
-
 #define SignalHandler1      ThreadPosix__SignalHandler1
 #define setup_sigvtalrm     ThreadPosix__setup_sigvtalrm
 #define allow_sigvtalrm     ThreadPosix__allow_sigvtalrm
