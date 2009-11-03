@@ -103,7 +103,7 @@ MakeContext (void (*p)(void), int words)
   Context *c = (Context*)calloc (1, sizeof(Context));
   size_t size = words * sizeof(void *);
   int pagesize = getpagesize();
-  char *sp = 0;
+  char *sp = NULL;
   int pages;
   int er;
 
