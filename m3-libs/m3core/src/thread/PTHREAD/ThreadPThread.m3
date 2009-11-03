@@ -54,10 +54,9 @@ REVEAL
     (* the alert flag *)
     alerted : BOOLEAN := FALSE;
 
-    (* indicates that "result" is set *)
-    completed: BOOLEAN := FALSE;
     (* wait here to join *)
-    join: Condition;
+    join: Condition;			 (* NIL when result is set *)
+    joined: BOOLEAN := FALSE;		 (* Is anyone waiting yet? *)
   END;
 
 TYPE
@@ -419,7 +418,7 @@ PROCEDURE DumpThread (t: T) =
     RTIO.PutText("  waitingOn:  "); RTIO.PutAddr(LOOPHOLE(t.waitingOn, ADDRESS));     RTIO.PutChar('\n');
     RTIO.PutText("  nextWaiter: "); RTIO.PutAddr(LOOPHOLE(t.nextWaiter, ADDRESS));    RTIO.PutChar('\n');
     RTIO.PutText("  alerted:    "); RTIO.PutInt(ORD(t.alerted));   RTIO.PutChar('\n');
-    RTIO.PutText("  completed:  "); RTIO.PutInt(ORD(t.completed)); RTIO.PutChar('\n');
+    RTIO.PutText("  joined:     "); RTIO.PutInt(ORD(t.joined)); RTIO.PutChar('\n');
     RTIO.PutText("  join:       "); RTIO.PutAddr(LOOPHOLE(t.join, ADDRESS)); RTIO.PutChar('\n');
     RTIO.Flush();
   END DumpThread;
@@ -512,8 +511,8 @@ PROCEDURE RunThread (me: Activation) =
 
     (* Join *)
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
-    self.completed := TRUE;
     Broadcast(self.join);
+    self.join := NIL;
     WITH r = pthread_mutex_unlock(self.mutex) DO <*ASSERT r=0*> END;
 
     IF perfOn THEN PerfChanged(State.dead) END;
@@ -565,7 +564,13 @@ PROCEDURE Fork (closure: Closure): T =
 PROCEDURE Join (t: T): REFANY =
   BEGIN
     LOCK t DO
-      WHILE NOT t.completed DO Wait(t, t.join) END;
+      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice") END;
+      TRY
+        t.joined := TRUE;
+        WHILE t.join # NIL DO Wait(t, t.join) END;
+      FINALLY
+        IF t.join # NIL THEN t.joined := FALSE END;
+      END;
     END;
     RETURN t.result;
   END Join;
@@ -573,7 +578,13 @@ PROCEDURE Join (t: T): REFANY =
 PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
   BEGIN
     LOCK t DO
-      WHILE NOT t.completed DO AlertWait(t, t.join) END;
+      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice") END;
+      TRY
+        t.joined := TRUE;
+        WHILE t.join # NIL DO AlertWait(t, t.join) END;
+      FINALLY
+        IF t.join # NIL THEN t.joined := FALSE END;
+      END;
     END;
     RETURN t.result;
   END AlertJoin;
