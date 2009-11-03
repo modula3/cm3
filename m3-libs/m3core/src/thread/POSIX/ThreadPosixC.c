@@ -39,6 +39,8 @@ Some use BSD sigvec which is similar to sigaction.
 extern "C" {
 #endif
 
+#define ZeroMemory(a,b) (memset((a), 0, (b)))
+
 #define SignalHandler1      ThreadPosix__SignalHandler1
 #define setup_sigvtalrm     ThreadPosix__setup_sigvtalrm
 #define allow_sigvtalrm     ThreadPosix__allow_sigvtalrm
@@ -62,6 +64,9 @@ void setup_sigvtalrm(SignalHandler1 handler)
 {
   static sigset_t tick;
   struct sigaction act, oact;
+
+  ZeroMemory(&act, sizeof(act));
+  ZeroMemory(&oact, sizeof(oact));
 
   sigemptyset(&tick);
   sigaddset(&tick, SIG_TIMESLICE);
