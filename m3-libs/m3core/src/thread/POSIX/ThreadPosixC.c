@@ -132,7 +132,7 @@ Error:
   if (c != NULL) free(c);
   if (sp != NULL) munmap(sp, size);
   errno = er;
-  return 0;
+  return NULL;
 }
 
 void GetContext (Context *c)
