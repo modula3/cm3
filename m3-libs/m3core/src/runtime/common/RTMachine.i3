@@ -11,6 +11,7 @@ INTERFACE RTMachine;
 
 (*------------------------------------------------------------------ heap ---*)
 
+CONST
 (* The heap page size used to be machine-dependent, since it could depend
    on the architecture's VM page size (if VM was TRUE). VM is now always
    FALSE. Otherwise, 8192 bytes is a reasonable page size. The page size must
