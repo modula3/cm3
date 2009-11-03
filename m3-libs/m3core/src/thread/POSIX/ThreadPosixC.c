@@ -10,10 +10,17 @@ The users of sigaction() vary as to which flags they use.
 Some use BSD sigvec which is similar to sigaction.
 */
 
+#ifdef __OpenBSD__
+#define _XOPEN_SOURCE 500
+#else
 #define _XOPEN_SOURCE
+#endif
 #define _BSD_SOURCE
 #define _XPG4_2
 
+#ifdef __OpenBSD__
+#include "m3unix.h"
+#endif
 #include "ThreadPosix.h"
 #include <stdlib.h>
 #include <unistd.h>
@@ -21,7 +28,11 @@ Some use BSD sigvec which is similar to sigaction.
 #include <assert.h>
 #include <setjmp.h>
 #include <stddef.h>
+#ifdef __OpenBSD__
+#include "context.h"
+#else
 #include <ucontext.h>
+#endif
 #include <sys/mman.h>
 
 #ifdef __cplusplus

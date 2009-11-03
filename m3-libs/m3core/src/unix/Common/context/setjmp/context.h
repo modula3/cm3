@@ -88,6 +88,11 @@ int  Uucontext__setcontext(const ucontext_t*);
 void Uucontext__makecontext(ucontext_t*, void(*)(), int, ...);
 int  Uucontext__swapcontext(ucontext_t*, const ucontext_t*);
 
+#define getcontext Uucontext__getcontext
+#define setcontext Uucontext__setcontext
+#define makecontext Uucontext_makecontext
+#define swapcontext Uucontext__swapcontext
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
