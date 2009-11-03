@@ -1296,6 +1296,9 @@ PROCEDURE Init() =
       self := NEW (T, state := State.alive, id := nextId,
                    stackbase := ADR(xx),
                    context := MakeContext(NIL, 0));
+      IF self.context = NIL THEN
+        RuntimeError.Raise(RuntimeError.T.SystemError);
+      END;
       heapCond := NEW (Condition);
       FloatMode.InitThread (self.floatState);
 
