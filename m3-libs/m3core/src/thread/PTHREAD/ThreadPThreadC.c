@@ -7,14 +7,14 @@
 #include <pthread.h>
 #include <setjmp.h>
 
-#if defined(__APPLE__) || defined(__OpenBSD__)
+#if defined(__APPLE__) || defined(__0OpenBSD__)
 #ifdef __APPLE__
 /* MacOSX diverges in a good way and therefore many functions
 in this file are just stubs for it, that other code dynamically chooses
 not to call (statically, but the compiler can't or won't tell). */
 #define CUSTOM_SUSPEND_ASSERT_FALSE assert(0 && "MacOS X should not get here.");
 #endif
-#ifdef __OpenBSD__
+#ifdef __0OpenBSD__
 /* OpenBSD diverges in a less good way. */
 #define CUSTOM_SUSPEND_ASSERT_FALSE assert(0 && "OpenBSD should not get here.");
 #endif
@@ -55,7 +55,7 @@ extern "C" {
   Both SIG and SIG_SUSPEND were only defined for systems using pthreads.
   SIG was shorthand.
 */
-#if defined(__APPLE__) || defined(__OpenBSD__)
+#if defined(__APPLE__) || defined(__0OpenBSD__)
 EXTERN_CONST int SIG_SUSPEND = 0;
 #elif defined(__sun) || defined(__CYGWIN__) || defined(__FreeBSD__)
 EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
@@ -73,7 +73,7 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #error Unable to determine SIG_SUSPEND.
 #endif
 
-#if !defined(__APPLE__) && !defined(__OpenBSD__)
+#if !defined(__APPLE__) && !defined(__0OpenBSD__)
 
 #define ZeroMemory(a, b) (memset((a), 0, (b)))
 
@@ -140,7 +140,7 @@ void ThreadPThread__sem_post(void)      { CUSTOM_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_getvalue(void)  { CUSTOM_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sigsuspend(void)    { CUSTOM_SUSPEND_ASSERT_FALSE }
 
-#ifdef __OpenBSD__
+#ifdef __0OpenBSD__
 
 #include <pthread_np.h>
 
