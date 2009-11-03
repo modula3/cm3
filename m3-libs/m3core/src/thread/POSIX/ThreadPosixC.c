@@ -22,6 +22,7 @@ Some use BSD sigvec which is similar to sigaction.
 #include "m3unix.h"
 #endif
 #include "ThreadPosix.h"
+#include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
 #include <signal.h>
@@ -98,7 +99,7 @@ typedef struct {
 void *
 MakeContext (void (*p)(void), int words)
 {
-  Context *c = calloc (1, sizeof(Context));
+  Context *c = (Context*)calloc (1, sizeof(Context));
   size_t size = words * sizeof(void *);
   int pagesize = getpagesize();
   char *sp;
@@ -108,7 +109,7 @@ MakeContext (void (*p)(void), int words)
   if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
   pages = (size + pagesize - 1) / pagesize + 2;
   size = pages * pagesize;
-  sp = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+  sp = (char*)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
   c->ss.ss_sp = sp;
   c->ss.ss_size = size;
   if (mprotect(sp, pagesize, PROT_NONE)) abort();
