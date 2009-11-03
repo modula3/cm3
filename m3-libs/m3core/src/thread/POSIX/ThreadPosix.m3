@@ -16,7 +16,7 @@ Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPosix;
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTParams, RTPerfTool, RTProcedureSRC,
        RTProcess, RTIO, ThreadEvent, Time, TimePosix,
-       Unix, Utime, Uexec;
+       Unix, Utime, Uexec, RuntimeError;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 
@@ -275,6 +275,9 @@ PROCEDURE Fork (cl: Closure): T =
       self.next := t;
 
       t.context := MakeContext (RunThread, stack_size);
+      IF t.context = NIL THEN
+        RuntimeError.Raise(RuntimeError.T.SystemError);
+      END;
       CanRun (t);
     DEC (inCritical);
     RETURN t;

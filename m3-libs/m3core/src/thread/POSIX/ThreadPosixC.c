@@ -29,6 +29,7 @@ Some use BSD sigvec which is similar to sigaction.
 #include <assert.h>
 #include <setjmp.h>
 #include <stddef.h>
+#include <errno.h>
 #ifdef __OpenBSD__
 #include "context.h"
 #else
@@ -102,14 +103,19 @@ MakeContext (void (*p)(void), int words)
   Context *c = (Context*)calloc (1, sizeof(Context));
   size_t size = words * sizeof(void *);
   int pagesize = getpagesize();
-  char *sp;
+  char *sp = 0;
   int pages;
+  int er;
 
+  if (c == NULL)
+    goto Error;
   if (size <= 0) return c;
   if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
   pages = (size + pagesize - 1) / pagesize + 2;
   size = pages * pagesize;
   sp = (char*)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+  if (sp == NULL)
+    goto Error;
   c->ss.ss_sp = sp;
   c->ss.ss_size = size;
   if (mprotect(sp, pagesize, PROT_NONE)) abort();
@@ -121,6 +127,12 @@ MakeContext (void (*p)(void), int words)
   c->uc.uc_link = 0;
   makecontext(&(c->uc), p, 0);
   return c;
+Error:
+  er = errno;
+  if (c != NULL) free(c);
+  if (sp != NULL) munmap(sp, size);
+  errno = er;
+  return 0;
 }
 
 void GetContext (Context *c)
