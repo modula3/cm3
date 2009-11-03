@@ -35,7 +35,7 @@ end
 
 include("platforms.quake")
 
-readonly proc Platform_IsOpenBSD (Platform) is
+readonly proc IsOpenBSD (Platform) is
   return {"I386_OPENBSD":1,"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1,
     "MIPS64_OPENBSD":1,"AMD64_OPENBSD":1} contains Platform
 end
@@ -49,7 +49,7 @@ proc FileExists (a) is
 end
 
 readonly proc ApplyPatches (Platform) is
-  if not Platform_IsOpenBSD (Platform)
+  if not IsOpenBSD (Platform)
     return
   end
   pushd ("../gcc")
@@ -327,6 +327,13 @@ if equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD) and equal (M
     Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
     Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
     Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
+end
+
+% OpenBSD provides no forward or backward compatibility for
+% executabes that use shared libraries, as libc.so changes name.
+
+if IsOpenBSD(M3CC_HOST)
+  M3CC_CFLAGS = M3CC_CFLAGS & " -static"
 end
 
 %
