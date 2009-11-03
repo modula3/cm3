@@ -311,6 +311,10 @@ PROCEDURE XJoin (t: T): REFANY RAISES {Alerted} =
           InternalYield ();
         INC (inCritical);
       END;
+      IF t.state = State.dead THEN
+        DumpEveryBody();
+        RTError.Msg(ThisFile(), ThisLine(), "attempt to join with thread twice");
+      END;
       t.state := State.dead;
       IF perfOn THEN PerfChanged (t.id, State.dead); END;
       INC (stats.n_joins);
