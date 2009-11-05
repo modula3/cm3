@@ -158,12 +158,10 @@ PROCEDURE UnlockMutex (m: Mutex) =
 
 (*---------------------------------------- Condition variables and Alerts ---*)
 
-PROCEDURE XWait (m: Mutex; c: Condition; alertable: BOOLEAN)
+PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
   RAISES {Alerted} =
   (* LL = m *)
-  VAR
-    self := Self();
-    next, prev: T;
+  VAR next, prev: T;
   BEGIN
     IF c.mutex = NIL THEN InitMutex(c) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
@@ -212,15 +210,17 @@ PROCEDURE XWait (m: Mutex; c: Condition; alertable: BOOLEAN)
 
 PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
+  VAR self := Self();
   BEGIN
-    XWait(m, c, alertable := TRUE);
+    XWait(self, m, c, alertable := TRUE);
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
   <*FATAL Alerted*>
   (* LL = m *)
+  VAR self := Self();
   BEGIN
-    XWait(m, c, alertable := FALSE);
+    XWait(self, m, c, alertable := FALSE);
   END Wait;
 
 PROCEDURE DequeueHead(c: Condition) =
@@ -541,13 +541,13 @@ PROCEDURE Fork (closure: Closure): T =
     RETURN t;
   END Fork;
 
-PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
+PROCEDURE XJoin (self, t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
   BEGIN
     LOCK t DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice") END;
       TRY
         t.joined := TRUE;
-        WHILE t.join # NIL DO XWait(t, t.join, alertable) END;
+        WHILE t.join # NIL DO XWait(self, t, t.join, alertable) END;
       FINALLY
         IF t.join # NIL THEN t.joined := FALSE END;
       END;
@@ -557,13 +557,15 @@ PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
 
 PROCEDURE Join (t: T): REFANY =
   <*FATAL Alerted*>
+  VAR self := Self();
   BEGIN
-    RETURN XJoin(t, alertable := FALSE);
+    RETURN XJoin(self, t, alertable := FALSE);
   END Join;
 
 PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
+  VAR self := Self();
   BEGIN
-    RETURN XJoin(t, alertable := TRUE);
+    RETURN XJoin(self, t, alertable := TRUE);
   END AlertJoin;
 
 (*---------------------------------------------------- Scheduling support ---*)
@@ -584,10 +586,8 @@ PROCEDURE ToNTime (n: LONGREAL; VAR ts: Utime.struct_timespec) =
     ts.tv_nsec := ROUND((n - FLOAT(ts.tv_sec, LONGREAL)) * 1.0D9);
   END ToNTime;
 
-PROCEDURE XPause (n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
-  VAR
-    self := Self();
-    until: Utime.struct_timespec;
+PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
+  VAR until: Utime.struct_timespec;
   BEGIN
     IF n <= 0.0d0 THEN RETURN END;
     ToNTime(Time.Now() + n, until);
@@ -616,13 +616,15 @@ PROCEDURE XPause (n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
 
 PROCEDURE Pause (n: LONGREAL) =
   <*FATAL Alerted*>
+  VAR self := Self();
   BEGIN
-    XPause(n, alertable := FALSE);
+    XPause(self, n, alertable := FALSE);
   END Pause;
 
 PROCEDURE AlertPause (n: LONGREAL) RAISES {Alerted} =
+  VAR self := Self();
   BEGIN
-    XPause(n, alertable := TRUE);
+    XPause(self, n, alertable := TRUE);
   END AlertPause;
 
 PROCEDURE Yield () =
