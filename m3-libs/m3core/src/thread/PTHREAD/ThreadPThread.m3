@@ -1062,9 +1062,11 @@ PROCEDURE StopWorld () =
         WITH r = Cerrno.GetErrno() DO
           IF r # Uerror.EINTR THEN DieI(ThisLine(), r) END;
         END;
-        (* retry *)
+        (*retry*)
       END;
     END;
+    WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
+    <*ASSERT acks = 0*>
 
     IF DEBUG THEN
       RTIO.PutText("Stopped from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
@@ -1137,6 +1139,8 @@ PROCEDURE StartWorld () =
         (*retry*)
       END;
     END;
+    WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
+    <*ASSERT acks = 0*>
 
     IF DEBUG THEN
       RTIO.PutText("Started from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
