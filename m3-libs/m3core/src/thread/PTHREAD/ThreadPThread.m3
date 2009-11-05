@@ -158,10 +158,11 @@ PROCEDURE UnlockMutex (m: Mutex) =
 
 (*---------------------------------------- Condition variables and Alerts ---*)
 
-PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
+PROCEDURE XWait (m: Mutex; c: Condition; alertable: BOOLEAN)
   RAISES {Alerted} =
   (* LL = m *)
   VAR next, prev: T;
+      self := SelfOrDie();
   BEGIN
     IF c.mutex = NIL THEN InitMutex(c) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
@@ -210,23 +211,15 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
 
 PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
-  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), "AlertWait called from non-Modula-3 thread");
-    END;
-    XWait(self, m, c, alertable := TRUE);
+    XWait(m, c, alertable := TRUE);
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
   <*FATAL Alerted*>
   (* LL = m *)
-  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), "Wait called from non-Modula-3 thread");
-    END;
-    XWait(self, m, c, alertable := FALSE);
+    XWait(m, c, alertable := FALSE);
   END Wait;
 
 PROCEDURE DequeueHead(c: Condition) =
@@ -346,6 +339,15 @@ PROCEDURE Self (): T =
     IF (t.act # me) THEN Die(ThisLine(), "thread with bad slot!") END;
     RETURN t;
   END Self;
+
+PROCEDURE SelfOrDie (): T =
+  VAR self := Self();
+  BEGIN
+    IF self = NIL THEN
+      Die(ThisLine(), "Self called from a non-Modula-3 thread");
+    END;
+    RETURN self;
+  END SelfOrDie;
 
 PROCEDURE AssignSlot (t: T) =
   (* LL = 0, cause we allocate stuff with NEW! *)
@@ -561,32 +563,29 @@ PROCEDURE Fork (closure: Closure): T =
     RETURN t;
   END Fork;
 
-PROCEDURE Join (t: T): REFANY =
+PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
   BEGIN
     LOCK t DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice") END;
       TRY
         t.joined := TRUE;
-        WHILE t.join # NIL DO Wait(t, t.join) END;
+        WHILE t.join # NIL DO XWait(t, t.join, alertable) END;
       FINALLY
         IF t.join # NIL THEN t.joined := FALSE END;
       END;
     END;
     RETURN t.result;
+  END XJoin;
+
+PROCEDURE Join (t: T): REFANY =
+  <*FATAL Alerted*>
+  BEGIN
+    RETURN XJoin(t, FALSE);
   END Join;
 
 PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
   BEGIN
-    LOCK t DO
-      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice") END;
-      TRY
-        t.joined := TRUE;
-        WHILE t.join # NIL DO AlertWait(t, t.join) END;
-      FINALLY
-        IF t.join # NIL THEN t.joined := FALSE END;
-      END;
-    END;
-    RETURN t.result;
+    RETURN XJoin(t, TRUE);
   END AlertJoin;
 
 (*---------------------------------------------------- Scheduling support ---*)
@@ -607,8 +606,9 @@ PROCEDURE ToNTime (n: LONGREAL; VAR ts: Utime.struct_timespec) =
     ts.tv_nsec := ROUND((n - FLOAT(ts.tv_sec, LONGREAL)) * 1.0D9);
   END ToNTime;
 
-PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
+PROCEDURE XPause (n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
   VAR until: Utime.struct_timespec;
+      self := SelfOrDie();
   BEGIN
     IF n <= 0.0d0 THEN RETURN END;
     ToNTime(Time.Now() + n, until);
@@ -637,21 +637,13 @@ PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
 
 PROCEDURE Pause (n: LONGREAL) =
   <*FATAL Alerted*>
-  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), "Pause called from a non-Modula-3 thread");
-    END;
-    XPause(self, n, alertable := FALSE);
+    XPause(n, alertable := FALSE);
   END Pause;
 
 PROCEDURE AlertPause (n: LONGREAL) RAISES {Alerted} =
-  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), "AlertPause called from a non-Modula-3 thread");
-    END;
-    XPause(self, n, alertable := TRUE);
+    XPause(n, alertable := TRUE);
   END AlertPause;
 
 PROCEDURE Yield () =
