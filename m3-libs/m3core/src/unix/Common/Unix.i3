@@ -2,7 +2,7 @@
 (* All rights reserved.                                               *)
 (* See the file COPYRIGHT for a full description.                     *)
 
-<*EXTERNAL*> INTERFACE Unix;
+INTERFACE Unix;
 
 FROM Cstddef IMPORT size_t;
 FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
@@ -116,6 +116,7 @@ PROCEDURE fork (): pid_t;
 
 (* Do not wrap vfork in C; doing so violates the Posix standard, because
  callers of vfork cannot return without calling exec or _exit. *)
+<*EXTERNAL*>
 PROCEDURE vfork (): pid_t;
 
 
