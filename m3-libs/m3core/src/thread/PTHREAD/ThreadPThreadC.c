@@ -117,12 +117,12 @@ int ThreadPThread__sigsuspend(void)         { return sigsuspend(&mask); }
 
 int ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
-  return 0;
+  abort();
 }
 
 int ThreadPThread__RestartThread (m3_pthread_t mt)
 {
-  return 0;
+  abort();
 }
 
 void *ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
@@ -134,7 +134,7 @@ void *ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
 
 #else /* Apple | OpenBSD */
 
-void SetupHandlers(void)                {}
+void SetupHandlers(void)                { CUSTOM_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_wait(void)      { CUSTOM_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_post(void)      { CUSTOM_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_getvalue(void)  { CUSTOM_SUSPEND_ASSERT_FALSE }
@@ -165,7 +165,10 @@ void *
 ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
 			     void (*p)(void *start, void *end))
 {
-    return sp; /* Is this correct? */
+  stack_t sinfo;
+  /* assume registers of stopped threads are in the stack so don't process */
+  if (pthread_stack_np(PTHREAD_FROM_M3(mt), &sinfo) != 0) abort();
+  return sinfo.ss_sp;		/* according to the man page this should be the sp */
 }
 
 #endif
@@ -179,8 +182,12 @@ int ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
   pthread_t t = PTHREAD_FROM_M3(mt);
   mach_port_t mach_thread = pthread_mach_thread_np(t);
-  if (thread_suspend(mach_thread) != KERN_SUCCESS) abort();
-  return thread_abort_safely(mach_thread) == KERN_SUCCESS;
+  if (thread_suspend(mach_thread) != KERN_SUCCESS) return 0;
+  if (thread_abort_safely(mach_thread) != KERN_SUCCESS) {
+    if (thread_resume(mach_thread != KERN_SUCCESS)) abort();
+    return 0;
+  }
+  return 1;
 }
 
 int
@@ -188,8 +195,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 {
   pthread_t t = PTHREAD_FROM_M3(mt);
   mach_port_t mach_thread = pthread_mach_thread_np(t);
-  if (thread_resume(mach_thread) != KERN_SUCCESS) abort();
-  return 1;
+  return thread_resume(mach_thread) == KERN_SUCCESS;
 }
 
 void *
