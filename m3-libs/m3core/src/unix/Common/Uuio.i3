@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-<*EXTERNAL*> INTERFACE Uuio;
+INTERFACE Uuio;
 
 FROM Ctypes IMPORT int, void_star, const_void_star;
 FROM Cstddef IMPORT size_t, ssize_t;
