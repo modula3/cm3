@@ -161,8 +161,9 @@ PROCEDURE UnlockMutex (m: Mutex) =
 PROCEDURE XWait (m: Mutex; c: Condition; alertable: BOOLEAN)
   RAISES {Alerted} =
   (* LL = m *)
-  VAR next, prev: T;
-      self := SelfOrDie();
+  VAR
+    self := Self();
+    next, prev: T;
   BEGIN
     IF c.mutex = NIL THEN InitMutex(c) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
@@ -271,11 +272,7 @@ PROCEDURE XTestAlert (self: T): BOOLEAN =
 PROCEDURE TestAlert (): BOOLEAN =
   VAR self := Self();
   BEGIN
-    IF self = NIL
-      (* Not created by Fork; not alertable *)
-      THEN RETURN FALSE;
-      ELSE RETURN XTestAlert(self);
-    END;
+    XTestAlert(self);
   END TestAlert;
 
 (*------------------------------------------------------------------ Self ---*)
@@ -339,15 +336,6 @@ PROCEDURE Self (): T =
     IF (t.act # me) THEN Die(ThisLine(), "thread with bad slot!") END;
     RETURN t;
   END Self;
-
-PROCEDURE SelfOrDie (): T =
-  VAR self := Self();
-  BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), "Self called from a non-Modula-3 thread");
-    END;
-    RETURN self;
-  END SelfOrDie;
 
 PROCEDURE AssignSlot (t: T) =
   (* LL = 0, cause we allocate stuff with NEW! *)
@@ -580,12 +568,12 @@ PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
 PROCEDURE Join (t: T): REFANY =
   <*FATAL Alerted*>
   BEGIN
-    RETURN XJoin(t, FALSE);
+    RETURN XJoin(t, alertable := FALSE);
   END Join;
 
 PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
   BEGIN
-    RETURN XJoin(t, TRUE);
+    RETURN XJoin(t, alertable := TRUE);
   END AlertJoin;
 
 (*---------------------------------------------------- Scheduling support ---*)
@@ -607,8 +595,9 @@ PROCEDURE ToNTime (n: LONGREAL; VAR ts: Utime.struct_timespec) =
   END ToNTime;
 
 PROCEDURE XPause (n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
-  VAR until: Utime.struct_timespec;
-      self := SelfOrDie();
+  VAR
+    self := Self();
+    until: Utime.struct_timespec;
   BEGIN
     IF n <= 0.0d0 THEN RETURN END;
     ToNTime(Time.Now() + n, until);
