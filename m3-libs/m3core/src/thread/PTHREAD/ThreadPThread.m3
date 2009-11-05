@@ -885,7 +885,9 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
           WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
           IF acks > 0 THEN
             WHILE sem_wait() # 0 DO
-              <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
+              WITH r = Cerrno.GetErrno() DO
+                IF r # Uerror.EINTR THEN DieI(ThisLine(), r) END;
+              END;
             END;
             EXIT;
           END;
@@ -903,7 +905,9 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
           WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
           IF acks > 0 THEN
             WHILE sem_wait() # 0 DO
-              <*ASSERT Cerrno.GetErrno() = Uerror.EINTR*>
+              WITH r = Cerrno.GetErrno() DO
+                IF r # Uerror.EINTR THEN DieI(ThisLine(), r) END;
+              END;
             END;
             EXIT;
           END;
@@ -965,7 +969,7 @@ PROCEDURE SignalThread(act: Activation; state: ActState) =
     LOOP
       WITH z = Upthread.kill(act.handle, SIG_SUSPEND) DO
         IF z = 0 THEN EXIT END;
-        <*ASSERT z = Uerror.EAGAIN*>
+        IF z # Uerror.EAGAIN THEN DieI(ThisLine(), z) END;
         (* try it again... *)
       END;
     END;
@@ -1054,15 +1058,11 @@ PROCEDURE StopWorld () =
     END;
     (* drain semaphore *)
     FOR i := 0 TO nLive-1 DO
-      LOOP
-        WITH r = sem_wait() DO
-          IF r = 0 THEN EXIT END;
-          IF Cerrno.GetErrno() = Uerror.EINTR THEN
-            (*retry*)
-          ELSE
-            <*ASSERT FALSE*>
-          END;
+      WHILE sem_wait() # 0 DO
+        WITH r = Cerrno.GetErrno() DO
+          IF r # Uerror.EINTR THEN DieI(ThisLine(), r) END;
         END;
+        (* retry *)
       END;
     END;
 
@@ -1130,15 +1130,11 @@ PROCEDURE StartWorld () =
     END;
     (* drain semaphore *)
     FOR i := 0 TO nDead-1 DO
-      LOOP
-        WITH r = sem_wait() DO
-          IF r = 0 THEN EXIT END;
-          IF Cerrno.GetErrno() = Uerror.EINTR THEN
-            (*retry*)
-          ELSE
-            <*ASSERT FALSE*>
-          END;
+      WHILE sem_wait() # 0 DO
+        WITH r = Cerrno.GetErrno() DO
+          IF r # Uerror.EINTR THEN DieI(ThisLine(), r) END;
         END;
+        (*retry*)
       END;
     END;
 
