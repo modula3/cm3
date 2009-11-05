@@ -2,7 +2,7 @@
 (* All rights reserved.                                               *)
 (* See the file COPYRIGHT for a full description.                     *)
 
-<*EXTERNAL*> INTERFACE Usignal;
+INTERFACE Usignal;
 
 FROM Ctypes IMPORT int;
 FROM Utypes IMPORT pid_t;
