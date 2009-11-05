@@ -905,8 +905,10 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
     WHILE act # me DO
       (* stop *)
       LOOP
-        IF StopThread(act) THEN EXIT END;
-        IF SignalThread(act) THEN
+        IF SIG_SUSPEND = 0 THEN
+          IF StopThread(act) THEN EXIT END;
+        ELSE
+          SignalThread(act, ActState.Stopping);
           WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
           IF acks > 0 THEN
             WHILE sem_wait() # 0 DO
@@ -914,15 +916,17 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
             END;
             EXIT;
           END;
+          CommonSleep();
         END;
-        CommonSleep();
       END;
       (* process *)
       ProcessOther(act, p);
       (* start *)
       LOOP
-        IF StartThread(act) THEN EXIT END;
-        IF SignalThread(act) THEN
+        IF SIG_SUSPEND = 0 THEN
+          IF StartThread(act) THEN EXIT END;
+        ELSE
+          SignalThread(act, ActState.Starting);
           WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
           IF acks > 0 THEN
             WHILE sem_wait() # 0 DO
@@ -981,12 +985,13 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
 
 (* Signal based suspend/resume *)
 
-PROCEDURE SignalThread(act: Activation): BOOLEAN =
+PROCEDURE SignalThread(act: Activation; state: ActState) =
   BEGIN
-    IF SIG_SUSPEND = 0 THEN RETURN FALSE END;
+    <*ASSERT SIG_SUSPEND # 0*>
+    SetState(act, state);
     LOOP
       WITH z = Upthread.kill(act.handle, SIG_SUSPEND) DO
-        IF z = 0 THEN RETURN TRUE END;
+        IF z = 0 THEN EXIT END;
         <*ASSERT z = Uerror.EAGAIN*>
         (* try it again... *)
       END;
@@ -996,11 +1001,12 @@ PROCEDURE SignalThread(act: Activation): BOOLEAN =
 PROCEDURE StopThread (act: Activation): BOOLEAN =
   BEGIN
     <*ASSERT act.state # ActState.Stopped*>
+    <*ASSERT SIG_SUSPEND = 0*>
     SetState(act, ActState.Stopping);
     IF NOT SuspendThread(act.handle) THEN RETURN FALSE END;
     IF act.heapState.inCritical # 0 THEN
-      IF RestartThread(act.handle) THEN RETURN FALSE END;
-      <*ASSERT FALSE*>
+      IF NOT RestartThread(act.handle) THEN <*ASSERT FALSE*> END;
+      RETURN FALSE;
     END;
     act.state := ActState.Stopped;
     RETURN TRUE;
@@ -1008,7 +1014,8 @@ PROCEDURE StopThread (act: Activation): BOOLEAN =
 
 PROCEDURE StartThread (act: Activation): BOOLEAN =
   BEGIN
-    <*ASSERT act.state # ActState.Started*>
+    <*ASSERT act.state = ActState.Stopped*>
+    <*ASSERT SIG_SUSPEND = 0*>
     SetState(act, ActState.Starting);
     IF NOT RestartThread(act.handle) THEN RETURN FALSE END;
     act.state := ActState.Started;
@@ -1035,13 +1042,11 @@ PROCEDURE StopWorld () =
       act := me.next;
       WHILE act # me DO
         IF act.state # ActState.Stopped THEN
-          IF StopThread(act) THEN
-            (* good *)
-          ELSIF SignalThread(act) THEN
-            INC(nLive);
+          IF SIG_SUSPEND = 0 THEN
+            retry := NOT StopThread(act);
           ELSE
-            (* try again *)
-            retry := TRUE;
+            SignalThread(act, ActState.Stopping);
+            INC(nLive);
           END;
         END;
         act := act.next;
@@ -1050,6 +1055,7 @@ PROCEDURE StopWorld () =
       CommonSleep();
     END;
     WHILE nLive > 0 DO
+      <*ASSERT SIG_SUSPEND # 0*>
       WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
       IF acks = nLive THEN EXIT END;
       <*ASSERT acks < nLive*>
@@ -1057,12 +1063,9 @@ PROCEDURE StopWorld () =
         newlySent := 0;
         act := me.next;
         WHILE act # me DO
-          IF act.state = ActState.Stopped THEN
-            (* good *)
-          ELSIF SignalThread(act) THEN
+          IF act.state # ActState.Stopped THEN
+            SignalThread(act, ActState.Stopping);
             INC(newlySent);
-          ELSE
-            <*ASSERT FALSE*>
           END;
           act := act.next;
         END;
@@ -1115,13 +1118,11 @@ PROCEDURE StartWorld () =
       act := me.next;
       WHILE act # me DO
         IF act.state # ActState.Started THEN
-          IF StartThread(act) THEN
-            (* good *)
-          ELSIF SignalThread(act) THEN
-            INC(nDead);
+          IF SIG_SUSPEND = 0 THEN
+            retry := NOT StartThread(act);
           ELSE
-            (* try again *)
-            retry := TRUE;
+            SignalThread(act, ActState.Starting);
+            INC(nDead);
           END;
         END;
         act := act.next;
@@ -1130,6 +1131,7 @@ PROCEDURE StartWorld () =
       CommonSleep();
     END;
     WHILE nDead > 0 DO
+      <*ASSERT SIG_SUSPEND # 0*>
       WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
       IF acks = nDead THEN EXIT END;
       <*ASSERT acks < nDead*>
@@ -1137,12 +1139,9 @@ PROCEDURE StartWorld () =
         newlySent := 0;
         act := me.next;
         WHILE act # me DO
-          IF act.state = ActState.Started THEN
-            (* good *)
-          ELSIF SignalThread(act) THEN
+          IF act.state # ActState.Started THEN
+            SignalThread(act, ActState.Starting);
             INC(newlySent);
-          ELSE
-            <*ASSERT FALSE*>
           END;
           act := act.next;
         END;
@@ -1303,7 +1302,7 @@ PROCEDURE Init ()=
     self: T;
     me := InitActivations();
   BEGIN
-    SetupHandlers();
+    IF SIG_SUSPEND # 0 THEN SetupHandlers() END;
 
     (* cm, activeMu, slotMu: initialized statically *)
     self := CreateT(me);
