@@ -49,11 +49,6 @@ extern "C"
 #define CONTEXT_STACK 0 /* experimentally derived */
 #endif
 
-#define getcontext Uucontext__getcontext
-#define makecontext Uucontext__makecontext
-#define setcontext Uucontext__setcontext
-#define swapcontext Uucontext__swapcontext
-
 #if 0
 static void print_context(const char* name, const ucontext_t* context)
 {
@@ -81,7 +76,8 @@ int getcontext(ucontext_t* context)
     volatile char a[65];
 #endif
     sigprocmask(SIG_SETMASK, NULL, &context->uc_sigmask);
-    setjmp(context->uc_mcontext.jb);
+    if (!setjmp(context->uc_mcontext.jb))
+        context->uc_stack.ss_sp = (void*)context->uc_mcontext.a[CONTEXT_STACK];
     return 0;
 }
 
