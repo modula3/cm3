@@ -1046,6 +1046,7 @@ PROCEDURE StopWorld () =
           END;
           act := act.next;
         END;
+        WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
         IF newlySent < nLive - acks THEN
           (* how did we manage to lose some? *)
           nLive := acks + newlySent;
@@ -1120,6 +1121,7 @@ PROCEDURE StartWorld () =
           END;
           act := act.next;
         END;
+        WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
         IF newlySent < nDead - acks THEN
           (* how did we manage to lose some? *)
           nDead := acks + newlySent;
