@@ -167,8 +167,8 @@ ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
 {
   stack_t sinfo;
   /* assume registers of stopped threads are in the stack so don't process */
-  if (pthread_stack_np(PTHREAD_FROM_M3(mt), &sinfo) != 0) abort();
-  return sinfo.ss_sp;		/* according to the man page this should be the sp */
+  if (pthread_stackseg_np(PTHREAD_FROM_M3(mt), &sinfo) != 0) abort();
+  return sinfo.ss_sp; /* according to the man page this should be the sp */
 }
 
 #endif
