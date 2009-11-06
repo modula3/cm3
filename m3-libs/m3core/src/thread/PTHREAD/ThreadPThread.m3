@@ -1035,7 +1035,6 @@ PROCEDURE StopWorld () =
       <*ASSERT SIG_SUSPEND # 0*>
       WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
       IF acks = nLive THEN EXIT END;
-      <*ASSERT acks < nLive*>
       IF wait_nsecs <= 0 THEN
         newlySent := 0;
         act := me.next;
@@ -1110,7 +1109,6 @@ PROCEDURE StartWorld () =
       <*ASSERT SIG_SUSPEND # 0*>
       WITH r = sem_getvalue(acks) DO <*ASSERT r=0*> END;
       IF acks = nDead THEN EXIT END;
-      <*ASSERT acks < nDead*>
       IF wait_nsecs <= 0 THEN
         newlySent := 0;
         act := me.next;
