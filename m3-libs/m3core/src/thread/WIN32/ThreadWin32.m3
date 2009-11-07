@@ -574,34 +574,43 @@ PROCEDURE Fork(closure: Closure): T =
     RETURN t;
   END Fork;
 
+PROCEDURE XWait (m: Mutex; c: Condition; alertable: BOOLEAN) RAISES {Alerted} =
+(* In future maybe Wait and AlertWait merged into here, esp. if/when
+   we use Win32 alert mechanism and just pass alertable onto WaitForSingleObjectEx(). *)
+  BEGIN
+    IF alertable THEN
+      AlertWait(m, c);
+    ELSE
+      Wait(m, c);
+    END;
+  END XWait;
+
+PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
+(* This should be shared between Win32 and Pthread. *)
+  BEGIN
+    LOCK t DO
+      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice") END;
+      TRY
+        t.joined := TRUE;
+        WHILE t.join # NIL DO XWait(t, t.join, alertable) END;
+      FINALLY
+        IF t.join # NIL THEN t.joined := FALSE END;
+      END;
+    END;
+    RETURN t.result;
+  END XJoin;
+
 PROCEDURE Join(t: T): REFANY =
-  VAR res: REFANY;
+  <*FATAL Alerted*>
   BEGIN
     IF debug THEN ThreadDebug.Join(t); END;
-    LOCK t DO
-      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
-      WHILE NOT t.completed DO Wait(t, t.join) END;
-      res := t.result;
-      t.result := NIL;
-      t.joined := TRUE;
-      t.join := NIL;
-    END;
-    RETURN res;
+    RETURN XJoin(t, alertable := FALSE);
   END Join;
 
 PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
-  VAR res: REFANY;
   BEGIN
     IF debug THEN ThreadDebug.AlertJoin(t); END;
-    LOCK t DO
-      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice"); END;
-      WHILE NOT t.completed DO AlertWait(t, t.join) END;
-      res := t.result;
-      t.result := NIL;
-      t.joined := TRUE;
-      t.join := NIL;
-    END;
-    RETURN res;
+    RETURN XJoin(t, alertable := TRUE);
   END AlertJoin;
 
 (*---------------------------------------------------- Scheduling support ---*)
