@@ -7,7 +7,6 @@ INTERFACE Usysdep;
 FROM Ctypes IMPORT int;
 
 CONST
-    (* trick from darwin-generic/Upthread.i3 *)
     X32 = ORD(BITSIZE(INTEGER) = 32);
     X64 = ORD(BITSIZE(INTEGER) = 64);
 
