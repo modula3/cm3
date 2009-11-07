@@ -505,6 +505,7 @@ PROCEDURE RunThread (me: Activation) =
       (* mark "self" done and clean it up a bit *)
       self.completed := TRUE;
       Broadcast(self.join); (* let everybody know that "self" is done *)
+      self.join := NIL;
     END;
 
     IF perfOn THEN PerfChanged(State.dead) END;
