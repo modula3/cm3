@@ -210,17 +210,15 @@ PROCEDURE XWait (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
 
 PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
-  VAR self := Self();
   BEGIN
-    XWait(self, m, c, alertable := TRUE);
+    XWait(Self(), m, c, alertable := TRUE);
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
   <*FATAL Alerted*>
   (* LL = m *)
-  VAR self := Self();
   BEGIN
-    XWait(self, m, c, alertable := FALSE);
+    XWait(Self(), m, c, alertable := FALSE);
   END Wait;
 
 PROCEDURE DequeueHead(c: Condition) =
@@ -270,9 +268,8 @@ PROCEDURE XTestAlert (self: T): BOOLEAN =
   END XTestAlert;
 
 PROCEDURE TestAlert (): BOOLEAN =
-  VAR self := Self();
   BEGIN
-    RETURN XTestAlert(self);
+    RETURN XTestAlert(Self());
   END TestAlert;
 
 (*------------------------------------------------------------------ Self ---*)
@@ -557,15 +554,13 @@ PROCEDURE XJoin (self, t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
 
 PROCEDURE Join (t: T): REFANY =
   <*FATAL Alerted*>
-  VAR self := Self();
   BEGIN
-    RETURN XJoin(self, t, alertable := FALSE);
+    RETURN XJoin(Self(), t, alertable := FALSE);
   END Join;
 
 PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
-  VAR self := Self();
   BEGIN
-    RETURN XJoin(self, t, alertable := TRUE);
+    RETURN XJoin(Self(), t, alertable := TRUE);
   END AlertJoin;
 
 (*---------------------------------------------------- Scheduling support ---*)
@@ -616,15 +611,13 @@ PROCEDURE XPause (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
 
 PROCEDURE Pause (n: LONGREAL) =
   <*FATAL Alerted*>
-  VAR self := Self();
   BEGIN
-    XPause(self, n, alertable := FALSE);
+    XPause(Self(), n, alertable := FALSE);
   END Pause;
 
 PROCEDURE AlertPause (n: LONGREAL) RAISES {Alerted} =
-  VAR self := Self();
   BEGIN
-    XPause(self, n, alertable := TRUE);
+    XPause(Self(), n, alertable := TRUE);
   END AlertPause;
 
 PROCEDURE Yield () =
