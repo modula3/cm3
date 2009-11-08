@@ -32,7 +32,7 @@ REVEAL
 
   Condition = BRANDED "Thread.Condition Pthread-1.0" OBJECT
     mutex: pthread_mutex_t := NIL;
-    waiters: Activation := NIL;                         (* LL = mutex *)
+    waiters: Activation := NIL;		 (* LL = mutex *)
   END;
 
   T = BRANDED "Thread.T Pthread-1.6" OBJECT
@@ -44,8 +44,8 @@ REVEAL
     result: REFANY := NIL;
 
     (* wait here to join *)
-    join: Condition;                            (* NIL when result is set *)
-    joined: BOOLEAN := FALSE;                   (* Is anyone waiting yet? *)
+    join: Condition;			 (* NIL when result is set *)
+    joined: BOOLEAN := FALSE;		 (* Is anyone waiting yet? *)
   END;
 
 TYPE
@@ -60,21 +60,21 @@ TYPE
     alerted : BOOLEAN := FALSE;
 
     (* queue of threads waiting on the same CV *)
-    waitingOn: pthread_mutex_t := NIL;          (* The CV's mutex *)
+    waitingOn: pthread_mutex_t := NIL;	 (* The CV's mutex *)
     nextWaiter: Activation := NIL;
 
     (* global doubly-linked, circular list of all active threads *)
-    next, prev: Activation := NIL;              (* LL = activeMu *)
+    next, prev: Activation := NIL;	 (* LL = activeMu *)
     (* thread handle *)
-    handle: pthread_t;                          (* LL = activeMu *)
+    handle: pthread_t;			 (* LL = activeMu *)
     (* base of thread stack for use by GC *)
-    stackbase: ADDRESS := NIL;                  (* LL = activeMu *)
-    sp: ADDRESS := NIL;                         (* LL = activeMu *)
+    stackbase: ADDRESS := NIL;		 (* LL = activeMu *)
+    sp: ADDRESS := NIL;			 (* LL = activeMu *)
 
-    state := ActState.Started;                  (* LL = activeMu *)
+    state := ActState.Started;		 (* LL = activeMu *)
 
     (* index into global array of active, slotted threads *)
-    slot: INTEGER;                              (* LL = slotMu *)
+    slot: INTEGER;			 (* LL = slotMu *)
 
     (* exception handling support *)
     frame: ADDRESS := NIL;
@@ -289,7 +289,27 @@ PROCEDURE TestAlert (): BOOLEAN =
 VAR (* LL = slotMu *)
   n_slotted := 0;
   next_slot := 1;
-  slots: REF ARRAY OF T;                       (* NOTE: we don't use slots[0] *)
+  slots: REF ARRAY OF T;		 (* NOTE: we don't use slots[0] *)
+
+PROCEDURE InitActivations (base: ADDRESS): Activation =
+  VAR me := NEW(Activation);
+  BEGIN
+    me.handle := pthread_self();
+    me.next := me;
+    me.prev := me;
+    WITH r = pthread_key_create_activations() DO <*ASSERT r=0*> END;
+    WITH r = pthread_setspecific_activations(me) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
+      <* ASSERT next_slot = 1 *> (* no threads created yet *)
+      <* ASSERT slots = NIL *> (* no threads created yet *)
+      <* ASSERT n_slotted = 0 *> (* no threads created yet *)
+      <* ASSERT allThreads = NIL *> (* no threads created yet *)
+      allThreads := me;
+      me.stackbase := base;
+    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+    FloatMode.InitThread(me.floatState);
+    RETURN me;
+  END InitActivations;
 
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
@@ -365,7 +385,6 @@ PROCEDURE FreeSlot (t: T) =
     WITH r = pthread_mutex_unlock_slots() DO <*ASSERT r=0*> END;
   END FreeSlot;
 
-<*NOWARN*> (*unused*)
 PROCEDURE DumpThread (t: Activation) =
   BEGIN
     RTIO.PutText("Activation:   "); RTIO.PutAddr(t);             RTIO.PutChar('\n');
@@ -391,7 +410,7 @@ PROCEDURE DumpThread (t: Activation) =
     RTIO.Flush();
   END DumpThread;
 
-<*NOWARN*> (*unused*)
+<*UNUSED*>
 PROCEDURE DumpThreads () =
   VAR t := allThreads;
   BEGIN
@@ -404,7 +423,7 @@ PROCEDURE DumpThreads () =
 (*------------------------------------------------------------ Fork, Join ---*)
 
 VAR (* LL=activeMu *)
-  allThreads: Activation := NIL;            (* global list of active threads *)
+  allThreads: Activation := NIL;	 (* global list of active threads *)
 
 PROCEDURE CleanThread (r: REFANY) =
   VAR t := NARROW(r, T);
@@ -436,15 +455,14 @@ PROCEDURE CreateT (act: Activation): T =
     RETURN t;
   END CreateT;
 
-(* ThreadBase calls self.closure.apply() after finding (approximately) where
-   its stack begins.  This dance ensures that traced references are within
-   the stack scanned by the collector. *)
+(* ThreadBase calls RunThread after finding (approximately) where
+   its stack begins.  This dance ensures that all of ThreadMain's
+   traced references are within the stack scanned by the collector. *)
 
 PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   VAR
     xx: INTEGER;
     me: Activation := param;
-    self: T;
   BEGIN
     WITH r = pthread_setspecific_activations(me) DO <*ASSERT r=0*> END;
 
@@ -458,7 +476,24 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
     FloatMode.InitThread (me.floatState);
 
+    RunThread(me);
 
+    (* remove from the list of active threads *)
+    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
+      me.stackbase := NIL;              (* disable GC scanning of my stack *)
+      <*ASSERT allThreads # me*>
+      me.next.prev := me.prev;
+      me.prev.next := me.next;
+      me.next := NIL;
+      me.prev := NIL;
+      WITH r = pthread_detach(me.handle) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+    RETURN NIL;
+  END ThreadBase;
+
+PROCEDURE RunThread (me: Activation) =
+  VAR self: T;
+  BEGIN
     IF perfOn THEN PerfChanged(State.alive) END;
 
     WITH r = pthread_mutex_lock_slots() DO <*ASSERT r=0*> END;
@@ -473,7 +508,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     (* Join *)
     LOCK joinMu DO
       Broadcast(self.join);
-      self.join := NIL;     (* mark me done *)
+      self.join := NIL;		 (* mark me done *)
     END;
 
     IF perfOn THEN PerfChanged(State.dead) END;
@@ -484,20 +519,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     IF perfOn THEN PerfDeleted() END;
     FreeSlot(self);  (* note: needs self.act ! *)
     (* Since we're no longer slotted, we cannot touch traced refs. *)
-
-
-    (* remove from the list of active threads *)
-    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
-      me.stackbase := NIL;              (* disable GC scanning of my stack *)
-      <*ASSERT allThreads # me*>
-      me.next.prev := me.prev;
-      me.prev.next := me.next;
-      me.next := NIL;
-      me.prev := NIL;
-      WITH r = pthread_detach(me.handle) DO <*ASSERT r=0*> END;
-    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
-    RETURN NIL;
-  END ThreadBase;
+  END RunThread;
 
 VAR joinMu: MUTEX;
 
@@ -809,7 +831,7 @@ PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
    that acquire "cm", it'll be deadlocked.
 *)
 
-VAR suspended: BOOLEAN := FALSE;    (* LL=activeMu *)
+VAR suspended: BOOLEAN := FALSE;	 (* LL=activeMu *)
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu" *)
@@ -1217,7 +1239,7 @@ PROCEDURE SignalHandler (sig: int) =
     IF me.state = ActState.Stopping THEN
       IF me.heapState.inCritical # 0 THEN
         me.state := ActState.Started;
-        RETURN;
+	RETURN;
       END;
       me.sp := ProcessRegisters(NIL);
       IF me.sp = NIL THEN me.sp := ADR(xx) END;
@@ -1280,7 +1302,7 @@ PROCEDURE DieI (lineno: INTEGER; i: INTEGER) =
 
 VAR
   perfW : RTPerfTool.Handle;
-  perfOn: BOOLEAN := FALSE;     (* LL = perfMu *)
+  perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
 
 PROCEDURE PerfStart () =
   BEGIN
@@ -1333,27 +1355,12 @@ PROCEDURE PerfRunning () =
 
 PROCEDURE Init ()=
   VAR
+    xx: INTEGER;
     self: T;
-    base := ADR(base);
-    me := NEW(Activation);
+    me := InitActivations(ADR(xx));
   BEGIN
-    me.handle := pthread_self();
-    me.next := me;
-    me.prev := me;
-    WITH r = pthread_key_create_activations() DO <*ASSERT r=0*> END;
-    WITH r = pthread_setspecific_activations(me) DO <*ASSERT r=0*> END;
-    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
-      <* ASSERT next_slot = 1 *> (* no threads created yet *)
-      <* ASSERT slots = NIL *> (* no threads created yet *)
-      <* ASSERT n_slotted = 0 *> (* no threads created yet *)
-      <* ASSERT allThreads = NIL *> (* no threads created yet *)
-      allThreads := me;
-      me.stackbase := base;
-    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
-    FloatMode.InitThread(me.floatState);
-
     IF SIG_SUSPEND # 0 THEN SetupHandlers() END;
-    stack_grows_down := base > XX();
+    stack_grows_down := ADR(xx) > XX();
 
     self := CreateT(me);
     joinMu := NEW(MUTEX);
