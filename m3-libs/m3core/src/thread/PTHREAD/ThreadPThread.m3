@@ -1142,6 +1142,7 @@ PROCEDURE StopWorld () =
 
     IF DEBUG THEN
       RTIO.PutText("Stopped from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
+      DumpThreads();
     END;
   END StopWorld;
 
@@ -1224,6 +1225,7 @@ PROCEDURE StartWorld () =
 
     IF DEBUG THEN
       RTIO.PutText("Started from act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
+      DumpThreads();
     END;
   END StartWorld;
 
@@ -1234,9 +1236,11 @@ PROCEDURE SignalHandler (sig: int) =
     xx: INTEGER;
   BEGIN
     <*ASSERT sig = SIG_SUSPEND*>
-    IF me # NIL
-      AND me.state = ActState.Stopping
-      AND me.heapState.inCritical = 0 THEN
+    IF me.state = ActState.Stopping THEN
+      IF me.heapState.inCritical # 0 THEN
+        me.state := ActState.Started;
+	RETURN;
+      END;
       me.sp := ProcessRegisters(NIL);
       IF me.sp = NIL THEN me.sp := ADR(xx) END;
       me.state := ActState.Stopped;
@@ -1245,8 +1249,6 @@ PROCEDURE SignalHandler (sig: int) =
       me.sp := NIL;
       me.state := ActState.Started;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
-    ELSE
-      me.state := ActState.Started;
     END;
     Cerrno.SetErrno(errno);
   END SignalHandler;
