@@ -19,7 +19,6 @@ c_source("Uutmp")
 c_source("Usignal")
 c_source("Upwd")
 c_source("Uprocess")
-c_source("Upthread")
 
 if not (equal (TARGET, "SOLgnu") or equal (TARGET, "SOLsun")
         or equal (TARGET, "LINUXLIBC6") or equal (TARGET, "NetBSD2_i386")
@@ -60,7 +59,6 @@ Interface("Uerror")
 c_source("Uconstants")
 h_source("UerrorX")
 
-Interface("Upthread")
 Interface("Usched")
 
 Interface("Usocket")
