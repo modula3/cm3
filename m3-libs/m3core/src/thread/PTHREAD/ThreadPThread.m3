@@ -436,9 +436,9 @@ PROCEDURE CreateT (act: Activation): T =
     RETURN t;
   END CreateT;
 
-(* ThreadBase calls RunThread after finding (approximately) where
-   its stack begins.  This dance ensures that all of ThreadMain's
-   traced references are within the stack scanned by the collector. *)
+(* ThreadBase calls self.closure.apply() after finding (approximately) where
+   its stack begins.  This dance ensures that traced references are within
+   the stack scanned by the collector. *)
 
 PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   VAR
