@@ -32,7 +32,7 @@ REVEAL
 
   Condition = BRANDED "Thread.Condition Pthread-1.0" OBJECT
     mutex: pthread_mutex_t := NIL;
-    waiters: Activation := NIL;		 (* LL = mutex *)
+    waiters: Activation := NIL;                         (* LL = mutex *)
   END;
 
   T = BRANDED "Thread.T Pthread-1.6" OBJECT
@@ -44,8 +44,8 @@ REVEAL
     result: REFANY := NIL;
 
     (* wait here to join *)
-    join: Condition;			 (* NIL when result is set *)
-    joined: BOOLEAN := FALSE;		 (* Is anyone waiting yet? *)
+    join: Condition;                            (* NIL when result is set *)
+    joined: BOOLEAN := FALSE;                   (* Is anyone waiting yet? *)
   END;
 
 TYPE
@@ -60,21 +60,21 @@ TYPE
     alerted : BOOLEAN := FALSE;
 
     (* queue of threads waiting on the same CV *)
-    waitingOn: pthread_mutex_t := NIL;	 (* The CV's mutex *)
+    waitingOn: pthread_mutex_t := NIL;          (* The CV's mutex *)
     nextWaiter: Activation := NIL;
 
     (* global doubly-linked, circular list of all active threads *)
-    next, prev: Activation := NIL;	 (* LL = activeMu *)
+    next, prev: Activation := NIL;              (* LL = activeMu *)
     (* thread handle *)
-    handle: pthread_t;			 (* LL = activeMu *)
+    handle: pthread_t;                          (* LL = activeMu *)
     (* base of thread stack for use by GC *)
-    stackbase: ADDRESS := NIL;		 (* LL = activeMu *)
-    sp: ADDRESS := NIL;			 (* LL = activeMu *)
+    stackbase: ADDRESS := NIL;                  (* LL = activeMu *)
+    sp: ADDRESS := NIL;                         (* LL = activeMu *)
 
-    state := ActState.Started;		 (* LL = activeMu *)
+    state := ActState.Started;                  (* LL = activeMu *)
 
     (* index into global array of active, slotted threads *)
-    slot: INTEGER;			 (* LL = slotMu *)
+    slot: INTEGER;                              (* LL = slotMu *)
 
     (* exception handling support *)
     frame: ADDRESS := NIL;
@@ -289,7 +289,7 @@ PROCEDURE TestAlert (): BOOLEAN =
 VAR (* LL = slotMu *)
   n_slotted := 0;
   next_slot := 1;
-  slots: REF ARRAY OF T;		 (* NOTE: we don't use slots[0] *)
+  slots: REF ARRAY OF T;                       (* NOTE: we don't use slots[0] *)
 
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
@@ -404,7 +404,7 @@ PROCEDURE DumpThreads () =
 (*------------------------------------------------------------ Fork, Join ---*)
 
 VAR (* LL=activeMu *)
-  allThreads: Activation := NIL;	 (* global list of active threads *)
+  allThreads: Activation := NIL;            (* global list of active threads *)
 
 PROCEDURE CleanThread (r: REFANY) =
   VAR t := NARROW(r, T);
@@ -473,7 +473,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     (* Join *)
     LOCK joinMu DO
       Broadcast(self.join);
-      self.join := NIL;		 (* mark me done *)
+      self.join := NIL;     (* mark me done *)
     END;
 
     IF perfOn THEN PerfChanged(State.dead) END;
@@ -809,7 +809,7 @@ PROCEDURE IncDefaultStackSize (inc: CARDINAL) =
    that acquire "cm", it'll be deadlocked.
 *)
 
-VAR suspended: BOOLEAN := FALSE;	 (* LL=activeMu *)
+VAR suspended: BOOLEAN := FALSE;    (* LL=activeMu *)
 
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu" *)
@@ -1217,7 +1217,7 @@ PROCEDURE SignalHandler (sig: int) =
     IF me.state = ActState.Stopping THEN
       IF me.heapState.inCritical # 0 THEN
         me.state := ActState.Started;
-	RETURN;
+        RETURN;
       END;
       me.sp := ProcessRegisters(NIL);
       IF me.sp = NIL THEN me.sp := ADR(xx) END;
@@ -1280,7 +1280,7 @@ PROCEDURE DieI (lineno: INTEGER; i: INTEGER) =
 
 VAR
   perfW : RTPerfTool.Handle;
-  perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
+  perfOn: BOOLEAN := FALSE;     (* LL = perfMu *)
 
 PROCEDURE PerfStart () =
   BEGIN
