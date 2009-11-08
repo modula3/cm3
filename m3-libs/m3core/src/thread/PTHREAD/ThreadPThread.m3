@@ -444,6 +444,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   VAR
     xx: INTEGER;
     me: Activation := param;
+    self: T;
   BEGIN
     WITH r = pthread_setspecific_activations(me) DO <*ASSERT r=0*> END;
 
@@ -457,24 +458,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
     FloatMode.InitThread (me.floatState);
 
-    RunThread(me);
 
-    (* remove from the list of active threads *)
-    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
-      me.stackbase := NIL;              (* disable GC scanning of my stack *)
-      <*ASSERT allThreads # me*>
-      me.next.prev := me.prev;
-      me.prev.next := me.next;
-      me.next := NIL;
-      me.prev := NIL;
-      WITH r = pthread_detach(me.handle) DO <*ASSERT r=0*> END;
-    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
-    RETURN NIL;
-  END ThreadBase;
-
-PROCEDURE RunThread (me: Activation) =
-  VAR self: T;
-  BEGIN
     IF perfOn THEN PerfChanged(State.alive) END;
 
     WITH r = pthread_mutex_lock_slots() DO <*ASSERT r=0*> END;
@@ -500,7 +484,20 @@ PROCEDURE RunThread (me: Activation) =
     IF perfOn THEN PerfDeleted() END;
     FreeSlot(self);  (* note: needs self.act ! *)
     (* Since we're no longer slotted, we cannot touch traced refs. *)
-  END RunThread;
+
+
+    (* remove from the list of active threads *)
+    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
+      me.stackbase := NIL;              (* disable GC scanning of my stack *)
+      <*ASSERT allThreads # me*>
+      me.next.prev := me.prev;
+      me.prev.next := me.next;
+      me.next := NIL;
+      me.prev := NIL;
+      WITH r = pthread_detach(me.handle) DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+    RETURN NIL;
+  END ThreadBase;
 
 VAR joinMu: MUTEX;
 
