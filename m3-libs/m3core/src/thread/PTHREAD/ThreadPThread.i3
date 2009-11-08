@@ -8,8 +8,10 @@ UNSAFE INTERFACE ThreadPThread;
 
 FROM Ctypes IMPORT int;
 FROM Cstddef IMPORT size_t;
-FROM Upthread IMPORT pthread_t, start_routine_t;
 FROM Utime IMPORT struct_timespec;
+
+TYPE
+  pthread_t = ADDRESS;
 
 (*---------------------------------------------------------------------------*)
 
@@ -50,7 +52,19 @@ PROCEDURE sigsuspend (): int;
 
 <*EXTERNAL "ThreadPThread__thread_create"*>
 PROCEDURE thread_create(VAR pthread: pthread_t; stackSize: size_t;
-                        start_routine: start_routine_t; arg: ADDRESS): int;
+                        start_routine: PROCEDURE(arg: ADDRESS): ADDRESS; arg: ADDRESS): int;
+
+<*EXTERNAL "ThreadPThread__pthread_detach"*>
+PROCEDURE pthread_detach(thread: pthread_t): int;
+
+<*EXTERNAL "ThreadPThread__pthread_self"*>
+PROCEDURE pthread_self(): pthread_t;
+
+<*EXTERNAL "ThreadPThread__pthread_equal"*>
+PROCEDURE pthread_equal(t1, t2: pthread_t): int;
+
+<*EXTERNAL "ThreadPThread__pthread_kill"*>
+PROCEDURE pthread_kill(t: pthread_t; sig: int): int;
 
 (*---------------------------------------------------------------------------*)
 

@@ -504,6 +504,27 @@ int ThreadPThread__pthread_cond_broadcast(pthread_cond_t* cond)
     return pthread_cond_broadcast(cond);
 }
 
+int ThreadPThread__pthread_detach(m3_pthread_t thread)
+{
+    return pthread_detach(PTHREAD_FROM_M3(thread));
+}
+
+m3_pthread_t ThreadPThread__pthread_self(void)
+{
+    pthread_t a = pthread_self();
+    return PTHREAD_TO_M3(a);
+}
+
+int ThreadPThread__pthread_equal(m3_pthread_t t1, m3_pthread_t t2)
+{
+    return pthread_equal(PTHREAD_FROM_M3(t1), PTHREAD_FROM_M3(t2));
+}
+
+int ThreadPThread__pthread_kill(m3_pthread_t thread, int sig)
+{
+    return pthread_kill(PTHREAD_FROM_M3(thread), sig);
+}
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
