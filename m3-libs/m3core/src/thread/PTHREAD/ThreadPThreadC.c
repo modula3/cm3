@@ -267,7 +267,34 @@ ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
 #endif /* Apple */
 #endif /* Apple | OpenBSD */
 
-void* RTMachine__SaveRegsInStack(void);
+/* On register window machines, we need a way to force registers into 	*/
+/* the stack.	Return sp.						*/
+# ifdef __sparc
+  void *GC_save_regs_in_stack();
+    asm("	.seg 	\"text\"");
+#   if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
+      asm("	.globl	GC_save_regs_in_stack");
+      asm("GC_save_regs_in_stack:");
+      asm("	.type GC_save_regs_in_stack,#function");
+#   else
+      asm("	.globl	_GC_save_regs_in_stack");
+      asm("_GC_save_regs_in_stack:");
+#   endif
+#   if defined(__arch64__) || defined(__sparcv9)
+      asm("	save	%sp,-128,%sp");
+      asm("	flushw");
+      asm("	ret");
+      asm("	restore %sp,2047+128,%o0");
+#   else
+      asm("	ta	0x3   ! ST_FLUSH_WINDOWS");
+      asm("	retl");
+      asm("	mov	%sp,%o0");
+#   endif
+#   ifdef SVR4
+      asm("	.GC_save_regs_in_stack_end:");
+      asm("	.size GC_save_regs_in_stack,.GC_save_regs_in_stack_end-GC_save_regs_in_stack");
+#   endif
+# endif
 
 void *
 ThreadPThread__ProcessRegisters(void (*p)(void *start, void *stop))
@@ -279,7 +306,7 @@ ThreadPThread__ProcessRegisters(void (*p)(void *start, void *stop))
     p(&buf, (char *)&buf + sizeof(buf));
   }
 #ifdef __sparc
-  return RTMachine__SaveRegsInStack();
+  return GC_save_regs_in_stack();
 #else
   return NULL;
 #endif

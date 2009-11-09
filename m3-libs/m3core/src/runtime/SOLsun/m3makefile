@@ -9,4 +9,3 @@
 
 interface      ("RTMachine")
 c_source       ("RTStackC")
-s_source       ("RTMachineASM")
