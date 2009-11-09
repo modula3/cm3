@@ -12,7 +12,7 @@ void Atomic__MemoryBarrier(void)
     membar_consumer();
 }
 
-#elif defined(__GNUC__)
+#elif __GNUC__ >= 4
 
 void Atomic__MemoryBarrier(void)
 {
@@ -45,6 +45,15 @@ MemoryBarrier(
 void Atomic__MemoryBarrier(void)
 {
     MemoryBarrier();
+}
+
+#elif __GNUC__ >= 3 && __i386__
+
+
+void Atomic__MemoryBarrier(void)
+{
+    long Barrier;
+    asm volatile("xchg %0, %%eax"::"m"(Barrier):"%eax");
 }
  
 #else
