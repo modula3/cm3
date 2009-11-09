@@ -23,8 +23,11 @@ void Atomic__MemoryBarrier(void)
 
 #include <windows.h>
 
+#ifndef FORCEINLINE
+#define FORCEINLINE
+#endif
+
 #if !defined(MemoryBarrier) && defined(_M_IX86) && !defined(_M_CEE_PURE)
-#pragma warning(push)
 #pragma warning(disable:4793)
 VOID
 FORCEINLINE
@@ -37,7 +40,6 @@ MemoryBarrier(
     }
 }
 #define MemoryBarrier MemoryBarrier
-#pragma warning(pop)
 #endif
 
 void Atomic__MemoryBarrier(void)
