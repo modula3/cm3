@@ -8,9 +8,7 @@
 #include <windows.h>
 #include <assert.h>
 
-#ifndef FORCEINLINE
-#define FORCEINLINE
-#endif
+void __cdecl Atomic__MemoryBarrier(void);
 
 /* const is extern const in C, but static const in C++,
  * but gcc gives a warning for the correct portable form "extern const" */
@@ -64,23 +62,6 @@ void __cdecl ThreadWin32__InitC(void)
     assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
 }
 
-#if !defined(MemoryBarrier) && defined(_M_IX86) && !defined(_M_CEE_PURE)
-#pragma warning(push)
-#pragma warning(disable:4793)
-VOID
-FORCEINLINE
-MemoryBarrier(
-    VOID)
-{
-    LONG Barrier;
-    __asm {
-        xchg Barrier, eax
-    }
-}
-#define MemoryBarrier MemoryBarrier
-#pragma warning(pop)
-#endif
-
 #if !defined(InterlockedExchangePointer) && defined(_X86_)
 #define InterlockedExchangePointer InterlockedExchangePointer
 PVOID InterlockedExchangePointer(PVOID* a, PVOID b)
@@ -89,32 +70,15 @@ PVOID InterlockedExchangePointer(PVOID* a, PVOID b)
 }
 #endif
 
-/* Otherwise we depend on newer windows.h for AMD64, IA64 */
-
-void __cdecl ThreadWin32__MemoryBarrier(void)
-{
-    MemoryBarrier();
-}
 
 LONG __cdecl ThreadWin32__InterlockedRead(volatile LONG* a)
 { /* based on Boost */
     LONG b;
-    MemoryBarrier();
+    Atomic__MemoryBarrier();
     b = *a;
-    MemoryBarrier();
+    Atomic__MemoryBarrier();
     return b;
 }
-
-#if 0
-
-void __cdecl ThreadWin32__InterlockedWritePointer(PVOID* a, PVOID b)
-{
-    MemoryBarrier();
-    InterlockedExchangePointer(a, b);
-    MemoryBarrier();
-}
-
-#endif
 
 void __cdecl ThreadWin32__InterlockedIncrement(volatile LONG* a)
 {
