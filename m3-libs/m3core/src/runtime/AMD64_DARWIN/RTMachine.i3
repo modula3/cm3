@@ -29,12 +29,6 @@ CONST
      Setting it too large will cause the collector to collect storage
      that is not free. *)
 
-CONST
-  StackFrameAlignment = 16;
-  (* Stack frames must be aligned to this constraint (in ADRSIZE units). 
-     It's not a big deal if this value is too large, but it may break 
-     the thread mechanism to make it too small. *)
-
 (*----------------------------------------------- exception stack walking ---*)
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
 
