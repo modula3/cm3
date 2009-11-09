@@ -68,9 +68,6 @@ PROCEDURE LeaveCriticalSection_heap();
 
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL ThreadWin32__MemoryBarrier*>
-PROCEDURE MemoryBarrier();
-
 <*EXTERNAL ThreadWin32__InterlockedIncrement*>
 PROCEDURE InterlockedIncrement(VAR a: LONG);
 
