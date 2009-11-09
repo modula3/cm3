@@ -299,14 +299,16 @@ PROCEDURE InitActivations (base: ADDRESS): Activation =
     me.prev := me;
     WITH r = pthread_key_create_activations() DO <*ASSERT r=0*> END;
     WITH r = pthread_setspecific_activations(me) DO <*ASSERT r=0*> END;
-    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
-      <* ASSERT next_slot = 1 *> (* no threads created yet *)
-      <* ASSERT slots = NIL *> (* no threads created yet *)
-      <* ASSERT n_slotted = 0 *> (* no threads created yet *)
-      <* ASSERT allThreads = NIL *> (* no threads created yet *)
-      allThreads := me;
-      me.stackbase := base;
-    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+    <* ASSERT next_slot = 1 *> (* no threads created yet *)
+    <* ASSERT slots = NIL *> (* no threads created yet *)
+    <* ASSERT n_slotted = 0 *> (* no threads created yet *)
+    <* ASSERT allThreads = NIL *> (* no threads created yet *)
+    allThreads := me;
+    <* ASSERT next_slot = 1 *> (* no threads created yet *)
+    <* ASSERT slots = NIL *> (* no threads created yet *)
+    <* ASSERT n_slotted = 0 *> (* no threads created yet *)
+    <* ASSERT allThreads = me *> (* no threads created yet *)
+    me.stackbase := base;
     FloatMode.InitThread(me.floatState);
     RETURN me;
   END InitActivations;
