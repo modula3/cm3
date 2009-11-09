@@ -49,7 +49,6 @@ void Atomic__MemoryBarrier(void)
 
 #elif __GNUC__ >= 3 && __i386__
 
-
 void Atomic__MemoryBarrier(void)
 {
     long Barrier;
