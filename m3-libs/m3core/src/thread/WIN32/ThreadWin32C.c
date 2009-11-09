@@ -8,6 +8,10 @@
 #include <windows.h>
 #include <assert.h>
 
+#ifndef FORCEINLINE
+#define FORCEINLINE
+#endif
+
 /* const is extern const in C, but static const in C++,
  * but gcc gives a warning for the correct portable form "extern const" */
 #if defined(__cplusplus) || !defined(__GNUC__)
@@ -60,28 +64,24 @@ void __cdecl ThreadWin32__InitC(void)
     assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
 }
 
-#ifndef MemoryBarrier
-#ifdef _MSC_VER
+#if !defined(MemoryBarrier) && defined(_M_IX86) && !defined(_M_CEE_PURE)
 #pragma warning(push)
 #pragma warning(disable:4793)
-#endif
-#ifdef FORCEINLINE
+VOID
 FORCEINLINE
-#endif
-void
 MemoryBarrier(
-    void)
+    VOID)
 {
-    long Barrier;
+    LONG Barrier;
     __asm {
         xchg Barrier, eax
     }
 }
 #define MemoryBarrier MemoryBarrier
-#ifdef _MSC_VER
 #pragma warning(pop)
 #endif
-#endif
+
+/* Otherwise we depend on newer windows.h for AMD64, IA64 */
 
 void __cdecl ThreadWin32__MemoryBarrier(void)
 {
