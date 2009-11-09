@@ -408,7 +408,6 @@ PROCEDURE DumpThread (t: Activation) =
     RTIO.Flush();
   END DumpThread;
 
-<*UNUSED*>
 PROCEDURE DumpThreads () =
   VAR t := allThreads;
   BEGIN
