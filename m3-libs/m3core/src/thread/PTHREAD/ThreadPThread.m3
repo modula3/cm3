@@ -304,10 +304,6 @@ PROCEDURE InitActivations (base: ADDRESS): Activation =
     <* ASSERT n_slotted = 0 *> (* no threads created yet *)
     <* ASSERT allThreads = NIL *> (* no threads created yet *)
     allThreads := me;
-    <* ASSERT next_slot = 1 *> (* no threads created yet *)
-    <* ASSERT slots = NIL *> (* no threads created yet *)
-    <* ASSERT n_slotted = 0 *> (* no threads created yet *)
-    <* ASSERT allThreads = me *> (* no threads created yet *)
     me.stackbase := base;
     FloatMode.InitThread(me.floatState);
     RETURN me;
