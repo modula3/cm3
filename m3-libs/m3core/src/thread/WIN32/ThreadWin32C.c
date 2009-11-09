@@ -81,11 +81,49 @@ MemoryBarrier(
 #pragma warning(pop)
 #endif
 
+#if !defined(InterlockedExchangePointer) && defined(_X86_)
+#define InterlockedExchangePointer InterlockedExchangePointer
+PVOID InterlockedExchangePointer(PVOID* a, PVOID b)
+{
+    return (PVOID)InterlockedExchange((PLONG)a, (LONG)b);
+}
+#endif
+
 /* Otherwise we depend on newer windows.h for AMD64, IA64 */
 
 void __cdecl ThreadWin32__MemoryBarrier(void)
 {
     MemoryBarrier();
+}
+
+LONG __cdecl ThreadWin32__InterlockedRead(volatile LONG* a)
+{ /* based on Boost */
+    LONG b;
+    MemoryBarrier();
+    b = *a;
+    MemoryBarrier();
+    return b;
+}
+
+#if 0
+
+void __cdecl ThreadWin32__InterlockedWritePointer(PVOID* a, PVOID b)
+{
+    MemoryBarrier();
+    InterlockedExchangePointer(a, b);
+    MemoryBarrier();
+}
+
+#endif
+
+void __cdecl ThreadWin32__InterlockedIncrement(volatile LONG* a)
+{
+    InterlockedIncrement(a);
+}
+
+void __cdecl ThreadWin32__InterlockedDecrement(volatile LONG* a)
+{
+    InterlockedDecrement(a);
 }
 
 #ifdef __cplusplus

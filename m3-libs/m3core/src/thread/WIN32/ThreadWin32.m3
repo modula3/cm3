@@ -12,7 +12,7 @@ IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
+FROM WinNT IMPORT LONG, HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
     MEMORY_BASIC_INFORMATION, PAGE_READWRITE, PAGE_READONLY;
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     GetCurrentProcess, DuplicateHandle, GetCurrentThread, CreateSemaphore,
@@ -191,7 +191,7 @@ PROCEDURE DumpSlots () =
     RTIO.PutText ("  self = ");
     RTIO.PutAddr (LOOPHOLE (slots[me.slot], ADDRESS));
     RTIO.PutText ("\r\n");
-    FOR i := 1 TO n_slotted DO
+    FOR i := 1 TO InterlockedRead(n_slotted) DO
       RTIO.PutText (" slot = ");
       RTIO.PutInt  (i);
       RTIO.PutText ("  thr = ");
@@ -347,7 +347,7 @@ PROCEDURE TestAlert(): BOOLEAN =
 (*------------------------------------------------------------------ Self ---*)
 
 VAR (* LL = slotMu *)
-  n_slotted := 0;
+  n_slotted: LONG := 0;
   next_slot := 1;
   slots     : REF ARRAY OF T;  (* NOTE: we don't use slots[0]. *)
 
@@ -394,7 +394,7 @@ PROCEDURE AssignSlot (t: T) =
             slots := NEW (REF ARRAY OF T, 20);
           EnterCriticalSection_slotMu();
         END;
-        IF n_slotted >= LAST (slots^) THEN
+        IF InterlockedRead(n_slotted) >= LAST (slots^) THEN
           old_slots := slots;
           n := NUMBER (old_slots^);
           LeaveCriticalSection_slotMu();
@@ -406,7 +406,7 @@ PROCEDURE AssignSlot (t: T) =
             MemoryBarrier(); (* finish filling in new_slots before writing to global slots
                                 so that slots can be read without a lock *)
             slots := new_slots;
-          ELSIF n_slotted < LAST (slots^) THEN
+          ELSIF InterlockedRead(n_slotted) < LAST (slots^) THEN
             (* we lost a race while allocating a new slot table,
                and the new table has room for us. *)
           ELSE
@@ -422,7 +422,7 @@ PROCEDURE AssignSlot (t: T) =
         IF next_slot >= NUMBER (slots^) THEN next_slot := 1; END;
       END;
 
-      INC (n_slotted);
+      InterlockedIncrement(n_slotted);
       t.act.slot := next_slot;
       slots [next_slot] := t;
 
@@ -433,16 +433,12 @@ PROCEDURE FreeSlot (t: T) =
   (* LL = 0 *)
   VAR act := t.act;
   BEGIN
-    EnterCriticalSection_slotMu();
-    
-      DEC (n_slotted);
-      WITH z = slots [act.slot] DO
-        IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
-        z := NIL;
-      END;
-      act.slot := 0;
-
-    LeaveCriticalSection_slotMu();
+    InterlockedDecrement(n_slotted);
+    WITH z = slots [act.slot] DO
+      IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
+      z := NIL; (* need write this carefully? I don't think so. *)
+    END;
+    act.slot := 0;
   END FreeSlot;
 
 (*------------------------------------------------------------ Fork, Join ---*)
