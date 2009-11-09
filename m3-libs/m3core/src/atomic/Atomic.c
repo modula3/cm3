@@ -14,7 +14,11 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #include <windows.h>
 #endif
 
-void Atomic__MemoryBarrier(void)
+#if !defined(__cdecl) && !defined(_MSC_VER)
+#define __cdecl
+#endif
+
+void __cdecl Atomic__MemoryBarrier(void)
 {
 #if defined(__sun)
     membar_producer();
