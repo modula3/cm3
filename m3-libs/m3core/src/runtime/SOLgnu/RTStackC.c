@@ -17,8 +17,8 @@ asm("	.seg 	\"text\"");
     asm("RTStack__SaveRegsInStack:");
     asm("	.type RTStack__SaveRegsInStack,#function");
 # else
-    asm("	.globl	_RTStack__SaveRegsInStack");
-    asm("_RTStack__SaveRegsInStack:");
+    asm("	.globl	RTStack__SaveRegsInStack");
+    asm("RTStack__SaveRegsInStack:");
 # endif
 # if defined(__arch64__) || defined(__sparcv9)
     asm("	save	%sp,-128,%sp");
@@ -149,9 +149,9 @@ void RTStack__Unwind (Frame* target)
   RTStack__SaveRegsInStack();
 
   if (target->lock != FrameLock) abort();
-  reg[REG_PC] = (int)target->pc + 8;/* for return address */
-  reg[REG_nPC] = (int)reg[REG_PC] + 4;
-  reg[REG_SP] = (int)target->sp;
+  reg[REG_PC] = (greg_t)target->pc + 8;/* for return address */
+  reg[REG_nPC] = reg[REG_PC] + 4;
+  reg[REG_SP] = (greg_t)target->sp;
   reg[REG_O7] = target->sp->fr_savpc;
   setcontext(&target->ctxt);
 }
