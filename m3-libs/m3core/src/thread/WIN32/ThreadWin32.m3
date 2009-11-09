@@ -374,9 +374,7 @@ PROCEDURE Self (): T =
     t: T;
   BEGIN
     IF me = NIL THEN RETURN NIL; END;
-    EnterCriticalSection_slotMu();
-      t := slots[me.slot];
-    LeaveCriticalSection_slotMu();
+    t := slots[me.slot];
     IF t.act # me THEN Die (ThisLine(), "thread with bad slot!"); END;
     RETURN t;
   END Self;
@@ -405,6 +403,8 @@ PROCEDURE AssignSlot (t: T) =
           IF old_slots = slots THEN
             (* we won any races that may have occurred. *)
             SUBARRAY (new_slots^, 0, n) := slots^;
+            MemoryBarrier(); (* finish filling in new_slots before writing to global slots
+                                so that slots can be read without a lock *)
             slots := new_slots;
           ELSIF n_slotted < LAST (slots^) THEN
             (* we lost a race while allocating a new slot table,
@@ -492,9 +492,7 @@ PROCEDURE RunThread (me: Activation) =
   BEGIN
     IF debug THEN ThreadDebug.RunThread(); END;
     IF perfOn THEN PerfChanged(State.alive) END;
-    EnterCriticalSection_slotMu();
-      self := slots [me.slot];
-    LeaveCriticalSection_slotMu();
+    self := slots [me.slot];
 
     (* Run the user-level code. *)
     IF perfOn THEN PerfRunning() END;

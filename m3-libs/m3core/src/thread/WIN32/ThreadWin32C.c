@@ -60,6 +60,34 @@ void __cdecl ThreadWin32__InitC(void)
     assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
 }
 
+#ifndef MemoryBarrier
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable:4793)
+#endif
+#ifdef FORCEINLINE
+FORCEINLINE
+#endif
+void
+MemoryBarrier(
+    void)
+{
+    long Barrier;
+    __asm {
+        xchg Barrier, eax
+    }
+}
+#define MemoryBarrier MemoryBarrier
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+#endif
+
+void __cdecl ThreadWin32__MemoryBarrier(void)
+{
+    MemoryBarrier();
+}
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

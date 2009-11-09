@@ -68,6 +68,9 @@ PROCEDURE LeaveCriticalSection_heap();
 
 (*---------------------------------------------------------------------------*)
 
+<*EXTERNAL ThreadWin32__MemoryBarrier*>
+PROCEDURE MemoryBarrier();
+
 <*EXTERNAL ThreadWin32__InitC*>
 PROCEDURE InitC();
 
