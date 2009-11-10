@@ -8,7 +8,7 @@
 UNSAFE MODULE ThreadWin32 EXPORTS
 Thread, ThreadF, Scheduler, ThreadInternal, RTOS, RTHooks, ThreadWin32;
 
-IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError, Atomic;
+IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
@@ -403,7 +403,7 @@ PROCEDURE AssignSlot (t: T) =
           IF old_slots = slots THEN
             (* we won any races that may have occurred. *)
             SUBARRAY (new_slots^, 0, n) := slots^;
-            Atomic.MemoryBarrier(); (* finish filling in new_slots before writing to global slots
+            MemoryBarrier(); (* finish filling in new_slots before writing to global slots
                                 so that slots can be read without a lock *)
             slots := new_slots;
           ELSIF InterlockedRead(n_slotted) < LAST (slots^) THEN
