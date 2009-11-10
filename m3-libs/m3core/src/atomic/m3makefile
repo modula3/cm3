@@ -1,2 +1,0 @@
-interface("Atomic")
-c_source("Atomic")
