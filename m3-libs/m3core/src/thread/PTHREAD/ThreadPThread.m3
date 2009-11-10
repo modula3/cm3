@@ -867,6 +867,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
   VAR
     me: Activation := pthread_getspecific_activations();
     act: Activation;
+    state: ActState;
     acks: int;
     nLive, nDead, newlySent: INTEGER;
     wait_nsecs := RETRY_INTERVAL;
@@ -902,9 +903,9 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
         <*ASSERT acks < nLive*>
         IF wait_nsecs <= 0 THEN
           newlySent := 0;
-          <*ASSERT act.state # ActState.Starting*>
-          IF act.state = ActState.Started THEN
-            SetState(act, ActState.Stopping);
+          state := act.state;
+          <*ASSERT state # ActState.Starting*>
+          IF state # ActState.Stopped THEN
             SignalThread(act);
             INC(newlySent);
           END;
@@ -957,9 +958,9 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
         <*ASSERT acks < nDead*>
         IF wait_nsecs <= 0 THEN
           newlySent := 0;
-          <*ASSERT act.state # ActState.Stopping*>
-          IF act.state = ActState.Stopped THEN
-            SetState(act, ActState.Starting);
+          state := act.state;
+          <*ASSERT state # ActState.Stopping*>
+          IF state # ActState.Started THEN
             SignalThread(act);
             INC(newlySent);
           END;
@@ -1065,6 +1066,7 @@ PROCEDURE StopWorld () =
   VAR
     me: Activation := pthread_getspecific_activations();
     act: Activation;
+    state: ActState;
     acks: int;
     nLive, newlySent: INTEGER;
     retry: BOOLEAN;
@@ -1108,9 +1110,9 @@ PROCEDURE StopWorld () =
         newlySent := 0;
         act := me.next;
         WHILE act # me DO
-          <*ASSERT act.state # ActState.Starting*>
-          IF act.state = ActState.Started THEN
-            SetState(act, ActState.Stopping);
+          state := act.state;
+          <*ASSERT state # ActState.Starting*>
+          IF state # ActState.Stopped THEN
             SignalThread(act);
             INC(newlySent);
           END;
@@ -1148,6 +1150,7 @@ PROCEDURE StartWorld () =
   VAR
     me: Activation := pthread_getspecific_activations();
     act: Activation;
+    state: ActState;
     acks: int;
     nDead, newlySent: INTEGER;
     retry: BOOLEAN;
@@ -1191,9 +1194,9 @@ PROCEDURE StartWorld () =
         newlySent := 0;
         act := me.next;
         WHILE act # me DO
-          <*ASSERT act.state # ActState.Stopping*>
-          IF act.state = ActState.Stopped THEN
-            SetState(act, ActState.Starting);
+          state := act.state;
+          <*ASSERT state # ActState.Stopping*>
+          IF state # ActState.Started THEN
             SignalThread(act);
             INC(newlySent);
           END;
