@@ -1,32 +1,25 @@
-#if defined(_WIN32) || defined(__CYGWIN__)
 #include <windows.h>
-#endif
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if defined(_WIN32) || defined(__CYGWIN__)
-
-void m3_MemoryBarrier(void)
+/*
+This function ensure that all reads/writes before it
+finish before any reads/writes after it.
+It is both a compiler barrier and a processor barrier.
+*/
+void __cdecl WinNT__MemoryBarrier(void)
 {
-#if defined(MemoryBarrier)
-    /* IA64 and AMD64 make this a macro, good, we can test for it. */
+#ifdef MemoryBarrier
+    /* newer headers */
     MemoryBarrier();
 #else
-    /* x86 MemoryBarrier is plain exchange, so InterlockedExchange should work */
-    static volatile long a;
+    /* older headers */
+    volatile long a;
     InterlockedExchange(&a, a);
 #endif
 }
-
-#else
-
-void m3_MemoryBarrier(void)
-{
-}
-
-#endif
 
 #ifdef __cplusplus
 }
