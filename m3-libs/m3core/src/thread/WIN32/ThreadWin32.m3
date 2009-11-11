@@ -19,6 +19,7 @@ FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     CloseHandle, CreateThread, ResumeThread, Sleep, SuspendThread,
     GetThreadContext, VirtualQuery, GetLastError, CREATE_SUSPENDED,
     GetCurrentThreadId;
+FROM WinNT IMPORT MemoryBarrier;
 
 (*--------------------------------------------------------------------------*)
 
