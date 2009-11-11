@@ -8,27 +8,9 @@
 #include <windows.h>
 #include <assert.h>
 
-void __cdecl ThreadWin32__MemoryBarrier(void)
-{
-#if defined(__sun)
-    membar_producer();
-    membar_consumer();
-#elif __GNUC__ >= 4
-    __sync_synchronize();
-#elif defined(_WIN32) && defined(MemoryBarrier)
-    MemoryBarrier();
-#elif defined(_WIN32) && defined(_M_IX86) && !defined(_M_CEE_PURE)
-    LONG Barrier;
-    __asm {
-        xchg Barrier, eax
-    }
-#elif __GNUC__ >= 3 && __i386__
-    long Barrier;
-    asm volatile("xchg %0, %%eax"::"m"(Barrier):"%eax");
-#else
-#error ThreadWin32__MemoryBarrier not implemented.
+#ifdef __sun
+#include <atomic.h>
 #endif
-}
 
 /* const is extern const in C, but static const in C++,
  * but gcc gives a warning for the correct portable form "extern const" */
@@ -108,6 +90,28 @@ void __cdecl ThreadWin32__InterlockedIncrement(volatile LONG* a)
 void __cdecl ThreadWin32__InterlockedDecrement(volatile LONG* a)
 {
     InterlockedDecrement(a);
+}
+
+void __cdecl ThreadWin32__MemoryBarrier(void)
+{
+#if defined(__sun)
+    membar_producer();
+    membar_consumer();
+#elif __GNUC__ >= 4
+    __sync_synchronize();
+#elif defined(_WIN32) && defined(MemoryBarrier)
+    MemoryBarrier();
+#elif defined(_WIN32) && defined(_M_IX86) && !defined(_M_CEE_PURE)
+    LONG Barrier;
+    __asm {
+        xchg Barrier, eax
+    }
+#elif __GNUC__ >= 3 && __i386__
+    long Barrier;
+    asm volatile("xchg %0, %%eax"::"m"(Barrier):"%eax");
+#else
+#error ThreadWin32__MemoryBarrier not implemented.
+#endif
 }
 
 #ifdef __cplusplus
