@@ -173,6 +173,8 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
   stack_t sinfo;
   if (pthread_stackseg_np(PTHREAD_FROM_M3(mt), &sinfo) != 0) abort();
   assert(start == 0);
+  assert(end >= sinfo.ss_sp);
+  assert((char *)end <= (char *)sinfo.ss_sp + sinfo.ss_size);
   p(sinfo.ss_sp, end);
 }
 
