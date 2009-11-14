@@ -351,12 +351,12 @@ ThreadPThread__ProcessLive(void *start, void * end,
 			   void (*p)(void *start, void *stop))
 {
   jmp_buf buf;
+  setjmp(buf);
+  p(&buf, (char *)&buf + sizeof(buf));
 #ifdef __sparc
   start = ThreadPThread__SaveRegsInStack();
 #endif
   assert(start < end);
-  setjmp(buf);
-  p(&buf, (char *)&buf + sizeof(buf));
   p(start, end);
 }
 
