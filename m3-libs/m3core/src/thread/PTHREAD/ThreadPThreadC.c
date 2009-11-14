@@ -7,8 +7,14 @@
 #include <pthread.h>
 #include <setjmp.h>
 
-#if defined(__APPLE__) || defined(__0OpenBSD__)
+#if defined(__APPLE__) || defined(__0OpenBSD__) || defined(__FreeBSD__)
 #ifdef __APPLE__
+/* MacOSX diverges in a good way and therefore many functions
+in this file are just stubs for it, that other code dynamically chooses
+not to call (statically, but the compiler can't or won't tell). */
+#define CUSTOM_SUSPEND_ASSERT_FALSE assert(0 && "MacOS X should not get here.");
+#endif
+#ifdef __FreeBSD__
 /* MacOSX diverges in a good way and therefore many functions
 in this file are just stubs for it, that other code dynamically chooses
 not to call (statically, but the compiler can't or won't tell). */
@@ -55,9 +61,9 @@ extern "C" {
   Both SIG and SIG_SUSPEND were only defined for systems using pthreads.
   SIG was shorthand.
 */
-#if defined(__APPLE__) || defined(__0OpenBSD__)
+#if defined(__APPLE__) || defined(__0OpenBSD__) || defined(__FreeBSD__)
 EXTERN_CONST int SIG_SUSPEND = 0;
-#elif defined(__sun) || defined(__CYGWIN__) || defined(__FreeBSD__)
+#elif defined(__sun) || defined(__CYGWIN__)
 EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #elif defined(__linux)
 EXTERN_CONST int SIG_SUSPEND = NSIG - 1;
@@ -73,7 +79,7 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #error Unable to determine SIG_SUSPEND.
 #endif
 
-#if !defined(__APPLE__) && !defined(__0OpenBSD__)
+#if !defined(__APPLE__) && !defined(__0OpenBSD__) && !defined(__FreeBSD__)
 
 #define ZeroMemory(a, b) (memset((a), 0, (b)))
 
@@ -125,14 +131,13 @@ int ThreadPThread__RestartThread (m3_pthread_t mt)
   abort();
 }
 
-void *ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
-				   void (*p)(void *start, void *end))
+void ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
+				    void (*p)(void *start, void *end))
 {
-  /* Full context is in the signal handler frame so no need to process */
-  return sp;
+  p(start, end);
 }
 
-#else /* Apple | OpenBSD */
+#else /* Apple | OpenBSD | FreeBSD */
 
 void SetupHandlers(void)                { CUSTOM_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_wait(void)      { CUSTOM_SUSPEND_ASSERT_FALSE }
@@ -161,17 +166,56 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
     return success;
 }
 
-void *
-ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
-			     void (*p)(void *start, void *end))
+void
+ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
+			       void (*p)(void *start, void *end))
 {
   stack_t sinfo;
-  /* assume registers of stopped threads are in the stack so don't process */
   if (pthread_stackseg_np(PTHREAD_FROM_M3(mt), &sinfo) != 0) abort();
-  return sinfo.ss_sp; /* according to the man page this should be the sp */
+  assert(start == 0);
+  p(sinfo.ss_sp, end);
 }
 
 #endif
+
+#ifdef __FreeBSD__
+
+int ThreadPThread__SuspendThread (m3_pthread_t mt)
+{
+    int a = pthread_suspend_np(PTHREAD_FROM_M3(mt));
+    int success = (a == 0);
+    assert(success);
+    return success;
+}
+
+int
+ThreadPThread__RestartThread (m3_pthread_t mt)
+{
+    int a = pthread_resume_np(PTHREAD_FROM_M3(mt));
+    int success = (a == 0);
+    assert(success);
+    return success;
+}
+
+void
+ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
+			      void (*p)(void *start, void *end))
+{
+  pthread_attr_t attr;
+  void *stackaddr;
+  size_t stacksize;
+  /* assume registers of stopped threads are in the stack so don't process */
+  if (pthread_attr_init(&attr) != 0) abort();
+  if (pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr) != 0) abort();
+  if (pthread_attr_getstack(&attr, &stackaddr, &stacksize) != 0) abort();
+  assert(start == 0);
+  assert(end >= stackaddr);
+  assert((char *)end <= (char *)stackaddr + stacksize);
+  p(stackaddr, end);
+}
+
+#endif
+
 
 #ifdef __APPLE__
 
@@ -198,10 +242,11 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
   return thread_resume(mach_thread) == KERN_SUCCESS;
 }
 
-void *
-ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
-			     void (*p)(void *start, void *end))
+void
+ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
+			       void (*p)(void *start, void *end))
 {
+  void *sp;
   pthread_t t = PTHREAD_FROM_M3(mt);
   mach_port_t mach_thread = pthread_mach_thread_np(t);
 #if defined(__ppc__)
@@ -261,7 +306,8 @@ ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
   sp = (void *)(state.r13);
 #endif
   p(&state, (char *)&state + sizeof(state));
-  return sp;
+  assert(start == 0);
+  p(sp, end);
 }
 
 #endif /* Apple */
@@ -270,15 +316,15 @@ ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
 /* On register window machines, we need a way to force registers into 	*/
 /* the stack.	Return sp.						*/
 # ifdef __sparc
-  void *GC_save_regs_in_stack();
+void *ThreadPThread__SaveRegsInStack(void);
     asm("	.seg 	\"text\"");
 #   if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
-      asm("	.globl	GC_save_regs_in_stack");
-      asm("GC_save_regs_in_stack:");
-      asm("	.type GC_save_regs_in_stack,#function");
+      asm("	.globl	ThreadPThread__SaveRegsInStack");
+      asm("ThreadPThread__SaveRegsInStack:");
+      asm("	.type ThreadPThread__SaveRegsInStack,#function");
 #   else
-      asm("	.globl	_GC_save_regs_in_stack");
-      asm("_GC_save_regs_in_stack:");
+      asm("	.globl	_ThreadPThread__SaveRegsInStack");
+      asm("_ThreadPThread__SaveRegsInStack:");
 #   endif
 #   if defined(__arch64__) || defined(__sparcv9)
       asm("	save	%sp,-128,%sp");
@@ -291,25 +337,25 @@ ThreadPThread__ProcessState (m3_pthread_t mt, void *sp,
       asm("	mov	%sp,%o0");
 #   endif
 #   ifdef SVR4
-      asm("	.GC_save_regs_in_stack_end:");
-      asm("	.size GC_save_regs_in_stack,.GC_save_regs_in_stack_end-GC_save_regs_in_stack");
+      asm("	.ThreadPThread__SaveRegsInStack_end:");
+      asm("	.size ThreadPThread__SaveRegsInStack,.ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
 #   endif
+# else
+void *ThreadPThread__SaveRegsInStack(void) { return 0; }
 # endif
 
-void *
-ThreadPThread__ProcessRegisters(void (*p)(void *start, void *stop))
+void
+ThreadPThread__ProcessLive(void *start, void * end,
+			   void (*p)(void *start, void *stop))
 {
   jmp_buf buf;
-
-  if (p) {
-    setjmp(buf);
-    p(&buf, (char *)&buf + sizeof(buf));
-  }
 #ifdef __sparc
-  return GC_save_regs_in_stack();
-#else
-  return NULL;
+  start = ThreadPThread__SaveRegsInStack();
 #endif
+  assert(start < end);
+  setjmp(buf);
+  p(&buf, (char *)&buf + sizeof(buf));
+  p(start, end);
 }
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
@@ -353,29 +399,11 @@ ThreadPThread__thread_create(
 
 #define MUTEX(name) \
 static pthread_mutex_t name##Mu = PTHREAD_MUTEX_INITIALIZER; \
-int ThreadPThread__pthread_mutex_lock_##name(void) \
-{ \
-    return pthread_mutex_lock(&name##Mu); \
-} \
- \
-int ThreadPThread__pthread_mutex_unlock_##name(void) \
-{ \
-    return pthread_mutex_unlock(&name##Mu); \
-} \
-
+pthread_mutex_t *ThreadPThread__##name##Mu = &name##Mu; \
 
 #define CONDITION_VARIABLE(name) \
 static pthread_cond_t name##Cond = PTHREAD_COND_INITIALIZER; \
-int ThreadPThread__pthread_cond_broadcast_##name(void) \
-{ \
-    return pthread_cond_broadcast(&name##Cond); \
-} \
- \
-int ThreadPThread__pthread_cond_wait_##name(void) \
-{ \
-    return pthread_cond_wait(&name##Cond, &name##Mu); \
-} \
-
+pthread_cond_t *ThreadPThread__##name##Cond = &name##Cond; \
 
 #define THREAD_LOCAL_FAST(name) \
 static __thread void* name; \

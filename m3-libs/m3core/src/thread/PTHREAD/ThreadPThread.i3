@@ -12,6 +12,8 @@ FROM Utime IMPORT struct_timespec;
 
 TYPE
   pthread_t = ADDRESS;
+  pthread_mutex_t = ADDRESS;
+  pthread_cond_t = ADDRESS;
 
 (*---------------------------------------------------------------------------*)
 
@@ -68,75 +70,14 @@ PROCEDURE pthread_kill(t: pthread_t; sig: int): int;
 
 (*---------------------------------------------------------------------------*)
 
-(* implement the statically allocated mutexes, condition variables, and
-thread locals. These are wrappers to:
- pthread_mutex_lock
- pthread_mutex_unlock
- pthread_cond_broadcast
- pthread_cond_wait
- pthread_key_create
- pthread_setspecific
- pthread_getspecific
- 
-where the parameters are all implied, and are indicated
-by the last part of the function name.
-This reduces platform specific code as it removes
-the need for the Modula-3 code to define the static mutexes and condition variable(s).
-*)
+(* static mutexes and conditions *)
 
-(* mutex "active" *)
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_lock_active"*>
-PROCEDURE pthread_mutex_lock_active():int;
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_active"*>
-PROCEDURE pthread_mutex_unlock_active():int;
-
-
-(* mutex "slot" *)
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_lock_slots"*>
-PROCEDURE pthread_mutex_lock_slots():int;
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_slots"*>
-PROCEDURE pthread_mutex_unlock_slots():int;
-
-
-(* mutex "init" *)
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_lock_init"*>
-PROCEDURE pthread_mutex_lock_init():int;
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_init"*>
-PROCEDURE pthread_mutex_unlock_init():int;
-
-
-(* mutex "perf" *)
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_lock_perf"*>
-PROCEDURE pthread_mutex_lock_perf():int;
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_perf"*>
-PROCEDURE pthread_mutex_unlock_perf():int;
-
-
-(* mutex "heap" *)
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_lock_heap"*>
-PROCEDURE pthread_mutex_lock_heap():int;
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_heap"*>
-PROCEDURE pthread_mutex_unlock_heap():int;
-
-
-(* condition variable "heap" *)
-
-<*EXTERNAL "ThreadPThread__pthread_cond_broadcast_heap"*>
-PROCEDURE pthread_cond_broadcast_heap():int;
-
-<*EXTERNAL "ThreadPThread__pthread_cond_wait_heap"*>
-PROCEDURE pthread_cond_wait_heap():int;
-
+<*EXTERNAL "ThreadPThread__activeMu"*> VAR activeMu: pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__slotsMu"*>  VAR slotsMu: pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__initMu"*>   VAR initMu: pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__perfMu"*>   VAR perfMu: pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__heapMu"*>   VAR heapMu: pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__heapCond"*> VAR heapCond: pthread_cond_t;
 
 (* thread local "activation" *)
 
@@ -152,10 +93,6 @@ PROCEDURE pthread_getspecific_activations(): ADDRESS;
 (*---------------------------------------------------------------------------*)
 
 (* support for dynamically allocated mutexes and condition variables *)
-
-TYPE
-    pthread_mutex_t = ADDRESS;
-    pthread_cond_t = ADDRESS;
 
 <*EXTERNAL "ThreadPThread__pthread_mutex_new"*>
 PROCEDURE pthread_mutex_new():pthread_mutex_t;
@@ -202,12 +139,16 @@ PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
 <*EXTERNAL "ThreadPThread__RestartThread"*>
 PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
 
-<*EXTERNAL "ThreadPThread__ProcessRegisters"*>
-PROCEDURE ProcessRegisters(p: PROCEDURE(start, stop: ADDRESS)): ADDRESS;
+<*EXTERNAL "ThreadPThread__ProcessLive"*>
+PROCEDURE ProcessLive(start, end: ADDRESS;
+                      p: PROCEDURE(start, stop: ADDRESS));
 
-<*EXTERNAL "ThreadPThread__ProcessState"*>
-PROCEDURE ProcessState (t: pthread_t; sp: ADDRESS;
-                        p: PROCEDURE(start, stop: ADDRESS)): ADDRESS;
+<*EXTERNAL "ThreadPThread__ProcessStopped"*>
+PROCEDURE ProcessStopped (t: pthread_t; start, end: ADDRESS;
+                          p: PROCEDURE(start, end: ADDRESS));
+
+<*EXTERNAL "ThreadPThread__SaveRegsInStack"*>
+PROCEDURE SaveRegsInStack (): ADDRESS;
 
 (*---------------------------------------------------------------------------*)
 
