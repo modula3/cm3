@@ -544,6 +544,16 @@ int ThreadPThread__pthread_kill(m3_pthread_t thread, int sig)
     return pthread_kill(PTHREAD_FROM_M3(thread), sig);
 }
 
+int ThreadPThread__pthread_mutex_lock(pthread_mutex_t* m)
+{
+    return pthread_mutex_lock(m);
+}
+
+void ThreadPThread__pthread_mutex_unlock(pthread_mutex_t* m)
+{
+    pthread_mutex_unlock(m);
+}
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
