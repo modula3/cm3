@@ -31,8 +31,8 @@ asm("	.seg 	\"text\"");
     asm("	mov	%sp,%o0");
 # endif
 # ifdef SVR4
-    asm("	.RTStack__SaveRegsInStack_end:");
-    asm("	.size RTStack__SaveRegsInStack,.RTStack__SaveRegsInStack_end-RTStack__SaveRegsInStack");
+    asm("	RTStack__SaveRegsInStack_end:");
+    asm("	.size RTStack__SaveRegsInStack,RTStack__SaveRegsInStack_end-RTStack__SaveRegsInStack");
 # endif
 
 /*
