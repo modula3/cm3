@@ -301,8 +301,8 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 void *ThreadPThread__SaveRegsInStack(void)
 /* On register window machines, we need a way to force registers into 	*/
 /* the stack.	Return sp.						*/
-# ifdef __sparc
 {
+# ifdef __sparc
     asm("	.seg 	\"text\"");
 #   if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
       asm("	.globl	ThreadPThread__SaveRegsInStack");
