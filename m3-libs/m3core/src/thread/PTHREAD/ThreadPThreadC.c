@@ -82,8 +82,6 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 
 #ifndef M3_DIRECT_SUSPEND
 
-#define ZeroMemory(a, b) (memset((a), 0, (b)))
-
 typedef struct sigaction sigaction_t;
 
 static sigset_t mask;
