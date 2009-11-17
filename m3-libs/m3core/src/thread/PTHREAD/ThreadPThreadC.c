@@ -17,7 +17,10 @@
 #include <mach/thread_act.h>
 #endif
 #if defined(__APPLE__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+/* These operating systems use pthread_suspend_np, Mach thread_suspend, etc. */
 #define M3_DIRECT_SUSPEND
+#else
+/* Else we send a signal to the thread to suspend/resume it. */
 #endif
 #ifndef M3_DIRECT_SUSPEND
 #include <semaphore.h>
@@ -163,6 +166,8 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
     return success;
 }
 
+#endif /* OpenBSD | FreeBSD */
+
 #ifdef __OpenBSD__
 
 void
@@ -177,7 +182,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
   p(sinfo.ss_sp, end);
 }
 
-#endif
+#endif /* OpenBSD */
 
 #ifdef __FreeBSD__
 
@@ -198,8 +203,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
   p(stackaddr, end);
 }
 
-#endif
-
+#endif /* FreeBSD */
 
 #ifdef __APPLE__
 
@@ -292,7 +296,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 }
 
 #endif /* Apple */
-#endif /* Apple | OpenBSD */
+#endif /* M3_DIRECT_SUSPEND */
 
 /* On register window machines, we need a way to force registers into 	*/
 /* the stack.	Return sp.						*/
