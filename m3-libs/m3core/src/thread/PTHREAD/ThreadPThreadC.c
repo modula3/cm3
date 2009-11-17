@@ -298,11 +298,11 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 #endif /* Apple */
 #endif /* M3_DIRECT_SUSPEND */
 
+# ifdef __sparc
 void *ThreadPThread__SaveRegsInStack(void)
 /* On register window machines, we need a way to force registers into 	*/
 /* the stack.	Return sp.						*/
 {
-# ifdef __sparc
     asm("	.seg 	\"text\"");
 #   if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
       asm("	.globl	ThreadPThread__SaveRegsInStack");
@@ -326,10 +326,8 @@ void *ThreadPThread__SaveRegsInStack(void)
       asm("	.ThreadPThread__SaveRegsInStack_end:");
       asm("	.size ThreadPThread__SaveRegsInStack,.ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
 #   endif
-# else
-  return 0;
-# endif
 }
+# endif
 
 void
 ThreadPThread__ProcessLive(void *start, void * end,
