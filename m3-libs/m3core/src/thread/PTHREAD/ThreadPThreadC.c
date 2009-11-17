@@ -144,7 +144,7 @@ void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 
-#ifdef __OpenBSD__
+#if defined(__OpenBSD__) || defined(__FreeBSD__)
 
 int ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
@@ -162,6 +162,8 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
     assert(success);
     return success;
 }
+
+#ifdef __OpenBSD__
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
@@ -178,23 +180,6 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 #endif
 
 #ifdef __FreeBSD__
-
-int ThreadPThread__SuspendThread (m3_pthread_t mt)
-{
-    int a = pthread_suspend_np(PTHREAD_FROM_M3(mt));
-    int success = (a == 0);
-    assert(success);
-    return success;
-}
-
-int
-ThreadPThread__RestartThread (m3_pthread_t mt)
-{
-    int a = pthread_resume_np(PTHREAD_FROM_M3(mt));
-    int success = (a == 0);
-    assert(success);
-    return success;
-}
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
