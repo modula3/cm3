@@ -299,18 +299,17 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 #endif /* M3_DIRECT_SUSPEND */
 
 # ifdef __sparc
-void *ThreadPThread__SaveRegsInStack(void)
+void *ThreadPThread__SaveRegsInStack(void);
 /* On register window machines, we need a way to force registers into 	*/
 /* the stack.	Return sp.						*/
-{
     asm("	.seg 	\"text\"");
 #   if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
       asm("	.globl	ThreadPThread__SaveRegsInStack");
       asm("ThreadPThread__SaveRegsInStack:");
       asm("	.type ThreadPThread__SaveRegsInStack,#function");
 #   else
-      asm("	.globl	_ThreadPThread__SaveRegsInStack");
-      asm("_ThreadPThread__SaveRegsInStack:");
+      asm("	.globl	ThreadPThread__SaveRegsInStack");
+      asm("ThreadPThread__SaveRegsInStack:");
 #   endif
 #   if defined(__arch64__) || defined(__sparcv9)
       asm("	save	%sp,-128,%sp");
@@ -323,10 +322,9 @@ void *ThreadPThread__SaveRegsInStack(void)
       asm("	mov	%sp,%o0");
 #   endif
 #   ifdef SVR4
-      asm("	.ThreadPThread__SaveRegsInStack_end:");
-      asm("	.size ThreadPThread__SaveRegsInStack,.ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
+      asm("	ThreadPThread__SaveRegsInStack_end:");
+      asm("	.size ThreadPThread__SaveRegsInStack,ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
 #   endif
-}
 # endif
 
 void
