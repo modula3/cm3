@@ -8,6 +8,10 @@
 #include <setjmp.h>
 
 #if defined(__APPLE__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+#define M3_DIRECT_SUSPEND
+#endif
+
+#ifdef M3_DIRECT_SUSPEND
 #ifdef __APPLE__
 /* MacOSX diverges in a good way and therefore many functions
 in this file are just stubs for it, that other code dynamically chooses
@@ -61,7 +65,7 @@ extern "C" {
   Both SIG and SIG_SUSPEND were only defined for systems using pthreads.
   SIG was shorthand.
 */
-#if defined(__APPLE__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+#ifdef M3_DIRECT_SUSPEND
 EXTERN_CONST int SIG_SUSPEND = 0;
 #elif defined(__sun) || defined(__CYGWIN__)
 EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
@@ -79,7 +83,7 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #error Unable to determine SIG_SUSPEND.
 #endif
 
-#if !defined(__APPLE__) && !defined(__OpenBSD__) && !defined(__FreeBSD__)
+#ifndef M3_DIRECT_SUSPEND
 
 #define ZeroMemory(a, b) (memset((a), 0, (b)))
 
