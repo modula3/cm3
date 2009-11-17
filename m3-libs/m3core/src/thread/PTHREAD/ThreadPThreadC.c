@@ -6,33 +6,30 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <setjmp.h>
-
+#ifdef __hpux
+#include <stdio.h>
+#endif
+#ifdef __OpenBSD__
+#include <pthread_np.h>
+#endif
+#ifdef __APPLE__
+#include <mach/mach.h>
+#include <mach/thread_act.h>
+#endif
 #if defined(__APPLE__) || defined(__OpenBSD__) || defined(__FreeBSD__)
 #define M3_DIRECT_SUSPEND
 #endif
+#ifndef M3_DIRECT_SUSPEND
+#include <semaphore.h>
+#endif
 
 #ifdef M3_DIRECT_SUSPEND
-#ifdef __APPLE__
-/* MacOSX diverges in a good way and therefore many functions
-in this file are just stubs for it, that other code dynamically chooses
-not to call (statically, but the compiler can't or won't tell). */
-#define CUSTOM_SUSPEND_ASSERT_FALSE assert(0 && "MacOS X should not get here.");
-#endif
-#ifdef __FreeBSD__
-/* MacOSX diverges in a good way and therefore many functions
-in this file are just stubs for it, that other code dynamically chooses
-not to call (statically, but the compiler can't or won't tell). */
-#define CUSTOM_SUSPEND_ASSERT_FALSE assert(0 && "MacOS X should not get here.");
-#endif
-#ifdef __OpenBSD__
-/* OpenBSD diverges in a less good way. */
-#define CUSTOM_SUSPEND_ASSERT_FALSE assert(0 && "OpenBSD should not get here.");
-#endif
-#else
-#include <semaphore.h>
-#ifdef __hpux
 #include <stdio.h>
-#endif /* hpux */
+#define M3_DIRECT_SUSPEND_ASSERT_FALSE do { \
+    assert(0 && "MacOS X, FreeBSD, OpenBSD should not get here."); \
+    fprintf(stderr, "MacOS X, FreeBSD, OpenBSD should not get here.\n"); \
+    abort(); \
+} while(0)
 #endif
 
 /* const is extern const in C, but static const in C++,
@@ -141,17 +138,15 @@ void ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
   p(start, end);
 }
 
-#else /* Apple | OpenBSD | FreeBSD */
+#else /* M3_DIRECT_SUSPEND */
 
-void SetupHandlers(void)                { CUSTOM_SUSPEND_ASSERT_FALSE }
-void ThreadPThread__sem_wait(void)      { CUSTOM_SUSPEND_ASSERT_FALSE }
-void ThreadPThread__sem_post(void)      { CUSTOM_SUSPEND_ASSERT_FALSE }
-void ThreadPThread__sem_getvalue(void)  { CUSTOM_SUSPEND_ASSERT_FALSE }
-void ThreadPThread__sigsuspend(void)    { CUSTOM_SUSPEND_ASSERT_FALSE }
+void SetupHandlers(void)                { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 
 #ifdef __OpenBSD__
-
-#include <pthread_np.h>
 
 int ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
@@ -224,9 +219,6 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 
 
 #ifdef __APPLE__
-
-#include <mach/mach.h>
-#include <mach/thread_act.h>
 
 int ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
