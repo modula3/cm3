@@ -32,7 +32,7 @@
     assert(0 && "MacOS X, FreeBSD, OpenBSD should not get here."); \
     fprintf(stderr, "MacOS X, FreeBSD, OpenBSD should not get here.\n"); \
     abort(); \
-} while(0)
+} while(0);
 #endif
 
 /* const is extern const in C, but static const in C++,
