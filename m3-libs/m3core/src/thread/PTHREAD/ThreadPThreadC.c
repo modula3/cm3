@@ -200,6 +200,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
   if (pthread_attr_init(&attr) != 0) abort();
   if (pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr) != 0) abort();
   if (pthread_attr_getstack(&attr, (void**)&stackaddr, &stacksize) != 0) abort();
+  if (pthread_attr_destroy(&attr) != 0) abort();
   assert(start == 0);
   assert(end >= stackaddr);
   assert(end <= (stackaddr + stacksize));
