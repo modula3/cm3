@@ -42,12 +42,32 @@ extern "C"
 
 void Unix__Assertions(void)
 {
-    /* make sure all the Modula-3 types are large enough */
+    /* make sure things are normal */
+    M3_STATIC_ASSERT(CHAR_BIT == 8);
+    M3_STATIC_ASSERT(sizeof(short) == 2);
+    M3_STATIC_ASSERT(sizeof(int) == 4);
+    M3_STATIC_ASSERT((sizeof(long) == 4) || (sizeof(long) == 8));
+    M3_STATIC_ASSERT((sizeof(void*) == 4) || (sizeof(void*) == 8));
+    M3_STATIC_ASSERT((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
+    M3_STATIC_ASSERT(sizeof(ptrdiff_t) == sizeof(size_t));
+    M3_STATIC_ASSERT(sizeof(void*) == sizeof(size_t));
+#ifndef _WIN64
+    M3_STATIC_ASSERT(sizeof(void*) == sizeof(long));
+    M3_STATIC_ASSERT(sizeof(size_t) == sizeof(long));
+#endif
 
-#define CHECK_M3_TYPE_SIZE(x) assert(sizeof(m3_##x) >= sizeof(x))
-#define IS_TYPE_SIGNED(x)  (((x)-1) < (x)0)
+#ifdef _MSC_VER
+    M3_STATIC_ASSERT(sizeof(__int64) == 8);
+#else
+    M3_STATIC_ASSERT(sizeof(long long) == 8);
+#endif
 
 #ifndef _WIN32
+
+/* make sure all the Modula-3 types are large enough */
+
+#define CHECK_M3_TYPE_SIZE(x) M3_STATIC_ASSERT(sizeof(m3_##x) >= sizeof(x))
+#define IS_TYPE_SIGNED(x)  (((x)-1) < (x)0)
 
     CHECK_M3_TYPE_SIZE(dev_t);
     CHECK_M3_TYPE_SIZE(gid_t);
@@ -59,26 +79,10 @@ void Unix__Assertions(void)
     CHECK_M3_TYPE_SIZE(pthread_t);
     CHECK_M3_TYPE_SIZE(uid_t);
 
-    assert(IS_TYPE_SIGNED(pid_t) == 1);
-
+    M3_STATIC_ASSERT(IS_TYPE_SIGNED(pid_t));
 #endif
-
-    assert(CHAR_BIT == 8);
-    assert(sizeof(short) == 2);
-    assert(sizeof(int) == 4);
-    assert((sizeof(long) == 4) || (sizeof(long) == 8));
-    assert((sizeof(void*) == 4) || (sizeof(void*) == 8));
-    assert((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
-    assert(sizeof(void*) == sizeof(size_t));
-#ifndef _WIN64
-    assert(sizeof(void*) == sizeof(long));
-    assert(sizeof(size_t) == sizeof(long));
-#endif
-#ifdef _MSC_VER
-    assert(sizeof(__int64) == 8);
-#else
-    assert(sizeof(long long) == 8);
-#endif
+    Utime__Assertions();
+    Usocket__Assertions();
 }
 
 /* open doesn't take any off_t parameter, but there is open64, that
