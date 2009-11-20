@@ -15,11 +15,6 @@ Some use BSD sigvec which is similar to sigaction.
 #define _XPG4_2
 #define _DARWIN_C_SOURCE
 
-#ifdef __OpenBSD__
-/* http://www.usenix.org/event/usenix2000/general/full_papers/engelschall/engelschall.pdf */
-/*#define M3_THREADS_USE_SIGALTSTACK_AND_JMPBUF */ /* not yet */
-#endif
-
 #include "m3unix.h"
 #include "ThreadPosix.h"
 #include <string.h>
@@ -30,15 +25,10 @@ Some use BSD sigvec which is similar to sigaction.
 #include <setjmp.h>
 #include <stddef.h>
 #include <errno.h>
-#ifdef M3_THREADS_USE_SIGALTSTACK_AND_JMPBUF
-#include <sys/signal.h>
-#include <stdio.h>
-#else
 #ifdef __OpenBSD__
 #include "context.h"
 #else
 #include <ucontext.h>
-#endif
 #endif
 #include <sys/mman.h>
 
@@ -97,55 +87,8 @@ void disallow_sigvtalrm(void)
 
 typedef struct {
   stack_t ss;
-#ifdef M3_THREADS_USE_SIGALTSTACK_AND_JMPBUF
-  jmp_buf jb;
-  struct /* source compatible with #else */
-  {
-    stack_t uc_stack;
-  } uc;
-#else
   ucontext_t uc;
-#endif
 } Context;
-
-#ifdef M3_THREADS_USE_SIGALTSTACK_AND_JMPBUF
-
-static Context Context_Caller;
-static Context* Context_Create;
-static int/*sigatomic_t*/ Trampoline_Called;
-static void (*Trampoline_Func)(void);
-static sigset_t Trampoline_Sigs;
-
-static void Boot(void)
-{
-    void (*func)(void);
-
-    sigprocmask(SIG_SETMASK, &Trampoline_Sigs, NULL);
-
-    func = Trampoline_Func;
-
-    if (setjmp(Context_Create->jb) == 0)
-        longjmp(Context_Caller.jb, 1);
-
-    func();
-
-    /* not reached */
-
-    abort();
-}
-
-static void Trampoline(int sig)
-{
-    assert(sig == SIGUSR1);
-    if (setjmp(Context_Create->jb) == 0)
-    {
-        Trampoline_Called = 1;
-        return;
-    }
-    Boot();
-}
-
-#endif
 
 void *
 MakeContext (void (*p)(void), int words)
@@ -156,20 +99,6 @@ MakeContext (void (*p)(void), int words)
   char *sp = NULL;
   int pages;
   int er;
-#ifdef M3_THREADS_USE_SIGALTSTACK_AND_JMPBUF
-  struct sigaction sa, osa;
-  sigset_t sigs, osigs;
-  stack_t ss, oss;
-  int r = { 0 };
-
-  ZeroMemory(&ss, sizeof(ss));
-  ZeroMemory(&oss, sizeof(oss));
-  ZeroMemory(&sa, sizeof(sa));
-  ZeroMemory(&osa, sizeof(osa));
-  ZeroMemory(&sigs, sizeof(sigs));
-  ZeroMemory(&osigs, sizeof(osigs));
-
-#endif
 
   if (c == NULL)
     goto Error;
@@ -185,89 +114,12 @@ MakeContext (void (*p)(void), int words)
   if (mprotect(sp, pagesize, PROT_NONE)) abort();
   if (mprotect(sp + size - pagesize, pagesize, PROT_NONE)) abort();
 
-#ifdef M3_THREADS_USE_SIGALTSTACK_AND_JMPBUF
-
-  /* 1 block SIGUSR1 */
-  /* Shouldn't this block all signals? */
-
-  r = sigemptyset(&sigs);
-  assert(r == 0);
-  r = sigaddset(&sigs, SIGUSR1);
-  assert(r == 0);
-  r = sigprocmask(SIG_BLOCK, &sigs, &osigs);
-  assert(r == 0);
-
-  /* 2 set SIGUSR1 to use new stack and call setup function */
-
-  sa.sa_handler = Trampoline;
-  sa.sa_flags = SA_ONSTACK;
-  r = sigemptyset(&sa.sa_mask);
-  assert(r == 0);
-  r = sigaction(SIGUSR1, &sa, &osa);
-  assert(r == 0);
-
-  /* 3 set alternate signal stack */
-
-  c->uc.uc_stack.ss_sp = sp + pagesize;
-  c->uc.uc_stack.ss_size = size - 2 * pagesize;
-  c->uc.uc_stack.ss_flags = 0;
-  r = sigaltstack(&c->uc.uc_stack, &oss);
-  if (r == 0)
-  {
-    fprintf(stderr, "sigaltstack failed with %d\n", errno);
-    assert(r == 0);
-  }
-
-  /* 4a set global parameters and send SIGUSR1 (currently blocked) */
-
-  Context_Create = c;
-  Trampoline_Sigs = osigs;
-  Trampoline_Func = p;
-  r = kill(getpid(), SIGUSR1);
-  assert(r == 0);
-
-  /* 4b allow only SIGUSR1 and wait for it be delivered */
-
-  r = sigfillset(&sigs);
-  assert(r == 0);
-  r = sigdelset(&sigs, SIGUSR1);
-  assert(r == 0);
-  Trampoline_Called = 0;
-  while (Trampoline_Called == 0)
-  {
-      r = sigsuspend(&sigs);
-      assert(r == -1);
-      assert(errno == EINTR);
-  }
-
-  /* 6 restore old stack/action/mask for SIGUSR1 */
-
-  r = sigaltstack(NULL, &ss);
-  assert(r == 0);
-  ss.ss_flags = SS_DISABLE;
-  r = sigaltstack(&ss, NULL);
-  assert(r == 0);
-  if (!(oss.ss_flags & SS_DISABLE))
-  {
-    r = sigaltstack(&oss, NULL);
-    assert(r == 0);
-  }
-  r = sigaction(SIGUSR1, &osa, NULL);
-  assert(r == 0);
-  r = sigprocmask(SIG_SETMASK, &osigs, NULL);
-  assert(r == 0);
-
-
-  if (setjmp(Context_Caller.jb) == 0)
-    longjmp(c->jb, 1);
-
-#else
   if (getcontext(&(c->uc))) abort();
   c->uc.uc_stack.ss_sp = sp + pagesize;
   c->uc.uc_stack.ss_size = size - 2 * pagesize;
   c->uc.uc_link = 0;
   makecontext(&(c->uc), p, 0);
-#endif
+
   return c;
 Error:
   er = errno;
@@ -279,21 +131,12 @@ Error:
 
 void GetContext (Context *c)
 {
-#ifdef M3_THREADS_USE_SIGALTSTACK_AND_JMPBUF
-  setjmp(c->jb);
-#else
   if (getcontext(&(c->uc))) abort();
-#endif
 }
 
 void SwapContext (Context *from, Context *to)
 {
-#ifdef M3_THREADS_USE_SIGALTSTACK_AND_JMPBUF
-    if (setjmp(from->jb) == 0)
-        longjmp(to->jb, 1);
-#else
   if (swapcontext(&(from->uc), &(to->uc))) abort();
-#endif
 }
 
 void DisposeContext (Context **c)
