@@ -325,6 +325,8 @@ void *ThreadPThread__SaveRegsInStack(void);
       asm("	ThreadPThread__SaveRegsInStack_end:");
       asm("	.size ThreadPThread__SaveRegsInStack,ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
 #   endif
+# else
+void *ThreadPThread__SaveRegsInStack(void) { return 0; }
 # endif
 
 void
