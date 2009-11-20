@@ -2648,7 +2648,7 @@ TYPE
 
 (* End Image Format *)
 
-<*EXTERNAL "m3_MemoryBarrier"*>
+<*EXTERNAL "WinNT__MemoryBarrier"*>
 PROCEDURE MemoryBarrier();
 
 END WinNT. 
