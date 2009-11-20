@@ -338,7 +338,7 @@ ThreadPThread__ProcessLive(char *start, char *end,
 {
   jmp_buf buf;
   setjmp(buf);
-  p(&buf, ((char *)&buf) + sizeof(buf));
+  p((char *)&buf, ((char *)&buf) + sizeof(buf));
 #ifdef __sparc
   start = ThreadPThread__SaveRegsInStack();
 #endif
