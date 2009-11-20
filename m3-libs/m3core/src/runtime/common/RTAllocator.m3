@@ -14,7 +14,7 @@
 UNSAFE MODULE RTAllocator
 EXPORTS RTAllocator, RTAllocCnts, RTHooks, RTHeapRep;
 
-IMPORT Cstdlib, RT0, RTMisc, RTOS, RTType, Scheduler, ThreadUnsafe;
+IMPORT Cstdlib, RT0, RTMisc, RTOS, RTType, Scheduler, ThreadInternal;
 IMPORT RuntimeError AS RTE, Word;
 FROM RTType IMPORT Typecode;
 
@@ -71,7 +71,7 @@ PROCEDURE Clone (ref: REFANY): REFANY
   VAR
     hdr: RefHeader;  def: RT0.TypeDefn;  dataSize: CARDINAL;
     res: ADDRESS;
-    thread := ThreadUnsafe.MyHeapState();
+    thread := ThreadInternal.MyHeapState();
   BEGIN
     IF (ref = NIL) THEN RETURN NIL; END;
     IF Word.And(LOOPHOLE(ref, Word.T), 1) # 0 THEN RETURN ref; END;
@@ -190,7 +190,7 @@ PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
 PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
   VAR
     res: ADDRESS;
-    thread := ThreadUnsafe.MyHeapState();
+    thread := ThreadInternal.MyHeapState();
   BEGIN
     IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Ref) THEN
       RTE.Raise(RTE.T.ValueOutOfRange);
@@ -212,7 +212,7 @@ PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
 PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
   VAR
     res: ADDRESS;
-    thread := ThreadUnsafe.MyHeapState();
+    thread := ThreadInternal.MyHeapState();
   BEGIN
     IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Obj) THEN
       RTE.Raise(RTE.T.ValueOutOfRange);
@@ -281,7 +281,7 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
   VAR
     res: ADDRESS;
     dataSize: CARDINAL;
-    thread := ThreadUnsafe.MyHeapState();
+    thread := ThreadInternal.MyHeapState();
   BEGIN
     IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Array) THEN
       RTE.Raise(RTE.T.ValueOutOfRange);

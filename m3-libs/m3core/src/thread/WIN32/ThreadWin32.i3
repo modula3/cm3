@@ -7,7 +7,9 @@
 
 UNSAFE INTERFACE ThreadWin32;
 
-FROM WinDef IMPORT BOOL(*int*);
+FROM WinDef IMPORT LONG, BOOL(*int*);
+FROM Thread IMPORT T;
+FROM ThreadF IMPORT State;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
 
@@ -61,14 +63,27 @@ PROCEDURE LeaveCriticalSection_perfMu();
 
 <*EXTERNAL "ThreadWin32__EnterCriticalSection_heap"*>
 PROCEDURE EnterCriticalSection_heap();
+
 <*EXTERNAL "ThreadWin32__LeaveCriticalSection_heap"*>
 PROCEDURE LeaveCriticalSection_heap();
 
-(*---------------------------------------------------------------------------*)
+<*EXTERNAL ThreadWin32__InterlockedIncrement*>
+PROCEDURE InterlockedIncrement(VAR a: LONG);
+
+<*EXTERNAL ThreadWin32__InterlockedDecrement*>
+PROCEDURE InterlockedDecrement(VAR a: LONG);
+
+<*EXTERNAL ThreadWin32__InterlockedRead*>
+PROCEDURE InterlockedRead(VAR a: LONG): LONG;
 
 <*EXTERNAL ThreadWin32__InitC*>
 PROCEDURE InitC();
 
-(*---------------------------------------------------------------------------*)
+(*----------------------------------------------------- for SchedulerPosix --*)
+
+PROCEDURE PerfChanged (s: State);
+PROCEDURE PerfRunning ();
+PROCEDURE XTestAlert (self: T): BOOLEAN;
+VAR perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
 
 END ThreadWin32.

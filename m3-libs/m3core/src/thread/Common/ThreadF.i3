@@ -30,4 +30,10 @@ TYPE
 PROCEDURE MyId(): Id RAISES {};
 (* return Id of caller *)
 
+(*------------------------------------------------------------ preemption ---*)
+
+PROCEDURE SetSwitchingInterval (usec: CARDINAL);
+(* Sets the time between thread preemptions to 'usec' microseconds.
+   This procedure is a no-op with kernel threads. *)
+
 END ThreadF.
