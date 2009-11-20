@@ -17,7 +17,6 @@ typedef void (*ThreadPosix__SignalHandler1)(int signo);
 void ThreadPosix__setup_sigvtalrm(ThreadPosix__SignalHandler1 handler);
 void ThreadPosix__allow_sigvtalrm(void);
 void ThreadPosix__disallow_sigvtalrm(void);
-void ThreadPosix__Init(void);
 
 #ifdef __cplusplus
 } /* extern "C" */
