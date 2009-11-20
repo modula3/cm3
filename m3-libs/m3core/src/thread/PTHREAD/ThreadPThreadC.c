@@ -302,7 +302,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 #endif /* M3_DIRECT_SUSPEND */
 
 # ifdef __sparc
-void *ThreadPThread__SaveRegsInStack(void);
+char *ThreadPThread__SaveRegsInStack(void);
 /* On register window machines, we need a way to force registers into       */
 /* the stack.       Return sp.                                              */
     asm("       .seg        \"text\"");
@@ -329,16 +329,16 @@ void *ThreadPThread__SaveRegsInStack(void);
       asm("     .size ThreadPThread__SaveRegsInStack,ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
 #   endif
 # else
-void *ThreadPThread__SaveRegsInStack(void) { return 0; }
+char *ThreadPThread__SaveRegsInStack(void) { return 0; }
 # endif
 
 void
-ThreadPThread__ProcessLive(char *start, char * end,
+ThreadPThread__ProcessLive(char *start, char *end,
                            void (*p)(char *start, char *stop))
 {
   jmp_buf buf;
   setjmp(buf);
-  p(&buf, (char *)&buf + sizeof(buf));
+  p(&buf, ((char *)&buf) + sizeof(buf));
 #ifdef __sparc
   start = ThreadPThread__SaveRegsInStack();
 #endif
