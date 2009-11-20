@@ -133,8 +133,8 @@ int ThreadPThread__RestartThread (m3_pthread_t mt)
   abort();
 }
 
-void ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
-                                    void (*p)(char *start, char *end))
+void ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
+                                    void (*p)(void *start, void *end))
 {
   p(start, end);
 }
@@ -172,7 +172,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
-                               void (*p)(char *start, char *end))
+                               void (*p)(void *start, void *end))
 {
   stack_t sinfo;
   char* ss_sp;
@@ -191,7 +191,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
-                              void (*p)(char *start, char *end))
+                              void (*p)(void *start, void *end))
 {
   pthread_attr_t attr;
   char *stackaddr;
@@ -334,11 +334,11 @@ char *ThreadPThread__SaveRegsInStack(void) { return 0; }
 
 void
 ThreadPThread__ProcessLive(char *start, char *end,
-                           void (*p)(char *start, char *stop))
+                           void (*p)(void *start, void *stop))
 {
   jmp_buf buf;
   setjmp(buf);
-  p((char *)&buf, ((char *)&buf) + sizeof(buf));
+  p(&buf, ((char *)&buf) + sizeof(buf));
 #ifdef __sparc
   start = ThreadPThread__SaveRegsInStack();
 #endif
