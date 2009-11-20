@@ -4,7 +4,7 @@
 UNSAFE MODULE RTSignal;
 
 IMPORT RT0, RTMachInfo, RTError, RTException, RTProcess, RuntimeError;
-IMPORT WinBase, WinCon, WinDef, WinNT, ThreadContext, Thread, ThreadF;
+IMPORT WinBase, WinCon, WinDef, WinNT, ThreadContext, Thread, ThreadInternal;
 
 TYPE
   RTE = RuntimeError.T;
@@ -60,7 +60,7 @@ PROCEDURE RuntimeFilter (info: WinNT.PEXCEPTION_POINTERS): WinDef.LONG =
     END;
 
     (* Otherwise, just dump our guts... *)
-    ThreadF.SuspendOthers ();
+    ThreadInternal.SuspendOthers ();
     FOR i := FIRST (SysErrs) TO LAST (SysErrs) DO
       IF (SysErrs[i].err = err) THEN
         RTError.ReportPC (pc, SysErrs[i].msg);
@@ -71,7 +71,7 @@ PROCEDURE RuntimeFilter (info: WinNT.PEXCEPTION_POINTERS): WinDef.LONG =
         EXIT;
       END;
     END;
-    ThreadF.ResumeOthers ();
+    ThreadInternal.ResumeOthers ();
 (***
     IF (old_filter # NIL)
       THEN RETURN old_filter (info);

@@ -2,10 +2,8 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 
-Interface ("ThreadF")
 Interface ("ThreadContext")
 module ("ThreadWin32")
-interface("ThreadInternal")
 c_source("ThreadWin32C")
 
 if equal (OS_TYPE, "POSIX")   
