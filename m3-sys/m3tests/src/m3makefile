@@ -549,6 +549,7 @@ p_test ("p2", "p207", "subrange declarations")
 p_test ("p2", "p208", "catching runtime errors")
 p_test ("p2", "p209", "open array initializers compile failure")
 p_test ("p2", "p210", "open array initializers runtime failure")
+p_test ("p2", "p213", "mutex checker (approx. 4 to 5 minutes)")
 
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated
