@@ -4,8 +4,36 @@
 extern "C" {
 #endif
 
-/* to address libtool: file: UtimeC.o has no symbols */
-void UtimeC__dummy(void) { }
+void Utime__Assertions(void)
+{
+#ifndef _WIN32
+    /* Basically no 32bit system has a 64bit time_t, unfortunate. */
+    M3_STATIC_ASSERT(sizeof(time_t) <= sizeof(void*));
+
+    /* verify itimerval contains just the two fields we know about, in either order */
+    { typedef itimerval_t T;
+      M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, it_value) + M3_FIELD_SIZE(T, it_interval)); }
+
+    /* verify timespec (nanotime) contains just the two fields we know about, in either order */
+    { typedef timespec_T T;
+      M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, tv_sec) + M3_FIELD_SIZE(T, tv_nsec)); }
+
+    /* verify timeval (microtime) contains just the two fields we know about, in either order */
+    { typedef timeval_t T;
+      M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, tv_sec) + M3_FIELD_SIZE(T, tv_usec)); }
+
+    /* verify timezone is exactly as we expect */
+    { typedef m3_timezone_t M;
+      typedef timezone_t T;
+      M3_STATIC_ASSERT(sizeof(T) == sizeof(M));
+      M3_STATIC_ASSERT(sizeof(T) == 8);
+      M3_STATIC_ASSERT(offsetof(T, tz_minuteswest) == 0);
+      M3_STATIC_ASSERT(offsetof(T, tz_dsttime) == 4);
+      M3_STATIC_ASSERT(offsetof(M, minuteswest) == 0);
+      M3_STATIC_ASSERT(offsetof(M, dsttime) == 4);
+    }
+#endif
+}
 
 #if defined(__OpenBSD__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__APPLE__)
 #define M3BSD
