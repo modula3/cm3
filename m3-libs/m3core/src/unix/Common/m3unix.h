@@ -280,17 +280,6 @@ time_t Utime__get_timezone(void);
 time_t Utime__get_altzone(void);
 int Utime__get_daylight(void);
 const char* Utime__get_tzname(unsigned a);
-int Utime__gettimeofday(m3_timeval_t* m3t);
-int Utime__getitimer(int which, m3_itimerval_t* m3t);
-m3_time_t Utime__time(m3_time_t* tloc);
-m3_time_t Utime__mktime(tm_t* tm);
-char* Utime__ctime(const m3_time_t* m);
-tm_t* Utime__localtime(const m3_time_t* m);
-tm_t* Utime__gmtime(const m3_time_t* m);
-tm_t* Utime__localtime_r(const m3_time_t* clock, tm_t* result);
-tm_t* Utime__gmtime_r(const m3_time_t* clock, tm_t* result);
-int Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old);
-int Utime__nanosleep(const m3_timespec_t* m3req, m3_timespec_t* m3rem);
 void Utime__tzset(void);
 
 
