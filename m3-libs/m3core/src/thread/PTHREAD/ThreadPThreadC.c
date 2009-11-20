@@ -179,7 +179,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
   if (pthread_stackseg_np(PTHREAD_FROM_M3(mt), &sinfo) != 0) abort();
   ss_sp = (char*)sinfo.ss_sp;
   assert(start == 0);
-  assert(sinfo.ss_sp <= end);       /* man page says ss_sp is "top" */
+  assert(ss_sp <= end);       /* man page says ss_sp is "top" */
   assert(end <= (ss_sp + sinfo.ss_size));
   /* we don't have a reliable sp, so... */
   p(ss_sp, (ss_sp + sinfo.ss_size));
