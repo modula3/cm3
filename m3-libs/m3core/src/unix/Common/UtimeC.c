@@ -127,7 +127,7 @@ int Utime__setitimer(int which, itimerval_t* new_value, itimerval_t* old_value)
 
 #ifndef __INTERIX
 
-int Utime__nanosleep(timespec_t* req, timespec_t* rem)
+int Utime__nanosleep(timespec_T* req, timespec_T* rem)
 {
     return nanosleep(req, rem);
 }

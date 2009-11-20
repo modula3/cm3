@@ -10,7 +10,7 @@
 #include <errno.h>
 #include <pthread.h>
 #include <time.h>
-typedef struct timespec timespec_t;
+typedef struct timespec timespec_T;
 
 #ifdef __APPLE__
 /* MacOSX diverges in a good way and therefore many functions
@@ -302,7 +302,7 @@ void ThreadPThread__pthread_cond_delete(pthread_cond_t* p)
     free(p);
 }
 
-int ThreadPThread__Nanosleep(timespec_t* req, timespec_t* rem)
+int ThreadPThread__Nanosleep(timespec_T* req, timespec_T* rem)
 {
 #ifdef __INTERIX
     /* This is only an approximation. */
@@ -330,7 +330,7 @@ int
 ThreadPThread__pthread_cond_timedwait(
 	pthread_cond_t* cond,
 	pthread_mutex_t* mutex,
-	const timespec_t* abs)
+	const timespec_T* abs)
 {
     return pthread_cond_timedwait(cond, mutex, abs);
 }
