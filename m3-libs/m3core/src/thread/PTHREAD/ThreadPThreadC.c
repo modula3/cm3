@@ -133,8 +133,8 @@ int ThreadPThread__RestartThread (m3_pthread_t mt)
   abort();
 }
 
-void ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
-                                    void (*p)(void *start, void *end))
+void ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
+                                    void (*p)(char *start, char *end))
 {
   p(start, end);
 }
@@ -171,16 +171,18 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 #ifdef __OpenBSD__
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
-                               void (*p)(void *start, void *end))
+ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
+                               void (*p)(char *start, char *end))
 {
   stack_t sinfo;
+  char* ss_sp;
   if (pthread_stackseg_np(PTHREAD_FROM_M3(mt), &sinfo) != 0) abort();
+  ss_sp = (char*)sinfo.ss_sp;
   assert(start == 0);
   assert(sinfo.ss_sp <= end);       /* man page says ss_sp is "top" */
-  assert((char *)end <= (char *)sinfo.ss_sp + sinfo.ss_size);
+  assert(end <= (ss_sp + sinfo.ss_size));
   /* we don't have a reliable sp, so... */
-  p(sinfo.ss_sp, (char *)sinfo.ss_sp + sinfo.ss_size);
+  p(ss_sp, (ss_sp + sinfo.ss_size));
 }
 
 #endif /* OpenBSD */
@@ -188,19 +190,19 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 #ifdef __FreeBSD__
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
-                              void (*p)(void *start, void *end))
+ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
+                              void (*p)(char *start, char *end))
 {
   pthread_attr_t attr;
-  void *stackaddr;
+  char *stackaddr;
   size_t stacksize;
   /* assume registers of stopped threads are in the stack so don't process */
   if (pthread_attr_init(&attr) != 0) abort();
   if (pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr) != 0) abort();
-  if (pthread_attr_getstack(&attr, &stackaddr, &stacksize) != 0) abort();
+  if (pthread_attr_getstack(&attr, (void**)&stackaddr, &stacksize) != 0) abort();
   assert(start == 0);
   assert(end >= stackaddr);
-  assert((char *)end <= (char *)stackaddr + stacksize);
+  assert(end <= (stackaddr + stacksize));
   p(stackaddr, end);
 }
 
@@ -331,8 +333,8 @@ void *ThreadPThread__SaveRegsInStack(void) { return 0; }
 # endif
 
 void
-ThreadPThread__ProcessLive(void *start, void * end,
-                           void (*p)(void *start, void *stop))
+ThreadPThread__ProcessLive(char *start, char * end,
+                           void (*p)(char *start, char *stop))
 {
   jmp_buf buf;
   setjmp(buf);
