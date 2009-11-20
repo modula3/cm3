@@ -292,8 +292,6 @@ tm_t* Utime__gmtime_r(const m3_time_t* clock, tm_t* result);
 int Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old);
 int Utime__nanosleep(const m3_timespec_t* m3req, m3_timespec_t* m3rem);
 void Utime__tzset(void);
-int Unix__utimes(const char* file, const m3_timeval_t* tvp);
-int Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, m3_timeval_t* timeout);
 
 
 /* Some compilers don't like this, will adjust as needed. */
