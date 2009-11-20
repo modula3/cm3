@@ -134,7 +134,7 @@ int ThreadPThread__RestartThread (m3_pthread_t mt)
 }
 
 void ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
-				    void (*p)(void *start, void *end))
+                                    void (*p)(void *start, void *end))
 {
   p(start, end);
 }
@@ -172,12 +172,12 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
-			       void (*p)(void *start, void *end))
+                               void (*p)(void *start, void *end))
 {
   stack_t sinfo;
   if (pthread_stackseg_np(PTHREAD_FROM_M3(mt), &sinfo) != 0) abort();
   assert(start == 0);
-  assert(sinfo.ss_sp <= end);	/* man page says ss_sp is "top" */
+  assert(sinfo.ss_sp <= end);       /* man page says ss_sp is "top" */
   assert((char *)end <= (char *)sinfo.ss_sp + sinfo.ss_size);
   /* we don't have a reliable sp, so... */
   p(sinfo.ss_sp, (char *)sinfo.ss_sp + sinfo.ss_size);
@@ -189,7 +189,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
-			      void (*p)(void *start, void *end))
+                              void (*p)(void *start, void *end))
 {
   pthread_attr_t attr;
   void *stackaddr;
@@ -230,7 +230,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
-			       void (*p)(void *start, void *end))
+                               void (*p)(void *start, void *end))
 {
   void *sp;
   pthread_t t = PTHREAD_FROM_M3(mt);
@@ -239,7 +239,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
   ppc_thread_state_t state;
   mach_msg_type_number_t thread_state_count = PPC_THREAD_STATE_COUNT;
   if (thread_get_state(mach_thread, PPC_THREAD_STATE,
-		       (thread_state_t)&state, &thread_state_count)
+                       (thread_state_t)&state, &thread_state_count)
       != KERN_SUCCESS) abort();
   if (thread_state_count != PPC_THREAD_STATE_COUNT) abort();
 #if __DARWIN_UNIX03
@@ -251,7 +251,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
   ppc_thread_state64_t state;
   mach_msg_type_number_t thread_state_count = PPC_THREAD_STATE64_COUNT;
   if (thread_get_state(mach_thread, PPC_THREAD_STATE64,
-		       (thread_state_t)&state, &thread_state_count)
+                       (thread_state_t)&state, &thread_state_count)
       != KERN_SUCCESS) abort();
   if (thread_state_count != PPC_THREAD_STATE64_COUNT) abort();
 #if __DARWIN_UNIX03
@@ -263,7 +263,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
   i386_thread_state_t state;
   mach_msg_type_number_t thread_state_count = i386_THREAD_STATE_COUNT;
   if (thread_get_state(mach_thread, i386_THREAD_STATE,
-		       (thread_state_t)&state, &thread_state_count)
+                       (thread_state_t)&state, &thread_state_count)
       != KERN_SUCCESS) abort();
   if (thread_state_count != i386_THREAD_STATE_COUNT) abort();
 #if __DARWIN_UNIX03
@@ -275,7 +275,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
   x86_thread_state64_t state;
   mach_msg_type_number_t thread_state_count = x86_THREAD_STATE64_COUNT;
   if (thread_get_state(mach_thread, x86_THREAD_STATE64,
-		       (thread_state_t)&state, &thread_state_count)
+                       (thread_state_t)&state, &thread_state_count)
       != KERN_SUCCESS) abort();
   if (thread_state_count != x86_THREAD_STATE64_COUNT) abort();
 #if __DARWIN_UNIX03
@@ -286,7 +286,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 #elif defined(__arm__)
   mach_msg_type_number_t thread_state_count = ARM_THREAD_STATE_COUNT;
   if (thread_get_state(mach_thread, ARM_THREAD_STATE,
-		       state, &thread_state_count)
+                       state, &thread_state_count)
       != KERN_SUCCESS) abort();
   if (thread_state_count != ARM_THREAD_STATE_COUNT) abort();
   sp = (void *)(state.r13);
@@ -301,30 +301,30 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 
 # ifdef __sparc
 void *ThreadPThread__SaveRegsInStack(void);
-/* On register window machines, we need a way to force registers into 	*/
-/* the stack.	Return sp.						*/
-    asm("	.seg 	\"text\"");
+/* On register window machines, we need a way to force registers into       */
+/* the stack.       Return sp.                                              */
+    asm("       .seg        \"text\"");
 #   if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
-      asm("	.globl	ThreadPThread__SaveRegsInStack");
+      asm("     .globl      ThreadPThread__SaveRegsInStack");
       asm("ThreadPThread__SaveRegsInStack:");
-      asm("	.type ThreadPThread__SaveRegsInStack,#function");
+      asm("     .type ThreadPThread__SaveRegsInStack,#function");
 #   else
-      asm("	.globl	ThreadPThread__SaveRegsInStack");
+      asm("     .globl      ThreadPThread__SaveRegsInStack");
       asm("ThreadPThread__SaveRegsInStack:");
 #   endif
 #   if defined(__arch64__) || defined(__sparcv9)
-      asm("	save	%sp,-128,%sp");
-      asm("	flushw");
-      asm("	ret");
-      asm("	restore %sp,2047+128,%o0");
+      asm("     save        %sp,-128,%sp");
+      asm("     flushw");
+      asm("     ret");
+      asm("     restore %sp,2047+128,%o0");
 #   else
-      asm("	ta	0x3   ! ST_FLUSH_WINDOWS");
-      asm("	retl");
-      asm("	mov	%sp,%o0");
+      asm("     ta      0x3   ! ST_FLUSH_WINDOWS");
+      asm("     retl");
+      asm("     mov     %sp,%o0");
 #   endif
 #   ifdef SVR4
-      asm("	ThreadPThread__SaveRegsInStack_end:");
-      asm("	.size ThreadPThread__SaveRegsInStack,ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
+      asm("     ThreadPThread__SaveRegsInStack_end:");
+      asm("     .size ThreadPThread__SaveRegsInStack,ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
 #   endif
 # else
 void *ThreadPThread__SaveRegsInStack(void) { return 0; }
@@ -332,7 +332,7 @@ void *ThreadPThread__SaveRegsInStack(void) { return 0; }
 
 void
 ThreadPThread__ProcessLive(void *start, void * end,
-			   void (*p)(void *start, void *stop))
+                           void (*p)(void *start, void *stop))
 {
   jmp_buf buf;
   setjmp(buf);
@@ -507,9 +507,9 @@ ThreadPThread__pthread_cond_wait(
 
 int
 ThreadPThread__pthread_cond_timedwait(
-	pthread_cond_t* cond,
-	pthread_mutex_t* mutex,
-	const timespec_T* abs)
+        pthread_cond_t* cond,
+        pthread_mutex_t* mutex,
+        const timespec_T* abs)
 {
     return pthread_cond_timedwait(cond, mutex, abs);
 }
