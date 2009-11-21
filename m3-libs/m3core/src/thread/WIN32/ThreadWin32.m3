@@ -578,9 +578,19 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
 
 (*------------------------------------------------ timer-based preemption ---*)
 
+(* do-nothing stubs for compatibility with user-level threads *)
+
 PROCEDURE SetSwitchingInterval (<*UNUSED*> usec: CARDINAL) =
   BEGIN
   END SetSwitchingInterval;
+
+PROCEDURE DisableSwitching () =
+  BEGIN
+  END DisableSwitching;
+
+PROCEDURE EnableSwitching () =
+  BEGIN
+  END EnableSwitching;
 
 (*---------------------------------------------------- Scheduling support ---*)
 
@@ -798,16 +808,6 @@ PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState =
   BEGIN
     RETURN ADR(me.heapState);
   END MyHeapState;
-
-PROCEDURE DisableSwitching () =
-  BEGIN
-    (* no user-level thread switching *)
-  END DisableSwitching;
-
-PROCEDURE EnableSwitching () =
-  BEGIN
-    (* no user-level thread switching *)
-  END EnableSwitching;
 
 (*---------------------------------------------------------------- errors ---*)
 
