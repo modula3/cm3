@@ -1397,12 +1397,11 @@ PROCEDURE SignalHandler (sig: int) =
 (*----------------------------------------------------------- misc. stuff ---*)
 
 PROCEDURE MyId (): Id RAISES {} =
-  VAR self := Self();
   BEGIN
-    RETURN self.id;
+    RETURN Self().id;
   END MyId;
 
-PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
+PROCEDURE MyFPState (): UNTRACED REF RTHeapRep.ThreadState =
   BEGIN
     RETURN ADR(GetActivation().floatState);
   END MyFPState;
@@ -1411,16 +1410,6 @@ PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
   BEGIN
     RETURN ADR(GetActivation().heapState);
   END MyHeapState;
-
-PROCEDURE DisableSwitching () =
-  BEGIN
-    (* no user-level thread switching *)
-  END DisableSwitching;
-
-PROCEDURE EnableSwitching () =
-  BEGIN
-    (* no user-level thread switching *)
-  END EnableSwitching;
 
 (*---------------------------------------------------------------- errors ---*)
 
