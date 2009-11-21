@@ -167,29 +167,11 @@ ThreadPThread__thread_create(
 
 #define MUTEX(name) \
 static pthread_mutex_t name##Mu = PTHREAD_MUTEX_INITIALIZER; \
-int ThreadPThread__pthread_mutex_lock_##name(void) \
-{ \
-    return pthread_mutex_lock(&name##Mu); \
-} \
- \
-int ThreadPThread__pthread_mutex_unlock_##name(void) \
-{ \
-    return pthread_mutex_unlock(&name##Mu); \
-} \
-
+pthread_mutex_t *ThreadPThread__##name##Mu = &name##Mu; \
 
 #define CONDITION_VARIABLE(name) \
 static pthread_cond_t name##Cond = PTHREAD_COND_INITIALIZER; \
-int ThreadPThread__pthread_cond_broadcast_##name(void) \
-{ \
-    return pthread_cond_broadcast(&name##Cond); \
-} \
- \
-int ThreadPThread__pthread_cond_wait_##name(void) \
-{ \
-    return pthread_cond_wait(&name##Cond, &name##Mu); \
-} \
-
+pthread_cond_t *ThreadPThread__##name##Cond = &name##Cond; \
 
 #define THREAD_LOCAL_FAST(name) \
 static __thread void* name; \
