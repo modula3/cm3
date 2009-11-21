@@ -8,7 +8,7 @@ Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError, RTHeapRep, RTIO, RTMachine, RTParams,
        RTPerfTool, RTProcess, ThreadEvent, Time,
-       Unix, Utime, Word, Upthread, Usched,
+       Unix, Utime, Word, Usched,
        Uerror, Uexec;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
@@ -375,7 +375,7 @@ PROCEDURE InitActivations (): Activation =
     <* ASSERT me.stackbase = NIL *>
     <* ASSERT me.sp = NIL *>
     <* ASSERT me.state = ActState.Started *>
-    me.handle := Upthread.self();
+    me.handle := pthread_self();
     me.next := me;
     me.prev := me;
     WITH r = pthread_key_create_activations() DO <*ASSERT r=0*> END;
@@ -614,7 +614,7 @@ PROCEDURE RunThread (me: Activation) =
       me.prev.next := me.next;
       me.next := NIL;
       me.prev := NIL;
-      WITH r = Upthread.detach(me.handle) DO <*ASSERT r=0*> END;
+      WITH r = pthread_detach(me.handle) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END RunThread;
 
@@ -1177,7 +1177,7 @@ PROCEDURE SignalThread(act: Activation; state: ActState): BOOLEAN =
     IF SIG_SUSPEND = 0 THEN RETURN FALSE END;
     SetState(act, state);
     LOOP
-      WITH z = Upthread.kill(act.handle, SIG_SUSPEND) DO
+      WITH z = pthread_kill(act.handle, SIG_SUSPEND) DO
         IF z = 0 THEN RETURN TRUE END;
         <*ASSERT z = Uerror.EAGAIN*>
         (* try it again... *)
@@ -1515,9 +1515,9 @@ VAR
   inCritical := 0;
 
 PROCEDURE LockHeap () =
-  VAR self := Upthread.self();
+  VAR self := pthread_self();
   BEGIN
-    IF Upthread.equal(holder, self) = 0 THEN
+    IF pthread_equal(holder, self) = 0 THEN
       WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
       holder := self;
     END;
@@ -1526,7 +1526,7 @@ PROCEDURE LockHeap () =
 
 PROCEDURE UnlockHeap () =
   BEGIN
-    <*ASSERT Upthread.equal(holder, Upthread.self()) # 0*>
+    <*ASSERT pthread_equal(holder, pthread_self()) # 0*>
     DEC(inCritical);
     IF inCritical = 0 THEN
       holder := NIL;
@@ -1535,9 +1535,9 @@ PROCEDURE UnlockHeap () =
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
-  VAR self := Upthread.self();
+  VAR self := pthread_self();
   BEGIN
-    <*ASSERT Upthread.equal(holder, self) # 0*>
+    <*ASSERT pthread_equal(holder, self) # 0*>
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
     WITH r = pthread_cond_wait(heapMu, heapCond) DO <*ASSERT r=0*> END;
