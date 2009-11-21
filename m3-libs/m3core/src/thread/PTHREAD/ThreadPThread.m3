@@ -132,18 +132,18 @@ PROCEDURE CleanMutex (r: REFANY) =
 PROCEDURE InitMutex (m: Mutex) =
   VAR mutex := pthread_mutex_new();
   BEGIN
-    WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(initMu) DO <*ASSERT r=0*> END;
     IF m.mutex = NIL THEN (* We won the race. *)
       IF mutex = NIL THEN (* But we failed. *)
-        WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
         RTE.Raise (RTE.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
         m.mutex := mutex;
-        WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
         RTHeapRep.RegisterFinalCleanup (m, CleanMutex);
       END;
     ELSE (* another thread beat us in the race, ok *)
-      WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
       pthread_mutex_delete(mutex);
     END;
   END InitMutex;
@@ -192,18 +192,18 @@ PROCEDURE CleanCondition (r: REFANY) =
 PROCEDURE InitCondition (c: Condition) =
   VAR mutex := pthread_mutex_new();
   BEGIN
-    WITH r = pthread_mutex_lock_init() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(initMu) DO <*ASSERT r=0*> END;
     IF c.mutex = NIL THEN (* We won the race. *)
       IF mutex = NIL THEN (* But we failed. *)
-        WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
         RTE.Raise (RTE.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
         c.mutex := mutex;
-        WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
         RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
       END;
     ELSE (* another thread beat us in the race, ok *)
-      WITH r = pthread_mutex_unlock_init() DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
       pthread_mutex_delete(mutex);
     END;
   END InitCondition;
@@ -381,13 +381,13 @@ PROCEDURE InitActivations (): Activation =
     me.prev := me;
     WITH r = pthread_key_create_activations() DO <*ASSERT r=0*> END;
     WITH r = pthread_setspecific_activations(me) DO <*ASSERT r=0*> END;
-    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       <* ASSERT next_slot = 1 *> (* no threads created yet *)
       <* ASSERT slots = NIL *> (* no threads created yet *)
       <* ASSERT n_slotted = 0 *> (* no threads created yet *)
       <* ASSERT allThreads = NIL *> (* no threads created yet *)
       allThreads := me;
-    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
     RETURN me;
   END InitActivations;
 
@@ -415,9 +415,9 @@ PROCEDURE Self (): T =
     IF allThreads = NIL THEN RETURN NIL END;
     me := pthread_getspecific_activations();
     IF me = NIL THEN RETURN NIL END;
-    WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
       t := slots[me.slot];
-    WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
     IF (t.act # me) THEN Die(ThisLine(), "thread with bad slot!") END;
     RETURN t;
   END Self;
@@ -426,19 +426,19 @@ PROCEDURE AssignSlot (t: T) =
   (* LL = 0, cause we allocate stuff with NEW! *)
   VAR n: CARDINAL;  new_slots: REF ARRAY OF T;
   BEGIN
-    WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
 
       (* make sure we have room to register this guy *)
       IF (slots = NIL) THEN
-        WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
           slots := NEW (REF ARRAY OF T, 20);
-        WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
       END;
       IF (n_slotted >= LAST (slots^)) THEN
         n := NUMBER (slots^);
-        WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
           new_slots := NEW (REF ARRAY OF T, n+n);
-        WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+        WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
         IF (n = NUMBER (slots^)) THEN
           (* we won any races that may have occurred. *)
           SUBARRAY (new_slots^, 0, n) := slots^;
@@ -448,7 +448,7 @@ PROCEDURE AssignSlot (t: T) =
              and the new table has room for us. *)
         ELSE
           (* ouch, the new table is full too!   Bail out and retry *)
-          WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+          WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
           AssignSlot (t);
           RETURN;
         END;
@@ -464,13 +464,13 @@ PROCEDURE AssignSlot (t: T) =
       t.act.slot := next_slot;
       slots [next_slot] := t;
 
-    WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
   END AssignSlot;
 
 PROCEDURE FreeSlot (t: T) =
   (* LL = 0 *)
   BEGIN
-    WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
 
       DEC (n_slotted);
       WITH z = slots [t.act.slot] DO
@@ -479,7 +479,7 @@ PROCEDURE FreeSlot (t: T) =
       END;
       t.act.slot := 0;
 
-    WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
   END FreeSlot;
 
 PROCEDURE DumpThread (t: T) =
@@ -573,9 +573,9 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
 PROCEDURE RunThread (me: Activation) =
   VAR self: T;  cl: Closure;
   BEGIN
-    WITH r = pthread_mutex_lock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
       self := slots [me.slot];
-    WITH r = pthread_mutex_unlock_slot() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
 
     (* Let parent know we are running *)
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
@@ -609,14 +609,14 @@ PROCEDURE RunThread (me: Activation) =
     (* Since we're no longer slotted, we cannot touch traced refs. *)
 
     (* remove ourself from the list of active threads *)
-    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       <*ASSERT allThreads # me*>
       me.next.prev := me.prev;
       me.prev.next := me.next;
       me.next := NIL;
       me.prev := NIL;
       WITH r = Upthread.detach(me.handle) DO <*ASSERT r=0*> END;
-    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END RunThread;
 
 PROCEDURE Fork (closure: Closure): T =
@@ -631,7 +631,7 @@ PROCEDURE Fork (closure: Closure): T =
     ELSE (*skip*)
     END;
 
-    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       t.closure := closure;
       t.id := nextId;  INC(nextId);
       IF perfOn THEN PerfChanged(t.id, State.alive) END;
@@ -647,7 +647,7 @@ PROCEDURE Fork (closure: Closure): T =
                        "Thread client error: Fork failed with error: ", r);
         END;
       END;
-    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_lock(t.mutex) DO <*ASSERT r=0*> END;
     WHILE t.closure # NIL DO
       WITH r = pthread_cond_wait(t.cond, t.mutex) DO <*ASSERT r=0*> END;
@@ -1042,7 +1042,7 @@ VAR suspended: BOOLEAN := FALSE;	 (* LL=activeMu *)
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu" *)
   BEGIN
-    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
     StopWorld();
     <*ASSERT NOT suspended*>
     suspended := TRUE;
@@ -1054,7 +1054,7 @@ PROCEDURE ResumeOthers () =
     <*ASSERT suspended*>
     suspended := FALSE;
     StartWorld();
-    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
@@ -1078,7 +1078,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
     act: Activation;
     acks: int;
   BEGIN
-    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
 
     ProcessMe(me, p);
 
@@ -1117,7 +1117,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
       act := act.next;
     END;
 
-    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ProcessEachStack;
 
 PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -1447,25 +1447,25 @@ TYPE
 PROCEDURE PerfChanged (id: Id; s: State) =
   VAR e := ThreadEvent.T {kind := TE.Changed, id := id, state := s};
   BEGIN
-    WITH r = pthread_mutex_lock_perf() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(perfMu) DO <*ASSERT r=0*> END;
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    WITH r = pthread_mutex_unlock_perf() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(perfMu) DO <*ASSERT r=0*> END;
   END PerfChanged;
 
 PROCEDURE PerfDeleted (id: Id) =
   VAR e := ThreadEvent.T {kind := TE.Deleted, id := id};
   BEGIN
-    WITH r = pthread_mutex_lock_perf() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(perfMu) DO <*ASSERT r=0*> END;
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    WITH r = pthread_mutex_unlock_perf() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(perfMu) DO <*ASSERT r=0*> END;
   END PerfDeleted;
 
 PROCEDURE PerfRunning (id: Id) =
   VAR e := ThreadEvent.T {kind := TE.Running, id := id};
   BEGIN
-    WITH r = pthread_mutex_lock_perf() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(perfMu) DO <*ASSERT r=0*> END;
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    WITH r = pthread_mutex_unlock_perf() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(perfMu) DO <*ASSERT r=0*> END;
   END PerfRunning;
 
 (*-------------------------------------------------------- Initialization ---*)
@@ -1488,9 +1488,9 @@ PROCEDURE Init ()=
 
     stack_grows_down := ADR(xx) > XX();
 
-    WITH r = pthread_mutex_lock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       me.stackbase := ADR(xx);
-    WITH r = pthread_mutex_unlock_active() DO <*ASSERT r=0*> END;
+    WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
     PerfStart();
     IF perfOn THEN PerfRunning(self.id) END;
     IF RTParams.IsPresent("backgroundgc") THEN
@@ -1519,7 +1519,7 @@ PROCEDURE LockHeap () =
   VAR self := Upthread.self();
   BEGIN
     IF Upthread.equal(holder, self) = 0 THEN
-      WITH r = pthread_mutex_lock_heap() DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
       holder := self;
     END;
     INC(inCritical);
@@ -1531,7 +1531,7 @@ PROCEDURE UnlockHeap () =
     DEC(inCritical);
     IF inCritical = 0 THEN
       holder := NIL;
-      WITH r = pthread_mutex_unlock_heap() DO <*ASSERT r=0*> END;
+      WITH r = pthread_mutex_unlock(heapMu) DO <*ASSERT r=0*> END;
     END;
   END UnlockHeap;
 
