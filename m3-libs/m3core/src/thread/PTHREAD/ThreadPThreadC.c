@@ -2,28 +2,37 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#if defined(__INTERIX) && !defined(_ALL_SOURCE)
-#define _ALL_SOURCE
-#endif
 #include "m3unix.h"
-#include <assert.h>
 #include <stdlib.h>
-#include <errno.h>
 #include <pthread.h>
-#include <time.h>
-
-#ifdef __APPLE__
-/* MacOSX diverges in a good way and therefore many functions
-in this file are just stubs for it, that other code dynamically choses
-not to call (statically, but the compiler can't or won't tell). */
-#define APPLE_ASSERT_FALSE assert(0 && "MacOS X should not get here.");
-#else
-#include <signal.h>
-#include <semaphore.h>
-#include <string.h>
+#include <setjmp.h>
 #ifdef __hpux
 #include <stdio.h>
-#endif /* hpux */
+#endif
+#ifdef __OpenBSD__
+#include <pthread_np.h>
+#endif
+#ifdef __APPLE__
+#include <mach/mach.h>
+#include <mach/thread_act.h>
+#endif
+#if defined(__APPLE__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+/* These operating systems use pthread_suspend_np, Mach thread_suspend, etc. */
+#define M3_DIRECT_SUSPEND
+#else
+/* Else we send a signal to the thread to suspend/resume it. */
+#endif
+#ifndef M3_DIRECT_SUSPEND
+#include <semaphore.h>
+#endif
+
+#ifdef M3_DIRECT_SUSPEND
+#include <stdio.h>
+#define M3_DIRECT_SUSPEND_ASSERT_FALSE do { \
+    assert(0 && "MacOS X, FreeBSD, OpenBSD should not get here."); \
+    fprintf(stderr, "MacOS X, FreeBSD, OpenBSD should not get here.\n"); \
+    abort(); \
+} while(0);
 #endif
 
 /* const is extern const in C, but static const in C++,
@@ -56,9 +65,9 @@ extern "C" {
   Both SIG and SIG_SUSPEND were only defined for systems using pthreads.
   SIG was shorthand.
 */
-#if defined(__APPLE__)
+#ifdef M3_DIRECT_SUSPEND
 EXTERN_CONST int SIG_SUSPEND = 0;
-#elif defined(__sun) || defined(__CYGWIN__) || defined(__FreeBSD__)
+#elif defined(__sun) || defined(__CYGWIN__)
 EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #elif defined(__linux)
 EXTERN_CONST int SIG_SUSPEND = NSIG - 1;
@@ -74,7 +83,7 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #error Unable to determine SIG_SUSPEND.
 #endif
 
-#ifndef __APPLE__
+#ifndef M3_DIRECT_SUSPEND
 
 typedef struct sigaction sigaction_t;
 
@@ -114,15 +123,230 @@ int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
 int ThreadPThread__sem_getvalue(int* value) { return sem_getvalue(&ackSem, value); }
 int ThreadPThread__sigsuspend(void)         { return sigsuspend(&mask); }
 
-#else /* Apple */
+int ThreadPThread__SuspendThread (m3_pthread_t mt)
+{
+  abort();
+}
 
-void SetupHandlers(void)                { APPLE_ASSERT_FALSE }
-void ThreadPThread__sem_wait(void)      { APPLE_ASSERT_FALSE }
-void ThreadPThread__sem_post(void)      { APPLE_ASSERT_FALSE }
-void ThreadPThread__sem_getvalue(void)  { APPLE_ASSERT_FALSE }
-void ThreadPThread__sigsuspend(void)    { APPLE_ASSERT_FALSE }
+int ThreadPThread__RestartThread (m3_pthread_t mt)
+{
+  abort();
+}
+
+void ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
+                                    void (*p)(void *start, void *end))
+{
+  p(start, end);
+}
+
+#else /* M3_DIRECT_SUSPEND */
+
+void SetupHandlers(void)                { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+
+#if defined(__OpenBSD__) || defined(__FreeBSD__)
+
+int ThreadPThread__SuspendThread (m3_pthread_t mt)
+{
+    int a = pthread_suspend_np(PTHREAD_FROM_M3(mt));
+    int success = (a == 0);
+    assert(success);
+    return success;
+}
+
+int
+ThreadPThread__RestartThread (m3_pthread_t mt)
+{
+    int a = pthread_resume_np(PTHREAD_FROM_M3(mt));
+    int success = (a == 0);
+    assert(success);
+    return success;
+}
+
+#endif /* OpenBSD | FreeBSD */
+
+#ifdef __OpenBSD__
+
+void
+ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
+                               void (*p)(void *start, void *end))
+{
+  stack_t sinfo;
+  char* ss_sp;
+  if (pthread_stackseg_np(PTHREAD_FROM_M3(mt), &sinfo) != 0) abort();
+  ss_sp = (char*)sinfo.ss_sp;
+  assert(start == 0);
+  start = ss_sp - sinfo.ss_size; /* man page says ss_sp is "top" */
+  assert(start < end);
+  assert(end <= ss_sp);
+  /* we don't have a reliable sp, so... */
+  p(start, ss_sp);
+}
+
+#endif /* OpenBSD */
+
+#ifdef __FreeBSD__
+
+void
+ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
+                              void (*p)(void *start, void *end))
+{
+  pthread_attr_t attr;
+  char *stackaddr;
+  size_t stacksize;
+  /* assume registers of stopped threads are in the stack so don't process */
+  if (pthread_attr_init(&attr) != 0) abort();
+  if (pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr) != 0) abort();
+  if (pthread_attr_getstack(&attr, (void**)&stackaddr, &stacksize) != 0) abort();
+  if (pthread_attr_destroy(&attr) != 0) abort();
+  assert(start == 0);
+  assert(end >= stackaddr);
+  assert(end <= (stackaddr + stacksize));
+  p(stackaddr, end);
+}
+
+#endif /* FreeBSD */
+
+#ifdef __APPLE__
+
+int ThreadPThread__SuspendThread (m3_pthread_t mt)
+{
+  pthread_t t = PTHREAD_FROM_M3(mt);
+  mach_port_t mach_thread = pthread_mach_thread_np(t);
+  if (thread_suspend(mach_thread) != KERN_SUCCESS) return 0;
+  if (thread_abort_safely(mach_thread) != KERN_SUCCESS) {
+    if (thread_resume(mach_thread != KERN_SUCCESS)) abort();
+    return 0;
+  }
+  return 1;
+}
+
+int
+ThreadPThread__RestartThread (m3_pthread_t mt)
+{
+  pthread_t t = PTHREAD_FROM_M3(mt);
+  mach_port_t mach_thread = pthread_mach_thread_np(t);
+  return thread_resume(mach_thread) == KERN_SUCCESS;
+}
+
+void
+ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
+                               void (*p)(void *start, void *end))
+{
+  void *sp;
+  pthread_t t = PTHREAD_FROM_M3(mt);
+  mach_port_t mach_thread = pthread_mach_thread_np(t);
+#if defined(__ppc__)
+  ppc_thread_state_t state;
+  mach_msg_type_number_t thread_state_count = PPC_THREAD_STATE_COUNT;
+  if (thread_get_state(mach_thread, PPC_THREAD_STATE,
+                       (thread_state_t)&state, &thread_state_count)
+      != KERN_SUCCESS) abort();
+  if (thread_state_count != PPC_THREAD_STATE_COUNT) abort();
+#if __DARWIN_UNIX03
+  sp = (void *)(state.__r1 - C_RED_ZONE);
+#else
+  sp = (void *)(state.r1 - C_RED_ZONE);
+#endif
+#elif defined(__ppc64__)
+  ppc_thread_state64_t state;
+  mach_msg_type_number_t thread_state_count = PPC_THREAD_STATE64_COUNT;
+  if (thread_get_state(mach_thread, PPC_THREAD_STATE64,
+                       (thread_state_t)&state, &thread_state_count)
+      != KERN_SUCCESS) abort();
+  if (thread_state_count != PPC_THREAD_STATE64_COUNT) abort();
+#if __DARWIN_UNIX03
+  sp = (void *)(state.__r1 - C_RED_ZONE);
+#else
+  sp = (void *)(state.r1 - C_RED_ZONE);
+#endif
+#elif defined(__i386__)
+  i386_thread_state_t state;
+  mach_msg_type_number_t thread_state_count = i386_THREAD_STATE_COUNT;
+  if (thread_get_state(mach_thread, i386_THREAD_STATE,
+                       (thread_state_t)&state, &thread_state_count)
+      != KERN_SUCCESS) abort();
+  if (thread_state_count != i386_THREAD_STATE_COUNT) abort();
+#if __DARWIN_UNIX03
+  sp = (void *)(state.__esp);
+#else
+  sp = (void *)(state.esp);
+#endif
+#elif defined(__x86_64__)
+  x86_thread_state64_t state;
+  mach_msg_type_number_t thread_state_count = x86_THREAD_STATE64_COUNT;
+  if (thread_get_state(mach_thread, x86_THREAD_STATE64,
+                       (thread_state_t)&state, &thread_state_count)
+      != KERN_SUCCESS) abort();
+  if (thread_state_count != x86_THREAD_STATE64_COUNT) abort();
+#if __DARWIN_UNIX03
+  sp = (void *)(state.__rsp - 128);
+#else
+  sp = (void *)(state.rsp - 128);
+#endif
+#elif defined(__arm__)
+  mach_msg_type_number_t thread_state_count = ARM_THREAD_STATE_COUNT;
+  if (thread_get_state(mach_thread, ARM_THREAD_STATE,
+                       state, &thread_state_count)
+      != KERN_SUCCESS) abort();
+  if (thread_state_count != ARM_THREAD_STATE_COUNT) abort();
+  sp = (void *)(state.r13);
+#endif
+  p(&state, (char *)&state + sizeof(state));
+  assert(start == 0);
+  p(sp, end);
+}
 
 #endif /* Apple */
+#endif /* M3_DIRECT_SUSPEND */
+
+# ifdef __sparc
+char *ThreadPThread__SaveRegsInStack(void);
+/* On register window machines, we need a way to force registers into       */
+/* the stack.       Return sp.                                              */
+    asm("       .seg        \"text\"");
+#   if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
+      asm("     .globl      ThreadPThread__SaveRegsInStack");
+      asm("ThreadPThread__SaveRegsInStack:");
+      asm("     .type ThreadPThread__SaveRegsInStack,#function");
+#   else
+      asm("     .globl      ThreadPThread__SaveRegsInStack");
+      asm("ThreadPThread__SaveRegsInStack:");
+#   endif
+#   if defined(__arch64__) || defined(__sparcv9)
+      asm("     save        %sp,-128,%sp");
+      asm("     flushw");
+      asm("     ret");
+      asm("     restore %sp,2047+128,%o0");
+#   else
+      asm("     ta      0x3   ! ST_FLUSH_WINDOWS");
+      asm("     retl");
+      asm("     mov     %sp,%o0");
+#   endif
+#   ifdef SVR4
+      asm("     ThreadPThread__SaveRegsInStack_end:");
+      asm("     .size ThreadPThread__SaveRegsInStack,ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
+#   endif
+# else
+char *ThreadPThread__SaveRegsInStack(void) { return 0; }
+# endif
+
+void
+ThreadPThread__ProcessLive(char *start, char *end,
+                           void (*p)(void *start, void *stop))
+{
+  jmp_buf buf;
+  setjmp(buf);
+  p(&buf, ((char *)&buf) + sizeof(buf));
+#ifdef __sparc
+  start = ThreadPThread__SaveRegsInStack();
+#endif
+  assert(start < end);
+  p(start, end);
+}
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
 typedef void* (*start_routine_t)(void*);
@@ -287,9 +511,9 @@ ThreadPThread__pthread_cond_wait(
 
 int
 ThreadPThread__pthread_cond_timedwait(
-	pthread_cond_t* cond,
-	pthread_mutex_t* mutex,
-	const timespec_T* abs)
+        pthread_cond_t* cond,
+        pthread_mutex_t* mutex,
+        const timespec_T* abs)
 {
     return pthread_cond_timedwait(cond, mutex, abs);
 }

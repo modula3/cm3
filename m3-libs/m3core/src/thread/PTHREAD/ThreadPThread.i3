@@ -133,4 +133,23 @@ PROCEDURE Nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): i
 
 (*---------------------------------------------------------------------------*)
 
+<*EXTERNAL "ThreadPThread__SuspendThread"*>
+PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
+
+<*EXTERNAL "ThreadPThread__RestartThread"*>
+PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
+
+<*EXTERNAL "ThreadPThread__ProcessLive"*>
+PROCEDURE ProcessLive(start, end: ADDRESS;
+                      p: PROCEDURE(start, stop: ADDRESS));
+
+<*EXTERNAL "ThreadPThread__ProcessStopped"*>
+PROCEDURE ProcessStopped (t: pthread_t; start, end: ADDRESS;
+                          p: PROCEDURE(start, end: ADDRESS));
+
+<*EXTERNAL "ThreadPThread__SaveRegsInStack"*>
+PROCEDURE SaveRegsInStack (): ADDRESS;
+
+(*---------------------------------------------------------------------------*)
+
 END ThreadPThread.
