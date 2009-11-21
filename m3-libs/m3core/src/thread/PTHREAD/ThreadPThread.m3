@@ -1401,7 +1401,7 @@ PROCEDURE MyId (): Id RAISES {} =
     RETURN Self().id;
   END MyId;
 
-PROCEDURE MyFPState (): UNTRACED REF RTHeapRep.ThreadState =
+PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
   BEGIN
     RETURN ADR(GetActivation().floatState);
   END MyFPState;
