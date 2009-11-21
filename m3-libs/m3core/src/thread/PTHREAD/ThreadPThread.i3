@@ -100,10 +100,10 @@ PROCEDURE pthread_mutex_new():pthread_mutex_t;
 <*EXTERNAL "ThreadPThread__pthread_mutex_delete"*>
 PROCEDURE pthread_mutex_delete(a:pthread_mutex_t);
 
-<*EXTERNAL*>
+<*EXTERNAL ThreadPThread__pthread_mutex_lock*>
 PROCEDURE pthread_mutex_lock(mutex: pthread_mutex_t):int;
 
-<*EXTERNAL*>
+<*EXTERNAL ThreadPThread__pthread_mutex_unlock*>
 PROCEDURE pthread_mutex_unlock(mutex: pthread_mutex_t):int;
 
 <*EXTERNAL "ThreadPThread__pthread_cond_new"*>
