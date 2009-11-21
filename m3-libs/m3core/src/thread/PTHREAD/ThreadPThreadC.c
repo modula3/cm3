@@ -206,7 +206,7 @@ void* ThreadPThread__pthread_getspecific_##name(void) \
 /* activeMu slotMu initMu perfMu heapMu heapCond */
 
 MUTEX(active) /* global lock for list of active threads */
-MUTEX(slot)   /* global lock for thread slot table */
+MUTEX(slots)  /* global lock for thread slot table */
 MUTEX(init)   /* global lock for initializers */
 MUTEX(perf)
 MUTEX(heap)
