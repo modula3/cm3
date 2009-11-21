@@ -10,6 +10,7 @@
 #include <stdio.h>
 #endif
 #ifdef __OpenBSD__
+#error OpenBSD pthreads don't work.
 #include <pthread_np.h>
 #endif
 #ifdef __APPLE__
