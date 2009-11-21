@@ -9,6 +9,4 @@
 
 Interface      ("RTMachine")
 implementation ("RTSignal")
-implementation ("RTThread")
-c_source       ("RTThreadC")
 c_source       ("RTStackC")
