@@ -5,12 +5,12 @@
 #if defined(__INTERIX) && !defined(_ALL_SOURCE)
 #define _ALL_SOURCE
 #endif
+#include "m3unix.h"
 #include <assert.h>
 #include <stdlib.h>
 #include <errno.h>
 #include <pthread.h>
 #include <time.h>
-typedef struct timespec timespec_T;
 
 #ifdef __APPLE__
 /* MacOSX diverges in a good way and therefore many functions
@@ -325,6 +325,37 @@ int ThreadPThread__pthread_cond_signal(pthread_cond_t* cond)
 int ThreadPThread__pthread_cond_broadcast(pthread_cond_t* cond)
 {
     return pthread_cond_broadcast(cond);
+}
+
+int ThreadPThread__pthread_detach(m3_pthread_t thread)
+{
+    return pthread_detach(PTHREAD_FROM_M3(thread));
+}
+
+m3_pthread_t ThreadPThread__pthread_self(void)
+{
+    pthread_t a = pthread_self();
+    return PTHREAD_TO_M3(a);
+}
+
+int ThreadPThread__pthread_equal(m3_pthread_t t1, m3_pthread_t t2)
+{
+    return pthread_equal(PTHREAD_FROM_M3(t1), PTHREAD_FROM_M3(t2));
+}
+
+int ThreadPThread__pthread_kill(m3_pthread_t thread, int sig)
+{
+    return pthread_kill(PTHREAD_FROM_M3(thread), sig);
+}
+
+int ThreadPThread__pthread_mutex_lock(pthread_mutex_t* m)
+{
+    return pthread_mutex_lock(m);
+}
+
+void ThreadPThread__pthread_mutex_unlock(pthread_mutex_t* m)
+{
+    pthread_mutex_unlock(m);
 }
 
 #ifdef __cplusplus
