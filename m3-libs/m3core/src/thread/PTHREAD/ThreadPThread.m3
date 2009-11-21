@@ -1541,7 +1541,7 @@ PROCEDURE WaitHeap () =
     <*ASSERT Upthread.equal(holder, self) # 0*>
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
-    WITH r = pthread_cond_wait_heap() DO <*ASSERT r=0*> END;
+    WITH r = pthread_cond_wait(heapMu, heapCond) DO <*ASSERT r=0*> END;
     holder := self;
     <*ASSERT inCritical = 0*>
     INC(inCritical);
@@ -1549,7 +1549,7 @@ PROCEDURE WaitHeap () =
 
 PROCEDURE BroadcastHeap () =
   BEGIN
-    WITH r = pthread_cond_broadcast_heap() DO <*ASSERT r=0*> END;
+    WITH r = pthread_cond_broadcast(heapCond) DO <*ASSERT r=0*> END;
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
