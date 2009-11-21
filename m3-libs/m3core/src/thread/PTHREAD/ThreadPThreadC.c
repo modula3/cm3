@@ -11,13 +11,12 @@
 #endif
 #ifdef __OpenBSD__
 #error OpenBSD pthreads don't work.
-#include <pthread_np.h>
 #endif
 #ifdef __APPLE__
 #include <mach/mach.h>
 #include <mach/thread_act.h>
 #endif
-#if defined(__APPLE__) || defined(__OpenBSD__) || defined(__FreeBSD__)
+#if defined(__APPLE__) || defined(__FreeBSD__)
 /* These operating systems use pthread_suspend_np, Mach thread_suspend, etc. */
 #define M3_DIRECT_SUSPEND
 #else
@@ -30,8 +29,8 @@
 #ifdef M3_DIRECT_SUSPEND
 #include <stdio.h>
 #define M3_DIRECT_SUSPEND_ASSERT_FALSE do { \
-    assert(0 && "MacOS X, FreeBSD, OpenBSD should not get here."); \
-    fprintf(stderr, "MacOS X, FreeBSD, OpenBSD should not get here.\n"); \
+    assert(0 && "MacOS X, FreeBSD should not get here."); \
+    fprintf(stderr, "MacOS X, FreeBSD should not get here.\n"); \
     abort(); \
 } while(0);
 #endif
@@ -148,7 +147,7 @@ void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 
-#if defined(__OpenBSD__) || defined(__FreeBSD__)
+#ifdef __FreeBSD__
 
 int ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
@@ -166,30 +165,6 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
     assert(success);
     return success;
 }
-
-#endif /* OpenBSD | FreeBSD */
-
-#ifdef __OpenBSD__
-
-void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
-                               void (*p)(void *start, void *end))
-{
-  stack_t sinfo;
-  char* ss_sp;
-  if (pthread_stackseg_np(PTHREAD_FROM_M3(mt), &sinfo) != 0) abort();
-  ss_sp = (char*)sinfo.ss_sp;
-  assert(start == 0);
-  start = ss_sp - sinfo.ss_size; /* man page says ss_sp is "top" */
-  assert(start < end);
-  assert(end <= ss_sp);
-  /* we don't have a reliable sp, so... */
-  p(start, ss_sp);
-}
-
-#endif /* OpenBSD */
-
-#ifdef __FreeBSD__
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, char *start, char *end,
