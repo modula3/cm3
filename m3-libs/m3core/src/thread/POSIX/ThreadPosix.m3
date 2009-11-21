@@ -1266,15 +1266,10 @@ PROCEDURE Tos (READONLY c: Context; VAR start, stop: ADDRESS) =
     END;
   END Tos;
 
-PROCEDURE GetMyFPState (reader: PROCEDURE(READONLY s: FloatMode.ThreadState)) =
+PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
   BEGIN
-    reader(self.floatState);
+    RETURN ADR(self.floatState);
   END GetMyFPState;
-
-PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
-  BEGIN
-    writer(self.floatState);
-  END SetMyFPState;
 
 VAR heapState: RTHeapRep.ThreadState;
 

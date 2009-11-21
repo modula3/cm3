@@ -731,6 +731,22 @@ PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
     RETURN res;
   END AlertJoin;
 
+(*------------------------------------------------ timer-based preemption ---*)
+
+(* do-nothing stubs for compatibility with user-level threads *)
+
+PROCEDURE SetSwitchingInterval (<*UNUSED*> usec: CARDINAL) =
+  BEGIN
+  END SetSwitchingInterval;
+
+PROCEDURE DisableSwitching () =
+  BEGIN
+  END DisableSwitching;
+
+PROCEDURE EnableSwitching () =
+  BEGIN
+  END EnableSwitching;
+
 (*---------------------------------------------------- Scheduling support ---*)
 
 PROCEDURE CommonSleep() =
@@ -1386,22 +1402,14 @@ PROCEDURE MyId (): Id RAISES {} =
     RETURN self.id;
   END MyId;
 
-PROCEDURE GetMyFPState (reader: PROCEDURE(READONLY s: FloatMode.ThreadState)) =
-  VAR me := GetActivation();
+PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
   BEGIN
-    reader(me.floatState);
-  END GetMyFPState;
-
-PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
-  VAR me := GetActivation();
-  BEGIN
-    writer(me.floatState);
-  END SetMyFPState;
+    RETURN ADR(GetActivation().floatState);
+  END MyFPState;
 
 PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
-  VAR me := GetActivation();
   BEGIN
-    RETURN ADR(me.heapState);
+    RETURN ADR(GetActivation().heapState);
   END MyHeapState;
 
 PROCEDURE DisableSwitching () =
