@@ -10,7 +10,30 @@
 #include <ucontext.h>
 #include <sys/frame.h>
 
-void RTMachine__SaveRegsInStack(void);
+void *RTStack__SaveRegsInStack(void);
+asm("	.seg 	\"text\"");
+# if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
+    asm("	.globl	RTStack__SaveRegsInStack");
+    asm("RTStack__SaveRegsInStack:");
+    asm("	.type RTStack__SaveRegsInStack,#function");
+# else
+    asm("	.globl	RTStack__SaveRegsInStack");
+    asm("RTStack__SaveRegsInStack:");
+# endif
+# if defined(__arch64__) || defined(__sparcv9)
+    asm("	save	%sp,-128,%sp");
+    asm("	flushw");
+    asm("	ret");
+    asm("	restore %sp,2047+128,%o0");
+# else
+    asm("	ta	0x3   ! ST_FLUSH_WINDOWS");
+    asm("	retl");
+    asm("	mov	%sp,%o0");
+# endif
+# ifdef SVR4
+    asm("	RTStack__SaveRegsInStack_end:");
+    asm("	.size RTStack__SaveRegsInStack,RTStack__SaveRegsInStack_end-RTStack__SaveRegsInStack");
+# endif
 
 /*
 TYPE FrameInfo = RECORD
@@ -71,7 +94,7 @@ void RTStack__GetThreadFrame (Frame *f, void *start, int len)
   f->pc = 0;
   f->sp = 0;
   if (len == sizeof (ucontext_t)) {
-    RTMachine__SaveRegsInStack();
+    RTStack__SaveRegsInStack();
 
     f->ctxt = *(ucontext_t *)start;
     f->pc = (void *)reg[REG_PC];
@@ -105,7 +128,7 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
   if (caller == 0) abort();
   if (callee->lock != FrameLock) abort();
 
-  RTMachine__SaveRegsInStack();
+  RTStack__SaveRegsInStack();
 
   caller->lock = FrameLock;
 
@@ -123,12 +146,12 @@ void RTStack__Unwind (Frame* target)
   struct frame *sp = target->sp;
   greg_t *reg = target->ctxt.uc_mcontext.gregs;
 
-  RTMachine__SaveRegsInStack();
+  RTStack__SaveRegsInStack();
 
   if (target->lock != FrameLock) abort();
-  reg[REG_PC] = (int)target->pc + 8;/* for return address */
-  reg[REG_nPC] = (int)reg[REG_PC] + 4;
-  reg[REG_SP] = (int)target->sp;
+  reg[REG_PC] = (greg_t)target->pc + 8;/* for return address */
+  reg[REG_nPC] = reg[REG_PC] + 4;
+  reg[REG_SP] = (greg_t)target->sp;
   reg[REG_O7] = target->sp->fr_savpc;
   setcontext(&target->ctxt);
 }
