@@ -42,6 +42,7 @@ readonly USE_PTHREADS = {
   "FreeBSD4"   : TRUE,
   "HP300"      : FALSE,
   "HPPA"       : FALSE,
+  "I386_OPENBSD" : FALSE, 
   "IBMR2"      : FALSE,
   "IBMRT"      : FALSE,
   "IRIX5"      : FALSE,
