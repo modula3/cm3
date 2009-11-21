@@ -9,25 +9,6 @@
 
 INTERFACE RTMachine;
 
-IMPORT Csetjmp;
-
-(*--------------------------------------------------------- thread state ---*)
-
-TYPE
-  State = Csetjmp.jmp_buf;
-  (* The machine state is saved in a "State".  This type is really
-     opaque to the client, i.e. it does not need to be an array. *)
-
-<*EXTERNAL "_setjmp" *>
-PROCEDURE SaveState (VAR s: State): INTEGER;
-(* Capture the currently running thread's state *)
-
-CONST
-  FramePadBottom = 2;
-  FramePadTop    = 0;
-  (* Additional padding words from above and below an existing
-     thread's stack pointer to copy when creating a new thread *)
-
 (*------------------------------------------------------------------ heap ---*)
 
 (* The heap page size used to be machine-dependent, since it could depend
@@ -51,12 +32,6 @@ CONST
      smaller than is needed will only make your system run slower.
      Setting it too large will cause the collector to collect storage
      that is not free. *)
-
-CONST
-  StackFrameAlignment = 8;
-  (* Stack frames must be aligned to this constraint (in ADRSIZE units). 
-     It's not a big deal if this value is too large, but it may break 
-     the thread mechanism to make it too small. *)
 
 (*----------------------------------------------- exception stack walking ---*)
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)

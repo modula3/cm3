@@ -8,9 +8,3 @@
 
 Interface      ("RTMachine")
 implementation ("RTSignal")
-implementation ("RTThread")
-c_source       ("RTThreadC")
-
-source         ("notest_longjmp.s")
-  % can be compiled with "xlc -c notest_longjmp.s" to produce:
-pgm_source     ("notest_longjmp.o")

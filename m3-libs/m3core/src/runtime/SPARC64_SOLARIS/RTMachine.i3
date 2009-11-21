@@ -11,18 +11,6 @@
 INTERFACE RTMachine;
 
 IMPORT Uucontext;
-FROM Upthread IMPORT pthread_t;
-
-(*--------------------------------------------------------- thread state ---*)
-
-TYPE
-  State = Uucontext.ucontext_t;
-  (* The machine state is saved in a "State".  This type is really
-     opaque to the client, i.e. it does not need to be an array. *)
-
-<*EXTERNAL "getcontext" *>
-PROCEDURE SaveState (VAR s: State): INTEGER;
-(* Capture the currently running thread's state *)
 
 (*------------------------------------------------------------------ heap ---*)
 
@@ -40,33 +28,29 @@ CONST
 (*--------------------------------------------------------- thread stacks ---*)
 
 CONST
-  PointerAlignment = BYTESIZE(INTEGER);
+  PointerAlignment = ADRSIZE(ADDRESS);
   (* The C compiler allocates all pointers on 'PointerAlignment'-byte
      boundaries.  The garbage collector scans thread stacks, but only
      looks at these possible pointer locations.  Setting this value
      smaller than is needed will only make your system run slower.
-        Correction: Setting it too small will cause alignment faults in RTCollector__NoteStackLocations,
-        at least on platforms that ever have alignment faults.
      Setting it too large will cause the collector to collect storage
      that is not free. *)
 
 (*----------------------------------------------- exception stack walking ---*)
+(* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
 
+CONST
   Has_stack_walker = FALSE;
   (* Indicates whether this platform supports the stack walking functions
      defined in the "RTStack" interface. *)
 
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
-TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
-
-(*------------------------------------------------------ pthreads support ---*)
-
-TYPE ThreadState = RECORD END;
-
-CONST
-  SuspendThread: PROCEDURE(t: pthread_t): BOOLEAN = NIL;
-  RestartThread: PROCEDURE(t: pthread_t) = NIL;
-  GetState: PROCEDURE(t: pthread_t; VAR state: ThreadState): ADDRESS = NIL;
-  SaveRegsInStack: PROCEDURE(): ADDRESS = NIL;
+TYPE
+  FrameInfo = RECORD
+    pc, sp  : ADDRESS;       (* sp here is actually SPARC fp *)
+    true_sp : ADDRESS;
+    context : ADDRESS;
+    lock    : INTEGER;       (* to ensure that ctxt isn't overrun!! *)
+  END;
 
 END RTMachine.
