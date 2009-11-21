@@ -10,7 +10,6 @@ IMPORT Cerrno, FloatMode, MutexRep,
        RTPerfTool, RTProcess, ThreadEvent, Time,
        Unix, Utime, Word, Upthread, Usched,
        Uerror, Uexec;
-FROM Upthread IMPORT pthread_t;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 IMPORT RuntimeError AS RTE;
