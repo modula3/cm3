@@ -173,21 +173,6 @@ pthread_mutex_t *ThreadPThread__##name##Mu = &name##Mu; \
 static pthread_cond_t name##Cond = PTHREAD_COND_INITIALIZER; \
 pthread_cond_t *ThreadPThread__##name##Cond = &name##Cond; \
 
-#define THREAD_LOCAL_FAST(name) \
-static __thread void* name; \
-int ThreadPThread__pthread_key_create_##name(void) \
-{ \
-    /* nothing */ \
-} \
-int ThreadPThread__pthread_setspecific_##name(void* value) \
-{ \
-    name = value; \
-} \
-void* ThreadPThread__pthread_getspecific_##name(void) \
-{ \
-    return name; \
-} \
-
 #define THREAD_LOCAL(name) \
 static pthread_key_t name; \
 int ThreadPThread__pthread_key_create_##name(void) \
