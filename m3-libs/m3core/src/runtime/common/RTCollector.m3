@@ -16,7 +16,7 @@ UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
 
 IMPORT RT0, RTHeapEvent, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
-IMPORT Word, Thread, ThreadInternal, RuntimeError;
+IMPORT Word, Thread, ThreadInternal;
 IMPORT TextLiteral AS TextLit, RTLinker, Time;
 
 FROM RT0 IMPORT Typecode, TypeDefn;
@@ -440,9 +440,11 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
       np       : RefReferent;
     BEGIN
       IF (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj)) THEN
-        np := AllocTraced(dataSize, def.dataAlignment, pureCopy);
+        np := AllocCopy(dataSize, def.dataAlignment, pureCopy);
         IF (np = NIL) THEN
-          RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
+          (* promote as if large so we can bail out gracefully *)
+          PromotePage(page, PromoteReason.LargePure);
+          RETURN;
         END;
         WITH nh = HeaderOf(np) DO
           RTMisc.Copy(hdr, nh, BYTESIZE(Header) + dataSize);
@@ -450,9 +452,11 @@ PROCEDURE Move (<*UNUSED*> self: Mover;  cp: ADDRESS) =
           nh.dirty := TRUE;
         END;
       ELSE
-        np := AllocTraced(dataSize, def.dataAlignment, impureCopy);
+        np := AllocCopy(dataSize, def.dataAlignment, impureCopy);
         IF (np = NIL) THEN
-          RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
+          (* promote as if large so we can bail out gracefully *)
+          PromotePage(page, PromoteReason.LargeImpure);
+          RETURN;
         END;
         WITH nh = HeaderOf(np) DO
           RTMisc.Copy(hdr, nh, BYTESIZE(Header) + dataSize);
@@ -1377,8 +1381,8 @@ PROCEDURE StackEmpty (s: Stacker): BOOLEAN =
     RETURN s.xA = s.x0;
   END StackEmpty;
 
-PROCEDURE AllocTraced (dataSize, dataAlignment: CARDINAL;
-                       VAR pool: AllocPool): RefReferent =
+PROCEDURE AllocCopy (dataSize, dataAlignment: CARDINAL;
+                     VAR pool: AllocPool): RefReferent =
   (* Allocates space from "pool" in the traced heap. *)
   (* LL >= RTOS.LockHeap *)
   VAR
@@ -1402,7 +1406,7 @@ PROCEDURE AllocTraced (dataSize, dataAlignment: CARDINAL;
 
     pool.next := nextPtr;
     RETURN res;
-  END AllocTraced;
+  END AllocCopy;
 
 PROCEDURE LongAlloc (dataSize, dataAlignment: CARDINAL;
                      VAR pool: AllocPool): RefReferent =
@@ -2212,8 +2216,9 @@ PROCEDURE CheckLoadTracedRef (ref: REFANY) =
      The fast-path inline guard for this operation has already noticed that the
      target of the reference was gray.  We now scan the target object to make it
      black, so that it is guaranteed to contain no white references.
-     This preserves the black mutator invariant that permits unbarriered access
-     to heap state. *)
+     This preserves the strong tricolor invariant (no pointers from black to
+     white) where the mutator and the objects directly referred to from the
+     mutator are black. *)
   VAR p := Word.RightShift (LOOPHOLE(ref, Word.T), LogBytesPerPage);
   BEGIN
     INC(checkLoadTracedRef);		 (* race, so only approximate *)
