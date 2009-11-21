@@ -578,18 +578,14 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
 
 (*------------------------------------------------ timer-based preemption ---*)
 
-(* do-nothing stubs for compatibility with user-level threads *)
-
-PROCEDURE SetSwitchingInterval (<*UNUSED*> usec: CARDINAL) =
-  BEGIN
-  END SetSwitchingInterval;
-
 PROCEDURE DisableSwitching () =
   BEGIN
+    (* do nothing *)
   END DisableSwitching;
 
 PROCEDURE EnableSwitching () =
   BEGIN
+    (* do nothing *)
   END EnableSwitching;
 
 (*---------------------------------------------------- Scheduling support ---*)
