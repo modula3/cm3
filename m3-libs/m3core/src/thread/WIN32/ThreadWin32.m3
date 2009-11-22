@@ -83,6 +83,7 @@ TYPE
 
       (* thread state *)
       heapState: RTHeapRep.ThreadState;
+      floatState: FloatMode.ThreadState;
     END;
 
 (*----------------------------------------------------------------- Mutex ---*)
@@ -800,10 +801,14 @@ PROCEDURE MyId(): Id RAISES {}=
   END MyId;
 
 PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState =
-  VAR me := GetActivation();
   BEGIN
-    RETURN ADR(me.heapState);
+    RETURN ADR(GetActivation().heapState);
   END MyHeapState;
+
+PROCEDURE MyFPState(): UNTRACED REF FloatMode.ThreadState =
+  BEGIN
+    RETURN ADR(GetActivation().floatState);
+  END MyFPState;
 
 (*---------------------------------------------------------------- errors ---*)
 
