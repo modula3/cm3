@@ -1406,7 +1406,7 @@ PROCEDURE WaitHeap () =
     <*ASSERT pthread_equal(holder, self) # 0*>
     DEC(inCritical);
     <*ASSERT inCritical = 0*>
-    WITH r = pthread_cond_wait(heapMu, heapCond) DO <*ASSERT r=0*> END;
+    WITH r = pthread_cond_wait(heapCond, heapMu) DO <*ASSERT r=0*> END;
     holder := self;
     <*ASSERT inCritical = 0*>
     INC(inCritical);
