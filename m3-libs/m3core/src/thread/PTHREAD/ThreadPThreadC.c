@@ -304,6 +304,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 #endif /* M3_DIRECT_SUSPEND */
 
 # ifdef __sparc
+#ifdef __GNUC__
 char *ThreadPThread__SaveRegsInStack(void);
 /* On register window machines, we need a way to force registers into       */
 /* the stack.       Return sp.                                              */
@@ -330,22 +331,46 @@ char *ThreadPThread__SaveRegsInStack(void);
       asm("     ThreadPThread__SaveRegsInStack_end:");
       asm("     .size ThreadPThread__SaveRegsInStack,ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
 #   endif
-# else
+#else /* gcc */
+#include <setjmp.h>
+void *ThreadPThread__SaveRegsInStack(void)
+{
+  jmp_buf jb;
+  if (setjmp(jb) == 0)
+    longjmp(jb, 1); /* contains ta 3 */
+  else
+    return &jb;
+}
+#endif /* gcc */
+# else /* sparc */
 char *ThreadPThread__SaveRegsInStack(void) { return 0; }
-# endif
+# endif /* sparc */
 
 void
 ThreadPThread__ProcessLive(char *start, char *end,
                            void (*p)(void *start, void *stop))
 {
   jmp_buf buf;
-  setjmp(buf);
-  p(&buf, ((char *)&buf) + sizeof(buf));
+
+  if (setjmp(buf) == 0)
+  {
+    p(&buf, ((char *)&buf) + sizeof(buf));
 #ifdef __sparc
-  start = ThreadPThread__SaveRegsInStack();
-#endif
-  assert(start < end);
-  p(start, end);
+#ifdef __GNUC__
+    start = ThreadPThread__SaveRegsInStack();
+#else /* gcc */
+    start = (char*)&buf;
+    longjmp(buf, 1); /* contains ta 3 */
+  }
+  else
+#endif /* gcc */
+#endif /* sparc */
+  {
+    assert(start);
+    assert(end);
+    assert(start < end);
+    p(start, end);
+  }
 }
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
