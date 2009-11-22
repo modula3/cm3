@@ -9,6 +9,14 @@
 #if defined(__INTERIX) && !defined(_ALL_SOURCE)
 #define _ALL_SOURCE
 #endif
+
+#if defined(__APPLE__) && defined(__i386__) && !defined(_XOPEN_SOURCE)
+/* http://tinderbox.elegosoft.com/tinderbox/cgi-bin/gunzip.cgi?tree=cm3&brief-log=1258879870.10595#err9 */
+/* /usr/include/ucontext.h:42:2: error: #error ucontext routines are deprecated, and require _XOPEN_SOURCE to be defined */
+/* expand #if to allow more architecures as they are discovered/tested, probably just allow all */
+#define _XOPEN_SOURCE
+#endif
+
 #include <unistd.h>
 #include <signal.h>
 #include <assert.h>
