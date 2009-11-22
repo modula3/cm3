@@ -48,16 +48,14 @@ REVEAL
 
   T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
       act: Activation := NIL;       (* LL = Self(); live (untraced) thread data *)
-      closure: Closure := NIL;      (* LL = Self() *)
-      result: REFANY := NIL;        (* LL = Self(); if not self.completed, used only by self;
-                                                    if self.completed, read-only. *)
+      closure: Closure := NIL;      (* our work and its result *)
+      result: REFANY := NIL;        (* our work and its result *)
       join: Condition;              (* LL = Self(); wait here to join *)
       waitingOn: Condition := NIL;  (* LL = giant; CV that we're blocked on *)
       nextWaiter: T := NIL;         (* LL = giant; queue of threads waiting on the same CV *)
       waitSema: HANDLE := NIL;      (* binary semaphore for blocking during "Wait" *)
       alertable: BOOLEAN := FALSE;  (* LL = giant; distinguishes between "Wait" and "AlertWait" *)
       alerted: BOOLEAN := FALSE;    (* LL = giant; the alert flag, of course *)
-      completed: BOOLEAN := FALSE;  (* LL = Self(); indicates that "result" is set *)
       joined: BOOLEAN := FALSE;     (* LL = Self(); "Join" or "AlertJoin" has already returned *)
     END;
 
@@ -488,10 +486,8 @@ PROCEDURE RunThread (me: Activation) =
     IF perfOn THEN PerfChanged(State.dying) END;
 
     LOCK self DO
-      (* mark "self" done and clean it up a bit *)
-      self.completed := TRUE;
       Broadcast(self.join); (* let everybody know that "self" is done *)
-      self.join := NIL;
+      self.join := NIL;     (* mark me done *)
     END;
 
     IF perfOn THEN PerfChanged(State.dead) END;
