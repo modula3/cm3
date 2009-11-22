@@ -358,6 +358,7 @@ ThreadPThread__ProcessLive(char *start, char *end,
 #ifdef __sparc
 #ifdef __GNUC__
     start = ThreadPThread__SaveRegsInStack();
+  }
 #else /* gcc */
     start = (char*)&buf;
     longjmp(buf, 1); /* contains ta 3 */
