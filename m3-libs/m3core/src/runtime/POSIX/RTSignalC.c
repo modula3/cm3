@@ -9,18 +9,17 @@
 #if defined(__INTERIX) && !defined(_ALL_SOURCE)
 #define _ALL_SOURCE
 #endif
+
 #include <unistd.h>
 #include <signal.h>
 #include <assert.h>
 typedef struct sigaction sigaction_t;
-#if defined(__OpenBSD__) || (defined(__APPLE__) && defined(__arm)) \
- || defined(__CYGWIN__)
-/* Apple/arm: ucontext_t is in signal.h
-              #including ucontext.h gives #error
+#if !(defined(__OpenBSD__) || defined(__APPLE__)  || defined(__CYGWIN__))
+/*     Apple: ucontext_t is in signal.h
+              #including ucontext.h gives #error unless #define _XOPEN_SOURCE
  OpenBSD 4.3: ucontext.h doesn't exist, ucontext_t is in signal.h
       Cygwin: no state provided to signal handler?
 */
-#else
 #include <ucontext.h>
 #endif
 
