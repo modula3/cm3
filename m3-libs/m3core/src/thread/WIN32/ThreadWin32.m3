@@ -47,49 +47,34 @@ REVEAL
     END;
 
   T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
-      act: Activation := NIL;
-        (* LL = Self();  live thread data *)
-      closure: Closure := NIL;
-        (* LL = Self() *)
-      result: REFANY := NIL;
-        (* LL = Self();  if not self.completed, used only by self;
-           if self.completed, read-only. *)
-      join: Condition;
-        (* LL = Self(); wait here to join *)
-      waitingOn: Condition := NIL;
-        (* LL = giant; CV that we're blocked on *)
-      nextWaiter: T := NIL;
-        (* LL = giant; queue of threads waiting on the same CV *)
-      waitSema: HANDLE := NIL;
-        (* binary semaphore for blocking during "Wait" *)
-      alertable: BOOLEAN := FALSE;
-        (* LL = giant; distinguishes between "Wait" and "AlertWait" *)
-      alerted: BOOLEAN := FALSE;
-        (* LL = giant; the alert flag, of course *)
-      completed: BOOLEAN := FALSE;
-        (* LL = Self(); indicates that "result" is set *)
-      joined: BOOLEAN := FALSE;
-        (* LL = Self(); "Join" or "AlertJoin" has already returned *)
+      act: Activation := NIL;       (* LL = Self(); live (untraced) thread data *)
+      closure: Closure := NIL;      (* LL = Self() *)
+      result: REFANY := NIL;        (* LL = Self(); if not self.completed, used only by self;
+                                                    if self.completed, read-only. *)
+      join: Condition;              (* LL = Self(); wait here to join *)
+      waitingOn: Condition := NIL;  (* LL = giant; CV that we're blocked on *)
+      nextWaiter: T := NIL;         (* LL = giant; queue of threads waiting on the same CV *)
+      waitSema: HANDLE := NIL;      (* binary semaphore for blocking during "Wait" *)
+      alertable: BOOLEAN := FALSE;  (* LL = giant; distinguishes between "Wait" and "AlertWait" *)
+      alerted: BOOLEAN := FALSE;    (* LL = giant; the alert flag, of course *)
+      completed: BOOLEAN := FALSE;  (* LL = Self(); indicates that "result" is set *)
+      joined: BOOLEAN := FALSE;     (* LL = Self(); "Join" or "AlertJoin" has already returned *)
     END;
 
 TYPE
   Activation = UNTRACED REF RECORD
-      frame: ADDRESS := NIL; (* exception handling support; this field is access MANY times
-                                so perhaps therefore should be first *)
-
-      next, prev: Activation := NIL; (* LL = activeMu; global doubly-linked, circular list of all active threads *)
-      handle: HANDLE := NIL;        (* LL = activeMu; thread handle in Windows *)
-      stackStart: ADDRESS := NIL;   (* LL = activeMu; stack bounds for use by GC *)
-      stackEnd: ADDRESS := NIL;     (* LL = activeMu; stack bounds for use by GC *)
-      slot: INTEGER;                (* LL = slotMu;  index into global array of active, slotted threads *)
-      suspendCount := 1;            (* LL = activeMu *)
-
-      context: CONTEXT;             (* registers of suspended thread *)
-      stackPointer: ADDRESS;        (* LOOPHOLE(context.Esp, ADDRESS); *)
-
-      (* thread state *)
-      heapState: RTHeapRep.ThreadState;
-      floatState: FloatMode.ThreadState;
+      frame: ADDRESS := NIL;            (* exception handling support; this field is access MANY times
+                                        so perhaps therefore should be first *)
+      next, prev: Activation := NIL;    (* LL = activeMu; global doubly-linked, circular list of all active threads *)
+      handle: HANDLE := NIL;            (* LL = activeMu; thread handle in Windows *)
+      stackStart: ADDRESS := NIL;       (* LL = activeMu; stack bounds for use by GC *)
+      stackEnd: ADDRESS := NIL;         (* LL = activeMu; stack bounds for use by GC *)
+      slot: INTEGER;                    (* LL = slotMu;  index into global array of active, slotted threads *)
+      suspendCount := 1;                (* LL = activeMu *)
+      context: CONTEXT;                 (* registers of suspended thread *)
+      stackPointer: ADDRESS;            (* LOOPHOLE(context.Esp, ADDRESS); *)
+      heapState: RTHeapRep.ThreadState; (* thread state *)
+      floatState: FloatMode.ThreadState; (* thread state *)
     END;
 
 (*----------------------------------------------------------------- Mutex ---*)
