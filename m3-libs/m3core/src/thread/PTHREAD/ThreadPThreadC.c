@@ -375,7 +375,6 @@ ThreadPThread__ProcessLive(char *start, char *end,
   if (setjmp(buf) == 0)
   {
     p(&buf, ((char *)&buf) + sizeof(buf));
-    ThreadPThread__SaveRegsInStack();
     longjmp(buf, 1); /* contains ta 3 */
   }
   else
