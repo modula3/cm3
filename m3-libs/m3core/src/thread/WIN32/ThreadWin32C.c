@@ -30,22 +30,7 @@ CRITSEC(heap)
 CRITSEC(perf)
 CRITSEC(slot)
 
-#define THREAD_LOCAL(name) \
-DWORD ThreadWin32__##name = TLS_OUT_OF_INDEXES; \
-void* __cdecl ThreadWin32__TlsGetValue_##name(void) \
-{ \
-    if (ThreadWin32__##name == TLS_OUT_OF_INDEXES) \
-        return 0; \
-    return TlsGetValue(ThreadWin32__##name); \
-} \
-BOOL __cdecl ThreadWin32__TlsSetValue_##name(void* a) \
-{ \
-    if (ThreadWin32__##name == TLS_OUT_OF_INDEXES) \
-        return 0; \
-    return TlsSetValue(ThreadWin32__##name, a); \
-}
-
-THREAD_LOCAL(threadIndex)
+DWORD ThreadWin32__threadIndex = TLS_OUT_OF_INDEXES;
 
 void __cdecl ThreadWin32__InitC(void)
 {
@@ -56,6 +41,7 @@ void __cdecl ThreadWin32__InitC(void)
     InitializeCriticalSection(&perfLock);
     InitializeCriticalSection(&slotLock);
     ThreadWin32__threadIndex = TlsAlloc();
+    /* NOTE: This CAN fail. */
     assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
 }
 
@@ -145,6 +131,25 @@ void __cdecl ThreadWin32__DeleteLock(PCRITICAL_SECTION lock)
     HeapFree(GetProcessHeap(), 0, lock);
 }
 
+void __cdecl ThreadWin32__SetActivation(void* act)
+  /* LL = 0 */
+  /* This function is called VERY frequently. */
+{
+    BOOL success;
+    assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+    success = TlsSetValue(ThreadWin32__threadIndex, act);
+    /* NOTE: This CAN fail. */
+    assert(success);
+}
+
+void* __cdecl ThreadWin32__GetActivation(void)
+  /* If not the initial thread and not created by Fork, returns NIL */
+  /* LL = 0 */
+  /* This function is called VERY frequently. */
+{
+    assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+    return TlsGetValue(ThreadWin32__threadIndex);
+}
 
 #ifdef __cplusplus
 } /* extern "C" */
