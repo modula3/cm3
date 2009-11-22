@@ -6,6 +6,7 @@
 /* See file COPYRIGHT-CMASS for details.                           */
 
 struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses */
+#ifdef _MSC_VER
 #pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
 #pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
 #pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
@@ -13,6 +14,7 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #if _MSC_VER <= 1100
 #pragma warning(disable:4024) /* volatile mismatch on Interlocked */
 #pragma warning(disable:4090) /* volatile mismatch on Interlocked */
+#endif
 #endif
 
 #include <windows.h>
