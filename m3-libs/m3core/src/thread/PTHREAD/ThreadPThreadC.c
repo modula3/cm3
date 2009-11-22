@@ -304,7 +304,6 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 #endif /* M3_DIRECT_SUSPEND */
 
 # ifdef __sparc
-#ifdef __GNUC__
 char *ThreadPThread__SaveRegsInStack(void);
 /* On register window machines, we need a way to force registers into       */
 /* the stack.       Return sp.                                              */
@@ -331,17 +330,6 @@ char *ThreadPThread__SaveRegsInStack(void);
       asm("     ThreadPThread__SaveRegsInStack_end:");
       asm("     .size ThreadPThread__SaveRegsInStack,ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
 #   endif
-#else /* gcc */
-#include <setjmp.h>
-void *ThreadPThread__SaveRegsInStack(void)
-{
-  jmp_buf jb;
-  if (setjmp(jb) == 0)
-    longjmp(jb, 1); /* contains ta 3 */
-  else
-    return &jb;
-}
-#endif /* gcc */
 # else /* sparc */
 char *ThreadPThread__SaveRegsInStack(void) { return 0; }
 # endif /* sparc */
@@ -352,30 +340,16 @@ ThreadPThread__ProcessLive(char *start, char *end,
 {
   jmp_buf buf;
 
-  if (setjmp(buf) == 0)
-  {
-#if !defined(__sparc) || defined(__GNUC__)
+  setjmp(buf);
 #ifdef __sparc
-    ThreadPThread__SaveRegsInStack();
-#else /* sparc */
-    /* no need to scan the registers here on Sparc, as they are in start-end */
-    p(&buf, ((char *)&buf) + sizeof(buf));
+  start = ThreadPThread__SaveRegsInStack();
 #endif /* sparc */
-#else
-    longjmp(buf, 1); /* contains ta 3 for sparc, flushrs for ia64, etc. */
-  }
-  else
-  {
-#endif
-#ifdef __sparc
-    start = (char*)&buf;
-#else
-    assert(start);
-#endif
-    assert(end);
-    assert(start < end);
-    p(start, end);
-  }
+
+  assert(start);
+  assert(end);
+  assert(start < end);
+  p(&buf, ((char *)&buf) + sizeof(buf));
+  p(start, end);
 }
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
