@@ -532,9 +532,9 @@ int ThreadPThread__pthread_mutex_lock(pthread_mutex_t* m)
     return pthread_mutex_lock(m);
 }
 
-void ThreadPThread__pthread_mutex_unlock(pthread_mutex_t* m)
+int ThreadPThread__pthread_mutex_unlock(pthread_mutex_t* m)
 {
-    pthread_mutex_unlock(m);
+    return pthread_mutex_unlock(m);
 }
 
 #ifdef __cplusplus
