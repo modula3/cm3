@@ -21,15 +21,14 @@ extern "C" {
 #endif
 
 #define CRITSEC(name) \
-CRITICAL_SECTION ThreadWin32__##name; \
-void __cdecl ThreadWin32__EnterCriticalSection_##name(void) {EnterCriticalSection(&ThreadWin32__##name);} \
-void __cdecl ThreadWin32__LeaveCriticalSection_##name(void) {LeaveCriticalSection(&ThreadWin32__##name);}
+static CRITICAL_SECTION name##Lock; \
+const PCRITICAL_SECTION ThreadWin32__##name##Lock = &name##Lock; \
 
-CRITSEC(activeMu)
+CRITSEC(active)
 CRITSEC(giant)
 CRITSEC(heap)
-CRITSEC(perfMu)
-CRITSEC(slotMu)
+CRITSEC(perf)
+CRITSEC(slot)
 
 #define THREAD_LOCAL(name) \
 DWORD ThreadWin32__##name = TLS_OUT_OF_INDEXES; \
@@ -51,11 +50,11 @@ THREAD_LOCAL(threadIndex)
 void __cdecl ThreadWin32__InitC(void)
 {
     assert(ThreadWin32__threadIndex == TLS_OUT_OF_INDEXES);
-    InitializeCriticalSection(&ThreadWin32__activeMu);
-    InitializeCriticalSection(&ThreadWin32__giant);
-    InitializeCriticalSection(&ThreadWin32__heap);
-    InitializeCriticalSection(&ThreadWin32__perfMu);
-    InitializeCriticalSection(&ThreadWin32__slotMu);
+    InitializeCriticalSection(&activeLock);
+    InitializeCriticalSection(&giantLock);
+    InitializeCriticalSection(&heapLock);
+    InitializeCriticalSection(&perfLock);
+    InitializeCriticalSection(&slotLock);
     ThreadWin32__threadIndex = TlsAlloc();
     assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
 }
@@ -119,6 +118,33 @@ void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
     *start = Available;
     *end = Used + info.RegionSize;
 }
+
+PCRITICAL_SECTION __cdecl ThreadWin32__NewLock(void)
+{
+    PCRITICAL_SECTION lock = (PCRITICAL_SECTION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
+    if (lock)
+        InitializeCriticalSection(lock);
+    return lock;
+}
+
+void __cdecl ThreadWin32__Lock(PCRITICAL_SECTION lock)
+{
+    EnterCriticalSection(lock);
+}
+
+void __cdecl ThreadWin32__Unlock(PCRITICAL_SECTION lock)
+{
+    LeaveCriticalSection(lock);
+}
+
+void __cdecl ThreadWin32__DeleteLock(PCRITICAL_SECTION lock)
+{
+    if (!lock)
+        return;
+    DeleteCriticalSection(lock);
+    HeapFree(GetProcessHeap(), 0, lock);
+}
+
 
 #ifdef __cplusplus
 } /* extern "C" */

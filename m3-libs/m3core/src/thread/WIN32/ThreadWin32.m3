@@ -67,8 +67,8 @@ TYPE
       handle: HANDLE := NIL;            (* thread handle in Windows *)
       stackStart: ADDRESS := NIL;       (* stack bounds for use by GC *)
       stackEnd: ADDRESS := NIL;         (* stack bounds for use by GC *)
-      slot: INTEGER;                    (* LL = slotMu;  index into global array of active, slotted threads *)
-      suspendCount := 1;                (* LL = activeMu *)
+      slot: INTEGER;                    (* LL = slotLock;  index into global array of active, slotted threads *)
+      suspendCount := 1;                (* LL = activeLock *)
       context: CONTEXT;                 (* registers of suspended thread *)
       stackPointer: ADDRESS;            (* LOOPHOLE(context.Esp, ADDRESS); *)
       heapState: RTHeapRep.ThreadState; (* thread state *)
@@ -97,7 +97,7 @@ PROCEDURE LockMutex (m: Mutex) =
     IF self = NIL THEN Die(ThisLine(), "LockMutex called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(State.locking) END;
 
-    EnterCriticalSection_giant();
+    Lock(giantLock);
 
       self.alertable := FALSE;
       IF m.holder = NIL THEN
@@ -119,7 +119,7 @@ PROCEDURE LockMutex (m: Mutex) =
         END;
       END;
 
-    LeaveCriticalSection_giant();
+    Unlock(giantLock);
 
     IF wait THEN
       (* I didn't get the mutex, I need to wait for my turn... *)
@@ -137,7 +137,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
   BEGIN
     IF debug THEN ThreadDebug.UnlockMutex(m); END;
     IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
-    EnterCriticalSection_giant();
+    Lock(giantLock);
 
       (* Make sure I'm allowed to release this mutex. *)
       IF m.holder = self THEN
@@ -161,7 +161,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
         END;
       END;
 
-    LeaveCriticalSection_giant();
+    Unlock(giantLock);
   END UnlockMutex;
 
 (**********
@@ -200,7 +200,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
     self.nextWaiter := c.waiters;
     c.waiters := self;
 
-    LeaveCriticalSection_giant();
+    Unlock(giantLock);
     m.release();
     IF perfOn THEN PerfChanged(State.waiting) END;
     IF WaitForSingleObject(self.waitSema, INFINITE) # 0 THEN
@@ -217,7 +217,7 @@ PROCEDURE InnerTestAlert(self: T) RAISES {Alerted} =
     IF debug THEN ThreadDebug.InnerTestAlert(self); END;
     IF self.alerted THEN
       self.alerted := FALSE;
-      LeaveCriticalSection_giant();
+      Unlock(giantLock);
       RAISE Alerted
     END;
   END InnerTestAlert;
@@ -228,13 +228,13 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   BEGIN
     IF debug THEN ThreadDebug.AlertWait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
-    EnterCriticalSection_giant();
+    Lock(giantLock);
     InnerTestAlert(self);
     self.alertable := TRUE;
     InnerWait(m, c, self);
-    EnterCriticalSection_giant();
+    Lock(giantLock);
     InnerTestAlert(self);
-    LeaveCriticalSection_giant();
+    Unlock(giantLock);
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
@@ -243,7 +243,7 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   BEGIN
     IF debug THEN ThreadDebug.Wait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
-    EnterCriticalSection_giant();
+    Lock(giantLock);
     InnerWait(m, c, self);
   END Wait;
 
@@ -264,17 +264,17 @@ PROCEDURE DequeueHead(c: Condition) =
 PROCEDURE Signal (c: Condition) =
   BEGIN
     IF debug THEN ThreadDebug.Signal(c); END;
-    EnterCriticalSection_giant();
+    Lock(giantLock);
     IF c.waiters # NIL THEN DequeueHead(c) END;
-    LeaveCriticalSection_giant();
+    Unlock(giantLock);
   END Signal;
 
 PROCEDURE Broadcast (c: Condition) =
   BEGIN
     IF debug THEN ThreadDebug.Broadcast(c); END;
-    EnterCriticalSection_giant();
+    Lock(giantLock);
     WHILE c.waiters # NIL DO DequeueHead(c) END;
-    LeaveCriticalSection_giant();
+    Unlock(giantLock);
   END Broadcast;
 
 PROCEDURE Alert(t: T) =
@@ -282,7 +282,7 @@ PROCEDURE Alert(t: T) =
   BEGIN
     IF debug THEN ThreadDebug.Alert(t); END;
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
-    EnterCriticalSection_giant();
+    Lock(giantLock);
     t.alerted := TRUE;
     IF t.alertable THEN
       (* Dequeue from any CV and unblock from the semaphore *)
@@ -305,16 +305,16 @@ PROCEDURE Alert(t: T) =
         Choke(ThisLine());
       END;
     END;
-    LeaveCriticalSection_giant();
+    Unlock(giantLock);
   END Alert;
 
 PROCEDURE XTestAlert (self: T): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
     IF debug THEN ThreadDebug.XTestAlert(self); END;
-    EnterCriticalSection_giant();
+    Lock(giantLock);
     result := self.alerted; IF result THEN self.alerted := FALSE END;
-    LeaveCriticalSection_giant();
+    Unlock(giantLock);
     RETURN result;
   END XTestAlert;
 
@@ -331,7 +331,7 @@ PROCEDURE TestAlert(): BOOLEAN =
 
 (*------------------------------------------------------------------ Self ---*)
 
-VAR (* LL = slotMu *)
+VAR (* LL = slotLock *)
   n_slotted: LONG := 0;
   next_slot := 1;
   slots     : REF ARRAY OF T;  (* NOTE: we don't use slots[0]. *)
@@ -369,22 +369,22 @@ PROCEDURE AssignSlot (t: T) =
   VAR n: CARDINAL;  old_slots, new_slots: REF ARRAY OF T;
       retry := TRUE;
   BEGIN
-    EnterCriticalSection_slotMu();
+    Lock(slotLock);
       WHILE retry DO
         retry := FALSE;
 
         (* make sure we have room to register this guy *)
         IF slots = NIL THEN
-          LeaveCriticalSection_slotMu();
+          Unlock(slotLock);
             slots := NEW (REF ARRAY OF T, 20);
-          EnterCriticalSection_slotMu();
+          Lock(slotLock);
         END;
         IF InterlockedRead(n_slotted) >= LAST (slots^) THEN
           old_slots := slots;
           n := NUMBER (old_slots^);
-          LeaveCriticalSection_slotMu();
+          Unlock(slotLock);
             new_slots := NEW (REF ARRAY OF T, n+n);
-          EnterCriticalSection_slotMu();
+          Lock(slotLock);
           IF old_slots = slots THEN
             (* we won any races that may have occurred. *)
             SUBARRAY (new_slots^, 0, n) := slots^;
@@ -411,7 +411,7 @@ PROCEDURE AssignSlot (t: T) =
       t.act.slot := next_slot;
       slots [next_slot] := t;
 
-    LeaveCriticalSection_slotMu();
+    Unlock(slotLock);
   END AssignSlot;
 
 PROCEDURE FreeSlot (t: T) =
@@ -503,11 +503,11 @@ PROCEDURE RunThread (me: Activation) =
     (* Since we're no longer slotted, we cannot touch traced refs. *)
 
     (* remove ourself from the list of active threads *)
-    EnterCriticalSection_activeMu();
+    Lock(activeLock);
       <*ASSERT allThreads # me*>
       me.next.prev := me.prev;
       me.prev.next := me.next;
-    LeaveCriticalSection_activeMu();
+    Unlock(activeLock);
 
     me.next := NIL;
     me.prev := NIL;
@@ -546,14 +546,14 @@ PROCEDURE Fork(closure: Closure): T =
     act.handle := handle;
     t := CreateT(act);
     t.closure := closure;
-    EnterCriticalSection_activeMu();
+    Lock(activeLock);
       act.next := allThreads;
       act.prev := allThreads.prev;
       allThreads.prev.next := act;
       allThreads.prev := act;
       IF ResumeThread(handle) = -1 THEN Choke(ThisLine()) END;
       DEC(act.suspendCount);
-    LeaveCriticalSection_activeMu();
+    Unlock(activeLock);
     RETURN t;
   END Fork;
 
@@ -622,13 +622,13 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
     WHILE amount > 0.0D0 DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
-      EnterCriticalSection_giant();
+      Lock(giantLock);
       InnerTestAlert(self);
       self.alertable := TRUE;
       <* ASSERT(self.waitingOn = NIL) *>
-      LeaveCriticalSection_giant();
+      Unlock(giantLock);
       EVAL WaitForSingleObject(self.waitSema, ROUND(thisTime*1000.0D0));
-      EnterCriticalSection_giant();
+      Lock(giantLock);
       self.alertable := FALSE;
       IF self.alerted THEN
         (* Sadly, the alert might have happened after we timed out on the
@@ -637,7 +637,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
         EVAL WaitForSingleObject(self.waitSema, 0);
         InnerTestAlert(self);
       END;
-      LeaveCriticalSection_giant();
+      Unlock(giantLock);
     END;
     IF perfOn THEN PerfRunning() END;
   END AlertPause;
@@ -719,7 +719,7 @@ PROCEDURE SuspendOthers () =
       act: Activation;
       nLive := 0;
   BEGIN
-    EnterCriticalSection_activeMu();
+    Lock(activeLock);
 
     INC (suspend_cnt);
     IF suspend_cnt # 1 THEN
@@ -765,7 +765,7 @@ PROCEDURE ResumeOthers () =
       END;
     END;
 
-    LeaveCriticalSection_activeMu();
+    Unlock(activeLock);
   END ResumeOthers;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
@@ -864,27 +864,27 @@ PROCEDURE PerfChanged (s: State) =
   (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Changed, id := GetCurrentThreadId(), state := s};
   BEGIN
-    EnterCriticalSection_perfMu();
+    Lock(perfLock);
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    LeaveCriticalSection_perfMu();
+    Unlock(perfLock);
   END PerfChanged;
 
 PROCEDURE PerfDeleted () =
   (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Deleted, id := GetCurrentThreadId()};
   BEGIN
-    EnterCriticalSection_perfMu();
+    Lock(perfLock);
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    LeaveCriticalSection_perfMu();
+    Unlock(perfLock);
   END PerfDeleted;
 
 PROCEDURE PerfRunning () =
   (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Running, id := GetCurrentThreadId()};
   BEGIN
-    EnterCriticalSection_perfMu();
+    Lock(perfLock);
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    LeaveCriticalSection_perfMu();
+    Unlock(perfLock);
   END PerfRunning;
 
 (*-------------------------------------------------------- Initialization ---*)
@@ -940,7 +940,7 @@ VAR
 PROCEDURE LockHeap () =
   BEGIN
     IF debug THEN ThreadDebug.LockHeap(); END;
-    EnterCriticalSection_heap();
+    Lock(heapLock);
     INC(inCritical);
   END LockHeap;
 
@@ -950,7 +950,7 @@ PROCEDURE UnlockHeap () =
     IF debug THEN ThreadDebug.UnlockHeap(); END;
     DEC(inCritical);
     IF (inCritical = 0) AND do_signal THEN sig := TRUE; do_signal := FALSE; END;
-    LeaveCriticalSection_heap();
+    Unlock(heapLock);
     IF sig THEN Broadcast(condition); END;
   END UnlockHeap;
 
@@ -960,9 +960,9 @@ PROCEDURE WaitHeap () =
     LOCK mutex DO
       DEC(inCritical);
       <*ASSERT inCritical = 0*>
-      LeaveCriticalSection_heap();
+      Unlock(heapLock);
       Wait(mutex, condition);
-      EnterCriticalSection_heap();
+      Lock(heapLock);
       <*ASSERT inCritical = 0*>
       INC(inCritical);
     END;
@@ -971,9 +971,9 @@ PROCEDURE WaitHeap () =
 PROCEDURE BroadcastHeap () =
   BEGIN
     IF debug THEN ThreadDebug.BroadcastHeap(); END;
-    EnterCriticalSection_heap();
+    Lock(heapLock);
       do_signal := TRUE;
-    LeaveCriticalSection_heap();
+    Unlock(heapLock);
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
