@@ -346,6 +346,26 @@ void *ThreadPThread__SaveRegsInStack(void)
 char *ThreadPThread__SaveRegsInStack(void) { return 0; }
 # endif /* sparc */
 
+#if !defined(__sparc) || defined(__GNUC__)
+void
+ThreadPThread__ProcessLive(char *start, char *end,
+                           void (*p)(void *start, void *stop))
+{
+  jmp_buf buf;
+
+  setjmp(buf);
+  p(&buf, ((char *)&buf) + sizeof(buf));
+#ifdef __sparc
+  start = ThreadPThread__SaveRegsInStack();
+#endif /* sparc */
+  assert(start);
+  assert(end);
+  assert(start < end);
+  p(start, end);
+}
+
+#else /* sparc, gcc */
+
 void
 ThreadPThread__ProcessLive(char *start, char *end,
                            void (*p)(void *start, void *stop))
@@ -355,24 +375,19 @@ ThreadPThread__ProcessLive(char *start, char *end,
   if (setjmp(buf) == 0)
   {
     p(&buf, ((char *)&buf) + sizeof(buf));
-#ifdef __sparc
-#ifdef __GNUC__
-    start = ThreadPThread__SaveRegsInStack();
-  }
-#else /* gcc */
-    start = (char*)&buf;
+    ThreadPThread__SaveRegsInStack();
     longjmp(buf, 1); /* contains ta 3 */
   }
   else
-#endif /* gcc */
-#endif /* sparc */
   {
-    assert(start);
+    start = (char*)&buf;
     assert(end);
     assert(start < end);
     p(start, end);
   }
 }
+
+#endif /* sparc, gcc */
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
 typedef void* (*start_routine_t)(void*);
