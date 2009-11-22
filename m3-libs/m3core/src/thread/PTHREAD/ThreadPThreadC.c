@@ -346,26 +346,6 @@ void *ThreadPThread__SaveRegsInStack(void)
 char *ThreadPThread__SaveRegsInStack(void) { return 0; }
 # endif /* sparc */
 
-#if !defined(__sparc) || defined(__GNUC__)
-void
-ThreadPThread__ProcessLive(char *start, char *end,
-                           void (*p)(void *start, void *stop))
-{
-  jmp_buf buf;
-
-  setjmp(buf);
-  p(&buf, ((char *)&buf) + sizeof(buf));
-#ifdef __sparc
-  start = ThreadPThread__SaveRegsInStack();
-#endif /* sparc */
-  assert(start);
-  assert(end);
-  assert(start < end);
-  p(start, end);
-}
-
-#else /* sparc, gcc */
-
 void
 ThreadPThread__ProcessLive(char *start, char *end,
                            void (*p)(void *start, void *stop))
@@ -374,19 +354,29 @@ ThreadPThread__ProcessLive(char *start, char *end,
 
   if (setjmp(buf) == 0)
   {
+#if !defined(__sparc) || defined(__GNUC__)
+#ifdef __sparc
+    ThreadPThread__SaveRegsInStack();
+#else /* sparc */
+    /* no need to scan the registers here on Sparc, as they are in start-end */
     p(&buf, ((char *)&buf) + sizeof(buf));
-    longjmp(buf, 1); /* contains ta 3 */
+#endif /* sparc */
+#else
+    longjmp(buf, 1); /* contains ta 3 for sparc, flushrs for ia64, etc. */
   }
   else
   {
+#endif
+#ifdef __sparc
     start = (char*)&buf;
+#else
+    assert(start);
+#endif
     assert(end);
     assert(start < end);
     p(start, end);
   }
 }
-
-#endif /* sparc, gcc */
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
 typedef void* (*start_routine_t)(void*);
