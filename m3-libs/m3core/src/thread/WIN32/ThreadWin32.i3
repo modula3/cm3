@@ -7,15 +7,14 @@
 
 UNSAFE INTERFACE ThreadWin32;
 
-FROM WinDef IMPORT LONG, BOOL(*int*);
+FROM WinDef IMPORT LONG;
 FROM Thread IMPORT T;
 FROM ThreadF IMPORT State;
 
-(*----------------------------------------- Exceptions, types and globals ---*)
+(*---------------------------------------------------------------------------*)
 
 (* locks (aka critical section aka mutex) *)
 
-(*---------------------------------------------------------------------------*)
 
 TYPE Lock_t = ADDRESS;
 
@@ -42,22 +41,18 @@ TYPE Lock_t = ADDRESS;
 
 (*------------------------------------------------------------------ Self ---*)
 
-(* thread local threadIndex: TlsGetValue, TlsSetValue
-   GetValue called before InitC returns 0 (aka NULL)
-   SetValue called before InitC returns 0 (aka FALSE)
-*)
-<*EXTERNAL ThreadWin32__TlsSetValue_threadIndex*>
-PROCEDURE TlsSetValue_threadIndex(a: INTEGER): BOOL;
-<*EXTERNAL ThreadWin32__TlsGetValue_threadIndex*>
-PROCEDURE TlsGetValue_threadIndex(): INTEGER;
+(* The untraced state of a thread, a thread local. *)
+TYPE Activation <: ADDRESS;
+
+<*EXTERNAL ThreadWin32__SetActivation*> PROCEDURE SetActivation (act: Activation);
+<*EXTERNAL ThreadWin32__GetActivation*> PROCEDURE GetActivation (): Activation;
 
 (*------------------------------------------------------ ShowThread hooks ---*)
 
 <*EXTERNAL ThreadWin32__perfLock*> VAR perfLock: Lock_t;
 
 (*------------------------------------------------------------- collector ---*)
-(* These procedures provide synchronization primitives for the allocator
-   and collector. *)
+(* synchronization for the allocator and collector. *)
 
 <*EXTERNAL ThreadWin32__heapLock*> VAR heapLock: Lock_t;
 

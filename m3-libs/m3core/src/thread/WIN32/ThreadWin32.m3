@@ -12,7 +12,7 @@ IMPORT RTMisc, RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT LONG, HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS;
+FROM WinNT IMPORT LONG, HANDLE, DWORD, DUPLICATE_SAME_ACCESS;
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     GetCurrentProcess, DuplicateHandle, GetCurrentThread, CreateSemaphore,
     CloseHandle, CreateThread, ResumeThread, Sleep, SuspendThread,
@@ -60,7 +60,7 @@ REVEAL
     END;
 
 TYPE
-  Activation = UNTRACED REF RECORD
+  REVEAL Activation = UNTRACED BRANDED REF RECORD
       frame: ADDRESS := NIL;            (* exception handling support; this field is accessed MANY times
                                         so perhaps therefore should be first *)
       next, prev: Activation := NIL;    (* LL = activeMu; global doubly-linked, circular list of all active threads *)
@@ -167,7 +167,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
 (**********
 PROCEDURE DumpSlots () =
   VAR
-    me := LOOPHOLE (TlsGetValue_threadIndex(), Activation);
+    me := GetActivation();
   BEGIN
     RTIO.PutText ("me = ");
     RTIO.PutAddr (me);
@@ -335,21 +335,6 @@ VAR (* LL = slotLock *)
   n_slotted: LONG := 0;
   next_slot := 1;
   slots     : REF ARRAY OF T;  (* NOTE: we don't use slots[0]. *)
-
-PROCEDURE SetActivation (act: Activation) =
-  (* LL = 0 *)
-  BEGIN
-    IF TlsSetValue_threadIndex(LOOPHOLE (act, SIZE_T)) = 0 THEN
-      Choke(ThisLine());
-    END;
-  END SetActivation;
-
-PROCEDURE GetActivation (): Activation =
-  (* If not the initial thread and not created by Fork, returns NIL *)
-  (* LL = 0 *)
-  BEGIN
-    RETURN LOOPHOLE (TlsGetValue_threadIndex(), Activation);
-  END GetActivation;
 
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
