@@ -41,7 +41,7 @@ TYPE Lock_t = ADDRESS;
 
 (*------------------------------------------------------------------ Self ---*)
 
-(* The untraced state of a thread, a thread local. *)
+(* the untraced state of a thread, a thread local *)
 TYPE Activation <: ADDRESS;
 
 <*EXTERNAL ThreadWin32__SetActivation*> PROCEDURE SetActivation (act: Activation);
@@ -52,7 +52,7 @@ TYPE Activation <: ADDRESS;
 <*EXTERNAL ThreadWin32__perfLock*> VAR perfLock: Lock_t;
 
 (*------------------------------------------------------------- collector ---*)
-(* synchronization for the allocator and collector. *)
+(* synchronization for the allocator and collector *)
 
 <*EXTERNAL ThreadWin32__heapLock*> VAR heapLock: Lock_t;
 
