@@ -6,28 +6,30 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <setjmp.h>
-#ifdef __hpux
 #include <stdio.h>
-#endif
+
 #ifdef __OpenBSD__
 #error OpenBSD pthreads don't work.
 #endif
+
 #ifdef __APPLE__
+#define M3_DIRECT_SUSPEND
 #include <mach/mach.h>
 #include <mach/thread_act.h>
+#if defined(__ppc__) || defined(__ppc64__)
+#include <architecture/ppc/cframe.h>
 #endif
-#if defined(__APPLE__) || defined(__FreeBSD__)
-/* These operating systems use pthread_suspend_np, Mach thread_suspend, etc. */
+#endif
+
+#ifdef __FreeBSD__
 #define M3_DIRECT_SUSPEND
-#else
-/* Else we send a signal to the thread to suspend/resume it. */
 #endif
+
 #ifndef M3_DIRECT_SUSPEND
 #include <semaphore.h>
 #endif
 
 #ifdef M3_DIRECT_SUSPEND
-#include <stdio.h>
 #define M3_DIRECT_SUSPEND_ASSERT_FALSE do { \
     assert(0 && "MacOS X, FreeBSD should not get here."); \
     fprintf(stderr, "MacOS X, FreeBSD should not get here.\n"); \
