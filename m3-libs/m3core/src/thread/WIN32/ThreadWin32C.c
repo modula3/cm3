@@ -5,6 +5,16 @@
 /* Portions Copyright 1996-2000, Critical Mass, Inc.               */
 /* See file COPYRIGHT-CMASS for details.                           */
 
+struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses */
+#pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
+#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
+#pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
+#pragma warning(disable:4514) /* unused inline function removed */
+#if _MSC_VER <= 1100
+#pragma warning(disable:4024) /* volatile mismatch on Interlocked */
+#pragma warning(disable:4090) /* volatile mismatch on Interlocked */
+#endif
+
 #include <windows.h>
 #include <assert.h>
 
@@ -22,7 +32,7 @@ extern "C" {
 
 #define CRITSEC(name) \
 static CRITICAL_SECTION name##Lock; \
-const PCRITICAL_SECTION ThreadWin32__##name##Lock = &name##Lock; \
+PCRITICAL_SECTION ThreadWin32__##name##Lock; \
 
 CRITSEC(active)
 CRITSEC(giant)
@@ -32,25 +42,60 @@ CRITSEC(slot)
 
 DWORD ThreadWin32__threadIndex = TLS_OUT_OF_INDEXES;
 
-void __cdecl ThreadWin32__InitC(void)
+static void InitLock(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
 {
-    assert(ThreadWin32__threadIndex == TLS_OUT_OF_INDEXES);
-    InitializeCriticalSection(&activeLock);
-    InitializeCriticalSection(&giantLock);
-    InitializeCriticalSection(&heapLock);
-    InitializeCriticalSection(&perfLock);
-    InitializeCriticalSection(&slotLock);
-    ThreadWin32__threadIndex = TlsAlloc();
-    /* NOTE: This CAN fail. */
-    assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+    assert(*pp == NULL || *pp == p);
+    if (*pp)
+        return;
+    InitializeCriticalSection(p);
+    *pp = p;
 }
 
+static void DeleteLock(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
+{
+    assert(*pp == NULL || *pp == p);
+    if (!*pp)
+        return;
+    DeleteCriticalSection(p);
+    *pp = 0;
+}
+
+BOOL __cdecl ThreadWin32__InitC(void)
+{
+    InitLock(&ThreadWin32__activeLock, &activeLock);
+    InitLock(&ThreadWin32__giantLock, &giantLock);
+    InitLock(&ThreadWin32__heapLock, &heapLock);
+    InitLock(&ThreadWin32__perfLock, &perfLock);
+    InitLock(&ThreadWin32__slotLock, &slotLock);
+
+    if (ThreadWin32__threadIndex == TLS_OUT_OF_INDEXES)
+        ThreadWin32__threadIndex = TlsAlloc(); /* This CAN fail. */
+
+    return (ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+}
+
+void __cdecl ThreadWin32__Cleanup(void)
+{
+    DeleteLock(&ThreadWin32__activeLock, &activeLock);
+    DeleteLock(&ThreadWin32__giantLock, &giantLock);
+    DeleteLock(&ThreadWin32__heapLock, &heapLock);
+    DeleteLock(&ThreadWin32__perfLock, &perfLock);
+    DeleteLock(&ThreadWin32__slotLock, &slotLock);
+
+    if (ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES)
+        TlsFree(ThreadWin32__threadIndex);
+
+    ThreadWin32__threadIndex = TLS_OUT_OF_INDEXES;
+}
+
+#if 0
 #if !defined(InterlockedExchangePointer) && defined(_X86_)
 #define InterlockedExchangePointer InterlockedExchangePointer
 PVOID InterlockedExchangePointer(PVOID* a, PVOID b)
 {
     return (PVOID)InterlockedExchange((PLONG)a, (LONG)b);
 }
+#endif
 #endif
 
 #ifndef MemoryBarrier
@@ -98,8 +143,8 @@ void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
 
     /* verify it is readable
     NOTE: Do not verify *Available -- stack pages must be touched in order. */
-    *(volatile char*)Used;
-    *(volatile char*)(Used + info.RegionSize - 1);
+    a = *(volatile unsigned char*)Used;
+    a = *(volatile unsigned char*)(Used + info.RegionSize - 1);
 
     *start = Available;
     *end = Used + info.RegionSize;
@@ -131,14 +176,11 @@ void __cdecl ThreadWin32__DeleteLock(PCRITICAL_SECTION lock)
     HeapFree(GetProcessHeap(), 0, lock);
 }
 
-void __cdecl ThreadWin32__SetActivation(void* act)
+BOOL __cdecl ThreadWin32__SetActivation(void* act)
   /* LL = 0 */
 {
-    BOOL success;
     assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
-    success = TlsSetValue(ThreadWin32__threadIndex, act);
-    /* NOTE: This CAN fail. */
-    assert(success);
+    return TlsSetValue(ThreadWin32__threadIndex, act); /* NOTE: This CAN fail. */
 }
 
 void* __cdecl ThreadWin32__GetActivation(void)
@@ -149,6 +191,34 @@ void* __cdecl ThreadWin32__GetActivation(void)
     assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
     return TlsGetValue(ThreadWin32__threadIndex);
 }
+
+#if 0
+
+BOOL WINAPI DllMain(HANDLE DllHandle, DWORD Reason, PVOID Static)
+{
+    switch (Reason)
+    {
+    case DLL_THREAD_DETACH:
+        break;
+
+    case DLL_THREAD_ATTACH:
+        /* SetActivation belongs here (and allocating it) */
+        break;
+
+    case DLL_PROCESS_DETACH:
+        if (Static)
+            return TRUE; /* no need for any cleanup */
+        return ThreadWin32__Cleanup();
+
+    case DLL_PROCESS_ATTACH:
+        /* Module initializers belong here */.
+        return ThreadWin32__InitC();
+    }
+
+    return TRUE;
+}
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
