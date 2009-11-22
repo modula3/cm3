@@ -367,11 +367,11 @@ ThreadPThread__thread_create(
 
 #define MUTEX(name) \
 static pthread_mutex_t name##Mu = PTHREAD_MUTEX_INITIALIZER; \
-pthread_mutex_t *ThreadPThread__##name##Mu = &name##Mu; \
+pthread_mutex_t * const ThreadPThread__##name##Mu = &name##Mu; \
 
 #define CONDITION_VARIABLE(name) \
 static pthread_cond_t name##Cond = PTHREAD_COND_INITIALIZER; \
-pthread_cond_t *ThreadPThread__##name##Cond = &name##Cond; \
+pthread_cond_t * const ThreadPThread__##name##Cond = &name##Cond; \
 
 #define THREAD_LOCAL(name) \
 static pthread_key_t name; \
@@ -532,9 +532,9 @@ int ThreadPThread__pthread_mutex_lock(pthread_mutex_t* m)
     return pthread_mutex_lock(m);
 }
 
-void ThreadPThread__pthread_mutex_unlock(pthread_mutex_t* m)
+int ThreadPThread__pthread_mutex_unlock(pthread_mutex_t* m)
 {
-    pthread_mutex_unlock(m);
+    return pthread_mutex_unlock(m);
 }
 
 #ifdef __cplusplus
