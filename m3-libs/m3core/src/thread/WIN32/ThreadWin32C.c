@@ -133,7 +133,6 @@ void __cdecl ThreadWin32__DeleteLock(PCRITICAL_SECTION lock)
 
 void __cdecl ThreadWin32__SetActivation(void* act)
   /* LL = 0 */
-  /* This function is called VERY frequently. */
 {
     BOOL success;
     assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
