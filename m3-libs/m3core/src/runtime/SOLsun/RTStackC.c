@@ -10,8 +10,9 @@
 #include <ucontext.h>
 #include <sys/frame.h>
 
+#ifdef __GNUC__
 void *RTStack__SaveRegsInStack(void);
-asm("	.seg 	\"text\"");
+    asm("	.seg 	\"text\"");
 # if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
     asm("	.globl	RTStack__SaveRegsInStack");
     asm("RTStack__SaveRegsInStack:");
@@ -34,6 +35,17 @@ asm("	.seg 	\"text\"");
     asm("	RTStack__SaveRegsInStack_end:");
     asm("	.size RTStack__SaveRegsInStack,RTStack__SaveRegsInStack_end-RTStack__SaveRegsInStack");
 # endif
+#else
+#include <setjmp.h>
+void *RTStack__SaveRegsInStack(void)
+{
+  jmp_buf jb;
+  if (setjmp(jb) == 0)
+    longjmp(jb, 1); /* contains ta 3 */
+  else
+    return &jb;
+}
+#endif
 
 /*
 TYPE FrameInfo = RECORD
