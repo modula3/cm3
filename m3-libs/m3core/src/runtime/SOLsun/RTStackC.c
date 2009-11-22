@@ -35,7 +35,7 @@ void *RTStack__SaveRegsInStack(void);
     asm("	RTStack__SaveRegsInStack_end:");
     asm("	.size RTStack__SaveRegsInStack,RTStack__SaveRegsInStack_end-RTStack__SaveRegsInStack");
 # endif
-#else
+#else /* gcc */
 #include <setjmp.h>
 void *RTStack__SaveRegsInStack(void)
 {
@@ -45,7 +45,7 @@ void *RTStack__SaveRegsInStack(void)
   else
     return &jb;
 }
-#endif
+#endif /* gcc */
 
 /*
 TYPE FrameInfo = RECORD
