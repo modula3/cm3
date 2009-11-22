@@ -63,12 +63,12 @@ REVEAL
 
 TYPE
   Activation = UNTRACED REF RECORD
-      frame: ADDRESS := NIL;            (* exception handling support; this field is access MANY times
+      frame: ADDRESS := NIL;            (* exception handling support; this field is accessed MANY times
                                         so perhaps therefore should be first *)
       next, prev: Activation := NIL;    (* LL = activeMu; global doubly-linked, circular list of all active threads *)
-      handle: HANDLE := NIL;            (* LL = activeMu; thread handle in Windows *)
-      stackStart: ADDRESS := NIL;       (* LL = activeMu; stack bounds for use by GC *)
-      stackEnd: ADDRESS := NIL;         (* LL = activeMu; stack bounds for use by GC *)
+      handle: HANDLE := NIL;            (* thread handle in Windows *)
+      stackStart: ADDRESS := NIL;       (* stack bounds for use by GC *)
+      stackEnd: ADDRESS := NIL;         (* stack bounds for use by GC *)
       slot: INTEGER;                    (* LL = slotMu;  index into global array of active, slotted threads *)
       suspendCount := 1;                (* LL = activeMu *)
       context: CONTEXT;                 (* registers of suspended thread *)
