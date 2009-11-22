@@ -8,7 +8,7 @@
 UNSAFE MODULE ThreadWin32 EXPORTS RTHooks, RTOS, Scheduler, Thread,
 ThreadF, ThreadInternal, ThreadWin32;
 
-IMPORT RTError, WinGDI, RTParams, RuntimeError;
+IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess;
 FROM Compiler IMPORT ThisFile, ThisLine;
