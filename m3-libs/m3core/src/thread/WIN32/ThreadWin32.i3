@@ -68,6 +68,11 @@ PROCEDURE LeaveCriticalSection_heap();
 
 (*---------------------------------------------------------------------------*)
 
+<*EXTERNAL "ThreadWin32__GetStackBounds"*>
+PROCEDURE GetStackBounds(VAR start, end: ADDRESS);
+
+(*---------------------------------------------------------------------------*)
+
 <*EXTERNAL ThreadWin32__InterlockedIncrement*>
 PROCEDURE InterlockedIncrement(VAR a: LONG);
 

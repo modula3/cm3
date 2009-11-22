@@ -92,6 +92,34 @@ void __cdecl ThreadWin32__InterlockedDecrement(volatile LONG* a)
     InterlockedDecrement(a);
 }
 
+void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
+{
+    MEMORY_BASIC_INFORMATION info = { 0 };
+    size_t a = VirtualQuery(&info, &info, sizeof(info));
+
+    /* how far down has the stack been used so far */
+    char* Used = (char*)info.BaseAddress;
+
+    /* how far down the stack can grow */
+    char* Available = (char*)info.AllocationBase;
+
+    assert(a >= sizeof(info));
+    assert(Available);
+    assert(Used);
+    assert(info.RegionSize);
+    assert(((char*)&info) > Available);
+    assert(((char*)&info) >= Used);
+    assert(((char*)&info) < Used + info.RegionSize);
+
+    /* verify it is readable
+    NOTE: Do not verify *Available -- stack pages must be touched in order. */
+    *(volatile char*)Used;
+    *(volatile char*)(Used + info.RegionSize - 1);
+
+    *start = Available;
+    *end = Used + info.RegionSize;
+}
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

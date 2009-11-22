@@ -8,17 +8,17 @@
 UNSAFE MODULE ThreadWin32 EXPORTS
 Thread, ThreadF, Scheduler, ThreadInternal, RTOS, RTHooks, ThreadWin32;
 
-IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
-IMPORT ThreadContext, Word, MutexRep, RTHeapRep, RTCollectorSRC;
+IMPORT RTMisc, RTError, WinGDI, RTParams, FloatMode, RuntimeError;
+IMPORT Word, MutexRep, RTHeapRep, RTCollectorSRC;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT LONG, HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS,
-    MEMORY_BASIC_INFORMATION, PAGE_READWRITE, PAGE_READONLY;
+FROM WinNT IMPORT LONG, HANDLE, DWORD, SIZE_T, DUPLICATE_SAME_ACCESS;
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     GetCurrentProcess, DuplicateHandle, GetCurrentThread, CreateSemaphore,
     CloseHandle, CreateThread, ResumeThread, Sleep, SuspendThread,
-    GetThreadContext, VirtualQuery, GetLastError, CREATE_SUSPENDED,
+    GetThreadContext, GetLastError, CREATE_SUSPENDED,
     GetCurrentThreadId;
+FROM ThreadContext IMPORT CONTEXT, CONTEXT_CONTROL, CONTEXT_INTEGER;
 FROM WinNT IMPORT MemoryBarrier;
 
 (*--------------------------------------------------------------------------*)
@@ -80,11 +80,16 @@ TYPE
         (* LL = activeMu; global doubly-linked, circular list of all active threads *)
       handle: HANDLE := NIL;
         (* LL = activeMu; thread handle in Windows *)
-      stackbase: ADDRESS := NIL;
-        (* LL = activeMu; base of thread stack for use by GC *)
+      stackStart: ADDRESS := NIL;
+      stackEnd: ADDRESS := NIL;
+        (* LL = activeMu; stack bounds for use by GC *)
       slot: INTEGER;
         (* LL = slotMu;  index into global array of active, slotted threads *)
       suspendCount := 1; (* LL = activeMu *)
+
+      (* registers of suspended thread *)
+      context: CONTEXT;
+      stackPointer: ADDRESS; (* LOOPHOLE(context.Esp, ADDRESS); *)
 
       (* thread state *)
       heapState: RTHeapRep.ThreadState;
@@ -451,16 +456,20 @@ PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
      the allocator to start a collection which will call "SuspendOthers"
      which will try to acquire "activeMu". *)
+  CONST UserRegs = Word.Or(CONTEXT_CONTROL,
+                           CONTEXT_INTEGER);
   VAR t := NEW(T, act := act);
   BEGIN
+    RTMisc.Zero(ADR(act.context), BYTESIZE(act.context));
+    act.context.ContextFlags := UserRegs;
     t.waitSema := CreateSemaphore(NIL, 0, 1, NIL);
     t.join     := NEW(Condition);
     AssignSlot (t);
     RETURN t;
   END CreateT;
 
-(* ThreadBase calls RunThread after finding (approximately) where
-   its stack begins.  This dance ensures that all of ThreadMain's
+(* ThreadBase calls RunThread after finding where
+   its stack begins.  This ensures that all of ThreadMain's
    traced references are within the stack scanned by the collector.
 *)
 
@@ -474,9 +483,10 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
        traced references.  Otherwise, it may trigger a heap page fault,
        which would call SuspendOthers, which requires an Activation. *)
 
-    me.stackbase := ADR (me); (* enable GC scanning of this stack *)
+    GetStackBounds(me.stackStart, me.stackEnd);
     RunThread (me);
-    me.stackbase := NIL; (* disable GC scanning of my stack *)
+    me.stackStart := NIL; (* disable GC scanning of my stack *)
+    me.stackEnd := NIL;
     EVAL WinGDI.GdiFlush ();  (* help out Trestle *)
 
     <*ASSERT me # allThreads*>
@@ -704,6 +714,28 @@ PROCEDURE IncDefaultStackSize(inc: CARDINAL)=
 VAR
   suspend_cnt: CARDINAL := 0;  (* LL = giant *)
 
+PROCEDURE GetContextAndCheckStack(act: Activation): BOOLEAN =
+BEGIN
+  (* helper function used by SuspendOthers
+
+  If the stack pointer is not within bounds, then this might
+  be a Windows 95 bug; let the thread run longer and try again.
+  Our historical behavior here was wierd. If stackbase - stackpointer > 10000,
+  do some VirtualQuery calls to confirm readability. As well, historically,
+  we called GetThreadContext on the currently running thread, which
+  is documented as not working. As well, historically, GetThreadContext
+  was called later, in ProcessStacks. See versions prior to November 22 2009.
+  I really don't know if the stack ever comes back invalid, and I didn't
+  test on Windows 95, but this seems like a better cheaper way to attempt
+  to honor the historical goals. Note also that GetStackBounds should be
+  tested on Windows 95. *)
+
+  IF GetThreadContext(act.handle, ADR(act.context)) = 0 THEN Choke(ThisLine()) END;
+  act.stackPointer := LOOPHOLE (act.context.Esp, ADDRESS);
+  RETURN (act.stackPointer >= act.stackStart AND act.stackPointer < act.stackEnd);
+
+END GetContextAndCheckStack;
+
 PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeMu". *)
   VAR me: Activation;
@@ -723,7 +755,7 @@ PROCEDURE SuspendOthers () =
       WHILE act # me DO
         IF act.suspendCount = 0 THEN
           IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-          IF act.heapState.inCritical # 0 THEN
+          IF act.heapState.inCritical # 0 OR NOT GetContextAndCheckStack(act) THEN
             IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
             INC(nLive);
           ELSE
@@ -761,21 +793,20 @@ PROCEDURE ResumeOthers () =
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
-  CONST UserRegs = Word.Or(ThreadContext.CONTEXT_CONTROL,
-                           ThreadContext.CONTEXT_INTEGER);
-  VAR act := allThreads;  context: ThreadContext.CONTEXT;  fixed_SP: ADDRESS;
+  VAR act := allThreads;
+       me := GetActivation();
+       assertReadable: CHAR;
+       stackPointer: UNTRACED REF CHAR;
   BEGIN
+    me.stackPointer := ADR(me);
     REPEAT
-      IF act.stackbase # NIL THEN
-        context.ContextFlags := UserRegs;
-        IF GetThreadContext(act.handle, ADR(context))=0 THEN Choke(ThisLine()) END;
-        fixed_SP := LOOPHOLE (context.Esp, ADDRESS);
-        IF (act.stackbase - fixed_SP) > 10000 THEN
-          fixed_SP := VerifySP (fixed_SP, act.stackbase);
-        END;
+      IF act.stackStart # NIL AND act.stackEnd # NIL THEN
         RTHeapRep.FlushThreadState(act.heapState);
-        p(fixed_SP, act.stackbase); (* Process the stack *)
-        p(ADR(context.Edi), ADR(context.Eip));  (* Process the registers *)
+        stackPointer := act.stackPointer;
+        <*ASSERT stackPointer # NIL*>
+        assertReadable := stackPointer^;
+        p(stackPointer, act.stackEnd); (* Process the stack *)
+        p(ADR(act.context.Edi), ADR(act.context.Eip));  (* Process the registers *)
       END;
       act := act.next;
     UNTIL (act = allThreads);
@@ -787,39 +818,6 @@ PROCEDURE ProcessEachStack (<*UNUSED*>p: PROCEDURE (start, stop: ADDRESS)) =
     <*ASSERT FALSE*>
   END ProcessEachStack;
 
-PROCEDURE VerifySP (start, stop: ADDRESS): ADDRESS =
-  (* Apparently, Win95 will lie about a thread's stack pointer! *)
-  (* Verify that the claimed stack pages are really readable... *)
-  CONST PageSize = 4096;
-  CONST N = BYTESIZE (info);
-  VAR info: MEMORY_BASIC_INFORMATION;
-  BEGIN
-    info.BaseAddress := LOOPHOLE (stop-1, ADDRESS);
-    LOOP
-      IF info.BaseAddress <= start THEN
-        info.BaseAddress := start;
-        EXIT;
-      END;
-
-      IF VirtualQuery (info.BaseAddress, ADR (info), N) # N THEN
-        Choke(ThisLine());
-      END;
- 
-      (* is this chunk readable? *)
-      IF (info.Protect # PAGE_READWRITE)
-        AND (info.Protect # PAGE_READONLY) THEN
-        (* nope, return the base of the last good chunk *)
-        INC (info.BaseAddress, info.RegionSize);
-        EXIT;
-      END;
-
-      (* yep, try the next chunk *)
-      DEC (info.BaseAddress, PageSize);
-    END;
-
-    RETURN info.BaseAddress;
-  END VerifySP;
-
 (*------------------------------------------------------------ misc. stuff ---*)
 
 PROCEDURE MyId(): Id RAISES {}=
@@ -828,15 +826,13 @@ PROCEDURE MyId(): Id RAISES {}=
   END MyId;
 
 PROCEDURE MyHeapState(): UNTRACED REF RTHeapRep.ThreadState =
-  VAR me := GetActivation();
   BEGIN
-    RETURN ADR(me.heapState);
+    RETURN ADR(GetActivation().heapState);
   END MyHeapState;
 
 PROCEDURE MyFPState(): UNTRACED REF FloatMode.ThreadState =
-  VAR me := GetActivation();
   BEGIN
-    RETURN ADR(me.floatState);
+    RETURN ADR(GetActivation().floatState);
   END MyFPState;
 
 PROCEDURE DisableSwitching () =
@@ -937,8 +933,8 @@ PROCEDURE Init() =
     mutex := NEW(MUTEX);
     condition := NEW(Condition);
 
-    me.stackbase := InitialStackBase (ADR (self));
-    IF me.stackbase = NIL THEN Choke(ThisLine()); END;
+    GetStackBounds(me.stackStart, me.stackEnd);
+    IF me.stackStart = NIL OR me.stackEnd = NIL THEN Choke(ThisLine()); END;
 
     <*ASSERT inCritical = 1*>
     inCritical := 0;
@@ -953,31 +949,6 @@ PROCEDURE Init() =
       RTCollectorSRC.StartForegroundCollection();
     END;
   END Init;
-
-PROCEDURE InitialStackBase (start: ADDRESS): ADDRESS =
-  (* Find the bottom of the stack containing "start". *)
-  CONST N = BYTESIZE (info);
-  VAR info: MEMORY_BASIC_INFORMATION;  last_good: ADDRESS;
-  BEGIN
-    last_good := start;
-    info.BaseAddress := start;
-    LOOP
-      IF VirtualQuery (info.BaseAddress, ADR (info), N) # N THEN
-        Choke(ThisLine());
-      END;
- 
-      (* is this chunk readable? *)
-      IF (info.Protect # PAGE_READWRITE)
-        AND (info.Protect # PAGE_READONLY) THEN
-        (* nope, return the base of the last good chunk *)
-        RETURN last_good;
-      END;
-
-      (* yep, try the previous chunk *)
-      last_good := info.BaseAddress + info.RegionSize;
-      info.BaseAddress := last_good;
-    END;
-  END InitialStackBase;
 
 (*------------------------------------------------------------- collector ---*)
 (* These procedures provide synchronization primitives for the allocator
