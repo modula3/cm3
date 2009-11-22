@@ -760,6 +760,12 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     UNTIL (act = allThreads);
   END ProcessStacks;
 
+PROCEDURE ProcessEachStack (<*UNUSED*>p: PROCEDURE (start, stop: ADDRESS)) =
+  BEGIN
+    (* experimental, unimplemented here *)
+    <*ASSERT FALSE*>
+  END ProcessEachStack;
+
 PROCEDURE VerifySP (start, stop: ADDRESS): ADDRESS =
   (* Apparently, Win95 will lie about a thread's stack pointer! *)
   (* Verify that the claimed stack pages are really readable... *)
