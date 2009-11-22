@@ -74,22 +74,18 @@ REVEAL
 
 TYPE
   Activation = UNTRACED REF RECORD
-      (* exception handling support *)
-      frame: ADDRESS := NIL;
-      next, prev: Activation := NIL;
-        (* LL = activeMu; global doubly-linked, circular list of all active threads *)
-      handle: HANDLE := NIL;
-        (* LL = activeMu; thread handle in Windows *)
-      stackStart: ADDRESS := NIL;
-      stackEnd: ADDRESS := NIL;
-        (* LL = activeMu; stack bounds for use by GC *)
-      slot: INTEGER;
-        (* LL = slotMu;  index into global array of active, slotted threads *)
-      suspendCount := 1; (* LL = activeMu *)
+      frame: ADDRESS := NIL; (* exception handling support; this field is access MANY times
+                                so perhaps therefore should be first *)
 
-      (* registers of suspended thread *)
-      context: CONTEXT;
-      stackPointer: ADDRESS; (* LOOPHOLE(context.Esp, ADDRESS); *)
+      next, prev: Activation := NIL; (* LL = activeMu; global doubly-linked, circular list of all active threads *)
+      handle: HANDLE := NIL;        (* LL = activeMu; thread handle in Windows *)
+      stackStart: ADDRESS := NIL;   (* LL = activeMu; stack bounds for use by GC *)
+      stackEnd: ADDRESS := NIL;     (* LL = activeMu; stack bounds for use by GC *)
+      slot: INTEGER;                (* LL = slotMu;  index into global array of active, slotted threads *)
+      suspendCount := 1;            (* LL = activeMu *)
+
+      context: CONTEXT;             (* registers of suspended thread *)
+      stackPointer: ADDRESS;        (* LOOPHOLE(context.Esp, ADDRESS); *)
 
       (* thread state *)
       heapState: RTHeapRep.ThreadState;
