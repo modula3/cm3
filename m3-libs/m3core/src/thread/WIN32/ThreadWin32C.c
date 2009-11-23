@@ -47,33 +47,40 @@ DWORD ThreadWin32__threadIndex = TLS_OUT_OF_INDEXES;
 static void InitLock(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
 {
     assert(*pp == NULL || *pp == p);
-    if (*pp)
-        return;
-    InitializeCriticalSection(p);
-    *pp = p;
+    if (!*pp)
+    {
+        InitializeCriticalSection(p);
+        *pp = p;
+    }
 }
 
 static void DeleteLock(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
 {
     assert(*pp == NULL || *pp == p);
-    if (!*pp)
-        return;
-    DeleteCriticalSection(p);
-    *pp = 0;
+    if (*pp)
+    {
+        DeleteCriticalSection(p);
+        *pp = 0;
+    }
 }
 
 BOOL __cdecl ThreadWin32__InitC(void)
 {
+    BOOL success = (ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+
     InitLock(&ThreadWin32__activeLock, &activeLock);
     InitLock(&ThreadWin32__giantLock, &giantLock);
     InitLock(&ThreadWin32__heapLock, &heapLock);
     InitLock(&ThreadWin32__perfLock, &perfLock);
     InitLock(&ThreadWin32__slotLock, &slotLock);
 
-    if (ThreadWin32__threadIndex == TLS_OUT_OF_INDEXES)
+    if (!success)
+    {
         ThreadWin32__threadIndex = TlsAlloc(); /* This CAN fail. */
-
-    return (ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+        success = (ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+    }
+    assert(success);
+    return success;
 }
 
 void __cdecl ThreadWin32__Cleanup(void)
@@ -181,8 +188,11 @@ void __cdecl ThreadWin32__DeleteLock(PCRITICAL_SECTION lock)
 BOOL __cdecl ThreadWin32__SetActivation(void* act)
   /* LL = 0 */
 {
-    assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
-    return TlsSetValue(ThreadWin32__threadIndex, act); /* NOTE: This CAN fail. */
+    BOOL success = (ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+    assert(success);
+    success = TlsSetValue(ThreadWin32__threadIndex, act); /* NOTE: This CAN fail. */
+    assert(success);
+    return success;
 }
 
 void* __cdecl ThreadWin32__GetActivation(void)
