@@ -32,15 +32,15 @@ struct IRpcStubBuffer;        /* warning 4115: named type definition in parenthe
 extern "C" {
 #endif
 
-#define CRITSEC(name) \
+#define LOCK(name) \
 static CRITICAL_SECTION name##Lock; \
 PCRITICAL_SECTION ThreadWin32__##name##Lock; \
 
-CRITSEC(active)
-CRITSEC(giant)
-CRITSEC(heap)
-CRITSEC(perf)
-CRITSEC(slot)
+LOCK(active) /* global lock for list of active threads */
+LOCK(slot)   /* global lock for thread slots table which maps untraced to traced */
+LOCK(giant)
+LOCK(heap)
+LOCK(perf)
 
 DWORD ThreadWin32__threadIndex = TLS_OUT_OF_INDEXES;
 
