@@ -92,20 +92,11 @@ void __cdecl ThreadWin32__Cleanup(void)
     DeleteLock(&ThreadWin32__slotLock, &slotLock);
 
     if (ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES)
+    {
         TlsFree(ThreadWin32__threadIndex);
-
-    ThreadWin32__threadIndex = TLS_OUT_OF_INDEXES;
+        ThreadWin32__threadIndex = TLS_OUT_OF_INDEXES;
+    }
 }
-
-#if 0
-#if !defined(InterlockedExchangePointer) && defined(_X86_)
-#define InterlockedExchangePointer InterlockedExchangePointer
-PVOID InterlockedExchangePointer(PVOID* a, PVOID b)
-{
-    return (PVOID)InterlockedExchange((PLONG)a, (LONG)b);
-}
-#endif
-#endif
 
 #ifndef MemoryBarrier
 void __cdecl WinNT__MemoryBarrier(void);
