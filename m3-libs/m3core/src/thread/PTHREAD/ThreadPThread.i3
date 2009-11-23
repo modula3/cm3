@@ -11,9 +11,10 @@ FROM Cstddef IMPORT size_t;
 FROM Utime IMPORT struct_timespec;
 
 TYPE
-  pthread_t = ADDRESS;
-  pthread_mutex_t = ADDRESS;
-  pthread_cond_t = ADDRESS;
+  (* These are opaque C references (not necessarily UNTRACED REF ADDRESS) *)
+  pthread_t = UNTRACED BRANDED REF ADDRESS;
+  pthread_mutex_t = UNTRACED BRANDED REF ADDRESS;
+  pthread_cond_t = UNTRACED BRANDED REF ADDRESS;
 
 (*---------------------------------------------------------------------------*)
 
@@ -107,10 +108,10 @@ PROCEDURE pthread_mutex_lock(mutex: pthread_mutex_t):int;
 PROCEDURE pthread_mutex_unlock(mutex: pthread_mutex_t):int;
 
 <*EXTERNAL "ThreadPThread__pthread_cond_new"*>
-PROCEDURE pthread_cond_new():pthread_mutex_t;
+PROCEDURE pthread_cond_new(): pthread_cond_t;
 
 <*EXTERNAL "ThreadPThread__pthread_cond_delete"*>
-PROCEDURE pthread_cond_delete(a:pthread_cond_t);
+PROCEDURE pthread_cond_delete(cond: pthread_cond_t);
 
 <*EXTERNAL ThreadPThread__pthread_cond_wait*>
 PROCEDURE pthread_cond_wait(cond: pthread_cond_t; mutex: pthread_mutex_t):int;
