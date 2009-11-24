@@ -9,7 +9,7 @@
 #include <stdio.h>
 
 #ifdef __OpenBSD__
-#error OpenBSD pthreads don't work.
+#error OpenBSD pthreads do not work.
 #endif
 
 #ifdef __APPLE__
