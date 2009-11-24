@@ -29,6 +29,16 @@
 #include <semaphore.h>
 #endif
 
+#if defined(__sparc) || defined(__ia64__)
+#define M3_REGISTER_WINDOWS
+#endif
+
+/* Splitting the callback for registers and stack isn't
+   needed for but for now preserves compatibility with code that
+   assumes this behavior.
+*/
+#define M3_SPLIT_PROCESSLIVE_CALLS
+
 #ifdef M3_DIRECT_SUSPEND
 #define M3_DIRECT_SUSPEND_ASSERT_FALSE do { \
     assert(0 && "MacOS X, FreeBSD should not get here."); \
@@ -281,49 +291,60 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *start, void *end,
 #endif /* Apple */
 #endif /* M3_DIRECT_SUSPEND */
 
-# ifdef __sparc
-char *ThreadPThread__SaveRegsInStack(void);
-/* On register window machines, we need a way to force registers into       */
-/* the stack.       Return sp.                                              */
-    asm("       .seg        \"text\"");
-#   if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
-      asm("     .globl      ThreadPThread__SaveRegsInStack");
-      asm("ThreadPThread__SaveRegsInStack:");
-      asm("     .type ThreadPThread__SaveRegsInStack,#function");
-#   else
-      asm("     .globl      ThreadPThread__SaveRegsInStack");
-      asm("ThreadPThread__SaveRegsInStack:");
-#   endif
-#   if defined(__arch64__) || defined(__sparcv9)
-      asm("     save        %sp,-128,%sp");
-      asm("     flushw");
-      asm("     ret");
-      asm("     restore %sp,2047+128,%o0");
-#   else
-      asm("     ta      0x3   ! ST_FLUSH_WINDOWS");
-      asm("     retl");
-      asm("     mov     %sp,%o0");
-#   endif
-#   ifdef SVR4
-      asm("     ThreadPThread__SaveRegsInStack_end:");
-      asm("     .size ThreadPThread__SaveRegsInStack,ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
-#   endif
-# else
-char *ThreadPThread__SaveRegsInStack(void) { return 0; }
-# endif
+void ThreadPThread__SaveRegsInStack(void)
+{
+#ifdef M3_REGISTER_WINDOWS
+/* On "register window" architectures, setjmp/longjmp tends
+   to flush registers to the stack in a fairly portable not
+   too inefficient fashion, and saves us the need for
+   gnarly assembly. (ta 3 on Sparc, flushrs on IA64)
+*/
+  jmp_buf jb;
+  if (setjmp(jb) == 0) longjmp(jb, 1);
+#endif
+}
+
+#define stack_grows_down ThreadPThread__stack_grows_down
+int stack_grows_down;
 
 void
-ThreadPThread__ProcessLive(char *start, char *end,
+ThreadPThread__ProcessLive(char *stackbase,
                            void (*p)(void *start, void *stop))
 {
-  jmp_buf buf;
-  setjmp(buf);
-  p(&buf, ((char *)&buf) + sizeof(buf));
-#ifdef __sparc
-  start = ThreadPThread__SaveRegsInStack();
+  jmp_buf jb;
+
+/* Capture registers to jmpbuf, no matter if a register window
+   machine or not. */
+  if (setjmp(jb) == 0)
+#ifdef M3_REGISTER_WINDOWS
+  { /* see SaveRegsInStack */
+    longjmp(jb, 1);
+  }
+  else
 #endif
-  assert(start < end);
-  p(start, end);
+  {
+    /* compute these after longjmp to avoid the caveat
+       that longjmp does not necessarily preserve non-volatile locals
+       (what about the parameters?) */
+    char* buf = (char*)&jb;
+    const size_t N = sizeof(jb);
+    int down = stack_grows_down;
+#ifdef M3_SPLIT_PROCESSLIVE_CALLS
+    char* start = down ? (buf + N) : stackbase;
+    char* end   = down ? stackbase : buf;
+#else
+    char* start = down ? buf       : stackbase;
+    char* end   = down ? stackbase : (buf + N);
+#endif
+
+#ifdef M3_SPLIT_PROCESSLIVE_CALLS
+    p(buf, (buf + N));
+#endif
+    assert(start);
+    assert(end);
+    assert(start < end);
+    p(start, end);
+  }
 }
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
