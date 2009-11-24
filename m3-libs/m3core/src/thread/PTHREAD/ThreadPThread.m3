@@ -50,7 +50,7 @@ REVEAL
 
 TYPE
   ActState = { Starting, Started, Stopping, Stopped };
-  Activation = UNTRACED REF RECORD
+  REVEAL Activation = UNTRACED BRANDED REF RECORD
     mutex: pthread_mutex_t := NIL;
 
     (* a place to park while waiting *)
@@ -218,17 +218,15 @@ PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN)
 
 PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
-  VAR self := pthread_getspecific_activations();
   BEGIN
-    XWait(self, m, c, alertable := TRUE);
+    XWait(GetActivation(), m, c, alertable := TRUE);
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
   <*FATAL Alerted*>
   (* LL = m *)
-  VAR self := pthread_getspecific_activations();
   BEGIN
-    XWait(self, m, c, alertable := FALSE);
+    XWait(GetActivation(), m, c, alertable := FALSE);
   END Wait;
 
 PROCEDURE DequeueHead(c: Condition) =
@@ -279,9 +277,8 @@ PROCEDURE XTestAlert (self: Activation): BOOLEAN =
   END XTestAlert;
 
 PROCEDURE TestAlert (): BOOLEAN =
-  VAR self := pthread_getspecific_activations();
   BEGIN
-    RETURN XTestAlert(self);
+    RETURN XTestAlert(GetActivation());
   END TestAlert;
 
 (*------------------------------------------------------------------ Self ---*)
@@ -298,7 +295,7 @@ PROCEDURE InitActivations (base: ADDRESS): Activation =
     me.next := me;
     me.prev := me;
     WITH r = pthread_key_create_activations() DO <*ASSERT r=0*> END;
-    WITH r = pthread_setspecific_activations(me) DO <*ASSERT r=0*> END;
+    WITH r = SetActivation(me) DO <*ASSERT r=0*> END;
     <* ASSERT next_slot = 1 *> (* no threads created yet *)
     <* ASSERT slots = NIL *> (* no threads created yet *)
     <* ASSERT n_slotted = 0 *> (* no threads created yet *)
@@ -312,7 +309,7 @@ PROCEDURE InitActivations (base: ADDRESS): Activation =
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   VAR
-    me: Activation := pthread_getspecific_activations();
+    me: Activation := GetActivation();
     t: T;
   BEGIN
     IF me = NIL THEN Die(ThisLine(), "Thread primitive called from non-Modula-3 thread") END;
@@ -461,7 +458,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     xx: INTEGER;
     me: Activation := param;
   BEGIN
-    WITH r = pthread_setspecific_activations(me) DO <*ASSERT r=0*> END;
+    WITH r = SetActivation(me) DO <*ASSERT r=0*> END;
 
     (* add to the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
@@ -555,15 +552,13 @@ PROCEDURE XJoin (self: Activation; t: T; alertable: BOOLEAN):
 
 PROCEDURE Join (t: T): REFANY =
   <*FATAL Alerted*>
-  VAR self := pthread_getspecific_activations();
   BEGIN
-    RETURN XJoin(self, t, alertable := FALSE);
+    RETURN XJoin(GetActivation(), t, alertable := FALSE);
   END Join;
 
 PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
-  VAR self := pthread_getspecific_activations();
   BEGIN
-    RETURN XJoin(self, t, alertable := TRUE);
+    RETURN XJoin(GetActivation(), t, alertable := TRUE);
   END AlertJoin;
 
 (*---------------------------------------------------- Scheduling support ---*)
@@ -615,15 +610,13 @@ PROCEDURE XPause (self: Activation; n: LONGREAL; alertable: BOOLEAN)
 
 PROCEDURE Pause (n: LONGREAL) =
   <*FATAL Alerted*>
-  VAR self := pthread_getspecific_activations();
   BEGIN
-    XPause(self, n, alertable := FALSE);
+    XPause(GetActivation(), n, alertable := FALSE);
   END Pause;
 
 PROCEDURE AlertPause (n: LONGREAL) RAISES {Alerted} =
-  VAR self := pthread_getspecific_activations();
   BEGIN
-    XPause(self, n, alertable := TRUE);
+    XPause(GetActivation(), n, alertable := TRUE);
   END AlertPause;
 
 PROCEDURE Yield () =
@@ -642,11 +635,10 @@ TYPE
 PROCEDURE IOWait (fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult =
   <*FATAL Alerted*>
-  VAR self := pthread_getspecific_activations();
   BEGIN
     TRY
       IF perfOn THEN PerfChanged(State.blocking) END;
-      RETURN XIOWait(self, fd, read, timeoutInterval, alertable := FALSE);
+      RETURN XIOWait(GetActivation(), fd, read, timeoutInterval, alertable := FALSE);
     FINALLY
       IF perfOn THEN PerfRunning() END;
     END;
@@ -655,11 +647,10 @@ PROCEDURE IOWait (fd: CARDINAL; read: BOOLEAN;
 PROCEDURE IOAlertWait (fd: CARDINAL; read: BOOLEAN;
                        timeoutInterval: LONGREAL := -1.0D0): WaitResult
   RAISES {Alerted} =
-  VAR self := pthread_getspecific_activations();
   BEGIN
     TRY
       IF perfOn THEN PerfChanged(State.blocking) END;
-      RETURN XIOWait(self, fd, read, timeoutInterval, alertable := TRUE);
+      RETURN XIOWait(GetActivation(), fd, read, timeoutInterval, alertable := TRUE);
     FINALLY
       IF perfOn THEN PerfRunning() END;
     END;
@@ -851,7 +842,7 @@ PROCEDURE ResumeOthers () =
 PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR
-    me: Activation := pthread_getspecific_activations();
+    me := GetActivation();
     act: Activation;
   BEGIN
     ProcessMe(me, p);
@@ -865,7 +856,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
 PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=0 *)
   VAR
-    me: Activation := pthread_getspecific_activations();
+    me := GetActivation();
     act: Activation;
     state: ActState;
     acks: int;
@@ -1055,7 +1046,7 @@ PROCEDURE StartThread (act: Activation): BOOLEAN =
 PROCEDURE StopWorld () =
   (* LL=activeMu *)
   VAR
-    me: Activation := pthread_getspecific_activations();
+    me := GetActivation();
     act: Activation;
     state: ActState;
     acks: int;
@@ -1139,7 +1130,7 @@ PROCEDURE StopWorld () =
 PROCEDURE StartWorld () =
   (* LL=activeMu *)
   VAR
-    me: Activation := pthread_getspecific_activations();
+    me := GetActivation();
     act: Activation;
     state: ActState;
     acks: int;
@@ -1222,7 +1213,7 @@ PROCEDURE StartWorld () =
 
 PROCEDURE SignalHandler (sig: int) =
   VAR
-    me: Activation := pthread_getspecific_activations();
+    me := GetActivation();
     errno := Cerrno.GetErrno();
     xx: INTEGER;
   BEGIN
@@ -1247,7 +1238,7 @@ PROCEDURE SignalHandler (sig: int) =
 (*----------------------------------------------------------- misc. stuff ---*)
 
 PROCEDURE MyId (): Id RAISES {} =
-  VAR me: Activation := pthread_getspecific_activations();
+  VAR me := GetActivation();
   BEGIN
     IF me = NIL
       THEN RETURN 0
@@ -1256,15 +1247,13 @@ PROCEDURE MyId (): Id RAISES {} =
   END MyId;
 
 PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
-  VAR me: Activation := pthread_getspecific_activations();
   BEGIN
-    RETURN ADR(me.heapState);
+    RETURN ADR(GetActivation().heapState);
   END MyFPState;
 
 PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
-  VAR me: Activation := pthread_getspecific_activations();
   BEGIN
-    RETURN ADR(me.heapState);
+    RETURN ADR(GetActivation().heapState);
   END MyHeapState;
 
 PROCEDURE DisableSwitching () =
@@ -1420,22 +1409,20 @@ PROCEDURE BroadcastHeap () =
 (*--------------------------------------------- exception handling support --*)
 
 PROCEDURE GetCurrentHandlers (): ADDRESS =
-  VAR me: Activation := pthread_getspecific_activations();
   BEGIN
-    RETURN me.frame;
+    RETURN GetActivation().frame;
   END GetCurrentHandlers;
 
 PROCEDURE SetCurrentHandlers (h: ADDRESS) =
-  VAR me: Activation := pthread_getspecific_activations();
   BEGIN
-    me.frame := h;
+    GetActivation().frame := h;
   END SetCurrentHandlers;
 
 (*RTHooks.PushEFrame*)
 PROCEDURE PushEFrame (frame: ADDRESS) =
   TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
   VAR
-    me: Activation := pthread_getspecific_activations();
+    me := GetActivation();
     f: Frame := frame;
   BEGIN
     f.next := me.frame;
@@ -1444,9 +1431,8 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
 
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
-  VAR me: Activation := pthread_getspecific_activations();
   BEGIN
-    me.frame := frame;
+    GetActivation().frame := frame;
   END PopEFrame;
 
 VAR DEBUG := RTParams.IsPresent("debugthreads");

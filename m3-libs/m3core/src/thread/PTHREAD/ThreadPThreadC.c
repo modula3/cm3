@@ -373,21 +373,6 @@ pthread_mutex_t * const ThreadPThread__##name##Mu = &name##Mu; \
 static pthread_cond_t name##Cond = PTHREAD_COND_INITIALIZER; \
 pthread_cond_t * const ThreadPThread__##name##Cond = &name##Cond; \
 
-#define THREAD_LOCAL(name) \
-static pthread_key_t name; \
-int ThreadPThread__pthread_key_create_##name(void) \
-{ \
-    return pthread_key_create(&name, NULL); \
-} \
-int ThreadPThread__pthread_setspecific_##name(void* value) \
-{ \
-    return pthread_setspecific(name, value); \
-} \
-void* ThreadPThread__pthread_getspecific_##name(void) \
-{ \
-    return pthread_getspecific(name); \
-} \
-
 /* activeMu slotMu initMu perfMu heapMu heapCond */
 
 MUTEX(active) /* global lock for list of active threads */
@@ -396,7 +381,23 @@ MUTEX(init)   /* global lock for initializers */
 MUTEX(perf)
 MUTEX(heap)
 CONDITION_VARIABLE(heap)
-THREAD_LOCAL(activations)
+
+static pthread_key_t activations;
+
+int pthread_key_create_activations(void)
+{
+  return pthread_key_create(&activations, NULL);
+}
+
+int ThreadPThread__SetActivation(void* value)
+{
+  return pthread_setspecific(activations, value);
+}
+
+void* ThreadPThread__GetActivation(void)
+{
+  return pthread_getspecific(activations);
+}
 
 typedef int (*generic_init_t)(void*, const void*);
 
