@@ -10,16 +10,20 @@
 #define _ALL_SOURCE
 #endif
 
+#if defined(__APPLE__) && !defined(_XOPEN_SOURCE)
+/* http://tinderbox.elegosoft.com/tinderbox/cgi-bin/gunzip.cgi?tree=cm3&brief-log=1258879870.10595#err9
+/usr/include/ucontext.h:42:2: error: #error ucontext routines are deprecated, and require _XOPEN_SOURCE to be defined
+This definitely does not occur on all systems. */
+#define _XOPEN_SOURCE
+#endif
+
 #include <unistd.h>
 #include <signal.h>
 #include <assert.h>
 typedef struct sigaction sigaction_t;
-#if !(defined(__OpenBSD__) || defined(__APPLE__)  || defined(__CYGWIN__))
-/*     Apple: ucontext_t is in signal.h
-              #including ucontext.h gives #error unless #define _XOPEN_SOURCE
- OpenBSD 4.3: ucontext.h doesn't exist, ucontext_t is in signal.h
-      Cygwin: no state provided to signal handler?
-*/
+#if !(defined(__OpenBSD__) || defined(__CYGWIN__))
+/* OpenBSD 4.3: ucontext.h doesn't exist, ucontext_t is in signal.h
+        Cygwin: no state provided to signal handler? */
 #include <ucontext.h>
 #endif
 
