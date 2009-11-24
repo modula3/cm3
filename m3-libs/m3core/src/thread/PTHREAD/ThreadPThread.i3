@@ -19,6 +19,11 @@ TYPE
 
 (*---------------------------------------------------------------------------*)
 
+<*EXTERNAL ThreadPThread__stack_grows_down*>
+(*CONST*)VAR stack_grows_down: (*BOOLEAN*)int;
+
+(*---------------------------------------------------------------------------*)
+
 PROCEDURE SignalHandler(sig: int);
 
 (*---------------------------------------------------------------------------*)
@@ -142,7 +147,7 @@ PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
 PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
 
 <*EXTERNAL "ThreadPThread__ProcessLive"*>
-PROCEDURE ProcessLive(start, end: ADDRESS;
+PROCEDURE ProcessLive(stackbase: ADDRESS;
                       p: PROCEDURE(start, stop: ADDRESS));
 
 <*EXTERNAL "ThreadPThread__ProcessStopped"*>
@@ -150,7 +155,7 @@ PROCEDURE ProcessStopped (t: pthread_t; start, end: ADDRESS;
                           p: PROCEDURE(start, end: ADDRESS));
 
 <*EXTERNAL "ThreadPThread__SaveRegsInStack"*>
-PROCEDURE SaveRegsInStack (): ADDRESS;
+PROCEDURE SaveRegsInStack ();
 
 (*---------------------------------------------------------------------------*)
 

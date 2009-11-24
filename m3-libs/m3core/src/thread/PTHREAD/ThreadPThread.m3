@@ -20,8 +20,6 @@ CONST
   WAIT_UNIT = 1000000; (* one million nanoseconds, one thousandth of a second *)
   RETRY_INTERVAL = 10000000; (* 10 million nanoseconds, one hundredth of a second *)
 
-VAR stack_grows_down: BOOLEAN;
-
 REVEAL
   Mutex = MutexRep.Public BRANDED "Mutex Pthread-1.0" OBJECT
     mutex: pthread_mutex_t := NIL;
@@ -981,17 +979,13 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
 
 PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu *)
-  VAR xx: INTEGER;
   BEGIN
     <*ASSERT me.state # ActState.Stopped*>
     IF DEBUG THEN
       RTIO.PutText("Processing act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(me.heapState);
-    IF stack_grows_down
-      THEN ProcessLive(ADR(xx), me.stackbase, p);
-      ELSE ProcessLive(me.stackbase, ADR(xx), p);
-    END;
+    ProcessLive(me.stackbase, p);
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -1004,7 +998,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
     IF act.stackbase = NIL THEN RETURN END;
     RTHeapRep.FlushThreadState(act.heapState);
     (* process registers explicitly *)
-    IF stack_grows_down
+    IF stack_grows_down = 1
       THEN ProcessStopped(act.handle, act.sp, act.stackbase, p);
       ELSE ProcessStopped(act.handle, act.stackbase, act.sp, p);
     END;
@@ -1223,8 +1217,8 @@ PROCEDURE SignalHandler (sig: int) =
         me.state := ActState.Started;
         RETURN;
       END;
-      me.sp := SaveRegsInStack();
-      IF me.sp = NIL THEN me.sp := ADR(xx) END;
+      SaveRegsInStack();
+      me.sp := ADR(xx);
       me.state := ActState.Stopped;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
       REPEAT EVAL sigsuspend() UNTIL me.state = ActState.Starting;
@@ -1340,7 +1334,7 @@ PROCEDURE Init ()=
     me := InitActivations(ADR(xx));
   BEGIN
     IF SIG_SUSPEND # 0 THEN SetupHandlers() END;
-    stack_grows_down := ADR(xx) > XX();
+    stack_grows_down := ORD(ADR(xx) > XX());
 
     self := CreateT(me);
     joinMu := NEW(MUTEX);
