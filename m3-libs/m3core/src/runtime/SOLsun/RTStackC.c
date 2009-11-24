@@ -9,43 +9,14 @@
 #include <signal.h>
 #include <ucontext.h>
 #include <sys/frame.h>
-
-#ifdef __GNUC__
-void *RTStack__SaveRegsInStack(void);
-    asm("	.seg 	\"text\"");
-# if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
-    asm("	.globl	RTStack__SaveRegsInStack");
-    asm("RTStack__SaveRegsInStack:");
-    asm("	.type RTStack__SaveRegsInStack,#function");
-# else
-    asm("	.globl	RTStack__SaveRegsInStack");
-    asm("RTStack__SaveRegsInStack:");
-# endif
-# if defined(__arch64__) || defined(__sparcv9)
-    asm("	save	%sp,-128,%sp");
-    asm("	flushw");
-    asm("	ret");
-    asm("	restore %sp,2047+128,%o0");
-# else
-    asm("	ta	0x3   ! ST_FLUSH_WINDOWS");
-    asm("	retl");
-    asm("	mov	%sp,%o0");
-# endif
-# ifdef SVR4
-    asm("	RTStack__SaveRegsInStack_end:");
-    asm("	.size RTStack__SaveRegsInStack,RTStack__SaveRegsInStack_end-RTStack__SaveRegsInStack");
-# endif
-#else /* gcc */
 #include <setjmp.h>
-void *RTStack__SaveRegsInStack(void)
+
+void RTStack__SaveRegsInStack(void)
 {
   jmp_buf jb;
   if (setjmp(jb) == 0)
     longjmp(jb, 1); /* contains ta 3 */
-  else
-    return &jb;
 }
-#endif /* gcc */
 
 /*
 TYPE FrameInfo = RECORD
