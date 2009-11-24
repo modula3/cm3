@@ -15,6 +15,7 @@ TYPE
   pthread_t = UNTRACED BRANDED REF ADDRESS;
   pthread_mutex_t = UNTRACED BRANDED REF ADDRESS;
   pthread_cond_t = UNTRACED BRANDED REF ADDRESS;
+  Activation <: ADDRESS; (* untraced thread stated stored in thread local *)
 
 (*---------------------------------------------------------------------------*)
 
@@ -85,11 +86,11 @@ PROCEDURE pthread_kill(t: pthread_t; sig: int): int;
 <*EXTERNAL "ThreadPThread__pthread_key_create_activations"*>
 PROCEDURE pthread_key_create_activations(): int;
 
-<*EXTERNAL "ThreadPThread__pthread_setspecific_activations"*>
-PROCEDURE pthread_setspecific_activations(value: ADDRESS): int;
+<*EXTERNAL ThreadPThread__SetActivation*>
+PROCEDURE SetActivation(value: Activation): int;
 
-<*EXTERNAL "ThreadPThread__pthread_getspecific_activations"*>
-PROCEDURE pthread_getspecific_activations(): ADDRESS;
+<*EXTERNAL ThreadPThread__GetActivation*>
+PROCEDURE GetActivation(): Activation;
 
 (*---------------------------------------------------------------------------*)
 
