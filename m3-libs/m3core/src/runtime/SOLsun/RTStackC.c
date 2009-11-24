@@ -102,11 +102,6 @@ void (*RTProcedureSRC_FromPC) (void *pc, void **p, char **file, char **name);
 
 void RTStack__PrevFrame (Frame* callee, Frame* caller)
 {
-  ucontext_t *link;
-  struct frame *link_sp, *link_fp;
-  void *proc;
-  char *file, *name;
-
   if (callee == 0) abort();
   if (caller == 0) abort();
   if (callee->lock != FrameLock) abort();
@@ -126,7 +121,6 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
 
 void RTStack__Unwind (Frame* target)
 {
-  struct frame *sp = target->sp;
   greg_t *reg = target->ctxt.uc_mcontext.gregs;
 
   RTStack__SaveRegsInStack();
