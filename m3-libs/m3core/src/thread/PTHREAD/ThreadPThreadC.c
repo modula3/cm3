@@ -91,6 +91,9 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #error Unable to determine SIG_SUSPEND.
 #endif
 
+static int stack_grows_down;
+static pthread_key_t activations;
+
 #ifndef M3_DIRECT_SUSPEND
 
 typedef struct sigaction sigaction_t;
@@ -101,16 +104,6 @@ static sigset_t mask;
 static sem_t ackSem;
 
 void SignalHandler(int);
-
-static int stack_grows_down;
-static pthread_key_t activations;
-
-void *
-XX() __attribute__ ((noinline))
-{
-  int xx;
-  return &xx;
-}
 
 void
 InitC(void *bottom)
@@ -172,9 +165,6 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
 }
 
 #else /* M3_DIRECT_SUSPEND */
-
-static int stack_grows_down;
-static pthread_key_t activations;
 
 void
 InitC(void *bottom)
