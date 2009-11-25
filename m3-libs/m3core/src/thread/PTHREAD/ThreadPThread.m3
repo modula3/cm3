@@ -1258,7 +1258,7 @@ PROCEDURE MyId (): Id RAISES {} =
 PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
   VAR me: Activation := pthread_getspecific_activations();
   BEGIN
-    RETURN ADR(me.heapState);
+    RETURN ADR(me.floatState);
   END MyFPState;
 
 PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
