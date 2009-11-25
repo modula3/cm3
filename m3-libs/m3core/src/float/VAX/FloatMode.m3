@@ -9,7 +9,7 @@
 
 MODULE FloatMode (* FOR VAX *);
 
-IMPORT ThreadInternal;
+IMPORT RTThread;
 
 PROCEDURE SetRounding(md: RoundingMode) RAISES {Failure} =
   BEGIN

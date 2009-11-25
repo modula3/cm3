@@ -22,7 +22,7 @@ UNSAFE MODULE FloatMode (* FOR IRIX5 *);
        doesn't cause floating-point exceptions)
 *)
 
-IMPORT FPU, Usignal, ThreadInternal, Word, RTError;
+IMPORT FPU, Usignal, RTThread, Word, RTError;
 
 TYPE RM  = RoundingMode;
 TYPE MRM = FPU.RoundingMode;
