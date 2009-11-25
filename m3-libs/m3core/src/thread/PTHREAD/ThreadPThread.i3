@@ -19,11 +19,6 @@ TYPE
 
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL ThreadPThread__stack_grows_down*>
-(*CONST*)VAR stack_grows_down: (*BOOLEAN*)int;
-
-(*---------------------------------------------------------------------------*)
-
 PROCEDURE SignalHandler(sig: int);
 
 (*---------------------------------------------------------------------------*)
@@ -33,8 +28,8 @@ PROCEDURE SignalHandler(sig: int);
 
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL "ThreadPThread__SetupHandlers"*>
-PROCEDURE SetupHandlers();
+<*EXTERNAL "ThreadPThread__InitC"*>
+PROCEDURE InitC(bottom: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 
@@ -88,11 +83,8 @@ PROCEDURE pthread_kill(t: pthread_t; sig: int): int;
 
 (* thread local "activation" *)
 
-<*EXTERNAL "ThreadPThread__pthread_key_create_activations"*>
-PROCEDURE pthread_key_create_activations(): int;
-
 <*EXTERNAL ThreadPThread__SetActivation*>
-PROCEDURE SetActivation(value: Activation): int;
+PROCEDURE SetActivation(value: Activation);
 
 <*EXTERNAL ThreadPThread__GetActivation*>
 PROCEDURE GetActivation(): Activation;
@@ -147,11 +139,10 @@ PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
 PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
 
 <*EXTERNAL "ThreadPThread__ProcessLive"*>
-PROCEDURE ProcessLive(stackbase: ADDRESS;
-                      p: PROCEDURE(start, stop: ADDRESS));
+PROCEDURE ProcessLive(bottom: ADDRESS; p: PROCEDURE(start, stop: ADDRESS));
 
 <*EXTERNAL "ThreadPThread__ProcessStopped"*>
-PROCEDURE ProcessStopped (t: pthread_t; start, end: ADDRESS;
+PROCEDURE ProcessStopped (t: pthread_t; bottom, top: ADDRESS;
                           p: PROCEDURE(start, end: ADDRESS));
 
 <*EXTERNAL "ThreadPThread__SaveRegsInStack"*>

@@ -37,7 +37,7 @@ REVEAL
     act: Activation := NIL;         (* live untraced thread data *)
     closure: Closure := NIL;        (* our work and its result *)
     result: REFANY := NIL;          (* our work and its result *)
-    join: Condition;                (* wait here to join; NIL when result is set *)
+    join: Condition;                (* wait here to join; NIL when done *)
     joined: BOOLEAN := FALSE;       (* Is anyone waiting yet? *)
   END;
 
@@ -49,15 +49,15 @@ TYPE
     cond: pthread_cond_t := NIL;        (* write-once in CreateT; a place to park while waiting *)
     alerted : BOOLEAN := FALSE;         (* LL = mutex; the alert flag *)
     waitingOn: pthread_mutex_t := NIL;  (* LL = mutex; The CV's mutex *)
-    nextWaiter: Activation := NIL;      (* LL = mutex; queue of threads waiting on the same CV *)
+    nextWaiter: Activation := NIL;      (* LL = mutex; waiting thread queue *)
     next, prev: Activation := NIL;      (* LL = activeMu; global doubly-linked, circular list of all active threads *)
     handle: pthread_t;                  (* LL = activeMu; thread handle *)
-    stackbase: ADDRESS := NIL;          (* LL = activeMu; base of thread stack for use by GC *)
+    stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
     sp: ADDRESS := NIL;                 (* LL = activeMu *)
     state := ActState.Started;          (* LL = activeMu *)
-    slot: INTEGER;                      (* LL = slotMu; index into global array of active, slotted threads *)
-    floatState : FloatMode.ThreadState; (* state that is available to the floating point routines *)
-    heapState : RTHeapRep.ThreadState;  (* state that is available to the heap routines *)
+    slot: INTEGER;                      (* LL = slotMu; index in slots *)
+    floatState : FloatMode.ThreadState; (* per-thread floating point state *)
+    heapState : RTHeapRep.ThreadState;  (* per-thread heap state *)
   END;
 
 PROCEDURE SetState (act: Activation;  state: ActState) =
@@ -199,8 +199,9 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
 PROCEDURE Wait (m: Mutex; c: Condition) =
   <*FATAL Alerted*>
   (* LL = m *)
+  VAR self := GetActivation();
   BEGIN
-    XWait(GetActivation(), m, c, alertable := FALSE);
+    XWait(self, m, c, alertable := FALSE);
   END Wait;
 
 PROCEDURE DequeueHead(c: Condition) =
@@ -251,8 +252,9 @@ PROCEDURE XTestAlert (self: Activation): BOOLEAN =
   END XTestAlert;
 
 PROCEDURE TestAlert (): BOOLEAN =
+  VAR self := GetActivation();
   BEGIN
-    RETURN XTestAlert(GetActivation());
+    RETURN XTestAlert(self);
   END TestAlert;
 
 (*------------------------------------------------------------------ Self ---*)
@@ -262,20 +264,18 @@ VAR (* LL = slotMu *)
   next_slot := 1;
   slots: REF ARRAY OF T;    (* NOTE: we don't use slots[0] *)
 
-PROCEDURE InitActivations (base: ADDRESS): Activation =
+PROCEDURE InitActivations (): Activation =
   VAR me := NEW(Activation);
   BEGIN
     me.handle := pthread_self();
     me.next := me;
     me.prev := me;
-    WITH r = pthread_key_create_activations() DO <*ASSERT r=0*> END;
-    WITH r = SetActivation(me) DO <*ASSERT r=0*> END;
+    SetActivation(me);
     <* ASSERT next_slot = 1 *> (* no threads created yet *)
     <* ASSERT slots = NIL *> (* no threads created yet *)
     <* ASSERT n_slotted = 0 *> (* no threads created yet *)
     <* ASSERT allThreads = NIL *> (* no threads created yet *)
     allThreads := me;
-    me.stackbase := base;
     FloatMode.InitThread(me.floatState);
     RETURN me;
   END InitActivations;
@@ -283,7 +283,7 @@ PROCEDURE InitActivations (base: ADDRESS): Activation =
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   VAR
-    me: Activation := GetActivation();
+    me := GetActivation();
     t: T;
   BEGIN
     IF me = NIL THEN Die(ThisLine(), "Thread primitive called from non-Modula-3 thread") END;
@@ -428,11 +428,9 @@ PROCEDURE CreateT (act: Activation): T =
    traced references are within the stack scanned by the collector. *)
 
 PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
-  VAR
-    xx: INTEGER;
-    me: Activation := param;
+  VAR me: Activation := param;
   BEGIN
-    WITH r = SetActivation(me) DO <*ASSERT r=0*> END;
+    SetActivation(me);
 
     (* add to the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
@@ -440,7 +438,6 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
       me.prev := allThreads.prev;
       allThreads.prev.next := me;
       allThreads.prev := me;
-      me.stackbase := ADR(xx);          (* enable GC scanning of this stack *)
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
     FloatMode.InitThread (me.floatState);
 
@@ -448,7 +445,6 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
 
     (* remove from the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
-      me.stackbase := NIL;              (* disable GC scanning of my stack *)
       <*ASSERT allThreads # me*>
       me.next.prev := me.prev;
       me.prev.next := me.next;
@@ -462,6 +458,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
 PROCEDURE RunThread (me: Activation) =
   VAR self: T;
   BEGIN
+    me.stackbase := ADR(self);          (* enable GC scanning of this stack *)
     IF perfOn THEN PerfChanged(State.alive) END;
 
     WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
@@ -487,6 +484,7 @@ PROCEDURE RunThread (me: Activation) =
     IF perfOn THEN PerfDeleted() END;
     FreeSlot(self);  (* note: needs self.act ! *)
     (* Since we're no longer slotted, we cannot touch traced refs. *)
+    me.stackbase := NIL;              (* disable GC scanning of my stack *)
   END RunThread;
 
 VAR joinMu: MUTEX;
@@ -526,13 +524,15 @@ PROCEDURE XJoin (self: Activation; t: T; alertable: BOOLEAN):
 
 PROCEDURE Join (t: T): REFANY =
   <*FATAL Alerted*>
+  VAR self := GetActivation();
   BEGIN
-    RETURN XJoin(GetActivation(), t, alertable := FALSE);
+    RETURN XJoin(self, t, alertable := FALSE);
   END Join;
 
 PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
+  VAR self := GetActivation();
   BEGIN
-    RETURN XJoin(GetActivation(), t, alertable := TRUE);
+    RETURN XJoin(self, t, alertable := TRUE);
   END AlertJoin;
 
 (*---------------------------------------------------- Scheduling support ---*)
@@ -584,13 +584,15 @@ PROCEDURE XPause (self: Activation; n: LONGREAL; alertable: BOOLEAN)
 
 PROCEDURE Pause (n: LONGREAL) =
   <*FATAL Alerted*>
+  VAR self := GetActivation();
   BEGIN
-    XPause(GetActivation(), n, alertable := FALSE);
+    XPause(self, n, alertable := FALSE);
   END Pause;
 
 PROCEDURE AlertPause (n: LONGREAL) RAISES {Alerted} =
+  VAR self := GetActivation();
   BEGIN
-    XPause(GetActivation(), n, alertable := TRUE);
+    XPause(self, n, alertable := TRUE);
   END AlertPause;
 
 PROCEDURE Yield () =
@@ -609,10 +611,11 @@ TYPE
 PROCEDURE IOWait (fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult =
   <*FATAL Alerted*>
+  VAR self := GetActivation();
   BEGIN
     TRY
       IF perfOn THEN PerfChanged(State.blocking) END;
-      RETURN XIOWait(GetActivation(), fd, read, timeoutInterval, alertable := FALSE);
+      RETURN XIOWait(self, fd, read, timeoutInterval, alertable := FALSE);
     FINALLY
       IF perfOn THEN PerfRunning() END;
     END;
@@ -621,10 +624,11 @@ PROCEDURE IOWait (fd: CARDINAL; read: BOOLEAN;
 PROCEDURE IOAlertWait (fd: CARDINAL; read: BOOLEAN;
                        timeoutInterval: LONGREAL := -1.0D0): WaitResult
   RAISES {Alerted} =
+  VAR self := GetActivation();
   BEGIN
     TRY
       IF perfOn THEN PerfChanged(State.blocking) END;
-      RETURN XIOWait(GetActivation(), fd, read, timeoutInterval, alertable := TRUE);
+      RETURN XIOWait(self, fd, read, timeoutInterval, alertable := TRUE);
     FINALLY
       IF perfOn THEN PerfRunning() END;
     END;
@@ -974,10 +978,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
     IF act.stackbase = NIL THEN RETURN END;
     RTHeapRep.FlushThreadState(act.heapState);
     (* process registers explicitly *)
-    IF stack_grows_down = 1
-      THEN ProcessStopped(act.handle, act.sp, act.stackbase, p);
-      ELSE ProcessStopped(act.handle, act.stackbase, act.sp, p);
-    END;
+    ProcessStopped(act.handle, act.stackbase, act.sp, p);
   END ProcessOther;
 
 (* Signal based suspend/resume *)
@@ -1217,13 +1218,15 @@ PROCEDURE MyId (): Id RAISES {} =
   END MyId;
 
 PROCEDURE MyFPState (): UNTRACED REF FloatMode.ThreadState =
+  VAR me := GetActivation();
   BEGIN
-    RETURN ADR(GetActivation().floatState);
+    RETURN ADR(me.floatState);
   END MyFPState;
 
 PROCEDURE MyHeapState (): UNTRACED REF RTHeapRep.ThreadState =
+  VAR me := GetActivation();
   BEGIN
-    RETURN ADR(GetActivation().heapState);
+    RETURN ADR(me.heapState);
   END MyHeapState;
 
 PROCEDURE DisableSwitching () =
@@ -1305,12 +1308,13 @@ PROCEDURE PerfRunning () =
 
 PROCEDURE Init ()=
   VAR
-    xx: INTEGER;
     self: T;
-    me := InitActivations(ADR(xx));
+    me: Activation;
   BEGIN
-    IF SIG_SUSPEND # 0 THEN SetupHandlers() END;
-    stack_grows_down := ORD(ADR(xx) > XX());
+    InitC(ADR(self));
+
+    me := InitActivations();
+    me.stackbase := ADR(self); (* not quite accurate but hopefully ok *)
 
     self := CreateT(me);
     joinMu := NEW(MUTEX);
@@ -1324,12 +1328,6 @@ PROCEDURE Init ()=
       RTCollectorSRC.StartForegroundCollection();
     END;
   END Init;
-
-PROCEDURE XX (): ADDRESS =
-  VAR xx: INTEGER;
-  BEGIN
-    RETURN ADR(xx);
-  END XX;
 
 (*------------------------------------------------------------- collector ---*)
 (* These procedures provide synchronization primitives for the allocator
@@ -1379,13 +1377,15 @@ PROCEDURE BroadcastHeap () =
 (*--------------------------------------------- exception handling support --*)
 
 PROCEDURE GetCurrentHandlers (): ADDRESS =
+  VAR me := GetActivation();
   BEGIN
-    RETURN GetActivation().frame;
+    RETURN me.frame;
   END GetCurrentHandlers;
 
 PROCEDURE SetCurrentHandlers (h: ADDRESS) =
+  VAR me := GetActivation();
   BEGIN
-    GetActivation().frame := h;
+    me.frame := h;
   END SetCurrentHandlers;
 
 (*RTHooks.PushEFrame*)
@@ -1401,8 +1401,9 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
 
 (*RTHooks.PopEFrame*)
 PROCEDURE PopEFrame (frame: ADDRESS) =
+  VAR me := GetActivation();
   BEGIN
-    GetActivation().frame := frame;
+    me.frame := frame;
   END PopEFrame;
 
 VAR DEBUG := RTParams.IsPresent("debugthreads");
