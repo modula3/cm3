@@ -45,11 +45,11 @@ TYPE
   ActState = { Starting, Started, Stopping, Stopped };
   REVEAL Activation = UNTRACED BRANDED REF RECORD
     frame: ADDRESS := NIL;              (* exception handling support *)
-    mutex: pthread_mutex_t := NIL;
-    cond: pthread_cond_t := NIL;        (* a place to park while waiting *)
-    alerted : BOOLEAN := FALSE;         (* the alert flag *)
-    waitingOn: pthread_mutex_t := NIL;  (* The CV's mutex *)
-    nextWaiter: Activation := NIL;      (* queue of threads waiting on the same CV *)
+    mutex: pthread_mutex_t := NIL;      (* write-once in CreateT *)
+    cond: pthread_cond_t := NIL;        (* write-once in CreateT; a place to park while waiting *)
+    alerted : BOOLEAN := FALSE;         (* LL = mutex; the alert flag *)
+    waitingOn: pthread_mutex_t := NIL;  (* LL = mutex; The CV's mutex *)
+    nextWaiter: Activation := NIL;      (* LL = mutex; queue of threads waiting on the same CV *)
     next, prev: Activation := NIL;      (* LL = activeMu; global doubly-linked, circular list of all active threads *)
     handle: pthread_t;                  (* LL = activeMu; thread handle *)
     stackbase: ADDRESS := NIL;          (* LL = activeMu; base of thread stack for use by GC *)
