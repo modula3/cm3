@@ -38,10 +38,10 @@
 #define M3_SPLIT_PROCESSLIVE_CALLS
 
 #ifdef M3_DIRECT_SUSPEND
-#define M3_DIRECT_SUSPEND_ASSERT_FALSE do {			\
-    assert(0 && "MacOS X, FreeBSD should not get here.");	\
+#define M3_DIRECT_SUSPEND_ASSERT_FALSE do {                     \
+    assert(0 && "MacOS X, FreeBSD should not get here.");       \
     fprintf(stderr, "MacOS X, FreeBSD should not get here.\n"); \
-    abort();							\
+    abort();                                                    \
   } while(0);
 #endif
 
@@ -153,7 +153,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
-			       void (*p)(void *start, void *end))
+                               void (*p)(void *start, void *end))
 {
   if (stack_grows_down) {
     assert((char *)top < (char *)bottom);
@@ -369,9 +369,9 @@ typedef void *(*start_routine_t)(void *);
 
 int
 ThreadPThread__thread_create(pthread_t *pthread,
-			     size_t stackSize,
-			     start_routine_t start_routine,
-			     void *arg)
+                             size_t stackSize,
+                             start_routine_t start_routine,
+                             void *arg)
 {
   int r;
   size_t bytes;
@@ -381,11 +381,10 @@ ThreadPThread__thread_create(pthread_t *pthread,
 #ifdef __hpux
   if (r == ENOSYS)
     {
-      fprintf(
-	      stderr,
-	      "You got the nonfunctional pthread stubs on HP-UX. You need to"
-	      " adjust your build commands, such as to link to -lpthread or"
-	      " use -pthread, and not link explicitly to -lc.\n");
+      fprintf(stderr,
+              "You got the nonfunctional pthread stubs on HP-UX. You need to"
+              " adjust your build commands, such as to link to -lpthread or"
+              " use -pthread, and not link explicitly to -lc.\n");
     }
 #endif
   assert(r == 0);
@@ -412,12 +411,12 @@ pthread_cond_t * const ThreadPThread__##name##Cond = &name##Cond; \
 
 /* activeMu slotMu initMu perfMu heapMu heapCond */
 
-MUTEX(active)			/* global lock for list of active threads */
-MUTEX(slots)			/* global lock for thread slots table */
-MUTEX(init)			/* global lock for initializers */
-MUTEX(perf)			/* global lock for thread state tracing */
-MUTEX(heap)			/* global lock for heap atomicity */
-CONDITION_VARIABLE(heap)	/* CV for heap state changes */
+MUTEX(active)                   /* global lock for list of active threads */
+MUTEX(slots)                    /* global lock for thread slots table */
+MUTEX(init)                     /* global lock for initializers */
+MUTEX(perf)                     /* global lock for thread state tracing */
+MUTEX(heap)                     /* global lock for heap atomicity */
+CONDITION_VARIABLE(heap)        /* CV for heap state changes */
 
 
 void
@@ -456,14 +455,14 @@ ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
   return NULL;
 }
 
-#define THREADPTHREAD__PTHREAD_GENERIC_NEW(type) {			\
-    typedef pthread_##type##_t T;					\
-    typedef pthread_##type##attr_t attr_t;				\
-    typedef int (*init_t)(T *, const attr_t *);				\
-    /* make sure the type matches */					\
-    init_t init = pthread_##type##_init;				\
-    return ThreadPThread_pthread_generic_new(sizeof(T),			\
-					     (generic_init_t)init);	\
+#define THREADPTHREAD__PTHREAD_GENERIC_NEW(type) {                      \
+    typedef pthread_##type##_t T;                                       \
+    typedef pthread_##type##attr_t attr_t;                              \
+    typedef int (*init_t)(T *, const attr_t *);                         \
+    /* make sure the type matches */                                    \
+    init_t init = pthread_##type##_init;                                \
+    return ThreadPThread_pthread_generic_new(sizeof(T),                 \
+                                             (generic_init_t)init);     \
   }
 
 void *
@@ -530,8 +529,8 @@ ThreadPThread__pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
 
 int
 ThreadPThread__pthread_cond_timedwait(pthread_cond_t *cond,
-				      pthread_mutex_t *mutex,
-				      const timespec_T *abs)
+                                      pthread_mutex_t *mutex,
+                                      const timespec_T *abs)
 {
   return pthread_cond_timedwait(cond, mutex, abs);
 }
