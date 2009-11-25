@@ -34,55 +34,30 @@ REVEAL
   END;
 
   T = BRANDED "Thread.T Pthread-1.6" OBJECT
-    (* live thread data *)
-    act: Activation := NIL;
-
-    (* our work and its result *)
-    closure: Closure := NIL;
-    result: REFANY := NIL;
-
-    (* wait here to join *)
-    join: Condition;                (* NIL when result is set *)
+    act: Activation := NIL;         (* live untraced thread data *)
+    closure: Closure := NIL;        (* our work and its result *)
+    result: REFANY := NIL;          (* our work and its result *)
+    join: Condition;                (* wait here to join; NIL when result is set *)
     joined: BOOLEAN := FALSE;       (* Is anyone waiting yet? *)
   END;
 
 TYPE
   ActState = { Starting, Started, Stopping, Stopped };
   REVEAL Activation = UNTRACED BRANDED REF RECORD
-
-    (* exception handling support *)
-    frame: ADDRESS := NIL;
-
+    frame: ADDRESS := NIL;              (* exception handling support *)
     mutex: pthread_mutex_t := NIL;
-
-    (* a place to park while waiting *)
-    cond: pthread_cond_t := NIL;
-
-    (* the alert flag *)
-    alerted : BOOLEAN := FALSE;
-
-    (* queue of threads waiting on the same CV *)
+    cond: pthread_cond_t := NIL;        (* a place to park while waiting *)
+    alerted : BOOLEAN := FALSE;         (* the alert flag *)
     waitingOn: pthread_mutex_t := NIL;  (* The CV's mutex *)
-    nextWaiter: Activation := NIL;
-
-    (* global doubly-linked, circular list of all active threads *)
-    next, prev: Activation := NIL;      (* LL = activeMu *)
-    (* thread handle *)
-    handle: pthread_t;                  (* LL = activeMu *)
-    (* base of thread stack for use by GC *)
-    stackbase: ADDRESS := NIL;          (* LL = activeMu *)
+    nextWaiter: Activation := NIL;      (* queue of threads waiting on the same CV *)
+    next, prev: Activation := NIL;      (* LL = activeMu; global doubly-linked, circular list of all active threads *)
+    handle: pthread_t;                  (* LL = activeMu; thread handle *)
+    stackbase: ADDRESS := NIL;          (* LL = activeMu; base of thread stack for use by GC *)
     sp: ADDRESS := NIL;                 (* LL = activeMu *)
-
     state := ActState.Started;          (* LL = activeMu *)
-
-    (* index into global array of active, slotted threads *)
-    slot: INTEGER;                      (* LL = slotMu *)
-
-    (* state that is available to the floating point routines *)
-    floatState : FloatMode.ThreadState;
-
-    (* state that is available to the heap routines *)
-    heapState : RTHeapRep.ThreadState;
+    slot: INTEGER;                      (* LL = slotMu; index into global array of active, slotted threads *)
+    floatState : FloatMode.ThreadState; (* state that is available to the floating point routines *)
+    heapState : RTHeapRep.ThreadState;  (* state that is available to the heap routines *)
   END;
 
 PROCEDURE SetState (act: Activation;  state: ActState) =
