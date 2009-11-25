@@ -21,7 +21,7 @@ UNSAFE MODULE FloatMode (* FOR DS3100 *);
        doesn't cause floating-point exceptions)
 *)
 
-IMPORT FPU, Usignal, ThreadInternal, Word, RTMisc;
+IMPORT FPU, Usignal, RTThread, Word, RTMisc;
 
 TYPE RM  = RoundingMode;
 TYPE MRM = FPU.RoundingMode;
