@@ -43,6 +43,7 @@ Module    ("RTPacking")
 Module    ("RTParams")
 Module    ("RTProcedure")
 Module    ("RTProcess")
+interface ("RTThread")
 Module    ("RTTipe")
 Module    ("RTType")
 Module    ("RTTypeFP")
@@ -63,7 +64,5 @@ end
 
 if (equal(TARGET, "NT386") and equal(OS_TYPE, "POSIX")) or equal (TARGET, "NetBSD2_i386")
     or not FileExists(path() & "/../" & TARGET & "/m3makefile")
-    
   interface      ("RTMachine")   
-    
 end 

@@ -18,4 +18,3 @@ else
 end
 Interface ("MutexRep")
 Interface ("ThreadEvent")
-interface ("ThreadInternal")

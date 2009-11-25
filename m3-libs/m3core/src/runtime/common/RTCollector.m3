@@ -16,7 +16,7 @@ UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
 
 IMPORT RT0, RTHeapEvent, RTHeapMap, RTIO, RTMachine;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
-IMPORT Word, Thread, ThreadInternal;
+IMPORT Word, Thread, RTThread;
 IMPORT TextLiteral AS TextLit, RTLinker, Time;
 
 FROM RT0 IMPORT Typecode, TypeDefn;
@@ -742,7 +742,7 @@ VAR
 
 PROCEDURE CollectSomeInStateZero () =
   BEGIN
-    ThreadInternal.SuspendOthers ();
+    RTThread.SuspendOthers ();
 
     <* ASSERT disableCount + disableMotionCount = 0 *>
     (* compute some costs relative to previous collection *)
@@ -816,7 +816,7 @@ PROCEDURE CollectSomeInStateZero () =
        pages, because we want to make sure that old, impure, dirty
        pages referenced by threads are marked as ambiguous roots.
        Otherwise, these pages won't get cleaned before we return. *)
-    ThreadInternal.ProcessStacks(NoteStackLocations);
+    RTThread.ProcessStacks(NoteStackLocations);
     (* Now, nothing in previous space is referenced by a thread. *)
 
     (* Promote any remaining "old" pages and unprotect everything else *)
@@ -896,7 +896,7 @@ PROCEDURE CollectSomeInStateZero () =
     collectorState := CollectorState.One;
     IF backgroundWaiting THEN signalBackground := TRUE; END;
 
-    ThreadInternal.ResumeOthers ();
+    RTThread.ResumeOthers ();
   END CollectSomeInStateZero;
 
 (* Clean gray nodes *)
@@ -1625,9 +1625,9 @@ CONST Before = SanityCheck; (* already suspended *)
 
 PROCEDURE After (self: MonitorClosure) =
   BEGIN
-    ThreadInternal.SuspendOthers();
+    RTThread.SuspendOthers();
     SanityCheck (self);
-    ThreadInternal.ResumeOthers();
+    RTThread.ResumeOthers();
   END After;
 
 PROCEDURE SanityCheck (<*UNUSED*> self: MonitorClosure) =
@@ -1800,7 +1800,7 @@ PROCEDURE VisitAllRefs (v: RefVisitor) =
   BEGIN
     TRY
       Disable();
-      ThreadInternal.SuspendOthers();
+      RTThread.SuspendOthers();
       FOR p := p0 TO p1 - 1 DO
         IF desc[p - p0] = 0 THEN
           WITH page = PageToRef(p), d = page.desc DO
@@ -1823,7 +1823,7 @@ PROCEDURE VisitAllRefs (v: RefVisitor) =
         END;
       END;
     FINALLY
-      ThreadInternal.ResumeOthers();
+      RTThread.ResumeOthers();
       Enable();
     END;
   END VisitAllRefs;
