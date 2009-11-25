@@ -49,6 +49,10 @@ REVEAL
 TYPE
   ActState = { Starting, Started, Stopping, Stopped };
   REVEAL Activation = UNTRACED BRANDED REF RECORD
+
+    (* exception handling support *)
+    frame: ADDRESS := NIL;
+
     mutex: pthread_mutex_t := NIL;
 
     (* a place to park while waiting *)
@@ -73,9 +77,6 @@ TYPE
 
     (* index into global array of active, slotted threads *)
     slot: INTEGER;                      (* LL = slotMu *)
-
-    (* exception handling support *)
-    frame: ADDRESS := NIL;
 
     (* state that is available to the floating point routines *)
     floatState : FloatMode.ThreadState;
