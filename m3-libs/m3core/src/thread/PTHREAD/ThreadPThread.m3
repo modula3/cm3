@@ -1185,8 +1185,8 @@ PROCEDURE StartWorld () =
 
 PROCEDURE SignalHandler (sig: int) =
   VAR
-    me := GetActivation();
     errno := Cerrno.GetErrno();
+    me := GetActivation();
     xx: INTEGER;
   BEGIN
     <*ASSERT sig = SIG_SUSPEND*>
