@@ -28,6 +28,17 @@ void __cdecl RTMisc__Zero(void* dest, size_t len)
     memset(dest, 0, len);
 }
 
+/*------------------------------- rounded arithmetic ------------------------*/
+
+/* Align is equated to Upper via <*EXTERNAL*>; this is here for compatiblity. */
+
+size_t RTMisc__Upper(size_t a, size_t y);
+
+void* __cdecl RTMisc__Align(void* a, size_t y)
+{
+    return (void*)RTMisc__Upper((size_t)a, y);
+}
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
