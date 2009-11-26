@@ -11,9 +11,11 @@ FROM Cstddef IMPORT size_t;
 FROM Utime IMPORT struct_timespec;
 
 TYPE
-  pthread_t = ADDRESS;
-  pthread_mutex_t = ADDRESS;
-  pthread_cond_t = ADDRESS;
+  (* These are opaque C references (not necessarily UNTRACED REF ADDRESS) *)
+  pthread_t = UNTRACED BRANDED REF ADDRESS;
+  pthread_mutex_t = UNTRACED BRANDED REF ADDRESS;
+  pthread_cond_t = UNTRACED BRANDED REF ADDRESS;
+  Activation <: ADDRESS; (* untraced thread stated stored in thread local *)
 
 (*---------------------------------------------------------------------------*)
 
@@ -26,8 +28,8 @@ PROCEDURE SignalHandler(sig: int);
 
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL "ThreadPThread__SetupHandlers"*>
-PROCEDURE SetupHandlers();
+<*EXTERNAL "ThreadPThread__InitC"*>
+PROCEDURE InitC(bottom: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 
@@ -35,18 +37,9 @@ PROCEDURE SetupHandlers();
 
 <*EXTERNAL "ThreadPThread__sem_wait"*>
 PROCEDURE sem_wait (): int;
-<*EXTERNAL "ThreadPThread__sem_post"*>
-PROCEDURE sem_post (): int;
 
 <*EXTERNAL "ThreadPThread__sem_getvalue"*>
 PROCEDURE sem_getvalue (VAR value: int): int;
-
-(*---------------------------------------------------------------------------*)
-
-(* the signal set is implied *)
-
-<*EXTERNAL "ThreadPThread__sigsuspend"*>
-PROCEDURE sigsuspend (): int;
 
 (*---------------------------------------------------------------------------*)
 
@@ -81,14 +74,11 @@ PROCEDURE pthread_kill(t: pthread_t; sig: int): int;
 
 (* thread local "activation" *)
 
-<*EXTERNAL "ThreadPThread__pthread_key_create_activations"*>
-PROCEDURE pthread_key_create_activations(): int;
+<*EXTERNAL ThreadPThread__SetActivation*>
+PROCEDURE SetActivation(value: Activation);
 
-<*EXTERNAL "ThreadPThread__pthread_setspecific_activations"*>
-PROCEDURE pthread_setspecific_activations(value: ADDRESS): int;
-
-<*EXTERNAL "ThreadPThread__pthread_getspecific_activations"*>
-PROCEDURE pthread_getspecific_activations(): ADDRESS;
+<*EXTERNAL ThreadPThread__GetActivation*>
+PROCEDURE GetActivation(): Activation;
 
 (*---------------------------------------------------------------------------*)
 
@@ -107,10 +97,10 @@ PROCEDURE pthread_mutex_lock(mutex: pthread_mutex_t):int;
 PROCEDURE pthread_mutex_unlock(mutex: pthread_mutex_t):int;
 
 <*EXTERNAL "ThreadPThread__pthread_cond_new"*>
-PROCEDURE pthread_cond_new():pthread_mutex_t;
+PROCEDURE pthread_cond_new(): pthread_cond_t;
 
 <*EXTERNAL "ThreadPThread__pthread_cond_delete"*>
-PROCEDURE pthread_cond_delete(a:pthread_cond_t);
+PROCEDURE pthread_cond_delete(cond: pthread_cond_t);
 
 <*EXTERNAL ThreadPThread__pthread_cond_wait*>
 PROCEDURE pthread_cond_wait(cond: pthread_cond_t; mutex: pthread_mutex_t):int;
@@ -140,15 +130,17 @@ PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
 PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
 
 <*EXTERNAL "ThreadPThread__ProcessLive"*>
-PROCEDURE ProcessLive(start, end: ADDRESS;
+PROCEDURE ProcessLive(bottom: ADDRESS;
                       p: PROCEDURE(start, stop: ADDRESS));
 
 <*EXTERNAL "ThreadPThread__ProcessStopped"*>
-PROCEDURE ProcessStopped (t: pthread_t; start, end: ADDRESS;
+PROCEDURE ProcessStopped (t: pthread_t; bottom, top: ADDRESS;
                           p: PROCEDURE(start, end: ADDRESS));
 
-<*EXTERNAL "ThreadPThread__SaveRegsInStack"*>
-PROCEDURE SaveRegsInStack (): ADDRESS;
+TYPE ActState = { Starting, Started, Stopping, Stopped };
+
+<*EXTERNAL ThreadPThread__SignalHandlerC*>
+PROCEDURE SignalHandlerC(VAR sp: ADDRESS; VAR state: ActState; stopped, starting, started: ActState);
 
 (*---------------------------------------------------------------------------*)
 
