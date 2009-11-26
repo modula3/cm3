@@ -7,38 +7,39 @@
 
 INTERFACE ThreadContext;
 
-IMPORT WinDef, Word;
+FROM WinDef IMPORT BYTE, DWORD;
+FROM Word IMPORT Or;
 
 CONST SIZE_OF_80387_REGISTERS = 80;
 
 CONST CONTEXT_i386 = 16_00010000;    (* this assumes that i386 and *)
 CONST CONTEXT_i486 = 16_00010000;    (* i486 have identical context records *)
 
-CONST CONTEXT_CONTROL = Word.Or(CONTEXT_i386, 16_0001);
+CONST CONTEXT_CONTROL = Or(CONTEXT_i386, 16_0001);
                           (* SS:SP, CS:IP, FLAGS, BP *)
-CONST CONTEXT_INTEGER = Word.Or(CONTEXT_i386, 16_0002);
+CONST CONTEXT_INTEGER = Or(CONTEXT_i386, 16_0002);
                           (* AX, BX, CX, DX, SI, DI *)
-CONST CONTEXT_SEGMENTS= Word.Or(CONTEXT_i386, 16_0004);
+CONST CONTEXT_SEGMENTS= Or(CONTEXT_i386, 16_0004);
                           (* DS, ES, FS, GS *)
-CONST CONTEXT_FLOATING_POINT = Word.Or(CONTEXT_i386, 16_0008);
+CONST CONTEXT_FLOATING_POINT = Or(CONTEXT_i386, 16_0008);
                           (* 387 state *)
-CONST CONTEXT_DEBUG_REGISTERS = Word.Or(CONTEXT_i386, 16_0010);
+CONST CONTEXT_DEBUG_REGISTERS = Or(CONTEXT_i386, 16_0010);
                           (* DB 0-3,6,7 *)
 
-CONST CONTEXT_FULL = Word.Or(CONTEXT_CONTROL, Word.Or(CONTEXT_INTEGER,
-                                                      CONTEXT_SEGMENTS));
+CONST CONTEXT_FULL = Or(CONTEXT_CONTROL, Or(CONTEXT_INTEGER,
+                                            CONTEXT_SEGMENTS));
 
 TYPE
   FLOATING_SAVE_AREA = RECORD
-    ControlWord:   WinDef.DWORD;
-    StatusWord:    WinDef.DWORD;
-    TagWord:       WinDef.DWORD;
-    ErrorOffset:   WinDef.DWORD;
-    ErrorSelector: WinDef.DWORD;
-    DataOffset:    WinDef.DWORD;
-    DataSelector:  WinDef.DWORD;
-    RegisterArea:  ARRAY[0 .. SIZE_OF_80387_REGISTERS-1] OF WinDef.BYTE;
-    Cr0NpxState:   WinDef.DWORD;
+    ControlWord:   DWORD;
+    StatusWord:    DWORD;
+    TagWord:       DWORD;
+    ErrorOffset:   DWORD;
+    ErrorSelector: DWORD;
+    DataOffset:    DWORD;
+    DataSelector:  DWORD;
+    RegisterArea:  ARRAY[0 .. SIZE_OF_80387_REGISTERS-1] OF BYTE;
+    Cr0NpxState:   DWORD;
   END;
 
 TYPE PFLOATING_SAVE_AREA = ADDRESS;
@@ -46,35 +47,35 @@ TYPE PFLOATING_SAVE_AREA = ADDRESS;
 
 TYPE
   CONTEXT = RECORD
-    ContextFlags: WinDef.DWORD;
+    ContextFlags: DWORD;
 
-    Dr0: WinDef.DWORD;
-    Dr1: WinDef.DWORD;
-    Dr2: WinDef.DWORD;
-    Dr3: WinDef.DWORD;
-    Dr6: WinDef.DWORD;
-    Dr7: WinDef.DWORD;
+    Dr0: DWORD;
+    Dr1: DWORD;
+    Dr2: DWORD;
+    Dr3: DWORD;
+    Dr6: DWORD;
+    Dr7: DWORD;
 
     FloatSave: FLOATING_SAVE_AREA;
 
-    SegGs: WinDef.DWORD;
-    SegFs: WinDef.DWORD;
-    SegEs: WinDef.DWORD;
-    SegDs: WinDef.DWORD;
+    SegGs: DWORD;
+    SegFs: DWORD;
+    SegEs: DWORD;
+    SegDs: DWORD;
 
-    Edi: WinDef.DWORD;
-    Esi: WinDef.DWORD;
-    Ebx: WinDef.DWORD;
-    Edx: WinDef.DWORD;
-    Ecx: WinDef.DWORD;
-    Eax: WinDef.DWORD;
+    Edi: DWORD;
+    Esi: DWORD;
+    Ebx: DWORD;
+    Edx: DWORD;
+    Ecx: DWORD;
+    Eax: DWORD;
 
-    Ebp:    WinDef.DWORD;
-    Eip:    WinDef.DWORD;
-    SegCs:  WinDef.DWORD;
-    EFlags: WinDef.DWORD;
-    Esp:    WinDef.DWORD;
-    SegSs:  WinDef.DWORD;
+    Ebp:    DWORD;
+    Eip:    DWORD;
+    SegCs:  DWORD;
+    EFlags: DWORD;
+    Esp:    DWORD;
+    SegSs:  DWORD;
   END;
 
 TYPE PCONTEXT = UNTRACED REF CONTEXT;
