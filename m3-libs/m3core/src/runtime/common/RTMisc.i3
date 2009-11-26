@@ -20,6 +20,7 @@ PROCEDURE Zero (dest: ADDRESS; len: INTEGER);
 
 (*------------------------------- rounded arithmetic ------------------------*)
 
+<*EXTERNAL RTMisc__Upper*>
 PROCEDURE Align (a: ADDRESS; y: INTEGER): ADDRESS;
 (* same as Upper but casting INTEGER <=> ADDRESS *)
 
