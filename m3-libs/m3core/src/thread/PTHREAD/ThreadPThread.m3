@@ -42,6 +42,7 @@ REVEAL
   END;
 
 TYPE
+  ActState = { Starting, Started, Stopping, Stopped };
   REVEAL Activation = UNTRACED BRANDED REF RECORD
     frame: ADDRESS := NIL;              (* exception handling support *)
     mutex: pthread_mutex_t := NIL;      (* write-once in CreateT *)
@@ -816,7 +817,7 @@ PROCEDURE ResumeOthers () =
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;
 
-PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR
     me := GetActivation();
@@ -830,7 +831,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     END;
   END ProcessStacks;
 
-PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=0 *)
   VAR
     me := GetActivation();
@@ -964,7 +965,9 @@ PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(me.heapState);
-    ProcessLive(me.stackbase, p);
+    SaveRegsInStack(me.sp);
+    ProcessLive(me.stackbase, me.sp, p);
+    me.sp := NIL;
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -976,7 +979,6 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
     END;
     IF act.stackbase = NIL THEN RETURN END;
     RTHeapRep.FlushThreadState(act.heapState);
-    (* process registers explicitly *)
     ProcessStopped(act.handle, act.stackbase, act.sp, p);
   END ProcessOther;
 
@@ -1192,7 +1194,13 @@ PROCEDURE SignalHandler (sig: int) =
         me.state := ActState.Started;
         RETURN;
       END;
-      SignalHandlerC(me.sp, me.state, ActState.Stopped, ActState.Starting, ActState.Started);
+      SaveRegsInStack(me.sp);
+      me.state := ActState.Stopped;
+      WITH r = sem_post() DO <*ASSERT r=0*> END;
+      REPEAT EVAL sigsuspend() UNTIL me.state = ActState.Starting;
+      me.sp := NIL;
+      me.state := ActState.Started;
+      WITH r = sem_post() DO <*ASSERT r=0*> END;
     END;
     Cerrno.SetErrno(errno);
   END SignalHandler;
@@ -1400,5 +1408,4 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
 VAR DEBUG := RTParams.IsPresent("debugthreads");
 
 BEGIN
- <*ASSERT BYTESIZE(ActState) = 1*>
 END ThreadPThread.

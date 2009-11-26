@@ -123,7 +123,9 @@ static sem_t ackSem;
 void SignalHandler(int);
 
 int ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
+int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
 int ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value); }
+int ThreadPThread__sigsuspend(void)         { return sigsuspend(&mask); }
 
 int
 ThreadPThread__SuspendThread (m3_pthread_t mt)
@@ -157,7 +159,9 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
 #else /* M3_DIRECT_SUSPEND */
 
 void ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 
 #ifdef __FreeBSD__
 
@@ -301,13 +305,10 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
 #endif /* Apple */
 #endif /* M3_DIRECT_SUSPEND */
 
-DECLSPEC_NOINLINE void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void *start, void *limit)) ATTRIBUTE_NOINLINE;
-DECLSPEC_NOINLINE void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void *start, void *limit))
-/* separate function from ThreadPThread__ProcessLive to be sure stack encompasses all of jmp_buf, without
-   worrying about stack growth direction */
+void
+ThreadPThread__ProcessLive(void *bottom, void *top,
+			   void (*p)(void *start, void *limit))
 {
-  char* top = (char*)&top;
-
   assert(bottom);
   assert(top);
   if (stack_grows_down) {
@@ -317,22 +318,9 @@ DECLSPEC_NOINLINE void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void 
     assert((char *)bottom < (char *)top);
     p(bottom, top);
   }
-
-  /* simulate processing registers: see RTHeapStats.m3 */
+  /* assume registers are stored in the stack */
+  /* but call p again to simulate processing registers: see RTHeapStats.m3 */
   p(0, 0);
-}
-
-DECLSPEC_NOINLINE void ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit)) ATTRIBUTE_NOINLINE;
-DECLSPEC_NOINLINE void ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
-{
-  jmp_buf jb;
-
-  if (M3_SETJMP(jb) == 0) /* save registers to stack */
-#ifdef M3_REGISTER_WINDOWS
-      M3_LONGJMP(jb, 1); /* flush register windows */
-  else
-#endif
-      ThreadPThread__ProcessLiveX(bottom, p);
 }
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
@@ -555,44 +543,25 @@ ThreadPThread__pthread_mutex_unlock(pthread_mutex_t *m)
   return pthread_mutex_unlock(m);
 }
 
-DECLSPEC_NOINLINE void ThreadPThread__SignalHandlerX(int** stack_pointer, volatile char* state, char stopped, char starting, char started) ATTRIBUTE_NOINLINE;
-DECLSPEC_NOINLINE void ThreadPThread__SignalHandlerX(int** stack_pointer, volatile char* state, char stopped, char starting, char started)
-/* separate function from SignalHandlerC to be sure stack encompasses all of jmp_buf, without
-   worrying about stack growth direction */
+static DECLSPEC_NOINLINE void GetSP(void **sp) ATTRIBUTE_NOINLINE;
+static DECLSPEC_NOINLINE void GetSP(void **sp)
+/* separate function from SaveRegsInStack to be sure sp encompasses all of
+   jmp_buf, without worrying about stack growth direction */
 {
-    int r;
-
-    /* Tell the garbage collector where our stack is and that we are stopped. */
-
-    *stack_pointer = &r;
-    *state = stopped;
-    r = sem_post(&ackSem);
-    assert(r == 0);
-
-    /* Wait for the garbage collector to wake us up. */
-
-    while (*state != starting)
-        sigsuspend(&mask);
-
-    /* Resume. */
-
-    *stack_pointer = NULL;
-    *state = started;
-    r = sem_post(&ackSem);
-    assert(r == 0);
+  int r;
+  *sp = &r;
 }
 
-DECLSPEC_NOINLINE void ThreadPThread__SignalHandlerC(int** stack_pointer, volatile char* state, char stopped, char starting, char started) ATTRIBUTE_NOINLINE;
-DECLSPEC_NOINLINE void ThreadPThread__SignalHandlerC(int** stack_pointer, volatile char* state, char stopped, char starting, char started)
+void ThreadPThread__SaveRegsInStack(void **sp)
 {
-    jmp_buf jb;
+  jmp_buf jb;
 
-    if (M3_SETJMP(jb) == 0) /* save registers to stack */
+  if (M3_SETJMP(jb) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
-        M3_LONGJMP(jb, 1); /* flush register windows */
-    else
+    M3_LONGJMP(jb, 1); /* flush register windows */
+  else
 #endif
-        ThreadPThread__SignalHandlerX(stack_pointer, state, stopped, starting, started);
+    GetSP(sp);
 }
 
 void
