@@ -58,7 +58,7 @@ find_exe() {
     IFS=:
     for path in $PATH ; do
       if [ -f "$path/$file" -a -x "$path/$file" ]; then
-       echo "$path"
+       # echo "$path"
        return 0
       fi
     done
