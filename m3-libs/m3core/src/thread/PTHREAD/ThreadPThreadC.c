@@ -29,14 +29,6 @@
 #include <semaphore.h>
 #endif
 
-#ifdef M3_DIRECT_SUSPEND
-#define M3_DIRECT_SUSPEND_ASSERT_FALSE do {                     \
-    assert(0 && "MacOS X, FreeBSD should not get here.");       \
-    fprintf(stderr, "MacOS X, FreeBSD should not get here.\n"); \
-    abort();                                                    \
-  } while(0);
-#endif
-
 /* Sometimes setjmp saves signal mask, in which case _setjmp does not.
 setjmp works, but _setjmp can be much faster. */
 #ifndef __sun
@@ -47,12 +39,32 @@ setjmp works, but _setjmp can be much faster. */
 #define M3_LONGJMP longjmp
 #endif
 
+#if defined(__sparc) || defined(__ia64__)
+#define M3_REGISTER_WINDOWS
+#endif
+
+#ifdef M3_DIRECT_SUSPEND
+#define M3_DIRECT_SUSPEND_ASSERT_FALSE do {                     \
+    assert(0 && "MacOS X, FreeBSD should not get here.");       \
+    fprintf(stderr, "MacOS X, FreeBSD should not get here.\n"); \
+    abort();                                                    \
+  } while(0);
+#endif
+
 /* const is extern const in C, but static const in C++,
  * but gcc gives a warning for the correct portable form "extern const" */
 #if defined(__cplusplus) || !defined(__GNUC__)
 #define EXTERN_CONST extern const
 #else
 #define EXTERN_CONST const
+#endif
+
+
+#ifdef __GNUC__
+#define NOINLINE __attribute__((noinline))
+#else
+/* Other compilers do support this. How to detect? Autoconf? */
+#define NOINLINE
 #endif
 
 #ifdef __cplusplus
@@ -69,8 +81,8 @@ extern "C" {
     Solaris: 17 (at least 32bit SPARC?)
     Cygwin: 19 -- er, but maybe that's wrong
     Linux: 64
-    FreeBSD: 31
-    OpenBSD: 31
+    FreeBSD: 31 (not used)
+    OpenBSD: 31 (not used)
     HPUX: 44
   Look at the history of Usignal and RTMachine to find more values.  There was
   RTMachine.SIG_SUSPEND and SIG was aliased to it.  Both SIG and SIG_SUSPEND
@@ -94,7 +106,6 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #endif
 
 static int stack_grows_down;
-static pthread_key_t activations;
 
 #ifndef M3_DIRECT_SUSPEND
 
@@ -108,9 +119,7 @@ static sem_t ackSem;
 void SignalHandler(int);
 
 int ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
-int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
 int ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value); }
-int ThreadPThread__sigsuspend(void)         { return sigsuspend(&mask); }
 
 int
 ThreadPThread__SuspendThread (m3_pthread_t mt)
@@ -137,16 +146,14 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
     p(bottom, top);
   }
   /* assume registers are stored in the signal handler frame */
-  /* but call p once to simulate processing registers: see RTHeapStats.m3 */
+  /* but call p again to simulate processing registers: see RTHeapStats.m3 */
   p(0, 0);
 }
 
 #else /* M3_DIRECT_SUSPEND */
 
 void ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
-void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
-void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 
 #ifdef __FreeBSD__
 
@@ -290,47 +297,13 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
 #endif /* Apple */
 #endif /* M3_DIRECT_SUSPEND */
 
-# ifdef __sparc
-void *ThreadPThread__SaveRegsInStack(void);
-/* On register window machines, we need a way to force registers into       */
-/* the stack.       Return sp.                                              */
-    asm("       .seg        \"text\"");
-#   if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
-      asm("     .globl      ThreadPThread__SaveRegsInStack");
-      asm("ThreadPThread__SaveRegsInStack:");
-      asm("     .type ThreadPThread__SaveRegsInStack,#function");
-#   else
-      asm("     .globl      ThreadPThread__SaveRegsInStack");
-      asm("ThreadPThread__SaveRegsInStack:");
-#   endif
-#   if defined(__arch64__) || defined(__sparcv9)
-      asm("     save        %sp,-128,%sp");
-      asm("     flushw");
-      asm("     ret");
-      asm("     restore %sp,2047+128,%o0");
-#   else
-      asm("     ta      0x3   ! ST_FLUSH_WINDOWS");
-      asm("     retl");
-      asm("     mov     %sp,%o0");
-#   endif
-#   ifdef SVR4
-      asm("     ThreadPThread__SaveRegsInStack_end:");
-      asm("     .size ThreadPThread__SaveRegsInStack,ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
-#   endif
-# else
-void *ThreadPThread__SaveRegsInStack(void) { return 0; }
-# endif
-
-void
-ThreadPThread__ProcessLive(void *bottom, void * top,
-			   void (*p)(void *start, void *limit))
+void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void *start, void *limit)) NOINLINE;
+void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void *start, void *limit))
+/* separate function from ThreadPThread__ProcessLive to be sure stack encompasses all of jmp_buf, without
+   worrying about stack growth direction */
 {
-  jmp_buf jb;
+  char* top = (char*)&top;
 
-  /* first the stacks */
-#ifdef __sparc
-  top = ThreadPThread__SaveRegsInStack();
-#endif
   assert(bottom);
   assert(top);
   if (stack_grows_down) {
@@ -341,9 +314,21 @@ ThreadPThread__ProcessLive(void *bottom, void * top,
     p(bottom, top);
   }
 
-  /* then the registers */
-  M3_SETJMP(jb);
-  p(&jb, ((char *)&jb) + sizeof(jb));
+  /* simulate processing registers: see RTHeapStats.m3 */
+  p(0, 0);
+}
+
+void ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit)) NOINLINE;
+void ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
+{
+  jmp_buf jb;
+
+  if (M3_SETJMP(jb) == 0) /* save registers to stack */
+#ifdef M3_REGISTER_WINDOWS
+      M3_LONGJMP(jb, 1); /* flush register windows */
+  else
+#endif
+      ThreadPThread__ProcessLiveX(bottom, p);
 }
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
@@ -400,6 +385,7 @@ MUTEX(perf)                     /* global lock for thread state tracing */
 MUTEX(heap)                     /* global lock for heap atomicity */
 CONDITION_VARIABLE(heap)        /* CV for heap state changes */
 
+static pthread_key_t activations;
 
 void
 ThreadPThread__SetActivation(void *value)
@@ -563,6 +549,46 @@ int
 ThreadPThread__pthread_mutex_unlock(pthread_mutex_t *m)
 {
   return pthread_mutex_unlock(m);
+}
+
+void ThreadPThread__SignalHandlerX(int** stack_pointer, volatile char* state, char stopped, char starting, char started) NOINLINE;
+void ThreadPThread__SignalHandlerX(int** stack_pointer, volatile char* state, char stopped, char starting, char started)
+/* separate function from SignalHandlerC to be sure stack encompasses all of jmp_buf, without
+   worrying about stack growth direction */
+{
+    int r;
+
+    /* Tell the garbage collector where our stack is and that we are stopped. */
+
+    *stack_pointer = &r;
+    *state = stopped;
+    r = sem_post(&ackSem);
+    assert(r == 0);
+
+    /* Wait for the garbage collector to wake us up. */
+
+    while (*state != starting)
+        sigsuspend(&mask);
+
+    /* Resume. */
+
+    *stack_pointer = NULL;
+    *state = started;
+    r = sem_post(&ackSem);
+    assert(r == 0);
+}
+
+void ThreadPThread__SignalHandlerC(int** stack_pointer, volatile char* state, char stopped, char starting, char started) NOINLINE;
+void ThreadPThread__SignalHandlerC(int** stack_pointer, volatile char* state, char stopped, char starting, char started)
+{
+    jmp_buf jb;
+
+    if (M3_SETJMP(jb) == 0) /* save registers to stack */
+#ifdef M3_REGISTER_WINDOWS
+        M3_LONGJMP(jb, 1); /* flush register windows */
+    else
+#endif
+        ThreadPThread__SignalHandlerX(stack_pointer, state, stopped, starting, started);
 }
 
 void

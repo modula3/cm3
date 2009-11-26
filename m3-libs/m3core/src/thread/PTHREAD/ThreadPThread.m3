@@ -42,7 +42,6 @@ REVEAL
   END;
 
 TYPE
-  ActState = { Starting, Started, Stopping, Stopped };
   REVEAL Activation = UNTRACED BRANDED REF RECORD
     frame: ADDRESS := NIL;              (* exception handling support *)
     mutex: pthread_mutex_t := NIL;      (* write-once in CreateT *)
@@ -959,14 +958,13 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
 
 PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu *)
-  VAR xx: INTEGER;
   BEGIN
     <*ASSERT me.state # ActState.Stopped*>
     IF DEBUG THEN
       RTIO.PutText("Processing act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(me.heapState);
-    ProcessLive(me.stackbase, ADR(xx), p);
+    ProcessLive(me.stackbase, p);
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -1187,7 +1185,6 @@ PROCEDURE SignalHandler (sig: int) =
   VAR
     errno := Cerrno.GetErrno();
     me := GetActivation();
-    xx: INTEGER;
   BEGIN
     <*ASSERT sig = SIG_SUSPEND*>
     IF me.state = ActState.Stopping THEN
@@ -1195,14 +1192,7 @@ PROCEDURE SignalHandler (sig: int) =
         me.state := ActState.Started;
         RETURN;
       END;
-      me.sp := SaveRegsInStack();
-      IF me.sp = NIL THEN me.sp := ADR(xx) END;
-      me.state := ActState.Stopped;
-      WITH r = sem_post() DO <*ASSERT r=0*> END;
-      REPEAT EVAL sigsuspend() UNTIL me.state = ActState.Starting;
-      me.sp := NIL;
-      me.state := ActState.Started;
-      WITH r = sem_post() DO <*ASSERT r=0*> END;
+      SignalHandlerC(me.sp, me.state, ActState.Stopped, ActState.Starting, ActState.Started);
     END;
     Cerrno.SetErrno(errno);
   END SignalHandler;
@@ -1410,4 +1400,5 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
 VAR DEBUG := RTParams.IsPresent("debugthreads");
 
 BEGIN
+ <*ASSERT BYTESIZE(ActState) = 1*>
 END ThreadPThread.
