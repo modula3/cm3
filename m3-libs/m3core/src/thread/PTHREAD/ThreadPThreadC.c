@@ -59,12 +59,16 @@ setjmp works, but _setjmp can be much faster. */
 #define EXTERN_CONST const
 #endif
 
-
-#ifdef __GNUC__
-#define NOINLINE __attribute__((noinline))
+#if __GNUC__ || __SUNPRO_C >= 0x590
+#define ATTRIBUTE_NOINLINE __attribute__((noinline))
 #else
-/* Other compilers do support this. How to detect? Autoconf? */
-#define NOINLINE
+#define ATTRIBUTE_NOINLINE
+#endif
+
+#if _MSC_VER >= 1300
+#define DECLSPEC_NOINLINE __declspec(noinline)
+#else
+#define DECLSPEC_NOINLINE
 #endif
 
 #ifdef __cplusplus
@@ -297,8 +301,8 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
 #endif /* Apple */
 #endif /* M3_DIRECT_SUSPEND */
 
-void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void *start, void *limit)) NOINLINE;
-void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void *start, void *limit))
+DECLSPEC_NOINLINE void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void *start, void *limit)) ATTRIBUTE_NOINLINE;
+DECLSPEC_NOINLINE void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void *start, void *limit))
 /* separate function from ThreadPThread__ProcessLive to be sure stack encompasses all of jmp_buf, without
    worrying about stack growth direction */
 {
@@ -318,8 +322,8 @@ void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void *start, void *limi
   p(0, 0);
 }
 
-void ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit)) NOINLINE;
-void ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
+DECLSPEC_NOINLINE void ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit)) ATTRIBUTE_NOINLINE;
+DECLSPEC_NOINLINE void ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
 {
   jmp_buf jb;
 
@@ -551,8 +555,8 @@ ThreadPThread__pthread_mutex_unlock(pthread_mutex_t *m)
   return pthread_mutex_unlock(m);
 }
 
-void ThreadPThread__SignalHandlerX(int** stack_pointer, volatile char* state, char stopped, char starting, char started) NOINLINE;
-void ThreadPThread__SignalHandlerX(int** stack_pointer, volatile char* state, char stopped, char starting, char started)
+DECLSPEC_NOINLINE void ThreadPThread__SignalHandlerX(int** stack_pointer, volatile char* state, char stopped, char starting, char started) ATTRIBUTE_NOINLINE;
+DECLSPEC_NOINLINE void ThreadPThread__SignalHandlerX(int** stack_pointer, volatile char* state, char stopped, char starting, char started)
 /* separate function from SignalHandlerC to be sure stack encompasses all of jmp_buf, without
    worrying about stack growth direction */
 {
@@ -578,8 +582,8 @@ void ThreadPThread__SignalHandlerX(int** stack_pointer, volatile char* state, ch
     assert(r == 0);
 }
 
-void ThreadPThread__SignalHandlerC(int** stack_pointer, volatile char* state, char stopped, char starting, char started) NOINLINE;
-void ThreadPThread__SignalHandlerC(int** stack_pointer, volatile char* state, char stopped, char starting, char started)
+DECLSPEC_NOINLINE void ThreadPThread__SignalHandlerC(int** stack_pointer, volatile char* state, char stopped, char starting, char started) ATTRIBUTE_NOINLINE;
+DECLSPEC_NOINLINE void ThreadPThread__SignalHandlerC(int** stack_pointer, volatile char* state, char stopped, char starting, char started)
 {
     jmp_buf jb;
 
