@@ -7,6 +7,8 @@
 #include <pthread.h>
 #include <setjmp.h>
 #include <stdio.h>
+#include <signal.h>
+#include <sys/ucontext.h>
 
 #ifdef __OpenBSD__
 #error OpenBSD pthreads do not work.
@@ -120,12 +122,26 @@ static sigset_t mask;
 /* Signal based suspend/resume */
 static sem_t ackSem;
 
-void SignalHandler(int);
+void SignalHandler(int signo, siginfo_t *info, void *context);
 
 int ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
 int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
 int ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value); }
-int ThreadPThread__sigsuspend(void)         { return sigsuspend(&mask); }
+
+void
+ThreadPThread__sigsuspend(void)
+{
+  jmp_buf jb;
+
+  if (M3_SETJMP(jb) == 0) {
+    /* save registers to stack */
+#ifdef M3_REGISTER_WINDOWS
+    M3_LONGJMP(jb, 1); /* flush register windows */
+  else {
+#endif
+    sigsuspend(&mask);
+  }
+}
 
 int
 ThreadPThread__SuspendThread (m3_pthread_t mt)
@@ -140,20 +156,19 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 }
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
                                void (*p)(void *start, void *limit))
 {
-  /* process the stacks */
+  /* process stack */
   if (stack_grows_down) {
-    assert((char *)top < (char *)bottom);
-    p(top, bottom);
+    assert((char *)context < (char *)bottom);
+    p(context, bottom);
   } else {
-    assert((char *)bottom < (char *)top);
-    p(bottom, top);
+    assert((char *)bottom < (char *)context);
+    p(bottom, context);
   }
-  /* assume registers are stored in the signal handler frame */
-  /* but call p again to simulate processing registers: see RTHeapStats.m3 */
-  p(0, 0);
+  /* process register context */
+  p(context, ((char *)context) + sizeof(ucontext_t));
 }
 
 #else /* M3_DIRECT_SUSPEND */
@@ -184,7 +199,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 }
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
                               void (*p)(void *start, void *limit))
 {
   pthread_attr_t attr;
@@ -197,7 +212,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
   if (pthread_attr_getstack(&attr, (void **)&stackaddr, &stacksize) != 0) abort();
   if (pthread_attr_destroy(&attr) != 0) abort();
   assert(stack_grows_down);
-  assert(top == 0);
+  assert(context == 0);
   assert((char *)bottom >= stackaddr);
   assert((char *)bottom <= (stackaddr + stacksize));
   p(stackaddr, bottom);
@@ -232,7 +247,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 }
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
                                void (*p)(void *start, void *limit))
 {
   void *sp;
@@ -296,7 +311,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
 #endif
   /* process the stack */
   assert(stack_grows_down);
-  assert(top == 0);
+  assert(context == 0);
   p(sp, bottom);
   /* process the registers */
   p(&state, (char *)&state + sizeof(state));
@@ -306,21 +321,26 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
 #endif /* M3_DIRECT_SUSPEND */
 
 void
-ThreadPThread__ProcessLive(void *bottom, void *top,
-			   void (*p)(void *start, void *limit))
+ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
 {
-  assert(bottom);
-  assert(top);
-  if (stack_grows_down) {
-    assert((char *)top < (char *)bottom);
-    p(top, bottom);
-  } else {
-    assert((char *)bottom < (char *)top);
-    p(bottom, top);
+  jmp_buf jb;
+  void *top = &top;
+
+  if (M3_SETJMP(jb) == 0) { /* save registers to stack */
+#ifdef M3_REGISTER_WINDOWS
+    M3_LONGJMP(jb, 1); /* flush register windows */
+  else {
+#endif
+    assert(bottom);
+    if (stack_grows_down) {
+      assert((char *)top < (char *)bottom);
+      p(top, bottom);
+    } else {
+      assert((char *)bottom < (char *)top);
+      p(bottom, top);
+    }
+    p(&jb, ((char *)&jb) + sizeof(jb));
   }
-  /* assume registers are stored in the stack */
-  /* but call p again to simulate processing registers: see RTHeapStats.m3 */
-  p(0, 0);
 }
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
@@ -543,27 +563,6 @@ ThreadPThread__pthread_mutex_unlock(pthread_mutex_t *m)
   return pthread_mutex_unlock(m);
 }
 
-static DECLSPEC_NOINLINE void GetSP(void **sp) ATTRIBUTE_NOINLINE;
-static DECLSPEC_NOINLINE void GetSP(void **sp)
-/* separate function from SaveRegsInStack to be sure sp encompasses all of
-   jmp_buf, without worrying about stack growth direction */
-{
-  int r;
-  *sp = &r;
-}
-
-void ThreadPThread__SaveRegsInStack(void **sp)
-{
-  jmp_buf jb;
-
-  if (M3_SETJMP(jb) == 0) /* save registers to stack */
-#ifdef M3_REGISTER_WINDOWS
-    M3_LONGJMP(jb, 1); /* flush register windows */
-  else
-#endif
-    GetSP(sp);
-}
-
 void
 InitC(int *bottom)
 {
@@ -589,8 +588,8 @@ InitC(int *bottom)
   r = sigdelset(&mask, SIGABRT); assert(r == 0);
   r = sigdelset(&mask, SIGTERM); assert(r == 0);
 
-  act.sa_flags = SA_RESTART;
-  act.sa_handler = SignalHandler;
+  act.sa_flags = SA_RESTART | SA_SIGINFO;
+  act.sa_sigaction = SignalHandler;
   r = sigfillset(&act.sa_mask); assert(r == 0);
   r = sigaction(SIG_SUSPEND, &act, &oact); assert(r == 0);
 #endif

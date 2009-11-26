@@ -19,7 +19,7 @@ TYPE
 
 (*---------------------------------------------------------------------------*)
 
-PROCEDURE SignalHandler(sig: int);
+PROCEDURE SignalHandler(sig: int; info, uap: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 
@@ -48,7 +48,7 @@ PROCEDURE sem_getvalue (VAR value: int): int;
 (* the signal set is implied *)
 
 <*EXTERNAL "ThreadPThread__sigsuspend"*>
-PROCEDURE sigsuspend (): int;
+PROCEDURE sigsuspend ();
 
 (*---------------------------------------------------------------------------*)
 
@@ -140,15 +140,11 @@ PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
 
 <*EXTERNAL "ThreadPThread__ProcessLive"*>
 PROCEDURE ProcessLive
-  (bottom, top: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
+  (bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 
 <*EXTERNAL "ThreadPThread__ProcessStopped"*>
 PROCEDURE ProcessStopped
-  (t: pthread_t;
-   bottom, top: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
-
-<*EXTERNAL "ThreadPThread__SaveRegsInStack"*>
-PROCEDURE SaveRegsInStack (VAR sp: ADDRESS);
+  (t: pthread_t; bottom, context: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 (*---------------------------------------------------------------------------*)
 
 END ThreadPThread.
