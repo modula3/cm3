@@ -21,7 +21,7 @@ PROCEDURE Zero (dest: ADDRESS; len: INTEGER);
 (*------------------------------- rounded arithmetic ------------------------*)
 
 PROCEDURE Align (a: ADDRESS; y: INTEGER): ADDRESS;
-(* return the smallest integer greater or equal to x that is a multiple of y *)
+(* same as Upper but casting INTEGER <=> ADDRESS *)
 
 PROCEDURE Upper (x, y: INTEGER): INTEGER;
 (* return the smallest integer greater or equal to x that is a multiple of y *)
