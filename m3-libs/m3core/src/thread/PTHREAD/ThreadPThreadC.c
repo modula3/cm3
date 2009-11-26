@@ -37,6 +37,16 @@
   } while(0);
 #endif
 
+/* Sometimes setjmp saves signal mask, in which case _setjmp does not.
+setjmp works, but _setjmp can be much faster. */
+#ifndef __sun
+#define M3_SETJMP _setjmp
+#define M3_LONGJMP _longjmp
+#else
+#define M3_SETJMP setjmp
+#define M3_LONGJMP longjmp
+#endif
+
 /* const is extern const in C, but static const in C++,
  * but gcc gives a warning for the correct portable form "extern const" */
 #if defined(__cplusplus) || !defined(__GNUC__)
@@ -332,7 +342,7 @@ ThreadPThread__ProcessLive(void *bottom, void * top,
   }
 
   /* then the registers */
-  setjmp(jb);
+  M3_SETJMP(jb);
   p(&jb, ((char *)&jb) + sizeof(jb));
 }
 
