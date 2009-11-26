@@ -97,35 +97,6 @@ static sem_t ackSem;
 
 void SignalHandler(int);
 
-void
-InitC(int *bottom)
-{
-  sigaction_t act;
-  sigaction_t oact;
-  int r;
-  int xx;
-
-  stack_grows_down = bottom > &xx;
-  r = pthread_key_create(&activations, NULL); assert(r == 0);
-
-  ZeroMemory(&act, sizeof(act));
-  ZeroMemory(&oact, sizeof(oact));
-
-  r = sem_init(&ackSem, 0, 0); assert(r == 0);
-
-  r = sigfillset(&mask); assert(r == 0);
-  r = sigdelset(&mask, SIG_SUSPEND); assert(r == 0);
-  r = sigdelset(&mask, SIGINT); assert(r == 0);
-  r = sigdelset(&mask, SIGQUIT); assert(r == 0);
-  r = sigdelset(&mask, SIGABRT); assert(r == 0);
-  r = sigdelset(&mask, SIGTERM); assert(r == 0);
-
-  act.sa_flags = SA_RESTART;
-  act.sa_handler = SignalHandler;
-  r = sigfillset(&act.sa_mask); assert(r == 0);
-  r = sigaction(SIG_SUSPEND, &act, &oact); assert(r == 0);
-}
-
 int ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
 int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
 int ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value); }
@@ -161,14 +132,6 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
 }
 
 #else /* M3_DIRECT_SUSPEND */
-
-void
-InitC(int *bottom)
-{
-  int r, xx;
-  stack_grows_down = bottom > &xx;
-  r = pthread_key_create(&activations, NULL); assert(r == 0);
-}
 
 void ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
@@ -590,6 +553,38 @@ int
 ThreadPThread__pthread_mutex_unlock(pthread_mutex_t *m)
 {
   return pthread_mutex_unlock(m);
+}
+
+void
+InitC(int *bottom)
+{
+#ifndef M3_DIRECT_SUSPEND
+  sigaction_t act;
+  sigaction_t oact;
+#endif
+  int r;
+
+  stack_grows_down = (bottom > &r);
+  r = pthread_key_create(&activations, NULL); assert(r == 0);
+
+#ifndef M3_DIRECT_SUSPEND
+  ZeroMemory(&act, sizeof(act));
+  ZeroMemory(&oact, sizeof(oact));
+
+  r = sem_init(&ackSem, 0, 0); assert(r == 0);
+
+  r = sigfillset(&mask); assert(r == 0);
+  r = sigdelset(&mask, SIG_SUSPEND); assert(r == 0);
+  r = sigdelset(&mask, SIGINT); assert(r == 0);
+  r = sigdelset(&mask, SIGQUIT); assert(r == 0);
+  r = sigdelset(&mask, SIGABRT); assert(r == 0);
+  r = sigdelset(&mask, SIGTERM); assert(r == 0);
+
+  act.sa_flags = SA_RESTART;
+  act.sa_handler = SignalHandler;
+  r = sigfillset(&act.sa_mask); assert(r == 0);
+  r = sigaction(SIG_SUSPEND, &act, &oact); assert(r == 0);
+#endif
 }
 
 #ifdef __cplusplus
