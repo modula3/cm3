@@ -139,14 +139,15 @@ PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
 PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
 
 <*EXTERNAL "ThreadPThread__ProcessLive"*>
-PROCEDURE ProcessLive(bottom: ADDRESS; p: PROCEDURE(start, stop: ADDRESS));
+PROCEDURE ProcessLive(bottom, top: ADDRESS;
+                      p: PROCEDURE(start, stop: ADDRESS));
 
 <*EXTERNAL "ThreadPThread__ProcessStopped"*>
 PROCEDURE ProcessStopped (t: pthread_t; bottom, top: ADDRESS;
                           p: PROCEDURE(start, end: ADDRESS));
 
 <*EXTERNAL "ThreadPThread__SaveRegsInStack"*>
-PROCEDURE SaveRegsInStack ();
+PROCEDURE SaveRegsInStack (): ADDRESS;
 
 (*---------------------------------------------------------------------------*)
 
