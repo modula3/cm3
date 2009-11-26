@@ -98,14 +98,14 @@ static sem_t ackSem;
 void SignalHandler(int);
 
 void
-InitC(void *bottom)
+InitC(int *bottom)
 {
   sigaction_t act;
   sigaction_t oact;
   int r;
   int xx;
 
-  stack_grows_down = (int *)bottom > &callee;
+  stack_grows_down = bottom > &xx;
   r = pthread_key_create(&activations, NULL); assert(r == 0);
 
   ZeroMemory(&act, sizeof(act));
@@ -163,10 +163,10 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
 #else /* M3_DIRECT_SUSPEND */
 
 void
-InitC(void *bottom)
+InitC(int *bottom)
 {
   int r, xx;
-  stack_grows_down = (int *)bottom > &xx;
+  stack_grows_down = bottom > &xx;
   r = pthread_key_create(&activations, NULL); assert(r == 0);
 }
 
