@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: sysinfo.sh,v 1.88 2009-11-03 11:57:56 jkrell Exp $
+# $Id: sysinfo.sh,v 1.89 2009-11-26 08:46:14 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 
@@ -58,7 +58,7 @@ find_exe() {
     IFS=:
     for path in $PATH ; do
       if [ -f "$path/$file" -a -x "$path/$file" ]; then
-       echo "$path"
+       # echo "$path"
        return 0
       fi
     done
