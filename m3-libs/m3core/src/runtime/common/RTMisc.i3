@@ -10,21 +10,20 @@ INTERFACE RTMisc;
 
 (*------------------------------- byte copying ------------------------------*)
 
+<*EXTERNAL RTMisc__Copy*>
 PROCEDURE Copy (src, dest: ADDRESS; len: INTEGER);
 (* copy len bytes from src to dest *)
 
+<*EXTERNAL RTMisc__Zero*>
 PROCEDURE Zero (dest: ADDRESS; len: INTEGER);
 (* zero len bytes begining at dest *)
 
 (*------------------------------- rounded arithmetic ------------------------*)
 
 PROCEDURE Align (a: ADDRESS; y: INTEGER): ADDRESS;
-(* return the smallest integer greater or equal to x that is a multiple of
-   y *)
+(* return the smallest integer greater or equal to x that is a multiple of y *)
 
 PROCEDURE Upper (x, y: INTEGER): INTEGER;
-(* return the smallest integer greater or equal to x that is a multiple of
-   y *)
+(* return the smallest integer greater or equal to x that is a multiple of y *)
 
 END RTMisc.
-

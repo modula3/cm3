@@ -10,20 +10,6 @@
 
 UNSAFE MODULE RTMisc;
 
-IMPORT Cstring;
-
-(*------------------------------- byte copying ------------------------------*)
-
-PROCEDURE Copy (src, dest: ADDRESS;  len: INTEGER) =
-  BEGIN
-    EVAL Cstring.memmove (dest, src, len);
-  END Copy;
-
-PROCEDURE Zero (dest: ADDRESS;  len: INTEGER) =
-  BEGIN
-    EVAL Cstring.memset (dest, 0, len);
-  END Zero;
-
 (*------------------------------- rounded arithmetic ------------------------*)
 
 PROCEDURE Align (a: ADDRESS; y: INTEGER): ADDRESS =
