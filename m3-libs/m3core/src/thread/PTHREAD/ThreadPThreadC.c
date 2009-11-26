@@ -29,14 +29,6 @@
 #include <semaphore.h>
 #endif
 
-#if defined(__sparc) || defined(__ia64__)
-#define M3_REGISTER_WINDOWS
-#endif
-
-/* Splitting the callback for registers and stack isn't needed for but for now
-   preserves compatibility with code that assumes this behavior. */
-#define M3_SPLIT_PROCESSLIVE_CALLS
-
 #ifdef M3_DIRECT_SUSPEND
 #define M3_DIRECT_SUSPEND_ASSERT_FALSE do {                     \
     assert(0 && "MacOS X, FreeBSD should not get here.");       \
@@ -153,8 +145,9 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
-                               void (*p)(void *start, void *end))
+                               void (*p)(void *start, void *limit))
 {
+  /* process the stacks */
   if (stack_grows_down) {
     assert((char *)top < (char *)bottom);
     p(top, bottom);
@@ -162,6 +155,9 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
     assert((char *)bottom < (char *)top);
     p(bottom, top);
   }
+  /* assume registers are stored in the signal handler frame */
+  /* but call p once to simulate processing registers: see RTHeapStats.m3 */
+  p(0, 0);
 }
 
 #else /* M3_DIRECT_SUSPEND */
@@ -201,13 +197,13 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
-                              void (*p)(void *start, void *end))
+                              void (*p)(void *start, void *limit))
 {
   pthread_attr_t attr;
   char *stackaddr;
   size_t stacksize;
 
-  /* assume registers of stopped threads are in the stack so don't process */
+  /* process the stacks */
   if (pthread_attr_init(&attr) != 0) abort();
   if (pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr) != 0) abort();
   if (pthread_attr_getstack(&attr, (void **)&stackaddr, &stacksize) != 0) abort();
@@ -217,6 +213,9 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
   assert((char *)bottom >= stackaddr);
   assert((char *)bottom <= (stackaddr + stacksize));
   p(stackaddr, bottom);
+  /* assume registers are stored in the stack */
+  /* but call p to simulate processing registers: see RTHeapStats.m3 */
+  p(0, 0);
 }
 
 #endif /* FreeBSD */
@@ -246,7 +245,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
-                               void (*p)(void *start, void *end))
+                               void (*p)(void *start, void *limit))
 {
   void *sp;
   pthread_t t = PTHREAD_FROM_M3(mt);
@@ -307,61 +306,71 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
   if (thread_state_count != ARM_THREAD_STATE_COUNT) abort();
   sp = (void *)(state.r13);
 #endif
-  p(&state, (char *)&state + sizeof(state));
+  /* process the stack */
   assert(stack_grows_down);
   assert(top == 0);
   p(sp, bottom);
+  /* process the registers */
+  p(&state, (char *)&state + sizeof(state));
 }
 
 #endif /* Apple */
 #endif /* M3_DIRECT_SUSPEND */
 
+# ifdef __sparc
+void *ThreadPThread__SaveRegsInStack(void);
+/* On register window machines, we need a way to force registers into       */
+/* the stack.       Return sp.                                              */
+    asm("       .seg        \"text\"");
+#   if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
+      asm("     .globl      ThreadPThread__SaveRegsInStack");
+      asm("ThreadPThread__SaveRegsInStack:");
+      asm("     .type ThreadPThread__SaveRegsInStack,#function");
+#   else
+      asm("     .globl      ThreadPThread__SaveRegsInStack");
+      asm("ThreadPThread__SaveRegsInStack:");
+#   endif
+#   if defined(__arch64__) || defined(__sparcv9)
+      asm("     save        %sp,-128,%sp");
+      asm("     flushw");
+      asm("     ret");
+      asm("     restore %sp,2047+128,%o0");
+#   else
+      asm("     ta      0x3   ! ST_FLUSH_WINDOWS");
+      asm("     retl");
+      asm("     mov     %sp,%o0");
+#   endif
+#   ifdef SVR4
+      asm("     ThreadPThread__SaveRegsInStack_end:");
+      asm("     .size ThreadPThread__SaveRegsInStack,ThreadPThread__SaveRegsInStack_end-ThreadPThread__SaveRegsInStack");
+#   endif
+# else
+void *ThreadPThread__SaveRegsInStack(void) { return 0; }
+# endif
+
 void
-ThreadPThread__SaveRegsInStack(void)
+ThreadPThread__ProcessLive(void *bottom, void * top,
+			   void (*p)(void *start, void *limit))
 {
-#ifdef M3_REGISTER_WINDOWS
-/* On "register window" architectures, setjmp/longjmp tends to flush registers
-   to the stack in a fairly portable not too inefficient fashion, and saves us
-   the need for gnarly assembly. (ta 3 on Sparc, flushrs on IA64) */
   jmp_buf jb;
-  if (setjmp(jb) == 0) longjmp(jb, 1);
+
+  /* first the stacks */
+#ifdef __sparc
+  top = ThreadPThread__SaveRegsInStack();
 #endif
-}
-
-void
-ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *stop))
-{
-  jmp_buf jb;
-
-  /* Capture registers to jmpbuf */
-  if (setjmp(jb) == 0) {
-#ifdef M3_REGISTER_WINDOWS
-    /* see SaveRegsInStack */
-    longjmp(jb, 1);
+  assert(bottom);
+  assert(top);
+  if (stack_grows_down) {
+    assert((char *)top < (char *)bottom);
+    p(top, bottom);
   } else {
-#endif
-    /* compute these after longjmp to avoid the caveat that longjmp does not
-       necessarily preserve non-volatile locals (what about the
-       parameters?) */
-    char *buf = (char *)&jb;
-    const size_t N = sizeof(jb);
-    int down = stack_grows_down;
-#ifdef M3_SPLIT_PROCESSLIVE_CALLS
-    char *start = down ? (buf + N) : bottom;
-    char *end   = down ? bottom    : buf;
-#else
-    char *start = down ? buf       : bottom;
-    char *end   = down ? bottom    : (buf + N);
-#endif
-
-#ifdef M3_SPLIT_PROCESSLIVE_CALLS
-    p(buf, (buf + N));
-#endif
-    assert(start);
-    assert(end);
-    assert(start < end);
-    p(start, end);
+    assert((char *)bottom < (char *)top);
+    p(bottom, top);
   }
+
+  /* then the registers */
+  setjmp(jb);
+  p(&jb, ((char *)&jb) + sizeof(jb));
 }
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))

@@ -817,7 +817,7 @@ PROCEDURE ResumeOthers () =
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;
 
-PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR
     me := GetActivation();
@@ -831,7 +831,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     END;
   END ProcessStacks;
 
-PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=0 *)
   VAR
     me := GetActivation();
@@ -957,15 +957,16 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ProcessEachStack;
 
-PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu *)
+  VAR xx: INTEGER;
   BEGIN
     <*ASSERT me.state # ActState.Stopped*>
     IF DEBUG THEN
       RTIO.PutText("Processing act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(me.heapState);
-    ProcessLive(me.stackbase, p);
+    ProcessLive(me.stackbase, ADR(xx), p);
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -1194,8 +1195,8 @@ PROCEDURE SignalHandler (sig: int) =
         me.state := ActState.Started;
         RETURN;
       END;
-      SaveRegsInStack();
-      me.sp := ADR(xx);
+      me.sp := SaveRegsInStack();
+      IF me.sp = NIL THEN me.sp := ADR(xx) END;
       me.state := ActState.Stopped;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
       REPEAT EVAL sigsuspend() UNTIL me.state = ActState.Starting;
