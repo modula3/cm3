@@ -9,31 +9,14 @@
 #include <signal.h>
 #include <ucontext.h>
 #include <sys/frame.h>
+#include <setjmp.h>
 
-void *RTStack__SaveRegsInStack(void);
-asm("	.seg 	\"text\"");
-# if defined(SVR4) || defined(NETBSD) || defined(FREEBSD)
-    asm("	.globl	RTStack__SaveRegsInStack");
-    asm("RTStack__SaveRegsInStack:");
-    asm("	.type RTStack__SaveRegsInStack,#function");
-# else
-    asm("	.globl	RTStack__SaveRegsInStack");
-    asm("RTStack__SaveRegsInStack:");
-# endif
-# if defined(__arch64__) || defined(__sparcv9)
-    asm("	save	%sp,-128,%sp");
-    asm("	flushw");
-    asm("	ret");
-    asm("	restore %sp,2047+128,%o0");
-# else
-    asm("	ta	0x3   ! ST_FLUSH_WINDOWS");
-    asm("	retl");
-    asm("	mov	%sp,%o0");
-# endif
-# ifdef SVR4
-    asm("	RTStack__SaveRegsInStack_end:");
-    asm("	.size RTStack__SaveRegsInStack,RTStack__SaveRegsInStack_end-RTStack__SaveRegsInStack");
-# endif
+void RTStack__SaveRegsInStack(void)
+{
+  jmp_buf jb;
+  if (setjmp(jb) == 0)
+    longjmp(jb, 1); /* flushes register windows */
+}
 
 /*
 TYPE FrameInfo = RECORD
@@ -119,11 +102,6 @@ void (*RTProcedureSRC_FromPC) (void *pc, void **p, char **file, char **name);
 
 void RTStack__PrevFrame (Frame* callee, Frame* caller)
 {
-  ucontext_t *link;
-  struct frame *link_sp, *link_fp;
-  void *proc;
-  char *file, *name;
-
   if (callee == 0) abort();
   if (caller == 0) abort();
   if (callee->lock != FrameLock) abort();
@@ -143,7 +121,6 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
 
 void RTStack__Unwind (Frame* target)
 {
-  struct frame *sp = target->sp;
   greg_t *reg = target->ctxt.uc_mcontext.gregs;
 
   RTStack__SaveRegsInStack();
