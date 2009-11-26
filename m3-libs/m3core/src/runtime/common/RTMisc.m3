@@ -12,11 +12,6 @@ UNSAFE MODULE RTMisc;
 
 (*------------------------------- rounded arithmetic ------------------------*)
 
-PROCEDURE Align (a: ADDRESS; y: INTEGER): ADDRESS =
-  BEGIN 
-    RETURN LOOPHOLE (Upper (LOOPHOLE (a, INTEGER), y), ADDRESS);
-  END Align;
-
 PROCEDURE Upper (x, y: INTEGER): INTEGER =
   BEGIN
     RETURN ((x + y - 1) DIV y) * y;
