@@ -9,7 +9,7 @@ FROM Ctypes IMPORT int;
 TYPE
   Handler = PROCEDURE (s: int);
 
-<*EXTERNAL*>
+<*EXTERNAL Csignal__signal*>
 PROCEDURE signal (sig: int; func: Handler): Handler;
 
 END Csignal.

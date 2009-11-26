@@ -8,6 +8,10 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma optimize("gty", on)
+#endif
+
 int
 Cerrno__GetErrno(void)
 {

@@ -6,6 +6,10 @@
 extern "C" {
 #endif
 
+#ifdef _MSC_VER
+#pragma optimize("gty", on)
+#endif
+
 int Cstdio__feof(FILE* f)
 {
     return feof(f);
