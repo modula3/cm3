@@ -519,9 +519,7 @@ PROCEDURE Moved (ref: RefReferent): BOOLEAN =
 PROCEDURE NoteStackLocations (start, stop: ADDRESS) =
   VAR fp : UNTRACED REF ADDRESS := start;
   BEGIN
-    IF start = NIL AND stop = NIL THEN
-      RETURN;
-    END;
+    IF NOT (start < stop) THEN RETURN END;
     stop := stop - ADRSIZE (ADDRESS); (* so we don't overrun the valid addresses *)
     WHILE fp <= stop DO               (* with the memory read on the next line.  *)
       WITH page = AddressToPage(fp^) DO
