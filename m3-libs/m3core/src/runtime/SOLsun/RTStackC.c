@@ -15,7 +15,7 @@ void RTStack__SaveRegsInStack(void)
 {
   jmp_buf jb;
   if (setjmp(jb) == 0)
-    longjmp(jb, 1); /* contains ta 3 */
+    longjmp(jb, 1); /* flushes register windows */
 }
 
 /*
