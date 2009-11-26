@@ -53,7 +53,7 @@ TYPE
     next, prev: Activation := NIL;      (* LL = activeMu; global doubly-linked, circular list of all active threads *)
     handle: pthread_t;                  (* LL = activeMu; thread handle *)
     stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
-    sp: ADDRESS := NIL;                 (* LL = activeMu *)
+    context: ADDRESS := NIL;            (* LL = activeMu *)
     state := ActState.Started;          (* LL = activeMu *)
     slot: INTEGER;                      (* LL = slotMu; index in slots *)
     floatState : FloatMode.ThreadState; (* per-thread floating point state *)
@@ -368,7 +368,7 @@ PROCEDURE DumpThread (t: Activation) =
     RTIO.PutText("  prev:       "); RTIO.PutAddr(t.prev);        RTIO.PutChar('\n');
     RTIO.PutText("  handle:     "); RTIO.PutAddr(t.handle);      RTIO.PutChar('\n');
     RTIO.PutText("  stackbase:  "); RTIO.PutAddr(t.stackbase);   RTIO.PutChar('\n');
-    RTIO.PutText("  sp:         "); RTIO.PutAddr(t.sp);          RTIO.PutChar('\n');
+    RTIO.PutText("  context:    "); RTIO.PutAddr(t.context);     RTIO.PutChar('\n');
     RTIO.PutText("  state:      ");
     CASE t.state OF
     | ActState.Started => RTIO.PutText("Started\n");
@@ -965,9 +965,7 @@ PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(me); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(me.heapState);
-    SaveRegsInStack(me.sp);
-    ProcessLive(me.stackbase, me.sp, p);
-    me.sp := NIL;
+    ProcessLive(me.stackbase, p);
   END ProcessMe;
 
 PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
@@ -979,7 +977,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
     END;
     IF act.stackbase = NIL THEN RETURN END;
     RTHeapRep.FlushThreadState(act.heapState);
-    ProcessStopped(act.handle, act.stackbase, act.sp, p);
+    ProcessStopped(act.handle, act.stackbase, act.context, p);
   END ProcessOther;
 
 (* Signal based suspend/resume *)
@@ -1183,7 +1181,7 @@ PROCEDURE StartWorld () =
     END;
   END StartWorld;
 
-PROCEDURE SignalHandler (sig: int) =
+PROCEDURE SignalHandler (sig: int; <*UNUSED*>info: ADDRESS; context: ADDRESS) =
   VAR
     errno := Cerrno.GetErrno();
     me := GetActivation();
@@ -1194,11 +1192,12 @@ PROCEDURE SignalHandler (sig: int) =
         me.state := ActState.Started;
         RETURN;
       END;
-      SaveRegsInStack(me.sp);
       me.state := ActState.Stopped;
+      <*ASSERT me.context = NIL*>
+      me.context := context;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
-      REPEAT EVAL sigsuspend() UNTIL me.state = ActState.Starting;
-      me.sp := NIL;
+      REPEAT sigsuspend() UNTIL me.state = ActState.Starting;
+      me.context := NIL;
       me.state := ActState.Started;
       WITH r = sem_post() DO <*ASSERT r=0*> END;
     END;
