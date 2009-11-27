@@ -41,7 +41,6 @@ extern "C" {
 #define allow_sigvtalrm     ThreadPosix__allow_sigvtalrm
 #define disallow_sigvtalrm  ThreadPosix__disallow_sigvtalrm
 #define MakeContext         ThreadPosix__MakeContext
-#define GetContext          ThreadPosix__GetContext
 #define SwapContext         ThreadPosix__SwapContext
 #define DisposeContext      ThreadPosix__DisposeContext
 #define ProcessContext      ThreadPosix__ProcessContext
@@ -86,8 +85,9 @@ void disallow_sigvtalrm(void)
 }
 
 typedef struct {
+  void *stackaddr;
+  size_t stacksize;
   void *sp;
-  size_t size;
   ucontext_t uc;
 } Context;
 
@@ -110,8 +110,8 @@ MakeContext (void (*p)(void), int words)
   sp = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
   if (sp == NULL)
     goto Error;
-  c->sp = sp;
-  c->size = size;
+  c->stackaddr = sp;
+  c->stacksize = size;
   if (mprotect(sp, pagesize, PROT_NONE)) abort();
   if (mprotect(sp + size - pagesize, pagesize, PROT_NONE)) abort();
 
@@ -130,11 +130,6 @@ Error:
   return NULL;
 }
 
-void GetContext (Context *c)
-{
-  if (getcontext(&(c->uc))) abort();
-}
-
 void SwapContext (Context *from, Context *to)
 {
   if (swapcontext(&(from->uc), &(to->uc))) abort();
@@ -142,7 +137,7 @@ void SwapContext (Context *from, Context *to)
 
 void DisposeContext (Context **c)
 {
-  if (munmap((*c)->sp, (*c)->size)) abort();
+  if (munmap((*c)->stackaddr, (*c)->stacksize)) abort();
   free(*c);
   *c = NULL;
 }
@@ -151,10 +146,13 @@ void
 ProcessContext(Context *c, char *bottom, char *top,
 	       void (*p) (void *start, void *limit))
 {
-  int xx;
-
-  if (top == NULL)
+  if (top == NULL) {
+    /* live thread */
+    /* do we need to flush register windows too? */
+    int xx;
+    if (getcontext(&(c->uc))) abort();
     top = (char *)&xx;
+  }
   if (bottom < top)
     p(bottom, top);
   else
