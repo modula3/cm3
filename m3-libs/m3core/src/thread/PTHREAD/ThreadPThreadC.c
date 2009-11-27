@@ -322,7 +322,6 @@ void
 ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
 {
   jmp_buf jb;
-  void *top = &top;
 
   if (M3_SETJMP(jb) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
@@ -330,6 +329,7 @@ ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
   else
 #endif
   {
+    void *top = &top;
     assert(bottom);
     if (stack_grows_down) {
       assert((char *)top < (char *)bottom);
