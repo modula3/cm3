@@ -120,14 +120,12 @@ ThreadPThread__sigsuspend(void)
 {
   jmp_buf jb;
 
-  if (M3_SETJMP(jb) == 0) {
-    /* save registers to stack */
+  if (M3_SETJMP(jb) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
     M3_LONGJMP(jb, 1); /* flush register windows */
-  else {
+  else
 #endif
     sigsuspend(&mask);
-  }
 }
 
 int
@@ -176,11 +174,12 @@ ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
   jmp_buf jb;
   void *top = &top;
 
-  if (M3_SETJMP(jb) == 0) { /* save registers to stack */
+  if (M3_SETJMP(jb) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
     M3_LONGJMP(jb, 1); /* flush register windows */
-  else {
+  else
 #endif
+  {
     assert(bottom);
     if (stack_grows_down) {
       assert((char *)top < (char *)bottom);
