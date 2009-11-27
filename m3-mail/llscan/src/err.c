@@ -11,6 +11,10 @@
 /*     The err package implements a simple error routine.      */
 /***************************************************************/
 
+#if defined(__INTERIX) && !defined(_REENTRANT)
+#define _REENTRANT
+#endif
+
 #include <stdio.h>
 #include <stdarg.h>
 #include <errno.h>

@@ -10,6 +10,10 @@
  *
  */
 
+#if defined(__INTERIX) && !defined(_REENTRANT)
+#define _REENTRANT
+#endif
+
 #include <sys/types.h>
 #include <fcntl.h>
 #include <unistd.h>
