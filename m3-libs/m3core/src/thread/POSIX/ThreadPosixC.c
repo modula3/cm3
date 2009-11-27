@@ -94,7 +94,7 @@ typedef struct {
 void *
 MakeContext (void (*p)(void), int words)
 {
-  Context *c = (Context*)calloc (1, sizeof(Context));
+  Context *c = calloc (1, sizeof(Context));
   size_t size = words * sizeof(void *);
   int pagesize = getpagesize();
   char *sp = NULL;
@@ -107,7 +107,7 @@ MakeContext (void (*p)(void), int words)
   if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
   pages = (size + pagesize - 1) / pagesize + 2;
   size = pages * pagesize;
-  sp = (char*)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
+  sp = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
   if (sp == NULL)
     goto Error;
   c->sp = sp;
@@ -154,7 +154,7 @@ ProcessContext(Context *c, char *bottom, char *top,
   int xx;
 
   if (top == NULL)
-    top = &xx;
+    top = (char *)&xx;
   if (bottom < top)
     p(bottom, top);
   else
