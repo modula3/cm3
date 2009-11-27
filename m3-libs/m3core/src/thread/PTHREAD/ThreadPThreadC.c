@@ -10,7 +10,7 @@
 #include <signal.h>
 #include <sys/ucontext.h>
 
-#ifdef __INTERIX
+#if defined(__INTERIX) || defined(__APPLE__) || defined(__FreeBSD__)
 #define M3_DIRECT_SUSPEND
 #endif
 
@@ -19,16 +19,11 @@
 #endif
 
 #ifdef __APPLE__
-#define M3_DIRECT_SUSPEND
 #include <mach/mach.h>
 #include <mach/thread_act.h>
 #if defined(__ppc__) || defined(__ppc64__)
 #include <architecture/ppc/cframe.h>
 #endif
-#endif
-
-#ifdef __FreeBSD__
-#define M3_DIRECT_SUSPEND
 #endif
 
 #ifndef M3_DIRECT_SUSPEND
@@ -172,7 +167,6 @@ void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 
 #include "freebsd.c"
 #include "apple.c"
-#include "interix.c"
 
 #endif /* M3_DIRECT_SUSPEND */
 

@@ -9,3 +9,4 @@
 
 module ("ThreadPThread")
 c_source ("ThreadPThreadC")
+c_source ("ThreadInterix")
