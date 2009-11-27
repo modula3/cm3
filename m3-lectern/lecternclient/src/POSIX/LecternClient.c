@@ -7,6 +7,9 @@
 
 /* Inspired by emacsclient. */
 
+#if defined(__INTERIX) && !defined(_REENTRANT)
+#define _REENTRANT
+#endif
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
