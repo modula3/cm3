@@ -21,9 +21,6 @@ PROCEDURE disallow_sigvtalrm();
 <*EXTERNAL ThreadPosix__MakeContext*>
 PROCEDURE MakeContext(p: PROCEDURE(); size: CARDINAL): ADDRESS;
 
-<*EXTERNAL ThreadPosix__GetContext*>
-PROCEDURE GetContext(c: ADDRESS);
-
 <*EXTERNAL ThreadPosix__SwapContext*>
 PROCEDURE SwapContext(from, to: ADDRESS);
 
