@@ -3,8 +3,14 @@
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
 #ifndef __INTERIX
-#error This is for Interix only.
-#endif
+
+/* avoid empty file */
+
+void ThreadInterix__Dummy(void)
+{
+}
+
+#else
 
 #include <windows.h>
 #include <ntapi.h>
@@ -68,3 +74,5 @@ void ThreadPThread__ProcessStopped(HANDLE thread, void *bottom, void *signal_con
     /* process the registers */
     p(&context, (char *)&context + sizeof(context));
 }
+
+#endif

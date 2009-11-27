@@ -2,7 +2,23 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#ifdef __FreeBSD__
+#ifndef __FreeBSD__
+
+/* avoid empty file */
+
+void ThreadFreeBSD__Dummy(void)
+{
+}
+
+#else
+
+#include "m3unix.h"
+#include <pthread.h>
+#include <assert.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int
 ThreadPThread__SuspendThread (m3_pthread_t mt)
@@ -44,5 +60,9 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   /* but call p to simulate processing registers: see RTHeapStats.m3 */
   p(0, 0);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

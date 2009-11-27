@@ -18,14 +18,6 @@
 #error OpenBSD pthreads do not work.
 #endif
 
-#ifdef __APPLE__
-#include <mach/mach.h>
-#include <mach/thread_act.h>
-#if defined(__ppc__) || defined(__ppc64__)
-#include <architecture/ppc/cframe.h>
-#endif
-#endif
-
 #ifndef M3_DIRECT_SUSPEND
 #include <semaphore.h>
 #endif
@@ -162,9 +154,6 @@ void ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
-
-#include "freebsd.c"
-#include "apple.c"
 
 #endif /* M3_DIRECT_SUSPEND */
 

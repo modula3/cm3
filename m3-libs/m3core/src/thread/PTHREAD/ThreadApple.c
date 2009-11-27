@@ -2,7 +2,30 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#ifdef __APPLE__
+#ifndef __APPLE__
+
+/* avoid empty file */
+
+void ThreadApple__Dummy(void)
+{
+}
+
+#else
+
+#include "m3unix.h"
+#include <pthread.h>
+#include <signal.h>
+#include <sys/ucontext.h>
+
+#include <mach/mach.h>
+#include <mach/thread_act.h>
+#if defined(__ppc__) || defined(__ppc64__)
+#include <architecture/ppc/cframe.h>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 int
 ThreadPThread__SuspendThread (m3_pthread_t mt)
@@ -95,5 +118,9 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   /* process the registers */
   p(&state, (char *)&state + sizeof(state));
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif

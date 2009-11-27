@@ -11,8 +11,25 @@ module ("ThreadPThread")
 c_source ("ThreadPThreadC")
 
 if defined("TARGET_OS")
+
 if equal(TARGET_OS, "INTERIX")
   local w32api =  "../../../../../m3-win/w32api/include"
   SYSTEM_CC = SYSTEM_CC & " -I " & w32api & " -I " & w32api & "/ddk"
   c_source ("ThreadInterix")
-end end
+end
+
+if equal(TARGET_OS, "DARWIN")
+  c_source ("ThreadApple")
+end
+
+if equal(TARGET_OS, "FREEBSD")
+  c_source ("ThreadFreeBSD")
+end
+
+else % TARGET_OS not defined: the files all have #ifdef guards so it is safe to always compile all of them
+
+c_source ("ThreadInterix")
+c_source ("ThreadApple")
+c_source ("ThreadFreeBSD")
+
+end
