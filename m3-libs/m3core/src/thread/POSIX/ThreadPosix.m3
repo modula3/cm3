@@ -116,7 +116,6 @@ REVEAL
     stackbase:   ADDRESS := NIL;
     sp:          ADDRESS := NIL;
     context:     ADDRESS := NIL;
-    stack:       ADDRESS := NIL;
 
     (* if state = blocking, the descriptors we are waiting on *)
     select : SelectRec := SelectRec{};
