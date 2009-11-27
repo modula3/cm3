@@ -19,7 +19,7 @@ TYPE
 
 (*---------------------------------------------------------------------------*)
 
-PROCEDURE SignalHandler(sig: int);
+PROCEDURE SignalHandler(sig: int; info, uap: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 
@@ -37,9 +37,18 @@ PROCEDURE InitC(bottom: ADDRESS);
 
 <*EXTERNAL "ThreadPThread__sem_wait"*>
 PROCEDURE sem_wait (): int;
+<*EXTERNAL "ThreadPThread__sem_post"*>
+PROCEDURE sem_post (): int;
 
 <*EXTERNAL "ThreadPThread__sem_getvalue"*>
 PROCEDURE sem_getvalue (VAR value: int): int;
+
+(*---------------------------------------------------------------------------*)
+
+(* the signal set is implied *)
+
+<*EXTERNAL "ThreadPThread__sigsuspend"*>
+PROCEDURE sigsuspend ();
 
 (*---------------------------------------------------------------------------*)
 
@@ -130,18 +139,12 @@ PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
 PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
 
 <*EXTERNAL "ThreadPThread__ProcessLive"*>
-PROCEDURE ProcessLive(bottom: ADDRESS;
-                      p: PROCEDURE(start, stop: ADDRESS));
+PROCEDURE ProcessLive
+  (bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 
 <*EXTERNAL "ThreadPThread__ProcessStopped"*>
-PROCEDURE ProcessStopped (t: pthread_t; bottom, top: ADDRESS;
-                          p: PROCEDURE(start, end: ADDRESS));
-
-TYPE ActState = { Starting, Started, Stopping, Stopped };
-
-<*EXTERNAL ThreadPThread__SignalHandlerC*>
-PROCEDURE SignalHandlerC(VAR sp: ADDRESS; VAR state: ActState; stopped, starting, started: ActState);
-
+PROCEDURE ProcessStopped
+  (t: pthread_t; bottom, context: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 (*---------------------------------------------------------------------------*)
 
 END ThreadPThread.
