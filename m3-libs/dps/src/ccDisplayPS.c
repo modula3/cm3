@@ -7,6 +7,9 @@
 /* Exception handling from "Perry" via Chris Kent. */
 /* It is fragile. Change no block structure or statements around it. */
 
+#if defined(__INTERIX) && !defined(_REENTRANT)
+#define _REENTRANT
+#endif
 #include <stdio.h>
 #include <errno.h>
 #include "Xlib.h"
@@ -18,8 +21,6 @@
 #include <strings.h>
 #include "dpsfriends.h"
 #include "wraps.h"
-
-extern int errno;
 
 #define FullWidth 1024   /* Congruent to definition in DPS.i3 */
 #define FullHeight 1024  /* Congruent to definition in DPS.i3 */
