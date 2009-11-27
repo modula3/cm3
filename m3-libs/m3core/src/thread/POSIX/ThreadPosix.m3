@@ -114,6 +114,7 @@ REVEAL
     handlers:    ADDRESS := NIL;
     errno:       INTEGER := 0;
     stackbase:   ADDRESS := NIL;
+    sp:          ADDRESS := NIL;
     context:     ADDRESS := NIL;
     stack:       ADDRESS := NIL;
 
@@ -521,31 +522,33 @@ PROCEDURE ResumeOthers () =
     DEC(inCritical);
   END ResumeOthers;
 
-PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
   (* we need to be careful to avoid read/write barriers here --
      hence the extensive use of LOOPHOLE. *)
   VAR
     me := LOOPHOLE(LOOPHOLE(ADR(self), UNTRACED REF ADDRESS)^, T);
     t: T;
+    
   BEGIN
     (* flush thread state *)
     RTHeapRep.FlushThreadState(heapState);
 
     (* save my state *)
     GetContext(me.context);
+    me.sp := NIL;
 
     t := me;
     REPEAT
       (* t.stackbase = NIL means the thread isn't fully initialized
          yet, hasn't run, has nothing interesting on its stack. *)
       IF t.stackbase # NIL THEN
-        ProcessContext(t.context, t.stackbase, p);
+        ProcessContext(t.context, t.stackbase, t.sp, p);
       END;
       t := LOOPHOLE(LOOPHOLE(ADR(t.next), UNTRACED REF ADDRESS)^, T);
     UNTIL t = me;
   END ProcessStacks;
 
-PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
   BEGIN
     ProcessStacks(p);
   END ProcessEachStack;
@@ -1082,12 +1085,14 @@ PROCEDURE RunThread () =
   END RunThread;
 
 PROCEDURE Transfer (from, to: T) =
+  VAR xx: INTEGER;
   BEGIN
     IF from # to THEN
       disallow_sigvtalrm ();
       from.handlers := handlerStack;
       from.errno := Cerrno.GetErrno();
       self := to;
+      from.sp := ADR(xx);
       SwapContext(from.context, to.context);
       handlerStack := from.handlers;
       Cerrno.SetErrno(from.errno);
