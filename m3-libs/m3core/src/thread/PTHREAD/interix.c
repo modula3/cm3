@@ -52,7 +52,7 @@ void ThreadPThread__ProcessStopped(HANDLE thread, void *bottom, void *signal_con
 #endif
     /* process the stack */
     assert(stack_grows_down);
-    assert(context == 0);
+    assert(signal_context == 0);
     p(sp, bottom);
     /* process the registers */
     p(&context, (char *)&context + sizeof(context));
