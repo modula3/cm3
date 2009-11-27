@@ -109,8 +109,7 @@ REVEAL
     endCondition: Condition;
     joined: BOOLEAN := FALSE;
 
-    (* where we carry our work. The first thread runs on the
-       original C program stack and its context.stack is NIL *)
+    (* where we carry our work *)
     handlers:    ADDRESS := NIL;
     errno:       INTEGER := 0;
     stackbase:   ADDRESS := NIL;
