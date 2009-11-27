@@ -24,7 +24,9 @@
 #include <process.h>
 #include <sys/termios.h>
 #endif
+#ifndef __INTERIX
 #include <net/if.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
