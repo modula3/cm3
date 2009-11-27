@@ -86,7 +86,8 @@ void disallow_sigvtalrm(void)
 }
 
 typedef struct {
-  stack_t ss;
+  void *sp;
+  size_t size;
   ucontext_t uc;
 } Context;
 
@@ -109,8 +110,8 @@ MakeContext (void (*p)(void), int words)
   sp = (char*)mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
   if (sp == NULL)
     goto Error;
-  c->ss.ss_sp = sp;
-  c->ss.ss_size = size;
+  c->sp = sp;
+  c->size = size;
   if (mprotect(sp, pagesize, PROT_NONE)) abort();
   if (mprotect(sp + size - pagesize, pagesize, PROT_NONE)) abort();
 
@@ -141,19 +142,23 @@ void SwapContext (Context *from, Context *to)
 
 void DisposeContext (Context **c)
 {
-  if (munmap((*c)->ss.ss_sp, (*c)->ss.ss_size)) abort();
+  if (munmap((*c)->sp, (*c)->size)) abort();
   free(*c);
   *c = NULL;
 }
 
 void
-ProcessContext(Context *c, void *stack,
-	       void (*p) (void *start, void *stop))
+ProcessContext(Context *c, char *bottom, char *top,
+	       void (*p) (void *start, void *limit))
 {
-  if (stack < c->uc.uc_stack.ss_sp)
-    p(stack, c->uc.uc_stack.ss_sp);
+  int xx;
+
+  if (top == NULL)
+    top = &xx;
+  if (bottom < top)
+    p(bottom, top);
   else
-    p(c->uc.uc_stack.ss_sp, stack);
+    p(top, bottom);
 #ifdef __APPLE__
   p(&(c->uc.uc_mcontext[0]), &(c->uc.uc_mcontext[1]));
 #else
