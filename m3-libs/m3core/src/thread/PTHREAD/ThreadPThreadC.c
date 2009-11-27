@@ -141,19 +141,19 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 }
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
                                void (*p)(void *start, void *limit))
 {
   /* process stack */
   if (stack_grows_down) {
-    assert((char *)context < (char *)bottom);
+    assert(context < bottom);
     p(context, bottom);
   } else {
-    assert((char *)bottom < (char *)context);
+    assert(bottom < context);
     p(bottom, context);
   }
   /* process register context */
-  p(context, ((char *)context) + sizeof(ucontext_t));
+  p(context, context + sizeof(ucontext_t));
 }
 
 #else /* M3_DIRECT_SUSPEND */
@@ -169,10 +169,10 @@ void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 #endif /* M3_DIRECT_SUSPEND */
 
 void
-ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
+ThreadPThread__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
 {
   jmp_buf jb;
-  void *top = &top;
+  char *top = (char*)&top;
 
   if (M3_SETJMP(jb) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
@@ -182,10 +182,10 @@ ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
   {
     assert(bottom);
     if (stack_grows_down) {
-      assert((char *)top < (char *)bottom);
+      assert(top < bottom);
       p(top, bottom);
     } else {
-      assert((char *)bottom < (char *)top);
+      assert(bottom < top);
       p(bottom, top);
     }
     p(&jb, ((char *)&jb) + sizeof(jb));
