@@ -7,6 +7,8 @@
 #include <pthread.h>
 #include <setjmp.h>
 #include <stdio.h>
+#include <signal.h>
+#include <sys/ucontext.h>
 
 #ifdef __OpenBSD__
 #error OpenBSD pthreads do not work.
@@ -59,12 +61,16 @@ setjmp works, but _setjmp can be much faster. */
 #define EXTERN_CONST const
 #endif
 
-
-#ifdef __GNUC__
-#define NOINLINE __attribute__((noinline))
+#if __GNUC__ || __SUNPRO_C >= 0x590
+#define ATTRIBUTE_NOINLINE __attribute__((noinline))
 #else
-/* Other compilers do support this. How to detect? Autoconf? */
-#define NOINLINE
+#define ATTRIBUTE_NOINLINE
+#endif
+
+#if _MSC_VER >= 1300
+#define DECLSPEC_NOINLINE __declspec(noinline)
+#else
+#define DECLSPEC_NOINLINE
 #endif
 
 #ifdef __cplusplus
@@ -116,10 +122,26 @@ static sigset_t mask;
 /* Signal based suspend/resume */
 static sem_t ackSem;
 
-void SignalHandler(int);
+void SignalHandler(int signo, siginfo_t *info, void *context);
 
 int ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
+int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
 int ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value); }
+
+void
+ThreadPThread__sigsuspend(void)
+{
+  jmp_buf jb;
+
+  if (M3_SETJMP(jb) == 0) {
+    /* save registers to stack */
+#ifdef M3_REGISTER_WINDOWS
+    M3_LONGJMP(jb, 1); /* flush register windows */
+  else {
+#endif
+    sigsuspend(&mask);
+  }
+}
 
 int
 ThreadPThread__SuspendThread (m3_pthread_t mt)
@@ -134,26 +156,27 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 }
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
                                void (*p)(void *start, void *limit))
 {
-  /* process the stacks */
+  /* process stack */
   if (stack_grows_down) {
-    assert((char *)top < (char *)bottom);
-    p(top, bottom);
+    assert((char *)context < (char *)bottom);
+    p(context, bottom);
   } else {
-    assert((char *)bottom < (char *)top);
-    p(bottom, top);
+    assert((char *)bottom < (char *)context);
+    p(bottom, context);
   }
-  /* assume registers are stored in the signal handler frame */
-  /* but call p again to simulate processing registers: see RTHeapStats.m3 */
-  p(0, 0);
+  /* process register context */
+  p(context, ((char *)context) + sizeof(ucontext_t));
 }
 
 #else /* M3_DIRECT_SUSPEND */
 
 void ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 
 #ifdef __FreeBSD__
 
@@ -176,7 +199,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 }
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
                               void (*p)(void *start, void *limit))
 {
   pthread_attr_t attr;
@@ -189,7 +212,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
   if (pthread_attr_getstack(&attr, (void **)&stackaddr, &stacksize) != 0) abort();
   if (pthread_attr_destroy(&attr) != 0) abort();
   assert(stack_grows_down);
-  assert(top == 0);
+  assert(context == 0);
   assert((char *)bottom >= stackaddr);
   assert((char *)bottom <= (stackaddr + stacksize));
   p(stackaddr, bottom);
@@ -224,7 +247,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 }
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
+ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
                                void (*p)(void *start, void *limit))
 {
   void *sp;
@@ -288,7 +311,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
 #endif
   /* process the stack */
   assert(stack_grows_down);
-  assert(top == 0);
+  assert(context == 0);
   p(sp, bottom);
   /* process the registers */
   p(&state, (char *)&state + sizeof(state));
@@ -297,38 +320,27 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *top,
 #endif /* Apple */
 #endif /* M3_DIRECT_SUSPEND */
 
-void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void *start, void *limit)) NOINLINE;
-void ThreadPThread__ProcessLiveX(void *bottom, void (*p)(void *start, void *limit))
-/* separate function from ThreadPThread__ProcessLive to be sure stack encompasses all of jmp_buf, without
-   worrying about stack growth direction */
-{
-  char* top = (char*)&top;
-
-  assert(bottom);
-  assert(top);
-  if (stack_grows_down) {
-    assert((char *)top < (char *)bottom);
-    p(top, bottom);
-  } else {
-    assert((char *)bottom < (char *)top);
-    p(bottom, top);
-  }
-
-  /* simulate processing registers: see RTHeapStats.m3 */
-  p(0, 0);
-}
-
-void ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit)) NOINLINE;
-void ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
+void
+ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
 {
   jmp_buf jb;
+  void *top = &top;
 
-  if (M3_SETJMP(jb) == 0) /* save registers to stack */
+  if (M3_SETJMP(jb) == 0) { /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
-      M3_LONGJMP(jb, 1); /* flush register windows */
-  else
+    M3_LONGJMP(jb, 1); /* flush register windows */
+  else {
 #endif
-      ThreadPThread__ProcessLiveX(bottom, p);
+    assert(bottom);
+    if (stack_grows_down) {
+      assert((char *)top < (char *)bottom);
+      p(top, bottom);
+    } else {
+      assert((char *)bottom < (char *)top);
+      p(bottom, top);
+    }
+    p(&jb, ((char *)&jb) + sizeof(jb));
+  }
 }
 
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
@@ -551,46 +563,6 @@ ThreadPThread__pthread_mutex_unlock(pthread_mutex_t *m)
   return pthread_mutex_unlock(m);
 }
 
-void ThreadPThread__SignalHandlerX(int** stack_pointer, volatile char* state, char stopped, char starting, char started) NOINLINE;
-void ThreadPThread__SignalHandlerX(int** stack_pointer, volatile char* state, char stopped, char starting, char started)
-/* separate function from SignalHandlerC to be sure stack encompasses all of jmp_buf, without
-   worrying about stack growth direction */
-{
-    int r;
-
-    /* Tell the garbage collector where our stack is and that we are stopped. */
-
-    *stack_pointer = &r;
-    *state = stopped;
-    r = sem_post(&ackSem);
-    assert(r == 0);
-
-    /* Wait for the garbage collector to wake us up. */
-
-    while (*state != starting)
-        sigsuspend(&mask);
-
-    /* Resume. */
-
-    *stack_pointer = NULL;
-    *state = started;
-    r = sem_post(&ackSem);
-    assert(r == 0);
-}
-
-void ThreadPThread__SignalHandlerC(int** stack_pointer, volatile char* state, char stopped, char starting, char started) NOINLINE;
-void ThreadPThread__SignalHandlerC(int** stack_pointer, volatile char* state, char stopped, char starting, char started)
-{
-    jmp_buf jb;
-
-    if (M3_SETJMP(jb) == 0) /* save registers to stack */
-#ifdef M3_REGISTER_WINDOWS
-        M3_LONGJMP(jb, 1); /* flush register windows */
-    else
-#endif
-        ThreadPThread__SignalHandlerX(stack_pointer, state, stopped, starting, started);
-}
-
 void
 InitC(int *bottom)
 {
@@ -616,8 +588,8 @@ InitC(int *bottom)
   r = sigdelset(&mask, SIGABRT); assert(r == 0);
   r = sigdelset(&mask, SIGTERM); assert(r == 0);
 
-  act.sa_flags = SA_RESTART;
-  act.sa_handler = SignalHandler;
+  act.sa_flags = SA_RESTART | SA_SIGINFO;
+  act.sa_sigaction = SignalHandler;
   r = sigfillset(&act.sa_mask); assert(r == 0);
   r = sigaction(SIG_SUSPEND, &act, &oact); assert(r == 0);
 #endif
