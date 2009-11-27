@@ -3,22 +3,27 @@
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
 #ifndef __INTERIX
+#error This is for Interix only.
+#endif
 
-/* avoid empty file */
-void ThreadInterix__Dummy(void)
-{
-}
-
-#else
-
-#include <windows.h> /* for types and defines, not any functions */
+#include <windows.h>
+#include <ntapi.h>
+#include <stddef.h>
 #include <assert.h>
 
-/* NOTE: HANDLE thread not pthread thread, needs work */
-
-__declspec(dllimport) long __stdcall NtSuspendThread(HANDLE thread, void* suspendCount);
-__declspec(dllimport) long __stdcall NtResumeThread(HANDLE thread, void* suspendCount);
-__declspec(dllimport) long __stdcall NtGetContextThread(HANDLE thread, CONTEXT* context);
+HANDLE ThreadPThread__pthread_self(void)
+/* Cleverly define pthread_self as the NT handle, since
+   we don't use pthread_self for other than suspend/resume.
+*/
+{
+    /* convert pseudo handle to real handle
+    This is exactly analogous to DuplicateHandle(GetCurrentProcess, GetCurrentThread(), ...) */
+    HANDLE self = { 0 };
+    long status = NtDuplicateObject(NtCurrentProcess(), NtCurrentThread(), NtCurrentProcess(), &self, 0, FALSE, DUPLICATE_SAME_ACCESS);
+    int success = (status == 0);
+    assert(success);
+    return self;
+}
 
 int ThreadPThread__SuspendThread(HANDLE thread)
 {
@@ -63,5 +68,3 @@ void ThreadPThread__ProcessStopped(HANDLE thread, void *bottom, void *signal_con
     /* process the registers */
     p(&context, (char *)&context + sizeof(context));
 }
-
-#endif /* interix */
