@@ -1229,7 +1229,7 @@ def Boot():
 
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
-    P = [ "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
+    P = [ "ntdll", "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
           "m3objfile", "m3linker", "m3back", "m3front", "cm3" ]
     if Target == "NT386":
         P += ["mklib"]
@@ -1480,6 +1480,7 @@ if _Program != "make-msi.py":
     #
         "min" :
             [
+            "ntdll",
             "import-libs",
             "libm3",
             "m3core",
@@ -1656,6 +1657,7 @@ if _Program != "make-msi.py":
             "webscape",
             "webcat",
     
+            "ntdll",
             "import-libs",
             "m3core",
             "libm3",
@@ -1671,6 +1673,7 @@ if _Program != "make-msi.py":
     
         # base libraries
     
+            "ntdll",
             "import-libs",
             "m3core",
             "libm3",
@@ -1873,6 +1876,7 @@ if _Program != "make-msi.py":
     }
     
     PackageSets_CoreBaseCommon = [
+        "ntdll",
         "import-libs",
         "m3core",
         "libm3",
