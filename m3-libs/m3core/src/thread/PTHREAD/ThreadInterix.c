@@ -2,10 +2,17 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#ifdef __INTERIX
+#ifndef __INTERIX
 
-/*#include "../../../../../m3-win/w32api/include/windows.h"*/
-/*#include "../../../../../m3-win/w32api/include/ddk/ntapi.h"*/
+/* avoid empty file */
+void ThreadInterix__Dummy(void)
+{
+}
+
+#else
+
+#include <windows.h> /* for types and defines, not any functions */
+#include <assert.h>
 
 /* NOTE: HANDLE thread not pthread thread, needs work */
 
@@ -51,7 +58,6 @@ void ThreadPThread__ProcessStopped(HANDLE thread, void *bottom, void *signal_con
 #error unknown architecture
 #endif
     /* process the stack */
-    assert(stack_grows_down);
     assert(signal_context == 0);
     p(sp, bottom);
     /* process the registers */
