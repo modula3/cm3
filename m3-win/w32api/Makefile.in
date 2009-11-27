@@ -2,7 +2,7 @@
 #	Makefile.in
 #
 #	This file is part of a free library for the Win32 API.
-# 
+#
 #	This library is distributed in the hope that it will be useful,
 #	but WITHOUT ANY WARRANTY; without even the implied warranty of
 #	MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -162,10 +162,8 @@ maintainer-clean-top:
 mostlyclean: mostlyclean-top mostlyclean-subdirs
 clean: mostlyclean-top clean-subdirs
 distclean: clean-top
-	$(MAKE) -C lib/directx distclean
-	$(MAKE) -C lib/ddk distclean
 	$(MAKE) -C lib distclean
 	rm -f Makefile config.status config.log config.cache TAGS *~
 maintainer-clean: maintainer-clean-subdirs
 
-.PHONY: lib test 
+.PHONY: lib test
