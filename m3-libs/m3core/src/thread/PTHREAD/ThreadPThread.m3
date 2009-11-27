@@ -450,7 +450,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
       me.prev.next := me.next;
       me.next := NIL;
       me.prev := NIL;
-      WITH r = pthread_detach(me.handle) DO <*ASSERT r=0*> END;
+      WITH r = pthread_detach_self() DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
     RETURN NIL;
   END ThreadBase;

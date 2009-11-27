@@ -58,8 +58,8 @@ PROCEDURE sigsuspend ();
 PROCEDURE thread_create(VAR pthread: pthread_t; stackSize: size_t;
                         start_routine: PROCEDURE(arg: ADDRESS): ADDRESS; arg: ADDRESS): int;
 
-<*EXTERNAL "ThreadPThread__pthread_detach"*>
-PROCEDURE pthread_detach(thread: pthread_t): int;
+<*EXTERNAL ThreadPThread__pthread_detach_self*>
+PROCEDURE pthread_detach_self(): int;
 
 <*EXTERNAL "ThreadPThread__pthread_self"*>
 PROCEDURE pthread_self(): pthread_t;
