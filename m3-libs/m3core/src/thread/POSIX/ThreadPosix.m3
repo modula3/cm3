@@ -534,8 +534,8 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
     RTHeapRep.FlushThreadState(heapState);
 
     (* flag live thread to ProcessContext *)
-    <*ASSERT me.stackbase # NIL*>
     me.sp := NIL;
+    <*ASSERT me.stackbase # NIL*>
 
     t := me;
     REPEAT
