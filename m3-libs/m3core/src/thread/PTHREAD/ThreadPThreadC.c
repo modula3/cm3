@@ -10,6 +10,10 @@
 #include <signal.h>
 #include <sys/ucontext.h>
 
+#ifdef __INTERIX
+#define M3_DIRECT_SUSPEND
+#endif
+
 #ifdef __OpenBSD__
 #error OpenBSD pthreads do not work.
 #endif
@@ -168,6 +172,7 @@ void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 
 #include "freebsd.c"
 #include "apple.c"
+#include "interix.c"
 
 #endif /* M3_DIRECT_SUSPEND */
 
