@@ -278,6 +278,7 @@ PROCEDURE Fork (cl: Closure): T =
 
       t.context := MakeContext (RunThread, stack_size);
       IF t.context = NIL THEN
+        DEC(inCritical);
         RuntimeError.Raise(RuntimeError.T.SystemError);
       END;
       CanRun (t);
