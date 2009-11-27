@@ -1,0 +1,8 @@
+> "ntdll.m3x" in 
+  write("")
+end
+> ".M3WEB" in 
+  write("")
+end
+c_source("ntdll")
+library("ntdll")
