@@ -2,16 +2,11 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-typedef void* HANDLE;
-typedef unsigned long ULONG;
-typedef void* PCONTEXT;
-typedef long NTSTATUS;
-
 #if !defined(_MSC_VER) && !defined(__stdcall)
 #define __stdcall /* nothing */
 #endif
 
-NTSTATUS __stdcall NtDuplicateObject(HANDLE a, HANDLE b, HANDLE c, HANDLE* d, ULONG e, ULONG f, ULONG g) { return -1; }
-NTSTATUS __stdcall NtSuspendThread(HANDLE thread, void* suspendCount) { return -1; }
-NTSTATUS __stdcall NtResumeThread(HANDLE thread, void* suspendCount) { return -1; }
-NTSTATUS __stdcall NtGetContextThread(HANDLE thread, PCONTEXT context) { return -1; }
+long __stdcall NtDuplicateObject(int a, int b, int c, int d, int e, int f, int g) { return -1; }
+long __stdcall NtSuspendThread(int thread, int suspendCount) { return -1; }
+long __stdcall NtResumeThread(int thread, int suspendCount) { return -1; }
+long __stdcall NtGetContextThread(int thread, int context) { return -1; }
