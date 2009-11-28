@@ -133,9 +133,7 @@ end
 
 %------------------------------------------------------------------------------
 
-UseNtdll = PKG_INSTALL & SL & "ntdll" & SL & TARGET & SL & "libntdll.a"
-if not IsInterix() or not FileExists (UseNtdll)
-  % for bootstrapping
+if not defined("UseNtdll")
   UseNtdll = ""
 end
 
@@ -158,8 +156,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local lib_so  = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
 
-    local ShipNtdll = IsInterix() and equal (lib, "ntdll") and FileExists("libntdll.a")
-    if ShipNtdll
+    if not equal(lib, "m3core")
         UseNtdll = ""
     end
 
@@ -271,7 +268,12 @@ end
 if not defined("m3_link")
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
-    local args = [ "-o", prog, options, objects, imported_libs, UseNtdll ]
+    local args = [ "-o", prog, options, objects, imported_libs ]
+
+    if not shared
+        args += UseNtdll
+    end
+
     if M3_PROFILING
         args += "-pg"
     end
