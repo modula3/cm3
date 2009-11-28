@@ -401,3 +401,21 @@ proc skip_link(prog, shared) is
 end
 
 %------------------------------------------------------------------------------
+
+readonly proc ConvertLibsToStandalone(imported_libs, shared) is
+    if shared
+        return imported_libs
+    end
+    local imports = [ ]
+    foreach f in imported_libs
+        local ff = f & ".sa"
+        if FileExists(ff)
+            imports += ff
+        else
+            imports += f
+        end
+    end
+    return imports
+end
+
+%------------------------------------------------------------------------------

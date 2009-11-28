@@ -451,24 +451,6 @@ end
 
 %------------------------------------------------------------------------------
 
-readonly proc ConvertLibsToStandalone(imported_libs, shared) is
-    if shared
-        return imported_libs
-    end
-    local imports = [ ]
-    foreach f in imported_libs
-        local ff = f & ".sa"
-        if FileExists(ff)
-            imports += ff
-        else
-            imports += f
-        end
-    end
-    return imports
-end
-
-%------------------------------------------------------------------------------
-
 readonly proc ManifestTool(DllOrExe, ManifestFile, ResourceId) is
     local ret = 0
     %
@@ -791,10 +773,7 @@ proc skip_lib(lib, shared) is
         PdbExport(pdb_file)
         install_derived(lib0_file)
     else
-        DeleteFile(lib0_file)
-        DeleteFile(dll_file)
-        DeleteFile(manifest_file)
-        DeleteFile(pdb_file)
+        DeleteFiles([lib0_file, dll_file, manifest_file, pdb_file])
     end
 
     return 0

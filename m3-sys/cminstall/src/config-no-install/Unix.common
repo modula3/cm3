@@ -155,8 +155,12 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     end
     local ret_code = 0
     local lib_a   = format("lib%s.a", lib)
+    local readonly lib0_file = lib_a & ".sa" % standalone
     local lib_so  = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
+    local expfile = "lib" & lib & ".exp" % libfoo.exp
+
+    DeleteFiles([lib_a, lib0_file, lib_so, lib_sox, expfile])
 
     if not equal(lib, "m3core")
         UseNtdll = ""
@@ -182,18 +186,26 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         end
     end
 
-    local expfile = ""
+    % The check for install_symbolic_link deliberately
+    % disables all shared linking when bootstrapping
+    % from older builds; all that older builds need to be
+    % able to do is build a standalone current cm3.
 
     if shared and defined("install_symbolic_link")
 
         local soname_opt = "-Wl," & soname_flag & "," & lib_sox
 
         if IsInterix()
-            MoveFile(lib_a, lib_a & ".sa") % standalone
+
+            % move libfoo.a to libfoo.a.sa; sa for standalone (or static)
+            % libfoo.a is the import library for libfoo.so
+            % libfoo.a.sa is a static library if the dependency is being avoided
+
+            MoveFile(lib_a, lib0_file)
             soname_opt = ""
             expfile = "lib" & lib & ".exp" % libfoo.exp
             local dllname = lib_sox
-            if equal(lib, "ntdll")
+            if equal(lib, "ntdll") % special case for building m3-win/ntdll
               dllname = "ntdll.dll"
               expfile = ""
               exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", objects)
@@ -201,6 +213,8 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
               % something is very wierd and using --output-exp changes the names in the import library
               exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", objects, "--output-exp", expfile)
             end
+        else
+            expfile = ""
         end
 
         % build the shared library
@@ -240,12 +254,19 @@ proc skip_lib(lib, shared) is
     local lib_a   = format("lib%s.a", lib)
     local lib_so = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
+    local readonly lib0_file = lib_a & ".sa" % standalone
+
+    % The check for install_symbolic_link deliberately
+    % disables all shared linking when bootstrapping
+    % from older builds; all that older builds need to be
+    % able to do is build a standalone current cm3.
 
     if shared and defined("install_symbolic_link")
         % create the version aliases
         link_file(lib_sox, lib_so)
 
         % make sure the shared library stuff gets installed properly
+
         if (not IsInterix()) or (not equal(lib, "ntdll"))
             LibdExport(lib_sox)
             install_link_to_derived(lib_a, LIB_INSTALL)
@@ -253,10 +274,11 @@ proc skip_lib(lib, shared) is
             install_derived_link("../../../lib/" & lib_sox, lib_so)
             install_derived_link("../../../lib/" & lib_sox, lib_sox)
         end
-
+        if IsInterix()
+            install_derived(lib0_file)
+        end
     else
-        delete_file(lib_so)
-        delete_file(lib_sox)
+        DeleteFiles([lib0_file, lib_so, lib_sox])
     end
 
     return 0
@@ -270,6 +292,9 @@ end
 if not defined("m3_link")
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
+
+    imported_libs = ConvertLibsToStandalone(imported_libs, shared)
+
     local args = [ "-o", prog, options, objects, imported_libs ]
 
     if not shared
