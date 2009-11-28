@@ -28,6 +28,7 @@ SYSTEM_LIBS =
 }
 
 include("I386.common")
+include("Interix.common")
 include("Unix.common")
 
 SYSTEM_LD = SYSTEM_CC
