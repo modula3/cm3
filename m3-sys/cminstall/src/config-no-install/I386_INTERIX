@@ -7,6 +7,7 @@ readonly TARGET_OS = "INTERIX"
 %
 readonly AR_AND_RANLIB_ARE_ONE = TRUE
 
+DLLTOOL = "/opt/gcc.3.3/i586-pc-interix3/bin/dlltool"
 m3back_flags = "-gstabs+ -m32 -funwind-tables"
 SYSTEM_CC = "gcc -g" % C compiler
 readonly SYSTEM_ASM = "as" % Assembler
@@ -34,5 +35,6 @@ SYSTEM_LD = SYSTEM_CC
   & " -Wl,--fatal-warnings"
   & " -Wl,-rpath,\\$ORIGIN"
   & " -Wl,-rpath,\\$ORIGIN/../lib"
+  & " --no-undefined "
 
 include("gnuld.common")

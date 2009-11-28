@@ -71,6 +71,15 @@ if not defined("configure_linker")
   end
 end
 
+proc IsInterix() is
+  if defined("TARGET_OS")
+    if equal(TARGET_OS, "INTERIX")
+      return TRUE
+    end
+  end
+  return FALSE
+end
+
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
@@ -122,6 +131,14 @@ proc assemble(source, object) is
     return try_exec("@" & SYSTEM_ASM, source, "-o", object)
 end
 
+%------------------------------------------------------------------------------
+
+UseNtdll = PKG_INSTALL & SL & "ntdll" & SL & TARGET & SL & "libntdll.a"
+if not IsInterix() or not FileExists (UseNtdll)
+  % for bootstrapping
+  UseNtdll = ""
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -140,6 +157,11 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local lib_a   = format("lib%s.a", lib)
     local lib_so  = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
+
+    local ShipNtdll = IsInterix() and equal (lib, "ntdll") and FileExists("libntdll.a")
+    if ShipNtdll
+        UseNtdll = ""
+    end
 
     % first build the non-shared library in the usual ar/ranlib way
 
@@ -161,11 +183,25 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         end
     end
 
+    local expfile = ""
+
     if shared and defined("install_symbolic_link")
 
         local soname_opt = "-Wl," & soname_flag & "," & lib_sox
-        if equal (TARGET, "I386_INTERIX")
+
+        if IsInterix()
+            MoveFile(lib_a, lib_a & ".sa") % standalone
             soname_opt = ""
+            expfile = "lib" & lib & ".exp" % libfoo.exp
+            local dllname = lib_sox
+            if equal(lib, "ntdll")
+              dllname = "ntdll.dll"
+              expfile = ""
+              exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", objects)
+            else
+              % something is very wierd and using --output-exp changes the names in the import library
+              exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", objects, "--output-exp", expfile)
+            end
         end
 
         % build the shared library
@@ -176,7 +212,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         configure_linker()
         ret_code =
             try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt,
-                "-o", lib_sox, objects, imported_libs)
+                "-o", lib_sox, objects, imported_libs, expfile, UseNtdll)
         if not equal(ret_code, 0)
             return ret_code
         end
@@ -211,11 +247,13 @@ proc skip_lib(lib, shared) is
         link_file(lib_sox, lib_so)
 
         % make sure the shared library stuff gets installed properly
-        LibdExport(lib_sox)
-        install_link_to_derived(lib_a, LIB_INSTALL)
-        install_symbolic_link(lib_sox, LIB_INSTALL & "/" & lib_so)
-        install_derived_link("../../../lib/" & lib_sox, lib_so)
-        install_derived_link("../../../lib/" & lib_sox, lib_sox)
+        if (not IsInterix()) or (not equal(lib, "ntdll"))
+            LibdExport(lib_sox)
+            install_link_to_derived(lib_a, LIB_INSTALL)
+            install_symbolic_link(lib_sox, LIB_INSTALL & "/" & lib_so)
+            install_derived_link("../../../lib/" & lib_sox, lib_so)
+            install_derived_link("../../../lib/" & lib_sox, lib_sox)
+        end
 
     else
         delete_file(lib_so)
@@ -233,7 +271,7 @@ end
 if not defined("m3_link")
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
-    local args = [ "-o", prog, options, objects, imported_libs ]
+    local args = [ "-o", prog, options, objects, imported_libs, UseNtdll ]
     if M3_PROFILING
         args += "-pg"
     end
