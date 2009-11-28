@@ -1,14 +1,11 @@
 if defined("TARGET_OS")
-if equal(TARGET_OS, "INTERIX")
-
-> "ntdll.m3x" in 
-  write("")
+  if equal(TARGET_OS, "INTERIX")
+    c_source("ntdll")
+    library("ntdll")
+  end
+  foreach a in ["libntdll.m3x", ".M3WEB"]
+    > a in 
+      write("")
+    end
+  end
 end
-> ".M3WEB" in 
-  write("")
-end
-
-c_source("ntdll")
-library("ntdll")
-
-end end
