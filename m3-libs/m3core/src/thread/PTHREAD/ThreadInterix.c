@@ -17,10 +17,7 @@ void ThreadInterix__Dummy(void)
 #include <stddef.h>
 #include <assert.h>
 
-HANDLE ThreadPThread__pthread_self(void)
-/* Cleverly define pthread_self as the NT handle, since
-   we don't use pthread_self for other than suspend/resume.
-*/
+HANDLE ThreadPThread__GetCurrentThreadHandleForSuspendResume(void)
 {
     /* convert pseudo handle to real handle
     This is exactly analogous to DuplicateHandle(GetCurrentProcess, GetCurrentThread(), ...) */

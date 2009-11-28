@@ -61,8 +61,11 @@ PROCEDURE thread_create(VAR pthread: pthread_t; stackSize: size_t;
 <*EXTERNAL ThreadPThread__pthread_detach_self*>
 PROCEDURE pthread_detach_self(): int;
 
-<*EXTERNAL "ThreadPThread__pthread_self"*>
-PROCEDURE pthread_self(): pthread_t;
+<*EXTERNAL ThreadPThread__GetCurrentThreadHandleForLockHolder*>
+PROCEDURE GetCurrentThreadHandleForLockHolder(): pthread_t;
+
+<*EXTERNAL ThreadPThread__GetCurrentThreadHandleForSuspendResume*>
+PROCEDURE GetCurrentThreadHandleForSuspendResume(): pthread_t;
 
 <*EXTERNAL "ThreadPThread__pthread_equal"*>
 PROCEDURE pthread_equal(t1, t2: pthread_t): int;
