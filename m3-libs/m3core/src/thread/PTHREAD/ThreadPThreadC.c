@@ -371,12 +371,17 @@ ThreadPThread__pthread_detach_self(void)
   return pthread_detach(pthread_self());
 }
 
-#ifndef __INTERIX
-
-m3_pthread_t ThreadPThread__pthread_self(void)
+m3_pthread_t ThreadPThread__GetCurrentThreadHandleForLockHolder(void)
 {
   pthread_t a = pthread_self();
   return PTHREAD_TO_M3(a);
+}
+
+#ifndef __INTERIX
+
+m3_pthread_t ThreadPThread__GetCurrentThreadHandleForSuspendResume(void)
+{
+    return ThreadPThread__GetCurrentThreadHandleForLockHolder();
 }
 
 #endif

@@ -267,7 +267,7 @@ VAR (* LL = slotMu *)
 PROCEDURE InitActivations (): Activation =
   VAR me := NEW(Activation);
   BEGIN
-    me.handle := pthread_self();
+    me.handle := GetCurrentThreadHandleForSuspendResume();
     me.next := me;
     me.prev := me;
     SetActivation(me);
@@ -1336,7 +1336,7 @@ VAR
   inCritical := 0;
 
 PROCEDURE LockHeap () =
-  VAR self := pthread_self();
+  VAR self := GetCurrentThreadHandleForLockHolder();
   BEGIN
     IF pthread_equal(holder, self) = 0 THEN
       WITH r = pthread_mutex_lock(heapMu) DO <*ASSERT r=0*> END;
@@ -1347,7 +1347,7 @@ PROCEDURE LockHeap () =
 
 PROCEDURE UnlockHeap () =
   BEGIN
-    <*ASSERT pthread_equal(holder, pthread_self()) # 0*>
+    <*ASSERT pthread_equal(holder, GetCurrentThreadHandleForLockHolder()) # 0*>
     DEC(inCritical);
     IF inCritical = 0 THEN
       holder := NIL;
@@ -1356,7 +1356,7 @@ PROCEDURE UnlockHeap () =
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
-  VAR self := pthread_self();
+  VAR self := GetCurrentThreadHandleForLockHolder();
   BEGIN
     <*ASSERT pthread_equal(holder, self) # 0*>
     DEC(inCritical);
