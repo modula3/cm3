@@ -133,7 +133,9 @@ end
 
 %------------------------------------------------------------------------------
 
-if not defined("UseNtdll")
+if IsInterix()
+  UseNtdll = PKG_INSTALL & SL & "ntdll" & SL & TARGET & SL & "libntdll.a"
+else
   UseNtdll = ""
 end
 
