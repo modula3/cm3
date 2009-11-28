@@ -1227,6 +1227,10 @@ def Boot():
     Assemble = re.sub("  +", " ", Assemble)
     Assemble = re.sub(" +$", "", Assemble)
 
+    if Target.find("INTERIX") != -1:
+        a = " -I /dev/fs/C/dev2/cm3.2/m3-win/w32api/include"
+        Compile = Compile + a + a + "/ddk"
+
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
     P = [ "ntdll", "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
@@ -1282,8 +1286,16 @@ def Boot():
                 CopyFile(os.path.join(Root, dir, Config, a), BootDir)
 
     Makefile.write("cm3: $(Objects)\n\t")
+
     for a in [Make, Makefile]:
-        a.write("$(Link) -o cm3 *.o\n")
+        if Target.find("INTERIX") == -1:
+            a.write("$(Link) -o cm3 *.o\n")
+        else:
+            a.write("rm ntdll.def ntdll.lib ntdll.dll ntdll.o ntdll.c.o a.out a.exe cm3 cm3.exe")
+            a.write("gcc -c ntdll.c")
+            a.write("/opt/gcc.3.3/i586-pc-interix3/bin/dlltool --dllname ntdll.dll --kill-at --output-lib libntdll.a --export-all-symbols ntdll.o")
+            a.write("rm ntdll.o ntdll.c.o _m3main.c.o _m3main.o")
+            a.write("gcc -g -o cm3 _m3main.c *.o -lm -L . -lntdll")
 
     Common = "Common"
 
