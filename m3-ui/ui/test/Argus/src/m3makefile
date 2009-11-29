@@ -5,6 +5,8 @@
 % Last modified on Wed May 19 16:34:59 PDT 1993 by msm
 %      modified on Fri Apr 30-ip5:58:21 PDT 1993 by mjordan
 
+if HasGui()
+
 import("ui")
 import("EyesVBT")
 
@@ -12,4 +14,4 @@ implementation("Argus")
 
 program("Argus")
 
-
+end

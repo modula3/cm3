@@ -6,6 +6,8 @@
 %      modified on Mon Jun 28 10:49:10 PDT 1993 by mcjones
 %      modified on Fri May 14 16:45:58 PDT 1993 by meehan
 
+if HasGui()
+
 import ("ui")
 import ("libm3")
 
@@ -19,3 +21,4 @@ include_dir ("color")
 
 Library ("m3vbtkit")
 
+end
