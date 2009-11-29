@@ -121,6 +121,10 @@ proc IsInterix() is
   return FALSE
 end
 
+proc HasGui() is
+  return not IsInterix()
+end
+
 %------------------------------------------------------------------------------
 
 if not defined("subst_chars")
