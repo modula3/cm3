@@ -10,7 +10,7 @@
 %      modified on Fri Apr 16 09:42:42 PDT 1993 by steveg
 %      modified on Mon Feb 24 14:00:03 PST 1992 by muller
 
-if not IsInterix()
+if SYSTEM_LIBS contains "X11"
 
 import ("X11R4")
 import ("tcp")
