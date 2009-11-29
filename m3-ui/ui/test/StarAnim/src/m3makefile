@@ -4,6 +4,7 @@
 
 % Last modified on Mon Jan 15 13:15:27 PST 1996 by heydon
 
+if HasGui()
 
 import		("libm3")
 import		("ui")
@@ -11,3 +12,5 @@ import		("ui")
 module		("R2")
 implementation	("StarAnim")
 program		("StarAnim")
+
+end

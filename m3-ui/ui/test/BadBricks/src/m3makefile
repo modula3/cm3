@@ -5,6 +5,8 @@
 % Last modified on Wed May 19 16:33:44 PDT 1993 by msm
 %      modified on Fri Apr 30-ip4:31:43 PDT 1993 by mjordan
 
+if HasGui()
+
 import("ui")
 
 implementation("BadBricks")
@@ -13,4 +15,4 @@ program("BadBricks")
 
 % ManPage("BadBricks")
 
-
+end

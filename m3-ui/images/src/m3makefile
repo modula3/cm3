@@ -4,6 +4,7 @@
 /*                                                             */
 /* Makefile for "Images" library                               */
 
+if HasGui()
 
 import         ("ui")
 
@@ -17,3 +18,5 @@ Module         ("ImageVBT")
 Module         ("ImageRd")
 
 Library        ("Images")
+
+end

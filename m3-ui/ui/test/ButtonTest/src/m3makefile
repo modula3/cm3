@@ -5,10 +5,12 @@
 % Last modified on Wed May 19 16:34:34 PDT 1993 by msm
 %      modified on Fri Apr 30-ip5:11:00 PDT 1993 by mjordan
 
+if HasGui()
+
 import("ui")
 
 implementation("ButtonTest")
 
 program("ButtonTest")
 
-
+end
