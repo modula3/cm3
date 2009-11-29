@@ -125,6 +125,11 @@ proc HasGui() is
   return not IsInterix()
 end
 
+proc HasOpenGL() is
+  % but see http://www.interix.com/Motif-OpenGL.htm
+  return not IsInterix()
+end
+
 %------------------------------------------------------------------------------
 
 if not defined("subst_chars")
