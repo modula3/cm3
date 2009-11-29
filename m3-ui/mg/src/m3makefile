@@ -9,6 +9,8 @@
 %      modified on Wed Jul  8 09:44:42 1992 by mhb
 
 if HasGui()
+  build_standalone()
+end
 
 import("formsvbt")
 
@@ -33,5 +35,3 @@ module ("R2PathExtra")
 Generic_module ("TypeSelector")
 
 Library("m3mg")
-
-end

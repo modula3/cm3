@@ -5,6 +5,8 @@
 /* Makefile for "Images" library                               */
 
 if HasGui()
+  build_standalone()
+end
 
 import         ("ui")
 
@@ -18,5 +20,3 @@ Module         ("ImageVBT")
 Module         ("ImageRd")
 
 Library        ("Images")
-
-end
