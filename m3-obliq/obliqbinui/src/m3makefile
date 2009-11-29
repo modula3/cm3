@@ -5,6 +5,8 @@
 % Last modified on Wed Mar 23 14:10:44 1994 by luca      
 %      modified on Wed Dec 22 15:36:06 PST 1993 by kalsow
 
+if HasGui()
+
 import("obliqlibm3")
 import("obliqlibui")
 import("obliq")
@@ -12,3 +14,5 @@ implementation("Main")
 
 Program("obliq-ui")
 ManPage("obliq-ui","1")
+
+end
