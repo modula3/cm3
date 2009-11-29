@@ -1,3 +1,4 @@
+if HasGui()
 
 import ("libm3")
 import ("ui")
@@ -20,3 +21,4 @@ module ("ClockVBT")
 
 library ("cmvbt")
 
+end
