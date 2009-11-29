@@ -8,6 +8,8 @@
 %      modified on Sun Jul 19 18:28:44 PDT 1992 by sclafani
 
 if HasGui()
+  build_standalone()
+end
 
 import     ("formsvbt")
 
@@ -20,5 +22,3 @@ Module     ("CodeView")
 Module     ("DataView")
 
 Library    ("m3codeview")
-
-end

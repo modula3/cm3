@@ -5,6 +5,8 @@
 % Last modified on Tue Dec 21 14:35:56 PST 1993 by kalsow
 
 if HasGui()
+  build_standalone()
+end
 
 import ("ui")
 
@@ -15,5 +17,3 @@ module ("FaceCards")
 Module ("PixmapFromXData")
 
 Library ("m3bicycle")
-
-end

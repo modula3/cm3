@@ -6,6 +6,8 @@
 %      modified on Tue Nov  1 09:28:18 PST 1994 by kalsow
 
 if HasGui()
+  build_standalone()
+end
 
 import ("ui")
 import ("jvideo")
@@ -16,5 +18,3 @@ Interface ("VideoVBT")
 include_dir (OS_TYPE)
 
 Library("videovbt")
-
-end

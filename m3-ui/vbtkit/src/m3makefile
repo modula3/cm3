@@ -7,6 +7,8 @@
 %      modified on Fri May 14 16:45:58 PDT 1993 by meehan
 
 if HasGui()
+  build_standalone()
+end
 
 import ("ui")
 import ("libm3")
@@ -20,5 +22,3 @@ include_dir ("mtext")
 include_dir ("color")
 
 Library ("m3vbtkit")
-
-end
