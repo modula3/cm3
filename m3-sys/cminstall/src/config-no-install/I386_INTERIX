@@ -36,6 +36,5 @@ SYSTEM_LD = SYSTEM_CC
   & " -Wl,--fatal-warnings"
   & " -Wl,-rpath,\\$ORIGIN"
   & " -Wl,-rpath,\\$ORIGIN/../lib"
-  & " --no-undefined "
 
 include("gnuld.common")
