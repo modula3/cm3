@@ -1,6 +1,8 @@
+if HasGui()
 
 import("formsvbt")
 implementation("formsview")
 %build_standalone()
 program("formsview")
 
+end
