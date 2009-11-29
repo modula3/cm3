@@ -8,6 +8,8 @@
 %      modified on Wed Jul 22 12:03:01 PDT 1992 by harrison
 %      modified on Wed Jul  8 09:44:42 1992 by mhb
 
+if HasGui()
+
 import("formsvbt")
 
 Interface ("MGPublic")
@@ -31,3 +33,5 @@ module ("R2PathExtra")
 Generic_module ("TypeSelector")
 
 Library("m3mg")
+
+end

@@ -5,6 +5,8 @@
 /*      modified on Tue Oct  5 16:41:11 PDT 1993 by steveg                   */
 /*      modified on Wed Jun  2 18:01:43 PDT 1993 by meehan                   */
 
+if HasGui()
+
 m3_option       ("-times")
 
 import          ("formsvbt")
@@ -18,3 +20,4 @@ bundle          ("formseditBundle")
 ManPage         ("formsedit","1")
 Program         ("formsedit")
 
+end
