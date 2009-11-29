@@ -6,10 +6,10 @@
 %      modified on Fri Apr 30-ip5:41:35 PDT 1993 by mjordan
 
 if HasGui()
+  build_standalone()
+end
 
 import("ui")
 
 Module("EyesVBT")
 library ("EyesVBT")
-
-end

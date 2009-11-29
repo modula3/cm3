@@ -6,6 +6,8 @@
 %      modified on Wed Jan 17 14:42:47 PST 1996 by najork
 
 if HasGui()
+  build_standalone()
+end
 
 import ("libm3")
 import ("formsvbt")
@@ -47,5 +49,3 @@ Module		("TextPortButton")
 Module		("TextPortWithButtons")
 
 library 	("webvbt")
-
-end

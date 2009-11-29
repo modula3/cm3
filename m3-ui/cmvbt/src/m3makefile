@@ -1,4 +1,6 @@
 if HasGui()
+  build_standalone()
+end
 
 import ("libm3")
 import ("ui")
@@ -20,5 +22,3 @@ module ("AnimateVBT")
 module ("ClockVBT")
 
 library ("cmvbt")
-
-end
