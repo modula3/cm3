@@ -20,9 +20,9 @@ SYSTEM_LIBS =
     "LEX-YACC"   : [ "-ll" ],
     "FLEX-BISON" : [ "-lfl" ],
 %   "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
-    "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
+%   "OPENGL"     : [ "-lGLU", "-lGL", "-lXext" ],
 %   "ODBC"       : [ "-lodbc" ],
-    "MOTIF"      : [ "-lXm" ],
+%   "MOTIF"      : [ "-lXm" ],
     "TCP"        : [ ],
 %   "X11" :      [  "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
 }
