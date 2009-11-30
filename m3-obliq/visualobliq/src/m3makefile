@@ -9,6 +9,8 @@
 /*      modified on Thu Jul  7 11:39:38 PDT 1994 by bharat  */
 /*      modified on Tue Jun 16 18:26:52 PDT 1992 by muller  */
 
+if HasGui()
+
 import ("formsvbt")
 import ("obliqlibm3")
 import ("obliqlibui")
@@ -63,3 +65,4 @@ to the visual obliq project plan in
 
 ---------------------------------------------------*/
 
+end
