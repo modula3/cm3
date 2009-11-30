@@ -51,7 +51,17 @@ TYPE
     waitingOn: pthread_mutex_t := NIL;  (* LL = mutex; The CV's mutex *)
     nextWaiter: Activation := NIL;      (* LL = mutex; waiting thread queue *)
     next, prev: Activation := NIL;      (* LL = activeMu; global doubly-linked, circular list of all active threads *)
-    handle: pthread_t;                  (* LL = activeMu; thread handle *)
+
+    (* two thread handles:
+       On all platforms but Interix, they are the same.
+       On Interix, joinHandle is the pthread handle from pthread_create or pthread_self.
+          One probably ought to call pthread_join on it, but we don't.
+       On Interix, suspendResumeHandle is the NT handle from Duplicate(CurrentThread())
+          It used with Suspend/Resume/GetContextThread.
+       Cygwin might do that too.
+    *)
+    joinHandle: pthread_t := NIL;       (* LL = activeMu; thread handle *)
+    suspendResumeHandle: pthread_t := NIL; (* LL = activeMu; thread handle *)
     stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
     context: ADDRESS := NIL;            (* LL = activeMu *)
     state := ActState.Started;          (* LL = activeMu *)
@@ -267,7 +277,7 @@ VAR (* LL = slotMu *)
 PROCEDURE InitActivations (): Activation =
   VAR me := NEW(Activation);
   BEGIN
-    me.handle := GetCurrentThreadHandleForSuspendResume();
+    me.suspendResumeHandle := GetCurrentThreadHandleForSuspendResume();
     me.next := me;
     me.prev := me;
     SetActivation(me);
@@ -366,7 +376,8 @@ PROCEDURE DumpThread (t: Activation) =
     RTIO.PutText("  frame:      "); RTIO.PutAddr(t.frame);       RTIO.PutChar('\n');
     RTIO.PutText("  next:       "); RTIO.PutAddr(t.next);        RTIO.PutChar('\n');
     RTIO.PutText("  prev:       "); RTIO.PutAddr(t.prev);        RTIO.PutChar('\n');
-    RTIO.PutText("  handle:     "); RTIO.PutAddr(t.handle);      RTIO.PutChar('\n');
+    RTIO.PutText("  suspendResumeHandle: "); RTIO.PutAddr(t.suspendResumeHandle); RTIO.PutChar('\n');
+    RTIO.PutText("  joinHandle: "); RTIO.PutAddr(t.joinHandle); RTIO.PutChar('\n');
     RTIO.PutText("  stackbase:  "); RTIO.PutAddr(t.stackbase);   RTIO.PutChar('\n');
     RTIO.PutText("  context:    "); RTIO.PutAddr(t.context);     RTIO.PutChar('\n');
     RTIO.PutText("  state:      ");
@@ -431,6 +442,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   VAR me: Activation := param;
   BEGIN
     SetActivation(me);
+    me.suspendResumeHandle := GetCurrentThreadHandleForSuspendResume();
 
     (* add to the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
@@ -501,7 +513,7 @@ PROCEDURE Fork (closure: Closure): T =
     | SizedClosure (scl) => size := scl.stackSize;
     ELSE (*skip*)
     END;
-    WITH r = thread_create(act.handle, size * ADRSIZE(Word.T), ThreadBase, act) DO
+    WITH r = thread_create(act.joinHandle, size * ADRSIZE(Word.T), ThreadBase, act) DO
       IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
     RETURN t;
@@ -977,7 +989,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
     END;
     IF act.stackbase = NIL THEN RETURN END;
     RTHeapRep.FlushThreadState(act.heapState);
-    ProcessStopped(act.handle, act.stackbase, act.context, p);
+    ProcessStopped(act.suspendResumeHandle, act.stackbase, act.context, p);
   END ProcessOther;
 
 (* Signal based suspend/resume *)
@@ -986,7 +998,7 @@ PROCEDURE SignalThread(act: Activation) =
   BEGIN
     <*ASSERT SIG_SUSPEND # 0*>
     LOOP
-      WITH z = pthread_kill(act.handle, SIG_SUSPEND) DO
+      WITH z = pthread_kill(act.suspendResumeHandle, SIG_SUSPEND) DO
         IF z = 0 THEN EXIT END;
         IF z # Uerror.EAGAIN THEN DieI(ThisLine(), z) END;
         (* try it again... *)
@@ -998,9 +1010,9 @@ PROCEDURE StopThread (act: Activation): BOOLEAN =
   BEGIN
     <*ASSERT act.state = ActState.Stopping*>
     <*ASSERT SIG_SUSPEND = 0*>
-    IF NOT SuspendThread(act.handle) THEN RETURN FALSE END;
+    IF NOT SuspendThread(act.suspendResumeHandle) THEN RETURN FALSE END;
     IF act.heapState.inCritical # 0 THEN
-      IF NOT RestartThread(act.handle) THEN <*ASSERT FALSE*> END;
+      IF NOT RestartThread(act.suspendResumeHandle) THEN <*ASSERT FALSE*> END;
       RETURN FALSE;
     END;
     RETURN TRUE;
@@ -1010,7 +1022,7 @@ PROCEDURE StartThread (act: Activation): BOOLEAN =
   BEGIN
     <*ASSERT act.state = ActState.Starting*>
     <*ASSERT SIG_SUSPEND = 0*>
-    RETURN RestartThread(act.handle);
+    RETURN RestartThread(act.suspendResumeHandle);
   END StartThread;
 
 PROCEDURE StopWorld () =
