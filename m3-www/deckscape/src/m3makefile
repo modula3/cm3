@@ -6,6 +6,7 @@
 %      modified on Fri Sep  8 14:44:53 PDT 1995 by najork   
 %      modified on Wed Aug 24 22:09:20 PDT 1994 by shillner 
 
+if HasGui()
 
 import		("parseparams")
 import		("formsvbt")
@@ -27,3 +28,4 @@ implementation	("Main")
 ManPage		("DeckScape","1")
 Program		("DeckScape")
 
+end
