@@ -41,12 +41,18 @@ HANDLE ThreadPThread__GetCurrentThreadHandleForSuspendResume(void)
 int ThreadPThread__SuspendThread(HANDLE thread)
 {
     long status = NtSuspendThread(thread, NULL);
+    if (status == 0)
+        return TRUE;
+    fprintf(stderr, "NtSuspendThread(%p) failed with %lx\n", thread, status);
     return CheckStatus(status);
 }
 
 int ThreadPThread__RestartThread(HANDLE thread)
 {
     long status = NtResumeThread(thread, NULL);
+    if (status == 0)
+        return TRUE;
+    fprintf(stderr, "NtResumeThread(%p) failed with %lx\n", thread, status);
     return CheckStatus(status);
 }
 
@@ -54,12 +60,14 @@ void ThreadPThread__ProcessStopped(HANDLE thread, void *bottom, void *signal_con
                                    void (*p)(void *start, void *limit))
 {
     CONTEXT context = { 0 };
-    int status = { 0 };
+    long status = { 0 };
     void *sp = { 0 };
     
     ZeroMemory(&context, sizeof(context));
     context.ContextFlags = (CONTEXT_CONTROL | CONTEXT_INTEGER);
     status = NtGetContextThread(thread, &context);
+    if (status != 0)
+        fprintf(stderr, "NtGetContextThread(%p) failed with %lx\n", thread, status);
     CheckStatus(status);
 
 #if defined(_X86_)
