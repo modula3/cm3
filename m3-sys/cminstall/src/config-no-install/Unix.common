@@ -199,10 +199,10 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             if equal(lib, "ntdll") % special case for building m3-win/ntdll
               dllname = "ntdll.dll"
               expfile = ""
-              exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", objects)
+              exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", lib0_file)
             else
               % something is very wierd and using --output-exp changes the names in the import library
-              exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", objects, "--output-exp", expfile)
+              exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", lib0_file, "--output-exp", expfile)
             end
         else
             expfile = ""
@@ -214,9 +214,11 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             pg = "-pg"
         end
         configure_linker()
-        ret_code =
-            try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt,
-                "-o", lib_sox, objects, imported_libs, expfile, UseNtdll)
+        if IsInterix()
+          ret_code = try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, "--whole-archive", lib0_file, "--no-whole-archive", imported_libs, expfile, UseNtdll)
+        else
+          ret_code = try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, objects, imported_libs)
+        end
         if not equal(ret_code, 0)
             return ret_code
         end
