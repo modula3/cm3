@@ -1,27 +1,22 @@
-if not defined("M3_MODE")
+proc Build() is
+  if not defined("M3_MODE")
     M3_MODE = ""
-end
-
-proc build() is
-  if not equal(M3_MODE, "clean") and IsInterix()
-    local outOfDate = FALSE
-    local previous = ""
-    foreach a in ["../src/ntdll.c", "ntdll.o", "libntdll.a"]
-      if not outOfDate and stale(a, a)
-        outOfDate = TRUE
-      end
-      if not outOfDate and not equal(previous, "") and stale(a, previous)
-        outOfDate = TRUE
-      end
-      previous = a
-    end
-    if outOfDate
-      %exec("gcc -c ../src/ntdll.c")
-      local a = compile_c("../src/ntdll.c", "ntdll.o", "", "", "")
-      exec(DLLTOOL,  "--dllname ntdll.dll --kill-at","--output-lib libntdll.a --export-all-symbols ntdll.o")
-    end
-    install_derived("libntdll.a")
   end
+  if equal(M3_MODE, "clean") or not IsInterix()
+    return
+  end
+  local A = "libntdll.a"
+  local O = "ntdll.o"
+  local C = "../src/ntdll.c"
+  local M = "../src/m3makefile"
+  local D = "ntdll.dll"
+  if stale(O, C) or stale(O, M)
+    local a = compile_c(C, O, "", "", "")
+  end
+  if stale(A, O) or stale(A, M)
+    exec(DLLTOOL,  "--dllname", D, "--kill-at --output-lib", A, "--export-all-symbols", O)
+  end
+  install_derived(A)
 end
 
-build()
+Build()
