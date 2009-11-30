@@ -17,6 +17,7 @@ void ThreadInterix__Dummy(void)
 #include <stddef.h>
 #include <assert.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */
@@ -34,10 +35,19 @@ static int CheckStatus(long status, int line)
 
 HANDLE __cdecl ThreadPThread__GetCurrentThreadHandleForSuspendResume(void)
 {
-    /* convert pseudo handle to real handle
-    This is exactly analogous to DuplicateHandle(GetCurrentProcess, GetCurrentThread(), ...) */
     HANDLE self = { 0 };
-    long status = NtDuplicateObject(NtCurrentProcess(), NtCurrentThread(), NtCurrentProcess(), &self, 0, FALSE, DUPLICATE_SAME_ACCESS);
+    unsigned i = { 0 };
+    long status = STATUS_ACCESS_DENIED;
+    /* strange! */
+    for (i = 0; (status == STATUS_ACCESS_DENIED) && i < 200; ++i)
+    {
+        if (i)
+            usleep(1);
+        status = NtDuplicateObject(NtCurrentProcess(), NtCurrentThread(), NtCurrentProcess(), &self, THREAD_ALL_ACCESS, FALSE, 0);
+        if (status == 0)
+            return self;
+    }
+    fprintf(stderr, "NtDuplicateObject(current thread) failed with %lx\n", status);
     CheckStatus(status);
     return self;
 }
