@@ -13,8 +13,13 @@ c_source ("ThreadPThreadC")
 if defined("TARGET_OS")
 
 if equal(TARGET_OS, "INTERIX")
-  local w32api =  "../../../../../m3-win/w32api/include"
-  SYSTEM_CC = SYSTEM_CC & " -I " & w32api & " -I " & w32api & "/ddk"
+  local a = ""
+  if defined("ROOT")
+    a = " -I " & ROOT & "/m3-win/w32api/include"
+  else
+    a = " -I ../../../m3-win/w32api/include"
+  end
+  SYSTEM_CC = SYSTEM_CC & a & a & "/ddk"
   c_source ("ThreadInterix")
 end
 
