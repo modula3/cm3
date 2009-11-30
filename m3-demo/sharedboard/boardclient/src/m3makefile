@@ -2,6 +2,9 @@
 % All rights reserved.
 % See the file COPYRIGHT for a full description.
 %
+
+if HasGui()
+
 import ("ui")
 import ("netobj")
 import ("m3tk-misc")
@@ -22,3 +25,4 @@ bundle ("WinUIBundle")
 implementation ("Client")
 program ("boardclient")
 
+end

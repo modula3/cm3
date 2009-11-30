@@ -4,6 +4,8 @@
 /* Last modified on Tue May 17 21:13:51 PDT 1994 by mhb                      */
 /*      modified on Tue Jun 16 18:28:35 PDT 1992 by muller                   */
 
+if HasGui()
+
 import ("formsvbt")
 
 ManPage ("fisheye","1")
@@ -28,3 +30,4 @@ implementation ("Fisheye")
 
 Program ("fisheye")
 
+end

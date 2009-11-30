@@ -6,9 +6,13 @@
 %      modified on Fri Jan 15 14:40:34 PST 1993 by jdd
 %      modified on Tue Jun 16 19:06:34 PDT 1992 by muller
 
+if HasGui()
+
 import ("vbtkit")
 implementation ("ShowHeap")
 %build_standalone()
 Program ("showheap")
 
 ManPage ("showheap","1")
+
+end
