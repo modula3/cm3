@@ -9,13 +9,24 @@
 void ThreadInterix__Dummy(void)
 {
 }
-
+ 
 #else
 
 #include <windows.h>
 #include <ntapi.h>
 #include <stddef.h>
 #include <assert.h>
+#include <stdio.h>
+
+static int CheckStatus(long status, int line)
+{
+    if (status == 0)
+        return TRUE;
+    fprintf(stderr, "status %lx at line %d\n", status, line);
+    assert(status == 0);
+    return FALSE;
+}
+#define CheckStatus(a) CheckStatus(a, __LINE__)
 
 HANDLE ThreadPThread__GetCurrentThreadHandleForSuspendResume(void)
 {
@@ -23,25 +34,20 @@ HANDLE ThreadPThread__GetCurrentThreadHandleForSuspendResume(void)
     This is exactly analogous to DuplicateHandle(GetCurrentProcess, GetCurrentThread(), ...) */
     HANDLE self = { 0 };
     long status = NtDuplicateObject(NtCurrentProcess(), NtCurrentThread(), NtCurrentProcess(), &self, 0, FALSE, DUPLICATE_SAME_ACCESS);
-    int success = (status == 0);
-    assert(success);
+    CheckStatus(status);
     return self;
 }
 
 int ThreadPThread__SuspendThread(HANDLE thread)
 {
     long status = NtSuspendThread(thread, NULL);
-    int success = (status == 0);
-    assert(success);
-    return success;
+    return CheckStatus(status);
 }
 
 int ThreadPThread__RestartThread(HANDLE thread)
 {
     long status = NtResumeThread(thread, NULL);
-    int success = (status == 0);
-    assert(success);
-    return success;
+    return CheckStatus(status);
 }
 
 void ThreadPThread__ProcessStopped(HANDLE thread, void *bottom, void *signal_context,
@@ -50,13 +56,11 @@ void ThreadPThread__ProcessStopped(HANDLE thread, void *bottom, void *signal_con
     CONTEXT context = { 0 };
     int status = { 0 };
     void *sp = { 0 };
-    long success = { 0 };
     
     ZeroMemory(&context, sizeof(context));
     context.ContextFlags = (CONTEXT_CONTROL | CONTEXT_INTEGER);
     status = NtGetContextThread(thread, &context);
-    success = (status == 0);
-    assert(success);
+    CheckStatus(status);
 
 #if defined(_X86_)
     sp = (void*)context.Esp;
