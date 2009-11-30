@@ -18,6 +18,10 @@ void ThreadInterix__Dummy(void)
 #include <assert.h>
 #include <stdio.h>
 
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
+#endif
+
 static int CheckStatus(long status, int line)
 {
     if (status == 0)
@@ -28,7 +32,7 @@ static int CheckStatus(long status, int line)
 }
 #define CheckStatus(a) CheckStatus(a, __LINE__)
 
-HANDLE ThreadPThread__GetCurrentThreadHandleForSuspendResume(void)
+HANDLE __cdecl ThreadPThread__GetCurrentThreadHandleForSuspendResume(void)
 {
     /* convert pseudo handle to real handle
     This is exactly analogous to DuplicateHandle(GetCurrentProcess, GetCurrentThread(), ...) */
@@ -38,7 +42,7 @@ HANDLE ThreadPThread__GetCurrentThreadHandleForSuspendResume(void)
     return self;
 }
 
-int ThreadPThread__SuspendThread(HANDLE thread)
+int __cdecl ThreadPThread__SuspendThread(HANDLE thread)
 {
     long status = NtSuspendThread(thread, NULL);
     if (status == 0)
@@ -47,7 +51,7 @@ int ThreadPThread__SuspendThread(HANDLE thread)
     return CheckStatus(status);
 }
 
-int ThreadPThread__RestartThread(HANDLE thread)
+int __cdecl ThreadPThread__RestartThread(HANDLE thread)
 {
     long status = NtResumeThread(thread, NULL);
     if (status == 0)
@@ -56,8 +60,8 @@ int ThreadPThread__RestartThread(HANDLE thread)
     return CheckStatus(status);
 }
 
-void ThreadPThread__ProcessStopped(HANDLE thread, void *bottom, void *signal_context,
-                                   void (*p)(void *start, void *limit))
+void __cdecl ThreadPThread__ProcessStopped(HANDLE thread, void *bottom, void *signal_context,
+                                           void (*p)(void *start, void *limit))
 {
     CONTEXT context = { 0 };
     long status = { 0 };
