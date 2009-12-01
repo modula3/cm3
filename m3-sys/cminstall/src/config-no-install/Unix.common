@@ -137,6 +137,7 @@ end
 if not defined("make_lib")
 
 proc make_lib(lib, options, objects, imported_libs, shared) is
+    shared = shared and not IsInterix()
     local suffix = "so"
     local hpux_flags = ""
     local soname_flag = "-soname"
@@ -195,8 +196,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             MoveFile(lib_a, lib0_file)
             soname_opt = ""
             expfile = "lib" & lib & ".exp" % libfoo.exp
-            local dllname = lib_sox
-            exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", lib0_file, "--output-exp", expfile)
+            exec(DLLTOOL,  "--dllname", lib_sox, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", lib0_file, "--output-exp", expfile)
         else
             expfile = ""
         end
@@ -232,6 +232,7 @@ end
 if not defined("skip_lib")
 
 proc skip_lib(lib, shared) is
+    shared = shared and not IsInterix()
     local suffix = "so"
     if equal (TARGET, "PA32_HPUX")
       suffix = "sl" 
@@ -253,16 +254,11 @@ proc skip_lib(lib, shared) is
 
         % make sure the shared library stuff gets installed properly
 
-        if not IsInterix()
-            LibdExport(lib_sox)
-            install_link_to_derived(lib_a, LIB_INSTALL)
-            install_symbolic_link(lib_sox, LIB_INSTALL & "/" & lib_so)
-            install_derived_link("../../../lib/" & lib_sox, lib_so)
-            install_derived_link("../../../lib/" & lib_sox, lib_sox)
-        end
-        if IsInterix()
-            install_derived(lib0_file)
-        end
+        LibdExport(lib_sox)
+        install_link_to_derived(lib_a, LIB_INSTALL)
+        install_symbolic_link(lib_sox, LIB_INSTALL & "/" & lib_so)
+        install_derived_link("../../../lib/" & lib_sox, lib_so)
+        install_derived_link("../../../lib/" & lib_sox, lib_sox)
     else
         DeleteFiles([lib0_file, lib_so, lib_sox])
     end
@@ -278,15 +274,12 @@ end
 if not defined("m3_link")
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
-
+    shared = shared and not IsInterix()
     imported_libs = ConvertLibsToStandalone(imported_libs, shared)
-
     local args = [ "-o", prog, options, objects, imported_libs ]
-
     if not shared
         args += UseNtdll
     end
-
     if M3_PROFILING
         args += "-pg"
     end
