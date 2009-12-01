@@ -196,14 +196,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
             soname_opt = ""
             expfile = "lib" & lib & ".exp" % libfoo.exp
             local dllname = lib_sox
-            if equal(lib, "ntdll") % special case for building m3-win/ntdll
-              dllname = "ntdll.dll"
-              expfile = ""
-              exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", lib0_file)
-            else
-              % something is very wierd and using --output-exp changes the names in the import library
-              exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", lib0_file, "--output-exp", expfile)
-            end
+            exec(DLLTOOL,  "--dllname", dllname, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", lib0_file, "--output-exp", expfile)
         else
             expfile = ""
         end
@@ -260,7 +253,7 @@ proc skip_lib(lib, shared) is
 
         % make sure the shared library stuff gets installed properly
 
-        if (not IsInterix()) or (not equal(lib, "ntdll"))
+        if not IsInterix()
             LibdExport(lib_sox)
             install_link_to_derived(lib_a, LIB_INSTALL)
             install_symbolic_link(lib_sox, LIB_INSTALL & "/" & lib_so)
