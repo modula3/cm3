@@ -49,11 +49,13 @@ else
     %import_lib("z", LibZPath) % cannot be linked statically on Darwin
     % must be added to cm3.cfg SYSTEM_LIBS[LIBC] as a work around
     % (cvsup.quake does that unconditionally)
-  else if equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun")
-    LibZPath = findlib("libz.so")
-  else
-    LibZPath = findlib("libz.a")
-    import_lib("z", LibZPath)
+  else 
+    if equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun")
+      LibZPath = findlib("libz.so")
+    else
+      LibZPath = findlib("libz.a")
+      import_lib("z", LibZPath)
+	end
   end
 end
 
