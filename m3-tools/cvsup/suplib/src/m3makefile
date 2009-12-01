@@ -26,7 +26,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: m3makefile,v 1.10 2009-09-30 13:14:58 hosking Exp $
+% $Id: m3makefile,v 1.11 2009-12-01 16:55:12 rcoleburn Exp $
 
 if equal(OS_TYPE, "POSIX")
 
@@ -49,11 +49,13 @@ else
     %import_lib("z", LibZPath) % cannot be linked statically on Darwin
     % must be added to cm3.cfg SYSTEM_LIBS[LIBC] as a work around
     % (cvsup.quake does that unconditionally)
-  else if equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun")
-    LibZPath = findlib("libz.so")
-  else
-    LibZPath = findlib("libz.a")
-    import_lib("z", LibZPath)
+  else 
+    if equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun")
+      LibZPath = findlib("libz.so")
+    else
+      LibZPath = findlib("libz.a")
+      import_lib("z", LibZPath)
+	end
   end
 end
 
