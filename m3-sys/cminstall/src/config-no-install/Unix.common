@@ -130,6 +130,26 @@ else
   UseNtdll = ""
 end
 
+%------------------------------------------------------------------------------
+
+proc AdjustShared(shared) is
+
+  return shared
+
+    % for now at least, no shared on Interix
+  
+    and (not IsInterix())
+
+    % Do not support shared with older compilers.
+    % There are, I vaguely recall, problems due to the way
+    % we changed the directory layout. Older compilers combined
+    % with this config file need only support building a static compiler,
+    % so this is ok.
+
+    and defined("install_symbolic_link")
+
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -137,7 +157,7 @@ end
 if not defined("make_lib")
 
 proc make_lib(lib, options, objects, imported_libs, shared) is
-    shared = shared and not IsInterix()
+    shared = AdjustShared(shared)
     local suffix = "so"
     local hpux_flags = ""
     local soname_flag = "-soname"
@@ -178,12 +198,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         end
     end
 
-    % The check for install_symbolic_link deliberately
-    % disables all shared linking when bootstrapping
-    % from older builds; all that older builds need to be
-    % able to do is build a standalone current cm3.
-
-    if shared and defined("install_symbolic_link")
+    if shared
 
         local soname_opt = "-Wl," & soname_flag & "," & lib_sox
 
@@ -232,7 +247,7 @@ end
 if not defined("skip_lib")
 
 proc skip_lib(lib, shared) is
-    shared = shared and not IsInterix()
+    shared = AdjustShared(shared)
     local suffix = "so"
     if equal (TARGET, "PA32_HPUX")
       suffix = "sl" 
@@ -243,12 +258,7 @@ proc skip_lib(lib, shared) is
     local lib_sox = format("lib%s.%s.5", lib, suffix)
     local readonly lib0_file = lib_a & ".sa" % standalone
 
-    % The check for install_symbolic_link deliberately
-    % disables all shared linking when bootstrapping
-    % from older builds; all that older builds need to be
-    % able to do is build a standalone current cm3.
-
-    if shared and defined("install_symbolic_link")
+    if shared
         % create the version aliases
         link_file(lib_sox, lib_so)
 
@@ -274,7 +284,7 @@ end
 if not defined("m3_link")
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
-    shared = shared and not IsInterix()
+    shared = AdjustShared(shared)
     imported_libs = ConvertLibsToStandalone(imported_libs, shared)
     local args = [ "-o", prog, options, objects, imported_libs ]
     if not shared
