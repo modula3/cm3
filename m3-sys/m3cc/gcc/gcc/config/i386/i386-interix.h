@@ -272,7 +272,9 @@ do {									\
    ld -r (specifically -rU).  */
 #define CTOR_LISTS_DEFINED_EXTERNALLY 1
 
+/* Enable alias attribute support.  */
 #define SET_ASM_OP	"\t.set\t"
+
 /* Output a definition (implements alias) */
 #define ASM_OUTPUT_DEF(FILE,LABEL1,LABEL2)				\
 do									\
@@ -325,6 +327,9 @@ while (0)
    differently depending on something about the variable or
    function named by the symbol (such as what section it is in).  */
 
+#undef    TARGET_ENCODE_SECTION_INFO
+#undef SUBTARGET_ENCODE_SECTION_INFO
+#define    TARGET_ENCODE_SECTION_INFO i386_pe_encode_section_info
 #define SUBTARGET_ENCODE_SECTION_INFO i386_pe_encode_section_info
 #undef  TARGET_STRIP_NAME_ENCODING
 #define TARGET_STRIP_NAME_ENCODING  i386_pe_strip_name_encoding_full
@@ -361,3 +366,44 @@ extern void i386_pe_unique_section (tree, int);
 #define RETURN_IN_MEMORY(TYPE) \
   (TYPE_MODE (TYPE) == BLKmode || \
      (AGGREGATE_TYPE_P (TYPE) && int_size_in_bytes(TYPE) > 8 ))
+
+/* Select attributes for named sections.  */
+#define TARGET_SECTION_TYPE_FLAGS  i386_pe_section_type_flags
+
+/* Write the extra assembler code needed to declare a function
+   properly.  If we are generating SDB debugging information, this
+   will happen automatically, so we only need to handle other cases.  */
+#undef ASM_DECLARE_FUNCTION_NAME
+#define ASM_DECLARE_FUNCTION_NAME(FILE, NAME, DECL)			\
+  do									\
+    {									\
+      if (write_symbols != SDB_DEBUG)					\
+	i386_pe_declare_function_type (FILE, NAME, TREE_PUBLIC (DECL));	\
+      ASM_OUTPUT_LABEL (FILE, NAME);					\
+    }									\
+  while (0)
+
+/* Add an external function to the list of functions to be declared at
+   the end of the file.  */
+#define ASM_OUTPUT_EXTERNAL(FILE, DECL, NAME)				\
+  do									\
+    {									\
+      if (TREE_CODE (DECL) == FUNCTION_DECL)				\
+	i386_pe_record_external_function (DECL, NAME);			\
+    }									\
+  while (0)
+
+/* Declare the type properly for any external libcall.  */
+#define ASM_OUTPUT_EXTERNAL_LIBCALL(FILE, FUN) \
+  i386_pe_declare_function_type (FILE, XSTR (FUN, 0), 1)
+
+/* This says out to put a global symbol in the BSS section.  */
+#undef ASM_OUTPUT_ALIGNED_BSS
+#define ASM_OUTPUT_ALIGNED_BSS(FILE, DECL, NAME, SIZE, ALIGN) \
+  asm_output_aligned_bss ((FILE), (DECL), (NAME), (SIZE), (ALIGN))
+
+/* External function declarations.  */
+extern void i386_pe_record_external_function PARAMS ((tree, const char *));
+extern void i386_pe_declare_function_type PARAMS ((FILE *, const char *, int));
+extern void i386_pe_record_exported_symbol PARAMS ((const char *, int));
+extern void i386_pe_asm_file_end PARAMS ((FILE *));
