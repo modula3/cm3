@@ -62,7 +62,7 @@ PROCEDURE thread_create(VAR pthread: pthread_t; stackSize: size_t;
 PROCEDURE pthread_detach_self(): int;
 
 <*EXTERNAL ThreadPThread__pthread_self*>
-PROCEDURE pthread_self(): int;
+PROCEDURE pthread_self(): pthread_t;
 
 <*EXTERNAL "ThreadPThread__pthread_equal"*>
 PROCEDURE pthread_equal(t1, t2: pthread_t): int;
