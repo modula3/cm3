@@ -84,6 +84,12 @@ PROCEDURE ProcessStopped(bottom: ADDRESS; context: PCONTEXT; p: PROCEDURE(start,
 <*EXTERNAL ThreadWin32__StackPointerFromContext*>
 PROCEDURE StackPointerFromContext(context: PCONTEXT): ADDRESS;
 
+<*EXTERNAL ThreadWin32__NewContext*>
+PROCEDURE NewContext(): ADDRESS;
+
+<*EXTERNAL ThreadWin32__DeleteContext*>
+PROCEDURE DeleteContext(a: ADDRESS);
+
 (*----------------------------------------------------- for SchedulerPosix --*)
 
 PROCEDURE PerfChanged (s: State);
