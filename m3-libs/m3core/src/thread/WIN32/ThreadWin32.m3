@@ -12,11 +12,10 @@ IMPORT RTMisc, RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT Word, MutexRep, RTHeapRep, RTCollectorSRC, RTIO;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT LONG, HANDLE, DWORD, DUPLICATE_SAME_ACCESS;
+FROM WinNT IMPORT LONG, HANDLE, DWORD;
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
-    GetCurrentProcess, DuplicateHandle, GetCurrentThread, CreateSemaphore,
-    CloseHandle, CreateThread, ResumeThread, Sleep, SuspendThread,
-    GetThreadContext, GetLastError, CREATE_SUSPENDED,
+    CreateSemaphore, CloseHandle, CreateThread, ResumeThread, Sleep,
+    SuspendThread, GetThreadContext, GetLastError, CREATE_SUSPENDED,
     GetCurrentThreadId;
 FROM ThreadContext IMPORT CONTEXT, CONTEXT_CONTROL, CONTEXT_INTEGER;
 FROM WinNT IMPORT MemoryBarrier;
@@ -914,16 +913,15 @@ PROCEDURE Init() =
     me := NEW(Activation);
   BEGIN
     me.suspendCount := 0;
-    InitC(ADR(self));
-    SetActivation(me);
-    IF DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
-            ADR(me.handle), 0, 0, DUPLICATE_SAME_ACCESS) = 0 THEN
-      Choke(ThisLine());
-    END;
+    me.handle := InitC(ADR(self));
     me.next := me;
     me.prev := me;
+    SetActivation(me);
     <* ASSERT allThreads = NIL *>
     allThreads := me;
+    IF me.handle = NIL THEN
+      Choke(ThisLine());
+    END;
 
     self := CreateT(me);
 
