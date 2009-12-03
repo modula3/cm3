@@ -12,11 +12,11 @@ IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT MutexRep, RTHeapRep, RTCollectorSRC, RTIO;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT LONG, HANDLE, DWORD;
+FROM WinNT IMPORT LONG, HANDLE, DWORD, UINT32;
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     CreateSemaphore, CloseHandle, CreateThread, ResumeThread, Sleep,
-    SuspendThread, GetThreadContext, GetLastError, CREATE_SUSPENDED,
-    GetCurrentThreadId;
+    SuspendThread, GetThreadContext, SetLastError, GetLastError,
+    CREATE_SUSPENDED, GetCurrentThreadId;
 FROM ThreadContext IMPORT PCONTEXT;
 FROM WinNT IMPORT MemoryBarrier;
 
@@ -435,6 +435,23 @@ PROCEDURE CreateT (act: Activation): T =
     RETURN t;
   END CreateT;
 
+PROCEDURE DeleteActivation(act: Activation) =
+  VAR error: UINT32;
+BEGIN
+  IF act # NIL THEN
+    error := GetLastError();
+    DeleteContext(act.context);
+    IF act.waitSema # NIL THEN
+      EVAL CloseHandle(act.waitSema);
+    END;
+    IF act.handle # NIL THEN
+      EVAL CloseHandle(act.handle);
+    END;
+    DISPOSE(act);
+    SetLastError(error);
+  END;
+END DeleteActivation;
+
 <*WINAPI*>
 PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   VAR
@@ -475,9 +492,6 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
         (* we're dying *)
         RTHeapRep.FlushThreadState(me.heapState);
 
-        IF CloseHandle(me.waitSema) = 0 THEN Choke(ThisLine()) END;
-        me.waitSema := NIL;
-
         IF perfOn THEN PerfDeleted() END;
         FreeSlot(self, me);
         (* Since we're no longer slotted, we cannot touch traced refs. *)
@@ -491,8 +505,6 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 
         me.next := NIL;
         me.prev := NIL;
-        IF CloseHandle(me.handle) = 0 THEN Choke(ThisLine()) END;
-        me.handle := NIL;
 
     (* RunThread *)
 
@@ -501,8 +513,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     EVAL WinGDI.GdiFlush ();  (* help out Trestle *)
 
     <*ASSERT me # allThreads*>
-    DeleteContext(me.context);
-    DISPOSE (me);
+    DeleteActivation(me);
     RETURN 0;
   END ThreadBase;
 
@@ -512,6 +523,7 @@ PROCEDURE Fork(closure: Closure): T =
       act: Activation;
       id: DWORD;
       handle: HANDLE;
+      abnormalTermination: BOOLEAN;
   BEGIN
     IF DEBUG THEN ThreadDebug.Fork(); END;
 
@@ -529,15 +541,23 @@ PROCEDURE Fork(closure: Closure): T =
     END;
 
     act := NEW(Activation);
-    handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
-    IF DEBUG THEN
-      RTIO.PutText("creating act="); RTIO.PutAddr(handle); RTIO.PutText("\n"); RTIO.Flush();
+    TRY
+      abnormalTermination := TRUE;
+      handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
+      IF DEBUG THEN
+        RTIO.PutText("creating act="); RTIO.PutAddr(handle); RTIO.PutText("\n"); RTIO.Flush();
+      END;
+      IF handle = NIL THEN
+        RuntimeError.Raise(RuntimeError.T.SystemError);
+      END;
+      act.handle := handle;
+      t := CreateT(act);
+      abnormalTermination := FALSE;
+    FINALLY
+      IF abnormalTermination THEN
+        DeleteActivation(act);
+      END;
     END;
-    IF handle = NIL THEN
-      RuntimeError.Raise(RuntimeError.T.SystemError);
-    END;
-    act.handle := handle;
-    t := CreateT(act);
     t.closure := closure;
     Lock(activeLock);
       act.next := allThreads;
