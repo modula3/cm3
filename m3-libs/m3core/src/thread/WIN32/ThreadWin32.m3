@@ -430,6 +430,9 @@ PROCEDURE CreateT (act: Activation): T =
       RuntimeError.Raise(RuntimeError.T.OutOfMemory);
     END;
     act.waitSema := CreateSemaphore(NIL, 0, 1, NIL);
+    IF act.waitSema = NIL THEN
+      RuntimeError.Raise(RuntimeError.T.SystemError);
+    END;
     t.join     := NEW(Condition);
     AssignSlot (t);
     RETURN t;
@@ -496,6 +499,9 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
         FreeSlot(self, me);
         (* Since we're no longer slotted, we cannot touch traced refs. *)
 
+        me.stackStart := NIL; (* disable GC scanning of my stack *)
+        me.stackEnd := NIL;
+
         (* remove ourself from the list of active threads *)
         Lock(activeLock);
           <*ASSERT allThreads # me*>
@@ -508,8 +514,6 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 
     (* RunThread *)
 
-    me.stackStart := NIL; (* disable GC scanning of my stack *)
-    me.stackEnd := NIL;
     EVAL WinGDI.GdiFlush ();  (* help out Trestle *)
 
     <*ASSERT me # allThreads*>
