@@ -21,10 +21,6 @@ FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
 FROM ThreadContext IMPORT CONTEXT, CONTEXT_CONTROL, CONTEXT_INTEGER;
 FROM WinNT IMPORT MemoryBarrier;
 
-(*--------------------------------------------------------------------------*)
-
-CONST debug = FALSE; (* controls calls to ThreadDebug *)
-
 (*----------------------------------------- Exceptions, types and globals ---*)
 
 VAR
@@ -93,7 +89,7 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE LockMutex (m: Mutex) =
   VAR self := Self();  wait := FALSE;  next, prev: T;
   BEGIN
-    IF debug THEN ThreadDebug.LockMutex(m); END;
+    IF DEBUG THEN ThreadDebug.LockMutex(m); END;
     IF self = NIL THEN Die(ThisLine(), "LockMutex called from non-Modula-3 thread") END;
     IF perfOn THEN PerfChanged(State.locking) END;
 
@@ -135,7 +131,7 @@ PROCEDURE LockMutex (m: Mutex) =
 PROCEDURE UnlockMutex(m: Mutex) =
   VAR self := Self(); next: T;
   BEGIN
-    IF debug THEN ThreadDebug.UnlockMutex(m); END;
+    IF DEBUG THEN ThreadDebug.UnlockMutex(m); END;
     IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
     Lock(giantLock);
 
@@ -193,7 +189,7 @@ PROCEDURE DumpSlots () =
 PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
     (* LL = giant+m on entry; LL = m on exit *)
   BEGIN
-    IF debug THEN ThreadDebug.InnerWait(m, c, self); END;
+    IF DEBUG THEN ThreadDebug.InnerWait(m, c, self); END;
     <* ASSERT( (self.waitingOn=NIL) AND (self.nextWaiter=NIL) ) *>
 
     self.waitingOn := c;
@@ -214,7 +210,7 @@ PROCEDURE InnerTestAlert(self: T) RAISES {Alerted} =
   (* If self.alerted, clear "alerted", leave giant and raise
      "Alerted". *)
   BEGIN
-    IF debug THEN ThreadDebug.InnerTestAlert(self); END;
+    IF DEBUG THEN ThreadDebug.InnerTestAlert(self); END;
     IF self.alerted THEN
       self.alerted := FALSE;
       Unlock(giantLock);
@@ -226,7 +222,7 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
   VAR self := Self();
   BEGIN
-    IF debug THEN ThreadDebug.AlertWait(m, c); END;
+    IF DEBUG THEN ThreadDebug.AlertWait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
     Lock(giantLock);
     InnerTestAlert(self);
@@ -241,7 +237,7 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   (* LL = m *)
   VAR self := Self();
   BEGIN
-    IF debug THEN ThreadDebug.Wait(m, c); END;
+    IF DEBUG THEN ThreadDebug.Wait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
     Lock(giantLock);
     InnerWait(m, c, self);
@@ -251,7 +247,7 @@ PROCEDURE DequeueHead(c: Condition) =
   (* LL = giant *)
   VAR t: T;
   BEGIN
-    IF debug THEN ThreadDebug.DequeueHead(c); END;
+    IF DEBUG THEN ThreadDebug.DequeueHead(c); END;
     t := c.waiters; c.waiters := t.nextWaiter;
     t.nextWaiter := NIL;
     t.waitingOn := NIL;
@@ -263,7 +259,7 @@ PROCEDURE DequeueHead(c: Condition) =
 
 PROCEDURE Signal (c: Condition) =
   BEGIN
-    IF debug THEN ThreadDebug.Signal(c); END;
+    IF DEBUG THEN ThreadDebug.Signal(c); END;
     Lock(giantLock);
     IF c.waiters # NIL THEN DequeueHead(c) END;
     Unlock(giantLock);
@@ -271,7 +267,7 @@ PROCEDURE Signal (c: Condition) =
 
 PROCEDURE Broadcast (c: Condition) =
   BEGIN
-    IF debug THEN ThreadDebug.Broadcast(c); END;
+    IF DEBUG THEN ThreadDebug.Broadcast(c); END;
     Lock(giantLock);
     WHILE c.waiters # NIL DO DequeueHead(c) END;
     Unlock(giantLock);
@@ -280,7 +276,7 @@ PROCEDURE Broadcast (c: Condition) =
 PROCEDURE Alert(t: T) =
     VAR prev, next: T;
   BEGIN
-    IF debug THEN ThreadDebug.Alert(t); END;
+    IF DEBUG THEN ThreadDebug.Alert(t); END;
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
     Lock(giantLock);
     t.alerted := TRUE;
@@ -311,7 +307,7 @@ PROCEDURE Alert(t: T) =
 PROCEDURE XTestAlert (self: T): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    IF debug THEN ThreadDebug.XTestAlert(self); END;
+    IF DEBUG THEN ThreadDebug.XTestAlert(self); END;
     Lock(giantLock);
     result := self.alerted; IF result THEN self.alerted := FALSE END;
     Unlock(giantLock);
@@ -321,7 +317,7 @@ PROCEDURE XTestAlert (self: T): BOOLEAN =
 PROCEDURE TestAlert(): BOOLEAN =
   VAR self := Self();
   BEGIN
-    IF debug THEN ThreadDebug.TestAlert(); END;
+    IF DEBUG THEN ThreadDebug.TestAlert(); END;
     IF self = NIL
       (* Not created by Fork; not alertable *)
       THEN RETURN FALSE
@@ -451,7 +447,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 
     (* RunThread *)
 
-        IF debug THEN ThreadDebug.RunThread(); END;
+        IF DEBUG THEN ThreadDebug.RunThread(); END;
         IF perfOn THEN PerfChanged(State.alive) END;
         self := slots [me.slot];
 
@@ -509,7 +505,7 @@ PROCEDURE Fork(closure: Closure): T =
       id: DWORD;
       handle: HANDLE;
   BEGIN
-    IF debug THEN ThreadDebug.Fork(); END;
+    IF DEBUG THEN ThreadDebug.Fork(); END;
 
     <*ASSERT allThreads # NIL*>
     <*ASSERT allThreads.next # NIL*>
@@ -572,13 +568,13 @@ PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
 PROCEDURE Join(t: T): REFANY =
   <*FATAL Alerted*>
   BEGIN
-    IF debug THEN ThreadDebug.Join(t); END;
+    IF DEBUG THEN ThreadDebug.Join(t); END;
     RETURN XJoin(t, alertable := FALSE);
   END Join;
 
 PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
   BEGIN
-    IF debug THEN ThreadDebug.AlertJoin(t); END;
+    IF DEBUG THEN ThreadDebug.AlertJoin(t); END;
     RETURN XJoin(t, alertable := TRUE);
   END AlertJoin;
 
@@ -928,7 +924,7 @@ VAR
 
 PROCEDURE LockHeap () =
   BEGIN
-    IF debug THEN ThreadDebug.LockHeap(); END;
+    IF DEBUG THEN ThreadDebug.LockHeap(); END;
     Lock(heapLock);
     INC(inCritical);
   END LockHeap;
@@ -936,7 +932,7 @@ PROCEDURE LockHeap () =
 PROCEDURE UnlockHeap () =
   VAR sig := FALSE;
   BEGIN   
-    IF debug THEN ThreadDebug.UnlockHeap(); END;
+    IF DEBUG THEN ThreadDebug.UnlockHeap(); END;
     DEC(inCritical);
     IF (inCritical = 0) AND do_signal THEN sig := TRUE; do_signal := FALSE; END;
     Unlock(heapLock);
@@ -945,7 +941,7 @@ PROCEDURE UnlockHeap () =
 
 PROCEDURE WaitHeap () =
   BEGIN
-    IF debug THEN ThreadDebug.WaitHeap(); END;
+    IF DEBUG THEN ThreadDebug.WaitHeap(); END;
     LOCK mutex DO
       DEC(inCritical);
       <*ASSERT inCritical = 0*>
@@ -959,7 +955,7 @@ PROCEDURE WaitHeap () =
 
 PROCEDURE BroadcastHeap () =
   BEGIN
-    IF debug THEN ThreadDebug.BroadcastHeap(); END;
+    IF DEBUG THEN ThreadDebug.BroadcastHeap(); END;
     Lock(heapLock);
       do_signal := TRUE;
     Unlock(heapLock);
@@ -991,6 +987,8 @@ PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
     GetActivation().frame := frame;
   END PopEFrame;
+
+VAR DEBUG := RTParams.IsPresent("debugthreads");
 
 BEGIN
 END ThreadWin32.
