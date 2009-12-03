@@ -8,8 +8,8 @@
 UNSAFE MODULE ThreadWin32 EXPORTS
 Thread, ThreadF, Scheduler, RTThread, RTOS, RTHooks, ThreadWin32;
 
-IMPORT RTMisc, RTError, WinGDI, RTParams, FloatMode, RuntimeError;
-IMPORT Word, MutexRep, RTHeapRep, RTCollectorSRC, RTIO;
+IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
+IMPORT MutexRep, RTHeapRep, RTCollectorSRC, RTIO;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM WinNT IMPORT LONG, HANDLE, DWORD;
@@ -17,7 +17,7 @@ FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     CreateSemaphore, CloseHandle, CreateThread, ResumeThread, Sleep,
     SuspendThread, GetThreadContext, GetLastError, CREATE_SUSPENDED,
     GetCurrentThreadId;
-FROM ThreadContext IMPORT CONTEXT, CONTEXT_CONTROL, CONTEXT_INTEGER;
+FROM ThreadContext IMPORT PCONTEXT;
 FROM WinNT IMPORT MemoryBarrier;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
@@ -61,8 +61,8 @@ TYPE
       stackEnd: ADDRESS := NIL;         (* stack bounds for use by GC *)
       slot: INTEGER;                    (* LL = slotLock;  index into global array of active, slotted threads *)
       suspendCount := 1;                (* LL = activeLock *)
-      context: CONTEXT;                 (* registers of suspended thread *)
-      stackPointer: ADDRESS;            (* LOOPHOLE(context.Esp, ADDRESS); *)
+      context: PCONTEXT;                (* registers of suspended thread *)
+      stackPointer: ADDRESS;            (* context->Esp etc. (processor dependent) *)
       waitSema: HANDLE := NIL;          (* binary semaphore for blocking during "Wait" *)
       alertable: BOOLEAN := FALSE;      (* LL = giant; distinguishes between "Wait" and "AlertWait" *)
       alerted: BOOLEAN := FALSE;        (* LL = giant; the alert flag, of course *)
@@ -423,12 +423,12 @@ PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
      the allocator to start a collection which will call "SuspendOthers"
      which will try to acquire "activeMu". *)
-  CONST UserRegs = Word.Or(CONTEXT_CONTROL,
-                           CONTEXT_INTEGER);
   VAR t := NEW(T, act := act);
   BEGIN
-    RTMisc.Zero(ADR(act.context), BYTESIZE(act.context));
-    act.context.ContextFlags := UserRegs;
+    act.context := NewContext();
+    IF act.context = NIL THEN
+      RuntimeError.Raise(RuntimeError.T.OutOfMemory);
+    END;
     act.waitSema := CreateSemaphore(NIL, 0, 1, NIL);
     t.join     := NEW(Condition);
     AssignSlot (t);
@@ -501,6 +501,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     EVAL WinGDI.GdiFlush ();  (* help out Trestle *)
 
     <*ASSERT me # allThreads*>
+    DeleteContext(me.context);
     DISPOSE (me);
     RETURN 0;
   END ThreadBase;
@@ -703,7 +704,7 @@ BEGIN
   to honor the historical goals. Note also that GetStackBounds should be
   tested on Windows 95. *)
 
-  IF GetThreadContext(act.handle, ADR(act.context)) = 0 THEN Choke(ThisLine()) END;
+  IF GetThreadContext(act.handle, act.context) = 0 THEN Choke(ThisLine()) END;
   act.stackPointer := StackPointerFromContext(ADR(act.context));
   RETURN (act.stackPointer >= act.stackStart AND act.stackPointer < act.stackEnd);
 
@@ -804,7 +805,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       RETURN
     END;
     RTHeapRep.FlushThreadState(act.heapState);
-    ProcessStopped(act.stackEnd, ADR(act.context), p);
+    ProcessStopped(act.stackEnd, act.context, p);
   END ProcessOther;
 
 PROCEDURE ProcessEachStack (<*UNUSED*>p: PROCEDURE (start, limit: ADDRESS)) =
