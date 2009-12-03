@@ -879,6 +879,7 @@ PROCEDURE Init() =
     self: T;
     me := NEW(Activation);
   BEGIN
+    me.suspendCount := 0;
     InitC();
     SetActivation(me);
     IF DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
