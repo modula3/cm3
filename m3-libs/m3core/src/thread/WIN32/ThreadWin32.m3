@@ -743,6 +743,8 @@ PROCEDURE ResumeOthers () =
       act := me.next;
       WHILE act # me DO
         <*ASSERT act.suspendCount > 0*>
+        <*ASSERT act.stackPointer # NIL*>
+        act.stackPointer := NIL;
         IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
         DEC(act.suspendCount);
         act := act.next;
@@ -771,6 +773,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
       END;
       act := act.next;
     UNTIL (act = allThreads);
+    me.stackPointer := NIL;
   END ProcessStacks;
 
 PROCEDURE ProcessEachStack (<*UNUSED*>p: PROCEDURE (start, limit: ADDRESS)) =
