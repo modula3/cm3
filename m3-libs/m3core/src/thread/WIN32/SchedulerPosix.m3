@@ -106,7 +106,7 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
       subInterval := interval;
     END;
 
-    IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
+    IF alertable AND TestAlert() THEN RAISE Alerted END;
     LOOP
       FOR i := 0 TO fdindex-1 DO
         gReadFDS[i] := FDSet{};
@@ -126,7 +126,7 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
         res := CallSelect(fd+1, NIL);
       END;
 
-      IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
+      IF alertable AND TestAlert() THEN RAISE Alerted END;
 
       IF    res > 0 THEN RETURN TestFDS(fdindex, fdset, read);
       ELSIF res = 0 THEN
