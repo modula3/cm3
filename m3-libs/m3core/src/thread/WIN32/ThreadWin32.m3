@@ -399,7 +399,7 @@ PROCEDURE AssignSlot (t: T) =
     Unlock(slotLock);
   END AssignSlot;
 
-PROCEDURE FreeSlot (act: Activation) =
+PROCEDURE FreeSlot (t: T; act: Activation) =
   (* LL = 0 *)
   BEGIN
     InterlockedDecrement(n_slotted);
@@ -440,6 +440,7 @@ PROCEDURE CreateT (act: Activation): T =
 PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   VAR
     me       : Activation   := param;
+    self: T;
   BEGIN
     SetActivation (me);
     (* We need to establish this binding before this thread touches any
@@ -447,7 +448,51 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
        which would call SuspendOthers, which requires an Activation. *)
 
     GetStackBounds(me.stackStart, me.stackEnd);
-    RunThread (me);
+
+    (* RunThread *)
+
+        IF debug THEN ThreadDebug.RunThread(); END;
+        IF perfOn THEN PerfChanged(State.alive) END;
+        self := slots [me.slot];
+
+        IF perfOn THEN PerfRunning() END;
+
+        (* Run the user-level code. *)
+        self.result := self.closure.apply();
+
+        IF perfOn THEN PerfChanged(State.dying) END;
+
+        LOCK self DO
+          Broadcast(self.join); (* let everybody know that "self" is done *)
+          self.join := NIL;     (* mark me done *)
+        END;
+
+        IF perfOn THEN PerfChanged(State.dead) END;
+
+        (* we're dying *)
+        RTHeapRep.FlushThreadState(me.heapState);
+
+        IF CloseHandle(self.waitSema) = 0 THEN Choke(ThisLine()) END;
+        self.waitSema := NIL;
+
+        IF perfOn THEN PerfDeleted() END;
+        FreeSlot(self, me);
+        (* Since we're no longer slotted, we cannot touch traced refs. *)
+
+        (* remove ourself from the list of active threads *)
+        Lock(activeLock);
+          <*ASSERT allThreads # me*>
+          me.next.prev := me.prev;
+          me.prev.next := me.next;
+        Unlock(activeLock);
+
+        me.next := NIL;
+        me.prev := NIL;
+        IF CloseHandle(me.handle) = 0 THEN Choke(ThisLine()) END;
+        me.handle := NIL;
+
+    (* RunThread *)
+
     me.stackStart := NIL; (* disable GC scanning of my stack *)
     me.stackEnd := NIL;
     EVAL WinGDI.GdiFlush ();  (* help out Trestle *)
@@ -456,51 +501,6 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     DISPOSE (me);
     RETURN 0;
   END ThreadBase;
-
-PROCEDURE RunThread (me: Activation) =
-  VAR self: T;
-  BEGIN
-    IF debug THEN ThreadDebug.RunThread(); END;
-    IF perfOn THEN PerfChanged(State.alive) END;
-    self := slots [me.slot];
-
-    IF perfOn THEN PerfRunning() END;
-
-    (* Run the user-level code. *)
-    self.result := self.closure.apply();
-
-    IF perfOn THEN PerfChanged(State.dying) END;
-
-    LOCK self DO
-      Broadcast(self.join); (* let everybody know that "self" is done *)
-      self.join := NIL;     (* mark me done *)
-    END;
-
-    IF perfOn THEN PerfChanged(State.dead) END;
-
-    (* we're dying *)
-    RTHeapRep.FlushThreadState(me.heapState);
-
-    IF CloseHandle(self.waitSema) = 0 THEN Choke(ThisLine()) END;
-    self.waitSema := NIL;
-
-    IF perfOn THEN PerfDeleted() END;
-    FreeSlot(me);
-    (* Since we're no longer slotted, we cannot touch traced refs. *)
-
-    (* remove ourself from the list of active threads *)
-    Lock(activeLock);
-      <*ASSERT allThreads # me*>
-      me.next.prev := me.prev;
-      me.prev.next := me.next;
-    Unlock(activeLock);
-
-    me.next := NIL;
-    me.prev := NIL;
-    IF CloseHandle(me.handle) = 0 THEN Choke(ThisLine()) END;
-    me.handle := NIL;
-
-  END RunThread;
 
 PROCEDURE Fork(closure: Closure): T =
   VAR t: T;
