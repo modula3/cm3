@@ -8,7 +8,6 @@
 UNSAFE INTERFACE ThreadWin32;
 
 FROM WinDef IMPORT LONG;
-FROM Thread IMPORT T;
 FROM ThreadF IMPORT State;
 FROM ThreadContext IMPORT PCONTEXT;
 
@@ -89,7 +88,6 @@ PROCEDURE StackPointerFromContext(context: PCONTEXT): ADDRESS;
 
 PROCEDURE PerfChanged (s: State);
 PROCEDURE PerfRunning ();
-PROCEDURE XTestAlert (self: T): BOOLEAN;
 VAR perfOn: BOOLEAN := FALSE;		 (* LL = perfLock *)
 
 END ThreadWin32.
