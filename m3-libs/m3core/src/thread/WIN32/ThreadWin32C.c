@@ -295,7 +295,7 @@ void __cdecl ThreadWin32__ProcessLive(char *bottom, void (*p)(void *start, void 
   }
 }
 
-PCONTEXT ThreadWin32__NewContext(void)
+PCONTEXT __cdecl ThreadWin32__NewContext(void)
 {
     PCONTEXT context = (PCONTEXT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*context));
     if (context)
@@ -303,7 +303,7 @@ PCONTEXT ThreadWin32__NewContext(void)
     return context;
 }
 
-void ThreadWin32__DeleteContext(void* p)
+void __cdecl ThreadWin32__DeleteContext(void* p)
 {
     HeapFree(GetProcessHeap(), 0, p);
 }
