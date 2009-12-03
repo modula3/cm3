@@ -7,7 +7,7 @@
 
 UNSAFE INTERFACE ThreadWin32;
 
-FROM WinDef IMPORT LONG;
+FROM WinDef IMPORT LONG, HANDLE;
 FROM ThreadF IMPORT State;
 FROM ThreadContext IMPORT PCONTEXT;
 
@@ -73,7 +73,7 @@ PROCEDURE InterlockedDecrement(VAR a: LONG);
 PROCEDURE InterlockedRead(VAR a: LONG): LONG;
 
 <*EXTERNAL ThreadWin32__InitC*>
-PROCEDURE InitC(bottom: ADDRESS);
+PROCEDURE InitC(bottom: ADDRESS): HANDLE; (* returns current thread handle *)
 
 <*EXTERNAL "ThreadWin32__ProcessLive"*>
 PROCEDURE ProcessLive(bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
