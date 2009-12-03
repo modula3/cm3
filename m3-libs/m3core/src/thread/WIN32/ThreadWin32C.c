@@ -91,9 +91,10 @@ static void DeleteLock(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
 
 static BOOL stack_grows_down;
 
-BOOL __cdecl ThreadWin32__InitC(BOOL* bottom)
+HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
 {
-    BOOL success = (threadIndex != TLS_OUT_OF_INDEXES);
+    HANDLE threadHandle = { 0 };
+    BOOL success = { 0 };
 
     stack_grows_down = (bottom > &success);
     assert(stack_grows_down);
@@ -104,13 +105,20 @@ BOOL __cdecl ThreadWin32__InitC(BOOL* bottom)
     InitLock(&ThreadWin32__perfLock, &perfLock);
     InitLock(&ThreadWin32__slotLock, &slotLock);
 
+    success = (threadIndex != TLS_OUT_OF_INDEXES);
     if (!success)
     {
         threadIndex = TlsAlloc(); /* This CAN fail. */
         success = (threadIndex != TLS_OUT_OF_INDEXES);
     }
     assert(success);
-    return success;
+    if (!success)
+        goto Exit;
+
+    success = DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &threadHandle, 0, 0, DUPLICATE_SAME_ACCESS);
+    assert(success);
+Exit:
+    return threadHandle;
 }
 
 void __cdecl ThreadWin32__Cleanup(void)
@@ -307,7 +315,7 @@ BOOL WINAPI DllMain(HANDLE DllHandle, DWORD Reason, PVOID Static)
 
     case DLL_PROCESS_ATTACH:
         /* Module initializers belong here */.
-        return ThreadWin32__InitC();
+        return !!ThreadWin32__InitC();
     }
 
     return TRUE;
