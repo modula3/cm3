@@ -60,7 +60,7 @@ TYPE
       stackStart: ADDRESS := NIL;       (* stack bounds for use by GC *)
       stackEnd: ADDRESS := NIL;         (* stack bounds for use by GC *)
       slot: INTEGER;                    (* LL = slotLock;  index into global array of active, slotted threads *)
-      suspendCount := 1;                (* LL = activeLock *)
+      suspendCount := 0;                (* LL = activeLock *)
       context: PCONTEXT;                (* registers of suspended thread *)
       stackPointer: ADDRESS;            (* context->Esp etc. (processor dependent) *)
       waitSema: HANDLE := NIL;          (* binary semaphore for blocking during "Wait" *)
@@ -417,7 +417,7 @@ PROCEDURE FreeSlot (t: T; act: Activation) =
 (*------------------------------------------------------------ Fork, Join ---*)
 
 VAR (* LL=activeMu *)
-  allThreads  : Activation := NIL;  (* global list of active threads *)
+  allThreads: Activation := NIL;  (* global list of active threads *)
 
 PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
@@ -438,7 +438,7 @@ PROCEDURE CreateT (act: Activation): T =
     RETURN t;
   END CreateT;
 
-PROCEDURE DeleteActivation(act: Activation) =
+PROCEDURE DeleteActivation(VAR act: Activation) =
   VAR error: UINT32;
 BEGIN
   IF act # NIL THEN
@@ -451,6 +451,7 @@ BEGIN
       EVAL CloseHandle(act.handle);
     END;
     DISPOSE(act);
+    act := NIL;
     SetLastError(error);
   END;
 END DeleteActivation;
@@ -458,25 +459,35 @@ END DeleteActivation;
 <*WINAPI*>
 PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   VAR
-    me: Activation   := param;
-    self: T;
+    me: Activation := param;
+    self: T := NIL;
   BEGIN
     SetActivation (me);
     (* We need to establish this binding before this thread touches any
        traced references.  Otherwise, it may trigger a heap page fault,
        which would call SuspendOthers, which requires an Activation. *)
 
-    GetStackBounds(me.stackStart, me.stackEnd);
-
     IF DEBUG THEN
       RTIO.PutText("threadbase act="); RTIO.PutAddr(me.handle); RTIO.PutText("\n"); RTIO.Flush();
     END;
 
-    (* RunThread *)
+    (* add to the list of active threads *)
+    <*ASSERT allThreads # NIL*>
+    Lock(activeLock);
+      me.next := allThreads;
+      me.prev := allThreads.prev;
+      allThreads.prev.next := me;
+      allThreads.prev := me;
+    Unlock(activeLock);
+
+    (* begin "RunThread" *)
+
+        GetStackBounds(me.stackStart, me.stackEnd); (* enable GC scanning of this stack *)
 
         IF DEBUG THEN ThreadDebug.RunThread(); END;
         IF perfOn THEN PerfChanged(State.alive) END;
-        self := slots [me.slot];
+
+        self := slots [me.slot]; (* produce traced references (slots briefly and self) *)
 
         IF perfOn THEN PerfRunning() END;
 
@@ -499,24 +510,24 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
         FreeSlot(self, me);
         (* Since we're no longer slotted, we cannot touch traced refs. *)
 
+        self := NIL; (* drop traced reference *)
         me.stackStart := NIL; (* disable GC scanning of my stack *)
         me.stackEnd := NIL;
 
-        (* remove ourself from the list of active threads *)
-        Lock(activeLock);
-          <*ASSERT allThreads # me*>
-          me.next.prev := me.prev;
-          me.prev.next := me.next;
-        Unlock(activeLock);
+    (* end "RunThread" *)
 
-        me.next := NIL;
-        me.prev := NIL;
-
-    (* RunThread *)
+    (* remove from the list of active threads *)
+    <*ASSERT allThreads # NIL*>
+    <*ASSERT allThreads # me*>
+    Lock(activeLock);
+      me.next.prev := me.prev;
+      me.prev.next := me.next;
+    Unlock(activeLock);
+    me.next := NIL;
+    me.prev := NIL;
 
     EVAL WinGDI.GdiFlush ();  (* help out Trestle *)
 
-    <*ASSERT me # allThreads*>
     DeleteActivation(me);
     RETURN 0;
   END ThreadBase;
@@ -524,57 +535,45 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 PROCEDURE Fork(closure: Closure): T =
   VAR t: T;
       stack_size: DWORD;
-      act: Activation;
+      act: Activation := NIL;
       id: DWORD;
-      handle: HANDLE;
-      abnormalTermination: BOOLEAN;
+      handle: HANDLE := NIL;
   BEGIN
-    IF DEBUG THEN ThreadDebug.Fork(); END;
-
-    <*ASSERT allThreads # NIL*>
-    <*ASSERT allThreads.next # NIL*>
-    <*ASSERT allThreads.prev # NIL*>
-
-    (* determine the initial size of the stack for this thread *)
-    stack_size := default_stack;
-    TYPECASE closure OF
-    | SizedClosure (scl) => IF scl.stackSize # 0 THEN 
-                              stack_size := scl.stackSize * BYTESIZE(INTEGER);
-                            END;
-    ELSE (*skip*)
-    END;
-
-    act := NEW(Activation);
     TRY
-      abnormalTermination := TRUE;
-      handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
-      IF DEBUG THEN
-        RTIO.PutText("creating act="); RTIO.PutAddr(handle); RTIO.PutText("\n"); RTIO.Flush();
+      IF DEBUG THEN ThreadDebug.Fork(); END;
+
+      <*ASSERT allThreads # NIL*>
+      <*ASSERT allThreads.next # NIL*>
+      <*ASSERT allThreads.prev # NIL*>
+
+      (* determine the initial size of the stack for this thread *)
+      stack_size := default_stack;
+      TYPECASE closure OF
+      | SizedClosure (scl) => IF scl.stackSize # 0 THEN 
+                                stack_size := scl.stackSize * BYTESIZE(INTEGER);
+                              END;
+      ELSE (*skip*)
       END;
+
+      act := NEW(Activation);
+      t := CreateT(act);
+      t.closure := closure;
+
+      (* create suspended just so we can store act.handle before it runs;
+      act.handle := CreateThread() is not good enough. *)
+
+      handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
       IF handle = NIL THEN
         RuntimeError.Raise(RuntimeError.T.SystemError);
       END;
       act.handle := handle;
-      t := CreateT(act);
-      abnormalTermination := FALSE;
+      act := NIL;
+      EVAL ResumeThread(handle);
+      handle := NIL;
+      RETURN t;
     FINALLY
-      IF abnormalTermination THEN
-        DeleteActivation(act);
-      END;
+      DeleteActivation(act);
     END;
-    t.closure := closure;
-    Lock(activeLock);
-      act.next := allThreads;
-      act.prev := allThreads.prev;
-      allThreads.prev.next := act;
-      allThreads.prev := act;
-      IF DEBUG THEN
-        RTIO.PutText("initial resume act="); RTIO.PutAddr(handle); RTIO.PutText("\n"); RTIO.Flush();
-      END;
-      IF ResumeThread(handle) = -1 THEN Choke(ThisLine()) END;
-      DEC(act.suspendCount);
-    Unlock(activeLock);
-    RETURN t;
   END Fork;
 
 PROCEDURE XWait (m: Mutex; c: Condition; alertable: BOOLEAN) RAISES {Alerted} =
@@ -755,12 +754,14 @@ PROCEDURE SuspendOthers () =
           IF DEBUG THEN
             RTIO.PutText("suspending act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
           END;
-          IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-          IF act.heapState.inCritical # 0 OR NOT GetContextAndCheckStack(act) THEN
-            IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-            INC(nLive);
-          ELSE
-            INC(act.suspendCount);
+          IF act.stackStart # NIL AND act.stackEnd # NIL THEN
+            IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
+            IF act.heapState.inCritical # 0 OR NOT GetContextAndCheckStack(act) THEN
+              IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
+              INC(nLive);
+            ELSE
+              INC(act.suspendCount);
+            END;
           END;
         END;
         act := act.next;
@@ -937,7 +938,6 @@ PROCEDURE Init() =
     self: T;
     me := NEW(Activation);
   BEGIN
-    me.suspendCount := 0;
     me.handle := InitC(ADR(self));
     me.next := me;
     me.prev := me;
