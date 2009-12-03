@@ -464,9 +464,11 @@ PROCEDURE RunThread (me: Activation) =
     IF perfOn THEN PerfChanged(State.alive) END;
     self := slots [me.slot];
 
-    (* Run the user-level code. *)
     IF perfOn THEN PerfRunning() END;
+
+    (* Run the user-level code. *)
     self.result := self.closure.apply();
+
     IF perfOn THEN PerfChanged(State.dying) END;
 
     LOCK self DO
