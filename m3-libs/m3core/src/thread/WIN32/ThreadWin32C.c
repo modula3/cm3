@@ -42,7 +42,7 @@ LOCK(giant)
 LOCK(heap)
 LOCK(perf)
 
-DWORD ThreadWin32__threadIndex = TLS_OUT_OF_INDEXES;
+static DWORD threadIndex = TLS_OUT_OF_INDEXES;
 
 static void InitLock(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
 {
@@ -66,7 +66,7 @@ static void DeleteLock(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
 
 BOOL __cdecl ThreadWin32__InitC(void)
 {
-    BOOL success = (ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+    BOOL success = (threadIndex != TLS_OUT_OF_INDEXES);
 
     InitLock(&ThreadWin32__activeLock, &activeLock);
     InitLock(&ThreadWin32__giantLock, &giantLock);
@@ -76,8 +76,8 @@ BOOL __cdecl ThreadWin32__InitC(void)
 
     if (!success)
     {
-        ThreadWin32__threadIndex = TlsAlloc(); /* This CAN fail. */
-        success = (ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+        threadIndex = TlsAlloc(); /* This CAN fail. */
+        success = (threadIndex != TLS_OUT_OF_INDEXES);
     }
     assert(success);
     return success;
@@ -91,10 +91,10 @@ void __cdecl ThreadWin32__Cleanup(void)
     DeleteLock(&ThreadWin32__perfLock, &perfLock);
     DeleteLock(&ThreadWin32__slotLock, &slotLock);
 
-    if (ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES)
+    if (threadIndex != TLS_OUT_OF_INDEXES)
     {
-        TlsFree(ThreadWin32__threadIndex);
-        ThreadWin32__threadIndex = TLS_OUT_OF_INDEXES;
+        TlsFree(threadIndex);
+        threadIndex = TLS_OUT_OF_INDEXES;
     }
 }
 
@@ -179,9 +179,9 @@ void __cdecl ThreadWin32__DeleteLock(PCRITICAL_SECTION lock)
 BOOL __cdecl ThreadWin32__SetActivation(void* act)
   /* LL = 0 */
 {
-    BOOL success = (ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+    BOOL success = (threadIndex != TLS_OUT_OF_INDEXES);
     assert(success);
-    success = TlsSetValue(ThreadWin32__threadIndex, act); /* NOTE: This CAN fail. */
+    success = TlsSetValue(threadIndex, act); /* NOTE: This CAN fail. */
     assert(success);
     return success;
 }
@@ -191,8 +191,8 @@ void* __cdecl ThreadWin32__GetActivation(void)
   /* LL = 0 */
   /* This function is called VERY frequently. */
 {
-    assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
-    return TlsGetValue(ThreadWin32__threadIndex);
+    assert(threadIndex != TLS_OUT_OF_INDEXES);
+    return TlsGetValue(threadIndex);
 }
 
 #if 0
