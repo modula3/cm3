@@ -786,8 +786,7 @@ PROCEDURE ResumeOthers () =
         IF DEBUG THEN
           RTIO.PutText("resuming act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
         END;
-        <*ASSERT (act.suspendCount > 0) OR (act.stackStart = NIL AND act.stackEnd = NIL)*>
-        <*ASSERT act.stackPointer # NIL*>
+        <*ASSERT (act.suspendCount > 0 AND act.stackPointer # NIL) OR (act.stackStart = NIL AND act.stackEnd = NIL)*>
         act.stackPointer := NIL;
         IF act.suspendCount > 0 THEN
           IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
