@@ -783,14 +783,16 @@ PROCEDURE ResumeOthers () =
       me := GetActivation();
       act := me.next;
       WHILE act # me DO
-        <*ASSERT act.suspendCount > 0*>
-        <*ASSERT act.stackPointer # NIL*>
-        act.stackPointer := NIL;
         IF DEBUG THEN
           RTIO.PutText("resuming act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
         END;
-        IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-        DEC(act.suspendCount);
+        <*ASSERT (act.suspendCount > 0) OR (act.stackStart = NIL AND act.stackEnd = NIL)*>
+        <*ASSERT act.stackPointer # NIL*>
+        act.stackPointer := NIL;
+        IF act.suspendCount > 0 THEN
+          IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
+          DEC(act.suspendCount);
+        END;
         act := act.next;
       END;
     END;
