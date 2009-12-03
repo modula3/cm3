@@ -10,6 +10,7 @@ UNSAFE INTERFACE ThreadWin32;
 FROM WinDef IMPORT LONG;
 FROM Thread IMPORT T;
 FROM ThreadF IMPORT State;
+FROM ThreadContext IMPORT PCONTEXT;
 
 (*---------------------------------------------------------------------------*)
 
@@ -73,7 +74,16 @@ PROCEDURE InterlockedDecrement(VAR a: LONG);
 PROCEDURE InterlockedRead(VAR a: LONG): LONG;
 
 <*EXTERNAL ThreadWin32__InitC*>
-PROCEDURE InitC();
+PROCEDURE InitC(bottom: ADDRESS);
+
+<*EXTERNAL "ThreadWin32__ProcessLive"*>
+PROCEDURE ProcessLive(bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
+
+<*EXTERNAL "ThreadWin32__ProcessStopped"*>
+PROCEDURE ProcessStopped(bottom: ADDRESS; context: PCONTEXT; p: PROCEDURE(start, limit: ADDRESS));
+
+<*EXTERNAL ThreadWin32__StackPointerFromContext*>
+PROCEDURE StackPointerFromContext(context: PCONTEXT): ADDRESS;
 
 (*----------------------------------------------------- for SchedulerPosix --*)
 
