@@ -295,6 +295,19 @@ void __cdecl ThreadWin32__ProcessLive(char *bottom, void (*p)(void *start, void 
   }
 }
 
+PCONTEXT ThreadWin32__NewContext(void)
+{
+    PCONTEXT context = (PCONTEXT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*context));
+    if (context)
+        context->ContextFlags = (CONTEXT_CONTROL | CONTEXT_INTEGER);
+    return context;
+}
+
+void ThreadWin32__DeleteContext(void* p)
+{
+    HeapFree(GetProcessHeap(), 0, p);
+}
+
 #if 0
 
 BOOL WINAPI DllMain(HANDLE DllHandle, DWORD Reason, PVOID Static)
