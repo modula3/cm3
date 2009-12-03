@@ -399,9 +399,8 @@ PROCEDURE AssignSlot (t: T) =
     Unlock(slotLock);
   END AssignSlot;
 
-PROCEDURE FreeSlot (t: T) =
+PROCEDURE FreeSlot (act: Activation) =
   (* LL = 0 *)
-  VAR act := t.act;
   BEGIN
     InterlockedDecrement(n_slotted);
     WITH z = slots [act.slot] DO
@@ -484,7 +483,7 @@ PROCEDURE RunThread (me: Activation) =
     self.waitSema := NIL;
 
     IF perfOn THEN PerfDeleted() END;
-    FreeSlot(self);  (* note: needs self.act ! *)
+    FreeSlot(me);
     (* Since we're no longer slotted, we cannot touch traced refs. *)
 
     (* remove ourself from the list of active threads *)
