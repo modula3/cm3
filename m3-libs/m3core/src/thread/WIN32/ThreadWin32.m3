@@ -9,7 +9,7 @@ UNSAFE MODULE ThreadWin32 EXPORTS
 Thread, ThreadF, Scheduler, RTThread, RTOS, RTHooks, ThreadWin32;
 
 IMPORT RTMisc, RTError, WinGDI, RTParams, FloatMode, RuntimeError;
-IMPORT Word, MutexRep, RTHeapRep, RTCollectorSRC;
+IMPORT Word, MutexRep, RTHeapRep, RTCollectorSRC, RTIO;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM WinNT IMPORT LONG, HANDLE, DWORD, DUPLICATE_SAME_ACCESS;
@@ -427,15 +427,10 @@ PROCEDURE CreateT (act: Activation): T =
     RETURN t;
   END CreateT;
 
-(* ThreadBase calls RunThread after finding where
-   its stack begins.  This ensures that all of ThreadMain's
-   traced references are within the stack scanned by the collector.
-*)
-
 <*WINAPI*>
 PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   VAR
-    me       : Activation   := param;
+    me: Activation   := param;
     self: T;
   BEGIN
     SetActivation (me);
@@ -445,6 +440,10 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 
     GetStackBounds(me.stackStart, me.stackEnd);
 
+    IF DEBUG THEN
+      RTIO.PutText("threadbase act="); RTIO.PutAddr(me.handle); RTIO.PutText("\n"); RTIO.Flush();
+    END;
+
     (* RunThread *)
 
         IF DEBUG THEN ThreadDebug.RunThread(); END;
@@ -453,7 +452,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 
         IF perfOn THEN PerfRunning() END;
 
-        (* Run the user-level code. *)
+        (*** Run the user-level code. ***)
         self.result := self.closure.apply();
 
         IF perfOn THEN PerfChanged(State.dying) END;
@@ -522,6 +521,9 @@ PROCEDURE Fork(closure: Closure): T =
 
     act := NEW(Activation);
     handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
+    IF DEBUG THEN
+      RTIO.PutText("creating act="); RTIO.PutAddr(handle); RTIO.PutText("\n"); RTIO.Flush();
+    END;
     IF handle = NIL THEN
       RuntimeError.Raise(RuntimeError.T.SystemError);
     END;
@@ -533,6 +535,9 @@ PROCEDURE Fork(closure: Closure): T =
       act.prev := allThreads.prev;
       allThreads.prev.next := act;
       allThreads.prev := act;
+      IF DEBUG THEN
+        RTIO.PutText("initial resume act="); RTIO.PutAddr(handle); RTIO.PutText("\n"); RTIO.Flush();
+      END;
       IF ResumeThread(handle) = -1 THEN Choke(ThisLine()) END;
       DEC(act.suspendCount);
     Unlock(activeLock);
@@ -690,7 +695,7 @@ BEGIN
   tested on Windows 95. *)
 
   IF GetThreadContext(act.handle, ADR(act.context)) = 0 THEN Choke(ThisLine()) END;
-  act.stackPointer := LOOPHOLE (act.context.Esp, ADDRESS);
+  act.stackPointer := StackPointerFromContext(ADR(act.context));
   RETURN (act.stackPointer >= act.stackStart AND act.stackPointer < act.stackEnd);
 
 END GetContextAndCheckStack;
@@ -713,6 +718,9 @@ PROCEDURE SuspendOthers () =
       nLive := 0;
       WHILE act # me DO
         IF act.suspendCount = 0 THEN
+          IF DEBUG THEN
+            RTIO.PutText("suspending act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
+          END;
           IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
           IF act.heapState.inCritical # 0 OR NOT GetContextAndCheckStack(act) THEN
             IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
@@ -743,6 +751,9 @@ PROCEDURE ResumeOthers () =
         <*ASSERT act.suspendCount > 0*>
         <*ASSERT act.stackPointer # NIL*>
         act.stackPointer := NIL;
+        IF DEBUG THEN
+          RTIO.PutText("resuming act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
+        END;
         IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
         DEC(act.suspendCount);
         act := act.next;
@@ -754,25 +765,38 @@ PROCEDURE ResumeOthers () =
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
-  VAR act := allThreads;
-       me := GetActivation();
-       assertReadable: CHAR;
-       stackPointer: UNTRACED REF CHAR;
+  VAR me := GetActivation();
+      act: Activation;
   BEGIN
-    me.stackPointer := ADR(me);
-    REPEAT
-      IF act.stackStart # NIL AND act.stackEnd # NIL THEN
-        RTHeapRep.FlushThreadState(act.heapState);
-        stackPointer := act.stackPointer;
-        <*ASSERT stackPointer # NIL*>
-        assertReadable := stackPointer^;
-        p(stackPointer, act.stackEnd); (* Process the stack *)
-        p(ADR(act.context.Edi), ADR(act.context.Eip));  (* Process the registers *)
-      END;
+    ProcessMe(me, p);
+    act := me.next;
+    WHILE act # me DO
+      ProcessOther(act, p);
       act := act.next;
-    UNTIL (act = allThreads);
-    me.stackPointer := NIL;
+    END;
   END ProcessStacks;
+
+PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
+  (* LL=activeMu *)
+  BEGIN
+    IF DEBUG THEN
+      RTIO.PutText("Processing me="); RTIO.PutAddr(me.handle); RTIO.PutText("\n"); RTIO.Flush();
+    END;
+    RTHeapRep.FlushThreadState(me.heapState);
+    ProcessLive(me.stackEnd, p);
+  END ProcessMe;
+
+PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
+  BEGIN
+    IF DEBUG THEN
+      RTIO.PutText("Processing act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
+    END;
+    IF act.stackStart = NIL OR act.stackEnd = NIL THEN
+      RETURN
+    END;
+    RTHeapRep.FlushThreadState(act.heapState);
+    ProcessStopped(act.stackEnd, ADR(act.context), p);
+  END ProcessOther;
 
 PROCEDURE ProcessEachStack (<*UNUSED*>p: PROCEDURE (start, limit: ADDRESS)) =
   BEGIN
@@ -880,7 +904,7 @@ PROCEDURE Init() =
     me := NEW(Activation);
   BEGIN
     me.suspendCount := 0;
-    InitC();
+    InitC(ADR(self));
     SetActivation(me);
     IF DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
             ADR(me.handle), 0, 0, DUPLICATE_SAME_ACCESS) = 0 THEN
@@ -898,6 +922,10 @@ PROCEDURE Init() =
 
     GetStackBounds(me.stackStart, me.stackEnd);
     IF me.stackStart = NIL OR me.stackEnd = NIL THEN Choke(ThisLine()); END;
+
+    IF DEBUG THEN
+      RTIO.PutText("created initial act="); RTIO.PutAddr(me.handle); RTIO.PutText("\n"); RTIO.Flush();
+    END;
 
     <*ASSERT inCritical = 1*>
     inCritical := 0;
