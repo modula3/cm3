@@ -45,7 +45,7 @@ PROCEDURE FromTime(t: Time.T; z: TimeZone := NIL): T =
          negation is necessary. *)
       date.offset  := - (tm.tm_gmtoff);
       date.zone    := M3toC.CopyStoT (tm.tm_zone);
-    END;
+    END; (* LOCK mu this comment is for m3makefile/grep to find *)
     RETURN date;
   END FromTime;
 
