@@ -5,7 +5,7 @@
 INTERFACE Unix;
 
 FROM Cstddef IMPORT size_t;
-FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
+FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star, unsigned;
 FROM Utime IMPORT struct_timeval;
 FROM Utypes IMPORT off_t, mode_t, dev_t, uid_t, gid_t, pid_t;
 IMPORT Usysdep;
@@ -153,6 +153,8 @@ PROCEDURE isatty (file: int): int;
 
 <*EXTERNAL "Unix__system"*>
 PROCEDURE system (string: const_char_star): int;
+
+<*EXTERNAL Unix__sleep*> PROCEDURE sleep (a: unsigned): unsigned;
 
 <*EXTERNAL "Unix__Assertions"*>
 PROCEDURE Assertions();
