@@ -9,5 +9,5 @@
 
 module ("ThreadPThread")
 c_source ("ThreadPThreadC")
-pgm_source ("ThreadApple.c")
-pgm_source ("ThreadFreeBSD.c")
+c_source ("ThreadApple")
+c_source ("ThreadFreeBSD")
