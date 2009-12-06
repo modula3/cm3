@@ -1,15 +1,11 @@
 #!/bin/sh
 
-#
 # echo everything and fail on any error
-#
 
 set -e
 set -x
 
-#
 # establish some parameters
-#
 
 if [ "x$CM3_VERSION" = "x" ]; then
     CM3_VERSION=2009-05-01
@@ -23,9 +19,7 @@ TARGET=I386_DARWIN
 CM3_TARGET=$TARGET
 export CM3_TARGET
 
-#
 # functions
-#
 
 copy_exe() {
   a=`basename $1`
@@ -77,3 +71,4 @@ for a in $p; do clean $a || exit 1; done
 for a in $p; do buildship $a || exit 1; done
 
 echo success
+
