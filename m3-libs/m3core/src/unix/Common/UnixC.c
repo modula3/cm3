@@ -383,6 +383,8 @@ int Unix__execve(const char* name, char** argv, char** envp)
     return execve(name, argv, envp);
 }
 
+unsigned Unix__sleep(unsigned i) { return sleep(i); }
+
 #endif
 
 void Unix__exit(int i)
