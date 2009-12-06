@@ -346,7 +346,23 @@ PROCEDURE FreeSlot (t: T) =
 
       DEC (n_slotted);
       WITH z = slots [t.act.slot] DO
-        IF (z # t) THEN Die (ThisLine(), "unslotted thread!"); END;
+        IF (z # t) THEN
+          RTIO.PutText("FreeSlot: z=");
+          RTIO.PutAddr(ADR(z));
+          RTIO.PutText(" t=");
+          RTIO.PutAddr(ADR(t));
+          RTIO.PutText(" n_slotted=");
+          RTIO.PutInt(n_slotted);
+          RTIO.PutText(" slots=");
+          RTIO.PutAddr(ADR(slots));
+          RTIO.PutText(" t.act=");
+          RTIO.PutAddr(ADR(t.act));
+          RTIO.PutText(" t.act.slot=");
+          RTIO.PutInt(t.act.slot);
+          RTIO.PutText("\n");
+          RTIO.Flush();
+          Die (ThisLine(), "unslotted thread!");
+        END;
         z := NIL;
       END;
       t.act.slot := 0;
