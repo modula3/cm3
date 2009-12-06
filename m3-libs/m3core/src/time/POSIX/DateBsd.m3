@@ -79,17 +79,14 @@ PROCEDURE ToTime(READONLY d: T): Time.T RAISES {Error} =
 
     (* adjust result to reflect "d.offset" *)
     EVAL Utime.time(ADR(now));
-
-    LOCK mu DO
-      local_now := Utime.localtime(ADR(now));
-      IF local_now.tm_isdst > 0 THEN
-        (* decrement the local time zone by one hour if DST is in effect *)
-        DEC(local_now.tm_gmtoff, 1 * SecsPerHour)
-      END;
-      (* As above, we must negate "d.offset" to account for the
-         opposite sense of that field compared to Unix. *)
-      DEC(time, (-d.offset) - local_now.tm_gmtoff);
+    local_now := Utime.localtime(ADR(now));
+    IF local_now.tm_isdst > 0 THEN
+      (* decrement the local time zone by one hour if DST is in effect *)
+      DEC(local_now.tm_gmtoff, 1 * SecsPerHour)
     END;
+    (* As above, we must negate "d.offset" to account for the
+       opposite sense of that field compared to Unix. *)
+    DEC(time, (-d.offset) - local_now.tm_gmtoff);
 
     (* convert to a "Time.T" *)
     t := FLOAT(time, LONGREAL);
