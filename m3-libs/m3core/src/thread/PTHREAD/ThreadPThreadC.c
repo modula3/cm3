@@ -213,6 +213,17 @@ ThreadPThread__thread_create(pthread_t *pthread,
   pthread_attr_setstacksize(&attr, bytes);
 
   r = pthread_create(pthread, &attr, start_routine, arg);
+  if (r == EAGAIN || r == ENOMEM)
+  {
+    /* try again right away */
+    r = pthread_create(pthread, &attr, start_routine, arg);
+    if (r == EAGAIN || r == ENOMEM)
+    {
+      /* try again after short delay */
+      sleep(1);
+      r = pthread_create(pthread, &attr, start_routine, arg);
+    }
+  }
 
   pthread_attr_destroy(&attr);
 
@@ -261,8 +272,17 @@ ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
   if (p == NULL)
     goto Error;
   r = init(p, NULL);
-  if (r == EAGAIN)
+  if (r == EAGAIN || r == ENOMEM)
+  {
+    /* try again right away */
     r = init(p, NULL);
+    if (r == EAGAIN || r == ENOMEM)
+    {
+      /* try again after short delay */
+      sleep(1);
+      r = init(p, NULL);
+    }
+  }
   if (r == ENOMEM)
     goto Error;
   assert(r == 0);
@@ -305,7 +325,7 @@ ThreadPThread__pthread_mutex_delete(pthread_mutex_t* p)
   /* workaround Tru64 5.1 and HP-UX bug: pthread_mutex_destroy()
      intermittently returns EBUSY even when there are no threads accessing the
      mutex. */
-  while ((e = pthread_mutex_destroy(p)) == EBUSY) { }
+  do { e = pthread_mutex_destroy(p); } while (e == EBUSY);
 #else
   e = pthread_mutex_destroy(p);
 #endif
