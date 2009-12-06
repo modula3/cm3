@@ -1273,17 +1273,18 @@ def Boot():
     for q in P:
         dir = GetPackagePath(q)
         for a in os.listdir(os.path.join(Root, dir, Config)):
-            if (a.endswith(".ms") or a.endswith(".is") or a.endswith(".s") or a.endswith(".c")):
-                CopyFile(os.path.join(Root, dir, Config, a), BootDir)
-                Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
-                if a.endswith(".c"):
-                    Command = "Compile"
-                else:
-                    Command = "Assemble"
-                for b in [Make, Makefile]:
-                    b.write("${" + Command + "} " + a + " -o " + a + ".o\n")
-            if a.endswith(".h"):
-                CopyFile(os.path.join(Root, dir, Config, a), BootDir)
+            if not (a.endswith(".ms") or a.endswith(".is") or a.endswith(".s") or a.endswith(".c") or a.endswith(".h")):
+                continue
+            CopyFile(os.path.join(Root, dir, Config, a), BootDir)
+            if a.endswith("ThreadApple.c") or a.endswith("ThreadFreeBSD.c") or a.endswith(".h"):
+                continue
+            Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
+            if a.endswith(".c"):
+                Command = "Compile"
+            else:
+                Command = "Assemble"
+            for b in [Make, Makefile]:
+                b.write("${" + Command + "} " + a + " -o " + a + ".o\n")
 
     Makefile.write("cm3: $(Objects)\n\t")
 
