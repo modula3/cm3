@@ -1139,7 +1139,7 @@ def _MakeArchive(a):
 def Boot():
 
     global BuildLocal
-    BuildLocal += " -boot -keep "
+    BuildLocal += " -boot -keep -DM3CC_TARGET=" + Target
 
     Version = "1"
 
@@ -1233,7 +1233,7 @@ def Boot():
 
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
-    P = [ "ntdll", "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
+    P = [ "m3cc", "ntdll", "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
           "m3objfile", "m3linker", "m3back", "m3front", "cm3" ]
     if Target == "NT386":
         P += ["mklib"]
