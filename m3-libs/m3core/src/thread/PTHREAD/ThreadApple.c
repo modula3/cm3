@@ -13,6 +13,7 @@ void ThreadApple__Dummy(void)
 #else
 
 #include "m3unix.h"
+#include <stdlib.h>
 #include <pthread.h>
 #include <signal.h>
 #include <sys/ucontext.h>
@@ -112,7 +113,9 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   sp = (void *)(state.r13);
 #endif
   /* process the stack */
-  assert(stack_grows_down);
+#if 0
+  assert(stack_grows_down); /* See ThreadPThreadC.c */
+#endif
   assert(context == 0);
   p(sp, bottom);
   /* process the registers */

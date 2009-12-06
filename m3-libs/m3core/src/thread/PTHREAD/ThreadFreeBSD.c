@@ -15,6 +15,7 @@ void ThreadFreeBSD__Dummy(void)
 #include "m3unix.h"
 #include <pthread.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
