@@ -441,6 +441,8 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
     FloatMode.InitThread (me.floatState);
 
+    me.stackbase := ADR(me);          (* enable GC scanning of this stack *)
+
     RunThread(me);
 
     (* remove from the list of active threads *)
@@ -458,7 +460,6 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
 PROCEDURE RunThread (me: Activation) =
   VAR self: T;
   BEGIN
-    me.stackbase := ADR(self);          (* enable GC scanning of this stack *)
     IF perfOn THEN PerfChanged(State.alive) END;
 
     WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
