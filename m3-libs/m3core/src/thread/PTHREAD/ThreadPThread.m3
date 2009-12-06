@@ -192,8 +192,9 @@ PROCEDURE XWait (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN)
 
 PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
+  VAR self := GetActivation();
   BEGIN
-    XWait(GetActivation(), m, c, alertable := TRUE);
+    XWait(self, m, c, alertable := TRUE);
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
@@ -382,7 +383,7 @@ PROCEDURE DumpThread (t: Activation) =
     RTIO.PutText("  frame:      "); RTIO.PutAddr(t.frame);       RTIO.PutChar('\n');
     RTIO.PutText("  next:       "); RTIO.PutAddr(t.next);        RTIO.PutChar('\n');
     RTIO.PutText("  prev:       "); RTIO.PutAddr(t.prev);        RTIO.PutChar('\n');
-    RTIO.PutText("  handle:     "); RTIO.PutAddr(t.handle); RTIO.PutChar('\n');
+    RTIO.PutText("  handle:     "); RTIO.PutAddr(t.handle);      RTIO.PutChar('\n');
     RTIO.PutText("  stackbase:  "); RTIO.PutAddr(t.stackbase);   RTIO.PutChar('\n');
     RTIO.PutText("  context:    "); RTIO.PutAddr(t.context);     RTIO.PutChar('\n');
     RTIO.PutText("  state:      ");
@@ -444,10 +445,11 @@ PROCEDURE CreateT (act: Activation): T =
    traced references are within the stack scanned by the collector. *)
 
 PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
-  VAR me: Activation := param;
+  VAR
+    xx: INTEGER;
+    me: Activation := param;
   BEGIN
     SetActivation(me);
-    me.handle := pthread_self();
 
     (* add to the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
@@ -455,6 +457,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
       me.prev := allThreads.prev;
       allThreads.prev.next := me;
       allThreads.prev := me;
+      me.stackbase := ADR(xx);          (* enable GC scanning of this stack *)
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
     FloatMode.InitThread (me.floatState);
 
@@ -462,6 +465,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
 
     (* remove from the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
+      me.stackbase := NIL;              (* disable GC scanning of my stack *)
       <*ASSERT allThreads # me*>
       me.next.prev := me.prev;
       me.prev.next := me.next;
@@ -475,7 +479,6 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
 PROCEDURE RunThread (me: Activation) =
   VAR self: T;
   BEGIN
-    me.stackbase := ADR(self);          (* enable GC scanning of this stack *)
     IF perfOn THEN PerfChanged(State.alive) END;
 
     WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
@@ -501,7 +504,6 @@ PROCEDURE RunThread (me: Activation) =
     IF perfOn THEN PerfDeleted() END;
     FreeSlot(self);  (* note: needs self.act ! *)
     (* Since we're no longer slotted, we cannot touch traced refs. *)
-    me.stackbase := NIL;              (* disable GC scanning of my stack *)
   END RunThread;
 
 VAR joinMu: MUTEX;
@@ -853,7 +855,6 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
   VAR
     me := GetActivation();
     act: Activation;
-    state: ActState;
     acks: int;
     nLive, nDead, newlySent: INTEGER;
     wait_nsecs := RETRY_INTERVAL;
@@ -889,9 +890,8 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
         <*ASSERT acks < nLive*>
         IF wait_nsecs <= 0 THEN
           newlySent := 0;
-          state := act.state;
-          <*ASSERT state # ActState.Starting*>
-          IF state # ActState.Stopped THEN
+          <*ASSERT act.state # ActState.Starting*>
+          IF act.state # ActState.Stopped THEN
             SignalThread(act);
             INC(newlySent);
           END;
@@ -944,9 +944,8 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
         <*ASSERT acks < nDead*>
         IF wait_nsecs <= 0 THEN
           newlySent := 0;
-          state := act.state;
-          <*ASSERT state # ActState.Stopping*>
-          IF state # ActState.Started THEN
+          <*ASSERT act.state # ActState.Stopping*>
+          IF act.state # ActState.Started THEN
             SignalThread(act);
             INC(newlySent);
           END;
@@ -1035,7 +1034,6 @@ PROCEDURE StopWorld () =
   VAR
     me := GetActivation();
     act: Activation;
-    state: ActState;
     acks: int;
     nLive, newlySent: INTEGER;
     retry: BOOLEAN;
@@ -1079,9 +1077,8 @@ PROCEDURE StopWorld () =
         newlySent := 0;
         act := me.next;
         WHILE act # me DO
-          state := act.state;
-          <*ASSERT state # ActState.Starting*>
-          IF state # ActState.Stopped THEN
+          <*ASSERT act.state # ActState.Starting*>
+          IF act.state # ActState.Stopped THEN
             SignalThread(act);
             INC(newlySent);
           END;
@@ -1119,7 +1116,6 @@ PROCEDURE StartWorld () =
   VAR
     me := GetActivation();
     act: Activation;
-    state: ActState;
     acks: int;
     nDead, newlySent: INTEGER;
     retry: BOOLEAN;
@@ -1163,9 +1159,8 @@ PROCEDURE StartWorld () =
         newlySent := 0;
         act := me.next;
         WHILE act # me DO
-          state := act.state;
-          <*ASSERT state # ActState.Stopping*>
-          IF state # ActState.Started THEN
+          <*ASSERT act.state # ActState.Stopping*>
+          IF act.state # ActState.Started THEN
             SignalThread(act);
             INC(newlySent);
           END;
