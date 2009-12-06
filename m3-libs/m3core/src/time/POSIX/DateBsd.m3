@@ -9,9 +9,9 @@
 
 UNSAFE MODULE DateBsd EXPORTS Date;
 
-IMPORT Thread, Time, M3toC, Utime, TimePosix;
+IMPORT Time, M3toC, Utime, TimePosix;
 
-VAR mu := NEW(Thread.Mutex);
+VAR mu := NEW(MUTEX);
 (* Protect the static storage used by "Utime.localtime" and "Utime.gmtime"
    (see the localtime(3) manpage). *)
 
