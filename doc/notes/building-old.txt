@@ -13,8 +13,13 @@ Fatal Error: package build failed
 + exit 1
 
 
-Edit out all references to M3Config and might as well also Version
+Edit out most of the references to M3Config and might as well also Version
 in m3-sys/cm3/src/Main.m3.
+
+It depends on the version.
+IMPORT MxConfig AS M3Config(*, CMKey, CMCurrent *);
+    config := M3Config.FindFile ();
+is fine.
 
 3)
 Testing older X apps on MacOS X with Apple's X, you will always get:
@@ -49,5 +54,29 @@ Arg.
  
 Change SameHost in that file to just return TRUE or FALSE.
 FALSE is probably always safe, even if it is wrong.
+
+4)
+Older compilers don't like current cm3.cfg, in particular the GetM3Back function causes:
+
+
+***
+*** runtime error:
+***    An array subscript was out of range.
+***    file "../src/QMachine.m3", line 684
+***
+
+Put the line:
+
+    return "@" & INSTALL_ROOT & "/bin/cm3cg"
+
+
+at the start of GetM3Back.
+
+5)
+If you try to use older config files, feel free to neuter parts
+that try to build shared libraries and just build static instead.
+Set shared = FALSE in the functions for example.
+And on some operating systems (Mac), remove the "-static" flag.
+And -Wl,-R seen to error on Mac.
 
   - Jay
