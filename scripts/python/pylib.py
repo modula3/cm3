@@ -1276,7 +1276,7 @@ def Boot():
             if not (a.endswith(".ms") or a.endswith(".is") or a.endswith(".s") or a.endswith(".c") or a.endswith(".h")):
                 continue
             CopyFile(os.path.join(Root, dir, Config, a), BootDir)
-            if a.endswith("ThreadApple.c") or a.endswith("ThreadFreeBSD.c") or a.endswith(".h"):
+            if a.endswith(".h"):
                 continue
             Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
             if a.endswith(".c"):
