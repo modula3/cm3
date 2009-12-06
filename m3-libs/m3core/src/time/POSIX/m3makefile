@@ -21,7 +21,8 @@ readonly _DateImpls = {
 }
 
 if equal(_DateImpls {TARGET_OS}, "DateBsd") and KernelThreads
-  exec("grep -v \" mu \" ../src/time/POSIX/DateBsd.m3 > DateBsd.m3")
+  exec("@grep -v \" mu \" ../src/time/POSIX/DateBsd.m3 > DateBsd.m3.tmp")
+  cp_if("DateBsd.m3.tmp", "DateBsd.m3")
   derived_implementation ("DateBsd")
 else
   implementation (_DateImpls {TARGET_OS})
