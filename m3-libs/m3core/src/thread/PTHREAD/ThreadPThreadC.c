@@ -155,6 +155,9 @@ void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 
+#include "ThreadApple.c"
+#include "ThreadFreeBSD.c"
+
 #endif /* M3_DIRECT_SUSPEND */
 
 void
