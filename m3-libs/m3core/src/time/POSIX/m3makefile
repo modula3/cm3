@@ -20,5 +20,10 @@ readonly _DateImpls = {
   "SOLARIS" : "DatePosix",
 }
 
-implementation (_DateImpls {TARGET_OS})
+if equal(_DateImpls {TARGET_OS}, "DateBsd") and KernelThreads
+  exec("grep -v \" mu \" ../src/time/POSIX/DateBsd.m3 > DateBsd.m3")
+  derived_implementation ("DateBsd")
+else
+  implementation (_DateImpls {TARGET_OS})
+end
 Module("TimePosix")
