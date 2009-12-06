@@ -19,8 +19,29 @@ void Utime__Assertions(void)
       M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, tv_sec) + M3_FIELD_SIZE(T, tv_nsec)); }
 
     /* verify timeval (microtime) contains just the two fields we know about, in either order */
+#if defined(__APPLE__) && defined(__x86_64__)
+/* AMD64_DARWIN has:
+struct timeval
+{
+ int64 tv_sec;
+ int32 tv_usec;
+ 4 bytes of padding
+}; I do not see much we can do about this. We use copying wrappers and we
+   want to be sure they are copying the entire struct.
+*/
+    { typedef timeval_t T1;
+      typedef struct { time_t tv_sec; suseconds_t tv_usec; } T2;
+      M3_STATIC_ASSERT(M3_FIELD_SIZE(T1, tv_sec) == 8);
+      M3_STATIC_ASSERT(M3_FIELD_SIZE(T1, tv_usec) == 4);
+      M3_STATIC_ASSERT(M3_FIELD_SIZE(T2, tv_sec) == 8);
+      M3_STATIC_ASSERT(M3_FIELD_SIZE(T2, tv_usec) == 4);
+      M3_STATIC_ASSERT(sizeof(T1) == 16);
+      M3_STATIC_ASSERT(sizeof(T2) == 16);
+    }
+#else
     { typedef timeval_t T;
       M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, tv_sec) + M3_FIELD_SIZE(T, tv_usec)); }
+#endif
 
     /* verify timezone is exactly as we expect */
     { typedef m3_timezone_t M;
