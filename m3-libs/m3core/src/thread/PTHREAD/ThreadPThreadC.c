@@ -11,6 +11,7 @@
 #include <sys/ucontext.h>
 
 #if defined(__INTERIX) || defined(__APPLE__) || defined(__FreeBSD__)
+/* See ThreadApple.c and ThreadFreeBSD.c. */
 #define M3_DIRECT_SUSPEND
 #endif
 
@@ -154,9 +155,6 @@ void ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
-
-#include "ThreadApple.c"
-#include "ThreadFreeBSD.c"
 
 #endif /* M3_DIRECT_SUSPEND */
 
@@ -414,6 +412,9 @@ InitC(int *bottom)
   int r;
 
   stack_grows_down = (bottom > &r);
+#ifdef __APPLE__
+  assert(stack_grows_down); /* See ThreadApple.c */
+#endif
   r = pthread_key_create(&activations, NULL); assert(r == 0);
 
 #ifndef M3_DIRECT_SUSPEND
