@@ -44,20 +44,10 @@ void Usocket__Assertions(void)
 
 /* wrap everything */
 
-int Usocket__listen(int s, int backlog)
-{
-    return listen(s, backlog);
-}
-
-int Usocket__shutdown(int s, int how)
-{
-    return shutdown(s, how);
-}
-
-int Usocket__socket(int af, int type, int protocol)
-{
-    return socket(af, type, protocol);
-}
+#define M3MODULE Usocket
+M3WRAP2(int, listen, int, int)
+M3WRAP2(int, shutdown, int, int)
+M3WRAP3(int, socket, int, int, int)
 
 /* wrap everything taking input socklen_t */
 

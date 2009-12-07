@@ -10,10 +10,8 @@ extern "C" {
 
 #ifndef _WIN32
 
-int Usignal__kill(m3_pid_t pid, int sig)
-{
-    return kill(pid, sig);
-}
+#define M3MODULE Usignal
+M3WRAP2(int, kill, m3_pid_t, int)
 
 #endif
 

@@ -56,6 +56,7 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #define M3WRAP5(ret, name, a, b, c, d, e) M3WRAP(ret, name, (a i, b j, c k, d m, e n), (i, j, k, m, n))
 #define M3WRAP6(ret, name, a, b, c, d, e, f) M3WRAP(ret, name, (a i, b j, c k, d m, e n, f o), (i, j, k, m, n, o))
 
+#define M3WRAP0_(ret, name)           M3WRAP_(ret, name, (void),               ())
 #define M3WRAP1_(ret, name, a)        M3WRAP_(ret, name, (a i),                (i))
 #define M3WRAP2_(ret, name, a, b)     M3WRAP_(ret, name, (a i, b j),           (i, j))
 #define M3WRAP3_(ret, name, a, b, c)  M3WRAP_(ret, name, (a i, b j, c k),      (i, j, k))
