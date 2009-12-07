@@ -15,7 +15,7 @@ Some use BSD sigvec which is similar to sigaction.
 #define _XPG4_2
 #define _DARWIN_C_SOURCE
 
-#include "m3unix.h"
+#include "m3core.h"
 #include "ThreadPosix.h"
 #include <string.h>
 #include <stdlib.h>

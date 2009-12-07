@@ -2,7 +2,7 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
-#include "m3unix.h"
+#include "m3core.h"
 #if defined(__OpenBSD__)
 #include "context/setjmp/context.h"
 #define HAS_UCONTEXT_T

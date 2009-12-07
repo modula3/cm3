@@ -7,7 +7,7 @@ Modula-3 Time.T is LONGREAL aka double counting seconds.
 We use gettimeofday() which returns seconds and microseconds.
 */
 
-#include "m3unix.h"
+#include "m3core.h"
 #include <stdio.h>
 
 #ifdef __cplusplus
