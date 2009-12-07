@@ -40,11 +40,19 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #define __cdecl /* nothing */
 #endif
 
+#ifdef __cplusplus
+#define M3EXTERNC_BEGIN extern "C" {
+#define M3EXTERNC_END }
+#else
+#define M3EXTERNC_BEGIN
+#define M3EXTERNC_END
+#endif
+
 #define M3WRAPNAMEx(a, b) a##__##b
 #define M3WRAPNAME(a, b) M3WRAPNAMEx(a, b)
-#define M3WRAP(ret, name, in, out)     ret __cdecl M3WRAPNAME(M3MODULE, name) in { return name out; }
+#define M3WRAP(ret, name, in, out)     M3EXTERNC_BEGIN ret __cdecl M3WRAPNAME(M3MODULE, name) in { return name out; } M3EXTERNC_END
 #ifdef _WIN32
-#define M3WRAP_(ret, name, in, out)    ret __cdecl M3WRAPNAME(M3MODULE, name) in { return _##name out; }
+#define M3WRAP_(ret, name, in, out)    M3EXTERNC_BEGIN ret __cdecl M3WRAPNAME(M3MODULE, name) in { return _##name out; } M3EXTERNC_END
 #else
 #define M3WRAP_(ret, name, in, out)    M3WRAP(ret, name, in, out)
 #endif

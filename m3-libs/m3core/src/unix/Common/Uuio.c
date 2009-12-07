@@ -4,14 +4,6 @@
 
 #include "m3unix.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define M3MODULE Uuio
 M3WRAP3_(ssize_t, read, int, void*, size_t)
 M3WRAP3_(ssize_t, write, int, const void*, size_t)
-
-#ifdef __cplusplus
-}
-#endif

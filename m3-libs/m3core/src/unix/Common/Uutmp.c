@@ -4,17 +4,9 @@
 
 #include "m3unix.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef _WIN32
 
 #define M3MODULE Uutmp
 M3WRAP0(char*, getlogin)
 
-#endif
-
-#ifdef __cplusplus
-}
 #endif
