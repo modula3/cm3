@@ -7,7 +7,7 @@
 /* Originally submitted on Fri, 22 Jul 1994 16:42:53 GMT      */
 /*   by jredford@lehman.com (John Redford)                    */
 
-#include "m3unix.h"
+#include "m3core.h"
 
 #ifdef __cplusplus
 extern "C"

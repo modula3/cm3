@@ -27,7 +27,7 @@ However that is not portable.
 So use these wrappers instead.
 */
 
-#include "m3unix.h"
+#include "m3core.h"
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
