@@ -8,14 +8,8 @@
 extern "C" {
 #endif
 
-m3_pid_t Uprocess__getpid(void)
-{
-#ifdef _WIN32
-    return _getpid();
-#else
-    return getpid();
-#endif
-}
+#define M3PMODULE Uprocess
+M3WRAP0_(m3_pid_t, getpid)
 
 #ifdef __cplusplus
 }

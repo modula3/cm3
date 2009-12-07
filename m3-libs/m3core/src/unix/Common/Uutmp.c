@@ -10,10 +10,8 @@ extern "C" {
 
 #ifndef _WIN32
 
-char* Uutmp__getlogin(void)
-{
-    return getlogin();
-}
+#define M3MODULE Uutmp
+M3WRAP0(char*, getlogin)
 
 #endif
 
