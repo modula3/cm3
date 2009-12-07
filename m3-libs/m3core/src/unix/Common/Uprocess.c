@@ -4,5 +4,5 @@
 
 #include "m3unix.h"
 
-#define M3PMODULE Uprocess
+#define M3MODULE Uprocess
 M3WRAP0_(m3_pid_t, getpid)
