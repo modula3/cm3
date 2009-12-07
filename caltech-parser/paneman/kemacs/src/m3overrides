@@ -1,2 +1,1 @@
-/* $Id: m3overrides,v 1.3 2008-02-20 11:14:03 wagner Exp $ */
-include(".." & SL & ".." & SL & ".." & SL & "m3overrides")
+include(ROOT & "/m3overrides")
