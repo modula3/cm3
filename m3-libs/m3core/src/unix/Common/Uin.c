@@ -5,25 +5,11 @@
 extern "C" {
 #endif
 
-UINT32 Uin__ntohl(UINT32 x)
-{
-    return ntohl(x);
-}
-
-UINT16 Uin__ntohs(UINT16 x)
-{
-    return ntohs(x);
-}
-
-UINT32 Uin__htonl(UINT32 x)
-{
-    return htonl(x);
-}
-
-UINT16 Uin__htons(UINT16 x)
-{
-    return htons(x);
-}
+#define M3MODULE Uin
+M3WRAP1(UINT32, ntohl, UINT32)
+M3WRAP1(UINT16, ntohs, UINT16)
+M3WRAP1(UINT32, htonl, UINT32)
+M3WRAP1(UINT16, htons, UINT16)
 
 #ifdef __cplusplus
 }
