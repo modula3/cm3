@@ -272,9 +272,9 @@ PROCEDURE InitActivations (): Activation =
     me.next := me;
     me.prev := me;
     SetActivation(me);
-    <* ASSERT next_slot = 1 *> (* no threads created yet *)
-    <* ASSERT slots = NIL *> (* no threads created yet *)
-    <* ASSERT n_slotted = 0 *> (* no threads created yet *)
+    <* ASSERT next_slot = 1 *>    (* no threads created yet *)
+    <* ASSERT slots = NIL *>      (* no threads created yet *)
+    <* ASSERT n_slotted = 0 *>    (* no threads created yet *)
     <* ASSERT allThreads = NIL *> (* no threads created yet *)
     allThreads := me;
     FloatMode.InitThread(me.floatState);
@@ -470,9 +470,11 @@ PROCEDURE RunThread (me: Activation) =
       self := slots [me.slot];
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
 
-    (* Run the user-level code. *)
     IF perfOn THEN PerfRunning() END;
+
+    (*** Run the user-level code. ***)
     self.result := self.closure.apply();
+
     IF perfOn THEN PerfChanged(State.dying) END;
 
     (* Join *)
