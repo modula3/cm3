@@ -986,6 +986,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
 (* Signal based suspend/resume *)
 
 PROCEDURE SignalThread(act: Activation) =
+  (* LL=activeMu *)
   BEGIN
     <*ASSERT SIG_SUSPEND # 0*>
     LOOP
@@ -998,6 +999,7 @@ PROCEDURE SignalThread(act: Activation) =
   END SignalThread;
 
 PROCEDURE StopThread (act: Activation): BOOLEAN =
+  (* LL=activeMu *)
   BEGIN
     <*ASSERT act.state = ActState.Stopping*>
     <*ASSERT SIG_SUSPEND = 0*>
@@ -1010,6 +1012,7 @@ PROCEDURE StopThread (act: Activation): BOOLEAN =
   END StopThread;
 
 PROCEDURE StartThread (act: Activation): BOOLEAN =
+  (* LL=activeMu *)
   BEGIN
     <*ASSERT act.state = ActState.Starting*>
     <*ASSERT SIG_SUSPEND = 0*>
