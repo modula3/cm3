@@ -446,10 +446,10 @@ PROCEDURE CreateT (act: Activation): T =
 
 PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   VAR
-    xx: INTEGER;
     me: Activation := param;
   BEGIN
     SetActivation(me);
+    me.stackbase := ADR(me); (* enable GC scanning of this stack *)
 
     (* add to the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
@@ -457,22 +457,22 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
       me.prev := allThreads.prev;
       allThreads.prev.next := me;
       allThreads.prev := me;
-      me.stackbase := ADR(xx);          (* enable GC scanning of this stack *)
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
     FloatMode.InitThread (me.floatState);
 
     RunThread(me);
 
+    me.stackbase := NIL; (* disable GC scanning of my stack *)
+
     (* remove from the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
-      me.stackbase := NIL;              (* disable GC scanning of my stack *)
       <*ASSERT allThreads # me*>
       me.next.prev := me.prev;
       me.prev.next := me.next;
-      me.next := NIL;
-      me.prev := NIL;
       WITH r = pthread_detach_self() DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
+    me.next := NIL;
+    me.prev := NIL;
     RETURN NIL;
   END ThreadBase;
 
