@@ -169,6 +169,7 @@ ThreadPThread__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
   else
 #endif
   {
+    /* capture top after longjmp because longjmp can clobber non-volatile locals */
     char *top = (char*)&top;
     assert(bottom);
     if (stack_grows_down) {
@@ -185,6 +186,20 @@ ThreadPThread__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
 #define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
 typedef void *(*start_routine_t)(void *);
 
+#define M3_RETRY(expr) \
+  r = (expr); \
+  if (r == EAGAIN || r == ENOMEM || r == ENOSPC) \
+  { \
+    /* try again right away */ \
+    r = (expr); \
+    if (r == EAGAIN || r == ENOMEM || r == ENOSPC) \
+    { \
+      /* try again after short delay */ \
+      sleep(1); \
+      r = (expr); \
+    } \
+  }
+
 int
 ThreadPThread__thread_create(pthread_t *pthread,
                              size_t stackSize,
@@ -195,7 +210,7 @@ ThreadPThread__thread_create(pthread_t *pthread,
   size_t bytes;
   pthread_attr_t attr;
 
-  r = pthread_attr_init(&attr);
+  M3_RETRY(pthread_attr_init(&attr));
 #ifdef __hpux
   if (r == ENOSYS)
     {
@@ -212,18 +227,7 @@ ThreadPThread__thread_create(pthread_t *pthread,
   bytes = M3_MAX(bytes, stackSize);
   pthread_attr_setstacksize(&attr, bytes);
 
-  r = pthread_create(pthread, &attr, start_routine, arg);
-  if (r == EAGAIN || r == ENOMEM)
-  {
-    /* try again right away */
-    r = pthread_create(pthread, &attr, start_routine, arg);
-    if (r == EAGAIN || r == ENOMEM)
-    {
-      /* try again after short delay */
-      sleep(1);
-      r = pthread_create(pthread, &attr, start_routine, arg);
-    }
-  }
+  M3_RETRY(pthread_create(pthread, &attr, start_routine, arg));
 
   pthread_attr_destroy(&attr);
 
@@ -252,7 +256,8 @@ static pthread_key_t activations;
 void
 ThreadPThread__SetActivation(void *value)
 {
-  int r = pthread_setspecific(activations, value);
+  int r;
+  M3_RETRY(pthread_setspecific(activations, value));
   assert(r == 0);
 }
 
@@ -271,18 +276,7 @@ ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
   void *p = calloc(1, size);
   if (p == NULL)
     goto Error;
-  r = init(p, NULL);
-  if (r == EAGAIN || r == ENOMEM)
-  {
-    /* try again right away */
-    r = init(p, NULL);
-    if (r == EAGAIN || r == ENOMEM)
-    {
-      /* try again after short delay */
-      sleep(1);
-      r = init(p, NULL);
-    }
-  }
+  M3_RETRY(init(p, NULL));
   if (r == ENOMEM)
     goto Error;
   assert(r == 0);
@@ -435,13 +429,13 @@ InitC(int *bottom)
 #ifdef __APPLE__
   assert(stack_grows_down); /* See ThreadApple.c */
 #endif
-  r = pthread_key_create(&activations, NULL); assert(r == 0);
+  M3_RETRY(pthread_key_create(&activations, NULL)); assert(r == 0);
 
 #ifndef M3_DIRECT_SUSPEND
   ZeroMemory(&act, sizeof(act));
   ZeroMemory(&oact, sizeof(oact));
 
-  r = sem_init(&ackSem, 0, 0); assert(r == 0);
+  M3_RETRY(sem_init(&ackSem, 0, 0)); assert(r == 0);
 
   r = sigfillset(&mask); assert(r == 0);
   r = sigdelset(&mask, SIG_SUSPEND); assert(r == 0);
