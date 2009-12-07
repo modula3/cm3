@@ -23,6 +23,8 @@
 #include <semaphore.h>
 #endif
 
+#define M3MODULE ThreadPThread
+
 /* Sometimes setjmp saves signal mask, in which case _setjmp does not.
 setjmp works, but _setjmp can be much faster. */
 #ifndef __sun
@@ -355,31 +357,10 @@ ThreadPThread__Nanosleep(timespec_T *req, timespec_T *rem)
 #endif
 }
 
-int
-ThreadPThread__pthread_cond_wait(pthread_cond_t *cond, pthread_mutex_t *mutex)
-{
-  return pthread_cond_wait(cond, mutex);
-}
-
-int
-ThreadPThread__pthread_cond_timedwait(pthread_cond_t *cond,
-                                      pthread_mutex_t *mutex,
-                                      const timespec_T *abs)
-{
-  return pthread_cond_timedwait(cond, mutex, abs);
-}
-
-int
-ThreadPThread__pthread_cond_signal(pthread_cond_t *cond)
-{
-  return pthread_cond_signal(cond);
-}
-
-int
-ThreadPThread__pthread_cond_broadcast(pthread_cond_t *cond)
-{
-  return pthread_cond_broadcast(cond);
-}
+M3WRAP2(int, pthread_cond_wait, pthread_cond_t*, pthread_mutex_t*)
+M3WRAP3(int, pthread_cond_timedwait, pthread_cond_t*, pthread_mutex_t*, const timespec_T*)
+M3WRAP1(int, pthread_cond_signal, pthread_cond_t*)
+M3WRAP1(int, pthread_cond_broadcast, pthread_cond_t*)
 
 int
 ThreadPThread__pthread_detach_self(void)
@@ -405,17 +386,8 @@ ThreadPThread__pthread_kill(m3_pthread_t thread, int sig)
   return pthread_kill(PTHREAD_FROM_M3(thread), sig);
 }
 
-int
-ThreadPThread__pthread_mutex_lock(pthread_mutex_t *m)
-{
-  return pthread_mutex_lock(m);
-}
-
-int
-ThreadPThread__pthread_mutex_unlock(pthread_mutex_t *m)
-{
-  return pthread_mutex_unlock(m);
-}
+M3WRAP1(int, pthread_mutex_lock, pthread_mutex_t*)
+M3WRAP1(int, pthread_mutex_unlock, pthread_mutex_t*)
 
 void
 InitC(int *bottom)
