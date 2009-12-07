@@ -29,13 +29,9 @@ REVEAL
 <*INLINE*>
 PROCEDURE GetChar (rd: T): CHAR
   RAISES {EndOfFile, Failure, Alerted} =
-  VAR res: CHAR;
   BEGIN
     LOCK rd DO
-      IF rd.cur = rd.hi THEN DoSeek(rd) END;
-      res := rd.buff[rd.st + (rd.cur - rd.lo)];
-      INC(rd.cur);
-      RETURN res
+      RETURN FastGetChar(rd);
     END
   END GetChar;
 
@@ -63,12 +59,9 @@ PROCEDURE DoSeek(rd: T)
 <*INLINE*>
 PROCEDURE GetWideChar (rd: T): WIDECHAR
   RAISES {EndOfFile, Failure, Alerted} =
-  VAR ch: WIDECHAR;
   BEGIN
     LOCK rd DO
-      IF rd.closed THEN Die() END;
-      IF NOT GetWC (rd, ch) THEN RAISE EndOfFile; END;
-      RETURN ch;
+      RETURN FastGetWideChar(rd);
     END
   END GetWideChar;
 
@@ -116,8 +109,7 @@ PROCEDURE GetSub (rd: T; VAR (*out*) str: ARRAY OF CHAR): CARDINAL
   RAISES {Failure, Alerted} =
   BEGIN
     LOCK rd DO
-      IF rd.closed THEN Die() END;
-      RETURN rd.getSub(str)
+      RETURN FastGetSub(rd, str);
     END
   END GetSub;
   
@@ -177,12 +169,7 @@ PROCEDURE EOF (rd: T): BOOLEAN
   (* rd is unlocked *)
   BEGIN
     LOCK rd DO
-      IF rd.cur # rd.hi THEN
-        RETURN FALSE
-      ELSE
-        IF rd.closed THEN Die() END;
-        RETURN rd.seek(rd.cur, FALSE) = SeekResult.Eof
-      END
+      RETURN FastEOF(rd);
     END
   END EOF;
   

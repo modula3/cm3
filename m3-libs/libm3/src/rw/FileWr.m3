@@ -12,6 +12,7 @@
 UNSAFE MODULE FileWr;
 
 IMPORT File, FS, Pathname, OSError, RegularFile, Wr, WrClass;
+IMPORT RTIO, Fmt;
 
 PROCEDURE Open(p: Pathname.T): T RAISES {OSError.E} =
   BEGIN
@@ -78,7 +79,11 @@ EXCEPTION Error; <*FATAL Error*>
 
 PROCEDURE Seek(wr: T; n: CARDINAL) RAISES {Wr.Failure} =
   BEGIN
-    IF NOT wr.seekable AND n # wr.hi THEN RAISE Error END;
+    IF NOT wr.seekable AND n # wr.hi THEN
+        RTIO.PutText("FileWr.Seek:wr.seekable=" & Fmt.Bool(wr.seekable) & ";n=" & Fmt.Int(n) & ";wr.hi=" & Fmt.Int(wr.hi) & "\n");
+        RTIO.Flush();
+        RAISE Error
+    END;
     TRY
       EmptyBuffer (wr);
       (* Maintains V4 -- we hope that on a seek failure the file
