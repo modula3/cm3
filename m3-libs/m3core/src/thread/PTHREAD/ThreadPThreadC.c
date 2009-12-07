@@ -527,9 +527,9 @@ ThreadPThread__pthread_cond_broadcast(pthread_cond_t *cond)
 }
 
 int
-ThreadPThread__pthread_detach(m3_pthread_t thread)
+ThreadPThread__pthread_detach_self(void)
 {
-  return pthread_detach(PTHREAD_FROM_M3(thread));
+  return pthread_detach(pthread_self());
 }
 
 m3_pthread_t ThreadPThread__pthread_self(void)
