@@ -339,17 +339,18 @@ PROCEDURE AssignSlot (t: T) =
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
   END AssignSlot;
 
-PROCEDURE FreeSlot (t: T) =
+PROCEDURE FreeSlot (t: T; act: Activation) =
   (* LL = 0 *)
   BEGIN
     WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
 
       DEC (n_slotted);
-      WITH z = slots [t.act.slot] DO
-        IF (z # t) THEN Die (ThisLine(), "unslotted thread!"); END;
+      WITH z = slots [act.slot] DO
+        IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
-      t.act.slot := 0;
+      t := NIL; (* drop traced reference *)
+      act.slot := 0;
 
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
   END FreeSlot;
@@ -431,6 +432,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   VAR me: Activation := param;
   BEGIN
     SetActivation(me);
+    me.stackbase := ADR(me); (* enable GC scanning of this stack *)
 
     (* add to the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
@@ -441,19 +443,19 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
     FloatMode.InitThread (me.floatState);
 
-    me.stackbase := ADR(me);          (* enable GC scanning of this stack *)
-
     RunThread(me);
+
+    me.stackbase := NIL; (* disable GC scanning of my stack *)
 
     (* remove from the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
       <*ASSERT allThreads # me*>
       me.next.prev := me.prev;
       me.prev.next := me.next;
-      me.next := NIL;
-      me.prev := NIL;
-      WITH r = pthread_detach(me.handle) DO <*ASSERT r=0*> END;
+      WITH r = pthread_detach_self() DO <*ASSERT r=0*> END;
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
+    me.next := NIL;
+    me.prev := NIL;
     RETURN NIL;
   END ThreadBase;
 
@@ -466,9 +468,11 @@ PROCEDURE RunThread (me: Activation) =
       self := slots [me.slot];
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
 
-    (* Run the user-level code. *)
     IF perfOn THEN PerfRunning() END;
+
+    (*** Run the user-level code. ***)
     self.result := self.closure.apply();
+
     IF perfOn THEN PerfChanged(State.dying) END;
 
     (* Join *)
@@ -483,9 +487,9 @@ PROCEDURE RunThread (me: Activation) =
     RTHeapRep.FlushThreadState(me.heapState);
 
     IF perfOn THEN PerfDeleted() END;
-    FreeSlot(self);  (* note: needs self.act ! *)
+    FreeSlot(self, me);
     (* Since we're no longer slotted, we cannot touch traced refs. *)
-    me.stackbase := NIL;              (* disable GC scanning of my stack *)
+    self := NIL; (* drop traced reference *)
   END RunThread;
 
 VAR joinMu: MUTEX;
