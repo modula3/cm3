@@ -435,6 +435,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   BEGIN
     SetActivation(me);
     me.stackbase := ADR(me); (* enable GC scanning of this stack *)
+    me.handle := pthread_self();
 
     (* add to the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
@@ -508,7 +509,7 @@ PROCEDURE Fork (closure: Closure): T =
     | SizedClosure (scl) => size := scl.stackSize;
     ELSE (*skip*)
     END;
-    WITH r = thread_create(act.handle, size * ADRSIZE(Word.T), ThreadBase, act) DO
+    WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act) DO
       IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
     RETURN t;
