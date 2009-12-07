@@ -1,10 +1,5 @@
-#define _CRT_SECURE_NO_DEPRECATE
-
+#include "m3core.h"
 #include <stdio.h>
-
-#if !defined(_MSC_VER) && !defined(__cdecl)
-#define __cdecl /* nothing */
-#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -14,70 +9,49 @@ extern "C" {
 #pragma optimize("gty", on)
 #endif
 
-/* return types need to be single tokens -- else we need separate macros for void functions
-   parameter types do not have this restriction */
-#define return_void
-#define return_int return
-#define return_long return
-#define return_PCSTR return
-#define return_PFILE  return
-#define return_PSTR return
-#define return_size_t return
-typedef const char* PCSTR;
-typedef char* PSTR;
-typedef FILE* PFILE;
+#define M3MODULE Cstdio
 
-#define X(ret, name, in, out)     ret __cdecl Cstdio__##name in { return_##ret name out; }
-#ifdef _WIN32
-#define X_(ret, name, in, out)     ret __cdecl Cstdio__##name in { return_##ret _##name out; }
-#else
-#define X_(ret, name, in, out)    X(ret, name, in, out)
-#endif
-#define X0(ret, name)             X(ret, name, (void),               ())
-#define X1(ret, name, a)          X(ret, name, (a i),                (i))
-#define X2(ret, name, a, b)       X(ret, name, (a i, b j),           (i, j))
-#define X3(ret, name, a, b, c)    X(ret, name, (a i, b j, c k),      (i, j, k))
-#define X4(ret, name, a, b, c, d) X(ret, name, (a i, b j, c k, d m), (i, j, k, m))
+M3WRAP1(int, fclose, FILE*)
+M3WRAP2_(FILE*, fdopen, int, const char*) /* fileno to FILE* */
+M3WRAP1(int, feof, FILE*)
+M3WRAP1(int, ferror, FILE*)
+M3WRAP1(int, fflush, FILE*)
+M3WRAP1(int, fgetc, FILE*)
+M3WRAP3(char*, fgets, char*, int, FILE*)
+M3WRAP1_(int, fileno, FILE*) /* FILE* to fileno */
+M3WRAP2(FILE*, fopen, const char*, const char*)
+M3WRAP2(int, fputc, int, FILE*)
+M3WRAP2(int, fputs, const char*, FILE*)
+M3WRAP4(size_t, fread, void*, size_t, size_t, FILE*)
+M3WRAP3(FILE*, freopen, const char*, const char*, FILE*)
+M3WRAP3(int, fseek, FILE*, long, int)
+M3WRAP1(long, ftell, FILE*)
+M3WRAP4(size_t, fwrite, const void*, size_t, size_t, FILE*)
+M3WRAP1(int, getc, FILE*)
+M3WRAP0(int, getchar)
+M3WRAP1_(int, pclose, FILE*) /* close pipe */
+M3WRAP2_(FILE*, popen, const char*, const char*) /* open pipe */
+M3WRAP2(int, putc, int, FILE*)
+M3WRAP1(int, putchar, int)
+M3WRAP1(int, puts, const char*) /* put string + "\n" to stdout, atomically */
+M3WRAP1(int, remove, const char*)
+M3WRAP2(int, rename, const char*, const char*)
+M3WRAP4(int, setvbuf, FILE*, char*, int, size_t)
+M3WRAP2_(char*, tempnam, const char*, const char*)
+M3WRAP0(FILE*, tmpfile)
+M3WRAP1(char*, tmpnam, char*)
+M3WRAP2(int, ungetc, int, FILE*)
+M3WRAP1_(int, getw, FILE*)
+M3WRAP2_(int, putw, int, FILE*)
 
-#define X1_(ret, name, a)        X_(ret, name, (a i),                (i))
-#define X2_(ret, name, a, b)     X_(ret, name, (a i, b j),           (i, j))
+#define X(name, in, out)   void __cdecl Cstdio__##name in { name out; }
+#define X1(name, a)             X(name, (a i),      (i))
+#define X2(name, a, b)          X(name, (a i, b j), (i, j))
 
-X1(void, clearerr, PFILE)
-X1(int, fclose, PFILE)
-X2_(PFILE, fdopen, int, PCSTR) /* fileno to FILE* */
-X1(int, feof, PFILE)
-X1(int, ferror, PFILE)
-X1(int, fflush, PFILE)
-X1(int, fgetc, PFILE)
-X3(PSTR, fgets, PSTR, int, PFILE)
-X1_(int, fileno, PFILE) /* FILE* to fileno */
-X2(PFILE, fopen, PCSTR, PCSTR)
-X2(int, fputc, int, PFILE)
-X2(int, fputs, PCSTR, PFILE)
-X4(size_t, fread, void*, size_t, size_t, PFILE)
-X3(PFILE, freopen, PCSTR, PCSTR, PFILE)
-X3(int, fseek, PFILE, long, int)
-X1(long, ftell, PFILE)
-X4(size_t, fwrite, const void*, size_t, size_t, PFILE)
-X1(int, getc, PFILE)
-X0(int, getchar)
-X1_(int, pclose, PFILE) /* close pipe */
-X1(void, perror, PCSTR) /* print error */
-X2_(PFILE, popen, PCSTR, PCSTR) /* open pipe */
-X2(int, putc, int, PFILE)
-X1(int, putchar, int)
-X1(int, puts, PCSTR) /* put string + "\n" to stdout */
-X1(int, remove, PCSTR)
-X2(int, rename, PCSTR, PCSTR)
-X1(void, rewind, PFILE)
-X2(void, setbuf, PFILE, PSTR)
-X4(int, setvbuf, PFILE, PSTR, int, size_t)
-X2_(PSTR, tempnam, PCSTR, PCSTR)
-X0(PFILE, tmpfile)
-X1(PSTR, tmpnam, PSTR)
-X2(int, ungetc, int, PFILE)
-X1_(int, getw, PFILE)
-X2_(int, putw, int, PFILE)
+X1(clearerr, FILE*)
+X1(perror, const char*) /* print error */
+X1(rewind, FILE*)
+X2(setbuf, FILE*, char*)
 
 #undef X
 #undef X_
@@ -107,7 +81,7 @@ X(EOF)
 X(P_tmpdir)
 
 #undef X
-#define X(a) PFILE __cdecl Cstdio__get_##a(void) { return a; }
+#define X(a) FILE* __cdecl Cstdio__get_##a(void) { return a; }
 
 X(stdin)
 X(stdout)
