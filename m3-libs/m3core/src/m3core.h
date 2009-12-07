@@ -4,8 +4,8 @@
 
 #define _FILE_OFFSET_BITS 64
 
-#ifndef INCLUDED_M3UNIX_H
-#define INCLUDED_M3UNIX_H
+#ifndef INCLUDED_M3CORE_H
+#define INCLUDED_M3CORE_H
 
 #ifdef __INTERIX
 #ifndef _ALL_SOURCE
