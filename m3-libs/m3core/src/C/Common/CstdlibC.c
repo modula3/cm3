@@ -2,34 +2,35 @@
 /* All rights reserved.                                        */
 /* See the file COPYRIGHT for a full description.              */
 
+#include "m3core.h"
+
 #ifdef _MSC_VER
 #pragma optimize("gty", on)
 #endif
-#define _CRT_SECURE_NO_DEPRECATE
+
+#include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include <stdlib.h>
+#define M3MODULE Cstdlib
 
-#if !defined(_MSC_VER) && !defined(__cdecl)
-#define __cdecl /* nothing */
-#endif
+typedef void (__cdecl*AtExitFunction)(void);
 
-#define X(ret, name, in, out) ret __cdecl Cstdlib__##name in { return name out; }
+M3WRAP1(int, atexit, AtExitFunction)
+M3WRAP1(char*, getenv, const char*)
+M3WRAP1(int, system, const char*)
+M3WRAP1(void*, malloc, size_t)
+M3WRAP2(void*, calloc, size_t, size_t)
+M3WRAP2(double, strtod, const char*, char**)
+M3WRAP1(double, atof, const char*)
+
 #define V(name, in, out) void __cdecl Cstdlib__##name in { name out; }
 
 V(abort, (void), ())
-X(int, atexit, (void (__cdecl*func)(void)), (func))
 V(exit, (int status), (status))
-X(char*, getenv, (const char* name), (name))
-X(int, system, (const char* s), (s))
-X(void*, malloc, (size_t n), (n))
-X(void*, calloc, (size_t a, size_t b), (a, b))
 V(free, (void* a), (a))
-X(double, strtod, (const char* a, char** b), (a, b))
-X(double, atof, (const char* a), (a))
 
 #ifdef __cplusplus
 }
