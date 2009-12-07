@@ -2,7 +2,7 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#include "m3unix.h"
+#include "m3core.h"
 #include <stdlib.h>
 #include <pthread.h>
 #include <setjmp.h>

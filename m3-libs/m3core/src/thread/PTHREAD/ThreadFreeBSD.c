@@ -12,7 +12,7 @@ void ThreadFreeBSD__Dummy(void)
 
 #else
 
-#include "m3unix.h"
+#include "m3core.h"
 #include <pthread.h>
 #include <assert.h>
 #include <stdlib.h>
