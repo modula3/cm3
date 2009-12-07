@@ -4,13 +4,5 @@
 
 #include "m3unix.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #define M3PMODULE Uprocess
 M3WRAP0_(m3_pid_t, getpid)
-
-#ifdef __cplusplus
-}
-#endif

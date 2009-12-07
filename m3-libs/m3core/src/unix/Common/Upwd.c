@@ -4,10 +4,6 @@
 
 #include "m3unix.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #ifndef _WIN32
 
 typedef struct passwd passwd_t;
@@ -16,8 +12,4 @@ typedef struct passwd passwd_t;
 M3WRAP1(passwd_t*, getpwuid, m3_uid_t)
 M3WRAP1(passwd_t*, getpwnam, char*)
 
-#endif
-
-#ifdef __cplusplus
-}
 #endif
