@@ -3,6 +3,7 @@
 /* See the file COPYRIGHT for a full description.                            */
 
 #include "m3unix.h"
+#define M3MODULE Umman
 
 #ifdef __cplusplus
 extern "C" {
@@ -10,20 +11,9 @@ extern "C" {
 
 #ifndef _WIN32
 
-int Umman__mprotect(ADDRESS addr, size_t length, int prot)
-{
-    return mprotect(addr, length, prot);
-}
-
-ADDRESS Umman__mmap(ADDRESS addr, size_t length, int prot, int flags, int fd, m3_off_t off)
-{
-    return mmap(addr, length, prot, flags, fd, off);
-}
-
-int Umman__munmap(ADDRESS addr, size_t length)
-{
-    return munmap(addr, length);
-}
+M3WRAP3(int, mprotect, ADDRESS, size_t, int)
+M3WRAP6(ADDRESS, mmap, ADDRESS, size_t, int, int, int, m3_off_t)
+M3WRAP2(int, munmap, ADDRESS, size_t)
 
 #endif
 

@@ -36,6 +36,30 @@ struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses *
 #define ucontext_t openbsd_ucontext_t
 #endif
 
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
+#endif
+
+#define M3WRAPNAMEx(a, b) a##__##b
+#define M3WRAPNAME(a, b) M3WRAPNAMEx(a, b)
+#define M3WRAP(ret, name, in, out)     ret __cdecl M3WRAPNAME(M3MODULE, name) in { return name out; }
+#ifdef _WIN32
+#define M3WRAP_(ret, name, in, out)    ret __cdecl M3WRAPNAME(M3MODULE, name) in { return _##name out; }
+#else
+#define M3WRAP_(ret, name, in, out)    M3WRAP(ret, name, in, out)
+#endif
+#define M3WRAP0(ret, name)             M3WRAP(ret, name, (void),               ())
+#define M3WRAP1(ret, name, a)          M3WRAP(ret, name, (a i),                (i))
+#define M3WRAP2(ret, name, a, b)       M3WRAP(ret, name, (a i, b j),           (i, j))
+#define M3WRAP3(ret, name, a, b, c)    M3WRAP(ret, name, (a i, b j, c k),      (i, j, k))
+#define M3WRAP4(ret, name, a, b, c, d) M3WRAP(ret, name, (a i, b j, c k, d m), (i, j, k, m))
+#define M3WRAP5(ret, name, a, b, c, d, e) M3WRAP(ret, name, (a i, b j, c k, d m, e n), (i, j, k, m, n))
+#define M3WRAP6(ret, name, a, b, c, d, e, f) M3WRAP(ret, name, (a i, b j, c k, d m, e n, f o), (i, j, k, m, n, o))
+
+#define M3WRAP1_(ret, name, a)        M3WRAP_(ret, name, (a i),                (i))
+#define M3WRAP2_(ret, name, a, b)     M3WRAP_(ret, name, (a i, b j),           (i, j))
+#define M3WRAP3_(ret, name, a, b, c)  M3WRAP_(ret, name, (a i, b j, c k),      (i, j, k))
+
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <assert.h>
