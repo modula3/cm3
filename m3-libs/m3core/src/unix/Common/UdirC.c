@@ -25,24 +25,12 @@ $ cc 1.c
 
 */
 
-DIR* Udir__opendir(const char* a)
-{
-    return opendir(a);
-}
-
-void* Udir__readdir(DIR* a)
-{
-    return readdir(a);
-}
-
-int Udir__closedir(DIR* a)
-{
-    return closedir(a);
-}
-
+#define M3MODULE Udir
+M3WRAP1(DIR*, opendir, const char*)
+M3WRAP1(void*, readdir, DIR*)
+M3WRAP1(int, closedir, DIR*)
 
 #endif
-
 
 #ifdef __cplusplus
 }
