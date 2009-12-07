@@ -31,15 +31,10 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
     || defined(__hpux) \
     || defined(__FreeBSD__) \
 
-int Uucontext__getcontext(ucontext_t* context)
-{
-    return getcontext(context);
-}
-
-int Uucontext__setcontext(const ucontext_t* context)
-{
-    return setcontext(context);
-}
+#define M3MODULE Uucontext
+M3WRAP1(int, getcontext, ucontext_t*)
+M3WRAP1(int, setcontext, const ucontext_t*)
+M3WRAP2(int, swapcontext, ucontext_t*, const ucontext_t*)
 
 void
 Uucontext__makecontext(
@@ -60,11 +55,6 @@ Uucontext__makecontext(
  * - 1 is probably all we need. */
     assert(argc <= 8);
     makecontext(context, function, argc, a1, a2, a3, a4, a5, a6, a7, a8);
-}
-
-int Uucontext__swapcontext(ucontext_t* Old, const ucontext_t* New)
-{
-    return swapcontext(Old, New);
 }
 
 #endif

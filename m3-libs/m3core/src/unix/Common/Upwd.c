@@ -11,19 +11,12 @@ extern "C" {
 #ifndef _WIN32
 
 typedef struct passwd passwd_t;
+#define M3MODULE Upwd
 
-passwd_t* Upwd__getpwuid(m3_uid_t uid)
-{
-    return getpwuid(uid);
-}
-
-passwd_t* Upwd__getpwnam(char* name)
-{
-    return getpwnam(name);
-}
+M3WRAP1(passwd_t*, getpwuid, m3_uid_t)
+M3WRAP1(passwd_t*, getpwnam, char*)
 
 #endif
-
 
 #ifdef __cplusplus
 }
