@@ -15,7 +15,10 @@
 
 include("thread.quake")
 
+%------------------------------------------------------------------------------
+
 h_source("unix/Common/m3unix")
+h_source("m3core")
 
 %----------------------------------------------- machine dependent packages ---
 
