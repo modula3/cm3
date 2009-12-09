@@ -122,5 +122,5 @@ override("wellfett", ROOT & "/m3-libs")
 override("X11R4", ROOT & "/m3-ui")
 override("zeus", ROOT & "/m3-ui")
 
-_NETOBJ_OVERRIDE = TRUE % m3-comm/netobj/src/m3overrides
-_SHAREDOBJ_OVERRIDE = TRUE % m3-comm/sharedobj/src/m3overrides
+%_NETOBJ_OVERRIDE = TRUE % m3-comm/netobj/src/m3overrides
+%_SHAREDOBJ_OVERRIDE = TRUE % m3-comm/sharedobj/src/m3overrides
