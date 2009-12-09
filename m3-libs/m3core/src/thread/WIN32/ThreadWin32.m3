@@ -96,7 +96,7 @@ PROCEDURE LockMutex (m: Mutex) =
 
     Lock(giantLock);
 
-      act.alertable := FALSE;
+      <*ASSERT act.alertable = FALSE*>
       IF m.holder = NIL THEN
         m.holder := self;  (* I get it! *)
       ELSIF m.holder = self THEN
@@ -204,6 +204,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
     IF WaitForSingleObject(act.waitSema, INFINITE) # 0 THEN
       Choke(ThisLine());
     END;
+    act.alertable := FALSE;
     m.acquire();
   END InnerWait;
 
@@ -215,6 +216,7 @@ PROCEDURE InnerTestAlert(self: Activation) RAISES {Alerted} =
     (*IF DEBUG THEN ThreadDebug.InnerTestAlert(self); END;*)
     IF self.alerted THEN
       self.alerted := FALSE;
+      self.alertable := FALSE;
       Unlock(giantLock);
       RAISE Alerted
     END;
@@ -232,6 +234,7 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
     act.alertable := TRUE;
     InnerWait(m, c, self);
     Lock(giantLock);
+    <*ASSERT act.alertable = TRUE*>
     InnerTestAlert(act);
     Unlock(giantLock);
   END AlertWait;
