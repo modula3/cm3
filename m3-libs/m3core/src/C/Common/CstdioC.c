@@ -76,11 +76,6 @@ X(TMP_MAX)
 X(EOF)
 
 #undef X
-#define X(a) const char Cstdio__##a[] = a;
-
-X(P_tmpdir)
-
-#undef X
 #define X(a) FILE* __cdecl Cstdio__get_##a(void) { return a; }
 
 X(stdin)
