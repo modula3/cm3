@@ -31,6 +31,7 @@ REVEAL
         (* LL = giant; List of threads waiting on this mutex. *)
       holder: T := NIL;
         (* LL = giant; The thread currently holding this mutex. *)
+      writeToForceGcInteractionOutsideOfGiantLock := 0;
     OVERRIDES
       acquire := LockMutex;
       release := UnlockMutex;
@@ -39,10 +40,12 @@ REVEAL
   Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
       waiters: T := NIL;
         (* LL = giant; List of threads waiting on this CV. *)
+      writeToForceGcInteractionOutsideOfGiantLock := 0;
     END;
 
   T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
       act: Activation := NIL;       (* LL = Self(); live (untraced) thread data *)
+      writeToForceGcInteractionOutsideOfGiantLock := 0;
       closure: Closure := NIL;      (* our work and its result *)
       result: REFANY := NIL;        (* our work and its result *)
       join: Condition;              (* LL = Self(); wait here to join *)
@@ -94,6 +97,8 @@ PROCEDURE LockMutex (m: Mutex) =
     IF perfOn THEN PerfChanged(State.locking) END;
     act := self.act;
 
+    m.writeToForceGcInteractionOutsideOfGiantLock := 0;
+
     Lock(giantLock);
 
       act.alertable := FALSE;
@@ -134,6 +139,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
   BEGIN
     IF DEBUG THEN ThreadDebug.UnlockMutex(m); END;
     IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
+    m.writeToForceGcInteractionOutsideOfGiantLock := 0;
     Lock(giantLock);
 
       (* Make sure I'm allowed to release this mutex. *)
@@ -227,6 +233,9 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   BEGIN
     IF DEBUG THEN ThreadDebug.AlertWait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
+    m.writeToForceGcInteractionOutsideOfGiantLock := 0;
+    c.writeToForceGcInteractionOutsideOfGiantLock := 0;
+    self.writeToForceGcInteractionOutsideOfGiantLock := 0;
     Lock(giantLock);
     InnerTestAlert(act);
     act.alertable := TRUE;
@@ -242,6 +251,8 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   BEGIN
     IF DEBUG THEN ThreadDebug.Wait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
+    m.writeToForceGcInteractionOutsideOfGiantLock := 0;
+    c.writeToForceGcInteractionOutsideOfGiantLock := 0;
     Lock(giantLock);
     InnerWait(m, c, self);
   END Wait;
@@ -274,6 +285,7 @@ PROCEDURE Signal (c: Condition) =
 PROCEDURE Broadcast (c: Condition) =
   BEGIN
     IF DEBUG THEN ThreadDebug.Broadcast(c); END;
+    c.writeToForceGcInteractionOutsideOfGiantLock := 0;
     Lock(giantLock);
     WHILE c.waiters # NIL DO DequeueHead(c) END;
     Unlock(giantLock);
@@ -286,6 +298,7 @@ PROCEDURE Alert(t: T) =
     IF DEBUG THEN ThreadDebug.Alert(t); END;
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
     act := t.act;
+    t.writeToForceGcInteractionOutsideOfGiantLock := 0;
     Lock(giantLock);
     act.alerted := TRUE;
     IF act.alertable THEN
@@ -358,6 +371,7 @@ PROCEDURE AssignSlot (t: T) =
   VAR n: CARDINAL;  old_slots, new_slots: REF ARRAY OF T;
       retry := TRUE;
   BEGIN
+    t.writeToForceGcInteractionOutsideOfGiantLock := 0;
     Lock(slotLock);
       WHILE retry DO
         retry := FALSE;
@@ -642,12 +656,14 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
     WHILE amount > 0.0D0 DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
+      self.writeToForceGcInteractionOutsideOfGiantLock := 0;
       Lock(giantLock);
       InnerTestAlert(act);
       act.alertable := TRUE;
       <* ASSERT(self.waitingOn = NIL) *>
       Unlock(giantLock);
       EVAL WaitForSingleObject(act.waitSema, ROUND(thisTime*1000.0D0));
+      self.writeToForceGcInteractionOutsideOfGiantLock := 0;
       Lock(giantLock);
       act.alertable := FALSE;
       IF act.alerted THEN
