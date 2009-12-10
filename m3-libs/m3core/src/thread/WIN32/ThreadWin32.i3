@@ -34,10 +34,11 @@ TYPE Lock_t = ADDRESS;
        holding activeLock because it is needed by SuspendOthers
        which is called by the collector's page fault handler. *)
 
-
 <*EXTERNAL ThreadWin32__slotLock*> VAR slotLock: Lock_t;
     (* Global lock for thread slot table that maps untraced to traced *)
 
+<*EXTERNAL ThreadWin32__initLock*> VAR initLock: Lock_t;
+  (* used when allocation the criticalsection within a mutex on-demand *)
 
 (*------------------------------------------------------------------ Self ---*)
 
