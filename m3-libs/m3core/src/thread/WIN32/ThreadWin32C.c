@@ -66,6 +66,7 @@ LOCK(slot)   /* global lock for thread slots table which maps untraced to traced
 LOCK(giant)
 LOCK(heap)
 LOCK(perf)
+LOCK(init)
 
 static DWORD threadIndex = TLS_OUT_OF_INDEXES;
 
@@ -104,6 +105,7 @@ HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
     InitLock(&ThreadWin32__heapLock, &heapLock);
     InitLock(&ThreadWin32__perfLock, &perfLock);
     InitLock(&ThreadWin32__slotLock, &slotLock);
+    InitLock(&ThreadWin32__initLock, &initLock);
 
     success = (threadIndex != TLS_OUT_OF_INDEXES);
     if (!success)

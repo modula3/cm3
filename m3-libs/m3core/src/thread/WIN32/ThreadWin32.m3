@@ -27,8 +27,8 @@ VAR
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
-      waiters: T := NIL; (* LL = giant; List of threads waiting on this mutex. *)
-      holder: T := NIL;  (* LL = giant; The thread currently holding this mutex. *)
+      lock: Lock_t := NIL;
+      held: BOOLEAN := FALSE; (* LL = self.cs *) (* Because critical sections are thread re-entrant *)
       writeToForceGcInteractionOutsideOfGiantLock := 0;
     OVERRIDES
       acquire := LockMutex;
@@ -108,84 +108,48 @@ BEGIN
   END;
 END UnlockGiant;
 
-PROCEDURE LockMutex (m: Mutex) =
-  VAR self := Self();  wait := FALSE;  next, prev: T;
-      act: Activation;
+PROCEDURE CleanMutex (r: REFANY) =
+  VAR m := NARROW(r, Mutex);
   BEGIN
-    IF DEBUG THEN ThreadDebug.LockMutex(m); END;
-    IF self = NIL THEN Die(ThisLine(), "LockMutex called from non-Modula-3 thread") END;
-    IF perfOn THEN PerfChanged(State.locking) END;
-    act := self.act;
+    DeleteLock(m.lock);
+    m.lock := NIL;
+  END CleanMutex;
 
-    m.writeToForceGcInteractionOutsideOfGiantLock := 0;
-
-    LockGiant(act);
-
-      IF m.holder = NIL THEN
-        m.holder := self;  (* I get it! *)
-      ELSIF m.holder = self THEN
-        Die(ThisLine(), "Attempt to lock mutex already locked by self");
-      ELSE
-        (* somebody else already has the mutex locked.  We'll need to wait *)
-        wait := TRUE;
-        self.nextWaiter := NIL;
-        next := m.waiters;
-        IF next = NIL THEN
-          m.waiters := self;
-        ELSE
-          (* put me at the end of the list of waiters.*)
-          prev := NIL;
-          WHILE (next # NIL) DO  prev := next;  next := next.nextWaiter; END;
-          prev.nextWaiter := self;
-        END;
+PROCEDURE InitMutex (VAR m: Lock_t; root: REFANY;
+                     Clean: PROCEDURE(root: REFANY)) =
+  VAR lock := NewLock();
+  BEGIN
+    Lock(initLock);
+    IF m = NIL THEN (* We won the race. *)
+      IF lock = NIL THEN (* But we failed. *)
+        Unlock(initLock);
+        RuntimeError.Raise(RuntimeError.T.OutOfMemory);
+      ELSE (* We won the race and succeeded. *)
+        m := lock;
+        Unlock(initLock);
+        RTHeapRep.RegisterFinalCleanup (root, Clean);
       END;
-
-    UnlockGiant();
-
-    IF wait THEN
-      (* I didn't get the mutex, I need to wait for my turn... *)
-      IF WaitForSingleObject(act.waitSema, INFINITE) # 0 THEN
-        Choke(ThisLine());
-      END;
+    ELSE (* another thread beat us in the race, ok *)
+      Unlock(initLock);
+      DeleteLock(lock);
     END;
+  END InitMutex;
 
+PROCEDURE LockMutex (m: Mutex) =
+  BEGIN
+    IF perfOn THEN PerfChanged(State.locking) END;
+    IF m.lock = NIL THEN InitMutex(m.lock, m, CleanMutex) END;
+    Lock(m.lock);
+    IF m.held THEN Die(ThisLine(), "attempt to lock mutex already locked by self") END;
+    m.held := TRUE;
     IF perfOn THEN PerfRunning() END;
-
   END LockMutex;
 
 PROCEDURE UnlockMutex(m: Mutex) =
-  VAR self := Self(); next: T;
-      act: Activation;
   BEGIN
-    IF DEBUG THEN ThreadDebug.UnlockMutex(m); END;
-    IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
-    act := self.act;
-    m.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    LockGiant(act, maybeAlertable := TRUE);
-
-      (* Make sure I'm allowed to release this mutex. *)
-      IF m.holder = self THEN
-        (* ok, we're releasing the mutex *)
-        m.holder := NIL;
-      ELSIF m.holder = NIL THEN
-        Die(ThisLine(), "attempt to release an unlocked mutex");
-      ELSE
-        Die(ThisLine(), "attempt to release an mutex locked by another thread");
-      END;
-
-      (* Let the next guy go... *)
-      next := m.waiters;
-      IF next # NIL THEN
-        (* let the next guy go... *)
-        m.waiters := next.nextWaiter;
-        next.nextWaiter := NIL;
-        m.holder := next;
-        IF ReleaseSemaphore(next.act.waitSema, 1, NIL) = 0 THEN
-          Choke(ThisLine());
-        END;
-      END;
-
-    UnlockGiant(act, maybeAlertable := TRUE);
+    IF NOT m.held THEN Die(ThisLine(), "attempt to release an unlocked mutex") END;
+    m.held := FALSE;
+    Unlock(m.lock);
   END UnlockMutex;
 
 (**********
@@ -945,7 +909,6 @@ TYPE
   TE = ThreadEvent.Kind;
 
 PROCEDURE PerfChanged (s: State) =
-  (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Changed, id := GetCurrentThreadId(), state := s};
   BEGIN
     Lock(perfLock);
@@ -954,7 +917,6 @@ PROCEDURE PerfChanged (s: State) =
   END PerfChanged;
 
 PROCEDURE PerfDeleted () =
-  (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Deleted, id := GetCurrentThreadId()};
   BEGIN
     Lock(perfLock);
@@ -963,7 +925,6 @@ PROCEDURE PerfDeleted () =
   END PerfDeleted;
 
 PROCEDURE PerfRunning () =
-  (* LL = Self() *)
   VAR e := ThreadEvent.T {kind := TE.Running, id := GetCurrentThreadId()};
   BEGIN
     Lock(perfLock);
