@@ -5,8 +5,21 @@
 /* Portions Copyright 1996-2000, Critical Mass, Inc.               */
 /* See file COPYRIGHT-CMASS for details.                           */
 
+#ifdef _MSC_VER
+struct IRpcStubBuffer;        /* warning 4115: named type definition in parentheses */
+#pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
+#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
+#pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
+#pragma warning(disable:4514) /* unused inline function removed */
+#if _MSC_VER <= 1100
+#pragma warning(disable:4024) /* volatile mismatch on Interlocked */
+#pragma warning(disable:4090) /* volatile mismatch on Interlocked */
+#endif
+#endif
+
 #include <windows.h>
 #include <assert.h>
+#include <setjmp.h>
 
 /* const is extern const in C, but static const in C++,
  * but gcc gives a warning for the correct portable form "extern const" */
@@ -16,49 +29,324 @@
 #define EXTERN_CONST const
 #endif
 
+/* Sometimes setjmp saves signal mask, in which case _setjmp does not.
+setjmp works, but _setjmp can be much faster. */
+#ifndef __sun
+#define M3_SETJMP _setjmp
+#define M3_LONGJMP _longjmp
+#else
+#define M3_SETJMP setjmp
+#define M3_LONGJMP longjmp
+#endif
+
+#if defined(__sparc) || defined(__ia64__) || defined(_M_IA64) || defined(_IA64_)
+#define M3_REGISTER_WINDOWS
+#endif
+
+#if defined(_AMD64_)
+#define STACK_REGISTER Rsp
+#elif defined(_X86_)
+#define STACK_REGISTER Esp
+#elif defined(_IA64_)
+#define STACK_REGISTER Rsp
+#else
+#error unknown architecture
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define CRITSEC(name) \
-CRITICAL_SECTION ThreadWin32__##name; \
-void __cdecl ThreadWin32__EnterCriticalSection_##name(void) {EnterCriticalSection(&ThreadWin32__##name);} \
-void __cdecl ThreadWin32__LeaveCriticalSection_##name(void) {LeaveCriticalSection(&ThreadWin32__##name);}
+#define LOCK(name) \
+static CRITICAL_SECTION name##Lock; \
+PCRITICAL_SECTION ThreadWin32__##name##Lock; \
 
-CRITSEC(activeMu)
-CRITSEC(giant)
-CRITSEC(heap)
-CRITSEC(perfMu)
-CRITSEC(slotMu)
+LOCK(active) /* global lock for list of active threads */
+LOCK(slot)   /* global lock for thread slots table which maps untraced to traced */
+LOCK(giant)
+LOCK(heap)
+LOCK(perf)
+LOCK(init)
 
-#define THREAD_LOCAL(name) \
-DWORD ThreadWin32__##name = TLS_OUT_OF_INDEXES; \
-void* __cdecl ThreadWin32__TlsGetValue_##name(void) \
-{ \
-    if (ThreadWin32__##name == TLS_OUT_OF_INDEXES) \
-        return 0; \
-    return TlsGetValue(ThreadWin32__##name); \
-} \
-BOOL __cdecl ThreadWin32__TlsSetValue_##name(void* a) \
-{ \
-    if (ThreadWin32__##name == TLS_OUT_OF_INDEXES) \
-        return 0; \
-    return TlsSetValue(ThreadWin32__##name, a); \
-}
+static DWORD threadIndex = TLS_OUT_OF_INDEXES;
 
-THREAD_LOCAL(threadIndex)
-
-void __cdecl ThreadWin32__InitC(void)
+static void InitLockRE(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
 {
-    assert(ThreadWin32__threadIndex == TLS_OUT_OF_INDEXES);
-    InitializeCriticalSection(&ThreadWin32__activeMu);
-    InitializeCriticalSection(&ThreadWin32__giant);
-    InitializeCriticalSection(&ThreadWin32__heap);
-    InitializeCriticalSection(&ThreadWin32__perfMu);
-    InitializeCriticalSection(&ThreadWin32__slotMu);
-    ThreadWin32__threadIndex = TlsAlloc();
-    assert(ThreadWin32__threadIndex != TLS_OUT_OF_INDEXES);
+    assert(*pp == NULL || *pp == p);
+    if (!*pp)
+    {
+        InitializeCriticalSection(p);
+        *pp = p;
+    }
 }
+
+static void DeleteLockRE(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
+{
+    assert(*pp == NULL || *pp == p);
+    if (*pp)
+    {
+        DeleteCriticalSection(p);
+        *pp = 0;
+    }
+}
+
+static BOOL stack_grows_down;
+
+HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
+{
+    HANDLE threadHandle = { 0 };
+    BOOL success = { 0 };
+
+    stack_grows_down = (bottom > &success);
+    assert(stack_grows_down);
+
+    InitLockRE(&ThreadWin32__activeLock, &activeLock);
+    InitLockRE(&ThreadWin32__giantLock, &giantLock);
+    InitLockRE(&ThreadWin32__heapLock, &heapLock);
+    InitLockRE(&ThreadWin32__perfLock, &perfLock);
+    InitLockRE(&ThreadWin32__slotLock, &slotLock);
+    InitLockRE(&ThreadWin32__initLock, &initLock);
+
+    success = (threadIndex != TLS_OUT_OF_INDEXES);
+    if (!success)
+    {
+        threadIndex = TlsAlloc(); /* This CAN fail. */
+        success = (threadIndex != TLS_OUT_OF_INDEXES);
+    }
+    assert(success);
+    if (!success)
+        goto Exit;
+
+    success = DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &threadHandle, 0, 0, DUPLICATE_SAME_ACCESS);
+    assert(success);
+Exit:
+    return threadHandle;
+}
+
+void __cdecl ThreadWin32__Cleanup(void)
+{
+    DeleteLockRE(&ThreadWin32__activeLock, &activeLock);
+    DeleteLockRE(&ThreadWin32__giantLock, &giantLock);
+    DeleteLockRE(&ThreadWin32__heapLock, &heapLock);
+    DeleteLockRE(&ThreadWin32__perfLock, &perfLock);
+    DeleteLockRE(&ThreadWin32__slotLock, &slotLock);
+
+    if (threadIndex != TLS_OUT_OF_INDEXES)
+    {
+        TlsFree(threadIndex);
+        threadIndex = TLS_OUT_OF_INDEXES;
+    }
+}
+
+#ifndef MemoryBarrier
+void __cdecl WinNT__MemoryBarrier(void);
+#define MemoryBarrier WinNT__MemoryBarrier
+#endif
+
+LONG __cdecl ThreadWin32__InterlockedRead(volatile LONG* a)
+{ /* based on Boost */
+    LONG b;
+    MemoryBarrier();
+    b = *a;
+    MemoryBarrier();
+    return b;
+}
+
+void __cdecl ThreadWin32__InterlockedIncrement(volatile LONG* a)
+{
+    InterlockedIncrement(a);
+}
+
+void __cdecl ThreadWin32__InterlockedDecrement(volatile LONG* a)
+{
+    InterlockedDecrement(a);
+}
+
+void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
+{
+    MEMORY_BASIC_INFORMATION info = { 0 };
+    size_t a = VirtualQuery(&info, &info, sizeof(info));
+
+    /* how far down has the stack been used so far */
+    char* Used = (char*)info.BaseAddress;
+
+    /* how far down the stack can grow */
+    char* Available = (char*)info.AllocationBase;
+
+    assert(a >= sizeof(info));
+    assert(Available);
+    assert(Used);
+    assert(info.RegionSize);
+    assert(((char*)&info) > Available);
+    assert(((char*)&info) >= Used);
+    assert(((char*)&info) < Used + info.RegionSize);
+
+    /* verify it is readable
+    NOTE: Do not verify *Available -- stack pages must be touched in order. */
+    a = *(volatile unsigned char*)Used;
+    a = *(volatile unsigned char*)(Used + info.RegionSize - 1);
+
+    *start = Available;
+    *end = Used + info.RegionSize;
+}
+
+PCRITICAL_SECTION __cdecl ThreadWin32__NewLockRE(void)
+{
+    PCRITICAL_SECTION lock = (PCRITICAL_SECTION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
+    if (lock)
+        InitializeCriticalSection(lock);
+    return lock;
+}
+
+void __cdecl ThreadWin32__LockRE(PCRITICAL_SECTION lock)
+{
+    EnterCriticalSection(lock);
+}
+
+void __cdecl ThreadWin32__Unlock(PCRITICAL_SECTION lock)
+{
+    LeaveCriticalSection(lock);
+}
+
+void __cdecl ThreadWin32__DeleteLockRE(PCRITICAL_SECTION lock)
+{
+    if (!lock)
+        return;
+    DeleteCriticalSection(lock);
+    HeapFree(GetProcessHeap(), 0, lock);
+}
+
+BOOL __cdecl ThreadWin32__SetActivation(void* act)
+  /* LL = 0 */
+{
+    BOOL success = (threadIndex != TLS_OUT_OF_INDEXES);
+    assert(success);
+    success = TlsSetValue(threadIndex, act); /* NOTE: This CAN fail. */
+    assert(success);
+    return success;
+}
+
+void* __cdecl ThreadWin32__GetActivation(void)
+  /* If not the initial thread and not created by Fork, returns NIL */
+  /* LL = 0 */
+  /* This function is called VERY frequently. */
+{
+    assert(threadIndex != TLS_OUT_OF_INDEXES);
+    return TlsGetValue(threadIndex);
+}
+
+void* __cdecl ThreadWin32__StackPointerFromContext(CONTEXT* context)
+{
+  return (void*)context->STACK_REGISTER;
+}
+
+void __cdecl ThreadWin32__ProcessStopped(
+    char* stackStart,
+    char* stackEnd,
+    CONTEXT* context,
+    void (*p)(void* start, void* limit))
+{
+  volatile char assertReadable;
+  char* top;
+
+  /* stack bounds are not yet set or have been cleared;
+     therefore the thread either doesn't yet have any traced
+     references or no longer has any */
+
+  if (!stackStart || !stackEnd)
+      return;
+
+  /* process stack */
+
+  assert(context);
+  assert(stackStart < stackEnd);
+  assert(stack_grows_down);
+  top = (char*)context->STACK_REGISTER;  ;
+  assert(top <= stackEnd);
+  assert(top);
+  assertReadable = *(volatile char*)(stackEnd - 1);
+  p(top, stackEnd);
+
+ /* process registers */
+
+#ifdef _X86_
+  p(&context->Edi, &context->Eip); /* carefully pick out just a few registers */
+#else
+  p(context, context + 1); /* just do the whole thing */
+#endif
+
+    /* ?? handle register stack; don't know if this is correct ?? */
+
+#ifdef _IA64_
+  top = (char*)context->RsBSP;
+  assert(stackEnd <= top);
+  p(stackEnd, top);
+#endif
+}
+
+void __cdecl ThreadWin32__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
+{
+  jmp_buf jb;
+
+  if (M3_SETJMP(jb) == 0) /* save registers to stack */
+#ifdef M3_REGISTER_WINDOWS
+    M3_LONGJMP(jb, 1); /* flush register windows */
+  else
+#endif
+  {
+    char *top = (char*)&top;
+    assert(bottom);
+    assert(stack_grows_down);
+    assert(top < bottom);
+    p(top, bottom);
+    p(&jb, ((char *)&jb) + sizeof(jb));
+#ifdef _IA64_
+#error ia64?
+    p(bottom, __getReg(?)); /* bsp? bspstore? try numbers until we find it? */
+#endif
+  }
+}
+
+PCONTEXT __cdecl ThreadWin32__NewContext(void)
+{
+    PCONTEXT context = (PCONTEXT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*context));
+    if (context)
+        context->ContextFlags = (CONTEXT_CONTROL | CONTEXT_INTEGER);
+    return context;
+}
+
+void __cdecl ThreadWin32__DeleteContext(void* p)
+{
+    HeapFree(GetProcessHeap(), 0, p);
+}
+
+#if 0
+
+BOOL WINAPI DllMain(HANDLE DllHandle, DWORD Reason, PVOID Static)
+{
+    switch (Reason)
+    {
+    case DLL_THREAD_DETACH:
+        break;
+
+    case DLL_THREAD_ATTACH:
+        /* SetActivation belongs here (and allocating it) */
+        break;
+
+    case DLL_PROCESS_DETACH:
+        if (Static)
+            return TRUE; /* no need for any cleanup */
+        return ThreadWin32__Cleanup();
+
+    case DLL_PROCESS_ATTACH:
+        /* Module initializers belong here */.
+        return !!ThreadWin32__InitC();
+    }
+
+    return TRUE;
+}
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

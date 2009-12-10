@@ -7,65 +7,62 @@
 
 UNSAFE INTERFACE ThreadWin32;
 
-FROM WinDef IMPORT LONG, BOOL(*int*);
-FROM Thread IMPORT T;
+FROM WinDef IMPORT LONG, HANDLE;
 FROM ThreadF IMPORT State;
+FROM ThreadContext IMPORT PCONTEXT;
 
-(*----------------------------------------- Exceptions, types and globals ---*)
+(*---------------------------------------------------------------------------*)
 
-(* critical sections: Enter, Leave *)
-
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_giant"*>
-PROCEDURE EnterCriticalSection_giant();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_giant"*>
-PROCEDURE LeaveCriticalSection_giant();
-    (* Global lock for internals of Mutex and Condition *)
+(* locks (aka critical section aka mutex) *)
 
 
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_activeMu"*>
-PROCEDURE EnterCriticalSection_activeMu();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_activeMu"*>
-PROCEDURE LeaveCriticalSection_activeMu();
+TYPE LockRE_t = ADDRESS;
+
+<*EXTERNAL ThreadWin32__NewLockRE*> PROCEDURE NewLockRE(): LockRE_t;
+<*EXTERNAL ThreadWin32__LockRE*> PROCEDURE LockRE(lock: LockRE_t);
+<*EXTERNAL ThreadWin32__Unlock*> PROCEDURE UnlockRE(lock: LockRE_t);
+<*EXTERNAL ThreadWin32__DeleteLockRE*> PROCEDURE DeleteLockRE(lock: LockRE_t);
+
+(* static locks *)
+
+(* Global lock for internals of Mutex and Condition *)
+<*EXTERNAL ThreadWin32__giantLock*> VAR giantLock: LockRE_t;
+
+<*EXTERNAL ThreadWin32__activeLock*> VAR activeLock: LockRE_t;
     (* Global lock for list of active threads *)
     (* It is illegal to touch *any* traced references while
-       holding activeMu because it is needed by SuspendOthers
+       holding activeLock because it is needed by SuspendOthers
        which is called by the collector's page fault handler. *)
 
+<*EXTERNAL ThreadWin32__slotLock*> VAR slotLock: LockRE_t;
+    (* Global lock for thread slot table that maps untraced to traced *)
 
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_slotMu"*>
-PROCEDURE EnterCriticalSection_slotMu();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_slotMu"*>
-PROCEDURE LeaveCriticalSection_slotMu();
-    (* Global lock for thread slot table *)
-
+<*EXTERNAL ThreadWin32__initLock*> VAR initLock: LockRE_t;
+  (* used when allocation the criticalsection within a mutex on-demand *)
 
 (*------------------------------------------------------------------ Self ---*)
 
-(* thread local threadIndex: TlsGetValue, TlsSetValue
-   GetValue called before InitC returns 0 (aka NULL)
-   SetValue called before InitC returns 0 (aka FALSE)
-*)
-<*EXTERNAL "ThreadWin32__TlsSetValue_threadIndex"*>
-PROCEDURE TlsSetValue_threadIndex(a: INTEGER): BOOL;
-<*EXTERNAL "ThreadWin32__TlsGetValue_threadIndex"*>
-PROCEDURE TlsGetValue_threadIndex(): INTEGER;
+(* the untraced state of a thread, a thread local *)
+TYPE Activation <: ADDRESS;
+
+<*EXTERNAL ThreadWin32__SetActivation*> PROCEDURE SetActivation (act: Activation);
+<*EXTERNAL ThreadWin32__GetActivation*> PROCEDURE GetActivation (): Activation;
 
 (*------------------------------------------------------ ShowThread hooks ---*)
 
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_perfMu"*>
-PROCEDURE EnterCriticalSection_perfMu();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_perfMu"*>
-PROCEDURE LeaveCriticalSection_perfMu();
+<*EXTERNAL ThreadWin32__perfLock*> VAR perfLock: LockRE_t;
 
 (*------------------------------------------------------------- collector ---*)
-(* These procedures provide synchronization primitives for the allocator
-   and collector. *)
+(* synchronization for the allocator and collector *)
 
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_heap"*>
-PROCEDURE EnterCriticalSection_heap();
+<*EXTERNAL ThreadWin32__heapLock*> VAR heapLock: LockRE_t;
 
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_heap"*>
-PROCEDURE LeaveCriticalSection_heap();
+(*---------------------------------------------------------------------------*)
+
+<*EXTERNAL ThreadWin32__GetStackBounds*>
+PROCEDURE GetStackBounds(VAR start, end: ADDRESS);
+
+(*---------------------------------------------------------------------------*)
 
 <*EXTERNAL ThreadWin32__InterlockedIncrement*>
 PROCEDURE InterlockedIncrement(VAR a: LONG);
@@ -77,13 +74,28 @@ PROCEDURE InterlockedDecrement(VAR a: LONG);
 PROCEDURE InterlockedRead(VAR a: LONG): LONG;
 
 <*EXTERNAL ThreadWin32__InitC*>
-PROCEDURE InitC();
+PROCEDURE InitC(bottom: ADDRESS): HANDLE; (* returns current thread handle *)
+
+<*EXTERNAL "ThreadWin32__ProcessLive"*>
+PROCEDURE ProcessLive(bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
+
+<*EXTERNAL "ThreadWin32__ProcessStopped"*>
+PROCEDURE ProcessStopped(stackStart, stackEnd: ADDRESS; context: PCONTEXT;
+                         p: PROCEDURE(start, limit: ADDRESS));
+
+<*EXTERNAL ThreadWin32__StackPointerFromContext*>
+PROCEDURE StackPointerFromContext(context: PCONTEXT): ADDRESS;
+
+<*EXTERNAL ThreadWin32__NewContext*>
+PROCEDURE NewContext(): ADDRESS;
+
+<*EXTERNAL ThreadWin32__DeleteContext*>
+PROCEDURE DeleteContext(a: ADDRESS);
 
 (*----------------------------------------------------- for SchedulerPosix --*)
 
 PROCEDURE PerfChanged (s: State);
 PROCEDURE PerfRunning ();
-PROCEDURE XTestAlert (self: T): BOOLEAN;
-VAR perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
+VAR perfOn: BOOLEAN := FALSE;		 (* LL = perfLock *)
 
 END ThreadWin32.
