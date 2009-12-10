@@ -744,7 +744,7 @@ BEGIN
   tested on Windows 95. *)
 
   IF GetThreadContext(act.handle, act.context) = 0 THEN Choke(ThisLine()) END;
-  act.stackPointer := StackPointerFromContext(ADR(act.context));
+  act.stackPointer := StackPointerFromContext(act.context);
   RETURN (act.stackPointer >= act.stackStart AND act.stackPointer < act.stackEnd);
 
 END GetContextAndCheckStack;
