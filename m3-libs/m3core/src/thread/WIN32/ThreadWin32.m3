@@ -86,6 +86,28 @@ PROCEDURE Release (m: Mutex) =
     m.release ();
   END Release;
 
+PROCEDURE LockGiant(activation: Activation := NIL; maybeAlertable := FALSE) =
+BEGIN
+  Lock(giantLock);
+  IF NOT maybeAlertable THEN
+    IF activation = NIL THEN
+      activation := GetActivation();
+    END;
+    <*ASSERT NOT activation.alertable *>
+  END;
+END LockGiant;
+
+PROCEDURE UnlockGiant(activation: Activation := NIL; maybeAlertable := FALSE) =
+BEGIN
+  Unlock(giantLock);
+  IF NOT maybeAlertable THEN
+    IF activation = NIL THEN
+      activation := GetActivation();
+    END;
+    <*ASSERT NOT activation.alertable *>
+  END;
+END UnlockGiant;
+
 PROCEDURE LockMutex (m: Mutex) =
   VAR self := Self();  wait := FALSE;  next, prev: T;
       act: Activation;
@@ -97,7 +119,7 @@ PROCEDURE LockMutex (m: Mutex) =
 
     m.writeToForceGcInteractionOutsideOfGiantLock := 0;
 
-    Lock(giantLock);
+    LockGiant(act);
 
       act.alertable := FALSE;
       IF m.holder = NIL THEN
@@ -119,7 +141,7 @@ PROCEDURE LockMutex (m: Mutex) =
         END;
       END;
 
-    Unlock(giantLock);
+    UnlockGiant();
 
     IF wait THEN
       (* I didn't get the mutex, I need to wait for my turn... *)
@@ -134,11 +156,13 @@ PROCEDURE LockMutex (m: Mutex) =
 
 PROCEDURE UnlockMutex(m: Mutex) =
   VAR self := Self(); next: T;
+      act: Activation;
   BEGIN
     IF DEBUG THEN ThreadDebug.UnlockMutex(m); END;
     IF self = NIL THEN Die(ThisLine(), "UnlockMutex called from non-Modula-3 thread") END;
+    act := self.act;
     m.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    Lock(giantLock);
+    LockGiant(act, maybeAlertable := TRUE);
 
       (* Make sure I'm allowed to release this mutex. *)
       IF m.holder = self THEN
@@ -162,7 +186,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
         END;
       END;
 
-    Unlock(giantLock);
+    UnlockGiant(act, maybeAlertable := TRUE);
   END UnlockMutex;
 
 (**********
@@ -202,7 +226,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
     self.nextWaiter := c.waiters;
     c.waiters := self;
 
-    Unlock(giantLock);
+    UnlockGiant(maybeAlertable := TRUE);
     m.release();
     IF perfOn THEN PerfChanged(State.waiting) END;
     IF WaitForSingleObject(act.waitSema, INFINITE) # 0 THEN
@@ -219,7 +243,7 @@ PROCEDURE InnerTestAlert(self: Activation) RAISES {Alerted} =
     (*IF DEBUG THEN ThreadDebug.InnerTestAlert(self); END;*)
     IF self.alerted THEN
       self.alerted := FALSE;
-      Unlock(giantLock);
+      UnlockGiant();
       RAISE Alerted
     END;
   END InnerTestAlert;
@@ -227,31 +251,35 @@ PROCEDURE InnerTestAlert(self: Activation) RAISES {Alerted} =
 PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
   VAR self := Self();
-      act := self.act;
+      act: Activation;
   BEGIN
     IF DEBUG THEN ThreadDebug.AlertWait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
+    act := self.act;
     m.writeToForceGcInteractionOutsideOfGiantLock := 0;
     c.writeToForceGcInteractionOutsideOfGiantLock := 0;
     self.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    Lock(giantLock);
+    LockGiant(act);
     InnerTestAlert(act);
     act.alertable := TRUE;
     InnerWait(m, c, self);
-    Lock(giantLock);
+    act.alertable := FALSE;
+    LockGiant(act);
     InnerTestAlert(act);
-    Unlock(giantLock);
+    UnlockGiant();
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
   (* LL = m *)
   VAR self := Self();
+      act: Activation;
   BEGIN
     IF DEBUG THEN ThreadDebug.Wait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
+    act := self.act;
     m.writeToForceGcInteractionOutsideOfGiantLock := 0;
     c.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    Lock(giantLock);
+    LockGiant(act);
     InnerWait(m, c, self);
   END Wait;
 
@@ -275,18 +303,18 @@ PROCEDURE DequeueHead(c: Condition) =
 PROCEDURE Signal (c: Condition) =
   BEGIN
     IF DEBUG THEN ThreadDebug.Signal(c); END;
-    Lock(giantLock);
+    LockGiant();
     IF c.waiters # NIL THEN DequeueHead(c) END;
-    Unlock(giantLock);
+    UnlockGiant();
   END Signal;
 
 PROCEDURE Broadcast (c: Condition) =
   BEGIN
     IF DEBUG THEN ThreadDebug.Broadcast(c); END;
     c.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    Lock(giantLock);
+    LockGiant();
     WHILE c.waiters # NIL DO DequeueHead(c) END;
-    Unlock(giantLock);
+    UnlockGiant();
   END Broadcast;
 
 PROCEDURE Alert(t: T) =
@@ -297,7 +325,7 @@ PROCEDURE Alert(t: T) =
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
     act := t.act;
     t.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    Lock(giantLock);
+    LockGiant();
     act.alerted := TRUE;
     IF act.alertable THEN
       (* Dequeue from any CV and unblock from the semaphore *)
@@ -320,16 +348,16 @@ PROCEDURE Alert(t: T) =
         Choke(ThisLine());
       END;
     END;
-    Unlock(giantLock);
+    UnlockGiant();
   END Alert;
 
 PROCEDURE XTestAlert (self: Activation): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
     (*IF DEBUG THEN ThreadDebug.XTestAlert(self); END;*)
-    Lock(giantLock);
+    LockGiant();
     result := self.alerted; IF result THEN self.alerted := FALSE END;
-    Unlock(giantLock);
+    UnlockGiant();
     RETURN result;
   END XTestAlert;
 
@@ -644,26 +672,27 @@ PROCEDURE Pause(n: LONGREAL) =
 PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
   VAR amount, thisTime: LONGREAL;
     self := Self();
-    act := self.act;
+    act: Activation;
   CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
     IF n <= 0.0d0 THEN RETURN END;
     IF perfOn THEN PerfChanged(State.pausing) END;
+    act := self.act;
     amount := n;
     WHILE amount > 0.0D0 DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
       self.writeToForceGcInteractionOutsideOfGiantLock := 0;
-      Lock(giantLock);
+      LockGiant(act);
       InnerTestAlert(act);
       act.alertable := TRUE;
       <* ASSERT(self.waitingOn = NIL) *>
-      Unlock(giantLock);
+      UnlockGiant(maybeAlertable := TRUE);
       EVAL WaitForSingleObject(act.waitSema, ROUND(thisTime*1000.0D0));
       self.writeToForceGcInteractionOutsideOfGiantLock := 0;
-      Lock(giantLock);
       act.alertable := FALSE;
+      LockGiant(act);
       IF act.alerted THEN
         (* Sadly, the alert might have happened after we timed out on the
            semaphore and before we entered "giant". In that case, we need to
@@ -671,7 +700,7 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
         EVAL WaitForSingleObject(act.waitSema, 0);
         InnerTestAlert(act);
       END;
-      Unlock(giantLock);
+      UnlockGiant();
     END;
     IF perfOn THEN PerfRunning() END;
   END AlertPause;
