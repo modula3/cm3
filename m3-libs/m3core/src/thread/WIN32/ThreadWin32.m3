@@ -121,7 +121,6 @@ PROCEDURE LockMutex (m: Mutex) =
 
     LockGiant(act);
 
-      act.alertable := FALSE;
       IF m.holder = NIL THEN
         m.holder := self;  (* I get it! *)
       ELSIF m.holder = self THEN
