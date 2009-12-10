@@ -203,7 +203,7 @@ void __cdecl ThreadWin32__LockRE(PCRITICAL_SECTION lock)
     EnterCriticalSection(lock);
 }
 
-void __cdecl ThreadWin32__Unlock(PCRITICAL_SECTION lock)
+void __cdecl ThreadWin32__UnlockRE(PCRITICAL_SECTION lock)
 {
     LeaveCriticalSection(lock);
 }
