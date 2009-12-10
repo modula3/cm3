@@ -485,6 +485,8 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
       RTIO.PutText("threadbase act="); RTIO.PutAddr(me.handle); RTIO.PutText("\n"); RTIO.Flush();
     END;
 
+    GetStackBounds(me.stackStart, me.stackEnd); (* enable GC scanning of this stack *)
+
     (* add to the list of active threads *)
     <*ASSERT allThreads # NIL*>
     Lock(activeLock);
@@ -495,8 +497,6 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     Unlock(activeLock);
 
     (* begin "RunThread" *)
-
-        GetStackBounds(me.stackStart, me.stackEnd); (* enable GC scanning of this stack *)
 
         IF DEBUG THEN ThreadDebug.RunThread(); END;
         IF perfOn THEN PerfChanged(State.alive) END;
@@ -843,11 +843,8 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
     IF DEBUG THEN
       RTIO.PutText("Processing act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
     END;
-    IF act.stackStart = NIL OR act.stackEnd = NIL THEN
-      RETURN
-    END;
     RTHeapRep.FlushThreadState(act.heapState);
-    ProcessStopped(act.stackEnd, act.context, p);
+    ProcessStopped(act.stackStart, act.stackEnd, act.context, p);
   END ProcessOther;
 
 PROCEDURE ProcessEachStack (<*UNUSED*>p: PROCEDURE (start, limit: ADDRESS)) =

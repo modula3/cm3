@@ -79,7 +79,8 @@ PROCEDURE InitC(bottom: ADDRESS): HANDLE; (* returns current thread handle *)
 PROCEDURE ProcessLive(bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 
 <*EXTERNAL "ThreadWin32__ProcessStopped"*>
-PROCEDURE ProcessStopped(bottom: ADDRESS; context: PCONTEXT; p: PROCEDURE(start, limit: ADDRESS));
+PROCEDURE ProcessStopped(stackStart, stackEnd: ADDRESS; context: PCONTEXT;
+                         p: PROCEDURE(start, limit: ADDRESS));
 
 <*EXTERNAL ThreadWin32__StackPointerFromContext*>
 PROCEDURE StackPointerFromContext(context: PCONTEXT): ADDRESS;
