@@ -27,10 +27,8 @@ VAR
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
-      waiters: T := NIL;
-        (* LL = giant; List of threads waiting on this mutex. *)
-      holder: T := NIL;
-        (* LL = giant; The thread currently holding this mutex. *)
+      waiters: T := NIL; (* LL = giant; List of threads waiting on this mutex. *)
+      holder: T := NIL;  (* LL = giant; The thread currently holding this mutex. *)
       writeToForceGcInteractionOutsideOfGiantLock := 0;
     OVERRIDES
       acquire := LockMutex;
