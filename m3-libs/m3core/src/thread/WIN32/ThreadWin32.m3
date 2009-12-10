@@ -1017,10 +1017,11 @@ PROCEDURE WaitHeap () =
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
-  (* LL >= RTOS.LockHeap *)
   BEGIN
     IF DEBUG THEN ThreadDebug.BroadcastHeap(); END;
-    do_signal := TRUE;
+    LockRE(heapLock);
+      do_signal := TRUE;
+    UnlockRE(heapLock);
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
