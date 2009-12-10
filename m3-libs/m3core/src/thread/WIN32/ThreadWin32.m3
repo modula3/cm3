@@ -27,9 +27,7 @@ VAR
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
-      lock: LockRE_t := NIL;
-      held: BOOLEAN := FALSE; (* LL = self.cs *) (* Because critical sections are thread re-entrant *)
-      writeToForceGcInteractionOutsideOfGiantLock := 0;
+      lock: LockE_t := NIL;
     OVERRIDES
       acquire := LockMutex;
       release := UnlockMutex;
@@ -37,12 +35,10 @@ REVEAL
 
   Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
       waiters: T := NIL; (* LL = giant; List of threads waiting on this CV. *)
-      writeToForceGcInteractionOutsideOfGiantLock := 0;
     END;
 
   T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
       act: Activation := NIL;       (* LL = Self(); live (untraced) thread data *)
-      writeToForceGcInteractionOutsideOfGiantLock := 0;
       closure: Closure := NIL;      (* our work and its result *)
       result: REFANY := NIL;        (* our work and its result *)
       join: Condition;              (* LL = Self(); wait here to join *)
@@ -71,7 +67,7 @@ TYPE
     END;
 
 (*----------------------------------------------------------------- Mutex ---*)
-(* Note: {UnlockRE,LockRE}Mutex are the routines called directly by
+(* Note: {Unlock,Lock}Mutex are the routines called directly by
    the compiler.  Acquire and Release are the routines exported through
    the Thread interface *)
          
@@ -110,13 +106,13 @@ END UnlockGiant;
 PROCEDURE CleanMutex (r: REFANY) =
   VAR m := NARROW(r, Mutex);
   BEGIN
-    DeleteLockRE(m.lock);
+    DeleteLockE(m.lock);
     m.lock := NIL;
   END CleanMutex;
 
 PROCEDURE InitMutex (VAR m: LockRE_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
-  VAR lock := NewLockRE();
+  VAR lock := NewLockE();
   BEGIN
     LockRE(initLock);
     IF m = NIL THEN (* We won the race. *)
@@ -130,7 +126,7 @@ PROCEDURE InitMutex (VAR m: LockRE_t; root: REFANY;
       END;
     ELSE (* another thread beat us in the race, ok *)
       UnlockRE(initLock);
-      DeleteLockRE(lock);
+      DeleteLockE(lock);
     END;
   END InitMutex;
 
@@ -139,17 +135,13 @@ PROCEDURE LockMutex (m: Mutex) =
     IF perfOn THEN PerfChanged(State.locking) END;
     IF m.lock = NIL THEN InitMutex(m.lock, m, CleanMutex) END;
     <*ASSERT NOT GetActivation().alertable *>
-    LockRE(m.lock);
-    IF m.held THEN Die(ThisLine(), "attempt to lock mutex already locked by self") END;
-    m.held := TRUE;
+    LockE(m.lock);
     IF perfOn THEN PerfRunning() END;
   END LockMutex;
 
 PROCEDURE UnlockMutex(m: Mutex) =
   BEGIN
-    IF NOT m.held THEN Die(ThisLine(), "attempt to release an unlocked mutex") END;
-    m.held := FALSE;
-    UnlockRE(m.lock);
+    UnlockE(m.lock);
   END UnlockMutex;
 
 (**********
@@ -219,9 +211,6 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
     IF DEBUG THEN ThreadDebug.AlertWait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
     act := self.act;
-    m.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    c.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    self.writeToForceGcInteractionOutsideOfGiantLock := 0;
     LockGiant(act);
     InnerTestAlert(act);
     act.alertable := TRUE;
@@ -240,8 +229,6 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
     IF DEBUG THEN ThreadDebug.Wait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
     act := self.act;
-    m.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    c.writeToForceGcInteractionOutsideOfGiantLock := 0;
     LockGiant(act);
     InnerWait(m, c, self);
   END Wait;
@@ -274,7 +261,6 @@ PROCEDURE Signal (c: Condition) =
 PROCEDURE Broadcast (c: Condition) =
   BEGIN
     IF DEBUG THEN ThreadDebug.Broadcast(c); END;
-    c.writeToForceGcInteractionOutsideOfGiantLock := 0;
     LockGiant();
     WHILE c.waiters # NIL DO DequeueHead(c) END;
     UnlockGiant();
@@ -287,7 +273,6 @@ PROCEDURE Alert(t: T) =
     IF DEBUG THEN ThreadDebug.Alert(t); END;
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
     act := t.act;
-    t.writeToForceGcInteractionOutsideOfGiantLock := 0;
     LockGiant();
     act.alerted := TRUE;
     IF act.alertable THEN
@@ -360,7 +345,6 @@ PROCEDURE AssignSlot (t: T) =
   VAR n: CARDINAL;  old_slots, new_slots: REF ARRAY OF T;
       retry := TRUE;
   BEGIN
-    t.writeToForceGcInteractionOutsideOfGiantLock := 0;
     LockRE(slotLock);
       WHILE retry DO
         retry := FALSE;
@@ -646,14 +630,12 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
     WHILE amount > 0.0D0 DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
-      self.writeToForceGcInteractionOutsideOfGiantLock := 0;
       LockGiant(act);
       InnerTestAlert(act);
       act.alertable := TRUE;
       <* ASSERT(self.waitingOn = NIL) *>
       UnlockGiant(maybeAlertable := TRUE);
       EVAL WaitForSingleObject(act.waitSema, ROUND(thisTime*1000.0D0));
-      self.writeToForceGcInteractionOutsideOfGiantLock := 0;
       act.alertable := FALSE;
       LockGiant(act);
       IF act.alerted THEN
