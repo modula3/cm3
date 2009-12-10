@@ -27,7 +27,7 @@ VAR
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
-      lock: Lock_t := NIL;
+      lock: LockRE_t := NIL;
       held: BOOLEAN := FALSE; (* LL = self.cs *) (* Because critical sections are thread re-entrant *)
       writeToForceGcInteractionOutsideOfGiantLock := 0;
     OVERRIDES
@@ -71,7 +71,7 @@ TYPE
     END;
 
 (*----------------------------------------------------------------- Mutex ---*)
-(* Note: {Unlock,Lock}Mutex are the routines called directly by
+(* Note: {UnlockRE,LockRE}Mutex are the routines called directly by
    the compiler.  Acquire and Release are the routines exported through
    the Thread interface *)
          
@@ -87,7 +87,7 @@ PROCEDURE Release (m: Mutex) =
 
 PROCEDURE LockGiant(activation: Activation := NIL; maybeAlertable := FALSE) =
 BEGIN
-  Lock(giantLock);
+  LockRE(giantLock);
   IF NOT maybeAlertable THEN
     IF activation = NIL THEN
       activation := GetActivation();
@@ -98,7 +98,7 @@ END LockGiant;
 
 PROCEDURE UnlockGiant(activation: Activation := NIL; maybeAlertable := FALSE) =
 BEGIN
-  Unlock(giantLock);
+  UnlockRE(giantLock);
   IF NOT maybeAlertable THEN
     IF activation = NIL THEN
       activation := GetActivation();
@@ -110,27 +110,27 @@ END UnlockGiant;
 PROCEDURE CleanMutex (r: REFANY) =
   VAR m := NARROW(r, Mutex);
   BEGIN
-    DeleteLock(m.lock);
+    DeleteLockRE(m.lock);
     m.lock := NIL;
   END CleanMutex;
 
-PROCEDURE InitMutex (VAR m: Lock_t; root: REFANY;
+PROCEDURE InitMutex (VAR m: LockRE_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
-  VAR lock := NewLock();
+  VAR lock := NewLockRE();
   BEGIN
-    Lock(initLock);
+    LockRE(initLock);
     IF m = NIL THEN (* We won the race. *)
       IF lock = NIL THEN (* But we failed. *)
-        Unlock(initLock);
+        UnlockRE(initLock);
         RuntimeError.Raise(RuntimeError.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
         m := lock;
-        Unlock(initLock);
+        UnlockRE(initLock);
         RTHeapRep.RegisterFinalCleanup (root, Clean);
       END;
     ELSE (* another thread beat us in the race, ok *)
-      Unlock(initLock);
-      DeleteLock(lock);
+      UnlockRE(initLock);
+      DeleteLockRE(lock);
     END;
   END InitMutex;
 
@@ -139,7 +139,7 @@ PROCEDURE LockMutex (m: Mutex) =
     IF perfOn THEN PerfChanged(State.locking) END;
     IF m.lock = NIL THEN InitMutex(m.lock, m, CleanMutex) END;
     <*ASSERT NOT GetActivation().alertable *>
-    Lock(m.lock);
+    LockRE(m.lock);
     IF m.held THEN Die(ThisLine(), "attempt to lock mutex already locked by self") END;
     m.held := TRUE;
     IF perfOn THEN PerfRunning() END;
@@ -149,7 +149,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
   BEGIN
     IF NOT m.held THEN Die(ThisLine(), "attempt to release an unlocked mutex") END;
     m.held := FALSE;
-    Unlock(m.lock);
+    UnlockRE(m.lock);
   END UnlockMutex;
 
 (**********
@@ -361,22 +361,22 @@ PROCEDURE AssignSlot (t: T) =
       retry := TRUE;
   BEGIN
     t.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    Lock(slotLock);
+    LockRE(slotLock);
       WHILE retry DO
         retry := FALSE;
 
         (* make sure we have room to register this guy *)
         IF slots = NIL THEN
-          Unlock(slotLock);
+          UnlockRE(slotLock);
             slots := NEW (REF ARRAY OF T, 20);
-          Lock(slotLock);
+          LockRE(slotLock);
         END;
         IF InterlockedRead(n_slotted) >= LAST (slots^) THEN
           old_slots := slots;
           n := NUMBER (old_slots^);
-          Unlock(slotLock);
+          UnlockRE(slotLock);
             new_slots := NEW (REF ARRAY OF T, n+n);
-          Lock(slotLock);
+          LockRE(slotLock);
           IF old_slots = slots THEN
             (* we won any races that may have occurred. *)
             SUBARRAY (new_slots^, 0, n) := slots^;
@@ -403,7 +403,7 @@ PROCEDURE AssignSlot (t: T) =
       t.act.slot := next_slot;
       slots [next_slot] := t;
 
-    Unlock(slotLock);
+    UnlockRE(slotLock);
   END AssignSlot;
 
 PROCEDURE FreeSlot (t: T; act: Activation) =
@@ -478,12 +478,12 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 
     (* add to the list of active threads *)
     <*ASSERT allThreads # NIL*>
-    Lock(activeLock);
+    LockRE(activeLock);
       me.next := allThreads;
       me.prev := allThreads.prev;
       allThreads.prev.next := me;
       allThreads.prev := me;
-    Unlock(activeLock);
+    UnlockRE(activeLock);
 
     (* begin "RunThread" *)
 
@@ -522,10 +522,10 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     (* remove from the list of active threads *)
     <*ASSERT allThreads # NIL*>
     <*ASSERT allThreads # me*>
-    Lock(activeLock);
+    LockRE(activeLock);
       me.next.prev := me.prev;
       me.prev.next := me.next;
-    Unlock(activeLock);
+    UnlockRE(activeLock);
     me.next := NIL;
     me.prev := NIL;
 
@@ -745,7 +745,7 @@ PROCEDURE SuspendOthers () =
       act: Activation;
       nLive := 0;
   BEGIN
-    Lock(activeLock);
+    LockRE(activeLock);
 
     INC (suspend_cnt);
     IF suspend_cnt # 1 THEN
@@ -802,7 +802,7 @@ PROCEDURE ResumeOthers () =
       END;
     END;
 
-    Unlock(activeLock);
+    UnlockRE(activeLock);
   END ResumeOthers;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
@@ -911,25 +911,25 @@ TYPE
 PROCEDURE PerfChanged (s: State) =
   VAR e := ThreadEvent.T {kind := TE.Changed, id := GetCurrentThreadId(), state := s};
   BEGIN
-    Lock(perfLock);
+    LockRE(perfLock);
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    Unlock(perfLock);
+    UnlockRE(perfLock);
   END PerfChanged;
 
 PROCEDURE PerfDeleted () =
   VAR e := ThreadEvent.T {kind := TE.Deleted, id := GetCurrentThreadId()};
   BEGIN
-    Lock(perfLock);
+    LockRE(perfLock);
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    Unlock(perfLock);
+    UnlockRE(perfLock);
   END PerfDeleted;
 
 PROCEDURE PerfRunning () =
   VAR e := ThreadEvent.T {kind := TE.Running, id := GetCurrentThreadId()};
   BEGIN
-    Lock(perfLock);
+    LockRE(perfLock);
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    Unlock(perfLock);
+    UnlockRE(perfLock);
   END PerfRunning;
 
 (*-------------------------------------------------------- Initialization ---*)
@@ -988,7 +988,7 @@ VAR
 PROCEDURE LockHeap () =
   BEGIN
     IF DEBUG THEN ThreadDebug.LockHeap(); END;
-    Lock(heapLock);
+    LockRE(heapLock);
     INC(inCritical);
   END LockHeap;
 
@@ -998,7 +998,7 @@ PROCEDURE UnlockHeap () =
     IF DEBUG THEN ThreadDebug.UnlockHeap(); END;
     DEC(inCritical);
     IF (inCritical = 0) AND do_signal THEN sig := TRUE; do_signal := FALSE; END;
-    Unlock(heapLock);
+    UnlockRE(heapLock);
     IF sig THEN Broadcast(condition); END;
   END UnlockHeap;
 
@@ -1008,9 +1008,9 @@ PROCEDURE WaitHeap () =
     LOCK mutex DO
       DEC(inCritical);
       <*ASSERT inCritical = 0*>
-      Unlock(heapLock);
+      UnlockRE(heapLock);
       Wait(mutex, condition);
-      Lock(heapLock);
+      LockRE(heapLock);
       <*ASSERT inCritical = 0*>
       INC(inCritical);
     END;
@@ -1019,9 +1019,9 @@ PROCEDURE WaitHeap () =
 PROCEDURE BroadcastHeap () =
   BEGIN
     IF DEBUG THEN ThreadDebug.BroadcastHeap(); END;
-    Lock(heapLock);
+    LockRE(heapLock);
       do_signal := TRUE;
-    Unlock(heapLock);
+    UnlockRE(heapLock);
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
