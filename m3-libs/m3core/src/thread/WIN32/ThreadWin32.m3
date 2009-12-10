@@ -36,8 +36,7 @@ REVEAL
     END;
 
   Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
-      waiters: T := NIL;
-        (* LL = giant; List of threads waiting on this CV. *)
+      waiters: T := NIL; (* LL = giant; List of threads waiting on this CV. *)
       writeToForceGcInteractionOutsideOfGiantLock := 0;
     END;
 
