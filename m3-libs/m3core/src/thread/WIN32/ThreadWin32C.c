@@ -5,6 +5,8 @@
 /* Portions Copyright 1996-2000, Critical Mass, Inc.               */
 /* See file COPYRIGHT-CMASS for details.                           */
 
+/* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp */
+
 #ifdef _MSC_VER
 struct IRpcStubBuffer;        /* warning 4115: named type definition in parentheses */
 #pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
@@ -193,7 +195,7 @@ void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
 }
 
 LockRE_t* __cdecl ThreadWin32__NewLockRE(void)
-/* RE for recursive/exclusive */
+/* RE = recursive/exclusive */
 {
     LockRE_t* lock = (LockRE_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
     if (lock)
@@ -202,24 +204,79 @@ LockRE_t* __cdecl ThreadWin32__NewLockRE(void)
 }
 
 void __cdecl ThreadWin32__LockRE(LockRE_t* lock)
-/* RE for recursive/exclusive */
+/* RE = recursive/exclusive */
 {
     EnterCriticalSection(lock);
 }
 
 void __cdecl ThreadWin32__UnlockRE(LockRE_t* lock)
-/* RE for recursive/exclusive */
+/* RE = recursive/exclusive */
 {
     LeaveCriticalSection(lock);
 }
 
 void __cdecl ThreadWin32__DeleteLockRE(LockRE_t* lock)
-/* RE for recursive/exclusive */
+/* RE = recursive/exclusive */
 {
     if (!lock)
         return;
     DeleteCriticalSection(lock);
     HeapFree(GetProcessHeap(), 0, lock);
+}
+
+typedef struct _LockE_t { /* E = exclusive */
+    long count;
+    int owner;
+    HANDLE event;
+} LockE_t;
+ 
+void __cdecl ThreadWin32__DeleteLockE(LockE_t* lock)
+/* E = exclusive */
+{
+    if (lock)
+    {
+        HANDLE event = lock->event;
+        assert(lock->owner == 0);
+        assert(lock->count == -1);
+        if (event)
+            CloseHandle(event);
+        HeapFree(GetProcessHeap(), 0, lock);
+    }
+}
+ 
+LockE_t* __cdecl ThreadWin32__NewLockE(void)
+/* E = exclusive */
+{
+    HANDLE event;
+    LockE_t* lock = (LockE_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
+    if (!lock)
+        goto Error;
+    lock->owner = 0;
+    lock->count = -1;
+    if (!(lock->event = CreateEventA(0, 0, 0, 0)))
+        goto Error;
+    return lock;
+Error:
+    ThreadWin32__DeleteLockE(lock);
+    return NULL;
+}
+ 
+void __cdecl ThreadWin32__LockE(LockE_t* lock)
+/* E = exclusive */
+{
+    if (InterlockedIncrement(&lock->count) != 0)
+        WaitForSingleObject(lock->event, INFINITE);
+    assert(lock->owner == 0);
+    lock->owner = GetCurrentThreadId();
+}
+ 
+void __cdecl ThreadWin32__UnlockE(LockE_t* lock)
+/* E = exclusive */
+{
+    assert(lock->owner == GetCurrentThreadId());
+    lock->owner = 0;
+    if (InterlockedDecrement(&lock->count) >= 0)
+        SetEvent(lock->event);
 }
 
 BOOL __cdecl ThreadWin32__SetActivation(void* act)
