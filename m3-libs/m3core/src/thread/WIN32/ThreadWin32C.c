@@ -70,7 +70,7 @@ LOCK(init)
 
 static DWORD threadIndex = TLS_OUT_OF_INDEXES;
 
-static void InitLock(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
+static void InitLockRE(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
 {
     assert(*pp == NULL || *pp == p);
     if (!*pp)
@@ -80,7 +80,7 @@ static void InitLock(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
     }
 }
 
-static void DeleteLock(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
+static void DeleteLockRE(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
 {
     assert(*pp == NULL || *pp == p);
     if (*pp)
@@ -100,12 +100,12 @@ HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
     stack_grows_down = (bottom > &success);
     assert(stack_grows_down);
 
-    InitLock(&ThreadWin32__activeLock, &activeLock);
-    InitLock(&ThreadWin32__giantLock, &giantLock);
-    InitLock(&ThreadWin32__heapLock, &heapLock);
-    InitLock(&ThreadWin32__perfLock, &perfLock);
-    InitLock(&ThreadWin32__slotLock, &slotLock);
-    InitLock(&ThreadWin32__initLock, &initLock);
+    InitLockRE(&ThreadWin32__activeLock, &activeLock);
+    InitLockRE(&ThreadWin32__giantLock, &giantLock);
+    InitLockRE(&ThreadWin32__heapLock, &heapLock);
+    InitLockRE(&ThreadWin32__perfLock, &perfLock);
+    InitLockRE(&ThreadWin32__slotLock, &slotLock);
+    InitLockRE(&ThreadWin32__initLock, &initLock);
 
     success = (threadIndex != TLS_OUT_OF_INDEXES);
     if (!success)
@@ -125,11 +125,11 @@ Exit:
 
 void __cdecl ThreadWin32__Cleanup(void)
 {
-    DeleteLock(&ThreadWin32__activeLock, &activeLock);
-    DeleteLock(&ThreadWin32__giantLock, &giantLock);
-    DeleteLock(&ThreadWin32__heapLock, &heapLock);
-    DeleteLock(&ThreadWin32__perfLock, &perfLock);
-    DeleteLock(&ThreadWin32__slotLock, &slotLock);
+    DeleteLockRE(&ThreadWin32__activeLock, &activeLock);
+    DeleteLockRE(&ThreadWin32__giantLock, &giantLock);
+    DeleteLockRE(&ThreadWin32__heapLock, &heapLock);
+    DeleteLockRE(&ThreadWin32__perfLock, &perfLock);
+    DeleteLockRE(&ThreadWin32__slotLock, &slotLock);
 
     if (threadIndex != TLS_OUT_OF_INDEXES)
     {
@@ -190,7 +190,7 @@ void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
     *end = Used + info.RegionSize;
 }
 
-PCRITICAL_SECTION __cdecl ThreadWin32__NewLock(void)
+PCRITICAL_SECTION __cdecl ThreadWin32__NewLockRE(void)
 {
     PCRITICAL_SECTION lock = (PCRITICAL_SECTION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
     if (lock)
@@ -198,7 +198,7 @@ PCRITICAL_SECTION __cdecl ThreadWin32__NewLock(void)
     return lock;
 }
 
-void __cdecl ThreadWin32__Lock(PCRITICAL_SECTION lock)
+void __cdecl ThreadWin32__LockRE(PCRITICAL_SECTION lock)
 {
     EnterCriticalSection(lock);
 }
@@ -208,7 +208,7 @@ void __cdecl ThreadWin32__Unlock(PCRITICAL_SECTION lock)
     LeaveCriticalSection(lock);
 }
 
-void __cdecl ThreadWin32__DeleteLock(PCRITICAL_SECTION lock)
+void __cdecl ThreadWin32__DeleteLockRE(PCRITICAL_SECTION lock)
 {
     if (!lock)
         return;

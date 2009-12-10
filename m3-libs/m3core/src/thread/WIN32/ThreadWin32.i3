@@ -16,28 +16,28 @@ FROM ThreadContext IMPORT PCONTEXT;
 (* locks (aka critical section aka mutex) *)
 
 
-TYPE Lock_t = ADDRESS;
+TYPE LockRE_t = ADDRESS;
 
-<*EXTERNAL ThreadWin32__NewLock*> PROCEDURE NewLock(): Lock_t;
-<*EXTERNAL ThreadWin32__Lock*> PROCEDURE Lock(lock: Lock_t);
-<*EXTERNAL ThreadWin32__Unlock*> PROCEDURE Unlock(lock: Lock_t);
-<*EXTERNAL ThreadWin32__DeleteLock*> PROCEDURE DeleteLock(lock: Lock_t);
+<*EXTERNAL ThreadWin32__NewLockRE*> PROCEDURE NewLockRE(): LockRE_t;
+<*EXTERNAL ThreadWin32__LockRE*> PROCEDURE LockRE(lock: LockRE_t);
+<*EXTERNAL ThreadWin32__Unlock*> PROCEDURE UnlockRE(lock: LockRE_t);
+<*EXTERNAL ThreadWin32__DeleteLockRE*> PROCEDURE DeleteLockRE(lock: LockRE_t);
 
 (* static locks *)
 
 (* Global lock for internals of Mutex and Condition *)
-<*EXTERNAL ThreadWin32__giantLock*> VAR giantLock: Lock_t;
+<*EXTERNAL ThreadWin32__giantLock*> VAR giantLock: LockRE_t;
 
-<*EXTERNAL ThreadWin32__activeLock*> VAR activeLock: Lock_t;
+<*EXTERNAL ThreadWin32__activeLock*> VAR activeLock: LockRE_t;
     (* Global lock for list of active threads *)
     (* It is illegal to touch *any* traced references while
        holding activeLock because it is needed by SuspendOthers
        which is called by the collector's page fault handler. *)
 
-<*EXTERNAL ThreadWin32__slotLock*> VAR slotLock: Lock_t;
+<*EXTERNAL ThreadWin32__slotLock*> VAR slotLock: LockRE_t;
     (* Global lock for thread slot table that maps untraced to traced *)
 
-<*EXTERNAL ThreadWin32__initLock*> VAR initLock: Lock_t;
+<*EXTERNAL ThreadWin32__initLock*> VAR initLock: LockRE_t;
   (* used when allocation the criticalsection within a mutex on-demand *)
 
 (*------------------------------------------------------------------ Self ---*)
@@ -50,12 +50,12 @@ TYPE Activation <: ADDRESS;
 
 (*------------------------------------------------------ ShowThread hooks ---*)
 
-<*EXTERNAL ThreadWin32__perfLock*> VAR perfLock: Lock_t;
+<*EXTERNAL ThreadWin32__perfLock*> VAR perfLock: LockRE_t;
 
 (*------------------------------------------------------------- collector ---*)
 (* synchronization for the allocator and collector *)
 
-<*EXTERNAL ThreadWin32__heapLock*> VAR heapLock: Lock_t;
+<*EXTERNAL ThreadWin32__heapLock*> VAR heapLock: LockRE_t;
 
 (*---------------------------------------------------------------------------*)
 
