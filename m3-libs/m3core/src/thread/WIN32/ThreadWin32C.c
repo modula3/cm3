@@ -238,22 +238,32 @@ void* __cdecl ThreadWin32__StackPointerFromContext(CONTEXT* context)
   return (void*)context->STACK_REGISTER;
 }
 
-void __cdecl ThreadWin32__ProcessStopped(char* bottom, CONTEXT* context,
-                                 void (*p)(void* start, void* limit))
+void __cdecl ThreadWin32__ProcessStopped(
+    char* stackStart,
+    char* stackEnd,
+    CONTEXT* context,
+    void (*p)(void* start, void* limit))
 {
   volatile char assertReadable;
   char* top;
 
+  /* stack bounds are not yet set or have been cleared;
+     therefore the thread either doesn't yet have any traced
+     references or no longer has any */
+
+  if (!stackStart || !stackEnd)
+      return;
+
   /* process stack */
 
   assert(context);
-  assert(bottom);
+  assert(stackStart < stackEnd);
   assert(stack_grows_down);
   top = (char*)context->STACK_REGISTER;  ;
-  assert(top <= bottom);
+  assert(top <= stackEnd);
   assert(top);
-  assertReadable = *(volatile char*)(bottom - 1);
-  p(top, bottom);
+  assertReadable = *(volatile char*)(stackEnd - 1);
+  p(top, stackEnd);
 
  /* process registers */
 
@@ -267,8 +277,8 @@ void __cdecl ThreadWin32__ProcessStopped(char* bottom, CONTEXT* context,
 
 #ifdef _IA64_
   top = (char*)context->RsBSP;
-  assert(bottom <= top);
-  p(bottom, top);
+  assert(stackEnd <= top);
+  p(stackEnd, top);
 #endif
 }
 
