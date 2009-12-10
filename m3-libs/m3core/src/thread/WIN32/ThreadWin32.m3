@@ -139,6 +139,7 @@ PROCEDURE LockMutex (m: Mutex) =
   BEGIN
     IF perfOn THEN PerfChanged(State.locking) END;
     IF m.lock = NIL THEN InitMutex(m.lock, m, CleanMutex) END;
+    <*ASSERT NOT GetActivation().alertable *>
     Lock(m.lock);
     IF m.held THEN Die(ThisLine(), "attempt to lock mutex already locked by self") END;
     m.held := TRUE;
