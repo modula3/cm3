@@ -57,20 +57,22 @@ setjmp works, but _setjmp can be much faster. */
 extern "C" {
 #endif
 
-#define LOCK(name) \
-static CRITICAL_SECTION name##Lock; \
-PCRITICAL_SECTION ThreadWin32__##name##Lock; \
+typedef CRITICAL_SECTION LockRE_t;
 
-LOCK(active) /* global lock for list of active threads */
-LOCK(slot)   /* global lock for thread slots table which maps untraced to traced */
-LOCK(giant)
-LOCK(heap)
-LOCK(perf)
-LOCK(init)
+#define LOCKRE(name) \
+static LockRE_t name##Lock; \
+LockRE_t* ThreadWin32__##name##Lock; \
+
+LOCKRE(active) /* global lock for list of active threads */
+LOCKRE(slot)   /* global lock for thread slots table which maps untraced to traced */
+LOCKRE(giant)
+LOCKRE(heap)
+LOCKRE(perf)
+LOCKRE(init)
 
 static DWORD threadIndex = TLS_OUT_OF_INDEXES;
 
-static void InitLockRE(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
+static void InitLockRE(LockRE_t** pp, LockRE_t* p)
 {
     assert(*pp == NULL || *pp == p);
     if (!*pp)
@@ -80,7 +82,7 @@ static void InitLockRE(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
     }
 }
 
-static void DeleteLockRE(PCRITICAL_SECTION* pp, PCRITICAL_SECTION p)
+static void DeleteLockRE(LockRE_t** pp, LockRE_t* p)
 {
     assert(*pp == NULL || *pp == p);
     if (*pp)
@@ -190,25 +192,29 @@ void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
     *end = Used + info.RegionSize;
 }
 
-PCRITICAL_SECTION __cdecl ThreadWin32__NewLockRE(void)
+LockRE_t* __cdecl ThreadWin32__NewLockRE(void)
+/* RE for recursive/exclusive */
 {
-    PCRITICAL_SECTION lock = (PCRITICAL_SECTION)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
+    LockRE_t* lock = (LockRE_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
     if (lock)
         InitializeCriticalSection(lock);
     return lock;
 }
 
-void __cdecl ThreadWin32__LockRE(PCRITICAL_SECTION lock)
+void __cdecl ThreadWin32__LockRE(LockRE_t* lock)
+/* RE for recursive/exclusive */
 {
     EnterCriticalSection(lock);
 }
 
-void __cdecl ThreadWin32__Unlock(PCRITICAL_SECTION lock)
+void __cdecl ThreadWin32__UnlockRE(LockRE_t* lock)
+/* RE for recursive/exclusive */
 {
     LeaveCriticalSection(lock);
 }
 
-void __cdecl ThreadWin32__DeleteLockRE(PCRITICAL_SECTION lock)
+void __cdecl ThreadWin32__DeleteLockRE(LockRE_t* lock)
+/* RE for recursive/exclusive */
 {
     if (!lock)
         return;

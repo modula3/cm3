@@ -14,13 +14,13 @@ FROM ThreadContext IMPORT PCONTEXT;
 (*---------------------------------------------------------------------------*)
 
 (* locks (aka critical section aka mutex) *)
-
+(* RE for recursive/exclusive *)
 
 TYPE LockRE_t = ADDRESS;
 
 <*EXTERNAL ThreadWin32__NewLockRE*> PROCEDURE NewLockRE(): LockRE_t;
 <*EXTERNAL ThreadWin32__LockRE*> PROCEDURE LockRE(lock: LockRE_t);
-<*EXTERNAL ThreadWin32__Unlock*> PROCEDURE UnlockRE(lock: LockRE_t);
+<*EXTERNAL ThreadWin32__UnlockRE*> PROCEDURE UnlockRE(lock: LockRE_t);
 <*EXTERNAL ThreadWin32__DeleteLockRE*> PROCEDURE DeleteLockRE(lock: LockRE_t);
 
 (* static locks *)
