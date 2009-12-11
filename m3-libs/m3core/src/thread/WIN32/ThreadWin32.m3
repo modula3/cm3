@@ -29,7 +29,6 @@ REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
       lock: LockRE_t := NIL;
       held: BOOLEAN := FALSE; (* LL = self.cs *) (* Because critical sections are thread re-entrant *)
-      writeToForceGcInteractionOutsideOfGiantLock := 0;
     OVERRIDES
       acquire := LockMutex;
       release := UnlockMutex;
@@ -37,12 +36,10 @@ REVEAL
 
   Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
       waiters: T := NIL; (* LL = giant; List of threads waiting on this CV. *)
-      writeToForceGcInteractionOutsideOfGiantLock := 0;
     END;
 
   T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
       act: Activation := NIL;       (* LL = Self(); live (untraced) thread data *)
-      writeToForceGcInteractionOutsideOfGiantLock := 0;
       closure: Closure := NIL;      (* our work and its result *)
       result: REFANY := NIL;        (* our work and its result *)
       join: Condition;              (* LL = Self(); wait here to join *)
@@ -71,7 +68,7 @@ TYPE
     END;
 
 (*----------------------------------------------------------------- Mutex ---*)
-(* Note: {UnlockRE,LockRE}Mutex are the routines called directly by
+(* Note: {Unlock,Lock}Mutex are the routines called directly by
    the compiler.  Acquire and Release are the routines exported through
    the Thread interface *)
          
@@ -116,21 +113,11 @@ PROCEDURE CleanMutex (r: REFANY) =
 
 PROCEDURE InitMutex (VAR m: LockRE_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
-  VAR lock := NewLockRE();
   BEGIN
-    LockRE(initLock);
-    IF m = NIL THEN (* We won the race. *)
-      IF lock = NIL THEN (* But we failed. *)
-        UnlockRE(initLock);
-        RuntimeError.Raise(RuntimeError.T.OutOfMemory);
-      ELSE (* We won the race and succeeded. *)
-        m := lock;
-        UnlockRE(initLock);
+    IF InitMutexC(m) # 0 THEN (* We won the race and succeeded. *)
         RTHeapRep.RegisterFinalCleanup (root, Clean);
-      END;
-    ELSE (* another thread beat us in the race, ok *)
-      UnlockRE(initLock);
-      DeleteLockRE(lock);
+    ELSIF m = NIL THEN (* We failed and nobody else succeeded at about the same time. *)
+        RuntimeError.Raise(RuntimeError.T.OutOfMemory);
     END;
   END InitMutex;
 
@@ -219,9 +206,6 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
     IF DEBUG THEN ThreadDebug.AlertWait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
     act := self.act;
-    m.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    c.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    self.writeToForceGcInteractionOutsideOfGiantLock := 0;
     LockGiant(act);
     InnerTestAlert(act);
     act.alertable := TRUE;
@@ -240,8 +224,6 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
     IF DEBUG THEN ThreadDebug.Wait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
     act := self.act;
-    m.writeToForceGcInteractionOutsideOfGiantLock := 0;
-    c.writeToForceGcInteractionOutsideOfGiantLock := 0;
     LockGiant(act);
     InnerWait(m, c, self);
   END Wait;
@@ -274,7 +256,6 @@ PROCEDURE Signal (c: Condition) =
 PROCEDURE Broadcast (c: Condition) =
   BEGIN
     IF DEBUG THEN ThreadDebug.Broadcast(c); END;
-    c.writeToForceGcInteractionOutsideOfGiantLock := 0;
     LockGiant();
     WHILE c.waiters # NIL DO DequeueHead(c) END;
     UnlockGiant();
@@ -287,7 +268,6 @@ PROCEDURE Alert(t: T) =
     IF DEBUG THEN ThreadDebug.Alert(t); END;
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
     act := t.act;
-    t.writeToForceGcInteractionOutsideOfGiantLock := 0;
     LockGiant();
     act.alerted := TRUE;
     IF act.alertable THEN
@@ -360,7 +340,6 @@ PROCEDURE AssignSlot (t: T) =
   VAR n: CARDINAL;  old_slots, new_slots: REF ARRAY OF T;
       retry := TRUE;
   BEGIN
-    t.writeToForceGcInteractionOutsideOfGiantLock := 0;
     LockRE(slotLock);
       WHILE retry DO
         retry := FALSE;
@@ -646,14 +625,12 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
     WHILE amount > 0.0D0 DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
-      self.writeToForceGcInteractionOutsideOfGiantLock := 0;
       LockGiant(act);
       InnerTestAlert(act);
       act.alertable := TRUE;
       <* ASSERT(self.waitingOn = NIL) *>
       UnlockGiant(maybeAlertable := TRUE);
       EVAL WaitForSingleObject(act.waitSema, ROUND(thisTime*1000.0D0));
-      self.writeToForceGcInteractionOutsideOfGiantLock := 0;
       act.alertable := FALSE;
       LockGiant(act);
       IF act.alerted THEN
@@ -951,8 +928,8 @@ PROCEDURE Init() =
 
     self := CreateT(me);
 
-    mutex := NEW(MUTEX);
-    condition := NEW(Condition);
+    HeapWaitMutex := NEW(MUTEX);
+    HeapWaitCondition := NEW(Condition);
 
     GetStackBounds(me.stackStart, me.stackEnd);
     IF me.stackStart = NIL OR me.stackEnd = NIL THEN Choke(ThisLine()); END;
@@ -961,8 +938,8 @@ PROCEDURE Init() =
       RTIO.PutText("created initial act="); RTIO.PutAddr(me.handle); RTIO.PutText("\n"); RTIO.Flush();
     END;
 
-    <*ASSERT inCritical = 1*>
-    inCritical := 0;
+    <*ASSERT HeapInCritical = 1*>
+    HeapInCritical := 0;
 
     PerfStart();
     IF perfOn THEN PerfChanged(State.alive) END;
@@ -980,48 +957,47 @@ PROCEDURE Init() =
    and collector. *)
 
 VAR
-  inCritical := 1;     (* LL = heap *)
-  do_signal := FALSE;  (* LL = heap *)
-  mutex: MUTEX;
-  condition: Condition;
+  HeapInCritical := 1;      (* LL = heap *)
+  HeapDoSignal := FALSE;    (* LL = heap *)
+  HeapWaitMutex: MUTEX;
+  HeapWaitCondition: Condition;
 
 PROCEDURE LockHeap () =
   BEGIN
     IF DEBUG THEN ThreadDebug.LockHeap(); END;
     LockRE(heapLock);
-    INC(inCritical);
+    INC(HeapInCritical);
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
   VAR sig := FALSE;
   BEGIN   
     IF DEBUG THEN ThreadDebug.UnlockHeap(); END;
-    DEC(inCritical);
-    IF (inCritical = 0) AND do_signal THEN sig := TRUE; do_signal := FALSE; END;
+    DEC(HeapInCritical);
+    IF (HeapInCritical = 0) AND HeapDoSignal THEN sig := TRUE; HeapDoSignal := FALSE; END;
     UnlockRE(heapLock);
-    IF sig THEN Broadcast(condition); END;
+    IF sig THEN Broadcast(HeapWaitCondition); END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
   BEGIN
     IF DEBUG THEN ThreadDebug.WaitHeap(); END;
-    LOCK mutex DO
-      DEC(inCritical);
-      <*ASSERT inCritical = 0*>
+    LOCK HeapWaitMutex DO
+      DEC(HeapInCritical);
+      <*ASSERT HeapInCritical = 0*>
       UnlockRE(heapLock);
-      Wait(mutex, condition);
+      Wait(HeapWaitMutex, HeapWaitCondition);
       LockRE(heapLock);
-      <*ASSERT inCritical = 0*>
-      INC(inCritical);
+      <*ASSERT HeapInCritical = 0*>
+      INC(HeapInCritical);
     END;
   END WaitHeap;
 
 PROCEDURE BroadcastHeap () =
+  (* LL >= RTOS.LockHeap *)
   BEGIN
     IF DEBUG THEN ThreadDebug.BroadcastHeap(); END;
-    LockRE(heapLock);
-      do_signal := TRUE;
-    UnlockRE(heapLock);
+    HeapDoSignal := TRUE;
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
