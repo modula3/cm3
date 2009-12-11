@@ -340,8 +340,9 @@ PROCEDURE AssignSlot (t: T) =
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
   END AssignSlot;
 
-PROCEDURE FreeSlot (t: T; act: Activation) =
+PROCEDURE FreeSlot (VAR self: T) =
   (* LL = 0 *)
+  VAR me := self.act;
   BEGIN
     WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
 
@@ -350,8 +351,8 @@ PROCEDURE FreeSlot (t: T; act: Activation) =
         IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
-      t := NIL; (* drop traced reference *)
-      act.slot := 0;
+      self := NIL; (* drop traced reference *)
+      me.slot := 0;
 
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
   END FreeSlot;
@@ -490,9 +491,8 @@ PROCEDURE RunThread (me: Activation) =
     RTHeapRep.FlushThreadState(me.heapState);
 
     IF perfOn THEN PerfDeleted() END;
-    FreeSlot(self, me);
+    FreeSlot(self);  (* note: needs self.act ! *)
     (* Since we're no longer slotted, we cannot touch traced refs. *)
-    self := NIL; (* drop traced reference *)
   END RunThread;
 
 VAR joinMu: MUTEX;
