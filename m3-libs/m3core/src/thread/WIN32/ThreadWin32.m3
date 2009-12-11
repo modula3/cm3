@@ -933,8 +933,8 @@ PROCEDURE Init() =
 
     self := CreateT(me);
 
-    mutex := NEW(MUTEX);
-    condition := NEW(Condition);
+    HeapWaitMutex := NEW(MUTEX);
+    HeapWaitCondition := NEW(Condition);
 
     GetStackBounds(me.stackStart, me.stackEnd);
     IF me.stackStart = NIL OR me.stackEnd = NIL THEN Choke(ThisLine()); END;
@@ -943,8 +943,8 @@ PROCEDURE Init() =
       RTIO.PutText("created initial act="); RTIO.PutAddr(me.handle); RTIO.PutText("\n"); RTIO.Flush();
     END;
 
-    <*ASSERT inCritical = 1*>
-    inCritical := 0;
+    <*ASSERT HeapInCritical = 1*>
+    HeapInCritical := 0;
 
     PerfStart();
     IF perfOn THEN PerfChanged(State.alive) END;
@@ -962,39 +962,39 @@ PROCEDURE Init() =
    and collector. *)
 
 VAR
-  inCritical := 1;     (* LL = heap *)
-  do_signal := FALSE;  (* LL = heap *)
-  mutex: MUTEX;
-  condition: Condition;
+  HeapInCritical := 1;      (* LL = heap *)
+  HeapDoSignal := FALSE;    (* LL = heap *)
+  HeapWaitMutex: MUTEX;
+  HeapWaitCondition: Condition;
 
 PROCEDURE LockHeap () =
   BEGIN
     IF DEBUG THEN ThreadDebug.LockHeap(); END;
     LockRE(heapLock);
-    INC(inCritical);
+    INC(HeapInCritical);
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
   VAR sig := FALSE;
   BEGIN   
     IF DEBUG THEN ThreadDebug.UnlockHeap(); END;
-    DEC(inCritical);
-    IF (inCritical = 0) AND do_signal THEN sig := TRUE; do_signal := FALSE; END;
+    DEC(HeapInCritical);
+    IF (HeapInCritical = 0) AND HeapDoSignal THEN sig := TRUE; HeapDoSignal := FALSE; END;
     UnlockRE(heapLock);
-    IF sig THEN Broadcast(condition); END;
+    IF sig THEN Broadcast(HeapWaitCondition); END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
   BEGIN
     IF DEBUG THEN ThreadDebug.WaitHeap(); END;
-    LOCK mutex DO
-      DEC(inCritical);
-      <*ASSERT inCritical = 0*>
+    LOCK HeapWaitMutex DO
+      DEC(HeapInCritical);
+      <*ASSERT HeapInCritical = 0*>
       UnlockRE(heapLock);
-      Wait(mutex, condition);
+      Wait(HeapWaitMutex, HeapWaitCondition);
       LockRE(heapLock);
-      <*ASSERT inCritical = 0*>
-      INC(inCritical);
+      <*ASSERT HeapInCritical = 0*>
+      INC(HeapInCritical);
     END;
   END WaitHeap;
 
@@ -1002,7 +1002,7 @@ PROCEDURE BroadcastHeap () =
   (* LL >= RTOS.LockHeap *)
   BEGIN
     IF DEBUG THEN ThreadDebug.BroadcastHeap(); END;
-    do_signal := TRUE;
+    HeapDoSignal := TRUE;
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
