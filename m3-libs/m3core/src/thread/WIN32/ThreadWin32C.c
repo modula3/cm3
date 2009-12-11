@@ -101,9 +101,11 @@ static void InitLockE(LockE_t** pp, LockE_t* p)
         p->count = -1;
         event = CreateEventA(0, 0, 0, 0);
         if (event)
+        {
             p->event = event;
-        MemoryBarrier();
-        *pp = p;
+            MemoryBarrier();
+            *pp = p;
+        }
     }
     MemoryBarrier();
 }
