@@ -66,12 +66,6 @@ PROCEDURE GetStackBounds(VAR start, end: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL ThreadWin32__InterlockedIncrement*>
-PROCEDURE InterlockedIncrement(VAR a: LONG);
-
-<*EXTERNAL ThreadWin32__InterlockedDecrement*>
-PROCEDURE InterlockedDecrement(VAR a: LONG);
-
 <*EXTERNAL ThreadWin32__InterlockedRead*>
 PROCEDURE InterlockedRead(VAR a: LONG): LONG;
 
