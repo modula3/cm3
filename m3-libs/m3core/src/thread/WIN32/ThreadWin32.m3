@@ -285,11 +285,12 @@ PROCEDURE Alert(t: T) =
 PROCEDURE TestAlert(): BOOLEAN =
   VAR self := Self();
       act: Activation;
-      result := FALSE;
+      result: BOOLEAN;
   BEGIN
     IF DEBUG THEN ThreadDebug.TestAlert(); END;
     IF self = NIL THEN
       (* Not created by Fork; not alertable *)
+      RETURN FALSE
     ELSE
       act := self.act;
       <* ASSERT self.waitingOn = NIL *>
@@ -297,8 +298,8 @@ PROCEDURE TestAlert(): BOOLEAN =
       result := WaitForSingleObject(act.alertEvent, 0) = WAIT_OBJECT_0;
       <* ASSERT self.waitingOn = NIL *>
       <* ASSERT self.nextWaiter = NIL *>
+      RETURN result;
     END;
-    RETURN result;
   END TestAlert;
 
 (*------------------------------------------------------------------ Self ---*)
