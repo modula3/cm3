@@ -59,172 +59,10 @@ setjmp works, but _setjmp can be much faster. */
 extern "C" {
 #endif
 
-typedef CRITICAL_SECTION LockRE_t;
+/*-------------------------------------------------------------------------*/
+/* LockE_t E = exclusive */
 
-#define LOCKRE(name) \
-static LockRE_t name##Lock; \
-LockRE_t* ThreadWin32__##name##Lock; \
-
-LOCKRE(active) /* global lock for list of active threads */
-LOCKRE(slot)   /* global lock for thread slots table which maps untraced to traced */
-LOCKRE(giant)
-LOCKRE(heap)
-LOCKRE(perf)
-LOCKRE(init)
-
-static DWORD threadIndex = TLS_OUT_OF_INDEXES;
-
-static void InitLockRE(LockRE_t** pp, LockRE_t* p)
-{
-    assert(*pp == NULL || *pp == p);
-    if (!*pp)
-    {
-        InitializeCriticalSection(p);
-        *pp = p;
-    }
-}
-
-static void DeleteLockRE(LockRE_t** pp, LockRE_t* p)
-{
-    assert(*pp == NULL || *pp == p);
-    if (*pp)
-    {
-        DeleteCriticalSection(p);
-        *pp = 0;
-    }
-}
-
-static BOOL stack_grows_down;
-
-HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
-{
-    HANDLE threadHandle = { 0 };
-    BOOL success = { 0 };
-
-    stack_grows_down = (bottom > &success);
-    assert(stack_grows_down);
-
-    InitLockRE(&ThreadWin32__activeLock, &activeLock);
-    InitLockRE(&ThreadWin32__giantLock, &giantLock);
-    InitLockRE(&ThreadWin32__heapLock, &heapLock);
-    InitLockRE(&ThreadWin32__perfLock, &perfLock);
-    InitLockRE(&ThreadWin32__slotLock, &slotLock);
-    InitLockRE(&ThreadWin32__initLock, &initLock);
-
-    success = (threadIndex != TLS_OUT_OF_INDEXES);
-    if (!success)
-    {
-        threadIndex = TlsAlloc(); /* This CAN fail. */
-        success = (threadIndex != TLS_OUT_OF_INDEXES);
-    }
-    assert(success);
-    if (!success)
-        goto Exit;
-
-    success = DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &threadHandle, 0, 0, DUPLICATE_SAME_ACCESS);
-    assert(success);
-Exit:
-    return threadHandle;
-}
-
-void __cdecl ThreadWin32__Cleanup(void)
-{
-    DeleteLockRE(&ThreadWin32__activeLock, &activeLock);
-    DeleteLockRE(&ThreadWin32__giantLock, &giantLock);
-    DeleteLockRE(&ThreadWin32__heapLock, &heapLock);
-    DeleteLockRE(&ThreadWin32__perfLock, &perfLock);
-    DeleteLockRE(&ThreadWin32__slotLock, &slotLock);
-
-    if (threadIndex != TLS_OUT_OF_INDEXES)
-    {
-        TlsFree(threadIndex);
-        threadIndex = TLS_OUT_OF_INDEXES;
-    }
-}
-
-#ifndef MemoryBarrier
-void __cdecl WinNT__MemoryBarrier(void);
-#define MemoryBarrier WinNT__MemoryBarrier
-#endif
-
-LONG __cdecl ThreadWin32__InterlockedRead(volatile LONG* a)
-{ /* based on Boost */
-    LONG b;
-    MemoryBarrier();
-    b = *a;
-    MemoryBarrier();
-    return b;
-}
-
-void __cdecl ThreadWin32__InterlockedIncrement(volatile LONG* a)
-{
-    InterlockedIncrement(a);
-}
-
-void __cdecl ThreadWin32__InterlockedDecrement(volatile LONG* a)
-{
-    InterlockedDecrement(a);
-}
-
-void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
-{
-    MEMORY_BASIC_INFORMATION info = { 0 };
-    size_t a = VirtualQuery(&info, &info, sizeof(info));
-
-    /* how far down has the stack been used so far */
-    char* Used = (char*)info.BaseAddress;
-
-    /* how far down the stack can grow */
-    char* Available = (char*)info.AllocationBase;
-
-    assert(a >= sizeof(info));
-    assert(Available);
-    assert(Used);
-    assert(info.RegionSize);
-    assert(((char*)&info) > Available);
-    assert(((char*)&info) >= Used);
-    assert(((char*)&info) < Used + info.RegionSize);
-
-    /* verify it is readable
-    NOTE: Do not verify *Available -- stack pages must be touched in order. */
-    a = *(volatile unsigned char*)Used;
-    a = *(volatile unsigned char*)(Used + info.RegionSize - 1);
-
-    *start = Available;
-    *end = Used + info.RegionSize;
-}
-
-LockRE_t* __cdecl ThreadWin32__NewLockRE(void)
-/* RE = recursive/exclusive */
-{
-    LockRE_t* lock = (LockRE_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
-    if (lock)
-        InitializeCriticalSection(lock);
-    return lock;
-}
-
-void __cdecl ThreadWin32__LockRE(LockRE_t* lock)
-/* RE = recursive/exclusive */
-{
-    EnterCriticalSection(lock);
-}
-
-void __cdecl ThreadWin32__UnlockRE(LockRE_t* lock)
-/* RE = recursive/exclusive */
-{
-    LeaveCriticalSection(lock);
-}
-
-void __cdecl ThreadWin32__DeleteLockRE(LockRE_t* lock)
-/* RE = recursive/exclusive */
-{
-    if (!lock)
-        return;
-    DeleteCriticalSection(lock);
-    HeapFree(GetProcessHeap(), 0, lock);
-}
-
-typedef struct _LockE_t { /* E = exclusive */
+typedef struct _LockE_t {
     long count;
     DWORD owner;
     HANDLE event;
@@ -279,30 +117,131 @@ void __cdecl ThreadWin32__UnlockE(LockE_t* lock)
         SetEvent(lock->event);
 }
 
-BOOL __cdecl ThreadWin32__SetActivation(void* act)
-  /* LL = 0 */
+/*-------------------------------------------------------------------------*/
+/* LockRE_t RE = recursive/exclusive */
+
+typedef CRITICAL_SECTION LockRE_t;
+
+#define LOCKRE(name) \
+static LockRE_t name##Lock; \
+LockRE_t* ThreadWin32__##name##Lock; \
+
+static void InitLockRE(LockRE_t** pp, LockRE_t* p)
 {
-    BOOL success = (threadIndex != TLS_OUT_OF_INDEXES);
-    assert(success);
-    success = TlsSetValue(threadIndex, act); /* NOTE: This CAN fail. */
-    assert(success);
-    return success;
+    assert(*pp == NULL || *pp == p);
+    if (!*pp)
+    {
+        InitializeCriticalSection(p);
+        *pp = p;
+    }
 }
 
-void* __cdecl ThreadWin32__GetActivation(void)
-  /* If not the initial thread and not created by Fork, returns NIL */
-  /* LL = 0 */
-  /* This function is called VERY frequently. */
+static void DeleteLockRE(LockRE_t** pp, LockRE_t* p)
 {
-    assert(threadIndex != TLS_OUT_OF_INDEXES);
-    return TlsGetValue(threadIndex);
+    assert(*pp == NULL || *pp == p);
+    if (*pp)
+    {
+        DeleteCriticalSection(p);
+        *pp = 0;
+    }
 }
 
-void* __cdecl ThreadWin32__StackPointerFromContext(CONTEXT* context)
+LockRE_t* __cdecl ThreadWin32__NewLockRE(void)
+/* RE = recursive/exclusive */
 {
-  return (void*)context->STACK_REGISTER;
+    LockRE_t* lock = (LockRE_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
+    if (lock)
+        InitializeCriticalSection(lock);
+    return lock;
 }
 
+void __cdecl ThreadWin32__LockRE(LockRE_t* lock)
+/* RE = recursive/exclusive */
+{
+    EnterCriticalSection(lock);
+}
+
+void __cdecl ThreadWin32__UnlockRE(LockRE_t* lock)
+/* RE = recursive/exclusive */
+{
+    LeaveCriticalSection(lock);
+}
+
+void __cdecl ThreadWin32__DeleteLockRE(LockRE_t* lock)
+/* RE = recursive/exclusive */
+{
+    if (!lock)
+        return;
+    DeleteCriticalSection(lock);
+    HeapFree(GetProcessHeap(), 0, lock);
+}
+
+/*-------------------------------------------------------------------------*/
+/* lock-free support */
+
+#ifndef MemoryBarrier
+void __cdecl WinNT__MemoryBarrier(void);
+#define MemoryBarrier WinNT__MemoryBarrier
+#endif
+
+LONG __cdecl ThreadWin32__InterlockedRead(volatile LONG* a)
+{ /* based on Boost */
+    LONG b;
+    MemoryBarrier();
+    b = *a;
+    MemoryBarrier();
+    return b;
+}
+
+void __cdecl ThreadWin32__InterlockedIncrement(volatile LONG* a)
+{
+    InterlockedIncrement(a);
+}
+
+void __cdecl ThreadWin32__InterlockedDecrement(volatile LONG* a)
+{
+    InterlockedDecrement(a);
+}
+
+/*-------------------------------------------------------------------------*/
+
+void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
+{
+    MEMORY_BASIC_INFORMATION info = { 0 };
+    size_t a = VirtualQuery(&info, &info, sizeof(info));
+
+    /* how far down has the stack been used so far */
+    char* Used = (char*)info.BaseAddress;
+
+    /* how far down the stack can grow */
+    char* Available = (char*)info.AllocationBase;
+
+    assert(a >= sizeof(info));
+    assert(Available);
+    assert(Used);
+    assert(info.RegionSize);
+    assert(((char*)&info) > Available);
+    assert(((char*)&info) >= Used);
+    assert(((char*)&info) < Used + info.RegionSize);
+
+    /* verify it is readable
+    NOTE: Do not verify *Available -- stack pages must be touched in order. */
+    a = *(volatile unsigned char*)Used;
+    a = *(volatile unsigned char*)(Used + info.RegionSize - 1);
+
+    *start = Available;
+    *end = Used + info.RegionSize;
+}
+
+/*-------------------------------------------------------------------------*/
+/* some variables */
+
+static DWORD threadIndex = TLS_OUT_OF_INDEXES;
+static BOOL stack_grows_down;
+
+/*-------------------------------------------------------------------------*/
+/* process stopped and live stack and registers (garbage collection) */
+ 
 void __cdecl ThreadWin32__ProcessStopped(
     char* stackStart,
     char* stackEnd,
@@ -370,6 +309,36 @@ void __cdecl ThreadWin32__ProcessLive(char *bottom, void (*p)(void *start, void 
   }
 }
 
+/*-------------------------------------------------------------------------*/
+/* activation (thread local) */
+
+BOOL __cdecl ThreadWin32__SetActivation(void* act)
+  /* LL = 0 */
+{
+    BOOL success = (threadIndex != TLS_OUT_OF_INDEXES);
+    assert(success);
+    success = TlsSetValue(threadIndex, act); /* NOTE: This CAN fail. */
+    assert(success);
+    return success;
+}
+
+void* __cdecl ThreadWin32__GetActivation(void)
+  /* If not the initial thread and not created by Fork, returns NIL */
+  /* LL = 0 */
+  /* This function is called VERY frequently. */
+{
+    assert(threadIndex != TLS_OUT_OF_INDEXES);
+    return TlsGetValue(threadIndex);
+}
+
+/*-------------------------------------------------------------------------*/
+/* context */
+
+void* __cdecl ThreadWin32__StackPointerFromContext(CONTEXT* context)
+{
+  return (void*)context->STACK_REGISTER;
+}
+
 PCONTEXT __cdecl ThreadWin32__NewContext(void)
 {
     PCONTEXT context = (PCONTEXT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*context));
@@ -381,6 +350,62 @@ PCONTEXT __cdecl ThreadWin32__NewContext(void)
 void __cdecl ThreadWin32__DeleteContext(void* p)
 {
     HeapFree(GetProcessHeap(), 0, p);
+}
+
+/*-------------------------------------------------------------------------*/
+/* variables and initialization/cleanup */
+
+LOCKRE(active) /* global lock for list of active threads */
+LOCKRE(slot)   /* global lock for thread slots table which maps untraced to traced */
+LOCKRE(giant)
+LOCKRE(heap)
+LOCKRE(perf)
+LOCKRE(init)
+
+HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
+{
+    HANDLE threadHandle = { 0 };
+    BOOL success = { 0 };
+
+    stack_grows_down = (bottom > &success);
+    assert(stack_grows_down);
+
+    InitLockRE(&ThreadWin32__activeLock, &activeLock);
+    InitLockRE(&ThreadWin32__giantLock, &giantLock);
+    InitLockRE(&ThreadWin32__heapLock, &heapLock);
+    InitLockRE(&ThreadWin32__perfLock, &perfLock);
+    InitLockRE(&ThreadWin32__slotLock, &slotLock);
+    InitLockRE(&ThreadWin32__initLock, &initLock);
+
+    success = (threadIndex != TLS_OUT_OF_INDEXES);
+    if (!success)
+    {
+        threadIndex = TlsAlloc(); /* This CAN fail. */
+        success = (threadIndex != TLS_OUT_OF_INDEXES);
+    }
+    assert(success);
+    if (!success)
+        goto Exit;
+
+    success = DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &threadHandle, 0, 0, DUPLICATE_SAME_ACCESS);
+    assert(success);
+Exit:
+    return threadHandle;
+}
+
+void __cdecl ThreadWin32__Cleanup(void)
+{
+    DeleteLockRE(&ThreadWin32__activeLock, &activeLock);
+    DeleteLockRE(&ThreadWin32__giantLock, &giantLock);
+    DeleteLockRE(&ThreadWin32__heapLock, &heapLock);
+    DeleteLockRE(&ThreadWin32__perfLock, &perfLock);
+    DeleteLockRE(&ThreadWin32__slotLock, &slotLock);
+
+    if (threadIndex != TLS_OUT_OF_INDEXES)
+    {
+        TlsFree(threadIndex);
+        threadIndex = TLS_OUT_OF_INDEXES;
+    }
 }
 
 #if 0
@@ -410,6 +435,8 @@ BOOL WINAPI DllMain(HANDLE DllHandle, DWORD Reason, PVOID Static)
 }
 
 #endif
+
+/*-------------------------------------------------------------------------*/
 
 #ifdef __cplusplus
 } /* extern "C" */
