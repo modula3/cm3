@@ -64,16 +64,6 @@ LONG __cdecl ThreadWin32__InterlockedRead(volatile LONG* a)
     return b;
 }
 
-void __cdecl ThreadWin32__InterlockedIncrement(volatile LONG* a)
-{
-    InterlockedIncrement(a);
-}
-
-void __cdecl ThreadWin32__InterlockedDecrement(volatile LONG* a)
-{
-    InterlockedDecrement(a);
-}
-
 /*-------------------------------------------------------------------------*/
 /* LockE_t E = exclusive */
 
