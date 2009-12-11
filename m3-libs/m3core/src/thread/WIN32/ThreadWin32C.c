@@ -79,6 +79,8 @@ void __cdecl ThreadWin32__InterlockedDecrement(volatile LONG* a)
 /*-------------------------------------------------------------------------*/
 /* LockE_t E = exclusive */
 
+#if 0
+
 typedef struct _LockE_t {
     volatile long count;
     volatile DWORD owner;
@@ -176,6 +178,8 @@ void __cdecl ThreadWin32__UnlockE(LockE_t* lock)
         SetEvent(lock->event);
     MemoryBarrier();
 }
+
+#endif
 
 /*-------------------------------------------------------------------------*/
 /* LockRE_t RE = recursive/exclusive */
