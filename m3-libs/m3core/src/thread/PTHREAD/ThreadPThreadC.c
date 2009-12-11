@@ -158,6 +158,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
                                void (*p)(void *start, void *limit))
 {
   /* process stack */
+  if (!bottom) return;
   if (stack_grows_down) {
     assert((char *)context < (char *)bottom);
     p(context, bottom);
