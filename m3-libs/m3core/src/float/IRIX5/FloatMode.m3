@@ -48,7 +48,7 @@ PROCEDURE GetRounding(): RoundingMode =
 
 PROCEDURE GetFlags(): SET OF Flag =
   VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
-  VAR state  := ThreadInternal.MyFPState ();
+  VAR state  := RTThread.MyFPState ();
   BEGIN
     RETURN ExtractFlags (status, state^);
   END GetFlags;
@@ -118,7 +118,7 @@ PROCEDURE ExtractFlags (READONLY status: FPU.ControlStatus;
 
 PROCEDURE SetFlags(s: SET OF Flag): SET OF Flag =
   VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
-  VAR state  := ThreadInternal.MyFPState ();
+  VAR state  := RTThread.MyFPState ();
   VAR flags  := ExtractFlags (status, state^);
   VAR new: FPU.ControlStatus;
   BEGIN
@@ -141,7 +141,7 @@ PROCEDURE SetFlags(s: SET OF Flag): SET OF Flag =
 
 PROCEDURE ClearFlag(f: Flag) =
   VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
-  VAR state  := ThreadInternal.MyFPState ();
+  VAR state  := RTThread.MyFPState ();
   BEGIN
     CASE f OF
     | Flag.Inexact      => status.se_inexact   := FALSE;
@@ -174,7 +174,7 @@ CONST
 PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
   TYPE BH = Behavior;
   VAR status := LOOPHOLE (FPU.GetStatus (),  FPU.ControlStatus);
-  VAR state  := ThreadInternal.MyFPState ();
+  VAR state  := RTThread.MyFPState ();
   VAR old    := state.behavior [f];
   BEGIN
     IF (old = b) THEN RETURN END;
@@ -235,7 +235,7 @@ PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
 
 PROCEDURE GetBehavior(f: Flag): Behavior =
   BEGIN
-    RETURN ThreadInternal.MyFPState().behavior [f];
+    RETURN RTThread.MyFPState().behavior [f];
   END GetBehavior;
 
 (*------------------------------------------------- thread initialization ---*)
