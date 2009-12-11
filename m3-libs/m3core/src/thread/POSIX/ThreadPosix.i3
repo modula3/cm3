@@ -31,6 +31,6 @@ PROCEDURE SwapContext(from, to: ADDRESS);
 PROCEDURE DisposeContext(VAR c: ADDRESS);
 
 <*EXTERNAL ThreadPosix__ProcessContext*>
-PROCEDURE ProcessContext(c, s: ADDRESS; p: PROCEDURE(start, stop: ADDRESS));
+PROCEDURE ProcessContext(c, s: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 
 END ThreadPosix.

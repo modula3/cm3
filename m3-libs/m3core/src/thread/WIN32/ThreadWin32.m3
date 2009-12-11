@@ -805,7 +805,7 @@ PROCEDURE ResumeOthers () =
     UnlockRE(activeLock);
   END ResumeOthers;
 
-PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR me := GetActivation();
       act: Activation;
@@ -818,7 +818,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     END;
   END ProcessStacks;
 
-PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu *)
   BEGIN
     IF DEBUG THEN
@@ -837,7 +837,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
     ProcessStopped(act.stackStart, act.stackEnd, act.context, p);
   END ProcessOther;
 
-PROCEDURE ProcessEachStack (<*UNUSED*>p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessEachStack (<*UNUSED*>p: PROCEDURE (start, limit: ADDRESS)) =
   BEGIN
     (* experimental, unimplemented here *)
     <*ASSERT FALSE*>
