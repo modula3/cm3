@@ -10,6 +10,7 @@ UNSAFE INTERFACE ThreadWin32;
 FROM WinDef IMPORT LONG, HANDLE;
 FROM ThreadF IMPORT State;
 FROM ThreadContext IMPORT PCONTEXT;
+FROM Ctypes IMPORT int;
 
 (*---------------------------------------------------------------------------*)
 
@@ -40,9 +41,6 @@ TYPE LockE_t = UNTRACED BRANDED REF ADDRESS; (* E = exclusive *)
 
 <*EXTERNAL ThreadWin32__slotLock*> VAR slotLock: LockRE_t;
     (* Global lock for thread slot table that maps untraced to traced *)
-
-<*EXTERNAL ThreadWin32__initLock*> VAR initLock: LockRE_t;
-  (* used when allocation the criticalsection within a mutex on-demand *)
 
 (*------------------------------------------------------------------ Self ---*)
 
@@ -95,6 +93,11 @@ PROCEDURE NewContext(): ADDRESS;
 
 <*EXTERNAL ThreadWin32__DeleteContext*>
 PROCEDURE DeleteContext(a: ADDRESS);
+
+(*---------------------------------------------------------------------------*)
+
+<*EXTERNAL ThreadWin32__InitMutexC*>
+PROCEDURE InitMutexC (VAR m: LockRE_t): int;
 
 (*----------------------------------------------------- for SchedulerPosix --*)
 
