@@ -50,123 +50,6 @@ extern "C" {
 #endif
 
 /*-------------------------------------------------------------------------*/
-/* LockE_t E = exclusive */
-
-typedef struct _LockE_t {
-    long count;
-    DWORD owner;
-    HANDLE event;
-} LockE_t;
- 
-void __cdecl ThreadWin32__DeleteLockE(LockE_t* lock)
-/* E = exclusive */
-{
-    if (lock)
-    {
-        HANDLE event = lock->event;
-        assert(lock->owner == 0);
-        assert(lock->count == -1);
-        if (event)
-            CloseHandle(event);
-        HeapFree(GetProcessHeap(), 0, lock);
-    }
-}
- 
-LockE_t* __cdecl ThreadWin32__NewLockE(void)
-/* E = exclusive */
-{
-    HANDLE event;
-    LockE_t* lock = (LockE_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
-    if (!lock)
-        goto Error;
-    lock->owner = 0;
-    lock->count = -1;
-    if (!(lock->event = CreateEventA(0, 0, 0, 0)))
-        goto Error;
-    return lock;
-Error:
-    ThreadWin32__DeleteLockE(lock);
-    return NULL;
-}
- 
-void __cdecl ThreadWin32__LockE(LockE_t* lock)
-/* E = exclusive */
-{
-    if (InterlockedIncrement(&lock->count) != 0)
-        WaitForSingleObject(lock->event, INFINITE);
-    assert(lock->owner == 0);
-    lock->owner = GetCurrentThreadId();
-}
- 
-void __cdecl ThreadWin32__UnlockE(LockE_t* lock)
-/* E = exclusive */
-{
-    assert(lock->owner == GetCurrentThreadId());
-    lock->owner = 0;
-    if (InterlockedDecrement(&lock->count) >= 0)
-        SetEvent(lock->event);
-}
-
-/*-------------------------------------------------------------------------*/
-/* LockRE_t RE = recursive/exclusive */
-
-typedef CRITICAL_SECTION LockRE_t;
-
-#define LOCKRE(name) \
-static LockRE_t name##Lock; \
-LockRE_t* ThreadWin32__##name##Lock; \
-
-static void InitLockRE(LockRE_t** pp, LockRE_t* p)
-{
-    assert(*pp == NULL || *pp == p);
-    if (!*pp)
-    {
-        InitializeCriticalSection(p);
-        *pp = p;
-    }
-}
-
-static void DeleteLockRE(LockRE_t** pp, LockRE_t* p)
-{
-    assert(*pp == NULL || *pp == p);
-    if (*pp)
-    {
-        DeleteCriticalSection(p);
-        *pp = 0;
-    }
-}
-
-LockRE_t* __cdecl ThreadWin32__NewLockRE(void)
-/* RE = recursive/exclusive */
-{
-    LockRE_t* lock = (LockRE_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
-    if (lock)
-        InitializeCriticalSection(lock);
-    return lock;
-}
-
-void __cdecl ThreadWin32__LockRE(LockRE_t* lock)
-/* RE = recursive/exclusive */
-{
-    EnterCriticalSection(lock);
-}
-
-void __cdecl ThreadWin32__UnlockRE(LockRE_t* lock)
-/* RE = recursive/exclusive */
-{
-    LeaveCriticalSection(lock);
-}
-
-void __cdecl ThreadWin32__DeleteLockRE(LockRE_t* lock)
-/* RE = recursive/exclusive */
-{
-    if (!lock)
-        return;
-    DeleteCriticalSection(lock);
-    HeapFree(GetProcessHeap(), 0, lock);
-}
-
-/*-------------------------------------------------------------------------*/
 /* lock-free support */
 
 #ifndef MemoryBarrier
@@ -191,6 +74,173 @@ void __cdecl ThreadWin32__InterlockedIncrement(volatile LONG* a)
 void __cdecl ThreadWin32__InterlockedDecrement(volatile LONG* a)
 {
     InterlockedDecrement(a);
+}
+
+/*-------------------------------------------------------------------------*/
+/* LockE_t E = exclusive */
+
+typedef struct _LockE_t {
+    long count;
+    DWORD owner;
+    HANDLE event;
+} LockE_t;
+
+static void InitLockE(LockE_t** pp, LockE_t* p)
+/* E = exclusive */
+{
+    MemoryBarrier();
+    assert(*pp == NULL || *pp == p);
+    if (!*pp)
+    {
+        HANDLE event;
+        p->owner = 0;
+        p->count = -1;
+        event = CreateEventA(0, 0, 0, 0);
+        if (event)
+            p->event = event;
+        MemoryBarrier();
+        *pp = p;
+    }
+    MemoryBarrier();
+}
+
+static void DeleteLockE(LockE_t** pp, LockE_t* p)
+/* E = exclusive */
+{
+    MemoryBarrier();
+    assert(*pp == NULL || *pp == p);
+    if (*pp)
+    {
+        HANDLE event = p->event;
+        assert(p->owner == 0);
+        assert(p->count == -1);
+        if (event)
+            CloseHandle(event);
+        MemoryBarrier();
+        *pp = 0;
+    }
+    MemoryBarrier();
+}
+ 
+void __cdecl ThreadWin32__DeleteLockE(LockE_t* lock)
+/* E = exclusive */
+{
+    LockE_t* dummy;
+
+    MemoryBarrier();
+    dummy = lock;
+    DeleteLockE(&dummy, lock);
+    HeapFree(GetProcessHeap(), 0, lock);
+    MemoryBarrier();
+}
+ 
+LockE_t* __cdecl ThreadWin32__NewLockE(void)
+/* E = exclusive */
+{
+    LockE_t* dummy = 0;
+    LockE_t* lock;
+
+    MemoryBarrier();
+    lock = (LockE_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
+    InitLockE(&dummy, lock);
+    if (!dummy)
+        ThreadWin32__DeleteLockE(lock);
+    MemoryBarrier();
+    return dummy;
+}
+ 
+void __cdecl ThreadWin32__LockE(LockE_t* lock)
+/* E = exclusive */
+{
+    MemoryBarrier();
+    if (InterlockedIncrement(&lock->count) != 0)
+        WaitForSingleObject(lock->event, INFINITE);
+    assert(lock->owner == 0);
+    lock->owner = GetCurrentThreadId();
+    MemoryBarrier();
+}
+ 
+void __cdecl ThreadWin32__UnlockE(LockE_t* lock)
+/* E = exclusive */
+{
+    MemoryBarrier();
+    assert(lock->owner == GetCurrentThreadId());
+    lock->owner = 0;
+    if (InterlockedDecrement(&lock->count) >= 0)
+        SetEvent(lock->event);
+    MemoryBarrier();
+}
+
+/*-------------------------------------------------------------------------*/
+/* LockRE_t RE = recursive/exclusive */
+
+typedef CRITICAL_SECTION LockRE_t;
+
+#define LOCKRE(name) \
+static LockRE_t name##Lock; \
+LockRE_t* ThreadWin32__##name##Lock; \
+
+static void InitLockRE(LockRE_t** pp, LockRE_t* p)
+{
+    MemoryBarrier();
+    assert(*pp == NULL || *pp == p);
+    if (!*pp)
+    {
+        InitializeCriticalSection(p);
+        MemoryBarrier();
+        *pp = p;
+    }
+    MemoryBarrier();
+}
+
+static void DeleteLockRE(LockRE_t** pp, LockRE_t* p)
+{
+    MemoryBarrier();
+    assert(*pp == NULL || *pp == p);
+    if (*pp)
+    {
+        DeleteCriticalSection(p);
+        MemoryBarrier();
+        *pp = 0;
+    }
+    MemoryBarrier();
+}
+
+LockRE_t* __cdecl ThreadWin32__NewLockRE(void)
+/* RE = recursive/exclusive */
+{
+    LockRE_t* lock;
+
+    MemoryBarrier();
+    lock = (LockRE_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
+    if (lock)
+        InitializeCriticalSection(lock);
+    MemoryBarrier();
+    return lock;
+}
+
+void __cdecl ThreadWin32__LockRE(LockRE_t* lock)
+/* RE = recursive/exclusive */
+{
+    EnterCriticalSection(lock);
+}
+
+void __cdecl ThreadWin32__UnlockRE(LockRE_t* lock)
+/* RE = recursive/exclusive */
+{
+    LeaveCriticalSection(lock);
+}
+
+void __cdecl ThreadWin32__DeleteLockRE(LockRE_t* lock)
+/* RE = recursive/exclusive */
+{
+    MemoryBarrier();
+    if (lock)
+    {
+        DeleteCriticalSection(lock);
+        HeapFree(GetProcessHeap(), 0, lock);
+    }
+    MemoryBarrier();
 }
 
 /*-------------------------------------------------------------------------*/
