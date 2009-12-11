@@ -16,7 +16,8 @@ FROM WinNT IMPORT LONG, HANDLE, DWORD, UINT32;
 FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     CreateSemaphore, CloseHandle, CreateThread, ResumeThread, Sleep,
     SuspendThread, GetThreadContext, SetLastError, GetLastError,
-    CREATE_SUSPENDED, GetCurrentThreadId;
+    CREATE_SUSPENDED, GetCurrentThreadId, InterlockedCompareExchange,
+    InterlockedExchange;
 FROM ThreadContext IMPORT PCONTEXT;
 FROM WinNT IMPORT MemoryBarrier;
 
@@ -957,8 +958,8 @@ PROCEDURE Init() =
    and collector. *)
 
 VAR
-  HeapInCritical := 1;      (* LL = heap *)
-  HeapDoSignal := FALSE;    (* LL = heap *)
+  HeapInCritical := 1;  (* LL = heap *)
+  HeapDoSignal: LONG;   (* LL = heap, but Interlocked just in case *)
   HeapWaitMutex: MUTEX;
   HeapWaitCondition: Condition;
 
@@ -970,13 +971,15 @@ PROCEDURE LockHeap () =
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
-  VAR sig := FALSE;
+  VAR sig: LONG := 0;
   BEGIN   
     IF DEBUG THEN ThreadDebug.UnlockHeap(); END;
     DEC(HeapInCritical);
-    IF (HeapInCritical = 0) AND HeapDoSignal THEN sig := TRUE; HeapDoSignal := FALSE; END;
+    IF HeapInCritical = 0 THEN
+      sig := InterlockedCompareExchange(ADR(HeapDoSignal), 0, 1);
+    END;
     UnlockRE(heapLock);
-    IF sig THEN Broadcast(HeapWaitCondition); END;
+    IF sig = 1 THEN Broadcast(HeapWaitCondition); END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
@@ -997,7 +1000,7 @@ PROCEDURE BroadcastHeap () =
   (* LL >= RTOS.LockHeap *)
   BEGIN
     IF DEBUG THEN ThreadDebug.BroadcastHeap(); END;
-    HeapDoSignal := TRUE;
+    EVAL InterlockedExchange(ADR(HeapDoSignal), 1);
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
