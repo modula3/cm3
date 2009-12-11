@@ -174,8 +174,6 @@ PROCEDURE DisposeUntracedObj (VAR a: UNTRACED ROOT) =
     END;
   END DisposeUntracedObj;
 
-(*-------------------------------------------------------- barrier support --*)
-
 (*-------------------------------------------------------------- internal ---*)
 
 PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
