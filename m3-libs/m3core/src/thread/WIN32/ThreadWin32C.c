@@ -90,7 +90,7 @@ static void InitLockE(LockE_t** pp, LockE_t* p)
 {
     MemoryBarrier();
     assert(*pp == NULL || *pp == p);
-    if (!*pp)
+    if (!*pp && p)
     {
         HANDLE event;
         p->owner = 0;
@@ -109,7 +109,7 @@ static void DeleteLockE(LockE_t** pp, LockE_t* p)
 {
     MemoryBarrier();
     assert(*pp == NULL || *pp == p);
-    if (*pp)
+    if (*pp && p)
     {
         HANDLE event = p->event;
         assert(p->owner == 0);
