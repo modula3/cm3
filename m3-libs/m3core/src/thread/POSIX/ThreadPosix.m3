@@ -521,7 +521,7 @@ PROCEDURE ResumeOthers () =
     DEC(inCritical);
   END ResumeOthers;
 
-PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
   (* we need to be careful to avoid read/write barriers here --
      hence the extensive use of LOOPHOLE. *)
   VAR
@@ -545,7 +545,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     UNTIL t = me;
   END ProcessStacks;
 
-PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
   BEGIN
     ProcessStacks(p);
   END ProcessEachStack;

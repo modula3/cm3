@@ -822,7 +822,7 @@ PROCEDURE ResumeOthers () =
     WITH r = pthread_mutex_unlock(activeMu) DO <*ASSERT r=0*> END;
   END ResumeOthers;
 
-PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR
     me := GetActivation();
@@ -836,7 +836,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, stop: ADDRESS)) =
     END;
   END ProcessStacks;
 
-PROCEDURE ProcessEachStack (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=0 *)
   VAR
     me := GetActivation();
