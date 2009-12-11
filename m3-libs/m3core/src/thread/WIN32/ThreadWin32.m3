@@ -9,7 +9,7 @@ UNSAFE MODULE ThreadWin32 EXPORTS
 Thread, ThreadF, Scheduler, RTThread, RTOS, RTHooks, ThreadWin32;
 
 IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
-IMPORT MutexRep, RTHeapRep, RTCollectorSRC, RTIO;
+IMPORT MutexRep, RTHeapRep, RTCollectorSRC, RTIO, Word;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM WinNT IMPORT LONG, HANDLE, DWORD, UINT32;
@@ -36,7 +36,11 @@ REVEAL
     END;
 
   Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
-      waiters: T := NIL; (* LL = giant; List of threads waiting on this CV. *)
+    (* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp *)
+      waitEvent: HANDLE := NIL;
+      tickets := 0;
+      waiters := 0;
+      counter := 0;
     END;
 
   T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
@@ -44,12 +48,12 @@ REVEAL
       closure: Closure := NIL;      (* our work and its result *)
       result: REFANY := NIL;        (* our work and its result *)
       join: Condition;              (* LL = Self(); wait here to join *)
-      waitingOn: Condition := NIL;  (* LL = giant; CV that we're blocked on *)
-      nextWaiter: T := NIL;         (* LL = giant; queue of threads waiting on the same CV *)
       joined: BOOLEAN := FALSE;     (* LL = Self(); "Join" or "AlertJoin" has already returned *)
     END;
 
 TYPE
+  CONST ALERTED = 1;                    (* the alert flag, of course *)
+  CONST ALERTABLE = 2;                  (* distinguishes between "Wait" and "AlertWait" *)
   REVEAL Activation = UNTRACED BRANDED REF RECORD
       frame: ADDRESS := NIL;            (* exception handling support; this field is accessed MANY times
                                         so perhaps therefore should be first *)
@@ -62,8 +66,8 @@ TYPE
       context: PCONTEXT;                (* registers of suspended thread *)
       stackPointer: ADDRESS;            (* context->Esp etc. (processor dependent) *)
       waitSema: HANDLE := NIL;          (* binary semaphore for blocking during "Wait" *)
-      alertable: BOOLEAN := FALSE;      (* LL = giant; distinguishes between "Wait" and "AlertWait" *)
-      alerted: BOOLEAN := FALSE;        (* LL = giant; the alert flag, of course *)
+      alert: LONG := 0;                 (* distinguishes between "Wait" and "AlertWait" *)
+      alertEvent: HANDLE := NIL;
       heapState: RTHeapRep.ThreadState; (* thread state *)
       floatState: FloatMode.ThreadState; (* thread state *)
     END;
@@ -83,6 +87,16 @@ PROCEDURE Release (m: Mutex) =
     m.release ();
   END Release;
 
+PROCEDURE Alertable(act: Activation): BOOLEAN =
+BEGIN
+  RETURN Word.And(act.alert, ALERTABLE) # 0;
+END Alertable;
+
+PROCEDURE Alerted(act: Activation): BOOLEAN =
+BEGIN
+  RETURN Word.And(act.alert, ALERTED) # 0;
+END Alerted;
+
 PROCEDURE LockGiant(activation: Activation := NIL; maybeAlertable := FALSE) =
 BEGIN
   LockRE(giantLock);
@@ -90,7 +104,7 @@ BEGIN
     IF activation = NIL THEN
       activation := GetActivation();
     END;
-    <*ASSERT NOT activation.alertable *>
+    <*ASSERT NOT Alertable(activation) *>
   END;
 END LockGiant;
 
@@ -101,7 +115,7 @@ BEGIN
     IF activation = NIL THEN
       activation := GetActivation();
     END;
-    <*ASSERT NOT activation.alertable *>
+    <*ASSERT NOT Alertable(activation) *>
   END;
 END UnlockGiant;
 
@@ -126,7 +140,7 @@ PROCEDURE LockMutex (m: Mutex) =
   BEGIN
     IF perfOn THEN PerfChanged(State.locking) END;
     IF m.lock = NIL THEN InitMutex(m.lock, m, CleanMutex) END;
-    <*ASSERT NOT GetActivation().alertable *>
+    <*ASSERT NOT Alertable(GetActivation()) *>
     LockRE(m.lock);
     IF m.held THEN Die(ThisLine(), "attempt to lock mutex already locked by self") END;
     m.held := TRUE;
@@ -187,14 +201,11 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; self: T) =
   END InnerWait;
 
 PROCEDURE InnerTestAlert(self: Activation) RAISES {Alerted} =
-  (* LL = giant on entry; LL = giant on normal exit, 0 on exception exit *)
-  (* If act.alerted, clear "alerted", leave giant and raise
-     "Alerted". *)
+  (* LL = 0*)
+  (* If act.alerted, clear "alerted", and raise "Alerted". *)
   BEGIN
     (*IF DEBUG THEN ThreadDebug.InnerTestAlert(self); END;*)
-    IF self.alerted THEN
-      self.alerted := FALSE;
-      UnlockGiant();
+    IF InterlockedTestClear(self.alert, ALERTED, ALERTED) THEN
       RAISE Alerted
     END;
   END InnerTestAlert;
@@ -207,14 +218,13 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
     IF DEBUG THEN ThreadDebug.AlertWait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
     act := self.act;
-    LockGiant(act);
     InnerTestAlert(act);
-    act.alertable := TRUE;
+    InterlockedSet(act.act, ALERTABLE);
+    LockGiant(act);
     InnerWait(m, c, self);
-    act.alertable := FALSE;
-    LockGiant(act);
-    InnerTestAlert(act);
-    UnlockGiant();
+    IF InterlockedTestClear(act.alert, ALERTED, ALERTED + ALERTABLE) THEN
+      RAISE Alerted
+    END;
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
@@ -240,7 +250,7 @@ PROCEDURE DequeueHead(c: Condition) =
     act := t.act;
     t.nextWaiter := NIL;
     t.waitingOn := NIL;
-    act.alertable := FALSE;
+    InterlockedClear(act.act, ALERTABLE);
     IF ReleaseSemaphore(act.waitSema, 1, NIL) = 0 THEN
       Choke(ThisLine());
     END;
@@ -269,30 +279,9 @@ PROCEDURE Alert(t: T) =
     IF DEBUG THEN ThreadDebug.Alert(t); END;
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
     act := t.act;
-    LockGiant();
-    act.alerted := TRUE;
-    IF act.alertable THEN
-      (* Dequeue from any CV and unblock from the semaphore *)
-      IF t.waitingOn # NIL THEN
-        next := t.waitingOn.waiters; prev := NIL;
-        WHILE next # t DO
-          <* ASSERT(next#NIL) *>
-          prev := next; next := next.nextWaiter;
-        END;
-        IF prev = NIL THEN
-          t.waitingOn.waiters := t.nextWaiter
-        ELSE
-          prev.nextWaiter := t.nextWaiter;
-        END;
-        t.nextWaiter := NIL;
-        t.waitingOn := NIL;
-      END;
-      act.alertable := FALSE;
-      IF ReleaseSemaphore(act.waitSema, 1, NIL) = 0 THEN
-        Choke(ThisLine());
-      END;
+    IF SetEvent(act.alertEvent, 1, NIL) = 0 THEN
+      Choke(ThisLine());
     END;
-    UnlockGiant();
   END Alert;
 
 PROCEDURE XTestAlert (self: Activation): BOOLEAN =
@@ -300,7 +289,7 @@ PROCEDURE XTestAlert (self: Activation): BOOLEAN =
   BEGIN
     (*IF DEBUG THEN ThreadDebug.XTestAlert(self); END;*)
     LockGiant();
-    result := self.alerted; IF result THEN self.alerted := FALSE END;
+    result := InterlockedTestClear(self.alert, ALERTED, ALERTED);
     UnlockGiant();
     RETURN result;
   END XTestAlert;
@@ -616,6 +605,8 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
   VAR amount, thisTime: LONGREAL;
     self := Self();
     act: Activation;
+    handles := ARRAY [0..1] OF HANDLE;
+    wait: DWORD;
   CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
   BEGIN
     IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
@@ -623,25 +614,19 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
     IF perfOn THEN PerfChanged(State.pausing) END;
     act := self.act;
     amount := n;
+    handles[0] := act.alertEvent;
+    handles[1] := act.waitSema;
     WHILE amount > 0.0D0 DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
-      LockGiant(act);
       InnerTestAlert(act);
-      act.alertable := TRUE;
+      InterlockedSet(act.alert, ALERTABLE);
       <* ASSERT(self.waitingOn = NIL) *>
-      UnlockGiant(maybeAlertable := TRUE);
-      EVAL WaitForSingleObject(act.waitSema, ROUND(thisTime*1000.0D0));
-      act.alertable := FALSE;
-      LockGiant(act);
-      IF act.alerted THEN
-        (* Sadly, the alert might have happened after we timed out on the
-           semaphore and before we entered "giant". In that case, we need to
-           decrement the semaphore's count *)
-        EVAL WaitForSingleObject(act.waitSema, 0);
-        InnerTestAlert(act);
+      wait := WaitForMultipleObjects(2, ADR(handles[0]), 0, ROUND(thisTime*1000.0D0));
+      InterlockedClear(act.alert, ALERTABLE);
+      IF wait = WAIT_OBJECT_0 THEN
+        RAISE Alerted
       END;
-      UnlockGiant();
     END;
     IF perfOn THEN PerfRunning() END;
   END AlertPause;

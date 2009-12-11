@@ -69,6 +69,18 @@ PROCEDURE GetStackBounds(VAR start, end: ADDRESS);
 <*EXTERNAL ThreadWin32__InterlockedRead*>
 PROCEDURE InterlockedRead(VAR a: LONG): LONG;
 
+<*EXTERNAL ThreadWin32__InterlockedSet*>
+PROCEDURE InterlockedSet(VAR a: LONG; b: LONG);
+
+<*EXTERNAL ThreadWin32__InterlockedClear*>
+PROCEDURE InterlockedClear(VAR a: LONG; b: LONG);
+
+<*EXTERNAL ThreadWin32__InterlockedSetTestClear*>
+PROCEDURE InterlockedClear(VAR a: LONG; set, test, clear: LONG): BOOLEAN;
+
+<*EXTERNAL ThreadWin32__InterlockedTestAndClear*>
+PROCEDURE InterlockedTestClear(VAR a: LONG; test, clear: LONG): BOOLEAN;
+
 <*EXTERNAL ThreadWin32__InitC*>
 PROCEDURE InitC(bottom: ADDRESS): HANDLE; (* returns current thread handle *)
 

@@ -55,13 +55,76 @@ void __cdecl WinNT__MemoryBarrier(void);
 #define MemoryBarrier WinNT__MemoryBarrier
 #endif
 
-LONG __cdecl ThreadWin32__InterlockedRead(volatile LONG* a)
+long __cdecl ThreadWin32__InterlockedRead(volatile long* a)
 { /* based on Boost */
-    LONG b;
+    long b;
     MemoryBarrier();
     b = *a;
     MemoryBarrier();
     return b;
+}
+
+long __cdecl ThreadWin32__InterlockedSet(volatile long* target, long set)
+{
+#ifdef InterlockedOr
+    return InterlockedOr(target, set);
+#else
+    long i;
+    long j;
+
+    j = *target;
+    do {
+        i = j;
+        j = InterlockedCompareExchange(target,
+                                       i | set,
+                                       i);
+
+    } while (i != j);
+    return j;
+#endif
+}
+
+long __cdecl ThreadWin32__InterlockedClear(long volatile* target, long clear)
+{
+#ifdef InterlockedAnd
+    return InterlockedAnd(target, ~clear);
+#else
+    long i;
+    long j;
+
+    j = *target;
+    do {
+        i = j;
+        j = InterlockedCompareExchange(target,
+                                       i & ~clear,
+                                       i);
+
+    } while (i != j);
+
+    return j;
+#endif
+}
+
+long __cdecl ThreadWin32__InterlockedSetTestClear(long volatile* target, long set, long test, clear)
+{
+    long i;
+    long j;
+
+    j = *target;
+    do {
+        i = j;
+        j = InterlockedCompareExchange(target,
+                                       (i | set) & ~clear,
+                                       i);
+
+    } while (i != j);
+
+    return !!(j & test);
+}
+
+long __cdecl ThreadWin32__InterlockedTestClear(long volatile* target, long test, clear)
+{
+    return !!(ThreadWin32__InterlockedClear(target, clear) & test);
 }
 
 /*-------------------------------------------------------------------------*/
