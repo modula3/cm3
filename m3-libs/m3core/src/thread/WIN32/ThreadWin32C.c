@@ -5,8 +5,6 @@
 /* Portions Copyright 1996-2000, Critical Mass, Inc.               */
 /* See file COPYRIGHT-CMASS for details.                           */
 
-/* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp */
-
 #ifdef _MSC_VER
 struct IRpcStubBuffer;        /* warning 4115: named type definition in parentheses */
 #pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
@@ -80,6 +78,8 @@ void __cdecl ThreadWin32__InterlockedDecrement(volatile LONG* a)
 /* LockE_t E = exclusive */
 
 #if 0
+
+/* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp */
 
 typedef struct _LockE_t {
     volatile long count;
