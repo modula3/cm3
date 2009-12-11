@@ -20,12 +20,12 @@ PROCEDURE Crash () =
   CONST Magic = 1 * ADRSIZE (INTEGER);  (* == offset of "fp" in this frame *)
   VAR fp: ADDRESS := ADR (fp) + Magic;  (* == my frame pointer *)
   BEGIN
-    RTThread.SuspendOthers ();
-    RTMachInfo.DumpStack (LOOPHOLE (Crash, ADDRESS), fp);
-    RTSignal.RestoreHandlers (); (* so we really do crash... *)
     IF WinBase.IsDebuggerPresent () # 0 THEN
       WinBase.DebugBreak ();
     END;
+    RTThread.SuspendOthers ();
+    RTMachInfo.DumpStack (LOOPHOLE (Crash, ADDRESS), fp);
+    RTSignal.RestoreHandlers (); (* so we really do crash... *)
     Exit (-1);
   END Crash;
 
