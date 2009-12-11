@@ -22,13 +22,13 @@ PROCEDURE GetRounding(): RoundingMode =
   END GetRounding;
 
 PROCEDURE GetFlags(): SET OF Flag =
-  VAR state := ThreadInternal.MyFPState ();
+  VAR state := RTThread.MyFPState ();
   BEGIN
     RETURN state.sticky;
   END GetFlags;
 
 PROCEDURE SetFlags(s: SET OF Flag): SET OF Flag =
-  VAR state := ThreadInternal.MyFPState ();
+  VAR state := RTThread.MyFPState ();
   VAR old := state.sticky;
   BEGIN
     state.sticky := s;
@@ -36,7 +36,7 @@ PROCEDURE SetFlags(s: SET OF Flag): SET OF Flag =
   END SetFlags;
 
 PROCEDURE ClearFlag(f: Flag) =
-  VAR state := ThreadInternal.MyFPState ();
+  VAR state := RTThread.MyFPState ();
   BEGIN
     state.sticky := state.sticky - SET OF Flag {f};
   END ClearFlag;
@@ -56,7 +56,7 @@ CONST
   };
 
 PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
-  VAR state := ThreadInternal.MyFPState ();
+  VAR state := RTThread.MyFPState ();
   BEGIN
     IF (state.behavior [f] = b) THEN RETURN END;
     IF NOT AllowedBehavior [f, b] THEN RAISE Failure END;
@@ -65,7 +65,7 @@ PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
 
 PROCEDURE GetBehavior(f: Flag): Behavior =
   BEGIN
-    RETURN ThreadInternal.MyFPState().behavior [f];
+    RETURN RTThread.MyFPState().behavior [f];
   END GetBehavior;
 
 (*------------------------------------------------- thread initialization ---*)
