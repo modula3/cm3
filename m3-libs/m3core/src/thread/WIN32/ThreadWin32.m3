@@ -17,7 +17,7 @@ FROM WinBase IMPORT WaitForSingleObject, INFINITE, ReleaseSemaphore,
     CreateSemaphore, CloseHandle, CreateThread, ResumeThread, Sleep,
     SuspendThread, GetThreadContext, SetLastError, GetLastError,
     CREATE_SUSPENDED, GetCurrentThreadId, InterlockedCompareExchange,
-    InterlockedExchange;
+    InterlockedExchange, InterlockedIncrement, InterlockedDecrement;
 FROM ThreadContext IMPORT PCONTEXT;
 FROM WinNT IMPORT MemoryBarrier;
 
@@ -379,7 +379,7 @@ PROCEDURE AssignSlot (t: T) =
         IF next_slot >= NUMBER (slots^) THEN next_slot := 1; END;
       END;
 
-      InterlockedIncrement(n_slotted);
+      EVAL InterlockedIncrement(ADR(n_slotted));
       t.act.slot := next_slot;
       slots [next_slot] := t;
 
@@ -389,7 +389,7 @@ PROCEDURE AssignSlot (t: T) =
 PROCEDURE FreeSlot (t: T; act: Activation) =
   (* LL = 0 *)
   BEGIN
-    InterlockedDecrement(n_slotted);
+    EVAL InterlockedDecrement(ADR(n_slotted));
     WITH z = slots [act.slot] DO
       IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
       z := NIL; (* need write this carefully? I don't think so. *)
