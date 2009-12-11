@@ -226,7 +226,7 @@ void __cdecl ThreadWin32__DeleteLockRE(LockRE_t* lock)
 
 typedef struct _LockE_t { /* E = exclusive */
     long count;
-    int owner;
+    DWORD owner;
     HANDLE event;
 } LockE_t;
  
