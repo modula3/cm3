@@ -468,6 +468,39 @@ void __cdecl ThreadWin32__Cleanup(void)
     }
 }
 
+/*-------------------------------------------------------------------------*/
+
+BOOL ThreadWin32__InitMutexC(LockRE_t** lock)
+/* Return TRUE if this thread allocated the lock and nobody beat it in a race.
+FALSE can still mean the lock was allocated successfully, by another thread. */
+{
+    LockRE_t* newLock;
+
+    if (*lock)
+        return FALSE;
+
+    newLock = ThreadWin32__NewLockRE();
+
+    /* We failed, but in the mean time, somebody else may have succeeded */
+    if (!newLock)
+        return FALSE;
+
+    /* We succeeded, but in the mean time, somebody else may also have. */
+#ifdef _WIN64
+    if (InterlockedCompareExchangePointer((void**)lock, newLock, 0))
+#else
+    if (InterlockedCompareExchange((long*)lock, (long)newLock, 0))
+#endif
+    {
+        ThreadWin32__DeleteLockRE(newLock);
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+/*-------------------------------------------------------------------------*/
+
 #if 0
 
 BOOL WINAPI DllMain(HANDLE DllHandle, DWORD Reason, PVOID Static)
