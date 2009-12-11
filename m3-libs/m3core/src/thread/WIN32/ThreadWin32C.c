@@ -80,9 +80,9 @@ void __cdecl ThreadWin32__InterlockedDecrement(volatile LONG* a)
 /* LockE_t E = exclusive */
 
 typedef struct _LockE_t {
-    long count;
-    DWORD owner;
-    HANDLE event;
+    volatile long count;
+    volatile DWORD owner;
+    volatile HANDLE event;
 } LockE_t;
 
 #define LOCKE(name) \
