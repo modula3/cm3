@@ -110,7 +110,7 @@ PROCEDURE CleanMutex (r: REFANY) =
     m.lock := NIL;
   END CleanMutex;
 
-PROCEDURE InitMutex (VAR m: LockRE_t; root: REFANY;
+PROCEDURE InitMutex (VAR m: LockE_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
   VAR lock := NewLockE();
   BEGIN
