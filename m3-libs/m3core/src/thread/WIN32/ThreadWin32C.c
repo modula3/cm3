@@ -85,6 +85,10 @@ typedef struct _LockE_t {
     HANDLE event;
 } LockE_t;
 
+#define LOCKE(name) \
+static LockE_t name##Lock; \
+LockE_t* ThreadWin32__##name##Lock; \
+
 static void InitLockE(LockE_t** pp, LockE_t* p)
 /* E = exclusive */
 {
