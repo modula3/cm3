@@ -27,7 +27,8 @@ VAR
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
-      lock: LockE_t := NIL;
+      lock: LockRE_t := NIL;
+      held: BOOLEAN := FALSE; (* LL = self.cs *) (* Because critical sections are thread re-entrant *)
     OVERRIDES
       acquire := LockMutex;
       release := UnlockMutex;
@@ -106,13 +107,13 @@ END UnlockGiant;
 PROCEDURE CleanMutex (r: REFANY) =
   VAR m := NARROW(r, Mutex);
   BEGIN
-    DeleteLockE(m.lock);
+    DeleteLockRE(m.lock);
     m.lock := NIL;
   END CleanMutex;
 
-PROCEDURE InitMutex (VAR m: LockE_t; root: REFANY;
+PROCEDURE InitMutex (VAR m: LockRE_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
-  VAR lock := NewLockE();
+  VAR lock := NewLockRE();
   BEGIN
     LockRE(initLock);
     IF m = NIL THEN (* We won the race. *)
@@ -126,7 +127,7 @@ PROCEDURE InitMutex (VAR m: LockE_t; root: REFANY;
       END;
     ELSE (* another thread beat us in the race, ok *)
       UnlockRE(initLock);
-      DeleteLockE(lock);
+      DeleteLockRE(lock);
     END;
   END InitMutex;
 
@@ -135,13 +136,17 @@ PROCEDURE LockMutex (m: Mutex) =
     IF perfOn THEN PerfChanged(State.locking) END;
     IF m.lock = NIL THEN InitMutex(m.lock, m, CleanMutex) END;
     <*ASSERT NOT GetActivation().alertable *>
-    LockE(m.lock);
+    LockRE(m.lock);
+    IF m.held THEN Die(ThisLine(), "attempt to lock mutex already locked by self") END;
+    m.held := TRUE;
     IF perfOn THEN PerfRunning() END;
   END LockMutex;
 
 PROCEDURE UnlockMutex(m: Mutex) =
   BEGIN
-    UnlockE(m.lock);
+    IF NOT m.held THEN Die(ThisLine(), "attempt to release an unlocked mutex") END;
+    m.held := FALSE;
+    UnlockRE(m.lock);
   END UnlockMutex;
 
 (**********
