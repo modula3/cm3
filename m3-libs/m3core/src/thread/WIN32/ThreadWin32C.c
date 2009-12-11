@@ -481,6 +481,15 @@ FALSE can still mean the lock was allocated successfully, by another thread. */
 
     /* We failed, but in the mean time, somebody else may have succeeded. */
     if (!newLock)
+    {
+        if (*lock)
+            return FALSE;
+        /* try again after short delay */
+        Sleep(1);
+        newLock = ThreadWin32__NewLockRE();
+    }
+
+    if (!newLock)
         return FALSE;
 
     /* We succeeded, but in the mean time, somebody else may also have. */
