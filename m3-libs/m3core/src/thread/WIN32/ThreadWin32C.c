@@ -45,16 +45,6 @@ setjmp works, but _setjmp can be much faster. */
 #define M3_REGISTER_WINDOWS
 #endif
 
-#if defined(_AMD64_)
-#define STACK_REGISTER Rsp
-#elif defined(_X86_)
-#define STACK_REGISTER Esp
-#elif defined(_IA64_)
-#define STACK_REGISTER Rsp
-#else
-#error unknown architecture
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -240,6 +230,37 @@ static DWORD threadIndex = TLS_OUT_OF_INDEXES;
 static BOOL stack_grows_down;
 
 /*-------------------------------------------------------------------------*/
+/* context */
+
+#if defined(_AMD64_)
+#define STACK_REGISTER Rsp
+#elif defined(_X86_)
+#define STACK_REGISTER Esp
+#elif defined(_IA64_)
+#define STACK_REGISTER Rsp
+#else
+#error unknown architecture
+#endif
+
+void* __cdecl ThreadWin32__StackPointerFromContext(CONTEXT* context)
+{
+  return (void*)context->STACK_REGISTER;
+}
+
+PCONTEXT __cdecl ThreadWin32__NewContext(void)
+{
+    PCONTEXT context = (PCONTEXT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*context));
+    if (context)
+        context->ContextFlags = (CONTEXT_CONTROL | CONTEXT_INTEGER);
+    return context;
+}
+
+void __cdecl ThreadWin32__DeleteContext(void* p)
+{
+    HeapFree(GetProcessHeap(), 0, p);
+}
+
+/*-------------------------------------------------------------------------*/
 /* process stopped and live stack and registers (garbage collection) */
  
 void __cdecl ThreadWin32__ProcessStopped(
@@ -329,27 +350,6 @@ void* __cdecl ThreadWin32__GetActivation(void)
 {
     assert(threadIndex != TLS_OUT_OF_INDEXES);
     return TlsGetValue(threadIndex);
-}
-
-/*-------------------------------------------------------------------------*/
-/* context */
-
-void* __cdecl ThreadWin32__StackPointerFromContext(CONTEXT* context)
-{
-  return (void*)context->STACK_REGISTER;
-}
-
-PCONTEXT __cdecl ThreadWin32__NewContext(void)
-{
-    PCONTEXT context = (PCONTEXT)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*context));
-    if (context)
-        context->ContextFlags = (CONTEXT_CONTROL | CONTEXT_INTEGER);
-    return context;
-}
-
-void __cdecl ThreadWin32__DeleteContext(void* p)
-{
-    HeapFree(GetProcessHeap(), 0, p);
 }
 
 /*-------------------------------------------------------------------------*/
