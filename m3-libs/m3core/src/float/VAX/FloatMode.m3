@@ -9,7 +9,7 @@
 
 MODULE FloatMode (* FOR VAX *);
 
-IMPORT ThreadInternal;
+IMPORT RTThread;
 
 PROCEDURE SetRounding(md: RoundingMode) RAISES {Failure} =
   BEGIN
@@ -28,7 +28,7 @@ PROCEDURE GetFlags(): SET OF Flag =
       flags := state.sticky;
     END Get;
   BEGIN
-    ThreadInternal.GetMyFPState(Get);
+    RTThread.GetMyFPState(Get);
     RETURN flags;
   END GetFlags;
 
@@ -49,7 +49,7 @@ PROCEDURE ClearFlag(f: Flag) =
       state.sticky := state.sticky - SET OF Flag {f};
     END Set;
   BEGIN
-    ThreadInternal.SetMyFPState(Set);
+    RTThread.SetMyFPState(Set);
   END ClearFlag;
 
 TYPE
@@ -74,7 +74,7 @@ PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
       state.behavior [f] := b;
     END Set;
   BEGIN
-    ThreadInternal.SetMyFPState(Set);
+    RTThread.SetMyFPState(Set);
   END SetBehavior;
 
 PROCEDURE GetBehavior(f: Flag): Behavior =

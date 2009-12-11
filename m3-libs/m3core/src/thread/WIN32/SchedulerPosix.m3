@@ -6,7 +6,7 @@
 
 UNSAFE MODULE SchedulerPosix;
 
-FROM ThreadInternal IMPORT PerfChanged, PerfRunning, XTestAlert, perfOn;
+FROM RTThread IMPORT PerfChanged, PerfRunning, XTestAlert, perfOn;
 FROM ThreadF IMPORT State, MyId;
 FROM Thread IMPORT Alerted, Self, T;
 IMPORT Unix, Cerrno, Uerror, Utime, Time;

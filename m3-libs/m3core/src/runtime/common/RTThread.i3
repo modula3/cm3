@@ -6,7 +6,7 @@
 (* All rights reserved.                                            *)
 (* See the file COPYRIGHT for a full description.                  *)
 
-UNSAFE INTERFACE ThreadInternal;
+UNSAFE INTERFACE RTThread;
 
 IMPORT FloatMode, RTHeapRep;
 
@@ -54,4 +54,4 @@ PROCEDURE SetCurrentHandlers(h: ADDRESS);
 
 PROCEDURE Init();
 
-END ThreadInternal.
+END RTThread.
