@@ -53,7 +53,7 @@ REVEAL
   REVEAL Activation = UNTRACED BRANDED REF RECORD
       frame: ADDRESS := NIL;            (* exception handling support; this field is accessed MANY times
                                         so perhaps therefore should be first *)
-      next, prev: Activation := NIL;    (* LL = activeMu; global doubly-linked, circular list of all active threads *)
+      next, prev: Activation := NIL;    (* LL = activeLock; global doubly-linked, circular list of all active threads *)
       handle: HANDLE := NIL;            (* thread handle in Windows *)
       stackStart: ADDRESS := NIL;       (* stack bounds for use by GC *)
       stackEnd: ADDRESS := NIL;         (* stack bounds for use by GC *)
@@ -393,13 +393,13 @@ PROCEDURE FreeSlot (t: T; act: Activation) =
 
 (*------------------------------------------------------------ Fork, Join ---*)
 
-VAR (* LL=activeMu *)
+VAR (* LL=activeLock *)
   allThreads: Activation := NIL;  (* global list of active threads *)
 
 PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
      the allocator to start a collection which will call "SuspendOthers"
-     which will try to acquire "activeMu". *)
+     which will try to acquire "activeLock". *)
   VAR t := NEW(T, act := act);
   BEGIN
     act.context := NewContext();
@@ -683,7 +683,7 @@ PROCEDURE IncDefaultStackSize(inc: CARDINAL)=
 *)
 
 VAR
-  suspend_cnt: CARDINAL := 0;  (* LL = giant *)
+  suspend_cnt: CARDINAL := 0;  (* LL = activeLock *)
 
 PROCEDURE GetContextAndCheckStack(act: Activation): BOOLEAN =
 BEGIN
@@ -708,7 +708,7 @@ BEGIN
 END GetContextAndCheckStack;
 
 PROCEDURE SuspendOthers () =
-  (* LL=0. Always bracketed with ResumeOthers which releases "activeMu". *)
+  (* LL=0. Always bracketed with ResumeOthers which releases "activeLock". *)
   VAR me: Activation;
       act: Activation;
       nLive := 0;
@@ -748,7 +748,7 @@ PROCEDURE SuspendOthers () =
   END SuspendOthers;
 
 PROCEDURE ResumeOthers () =
-  (* LL=activeMu.  Always preceded by SuspendOthers. *)
+  (* LL=activeLock.  Always preceded by SuspendOthers. *)
   VAR act: Activation;
       me: Activation;
   BEGIN
@@ -774,7 +774,7 @@ PROCEDURE ResumeOthers () =
   END ResumeOthers;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
-  (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
+  (* LL=activeLock.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR me := GetActivation();
       act: Activation;
   BEGIN
@@ -787,7 +787,7 @@ PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
   END ProcessStacks;
 
 PROCEDURE ProcessMe (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
-  (* LL=activeMu *)
+  (* LL=activeLock *)
   BEGIN
     IF DEBUG THEN
       RTIO.PutText("Processing me="); RTIO.PutAddr(me.handle); RTIO.PutText("\n"); RTIO.Flush();
