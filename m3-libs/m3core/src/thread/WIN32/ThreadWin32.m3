@@ -610,48 +610,35 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 PROCEDURE Fork(closure: Closure): T =
   VAR t: T;
       stack_size: DWORD;
-      act: Activation := NIL;
       id: DWORD;
-      handle: HANDLE := NIL;
   BEGIN
-    TRY
-      IF DEBUG THEN ThreadDebug.Fork(); END;
+    IF DEBUG THEN ThreadDebug.Fork(); END;
 
-      <*ASSERT allThreads # NIL*>
-      <*ASSERT allThreads.next # NIL*>
-      <*ASSERT allThreads.prev # NIL*>
+    <*ASSERT allThreads # NIL*>
+    <*ASSERT allThreads.next # NIL*>
+    <*ASSERT allThreads.prev # NIL*>
 
-      (* determine the initial size of the stack for this thread *)
-      stack_size := default_stack;
-      TYPECASE closure OF
-      | SizedClosure (scl) => IF scl.stackSize # 0 THEN 
-                                stack_size := scl.stackSize * BYTESIZE(INTEGER);
-                              END;
-      ELSE (*skip*)
-      END;
-
-      act := NEW(Activation);
-      t := CreateT(act);
-      act := NIL; (* let the garbage collector takeover deciding when to cleanup *)
-      t.closure := closure;
-
-      (* create suspended just so we can store act.handle before it runs;
-      act.handle := CreateThread() is not good enough. *)
-
-      handle := CreateThread(NIL, stack_size, ThreadBase, t.act, CREATE_SUSPENDED, ADR(id));
-      IF handle = NIL THEN
-        RuntimeError.Raise(RuntimeError.T.SystemError);
-      END;
-      t.act.handle := handle;
-      IF ResumeThread(handle) = -1 THEN Choke(ThisLine()) END;
-      handle := NIL;
-      RETURN t;
-    FINALLY
-      (* cleanup if there was a failure (exception) after resources were allocated
-       * but before act was stored into t.
-       *)
-      DeleteActivation(act);
+    (* determine the initial size of the stack for this thread *)
+    stack_size := default_stack;
+    TYPECASE closure OF
+    | SizedClosure (scl) => IF scl.stackSize # 0 THEN 
+                              stack_size := scl.stackSize * BYTESIZE(INTEGER);
+                            END;
+    ELSE (*skip*)
     END;
+
+    t := CreateT(NEW(Activation));
+    t.closure := closure;
+
+    (* create suspended just so we can store act.handle before it runs;
+     * act.handle := CreateThread() is not good enough. *)
+
+    t.act.handle := CreateThread(NIL, stack_size, ThreadBase, t.act, CREATE_SUSPENDED, ADR(id));
+    IF t.act.handle = NIL THEN
+      RuntimeError.Raise(RuntimeError.T.SystemError);
+    END;
+    IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
+    RETURN t;
   END Fork;
 
 PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
