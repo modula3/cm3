@@ -1405,18 +1405,8 @@ CONST
   RTL_CRITSECT_TYPE = 0;
   RTL_RESOURCE_TYPE = 1;
 
-(* NOTE: "PRTL_CRITICAL_SECTION" is declared as a Modula-3 opaque
-   type and then immediately revealed so that "EnterCriticalSection()"
-   and "LeaveCriticalSection()" won't require checks by the GC wrapper
-   routines.  Clearly, if a Windows critical section is inside an M3
-   traced ref (which moves!) the system is going to crash.  Hence, the
-   extra GC check isn't needed. *)
-
-TYPE   PRTL_CRITICAL_SECTION <: ADDRESS;
-REVEAL PRTL_CRITICAL_SECTION = UNTRACED BRANDED "WinNT.PRTL_CRITICAL_SECTION"
-                               REF RTL_CRITICAL_SECTION;
-
 TYPE
+  PRTL_CRITICAL_SECTION = UNTRACED REF RTL_CRITICAL_SECTION;
   RTL_CRITICAL_SECTION = RECORD
     DebugInfo: PRTL_CRITICAL_SECTION_DEBUG;
 
