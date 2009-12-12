@@ -410,6 +410,7 @@ LOCKRE(slot)   /* global lock for thread slots table which maps untraced to trac
 LOCKRE(giant)
 LOCKRE(heap)
 LOCKRE(perf)
+LOCKRE(init)
 
 HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
 {
@@ -424,6 +425,7 @@ HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
     InitLockRE(&ThreadWin32__heapLock, &heapLock);
     InitLockRE(&ThreadWin32__perfLock, &perfLock);
     InitLockRE(&ThreadWin32__slotLock, &slotLock);
+    InitLockRE(&ThreadWin32__initLock, &initLock);
 
     success = (threadIndex != TLS_OUT_OF_INDEXES);
     if (!success)
@@ -454,46 +456,6 @@ void __cdecl ThreadWin32__Cleanup(void)
         TlsFree(threadIndex);
         threadIndex = TLS_OUT_OF_INDEXES;
     }
-}
-
-/*-------------------------------------------------------------------------*/
-
-BOOL ThreadWin32__InitMutexC(LockRE_t** lock)
-/* Return TRUE if this thread allocated the lock and nobody beat it in a race.
-FALSE can still mean the lock was allocated successfully, by another thread. */
-{
-    LockRE_t* newLock;
-
-    if (*lock)
-        return FALSE;
-
-    newLock = ThreadWin32__NewLockRE();
-
-    /* We failed, but in the mean time, somebody else may have succeeded. */
-    if (!newLock)
-    {
-        if (*lock)
-            return FALSE;
-        /* try again after short delay */
-        Sleep(1);
-        newLock = ThreadWin32__NewLockRE();
-    }
-
-    if (!newLock)
-        return FALSE;
-
-    /* We succeeded, but in the mean time, somebody else may also have. */
-#ifdef _WIN64
-    if (InterlockedCompareExchangePointer((void**)lock, newLock, 0))
-#else
-    if (InterlockedCompareExchange((long*)lock, (long)newLock, 0))
-#endif
-    {
-        ThreadWin32__DeleteLockRE(newLock);
-        return FALSE;
-    }
-
-    return TRUE;
 }
 
 /*-------------------------------------------------------------------------*/

@@ -42,6 +42,9 @@ TYPE LockE_t = UNTRACED BRANDED REF ADDRESS; (* E = exclusive *)
 <*EXTERNAL ThreadWin32__slotLock*> VAR slotLock: LockRE_t;
     (* Global lock for thread slot table that maps untraced to traced *)
 
+<*EXTERNAL ThreadWin32__initLock*> VAR initLock: LockRE_t;
+    (* Global lock for initializing locks *)
+
 (*------------------------------------------------------------------ Self ---*)
 
 (* the untraced state of a thread, a thread local *)
