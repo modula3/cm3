@@ -17,7 +17,7 @@ FROM WinBase IMPORT CloseHandle, CREATE_SUSPENDED, CreateEvent, CreateThread,
     CRITICAL_SECTION, DuplicateHandle, EnterCriticalSection,
     GetCurrentProcess, GetCurrentThread, GetCurrentThreadId, GetLastError,
     GetThreadContext, INFINITE, LeaveCriticalSection,
-    PCRITICAL_SECTION, ResetEvent, ResumeThread, SetEvent, SetLastError, Sleep,
+    PCRITICAL_SECTION, ResetEvent, ResumeThread, SetEvent, Sleep,
     SuspendThread, TLS_OUT_OF_INDEXES, TlsAlloc, TlsGetValue, TlsSetValue,
     WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject;
 FROM ThreadContext IMPORT PCONTEXT;
@@ -514,25 +514,18 @@ PROCEDURE CreateT (act: Activation): T =
     RETURN t;
   END CreateT;
 
-PROCEDURE DeleteActivation(VAR act: Activation) =
-  VAR error: UINT32;
-BEGIN
-  IF act # NIL THEN
-    error := GetLastError();
-    DeleteContext(act.context);
-    DelHandle(act.waitEvent, ThisLine());
-    DelHandle(act.alertEvent, ThisLine());
-    DelHandle(act.handle, ThisLine());
-    DISPOSE(act);
-    act := NIL;
-    SetLastError(error);
-  END;
-END DeleteActivation;
-
 PROCEDURE CleanT(r: REFANY) =
   VAR t := NARROW(r, T);
+      act := t.act;
   BEGIN
-    DeleteActivation(t.act);
+    IF act # NIL THEN
+      DeleteContext(act.context);
+      DelHandle(act.waitEvent, ThisLine());
+      DelHandle(act.alertEvent, ThisLine());
+      DelHandle(act.handle, ThisLine());
+      DISPOSE(act);
+      t.act := NIL;
+    END;
   END CleanT;
 
 <*WINAPI*>
