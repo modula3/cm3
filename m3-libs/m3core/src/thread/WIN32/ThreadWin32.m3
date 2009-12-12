@@ -19,7 +19,8 @@ FROM WinBase IMPORT CloseHandle, CREATE_SUSPENDED, CreateEvent, CreateThread,
     GetThreadContext, INFINITE, LeaveCriticalSection,
     PCRITICAL_SECTION, ResetEvent, ResumeThread, SetEvent, SetLastError, Sleep,
     SuspendThread, TLS_OUT_OF_INDEXES, TlsAlloc, TlsGetValue, TlsSetValue,
-    WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject;
+    WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject,
+    IsDebuggerPresent, DebugBreak;
 FROM ThreadContext IMPORT PCONTEXT;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
@@ -653,8 +654,27 @@ PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
       handles[1] := GetActivation().alertEvent;
     END;
     wait := WaitForMultipleObjects(1 + ORD(alertable), ADR(handles[0]), 0, INFINITE);
-    <* ASSERT wait # WAIT_TIMEOUT *>
-    <* ASSERT wait = WAIT_OBJECT_0 OR wait = (WAIT_OBJECT_0 + 1) *>
+    IF wait # WAIT_OBJECT_0 AND wait # (WAIT_OBJECT_0 + 1) THEN
+      RTIO.PutText("Join(t=");
+      RTIO.PutAddr(ADR(t));
+      RTIO.PutText(",act=");
+      RTIO.PutAddr(t.act);
+      RTIO.PutText("):WaitForMultipleObjects(");
+      RTIO.PutAddr(handles[0]);
+      IF alertable THEN
+        RTIO.PutText(",");
+        RTIO.PutAddr(handles[1]);
+      END;
+      RTIO.PutText(") returned unexpected:");
+      RTIO.PutInt(wait);
+      RTIO.PutText("\n");
+      RTIO.Flush();
+      IF IsDebuggerPresent() # 0 THEN
+        DebugBreak();
+      END;
+      <* ASSERT wait # WAIT_TIMEOUT *>
+      <* ASSERT wait = WAIT_OBJECT_0 OR wait = (WAIT_OBJECT_0 + 1) *>
+    END;
     IF wait = WAIT_OBJECT_0 THEN
       t.joined := 1;
       RETURN t.result;
