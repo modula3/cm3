@@ -49,8 +49,7 @@ REVEAL
       act: Activation := NIL;       (* LL = Self(); live (untraced) thread data *)
       closure: Closure := NIL;      (* our work and its result *)
       result: REFANY := NIL;        (* our work and its result *)
-      join: Condition := NIL;       (* LL = Self(); wait here to join *)
-      joined: BOOLEAN := FALSE;     (* LL = Self(); "Join" or "AlertJoin" has already returned *)
+      joined (*BOOLEAN*) := 0;      (* "Join" or "AlertJoin" has already returned *)
     END;
 
   TYPE Activation = UNTRACED BRANDED REF RECORD
@@ -510,7 +509,6 @@ PROCEDURE CreateT (act: Activation): T =
     IF act.waitEvent = NIL OR act.alertEvent = NIL THEN
       RuntimeError.Raise(RuntimeError.T.SystemError);
     END;
-    t.join     := NEW(Condition);
     AssignSlot (t);
     RETURN t;
   END CreateT;
@@ -575,12 +573,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
         self.result := self.closure.apply();
 
         IF perfOn THEN PerfChanged(State.dying) END;
-
-        LOCK self DO
-          Broadcast(self.join); (* let everybody know that "self" is done *)
-          self.join := NIL;     (* mark me done *)
-        END;
-
+        (* huh? *)
         IF perfOn THEN PerfChanged(State.dead) END;
 
         (* we're dying *)
@@ -657,19 +650,25 @@ PROCEDURE Fork(closure: Closure): T =
   END Fork;
 
 PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
-(* This should be shared between Win32 and Pthread. *)
-  VAR self := GetActivation();
+  VAR (* The order of the handles is important. *)
+      handles := ARRAY [0..1] OF HANDLE {t.act.handle, NIL(*alertEvent*)};
+      wait: DWORD;
   BEGIN
-    LOCK t DO
-      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice") END;
-      TRY
-        t.joined := TRUE;
-        WHILE t.join # NIL DO InnerWait(t, t.join, self, alertable) END;
-      FINALLY
-        IF t.join # NIL THEN t.joined := FALSE END;
-      END;
+    IF t.joined # 0 THEN Die(ThisLine(), "attempt to join with thread twice") END;
+    IF alertable THEN
+      handles[1] := GetActivation().alertEvent;
     END;
-    RETURN t.result;
+    wait := WaitForMultipleObjects(1 + ORD(alertable), ADR(handles[0]), 0, INFINITE);
+    <* ASSERT wait # WAIT_TIMEOUT *>
+    <* ASSERT wait = WAIT_OBJECT_0 OR wait = (WAIT_OBJECT_0 + 1) *>
+    IF wait = WAIT_OBJECT_0 THEN
+      t.joined := 1;
+      RETURN t.result;
+    ELSE
+      <* ASSERT wait = WAIT_OBJECT_0 + 1 *>
+      <* ASSERT alertable *>
+      RAISE Alerted;
+    END;
   END XJoin;
 
 PROCEDURE Join(t: T): REFANY =
