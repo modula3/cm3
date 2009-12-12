@@ -347,14 +347,14 @@ ThreadPThread__ProcessLive(void *bottom, void (*p)(void *start, void *limit))
 typedef void *(*start_routine_t)(void *);
 
 int
-ThreadPThread__thread_create(pthread_t *pthread,
-                             size_t stackSize,
+ThreadPThread__thread_create(size_t stackSize,
                              start_routine_t start_routine,
                              void *arg)
 {
   int r;
   size_t bytes;
   pthread_attr_t attr;
+  pthread_t pthread;
 
   r = pthread_attr_init(&attr);
 #ifdef __hpux
@@ -373,7 +373,7 @@ ThreadPThread__thread_create(pthread_t *pthread,
   bytes = M3_MAX(bytes, stackSize);
   pthread_attr_setstacksize(&attr, bytes);
 
-  r = pthread_create(pthread, &attr, start_routine, arg);
+  r = pthread_create(&pthread, &attr, start_routine, arg);
 
   pthread_attr_destroy(&attr);
 

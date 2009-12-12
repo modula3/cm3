@@ -51,7 +51,7 @@ TYPE
     waitingOn: pthread_mutex_t := NIL;  (* LL = mutex; The CV's mutex *)
     nextWaiter: Activation := NIL;      (* LL = mutex; waiting thread queue *)
     next, prev: Activation := NIL;      (* LL = activeMu; global doubly-linked, circular list of all active threads *)
-    handle: pthread_t;                  (* LL = activeMu; thread handle *)
+    handle: pthread_t := NIL;           (* LL = activeMu; thread handle *)
     stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
     context: ADDRESS := NIL;            (* LL = activeMu *)
     state := ActState.Started;          (* LL = activeMu *)
@@ -433,6 +433,7 @@ PROCEDURE ThreadBase (param: ADDRESS): ADDRESS =
   BEGIN
     SetActivation(me);
     me.stackbase := ADR(me); (* enable GC scanning of this stack *)
+    me.handle := pthread_self();
 
     (* add to the list of active threads *)
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
@@ -506,7 +507,7 @@ PROCEDURE Fork (closure: Closure): T =
     | SizedClosure (scl) => size := scl.stackSize;
     ELSE (*skip*)
     END;
-    WITH r = thread_create(act.handle, size * ADRSIZE(Word.T), ThreadBase, act) DO
+    WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act) DO
       IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
     RETURN t;

@@ -55,7 +55,7 @@ PROCEDURE sigsuspend ();
 (* pthread_create but replace attr with stackSize so that attr need not be known to Modula-3 *)
 
 <*EXTERNAL "ThreadPThread__thread_create"*>
-PROCEDURE thread_create(VAR pthread: pthread_t; stackSize: size_t;
+PROCEDURE thread_create(stackSize: size_t;
                         start_routine: PROCEDURE(arg: ADDRESS): ADDRESS; arg: ADDRESS): int;
 
 <*EXTERNAL ThreadPThread__pthread_detach_self*>
