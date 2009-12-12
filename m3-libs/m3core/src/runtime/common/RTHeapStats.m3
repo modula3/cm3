@@ -330,7 +330,7 @@ PROCEDURE ScanPages (start, stop: ADDRESS) =
   VAR fp: UNTRACED REF ADDRESS := start;
   BEGIN
     (* scan the stack or registers *)
-    WHILE fp <= stop DO
+    WHILE fp < stop DO
       WITH page = RTHeapRep.AddressToPage(fp^), d = page.desc DO
         IF page # NIL AND d.space = RTHeapRep.Space.Current THEN
           VisitPage(page);
