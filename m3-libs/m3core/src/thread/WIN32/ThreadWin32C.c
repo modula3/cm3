@@ -410,7 +410,6 @@ void* __cdecl ThreadWin32__GetActivation(void)
 
 LOCKRE(active) /* global lock for list of active threads */
 LOCKRE(slot)   /* global lock for thread slots table which maps untraced to traced */
-LOCKRE(giant)
 LOCKRE(heap)
 LOCKRE(perf)
 LOCKRE(init)
@@ -424,7 +423,6 @@ HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
     assert(stack_grows_down);
 
     InitLockRE(&ThreadWin32__activeLock, &activeLock);
-    InitLockRE(&ThreadWin32__giantLock, &giantLock);
     InitLockRE(&ThreadWin32__heapLock, &heapLock);
     InitLockRE(&ThreadWin32__perfLock, &perfLock);
     InitLockRE(&ThreadWin32__slotLock, &slotLock);
@@ -449,7 +447,6 @@ Exit:
 void __cdecl ThreadWin32__Cleanup(void)
 {
     DeleteLockRE(&ThreadWin32__activeLock, &activeLock);
-    DeleteLockRE(&ThreadWin32__giantLock, &giantLock);
     DeleteLockRE(&ThreadWin32__heapLock, &heapLock);
     DeleteLockRE(&ThreadWin32__perfLock, &perfLock);
     DeleteLockRE(&ThreadWin32__slotLock, &slotLock);
