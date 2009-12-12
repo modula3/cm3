@@ -7,7 +7,7 @@ PROCEDURE LockMutex (mutex: REFANY);
 PROCEDURE UnlockMutex(mutex: REFANY);
 
 <*EXTERNAL ThreadDebug__InnerWait*>
-PROCEDURE InnerWait(mutex: REFANY; condition: REFANY; self: REFANY);
+PROCEDURE InnerWait(mutex: REFANY; condition: REFANY; self: ADDRESS);
 
 <*EXTERNAL ThreadDebug__InnerTestAlert*>
 PROCEDURE InnerTestAlert(self: REFANY);
