@@ -499,8 +499,9 @@ PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
      the allocator to start a collection which will call "SuspendOthers"
      which will try to acquire "activeLock". *)
-  VAR t := NEW(T, act := act);
+  VAR t: T := NEW(T, act := act);
   BEGIN
+    RTHeapRep.RegisterFinalCleanup (t, CleanT);
     act.context := NewContext();
     IF act.context = NIL THEN
       RuntimeError.Raise(RuntimeError.T.OutOfMemory);
@@ -528,6 +529,12 @@ BEGIN
     SetLastError(error);
   END;
 END DeleteActivation;
+
+PROCEDURE CleanT(r: REFANY) =
+  VAR t := NARROW(r, T);
+  BEGIN
+    DeleteActivation(t.act);
+  END CleanT;
 
 <*WINAPI*>
 PROCEDURE ThreadBase (param: ADDRESS): DWORD =
@@ -596,7 +603,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 
     EVAL WinGDI.GdiFlush ();  (* help out Trestle *)
 
-    DeleteActivation(me);
+    SetActivation(NIL);
     RETURN 0;
   END ThreadBase;
 
@@ -625,21 +632,24 @@ PROCEDURE Fork(closure: Closure): T =
 
       act := NEW(Activation);
       t := CreateT(act);
+      act := NIL; (* let the garbage collector takeover deciding when to cleanup *)
       t.closure := closure;
 
       (* create suspended just so we can store act.handle before it runs;
       act.handle := CreateThread() is not good enough. *)
 
-      handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
+      handle := CreateThread(NIL, stack_size, ThreadBase, t.act, CREATE_SUSPENDED, ADR(id));
       IF handle = NIL THEN
         RuntimeError.Raise(RuntimeError.T.SystemError);
       END;
-      act.handle := handle;
-      act := NIL;
+      t.act.handle := handle;
       IF ResumeThread(handle) = -1 THEN Choke(ThisLine()) END;
       handle := NIL;
       RETURN t;
     FINALLY
+      (* cleanup if there was a failure (exception) after resources were allocated
+       * but before act was stored into t.
+       *)
       DeleteActivation(act);
     END;
   END Fork;
