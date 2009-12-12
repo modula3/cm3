@@ -1009,7 +1009,7 @@ PROCEDURE Init() =
     WinBase.InitializeCriticalSection(ADR(slotLock));
     WinBase.InitializeCriticalSection(ADR(initLock));
 
-    (* This CAN fail under low resources? *)
+    (* This CAN fail under low resources. *)
     threadIndex := TlsAlloc();
     IF threadIndex = TLS_OUT_OF_INDEXES THEN Choke(ThisLine()) END;
 
