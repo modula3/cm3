@@ -19,7 +19,8 @@ FROM WinBase IMPORT CloseHandle, CREATE_SUSPENDED, CreateEvent, CreateThread,
     GetThreadContext, INFINITE, LeaveCriticalSection,
     PCRITICAL_SECTION, ResetEvent, ResumeThread, SetEvent, SetLastError, Sleep,
     SuspendThread, TLS_OUT_OF_INDEXES, TlsAlloc, TlsGetValue, TlsSetValue,
-    WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject;
+    WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject,
+    IsDebuggerPresent, DebugBreak;
 FROM ThreadContext IMPORT PCONTEXT;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
@@ -49,8 +50,7 @@ REVEAL
       act: Activation := NIL;       (* LL = Self(); live (untraced) thread data *)
       closure: Closure := NIL;      (* our work and its result *)
       result: REFANY := NIL;        (* our work and its result *)
-      join: Condition := NIL;       (* LL = Self(); wait here to join *)
-      joined: BOOLEAN := FALSE;     (* LL = Self(); "Join" or "AlertJoin" has already returned *)
+      joined (*BOOLEAN*) := 0;      (* "Join" or "AlertJoin" has already returned *)
     END;
 
   TYPE Activation = UNTRACED BRANDED REF RECORD
@@ -104,15 +104,15 @@ PROCEDURE DelCriticalSection(VAR a:PCRITICAL_SECTION) =
   BEGIN
     IF a # NIL THEN
       WinBase.DeleteCriticalSection(a);
-      (*DISPOSE(a);*)
+      DISPOSE(a);
       a := NIL;
     END
   END DelCriticalSection;
 
-PROCEDURE DelHandle(VAR a: HANDLE) =
+PROCEDURE DelHandle(VAR a: HANDLE; line: INTEGER) =
   BEGIN
     IF a # NIL THEN
-      IF CloseHandle(a) = 0 THEN Choke(ThisLine()) END;
+      IF CloseHandle(a) = 0 THEN Choke(line) END;
       a := NIL;
     END;
   END DelHandle;
@@ -141,7 +141,7 @@ PROCEDURE CleanCondition (r: REFANY) =
   VAR c := NARROW(r, Condition);
   BEGIN
     DelCriticalSection(c.lock);
-    DelHandle(c.waitEvent);
+    DelHandle(c.waitEvent, ThisLine());
   END CleanCondition;
 
 PROCEDURE InitCondition (VAR c: Condition) =
@@ -153,7 +153,7 @@ PROCEDURE InitCondition (VAR c: Condition) =
     IF c.lock = NIL THEN (* We won the race. *)
       IF lock = NIL OR event = NIL THEN (* But we failed. *)
         DelCriticalSection(lock);
-        DelHandle(event);
+        DelHandle(event, ThisLine());
         LeaveCriticalSection(ADR(initLock));
         RuntimeError.Raise (RuntimeError.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
@@ -165,7 +165,7 @@ PROCEDURE InitCondition (VAR c: Condition) =
     ELSE (* another thread beat us in the race, ok *)
       LeaveCriticalSection(ADR(initLock));
       DelCriticalSection(lock);
-      DelHandle(event);
+      DelHandle(event, ThisLine());
     END;
   END InitCondition;
 
@@ -499,8 +499,9 @@ PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
      the allocator to start a collection which will call "SuspendOthers"
      which will try to acquire "activeLock". *)
-  VAR t := NEW(T, act := act);
+  VAR t: T := NEW(T, act := act);
   BEGIN
+    RTHeapRep.RegisterFinalCleanup (t, CleanT);
     act.context := NewContext();
     IF act.context = NIL THEN
       RuntimeError.Raise(RuntimeError.T.OutOfMemory);
@@ -510,7 +511,6 @@ PROCEDURE CreateT (act: Activation): T =
     IF act.waitEvent = NIL OR act.alertEvent = NIL THEN
       RuntimeError.Raise(RuntimeError.T.SystemError);
     END;
-    t.join     := NEW(Condition);
     AssignSlot (t);
     RETURN t;
   END CreateT;
@@ -521,20 +521,20 @@ BEGIN
   IF act # NIL THEN
     error := GetLastError();
     DeleteContext(act.context);
-    IF act.waitEvent # NIL THEN
-      IF CloseHandle(act.waitEvent) = 0 THEN Choke(ThisLine()) END;
-    END;
-    IF act.alertEvent # NIL THEN
-      IF CloseHandle(act.alertEvent) = 0 THEN Choke(ThisLine()) END;
-    END;
-    IF act.handle # NIL THEN
-      IF CloseHandle(act.handle) = 0 THEN Choke(ThisLine()) END;
-    END;
+    DelHandle(act.waitEvent, ThisLine());
+    DelHandle(act.alertEvent, ThisLine());
+    DelHandle(act.handle, ThisLine());
     DISPOSE(act);
     act := NIL;
     SetLastError(error);
   END;
 END DeleteActivation;
+
+PROCEDURE CleanT(r: REFANY) =
+  VAR t := NARROW(r, T);
+  BEGIN
+    DeleteActivation(t.act);
+  END CleanT;
 
 <*WINAPI*>
 PROCEDURE ThreadBase (param: ADDRESS): DWORD =
@@ -575,12 +575,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
         self.result := self.closure.apply();
 
         IF perfOn THEN PerfChanged(State.dying) END;
-
-        LOCK self DO
-          Broadcast(self.join); (* let everybody know that "self" is done *)
-          self.join := NIL;     (* mark me done *)
-        END;
-
+        (* What is the point of this in-between state? *)
         IF perfOn THEN PerfChanged(State.dead) END;
 
         (* we're dying *)
@@ -608,68 +603,62 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 
     EVAL WinGDI.GdiFlush ();  (* help out Trestle *)
 
-    DeleteActivation(me);
+    SetActivation(NIL);
     RETURN 0;
   END ThreadBase;
 
 PROCEDURE Fork(closure: Closure): T =
   VAR t: T;
       stack_size: DWORD;
-      act: Activation := NIL;
       id: DWORD;
-      handle: HANDLE := NIL;
   BEGIN
-    TRY
-      IF DEBUG THEN ThreadDebug.Fork(); END;
+    IF DEBUG THEN ThreadDebug.Fork(); END;
 
-      <*ASSERT allThreads # NIL*>
-      <*ASSERT allThreads.next # NIL*>
-      <*ASSERT allThreads.prev # NIL*>
+    <*ASSERT allThreads # NIL*>
+    <*ASSERT allThreads.next # NIL*>
+    <*ASSERT allThreads.prev # NIL*>
 
-      (* determine the initial size of the stack for this thread *)
-      stack_size := default_stack;
-      TYPECASE closure OF
-      | SizedClosure (scl) => IF scl.stackSize # 0 THEN 
-                                stack_size := scl.stackSize * BYTESIZE(INTEGER);
-                              END;
-      ELSE (*skip*)
-      END;
-
-      act := NEW(Activation);
-      t := CreateT(act);
-      t.closure := closure;
-
-      (* create suspended just so we can store act.handle before it runs;
-      act.handle := CreateThread() is not good enough. *)
-
-      handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
-      IF handle = NIL THEN
-        RuntimeError.Raise(RuntimeError.T.SystemError);
-      END;
-      act.handle := handle;
-      act := NIL;
-      IF ResumeThread(handle) = -1 THEN Choke(ThisLine()) END;
-      handle := NIL;
-      RETURN t;
-    FINALLY
-      DeleteActivation(act);
+    (* determine the initial size of the stack for this thread *)
+    stack_size := default_stack;
+    TYPECASE closure OF
+    | SizedClosure (scl) => IF scl.stackSize # 0 THEN 
+                              stack_size := scl.stackSize * BYTESIZE(INTEGER);
+                            END;
+    ELSE (*skip*)
     END;
+
+    t := CreateT(NEW(Activation));
+    t.closure := closure;
+
+    (* create suspended just so we can store act.handle before it runs;
+     * act.handle := CreateThread() is not good enough. *)
+
+    t.act.handle := CreateThread(NIL, stack_size, ThreadBase, t.act, CREATE_SUSPENDED, ADR(id));
+    IF t.act.handle = NIL THEN
+      RuntimeError.Raise(RuntimeError.T.SystemError);
+    END;
+    IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
+    RETURN t;
   END Fork;
 
 PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
-(* This should be shared between Win32 and Pthread. *)
-  VAR self := GetActivation();
+  VAR (* The order of the handles is important. *)
+      handles := ARRAY [0..1] OF HANDLE {t.act.handle, NIL(*alertEvent*)};
+      wait: DWORD;
   BEGIN
-    LOCK t DO
-      IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice") END;
-      TRY
-        t.joined := TRUE;
-        WHILE t.join # NIL DO InnerWait(t, t.join, self, alertable) END;
-      FINALLY
-        IF t.join # NIL THEN t.joined := FALSE END;
-      END;
+    IF t.joined # 0 THEN Die(ThisLine(), "attempt to join with thread twice") END;
+    IF alertable THEN
+      handles[1] := GetActivation().alertEvent;
     END;
-    RETURN t.result;
+    wait := WaitForMultipleObjects(1 + ORD(alertable), ADR(handles[0]), 0, INFINITE);
+    <* ASSERT wait = WAIT_OBJECT_0 OR wait = (WAIT_OBJECT_0 + 1) *>
+    IF wait = WAIT_OBJECT_0 THEN
+      t.joined := 1;
+      RETURN t.result;
+    ELSE
+      <* ASSERT alertable *>
+      RAISE Alerted;
+    END;
   END XJoin;
 
 PROCEDURE Join(t: T): REFANY =
