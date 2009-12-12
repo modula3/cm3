@@ -30,9 +30,6 @@ TYPE LockE_t = UNTRACED BRANDED REF ADDRESS; (* E = exclusive *)
 
 (* static locks *)
 
-(* Global lock for internals of Mutex and Condition *)
-<*EXTERNAL ThreadWin32__giantLock*> VAR giantLock: LockRE_t;
-
 <*EXTERNAL ThreadWin32__activeLock*> VAR activeLock: LockRE_t;
     (* Global lock for list of active threads *)
     (* It is illegal to touch *any* traced references while
