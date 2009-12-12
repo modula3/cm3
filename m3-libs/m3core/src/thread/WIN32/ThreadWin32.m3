@@ -108,10 +108,10 @@ PROCEDURE DelCriticalSection(VAR a:PCRITICAL_SECTION) =
     END
   END DelCriticalSection;
 
-PROCEDURE DelHandle(VAR a: HANDLE) =
+PROCEDURE DelHandle(VAR a: HANDLE; line: INTEGER) =
   BEGIN
     IF a # NIL THEN
-      IF CloseHandle(a) = 0 THEN Choke(ThisLine()) END;
+      IF CloseHandle(a) = 0 THEN Choke(line) END;
       a := NIL;
     END;
   END DelHandle;
@@ -140,7 +140,7 @@ PROCEDURE CleanCondition (r: REFANY) =
   VAR c := NARROW(r, Condition);
   BEGIN
     DelCriticalSection(c.lock);
-    DelHandle(c.waitEvent);
+    DelHandle(c.waitEvent, ThisLine());
   END CleanCondition;
 
 PROCEDURE InitCondition (VAR c: Condition) =
@@ -152,7 +152,7 @@ PROCEDURE InitCondition (VAR c: Condition) =
     IF c.lock = NIL THEN (* We won the race. *)
       IF lock = NIL OR event = NIL THEN (* But we failed. *)
         DelCriticalSection(lock);
-        DelHandle(event);
+        DelHandle(event, ThisLine());
         LeaveCriticalSection(ADR(initLock));
         RuntimeError.Raise (RuntimeError.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
@@ -164,7 +164,7 @@ PROCEDURE InitCondition (VAR c: Condition) =
     ELSE (* another thread beat us in the race, ok *)
       LeaveCriticalSection(ADR(initLock));
       DelCriticalSection(lock);
-      DelHandle(event);
+      DelHandle(event, ThisLine());
     END;
   END InitCondition;
 
@@ -519,15 +519,9 @@ BEGIN
   IF act # NIL THEN
     error := GetLastError();
     DeleteContext(act.context);
-    IF act.waitEvent # NIL THEN
-      IF CloseHandle(act.waitEvent) = 0 THEN Choke(ThisLine()) END;
-    END;
-    IF act.alertEvent # NIL THEN
-      IF CloseHandle(act.alertEvent) = 0 THEN Choke(ThisLine()) END;
-    END;
-    IF act.handle # NIL THEN
-      IF CloseHandle(act.handle) = 0 THEN Choke(ThisLine()) END;
-    END;
+    DelHandle(act.waitEvent, ThisLine());
+    DelHandle(act.alertEvent, ThisLine());
+    DelHandle(act.handle, ThisLine());
     DISPOSE(act);
     act := NIL;
     SetLastError(error);
