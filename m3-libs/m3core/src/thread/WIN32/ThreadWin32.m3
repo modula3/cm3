@@ -14,11 +14,11 @@ IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM WinNT IMPORT LONG, HANDLE, DWORD, UINT32;
 FROM WinBase IMPORT WaitForSingleObject, INFINITE,
-    CloseHandle, CreateThread, ResumeThread, Sleep,
+    CloseHandle, CreateThread, ResumeThread, Sleep, ResetEvent,
     SuspendThread, GetThreadContext, SetLastError, GetLastError,
     CREATE_SUSPENDED, GetCurrentThreadId, InterlockedCompareExchange,
     InterlockedExchange, InterlockedIncrement, InterlockedDecrement,
-    SetEvent, WAIT_OBJECT_0, CreateEvent, WaitForMultipleObjects;
+    SetEvent, WAIT_OBJECT_0, WAIT_TIMEOUT, CreateEvent, WaitForMultipleObjects;
 FROM ThreadContext IMPORT PCONTEXT;
 FROM WinNT IMPORT MemoryBarrier;
 
@@ -30,14 +30,19 @@ VAR
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
       lock: LockRE_t := NIL;
-      held: BOOLEAN := FALSE; (* LL = self.cs *) (* Because critical sections are thread re-entrant *)
+      held: BOOLEAN := FALSE; (* LL = mutex.lock *) (* Because critical sections are thread re-entrant *)
     OVERRIDES
       acquire := LockMutex;
       release := UnlockMutex;
     END;
 
   Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
-      waiters: T := NIL; (* LL = giant; List of threads waiting on this CV. *)
+  (* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp *)
+      lock: LockRE_t := NIL;
+      waitEvent: HANDLE := NIL;
+      counter := 0; (* LL = condition.lock *)
+      tickets := 0; (* LL = condition.lock *)
+      waiters := 0; (* LL = condition.lock *)
     END;
 
   T = MUTEX BRANDED "Thread.T Win32-1.0" OBJECT
@@ -45,8 +50,6 @@ REVEAL
       closure: Closure := NIL;      (* our work and its result *)
       result: REFANY := NIL;        (* our work and its result *)
       join: Condition := NIL;       (* LL = Self(); wait here to join *)
-      waitingOn: Condition := NIL;  (* LL = giant; CV that we're blocked on *)
-      nextWaiter: T := NIL;         (* LL = giant; queue of threads waiting on the same CV *)
       joined: BOOLEAN := FALSE;     (* LL = Self(); "Join" or "AlertJoin" has already returned *)
     END;
 
@@ -82,16 +85,6 @@ PROCEDURE Release (m: Mutex) =
     m.release ();
   END Release;
 
-PROCEDURE LockGiant() =
-BEGIN
-  LockRE(giantLock);
-END LockGiant;
-
-PROCEDURE UnlockGiant() =
-BEGIN
-  UnlockRE(giantLock);
-END UnlockGiant;
-
 PROCEDURE CleanMutex (r: REFANY) =
   VAR m := NARROW(r, Mutex);
   BEGIN
@@ -118,6 +111,47 @@ PROCEDURE InitMutex (VAR m: LockRE_t; root: REFANY;
       DeleteLockRE(mutex);
     END;
   END InitMutex;
+
+
+PROCEDURE CleanCondition (r: REFANY) =
+  VAR c := NARROW(r, Condition);
+  BEGIN
+    DeleteLockRE(c.lock);
+    c.lock := NIL;
+    IF c.waitEvent # NIL THEN
+      IF CloseHandle(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
+      c.waitEvent := NIL;
+    END;
+  END CleanCondition;
+
+PROCEDURE InitCondition (VAR c: Condition) =
+  VAR lock := NewLockRE();
+      event := CreateEvent(NIL, 1, 0, NIL);
+  BEGIN
+    LockRE(initLock);
+    <* ASSERT (c.lock = NIL) = (c.waitEvent = NIL) *>
+    IF c.lock = NIL THEN (* We won the race. *)
+      IF lock = NIL OR event = NIL THEN (* But we failed. *)
+        DeleteLockRE(lock);
+        IF event # NIL THEN
+          IF CloseHandle(event) = 0 THEN Choke(ThisLine()) END;
+        END;
+        UnlockRE(initLock);
+        RuntimeError.Raise (RuntimeError.T.OutOfMemory);
+      ELSE (* We won the race and succeeded. *)
+        c.lock := lock;
+        c.waitEvent := event;
+        UnlockRE(initLock);
+        RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
+      END;
+    ELSE (* another thread beat us in the race, ok *)
+      UnlockRE(initLock);
+      DeleteLockRE(lock);
+      IF event # NIL THEN
+        IF CloseHandle(event) = 0 THEN Choke(ThisLine()) END;
+      END;
+    END;
+  END InitCondition;
 
 PROCEDURE LockMutex (m: Mutex) =
   BEGIN
@@ -162,151 +196,198 @@ PROCEDURE DumpSlots () =
 
 (*---------------------------------------- Condition variables and Alerts ---*)
 
-PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation; self: T;
+PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
                     alertable: BOOLEAN) RAISES {Alerted} =
-    (* LL = m on entry and exit, but not for the duration *)
-  VAR alerted: BOOLEAN;
-      (* The order of the handles is important. See WaitForMultipleObjects. *)
-      handles := ARRAY [0..1] OF HANDLE {act.waitEvent, act.alertEvent};
+  (* LL = m on entry and exit, but not for the duration
+   * see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp
+   * NOTE that they merge the user lock and the condition lock.
+   *)
+  VAR (* The order of the handles is important.
+       * - They affect computing if we are alerted.
+       * - If we are alerted and signaled, we take the signaled path
+       *   in order to maintain the condition variable correctly.
+       *   If both events get signaled, WaitForMultipleObjects returns the smaller index.
+       *)
+      handles := ARRAY [0..1] OF HANDLE {NIL(*c.waitEvent*), act.alertEvent};
+      count: INTEGER;
+      retry := FALSE;
+      wait: DWORD;
+      conditionLock := c.lock;
   BEGIN
 
-    IF DEBUG THEN ThreadDebug.InnerWait(m, c, self); END;
+    IF DEBUG THEN ThreadDebug.InnerWait(m, c, act); END;
 
-    (* CONSIDER: if alertable, do one "quick" up-front check before
-     * taking the giant lock. The thing is, the lock is only held briefly
-     * and checking for alert is a kernel call, AND the giant lock
-     * will be going away as well.
+    IF conditionLock = NIL THEN
+      InitCondition(c);
+      conditionLock := c.lock;
+    END;
+    <* ASSERT conditionLock # NIL *>
+    <* ASSERT c.waitEvent # NIL *>
+
+    handles[0] := c.waitEvent;
+    LockRE(conditionLock);
+
+    (* Capture the value of the counter before we start waiting.
+     * We will not stop waiting until the counter changes.
+     * That is, we will not stop waiting until a signal
+     * comes in after we start waiting.
      *)
 
-    LockGiant();
-      <* ASSERT self.waitingOn = NIL *>
-      <* ASSERT self.nextWaiter = NIL *>
-      self.waitingOn := c;
-      self.nextWaiter := c.waiters;
-      c.waiters := self;
-    UnlockGiant();
+    count := c.counter;
 
-    m.release();
+    INC(c.waiters);
 
-    IF perfOn THEN PerfChanged(State.waiting) END;
+    (* Loop until condition variable is signaled. The event object is
+     * set whenever the condition variable is signaled, and tickets will
+     * reflect the number of threads which have been notified. The counter
+     * field is used to make sure we don't respond to notifications that
+     * have occurred *before* we started waiting, and is incremented each
+     * time the condition variable is signaled.
+     *)
 
-    alerted := (WaitForMultipleObjects(1 + ORD(alertable), ADR(handles[0]), 0,
-                INFINITE) = (WAIT_OBJECT_0 + 1));
+    LOOP
 
-    (* "IF alerted" is repeated in order to reduce the lock size. *)
-    IF alerted THEN
-      self.waitingOn := NIL;
-      self.nextWaiter := NIL;
-    ELSE
-      <* ASSERT self.waitingOn = NIL *>
-      <* ASSERT self.nextWaiter = NIL *>
+      (* Leave critical region (careful with the lock order) *)
+
+      UnlockRE(conditionLock);
+      m.release();
+
+      IF perfOn THEN PerfChanged(State.waiting) END;
+
+      (* If this is a retry, let other low-priority threads run.
+       * Be sure to sleep outside of critical section.
+       *)
+
+      IF retry THEN
+        Sleep(1);
+      ELSE
+        retry := TRUE;
+      END;
+
+      wait := WaitForMultipleObjects(1 + ORD(alertable), ADR(handles[0]), 0, INFINITE);
+      <* ASSERT wait # WAIT_TIMEOUT *>
+      <* ASSERT wait = WAIT_OBJECT_0 OR wait = (WAIT_OBJECT_0 + 1) *>
+
+      IF perfOn THEN PerfRunning() END;
+
+      (* Enter critical region (careful with the lock order)
+       * For the alerted case, we could avoid taking the conditionLock
+       * if we used Interlocked on waiters.
+       *)
+
+      m.acquire();
+      LockRE(conditionLock);
+
+      IF wait = (WAIT_OBJECT_0 + 1) THEN
+        DEC(c.waiters);
+        UnlockRE(conditionLock);
+        RAISE Alerted;
+      END;
+
+      IF c.tickets # 0 AND c.counter # count THEN
+        EXIT;
+      END;
+
+    END; (* LOOP *)
+
+    DEC(c.waiters);
+
+    (* If this was the last thread to be notified, then reset event
+     * so no further threads are woken, for now.
+     *)
+
+    DEC(c.tickets);
+    IF c.tickets = 0 THEN
+      IF ResetEvent(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
     END;
 
-    m.acquire();
-
-    IF alerted THEN
-      RAISE Alerted;
-    END;
+    UnlockRE(conditionLock);
 
   END InnerWait;
 
 PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
-  VAR self := Self();
+  VAR self := GetActivation();
   BEGIN
     IF DEBUG THEN ThreadDebug.AlertWait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
-    <* ASSERT self.waitingOn = NIL *>
-    <* ASSERT self.nextWaiter = NIL *>
-    InnerWait(m, c, self.act, self, alertable := TRUE);
+    InnerWait(m, c, self, alertable := TRUE);
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
   <*FATAL Alerted*>
   (* LL = m *)
-  VAR self := Self();
+  VAR self := GetActivation();
   BEGIN
     IF DEBUG THEN ThreadDebug.Wait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
-    <* ASSERT self.waitingOn = NIL *>
-    <* ASSERT self.nextWaiter = NIL *>
-    InnerWait(m, c, self.act, self, alertable := FALSE);
+    InnerWait(m, c, self, alertable := FALSE);
   END Wait;
 
-PROCEDURE DequeueHead(c: Condition) =
-  (* LL = giant *)
-  VAR t: T;
-      act: Activation;
-  BEGIN
-    IF DEBUG THEN ThreadDebug.DequeueHead(c); END;
-    t := c.waiters;
-    c.waiters := t.nextWaiter;
-    act := t.act;
-    t.nextWaiter := NIL;
-    t.waitingOn := NIL;
-    IF SetEvent(act.waitEvent) = 0 THEN
-      Choke(ThisLine());
-    END;
-  END DequeueHead;
-
 PROCEDURE Signal (c: Condition) =
+  VAR conditionLock := c.lock;
   BEGIN
     IF DEBUG THEN ThreadDebug.Signal(c); END;
-    LockGiant();
-    IF c.waiters # NIL THEN DequeueHead(c) END;
-    UnlockGiant();
+
+    IF conditionLock = NIL THEN
+      InitCondition(c);
+      conditionLock := c.lock;
+    END;
+    <* ASSERT conditionLock # NIL *>
+    <* ASSERT c.waitEvent # NIL *>
+
+    LockRE(conditionLock);
+
+      IF c.waiters > c.tickets THEN
+        IF SetEvent(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
+        INC(c.tickets);
+        INC(c.counter);
+      END;
+
+    UnlockRE(conditionLock);
+
   END Signal;
 
 PROCEDURE Broadcast (c: Condition) =
+  VAR conditionLock := c.lock;
   BEGIN
     IF DEBUG THEN ThreadDebug.Broadcast(c); END;
-    LockGiant();
-    WHILE c.waiters # NIL DO DequeueHead(c) END;
-    UnlockGiant();
+
+    IF conditionLock = NIL THEN
+      InitCondition(c);
+      conditionLock := c.lock;
+    END;
+    <* ASSERT conditionLock # NIL *>
+    <* ASSERT c.waitEvent # NIL *>
+
+    LockRE(conditionLock);
+
+      IF c.waiters > 0 THEN
+        IF SetEvent(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
+        c.tickets := c.waiters;
+        INC(c.counter);
+      END;
+
+    UnlockRE(conditionLock);
+
   END Broadcast;
 
 PROCEDURE Alert(t: T) =
-  VAR prev, next: T;
   BEGIN
     IF DEBUG THEN ThreadDebug.Alert(t); END;
     IF t = NIL THEN Die(ThisLine(), "Alert called from non-Modula-3 thread") END;
-    LockGiant();
-      (* Dequeue from any CV *)
-      IF t.waitingOn # NIL THEN
-        next := t.waitingOn.waiters; prev := NIL;
-        WHILE next # t DO
-          <* ASSERT(next#NIL) *>
-          prev := next; next := next.nextWaiter;
-        END;
-        IF prev = NIL THEN
-          t.waitingOn.waiters := t.nextWaiter
-        ELSE
-          prev.nextWaiter := t.nextWaiter;
-        END;
-        t.nextWaiter := NIL;
-        t.waitingOn := NIL;
-      END;
-    UnlockGiant();
-    IF SetEvent(t.act.alertEvent) = 0 THEN
-      Choke(ThisLine());
-    END;
+    IF SetEvent(t.act.alertEvent) = 0 THEN Choke(ThisLine()) END;
   END Alert;
 
 PROCEDURE TestAlert(): BOOLEAN =
-  VAR self := Self();
-      result: BOOLEAN;
+  VAR self := GetActivation();
   BEGIN
     IF DEBUG THEN ThreadDebug.TestAlert(); END;
     IF self = NIL THEN
       (* Not created by Fork; not alertable *)
       RETURN FALSE
     ELSE
-      <* ASSERT self.waitingOn = NIL *>
-      <* ASSERT self.nextWaiter = NIL *>
-      result := WaitForSingleObject(self.act.alertEvent, 0) = WAIT_OBJECT_0;
-      <* ASSERT self.waitingOn = NIL *>
-      <* ASSERT self.nextWaiter = NIL *>
-      RETURN result;
+      RETURN WaitForSingleObject(self.alertEvent, 0) = WAIT_OBJECT_0;
     END;
   END TestAlert;
 
@@ -423,13 +504,13 @@ BEGIN
     error := GetLastError();
     DeleteContext(act.context);
     IF act.waitEvent # NIL THEN
-      EVAL CloseHandle(act.waitEvent);
+      IF CloseHandle(act.waitEvent) = 0 THEN Choke(ThisLine()) END;
     END;
     IF act.alertEvent # NIL THEN
-      EVAL CloseHandle(act.alertEvent);
+      IF CloseHandle(act.alertEvent) = 0 THEN Choke(ThisLine()) END;
     END;
     IF act.handle # NIL THEN
-      EVAL CloseHandle(act.handle);
+      IF CloseHandle(act.handle) = 0 THEN Choke(ThisLine()) END;
     END;
     DISPOSE(act);
     act := NIL;
@@ -549,7 +630,7 @@ PROCEDURE Fork(closure: Closure): T =
       END;
       act.handle := handle;
       act := NIL;
-      EVAL ResumeThread(handle);
+      IF ResumeThread(handle) = -1 THEN Choke(ThisLine()) END;
       handle := NIL;
       RETURN t;
     FINALLY
@@ -559,14 +640,13 @@ PROCEDURE Fork(closure: Closure): T =
 
 PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
 (* This should be shared between Win32 and Pthread. *)
-  VAR self := Self();
-      act := self.act;
+  VAR self := GetActivation();
   BEGIN
     LOCK t DO
       IF t.joined THEN Die(ThisLine(), "attempt to join with thread twice") END;
       TRY
         t.joined := TRUE;
-        WHILE t.join # NIL DO InnerWait(t, t.join, act, self, alertable) END;
+        WHILE t.join # NIL DO InnerWait(t, t.join, self, alertable) END;
       FINALLY
         IF t.join # NIL THEN t.joined := FALSE END;
       END;
@@ -606,8 +686,7 @@ PROCEDURE Pause(n: LONGREAL) =
 
 PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
   VAR amount, thisTime: LONGREAL;
-      self := Self();
-      act: Activation;
+      self := GetActivation();
       alerted := FALSE;
   CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
   BEGIN
@@ -615,21 +694,14 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
    * most waits will just wait once.
    *)
     IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
-    <* ASSERT self.waitingOn = NIL *>
-    <* ASSERT self.nextWaiter = NIL *>
     IF n <= 0.0d0 THEN RETURN END;
-    act := self.act;
     amount := n;
     IF perfOn THEN PerfChanged(State.pausing) END;
     WHILE (NOT alerted) AND (amount > 0.0D0) DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
-      <* ASSERT self.waitingOn = NIL *>
-      <* ASSERT self.nextWaiter = NIL *>
-      alerted := (WaitForSingleObject(act.alertEvent, ROUND(thisTime*1000.0D0)) = WAIT_OBJECT_0);
+      alerted := (WaitForSingleObject(self.alertEvent, ROUND(thisTime*1000.0D0)) = WAIT_OBJECT_0);
     END;
-    <* ASSERT self.waitingOn = NIL *>
-    <* ASSERT self.nextWaiter = NIL *>
     IF perfOn THEN PerfRunning() END;
     IF alerted THEN
       RAISE Alerted;
@@ -662,25 +734,6 @@ PROCEDURE IncDefaultStackSize(inc: CARDINAL)=
 (* NOTE: These routines are called indirectly by the low-level page fault
    handler of the garbage collector.  So, if they touched traced references,
    they could trigger indefinite invocations of the fault handler. *)
-
-(* In versions of SuspendOthers prior to the addition of the incremental
-   collector, it acquired 'giant' to guarantee that no suspended thread held it.
-   That way when the collector tried to acquire a mutex or signal a
-   condition, it wouldn't deadlock with the suspended thread that held giant.
-   
-   With the VM-synchronized, incremental collector this design is inadequate.
-   Here's a deadlock that occurred:
-      Thread.Broadcast held giant,
-      then it touched its condition argument,
-      the page containing the condition was protected by the collector,
-      another thread started running the page fault handler,
-      the handler called SuspendOthers,
-      SuspendOthers tried to acquire giant.
-
-   So, SuspendOthers doesn't grab "giant" before shutting down the other
-   threads.  If the collector tries to use any of the thread functions
-   that acquire "giant", it'll be deadlocked.
-*)
 
 VAR
   suspend_cnt: CARDINAL := 0;  (* LL = activeLock *)
