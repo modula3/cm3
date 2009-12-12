@@ -11,10 +11,6 @@ struct IRpcStubBuffer;        /* warning 4115: named type definition in parenthe
 #pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
 #pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
 #pragma warning(disable:4514) /* unused inline function removed */
-#if _MSC_VER <= 1100
-#pragma warning(disable:4024) /* volatile mismatch on Interlocked */
-#pragma warning(disable:4090) /* volatile mismatch on Interlocked */
-#endif
 #endif
 
 #include <windows.h>
@@ -70,6 +66,13 @@ LONG __cdecl ThreadWin32__InterlockedRead(volatile LONG* a)
 #if 0
 
 /* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp */
+
+#ifdef _MSC_VER
+#if _MSC_VER <= 1100
+#pragma warning(disable:4024) /* volatile mismatch on Interlocked */
+#pragma warning(disable:4090) /* volatile mismatch on Interlocked */
+#endif
+#endif
 
 typedef struct _LockE_t {
     volatile long count;
