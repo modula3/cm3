@@ -998,7 +998,11 @@ PROCEDURE GetActivation(): Activation =
 
 PROCEDURE Init() =
 (* NOTE: We never cleanup; this would be a job for DllMain(DLL_PROCESS_DETACH)
-         if we implemented it. *)
+ *        if we implemented it.
+ * NOTE: Be careful not use <* ASSERT *> too early.
+ *       Assertion failures depend on some of Init having run. (e.g. SetActivation)
+ *       Test by making the ASSERT fail.
+ *)
   VAR
     self: T;
     me := NEW(Activation);
