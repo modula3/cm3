@@ -1,48 +1,46 @@
 INTERFACE ThreadDebug;
 
-FROM Thread IMPORT Mutex, Condition, T;
-
 <*EXTERNAL ThreadDebug__LockMutex*>
-PROCEDURE LockMutex (m: Mutex);
+PROCEDURE LockMutex (mutex: REFANY);
 
 <*EXTERNAL ThreadDebug__UnlockMutex*>
-PROCEDURE UnlockMutex(m: Mutex);
+PROCEDURE UnlockMutex(mutex: REFANY);
 
 <*EXTERNAL ThreadDebug__InnerWait*>
-PROCEDURE InnerWait(m: Mutex; c: Condition; self: T);
+PROCEDURE InnerWait(mutex: REFANY; condition: REFANY; self: ADDRESS);
 
 <*EXTERNAL ThreadDebug__InnerTestAlert*>
-PROCEDURE InnerTestAlert(self: T);
+PROCEDURE InnerTestAlert(self: REFANY);
 
 <*EXTERNAL ThreadDebug__AlertWait*>
-PROCEDURE AlertWait (m: Mutex; c: Condition);
+PROCEDURE AlertWait (mutex: REFANY; condition: REFANY);
 
 <*EXTERNAL ThreadDebug__Wait*>
-PROCEDURE Wait (m: Mutex; c: Condition);
+PROCEDURE Wait (mutex: REFANY; condition: REFANY);
 
 <*EXTERNAL ThreadDebug__DequeueHead*>
-PROCEDURE DequeueHead(c: Condition);
+PROCEDURE DequeueHead(condition: REFANY);
 
 <*EXTERNAL ThreadDebug__Signal*>
-PROCEDURE Signal (c: Condition);
+PROCEDURE Signal (condition: REFANY);
 
 <*EXTERNAL ThreadDebug__Broadcast*>
-PROCEDURE Broadcast (c: Condition);
+PROCEDURE Broadcast (condition: REFANY);
 
 <*EXTERNAL ThreadDebug__Alert*>
-PROCEDURE Alert(t: T);
+PROCEDURE Alert(thread: REFANY);
 
 <*EXTERNAL ThreadDebug__XTestAlert*>
-PROCEDURE XTestAlert (self: T);
+PROCEDURE XTestAlert (self: REFANY);
 
 <*EXTERNAL ThreadDebug__TestAlert*>
 PROCEDURE TestAlert();
 
 <*EXTERNAL ThreadDebug__Join*>
-PROCEDURE Join(t: T);
+PROCEDURE Join(thread: REFANY);
 
 <*EXTERNAL ThreadDebug__AlertJoin*>
-PROCEDURE AlertJoin(t: T);
+PROCEDURE AlertJoin(thread: REFANY);
 
 <*EXTERNAL ThreadDebug__Fork*>
 PROCEDURE Fork();
