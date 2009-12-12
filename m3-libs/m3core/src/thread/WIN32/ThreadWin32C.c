@@ -44,167 +44,6 @@ extern "C" {
 #endif
 
 /*-------------------------------------------------------------------------*/
-/* lock-free support */
-
-#ifndef MemoryBarrier
-void __cdecl WinNT__MemoryBarrier(void);
-#define MemoryBarrier WinNT__MemoryBarrier
-#endif
-
-LONG __cdecl ThreadWin32__InterlockedRead(volatile LONG* a)
-{ /* based on Boost */
-    LONG b;
-    MemoryBarrier();
-    b = *a;
-    MemoryBarrier();
-    return b;
-}
-
-/*-------------------------------------------------------------------------*/
-/* LockE_t E = exclusive */
-
-#if 0
-
-/* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp */
-
-#ifdef _MSC_VER
-#if _MSC_VER <= 1100
-#pragma warning(disable:4024) /* volatile mismatch on Interlocked */
-#pragma warning(disable:4090) /* volatile mismatch on Interlocked */
-#endif
-#endif
-
-typedef struct _LockE_t {
-    volatile long count;
-    volatile DWORD owner;
-    volatile HANDLE event;
-} LockE_t;
-
-#define LOCKE(name) \
-static LockE_t name##Lock; \
-LockE_t* ThreadWin32__##name##Lock; \
-
-static void InitLockE(LockE_t** pp, LockE_t* p)
-/* E = exclusive */
-{
-    MemoryBarrier();
-    assert(*pp == NULL || *pp == p);
-    if (!*pp && p)
-    {
-        HANDLE event;
-        p->owner = 0;
-        p->count = -1;
-        event = CreateEventA(0, 0, 0, 0);
-        if (event)
-        {
-            p->event = event;
-            MemoryBarrier();
-            *pp = p;
-        }
-    }
-    MemoryBarrier();
-}
-
-static void DeleteLockE(LockE_t** pp, LockE_t* p)
-/* E = exclusive */
-{
-    MemoryBarrier();
-    assert(*pp == NULL || *pp == p);
-    if (*pp && p)
-    {
-        HANDLE event = p->event;
-        assert(p->owner == 0);
-        assert(p->count == -1);
-        if (event)
-            CloseHandle(event);
-        MemoryBarrier();
-        *pp = 0;
-    }
-    MemoryBarrier();
-}
- 
-void __cdecl ThreadWin32__DeleteLockE(LockE_t* lock)
-/* E = exclusive */
-{
-    LockE_t* dummy;
-
-    MemoryBarrier();
-    dummy = lock;
-    DeleteLockE(&dummy, lock);
-    HeapFree(GetProcessHeap(), 0, lock);
-    MemoryBarrier();
-}
- 
-LockE_t* __cdecl ThreadWin32__NewLockE(void)
-/* E = exclusive */
-{
-    LockE_t* dummy = 0;
-    LockE_t* lock;
-
-    MemoryBarrier();
-    lock = (LockE_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
-    InitLockE(&dummy, lock);
-    if (!dummy)
-        ThreadWin32__DeleteLockE(lock);
-    MemoryBarrier();
-    return dummy;
-}
- 
-void __cdecl ThreadWin32__LockE(LockE_t* lock)
-/* E = exclusive */
-{
-    MemoryBarrier();
-    if (InterlockedIncrement(&lock->count) != 0)
-        WaitForSingleObject(lock->event, INFINITE);
-    assert(lock->owner == 0);
-    lock->owner = GetCurrentThreadId();
-    MemoryBarrier();
-}
- 
-void __cdecl ThreadWin32__UnlockE(LockE_t* lock)
-/* E = exclusive */
-{
-    MemoryBarrier();
-    assert(lock->owner == GetCurrentThreadId());
-    lock->owner = 0;
-    if (InterlockedDecrement(&lock->count) >= 0)
-        SetEvent(lock->event);
-    MemoryBarrier();
-}
-
-#endif
-
-/*-------------------------------------------------------------------------*/
-/* LockRE_t RE = recursive/exclusive */
-
-typedef CRITICAL_SECTION LockRE_t;
-
-LockRE_t* __cdecl ThreadWin32__NewLockRE(void)
-/* RE = recursive/exclusive */
-{
-    LockRE_t* lock;
-
-    MemoryBarrier();
-    lock = (LockRE_t*)HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(*lock));
-    if (lock)
-        InitializeCriticalSection(lock);
-    MemoryBarrier();
-    return lock;
-}
-
-void __cdecl ThreadWin32__DeleteLockRE(LockRE_t* lock)
-/* RE = recursive/exclusive */
-{
-    MemoryBarrier();
-    if (lock)
-    {
-        DeleteCriticalSection(lock);
-        HeapFree(GetProcessHeap(), 0, lock);
-    }
-    MemoryBarrier();
-}
-
-/*-------------------------------------------------------------------------*/
 
 void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
 {
@@ -233,12 +72,6 @@ void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
     *start = Available;
     *end = Used + info.RegionSize;
 }
-
-/*-------------------------------------------------------------------------*/
-/* some variables */
-
-static DWORD threadIndex = TLS_OUT_OF_INDEXES;
-static BOOL stack_grows_down;
 
 /*-------------------------------------------------------------------------*/
 /* context */
@@ -294,7 +127,7 @@ void __cdecl ThreadWin32__ProcessStopped(
 
   assert(context);
   assert(stackStart < stackEnd);
-  assert(stack_grows_down);
+  /* assert(stack_grows_down); */
   top = (char*)context->STACK_REGISTER;  ;
   assert(top <= stackEnd);
   assert(top);
@@ -330,7 +163,7 @@ void __cdecl ThreadWin32__ProcessLive(char *bottom, void (*p)(void *start, void 
   {
     char *top = (char*)&top;
     assert(bottom);
-    assert(stack_grows_down);
+    /* assert(stack_grows_down); */
     assert(top < bottom);
     p(top, bottom);
     p(&jb, ((char *)&jb) + sizeof(jb));
@@ -342,65 +175,22 @@ void __cdecl ThreadWin32__ProcessLive(char *bottom, void (*p)(void *start, void 
 }
 
 /*-------------------------------------------------------------------------*/
-/* activation (thread local) */
-
-BOOL __cdecl ThreadWin32__SetActivation(void* act)
-  /* LL = 0 */
-{
-    BOOL success = (threadIndex != TLS_OUT_OF_INDEXES);
-    assert(success);
-    success = TlsSetValue(threadIndex, act); /* NOTE: This CAN fail. */
-    assert(success);
-    return success;
-}
-
-void* __cdecl ThreadWin32__GetActivation(void)
-  /* If not the initial thread and not created by Fork, returns NIL */
-  /* LL = 0 */
-  /* This function is called VERY frequently. */
-{
-    assert(threadIndex != TLS_OUT_OF_INDEXES);
-    return TlsGetValue(threadIndex);
-}
-
-/*-------------------------------------------------------------------------*/
 /* variables and initialization/cleanup */
 
+/* implementing variables in C greatly increase debuggability (symbols work) */
+
+#define threadIndex ThreadWin32__threadIndex
+
+DWORD threadIndex = TLS_OUT_OF_INDEXES;
 CRITICAL_SECTION ThreadWin32__activeLock;   /* global lock for list of active threads */
 CRITICAL_SECTION ThreadWin32__slotLock;     /* global lock for thread slots table which maps untraced to traced */
 CRITICAL_SECTION ThreadWin32__heapLock;
 CRITICAL_SECTION ThreadWin32__perfLock;
 CRITICAL_SECTION ThreadWin32__initLock;
 
-HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
-{
-    HANDLE threadHandle = { 0 };
-    BOOL success = { 0 };
+extern const int ThreadWin32__sizeof_CRITICAL_SECTION = sizeof(CRITICAL_SECTION);
 
-    stack_grows_down = (bottom > &success);
-    assert(stack_grows_down);
-
-    InitializeCriticalSection(&ThreadWin32__activeLock);
-    InitializeCriticalSection(&ThreadWin32__heapLock);
-    InitializeCriticalSection(&ThreadWin32__perfLock);
-    InitializeCriticalSection(&ThreadWin32__slotLock);
-    InitializeCriticalSection(&ThreadWin32__initLock);
-
-    success = (threadIndex != TLS_OUT_OF_INDEXES);
-    if (!success)
-    {
-        threadIndex = TlsAlloc(); /* This CAN fail. */
-        success = (threadIndex != TLS_OUT_OF_INDEXES);
-    }
-    assert(success);
-    if (!success)
-        goto Exit;
-
-    success = DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(), &threadHandle, 0, 0, DUPLICATE_SAME_ACCESS);
-    assert(success);
-Exit:
-    return threadHandle;
-}
+#if 0
 
 void __cdecl ThreadWin32__Cleanup(void)
 {
@@ -417,8 +207,6 @@ void __cdecl ThreadWin32__Cleanup(void)
 }
 
 /*-------------------------------------------------------------------------*/
-
-#if 0
 
 BOOL WINAPI DllMain(HANDLE DllHandle, DWORD Reason, PVOID Static)
 {
