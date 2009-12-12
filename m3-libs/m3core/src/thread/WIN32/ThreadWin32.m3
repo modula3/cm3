@@ -9,18 +9,18 @@ UNSAFE MODULE ThreadWin32 EXPORTS
 Thread, ThreadF, Scheduler, RTThread, RTOS, RTHooks, ThreadWin32;
 
 IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
-IMPORT MutexRep, RTHeapRep, RTCollectorSRC, RTIO;
+IMPORT MutexRep, RTHeapRep, RTCollectorSRC, RTIO, WinBase;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT LONG, HANDLE, DWORD, UINT32;
-FROM WinBase IMPORT WaitForSingleObject, INFINITE,
-    CloseHandle, CreateThread, ResumeThread, Sleep, ResetEvent,
-    SuspendThread, GetThreadContext, SetLastError, GetLastError,
-    CREATE_SUSPENDED, GetCurrentThreadId, InterlockedCompareExchange,
-    InterlockedExchange, InterlockedIncrement, InterlockedDecrement,
-    SetEvent, WAIT_OBJECT_0, WAIT_TIMEOUT, CreateEvent, WaitForMultipleObjects;
+FROM WinNT IMPORT DUPLICATE_SAME_ACCESS, DWORD, HANDLE, LONG, SIZE_T, UINT32;
+FROM WinBase IMPORT CloseHandle, CREATE_SUSPENDED, CreateEvent, CreateThread,
+    CRITICAL_SECTION, DuplicateHandle, EnterCriticalSection,
+    GetCurrentProcess, GetCurrentThread, GetCurrentThreadId, GetLastError,
+    GetThreadContext, INFINITE, LeaveCriticalSection,
+    PCRITICAL_SECTION, ResetEvent, ResumeThread, SetEvent, SetLastError, Sleep,
+    SuspendThread, TLS_OUT_OF_INDEXES, TlsAlloc, TlsGetValue, TlsSetValue,
+    WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject;
 FROM ThreadContext IMPORT PCONTEXT;
-FROM WinNT IMPORT MemoryBarrier;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
 
@@ -29,7 +29,7 @@ VAR
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
-      lock: LockRE_t := NIL;
+      lock: PCRITICAL_SECTION := NIL;
       held: BOOLEAN := FALSE; (* LL = mutex.lock *) (* Because critical sections are thread re-entrant *)
     OVERRIDES
       acquire := LockMutex;
@@ -38,7 +38,7 @@ REVEAL
 
   Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
   (* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp *)
-      lock: LockRE_t := NIL;
+      lock: PCRITICAL_SECTION := NIL;
       waitEvent: HANDLE := NIL;
       counter := 0; (* LL = condition.lock *)
       tickets := 0; (* LL = condition.lock *)
@@ -53,7 +53,7 @@ REVEAL
       joined: BOOLEAN := FALSE;     (* LL = Self(); "Join" or "AlertJoin" has already returned *)
     END;
 
-  REVEAL Activation = UNTRACED BRANDED REF RECORD
+  TYPE Activation = UNTRACED BRANDED REF RECORD
       frame: ADDRESS := NIL;            (* exception handling support; this field is accessed MANY times
                                         so perhaps therefore should be first *)
       next, prev: Activation := NIL;    (* LL = activeLock; global doubly-linked, circular list of all active threads *)
@@ -88,68 +88,84 @@ PROCEDURE Release (m: Mutex) =
 PROCEDURE CleanMutex (r: REFANY) =
   VAR m := NARROW(r, Mutex);
   BEGIN
-    DeleteLockRE(m.lock);
-    m.lock := NIL;
+    DelCriticalSection(m.lock);
   END CleanMutex;
 
-PROCEDURE InitMutex (VAR m: LockRE_t; root: REFANY;
-                     Clean: PROCEDURE(root: REFANY)) =
-  VAR mutex := NewLockRE();
+PROCEDURE NewCriticalSection(): PCRITICAL_SECTION =
+  VAR a := NEW(PCRITICAL_SECTION);
   BEGIN
-    LockRE(ADR(initLock));
+    IF a # NIL THEN
+      WinBase.InitializeCriticalSection(a);
+    END;
+    RETURN a;
+  END NewCriticalSection;
+
+PROCEDURE DelCriticalSection(VAR a:PCRITICAL_SECTION) =
+  BEGIN
+    IF a # NIL THEN
+      WinBase.DeleteCriticalSection(a);
+      (*DISPOSE(a);*)
+      a := NIL;
+    END
+  END DelCriticalSection;
+
+PROCEDURE DelHandle(VAR a: HANDLE) =
+  BEGIN
+    IF a # NIL THEN
+      IF CloseHandle(a) = 0 THEN Choke(ThisLine()) END;
+      a := NIL;
+    END;
+  END DelHandle;
+
+PROCEDURE InitMutex (VAR m: PCRITICAL_SECTION; root: REFANY;
+                     Clean: PROCEDURE(root: REFANY)) =
+  VAR mutex := NewCriticalSection();
+  BEGIN
+    EnterCriticalSection(ADR(initLock));
     IF m = NIL THEN (* We won the race. *)
       IF mutex = NIL THEN (* But we failed. *)
-        UnlockRE(ADR(initLock));
+        LeaveCriticalSection(ADR(initLock));
         RuntimeError.Raise (RuntimeError.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
         m := mutex;
-        UnlockRE(ADR(initLock));
+        LeaveCriticalSection(ADR(initLock));
         RTHeapRep.RegisterFinalCleanup (root, Clean);
       END;
     ELSE (* another thread beat us in the race, ok *)
-      UnlockRE(ADR(initLock));
-      DeleteLockRE(mutex);
+      LeaveCriticalSection(ADR(initLock));
+      DelCriticalSection(mutex);
     END;
   END InitMutex;
-
 
 PROCEDURE CleanCondition (r: REFANY) =
   VAR c := NARROW(r, Condition);
   BEGIN
-    DeleteLockRE(c.lock);
-    c.lock := NIL;
-    IF c.waitEvent # NIL THEN
-      IF CloseHandle(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
-      c.waitEvent := NIL;
-    END;
+    DelCriticalSection(c.lock);
+    DelHandle(c.waitEvent);
   END CleanCondition;
 
 PROCEDURE InitCondition (VAR c: Condition) =
-  VAR lock := NewLockRE();
+  VAR lock := NewCriticalSection();
       event := CreateEvent(NIL, 1, 0, NIL);
   BEGIN
-    LockRE(ADR(initLock));
+    EnterCriticalSection(ADR(initLock));
     <* ASSERT (c.lock = NIL) = (c.waitEvent = NIL) *>
     IF c.lock = NIL THEN (* We won the race. *)
       IF lock = NIL OR event = NIL THEN (* But we failed. *)
-        DeleteLockRE(lock);
-        IF event # NIL THEN
-          IF CloseHandle(event) = 0 THEN Choke(ThisLine()) END;
-        END;
-        UnlockRE(ADR(initLock));
+        DelCriticalSection(lock);
+        DelHandle(event);
+        LeaveCriticalSection(ADR(initLock));
         RuntimeError.Raise (RuntimeError.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
         c.lock := lock;
         c.waitEvent := event;
-        UnlockRE(ADR(initLock));
+        LeaveCriticalSection(ADR(initLock));
         RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
       END;
     ELSE (* another thread beat us in the race, ok *)
-      UnlockRE(ADR(initLock));
-      DeleteLockRE(lock);
-      IF event # NIL THEN
-        IF CloseHandle(event) = 0 THEN Choke(ThisLine()) END;
-      END;
+      LeaveCriticalSection(ADR(initLock));
+      DelCriticalSection(lock);
+      DelHandle(event);
     END;
   END InitCondition;
 
@@ -157,7 +173,7 @@ PROCEDURE LockMutex (m: Mutex) =
   BEGIN
     IF perfOn THEN PerfChanged(State.locking) END;
     IF m.lock = NIL THEN InitMutex(m.lock, m, CleanMutex) END;
-    LockRE(m.lock);
+    EnterCriticalSection(m.lock);
     IF m.held THEN Die(ThisLine(), "attempt to lock mutex already locked by self") END;
     m.held := TRUE;
     IF perfOn THEN PerfRunning() END;
@@ -167,7 +183,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
   BEGIN
     IF NOT m.held THEN Die(ThisLine(), "attempt to release an unlocked mutex") END;
     m.held := FALSE;
-    UnlockRE(m.lock);
+    LeaveCriticalSection(m.lock);
   END UnlockMutex;
 
 (**********
@@ -182,7 +198,7 @@ PROCEDURE DumpSlots () =
     RTIO.PutText ("  self = ");
     RTIO.PutAddr (LOOPHOLE (slots[me.slot], ADDRESS));
     RTIO.PutText ("\r\n");
-    FOR i := 1 TO InterlockedRead(n_slotted) DO
+    FOR i := 1 TO n_slotted DO
       RTIO.PutText (" slot = ");
       RTIO.PutInt  (i);
       RTIO.PutText ("  thr = ");
@@ -225,7 +241,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
     <* ASSERT c.waitEvent # NIL *>
 
     handles[0] := c.waitEvent;
-    LockRE(conditionLock);
+    EnterCriticalSection(conditionLock);
 
     (* Capture the value of the counter before we start waiting.
      * We will not stop waiting until the counter changes.
@@ -249,7 +265,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
 
       (* Leave critical region (careful with the lock order) *)
 
-      UnlockRE(conditionLock);
+      LeaveCriticalSection(conditionLock);
       m.release();
 
       IF perfOn THEN PerfChanged(State.waiting) END;
@@ -276,11 +292,11 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
        *)
 
       m.acquire();
-      LockRE(conditionLock);
+      EnterCriticalSection(conditionLock);
 
       IF wait = (WAIT_OBJECT_0 + 1) THEN
         DEC(c.waiters);
-        UnlockRE(conditionLock);
+        LeaveCriticalSection(conditionLock);
         RAISE Alerted;
       END;
 
@@ -301,7 +317,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
       IF ResetEvent(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
     END;
 
-    UnlockRE(conditionLock);
+    LeaveCriticalSection(conditionLock);
 
   END InnerWait;
 
@@ -336,7 +352,7 @@ PROCEDURE Signal (c: Condition) =
     <* ASSERT conditionLock # NIL *>
     <* ASSERT c.waitEvent # NIL *>
 
-    LockRE(conditionLock);
+    EnterCriticalSection(conditionLock);
 
       IF c.waiters > c.tickets THEN
         IF SetEvent(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
@@ -344,7 +360,7 @@ PROCEDURE Signal (c: Condition) =
         INC(c.counter);
       END;
 
-    UnlockRE(conditionLock);
+    LeaveCriticalSection(conditionLock);
 
   END Signal;
 
@@ -360,7 +376,7 @@ PROCEDURE Broadcast (c: Condition) =
     <* ASSERT conditionLock # NIL *>
     <* ASSERT c.waitEvent # NIL *>
 
-    LockRE(conditionLock);
+    EnterCriticalSection(conditionLock);
 
       IF c.waiters > 0 THEN
         IF SetEvent(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
@@ -368,7 +384,7 @@ PROCEDURE Broadcast (c: Condition) =
         INC(c.counter);
       END;
 
-    UnlockRE(conditionLock);
+    LeaveCriticalSection(conditionLock);
 
   END Broadcast;
 
@@ -406,8 +422,10 @@ PROCEDURE Self (): T =
     t: T;
   BEGIN
     IF me = NIL THEN RETURN NIL; END;
-    t := slots[me.slot];
-    IF t.act # me THEN Die (ThisLine(), "thread with bad slot!"); END;
+    EnterCriticalSection(ADR(slotLock));
+      t := slots[me.slot];
+      IF t.act # me THEN Die (ThisLine(), "thread with bad slot!"); END;
+    LeaveCriticalSection(ADR(slotLock));
     RETURN t;
   END Self;
 
@@ -416,29 +434,27 @@ PROCEDURE AssignSlot (t: T) =
   VAR n: CARDINAL;  old_slots, new_slots: REF ARRAY OF T;
       retry := TRUE;
   BEGIN
-    LockRE(ADR(slotLock));
+    EnterCriticalSection(ADR(slotLock));
       WHILE retry DO
         retry := FALSE;
 
         (* make sure we have room to register this guy *)
         IF slots = NIL THEN
-          UnlockRE(ADR(slotLock));
+          LeaveCriticalSection(ADR(slotLock));
             slots := NEW (REF ARRAY OF T, 20);
-          LockRE(ADR(slotLock));
+          EnterCriticalSection(ADR(slotLock));
         END;
-        IF InterlockedRead(n_slotted) >= LAST (slots^) THEN
+        IF n_slotted >= LAST (slots^) THEN
           old_slots := slots;
           n := NUMBER (old_slots^);
-          UnlockRE(ADR(slotLock));
+          LeaveCriticalSection(ADR(slotLock));
             new_slots := NEW (REF ARRAY OF T, n+n);
-          LockRE(ADR(slotLock));
+          EnterCriticalSection(ADR(slotLock));
           IF old_slots = slots THEN
             (* we won any races that may have occurred. *)
             SUBARRAY (new_slots^, 0, n) := slots^;
-            MemoryBarrier(); (* finish filling in new_slots before writing to global slots
-                                so that slots can be read without a lock *)
             slots := new_slots;
-          ELSIF InterlockedRead(n_slotted) < LAST (slots^) THEN
+          ELSIF n_slotted < LAST (slots^) THEN
             (* we lost a race while allocating a new slot table,
                and the new table has room for us. *)
           ELSE
@@ -454,22 +470,24 @@ PROCEDURE AssignSlot (t: T) =
         IF next_slot >= NUMBER (slots^) THEN next_slot := 1; END;
       END;
 
-      EVAL InterlockedIncrement(ADR(n_slotted));
+      INC (n_slotted);
       t.act.slot := next_slot;
       slots [next_slot] := t;
 
-    UnlockRE(ADR(slotLock));
+    LeaveCriticalSection(ADR(slotLock));
   END AssignSlot;
 
 PROCEDURE FreeSlot (t: T; act: Activation) =
   (* LL = 0 *)
   BEGIN
-    EVAL InterlockedDecrement(ADR(n_slotted));
-    WITH z = slots [act.slot] DO
-      IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
-      z := NIL; (* need write this carefully? I don't think so. *)
-    END;
-    act.slot := 0;
+    EnterCriticalSection(ADR(slotLock));
+      DEC(n_slotted);
+      WITH z = slots [act.slot] DO
+        IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
+        z := NIL; (* need write this carefully? I don't think so. *)
+      END;
+      act.slot := 0;
+    LeaveCriticalSection(ADR(slotLock));
   END FreeSlot;
 
 (*------------------------------------------------------------ Fork, Join ---*)
@@ -524,7 +542,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     me: Activation := param;
     self: T := NIL;
   BEGIN
-    SetActivation (me);
+    EVAL SetActivation (me);
     (* We need to establish this binding before this thread touches any
        traced references.  Otherwise, it may trigger a heap page fault,
        which would call SuspendOthers, which requires an Activation. *)
@@ -537,12 +555,12 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 
     (* add to the list of active threads *)
     <*ASSERT allThreads # NIL*>
-    LockRE(ADR(activeLock));
+    EnterCriticalSection(ADR(activeLock));
       me.next := allThreads;
       me.prev := allThreads.prev;
       allThreads.prev.next := me;
       allThreads.prev := me;
-    UnlockRE(ADR(activeLock));
+    LeaveCriticalSection(ADR(activeLock));
 
     (* begin "RunThread" *)
 
@@ -581,10 +599,10 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     (* remove from the list of active threads *)
     <*ASSERT allThreads # NIL*>
     <*ASSERT allThreads # me*>
-    LockRE(ADR(activeLock));
+    EnterCriticalSection(ADR(activeLock));
       me.next.prev := me.prev;
       me.prev.next := me.next;
-    UnlockRE(ADR(activeLock));
+    LeaveCriticalSection(ADR(activeLock));
     me.next := NIL;
     me.prev := NIL;
 
@@ -766,7 +784,7 @@ PROCEDURE SuspendOthers () =
       act: Activation;
       nLive := 0;
   BEGIN
-    LockRE(ADR(activeLock));
+    EnterCriticalSection(ADR(activeLock));
 
     INC (suspend_cnt);
     IF suspend_cnt # 1 THEN
@@ -823,7 +841,7 @@ PROCEDURE ResumeOthers () =
       END;
     END;
 
-    UnlockRE(ADR(activeLock));
+    LeaveCriticalSection(ADR(activeLock));
   END ResumeOthers;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
@@ -932,43 +950,85 @@ TYPE
 PROCEDURE PerfChanged (s: State) =
   VAR e := ThreadEvent.T {kind := TE.Changed, id := GetCurrentThreadId(), state := s};
   BEGIN
-    LockRE(perfLock);
+    EnterCriticalSection(ADR(perfLock));
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    UnlockRE(perfLock);
+    LeaveCriticalSection(ADR(perfLock));
   END PerfChanged;
 
 PROCEDURE PerfDeleted () =
   VAR e := ThreadEvent.T {kind := TE.Deleted, id := GetCurrentThreadId()};
   BEGIN
-    LockRE(perfLock);
+    EnterCriticalSection(ADR(perfLock));
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    UnlockRE(perfLock);
+    LeaveCriticalSection(ADR(perfLock));
   END PerfDeleted;
 
 PROCEDURE PerfRunning () =
   VAR e := ThreadEvent.T {kind := TE.Running, id := GetCurrentThreadId()};
   BEGIN
-    LockRE(perfLock);
+    EnterCriticalSection(ADR(perfLock));
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    UnlockRE(perfLock);
+    LeaveCriticalSection(ADR(perfLock));
   END PerfRunning;
 
 (*-------------------------------------------------------- Initialization ---*)
 
+VAR
+  threadIndex: DWORD := TLS_OUT_OF_INDEXES; (* read-only;  TLS (Thread Local Storage) index *)
+
+PROCEDURE SetActivation(act: Activation): BOOLEAN =
+  (* LL = 0 *)
+  VAR success: BOOLEAN;
+  BEGIN
+    success := (threadIndex # TLS_OUT_OF_INDEXES);
+    <* ASSERT success *>
+    success := (0 # TlsSetValue(threadIndex, LOOPHOLE(act, SIZE_T))); (* NOTE: This CAN fail. *)
+    <* ASSERT success *>
+    RETURN success;
+  END SetActivation;
+
+PROCEDURE GetActivation(): Activation =
+  (* If not the initial thread and not created by Fork, returns NIL *)
+  (* LL = 0 *)
+  (* This function is called VERY frequently. *)
+  BEGIN
+    <* ASSERT threadIndex # TLS_OUT_OF_INDEXES *>
+    RETURN LOOPHOLE(TlsGetValue(threadIndex), Activation);
+  END GetActivation;
+
 PROCEDURE Init() =
+(* NOTE: We never cleanup; this would be a job for DllMain(DLL_PROCESS_DETACH)
+         if we implemented it. *)
   VAR
     self: T;
     me := NEW(Activation);
   BEGIN
-    me.handle := InitC(ADR(self));
+    WinBase.InitializeCriticalSection(ADR(activeLock));
+    WinBase.InitializeCriticalSection(ADR(heapLock));
+    WinBase.InitializeCriticalSection(ADR(perfLock));
+    WinBase.InitializeCriticalSection(ADR(slotLock));
+    WinBase.InitializeCriticalSection(ADR(initLock));
+
+    (* This CAN fail under low resources? *)
+    threadIndex := TlsAlloc();
+    IF threadIndex = TLS_OUT_OF_INDEXES THEN Choke(ThisLine()) END;
+
+    (* This CAN fail under very low resources? *)
+    IF DuplicateHandle(GetCurrentProcess(), GetCurrentThread(),
+            GetCurrentProcess(), ADR(me.handle), 0, 0, DUPLICATE_SAME_ACCESS) = 0 THEN
+      Choke(ThisLine());
+    END;
+
     me.next := me;
     me.prev := me;
-    SetActivation(me);
+    EVAL SetActivation(me);
     <* ASSERT allThreads = NIL *>
     allThreads := me;
     IF me.handle = NIL THEN
       Choke(ThisLine());
     END;
+
+    <* ASSERT BYTESIZE(CRITICAL_SECTION) = sizeof_CRITICAL_SECTION *>
 
     self := CreateT(me);
 
@@ -1001,28 +1061,29 @@ PROCEDURE Init() =
    and collector. *)
 
 VAR
-  HeapInCritical := 1;  (* LL = heap *)
-  HeapDoSignal: LONG;   (* LL = heap, but Interlocked just in case *)
+  HeapInCritical := 1;   (* LL = heap *)
+  HeapDoSignal: BOOLEAN; (* LL = heap *)
   HeapWaitMutex: MUTEX;
   HeapWaitCondition: Condition;
 
 PROCEDURE LockHeap () =
   BEGIN
     IF DEBUG THEN ThreadDebug.LockHeap(); END;
-    LockRE(ADR(heapLock));
+    EnterCriticalSection(ADR(heapLock));
     INC(HeapInCritical);
   END LockHeap;
 
 PROCEDURE UnlockHeap () =
-  VAR sig: LONG := 0;
+  VAR sig := FALSE;
   BEGIN   
     IF DEBUG THEN ThreadDebug.UnlockHeap(); END;
     DEC(HeapInCritical);
-    IF HeapInCritical = 0 THEN
-      sig := InterlockedCompareExchange(ADR(HeapDoSignal), 0, 1);
+    IF HeapInCritical = 0 AND HeapDoSignal THEN
+      HeapDoSignal := FALSE;
+      sig := TRUE;
     END;
-    UnlockRE(ADR(heapLock));
-    IF sig = 1 THEN Broadcast(HeapWaitCondition); END;
+    LeaveCriticalSection(ADR(heapLock));
+    IF sig THEN Broadcast(HeapWaitCondition); END;
   END UnlockHeap;
 
 PROCEDURE WaitHeap () =
@@ -1031,9 +1092,9 @@ PROCEDURE WaitHeap () =
     LOCK HeapWaitMutex DO
       DEC(HeapInCritical);
       <*ASSERT HeapInCritical = 0*>
-      UnlockRE(ADR(heapLock));
+      LeaveCriticalSection(ADR(heapLock));
       Wait(HeapWaitMutex, HeapWaitCondition);
-      LockRE(ADR(heapLock));
+      EnterCriticalSection(ADR(heapLock));
       <*ASSERT HeapInCritical = 0*>
       INC(HeapInCritical);
     END;
@@ -1043,7 +1104,8 @@ PROCEDURE BroadcastHeap () =
   (* LL >= RTOS.LockHeap *)
   BEGIN
     IF DEBUG THEN ThreadDebug.BroadcastHeap(); END;
-    EVAL InterlockedExchange(ADR(HeapDoSignal), 1);
+    <*ASSERT HeapInCritical # 0*>
+    HeapDoSignal := TRUE;
   END BroadcastHeap;
 
 (*--------------------------------------------- exception handling support --*)
