@@ -101,11 +101,21 @@ PROCEDURE CleanMutex (r: REFANY) =
 
 PROCEDURE InitMutex (VAR m: LockRE_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
+  VAR mutex := NewLockRE();
   BEGIN
-    IF InitMutexC(m) # 0 THEN (* We won the race and succeeded. *)
+    LockRE(initLock);
+    IF m = NIL THEN (* We won the race. *)
+      IF mutex = NIL THEN (* But we failed. *)
+        UnlockRE(initLock);
+        RuntimeError.Raise (RuntimeError.T.OutOfMemory);
+      ELSE (* We won the race and succeeded. *)
+        m := mutex;
+        UnlockRE(initLock);
         RTHeapRep.RegisterFinalCleanup (root, Clean);
-    ELSIF m = NIL THEN (* We failed and nobody else succeeded at about the same time. *)
-        RuntimeError.Raise(RuntimeError.T.OutOfMemory);
+      END;
+    ELSE (* another thread beat us in the race, ok *)
+      UnlockRE(initLock);
+      DeleteLockRE(mutex);
     END;
   END InitMutex;
 
