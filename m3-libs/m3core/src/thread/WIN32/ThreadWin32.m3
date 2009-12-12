@@ -542,7 +542,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     me: Activation := param;
     self: T := NIL;
   BEGIN
-    EVAL SetActivation (me);
+    SetActivation (me);
     (* We need to establish this binding before this thread touches any
        traced references.  Otherwise, it may trigger a heap page fault,
        which would call SuspendOthers, which requires an Activation. *)
@@ -976,7 +976,7 @@ PROCEDURE PerfRunning () =
 VAR
   threadIndex: DWORD := TLS_OUT_OF_INDEXES; (* read-only;  TLS (Thread Local Storage) index *)
 
-PROCEDURE SetActivation(act: Activation): BOOLEAN =
+PROCEDURE SetActivation(act: Activation) =
   (* LL = 0 *)
   VAR success: BOOLEAN;
   BEGIN
@@ -984,7 +984,6 @@ PROCEDURE SetActivation(act: Activation): BOOLEAN =
     <* ASSERT success *>
     success := (0 # TlsSetValue(threadIndex, LOOPHOLE(act, SIZE_T))); (* NOTE: This CAN fail. *)
     <* ASSERT success *>
-    RETURN success;
   END SetActivation;
 
 PROCEDURE GetActivation(): Activation =
@@ -1025,7 +1024,7 @@ PROCEDURE Init() =
 
     me.next := me;
     me.prev := me;
-    EVAL SetActivation(me);
+    SetActivation(me);
     <* ASSERT allThreads = NIL *>
     allThreads := me;
     IF me.handle = NIL THEN
