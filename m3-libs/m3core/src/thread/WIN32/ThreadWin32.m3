@@ -19,8 +19,7 @@ FROM WinBase IMPORT CloseHandle, CREATE_SUSPENDED, CreateEvent, CreateThread,
     GetThreadContext, INFINITE, LeaveCriticalSection,
     PCRITICAL_SECTION, ResetEvent, ResumeThread, SetEvent, SetLastError, Sleep,
     SuspendThread, TLS_OUT_OF_INDEXES, TlsAlloc, TlsGetValue, TlsSetValue,
-    WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject,
-    IsDebuggerPresent, DebugBreak;
+    WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject;
 FROM ThreadContext IMPORT PCONTEXT;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
