@@ -179,36 +179,6 @@ void __cdecl ThreadWin32__UnlockE(LockE_t* lock)
 
 typedef CRITICAL_SECTION LockRE_t;
 
-#define LOCKRE(name) \
-static LockRE_t name##Lock; \
-LockRE_t* ThreadWin32__##name##Lock; \
-
-static void InitLockRE(LockRE_t** pp, LockRE_t* p)
-{
-    MemoryBarrier();
-    assert(*pp == NULL || *pp == p);
-    if (!*pp)
-    {
-        InitializeCriticalSection(p);
-        MemoryBarrier();
-        *pp = p;
-    }
-    MemoryBarrier();
-}
-
-static void DeleteLockRE(LockRE_t** pp, LockRE_t* p)
-{
-    MemoryBarrier();
-    assert(*pp == NULL || *pp == p);
-    if (*pp)
-    {
-        DeleteCriticalSection(p);
-        MemoryBarrier();
-        *pp = 0;
-    }
-    MemoryBarrier();
-}
-
 LockRE_t* __cdecl ThreadWin32__NewLockRE(void)
 /* RE = recursive/exclusive */
 {
@@ -220,18 +190,6 @@ LockRE_t* __cdecl ThreadWin32__NewLockRE(void)
         InitializeCriticalSection(lock);
     MemoryBarrier();
     return lock;
-}
-
-void __cdecl ThreadWin32__LockRE(LockRE_t* lock)
-/* RE = recursive/exclusive */
-{
-    EnterCriticalSection(lock);
-}
-
-void __cdecl ThreadWin32__UnlockRE(LockRE_t* lock)
-/* RE = recursive/exclusive */
-{
-    LeaveCriticalSection(lock);
 }
 
 void __cdecl ThreadWin32__DeleteLockRE(LockRE_t* lock)
@@ -408,11 +366,11 @@ void* __cdecl ThreadWin32__GetActivation(void)
 /*-------------------------------------------------------------------------*/
 /* variables and initialization/cleanup */
 
-LOCKRE(active) /* global lock for list of active threads */
-LOCKRE(slot)   /* global lock for thread slots table which maps untraced to traced */
-LOCKRE(heap)
-LOCKRE(perf)
-LOCKRE(init)
+CRITICAL_SECTION ThreadWin32__activeLock;   /* global lock for list of active threads */
+CRITICAL_SECTION ThreadWin32__slotLock;     /* global lock for thread slots table which maps untraced to traced */
+CRITICAL_SECTION ThreadWin32__heapLock;
+CRITICAL_SECTION ThreadWin32__perfLock;
+CRITICAL_SECTION ThreadWin32__initLock;
 
 HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
 {
@@ -422,11 +380,11 @@ HANDLE __cdecl ThreadWin32__InitC(BOOL* bottom)
     stack_grows_down = (bottom > &success);
     assert(stack_grows_down);
 
-    InitLockRE(&ThreadWin32__activeLock, &activeLock);
-    InitLockRE(&ThreadWin32__heapLock, &heapLock);
-    InitLockRE(&ThreadWin32__perfLock, &perfLock);
-    InitLockRE(&ThreadWin32__slotLock, &slotLock);
-    InitLockRE(&ThreadWin32__initLock, &initLock);
+    InitializeCriticalSection(&ThreadWin32__activeLock);
+    InitializeCriticalSection(&ThreadWin32__heapLock);
+    InitializeCriticalSection(&ThreadWin32__perfLock);
+    InitializeCriticalSection(&ThreadWin32__slotLock);
+    InitializeCriticalSection(&ThreadWin32__initLock);
 
     success = (threadIndex != TLS_OUT_OF_INDEXES);
     if (!success)
@@ -446,10 +404,10 @@ Exit:
 
 void __cdecl ThreadWin32__Cleanup(void)
 {
-    DeleteLockRE(&ThreadWin32__activeLock, &activeLock);
-    DeleteLockRE(&ThreadWin32__heapLock, &heapLock);
-    DeleteLockRE(&ThreadWin32__perfLock, &perfLock);
-    DeleteLockRE(&ThreadWin32__slotLock, &slotLock);
+    DeleteCriticalSection(&ThreadWin32__activeLock);
+    DeleteCriticalSection(&ThreadWin32__heapLock);
+    DeleteCriticalSection(&ThreadWin32__perfLock);
+    DeleteCriticalSection(&ThreadWin32__slotLock);
 
     if (threadIndex != TLS_OUT_OF_INDEXES)
     {

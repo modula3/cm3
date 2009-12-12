@@ -11,16 +11,19 @@ FROM WinDef IMPORT LONG, HANDLE;
 FROM ThreadF IMPORT State;
 FROM ThreadContext IMPORT PCONTEXT;
 FROM Ctypes IMPORT int;
+FROM WinBase IMPORT CRITICAL_SECTION, PCRITICAL_SECTION,
+    EnterCriticalSection, LeaveCriticalSection;
 
 (*---------------------------------------------------------------------------*)
 
 (* locks (aka critical section aka mutex) *)
 
-TYPE LockRE_t = UNTRACED BRANDED REF ADDRESS; (* RE = recursive/exclusive *)
+TYPE LockRE_t = PCRITICAL_SECTION; (* RE = recursive/exclusive *)
 <*EXTERNAL ThreadWin32__NewLockRE*> PROCEDURE NewLockRE(): LockRE_t;
-<*EXTERNAL ThreadWin32__LockRE*> PROCEDURE LockRE(lock: LockRE_t);
-<*EXTERNAL ThreadWin32__UnlockRE*> PROCEDURE UnlockRE(lock: LockRE_t);
 <*EXTERNAL ThreadWin32__DeleteLockRE*> PROCEDURE DeleteLockRE(lock: LockRE_t);
+
+CONST LockRE = EnterCriticalSection;
+      UnlockRE = LeaveCriticalSection;
 
 TYPE LockE_t = UNTRACED BRANDED REF ADDRESS; (* E = exclusive *)
 <*EXTERNAL ThreadWin32__NewLockE*> PROCEDURE NewLockE(): LockE_t;
@@ -30,16 +33,16 @@ TYPE LockE_t = UNTRACED BRANDED REF ADDRESS; (* E = exclusive *)
 
 (* static locks *)
 
-<*EXTERNAL ThreadWin32__activeLock*> VAR activeLock: LockRE_t;
+<*EXTERNAL ThreadWin32__activeLock*> VAR activeLock: CRITICAL_SECTION;
     (* Global lock for list of active threads *)
     (* It is illegal to touch *any* traced references while
        holding activeLock because it is needed by SuspendOthers
        which is called by the collector's page fault handler. *)
 
-<*EXTERNAL ThreadWin32__slotLock*> VAR slotLock: LockRE_t;
+<*EXTERNAL ThreadWin32__slotLock*> VAR slotLock: CRITICAL_SECTION;
     (* Global lock for thread slot table that maps untraced to traced *)
 
-<*EXTERNAL ThreadWin32__initLock*> VAR initLock: LockRE_t;
+<*EXTERNAL ThreadWin32__initLock*> VAR initLock: CRITICAL_SECTION;
     (* Global lock for initializing locks *)
 
 (*------------------------------------------------------------------ Self ---*)

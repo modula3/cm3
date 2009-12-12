@@ -96,18 +96,18 @@ PROCEDURE InitMutex (VAR m: LockRE_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
   VAR mutex := NewLockRE();
   BEGIN
-    LockRE(initLock);
+    LockRE(ADR(initLock));
     IF m = NIL THEN (* We won the race. *)
       IF mutex = NIL THEN (* But we failed. *)
-        UnlockRE(initLock);
+        UnlockRE(ADR(initLock));
         RuntimeError.Raise (RuntimeError.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
         m := mutex;
-        UnlockRE(initLock);
+        UnlockRE(ADR(initLock));
         RTHeapRep.RegisterFinalCleanup (root, Clean);
       END;
     ELSE (* another thread beat us in the race, ok *)
-      UnlockRE(initLock);
+      UnlockRE(ADR(initLock));
       DeleteLockRE(mutex);
     END;
   END InitMutex;
@@ -128,7 +128,7 @@ PROCEDURE InitCondition (VAR c: Condition) =
   VAR lock := NewLockRE();
       event := CreateEvent(NIL, 1, 0, NIL);
   BEGIN
-    LockRE(initLock);
+    LockRE(ADR(initLock));
     <* ASSERT (c.lock = NIL) = (c.waitEvent = NIL) *>
     IF c.lock = NIL THEN (* We won the race. *)
       IF lock = NIL OR event = NIL THEN (* But we failed. *)
@@ -136,16 +136,16 @@ PROCEDURE InitCondition (VAR c: Condition) =
         IF event # NIL THEN
           IF CloseHandle(event) = 0 THEN Choke(ThisLine()) END;
         END;
-        UnlockRE(initLock);
+        UnlockRE(ADR(initLock));
         RuntimeError.Raise (RuntimeError.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
         c.lock := lock;
         c.waitEvent := event;
-        UnlockRE(initLock);
+        UnlockRE(ADR(initLock));
         RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
       END;
     ELSE (* another thread beat us in the race, ok *)
-      UnlockRE(initLock);
+      UnlockRE(ADR(initLock));
       DeleteLockRE(lock);
       IF event # NIL THEN
         IF CloseHandle(event) = 0 THEN Choke(ThisLine()) END;
@@ -416,22 +416,22 @@ PROCEDURE AssignSlot (t: T) =
   VAR n: CARDINAL;  old_slots, new_slots: REF ARRAY OF T;
       retry := TRUE;
   BEGIN
-    LockRE(slotLock);
+    LockRE(ADR(slotLock));
       WHILE retry DO
         retry := FALSE;
 
         (* make sure we have room to register this guy *)
         IF slots = NIL THEN
-          UnlockRE(slotLock);
+          UnlockRE(ADR(slotLock));
             slots := NEW (REF ARRAY OF T, 20);
-          LockRE(slotLock);
+          LockRE(ADR(slotLock));
         END;
         IF InterlockedRead(n_slotted) >= LAST (slots^) THEN
           old_slots := slots;
           n := NUMBER (old_slots^);
-          UnlockRE(slotLock);
+          UnlockRE(ADR(slotLock));
             new_slots := NEW (REF ARRAY OF T, n+n);
-          LockRE(slotLock);
+          LockRE(ADR(slotLock));
           IF old_slots = slots THEN
             (* we won any races that may have occurred. *)
             SUBARRAY (new_slots^, 0, n) := slots^;
@@ -458,7 +458,7 @@ PROCEDURE AssignSlot (t: T) =
       t.act.slot := next_slot;
       slots [next_slot] := t;
 
-    UnlockRE(slotLock);
+    UnlockRE(ADR(slotLock));
   END AssignSlot;
 
 PROCEDURE FreeSlot (t: T; act: Activation) =
@@ -537,12 +537,12 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
 
     (* add to the list of active threads *)
     <*ASSERT allThreads # NIL*>
-    LockRE(activeLock);
+    LockRE(ADR(activeLock));
       me.next := allThreads;
       me.prev := allThreads.prev;
       allThreads.prev.next := me;
       allThreads.prev := me;
-    UnlockRE(activeLock);
+    UnlockRE(ADR(activeLock));
 
     (* begin "RunThread" *)
 
@@ -581,10 +581,10 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     (* remove from the list of active threads *)
     <*ASSERT allThreads # NIL*>
     <*ASSERT allThreads # me*>
-    LockRE(activeLock);
+    LockRE(ADR(activeLock));
       me.next.prev := me.prev;
       me.prev.next := me.next;
-    UnlockRE(activeLock);
+    UnlockRE(ADR(activeLock));
     me.next := NIL;
     me.prev := NIL;
 
@@ -766,7 +766,7 @@ PROCEDURE SuspendOthers () =
       act: Activation;
       nLive := 0;
   BEGIN
-    LockRE(activeLock);
+    LockRE(ADR(activeLock));
 
     INC (suspend_cnt);
     IF suspend_cnt # 1 THEN
@@ -823,7 +823,7 @@ PROCEDURE ResumeOthers () =
       END;
     END;
 
-    UnlockRE(activeLock);
+    UnlockRE(ADR(activeLock));
   END ResumeOthers;
 
 PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
@@ -1009,7 +1009,7 @@ VAR
 PROCEDURE LockHeap () =
   BEGIN
     IF DEBUG THEN ThreadDebug.LockHeap(); END;
-    LockRE(heapLock);
+    LockRE(ADR(heapLock));
     INC(HeapInCritical);
   END LockHeap;
 
@@ -1021,7 +1021,7 @@ PROCEDURE UnlockHeap () =
     IF HeapInCritical = 0 THEN
       sig := InterlockedCompareExchange(ADR(HeapDoSignal), 0, 1);
     END;
-    UnlockRE(heapLock);
+    UnlockRE(ADR(heapLock));
     IF sig = 1 THEN Broadcast(HeapWaitCondition); END;
   END UnlockHeap;
 
@@ -1031,9 +1031,9 @@ PROCEDURE WaitHeap () =
     LOCK HeapWaitMutex DO
       DEC(HeapInCritical);
       <*ASSERT HeapInCritical = 0*>
-      UnlockRE(heapLock);
+      UnlockRE(ADR(heapLock));
       Wait(HeapWaitMutex, HeapWaitCondition);
-      LockRE(heapLock);
+      LockRE(ADR(heapLock));
       <*ASSERT HeapInCritical = 0*>
       INC(HeapInCritical);
     END;
