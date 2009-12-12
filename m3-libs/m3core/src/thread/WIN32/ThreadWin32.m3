@@ -104,7 +104,7 @@ PROCEDURE DelCriticalSection(VAR a:PCRITICAL_SECTION) =
   BEGIN
     IF a # NIL THEN
       WinBase.DeleteCriticalSection(a);
-      (*DISPOSE(a);*)
+      DISPOSE(a);
       a := NIL;
     END
   END DelCriticalSection;
