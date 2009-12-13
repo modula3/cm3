@@ -676,7 +676,7 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
   BEGIN
     IF DEBUG THEN ThreadDebug.AlertJoin(t); END;
     IF self = NIL THEN Die(ThisLine(), "AlertJoin called from a non-Modula-3 thread") END;
-    RETURN XJoin(t, NIL, alertable := TRUE);
+    RETURN XJoin(t, self, alertable := TRUE);
   END AlertJoin;
 
 (*---------------------------------------------------- Scheduling support ---*)
