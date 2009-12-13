@@ -330,7 +330,7 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
-  <*FATAL Alerted*>
+  <* FATAL Alerted *>
   (* LL = m *)
   VAR self := GetActivation();
   BEGIN
@@ -530,7 +530,7 @@ PROCEDURE CleanT(r: REFANY) =
     END;
   END CleanT;
 
-<*WINAPI*>
+<* WINAPI *>
 PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   VAR
     me: Activation := param;
@@ -548,7 +548,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     GetStackBounds(me.stackStart, me.stackEnd); (* enable GC scanning of this stack *)
 
     (* add to the list of active threads *)
-    <*ASSERT allThreads # NIL*>
+    <* ASSERT allThreads # NIL *>
     EnterCriticalSection(ADR(activeLock));
       me.next := allThreads;
       me.prev := allThreads.prev;
@@ -586,8 +586,8 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     (* end "RunThread" *)
 
     (* remove from the list of active threads *)
-    <*ASSERT allThreads # NIL*>
-    <*ASSERT allThreads # me*>
+    <* ASSERT allThreads # NIL *>
+    <* ASSERT allThreads # me *>
     EnterCriticalSection(ADR(activeLock));
       me.next.prev := me.prev;
       me.prev.next := me.next;
@@ -608,9 +608,9 @@ PROCEDURE Fork(closure: Closure): T =
   BEGIN
     IF DEBUG THEN ThreadDebug.Fork(); END;
 
-    <*ASSERT allThreads # NIL*>
-    <*ASSERT allThreads.next # NIL*>
-    <*ASSERT allThreads.prev # NIL*>
+    <* ASSERT allThreads # NIL *>
+    <* ASSERT allThreads.next # NIL *>
+    <* ASSERT allThreads.prev # NIL *>
 
     (* determine the initial size of the stack for this thread *)
     stack_size := default_stack;
@@ -656,7 +656,7 @@ PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
   END XJoin;
 
 PROCEDURE Join(t: T): REFANY =
-  <*FATAL Alerted*>
+  <* FATAL Alerted *>
   BEGIN
     IF DEBUG THEN ThreadDebug.Join(t); END;
     RETURN XJoin(t, alertable := FALSE);
@@ -814,7 +814,7 @@ PROCEDURE ResumeOthers () =
         IF DEBUG THEN
           RTIO.PutText("resuming act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
         END;
-        <*ASSERT (act.suspendCount > 0 AND act.stackPointer # NIL) OR (act.stackStart = NIL AND act.stackEnd = NIL)*>
+        <* ASSERT (act.suspendCount > 0 AND act.stackPointer # NIL) OR (act.stackStart = NIL AND act.stackEnd = NIL) *>
         act.stackPointer := NIL;
         IF act.suspendCount > 0 THEN
           IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
@@ -859,10 +859,10 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
     ProcessStopped(act.stackStart, act.stackEnd, act.context, p);
   END ProcessOther;
 
-PROCEDURE ProcessEachStack (<*UNUSED*>p: PROCEDURE (start, limit: ADDRESS)) =
+PROCEDURE ProcessEachStack (<* UNUSED *>p: PROCEDURE (start, limit: ADDRESS)) =
   BEGIN
     (* experimental, unimplemented here *)
-    <*ASSERT FALSE*>
+    <* ASSERT FALSE *>
   END ProcessEachStack;
 
 (*------------------------------------------------------------ misc. stuff ---*)
@@ -1028,7 +1028,7 @@ PROCEDURE Init() =
       RTIO.PutText("created initial act="); RTIO.PutAddr(me.handle); RTIO.PutText("\n"); RTIO.Flush();
     END;
 
-    <*ASSERT HeapInCritical = 1*>
+    <* ASSERT HeapInCritical = 1 *>
     HeapInCritical := 0;
 
     PerfStart();
@@ -1077,11 +1077,11 @@ PROCEDURE WaitHeap () =
     IF DEBUG THEN ThreadDebug.WaitHeap(); END;
     LOCK HeapWaitMutex DO
       DEC(HeapInCritical);
-      <*ASSERT HeapInCritical = 0*>
+      <* ASSERT HeapInCritical = 0 *>
       LeaveCriticalSection(ADR(heapLock));
       Wait(HeapWaitMutex, HeapWaitCondition);
       EnterCriticalSection(ADR(heapLock));
-      <*ASSERT HeapInCritical = 0*>
+      <* ASSERT HeapInCritical = 0 *>
       INC(HeapInCritical);
     END;
   END WaitHeap;
@@ -1090,7 +1090,7 @@ PROCEDURE BroadcastHeap () =
   (* LL >= RTOS.LockHeap *)
   BEGIN
     IF DEBUG THEN ThreadDebug.BroadcastHeap(); END;
-    <*ASSERT HeapInCritical # 0*>
+    <* ASSERT HeapInCritical # 0 *>
     HeapDoSignal := TRUE;
   END BroadcastHeap;
 
@@ -1115,7 +1115,7 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
     me.frame := f;
   END PushEFrame;
 
-(*RTHooks.PopEFrame*)
+(* RTHooks.PopEFrame *)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
     GetActivation().frame := frame;
