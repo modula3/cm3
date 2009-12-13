@@ -7,8 +7,7 @@
 %      modified on Fri May 14 17:02:06 PDT 1993 by meehan
 %      modified on Fri Sep 25 14:16:22 PDT 1992 by steveg
 
-%include_dir(OS_TYPE)
-include_dir ("POSIX")
+include_dir(OS_TYPE)
 
 Module ("AnchorSplit")
 Module ("AnchorHelpSplit")
