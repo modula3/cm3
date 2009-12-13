@@ -12,20 +12,19 @@ IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT MutexRep, RTHeapRep, RTCollectorSRC, RTIO, WinBase;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT DUPLICATE_SAME_ACCESS, DWORD, HANDLE, LONG, SIZE_T, UINT32;
+FROM WinNT IMPORT DUPLICATE_SAME_ACCESS, DWORD, HANDLE, UINT8, LONG,
+    MEMORY_BASIC_INFORMATION, PMEMORY_BASIC_INFORMATION, SIZE_T;
 FROM WinBase IMPORT CloseHandle, CREATE_SUSPENDED, CreateEvent, CreateThread,
-    CRITICAL_SECTION, DuplicateHandle, EnterCriticalSection,
-    GetCurrentProcess, GetCurrentThread, GetCurrentThreadId, GetLastError,
-    GetThreadContext, INFINITE, LeaveCriticalSection,
-    PCRITICAL_SECTION, ResetEvent, ResumeThread, SetEvent, SetLastError, Sleep,
-    SuspendThread, TLS_OUT_OF_INDEXES, TlsAlloc, TlsGetValue, TlsSetValue,
-    WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject;
+    DuplicateHandle, EnterCriticalSection, GetCurrentProcess, GetCurrentThread,
+    GetCurrentThreadId, GetLastError, GetThreadContext, INFINITE,
+    LeaveCriticalSection, PCRITICAL_SECTION, ResetEvent, ResumeThread, SetEvent,
+    Sleep, SuspendThread, TLS_OUT_OF_INDEXES, TlsAlloc, TlsGetValue, TlsSetValue,
+    VirtualQuery, WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject;
 FROM ThreadContext IMPORT PCONTEXT;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
 
-VAR
-  default_stack: DWORD := 8192;
+VAR default_stack: DWORD := 8192;
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
@@ -187,8 +186,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
 
 (**********
 PROCEDURE DumpSlots () =
-  VAR
-    me := GetActivation();
+  VAR me := GetActivation();
   BEGIN
     RTIO.PutText ("me = ");
     RTIO.PutAddr (me);
@@ -211,8 +209,8 @@ PROCEDURE DumpSlots () =
 
 (*---------------------------------------- Condition variables and Alerts ---*)
 
-PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
-                    alertable: BOOLEAN) RAISES {Alerted} =
+PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
+                alertable: BOOLEAN) RAISES {Alerted} =
   (* LL = m on entry and exit, but not for the duration
    * see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp
    * NOTE that they merge the user lock and the condition lock.
@@ -230,7 +228,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
       conditionLock := c.lock;
   BEGIN
 
-    IF DEBUG THEN ThreadDebug.InnerWait(m, c, act); END;
+    IF DEBUG THEN ThreadDebug.XWait(m, c, act); END;
 
     IF conditionLock = NIL THEN
       InitCondition(c);
@@ -238,6 +236,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
     END;
     <* ASSERT conditionLock # NIL *>
     <* ASSERT c.waitEvent # NIL *>
+    <* ASSERT act.alertEvent # NIL *>
 
     handles[0] := c.waitEvent;
     EnterCriticalSection(conditionLock);
@@ -318,7 +317,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
 
     LeaveCriticalSection(conditionLock);
 
-  END InnerWait;
+  END XWait;
 
 PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
@@ -326,17 +325,17 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   BEGIN
     IF DEBUG THEN ThreadDebug.AlertWait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
-    InnerWait(m, c, self, alertable := TRUE);
+    XWait(m, c, self, alertable := TRUE);
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
-  <*FATAL Alerted*>
+  <* FATAL Alerted *>
   (* LL = m *)
   VAR self := GetActivation();
   BEGIN
     IF DEBUG THEN ThreadDebug.Wait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
-    InnerWait(m, c, self, alertable := FALSE);
+    XWait(m, c, self, alertable := FALSE);
   END Wait;
 
 PROCEDURE Signal (c: Condition) =
@@ -394,16 +393,24 @@ PROCEDURE Alert(t: T) =
     IF SetEvent(t.act.alertEvent) = 0 THEN Choke(ThisLine()) END;
   END Alert;
 
-PROCEDURE TestAlert(): BOOLEAN =
-  VAR self := GetActivation();
+PROCEDURE XTestAlert(self: Activation): BOOLEAN =
+  VAR wait: DWORD;
   BEGIN
-    IF DEBUG THEN ThreadDebug.TestAlert(); END;
     IF self = NIL THEN
       (* Not created by Fork; not alertable *)
       RETURN FALSE
     ELSE
-      RETURN WaitForSingleObject(self.alertEvent, 0) = WAIT_OBJECT_0;
+      <* ASSERT self.alertEvent # NIL *>
+      wait := WaitForSingleObject(self.alertEvent, 0);
+      <* ASSERT wait = WAIT_TIMEOUT OR wait = WAIT_OBJECT_0 *>
+      RETURN (wait = WAIT_OBJECT_0);
     END;
+  END XTestAlert;
+
+PROCEDURE TestAlert(): BOOLEAN =
+  BEGIN
+    IF DEBUG THEN ThreadDebug.TestAlert(); END;
+    RETURN XTestAlert(GetActivation());
   END TestAlert;
 
 (*------------------------------------------------------------------ Self ---*)
@@ -416,9 +423,8 @@ VAR (* LL = slotLock *)
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
-  VAR
-    me := GetActivation();
-    t: T;
+  VAR me := GetActivation();
+      t: T;
   BEGIN
     IF me = NIL THEN RETURN NIL; END;
     EnterCriticalSection(ADR(slotLock));
@@ -480,10 +486,12 @@ PROCEDURE FreeSlot (t: T; act: Activation) =
   (* LL = 0 *)
   BEGIN
     EnterCriticalSection(ADR(slotLock));
+      <* ASSERT act.slot > 0 *>
+      <* ASSERT n_slotted > 0 *>
       DEC(n_slotted);
       WITH z = slots [act.slot] DO
         IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
-        z := NIL; (* need write this carefully? I don't think so. *)
+        z := NIL;
       END;
       act.slot := 0;
     LeaveCriticalSection(ADR(slotLock));
@@ -514,32 +522,24 @@ PROCEDURE CreateT (act: Activation): T =
     RETURN t;
   END CreateT;
 
-PROCEDURE DeleteActivation(VAR act: Activation) =
-  VAR error: UINT32;
-BEGIN
-  IF act # NIL THEN
-    error := GetLastError();
-    DeleteContext(act.context);
-    DelHandle(act.waitEvent, ThisLine());
-    DelHandle(act.alertEvent, ThisLine());
-    DelHandle(act.handle, ThisLine());
-    DISPOSE(act);
-    act := NIL;
-    SetLastError(error);
-  END;
-END DeleteActivation;
-
 PROCEDURE CleanT(r: REFANY) =
   VAR t := NARROW(r, T);
+      act := t.act;
   BEGIN
-    DeleteActivation(t.act);
+    IF act # NIL THEN
+      DeleteContext(act.context);
+      DelHandle(act.waitEvent, ThisLine());
+      DelHandle(act.alertEvent, ThisLine());
+      DelHandle(act.handle, ThisLine());
+      DISPOSE(act);
+      t.act := NIL;
+    END;
   END CleanT;
 
-<*WINAPI*>
+<* WINAPI *>
 PROCEDURE ThreadBase (param: ADDRESS): DWORD =
-  VAR
-    me: Activation := param;
-    self: T := NIL;
+  VAR me: Activation := param;
+      self: T := NIL;
   BEGIN
     SetActivation (me);
     (* We need to establish this binding before this thread touches any
@@ -553,7 +553,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     GetStackBounds(me.stackStart, me.stackEnd); (* enable GC scanning of this stack *)
 
     (* add to the list of active threads *)
-    <*ASSERT allThreads # NIL*>
+    <* ASSERT allThreads # NIL *>
     EnterCriticalSection(ADR(activeLock));
       me.next := allThreads;
       me.prev := allThreads.prev;
@@ -591,8 +591,8 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
     (* end "RunThread" *)
 
     (* remove from the list of active threads *)
-    <*ASSERT allThreads # NIL*>
-    <*ASSERT allThreads # me*>
+    <* ASSERT allThreads # NIL *>
+    <* ASSERT allThreads # me *>
     EnterCriticalSection(ADR(activeLock));
       me.next.prev := me.prev;
       me.prev.next := me.next;
@@ -607,18 +607,17 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   END ThreadBase;
 
 PROCEDURE Fork(closure: Closure): T =
-  VAR t: T;
-      stack_size: DWORD;
+  VAR t := CreateT(NEW(Activation));
+      stack_size := default_stack;
       id: DWORD;
   BEGIN
     IF DEBUG THEN ThreadDebug.Fork(); END;
 
-    <*ASSERT allThreads # NIL*>
-    <*ASSERT allThreads.next # NIL*>
-    <*ASSERT allThreads.prev # NIL*>
+    <* ASSERT allThreads # NIL *>
+    <* ASSERT allThreads.next # NIL *>
+    <* ASSERT allThreads.prev # NIL *>
 
     (* determine the initial size of the stack for this thread *)
-    stack_size := default_stack;
     TYPECASE closure OF
     | SizedClosure (scl) => IF scl.stackSize # 0 THEN 
                               stack_size := scl.stackSize * BYTESIZE(INTEGER);
@@ -626,7 +625,6 @@ PROCEDURE Fork(closure: Closure): T =
     ELSE (*skip*)
     END;
 
-    t := CreateT(NEW(Activation));
     t.closure := closure;
 
     (* create suspended just so we can store act.handle before it runs;
@@ -640,14 +638,18 @@ PROCEDURE Fork(closure: Closure): T =
     RETURN t;
   END Fork;
 
-PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
+PROCEDURE XJoin (t: T; act: Activation; alertable: BOOLEAN): REFANY RAISES {Alerted} =
   VAR (* The order of the handles is important. *)
       handles := ARRAY [0..1] OF HANDLE {t.act.handle, NIL(*alertEvent*)};
       wait: DWORD;
   BEGIN
     IF t.joined # 0 THEN Die(ThisLine(), "attempt to join with thread twice") END;
+    <* ASSERT handles[0] # NIL *>
     IF alertable THEN
-      handles[1] := GetActivation().alertEvent;
+      <* ASSERT act # NIL *>
+      <* ASSERT act.alertEvent # NIL *>
+      handles[1] := act.alertEvent;
+      <* ASSERT handles[1] # NIL *>
     END;
     wait := WaitForMultipleObjects(1 + ORD(alertable), ADR(handles[0]), 0, INFINITE);
     <* ASSERT wait = WAIT_OBJECT_0 OR wait = (WAIT_OBJECT_0 + 1) *>
@@ -661,58 +663,79 @@ PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
   END XJoin;
 
 PROCEDURE Join(t: T): REFANY =
-  <*FATAL Alerted*>
+  <* FATAL Alerted *>
   BEGIN
     IF DEBUG THEN ThreadDebug.Join(t); END;
-    RETURN XJoin(t, alertable := FALSE);
+    RETURN XJoin(t, NIL, alertable := FALSE);
   END Join;
 
 PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
+  VAR self := GetActivation();
   BEGIN
     IF DEBUG THEN ThreadDebug.AlertJoin(t); END;
-    RETURN XJoin(t, alertable := TRUE);
+    IF self = NIL THEN Die(ThisLine(), "AlertJoin called from a non-Modula-3 thread") END;
+    RETURN XJoin(t, self, alertable := TRUE);
   END AlertJoin;
 
 (*---------------------------------------------------- Scheduling support ---*)
 
 PROCEDURE Pause(n: LONGREAL) =
-  VAR amount, thisTime: LONGREAL;
-  CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
+  <* FATAL Alerted *>
   BEGIN
-  (* The loop here is to enable waiting more than 4billion milliseconds;
-     most waits will just wait once.
-   *)
-    amount := n;
-    WHILE amount > 0.0D0 DO
-      thisTime := MIN (Limit, amount);
-      amount := amount - thisTime;
-      Sleep(ROUND(thisTime*1000.0D0));
-    END;
+    XPause(NIL, n, alertable := FALSE);
   END Pause;
 
 PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
-  VAR amount, thisTime: LONGREAL;
-      self := GetActivation();
+  VAR self := GetActivation();
+  BEGIN
+    IF self = NIL THEN Die(ThisLine(), "AlertPause called from a non-Modula-3 thread") END;
+    XPause(self, n, alertable := TRUE);
+  END AlertPause;
+
+PROCEDURE XPause(self: Activation; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
+  VAR amount := n;
+      thisTime: LONGREAL;
+      wait: DWORD;
       alerted := FALSE;
   CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
   BEGIN
-  (* The loop here is to enable waiting more than 4billion milliseconds;
-   * most waits will just wait once.
-   *)
-    IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
-    IF n <= 0.0d0 THEN RETURN END;
-    amount := n;
+
+    IF DEBUG THEN ThreadDebug.XPause(self, n, alertable); END;
+
+    IF alertable THEN
+      <* ASSERT self # NIL *>
+      <* ASSERT self.alertEvent # NIL *>
+    END;
+
+    IF amount <= 0.0d0 THEN
+      IF alertable THEN
+        IF XTestAlert(self) THEN
+          RAISE Alerted;
+        END;
+      END;
+      RETURN;
+    END;
+
     IF perfOn THEN PerfChanged(State.pausing) END;
+
+    (* Loop to handle waiting more than 4 billion milliseconds. *)
+
     WHILE (NOT alerted) AND (amount > 0.0D0) DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
-      alerted := (WaitForSingleObject(self.alertEvent, ROUND(thisTime*1000.0D0)) = WAIT_OBJECT_0);
+      IF alertable THEN
+        wait := WaitForSingleObject(self.alertEvent, ROUND(thisTime*1000.0D0));
+        <* ASSERT wait = WAIT_TIMEOUT OR wait = WAIT_OBJECT_0 *>
+        alerted := (wait = WAIT_OBJECT_0);
+      ELSE
+        Sleep(ROUND(thisTime*1000.0D0));
+      END;
     END;
     IF perfOn THEN PerfRunning() END;
     IF alerted THEN
       RAISE Alerted;
     END;
-  END AlertPause;
+  END XPause;
 
 PROCEDURE Yield() =
   BEGIN
@@ -741,8 +764,7 @@ PROCEDURE IncDefaultStackSize(inc: CARDINAL)=
    handler of the garbage collector.  So, if they touched traced references,
    they could trigger indefinite invocations of the fault handler. *)
 
-VAR
-  suspend_cnt: CARDINAL := 0;  (* LL = activeLock *)
+VAR suspend_cnt: CARDINAL := 0; (* LL = activeLock *)
 
 PROCEDURE GetContextAndCheckStack(act: Activation): BOOLEAN =
 BEGIN
@@ -819,7 +841,7 @@ PROCEDURE ResumeOthers () =
         IF DEBUG THEN
           RTIO.PutText("resuming act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
         END;
-        <*ASSERT (act.suspendCount > 0 AND act.stackPointer # NIL) OR (act.stackStart = NIL AND act.stackEnd = NIL)*>
+        <* ASSERT (act.suspendCount > 0 AND act.stackPointer # NIL) OR (act.stackStart = NIL AND act.stackEnd = NIL) *>
         act.stackPointer := NIL;
         IF act.suspendCount > 0 THEN
           IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
@@ -835,10 +857,9 @@ PROCEDURE ResumeOthers () =
 PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeLock.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR me := GetActivation();
-      act: Activation;
+      act := me.next;
   BEGIN
     ProcessMe(me, p);
-    act := me.next;
     WHILE act # me DO
       ProcessOther(act, p);
       act := act.next;
@@ -864,10 +885,10 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
     ProcessStopped(act.stackStart, act.stackEnd, act.context, p);
   END ProcessOther;
 
-PROCEDURE ProcessEachStack (<*UNUSED*>p: PROCEDURE (start, limit: ADDRESS)) =
+PROCEDURE ProcessEachStack (<* UNUSED *>p: PROCEDURE (start, limit: ADDRESS)) =
   BEGIN
     (* experimental, unimplemented here *)
-    <*ASSERT FALSE*>
+    <* ASSERT FALSE *>
   END ProcessEachStack;
 
 (*------------------------------------------------------------ misc. stuff ---*)
@@ -911,9 +932,8 @@ PROCEDURE Choke (lineno: INTEGER) =
 
 (*------------------------------------------------------ ShowThread hooks ---*)
 
-VAR
-  perfW : RTPerfTool.Handle;
-  (* perfOn: BOOLEAN := FALSE;                          (* LL = perfMu *) *)
+VAR perfW : RTPerfTool.Handle;
+    (* perfOn: BOOLEAN := FALSE;    (* LL = perfLock *) *)
 
 PROCEDURE PerfStart () =
   BEGIN
@@ -961,14 +981,42 @@ PROCEDURE PerfRunning () =
 
 (*-------------------------------------------------------- Initialization ---*)
 
-VAR
-  threadIndex: DWORD := TLS_OUT_OF_INDEXES; (* read-only;  TLS (Thread Local Storage) index *)
+PROCEDURE GetStackBounds(VAR start: ADDRESS; VAR end: ADDRESS) =
+  VAR info: MEMORY_BASIC_INFORMATION;
+      a := VirtualQuery(ADR(info), ADR(info), BYTESIZE(info));
+
+      (* how far down has the stack been used so far *)
+      used: UNTRACED REF UINT8 := info.BaseAddress;
+
+      (* how far down the stack can grow *)
+      available := info.AllocationBase;
+
+      b: UINT8;
+  BEGIN
+    <* ASSERT a >= BYTESIZE(info) *>
+    <* ASSERT available # NIL *>
+    <* ASSERT used # NIL *>
+    <* ASSERT info.RegionSize # 0 *>
+    <* ASSERT ADR(info) > available *>
+    <* ASSERT ADR(info) >= used *>
+    <* ASSERT ADR(info) < (used + info.RegionSize) *>
+
+    (* verify it is readable
+     * NOTE: Do not verify *available -- stack pages must be touched in order.
+     *)
+    b := used^;
+    b := LOOPHOLE(used + info.RegionSize - 1, UNTRACED REF UINT8)^;
+
+    start := available;
+    end := used + info.RegionSize;
+  END GetStackBounds;
+
+VAR threadIndex: DWORD := TLS_OUT_OF_INDEXES; (* read-only;  TLS (Thread Local Storage) index *)
 
 PROCEDURE SetActivation(act: Activation) =
   (* LL = 0 *)
-  VAR success: BOOLEAN;
+  VAR success := (threadIndex # TLS_OUT_OF_INDEXES);
   BEGIN
-    success := (threadIndex # TLS_OUT_OF_INDEXES);
     <* ASSERT success *>
     success := (0 # TlsSetValue(threadIndex, LOOPHOLE(act, SIZE_T))); (* NOTE: This CAN fail. *)
     <* ASSERT success *>
@@ -990,9 +1038,16 @@ PROCEDURE Init() =
  *       Assertion failures depend on some of Init having run. (e.g. SetActivation)
  *       Test by making the ASSERT fail.
  *)
-  VAR
-    self: T;
-    me := NEW(Activation);
+  VAR self: T;
+      me := NEW(Activation);
+      basicInfo := LOOPHOLE(NIL, PMEMORY_BASIC_INFORMATION);
+      clonedHeaderCheck := ClonedHeaderCheck_t{
+        MEMORY_BASIC_INFORMATION_BaseAddress := ClonedHeaderCheckField_t{ADR(basicInfo.BaseAddress) - basicInfo,
+                                                                         BYTESIZE(basicInfo.BaseAddress)},
+        MEMORY_BASIC_INFORMATION_AllocationBase := ClonedHeaderCheckField_t{ADR(basicInfo.AllocationBase) - basicInfo,
+                                                                            BYTESIZE(basicInfo.AllocationBase)},
+        MEMORY_BASIC_INFORMATION_RegionSize := ClonedHeaderCheckField_t{ADR(basicInfo.RegionSize) - basicInfo,
+                                                                        BYTESIZE(basicInfo.RegionSize)}};
   BEGIN
     WinBase.InitializeCriticalSection(ADR(activeLock));
     WinBase.InitializeCriticalSection(ADR(heapLock));
@@ -1019,7 +1074,7 @@ PROCEDURE Init() =
       Choke(ThisLine());
     END;
 
-    <* ASSERT BYTESIZE(CRITICAL_SECTION) = sizeof_CRITICAL_SECTION *>
+    ClonedHeaderCheck(ADR(clonedHeaderCheck), BYTESIZE(clonedHeaderCheck));
 
     self := CreateT(me);
 
@@ -1033,7 +1088,7 @@ PROCEDURE Init() =
       RTIO.PutText("created initial act="); RTIO.PutAddr(me.handle); RTIO.PutText("\n"); RTIO.Flush();
     END;
 
-    <*ASSERT HeapInCritical = 1*>
+    <* ASSERT HeapInCritical = 1 *>
     HeapInCritical := 0;
 
     PerfStart();
@@ -1051,11 +1106,10 @@ PROCEDURE Init() =
 (* These procedures provide synchronization primitives for the allocator
    and collector. *)
 
-VAR
-  HeapInCritical := 1;   (* LL = heap *)
-  HeapDoSignal: BOOLEAN; (* LL = heap *)
-  HeapWaitMutex: MUTEX;
-  HeapWaitCondition: Condition;
+VAR HeapInCritical := 1;   (* LL = heap *)
+    HeapDoSignal: BOOLEAN; (* LL = heap *)
+    HeapWaitMutex: MUTEX;
+    HeapWaitCondition: Condition;
 
 PROCEDURE LockHeap () =
   BEGIN
@@ -1082,11 +1136,11 @@ PROCEDURE WaitHeap () =
     IF DEBUG THEN ThreadDebug.WaitHeap(); END;
     LOCK HeapWaitMutex DO
       DEC(HeapInCritical);
-      <*ASSERT HeapInCritical = 0*>
+      <* ASSERT HeapInCritical = 0 *>
       LeaveCriticalSection(ADR(heapLock));
       Wait(HeapWaitMutex, HeapWaitCondition);
       EnterCriticalSection(ADR(heapLock));
-      <*ASSERT HeapInCritical = 0*>
+      <* ASSERT HeapInCritical = 0 *>
       INC(HeapInCritical);
     END;
   END WaitHeap;
@@ -1095,7 +1149,7 @@ PROCEDURE BroadcastHeap () =
   (* LL >= RTOS.LockHeap *)
   BEGIN
     IF DEBUG THEN ThreadDebug.BroadcastHeap(); END;
-    <*ASSERT HeapInCritical # 0*>
+    <* ASSERT HeapInCritical # 0 *>
     HeapDoSignal := TRUE;
   END BroadcastHeap;
 
@@ -1120,7 +1174,7 @@ PROCEDURE PushEFrame (frame: ADDRESS) =
     me.frame := f;
   END PushEFrame;
 
-(*RTHooks.PopEFrame*)
+(* RTHooks.PopEFrame *)
 PROCEDURE PopEFrame (frame: ADDRESS) =
   BEGIN
     GetActivation().frame := frame;
