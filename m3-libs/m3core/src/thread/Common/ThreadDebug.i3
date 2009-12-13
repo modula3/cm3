@@ -9,6 +9,18 @@ PROCEDURE UnlockMutex(mutex: REFANY);
 <*EXTERNAL ThreadDebug__InnerWait*>
 PROCEDURE InnerWait(mutex: REFANY; condition: REFANY; self: ADDRESS);
 
+<*EXTERNAL ThreadDebug__XWait*>
+PROCEDURE XWait(mutex: REFANY; condition: REFANY; self: ADDRESS);
+
+<*EXTERNAL ThreadDebug__XPause*>
+PROCEDURE XPause(self: ADDRESS; n: LONGREAL; alertable: BOOLEAN);
+
+<*EXTERNAL ThreadDebug__Pause*>
+PROCEDURE Pause(self: ADDRESS; n: LONGREAL);
+
+<*EXTERNAL ThreadDebug__AlertPause*>
+PROCEDURE AlertPause(self: ADDRESS; n: LONGREAL);
+
 <*EXTERNAL ThreadDebug__InnerTestAlert*>
 PROCEDURE InnerTestAlert(self: REFANY);
 
