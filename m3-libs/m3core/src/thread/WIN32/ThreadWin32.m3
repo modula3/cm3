@@ -236,6 +236,7 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
     END;
     <* ASSERT conditionLock # NIL *>
     <* ASSERT c.waitEvent # NIL *>
+    <* ASSERT act.alertEvent # NIL *>
 
     handles[0] := c.waitEvent;
     EnterCriticalSection(conditionLock);
@@ -399,6 +400,7 @@ PROCEDURE XTestAlert(self: Activation): BOOLEAN =
       (* Not created by Fork; not alertable *)
       RETURN FALSE
     ELSE
+      <* ASSERT self.alertEvent # NIL *>
       wait := WaitForSingleObject(self.alertEvent, 0);
       <* ASSERT wait = WAIT_TIMEOUT OR wait = WAIT_OBJECT_0 *>
       RETURN (wait = WAIT_OBJECT_0);
@@ -421,9 +423,8 @@ VAR (* LL = slotLock *)
 PROCEDURE Self (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
   (* LL = 0 *)
-  VAR
-    me := GetActivation();
-    t: T;
+  VAR me := GetActivation();
+      t: T;
   BEGIN
     IF me = NIL THEN RETURN NIL; END;
     EnterCriticalSection(ADR(slotLock));
@@ -638,14 +639,18 @@ PROCEDURE Fork(closure: Closure): T =
     RETURN t;
   END Fork;
 
-PROCEDURE XJoin (t: T; alertable: BOOLEAN): REFANY RAISES {Alerted} =
+PROCEDURE XJoin (t: T; act: Activation; alertable: BOOLEAN): REFANY RAISES {Alerted} =
   VAR (* The order of the handles is important. *)
       handles := ARRAY [0..1] OF HANDLE {t.act.handle, NIL(*alertEvent*)};
       wait: DWORD;
   BEGIN
     IF t.joined # 0 THEN Die(ThisLine(), "attempt to join with thread twice") END;
+    <* ASSERT handles[0] # NIL *>
     IF alertable THEN
-      handles[1] := GetActivation().alertEvent;
+      <* ASSERT act # NIL *>
+      <* ASSERT act.alertEvent # NIL *>
+      handles[1] := act.alertEvent;
+      <* ASSERT handles[1] # NIL *>
     END;
     wait := WaitForMultipleObjects(1 + ORD(alertable), ADR(handles[0]), 0, INFINITE);
     <* ASSERT wait = WAIT_OBJECT_0 OR wait = (WAIT_OBJECT_0 + 1) *>
@@ -662,23 +667,23 @@ PROCEDURE Join(t: T): REFANY =
   <* FATAL Alerted *>
   BEGIN
     IF DEBUG THEN ThreadDebug.Join(t); END;
-    RETURN XJoin(t, alertable := FALSE);
+    RETURN XJoin(t, NIL, alertable := FALSE);
   END Join;
 
 PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
+  VAR self := GetActivation();
   BEGIN
     IF DEBUG THEN ThreadDebug.AlertJoin(t); END;
-    RETURN XJoin(t, alertable := TRUE);
+    IF self = NIL THEN Die(ThisLine(), "AlertJoin called from a non-Modula-3 thread") END;
+    RETURN XJoin(t, NIL, alertable := TRUE);
   END AlertJoin;
 
 (*---------------------------------------------------- Scheduling support ---*)
 
 PROCEDURE Pause(n: LONGREAL) =
   <* FATAL Alerted *>
-  VAR self := GetActivation();
   BEGIN
-    IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
-    XPause(self, n, alertable := FALSE);
+    XPause(NIL, n, alertable := FALSE);
   END Pause;
 
 PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
@@ -698,7 +703,10 @@ PROCEDURE XPause(self: Activation; n: LONGREAL; alertable: BOOLEAN) RAISES {Aler
 
     IF DEBUG THEN ThreadDebug.XPause(self, n, alertable); END;
 
-    <* ASSERT self # NIL *>
+    IF alertable THEN
+      <* ASSERT self # NIL *>
+      <* ASSERT self.alertEvent # NIL *>
+    END;
 
     IF amount <= 0.0d0 THEN
       IF alertable THEN
