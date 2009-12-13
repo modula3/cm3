@@ -129,6 +129,15 @@ static size_t GetPC(void* xcontext)
 #error Unknown __APPLE__ target
 #endif
 
+#elif defined(__OpenBSD__)
+#if defined(__amd64)
+    context->sc_rip
+#elif defined(__powerpc)
+    context->sc_frame.srr0
+#else
+    context->sc_pc
+#endif
+
 #elif defined(__sun) || defined(__sparc)
       context->uc_mcontext.gregs[REG_PC]
 
@@ -146,15 +155,6 @@ static size_t GetPC(void* xcontext)
 
 #elif defined(__NetBSD__)
     _UC_MACHINE_PC(context)
-
-#elif defined(__OpenBSD__)
-#if defined(__amd64)
-    context->sc_rip
-#elif defined(__powerpc)
-    context->sc_frame.srr0
-#else
-    context->sc_pc
-#endif
 
 #elif defined(__FreeBSD__)
 #if defined(__amd64)
