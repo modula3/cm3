@@ -30,29 +30,29 @@ extern "C"
 #elif defined(__sparc64__)
 #define OpenBSD_sparc64
 #else
-#error unsupported platform
+#error unsupported OpenBSD platform
 #endif
 #elif defined(__APPLE__)
 #ifdef __ppc__
 #define Apple_ppc
 #else
-#error unsupported platform
+#error unsupported Apple platform
 #endif
 #else
-#error unsupported platform
+#error unsupported operating system
 #endif
 
 /* The various numbers are experimentally derived or based
  * on reading (assembly) source or stepping through with
  * the debugger, etc.
  */
-#ifdef __CYGWIN__           /* This isn't going to work anyway. */
+#ifdef __CYGWIN__           /* Cygwin isn't going to work anyway. */
 #define CONTEXT_PC      8
 #define CONTEXT_STACK   7
 #elif defined(OpenBSD_i386)
 #define CONTEXT_PC      0
 #define CONTEXT_STACK   2
-#define STACK_ADJUST    (40)
+#define STACK_ADJUST    40
 #elif defined(OpenBSD_powerpc)
 #define CONTEXT_PC      20
 #define CONTEXT_STACK   1
@@ -64,7 +64,7 @@ extern "C"
 #elif defined(OpenBSD_sparc64)
 #define CONTEXT_STACK    1
 #define CONTEXT_PC       2
-#define CONTEXT_FRAME    5
+/*define CONTEXT_FRAME   5*/
 #define STACK_ADJUST     2239
 #endif
 
@@ -197,9 +197,9 @@ void makecontext(ucontext_t* context, void (*function)(), int argc, ...)
         *--stack = (i << 16) | ((i + 1) << 8) | (i + 2);
     }
 #endif
-    context->uc_mcontext.a[CONTEXT_PC] = (size_t)internal_setcontext;
+    context->uc_mcontext.a[CONTEXT_PC] = (size_t)&internal_setcontext;
 #ifdef OpenBSD_sparc64
-    context->uc_mcontext.a[CONTEXT_PC + 1] = 4 + (size_t)internal_setcontext;
+    context->uc_mcontext.a[CONTEXT_PC + 1] = 4 + (size_t)&internal_setcontext;
 #endif
     context->uc_mcontext.a[CONTEXT_STACK] = ((size_t)stack) - STACK_ADJUST;
     va_end(args);
