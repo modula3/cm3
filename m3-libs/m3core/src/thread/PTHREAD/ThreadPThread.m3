@@ -347,7 +347,7 @@ PROCEDURE FreeSlot (VAR self: T; VAR act: Activation) =
 
       DEC (n_slotted);
       WITH z = slots [act.slot] DO
-        IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
+        IF z # self THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
       self := NIL; (* drop traced reference *)
