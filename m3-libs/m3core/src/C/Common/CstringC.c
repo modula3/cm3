@@ -15,9 +15,7 @@ M3WRAP3(void*, memchr, const void*, int, size_t)
 M3WRAP3(void*, memcpy, void*, const void*, size_t)
 M3WRAP3(void*, memset, void*, int, size_t)
 M3WRAP3(int, memcmp, const void*, const void*, size_t)
-M3WRAP2(char*, strcpy, char*, const char*)
 M3WRAP3(char*, strncpy, char*, const char*, size_t)
-M3WRAP2(char*, strcat, char*, const char*)
 M3WRAP3(char*, strncat, char*, const char*, size_t)
 M3WRAP2(char*, strchr, const char*, int)
 M3WRAP2(char*, strrchr, const char*, int)
@@ -33,3 +31,12 @@ M3WRAP2(int, strcoll, const char*, const char*)
 M3WRAP3(size_t, strxfrm, char*, const char*, size_t)
 M3WRAP2(char*, strstr, const char*, const char*)
 M3WRAP1(char*, strerror, int)
+
+/* These are bad functions, that OpenBSD linker rightfully warns about, so
+ * just provide the older style and then only folks using them will get warnings,
+ * instead of everyone.
+ */
+#if 0
+M3WRAP2(char*, strcpy, char*, const char*)
+M3WRAP2(char*, strcat, char*, const char*)
+#endif
