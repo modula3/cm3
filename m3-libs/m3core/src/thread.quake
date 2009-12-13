@@ -24,7 +24,6 @@ readonly NO_USER_THREADS =
     "PPC64_DARWIN":1,
     "SPARC32_LINUX":1,
     "SPARC64_LINUX":1,
-    "SPARC64_OPENBSD":1,
     "SPARC64_SOLARIS":1,
 }
 
@@ -56,6 +55,7 @@ readonly USE_PTHREADS = {
   "SOLgnu"     : TRUE,
   "SOLsun"     : TRUE,
   "SPARC"      : FALSE,
+  "SPARC64_OPENBSD" : FALSE,
   "SUN3"       : FALSE,
   "SUN386"     : FALSE,
   "UMAX"       : FALSE,
