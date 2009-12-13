@@ -12,7 +12,7 @@ IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT MutexRep, RTHeapRep, RTCollectorSRC, RTIO, WinBase;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT DUPLICATE_SAME_ACCESS, DWORD, HANDLE, LONG, SIZE_T, UINT32;
+FROM WinNT IMPORT DUPLICATE_SAME_ACCESS, DWORD, HANDLE, LONG, SIZE_T;
 FROM WinBase IMPORT CloseHandle, CREATE_SUSPENDED, CreateEvent, CreateThread,
     CRITICAL_SECTION, DuplicateHandle, EnterCriticalSection,
     GetCurrentProcess, GetCurrentThread, GetCurrentThreadId, GetLastError,
@@ -480,10 +480,12 @@ PROCEDURE FreeSlot (t: T; act: Activation) =
   (* LL = 0 *)
   BEGIN
     EnterCriticalSection(ADR(slotLock));
+      <* ASSERT act.slot > 0 *>
+      <* ASSERT n_slotted > 0 *>
       DEC(n_slotted);
       WITH z = slots [act.slot] DO
         IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
-        z := NIL; (* need write this carefully? I don't think so. *)
+        z := NIL;
       END;
       act.slot := 0;
     LeaveCriticalSection(ADR(slotLock));
