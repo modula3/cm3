@@ -10,6 +10,7 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
 #ifdef __CYGWIN__
 #include <windows.h>
 #endif
+#include <unistd.h>
 typedef struct itimerval itimerval_t;
 typedef struct timeval timeval_t;
 typedef struct sigaction sigaction_t;
@@ -199,7 +200,7 @@ int main(void)
 
     print_threadid("main");
 
-    for (i = 0 ; i != 4 ; ++i)
+    for (i = 0; i < 4; ++i)
     {
         getcontext(&ctx[i]);
         if (i != 0)
