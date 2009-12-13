@@ -24,8 +24,7 @@ FROM ThreadContext IMPORT PCONTEXT;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
 
-VAR
-  default_stack: DWORD := 8192;
+VAR default_stack: DWORD := 8192;
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "MUTEX Win32-1.0" OBJECT
@@ -187,8 +186,7 @@ PROCEDURE UnlockMutex(m: Mutex) =
 
 (**********
 PROCEDURE DumpSlots () =
-  VAR
-    me := GetActivation();
+  VAR me := GetActivation();
   BEGIN
     RTIO.PutText ("me = ");
     RTIO.PutAddr (me);
@@ -396,13 +394,16 @@ PROCEDURE Alert(t: T) =
 
 PROCEDURE TestAlert(): BOOLEAN =
   VAR self := GetActivation();
+      wait: DWORD;
   BEGIN
     IF DEBUG THEN ThreadDebug.TestAlert(); END;
     IF self = NIL THEN
       (* Not created by Fork; not alertable *)
       RETURN FALSE
     ELSE
-      RETURN WaitForSingleObject(self.alertEvent, 0) = WAIT_OBJECT_0;
+      wait := WaitForSingleObject(self.alertEvent, 0);
+      <* ASSERT wait = WAIT_TIMEOUT OR wait = WAIT_OBJECT_0 *>
+      RETURN (wait = WAIT_OBJECT_0);
     END;
   END TestAlert;
 
@@ -602,8 +603,8 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   END ThreadBase;
 
 PROCEDURE Fork(closure: Closure): T =
-  VAR t: T;
-      stack_size: DWORD;
+  VAR t := CreateT(NEW(Activation));
+      stack_size := default_stack;
       id: DWORD;
   BEGIN
     IF DEBUG THEN ThreadDebug.Fork(); END;
@@ -613,7 +614,6 @@ PROCEDURE Fork(closure: Closure): T =
     <* ASSERT allThreads.prev # NIL *>
 
     (* determine the initial size of the stack for this thread *)
-    stack_size := default_stack;
     TYPECASE closure OF
     | SizedClosure (scl) => IF scl.stackSize # 0 THEN 
                               stack_size := scl.stackSize * BYTESIZE(INTEGER);
@@ -621,7 +621,6 @@ PROCEDURE Fork(closure: Closure): T =
     ELSE (*skip*)
     END;
 
-    t := CreateT(NEW(Activation));
     t.closure := closure;
 
     (* create suspended just so we can store act.handle before it runs;
@@ -671,13 +670,13 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
 (*---------------------------------------------------- Scheduling support ---*)
 
 PROCEDURE Pause(n: LONGREAL) =
-  VAR amount, thisTime: LONGREAL;
+  VAR amount := n;
+      thisTime: LONGREAL;
   CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
   BEGIN
   (* The loop here is to enable waiting more than 4billion milliseconds;
      most waits will just wait once.
    *)
-    amount := n;
     WHILE amount > 0.0D0 DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
@@ -686,8 +685,10 @@ PROCEDURE Pause(n: LONGREAL) =
   END Pause;
 
 PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
-  VAR amount, thisTime: LONGREAL;
+  VAR amount := n;
+      thisTime: LONGREAL;
       self := GetActivation();
+      wait: DWORD;
       alerted := FALSE;
   CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
   BEGIN
@@ -695,13 +696,14 @@ PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
    * most waits will just wait once.
    *)
     IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
-    IF n <= 0.0d0 THEN RETURN END;
-    amount := n;
+    IF amount <= 0.0d0 THEN RETURN END;
     IF perfOn THEN PerfChanged(State.pausing) END;
     WHILE (NOT alerted) AND (amount > 0.0D0) DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
-      alerted := (WaitForSingleObject(self.alertEvent, ROUND(thisTime*1000.0D0)) = WAIT_OBJECT_0);
+      wait := WaitForSingleObject(self.alertEvent, ROUND(thisTime*1000.0D0));
+      <* ASSERT wait = WAIT_TIMEOUT OR wait = WAIT_OBJECT_0 *>
+      alerted := (wait = WAIT_OBJECT_0);
     END;
     IF perfOn THEN PerfRunning() END;
     IF alerted THEN
@@ -830,10 +832,9 @@ PROCEDURE ResumeOthers () =
 PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeLock.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR me := GetActivation();
-      act: Activation;
+      act := me.next;
   BEGIN
     ProcessMe(me, p);
-    act := me.next;
     WHILE act # me DO
       ProcessOther(act, p);
       act := act.next;
@@ -906,9 +907,8 @@ PROCEDURE Choke (lineno: INTEGER) =
 
 (*------------------------------------------------------ ShowThread hooks ---*)
 
-VAR
-  perfW : RTPerfTool.Handle;
-  (* perfOn: BOOLEAN := FALSE;                          (* LL = perfMu *) *)
+VAR perfW : RTPerfTool.Handle;
+    (* perfOn: BOOLEAN := FALSE;    (* LL = perfLock *) *)
 
 PROCEDURE PerfStart () =
   BEGIN
@@ -956,14 +956,12 @@ PROCEDURE PerfRunning () =
 
 (*-------------------------------------------------------- Initialization ---*)
 
-VAR
-  threadIndex: DWORD := TLS_OUT_OF_INDEXES; (* read-only;  TLS (Thread Local Storage) index *)
+VAR threadIndex: DWORD := TLS_OUT_OF_INDEXES; (* read-only;  TLS (Thread Local Storage) index *)
 
 PROCEDURE SetActivation(act: Activation) =
   (* LL = 0 *)
-  VAR success: BOOLEAN;
+  VAR success := (threadIndex # TLS_OUT_OF_INDEXES);
   BEGIN
-    success := (threadIndex # TLS_OUT_OF_INDEXES);
     <* ASSERT success *>
     success := (0 # TlsSetValue(threadIndex, LOOPHOLE(act, SIZE_T))); (* NOTE: This CAN fail. *)
     <* ASSERT success *>
@@ -985,9 +983,8 @@ PROCEDURE Init() =
  *       Assertion failures depend on some of Init having run. (e.g. SetActivation)
  *       Test by making the ASSERT fail.
  *)
-  VAR
-    self: T;
-    me := NEW(Activation);
+  VAR self: T;
+      me := NEW(Activation);
   BEGIN
     WinBase.InitializeCriticalSection(ADR(activeLock));
     WinBase.InitializeCriticalSection(ADR(heapLock));
@@ -1046,11 +1043,10 @@ PROCEDURE Init() =
 (* These procedures provide synchronization primitives for the allocator
    and collector. *)
 
-VAR
-  HeapInCritical := 1;   (* LL = heap *)
-  HeapDoSignal: BOOLEAN; (* LL = heap *)
-  HeapWaitMutex: MUTEX;
-  HeapWaitCondition: Condition;
+VAR HeapInCritical := 1;   (* LL = heap *)
+    HeapDoSignal: BOOLEAN; (* LL = heap *)
+    HeapWaitMutex: MUTEX;
+    HeapWaitCondition: Condition;
 
 PROCEDURE LockHeap () =
   BEGIN
