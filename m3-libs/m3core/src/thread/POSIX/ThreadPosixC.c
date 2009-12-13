@@ -146,10 +146,10 @@ void
 ProcessContext(Context *c, char *bottom, char *top,
 	       void (*p) (void *start, void *limit))
 {
+  size_t xx;
   if (top == NULL) {
     /* live thread */
     /* do we need to flush register windows too? */
-    int xx;
     if (getcontext(&(c->uc))) abort();
     top = (char *)&xx;
   }
