@@ -71,8 +71,8 @@ struct _stack_t
 
 typedef union
 {
-    size_t a[sizeof(jmp_buf) / sizeof(size_t)];
-    jmp_buf jb;
+    size_t a[sizeof(sigjmp_buf) / sizeof(size_t)];
+    sigjmp_buf jb;
 } mcontext_t;
 
 struct _ucontext_t
