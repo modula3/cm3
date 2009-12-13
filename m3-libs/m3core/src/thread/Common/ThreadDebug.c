@@ -3,7 +3,7 @@ This file implements aggressive logging for ThreadWin32 for debugging purposes.
 You have to edit ThreadWin32.m3 to enable it.
 The intent is to view the data in the debugger.
 A good command is:
-    dt -oca m3core!ThreadDebug__Log
+    dt -oca10 m3core!ThreadDebug__Log
 The code is also portable and could be used for ThreadPThread.m3 if desired.
 */
 
@@ -20,34 +20,37 @@ The code is also portable and could be used for ThreadPThread.m3 if desired.
 #endif
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#if 0
-
-/* enabled */
-
 #ifdef _WIN32
 #include <windows.h>
 #else
 #include <stddef.h>
 #include <pthread.h>
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#ifdef _WIN32 /* #if 1 ok here */
+
+/* enabled */
+
+#ifndef _WIN32
 static unsigned long GetCurrentThreadId(void) { return (unsigned long)(size_t)pthread_self(); }
 static long InterlockedIncrement(volatile long* a) { return ++*a; }
 #endif
 
 typedef struct _ThreadDebug__LogEntry_t {
 /* The names here are terse to produce more compact debugger output. */
-    unsigned tm; /* time */
-    unsigned long tid; /* thread id */
-    const char* f; /* function */
-    void* c; /* condition */
-    void* m; /* mutex */
-    void* t; /* thread */
+    unsigned tm;        /* time */
+    unsigned long tid;  /* thread id */
+    const char* f;      /* function */
+    void* c;            /* condition */
+    void* m;            /* mutex */
+    void* t;            /* thread */
 } ThreadDebug__LogEntry_t;
 
-static ThreadDebug__LogEntry_t ThreadDebug__Log[28000]; /* size can be tuned for the scenario */
+static ThreadDebug__LogEntry_t ThreadDebug__Log[10]; /* size can be tuned for the scenario */
 static volatile long ThreadDebug__LogCounter;
 
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
@@ -81,15 +84,13 @@ static void ThreadDebug__LogEntry(const char* function, void* c, void* m, void* 
         unsigned Counter = (unsigned)InterlockedIncrement(&ThreadDebug__LogCounter) - 1;
         if (Counter > Skip)
         {
-            {
-                ThreadDebug__LogEntry_t* entry = &ThreadDebug__Log[(Counter - Skip) % NUMBER_OF(ThreadDebug__Log)];
-                entry->tm = (unsigned)ReadTimeStampCounter();
-                entry->tid = GetCurrentThreadId();
-                entry->f = function;
-                entry->c = c;
-                entry->m = m;
-                entry->t = t;
-            }
+            ThreadDebug__LogEntry_t* entry = &ThreadDebug__Log[(Counter - Skip) % NUMBER_OF(ThreadDebug__Log)];
+            entry->tm = (unsigned)ReadTimeStampCounter();
+            entry->tid = GetCurrentThreadId();
+            entry->f = function;
+            entry->c = c;
+            entry->m = m;
+            entry->t = t;
         }
     }
 }
@@ -122,6 +123,26 @@ void __cdecl ThreadDebug__UnlockMutex(void* m)
 void __cdecl ThreadDebug__InnerWait(void* m, void* c, void* t /* self */)
 {
     LOG("InnerWait");
+}
+
+void __cdecl ThreadDebug__XWait(void* m, void* c, void* t /* self */)
+{
+    LOG("XWait");
+}
+
+void __cdecl ThreadDebug__XPause(void* t /*self */, double n, int a /* alertable */)
+{
+    LOG("XPause");
+}
+
+void __cdecl ThreadDebug__Pause(void* t /*self */, double n)
+{
+    LOG("Pause");
+}
+
+void __cdecl ThreadDebug__AlertPause(void* t /*self */, double n)
+{
+    LOG("AlertPause");
 }
 
 void __cdecl ThreadDebug__InnerTestAlert(void* t /* self */)
