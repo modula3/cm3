@@ -565,7 +565,6 @@ PROCEDURE XPause (self: Activation; n: LONGREAL; alertable: BOOLEAN)
   RAISES {Alerted} =
   VAR until: Utime.struct_timespec;
   BEGIN
-    IF n <= 0.0d0 THEN RETURN END;
     ToNTime(Time.Now() + n, until);
     IF perfOn THEN PerfChanged(State.pausing) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
