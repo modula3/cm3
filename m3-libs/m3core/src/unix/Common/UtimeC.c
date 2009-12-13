@@ -15,9 +15,32 @@ void Utime__Assertions(void)
       M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, it_value) + M3_FIELD_SIZE(T, it_interval)); }
 
     /* verify timespec (nanotime) contains just the two fields we know about, in either order */
+/* OpenBSD/sparc64 has the unfortunate:
+struct timespec
+{
+  int32 tv_sec;  year 2038 bug
+  4 bytes of padding
+  int64 tv_nsec;
+}
+*/
+#if defined(__OpenBSD__) && defined(__sparc64__)
+    { typedef timespec_T T1;
+      typedef struct { time_t tv_sec; long tv_nsec; } T2;
+      M3_STATIC_ASSERT(M3_FIELD_SIZE(T1, tv_sec ) == 4);
+      M3_STATIC_ASSERT(M3_FIELD_SIZE(T1, tv_nsec) == 8);
+      M3_STATIC_ASSERT(M3_FIELD_SIZE(T2, tv_sec ) == 4);
+      M3_STATIC_ASSERT(M3_FIELD_SIZE(T2, tv_nsec) == 8);
+      M3_STATIC_ASSERT(offsetof(T1, tv_sec ) == 0);
+      M3_STATIC_ASSERT(offsetof(T1, tv_nsec) == 8);
+      M3_STATIC_ASSERT(offsetof(T2, tv_sec ) == 0);
+      M3_STATIC_ASSERT(offsetof(T2, tv_nsec) == 8);
+      M3_STATIC_ASSERT(sizeof(T1) == 16);
+      M3_STATIC_ASSERT(sizeof(T2) == 16);
+    }
+#else
     { typedef timespec_T T;
       M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, tv_sec) + M3_FIELD_SIZE(T, tv_nsec)); }
-
+#endif
     /* verify timeval (microtime) contains just the two fields we know about, in either order */
 #if defined(__APPLE__) && defined(__x86_64__)
 /* AMD64_DARWIN has:
