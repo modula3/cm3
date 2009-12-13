@@ -9,8 +9,8 @@ UNSAFE INTERFACE ThreadWin32;
 
 FROM ThreadF IMPORT State;
 FROM ThreadContext IMPORT PCONTEXT;
-FROM Ctypes IMPORT int;
 FROM WinBase IMPORT CRITICAL_SECTION;
+FROM WinNT IMPORT UCHAR;
 
 (*---------------------------------------------------------------------------*)
 
@@ -31,7 +31,8 @@ FROM WinBase IMPORT CRITICAL_SECTION;
 <*EXTERNAL ThreadWin32__initLock*> VAR initLock: CRITICAL_SECTION;
     (* Global lock for initializing locks *)
 
-<*EXTERNAL ThreadWin32__sizeof_CRITICAL_SECTION*> VAR sizeof_CRITICAL_SECTION: int;
+<*EXTERNAL ThreadWin32__sizeof_CRITICAL_SECTION*> VAR sizeof_CRITICAL_SECTION: UCHAR;
+<*EXTERNAL ThreadWin32__sizeof_MEMORY_BASIC_INFORMATION*> VAR sizeof_MEMORY_BASIC_INFORMATION: UCHAR;
 
 (*------------------------------------------------------ ShowThread hooks ---*)
 
@@ -41,11 +42,6 @@ FROM WinBase IMPORT CRITICAL_SECTION;
 (* synchronization for the allocator and collector *)
 
 <*EXTERNAL ThreadWin32__heapLock*> VAR heapLock: CRITICAL_SECTION;
-
-(*---------------------------------------------------------------------------*)
-
-<*EXTERNAL ThreadWin32__GetStackBounds*>
-PROCEDURE GetStackBounds(VAR start, end: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 
