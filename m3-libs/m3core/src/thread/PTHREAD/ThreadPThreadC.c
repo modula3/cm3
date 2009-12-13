@@ -25,16 +25,6 @@
 
 #define M3MODULE ThreadPThread
 
-/* Sometimes setjmp saves signal mask, in which case _setjmp does not.
-setjmp works, but _setjmp can be much faster. */
-#ifndef __sun
-#define M3_SETJMP _setjmp
-#define M3_LONGJMP _longjmp
-#else
-#define M3_SETJMP setjmp
-#define M3_LONGJMP longjmp
-#endif
-
 #if defined(__sparc) || defined(__ia64__)
 #define M3_REGISTER_WINDOWS
 #endif
@@ -113,11 +103,11 @@ int ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value
 void
 ThreadPThread__sigsuspend(void)
 {
-  jmp_buf jb;
+  sigjmp_buf jb;
 
-  if (M3_SETJMP(jb) == 0) /* save registers to stack */
+  if (sigsetjmp(jb, 0) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
-    M3_LONGJMP(jb, 1); /* flush register windows */
+    siglongjmp(jb, 1); /* flush register windows */
   else
 #endif
     sigsuspend(&mask);
@@ -164,11 +154,11 @@ void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 void
 ThreadPThread__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
 {
-  jmp_buf jb;
+  sigjmp_buf jb;
 
-  if (M3_SETJMP(jb) == 0) /* save registers to stack */
+  if (sigsetjmp(jb, 0) == 0) /* save registers to stack */
 #ifdef M3_REGISTER_WINDOWS
-    M3_LONGJMP(jb, 1); /* flush register windows */
+    siglongjmp(jb, 1); /* flush register windows */
   else
 #endif
   {
