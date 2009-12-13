@@ -497,6 +497,12 @@ if not FileExists (UseUconstants)
   UseUconstants = ""
 end
 
+UseWinConstants = LIB_INSTALL & SL & "WinConstants" & Obj
+if not FileExists (UseWinConstants)
+  % for bootstrapping
+  UseWinConstants = ""
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -551,6 +557,7 @@ proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, 
                  objects,
                  subst_chars(imported_libs, "/", "\\"),
                  subst_chars(UseHand, "/", "\\"),
+                 subst_chars(UseWinConstants, "/", "\\"),
             ]),
         "2>&1",
         ">", listing
@@ -587,6 +594,7 @@ proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file,
                         objects,
                         EscapeList(imported_libs),
                         escape(UseUconstants),
+                        escape(UseWinConstants),
                         %escape(UseHand),
                     ]),
             "2>&1",
@@ -610,6 +618,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local LinkResponseFile = LibResponseFile
     local ShipHand = equal (lib, "m3core") and FileExists("hand" & Obj)
     local ShipUconstants = equal (lib, "m3core") and FileExists("Uconstants" & Obj)
+    local ShipWinConstants = equal (lib, "m3core") and FileExists("WinConstants" & Obj)
 
     if ShipHand
         UseHand = ""
@@ -617,6 +626,10 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
 
     if ShipUconstants
         UseUconstants = ""
+    end
+
+    if ShipWinConstants
+        UseWinConstants = ""
     end
 
     if shared
@@ -876,6 +889,7 @@ proc m3_link_ms(prog, options, objects, imported_libs, shared, pgm_file, listing
                 objects,
                 subst_chars(imported_libs, "/", "\\"),
                 subst_chars(UseHand, "/", "\\"),
+                subst_chars(UseWinConstants, "/", "\\"),
             ]),
         "2>&1",
         ">", listing
@@ -906,6 +920,10 @@ proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listin
         UseUconstants = ""
     end
 
+    if not shared
+        UseWinConstants = ""
+    end
+
     return try_exec(
             "@gcc",
             "-gstabs+",
@@ -924,6 +942,7 @@ proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listin
                         objects,
                         EscapeList(imported_libs),
                         escape(UseUconstants),
+                        escape(UseWinConstants),
                         %escape(UseHand),
                     ]),
             "2>&1",
