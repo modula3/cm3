@@ -16,6 +16,10 @@ struct IRpcStubBuffer;        /* warning 4115: named type definition in parenthe
 #include <windows.h>
 #include <assert.h>
 #include <setjmp.h>
+#include <stddef.h>
+#include <string.h>
+
+#define M3_FIELD_SIZE(type, field) (sizeof((type*)0)->field)
 
 /* const is extern const in C, but static const in C++,
  * but gcc gives a warning for the correct portable form "extern const" */
@@ -42,36 +46,6 @@ setjmp works, but _setjmp can be much faster. */
 #ifdef __cplusplus
 extern "C" {
 #endif
-
-/*-------------------------------------------------------------------------*/
-
-void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
-{
-    MEMORY_BASIC_INFORMATION info = { 0 };
-    size_t a = VirtualQuery(&info, &info, sizeof(info));
-
-    /* how far down has the stack been used so far */
-    char* Used = (char*)info.BaseAddress;
-
-    /* how far down the stack can grow */
-    char* Available = (char*)info.AllocationBase;
-
-    assert(a >= sizeof(info));
-    assert(Available);
-    assert(Used);
-    assert(info.RegionSize);
-    assert(((char*)&info) > Available);
-    assert(((char*)&info) >= Used);
-    assert(((char*)&info) < Used + info.RegionSize);
-
-    /* verify it is readable
-    NOTE: Do not verify *Available -- stack pages must be touched in order. */
-    a = *(volatile unsigned char*)Used;
-    a = *(volatile unsigned char*)(Used + info.RegionSize - 1);
-
-    *start = Available;
-    *end = Used + info.RegionSize;
-}
 
 /*-------------------------------------------------------------------------*/
 /* context */
@@ -188,7 +162,40 @@ CRITICAL_SECTION ThreadWin32__heapLock;
 CRITICAL_SECTION ThreadWin32__perfLock;
 CRITICAL_SECTION ThreadWin32__initLock;
 
-extern const int ThreadWin32__sizeof_CRITICAL_SECTION = sizeof(CRITICAL_SECTION);
+/* widen to USHORT, etc. if needed */
+
+typedef struct _ClonedHeaderCheckField_t {
+    UCHAR offset;
+    UCHAR size;
+} ClonedHeaderCheckField_t;
+
+typedef struct _ClonedHeaderCheck_t {
+    UINT32 TlsOutOfIndexs;
+    UCHAR sizeof_CRITICAL_SECTION;
+    UCHAR sizeof_MEMORY_BASIC_INFORMATION;
+    ClonedHeaderCheckField_t MEMORY_BASIC_INFORMATION_AllocationBase;
+    ClonedHeaderCheckField_t MEMORY_BASIC_INFORMATION_BaseAddress;
+    ClonedHeaderCheckField_t MEMORY_BASIC_INFORMATION_RegionSize;
+} ClonedHeaderCheck_t;
+
+#define FIELD_INFO(t, f) { offsetof(t, f), M3_FIELD_SIZE(t, f) }
+
+const static ClonedHeaderCheck_t clonedHeaderCheck = {
+    TLS_OUT_OF_INDEXES,
+    sizeof(CRITICAL_SECTION),
+    sizeof(MEMORY_BASIC_INFORMATION),
+    FIELD_INFO(MEMORY_BASIC_INFORMATION, AllocationBase),
+    FIELD_INFO(MEMORY_BASIC_INFORMATION, BaseAddress),
+    FIELD_INFO(MEMORY_BASIC_INFORMATION, RegionSize),
+};
+void
+ThreadWin32__ClonedHeaderCheck(
+    const ClonedHeaderCheck_t* a,
+    size_t aSize)
+{
+    assert(sizeof(*a) == aSize);
+    assert(memcmp(a, &clonedHeaderCheck, sizeof(*a)) == 0);
+}
 
 #if 0
 
