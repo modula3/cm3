@@ -44,36 +44,6 @@ extern "C" {
 #endif
 
 /*-------------------------------------------------------------------------*/
-
-void __cdecl ThreadWin32__GetStackBounds(void** start, void** end)
-{
-    MEMORY_BASIC_INFORMATION info = { 0 };
-    size_t a = VirtualQuery(&info, &info, sizeof(info));
-
-    /* how far down has the stack been used so far */
-    char* Used = (char*)info.BaseAddress;
-
-    /* how far down the stack can grow */
-    char* Available = (char*)info.AllocationBase;
-
-    assert(a >= sizeof(info));
-    assert(Available);
-    assert(Used);
-    assert(info.RegionSize);
-    assert(((char*)&info) > Available);
-    assert(((char*)&info) >= Used);
-    assert(((char*)&info) < Used + info.RegionSize);
-
-    /* verify it is readable
-    NOTE: Do not verify *Available -- stack pages must be touched in order. */
-    a = *(volatile unsigned char*)Used;
-    a = *(volatile unsigned char*)(Used + info.RegionSize - 1);
-
-    *start = Available;
-    *end = Used + info.RegionSize;
-}
-
-/*-------------------------------------------------------------------------*/
 /* context */
 
 #if defined(_AMD64_)
@@ -187,8 +157,8 @@ CRITICAL_SECTION ThreadWin32__slotLock;     /* global lock for thread slots tabl
 CRITICAL_SECTION ThreadWin32__heapLock;
 CRITICAL_SECTION ThreadWin32__perfLock;
 CRITICAL_SECTION ThreadWin32__initLock;
-
-extern const int ThreadWin32__sizeof_CRITICAL_SECTION = sizeof(CRITICAL_SECTION);
+extern const UCHAR ThreadWin32__sizeof_CRITICAL_SECTION = sizeof(CRITICAL_SECTION);
+extern const UCHAR ThreadWin32__sizeof_MEMORY_BASIC_INFORMATION = sizeof(MEMORY_BASIC_INFORMATION);
 
 #if 0
 

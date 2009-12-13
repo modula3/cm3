@@ -12,14 +12,15 @@ IMPORT RTError, WinGDI, RTParams, FloatMode, RuntimeError;
 IMPORT MutexRep, RTHeapRep, RTCollectorSRC, RTIO, WinBase;
 IMPORT ThreadEvent, RTPerfTool, RTProcess, ThreadDebug;
 FROM Compiler IMPORT ThisFile, ThisLine;
-FROM WinNT IMPORT DUPLICATE_SAME_ACCESS, DWORD, HANDLE, LONG, SIZE_T;
+FROM WinNT IMPORT DUPLICATE_SAME_ACCESS, DWORD, HANDLE, UINT8, LONG,
+    MEMORY_BASIC_INFORMATION, SIZE_T;
 FROM WinBase IMPORT CloseHandle, CREATE_SUSPENDED, CreateEvent, CreateThread,
     CRITICAL_SECTION, DuplicateHandle, EnterCriticalSection,
     GetCurrentProcess, GetCurrentThread, GetCurrentThreadId, GetLastError,
     GetThreadContext, INFINITE, LeaveCriticalSection,
     PCRITICAL_SECTION, ResetEvent, ResumeThread, SetEvent, Sleep,
     SuspendThread, TLS_OUT_OF_INDEXES, TlsAlloc, TlsGetValue, TlsSetValue,
-    WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject;
+    VirtualQuery, WAIT_OBJECT_0, WAIT_TIMEOUT, WaitForMultipleObjects, WaitForSingleObject;
 FROM ThreadContext IMPORT PCONTEXT;
 
 (*----------------------------------------- Exceptions, types and globals ---*)
@@ -983,6 +984,36 @@ PROCEDURE PerfRunning () =
 
 (*-------------------------------------------------------- Initialization ---*)
 
+PROCEDURE GetStackBounds(VAR start: ADDRESS; VAR end: ADDRESS) =
+  VAR info: MEMORY_BASIC_INFORMATION;
+      a := VirtualQuery(ADR(info), ADR(info), BYTESIZE(info));
+
+      (* how far down has the stack been used so far *)
+      used: UNTRACED REF UINT8 := info.BaseAddress;
+
+      (* how far down the stack can grow *)
+      available := info.AllocationBase;
+
+      b: UINT8;
+  BEGIN
+    <* ASSERT a >= BYTESIZE(info) *>
+    <* ASSERT available # NIL *>
+    <* ASSERT used # NIL *>
+    <* ASSERT info.RegionSize # 0 *>
+    <* ASSERT ADR(info) > available *>
+    <* ASSERT ADR(info) >= used *>
+    <* ASSERT ADR(info) < (used + info.RegionSize) *>
+
+    (* verify it is readable
+     * NOTE: Do not verify *available -- stack pages must be touched in order.
+     *)
+    b := used^;
+    b := LOOPHOLE(used + info.RegionSize - 1, UNTRACED REF UINT8)^;
+
+    start := available;
+    end := used + info.RegionSize;
+  END GetStackBounds;
+
 VAR threadIndex: DWORD := TLS_OUT_OF_INDEXES; (* read-only;  TLS (Thread Local Storage) index *)
 
 PROCEDURE SetActivation(act: Activation) =
@@ -1039,6 +1070,7 @@ PROCEDURE Init() =
     END;
 
     <* ASSERT BYTESIZE(CRITICAL_SECTION) = sizeof_CRITICAL_SECTION *>
+    <* ASSERT BYTESIZE(MEMORY_BASIC_INFORMATION) = sizeof_MEMORY_BASIC_INFORMATION *>
 
     self := CreateT(me);
 
