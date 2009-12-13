@@ -16,6 +16,10 @@ struct IRpcStubBuffer;        /* warning 4115: named type definition in parenthe
 #include <windows.h>
 #include <assert.h>
 #include <setjmp.h>
+#include <stddef.h>
+#include <string.h>
+
+#define M3_FIELD_SIZE(type, field) (sizeof((type*)0)->field)
 
 /* const is extern const in C, but static const in C++,
  * but gcc gives a warning for the correct portable form "extern const" */
@@ -157,8 +161,41 @@ CRITICAL_SECTION ThreadWin32__slotLock;     /* global lock for thread slots tabl
 CRITICAL_SECTION ThreadWin32__heapLock;
 CRITICAL_SECTION ThreadWin32__perfLock;
 CRITICAL_SECTION ThreadWin32__initLock;
-extern const UCHAR ThreadWin32__sizeof_CRITICAL_SECTION = sizeof(CRITICAL_SECTION);
-extern const UCHAR ThreadWin32__sizeof_MEMORY_BASIC_INFORMATION = sizeof(MEMORY_BASIC_INFORMATION);
+
+/* widen to USHORT, etc. if needed */
+
+typedef struct _ClonedHeaderCheckField_t {
+    UCHAR offset;
+    UCHAR size;
+} ClonedHeaderCheckField_t;
+
+typedef struct _ClonedHeaderCheck_t {
+    UINT32 TlsOutOfIndexs;
+    UCHAR sizeof_CRITICAL_SECTION;
+    UCHAR sizeof_MEMORY_BASIC_INFORMATION;
+    ClonedHeaderCheckField_t MEMORY_BASIC_INFORMATION_AllocationBase;
+    ClonedHeaderCheckField_t MEMORY_BASIC_INFORMATION_BaseAddress;
+    ClonedHeaderCheckField_t MEMORY_BASIC_INFORMATION_RegionSize;
+} ClonedHeaderCheck_t;
+
+#define FIELD_INFO(t, f) { offsetof(t, f), M3_FIELD_SIZE(t, f) }
+
+const static ClonedHeaderCheck_t clonedHeaderCheck = {
+    TLS_OUT_OF_INDEXES,
+    sizeof(CRITICAL_SECTION),
+    sizeof(MEMORY_BASIC_INFORMATION),
+    FIELD_INFO(MEMORY_BASIC_INFORMATION, AllocationBase),
+    FIELD_INFO(MEMORY_BASIC_INFORMATION, BaseAddress),
+    FIELD_INFO(MEMORY_BASIC_INFORMATION, RegionSize),
+};
+void
+ThreadWin32__ClonedHeaderCheck(
+    const ClonedHeaderCheck_t* a,
+    size_t aSize)
+{
+    assert(sizeof(*a) == aSize);
+    assert(memcmp(a, &clonedHeaderCheck, sizeof(*a)) == 0);
+}
 
 #if 0
 
