@@ -351,8 +351,8 @@ PROCEDURE FreeSlot (VAR self: T; VAR act: Activation) =
         z := NIL;
       END;
       self := NIL; (* drop traced reference *)
+      act.slot := 0;
       act := NIL;  (* drop reference *)
-      me.slot := 0;
 
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
   END FreeSlot;
