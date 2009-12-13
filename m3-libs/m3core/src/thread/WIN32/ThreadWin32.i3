@@ -9,8 +9,8 @@ UNSAFE INTERFACE ThreadWin32;
 
 FROM ThreadF IMPORT State;
 FROM ThreadContext IMPORT PCONTEXT;
-FROM WinBase IMPORT CRITICAL_SECTION;
-FROM WinNT IMPORT UCHAR;
+FROM WinBase IMPORT CRITICAL_SECTION, TLS_OUT_OF_INDEXES;
+FROM WinNT IMPORT UCHAR, UINT32, MEMORY_BASIC_INFORMATION;
 
 (*---------------------------------------------------------------------------*)
 
@@ -30,9 +30,6 @@ FROM WinNT IMPORT UCHAR;
 
 <*EXTERNAL ThreadWin32__initLock*> VAR initLock: CRITICAL_SECTION;
     (* Global lock for initializing locks *)
-
-<*EXTERNAL ThreadWin32__sizeof_CRITICAL_SECTION*> VAR sizeof_CRITICAL_SECTION: UCHAR;
-<*EXTERNAL ThreadWin32__sizeof_MEMORY_BASIC_INFORMATION*> VAR sizeof_MEMORY_BASIC_INFORMATION: UCHAR;
 
 (*------------------------------------------------------ ShowThread hooks ---*)
 
@@ -60,6 +57,26 @@ PROCEDURE NewContext(): ADDRESS;
 
 <*EXTERNAL ThreadWin32__DeleteContext*>
 PROCEDURE DeleteContext(a: ADDRESS);
+
+(*---------------------------------------------------------------------------*)
+
+TYPE ClonedHeaderCheckField_t = RECORD
+    offset: UCHAR;
+    size: UCHAR;
+END;
+
+TYPE PClonedHeaderCheck_t = UNTRACED REF ClonedHeaderCheck_t;
+TYPE ClonedHeaderCheck_t = RECORD
+    TlsOutOfIndexes: UINT32 := TLS_OUT_OF_INDEXES;
+    sizeof_CRITICAL_SECTION: UCHAR := BYTESIZE(CRITICAL_SECTION);
+    sizeof_MEMORY_BASIC_INFORMATION: UCHAR := BYTESIZE(MEMORY_BASIC_INFORMATION);
+    MEMORY_BASIC_INFORMATION_AllocationBase: ClonedHeaderCheckField_t;
+    MEMORY_BASIC_INFORMATION_BaseAddress: ClonedHeaderCheckField_t;
+    MEMORY_BASIC_INFORMATION_RegionSize: ClonedHeaderCheckField_t;
+END;
+
+<*EXTERNAL ThreadWin32__ClonedHeaderCheck*>
+PROCEDURE ClonedHeaderCheck(a: PClonedHeaderCheck_t; b: INTEGER);
 
 (*----------------------------------------------------- for SchedulerPosix --*)
 
