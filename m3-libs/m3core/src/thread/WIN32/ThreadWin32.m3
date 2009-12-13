@@ -209,8 +209,8 @@ PROCEDURE DumpSlots () =
 
 (*---------------------------------------- Condition variables and Alerts ---*)
 
-PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
-                    alertable: BOOLEAN) RAISES {Alerted} =
+PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
+                alertable: BOOLEAN) RAISES {Alerted} =
   (* LL = m on entry and exit, but not for the duration
    * see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp
    * NOTE that they merge the user lock and the condition lock.
@@ -228,7 +228,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
       conditionLock := c.lock;
   BEGIN
 
-    IF DEBUG THEN ThreadDebug.InnerWait(m, c, act); END;
+    IF DEBUG THEN ThreadDebug.XWait(m, c, act); END;
 
     IF conditionLock = NIL THEN
       InitCondition(c);
@@ -316,7 +316,7 @@ PROCEDURE InnerWait(m: Mutex; c: Condition; act: Activation;
 
     LeaveCriticalSection(conditionLock);
 
-  END InnerWait;
+  END XWait;
 
 PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
@@ -324,7 +324,7 @@ PROCEDURE AlertWait (m: Mutex; c: Condition) RAISES {Alerted} =
   BEGIN
     IF DEBUG THEN ThreadDebug.AlertWait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "AlertWait called from non-Modula-3 thread") END;
-    InnerWait(m, c, self, alertable := TRUE);
+    XWait(m, c, self, alertable := TRUE);
   END AlertWait;
 
 PROCEDURE Wait (m: Mutex; c: Condition) =
@@ -334,7 +334,7 @@ PROCEDURE Wait (m: Mutex; c: Condition) =
   BEGIN
     IF DEBUG THEN ThreadDebug.Wait(m, c); END;
     IF self = NIL THEN Die(ThisLine(), "Wait called from non-Modula-3 thread") END;
-    InnerWait(m, c, self, alertable := FALSE);
+    XWait(m, c, self, alertable := FALSE);
   END Wait;
 
 PROCEDURE Signal (c: Condition) =
@@ -392,11 +392,9 @@ PROCEDURE Alert(t: T) =
     IF SetEvent(t.act.alertEvent) = 0 THEN Choke(ThisLine()) END;
   END Alert;
 
-PROCEDURE TestAlert(): BOOLEAN =
-  VAR self := GetActivation();
-      wait: DWORD;
+PROCEDURE XTestAlert(self: Activation): BOOLEAN =
+  VAR wait: DWORD;
   BEGIN
-    IF DEBUG THEN ThreadDebug.TestAlert(); END;
     IF self = NIL THEN
       (* Not created by Fork; not alertable *)
       RETURN FALSE
@@ -405,6 +403,12 @@ PROCEDURE TestAlert(): BOOLEAN =
       <* ASSERT wait = WAIT_TIMEOUT OR wait = WAIT_OBJECT_0 *>
       RETURN (wait = WAIT_OBJECT_0);
     END;
+  END XTestAlert;
+
+PROCEDURE TestAlert(): BOOLEAN =
+  BEGIN
+    IF DEBUG THEN ThreadDebug.TestAlert(); END;
+    RETURN XTestAlert(GetActivation());
   END TestAlert;
 
 (*------------------------------------------------------------------ Self ---*)
@@ -670,46 +674,61 @@ PROCEDURE AlertJoin(t: T): REFANY RAISES {Alerted} =
 (*---------------------------------------------------- Scheduling support ---*)
 
 PROCEDURE Pause(n: LONGREAL) =
-  VAR amount := n;
-      thisTime: LONGREAL;
-  CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
+  <* FATAL Alerted *>
+  VAR self := GetActivation();
   BEGIN
-  (* The loop here is to enable waiting more than 4billion milliseconds;
-     most waits will just wait once.
-   *)
-    WHILE amount > 0.0D0 DO
-      thisTime := MIN (Limit, amount);
-      amount := amount - thisTime;
-      Sleep(ROUND(thisTime*1000.0D0));
-    END;
+    IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
+    XPause(self, n, alertable := FALSE);
   END Pause;
 
 PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted} =
+  VAR self := GetActivation();
+  BEGIN
+    IF self = NIL THEN Die(ThisLine(), "AlertPause called from a non-Modula-3 thread") END;
+    XPause(self, n, alertable := TRUE);
+  END AlertPause;
+
+PROCEDURE XPause(self: Activation; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
   VAR amount := n;
       thisTime: LONGREAL;
-      self := GetActivation();
       wait: DWORD;
       alerted := FALSE;
   CONST Limit = FLOAT(LAST(CARDINAL), LONGREAL) / 1000.0D0 - 1.0D0;
   BEGIN
-  (* The loop here is to enable waiting more than 4billion milliseconds;
-   * most waits will just wait once.
-   *)
-    IF self = NIL THEN Die(ThisLine(), "Pause called from a non-Modula-3 thread") END;
-    IF amount <= 0.0d0 THEN RETURN END;
+
+    IF DEBUG THEN ThreadDebug.XPause(self, n, alertable); END;
+
+    <* ASSERT self # NIL *>
+
+    IF amount <= 0.0d0 THEN
+      IF alertable THEN
+        IF XTestAlert(self) THEN
+          RAISE Alerted;
+        END;
+      END;
+      RETURN;
+    END;
+
     IF perfOn THEN PerfChanged(State.pausing) END;
+
+    (* Loop to handle waiting more than 4 billion milliseconds. *)
+
     WHILE (NOT alerted) AND (amount > 0.0D0) DO
       thisTime := MIN (Limit, amount);
       amount := amount - thisTime;
-      wait := WaitForSingleObject(self.alertEvent, ROUND(thisTime*1000.0D0));
-      <* ASSERT wait = WAIT_TIMEOUT OR wait = WAIT_OBJECT_0 *>
-      alerted := (wait = WAIT_OBJECT_0);
+      IF alertable THEN
+        wait := WaitForSingleObject(self.alertEvent, ROUND(thisTime*1000.0D0));
+        <* ASSERT wait = WAIT_TIMEOUT OR wait = WAIT_OBJECT_0 *>
+        alerted := (wait = WAIT_OBJECT_0);
+      ELSE
+        Sleep(ROUND(thisTime*1000.0D0));
+      END;
     END;
     IF perfOn THEN PerfRunning() END;
     IF alerted THEN
       RAISE Alerted;
     END;
-  END AlertPause;
+  END XPause;
 
 PROCEDURE Yield() =
   BEGIN
