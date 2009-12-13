@@ -49,6 +49,16 @@ extern "C"
 #define CONTEXT_STACK 0 /* experimentally derived */
 #endif
 
+/* Sometimes setjmp saves signal mask, in which case _setjmp does not.
+setjmp works, but _setjmp can be much faster. */
+#ifndef __sun
+#define CONTEXT_SETJMP _setjmp
+#define CONTEXT_LONGJMP _longjmp
+#else
+#define CONTEXT_SETJMP setjmp
+#define CONTEXT_LONGJMP longjmp
+#endif
+
 #if 0
 static void print_context(const char* name, const ucontext_t* context)
 {
@@ -76,7 +86,7 @@ int getcontext(ucontext_t* context)
     volatile char a[65];
 #endif
     sigprocmask(SIG_SETMASK, NULL, &context->uc_sigmask);
-    if (!setjmp(context->uc_mcontext.jb))
+    if (!CONTEXT_SETJMP(context->uc_mcontext.jb))
         context->uc_stack.ss_sp = (void*)context->uc_mcontext.a[CONTEXT_STACK];
     return 0;
 }
@@ -87,7 +97,7 @@ int setcontext(const ucontext_t* const_context)
     if (context)
     {
         sigprocmask(SIG_SETMASK, &context->uc_sigmask, NULL);
-        longjmp(context->uc_mcontext.jb, 1);
+        CONTEXT_LONGJMP(context->uc_mcontext.jb, 1);
     }
     return 0;
 }
