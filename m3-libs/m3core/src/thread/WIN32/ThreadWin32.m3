@@ -508,7 +508,7 @@ PROCEDURE CreateT (act: Activation): T =
      which will try to acquire "activeLock". *)
   VAR t: T := NEW(T, act := act);
   BEGIN
-    RTHeapRep.RegisterFinalCleanup (t, CleanT);
+    RTHeapRep.RegisterFinalCleanup (t, CleanThread);
     act.context := NewContext();
     IF act.context = NIL THEN
       RuntimeError.Raise(RuntimeError.T.OutOfMemory);
@@ -522,7 +522,7 @@ PROCEDURE CreateT (act: Activation): T =
     RETURN t;
   END CreateT;
 
-PROCEDURE CleanT(r: REFANY) =
+PROCEDURE CleanThread(r: REFANY) =
   VAR t := NARROW(r, T);
   BEGIN
     DeleteContext(t.act.context);
@@ -530,7 +530,7 @@ PROCEDURE CleanT(r: REFANY) =
     DelHandle(t.act.alertEvent, ThisLine());
     DelHandle(t.act.handle, ThisLine());
     DISPOSE(t.act);
-  END CleanT;
+  END CleanThread;
 
 <* WINAPI *>
 PROCEDURE ThreadBase (param: ADDRESS): DWORD =
