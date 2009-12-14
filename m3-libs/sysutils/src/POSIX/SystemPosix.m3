@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: SystemPosix.m3,v 1.11 2009-07-29 09:33:02 jkrell Exp $ *)
+ * $Id: SystemPosix.m3,v 1.12 2009-12-14 06:57:18 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
@@ -72,7 +72,7 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     Uexec.RepackStatus(status);
 *)
     (* ensure non-zero implies lower bits non-zero *)
-    IF (Word.And(status, 16_FFFFFF00) # 0) AND (Word.And(status, 16_FF) = 0) THEN
+    IF (status # 0) AND (Word.And(status, 16_FF) = 0) THEN
       status := 1;
     END;
     RETURN MIN(LAST(Process.ExitCode), status);
