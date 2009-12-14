@@ -521,11 +521,11 @@ PROCEDURE CreateT (act: Activation): T =
       END;
       RTHeapRep.RegisterFinalCleanup (t, CleanThread);
       cleanup := NIL;
-      AssignSlot (t);
-      RETURN t;
     FINALLY
       CleanThread(cleanup);
     END;
+    AssignSlot (t);
+    RETURN t;
   END CreateT;
 
 PROCEDURE CleanThread(r: REFANY) =
