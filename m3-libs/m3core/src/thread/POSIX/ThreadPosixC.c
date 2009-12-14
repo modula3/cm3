@@ -104,73 +104,32 @@ typedef struct {
 #else
   ucontext_t uc;
 #endif
-} Context, Context_t;
+} Context;
 
 #ifdef M3_USE_SIGALTSTACK
 
-#define xGetContext ThreadPosix__xGetContext
-#define xSetContext ThreadPosix__xSetContext
-#define xSwapContext ThreadPosix__xSwapContext
 #define xMakeContext ThreadPosix__xMakeContext
 
-#define GetContext(ctx)      \
-do {                         \
-    xGetContext(ctx);        \
-    sigsetjmp((ctx)->jb, 1); \
-} while(0)
-
-#define SetContext(ctx)       \
-do {                          \
-    xSetContext(ctx);         \
-    siglongjmp((ctx)->jb, 1); \
-} while(0)
-
-#define SWAP_CONTEXT(oldc, newc)        \
+#define SWAP_CONTEXT(oldc, newc)       \
 do {                                   \
-    xSwapContext((oldc), (newc));      \
     if (sigsetjmp((oldc)->jb, 1) == 0) \
         siglongjmp((newc)->jb, 1);     \
 } while (0)
 
-void
-xGetContext(
-    Context_t* context)
-{
-}
-
-void
-xSetContext(
-    Context_t* context)
-{
-}
-
-void
-xSwapContext(
-    Context_t* oldContext,
-    Context_t* newContext)
-{
-    xGetContext(oldContext);
-    xSetContext(newContext);
-}
-
-static Context_t mctx_caller;
+static Context mctx_caller;
 static sig_atomic_t volatile mctx_called;
-static Context_t * volatile mctx_create;
+static Context * volatile mctx_create;
 static void (* volatile mctx_create_func)(void);
 static sigset_t mctx_create_sigs;
 
 static void mctx_create_boot(void)
 {
-    void (*mctx_start_func)(void);
+    void (*volatile mctx_start_func)(void);
     
     sigprocmask(SIG_SETMASK, &mctx_create_sigs, NULL);
-    
     mctx_start_func = mctx_create_func;
-    
     SWAP_CONTEXT(mctx_create, &mctx_caller);
-    
     mctx_start_func();
-
     abort(); /* not reached */
 }
 
@@ -187,7 +146,7 @@ static void mctx_create_trampoline(int sig)
 
 void
 xMakeContext( 
-    Context_t *context, 
+    Context *context, 
     void (*function)(void),
     void *stack,
     size_t stack_size) 
@@ -240,7 +199,7 @@ xMakeContext(
 void *
 MakeContext (void (*p)(void), int words)
 {
-  Context *c = calloc (1, sizeof(Context));
+  Context *c = (Context *)calloc (1, sizeof(*c));
   size_t size = words * sizeof(void *);
   int pagesize = getpagesize();
   char *sp = NULL;
@@ -305,7 +264,7 @@ ProcessContext(Context *c, char *bottom, char *top,
     /* live thread */
     /* do we need to flush register windows too? */
 #ifdef M3_USE_SIGALTSTACK
-    GetContext(c);
+    sigsetjmp(c->jb, 0);
 #else
     if (getcontext(&(c->uc))) abort();
 #endif
