@@ -96,33 +96,23 @@ PROCEDURE CleanMutex (r: REFANY) =
 PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
   VAR mutex := pthread_mutex_new();
-      cleanup := root;
+      cleanup := mutex;
   BEGIN
     WITH r = pthread_mutex_lock(initMu) DO <*ASSERT r=0*> END;
-    IF m = NIL THEN (* We won the race. *)
-      IF mutex = NIL THEN (* But we failed. *)
-        WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
-        RTE.Raise (RTE.T.OutOfMemory);
-      ELSE (* We won the race and succeeded. *)
-        TRY
+    TRY
+      IF m = NIL THEN (* We won the race. *)
+        IF mutex = NIL THEN (* But we failed. *)
+          RTE.Raise (RTE.T.OutOfMemory);
+        ELSE (* We won the race and succeeded. *)
           RTHeapRep.RegisterFinalCleanup (root, Clean);
           cleanup := NIL;
           m := mutex;
-        FINALLY
-          IF cleanup # NIL THEN
-            (* Do not call Clean() here.
-             * That would require storing mutex,
-             * which would enable other threads
-             * to go ahead and use it.
-             *)
-            pthread_mutex_delete(mutex);
-          END;
-          WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
         END;
+      ELSE (* another thread beat us in the race, ok, handled by FINALLY *)
       END;
-    ELSE (* another thread beat us in the race, ok *)
+    FINALLY
       WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
-      pthread_mutex_delete(mutex);
+      pthread_mutex_delete(cleanup);
     END;
   END InitMutex;
 
