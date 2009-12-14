@@ -147,39 +147,28 @@ PROCEDURE CleanCondition (r: REFANY) =
 PROCEDURE InitCondition (c: Condition) =
   VAR lock := NewCriticalSection();
       event := CreateEvent(NIL, 1, 0, NIL);
-      cleanup := c;
+      cleanupLock := lock;
+      cleanupEvent := event;
   BEGIN
     EnterCriticalSection(ADR(initLock));
-    <* ASSERT (c.lock = NIL) = (c.waitEvent = NIL) *>
-    IF c.lock = NIL THEN (* We won the race. *)
-      IF lock = NIL OR event = NIL THEN (* But we failed. *)
-        DelCriticalSection(lock);
-        DelHandle(event, ThisLine());
-        LeaveCriticalSection(ADR(initLock));
-        RuntimeError.Raise (RuntimeError.T.OutOfMemory);
-      ELSE (* We won the race and succeeded. *)
-        TRY
+    TRY
+      <* ASSERT (c.lock = NIL) = (c.waitEvent = NIL) *>
+      IF c.lock = NIL THEN (* We won the race. *)
+        IF lock = NIL OR event = NIL THEN (* But we failed. *)
+          RuntimeError.Raise (RuntimeError.T.OutOfMemory);
+        ELSE (* We won the race and succeeded. *)
           RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
-          cleanup := NIL;
-        FINALLY
-          IF cleanup # NIL THEN
-            (* Do not try to call CleanCondition() here.
-             * That would require storing lock/event,
-             * which would enable other threads
-             * to go ahead and use them.
-             *)
-            DelCriticalSection(lock);
-            DelHandle(event, ThisLine());
-          END;
+          cleanupLock := NIL;
+          cleanupEvent := NIL;
+          c.lock := lock;
+          c.waitEvent := event;
         END;
-        c.lock := lock;
-        c.waitEvent := event;
-        LeaveCriticalSection(ADR(initLock));
+      ELSE (* another thread beat us in the race, ok, handled by FINALLY *)
       END;
-    ELSE (* another thread beat us in the race, ok *)
+    FINALLY
       LeaveCriticalSection(ADR(initLock));
-      DelCriticalSection(lock);
-      DelHandle(event, ThisLine());
+      DelCriticalSection(cleanupLock);
+      DelHandle(cleanupEvent, ThisLine());
     END;
   END InitCondition;
 
