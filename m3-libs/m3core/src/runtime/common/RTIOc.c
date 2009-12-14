@@ -15,37 +15,37 @@ extern "C" {
 #define PutG    RTIO__PutG
 #define PutBytes RTIO__PutBytes
 
-void __cdecl RTIO__Flush(void);
+void __cdecl Flush(void);
 
-void __cdecl RTIO__PutE(double a)
+void __cdecl PutE(double a)
 {
-    RTIO__Flush();
+    Flush();
     printf("%e", a);
     fflush(NULL);
 }
 
-void __cdecl RTIO__PutF(double a)
+void __cdecl PutF(double a)
 {
-    RTIO__Flush();
+    Flush();
     printf("%f", a);
     fflush(NULL);
 }
 
-void __cdecl RTIO__PutG(double a)
+void __cdecl PutG(double a)
 {
-    RTIO__Flush();
+    Flush();
     printf("%g", a);
     fflush(NULL);
 }
 
-void __cdecl RTIO__PutBytes(const unsigned char* p, size_t count)
+void __cdecl PutBytes(const unsigned char* p, size_t count)
 {
     char buffer[33];
     const static char hex[] = "0123456789ABCDEF";
     size_t i = { 0 };
     size_t j = { 0 };
     
-    RTIO__Flush();
+    Flush();
     for (i = 0; i < count; ++i)
     {
         unsigned char c = p[i];
