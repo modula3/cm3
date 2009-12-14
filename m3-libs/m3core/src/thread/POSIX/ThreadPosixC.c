@@ -162,7 +162,7 @@ xMakeContext(
     sigaddset(&sigs, SIGUSR1);
     sigprocmask(SIG_BLOCK, &sigs, &osigs);
     
-    memset(&sa, 0, sizeof(sa));
+    ZeroMemory(&sa, sizeof(sa));
     sa.sa_handler = mctx_create_trampoline;
     sa.sa_flags = SA_ONSTACK;
     sigemptyset(&sa.sa_mask);
