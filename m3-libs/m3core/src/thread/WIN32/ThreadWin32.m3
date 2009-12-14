@@ -482,18 +482,18 @@ PROCEDURE AssignSlot (t: T) =
     LeaveCriticalSection(ADR(slotLock));
   END AssignSlot;
 
-PROCEDURE FreeSlot (t: T; act: Activation) =
+PROCEDURE FreeSlot (self: T) =
   (* LL = 0 *)
   BEGIN
     EnterCriticalSection(ADR(slotLock));
-      <* ASSERT act.slot > 0 *>
+      <* ASSERT self.act.slot > 0 *>
       <* ASSERT n_slotted > 0 *>
       DEC(n_slotted);
-      WITH z = slots [act.slot] DO
-        IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
+      WITH z = slots [self.act.slot] DO
+        IF z # self THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
-      act.slot := 0;
+      self.act.slot := 0;
     LeaveCriticalSection(ADR(slotLock));
   END FreeSlot;
 
@@ -524,16 +524,12 @@ PROCEDURE CreateT (act: Activation): T =
 
 PROCEDURE CleanT(r: REFANY) =
   VAR t := NARROW(r, T);
-      act := t.act;
   BEGIN
-    IF act # NIL THEN
-      DeleteContext(act.context);
-      DelHandle(act.waitEvent, ThisLine());
-      DelHandle(act.alertEvent, ThisLine());
-      DelHandle(act.handle, ThisLine());
-      DISPOSE(act);
-      t.act := NIL;
-    END;
+    DeleteContext(t.act.context);
+    DelHandle(t.act.waitEvent, ThisLine());
+    DelHandle(t.act.alertEvent, ThisLine());
+    DelHandle(t.act.handle, ThisLine());
+    DISPOSE(t.act);
   END CleanT;
 
 <* WINAPI *>
@@ -581,7 +577,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
         RTHeapRep.FlushThreadState(me.heapState);
 
         IF perfOn THEN PerfDeleted() END;
-        FreeSlot(self, me);
+        FreeSlot(self);  (* note: needs self.act ! *)
         (* Since we're no longer slotted, we cannot touch traced refs. *)
 
         self := NIL; (* drop traced reference *)
