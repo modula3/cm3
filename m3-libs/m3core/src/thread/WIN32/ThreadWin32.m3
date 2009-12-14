@@ -507,35 +507,38 @@ PROCEDURE CreateT (act: Activation): T =
      the allocator to start a collection which will call "SuspendOthers"
      which will try to acquire "activeLock". *)
   VAR t: T := NEW(T, act := act);
-      cleanup := act;
+      cleanup := t;
   BEGIN
     TRY
+      t.act.context := NewContext();
+      IF t.act.context = NIL THEN
+        RuntimeError.Raise(RuntimeError.T.OutOfMemory);
+      END;
+      t.act.waitEvent := CreateEvent(NIL, 0, 0, NIL);
+      t.act.alertEvent := CreateEvent(NIL, 0, 0, NIL);
+      IF t.act.waitEvent = NIL OR t.act.alertEvent = NIL THEN
+        RuntimeError.Raise(RuntimeError.T.SystemError);
+      END;
       RTHeapRep.RegisterFinalCleanup (t, CleanThread);
       cleanup := NIL;
+      AssignSlot (t);
+      RETURN t;
     FINALLY
-      DISPOSE(cleanup);
+      CleanThread(cleanup);
     END;
-    act.context := NewContext();
-    IF act.context = NIL THEN
-      RuntimeError.Raise(RuntimeError.T.OutOfMemory);
-    END;
-    act.waitEvent := CreateEvent(NIL, 0, 0, NIL);
-    act.alertEvent := CreateEvent(NIL, 0, 0, NIL);
-    IF act.waitEvent = NIL OR act.alertEvent = NIL THEN
-      RuntimeError.Raise(RuntimeError.T.SystemError);
-    END;
-    AssignSlot (t);
-    RETURN t;
   END CreateT;
 
 PROCEDURE CleanThread(r: REFANY) =
-  VAR t := NARROW(r, T);
+  VAR t: T;
   BEGIN
-    DeleteContext(t.act.context);
-    DelHandle(t.act.waitEvent, ThisLine());
-    DelHandle(t.act.alertEvent, ThisLine());
-    DelHandle(t.act.handle, ThisLine());
-    DISPOSE(t.act);
+    IF r # NIL THEN
+      t := NARROW(r, T);
+      DeleteContext(t.act.context);
+      DelHandle(t.act.waitEvent, ThisLine());
+      DelHandle(t.act.alertEvent, ThisLine());
+      DelHandle(t.act.handle, ThisLine());
+      DISPOSE(t.act);
+    END;
   END CleanThread;
 
 <* WINAPI *>
