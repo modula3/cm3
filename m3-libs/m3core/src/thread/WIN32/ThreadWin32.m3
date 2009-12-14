@@ -130,7 +130,7 @@ PROCEDURE InitMutex (mutex: Mutex) =
           cleanup := NIL;
         FINALLY
           IF cleanup # NIL THEN
-            (* Do not try to call CleanMutex() here.
+            (* Do not call CleanMutex() here.
              * That would require storing lock,
              * which would enable other threads
              * to go ahead and use it.
