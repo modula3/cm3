@@ -117,33 +117,23 @@ PROCEDURE DelHandle(VAR a: HANDLE; line: INTEGER) =
 
 PROCEDURE InitMutex (mutex: Mutex) =
   VAR lock := NewCriticalSection();
-      cleanup := mutex;
+      cleanup := lock;
   BEGIN
     EnterCriticalSection(ADR(initLock));
-    IF mutex.lock = NIL THEN (* We won the race. *)
-      IF lock = NIL THEN (* But we failed. *)
-        LeaveCriticalSection(ADR(initLock));
-        RuntimeError.Raise (RuntimeError.T.OutOfMemory);
-      ELSE (* We won the race and succeeded. *)
-        TRY
+    TRY
+      IF mutex.lock = NIL THEN (* We won the race. *)
+        IF lock = NIL THEN (* But we failed. *)
+          RuntimeError.Raise (RuntimeError.T.OutOfMemory);
+        ELSE (* We won the race and succeeded. *)
           RTHeapRep.RegisterFinalCleanup (mutex, CleanMutex);
           cleanup := NIL;
           mutex.lock := lock;
-        FINALLY
-          IF cleanup # NIL THEN
-            (* Do not call CleanMutex() here.
-             * That would require storing lock,
-             * which would enable other threads
-             * to go ahead and use it.
-             *)
-            DelCriticalSection(lock);
-          END;
-          LeaveCriticalSection(ADR(initLock));
         END;
-      END;
-    ELSE (* another thread beat us in the race, ok *)
+      ELSE (* another thread beat us in the race, ok, handled by FINALLY *)
+      END
+    FINALLY
       LeaveCriticalSection(ADR(initLock));
-      DelCriticalSection(lock);
+      DelCriticalSection(cleanup);
     END;
   END InitMutex;
 
