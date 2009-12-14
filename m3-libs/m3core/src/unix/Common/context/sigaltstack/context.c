@@ -43,13 +43,36 @@ static void mctx_create_boot(void)
 
 static void mctx_create_trampoline(int sig)
 {
-    if (_setjmp(mctx_create->jb) == 0)
+    if (sigsetjmp(mctx_create->jb, 0) == 0)
     {
         mctx_called = 1;
         return;
     }
     
     mctx_create_boot();
+}
+
+void
+xGetContext(
+    Context_t* context)
+{
+    context->err = errno;
+}
+
+void
+xSetContext(
+    Context_t* context)
+{
+    errno = context->err;
+}
+
+void
+xSwapContext(
+    Context_t* oldContext,
+    Context_t* newContext)
+{
+    xGetContext(oldContext);
+    xSetContext(newContext);
 }
 
 void
@@ -68,14 +91,14 @@ MakeContext(
     sigset_t sigs = { 0 };
 
     sigemptyset(&sigs);
-    sigaddset(&sigs, SIGUSR2);
+    sigaddset(&sigs, SIGUSR1);
     sigprocmask(SIG_BLOCK, &sigs, &osigs);
     
     memset(&sa, 0, sizeof(sa));
     sa.sa_handler = mctx_create_trampoline;
     sa.sa_flags = SA_ONSTACK;
     sigemptyset(&sa.sa_mask);
-    sigaction(SIGUSR2, &sa, &osa);
+    sigaction(SIGUSR1, &sa, &osa);
     
     ss.ss_sp = stack;
     ss.ss_size = stack_size;
@@ -87,9 +110,9 @@ MakeContext(
     mctx_create_arg = arg;
     mctx_create_sigs = osigs;
     mctx_called = 0;
-    kill(getpid(), SIGUSR2);
+    kill(getpid(), SIGUSR1);
     sigfillset(&sigs);
-    sigdelset(&sigs, SIGUSR2);
+    sigdelset(&sigs, SIGUSR1);
     while (!mctx_called)
         sigsuspend(&sigs);
         
@@ -98,7 +121,7 @@ MakeContext(
     sigaltstack(&ss, NULL);
     if (!(oss.ss_flags & SS_DISABLE))
         sigaltstack(&oss, NULL);
-    sigaction(SIGUSR2, &osa, NULL);
+    sigaction(SIGUSR1, &osa, NULL);
     sigprocmask(SIG_SETMASK, &osigs, NULL);
     
     SwapContext(&mctx_caller, context);
