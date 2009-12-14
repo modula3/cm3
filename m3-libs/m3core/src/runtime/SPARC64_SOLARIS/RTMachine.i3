@@ -10,8 +10,6 @@
 
 INTERFACE RTMachine;
 
-IMPORT Uucontext;
-
 (*------------------------------------------------------------------ heap ---*)
 
 (* The heap page size used to be machine-dependent, since it could depend

@@ -34,7 +34,7 @@ readonly _UnixPieces = {
   "SPARC32_LINUX"   : [ "linux-common", "uin-common" ],
   "SPARC64_LINUX"   : [ "linux-common", "uin-common" ],
   "SPARC64_OPENBSD" : [ "openbsd-common",                          "uin-len" ],
-  "SPARC64_SOLARIS" : [ "solaris-common", "solaris-2-x",           "uin-common" ],
+  "SPARC64_SOLARIS" : [ "solaris-common",                          "uin-common" ],
 }
 
 if equal (OS_TYPE, "WIN32")
