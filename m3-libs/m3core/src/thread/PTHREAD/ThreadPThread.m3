@@ -394,11 +394,14 @@ VAR (* LL=activeMu *)
   allThreads: Activation := NIL;            (* global list of active threads *)
 
 PROCEDURE CleanThread (r: REFANY) =
-  VAR t := NARROW(r, T);
+  VAR t: T;
   BEGIN
-    pthread_mutex_delete(t.act.mutex);
-    pthread_cond_delete(t.act.cond);
-    DISPOSE(t.act);
+    IF r # NIL THEN
+      t := NARROW(r, T);
+      pthread_mutex_delete(t.act.mutex);
+      pthread_cond_delete(t.act.cond);
+      DISPOSE(t.act);
+    END;
   END CleanThread;
 
 PROCEDURE CreateT (act: Activation): T =
@@ -407,17 +410,20 @@ PROCEDURE CreateT (act: Activation): T =
      which will try to acquire "activeMu". *)
   VAR
     t := NEW(T, act := act);
-    mutex := pthread_mutex_new();
-    cond := pthread_cond_new();
+    cleanup := t;
   BEGIN
-    IF (mutex = NIL) OR (cond = NIL) THEN
-      pthread_mutex_delete(mutex);
-      pthread_cond_delete(cond);
+    t.act.mutex := pthread_mutex_new();
+    t.act.cond := pthread_cond_new();
+    IF (t.act.mutex = NIL) OR (t.act.cond = NIL) THEN
+      CleanThread(t);
       RTE.Raise(RTE.T.OutOfMemory);
     END;
-    act.mutex := mutex;
-    act.cond := cond;
-    RTHeapRep.RegisterFinalCleanup (t, CleanThread);
+    TRY
+      RTHeapRep.RegisterFinalCleanup (t, CleanThread);
+      cleanup := NIL;
+    FINALLY
+      CleanThread(cleanup);
+    END;
     t.join := NEW(Condition);
     AssignSlot (t);
     RETURN t;
