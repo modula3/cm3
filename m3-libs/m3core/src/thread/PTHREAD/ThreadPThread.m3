@@ -412,13 +412,12 @@ PROCEDURE CreateT (act: Activation): T =
     t := NEW(T, act := act);
     cleanup := t;
   BEGIN
-    t.act.mutex := pthread_mutex_new();
-    t.act.cond := pthread_cond_new();
-    IF (t.act.mutex = NIL) OR (t.act.cond = NIL) THEN
-      CleanThread(cleanup);
-      RTE.Raise(RTE.T.OutOfMemory);
-    END;
     TRY
+      t.act.mutex := pthread_mutex_new();
+      t.act.cond := pthread_cond_new();
+      IF (t.act.mutex = NIL) OR (t.act.cond = NIL) THEN
+        RTE.Raise(RTE.T.OutOfMemory);
+      END;
       RTHeapRep.RegisterFinalCleanup (t, CleanThread);
       cleanup := NIL;
     FINALLY
