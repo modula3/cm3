@@ -10,6 +10,10 @@ The users of sigaction() vary as to which flags they use.
 Some use BSD sigvec which is similar to sigaction.
 */
 
+/* _XOPEN_SOURCE is required to get the correct MacOSX/x86
+ * ucontext_t declaration. Otherwise getcontext overruns
+ * its parameter.
+ */
 #define _XOPEN_SOURCE 500
 #define _BSD_SOURCE
 #define _XPG4_2
