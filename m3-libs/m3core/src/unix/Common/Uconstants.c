@@ -686,16 +686,10 @@ X(IPPROTO_TCP)
 
 
 #undef X
-#undef Y
 #define X(x) const int Utime__##x = x;
-#define Y(x, y) const int Utime__##x = y;
-/* Cygwin only supports real time whereas Modula-3 only uses virtual time. Lie. */
 #ifndef _WIN32
-#ifdef __CYGWIN__
-Y(ITIMER_VIRTUAL, ITIMER_REAL)
-#else
-X(ITIMER_VIRTUAL) /* virtual time intervals */
-#endif
+X(ITIMER_REAL)
+X(ITIMER_VIRTUAL)
 #endif
 
 #undef X
