@@ -115,31 +115,35 @@ PROCEDURE DelHandle(VAR a: HANDLE; line: INTEGER) =
     END;
   END DelHandle;
 
-PROCEDURE InitMutex (VAR m: PCRITICAL_SECTION; root: REFANY;
-                     Clean: PROCEDURE(root: REFANY)) =
-  VAR mutex := NewCriticalSection();
-      cleanup := root;
+PROCEDURE InitMutex (mutex: Mutex) =
+  VAR lock := NewCriticalSection();
+      cleanup := mutex;
   BEGIN
     EnterCriticalSection(ADR(initLock));
-    IF m = NIL THEN (* We won the race. *)
-      IF mutex = NIL THEN (* But we failed. *)
+    IF mutex.lock = NIL THEN (* We won the race. *)
+      IF lock = NIL THEN (* But we failed. *)
         LeaveCriticalSection(ADR(initLock));
         RuntimeError.Raise (RuntimeError.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
         TRY
-          RTHeapRep.RegisterFinalCleanup (root, Clean);
+          RTHeapRep.RegisterFinalCleanup (mutex, CleanMutex);
           cleanup := NIL;
         FINALLY
           IF cleanup # NIL THEN
-            WinBase.DeleteCriticalSection(mutex);
+            (* Do not try to call CleanMutex() here.
+             * That would require storing lock,
+             * which would enable other threads
+             * to go ahead and use it.
+             *)
+            DelCriticalSection(lock);
           END;
         END;
-        m := mutex;
+        mutex.lock := lock;
         LeaveCriticalSection(ADR(initLock));
       END;
     ELSE (* another thread beat us in the race, ok *)
       LeaveCriticalSection(ADR(initLock));
-      DelCriticalSection(mutex);
+      DelCriticalSection(lock);
     END;
   END InitMutex;
 
@@ -150,7 +154,7 @@ PROCEDURE CleanCondition (r: REFANY) =
     DelHandle(c.waitEvent, ThisLine());
   END CleanCondition;
 
-PROCEDURE InitCondition (VAR c: Condition) =
+PROCEDURE InitCondition (c: Condition) =
   VAR lock := NewCriticalSection();
       event := CreateEvent(NIL, 1, 0, NIL);
       cleanup := c;
@@ -169,6 +173,11 @@ PROCEDURE InitCondition (VAR c: Condition) =
           cleanup := NIL;
         FINALLY
           IF cleanup # NIL THEN
+            (* Do not try to call CleanCondition() here.
+             * That would require storing lock/event,
+             * which would enable other threads
+             * to go ahead and use them.
+             *)
             DelCriticalSection(lock);
             DelHandle(event, ThisLine());
           END;
@@ -187,7 +196,7 @@ PROCEDURE InitCondition (VAR c: Condition) =
 PROCEDURE LockMutex (m: Mutex) =
   BEGIN
     IF perfOn THEN PerfChanged(State.locking) END;
-    IF m.lock = NIL THEN InitMutex(m.lock, m, CleanMutex) END;
+    IF m.lock = NIL THEN InitMutex(m) END;
     EnterCriticalSection(m.lock);
     IF m.held THEN Die(ThisLine(), "attempt to lock mutex already locked by self") END;
     m.held := TRUE;
