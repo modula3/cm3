@@ -147,8 +147,7 @@ PROCEDURE CleanCondition (r: REFANY) =
 PROCEDURE InitCondition (c: Condition) =
   VAR lock := NewCriticalSection();
       event := CreateEvent(NIL, 1, 0, NIL);
-      cleanupLock := lock;
-      cleanupEvent := event;
+      cleanup := TRUE;
   BEGIN
     EnterCriticalSection(ADR(initLock));
     TRY
@@ -158,8 +157,7 @@ PROCEDURE InitCondition (c: Condition) =
           RuntimeError.Raise (RuntimeError.T.OutOfMemory);
         ELSE (* We won the race and succeeded. *)
           RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
-          cleanupLock := NIL;
-          cleanupEvent := NIL;
+          cleanup := FALSE;
           c.lock := lock;
           c.waitEvent := event;
         END;
@@ -167,8 +165,10 @@ PROCEDURE InitCondition (c: Condition) =
       END;
     FINALLY
       LeaveCriticalSection(ADR(initLock));
-      DelCriticalSection(cleanupLock);
-      DelHandle(cleanupEvent, ThisLine());
+      IF cleanup THEN
+        DelCriticalSection(lock);
+        DelHandle(event, ThisLine());
+      END;
     END;
   END InitCondition;
 
