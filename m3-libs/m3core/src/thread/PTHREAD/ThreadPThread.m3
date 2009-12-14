@@ -489,7 +489,7 @@ PROCEDURE RunThread (me: Activation) =
     RTHeapRep.FlushThreadState(me.heapState);
 
     IF perfOn THEN PerfDeleted() END;
-    FreeSlot(self, self.act);
+    FreeSlot(self);  (* note: needs self.act ! *)
     (* Since we're no longer slotted, we cannot touch traced refs. *)
   END RunThread;
 
