@@ -340,20 +340,18 @@ PROCEDURE AssignSlot (t: T) =
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
   END AssignSlot;
 
-PROCEDURE FreeSlot (VAR self: T; VAR act: Activation) =
+PROCEDURE FreeSlot (VAR self: T) =
   (* LL = 0 *)
   BEGIN
     WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
 
       DEC (n_slotted);
-      WITH z = slots [act.slot] DO
+      WITH z = slots [self.act.slot] DO
         IF z # self THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
       self := NIL; (* drop traced reference *)
-      act.slot := 0;
-      act := NIL;  (* drop reference *)
-
+      self.act.slot := 0;
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
   END FreeSlot;
 
@@ -398,14 +396,10 @@ VAR (* LL=activeMu *)
 
 PROCEDURE CleanThread (r: REFANY) =
   VAR t := NARROW(r, T);
-      act := t.act;
   BEGIN
-    IF act # NIL THEN
-      pthread_mutex_delete(act.mutex);
-      pthread_cond_delete(act.cond);
-      DISPOSE(act);
-      t.act := NIL;
-    END;
+    pthread_mutex_delete(t.act.mutex);
+    pthread_cond_delete(t.act.cond);
+    DISPOSE(t.act);
   END CleanThread;
 
 PROCEDURE CreateT (act: Activation): T =
