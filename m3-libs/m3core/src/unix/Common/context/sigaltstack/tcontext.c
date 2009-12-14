@@ -28,6 +28,9 @@ typedef void (*SignalHandler1)(int signo);
 
 sigset_t ThreadSwitchSignal;
 
+/* SIGVTALRM was often used in the past, but SIGALRM seems
+ * to behave much better, at least on MacOS X.
+ */
 #if 1 /* defined(__CYGWIN__) || defined(__APPLE__) */
 #define SIG_TIMESLICE SIGALRM
 #define ITIMER_TIMESLICE ITIMER_REAL

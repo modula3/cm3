@@ -33,6 +33,7 @@ typedef unsigned char _JBTYPE __attribute__((aligned(4)));
 #include <setjmp.h>
 #include <stddef.h>
 #include <signal.h>
+#include <errno.h>
 
 #ifdef __cplusplus
 extern "C"
@@ -41,18 +42,41 @@ extern "C"
 
 typedef struct {
     sigjmp_buf jb;
+    int err; /* errno */
 } Context_t;
 
-#define  GetContext(ctx) \
-    (void)_setjmp((ctx)->jb)
+void
+xGetContext(
+    Context_t* context);
 
-#define SetContext(ctx) \
-    _longjmp((ctx)->jb, 1)
+void
+xSetContext(
+    Context_t* context);
 
-#define SwapContext(old, new)\
-    if (_setjmp((old)->jb) == 0) \
-        _longjmp((new)->jb, 1)
-    
+void
+xSwapContext(
+    Context_t* oldContext,
+    Context_t* newContext);
+
+#define GetContext(ctx)      \
+do {                         \
+    xGetContext(ctx);        \
+    sigsetjmp((ctx)->jb, 1); \
+} while(0)
+
+#define SetContext(ctx)       \
+do {                          \
+    xSetContext(ctx);         \
+    siglongjmp((ctx)->jb, 1); \
+} while(0)
+
+#define SwapContext(oldc, newc)        \
+do {                                   \
+    xSwapContext((oldc), (newc));      \
+    if (sigsetjmp((oldc)->jb, 1) == 0) \
+        siglongjmp((newc)->jb, 1);     \
+} while (0)
+
 void
 MakeContext(
     Context_t* context,
