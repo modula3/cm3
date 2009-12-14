@@ -415,7 +415,7 @@ PROCEDURE CreateT (act: Activation): T =
     t.act.mutex := pthread_mutex_new();
     t.act.cond := pthread_cond_new();
     IF (t.act.mutex = NIL) OR (t.act.cond = NIL) THEN
-      CleanThread(t);
+      CleanThread(cleanup);
       RTE.Raise(RTE.T.OutOfMemory);
     END;
     TRY
