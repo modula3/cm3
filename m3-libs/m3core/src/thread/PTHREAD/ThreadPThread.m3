@@ -398,10 +398,14 @@ VAR (* LL=activeMu *)
 
 PROCEDURE CleanThread (r: REFANY) =
   VAR t := NARROW(r, T);
+      act := t.act;
   BEGIN
-    pthread_mutex_delete(t.act.mutex);
-    pthread_cond_delete(t.act.cond);
-    DISPOSE(t.act);
+    IF act # NIL THEN
+      pthread_mutex_delete(act.mutex);
+      pthread_cond_delete(act.cond);
+      DISPOSE(act);
+      t.act := NIL;
+    END;
   END CleanThread;
 
 PROCEDURE CreateT (act: Activation): T =
