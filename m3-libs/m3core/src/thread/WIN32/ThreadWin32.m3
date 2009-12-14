@@ -524,16 +524,12 @@ PROCEDURE CreateT (act: Activation): T =
 
 PROCEDURE CleanT(r: REFANY) =
   VAR t := NARROW(r, T);
-      act := t.act;
   BEGIN
-    IF act # NIL THEN
-      DeleteContext(act.context);
-      DelHandle(act.waitEvent, ThisLine());
-      DelHandle(act.alertEvent, ThisLine());
-      DelHandle(act.handle, ThisLine());
-      DISPOSE(act);
-      t.act := NIL;
-    END;
+    DeleteContext(t.act.context);
+    DelHandle(t.act.waitEvent, ThisLine());
+    DelHandle(t.act.alertEvent, ThisLine());
+    DelHandle(t.act.handle, ThisLine());
+    DISPOSE(t.act);
   END CleanT;
 
 <* WINAPI *>
