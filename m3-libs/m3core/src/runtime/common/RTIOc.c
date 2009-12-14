@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <string.h>
+#include <stddef.h>
 
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */
@@ -40,7 +40,7 @@ void __cdecl PutG(double a)
 
 void __cdecl PutBytes(const unsigned char* p, size_t count)
 {
-    char buffer[33];
+    char buffer[33]; /* size must be odd */
     const static char hex[] = "0123456789ABCDEF";
     size_t i = { 0 };
     size_t j = { 0 };
@@ -51,7 +51,7 @@ void __cdecl PutBytes(const unsigned char* p, size_t count)
         unsigned char c = p[i];
         buffer[j++] = hex[(c >> 4) & 0xF];
         buffer[j++] = hex[c & 0xF];
-        if (j >= (sizeof(buffer) - 1))
+        if (j == (sizeof(buffer) - 1))
         {
             buffer[j++] = 0;
             printf("%s", buffer);
