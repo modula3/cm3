@@ -507,8 +507,14 @@ PROCEDURE CreateT (act: Activation): T =
      the allocator to start a collection which will call "SuspendOthers"
      which will try to acquire "activeLock". *)
   VAR t: T := NEW(T, act := act);
+      cleanup := act;
   BEGIN
-    RTHeapRep.RegisterFinalCleanup (t, CleanThread);
+    TRY
+      RTHeapRep.RegisterFinalCleanup (t, CleanThread);
+      cleanup := NIL;
+    FINALLY
+      DISPOSE(cleanup);
+    END;
     act.context := NewContext();
     IF act.context = NIL THEN
       RuntimeError.Raise(RuntimeError.T.OutOfMemory);
