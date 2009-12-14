@@ -72,7 +72,7 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     Uexec.RepackStatus(status);
 *)
     (* ensure non-zero implies lower bits non-zero *)
-    IF (Word.And(status, 16_FFFFFF00) # 0) AND (Word.And(status, 16_FF) = 0) THEN
+    IF (status # 0) AND (Word.And(status, 16_FF) = 0) THEN
       status := 1;
     END;
     RETURN MIN(LAST(Process.ExitCode), status);
