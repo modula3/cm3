@@ -407,14 +407,18 @@ PROCEDURE CreateT (act: Activation): T =
      which will try to acquire "activeMu". *)
   VAR
     t := NEW(T, act := act);
-    mutex := pthread_mutex_new();
-    cond := pthread_cond_new();
+    cleanup := t;
   BEGIN
-    act.mutex := mutex;
-    act.cond := cond;
-    RTHeapRep.RegisterFinalCleanup (t, CleanThread);
-    IF (mutex = NIL) OR (cond = NIL) THEN
-      RTE.Raise(RTE.T.OutOfMemory);
+    TRY
+      t.act.mutex := pthread_mutex_new();
+      t.act.cond := pthread_cond_new();
+      IF (t.act.mutex = NIL) OR (t.act.cond = NIL) THEN
+        RTE.Raise(RTE.T.OutOfMemory);
+      END;
+      RTHeapRep.RegisterFinalCleanup (t, CleanThread);
+      cleanup := NIL;
+    FINALLY
+      IF cleanup # NIL THEN CleanThread(cleanup) END;
     END;
     t.join := NEW(Condition);
     AssignSlot (t);
