@@ -113,20 +113,24 @@ readonly m3cc_config = {
   % Not all of this is relevant to m3cg?, but user can build gcc/cc1 here.
   %
 
-  "PPC32_AIX" : "-with-as=/usr/bin/as -without-gnu-as -with-ld=/us/bin/ld -without-gnu-ld",
-  "PPC64_AIX" : "-with-as=/usr/bin/as -without-gnu-as -with-ld=/us/bin/ld -without-gnu-ld",
+  "PPC32_AIX" : "-without-gnu-as -without-gnu-ld",
+  "PPC64_AIX" : "-without-gnu-as -without-gnu-ld",
+  % If buiding native gcc driver, add:
+  % -with-as=/usr/bin/as -with-ld=/us/bin/ld
 
   %
   % Irix requires GNU as and GNU ld should work but presently does not.
   % Irix native ld works.
   %
 
-  "MIPS32_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
-  "MIPS64_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
+  "MIPS32_IRIX" : "-with-gnu-as -without-gnu-ld", 
+  "MIPS64_IRIX" : "-with-gnu-as -without-gnu-ld",
+  % If buiding native gcc driver, add:
+  % -with-ld=/usr/bin/ld 
 
   %
   % Hm -- I thought this was just about what assembler/linker the gcc driver runs,
-  % but it might also affect the contents of the assembly.
+  % but it also affect the contents of the assembly.
   % For example, SPARC64_SOLARIS output isn't being accepted by SUN as, let's see..
   % #ifdef HAVE_AS_REGISTER_PSEUDO_OP
   % D:\dev2\cm3.2\m3-sys\m3cc\gcc\gcc\config\sparc\sparc.c(3842):	  fprintf (file, "\t.register\t%%g%d, #%s\n", i,
@@ -139,17 +143,23 @@ readonly m3cc_config = {
   % If m3cg omits the .register psuedo ops, assembly completely fails, with lots of errors.
   %
 
-  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes -with-as=/usr/ccs/bin/as -without-gnu-as -with-ld=/usr/ccs/bin/ld -without-gnu-ld",
+  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes -without-gnu-as -without-gnu-ld",
+  % If buiding native gcc driver, add:
+  % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld 
 
   %
   % This is recommended and has been seen to make a difference.
   %
 
-  "I386_SOLARIS" :  "-with-gnu-as -with-as=/usr/sfw/bin/gas -without-gnu-ld -with-ld=/usr/ccs/bin/ld",
-  "AMD64_SOLARIS" : "-with-gnu-as -with-as=/usr/sfw/bin/gas -without-gnu-ld -with-ld=/usr/ccs/bin/ld",
+  "I386_SOLARIS" :  "-with-gnu-as -without-gnu-ld",
+  "AMD64_SOLARIS" : "-with-gnu-as -without-gnu-ld",
+  % If buiding native gcc driver, add:
+  % -with-as=/usr/sfw/bin/gas -with-ld=/usr/ccs/bin/ld
 
-  "SOLgnu"        : "-with-ld=/usr/ccs/bin/ld -without-gnu-ld -with-as=/usr/ccs/bin/as -without-gnu-as",
-  "SOLsun"        : "-with-ld=/usr/ccs/bin/ld -without-gnu-ld -with-as=/usr/ccs/bin/as -without-gnu-as",
+  "SOLgnu"        : "-without-gnu-ld -without-gnu-as",
+  "SOLsun"        : "-without-gnu-ld -without-gnu-as",
+  % If buiding native gcc driver, add:
+  % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld
 
   %
   % Bootstrap procedure for gcc on HPPA{64}-HPUX:
@@ -177,12 +187,12 @@ readonly m3cc_config = {
   % of gcc will support -g on HP-UX, and I think whether or not
   % configure will even succeed on HP-UX (with newer gcc).
   %
-  "PA32_HPUX"  : "-with-gnu-as -with-as=/usr/local/32/bin/gas",
-  "PA64_HPUX"  : "-with-gnu-as -with-as=/usr/local/64/bin/gas",
-  % If this suffices, good, otherwise specify the full path to the GNU assembler.
-  %"PA32_HPUX"  : "-with-gnu-as",
-  %"PA64_HPUX"  : "-with-gnu-as",
-
+  "PA32_HPUX"  : "-with-gnu-as",
+  "PA64_HPUX"  : "-with-gnu-as",
+  % If buiding native gcc driver, add:
+  %    -with-as=/usr/local/32/bin/gas
+  % or -with-as=/usr/local/64/bin/gas
+  
   "HPPA"  : "-with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
 
