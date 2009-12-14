@@ -482,18 +482,18 @@ PROCEDURE AssignSlot (t: T) =
     LeaveCriticalSection(ADR(slotLock));
   END AssignSlot;
 
-PROCEDURE FreeSlot (t: T; act: Activation) =
+PROCEDURE FreeSlot (t: T) =
   (* LL = 0 *)
   BEGIN
     EnterCriticalSection(ADR(slotLock));
-      <* ASSERT act.slot > 0 *>
+      <* ASSERT t.act.slot > 0 *>
       <* ASSERT n_slotted > 0 *>
       DEC(n_slotted);
-      WITH z = slots [act.slot] DO
+      WITH z = slots [t.act.slot] DO
         IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
-      act.slot := 0;
+      t.act.slot := 0;
     LeaveCriticalSection(ADR(slotLock));
   END FreeSlot;
 
@@ -581,7 +581,7 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
         RTHeapRep.FlushThreadState(me.heapState);
 
         IF perfOn THEN PerfDeleted() END;
-        FreeSlot(self, me);
+        FreeSlot(self);  (* note: needs self.act ! *)
         (* Since we're no longer slotted, we cannot touch traced refs. *)
 
         self := NIL; (* drop traced reference *)
