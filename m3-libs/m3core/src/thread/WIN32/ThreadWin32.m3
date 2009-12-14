@@ -137,7 +137,6 @@ PROCEDURE InitMutex (mutex: Mutex) =
              * to go ahead and use it.
              *)
             DelCriticalSection(lock);
-            LeaveCriticalSection(ADR(initLock));
           END;
           LeaveCriticalSection(ADR(initLock));
         END;
