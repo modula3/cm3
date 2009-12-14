@@ -340,7 +340,7 @@ PROCEDURE AssignSlot (t: T) =
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
   END AssignSlot;
 
-PROCEDURE FreeSlot (VAR self: T) =
+PROCEDURE FreeSlot (self: T) =
   (* LL = 0 *)
   BEGIN
     WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
