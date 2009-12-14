@@ -350,7 +350,6 @@ PROCEDURE FreeSlot (VAR self: T) =
         IF z # self THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
-      self := NIL; (* drop traced reference *)
       self.act.slot := 0;
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
   END FreeSlot;
