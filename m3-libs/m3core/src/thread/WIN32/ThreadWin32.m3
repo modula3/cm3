@@ -118,6 +118,7 @@ PROCEDURE DelHandle(VAR a: HANDLE; line: INTEGER) =
 PROCEDURE InitMutex (VAR m: PCRITICAL_SECTION; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
   VAR mutex := NewCriticalSection();
+      cleanup := root;
   BEGIN
     EnterCriticalSection(ADR(initLock));
     IF m = NIL THEN (* We won the race. *)
@@ -125,9 +126,16 @@ PROCEDURE InitMutex (VAR m: PCRITICAL_SECTION; root: REFANY;
         LeaveCriticalSection(ADR(initLock));
         RuntimeError.Raise (RuntimeError.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
+        TRY
+          RTHeapRep.RegisterFinalCleanup (root, Clean);
+          cleanup := NIL;
+        FINALLY
+          IF cleanup # NIL THEN
+            WinBase.DeleteCriticalSection(mutex);
+          END;
+        END;
         m := mutex;
         LeaveCriticalSection(ADR(initLock));
-        RTHeapRep.RegisterFinalCleanup (root, Clean);
       END;
     ELSE (* another thread beat us in the race, ok *)
       LeaveCriticalSection(ADR(initLock));
@@ -145,6 +153,7 @@ PROCEDURE CleanCondition (r: REFANY) =
 PROCEDURE InitCondition (VAR c: Condition) =
   VAR lock := NewCriticalSection();
       event := CreateEvent(NIL, 1, 0, NIL);
+      cleanup := c;
   BEGIN
     EnterCriticalSection(ADR(initLock));
     <* ASSERT (c.lock = NIL) = (c.waitEvent = NIL) *>
@@ -155,10 +164,18 @@ PROCEDURE InitCondition (VAR c: Condition) =
         LeaveCriticalSection(ADR(initLock));
         RuntimeError.Raise (RuntimeError.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
+        TRY
+          RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
+          cleanup := NIL;
+        FINALLY
+          IF cleanup # NIL THEN
+            DelCriticalSection(lock);
+            DelHandle(event, ThisLine());
+          END;
+        END;
         c.lock := lock;
         c.waitEvent := event;
         LeaveCriticalSection(ADR(initLock));
-        RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
       END;
     ELSE (* another thread beat us in the race, ok *)
       LeaveCriticalSection(ADR(initLock));
