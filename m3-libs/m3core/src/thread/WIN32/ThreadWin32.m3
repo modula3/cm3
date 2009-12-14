@@ -128,6 +128,7 @@ PROCEDURE InitMutex (mutex: Mutex) =
         TRY
           RTHeapRep.RegisterFinalCleanup (mutex, CleanMutex);
           cleanup := NIL;
+          mutex.lock := lock;
         FINALLY
           IF cleanup # NIL THEN
             (* Do not call CleanMutex() here.
@@ -136,10 +137,10 @@ PROCEDURE InitMutex (mutex: Mutex) =
              * to go ahead and use it.
              *)
             DelCriticalSection(lock);
+            LeaveCriticalSection(ADR(initLock));
           END;
+          LeaveCriticalSection(ADR(initLock));
         END;
-        mutex.lock := lock;
-        LeaveCriticalSection(ADR(initLock));
       END;
     ELSE (* another thread beat us in the race, ok *)
       LeaveCriticalSection(ADR(initLock));
