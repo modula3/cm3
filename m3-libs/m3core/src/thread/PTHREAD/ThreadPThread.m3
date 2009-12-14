@@ -107,6 +107,7 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
         TRY
           RTHeapRep.RegisterFinalCleanup (root, Clean);
           cleanup := NIL;
+          m := mutex;
         FINALLY
           IF cleanup # NIL THEN
             (* Do not call Clean() here.
@@ -116,9 +117,8 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
              *)
             pthread_mutex_delete(mutex);
           END;
+          WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
         END;
-        m := mutex;
-        WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
       END;
     ELSE (* another thread beat us in the race, ok *)
       WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
