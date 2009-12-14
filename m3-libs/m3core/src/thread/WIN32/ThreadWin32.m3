@@ -482,18 +482,18 @@ PROCEDURE AssignSlot (t: T) =
     LeaveCriticalSection(ADR(slotLock));
   END AssignSlot;
 
-PROCEDURE FreeSlot (t: T) =
+PROCEDURE FreeSlot (self: T) =
   (* LL = 0 *)
   BEGIN
     EnterCriticalSection(ADR(slotLock));
-      <* ASSERT t.act.slot > 0 *>
+      <* ASSERT self.act.slot > 0 *>
       <* ASSERT n_slotted > 0 *>
       DEC(n_slotted);
-      WITH z = slots [t.act.slot] DO
-        IF z # t THEN Die (ThisLine(), "unslotted thread!"); END;
+      WITH z = slots [self.act.slot] DO
+        IF z # self THEN Die (ThisLine(), "unslotted thread!"); END;
         z := NIL;
       END;
-      t.act.slot := 0;
+      self.act.slot := 0;
     LeaveCriticalSection(ADR(slotLock));
   END FreeSlot;
 
