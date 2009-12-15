@@ -2137,53 +2137,31 @@ PROCEDURE WeakRefToRef (READONLY t: WeakRef): REFANY =
     RETURN r;
   END WeakRefToRef;
 
-(* "final cleanup" for a heap object -- register
- * a callback to cleanup untraced data within a traced
- * reference shortly before the traced reference is reclaimed.
- *)
+(* This is RTHeapRep.RegisterFinalCleanup, which registers final cleanup
+   for a heap object. *)
 
-PROCEDURE ReserveFinalCleanup (): INTEGER = (* raises under low memory *)
-  VAR i: INTEGER;
+PROCEDURE RegisterFinalCleanup (r: REFANY; p: PROCEDURE (r: REFANY)) =
   BEGIN
+    <* ASSERT r # NIL *>
+    <* ASSERT p # NIL *>
     TRY
       RTOS.LockHeap();
       (* if necessary, expand weakTable *)
       IF weakFree0 = -1 THEN ExpandWeakTable(); END;
       (* allocate a new entry *)
-      i := weakFree0;
+      VAR i := weakFree0;
       BEGIN
         weakFree0 := weakTable[i].next;
         (* set up the entry, without a weak ref *)
-        weakTable[i].t.a := 0;
-        weakTable[i].t.b := 0;
-        weakTable[i].r   := NIL;
-        weakTable[i].p   := NIL;
+        weakTable[i].r := LOOPHOLE(r, RefReferent);
+        weakTable[i].p := LOOPHOLE(p, ADDRESS);
         weakTable[i].next := weakFinal0;
         weakFinal0 := i;
       END;
     FINALLY
       RTOS.UnlockHeap();
     END;
-    RETURN i;
-  END ReserveFinalCleanup;
-
-PROCEDURE CommitFinalCleanup (i: INTEGER; r: REFANY; p: PROCEDURE (r: REFANY)) =
-  (* i is from ReserveCleanup *)
-  BEGIN
-    <* ASSERT r # NIL *>
-    <* ASSERT p # NIL *>
-    <* ASSERT i >= 0 *>
-    TRY
-      RTOS.LockHeap();
-      BEGIN
-        (* set up the entry, without a weak ref *)
-        weakTable[i].r := LOOPHOLE(r, RefReferent);
-        weakTable[i].p := LOOPHOLE(p, ADDRESS);
-      END;
-    FINALLY
-      RTOS.UnlockHeap();
-    END;
-  END CommitFinalCleanup;
+  END RegisterFinalCleanup;
 
 (* WeakCleaner waits for entries to be placed on the dead list, then cleans
    them up and puts them on the free list. *)
