@@ -95,29 +95,24 @@ PROCEDURE CleanMutex (r: REFANY) =
 
 PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
-  VAR cleanup: INTEGER;
-      mutex: pthread_mutex_t := NIL;
-      success := FALSE;
+  VAR mutex := pthread_mutex_new();
   BEGIN
-    cleanup := RTHeapRep.ReserveFinalCleanup(); (* raises under low memory *)
+    IF mutex = NIL THEN RTE.Raise (RTE.T.OutOfMemory) END;
     WITH r = pthread_mutex_lock(initMu) DO <*ASSERT r=0*> END;
+    IF m # NIL THEN
+      (* Someone else won the race. *)
+      pthread_mutex_delete(mutex);
+      WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
+      RETURN;
+    END;
+    (* We won the race. *)
     TRY
-      mutex := pthread_mutex_new();
-      IF m = NIL THEN (* We won the race. *)
-        IF mutex = NIL THEN (* But we failed. *)
-          RTE.Raise (RTE.T.OutOfMemory);
-        END;
-        (* We won the race and succeeded. *)
-        m := mutex;
-        success := TRUE;
-      END;
+      RTHeapRep.RegisterFinalCleanUp (root, Clean);
+      m := mutex;
+      mutex := NIL;
     FINALLY
       WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
-      IF success THEN
-        RTHeapRep.CommitFinalCleanup(cleanup, root, Clean);
-      ELSE
-        pthread_mutex_delete(mutex);
-      END;
+      pthread_mutex_delete(mutex);
     END;
   END InitMutex;
 
@@ -411,29 +406,16 @@ PROCEDURE CleanThread (r: REFANY) =
 
 PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
-   * the allocator to start a collection which will call "SuspendOthers"
-   * which will try to acquire "activeMu".
-   * NOTE that if we fail, we have to cleanup act;
-   * It is untraced and this is the only reference.
-   *)
+     the allocator to start a collection which will call "SuspendOthers"
+     which will try to acquire "activeMu". *)
   VAR t := NEW(T, act := act);
-      cleanup: INTEGER;
-      success := FALSE;
   BEGIN
-    TRY
-      t.act.mutex := pthread_mutex_new();           (* does not raise *)
-      t.act.cond := pthread_cond_new();             (* does not raise *)
-      cleanup := RTHeapRep.ReserveFinalCleanup();   (* raises under low memory *)
-      IF (t.act.mutex = NIL) OR (t.act.cond = NIL) THEN
-        RTE.Raise(RTE.T.OutOfMemory);
-      END;
-      success := TRUE;
-    FINALLY
-      IF success THEN
-        RTHeapRep.CommitFinalCleanup(cleanup, t, CleanThread);
-      ELSE
-        CleanThread(t);
-      END;
+    RTHeapRep.RegisterFinalCleanup (t, CleanThread);
+    t.act.mutex := pthread_mutex_new();
+    t.act.cond := pthread_cond_new();
+    IF (t.act.mutex = NIL) OR (t.act.cond = NIL) THEN
+      CleanThread(t);
+      RTE.Raise(RTE.T.OutOfMemory);
     END;
     t.join := NEW(Condition);
     AssignSlot (t);
