@@ -8,7 +8,7 @@ void MscTryFinally__F2(void);
 
 void MscTryFinally__F1(void)
 {
-#if defined(_MSC_VER)
+#ifdef _MSC_VER
     __try
     {
         MscTryFinally__F2();
