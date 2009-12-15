@@ -116,31 +116,26 @@ PROCEDURE DelHandle(VAR a: HANDLE; line: INTEGER) =
   END DelHandle;
 
 PROCEDURE InitMutex (mutex: Mutex) =
-  VAR lock: PCRITICAL_SECTION := NIL;
-      cleanup: INTEGER;
-      success := FALSE;
+  VAR lock := NewCriticalSection();
   BEGIN
-    cleanup := RTHeapRep.ReserveFinalCleanup(); (* raises *)
-    lock := NewCriticalSection();
+    IF lock = NIL THEN RuntimeError.Raise (RuntimeError.T.OutOfMemory) END;
     EnterCriticalSection(ADR(initLock));
+    IF mutex.lock # NIL THEN
+      (* Someone else won the race. *)
+      DelCriticalSection(lock);
+      LeaveCriticalSection(ADR(initLock));
+      RETURN;
+    END;
+    (* We won the race. *)
     TRY
-      IF mutex.lock = NIL THEN (* We won the race. *)
-        IF lock = NIL THEN (* But we failed. *)
-          RuntimeError.Raise (RuntimeError.T.OutOfMemory);
-        END;
-        (* We won the race and succeeded. *)
-        mutex.lock := lock;
-        success := TRUE;
-      END
+      RTHeapRep.RegisterFinalCleanup (mutex, CleanMutex);
+      mutex.lock := lock;
+      lock := NIL;
     FINALLY
       LeaveCriticalSection(ADR(initLock));
-      IF success THEN
-        RTHeapRep.CommitFinalCleanup(cleanup, mutex, CleanMutex);
-      ELSE
-        DelCriticalSection(lock);
-      END;
+      DelCriticalSection(lock);
     END;
-  END InitMutex;
+  END InitMutex;      
 
 PROCEDURE CleanCondition (r: REFANY) =
   VAR c := NARROW(r, Condition);
@@ -150,34 +145,34 @@ PROCEDURE CleanCondition (r: REFANY) =
   END CleanCondition;
 
 PROCEDURE InitCondition (c: Condition) =
-  VAR lock: PCRITICAL_SECTION := NIL;
-      cleanup: INTEGER;
-      event: HANDLE := NIL;
-      success := FALSE;
-  BEGIN
-    cleanup := RTHeapRep.ReserveFinalCleanup(); (* raises *)
+  VAR
     lock := NewCriticalSection();
     event := CreateEvent(NIL, 1, 0, NIL);
+  BEGIN
+    IF lock = NIL OR event = NIL THEN
+      DelCriticalSection(lock);
+      DelHandle(event, ThisLine());
+      RuntimeError.Raise (RuntimeError.T.OutOfMemory);
+    END;
     EnterCriticalSection(ADR(initLock));
+    IF c.lock # NIL THEN
+      (* Someone else won the race. *)
+      LeaveCriticalSection(ADR(initLock));
+      DelCriticalSection(lock);
+      DelHandle(event, ThisLine());
+      RETURN;
+    END;
+    (* We won the race. *)
     TRY
-      <* ASSERT (c.lock = NIL) = (c.waitEvent = NIL) *>
-      IF c.lock = NIL THEN (* We won the race. *)
-        IF lock = NIL OR event = NIL THEN (* But we failed. *)
-          RuntimeError.Raise (RuntimeError.T.OutOfMemory);
-        END;
-        (* We won the race and succeeded. *)
-        c.lock := lock;
-        c.waitEvent := event;
-        success := TRUE;
-      END;
+      RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
+      c.lock := lock;
+      c.waitEvent := event;
+      lock := NIL;
+      event := NIL;
     FINALLY
       LeaveCriticalSection(ADR(initLock));
-      IF success THEN
-        RTHeapRep.CommitFinalCleanup(cleanup, c, CleanCondition);
-      ELSE
-        DelCriticalSection(lock);
-        DelHandle(event, ThisLine());
-      END;
+      DelCriticalSection(lock);
+      DelHandle(event, ThisLine());
     END;
   END InitCondition;
 
@@ -518,33 +513,18 @@ VAR (* LL=activeLock *)
 
 PROCEDURE CreateT (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
-   * the allocator to start a collection which will call "SuspendOthers"
-   * which will try to acquire "activeLock".
-   * NOTE that if we fail, we have to cleanup act;
-   * It is untraced and this is the only reference.
-   *)
+     the allocator to start a collection which will call "SuspendOthers"
+     which will try to acquire "activeLock". *)
   VAR t: T := NEW(T, act := act);
-      cleanup: INTEGER;
-      success := FALSE;
   BEGIN
-    TRY
-      cleanup := RTHeapRep.ReserveFinalCleanup(); (* raises *)
-      t.act.context := NewContext();
-      IF t.act.context = NIL THEN
-        RuntimeError.Raise(RuntimeError.T.OutOfMemory);
-      END;
-      t.act.waitEvent := CreateEvent(NIL, 0, 0, NIL);
-      t.act.alertEvent := CreateEvent(NIL, 0, 0, NIL);
-      IF t.act.waitEvent = NIL OR t.act.alertEvent = NIL THEN
-        RuntimeError.Raise(RuntimeError.T.SystemError);
-      END;
-      success := TRUE;
-    FINALLY
-      IF success THEN
-        RTHeapRep.CommitFinalCleanup(cleanup, t, CleanThread);
-      ELSE
-        CleanThread(t);
-      END;
+    RTHeapRep.RegisterFinalCleanup (t, CleanThread);
+    t.act.context := NewContext();
+    t.act.waitEvent := CreateEvent(NIL, 0, 0, NIL);
+    t.act.alertEvent := CreateEvent(NIL, 0, 0, NIL);
+    IF t.act.context = NIL OR t.act.waitEvent = NIL OR t.act.alertEvent = NIL THEN
+      (* we could just let the registered cleanup run, but memory is tight *)
+      CleanThread(t);
+      RuntimeError.Raise(RuntimeError.T.SystemError);
     END;
     AssignSlot (t);
     RETURN t;
