@@ -1,0 +1,8 @@
+INTERFACE MscTryFinally;
+
+EXCEPTION E1;
+
+PROCEDURE F2() RAISES {E1};
+<* EXTERNAL MscTryFinally__F1 *> PROCEDURE F1() RAISES {E1};
+
+END MscTryFinally.
