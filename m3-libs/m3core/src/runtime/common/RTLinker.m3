@@ -263,6 +263,18 @@ PROCEDURE FixTypes () =
     n_fixed := MAX (n_fixed, stop+1);
   END FixTypes;
 
+PROCEDURE TraceBrand(a: RT0.BrandPtr) =
+  VAR b: ARRAY[0..100] OF CHAR;
+      i := 0;
+  BEGIN
+    WHILE i < 99 AND i < a.length DO
+      b[i] := a.chars[i];
+      INC(i);
+    END;
+    b[i] := '\x00';
+    TraceMsgS("    brand    ", ADR(b[0]));
+  END TraceBrand;
+
 PROCEDURE DeclareModuleTypes (m: RT0.ModulePtr) =
   VAR
     type  : RT0.TypeDefn;
@@ -274,9 +286,14 @@ PROCEDURE DeclareModuleTypes (m: RT0.ModulePtr) =
     type := m.type_cells;  m.type_cells := NIL;
     WHILE (type # NIL) DO
       next := type.next;  type.next := NIL;
-      TraceMsgS("  type ", type.name);
-      TraceMsgI("    typecode ", type.typecode);
-      TraceMsgI("    typeid   ", type.selfID);
+      IF traceInit THEN
+        TraceMsgS("  type ", type.name);
+        TraceMsgI("    typecode ", type.typecode);
+        TraceMsgI("    typeid   ", type.selfID);
+        IF type.brand_ptr # NIL THEN
+          TraceBrand(type.brand_ptr);
+        END;
+      END;
       RTTypeSRC.AddTypecell (type, m);
       type := next;
     END;
