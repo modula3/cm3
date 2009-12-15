@@ -8,7 +8,7 @@
 /*      modified on Fri Oct 16 10:38:41 PDT 1992 by steveg                   */
 /*      modified on Tue Jun 16 22:04:27 PDT 1992 by muller                   */
 
-if HasGui()
+if not HasGui()
   build_standalone()
 end
 

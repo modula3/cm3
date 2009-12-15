@@ -7,7 +7,7 @@
 %      modified on Wed Jun 23 14:03:11 PDT 1993 by steveg
 %      modified on Sun Jul 19 18:28:44 PDT 1992 by sclafani
 
-if HasGui()
+if not HasGui()
   build_standalone()
 end
 

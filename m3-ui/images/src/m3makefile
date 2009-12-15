@@ -4,7 +4,7 @@
 /*                                                             */
 /* Makefile for "Images" library                               */
 
-if HasGui()
+if not HasGui()
   build_standalone()
 end
 
