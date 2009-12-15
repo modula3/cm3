@@ -76,8 +76,8 @@ proc compare_file (dir, OutputPath) is
     return
   end
 
-  ExpectedPath = subst_chars (ExpectedPath, "/", diff_slash)
-  OutputPath = subst_chars (OutputPath, "/", diff_slash)
+  ExpectedPath = subst_chars (ExpectedPath, SL, diff_slash)
+  OutputPath = subst_chars (OutputPath, SL, diff_slash)
 
   ExpectedPath = File64(ExpectedPath)
 
