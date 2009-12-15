@@ -210,7 +210,7 @@ TYPE
 (* Flush cached thread state, on GC flip and thread death *)
 PROCEDURE FlushThreadState (VAR thread: ThreadState);
 
-(* RegisterFinalCleanup is available for low-level cleanup by the thread
+(* FinalCleanup is available for low-level cleanup by the thread
    package.  If "r" is registered for cleanup, then just before "r" is
    freed, the cleanup procedure "p" is called.  This procedure is allowed
    to dereference "r" to copy out data, not including traced references.
@@ -220,7 +220,8 @@ PROCEDURE FlushThreadState (VAR thread: ThreadState);
    cannot use weak refs straight on public types because its clients should
    remain free to use weak refs on subtypes. *)
 
-PROCEDURE RegisterFinalCleanup (r: REFANY; p: PROCEDURE (r: REFANY));
+PROCEDURE ReserveFinalCleanup ():INTEGER; (* raises under low memory *)
+PROCEDURE CommitFinalCleanup (i: INTEGER; r: REFANY; p: PROCEDURE (r: REFANY));
 
 (****** COLLECTOR STATUS AND CONTROL ******)
 
