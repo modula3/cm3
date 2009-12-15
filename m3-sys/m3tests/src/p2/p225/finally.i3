@@ -1,0 +1,8 @@
+INTERFACE finally;
+
+EXCEPTION E1;
+
+PROCEDURE F2() RAISES {E1};
+<* EXTERNAL finally__F1 *> PROCEDURE F1() RAISES {E1};
+
+END finally.
