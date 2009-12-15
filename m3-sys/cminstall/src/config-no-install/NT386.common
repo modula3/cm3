@@ -623,8 +623,8 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local readonly listing  = lib & ".lst"
     local readonly LibResponseFile = GetResponseFileName()
     local LinkResponseFile = LibResponseFile
-    local ShipHand = equal (lib, "m3core") and FileExists("hand" & Obj)
-    local ShipUconstants = equal (lib, "m3core") and FileExists("Uconstants" & Obj)
+    local ShipHand = shared and equal (lib, "m3core") and FileExists("hand" & Obj)
+    local ShipUconstants = shared and equal (lib, "m3core") and FileExists("Uconstants" & Obj)
 
     if ShipHand
         UseHand = ""
@@ -650,9 +650,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         LinkResponseFile,
         lib & ".ilk"]
 
-    % make sure files get cleaned up
     DeleteFiles(Outputs)
-    deriveds("", Outputs)
 
     local m3_lib_flags = [ ]
     if equal(LINKER, "MS")
@@ -740,17 +738,10 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         if not equal(ret_code, 0)
             return ret_code
         end
-
-        BindExport(dll_file)
-        PdbExport(pdb_file)
-        install_derived(lib0_file)
-        if ShipHand
-            LibdExport("hand" & Obj)
-        end
-        if ShipUconstants
-            LibdExport("Uconstants" & Obj)
-        end
     end
+
+    local a = skip_lib(lib, shared)
+
     return ret_code
 end
 
@@ -767,6 +758,8 @@ proc skip_lib(lib, shared) is
     local manifest_file  = dll_file & ".manifest"
     local pdb_file  = lib & ".pdb"
     local listing   = lib & ".lst"
+    local ShipHand = shared and equal (lib, "m3core") and FileExists("hand" & Obj)
+    local ShipUconstants = shared and equal (lib, "m3core") and FileExists("Uconstants" & Obj)
 
     local readonly Outputs = [
         lib_file,
@@ -792,6 +785,13 @@ proc skip_lib(lib, shared) is
         DeleteFile(dll_file)
         DeleteFile(manifest_file)
         DeleteFile(pdb_file)
+    end
+
+    if ShipHand
+        LibdExport("hand" & Obj)
+    end
+    if ShipUconstants
+        LibdExport("Uconstants" & Obj)
     end
 
     return 0
