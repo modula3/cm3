@@ -263,32 +263,10 @@ PROCEDURE FixTypes () =
     n_fixed := MAX (n_fixed, stop+1);
   END FixTypes;
 
-PROCEDURE TraceBrand (a: RT0.BrandPtr) =
-  VAR b: ARRAY[0..100] OF CHAR;
-      i := 0;
-  BEGIN
-    WHILE i < 99 AND i < a.length DO
-      b[i] := a.chars[i];
-      INC(i);
-    END;
-    b[i] := '\x00';
-    TraceMsgS("    brand    ", ADR(b[0]));
-  END TraceBrand;
-
-PROCEDURE TraceType (type: RT0.TypeDefn) =
-  BEGIN
-    IF NOT traceInit THEN RETURN END;
-    TraceMsgS("  type ", type.name);
-    TraceMsgI("    typecode ", type.typecode);
-    TraceMsgI("    typeid   ", type.selfID);
-    IF type.brand_ptr # NIL THEN
-      TraceBrand(type.brand_ptr);
-    END;
-  END TraceType;
-
 PROCEDURE DeclareModuleTypes (m: RT0.ModulePtr) =
   VAR
     type  : RT0.TypeDefn;
+    brand : RT0.BrandPtr;
     rev   : RT0.RevPtr;
     next  : ADDRESS;
   BEGIN
@@ -297,7 +275,13 @@ PROCEDURE DeclareModuleTypes (m: RT0.ModulePtr) =
     type := m.type_cells;  m.type_cells := NIL;
     WHILE (type # NIL) DO
       next := type.next;  type.next := NIL;
-      TraceType(type);
+      TraceMsgS("  type ", type.name);
+      TraceMsgI("    typecode ", type.typecode);
+      TraceMsgI("    typeid   ", type.selfID);
+      brand := type.brand_ptr;
+      IF brand # NIL THEN
+        TraceMsgC("    brand    ", ADR(brand.chars[0]), brand.length);
+      END;
       RTTypeSRC.AddTypecell (type, m);
       type := next;
     END;
@@ -564,6 +548,15 @@ PROCEDURE TraceMsgS(s: TEXT; s2: RT0.String) =
     RTIO.PutText("\r\n");
     RTIO.Flush();
   END TraceMsgS;
+
+PROCEDURE TraceMsgC(s: TEXT; a: ADDRESS; n: INTEGER) =
+  BEGIN
+    IF NOT traceInit THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutChars(a, n);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END TraceMsgC;
 
 BEGIN
 END RTLinker.
