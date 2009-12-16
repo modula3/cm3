@@ -122,7 +122,12 @@ PROCEDURE DelHandle(VAR a: HANDLE; line: INTEGER) =
 PROCEDURE InitMutex (mutex: Mutex) =
   VAR lock := NewCriticalSection();
   BEGIN
-    IF lock = NIL THEN RuntimeError.Raise (RuntimeError.T.OutOfMemory) END;
+    IF lock = NIL THEN
+      IF mutex.lock # NIL THEN (* Someone else won the race. *)
+        RETURN;
+      END;
+      RuntimeError.Raise (RuntimeError.T.OutOfMemory)
+    END;
     EnterCriticalSection(ADR(initLock));
     IF mutex.lock # NIL THEN
       (* Someone else won the race. *)
@@ -156,6 +161,9 @@ PROCEDURE InitCondition (c: Condition) =
     IF lock = NIL OR event = NIL THEN
       DelCriticalSection(lock);
       DelHandle(event, ThisLine());
+      IF c.lock # NIL AND c.waitEvent # NIL THEN (* Someone else won the race. *)
+        RETURN;
+      END;
       RuntimeError.Raise (RuntimeError.T.OutOfMemory);
     END;
     EnterCriticalSection(ADR(initLock));
