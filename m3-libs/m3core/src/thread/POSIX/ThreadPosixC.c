@@ -19,7 +19,7 @@ Some use BSD sigvec which is similar to sigaction.
 #define _XPG4_2
 #define _DARWIN_C_SOURCE
 
-#if (defined(__APPLE__) && defined(__x86_64__)) /*|| defined(__OpenBSD__)*/
+#if (defined(__APPLE__) && defined(__x86_64__)) || defined(__OpenBSD__)
 /* see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
  * see http://www.engelschall.com/pw/usenix/2000/pmt-html/
  */
@@ -36,9 +36,7 @@ Some use BSD sigvec which is similar to sigaction.
 #include <setjmp.h>
 #include <stddef.h>
 #include <errno.h>
-#ifdef __OpenBSD__
-#include "context.h"
-#else
+#ifndef __OpenBSD__
 #include <ucontext.h>
 #endif
 #include <sys/mman.h>
