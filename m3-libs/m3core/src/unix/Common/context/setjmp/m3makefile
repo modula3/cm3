@@ -1,4 +1,4 @@
-if IsOpenBSD()
+if FALSE
     h_source("context")
     c_source("context")
 end
