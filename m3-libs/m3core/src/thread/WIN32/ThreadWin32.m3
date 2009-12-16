@@ -55,6 +55,7 @@ REVEAL
       joined (*BOOLEAN*) := 0;      (* "Join" or "AlertJoin" has already returned *)
     END;
 
+  TYPE ActState = { Starting, Started, Stopping, Stopped };
   TYPE Activation = UNTRACED BRANDED REF RECORD
       frame: ADDRESS := NIL;            (* exception handling support; this field is accessed MANY times
                                         so perhaps therefore should be first *)
@@ -68,9 +69,24 @@ REVEAL
       stackPointer: ADDRESS := NIL;     (* context->Esp etc. (processor dependent) *)
       waitEvent: HANDLE := NIL;         (* event for blocking during "Wait", "AlertWait", "AlertPause", etc. *)
       alertEvent: HANDLE := NIL;        (* event for blocking during "Wait", "AlertWait", "AlertPause", etc. *)
+      state := ActState.Started;        (* LL = activeMu *)
       heapState: RTHeapRep.ThreadState; (* thread state *)
       floatState: FloatMode.ThreadState; (* thread state *)
     END;
+
+PROCEDURE SetState (act: Activation;  state: ActState) =
+  CONST text = ARRAY ActState OF TEXT
+    { "Starting", "Started", "Stopping", "Stopped" };
+  BEGIN
+    act.state := state;
+    IF DEBUG THEN
+      RTIO.PutText(text[state]);
+      RTIO.PutText(" act=");
+      RTIO.PutAddr(act);
+      RTIO.PutText("\n");
+      RTIO.Flush();
+    END;
+  END SetState;    
 
 (*----------------------------------------------------------------- Mutex ---*)
 (* Note: {Unlock,Lock}Mutex are the routines called directly by
@@ -818,7 +834,7 @@ PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeLock". *)
   VAR me: Activation;
       act: Activation;
-      nLive := 0;
+      retry: BOOLEAN;
   BEGIN
     EnterCriticalSection(ADR(activeLock));
 
@@ -829,26 +845,26 @@ PROCEDURE SuspendOthers () =
     me := GetActivation();
     LOOP
       act := me.next;
-      nLive := 0;
+      retry := FALSE;
       WHILE act # me DO
         IF act.suspendCount = 0 THEN
-          IF DEBUG THEN
-            RTIO.PutText("suspending act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
-          END;
+          SetState(act, ActState.Stopping);
           IF act.stackStart # NIL AND act.stackEnd # NIL THEN
             IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
             IF act.heapState.inCritical # 0 OR NOT GetContextAndCheckStack(act) THEN
               IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-              INC(nLive);
+              retry := TRUE;
+              SetState(act, ActState.Started);
             ELSE
               INC(act.suspendCount);
+              SetState(act, ActState.Stopped);
             END;
           END;
         END;
         act := act.next;
       END;
-      IF nLive = 0 THEN
-        RETURN
+      IF NOT retry THEN
+        RETURN;
       END;
       Sleep(1);
     END;
@@ -870,8 +886,10 @@ PROCEDURE ResumeOthers () =
         <* ASSERT (act.suspendCount > 0 AND act.stackPointer # NIL) OR (act.stackStart = NIL AND act.stackEnd = NIL) *>
         act.stackPointer := NIL;
         IF act.suspendCount > 0 THEN
+          SetState(act, ActState.Starting);
           IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
           DEC(act.suspendCount);
+          SetState(act, ActState.Started);
         END;
         act := act.next;
       END;
