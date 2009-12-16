@@ -61,8 +61,8 @@ REVEAL
                                         so perhaps therefore should be first *)
       next, prev: Activation := NIL;    (* LL = activeLock; global doubly-linked, circular list of all active threads *)
       handle: HANDLE := NIL;            (* thread handle in Windows *)
-      stackStart: ADDRESS := NIL;       (* stack bounds for use by GC *)
-      stackEnd: ADDRESS := NIL;         (* stack bounds for use by GC *)
+      stackStart: ADDRESS := NIL;       (* stack bounds for use by GC; the lowest address in a growing-down stack *)
+      stackEnd: ADDRESS := NIL;         (* stack bounds for use by GC; just past the highest address in a growing-down stack *)
       slot := 0;                        (* LL = slotLock;  index into global array of active, slotted threads *)
       suspendCount := 0;                (* LL = activeLock *)
       context: PCONTEXT := NIL;         (* registers of suspended thread *)
@@ -838,6 +838,7 @@ PROCEDURE SuspendOthers () =
   BEGIN
     EnterCriticalSection(ADR(activeLock));
 
+    <* ASSERT suspend_cnt = 0 *>
     INC (suspend_cnt);
     IF suspend_cnt # 1 THEN
       RETURN
@@ -847,6 +848,7 @@ PROCEDURE SuspendOthers () =
       act := me.next;
       retry := FALSE;
       WHILE act # me DO
+        <* ASSERT act.suspendCount = 0 OR act.suspendCount = 1 *>
         IF act.suspendCount = 0 THEN
           SetState(act, ActState.Stopping);
           IF act.stackStart # NIL AND act.stackEnd # NIL THEN
@@ -857,6 +859,7 @@ PROCEDURE SuspendOthers () =
               SetState(act, ActState.Started);
             ELSE
               INC(act.suspendCount);
+              <* ASSERT act.suspendCount = 1 *>
               SetState(act, ActState.Stopped);
             END;
           END;
@@ -875,6 +878,7 @@ PROCEDURE ResumeOthers () =
   VAR act: Activation;
       me: Activation;
   BEGIN
+    <* ASSERT suspend_cnt = 1 *>
     DEC (suspend_cnt);
     IF suspend_cnt = 0 THEN
       me := GetActivation();
@@ -884,11 +888,13 @@ PROCEDURE ResumeOthers () =
           RTIO.PutText("resuming act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
         END;
         <* ASSERT (act.suspendCount > 0 AND act.stackPointer # NIL) OR (act.stackStart = NIL AND act.stackEnd = NIL) *>
+        <* ASSERT act.suspendCount = 0 OR act.suspendCount = 1 *>
         act.stackPointer := NIL;
         IF act.suspendCount > 0 THEN
           SetState(act, ActState.Starting);
           IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
           DEC(act.suspendCount);
+          <* ASSERT act.suspendCount = 0 *>
           SetState(act, ActState.Started);
         END;
         act := act.next;
