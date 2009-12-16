@@ -522,7 +522,12 @@ PROCEDURE CreateT (act: Activation): T =
      which will try to acquire "activeLock". *)
   VAR t: T := NEW(T, act := act);
   BEGIN
-    RTHeapRep.RegisterFinalCleanup (t, CleanThread);
+    TRY
+      RTHeapRep.RegisterFinalCleanup (t, CleanThread);
+      act := NIL;
+    FINALLY
+      DISPOSE(act);
+    END;
     t.act.context := NewContext();
     t.act.waitEvent := CreateEvent(NIL, 0, 0, NIL);
     t.act.alertEvent := CreateEvent(NIL, 0, 0, NIL);
@@ -619,7 +624,8 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   END ThreadBase;
 
 PROCEDURE Fork(closure: Closure): T =
-  VAR t := CreateT(NEW(Activation));
+  VAR act := NEW(Activation);
+      t := CreateT(act);
       stack_size := default_stack;
       id: DWORD;
   BEGIN
@@ -642,8 +648,8 @@ PROCEDURE Fork(closure: Closure): T =
     (* create suspended just so we can store act.handle before it runs;
      * act.handle := CreateThread() is not good enough. *)
 
-    t.act.handle := CreateThread(NIL, stack_size, ThreadBase, t.act, CREATE_SUSPENDED, ADR(id));
-    IF t.act.handle = NIL THEN
+    act.handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
+    IF act.handle = NIL THEN
       RuntimeError.Raise(RuntimeError.T.SystemError);
     END;
     IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
