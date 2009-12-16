@@ -107,7 +107,7 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
     END;
     (* We won the race. *)
     TRY
-      RTHeapRep.RegisterFinalCleanUp (root, Clean);
+      RTHeapRep.RegisterFinalCleanup (root, Clean);
       m := mutex;
       mutex := NIL;
     FINALLY
