@@ -389,8 +389,8 @@ InitC(int *bottom)
   int r;
 
   stack_grows_down = (bottom > &r);
-#ifdef __APPLE__
-  assert(stack_grows_down); /* See ThreadApple.c */
+#if defined(__APPLE__) || defined(__FreeBSD__)
+  assert(stack_grows_down); /* See ThreadApple.c, ThreadFreeBSD.c */
 #endif
   M3_RETRY(pthread_key_create(&activations, NULL)); assert(r == 0);
 

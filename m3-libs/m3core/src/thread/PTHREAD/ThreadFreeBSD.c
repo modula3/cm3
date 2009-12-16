@@ -52,7 +52,9 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
   if (pthread_attr_get_np(PTHREAD_FROM_M3(mt), &attr) != 0) abort();
   if (pthread_attr_getstack(&attr, (void **)&stackaddr, &stacksize) != 0) abort();
   if (pthread_attr_destroy(&attr) != 0) abort();
-  assert(stack_grows_down);
+#if 0
+  assert(stack_grows_down); /* See ThreadPThreadC.c */
+#endif
   assert(context == 0);
   assert((char *)bottom >= stackaddr);
   assert((char *)bottom <= (stackaddr + stacksize));
