@@ -1,6 +1,3 @@
-% Eventually everything in this file will apply to all platforms,
-% but we will get to that point very gradually.
-
 c_source ("UtimeC")
 c_source ("UnixC")
 c_source ("UnixLink")
