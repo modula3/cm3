@@ -36,7 +36,11 @@ REVEAL
     END;
 
   Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
-  (* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp *)
+  (* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp
+   * http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
+   *   "3.3. The Generation Count Solution"
+   *)
+ 
       lock: PCRITICAL_SECTION := NIL;
       waitEvent: HANDLE := NIL;
       counter := 0; (* LL = condition.lock *)
@@ -223,6 +227,8 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
   (* LL = m on entry and exit, but not for the duration
    * see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp
    * NOTE that they merge the user lock and the condition lock.
+   * http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
+   *   "3.3. The Generation Count Solution"
    *)
   VAR (* The order of the handles is important.
        * - They affect computing if we are alerted.
@@ -235,6 +241,9 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
       retry := FALSE;
       wait: DWORD;
       conditionLock := c.lock;
+      waitDone := FALSE;
+      alerted := FALSE;
+      lastWaiter := FALSE;
   BEGIN
 
     IF DEBUG THEN ThreadDebug.XWait(m, c, act); END;
@@ -250,15 +259,17 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
     handles[0] := c.waitEvent;
     EnterCriticalSection(conditionLock);
 
-    (* Capture the value of the counter before we start waiting.
-     * We will not stop waiting until the counter changes.
-     * That is, we will not stop waiting until a signal
-     * comes in after we start waiting.
-     *)
+      (* Capture the value of the counter before we start waiting.
+       * We will not stop waiting until the counter changes.
+       * That is, we will not stop waiting until a signal
+       * comes in after we start waiting.
+       *)
 
-    count := c.counter;
+      count := c.counter;
+      INC(c.waiters);
 
-    INC(c.waiters);
+    LeaveCriticalSection(conditionLock);
+    m.release(); (* can this be moved to before taking conditionLock? *)
 
     (* Loop until condition variable is signaled. The event object is
      * set whenever the condition variable is signaled, and tickets will
@@ -268,12 +279,7 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
      * time the condition variable is signaled.
      *)
 
-    LOOP
-
-      (* Leave critical region (careful with the lock order) *)
-
-      LeaveCriticalSection(conditionLock);
-      m.release();
+    WHILE (NOT alerted) AND (NOT waitDone) DO
 
       IF perfOn THEN PerfChanged(State.waiting) END;
 
@@ -298,33 +304,38 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
        * if we used Interlocked on waiters.
        *)
 
-      m.acquire();
+      alerted := (wait = (WAIT_OBJECT_0 + 1));
       EnterCriticalSection(conditionLock);
+        waitDone := (c.tickets # 0 AND c.counter # count);
+      LeaveCriticalSection(conditionLock);
 
-      IF wait = (WAIT_OBJECT_0 + 1) THEN
-        DEC(c.waiters);
-        LeaveCriticalSection(conditionLock);
-        RAISE Alerted;
+    END; (* WHILE *)
+
+    IF waitDone THEN
+      alerted := FALSE;
+    END;
+
+    m.acquire();
+
+    EnterCriticalSection(conditionLock);
+      DEC(c.waiters);
+      IF waitDone THEN
+        DEC(c.tickets);
+        lastWaiter := (c.tickets = 0);
       END;
+    LeaveCriticalSection(conditionLock);
 
-      IF c.tickets # 0 AND c.counter # count THEN
-        EXIT;
-      END;
-
-    END; (* LOOP *)
-
-    DEC(c.waiters);
+    IF alerted THEN
+      RAISE Alerted;
+    END;
 
     (* If this was the last thread to be notified, then reset event
      * so no further threads are woken, for now.
      *)
 
-    DEC(c.tickets);
-    IF c.tickets = 0 THEN
+    IF lastWaiter THEN
       IF ResetEvent(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
     END;
-
-    LeaveCriticalSection(conditionLock);
 
   END XWait;
 
