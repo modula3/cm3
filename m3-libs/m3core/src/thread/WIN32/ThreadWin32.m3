@@ -294,15 +294,9 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
       END;
 
       wait := WaitForMultipleObjects(1 + ORD(alertable), ADR(handles[0]), 0, INFINITE);
-      <* ASSERT wait # WAIT_TIMEOUT *>
       <* ASSERT wait = WAIT_OBJECT_0 OR wait = (WAIT_OBJECT_0 + 1) *>
 
       IF perfOn THEN PerfRunning() END;
-
-      (* Enter critical region (careful with the lock order)
-       * For the alerted case, we could avoid taking the conditionLock
-       * if we used Interlocked on waiters.
-       *)
 
       alerted := (wait = (WAIT_OBJECT_0 + 1));
       EnterCriticalSection(conditionLock);
