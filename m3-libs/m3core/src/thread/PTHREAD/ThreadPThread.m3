@@ -55,7 +55,7 @@ TYPE
     stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
     context: ADDRESS := NIL;            (* LL = activeMu *)
     state := ActState.Started;          (* LL = activeMu *)
-    slot: INTEGER;                      (* LL = slotMu; index in slots *)
+    slot := 0;                          (* LL = slotMu; index in slots *)
     floatState : FloatMode.ThreadState; (* per-thread floating point state *)
     heapState : RTHeapRep.ThreadState;  (* per-thread heap state *)
   END;
@@ -97,16 +97,12 @@ PROCEDURE InitMutex (VAR m: pthread_mutex_t; root: REFANY;
                      Clean: PROCEDURE(root: REFANY)) =
   VAR mutex := pthread_mutex_new();
   BEGIN
-    IF mutex = NIL THEN RTE.Raise (RTE.T.OutOfMemory) END;
-    WITH r = pthread_mutex_lock(initMu) DO <*ASSERT r=0*> END;
-    IF m # NIL THEN
-      (* Someone else won the race. *)
-      pthread_mutex_delete(mutex);
-      WITH r = pthread_mutex_unlock(initMu) DO <*ASSERT r=0*> END;
-      RETURN;
-    END;
-    (* We won the race. *)
     TRY
+      WITH r = pthread_mutex_lock(initMu) DO <*ASSERT r=0*> END;
+      (* Did someone else win? *)
+      IF m # NIL THEN RETURN END;
+      (* We won, but we might have failed to allocate! *)
+      IF mutex = NIL THEN RTE.Raise (RTE.T.OutOfMemory) END;
       RTHeapRep.RegisterFinalCleanup (root, Clean);
       m := mutex;
       mutex := NIL;
@@ -268,8 +264,7 @@ VAR (* LL = slotMu *)
   next_slot := 1;
   slots: REF ARRAY OF T;    (* NOTE: we don't use slots[0] *)
 
-PROCEDURE InitActivations (): Activation =
-  VAR me := NEW(Activation);
+PROCEDURE InitActivations (me: Activation) =
   BEGIN
     me.handle := pthread_self();
     me.next := me;
@@ -281,7 +276,6 @@ PROCEDURE InitActivations (): Activation =
     <* ASSERT allThreads = NIL *> (* no threads created yet *)
     allThreads := me;
     FloatMode.InitThread(me.floatState);
-    RETURN me;
   END InitActivations;
 
 PROCEDURE Self (): T =
@@ -298,9 +292,9 @@ PROCEDURE Self (): T =
     RETURN t;
   END Self;
 
-PROCEDURE AssignSlot (t: T) =
+PROCEDURE AssignSlot (t: T): INTEGER =
   (* LL = 0, cause we allocate stuff with NEW! *)
-  VAR n: CARDINAL;  new_slots: REF ARRAY OF T;
+  VAR n: CARDINAL;  new_slots: REF ARRAY OF T;  slot: CARDINAL;
   BEGIN
     WITH r = pthread_mutex_lock(slotsMu) DO <*ASSERT r=0*> END;
 
@@ -325,8 +319,7 @@ PROCEDURE AssignSlot (t: T) =
         ELSE
           (* ouch, the new table is full too!   Bail out and retry *)
           WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
-          AssignSlot (t);
-          RETURN;
+          RETURN AssignSlot (t);
         END;
       END;
 
@@ -337,10 +330,11 @@ PROCEDURE AssignSlot (t: T) =
       END;
 
       INC (n_slotted);
-      t.act.slot := next_slot;
-      slots [next_slot] := t;
+      slot := next_slot;
+      slots [slot] := t;
 
     WITH r = pthread_mutex_unlock(slotsMu) DO <*ASSERT r=0*> END;
+    RETURN slot;
   END AssignSlot;
 
 PROCEDURE FreeSlot (self: T) =
@@ -403,29 +397,6 @@ PROCEDURE CleanThread (r: REFANY) =
     pthread_cond_delete(t.act.cond);
     DISPOSE(t.act);
   END CleanThread;
-
-PROCEDURE CreateT (act: Activation): T =
-  (* LL = 0, because allocating a traced reference may cause
-     the allocator to start a collection which will call "SuspendOthers"
-     which will try to acquire "activeMu". *)
-  VAR t := NEW(T, act := act);
-  BEGIN
-    TRY
-      RTHeapRep.RegisterFinalCleanup (t, CleanThread);
-      act := NIL;
-    FINALLY
-      DISPOSE(act);
-    END;
-    t.act.mutex := pthread_mutex_new();
-    t.act.cond := pthread_cond_new();
-    IF (t.act.mutex = NIL) OR (t.act.cond = NIL) THEN
-      CleanThread(t);
-      RTE.Raise(RTE.T.OutOfMemory);
-    END;
-    t.join := NEW(Condition);
-    AssignSlot (t);
-    RETURN t;
-  END CreateT;
 
 (* ThreadBase calls RunThread after finding (approximately) where
    its stack begins.  This dance ensures that all of ThreadMain's
@@ -500,11 +471,27 @@ VAR joinMu: MUTEX;
 
 PROCEDURE Fork (closure: Closure): T =
   VAR
-    act := NEW(Activation);
-    t := CreateT(act);
+    act := NEW(Activation,
+               mutex := pthread_mutex_new(),
+               cond := pthread_cond_new());
     size := defaultStackSize;
+    t: T := NIL;
   BEGIN
-    t.closure := closure;
+    TRY
+      IF act.mutex = NIL OR act.cond = NIL THEN
+        RTE.Raise(RTE.T.OutOfMemory);
+      END;
+      t := NEW(T, act := act, closure := closure, join := NEW(Condition));
+      RTHeapRep.RegisterFinalCleanup(t, CleanThread);
+      act.slot := AssignSlot(t);
+    FINALLY
+      IF act.slot = 0 THEN
+        (* we failed, cleanup *)
+        pthread_mutex_delete(act.mutex);
+        pthread_cond_delete(act.cond);
+        DISPOSE(act);
+      END;
+    END;
     (* determine the initial size of the stack for this thread *)
     TYPECASE closure OF
     | SizedClosure (scl) => size := scl.stackSize;
@@ -1314,10 +1301,17 @@ PROCEDURE Init ()=
   BEGIN
     InitC(ADR(self));
 
-    me := InitActivations();
+    me := NEW(Activation,
+              mutex := pthread_mutex_new(),
+              cond := pthread_cond_new());
+    InitActivations(me);
     me.stackbase := ADR(self); (* not quite accurate but hopefully ok *)
+    IF me.mutex = NIL OR me.cond = NIL THEN
+      Die(ThisLine(), "Thread initialization failed.");
+    END;
+    self := NEW(T, act := me, closure := NIL, join := NIL);
+    me.slot := AssignSlot(self);
 
-    self := CreateT(me);
     joinMu := NEW(MUTEX);
 
     PerfStart();
