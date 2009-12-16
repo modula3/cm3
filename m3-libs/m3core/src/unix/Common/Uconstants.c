@@ -3,15 +3,6 @@
 /* See the file COPYRIGHT for a full description.             */
 
 #include "m3core.h"
-#if defined(__OpenBSD__)
-#include "context.h"
-#define HAS_UCONTEXT_T
-#elif defined(__linux) && defined(__i386)
-#include <ucontext.h>
-#define HAS_UCONTEXT_T
-#else
-/*#include <ucontext.h>*/
-#endif
 #include <signal.h>
 #ifndef _WIN32
 #include <netinet/tcp.h>
@@ -736,14 +727,6 @@ X(PROT_WRITE)
 #endif
 #ifdef MAP_NOCORE
      X(MAP_NOCORE)
-#endif
-
-#ifdef HAS_UCONTEXT_T
-#undef X
-#undef Y
-#define X(x) const int Uucontext__##x = x;
-#define Y(x, y) const int Uucontext__##x = y;
-Y(context_t_size, sizeof(ucontext_t))
 #endif
 
 #ifdef __CYGWIN__
