@@ -9,7 +9,7 @@ MODULE M3x86 EXPORTS M3x86, M3x86Rep;
  
 IMPORT Wr, Text, Fmt, IntRefTbl, Word, Convert;
 IMPORT M3CG, M3ID, M3CG_Ops, Target, TInt AS TargetInt, TFloat AS TargetFloat;
-IMPORT M3ObjFile, TargetMap;
+IMPORT M3ObjFile, TargetMap, IO, Cstdlib;
 
 FROM TargetMap IMPORT CG_Bytes;
 
@@ -206,6 +206,8 @@ REVEAL
         load_procedure := load_procedure;
         load_static_link := load_static_link;
         comment := comment;
+        val_compare_and_swap := val_compare_and_swap;
+        bool_compare_and_swap := bool_compare_and_swap;
       END;
 
 (*---------------------------------------------------------------------------*)
@@ -2809,7 +2811,8 @@ TYPE
   Builtin = {
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_eq, set_ne, set_lt, set_le, set_gt, set_ge,
-    set_member, set_singleton, memmove, memcpy, memset
+    set_member, set_singleton, memmove, memcpy, memset,
+    cas16, casp16, cas32, casp32
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
@@ -2843,7 +2846,11 @@ CONST
     BP { "set_singleton",      2, Type.Void,  "C" },
     BP { "memmove",            3, Type.Addr,  "C" },
     BP { "memcpy",             3, Type.Addr,  "C" },
-    BP { "memset",             3, Type.Addr,  "C" }
+    BP { "memset",             3, Type.Addr,  "C" },
+    BP { "m3_InterlockedCompareExchange16",          3, Type.Int16, "C" },
+    BP { "m3_InterlockedCompareExchange16Predicate", 3, Type.Int32, "C" },
+    BP { "m3_InterlockedCompareExchange",            3, Type.Int32, "C" },
+    BP { "m3_InterlockedCompareExchangePredicate",   3, Type.Int32, "C" }
   };
 
 
@@ -3731,6 +3738,59 @@ PROCEDURE Cmt (u: U;  t: TEXT;  VAR width: INTEGER) =
       END
     END;
   END Cmt;
+
+(*-------------------------------------------------------------- cas/casp ---*)
+
+PROCEDURE Die(a: TEXT) =
+BEGIN
+  IO.Put(a);
+  Cstdlib.abort();
+END Die;
+
+PROCEDURE bool_compare_and_swap (u: U;  t: MType;  i: IType) =
+  VAR b: Builtin;
+  BEGIN
+    IF u.debug THEN
+      u.wr.Cmd   ("bool_compare_and_swap");
+      u.wr.TName (t);
+      u.wr.TName (i);
+      u.wr.NL    ();
+    END;
+    CASE t OF
+    | Type.Word16, Type.Int16 => b := Builtin.casp16;
+    | Type.Addr, Type.Word32, Type.Int32 => b := Builtin.casp32;
+    ELSE Die("unsupported type with cas/casp");
+    END;
+    start_int_proc (u, b);
+    u.vstack.swap();
+    pop_param(u, t);
+    pop_param(u, t);
+    pop_param(u, t);
+    call_int_proc (u, b);
+  END bool_compare_and_swap;
+
+PROCEDURE val_compare_and_swap (u: U;  t: MType) =
+  VAR b: Builtin;
+  BEGIN
+    IF u.debug THEN
+      u.wr.Cmd   ("val_compare_and_swap");
+      u.wr.TName (t);
+      u.wr.NL    ();
+    END;
+    CASE t OF
+    | Type.Word16, Type.Int16 => b := Builtin.cas16;
+    | Type.Addr, Type.Word32, Type.Int32 => b := Builtin.cas32;
+    ELSE Die("unsupported type with cas/casp");
+    END;
+      
+    start_int_proc (u, b);
+
+    u.vstack.swap();
+    pop_param(u, t);
+    pop_param(u, t);
+    pop_param(u, t);
+    call_int_proc (u, b);
+  END val_compare_and_swap;
 
 BEGIN
 END M3x86.
