@@ -29,7 +29,8 @@ extern "C" {
 #endif
 
 int
-ThreadPThread__SuspendThread (m3_pthread_t mt)
+ThreadPThread__SuspendThread (m3_pthread_t mt,
+                              int controlFile)
 {
   pthread_t t = PTHREAD_FROM_M3(mt);
   mach_port_t mach_thread = pthread_mach_thread_np(t);
@@ -42,7 +43,8 @@ ThreadPThread__SuspendThread (m3_pthread_t mt)
 }
 
 int
-ThreadPThread__RestartThread (m3_pthread_t mt)
+ThreadPThread__RestartThread (m3_pthread_t mt,
+                              int controlFile)
 {
   pthread_t t = PTHREAD_FROM_M3(mt);
   mach_port_t mach_thread = pthread_mach_thread_np(t);
@@ -51,7 +53,8 @@ ThreadPThread__RestartThread (m3_pthread_t mt)
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
-                               void (*p)(void *start, void *limit))
+                               void (*p)(void *start, void *limit)),
+                               int statusFile)
 {
   void *sp;
   pthread_t t = PTHREAD_FROM_M3(mt);
