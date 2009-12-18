@@ -392,6 +392,37 @@ void set_singleton
   s[a_word] |= (1UL << a_bit);
 }
 
+#ifdef _MSC_VER
+
+#pragma optimize("gty", on)
+
+short __cdecl _InterlockedCompareExchange16(short* dest, short exchange, short compare);
+#pragma intrinsic(_InterlockedCompareExchange16)
+long __cdecl _InterlockedCompareExchange(long* dest, long exchange, long compare);
+#pragma intrinsic(_InterlockedCompareExchange)
+
+int __cdecl m3_InterlockedCompareExchange16(volatile short* dest, short exchange, short compare)
+{
+    return _InterlockedCompareExchange16(dest, exchange, compare);
+}
+
+int __cdecl m3_InterlockedCompareExchange16Predicate(volatile short* dest, short exchange, short compare)
+{
+    return (_InterlockedCompareExchange16(dest, exchange, compare) == compare);
+}
+
+int __cdecl m3_InterlockedCompareExchange(volatile long* dest, long exchange, long compare)
+{
+    return _InterlockedCompareExchange(dest, exchange, compare);
+}
+
+int __cdecl m3_InterlockedCompareExchangePredicate(volatile long* dest, long exchange, long compare)
+{
+    return (_InterlockedCompareExchange(dest, exchange, compare) == compare);
+}
+
+#endif
+
 /************************************************************************
 
 #include <stdio.h>
