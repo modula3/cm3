@@ -275,12 +275,14 @@ PROCEDURE DeclareModuleTypes (m: RT0.ModulePtr) =
     type := m.type_cells;  m.type_cells := NIL;
     WHILE (type # NIL) DO
       next := type.next;  type.next := NIL;
-      TraceMsgS("  type ", type.name);
-      TraceMsgI("    typecode ", type.typecode);
-      TraceMsgI("    typeid   ", type.selfID);
-      brand := type.brand_ptr;
-      IF brand # NIL THEN
-        TraceMsgC("    brand    ", ADR(brand.chars[0]), brand.length);
+      IF traceInit THEN
+        TraceMsgS("  type ", type.name);
+        TraceMsgI("    typecode ", type.typecode);
+        TraceMsgI("    typeid   ", type.selfID);
+        brand := type.brand_ptr;
+        IF brand # NIL THEN
+          TraceMsgC("    brand    ", ADR(brand.chars[0]), brand.length);
+        END;
       END;
       RTTypeSRC.AddTypecell (type, m);
       type := next;
