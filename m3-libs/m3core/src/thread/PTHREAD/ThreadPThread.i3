@@ -55,7 +55,7 @@ PROCEDURE sigsuspend ();
 (* pthread_create but replace attr with stackSize so that attr need not be known to Modula-3 *)
 
 <*EXTERNAL "ThreadPThread__thread_create"*>
-PROCEDURE thread_create(VAR handle: pthread_t; stackSize: size_t;
+PROCEDURE thread_create(stackSize: size_t;
                         start_routine: PROCEDURE(arg: ADDRESS): ADDRESS; arg: ADDRESS): int;
 
 <*EXTERNAL ThreadPThread__pthread_detach_self*>
@@ -133,24 +133,18 @@ PROCEDURE Nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): i
 (*---------------------------------------------------------------------------*)
 
 <*EXTERNAL "ThreadPThread__SuspendThread"*>
-PROCEDURE SuspendThread (t: pthread_t; controlFile: int): BOOLEAN;
+PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
 
 <*EXTERNAL "ThreadPThread__RestartThread"*>
-PROCEDURE RestartThread (t: pthread_t; controlFile: int): BOOLEAN;
+PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
 
 <*EXTERNAL "ThreadPThread__ProcessLive"*>
 PROCEDURE ProcessLive
   (bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 
 <*EXTERNAL "ThreadPThread__ProcessStopped"*>
-PROCEDURE ProcessStopped(t: pthread_t; bottom, context: ADDRESS;
-                         p: PROCEDURE(start, limit: ADDRESS); statusFile: int);
-
-(*---------------------------------------------------------------------------*)
-
-<* EXTERNAL ThreadPThread__OpenInterixFiles *)
-PROCEDURE OpenInterixFiles(thread: pthread_t; VAR statusFile, controlFile: int);
-
+PROCEDURE ProcessStopped
+  (t: pthread_t; bottom, context: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 (*---------------------------------------------------------------------------*)
 
 END ThreadPThread.
