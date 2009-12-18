@@ -194,7 +194,7 @@ typedef void *(*start_routine_t)(void *);
   }
 
 int
-ThreadPThread__thread_create(size_t stackSize,
+ThreadPThread__thread_create(m3_pthread_t* mt, size_t stackSize,
                              start_routine_t start_routine,
                              void *arg)
 {
@@ -221,11 +221,21 @@ ThreadPThread__thread_create(size_t stackSize,
   pthread_attr_setstacksize(&attr, bytes);
 
   M3_RETRY(pthread_create(&pthread, &attr, start_routine, arg));
+  *mt = PTHREAD_TO_M3(pthread);
 
   pthread_attr_destroy(&attr);
 
   return r;
 }
+
+#ifndef __INTERIX
+int ThreadInterix__OpenFiles(m3_pthread_t pthread,
+                             int *statusFile,
+                             int *controlFile)
+{
+    return 0;
+}
+#endif
 
 #define MUTEX(name) \
 static pthread_mutex_t name##Mu = PTHREAD_MUTEX_INITIALIZER; \
