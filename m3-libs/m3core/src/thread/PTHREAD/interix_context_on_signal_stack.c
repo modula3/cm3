@@ -25,6 +25,62 @@
 #include <stdio.h>
 #include <signal.h>
 
+typedef unsigned long DWORD;
+typedef unsigned char BYTE;
+
+#define SIZE_OF_80387_REGISTERS      80
+
+#define CONTEXT_i386    0x00010000    // this assumes that i386 and
+#define CONTEXT_CONTROL         (CONTEXT_i386 | 0x00000001L) // SS:SP, CS:IP, FLAGS, BP
+#define CONTEXT_INTEGER         (CONTEXT_i386 | 0x00000002L) // AX, BX, CX, DX, SI, DI
+#define CONTEXT_SEGMENTS        (CONTEXT_i386 | 0x00000004L) // DS, ES, FS, GS
+#define CONTEXT_FLOATING_POINT  (CONTEXT_i386 | 0x00000008L) // 387 state
+#define CONTEXT_DEBUG_REGISTERS (CONTEXT_i386 | 0x00000010L) // DB 0-3,6,7
+
+#define CONTEXT_FULL (CONTEXT_CONTROL | CONTEXT_INTEGER |\
+                      CONTEXT_SEGMENTS)
+
+typedef struct _FLOATING_SAVE_AREA {
+    DWORD   ControlWord;
+    DWORD   StatusWord;
+    DWORD   TagWord;
+    DWORD   ErrorOffset;
+    DWORD   ErrorSelector;
+    DWORD   DataOffset;
+    DWORD   DataSelector;
+    BYTE    RegisterArea[SIZE_OF_80387_REGISTERS];
+    DWORD   Cr0NpxState;
+} FLOATING_SAVE_AREA;
+
+typedef FLOATING_SAVE_AREA *PFLOATING_SAVE_AREA;
+
+typedef struct _CONTEXT {
+    DWORD ContextFlags;
+    DWORD   Dr0;
+    DWORD   Dr1;
+    DWORD   Dr2;
+    DWORD   Dr3;
+    DWORD   Dr6;
+    DWORD   Dr7;
+    FLOATING_SAVE_AREA FloatSave;
+    DWORD   SegGs;
+    DWORD   SegFs;
+    DWORD   SegEs;
+    DWORD   SegDs;
+    DWORD   Edi;
+    DWORD   Esi;
+    DWORD   Ebx;
+    DWORD   Edx;
+    DWORD   Ecx;
+    DWORD   Eax;
+    DWORD   Ebp;
+    DWORD   Eip;
+    DWORD   SegCs;
+    DWORD   EFlags;
+    DWORD   Esp;
+    DWORD   SegSs;
+} CONTEXT;
+
 void* thread(void* a)
 {
     __asm
@@ -108,12 +164,12 @@ void* thread5(void*a)
 {
     __asm
     {
-        mov eax, 0xA1FE
-        mov ebx, 0xB21F
-        mov ecx, 0xC321
+        mov edi, 0xA1FE
+        mov esi, 0xB21F
+        mov ebx, 0xC321
         mov edx, 0xD432
-        mov edi, 0xE543
-        mov esi, 0xF654
+        mov ecx, 0xE543
+        mov eax, 0xF654
 A:      jmp A
     }
     return 0;
@@ -121,15 +177,61 @@ A:      jmp A
 
 void SignalHandler(int sig)
 {
-    printf("SignalHandler pthread_self=%ld sig=%d\n", (long)pthread_self(), sig);
-    __debugbreak();
+    CONTEXT context;
+    CONTEXT* pcontext = 0;
+
+    memset(&context, 0, sizeof(context));
+    context.ContextFlags = CONTEXT_i386 | CONTEXT_CONTROL | CONTEXT_INTEGER | CONTEXT_SEGMENTS;
+
+    __asm
+    {
+        xor eax, eax
+        mov ax, cs
+        mov context.SegCs, eax
+        mov ax, ds
+        mov context.SegDs, eax
+        mov ax, es
+        mov context.SegEs, eax
+        mov ax, fs
+        mov context.SegFs, eax
+        mov ax, gs
+        mov context.SegGs, eax
+        mov ax, ss
+        mov context.SegSs, eax
+    }
+
+    pcontext = &context + 1;
+    while (1)
+    {
+        if (   pcontext->SegCs == context.SegCs
+            && pcontext->SegDs == context.SegDs
+            && pcontext->SegEs == context.SegEs
+            && pcontext->SegFs == context.SegFs
+            && pcontext->SegGs == context.SegGs
+            && pcontext->SegSs == context.SegSs
+            && pcontext->ContextFlags == context.ContextFlags)
+        {
+            printf("thread %ld context search from @%p found at @%p %x %x %x %x %x %x %x %x %x\n",
+                    pthread_self(),
+                    &context,
+                    pcontext,
+                    pcontext->Edi, pcontext->Esi, pcontext->Ebx, pcontext->Edx,
+                    pcontext->Ecx, pcontext->Eax, pcontext->Ebp, pcontext->Eip,
+                    pcontext->Esp);
+            break;
+        }
+        pcontext = (CONTEXT*)(1 + (DWORD*)pcontext);
+    }
+
 }
 
 int main()
 {
     pthread_t t[8];
     int i;
+
     getchar();
+
     signal(SIGUSR1, SignalHandler);
     pthread_create(&t[0], NULL, thread1, 0);
     pthread_create(&t[1], NULL, thread2, 0);
