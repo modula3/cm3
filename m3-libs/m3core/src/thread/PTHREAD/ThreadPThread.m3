@@ -56,6 +56,8 @@ TYPE
     context: ADDRESS := NIL;            (* LL = activeMu *)
     state := ActState.Started;          (* LL = activeMu *)
     slot := 0;                          (* LL = slotMu; index in slots *)
+    statusFile: int := -1;              (* for Interix *)
+    controlFile: int := -1;             (* for Interix *)
     floatState : FloatMode.ThreadState; (* per-thread floating point state *)
     heapState : RTHeapRep.ThreadState;  (* per-thread heap state *)
   END;
@@ -390,11 +392,20 @@ PROCEDURE DumpThreads () =
 VAR (* LL=activeMu *)
   allThreads: Activation := NIL;            (* global list of active threads *)
 
+PROCEDURE CloseFile(file: int) =
+  BEGIN
+    IF file >= 0 THEN
+      Unix.close(file);
+    END;
+  END CloseFile;
+
 PROCEDURE CleanThread (r: REFANY) =
   VAR t := NARROW(r, T);
   BEGIN
     pthread_mutex_delete(t.act.mutex);
     pthread_cond_delete(t.act.cond);
+    CloseFile(t.act.statusFile);
+    CloseFile(t.act.controlFile);
     DISPOSE(t.act);
   END CleanThread;
 
@@ -497,9 +508,13 @@ PROCEDURE Fork (closure: Closure): T =
     | SizedClosure (scl) => size := scl.stackSize;
     ELSE (*skip*)
     END;
-    WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act) DO
+    WITH r = thread_create(handle, size * ADRSIZE(Word.T), ThreadBase, act) DO
       IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
+    WITH r = OpenInterixFiles(handle, act.statusFile, act.controlFile) DO
+      IF r # 0 THEN DieI(ThisLine(), r) END;
+    END;
+
     RETURN t;
   END Fork;
 
@@ -968,7 +983,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(act.heapState);
-    ProcessStopped(act.handle, act.stackbase, act.context, p);
+    ProcessStopped(act.handle, act.stackbase, act.context, p, act.statusFile);
   END ProcessOther;
 
 (* Signal based suspend/resume *)
@@ -991,9 +1006,9 @@ PROCEDURE StopThread (act: Activation): BOOLEAN =
   BEGIN
     <*ASSERT act.state = ActState.Stopping*>
     <*ASSERT SIG_SUSPEND = 0*>
-    IF NOT SuspendThread(act.handle) THEN RETURN FALSE END;
+    IF NOT SuspendThread(act.handle, act.controlFile) THEN RETURN FALSE END;
     IF act.heapState.inCritical # 0 THEN
-      IF NOT RestartThread(act.handle) THEN <*ASSERT FALSE*> END;
+      IF NOT RestartThread(act.handle, act.controlFile) THEN <*ASSERT FALSE*> END;
       RETURN FALSE;
     END;
     RETURN TRUE;
@@ -1004,7 +1019,7 @@ PROCEDURE StartThread (act: Activation): BOOLEAN =
   BEGIN
     <*ASSERT act.state = ActState.Starting*>
     <*ASSERT SIG_SUSPEND = 0*>
-    RETURN RestartThread(act.handle);
+    RETURN RestartThread(act.handle, act.controlFile);
   END StartThread;
 
 PROCEDURE StopWorld () =
