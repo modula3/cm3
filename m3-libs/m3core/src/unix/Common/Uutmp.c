@@ -2,21 +2,11 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
-#include "m3unix.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "m3core.h"
 
 #ifndef _WIN32
 
-char* Uutmp__getlogin(void)
-{
-    return getlogin();
-}
+#define M3MODULE Uutmp
+M3WRAP0(char*, getlogin)
 
-#endif
-
-#ifdef __cplusplus
-}
 #endif

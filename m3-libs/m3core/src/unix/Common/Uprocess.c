@@ -2,21 +2,7 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
-#include "m3unix.h"
+#include "m3core.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-m3_pid_t Uprocess__getpid(void)
-{
-#ifdef _WIN32
-    return _getpid();
-#else
-    return getpid();
-#endif
-}
-
-#ifdef __cplusplus
-}
-#endif
+#define M3MODULE Uprocess
+M3WRAP0_(m3_pid_t, getpid)

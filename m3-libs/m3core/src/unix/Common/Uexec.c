@@ -2,7 +2,8 @@
 /* All rights reserved.                                        */
 /* See the file COPYRIGHT for a full description.              */
 
-#include "m3unix.h"
+#include "m3core.h"
+#define M3MODULE Uexec
 
 #ifdef __cplusplus
 extern "C" {
@@ -34,40 +35,11 @@ typedef intptr_t m3_exec_t; /* correct for Win32 but requires newer headers */
 typedef int m3_exec_t;
 #endif
 
-m3_exec_t Uexec__execv(const char* name, char** argv)
-{
-#ifdef _WIN32
-    return _execv(name, argv);
-#else
-    return execv(name, argv);
-#endif
-}
-
-m3_exec_t Uexec__execvp(const char* name, char** argv)
-{
-#ifdef _WIN32
-    return _execvp(name, argv);
-#else
-    return execvp(name, argv);
-#endif
-}
-
-m3_exec_t Uexec__execve(const char* name, char** argv, char** envp)
-{
-#ifdef _WIN32
-    return _execve(name, argv, envp);
-#else
-    return execve(name, argv, envp);
-#endif
-}
-
+M3WRAP2_(m3_exec_t, execv, const char*, char**)
+M3WRAP2_(m3_exec_t, execvp, const char*, char**)
+M3WRAP3_(m3_exec_t, execve, const char*, char**, char**)
 #ifndef _WIN32
-
-m3_pid_t Uexec__waitpid(m3_pid_t pid, int* status, int options)
-{
-    return waitpid(pid, status, options);
-}
-
+M3WRAP3(m3_pid_t, waitpid, m3_pid_t, int*, int)
 #endif
 
 #ifdef __cplusplus

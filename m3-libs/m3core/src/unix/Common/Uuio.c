@@ -2,30 +2,8 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
-#include "m3unix.h"
+#include "m3core.h"
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-ssize_t Uuio__read (int d, void* buf, size_t nbytes)
-{
-#ifdef _WIN32
-    return _read(d, buf, nbytes);
-#else
-    return read(d, buf, nbytes);
-#endif
-}
-
-ssize_t Uuio__write (int d, const void* buf, size_t nbytes)
-{
-#ifdef _WIN32
-    return _write(d, buf, nbytes);
-#else
-    return write(d, buf, nbytes);
-#endif
-}
-
-#ifdef __cplusplus
-}
-#endif
+#define M3MODULE Uuio
+M3WRAP3_(ssize_t, read, int, void*, size_t)
+M3WRAP3_(ssize_t, write, int, const void*, size_t)
