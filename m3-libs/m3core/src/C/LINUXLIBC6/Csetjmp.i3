@@ -4,20 +4,18 @@
 
 (* Last modified on Fri Apr 30 16:25:40 PDT 1993 by muller         *)
 
-INTERFACE Csetjmp;		(* for LINUX *)
-
-FROM Ctypes IMPORT long, int, void_star;
-IMPORT Usignal;
+INTERFACE Csetjmp;
+FROM Ctypes IMPORT int;
 
 
 TYPE 
-  ptr_t = void_star;
 
   jmp_buf = RECORD
-        bx, si, di: long;
-        bp, sp, pc: ptr_t;
-        mask_was_saved : long;
-        saved_mask : Usignal.sigset_t; 
+    (* The compiler uses 40, but 39
+     * is correct and what was effectively
+     * historically here.
+     *)
+    opaque: ARRAY [1..39] OF INTEGER;
   END;
 
 <*EXTERNAL*> PROCEDURE setjmp (VAR env: jmp_buf): int;
