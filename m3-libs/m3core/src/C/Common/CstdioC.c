@@ -43,12 +43,6 @@ M3WRAP2(int, ungetc, int, FILE*)
 M3WRAP1_(int, getw, FILE*)
 M3WRAP2_(int, putw, int, FILE*)
 
-/* OpenBSD linker warns about these; use mkstemp instead, or Modula-3 library */
-#if 0
-M3WRAP2_(char*, tempnam, const char*, const char*)
-M3WRAP1(char*, tmpnam, char*)
-#endif
-
 #define X(name, in, out)   void __cdecl Cstdio__##name in { name out; }
 #define X1(name, a)             X(name, (a i),      (i))
 #define X2(name, a, b)          X(name, (a i, b j), (i, j))
