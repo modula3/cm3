@@ -9,7 +9,7 @@ MODULE M3x86 EXPORTS M3x86, M3x86Rep;
  
 IMPORT Wr, Text, Fmt, IntRefTbl, Word, Convert;
 IMPORT M3CG, M3ID, M3CG_Ops, Target, TInt AS TargetInt, TFloat AS TargetFloat;
-IMPORT M3ObjFile, TargetMap, IO, Cstdlib;
+IMPORT M3ObjFile, TargetMap;
 
 FROM TargetMap IMPORT CG_Bytes;
 
@@ -206,8 +206,6 @@ REVEAL
         load_procedure := load_procedure;
         load_static_link := load_static_link;
         comment := comment;
-        val_compare_and_swap := val_compare_and_swap;
-        bool_compare_and_swap := bool_compare_and_swap;
       END;
 
 (*---------------------------------------------------------------------------*)
@@ -3738,59 +3736,6 @@ PROCEDURE Cmt (u: U;  t: TEXT;  VAR width: INTEGER) =
       END
     END;
   END Cmt;
-
-(*-------------------------------------------------------------- cas/casp ---*)
-
-PROCEDURE Die(a: TEXT) =
-BEGIN
-  IO.Put(a);
-  Cstdlib.abort();
-END Die;
-
-PROCEDURE bool_compare_and_swap (u: U;  t: MType;  i: IType) =
-  VAR b: Builtin;
-  BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("bool_compare_and_swap");
-      u.wr.TName (t);
-      u.wr.TName (i);
-      u.wr.NL    ();
-    END;
-    CASE t OF
-    | Type.Word16, Type.Int16 => b := Builtin.casp16;
-    | Type.Addr, Type.Word32, Type.Int32 => b := Builtin.casp32;
-    ELSE Die("unsupported type with cas/casp");
-    END;
-    start_int_proc (u, b);
-    u.vstack.swap();
-    pop_param(u, t);
-    pop_param(u, t);
-    pop_param(u, t);
-    call_int_proc (u, b);
-  END bool_compare_and_swap;
-
-PROCEDURE val_compare_and_swap (u: U;  t: MType) =
-  VAR b: Builtin;
-  BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("val_compare_and_swap");
-      u.wr.TName (t);
-      u.wr.NL    ();
-    END;
-    CASE t OF
-    | Type.Word16, Type.Int16 => b := Builtin.cas16;
-    | Type.Addr, Type.Word32, Type.Int32 => b := Builtin.cas32;
-    ELSE Die("unsupported type with cas/casp");
-    END;
-      
-    start_int_proc (u, b);
-
-    u.vstack.swap();
-    pop_param(u, t);
-    pop_param(u, t);
-    pop_param(u, t);
-    call_int_proc (u, b);
-  END val_compare_and_swap;
 
 BEGIN
 END M3x86.
