@@ -2809,8 +2809,7 @@ TYPE
   Builtin = {
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_eq, set_ne, set_lt, set_le, set_gt, set_ge,
-    set_member, set_singleton, memmove, memcpy, memset,
-    cas16, casp16, cas32, casp32
+    set_member, set_singleton, memmove, memcpy, memset
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
