@@ -215,9 +215,9 @@ CONST
                           " EQ", " NE", " GT", " GE", " LT", " LE" };
   CompareOpCond = ARRAY CompareOp OF Cond {
                           Cond.E, Cond.NE, Cond.G, Cond.GE, Cond.L, Cond.LE };
-  CompareOpProc = ARRAY CompareOp OF Builtin {
-                          Builtin.set_eq, Builtin.set_ne, Builtin.set_gt,
-                          Builtin.set_ge, Builtin.set_lt, Builtin.set_le };
+
+  CompareOpProc = ARRAY [CompareOp.GT .. CompareOp.LE] OF Builtin {
+        Builtin.set_gt, Builtin.set_ge, Builtin.set_lt, Builtin.set_le };
 
 CONST
   ConvertOpName = ARRAY ConvertOp OF TEXT {
@@ -2082,23 +2082,37 @@ PROCEDURE set_member (u: U;  s: ByteSize;  t: IType) =
 
 PROCEDURE set_compare (u: U;  s: ByteSize;  op: CompareOp;  t: IType) =
   (* s1.t := (s1.B  op  s0.B)  ; pop *)
-  VAR proc := CompareOpProc [op];
+  VAR proc: Builtin;
   BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("set_eq");
+      u.wr.Cmd   ("set_compare");
       u.wr.Int   (s);
       u.wr.OutT  (CompareOpName [op]);
       u.wr.TName (t);
       u.wr.NL    ();
     END;
 
-    start_int_proc (u, proc);
-    u.vstack.swap();
-    pop_param(u, Type.Addr);
-    pop_param(u, Type.Addr);
-    u.vstack.pushimm(s * 8);
-    pop_param(u, Type.Int32);
-    call_int_proc (u, proc);
+    IF op = CompareOp.EQ OR op = CompareOp.NE THEN
+      proc := Builtin.memcmp;
+      start_int_proc (u, proc);
+      u.vstack.pushimm(s);
+      pop_param(u, Type.Addr);
+      pop_param(u, Type.Addr);
+      pop_param(u, Type.Addr);
+      call_int_proc (u, proc);
+      u.vstack.pushimm(0);
+      condset(u, CompareOpCond [op], t);
+    ELSE
+      proc := CompareOpProc [op];
+      start_int_proc (u, proc);
+      u.vstack.swap();
+      pop_param(u, Type.Addr);
+      pop_param(u, Type.Addr);
+      u.vstack.pushimm(s * 8);
+      pop_param(u, Type.Int32);
+      call_int_proc (u, proc);
+    END;
+
   END set_compare;
 
 PROCEDURE set_range (u: U;  s: ByteSize;  t: IType) =
@@ -2808,8 +2822,8 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
 TYPE
   Builtin = {
     set_union, set_difference, set_intersection, set_sym_difference,
-    set_range, set_eq, set_ne, set_lt, set_le, set_gt, set_ge,
-    set_member, set_singleton, memmove, memcpy, memset
+    set_range, set_lt, set_le, set_gt, set_ge, set_member, set_singleton,
+    memmove, memcpy, memset, memcmp
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
@@ -2833,8 +2847,6 @@ CONST
     BP { "set_intersection",   4, Type.Void,  "C" },
     BP { "set_sym_difference", 4, Type.Void,  "C" },
     BP { "set_range",          3, Type.Void,  "C" },
-    BP { "set_eq",             3, Type.Int32, "C" },
-    BP { "set_ne",             3, Type.Int32, "C" },
     BP { "set_lt",             3, Type.Int32, "C" },
     BP { "set_le",             3, Type.Int32, "C" },
     BP { "set_gt",             3, Type.Int32, "C" },
@@ -2843,7 +2855,8 @@ CONST
     BP { "set_singleton",      2, Type.Void,  "C" },
     BP { "memmove",            3, Type.Addr,  "C" },
     BP { "memcpy",             3, Type.Addr,  "C" },
-    BP { "memset",             3, Type.Addr,  "C" }
+    BP { "memset",             3, Type.Addr,  "C" },
+    BP { "memcmp",             3, Type.Int32, "C" }
   };
 
 
