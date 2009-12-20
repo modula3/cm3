@@ -21,7 +21,7 @@
 #define _CRT_NONSTDC_NO_DEPRECATE
 struct _RPC_ASYNC_STATE; /* warning 4115: named type definition in parentheses */
 struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses */
-#pragma warning(disable:4100) /* unused parameter*/
+#pragma warning(disable:4100) /* unused parameter */
 #pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
 #pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
 #pragma warning(disable:4514) /* unused inline function removed */
