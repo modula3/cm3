@@ -170,7 +170,7 @@ typedef struct _ClonedHeaderCheckField_t {
 } ClonedHeaderCheckField_t;
 
 typedef struct _ClonedHeaderCheck_t {
-    UINT32 TlsOutOfIndexs;
+    UINT TlsOutOfIndexs;
     UCHAR sizeof_CRITICAL_SECTION;
     UCHAR sizeof_MEMORY_BASIC_INFORMATION;
     ClonedHeaderCheckField_t MEMORY_BASIC_INFORMATION_AllocationBase;
