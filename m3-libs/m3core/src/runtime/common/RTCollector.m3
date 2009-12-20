@@ -2210,7 +2210,7 @@ PROCEDURE WeakCleaner (<*UNUSED*> closure: Thread.Closure): REFANY =
     END;
   END WeakCleaner;
 
-(*-------------------------------------------------------- barrier support --*)
+(*------------------------------------------------------ barrier support --*)
 
 PROCEDURE CheckLoadTracedRef (ref: REFANY) =
   (* Load a heap reference 'ref' from a global or heap variable.
