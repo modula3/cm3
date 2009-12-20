@@ -2844,11 +2844,7 @@ CONST
     BP { "set_singleton",      2, Type.Void,  "C" },
     BP { "memmove",            3, Type.Addr,  "C" },
     BP { "memcpy",             3, Type.Addr,  "C" },
-    BP { "memset",             3, Type.Addr,  "C" },
-    BP { "m3_InterlockedCompareExchange16",          3, Type.Int16, "C" },
-    BP { "m3_InterlockedCompareExchange16Predicate", 3, Type.Int32, "C" },
-    BP { "m3_InterlockedCompareExchange",            3, Type.Int32, "C" },
-    BP { "m3_InterlockedCompareExchangePredicate",   3, Type.Int32, "C" }
+    BP { "memset",             3, Type.Addr,  "C" }
   };
 
 
