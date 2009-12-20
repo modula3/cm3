@@ -2,21 +2,11 @@
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
-#include "m3unix.h"
-
-#ifdef __cplusplus
-extern "C" {
-#endif
+#include "m3core.h"
 
 #ifndef _WIN32
 
-int Usignal__kill(m3_pid_t pid, int sig)
-{
-    return kill(pid, sig);
-}
+#define M3MODULE Usignal
+M3WRAP2(int, kill, m3_pid_t, int)
 
-#endif
-
-#ifdef __cplusplus
-}
 #endif
