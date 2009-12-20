@@ -11,6 +11,10 @@ extern "C"
 {           
 #endif
 
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
+#endif
+
 typedef unsigned char uchar;
 typedef signed char schar;
 typedef unsigned short ushort;
@@ -18,6 +22,7 @@ typedef unsigned int uint;
 typedef unsigned long ulong;
 
 #include <limits.h>
+#include <string.h>
 
 #if UCHAR_MAX == 0xffffffff
 typedef unsigned char uint32;
@@ -59,7 +64,7 @@ typedef long int32;
 #define KR(x) x
 #endif
 
-long m3_div
+long __cdecl m3_div
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
@@ -71,7 +76,7 @@ long m3_div
   return c;
 }
 
-int64 m3_divL
+int64 __cdecl m3_divL
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
@@ -83,7 +88,7 @@ int64 m3_divL
   return c;
 }
 
-long m3_mod
+long __cdecl m3_mod
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
@@ -95,7 +100,7 @@ long m3_mod
   return c;
 }
 
-int64 m3_modL
+int64 __cdecl m3_modL
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
@@ -109,7 +114,7 @@ int64 m3_modL
 
 #define SET_GRAIN (sizeof (long) * 8)
 
-long set_member
+long __cdecl set_member
     ANSI((          long elt, ulong* set))
       KR((elt, set) long elt; ulong* set;)
 {
@@ -118,7 +123,7 @@ long set_member
   return (set[word] & (1UL << bit)) != 0;
 }
 
-void set_union
+void __cdecl set_union
     ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
       KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
 {
@@ -129,7 +134,7 @@ void set_union
   }
 }
 
-void set_intersection
+void __cdecl set_intersection
     ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
       KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
 {
@@ -140,7 +145,7 @@ void set_intersection
   }
 }
 
-void set_difference
+void __cdecl set_difference
     ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
       KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
 {
@@ -151,7 +156,7 @@ void set_difference
   }
 }
 
-void set_sym_difference
+void __cdecl set_sym_difference
     ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
       KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
 {
@@ -162,31 +167,21 @@ void set_sym_difference
   }
 }
 
-long set_eq
+long __cdecl set_eq
     ANSI((              long n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
-  register long n_words = n_bits / SET_GRAIN;
-  register long i;
-  for (i = 0; i < n_words; i++) {
-    if (a[i] != b[i]) return 0;
-  }
-  return 1;
+  return (memcmp(a, b, n_bits / 8) == 0);
 }
 
-long set_ne
+long __cdecl set_ne
     ANSI((              long n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
-  register long n_words = n_bits / SET_GRAIN;
-  register long i;
-  for (i = 0; i < n_words; i++) {
-    if (a[i] != b[i]) return 1;
-  }
-  return 0;
+  return (memcmp(a, b, n_bits / 8) != 0);
 }
 
-long set_ge
+long __cdecl set_ge
     ANSI((              long n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
@@ -198,7 +193,7 @@ long set_ge
   return 1;
 }
 
-long set_gt
+long __cdecl set_gt
     ANSI((              long n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
@@ -212,7 +207,7 @@ long set_gt
   return (eq != 0);
 }
 
-long set_le
+long __cdecl set_le
     ANSI((              long n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
@@ -224,7 +219,7 @@ long set_le
   return 1;
 }
 
-long set_lt
+long __cdecl set_lt
     ANSI((              long n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
 {
@@ -360,7 +355,7 @@ static const ulong HiBits[] = {
 #error unknown size of ulong
 #endif
 
-void set_range
+void __cdecl set_range
     ANSI((       long b, long a, ulong* s))
     KR((b, a, s) long b; long a; ulong* s;)
 {
@@ -383,7 +378,7 @@ void set_range
     }
 }
 
-void set_singleton
+void __cdecl set_singleton
     ANSI((      long a, ulong* s))
       KR((a, s) long a; ulong* s;)
 {
