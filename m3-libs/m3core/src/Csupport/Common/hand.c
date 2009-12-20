@@ -177,6 +177,8 @@ long __cdecl set_eq
 long __cdecl set_ne
     ANSI((              long n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
+/* The integrated back end calls memcmp directly; the gcc
+   backend does not. */
 {
   return (memcmp(a, b, n_bits / 8) != 0);
 }
@@ -184,6 +186,8 @@ long __cdecl set_ne
 long __cdecl set_ge
     ANSI((              long n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
+/* The integrated back end calls memcmp directly; the gcc
+   backend does not. */
 {
   register long n_words = n_bits / SET_GRAIN;
   register long i;
