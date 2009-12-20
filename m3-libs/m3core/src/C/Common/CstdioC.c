@@ -1,12 +1,13 @@
+#ifdef _MSC_VER
+#pragma optimize("gty", on)
+#undef _DLL
+#endif
+
 #include "m3core.h"
 #include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#ifdef _MSC_VER
-#pragma optimize("gty", on)
 #endif
 
 #define M3MODULE Cstdio
@@ -73,10 +74,8 @@ X(TMP_MAX)
 
 X(EOF)
 
-#undef X
-#define X(a) const char Cstdio__##a[] = a;
-
-X(P_tmpdir)
+#ifndef _WIN32
+/* varying ABI in libcmt.lib and msvcrt.lib so just don't expose them */
 
 #undef X
 #define X(a) FILE* __cdecl Cstdio__get_##a(void) { return a; }
@@ -84,6 +83,7 @@ X(P_tmpdir)
 X(stdin)
 X(stdout)
 X(stderr)
+#endif
 
 #ifdef __cplusplus
 }

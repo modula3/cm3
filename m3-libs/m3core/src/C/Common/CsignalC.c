@@ -2,11 +2,12 @@
 /* All rights reserved.                                                      */
 /* See the file COPYRIGHT for a full description.                            */
 
-#include "m3core.h"
-
 #ifdef _MSC_VER
 #pragma optimize("gty", on)
+#undef _DLL
 #endif
+
+#include "m3core.h"
 
 #define M3MODULE Csignal
 
