@@ -222,7 +222,6 @@ void SignalHandler(int sig)
         }
         pcontext = (CONTEXT*)(1 + (DWORD*)pcontext);
     }
-
 }
 
 int main()
