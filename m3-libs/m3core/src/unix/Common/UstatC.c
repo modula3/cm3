@@ -1,4 +1,4 @@
-#include "m3unix.h"
+#include "m3core.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -90,15 +90,8 @@ int Ustat__fstat(int fd, m3_stat_t* m3st)
 
 #ifdef HAS_STAT_FLAGS
 
-int Ustat__chflags(const char* path, unsigned long flags)
-{
-    return chflags(path, flags);
-}
-
-int Ustat__fchflags(int fd, unsigned long flags)
-{
-    return fchflags(fd, flags);
-}
+M3WRAP2(int, chflags, const char*, unsigned long)
+M3WRAP2(int, fchflags, int, unsigned long)
 
 #endif
 
