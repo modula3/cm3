@@ -11,6 +11,10 @@
 #include <sys/frame.h>
 #include <setjmp.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void RTStack__SaveRegsInStack(void)
 {
   jmp_buf jb;
@@ -132,3 +136,7 @@ void RTStack__Unwind (Frame* target)
   reg[REG_O7] = target->sp->fr_savpc;
   setcontext(&target->ctxt);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

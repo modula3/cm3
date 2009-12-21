@@ -1,6 +1,11 @@
-#if 0
-
 #include <stdlib.h>
+#include <windows.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#if 0
 
 void* RTOS__GetMemory(size_t Size)
 {
@@ -9,16 +14,12 @@ void* RTOS__GetMemory(size_t Size)
 
 #elif 0
 
-#include <windows.h>
-
 void* RTOS__GetMemory(size_t Size)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 }
 
 #elif 1
-
-#include <windows.h>
 
 void* RTOS__GetMemory(size_t Size)
 {
@@ -27,7 +28,6 @@ void* RTOS__GetMemory(size_t Size)
 
 #elif 0
 
-#include <windows.h>
 /* Same as previous, but with some internal logging, which 
 reveals the lossage that results from using VirtualAlloc with RTMachine.PageSize < GetSystemInfo.AllocationGranularity.
 */
@@ -55,4 +55,8 @@ void* RTOS__GetMemory(size_t Size)
     return LogEntry.Result;
 }
 
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif
