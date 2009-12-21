@@ -2,7 +2,7 @@
 /* All rights reserved.                                               */
 /* See the file COPYRIGHT for a full description.                     */
 
-#include "m3unix.h"
+#include "m3core.h"
 #ifdef _WIN32
 #include <windows.h>
 #endif
