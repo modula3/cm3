@@ -6,6 +6,9 @@
 /*      modified on Tue Jan 10 15:48:28 PST 1995 by kalsow  */
 /*      modified on Tue Feb 11 15:18:40 PST 1992 by muller  */
 
+#include <limits.h>
+#include <string.h>
+
 #ifdef __cplusplus
 extern "C"
 {           
@@ -20,9 +23,6 @@ typedef signed char schar;
 typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long ulong;
-
-#include <limits.h>
-#include <string.h>
 
 #if UCHAR_MAX == 0xffffffff
 typedef unsigned char uint32;
