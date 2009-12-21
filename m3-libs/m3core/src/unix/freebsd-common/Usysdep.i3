@@ -7,7 +7,6 @@
 INTERFACE Usysdep;
 
 FROM Ctypes IMPORT int, char_star;
-FROM Cstdint IMPORT int32_t;
 
 (* INTERFACE Unix; *)
 
@@ -31,15 +30,15 @@ TYPE
   END;
 
   struct_tm = RECORD
-    tm_sec:   int32_t;
-    tm_min:   int32_t;
-    tm_hour:  int32_t;
-    tm_mday:  int32_t;
-    tm_mon:   int32_t;
-    tm_year:  int32_t;
-    tm_wday:  int32_t;
-    tm_yday:  int32_t;
-    tm_isdst: int32_t;
+    tm_sec:   int;
+    tm_min:   int;
+    tm_hour:  int;
+    tm_mday:  int;
+    tm_mon:   int;
+    tm_year:  int;
+    tm_wday:  int;
+    tm_yday:  int;
+    tm_isdst: int;
     tm_gmtoff:INTEGER;
     tm_zone:  char_star;
   END;
