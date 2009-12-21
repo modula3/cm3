@@ -4,7 +4,6 @@
 
 INTERFACE Usysdep;
 
-FROM Cstdint IMPORT int32_t;
 FROM Ctypes IMPORT int;
 
 CONST
@@ -17,8 +16,8 @@ TYPE
 (* INTERFACE Usocket; *)
 
     struct_linger = RECORD
-        l_onoff: int32_t;
-        l_linger: int32_t;
+        l_onoff: int;
+        l_linger: int;
     END;
 
 (* INTERFACE Utime; *)
