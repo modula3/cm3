@@ -50,7 +50,7 @@ void RTStack__CurFrame ANSI((Frame *f))
    Return the stack frame that called "f".  Returns with pc = NIL if
    "f" is the first frame on the stack or its predecessor is ill-formed. */
 
-RTStack__PrevFrame ANSI((Frame *callee, Frame *caller))
+void RTStack__PrevFrame ANSI((Frame *callee, Frame *caller))
     KR((callee, caller) Frame *callee; Frame *caller;)
 {
   abort ();
