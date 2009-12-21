@@ -9,6 +9,10 @@
 
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(__STDC__) || defined(__cplusplus)
 #define ANSI(x) x
 #define KR(x)
@@ -79,3 +83,7 @@ char* RTStack__ProcName ANSI((Frame *f))
 {
   return (char*)0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
