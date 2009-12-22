@@ -18,8 +18,6 @@ INTERFACE RTMachine;
 CONST
   BytesPerHeapPage    = 65536;              (* bytes per page *)
   LogBytesPerHeapPage = 16;
-  AdrPerHeapPage      = BytesPerHeapPage;   (* addresses per page *)
-  LogAdrPerHeapPage   = LogBytesPerHeapPage;
 
 (*--------------------------------------------------------- thread stacks ---*)
 
