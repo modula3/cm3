@@ -44,8 +44,8 @@ FROM RT0 IMPORT Typecode;
 CONST
   BytesPerPage    = RTMachine.BytesPerHeapPage;
   LogBytesPerPage = RTMachine.LogBytesPerHeapPage;
-  AdrPerPage      = RTMachine.AdrPerHeapPage;
-  LogAdrPerPage   = RTMachine.LogAdrPerHeapPage;
+  AdrPerPage      = RTMachine.BytesPerHeapPage;
+  LogAdrPerPage   = RTMachine.LogBytesPerHeapPage;
 
 TYPE Page = [0 .. Word.Divide(-1, AdrPerPage)];
 
