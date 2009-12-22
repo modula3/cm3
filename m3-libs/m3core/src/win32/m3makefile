@@ -4,8 +4,6 @@
 %
 % Last modified on Wed Nov  9 15:14:29 PST 1994 by kalsow  
 
-% $Id$
-
 Interface  ("WinBaseTypes")
 Module     ("WinDef")
 Module     ("WinNT")
