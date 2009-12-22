@@ -1,27 +1,36 @@
 #include <stdlib.h>
 #include <windows.h>
 
+#ifdef _MSC_VER
+#pragma optimize("gty", on)
+#undef _DLL
+#endif
+
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 #if 0
 
-void* RTOS__GetMemory(size_t Size)
+void* __cdecl RTOS__GetMemory(size_t Size)
 {
     return calloc(Size, 1);
 }
 
 #elif 0
 
-void* RTOS__GetMemory(size_t Size)
+void* __cdecl RTOS__GetMemory(size_t Size)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 }
 
 #elif 1
 
-void* RTOS__GetMemory(size_t Size)
+void* __cdecl RTOS__GetMemory(size_t Size)
 {
     return VirtualAlloc(NULL, Size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 }
@@ -41,7 +50,7 @@ RTOSMemoryLogEntry_t RTOSMemoryLog[128];
 size_t RTOSMemoryLogIndex;
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
-void* RTOS__GetMemory(size_t Size)
+void* __cdecl RTOS__GetMemory(size_t Size)
 {
     RTOSMemoryLogEntry_t LogEntry;
     
