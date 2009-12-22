@@ -5,6 +5,11 @@ such as on Windows going directly to HeapAlloc(GetProcessHeap()) and
 reducing C runtime dependency.
 */
 
+#ifdef _MSC_VER
+#pragma optimize("gty", on)
+#undef _DLL
+#endif
+
 #include <stddef.h>
 
 #ifdef _MSC_VER
@@ -13,10 +18,10 @@ reducing C runtime dependency.
 #pragma warning(disable:4201) /* nonstandard extension (windows.h) */
 #pragma warning(disable:4214) /* nonstandard extension (windows.h) */
 #pragma warning(disable:4514) /* unreferenced inline function */
-#else
-#ifndef __cdecl
-#define __cdecl /* nothing */
 #endif
+
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
 #endif
 
 #ifdef _WIN32

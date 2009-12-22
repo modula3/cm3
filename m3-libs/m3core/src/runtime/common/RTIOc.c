@@ -1,3 +1,8 @@
+#ifdef _MSC_VER
+#pragma optimize("gty", on)
+#undef _DLL
+#endif
+
 #include <stdio.h>
 #include <stddef.h>
 
