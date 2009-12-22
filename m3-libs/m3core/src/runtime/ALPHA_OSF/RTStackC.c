@@ -114,7 +114,7 @@ void RTStack__CurFrame (Frame *f)
    "callee" is the first frame on the stack or its predecessor is ill-formed.
    */
 
-RTStack__PrevFrame (Frame* callee, Frame* caller)
+void RTStack__PrevFrame (Frame* callee, Frame* caller)
 {
   PRUNTIME_FUNCTION proc;
 
