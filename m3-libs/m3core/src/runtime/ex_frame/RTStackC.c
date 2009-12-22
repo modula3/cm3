@@ -9,6 +9,10 @@
 
 #include <stdlib.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #if defined(__STDC__) || defined(__cplusplus)
 #define ANSI(x) x
 #define KR(x)
@@ -50,7 +54,7 @@ void RTStack__CurFrame ANSI((Frame *f))
    Return the stack frame that called "f".  Returns with pc = NIL if
    "f" is the first frame on the stack or its predecessor is ill-formed. */
 
-RTStack__PrevFrame ANSI((Frame *callee, Frame *caller))
+void RTStack__PrevFrame ANSI((Frame *callee, Frame *caller))
     KR((callee, caller) Frame *callee; Frame *caller;)
 {
   abort ();
@@ -79,3 +83,7 @@ char* RTStack__ProcName ANSI((Frame *f))
 {
   return (char*)0;
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
