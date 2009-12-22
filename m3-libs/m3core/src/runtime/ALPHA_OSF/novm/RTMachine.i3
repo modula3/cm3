@@ -37,8 +37,6 @@ CONST
 CONST
   BytesPerHeapPage    = 8192;               (* bytes per page *)
   LogBytesPerHeapPage = 13;
-  AdrPerHeapPage      = BytesPerHeapPage;   (* addresses per page *)
-  LogAdrPerHeapPage   = LogBytesPerHeapPage;
 
 (* The collector supports the use of VM protection to achieve incremental,
    generational collection.  This is not possible on all architectures, and
