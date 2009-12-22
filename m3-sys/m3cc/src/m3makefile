@@ -143,7 +143,7 @@ readonly m3cc_config = {
   % If m3cg omits the .register psuedo ops, assembly completely fails, with lots of errors.
   %
 
-  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes -without-gnu-as -without-gnu-ld",
+  "SPARC64_SOLARIS" : "-without-gnu-as -without-gnu-ld",
   % If buiding native gcc driver, add:
   % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld 
 
@@ -207,9 +207,23 @@ readonly m3cc_config = {
 
 } % m3cc_config
 
+
+readonly m3cc_env = {
+% This is required for cross builds, probably automatic for native builds.
+  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes",
+} % m3cc_env
+
 readonly proc get_config (target) is
   if m3cc_config contains target
     return m3cc_config {target}
+  else
+    return ""
+  end
+end
+
+readonly proc get_env (target) is
+  if m3cc_env contains target
+    return m3cc_env {target}
   else
     return ""
   end
@@ -351,6 +365,7 @@ end
 % so these must be specified on both the configure command and the make command.
 %
 env = env & " " & get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
+env = env & " " & get_env(M3CC_TARGET)
 
 ConfigureGNUMake()
 write("GNU_MAKE is " & GNU_MAKE & CR)
