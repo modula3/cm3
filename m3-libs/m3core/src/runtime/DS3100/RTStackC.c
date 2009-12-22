@@ -18,6 +18,11 @@
 #include <setjmp.h>
 #include <exception.h>
 #include <sym.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void sigvec();
 
 /* TYPE Frame = RECORD pc, sp: ADDRESS END; */
@@ -290,5 +295,6 @@ void RTStack__Unwind (Frame *target)
   ********************************************************************/
 }
 
-
-
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
