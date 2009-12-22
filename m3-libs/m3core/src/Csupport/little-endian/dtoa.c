@@ -2,7 +2,9 @@
 /* All rights reserved.                                                      */
 /* See the file COPYRIGHT for a full description.                            */
 
+#ifndef __cplusplus
 #define KR_headers
+#endif
 #define IEEE_8087
 #undef IEEE_MC68k
 
