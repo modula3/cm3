@@ -108,7 +108,7 @@ char* RTStack__ProcName (Frame *f)
    Return the stack frame that called "f".  Returns with pc = NIL if
    "f" is the first frame on the stack or its predecessor is ill-formed. */
 
-RTStack__PrevFrame (Frame* callee, Frame* caller)
+void RTStack__PrevFrame (Frame* callee, Frame* caller)
 {
   Proc p = RTStack__Find (callee->pc);
   Frame f;
