@@ -12,7 +12,7 @@ typedef unsigned char _JBTYPE __attribute__((aligned(4)));
 #include <string.h>
 typedef unsigned U;
 
-typedef size_t JB[sizeof(jmp_buf) / sizeof(size_t)];
+typedef size_t JB[sizeof(sigjmp_buf) / sizeof(size_t)];
 
 void find(JB jb1, size_t a)
 {
@@ -38,20 +38,20 @@ void diff(JB jb1, JB jb2)
     }
 }
 
-void config2(jmp_buf* jb1)
+void config2(sigjmp_buf* jb1)
 {
-    jmp_buf jb2;
+    sigjmp_buf jb2;
 
     memset(&jb2, 0, sizeof(jb2));
     printf("looking for program counter and stack pointer and frame pointer\n");
-    setjmp(jb2);
+    sigsetjmp(jb2, 1);
     diff(*(JB*)jb1, *(JB*)jb2);
 }
 
 void config(volatile size_t a)
 {
-    jmp_buf jb1;
-    jmp_buf jb2;
+    sigjmp_buf jb1;
+    sigjmp_buf jb2;
     void* volatile p;
     void* volatile q;
 
@@ -64,19 +64,19 @@ void config(volatile size_t a)
     printf("local jb2 is at %p\n", &jb2);
 
     printf("looking for first parameter\n");
-    setjmp(jb1);
+    sigsetjmp(jb1, 1);
     find(*(JB*)&jb1, a);
 
     printf("looking for program counter\n");
-    setjmp(jb1);
-    setjmp(jb2);
+    sigsetjmp(jb1, 1);
+    sigsetjmp(jb2, 1);
     diff(*(JB*)&jb1, *(JB*)&jb2);
 
     printf("looking for program counter and stack pointer\n");
     printf("alloca(123):%p\n", p = alloca(0x123));
-    setjmp(jb1);
+    sigsetjmp(jb1, 1);
     printf("alloca(123):%p\n", q = alloca(0x123));
-    setjmp(jb2);
+    sigsetjmp(jb2, 1);
     diff(*(JB*)&jb1, *(JB*)&jb2);
 
     config2(&jb1);
@@ -93,14 +93,14 @@ int main()
 {
     char a;
     
-    printf("alignof(jmp_buf) %u\n", (U)__alignof(jmp_buf));
-    printf("sizeof(jmp_buf) %u\n", (U)sizeof(jmp_buf));
+    printf("alignof(sigjmp_buf) %u\n", (U)__alignof(sigjmp_buf));
+    printf("sizeof(sigjmp_buf) %u\n", (U)sizeof(sigjmp_buf));
     
     stack_grow(&a);
 
-    if (sizeof(jmp_buf) % sizeof(size_t))
+    if (sizeof(sigjmp_buf) % sizeof(size_t))
     {
-        printf("jmp_buf size not multiple of size_t\n");
+        printf("sigjmp_buf size not multiple of size_t\n");
         exit(1);
     }
     config(0xdeadbeef * 16);
