@@ -25,6 +25,10 @@ NT386 linking to NT386GNU /cm3/lib/hand.obj, which should probably move to eithe
     /cm3/lib/target/hand.obj, probably the first.
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* otherwise we get:
 libtool: file: libgcc.o has no symbols
 */
@@ -89,4 +93,8 @@ count set bits?
 int __popcountsi2 (UINT32 x) { return __builtin_popcount (x); }
 */
 
+#endif
+
+#ifdef __cplusplus
+} /* extern C */
 #endif
