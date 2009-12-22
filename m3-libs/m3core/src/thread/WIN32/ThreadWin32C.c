@@ -29,20 +29,6 @@ struct IRpcStubBuffer;        /* warning 4115: named type definition in parenthe
 #define EXTERN_CONST const
 #endif
 
-/* Sometimes setjmp saves signal mask, in which case _setjmp does not.
-setjmp works, but _setjmp can be much faster. */
-#ifndef __sun
-#define M3_SETJMP _setjmp
-#define M3_LONGJMP _longjmp
-#else
-#define M3_SETJMP setjmp
-#define M3_LONGJMP longjmp
-#endif
-
-#if defined(__sparc) || defined(__ia64__) || defined(_M_IA64) || defined(_IA64_)
-#define M3_REGISTER_WINDOWS
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -129,9 +115,9 @@ void __cdecl ThreadWin32__ProcessLive(char *bottom, void (*p)(void *start, void 
 {
   jmp_buf jb;
 
-  if (M3_SETJMP(jb) == 0) /* save registers to stack */
-#ifdef M3_REGISTER_WINDOWS
-    M3_LONGJMP(jb, 1); /* flush register windows */
+  if (setjmp(jb) == 0) /* save registers to stack */
+#ifdef _IA64_
+    longjmp(jb, 1); /* flush register windows */
   else
 #endif
   {
