@@ -4,8 +4,6 @@
 %
 % Last modified on Wed Nov  9 15:14:29 PST 1994 by kalsow  
 
-% $Id: m3makefile,v 1.9 2009-11-11 06:18:06 jkrell Exp $
-
 Interface  ("WinBaseTypes")
 Module     ("WinDef")
 Module     ("WinNT")
