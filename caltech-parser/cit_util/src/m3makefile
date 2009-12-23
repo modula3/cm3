@@ -1,4 +1,4 @@
-/* $Id: m3makefile,v 1.4 2009-08-09 22:57:03 jkrell Exp $ */
+/* $Id: m3makefile,v 1.5 2009-12-23 22:04:03 hosking Exp $ */
 
 if not defined("TOP")
   TOP = PACKAGE_DIR & SL & ".."
@@ -45,8 +45,8 @@ template("to_refany")
 ord_to_refany("Int", "Integer")
 ord_to_refany("Bool", "Boolean")
 ord_to_refany("Char", "Char")
-ord_to_refany("Real", "RealType")
-ord_to_refany("Longreal", "LongrealType")
+ord_to_refany("Real", "Real")
+ord_to_refany("LongReal", "LongReal")
 
 /* new stuff */
 MkSet("IntPair", "IntPair")
