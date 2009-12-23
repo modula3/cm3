@@ -45,8 +45,8 @@ template("to_refany")
 ord_to_refany("Int", "Integer")
 ord_to_refany("Bool", "Boolean")
 ord_to_refany("Char", "Char")
-ord_to_refany("Real", "RealType")
-ord_to_refany("Longreal", "LongrealType")
+ord_to_refany("Real", "Real")
+ord_to_refany("LongReal", "LongReal")
 
 /* new stuff */
 MkSet("IntPair", "IntPair")
