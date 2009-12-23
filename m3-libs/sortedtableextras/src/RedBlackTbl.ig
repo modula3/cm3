@@ -81,7 +81,7 @@ form; it must be the same name that is used to instantiate the generic
 
 | redblack_table ("IntInt", "Integer", "Integer")
 | redblack_table ("IntText", "Integer", "Text")
-| redblack_table ("RealRef", "RealType", "Refany")
+| redblack_table ("RealRef", "Real", "Refany")
 
 For example, the last procedure call would create the two derived
 files "RedBlackRealRefTbl.i3" and "RedBlackRealRefTbl.m3".
