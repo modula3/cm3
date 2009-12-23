@@ -10,7 +10,7 @@
 
 import    ("zeus")
 
-list      ("Real", "RealType")
+list      ("Real", "Real")
 
 zume      ("Binpack")
 oblume    ("Binpack", "myview")

@@ -2,4 +2,4 @@
 (* Distributed only by permission. *)
 (* Last modified on Fri Jul  9 16:36:47 PDT 1993 by mhb *)
 
-INTERFACE RealList = List(RealType) END RealList.
+INTERFACE RealList = List(Real) END RealList.
