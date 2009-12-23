@@ -91,7 +91,7 @@ form; it must be the same name that is used to instantiate the generic
 
 | skiplist_table ("IntInt", "Integer", "Integer")
 | skiplist_table ("IntText", "Integer", "Text")
-| skiplist_table ("RealRef", "RealType", "Refany")
+| skiplist_table ("RealRef", "Real", "Refany")
 
 For example, the last procedure call would create the two derived
 files "SkipListRealRefTbl.i3" and "SkipListRealRefTbl.m3".
