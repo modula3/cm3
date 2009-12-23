@@ -4,12 +4,12 @@
 
 /* Last modified on Tue Feb 11 17:20:01 PST 1992 by muller                   */
 
-Generic_interface("GenWord")
+Generic_interface("Word")
 Interface("WordRep")
 Interface("Word")
 Interface("LongRep")
 Interface("Long")
 
-generic_implementation("GenWord")
+generic_implementation("Word")
 implementation ("Word")
 implementation ("Long")
