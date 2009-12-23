@@ -7,6 +7,7 @@
 (*      modified on Fri Feb 28 20:49:49 PST 1992 by stolfi     *)
 
 INTERFACE Real; 
+IMPORT Word;
 
 (* Properties of REAL (for the VAX).
 
@@ -51,5 +52,20 @@ CONST
 | MaxSignifDigits = ceiling(log_10(Base^Precision)) + 1.
 
 *)
-END Real.
 
+CONST Brand = "Real";
+
+PROCEDURE Equal(a, b: T): BOOLEAN;
+(* Return "a = b".  The result is undefined if either "a" or "b" is
+   an "NaN" (not a number) value. *)
+
+PROCEDURE Hash(a: T): Word.T;
+(* Return a hash value derived from "a".  The result is undefined if
+   either "a" or "b" is an "NaN" (not a number) value. *)
+
+PROCEDURE Compare(a, b: T): [-1..1];
+(* Return "-1" if "a < b", "0" if "a = b", or "+1" if "a > b".
+   The result is undefined if either "a" or "b" is an "NaN" (not a
+   number) value. *)
+
+END Real.
