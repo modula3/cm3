@@ -5,17 +5,15 @@ import("libm3")
 template("float")
 
 
-Module("ExtendedType")
-
 Generic_implementation("FloatEx")
 FloatEx("Real",     "Real")
 FloatEx("LongReal", "LongReal")
 FloatEx("Extended", "Extended")
 
 Generic_module("FloatBasic")
-FloatBasic("Real",     "Real",     "RealType",     "RealFloat")
-FloatBasic("LongReal", "LongReal", "LongrealType", "LongFloat")
-FloatBasic("Extended", "Extended", "ExtendedType", "ExtendedFloat")
+FloatBasic("Real",     "Real",     "Real",     "RealFloat")
+FloatBasic("LongReal", "LongReal", "LongReal", "LongFloat")
+FloatBasic("Extended", "Extended", "Extended", "ExtendedFloat")
 
 Generic_module("FloatTrans")
 FloatTrans("Real",     "Real",     "RealBasic",     "RealEx")
