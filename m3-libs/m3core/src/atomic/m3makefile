@@ -1,4 +1,4 @@
-generic_module("Atomic")
+generic_interface("Atomic")
 template("atomic")
 atomic("Address")
 atomic("Boolean")
