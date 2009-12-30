@@ -12,7 +12,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#ifdef __APPLE__
+
+#if defined(__APPLE__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__OpenBSD__)
+#define HAS_GETIFADDRS
+#endif
+
+#ifdef HAS_GETIFADDRS
 #include <ifaddrs.h>
 #include <sys/socket.h>
 #include <net/if_dl.h>
@@ -36,7 +41,7 @@ main() {
         char b[4096];
     } buf;
     struct ifreq* p = { 0 };
-#ifdef __APPLE__
+#ifdef HAS_GETIFADDRS
     struct ifaddrs* if1;
     struct ifaddrs* if2;
 #endif
@@ -48,7 +53,7 @@ main() {
        exit(1);
     }
     
- #ifdef __APPLE__
+ #ifdef HAS_GETIFADDRS
     getifaddrs(&if1);
     for (if2 = if1; if2; if2 = if2->ifa_next)
     {
