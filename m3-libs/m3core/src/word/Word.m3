@@ -1,1 +1,1 @@
-MODULE Word = Word(Word) END Word.
+MODULE Word = GenWord(Word) END Word.

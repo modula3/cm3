@@ -1,1 +1,1 @@
-INTERFACE Long = Word(LongRep) END Long.
+INTERFACE Long = GenWord(LongRep) END Long.
