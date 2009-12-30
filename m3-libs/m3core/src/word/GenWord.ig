@@ -6,7 +6,7 @@
 (*      modified on Wed Apr 12 09:23:40 1989 by kalsow         *)
 
 
-GENERIC INTERFACE Word(Rep);
+GENERIC INTERFACE GenWord(Rep);
 
 (* A Rep.T w represents a sequence of Size bits
 	  w(0), ..., w(Size-1).
@@ -65,4 +65,4 @@ PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
    the least significant n bits of y. The other bits of x are unchanged. A
    checked runtime error if n + i > Word.Size. *)
 
-END Word.
+END GenWord.

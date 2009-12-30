@@ -1,1 +1,1 @@
-MODULE Long = Word(Long) END Long.
+MODULE Long = GenWord(Long) END Long.

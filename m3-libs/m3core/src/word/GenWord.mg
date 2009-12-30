@@ -5,7 +5,7 @@
 (* Last modified on Mon Dec 16 11:02:01 PST 1991 by kalsow     *)
 (*      modified on Sat May 19 07:28:29 1990 by muller         *)
 
-GENERIC MODULE Word(Impl);
+GENERIC MODULE GenWord(Impl);
 
 PROCEDURE Plus (x, y: T): T     = BEGIN RETURN Impl.Plus (x, y)   END Plus;
 PROCEDURE Times (x, y: T): T    = BEGIN RETURN Impl.Times (x, y)  END Times;
@@ -46,4 +46,4 @@ PROCEDURE Insert (x, y: T; i, n: CARDINAL): T
  = BEGIN RETURN Impl.Insert (x, y, i, n) END Insert;
 
 BEGIN
-END Word.
+END GenWord.
