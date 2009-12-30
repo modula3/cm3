@@ -19,7 +19,6 @@
 
 #ifdef HAS_GETIFADDRS
 #include <ifaddrs.h>
-#include <sys/socket.h>
 #include <net/if_dl.h>
 #endif
 
