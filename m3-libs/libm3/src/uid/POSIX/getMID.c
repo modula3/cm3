@@ -58,7 +58,7 @@ main() {
     {
         if (if2->ifa_addr->sa_family == AF_LINK)
         {
-            struct sockaddr_dl* volatile dl = (struct sockaddr_dl*)if2->ifa_addr;
+            struct sockaddr_dl* dl = (struct sockaddr_dl*)if2->ifa_addr;
             unsigned char* mac = (unsigned char*)LLADDR(dl);
             if (dl->sdl_alen == 6) /* 48 bits */
             {
