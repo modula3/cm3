@@ -1,1 +1,1 @@
-INTERFACE Word = Word(WordRep) END Word.
+INTERFACE Word = GenWord(WordRep) END Word.
