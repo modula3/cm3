@@ -564,6 +564,16 @@ PROCEDURE Compile (p: P) =
     END;
   END Compile;
 
+PROCEDURE TargetIntToDiagnosticText(name: TEXT; a: Target.Int): TEXT =
+  VAR t := "";
+      b: INTEGER;
+  BEGIN
+    IF NOT TInt.ToInt(a, b) THEN
+      t := "**";
+    END;
+    RETURN t & name & ":" & Target.TargetIntToDiagnosticText(a);
+  END TargetIntToDiagnosticText;
+
 PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
   VAR
     range        : Type.T;
@@ -580,13 +590,14 @@ PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
     n            : Node;
     b            : BOOLEAN;
     tmp          : Target.Int;
-
   BEGIN
     b := SetType.Split (p.tipe, range); <* ASSERT b *>
     EVAL Type.GetBounds (range, min_T, max_T);
     IF NOT TInt.ToInt (min_T, minT)
-      OR NOT TInt.ToInt (max_T, maxT) THEN
-      Error.Msg ("set domain too large");
+        OR NOT TInt.ToInt (max_T, maxT) THEN
+      Error.Msg ("set domain too large ("
+            & TargetIntToDiagnosticText("min", min_T)
+            & "," & TargetIntToDiagnosticText("max", max_T) & ")");
       minT := FIRST (INTEGER);
       maxT := LAST (INTEGER);
     END;
@@ -687,8 +698,10 @@ PROCEDURE CompileSmall (p: P;  VAR info: Type.Info) =
     b := SetType.Split (p.tipe, range); <* ASSERT b *>
     EVAL Type.GetBounds (range, min_T, max_T);
     IF NOT TInt.ToInt (min_T, minT)
-      OR NOT TInt.ToInt (max_T, maxT) THEN
-      Error.Msg ("set domain too large");
+        OR NOT TInt.ToInt (max_T, maxT) THEN
+      Error.Msg ("set domain too large ("
+            & TargetIntToDiagnosticText("min", min_T)
+            & "," & TargetIntToDiagnosticText("max", max_T) & ")");
       minT := FIRST (INTEGER);
       maxT := LAST (INTEGER);
     END;
