@@ -1194,12 +1194,13 @@ def Boot():
         Assemble = "/usr/ccs/bin/as "
     else:
         Assemble = "as "
-        
-    if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
-        if Target.find("64") != -1 or Target.find("ALPHA") != -1:
-            Assemble = Assemble + " --64"
-        else:
-            Assemble = Assemble + " --32"
+
+    if Target != "PPC32_OPENBSD":
+        if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
+            if Target.find("64") != -1 or Target.find("ALPHA") != -1:
+                Assemble = Assemble + " --64"
+            else:
+                Assemble = Assemble + " --32"
 
     Assemble = (Assemble + ({
         "AMD64_DARWIN"      : " -arch x86_64 ",
