@@ -405,8 +405,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_align             := Word64.align;
 
     |  Systems.PPC32_OPENBSD => 
-                 Jumpbuf_size              := 16_190 * Char.size;
-                 Jumpbuf_align             := Word64.align; (* ? *)
+                 Jumpbuf_size              := 408 * Char.size;
+                 Jumpbuf_align             := Word64.align;
 
     | Systems.NetBSD2_i386 =>
                  max_align                 := 32;
