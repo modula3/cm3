@@ -27,6 +27,7 @@ readonly _UnixPieces = {
   "PA32_HPUX"       : [ "hpux-common",    "uin-common" ],
   "PA64_HPUX"       : [ "hpux-common",    "uin-common" ],
   "PPC_DARWIN"      : [ "darwin-common",  "uin-len" ],
+  "PPC64_DARWIN"    : [ "darwin-common",  "uin-len" ],
   "PPC_LINUX"       : [ "linux-common",   "uin-common" ],
   "PPC32_OPENBSD"   : [ "openbsd-common", "uin-len" ],
   "SOLgnu"          : [ "solaris-common", "solaris-2-x", "uin-common" ],
