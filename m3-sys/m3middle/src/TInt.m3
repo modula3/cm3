@@ -39,20 +39,17 @@ TYPE Sign = {Bad, Neg, Pos};
 PROCEDURE CheckSign (READONLY r: Int;  n: CARDINAL): Sign =
   BEGIN
     <*ASSERT n # 0*>
+    <*ASSERT n <= r.n*>
     IF And (r.x[r.n-1], SignMask) = 0 THEN
-      IF n < r.n THEN
-        IF And (r.x[n-1], SignMask) # 0 THEN RETURN Sign.Bad END;
-        FOR i := n TO r.n-1 DO
-          IF r.x[i] # 0 THEN RETURN Sign.Bad END;
-        END;
+      IF And (r.x[n-1], SignMask) # 0 THEN RETURN Sign.Bad END;
+      FOR i := n TO r.n-1 DO
+        IF r.x[i] # 0 THEN RETURN Sign.Bad END;
       END;
       RETURN Sign.Pos;
     ELSE
-      IF n < r.n THEN
-        IF And (r.x[n-1], SignMask) = 0 THEN RETURN Sign.Bad END;
-        FOR i := n TO r.n-1 DO
-          IF r.x[i] # Mask THEN RETURN Sign.Bad END;
-        END;
+      IF And (r.x[n-1], SignMask) = 0 THEN RETURN Sign.Bad END;
+      FOR i := n TO r.n-1 DO
+        IF r.x[i] # Mask THEN RETURN Sign.Bad END;
       END;
       RETURN Sign.Neg;
     END;
@@ -73,7 +70,9 @@ PROCEDURE IntI (READONLY r: Int;  n: CARDINAL;  VAR x: Int): BOOLEAN =
   END IntI;
 
 PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
-  VAR sign := CheckSign (r, BITSIZE (INTEGER) DIV BITSIZE (IByte));
+  VAR
+    n := MIN (r.n, BITSIZE (INTEGER) DIV BITSIZE (IByte));
+    sign := CheckSign (r, n);
   BEGIN
     (* ensure the result has the right sign extension *)
     CASE sign OF
