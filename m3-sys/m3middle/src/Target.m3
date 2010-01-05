@@ -251,7 +251,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     |  Systems.AMD64_NETBSD,
        Systems.AMD64_OPENBSD,
        Systems.AMD64_FREEBSD =>
-                 Jumpbuf_size              := 16_60 * Char.size;
+                 Jumpbuf_size              := 12 * Address.size;
 
     |  Systems.PA32_HPUX =>
                  Structure_size_boundary   := 16;
@@ -346,7 +346,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                    Jumpbuf_size              := 16_90 * Char.size;
 
                  | Systems.SPARC64_OPENBSD =>
-                   Jumpbuf_size := 16_70 * Char.size;
+                   Jumpbuf_size := 14 * Address.size;
                    Aligned_procedures := FALSE;
 
                  | Systems.SPARC64_LINUX =>
@@ -365,35 +365,37 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     |  Systems.I386_LINUX, Systems.LINUXLIBC6 =>
                  max_align                 := 32;
-                 Jumpbuf_size              := 40 * Address.size;
+                 Jumpbuf_size              := 39 * Address.size;
 
     |  Systems.AMD64_LINUX =>
-                 Jumpbuf_size              := 200 * Char.size;
+                 Jumpbuf_size              := 25 * Address.size;
 
-    |  Systems.I386_DARWIN,
-       Systems.AMD64_DARWIN =>
-                 Jumpbuf_size              := 19 * Address.size;
+    |  Systems.I386_DARWIN =>
+                 Jumpbuf_size              := 18 * Address.size;
+
+     | Systems.AMD64_DARWIN =>
+                 Jumpbuf_size              := ((9 * 2) + 3 + 16) * Int32.size;
 
     |  Systems.ARM_DARWIN =>
-                 Jumpbuf_size              := 28 * Address.size; (* sigjmpbuf, just in case.. *)
+                 Jumpbuf_size              := 28 * Address.size;
 
     |  Systems.PPC_DARWIN =>
-                 Jumpbuf_size              := (26 + 36 + 129 + 1 + 1) * 
-                                              Address.size;
+                 Jumpbuf_size              := (26 + 18*2 + 129 + 1) * Address.size;
                  Jumpbuf_align             := Word64.align;
                  (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
 
     |  Systems.PPC_LINUX => 
-                 Jumpbuf_size              := 16_94 * Address.size;
-                 Jumpbuf_align             := Word64.align;
+                 Jumpbuf_size              := 74 * Int64.size;
+                 (* ideal alignment is 16 bytes, but 4 is ok *)
+                 Jumpbuf_align             := 128;
 
     |  Systems.PPC32_OPENBSD => 
-                 Jumpbuf_size              := 408 * Char.size;
+                 Jumpbuf_size              := 100 * Address.size;
                  Jumpbuf_align             := Word64.align;
 
     | Systems.NetBSD2_i386 =>
                  max_align                 := 32;
-                 Jumpbuf_size              := 14 * Address.size;
+                 Jumpbuf_size              := 14 * Address.size; (* 13? *)
 
 (*    | Systems.I386_MSDOS =>
                  Jumpbuf_size              := 172 * Char.size; TBD *)
