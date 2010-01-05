@@ -36,7 +36,11 @@ REVEAL
     END;
 
   Condition = BRANDED "Thread.Condition Win32-1.0" OBJECT
-  (* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp *)
+  (* see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp
+   * http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
+   *   "3.3. The Generation Count Solution"
+   *)
+ 
       lock: PCRITICAL_SECTION := NIL;
       waitEvent: HANDLE := NIL;
       counter := 0; (* LL = condition.lock *)
@@ -51,22 +55,38 @@ REVEAL
       joined (*BOOLEAN*) := 0;      (* "Join" or "AlertJoin" has already returned *)
     END;
 
+  TYPE ActState = { Starting, Started, Stopping, Stopped };
   TYPE Activation = UNTRACED BRANDED REF RECORD
       frame: ADDRESS := NIL;            (* exception handling support; this field is accessed MANY times
                                         so perhaps therefore should be first *)
       next, prev: Activation := NIL;    (* LL = activeLock; global doubly-linked, circular list of all active threads *)
       handle: HANDLE := NIL;            (* thread handle in Windows *)
-      stackStart: ADDRESS := NIL;       (* stack bounds for use by GC *)
-      stackEnd: ADDRESS := NIL;         (* stack bounds for use by GC *)
+      stackStart: ADDRESS := NIL;       (* stack bounds for use by GC; the lowest address in a growing-down stack *)
+      stackEnd: ADDRESS := NIL;         (* stack bounds for use by GC; just past the highest address in a growing-down stack *)
       slot := 0;                        (* LL = slotLock;  index into global array of active, slotted threads *)
       suspendCount := 0;                (* LL = activeLock *)
       context: PCONTEXT := NIL;         (* registers of suspended thread *)
       stackPointer: ADDRESS := NIL;     (* context->Esp etc. (processor dependent) *)
       waitEvent: HANDLE := NIL;         (* event for blocking during "Wait", "AlertWait", "AlertPause", etc. *)
       alertEvent: HANDLE := NIL;        (* event for blocking during "Wait", "AlertWait", "AlertPause", etc. *)
+      state := ActState.Started;        (* LL = activeMu *)
       heapState: RTHeapRep.ThreadState; (* thread state *)
       floatState: FloatMode.ThreadState; (* thread state *)
     END;
+
+PROCEDURE SetState (act: Activation;  state: ActState) =
+  CONST text = ARRAY ActState OF TEXT
+    { "Starting", "Started", "Stopping", "Stopped" };
+  BEGIN
+    act.state := state;
+    IF DEBUG THEN
+      RTIO.PutText(text[state]);
+      RTIO.PutText(" act=");
+      RTIO.PutAddr(act);
+      RTIO.PutText("\n");
+      RTIO.Flush();
+    END;
+  END SetState;    
 
 (*----------------------------------------------------------------- Mutex ---*)
 (* Note: {Unlock,Lock}Mutex are the routines called directly by
@@ -115,25 +135,32 @@ PROCEDURE DelHandle(VAR a: HANDLE; line: INTEGER) =
     END;
   END DelHandle;
 
-PROCEDURE InitMutex (VAR m: PCRITICAL_SECTION; root: REFANY;
-                     Clean: PROCEDURE(root: REFANY)) =
-  VAR mutex := NewCriticalSection();
+PROCEDURE InitMutex (mutex: Mutex) =
+  VAR lock := NewCriticalSection();
   BEGIN
-    EnterCriticalSection(ADR(initLock));
-    IF m = NIL THEN (* We won the race. *)
-      IF mutex = NIL THEN (* But we failed. *)
-        LeaveCriticalSection(ADR(initLock));
-        RuntimeError.Raise (RuntimeError.T.OutOfMemory);
-      ELSE (* We won the race and succeeded. *)
-        m := mutex;
-        LeaveCriticalSection(ADR(initLock));
-        RTHeapRep.RegisterFinalCleanup (root, Clean);
+    IF lock = NIL THEN
+      IF mutex.lock # NIL THEN (* Someone else won the race. *)
+        RETURN;
       END;
-    ELSE (* another thread beat us in the race, ok *)
-      LeaveCriticalSection(ADR(initLock));
-      DelCriticalSection(mutex);
+      RuntimeError.Raise (RuntimeError.T.OutOfMemory)
     END;
-  END InitMutex;
+    EnterCriticalSection(ADR(initLock));
+    IF mutex.lock # NIL THEN
+      (* Someone else won the race. *)
+      DelCriticalSection(lock);
+      LeaveCriticalSection(ADR(initLock));
+      RETURN;
+    END;
+    (* We won the race. *)
+    TRY
+      RTHeapRep.RegisterFinalCleanup (mutex, CleanMutex);
+      mutex.lock := lock;
+      lock := NIL;
+    FINALLY
+      LeaveCriticalSection(ADR(initLock));
+      DelCriticalSection(lock);
+    END;
+  END InitMutex;      
 
 PROCEDURE CleanCondition (r: REFANY) =
   VAR c := NARROW(r, Condition);
@@ -142,25 +169,35 @@ PROCEDURE CleanCondition (r: REFANY) =
     DelHandle(c.waitEvent, ThisLine());
   END CleanCondition;
 
-PROCEDURE InitCondition (VAR c: Condition) =
-  VAR lock := NewCriticalSection();
-      event := CreateEvent(NIL, 1, 0, NIL);
+PROCEDURE InitCondition (c: Condition) =
+  VAR
+    lock := NewCriticalSection();
+    event := CreateEvent(NIL, 1, 0, NIL);
   BEGIN
-    EnterCriticalSection(ADR(initLock));
-    <* ASSERT (c.lock = NIL) = (c.waitEvent = NIL) *>
-    IF c.lock = NIL THEN (* We won the race. *)
-      IF lock = NIL OR event = NIL THEN (* But we failed. *)
-        DelCriticalSection(lock);
-        DelHandle(event, ThisLine());
-        LeaveCriticalSection(ADR(initLock));
-        RuntimeError.Raise (RuntimeError.T.OutOfMemory);
-      ELSE (* We won the race and succeeded. *)
-        c.lock := lock;
-        c.waitEvent := event;
-        LeaveCriticalSection(ADR(initLock));
-        RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
+    IF lock = NIL OR event = NIL THEN
+      DelCriticalSection(lock);
+      DelHandle(event, ThisLine());
+      IF c.lock # NIL AND c.waitEvent # NIL THEN (* Someone else won the race. *)
+        RETURN;
       END;
-    ELSE (* another thread beat us in the race, ok *)
+      RuntimeError.Raise (RuntimeError.T.OutOfMemory);
+    END;
+    EnterCriticalSection(ADR(initLock));
+    IF c.lock # NIL THEN
+      (* Someone else won the race. *)
+      LeaveCriticalSection(ADR(initLock));
+      DelCriticalSection(lock);
+      DelHandle(event, ThisLine());
+      RETURN;
+    END;
+    (* We won the race. *)
+    TRY
+      RTHeapRep.RegisterFinalCleanup (c, CleanCondition);
+      c.lock := lock;
+      c.waitEvent := event;
+      lock := NIL;
+      event := NIL;
+    FINALLY
       LeaveCriticalSection(ADR(initLock));
       DelCriticalSection(lock);
       DelHandle(event, ThisLine());
@@ -170,7 +207,7 @@ PROCEDURE InitCondition (VAR c: Condition) =
 PROCEDURE LockMutex (m: Mutex) =
   BEGIN
     IF perfOn THEN PerfChanged(State.locking) END;
-    IF m.lock = NIL THEN InitMutex(m.lock, m, CleanMutex) END;
+    IF m.lock = NIL THEN InitMutex(m) END;
     EnterCriticalSection(m.lock);
     IF m.held THEN Die(ThisLine(), "attempt to lock mutex already locked by self") END;
     m.held := TRUE;
@@ -214,6 +251,8 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
   (* LL = m on entry and exit, but not for the duration
    * see C:\src\jdk-6u14-ea-src-b05-jrl-23_apr_2009\hotspot\agent\src\os\win32\Monitor.cpp
    * NOTE that they merge the user lock and the condition lock.
+   * http://www.cs.wustl.edu/~schmidt/win32-cv-1.html
+   *   "3.3. The Generation Count Solution"
    *)
   VAR (* The order of the handles is important.
        * - They affect computing if we are alerted.
@@ -226,6 +265,9 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
       retry := FALSE;
       wait: DWORD;
       conditionLock := c.lock;
+      waitDone := FALSE;
+      alerted := FALSE;
+      lastWaiter := FALSE;
   BEGIN
 
     IF DEBUG THEN ThreadDebug.XWait(m, c, act); END;
@@ -241,15 +283,17 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
     handles[0] := c.waitEvent;
     EnterCriticalSection(conditionLock);
 
-    (* Capture the value of the counter before we start waiting.
-     * We will not stop waiting until the counter changes.
-     * That is, we will not stop waiting until a signal
-     * comes in after we start waiting.
-     *)
+      (* Capture the value of the counter before we start waiting.
+       * We will not stop waiting until the counter changes.
+       * That is, we will not stop waiting until a signal
+       * comes in after we start waiting.
+       *)
 
-    count := c.counter;
+      count := c.counter;
+      INC(c.waiters);
 
-    INC(c.waiters);
+    LeaveCriticalSection(conditionLock);
+    m.release(); (* can this be moved to before taking conditionLock? *)
 
     (* Loop until condition variable is signaled. The event object is
      * set whenever the condition variable is signaled, and tickets will
@@ -259,12 +303,7 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
      * time the condition variable is signaled.
      *)
 
-    LOOP
-
-      (* Leave critical region (careful with the lock order) *)
-
-      LeaveCriticalSection(conditionLock);
-      m.release();
+    WHILE (NOT alerted) AND (NOT waitDone) DO
 
       IF perfOn THEN PerfChanged(State.waiting) END;
 
@@ -279,43 +318,42 @@ PROCEDURE XWait(m: Mutex; c: Condition; act: Activation;
       END;
 
       wait := WaitForMultipleObjects(1 + ORD(alertable), ADR(handles[0]), 0, INFINITE);
-      <* ASSERT wait # WAIT_TIMEOUT *>
       <* ASSERT wait = WAIT_OBJECT_0 OR wait = (WAIT_OBJECT_0 + 1) *>
 
       IF perfOn THEN PerfRunning() END;
 
-      (* Enter critical region (careful with the lock order)
-       * For the alerted case, we could avoid taking the conditionLock
-       * if we used Interlocked on waiters.
-       *)
-
-      m.acquire();
+      alerted := (wait = (WAIT_OBJECT_0 + 1));
       EnterCriticalSection(conditionLock);
+        waitDone := (c.tickets # 0 AND c.counter # count);
+      LeaveCriticalSection(conditionLock);
 
-      IF wait = (WAIT_OBJECT_0 + 1) THEN
-        DEC(c.waiters);
-        LeaveCriticalSection(conditionLock);
-        RAISE Alerted;
+    END; (* WHILE *)
+
+    IF waitDone THEN
+      alerted := FALSE;
+    END;
+
+    m.acquire();
+
+    EnterCriticalSection(conditionLock);
+      DEC(c.waiters);
+      IF waitDone THEN
+        DEC(c.tickets);
+        lastWaiter := (c.tickets = 0);
       END;
+    LeaveCriticalSection(conditionLock);
 
-      IF c.tickets # 0 AND c.counter # count THEN
-        EXIT;
-      END;
-
-    END; (* LOOP *)
-
-    DEC(c.waiters);
+    IF alerted THEN
+      RAISE Alerted;
+    END;
 
     (* If this was the last thread to be notified, then reset event
      * so no further threads are woken, for now.
      *)
 
-    DEC(c.tickets);
-    IF c.tickets = 0 THEN
+    IF lastWaiter THEN
       IF ResetEvent(c.waitEvent) = 0 THEN Choke(ThisLine()) END;
     END;
-
-    LeaveCriticalSection(conditionLock);
 
   END XWait;
 
@@ -508,14 +546,18 @@ PROCEDURE CreateT (act: Activation): T =
      which will try to acquire "activeLock". *)
   VAR t: T := NEW(T, act := act);
   BEGIN
-    RTHeapRep.RegisterFinalCleanup (t, CleanThread);
-    act.context := NewContext();
-    IF act.context = NIL THEN
-      RuntimeError.Raise(RuntimeError.T.OutOfMemory);
+    TRY
+      RTHeapRep.RegisterFinalCleanup (t, CleanThread);
+      act := NIL;
+    FINALLY
+      DISPOSE(act);
     END;
-    act.waitEvent := CreateEvent(NIL, 0, 0, NIL);
-    act.alertEvent := CreateEvent(NIL, 0, 0, NIL);
-    IF act.waitEvent = NIL OR act.alertEvent = NIL THEN
+    t.act.context := NewContext();
+    t.act.waitEvent := CreateEvent(NIL, 0, 0, NIL);
+    t.act.alertEvent := CreateEvent(NIL, 0, 0, NIL);
+    IF t.act.context = NIL OR t.act.waitEvent = NIL OR t.act.alertEvent = NIL THEN
+      (* we could just let the registered cleanup run, but memory is tight *)
+      CleanThread(t);
       RuntimeError.Raise(RuntimeError.T.SystemError);
     END;
     AssignSlot (t);
@@ -523,13 +565,16 @@ PROCEDURE CreateT (act: Activation): T =
   END CreateT;
 
 PROCEDURE CleanThread(r: REFANY) =
-  VAR t := NARROW(r, T);
+  VAR t: T;
   BEGIN
-    DeleteContext(t.act.context);
-    DelHandle(t.act.waitEvent, ThisLine());
-    DelHandle(t.act.alertEvent, ThisLine());
-    DelHandle(t.act.handle, ThisLine());
-    DISPOSE(t.act);
+    IF r # NIL THEN
+      t := NARROW(r, T);
+      DeleteContext(t.act.context);
+      DelHandle(t.act.waitEvent, ThisLine());
+      DelHandle(t.act.alertEvent, ThisLine());
+      DelHandle(t.act.handle, ThisLine());
+      DISPOSE(t.act);
+    END;
   END CleanThread;
 
 <* WINAPI *>
@@ -603,7 +648,8 @@ PROCEDURE ThreadBase (param: ADDRESS): DWORD =
   END ThreadBase;
 
 PROCEDURE Fork(closure: Closure): T =
-  VAR t := CreateT(NEW(Activation));
+  VAR act := NEW(Activation);
+      t := CreateT(act);
       stack_size := default_stack;
       id: DWORD;
   BEGIN
@@ -626,8 +672,8 @@ PROCEDURE Fork(closure: Closure): T =
     (* create suspended just so we can store act.handle before it runs;
      * act.handle := CreateThread() is not good enough. *)
 
-    t.act.handle := CreateThread(NIL, stack_size, ThreadBase, t.act, CREATE_SUSPENDED, ADR(id));
-    IF t.act.handle = NIL THEN
+    act.handle := CreateThread(NIL, stack_size, ThreadBase, act, CREATE_SUSPENDED, ADR(id));
+    IF act.handle = NIL THEN
       RuntimeError.Raise(RuntimeError.T.SystemError);
     END;
     IF ResumeThread(t.act.handle) = -1 THEN Choke(ThisLine()) END;
@@ -788,10 +834,11 @@ PROCEDURE SuspendOthers () =
   (* LL=0. Always bracketed with ResumeOthers which releases "activeLock". *)
   VAR me: Activation;
       act: Activation;
-      nLive := 0;
+      retry: BOOLEAN;
   BEGIN
     EnterCriticalSection(ADR(activeLock));
 
+    <* ASSERT suspend_cnt = 0 *>
     INC (suspend_cnt);
     IF suspend_cnt # 1 THEN
       RETURN
@@ -799,26 +846,28 @@ PROCEDURE SuspendOthers () =
     me := GetActivation();
     LOOP
       act := me.next;
-      nLive := 0;
+      retry := FALSE;
       WHILE act # me DO
+        <* ASSERT act.suspendCount = 0 OR act.suspendCount = 1 *>
         IF act.suspendCount = 0 THEN
-          IF DEBUG THEN
-            RTIO.PutText("suspending act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
-          END;
+          SetState(act, ActState.Stopping);
           IF act.stackStart # NIL AND act.stackEnd # NIL THEN
             IF SuspendThread(act.handle) = -1 THEN Choke(ThisLine()) END;
             IF act.heapState.inCritical # 0 OR NOT GetContextAndCheckStack(act) THEN
               IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
-              INC(nLive);
+              retry := TRUE;
+              SetState(act, ActState.Started);
             ELSE
               INC(act.suspendCount);
+              <* ASSERT act.suspendCount = 1 *>
+              SetState(act, ActState.Stopped);
             END;
           END;
         END;
         act := act.next;
       END;
-      IF nLive = 0 THEN
-        RETURN
+      IF NOT retry THEN
+        RETURN;
       END;
       Sleep(1);
     END;
@@ -829,6 +878,7 @@ PROCEDURE ResumeOthers () =
   VAR act: Activation;
       me: Activation;
   BEGIN
+    <* ASSERT suspend_cnt = 1 *>
     DEC (suspend_cnt);
     IF suspend_cnt = 0 THEN
       me := GetActivation();
@@ -838,10 +888,14 @@ PROCEDURE ResumeOthers () =
           RTIO.PutText("resuming act="); RTIO.PutAddr(act.handle); RTIO.PutText("\n"); RTIO.Flush();
         END;
         <* ASSERT (act.suspendCount > 0 AND act.stackPointer # NIL) OR (act.stackStart = NIL AND act.stackEnd = NIL) *>
+        <* ASSERT act.suspendCount = 0 OR act.suspendCount = 1 *>
         act.stackPointer := NIL;
         IF act.suspendCount > 0 THEN
+          SetState(act, ActState.Starting);
           IF ResumeThread(act.handle) = -1 THEN Choke(ThisLine()) END;
           DEC(act.suspendCount);
+          <* ASSERT act.suspendCount = 0 *>
+          SetState(act, ActState.Started);
         END;
         act := act.next;
       END;
