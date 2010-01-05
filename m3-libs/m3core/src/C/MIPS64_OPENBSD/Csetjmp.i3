@@ -4,8 +4,6 @@ FROM Ctypes IMPORT int;
 
 TYPE
   jmp_buf = RECORD
-(* This information appears both here and in m3middle/Target.m3.
-   Ideally it would only occur in one place. *)
     opaque : ARRAY [1..16_53] OF INTEGER;
   END;
 
