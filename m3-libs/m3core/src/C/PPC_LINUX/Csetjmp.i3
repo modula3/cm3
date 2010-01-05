@@ -11,10 +11,6 @@ TYPE
     opaque: ARRAY [0..16_4A - 1] OF LONGINT;
   END;
 
-<*EXTERNAL*> PROCEDURE setjmp (VAR env: jmp_buf): int;
-<*EXTERNAL*> PROCEDURE longjmp (VAR env: jmp_buf; val: int);
-
-<*EXTERNAL "_setjmp" *>  PROCEDURE usetjmp (VAR env: jmp_buf): int;
 <*EXTERNAL "_longjmp" *> PROCEDURE ulongjmp (VAR env: jmp_buf; val: int);
 
 END Csetjmp.
