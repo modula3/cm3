@@ -88,7 +88,7 @@ void __cdecl ThreadWin32__ProcessStopped(
   assert(context);
   assert(stackStart < stackEnd);
   /* assert(stack_grows_down); */
-  top = (char*)context->STACK_REGISTER;  ;
+  top = (char*)context->STACK_REGISTER;
   assert(top <= stackEnd);
   assert(top);
   assertReadable = *(volatile char*)(stackEnd - 1);
