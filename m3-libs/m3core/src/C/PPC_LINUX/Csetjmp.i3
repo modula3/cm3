@@ -6,6 +6,7 @@ INTERFACE Csetjmp;
 
 FROM Ctypes IMPORT int;
 
+(* ideal alignment is 16 bytes but 4 is ok; 8 here *)
 TYPE jmp_buf = ARRAY [0..73] OF LONGINT;
 
 <*EXTERNAL "_longjmp" *> PROCEDURE ulongjmp (VAR env: jmp_buf; val: int);
