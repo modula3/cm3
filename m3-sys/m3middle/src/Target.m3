@@ -228,20 +228,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
         Little_endian := FALSE;
     END;
 
-    (* Solaris (should we put all "setjmp" platforms here?) *)
-
-    CASE System OF
-    (* SPARC32_SOLARIS *)
-    | Systems.SOLgnu,
-      Systems.SOLsun,
-      Systems.I386_SOLARIS,
-      Systems.AMD64_SOLARIS,
-      Systems.SPARC64_SOLARIS
-    =>
-        Setjmp := "setjmp";
-    ELSE
-    END;
-
     (* SPARC *)
 
     CASE System OF
@@ -387,17 +373,14 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     |  Systems.I386_DARWIN,
        Systems.AMD64_DARWIN =>
                  Jumpbuf_size              := 19 * Address.size;
-                 Setjmp                    := "setjmp";
 
     |  Systems.ARM_DARWIN =>
                  Jumpbuf_size              := 28 * Address.size; (* sigjmpbuf, just in case.. *)
-                 Setjmp                    := "setjmp";
 
     |  Systems.PPC_DARWIN =>
                  Jumpbuf_size              := (26 + 36 + 129 + 1 + 1) * 
                                               Address.size;
                  Jumpbuf_align             := Word64.align;
-                 Setjmp                    := "setjmp";
                  (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
 
     |  Systems.PPC_LINUX => 
