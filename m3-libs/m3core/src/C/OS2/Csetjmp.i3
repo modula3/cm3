@@ -4,15 +4,9 @@
 
 INTERFACE Csetjmp;
 
-FROM Ctypes IMPORT long, int, void_star;
+FROM Ctypes IMPORT int;
 
-
-TYPE 
-  ptr_t = void_star;
-
-  jmp_buf = RECORD
-        bx, si, di: long;
-        bp, sp, pc: ptr_t; END;
+TYPE jmp_buf = ARRAY [0..5] OF INTEGER;
 
 <*EXTERNAL "_longjmp" *> PROCEDURE ulongjmp (VAR env: jmp_buf; val: int);
 
