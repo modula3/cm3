@@ -1,1 +1,0 @@
-INTERFACE WordGE = GenGE () END WordGE.

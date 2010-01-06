@@ -1,1 +1,0 @@
-INTERFACE WordLE = GenLE () END WordLE.
