@@ -34,36 +34,36 @@ PROCEDURE Compile (ce: CallExpr.T) =
 
     IF x1 AND x2 THEN
       (* we can use the extract_mn operator *)
-      IF (i1 + i2 > Rep.size) THEN
+      IF (i1 + i2 > Rep.Size) THEN
         Error.Warn (2, "Word.Extract: i+n value out of range");
         CG.Load_integer (Target.Integer.cg_type, TInt.One);
         CG.Check_hi (Target.Integer.cg_type, TInt.Zero,
                      CG.RuntimeError.ValueOutOfRange);
       ELSE
         Expr.Compile (ce.args[0]);
-        CG.Extract_mn (Rep.signed, FALSE, i1, i2);
+        CG.Extract_mn (Rep.Signed, FALSE, i1, i2);
       END;
 
     ELSIF x2 THEN
       (* we can use the extract_n operator *)
-      b := TInt.FromInt (Rep.size - i2, Target.Integer.bytes, max);
+      b := TInt.FromInt (Rep.Size - i2, Target.Integer.bytes, max);
       <*ASSERT b*>
       Expr.Compile (ce.args[0]);
       CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
                             CG.RuntimeError.ValueOutOfRange);
-      CG.Extract_n (Rep.signed, FALSE, i2);
+      CG.Extract_n (Rep.Signed, FALSE, i2);
 
     ELSIF x1 THEN
       (* we need the general purpose extract operator, but can simplify
          the range checking code *)
-      b := TInt.FromInt (Rep.size - i1, Target.Integer.bytes, max);
+      b := TInt.FromInt (Rep.Size - i1, Target.Integer.bytes, max);
       <*ASSERT b*>
       Expr.Compile (ce.args[0]);
       CG.Force ();
       CG.Load_intt (i1);
       CheckExpr.EmitChecks (ce.args[2], TInt.Zero, max,
                             CG.RuntimeError.ValueOutOfRange);
-      CG.Extract (Rep.signed, sign := FALSE);
+      CG.Extract (Rep.Signed, sign := FALSE);
 
     ELSE
       (* we need the general purpose extract operator *)
@@ -74,7 +74,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
                             CG.RuntimeError.ValueOutOfRange);
       t2 := CG.Pop ();
       IF Host.doRangeChk THEN
-        b := TInt.FromInt (Rep.size, Target.Integer.bytes, max);
+        b := TInt.FromInt (Rep.Size, Target.Integer.bytes, max);
         <*ASSERT b*>
         CG.Push (t1);
         CG.Push (t2);
@@ -87,7 +87,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
       CG.Force ();
       CG.Push (t1);
       CG.Push (t2);
-      CG.Extract (Rep.signed, sign := FALSE);
+      CG.Extract (Rep.Signed, sign := FALSE);
       CG.Free (t1);
       CG.Free (t2);
     END;
@@ -97,7 +97,7 @@ PROCEDURE GetBitIndex (e: Expr.T;  VAR i: INTEGER): BOOLEAN =
   BEGIN
     e := Expr.ConstValue (e);
     IF (e = NIL) THEN RETURN FALSE END;
-    RETURN IntegerExpr.ToInt (e, i) AND (0 <= i) AND (i <= Rep.size);
+    RETURN IntegerExpr.ToInt (e, i) AND (0 <= i) AND (i <= Rep.Size);
   END GetBitIndex;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
@@ -119,7 +119,7 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
   VAR min_bits, max_bits: Target.Int;  i: INTEGER;
   BEGIN
     Expr.GetBounds (ce.args[2], min_bits, max_bits);
-    IF TInt.ToInt (max_bits, i) AND i < Rep.size THEN
+    IF TInt.ToInt (max_bits, i) AND i < Rep.Size THEN
       IF NOT TWord.Extract (TInt.MOne, 0, i, max) THEN
         EVAL Type.GetBounds (T, min, max);
       END;

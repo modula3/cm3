@@ -18,7 +18,7 @@ FROM Rep IMPORT T;
 PROCEDURE Initialize (name: TEXT) =
   VAR zz: Scope.T;  size: Target.Int;  b: BOOLEAN;
   BEGIN
-    b := TInt.FromInt (Rep.size, Target.Integer.bytes, size);
+    b := TInt.FromInt (Rep.Size, Target.Integer.bytes, size);
     <*ASSERT b*>
     M := Module.NewDefn (name, TRUE, NIL);
 

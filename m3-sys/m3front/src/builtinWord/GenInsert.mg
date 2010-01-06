@@ -32,7 +32,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
                           CG.RuntimeError.ValueOutOfRange);
     t3 := CG.Pop ();
     IF Host.doRangeChk THEN
-      b := TInt.FromInt (Rep.size, Target.Integer.bytes, max);
+      b := TInt.FromInt (Rep.Size, Target.Integer.bytes, max);
       <*ASSERT b*>
       CG.Push (t2);
       CG.Push (t3);
@@ -47,7 +47,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
     CG.Force ();
     CG.Push (t2);
     CG.Push (t3);
-    CG.Insert (Rep.signed);
+    CG.Insert (Rep.Signed);
     CG.Free (t2);
     CG.Free (t3);
   END Compile;
