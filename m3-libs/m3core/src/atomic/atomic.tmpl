@@ -6,6 +6,5 @@
 % (based on list.tmpl)
 
 readonly proc Atomic (T) is
-  build_generic_intf ("Atomic" & T, "Atomic", ["Atomic" & T & "Rep"], VISIBLE)
-  build_generic_intf ("Atomic" & T & "Rep", "AtomicRep", [T], HIDDEN)
+  build_generic_intf ("Atomic" & T, "Atomic", [T], VISIBLE)
 end
