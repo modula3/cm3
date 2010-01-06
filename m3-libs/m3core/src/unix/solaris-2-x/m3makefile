@@ -8,7 +8,6 @@
 
 if TRUE
 
-Interface ("Usignal")
 Interface ("Uucontext")
 Interface ("Uframe")
 
