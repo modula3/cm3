@@ -6,10 +6,10 @@
 (* Last Modified On Mon Dec  5 15:30:49 PST 1994 By kalsow     *)
 (*      Modified On Tue Apr 10 11:13:37 1990 By muller         *)
 
-GENERIC MODULE GenLT (Rep, Plus);
+GENERIC MODULE GenLT (Rep);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TWord;
-IMPORT Bool, Value, Formal, ProcType;
+IMPORT Bool, IntegerExpr, Value, Formal, Type, ProcType;
 FROM Rep IMPORT T;
 
 VAR Z: CallExpr.MethodList;
@@ -40,11 +40,20 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1: Target.Int;
   BEGIN
-    IF Plus.GetArgs (ce.args, w0, w1)
+    IF GetArgs (ce.args, w0, w1)
       THEN RETURN Bool.Map [TWord.LT (w0, w1)];
       ELSE RETURN NIL;
     END;
   END Fold;
+
+PROCEDURE GetArgs (args: Expr.List;  VAR w0, w1: Target.Int): BOOLEAN =
+  VAR e0, e1: Expr.T;  t: Type.T;
+  BEGIN
+    e0 := Expr.ConstValue (args[0]);
+    e1 := Expr.ConstValue (args[1]);
+    RETURN (e0 # NIL) AND IntegerExpr.Split (e0, w0, t) AND 
+           (e1 # NIL) AND IntegerExpr.Split (e1, w1, t);
+  END GetArgs;
 
 PROCEDURE Initialize () =
   VAR

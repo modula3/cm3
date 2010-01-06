@@ -1,1 +1,0 @@
-INTERFACE WordLT = GenLT () END WordLT.

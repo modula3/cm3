@@ -6,7 +6,7 @@
 (* Last Modified On Mon Dec  5 15:19:35 PST 1994 By kalsow     *)
 (*      Modified On Tue Apr 10 11:06:36 1990 By muller         *)
 
-GENERIC MODULE GenAnd (Rep, Plus);
+GENERIC MODULE GenAnd (Rep);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Type, ProcType;
 IMPORT IntegerExpr, Formal, Value, Target, TWord, TInt;
@@ -31,12 +31,21 @@ PROCEDURE Compile (ce: CallExpr.T) =
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
-    IF Plus.GetArgs (ce.args, w0, w1) THEN
+    IF GetArgs (ce.args, w0, w1) THEN
       TWord.And (w0, w1, result);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;
   END Fold;
+
+PROCEDURE GetArgs (args: Expr.List;  VAR w0, w1: Target.Int): BOOLEAN =
+  VAR e0, e1: Expr.T;  t: Type.T;
+  BEGIN
+    e0 := Expr.ConstValue (args[0]);
+    e1 := Expr.ConstValue (args[1]);
+    RETURN (e0 # NIL) AND IntegerExpr.Split (e0, w0, t) AND 
+           (e1 # NIL) AND IntegerExpr.Split (e1, w1, t);
+  END GetArgs;
 
 PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
   VAR min_a, max_a, min_b, max_b : Target.Int;
