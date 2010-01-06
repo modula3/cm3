@@ -82,11 +82,11 @@ PROCEDURE Initialize () =
     Scanner.Pop ();
 
     Scanner.Push ("Word.i3", NIL, is_main := Host.emitBuiltins);
-      WordModule.Initialize ();
+      WordModule.Initialize ("Word");
     Scanner.Pop ();
 
     Scanner.Push ("Long.i3", NIL, is_main := Host.emitBuiltins);
-      LongModule.Initialize ();
+      LongModule.Initialize ("Long");
     Scanner.Pop ();
 
     Scanner.Push ("Compiler.i3", NIL, is_main := Host.emitBuiltins);

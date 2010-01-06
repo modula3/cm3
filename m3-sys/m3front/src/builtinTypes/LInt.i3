@@ -8,9 +8,11 @@
 
 INTERFACE LInt;
 
-IMPORT Type;
+IMPORT Type, CG;
 
 VAR T: Type.T;
+VAR signed, unsigned: CG.Type;
+VAR size: INTEGER;
 
 PROCEDURE Initialize ();
 

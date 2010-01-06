@@ -16,7 +16,6 @@ import ("m3middle")
 % FRONTEND
 include_dir ("builtinOps")
 include_dir ("builtinWord")
-include_dir ("builtinLong")
 include_dir ("builtinInfo")
 include_dir ("builtinTypes")
 include_dir ("exprs")
