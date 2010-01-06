@@ -76,6 +76,9 @@ PROCEDURE GenDesc (p: P) =
 PROCEDURE Initialize () =
   BEGIN
     T := NEW (P);
+    size := Target.Longint.size;
+    signed := Target.Longint.cg_type;
+    unsigned := Target.Long.cg_type;
     TypeRep.Init (T, Type.Class.Longint);
     Tipe.Define ("LONGINT", T, TRUE);
   END Initialize;

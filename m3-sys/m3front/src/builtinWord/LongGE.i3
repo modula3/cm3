@@ -1,0 +1,1 @@
+INTERFACE LongGE = GenGE () END LongGE.
