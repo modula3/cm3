@@ -24,7 +24,7 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
 PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
-    CG.Not (Rep.signed);
+    CG.Not (Rep.Signed);
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =

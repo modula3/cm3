@@ -37,29 +37,29 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.Shift (Rep.signed);
+    CG.Shift (Rep.Signed);
   END Compile;
 
 PROCEDURE CompileL (ce: CallExpr.T) =
   VAR max: Target.Int;
-      b := TInt.FromInt (Rep.size-1, Target.Integer.bytes, max);
+      b := TInt.FromInt (Rep.Size-1, Target.Integer.bytes, max);
   BEGIN
     <* ASSERT b *>
     Expr.Compile (ce.args[0]);
     CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
                           CG.RuntimeError.ValueOutOfRange);
-    CG.Shift_left (Rep.signed);
+    CG.Shift_left (Rep.Signed);
   END CompileL;
 
 PROCEDURE CompileR (ce: CallExpr.T) =
   VAR max: Target.Int;
-      b := TInt.FromInt (Rep.size-1, Target.Integer.bytes, max);
+      b := TInt.FromInt (Rep.Size-1, Target.Integer.bytes, max);
   BEGIN
     <* ASSERT b *>
     Expr.Compile (ce.args[0]);
     CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
                           CG.RuntimeError.ValueOutOfRange);
-    CG.Shift_right (Rep.signed);
+    CG.Shift_right (Rep.Signed);
   END CompileR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
@@ -83,7 +83,7 @@ PROCEDURE FoldL (ce: CallExpr.T): Expr.T =
     e1 := Expr.ConstValue (ce.args[1]);
     IF (e0 # NIL) AND IntegerExpr.Split (e0, w0, t)
       AND (e1 # NIL) AND IntegerExpr.ToInt (e1, i1)
-      AND 0 <= i1 AND i1 < Rep.size
+      AND 0 <= i1 AND i1 < Rep.Size
     THEN
       TWord.Shift (w0, i1, result);
       RETURN IntegerExpr.New (T, result);
@@ -98,7 +98,7 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
     e1 := Expr.ConstValue (ce.args[1]);
     IF (e0 # NIL) AND IntegerExpr.Split (e0, w0, t)
       AND (e1 # NIL) AND IntegerExpr.ToInt (e1, i1)
-      AND 0 <= i1 AND i1 < Rep.size
+      AND 0 <= i1 AND i1 < Rep.Size
     THEN
       TWord.Shift (w0, -i1, result);
       RETURN IntegerExpr.New (T, result);
@@ -109,7 +109,7 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
 PROCEDURE Initialize () =
   VAR
     max : Target.Int;
-    b   := TInt.FromInt (Rep.size-1, Target.Integer.bytes, max);
+    b   := TInt.FromInt (Rep.Size-1, Target.Integer.bytes, max);
     sub := SubrangeType.New (TInt.Zero, max, Int.T, FALSE);
 
     f0  := Formal.NewBuiltin ("x", 0, T);
