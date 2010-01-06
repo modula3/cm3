@@ -1,1 +1,0 @@
-INTERFACE LongLT = GenLT () END LongLT.
