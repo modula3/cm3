@@ -11,7 +11,7 @@ FROM Utypes IMPORT off_t, mode_t, dev_t, uid_t, gid_t, pid_t;
 IMPORT Usysdep;
 
 CONST
-  MaxPathLen = Usysdep.MaxPathLen;
+  MaxPathLen = 1024; (* 4096 on Irix? *)
 
 (*CONST*)
 <*EXTERNAL "Unix__MSETUID"*> VAR MSETUID: int; (* set user id on execution *)

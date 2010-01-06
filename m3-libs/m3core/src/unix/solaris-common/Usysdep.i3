@@ -11,7 +11,6 @@ CONST
     X64 = ORD(BITSIZE(INTEGER) = 64);
 
 (* INTERFACE Unix; *)
-    MaxPathLen = 1024;
     MAX_FDSET = (X32 * 1024) + (X64 * 65536);
 
 TYPE
