@@ -76,9 +76,9 @@ PROCEDURE GenDesc (p: P) =
 PROCEDURE Initialize () =
   BEGIN
     T := NEW (P);
-    size := Target.Integer.size;
-    signed := Target.Integer.cg_type;
-    unsigned := Target.Word.cg_type;
+    Size := Target.Integer.size;
+    Signed := Target.Integer.cg_type;
+    Unsigned := Target.Word.cg_type;
     TypeRep.Init (T, Type.Class.Integer);
     Tipe.Define ("INTEGER", T, TRUE);
   END Initialize;

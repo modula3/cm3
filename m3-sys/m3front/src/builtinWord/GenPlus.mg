@@ -25,7 +25,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.Add (Rep.unsigned);
+    CG.Add (Rep.Unsigned);
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =

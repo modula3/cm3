@@ -25,7 +25,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.Div (Rep.unsigned,
+    CG.Div (Rep.Unsigned,
             Expr.GetSign (ce.args[0]),
             Expr.GetSign (ce.args[1]));
   END Compile;

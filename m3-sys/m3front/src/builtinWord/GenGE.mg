@@ -25,7 +25,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.Compare (Rep.unsigned, CG.Cmp.GE);
+    CG.Compare (Rep.Unsigned, CG.Cmp.GE);
   END Compile;
 
 PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
@@ -34,7 +34,7 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
     Expr.Prep (ce.args[1]);
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.If_then (Rep.unsigned, CG.Cmp.GE, true, false, freq);
+    CG.If_then (Rep.Unsigned, CG.Cmp.GE, true, false, freq);
   END PrepBR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
