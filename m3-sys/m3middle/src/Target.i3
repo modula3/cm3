@@ -334,10 +334,10 @@ VAR (*CONST*)
   (* every structure size must be a multiple of this *)
 
   Allow_packed_byte_aligned: BOOLEAN;
- (* Allow the compiler to align scalar types on byte boundaries when packing.
-    The target processor must support byte alignment of scalar store and
-    loads. This does not remove the restriction that bitfields may not cross
-    word boundaries. *)
+  (* Allow the compiler to align scalar types on byte boundaries when packing.
+     The target processor must support byte alignment of scalar store and
+     loads. This does not remove the restriction that bitfields may not cross
+     word boundaries. *)
 
   (* NIL checking *)
   First_readable_addr: CARDINAL;
