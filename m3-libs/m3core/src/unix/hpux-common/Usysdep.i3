@@ -8,8 +8,6 @@ FROM Ctypes IMPORT int;
 
 CONST
 (* INTERFACE Unix; *)
-
-    MaxPathLen = 1024;
     MAX_FDSET = 1024;
 
 TYPE
