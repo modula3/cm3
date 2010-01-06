@@ -1205,9 +1205,9 @@ def Boot():
     Assemble = (Assemble + ({
         "AMD64_DARWIN"      : " -arch x86_64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
-        "SOLgnu"            : " -s -K PIC -xarch=v8plus ",
-        "SOLsun"            : " -s -K PIC -xarch=v8plus ",
-        "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
+        "SOLgnu"            : " -s -xarch=v8plus ",
+        "SOLsun"            : " -s -xarch=v8plus ",
+        "SPARC64_SOLARIS"   : " -s -xarch=v9 ",
         }.get(Target) or ""))
 
     GnuPlatformPrefix = {
