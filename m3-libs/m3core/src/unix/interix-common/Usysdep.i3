@@ -9,7 +9,6 @@ FROM Ctypes IMPORT int;
 (* INTERFACE Unix; *)
 
 CONST
-  MaxPathLen = 1024;
   MAX_FDSET = 1024; (* header says 4096 but that doesn't work and 1024 does *)
 
 TYPE

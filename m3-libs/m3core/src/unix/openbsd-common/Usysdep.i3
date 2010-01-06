@@ -9,7 +9,6 @@ FROM Ctypes IMPORT int, char_star;
 (* INTERFACE Unix; *)
 
 CONST
-  MaxPathLen = 1024;
   MAX_FDSET = 1024;
 
 TYPE

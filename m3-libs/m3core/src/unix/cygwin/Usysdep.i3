@@ -16,9 +16,7 @@ FROM Cstdint IMPORT uint8_t, uint32_t;
 <*EXTERNAL*> PROCEDURE spawnve (mode: int; name: const_char_star; argv, envp: char_star_star): int;
 
 (* Unix.i3 *)
-
 CONST
-  MaxPathLen = 1024;
   MAX_FDSET = 1024;
 
 TYPE
