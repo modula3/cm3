@@ -6,8 +6,8 @@ INTERFACE Csetjmp;
 
 FROM Ctypes IMPORT int;
 
-TYPE jmp_buf = ARRAY [0..12] OF int; (* actually, this is a sigjmp_buf,
-                                        just in case *)
+(* 52 bytes with 4 byte alignment *)
+TYPE jmp_buf = ARRAY [0..12] OF INTEGER;
 
 <*EXTERNAL "_longjmp" *> PROCEDURE ulongjmp (VAR env: jmp_buf; val: int);
 
