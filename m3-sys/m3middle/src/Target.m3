@@ -153,56 +153,62 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Setjmp                    := "_setjmp";
 
     (* There is no portable stack walker, and therefore few systems have one.
-    Having a stack walker theoretically speeds up everything nicely.
-    If you are familiar with NT exception handling, all but x86 have a stack walker.
-    Not having a stack walker means that functions that have try/except/finally/raise
-    incur a codegen cost even if there is never a raise -- for having the try.
-    Having a stack walker means "zero cost" for exception handling code that
-    does not actually raise an exception.
+       Having a stack walker theoretically speeds up everything nicely.  If
+       you are familiar with NT exception handling, all but x86 have a stack
+       walker.  Not having a stack walker means that functions that have
+       try/except/finally/raise incur a codegen cost even if there is never a
+       raise -- for having the try.  Having a stack walker means "zero cost"
+       for exception handling code that does not actually raise an exception.
 
-    If there is NOT a stack walker, prologues/epilogues for functions that try/except/finally/raise
-    call PushEFrame / PopEFrame, essentially to build a walkable parallel stack.
+       If there is NOT a stack walker, prologues/epilogues for functions that
+       try/except/finally/raise call PushEFrame / PopEFrame, essentially to
+       build a walkable parallel stack.
 
-    If there is a stack walker, then raise can discover what PushEFrame / PopEFrame effectively recorded.
+       If there is a stack walker, then raise can discover what PushEFrame /
+       PopEFrame effectively recorded.
 
-    NT/x86 has a highly optimized equivalent of PushEFrame / PopEFrame, not currently used by Modula-3.
-    *)
+       NT/x86 has a highly optimized equivalent of PushEFrame / PopEFrame, not
+       currently used by Modula-3. *)
     Has_stack_walker          := FALSE;
 
-    (* "Closures" in Modula-3 -- function pointers to nested functions,
-    are represented as a pointer to -1 (of size?) followed by other data.
-    -1 is assumed to be invalid code. Prior to calling any function pointer,
-    the generated code first checks for the marker -1, to decide how to call it.
-    On systems where data alignment matters, but functions are not aligned,
-    this can result in an alignment fault. Most systems either don't care
-    about alignment (x86, AMD64) or have fixed sized and aligned instructions (PowerPC),
-    in which case the check for -1 can just be a direct read, in which case Aligned_procedures := TRUE.
-    This logic can break down on 64bit platforms, where the -1 is perhaps 64bits, but
-    the fixed size instructions may be 32bits. Or of course, on systems that care
-    about data alignment but not code alignment, or in which the alignments differ.
+    (* "Closures" in Modula-3 -- function pointers to nested functions, are
+       represented as a pointer to -1 (of size?) followed by other data.  -1
+       is assumed to be invalid code. Prior to calling any function pointer,
+       the generated code first checks for the marker -1, to decide how to
+       call it.  On systems where data alignment matters, but functions are
+       not aligned, this can result in an alignment fault. Most systems either
+       don't care about alignment (x86, AMD64) or have fixed sized and aligned
+       instructions (PowerPC), in which case the check for -1 can just be a
+       direct read, in which case Aligned_procedures := TRUE.  This logic can
+       break down on 64bit platforms, where the -1 is perhaps 64bits, but the
+       fixed size instructions may be 32bits. Or of course, on systems that
+       care about data alignment but not code alignment, or in which the
+       alignments differ.
 
-    Setting this to FALSE is safe, but results in slower code -- code that
-    checks function pointers for alignment before checking for the -1, and if they
-    aren't aligned, doing a byte-wise read instead of an integer-wise read.
+       Setting this to FALSE is safe, but results in slower code -- code that
+       checks function pointers for alignment before checking for the -1, and
+       if they aren't aligned, doing a byte-wise read instead of an
+       integer-wise read.
 
-    We can probably do better here, such as ensuring the marker is 4 bytes instead of 8,
-    if that works (for 64 bit platforms, that care about alignment, but with fixed
-    sized aligned 32 bit instructions, which probably describes some e.g. MIPS64 and SPARC64)
-    *)
-    Aligned_procedures        := TRUE;
+       We can probably do better here, such as ensuring the marker is 4 bytes
+       instead of 8, if that works (for 64 bit platforms, that care about
+       alignment, but with fixed sized aligned 32 bit instructions, which
+       probably describes some (e.g., MIPS64 and SPARC64) *)
+    Aligned_procedures := TRUE;
 
-    (* The affect of First_readable_addr is that (static?) array indices (offsets)
-    lower than it (and positive?) do not have a NULL check on the array base.
-    Reading NULL + an offset less than First_readable_addr is assumed to access
-    violate the same as reading NULL. It is a nice optimization.
-    Setting the value too low results in correct but suboptimal code.
-    However just setting it to a small non-zero number should provide most of the benefit.
-    Setting the value too high results in missing NULL checks -- a loss of safety enforcement.
-    Typically setting it to one hardware page is a good estimate, since if NULL is not accessible,
-    nor is any address on the same page. As well, setting it to getpagesize, whatever
-    the granularity of mmap/VirtualAlloc, often larger than a hardware page, is another good guess.
-    *)
-    First_readable_addr       := 4096 * Char.size;
+    (* The effect of First_readable_addr is that (static?) array indices
+       (offsets) lower than it (and positive?) do not have a NULL check on the
+       array base.  Reading NULL + an offset less than First_readable_addr is
+       assumed to access violate the same as reading NULL. It is a nice
+       optimization.  Setting the value too low results in correct but
+       suboptimal code.  However just setting it to a small non-zero number
+       should provide most of the benefit.  Setting the value too high results
+       in missing NULL checks -- a loss of safety enforcement.  Typically
+       setting it to one hardware page is a good estimate, since if NULL is
+       not accessible, nor is any address on the same page. As well, setting
+       it to getpagesize, whatever the granularity of mmap/VirtualAlloc, often
+       larger than a hardware page, is another good guess.  *)
+    First_readable_addr := 4096 * Char.size;
 
     (* add the system-specific customization *)
 
@@ -458,9 +464,9 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
 PROCEDURE NTCall (x: INTEGER;  nm: TEXT;  id: INTEGER; backend_mode: M3BackendMode_t) =
   BEGIN
- (* The external backend handles more calling convention
-    details than the integrated backend -- reversing parameter
-    order and knowing how to return structs. *)
+    (* The external backend handles more calling convention details than the
+       integrated backend -- reversing parameter order and knowing how to
+       return structs. *)
     CCs[x] := NEW (CallingConvention,
                      name := nm,
                      m3cg_id := id,
