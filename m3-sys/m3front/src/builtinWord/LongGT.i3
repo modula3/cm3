@@ -1,0 +1,1 @@
+INTERFACE LongGT = GenGT () END LongGT.

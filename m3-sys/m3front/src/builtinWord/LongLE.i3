@@ -1,0 +1,1 @@
+INTERFACE LongLE = GenLE () END LongLE.
