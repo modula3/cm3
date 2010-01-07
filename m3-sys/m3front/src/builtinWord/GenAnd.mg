@@ -11,9 +11,11 @@ GENERIC MODULE GenAnd (Rep);
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Type, ProcType;
 IMPORT IntegerExpr, Formal, Value, Target, TWord, TInt;
 FROM Rep IMPORT T;
+FROM TargetMap IMPORT Integer_types;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
+VAR rep: [FIRST (Integer_types) .. LAST (Integer_types)];
 
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
@@ -25,7 +27,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.And (Rep.Signed);
+    CG.And (Integer_types[rep].cg_type);
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
@@ -73,12 +75,13 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
     END;
   END GetBounds;
 
-PROCEDURE Initialize () =
+PROCEDURE Initialize (r: INTEGER) =
   VAR
     x0 := Formal.NewBuiltin ("x", 0, T);
     y0 := Formal.NewBuiltin ("y", 1, T);
     t0 := ProcType.New (T, x0, y0);
   BEGIN
+    rep := r;
     Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,

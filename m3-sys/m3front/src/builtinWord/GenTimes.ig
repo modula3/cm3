@@ -7,6 +7,6 @@
 
 GENERIC INTERFACE GenTimes ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenTimes.

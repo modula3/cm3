@@ -11,9 +11,11 @@ GENERIC MODULE GenShift (Rep);
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Type, SubrangeType, Formal;
 IMPORT Int, IntegerExpr, Value, ProcType, CheckExpr, Target, TInt, TWord;
 FROM Rep IMPORT T;
+FROM TargetMap IMPORT Integer_types;
 
 VAR Z, ZL, ZR: CallExpr.MethodList;
 VAR formals, formalsL, formalsR: Value.T;
+VAR rep: [FIRST (Integer_types) .. LAST (Integer_types)];
 
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
@@ -37,29 +39,29 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.Shift (Rep.Signed);
+    CG.Shift (Integer_types[rep].cg_type);
   END Compile;
 
 PROCEDURE CompileL (ce: CallExpr.T) =
   VAR max: Target.Int;
-      b := TInt.FromInt (Rep.Size-1, Target.Integer.bytes, max);
+      b := TInt.FromInt (Integer_types[rep].size-1, Target.Integer.bytes, max);
   BEGIN
     <* ASSERT b *>
     Expr.Compile (ce.args[0]);
     CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
                           CG.RuntimeError.ValueOutOfRange);
-    CG.Shift_left (Rep.Signed);
+    CG.Shift_left (Integer_types[rep].cg_type);
   END CompileL;
 
 PROCEDURE CompileR (ce: CallExpr.T) =
   VAR max: Target.Int;
-      b := TInt.FromInt (Rep.Size-1, Target.Integer.bytes, max);
+      b := TInt.FromInt (Integer_types[rep].size-1, Target.Integer.bytes, max);
   BEGIN
     <* ASSERT b *>
     Expr.Compile (ce.args[0]);
     CheckExpr.EmitChecks (ce.args[1], TInt.Zero, max,
                           CG.RuntimeError.ValueOutOfRange);
-    CG.Shift_right (Rep.Signed);
+    CG.Shift_right (Integer_types[rep].cg_type);
   END CompileR;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
@@ -83,7 +85,7 @@ PROCEDURE FoldL (ce: CallExpr.T): Expr.T =
     e1 := Expr.ConstValue (ce.args[1]);
     IF (e0 # NIL) AND IntegerExpr.Split (e0, w0, t)
       AND (e1 # NIL) AND IntegerExpr.ToInt (e1, i1)
-      AND 0 <= i1 AND i1 < Rep.Size
+      AND 0 <= i1 AND i1 < Integer_types[rep].size
     THEN
       TWord.Shift (w0, i1, result);
       RETURN IntegerExpr.New (T, result);
@@ -98,7 +100,7 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
     e1 := Expr.ConstValue (ce.args[1]);
     IF (e0 # NIL) AND IntegerExpr.Split (e0, w0, t)
       AND (e1 # NIL) AND IntegerExpr.ToInt (e1, i1)
-      AND 0 <= i1 AND i1 < Rep.Size
+      AND 0 <= i1 AND i1 < Integer_types[rep].size
     THEN
       TWord.Shift (w0, -i1, result);
       RETURN IntegerExpr.New (T, result);
@@ -106,10 +108,10 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
     RETURN NIL;
   END FoldR;
 
-PROCEDURE Initialize () =
+PROCEDURE Initialize (r: INTEGER) =
   VAR
     max : Target.Int;
-    b   := TInt.FromInt (Rep.Size-1, Target.Integer.bytes, max);
+    b   := TInt.FromInt (Integer_types[r].size-1, Target.Integer.bytes, max);
     sub := SubrangeType.New (TInt.Zero, max, Int.T, FALSE);
 
     f0  := Formal.NewBuiltin ("x", 0, T);
@@ -125,6 +127,7 @@ PROCEDURE Initialize () =
     Rt  := ProcType.New (T, Rf0, Rf1);
   BEGIN
     <*ASSERT b*>
+    rep := r;
     Z := CallExpr.NewMethodList (2, 2, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,

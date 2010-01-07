@@ -7,6 +7,6 @@
 
 GENERIC INTERFACE GenInsert ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenInsert.

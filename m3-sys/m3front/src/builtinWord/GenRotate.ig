@@ -8,6 +8,6 @@
 
 GENERIC INTERFACE GenRotate ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenRotate.

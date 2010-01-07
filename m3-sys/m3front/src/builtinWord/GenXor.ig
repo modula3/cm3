@@ -7,6 +7,6 @@
 
 GENERIC INTERFACE GenXor ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenXor.

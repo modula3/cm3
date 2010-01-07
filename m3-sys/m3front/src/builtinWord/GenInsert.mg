@@ -12,9 +12,11 @@ IMPORT CG, CallExpr, Expr, ExprRep, Procedure;
 IMPORT IntegerExpr, Type, ProcType, CheckExpr, Card;
 IMPORT Target, TInt, TWord, Value, Formal, Host;
 FROM Rep IMPORT T;
+FROM TargetMap IMPORT Integer_types;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
+VAR rep: [FIRST (Integer_types) .. LAST (Integer_types)];
 
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
@@ -32,7 +34,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
                           CG.RuntimeError.ValueOutOfRange);
     t3 := CG.Pop ();
     IF Host.doRangeChk THEN
-      b := TInt.FromInt (Rep.Size, Target.Integer.bytes, max);
+      b := TInt.FromInt (Integer_types[rep].size, Target.Integer.bytes, max);
       <*ASSERT b*>
       CG.Push (t2);
       CG.Push (t3);
@@ -47,7 +49,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
     CG.Force ();
     CG.Push (t2);
     CG.Push (t3);
-    CG.Insert (Rep.Signed);
+    CG.Insert (Integer_types[rep].cg_type);
     CG.Free (t2);
     CG.Free (t3);
   END Compile;
@@ -70,7 +72,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     RETURN IntegerExpr.New (T, result);
   END Fold;
 
-PROCEDURE Initialize () =
+PROCEDURE Initialize (r: INTEGER) =
   VAR
     f0 := Formal.NewBuiltin ("x", 0, T);
     f1 := Formal.NewBuiltin ("y", 1, T);
@@ -78,6 +80,7 @@ PROCEDURE Initialize () =
     f3 := Formal.NewBuiltin ("n", 3, Card.T);
     t  := ProcType.New (T, f0, f1, f2, f3);
   BEGIN
+    rep := r;
     Z := CallExpr.NewMethodList (4, 4, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,

@@ -12,13 +12,29 @@ GENERIC MODULE GenModule (Rep,
                           Shift, Rotate, Extract, Insert);
 
 IMPORT Scope, Tipe, Module, Int, IntegerExpr, Constant, Target, TInt,
-       NamedType;
+       NamedType, Type, TWord;
 FROM Rep IMPORT T;
+FROM TargetMap IMPORT Word_types;
+
+PROCEDURE SetRep (): INTEGER =
+  VAR min, max: Target.Int;  b: BOOLEAN;
+  BEGIN
+    b := Type.GetBounds (T, min, max);
+    <*ASSERT b*>
+    FOR i := FIRST (Word_types) TO LAST (Word_types) DO
+      WITH t = Word_types[i] DO
+        IF TWord.LE (max, t.max) THEN
+          RETURN i;
+        END;
+      END;
+    END;
+    RETURN LAST (Word_types);
+  END SetRep;
 
 PROCEDURE Initialize (name: TEXT) =
-  VAR zz: Scope.T;  size: Target.Int;  b: BOOLEAN;
+  VAR zz: Scope.T;  size: Target.Int;  b: BOOLEAN;  rep := SetRep ();
   BEGIN
-    b := TInt.FromInt (Rep.Size, Target.Integer.bytes, size);
+    b := TInt.FromInt (Word_types[rep].size, Target.Integer.bytes, size);
     <*ASSERT b*>
     M := Module.NewDefn (name, TRUE, NIL);
 
@@ -29,23 +45,23 @@ PROCEDURE Initialize (name: TEXT) =
     zz := Scope.Push (Module.ExportScope (M));
     Tipe.Define ("T", NamedType.New (T), FALSE);
     Constant.Declare ("Size", IntegerExpr.New (Int.T, size), FALSE);
-    Plus.Initialize ();
-    Times.Initialize ();
-    Minus.Initialize ();
-    Divide.Initialize ();
-    Mod.Initialize ();
-    LT.Initialize ();
-    LE.Initialize ();
-    GT.Initialize ();
-    GE.Initialize ();
-    And.Initialize ();
-    Or.Initialize ();
-    Xor.Initialize ();
-    Not.Initialize ();
-    Shift.Initialize ();
-    Rotate.Initialize ();
-    Extract.Initialize ();
-    Insert.Initialize ();
+    Plus.Initialize (rep);
+    Times.Initialize (rep);
+    Minus.Initialize (rep);
+    Divide.Initialize (rep);
+    Mod.Initialize (rep);
+    LT.Initialize (rep);
+    LE.Initialize (rep);
+    GT.Initialize (rep);
+    GE.Initialize (rep);
+    And.Initialize (rep);
+    Or.Initialize (rep);
+    Xor.Initialize (rep);
+    Not.Initialize (rep);
+    Shift.Initialize (rep);
+    Rotate.Initialize (rep);
+    Extract.Initialize (rep);
+    Insert.Initialize (rep);
     Scope.Pop (zz);
   END Initialize;
 

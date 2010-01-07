@@ -11,9 +11,11 @@ GENERIC MODULE GenNot (Rep);
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TWord;
 IMPORT IntegerExpr, Value, Formal, Type, ProcType;
 FROM Rep IMPORT T;
+FROM TargetMap IMPORT Integer_types;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
+VAR rep: [FIRST (Integer_types) .. LAST (Integer_types)];
 
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
@@ -24,7 +26,7 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
 PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
-    CG.Not (Rep.Signed);
+    CG.Not (Integer_types[rep].cg_type);
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
@@ -38,11 +40,12 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     RETURN NIL;
   END Fold;
 
-PROCEDURE Initialize () =
+PROCEDURE Initialize (r: INTEGER) =
   VAR
     f0 := Formal.NewBuiltin ("x", 0, T);
     t  := ProcType.New (T, f0);
   BEGIN
+    rep := r;
     Z := CallExpr.NewMethodList (1, 1, TRUE, TRUE, TRUE, T,
                                  NIL,
                                  CallExpr.NotAddressable,

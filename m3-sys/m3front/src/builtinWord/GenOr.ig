@@ -7,6 +7,6 @@
 
 GENERIC INTERFACE GenOr ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenOr.
