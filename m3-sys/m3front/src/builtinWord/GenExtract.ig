@@ -7,6 +7,6 @@
 
 GENERIC INTERFACE GenExtract ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenExtract.

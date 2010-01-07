@@ -7,10 +7,6 @@
 
 GENERIC INTERFACE GenPlus ();
 
-IMPORT Expr, Target;
-
-PROCEDURE GetArgs (args: Expr.List;  VAR i0, i1: Target.Int): BOOLEAN;
-
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenPlus.

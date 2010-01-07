@@ -7,6 +7,6 @@
 
 GENERIC INTERFACE GenShift ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenShift.

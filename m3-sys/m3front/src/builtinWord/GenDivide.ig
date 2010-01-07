@@ -7,6 +7,6 @@
 
 GENERIC INTERFACE GenDivide ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenDivide.

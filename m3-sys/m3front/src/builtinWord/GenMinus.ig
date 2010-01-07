@@ -7,6 +7,6 @@
 
 GENERIC INTERFACE GenMinus ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenMinus.

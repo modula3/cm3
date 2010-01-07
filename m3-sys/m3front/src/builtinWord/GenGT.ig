@@ -7,6 +7,6 @@
 
 GENERIC INTERFACE GenGT ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenGT.

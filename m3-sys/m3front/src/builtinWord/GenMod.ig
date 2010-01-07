@@ -7,6 +7,6 @@
 
 GENERIC INTERFACE GenMod ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (r: INTEGER);
 
 END GenMod.
