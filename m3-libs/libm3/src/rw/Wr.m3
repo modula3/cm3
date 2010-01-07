@@ -14,9 +14,6 @@ FROM Thread IMPORT Alerted;
 REVEAL
   Private = Thread.Mutex BRANDED OBJECT END;
 
-(* FastPutChar and PutChar are identical except that PutChar acquires
-   and releases the lock while FastPutChar assumes it is already held. *)
-
 (* It is invariant that for a closed writer "wr", "wr.buff = NIL" and
    "wr.lo = wr.hi".  Therefore the check that "wr" is ready need
    not inspect "wr.closed" on the fast path. *)
@@ -31,14 +28,14 @@ PROCEDURE Unlock(wr: T) =
     Thread.Release(wr)
   END Unlock;
 
+(* FastPutChar and PutChar are identical except that PutChar acquires
+   and releases the lock while FastPutChar assumes it is already held. *)
+
 <*INLINE*>
 PROCEDURE PutChar (wr: T; ch: CHAR) RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      IF wr.cur = wr.hi THEN DoSeek(wr) END;
-      wr.buff[wr.st + wr.cur - wr.lo] := ch;
-      INC(wr.cur);
-      IF NOT wr.buffered THEN wr.flush(); END;
+      FastPutChar(wr, ch);
     END;
   END PutChar;
 
@@ -55,8 +52,7 @@ PROCEDURE FastPutChar (wr: T; ch: CHAR) RAISES {Failure, Alerted} =
 PROCEDURE PutWideChar (wr: T; ch: WIDECHAR) RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      PutWC (wr, ch);
-      IF NOT wr.buffered THEN wr.flush(); END;
+      FastPutWideChar(wr, ch);
     END;
   END PutWideChar;
 
@@ -138,9 +134,7 @@ PROCEDURE PutString (wr: T; READONLY a: ARRAY OF CHAR)
   RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      IF wr.closed THEN Die() END;
-      wr.putString(a);
-      IF NOT wr.buffered THEN wr.flush(); END;
+      FastPutString(wr, a);
     END;
   END PutString;
 
@@ -231,19 +225,29 @@ PROCEDURE FastPutLongReal (wr: T; r: LONGREAL; p: CARDINAL := 6;
   END FastPutLongReal;
 
    
+PROCEDURE FastSeek(wr: T; n: CARDINAL) RAISES {Failure, Alerted} =
+  BEGIN
+    IF wr.closed OR NOT wr.seekable THEN Die() END;
+    wr.seek(n);
+  END FastSeek;
+   
 PROCEDURE Seek(wr: T; n: CARDINAL) RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      IF wr.closed OR NOT wr.seekable THEN Die() END;
-      wr.seek(n);
+      FastSeek(wr, n);
     END
   END Seek;
+
+PROCEDURE FastFlush (wr: T) RAISES {Failure, Alerted} =
+  BEGIN
+    IF wr.closed THEN Die() END;
+    wr.flush();
+  END FastFlush;
 
 PROCEDURE Flush (wr: T) RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      IF wr.closed THEN Die() END;
-      wr.flush();
+      FastFlush(wr);
     END;
   END Flush;
 
@@ -255,11 +259,16 @@ PROCEDURE Index(wr: T): CARDINAL RAISES {} =
     END
   END Index;
 
+PROCEDURE FastLength (wr: T): CARDINAL RAISES {Failure, Alerted} =
+  BEGIN
+    IF wr.closed THEN Die() END;
+    RETURN wr.length ();
+  END FastLength;
+
 PROCEDURE Length (wr: T): CARDINAL RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
-      IF wr.closed THEN Die() END;
-      RETURN wr.length ();
+      RETURN FastLength(wr);
     END
   END Length;
 
@@ -331,4 +340,3 @@ PROCEDURE Die() =
 
 BEGIN
 END Wr.
-

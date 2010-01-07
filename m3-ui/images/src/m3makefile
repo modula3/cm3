@@ -4,6 +4,9 @@
 /*                                                             */
 /* Makefile for "Images" library                               */
 
+if not HasGui()
+  build_standalone()
+end
 
 import         ("ui")
 

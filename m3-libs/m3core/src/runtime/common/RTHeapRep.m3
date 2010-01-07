@@ -9,7 +9,7 @@
 
 UNSAFE MODULE RTHeapRep;
 
-IMPORT RT0, RTType;
+IMPORT RT0, RTType, RTOS;
 
 (*----------------------------------------------------------- open arrays ---*)
 
@@ -62,33 +62,43 @@ PROCEDURE InvokeMonitors (before: BOOLEAN) =
 
 PROCEDURE RegisterMonitor (cl: MonitorClosure) =
   BEGIN
-    cl.next := monitorsHead;
-    IF monitorsHead = NIL THEN
-      monitorsTail := cl;
-    ELSE
-      monitorsHead.prev := cl;
+    RTOS.LockHeap();
+    TRY
+      cl.next := monitorsHead;
+      IF monitorsHead = NIL THEN
+        monitorsTail := cl;
+      ELSE
+        monitorsHead.prev := cl;
+      END;
+      monitorsHead := cl;
+    FINALLY
+      RTOS.UnlockHeap();
     END;
-    monitorsHead := cl;
   END RegisterMonitor;
 
 PROCEDURE UnregisterMonitor (cl: MonitorClosure) =
   BEGIN
-    IF cl = monitorsHead THEN
-      IF cl = monitorsTail THEN
-        monitorsHead := NIL;
-        monitorsTail := NIL;
+    RTOS.LockHeap();
+    TRY
+      IF cl = monitorsHead THEN
+        IF cl = monitorsTail THEN
+          monitorsHead := NIL;
+          monitorsTail := NIL;
+        ELSE
+          monitorsHead := monitorsHead.next;
+          monitorsHead.prev := NIL;
+        END;
       ELSE
-        monitorsHead := monitorsHead.next;
-        monitorsHead.prev := NIL;
+        IF cl = monitorsTail THEN
+          monitorsTail := monitorsTail.prev;
+          monitorsTail.next := NIL;
+        ELSE
+          cl.prev.next := cl.next;
+          cl.next.prev := cl.prev;
+        END;
       END;
-    ELSE
-      IF cl = monitorsTail THEN
-        monitorsTail := monitorsTail.prev;
-        monitorsTail.next := NIL;
-      ELSE
-        cl.prev.next := cl.next;
-        cl.next.prev := cl.prev;
-      END;
+    FINALLY
+      RTOS.UnlockHeap();
     END;
   END UnregisterMonitor;
 

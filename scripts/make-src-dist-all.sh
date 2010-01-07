@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-src-dist-all.sh,v 1.10 2009-07-24 04:22:35 jkrell Exp $
+# $Id: make-src-dist-all.sh,v 1.12 2009-09-27 13:07:53 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -38,7 +38,7 @@ cd "${ROOT}" || exit 1
 /bin/ls -1d m3-*/*/${TARGET} > .tar-exclude
 /bin/ls -1d m3-*/*/${TARGET}p >> .tar-exclude
 echo "building exclude list..."
-find . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
+$FIND . \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
           -name '*.rej'  -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
           -name 'PkgDep' -or -name 'PkgKind' -or -name '.bok' -or \
           -name '*.o' -or -name '*.a' -or -name '*.dll' -or -name '*.obj' -or \
@@ -54,7 +54,12 @@ ${TAR} -czf ${ARCHIVE} --files-from .tar-include --exclude-from .tar-exclude \
  || exit 1
 ls -l ${ARCHIVE}
 if [ -n "${DOSHIP}" ]; then
-  WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+  if test "x${CM3CVSUSER}" != "x"; then
+    CM3CVSUSER_AT="${CM3CVSUSER}@"
+  else
+    CM3CVSUSER_AT=""
+  fi
+  WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
   WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/snaps}
   scp "${ARCHIVE}" "${WWWDEST}" < /dev/null
 fi

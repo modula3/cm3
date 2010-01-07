@@ -72,7 +72,7 @@ struct _stack_t
 typedef union
 {
     size_t a[sizeof(jmp_buf) / sizeof(size_t)];
-    jmp_buf jb;
+    sigjmp_buf jb;
 } mcontext_t;
 
 struct _ucontext_t
@@ -80,13 +80,17 @@ struct _ucontext_t
     mcontext_t uc_mcontext;
     stack_t uc_stack;
     ucontext_t* uc_link;
-    sigset_t uc_sigmask;
 };
 
 int  Uucontext__getcontext(ucontext_t*);
 int  Uucontext__setcontext(const ucontext_t*);
 void Uucontext__makecontext(ucontext_t*, void(*)(), int, ...);
 int  Uucontext__swapcontext(ucontext_t*, const ucontext_t*);
+
+#define getcontext Uucontext__getcontext
+#define setcontext Uucontext__setcontext
+#define makecontext Uucontext__makecontext
+#define swapcontext Uucontext__swapcontext
 
 #ifdef __cplusplus
 } /* extern "C" */

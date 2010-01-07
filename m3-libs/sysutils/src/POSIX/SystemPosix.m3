@@ -21,12 +21,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: SystemPosix.m3,v 1.10 2009-04-28 10:57:00 jkrell Exp $ *)
+ * $Id: SystemPosix.m3,v 1.12 2009-12-14 06:57:18 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
 
-IMPORT Unix, Text, Ctypes, Uexec, Process, Fmt, Uerror;
+IMPORT Unix, Text, Ctypes, (*Uexec,*) Process, Fmt, Uerror;
 IMPORT (*SchedulerPosix*) Word;
 
 (*---------------------------------------------------------------------------*)
@@ -57,7 +57,7 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     result := SchedulerPosix.WaitProcess (pid, status);
 *)
     (* 0 should be WNOHANG on user threads platforms, which there are presently none of *)
-    result := Uexec.waitpid (pid, ADR(status), 0);
+    result := (*Uexec.*)waitpid (pid, ADR(status), 0);
     IF result < 0 THEN 
       e := GetErrno();
       IF (e = Uerror.ECHILD) THEN err := "The process specified in pid does not exist or is not a child of the calling process.";
@@ -72,7 +72,7 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     Uexec.RepackStatus(status);
 *)
     (* ensure non-zero implies lower bits non-zero *)
-    IF (Word.And(status, 16_FFFFFF00) # 0) AND (Word.And(status, 16_FF) = 0) THEN
+    IF (status # 0) AND (Word.And(status, 16_FF) = 0) THEN
       status := 1;
     END;
     RETURN MIN(LAST(Process.ExitCode), status);

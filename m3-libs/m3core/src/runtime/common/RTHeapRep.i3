@@ -12,7 +12,7 @@
 (* "RTHeapRep" is a private, implementation-dependent extension to
    "RTAllocator", "RTCollector", and "RTHeap". *)
 
-INTERFACE RTHeapRep;
+UNSAFE INTERFACE RTHeapRep;
 
 (* This interface provides low-level access to the storage allocator and
    garbage collector.  Some items here should be made private or moved
@@ -44,8 +44,8 @@ FROM RT0 IMPORT Typecode;
 CONST
   BytesPerPage    = RTMachine.BytesPerHeapPage;
   LogBytesPerPage = RTMachine.LogBytesPerHeapPage;
-  AdrPerPage      = RTMachine.AdrPerHeapPage;
-  LogAdrPerPage   = RTMachine.LogAdrPerHeapPage;
+  AdrPerPage      = RTMachine.BytesPerHeapPage;
+  LogAdrPerPage   = RTMachine.LogBytesPerHeapPage;
 
 TYPE Page = [0 .. Word.Divide(-1, AdrPerPage)];
 
@@ -146,6 +146,8 @@ CONST
   Fill_N_type: Typecode = LAST(Typecode);
   FillHeaderN = Header{typecode := Fill_N_type, dirty := FALSE};
 
+PROCEDURE InsertFiller(start: RefHeader; n: INTEGER);
+
 (****** OPEN ARRAYS ******)
 
 (* An open array object with N open dimensions contains a header, then a
@@ -166,11 +168,20 @@ PROCEDURE UnsafeGetShape (    r          : REFANY;
 
 (****** LOW-LEVEL ALLOCATOR/COLLECTOR *****)
 
-PROCEDURE AllocTraced (size, alignment: CARDINAL;
-                       VAR pool: AllocPool): ADDRESS;
-(* Allocate 'size' zeroed bytes of traced storage of type 'def' on an
-   'alignment' byte boundary from the thread's allocation pool, initializing
-   the result using 'initializer' (if not "NIL"). *)
+CONST MaxAlignment  = 8;
+CONST MaxAlignMask  = 2_0111;     (* bit mask to capture MaxAlignment *)
+TYPE  MaxAlignRange = [0 .. MaxAlignment - 1];
+
+VAR align: ARRAY MaxAlignRange, [1 .. MaxAlignment] OF CARDINAL;
+(* align[i,j] == RTMisc.Align (i, j) - i *)
+
+PROCEDURE CollectEnough();
+PROCEDURE LongAlloc (size, alignment: CARDINAL;
+                     VAR pool: AllocPool): ADDRESS;
+(* Return the address of "size" bytes of traced storage on an
+   "alignment" byte boundary from the allocation pool "pool".
+   If the request cannot be satisfied, "NIL" is returned.
+   LL >= RTOS.LockHeap. *)
 
 (* Objects in the traced heap are allocated from "pools". *)
 TYPE
@@ -268,5 +279,8 @@ PROCEDURE VisitAllRefs (proc: RefVisitor);
 
 PROCEDURE Init();
 (* MUST be called to initialize allocator/collector state *)
+
+PROCEDURE StartBench();
+PROCEDURE FinishBench();
 
 END RTHeapRep.

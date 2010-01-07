@@ -5,6 +5,8 @@
 /* Last modified on Fri Oct 18 13:32:58 PDT 1996 by najork                   */
 /*       Created on Tue Oct 15 13:38:07 PDT 1996 by najork                   */
 
+if HasGui()
+
 import ("formsvbt")
 
 resource ("form.fv")
@@ -12,3 +14,5 @@ bundle ("MyBundle")
 
 implementation ("Main")
 Program ("TextureComTest")
+
+end

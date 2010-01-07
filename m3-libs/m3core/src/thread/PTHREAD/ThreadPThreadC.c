@@ -2,28 +2,39 @@
 /* All rights reserved.                                            */
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
-#if defined(__INTERIX) && !defined(_ALL_SOURCE)
-#define _ALL_SOURCE
-#endif
-#include <assert.h>
+#include "m3core.h"
 #include <stdlib.h>
-#include <errno.h>
 #include <pthread.h>
-#include <time.h>
-typedef struct timespec timespec_t;
-
-#ifdef __APPLE__
-/* MacOSX diverges in a good way and therefore many functions
-in this file are just stubs for it, that other code dynamically choses
-not to call (statically, but the compiler can't or won't tell). */
-#define APPLE_ASSERT_FALSE assert(0 && "MacOS X should not get here.");
-#else
-#include <signal.h>
-#include <semaphore.h>
-#include <string.h>
-#ifdef __hpux
+#include <setjmp.h>
 #include <stdio.h>
-#endif /* hpux */
+#include <signal.h>
+#include <sys/ucontext.h>
+
+#if defined(__INTERIX) || defined(__APPLE__) || defined(__FreeBSD__)
+/* See ThreadApple.c and ThreadFreeBSD.c. */
+#define M3_DIRECT_SUSPEND
+#endif
+
+#ifdef __OpenBSD__
+#error OpenBSD pthreads do not work.
+#endif
+
+#ifndef M3_DIRECT_SUSPEND
+#include <semaphore.h>
+#endif
+
+#define M3MODULE ThreadPThread
+
+#if defined(__sparc) || defined(__ia64__)
+#define M3_REGISTER_WINDOWS
+#endif
+
+#ifdef M3_DIRECT_SUSPEND
+#define M3_DIRECT_SUSPEND_ASSERT_FALSE do {                     \
+    assert(0 && "MacOS X, FreeBSD should not get here.");       \
+    fprintf(stderr, "MacOS X, FreeBSD should not get here.\n"); \
+    abort();                                                    \
+  } while(0);
 #endif
 
 /* const is extern const in C, but static const in C++,
@@ -38,35 +49,33 @@ not to call (statically, but the compiler can't or won't tell). */
 extern "C" {
 #endif
 
+#define InitC                   ThreadPThread__InitC
 #define SignalHandler           ThreadPThread__SignalHandler
-#define SetupHandlers           ThreadPThread__SetupHandlers
 #define sizeof_pthread_mutex_t  ThreadPThread__sizeof_pthread_mutex_t
 #define sizeof_pthread_cond_t   ThreadPThread__sizeof_pthread_cond_t
 #define SIG_SUSPEND             ThreadPThread__SIG_SUSPEND
- 
+
 /* expected values for compat, if compat matters:
     Solaris: 17 (at least 32bit SPARC?)
     Cygwin: 19 -- er, but maybe that's wrong
     Linux: 64
-    FreeBSD: 31
-    OpenBSD: 31
+    FreeBSD: 31 (not used)
+    OpenBSD: 31 (not used)
     HPUX: 44
-  Look at the history of Usignal and RTMachine to find more values.
-  There was RTMachine.SIG_SUSPEND and SIG was aliased to it.
-  Both SIG and SIG_SUSPEND were only defined for systems using pthreads.
-  SIG was shorthand.
-*/
-#if defined(__APPLE__)
+  Look at the history of Usignal and RTMachine to find more values.  There was
+  RTMachine.SIG_SUSPEND and SIG was aliased to it.  Both SIG and SIG_SUSPEND
+  were only defined for systems using pthreads.  SIG was shorthand. */
+#ifdef M3_DIRECT_SUSPEND
 EXTERN_CONST int SIG_SUSPEND = 0;
-#elif defined(__sun) || defined(__CYGWIN__) || defined(__FreeBSD__)
+#elif defined(__sun) || defined(__CYGWIN__)
 EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #elif defined(__linux)
 EXTERN_CONST int SIG_SUSPEND = NSIG - 1;
 #elif defined(__hpux)
 EXTERN_CONST int SIG_SUSPEND = _SIGRTMAX;
 #elif defined(SIGRTMAX)
-/* This might be a function call, in which case try _SIGRTMAX or
-initializing it somewhere. */
+/* This might be a function call, in which case try _SIGRTMAX or initializing
+   it somewhere. */
 EXTERN_CONST int SIG_SUSPEND = SIGRTMAX;
 #elif defined(SIGUSR2)
 EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
@@ -74,9 +83,9 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 #error Unable to determine SIG_SUSPEND.
 #endif
 
-#ifndef __APPLE__
+static int stack_grows_down;
 
-#define ZeroMemory(a, b) (memset((a), 0, (b)))
+#ifndef M3_DIRECT_SUSPEND
 
 typedef struct sigaction sigaction_t;
 
@@ -85,237 +94,323 @@ static sigset_t mask;
 /* Signal based suspend/resume */
 static sem_t ackSem;
 
-void SignalHandler(int);
-
-void SetupHandlers(void)
-{
-    sigaction_t act;
-    sigaction_t oact;
-    int r;
-
-    ZeroMemory(&act, sizeof(act));
-    ZeroMemory(&oact, sizeof(oact));
-
-    r = sem_init(&ackSem, 0, 0); assert(r == 0);
-
-    r = sigfillset(&mask); assert(r == 0);
-    r = sigdelset(&mask, SIG_SUSPEND); assert(r == 0);
-    r = sigdelset(&mask, SIGINT); assert(r == 0);
-    r = sigdelset(&mask, SIGQUIT); assert(r == 0);
-    r = sigdelset(&mask, SIGABRT); assert(r == 0);
-    r = sigdelset(&mask, SIGTERM); assert(r == 0);
-
-    act.sa_flags = SA_RESTART;
-    act.sa_handler = SignalHandler;
-    r = sigfillset(&act.sa_mask); assert(r == 0);
-    r = sigaction(SIG_SUSPEND, &act, &oact); assert(r == 0);
-}
+void SignalHandler(int signo, siginfo_t *info, void *context);
 
 int ThreadPThread__sem_wait(void)           { return sem_wait(&ackSem); }
 int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
-int ThreadPThread__sem_getvalue(int* value) { return sem_getvalue(&ackSem, value); }
-int ThreadPThread__sigsuspend(void)         { return sigsuspend(&mask); }
+int ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value); }
 
-#else /* Apple */
+void
+ThreadPThread__sigsuspend(void)
+{
+  sigjmp_buf jb;
 
-void SetupHandlers(void)                { APPLE_ASSERT_FALSE }
-void ThreadPThread__sem_wait(void)      { APPLE_ASSERT_FALSE }
-void ThreadPThread__sem_post(void)      { APPLE_ASSERT_FALSE }
-void ThreadPThread__sem_getvalue(void)  { APPLE_ASSERT_FALSE }
-void ThreadPThread__sigsuspend(void)    { APPLE_ASSERT_FALSE }
-
-#endif /* Apple */
-
-#define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
-typedef void* (*start_routine_t)(void*);
+  if (sigsetjmp(jb, 0) == 0) /* save registers to stack */
+#ifdef M3_REGISTER_WINDOWS
+    siglongjmp(jb, 1); /* flush register windows */
+  else
+#endif
+    sigsuspend(&mask);
+}
 
 int
-ThreadPThread__thread_create(
-    pthread_t* pthread,
-    size_t stackSize,
-    start_routine_t start_routine,
-    void* arg)
+ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
-    int r;
-    size_t bytes;
-    pthread_attr_t attr;
+  abort();
+}
 
-    r = pthread_attr_init(&attr);
+int
+ThreadPThread__RestartThread (m3_pthread_t mt)
+{
+  abort();
+}
+
+void
+ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
+                               void (*p)(void *start, void *limit))
+{
+  /* process stack */
+  if (!bottom) return;
+  if (stack_grows_down) {
+    assert(context < bottom);
+    p(context, bottom);
+  } else {
+    assert(bottom < context);
+    p(bottom, context);
+  }
+  /* process register context */
+  p(context, context + sizeof(ucontext_t));
+}
+
+#else /* M3_DIRECT_SUSPEND */
+
+void ThreadPThread__sem_wait(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sem_post(void)      { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sem_getvalue(void)  { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
+
+#endif /* M3_DIRECT_SUSPEND */
+
+void
+ThreadPThread__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
+{
+  sigjmp_buf jb;
+
+  if (sigsetjmp(jb, 0) == 0) /* save registers to stack */
+#ifdef M3_REGISTER_WINDOWS
+    siglongjmp(jb, 1); /* flush register windows */
+  else
+#endif
+  {
+    /* capture top after longjmp because longjmp can clobber non-volatile locals */
+    char *top = (char*)&top;
+    assert(bottom);
+    if (stack_grows_down) {
+      assert(top < bottom);
+      p(top, bottom);
+    } else {
+      assert(bottom < top);
+      p(bottom, top);
+    }
+    p(&jb, ((char *)&jb) + sizeof(jb));
+  }
+}
+
+#define M3_MAX(x, y) (((x) > (y)) ? (x) : (y))
+typedef void *(*start_routine_t)(void *);
+
+#define M3_RETRY(expr) \
+  r = (expr); \
+  if (r == EAGAIN || r == ENOMEM || r == ENOSPC) \
+  { \
+    /* try again right away */ \
+    r = (expr); \
+    if (r == EAGAIN || r == ENOMEM || r == ENOSPC) \
+    { \
+      /* try again after short delay */ \
+      sleep(1); \
+      r = (expr); \
+    } \
+  }
+
+int
+ThreadPThread__thread_create(size_t stackSize,
+                             start_routine_t start_routine,
+                             void *arg)
+{
+  int r;
+  size_t bytes;
+  pthread_attr_t attr;
+  pthread_t pthread;
+
+  M3_RETRY(pthread_attr_init(&attr));
 #ifdef __hpux
-    if (r == ENOSYS)
+  if (r == ENOSYS)
     {
-        fprintf(
-            stderr,
-            "You got the nonfunctional pthread stubs on HP-UX. You need to"
-            " adjust your build commands, such as to link to -lpthread or"
-            " use -pthread, and not link explicitly to -lc.\n");
+      fprintf(stderr,
+              "You got the nonfunctional pthread stubs on HP-UX. You need to"
+              " adjust your build commands, such as to link to -lpthread or"
+              " use -pthread, and not link explicitly to -lc.\n");
     }
 #endif
-    assert(r == 0);
-    
-    r = pthread_attr_getstacksize(&attr, &bytes); assert(r == 0);
+  assert(r == 0);
 
-    bytes = M3_MAX(bytes, stackSize);
-    pthread_attr_setstacksize(&attr, bytes);
+  r = pthread_attr_getstacksize(&attr, &bytes); assert(r == 0);
 
-    r = pthread_create(pthread, &attr, start_routine, arg);
+  bytes = M3_MAX(bytes, stackSize);
+  pthread_attr_setstacksize(&attr, bytes);
 
-    pthread_attr_destroy(&attr);
+  M3_RETRY(pthread_create(&pthread, &attr, start_routine, arg));
 
-    return r;
+  pthread_attr_destroy(&attr);
+
+  return r;
 }
 
 #define MUTEX(name) \
 static pthread_mutex_t name##Mu = PTHREAD_MUTEX_INITIALIZER; \
-int ThreadPThread__pthread_mutex_lock_##name(void) \
-{ \
-    return pthread_mutex_lock(&name##Mu); \
-} \
- \
-int ThreadPThread__pthread_mutex_unlock_##name(void) \
-{ \
-    return pthread_mutex_unlock(&name##Mu); \
-} \
-
+pthread_mutex_t * const ThreadPThread__##name##Mu = &name##Mu; \
 
 #define CONDITION_VARIABLE(name) \
 static pthread_cond_t name##Cond = PTHREAD_COND_INITIALIZER; \
-int ThreadPThread__pthread_cond_broadcast_##name(void) \
-{ \
-    return pthread_cond_broadcast(&name##Cond); \
-} \
- \
-int ThreadPThread__pthread_cond_wait_##name(void) \
-{ \
-    return pthread_cond_wait(&name##Cond, &name##Mu); \
-} \
-
-
-#define THREAD_LOCAL_FAST(name) \
-static __thread void* name; \
-int ThreadPThread__pthread_key_create_##name(void) \
-{ \
-    /* nothing */ \
-} \
-int ThreadPThread__pthread_setspecific_##name(void* value) \
-{ \
-    name = value; \
-} \
-void* ThreadPThread__pthread_getspecific_##name(void) \
-{ \
-    return name; \
-} \
-
-#define THREAD_LOCAL_SLOW(name) \
-static pthread_key_t name; \
-int ThreadPThread__pthread_key_create_##name(void) \
-{ \
-    return pthread_key_create(&name, NULL); \
-} \
-int ThreadPThread__pthread_setspecific_##name(void* value) \
-{ \
-    return pthread_setspecific(name, value); \
-} \
-void* ThreadPThread__pthread_getspecific_##name(void) \
-{ \
-    return pthread_getspecific(name); \
-} \
-
-#if 0 /* M3CONFIG_THREAD_LOCAL_STORAGE */
-#define THREAD_LOCAL(name) THREAD_LOCAL_FAST(name)
-#else
-#define THREAD_LOCAL(name) THREAD_LOCAL_SLOW(name)
-#endif
+pthread_cond_t * const ThreadPThread__##name##Cond = &name##Cond; \
 
 /* activeMu slotMu initMu perfMu heapMu heapCond */
 
-MUTEX(active) /* global lock for list of active threads */
-MUTEX(slot)   /* global lock for thread slot table */
-MUTEX(init)   /* global lock for initializers */
-MUTEX(perf)
-MUTEX(heap)
-CONDITION_VARIABLE(heap)
-THREAD_LOCAL(activations)
+MUTEX(active)                   /* global lock for list of active threads */
+MUTEX(slots)                    /* global lock for thread slots table */
+MUTEX(init)                     /* global lock for initializers */
+MUTEX(perf)                     /* global lock for thread state tracing */
+MUTEX(heap)                     /* global lock for heap atomicity */
+CONDITION_VARIABLE(heap)        /* CV for heap state changes */
 
-typedef int (*generic_init_t)(void*, const void*);
+static pthread_key_t activations;
 
-void* ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
+void
+ThreadPThread__SetActivation(void *value)
 {
-    int r;
-    void* p = calloc(1, size);
-    if (p == NULL)
-        goto Error;
-    r = init(p, NULL);
-    if (r == EAGAIN)
-        r = init(p, NULL);
-    if (r == ENOMEM)
-        goto Error;
-    assert(r == 0);
-    if (r != 0)
-        goto Error;
-    return p;
-Error:
-    if (p) free(p);
-    return NULL;
+  int r;
+  M3_RETRY(pthread_setspecific(activations, value));
+  assert(r == 0);
 }
 
-#define THREADPTHREAD__PTHREAD_GENERIC_NEW(type) \
-    typedef pthread_##type##_t T; \
-    typedef pthread_##type##attr_t attr_t; \
-    typedef int (*init_t)(T*, const attr_t*); \
-    /* make sure the type matches */ \
-    init_t init = pthread_##type##_init; \
-    return ThreadPThread_pthread_generic_new(sizeof(T), (generic_init_t)init);
-
-void* ThreadPThread__pthread_mutex_new(void)
+void *
+ThreadPThread__GetActivation(void)
 {
-    THREADPTHREAD__PTHREAD_GENERIC_NEW(mutex);
+  return pthread_getspecific(activations);
 }
 
-void* ThreadPThread__pthread_cond_new(void)
+typedef int (*generic_init_t)(void *, const void *);
+
+void *
+ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
 {
-    THREADPTHREAD__PTHREAD_GENERIC_NEW(cond);
+  int r;
+  void *p = calloc(1, size);
+  if (p == NULL)
+    goto Error;
+  M3_RETRY(init(p, NULL));
+  if (r == ENOMEM)
+    goto Error;
+  assert(r == 0);
+  if (r != 0)
+    goto Error;
+  return p;
+ Error:
+  if (p) free(p);
+  return NULL;
 }
 
-void ThreadPThread__pthread_mutex_delete(pthread_mutex_t* p)
+#define THREADPTHREAD__PTHREAD_GENERIC_NEW(type) {                      \
+    typedef pthread_##type##_t T;                                       \
+    typedef pthread_##type##attr_t attr_t;                              \
+    typedef int (*init_t)(T *, const attr_t *);                         \
+    /* make sure the type matches */                                    \
+    init_t init = pthread_##type##_init;                                \
+    return ThreadPThread_pthread_generic_new(sizeof(T),                 \
+                                             (generic_init_t)init);     \
+  }
+
+void *
+ThreadPThread__pthread_mutex_new(void)
 {
-    int e;
-    if (p == NULL) return;
+  THREADPTHREAD__PTHREAD_GENERIC_NEW(mutex);
+}
+
+void *
+ThreadPThread__pthread_cond_new(void)
+{
+  THREADPTHREAD__PTHREAD_GENERIC_NEW(cond);
+}
+
+void
+ThreadPThread__pthread_mutex_delete(pthread_mutex_t* p)
+{
+  int e;
+  if (p == NULL) return;
 #if defined(__hpux) || defined(__osf)
-    /* workaround Tru64 5.1 and HP-UX bug
-    pthread_mutex_destroy() intermittently returns
-    EBUSY even when there are no threads accessing the mutex. */
-    while ((e = pthread_mutex_destroy(p)) == EBUSY) { }
+  /* workaround Tru64 5.1 and HP-UX bug: pthread_mutex_destroy()
+     intermittently returns EBUSY even when there are no threads accessing the
+     mutex. */
+  do { e = pthread_mutex_destroy(p); } while (e == EBUSY);
 #else
-    e = pthread_mutex_destroy(p);
+  e = pthread_mutex_destroy(p);
 #endif
-    assert(e == 0);
-    free(p);
+  assert(e == 0);
+  free(p);
 }
 
-void ThreadPThread__pthread_cond_delete(pthread_cond_t* p)
+void
+ThreadPThread__pthread_cond_delete(pthread_cond_t *p)
 {
-    int r;
-    if (p == NULL) return;
-    r = pthread_cond_destroy(p);
-    assert(r == 0);
-    free(p);
+  int r;
+  if (p == NULL) return;
+  r = pthread_cond_destroy(p);
+  assert(r == 0);
+  free(p);
 }
 
-
-int ThreadPThread__Nanosleep(timespec_t* req, timespec_t* rem)
+int
+ThreadPThread__Nanosleep(timespec_T *req, timespec_T *rem)
 {
 #ifdef __INTERIX
-    /* This is only an approximation. */
-    if (rem != NULL)
-        memset(rem, 0, sizeof(*rem));
-    if (req->tv_sec > 0)
-        sleep(req->tv_sec);
-    else
-        usleep(req->tv_nsec / 1000);
-    return 0;
+  /* This is only an approximation. */
+  if (rem != NULL)
+    memset(rem, 0, sizeof(*rem));
+  if (req->tv_sec > 0)
+    sleep(req->tv_sec);
+  else
+    usleep(req->tv_nsec / 1000);
+  return 0;
 #else
-    return nanosleep(req, rem);
+  return nanosleep(req, rem);
+#endif
+}
+
+M3WRAP2(int, pthread_cond_wait, pthread_cond_t*, pthread_mutex_t*)
+M3WRAP3(int, pthread_cond_timedwait, pthread_cond_t*, pthread_mutex_t*, const timespec_T*)
+M3WRAP1(int, pthread_cond_signal, pthread_cond_t*)
+M3WRAP1(int, pthread_cond_broadcast, pthread_cond_t*)
+
+int
+ThreadPThread__pthread_detach_self(void)
+{
+  return pthread_detach(pthread_self());
+}
+
+m3_pthread_t ThreadPThread__pthread_self(void)
+{
+  pthread_t a = pthread_self();
+  return PTHREAD_TO_M3(a);
+}
+
+int
+ThreadPThread__pthread_equal(m3_pthread_t t1, m3_pthread_t t2)
+{
+  return pthread_equal(PTHREAD_FROM_M3(t1), PTHREAD_FROM_M3(t2));
+}
+
+int
+ThreadPThread__pthread_kill(m3_pthread_t thread, int sig)
+{
+  return pthread_kill(PTHREAD_FROM_M3(thread), sig);
+}
+
+M3WRAP1(int, pthread_mutex_lock, pthread_mutex_t*)
+M3WRAP1(int, pthread_mutex_unlock, pthread_mutex_t*)
+
+void
+InitC(int *bottom)
+{
+#ifndef M3_DIRECT_SUSPEND
+  sigaction_t act;
+  sigaction_t oact;
+#endif
+  int r;
+
+  stack_grows_down = (bottom > &r);
+#if defined(__APPLE__) || defined(__FreeBSD__)
+  assert(stack_grows_down); /* See ThreadApple.c, ThreadFreeBSD.c */
+#endif
+  M3_RETRY(pthread_key_create(&activations, NULL)); assert(r == 0);
+
+#ifndef M3_DIRECT_SUSPEND
+  ZeroMemory(&act, sizeof(act));
+  ZeroMemory(&oact, sizeof(oact));
+
+  M3_RETRY(sem_init(&ackSem, 0, 0)); assert(r == 0);
+
+  r = sigfillset(&mask); assert(r == 0);
+  r = sigdelset(&mask, SIG_SUSPEND); assert(r == 0);
+  r = sigdelset(&mask, SIGINT); assert(r == 0);
+  r = sigdelset(&mask, SIGQUIT); assert(r == 0);
+  r = sigdelset(&mask, SIGABRT); assert(r == 0);
+  r = sigdelset(&mask, SIGTERM); assert(r == 0);
+
+  act.sa_flags = SA_RESTART | SA_SIGINFO;
+  act.sa_sigaction = SignalHandler;
+  r = sigfillset(&act.sa_mask); assert(r == 0);
+  r = sigaction(SIG_SUSPEND, &act, &oact); assert(r == 0);
 #endif
 }
 

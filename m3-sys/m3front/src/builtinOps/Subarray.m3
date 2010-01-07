@@ -63,10 +63,10 @@ PROCEDURE NeedsAddress (<*UNUSED*> ce: CallExpr.T) =
 
 PROCEDURE Prep (ce: CallExpr.T) =
   BEGIN
-    PrepLV (ce, lhs := FALSE);
+    PrepLV (ce, traced := FALSE);
   END Prep;
 
-PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
+PROCEDURE PrepLV (ce: CallExpr.T; traced: BOOLEAN) =
   VAR
     base      := ce.args[0];
     start     := ce.args[1];
@@ -87,7 +87,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
     Type.Compile (open);
     EVAL ArrayType.Split (array, index, element);
 
-    Expr.PrepLValue (base, lhs);
+    Expr.PrepLValue (base, traced);
 
     (* determine which case to use *)
     case := 0;
@@ -115,7 +115,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
           CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
 
           IF NOT Host.doRangeChk THEN
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             Expr.Compile (start);
           ELSE
             Expr.Compile (start);         t_start := CG.Pop ();
@@ -125,7 +125,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             CG.Check_hi (Target.Integer.cg_type, n_elts,
                          CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             CG.Push (t_start);
             CG.Free (t_start);
           END;
@@ -141,7 +141,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
           CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
 
           IF NOT Host.doRangeChk THEN
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             Expr.Compile (start);
           ELSIF NOT TInt.Subtract (n_elts, x_len, max) THEN
             (* cannot compute n-len at compile time *)
@@ -152,17 +152,17 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
             CG.Check_hi (Target.Integer.cg_type,
                          n_elts, CG.RuntimeError.ValueOutOfRange);
            CG.Discard (Target.Integer.cg_type);
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             CG.Push (t_start);
             CG.Free (t_start);
           ELSIF TInt.LT (max, TInt.Zero) THEN
             Error.Warn (2, "SUBARRAY length out of range");
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             Expr.Compile (start);
             CG.Check_hi (Target.Integer.cg_type,
                          max, CG.RuntimeError.ValueOutOfRange);
           ELSE
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             Expr.Compile (start);
             CG.Check_hi (Target.Integer.cg_type, max,
                          CG.RuntimeError.ValueOutOfRange);
@@ -205,7 +205,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
           END;
 
           (* initialize the new data pointer *)
-          Expr.CompileAddress (base, lhs);
+          Expr.CompileAddress (base, traced);
           CG.Add_offset (i_start * elt_pack);
           CG.Store_addr (t_result, M3RT.OA_elt_ptr);
 
@@ -237,14 +237,14 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
           END;
 
           (* initialize the new data pointer *)
-          Expr.CompileAddress (base, lhs);
+          Expr.CompileAddress (base, traced);
           CG.Add_offset (i_start * elt_pack);
           CG.Store_addr (t_result, M3RT.OA_elt_ptr);
 
     | 4 =>  (* open array, var start, var len -------------------------------*)
 
-          Expr.CompileAddress (base, lhs);   t_base  := CG.Pop ();
-          Expr.Compile (start);              t_start := CG.Pop ();
+          Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
+          Expr.Compile (start);                 t_start := CG.Pop ();
 
           (* initialize the new counts *)
           Expr.Compile (len);
@@ -274,8 +274,8 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
 
     | 5 =>  (* open array, var start, const len -----------------------------*)
 
-          Expr.CompileAddress (base, lhs);   t_base  := CG.Pop ();
-          Expr.Compile (start);              t_start := CG.Pop ();
+          Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
+          Expr.Compile (start);                 t_start := CG.Pop ();
 
           (* initialize the new counts *)
           CG.Load_integer (Target.Integer.cg_type, x_len);
@@ -305,7 +305,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
 
     | 6 =>  (* open array, const start, var len -----------------------------*)
 
-          Expr.CompileAddress (base, lhs);   t_base  := CG.Pop ();
+          Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
 
           (* initialize the new counts *)
           Expr.Compile (len);
@@ -339,7 +339,7 @@ PROCEDURE PrepLV (ce: CallExpr.T; lhs: BOOLEAN) =
 
     | 7 =>  (* open array, const start, const len ---------------------------*)
 
-          Expr.CompileAddress (base, lhs);   t_base  := CG.Pop ();
+          Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
 
           (* initialize the new counts *)
           CG.Load_integer (Target.Integer.cg_type, x_len);
@@ -422,10 +422,10 @@ PROCEDURE ComputeOffset (array: CG.Var;  depth, elt_pack: INTEGER) =
 
 PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
-    CompileLV (ce, lhs := FALSE);
+    CompileLV (ce, traced := FALSE);
   END Compile;
 
-PROCEDURE CompileLV (ce: CallExpr.T; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE CompileLV (ce: CallExpr.T; <*UNUSED*> traced: BOOLEAN) =
   BEGIN
     (* all the real work was done by PrepLV *)
     CG.Push (ce.tmp);

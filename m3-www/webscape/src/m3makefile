@@ -4,6 +4,8 @@
 %
 % Last modified on Thu Aug 22 09:50:58 PDT 1996 by mhb      
 
+if HasGui()
+
 import		("formsvbt")
 import		("webvbt")
 
@@ -14,8 +16,4 @@ implementation	("Main")
 ManPage		("WebScape", 1)
 Program		("WebScape")
 
-
-
-
-
-
+end

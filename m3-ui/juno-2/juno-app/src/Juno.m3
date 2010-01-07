@@ -8,7 +8,7 @@
 (*      modified on Sat Aug 22 23:32:17 PDT 1992 by myers                    *)
 <* PRAGMA LL *>
 
-MODULE Juno EXPORTS Main;
+UNSAFE MODULE Juno EXPORTS Main;
 
 IMPORT Source, Drawing, Editor, EditorUI, SaveState, PublicView, CurrCmd;
 IMPORT   Marquee, View, JunoError, JunoWM, ToolBox, DblBufferVBT, Drag;
@@ -2179,7 +2179,7 @@ BEGIN
     FVFilter.MakeActive(w, "background");
     IF NOT writepkl THEN
       checkpointThread := Thread.Fork(NEW(CheckpointClosure, w := w));
-      Trestle.AwaitDelete(startup)
+      Trestle.AwaitDelete(startup);
     ELSE
       <* FATAL OSError.E, Pickle.Error *>
       VAR wr := FileWr.Open("big.pkl"); BEGIN

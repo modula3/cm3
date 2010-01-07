@@ -8,9 +8,12 @@
 
 INTERFACE Int;
 
-IMPORT Type;
+IMPORT Type, CG;
 
-VAR T: Type.T;
+VAR
+  T: Type.T;
+  Signed, Unsigned: CG.Type;
+  Size: INTEGER;
 
 PROCEDURE Initialize ();
 

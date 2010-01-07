@@ -5,6 +5,10 @@
 % Last modified on Fri Apr 12 08:17:04 PDT 1996 by mhb
 %      modified on Wed Jan 17 14:42:47 PST 1996 by najork
 
+if not HasGui()
+  build_standalone()
+end
+
 import ("libm3")
 import ("formsvbt")
 import ("http")

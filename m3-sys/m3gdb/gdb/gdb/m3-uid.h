@@ -27,18 +27,20 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #if !defined (M3_UID_H)
 #define M3_UID_H 1
- 
+
+#include "m3-bool.h"
+
 #define M3UID_LEN 6
 
 extern char *
-m3uid_from_int (const int x);
-/* converts the 32-bit integer uid 'x' to its string representation */
+m3uid_from_num (const LONGEST x);
+/* converts the integer uid 'x' to its string representation */
 
-extern int
-m3uid_to_int (const char *uid, int *val);
-/* converts the string 'uid' to a 32-bit integer 'val',
-   returns a boolean indicating success or failure */
+extern BOOL
+m3uid_to_num (const char *uid, LONGEST *num_val);
+/* converts the string 'uid' to a numeric 'int_val',
+   returns a boolean indicating success. */
 
 #endif /* !defined (M3_UID_H) */
 
-/* End of file "m3-uid.h" */ 
+/* End of file "m3-uid.h" */

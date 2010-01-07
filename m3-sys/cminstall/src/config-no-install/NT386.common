@@ -325,14 +325,17 @@ proc compile_c_ms(source, object, options, optimize, debug) is
         args += "-Ox"
     end
     args += "-Oi"
-    %
+
     % Visual C++ always echos source file names as they are compiled.
     % This runs afoul of the goals of reducing the output of building.
     % Therefore, redirect to a file and only be noisy upon errors.
-    %
-    local readonly Listing = Path_GetBase (source) & ".lst"
-    local readonly Command = ["cl", escape(subst_chars(args, "\\", "/")), "-c", escape(source)]
-    ret = try_exec("@" & Command, ">", Listing)
+
+    local Listing = "_m3.lst"
+    if defined("pos")
+       Listing = Path_GetBase (source) & ".lst"
+    end
+    local readonly Command = ["cl.exe", escape(subst_chars(args, "\\", "/")), "-c", escape(source)]
+    local ret = try_exec("@" & Command, ">", Listing)
     if not equal (ret, 0)
         write (Command & CR)
         if defined ("xxfs_contents")
@@ -448,24 +451,6 @@ end
 
 %------------------------------------------------------------------------------
 
-readonly proc ConvertLibsToStandalone(imported_libs, shared) is
-    if shared
-        return imported_libs
-    end
-    local imports = [ ]
-    foreach f in imported_libs
-        local ff = f & ".sa"
-        if FileExists(ff)
-            imports += ff
-        else
-            imports += f
-        end
-    end
-    return imports
-end
-
-%------------------------------------------------------------------------------
-
 readonly proc ManifestTool(DllOrExe, ManifestFile, ResourceId) is
     local ret = 0
     %
@@ -512,6 +497,12 @@ if not FileExists (UseUconstants)
   UseUconstants = ""
 end
 
+UseWinConstants = LIB_INSTALL & SL & "WinConstants" & Obj
+if not FileExists (UseWinConstants)
+  % for bootstrapping
+  UseWinConstants = ""
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -550,7 +541,7 @@ proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, 
     end
 
     return try_exec(
-        "@link",
+        "@link.exe",
         WriteResponseFile(
             LinkResponseFile,
             " ",
@@ -566,6 +557,7 @@ proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, 
                  objects,
                  subst_chars(imported_libs, "/", "\\"),
                  subst_chars(UseHand, "/", "\\"),
+                 subst_chars(UseWinConstants, "/", "\\"),
             ]),
         "2>&1",
         ">", listing
@@ -602,6 +594,7 @@ proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file,
                         objects,
                         EscapeList(imported_libs),
                         escape(UseUconstants),
+                        escape(UseWinConstants),
                         %escape(UseHand),
                     ]),
             "2>&1",
@@ -625,6 +618,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local LinkResponseFile = LibResponseFile
     local ShipHand = equal (lib, "m3core") and FileExists("hand" & Obj)
     local ShipUconstants = equal (lib, "m3core") and FileExists("Uconstants" & Obj)
+    local ShipWinConstants = equal (lib, "m3core") and FileExists("WinConstants" & Obj)
 
     if ShipHand
         UseHand = ""
@@ -632,6 +626,10 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
 
     if ShipUconstants
         UseUconstants = ""
+    end
+
+    if ShipWinConstants
+        UseWinConstants = ""
     end
 
     if shared
@@ -788,10 +786,7 @@ proc skip_lib(lib, shared) is
         PdbExport(pdb_file)
         install_derived(lib0_file)
     else
-        DeleteFile(lib0_file)
-        DeleteFile(dll_file)
-        DeleteFile(manifest_file)
-        DeleteFile(pdb_file)
+        DeleteFiles([lib0_file, dll_file, manifest_file, pdb_file])
     end
 
     return 0
@@ -846,10 +841,10 @@ if not equal($USE_DELAYLOAD, "0")
 end
 
 if not defined("USE_DELAYLOAD")
-    if equal($USE_DELAYLOAD, "0")
-        USE_DELAYLOAD = FALSE
-    else
+    if equal($USE_DELAYLOAD, "1")
         USE_DELAYLOAD = TRUE
+    else
+        USE_DELAYLOAD = FALSE
     end
 end
 
@@ -894,6 +889,7 @@ proc m3_link_ms(prog, options, objects, imported_libs, shared, pgm_file, listing
                 objects,
                 subst_chars(imported_libs, "/", "\\"),
                 subst_chars(UseHand, "/", "\\"),
+                subst_chars(UseWinConstants, "/", "\\"),
             ]),
         "2>&1",
         ">", listing
@@ -924,6 +920,10 @@ proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listin
         UseUconstants = ""
     end
 
+    if not shared
+        UseWinConstants = ""
+    end
+
     return try_exec(
             "@gcc",
             "-gstabs+",
@@ -942,6 +942,7 @@ proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listin
                         objects,
                         EscapeList(imported_libs),
                         escape(UseUconstants),
+                        escape(UseWinConstants),
                         %escape(UseHand),
                     ]),
             "2>&1",

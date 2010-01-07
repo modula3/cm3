@@ -9,9 +9,6 @@
 
 INTERFACE RTMachine;
 
-IMPORT Word;
-FROM Upthread IMPORT pthread_t;
-
 (*------------------------------------------------------------------ heap ---*)
 
 (* The heap page size used to be machine-dependent, since it could depend
@@ -20,10 +17,8 @@ FROM Upthread IMPORT pthread_t;
    be a power of two. *)
 
 CONST
-  BytesPerHeapPage    = Word.LeftShift(1, LogBytesPerHeapPage); (* bytes per page *)
+  BytesPerHeapPage    = 8192;               (* bytes per page *)
   LogBytesPerHeapPage = 13;
-  AdrPerHeapPage      = BytesPerHeapPage;   (* addresses per page *)
-  LogAdrPerHeapPage   = LogBytesPerHeapPage;
 
 (*--------------------------------------------------------- thread stacks ---*)
 
@@ -43,13 +38,5 @@ CONST
      defined in the "RTStack" interface. *)
 
 TYPE FrameInfo = RECORD pc, sp: ADDRESS END;
-
-CONST
-  SuspendThread: PROCEDURE(t: pthread_t): BOOLEAN = NIL;
-  RestartThread: PROCEDURE(t: pthread_t) = NIL;
-  GetState: PROCEDURE(t: pthread_t; VAR state: ThreadState): ADDRESS = NIL;
-  SaveRegsInStack: PROCEDURE(): ADDRESS = NIL;
-
-TYPE ThreadState = RECORD END;
 
 END RTMachine.

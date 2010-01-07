@@ -8,12 +8,18 @@ UNSAFE INTERFACE ThreadPThread;
 
 FROM Ctypes IMPORT int;
 FROM Cstddef IMPORT size_t;
-FROM Upthread IMPORT pthread_t, start_routine_t;
 FROM Utime IMPORT struct_timespec;
+
+TYPE
+  (* These are opaque C references (not necessarily UNTRACED REF ADDRESS) *)
+  pthread_t = UNTRACED BRANDED REF ADDRESS;
+  pthread_mutex_t = UNTRACED BRANDED REF ADDRESS;
+  pthread_cond_t = UNTRACED BRANDED REF ADDRESS;
+  Activation <: ADDRESS; (* untraced thread stated stored in thread local *)
 
 (*---------------------------------------------------------------------------*)
 
-PROCEDURE SignalHandler(sig: int);
+PROCEDURE SignalHandler(sig: int; info, uap: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 
@@ -22,8 +28,8 @@ PROCEDURE SignalHandler(sig: int);
 
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL "ThreadPThread__SetupHandlers"*>
-PROCEDURE SetupHandlers();
+<*EXTERNAL "ThreadPThread__InitC"*>
+PROCEDURE InitC(bottom: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
 
@@ -42,106 +48,50 @@ PROCEDURE sem_getvalue (VAR value: int): int;
 (* the signal set is implied *)
 
 <*EXTERNAL "ThreadPThread__sigsuspend"*>
-PROCEDURE sigsuspend (): int;
+PROCEDURE sigsuspend ();
 
 (*---------------------------------------------------------------------------*)
 
 (* pthread_create but replace attr with stackSize so that attr need not be known to Modula-3 *)
 
 <*EXTERNAL "ThreadPThread__thread_create"*>
-PROCEDURE thread_create(VAR pthread: pthread_t; stackSize: size_t;
-                        start_routine: start_routine_t; arg: ADDRESS): int;
+PROCEDURE thread_create(stackSize: size_t;
+                        start_routine: PROCEDURE(arg: ADDRESS): ADDRESS; arg: ADDRESS): int;
+
+<*EXTERNAL ThreadPThread__pthread_detach_self*>
+PROCEDURE pthread_detach_self(): int;
+
+<*EXTERNAL ThreadPThread__pthread_self*>
+PROCEDURE pthread_self(): pthread_t;
+
+<*EXTERNAL "ThreadPThread__pthread_equal"*>
+PROCEDURE pthread_equal(t1, t2: pthread_t): int;
+
+<*EXTERNAL "ThreadPThread__pthread_kill"*>
+PROCEDURE pthread_kill(t: pthread_t; sig: int): int;
 
 (*---------------------------------------------------------------------------*)
 
-(* implement the statically allocated mutexes, condition variables, and
-thread locals. These are wrappers to:
- pthread_mutex_lock
- pthread_mutex_unlock
- pthread_cond_broadcast
- pthread_cond_wait
- pthread_key_create
- pthread_setspecific
- pthread_getspecific
- 
-where the parameters are all implied, and are indicated
-by the last part of the function name.
-This reduces platform specific code as it removes
-the need for the Modula-3 code to define the static mutexes and condition variable(s).
-*)
+(* static mutexes and conditions *)
 
-(* mutex "active" *)
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_lock_active"*>
-PROCEDURE pthread_mutex_lock_active():int;
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_active"*>
-PROCEDURE pthread_mutex_unlock_active():int;
-
-
-(* mutex "slot" *)
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_lock_slot"*>
-PROCEDURE pthread_mutex_lock_slot():int;
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_slot"*>
-PROCEDURE pthread_mutex_unlock_slot():int;
-
-
-(* mutex "init" *)
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_lock_init"*>
-PROCEDURE pthread_mutex_lock_init():int;
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_init"*>
-PROCEDURE pthread_mutex_unlock_init():int;
-
-
-(* mutex "perf" *)
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_lock_perf"*>
-PROCEDURE pthread_mutex_lock_perf():int;
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_perf"*>
-PROCEDURE pthread_mutex_unlock_perf():int;
-
-
-(* mutex "heap" *)
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_lock_heap"*>
-PROCEDURE pthread_mutex_lock_heap():int;
-
-<*EXTERNAL "ThreadPThread__pthread_mutex_unlock_heap"*>
-PROCEDURE pthread_mutex_unlock_heap():int;
-
-
-(* condition variable "heap" *)
-
-<*EXTERNAL "ThreadPThread__pthread_cond_broadcast_heap"*>
-PROCEDURE pthread_cond_broadcast_heap():int;
-
-<*EXTERNAL "ThreadPThread__pthread_cond_wait_heap"*>
-PROCEDURE pthread_cond_wait_heap():int;
-
+<*EXTERNAL "ThreadPThread__activeMu"*> VAR activeMu: pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__slotsMu"*>  VAR slotsMu: pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__initMu"*>   VAR initMu: pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__perfMu"*>   VAR perfMu: pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__heapMu"*>   VAR heapMu: pthread_mutex_t;
+<*EXTERNAL "ThreadPThread__heapCond"*> VAR heapCond: pthread_cond_t;
 
 (* thread local "activation" *)
 
-<*EXTERNAL "ThreadPThread__pthread_key_create_activations"*>
-PROCEDURE pthread_key_create_activations(): int;
+<*EXTERNAL ThreadPThread__SetActivation*>
+PROCEDURE SetActivation(value: Activation);
 
-<*EXTERNAL "ThreadPThread__pthread_setspecific_activations"*>
-PROCEDURE pthread_setspecific_activations(value: ADDRESS): int;
-
-<*EXTERNAL "ThreadPThread__pthread_getspecific_activations"*>
-PROCEDURE pthread_getspecific_activations(): ADDRESS;
+<*EXTERNAL ThreadPThread__GetActivation*>
+PROCEDURE GetActivation(): Activation;
 
 (*---------------------------------------------------------------------------*)
 
 (* support for dynamically allocated mutexes and condition variables *)
-
-TYPE
-    pthread_mutex_t = ADDRESS;
-    pthread_cond_t = ADDRESS;
 
 <*EXTERNAL "ThreadPThread__pthread_mutex_new"*>
 PROCEDURE pthread_mutex_new():pthread_mutex_t;
@@ -149,29 +99,52 @@ PROCEDURE pthread_mutex_new():pthread_mutex_t;
 <*EXTERNAL "ThreadPThread__pthread_mutex_delete"*>
 PROCEDURE pthread_mutex_delete(a:pthread_mutex_t);
 
-<*EXTERNAL*>
+<*EXTERNAL ThreadPThread__pthread_mutex_lock*>
 PROCEDURE pthread_mutex_lock(mutex: pthread_mutex_t):int;
 
-<*EXTERNAL*>
+<*EXTERNAL ThreadPThread__pthread_mutex_unlock*>
 PROCEDURE pthread_mutex_unlock(mutex: pthread_mutex_t):int;
 
 <*EXTERNAL "ThreadPThread__pthread_cond_new"*>
-PROCEDURE pthread_cond_new():pthread_mutex_t;
+PROCEDURE pthread_cond_new(): pthread_cond_t;
 
 <*EXTERNAL "ThreadPThread__pthread_cond_delete"*>
-PROCEDURE pthread_cond_delete(a:pthread_cond_t);
+PROCEDURE pthread_cond_delete(cond: pthread_cond_t);
 
-<*EXTERNAL*>
+<*EXTERNAL ThreadPThread__pthread_cond_wait*>
 PROCEDURE pthread_cond_wait(cond: pthread_cond_t; mutex: pthread_mutex_t):int;
 
-<*EXTERNAL*>
+<*EXTERNAL ThreadPThread__pthread_cond_timedwait*>
+PROCEDURE pthread_cond_timedwait(cond: pthread_cond_t;
+                                 mutex: pthread_mutex_t;
+                                 READONLY abs: struct_timespec):int;
+
+<*EXTERNAL ThreadPThread__pthread_cond_signal*>
 PROCEDURE pthread_cond_signal(cond: pthread_cond_t):int;
+
+<*EXTERNAL ThreadPThread__pthread_cond_broadcast*>
+PROCEDURE pthread_cond_broadcast(cond: pthread_cond_t):int;
 
 (*---------------------------------------------------------------------------*)
 
 <*EXTERNAL "ThreadPThread__Nanosleep"*>
 PROCEDURE Nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): int;
 
+(*---------------------------------------------------------------------------*)
+
+<*EXTERNAL "ThreadPThread__SuspendThread"*>
+PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
+
+<*EXTERNAL "ThreadPThread__RestartThread"*>
+PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
+
+<*EXTERNAL "ThreadPThread__ProcessLive"*>
+PROCEDURE ProcessLive
+  (bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
+
+<*EXTERNAL "ThreadPThread__ProcessStopped"*>
+PROCEDURE ProcessStopped
+  (t: pthread_t; bottom, context: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 (*---------------------------------------------------------------------------*)
 
 END ThreadPThread.

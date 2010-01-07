@@ -1,0 +1,22 @@
+proc Build() is
+  if not defined("M3_MODE")
+    M3_MODE = ""
+  end
+  if equal(M3_MODE, "clean") or not IsInterix()
+    return
+  end
+  local A = "libntdll.a"
+  local O = "ntdll.o"
+  local C = "../src/ntdll.c"
+  local M = "../src/m3makefile"
+  local D = "ntdll.dll"
+  if stale(O, C) or stale(O, M)
+    local a = compile_c(C, O, "", "", "")
+  end
+  if stale(A, O) or stale(A, M)
+    exec(DLLTOOL,  "--dllname", D, "--kill-at --output-lib", A, "--export-all-symbols", O)
+  end
+  install_derived(A)
+end
+
+Build()

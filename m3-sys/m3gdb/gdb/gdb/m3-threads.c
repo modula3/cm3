@@ -17,17 +17,17 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
-  /* This file contains debugging support for Modula-3 threads. */ 
+  /* This file contains debugging support for Modula-3 threads. */
 
 #include "defs.h"
 #include "gdbtypes.h"
-#include "frame.h" 
-#include "regcache.h" 
+#include "frame.h"
+#include "regcache.h"
 #include "target.h"
 
-#include "m3-threads.h" 
-#include "m3-util.h" 
-#include "m3-valprint.h" 
+#include "m3-threads.h"
+#include "m3-util.h"
+#include "m3-valprint.h"
 
 #define eval(x) evaluate_expression (parse_expression (x))
 
@@ -46,7 +46,7 @@ static struct type * thread__t__context_type;
 static int thread__t__buf_size, thread__t__buf_offset;
 static struct type * thread__t__buf_type;
 
-static void 
+static void
 ensure_init_thread_constants ( void )
 {
   int thread__t__context_size, thread__t__context_offset;
@@ -58,28 +58,28 @@ ensure_init_thread_constants ( void )
   m3_unit_name_globals_symbol ('I', "Thread", NULL );
   m3_unit_name_globals_symbol ('M', "ThreadPosix", NULL );
 
-  thread__t = find_m3_type_named ("Thread.T", /*must_find =*/ true);
+  thread__t = find_m3_type_named ("Thread.T", /*must_find =*/ TRUE);
 
-  m3_find_rec_field (thread__t, "id", 
-		     &thread__t__id_size, &thread__t__id_offset, 0);
-  m3_find_rec_field (thread__t, "state", 
-		     &thread__t__state_size, &thread__t__state_offset, 0);
-  m3_find_rec_field (thread__t, "next", 
-		     &thread__t__next_size, &thread__t__next_offset, 0);
-  m3_find_rec_field (thread__t, "waitingForCondition", 
-		     &thread__t__cond_size, &thread__t__cond_offset, 
-		     &thread__t__cond_type);
-  m3_find_rec_field (thread__t, "waitingForMutex", 
-		     &thread__t__mutex_size, &thread__t__mutex_offset, 
-		     &thread__t__mutex_type);
-  m3_find_rec_field (thread__t, "waitingForTime", 
-		     &thread__t__time_size, &thread__t__time_offset, 
-		     &thread__t__time_type);
+  m3_find_rec_field (thread__t, "id",
+                     &thread__t__id_size, &thread__t__id_offset, 0);
+  m3_find_rec_field (thread__t, "state",
+                     &thread__t__state_size, &thread__t__state_offset, 0);
+  m3_find_rec_field (thread__t, "next",
+                     &thread__t__next_size, &thread__t__next_offset, 0);
+  m3_find_rec_field (thread__t, "waitingForCondition",
+                     &thread__t__cond_size, &thread__t__cond_offset,
+                     &thread__t__cond_type);
+  m3_find_rec_field (thread__t, "waitingForMutex",
+                     &thread__t__mutex_size, &thread__t__mutex_offset,
+                     &thread__t__mutex_type);
+  m3_find_rec_field (thread__t, "waitingForTime",
+                     &thread__t__time_size, &thread__t__time_offset,
+                     &thread__t__time_type);
   m3_find_rec_field (thread__t, "context",
-		     &thread__t__context_size, &thread__t__context_offset,
-		     &thread__t__context_type);
+                     &thread__t__context_size, &thread__t__context_offset,
+                     &thread__t__context_type);
   m3_find_rec_field (thread__t__context_type, "buf",
-		     &thread__t__buf_size, &thread__t__buf_offset, 0);
+                     &thread__t__buf_size, &thread__t__buf_offset, 0);
 
   /* skip past the method pointer */
 #if defined(sparc)
@@ -93,7 +93,7 @@ ensure_init_thread_constants ( void )
   thread__t__mutex_offset += dataOffset;
   thread__t__time_offset  += dataOffset;
   thread__t__buf_offset   += dataOffset + thread__t__context_offset;
-} /* ensure_init_thread_constants */ 
+} /* ensure_init_thread_constants */
 
 /*--------------------------------------------------------- jmpbuf layout ---*/
 
@@ -131,7 +131,7 @@ static int regno_to_jmpbuf [] = {
 
 #if defined(linux) && defined(i386)
 
-/* This tells where each register in array REGISTER_NAMES in 
+/* This tells where each register in array REGISTER_NAMES in
    config/i386/tm-i386.h is found in a jump_buf <jmp_buf.h>.
    Registers which dont appear are set to 0? The fourth register
    below is ebx and happens to be the first entry (0) in jmp_buf. */
@@ -153,10 +153,10 @@ struct m3_thread {
   LONGEST ref;   /* the Thread.T value */
   int     id;    /* the thread's internal ID */
   char   *bits;  /* the pointer to the Thread.T's data fields */
-} ;
+};
 
 static void
-get_m3_thread ( LONGEST ref, struct m3_thread  * t ) 
+get_m3_thread ( LONGEST ref, struct m3_thread  * t )
 {
     CORE_ADDR tmpref = ref;
 
@@ -170,8 +170,9 @@ get_m3_thread ( LONGEST ref, struct m3_thread  * t )
     t->bits = m3_read_object_fields_bits (tmpref);
     if (!t->bits) return;
 
-    t->id = m3_extract_ord (t->bits, thread__t__id_offset,thread__t__id_size,0);
-} /* get_m3_thread */ 
+    t->id = m3_extract_ord
+              (t->bits, thread__t__id_offset,thread__t__id_size, FALSE);
+} /* get_m3_thread */
 
 static void
 first_m3_thread ( struct m3_thread * t )
@@ -179,10 +180,10 @@ first_m3_thread ( struct m3_thread * t )
     struct value * v = eval ("ThreadPosix.self");
     LONGEST ref = m3_extract_address (value_contents (v), 0);
     get_m3_thread (ref, t);
-} /* first_m3_thread */ 
+} /* first_m3_thread */
 
-static void 
-next_m3_thread ( struct m3_thread *t ) 
+static void
+next_m3_thread ( struct m3_thread *t )
 {
     LONGEST ref;
 
@@ -190,7 +191,7 @@ next_m3_thread ( struct m3_thread *t )
     if (!(t->bits)) return;
     ref = m3_extract_address (t->bits, thread__t__next_offset);
     get_m3_thread (ref, t);
-} /* next_m3_thread */ 
+} /* next_m3_thread */
 
 /*---------------------------------------------------------------- switch ---*/
 
@@ -198,7 +199,7 @@ next_m3_thread ( struct m3_thread *t )
 static struct m3_thread cur_m3_thread = { 0, 0, 0 };
 
 static void
-look_in_thread ( int regno ) 
+look_in_thread ( int regno )
 {
 #ifdef HAVE_REGISTER_MAP
   int reg_offset;
@@ -211,8 +212,8 @@ look_in_thread ( int regno )
     if (regno < 0) { first_reg = 0; last_reg = NUM_REGS; }
     for (regno = first_reg; regno < last_reg; regno++) {
       reg_offset = thread__t__buf_offset / HOST_CHAR_BIT
-	+ regno_to_jmpbuf [regno] * TARGET_PTR_BIT / HOST_CHAR_BIT;
-      regcache_raw_supply 
+        + regno_to_jmpbuf [regno] * TARGET_PTR_BIT / HOST_CHAR_BIT;
+      regcache_raw_supply
         (current_regcache, regno, cur_m3_thread.bits + reg_offset);
     }
   }
@@ -220,17 +221,17 @@ look_in_thread ( int regno )
   if ((regno >= 0) && (regno < NUM_REGS)) {
     error ( "%s, line %d: don't know where to find register \"%s\" "
             "in stopped thread",
-	    __FILE__, __LINE__, REGISTER_NAME ( regno )
+            __FILE__, __LINE__, REGISTER_NAME ( regno )
           );
   } else {
     error ("%s, line %d: don't know where to find registers in stopped thread",
-	   __FILE__, __LINE__);
+           __FILE__, __LINE__);
   }
 #endif
-} /* look_in_thread */ 
+} /* look_in_thread */
 
 void
-switch_command ( char *args, int from_tty ) 
+switch_command ( char *args, int from_tty )
 {
   static void (*saved_to_fetch_registers) PARAMS ((int)) = 0;
   struct m3_thread first, cur;
@@ -273,10 +274,10 @@ switch_command ( char *args, int from_tty )
 
   registers_changed ( );
   reinit_frame_cache ( );
-} /* switch_command */ 
+} /* switch_command */
 
 void
-threads_command ( char *args, int from_tty ) 
+threads_command ( char *args, int from_tty )
 {
   int first_id, state;
   struct m3_thread cur;
@@ -293,36 +294,36 @@ threads_command ( char *args, int from_tty )
     printf_filtered ("  ");
 
     state = m3_extract_ord (cur.bits, thread__t__state_offset,
-			   thread__t__state_size, 0);
+                           thread__t__state_size, FALSE);
     switch (state) {
       case 0 /* alive */:
-	printf_filtered ("alive");
-	break; 
+        printf_filtered ("alive");
+        break;
       case 1 /* waiting */:
-	printf_filtered ("waiting for condition 16_%lx",
-		  m3_extract_address (cur.bits, thread__t__cond_offset));
-	break;
+        printf_filtered ("waiting for condition 16_%lx",
+                  m3_extract_address (cur.bits, thread__t__cond_offset));
+        break;
       case 2 /* locking */:
-	printf_filtered ("waiting for mutex 16_%lx",
-		  m3_extract_address (cur.bits, thread__t__mutex_offset));
-	break;
+        printf_filtered ("waiting for mutex 16_%lx",
+                  m3_extract_address (cur.bits, thread__t__mutex_offset));
+        break;
       case 3 /* pausing */:
-	printf_filtered ("waiting until ");
-	m3_val_print2 (thread__t__time_type, cur.bits, thread__t__time_offset, 
-		       thread__t__time_size, gdb_stdout, 0, 0, 1);
-	break;
+        printf_filtered ("waiting until ");
+        m3_val_print2 (thread__t__time_type, cur.bits, thread__t__time_offset,
+                       thread__t__time_size, gdb_stdout, 0, 0, 1);
+        break;
       case 4 /* blocking */:
-	printf_filtered ("waiting for I/O");
-	break;
+        printf_filtered ("waiting for I/O");
+        break;
       case 5 /* dying */:
-	printf_filtered ("waiting for somebody to join");
-	break;
+        printf_filtered ("waiting for somebody to join");
+        break;
       case 6 /* dead */:
-	printf_filtered ("dead");
-	break;
+        printf_filtered ("dead");
+        break;
       default:
-	printf_filtered ("<unknown state = %d>", state);
-	break;
+        printf_filtered ("<unknown state = %d>", state);
+        break;
       }
     puts_filtered ("\n");
 
@@ -330,6 +331,6 @@ threads_command ( char *args, int from_tty )
     next_m3_thread (&cur);
     if (cur.id == first_id) break;
   }
-} /* threads_command */ 
+} /* threads_command */
 
-/* End of file m3-threads.c */ 
+/* End of file m3-threads.c */

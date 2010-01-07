@@ -10,21 +10,17 @@
 readonly NO_USER_THREADS =
 {
     "AMD64_FREEBSD":1,
-    "AMD64_OPENBSD":1,
     "AMD64_NETBSD":1,
     "AMD64_LINUX":1,
     "ARM_LINUX":1,
     "MIPS32_IRIX":1,
     "MIPS64_IRIX":1,
-    "MIPS64_OPENBSD":1,
     "PPC_LINUX":1,
     "PPC32_AIX":1,
-    "PPC32_OPENBSD":1,
     "PPC64_AIX":1,
     "PPC64_DARWIN":1,
     "SPARC32_LINUX":1,
     "SPARC64_LINUX":1,
-    "SPARC64_OPENBSD":1,
     "SPARC64_SOLARIS":1,
 }
 
@@ -63,6 +59,12 @@ readonly USE_PTHREADS = {
   "PPC_DARWIN" : TRUE,
   "PPC_LINUX"  : TRUE,
   "NetBSD2_i386"  : TRUE,
+
+  "I386_OPENBSD" : FALSE, 
+  "SPARC64_OPENBSD" : FALSE,
+  "AMD64_OPENBSD": FALSE,
+  "MIPS64_OPENBSD": FALSE,
+  "PPC32_OPENBSD": FALSE,
 }
 
 % pthreads or cygwin

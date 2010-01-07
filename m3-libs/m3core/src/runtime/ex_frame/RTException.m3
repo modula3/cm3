@@ -8,7 +8,7 @@
 UNSAFE MODULE RTException EXPORTS RTException, RTExRep;
 
 IMPORT RT0, RTMisc, RTIO, RTParams, RTOS;
-IMPORT Thread, ThreadF, M3toC, Ctypes, Csetjmp;
+IMPORT Thread, RTThread, M3toC, Ctypes, Csetjmp;
 
 VAR
   DEBUG := FALSE;
@@ -22,7 +22,7 @@ EXCEPTION
 
 PROCEDURE Raise (en: ExceptionPtr;  arg: ExceptionArg) RAISES ANY =
   VAR
-    f := LOOPHOLE(ThreadF.GetCurrentHandlers(), Frame);
+    f := LOOPHOLE(RTThread.GetCurrentHandlers(), Frame);
     ex: ExceptionList;
   BEGIN
     IF DEBUG THEN
@@ -69,7 +69,7 @@ PROCEDURE Raise (en: ExceptionPtr;  arg: ExceptionArg) RAISES ANY =
 
 PROCEDURE ResumeRaise (en: ExceptionPtr;  arg: ExceptionArg) RAISES ANY =
   VAR
-    f := LOOPHOLE(ThreadF.GetCurrentHandlers(), Frame);
+    f := LOOPHOLE(RTThread.GetCurrentHandlers(), Frame);
     ex: ExceptionList;
   BEGIN
     IF DEBUG THEN
@@ -101,7 +101,7 @@ PROCEDURE ResumeRaise (en: ExceptionPtr;  arg: ExceptionArg) RAISES ANY =
           BadStack ();
       END;
 
-      ThreadF.SetCurrentHandlers (f.next); (* cut to the new handler *)
+      RTThread.SetCurrentHandlers (f.next); (* cut to the new handler *)
       f := f.next;                         (* try the previous frame *)
     END;
   END ResumeRaise;
@@ -117,7 +117,7 @@ PROCEDURE InvokeHandler (f: Frame;  en: ExceptionPtr;
       RTIO.PutText ("\n");
       RTIO.Flush ();
     END;
-    ThreadF.SetCurrentHandlers (f.next); (* cut to the new handler *)
+    RTThread.SetCurrentHandlers (f.next); (* cut to the new handler *)
     p.exception := en;                   (* record the exception *)
     p.arg := arg;                        (* and it argument *)
     Csetjmp.ulongjmp (p.jmpbuf, 1);      (* and jump... *)
@@ -143,7 +143,7 @@ PROCEDURE InvokeFinallyHandler (f: Frame; en: ExceptionPtr;
     cl.proc   := p.handler;
     cl.frame  := p.frame;
     
-    ThreadF.SetCurrentHandlers (f.next); (* cut to the new handler *)
+    RTThread.SetCurrentHandlers (f.next); (* cut to the new handler *)
     CallProc (LOOPHOLE (ADR (cl), FinallyProc));
   END InvokeFinallyHandler;
 
@@ -164,7 +164,7 @@ PROCEDURE ReleaseLock (f: Frame) =
       RTIO.PutText ("\n");
       RTIO.Flush ();
     END;
-    ThreadF.SetCurrentHandlers (f.next); (* cut to the new handler *)
+    RTThread.SetCurrentHandlers (f.next); (* cut to the new handler *)
     Thread.Release (p.mutex);            (* and release the lock *)
   END ReleaseLock;
 
@@ -188,7 +188,7 @@ PROCEDURE BadStack () =
 PROCEDURE SanityCheck () =
   CONST Min_SK = ORD (FIRST (ScopeKind));
   CONST Max_SK = ORD (LAST (ScopeKind));
-  VAR f := LOOPHOLE(ThreadF.GetCurrentHandlers(), Frame);
+  VAR f := LOOPHOLE(RTThread.GetCurrentHandlers(), Frame);
   VAR i: INTEGER;
   BEGIN
     WHILE (f # NIL) DO
@@ -199,7 +199,7 @@ PROCEDURE SanityCheck () =
   END SanityCheck;
 
 PROCEDURE DumpStack () =
-  VAR f := LOOPHOLE(ThreadF.GetCurrentHandlers(), Frame);
+  VAR f := LOOPHOLE(RTThread.GetCurrentHandlers(), Frame);
   BEGIN
     IF NOT DEBUG AND NOT dump_enabled THEN RETURN; END;
 

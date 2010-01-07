@@ -6,7 +6,6 @@ INTERFACE Utypes;
 
 IMPORT Cstddef;
 IMPORT Cstdint;
-IMPORT Usysdep;
 
 TYPE
 
@@ -41,8 +40,8 @@ TYPE
   only occurence. If it occurs in structs, then no. *)
   off_t = int64_t;
 
-  (* Ideally this is always 64 bits, else time runs out in 2038. *)
-  time_t = Usysdep.time_t;
+  (* Ideally this is always 64 bits, else time runs out in 2038 on 32bit systems. *)
+  time_t = INTEGER;
 
   gid_t = INTEGER; (* signed on some systems, unsigned on some systems, portable code cannot depend on either *)
   pid_t = INTEGER; (* generally only 32 bits but ok *)

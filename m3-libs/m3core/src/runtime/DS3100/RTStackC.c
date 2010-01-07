@@ -18,6 +18,11 @@
 #include <setjmp.h>
 #include <exception.h>
 #include <sym.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void sigvec();
 
 /* TYPE Frame = RECORD pc, sp: ADDRESS END; */
@@ -103,7 +108,7 @@ char* RTStack__ProcName (Frame *f)
    Return the stack frame that called "f".  Returns with pc = NIL if
    "f" is the first frame on the stack or its predecessor is ill-formed. */
 
-RTStack__PrevFrame (Frame* callee, Frame* caller)
+void RTStack__PrevFrame (Frame* callee, Frame* caller)
 {
   Proc p = RTStack__Find (callee->pc);
   Frame f;
@@ -290,5 +295,6 @@ void RTStack__Unwind (Frame *target)
   ********************************************************************/
 }
 
-
-
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -18,13 +18,13 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 /* This file contains code to parse, print (unevaluated) and dump
-   Modula-3 expressions. */ 
+   Modula-3 expressions. */
 
-#include <stdbool.h> 
+#include "m3-bool.h"
 
 #include "defs.h"
 #include "block.h"
-#include "dictionary.h" 
+#include "dictionary.h"
 #include "expression.h"
 #include "gdbtypes.h"
 #include "gdb_string.h"
@@ -42,8 +42,8 @@ static struct m3_token cur_tok;
 
 /** #define DEBUG_M3_SCANNER **/
 
-static void 
-get_token ( )
+static void
+get_token (void)
 
 {
 #ifdef DEBUG_M3_SCANNER
@@ -53,11 +53,11 @@ get_token ( )
 #ifdef DEBUG_M3_SCANNER
 #define xxstr(x) (x == 0 ? "<NIL>" : x)
   printf ("scan_m3_token: %s\n  before: %s\n  after:  %s\n",
-	  m3_token_name (&cur_tok), xxstr(before), xxstr(lexptr));
+          m3_token_name (&cur_tok), xxstr(before), xxstr(lexptr));
 #endif
-} /* get_token */ 
+} /* get_token */
 
-static void 
+static void
 write_exp_text (
     enum exp_opcode opcode,
     const char *str,
@@ -66,47 +66,47 @@ write_exp_text (
 
 {
   struct stoken t;
-  
-  write_exp_elt_opcode (opcode); 
+
+  write_exp_elt_opcode (opcode);
   t.ptr = ( char * ) str;
   t.length = len;
   write_exp_string (t);
-  write_exp_elt_opcode (opcode); 
-} /* write_exp_text */ 
+  write_exp_elt_opcode (opcode);
+} /* write_exp_text */
 
-static void 
+static void
 write_exp_var ( struct symbol *sym, struct block *blk )
-     
+
 {
   write_exp_elt_opcode ( OP_VAR_VALUE );
   write_exp_elt_block ( blk );
   write_exp_elt_sym ( sym );
   write_exp_elt_opcode ( OP_VAR_VALUE );
-} /* write_exp_var */ 
+} /* write_exp_var */
 
 static void
-write_m3_const ( LONGEST val, struct type *tipe ) 
+write_m3_const ( LONGEST val, struct type *tipe )
 {
   write_exp_elt_opcode (OP_M3_LONG);
   write_exp_elt_type (tipe);
   write_exp_elt_longcst (val);
-  write_exp_elt_opcode (OP_M3_LONG); 
+  write_exp_elt_opcode (OP_M3_LONG);
   get_token ();
-} /* write_m3_const */ 
+} /* write_m3_const */
 
-static void 
-write_m3_type ( struct type *tipe ) 
+static void
+write_m3_type ( struct type *tipe )
 {
   write_exp_elt_opcode (OP_M3_TYPE);
   write_exp_elt_type (tipe);
-  write_exp_elt_opcode (OP_M3_TYPE); 
+  write_exp_elt_opcode (OP_M3_TYPE);
   get_token ();
 }
 
-static int m3_parse_e0 ( ); /* Forward decl. */
+static int m3_parse_e0 (void); /* Forward decl. */
 
-static void 
-m3_builtin_1_param ( enum exp_opcode op ) 
+static void
+m3_builtin_1_param ( enum exp_opcode op )
 {
   get_token (); /* builtin function name */
   if (cur_tok.kind != TK_LPAREN) { error ("missing opening ("); }
@@ -114,11 +114,11 @@ m3_builtin_1_param ( enum exp_opcode op )
   m3_parse_e0 ();
   if (cur_tok.kind != TK_RPAREN) { error ("missing closing )"); }
   get_token ();
-  write_exp_elt_opcode (op); 
+  write_exp_elt_opcode (op);
 } /* m3_builtin_1_param */
 
-static void 
-m3_builtin_2_params ( enum exp_opcode op ) 
+static void
+m3_builtin_2_params ( enum exp_opcode op )
 {
   get_token (); /* builtin function name */
   if (cur_tok.kind != TK_LPAREN) { error ("missing opening ("); }
@@ -129,11 +129,11 @@ m3_builtin_2_params ( enum exp_opcode op )
   m3_parse_e0 ();
   if (cur_tok.kind != TK_RPAREN) { error ("missing closing )"); }
   get_token ();
-  write_exp_elt_opcode (op); 
+  write_exp_elt_opcode (op);
 } /* m3_builtin_2_params */
 
-static void 
-m3_float_op ( enum exp_opcode op ) 
+static void
+m3_float_op ( enum exp_opcode op )
 {
   get_token (); /* builtin function name */
   if (cur_tok.kind != TK_LPAREN) { error ("missing opening ("); }
@@ -145,16 +145,16 @@ m3_float_op ( enum exp_opcode op )
   } else {
     write_exp_elt_opcode (OP_M3_TYPE);
     write_exp_elt_type (builtin_type_m3_real);
-    write_exp_elt_opcode (OP_M3_TYPE); 
+    write_exp_elt_opcode (OP_M3_TYPE);
   }
   if (cur_tok.kind != TK_RPAREN) { error ("missing closing )"); }
   get_token ();
-  write_exp_elt_opcode (op); 
+  write_exp_elt_opcode (op);
 } /* m3_float_op */
 
 
-static void 
-m3_not_yet ( char *nm ) 
+static void
+m3_not_yet ( char *nm )
 {
   int depth = 1;
 
@@ -170,100 +170,100 @@ m3_not_yet ( char *nm )
     else if (cur_tok.kind == TK_RPAREN) { depth--; get_token (); }
     else                                { get_token (); }
   }
-} /* m3_not_yet */ 
+} /* m3_not_yet */
 
-/* For investigation of what is in blocks and dictionaries: */ 
+/* For investigation of what is in blocks and dictionaries: */
 
-void 
-all_blocks_and_syms ( struct block * b ) 
+void
+all_blocks_and_syms ( struct block * b )
 
-{ struct block * bl; 
-  struct symbol * sym; 
+{ struct block * bl;
+  struct symbol * sym;
   struct dict_iterator iter;
-  char * name ; 
-  char * linkage_name ; 
-  int i; 
+  char * name;
+  char * linkage_name;
+  int i;
 
-  bl = b; 
-  i = 0; 
-  while ( true ) 
-    { if ( bl == NULL ) 
-        { break; } 
-      printf ( "Block no %d\n", i ); 
+  bl = b;
+  i = 0;
+  while ( TRUE )
+    { if ( bl == NULL )
+        { break; }
+      printf ( "Block no %d\n", i );
       ALL_BLOCK_SYMBOLS ( bl, iter, sym )
-        { if ( sym != NULL ) 
-            { name = SYMBOL_NATURAL_NAME ( sym ); 
-              linkage_name = SYMBOL_LINKAGE_NAME ( sym ); 
-              printf 
-                ( "name=\"%s\", linkage_name=\"%s\"\n", name, linkage_name );  
-            } 
-        } 
-      bl = BLOCK_SUPERBLOCK ( bl ); 
-      i ++; 
-    } 
+        { if ( sym != NULL )
+            { name = SYMBOL_NATURAL_NAME ( sym );
+              linkage_name = SYMBOL_LINKAGE_NAME ( sym );
+              printf
+                ( "name=\"%s\", linkage_name=\"%s\"\n", name, linkage_name );
+            }
+        }
+      bl = BLOCK_SUPERBLOCK ( bl );
+      i ++;
+    }
 }
 
 /* Write a little expression that denotes something named, taking care
-   of the globals_ref case and also qualified enumeration constants. 
-   PRE: The (first) TK_IDENT is already consumed. */ 
-static int  
-m3_write_id_ref ( struct symbol * sym, const char * name ) 
+   of the globals_ref case and also qualified enumeration constants.
+   PRE: The (first) TK_IDENT is already consumed. */
+static int
+m3_write_id_ref ( struct symbol * sym, const char * name )
 
-  { struct type * type_name_type; 
-    struct type * resolved_type; 
+  { struct type * type_name_type;
+    struct type * resolved_type;
     struct stoken tok;
 
-    if ( m3_is_globals_record_symbol ( sym ) ) 
-      { /* This is the ugly case of a global variable, which has 
+    if ( m3_is_globals_record_symbol ( sym ) )
+      { /* This is the ugly case of a global variable, which has
            no symbol.  Instead, lookup_symbol returned the globals
            record, to signal the case, and we have to concoct a
-           little field-selecting subexpression from it. */ 
+           little field-selecting subexpression from it. */
         write_exp_var ( sym, block_found );
         write_exp_text ( STRUCTOP_M3_MODULE, name, strlen ( name ) );
-        return 0; 
-      } 
-    else if ( m3_is_type_name_symbol ( sym ) ) 
-      { type_name_type = SYMBOL_TYPE ( sym ); 
-        resolved_type 
-          = m3_resolve_type ( TYPE_FIELD_M3_UID ( type_name_type, 0 ) ); 
-        if ( TYPE_CODE ( resolved_type ) == TYPE_CODE_M3_ENUM 
-             && cur_tok . kind == TK_DOT 
-           )          
-          /* It's the start of a (qualified) enumeration constant name. */ 
-          { get_token  ( ); /* Consume TK_DOT. */ 
-            if ( cur_tok . kind != TK_IDENT ) 
-              { error 
+        return 0;
+      }
+    else if ( m3_is_type_name_symbol ( sym ) )
+      { type_name_type = SYMBOL_TYPE ( sym );
+        resolved_type
+          = m3_resolve_type ( TYPE_FIELD_M3_UID ( type_name_type, 0 ) );
+        if ( TYPE_CODE ( resolved_type ) == TYPE_CODE_M3_ENUM
+             && cur_tok . kind == TK_DOT
+           )
+          /* It's the start of a (qualified) enumeration constant name. */
+          { get_token  ( ); /* Consume TK_DOT. */
+            if ( cur_tok . kind != TK_IDENT )
+              { error
                   ( "Enumeration constant %s requires a selector after the dot",
                      name
                   );
                 return 1;
               }
-            write_exp_elt_opcode ( STRUCTOP_M3_ENUM ); 
+            write_exp_elt_opcode ( STRUCTOP_M3_ENUM );
             write_exp_elt_sym ( sym );
             write_exp_elt_type ( resolved_type );
             tok.ptr = ( char * ) cur_tok . string;
-            tok.length = strlen ( cur_tok . string ); 
+            tok.length = strlen ( cur_tok . string );
             write_exp_string ( tok );
             write_exp_elt_opcode ( STRUCTOP_M3_ENUM );
-            get_token  ( ); /* Consume the second TK_IDENT. */  
-            return 0; 
-          } 
-        else 
+            get_token  ( ); /* Consume the second TK_IDENT. */
+            return 0;
+          }
+        else
           { write_exp_elt_opcode ( OP_M3_TYPE );
             write_exp_elt_type ( resolved_type );
-            write_exp_elt_opcode ( OP_M3_TYPE ); 
-            return 0; 
-          } 
-      } 
-    else 
-      { write_exp_var ( sym, block_found ); 
-        return 0; 
-      } 
-  } /* m3_write_id_ref */ 
+            write_exp_elt_opcode ( OP_M3_TYPE );
+            return 0;
+          }
+      }
+    else
+      { write_exp_var ( sym, block_found );
+        return 0;
+      }
+  } /* m3_write_id_ref */
 
-static int 
-m3_parse_e8 ( )
-{ struct dict_iterator iter; 
+static int
+m3_parse_e8 (void)
+{ struct dict_iterator iter;
 
   switch (cur_tok.kind) {
 
@@ -271,117 +271,117 @@ m3_parse_e8 ( )
       error ("Incomplete Modula-3 expression");
       return 1;
 
-    case TK_IDENT: 
+    case TK_IDENT:
       { struct symbol * sym;
         struct symbol * interface_sym;
         struct symbol * module_sym;
         char * name = NULL;
         char * unit_name = NULL;
         char * decl_name = NULL;
-        struct symtab * l_symtab; 
-        bool dot_consumed = false; 
+        struct symtab * l_symtab;
+        BOOL dot_consumed = FALSE;
 
         name = cur_tok . string;
-        get_token  ( ); /* Consume TK_IDENT. */ 
+        get_token  ( ); /* Consume TK_IDENT. */
 
         /* Try to find the ident as an unqualified reference (to something
-           other than an interface.) */ 
-        sym = lookup_symbol 
-                ( name,  
+           other than an interface.) */
+        sym = lookup_symbol
+                ( name,
                   m3_proc_body_block ( expression_context_block ),
                   VAR_DOMAIN, 0, NULL
-                ); 
-        if ( sym != NULL 
+                );
+        if ( sym != NULL
              && pm3_comp_unit_body_name_start ( SYMBOL_LINKAGE_NAME ( sym ) )
-                == NULL 
+                == NULL
              && cm3_comp_unit_body_name_len ( SYMBOL_LINKAGE_NAME ( sym ) ) == 0
-             /* ^These two conditions are to circumvent the case where the 
+             /* ^These two conditions are to circumvent the case where the
                 language-independent part of lookup_symbol, after m3-dependent
                 functions have failed, looks in all static blocks for what is
-                a module name and finds what is actually the module-body 
-                procedure (i.e., the initialization code) for a module name.  
-                We want to handle a module name differently, below. */  
-/* FIXME: Maybe a user actually wants to name the module-body code? */ 
-           ) 
-          { return m3_write_id_ref ( sym, name ); } 
+                a module name and finds what is actually the module-body
+                procedure (i.e., the initialization code) for a module name.
+                We want to handle a module name differently, below. */
+/* FIXME: Maybe a user actually wants to name the module-body code? */
+           )
+          { return m3_write_id_ref ( sym, name ); }
 
-        /* Try to make this a qualified reference starting with a unit name, 
-           either <interfaceName>.<decl> or <moduleName>,<decl>.  Other 
-           meanings of dot are handled during expression evaluation. */ 
+        /* Try to make this a qualified reference starting with a unit name,
+           either <interfaceName>.<decl> or <moduleName>,<decl>.  Other
+           meanings of dot are handled during expression evaluation. */
 
-        interface_sym = m3_unit_name_globals_symbol ( 'I', name, NULL ); 
-        module_sym = m3_unit_name_globals_symbol ( 'M', name, NULL ); 
-        if ( interface_sym != NULL || module_sym != NULL ) 
-          { /* Name of an interface and/or module.  We take the extravagant 
-               view that every unit name is accessible to m3gdb expressions as 
-               if declared in a kind of superglobal scope,  without needing 
+        interface_sym = m3_unit_name_globals_symbol ( 'I', name, NULL );
+        module_sym = m3_unit_name_globals_symbol ( 'M', name, NULL );
+        if ( interface_sym != NULL || module_sym != NULL )
+          { /* Name of an interface and/or module.  We take the extravagant
+               view that every unit name is accessible to m3gdb expressions as
+               if declared in a kind of superglobal scope,  without needing
                anything like an IMPORT or EXPORTS. */
-            unit_name = name ;  
-            if ( cur_tok . kind == TK_DOT ) 
-              { get_token ( ); /* Consume TK_DOT */   
-                if ( cur_tok . kind != TK_IDENT ) 
-                  { error ( "Unit name %s requires a selector after the dot", 
+            unit_name = name;
+            if ( cur_tok . kind == TK_DOT )
+              { get_token ( ); /* Consume TK_DOT */
+                if ( cur_tok . kind != TK_IDENT )
+                  { error ( "Unit name %s requires a selector after the dot",
                             unit_name
                           );
                     return 1;
                   }
-                decl_name = cur_tok . string; 
-                get_token  ( ); /* Consume second TK_IDENT */ 
-                sym = m3_lookup_interface_id 
-                        ( unit_name, decl_name, & l_symtab ); 
-                if ( sym != NULL ) 
-                  { return m3_write_id_ref ( sym, decl_name ); } 
+                decl_name = cur_tok . string;
+                get_token  ( ); /* Consume second TK_IDENT */
+                sym = m3_lookup_interface_id
+                        ( unit_name, decl_name, & l_symtab );
+                if ( sym != NULL )
+                  { return m3_write_id_ref ( sym, decl_name ); }
                 sym = m3_lookup_module_id ( unit_name, decl_name, & l_symtab );
-                if ( sym != NULL ) 
-                  { return m3_write_id_ref ( sym, decl_name ); } 
-                sym = m3_lookup_exported ( unit_name, decl_name, & l_symtab ); 
-                if ( sym != NULL ) 
-                  { return m3_write_id_ref ( sym, decl_name ); } 
-                error ( "Can't find Modula-3 qualified reference: %s.%s", 
+                if ( sym != NULL )
+                  { return m3_write_id_ref ( sym, decl_name ); }
+                sym = m3_lookup_exported ( unit_name, decl_name, & l_symtab );
+                if ( sym != NULL )
+                  { return m3_write_id_ref ( sym, decl_name ); }
+                error ( "Can't find Modula-3 qualified reference: %s.%s",
                         unit_name, decl_name
-                      ); /* NORETURN */ 
-              } 
-            else 
+                      ); /* NORETURN */
+              }
+            else
 /* TODO: It would be nice to be able to just name a unit and have expression
-         evaluation give info about it, e.g. source file name. */ 
-              { error 
-                  ( "Unit name %s alone is not implemented." , unit_name ); 
-              } 
-          } 
+         evaluation give info about it, e.g. source file name. */
+              { error
+                  ( "Unit name %s alone is not implemented." , unit_name );
+              }
+          }
 
-        error ( "Can't find Modula-3 identifier: %s", name ); 
-          /* NORETURN */ 
+        error ( "Can't find Modula-3 identifier: %s", name );
+          /* NORETURN */
       } /* case TK_IDENT */
-      
+
     case TK_INTEGER_LIT:
       write_m3_const (cur_tok.intval, builtin_type_m3_integer);
-      break; 
-      
+      break;
+
     case TK_LONGINT_LIT:
       write_m3_const (cur_tok.intval, builtin_type_m3_longint);
-      break; 
-      
+      break;
+
     case TK_REAL_LIT:
       write_exp_elt_opcode (OP_M3_REEL);
       write_exp_elt_type (builtin_type_m3_real);
       write_exp_elt_dblcst (cur_tok.floatval);
-      write_exp_elt_opcode (OP_M3_REEL); 
+      write_exp_elt_opcode (OP_M3_REEL);
       get_token ();
       break;
-      
+
     case TK_LREAL_LIT:
       write_exp_elt_opcode (OP_M3_LREEL);
       write_exp_elt_type (builtin_type_m3_longreal);
       write_exp_elt_dblcst (cur_tok.floatval);
-      write_exp_elt_opcode (OP_M3_LREEL); 
+      write_exp_elt_opcode (OP_M3_LREEL);
       get_token ();
       break;
-      
+
     case TK_XREAL_LIT:
       write_exp_elt_opcode (OP_M3_XREEL);
       write_exp_elt_type (builtin_type_m3_extended);
       write_exp_elt_dblcst (cur_tok.floatval);
-      write_exp_elt_opcode (OP_M3_XREEL); 
+      write_exp_elt_opcode (OP_M3_XREEL);
       get_token ();
       break;
 
@@ -389,7 +389,7 @@ m3_parse_e8 ( )
       write_exp_elt_opcode (OP_M3_CHAR);
       write_exp_elt_type (builtin_type_m3_char);
       write_exp_elt_longcst ((LONGEST) cur_tok.intval);
-      write_exp_elt_opcode (OP_M3_CHAR); 
+      write_exp_elt_opcode (OP_M3_CHAR);
       get_token ();
       break;
 
@@ -397,7 +397,7 @@ m3_parse_e8 ( )
       write_exp_elt_opcode (OP_M3_WIDECHAR);
       write_exp_elt_type (builtin_type_m3_widechar);
       write_exp_elt_longcst ((LONGEST) cur_tok.intval);
-      write_exp_elt_opcode (OP_M3_WIDECHAR); 
+      write_exp_elt_opcode (OP_M3_WIDECHAR);
       get_token ();
       break;
 
@@ -406,9 +406,9 @@ m3_parse_e8 ( )
       str.ptr = cur_tok.string;
       str.length = cur_tok.length;
       write_exp_elt_opcode (OP_M3_TEXT);
-      write_exp_string (str); 
-      /* ^Appends a zero byte, not counted in str.length. */ 
-      write_exp_elt_opcode (OP_M3_TEXT); 
+      write_exp_string (str);
+      /* ^Appends a zero byte, not counted in str.length. */
+      write_exp_elt_opcode (OP_M3_TEXT);
       get_token ();
       break;
     }
@@ -416,13 +416,13 @@ m3_parse_e8 ( )
     case TK_WIDETEXT_LIT: {
       struct stoken str;
       str.ptr = cur_tok.string;
-      str.length = cur_tok.length; /* Length in bytes. */ 
+      str.length = cur_tok.length; /* Length in bytes. */
       write_exp_elt_opcode (OP_M3_WIDETEXT);
       write_exp_string (str);
-      /* ^Appends a zero byte, not counted in str.length. */ 
+      /* ^Appends a zero byte, not counted in str.length. */
       write_exp_elt_opcode (OP_M3_WIDETEXT);
-      free (cur_tok.string); 
-      /* ^Was allocated in m3-token.c, scan_widetext. */ 
+      free (cur_tok.string);
+      /* ^Was allocated in m3-token.c, scan_widetext. */
       get_token ();
       break;
     }
@@ -433,15 +433,15 @@ m3_parse_e8 ( )
       if (cur_tok.kind != TK_RPAREN) { error ("missing closing )"); }
       get_token ();
       break;
-   
+
     case TK_GDB_HISTORY:
       write_exp_elt_opcode (OP_LAST);
       write_exp_elt_longcst ((LONGEST) cur_tok.intval);
       write_exp_elt_opcode (OP_LAST);
       get_token ();
-      break; 
+      break;
 
-    case TK_GDB_VAR: 
+    case TK_GDB_VAR:
       write_exp_elt_opcode (OP_INTERNALVAR);
       write_exp_elt_intern (lookup_internalvar (cur_tok.string));
       write_exp_elt_opcode (OP_INTERNALVAR);
@@ -507,126 +507,126 @@ m3_parse_e8 ( )
     case TK_UNTRACED:
       get_token ();
       if (cur_tok.kind != TK_ROOT) {
-	error 
-          ("Modula-3 type constructors in expressions not implemented: \"%s\".", 
+        error
+          ("Modula-3 type constructors in expressions not implemented: \"%s\".",
             m3_token_name (&cur_tok)
-          ); /* NORETURN */ 
-      };
+          ); /* NORETURN */
+      }
       write_m3_type (builtin_type_m3_untraced_root);
       break;
 
     /*---- builtin constants ---*/
 
-    case TK_TRUE:  
+    case TK_TRUE:
       write_m3_const ((LONGEST) 1, builtin_type_m3_boolean); break;
-    case TK_FALSE: 
+    case TK_FALSE:
       write_m3_const ((LONGEST) 0, builtin_type_m3_boolean); break;
-    case TK_NIL:   
+    case TK_NIL:
       write_m3_const ((LONGEST) 0, builtin_type_m3_null);    break;
 
-    /*--- programmer-defined types --- */ 
+    /*--- programmer-defined types --- */
 
-    case TK_REF: 
-    case TK_ARRAY: 
-    case TK_RECORD: 
-    case TK_SET: 
-    case TK_BITS: 
-    case TK_OBJECT: 
-    case TK_BRANDED: 
-      error ( "Modula-3 type constructors in expressions not implemented: \"%s\".", 
+    case TK_REF:
+    case TK_ARRAY:
+    case TK_RECORD:
+    case TK_SET:
+    case TK_BITS:
+    case TK_OBJECT:
+    case TK_BRANDED:
+      error ( "Modula-3 type constructors in expressions not implemented: \"%s\".",
               m3_token_name (&cur_tok)
-            ); /* NORETURN */ 
+            ); /* NORETURN */
 
-    default: 
+    default:
       error ( "Bad Modula-3 expression \"%s\" (kind = %d)",
-	      m3_token_name (&cur_tok), (int)cur_tok.kind 
-            ); /* NORETURN */ 
+              m3_token_name (&cur_tok), (int)cur_tok.kind
+            ); /* NORETURN */
       return 1;
 
   } /* switch */
 
   return 0;
-} /* m3_parse_e8 */  
+} /* m3_parse_e8 */
 
-static int 
-m3_parse_e7 ( )
+static int
+m3_parse_e7 (void)
 {
 
   if (m3_parse_e8 ()) { return 1; }
 
   while (1) {
     switch (cur_tok.kind) {
-      case TK_ARROW: 
-	write_exp_elt_opcode (UNOP_M3_DEREF);
-	get_token ();
-	break;
+      case TK_ARROW:
+        write_exp_elt_opcode (UNOP_M3_DEREF);
+        get_token ();
+        break;
 
       case TK_DOT: {
-	get_token ();
-	/* The cases <interfaceName>.<decl> and <moduleName>.<decl> won't 
-           reach here, because they are fully parsed by m3_parse_e8.  
-           We can't distinguish other meanings of dot constructs here, 
-           because we would need the the type of the left subexpression.  
-           So just use STRUCTOP_M3_STRUCT to build a dot-construct 
+        get_token ();
+        /* The cases <interfaceName>.<decl> and <moduleName>.<decl> won't
+           reach here, because they are fully parsed by m3_parse_e8.
+           We can't distinguish other meanings of dot constructs here,
+           because we would need the the type of the left subexpression.
+           So just use STRUCTOP_M3_STRUCT to build a dot-construct
            expression and let evaluation figure it out later. */
 
-	if (cur_tok.kind != TK_IDENT) {
-	  error ("An identifier must follow a dot."); 
-	  return 1; }
+        if (cur_tok.kind != TK_IDENT) {
+          error ("An identifier must follow a dot.");
+          return 1; }
 
-	write_exp_text (STRUCTOP_M3_STRUCT, cur_tok.string, cur_tok.length);
-	get_token ();
-	break; }
+        write_exp_text (STRUCTOP_M3_STRUCT, cur_tok.string, cur_tok.length);
+        get_token ();
+        break; }
 
       case TK_LPAREN: {
-	extern int arglist_len;
-        bool more_args; 
+        extern int arglist_len;
+        BOOL more_args;
         get_token ();
-	start_arglist ();
+        start_arglist ();
         if (cur_tok.kind == TK_RPAREN) {get_token ();}
-        else {  
-          more_args = true;
-          while (more_args) { 
+        else {
+          more_args = TRUE;
+          while (more_args) {
             if (m3_parse_e0 ()) {return 1;}
-            arglist_len++; 
+            arglist_len++;
             switch (cur_tok.kind) {
-              case TK_COMMA: { get_token(); break; } 
-              case TK_RPAREN: { get_token(); more_args = false; break; }
-              default: { error ("missing ')'"); return 1;}  
+              case TK_COMMA: { get_token(); break; }
+              case TK_RPAREN: { get_token(); more_args = FALSE; break; }
+              default: { error ("missing ')'"); return 1;}
             } /* switch */
-          } /* while */ 
-        } /* else */ 
+          } /* while */
+        } /* else */
         write_exp_elt_opcode (OP_FUNCALL);
-	write_exp_elt_longcst 
+        write_exp_elt_longcst
           ((LONGEST) end_arglist () /* Before prefixify, number of actuals. */ );
-	write_exp_elt_opcode (OP_FUNCALL);
-	break;
+        write_exp_elt_opcode (OP_FUNCALL);
+        break;
       }
-	
+        
       case TK_LBRACKET: {
-	struct type *array_type;
-	cur_tok.kind = TK_COMMA;
-	while (cur_tok.kind == TK_COMMA) {
-	  get_token ();
-	  if (m3_parse_e0 ()) { return 1; }
-	  write_exp_elt_opcode (BINOP_M3_SUBSCRIPT);
-	}
-	
-	if (cur_tok.kind == TK_RBRACKET) { get_token (); } 
+        struct type *array_type;
+        cur_tok.kind = TK_COMMA;
+        while (cur_tok.kind == TK_COMMA) {
+          get_token ();
+          if (m3_parse_e0 ()) { return 1; }
+          write_exp_elt_opcode (BINOP_M3_SUBSCRIPT);
+        }
+        
+        if (cur_tok.kind == TK_RBRACKET) { get_token (); }
         else { error ("missing ']'"); return 1; }
-	break;
+        break;
       }
 
       case TK_EOF:
       default:
-	return 0;
+        return 0;
     } /* switch */
   } /* while(1) */
 } /* m3_parse_e7 */
 
 
-static int 
-m3_parse_e6 ( )
+static int
+m3_parse_e6 (void)
 {
   int m = 0;
 
@@ -638,69 +638,69 @@ m3_parse_e6 ( )
   if (m3_parse_e7 ()) { return 1; }
   if (m % 2 == 1) { write_exp_elt_opcode (UNOP_M3_NEG); }
   return 0;
-} /* m3_parse_e6 */ 
+} /* m3_parse_e6 */
 
-static int 
-m3_parse_e5 ( )
+static int
+m3_parse_e5 (void)
 {
   if (m3_parse_e6 ()) { return 1; }
   while (1) {
     switch (cur_tok.kind) {
-      case TK_ASTERISK: 
-	get_token ();
-	if (m3_parse_e6 ()) {return 1;}
-	write_exp_elt_opcode (BINOP_M3_MULT);
-	break;
+      case TK_ASTERISK:
+        get_token ();
+        if (m3_parse_e6 ()) {return 1;}
+        write_exp_elt_opcode (BINOP_M3_MULT);
+        break;
       case TK_SLASH:
-	get_token ();
-	if (m3_parse_e6 ()) {return 1;}
-	write_exp_elt_opcode (BINOP_M3_DIVIDE);
-	break; 
+        get_token ();
+        if (m3_parse_e6 ()) {return 1;}
+        write_exp_elt_opcode (BINOP_M3_DIVIDE);
+        break;
       case TK_DIV:
-	get_token ();
-	if (m3_parse_e6 ()) {return 1;}
-	write_exp_elt_opcode (BINOP_M3_DIV);
-	break;
+        get_token ();
+        if (m3_parse_e6 ()) {return 1;}
+        write_exp_elt_opcode (BINOP_M3_DIV);
+        break;
       case TK_MOD:
-	get_token ();
-	if (m3_parse_e6 ()) {return 1;}
-	write_exp_elt_opcode (BINOP_M3_MOD);
-	break;
+        get_token ();
+        if (m3_parse_e6 ()) {return 1;}
+        write_exp_elt_opcode (BINOP_M3_MOD);
+        break;
       default:
-	return 0;
+        return 0;
     }
   }
-} /* m3_parse_e5 */ 
+} /* m3_parse_e5 */
 
-static int 
+static int
 m3_parse_e4 ()
 {
   if (m3_parse_e5 ()) { return 1; }
   while (1) {
     switch (cur_tok.kind) {
-      case TK_PLUS: 
-	get_token ();
-	if (m3_parse_e5 ()) {return 1;}
-	write_exp_elt_opcode (BINOP_M3_ADD);
-	break;
+      case TK_PLUS:
+        get_token ();
+        if (m3_parse_e5 ()) {return 1;}
+        write_exp_elt_opcode (BINOP_M3_ADD);
+        break;
       case TK_MINUS:
-	get_token ();
-	if (m3_parse_e5 ()) {return 1;}
-	write_exp_elt_opcode (BINOP_M3_MINUS);
-	break; 
+        get_token ();
+        if (m3_parse_e5 ()) {return 1;}
+        write_exp_elt_opcode (BINOP_M3_MINUS);
+        break;
       case TK_AMPERSAND:
-	get_token ();
-	if (m3_parse_e5 ()) {return 1;}
-	write_exp_elt_opcode (BINOP_M3_CAT);
-	break; 
+        get_token ();
+        if (m3_parse_e5 ()) {return 1;}
+        write_exp_elt_opcode (BINOP_M3_CAT);
+        break;
       default:
-	return 0;
+        return 0;
     }
   }
 } /* m3_parse_e4 */
 
-static int 
-m3_parse_e3 ( )
+static int
+m3_parse_e3 (void)
 {
   enum exp_opcode op;
 
@@ -716,19 +716,19 @@ m3_parse_e3 ( )
       case TK_IN:      op = BINOP_M3_IN;    goto other_arg;
 
       other_arg:
-	get_token ();
-	if (m3_parse_e4 ()) { return (1); }
-	write_exp_elt_opcode (op);
-	break; 
+        get_token ();
+        if (m3_parse_e4 ()) { return (1); }
+        write_exp_elt_opcode (op);
+        break;
 
       default:
-	return 0;
+        return 0;
     }
   }
 } /* m3_parse_e3 */
 
-static int 
-m3_parse_e2 ( )
+static int
+m3_parse_e2 (void)
 {
   int n = 0;
 
@@ -739,8 +739,8 @@ m3_parse_e2 ( )
   return 0;
 } /* m3_parse_e2 */
 
-static int 
-m3_parse_e1 ( )
+static int
+m3_parse_e1 (void)
 {
   if (m3_parse_e2 ()) { return 1; }
   while (cur_tok.kind == TK_AND) {
@@ -748,11 +748,11 @@ m3_parse_e1 ( )
     if (m3_parse_e2 ()) { return 1; }
     write_exp_elt_opcode (BINOP_M3_AND);
   }
-  return 0; 
+  return 0;
 } /* m3_parse_e1 */
 
-static int 
-m3_parse_e0 ( )
+static int
+m3_parse_e0 (void)
 {
   if (m3_parse_e1 ()) { return 1; }
   while (cur_tok.kind == TK_OR) {
@@ -760,11 +760,11 @@ m3_parse_e0 ( )
     if (m3_parse_e1 ()) { return 1; }
     write_exp_elt_opcode (BINOP_M3_OR);
   }
-  return 0; 
+  return 0;
 } /* m3_parse_e0 */
 
-static int 
-m3_parse_expr ( )
+static int
+m3_parse_expr (void)
 {
   int lhs = 0, rhs = 0;
   lhs = m3_parse_e0 ();
@@ -777,8 +777,8 @@ m3_parse_expr ( )
   return ((lhs + rhs) != 0);
 } /* m3_parse_expr */
 
-int 
-m3_parse ( )
+int
+m3_parse (void)
 {
   get_token ();
   if (m3_parse_expr ()) { return 1; }
@@ -791,9 +791,9 @@ m3_parse ( )
 
 void
 m3_print_subexp (
-    struct expression *exp, 
+    struct expression *exp,
     int *pos,
-    struct ui_file *stream, 
+    struct ui_file *stream,
     enum precedence prec
   )
 
@@ -801,7 +801,7 @@ m3_print_subexp (
   unsigned length;
   int pc;
   enum exp_opcode opcode;
-  char * sym_name; 
+  char * sym_name;
 
   pc = (*pos)++;
   opcode = exp->elts[pc].opcode;
@@ -811,30 +811,30 @@ m3_print_subexp (
 
     case OP_VAR_VALUE:
       { struct block *b;
-	(*pos) += 3;
+        (*pos) += 3;
 #if 0
         /* This code was present when the OP_VAR_VALUE case in
            print_subexp_standard was specialized for Modula-3.
            It is unneeded for now, but I wonder if it might be
-           wanted someday to print qualified names? */  
+           wanted someday to print qualified names? */
         b = exp->elts[pc + 1].block;
-	if (b != NULL
-	    && BLOCK_FUNCTION (b) != NULL
-	    && SYMBOL_PRINT_NAME (BLOCK_FUNCTION (b)) != NULL) {
+        if (b != NULL
+            && BLOCK_FUNCTION (b) != NULL
+            && SYMBOL_PRINT_NAME (BLOCK_FUNCTION (b)) != NULL) {
 
             if (exp->language_defn->la_language != language_m3) {
-	      fputs_filtered (SYMBOL_PRINT_NAME (BLOCK_FUNCTION (b)), stream);
-	      fputs_filtered ("::", stream);
+              fputs_filtered (SYMBOL_PRINT_NAME (BLOCK_FUNCTION (b)), stream);
+              fputs_filtered ("::", stream);
             }
-	}
+        }
 #endif
         sym_name = SYMBOL_PRINT_NAME (exp->elts[pc + 2].symbol);
         if ((sym_name[0] == 'I' || sym_name[0] == 'M') &&
              sym_name[1] == '$')
-	  fputs_filtered (sym_name+2, stream);
+          fputs_filtered (sym_name+2, stream);
         else
-	  fputs_filtered (sym_name, stream);
-	}
+          fputs_filtered (sym_name, stream);
+        }
       return;
 
     /* Modula-3-specific ops: */
@@ -844,8 +844,8 @@ m3_print_subexp (
     case OP_M3_WIDECHAR:
       (*pos) += 3;
       value_print ( m3_value_from_longest ( exp->elts[pc + 1].type,
-			      	            exp->elts[pc + 2].longconst),
-		   stream, 0, Val_no_prettyprint);
+                                                  exp->elts[pc + 2].longconst),
+                   stream, 0, Val_no_prettyprint);
       return;
 
     case OP_M3_REEL:
@@ -853,24 +853,24 @@ m3_print_subexp (
     case OP_M3_XREEL:
       (*pos) += 3;
       value_print (value_from_double (exp->elts[pc + 1].type,
-				      exp->elts[pc + 2].doubleconst),
-		   stream, 0, Val_no_prettyprint);
+                                      exp->elts[pc + 2].doubleconst),
+                   stream, 0, Val_no_prettyprint);
       return;
 
-    case OP_M3_TEXT: 
+    case OP_M3_TEXT:
       /* like OP_STRING */
       length = longest_to_int (exp -> elts[pc + 1].longconst);
       (*pos) += 3 + BYTES_TO_EXP_ELEM (length + 1);
       LA_PRINT_STRING (stream, &exp->elts[pc + 2].string, length, 1, 0);
       return;
 
-    case OP_M3_WIDETEXT: 
+    case OP_M3_WIDETEXT:
       /* like OP_STRING */
       length = longest_to_int (exp -> elts[pc + 1].longconst);
       (*pos) += 3 + BYTES_TO_EXP_ELEM (length + 1);
       LA_PRINT_STRING (stream, &exp->elts[pc + 2].string, length, 2, 0);
       /* FIXME: ^Here, length is in _bytes_, but there is confusion in
-                m3_print_string about what units it is in. */ 
+                m3_print_string about what units it is in. */
       return;
 
     case M3_FINAL_TYPE:
@@ -881,7 +881,7 @@ m3_print_subexp (
       print_subexp (exp, pos, stream, PREC_SUFFIX);
       fprintf_unfiltered(stream,"^");
       return;
-      
+
     case STRUCTOP_M3_MODULE:
     case STRUCTOP_M3_INTERFACE:
     case STRUCTOP_M3_STRUCT: {
@@ -894,13 +894,13 @@ m3_print_subexp (
       fprintf_unfiltered(stream,".");
       fputs_filtered (field_name, stream);
       return;
-    } 
+    }
 
     case STRUCTOP_M3_ENUM: {
       char *field_name;
-      struct symbol * sym; 
+      struct symbol * sym;
 
-      sym = exp->elts[pc + 1].symbol; 
+      sym = exp->elts[pc + 1].symbol;
       field_name = &exp->elts[pc + 4].string;
       length = longest_to_int (exp->elts[pc + 3].longconst);
       (*pos) += 5 + BYTES_TO_EXP_ELEM (length + 1);
@@ -919,12 +919,12 @@ m3_print_subexp (
       return;
 
     /* All of the UNOP_M3_*s, BINOP_M3_*s, and BINOP_ASSIGN are passed on to
-       print_subexp_standard, which can handle them, because it uses the 
+       print_subexp_standard, which can handle them, because it uses the
        Modula-3 version of la_op_print_tab. */
     default:
       (*pos)--; /* I hate this kludge, but it sure saves code. */
-      print_subexp_standard (exp, pos, stream, prec ) ; 
-  };
+      print_subexp_standard (exp, pos, stream, prec );
+  }
 } /* m3_print_subexp */
 
 int
@@ -934,20 +934,20 @@ m3_dump_subexp ( struct expression *exp, struct ui_file *stream, int elt )
   enum exp_opcode opcode = exp->elts[elt++].opcode;
   int length;
   char * field_name;
-  long longval;   
-  struct symbol * sym; 
-  
-  switch ( opcode ) 
+  long longval;
+  struct symbol * sym;
+
+  switch ( opcode )
   { case OP_M3_LONG:
     case OP_M3_CHAR:
-    case OP_M3_WIDECHAR: 
+    case OP_M3_WIDECHAR:
       fprintf_filtered (stream, "Type @");
       gdb_print_host_address (exp->elts[elt].type, stream);
       fprintf_filtered (stream, " (");
       type_print (exp->elts[elt].type, NULL, stream, 0);
-      longval = (long) exp->elts[elt + 1].longconst; 
+      longval = (long) exp->elts[elt + 1].longconst;
       fprintf_filtered (stream, "), value %ld (0x%lx)",
-			longval, longval);
+                        longval, longval);
       elt += 3;
       break;
 
@@ -959,23 +959,23 @@ m3_dump_subexp ( struct expression *exp, struct ui_file *stream, int elt )
       fprintf_filtered (stream, " (");
       type_print (exp->elts[elt].type, NULL, stream, 0);
       fprintf_filtered (stream, "), value %g",
-			(double) exp->elts[elt + 1].doubleconst);
+                        (double) exp->elts[elt + 1].doubleconst);
       elt += 3;
       break;
 
-    case OP_M3_TEXT: 
+    case OP_M3_TEXT:
       /* like OP_STRING */
       length = longest_to_int (exp -> elts[pc + 1].longconst);
       elt += 3 + BYTES_TO_EXP_ELEM (length + 1);
       LA_PRINT_STRING (stream, &(exp->elts[pc + 2].string), length, 1, 0);
       break;
 
-    case OP_M3_WIDETEXT: 
+    case OP_M3_WIDETEXT:
       length = longest_to_int (exp -> elts[pc + 1].longconst);
       elt += 3 + BYTES_TO_EXP_ELEM (length + 1);
       LA_PRINT_STRING (stream, &(exp->elts[pc + 2].string), length, 2, 0);
       /* FIXME: ^Here, length is in _bytes_, but there is confusion in
-                m3_print_string about what units it is in. */ 
+                m3_print_string about what units it is in. */
       break;
 
     case OP_M3_TYPE:
@@ -985,11 +985,11 @@ m3_dump_subexp ( struct expression *exp, struct ui_file *stream, int elt )
       type_print (exp->elts[elt].type, NULL, stream, 0);
       fprintf_filtered (stream, ") ");
       elt += 2;
-      break; 
+      break;
 
     case STRUCTOP_M3_MODULE:
     case STRUCTOP_M3_INTERFACE:
-    case STRUCTOP_M3_STRUCT: 
+    case STRUCTOP_M3_STRUCT:
       length = longest_to_int (exp->elts[pc + 1].longconst);
       elt += 3 + BYTES_TO_EXP_ELEM (length + 1);
       field_name = &exp->elts[pc + 2].string;
@@ -997,14 +997,14 @@ m3_dump_subexp ( struct expression *exp, struct ui_file *stream, int elt )
       elt = dump_subexp (exp, stream, elt);
       break;
 
-    case STRUCTOP_M3_ENUM: 
+    case STRUCTOP_M3_ENUM:
       sym = exp->elts[pc + 1].symbol;
       length = longest_to_int (exp->elts[pc + 3].longconst);
       elt += 5 + BYTES_TO_EXP_ELEM (length + 1);
       field_name = &exp->elts[pc + 4].string;
-      fprintf_filtered 
-        ( stream, "Enum const: '%s'.`%.*s'", 
-          SYMBOL_NATURAL_NAME ( sym ) + 2 /* Strip off leading "B$" */ , 
+      fprintf_filtered
+        ( stream, "Enum const: '%s'.`%.*s'",
+          SYMBOL_NATURAL_NAME ( sym ) + 2 /* Strip off leading "B$" */ ,
           length, field_name
         );
       elt = dump_subexp (exp, stream, elt);
@@ -1028,8 +1028,8 @@ m3_dump_subexp ( struct expression *exp, struct ui_file *stream, int elt )
     case UNOP_M3_ROUND:
     case UNOP_M3_TYPECODE:
     case UNOP_M3_TRUNC:
-      elt = dump_subexp ( exp, stream, elt); 
-      break; 
+      elt = dump_subexp ( exp, stream, elt);
+      break;
 
     case BINOP_M3_SUBSCRIPT:
     case BINOP_M3_MULT:
@@ -1053,15 +1053,15 @@ m3_dump_subexp ( struct expression *exp, struct ui_file *stream, int elt )
     case BINOP_M3_VAL:
     case BINOP_M3_FLOAT:
     case BINOP_M3_LOOPHOLE:
-      elt = dump_subexp ( exp, stream, elt); 
-      elt = dump_subexp ( exp, stream, elt); 
-      break; 
+      elt = dump_subexp ( exp, stream, elt);
+      elt = dump_subexp ( exp, stream, elt);
+      break;
 
     default:
       elt--; /* I hate this kludge, but it sure saves code. */
       return dump_subexp_body_standard (exp, stream, elt);
-  } 
-  return elt; 
-} /* m3_dump_subexp */ 
+  }
+  return elt;
+} /* m3_dump_subexp */
 
-/* End of file m3-exp.c */ 
+/* End of file m3-exp.c */

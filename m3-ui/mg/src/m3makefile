@@ -8,6 +8,10 @@
 %      modified on Wed Jul 22 12:03:01 PDT 1992 by harrison
 %      modified on Wed Jul  8 09:44:42 1992 by mhb
 
+if not HasGui()
+  build_standalone()
+end
+
 import("formsvbt")
 
 Interface ("MGPublic")

@@ -9,6 +9,18 @@
 #include <signal.h>
 #include <ucontext.h>
 #include <sys/frame.h>
+#include <setjmp.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+void RTStack__SaveRegsInStack(void)
+{
+  jmp_buf jb;
+  if (setjmp(jb) == 0)
+    longjmp(jb, 1); /* flushes register windows */
+}
 
 /*
 TYPE FrameInfo = RECORD
@@ -69,7 +81,7 @@ void RTStack__GetThreadFrame (Frame *f, void *start, int len)
   f->pc = 0;
   f->sp = 0;
   if (len == sizeof (ucontext_t)) {
-    RTMachine__SaveRegsInStack();
+    RTStack__SaveRegsInStack();
 
     f->ctxt = *(ucontext_t *)start;
     f->pc = (void *)reg[REG_PC];
@@ -94,16 +106,11 @@ void (*RTProcedureSRC_FromPC) (void *pc, void **p, char **file, char **name);
 
 void RTStack__PrevFrame (Frame* callee, Frame* caller)
 {
-  ucontext_t *link;
-  struct frame *link_sp, *link_fp;
-  void *proc;
-  char *file, *name;
-
   if (callee == 0) abort();
   if (caller == 0) abort();
   if (callee->lock != FrameLock) abort();
 
-  RTMachine__SaveRegsInStack();
+  RTStack__SaveRegsInStack();
 
   caller->lock = FrameLock;
 
@@ -118,15 +125,18 @@ void RTStack__PrevFrame (Frame* callee, Frame* caller)
 
 void RTStack__Unwind (Frame* target)
 {
-  struct frame *sp = target->sp;
   greg_t *reg = target->ctxt.uc_mcontext.gregs;
 
-  RTMachine__SaveRegsInStack();
+  RTStack__SaveRegsInStack();
 
   if (target->lock != FrameLock) abort();
-  reg[REG_PC] = (int)target->pc + 8;/* for return address */
-  reg[REG_nPC] = (int)reg[REG_PC] + 4;
-  reg[REG_SP] = (int)target->sp;
+  reg[REG_PC] = (greg_t)target->pc + 8;/* for return address */
+  reg[REG_nPC] = reg[REG_PC] + 4;
+  reg[REG_SP] = (greg_t)target->sp;
   reg[REG_O7] = target->sp->fr_savpc;
   setcontext(&target->ctxt);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

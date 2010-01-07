@@ -2,16 +2,16 @@
 (* All rights reserved.                                               *)
 (* See the file COPYRIGHT for a full description.                     *)
 
-<*EXTERNAL*> INTERFACE Unix;
+INTERFACE Unix;
 
 FROM Cstddef IMPORT size_t;
-FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star;
+FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star, unsigned;
 FROM Utime IMPORT struct_timeval;
 FROM Utypes IMPORT off_t, mode_t, dev_t, uid_t, gid_t, pid_t;
 IMPORT Usysdep;
 
 CONST
-  MaxPathLen = Usysdep.MaxPathLen;
+  MaxPathLen = 1024; (* 4096 on Irix? *)
 
 (*CONST*)
 <*EXTERNAL "Unix__MSETUID"*> VAR MSETUID: int; (* set user id on execution *)
@@ -116,6 +116,7 @@ PROCEDURE fork (): pid_t;
 
 (* Do not wrap vfork in C; doing so violates the Posix standard, because
  callers of vfork cannot return without calling exec or _exit. *)
+<*EXTERNAL*>
 PROCEDURE vfork (): pid_t;
 
 
@@ -153,7 +154,78 @@ PROCEDURE isatty (file: int): int;
 <*EXTERNAL "Unix__system"*>
 PROCEDURE system (string: const_char_star): int;
 
+<*EXTERNAL Unix__sleep*> PROCEDURE sleep (a: unsigned): unsigned;
+
 <*EXTERNAL "Unix__Assertions"*>
 PROCEDURE Assertions();
+
+(*CONST*) <*EXTERNAL Unix__TIOCCAR*> VAR TIOCCAR: int;
+(*CONST*) <*EXTERNAL Unix__TIOCCBRK*> VAR TIOCCBRK: int;
+(*CONST*) <*EXTERNAL Unix__TIOCCDTR*> VAR TIOCCDTR: int;
+(*CONST*) <*EXTERNAL Unix__TIOCCINUSE*> VAR TIOCCINUSE: int;
+(*CONST*) <*EXTERNAL Unix__TIOCCMLB*> VAR TIOCCMLB: int;
+(*CONST*) <*EXTERNAL Unix__TIOCEXCL*> VAR TIOCEXCL: int;
+(*CONST*) <*EXTERNAL Unix__TIOCFLUSH*> VAR TIOCFLUSH: int;
+(*CONST*) <*EXTERNAL Unix__TIOCGETC*> VAR TIOCGETC: int;
+(*CONST*) <*EXTERNAL Unix__TIOCGETD*> VAR TIOCGETD: int;
+(*CONST*) <*EXTERNAL Unix__TIOCGETP*> VAR TIOCGETP: int;
+(*CONST*) <*EXTERNAL Unix__TIOCGLTC*> VAR TIOCGLTC: int;
+(*CONST*) <*EXTERNAL Unix__TIOCGPGRP*> VAR TIOCGPGRP: int;
+(*CONST*) <*EXTERNAL Unix__TIOCGWINSZ*> VAR TIOCGWINSZ: int;
+(*CONST*) <*EXTERNAL Unix__TIOCHPCL*> VAR TIOCHPCL: int;
+(*CONST*) <*EXTERNAL Unix__TIOCLBIC*> VAR TIOCLBIC: int;
+(*CONST*) <*EXTERNAL Unix__TIOCLBIS*> VAR TIOCLBIS: int;
+(*CONST*) <*EXTERNAL Unix__TIOCLGET*> VAR TIOCLGET: int;
+(*CONST*) <*EXTERNAL Unix__TIOCLSET*> VAR TIOCLSET: int;
+(*CONST*) <*EXTERNAL Unix__TIOCMASTER*> VAR TIOCMASTER: int;
+(*CONST*) <*EXTERNAL Unix__TIOCMBIC*> VAR TIOCMBIC: int;
+(*CONST*) <*EXTERNAL Unix__TIOCMBIS*> VAR TIOCMBIS: int;
+(*CONST*) <*EXTERNAL Unix__TIOCMGET*> VAR TIOCMGET: int;
+(*CONST*) <*EXTERNAL Unix__TIOCMODEM*> VAR TIOCMODEM: int;
+(*CONST*) <*EXTERNAL Unix__TIOCMODG*> VAR TIOCMODG: int;
+(*CONST*) <*EXTERNAL Unix__TIOCMODS*> VAR TIOCMODS: int;
+(*CONST*) <*EXTERNAL Unix__TIOCMSET*> VAR TIOCMSET: int;
+(*CONST*) <*EXTERNAL Unix__TIOCM_CAR*> VAR TIOCM_CAR: int;
+(*CONST*) <*EXTERNAL Unix__TIOCM_CD*> VAR TIOCM_CD: int;
+(*CONST*) <*EXTERNAL Unix__TIOCM_CTS*> VAR TIOCM_CTS: int;
+(*CONST*) <*EXTERNAL Unix__TIOCM_DSR*> VAR TIOCM_DSR: int;
+(*CONST*) <*EXTERNAL Unix__TIOCM_DTR*> VAR TIOCM_DTR: int;
+(*CONST*) <*EXTERNAL Unix__TIOCM_LE*> VAR TIOCM_LE: int;
+(*CONST*) <*EXTERNAL Unix__TIOCM_RI*> VAR TIOCM_RI: int;
+(*CONST*) <*EXTERNAL Unix__TIOCM_RNG*> VAR TIOCM_RNG: int;
+(*CONST*) <*EXTERNAL Unix__TIOCM_RTS*> VAR TIOCM_RTS: int;
+(*CONST*) <*EXTERNAL Unix__TIOCM_SR*> VAR TIOCM_SR: int;
+(*CONST*) <*EXTERNAL Unix__TIOCM_ST*> VAR TIOCM_ST: int;
+(*CONST*) <*EXTERNAL Unix__TIOCNCAR*> VAR TIOCNCAR: int;
+(*CONST*) <*EXTERNAL Unix__TIOCNMODEM*> VAR TIOCNMODEM: int;
+(*CONST*) <*EXTERNAL Unix__TIOCNOTTY*> VAR TIOCNOTTY: int;
+(*CONST*) <*EXTERNAL Unix__TIOCNXCL*> VAR TIOCNXCL: int;
+(*CONST*) <*EXTERNAL Unix__TIOCOUTQ*> VAR TIOCOUTQ: int;
+(*CONST*) <*EXTERNAL Unix__TIOCPKT*> VAR TIOCPKT: int;
+(*CONST*) <*EXTERNAL Unix__TIOCPKT_DATA*> VAR TIOCPKT_DATA: int;
+(*CONST*) <*EXTERNAL Unix__TIOCPKT_DOSTOP*> VAR TIOCPKT_DOSTOP: int;
+(*CONST*) <*EXTERNAL Unix__TIOCPKT_FLUSHREAD*> VAR TIOCPKT_FLUSHREAD: int;
+(*CONST*) <*EXTERNAL Unix__TIOCPKT_FLUSHWRITE*> VAR TIOCPKT_FLUSHWRITE: int;
+(*CONST*) <*EXTERNAL Unix__TIOCPKT_IOCTL*> VAR TIOCPKT_IOCTL: int;
+(*CONST*) <*EXTERNAL Unix__TIOCPKT_NOSTOP*> VAR TIOCPKT_NOSTOP: int;
+(*CONST*) <*EXTERNAL Unix__TIOCPKT_START*> VAR TIOCPKT_START: int;
+(*CONST*) <*EXTERNAL Unix__TIOCPKT_STOP*> VAR TIOCPKT_STOP: int;
+(*CONST*) <*EXTERNAL Unix__TIOCREMOTE*> VAR TIOCREMOTE: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSBRK*> VAR TIOCSBRK: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSDTR*> VAR TIOCSDTR: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSETC*> VAR TIOCSETC: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSETD*> VAR TIOCSETD: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSETN*> VAR TIOCSETN: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSETP*> VAR TIOCSETP: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSINUSE*> VAR TIOCSINUSE: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSLTC*> VAR TIOCSLTC: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSMLB*> VAR TIOCSMLB: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSPGRP*> VAR TIOCSPGRP: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSTART*> VAR TIOCSTART: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSTI*> VAR TIOCSTI: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSTOP*> VAR TIOCSTOP: int;
+(*CONST*) <*EXTERNAL Unix__TIOCSWINSZ*> VAR TIOCSWINSZ: int;
+(*CONST*) <*EXTERNAL Unix__TIOCUCNTL*> VAR TIOCUCNTL: int;
+(*CONST*) <*EXTERNAL Unix__TIOCWONLINE*> VAR TIOCWONLINE: int;
 
 END Unix.

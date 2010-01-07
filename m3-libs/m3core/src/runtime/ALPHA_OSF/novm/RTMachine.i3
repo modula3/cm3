@@ -37,8 +37,6 @@ CONST
 CONST
   BytesPerHeapPage    = 8192;               (* bytes per page *)
   LogBytesPerHeapPage = 13;
-  AdrPerHeapPage      = BytesPerHeapPage;   (* addresses per page *)
-  LogAdrPerHeapPage   = LogBytesPerHeapPage;
 
 (* The collector supports the use of VM protection to achieve incremental,
    generational collection.  This is not possible on all architectures, and
@@ -53,7 +51,7 @@ CONST
 (*--------------------------------------------------------- thread stacks ---*)
 
 CONST
-  PointerAlignment = 8;
+  PointerAlignment = BYTESIZE(INTEGER);
   (* The C compiler allocates all pointers on 'PointerAlignment'-byte
      boundaries.  The garbage collector scans thread stacks, but only
      looks at these possible pointer locations.  Setting this value

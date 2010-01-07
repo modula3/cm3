@@ -7,75 +7,81 @@
 
 UNSAFE INTERFACE ThreadWin32;
 
-FROM WinDef IMPORT BOOL (* int *);
+FROM ThreadF IMPORT State;
+FROM ThreadContext IMPORT PCONTEXT;
+FROM WinBase IMPORT CRITICAL_SECTION, TLS_OUT_OF_INDEXES;
+FROM WinNT IMPORT UCHAR, UINT32, MEMORY_BASIC_INFORMATION;
 
-(*----------------------------------------- Exceptions, types and globals ---*)
+(*---------------------------------------------------------------------------*)
 
-(* critical sections: Enter, Leave *)
+(* locks (aka critical section aka mutex) *)
 
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_cm"*>
-PROCEDURE EnterCriticalSection_cm();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_cm"*>
-PROCEDURE LeaveCriticalSection_cm();
-    (* Global lock for internals of Mutex and Condition *)
+(* static locks *)
+(* implementing variables in C greatly increase debuggability (symbols work) *)
 
-
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_activeMu"*>
-PROCEDURE EnterCriticalSection_activeMu();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_activeMu"*>
-PROCEDURE LeaveCriticalSection_activeMu();
+<*EXTERNAL ThreadWin32__activeLock*> VAR activeLock: CRITICAL_SECTION;
     (* Global lock for list of active threads *)
     (* It is illegal to touch *any* traced references while
-       holding activeMu because it is needed by SuspendOthers
+       holding activeLock because it is needed by SuspendOthers
        which is called by the collector's page fault handler. *)
 
+<*EXTERNAL ThreadWin32__slotLock*> VAR slotLock: CRITICAL_SECTION;
+    (* Global lock for thread slot table that maps untraced to traced *)
 
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_idleMu"*>
-PROCEDURE EnterCriticalSection_idleMu();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_idleMu"*>
-PROCEDURE LeaveCriticalSection_idleMu();
-    (* Global lock for list of idle threads *)
-
-
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_slotMu"*>
-PROCEDURE EnterCriticalSection_slotMu();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_slotMu"*>
-PROCEDURE LeaveCriticalSection_slotMu();
-    (* Global lock for thread slot table *)
-
-
-(*------------------------------------------------------------------ Self ---*)
-
-(* thread local threadIndex: TlsGetValue, TlsSetValue
-   GetValue called before InitC returns 0 (aka NULL)
-   SetValue called before InitC returns 0 (aka FALSE)
-*)
-<*EXTERNAL "ThreadWin32__TlsSetValue_threadIndex"*>
-PROCEDURE TlsSetValue_threadIndex(a: INTEGER): BOOL;
-<*EXTERNAL "ThreadWin32__TlsGetValue_threadIndex"*>
-PROCEDURE TlsGetValue_threadIndex(): INTEGER;
+<*EXTERNAL ThreadWin32__initLock*> VAR initLock: CRITICAL_SECTION;
+    (* Global lock for initializing locks *)
 
 (*------------------------------------------------------ ShowThread hooks ---*)
 
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_perfMu"*>
-PROCEDURE EnterCriticalSection_perfMu();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_perfMu"*>
-PROCEDURE LeaveCriticalSection_perfMu();
+<*EXTERNAL ThreadWin32__perfLock*> VAR perfLock: CRITICAL_SECTION;
 
 (*------------------------------------------------------------- collector ---*)
-(* These procedures provide synchronization primitives for the allocator
-   and collector. *)
+(* synchronization for the allocator and collector *)
 
-<*EXTERNAL "ThreadWin32__EnterCriticalSection_cs"*>
-PROCEDURE EnterCriticalSection_cs();
-<*EXTERNAL "ThreadWin32__LeaveCriticalSection_cs"*>
-PROCEDURE LeaveCriticalSection_cs();
+<*EXTERNAL ThreadWin32__heapLock*> VAR heapLock: CRITICAL_SECTION;
 
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL ThreadWin32__InitC*>
-PROCEDURE InitC();
+<*EXTERNAL "ThreadWin32__ProcessLive"*>
+PROCEDURE ProcessLive(bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
+
+<*EXTERNAL "ThreadWin32__ProcessStopped"*>
+PROCEDURE ProcessStopped(stackStart, stackEnd: ADDRESS; context: PCONTEXT;
+                         p: PROCEDURE(start, limit: ADDRESS));
+
+<*EXTERNAL ThreadWin32__StackPointerFromContext*>
+PROCEDURE StackPointerFromContext(context: PCONTEXT): ADDRESS;
+
+<*EXTERNAL ThreadWin32__NewContext*>
+PROCEDURE NewContext(): ADDRESS;
+
+<*EXTERNAL ThreadWin32__DeleteContext*>
+PROCEDURE DeleteContext(a: ADDRESS);
 
 (*---------------------------------------------------------------------------*)
+
+TYPE ClonedHeaderCheckField_t = RECORD
+    offset: UCHAR;
+    size: UCHAR;
+END;
+
+TYPE PClonedHeaderCheck_t = UNTRACED REF ClonedHeaderCheck_t;
+TYPE ClonedHeaderCheck_t = RECORD
+    TlsOutOfIndexes: UINT32 := TLS_OUT_OF_INDEXES;
+    sizeof_CRITICAL_SECTION: UCHAR := BYTESIZE(CRITICAL_SECTION);
+    sizeof_MEMORY_BASIC_INFORMATION: UCHAR := BYTESIZE(MEMORY_BASIC_INFORMATION);
+    MEMORY_BASIC_INFORMATION_AllocationBase: ClonedHeaderCheckField_t;
+    MEMORY_BASIC_INFORMATION_BaseAddress: ClonedHeaderCheckField_t;
+    MEMORY_BASIC_INFORMATION_RegionSize: ClonedHeaderCheckField_t;
+END;
+
+<*EXTERNAL ThreadWin32__ClonedHeaderCheck*>
+PROCEDURE ClonedHeaderCheck(a: PClonedHeaderCheck_t; b: INTEGER);
+
+(*----------------------------------------------------- for SchedulerPosix --*)
+
+PROCEDURE PerfChanged (s: State);
+PROCEDURE PerfRunning ();
+VAR perfOn: BOOLEAN := FALSE;		 (* LL = perfLock *)
 
 END ThreadWin32.

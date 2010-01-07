@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: make-script-dist.sh,v 1.3 2009-07-22 20:14:35 jkrell Exp $
+# $Id: make-script-dist.sh,v 1.4 2009-09-27 13:11:49 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -33,7 +33,7 @@ header "building CM3 scripts distribution in ${ARCHIVE}"
 cd "${ROOT}" || exit 1
 /bin/ls -1d m3overrides COPYRIGHT-CMASS COPYRIGHT-DEC scripts > .tar-include
 echo "building exclude list..."
-find scripts \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
+$FIND scripts \( -name '*~' -or -name '*.bak' -or -name '*.orig' -or \
           -name '*.rej'  -or -name 'cvs-nq-up' -or -name '*-diffs' -or \
           \( -name 'CVS' -a -type d \) \) -print | \
   sed -e 's;^./;;' >> .tar-exclude

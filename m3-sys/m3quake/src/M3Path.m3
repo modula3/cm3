@@ -547,7 +547,10 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
     d_sep := DirSep [host_os];
     start : CARDINAL := 0;
     len := NUMBER (p);
+    j: CARDINAL := 0;
+
   BEGIN
+
     (* remove trailing slashes, leaving at most one *)
     (* check for length 3 here so we don't encroach on the leading slashes *)
     (* Trailing slashes break some code so for now don't do this.
@@ -555,21 +558,51 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
       DEC (len);
     END;
     *)
+
     (* remove all trailing slashes *)
-    (* check for length 3 here so we don't encroach on the leading slashes *)
+    (* check for length 3 here so we do not encroach on any leading slashes *)
+
     WHILE (len >= 3) AND IsDirSep (p[start + len - 1], d_sep) DO
       DEC (len);
     END;
+
+    (* remove trailing slash in 2 char string if first char is not slash,
+    otherwise ab/ => ab, but a/ => a/ which does not make sense *)
+
+    IF (len = 2) AND (NOT IsDirSep(p[start], d_sep)) AND (IsDirSep(p[start + 1], d_sep)) THEN
+      len := 1;
+    END;
+
     (* remove leading slashes, leaving at most two *)
+
     WHILE (len > 2) AND IsDirSep (p[start], d_sep) AND IsDirSep (p[start + 1], d_sep) AND IsDirSep (p[start + 2], d_sep) DO
       INC (start);
       DEC (len);
     END;
+
+    (* Change runs of separators to single separators, except at the start. *)
+
+    IF len > 2 THEN
+        j := start + 1;
+        FOR i := start + 1 TO start + len - 2 DO
+            IF NOT (IsDirSep(p[i], d_sep) AND IsDirSep(p[i + 1], d_sep)) THEN
+                p[j] := p[i];
+                INC(j);
+            END;
+        END;
+        p[j] := p[start + len - 1];
+        INC(j);
+        len := j - start;
+    END;
+
     PathRemoveDots (p, start, len);
+
     IF len = 0 THEN
       RETURN ".";
     END;
+
     RETURN Text.FromChars (SUBARRAY (p, start, len));
+
   END FixPath;
 
 BEGIN

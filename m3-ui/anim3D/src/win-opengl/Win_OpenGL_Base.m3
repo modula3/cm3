@@ -283,7 +283,7 @@ PROCEDURE ChangeTitle (self: T; title : TEXT) =
     LOCK conn DO
       status := WinUser.SetWindowText (self.hwnd, ctitle);
       M3toC.FreeSharedS(title, ctitle);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
     END;
   END ChangeTitle;
 
@@ -2063,7 +2063,7 @@ PROCEDURE Apply (self: Closure): REFANY =
 
       (* update the window (repaint its client area) *)
       status := WinUser.UpdateWindow (base.hwnd);
-      <* ASSERT status = True *>
+      <* ASSERT status # False *>
 
       (* Cache the device context in "base.hdc". Note that we can do this only
          because we declared the device context to be private ("CS_OWNDC"). *)
@@ -2294,7 +2294,7 @@ CONST
       BEGIN
         WITH base = GetBase (hwnd) DO
           status := WinUser.DestroyWindow (base.hwnd);
-          <* ASSERT status = True *>
+          <* ASSERT status # False *>
         END;
       END;
       RETURN 0;

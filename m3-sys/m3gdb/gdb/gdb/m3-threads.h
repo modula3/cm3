@@ -19,11 +19,11 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 
 #if !defined (M3_THREADS_H)
 #define M3_THREADS_H 1
- 
-extern void switch_command ( char *args, int from_tty ); 
 
-extern void threads_command ( char *args, int from_tty ); 
+extern void switch_command ( char *args, int from_tty );
+
+extern void threads_command ( char *args, int from_tty );
 
 #endif /* !defined (M3_THREADS_H) */
 
-/* End of file m3-threads.c */ 
+/* End of file m3-threads.c */

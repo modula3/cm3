@@ -21,6 +21,11 @@ TYPE
     sin_zero: ARRAY [0..7] OF char;
   END;
 
+  struct_sockaddr_un = RECORD
+    sin_family: unsigned_short; (* this is signed on some platforms; it does not matter *)
+    sun_path: ARRAY [0..103] OF char;
+  END;
+
 <*EXTERNAL "Uin__ntohl"*> PROCEDURE ntohl(x: unsigned): unsigned;
 <*EXTERNAL "Uin__ntohs"*> PROCEDURE ntohs(x: unsigned_short): unsigned_short;
 <*EXTERNAL "Uin__htonl"*> PROCEDURE htonl(x: unsigned): unsigned;

@@ -11,6 +11,10 @@
 #include <excpt.h>
 #include <sym.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 /* apparently, OSF/1 v1.3 doesn't define sc_sp... */
 #ifndef sc_sp
 #define sc_sp sc_regs[30]
@@ -110,7 +114,7 @@ void RTStack__CurFrame (Frame *f)
    "callee" is the first frame on the stack or its predecessor is ill-formed.
    */
 
-RTStack__PrevFrame (Frame* callee, Frame* caller)
+void RTStack__PrevFrame (Frame* callee, Frame* caller)
 {
   PRUNTIME_FUNCTION proc;
 
@@ -145,3 +149,6 @@ void RTStack__Unwind (Frame *target)
   exc_resume (& target->cxt);	/* longjmp doesn't unwind through signals */
 }
 
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -26,7 +26,7 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*---------------------------------------------------------------------------
- * $Id: System.i3,v 1.3 2009-04-28 10:56:59 jkrell Exp $ *)
+ * $Id: System.i3,v 1.5 2009-07-29 17:28:57 jkrell Exp $ *)
 (*---------------------------------------------------------------------------*)
 
 INTERFACE System;
@@ -186,5 +186,10 @@ copied from m3core/src/C/Common/Cerrno.i3 for bootstrapping against older releas
 
 <*EXTERNAL System__GetErrno*>
 PROCEDURE GetErrno(): int;
+
+TYPE pid_t = INTEGER; (* generally only 32 bits but ok *)
+
+<*EXTERNAL System__waitpid*>
+PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF int; options: int): pid_t;
 
 END System.

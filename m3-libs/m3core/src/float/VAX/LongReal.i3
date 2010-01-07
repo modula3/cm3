@@ -7,6 +7,7 @@
 (*      modified on Fri Feb 28 20:17:40 PST 1992 by stolfi     *)
 
 INTERFACE LongReal; 
+IMPORT Word;
 
 (* Basic properties OF LONGREAL (for the VAX).
 
@@ -51,4 +52,20 @@ CONST
 | MaxSignifDigits = ceiling(log_10(Base^Precision)) + 1.
 
 *)
+
+CONST Brand = "LongReal";
+
+PROCEDURE Equal(a, b: T): BOOLEAN;
+(* Return "a = b".  The result is undefined if either "a" or "b" is
+   an "NaN" (not a number) value. *)
+
+PROCEDURE Hash(a: T): Word.T;
+(* Return a hash value derived from "a".  The result is undefined if
+   either "a" or "b" is an "NaN" (not a number) value. *)
+
+PROCEDURE Compare(a, b: T): [-1..1];
+(* Return "-1" if "a < b", "0" if "a = b", or "+1" if "a > b".
+   The result is undefined if either "a" or "b" is an "NaN" (not a
+   number) value. *)
+
 END LongReal.

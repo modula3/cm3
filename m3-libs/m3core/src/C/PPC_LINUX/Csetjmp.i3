@@ -6,15 +6,9 @@ INTERFACE Csetjmp;
 
 FROM Ctypes IMPORT int;
 
-TYPE
-  jmp_buf = BITS 16_1280 FOR RECORD
-    opaque: ARRAY [0..16_4A - 1] OF LONGINT;
-  END;
+(* ideal alignment is 16 bytes but 4 is ok; 8 here *)
+TYPE jmp_buf = ARRAY [0..73] OF LONGINT;
 
-<*EXTERNAL*> PROCEDURE setjmp (VAR env: jmp_buf): int;
-<*EXTERNAL*> PROCEDURE longjmp (VAR env: jmp_buf; val: int);
-
-<*EXTERNAL "_setjmp" *>  PROCEDURE usetjmp (VAR env: jmp_buf): int;
 <*EXTERNAL "_longjmp" *> PROCEDURE ulongjmp (VAR env: jmp_buf; val: int);
 
 END Csetjmp.

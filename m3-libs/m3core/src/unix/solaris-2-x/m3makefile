@@ -8,7 +8,6 @@
 
 if TRUE
 
-Interface ("Usignal")
 Interface ("Uucontext")
 Interface ("Uframe")
 
@@ -23,7 +22,6 @@ Interface ("Umman")
 Module    ("Umsg")
 Module    ("Unix")
 Interface ("Uprocess")
-Interface ("Upthread")
 Interface ("Upwd")
 Interface ("Uresource")
 Interface ("Usched")

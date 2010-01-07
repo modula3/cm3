@@ -16,7 +16,7 @@ UNSAFE MODULE Trestle EXPORTS Trestle, TrestleImpl;
 IMPORT Thread, Env, TrestleClass, VBT, TrestleComm, Params, VBTClass,
        ScrnColorMap, Point, Rect, Region, ScrnPixmap, Split,
        VBTRep, JoinParent, ProperSplit, InstallQueue, InstalledVBT,
-       TrestleConf, TrestleOS;
+       TrestleConf, TrestleOS, RTParams;
 
 FROM TrestleClass IMPORT InstallRef, Decoration;
 
@@ -878,6 +878,9 @@ PROCEDURE CreateUser (user, display: TEXT): TrestleConf.User =
 PROCEDURE AwaitDelete(v: VBT.T) =
   VAR ir: InstallRef;
   BEGIN
+    IF RTParams.IsPresent("no-trestle-await-delete") THEN
+      RETURN;
+    END;
     LOCK VBT.mu DO
       ir := VBT.GetProp(v, TYPECODE(InstallRef));
       IF ir = NIL THEN RETURN END;

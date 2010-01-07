@@ -1,33 +1,43 @@
-#if 0
+#ifdef _MSC_VER
+
+#pragma optimize("gty", on)
+
+#undef _DLL
+
+#endif
+
+
 
 #include <stdlib.h>
+#include <windows.h>
 
-void* RTOS__GetMemory(size_t Size)
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+#if 0
+
+void* __cdecl RTOS__GetMemory(size_t Size)
 {
     return calloc(Size, 1);
 }
 
 #elif 0
 
-#include <windows.h>
-
-void* RTOS__GetMemory(size_t Size)
+void* __cdecl RTOS__GetMemory(size_t Size)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 }
 
 #elif 1
 
-#include <windows.h>
-
-void* RTOS__GetMemory(size_t Size)
+void* __cdecl RTOS__GetMemory(size_t Size)
 {
     return VirtualAlloc(NULL, Size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 }
 
 #elif 0
 
-#include <windows.h>
 /* Same as previous, but with some internal logging, which 
 reveals the lossage that results from using VirtualAlloc with RTMachine.PageSize < GetSystemInfo.AllocationGranularity.
 */
@@ -41,7 +51,7 @@ RTOSMemoryLogEntry_t RTOSMemoryLog[128];
 size_t RTOSMemoryLogIndex;
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
-void* RTOS__GetMemory(size_t Size)
+void* __cdecl RTOS__GetMemory(size_t Size)
 {
     RTOSMemoryLogEntry_t LogEntry;
     
@@ -55,4 +65,8 @@ void* RTOS__GetMemory(size_t Size)
     return LogEntry.Result;
 }
 
+#endif
+
+#ifdef __cplusplus
+} /* extern "C" */
 #endif

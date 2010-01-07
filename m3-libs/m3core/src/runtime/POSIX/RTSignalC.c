@@ -9,18 +9,24 @@
 #if defined(__INTERIX) && !defined(_ALL_SOURCE)
 #define _ALL_SOURCE
 #endif
+
 #include <unistd.h>
 #include <signal.h>
 #include <assert.h>
 typedef struct sigaction sigaction_t;
-#if defined(__OpenBSD__) || (defined(__APPLE__) && defined(__arm)) \
- || defined(__CYGWIN__)
-/* Apple/arm: ucontext_t is in signal.h
-              #including ucontext.h gives #error
- OpenBSD 4.3: ucontext.h doesn't exist, ucontext_t is in signal.h
-      Cygwin: no state provided to signal handler?
+#if defined(__APPLE__)
+/*
+http://tinderbox.elegosoft.com/tinderbox/cgi-bin/gunzip.cgi\
+  ?tree=cm3&brief-log=1258879870.10595#err9
+/usr/include/ucontext.h:42:2: error: #error ucontext routines are
+    deprecated, and require _XOPEN_SOURCE to be defined
+http://duriansoftware.com/joe/PSA:-avoiding-the-%22ucontext-\
+  routines-are-deprecated%22-error-on-Mac-OS-X-Snow-Leopard.html
 */
-#else
+#include <sys/ucontext.h>
+#elif !(defined(__OpenBSD__) || defined(__CYGWIN__))
+/* OpenBSD 4.3: ucontext.h doesn't exist, ucontext_t is in signal.h
+        Cygwin: no state provided to signal handler? */
 #include <ucontext.h>
 #endif
 
@@ -123,6 +129,15 @@ static size_t GetPC(void* xcontext)
 #error Unknown __APPLE__ target
 #endif
 
+#elif defined(__OpenBSD__)
+#if defined(__amd64)
+    context->sc_rip
+#elif defined(__powerpc)
+    context->sc_frame.srr0
+#else
+    context->sc_pc
+#endif
+
 #elif defined(__sun) || defined(__sparc)
       context->uc_mcontext.gregs[REG_PC]
 
@@ -140,15 +155,6 @@ static size_t GetPC(void* xcontext)
 
 #elif defined(__NetBSD__)
     _UC_MACHINE_PC(context)
-
-#elif defined(__OpenBSD__)
-#if defined(__amd64)
-    context->sc_rip
-#elif defined(__powerpc)
-    context->sc_frame.srr0
-#else
-    context->sc_pc
-#endif
 
 #elif defined(__FreeBSD__)
 #if defined(__amd64)

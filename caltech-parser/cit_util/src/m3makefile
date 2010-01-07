@@ -1,4 +1,4 @@
-/* $Id: m3makefile,v 1.3 2008-01-28 23:10:59 wagner Exp $ */
+/* $Id: m3makefile,v 1.6 2009-12-30 14:49:42 jkrell Exp $ */
 
 if not defined("TOP")
   TOP = PACKAGE_DIR & SL & ".."
@@ -45,8 +45,8 @@ template("to_refany")
 ord_to_refany("Int", "Integer")
 ord_to_refany("Bool", "Boolean")
 ord_to_refany("Char", "Char")
-ord_to_refany("Real", "RealType")
-ord_to_refany("Longreal", "LongrealType")
+ord_to_refany("Real", "Real")
+ord_to_refany("Longreal", "LongReal")
 
 /* new stuff */
 MkSet("IntPair", "IntPair")
@@ -61,6 +61,3 @@ Equivalence("Text", "Text", "TextTextTbl")
 Module("TextTextTblExtras")
 
 Library("cit_util")
-
-
-

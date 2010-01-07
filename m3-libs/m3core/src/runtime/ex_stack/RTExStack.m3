@@ -5,7 +5,7 @@
 UNSAFE MODULE RTExStack EXPORTS RTException, RTExStack;
 
 IMPORT RT0, RTError, RTProcedureSRC, RTIO, RTModule, RTOS, RTStack;
-IMPORT Thread, Cstring, RTProcedure, RTParams, ThreadF;
+IMPORT Thread, Cstring, RTProcedure, RTParams;
 FROM RT0 IMPORT RaiseActivation;
 
 VAR
@@ -218,12 +218,11 @@ PROCEDURE FindScope (pc: ADDRESS): Scope =
     lo, hi, mid, limit: CARDINAL;
     p: UNTRACED REF MapEntry;
     s: Scope;
-    thread := ThreadF.MyHeapState();
   BEGIN
     IF (pc_map = NIL) THEN
-      RTOS.LockHeap (thread^);
+      RTOS.LockHeap ();
         BuildPCMap ();
-      RTOS.UnlockHeap (thread^);
+      RTOS.UnlockHeap ();
     END;
 
     (* binary search of the sorted table *)
@@ -418,11 +417,10 @@ PROCEDURE DumpStack () =
     proc: RTProcedure.Proc;
     offset: INTEGER;
     info: ADDRESS;
-    thread := ThreadF.MyHeapState();
   BEGIN
     IF NOT DEBUG AND NOT dump_enabled THEN RETURN; END;
 
-    RTOS.LockHeap (thread^); (* disable thread switching... (you wish!) *)
+    RTOS.LockHeap (); (* disable thread switching... (you wish!) *)
 
     RTIO.PutText ("------------------------- STACK DUMP ---------------------------\n");
     RTIO.PutText ("----PC----  ----SP----  \n");
@@ -508,7 +506,7 @@ PROCEDURE DumpStack () =
     RTIO.PutText ("----------------------------------------------------------------\n");
     RTIO.Flush ();
 
-    RTOS.UnlockHeap (thread^); (* re-enable thread switching *)
+    RTOS.UnlockHeap (); (* re-enable thread switching *)
   END DumpStack;
 
 PROCEDURE DumpHandles (x: ExceptionList) =

@@ -1,4 +1,1 @@
-override ("parseparams", ROOT & "/m3-libs")
-override ("formsvbt", ROOT & "/m3-ui")
-override ("web", ROOT & "/m3-www")
-override ("webvbt", ROOT & "/m3-ui")
+include(ROOT & "/m3overrides")

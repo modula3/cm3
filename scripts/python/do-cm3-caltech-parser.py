@@ -1,5 +1,5 @@
 #! /usr/bin/env python
-# $Id: do-cm3-caltech-parser.py,v 1.7 2008-05-25 01:16:59 jkrell Exp $
+# $Id: do-cm3-caltech-parser.py,v 1.8 2009-07-28 09:27:03 jkrell Exp $
 
 import sys
 import os.path
@@ -19,12 +19,13 @@ DoPackage(sys.argv, [
     "paneman/kemacs",
     "parserlib/ktoklib",
     "parserlib/klexlib",
+    "parserlib/kyacclib",
     "parserlib/ktok",
     "parserlib/klex",
     "parserlib/kyacc",
     "parserlib/kext",
     "parserlib/parserlib",
-    "parserlib/parserlib/test",
+    #"parserlib/parserlib/test",
     ])
 
 print("%s: Success." % os.path.basename(sys.argv[0]))

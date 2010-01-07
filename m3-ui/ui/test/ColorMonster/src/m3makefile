@@ -5,10 +5,12 @@
 % Last modified on Thu May 20 12:28:41 PDT 1993 by msm
 %      modified on Fri Apr 30-ip4:19:01 PDT 1993 by mjordan
 
+if HasGui()
+
 import("ui")
 
 implementation("ColorMonster")
 
 program("ColorMonster")
 
-
+end

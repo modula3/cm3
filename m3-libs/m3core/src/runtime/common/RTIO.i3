@@ -25,7 +25,7 @@ PROCEDURE PutString (s: ADDRESS);
 (* Write the null terminated string beginning at "s". *)
 
 PROCEDURE PutText (t: TEXT);
-(* Write text "t" on file "f". *)
+(* Write text "t". *)
 
 PROCEDURE PutInt (i: INTEGER;  width := 0);
 (* Convert integer "i" to decimal digits and write it right-justified
@@ -37,6 +37,24 @@ PROCEDURE PutHex (i: INTEGER;  width := 0);
 
 PROCEDURE PutAddr (a: ADDRESS;  width := 0);
 (* == PutHex (LOOPHOLE (a, INTEGER), width) *)
+
+(* Normally RTIO goes to stderr; however these go to stdout
+   in order to be agnostic between static and dynamic Windows C runtime *)
+<* EXTERNAL RTIO__PutE *>
+PROCEDURE PutE (a: LONGREAL);
+(* == printf("%e", a) *)
+
+<* EXTERNAL RTIO__PutF *>
+PROCEDURE PutF (a: LONGREAL);
+(* == printf(%f", a) *)
+
+<* EXTERNAL RTIO__PutG *>
+PROCEDURE PutG (a: LONGREAL);
+(* == printf("%g", a) *)
+
+<* EXTERNAL RTIO__PutBytes *>
+PROCEDURE PutBytes(a: ADDRESS; count: INTEGER);
+(* hex *)
 
 PROCEDURE Flush ();
 (* Flush any buffered characters to the operating system. *)

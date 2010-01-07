@@ -6,7 +6,7 @@
 
 UNSAFE MODULE SchedulerPosix;
 
-FROM ThreadInternal IMPORT PerfChanged, PerfRunning, XTestAlert, perfOn;
+FROM ThreadWin32 IMPORT PerfChanged, PerfRunning, XTestAlert, perfOn;
 FROM ThreadF IMPORT State, MyId;
 FROM Thread IMPORT Alerted, Self, T;
 IMPORT Unix, Cerrno, Uerror, Utime, Time;
@@ -25,7 +25,7 @@ PROCEDURE IOWait (fd: CARDINAL; read: BOOLEAN;
   VAR self := Self();
   BEGIN
     TRY
-      IF perfOn THEN PerfChanged(MyId(), State.blocking) END;
+      IF perfOn THEN PerfChanged(State.blocking) END;
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := FALSE);
     FINALLY
       IF perfOn THEN PerfRunning(MyId()) END;
@@ -38,7 +38,7 @@ PROCEDURE IOAlertWait (fd: CARDINAL; read: BOOLEAN;
   VAR self := Self();
   BEGIN
     TRY
-      IF perfOn THEN PerfChanged(MyId(), State.blocking) END;
+      IF perfOn THEN PerfChanged(State.blocking) END;
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := TRUE);
     FINALLY
       IF perfOn THEN PerfRunning(MyId()) END;
@@ -106,7 +106,7 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
       subInterval := interval;
     END;
 
-    IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
+    IF alertable AND TestAlert() THEN RAISE Alerted END;
     LOOP
       FOR i := 0 TO fdindex-1 DO
         gReadFDS[i] := FDSet{};
@@ -126,7 +126,7 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
         res := CallSelect(fd+1, NIL);
       END;
 
-      IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
+      IF alertable AND TestAlert() THEN RAISE Alerted END;
 
       IF    res > 0 THEN RETURN TestFDS(fdindex, fdset, read);
       ELSIF res = 0 THEN

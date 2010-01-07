@@ -1,5 +1,9 @@
-#include "m3unix.h"
+#include "m3core.h"
 #include <unistd.h>
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 /*
 This is the historic and more portable implementation.
@@ -10,3 +14,7 @@ void* RTOS__GetMemory(size_t size)
 {
     return sbrk(size);
 }
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

@@ -626,7 +626,7 @@ object or traced reference value includes a code for a type, called the
 
 There are three kinds of ordinal types: enumerations, subranges, and integers.
 
-There are two integer types, which in order of increasing range and precision
+There are two integer types, which in order of increasing range 
 are \verb|INTEGER| and \verb|LONGINT|.
 
 An enumeration type is declared like this:
@@ -641,7 +641,7 @@ $i$'th value of the type in increasing order.  The empty enumeration
 Integers and enumeration elements are collectively called \emph{ordinal
   values}.  The \emph{base type} of an ordinal value \verb|v| is
 \verb|INTEGER| (or \verb|LONGINT|) if \verb|v| is an integer (or extended
-precision integer, respectively), otherwise it is the unique enumeration type
+range integer, respectively), otherwise it is the unique enumeration type
 that contains \verb|v|.
 
 A subrange type is declared like this:
@@ -662,17 +662,21 @@ Here are the predeclared ordinal types:
 \begin{quote}
   \begin{tabular}{ll}
     \verb|INTEGER|  & All integers represented by the implementation \\
-    \verb|LONGINT|  & Extended precision integers, at least as precise as
+    \verb|LONGINT|  & Extended range integers, with at least as much range as
                       \verb|INTEGER| \\
     \verb|CARDINAL| & Behaves just like the subrange \verb|[0..LAST(INTEGER)]|
     \\
     \verb|BOOLEAN|  & The enumeration \verb|{FALSE, TRUE}| \\
     \verb|CHAR|     & An enumeration containing at least 256 elements \\
+    \verb|WIDECHAR| & An enumeration containing at least 65536 elements \\
   \end{tabular}
 \end{quote}
 The first 256 elements of type \verb|CHAR| represent characters in the
-ISO-Latin-1 code, which is an extension of ASCII.  The language does not
-specify the names of the elements of the \verb|CHAR| enumeration.  The syntax
+ISO-Latin-1 code, which is an extension of ASCII.  
+The first 65536 elements of type \verb|WIDECHAR| represent characters in the
+Unicode character code.  
+The language does not specify the names of the elements of the \verb|CHAR| 
+or \verb|WIDECHAR| enumerations.  The syntax
 for character literals is specified in the section on literals.  \verb|FALSE|
 and \verb|TRUE| are predeclared synonyms for \verb|BOOLEAN.FALSE| and
 \verb|BOOLEAN.TRUE|.
@@ -1827,7 +1831,7 @@ A \verb|FOR| statement has the form:
 where \verb|id| is an identifier, \verb|first| and \verb|last| are ordinal
 expressions with the same base type, \verb|step| is an integer-valued
 expression, and \verb|S| is a statement.  ``\verb|BY step|'' is optional; if
-omitted, step defaults to \verb|1|.
+omitted, \verb|step| defaults to \verb|1|.
 
 The identifier \verb|id| denotes a readonly variable whose scope is \verb|S|
 and whose type is the common base type of \verb|first| and \verb|last|.
@@ -2600,7 +2604,7 @@ undefined for all operations except \verb|AND| and \verb|OR|.
 
 To describe the argument and result types of operations, we use a notation
 like procedure signatures.  But since most operations are too general to be
-described by a true procedure signature, we extend the notation in several
+described by a Modula-3 procedure signature, we extend the notation in several
 ways.
 
 The argument to an operation can be required to have a type in a particular
@@ -2620,7 +2624,7 @@ the operations.  For example:
 \end{verbatim}
 The particular operation will be selected so that each actual argument type is
 a subtype of the corresponding formal type or a member of the corresponding
-formal type class.
+formal type class.  This selection is always unambiguous. 
 
 The argument to an operation can be an expression denoting a type.  In this
 case, we write \verb|Type| as the argument type.  For example:
@@ -2759,7 +2763,7 @@ modules, \verb|LOOPHOLE| can also produce a designator.
 \subsubsection*{2.6.4 Numeric literals}
 
 Numeric literals denote constant non-negative integers or reals.  The types of
-these literals are \verb|INTEGER|, \verb|LONGING|, \verb|REAL|,
+these literals are \verb|INTEGER|, \verb|LONGINT|, \verb|REAL|,
 \verb|LONGREAL|, and \verb|EXTENDED|.
 
 A literal \verb|INTEGER| has the form \verb|base_digits|, where \verb|base| is
@@ -2773,8 +2777,8 @@ example, \verb|16_FF| and \verb|255| are equivalent integer literals.
 If no explicit base is present, the value of the literal must be at most
 \verb|LAST(INTEGER)|.  If an explicit base is present, the value of the
 literal must be less than \verb|2^Word.Size|, and its interpretation uses the
-convention of the \verb|Word| interface.  For example, on a sixteen-bit two's
-complement machine, \verb|16_FFFF| and \verb|-1| represent the same value.
+convention of the \verb|Word| interface.  For example, on a 32-bit two's
+complement machine, \verb|16_FFFFFFFF| and \verb|-1| represent the same value.
 
 A literal \verb|LONGINT| has the form \verb|integer L|, where \verb|integer|
 has the same form as a literal \verb|INTEGER|.  If no explicit base is
@@ -2794,8 +2798,8 @@ or \verb|-|.  The literal denotes \verb|decimal| times \verb|10^exponent|.  If
 \verb|LONGREAL| and \verb|EXTENDED| literals are like \verb|REAL| literals,
 but instead of \verb|E| they use \verb|D| and \verb|X| respectively.
 
-Case is not significant in digits, prefixes or scale factors.  Embedded spaces
-are not allowed.
+Case is not significant in any letter in a numeric literal.  
+Embedded spaces are not allowed in a numeric literal.
 
 For example, \verb|1.0| and \verb|0.5| are valid, \verb|1.| and \verb|.5| are
 not; \verb|6.624E-27| is a \verb|REAL|, and \verb|3.1415926535d0| a
@@ -2818,11 +2822,33 @@ Here are are the legal escape sequences and the characters they denote:
     \verb|\t| & tab                & \verb|\\| & backslash \\
     \verb|\r| & carriage return    & \verb|\"| & double quote \\
     \verb|\'| & single quote       & \verb|\nnn| & char with code \verb|8_nnn| \\
+              &                    & \verb|\Xnn| & char with code \verb|16_nn| \\
   \end{tabular}
 \end{quote}
 A \verb|\| followed by exactly three octal digits specifies the character
-whose code is that octal value.  A \verb|\| that is not a part of one of these
+whose code is that octal value.  
+A \verb|\x| followed by exactly two hexadecimal digits specifies the character
+whose code is that hexadecimal value.  
+The hexadecimal digits are case-insensitive. 
+The 'X' in a hexadecimal escape sequence is case-insensitive.  
+A \verb|\| that is not a part of one of these
 escape sequences is a static error.
+
+A wide character literal has the form \verb|W charlit|, where \verb|charlit|
+is like a character literal, except that an octal escape sequence
+within must have exactly six octal digits and a hexadecimal escape
+sequence within must have exactly four hexadecimal digits.  The type of
+a wide character literal is \verb|WIDECHAR|.
+The leading 'W' is case-insensitive. 
+
+Similarly, a wide text literal has the form \verb|W textlit|, 
+where \verb|textlit| is like a text literal, except any octal or hexadecimal
+escape sequences within must have exactly six octal or four hexadecimal 
+digits, respectively.  
+Unlike character literals, ordinary text literals and wide text literals 
+both have the type \verb|TEXT|, differing only in the method of specifying 
+the literal's value. 
+The leading 'W' is case-insensitive. 
 
 For example, \verb|'a'| and \verb|'\''| are valid character literals,
 \verb|'''| is not; \verb|""| and \verb|"Don't\n"| are valid text literals,
@@ -3454,6 +3480,7 @@ ADR       CEILING    FIRST     LAST       MUTEX   ORD       TRUE
 ADRSIZE   CHAR       FLOAT     LONGINT    NARROW  REAL      TRUNC
 BITSIZE   DEC        FLOOR     LONGREAL   NEW     REFANY    TYPECODE
 BOOLEAN   DISPOSE    INC       LOOPHOLE   NIL     ROUND     VAL
+                                                            WIDECHAR
 \end{verbatim}
 
 \subsubsection*{2.8.3 Operators}

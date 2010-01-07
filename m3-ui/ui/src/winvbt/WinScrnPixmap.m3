@@ -9,11 +9,11 @@
 UNSAFE MODULE WinScrnPixmap;
 
 IMPORT Axis, Palette, Pixmap, Point, Rect, ScrnPixmap, TrestleImpl, VBTRep,
-       WinDef, WinGDI, WinScreenType, WinScreenTypePrivate, WinUser;
-
-IMPORT Ctypes, Fmt, IO;
+       WinDef, WinGDI, WinScreenType, WinScreenTypePrivate, WinUser,
+       Ctypes, Fmt, IO, WinError;
 
 CONST
+  False = 0;
   True = 1;
 
 <* PRAGMA LL *>
@@ -80,7 +80,7 @@ PROCEDURE Localize (self: T; READONLY rect: Rect.T): ScrnPixmap.Raw =
                                   NIL,        (* ... that is, don't copy *)
                                   ADR (bmi),  (* ... just fill in bmi *)
                                   WinGDI.DIB_RGB_COLORS);
-      <* ASSERT status = True *>
+      <* ASSERT status # False AND status # WinError.ERROR_INVALID_PARAMETER *>
 
       <* ASSERT bmih.biWidth = width *>
       <* ASSERT bmih.biHeight = height *>
@@ -172,7 +172,7 @@ PROCEDURE Free (self: T) =
         st.pmfree := id;
         IF z.hbmp # NIL THEN
           status := WinGDI.DeleteObject (z.hbmp);
-          <* ASSERT status = True *>
+          <* ASSERT status # False *>
           z.hbmp := NIL;
         END;
       END;

@@ -99,14 +99,14 @@ PROCEDURE Compile (p: P) =
     Expr.Compile (p.expr);
   END Compile;
 
-PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
+PROCEDURE PrepLV (p: P;  traced: BOOLEAN) =
   BEGIN
-    Expr.PrepLValue (p.expr, lhs);
+    Expr.PrepLValue (p.expr, traced);
   END PrepLV;
 
-PROCEDURE CompileLV (p: P;  lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: P;  traced: BOOLEAN) =
   BEGIN
-    Expr.CompileLValue (p.expr, lhs);
+    Expr.CompileLValue (p.expr, traced);
   END CompileLV;
 
 PROCEDURE Bounder (p: P;  VAR min, max: Target.Int) =

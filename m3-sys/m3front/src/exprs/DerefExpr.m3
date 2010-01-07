@@ -128,11 +128,11 @@ PROCEDURE Compile (p: P) =
     Type.LoadScalar (t);
   END Compile;
 
-PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
+PROCEDURE PrepLV (p: P; traced: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
     Expr.Prep (p.a);
-    IF lhs AND Host.doGenGC THEN
+    IF traced AND Host.doGenGC THEN
       EVAL Type.CheckInfo (p.type, info);
       IF NOT info.isTraced THEN RETURN END;
       EVAL Type.CheckInfo (Expr.TypeOf (p.a), info);
@@ -143,11 +143,11 @@ PROCEDURE PrepLV (p: P; lhs: BOOLEAN) =
     END
   END PrepLV;
 
-PROCEDURE CompileLV (p: P; lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
     IF p.tmp # NIL THEN
-      <*ASSERT lhs*>
+      <*ASSERT traced*>
       CG.Push (p.tmp);
       CG.Free (p.tmp);
       p.tmp := NIL;

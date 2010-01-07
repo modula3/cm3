@@ -1,6 +1,6 @@
 import("libm3")
 
-Sequence("LongReal", "LongrealType")
+Sequence("LongReal", "LongReal")
 
 include_dir("basic")
 include_dir("control")

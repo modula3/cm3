@@ -23,9 +23,6 @@ typedef struct T T;
 #include <sys/socket.h>
 #include <netdb.h>
 
-typedef struct linger linger_t;
-typedef struct timeval timeval_t;
-
 #endif
 
 typedef struct tm tm_t;
@@ -37,9 +34,6 @@ struct T
 #ifndef _WIN32
     struct {
         /* keep these sorted by name for easier human comprehension */
-        size_t linger;
-        size_t time;
-        size_t timeval;
         size_t tm;
     } sizes;
 #endif
@@ -52,9 +46,6 @@ static const T t1 =
     { 0.0, 0.5, 1.0, 2.0, -1.0, -3.5, 12.34, -124.456, 1000.0, -10000.0 },
 #ifndef _WIN32
     {
-    SIZE(linger_t),
-    SIZE(time_t),
-    SIZE(timeval_t),
     SIZE(tm_t),
     },
 #endif
@@ -77,9 +68,6 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
         printf("d[0], d[1]: %x, %x\n", OFFSET(T, d[0]), OFFSET(T, d[1]));
         printf("f[0], f[1]: %x, %x\n", OFFSET(T, f[0]), OFFSET(T, f[1]));
         printf("d[8], d[9]: %x, %x\n", OFFSET(T, d[8]), OFFSET(T, d[9]));
-        printf("linger: %x\n", OFFSET(T, sizes.linger));
-        printf("time: %x\n", OFFSET(T, sizes.time));
-        printf("timeval: %x\n", OFFSET(T, sizes.timeval));
         printf("tm: %x\n", OFFSET(T, sizes.tm));
         for (i = 0; i < SIZE(t1); ++i)
         {
@@ -102,7 +90,7 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
     assert(jbsize >= (SIZE(jmp_buf) / 4));
 #elif defined(__FreeBSD__) && defined(__i386__)
     assert(jbsize == SIZE(jmp_buf) || (jbsize + 4) == SIZE(jmp_buf));
-#elif defined(__sun)
+#elif defined(__sun) || defined(__APPLE__)
     assert(jbsize == SIZE(jmp_buf) || jbsize == SIZE(sigjmp_buf));
 #else
     if (jbsize != SIZE(jmp_buf))

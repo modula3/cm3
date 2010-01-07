@@ -1,10 +1,43 @@
 
+#-----------------------------------------------------------------------------
+
+find_in_list() {
+    a="x`eval echo \\$$1`"
+    if [ "$a" = "x" ]; then
+        for a in $2; do
+            for b in $a ${a}.exe; do
+                if type $b >/dev/null 2>/dev/null; then
+                    echo $1=$b
+                    eval $1=$b
+                    echo export $1
+                    export $1
+                    return
+                fi
+            done
+        done
+        echo "none of $2 found"
+        exit 1
+    fi
+}
+
 #----------------------------------------------------------------------------
 # global definitions
 
 # nice, but need more testing
 #set -e
 #set -x
+
+#
+# Look for GNU make and GNU tar.
+# TODO: run them and grep for GNU tar and GNU make
+#
+# /usr/pkg is NetBSD default
+# /usr/sfw is Solaris default (Sun FreeWare)
+# /usr/local is FreeBSD and OpenBSD default and popular otherwise
+#
+
+find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
+find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
 
 # our hostname
 TESTHOSTNAME=${TESTHOSTNAME:-`hostname | sed -e 's/\..*//'`}
@@ -16,7 +49,7 @@ DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 WS=${WS:-${HOME}/work/cm3-ws/${TESTHOSTNAME}-${DS}}
 
 # version to check out from repository (usually the main trunk's head)
-COVERSION=${COVERSION:-"-AP"} # version to checkout, default current
+COVERSION=${COVERSION:-"-P -r release_branch_cm3_5_8"} # version to checkout, default current
 
 # CMINSTALL: set this to override the installer binary (full path)
 # NOCLEAN: set to avoid cleaning for re-starts
@@ -41,7 +74,7 @@ CM3CVSSERVER=${CM3CVSSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
 CM3CVSROOT=${CM3CVSROOT:-${CM3CVSSERVER}:/usr/cvs}
 
 # WWW server site
-WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
 
 # the whole test log
 RLOG=${RLOG:-${HTMP}/cm3-rlog-${DS}}
@@ -106,7 +139,6 @@ case "${UNAME}" in
 
   Linux*)
     CM3_OSTYPE=POSIX
-    GMAKE=${GMAKE:-make}
     if [ "${UNAMEM}" = "ppc" ] ; then
       CM3_TARGET=PPC_LINUX
     elif [ "${UNAMEM}" = "x86_64" ] ; then
@@ -132,6 +164,8 @@ case "${UNAME}" in
       CM3_TARGET=SPARC64_OPENBSD
     elif [ "${ARCH}" = "mips64" ] ; then
       CM3_TARGET=MIPS64_OPENBSD
+    elif [ "${ARCH}" = "i386" ] ; then
+      CM3_TARGET=I386_OPENBSD
     else
       echo Update $0 for ${ARCH}
       exit 1
@@ -203,71 +237,10 @@ fi
 #----------------------------------------------------------------------------
 # path functions
 
-pathelems()
-{
-  echo $1 | tr ':' ' '
-}
-
-makepath()
-{
-  #local p
-  p="$1"
-  shift
-  while [ -n "$1" ] ; do
-    p="${p}:${1}"
-    shift
-  done
-  echo $p
-}
-
-  # $1 elem, $2 path
-delpathelem()
-{
-  #local e
-  #local p
-  p=""
-  if [ -z "$1" ] ; then
-    return
-  fi
-  if [ -z "$2" ] ; then
-    return
-  fi
-  for e in `pathelems $2` ; do
-    if [ "$1" != "$e" ] ; then
-      if [ -z "$p" ] ; then
-         p=$e
-      else
-         p="${p}:${e}"
-      fi
-    fi
-  done
-  echo $p
-}
-
 prependpathelem()
 {
   # $1 elem, $2 path
   echo "${1}:${2}"
-}
-
-appendpathelem()
-{
-  # $1 elem, $2 path
-  echo "${2}:${1}"
-}
-
-delpath()
-{
-  # $1 elem to delete from path
-  PATH=`delpathelem $1 $PATH`
-  export PATH
-}
-
-appendpath()
-{
-  # $1 elem to append to the path
-  PATH=`appendpathelem $1 $PATH`
-  export PATH
 }
 
 prependpath()
@@ -287,9 +260,17 @@ checkout()
     mkdir -p "${WS}"
   fi
   cd "${WS}" || exit 1
-  (cvs -z1 -q -d ${CM3CVSROOT} checkout ${COVERSION} cm3 2>&1 | tee cvs-co.log) || exit 1
-  echo " >>> OK checkout ${DS} ${WS} ${COVERSION}"
-  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` checkout cm3 done"
+  echo "cvs -z1 -q -d ${CM3CVSROOT} checkout ${COVERSION} cm3"
+  cvs -z1 -q -d ${CM3CVSROOT} checkout ${COVERSION} cm3 >cvs-co.log 2>&1
+  rc=$?
+  cat cvs-co.log
+  if [ $rc = 0 ]; then
+    echo " >>> OK checkout ${DS} ${WS} ${COVERSION}"
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` checkout cm3 done"
+  else
+    echo " === `date -u +'%Y-%m-%d %H:%M:%S'` checkout cm3 failed"
+  fi
+  return $rc
 }
 
 #----------------------------------------------------------------------------
@@ -339,7 +320,9 @@ all_but_last_n() {
 
 cleanup_all_but_last_n() { 
   # Beware! This may ruin your disk with wrong standard input...
+  echo cleanup_all_but_last_n
   dirs=`all_but_last_n $1`
+  echo cleanup_all_but_last_n ${dirs}
   echo ${dirs} | xargs rm -rf
 }
 
@@ -389,6 +372,7 @@ cleanup_all() {
   echo "${pat}"
   ls -1d ${pat} | cleanup_all_but_last_n ${n}
   echo
+  echo done with cleanup_all
 }
 
 
@@ -507,8 +491,12 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   echo " >>> OK build_${1}_${BSET} ${DS} ${WS}"
 
   echo " === build intermediate lastok in ${INSTROOT_LOK}.$$"
-  cp -pR ${INSTROOT_LOK}   ${INSTROOT_LOK}.$$
-  cp -pR ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
+  [ -d ${INSTROOT_LOK} ] && cp -pR ${INSTROOT_LOK}   ${INSTROOT_LOK}.$$
+  if [ -d ${INSTROOT_LOK}.$$ ]; then
+    cp -pR ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
+  else
+    mv ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
+  fi
 
   if [ -d ${INSTROOT_LOK} -a -d ${INSTROOT_POK} ]; then
     echo " === remove previous ok version at ${INSTROOT_POK}"
@@ -635,6 +623,12 @@ make_src_dist_snapshots()
   echo " >>> OK make_src_dist_snapshots ${DS} ${WS}"
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 source snapshot build done"
 }
+
+# NT has \windows\system32\find.exe, completely different
+FIND=find
+if [ -x /usr/bin/find ] ; then
+  FIND=/usr/bin/find
+fi
 
 test_m3tests()
 {
@@ -773,13 +767,15 @@ test_m3tohtml()
   res=$?
   
   if [ 0 = "${res}" ]; then
-    if [ "${TESTHOSTNAME}" = "birch.elegosoft.com" -a `who -m | cut -d ' ' -f1` = "m3" ]; then
-      DOCDEST=/var/www/modula3.elegosoft.com/cm3/doc/help/gen_html
-      if [ -d "${DOCDEST}" ]; then
-        mv html "${DOCDEST}.new"
-        mv "${DOCDEST}" "${DOCDEST}.old" && 
-        mv "${DOCDEST}.new" "${DOCDEST}" &&
-        rm -rf "${DOCDEST}.old"
+    if [ "${TESTHOSTNAME}" = "birch.elegosoft.com" ]; then
+      if [ `who -m | cut -d ' ' -f1` = "m3" ]; then
+        DOCDEST=/var/www/modula3.elegosoft.com/cm3/doc/help/gen_html
+        if [ -d "${DOCDEST}" ]; then
+          mv html "${DOCDEST}.new"
+          mv "${DOCDEST}" "${DOCDEST}.old" && 
+          mv "${DOCDEST}.new" "${DOCDEST}" &&
+          rm -rf "${DOCDEST}.old"
+        fi
       fi
     fi
     echo " >>> OK test_m3tohtml ${DS} ${WS}"
@@ -852,6 +848,7 @@ main()
 {
   time testall 2>&1 | tee ${RLOG}
   cleanup_all ${CM3_NKEEP}
+  echo done with main
 }
 
 #----------------------------------------------------------------------------

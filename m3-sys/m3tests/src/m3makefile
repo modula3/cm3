@@ -39,14 +39,11 @@ build_standalone ()
 library ("test")
 
 % include floating point pieces from m3core
-M3TESTS = "yes"
-if defined ("ROOT")
-  include (".." & SL & ".." & SL & ".." & SL & "m3-libs" & SL & "m3core" & 
-           SL & "src" & SL & "float" & SL & "m3makefile")
-else
-  include (PKG_INSTALL & SL & "m3core" & 
-           SL & "src" & SL & "float" & SL & "m3makefile")
-end
+%if defined ("ROOT")
+%  include ("../../../m3-libs/m3core/src/float/m3makefile")
+%else
+%  include (PKG_INSTALL & "/m3core/src/float/m3makefile")
+%end
 
 proc File64(Path) is
   if equal (WORD_SIZE, "64BITS") and FileExists (Path & "64")
@@ -61,8 +58,8 @@ if not defined ("LIB_ONLY")
 %
 
 proc compare_file (dir, OutputPath) is
-  local ExpectedPath = dir & SL & OutputPath
-  OutputPath = dir & SL & BUILD_DIR & SL & OutputPath
+  local ExpectedPath = dir & "/" & OutputPath
+  OutputPath = dir & "/" & BUILD_DIR & "/" & OutputPath
 
   %write ("compare OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
   if stale (OutputPath, OutputPath)
@@ -95,7 +92,7 @@ proc compare_file (dir, OutputPath) is
 end
 
 if defined ("LOG_CMPS")
-  ComparisonLogFilePath = PACKAGE_DIR & SL & "m3tests-" & datestamp() & ".diffs"
+  ComparisonLogFilePath = PACKAGE_DIR & "/m3tests-" & datestamp() & ".diffs"
   fs_rmfile(ComparisonLogFilePath)
 end
 
@@ -104,8 +101,8 @@ proc FileExists(x) is
 end
 
 proc cmp_file (dir, file) is
-  local ExpectedPath = dir & SL & file
-  local OutputPath = dir & SL & BUILD_DIR & SL & file
+  local ExpectedPath = dir & "/" & file
+  local OutputPath = dir & "/" & BUILD_DIR & "/" & file
 
   ExpectedPath = File64(ExpectedPath)
 
@@ -151,9 +148,9 @@ proc cmp_file (dir, file) is
 end
 
 %NOW = "-" & datetime()
-report = PACKAGE_DIR & SL & "m3tests.html"
-jureport = PACKAGE_DIR & SL & "m3tests-results.xml.new"
-juxreport = PACKAGE_DIR & SL & "m3tests-results.xml"
+report = PACKAGE_DIR & "/m3tests.html"
+jureport = PACKAGE_DIR & "/m3tests-results.xml.new"
+juxreport = PACKAGE_DIR & "/m3tests-results.xml"
 
 if defined("HTML")
   > report in
@@ -243,26 +240,33 @@ html(["      <tbody>", CR])
 %
 
 readonly proc run_test (class, group, uid, comment, should_run) is
+  local cm3opts = ""
+  local runopts = ""
+  run_test2 (class, group, uid, comment, should_run, cm3opts, runopts)
+end
 
-  local dir = ".." & SL & "src" & SL & group & SL & uid
-  fs_rmrec (dir & SL & BUILD_DIR)
+readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopts) is
+  local dir = "../src/" & group & "/" & uid
+  fs_rmrec (dir & "/" & BUILD_DIR)
   tstart = compress (q_exec_get ("date '+%s'")[1]) % second resolution only
   %write (tstart, CR)
 
   if defined ("_all") or defined (class) or defined ("_" & uid)
     write ("--- ", uid, " --- ", comment, CR)
-    fs_mkdir (dir & SL & BUILD_DIR)
-    exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", ">" & BUILD_DIR & SL & "stdout.build.raw 2>" & BUILD_DIR & SL & "stderr.build.raw")
+    fs_mkdir (dir & "/" & BUILD_DIR)
+    fs_putfile (dir & "/" & BUILD_DIR & "/runopts", runopts)
 
-    NormalizeFile (dir & SL & BUILD_DIR & SL & "stdout.build")
-    NormalizeFile (dir & SL & BUILD_DIR & SL & "stderr.build")
+    exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", cm3opts, ">" & BUILD_DIR & "/stdout.build.raw 2>" & BUILD_DIR & "/stderr.build.raw")
+
+    NormalizeFile (dir & "/" & BUILD_DIR & "/stdout.build")
+    NormalizeFile (dir & "/" & BUILD_DIR & "/stderr.build")
 
     if defined ("CAPTURE_BUILD")
       if not cmp_file (dir, "stdout.build")
-        cp_if (dir & SL & BUILD_DIR & SL & "stdout.build", dir & SL & "stdout.build")
+        cp_if (dir & "/" & BUILD_DIR & "/stdout.build", dir & "/stdout.build")
       end
       if not cmp_file (dir, "stderr.build")
-        cp_if (dir & SL & BUILD_DIR & SL & "stderr.build", dir & SL & "stderr.build")
+        cp_if (dir & "/" & BUILD_DIR & "/stderr.build", dir & "/stderr.build")
       end
     end
 
@@ -315,7 +319,7 @@ readonly proc run_test (class, group, uid, comment, should_run) is
     html (["</pre></td></tr>", CR])
 
     if not defined ("keep")
-      fs_rmrec (dir & SL & BUILD_DIR)
+      fs_rmrec (dir & "/" & BUILD_DIR)
     end
   end
 end
@@ -328,7 +332,16 @@ readonly proc p_test (group, uid, comment) is
   run_test ("_ptests", group, uid, comment, "run")
 end
 
+readonly proc pr_test (group, uid, comment, runopts) is
+  run_test2 ("_ptests", group, uid, comment, "run", "", runopts)
+end
+
+readonly proc pb_test (group, uid, comment, cm3opts) is
+  run_test2 ("_ctests", group, uid, comment, "", cm3opts, "")
+end
+
 % some currently failing tests...
+
 %p_test ("p2", "p204", "IP address initializers")
 %p_test ("p2", "p206", "ARRAY constructors in var decls using named open array types")
 %p_test ("p2", "p207", "subrange declarations")
@@ -446,14 +459,14 @@ p_test ("p1", "p112", "local revelation that a type is an object")
 p_test ("p1", "p113", "FIRST/LAST of REAL")
 p_test ("p1", "p114", "array expressions")
 p_test ("p1", "p115", "reuse of open array conversion within an expression")
-if _FloatPieces contains "IEEE-default"
-  p_test ("p1", "p116", "IEEE floating point tests from Xerox PARC")
-else
+%if _FloatPieces contains "IEEE-default"
+%  p_test ("p1", "p116", "IEEE floating point tests from Xerox PARC")
+%else
   % In all IEEE-default configurations, the FloatMode interface is not
   % implemented (all procedure raise exceptions). In this case we run
   % a stripped-down set of tests.
   p_test ("p1", "p116b", "default IEEE floating point tests from Xerox PARC")
-end
+%end
 p_test ("p1", "p117", "SUBARRAY (LOOPHOLE)")
 p_test ("p1", "p118", "LAST (REAL)")
 p_test ("p1", "p119", "small exception arguments (big-endian problem)")
@@ -548,6 +561,23 @@ p_test ("p2", "p207", "subrange declarations")
 p_test ("p2", "p208", "catching runtime errors")
 p_test ("p2", "p209", "open array initializers compile failure")
 p_test ("p2", "p210", "open array initializers runtime failure")
+
+pr_test ("p2", "p213", "runtime arguments: @M3paranoidgc", "@M3paranoidgc")
+pr_test ("p2", "p214", "runtime arguments: @M3noincremental", "@M3noincremental")
+pr_test ("p2", "p215", "runtime arguments: @M3nogenerational", "@M3nogenerational")
+pr_test ("p2", "p216", "runtime arguments: @M3nogc", "@M3nogc")
+
+pb_test ("p2", "p217", ".M3SHIP program", "-no-m3ship-resolution")
+pb_test ("p2", "p218", ".M3SHIP Program", "-no-m3ship-resolution")
+pb_test ("p2", "p219", ".M3SHIP Program group-writable", "-no-m3ship-resolution -group-writable")
+pb_test ("p2", "p220", ".M3SHIP library", "-no-m3ship-resolution")
+pb_test ("p2", "p221", ".M3SHIP Library", "-no-m3ship-resolution")
+pb_test ("p2", "p222", ".M3SHIP Library", "-no-m3ship-resolution -group-writable")
+% The following test won't run until FSUtils.RmRec() is fixed
+%pb_test ("p2", "p223", ".M3SHIP Library", "-no-m3ship-resolution -group-writable")
+
+p_test ("p2", "p224", "mutex checker (approx. 4 to 5 minutes)")
+p_test ("p2", "p225", "__try/__finally")
 
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated

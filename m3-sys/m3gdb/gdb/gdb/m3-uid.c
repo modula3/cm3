@@ -30,43 +30,46 @@ Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.  */
 #include "m3-uid.h"
 
 char *
-m3uid_from_int (const int x)
+m3uid_from_num (const LONGEST x)
 {
   char *res;
   unsigned digit;
   int i;
-  int lx = x;
+  ULONGEST lx = x;
 
   if (lx == -1) return "zzzzzz";
 
   res = (char *) malloc (M3UID_LEN + 1);
+  /* FIXME: ^This can't be the right way to allocate in gdb. */
   res[M3UID_LEN] = 0;
   for (i = M3UID_LEN-1; i >= 0; i--) {
-    digit = ((unsigned)lx) % 62;
-    lx = ((unsigned)lx) / 62;
+    digit = lx % 62;
+    lx = lx / 62;
     if      (digit < 26) { res[i] = 'A' + digit; }
     else if (digit < 52) { res[i] = 'a' + (digit - 26); }
     else                 { res[i] = '0' + (digit - 52); }
   }
 
   if ((lx != 0) || (res[0] < 'A') || ('Z' < res[0])) {
-    error ("bad uid -> identifier conversion!!"); }
+    error ("bad numeric uid -> identifier conversion!!"); }
 
   return res;
 }
 
-int
-m3uid_to_int (const char *uid, int *val)
+BOOL
+m3uid_to_num (const char *uid, LONGEST *num_val)
 {
-  int value, digit, i;
+  LONGEST value;
+  int digit, i;
   char c;
 
-  *val = 0;
-  if (uid == NULL) return 0;
+  *num_val = 0;
+  if (uid == NULL) return FALSE;
 
-  if (strlen (uid) < M3UID_LEN) return 0;
+  if (strlen (uid) < M3UID_LEN) return FALSE;
 
-  if (strncmp (uid, "zzzzzz", M3UID_LEN ) == 0) { *val = -1;  return 1; };
+  if (strncmp (uid, "zzzzzz", M3UID_LEN ) == 0)
+    { *num_val = -1;  return TRUE; }
 
   value = 0;
   for (i = 0; i < M3UID_LEN; i++) {
@@ -74,11 +77,11 @@ m3uid_to_int (const char *uid, int *val)
     if      (('A' <= c) && (c <= 'Z')) digit = c - 'A';
     else if (('a' <= c) && (c <= 'z')) digit = c - 'a' + 26;
     else if (('0' <= c) && (c <= '9')) digit = c - '0' + 52;
-    else return 0;
+    else return FALSE;
     value = value * 62 + digit;
   }
-  *val = value;
-  return 1;
+  *num_val = value;
+  return TRUE;
 }
 
-/* End of file m3-uid.c */ 
+/* End of file m3-uid.c */

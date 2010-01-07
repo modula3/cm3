@@ -12,7 +12,7 @@ UNSAFE MODULE RTLinker EXPORTS RTLinker, RTModule;
 
 IMPORT Cstdlib, Cstring;
 IMPORT RT0, RTParams, RTDebug, RTHeapRep, RTCollectorSRC;
-IMPORT RTTypeSRC, RTSignal, ThreadF, RTHeapInfo, RTLinkerX, 
+IMPORT RTTypeSRC, RTSignal, RTThread, RTHeapInfo, RTLinkerX, 
        RTIO, Word;
 
 VAR
@@ -46,7 +46,7 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     AddUnit (RTLinkerX.RTDebug_I3);
     AddUnit (RTLinkerX.RTError_I3);
     AddUnit (RTLinkerX.RTHeapRep_I3);
-    AddUnit (RTLinkerX.ThreadF_I3);
+    AddUnit (RTLinkerX.RTThread_I3);
     AddUnit (RTLinkerX.RTHeapInfo_I3);
     AddUnit (RTLinkerX.RTIO_I3);
     AddUnit (RTLinkerX.RTCollectorSRC_I3);
@@ -55,8 +55,8 @@ PROCEDURE InitRuntime (p_argc: INTEGER;  p_argv, p_envp, p_instance: ADDRESS) =
     (* finally, initialize the runtime. *)
     RTSignal.InstallHandlers ();
     RTParams.Init ();
+    RTThread.Init ();
     RTHeapRep.Init ();
-    ThreadF.Init ();
     RTDebug.Init ();
     RTHeapInfo.Init ();
     IF RTParams.IsPresent("tracelinker") THEN
@@ -266,6 +266,7 @@ PROCEDURE FixTypes () =
 PROCEDURE DeclareModuleTypes (m: RT0.ModulePtr) =
   VAR
     type  : RT0.TypeDefn;
+    brand : RT0.BrandPtr;
     rev   : RT0.RevPtr;
     next  : ADDRESS;
   BEGIN
@@ -274,9 +275,15 @@ PROCEDURE DeclareModuleTypes (m: RT0.ModulePtr) =
     type := m.type_cells;  m.type_cells := NIL;
     WHILE (type # NIL) DO
       next := type.next;  type.next := NIL;
-      TraceMsgS("  type ", type.name);
-      TraceMsgI("    typecode ", type.typecode);
-      TraceMsgI("    typeid   ", type.selfID);
+      IF traceInit THEN
+        TraceMsgS("  type ", type.name);
+        TraceMsgI("    typecode ", type.typecode);
+        TraceMsgI("    typeid   ", type.selfID);
+        brand := type.brand_ptr;
+        IF brand # NIL THEN
+          TraceMsgC("    brand    ", ADR(brand.chars[0]), brand.length);
+        END;
+      END;
       RTTypeSRC.AddTypecell (type, m);
       type := next;
     END;
@@ -544,7 +551,14 @@ PROCEDURE TraceMsgS(s: TEXT; s2: RT0.String) =
     RTIO.Flush();
   END TraceMsgS;
 
+PROCEDURE TraceMsgC(s: TEXT; a: ADDRESS; n: INTEGER) =
+  BEGIN
+    IF NOT traceInit THEN RETURN END;
+    RTIO.PutText(s);
+    RTIO.PutChars(a, n);
+    RTIO.PutText("\r\n");
+    RTIO.Flush();
+  END TraceMsgC;
+
 BEGIN
 END RTLinker.
-
-

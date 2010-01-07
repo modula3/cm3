@@ -51,8 +51,24 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
 
 end
 
-if not defined("SYSTEM_LD")
-  SYSTEM_LD = SYSTEM_CC
+if not defined("configure_assembler")
+  proc configure_assembler() is
+  end
+end
+
+if not defined("configure_c_compiler")
+  proc configure_c_compiler() is
+  end
+end
+
+if not defined("configure_linker")
+  proc configure_linker() is
+    if defined("SYSTEM_LD")
+      return
+    end
+    configure_c_compiler()
+    SYSTEM_LD = SYSTEM_CC
+  end
 end
 
 %--------------------------------------------------------- Modula-3 backend ---
@@ -74,11 +90,21 @@ end
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files.  Note that this function
 % is only called if your program or library explicitly includes C source
-% code, the system distributed by Critical Mass does not.
+% code, the system distributed by Critical Mass did not, but
+% the current system does a fair amount for much easier porting.
 
 if not defined ("compile_c")
 
 proc compile_c(source, object, options, optimize, debug) is
+
+    % hack
+
+    if equal(source, "../src/runtime/SOLgnu/RTMachineASM.s")
+        return assemble(source, object)
+    end
+
+    configure_c_compiler()
+
     local args = options
     if M3_PROFILING args += "-pg" end
     return try_exec ("@" & SYSTEM_CC, args, "-c", source)
@@ -92,10 +118,36 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble(source, object) is
-    if defined("configure_assembler")
-        configure_assembler()
-    end
+    configure_assembler()
     return try_exec("@" & SYSTEM_ASM, source, "-o", object)
+end
+
+%------------------------------------------------------------------------------
+
+if IsInterix()
+  UseNtdll = PKG_INSTALL & SL & "ntdll" & SL & TARGET & SL & "libntdll.a"
+else
+  UseNtdll = ""
+end
+
+%------------------------------------------------------------------------------
+
+proc AdjustShared(shared) is
+
+  return shared
+
+    % for now at least, no shared on Interix
+  
+    and (not IsInterix())
+
+    % Do not support shared with older compilers.
+    % There are, I vaguely recall, problems due to the way
+    % we changed the directory layout. Older compilers combined
+    % with this config file need only support building a static compiler,
+    % so this is ok.
+
+    and defined("install_symbolic_link")
+
 end
 
 %--------------------------------------------------------- library creation ---
@@ -105,6 +157,7 @@ end
 if not defined("make_lib")
 
 proc make_lib(lib, options, objects, imported_libs, shared) is
+    shared = AdjustShared(shared)
     local suffix = "so"
     local hpux_flags = ""
     local soname_flag = "-soname"
@@ -114,8 +167,16 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     end
     local ret_code = 0
     local lib_a   = format("lib%s.a", lib)
+    local readonly lib0_file = lib_a & ".sa" % standalone
     local lib_so  = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
+    local expfile = "lib" & lib & ".exp" % libfoo.exp
+
+    DeleteFiles([lib_a, lib0_file, lib_so, lib_sox, expfile])
+
+    if not equal(lib, "m3core")
+        UseNtdll = ""
+    end
 
     % first build the non-shared library in the usual ar/ranlib way
 
@@ -137,11 +198,22 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         end
     end
 
-    if shared and defined("install_symbolic_link")
+    if shared
 
         local soname_opt = "-Wl," & soname_flag & "," & lib_sox
-        if equal (TARGET, "I386_INTERIX")
+
+        if IsInterix()
+
+            % move libfoo.a to libfoo.a.sa; sa for standalone (or static)
+            % libfoo.a is the import library for libfoo.so
+            % libfoo.a.sa is a static library if the dependency is being avoided
+
+            MoveFile(lib_a, lib0_file)
             soname_opt = ""
+            expfile = "lib" & lib & ".exp" % libfoo.exp
+            exec(DLLTOOL,  "--dllname", lib_sox, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", lib0_file, "--output-exp", expfile)
+        else
+            expfile = ""
         end
 
         % build the shared library
@@ -149,15 +221,12 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         if M3_PROFILING
             pg = "-pg"
         end
-        ret_code =
-            try_exec(
-                "@" & SYSTEM_LD,
-                pg,
-                "-shared",
-                soname_opt,
-                "-o", lib_sox,
-                objects,
-                imported_libs)
+        configure_linker()
+        if IsInterix()
+          ret_code = try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, "--whole-archive", lib0_file, "--no-whole-archive", imported_libs, expfile, UseNtdll)
+        else
+          ret_code = try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, objects, imported_libs)
+        end
         if not equal(ret_code, 0)
             return ret_code
         end
@@ -178,6 +247,7 @@ end
 if not defined("skip_lib")
 
 proc skip_lib(lib, shared) is
+    shared = AdjustShared(shared)
     local suffix = "so"
     if equal (TARGET, "PA32_HPUX")
       suffix = "sl" 
@@ -186,21 +256,21 @@ proc skip_lib(lib, shared) is
     local lib_a   = format("lib%s.a", lib)
     local lib_so = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
+    local readonly lib0_file = lib_a & ".sa" % standalone
 
-    if shared and defined("install_symbolic_link")
+    if shared
         % create the version aliases
         link_file(lib_sox, lib_so)
 
         % make sure the shared library stuff gets installed properly
+
         LibdExport(lib_sox)
         install_link_to_derived(lib_a, LIB_INSTALL)
         install_symbolic_link(lib_sox, LIB_INSTALL & "/" & lib_so)
         install_derived_link("../../../lib/" & lib_sox, lib_so)
         install_derived_link("../../../lib/" & lib_sox, lib_sox)
-
     else
-        delete_file(lib_so)
-        delete_file(lib_sox)
+        DeleteFiles([lib0_file, lib_so, lib_sox])
     end
 
     return 0
@@ -214,18 +284,20 @@ end
 if not defined("m3_link")
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
-    local args =
-    [
-        "-o", prog,
-        options,
-        objects,
-        imported_libs,
-    ]
+    shared = AdjustShared(shared)
+    imported_libs = ConvertLibsToStandalone(imported_libs, shared)
+    local args = [ "-o", prog, options, objects, imported_libs ]
+    if not shared
+        args += UseNtdll
+    end
     if M3_PROFILING
         args += "-pg"
     end
     if defined("POSITION_INDEPENDENT_EXECUTABLE")
         args += POSITION_INDEPENDENT_EXECUTABLE
+    end
+    if not shared and defined("LINK_STATIC")
+        args += LINK_STATIC
     end
     return try_exec("@" & SYSTEM_LD, args)
 end

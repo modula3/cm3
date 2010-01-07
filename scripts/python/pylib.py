@@ -38,6 +38,7 @@ def IsInterix():
     return os.name == "posix" and os.uname()[0].lower().startswith("interix")
 
 env_OS = getenv("OS")
+
 if env_OS == "Windows_NT" and not IsInterix():
     def uname():
         PROCESSOR_ARCHITECTURE = getenv("PROCESSOR_ARCHITECTURE")
@@ -57,6 +58,10 @@ else:
 
 #-----------------------------------------------------------------------------
 
+_Program = os.path.basename(sys.argv[0])
+
+#-----------------------------------------------------------------------------
+
 def FatalError(a = ""):
     # logs don't work yet
     #print("ERROR: see " + Logs)
@@ -64,10 +69,30 @@ def FatalError(a = ""):
     if __name__ != "__main__":
         sys.exit(1)
 
+def RemoveTrailingSlashes(a):
+    while len(a) > 0 and (a[-1] == '\\' or a[-1] == '/'):
+        a = a[:-1]
+    return a
+
+def RemoveTrailingSlash(a):
+    if len(a) > 0 and (a[-1] == '\\' or a[-1] == '/'):
+        a = a[:-1]
+    return a
+
+#print("RemoveTrailingSlash(a\\/):" + RemoveTrailingSlash("a\\/"))
+#print("RemoveTrailingSlash(a/\\):" + RemoveTrailingSlash("a/\\"))
+#print("RemoveTrailingSlash(a):" + RemoveTrailingSlash("a"))
+#print("RemoveTrailingSlashes(a\\\\):" + RemoveTrailingSlashes("a\\\\"))
+#print("RemoveTrailingSlashes(a//):" + RemoveTrailingSlashes("a//"))
+#print("RemoveTrailingSlashes(a):" + RemoveTrailingSlashes("a"))
+#sys.exit(1)
+
 def GetLastPathElement(a):
+    a = RemoveTrailingSlashes(a)
     return a[max(a.rfind("/"), a.rfind("\\")) + 1:]
 
 def RemoveLastPathElement(a):
+    a = RemoveTrailingSlashes(a)
     return a[0:max(a.rfind("/"), a.rfind("\\"))]
 
 def GetPathExtension(a):
@@ -95,6 +120,66 @@ def GetPathBaseName(a):
 # print("4:" + GetPathBaseName("a.b/c"))
 # sys.exit(1)
 
+
+#-----------------------------------------------------------------------------
+
+def _ConvertToCygwinPath(a):
+    if IsInterix() or env_OS != "Windows_NT" or a == None:
+        return a
+    if (a.find('\\') == -1) and (a.find(':') == -1):
+        return a
+    a = a.replace("\\", "/")
+    if a.find(":/") == 1:
+        a = "/cygdrive/" + a[0:1] + a[2:]
+    return a
+
+#-----------------------------------------------------------------------------
+
+def _ConvertFromCygwinPath(a):
+    if IsInterix() or env_OS != "Windows_NT" or a == None:
+        return a
+    a = a.replace("/", "\\")
+    #a = a.replace("\\", "/")
+    if a.startswith("\\cygdrive\\"):
+        a = a[10] + ":" + a[11:]
+    elif a.startswith("\\home\\elego\\"):
+        a = "c:\\cygwin\\" + a
+    return a
+
+def GetFullPath(a):
+    # find what separator it as (might be ambiguous)
+    if a.find("/") != -1:
+        sep = "/"
+    elif a.find("\\") != -1:
+        sep = "\\"
+    # convert to what Python expects, both due to ambiguity
+    a = a.replace("/", os.path.sep)
+    a = a.replace("\\", os.path.sep)
+    a = os.path.abspath(a)          # have Python do the work
+    a = a.replace(os.path.sep, sep) # put back the original separators
+    return a
+
+def ConvertPathForWin32(a):
+    return _ConvertFromCygwinPath(a)
+
+if os.name == "posix":
+    def ConvertPathForPython(a):
+        return _ConvertToCygwinPath(a)
+else:
+    def ConvertPathForPython(a):
+        return _ConvertFromCygwinPath(a)
+
+#-----------------------------------------------------------------------------
+
+def isfile(a):
+    return os.path.isfile(ConvertPathForPython(a))
+
+def isdir(a):
+    return os.path.isdir(ConvertPathForPython(a))
+
+def FileExists(a):
+    return isfile(a)
+
 #-----------------------------------------------------------------------------
 #
 # http://aspn.activestate.com/ASPN/Cookbook/Python/Recipe/52224
@@ -103,7 +188,7 @@ def GetPathBaseName(a):
 def SearchPath(name, paths = getenv("PATH")):
     #Given a search path, find file
     if (name.find("/") != -1) or (name.find("\\") != -1):
-        if os.path.isfile(name):
+        if isfile(name):
             return name
     if paths == "":
         print("SearchPath returning None 1")
@@ -115,10 +200,15 @@ def SearchPath(name, paths = getenv("PATH")):
         if ext == ".":
             ext = ""
         name = (base + ext)
-        for path in paths.split(os.path.pathsep):
-            candidate = os.path.join(path, name)
-            if os.path.isfile(candidate):
-                return os.path.abspath(candidate)
+        seps = [os.pathsep]
+        # use ; for portable separator where possible
+        if os.pathsep != ';':
+            seps.append(';')
+        for sep in seps:
+            for path in paths.split(sep):
+                candidate = os.path.join(path, name)
+                if isfile(candidate):
+                    return os.path.abspath(candidate)
     #print("SearchPath " + name + " returning None 2")
     return None
 
@@ -132,7 +222,7 @@ def _FormatEnvironmentVariable(Name):
 
 #-----------------------------------------------------------------------------
 
-def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
+def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep = os.pathsep):
     AnyMissing = False
     Value = os.environ.get(Name)
     if Value:
@@ -144,7 +234,7 @@ def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
         AnyMissing = True
     if AnyMissing:
         if Value:
-            NewValue = Attempt + os.path.pathsep + Value
+            NewValue = Attempt + pathsep + Value
         else:
             NewValue = Attempt
         for File in RequiredFiles:
@@ -152,13 +242,13 @@ def _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
                 return "ERROR: " + File + " not found in " + _FormatEnvironmentVariable(Name) + "(" + NewValue + ")"
         os.environ[Name] = NewValue
         if Value:
-            print(Name + "=" + Attempt + os.pathsep + _FormatEnvironmentVariable(Name))
+            print(Name + "=" + Attempt + pathsep + _FormatEnvironmentVariable(Name))
         else:
             print(Name + "=" + Attempt)
     return None
 
-def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
-    Error = _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt)
+def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep = os.pathsep):
+    Error = _CheckSetupEnvironmentVariableAll(Name, RequiredFiles, Attempt, pathsep)
     if Error:
         print(Error)
         if __name__ != "__main__":
@@ -166,21 +256,21 @@ def _SetupEnvironmentVariableAll(Name, RequiredFiles, Attempt):
 
 #-----------------------------------------------------------------------------
 
-def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt):
+def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt, pathsep = os.pathsep):
     Value = os.environ.get(Name)
     if Value:
         for File in RequiredFiles:
             if SearchPath(File, Value):
                 return
     if Value:
-        NewValue = Attempt + os.path.pathsep + Value
+        NewValue = Attempt + pathsep + Value
     else:
         NewValue = Attempt
     for File in RequiredFiles:
         if SearchPath(File, NewValue):
             os.environ[Name] = NewValue
             if Value:
-                print(Name + "=" + NewValue + os.pathsep + _FormatEnvironmentVariable(Name))
+                print(Name + "=" + NewValue + pathsep + _FormatEnvironmentVariable(Name))
             else:
                 print(Name + "=" + NewValue)
             return
@@ -198,10 +288,10 @@ def _ClearEnvironmentVariable(Name):
 #-----------------------------------------------------------------------------
 
 def _MapTarget(a):
-    #
+
     # Convert sensible names that the user might provide on the
     # command line into the legacy names other code knows about.
-    #
+
     return {
         "I386_LINUX" : "LINUXLIBC6",
         "I386_NT" : "NT386",
@@ -212,9 +302,8 @@ def _MapTarget(a):
         "I386_FREEBSD" : "FreeBSD4",
         "I386_NETBSD" : "NetBSD2_i386",
 
-        #
         # both options sensible, double HP a bit redundant in the HPUX names
-        #
+
         "HPPA32_HPUX"  : "PA32_HPUX",
         "HPPA64_HPUX"  : "PA64_HPUX",
         "HPPA32_LINUX" : "PA32_LINUX",
@@ -281,7 +370,7 @@ if "boot" in sys.argv:
 if "keep" in sys.argv:
     CM3_FLAGS = CM3_FLAGS + " -keep"
 
-CM3 = getenv("CM3") or "cm3"
+CM3 = ConvertPathForPython(getenv("CM3")) or "cm3"
 CM3 = SearchPath(CM3)
 
 #-----------------------------------------------------------------------------
@@ -290,12 +379,12 @@ CM3 = SearchPath(CM3)
 # if the defaults contain a cm3.
 #
 
-InstallRoot = getenv("CM3_INSTALL")
+InstallRoot = ConvertPathForPython(getenv("CM3_INSTALL"))
 # print("InstallRoot is " + InstallRoot)
 
 if not CM3 and not InstallRoot:
     for a in ["c:\\cm3\\bin\\cm3.exe", "d:\\cm3\\bin\\cm3.exe", "/cm3/bin/cm3", "/usr/local/bin/cm3"]:
-        if os.path.isfile(a):
+        if isfile(a):
             CM3 = a
             bin = os.path.dirname(CM3)
             print("using " + CM3)
@@ -338,7 +427,7 @@ Root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)
 # these paths (even though underlying Win32 does). So try leaving things alone.
 
 # if Root.find(":\\") == 1:
-#	Root = Root[2:]
+#   Root = Root[2:]
 #
 # Root = Root.replace("\\\\", "/")
 # Root = Root.replace("\\", "/")
@@ -379,18 +468,6 @@ Variables = [
     "CM3_BuildGlobal",
     "CM3_CleanGlobal",
     "CM3_Ship",
-
-    "PM3_BuildLocal",
-    "PM3_CleanLocal",
-    "PM3_BuildGlobal",
-    "PM3_CleanGlobal",
-    "PM3_Ship",
-
-    "SRC_BuildLocal",
-    "SRC_CleanLocal",
-    "SRC_BuildGlobal",
-    "SRC_CleanGlobal",
-    "SRC_Ship",
 
     "RealClean",
     "HAVE_TCL",
@@ -482,14 +559,6 @@ CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetVersion("CM3VERSIONNUM")
 CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetVersion("CM3LASTCHANGED")
 
 CM3_GDB = False
-
-#-----------------------------------------------------------------------------
-#
-# nascent support for building via SRC or PM3, probably will never work
-#
-
-M3Build = getenv("M3BUILD") or "m3build"
-M3Ship = getenv("M3SHIP") or "m3ship"
 
 
 #-----------------------------------------------------------------------------
@@ -697,7 +766,7 @@ def GetConfigForDistribution(Target):
     if False:
         a = os.path.join(Root, "m3-sys", "cminstall", "src")
         b = os.path.join(a, "config-no-install", Target)
-        if os.path.isfile(b):
+        if isfile(b):
             return b
         # b = os.path.join(a, "config", Target)
         b = os.path.join(a, "config-no-install", Target)
@@ -720,77 +789,42 @@ def SetEnvironmentVariable(Name, Value):
 def IsCygwinBinary(a):
     if IsInterix() or env_OS != "Windows_NT":
         return False
-    if not os.path.isfile(a):
+    if not isfile(a):
         FatalError(a + " does not exist")
     a = a.replace("/cygdrive/c/", "c:\\")
     a = a.replace("/cygdrive/d/", "d:\\")
     a = a.replace("/", "\\")
+    a = _ConvertFromCygwinPath(a)
     #print("a is " + a)
-    return (os.system("findstr 2>&1 >nul /m cygwin1.dll \"" + a + "\"") == 0)
+    return (os.system("findstr 2>&1 >" + os.devnull + " /m cygwin1.dll \"" + a + "\"") == 0)
 
 #-----------------------------------------------------------------------------
 
-def _ConvertToCygwinPath(a):
-    if IsInterix() or env_OS != "Windows_NT":
-        return a
-    if (a.find('\\') == -1) and (a.find(':') == -1):
-        return a
-    a = a.replace("\\", "/")
-    if a.find(":/") == 1:
-        a = "/cygdrive/" + a[0:1] + a[2:]
-    return a
-
-#-----------------------------------------------------------------------------
-
-def _ConvertFromCygwinPath(a):
-    if IsInterix() or env_OS != "Windows_NT":
-        return a
-    a = a.replace("/", "\\")
-    #a = a.replace("\\", "/")
-    if (a.find("\\cygdrive\\") == 0):
-        a = a[10] + ":" + a[11:]
-    return a
-
-#-----------------------------------------------------------------------------
-
-if IsCygwinBinary(CM3):
-
-    HostIsCygwin = True
-
-    def ConvertToCygwinPath(a):
-        return _ConvertToCygwinPath(a)
-
-    def ConvertFromCygwinPath(a):
-        return a
-
-else:
-
-    HostIsCygwin = False
-
-    def ConvertToCygwinPath(a):
-        return a
-
-    def ConvertFromCygwinPath(a):
-        return _ConvertFromCygwinPath(a)
-
-#-----------------------------------------------------------------------------
-
-def ConvertPath(a):
-    # This isn't "roundtrip", this is one (or both) is a nop.
-    b = ConvertFromCygwinPath(ConvertToCygwinPath(a))
-    # print("converted " + a + " to " + b)
-    return b
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    if IsCygwinBinary(CM3):
+        CM3IsCygwin = True
+        def ConvertPathForCM3(a):
+            return _ConvertToCygwinPath(a)
+    else:
+        CM3IsCygwin = False
+        def ConvertPathForCM3(a):
+            return _ConvertFromCygwinPath(a)
 
 #-----------------------------------------------------------------------------
 #
 # reflect what we decided back into the environment
 #
 
-SetEnvironmentVariable("CM3_TARGET", Target)
-SetEnvironmentVariable("CM3_INSTALL", ConvertPath(InstallRoot))
-SetEnvironmentVariable("M3CONFIG", ConvertPath(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
-#SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "\\\\"))
-SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "/"))
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    SetEnvironmentVariable("CM3_TARGET", Target)
+    SetEnvironmentVariable("CM3_INSTALL", ConvertPathForCM3(InstallRoot))
+    SetEnvironmentVariable("M3CONFIG", ConvertPathForCM3(os.environ.get("M3CONFIG") or GetConfigForDistribution(Config)))
+    #SetEnvironmentVariable("CM3_ROOT", ConvertPathForCM3(Root).replace("\\", "\\\\"))
+    SetEnvironmentVariable("CM3_ROOT", ConvertPathForCM3(Root).replace("\\", "/"))
 
 # sys.exit(1)
 
@@ -798,101 +832,85 @@ SetEnvironmentVariable("CM3_ROOT", ConvertPath(Root).replace("\\", "/"))
 # define build and ship programs for Critical Mass Modula-3
 #
 
-DEFS = "-DROOT=%(Q)s%(Root)s%(Q)s"
-DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
-DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
-DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
-
-NativeRoot = Root
-#Root = ConvertPath(Root).replace("\\", "\\\\")
-Root = ConvertPath(Root).replace("\\", "/")
-DEFS = (DEFS % vars())
-Root = NativeRoot
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    DEFS = "-DROOT=%(Q)s%(Root)s%(Q)s"
+    DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
+    DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
+    DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
+    
+    NativeRoot = Root
+    #Root = ConvertPathForCM3(Root).replace("\\", "\\\\")
+    Root = ConvertPathForCM3(Root).replace("\\", "/")
+    DEFS = (DEFS % vars())
+    Root = NativeRoot
 
 #-----------------------------------------------------------------------------
 # Make sure these variables all start with a space if they are non-empty.
 #
 
-if BuildArgs:
-    BuildArgs = " " + BuildArgs
-
-if CleanArgs:
-    CleanArgs = " " + CleanArgs
-
-if ShipArgs:
-    ShipArgs = " " + ShipArgs
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    if BuildArgs:
+        BuildArgs = " " + BuildArgs
+    
+    if CleanArgs:
+        CleanArgs = " " + CleanArgs
+    
+    if ShipArgs:
+        ShipArgs = " " + ShipArgs
 
 #-----------------------------------------------------------------------------
 # form the various commands we might run
 #
 
-CM3_BuildLocal = BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
-CM3_CleanLocal = CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
-CM3_BuildGlobal = BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
-CM3_CleanGlobal = CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
-CM3_Ship = Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
-
-#-----------------------------------------------------------------------------
-# define build and ship programs for Poly. Modula-3 from Montreal
-# This will not likely ever work, but maybe.
-#
-
-PM3_BuildLocal = BuildLocal or "%(M3Build)s -O %(DEFS)s%(BuildArgs)s"
-PM3_CleanLocal = CleanLocal or "%(M3Build)s clean -O %(DEFS)s%(CleanArgs)s"
-PM3_BuildGlobal = BuildGlobal or "%(M3Build)s %(DEFS)s %(BuildArgs)s)s"
-PM3_CleanGlobal = CleanGlobal or "%(M3Build)s clean %(DEFS)s%(CleanArgs)s"
-PM3_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
-
-#-----------------------------------------------------------------------------
-# define build and ship programs for DEC SRC Modula-3
-# This will not likely ever work, but maybe.
-#
-
-SRC_BuildLocal = BuildLocal or "%(M3Build)s -O %(DEFS)s%(BuildArgs)s"
-SRC_CleanLocal = CleanLocal or "%(M3Build)s clean -O %(DEFS)s%(CleanArgs)s"
-SRC_BuildGlobal = BuildGlobal or "%(M3Build)s %(DEFS)s%(BuildArgs)s"
-SRC_CleanGlobal = CleanGlobal or "%(M3Build)s clean %(DEFS)s%(CleanArgs)s"
-SRC_Ship = Ship or "%(M3Ship)s %(DEFS)s%(ShipArgs)s"
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    CM3_BuildLocal = CM3_BuildLocal or BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
+    CM3_CleanLocal = CM3_CleanLocal or CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
+    CM3_BuildGlobal = CM3_BuildGlobal or BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
+    CM3_CleanGlobal = CM3_CleanGlobal or CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
+    CM3_Ship = CM3_Ship or Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
 
 # other commands
 
-if os.name == "nt":
-    RealClean = RealClean or "if exist %(Config)s rmdir /q/s %(Config)s"
-else:
-    RealClean = RealClean or "rm -rf %(Config)s"
-
-RealClean = (RealClean % vars())
+    if os.name == "nt":
+        RealClean = RealClean or "if exist %(Config)s rmdir /q/s %(Config)s"
+    else:
+        RealClean = RealClean or "rm -rf %(Config)s"
+    
+    RealClean = (RealClean % vars())
 
 #-----------------------------------------------------------------------------
 # choose the compiler to use
 # pm3/dec/m3build is not tested and likely cm3 is all that works (heavily used)
 #
 
-if SearchPath(CM3):
-    BuildLocal = CM3_BuildLocal
-    CleanLocal = CM3_CleanLocal
-    BuildGlobal = CM3_BuildGlobal
-    CleanGlobal = CM3_CleanGlobal
-    Ship = CM3_Ship
-elif SearchPath(M3Build):
-    BuildLocal = PM3_BuildLocal
-    CleanLocal = PM3_CleanLocal
-    BuildGlobal = PM3_BuildGlobal
-    CleanGlobal = PM3_CleanGlobal
-    Ship = CM3_Ship
-else:
-    if (not BuildLocal) or (not BuildGlobal) or (not Ship):
-        File = __file__
-        sys.stderr.write(
-            "%(File)s: %(CM3)s or %(M3Build)s not found in your path, don't know how to compile\n"
-            % vars())
-        sys.exit(1)
-
-BuildLocal = BuildLocal.strip() % vars()
-CleanLocal = CleanLocal.strip() % vars()
-BuildGlobal = BuildGlobal.strip() % vars()
-CleanGlobal = CleanGlobal.strip() % vars()
-Ship = Ship.strip() % vars()
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    if SearchPath(CM3):
+        BuildLocal = CM3_BuildLocal
+        CleanLocal = CM3_CleanLocal
+        BuildGlobal = CM3_BuildGlobal
+        CleanGlobal = CM3_CleanGlobal
+        Ship = CM3_Ship
+    else:
+        if (not BuildLocal) or (not BuildGlobal) or (not Ship):
+            File = __file__
+            sys.stderr.write(
+                "%(File)s: %(CM3)s or %(M3Build)s not found in your path, don't know how to compile\n"
+                % vars())
+            sys.exit(1)
+    
+    BuildLocal = BuildLocal.strip() % vars()
+    CleanLocal = CleanLocal.strip() % vars()
+    BuildGlobal = BuildGlobal.strip() % vars()
+    CleanGlobal = CleanGlobal.strip() % vars()
+    Ship = Ship.strip() % vars()
 
 #-----------------------------------------------------------------------------
 
@@ -967,7 +985,7 @@ def ShowUsage(args, Usage, P):
 #-----------------------------------------------------------------------------
 
 def MakePackageDB():
-    if not os.path.isfile(PKGSDB):
+    if not isfile(PKGSDB):
         #
         # Look for all files src/m3makefile in the CM3 source
         # and write their relative paths from Root to PKGSDB.
@@ -983,7 +1001,7 @@ def MakePackageDB():
                 return
             if not "m3makefile" in Names:
                 return
-            if not os.path.isfile(os.path.join(Directory, "m3makefile")):
+            if not isfile(os.path.join(Directory, "m3makefile")):
                 return
             Result.append(Directory[len(Root) + 1:-4].replace('\\', "/") + "\n")
 
@@ -995,7 +1013,7 @@ def MakePackageDB():
         Result.sort()
         open(PKGSDB, "w").writelines(Result)
 
-        if not os.path.isfile(PKGSDB):
+        if not isfile(PKGSDB):
             File = __file__
             sys.stderr.write("%(File)s: cannot generate package list\n" % vars())
             sys.exit(1)
@@ -1121,7 +1139,7 @@ def _MakeArchive(a):
 def Boot():
 
     global BuildLocal
-    BuildLocal += " -boot -keep "
+    BuildLocal += " -boot -keep -DM3CC_TARGET=" + Target
 
     Version = "1"
 
@@ -1129,19 +1147,21 @@ def Boot():
     # TBD: put it only in one place.
     # The older bootstraping method does get that right.
 
-    SunCompile = "cc -g -mt -xcode=pic32 -xldscope=symbolic "
+    SunCompile = "/usr/ccs/bin/cc -g -mt -xcode=pic32 -xldscope=symbolic "
 
     GnuCompile = {
+        # gcc -fPIC generates incorrect code on Interix
         "I386_INTERIX"    : "gcc -g "
         }.get(Target) or "gcc -g -fPIC "
 
-    Compile = {
-        "SOLsun"          : SunCompile,
-        "SPARC64_SOLARIS" : SunCompile,
-        }.get(Target) or GnuCompile
+    if Target.endswith("_SOLARIS") or Target == "SOLsun":
+        Compile = SunCompile
+    else:
+        Compile = GnuCompile
 
     Compile = Compile + ({
         "AMD64_LINUX"     : " -m64 -mno-align-double ",
+        "AMD64_DARWIN"    : " -arch x86_64 ",
         "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
         "LINUXLIBC6"      : " -m32 -mno-align-double ",
         "MIPS64_OPENBSD"  : " -mabi=64 ",
@@ -1169,20 +1189,26 @@ def Boot():
 
     # not in Link
     Compile += " -c "
+    
+    if Target.endswith("_SOLARIS") or Target.startswith("SOL"):
+        Assemble = "/usr/ccs/bin/as "
+    else:
+        Assemble = "as "
 
-    Assemble = ("as " + ({
-        "AMD64_LINUX"       : " --64 ",
+    if Target != "PPC32_OPENBSD":
+        if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
+            if Target.find("64") != -1 or Target.find("ALPHA") != -1:
+                Assemble = Assemble + " --64"
+            else:
+                Assemble = Assemble + " --32"
+
+    Assemble = (Assemble + ({
+        "AMD64_DARWIN"      : " -arch x86_64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
-        "LINUXLIBC6"        : " --32 ",
-        "SPARC32_LINUX"     : " -32 ",
-        "SPARC64_LINUX"     : " -64 ",
-        "SPARC64_LINUX"     : " -64 -Av9 ",
-        "SOLsun"            : " -s -K PIC -xarch=v8plus ",
-        "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
+        "SOLgnu"            : " -s -xarch=v8plus ",
+        "SOLsun"            : " -s -xarch=v8plus ",
+        "SPARC64_SOLARIS"   : " -s -xarch=v9 ",
         }.get(Target) or ""))
-
-    if Target == "SOLgnu":
-        Assemble = "/usr/sfw/bin/gas"
 
     GnuPlatformPrefix = {
         "ARM_DARWIN"      : "arm-apple-darwin8-",
@@ -1202,9 +1228,13 @@ def Boot():
     Assemble = re.sub("  +", " ", Assemble)
     Assemble = re.sub(" +$", "", Assemble)
 
+    if Target.find("INTERIX") != -1:
+        a = " -I /dev/fs/C/dev2/cm3.2/m3-win/w32api/include"
+        Compile = Compile + a + a + "/ddk"
+
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
-    P = [ "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
+    P = [ "m3cc", "ntdll", "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
           "m3objfile", "m3linker", "m3back", "m3front", "cm3" ]
     if Target == "NT386":
         P += ["mklib"]
@@ -1236,7 +1266,7 @@ def Boot():
     for a in [Makefile]:
         a.write("# edit up here\n\n")
         a.write("Assemble=" + Assemble + "\nCompile=" + Compile + "\nLink=" + Link + "\n")
-        a.write("\n\n# no more editing should be needed\n\n")
+        a.write("\n\n# no more editing should be needed (except on Interix, look at the bottom)\n\n")
 
     for a in [Make]:
         a.write("Assemble=\"" + Assemble + "\"\nCompile=\"" + Compile + "\"\nLink=\"" + Link + "\"\n")
@@ -1244,21 +1274,30 @@ def Boot():
     for q in P:
         dir = GetPackagePath(q)
         for a in os.listdir(os.path.join(Root, dir, Config)):
-            if (a.endswith(".ms") or a.endswith(".is") or a.endswith(".s") or a.endswith(".c")):
-                CopyFile(os.path.join(Root, dir, Config, a), BootDir)
-                Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
-                if a.endswith(".c"):
-                    Command = "Compile"
-                else:
-                    Command = "Assemble"
-                for b in [Make, Makefile]:
-                    b.write("${" + Command + "} " + a + " -o " + a + ".o\n")
+            if not (a.endswith(".ms") or a.endswith(".is") or a.endswith(".s") or a.endswith(".c") or a.endswith(".h")):
+                continue
+            CopyFile(os.path.join(Root, dir, Config, a), BootDir)
             if a.endswith(".h"):
-                CopyFile(os.path.join(Root, dir, Config, a), BootDir)
+                continue
+            Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
+            if a.endswith(".c"):
+                Command = "Compile"
+            else:
+                Command = "Assemble"
+            for b in [Make, Makefile]:
+                b.write("${" + Command + "} " + a + " -o " + a + ".o\n")
 
     Makefile.write("cm3: $(Objects)\n\t")
+
     for a in [Make, Makefile]:
-        a.write("$(Link) -o cm3 *.o\n")
+        if Target.find("INTERIX") == -1:
+            a.write("$(Link) -o cm3 *.o\n")
+        else:
+            a.write("rm -f ntdll.def ntdll.lib ntdll.dll ntdll.o ntdll.c.o a.out a.exe cm3 cm3.exe libntdll.a\n")
+            a.write("gcc -c ntdll.c\n")
+            a.write("/opt/gcc.3.3/i586-pc-interix3/bin/dlltool --dllname ntdll.dll --kill-at --output-lib libntdll.a --export-all-symbols ntdll.o\n")
+            a.write("rm -f ntdll.o ntdll.c.o _m3main.c.o _m3main.o\n")
+            a.write("gcc -g -o cm3 _m3main.c *.o -lm -L . -lntdll\n")
 
     Common = "Common"
 
@@ -1360,52 +1399,58 @@ def Boot():
 #-----------------------------------------------------------------------------
 # map action names to code and possibly other data
 
-ActionInfo = {
-    "build":
-    {
-        "Commands": [_BuildLocalFunction],
-    },
-    "buildlocal":
-    {
-        "Commands": [_BuildLocalFunction],
-    },
-    "buildglobal":
-    {
-        "Commands": [_BuildGlobalFunction, _ShipFunction],
-    },
-    "buildship":
-    {
-        "Commands": [_BuildGlobalFunction, _ShipFunction],
-    },
-    "ship":
-    {
-        "Commands": [_ShipFunction],
-    },
-    "clean":
-    {
-        "Commands": [_CleanLocalFunction],
-        "KeepGoing": True,
-    },
-    "cleanlocal":
-    {
-        "Commands": [_CleanLocalFunction],
-        "KeepGoing": True,
-    },
-    "cleanglobal":
-    {
-        "Commands": [_CleanGlobalFunction],
-        "KeepGoing": True,
-    },
-    "realclean":
-    {
-        "Commands": [_RealCleanFunction],
-        "KeepGoing": True,
-    },
-}
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    ActionInfo = {
+        "build":
+        {
+            "Commands": [_BuildLocalFunction],
+        },
+        "buildlocal":
+        {
+            "Commands": [_BuildLocalFunction],
+        },
+        "buildglobal":
+        {
+            "Commands": [_BuildGlobalFunction, _ShipFunction],
+        },
+        "buildship":
+        {
+            "Commands": [_BuildGlobalFunction, _ShipFunction],
+        },
+        "ship":
+        {
+            "Commands": [_ShipFunction],
+        },
+        "clean":
+        {
+            "Commands": [_CleanLocalFunction],
+            "KeepGoing": True,
+        },
+        "cleanlocal":
+        {
+            "Commands": [_CleanLocalFunction],
+            "KeepGoing": True,
+        },
+        "cleanglobal":
+        {
+            "Commands": [_CleanGlobalFunction],
+            "KeepGoing": True,
+        },
+        "realclean":
+        {
+            "Commands": [_RealCleanFunction],
+            "KeepGoing": True,
+        },
+    }
 
 #-----------------------------------------------------------------------------
 
-BuildAll = getenv("CM3_ALL") or False
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    BuildAll = getenv("CM3_ALL") or False
 
 def _FilterPackage(Package):
     PackageConditions = {
@@ -1435,459 +1480,465 @@ def FilterPackages(Packages):
 
 #-----------------------------------------------------------------------------
 
-PackageSets = {
-#
-# These lists are deliberately in a jumbled order
-# in order to depend on OrderPackages working.
-#
-# This needs to be still further data driven,
-# and a full ordering is not necessarily, only
-# a partial ordering -- stuff can be build in parallel.
-#
-    "min" :
-        [
-        "import-libs",
-        "libm3",
-        "m3core",
-        ],
-
-    "std" :
-        [
-
-    # demo programs
-
-        "cube",
-        "calculator",
-        "fisheye",
-        "mentor",
-
-    # system / compiler libraries and tools
-
-        "m3quake",
-        "m3middle",
-        "m3scanner",
-        "m3tools",
-        "m3cgcat",
-        "m3cggen",
-        "m3cc",
-        "m3objfile",
-        "m3linker",
-        "m3back",
-        "m3staloneback",
-        "m3front",
-        "cm3",
-        "m3gdb",
-        "m3bundle",
-        "mklib",
-        "fix_nl",
-        "libdump",
-        "windowsResources",
-        "cm3ide",
-
-    # more useful quasi-standard libraries
-
-        "arithmetic",
-        "bitvector",
-        "digraph",
-        "parseparams",
-        "realgeometry",
-        "set",
-        "slisp",
-        "sortedtableextras",
-        "table-list",
-        "tempfiles",
-        "tcl",
-        "tcp",
-        "udp",
-        "libsio",
-        "libbuf",
-        "debug",
-        "listfuncs",
-        "embutils",
-        "m3tk-misc",
-        "http",
-        "binIO",
-        "deepcopy",
-        "sgml",
-        "commandrw",
-
-        # some CM3 communication extensions
-
-        "tapi",
-        "serial",
-
-        # tools
-
-        "m3tk",
-        "mtex",
-        "m3totex",
-        "m3tohtml",
-        "m3scan",
-        "m3markup",
-        "m3browser",
-        "cmpdir",
-        "cmpfp",
-        "dirfp",
-        "uniq",
-        # "pp" # needs lex and yacc or flex and bison
-        # "kate"   # can be shipped only on systems with KDE
-        # "nedit",
-
-        # network objects -- distributed programming
-
-        "netobj",
-        "netobjd",
-        "stubgen",
-        "events",
-        "rdwr",
-        "sharedobj",
-        "sharedobjgen",
-
-        # database packages
-
-        "odbc",
-        "postgres95",
-        "db",
-        "smalldb",
-        "stable",
-        "stablegen",
-
-        # the standard graphical user interface: trestle and formsvbt
-
-        "X11R4",
-        "ui",
-        "PEX",
-        "vbtkit",
-        "cmvbt",
-        "jvideo",
-        "videovbt",
-        "web",
-        "formsvbtpixmaps",
-        "formsvbt",
-        "formsview",
-        "formsedit",
-        "codeview",
-        "mg",
-        "mgkit",
-        "opengl",
-        "anim3D",
-        "zeus",
-        "m3zume",
-
-        # obliq
-        "synloc",
-        "synex",
-        "metasyn",
-        "obliqrt",
-        "obliqparse",
-        "obliqprint",
-        "obliq",
-        "obliqlibemb",
-        "obliqlibm3",
-        "obliqlibui",
-        "obliqlibanim",
-        "obliqlib3D",
-        "obliqsrvstd",
-        "obliqsrvui",
-        "obliqbinmin",
-        "obliqbinstd",
-        "obliqbinui",
-        "obliqbinanim",
-        "visualobliq",
-        "vocgi",
-        "voquery",
-        "vorun",
-
-        # more graphics depending on obliq
-
-        "webvbt",
-
-        # more tools
-
-        "recordheap",
-        "rehearsecode",
-        "replayheap",
-        "showheap",
-        "shownew",
-        "showthread",
-
-        # The Juno-2 graphical constraint based editor
-
-        "pkl-fonts",
-        "juno-machine",
-        "juno-compiler",
-        "juno-app",
-
-        "deckscape",
-        "webscape",
-        "webcat",
-
-        "import-libs",
-        "m3core",
-        "libm3",
-        "sysutils",
-
-        ],
-
-
-    "all": # in order
-        [
-    # backend
-        "m3cc",
-
-    # base libraries
-
-        "import-libs",
-        "m3core",
-        "libm3",
-        "windowsResources",
-        "sysutils",
-        "patternmatching",
-
-    # system / compiler libraries and tools
-
-        "m3middle",
-        "m3objfile",
-        "m3linker",
-        "m3back",
-        "m3staloneback",
-        "m3front",
-        "m3quake",
-        "cm3",
-        "m3scanner",
-        "m3tools",
-        "m3cgcat",
-        "m3cggen",
-
-        "m3gdb",
-        "m3bundle",
-        "mklib",
-        "fix_nl",
-        "libdump",
-
-    # more useful quasi-standard libraries
-
-        "arithmetic",
-        "bitvector",
-        "digraph",
-        "parseparams",
-        "realgeometry",
-        "set",
-        "slisp",
-        "sortedtableextras",
-        "table-list",
-        "tempfiles",
-        "tcl",
-        "tcp",
-        "udp",
-        "libsio",
-        "libbuf",
-        "debug",
-        "listfuncs",
-        "embutils",
-        "m3tk-misc",
-        "http",
-        "binIO",
-        "deepcopy",
-        "sgml",
-        "commandrw",
-
-        "cm3ide",
-
-        # some CM3 communication extensions
-
-        "tapi",
-        "serial",
-
-        # tools
-
-        "m3tk",
-        "mtex",
-        "m3totex",
-        "m3tohtml",
-        "m3scan",
-        "m3markup",
-        "m3browser",
-        "cmpdir",
-        "cmpfp",
-        "dirfp",
-        "uniq",
-        # "pp" # needs lex and yacc or flex and bison
-        # "kate"   # can be shipped only on systems with KDE
-        # "nedit",
-
-        # network objects -- distributed programming
-
-        "netobj",
-        "netobjd",
-        "stubgen",
-        "events",
-        "rdwr",
-        "sharedobj",
-        "sharedobjgen",
-
-        # database packages
-
-        "odbc",
-        "postgres95",
-        "db",
-        "smalldb",
-        "stable",
-        "stablegen",
-
-        # the standard graphical user interface: trestle and formsvbt
-
-        "X11R4",
-        "ui",
-        "PEX",
-        "vbtkit",
-        "cmvbt",
-        "jvideo",
-        "videovbt",
-        "web",
-        "formsvbtpixmaps",
-        "formsvbt",
-        "formsview",
-        "formsedit",
-        "codeview",
-        "mg",
-        "mgkit",
-        "opengl",
-        "anim3D",
-        "zeus",
-        "m3zume",
-
-        # obliq
-        "synloc",
-        "synex",
-        "metasyn",
-        "obliqrt",
-        "obliqparse",
-        "obliqprint",
-        "obliq",
-        "obliqlibemb",
-        "obliqlibm3",
-        "obliqlibui",
-        "obliqlibanim",
-        "obliqlib3D",
-        "obliqsrvstd",
-        "obliqsrvui",
-        "obliqbinmin",
-        "obliqbinstd",
-        "obliqbinui",
-        "obliqbinanim",
-        "visualobliq",
-        "vocgi",
-        "voquery",
-        "vorun",
-
-        # more graphics depending on obliq
-
-        "webvbt",
-
-        # more tools
-
-        "recordheap",
-        "rehearsecode",
-        "replayheap",
-        "showheap",
-        "shownew",
-        "showthread",
-
-        # The Juno-2 graphical constraint based editor
-
-        "pkl-fonts",
-        "juno-machine",
-        "juno-compiler",
-        "juno-app",
-
+if _Program != "make-msi.py":
+# general problem of way too much stuff at global scope
+# workaround some of it
+    PackageSets = {
+    #
+    # These lists are deliberately in a jumbled order
+    # in order to depend on OrderPackages working.
+    #
+    # This needs to be still further data driven,
+    # and a full ordering is not necessarily, only
+    # a partial ordering -- stuff can be build in parallel.
+    #
+        "min" :
+            [
+            "ntdll",
+            "import-libs",
+            "libm3",
+            "m3core",
+            ],
+    
+        "std" :
+            [
+    
         # demo programs
-
-        "cube",
-        "calculator",
-        "fisheye",
-        "mentor",
-
-        "cit_common",
-        "m3tmplhack",
-        "cit_util",
-        #"term",
-        "deepcopy",
-        #"paneman",
-        #"paneman/kemacs",
-        "drawcontext",
-        #"drawcontext/dcpane",
-        #"drawcontext/kgv",
-        "hack",
-        "m3browserhack",
-        "parserlib/ktoklib",
-        "parserlib/klexlib",
-        "parserlib/kyacclib",
-        "parserlib/ktok",
-        #"parserlib/klex",
-        #"parserlib/kyacc",
-        "parserlib/kext",
-        "parserlib/parserlib",
-        #"parserlib/parserlib/test",
-        #"pp",
-        #"kate",
-        "sgml",
-
-        "deckscape",
-        "webscape",
-        "webcat",
-        ],
-}
-
-PackageSets_CoreBaseCommon = [
-    "import-libs",
-    "m3core",
-    "libm3",
-    "windowsResources",
-    "sysutils",
-    "m3middle",
-    "m3quake",
-    "m3scanner",
-    "m3tools",
-    "m3cgcat",
-    "m3cggen",
-    "m3gdb",
-    "m3bundle",
-    "mklib",
-    "fix_nl",
-    "libdump",
-    "bitvector",
-    "digraph",
-    "parseparams",
-    "realgeometry",
-    "set",
-    "slisp",
-    "sortedtableextras",
-    "table-list",
-    "tempfiles",
-    "tcl",
-    ]
-
-PackageSets["core"] = PackageSets_CoreBaseCommon
-PackageSets["base"] = PackageSets_CoreBaseCommon
-
-PackageSets["core"] += [
-    "patternmatching",
-    "m3objfile",
-    "m3linker",
-    "m3back",
-    "m3staloneback",
-    "m3cc",
-    "cm3",
-    "m3front",
-    "m3gdb",
-    ]
-
-PackageSets["base"] += [
-    "tcp",
-    "tapi",
-    "serial",
-    ]
+    
+            "cube",
+            "calculator",
+            "fisheye",
+            "mentor",
+    
+        # system / compiler libraries and tools
+    
+            "m3quake",
+            "m3middle",
+            "m3scanner",
+            "m3tools",
+            "m3cgcat",
+            "m3cggen",
+            "m3cc",
+            "m3objfile",
+            "m3linker",
+            "m3back",
+            "m3staloneback",
+            "m3front",
+            "cm3",
+            "m3gdb",
+            "m3bundle",
+            "mklib",
+            "fix_nl",
+            "libdump",
+            "windowsResources",
+            "cm3ide",
+    
+        # more useful quasi-standard libraries
+    
+            "arithmetic",
+            "bitvector",
+            "digraph",
+            "parseparams",
+            "realgeometry",
+            "set",
+            "slisp",
+            "sortedtableextras",
+            "table-list",
+            "tempfiles",
+            "tcl",
+            "tcp",
+            "udp",
+            "libsio",
+            "libbuf",
+            "debug",
+            "listfuncs",
+            "embutils",
+            "m3tk-misc",
+            "http",
+            "binIO",
+            "deepcopy",
+            "sgml",
+            "commandrw",
+    
+            # some CM3 communication extensions
+    
+            "tapi",
+            "serial",
+    
+            # tools
+    
+            "m3tk",
+            "mtex",
+            "m3totex",
+            "m3tohtml",
+            "m3scan",
+            "m3markup",
+            "m3browser",
+            "cmpdir",
+            "cmpfp",
+            "dirfp",
+            "uniq",
+            "pp",
+            # "kate"   # can be shipped only on systems with KDE
+            # "nedit",
+    
+            # network objects -- distributed programming
+    
+            "netobj",
+            "netobjd",
+            "stubgen",
+            "events",
+            "rdwr",
+            "sharedobj",
+            "sharedobjgen",
+    
+            # database packages
+    
+            "odbc",
+            "postgres95",
+            "db",
+            "smalldb",
+            "stable",
+            "stablegen",
+    
+            # the standard graphical user interface: trestle and formsvbt
+    
+            "X11R4",
+            "ui",
+            "PEX",
+            "vbtkit",
+            "cmvbt",
+            "jvideo",
+            "videovbt",
+            "web",
+            "formsvbtpixmaps",
+            "formsvbt",
+            "formsview",
+            "formsedit",
+            "codeview",
+            "mg",
+            "mgkit",
+            "opengl",
+            "anim3D",
+            "zeus",
+            "m3zume",
+    
+            # obliq
+            "synloc",
+            "synex",
+            "metasyn",
+            "obliqrt",
+            "obliqparse",
+            "obliqprint",
+            "obliq",
+            "obliqlibemb",
+            "obliqlibm3",
+            "obliqlibui",
+            "obliqlibanim",
+            "obliqlib3D",
+            "obliqsrvstd",
+            "obliqsrvui",
+            "obliqbinmin",
+            "obliqbinstd",
+            "obliqbinui",
+            "obliqbinanim",
+            "visualobliq",
+            "vocgi",
+            "voquery",
+            "vorun",
+    
+            # more graphics depending on obliq
+    
+            "webvbt",
+    
+            # more tools
+    
+            "recordheap",
+            "rehearsecode",
+            "replayheap",
+            "showheap",
+            "shownew",
+            "showthread",
+    
+            # The Juno-2 graphical constraint based editor
+    
+            "pkl-fonts",
+            "juno-machine",
+            "juno-compiler",
+            "juno-app",
+    
+            "deckscape",
+            "webscape",
+            "webcat",
+    
+            "ntdll",
+            "import-libs",
+            "m3core",
+            "libm3",
+            "sysutils",
+    
+            ],
+    
+    
+        "all": # in order
+            [
+        # backend
+            "m3cc",
+    
+        # base libraries
+    
+            "ntdll",
+            "import-libs",
+            "m3core",
+            "libm3",
+            "windowsResources",
+            "sysutils",
+            "patternmatching",
+    
+        # system / compiler libraries and tools
+    
+            "m3middle",
+            "m3objfile",
+            "m3linker",
+            "m3back",
+            "m3staloneback",
+            "m3front",
+            "m3quake",
+            "cm3",
+            "m3scanner",
+            "m3tools",
+            "m3cgcat",
+            "m3cggen",
+    
+            "m3gdb",
+            "m3bundle",
+            "mklib",
+            "fix_nl",
+            "libdump",
+    
+        # more useful quasi-standard libraries
+    
+            "arithmetic",
+            "bitvector",
+            "digraph",
+            "parseparams",
+            "realgeometry",
+            "set",
+            "slisp",
+            "sortedtableextras",
+            "table-list",
+            "tempfiles",
+            "tcl",
+            "tcp",
+            "udp",
+            "libsio",
+            "libbuf",
+            "debug",
+            "listfuncs",
+            "embutils",
+            "m3tk-misc",
+            "http",
+            "binIO",
+            "deepcopy",
+            "sgml",
+            "commandrw",
+    
+            "cm3ide",
+    
+            # some CM3 communication extensions
+    
+            "tapi",
+            "serial",
+    
+            # tools
+    
+            "m3tk",
+            "mtex",
+            "m3totex",
+            "m3tohtml",
+            "m3scan",
+            "m3markup",
+            "m3browser",
+            "cmpdir",
+            "cmpfp",
+            "dirfp",
+            "uniq",
+            # "kate"   # can be shipped only on systems with KDE
+            # "nedit",
+    
+            # network objects -- distributed programming
+    
+            "netobj",
+            "netobjd",
+            "stubgen",
+            "events",
+            "rdwr",
+            "sharedobj",
+            "sharedobjgen",
+    
+            # database packages
+    
+            "odbc",
+            "postgres95",
+            "db",
+            "smalldb",
+            "stable",
+            "stablegen",
+    
+            # the standard graphical user interface: trestle and formsvbt
+    
+            "X11R4",
+            "ui",
+            "PEX",
+            "vbtkit",
+            "cmvbt",
+            "jvideo",
+            "videovbt",
+            "web",
+            "formsvbtpixmaps",
+            "formsvbt",
+            "formsview",
+            "formsedit",
+            "codeview",
+            "mg",
+            "mgkit",
+            "opengl",
+            "anim3D",
+            "zeus",
+            "m3zume",
+    
+            # obliq
+            "synloc",
+            "synex",
+            "metasyn",
+            "obliqrt",
+            "obliqparse",
+            "obliqprint",
+            "obliq",
+            "obliqlibemb",
+            "obliqlibm3",
+            "obliqlibui",
+            "obliqlibanim",
+            "obliqlib3D",
+            "obliqsrvstd",
+            "obliqsrvui",
+            "obliqbinmin",
+            "obliqbinstd",
+            "obliqbinui",
+            "obliqbinanim",
+            "visualobliq",
+            "vocgi",
+            "voquery",
+            "vorun",
+    
+            # more graphics depending on obliq
+    
+            "webvbt",
+    
+            # more tools
+    
+            "recordheap",
+            "rehearsecode",
+            "replayheap",
+            "showheap",
+            "shownew",
+            "showthread",
+    
+            # The Juno-2 graphical constraint based editor
+    
+            "pkl-fonts",
+            "juno-machine",
+            "juno-compiler",
+            "juno-app",
+    
+            # demo programs
+    
+            "cube",
+            "calculator",
+            "fisheye",
+            "mentor",
+    
+            "cit_common",
+            "m3tmplhack",
+            "cit_util",
+            "term",
+            "deepcopy",
+            "paneman",
+            "paneman/kemacs",
+            "drawcontext",
+            "drawcontext/dcpane",
+            "drawcontext/kgv",
+            "hack",
+            "m3browserhack",
+            "parserlib/ktoklib",
+            "parserlib/klexlib",
+            "parserlib/kyacclib",
+            "parserlib/ktok",
+            "parserlib/klex",
+            "parserlib/kyacc",
+            "parserlib/kext",
+            "parserlib/parserlib",
+            #"parserlib/parserlib/test",
+            "pp",
+            #"kate",
+            "sgml",
+    
+            "deckscape",
+            "webscape",
+            "webcat",
+            ],
+    }
+    
+    PackageSets_CoreBaseCommon = [
+        "ntdll",
+        "import-libs",
+        "m3core",
+        "libm3",
+        "windowsResources",
+        "sysutils",
+        "m3middle",
+        "m3quake",
+        "m3scanner",
+        "m3tools",
+        "m3cgcat",
+        "m3cggen",
+        "m3gdb",
+        "m3bundle",
+        "mklib",
+        "fix_nl",
+        "libdump",
+        "bitvector",
+        "digraph",
+        "parseparams",
+        "realgeometry",
+        "set",
+        "slisp",
+        "sortedtableextras",
+        "table-list",
+        "tempfiles",
+        "tcl",
+        ]
+    
+    PackageSets["core"] = PackageSets_CoreBaseCommon
+    PackageSets["base"] = PackageSets_CoreBaseCommon
+    
+    PackageSets["core"] += [
+        "patternmatching",
+        "m3objfile",
+        "m3linker",
+        "m3back",
+        "m3staloneback",
+        "m3cc",
+        "cm3",
+        "m3front",
+        "m3gdb",
+        ]
+    
+    PackageSets["base"] += [
+        "tcp",
+        "tapi",
+        "serial",
+        ]
 
 #-----------------------------------------------------------------------------
 
@@ -2035,7 +2086,7 @@ GenericCommand:
             sys.exit(1)
 
         q = os.path.join(Root, q)
-        if os.path.isfile(os.path.join(q, "src", "m3makefile")):
+        if isfile(os.path.join(q, "src", "m3makefile")):
             PackageDirectories.append(q)
             continue
 
@@ -2088,16 +2139,16 @@ def DeleteFile(a):
         print("rm -f " + a)
     else:
         print("del /f /a " + a)
-    if os.path.isfile(a):
-        os.chmod(a, 0700)
-        os.remove(a)
+    if isfile(a):
+        os.chmod(ConvertPathForPython(a), 0700)
+        os.remove(ConvertPathForPython(a))
 
 def MoveFile(a, b):
     if os.name != "nt":
         print("mv " + a + " " + b)
     else:
         print("move " + a + " " + b)
-    shutil.move(a, b)
+    shutil.move(ConvertPathForPython(a), ConvertPathForPython(b))
 
 #-----------------------------------------------------------------------------
 
@@ -2106,7 +2157,7 @@ def CreateDirectory(a):
         print("mkdir -p " + a)
     else:
         print("mkdir " + a)
-    if not os.path.isdir(a):
+    if not isdir(a):
         os.makedirs(a)
     return True
 
@@ -2124,34 +2175,29 @@ MakeTempDir()
 
 #-----------------------------------------------------------------------------
 
-def FileExists(a):
-    return os.path.isfile(a)
-
-#-----------------------------------------------------------------------------
-
 def CopyFile(From, To):
-    if os.path.isdir(To):
+    if isdir(To):
         To = os.path.join(To, os.path.basename(From))
     # Cygwin says foo exists when only foo.exe exists, and then remove fails.
-    if os.path.isfile(To):
+    if isfile(To):
         try:
-            os.remove(To)
+            os.remove(ConvertPathForPython(To))
         except:
             pass
     CopyCommand = "copy"
     if os.name != "nt":
         CopyCommand = "cp -Pv"
     print(CopyCommand + " " + From + " " + To)
-    if os.path.islink(From):
-        os.symlink(os.readlink(From), To)
+    if os.path.islink(ConvertPathForPython(From)):
+        os.symlink(os.readlink(ConvertPathForPython(From)), ConvertPathForPython(To))
     else:
-        shutil.copy(From, To)
+        shutil.copy(ConvertPathForPython(From), ConvertPathForPython(To))
     return True
 
 #-----------------------------------------------------------------------------
 
 def CopyFileIfExist(From, To):
-    if os.path.isfile(From):
+    if isfile(From):
         return CopyFile(From, To)
     return True
 
@@ -2175,7 +2221,7 @@ def CopyConfigForDevelopment():
 
     for b in ["config", "config-no-install"]:
         for File in glob.glob(os.path.join(a, b, "*")):
-            if os.path.isfile(File):
+            if isfile(File):
                 DeleteFile(os.path.join(To, os.path.basename(File)))
 
     # CopyFile(os.path.join(Root, a, "config", "cm3.cfg"), To) or FatalError()
@@ -2187,7 +2233,7 @@ def CopyConfigForDevelopment():
 #def CopyDirectoryNonRecursive(From, To):
 #    CreateDirectory(To)
 #    for File in glob.glob(os.path.join(From, "*")):
-#        if os.path.isfile(File):
+#        if isfile(File):
 #            print(File + " => " + To + "\n")
 #            CopyFile(File, To)
 #    return True
@@ -2206,7 +2252,7 @@ def CopyConfigForDistribution(To):
     CreateDirectory(dir)
     for b in [Target + "*", "*.common"]:
         for File in glob.glob(os.path.join(Root, "m3-sys", "cminstall", "src", "config-no-install", b)):
-            if os.path.isfile(File):
+            if isfile(File):
                 #print(File + " => " + dir + "\n")
                 CopyFile(File, dir)
     open(os.path.join(Bin, "cm3.cfg"), "w").write("INSTALL_ROOT = (path() & \"/..\")\ninclude(path() & \"/config/" + Config + "\")\n")
@@ -2324,15 +2370,21 @@ def CopyCompiler(From, To):
     return True
 
 #-----------------------------------------------------------------------------
-#
-# Need to figure out how to do this properly, if at all.
-#
-#
-# Pretty specific to my setup.
-# We could also honor MSDevDir, MSVCDir, VCToolkitInstallDir, VCINSTALLDIR, etc.
-# see scripts\win\sysinfo.cmd. Some of these are set always by those installers.
-# (Though I delete them. :) )
-#
+
+def GetProgramFiles():
+    # Look for Program Files.
+    # This is expensive and callers are expected to cache it.
+    ProgramFiles = []
+    for d in ["PROGRAMFILES", "PROGRAMFILES(X86)", "PROGRAMW6432"]:
+        e = os.environ.get(d)
+        if e and (not (e in ProgramFiles)) and isdir(e):
+            ProgramFiles.append(e)
+    if len(ProgramFiles) == 0:
+        SystemDrive = os.environ.get("SystemDrive", "")
+        a = os.path.join(SystemDrive, "Program Files")
+        if isdir(a):
+            ProgramFiles.append(a)
+    return ProgramFiles
 
 def SetupEnvironment():
     SystemDrive = os.environ.get("SystemDrive", "")
@@ -2345,20 +2397,18 @@ def SetupEnvironment():
     if SystemDrive:
         SystemDrive += os.path.sep
 
-    #
     # Do this earlier so that its link isn't a problem.
     # Looking in the registry HKEY_LOCAL_MACHINE\SOFTWARE\Cygnus Solutions\Cygwin\mounts v2
     # would be reasonable here.
-    #
-    if HostIsCygwin:
+
+    if CM3IsCygwin:
         _SetupEnvironmentVariableAll(
             "PATH",
             ["cygwin1.dll"],
             os.path.join(SystemDrive, "cygwin", "bin"))
 
-    #
     # some host/target confusion here..
-    #
+
     if Target == "NT386" and HostIsNT and Config == "NT386" and (not GCC_BACKEND) and OSType == "WIN32":
 
         VCBin = ""
@@ -2368,13 +2418,13 @@ def SetupEnvironment():
 
         # 4.0 e:\MSDEV
         # 5.0 E:\Program Files\DevStudio\SharedIDE
-        MSDevDir = os.environ.get("MSDevDir")
+        MSDevDir = os.environ.get("MSDEVDIR")
 
         # 5.0
-        MSVCDir = os.environ.get("MSVCDir") # E:\Program Files\DevStudio\VC
+        MSVCDir = os.environ.get("MSVCDIR") # E:\Program Files\DevStudio\VC
 
         # 7.1 Express
-        VCToolkitInstallDir = os.environ.get("VCToolkitInstallDir") # E:\Program Files\Microsoft Visual C++ Toolkit 2003 (not set by vcvars32)
+        VCToolkitInstallDir = os.environ.get("VCTOOLKITINSTALLDIR") # E:\Program Files\Microsoft Visual C++ Toolkit 2003 (not set by vcvars32)
 
         # 8.0 Express
         # E:\Program Files\Microsoft Visual Studio 8\VC
@@ -2384,18 +2434,23 @@ def SetupEnvironment():
         # VS80CommonTools = os.environ.get("VS80COMNTOOLS") # E:\Program Files\Microsoft Visual Studio 8\Common7\Tools
         VCInstallDir = os.environ.get("VCINSTALLDIR") # E:\Program Files\Microsoft Visual Studio 8\VC
 
-		# 9.0 Express
-		# always, global
-		#VS90COMNTOOLS=D:\msdev\90\Common7\Tools\
-		# after running the shortcut
-		#VCINSTALLDIR=D:\msdev\90\VC
-		#VSINSTALLDIR=D:\msdev\90
-		#
-		# The Windows SDK is carried with the express edition and tricky to find.
-		# Best if folks just run the installed shortcut probably.
-		#
+        # 9.0 Express
+        # always, global
+        #VS90COMNTOOLS=D:\msdev\90\Common7\Tools\
+        # after running the shortcut
+        #VCINSTALLDIR=D:\msdev\90\VC
+        #VSINSTALLDIR=D:\msdev\90
+        
+        VSCommonTools = os.environ.get("VS90COMNTOOLS")
+        
+        if VSCommonTools and not VSInstallDir:
+            VSInstallDir = RemoveLastPathElement(RemoveLastPathElement(VSCommonTools))
+        
+        # The Windows SDK is carried with the express edition and tricky to find.
+        # Best if folks just run the installed shortcut probably.
+        # We do a pretty good job now of finding it, be need to encode
+        # more paths to known versions.
 
-        #
         # This is not yet finished.
         #
         # Probe the partly version-specific less-polluting environment variables,
@@ -2404,45 +2459,43 @@ def SetupEnvironment():
         # a great idea, but having setup set DevEnvDir, VSINSTALLDIR, VS80COMNTOOLS, etc.
         # isn't so bad and we can temporarily establish the first set from the second
         # set.
-        #
+
         if VSInstallDir:
-            #
             # Visual C++ 2005/8.0, at least the Express Edition, free download
-            #
+            # also Visual C++ 2008/9.0 Express Edition
+
             if not VCInstallDir:
                 VCInstallDir = os.path.join(VSInstallDir, "VC")
+                #print("VCInstallDir:" + VCInstallDir)
             if not DevEnvDir:
                 DevEnvDir = os.path.join(VSInstallDir, "Common7", "IDE")
+                #print("DevEnvDir:" + DevEnvDir)
 
             MspdbDir = DevEnvDir
 
         elif VCToolkitInstallDir:
-            #
             # free download Visual C++ 2003; no longer available
-            #
+
             VCInstallDir = VCToolkitInstallDir
 
         elif MSVCDir and MSDevDir:
-            #
             # Visual C++ 5.0
-            #
+
             pass # do more research
             # VCInstallDir = MSVCDir
 
         elif MSDevDir:
-            #
             # Visual C++ 4.0, 5.0
-            #
+
             pass # do more research
             # VCInstallDir = MSDevDir
 
         else:
-            #
             # This is what really happens on my machine, for 8.0.
             # It might be good to guide pylib.py to other versions,
             # however setting things up manually suffices and I have, um,
             # well automated.
-            #
+
             Msdev = os.path.join(SystemDrive, "msdev", "80")
             VCInstallDir = os.path.join(Msdev, "VC")
             DevEnvDir = os.path.join(Msdev, "Common7", "IDE")
@@ -2457,37 +2510,72 @@ def SetupEnvironment():
         #elif VCBin:
         #    MspdbDir = VCBin
 
+        # Look for SDKs.
+        # expand this as they are released/discovered
+        # ordering is from newest to oldest
+        
+        PossibleSDKs = [os.path.join("Microsoft SDKs", "Windows", "v6.0A"), "Microsoft Platform SDK for Windows Server 2003 R2"]        
+        SDKs = []
+
+        for a in GetProgramFiles():
+            #print("checking " + a)
+            for b in PossibleSDKs:
+                c = os.path.join(a, b)
+                #print("checking " + c)
+                if isdir(c) and not (c in SDKs):
+                    SDKs.append(c)
+
+        # Make sure %INCLUDE% contains errno.h and windows.h.
+        # This doesn't work correctly for Cygwin Python, ok.
+
         if _CheckSetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc):
-            a = os.path.join(SystemDrive, "Program Files")
-            b = os.path.join(a, "Microsoft Platform SDK for Windows Server 2003 R2", "Include")
-            c = os.path.join(a, "Microsoft SDKs", "Windows", "v6.0A", "Include")
-            _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + ";" + c + ";" + b)
+            for a in SDKs:
+                b = os.path.join(a, "include")
+                if isfile(os.path.join(b, "windows.h")):
+                    _SetupEnvironmentVariableAll("INCLUDE", ["errno.h", "windows.h"], VCInc + ";" + b, ";")
+                    break
+
+        # Make sure %LIB% contains kernel32.lib and libcmt.lib.
+        # We carry our own kernel32.lib so we don't look in the SDKs.
+        # We usually use msvcrt.lib and not libcmt.lib, but Express 2003 had libcmt.lib and not msvcrt.lib
+        # I think, and libcmt.lib is always present.
 
         _SetupEnvironmentVariableAll(
             "LIB",
             ["kernel32.lib", "libcmt.lib"],
-            VCLib + os.path.pathsep + os.path.join(InstallRoot, "lib"))
+            VCLib + ";" + os.path.join(InstallRoot, "lib"))
 
+        # Check that cl.exe and link.exe are in path, and if not, add VCBin to it,
+        # checking that they are in it.
         #
         # Do this before mspdb*dll because it sometimes gets it in the path.
-        #
+        # (Why do we care?)
+
         _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
+        
+        # If none of mspdb*.dll are in PATH, add MpsdbDir to PATH, and check that one of them is in it.
 
         _SetupEnvironmentVariableAny(
             "PATH",
             ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
             MspdbDir)
 
-        _SetupEnvironmentVariableAny(
-            "PATH",
-            ["msobj80.dll", "msobj71.dll", "msobj10.dll", "msobj10.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
-            MspdbDir)
+        # Try to get mt.exe in %PATH% if it isn't already.
+        # We only need this for certain toolsets.
 
-        #
+        if not SearchPath("mt.exe", os.environ.get("PATH")):
+            for a in SDKs:
+                b = os.path.join(a, "bin")
+                if isfile(os.path.join(b, "mt.exe")):
+                    SetEnvironmentVariable("PATH", os.environ.get("PATH") + os.pathsep + b)
+                    break
+
+        # sys.exit(1)
+
         # The free Visual C++ 2003 has neither delayimp.lib nor msvcrt.lib.
         # Very old toolsets have no delayimp.lib.
         # The Quake config file checks these environment variables.
-        #
+
         Lib = os.environ.get("LIB")
         if not SearchPath("delayimp.lib", Lib):
             os.environ["USE_DELAYLOAD"] = "0"
@@ -2497,9 +2585,8 @@ def SetupEnvironment():
             os.environ["USE_MSVCRT"] = "0"
             print("set USE_MSVCRT=0")
 
-    #
     # some host/target confusion here..
-    #
+
     if Target == "NT386MINGNU" or (Target == "NT386" and GCC_BACKEND and OSType == "WIN32"):
 
         _ClearEnvironmentVariable("LIB")
@@ -2510,7 +2597,6 @@ def SetupEnvironment():
             ["gcc", "as", "ld"],
             os.path.join(SystemDrive, "mingw", "bin"))
 
-        #
         # need to probe for ld that accepts response files.
         # For example, this version does not:
         # C:\dev2\cm3\scripts\python>ld -v
@@ -2521,21 +2607,19 @@ def SetupEnvironment():
         # C:\dev2\cm3\scripts\python>ld -v
         # GNU ld version 2.17.50 20060824
 
-        #
         # Ensure msys make is ahead of mingwin make, by adding
         # msys to the start of the path after adding mingw to the
         # start of the path. Modula-3 does not generally use
         # make, but this might matter when building m3cg, and
         # is usually the right thing.
-        #
+
         _SetupEnvironmentVariableAll(
             "PATH",
             ["sh", "sed", "gawk", "make"],
             os.path.join(SystemDrive, "msys", "1.0", "bin"))
 
-    #
     # some host/target confusion here..
-    #
+
     if Target == "NT386GNU" or (Target == "NT386" and GCC_BACKEND and OSType == "POSIX"):
 
         #_ClearEnvironmentVariable("LIB")
@@ -2560,7 +2644,7 @@ def SetupEnvironment():
 def CheckForLinkSwitch(Switch):
     EnvName = "USE_" + Switch
     EnvValue = "0"
-    if os.system("link | findstr /i /c:\" /" + Switch + "\" > nul") == 0:
+    if os.system("link | findstr /i /c:\" /" + Switch + "\" >" + os.devnull) == 0:
         EnvValue = "1"
     os.environ[EnvName] = EnvValue
     print("set " + EnvName + "=" + EnvValue)
@@ -2569,9 +2653,79 @@ def CheckForLinkSwitch(Switch):
 
 # packaging support
 
+def InstallLicense(Root, InstallRoot):
+
+    license = os.path.join(InstallRoot, "license")
+    CreateDirectory(license)
+
+    for a in glob.glob(os.path.join(Root, "COPYRIGHT*")):
+        CopyFile(a, os.path.join(license, GetLastPathElement(a))) or FatalError()
+
+    CopyFile(os.path.join(Root, "m3-libs", "arithmetic", "copyrite.txt"), os.path.join(license, "COPYRIGHT-M3NA")) or FatalError()
+    CopyFile(os.path.join(Root, "m3-tools", "cvsup", "License"), os.path.join(license, "COPYRIGHT-JDP-CVSUP")) or FatalError()
+    CopyFile(os.path.join(Root, "m3-sys", "COPYRIGHT-CMASS"), os.path.join(license, "COPYRIGHT-CMASS")) or FatalError()
+
+    open(os.path.join(license, "COPYRIGHT-ELEGO-SYSUTILS"), "w").write(
+"""Copyright 1999-2002 elego Software Solutions GmbH, Berlin, Germany.
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions
+are met:
+1. Redistributions of source code must retain the above copyright
+   notice, this list of conditions and the following disclaimer.
+2. Redistributions in binary form must reproduce the above copyright
+   notice, this list of conditions and the following disclaimer in the
+   documentation and/or other materials provided with the distribution.
+
+THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+""")
+
+    open(os.path.join(license, "COPYRIGHT-OLIVETTI"), "w").write(
+"""                      Copyright (C) Olivetti 1989 
+                          All Rights reserved
+
+Use and copy of this software and preparation of derivative works based
+upon this software are permitted to any person, provided this same
+copyright notice and the following Olivetti warranty disclaimer are
+included in any copy of the software or any modification thereof or
+derivative work therefrom made by any person.
+
+This software is made available AS IS and Olivetti disclaims all
+warranties with respect to this software, whether expressed or implied
+under any law, including all implied warranties of merchantibility and
+fitness for any purpose. In no event shall Olivetti be liable for any
+damages whatsoever resulting from loss of use, data or profits or
+otherwise arising out of or in connection with the use or performance
+of this software.
+""")
+
+    class State:
+        pass
+
+    state = State()
+    state.id = 0
+
+    def Callback(state, dir, entries):
+        for a in entries:
+            if a == "COPYRIGHT":
+                state.id += 1
+                CopyFile(os.path.join(dir, a), os.path.join(license, "COPYRIGHT-CALTECH-" + str(state.id)))
+
+    os.path.walk(os.path.join(Root, "caltech-parser"), Callback, state)
+
 def GetStage():
     global STAGE
-    STAGE = getenv("STAGE")
+    STAGE = ConvertPathForPython(getenv("STAGE"))
 
     if (not STAGE):
         #tempfile.tempdir = os.path.join(tempfile.gettempdir(), "cm3", "make-dist")
@@ -2580,20 +2734,20 @@ def GetStage():
         SetEnvironmentVariable("STAGE", STAGE)
     return STAGE
 
-#
 # The way this SHOULD work is we build the union of all desired,
 # and then pick and chose from the output into the .zip/.tar.bz2.
 # For now though, we only build min.
-#
+
 def FormInstallRoot(PackageSetName):
     return os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
 
 def MakeMSIWithWix(input):
-    import uuid
-#
 # input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1
-# The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)
-#
+# The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)M
+    import uuid
+    
+    InstallLicense(Root, input)
+
     wix = open(input + ".wxs", "w")
     wix.write("""<?xml version='1.0' encoding='windows-1252'?>
 <Wix xmlns='http://schemas.microsoft.com/wix/2006/wi'>
@@ -2614,8 +2768,8 @@ def MakeMSIWithWix(input):
     def HandleDir(state, dir):
         for a in os.listdir(dir):
             b = os.path.join(dir, a)
-            if os.path.isdir(b):
-                wix.write("""<Directory Id='d%d' Name='%s'>\n""" % (state.dirID, a))
+            if isdir(b):
+                wix.write("""<Directory Id='d%d' Name='%s'>\n""" % (state.dirID, ConvertPathForWin32(a)))
                 state.dirID += 1
                 HandleDir(state, b) # recursion!
                 wix.write("</Directory>\n")
@@ -2625,8 +2779,7 @@ def MakeMSIWithWix(input):
                 if state.componentID == 1:
                     wix.write("""<Environment Id="envPath" Action="set" Name="PATH" Part="last" Permanent="no" Separator=";" Value='[INSTALLDIR]bin'/>\n""")
 
-
-                wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, b))
+                wix.write("""<File Id='f%d' Name='%s' Source='%s'/>\n""" % (state.fileID, a, ConvertPathForWin32(b)))
                 state.fileID += 1
                 wix.write("</Component>\n")
 
@@ -2635,18 +2788,17 @@ def MakeMSIWithWix(input):
     wix.write("</Directory>\n")
     wix.write("</Directory>\n")
 
-    wix.write("<Feature Id='Complete' Title='Modula-3' Description='everything.' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>\n")
+    wix.write("<Feature Id='Complete' Title='Modula-3' Description='everything' Display='expand' Level='1' ConfigurableDirectory='INSTALLDIR'>\n")
 
     for a in range(0, state.componentID):
         wix.write("<ComponentRef Id='c%d'/>\n" % a)
 
-    #
     # WixUI_Advanced
     # WixUI_Mondo
     # WixUI_InstallDir
     # WixUI_FeatureTree
     # are all good, but we need the package sets for some of them to make more sense
-    #
+
     wix.write("""
         </Feature>
         <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
@@ -2658,46 +2810,42 @@ def MakeMSIWithWix(input):
 
     wix.close()
 
-    if not SearchPath("candle") or not SearchPath("light"):
-        ProgramFiles = os.environ.get("ProgramFiles", "C:\\Program Files")
-        SetEnvironmentVariable("PATH", ProgramFiles + "\\Windows Installer XML v3\\bin;" + os.environ["PATH"])
+    print("SearchPath candle light")
 
-    command = "candle " + input + ".wxs -out " + input + ".wixobj"
+    if not SearchPath("candle") or not SearchPath("light"):
+        for a in GetProgramFiles():
+            b = os.path.join(ConvertPathForPython(a), "Windows Installer XML v3", "bin")
+            if isdir(b):
+                SetEnvironmentVariable("PATH", b + os.pathsep + os.environ["PATH"])
+                break
+
+    command = "candle " + ConvertPathForWin32(input) + ".wxs -out " + ConvertPathForWin32(input) + ".wixobj" + " 2>&1"
+    if os.name == "posix":
+        command = command.replace("\\", "\\\\")
     print(command)
     os.system(command)
-    a = input + ".msi"
-    DeleteFile(a)
+    DeleteFile(input + ".msi")
+
+    # This is similar to the toplevel README in the source tree.
+    licenseText = \
+"""The Critical Mass Modula-3 Software Distribution may be freely distributed as
+open source according to the various copyrights under which different parts of
+the sources are placed. Please read the files found in the license directory."""
 
     license = input + "-license.rtf"
     open(license, "w").write(
 """{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0\\fnil\\fcharset0 Courier New;}}
-{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + MakeMSILicense(input).replace("\n", "\\par\n")
+{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", "\\par\n")
 + "}")
 
-    command = "light -out " + a + " " + input + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + license
+    command = "light -out " + ConvertPathForWin32(input) + ".msi " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license) + " 2>&1"
+    if os.name == "posix":
+        command = command.replace("\\", "\\\\")
     print(command)
     os.system(command)
 
 #MakeMSIWithWix("C:\\stage1\\cm3-min-NT386-d5.8.1")
 #sys.exit(1)
-
-def ReadFile(f):
-    return open(f).read()
-
-def ReadLicense(dir, a):
-    return "\n\n**** " + a + " ****\n\n" + ReadFile(os.path.join(dir, a))
-
-def MakeMSILicense(dir):
-    dir = os.path.join(dir, "license")
-    license = ReadLicense(dir, "COPYRIGHTS")
-    license += ReadLicense(dir, "COPYRIGHT-DEC")
-    for a in os.listdir(dir):
-        if (a != "COPYRIGHTS" and a.find("CVSUP") == -1 and a.find("CALTECH") == -1 and a != "COPYRIGHT-DEC") or a == "COPYRIGHT-CALTECH-1":
-            license += ReadLicense(dir, a)
-    for a in os.listdir(dir):
-        if (a.find("CALTECH") != -1 or a.find("CVSUP") != -1) and a != "COPYRIGHT-CALTECH-1":
-            license += ReadLicense(dir, a)
-    return license
 
 def DiscoverHardLinks(r):
 #
@@ -2720,8 +2868,8 @@ def BreakHardLinks(links):
         first = links[inode][0]
         for other in links[inode][1:]:
             print("breaking link " + other + " <=> " + first)
-            os.remove(other)
-            open(other, "w")
+            os.remove(ConvertPathForPython(other))
+            open(ConvertPathForPython(other), "w")
 
 def RestoreHardLinks(links):
 #
@@ -2731,8 +2879,8 @@ def RestoreHardLinks(links):
         first = links[inode][0]
         for other in links[inode][1:]:
             print("restoring link " + other + " <=> " + first)
-            os.remove(other)
-            os.link(first, other)
+            os.remove(ConvertPathForPython(other))
+            os.link(ConvertPathForPython(first), ConvertPathForPython(other))
 
 def MoveSkel(prefix):
 #
@@ -2749,7 +2897,7 @@ def MoveSkel(prefix):
 #
     CreateDirectory("." + prefix)
     for a in ["bin", "pkg", "lib", "www", "man", "etc"]:
-        if os.path.isdir(a):
+        if isdir(a):
             print("mv " + a + " ." + prefix + "/" + a)
             os.rename(a, "." + prefix + "/" + a)
 
@@ -2758,7 +2906,7 @@ def RestoreSkel(prefix):
 # Undo the work of MoveSkel;
 #
     for a in ["bin", "pkg", "lib", "www", "man", "etc"]:
-        if os.path.isdir("." + prefix + "/" + a):
+        if isdir("." + prefix + "/" + a):
             print("mv ." + prefix + "/" + a + " " + a)
             os.rename("." + prefix + "/" + a, a)
 
@@ -2767,18 +2915,30 @@ def RestoreSkel(prefix):
 
 DebianArchitecture = {
   "LINUXLIBC6" : "i386",
-  "I386_LINUX" : "i386",
-  "IA64_LINUX" : "ia64",
-  "ALPHA_LINUX" : "alpha",
-  "AMD64_LINUX" : "amd64",
-  "PA32_LINUX" : "hppa",
-  "PA64_LINUX" : "hppa",
-  "MIPS32_LINUX" : "mips",
-  "MIPS64_LINUX" : "mips",
-  "PPC_LINUX" : "powerpc",
-  "PPC64_LINUX" : "ppc",
-  "SPARC32_LINUX" : "sparc",
-  "SPARC64_LINUX" : "sparc" }
+  "FreeBSD4" : "i386",
+  "NetBSD2_i386" : "i386",
+  "NT386" : "i386",
+  "NT386GNU" : "i386",
+  "NT386MINGNU" : "i386",
+  "I386" : "i386",
+  "IA64" : "ia64",
+  "ALPHA" : "alpha",
+  "AMD64" : "amd64",
+  "HPPA" : "hppa",
+  "PA32" : "hppa",
+  "PA64" : "hppa",
+  "MIPS" : "mips",
+  "MIPS32" : "mips",
+  "MIPS64" : "mips",
+  "PPC" : "powerpc",
+  "PPC32" : "powerpc",
+  "PPC64" : "ppc",
+  "SOLsun" : "sparc",
+  "SOLgnu" : "sparc",
+  "SPARC" : "sparc",
+  "SPARC32" : "sparc",
+  "SPARC64" : "sparc",
+  }
 
 def MakeDebianPackage(name, input, output, prefix):
 #
@@ -2804,7 +2964,7 @@ def MakeDebianPackage(name, input, output, prefix):
     newline = "\012" # take no chances
     open("./debian-binary", "w").write("2.0" + newline)
     os.chdir("./debian")
-    architecture = DebianArchitecture.get(Target)
+    architecture = DebianArchitecture.get(Target) or DebianArchitecture.get(Target[:Target.index("_")])
     open("./control", "w").write(
       "Package: cm3-" + name + newline
     + "Version: 1.0" + newline
@@ -2817,13 +2977,13 @@ def MakeDebianPackage(name, input, output, prefix):
     os.system(command)
     os.chdir(input)
     command = "tar cf data.tar ." + prefix
-    if os.path.isfile("data.tar." + compressed_extension) or os.path.isfile("data.tar"):
+    if isfile("data.tar." + compressed_extension) or isfile("data.tar"):
         print("skipping " + command)
     else:
         print(command)
         os.system(command)
     command = compresser + " data.tar"
-    if os.path.isfile("data.tar." + compressed_extension):
+    if isfile("data.tar." + compressed_extension):
         print("skipping " + command)
     else:
         print(command)

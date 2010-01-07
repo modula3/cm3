@@ -112,6 +112,35 @@ end
 
 %------------------------------------------------------------------------------
 
+proc IsInterix() is
+  if defined("TARGET_OS")
+    if equal(TARGET_OS, "INTERIX")
+      return TRUE
+    end
+  end
+  return FALSE
+end
+
+proc HasGui() is
+  return not IsInterix()
+end
+
+proc HasOpenGL() is
+  % but see http://www.interix.com/Motif-OpenGL.htm
+  return not IsInterix()
+end
+
+proc IsOpenBSD() is
+  if defined("TARGET_OS")
+    if equal(TARGET_OS, "OPENBSD")
+      return TRUE
+    end
+  end
+  return FALSE
+end
+
+%------------------------------------------------------------------------------
+
 if not defined("subst_chars")
     %
     % Ok, some cross builds will fail with older tools, but
@@ -394,12 +423,28 @@ proc skip_link(prog, shared) is
     % make sure files get cleaned up
     deriveds("", Outputs)
 
-    BindExport(pgm_file)
     DeleteFile(manifest_file)
     PdbExport(pdb_file)
 
     return 0
 end
 
+%------------------------------------------------------------------------------
+
+readonly proc ConvertLibsToStandalone(imported_libs, shared) is
+    if shared
+        return imported_libs
+    end
+    local imports = [ ]
+    foreach f in imported_libs
+        local ff = f & ".sa"
+        if FileExists(ff)
+            imports += ff
+        else
+            imports += f
+        end
+    end
+    return imports
+end
 
 %------------------------------------------------------------------------------

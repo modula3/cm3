@@ -6,9 +6,13 @@
  * this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
  * ----------------------------------------------------------------------------
  *
- * $Id: md5hl.c,v 1.1.1.1 2009-04-09 17:02:02 jkrell Exp $
+ * $Id: md5hl.c,v 1.2 2009-11-27 08:24:53 jkrell Exp $
  *
  */
+
+#if defined(__INTERIX) && !defined(_REENTRANT)
+#define _REENTRANT
+#endif
 
 #include <sys/types.h>
 #include <fcntl.h>

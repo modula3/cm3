@@ -14,7 +14,7 @@
 UNSAFE MODULE RTAllocator
 EXPORTS RTAllocator, RTAllocCnts, RTHooks, RTHeapRep;
 
-IMPORT Cstdlib, RT0, RTMisc, RTOS, RTType, Scheduler, ThreadF;
+IMPORT Cstdlib, RT0, RTMisc, RTOS, RTType, Scheduler, RTThread;
 IMPORT RuntimeError AS RTE, Word;
 FROM RTType IMPORT Typecode;
 
@@ -71,7 +71,7 @@ PROCEDURE Clone (ref: REFANY): REFANY
   VAR
     hdr: RefHeader;  def: RT0.TypeDefn;  dataSize: CARDINAL;
     res: ADDRESS;
-    thread := ThreadF.MyHeapState();
+    thread := RTThread.MyHeapState();
   BEGIN
     IF (ref = NIL) THEN RETURN NIL; END;
     IF Word.And(LOOPHOLE(ref, Word.T), 1) # 0 THEN RETURN ref; END;
@@ -81,7 +81,7 @@ PROCEDURE Clone (ref: REFANY): REFANY
     dataSize := ReferentSize(hdr);
 
     INC(thread.inCritical);
-    res := AllocTraced(dataSize, def.dataAlignment, thread.pool);
+    res := AllocTraced(dataSize, def.dataAlignment, thread^);
     IF res = NIL THEN DEC(thread.inCritical); RAISE OutOfMemory; END;
     RTMisc.Copy(LOOPHOLE(ref, ADDRESS), res, dataSize);
     IF def.kind = ORD (TK.Array) THEN
@@ -190,14 +190,14 @@ PROCEDURE GetTraced (def: RT0.TypeDefn): REFANY =
 PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
   VAR
     res: ADDRESS;
-    thread := ThreadF.MyHeapState();
+    thread := RTThread.MyHeapState();
   BEGIN
     IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Ref) THEN
       RTE.Raise(RTE.T.ValueOutOfRange);
     END;
 
     INC(thread.inCritical);
-    res := AllocTraced(def.dataSize, def.dataAlignment, thread.pool);
+    res := AllocTraced(def.dataSize, def.dataAlignment, thread^);
     IF res = NIL THEN DEC(thread.inCritical); RETURN NIL; END;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := def.typecode, dirty := TRUE};
@@ -212,14 +212,14 @@ PROCEDURE GetTracedRef (def: RT0.TypeDefn): REFANY =
 PROCEDURE GetTracedObj (def: RT0.TypeDefn): ROOT =
   VAR
     res: ADDRESS;
-    thread := ThreadF.MyHeapState();
+    thread := RTThread.MyHeapState();
   BEGIN
     IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Obj) THEN
       RTE.Raise(RTE.T.ValueOutOfRange);
     END;
     
     INC(thread.inCritical);
-    res := AllocTraced(def.dataSize, def.dataAlignment, thread.pool);
+    res := AllocTraced(def.dataSize, def.dataAlignment, thread^);
     IF res = NIL THEN DEC(thread.inCritical); RETURN NIL; END;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := def.typecode, dirty := TRUE};
@@ -281,7 +281,7 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
   VAR
     res: ADDRESS;
     dataSize: CARDINAL;
-    thread := ThreadF.MyHeapState();
+    thread := RTThread.MyHeapState();
   BEGIN
     IF def.typecode = 0 OR def.traced # 1 OR def.kind # ORD(TK.Array) THEN
       RTE.Raise(RTE.T.ValueOutOfRange);
@@ -289,7 +289,7 @@ PROCEDURE GetOpenArray (def: RT0.TypeDefn; READONLY s: Shape): REFANY =
     dataSize := ArraySize(LOOPHOLE(def, RT0.ArrayTypeDefn), s);
 
     INC(thread.inCritical);
-    res := AllocTraced(dataSize, def.dataAlignment, thread.pool);
+    res := AllocTraced(dataSize, def.dataAlignment, thread^);
     IF res = NIL THEN DEC(thread.inCritical); RETURN NIL; END;
     LOOPHOLE(res - ADRSIZE(Header), RefHeader)^ :=
         Header{typecode := def.typecode, dirty := TRUE};
@@ -344,30 +344,63 @@ PROCEDURE ArraySize (def: RT0.ArrayTypeDefn;  READONLY s: Shape): CARDINAL =
                         BYTESIZE(Header));
   END ArraySize;
 
+PROCEDURE AllocTraced (dataSize, dataAlignment: CARDINAL;
+                       VAR thread: ThreadState): ADDRESS =
+  VAR
+    res       := thread.pool.next + ADRSIZE(Header);
+    cur_align := Word.And(LOOPHOLE(res, INTEGER), MaxAlignMask);
+    alignment := align[cur_align, dataAlignment];
+    nextPtr   := res + (alignment + dataSize);
+  BEGIN
+    IF nextPtr > thread.pool.limit THEN
+      (* not enough space left in the pool, take the long route *)
+      res := NIL;  nextPtr := NIL;  (* in case of GC... *)
+      TRY
+        <*ASSERT thread.inCritical > 0*>
+        DEC(thread.inCritical);
+        RTOS.LockHeap();
+        (* make sure the collector gets a chance to keep up with NEW... *)
+        CollectEnough();
+        RETURN LongAlloc (dataSize, dataAlignment, thread.pool);
+      FINALLY
+        RTOS.UnlockHeap();
+        INC(thread.inCritical);
+      END;
+    END;
+
+    (* Align the referent *)
+    IF alignment # 0 THEN
+      InsertFiller(thread.pool.next, alignment);
+      thread.pool.next := thread.pool.next + alignment;
+      res := thread.pool.next + ADRSIZE(Header);
+    END;
+
+    thread.pool.next := nextPtr;
+    RETURN res;
+  END AllocTraced;
+
 (*---------------------------------------------------------- RTAllocCnts ---*)
 
 PROCEDURE BumpCnt (tc: RT0.Typecode) =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       IF (tc >= n_types) THEN ExpandCnts (tc); END;
       WITH z = n_objects[tc] DO z := Word.Plus (z, 1) END;
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
   END BumpCnt;
 
 PROCEDURE BumpSize (tc: RT0.Typecode;  size: INTEGER) =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       IF (tc >= n_types) THEN ExpandCnts (tc); END;
       WITH z = n_objects[tc] DO z := Word.Plus (z, 1)    END;
       WITH z = n_bytes[tc]   DO z := Word.Plus (z, size) END;
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
   END BumpSize;
 

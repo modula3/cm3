@@ -9,7 +9,7 @@
 
 MODULE FloatMode (* FOR VAX *);
 
-IMPORT ThreadF;
+IMPORT RTThread;
 
 PROCEDURE SetRounding(md: RoundingMode) RAISES {Failure} =
   BEGIN
@@ -22,34 +22,23 @@ PROCEDURE GetRounding(): RoundingMode =
   END GetRounding;
 
 PROCEDURE GetFlags(): SET OF Flag =
-  VAR flags: SET OF Flag;
-  PROCEDURE Get(READONLY state: ThreadState) =
-    BEGIN
-      flags := state.sticky;
-    END Get;
+  VAR state := RTThread.MyFPState ();
   BEGIN
-    ThreadF.GetMyFPState(Get);
-    RETURN flags;
+    RETURN state.sticky;
   END GetFlags;
 
 PROCEDURE SetFlags(s: SET OF Flag): SET OF Flag =
-  VAR old: SET OF Flag;
-  PROCEDURE Set(VAR state: ThreadState) =
-    BEGIN
-      old := state.sticky;
-      state.sticky := s;
-    END Set;
+  VAR state := RTThread.MyFPState ();
+  VAR old := state.sticky;
   BEGIN
+    state.sticky := s;
     RETURN old;
   END SetFlags;
 
 PROCEDURE ClearFlag(f: Flag) =
-  PROCEDURE Set(VAR state: ThreadState) =
-    BEGIN
-      state.sticky := state.sticky - SET OF Flag {f};
-    END Set;
+  VAR state := RTThread.MyFPState ();
   BEGIN
-    ThreadF.SetMyFPState(Set);
+    state.sticky := state.sticky - SET OF Flag {f};
   END ClearFlag;
 
 TYPE
@@ -67,24 +56,16 @@ CONST
   };
 
 PROCEDURE SetBehavior(f: Flag; b: Behavior) RAISES {Failure} =
-  PROCEDURE Set(VAR state: ThreadState) =
-    BEGIN
-      IF (state.behavior [f] = b) THEN RETURN END;
-      IF NOT AllowedBehavior [f, b] THEN RAISE Failure END;
-      state.behavior [f] := b;
-    END Set;
+  VAR state := RTThread.MyFPState ();
   BEGIN
-    ThreadF.SetMyFPState(Set);
+    IF (state.behavior [f] = b) THEN RETURN END;
+    IF NOT AllowedBehavior [f, b] THEN RAISE Failure END;
+    state.behavior [f] := b;
   END SetBehavior;
 
 PROCEDURE GetBehavior(f: Flag): Behavior =
-  VAR behavior: Behavior;
-  PROCEDURE Get(READONLY state: ThreadState) =
-    BEGIN
-      behavior := state.behavior [f];
-    END Get;
   BEGIN
-    RETURN behavior;
+    RETURN RTThread.MyFPState().behavior [f];
   END GetBehavior;
 
 (*------------------------------------------------- thread initialization ---*)

@@ -27,13 +27,14 @@ However that is not portable.
 So use these wrappers instead.
 */
 
-#include "m3unix.h"
+#include "m3core.h"
 #include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #ifdef _WIN32
 #include <windows.h>
 #endif
+#define M3MODULE Unix
 
 #ifdef __cplusplus
 extern "C"
@@ -42,12 +43,32 @@ extern "C"
 
 void Unix__Assertions(void)
 {
-    /* make sure all the Modula-3 types are large enough */
+    /* make sure things are normal */
+    M3_STATIC_ASSERT(CHAR_BIT == 8);
+    M3_STATIC_ASSERT(sizeof(short) == 2);
+    M3_STATIC_ASSERT(sizeof(int) == 4);
+    M3_STATIC_ASSERT((sizeof(long) == 4) || (sizeof(long) == 8));
+    M3_STATIC_ASSERT((sizeof(void*) == 4) || (sizeof(void*) == 8));
+    M3_STATIC_ASSERT((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
+    M3_STATIC_ASSERT(sizeof(ptrdiff_t) == sizeof(size_t));
+    M3_STATIC_ASSERT(sizeof(void*) == sizeof(size_t));
+#ifndef _WIN64
+    M3_STATIC_ASSERT(sizeof(void*) == sizeof(long));
+    M3_STATIC_ASSERT(sizeof(size_t) == sizeof(long));
+#endif
 
-#define CHECK_M3_TYPE_SIZE(x) assert(sizeof(m3_##x) >= sizeof(x))
-#define IS_TYPE_SIGNED(x)  (((x)-1) < (x)0)
+#ifdef _MSC_VER
+    M3_STATIC_ASSERT(sizeof(__int64) == 8);
+#else
+    M3_STATIC_ASSERT(sizeof(long long) == 8);
+#endif
 
 #ifndef _WIN32
+
+/* make sure all the Modula-3 types are large enough */
+
+#define CHECK_M3_TYPE_SIZE(x) M3_STATIC_ASSERT(sizeof(m3_##x) >= sizeof(x))
+#define IS_TYPE_SIGNED(x)  (((x)-1) < (x)0)
 
     CHECK_M3_TYPE_SIZE(dev_t);
     CHECK_M3_TYPE_SIZE(gid_t);
@@ -59,62 +80,66 @@ void Unix__Assertions(void)
     CHECK_M3_TYPE_SIZE(pthread_t);
     CHECK_M3_TYPE_SIZE(uid_t);
 
-    assert(IS_TYPE_SIGNED(pid_t) == 1);
-
+    M3_STATIC_ASSERT(IS_TYPE_SIGNED(pid_t));
 #endif
-
-    assert(CHAR_BIT == 8);
-    assert(sizeof(short) == 2);
-    assert(sizeof(int) == 4);
-    assert((sizeof(long) == 4) || (sizeof(long) == 8));
-    assert((sizeof(void*) == 4) || (sizeof(void*) == 8));
-    assert((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
-    assert(sizeof(void*) == sizeof(size_t));
-#ifndef _WIN64
-    assert(sizeof(void*) == sizeof(long));
-    assert(sizeof(size_t) == sizeof(long));
-#endif
-#ifdef _MSC_VER
-    assert(sizeof(__int64) == 8);
-#else
-    assert(sizeof(long long) == 8);
-#endif
+    Utime__Assertions();
+    Usocket__Assertions();
 }
 
-/* open doesn't take any off_t parameter, but there is open64, that
-#define _FILE_OFFSET_BITS 64 maps open to. */
-int Unix__open(const char* path, int flags, m3_mode_t mode)
-{
-#ifdef _WIN32
-    return _open(path, flags, mode);
-#else
-    return open(path, flags, mode);
-#endif
-}
-
-/* wrapped in case passing mode_t vs. int varies */
-int Unix__mkdir(const char* path, m3_mode_t mode)
-{
-#ifdef _WIN32
-    return _mkdir(path);
-#else
-    return mkdir(path, mode);
-#endif
-}
+M3WRAP3_(int, open, const char*, int, m3_mode_t)
+M3WRAP2_(int, mkdir, const char*, m3_mode_t)
+M3WRAP1_(m3_mode_t, umask, m3_mode_t)
+M3WRAP2_(int, chmod, const char*, m3_mode_t)
+M3WRAP2_(int, creat, const char*, m3_mode_t)
+M3WRAP1_(int, dup, int)
+M3WRAP1(int, system, const char*)
+M3WRAP1_(int, isatty, int)
+M3WRAP2(int, rename, const char*, const char*)
+M3WRAP1_(int, rmdir, const char*)
+M3WRAP1_(int, unlink, const char*)
+M3WRAP2(int, gethostname, char*, size_t)
+M3WRAP2_(char*, getcwd, char*, size_t)
+M3WRAP2_(int, access, const char*, int)
+M3WRAP1_(int, chdir, const char*)
+M3WRAP1_(int, close, int)
+M3WRAP2_(int, dup2, int, int)
 
 #ifndef _WIN32
-
-int Unix__truncate(const char* file, m3_off_t length)
-{
-    return truncate(file, length);
-}
-
-int Unix__ftruncate(int file, m3_off_t length)
-{
-    return ftruncate(file, length);
-}
-
+M3WRAP0(m3_pid_t, fork)
+M3WRAP2(int, fchmod, int, m3_mode_t)
+M3WRAP3(int, chown, const char*, m3_uid_t, m3_gid_t)
+M3WRAP3(int, fchown, int, m3_uid_t, m3_gid_t)
+M3WRAP2(int, truncate, const char*, m3_off_t)
+M3WRAP2(int, ftruncate, int, m3_off_t)
+M3WRAP3(INTEGER, readlink, const char*, char*, INTEGER)
+M3WRAP2(int, symlink, const char*, const char*)
+M3WRAP1(int, fsync, int)
+M3WRAP0(int, getdtablesize)
+M3WRAP0(int, getpagesize)
+M3WRAP1(void*, sbrk, INTEGER)
+M3WRAP3(int, execve, const char*, char**, char**)
+M3WRAP1(unsigned, sleep, unsigned)
+M3WRAP3(int, mknod, const char*, m3_mode_t, m3_dev_t)
 #endif
+
+void Unix__underscore_exit(int exit_code)
+{
+    _exit(exit_code);
+}
+
+void Unix__exit(int i)
+{
+    exit(i);
+}
+
+int Unix__pipe(int files[2])
+{
+#ifdef _WIN32
+    return _pipe(files, 0, _O_BINARY);
+#else
+    return pipe(files);
+#endif
+}
 
 m3_off_t Unix__lseek(int fd, m3_off_t offset, int whence)
 {
@@ -170,232 +195,7 @@ int Unix__ioctl(int fd, int request, void* argp)
 #endif
 }
 
-int Unix__mknod(const char* path, m3_mode_t mode, m3_dev_t dev)
-/* no good reason to wrap this */
-{
-    return mknod(path, mode, dev);
-}
-
 #endif
-
-m3_mode_t Unix__umask(m3_mode_t newmask)
-{
-#ifdef _WIN32
-    return _umask(newmask);
-#else
-    return umask(newmask);
-#endif
-}
-
-int Unix__chmod(const char* path, m3_mode_t mode)
-{
-#ifdef _WIN32
-    return _chmod(path, mode);
-#else
-    return chmod(path, mode);
-#endif
-}
-
-#ifndef _WIN32
-
-int Unix__fchmod(int fd, m3_mode_t mode)
-{
-    return fchmod(fd, mode);
-}
-
-int Unix__chown(const char* path, m3_uid_t owner, m3_gid_t group)
-{
-    return chown(path, owner, group);
-}
-
-int Unix__fchown(int fd, m3_uid_t owner, m3_gid_t group)
-{
-    return fchown(fd, owner, group);
-}
-
-#endif
-
-int Unix__creat(const char* path, m3_mode_t mode)
-{
-#ifdef _WIN32
-    return _creat(path, mode);
-#else
-    return creat(path, mode);
-#endif
-}
-
-int Unix__dup(int oldd)
-{
-#ifdef _WIN32
-    return _dup(oldd);
-#else
-    return dup(oldd);
-#endif
-}
-
-#ifndef _WIN32
-m3_pid_t Unix__fork(void) { return fork(); }
-#endif
-
-int Unix__system(const char* s) { return system(s); }
-
-int Unix__isatty(int file)
-{
-#ifdef _WIN32
-    return _isatty(file);
-#else
-    return isatty(file);
-#endif
-}
-
-int Unix__pipe(int files[2])
-{
-#ifdef _WIN32
-    return _pipe(files, 0, _O_BINARY);
-#else
-    return pipe(files);
-#endif
-}
-
-#ifndef _WIN32
-
-INTEGER Unix__readlink(const char* path, char* buf, INTEGER bufsize) { return readlink(path, buf, bufsize); }
-
-int Unix__symlink(const char* name1, const char* name2) { return symlink(name1, name2); }
-
-#ifndef __INTERIX
-
-int Unix__utimes(const char* file, const timeval_t* tvp) { return utimes(file, tvp); }
-
-#endif
-
-#endif
-
-int Unix__rename(const char* from, const char* to) { return rename(from, to); }
-
-int Unix__rmdir(const char* path)
-{
-#ifdef _WIN32
-    return _rmdir(path);
-#else
-    return rmdir(path);
-#endif
-}
-
-int Unix__unlink(const char* path)
-{
-#ifdef _WIN32
-    return _unlink(path);
-#else
-    return unlink(path);
-#endif
-}
-
-void Unix__underscore_exit(int exit_code)
-{
-    _exit(exit_code);
-}
-
-int Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, timeval_t* timeout)
-{
-    return select(nfds, readfds, writefds, exceptfds, timeout);
-}
-
-#ifndef _WIN32
-
-int Unix__fsync(int file)
-{
-    return fsync(file);
-}
-
-int Unix__getdtablesize()
-{
-    return getdtablesize();
-}
-
-#endif
-
-int Unix__gethostname(char* name, size_t namelen)
-{
-    return gethostname(name, namelen);
-}
-
-#ifndef _WIN32
-
-int Unix__getpagesize(void)
-{
-    return getpagesize();
-}
-
-#endif
-
-char* Unix__getcwd(char* pathname, size_t size)
-{
-#ifdef _WIN32
-    return _getcwd(pathname, size);
-#else
-    return getcwd(pathname, size);
-#endif
-}
-
-int Unix__access(const char* path, int mode)
-{
-#ifdef _WIN32
-    return _access(path, mode);
-#else
-    return access(path, mode);
-#endif
-}
-
-#ifndef _WIN32
-
-void* Unix__sbrk(INTEGER inc)
-{
-    return sbrk(inc);
-}
-
-#endif
-
-int Unix__chdir(const char* path)
-{
-#ifdef _WIN32
-    return _chdir(path);
-#else
-    return chdir(path);
-#endif
-}
-
-int Unix__close(int d)
-{
-#ifdef _WIN32
-    return _close(d);
-#else
-    return close(d);
-#endif
-}
-
-int Unix__dup2(int oldd, int newd)
-{
-#ifdef _WIN32
-    return _dup2(oldd, newd);
-#else
-    return dup2(oldd, newd);
-#endif
-}
-
-#ifndef _WIN32
-
-int Unix__execve(const char* name, char** argv, char** envp)
-{
-    return execve(name, argv, envp);
-}
-
-#endif
-
-void Unix__exit(int i)
-{
-    exit(i);
-}
 
 #ifdef __cplusplus
 } /* extern C */

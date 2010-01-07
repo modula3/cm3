@@ -11,7 +11,7 @@ IMPORT Ctypes, OSWin32, PaintPrivate, Point, Rect, VBT, VBTRep, WinDef, WinGDI,
        WinScrnPixmap, WinScreenType, WinScreenTypePrivate;
 
 CONST
-  True = 1;
+  False = 0;
 
 VAR
   Windows95 := OSWin32.Win95();
@@ -93,7 +93,7 @@ PROCEDURE PushTexture (hdc  : WinDef.HDC;
                                        delta.h + pst.pmtable[pm].domain.west,
                                        delta.v + pst.pmtable[pm].domain.north,
                                        ADR(oldOrg));
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
 
         ctxt.brush := WinGDI.SelectObject (hdc, brush);
         <* ASSERT ctxt.brush # NIL *>
@@ -156,7 +156,8 @@ PROCEDURE PushPixmap (hdc  : WinDef.HDC;
     END;
 
     IF op >= 0 AND st.optable # NIL AND op < NUMBER(st.optable^) AND
-       pst.pmtable # NIL AND pm < NUMBER (pst.pmtable^) THEN
+       pst.pmtable # NIL AND pm < NUMBER (pst.pmtable^) AND
+       pst.pmtable[pm].hbmp # NIL THEN
       WITH tbl = st.optable[op] DO
         ctxt.rop2 := WinGDI.SetROP2 (hdc, tbl.rop2);
         <* ASSERT ctxt.rop2 # 0 *>
@@ -165,7 +166,7 @@ PROCEDURE PushPixmap (hdc  : WinDef.HDC;
         <* ASSERT brush # NIL *>
 
         status := WinGDI.SetBrushOrgEx(hdc, delta.h, delta.v, ADR(oldOrg));
-        <* ASSERT status = True *>
+        <* ASSERT status # False *>
 
         ctxt.brush := WinGDI.SelectObject (hdc, brush);
         <* ASSERT ctxt.brush # NIL *>
@@ -229,7 +230,7 @@ PROCEDURE PushFill (hdc  : WinDef.HDC;
         <* ASSERT ctxt.rop2 # 0 *>
 
         status := WinGDI.SetPolyFillMode (hdc, FillStyle[wind]);
-        <* ASSERT status # 0 *>
+        <* ASSERT status # False *>
         (* Note: "Pop" does not try to reestablish the previous fill style.
            So, there is no need to save it in "ctxt". *)
 
@@ -402,7 +403,7 @@ PROCEDURE Pop (READONLY ctxt: T) =
       pen := WinGDI.SelectObject (ctxt.hdc, ctxt.pen);
       <* ASSERT pen # NIL *>
       bool := WinGDI.DeleteObject (pen);
-      <* ASSERT bool = True *>
+      <* ASSERT bool # False *>
     END;
 
     (* If necessary, reset the brush and free up the brush handle *)
@@ -410,7 +411,7 @@ PROCEDURE Pop (READONLY ctxt: T) =
       brush := WinGDI.SelectObject (ctxt.hdc, ctxt.brush);
       <* ASSERT brush # NIL *>
       bool := WinGDI.DeleteObject (brush);
-      <* ASSERT bool = True *>
+      <* ASSERT bool # False *>
     END;
   END Pop;
 

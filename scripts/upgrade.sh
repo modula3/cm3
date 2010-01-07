@@ -1,5 +1,5 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.26 2009-07-22 15:00:55 jkrell Exp $
+# $Id: upgrade.sh,v 1.28 2009-09-27 13:01:36 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -51,7 +51,7 @@ cp_config_files() {
     echo cp ${f} ${CFGD}/${b}
     cp ${f} ${CFGD}/${b}
   done
-  ( echo "INSTALL_ROOT = \"${INSTALLROOT}\""
+  ( echo "INSTALL_ROOT = path() & \"/..\""
     echo "include(path() & \"/config/${TARGET}\")"
   ) > ${CFG}
   echo "new config files copied/generated in ${CFG}, backup in ${CFGBAK}"

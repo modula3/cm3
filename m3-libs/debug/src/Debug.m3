@@ -14,16 +14,6 @@
  * Last Modified By: Blair MacIntyre
  * Last Modified On: Mon Aug  4 12:30:02 1997
  * Update Count    : 16
- * 
- * $Log: not supported by cvs2svn $
- * Revision 1.3  1997/08/04 20:15:05  bm
- * Fixed BRANDs
- *
- * Revision 1.2  1997/03/12 21:46:33  bm
- * small addition
- *
- * 
- * HISTORY
  *)
 
 MODULE Debug;

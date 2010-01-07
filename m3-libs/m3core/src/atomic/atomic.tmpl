@@ -1,0 +1,10 @@
+% Copyright (C) 1993, Digital Equipment Corporation
+% All rights reserved.
+% See the file COPYRIGHT for a full description.
+
+% Quake functions to instantiate atomic.
+% (based on list.tmpl)
+
+readonly proc Atomic (T) is
+  build_generic_intf ("Atomic" & T, "Atomic", [T], VISIBLE)
+end

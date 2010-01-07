@@ -1,17 +1,17 @@
 #!/bin/sh
-# $Id: pkgmap.sh,v 1.42 2009-07-25 20:03:26 wagner Exp $
+# $Id: pkgmap.sh,v 1.53 2009-09-27 13:03:07 jkrell Exp $
 
 #set -x
-if [ -n "$ROOT" -a -d "$ROOT" ] ; then
+if [ -n "$ROOT" -a -d "$ROOT" ]; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
   root="${ROOT}"; export root
 else
   root=`pwd`
-  while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ] ; do
+  while [ -n "$root" -a ! -f "$root/scripts/sysinfo.sh" ]; do
     root=`dirname $root`
   done
   sysinfo="$root/scripts/sysinfo.sh"
-  if [ ! -f "$sysinfo" ] ; then
+  if [ ! -f "$sysinfo" ]; then
     echo "scripts/sysinfo.sh not found" 1>&2
     exit 1
   fi
@@ -24,40 +24,45 @@ SYSINFO_DONE=""
 exec_cmd() {
   echo " +++ $PKG_ACTION +++"
   [ "$NO_ACTION" = yes ] || {
-    SOL="$1/tmp-stdout-$$"
-    /bin/sh -c "cd $1 && $PKG_ACTION" >"${SOL}"
-    rc=$?
-    if [ "$rc" != 0 ]; then
-      if echo "${PKG_ACTION}" | grep -q -- -build >/dev/null 2>&1; then
-        if [ -n "${WORKSPACE}" -o -n "${CM3_CLEAN_RETRY}" ]; then
-          echo "retry build after cleaning" >"${SOL}"
-          /bin/sh -c "cd $1 && cm3 -clean" >>"${SOL}"
-          /bin/sh -c "cd $1 && $PKG_ACTION" >>"${SOL}"
-          rc=$?
+    if [ -n "${WORKSPACE}" -o -n "${CM3_CLEAN_RETRY}" ]; then
+      SOL="$1/tmp-stdout-$$"
+      /bin/sh -c "cd $1 && $PKG_ACTION" >"${SOL}"
+      rc=$?
+      if [ "$rc" != 0 ]; then
+        if echo "${PKG_ACTION}" | grep -q -- -build >/dev/null 2>&1; then
+          if [ -n "${WORKSPACE}" -o -n "${CM3_CLEAN_RETRY}" ]; then
+            echo "retry build after cleaning" >"${SOL}"
+            /bin/sh -c "cd $1 && cm3 -clean" >>"${SOL}"
+            /bin/sh -c "cd $1 && $PKG_ACTION" >>"${SOL}"
+            rc=$?
+          fi
         fi
       fi
+      cat "${SOL}"
+      rm -f "${SOL}"
+    else
+      /bin/sh -c "cd $1 && $PKG_ACTION"
+      rc=$?
     fi
-    cat "${SOL}"
-    rm -f "${SOL}"
     return $rc
   }
 }
 
 PKGS=""
 RARGS=""
-while [ -n "$1" ] ; do
+while [ -n "$1" ]; do
   case "$1" in
     -*)
-      if [ x-k = x"$1" ] ; then
+      if [ x-k = x"$1" ]; then
         KEEP_GOING="yes"
-      elif [ x-n = x"$1" ] ; then
+      elif [ x-n = x"$1" ]; then
         NO_ACTION="yes"
-      elif [ x-report = x"$1" ] ; then
+      elif [ x-report = x"$1" ]; then
         REPORT="yes"
-      elif [ x-l = x"$1" ] ; then
+      elif [ x-l = x"$1" ]; then
         LIST_ONLY="yes"
-      elif [ x-c = x"$1" ] ; then
-        if [ -z "${PKG_ACTION}" ] ; then
+      elif [ x-c = x"$1" ]; then
+        if [ -z "${PKG_ACTION}" ]; then
           PKG_ACTION="$2"
         else
           PKG_ACTION="${PKG_ACTION}; $2"
@@ -70,15 +75,15 @@ while [ -n "$1" ] ; do
       shift
     ;;
     *)
-      if [ -d "$ROOT/$1" ] ; then
+      if [ -d "$ROOT/$1" ]; then
         PKGS="${PKGS} $ROOT/$1"
-      elif [ -d "$1" ] ; then
+      elif [ -d "$1" ]; then
         PKGS="${PKGS} $1"
       else
         p=`pkgpath $1`
-        if [ -d "$p" ] ; then
+        if [ -d "$p" ]; then
           PKGS="${PKGS} $p"
-        elif [ -n "$p" -a -d "$ROOT/$p" ] ; then
+        elif [ -n "$p" -a -d "$ROOT/$p" ]; then
           PKGS="${PKGS} $ROOT/$p"
         else
           echo " *** cannot find package $1 / $p" 1>&2
@@ -101,24 +106,24 @@ if [ -n "${REPORT}" ]; then
   RW="${WORKSPACE}/cm3-pkg-report-${TARGET}.html"
   RJW="${WORKSPACE}/cm3-pkg-report-${TARGET}.xml"
   RJTW="${WORKSPACE}/cm3-pkg-test-report-${TARGET}.xml"
-  R2="`basename ${R} .html`.part2}"
+  R2="`basename ${R} .html`.part2"
   ERRS=""
   REDPKGS=""
   GREENPKGS=""
   YELLOWPKGS=""
 fi
 
-if [ -z "$PKG_ACTION" ] ; then
+if [ -z "$PKG_ACTION" ]; then
   echo "no PKG_ACTION defined, aborting" 1>&2
   exit 1
 fi
 
-if [ -z "${PKGS}" ] ; then
+if [ -z "${PKGS}" ]; then
   echo "no packages" 1>&2
   exit 1
 fi
 
-if [ "yes" = "$LIST_ONLY" ] ; then
+if [ "yes" = "$LIST_ONLY" ]; then
   listpkgs ${PKGS}
   exit 0
 fi
@@ -228,18 +233,18 @@ write_pkg_report() {
   # evaluate package build status
   pname=`echo $1 | sed -e 's;/;-;g'`
   errlines=`egrep '^".*, line .*:|warning:|version stamp mismatch|bad version stamps|Fatal Error|failed|quake runtime error|ignoring override|unsupported' "$1/${TARGET}/stdout.log"`
-  if [ "$2" = "0" ] ; then
-    echo "<tr class=\"bggreen\">"
+  if [ "$2" = "0" ]; then
+    echo "<tr class=\"bggreen\">" >> "${R}"
     bgt="bggreen"
-  elif [ "$2" = "2" ] ; then
-    echo "<tr class=\"bgyellow\">"
+  elif [ "$2" = "2" ]; then
+    echo "<tr class=\"bgyellow\">" >> "${R}"
     bgt="bgyellow"
   else
-    echo "<tr class=\"bgred\">"
+    echo "<tr class=\"bgred\">" >> "${R}"
     bgt="bgred"
     ERRS=`printf "${ERRS}${errlines}\\n"`
     res=`printf "${PKG}${ERRS}\\n"`
-  fi >> "${R}"
+  fi
 
   # evaluate package test status
   tbgt="${bgt}"
@@ -261,15 +266,15 @@ write_pkg_report() {
   # write table fields for build and test part
   (
     echo "  <td class=\"tl\">$1</td>"
-    if [ "$2" = "0" ] ; then
+    if [ "$2" = "0" ]; then
       echo "  <td class=\"tl\">build OK</td>"
-    elif [ "$2" = "2" ] ; then
+    elif [ "$2" = "2" ]; then
       echo "  <td class=\"tl\">not supported on ${TARGET}</td>"
     else
       echo "  <td class=\"tl\">build failed</td>"
     fi
     echo "  <td class=\"small\"><pre>"
-    if FOLD="`find_exe fold /usr/bin`/fold" ; then
+    if FOLD="`find_exe fold /usr/bin`/fold"; then
       quote_xml "`echo "$errlines" | ${FOLD} -s -w 64`"
     else
       quote_xml "$errlines"
@@ -288,9 +293,9 @@ write_pkg_report() {
   ) >> "${R}"
   (
     echo "  <testcase name=\"$1\" time=\"$5\">"
-    if [ "$2" = "0" ] ; then
+    if [ "$2" = "0" ]; then
       echo "  build OK"
-    elif [ "$2" = "2" ] ; then
+    elif [ "$2" = "2" ]; then
       echo "  not supported on ${TARGET} (skipped)"
     else
       echo "  <failure type=\"build failed\">"
@@ -338,24 +343,51 @@ write_pkg_report() {
 
 if [ -n "${REPORT}" ]; then
   report_header
+
+  make_date() {
+    cat >date.c <<End
+#include <stdio.h>
+#include <time.h>
+int main()
+{
+  printf("%lu\n", (unsigned long)time(NULL));
+  return 0;
+}
+End
+    rm -f m3date m3date.exe
+    for cc in /opt/SUNWspro/bin/cc /usr/sfw/bin/gcc /usr/bin/cc /usr/bin/gcc cc gcc; do
+      echo type $cc
+      if type $cc; then
+        echo "$cc date.c -o m3date"
+        $cc date.c -o m3date
+        if [ -x m3date ]; then
+          return
+        fi
+      fi
+    done
+    echo "no C compiler found"
+    exit 1
+  }
+  make_date
+  M3DATE=`pwd`/m3date
 fi
 
 M3GDB=yes
 OK=yes
 
-for PKG in ${PKGS} ; do
+for PKG in ${PKGS}; do
   echo "=== package ${PKG} ==="
   tres="not supported on ${TARGET}"
   terr=""
   mkdir -p "${PKG}/${TARGET}"
   STDOUTLOG="${PKG}/${TARGET}/stdout.log"
-  if [ "${REPORT}" = "yes" ] ; then
+  if [ "${REPORT}" = "yes" ]; then
     rm -f "${STDOUTLOG}"
     if UsePackage `basename "${PKG}"` || [ "${CM3_ALL}" = yes ]; then
-      pstart=`date +%s`
+      pstart=`$M3DATE +%s`
       exec_cmd "$PKG" > "${STDOUTLOG}" 2>&1
       res=$?
-      pend=`date +%s`
+      pend=`$M3DATE +%s`
       ptime=`expr \( $pend - $pstart \) \* 1000 + 500`
       ptime=`echo "scale=3; ${ptime} / 1000" | bc`
       cat "${STDOUTLOG}"
@@ -388,9 +420,9 @@ for PKG in ${PKGS} ; do
             LD_LIBRARY_PATH="$LD_LIBRARY_PATH:${PKG}/${TARGET}"
             DYLD_LIBRARY_PATH="$LD_LIBRARY_PATH"
             export LD_LIBRARY_PATH DYLD_LIBRARY_PATH
-            tstart=`date +%s`
+            tstart=`$M3DATE +%s`
             tres=`cm3 -build -override -DTEST -DRUN -DROOT="${ROOT}" 2> stderr`
-            tend=`date +%s`
+            tend=`$M3DATE +%s`
             ttime=`expr \( $tend - $tstart \) \* 1000 + 500`
             ttime=`echo "scale=3; ${ttime} / 1000" | bc`
             terr=`cat stderr`
@@ -426,13 +458,13 @@ for PKG in ${PKGS} ; do
     ERRS=`write_pkg_report "${PKG}" "${res}" "${tres}" "${terr}" "${ptime}" "${ttime}"`
     pall=`expr $pall + 1`
   fi
-  if [ "$res" != "0" -a "$res" != "2" ] ; then
-    if [ "${KEEP_GOING}" != "yes" ] ; then
+  if [ "$res" != "0" -a "$res" != "2" ]; then
+    if [ "${KEEP_GOING}" != "yes" ]; then
       echo " *** execution of $PKG_ACTION failed ***" 
       exit 1
     fi
   fi
-  if [ "$res" != "0" -a "${KEEP_GOING}" = "yes" ] ; then
+  if [ "$res" != "0" -a "${KEEP_GOING}" = "yes" ]; then
     echo " ==> $PKG_ACTION returned $res"
   else
     echo " ==> ${PKG} done"
@@ -465,7 +497,12 @@ if [ -n "${REPORT}" ]; then
   echo "XML package test report in ${RJT}"
 
   if [ -n "${DOSHIP}" ]; then
-    WWWSERVER=${WWWSERVER:-birch.elegosoft.com}
+    if test "x${CM3CVSUSER}" != "x"; then
+      CM3CVSUSER_AT="${CM3CVSUSER}@"
+    else
+      CM3CVSUSER_AT=""
+    fi
+    WWWSERVER=${WWWSERVER:-${CM3CVSUSER_AT}birch.elegosoft.com}
     WWWDEST=${WWWDEST:-${WWWSERVER}:/var/www/modula3.elegosoft.com/cm3/logs}
     scp "${R}" "${WWWDEST}" < /dev/null
   fi

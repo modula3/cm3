@@ -1,4 +1,4 @@
-#include <stdbool.h> 
+#include "m3-bool.h"
 
 #include "defs.h"
 #include "expression.h"
@@ -131,7 +131,7 @@ recognize_reserved_word (tok)
     mid = (low + high) / 2;
     cmp = strcmp (reserved [mid].name, tok->string);
     if (cmp == 0) {
-      tok->kind = reserved [mid].kind; 
+      tok->kind = reserved [mid].kind;
       return;
     } else if (cmp < 0) {
       low  = mid + 1;
@@ -141,7 +141,7 @@ recognize_reserved_word (tok)
   }
 
   tok->kind = TK_IDENT;
-  return; 
+  return;
 } /* recognize_reserved_word */
 
 /*--------------------------------------------------------------- numbers ---*/
@@ -154,40 +154,40 @@ scan_number (char *input, m3_token *tok)
   int digit;
   LONGEST val;
   LONGEST base;
-  bool is_based; 
+  BOOL is_based;
 
-  c = input; 
+  c = input;
   val = 0;
-  if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) ) 
-    { /* Go ahead and accept the C lexical syntax for hex numbers. */ 
-      is_based = true;
-      base = 16; 
+  if (*c == '0' && ( *(c+1) == 'x' || *(c+1) == 'X' ) )
+    { /* Go ahead and accept the C lexical syntax for hex numbers. */
+      is_based = TRUE;
+      base = 16;
       c = c + 2;
-    } 
-  else 
+    }
+  else
     { /* scan the leading decimal digits */
-      while ('0' <= *c && *c <= '9') 
+      while ('0' <= *c && *c <= '9')
         { digit = *c - '0';
           val = val * 10 + digit;
-          c++; 
+          c++;
         }
-      if (*c == '_') 
-        { /* It's a based value in Modula-3 syntax. */ 
-          is_based = true; 
+      if (*c == '_')
+        { /* It's a based value in Modula-3 syntax. */
+          is_based = TRUE;
           base = val;
-          c++; 
-          if ((base < 2) || (16 < base)) 
-            { error 
-                ("%d is an illegal base for a Modula-3 literal, using 10 instead." 
-                , (int) base 
+          c++;
+          if ((base < 2) || (16 < base))
+            { error
+                ("%d is an illegal base for a Modula-3 literal, using 10 instead."
+                , (int) base
                 );
               base = 10;
             }
-        } 
-      else is_based = false; 
-    } 
+        }
+      else is_based = FALSE;
+    }
 
-  if ( is_based ) 
+  if ( is_based )
   { /* scan a based integer */
     /* scan the value */
     val = 0;
@@ -284,7 +284,7 @@ scan_gdb_token (input, tok)
       tok->kind = TK_GDB_HISTORY;
       tok->intval = sign * ((input == tokstart)? 1 : atoi(tokstart));
       return input;
-          
+
     default: break;
   }
 
@@ -315,16 +315,16 @@ scan_gdb_token (input, tok)
   }
 
   /* check for a pseudo-register name */
-#if 0 
+#if 0
   for (c = 0; c < num_std_regs; c++) {
     if (len == strlen (std_regs [c].name)
         && strncmp (tokstart, std_regs[c].name, len) == 0) {
       tok->kind = TK_REGISTER;
-      tok->intval = std_regs[c].regnum; 
+      tok->intval = std_regs[c].regnum;
       return input;
     }
   }
-#endif 
+#endif
 
   /* ? must be a GDB variable */
   tok->kind = TK_GDB_VAR;
@@ -518,13 +518,13 @@ scan_text (input, tok)
       else if (*input == '\'') { *next++ = '\'';  input++; }
       else if (*input == '"')  { *next++ = '"';   input++; }
       else if (*input == 'x') {
-	LONGEST hexval;
+        LONGEST hexval;
         input = scan_hex (++input, &hexval, 0);
-	*next++ = hexval;
+        *next++ = hexval;
       } else if (('0' <= *input) && (*input <= '7')) {
-	LONGEST octval;
+        LONGEST octval;
         input = scan_octal (input, &octval, 0);
-	*next++ = octval;
+        *next++ = octval;
       } else {
         error ("unknown escape sequence in text literal");
       }
@@ -578,11 +578,11 @@ scan_widetext (input, tok, wide)
       else if (*input == '\'') { len++;  input++; }
       else if (*input == '"')  { len++;  input++; }
       else if (*input == 'x')  {
-	len++;  input++;  /* assume the hex digits each count as characters */
+        len++;  input++;  /* assume the hex digits each count as characters */
       } else if (('0' <= *input) && (*input <= '7')) {
-	len++;  input++;  /* assume the octal digits each count as characters */
+        len++;  input++;  /* assume the octal digits each count as characters */
       } else {
-	len++;  input++;  /* ??? */
+        len++;  input++;  /* ??? */
       }
 
     } else if (*input == 0) {
@@ -620,15 +620,15 @@ scan_widetext (input, tok, wide)
       else if (*input == '\'') { *out++ = 0;  *out++ = '\'';  input++; }
       else if (*input == '"')  { *out++ = 0;  *out++ = '"';   input++; }
       else if (*input == 'x') {
-	LONGEST hexval;
+        LONGEST hexval;
         input = scan_hex (++input, &hexval, wide);
-	*out++ = (hexval & 0xffff) >> 8;
-	*out++ = (hexval & 0xff);
+        *out++ = (hexval & 0xffff) >> 8;
+        *out++ = (hexval & 0xff);
       } else if (('0' <= *input) && (*input <= '7')) {
-	LONGEST octval;
+        LONGEST octval;
         input = scan_octal (input, &octval, wide);
-	*out++ = (octval & 0xffff) >> 8;
-	*out++ = (octval & 0xff);
+        *out++ = (octval & 0xffff) >> 8;
+        *out++ = (octval & 0xff);
       } else {
         error ("unknown escape sequence in text literal");
       }
@@ -711,19 +711,19 @@ scan_m3_token (input, tok)
       input = tokstart + 1;
 
       if (*input == '\'') {
-	/* oops, it's a wide char */
+        /* oops, it's a wide char */
         input = scan_char (tokstart, tok, 1);
         break;
       }
       if (*input == '"') {
-	/* oops, it's a wide text literal */
+        /* oops, it's a wide text literal */
         input = scan_widetext (tokstart, tok);
         break;
       }
 
       while (   ('a' <= *input && *input <= 'z')
              || ('A' <= *input && *input <= 'Z')
-             || ('0' <= *input && *input <= '9') 
+             || ('0' <= *input && *input <= '9')
              || (*input == '_')) {
         input++;
       }
@@ -816,7 +816,7 @@ scan_m3_token (input, tok)
 
 static char* toknames[] = {
 
-  "<EOF>", 
+  "<EOF>",
 
   /* literals */
 

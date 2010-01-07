@@ -5,6 +5,8 @@
 /* Last modified on Thu Oct 17 13:12:01 PDT 1996 by najork                   */
 /*       Created on Tue Oct 15 13:38:07 PDT 1996 by najork                   */
 
+if HasGui()
+
 import ("libm3")
 import ("ui")
 import ("formsvbt")
@@ -14,3 +16,5 @@ bundle ("MyBundle")
 
 implementation ("Main")
 Program ("PixmapComTest")
+
+end

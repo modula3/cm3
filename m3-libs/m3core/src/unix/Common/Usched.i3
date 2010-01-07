@@ -2,7 +2,7 @@
 (* All rights reserved.                                       *)
 (* See the file COPYRIGHT for a full description.             *)
 
-<*EXTERNAL*> INTERFACE Usched;
+INTERFACE Usched;
 
 FROM Ctypes IMPORT int;
 

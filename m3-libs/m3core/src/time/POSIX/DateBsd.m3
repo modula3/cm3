@@ -9,9 +9,9 @@
 
 UNSAFE MODULE DateBsd EXPORTS Date;
 
-IMPORT Thread, Time, M3toC, Utime, TimePosix;
+IMPORT Time, M3toC, Utime, TimePosix;
 
-VAR mu := NEW(Thread.Mutex);
+VAR mu := NEW(MUTEX);
 (* Protect the static storage used by "Utime.localtime" and "Utime.gmtime"
    (see the localtime(3) manpage). *)
 
@@ -45,7 +45,7 @@ PROCEDURE FromTime(t: Time.T; z: TimeZone := NIL): T =
          negation is necessary. *)
       date.offset  := - (tm.tm_gmtoff);
       date.zone    := M3toC.CopyStoT (tm.tm_zone);
-    END;
+    END; (* LOCK mu this comment is for m3makefile/grep to find *)
     RETURN date;
   END FromTime;
 

@@ -5,6 +5,10 @@
 % Last modified on Thu May 20 12:06:03 PDT 1993 by msm
 %      modified on Fri Apr 30-ip5:41:35 PDT 1993 by mjordan
 
+if not HasGui()
+  build_standalone()
+end
+
 import("ui")
 
 Module("EyesVBT")

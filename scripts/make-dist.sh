@@ -1,7 +1,13 @@
 #bash
-# $Id: make-dist.sh,v 1.26 2009-07-24 13:40:48 wagner Exp $
+# $Id: make-dist.sh,v 1.30 2009-09-27 12:59:23 jkrell Exp $
 
-DESTHOST=${DESTHOST:-birch.elegosoft.com}
+if test "x${CM3CVSUSER}" != "x"; then
+  CM3CVSUSER_AT="${CM3CVSUSER}@"
+else
+  CM3CVSUSER_AT=""
+fi
+
+DESTHOST=${DESTHOST:-${CM3CVSUSER_AT}birch.elegosoft.com}
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -22,23 +28,40 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
+DS=${DS:-"pre-RC4"}; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
+COLLDEPS="${ROOT}/www/releng/collection-deps.txt"
+
+cd "${ROOT}" || exit 1
 
 # keep short runpaths
 M3_PORTABLE_RUN_PATH=1
 export M3_PORTABLE_RUN_PATH
 
-DS="RC2"; export DS
 if [ -z "${NOBUILD}" ]; then
-  DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
-  DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
+  DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" \
+    2>&1 | tee build-min.log
+  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-min.log; then
+    echo "building cm3-bin-min archive failed" 1>&2
+    exit 1
+  fi
+  DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" \
+    2>&1 | tee build-core.log
+  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-core.log; then
+    echo "building cm3-bin-core archive failed" 1>&2
+    exit 1
+  fi
   if [ `hostname` = 'birch' ]; then
     SYSINFO_DONE="" "$ROOT/scripts/make-src-dist-all.sh"
   fi
   PATH="${INSTALLROOT}/bin:${PATH}"
-  "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
+  "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution \
+    -group-writable 2>&1 |tee build-all.log
+  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-all.log; then
+    echo "errors during build-all; some packages will be missing" 1>&2
+  fi
 fi
 
 if [ `uname` = 'Interix' ]; then
@@ -184,19 +207,37 @@ support tools like m3bundle and some general useful libraries.
 </ul>
 '
 
+#
+# Windows setup is one constant setup.cmd, with a setup.txt
+# next to it, containing relative directories from $ROOT.
+# Unix setup is a generated install.sh at least for now.
+#
+
 cd "${ROOT}"
 for c in ${PKG_COLLECTIONS}; do
+  rm -f setup.txt
   P=`fgrep " $c" $ROOT/scripts/pkginfo.txt | awk "{print \\$1}" | tr '\\n' ' '`
   PKGS=""
   for x in $P; do
+    p="$x"
     if [ -d "$x" ] ; then
       PKGS="${PKGS} $x"
+      echo "$x" >> setup.txt
     else
       p=`pkgpath $x`
       if [ -d "$p" ] ; then
         PKGS="${PKGS} $p"
+        echo "$p" >> setup.txt
       else
         echo " *** cannot find package $x / $p" 1>&2
+        exit 1
+      fi
+    fi
+    m3ship="${p}/${TARGET}/.M3SHIP"
+    if [ -f ${m3ship} ]; then
+      if res=`egrep '/home|/var|/tmp' ${m3ship}`; then
+        echo "${m3ship} seems to be broken:" 1>&2
+        echo "${res}" 1>&2
         exit 1
       fi
     fi
@@ -211,33 +252,8 @@ for c in ${PKG_COLLECTIONS}; do
     echo "done"
   ) > install.sh
   chmod 755 install.sh
-  (
-    echo 'REM ---BEGIN---'
-    echo '@echo off'
-    printf 'for %%%%p in ('
-    for p in ${PKGS}; do
-      pw="`echo $p | sed -e 's;/;\\;g'`"
-      printf "%s; " ${pw}
-    done
-    echo ') do call :ShipIt %%p'
-    cat <<EOF
-goto End
- 
-:ShipIt
-echo ...shipping %1...
-pushd %1
-cm3 -ship %SHIPARGS%
-popd
-echo.
-goto :EOF
- 
-:End
-echo done
-@echo on
-REM ---END---
-EOF
-  ) > install.cmd
-  chmod 755 install.cmd
+  cp -p $ROOT/scripts/win/setup.cmd $ROOT/setup.cmd
+  chmod 755 setup.cmd
   (
     echo "<html>"
     cat <<EOF
@@ -253,9 +269,6 @@ EOF
   <body>
     <h1>CM3 Package Collection $c</h1>
 EOF
-    ddd=''
-    ddd=${ddd:=DESC_${c}}
-    echo ${!ddd}
     echo "<p>This collections contains the following packages:</p>"
     echo "<ul>"
     for p in ${PKGS}; do
@@ -269,7 +282,7 @@ EOF
       if [ -r ${p}/index.html ]; then
         echo "<a href=\"ws/${p}/index.html\">Description</a><br>"
       fi
-      readmes=`find "${p}" -type f -name README -print`
+      readmes=`$FIND "${p}" -type f -name README -print`
       if [ -n "$readmes" ]; then
         for f in $readmes; do
           if [ -r ${f} ]; then
@@ -281,8 +294,8 @@ EOF
         echo "<a href=\"http://www.opencm3.net/doc/help/gen_html/${b}/INDEX.html\">Browse Sources Online</a><br>"
       fi
       for section in 1 5 6 7 8; do
-        manpages=`find ${p}/src -name "[A-Za-z]*.${section}" -print`
-	[ ${p} = m3-tools/m3tk ] && manpages="" # only fragments in m3tk, ignore
+        manpages=`$FIND ${p}/src -name "[A-Za-z]*.${section}" -print`
+        [ ${p} = m3-tools/m3tk ] && manpages="" # only fragments in m3tk, ignore
         if [ -n "${manpages}" ]; then
           for m in ${manpages}; do
             mb=`basename ${m} .${section}`
@@ -302,10 +315,27 @@ EOF
       --exclude '*/CVS/*' --exclude '*/CVS' --exclude '*~' \
       --exclude '*.tar.*' --exclude '*.tgz' --exclude "*/${TARGET}/gcc" \
       --exclude "*/${TARGET}/*/*" \
-      -czf "${ARCHIVE}" collection-${c}.html install.sh install.cmd ${PKGS}
+      -czf "${ARCHIVE}" collection-${c}.html install.sh setup.txt setup.cmd ${PKGS}
       ls -l "${ARCHIVE}"
   fi
 done
+
+set -x
+
+if type python; then
+  if [ "x$TARGET" = "xNT386" ]; then
+    python "$ROOT/scripts/python/make-msi.py" "$INSTALLROOT"
+    mv "$INSTALLROOT.msi" "$STAGE/cm3-$TARGET-$DS.msi"
+  else
+    python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
+    mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-$DS.deb"
+  fi
+else
+  echo "python not available, skipping .msi and .deb creation"
+fi
+
+echo "hostname=`hostname`"
+echo "SHIPRC=$SHIPRC"
 
 if [ `hostname` = 'birch' ]; then
   ARCHIVE="${STAGE}/cm3-scripts-${CM3VERSION}-${DS}.tgz"
@@ -318,9 +348,23 @@ if [ `hostname` = 'birch' ]; then
     -czf "${ARCHIVE}" doc www
   ls -l "${ARCHIVE}"
 fi
+
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
-  scp ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+  RSYNC=${RSYNC:-"rsync -vu"}
+  type rsync || RSYNC=scp
+  false; while [ $? != 0 ]; do
+    $RSYNC ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+  done
+  for ext in msi deb; do
+    if [ -r "$STAGE/cm3-$TARGET-$DS.$ext" ]; then
+      false; while [ $? != 0 ]; do
+        $RSYNC "$STAGE/cm3-$TARGET-$DS.$ext" $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+      done
+    fi
+  done
   if [ `hostname` = 'birch' ]; then
-    scp collection-*.html $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+    false; while [ $? != 0 ]; do
+      $RSYNC collection-*.html $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
+    done
   fi
 fi

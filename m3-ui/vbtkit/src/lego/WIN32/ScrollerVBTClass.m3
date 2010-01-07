@@ -158,18 +158,19 @@ PROCEDURE GetAttributes (v: T): Attributes =
     a.stripeBorder := v.stripeW.millimeters;
     a.stripeBorderPaintOp := v.stripeBorderP;
     a.stripeBorderPixmap := v.stripeBorder;
-    IF NOT v.needToComputePixels
-    THEN
-       WITH st = VBT.ScreenTypeOf(v)
-       DO
-          IF v # NIL
-          THEN
-             a.margin := FLOAT(v.scrollMargin.pixels) / st.res[Axis.Other[v.axis]];
-             a.stripeWidth := FLOAT(v.stripeWidth.pixels) / st.res[Axis.Other[v.axis]];
-             a.stripeBorder := FLOAT(v.stripeW.pixels) / st.res[Axis.Other[v.axis]];
-          END; (* if *)
-       END; (* with *)
-    END; (* if *)
+    IF v # NIL THEN
+      LOCK v.mu DO
+        IF NOT v.needToComputePixels THEN
+          WITH st = VBT.ScreenTypeOf(v) DO
+            IF st # NIL THEN
+              a.margin := FLOAT(v.scrollMargin.pixels) / st.res[Axis.Other[v.axis]];
+              a.stripeWidth := FLOAT(v.stripeWidth.pixels) / st.res[Axis.Other[v.axis]];
+              a.stripeBorder := FLOAT(v.stripeW.pixels) / st.res[Axis.Other[v.axis]];
+            END;
+          END;
+        END;
+      END;
+    END;
     RETURN a;
   END GetAttributes;
 
@@ -628,6 +629,7 @@ PROCEDURE Rescreen (                      v : T;
                     <* UNUSED *> READONLY cd: VBT.RescreenRec)
   RAISES {} =
   BEGIN
+   LOCK v.mu DO
     IF v.needToComputePixels
     THEN
        v.stripeW.pixels :=
@@ -666,6 +668,7 @@ PROCEDURE Rescreen (                      v : T;
     v.minStripeLen.pixels :=
       ROUND(VBT.MMToPixels(v, v.minStripeLen.millimeters, v.axis));
     VBT.NewShape(v);
+   END;
   END Rescreen;
 
 PROCEDURE Shape (v: T; ax: Axis.T; <* UNUSED *> n: CARDINAL):

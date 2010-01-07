@@ -1,69 +1,89 @@
-#define _CRT_SECURE_NO_DEPRECATE
+#ifdef _MSC_VER
+#pragma optimize("gty", on)
+#undef _DLL
+#endif
 
+#include "m3core.h"
 #include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int Cstdio__feof(FILE* f)
-{
-    return feof(f);
-}
+#define M3MODULE Cstdio
 
-int Cstdio__getc(FILE* f)
-{
-    return getc(f);
-}
+M3WRAP1(int, fclose, FILE*)
+M3WRAP2_(FILE*, fdopen, int, const char*) /* fileno to FILE* */
+M3WRAP1(int, feof, FILE*)
+M3WRAP1(int, ferror, FILE*)
+M3WRAP1(int, fflush, FILE*)
+M3WRAP1(int, fgetc, FILE*)
+M3WRAP3(char*, fgets, char*, int, FILE*)
+M3WRAP1_(int, fileno, FILE*) /* FILE* to fileno */
+M3WRAP2(FILE*, fopen, const char*, const char*)
+M3WRAP2(int, fputc, int, FILE*)
+M3WRAP2(int, fputs, const char*, FILE*)
+M3WRAP4(size_t, fread, void*, size_t, size_t, FILE*)
+M3WRAP3(FILE*, freopen, const char*, const char*, FILE*)
+M3WRAP3(int, fseek, FILE*, long, int)
+M3WRAP1(long, ftell, FILE*)
+M3WRAP4(size_t, fwrite, const void*, size_t, size_t, FILE*)
+M3WRAP1(int, getc, FILE*)
+M3WRAP0(int, getchar)
+M3WRAP1_(int, pclose, FILE*) /* close pipe */
+M3WRAP2_(FILE*, popen, const char*, const char*) /* open pipe */
+M3WRAP2(int, putc, int, FILE*)
+M3WRAP1(int, putchar, int)
+M3WRAP1(int, puts, const char*) /* put string + "\n" to stdout, atomically */
+M3WRAP1(int, remove, const char*)
+M3WRAP2(int, rename, const char*, const char*)
+M3WRAP4(int, setvbuf, FILE*, char*, int, size_t)
+M3WRAP0(FILE*, tmpfile)
+M3WRAP2(int, ungetc, int, FILE*)
+M3WRAP1_(int, getw, FILE*)
+M3WRAP2_(int, putw, int, FILE*)
 
-int Cstdio__ungetc(int c, FILE* f)
-{
-    return ungetc(c, f);
-}
+#define X(name, in, out)   void __cdecl Cstdio__##name in { name out; }
+#define X1(name, a)             X(name, (a i),      (i))
+#define X2(name, a, b)          X(name, (a i, b j), (i, j))
 
-int Cstdio__putc(int c, FILE* f)
-{
-    return putc(c, f);
-}
+X1(clearerr, FILE*)
+X1(perror, const char*) /* print error */
+X1(rewind, FILE*)
+X2(setbuf, FILE*, char*)
 
-int Cstdio__fflush(FILE* f)
-{
-    return fflush(f);
-}
+#undef X
+#undef X_
+#define X(a) const unsigned Cstdio__##a = a;
+#define X_(a) const unsigned Cstdio__##a = _##a;
 
-FILE* Cstdio__fdopen(int fd, const char* mode)
-{
-#ifdef _WIN32
-    return _fdopen(fd, mode);
-#else
-    return fdopen(fd, mode);
+X(BUFSIZ)
+X(FILENAME_MAX)
+X(FOPEN_MAX)
+X_(IOFBF) /* setvbuf full buffered */
+X_(IOLBF) /* setvbuf line buffered */
+X_(IONBF) /* setvbuf not buffered */
+X(L_tmpnam)
+X(SEEK_CUR)
+X(SEEK_END)
+X(SEEK_SET)
+X(TMP_MAX)
+
+#undef X
+#define X(a) const int Cstdio__##a = a;
+
+X(EOF)
+
+#ifndef _WIN32
+/* varying ABI in libcmt.lib and msvcrt.lib so just don't expose them */
+
+#undef X
+#define X(a) FILE* __cdecl Cstdio__get_##a(void) { return a; }
+
+X(stdin)
+X(stdout)
+X(stderr)
 #endif
-}
-
-FILE* Cstdio__fopen(const char* path, const char* mode)
-{
-    return fopen(path, mode);
-}
-
-int Cstdio__fclose(FILE* f)
-{
-    return fclose(f);
-}
-
-FILE* Cstdio__get_stdin(void)
-{
-    return stdin;
-}
-
-FILE* Cstdio__get_stdout(void)
-{
-    return stdout;
-}
-
-FILE* Cstdio__get_stderr(void)
-{
-    return stderr;
-}
 
 #ifdef __cplusplus
 }

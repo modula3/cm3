@@ -23,73 +23,79 @@ INTERFACE Target;
 
 TYPE
   Systems = {
-    AIX386, ALPHA_OSF, AP3000, ARM, DS3100,
-    FreeBSD, FreeBSD2, HP300, HPPA, IBMR2,
-    IBMRT, IRIX5, LINUX, LINUXELF, NEXT,
-    NT386, OKI, OS2, SEQUENT, SOLgnu, SOLsun,
-    SPARC, SUN3, SUN386, UMAX, VAX, FreeBSD3,
-    FreeBSD4, FBSD_ALPHA, LINUXLIBC6, I386_DARWIN,
-    PPC_DARWIN, BSDI4, NT386GNU, PPC_LINUX, NetBSD2_i386,
-    AMD64_DARWIN, AMD64_LINUX, SPARC32_LINUX, SPARC64_LINUX,
-    SPARC64_OPENBSD, PPC32_OPENBSD, MIPS64_OPENBSD, SPARC64_SOLARIS,
-    I386_OPENBSD, AMD64_FREEBSD, PA32_HPUX, PA64_HPUX, ARM_DARWIN,
-    I386_INTERIX, AMD64_NETBSD, AMD64_OPENBSD, Undefined
+    AMD64_DARWIN,
+    AMD64_FREEBSD,
+    AMD64_LINUX,
+    AMD64_NETBSD,
+    AMD64_OPENBSD,
+    AMD64_SOLARIS,
+    ARM_DARWIN,
+    FreeBSD4,
+    I386_CYGWIN,
+    I386_DARWIN,
+    I386_FREEBSD,
+    I386_INTERIX,
+    I386_LINUX,
+    I386_MINGW,
+    I386_NETBSD,
+    I386_NT,
+    I386_OPENBSD,
+    I386_SOLARIS,
+    LINUXLIBC6,
+    MIPS64_OPENBSD,
+    NT386,
+    NT386GNU,
+    NetBSD2_i386,
+    PA32_HPUX,
+    PA64_HPUX,
+    PPC32_OPENBSD,
+    PPC_DARWIN,
+    PPC_LINUX,
+    SOLgnu,
+    SOLsun,
+    SPARC32_LINUX,
+    SPARC64_LINUX,
+    SPARC64_OPENBSD,
+    SPARC64_SOLARIS,
+    Undefined
   };
 
 CONST
   SystemNames = ARRAY OF TEXT {
-    (*  0 *) "AIX386",
-    (*  1 *) "ALPHA_OSF",
-    (*  2 *) "AP3000",
-    (*  3 *) "ARM",
-    (*  4 *) "DS3100",
-    (*  5 *) "FreeBSD",
-    (*  6 *) "FreeBSD2",
-    (*  7 *) "HP300",
-    (*  8 *) "HPPA",
-    (*  9 *) "IBMR2",
-    (* 10 *) "IBMRT",
-    (* 11 *) "IRIX5",
-    (* 12 *) "LINUX",
-    (* 13 *) "LINUXELF",
-    (* 14 *) "NEXT",
-    (* 15 *) "NT386",
-    (* 16 *) "OKI",
-    (* 17 *) "OS2",
-    (* 18 *) "SEQUENT",
-    (* 19 *) "SOLgnu",
-    (* 20 *) "SOLsun",
-    (* 21 *) "SPARC",
-    (* 22 *) "SUN3",
-    (* 23 *) "SUN386",
-    (* 24 *) "UMAX",
-    (* 25 *) "VAX",
-    (* 26 *) "FreeBSD3",
-    (* 27 *) "FreeBSD4",
-    (* 28 *) "FBSD_ALPHA",
-    (* 29 *) "LINUXLIBC6",
-    (* 30 *) "I386_DARWIN",
-    (* 31 *) "PPC_DARWIN",
-    (* 32 *) "BSDI4",
-    (* 33 *) "NT386GNU",
-    (* 34 *) "PPC_LINUX",
-    (* 35 *) "NetBSD2_i386",
-    (* 36 *) "AMD64_DARWIN",
-    (* 37 *) "AMD64_LINUX",
-    (* 38 *) "SPARC32_LINUX",
-    (* 39 *) "SPARC64_LINUX",
-    (* 40 *) "SPARC64_OPENBSD",
-    (* 41 *) "PPC32_OPENBSD",
-    (* 42 *) "MIPS64_OPENBSD",
-    (* 43 *) "SPARC64_SOLARIS",
-    (* 44 *) "I386_OPENBSD",
-    (* 45 *) "AMD64_FREEBSD",
-    (* 46 *) "PA32_HPUX",
-    (* 47 *) "PA64_HPUX",
-    (* 48 *) "ARM_DARWIN",
-    (* 49 *) "I386_INTERIX",
-    (* 50 *) "AMD64_NETBSD",
-    (* 51 *) "AMD64_OPENBSD"
+    "AMD64_DARWIN",
+    "AMD64_FREEBSD",
+    "AMD64_LINUX",
+    "AMD64_NETBSD",
+    "AMD64_OPENBSD",
+    "AMD64_SOLARIS",
+    "ARM_DARWIN",
+    "FreeBSD4",
+    "I386_CYGWIN",
+    "I386_DARWIN",
+    "I386_FREEBSD",
+    "I386_INTERIX",
+    "I386_LINUX",
+    "I386_MINGW",
+    "I386_NETBSD",
+    "I386_NT",
+    "I386_OPENBSD",
+    "I386_SOLARIS",
+    "LINUXLIBC6",
+    "MIPS64_OPENBSD",
+    "NT386",
+    "NT386GNU",
+    "NetBSD2_i386",
+    "PA32_HPUX",
+    "PA64_HPUX",
+    "PPC32_OPENBSD",
+    "PPC_DARWIN",
+    "PPC_LINUX",
+    "SOLgnu",
+    "SOLsun",
+    "SPARC32_LINUX",
+    "SPARC64_LINUX",
+    "SPARC64_OPENBSD",
+    "SPARC64_SOLARIS"
   };
 
 CONST
@@ -196,6 +202,8 @@ TYPE
   END;
   IBytes = ARRAY [0..7] OF IByte;
   IByte = BITS 8 FOR [0..16_ff];
+
+PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT;
 
 TYPE
   Int_type = RECORD
@@ -326,10 +334,10 @@ VAR (*CONST*)
   (* every structure size must be a multiple of this *)
 
   Allow_packed_byte_aligned: BOOLEAN;
- (* Allow the compiler to align scalar types on byte boundaries when packing.
-    The target processor must support byte alignment of scalar store and
-    loads. This does not remove the restriction that bitfields may not cross
-    word boundaries. *)
+  (* Allow the compiler to align scalar types on byte boundaries when packing.
+     The target processor must support byte alignment of scalar store and
+     loads. This does not remove the restriction that bitfields may not cross
+     word boundaries. *)
 
   (* NIL checking *)
   First_readable_addr: CARDINAL;

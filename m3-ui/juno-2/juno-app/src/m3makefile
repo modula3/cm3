@@ -8,6 +8,8 @@
 /*                                                                           */
 /* m3makefile for /proj/m3/pkgs/juno-app/src                                 */
 
+if HasGui()
+
 /* imported packages */
 import		("libm3")
 import		("netobj")
@@ -113,4 +115,4 @@ Program		("Juno")
 import		("mtex")
 Mtex		("Juno", 1)
 
-
+end

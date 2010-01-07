@@ -126,7 +126,7 @@ replayheap std m3devtool
 showheap std m3devtool
 shownew std m3devtool
 showthread std m3devtool
-pkl-fonts std juno
+juno-2/juno-app/pkl-fonts std juno
 juno-2/juno-machine std juno
 juno-2/juno-compiler std juno
 juno-2/juno-app std juno
