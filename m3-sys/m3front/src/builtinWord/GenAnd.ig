@@ -8,6 +8,6 @@
 
 GENERIC INTERFACE GenAnd ();
 
-PROCEDURE Initialize ();
+PROCEDURE Initialize (rep: INTEGER);
 
 END GenAnd.
