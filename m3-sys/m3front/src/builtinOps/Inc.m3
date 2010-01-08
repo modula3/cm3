@@ -32,7 +32,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
     inc    : Expr.T;
     check  : [0..3] := 0;
     lvalue : CG.Val;
-    bmin, bmax, imin, imax: Target.Int;
+    bmin, bmax: Target.Int;
   BEGIN
     tlhs := Type.CheckInfo (tlhs, info);
     IF (NUMBER (ce.args^) > 1)
@@ -42,19 +42,14 @@ PROCEDURE Compile (ce: CallExpr.T) =
       ELSE inc := IntegerExpr.New (Int.T,  TInt.One);  Expr.Prep (inc);
     END;
     Expr.GetBounds (lhs, bmin, bmax);
-    Expr.GetBounds (inc, imin, imax);
 
     IF Host.doRangeChk THEN
       IF Type.IsSubtype (tlhs, LInt.T) THEN
-        IF NOT TInt.EQ (bmin, Target.Longint.min)
-           AND TInt.LT (imin, TInt.Zero) THEN INC (check) END;
-        IF NOT TInt.EQ (bmax, Target.Longint.max)
-           AND TInt.LT (TInt.Zero, imax) THEN INC (check, 2) END;
-      ELSE        
-         IF NOT TInt.EQ (bmin, Target.Integer.min)
-            AND TInt.LT (imin, TInt.Zero) THEN INC (check) END;
-         IF NOT TInt.EQ (bmax, Target.Integer.max)
-            AND TInt.LT (TInt.Zero, imax) THEN INC (check, 2) END;
+        IF TInt.LT (Target.Longint.min, bmin) THEN INC (check) END;
+        IF TInt.LT (bmax, Target.Longint.max) THEN INC (check, 2) END;
+      ELSE
+        IF TInt.LT (Target.Integer.min, bmin) THEN INC (check) END;
+        IF TInt.LT (bmax, Target.Integer.max) THEN INC (check, 2) END;
       END;
     END;
 
