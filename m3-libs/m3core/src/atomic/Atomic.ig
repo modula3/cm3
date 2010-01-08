@@ -49,14 +49,18 @@ PROCEDURE Swap(VAR var: T; val: Rep.T; order := Order.Sequential): Rep.T;
      evaluation that reads the updated value. *)
 
 PROCEDURE CompareSwap(VAR var: T; VAR expected: Rep.T; desired: Rep.T;
-                      order := Order.Sequential): BOOLEAN;
-  (* Atomically, compares the value in "var" for equality with that in
+                      success, failure := Order.Sequential): BOOLEAN;
+  (* The "failure" argument shall be neither "Release" nor "AcquireRelease".
+     The "failure" argument shall be no stronger than the "success" argument.
+     Atomically, compares the value in "var" for equality with that in
      "expected", and if true, replaces the value in "var" with "desired", and
      if false, updates the value in "expected" with the value in "var".
-     Returns the result of the comparison.  The "order" shall be neither
-     "Release" nor "AcquireRelease".  This is a read-modify-write operation
-     and synchronizes with any evaluation that reads the updated value.  The
-     effect of the CompareSwap operation is:
+     Returns the result of the comparison.  Further, if the comparison is
+     true, memory is affected according to the value of "success", and if the
+     comparison is false, memory is affected according to the value of
+     "failure".  This is a read-modify-write operation and synchronizes with
+     any evaluation that reads the updated value.  The effect of the
+     CompareSwap operation is:
 
      IF var = expected THEN var := desired ELSE expected := var;
 
