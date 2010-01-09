@@ -155,23 +155,16 @@ typedef enum {
   M3CG_LOAD_PROCEDURE,         /* 148 */
   M3CG_LOAD_STATIC_LINK,       /* 149 */
   M3CG_COMMENT,                /* 150 */
-  M3CG_FETCH_AND_ADD,	       /* 151 */
-  M3CG_FETCH_AND_SUB,	       /* 152 */
-  M3CG_FETCH_AND_OR,	       /* 153 */
-  M3CG_FETCH_AND_AND,	       /* 154 */
-  M3CG_FETCH_AND_XOR,	       /* 155 */
-  M3CG_FETCH_AND_NAND,	       /* 156 */
-  M3CG_ADD_AND_FETCH,	       /* 157 */
-  M3CG_SUB_AND_FETCH,	       /* 158 */
-  M3CG_OR_AND_FETCH,	       /* 159 */
-  M3CG_AND_AND_FETCH,	       /* 160 */
-  M3CG_XOR_AND_FETCH,	       /* 161 */
-  M3CG_NAND_AND_FETCH,	       /* 162 */
-  M3CG_BOOL_COMPARE_AND_SWAP,  /* 163 */
-  M3CG_VAL_COMPARE_AND_SWAP,   /* 164 */
-  M3CG_SYNCHRONIZE,	       /* 165 */
-  M3CG_LOCK_TEST_AND_SET,      /* 166 */
-  M3CG_LOCK_RELEASE,	       /* 167 */
+  M3CG_STORE_ORDERED,	       /* 151 */
+  M3CG_LOAD_ORDERED,	       /* 152 */
+  M3CG_EXCHANGE,	       /* 153 */
+  M3CG_COMPARE_EXCHANGE,       /* 154 */
+  M3CG_FENCE,		       /* 155 */
+  M3CG_FETCH_AND_ADD,	       /* 156 */
+  M3CG_FETCH_AND_SUB,	       /* 157 */
+  M3CG_FETCH_AND_OR,	       /* 158 */
+  M3CG_FETCH_AND_AND,	       /* 159 */
+  M3CG_FETCH_AND_XOR,	       /* 160 */
   LAST_OPCODE } M3CG_opcode;
 
 static const char *M3CG_opnames[] = {
@@ -326,23 +319,16 @@ static const char *M3CG_opnames[] = {
   "load_procedure",         /* 148 */
   "load_static_link",       /* 149 */
   "comment",                /* 150 */
-  "fetch_and_add",	    /* 151 */
-  "fetch_and_sub",	    /* 152 */
-  "fetch_and_or",	    /* 153 */
-  "fetch_and_and",	    /* 154 */
-  "fetch_and_xor",	    /* 155 */
-  "fetch_and_nand",	    /* 156 */
-  "add_and_fetch",	    /* 157 */
-  "sub_and_fetch",	    /* 158 */
-  "or_and_fetch",	    /* 159 */
-  "and_and_fetch",	    /* 160 */
-  "xor_and_fetch",	    /* 161 */
-  "nand_and_fetch",	    /* 162 */
-  "bool_compare_and_fetch", /* 163 */
-  "val_compare_and_fetch",  /* 164 */
-  "synchronize",	    /* 165 */
-  "lock_test_and_set",	    /* 166 */
-  "lock_release",	    /* 167 */
+  "store_ordered",	    /* 151 */
+  "load_ordered",	    /* 152 */
+  "exchange",		    /* 153 */
+  "compare_exchange",	    /* 154 */
+  "fence",		    /* 155 */
+  "fetch_and_add",	    /* 156 */
+  "fetch_and_sub",	    /* 157 */
+  "fetch_and_or",	    /* 158 */
+  "fetch_and_and",	    /* 159 */
+  "fetch_and_xor",	    /* 160 */
   0 };
 
 
