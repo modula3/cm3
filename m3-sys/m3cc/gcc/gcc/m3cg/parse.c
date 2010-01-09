@@ -4847,64 +4847,61 @@ m3cg_comment (void)
     fprintf(stderr, "  comment: `%s'\n", comment);
 }
 
+typedef enum { Relaxed, Release, Acquire, AcquireRelease, Sequential } Order;
+
 static void
-m3cg_fetch (enum built_in_function fncode)
+m3cg_store_ordered (void)
 {
-  MTYPE2     (t, T);
+  MTYPE2 (src_t, src_T);
+  MTYPE2 (dst_t, dst_T);
+  INTEGER (order);
 
-  int size;
+  tree v;
 
-  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
-    goto incompatible;
-  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
-  if (size != 1 && size != 2 && size != 4 && size != 8)
-    goto incompatible;
+  if (order != Relaxed)
+    warning (0, "only Relaxed memory order for stores is supported");
 
-  m3_start_call ();
-  m3_pop_param (t);
-  m3_pop_param (t_addr);
-  CALL_TOP_ARG() = nreverse(CALL_TOP_ARG());
-  CALL_TOP_TYPE() = nreverse(CALL_TOP_TYPE());
-  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
-  return;
-
- incompatible:
-  fatal_error ("incompatible type for argument to atomic op");
+  v = EXPR_REF (-2);
+  v = m3_cast (build_pointer_type (dst_t), v);
+  v = m3_build1 (INDIRECT_REF, dst_t, v);
+  add_stmt (build2 (MODIFY_EXPR, dst_t, v,
+		    m3_build1 (CONVERT_EXPR, dst_t,
+			       m3_cast (src_t, EXPR_REF (-1)))));
+  EXPR_POP ();
+  EXPR_POP ();
 }
 
 static void
-m3cg_fetch_and_add (void) { m3cg_fetch (BUILT_IN_FETCH_AND_ADD_N); }
-static void
-m3cg_fetch_and_sub (void) { m3cg_fetch (BUILT_IN_FETCH_AND_SUB_N); }
-static void
-m3cg_fetch_and_or  (void) { m3cg_fetch (BUILT_IN_FETCH_AND_OR_N); }
-static void
-m3cg_fetch_and_and (void) { m3cg_fetch (BUILT_IN_FETCH_AND_AND_N); }
-static void
-m3cg_fetch_and_xor (void) { m3cg_fetch (BUILT_IN_FETCH_AND_XOR_N); }
-static void
-m3cg_fetch_and_nand (void) { m3cg_fetch (BUILT_IN_FETCH_AND_NAND_N); }
-static void
-m3cg_add_and_fetch (void) { m3cg_fetch (BUILT_IN_ADD_AND_FETCH_N); }
-static void
-m3cg_sub_and_fetch (void) { m3cg_fetch (BUILT_IN_SUB_AND_FETCH_N); }
-static void
-m3cg_or_and_fetch  (void) { m3cg_fetch (BUILT_IN_OR_AND_FETCH_N); }
-static void
-m3cg_and_and_fetch (void) { m3cg_fetch (BUILT_IN_AND_AND_FETCH_N); }
-static void
-m3cg_xor_and_fetch (void) { m3cg_fetch (BUILT_IN_XOR_AND_FETCH_N); }
-static void
-m3cg_nand_and_fetch (void) { m3cg_fetch (BUILT_IN_NAND_AND_FETCH_N); }
+m3cg_load_ordered (void)
+{
+  MTYPE2     (src_t, src_T);
+  MTYPE2     (dst_t, dst_T);
+  INTEGER    (order);
+
+  tree v;
+
+  if (order != Relaxed)
+    warning (0, "only Relaxed memory order for loads is supported");
+
+  v = EXPR_REF (-1);
+  v = m3_cast (build_pointer_type (src_t), v);
+  v = m3_build1 (INDIRECT_REF, src_t, v);
+  if (src_T != dst_T) {
+    v = m3_build1 (CONVERT_EXPR, dst_t, v);
+  }
+  EXPR_REF (-1) = v;
+}
 
 static void
-m3cg_bool_compare_and_swap (void)
+m3cg_exchange (void)
 {
   MTYPE2     (t, T);
   MTYPE2     (u, U);
+  INTEGER    (order);
 
   int size;
-  enum built_in_function fncode = BUILT_IN_BOOL_COMPARE_AND_SWAP_N;
+  enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
+  /* SYNCH_LOCK_TEST_AND_SET is an acquire barrier */
 
   if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
     goto incompatible;
@@ -4912,8 +4909,12 @@ m3cg_bool_compare_and_swap (void)
   if (size != 1 && size != 2 && size != 4 && size != 8)
     goto incompatible;
 
+  if (order == Sequential || order == AcquireRelease) {
+    /* is this enough to make it Sequential or just AcquireRelease */
+    m3_start_call ();
+    m3_call_direct (built_in_decls[BUILT_IN_SYNCHRONIZE], t_void);
+  }
   m3_start_call ();
-  m3_pop_param (t);
   m3_pop_param (t);
   m3_pop_param (t_addr);
   CALL_TOP_ARG() = nreverse(CALL_TOP_ARG());
@@ -4924,6 +4925,90 @@ m3cg_bool_compare_and_swap (void)
  incompatible:
   fatal_error ("incompatible type for argument to atomic op");
 }
+
+static void
+m3cg_compare_exchange (void)
+{
+  MTYPE2         (t, T);
+  UNUSED_MTYPE2  (u, U);
+  MTYPE2         (r, R);
+  UNUSED_INTEGER (success);
+  UNUSED_INTEGER (failure);
+
+  tree v;
+  int size;
+  enum built_in_function fncode = BUILT_IN_BOOL_COMPARE_AND_SWAP_N;
+
+  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
+    goto incompatible;
+  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
+  if (size != 1 && size != 2 && size != 4 && size != 8)
+    goto incompatible;
+
+  v = EXPR_REF (-2);
+  v = m3_cast (build_pointer_type (t), v);
+  v = m3_build1 (INDIRECT_REF, t, v);
+  EXPR_REF (-2) = v;
+
+  m3_start_call ();
+  m3_pop_param (t);
+  m3_pop_param (t);
+  m3_pop_param (t_addr);
+  CALL_TOP_ARG() = nreverse(CALL_TOP_ARG());
+  CALL_TOP_TYPE() = nreverse(CALL_TOP_TYPE());
+  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], r);
+  return;
+
+ incompatible:
+  fatal_error ("incompatible type for argument to atomic op");
+}
+
+static void
+m3cg_fence (void)
+{
+  UNUSED_INTEGER (order);
+
+  m3_start_call ();
+  m3_call_direct (built_in_decls[BUILT_IN_SYNCHRONIZE], t_void);
+}
+
+static void
+m3cg_fetch_and_op (enum built_in_function fncode)
+{
+  MTYPE2         (t, T);
+  MTYPE2         (u, U);
+  UNUSED_INTEGER (order);
+
+  int size;
+
+  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
+    goto incompatible;
+  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
+  if (size != 1 && size != 2 && size != 4 && size != 8)
+    goto incompatible;
+
+  m3_start_call ();
+  m3_pop_param (t);
+  m3_pop_param (t_addr);
+  CALL_TOP_ARG() = nreverse(CALL_TOP_ARG());
+  CALL_TOP_TYPE() = nreverse(CALL_TOP_TYPE());
+  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], u);
+  return;
+
+ incompatible:
+  fatal_error ("incompatible type for argument to atomic op");
+}
+
+static void
+m3cg_fetch_and_add (void) { m3cg_fetch_and_op (BUILT_IN_FETCH_AND_ADD_N); }
+static void
+m3cg_fetch_and_sub (void) { m3cg_fetch_and_op (BUILT_IN_FETCH_AND_SUB_N); }
+static void
+m3cg_fetch_and_or  (void) { m3cg_fetch_and_op (BUILT_IN_FETCH_AND_OR_N); }
+static void
+m3cg_fetch_and_and (void) { m3cg_fetch_and_op (BUILT_IN_FETCH_AND_AND_N); }
+static void
+m3cg_fetch_and_xor (void) { m3cg_fetch_and_op (BUILT_IN_FETCH_AND_XOR_N); }
 
 static void
 m3cg_val_compare_and_swap (void)
@@ -4950,13 +5035,6 @@ m3cg_val_compare_and_swap (void)
 
  incompatible:
   fatal_error ("incompatible type for argument to atomic op");
-}
-
-static void
-m3cg_synchronize (void)
-{
-  m3_start_call ();
-  m3_call_direct (built_in_decls[BUILT_IN_SYNCHRONIZE], t_void);
 }
 
 static void
@@ -5165,24 +5243,17 @@ OpProc ops[] = {
   { M3CG_LOAD_PROCEDURE,         m3cg_load_procedure         },
   { M3CG_LOAD_STATIC_LINK,       m3cg_load_static_link       },
   { M3CG_COMMENT,                m3cg_comment                },
+  { M3CG_STORE_ORDERED,          m3cg_store_ordered          },
+  { M3CG_LOAD_ORDERED,           m3cg_load_ordered           },
+  { M3CG_EXCHANGE,               m3cg_exchange               },
+  { M3CG_COMPARE_EXCHANGE,       m3cg_compare_exchange       },
+  { M3CG_FENCE,                  m3cg_fence                  },
   { M3CG_FETCH_AND_ADD,          m3cg_fetch_and_add          },
   { M3CG_FETCH_AND_SUB,          m3cg_fetch_and_sub          },
   { M3CG_FETCH_AND_OR,           m3cg_fetch_and_or           },
   { M3CG_FETCH_AND_AND,          m3cg_fetch_and_and          },
   { M3CG_FETCH_AND_XOR,          m3cg_fetch_and_xor          },
-  { M3CG_FETCH_AND_NAND,         m3cg_fetch_and_nand         },
-  { M3CG_ADD_AND_FETCH,          m3cg_add_and_fetch          },
-  { M3CG_SUB_AND_FETCH,          m3cg_sub_and_fetch          },
-  { M3CG_OR_AND_FETCH,           m3cg_or_and_fetch           },
-  { M3CG_AND_AND_FETCH,          m3cg_and_and_fetch          },
-  { M3CG_XOR_AND_FETCH,          m3cg_xor_and_fetch          },
-  { M3CG_NAND_AND_FETCH,         m3cg_nand_and_fetch         },
-  { M3CG_BOOL_COMPARE_AND_SWAP,  m3cg_bool_compare_and_swap  },
-  { M3CG_VAL_COMPARE_AND_SWAP,   m3cg_val_compare_and_swap   },
-  { M3CG_SYNCHRONIZE,            m3cg_synchronize            },
-  { M3CG_LOCK_TEST_AND_SET,      m3cg_lock_test_and_set      },
-  { M3CG_LOCK_RELEASE,           m3cg_lock_release           },
-  { LAST_OPCODE,                 0                              }
+  { LAST_OPCODE,                 0                           }
   };
 
 static void
