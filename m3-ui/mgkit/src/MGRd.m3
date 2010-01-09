@@ -77,7 +77,7 @@ PROCEDURE FromTextPort (         tp     : TextPort.T;
     RETURN t;
   END FromTextPort;
 
-PROCEDURE Length(t: T): INTEGER RAISES {Rd.Failure, Thread.Alerted} =
+PROCEDURE Length(t: T): LONGINT RAISES {Rd.Failure, Thread.Alerted} =
   BEGIN
     RETURN t.rd.length();
   END Length;
@@ -95,16 +95,16 @@ PROCEDURE Close(t: T) RAISES {Rd.Failure, Thread.Alerted} =
     VText.DeleteInterval(t.future);
   END Close;
 
-PROCEDURE Seek (t: T; n: CARDINAL;
+PROCEDURE Seek (t: T; n: LONGINT;
             <* UNUSED *> dontBlock: BOOLEAN): RdClass.SeekResult
   RAISES {Rd.Failure, Thread.Alerted} =
   <* FATAL VTDef.Error *>
   BEGIN
     TRY
       Rd.Seek(t.rd, n);
-      VText.MoveInterval(t.past, 0, n);
-      VText.MoveInterval(t.present, n, n + 1);
-      VText.MoveInterval(t.future, n + 1, LAST(INTEGER));
+      VText.MoveInterval(t.past, 0, ORD(n));
+      VText.MoveInterval(t.present, ORD(n), ORD(n + 1));
+      VText.MoveInterval(t.future, ORD(n + 1), LAST(INTEGER));
       VBT.Mark(t.vbt);
       t.cur := n;
       t.lo := n;

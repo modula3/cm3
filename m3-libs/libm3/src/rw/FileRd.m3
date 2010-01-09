@@ -55,7 +55,7 @@ PROCEDURE Init(rd: T; h: File.T): T RAISES {OSError.E} =
     ELSE
       rd.seekable := FALSE;
       rd.intermittent := TRUE;
-      rd.cur := 0
+      rd.cur := 0;
     END;
     rd.lo := rd.cur;
     rd.hi := rd.cur;
@@ -64,7 +64,7 @@ PROCEDURE Init(rd: T; h: File.T): T RAISES {OSError.E} =
 
 EXCEPTION Error; <*FATAL Error*>
 
-PROCEDURE Seek (rd: T; pos: CARDINAL; dontBlock: BOOLEAN): RdClass.SeekResult
+PROCEDURE Seek (rd: T; pos: LONGINT; dontBlock: BOOLEAN): RdClass.SeekResult
   RAISES {Rd.Failure} =
   VAR n: INTEGER; BEGIN
     TRY
@@ -99,11 +99,11 @@ PROCEDURE GetSub (rd: T; VAR a: ARRAY OF CHAR): CARDINAL
     TRY
       WHILE toRead # 0 DO
         IF rd.cur # rd.hi THEN
-          VAR n := MIN(toRead, rd.hi-rd.cur); BEGIN
+          VAR n := MIN(toRead, ORD(rd.hi-rd.cur)); BEGIN
             SUBARRAY(a, NUMBER(a) - toRead, n) := 
-              SUBARRAY(rd.buff^, rd.cur-rd.lo, n);
+              SUBARRAY(rd.buff^, ORD(rd.cur-rd.lo), n);
             INC(rd.cur, n);
-            DEC(toRead, n)
+            DEC(toRead, n);
           END
         ELSE
           rd.lo := rd.cur;
@@ -133,7 +133,7 @@ PROCEDURE GetSub (rd: T; VAR a: ARRAY OF CHAR): CARDINAL
     RETURN NUMBER(a) - toRead;
   END GetSub;
 
-PROCEDURE Length(rd: T): INTEGER RAISES {Rd.Failure} =
+PROCEDURE Length(rd: T): LONGINT RAISES {Rd.Failure} =
   BEGIN
     TRY
       IF rd.seekable THEN

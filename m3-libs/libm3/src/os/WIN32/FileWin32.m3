@@ -106,7 +106,7 @@ PROCEDURE FileStatus(h: File.T): File.Status  RAISES {OSError.E}=
         END;
         status.type := RegularFile.FileType;
         status.modificationTime := TimeWin32.FromFileTime(ffd.ftLastWriteTime);
-        status.size := ffd.nFileSizeLow
+        status.size := ffd.nFileSizeLow;
     | WinBase.FILE_TYPE_CHAR => status.type := Terminal.FileType
     | WinBase.FILE_TYPE_PIPE => status.type := Pipe.FileType
     | WinBase.FILE_TYPE_UNKNOWN => 
@@ -216,12 +216,12 @@ PROCEDURE RegularFileRead(h: (*Regular*)File.T;
   END RegularFileRead;
 
 PROCEDURE RegularFileSeek(
-    h: RegularFile.T; origin: RegularFile.Origin; offset: INTEGER)
-  : INTEGER RAISES {OSError.E} =
+    h: RegularFile.T; origin: RegularFile.Origin; offset: LONGINT)
+  : LONGINT RAISES {OSError.E} =
   BEGIN
-    WITH res = WinBase.SetFilePointer(h.handle, offset, NIL, ORD(origin)) DO
+    WITH res = WinBase.SetFilePointer(h.handle, ORD(offset), NIL, ORD(origin)) DO
       IF res < 0 THEN OSErrorWin32.Raise() END;
-      RETURN res
+      RETURN res;
     END
   END RegularFileSeek;
 

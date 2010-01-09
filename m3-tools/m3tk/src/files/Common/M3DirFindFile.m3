@@ -44,7 +44,7 @@ REVEAL
   END;
 
 TYPE
-  TFileLoc = REF RECORD index: CARDINAL; elem: M3PathElem.T END;
+  TFileLoc = REF RECORD index: LONGINT; elem: M3PathElem.T END;
  
 TYPE
   IndexToExts = ARRAY [ORD(FIRST(M3Extension.T))..ORD(LAST(M3Extension.T))]

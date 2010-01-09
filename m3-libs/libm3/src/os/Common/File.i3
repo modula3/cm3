@@ -31,7 +31,7 @@ TYPE
   Status = RECORD
     type: Type;
     modificationTime: Time.T;
-    size: CARDINAL
+    size: LONGINT
   END;
   Type = Atom.T;
 

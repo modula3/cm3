@@ -44,8 +44,8 @@ PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T;
     IF (NUMBER (ce.args^) > 1) THEN
       IF Type.IsSubtype (t, LInt.T) THEN
         t := Type.Base (Expr.TypeOf (ce.args[1]));
-        IF (t # LInt.T) THEN
-          Error.Txt (name, "second argument must be a LONGINT");
+        IF t # LInt.T AND t # Int.T THEN
+          Error.Txt (name, "second argument must be a INTEGER or LONGINT");
         END;
       ELSE
         t := Type.Base (Expr.TypeOf (ce.args[1]));

@@ -16,11 +16,24 @@
  * Update Count    : 24
  * 
  * $Source: /opt/cvs/cm3/m3-comm/rdwr/src/TeeWr.m3,v $
- * $Date: 2001-12-02 00:35:21 $
- * $Author: wagner $
- * $Revision: 1.2 $
+ * $Date: 2010-01-09 08:43:33 $
+ * $Author: jkrell $
+ * $Revision: 1.2.8.1 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2001-12-02 00:35:21  wagner
+ * add copyright notes and fix overrides for cm3
+ *
+ * added: rdwr/COPYRIGHT-COLUMBIA
+ * added: rdwr/src/COPYRIGHT-COLUMBIA
+ * added: rdwr/src/m3overrides
+ * modified: rdwr/src/RdWrPipe.i3
+ * modified: rdwr/src/RdWrPipe.m3
+ * modified: rdwr/src/SimpleMsgRW.i3
+ * modified: rdwr/src/SimpleMsgRW.m3
+ * modified: rdwr/src/TeeWr.i3
+ * modified: rdwr/src/TeeWr.m3
+ *
  * Revision 1.1.1.1  2001/12/02 00:29:10  wagner
  * Blair MacIntyre's rdwr library
  *
@@ -74,7 +87,7 @@ PROCEDURE Init (self: T): T =
 
 EXCEPTION Error;                 <*FATAL Error*>
 
-PROCEDURE Seek (self: T; n: CARDINAL) RAISES {Failure, Alerted} =
+PROCEDURE Seek (self: T; n: LONGINT) RAISES {Failure, Alerted} =
   BEGIN
     (* This file is not seekable, so only handle the special case. *)
     IF n # self.hi OR n # self.cur THEN RAISE Error; END;
@@ -90,7 +103,7 @@ PROCEDURE Seek (self: T; n: CARDINAL) RAISES {Failure, Alerted} =
 
 (* write the current buffered amount to a writer *)
 PROCEDURE EmptyBuffer(self: T; wr: Wr.T) RAISES {Failure, Alerted} =
-  VAR n := self.cur - self.lo;
+  VAR n := ORD(self.cur - self.lo);
   BEGIN
     <*ASSERT self.st = 0*>
     wr.putString(SUBARRAY(self.buff^, 0, n)); 

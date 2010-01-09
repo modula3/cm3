@@ -16,11 +16,52 @@
  * Update Count    : 49
  * 
  * $Source: /opt/cvs/cm3/m3-comm/events/src/EventRd.m3,v $
- * $Date: 2001-12-02 00:20:37 $
- * $Author: wagner $
- * $Revision: 1.2 $
+ * $Date: 2010-01-09 08:43:25 $
+ * $Author: jkrell $
+ * $Revision: 1.2.8.1 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2001-12-02 00:20:37  wagner
+ * add copyright notes, fix overrides for cm3, and make everything compile
+ *
+ * added: events/COPYRIGHT-COLUMBIA
+ * added: events/src/COPYRIGHT-COLUMBIA
+ * modified: events/src/Event.i3
+ * modified: events/src/Event.m3
+ * modified: events/src/EventConn.i3
+ * modified: events/src/EventConn.m3
+ * modified: events/src/EventCounter.i3
+ * modified: events/src/EventCounter.m3
+ * modified: events/src/EventHandle.i3
+ * modified: events/src/EventIO.i3
+ * modified: events/src/EventNumber.i3
+ * modified: events/src/EventNumber.m3
+ * modified: events/src/EventNumberF.i3
+ * modified: events/src/EventPort.i3
+ * modified: events/src/EventPort.m3
+ * modified: events/src/EventProtocol.i3
+ * modified: events/src/EventRd.i3
+ * modified: events/src/EventRd.m3
+ * modified: events/src/EventSpaceID.i3
+ * modified: events/src/EventSpaceID.m3
+ * modified: events/src/EventStubLib.i3
+ * modified: events/src/EventStubLib.m3
+ * modified: events/src/EventWireRep.i3
+ * modified: events/src/EventWireRep.m3
+ * modified: events/src/EventWr.i3
+ * modified: events/src/EventWr.m3
+ * modified: events/src/EventWrF.i3
+ * modified: events/src/HostInfo.i3
+ * modified: events/src/HostInfo.m3
+ * modified: events/src/RdWrMutex.i3
+ * modified: events/src/RdWrMutex.m3
+ * modified: events/src/Work.i3
+ * modified: events/src/WorkerPool.i3
+ * modified: events/src/WorkerPool.m3
+ * modified: events/src/Zombie.i3
+ * modified: events/src/m3makefile
+ * modified: events/src/m3overrides
+ *
  * Revision 1.1.1.1  2001/12/02 00:06:45  wagner
  * Blair MacIntyre's events library
  *
@@ -132,8 +173,8 @@ PROCEDURE ToWr (rd: T) : EventWr.T =
     RETURN wr;
   END ToWr;
 
-PROCEDURE GotoBuffer (rd: T;  n: INTEGER) =
-  VAR buf := n DIV BufferSize;
+PROCEDURE GotoBuffer (rd: T;  n: LONGINT) =
+  VAR buf := ORD(n DIV BufferSize);
   BEGIN
     <* ASSERT buf <= LAST (rd.buffers^) *>
     rd.cur_buf := buf;
@@ -144,12 +185,12 @@ PROCEDURE GotoBuffer (rd: T;  n: INTEGER) =
 
 PROCEDURE New(t: EventWr.T): T = BEGIN RETURN NEW(T).init(t); END New;
 
-PROCEDURE Length (rd: T): INTEGER RAISES {} =
+PROCEDURE Length (rd: T): LONGINT RAISES {} =
   BEGIN
     RETURN rd.max_len;
   END Length;
 
-PROCEDURE Seek (rd: T; pos: CARDINAL;
+PROCEDURE Seek (rd: T; pos: LONGINT;
                <*UNUSED*> dontBlock: BOOLEAN): RdClass.SeekResult =
   BEGIN
     (* IO.Put(Fmt.F("EventRd.Seek(%s) => max=%s\n", Fmt.Unsigned(pos, 10),
@@ -164,7 +205,7 @@ PROCEDURE Seek (rd: T; pos: CARDINAL;
       IF (pos < rd.lo) OR (rd.hi <= pos) THEN GotoBuffer (rd, pos) END;
       rd.cur := pos;
       (* IO.Put(Fmt.F("EventRd.Seek(%s) => set cur=%s and return Ready\n",
-                   Fmt.Unsigned(pos, 10), Fmt.Int(rd.cur))); *)
+                   Fmt.LongUnsigned(pos, 10), Fmt.LongInt(rd.cur))); *)
       RETURN RdClass.SeekResult.Ready; 
     END;
   END Seek;
@@ -173,7 +214,7 @@ PROCEDURE FromRd(rd: Rd.T; erd: T) : T
   RAISES {Rd.Failure, Thread.Alerted} =
   VAR
     wr: EventWr.T := ToWr(erd);
-    num : INTEGER;
+    num : LONGINT;
     <*FATAL Wr.Failure *>
   BEGIN
     IF wr = NIL THEN

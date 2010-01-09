@@ -41,7 +41,7 @@ PROCEDURE FastGetChar(rd: T): CHAR
   (* rd is locked *)
   VAR res: CHAR; BEGIN
     IF rd.cur = rd.hi THEN DoSeek(rd) END;
-    res := rd.buff[rd.st + (rd.cur - rd.lo)];
+    res := rd.buff[rd.st + ORD(rd.cur - rd.lo)];
     INC(rd.cur);
     RETURN res
   END FastGetChar;
@@ -88,16 +88,16 @@ PROCEDURE GetWC(rd: T;  VAR(*OUT*) ch: WIDECHAR): BOOLEAN
         RETURN FALSE;
       END;
     END;
-    c1 := rd.buff[rd.st + (rd.cur - rd.lo)];
+    c1 := rd.buff[rd.st + ORD(rd.cur - rd.lo)];
     INC(rd.cur);
 
     IF rd.cur # rd.hi THEN
-      c2 := rd.buff[rd.st + (rd.cur - rd.lo)];
+      c2 := rd.buff[rd.st + ORD(rd.cur - rd.lo)];
       INC(rd.cur);
     ELSIF rd.seek(rd.cur, FALSE) = SeekResult.Eof THEN
       c2 := '\000';
     ELSE
-      c2 := rd.buff[rd.st + (rd.cur - rd.lo)];
+      c2 := rd.buff[rd.st + ORD(rd.cur - rd.lo)];
       INC(rd.cur);
     END;
 
@@ -149,9 +149,9 @@ PROCEDURE GetSubDefault (rd: T; VAR (*out*) str: ARRAY OF CHAR): CARDINAL
         IF rd.seek(rd.cur, FALSE) = SeekResult.Eof THEN EXIT END
       END;
       (* rd.lo <= rd.cur < rd.hi *)
-      VAR n := MIN(rd.hi - rd.cur, NUMBER(str) - i); BEGIN
+      VAR n := MIN(ORD(rd.hi - rd.cur), NUMBER(str) - i); BEGIN
         SUBARRAY(str, i, n) :=
-          SUBARRAY(rd.buff^, rd.cur - rd.lo + rd.st, n);
+          SUBARRAY(rd.buff^, ORD(rd.cur - rd.lo) + rd.st, n);
         INC(i, n);
         INC(rd.cur, n)
       END
@@ -206,11 +206,11 @@ PROCEDURE CharsReady(rd: T): CARDINAL
         IF rd.closed THEN Die() END;
         IF rd.seek(rd.cur, TRUE) = SeekResult.Eof THEN RETURN 1 END
       END;
-      RETURN rd.hi - rd.cur;
+      RETURN ORD(rd.hi - rd.cur);
     END
   END CharsReady;
 
-PROCEDURE Index(rd: T): CARDINAL =
+PROCEDURE Index(rd: T): LONGINT =
   BEGIN
     LOCK rd DO
       IF rd.closed THEN Die() END;
@@ -218,7 +218,7 @@ PROCEDURE Index(rd: T): CARDINAL =
     END
   END Index;
 
-PROCEDURE Length(rd: T): INTEGER
+PROCEDURE Length(rd: T): LONGINT
   RAISES {Failure, Alerted} =
   BEGIN
     LOCK rd DO
@@ -227,7 +227,7 @@ PROCEDURE Length(rd: T): INTEGER
     END
   END Length;
 
-PROCEDURE Seek(rd: T; n: CARDINAL)
+PROCEDURE Seek(rd: T; n: LONGINT)
   RAISES {Failure, Alerted} =
   BEGIN
     LOCK rd DO
@@ -275,12 +275,12 @@ PROCEDURE GetSubLine (rd: T;  VAR(*out*) str: ARRAY OF CHAR): CARDINAL
         END;
         (* rd is ready *)
         VAR
-          n := MIN (rd.hi, rd.cur + NUMBER (str) - i) - rd.lo + rd.st;
-          j := rd.cur - rd.lo + rd.st;
+          n := ORD(MIN (rd.hi, rd.cur + NUMBER (str) - i) - rd.lo) + rd.st;
+          j := ORD(rd.cur - rd.lo) + rd.st;
         BEGIN
-          WHILE (j # n) AND (rd.buff[j] # '\n') DO INC (j) END;
+          WHILE (j # n) AND (rd.buff[ORD(j)] # '\n') DO INC (j) END;
           VAR
-            rd_cur := rd.cur - rd.lo + rd.st;
+            rd_cur := ORD(rd.cur - rd.lo) + rd.st;
             k := j - rd_cur;
           BEGIN
             SUBARRAY (str, i, k) := SUBARRAY (rd.buff^, rd_cur, k);
@@ -323,13 +323,13 @@ PROCEDURE GetText (rd: T;  length: CARDINAL): TEXT
       IF (rd.lo <= rd.cur) AND (rd.hi - rd.cur >= length) THEN
         (* the bytes we need are already in the buffer *)
         txt := Text.FromChars (
-                 SUBARRAY (rd.buff^, rd.cur - rd.lo + rd.st, length));
+                 SUBARRAY (rd.buff^, ORD(rd.cur - rd.lo) + rd.st, length));
         INC (rd.cur, length);
 
       ELSIF (NOT rd.intermittent) THEN
         (* we know how long the reader is... *)
         VAR
-          len := MIN (length, rd.length () - rd.cur);
+          len := MIN (length, ORD(rd.length () - rd.cur));
           txt8 := Text8.Create (len);
         BEGIN
           txt := txt8;
@@ -429,10 +429,10 @@ PROCEDURE GetLine (rd: T): TEXT
           END;
         END;
         (* rd is ready *)
-        n := rd.hi - rd.lo + rd.st;
-        j := rd.cur - rd.lo + rd.st;
+        n := ORD(rd.hi - rd.lo) + rd.st;
+        j := ORD(rd.cur - rd.lo) + rd.st;
         WHILE (j # n) AND rd.buff[j] # '\n' DO INC(j) END;
-        VAR rd_cur := rd.cur - rd.lo + rd.st;
+        VAR rd_cur := ORD(rd.cur - rd.lo) + rd.st;
             len := j - rd_cur;
          BEGIN
           IF len >= 1 AND j # n  AND rd.buff[j-1] = '\r' THEN
@@ -526,7 +526,7 @@ PROCEDURE Unlock (rd: T) =
     Thread.Release (rd)
   END Unlock;
 
-PROCEDURE LengthDefault (<*UNUSED*> rd: T): INTEGER =
+PROCEDURE LengthDefault (<*UNUSED*> rd: T): LONGINT =
   BEGIN
     <*NOWARN*> Die()
   END LengthDefault;

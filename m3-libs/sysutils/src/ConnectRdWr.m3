@@ -35,14 +35,15 @@ CONST Threshold = LAST(CARDINAL) DIV 4;
 PROCEDURE Apply(self : T) : REFANY = 
   VAR
     lrr := NEW(REF LONGREAL);
-    n, w :  CARDINAL;
+    n: CARDINAL;
+    w: LONGINT;
   BEGIN
     lrr^ := self.offset;
     TRY
       TRY
         WHILE NOT Rd.EOF(self.rd) DO
           n := Rd.CharsReady(self.rd);
-          IF n > 0 THEN                
+          IF n > 0 THEN
             w := RdCopy.ToWriter(self.rd, self.wr, MIN(NUMBER(self.buf^), n));
             Wr.Flush(self.wr); 
           END;

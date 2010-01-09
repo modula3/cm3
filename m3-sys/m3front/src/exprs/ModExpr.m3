@@ -60,6 +60,7 @@ PROCEDURE New (a, b: Expr.T): Expr.T =
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR ta, tb: Type.T;
+      resultType: Type.T := NIL;
   BEGIN
     Expr.TypeCheck (p.a, cs);
     Expr.TypeCheck (p.b, cs);
@@ -67,8 +68,18 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     tb := Type.Base (Expr.TypeOf (p.b));
     IF    (ta = Int.T)   AND (tb = Int.T)   THEN
       p.class := Class.cINT;
+
     ELSIF (ta = LInt.T)  AND (tb = LInt.T)  THEN
       p.class := Class.cLINT;
+
+    (* The result of MOD cannot be higher than either of its inputs.
+     * small divided by big is 0 remainder small
+     * big divided by small has a remainder of at most small
+     *)
+    ELSIF (ta = LInt.T OR ta = Int.T) AND (tb = LInt.T OR tb = Int.T) THEN
+      p.class := Class.cINT;
+      resultType := Int.T;
+
     ELSIF (ta = Reel.T)  AND (tb = Reel.T)  THEN
       p.class := Class.cREAL;
     ELSIF (ta = LReel.T) AND (tb = LReel.T) THEN
@@ -78,7 +89,11 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     ELSE p.class := Class.cERR;  ta := Int.T;
       ta := Expr.BadOperands ("MOD", ta, tb);
     END;
-    p.type := ta;
+    IF resultType # NIL THEN
+      p.type := resultType;
+    ELSE
+      p.type := ta;
+    END;
   END Check;
 
 PROCEDURE Prep (p: P) =

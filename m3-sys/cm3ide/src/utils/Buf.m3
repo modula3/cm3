@@ -20,7 +20,7 @@ PROCEDURE FromFile (path: TEXT;  pad: CARDINAL): T =
   BEGIN
     TRY
       f := FS.OpenFileReadonly (path);
-      len := f.status().size;
+      len := ORD(f.status().size);
       t := NEW (T, len + pad);
 
       next := 0;

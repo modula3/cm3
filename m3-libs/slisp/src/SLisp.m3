@@ -1088,9 +1088,9 @@ PROCEDURE ReadList (rm: ReadMacro; rd: Rd.T; s: Sx.Syntax): RefList.T
   (* Record the starting and ending positions of every list we read, so
      that we can highlight the list if there's an error. *)
   VAR
-    start := Rd.Index(rd) - 1;
+    start := ORD(Rd.Index(rd)) - 1;
     form  := Sx.ReadDelimitedList(rd, ')', s);
-    end   := Rd.Index(rd);
+    end   := ORD(Rd.Index(rd));
   BEGIN
     EVAL rm.table.put(start, NEW(Range, start := start, end := end, form := form));
     RETURN RefList.List1(form)

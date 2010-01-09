@@ -60,7 +60,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     tb := Type.Base (Expr.TypeOf (p.b));
     IF (ta = Int.T) AND (tb = Int.T) THEN
       p.type := Int.T;
-    ELSIF (ta = LInt.T) AND (tb = LInt.T) THEN
+    ELSIF (ta = LInt.T OR ta = Int.T) AND (tb = LInt.T OR tb = Int.T) THEN
       p.type := LInt.T;
     ELSE
       p.type := Expr.BadOperands ("DIV", ta, tb);

@@ -147,7 +147,7 @@ PROCEDURE NewWr(fd: ConnFD.T) : MsgWr.T =
   END NewWr;
 
 
-PROCEDURE RdSeek(rd: RdT; <*UNUSED*> n: CARDINAL;
+PROCEDURE RdSeek(rd: RdT; <*UNUSED*> n: LONGINT;
                           dontBlock: BOOLEAN): RdClass.SeekResult
   RAISES {Rd.Failure, Thread.Alerted} =
   VAR
@@ -166,7 +166,7 @@ PROCEDURE RdSeek(rd: RdT; <*UNUSED*> n: CARDINAL;
         (* fall out into common code below *)
       ELSE
         (* advance to next non-empty fragment *) 
-        rd.st := Align((rd.hi - rd.lo) + rd.st);
+        rd.st := Align(ORD(rd.hi - rd.lo) + rd.st);
         rd.lo := rd.hi;
         REPEAT
           IF rd.hdr.eom # 0 THEN RETURN RdClass.SeekResult.Eof; END;
@@ -226,12 +226,12 @@ PROCEDURE ReadAligned(
     RETURN len;
   END ReadAligned;
 
-PROCEDURE Length(rd: RdT) : INTEGER =
+PROCEDURE Length(rd: RdT) : LONGINT =
   BEGIN
     IF rd.hdr.eom # 0 THEN
       RETURN rd.lo + rd.hdr.nb;
     ELSE
-      RETURN -1;
+      RETURN -1
     END;
   END Length;
 
@@ -250,7 +250,7 @@ PROCEDURE RdNextMsg(rd: RdT) : BOOLEAN
     WHILE rd.hdr.nb # 0 OR NOT rd.hdr.eom # 0 DO
       EVAL RdSeek(rd, rd.hi, FALSE);
     END;
-    rd.st := Align((rd.hi - rd.lo) + rd.st);
+    rd.st := Align(ORD(rd.hi - rd.lo) + rd.st);
     rd.cur := 0;
     rd.lo := 0;
     rd.hi := 0;
@@ -260,7 +260,7 @@ PROCEDURE RdNextMsg(rd: RdT) : BOOLEAN
   END RdNextMsg;
   
 
-PROCEDURE WrSeek(wr: WrT; <*UNUSED*> n: CARDINAL)
+PROCEDURE WrSeek(wr: WrT; <*UNUSED*> n: LONGINT)
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN WrFlush(wr) END WrSeek;
 
@@ -288,7 +288,7 @@ PROCEDURE WrNextMsg(wr: WrT) RAISES {Wr.Failure, Thread.Alerted} =
   END WrNextMsg;
   
 PROCEDURE PutFrag(wr: WrT; eom: BOOLEAN) RAISES {Wr.Failure, Thread.Alerted} =
-  VAR len := wr.cur - wr.lo;
+  VAR len := ORD(wr.cur - wr.lo);
   BEGIN
     WITH hdr = LOOPHOLE(ADR(wr.buff[0]), UNTRACED REF FragmentHeader) DO
       hdr^ := FragmentHeader{eom := ORD(eom), nb := len};

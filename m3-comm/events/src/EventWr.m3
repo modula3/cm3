@@ -16,11 +16,52 @@
  * Update Count    : 17
  * 
  * $Source: /opt/cvs/cm3/m3-comm/events/src/EventWr.m3,v $
- * $Date: 2001-12-02 00:20:38 $
- * $Author: wagner $
- * $Revision: 1.2 $
+ * $Date: 2010-01-09 08:43:25 $
+ * $Author: jkrell $
+ * $Revision: 1.2.8.1 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2001-12-02 00:20:38  wagner
+ * add copyright notes, fix overrides for cm3, and make everything compile
+ *
+ * added: events/COPYRIGHT-COLUMBIA
+ * added: events/src/COPYRIGHT-COLUMBIA
+ * modified: events/src/Event.i3
+ * modified: events/src/Event.m3
+ * modified: events/src/EventConn.i3
+ * modified: events/src/EventConn.m3
+ * modified: events/src/EventCounter.i3
+ * modified: events/src/EventCounter.m3
+ * modified: events/src/EventHandle.i3
+ * modified: events/src/EventIO.i3
+ * modified: events/src/EventNumber.i3
+ * modified: events/src/EventNumber.m3
+ * modified: events/src/EventNumberF.i3
+ * modified: events/src/EventPort.i3
+ * modified: events/src/EventPort.m3
+ * modified: events/src/EventProtocol.i3
+ * modified: events/src/EventRd.i3
+ * modified: events/src/EventRd.m3
+ * modified: events/src/EventSpaceID.i3
+ * modified: events/src/EventSpaceID.m3
+ * modified: events/src/EventStubLib.i3
+ * modified: events/src/EventStubLib.m3
+ * modified: events/src/EventWireRep.i3
+ * modified: events/src/EventWireRep.m3
+ * modified: events/src/EventWr.i3
+ * modified: events/src/EventWr.m3
+ * modified: events/src/EventWrF.i3
+ * modified: events/src/HostInfo.i3
+ * modified: events/src/HostInfo.m3
+ * modified: events/src/RdWrMutex.i3
+ * modified: events/src/RdWrMutex.m3
+ * modified: events/src/Work.i3
+ * modified: events/src/WorkerPool.i3
+ * modified: events/src/WorkerPool.m3
+ * modified: events/src/Zombie.i3
+ * modified: events/src/m3makefile
+ * modified: events/src/m3overrides
+ *
  * Revision 1.1.1.1  2001/12/02 00:06:45  wagner
  * Blair MacIntyre's events library
  *
@@ -94,16 +135,16 @@ PROCEDURE Init (wr: T): T =
 
 PROCEDURE New(): T = BEGIN RETURN NEW(T).init(); END New;
 
-PROCEDURE Length (wr: T): CARDINAL RAISES {} =
+PROCEDURE Length (wr: T): LONGINT RAISES {} =
   BEGIN
-    wr.max_len := MAX (wr.max_len, wr.cur);
+    wr.max_len := MAX (wr.max_len, ORD(wr.cur));
     RETURN wr.max_len;
   END Length;
 
-PROCEDURE Seek(wr: T; n: CARDINAL) RAISES {} =
+PROCEDURE Seek(wr: T; n: LONGINT) RAISES {} =
   BEGIN
     (* capture the current length of the writer *)
-    wr.max_len := MAX (wr.max_len, wr.cur);
+    wr.max_len := MAX (wr.max_len, ORD(wr.cur));
 
     (* make sure we don't seek beyond the end of the writer *)
     n := MIN (n, wr.max_len);
@@ -117,8 +158,8 @@ PROCEDURE Flush(wr: T) =
     Seek(wr, wr.cur);
   END Flush;
 
-PROCEDURE GotoBuffer (wr: T;  n: INTEGER) =
-  VAR buf := n DIV BufferSize;
+PROCEDURE GotoBuffer (wr: T;  n: LONGINT) =
+  VAR buf := ORD(n DIV BufferSize);
   BEGIN
     WHILE (buf > LAST (wr.buffers^)) DO ExpandBufferPool (wr) END;
     WHILE (wr.n_buffers <= buf) DO
@@ -157,7 +198,7 @@ PROCEDURE ToChars(wr: T): REF ARRAY OF CHAR =
     WrClass.Lock(wr);
     TRY
       (* capture the current length of the writer *)
-      len := MAX (wr.max_len, wr.cur);
+      len := MAX (wr.max_len, ORD(wr.cur));
 
       (* allocate the result and count the buffersp *)
       result := NEW (REF ARRAY OF CHAR, len);

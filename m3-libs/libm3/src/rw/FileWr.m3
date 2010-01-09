@@ -77,10 +77,10 @@ PROCEDURE Init (wr: T; h: File.T; buffered: BOOLEAN := TRUE): T
 
 EXCEPTION Error; <*FATAL Error*>
 
-PROCEDURE Seek(wr: T; n: CARDINAL) RAISES {Wr.Failure} =
+PROCEDURE Seek(wr: T; n: LONGINT) RAISES {Wr.Failure} =
   BEGIN
     IF NOT wr.seekable AND n # wr.hi THEN
-        RTIO.PutText("FileWr.Seek:wr.seekable=" & Fmt.Bool(wr.seekable) & ";n=" & Fmt.Int(n) & ";wr.hi=" & Fmt.Int(wr.hi) & "\n");
+        RTIO.PutText("FileWr.Seek:wr.seekable=" & Fmt.Bool(wr.seekable) & ";n=" & Fmt.LongInt(n) & ";wr.hi=" & Fmt.LongInt(wr.hi) & "\n");
         RTIO.Flush();
         RAISE Error
     END;
@@ -101,7 +101,7 @@ PROCEDURE Seek(wr: T; n: CARDINAL) RAISES {Wr.Failure} =
     END
   END Seek;
 
-PROCEDURE Length(wr: T): CARDINAL RAISES {Wr.Failure} =
+PROCEDURE Length(wr: T): LONGINT RAISES {Wr.Failure} =
   BEGIN
     TRY
       IF wr.seekable THEN
@@ -124,7 +124,7 @@ PROCEDURE Flush(wr: T) RAISES {Wr.Failure} =
   END Flush;
 
 PROCEDURE EmptyBuffer(wr: T) RAISES {OSError.E} =
-  VAR buffered := wr.cur - wr.lo;  start := 0;  n: INTEGER;
+  VAR buffered := ORD(wr.cur - wr.lo);  start := 0;  n: INTEGER;
   BEGIN
     WHILE (buffered > 0) DO
       n := MIN (buffered, BIG);
@@ -142,8 +142,8 @@ PROCEDURE PutString (wr: T; READONLY buf: ARRAY OF CHAR)
   RAISES {Wr.Failure} =
   VAR toWrite, start, n: INTEGER;
   BEGIN
-    IF NUMBER(buf) <= wr.hi - wr.cur THEN
-      SUBARRAY(wr.buff^, wr.cur - wr.lo, NUMBER(buf)) := buf;
+    IF NUMBER(buf) <= ORD(wr.hi - wr.cur) THEN
+      SUBARRAY(wr.buff^, ORD(wr.cur - wr.lo), NUMBER(buf)) := buf;
       INC(wr.cur, NUMBER(buf));
     ELSE
       Flush(wr);

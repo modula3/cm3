@@ -60,7 +60,7 @@ PROCEDURE DumpMember (rd: Rd.T;  index: INTEGER)
   RAISES {Rd.Failure, Thread.Alerted, Wr.Failure} =
   VAR
     hdr: Header;
-    here := Rd.Index (rd);
+    here := ORD(Rd.Index (rd));
     nm_offs : INTEGER;
     size    : INTEGER;
   BEGIN

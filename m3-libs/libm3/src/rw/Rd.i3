@@ -299,7 +299,7 @@ PROCEDURE GetWideLine(rd: T): TEXT
    A line break is either {\tt \char'42\char'134n\char'42} or {\tt
    \char'42\char'134r\char'134n\char'42}. *)
 
-PROCEDURE Seek(rd: T; n: CARDINAL) RAISES {Failure, Alerted};
+PROCEDURE Seek(rd: T; n: LONGINT) RAISES {Failure, Alerted};
 (* This is equivalent to: *)
 (*
 | IF closed(rd) OR NOT seekable(rd) THEN
@@ -315,14 +315,14 @@ PROCEDURE Close(rd: T) RAISES {Failure, Alerted};
    closed.  This leaves "rd" closed even if it raises an exception,
    and is a no-op if "rd" is closed. *)
 
-PROCEDURE Index(rd: T): CARDINAL RAISES {};
+PROCEDURE Index(rd: T): LONGINT RAISES {};
 (* This is equivalent to: *)
 (*
 | IF closed(rd) THEN `Cause checked runtime error` END;
 | RETURN cur(rd)
 *)
 
-PROCEDURE Length(rd: T): INTEGER RAISES {Failure, Alerted};
+PROCEDURE Length(rd: T): LONGINT RAISES {Failure, Alerted};
 (* This is equivalent to: *)
 (*
 | IF closed(rd) THEN

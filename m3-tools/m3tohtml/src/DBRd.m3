@@ -30,7 +30,7 @@ PROCEDURE Init (t: T;  path: TEXT): T =
     t.cur := 0;
     TRY
       f     := FS.OpenFileReadonly (path);
-      sz    := f.status().size;
+      sz    := ORD(f.status().size);
       t.buf := NEW (REF ARRAY OF CHAR, MAX (1, sz));
       ptr   := ADR (t.buf[0]);
       t.len := f.read (SUBARRAY (ptr^, 0, NUMBER (t.buf^)), mayBlock := TRUE);

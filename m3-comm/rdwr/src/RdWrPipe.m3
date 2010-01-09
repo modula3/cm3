@@ -16,11 +16,24 @@
  * Update Count    : 76
  * 
  * $Source: /opt/cvs/cm3/m3-comm/rdwr/src/RdWrPipe.m3,v $
- * $Date: 2001-12-02 00:35:21 $
- * $Author: wagner $
- * $Revision: 1.2 $
+ * $Date: 2010-01-09 08:43:33 $
+ * $Author: jkrell $
+ * $Revision: 1.2.8.1 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2001-12-02 00:35:21  wagner
+ * add copyright notes and fix overrides for cm3
+ *
+ * added: rdwr/COPYRIGHT-COLUMBIA
+ * added: rdwr/src/COPYRIGHT-COLUMBIA
+ * added: rdwr/src/m3overrides
+ * modified: rdwr/src/RdWrPipe.i3
+ * modified: rdwr/src/RdWrPipe.m3
+ * modified: rdwr/src/SimpleMsgRW.i3
+ * modified: rdwr/src/SimpleMsgRW.m3
+ * modified: rdwr/src/TeeWr.i3
+ * modified: rdwr/src/TeeWr.m3
+ *
  * Revision 1.1.1.1  2001/12/02 00:29:10  wagner
  * Blair MacIntyre's rdwr library
  *
@@ -100,9 +113,9 @@ TYPE
 PROCEDURE RdChanged(t: TEXT; rd: RdT) = 
   BEGIN
     IO.Put(t & "Rd("&rd.share.name&") changed: \n lo = " &
-      Fmt.Unsigned(rd.lo,10) & ", hi = " &
-      Fmt.Unsigned(rd.hi,10) & ", cur = " &
-      Fmt.Unsigned(rd.cur,10) & ", st = " &
+      Fmt.LongUnsigned(rd.lo,10) & ", hi = " &
+      Fmt.LongUnsigned(rd.hi,10) & ", cur = " &
+      Fmt.LongUnsigned(rd.cur,10) & ", st = " &
       Fmt.Unsigned(rd.st,10) & "\n share.first_i = " &
       Fmt.Unsigned(rd.share.first_i,10) & ", share.next_i = " &
       Fmt.Unsigned(rd.share.next_i,10) & ", share.size = " &
@@ -113,9 +126,9 @@ PROCEDURE RdChanged(t: TEXT; rd: RdT) =
 PROCEDURE WrChanged(t: TEXT; wr: WrT) = 
   BEGIN
     IO.Put(t & "Wr("&wr.share.name&") changed: \n lo = " &
-      Fmt.Unsigned(wr.lo,10) & ", hi = " &
-      Fmt.Unsigned(wr.hi,10) & ", cur = " &
-      Fmt.Unsigned(wr.cur,10) & ", st = " &
+      Fmt.LongUnsigned(wr.lo,10) & ", hi = " &
+      Fmt.LongUnsigned(wr.hi,10) & ", cur = " &
+      Fmt.LongUnsigned(wr.cur,10) & ", st = " &
       Fmt.Unsigned(wr.st,10) & "\n share.first_i = " &
       Fmt.Unsigned(wr.share.first_i,10) & ", share.next_i = " &
       Fmt.Unsigned(wr.share.next_i,10) & ", share.size = " &
@@ -146,7 +159,7 @@ PROCEDURE New (VAR rd       : Rd.T;
     wr.st := 0;
     wr.lo := 0;
     wr.cur := 0;
-    wr.hi := buff_size-1;
+    wr.hi := buff_size - 1;
     wr.closed := FALSE;
     wr.seekable := FALSE;
     wr.buffered := TRUE;
@@ -154,7 +167,7 @@ PROCEDURE New (VAR rd       : Rd.T;
 
 EXCEPTION Error;                 <*FATAL Error*>
 
-PROCEDURE RdSeek (rd: RdT; pos: CARDINAL;
+PROCEDURE RdSeek (rd: RdT; pos: LONGINT;
                   dontBlock: BOOLEAN): 
   RdClass.SeekResult RAISES {Alerted} =
   VAR do_signal := FALSE;
@@ -238,7 +251,7 @@ PROCEDURE RdSeek (rd: RdT; pos: CARDINAL;
     RETURN RdClass.SeekResult.Ready;
   END RdSeek;
 
-PROCEDURE RdLength (<*UNUSED*>rd: RdT): INTEGER =
+PROCEDURE RdLength (<*UNUSED*>rd: RdT): LONGINT =
   BEGIN
     RETURN -1;
   END RdLength;
@@ -255,7 +268,7 @@ PROCEDURE RdClose (rd: RdT) RAISES {} =
     END;
   END RdClose;
 
-PROCEDURE WrSeek (wr: WrT; pos: CARDINAL) RAISES {Wr.Failure, Alerted} =
+PROCEDURE WrSeek (wr: WrT; pos: LONGINT) RAISES {Wr.Failure, Alerted} =
   BEGIN
     (* This file is not seekable, so only handle the special case. *)
     IF pos # wr.hi OR pos # wr.cur THEN RAISE Error; END;

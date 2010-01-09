@@ -76,7 +76,7 @@ PROCEDURE InitFromRd (t: Default;
 
     (* read the source *)
     TRY
-      len0 := Rd.Length (source);
+      len0 := ORD(Rd.Length (source));
       t.buffer := NEW (Buf, MAX (0, len0) + 1);
       IF (len0 < 0) THEN Err (t, 0, "can't tell how much source there is") END;
       len1 := Rd.GetSub (source, t.buffer^);

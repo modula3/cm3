@@ -16,11 +16,24 @@
  * Update Count    : 28
  * 
  * $Source: /opt/cvs/cm3/m3-comm/rdwr/src/SimpleMsgRW.m3,v $
- * $Date: 2001-12-02 00:35:21 $
- * $Author: wagner $
- * $Revision: 1.2 $
+ * $Date: 2010-01-09 08:43:33 $
+ * $Author: jkrell $
+ * $Revision: 1.2.8.1 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2001-12-02 00:35:21  wagner
+ * add copyright notes and fix overrides for cm3
+ *
+ * added: rdwr/COPYRIGHT-COLUMBIA
+ * added: rdwr/src/COPYRIGHT-COLUMBIA
+ * added: rdwr/src/m3overrides
+ * modified: rdwr/src/RdWrPipe.i3
+ * modified: rdwr/src/RdWrPipe.m3
+ * modified: rdwr/src/SimpleMsgRW.i3
+ * modified: rdwr/src/SimpleMsgRW.m3
+ * modified: rdwr/src/TeeWr.i3
+ * modified: rdwr/src/TeeWr.m3
+ *
  * Revision 1.1.1.1  2001/12/02 00:29:10  wagner
  * Blair MacIntyre's rdwr library
  *
@@ -187,7 +200,7 @@ PROCEDURE NewWr(wr: Wr.T) : MsgWr.T =
   END NewWr;
 
 
-PROCEDURE RdSeek(rd: RdT; <*UNUSED*> n: CARDINAL;
+PROCEDURE RdSeek(rd: RdT; <*UNUSED*> n: LONGINT;
                           dontBlock: BOOLEAN): RdClass.SeekResult
   RAISES {Rd.Failure, Thread.Alerted} =
   VAR
@@ -206,7 +219,7 @@ PROCEDURE RdSeek(rd: RdT; <*UNUSED*> n: CARDINAL;
         (* fall out into common code below *)
       ELSE
         (* advance to next non-empty fragment *) 
-        rd.st := Align((rd.hi - rd.lo) + rd.st);
+        rd.st := Align(ORD(rd.hi - rd.lo) + rd.st);
         rd.lo := rd.hi;
         REPEAT
           IF rd.hdr.eom # 0 THEN 
@@ -282,7 +295,7 @@ PROCEDURE ReadAligned(
     RETURN len;
   END ReadAligned;
 
-PROCEDURE Length(rd: RdT) : INTEGER =
+PROCEDURE Length(rd: RdT) : LONGINT =
   BEGIN
     IF rd.hdr.eom # 0 THEN
       RETURN rd.lo + rd.hdr.nb;
@@ -306,7 +319,7 @@ PROCEDURE RdNextMsg(rd: RdT) : BOOLEAN
     WHILE rd.hdr.nb # 0 OR NOT rd.hdr.eom # 0 DO
       EVAL RdSeek(rd, rd.hi, FALSE);
     END;
-    rd.st := Align((rd.hi - rd.lo) + rd.st);
+    rd.st := Align(ORD(rd.hi - rd.lo) + rd.st);
     rd.cur := 0;
     rd.lo := 0;
     rd.hi := 0;
@@ -316,7 +329,7 @@ PROCEDURE RdNextMsg(rd: RdT) : BOOLEAN
   END RdNextMsg;
   
 
-PROCEDURE WrSeek(wr: WrT; <*UNUSED*> n: CARDINAL)
+PROCEDURE WrSeek(wr: WrT; <*UNUSED*> n: LONGINT)
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN WrFlush(wr) END WrSeek;
 
@@ -345,7 +358,7 @@ PROCEDURE WrNextMsg(wr: WrT) RAISES {Wr.Failure, Thread.Alerted} =
   END WrNextMsg;
   
 PROCEDURE PutFrag(wr: WrT; eom: BOOLEAN) RAISES {Wr.Failure, Thread.Alerted} =
-  VAR len := wr.cur - wr.lo;
+  VAR len := ORD(wr.cur - wr.lo);
   BEGIN
     WITH hdr = LOOPHOLE(ADR(wr.buff[0]), UNTRACED REF FragmentHeader) DO
       hdr^ := FragmentHeader{eom := ORD(eom), nb := len};

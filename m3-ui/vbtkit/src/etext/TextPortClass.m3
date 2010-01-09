@@ -361,14 +361,14 @@ PROCEDURE Find (v: T; pattern: TEXT; loc := Loc.Next; ignoreCase := TRUE):
           IF loc = Loc.First THEN start := 0 END;
           LOCK readerLock DO
             EVAL reader.init (v.vtext.mtext, start := start);
-            found := RdUtils.Find (reader, pattern, can);
+            found := ORD(RdUtils.Find (reader, pattern, can));
             IF found >= 0 THEN RETURN Extent {found, found + len} END
           END
       | Loc.Prev =>
           LOCK readerLock DO
             EVAL reader.init (v.vtext.mtext, start := start, rangeStart := 0,
                               rangeEnd := start, reverse := TRUE);
-            found := RdUtils.Find (reader, TextReverse (pattern), can);
+            found := ORD(RdUtils.Find (reader, TextReverse (pattern), can));
             IF found >= 0 THEN
               RETURN Extent {start - found - len, start - found}
             END                  (* IF *)

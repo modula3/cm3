@@ -12,7 +12,7 @@ UNSAFE MODULE RdUtils;
 IMPORT ASCII, Rd, Atom, Wr, Text, Text8, Text8Short(**, Text8Literal**);
 IMPORT Thread, TextWr, AtomList;
 
-TYPE FindResult = [-1 .. LAST(CARDINAL)];
+TYPE FindResult = [-1L .. LAST(LONGINT)];
 
 PROCEDURE Find (rd           : Rd.T;
                 pattern      : TEXT;
@@ -49,16 +49,19 @@ PROCEDURE FindString (rd           : Rd.T;
                       canonicalize : Canonicalize := NIL): FindResult
   RAISES {Rd.Failure, Thread.Alerted} =
   <*FATAL Rd.EndOfFile*>
-  VAR end := NUMBER(pattern);  i, restart: CARDINAL;  x, y: CHAR;
+  VAR end := NUMBER(pattern);
+      i: CARDINAL;
+      restart: LONGINT;
+      x, y: CHAR;
   BEGIN
     IF end = 0 THEN  RETURN Rd.Index(rd);  END;
     LOOP
-      IF FindChar(rd, pattern[0], canonicalize) = -1 THEN  RETURN -1;  END;
+      IF FindChar(rd, pattern[0], canonicalize) = -1L THEN  RETURN -1L;  END;
       restart := Rd.Index(rd);
       i := 1;
       LOOP
-        IF i = end    THEN  RETURN restart - 1;  END;
-        IF Rd.EOF(rd) THEN  RETURN -1;           END;
+        IF i = end    THEN  RETURN restart - 1L;  END;
+        IF Rd.EOF(rd) THEN  RETURN -1;            END;
         x := Rd.GetChar(rd);
         y := pattern[i];
         IF x = y OR (canonicalize # NIL
@@ -75,7 +78,7 @@ PROCEDURE FindString (rd           : Rd.T;
 PROCEDURE FindChar (rd           : Rd.T;
                     pattern      : CHAR;
                     canonicalize: Canonicalize := NIL):
-  [-1 .. LAST(CARDINAL)] RAISES {Rd.Failure, Thread.Alerted} =
+  FindResult RAISES {Rd.Failure, Thread.Alerted} =
   VAR uc: CHAR;
    <*FATAL Rd.EndOfFile*>
   BEGIN

@@ -25,11 +25,14 @@ PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
 
 PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T) =
   VAR ta, tb: Type.T;
+      resultType: Type.T := NIL;
   BEGIN
     ta := Type.Base (Expr.TypeOf (ce.args[0]));
     tb := Type.Base (Expr.TypeOf (ce.args[1]));
 
-    IF (NOT Type.IsEqual (ta, tb, NIL)) THEN
+    IF (ta = LInt.T AND tb = Int.T) OR (tb = LInt.T AND ta = Int.T) THEN
+      resultType := LInt.T;
+    ELSIF (NOT Type.IsEqual (ta, tb, NIL)) THEN
       Error.Txt (name, "incompatible argument types");
     ELSIF (ta = Int.T) OR (ta = LInt.T) OR (Type.IsOrdinal (ta)) THEN
       (* ok *)
@@ -39,7 +42,11 @@ PROCEDURE DoCheck (name: TEXT;  ce: CallExpr.T) =
       Error.Txt (name, "wrong argument types");
       ta := Int.T;
     END;
-    ce.type := ta;
+    IF resultType # NIL THEN
+      ce.type := resultType;
+    ELSE
+      ce.type := ta;
+    END;
   END DoCheck;
 
 PROCEDURE Compile (ce: CallExpr.T) =

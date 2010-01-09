@@ -9,8 +9,8 @@ INTERFACE RdCopy;
 
 IMPORT Rd, Wr, Thread;
 
-PROCEDURE ToWriter (rd: Rd.T; wr: Wr.T; length: CARDINAL := LAST(CARDINAL)):
-  CARDINAL RAISES {Rd.Failure, Wr.Failure, Thread.Alerted};
+PROCEDURE ToWriter (rd: Rd.T; wr: Wr.T; length: LONGINT := LAST(LONGINT)):
+  LONGINT RAISES {Rd.Failure, Wr.Failure, Thread.Alerted};
   (* Copies MIN(length, len(rd) - cur(rd)) bytes from rd to wr.  Returns
      the number of bytes copied.  Equivalent to:
 
@@ -26,7 +26,7 @@ PROCEDURE ToWriter (rd: Rd.T; wr: Wr.T; length: CARDINAL := LAST(CARDINAL)):
 
 PROCEDURE ToProc (rd  : Rd.T;
                   proc: PROCEDURE (READONLY a: ARRAY OF CHAR) RAISES ANY;
-                  length: CARDINAL := LAST(CARDINAL)): CARDINAL
+                  length: LONGINT := LAST(LONGINT)): LONGINT
   RAISES ANY (* RAISES(proc) + {Rd.Failure, Thread.Alerted *);
   (* Passes MIN(length, len(rd) - cur(rd)) bytes from rd to proc.  Returns
      the number of bytes copied.  The length of the arrays passed to
@@ -35,7 +35,7 @@ PROCEDURE ToProc (rd  : Rd.T;
 PROCEDURE FromProc (wr: Wr.T;
                     proc: PROCEDURE (VAR a: ARRAY OF CHAR): CARDINAL
                             RAISES ANY;
-                    length: CARDINAL := LAST(CARDINAL)): CARDINAL
+                    length: LONGINT := LAST(LONGINT)): LONGINT
   RAISES ANY (* RAISES(proc) + {Rd.Failure, Thread.Alerted *);
   (* Calls proc repeatedly to fill in up to length bytes in a buffer which are
      written to the writer.  If proc returns a value < NUMBER(a) then

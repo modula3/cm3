@@ -43,8 +43,8 @@ PROCEDURE Init (t: T;  f: File.T;  map: Quake.IDMap): T =
     (* slurp the source into memory *)
     TRY
       status := f.status ();
-      t.buffer := NEW (REF ARRAY OF CHAR, MAX (0, status.size) + 1);
-      t.buflen := M3File.Read (f, t.buffer^, status.size);
+      t.buffer := NEW (REF ARRAY OF CHAR, MAX (0, ORD(status.size)) + 1);
+      t.buflen := M3File.Read (f, t.buffer^, ORD(status.size));
       IF (t.buflen # status.size) THEN RETURN NIL; END;
       t.buffer [t.buflen] := EOFChar;
     EXCEPT OSError.E => RETURN NIL;

@@ -124,7 +124,7 @@ PROCEDURE Init (v: T; scrollable := TRUE): T =
 
 (***********************  Typescript-specific code  ***********************)
 
-PROCEDURE WSeek (wr: Writer; <* UNUSED *> n: CARDINAL)
+PROCEDURE WSeek (wr: Writer; <* UNUSED *> n: LONGINT)
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
     wr.flush ()
@@ -134,7 +134,7 @@ PROCEDURE WFlush (wr: Writer) RAISES {Thread.Alerted} =
   VAR
     v      := wr.v; tp := v.tp;
     normP  := TextPort.IsVisible (v.tp, TextPort.Index (tp));
-    nchars := wr.cur - wr.lo;
+    nchars := ORD(wr.cur - wr.lo);
   BEGIN
     LOCK v.mu DO
       TextPort.Replace (tp, v.outputEnd, v.outputEnd,
@@ -148,7 +148,7 @@ PROCEDURE WFlush (wr: Writer) RAISES {Thread.Alerted} =
     IF Thread.TestAlert () THEN RAISE Thread.Alerted END
   END WFlush;
 
-PROCEDURE RSeek (rd: Reader; <*UNUSED*> n: CARDINAL;
+PROCEDURE RSeek (rd: Reader; <*UNUSED*> n: LONGINT;
                  dontBlock: BOOLEAN): RdClass.SeekResult
   RAISES {Thread.Alerted} =
   VAR

@@ -93,10 +93,10 @@ PROCEDURE ServiceCall(<*UNUSED*> tt: Transport.T; c: Conn) : BOOLEAN
           dispatcher: Dispatcher;
           obj: NetObj.T;
           rd := c.rd;
-          h := LOOPHOLE(ADR(rd.buff[rd.st+rd.cur-rd.lo]),
+          h := LOOPHOLE(ADR(rd.buff[rd.st + ORD(rd.cur - rd.lo)]),
                                      UNTRACED REF CallHeader);
         BEGIN
-          IF rd.hi - rd.cur < BYTESIZE(CallHeader) OR
+          IF ORD(rd.hi - rd.cur) < BYTESIZE(CallHeader) OR
                      h.hdr.private # ORD(Op.MethodCall) THEN
                RaiseUnmarshalFailure();
           END;
@@ -113,10 +113,10 @@ PROCEDURE ServiceCall(<*UNUSED*> tt: Transport.T; c: Conn) : BOOLEAN
             dispatcher(c, obj, h.hdr, h.prot);
             IF (c.objStack.pos # 0) THEN
               c.wr.nextMsg();
-              IF NOT rd.nextMsg() OR rd.hi - rd.cur < BYTESIZE(MsgHeader) THEN
+              IF NOT rd.nextMsg() OR ORD(rd.hi - rd.cur) < BYTESIZE(MsgHeader) THEN
                 RETURN FALSE;
               END;
-              VAR hh := LOOPHOLE(ADR(rd.buff[rd.st+rd.cur-rd.lo]),
+              VAR hh := LOOPHOLE(ADR(rd.buff[rd.st + ORD(rd.cur - rd.lo)]),
                                               UNTRACED REF MsgHeader)^;
               BEGIN
                 INC(rd.cur, BYTESIZE(MsgHeader));
@@ -141,7 +141,7 @@ PROCEDURE ServiceCall(<*UNUSED*> tt: Transport.T; c: Conn) : BOOLEAN
             (* this test checks whether we have started marshalling results *)
             IF c.wr.cur = 0 THEN
               VAR wr := c.wr;
-                  h := LOOPHOLE(ADR(wr.buff[wr.st+wr.cur-wr.lo]),
+                  h := LOOPHOLE(ADR(wr.buff[wr.st + ORD(wr.cur - wr.lo)]),
                                              UNTRACED REF MsgHeader);
               BEGIN
                 h.hdr := NativeRep;
@@ -169,7 +169,7 @@ PROCEDURE StartCall(obj: NetObj.T; stubProt: StubProtocol) : Conn
     c.inObj := FALSE;
     c.protocol := stubProt;
     VAR wr := c.wr;
-        h := LOOPHOLE(ADR(wr.buff[wr.st+wr.cur-wr.lo]),
+        h := LOOPHOLE(ADR(wr.buff[wr.st + ORD(wr.cur - wr.lo)]),
                                  UNTRACED REF CallHeader);
     BEGIN
       <* ASSERT (wr.hi - wr.cur >= BYTESIZE(CallHeader)) *>
@@ -189,10 +189,10 @@ PROCEDURE AwaitResult(c: Conn) : DataRep
   BEGIN
     c.wr.nextMsg();
     TRY
-      IF NOT rd.nextMsg() OR rd.hi - rd.cur < BYTESIZE(MsgHeader) THEN
+      IF NOT rd.nextMsg() OR ORD(rd.hi - rd.cur) < BYTESIZE(MsgHeader) THEN
         RaiseUnmarshalFailure();
       END;
-      h := LOOPHOLE(ADR(rd.buff[rd.st+rd.cur-rd.lo]), UNTRACED REF MsgHeader)^;
+      h := LOOPHOLE(ADR(rd.buff[rd.st + ORD(rd.cur - rd.lo)]), UNTRACED REF MsgHeader)^;
       INC(rd.cur, BYTESIZE(MsgHeader));
     EXCEPT
     | Thread.Alerted => RAISE NetObj.Error(AtomList.List1(NetObj.Alerted));
@@ -219,7 +219,7 @@ PROCEDURE EndCall(c: Conn; reUse: BOOLEAN)
       END;
       IF reUse AND c.inObj (* OR NOT UnsafeRd.FastEOF(c.rd) *) THEN
         VAR wr := c.wr;
-            h := LOOPHOLE(ADR(wr.buff[wr.st+wr.cur-wr.lo]),
+            h := LOOPHOLE(ADR(wr.buff[wr.st + ORD(wr.cur - wr.lo)]),
                                        UNTRACED REF MsgHeader);
         BEGIN
           h.hdr := NativeRep;
@@ -235,7 +235,7 @@ PROCEDURE EndCall(c: Conn; reUse: BOOLEAN)
   
 PROCEDURE StartResult(c: Conn) =
   VAR wr := c.wr;
-      h := LOOPHOLE(ADR(wr.buff[wr.st+wr.cur-wr.lo]),
+      h := LOOPHOLE(ADR(wr.buff[wr.st + ORD(wr.cur - wr.lo)]),
                                  UNTRACED REF MsgHeader);
   BEGIN
     h.hdr := NativeRep;
@@ -416,7 +416,7 @@ PROCEDURE AlignRd(rd: Rd.T; nb: CARDINAL) : ADDRESS
     END;
     IF rd.cur = rd.hi THEN EVAL rd.seek(rd.cur, FALSE); END;
     IF rd.hi - rd.cur < nb THEN RaiseUnmarshalFailure(); END;
-    res := ADR(rd.buff[rd.st + rd.cur - rd.lo]);
+    res := ADR(rd.buff[rd.st + ORD(rd.cur - rd.lo)]);
     RETURN res;
   END AlignRd;
 
@@ -451,7 +451,7 @@ PROCEDURE AlignWr(wr: Wr.T; align: CARDINAL) : ADDRESS
     (* here we rely on the alignment invariants of MsgWr.T *)
     IF diff # 0 THEN INC(wr.cur, align-diff); END;
     IF wr.cur = wr.hi THEN wr.seek(wr.cur); END;
-    res := ADR(wr.buff[wr.st + wr.cur - wr.lo]);
+    res := ADR(wr.buff[wr.st + ORD(wr.cur - wr.lo)]);
     RETURN res;
   END AlignWr;
 
@@ -978,7 +978,7 @@ PROCEDURE InObject (c: Conn; tc: INTEGER := -1): NetObj.T
     pwrep := LOOPHOLE(AlignRd(rd, Align64),
                                UNTRACED REF WireRep.T);
   BEGIN
-    IF rd.hi - rd.cur >= BYTESIZE(WireRep.T) THEN
+    IF ORD(rd.hi - rd.cur) >= BYTESIZE(WireRep.T) THEN
       INC(rd.cur, BYTESIZE(WireRep.T));
       IF pwrep^ = WireRep.NullT THEN RETURN NIL END;
       o := NetObjRT.Find(pwrep^, c.loc);

@@ -228,7 +228,7 @@ TYPE
               ObValue.BadArgVal(1, "non-closed", self.name, opCode.name, loc);
               <*ASSERT FALSE*>
             END;
-            RETURN NEW(ObValue.ValInt, int:=Rd.Index(rd1), temp:=temp);
+            RETURN NEW(ObValue.ValInt, int:=ORD(Rd.Index(rd1)), temp:=temp);
         | RdCode.Length => 
             TYPECASE args[1] OF | ValRd(node) => rd1 := node.rd;
             ELSE 
@@ -244,7 +244,7 @@ TYPE
                                 opCode.name,loc);
               <*ASSERT FALSE*>
             END;
-            RETURN NEW(ObValue.ValInt, int:=Rd.Length(rd1), temp:=temp);
+            RETURN NEW(ObValue.ValInt, int:=ORD(Rd.Length(rd1)), temp:=temp);
         | RdCode.Seek => 
             TYPECASE args[1] OF | ValRd(node) => rd1 := node.rd;
             ELSE 
@@ -471,14 +471,14 @@ TYPE
             IF Wr.Closed(wr1) THEN
               ObValue.BadArgVal(1, "non-closed", self.name, opCode.name, loc);<*ASSERT FALSE*>
             END;
-            RETURN NEW(ObValue.ValInt, int:=Wr.Index(wr1), temp:=temp);
+            RETURN NEW(ObValue.ValInt, int:=ORD(Wr.Index(wr1)), temp:=temp);
         | WrCode.Length => 
             TYPECASE args[1] OF | ValWr(node) => wr1 := node.wr;
             ELSE ObValue.BadArgType(1, "wr", self.name, opCode.name, loc); <*ASSERT FALSE*>END;
             IF Wr.Closed(wr1) THEN
               ObValue.BadArgVal(1, "non-closed", self.name, opCode.name, loc);<*ASSERT FALSE*>
             END;
-            RETURN NEW(ObValue.ValInt, int:=Wr.Length(wr1), temp:=temp);
+            RETURN NEW(ObValue.ValInt, int:=ORD(Wr.Length(wr1)), temp:=temp);
         | WrCode.Seek => 
             TYPECASE args[1] OF | ValWr(node) => wr1 := node.wr;
             ELSE ObValue.BadArgType(1, "wr", self.name, opCode.name, loc); <*ASSERT FALSE*>END;

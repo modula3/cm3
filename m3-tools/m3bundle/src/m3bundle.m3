@@ -45,7 +45,7 @@ PROCEDURE GetElementSizes (): BOOLEAN =
       WITH z = elts[i] DO
         TRY
           rd := FileRd.Open (z.path);
-          z.length := Rd.Length (rd);
+          z.length := ORD(Rd.Length (rd));
           z.blocks := (z.length + MaxBlock - 1) DIV MaxBlock;
           z.base   := "E" & Fmt.Int (i);
           max_blocks := MAX (max_blocks, z.blocks);

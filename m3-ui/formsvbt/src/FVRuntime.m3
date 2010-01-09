@@ -1486,7 +1486,7 @@ PROCEDURE PutText (fv: T; name: TEXT; text: TEXT; append := FALSE)
         TRY t.rd := Rsrc.Open (text, fv.path) EXCEPT
         | Rsrc.NotFound => RAISE Error("No such resource: " & text)
         END;
-        TRY len := Rd.Length(t.rd) EXCEPT
+        TRY len := ORD(Rd.Length(t.rd)) EXCEPT
         | Rd.Failure (ref) => RAISE Error(RdUtils.FailureText(ref))
         | Thread.Alerted => (* ignore *)
         END;

@@ -66,6 +66,7 @@ PROCEDURE TypeOf (p: P): Type.T =
 
 PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
   VAR ta, tb, range: Type.T;
+      resultType: Type.T := NIL;
   BEGIN
     Expr.TypeCheck (p.a, cs);
     Expr.TypeCheck (p.b, cs);
@@ -73,8 +74,9 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     tb := Type.Base (Expr.TypeOf (p.b));
     IF    (tb = Int.T)   AND (ta = Int.T)   THEN
       p.class := cINT;
-    ELSIF (tb = LInt.T)  AND (ta = LInt.T)  THEN
+    ELSIF (ta = LInt.T OR ta = Int.T) AND (tb = LInt.T OR tb = Int.T) THEN
       p.class := cLINT;
+      resultType := LInt.T;
     ELSIF (tb = Reel.T)  AND (ta = Reel.T)  THEN
       p.class := cREAL;
     ELSIF (tb = LReel.T) AND (ta = LReel.T) THEN
@@ -90,7 +92,11 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       ta := Expr.BadOperands ("\'*\'", ta, tb);
       p.class := cINT;
     END;
-    p.type := ta;
+    IF resultType # NIL THEN
+      p.type := resultType;
+    ELSE
+      p.type := ta;
+    END;
   END Check;
 
 PROCEDURE Prep (p: P) =

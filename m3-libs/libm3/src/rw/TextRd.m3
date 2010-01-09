@@ -39,7 +39,7 @@ PROCEDURE Init (rd: T; t: TEXT): T =
 
 PROCEDURE New(t: TEXT): T = BEGIN RETURN NEW(T).init(t); END New;
 
-PROCEDURE Seek (rd: T; pos: CARDINAL;
+PROCEDURE Seek (rd: T; pos: LONGINT;
                <*UNUSED*> dontBlock: BOOLEAN): RdClass.SeekResult =
   BEGIN
     IF pos >= rd.hi THEN
@@ -50,7 +50,7 @@ PROCEDURE Seek (rd: T; pos: CARDINAL;
       RETURN RdClass.SeekResult.Ready; END;
   END Seek;
 
-PROCEDURE Length (rd: T): INTEGER =
+PROCEDURE Length (rd: T): LONGINT =
   BEGIN
     RETURN rd.hi;
   END Length;

@@ -58,16 +58,16 @@ PROCEDURE Init (wr: T): T =
 
 PROCEDURE New(): T = BEGIN RETURN NEW(T).init(); END New;
 
-PROCEDURE Length (wr: T): CARDINAL RAISES {} =
+PROCEDURE Length (wr: T): LONGINT RAISES {} =
   BEGIN
-    wr.max_len := MAX (wr.max_len, wr.cur);
+    wr.max_len := MAX (wr.max_len, ORD(wr.cur));
     RETURN wr.max_len;
   END Length;
 
-PROCEDURE Seek(wr: T; n: CARDINAL) RAISES {} =
+PROCEDURE Seek(wr: T; n: LONGINT) RAISES {} =
   BEGIN
     (* capture the current length of the writer *)
-    wr.max_len := MAX (wr.max_len, wr.cur);
+    wr.max_len := MAX (wr.max_len, ORD(wr.cur));
 
     (* make sure we don't seek beyond the end of the writer *)
     n := MIN (n, wr.max_len);
@@ -76,8 +76,8 @@ PROCEDURE Seek(wr: T; n: CARDINAL) RAISES {} =
     wr.cur := n;
   END Seek;
 
-PROCEDURE GotoBuffer (wr: T;  n: INTEGER) =
-  VAR buf := n DIV BufferSize;
+PROCEDURE GotoBuffer (wr: T;  n: LONGINT) =
+  VAR buf := ORD(n DIV BufferSize);
   BEGIN
     WHILE (buf > LAST (wr.buffers^)) DO ExpandBufferPool (wr) END;
     WHILE (wr.n_buffers <= buf) DO
@@ -111,7 +111,7 @@ PROCEDURE ToText(wr: T): TEXT =
     WrClass.Lock(wr);
     TRY
       (* capture the current length of the writer *)
-      len := MAX (wr.max_len, wr.cur);
+      len := MAX (wr.max_len, ORD(wr.cur));
 
       (* allocate the result and count the buffersp *)
       result := Text8.Create (len);

@@ -243,7 +243,7 @@ PROCEDURE ParseAlg (rd: Rd.T; errorWr: Wr.T): TextRefTbl.T =
             pos := NEW (Position);
             tag := "0";
             id := 0;
-            pos.start := Wr.Index (procWr);
+            pos.start := ORD(Wr.Index (procWr));
             state := State.InStat;
           ELSE
             Wr.PutChar (tagWr, c);
@@ -252,7 +252,7 @@ PROCEDURE ParseAlg (rd: Rd.T; errorWr: Wr.T): TextRefTbl.T =
           IF c = '@' THEN
             IF replaceTags THEN
               pos := NEW (Position);            (* JK, 11-JUN-96 *)
-              pos.start := Wr.Index (procWr);   (* JK, 11-JUN-96 *)
+              pos.start := ORD(Wr.Index (procWr)) ;(* JK, 11-JUN-96 *)
               Wr.PutChar (procWr, ' ');	        (* JK, 07-JUN-96 *)
             END;
             state := State.ProcAt;
@@ -305,11 +305,11 @@ PROCEDURE ParseAlg (rd: Rd.T; errorWr: Wr.T): TextRefTbl.T =
                 errorWr,
                 Fmt.F (
                   "duplicate statement tag '@%s' at offsets %s and %s\n",
-                  tag, Fmt.Int (pos.start), Fmt.Int (Rd.Index (rd))));
+                  tag, Fmt.Int (pos.start), Fmt.LongInt (Rd.Index (rd))));
             END;
             IF NOT replaceTags THEN
               pos := NEW (Position);             (* JK, 11-JUN-96 *)
-              pos.start := Wr.Index (procWr);    (* JK, 11-JUN-96 *)
+              pos.start := ORD(Wr.Index (procWr)); (* JK, 11-JUN-96 *)
             END;
             state := State.InStat;
           END;
@@ -324,7 +324,7 @@ PROCEDURE ParseAlg (rd: Rd.T; errorWr: Wr.T): TextRefTbl.T =
             Wr.PutChar (procWr, c);
             state := State.InStat;
           ELSE
-            pos.end := Wr.Index (procWr);
+            pos.end := ORD(Wr.Index (procWr));
             EVAL proc.offsets.put (id, pos);
             Wr.PutChar (procWr, c);
             state := State.InProc;
@@ -362,7 +362,7 @@ PROCEDURE ParseAlg (rd: Rd.T; errorWr: Wr.T): TextRefTbl.T =
                       "unmatched procedure header (@%s) at end-of-file\n",
                       name));
     | State.StatAt =>
-        pos.end := Wr.Index (procWr);
+        pos.end := ORD(Wr.Index (procWr));
         EVAL proc.offsets.put (Lex.Int (TextRd.New (tag)), pos);
         Wr.PutText (errorWr,
                     Fmt.F (

@@ -107,7 +107,7 @@ PROCEDURE Init (wr: T; ch: Wr.T; p := -1.0D0): T =
     RETURN wr
   END Init;
 
-PROCEDURE Seek (wr: T; n: CARDINAL) RAISES {Failure, Alerted} =
+PROCEDURE Seek (wr: T; n: LONGINT) RAISES {Failure, Alerted} =
   VAR wasEmpty := FALSE;
   BEGIN
     WrClass.Lock(wr.child);
@@ -153,8 +153,8 @@ PROCEDURE Flush (wr: T) RAISES {Failure, Alerted} =
     END;
   END Flush;
 
-PROCEDURE Length (wr: T): CARDINAL RAISES {Failure, Alerted} =
-  VAR res: CARDINAL;
+PROCEDURE Length (wr: T): LONGINT RAISES {Failure, Alerted} =
+  VAR res: LONGINT;
   BEGIN
     WrClass.Lock(wr.child);
     TRY

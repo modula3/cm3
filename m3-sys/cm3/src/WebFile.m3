@@ -66,7 +66,7 @@ PROCEDURE Inhale (): CharList =
     rd  := Utils.OpenReader (InfoFile, fatal := FALSE);
     IF (rd = NIL) THEN RETURN NIL END;
     TRY
-      len := rd.status().size;
+      len := ORD(rd.status().size);
       IF (len > 0) THEN
         buf := NEW (CharList, len);
         xxx := M3File.Read (rd, buf^, len);

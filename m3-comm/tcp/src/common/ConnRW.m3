@@ -57,7 +57,7 @@ PROCEDURE NewWr(fd: ConnFD.T) : StreamWr.T =
         closed := FALSE);
   END NewWr;
 
-PROCEDURE RdSeek(rd: RdT; <*UNUSED*> pos: CARDINAL;
+PROCEDURE RdSeek(rd: RdT; <*UNUSED*> pos: LONGINT;
                  dontBlock: BOOLEAN): RdClass.SeekResult
   RAISES {Rd.Failure, Thread.Alerted} =
   VAR 
@@ -87,13 +87,13 @@ PROCEDURE RdClose(rd: RdT) RAISES {Rd.Failure} =
     rd.fd.shutdownIn();
   END RdClose;
 
-PROCEDURE WrSeek(wr: WrT; <*UNUSED*> n: CARDINAL)
+PROCEDURE WrSeek(wr: WrT; <*UNUSED*> n: LONGINT)
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN WrFlush(wr) END WrSeek;
 
 PROCEDURE WrFlush(wr: WrT) RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
-    wr.fd.put(SUBARRAY(wr.buff^, 0, wr.cur-wr.lo));
+    wr.fd.put(SUBARRAY(wr.buff^, 0, ORD(wr.cur - wr.lo)));
     wr.lo := wr.cur;
     wr.hi := wr.lo + NUMBER(wr.buff^);
     StreamWrClass.DontOverflow(wr);

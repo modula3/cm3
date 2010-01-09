@@ -107,13 +107,13 @@ PROCEDURE FastPutLongReal(
 PROCEDURE FastClose (wr: Wr.T) RAISES {Failure, Alerted};
 (* Like Wr.Close *)
 
-PROCEDURE FastSeek(wr: Wr.T; n: CARDINAL) RAISES {Failure, Alerted};
+PROCEDURE FastSeek(wr: Wr.T; n: LONGINT) RAISES {Failure, Alerted};
 (* Like Wr.Seek *)
 
 PROCEDURE FastFlush(wr: Wr.T) RAISES {Failure, Alerted};
 (* Like Wr.Flush *)
 
-PROCEDURE FastLength(wr: Wr.T): CARDINAL RAISES {Failure, Alerted};
+PROCEDURE FastLength(wr: Wr.T): LONGINT RAISES {Failure, Alerted};
 (* Like Wr.Length *)
 
 END UnsafeWr.

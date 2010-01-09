@@ -81,16 +81,16 @@ TYPE
 REVEAL
   Wr.T = Private BRANDED OBJECT
            buff       : REF ARRAY OF CHAR;
-           st         : CARDINAL;           (* index into buff *)
-           lo, hi, cur: CARDINAL            := 0; (* indexes into c(wr) *)
+           st         : CARDINAL;       (* index into buff *)
+           lo, hi, cur: LONGINT := 0L;  (* indexes into c(wr) *)
            closed := TRUE;       (* Subtype's init method should set this
                                     to FALSE *)
            seekable, buffered: BOOLEAN
          METHODS
-           seek      (n: CARDINAL) RAISES {Failure, Alerted};
+           seek      (n: LONGINT) RAISES {Failure, Alerted};
            putString (READONLY a: ARRAY OF CHAR) RAISES {Failure, Alerted}
                                                          := PutStringDefault;
-           length (): CARDINAL RAISES {Failure, Alerted} := LengthDefault;
+           length (): LONGINT RAISES {Failure, Alerted}  := LengthDefault;
            flush  () RAISES {Failure, Alerted}           := FlushDefault;
            close  () RAISES {Failure, Alerted}           := CloseDefault
          END;
@@ -225,7 +225,7 @@ The last declarations in the interface are for the default methods: *)
 PROCEDURE PutStringDefault(wr: Wr.T; READONLY a: ARRAY OF CHAR)
     RAISES {Failure, Alerted};
 
-PROCEDURE LengthDefault(wr: Wr.T): CARDINAL RAISES {};
+PROCEDURE LengthDefault(wr: Wr.T): LONGINT RAISES {};
 
 PROCEDURE CloseDefault(wr: Wr.T) RAISES {};
 

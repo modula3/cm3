@@ -92,7 +92,7 @@ PROCEDURE Init (rd        : T;
     RETURN rd
   END Init;
 
-PROCEDURE Seek (rd: T; n: CARDINAL; dontBlock: BOOLEAN): RdClass.SeekResult
+PROCEDURE Seek (rd: T; n: LONGINT; dontBlock: BOOLEAN): RdClass.SeekResult
   RAISES {Rd.Failure, Thread.Alerted} =
   BEGIN
     IF n >= rd.len THEN
@@ -108,15 +108,15 @@ PROCEDURE Seek (rd: T; n: CARDINAL; dontBlock: BOOLEAN): RdClass.SeekResult
     END
   END Seek;
 
-PROCEDURE ForwardSeek (rd: T; n: CARDINAL; <* UNUSED *> dontBlock: BOOLEAN):
+PROCEDURE ForwardSeek (rd: T; n: LONGINT; <* UNUSED *> dontBlock: BOOLEAN):
   RdClass.SeekResult RAISES {Rd.Failure, Thread.Alerted} =
   VAR
     beginN          : Node;
     beginI, count, i: CARDINAL;
     result                     := RdClass.SeekResult.Ready;
   BEGIN
-    MTextDs.LocateB (rd.m, n + rd.first, beginN, beginI);
-    count := MIN (MIN (beginN.length - beginI, BufferSize), rd.len - n);
+    MTextDs.LocateB (rd.m, ORD(n) + rd.first, beginN, beginI);
+    count := MIN (MIN (beginN.length - beginI, BufferSize), rd.len - ORD(n));
     CASE beginN.type OF
     | NodeType.text =>
         Text.SetChars (SUBARRAY (rd.buff^, 0, count), beginN.text, beginI);
@@ -143,7 +143,7 @@ PROCEDURE ForwardSeek (rd: T; n: CARDINAL; <* UNUSED *> dontBlock: BOOLEAN):
     RETURN result
   END ForwardSeek;
 
-PROCEDURE RevSeek (rd: T; n: CARDINAL; <* UNUSED *> dontBlock: BOOLEAN):
+PROCEDURE RevSeek (rd: T; n: LONGINT; <* UNUSED *> dontBlock: BOOLEAN):
   RdClass.SeekResult RAISES {Rd.Failure, Thread.Alerted} =
   VAR
     beginN                 : Node;
@@ -159,7 +159,7 @@ PROCEDURE RevSeek (rd: T; n: CARDINAL; <* UNUSED *> dontBlock: BOOLEAN):
       END;
     END RevCopyText;
   BEGIN
-    MTextDs.Locate (rd.m, rd.last + 1 - n, beginN, beginI);
+    MTextDs.Locate (rd.m, rd.last + 1 - ORD(n), beginN, beginI);
     count := MIN (MIN (beginI, BufferSize), rd.len - n);
     first := beginI - count;
     CASE beginN.type OF
@@ -187,13 +187,10 @@ PROCEDURE RevSeek (rd: T; n: CARDINAL; <* UNUSED *> dontBlock: BOOLEAN):
   END RevSeek;
 
 
-PROCEDURE Length (rd: T): INTEGER =
+PROCEDURE Length (rd: T): LONGINT =
   BEGIN
     RETURN rd.len
   END Length;
 
 BEGIN
 END MTextRd.
-
-
-

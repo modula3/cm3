@@ -41,8 +41,8 @@ TYPE
     update(value: REFANY; forceToDisk: BOOLEAN := TRUE) RAISES {OSError.E};
     snapshot(value: REFANY) RAISES {OSError.E};
     close() RAISES {OSError.E};
-    snapshotBytes() : CARDINAL;
-    logBytes() : CARDINAL;
+    snapshotBytes() : LONGINT;
+    logBytes() : LONGINT;
     status() : TEXT;
   END;
   

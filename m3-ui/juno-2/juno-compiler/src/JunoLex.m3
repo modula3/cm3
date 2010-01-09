@@ -87,7 +87,7 @@ PROCEDURE GetNextToken(s: Stream) RAISES {Error, Rd.EndOfFile, Rd.Failure} =
   BEGIN
     (* skip whitespace *)
     WHILE s.c IN Lex.Blanks DO s.c := Rd.GetChar(s.rd) END;
-    s.lastPos := Rd.Index(s.rd) - 1;
+    s.lastPos := ORD(Rd.Index(s.rd) - 1);
 
     TRY
       CASE s.c OF
@@ -337,18 +337,18 @@ PROCEDURE ReadText(s: Stream): TEXT RAISES {Error, Rd.Failure} =
     RETURN res
   END ReadText;
 
-PROCEDURE PrefixChars(rd: Rd.T; start: CARDINAL): TEXT RAISES {Rd.Failure} =
+PROCEDURE PrefixChars(rd: Rd.T; start: LONGINT): TEXT RAISES {Rd.Failure} =
   <* FATAL Rd.EndOfFile *>
-  VAR curr := Rd.Index(rd); buf := NEW(REF ARRAY OF CHAR, curr - start); BEGIN
+  VAR curr := Rd.Index(rd); buf := NEW(REF ARRAY OF CHAR, ORD(curr - start)); BEGIN
     Rd.Seek(rd, start);
-    FOR i := 0 TO curr - start - 1 DO buf[i] := Rd.GetChar(rd) END;
+    FOR i := 0 TO ORD(curr - start - 1) DO buf[i] := Rd.GetChar(rd) END;
     RETURN Text.FromChars(buf^)
   END PrefixChars;
 
 PROCEDURE ReadReal(s: Stream): REAL RAISES {Error, Rd.Failure} =
 (* This procedure assumes that "s.rd" is positioned one character *past* the
    first character of the real number. *)
-  VAR res: REAL; start: CARDINAL; BEGIN
+  VAR res: REAL; start: LONGINT; BEGIN
     start := Rd.Index(s.rd) - 1;
     Rd.Seek(s.rd, start);
     TRY

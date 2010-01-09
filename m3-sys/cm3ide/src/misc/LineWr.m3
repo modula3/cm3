@@ -60,19 +60,19 @@ PROCEDURE Clear (wr: T) RAISES {} =
     END;
   END Clear;
 
-PROCEDURE Length (wr: T): CARDINAL RAISES {} =
+PROCEDURE Length (wr: T): LONGINT RAISES {} =
   BEGIN
     RETURN wr.cur;
   END Length;
 
-PROCEDURE Seek(wr: T; n: CARDINAL)
+PROCEDURE Seek(wr: T; n: LONGINT)
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
     <*ASSERT wr.cur = wr.hi *>
     AddChar (wr, wr.buff[0]);
     wr.cur := n;
     wr.lo  := n;
-    wr.hi  := n+1;
+    wr.hi  := n + 1L;
   END Seek;
 
 PROCEDURE Flush(wr: T)

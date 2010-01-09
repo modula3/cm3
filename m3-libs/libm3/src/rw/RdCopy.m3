@@ -11,8 +11,8 @@ MODULE RdCopy;
 
 IMPORT RdClass, WrClass, Rd, Wr, Thread;
 
-PROCEDURE ToWriter (rd: Rd.T; wr: Wr.T; length: CARDINAL := LAST(CARDINAL)):
-  CARDINAL RAISES {Rd.Failure, Wr.Failure, Thread.Alerted}<*NOWARN*> =
+PROCEDURE ToWriter (rd: Rd.T; wr: Wr.T; length: LONGINT := LAST(LONGINT)):
+  LONGINT RAISES {Rd.Failure, Wr.Failure, Thread.Alerted}<*NOWARN*> =
   (*
   PROCEDURE GetSub (VAR a: ARRAY OF CHAR): CARDINAL
     RAISES {Rd.Failure, Thread.Alerted} =
@@ -32,9 +32,9 @@ PROCEDURE ToWriter (rd: Rd.T; wr: Wr.T; length: CARDINAL := LAST(CARDINAL)):
 
 PROCEDURE ToProc (rd  : Rd.T;
                   proc: PROCEDURE (READONLY a: ARRAY OF CHAR) RAISES ANY;
-                  length: CARDINAL := LAST(CARDINAL)): CARDINAL
+                  length: LONGINT := LAST(LONGINT)): LONGINT
   RAISES ANY (* RAISES(proc) + {Rd.Failure, Thread.Alerted *) =
-  VAR i := 0;
+  VAR i := 0L;
   BEGIN
     RdClass.Lock(rd);
     TRY
@@ -42,7 +42,7 @@ PROCEDURE ToProc (rd  : Rd.T;
         IF Thread.TestAlert() THEN RAISE Thread.Alerted END; (* mhb: 7/7/95 *)
         WITH len = MIN(length - i, rd.hi - rd.cur) DO
           IF len > 0 THEN
-            proc(SUBARRAY(rd.buff^, rd.st + rd.cur - rd.lo, len));
+            proc(SUBARRAY(rd.buff^, rd.st + ORD(rd.cur - rd.lo), ORD(len)));
             INC(i, len);
             INC(rd.cur, len);
           END;
@@ -61,9 +61,9 @@ PROCEDURE ToProc (rd  : Rd.T;
 PROCEDURE FromProc (wr: Wr.T;
                     proc: PROCEDURE (VAR a: ARRAY OF CHAR): CARDINAL
                             RAISES ANY;
-                    length: CARDINAL := LAST(CARDINAL)): CARDINAL
+                    length: LONGINT := LAST(LONGINT)): LONGINT
   RAISES ANY (* RAISES(proc) + {Rd.Failure, Thread.Alerted *) =
-  VAR i := 0;
+  VAR i := 0L;
   BEGIN
     WrClass.Lock(wr);
     TRY
@@ -71,7 +71,7 @@ PROCEDURE FromProc (wr: Wr.T;
         WITH len = MIN(length - i, wr.hi - wr.cur) DO
           IF len > 0 THEN
             WITH res = proc(
-                         SUBARRAY(wr.buff^, wr.st + wr.cur - wr.lo, len)) DO
+                         SUBARRAY(wr.buff^, wr.st + ORD(wr.cur - wr.lo), ORD(len))) DO
               INC(i, res);
               INC(wr.cur, res);
               IF res # len THEN EXIT; END;

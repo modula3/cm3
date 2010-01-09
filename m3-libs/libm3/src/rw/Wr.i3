@@ -176,7 +176,7 @@ PROCEDURE PutWideString(wr: T; READONLY a: ARRAY OF WIDECHAR)
 | IF NOT buffered(wr) THEN Flush(wr) END
 *)
 
-PROCEDURE Seek(wr: T; n: CARDINAL) RAISES {Failure, Alerted};
+PROCEDURE Seek(wr: T; n: LONGINT) RAISES {Failure, Alerted};
 (* Set the current position of "wr" to "n".  This is an error if "wr"
    is closed. More precisely, this is equivalent to: *)
 (*
@@ -199,8 +199,8 @@ PROCEDURE Close(wr: T) RAISES {Failure, Alerted};
    even if it raises an exception, and is a no-op if "wr" is closed.
    *)
 
-PROCEDURE Length(wr: T): CARDINAL RAISES {Failure, Alerted};
-PROCEDURE Index(wr: T): CARDINAL RAISES {};
+PROCEDURE Length(wr: T): LONGINT RAISES {Failure, Alerted};
+PROCEDURE Index(wr: T): LONGINT RAISES {};
 PROCEDURE Seekable(wr: T): BOOLEAN RAISES {};
 PROCEDURE Closed(wr: T): BOOLEAN RAISES {};
 PROCEDURE Buffered(wr: T): BOOLEAN RAISES {};

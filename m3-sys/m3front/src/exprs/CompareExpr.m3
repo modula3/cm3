@@ -89,7 +89,7 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     tb := Type.Base (Expr.TypeOf (p.b));
     p.class := cINT;
     IF    (ta = Int.T)   AND (tb = Int.T)    THEN  p.class := cINT;
-    ELSIF (ta = LInt.T)  AND (tb = LInt.T)   THEN  p.class := cLINT;
+    ELSIF (ta = LInt.T OR ta = Int.T) AND (tb = LInt.T OR tb = Int.T) THEN  p.class := cLINT;
     ELSIF (ta = Reel.T)  AND (tb = Reel.T)   THEN  p.class := cREAL;
     ELSIF (ta = LReel.T) AND (tb = LReel.T)  THEN  p.class := cLONG;
     ELSIF (ta = EReel.T) AND (tb = EReel.T)  THEN  p.class := cEXTND;

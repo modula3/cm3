@@ -25,7 +25,7 @@ PROCEDURE InitReaderIx (vt: T; index: I) RAISES {Rd.Failure, Thread.Alerted} =
 PROCEDURE Rev (vt: T) RAISES {Rd.Failure, Thread.Alerted} =
   BEGIN
     IF vt.rrd = NIL THEN vt.rrd := NEW (MTextRd.T) ELSE Rd.Close (vt.rrd) END;
-    EVAL vt.rrd.init (vt.mtext, Rd.Index (vt.rd), reverse := TRUE)
+    EVAL vt.rrd.init (vt.mtext, ORD(Rd.Index (vt.rd)), reverse := TRUE)
   END Rev;
 
 BEGIN END VTRd.

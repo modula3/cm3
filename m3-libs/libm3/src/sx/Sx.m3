@@ -305,7 +305,7 @@ PROCEDURE Init (rd: RefArrayReader): RefArrayReader =
     RETURN rd
   END Init;
 
-PROCEDURE Seek (rd: RefArrayReader; pos: CARDINAL;
+PROCEDURE Seek (rd: RefArrayReader; pos: LONGINT;
                 <* UNUSED *> dontBlock: BOOLEAN):
   RdClass.SeekResult =
   BEGIN
@@ -317,7 +317,7 @@ PROCEDURE Seek (rd: RefArrayReader; pos: CARDINAL;
     END
   END Seek;
 
-PROCEDURE Length (rd: RefArrayReader): INTEGER =
+PROCEDURE Length (rd: RefArrayReader): LONGINT =
   BEGIN
     RETURN rd.hi
   END Length;
@@ -332,7 +332,7 @@ PROCEDURE PutChar (rd: RefArrayReader; ch: CHAR)
     IF rd.hi >= MAXLEN THEN
       RAISE ReadError("Sx: Text literal or numeric too long")
     END;
-    rd.buff[rd.hi] := ch;
+    rd.buff[ORD(rd.hi)] := ch;
     INC(rd.hi);
   END PutChar;
 
@@ -407,7 +407,7 @@ PROCEDURE ReadDelimitedText (rd: Rd.T; delim: CHAR): TEXT
       LOOP
         c := Rd.GetChar (rd);
         IF c = delim THEN
-          RETURN Text.FromChars (SUBARRAY (wr.buff^, 0, wr.hi))
+          RETURN Text.FromChars (SUBARRAY (wr.buff^, 0, ORD(wr.hi)))
         ELSIF c = SLASH THEN
           wr.putChar (ReadEscapeSequence (rd, delim))
         ELSIF ISO_Latin_printing (c) THEN

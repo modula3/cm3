@@ -121,11 +121,11 @@ PROCEDURE LineFacts (             t          : T;
     LOCK mu DO
       EVAL rd.init (t, index);
       EVAL rrd.init (t, index, reverse := TRUE);
-      left := FindChar (rrd, SET OF CHAR {'\n'}, index, -1);
+      left := ORD(FindChar (rrd, SET OF CHAR {'\n'}, index, -1));
       Rd.Seek (rd, left);
-      leftMargin := FindChar (rd, SET OF CHAR {'\n'} + NonBlankRun, left);
+      leftMargin := ORD(FindChar (rd, SET OF CHAR {'\n'} + NonBlankRun, left));
       Rd.Seek (rd, leftMargin);
-      rightEnd := FindChar (rd, SET OF CHAR {'\n'}, leftMargin);
+      rightEnd := ORD(FindChar (rd, SET OF CHAR {'\n'}, leftMargin));
       right := rightEnd;
       IF right < len THEN INC (right) END;
       IF rightEnd = leftMargin THEN

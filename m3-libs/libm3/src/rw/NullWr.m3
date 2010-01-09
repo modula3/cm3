@@ -37,7 +37,7 @@ PROCEDURE Init (wr: T): T =
     RETURN wr;
   END Init;
 
-PROCEDURE Seek (wr: T; n: CARDINAL) =
+PROCEDURE Seek (wr: T; n: LONGINT) =
   BEGIN
     wr.lo := n;
     wr.cur := n;

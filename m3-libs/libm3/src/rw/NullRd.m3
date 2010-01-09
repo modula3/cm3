@@ -32,19 +32,15 @@ PROCEDURE Init (rd: T): T =
     RETURN rd;
   END Init;
 
-PROCEDURE Seek (<*UNUSED*> rd: T; <*UNUSED*> pos: CARDINAL;
+PROCEDURE Seek (<*UNUSED*> rd: T; <*UNUSED*> pos: LONGINT;
                                   <*UNUSED*> dontBlock: BOOLEAN):
   RdClass.SeekResult =
   BEGIN
     RETURN (RdClass.SeekResult.Eof);
   END Seek;
 
-PROCEDURE Length(<*UNUSED*> rd: T): INTEGER =
+PROCEDURE Length(<*UNUSED*> rd: T): LONGINT =
   BEGIN RETURN 0; END Length;
 
 BEGIN
 END NullRd.
-
-
-                
-  

@@ -8,14 +8,22 @@
 
 MODULE Min;
 
-IMPORT CG, CallExpr, Expr, Type, Procedure, Max;
-IMPORT IntegerExpr, EnumExpr, ReelExpr, Target, TInt;
+IMPORT CG, CallExpr, Expr, Type, Procedure, Max, ExprRep;
+IMPORT IntegerExpr, EnumExpr, ReelExpr, Target, TInt, Int, LInt;
 
 VAR Z: CallExpr.MethodList;
 
 PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
+  VAR ta, tb: Type.T;
   BEGIN
-    Max.DoCheck ("MIN", ce);
+    ta := Type.Base (Expr.TypeOf (ce.args[0]));
+    tb := Type.Base (Expr.TypeOf (ce.args[1]));
+
+    IF (ta = LInt.T AND tb = Int.T) OR (ta = Int.T AND tb = LInt.T) THEN
+      ce.type := ta;
+    ELSE
+      Max.DoCheck("MIN", ce);
+    END;
   END Check;
 
 PROCEDURE Compile (ce: CallExpr.T) =

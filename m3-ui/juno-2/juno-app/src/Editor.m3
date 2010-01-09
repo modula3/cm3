@@ -189,17 +189,17 @@ PROCEDURE HandleLexErr(
     Wr.PutText(wr, "\n");
     CASE err.kind OF <* NOWARN *>
     | JunoLex.ErrorKind.UnclosedComment, JunoLex.ErrorKind.UnclosedText =>
-        start := Wr.Index(wr);
+        start := ORD(Wr.Index(wr));
         Wr.PutText(wr, err.initialChars);
         Wr.PutText(wr, Rd.GetText(rd, LAST(CARDINAL)));
-        finish := Wr.Index(wr)
+        finish := ORD(Wr.Index(wr))
     | JunoLex.ErrorKind.BadInitialChar, JunoLex.ErrorKind.BadEscapeChar,
         JunoLex.ErrorKind.BadReal =>
       Wr.PutText(wr, err.initialChars);
-      start := Wr.Index(wr);
+      start := ORD(Wr.Index(wr));
       finish := start + 1;
       Wr.PutText(wr, Rd.GetText(rd, LAST(CARDINAL)));
-      IF start = Wr.Index(wr) THEN Wr.PutChar(wr, ' ') END
+      IF start = ORD(Wr.Index(wr)) THEN Wr.PutChar(wr, ' ') END
     END
   END HandleLexErr;
 
@@ -284,9 +284,9 @@ PROCEDURE Parse2(tp: T; time: VBT.TimeStamp): BOOLEAN =
   		  errmsg := errmsg & " (expected "
   		    & JunoToken.KindName[err.expected] & ")"
   		END;
-  		start := Wr.Index(wr);
+  		start := ORD(Wr.Index(wr));
   		Wr.PutText(wr, JunoToken.ToText(err.found));
-  		finish := Wr.Index(wr);
+  		finish := ORD(Wr.Index(wr));
   		Wr.PutChar(wr, ' ');
   		Wr.PutText(wr, err.additional);
   		Wr.PutText(wr, Rd.GetText(rd, LAST(CARDINAL)));
@@ -389,7 +389,7 @@ PROCEDURE UnparseTrees(f: Forest; wr: Wr.T;
    fields of each tree in "f". *)
   VAR fmt := Formatter.New(wr, width); BEGIN
     WHILE f # NIL DO
-      f.start := Wr.Index(wr);
+      f.start := ORD(Wr.Index(wr));
       JunoUnparse.ToFmt(fmt, f.tree, indent := 0,
         prec := JunoConfig.realPrec, errast := errast);
       Formatter.NewLine(fmt, freshLine := FALSE);
@@ -400,7 +400,7 @@ PROCEDURE UnparseTrees(f: Forest; wr: Wr.T;
         Formatter.NewLine(fmt, freshLine := FALSE)
       END;
       Formatter.Flush(fmt);
-      f.end := Wr.Index(wr);
+      f.end := ORD(Wr.Index(wr));
       f := f.next
     END;
     Formatter.Close(fmt)

@@ -12,7 +12,7 @@ INTERFACE RdUtils;
 IMPORT Rd, Thread, AtomList;
 
 PROCEDURE Find (rd: Rd.T; pattern: TEXT; canonicalize: Canonicalize := NIL):
-  [-1 .. LAST(CARDINAL)] RAISES {Rd.Failure, Thread.Alerted};
+  [-1L .. LAST(LONGINT)] RAISES {Rd.Failure, Thread.Alerted};
 (* Finds the first occurrence of pattern, reading forward from the current
    position of rd. If no match is found, Find returns -1 and leaves rd
    positioned at the end. If Rd.Failure, or Thread.Alerted is raised
@@ -31,13 +31,13 @@ PROCEDURE Find (rd: Rd.T; pattern: TEXT; canonicalize: Canonicalize := NIL):
 PROCEDURE FindString (         rd          : Rd.T;
                       READONLY pattern     : ARRAY OF CHAR;
                                canonicalize: Canonicalize    := NIL):
-  [-1 .. LAST(CARDINAL)] RAISES {Rd.Failure, Thread.Alerted};
+  [-1L .. LAST(LONGINT)] RAISES {Rd.Failure, Thread.Alerted};
 (* = Find(rd, Text.FromSub(pattern), canonicalize). *)
 
 PROCEDURE FindChar (rd          : Rd.T;
                     pattern     : CHAR;
                     canonicalize: Canonicalize := NIL):
-  [-1 .. LAST(CARDINAL)] RAISES {Rd.Failure, Thread.Alerted};
+  [-1L .. LAST(LONGINT)] RAISES {Rd.Failure, Thread.Alerted};
 (* = Find(rd, Text.FromChar(pattern), canonicalize). *)
 
 PROCEDURE FailureText (f: AtomList.T): TEXT;

@@ -807,7 +807,7 @@ PROCEDURE EmitTypeExpr (rd       : Rd.T;
              a := ReadInt (line, cur);  (* # formals *)
              b := ReadUID (line, cur);  (* return type *)
              c := ReadInt (line, cur);  (* # raises *)
-             d := Rd.Index (rd);
+             d := ORD(Rd.Index (rd));
              fmt.begin (2);
                IF (NOT sig_only) THEN
                  fmt.putText ("PROCEDURE ");
@@ -864,7 +864,7 @@ PROCEDURE EmitTypeExpr (rd       : Rd.T;
              e := ReadInt (line, cur); (* # overrides *)
              EVAL ReadInt (line, cur); (* total field size *)
              id := ReadBrand (line, cur);
-             f := Rd.Index (rd);
+             f := ORD(Rd.Index (rd));
 
              fmt.begin (2);
                IF (b # 0) THEN (* super type *)

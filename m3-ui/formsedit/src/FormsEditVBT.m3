@@ -213,7 +213,7 @@ PROCEDURE Read (frame: T) RAISES {FormsVBT.Error, Thread.Alerted} =
         IF NOT RefList.Member (frame.path, dir) THEN
           frame.path := RefList.Cons (dir, frame.path)
         END;
-        TextPort.SetText (ed.textport, Rd.GetText (rd, Rd.Length (rd)));
+        TextPort.SetText (ed.textport, Rd.GetText (rd, ORD(Rd.Length (rd))));
         TextPort.SetModified (ed.textport, FALSE);
         SetModified (ed, FALSE);
         Parse (frame);
@@ -1254,9 +1254,9 @@ PROCEDURE ReadList (rm: ReadMacro; rd: Rd.T; s: Sx.Syntax): RefList.T
   (* Record the starting and ending positions of every list we read, so that
      we can highlight the list if there's an error. *)
   VAR
-    start := Rd.Index (rd) - 1;
+    start := ORD(Rd.Index (rd) - 1);
     form  := Sx.ReadDelimitedList (rd, ')', s);
-    end   := Rd.Index (rd);
+    end   := ORD(Rd.Index (rd));
   BEGIN
     EVAL rm.ed.rangeTable.put (
            start, NEW (Range, start := start, end := end, form := form));

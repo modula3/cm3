@@ -145,12 +145,12 @@ PROCEDURE RegularFileWrite(
   END RegularFileWrite;
 
 PROCEDURE RegularFileSeek(
-    h: RegularFile.T; origin: RegularFile.Origin; offset: INTEGER)
-  : INTEGER RAISES {OSError.E} =
+    h: RegularFile.T; origin: RegularFile.Origin; offset: LONGINT)
+  : LONGINT RAISES {OSError.E} =
   BEGIN
-    WITH result = Unix.lseek(h.fd, VAL(offset, Utypes.off_t), ORD(origin)) DO
-      IF result < VAL(0, Utypes.off_t) THEN OSErrorPosix.Raise() END;
-      RETURN ORD(result)
+    WITH result = Unix.lseek(h.fd, offset), ORD(origin)) DO
+      IF result < 0 THEN OSErrorPosix.Raise() END;
+      RETURN result;
     END
   END RegularFileSeek;
 

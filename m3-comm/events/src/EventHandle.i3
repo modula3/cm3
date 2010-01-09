@@ -16,11 +16,52 @@
  * Update Count    : 15
  * 
  * $Source: /opt/cvs/cm3/m3-comm/events/src/EventHandle.i3,v $
- * $Date: 2001-12-02 00:20:37 $
- * $Author: wagner $
- * $Revision: 1.2 $
+ * $Date: 2010-01-09 08:43:25 $
+ * $Author: jkrell $
+ * $Revision: 1.2.8.1 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2001-12-02 00:20:37  wagner
+ * add copyright notes, fix overrides for cm3, and make everything compile
+ *
+ * added: events/COPYRIGHT-COLUMBIA
+ * added: events/src/COPYRIGHT-COLUMBIA
+ * modified: events/src/Event.i3
+ * modified: events/src/Event.m3
+ * modified: events/src/EventConn.i3
+ * modified: events/src/EventConn.m3
+ * modified: events/src/EventCounter.i3
+ * modified: events/src/EventCounter.m3
+ * modified: events/src/EventHandle.i3
+ * modified: events/src/EventIO.i3
+ * modified: events/src/EventNumber.i3
+ * modified: events/src/EventNumber.m3
+ * modified: events/src/EventNumberF.i3
+ * modified: events/src/EventPort.i3
+ * modified: events/src/EventPort.m3
+ * modified: events/src/EventProtocol.i3
+ * modified: events/src/EventRd.i3
+ * modified: events/src/EventRd.m3
+ * modified: events/src/EventSpaceID.i3
+ * modified: events/src/EventSpaceID.m3
+ * modified: events/src/EventStubLib.i3
+ * modified: events/src/EventStubLib.m3
+ * modified: events/src/EventWireRep.i3
+ * modified: events/src/EventWireRep.m3
+ * modified: events/src/EventWr.i3
+ * modified: events/src/EventWr.m3
+ * modified: events/src/EventWrF.i3
+ * modified: events/src/HostInfo.i3
+ * modified: events/src/HostInfo.m3
+ * modified: events/src/RdWrMutex.i3
+ * modified: events/src/RdWrMutex.m3
+ * modified: events/src/Work.i3
+ * modified: events/src/WorkerPool.i3
+ * modified: events/src/WorkerPool.m3
+ * modified: events/src/Zombie.i3
+ * modified: events/src/m3makefile
+ * modified: events/src/m3overrides
+ *
  * Revision 1.1.1.1  2001/12/02 00:06:45  wagner
  * Blair MacIntyre's events library
  *
@@ -52,7 +93,7 @@ REVEAL EventStubLib.Handle <: Public;
 
 TYPE 
   Public = Thread.Mutex OBJECT 
-    cur: CARDINAL;
+    cur: LONGINT;
     event: Event.T; 
     wr: EventWr.T 
   END;

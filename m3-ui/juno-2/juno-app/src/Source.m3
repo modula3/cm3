@@ -219,9 +219,9 @@ PROCEDURE ParseFromPort(port: Port; time: VBT.TimeStamp): JunoAST.Cmd =
             JunoUnparse.Cmd(wr, res, tokens,
               width := Editor.Width(port), prec := JunoConfig.realPrec);
             Wr.PutChar(wr, '\n');
-            start := Wr.Index(wr);
+            start := ORD(Wr.Index(wr));
             Wr.PutText(wr, JunoToken.ToText(err.found));
-            finish := Wr.Index(wr);
+            finish := ORD(Wr.Index(wr));
             Wr.PutChar(wr, ' ');
             Wr.PutText(wr, err.additional);
             Wr.PutText(wr, Rd.GetText(rd, LAST(CARDINAL)));

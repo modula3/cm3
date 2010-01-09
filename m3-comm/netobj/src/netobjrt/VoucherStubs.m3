@@ -66,15 +66,13 @@ PROCEDURE ClaimRdStub(c: StubLib.Conn; v: Voucher.T;
     RAISES {NetObj.Error, Rd.Failure, Wr.Failure, Thread.Alerted} =
   VAR
     rd: Rd.T;
-    pos: CARDINAL;
   BEGIN
     rd := v.claimRd();
     IF rd = NIL THEN
       RAISE NetObj.Error(AtomList.List1(NetObj.MissingObject));
     END;
     StubLib.StartResult(c);
-    pos := Rd.Index(rd);
-    StubLib.OutInteger(c, pos);
+    StubLib.OutInteger(c, ORD(Rd.Index(rd)));
     c.wr.nextMsg();
     SendOp(c, Op.StreamData);
     TRY
@@ -109,7 +107,6 @@ PROCEDURE ClaimWrStub(c: StubLib.Conn; v: Voucher.T;
     RAISES {NetObj.Error, Rd.Failure, Wr.Failure, Thread.Alerted} =
   VAR
     wr: Wr.T;
-    pos: CARDINAL;
   BEGIN
     (* wr might be lost here if an error is encountered during
        outbound marshalling.  This will be fixed by object cleanup. *)
@@ -118,8 +115,7 @@ PROCEDURE ClaimWrStub(c: StubLib.Conn; v: Voucher.T;
       RAISE NetObj.Error(AtomList.List1(NetObj.MissingObject));
     END;
     StubLib.StartResult(c);
-    pos := Wr.Index(wr);
-    StubLib.OutInteger(c, pos);
+    StubLib.OutInteger(c, ORD(Wr.Index(wr)));
     REPEAT
       c.wr.nextMsg();
       TRY
@@ -163,7 +159,7 @@ PROCEDURE SurrogateClaimRd(v: T) : Rd.T RAISES {NetObj.Error, Thread.Alerted} =
           c := c,
           v := v,
           buff := c.rd.buff,
-          st := c.rd.st + (c.rd.cur - c.rd.lo),
+          st := c.rd.st + ORD(c.rd.cur - c.rd.lo),
           lo := pos,
           hi := pos + (c.rd.hi - c.rd.cur),
           cur := pos,
@@ -184,7 +180,7 @@ PROCEDURE SurrogateClaimRd(v: T) : Rd.T RAISES {NetObj.Error, Thread.Alerted} =
 PROCEDURE SurrogateClaimWr(v: T) : Wr.T RAISES {NetObj.Error, Thread.Alerted} =
   VAR steal := FALSE;
       c: StubLib.Conn;
-      pos: CARDINAL;
+      pos: INTEGER;
       wr: SurrogateWr;
       rep: StubLib.DataRep;
   BEGIN
@@ -200,7 +196,7 @@ PROCEDURE SurrogateClaimWr(v: T) : Wr.T RAISES {NetObj.Error, Thread.Alerted} =
           v := v,
           buff := c.wr.buff,
         (* offset := pos - c.wr.cur, *)
-          st := c.wr.st + (c.wr.cur - c.wr.lo),
+          st := c.wr.st + ORD(c.wr.cur - c.wr.lo),
           lo := pos,
           hi := pos + (c.wr.hi - c.wr.cur),
           cur := pos,
@@ -221,7 +217,7 @@ PROCEDURE SurrogateClaimWr(v: T) : Wr.T RAISES {NetObj.Error, Thread.Alerted} =
 
 (* surrogate reader methods *)
 
-PROCEDURE SRSeek(rd: SurrogateRd; pos: CARDINAL;
+PROCEDURE SRSeek(rd: SurrogateRd; pos: LONGINT;
                  dontBlock: BOOLEAN) : RdClass.SeekResult
                  RAISES {Rd.Failure, Thread.Alerted} =
   VAR mrd := rd.c.rd;
@@ -311,14 +307,14 @@ PROCEDURE TerminateRd(rd: SurrogateRd; op: Op)
        the underlying connection.
   *)
   
-PROCEDURE SWSeek(wr: SurrogateWr; <*UNUSED*> n: CARDINAL)
+PROCEDURE SWSeek(wr: SurrogateWr; <*UNUSED*> n: LONGINT)
     RAISES {Wr.Failure, Thread.Alerted} =
   VAR mwr := wr.c.wr;
   BEGIN
     mwr.cur := mwr.hi;
     mwr.seek(mwr.cur);
     wr.buff := mwr.buff;
-    wr.st := mwr.st + (mwr.cur - mwr.lo);
+    wr.st := mwr.st + ORD(mwr.cur - mwr.lo);
     wr.lo := wr.cur;
     wr.hi := wr.cur + (mwr.hi - mwr.lo);
   END SWSeek;
@@ -351,7 +347,7 @@ PROCEDURE SWFlush(wr: SurrogateWr)
     END;
     SendOp(wr.c, wr.dataOp);
     (* offset := wr.cur - c.wr.cur, *)
-    wr.st := mwr.st + (mwr.cur - mwr.lo);
+    wr.st := mwr.st + ORD(mwr.cur - mwr.lo);
     wr.lo := wr.cur;
     wr.hi := wr.cur + (mwr.hi - mwr.lo);
   END SWFlush;
@@ -408,7 +404,7 @@ PROCEDURE SendOp(c: StubLib.Conn; op: Op) =
   VAR h: UNTRACED REF MsgHeader;
       wr := c.wr;
   BEGIN
-    h := LOOPHOLE(ADR(wr.buff[wr.st+wr.cur-wr.lo]), UNTRACED REF MsgHeader);
+    h := LOOPHOLE(ADR(wr.buff[wr.st + ORD(wr.cur - wr.lo)]), UNTRACED REF MsgHeader);
     INC(wr.cur, BYTESIZE(MsgHeader));
     h.hdr := StubLib.NativeRep;
     h.hdr.private := ORD(op);
@@ -422,7 +418,7 @@ PROCEDURE RecvOp(c: StubLib.Conn) : StubLib.DataRep
     IF NOT rd.nextMsg() OR rd.hi - rd.cur < BYTESIZE(MsgHeader) THEN
       RAISE Rd.Failure(AtomList.List1(StubLib.UnmarshalFailure));
     END;
-    h := LOOPHOLE(ADR(rd.buff[rd.st+rd.cur-rd.lo]), UNTRACED REF MsgHeader);
+    h := LOOPHOLE(ADR(rd.buff[rd.st + ORD(rd.cur - rd.lo)]), UNTRACED REF MsgHeader);
     INC(rd.cur, BYTESIZE(MsgHeader));
     RETURN h.hdr;
   END RecvOp;
@@ -460,7 +456,7 @@ PROCEDURE PlugRd(rd: Rd.T; wr: Wr.T)
       IF rd.closed THEN Die(); END;
       REPEAT
         IF rd.cur # rd.hi THEN
-          wr.putString(SUBARRAY(rd.buff^, (rd.cur-rd.lo)+rd.st, rd.hi-rd.cur));
+          wr.putString(SUBARRAY(rd.buff^, ORD(rd.cur - rd.lo) + rd.st, ORD(rd.hi - rd.cur)));
           rd.cur := rd.hi;
           dontBlock := rd.intermittent;
         ELSIF dontBlock THEN
@@ -482,7 +478,7 @@ PROCEDURE PlugWr(rd: Rd.T; wr: Wr.T)
     REPEAT
       IF rd.cur # rd.hi THEN
         Wr.PutString(wr,
-              SUBARRAY(rd.buff^, (rd.cur-rd.lo)+rd.st, rd.hi-rd.cur));
+              SUBARRAY(rd.buff^, ORD(rd.cur - rd.lo) + rd.st, ORD(rd.hi - rd.cur)));
         rd.cur := rd.hi;
       END;
     UNTIL (rd.seek(rd.cur, FALSE) = RdClass.SeekResult.Eof);

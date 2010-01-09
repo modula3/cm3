@@ -82,10 +82,10 @@ PROCEDURE FixFile (path: TEXT) =
       TRY
         stat := f.status ();
         IF (stat.size <= 0) THEN RETURN; END;
-        MakeRoom (stat.size);
-        in_len := f.read (SUBARRAY (inbuf^, 0, stat.size), mayBlock := TRUE);
-        IF (in_len # stat.size) THEN
-          Err ("unable to read: ", path, ": expected " & Fmt.Int (stat.size)
+        MakeRoom (ORD(stat.size));
+        in_len := f.read (SUBARRAY (inbuf^, 0, ORD(stat.size)), mayBlock := TRUE);
+        IF (in_len # ORD(stat.size)) THEN
+          Err ("unable to read: ", path, ": expected " & Fmt.Int (ORD(stat.size))
                & " bytes, but got " & Fmt.Int (in_len));
           RETURN;
         END;

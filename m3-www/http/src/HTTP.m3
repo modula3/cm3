@@ -292,7 +292,7 @@ PROCEDURE ParseHeaderFields (self        : Header;
   VAR
     field, prev: Field   := NIL;
     name, value: TEXT;
-    cur        : INTEGER;
+    cur        : LONGINT;
     ch         : CHAR;
   BEGIN
     TRY
@@ -1289,7 +1289,7 @@ PROCEDURE EncodeBasicAuth (account: TEXT): TEXT =
   BEGIN
     TRY
       Wr.PutText(res, "Basic ");
-      FOR i := 0 TO (Rd.Length(rd) DIV 3) - 1 DO
+      FOR i := 0L TO (Rd.Length(rd) DIV 3) - 1L DO
         c0 := UnsafeRd.FastGetChar(rd);
           c1 := UnsafeRd.FastGetChar(rd);
           c2 := UnsafeRd.FastGetChar(rd);

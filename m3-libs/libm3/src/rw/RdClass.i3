@@ -32,16 +32,16 @@ REVEAL
     Private BRANDED OBJECT
       buff         : REF ARRAY OF CHAR;
       st           : CARDINAL;           (* index into buff *)
-      lo, hi, cur  : CARDINAL            := 0; (* indexes into src(rd) *)
+      lo, hi, cur  : LONGINT := 0;       (* indexes into src(rd) *)
       closed: BOOLEAN := TRUE;   (* init method of the subtype should set
                                     this to FALSE *)
       seekable, intermittent: BOOLEAN;
     METHODS
-      seek   (n: CARDINAL; dontBlock: BOOLEAN): SeekResult
+      seek   (n: LONGINT; dontBlock: BOOLEAN): SeekResult
                          RAISES {Failure, Alerted};
       getSub (VAR a: ARRAY OF CHAR): CARDINAL
                          RAISES {Failure, Alerted} := GetSubDefault;
-      length (): INTEGER RAISES {Failure, Alerted} := LengthDefault;
+      length (): LONGINT RAISES {Failure, Alerted} := LengthDefault;
       close  () RAISES {Failure, Alerted}          := CloseDefault;
     END;
 
@@ -160,7 +160,7 @@ PROCEDURE GetSubDefault(rd: Rd.T; VAR (*OUT*) str: ARRAY OF CHAR): CARDINAL
    achieve greater efficiency; for example, by copying directly
    from the source of the reader into "str". *)
 
-PROCEDURE LengthDefault(rd: Rd.T): INTEGER RAISES {Failure, Alerted};
+PROCEDURE LengthDefault(rd: Rd.T): LONGINT RAISES {Failure, Alerted};
 (* The procedure LengthDefault causes a checked runtime error; this
 represents an error in the (non-intermittent) class implementation. *)
 

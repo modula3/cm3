@@ -31,7 +31,8 @@ TYPE
 
 PROCEDURE Annotate (rd: Rd.T;  wr: Wr.T;  path: TEXT)
   RAISES {Thread.Alerted, Wr.Failure, Rd.Failure} =
-  VAR s: State;  here: CARDINAL;
+  VAR s: State;
+      here: LONGINT;
   BEGIN
     s.rd   := rd;
     s.wr   := wr;

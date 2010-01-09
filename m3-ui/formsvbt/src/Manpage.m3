@@ -96,7 +96,7 @@ PROCEDURE ReadManpage (htc: HelpThreadClosure): REFANY =
           (* Create forward- and reverse-readers for searching. *)
           t.rd := MTextRd.New (mtext);
           t.revRd := MTextRd.New (mtext, reverse := TRUE);
-          t.length := Rd.Length (rd)
+          t.length := ORD(Rd.Length (rd))
         END
       END
     EXCEPT
@@ -154,18 +154,18 @@ PROCEDURE Help (t: T; fv: FormsVBT.T; name: TEXT; time: VBT.TimeStamp) =
           Rd.Seek (t.rd, 0)
         END;
         IF t.caseSensitive THEN
-          pos := RdUtils.Find (t.rd, pattern)
+          pos := ORD(RdUtils.Find (t.rd, pattern))
         ELSE
-          pos := RdUtils.Find (t.rd, pattern, RdUtils.ToUpperCaseASCII)
+          pos := ORD(RdUtils.Find (t.rd, pattern, RdUtils.ToUpperCaseASCII))
         END;
         show (pos)
       ELSIF Text.Equal (name, t.helpfindprev) THEN
         Rd.Seek (t.revRd, t.length - x.l);
         IF t.caseSensitive THEN
-          pos := RdUtils.Find (t.revRd, TextReverse (pattern));
+          pos := ORD(RdUtils.Find (t.revRd, TextReverse (pattern)));
         ELSE
-          pos := RdUtils.Find (
-                   t.revRd, TextReverse (pattern), RdUtils.ToUpperCaseASCII)
+          pos := ORD(RdUtils.Find (
+                   t.revRd, TextReverse (pattern), RdUtils.ToUpperCaseASCII))
         END;
         show (t.length - pos - n)
       ELSIF t.helpcase # NIL AND Text.Equal (name, t.helpcase) THEN

@@ -16,11 +16,52 @@
  * Update Count    : 137
  * 
  * $Source: /opt/cvs/cm3/m3-comm/events/src/EventStubLib.m3,v $
- * $Date: 2001-12-02 00:20:37 $
- * $Author: wagner $
- * $Revision: 1.2 $
+ * $Date: 2010-01-09 08:43:25 $
+ * $Author: jkrell $
+ * $Revision: 1.2.8.1 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.2  2001-12-02 00:20:37  wagner
+ * add copyright notes, fix overrides for cm3, and make everything compile
+ *
+ * added: events/COPYRIGHT-COLUMBIA
+ * added: events/src/COPYRIGHT-COLUMBIA
+ * modified: events/src/Event.i3
+ * modified: events/src/Event.m3
+ * modified: events/src/EventConn.i3
+ * modified: events/src/EventConn.m3
+ * modified: events/src/EventCounter.i3
+ * modified: events/src/EventCounter.m3
+ * modified: events/src/EventHandle.i3
+ * modified: events/src/EventIO.i3
+ * modified: events/src/EventNumber.i3
+ * modified: events/src/EventNumber.m3
+ * modified: events/src/EventNumberF.i3
+ * modified: events/src/EventPort.i3
+ * modified: events/src/EventPort.m3
+ * modified: events/src/EventProtocol.i3
+ * modified: events/src/EventRd.i3
+ * modified: events/src/EventRd.m3
+ * modified: events/src/EventSpaceID.i3
+ * modified: events/src/EventSpaceID.m3
+ * modified: events/src/EventStubLib.i3
+ * modified: events/src/EventStubLib.m3
+ * modified: events/src/EventWireRep.i3
+ * modified: events/src/EventWireRep.m3
+ * modified: events/src/EventWr.i3
+ * modified: events/src/EventWr.m3
+ * modified: events/src/EventWrF.i3
+ * modified: events/src/HostInfo.i3
+ * modified: events/src/HostInfo.m3
+ * modified: events/src/RdWrMutex.i3
+ * modified: events/src/RdWrMutex.m3
+ * modified: events/src/Work.i3
+ * modified: events/src/WorkerPool.i3
+ * modified: events/src/WorkerPool.m3
+ * modified: events/src/Zombie.i3
+ * modified: events/src/m3makefile
+ * modified: events/src/m3overrides
+ *
  * Revision 1.1.1.1  2001/12/02 00:06:45  wagner
  * Blair MacIntyre's events library
  *
@@ -181,9 +222,9 @@ PROCEDURE ChangeNumber(ev: Event.T; en: EventNumber.T) =
 PROCEDURE ToProc (rd  : Rd.T;
                   proc: PROCEDURE (READONLY a: ARRAY OF CHAR) 
                           RAISES {Wr.Failure, Thread.Alerted};
-                  length: CARDINAL := LAST(CARDINAL)): CARDINAL
+                  length: LONGINT := LAST(LONGINT)): LONGINT
   RAISES {Wr.Failure, Rd.Failure, Thread.Alerted} =
-  VAR i := 0;
+  VAR i := 0L;
   BEGIN
     (*RdClass.Lock(rd);*)
     EVAL rd.seek(0, FALSE);                   (* reset so we read it all! *)
@@ -191,7 +232,7 @@ PROCEDURE ToProc (rd  : Rd.T;
       LOOP
         WITH len = MIN(length - i, rd.hi - rd.cur) DO
           IF len > 0 THEN
-            proc(SUBARRAY(rd.buff^, rd.st + rd.cur - rd.lo, len));
+            proc(SUBARRAY(rd.buff^, rd.st + ORD(rd.cur - rd.lo), ORD(len)));
             INC(i, len);
             INC(rd.cur, len);
           END;
@@ -212,7 +253,7 @@ PROCEDURE Write (wr: Wr.T; ev: Event.T)
       h: UNTRACED REF MsgHeader;
       from := LOOPHOLE(ADR(ev.from), UNTRACED REF ARRAY [0..65535] OF CHAR);
       ts := LOOPHOLE(ADR(ev.ts), UNTRACED REF ARRAY [0..65535] OF CHAR);
-      count: INTEGER := 0;
+      count := 0L;
 
     PROCEDURE PutString (READONLY a: ARRAY OF CHAR)
       RAISES {Wr.Failure, Thread.Alerted} =
@@ -222,7 +263,7 @@ PROCEDURE Write (wr: Wr.T; ev: Event.T)
 
   BEGIN
     LOCK wr DO
-      h := LOOPHOLE(ADR(wr.buff[wr.st + wr.cur - wr.lo]),
+      h := LOOPHOLE(ADR(wr.buff[wr.st + ORD(wr.cur - wr.lo)]),
                     UNTRACED REF MsgHeader);
 
       IF wr.hi - wr.cur < BYTESIZE(MsgHeader) THEN
@@ -267,7 +308,7 @@ PROCEDURE Read (rd: Rd.T): Event.T RAISES {Event.Error, Rd.Failure,
         END;
       END;
     ELSE
-      WITH hdr = LOOPHOLE(ADR(rd.buff[rd.st+rd.cur-rd.lo]), 
+      WITH hdr = LOOPHOLE(ADR(rd.buff[rd.st + ORD(rd.cur - rd.lo)]),
                       UNTRACED REF MsgHeader) DO
         ev.hdr := hdr^;
         INC(rd.cur, BYTESIZE(MsgHeader));
@@ -530,7 +571,7 @@ PROCEDURE AlignRd(rd: Rd.T; nb: CARDINAL) : ADDRESS
     END;
     IF rd.cur = rd.hi THEN EVAL rd.seek(rd.cur, FALSE); END;
     IF rd.hi - rd.cur < nb THEN RaiseUnmarshalFailure(); END;
-    res := ADR(rd.buff[rd.st + rd.cur - rd.lo]);
+    res := ADR(rd.buff[rd.st + ORD(rd.cur - rd.lo)]);
     RETURN res;
   END AlignRd;
 
@@ -588,7 +629,7 @@ PROCEDURE AlignWr(wr: Wr.T; align: CARDINAL) : ADDRESS
      *) 
     IF diff # 0 THEN INC(wr.cur, align-diff); END;
     IF wr.cur = wr.hi THEN wr.seek(wr.cur); END;
-    res := ADR(wr.buff[wr.st + wr.cur - wr.lo]);
+    res := ADR(wr.buff[wr.st + ORD(wr.cur - wr.lo)]);
     RETURN res;
   END AlignWr;
 

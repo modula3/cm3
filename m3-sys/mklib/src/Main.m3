@@ -283,7 +283,7 @@ PROCEDURE ScanFile (f: FileDesc) =
       file   := FS.OpenFileReadonly (f.name);
       stat   := file.status ();
       f.time := stat.modificationTime;
-      f.size := stat.size;
+      f.size := ORD(stat.size);
       IF (stat.type # RegularFile.FileType) THEN
         Die ("\"", f.name, "\" is not a regular file.");
       END;
@@ -302,7 +302,7 @@ PROCEDURE ScanFile (f: FileDesc) =
       f.tag := f.name & "/";
     ELSE
       IF (long_nms = NIL) THEN long_nms := TextWr.New (); END;
-      VAR offs := Wr.Index (long_nms); <*FATAL Wr.Failure, Thread.Alerted*> BEGIN
+      VAR offs := ORD(Wr.Index (long_nms)); <*FATAL Wr.Failure, Thread.Alerted*> BEGIN
         Wr.PutText (long_nms, f.name);
         Wr.PutChar (long_nms, '\000');
         f.tag := "/" & Fmt.Int (offs);
@@ -513,7 +513,7 @@ PROCEDURE AssignFileOffsets () =
 
     IF (long_nms # NIL) THEN
       (* long filename table *)
-      INC (offs, Hdr + Wr.Index (long_nms));
+      INC (offs, Hdr + ORD(Wr.Index (long_nms)));
       IF (offs MOD 2 # 0) THEN INC (offs); END;
     END;
 
@@ -624,7 +624,7 @@ PROCEDURE DumpLongNames ()
   VAR len, odd: INTEGER;
   BEGIN
     IF (long_nms = NIL) THEN RETURN; END;
-    len := Wr.Index (long_nms);
+    len := ORD(Wr.Index (long_nms));
     odd := len MOD 2;
     WriteHeader ("//", "0", lib_time, len);
     Wr.PutText (lib_wr, TextWr.ToText (long_nms));

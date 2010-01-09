@@ -43,7 +43,7 @@ PROCEDURE PutChar (wr: T; ch: CHAR) RAISES {Failure, Alerted} =
 PROCEDURE FastPutChar (wr: T; ch: CHAR) RAISES {Failure, Alerted} =
   BEGIN
     IF wr.cur = wr.hi THEN DoSeek(wr) END;
-    wr.buff[wr.st + wr.cur - wr.lo] := ch;
+    wr.buff[wr.st + ORD(wr.cur - wr.lo)] := ch;
     INC(wr.cur);
     IF NOT wr.buffered THEN wr.flush(); END;
   END FastPutChar;
@@ -70,10 +70,10 @@ PROCEDURE PutWC (wr: T; ch: WIDECHAR) RAISES {Failure, Alerted} =
     c2 := VAL (Word.Extract (ORD (ch), 8, 8), CHAR);
   BEGIN
     IF wr.cur = wr.hi THEN DoSeek(wr) END;
-    wr.buff[wr.st + wr.cur - wr.lo] := c1;
+    wr.buff[wr.st + ORD(wr.cur - wr.lo)] := c1;
     INC(wr.cur);
     IF wr.cur = wr.hi THEN DoSeek(wr) END;
-    wr.buff[wr.st + wr.cur - wr.lo] := c2;
+    wr.buff[wr.st + ORD(wr.cur - wr.lo)] := c2;
     INC(wr.cur);
   END PutWC;
 
@@ -174,10 +174,10 @@ PROCEDURE PutStringDefault(wr: T; READONLY a: ARRAY OF CHAR)
     l               := NUMBER(a);
   BEGIN
     WHILE (l > 0) DO
-      VAR n := MIN(wr.hi - wr.cur, l);
+      VAR n := MIN(ORD(wr.hi - wr.cur), l);
       BEGIN
         IF n > 0 THEN
-          SUBARRAY(wr.buff^, wr.st + wr.cur - wr.lo, n) :=
+          SUBARRAY(wr.buff^, wr.st + ORD(wr.cur - wr.lo), n) :=
                      SUBARRAY(a, start, n);
           INC(start, n);
           DEC(l, n);
@@ -225,13 +225,13 @@ PROCEDURE FastPutLongReal (wr: T; r: LONGREAL; p: CARDINAL := 6;
   END FastPutLongReal;
 
    
-PROCEDURE FastSeek(wr: T; n: CARDINAL) RAISES {Failure, Alerted} =
+PROCEDURE FastSeek(wr: T; n: LONGINT) RAISES {Failure, Alerted} =
   BEGIN
     IF wr.closed OR NOT wr.seekable THEN Die() END;
     wr.seek(n);
   END FastSeek;
    
-PROCEDURE Seek(wr: T; n: CARDINAL) RAISES {Failure, Alerted} =
+PROCEDURE Seek(wr: T; n: LONGINT) RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
       FastSeek(wr, n);
@@ -251,7 +251,7 @@ PROCEDURE Flush (wr: T) RAISES {Failure, Alerted} =
     END;
   END Flush;
 
-PROCEDURE Index(wr: T): CARDINAL RAISES {} =
+PROCEDURE Index(wr: T): LONGINT RAISES {} =
   BEGIN 
     LOCK wr DO 
       IF wr.closed THEN Die() END;
@@ -259,13 +259,13 @@ PROCEDURE Index(wr: T): CARDINAL RAISES {} =
     END
   END Index;
 
-PROCEDURE FastLength (wr: T): CARDINAL RAISES {Failure, Alerted} =
+PROCEDURE FastLength (wr: T): LONGINT RAISES {Failure, Alerted} =
   BEGIN
     IF wr.closed THEN Die() END;
     RETURN wr.length ();
   END FastLength;
 
-PROCEDURE Length (wr: T): CARDINAL RAISES {Failure, Alerted} =
+PROCEDURE Length (wr: T): LONGINT RAISES {Failure, Alerted} =
   BEGIN
     LOCK wr DO
       RETURN FastLength(wr);
@@ -324,7 +324,7 @@ PROCEDURE FlushDefault (<*UNUSED*> wr: T) RAISES {} =
   BEGIN
   END FlushDefault;
 
-PROCEDURE LengthDefault(wr: T): CARDINAL RAISES {} =
+PROCEDURE LengthDefault(wr: T): LONGINT RAISES {} =
   BEGIN
     RETURN wr.cur;
   END LengthDefault;

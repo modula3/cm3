@@ -54,7 +54,7 @@ PROCEDURE NewWriter (ts: TextEditVBT.T): Writer =
            closed := FALSE, seekable := FALSE, buffered := FALSE);
   END NewWriter;
 
-PROCEDURE Seek (wr: Writer; <* UNUSED *> n: CARDINAL)
+PROCEDURE Seek (wr: Writer; <* UNUSED *> n: LONGINT)
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
     wr.flush ()
@@ -64,7 +64,7 @@ PROCEDURE Flush (wr: Writer) RAISES {Thread.Alerted} =
   BEGIN
     TextPort.PutText (
       wr.typescript.tp,
-      Text.FromChars (SUBARRAY (wr.buff^, 0, wr.cur - wr.lo)));
+      Text.FromChars (SUBARRAY (wr.buff^, 0, ORD(wr.cur - wr.lo))));
     wr.lo := wr.cur;
     wr.hi := wr.lo + NUMBER (wr.buff^);
     IF Thread.TestAlert () THEN RAISE Thread.Alerted END

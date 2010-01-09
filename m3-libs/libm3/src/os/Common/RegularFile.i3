@@ -14,7 +14,7 @@ IMPORT File, OSError;
 TYPE
   T <: Public;
   Public = File.T OBJECT METHODS
-    seek(origin: Origin; offset: INTEGER): INTEGER
+    seek(origin: Origin; offset: LONGINT): LONGINT
       RAISES {OSError.E};
     flush() RAISES {OSError.E};
     lock(): BOOLEAN RAISES {OSError.E};

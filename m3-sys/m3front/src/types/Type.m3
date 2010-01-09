@@ -539,13 +539,19 @@ PROCEDURE IsSubtype (a, b: T): BOOLEAN =
 
 PROCEDURE IsAssignable (a, b: T): BOOLEAN =
   VAR i, e: T;  min_a, max_a, min_b, max_b, min, max: Target.Int;
+    ta := Base (a);
+    tb := Base (b);
   BEGIN
     IF IsEqual (a, b, NIL) OR IsSubtype (b, a) THEN
       RETURN TRUE;
     ELSIF IsOrdinal (a) THEN
+      (* INTEGER and CARDINAL are assignable to LONGINT *)
+      IF ta = LInt.T AND (tb = Int.T OR tb = Card.T) THEN
+        RETURN TRUE;
+      END;
       (* ordinal types:  OK if there is a common supertype
          and they have at least one member in common. *)
-      IF IsEqual (Base(a), Base(b), NIL)
+      IF IsEqual (ta, tb, NIL)
          AND GetBounds (a, min_a, max_a)
          AND GetBounds (b, min_b, max_b) THEN
         (* check for a non-empty intersection *)

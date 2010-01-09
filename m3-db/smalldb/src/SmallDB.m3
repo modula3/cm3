@@ -20,8 +20,8 @@ REVEAL
     logName: TEXT := NIL;
     logWriter: OSSupport.T := NIL; (* Writer to the current logfile *)
     (* statistics *)
-    snapshotByteCnt, logByteCnt: CARDINAL := 0;
-    logEntries: CARDINAL := 0;
+    snapshotByteCnt, logByteCnt: LONGINT := 0L;
+    logEntries: LONGINT := 0;
     lastSnapshot, lastLog: Time.T;
     pad: BOOLEAN; (* if TRUE, pad each update to a DiskPageSize boundary *)
     cl: Closure;
@@ -302,7 +302,7 @@ PROCEDURE Update(t: T; update: REFANY; forceToDisk: BOOLEAN := TRUE )
   (* Records this update in the log file for "t" *)
   VAR
     updateLen: Word.T;
-    entryStart, entryEnd: CARDINAL;
+    entryStart, entryEnd: LONGINT;
   BEGIN
     
     <* ASSERT t.logWriter # NIL *>
@@ -315,7 +315,7 @@ PROCEDURE Update(t: T; update: REFANY; forceToDisk: BOOLEAN := TRUE )
       t.cl.logUpdate(t.logWriter, update);
 
       entryEnd := Wr.Index(t.logWriter);
-      updateLen := (entryEnd - entryStart) - IntBytes;
+      updateLen := ORD(entryEnd - entryStart - IntBytes);
 
       IF forceToDisk THEN (* force update contents before updating length *)
         Wr.Flush(t.logWriter);
@@ -329,7 +329,7 @@ PROCEDURE Update(t: T; update: REFANY; forceToDisk: BOOLEAN := TRUE )
       Wr.Seek(t.logWriter, entryEnd);
 
       (* don't start an entry at the end of page *)
-      IF t.pad OR (entryEnd MOD DiskPageSize > DiskPageSize-IntBytes) THEN
+      IF t.pad OR (entryEnd MOD DiskPageSize > DiskPageSize - IntBytes) THEN
         WHILE (Wr.Index(t.logWriter) MOD DiskPageSize) # 0 DO
           Wr.PutChar(t.logWriter, VAL(0, CHAR)); (* Fill to page boundary *)
         END;
@@ -355,7 +355,7 @@ PROCEDURE RecoverUpdates(t: T; state: REFANY): REFANY
     updateLen: Word.T;
     fname: TEXT;
     updateText: TEXT;
-    pos: CARDINAL;
+    pos: LONGINT;
   BEGIN
     IF t.version = 0 THEN RETURN state; END;
     TRY
@@ -426,26 +426,26 @@ PROCEDURE Close(t: T) RAISES {OSError.E} =
   (* Close a stable storage directory in an orderly manner *)
   BEGIN CloseLogfile(t); END Close;
 
-PROCEDURE SnapshotBytes(t: T): CARDINAL =
+PROCEDURE SnapshotBytes(t: T): LONGINT =
   BEGIN RETURN t.snapshotByteCnt; END SnapshotBytes;
 
-PROCEDURE LogBytes(t: T): CARDINAL = BEGIN RETURN t.logByteCnt; END LogBytes;
+PROCEDURE LogBytes(t: T): LONGINT = BEGIN RETURN t.logByteCnt; END LogBytes;
 
 PROCEDURE Status(t: T) : TEXT =
   VAR out: TEXT;
   BEGIN
     out := "   Stable storage status for directory \"" & t.dirname & "\"\n";
     out := out & "      Snapshot version " & Fmt.Int(t.version)
-              & ", size " & Fmt.Int(t.snapshotByteCnt) & " bytes.\n";
+              & ", size " & Fmt.LongInt(t.snapshotByteCnt) & " bytes.\n";
     IF t.lastSnapshot # 0.0D0 THEN
       out := out & "      Last snapshot was written at " &
          FmtTime.Long(t.lastSnapshot) & "\n";
     ELSE
       out := out & "      No snapshot has been made in this run.\n";
     END;
-    out := out & "      Log has " & Fmt.Int(t.logEntries)
+    out := out & "      Log has " & Fmt.LongInt(t.logEntries)
                & " entries, total size "
-               & Fmt.Int(t.logByteCnt) & " bytes.\n";
+               & Fmt.LongInt(t.logByteCnt) & " bytes.\n";
     IF t.lastLog # 0.0D0 THEN
       out := out & "      Last log entry was written at " &
          FmtTime.Long(t.lastLog) & "\n";
