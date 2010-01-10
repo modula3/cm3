@@ -199,16 +199,15 @@ PROCEDURE Fold (p: P): Expr.T =
   END Fold;
 
 PROCEDURE GetBounds (p: P;  VAR min, max: Target.Int) =
-  VAR min_a, max_a, min_b, max_b, diff: Target.Int;
+  VAR min_a, max_a, min_b, max_b, smin, smax: Target.Int;
   BEGIN
     EVAL Type.GetBounds (p.type, min, max);
     Expr.GetBounds (p.a, min_a, max_a);
     Expr.GetBounds (p.b, min_b, max_b);
-    IF TInt.Subtract (min_a, max_b, diff) AND TInt.LT (min, diff) THEN
-      min := diff;
-    END;
-    IF TInt.Subtract (max_a, min_b, diff) AND TInt.LT (diff, max) THEN
-      max := diff;
+    IF TInt.Subtract (min_a, max_b, smin)
+      AND TInt.Subtract (max_a, min_b, smax) THEN
+      IF TInt.LT (min, smin) THEN min := smin END;
+      IF TInt.LT (smax, max) THEN max := smax END;
     END;
   END GetBounds;
 
