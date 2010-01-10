@@ -72,18 +72,23 @@ PROCEDURE Compile (ce: CallExpr.T) =
     check  : [0..3] := 0;
     lvalue : CG.Val;
     bmin, bmax: Target.Int;
+    cg_type: CG.Type;
   BEGIN
-    EVAL Type.CheckInfo (tlhs, info);
+    tlhs := Type.CheckInfo (tlhs, info);
+    IF Type.IsSubtype (tlhs, LInt.T)
+      THEN tlhs := LInt.T; cg_type := Target.Longint.cg_type;
+      ELSE tlhs := Int.T;  cg_type := Target.Integer.cg_type;
+    END;
     IF (NUMBER (ce.args^) > 1)
       THEN dec := ce.args[1];
-    ELSIF Type.IsSubtype (tlhs, LInt.T)
+    ELSIF tlhs = LInt.T
       THEN dec := IntegerExpr.New (LInt.T, TInt.One);  Expr.Prep (dec);
       ELSE dec := IntegerExpr.New (Int.T,  TInt.One);  Expr.Prep (dec);
     END;
     Expr.GetBounds (lhs, bmin, bmax);
 
     IF Host.doRangeChk THEN
-      IF Type.IsSubtype (tlhs, LInt.T) THEN
+      IF tlhs = LInt.T THEN
         IF TInt.LT (Target.Longint.min, bmin) THEN INC (check) END;
         IF TInt.LT (bmax, Target.Longint.max) THEN INC (check, 2) END;
       ELSE
@@ -102,14 +107,14 @@ PROCEDURE Compile (ce: CallExpr.T) =
 
     IF (info.stk_type = CG.Type.Addr)
       THEN CG.Index_bytes (-Target.Byte);  check := 0;
-      ELSE CG.Subtract (info.stk_type);
+      ELSE CG.Add (cg_type);
     END;
 
     CASE check OF
     | 0 => (* no range checking *)
-    | 1 => CG.Check_lo (info.stk_type, bmin, CG.RuntimeError.ValueOutOfRange);
-    | 2 => CG.Check_hi (info.stk_type, bmax, CG.RuntimeError.ValueOutOfRange);
-    | 3 => CG.Check_range (info.stk_type, bmin, bmax,
+    | 1 => CG.Check_lo (cg_type, bmin, CG.RuntimeError.ValueOutOfRange);
+    | 2 => CG.Check_hi (cg_type, bmax, CG.RuntimeError.ValueOutOfRange);
+    | 3 => CG.Check_range (cg_type, bmin, bmax,
                            CG.RuntimeError.ValueOutOfRange);
     END;
 
