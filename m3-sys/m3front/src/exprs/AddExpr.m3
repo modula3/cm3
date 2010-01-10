@@ -167,13 +167,15 @@ PROCEDURE Fold (p: P): Expr.T =
   END Fold;
 
 PROCEDURE GetBounds (p: P;  VAR min, max: Target.Int) =
-  VAR min_a, max_a, min_b, max_b, sum: Target.Int;
+  VAR min_a, max_a, min_b, max_b, smin, smax: Target.Int;
   BEGIN
     EVAL Type.GetBounds (p.type, min, max);
     Expr.GetBounds (p.a, min_a, max_a);
     Expr.GetBounds (p.b, min_b, max_b);
-    IF TInt.Add (min_a, min_b, sum) AND TInt.LT (min, sum) THEN min := sum END;
-    IF TInt.Add (max_a, max_b, sum) AND TInt.LT (sum, max) THEN max := sum END;
+    IF TInt.Add (min_a, min_b, smin) AND TInt.Add (max_a, max_b, smax) THEN
+      IF TInt.LT (min, smin) THEN min := smin END;
+      IF TInt.LT (smax, max) THEN max := smax END;
+    END;
   END GetBounds;
 
 BEGIN
