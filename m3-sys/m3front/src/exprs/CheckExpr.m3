@@ -105,8 +105,12 @@ PROCEDURE Prep (p: P) =
   END Prep;
 
 PROCEDURE Compile (p: P) =
-  VAR cg_type := Type.CGType (Expr.TypeOf (p.expr));
+  VAR t := Expr.TypeOf (p.expr);  cg_type: CG.Type;
   BEGIN
+    IF Type.IsSubtype (t, LInt.T)
+      THEN cg_type := Target.Longint.cg_type;
+      ELSE cg_type := Target.Integer.cg_type;
+    END;
     Expr.Compile (p.expr);
     CASE p.class OF
     | Class.cLOWER => CG.Check_lo (cg_type, p.min, p.err);
@@ -117,10 +121,13 @@ PROCEDURE Compile (p: P) =
 
 PROCEDURE EmitChecks (e: Expr.T;  READONLY min, max: Target.Int;
                       err: CG.RuntimeError) =
-  VAR minE, maxE: Target.Int;  x: Expr.T;  t := Type.Base (Expr.TypeOf (e));
-      cg_type := Target.Integer.cg_type;
+  VAR minE, maxE: Target.Int;  x: Expr.T;
+      t := Expr.TypeOf (e);  cg_type: CG.Type;
   BEGIN
-    IF Type.IsSubtype (t, LInt.T) THEN cg_type := Target.Longint.cg_type END;
+    IF Type.IsSubtype (t, LInt.T)
+      THEN cg_type := Target.Longint.cg_type;
+      ELSE cg_type := Target.Integer.cg_type;
+    END;
     x := Expr.ConstValue (e);
     IF (x # NIL) THEN e := x;  END;
     Expr.Compile (e);
