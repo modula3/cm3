@@ -86,7 +86,10 @@ PROCEDURE Compile (ce: CallExpr.T) =
     IF (t = NIL) THEN (* open array *)
       CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
     ELSIF Type.GetBounds (t, min, max) THEN (* ordinal type *)
-      CG.Load_integer (Type.CGType (t), min);
+      IF Type.IsSubtype (t, LInt.T)
+        THEN CG.Load_integer (Target.Longint.cg_type, min);
+        ELSE CG.Load_integer (Target.Integer.cg_type, min);
+      END;
     ELSIF Type.IsEqual (t, Reel.T, NIL) THEN
       CG.Load_float (Target.Real.min);
     ELSIF Type.IsEqual (t, LReel.T, NIL) THEN
