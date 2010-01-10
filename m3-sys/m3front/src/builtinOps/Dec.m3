@@ -107,7 +107,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
 
     IF (info.stk_type = CG.Type.Addr)
       THEN CG.Index_bytes (-Target.Byte);  check := 0;
-      ELSE CG.Add (cg_type);
+      ELSE CG.Subtract (cg_type);
     END;
 
     CASE check OF
