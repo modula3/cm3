@@ -12,6 +12,7 @@ FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
+FROM M3CG IMPORT MemoryOrder;
 
 TYPE Bop    = M3CG_Binary.Op;
 TYPE WrVar  = Var    OBJECT tag: INTEGER END;
@@ -172,13 +173,12 @@ TYPE
         load_procedure := load_procedure;
         load_static_link := load_static_link;
         comment := comment;
+        store_ordered := store_ordered;
+        load_ordered := load_ordered;
+        exchange := exchange;
+        compare_exchange := compare_exchange;
+        fence := fence;
         fetch_and_op := fetch_and_op;
-        op_and_fetch := op_and_fetch;
-        bool_compare_and_swap := bool_compare_and_swap;
-        val_compare_and_swap := val_compare_and_swap;
-        synchronize := synchronize;
-        lock_test_and_set := lock_test_and_set;
-        lock_release := lock_release;
       END;
 
 (*------------------------------------------------------------------- I/O ---*)
@@ -1609,55 +1609,59 @@ PROCEDURE comment (u: U;  a, b, c, d: TEXT := NIL) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE fetch_and_op (u: U;  op: AtomicOp;  t: MType) =
+PROCEDURE store_ordered (u: U;  t: ZType;  z: MType;  order: MemoryOrder) =
+  BEGIN
+    Cmd   (u, Bop.store_ordered);
+    TName (u, t);
+    TName (u, z);
+    Int   (u, ORD(order));
+  END store_ordered;
+
+PROCEDURE load_ordered (u: U;  t: MType;  z: ZType;  order: MemoryOrder) =
+  BEGIN
+    Cmd   (u, Bop.load_ordered);
+    TName (u, t);
+    TName (u, z);
+    Int   (u, ORD(order));
+  END load_ordered;
+
+PROCEDURE exchange (u: U;  t: MType;  z: ZType;  order: MemoryOrder) =
+  BEGIN
+    Cmd   (u, Bop.exchange);
+    TName (u, t);
+    TName (u, z);
+    Int   (u, ORD(order));
+  END exchange;
+
+PROCEDURE compare_exchange (u: U;  t: MType;  z: ZType;  r: IType;
+                            success, failure: MemoryOrder) =
+  BEGIN
+    Cmd   (u, Bop.exchange);
+    TName (u, t);
+    TName (u, z);
+    TName (u, r);
+    Int   (u, ORD(success));
+    Int   (u, ORD(failure));
+  END compare_exchange;
+
+PROCEDURE fence (u: U;  order: MemoryOrder) =
+  BEGIN
+    Cmd   (u, Bop.fence);
+    Int   (u, ORD(order));
+  END fence;
+
+PROCEDURE fetch_and_op (u: U;  op: AtomicOp;  t: MType;  z: ZType;
+                        order: MemoryOrder) =
   CONST
     OpName = ARRAY AtomicOp OF Bop { Bop.fetch_and_add, Bop.fetch_and_sub,
                                      Bop.fetch_and_or,  Bop.fetch_and_and,
-                                     Bop.fetch_and_xor, Bop.fetch_and_nand };
+                                     Bop.fetch_and_xor };
   BEGIN
     Cmd   (u, OpName [op]);
-    TName (u, t);
-  END fetch_and_op;
-
-PROCEDURE op_and_fetch (u: U;  op: AtomicOp;  t: MType) =
-  CONST
-    OpName = ARRAY AtomicOp OF Bop { Bop.add_and_fetch, Bop.sub_and_fetch,
-                                     Bop.or_and_fetch,  Bop.and_and_fetch,
-                                     Bop.xor_and_fetch, Bop.nand_and_fetch };
-  BEGIN
-    Cmd   (u, OpName [op]);
-    TName (u, t);
-  END op_and_fetch;
-
-PROCEDURE bool_compare_and_swap (u: U;  t: MType;  z: IType) =
-  BEGIN
-    Cmd   (u, Bop.bool_compare_and_swap);
     TName (u, t);
     TName (u, z);
-  END bool_compare_and_swap;
-
-PROCEDURE val_compare_and_swap (u: U;  t: MType) =
-  BEGIN
-    Cmd   (u, Bop.val_compare_and_swap);
-    TName (u, t);
-  END val_compare_and_swap;
-
-PROCEDURE synchronize (u: U) =
-  BEGIN
-    Cmd (u, Bop.synchronize);
-  END synchronize;
-
-PROCEDURE lock_test_and_set (u: U;  t: MType) =
-  BEGIN
-    Cmd   (u, Bop.lock_test_and_set);
-    TName (u, t);
-  END lock_test_and_set;
-  
-PROCEDURE lock_release (u: U;  t: MType) =
-  BEGIN
-    Cmd   (u, Bop.lock_release);
-    TName (u, t);
-  END lock_release;
+    Int   (u, ORD(order));
+  END fetch_and_op;
 
 BEGIN
 END M3CG_BinWr.
