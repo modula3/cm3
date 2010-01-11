@@ -190,23 +190,16 @@ CONST
     Desc { "load_static_link", Op.load_static_link }, 
     Desc { "comment", Op.comment },
 
+    Desc { "store_ordered", Op.store_ordered },
+    Desc { "load_ordered", Op.load_ordered },
+    Desc { "exchange", Op.exchange },
+    Desc { "compare_exchange", Op.compare_exchange },
+    Desc { "fence", Op.fence },
     Desc { "fetch_and_add", Op.fetch_and_add },
     Desc { "fetch_and_sub", Op.fetch_and_sub },
     Desc { "fetch_and_or", Op.fetch_and_or },
     Desc { "fetch_and_and", Op.fetch_and_and },
-    Desc { "fetch_and_xor", Op.fetch_and_xor },
-    Desc { "fetch_and_nand", Op.fetch_and_nand },
-    Desc { "add_and_fetch", Op.add_and_fetch },
-    Desc { "sub_and_fetch", Op.sub_and_fetch },
-    Desc { "or_and_fetch", Op.or_and_fetch },
-    Desc { "and_and_fetch", Op.and_and_fetch },
-    Desc { "xor_and_fetch", Op.xor_and_fetch },
-    Desc { "nand_and_fetch", Op.nand_and_fetch },
-    Desc { "bool_compare_and_swap", Op.bool_compare_and_swap },
-    Desc { "val_compare_and_swap", Op.val_compare_and_swap },
-    Desc { "synchronize", Op.synchronize },
-    Desc { "lock_test_and_set", Op.lock_test_and_set },
-    Desc { "lock_release", Op.lock_release }
+    Desc { "fetch_and_xor", Op.fetch_and_xor }
   };
 
 PROCEDURE Out (a, b, c, d, e, f, g : TEXT := NIL) =
