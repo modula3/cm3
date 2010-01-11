@@ -405,7 +405,7 @@ PROCEDURE Import(p: Pathname.T;
       rf := NEW(T).init();
       rf.buf := UnixMisc.MapFile(p, statbuf);
       rf.attr := FileAttr.FromStat(statbuf);
-      rf.len := ORD(statbuf.st_size);
+      rf.len := VAL(statbuf.st_size, INTEGER);
       rf.start := rf.buf;
       rf.limit := rf.start + rf.len;
       rf.ptr := rf.limit;  (* Already at "end of file". *)
@@ -574,7 +574,7 @@ PROCEDURE OpenReadonly(p: Pathname.T): T
     rf := NEW(T).init();
     rf.buf := UnixMisc.MapFile(p, statbuf);
     rf.attr := FileAttr.FromStat(statbuf);
-    rf.len := ORD(statbuf.st_size);
+    rf.len := VAL(statbuf.st_size, INTEGER);
     rf.start := rf.buf;
     rf.ptr := rf.start;
     rf.limit := rf.start + rf.len;

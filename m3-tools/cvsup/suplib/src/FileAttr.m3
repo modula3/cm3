@@ -152,7 +152,7 @@ PROCEDURE Decode(t: TEXT): T
       SetFlags(fa, ScanInt(t, pos, FlagsRadix, "flags"));
     END;
     IF AttrType.LinkCount IN fa.mask THEN
-      fa.stat.st_nlink := VAL(ScanInt(t, pos, LinkCountRadix, "linkCount"), nlink_t);
+      fa.stat.st_nlink := ScanLong(t, pos, LinkCountRadix, "linkCount");
     ELSE
       (* If the link count is missing but supported, fake it as 1. *)
       IF AttrType.LinkCount IN Supported[fa.fileType] THEN
@@ -234,7 +234,7 @@ PROCEDURE Encode(fa: T;
       IF fa.stat.st_nlink = VAL(1, nlink_t) THEN
 	mask := mask - AttrTypes{AttrType.LinkCount};
       ELSE
-	EncodeCounted(Fmt.Unsigned(ORD(fa.stat.st_nlink), LinkCountRadix),
+	EncodeCounted(Fmt.LongUnsigned(fa.stat.st_nlink, LinkCountRadix),
 	  pieces, nextPiece);
       END;
     END;
@@ -305,6 +305,47 @@ PROCEDURE ScanText(t: TEXT; VAR pos: CARDINAL): TEXT
     RETURN at;
   END ScanText;
 
+PROCEDURE ScanInt(t: TEXT;
+                  VAR pos: CARDINAL;
+                  radix: [2..16] := 10;
+                  what: TEXT := "counted integer"): Word.T
+  RAISES {TokScan.Error} =
+  VAR
+    tLen := Text.Length(t);
+    count, val: Word.T := 0;
+    ch: CHAR;
+    digit: INTEGER;
+  BEGIN
+    WHILE pos < tLen DO
+      ch := Text.GetChar(t, pos);
+      INC(pos);
+      IF ch < '0' OR ch > '9' THEN EXIT END;
+      count := Word.Plus(Word.Times(count, 10), ORD(ch) - ORD('0'));
+    END;
+    IF pos >= tLen OR ch # '#' THEN
+      RAISE TokScan.Error("Missing \"#\" in " & what);
+    END;
+    IF pos + count > tLen THEN
+      RAISE TokScan.Error("Short counted file attribute");
+    END;
+    FOR i := 1 TO count DO
+      ch := Text.GetChar(t, pos);
+      INC(pos);
+      CASE ch OF
+      | '0'..'9' => digit := ORD(ch) - ORD('0');
+      | 'a'..'f' => digit := ORD(ch) - ORD('a') + 10;
+      | 'A'..'F' => digit := ORD(ch) - ORD('A') + 10;
+      ELSE
+	digit := radix;
+      END;
+      IF digit >= radix THEN
+	RAISE TokScan.Error("Invalid " & what);
+      END;
+      val := Word.Plus(Word.Times(val, radix), digit);
+    END;
+    RETURN val;
+  END ScanInt;
+
 PROCEDURE ScanLong(t: TEXT;
                   VAR pos: CARDINAL;
                   radix: [2..16] := 10;
@@ -346,15 +387,6 @@ PROCEDURE ScanLong(t: TEXT;
     END;
     RETURN val;
   END ScanLong;
-
-PROCEDURE ScanInt(t: TEXT;
-                  VAR pos: CARDINAL;
-                  radix: [2..16] := 10;
-                  what: TEXT := "counted integer"): Word.T
-  RAISES {TokScan.Error} =
-  BEGIN
-    RETURN ORD(ScanLong(t, pos, radix, what));
-  END ScanInt;
 
 PROCEDURE IsSupported(fa: T; READONLY support: SupportInfo): BOOLEAN =
   BEGIN
@@ -760,7 +792,7 @@ PROCEDURE Install(fa: T; to: Pathname.T; from: Pathname.T := NIL): BOOLEAN
 	  times: ARRAY [0..1] OF Utime.struct_timeval;
 	BEGIN
 	  EVAL Utime.gettimeofday(times[0]);  (* Access time. *)
-	  times[1].tv_sec := ORD(fa.stat.st_mtime);
+	  times[1].tv_sec := VAL(fa.stat.st_mtime, INTEGER);
 	  times[1].tv_usec := 0;
 	  EVAL Unix.utimes(fromStr, ADR(times));
 	END;
@@ -865,7 +897,7 @@ PROCEDURE GetModTime(fa: T): Time.T =
 PROCEDURE GetSize(fa: T): CARDINAL =
   BEGIN
     <* ASSERT AttrType.Size IN fa.mask *>
-    RETURN ORD(fa.stat.st_size);
+    RETURN VAL(fa.stat.st_size, CARDINAL);
   END GetSize;
 
 PROCEDURE SetSize(fa: T; size: CARDINAL) =
@@ -896,7 +928,7 @@ PROCEDURE GetLinkTarget(fa: T): Pathname.T =
 PROCEDURE GetLinkCount(fa: T): CARDINAL =
   BEGIN
     <* ASSERT AttrType.LinkCount IN fa.mask *>
-    RETURN ORD(fa.stat.st_nlink);
+    RETURN VAL(fa.stat.st_nlink, CARDINAL);
   END GetLinkCount;
 
 (*****************************************************************************)
@@ -997,8 +1029,7 @@ PROCEDURE DecodeGroup(name: TEXT; VAR gid: Utypes.gid_t): BOOLEAN
   END DecodeGroup;
 
 PROCEDURE EncodeGroup(gid: Utypes.gid_t; VAR name: TEXT): BOOLEAN =
-  VAR group: Ugrp.struct_group;
-	  tName: TEXT;
+  VAR group: Ugrp.struct_group;  tName: TEXT;
   BEGIN
     LOCK gidLock DO
       BEGIN
