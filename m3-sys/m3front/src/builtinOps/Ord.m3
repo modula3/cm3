@@ -9,52 +9,26 @@
 MODULE Ord;
 
 IMPORT CallExpr, Expr, ExprRep, Type, Procedure, Int, LInt, Error;
-IMPORT IntegerExpr, EnumExpr, CheckExpr, Target, TInt, CG;
+IMPORT IntegerExpr, EnumExpr, Target;
 
 VAR Z: CallExpr.MethodList;
 
-PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
-  VAR e := ce.args[0];  t := Expr.TypeOf (e);
-      emin, emax: Target.Int;
+PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
+  VAR t: Type.T;
   BEGIN
+    t := Expr.TypeOf (ce.args[0]);
     IF NOT Type.IsOrdinal (t) THEN
       Error.Msg ("ORD: argument must be an ordinal");
     END;
-    ce.type := Int.T;
-    IF Type.IsSubtype (t, LInt.T) AND ce.type = Int.T THEN
-      (* must bound check the result *)
-      Expr.GetBounds (e, emin, emax);
-      IF TInt.LT (emin, Target.Integer.min) THEN
-        (* we need a lower bound check *)
-        IF TInt.LT (Target.Integer.max, emax) THEN
-          (* we also need an upper bound check *)
-          e := CheckExpr.New (e, Target.Integer.min, Target.Integer.max,
-                              CG.RuntimeError.ValueOutOfRange);
-          Expr.TypeCheck (e, cs);
-          ce.args[0] := e;
-        ELSE
-          e := CheckExpr.NewLower (e, Target.Integer.min,
-                                   CG.RuntimeError.ValueOutOfRange);
-          Expr.TypeCheck (e, cs);
-          ce.args[0] := e;
-        END;
-      ELSIF TInt.LT (Target.Integer.max, emax) THEN
-        (* we need an upper bound check *)
-        e := CheckExpr.NewUpper (e, Target.Integer.max,
-                                 CG.RuntimeError.ValueOutOfRange);
-        Expr.TypeCheck (e, cs);
-        ce.args[0] := e;
-      END;
+    IF Type.IsSubtype (t, LInt.T)
+      THEN ce.type := LInt.T;
+      ELSE ce.type := Int.T;
     END;
   END Check;
 
 PROCEDURE Compile (ce: CallExpr.T) =
-  VAR e := ce.args[0];  t := Expr.TypeOf (e);
   BEGIN
-    Expr.Compile (e);
-    IF Type.IsSubtype (t, LInt.T) THEN
-      CG.Loophole (Target.Longint.cg_type, Target.Integer.cg_type);
-    END;
+    Expr.Compile (ce.args[0]);
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
@@ -66,18 +40,15 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     ELSIF EnumExpr.Split (e, i, t) THEN
       RETURN IntegerExpr.New (Int.T, i);
     ELSIF IntegerExpr.Split (e, i, t) THEN
-      RETURN IntegerExpr.New (Int.T, i);
+      RETURN IntegerExpr.New (t, i);
     ELSE
       RETURN NIL;
     END;
   END Fold;
 
 PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
-  VAR e := ce.args[0];
   BEGIN
-    Expr.GetBounds (e, min, max);
-    IF TInt.LT (min, Target.Integer.min) THEN min := Target.Integer.min END;
-    IF TInt.LT (Target.Integer.max, max) THEN max := Target.Integer.max END;
+    Expr.GetBounds (ce.args[0], min, max);
   END GetBounds;
 
 PROCEDURE Initialize () =
