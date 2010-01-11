@@ -26,10 +26,14 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   VAR t, u: Type.T;  mint, maxt, minu, maxu: Target.Int;
   BEGIN
     u := Expr.TypeOf (ce.args[0]);
-    t := Int.T;
-    IF NOT Type.IsSubtype (u, Int.T) THEN
-      Error.Msg ("VAL: first argument must be an INTEGER");
-    ELSIF NOT TypeExpr.Split (ce.args[1], t) THEN
+    IF Type.IsSubtype (u, LInt.T) THEN
+      t := LInt.T;
+    ELSIF Type.IsSubtype (u, Int.T) THEN
+      t := Int.T
+    ELSE
+      Error.Msg ("VAL: first argument must be an integer");
+    END;
+    IF NOT TypeExpr.Split (ce.args[1], t) THEN
       Error.Msg ("VAL: second argument must be a type");
     ELSIF NOT Type.IsOrdinal (t) THEN
       Error.Msg ("VAL: second argument must be an ordinal type");
@@ -64,12 +68,21 @@ PROCEDURE Prep (ce: CallExpr.T) =
   END Prep;
 
 PROCEDURE Compile (ce: CallExpr.T) =
-  VAR t: Type.T;
+  VAR t, u: Type.T;
   BEGIN
+    u := Expr.TypeOf (ce.args[0]);
     IF TypeExpr.Split (ce.args[1], t) THEN Type.Compile (t) END;
     Expr.Compile (ce.args[0]);
     IF Type.IsSubtype (t, LInt.T) THEN
-      CG.Loophole (Target.Integer.cg_type, Target.Longint.cg_type);
+      (* definitely not an enumeration *)
+      IF Type.IsSubtype (u, Int.T) THEN
+        CG.Loophole (Target.Integer.cg_type, Target.Longint.cg_type);
+      END;
+    ELSE
+      (* base type Int.T or enumeration *)
+      IF Type.IsSubtype (u, LInt.T) THEN
+        CG.Loophole (Target.Longint.cg_type, Target.Integer.cg_type);
+      END;
     END;
   END Compile;
 
