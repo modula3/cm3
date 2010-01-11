@@ -52,8 +52,8 @@ type or traced reference type.
 
 <A NAME=idx.200>
 <PRE>
-              ORD  (element: Ordinal): INTEGER
-              VAL  (i: INTEGER; T: OrdinalType): T
+              ORD  (element: Ordinal): Integer
+              VAL  (i: Integer; T: OrdinalType): T
 </PRE>
 </A>
 <TT>ORD</TT> converts an element of an enumeration to the integer that
@@ -71,8 +71,7 @@ not the subrange.  It is a checked runtime error for the value
 of <TT>i</TT> to be out of range for <TT>T</TT>.  
 <P>
 
-If <TT>n</TT> is an integer, <TT>ORD(n) = VAL(n, INTEGER) = n</TT>.
-Similarly, <TT>ORD(VAL(n, LONGINT)) = n</TT>.
+If <TT>n</TT> is an integer of type T, <TT>ORD(n) = VAL(n, T) = n</TT>.
 <P>
 
 <A NAME=idx.201>
