@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: RsyncFile.m3,v 1.2 2009-04-09 19:22:35 jkrell Exp $ *)
+ * $Id: RsyncFile.m3,v 1.3 2010-01-11 20:05:38 hosking Exp $ *)
 
 UNSAFE MODULE RsyncFile;
 
@@ -143,7 +143,7 @@ PROCEDURE Open(p: Pathname.T;
     rf := NEW(T);
     rf.buf := UnixMisc.MapFile(p, statbuf);
     rf.attr := FileAttr.FromStat(statbuf);
-    rf.size := ORD(statbuf.st_size);
+    rf.size := VAL(statbuf.st_size, INTEGER);
     rf.start := rf.buf;
     rf.limit := rf.start + rf.size;
 

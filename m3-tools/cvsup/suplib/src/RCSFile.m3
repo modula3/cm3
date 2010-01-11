@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: RCSFile.m3,v 1.2 2009-04-09 19:22:35 jkrell Exp $ *)
+ * $Id: RCSFile.m3,v 1.3 2010-01-11 20:05:38 hosking Exp $ *)
 
 UNSAFE MODULE RCSFile;
 
@@ -405,7 +405,7 @@ PROCEDURE Import(p: Pathname.T;
       rf := NEW(T).init();
       rf.buf := UnixMisc.MapFile(p, statbuf);
       rf.attr := FileAttr.FromStat(statbuf);
-      rf.len := ORD(statbuf.st_size);
+      rf.len := VAL(statbuf.st_size, INTEGER);
       rf.start := rf.buf;
       rf.limit := rf.start + rf.len;
       rf.ptr := rf.limit;  (* Already at "end of file". *)
@@ -574,7 +574,7 @@ PROCEDURE OpenReadonly(p: Pathname.T): T
     rf := NEW(T).init();
     rf.buf := UnixMisc.MapFile(p, statbuf);
     rf.attr := FileAttr.FromStat(statbuf);
-    rf.len := ORD(statbuf.st_size);
+    rf.len := VAL(statbuf.st_size, INTEGER);
     rf.start := rf.buf;
     rf.ptr := rf.start;
     rf.limit := rf.start + rf.len;
