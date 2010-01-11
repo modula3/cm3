@@ -25,7 +25,7 @@ PROCEDURE New_value(i: IntType.T): T RAISES {} =
   BEGIN
     IF VAL(FIRST(small), IntType.T) <= i
       AND i <= VAL(LAST(small), IntType.T) THEN
-      WITH result = small[ORD(i)] DO
+      WITH result = small[VAL(i, INTEGER)] DO
         IF result = NIL THEN result := NEW(T, sm_value := i) END;
         RETURN result;
       END;
