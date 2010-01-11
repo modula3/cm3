@@ -2611,7 +2611,7 @@ The argument to an operation can be required to have a type in a particular
 class, such as an ordinal type, set type, etc.  In this case the formal
 specifies a type class instead of a type.  For example:
 \begin{verbatim}
-    ORD (x: Ordinal): INTEGER
+    ORD (x: Ordinal): Integer
 \end{verbatim}
 The formal type \verb|Any| specifies an argument of any type.
 
@@ -3264,8 +3264,7 @@ within \verb|T|, not within the subrange.
 \verb|i| in the original enumeration type, not the subrange.  It is a checked
 runtime error for the value of \verb|i| to be out of range for \verb|T|.
 
-If \verb|n| is an integer, \verb|ORD(n) = VAL(n, INTEGER) = n|.  Similarly,
-\verb|ORD(VAL(n, LONGINT)) = n|.
+If \verb|n| is an integer of type \verb|T|, \verb|ORD(n) = VAL(n, T) = n|.
 
 \begin{quote}
   \begin{tabbing}
