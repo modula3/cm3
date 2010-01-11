@@ -126,7 +126,7 @@ PROCEDURE FromLongInt (
 
       (* convert the bulk of the digits *)
       WHILE (value > 0L) DO
-        result [nDigits] := Digits [ORD(value MOD VAL(base, LONGINT))];
+        result [nDigits] := Digits [VAL(value MOD VAL(base, LONGINT), INTEGER)];
         value := value DIV VAL(base, LONGINT);
         INC (nDigits);
       END;
@@ -230,7 +230,7 @@ PROCEDURE FromLongUnsigned (
     ELSE
       (* convert the bulk of the digits *)
       WHILE (value # 0L) DO
-        result [nDigits] := Digits [ORD(Long.Mod (value, VAL(base, LONGINT)))];
+        result [nDigits] := Digits [VAL(Long.Mod (value, VAL(base, LONGINT)), INTEGER)];
         value := Long.Divide (value, VAL(base, LONGINT));
         INC (nDigits);
       END;
