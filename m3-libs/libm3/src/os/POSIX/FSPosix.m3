@@ -337,7 +337,7 @@ PROCEDURE CStatus(s: Ctypes.char_star; VAR status: File.Status): INTEGER =
     status.type := FilePosix.FileTypeFromStatbuf(statBuf);
     (* Could make following assignments conditional on type: *)
     status.modificationTime := FLOAT(statBuf.st_mtime, LONGREAL);
-    status.size := ORD(statBuf.st_size);
+    status.size := VAL(statBuf.st_size, INTEGER);
     IF status.size < 0 THEN RETURN -1 END;
     RETURN 0
   END CStatus;

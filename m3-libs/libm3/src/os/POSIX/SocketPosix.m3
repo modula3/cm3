@@ -75,7 +75,7 @@ PROCEDURE Status (t: T): File.Status
     IF Ustat.fstat (t.fd, ADR (statBuf)) < 0 THEN IOError (Unexpected); END;
     status.type             := FileType;
     status.modificationTime := FLOAT (statBuf.st_mtime, LONGREAL);
-    status.size             := ORD(statBuf.st_size);
+    status.size             := VAL(statBuf.st_size, INTEGER);
     IF status.size < 0 THEN IOError (Unexpected); END;
     RETURN status
   END Status;  

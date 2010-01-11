@@ -81,7 +81,7 @@ PROCEDURE AnyUnsigned (n: Word.T; base: Base := 10): TEXT =
 PROCEDURE LongInt(n: LONGINT; base: Base := 10): TEXT =
   BEGIN
     IF VAL(FIRST(SmallInts), LONGINT) <= n AND n <= VAL(LAST(SmallInts), LONGINT) AND base = 10
-      THEN RETURN SmallInts[ORD(n)]
+      THEN RETURN SmallInts[VAL(n, INTEGER)]
       ELSE RETURN AnyLongInt(n, base)
     END
   END LongInt;
@@ -96,7 +96,7 @@ PROCEDURE AnyLongInt (n: LONGINT; base: Base := 10): TEXT =
 PROCEDURE LongUnsigned (n: Long.T; base: Base := 10): TEXT =
   BEGIN
     IF 0L <= n AND n <= VAL(LAST(SmallInts), LONGINT) AND base = 10
-      THEN RETURN SmallInts[ORD(n)]
+      THEN RETURN SmallInts[VAL(n, INTEGER)]
       ELSE RETURN AnyLongUnsigned (n, base)
     END
   END LongUnsigned;
