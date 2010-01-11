@@ -621,7 +621,7 @@ PROCEDURE ConvertOrdinal_C(
         IF iv.sm_value > VAL(LAST(INTEGER), LONGINT) THEN
           RETURN M3CBackEnd.NumStatus.Overflow;
         END;
-        er := M3CBackEnd_Int_Integer.New_value(ORD(iv.sm_value));
+        er := M3CBackEnd_Int_Integer.New_value(VAL(iv.sm_value, INTEGER));
       END;
     END;
     RETURN M3CBackEnd.NumStatus.Valid;
