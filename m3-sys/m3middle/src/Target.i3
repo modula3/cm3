@@ -312,6 +312,12 @@ PROCEDURE ConventionFromID (id: INTEGER): CallingConvention;
           and exit_proc methods are called with t=Struct.
 *)
 
+(*--------------------------------------------------------------- atomics ---*)
+
+VAR (*CONST*)
+  Atomic_lock_free: ARRAY [CGType.Word8..CGType.Addr] OF BOOLEAN;
+  (* TRUE => platform has lock-free atomic primitives for this type *)
+
 (*--------------------------------------------------- misc. configuration ---*)
 
 (* sizes are specified in bits *)

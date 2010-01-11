@@ -14,6 +14,7 @@ FROM M3CG IMPORT Name, ByteOffset, CallingConvention;
 FROM M3CG IMPORT ByteSize, Alignment, Frequency, RuntimeError;
 FROM M3CG IMPORT Var, Proc, Label, Sign, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
+FROM M3CG IMPORT MemoryOrder;
 
 TYPE (* stack data types *)
   ST = { Addr, Int32, Int64, Reel, LReel, XReel, Void,
@@ -160,13 +161,12 @@ TYPE
         pop_static_link := pop_static_link;
         load_procedure := load_procedure;
         load_static_link := load_static_link;
+        store_ordered := store_ordered;
+        load_ordered := load_ordered;
+        exchange := exchange;
+        compare_exchange := compare_exchange;
+        fence := fence;
         fetch_and_op := fetch_and_op;
-        op_and_fetch := op_and_fetch;
-        bool_compare_and_swap := bool_compare_and_swap;
-        val_compare_and_swap := val_compare_and_swap;
-        synchronize := synchronize;
-        lock_test_and_set := lock_test_and_set;
-        lock_release := lock_release;
       END;
         
 
@@ -1320,51 +1320,69 @@ PROCEDURE load_static_link (self: U;  p: Proc) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE fetch_and_op (self: U;  op: AtomicOp;  t: MType) =
+PROCEDURE store_ordered (self: U;  z: ZType;  t: MType;  order: MemoryOrder) =
   BEGIN
+    IF NOT LegalStore [z, t] THEN PutErr (self, "illegal store conversion"); END;
+    CASE order OF
+    | MemoryOrder.Acquire, MemoryOrder.AcquireRelease =>
+      PutErr (self, "illegal store memory order");
+    ELSE (* ok *) END;
+    self.s_pop (T_to_ST [z], ST.Addr);
+    IF (self.clean_stores) THEN self.s_empty () END;
+    self.child.store_ordered (z, t, order);
+  END store_ordered;
+
+PROCEDURE load_ordered (self: U;  t: MType;  z: ZType;
+                        order: MemoryOrder) =
+  BEGIN
+    IF NOT LegalLoad [t, z] THEN PutErr (self, "illegal load conversion"); END;
+    CASE order OF
+    | MemoryOrder.Release, MemoryOrder.AcquireRelease =>
+      PutErr (self, "illegal load memory order");
+    ELSE (* ok *) END;
     self.s_pop (ST.Addr);
-    self.s_push (t);
-    self.child.fetch_and_op (op, t);
+    self.s_push (z);
+    self.child.load_ordered (t, z, order);
+  END load_ordered;
+
+PROCEDURE exchange (self: U;  m: MType;  z: ZType;  order: MemoryOrder) =
+  BEGIN
+    IF NOT LegalStore [z, m] THEN PutErr (self, "illegal store conversion"); END;
+    IF NOT LegalLoad  [m, z] THEN PutErr (self, "illegal load conversion");  END;
+    self.s_pop (T_to_ST [z], ST.Addr);
+    self.s_push (z);
+    self.child.exchange (m, z, order);
+  END exchange;
+
+PROCEDURE compare_exchange (self: U;  m: MType;  z: ZType;  i: IType;
+                            success, failure: MemoryOrder) =
+  BEGIN
+    IF NOT LegalStore [z, m] THEN PutErr (self, "illegal store conversion"); END;
+    IF NOT LegalLoad  [m, z] THEN PutErr (self, "illegal load conversion");  END;
+    CASE failure OF
+    | MemoryOrder.Release, MemoryOrder.AcquireRelease =>
+      PutErr (self, "illegal load memory order");
+    ELSE (* ok *) END;
+    IF failure > success THEN PutErr (self, "failure stronger than success"); END;
+    self.s_pop (T_to_ST [z], ST.Addr, ST.Addr);
+    self.s_push (i);
+    self.child.compare_exchange (m, z, i, success, failure);
+  END compare_exchange;
+
+PROCEDURE fence (self: U;  order: MemoryOrder) = 
+  BEGIN
+    self.child.fence (order);
+  END fence;
+
+PROCEDURE fetch_and_op (self: U;  op: AtomicOp;  m: MType;  z: ZType;
+                        order: MemoryOrder) =
+  BEGIN
+    IF NOT LegalStore [z, m] THEN PutErr (self, "illegal store conversion"); END;
+    IF NOT LegalLoad  [m, z] THEN PutErr (self, "illegal load conversion");  END;
+    self.s_pop (T_to_ST[z], ST.Addr);
+    self.s_push (z);
+    self.child.fetch_and_op (op, m, z, order);
   END fetch_and_op;
-
-PROCEDURE op_and_fetch (self: U;  op: AtomicOp;  t: MType) =
-  BEGIN
-    self.s_pop (ST.Addr);
-    self.s_push (t);
-    self.child.op_and_fetch (op, t);
-  END op_and_fetch;
-
-PROCEDURE bool_compare_and_swap (self: U;  t: MType;  u: IType) =
-  BEGIN
-    self.s_pop (T_to_ST [t], ST.Match, ST.Addr);
-    self.s_push (u);
-    self.child.bool_compare_and_swap (t, u);
-  END bool_compare_and_swap;
-
-PROCEDURE val_compare_and_swap (self: U;  t: MType) =
-  BEGIN
-    self.s_pop (T_to_ST [t], ST.Match, ST.Addr);
-    self.s_push (t);
-    self.child.val_compare_and_swap (t);
-  END val_compare_and_swap;
-
-PROCEDURE synchronize (self: U) =
-  BEGIN
-    self.child.synchronize ();
-  END synchronize;
-
-PROCEDURE lock_test_and_set (self: U;  t: MType) =
-  BEGIN
-    self.s_pop (T_to_ST [t], ST.Addr);
-    self.s_push (t);
-    self.child.lock_test_and_set (t);
-  END lock_test_and_set;
-
-PROCEDURE lock_release (self: U;  t: MType) =
-  BEGIN
-    self.s_pop (ST.Addr);
-    self.child.lock_release (t);
-  END lock_release;
 
 BEGIN
 END M3CG_Check.
