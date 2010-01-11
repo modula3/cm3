@@ -589,7 +589,7 @@ PROCEDURE Ord_C(
         IF iv.sm_value > VAL(LAST(INTEGER), LONGINT) THEN
           RETURN M3CBackEnd.NumStatus.Overflow;
         END;
-        i := ORD(iv.sm_value);
+        i := VAL(iv.sm_value, INTEGER);
         RETURN M3CBackEnd.NumStatus.Valid;
     END;
   END Ord_C;
