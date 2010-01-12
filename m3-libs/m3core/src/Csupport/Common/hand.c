@@ -61,6 +61,10 @@ int __cdecl m3_add(int a, int b, int* overflow)
 {
   int c = (a + b);
   int asign = (a < 0);
+  /* positive + positive: expect positive
+     negative + negative: expect negative
+     positive + negative: cannot overflow
+     overflow if input signs equal and output doesn't match them*/
   *overflow |= (asign == (b < 0) && asign != (c < 0));
   return c;
 }
@@ -69,6 +73,10 @@ int64 __cdecl m3_add_64(int64 a, int64 b, int* overflow)
 {
   int64 c = (a + b);
   int asign = (a < 0);
+  /* positive + positive: expect positive
+     negative + negative: expect negative
+     positive + negative: cannot overflow
+     overflow if input signs equal and output doesn't match them*/
   *overflow |= (asign == (b < 0) && asign != (c < 0));
   return c;
 }
@@ -77,6 +85,11 @@ int __cdecl m3_sub(int a, int b, int* overflow)
 {
   int c = (a - b);
   int asign = (a < 0);
+  /* positive - positive: cannot overflow
+     negative - negative: cannot overflow
+     positive - negative: expect positive
+     negative - positive: expect negative
+     overflow if input signs vary and output doesn't match first input*/
   *overflow |= (asign != (b < 0) && asign != (c < 0));
   return c;
 }
@@ -85,12 +98,18 @@ int64 __cdecl m3_sub_64(int64 a, int64 b, int* overflow)
 {
   int64 c = (a - b);
   int asign = (a < 0);
+  /* positive - positive: cannot overflow
+     negative - negative: cannot overflow
+     positive - negative: expect positive
+     negative - positive: expect negative
+     overflow if input signs vary and output doesn't match first input*/
   *overflow |= (asign != (b < 0) && asign != (c < 0));
   return c;
 }
 
 int __cdecl m3_mult(int a, int b, int* overflow)
 {
+  /* do work in higher precision and range check result */
   int64 c = (a * (int64)b);
   *overflow |= (c < INT_MIN || c > INT_MAX);
   return (int)c;
@@ -99,6 +118,7 @@ int __cdecl m3_mult(int a, int b, int* overflow)
 uint __cdecl m3_add_u(uint a, uint b, int* overflow)
 {
   uint c = (a + b);
+  /* overflow if output less than either input */
   *overflow |= (c < a);
   return c;
 }
@@ -106,6 +126,7 @@ uint __cdecl m3_add_u(uint a, uint b, int* overflow)
 uint64 __cdecl m3_add_u64(uint64 a, uint64 b, int* overflow)
 {
   uint64 c = (a + b);
+  /* overflow if output less than either input */
   *overflow |= (c < a);
   return c;
 }
@@ -113,6 +134,7 @@ uint64 __cdecl m3_add_u64(uint64 a, uint64 b, int* overflow)
 uint __cdecl m3_sub_u(uint a, uint b, int* overflow)
 {
   uint c = (a - b);
+  /* overflow if output greater than first input */
   *overflow |= (c > a);
   return c;
 }
@@ -120,12 +142,14 @@ uint __cdecl m3_sub_u(uint a, uint b, int* overflow)
 uint64 __cdecl m3_sub_u64(uint64 a, uint64 b, int* overflow)
 {
   uint64 c = (a - b);
+  /* overflow if output greater than first input */
   *overflow |= (c > a);
   return c;
 }
 
 uint __cdecl m3_mult_u(uint a, uint b, int* overflow)
 {
+  /* do work in higher precision and range check result */
   uint64 c = (a * (uint64)b);
   *overflow |= (c > UINT_MAX);
   return (uint)c;
@@ -133,6 +157,15 @@ uint __cdecl m3_mult_u(uint a, uint b, int* overflow)
 
 uint64 __cdecl m3_mult_u64(uint64 a, uint64 b, int* overflow)
 {
+  /* break it down into smaller steps
+  hi(x) = x >> 32
+  lo(x) = (uint32)x
+  result =    (hi(a) * hi(b)) << 64
+            + (hi(a) * lo(b)) << 32
+            + (lo(a) * hi(b)) << 32
+            + (a * b)
+  checking for overflow on the additions and shifts
+  */
   uint32 ahi;
   uint32 alo;
   uint32 bhi;
@@ -174,11 +207,15 @@ static uint64 m3_abs64(int64 a)
 
 int64 __cdecl m3_mult_64(int64 a, int64 b, int* overflow)
 {
+  /* do the unsigned operation on the magnitudes
+    overflow if it overflows
+    range check result for smaller signed range,
+    figuring the range based on the input signs */
   const uint64 max = (~(uint64)0) >> 1;
   const uint64 min = ~max;
   uint64 c;
   int64 result = a * b;
-    
+
   if (*overflow)
     return result;
 
