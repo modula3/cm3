@@ -9,6 +9,14 @@
 #include <limits.h>
 #include <string.h>
 
+#if defined(LLONG_MIN) && !defined(INT64_MIN)
+#define INT64_MIN LLONG_MIN
+#endif
+
+#if defined(LLONG_MAX) && !defined(INT64_MAX)
+#define INT64_MAX LLONG_MAX
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {           
@@ -211,8 +219,6 @@ int64 __cdecl m3_mult_64(int64 a, int64 b, int* overflow)
     overflow if it overflows
     range check result for smaller signed range,
     figuring the range based on the input signs */
-  const uint64 max = (~(uint64)0) >> 1;
-  const uint64 min = ~max;
   uint64 c;
   int64 result = a * b;
 
@@ -223,7 +229,7 @@ int64 __cdecl m3_mult_64(int64 a, int64 b, int* overflow)
   if (*overflow)
     return result;
   
-  *overflow |= (c > (((a < 0) == (b < 0)) ? max : min));
+  *overflow |= (c > (((a < 0) == (b < 0)) ? INT64_MAX : INT64_MIN));
   return result;
 }
 
