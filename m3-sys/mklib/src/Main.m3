@@ -283,7 +283,7 @@ PROCEDURE ScanFile (f: FileDesc) =
       file   := FS.OpenFileReadonly (f.name);
       stat   := file.status ();
       f.time := stat.modificationTime;
-      f.size := stat.size;
+      f.size := VAL(stat.size, INTEGER);
       IF (stat.type # RegularFile.FileType) THEN
         Die ("\"", f.name, "\" is not a regular file.");
       END;
