@@ -17,6 +17,8 @@
 #define INT64_MAX LLONG_MAX
 #endif
 
+typedef int BOOL;
+
 #ifdef __cplusplus
 extern "C"
 {           
@@ -65,10 +67,10 @@ typedef ulong uint32;
 #define KR(x) x
 #endif
 
-int __cdecl m3_add(int a, int b, int* overflow)
+int __cdecl m3_add(int a, int b, BOOL* overflow)
 {
   int c = (a + b);
-  int asign = (a < 0);
+  BOOL asign = (a < 0);
   /* positive + positive: expect positive
      negative + negative: expect negative
      positive + negative: cannot overflow
@@ -77,10 +79,10 @@ int __cdecl m3_add(int a, int b, int* overflow)
   return c;
 }
 
-int64 __cdecl m3_add_64(int64 a, int64 b, int* overflow)
+int64 __cdecl m3_add_64(int64 a, int64 b, BOOL* overflow)
 {
   int64 c = (a + b);
-  int asign = (a < 0);
+  BOOL asign = (a < 0);
   /* positive + positive: expect positive
      negative + negative: expect negative
      positive + negative: cannot overflow
@@ -89,10 +91,10 @@ int64 __cdecl m3_add_64(int64 a, int64 b, int* overflow)
   return c;
 }
 
-int __cdecl m3_sub(int a, int b, int* overflow)
+int __cdecl m3_sub(int a, int b, BOOL* overflow)
 {
   int c = (a - b);
-  int asign = (a < 0);
+  BOOL asign = (a < 0);
   /* positive - positive: cannot overflow
      negative - negative: cannot overflow
      positive - negative: expect positive
@@ -102,10 +104,10 @@ int __cdecl m3_sub(int a, int b, int* overflow)
   return c;
 }
 
-int64 __cdecl m3_sub_64(int64 a, int64 b, int* overflow)
+int64 __cdecl m3_sub_64(int64 a, int64 b, BOOL* overflow)
 {
   int64 c = (a - b);
-  int asign = (a < 0);
+  BOOL asign = (a < 0);
   /* positive - positive: cannot overflow
      negative - negative: cannot overflow
      positive - negative: expect positive
@@ -115,7 +117,7 @@ int64 __cdecl m3_sub_64(int64 a, int64 b, int* overflow)
   return c;
 }
 
-int __cdecl m3_mult(int a, int b, int* overflow)
+int __cdecl m3_mult(int a, int b, BOOL* overflow)
 {
   /* do work in higher precision and range check result */
   int64 c = (a * (int64)b);
@@ -123,7 +125,7 @@ int __cdecl m3_mult(int a, int b, int* overflow)
   return (int)c;
 }
 
-uint __cdecl m3_add_u(uint a, uint b, int* overflow)
+uint __cdecl m3_add_u(uint a, uint b, BOOL* overflow)
 {
   uint c = (a + b);
   /* overflow if output less than either input */
@@ -131,7 +133,7 @@ uint __cdecl m3_add_u(uint a, uint b, int* overflow)
   return c;
 }
 
-uint64 __cdecl m3_add_u64(uint64 a, uint64 b, int* overflow)
+uint64 __cdecl m3_add_u64(uint64 a, uint64 b, BOOL* overflow)
 {
   uint64 c = (a + b);
   /* overflow if output less than either input */
@@ -139,7 +141,7 @@ uint64 __cdecl m3_add_u64(uint64 a, uint64 b, int* overflow)
   return c;
 }
 
-uint __cdecl m3_sub_u(uint a, uint b, int* overflow)
+uint __cdecl m3_sub_u(uint a, uint b, BOOL* overflow)
 {
   uint c = (a - b);
   /* overflow if output greater than first input */
@@ -147,7 +149,7 @@ uint __cdecl m3_sub_u(uint a, uint b, int* overflow)
   return c;
 }
 
-uint64 __cdecl m3_sub_u64(uint64 a, uint64 b, int* overflow)
+uint64 __cdecl m3_sub_u64(uint64 a, uint64 b, BOOL* overflow)
 {
   uint64 c = (a - b);
   /* overflow if output greater than first input */
@@ -155,7 +157,7 @@ uint64 __cdecl m3_sub_u64(uint64 a, uint64 b, int* overflow)
   return c;
 }
 
-uint __cdecl m3_mult_u(uint a, uint b, int* overflow)
+uint __cdecl m3_mult_u(uint a, uint b, BOOL* overflow)
 {
   /* do work in higher precision and range check result */
   uint64 c = (a * (uint64)b);
@@ -163,7 +165,7 @@ uint __cdecl m3_mult_u(uint a, uint b, int* overflow)
   return (uint)c;
 }
 
-uint64 __cdecl m3_mult_u64(uint64 a, uint64 b, int* overflow)
+uint64 __cdecl m3_mult_u64(uint64 a, uint64 b, BOOL* overflow)
 {
   /* break it down into smaller steps
   hi(x) = x >> 32
@@ -213,7 +215,7 @@ static uint64 m3_abs64(int64 a)
   return (uint64)((a < 0) ? -a : a);
 }
 
-int64 __cdecl m3_mult_64(int64 a, int64 b, int* overflow)
+int64 __cdecl m3_mult_64(int64 a, int64 b, BOOL* overflow)
 {
   /* do the unsigned operation on the magnitudes
     overflow if it overflows
