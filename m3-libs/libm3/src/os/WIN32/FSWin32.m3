@@ -432,7 +432,7 @@ PROCEDURE Status(p: Pathname.T): File.Status RAISES {OSError.E} =
 PROCEDURE BuildStatus (READONLY ffd  : WinBase.WIN32_FIND_DATA;
                      VAR(*OUT*) stat : File.Status) =
   BEGIN
-    stat.size := ffd.nFileSizeLow;
+    stat.size := VAL(ffd.nFileSizeLow, LONGINT);
     stat.modificationTime := TimeWin32.FromFileTime(ffd.ftLastWriteTime);
     IF Word.And(ffd.dwFileAttributes, WinNT.FILE_ATTRIBUTE_DIRECTORY) # 0
       THEN stat.type := DirectoryFileType;

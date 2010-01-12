@@ -106,7 +106,7 @@ PROCEDURE FileStatus(h: File.T): File.Status  RAISES {OSError.E}=
         END;
         status.type := RegularFile.FileType;
         status.modificationTime := TimeWin32.FromFileTime(ffd.ftLastWriteTime);
-        status.size := ffd.nFileSizeLow
+        status.size := VAL(ffd.nFileSizeLow, LONGINT)
     | WinBase.FILE_TYPE_CHAR => status.type := Terminal.FileType
     | WinBase.FILE_TYPE_PIPE => status.type := Pipe.FileType
     | WinBase.FILE_TYPE_UNKNOWN => 

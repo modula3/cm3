@@ -70,7 +70,7 @@ PROCEDURE Seek (rd: T; pos: CARDINAL; dontBlock: BOOLEAN): RdClass.SeekResult
     TRY
       IF pos # rd.hi THEN
         IF NOT rd.seekable THEN RAISE Error; END;
-        IF pos > rd.cur THEN pos := MIN(pos, rd.sourceH.status().size) END;
+        IF pos > rd.cur THEN pos := MIN(pos, VAL(rd.sourceH.status().size, INTEGER)) END;
         EVAL NARROW(rd.sourceH, RegularFile.T).seek(
                             RegularFile.Origin.Beginning, pos);
         rd.cur := pos;
@@ -137,7 +137,7 @@ PROCEDURE Length(rd: T): INTEGER RAISES {Rd.Failure} =
   BEGIN
     TRY
       IF rd.seekable THEN
-        RETURN rd.sourceH.status().size;
+        RETURN VAL(rd.sourceH.status().size, INTEGER);
       ELSE
         RETURN -1;
       END

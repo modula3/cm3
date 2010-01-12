@@ -50,7 +50,7 @@ PROCEDURE Status (<*UNUSED*> t: T): File.Status =
   BEGIN
     status.modificationTime := 0.0d0;
     status.type := Terminal.FileType;
-    status.size := 0;
+    status.size := 0L;
     RETURN status;
   END Status;
 

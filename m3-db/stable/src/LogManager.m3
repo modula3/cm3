@@ -245,7 +245,7 @@ PROCEDURE EmptyLog (lm: Default; nm: Pathname.T): BOOLEAN
                   "no checkpointfile for log in " & nm)));
     END;
     log := lm.logfn(nm);
-    RETURN (NOT TestFile(log)) OR (FS.Status(log).size = 0);
+    RETURN (NOT TestFile(log)) OR (FS.Status(log).size = 0L);
   END EmptyLog;
 
 PROCEDURE Dispose (lm: Default; nm: Pathname.T) RAISES {OSError.E} =
