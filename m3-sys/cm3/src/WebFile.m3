@@ -60,16 +60,15 @@ PROCEDURE Inhale (): CharList =
     rd  : File.T;
     buf : CharList := NIL;
     len : INTEGER;
-    xxx : INTEGER;
   BEGIN
     IF Utils.LocalModTime (InfoFile) = Utils.NO_TIME THEN RETURN NIL END;
     rd  := Utils.OpenReader (InfoFile, fatal := FALSE);
     IF (rd = NIL) THEN RETURN NIL END;
     TRY
-      len := rd.status().size;
+      len := VAL(rd.status().size, INTEGER);
       IF (len > 0) THEN
         buf := NEW (CharList, len);
-        xxx := M3File.Read (rd, buf^, len);
+        EVAL M3File.Read (rd, buf^, len);
       END;
     EXCEPT OSError.E(ec) =>
       Msg.Error (ec, "unable to read ", InfoFile);

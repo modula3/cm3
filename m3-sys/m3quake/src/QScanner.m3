@@ -36,16 +36,16 @@ VAR
   AlphaNumeric := ARRAY CHAR OF BOOLEAN { FALSE, .. };
 
 PROCEDURE Init (t: T;  f: File.T;  map: Quake.IDMap): T =
-  VAR status: File.Status;
+  VAR size: INTEGER;
   BEGIN
     IF NOT init_done THEN InitTables () END;
 
     (* slurp the source into memory *)
     TRY
-      status := f.status ();
-      t.buffer := NEW (REF ARRAY OF CHAR, MAX (0, status.size) + 1);
-      t.buflen := M3File.Read (f, t.buffer^, status.size);
-      IF (t.buflen # status.size) THEN RETURN NIL; END;
+      size := VAL(f.status ().size, INTEGER);
+      t.buffer := NEW (REF ARRAY OF CHAR, MAX (0, size) + 1);
+      t.buflen := M3File.Read (f, t.buffer^, size);
+      IF (t.buflen # size) THEN RETURN NIL; END;
       t.buffer [t.buflen] := EOFChar;
     EXCEPT OSError.E => RETURN NIL;
     END;

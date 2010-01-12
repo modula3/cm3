@@ -89,7 +89,7 @@ PROCEDURE Seek(wr: T; n: CARDINAL) RAISES {Wr.Failure} =
       (* Maintains V4 -- we hope that on a seek failure the file
                          position is unchanged, ensuring Q1 *)
       IF n # wr.cur THEN
-        IF n > wr.cur THEN n := MIN(n, wr.targetH.status().size); END;
+        IF n > wr.cur THEN n := MIN(n, VAL(wr.targetH.status().size, INTEGER)); END;
         EVAL NARROW(wr.targetH, RegularFile.T).seek(
                      RegularFile.Origin.Beginning, n);
         wr.cur := n;
@@ -105,7 +105,7 @@ PROCEDURE Length(wr: T): CARDINAL RAISES {Wr.Failure} =
   BEGIN
     TRY
       IF wr.seekable THEN
-        RETURN MAX (wr.cur, wr.targetH.status().size);
+        RETURN MAX (wr.cur, VAL(wr.targetH.status().size, INTEGER));
       ELSE
         RETURN wr.cur;
       END
