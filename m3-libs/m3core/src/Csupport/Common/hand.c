@@ -18,24 +18,17 @@ extern "C"
 #define __cdecl /* nothing */
 #endif
 
-typedef unsigned char uchar;
-typedef signed char schar;
-typedef unsigned short ushort;
 typedef unsigned int uint;
 typedef unsigned long ulong;
 
 #if UCHAR_MAX == 0xffffffff
 typedef unsigned char uint32;
-typedef signed char int32;
 #elif USHRT_MAX == 0xffffffff
-typedef ushort uint32;
-typedef short int32;
+typedef unsigned short uint32;
 #elif UINT_MAX == 0xffffffff
 typedef uint uint32;
-typedef int int32;
 #elif ULONG_MAX == 0xffffffff
 typedef ulong uint32;
-typedef long int32;
 #else
 #error no 32 bit integer type
 #endif
@@ -63,6 +56,139 @@ typedef long int32;
 #define ANSI(x)
 #define KR(x) x
 #endif
+
+int __cdecl m3_add(int a, int b, int* overflow)
+{
+  int c = (a + b);
+  int asign = (a < 0);
+  *overflow |= (asign == (b < 0) && asign != (c < 0));
+  return c;
+}
+
+int64 __cdecl m3_add_64(int64 a, int64 b, int* overflow)
+{
+  int64 c = (a + b);
+  int asign = (a < 0);
+  *overflow |= (asign == (b < 0) && asign != (c < 0));
+  return c;
+}
+
+int __cdecl m3_sub(int a, int b, int* overflow)
+{
+  int c = (a - b);
+  int asign = (a < 0);
+  *overflow |= (asign != (b < 0) && asign != (c < 0));
+  return c;
+}
+
+int64 __cdecl m3_sub_64(int64 a, int64 b, int* overflow)
+{
+  int64 c = (a - b);
+  int asign = (a < 0);
+  *overflow |= (asign != (b < 0) && asign != (c < 0));
+  return c;
+}
+
+int __cdecl m3_mult(int a, int b, int* overflow)
+{
+  int64 c = (a * (int64)b);
+  *overflow |= (c < INT_MIN || c > INT_MAX);
+  return (int)c;
+}
+
+uint __cdecl m3_add_u(uint a, uint b, int* overflow)
+{
+  uint c = (a + b);
+  *overflow |= (c < a);
+  return c;
+}
+
+uint64 __cdecl m3_add_u64(uint64 a, uint64 b, int* overflow)
+{
+  uint64 c = (a + b);
+  *overflow |= (c < a);
+  return c;
+}
+
+uint __cdecl m3_sub_u(uint a, uint b, int* overflow)
+{
+  uint c = (a - b);
+  *overflow |= (c > a);
+  return c;
+}
+
+uint64 __cdecl m3_sub_u64(uint64 a, uint64 b, int* overflow)
+{
+  uint64 c = (a - b);
+  *overflow |= (c > a);
+  return c;
+}
+
+uint __cdecl m3_mult_u(uint a, uint b, int* overflow)
+{
+  uint64 c = (a * (uint64)b);
+  *overflow |= (c > UINT_MAX);
+  return (uint)c;
+}
+
+uint64 __cdecl m3_mult_u64(uint64 a, uint64 b, int* overflow)
+{
+  uint32 ahi;
+  uint32 alo;
+  uint32 bhi;
+  uint32 blo;
+  uint64 c;
+  uint64 result = a * b;
+
+  if (*overflow)
+    return result;
+
+  ahi = (uint32)(a >> 32);
+  bhi = (uint32)(b >> 32);
+
+  if (ahi && bhi)
+    goto ov;
+
+  alo = (uint32)a;
+  blo = (uint32)b;
+ 
+  c = m3_add_u64(alo * (uint64)bhi, ahi * (uint64)blo, overflow);
+  if (*overflow)
+    return result;
+
+  if ((c >> 32) != 0)
+    goto ov;
+
+  m3_add_u64(alo * (uint64)blo, c << 32, overflow);
+  return result;
+
+ov:
+  *overflow = 1;
+  return result;
+}
+
+static uint64 m3_abs64(int64 a)
+{
+  return (uint64)((a < 0) ? -a : a);
+}
+
+int64 __cdecl m3_mult_64(int64 a, int64 b, int* overflow)
+{
+  const uint64 max = (~(uint64)0) >> 1;
+  const uint64 min = ~max;
+  uint64 c;
+  int64 result = a * b;
+    
+  if (*overflow)
+    return result;
+
+  c = m3_mult_u64(m3_abs64(a), m3_abs64(b), overflow);
+  if (*overflow)
+    return result;
+  
+  *overflow |= (c > (((a < 0) == (b < 0)) ? max : min));
+  return result;
+}
 
 long __cdecl m3_div
     ANSI((      long b, long a))
