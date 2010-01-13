@@ -14,7 +14,27 @@ REM v1.07, 07/29/2009, R.Coleburn, repair bug introduced with prior round of edi
 REM v1.08, 08/02/2009, R.Coleburn, rename CM3_Pkg to CM3_Package to prevent overloaded use of CM3_Pkg with cm3SetupCmdEnv.cmd
 REM v1.10, 10/26/2009, R.Coleburn, adapt to work with new cm3CommandShell.CMD.
 REM v1.11, 10/29/2009, R.Coleburn, various optimizations
+REM v1.12, 01/12/2010, R.Coleburn, repair multiple bugs in "if defined xxx if exist %xxx% del %xxx%" construct
 REM ===========================================================================
+
+
+goto Welcome
+
+
+
+:FN_DelzTempFile
+:---------------
+if not defined _z_TempFile goto :EOF
+if exist %_z_TempFile% del %_z_TempFile%
+goto :EOF
+
+
+
+:FN_DelzErrLog
+:-------------
+if not defined _z_ErrLog goto :EOF
+if exist %_z_ErrLog% del %_z_ErrLog%
+goto :EOF
 
 
 
@@ -23,7 +43,7 @@ REM ===========================================================================
 REM Identify this script.
 echo.
 echo ====== ----------------------------------
-echo do-cm3, v1.11, 10/29/2009, Randy Coleburn
+echo do-cm3, v1.12, 01/12/2010, Randy Coleburn
 echo ====== ----------------------------------
 echo.
 
@@ -220,9 +240,9 @@ goto END
 :-------
 REM Create a tempory file containing the names of all packages to be processed.
 set _z_TempFile="%CD%\Temp%RANDOM%.txt"
-if defined _z_TempFile if exist %_z_TempFile% del %_z_TempFile%
+call :FN_DelzTempFile
 set _z_ErrLog="%CD%\Temp%RANDOM%ErrLog.txt"
-if defined _z_ErrLog if exist %_z_ErrLog% del %_z_ErrLog%
+call :FN_DelzErrLog
 echo CM3 ARGS = %_z_CM3Args%
 echo  PkgInfo = %_z_PkgInfo%
 echo Pkg Tree = %_z_PkgTree%
@@ -237,7 +257,9 @@ FOR /F "tokens=1* delims= " %%i in (%_z_PkgInfo%) do call :FN_CheckPkg %%i %%j
 echo.
 echo Packages to be processed:
 echo ------------------------
-if defined _z_TempFile if exist %_z_TempFile% type %_z_TempFile%
+if not defined _z_TempFile goto EOL_Prepare
+if exist %_z_TempFile% type %_z_TempFile%
+:EOL_Prepare
 echo ---END-of-List---
 echo.
 if /I "%_z_NoPause%"=="TRUE" goto DoIt
@@ -496,7 +518,7 @@ set _z_Answ=
 set _z_Arg=
 set _z_CM3Args=
 set _z_CM3Failure=
-if defined _z_ErrLog if exist %_z_ErrLog% del %_z_ErrLog%
+call :FN_DelzErrLog
 set _z_ErrLog=
 set _z_Group=
 set _z_NoPause=
@@ -505,7 +527,7 @@ set _z_PkgInfo=
 set _z_PkgPath=
 set _z_PkgTree=
 set _z_TMP1=
-if defined _z_TempFile if exist %_z_TempFile% del %_z_TempFile%
+call :FN_DelzTempFile
 set _z_TempFile=
 set _z_Verbose=
 
