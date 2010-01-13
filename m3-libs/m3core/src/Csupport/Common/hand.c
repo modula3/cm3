@@ -45,7 +45,6 @@ typedef ulong uint32;
 
 #ifdef _MSC_VER
 #pragma warning(disable:4131) /* old style */
-#pragma warning(disable:4146) /* unary minus applied to unsigned is still unsigned (INT64_MIN) */
     #if _MSC_VER < 900
         #error __int64 support is required.
         /* avoid cascade */
@@ -232,7 +231,7 @@ int64 __cdecl m3_mult_64(int64 a, int64 b, BOOL* overflow)
   if (*overflow)
     return result;
   
-  *overflow |= ((c > (((a < 0) == (b < 0))) ? ((uint64)INT64_MAX) : -(uint64)INT64_MIN));
+  *overflow |= ((c > ((a < 0) == (b < 0))) ? ((uint64)INT64_MAX) : (((uint64)-(INT64_MIN + 1)) + 1));
   return result;
 }
 
