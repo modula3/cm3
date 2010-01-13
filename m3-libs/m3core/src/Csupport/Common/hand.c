@@ -231,7 +231,7 @@ int64 __cdecl m3_mult_64(int64 a, int64 b, BOOL* overflow)
   if (*overflow)
     return result;
   
-  *overflow |= (c > (((a < 0) == (b < 0)) ? INT64_MAX : INT64_MIN));
+  *overflow |= ((c > (((a < 0) == (b < 0))) ? ((uint64)INT64_MAX) : (uint64)-INT64_MIN));
   return result;
 }
 
