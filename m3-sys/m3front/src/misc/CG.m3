@@ -2677,20 +2677,6 @@ PROCEDURE DumpComment (x: CommentNode) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE Cas (t: MType) =
-  BEGIN
-    cg.val_compare_and_swap (t);
-    SPop (3, "CAS");
-    SPush (t);
-  END Cas;
-
-PROCEDURE CasP (t: MType;  u: IType) =
-  BEGIN
-    cg.bool_compare_and_swap (t, u);
-    SPop (3, "CASP");
-    SPush (u);
-  END CasP;
-
 (*-------------------------------------------------------------- internal ---*)
 
 PROCEDURE FixAlign (a: Alignment): Alignment =
