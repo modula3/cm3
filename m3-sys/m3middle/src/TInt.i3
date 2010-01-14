@@ -30,7 +30,7 @@ CONST
   Four  = Int{NUMBER (IBytes), IBytes{4,0,..}};
   Ten   = Int{NUMBER (IBytes), IBytes{10,0,..}};
 
-  (* 'M' for Minus *)
+  (* 'M' for Minus (negative) *)
 
   MOne  = Int{NUMBER (IBytes), IBytes{FF,..}};
 
