@@ -15,6 +15,7 @@ REM v1.08, 08/02/2009, R.Coleburn, rename CM3_Pkg to CM3_Package to prevent over
 REM v1.10, 10/26/2009, R.Coleburn, adapt to work with new cm3CommandShell.CMD.
 REM v1.11, 10/29/2009, R.Coleburn, various optimizations
 REM v1.12, 01/12/2010, R.Coleburn, repair multiple bugs in "if defined xxx if exist %xxx% del %xxx%" construct
+REM v1.20, 01/13/2010, R.Coleburn, add "-skip" directive.  Force argument keywords to be prefixed by "-".
 REM ===========================================================================
 
 
@@ -43,7 +44,7 @@ goto :EOF
 REM Identify this script.
 echo.
 echo ====== ----------------------------------
-echo do-cm3, v1.12, 01/12/2010, Randy Coleburn
+echo do-cm3, v1.20, 01/13/2010, Randy Coleburn
 echo ====== ----------------------------------
 echo.
 
@@ -87,6 +88,7 @@ set _z_PkgInfo=
 set _z_PkgPath=
 set _z_PkgTree=
 set _z_TMP1=
+set _z_Skip=
 set _z_TempFile=
 set _z_NoPause=FALSE
 set _z_Verbose=FALSE
@@ -104,12 +106,14 @@ shift
 :ExamineArg1
 if "%1"=="" goto ArgEnd
 if /I "%1"=="HELP" goto Help
+if /I "%1"=="-HELP" goto Help
 if /I "%1"=="?" goto Help
-if /I "%1"=="NOPAUSE" (set _z_NoPause=TRUE) & goto NextArg
-if /I "%1"=="VERBOSE" (set _z_Verbose=TRUE) & goto NextArg
-if /I "%1"=="SHOWTAGS" if "%_z_CM3Args%"=="" ((set _z_CM3Args=%1) & goto NextArg) ELSE goto Usage
+if /I "%1"=="-NOPAUSE" (set _z_NoPause=TRUE) & goto NextArg
+if /I "%1"=="-VERBOSE" (set _z_Verbose=TRUE) & goto NextArg
+if /I "%1"=="-SHOWTAGS" if "%_z_CM3Args%"=="" ((set _z_CM3Args=%1) & goto NextArg) ELSE goto Usage
 if /I "%1"=="-P" goto Arg_P
-if /I "%1"=="buildship" (set _z_CM3Args=%_z_CM3Args% -build -ship) & goto NextArg
+if /I "%1"=="-SKIP" goto Arg_Skip
+if /I "%1"=="-BUILDSHIP" (set _z_CM3Args=%_z_CM3Args% -build -ship) & goto NextArg
 
 rem check to see if %1 is a group tag
 if "%_z_Group%"=="" for %%a in (all base core min std) do if /I %%a==%1 set _z_Group=%1
@@ -131,6 +135,13 @@ rem we've seen -P, now get the path
 shift
 if "%1"=="" echo ERROR:  Missing path after -P argument. & goto Usage
 set _z_PkgInfo=%1
+goto NextArg
+
+:Arg_Skip
+rem we've seen -SKIP, now get the package name to be skipped
+shift
+if "%1"=="" echo ERROR:  Missing package name after -SKIP argument. & goto Usage
+IF defined _z_Skip (set _z_Skip=%_z_Skip%; %1) ELSE (set _z_Skip=%1)
 goto NextArg
 
 :ArgEnd
@@ -247,6 +258,7 @@ echo CM3 ARGS = %_z_CM3Args%
 echo  PkgInfo = %_z_PkgInfo%
 echo Pkg Tree = %_z_PkgTree%
 echo    Group = %_z_Group%
+if defined _z_Skip echo SkipList = %_z_Skip%
 if /I "%_z_NoPause%"=="TRUE" echo "NoPause" Option in Effect.
 if /I "%_z_Verbose%"=="TRUE" echo "Verbose" Option in Effect.
 echo.
@@ -260,6 +272,7 @@ echo ------------------------
 if not defined _z_TempFile goto EOL_Prepare
 if exist %_z_TempFile% type %_z_TempFile%
 :EOL_Prepare
+if defined _z_Skip echo But, skipping packages: %_z_Skip%
 echo ---END-of-List---
 echo.
 if /I "%_z_NoPause%"=="TRUE" goto DoIt
@@ -297,7 +310,7 @@ goto :EOF
 :FN_ChkTag
 rem %1 is a tag name; see if it is in the list, if not add it to the list
 set _z_Answ=0
-for %%y in (%_z_TMP1%) do if /I "%%y"=="%1" set _z_Answ==1
+for %%y in (%_z_TMP1%) do if /I "%%y"=="%1" set _z_Answ=1
 if "%_z_Answ%"=="0" set _z_TMP1=%_z_TMP1%;%1
 goto :EOF
 
@@ -419,12 +432,33 @@ goto :EOF
 
 
 
+:FN_ChkSkip
+:----------
+REM %1 is a package name; see if it is in the skip list: if no goto %2, if yes goto %3
+set _z_Answ=0
+if not defined _z_Skip goto %2
+for %%z in (%_z_Skip%) do if /I "%%z"=="%~nx1" set _z_Answ=1
+IF "%_z_Answ%"=="0" ( goto %2 ) ELSE ( goto %3 )
+echo ERROR: Failure in FN_ChkSkip function.
+set _z_CM3Failure=STOP
+goto :EOF
+
+
+
 :FN_DoPkg
 :--------
 REM Process this package (%1).
 if /I "%_z_CM3Failure%"=="STOP" goto :EOF
 echo.
 echo ------------------------------------------------------------------------------
+call :FN_ChkSkip %1 OkToProcess SkipThisPkg
+goto :EOF
+
+:SkipThisPkg
+echo --- skipping package "%1" ---
+goto :EOF
+
+:OkToProcess
 echo --- processing package "%1" ---
 pushd %_z_PkgTree%%1
 for %%z in (%_z_CM3Args%) do call :FN_DoCM3 %%z %1
@@ -485,12 +519,13 @@ echo =====   -------------------------------------------------------------------
 :U2
 echo.
 echo -----  ------------------------------------------------------------------------
-echo Usage: do-cm3 {help showTags} [group-tag] {cm3args} {noPause verbose} {-p path}
-echo -----  ------------------------------------------------------------------------
+echo Usage: do-cm3 {-help -showTags} [group-tag] {cm3args} {-noPause -verbose} 
+echo -----         {-p path} {-skip pkgName}
+echo        ------------------------------------------------------------------------
 echo.
-echo     help  = display help, then exit.
+echo    -help  = display help, then exit.
 echo.
-echo  showTags = display list of all group tags found in PkgInfo.txt.
+echo -showTags = display list of all group tags found in PkgInfo.txt.
 echo             If a group-tag is given, also list the packages in that group.
 echo             No cm3 action is taken.
 echo.
@@ -499,15 +534,18 @@ echo             (use showTags to discover list of all groups)
 echo.
 echo   cm3args = zero or more arguments to the cm3 builder, e.g., clean, build, ship
 echo             Multiple arguments are possible.  They will be performed in the
-echo             order given.  If no argument is given, "build" is assumed.
-echo             "buildship" is shorthand for "build" followed by "ship".
+echo             order given.  If no argument is given, "-build" is assumed.
+echo             "-buildship" is shorthand for "-build" followed by "-ship".
 echo.
-echo   noPause = Don't ask whether to continue; just keep on going.
+echo  -noPause = Don't ask whether to continue; just keep on going.
 echo.
-echo   verbose = Increase the amount of messages given.
+echo  -verbose = Increase the amount of messages given.
 echo.
 echo   -p path = specify location of "PkgInfo.txt" file.
 echo             (if not specified, searchs in path=(".\"; "..\"; "..\..")
+echo.
+echo -skip pkgName = if pkgName is in the specified group-tag, skip this package.
+echo                 Multiple -skip argments may be given.
 echo.
 
 
@@ -526,6 +564,7 @@ set _z_Package=
 set _z_PkgInfo=
 set _z_PkgPath=
 set _z_PkgTree=
+set _z_Skip=
 set _z_TMP1=
 call :FN_DelzTempFile
 set _z_TempFile=
