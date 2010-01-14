@@ -7,6 +7,7 @@ REM v1.0, 07/29/2009, R.Coleburn
 REM v1.1, 08/02/2009, R.Coleburn, min is not sufficient, use m3front
 REM v1.2, 08/03/2009, R.Coleburn, change cm3.cfg to replace HOST by "NT386"
 REM v1.3, 10/29/2009, R.Coleburn, adapt to work with new cm3CommandShell.CMD.
+REM v1.4, 01/13/2010, R.Coleburn, skip m3core, libm3, and mklib in 1st phase; using revised do-cm3.cmd.  Force argument keywords to be prefixed by "-".  Pass thru control args to do-cm3.cmd.  Add -all argument keyword.
 REM ===========================================================================
 
 :Init
@@ -27,6 +28,8 @@ set _cm3_Verbose=FALSE
 set _cm3_CfgDone=FALSE
 set _cm3_Repeat=1
 set _cm3_DO=
+set _z_ctrlArgs=
+set _z_Stage3=min
 
 
 
@@ -42,16 +45,20 @@ shift
 :ExamineArg1
 if "%1"=="" goto ArgEnd
 if /I "%1"=="HELP" goto Help
-if /I "%1"=="NOPAUSE" set _cm3_NoPause=TRUE& goto NextArg
-if /I "%1"=="VERBOSE" set _cm3_Verbose=TRUE& goto NextArg
+if /I "%1"=="-HELP" goto Help
+if /I "%1"=="?" goto Help
+if /I "%1"=="-PAUSE" set _cm3_NoPause=FALSE& goto NextArg
+if /I "%1"=="-VERBOSE" set _cm3_Verbose=TRUE& goto NextArg
 if /I "%1"=="-P" goto Arg_P
-echo ERROR:  Unknown or unsupported argument:  %1
+if /I "%1"=="-ALL" set _z_Stage3=all& goto NextArg
+echo.
+echo ERROR:  Unknown or unsupported argument:  %1 
 goto Usage
 
 :Arg_P
 rem we've seen -P, now get the path
 shift
-if "%1"=="" echo ERROR:  Missing path after -P argument. & goto Usage
+if "%1"=="" echo ERROR:  Missing path after -P argument.  & goto Usage
 set _cm3_PkgInfo=%1
 goto NextArg
 
@@ -65,8 +72,12 @@ rem no more parameters, so make sure we've got the minimum required
 REM Identify this script.
 echo.
 echo =============== ---------------------------------
-echo  RCC_upgradeCM3, v1.3, 10/29/2009, Randy Coleburn
+echo  RCC_upgradeCM3, v1.4, 01/13/2010, Randy Coleburn
 echo =============== ---------------------------------
+echo.
+if /I "%_z_NoPause%"=="TRUE" echo "NoPause" Option in Effect.
+if /I "%_z_Verbose%"=="TRUE" echo "Verbose" Option in Effect.
+if /I "%_z_Stage3%"=="MIN" (echo Stage3=produce minimal distribution.) ELSE (echo Stage3=produce complete distribution, i.e., all packages.)
 echo.
 
 
@@ -75,7 +86,7 @@ echo.
 :--------
 REM Find root of CM3 installation, copy required files to bin, and Ensure CM3 command line environment has been setup.
 if not "%CM3_ROOT%"=="" if exist "%CM3_ROOT%\bin" if exist "%CM3_ROOT%\pkg" goto FoundRoot
-if not "%CM3_ROOT%"=="" echo ERROR:  Specified CM3_ROOT (%CM3_ROOT%) is missing a required folder. & goto END
+if not "%CM3_ROOT%"=="" echo ERROR:  Specified CM3_ROOT (%CM3_ROOT%) is missing a required folder. & goto END
 pushd ..
 cd ..
 cd ..
@@ -84,14 +95,14 @@ cd ..
 if exist "bin" if exist "pkg" set CM3_ROOT=%CD%& popd & goto :FoundRoot
 if exist "C:\cm3\bin" if exist "C:\cm3\pkg" set CM3_ROOT=C:\cm3& popd & goto :FoundRoot
 popd
-echo ERROR:  Could not find root of CM3 installation.
+echo ERROR:  Could not find root of CM3 installation.
 goto END
 
 :FoundRoot
 echo CM3 Root = %CM3_ROOT%
 echo.
 set _cm3_DO=%_cm3_TMP1%do-cm3.cmd
-if not exist "%_cm3_DO%" echo ERROR:  Missing script "%_cm3_DO%" & goto END
+if not exist "%_cm3_DO%" echo ERROR:  Missing script "%_cm3_DO%" & goto END
 echo Copying .CMD scripts and documentation to %CM3_ROOT%\bin ...
 for %%f in (Documentation_cm3Proj.pdf Documentation_cm3CommandShell.pdf Documentation_CM3StartIDE.pdf) do if exist "..\..\doc\%%f" copy /y "..\..\doc\%%f" "%CM3_ROOT%\bin"
 for %%f in (Documentation_cm3Proj.htm Documentation_cm3CommandShell.htm Documentation_CM3StartIDE.htm) do if exist "..\..\doc\%%f" copy /y "..\..\doc\%%f" "%CM3_ROOT%\bin"
@@ -133,7 +144,7 @@ popd
 if not "%_cm3_PkgInfo%"=="" if exist "%_cm3_PkgInfo%" goto FindSourceTree
 
 :NoPkgInfo
-echo ERROR:  Unable to locate PkgInfo.txt file.
+echo ERROR:  Unable to locate PkgInfo.txt file.
 goto END
 
 :FN_PkgInfo
@@ -179,53 +190,64 @@ set _cm3_PkgTree=%CD%\
 popd
 if exist "%_cm3_PkgTree%m3-sys\cm3\src" goto Prepare
 
-echo ERROR:  Unable to locate package source tree.
+echo ERROR:  Unable to locate package source tree.
 goto END
 
 
 
 :Prepare
 :-------
+set _z_ctrlArgs=
+if "%_cm3_Verbose%"=="TRUE" set _z_ctrlArgs=%_z_ctrlArgs% -verbose
+if "%_cm3_NoPause%"=="TRUE" set _z_ctrlArgs=%_z_ctrlArgs% -nopause
 if /I not "%_cm3_CfgDone%"=="TRUE" call :FN_UpdateConfig
 echo Creating config ...
 if not exist "%CM3_ROOT%\bin\config" mkdir %CM3_ROOT%\bin\config
-if not exist "%CM3_ROOT%\bin\config" echo ERROR:  Unable to create folder "%CM3_ROOT%\bin\config" & goto END
+if not exist "%CM3_ROOT%\bin\config" echo ERROR:  Unable to create folder "%CM3_ROOT%\bin\config" & goto END
 copy /y %_cm3_PkgTree%m3-sys\cminstall\src\config-no-install\* %CM3_ROOT%\bin\config
-if errorlevel 1 echo ERROR:  Problem copying files. & goto END
+if errorlevel 1 echo ERROR:  Problem copying files. & goto END
+echo Creating "%CM3_ROOT%\bin\cm3.cfg" ...
 if exist "%CM3_ROOT%\bin\cm3.cfg" del /f %CM3_ROOT%\bin\cm3.cfg
-echo INSTALL_ROOT = path() ^& "/..">%CM3_ROOT%\bin\cm3.cfg
-echo include(path() ^& "/config/NT386")>>%CM3_ROOT%\bin\cm3.cfg
+REM OLD: echo INSTALL_ROOT = path() ^& "/..">%CM3_ROOT%\bin\cm3.cfg
+REM OLD: echo include(path() ^& "/config/NT386")>>%CM3_ROOT%\bin\cm3.cfg
+copy /y %_cm3_PkgTree%m3-sys\cminstall\src\config-no-install\cm3.cfg %CM3_ROOT%\bin\cm3.cfg
+if errorlevel 1 echo ERROR:  Problem copying files. & goto END
+if not exist "%CM3_ROOT%\bin\cm3.cfg" echo ERROR:  Problem copying files. & goto END
+if not "%_cm3_Verbose%"=="TRUE" goto SkipCFGlist
 echo.
 echo %CM3_ROOT%\bin\cm3.cfg
 echo -------------------
 type %CM3_ROOT%\bin\cm3.cfg
 echo ------------------------------------------------------------------------------
+:SkipCFGlist
 echo.
 echo ========================================================================
-echo STAGE-1:  Building CM3 Compiler
+echo STAGE-1:  BUILDING "front", EXCEPT FOR "m3core", "libm3", and "mklib"
 echo ========================================================================
 echo.
-call %_cm3_DO% front -realclean -clean -build -ship nopause
+call %_cm3_DO% front -skip m3core -skip libm3 -skip mklib -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
 echo.
 echo ========================================================================
-echo STAGE-2:  REPEATING BUILD to Ensure New Compiler Is Used to Build Itself
+echo STAGE-2:  REPEATING BUILD, but this time ALL of "front"
 echo ========================================================================
 echo.
-call %_cm3_DO% front -realclean -clean -build -ship nopause
+call %_cm3_DO% front -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
 echo.
 echo ========================================================================
-echo STAGE-3:  Building minimal distribution "min"
+echo STAGE-3:  BUILDING DISTRIBUTION "%_z_Stage3%"
 echo ========================================================================
 echo.
-call %_cm3_DO% min -realclean -clean -build -ship nopause
+call %_cm3_DO% %_z_Stage3% -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
 echo.
 echo ========================================================================
 cm3 -version
 echo ========================================================================
 goto END
+
+
 
 :FN_UpdateConfig
 :---------------
@@ -245,7 +267,7 @@ goto :EOF
 
 :FatalSetupCM3
 :-------------
-echo ERROR:  Unable to successfully run "c:\cm3\bin\cm3CommandShell.CMD"
+echo ERROR:  Unable to successfully run "c:\cm3\bin\cm3CommandShell.CMD"
 echo         Please edit this .CMD file to provide correct path.
 goto END
 
@@ -287,6 +309,11 @@ echo for in the current directory, then the parent and grandparent directory.
 echo.
 echo The package source tree is located relative to the PkgInfo.txt file (parent
 echo folder), or in the current directory, or in the parent or grandparent folder.
+echo.
+echo Note that the upgrade process requires 3 build stages:  
+echo    1. "front" group, minus packages "m3core", "libm3", and "mklib"
+echo    2. "front" group (this time the complete group)
+echo    3. a distribution (either min or all)
 goto U2
 
 
@@ -297,18 +324,26 @@ echo =====   -------------------------------------------------------------------
 :U2
 echo.
 echo -----  ------------------------------------------------------------------------
-echo Usage: RCC_upgradeCM3 {help noPause verbose} {-p path}
+echo Usage: RCC_upgradeCM3 {-help -pause -verbose -all} {-p path}
 echo -----  ------------------------------------------------------------------------
 echo.
-echo     help  = display help, then exit.
+echo     -help  = display help, then exit.
 echo.
-echo   noPause = Don't ask whether to continue; just keep on going.
+echo     -pause = ask whether to continue, esp. if an error occurs.
+echo              If not specified, the default is to keep on going, i.e., noPause.
+echo              (Be careful using this option because at each stage you are given
+echo               the option to continue.  Skipping one stage, but proceeding with
+echo               the next may cause unpredictable results.)
 echo.
-echo   verbose = Increase the amount of messages given.
+echo   -verbose = Increase the amount of messages given.
 echo.
-echo   -p path = specify location of "PkgInfo.txt" file.
-echo             (if not specified, searchs in path=(".\"; "..\"; "..\..")
+echo       -all = build all packages (a complete distribution) in stage 3.
+echo              If not specified, the default is to build a MINimal distribution.
 echo.
+echo    -p path = specify location of "PkgInfo.txt" file.
+echo              (if not specified, searchs in path=(".\"; "..\"; "..\..")
+echo.
+
 
 
 :END
@@ -369,5 +404,8 @@ set _cm3_TempFile=
 rem echo _cm3_Verbose=%_cm3_Verbose%
 set _cm3_Verbose=
 
-echo ===END do-cm3===
+rem echo _z_ctrlArgs=%_z_ctrlArgs%
+set _z_ctrlArgs=
+
+echo ===END RCC_upgradeCM3===
 echo on
