@@ -34,18 +34,23 @@ CONST
 
   MOne  = Int{NUMBER (IBytes), IBytes{FF,..}};
 
-  (* 'S' for Signed *)
+  (* Minimum and Maximum values for Signed and Unsigned values with specified bit count. *)
 
+  MinS8  = Int{NUMBER (IBytes), IBytes{16_80,FF,..}};
+  MinS16 = Int{NUMBER (IBytes), IBytes{0,16_80,FF,..}};
   MinS32 = Int{NUMBER (IBytes), IBytes{0,0,0,16_80,FF,..}};
-  MaxS32 = Int{NUMBER (IBytes), IBytes{FF,FF,FF,16_7F,0,..}};
   MinS64 = Int{NUMBER (IBytes), IBytes{0,0,0,0,0,0,0,16_80}};
+  MaxS8  = Int{NUMBER (IBytes), IBytes{16_7F,0,..}};
+  MaxS16 = Int{NUMBER (IBytes), IBytes{FF,16_7F,0,..}};
+  MaxS32 = Int{NUMBER (IBytes), IBytes{FF,FF,FF,16_7F,0,..}};
   MaxS64 = Int{NUMBER (IBytes), IBytes{FF,FF,FF,FF,FF,FF,FF,16_7F}};
-
-  (* 'U' for Unsigned *)
-
+  MinU8  = Zero;
+  MinU16 = Zero;
   MinU32 = Zero;
-  MaxU32 = Int{NUMBER (IBytes), IBytes{FF,FF,FF,FF,0,..}};
   MinU64 = Zero;
+  MaxU8  = Int{NUMBER (IBytes), IBytes{FF,0,..}};
+  MaxU16 = Int{NUMBER (IBytes), IBytes{FF,FF,0,..}};
+  MaxU32 = Int{NUMBER (IBytes), IBytes{FF,FF,FF,FF,0,..}};
   MaxU64 = Int{NUMBER (IBytes), IBytes{FF,FF,FF,FF,FF,FF,FF,FF}};
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR i: Int): BOOLEAN;
