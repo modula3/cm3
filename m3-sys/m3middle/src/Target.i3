@@ -197,7 +197,7 @@ CONST
 
 TYPE
   Int = (* OPAQUE *) RECORD
-    n: CARDINAL;          (* only bytes [0..n-1] contain valid bits *)
+    n: CARDINAL := 0;     (* only bytes [0..n-1] contain valid bits *)
     x := IBytes{0,..};    (* default is Zero *)
   END;
   IBytes = ARRAY [0..7] OF IByte;
