@@ -23,16 +23,16 @@ FROM Target IMPORT Int, IBytes;
 CONST
   FF = 16_FF;
 
-  Zero  = Int{NUMBER (IBytes), IBytes{16_00,16_00,..}};
-  One   = Int{NUMBER (IBytes), IBytes{16_01,16_00,..}};
-  Two   = Int{NUMBER (IBytes), IBytes{16_02,16_00,..}};
-  Three = Int{NUMBER (IBytes), IBytes{16_03,16_00,..}};
-  Four  = Int{NUMBER (IBytes), IBytes{16_04,16_00,..}};
-  Ten   = Int{NUMBER (IBytes), IBytes{ 10,0,..}};
+  Zero  = Int{NUMBER (IBytes), IBytes{0,..}};
+  One   = Int{NUMBER (IBytes), IBytes{1,0,..}};
+  Two   = Int{NUMBER (IBytes), IBytes{2,0,..}};
+  Three = Int{NUMBER (IBytes), IBytes{3,0,..}};
+  Four  = Int{NUMBER (IBytes), IBytes{4,0,..}};
+  Ten   = Int{NUMBER (IBytes), IBytes{10,0,..}};
 
   (* 'M' for Minus *)
 
-  MOne  = Int{NUMBER (IBytes), IBytes{16_ff,16_ff,..}};
+  MOne  = Int{NUMBER (IBytes), IBytes{FF,..}};
 
   (* 'S' for Signed *)
 
