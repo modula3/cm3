@@ -21,12 +21,32 @@ INTERFACE TInt;
 FROM Target IMPORT Int, IBytes;
 
 CONST
+  FF = 16_FF;
+
   Zero  = Int{NUMBER (IBytes), IBytes{16_00,16_00,..}};
   One   = Int{NUMBER (IBytes), IBytes{16_01,16_00,..}};
   Two   = Int{NUMBER (IBytes), IBytes{16_02,16_00,..}};
   Three = Int{NUMBER (IBytes), IBytes{16_03,16_00,..}};
   Four  = Int{NUMBER (IBytes), IBytes{16_04,16_00,..}};
+  Ten   = Int{NUMBER (IBytes), IBytes{ 10,0,..}};
+
+  (* 'M' for Minus *)
+
   MOne  = Int{NUMBER (IBytes), IBytes{16_ff,16_ff,..}};
+
+  (* 'S' for Signed *)
+
+  MinS32 = Int{NUMBER (IBytes), IBytes{0,0,0,16_80,FF,..}};
+  MaxS32 = Int{NUMBER (IBytes), IBytes{FF,FF,FF,16_7F,0,..}};
+  MinS64 = Int{NUMBER (IBytes), IBytes{0,0,0,0,0,0,0,16_80}};
+  MaxS64 = Int{NUMBER (IBytes), IBytes{FF,FF,FF,FF,FF,FF,FF,16_7F}};
+
+  (* 'U' for Unsigned *)
+
+  MinU32 = Zero;
+  MaxU32 = Int{NUMBER (IBytes), IBytes{FF,FF,FF,FF,0,..}};
+  MinU64 = Zero;
+  MaxU64 = Int{NUMBER (IBytes), IBytes{FF,FF,FF,FF,FF,FF,FF,FF}};
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
@@ -60,11 +80,20 @@ PROCEDURE Mod (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 PROCEDURE EQ (READONLY a, b: Int): BOOLEAN;
 (* returns 'a = b' *)
 
+PROCEDURE NE (READONLY a, b: Int): BOOLEAN;
+(* returns 'a # b' *)
+
 PROCEDURE LT (READONLY a, b: Int): BOOLEAN;
 (* returns 'a < b' *)
 
+PROCEDURE GT (READONLY a, b: Int): BOOLEAN;
+(* returns 'a > b' *)
+
 PROCEDURE LE (READONLY a, b: Int): BOOLEAN;
 (* returns 'a <= b' *)
+
+PROCEDURE GE (READONLY a, b: Int): BOOLEAN;
+(* returns 'a >= b' *)
 
 PROCEDURE ToChars (READONLY i: Int;  VAR buf: ARRAY OF CHAR): INTEGER;
 (* converts 'i' to a printable string in 'buf'.  Returns the

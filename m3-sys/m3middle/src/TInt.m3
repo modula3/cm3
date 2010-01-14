@@ -21,7 +21,6 @@ CONST
   SignMask = LShift (1, BITSIZE (IByte) - 1);
   Base     = Mask + 1;
   Digits   = ARRAY [0..9] OF CHAR { '0','1','2','3','4','5','6','7','8','9'};
-  Ten      = Int{NUMBER(IBytes), IBytes{10,0,..}};
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
   BEGIN
@@ -311,6 +310,21 @@ PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
   BEGIN
     RETURN EQ (a, b) OR LT (a, b);
   END LE;
+
+PROCEDURE NE (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN NOT EQ (a, b);
+  END NE;
+
+PROCEDURE GT (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN LT (b, a);
+  END GT;
+
+PROCEDURE GE (READONLY a, b: Int): BOOLEAN = 
+  BEGIN
+    RETURN LE(b, a);
+  END GE;
 
 PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
   VAR
