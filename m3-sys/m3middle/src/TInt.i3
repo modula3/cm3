@@ -100,6 +100,9 @@ PROCEDURE LE (READONLY a, b: Int): BOOLEAN;
 PROCEDURE GE (READONLY a, b: Int): BOOLEAN;
 (* returns 'a >= b' *)
 
+PROCEDURE ToText (READONLY i: Int): TEXT;
+(* converts 'i' to a printable string. *)
+
 PROCEDURE ToChars (READONLY i: Int;  VAR buf: ARRAY OF CHAR): INTEGER;
 (* converts 'i' to a printable string in 'buf'.  Returns the
    number of characters in the string.  Returns -1 if 'buf' is too short. *)
