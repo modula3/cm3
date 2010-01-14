@@ -378,7 +378,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; imm: INTEGER) =
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
     ins.imm := imm;
-    IF imm < 16_80 AND imm > -16_81
+    IF imm < 16_80 AND imm >= -16_80
       THEN ins.imsize := 1;
       ELSE ins.imsize := 4;
     END;
