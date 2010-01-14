@@ -9,7 +9,7 @@
 MODULE BuiltinOps;
 
 IMPORT Abs, Adr, AdrSize, BitSize;
-IMPORT ByteSize, Cas, CasP, Ceiling, Dec, Dispose, First, Floatt, Floor;
+IMPORT ByteSize, Ceiling, Dec, Dispose, First, Floatt, Floor;
 IMPORT Inc, IsType, Last, Loophole, Max, Min, Narrow;
 IMPORT New, Number, Ord, Round, Subarray, Trunc, Typecode, Val;
 
@@ -23,8 +23,6 @@ PROCEDURE Initialize () =
     AdrSize.Initialize ();
     BitSize.Initialize ();
     ByteSize.Initialize ();
-    Cas.Initialize ();
-    CasP.Initialize ();
     Ceiling.Initialize ();
     Dec.Initialize ();
     Dispose.Initialize ();
