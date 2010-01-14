@@ -8,7 +8,7 @@
 
 MODULE TInt;
 
-IMPORT Word, TWord;
+IMPORT Word, TWord, Text;
 FROM Target IMPORT Int, IByte, IBytes;
 
 CONST (* IMPORTS *)
@@ -325,6 +325,12 @@ PROCEDURE GE (READONLY a, b: Int): BOOLEAN =
   BEGIN
     RETURN LE(b, a);
   END GE;
+
+PROCEDURE ToText (READONLY r: Int): TEXT =
+  VAR result  : ARRAY [0..BITSIZE (IByte) * NUMBER (IBytes)] OF CHAR;
+  BEGIN
+    RETURN Text.FromChars(SUBARRAY(result, 0, ToChars(r, result)));
+  END ToText;
 
 PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
   VAR
