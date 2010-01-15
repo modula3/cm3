@@ -7,7 +7,7 @@
 
 MODULE QScanner;
 
-IMPORT File, OSError, Text, FSUtils;
+IMPORT File, OSError, Text;
 IMPORT M3File, Quake, QToken, QIdent;
 (** IMPORT Stdio, Wr, Fmt; **)
 
@@ -35,13 +35,14 @@ VAR
   init_done    := FALSE;
   AlphaNumeric := ARRAY CHAR OF BOOLEAN { FALSE, .. };
 
-PROCEDURE Init (t: T;  path: TEXT;  f: File.T;  map: Quake.IDMap): T =
-  VAR size: INTEGER := FSUtils.GetFileSize32(path);
+PROCEDURE Init (t: T;  f: File.T;  map: Quake.IDMap): T =
+  VAR size: INTEGER;
   BEGIN
     IF NOT init_done THEN InitTables () END;
 
     (* slurp the source into memory *)
     TRY
+      size := VAL(f.status ().size, INTEGER);
       t.buffer := NEW (REF ARRAY OF CHAR, MAX (0, size) + 1);
       t.buflen := M3File.Read (f, t.buffer^, size);
       IF (t.buflen # size) THEN RETURN NIL; END;
