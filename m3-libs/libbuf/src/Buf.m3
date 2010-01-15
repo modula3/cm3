@@ -22,7 +22,7 @@ PROCEDURE FromFile (path: TEXT;  src: File.T; pad : CARDINAL): T
       THEN f := FS.OpenFileReadonly (path);
       ELSE f := src;
     END;
-    len := f.status().size;
+    len := VAL(f.status().size, INTEGER);
     t := NEW (T, len + pad);
 
     next := 0;
