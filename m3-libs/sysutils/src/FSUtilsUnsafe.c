@@ -19,10 +19,8 @@ typedef ptrdiff_t INTEGER;
 
 #ifdef _WIN64
 #define INTEGER_MAX INT64_MAX
-#define INTEGER_MIN INT64_MIN
 #else
 #define INTEGER_MAX LONG_MAX
-#define INTEGER_MIN LONG_MIN
 #endif
 
 #ifdef _WIN32
@@ -55,13 +53,13 @@ INT64 __cdecl FSUtilsUnsafe__GetFileSize64(const char* path)
 INTEGER __cdecl FSUtilsUnsafe__GetFileSize(const char* path)
 {
     INT64 size = FSUtilsUnsafe__GetFileSize64(path);
-    return ((size >= INTEGER_MIN && size <= INTEGER_MAX) ? (INTEGER)size : 0);
+    return ((size >= 0 && size <= INTEGER_MAX) ? (INTEGER)size : 0);
 }
 
 int __cdecl FSUtilsUnsafe__GetFileSize32(const char* path)
 {
     INT64 size = FSUtilsUnsafe__GetFileSize64(path);
-    return ((size >= INT_MIN && size <= INT_MAX) ? (int)size : 0);
+    return ((size >= 0 && size <= INT_MAX) ? (int)size : 0);
 }
 
 #ifdef __cplusplus
