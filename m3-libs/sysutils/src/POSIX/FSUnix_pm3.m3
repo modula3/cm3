@@ -22,5 +22,12 @@ PROCEDURE IsExecutable(fn : Pathname.T) : BOOLEAN =
     RETURN Unix.access(M3toC.TtoS(PathRepr.Native(fn)), Unix.X_OK) = 0;
   END IsExecutable;
 
+(*--------------------------------------------------------------------------*)
+
+PROCEDURE GetFileSize32(path:TEXT):INTEGER =
+  BEGIN
+      RETURN FSUtilsUnsafe.GetFileSize32(M3toC.TtoS(path));
+  END GetFileSize32;
+
 BEGIN
 END FSUnix_pm3.
