@@ -2,7 +2,7 @@
 UNSAFE MODULE FSUnix_cm3 EXPORTS FSUtils;
 
 IMPORT Pathname, Unix, M3toC;
-IMPORT PathRepr;
+IMPORT PathRepr, FSUtilsUnsafe;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE IsReadable(fn : Pathname.T) : BOOLEAN =
