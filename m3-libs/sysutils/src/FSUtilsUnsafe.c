@@ -1,15 +1,5 @@
-#ifdef _MSC_VER
-#pragma optimize("gty", on)
-#undef _DLL
-#define _MT
-#endif
-
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */
-#endif
-
-#if defined(__INTERIX) && !defined(_REENTRANT)
-#define _REENTRANT
 #endif
 
 #include <stddef.h>
@@ -25,10 +15,9 @@
 extern "C" {
 #endif
 
-#ifdef _WIN32
-
-ptrdiff_t FSUtilsUnsafe__GetFileSize32(const char* a)
+ptrdiff_t __cdecl FSUtilsUnsafe__GetFileSize32(const char* a)
 {
+#ifdef _WIN32
     WIN32_FIND_DATAA data;
     HANDLE h = FindFirstFileA(a, &data);
     if (h == INVALID_HANDLE_VALUE)
@@ -37,19 +26,13 @@ ptrdiff_t FSUtilsUnsafe__GetFileSize32(const char* a)
     if (data.nFileSizeHigh || data.nFileSizeLow > INT_MAX)
         return 0;
     return (ptrdiff_t)data.nFileSizeLow;
-}
-
 #else
-
-ptrdiff_t FSUtilsUnsafe__GetFileSize(const char* a)
-{
     struct stat st;
     if (stat(a, &st) || st.st_size > INT_MAX)
         return 0;
     return (ptrdiff_t)st.st_size;
-}
-
 #endif
+}
 
 #ifdef __cplusplus
 } /* extern "C" */
