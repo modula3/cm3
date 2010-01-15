@@ -31,6 +31,9 @@ PROCEDURE PutWideChar(ch: WIDECHAR; wr: Wr.T := NIL);
 PROCEDURE PutInt(n: INTEGER; wr: Wr.T := NIL);
 (* Output "Fmt.Int(n)" to "wr" and flush "wr". *)
    
+PROCEDURE PutLongInt(n: LONGINT; wr: Wr.T := NIL);
+(* Output "Fmt.LongInt(n)" to "wr" and flush "wr". *)
+   
 PROCEDURE PutReal(r: REAL; wr: Wr.T := NIL);
 (* Output "Fmt.Real(r)" to "wr" and flush "wr". *)
 
@@ -61,6 +64,10 @@ PROCEDURE GetWideChar(rd: Rd.T := NIL): WIDECHAR RAISES {Error};
 
 PROCEDURE GetInt(rd: Rd.T := NIL): INTEGER RAISES {Error};
 (* Read a decimal numeral from "rd" using "Lex.Int" and return its
+   value. *)
+
+PROCEDURE GetLongInt(rd: Rd.T := NIL): LONGINT RAISES {Error};
+(* Read a decimal numeral from "rd" using "Lex.LongInt" and return its
    value. *)
 
 PROCEDURE GetReal(rd: Rd.T := NIL): REAL RAISES {Error};
