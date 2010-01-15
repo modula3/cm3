@@ -37,5 +37,15 @@ PROCEDURE IsExecutable(fn : Pathname.T) : BOOLEAN =
     RETURN res;
   END IsExecutable;
 
+(*--------------------------------------------------------------------------*)
+
+PROCEDURE GetFileSize32(path:TEXT):INTEGER =
+  VAR cpath := M3toC.SharedTtoS(path);
+      res := FSUtilsUnsafe.GetFileSize32(cpath);
+  BEGIN
+    M3toC.FreeSharedS(path, cpath);
+    RETURN res;
+  END GetFileSize32;
+
 BEGIN
 END FSUnix_cm3.
