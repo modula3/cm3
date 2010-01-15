@@ -564,16 +564,6 @@ PROCEDURE Compile (p: P) =
     END;
   END Compile;
 
-PROCEDURE TargetIntToDiagnosticText(name: TEXT; a: Target.Int): TEXT =
-  VAR t := "";
-      b: INTEGER;
-  BEGIN
-    IF NOT TInt.ToInt(a, b) THEN
-      t := "**";
-    END;
-    RETURN t & name & ":" & Target.TargetIntToDiagnosticText(a);
-  END TargetIntToDiagnosticText;
-
 PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
   VAR
     range        : Type.T;
@@ -595,9 +585,7 @@ PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
     EVAL Type.GetBounds (range, min_T, max_T);
     IF NOT TInt.ToInt (min_T, minT)
         OR NOT TInt.ToInt (max_T, maxT) THEN
-      Error.Msg ("set domain too large ("
-            & TargetIntToDiagnosticText("min", min_T)
-            & "," & TargetIntToDiagnosticText("max", max_T) & ")");
+      Error.Msg ("set domain too large");
       minT := FIRST (INTEGER);
       maxT := LAST (INTEGER);
     END;
