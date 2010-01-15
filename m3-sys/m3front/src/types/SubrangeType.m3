@@ -10,7 +10,7 @@ MODULE SubrangeType;
 
 IMPORT M3, CG, Type, TypeRep, Int, LInt, Expr, Token, Card, M3Buf;
 IMPORT Error, IntegerExpr, EnumExpr, Word, TipeMap, TipeDesc;
-IMPORT Target, TInt, TWord, TargetMap;
+IMPORT Target, TInt, TWord, TargetMap, LCard;
 FROM Scanner IMPORT Match;
 
 TYPE 
@@ -382,6 +382,8 @@ PROCEDURE GenDesc (p: P) =
   BEGIN
     IF Type.IsEqual (p, Card.T, NIL) THEN
       EVAL TipeDesc.AddO (TipeDesc.Op.Cardinal, p);
+    ELSIF Type.IsEqual (p, LCard.T, NIL) THEN
+      EVAL TipeDesc.AddO (TipeDesc.Op.Longcard, p);
     ELSIF TipeDesc.AddO (TipeDesc.Op.Subrange, p) THEN
       TipeDesc.AddX (p.min);
       TipeDesc.AddX (p.max);
@@ -392,6 +394,9 @@ PROCEDURE FPrinter (p: P;  VAR x: M3.FPInfo) =
   BEGIN
     IF Type.IsEqual (p, Card.T, NIL) THEN
       x.tag := "$cardinal";
+      x.n_nodes := 0;
+    ELSIF Type.IsEqual (p, LCard.T, NIL) THEN
+      x.tag := "$longcard";
       x.n_nodes := 0;
     ELSE
       M3Buf.PutText (x.buf, "SUBRANGE ");

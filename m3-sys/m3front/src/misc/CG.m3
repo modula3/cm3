@@ -2675,6 +2675,47 @@ PROCEDURE DumpComment (x: CommentNode) =
     cg.comment (x.a, x.b, x.c, x.d);
   END DumpComment;
 
+(*--------------------------------------------------------------- atomics ---*)
+
+PROCEDURE Store_ordered (t: MType;  order: MemoryOrder) =
+  BEGIN
+    cg.store_ordered (StackType[t], t, order);
+    SPop (2, "Store_ordered");
+  END Store_ordered;
+
+PROCEDURE Load_ordered (t: MType;  order: MemoryOrder) =
+  BEGIN
+    cg.load_ordered (t, StackType[t], order);
+    SPop (1, "Load_ordered");
+    SPush (StackType[t]);
+  END Load_ordered;
+
+PROCEDURE Exchange (t: MType;  order: MemoryOrder) =
+  BEGIN
+    cg.exchange (t, StackType[t], order);
+    SPop (2, "Exchange");
+    SPush (StackType[t]);
+  END Exchange;
+
+PROCEDURE Compare_exchange (t: MType;  u: IType;  success, failure: MemoryOrder) =
+  BEGIN
+    cg.compare_exchange (t, StackType[t], u, success, failure);
+    SPop (3, "Compare_exchange");
+    SPush (u);
+  END Compare_exchange;
+
+PROCEDURE Fence (order: MemoryOrder) =
+  BEGIN
+    cg.fence (order);
+  END Fence;
+
+PROCEDURE Fetch_and_op (op: AtomicOp;  t: MType;  order: MemoryOrder) =
+  BEGIN
+    cg.fetch_and_op (op, t, StackType[t], order);
+    SPop (2, "Fetch_and_op");
+    SPush (StackType[t]);
+  END Fetch_and_op;
+
 (*-------------------------------------------------------------- internal ---*)
 
 PROCEDURE FixAlign (a: Alignment): Alignment =
