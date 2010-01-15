@@ -44,7 +44,7 @@ PROCEDURE CompileFile (path: TEXT;  map: IDMap): QCode.Stream
     END;
 
     TRY
-      s.lexer      := NEW (QScanner.T).init (f, map);
+      s.lexer      := NEW (QScanner.T).init (path, f, map);
       s.file       := map.txt2id (path);
       s.code       := NEW (QCode.Stream, source_file := s.file);
       s.map        := map;

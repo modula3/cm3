@@ -21,9 +21,13 @@ TYPE
     string   : Quake.ID;  (* token = QToken.T.{Name,String} *)
     cardinal : CARDINAL;  (* token = OToken.T.Cardinal *)
   METHODS
-    init (f: File.T;  map: Quake.IDMap): T;
+    init (path: TEXT; f: File.T;  map: Quake.IDMap): T;
     initText (txt: TEXT;  map: Quake.IDMap): T;
     next ();  (* update the fields above *)
   END;
+
+(* This is needed because sometimes libm3 exposes an INTEGER file size, sometimes LONGINT *)
+<*EXTERNAL QScanner__GetFileSize*> 
+PROCEDURE GetFileSize(VAR a:CHAR):INTEGER;
 
 END QScanner.
