@@ -50,7 +50,6 @@ PROCEDURE Init (t: T;  path: TEXT;  f: File.T;  map: Quake.IDMap): T =
 
     (* slurp the source into memory *)
     TRY
-      size := VAL(f.status ().size, INTEGER);
       t.buffer := NEW (REF ARRAY OF CHAR, MAX (0, size) + 1);
       t.buflen := M3File.Read (f, t.buffer^, size);
       IF (t.buflen # size) THEN RETURN NIL; END;
