@@ -107,7 +107,7 @@ PROCEDURE Inhale (fn: TEXT;  VAR buf: Buffer): CARDINAL =
   BEGIN
     TRY
       f := FS.OpenFileReadonly (fn);
-      len := f.status().size;
+      len := VAL(f.status().size, INTEGER);
       IF len > NUMBER (buf^) THEN ExpandBuf (buf, len); END;
 
       next := 0;

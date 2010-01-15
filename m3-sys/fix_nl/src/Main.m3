@@ -71,6 +71,7 @@ VAR
 PROCEDURE FixFile (path: TEXT) =
   VAR
     f: File.T;
+    size: INTEGER;
     stat: File.Status;
     in_len: INTEGER;
     out_len: INTEGER;
@@ -81,11 +82,12 @@ PROCEDURE FixFile (path: TEXT) =
       f := FS.OpenFileReadonly (path);
       TRY
         stat := f.status ();
-        IF (stat.size <= 0) THEN RETURN; END;
-        MakeRoom (stat.size);
-        in_len := f.read (SUBARRAY (inbuf^, 0, stat.size), mayBlock := TRUE);
-        IF (in_len # stat.size) THEN
-          Err ("unable to read: ", path, ": expected " & Fmt.Int (stat.size)
+        size := VAL(stat.size, INTEGER);
+        IF (size <= 0) THEN RETURN; END;
+        MakeRoom (size);
+        in_len := f.read (SUBARRAY (inbuf^, 0, size), mayBlock := TRUE);
+        IF (in_len # size) THEN
+          Err ("unable to read: ", path, ": expected " & Fmt.Int (size)
                & " bytes, but got " & Fmt.Int (in_len));
           RETURN;
         END;
