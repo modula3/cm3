@@ -4,12 +4,12 @@
 #define _FILE_OFFSET_BITS 64
 
 #ifdef _MSC_VER
-typedef signed __int64 INT64;
+typedef __int64 INT64;
 /*#pragma warning(disable:4820)*/
 /*#pragma warning(disable:4668)*/
 /*#pragma warning(disable:4255)*/
 #else
-typedef signed long long INT64;
+typedef long long INT64;
 #endif
 
 #include <stddef.h>
