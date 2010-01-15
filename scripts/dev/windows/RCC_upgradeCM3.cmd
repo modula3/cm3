@@ -8,6 +8,7 @@ REM v1.1, 08/02/2009, R.Coleburn, min is not sufficient, use m3front
 REM v1.2, 08/03/2009, R.Coleburn, change cm3.cfg to replace HOST by "NT386"
 REM v1.3, 10/29/2009, R.Coleburn, adapt to work with new cm3CommandShell.CMD.
 REM v1.4, 01/13/2010, R.Coleburn, skip m3core, libm3, and mklib in 1st phase; using revised do-cm3.cmd.  Force argument keywords to be prefixed by "-".  Pass thru control args to do-cm3.cmd.  Add -all argument keyword.
+REM v1.5. 01/15/2010, R.Coleburn, add extra checks at end of each stage to ensure new cm3.exe was produced and copied to target bin folder.
 REM ===========================================================================
 
 :Init
@@ -72,7 +73,7 @@ rem no more parameters, so make sure we've got the minimum required
 REM Identify this script.
 echo.
 echo =============== ---------------------------------
-echo  RCC_upgradeCM3, v1.4, 01/13/2010, Randy Coleburn
+echo  RCC_upgradeCM3, v1.5, 01/15/2010, Randy Coleburn
 echo =============== ---------------------------------
 echo.
 if /I "%_z_NoPause%"=="TRUE" echo "NoPause" Option in Effect.
@@ -227,6 +228,8 @@ echo ========================================================================
 echo.
 call %_cm3_DO% front -skip m3core -skip libm3 -skip mklib -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
+call :FN_FinishStage
+if "%_cm3_CM3Failure%"=="TRUE" goto END
 echo.
 echo ========================================================================
 echo STAGE-2:  REPEATING BUILD, but this time ALL of "front"
@@ -234,6 +237,8 @@ echo ========================================================================
 echo.
 call %_cm3_DO% front -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
+call :FN_FinishStage
+if "%_cm3_CM3Failure%"=="TRUE" goto END
 echo.
 echo ========================================================================
 echo STAGE-3:  BUILDING DISTRIBUTION "%_z_Stage3%"
@@ -241,11 +246,31 @@ echo ========================================================================
 echo.
 call %_cm3_DO% %_z_Stage3% -realclean -clean -build -ship %_z_ctrlArgs%
 @echo off
+call :FN_FinishStage
+if "%_cm3_CM3Failure%"=="TRUE" goto END
 echo.
 echo ========================================================================
 cm3 -version
 echo ========================================================================
 goto END
+
+
+
+:FN_FinishStage
+:--------------
+if not exist "%_cm3_PkgTree%m3-sys\cm3\NT386\cm3.exe" goto StageFailure
+echo ...installing new cm3.exe as "%CM3_ROOT%\bin\cm3.exe" ...
+if exist "%CM3_ROOT%\bin\cm3.exe" del /f "%CM3_ROOT%\bin\cm3.exe"
+if exist "%CM3_ROOT%\bin\cm3.pdb" del /f "%CM3_ROOT%\bin\cm3.pdb"
+copy "%_cm3_PkgTree%m3-sys\cm3\NT386\cm3.exe" "%CM3_ROOT%\bin\cm3.exe"
+if exist "%_cm3_PkgTree%m3-sys\cm3\NT386\cm3.pdb" copy "%_cm3_PkgTree%m3-sys\cm3\NT386\cm3.pdb" "%CM3_ROOT%\bin\cm3.pdb"
+if not exist "%CM3_ROOT%\bin\cm3.exe" goto StageFailure
+goto :EOF
+
+:StageFailure
+set _cm3_CM3Failure=TRUE
+echo ERROR: Stage Failure--cm3.exe was not created successfully!  Aborting...
+goto :EOF
 
 
 
