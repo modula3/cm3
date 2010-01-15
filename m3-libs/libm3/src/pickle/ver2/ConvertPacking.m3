@@ -1217,6 +1217,8 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
         BuildOrdinal(self, fromTipe, toTipe, self.wordKind, signed:=FALSE);  
       | RTTipe.Kind.Integer =>  
         BuildOrdinal(self, fromTipe, toTipe, self.wordKind, signed:=TRUE);  
+      | RTTipe.Kind.Longcard =>
+        BuildOrdinal(self, fromTipe, toTipe, self.longKind, signed:=FALSE);
       | RTTipe.Kind.Longint =>  
         BuildOrdinal(self, fromTipe, toTipe, self.longKind, signed:=TRUE);  
       | RTTipe.Kind.Extended, RTTipe.Kind.Longreal =>
@@ -1470,6 +1472,7 @@ PROCEDURE KindToText(kind: RTTipe.Kind) =
     | RTTipe.Kind.Enum => IO.Put( "Enum");
     | RTTipe.Kind.Extended => IO.Put( "Extended");
     | RTTipe.Kind.Integer => IO.Put( "Integer");
+    | RTTipe.Kind.Longcard => IO.Put( "Longcard");
     | RTTipe.Kind.Longint => IO.Put( "Longint");
     | RTTipe.Kind.Longreal => IO.Put( "Longreal");
     | RTTipe.Kind.Null => IO.Put( "Null");
