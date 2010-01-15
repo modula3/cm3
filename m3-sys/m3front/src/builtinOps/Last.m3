@@ -48,7 +48,10 @@ PROCEDURE Compile (ce: CallExpr.T) =
       CG.Load_integer (Target.Integer.cg_type, TInt.One);
       CG.Subtract (Target.Integer.cg_type);
     ELSIF Type.GetBounds (t, min, max) THEN (* ordinal type *)
-      CG.Load_integer (Type.CGType (t), max);
+      IF Type.IsSubtype (t, LInt.T)
+        THEN CG.Load_integer (Target.Longint.cg_type, max);
+        ELSE CG.Load_integer (Target.Integer.cg_type, max);
+      END;
     ELSIF Type.IsEqual (t, Reel.T, NIL) THEN
       CG.Load_float (Target.Real.max);
     ELSIF Type.IsEqual (t, LReel.T, NIL) THEN

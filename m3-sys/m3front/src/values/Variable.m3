@@ -210,13 +210,13 @@ PROCEDURE NewFormal (formal: Value.T;  name: M3ID.T): T =
   END NewFormal;
 
 PROCEDURE Split (t: T;  VAR type: Type.T;
-                 VAR global, indirect, lhs: BOOLEAN) =
+                 VAR global, indirect, traced: BOOLEAN) =
   BEGIN
     <* ASSERT t.checked *>
     type     := t.tipe;
     global   := t.global;
     indirect := t.indirect;
-    lhs      := t.lhs;
+    traced   := t.traced;
   END Split;
 
 PROCEDURE BindType (t: T; type: Type.T; 

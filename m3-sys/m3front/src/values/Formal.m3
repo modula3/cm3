@@ -351,7 +351,7 @@ PROCEDURE DoCheckArgs (VAR cs       : Value.CheckState;
             IF NOT Expr.IsDesignator (e) THEN
               Err (slots[i], "VAR actual must be a designator");
               ok := FALSE;
-            ELSIF NOT Expr.IsWritable (e, lhs := TRUE) THEN
+            ELSIF NOT Expr.IsWritable (e, traced := TRUE) THEN
               Err (slots[i], "VAR actual must be writable");
               ok := FALSE;
             ELSIF Type.IsEqual (t, te, NIL) THEN
@@ -430,12 +430,12 @@ PROCEDURE PrepArg (formal: Value.T; actual: Expr.T) =
     | Mode.mVALUE =>
         Expr.Prep (actual);
     | Mode.mVAR =>
-        Expr.PrepLValue (actual, lhs := TRUE);
+        Expr.PrepLValue (actual, traced := TRUE);
     | Mode.mCONST =>
         IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           Expr.Prep (actual);
         ELSIF Expr.IsDesignator (actual) THEN
-          Expr.PrepLValue (actual, lhs := FALSE);
+          Expr.PrepLValue (actual, traced := FALSE);
         ELSE (* non-designator, same type *)
           Expr.Prep (actual);
         END;
@@ -490,13 +490,13 @@ PROCEDURE GenOrdinal (t: T;  actual: Expr.T) =
     | Mode.mVALUE =>
         CheckExpr.EmitChecks (actual, min, max, CG.RuntimeError.ValueOutOfRange);
     | Mode.mVAR =>
-        Expr.CompileAddress (actual, lhs := TRUE);
+        Expr.CompileAddress (actual, traced := TRUE);
     | Mode.mCONST =>
         IF NOT Type.IsEqual (t.tipe, Expr.TypeOf (actual), NIL) THEN
           CheckExpr.EmitChecks (actual, min, max, CG.RuntimeError.ValueOutOfRange);
           GenCopy (t.tipe);
         ELSIF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual, lhs := FALSE);
+          Expr.CompileAddress (actual, traced := FALSE);
         ELSE (* non-designator, same type *)
           Expr.Compile (actual);
           GenCopy (t.tipe);
@@ -510,10 +510,10 @@ PROCEDURE GenFloat (t: T;  actual: Expr.T) =
     | Mode.mVALUE =>
         Expr.Compile (actual);
     | Mode.mVAR =>
-        Expr.CompileAddress (actual, lhs := TRUE);
+        Expr.CompileAddress (actual, traced := TRUE);
     | Mode.mCONST =>
         IF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual, lhs := FALSE);
+          Expr.CompileAddress (actual, traced := FALSE);
         ELSE
           Expr.Compile (actual);
           GenCopy (t.tipe);
@@ -528,13 +528,13 @@ PROCEDURE GenReference (t: T;  actual: Expr.T) =
     | Mode.mVALUE =>
         Expr.Compile (actual);
     | Mode.mVAR =>
-        Expr.CompileAddress (actual, lhs := TRUE);
+        Expr.CompileAddress (actual, traced := TRUE);
     | Mode.mCONST =>
         IF NOT Type.IsEqual (t.tipe, t_actual, NIL) THEN
           Expr.Compile (actual);
           GenCopy (t.tipe);
         ELSIF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual, lhs := FALSE);
+          Expr.CompileAddress (actual, traced := FALSE);
         ELSE
           Expr.Compile (actual);
           GenCopy (t.tipe);
@@ -549,10 +549,10 @@ PROCEDURE GenProcedure (t: T;  actual: Expr.T;  proc: Expr.T) =
         Expr.Compile (actual);
         GenClosure (actual, proc);
     | Mode.mVAR =>
-        Expr.CompileAddress (actual, lhs := TRUE);
+        Expr.CompileAddress (actual, traced := TRUE);
     | Mode.mCONST =>
         IF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual, lhs := FALSE);
+          Expr.CompileAddress (actual, traced := FALSE);
         ELSE
           Expr.Compile (actual);
           GenClosure (actual, proc);
@@ -604,10 +604,10 @@ PROCEDURE GenRecord (t: T;  actual: Expr.T) =
     | Mode.mVALUE =>
         Expr.Compile (actual);
     | Mode.mVAR =>
-        Expr.CompileAddress (actual, lhs := TRUE);
+        Expr.CompileAddress (actual, traced := TRUE);
     | Mode.mCONST =>
         IF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual, lhs := FALSE);
+          Expr.CompileAddress (actual, traced := FALSE);
         ELSE
           Expr.Compile (actual);
           (* not needed because of the ASSERT above: GenCopy (t.tipe); *)
@@ -622,10 +622,10 @@ PROCEDURE GenSet (t: T;  actual: Expr.T) =
     | Mode.mVALUE =>
         Expr.Compile (actual);
     | Mode.mVAR =>
-        Expr.CompileAddress (actual, lhs := TRUE);
+        Expr.CompileAddress (actual, traced := TRUE);
     | Mode.mCONST =>
         IF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual, lhs := FALSE);
+          Expr.CompileAddress (actual, traced := FALSE);
         ELSIF Type.IsStructured (t.tipe) THEN
           Expr.Compile (actual);
           (* not needed because of the ASSERT above: GenCopy (t.tipe); *)
@@ -644,14 +644,14 @@ PROCEDURE GenArray (t: T;  actual: Expr.T) =
         Expr.Compile (actual);
         ReshapeArray (t.tipe, t_actual);
     | Mode.mVAR =>
-        Expr.CompileAddress (actual, lhs := TRUE);
+        Expr.CompileAddress (actual, traced := TRUE);
         ReshapeArray (t.tipe, t_actual);
     | Mode.mCONST =>
         IF NOT Type.IsEqual (t.tipe, t_actual, NIL) THEN
           Expr.Compile (actual);
           ReshapeArray (t.tipe, t_actual);
         ELSIF Expr.IsDesignator (actual) THEN
-          Expr.CompileAddress (actual, lhs := FALSE);
+          Expr.CompileAddress (actual, traced := FALSE);
         ELSE
           Expr.Compile (actual);
         END;

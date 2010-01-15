@@ -2675,8 +2675,6 @@ PROCEDURE DumpComment (x: CommentNode) =
     cg.comment (x.a, x.b, x.c, x.d);
   END DumpComment;
 
-(*--------------------------------------------------------------- atomics ---*)
-
 (*-------------------------------------------------------------- internal ---*)
 
 PROCEDURE FixAlign (a: Alignment): Alignment =

@@ -1,0 +1,45 @@
+readonly proc word (T, nm) is
+  build_generic_intf (nm & "Plus",    "GenPlus",    [], HIDDEN)
+  build_generic_intf (nm & "Times",   "GenTimes",   [], HIDDEN)
+  build_generic_intf (nm & "Minus",   "GenMinus",   [], HIDDEN)
+  build_generic_intf (nm & "Divide",  "GenDivide",  [], HIDDEN)
+  build_generic_intf (nm & "Mod",     "GenMod",     [], HIDDEN)
+  build_generic_intf (nm & "LT",      "GenLT",      [], HIDDEN)
+  build_generic_intf (nm & "LE",      "GenLE",      [], HIDDEN)
+  build_generic_intf (nm & "GT",      "GenGT",      [], HIDDEN)
+  build_generic_intf (nm & "GE",      "GenGE",      [], HIDDEN)
+  build_generic_intf (nm & "And",     "GenAnd",     [], HIDDEN)
+  build_generic_intf (nm & "Or",      "GenOr",      [], HIDDEN)
+  build_generic_intf (nm & "Xor",     "GenXor",     [], HIDDEN)
+  build_generic_intf (nm & "Not",     "GenNot",     [], HIDDEN)
+  build_generic_intf (nm & "Shift",   "GenShift",   [], HIDDEN)
+  build_generic_intf (nm & "Rotate",  "GenRotate",  [], HIDDEN)
+  build_generic_intf (nm & "Extract", "GenExtract", [], HIDDEN)
+  build_generic_intf (nm & "Insert",  "GenInsert",  [], HIDDEN)
+
+  build_generic_impl (nm & "Plus",    "GenPlus",    [T])
+  build_generic_impl (nm & "Times",   "GenTimes",   [T])
+  build_generic_impl (nm & "Minus",   "GenMinus",   [T])
+  build_generic_impl (nm & "Divide",  "GenDivide",  [T])
+  build_generic_impl (nm & "Mod",     "GenMod",     [T])
+  build_generic_impl (nm & "LT",      "GenLT",      [T])
+  build_generic_impl (nm & "LE",      "GenLE",      [T])
+  build_generic_impl (nm & "GT",      "GenGT",      [T])
+  build_generic_impl (nm & "GE",      "GenGE",      [T])
+  build_generic_impl (nm & "And",     "GenAnd",     [T])
+  build_generic_impl (nm & "Or",      "GenOr",      [T])
+  build_generic_impl (nm & "Xor",     "GenXor",     [T])
+  build_generic_impl (nm & "Not",     "GenNot",     [T])
+  build_generic_impl (nm & "Shift",   "GenShift",   [T])
+  build_generic_impl (nm & "Rotate",  "GenRotate",  [T])
+  build_generic_impl (nm & "Extract", "GenExtract", [T])
+  build_generic_impl (nm & "Insert",  "GenInsert",  [T])
+
+  build_generic_intf (nm & "Module", "GenModule", [], HIDDEN)
+  build_generic_impl (nm & "Module", "GenModule",
+   [T,
+    nm & "Plus", nm & "Times", nm & "Minus", nm & "Divide", nm & "Mod",
+    nm & "LT", nm & "LE", nm & "GT", nm & "GE",
+    nm & "And", nm & "Or", nm & "Xor", nm & "Not",
+    nm & "Shift", nm & "Rotate", nm & "Extract", nm & "Insert"])
+end

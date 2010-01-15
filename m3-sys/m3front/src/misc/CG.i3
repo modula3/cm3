@@ -679,6 +679,4 @@ PROCEDURE Closure_frame ();
 PROCEDURE Comment (offset: INTEGER;  is_const: BOOLEAN;  a, b, c, d: TEXT := NIL);
 (* annotate the output with a&b&c&d as a comment *)
 
-(*--------------------------------------------------------------- atomics ---*)
-
 END CG.

@@ -20,7 +20,7 @@ REVEAL
     class      : BITS 4 FOR Value.Class;
     checked    : M3.Flag;
     readonly   : M3.Flag;
-    lhs        : M3.Flag;
+    traced     : M3.Flag; (* assigned a traced value *)
     external   : M3.Flag;
     unused     : M3.Flag;
     obsolete   : M3.Flag;
