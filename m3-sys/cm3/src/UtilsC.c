@@ -17,14 +17,12 @@ ptrdiff_t Utils__GetFileSize(const char* a)
 {
     WIN32_FIND_DATAA data;
     HANDLE h = FindFirstFileA(a, &data);
-    if (IsDebuggerPresent())
-        DebugBreak();
     if (h == INVALID_HANDLE_VALUE)
         return 0;
     FindClose(h);
     if (data.nFileSizeHigh || data.nFileSizeLow > INT_MAX)
         return 0;
-    return data.nFileSizeLow;
+    return (ptrdiff_t)data.nFileSizeLow;
 }
 
 #else
