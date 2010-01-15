@@ -117,4 +117,7 @@ PROCEDURE FileContents(fn : Pathname.T) : TEXT RAISES {E};
 PROCEDURE PutFile(fn : Pathname.T; data : TEXT) RAISES {E};
   (* Write `data' into file `fn'. Create or overwrite `fn' as needed. *)
 
+(*---------------------------------------------------------------------------*)
+PROCEDURE GetFileSize32(path:TEXT):INTEGER;
+
 END FSUtils.
