@@ -35,8 +35,16 @@ VAR
   init_done    := FALSE;
   AlphaNumeric := ARRAY CHAR OF BOOLEAN { FALSE, .. };
 
-PROCEDURE Init (t: T;  f: File.T;  map: Quake.IDMap): T =
-  VAR size: INTEGER;
+PROCEDURE GetFileSizeT(text:TEXT):INTEGER =
+  VAR array:ARRAY[0..4095] OF CHAR; (* hope this is large enough *)
+  BEGIN
+    Text.SetChars(array, text);
+    array[Text.Length(text)] := '\000';
+    RETURN GetFileSize(array[0]);
+  END GetFileSizeT;
+
+PROCEDURE Init (t: T;  path: TEXT;  f: File.T;  map: Quake.IDMap): T =
+  VAR size: INTEGER := GetFileSizeT(path);
   BEGIN
     IF NOT init_done THEN InitTables () END;
 
