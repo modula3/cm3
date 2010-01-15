@@ -26,8 +26,4 @@ TYPE
     next ();  (* update the fields above *)
   END;
 
-(* This is needed because sometimes libm3 exposes an INTEGER file size, sometimes LONGINT *)
-<*EXTERNAL QScanner__GetFileSize*> 
-PROCEDURE GetFileSize(VAR a:CHAR):INTEGER;
-
 END QScanner.

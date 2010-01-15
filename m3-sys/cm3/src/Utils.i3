@@ -52,8 +52,4 @@ PROCEDURE SymbolicOrHardLink (link: PROCEDURE(name1, name2: const_char_star):int
 (*bootstrap hack*)
 <*EXTERNAL Utils__link*> PROCEDURE link (name1, name2: const_char_star): int;
 
-(* This is needed because sometimes libm3 exposes an INTEGER file size, sometimes LONGINT *)
-<*EXTERNAL Utils__GetFileSize*> 
-PROCEDURE GetFileSize(VAR a:CHAR):INTEGER;
-
 END Utils.
