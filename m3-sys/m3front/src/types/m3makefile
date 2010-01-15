@@ -25,5 +25,3 @@ module ("SubrangeType")
 module ("TypeFP")
 module ("TypeTbl")
 module ("UserProc")
-
-
