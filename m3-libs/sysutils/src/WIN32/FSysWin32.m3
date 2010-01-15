@@ -3,6 +3,7 @@ UNSAFE MODULE FSysWin32 EXPORTS FSUtils;
 
 IMPORT Pathname, Text, OSError, File;
 IMPORT PathRepr, (* FSFixed AS *) FS;
+IMPORT FSUtilsUnsafe, M3toC;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE IsReadable(fn : Pathname.T) : BOOLEAN =
@@ -51,6 +52,16 @@ PROCEDURE IsExecutable(fn : Pathname.T) : BOOLEAN =
       RETURN Text.Equal(ext, "exe") OR Text.Equal(ext, "com");
     END;
   END IsExecutable;
+
+(*--------------------------------------------------------------------------*)
+
+PROCEDURE GetFileSize32(path:TEXT):INTEGER =
+  VAR cpath := M3toC.SharedTtoS(path);
+      res := FSUtilsUnsafe.GetFileSize32(cpath);
+  BEGIN
+    M3toC.FreeSharedS(path, cpath);
+    RETURN res;
+  END GetFileSize32;
 
 BEGIN
 END FSysWin32.
