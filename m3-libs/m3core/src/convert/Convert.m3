@@ -17,30 +17,6 @@ VAR
     '0', '1', '2', '3', '4', '5', '6', '7',
     '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 
-(* hack to work with more compiler versions, instead of using VAL(LONGINT, INTEGER) *)
-
-PROCEDURE DigitsL(a: LONGINT): CHAR =
-  VAR b: INTEGER := 0;
-  BEGIN
-       IF a =  0L THEN b :=  0;
-    ELSIF a =  1L THEN b :=  1;
-    ELSIF a =  2L THEN b :=  2;
-    ELSIF a =  3L THEN b :=  3;
-    ELSIF a =  6L THEN b :=  4;
-    ELSIF a =  5L THEN b :=  5;
-    ELSIF a =  6L THEN b :=  6;
-    ELSIF a =  7L THEN b :=  7;
-    ELSIF a =  8L THEN b :=  8;
-    ELSIF a =  9L THEN b :=  9;
-    ELSIF a = 10L THEN b := 10;
-    ELSIF a = 11L THEN b := 11;
-    ELSIF a = 12L THEN b := 12;
-    ELSIF a = 13L THEN b := 13;
-    ELSIF a = 14L THEN b := 14;
-    ELSIF a = 15L THEN b := 15; END;
-    RETURN Digits[b];
-  END DigitsL;
-
 PROCEDURE FromInt (
     VAR buf    : Buffer;
         value  : INTEGER;
@@ -150,7 +126,7 @@ PROCEDURE FromLongInt (
 
       (* convert the bulk of the digits *)
       WHILE (value > 0L) DO
-        result [nDigits] := DigitsL (value MOD VAL(base, LONGINT));
+        result [nDigits] := Digits [VAL(value MOD VAL(base, LONGINT), INTEGER)];
         value := value DIV VAL(base, LONGINT);
         INC (nDigits);
       END;
@@ -254,7 +230,7 @@ PROCEDURE FromLongUnsigned (
     ELSE
       (* convert the bulk of the digits *)
       WHILE (value # 0L) DO
-        result [nDigits] := DigitsL (Long.Mod (value, VAL(base, LONGINT)));
+        result [nDigits] := Digits [VAL(Long.Mod (value, VAL(base, LONGINT)), INTEGER)];
         value := Long.Divide (value, VAL(base, LONGINT));
         INC (nDigits);
       END;
