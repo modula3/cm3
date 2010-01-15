@@ -45,6 +45,7 @@ module ("Msg")
 module ("Utils")
 module ("WebFile")
 implementation ("Main")
+c_source ("UtilsC")
 
 build_standalone () %-- we don't want to depend on the shared libraries...
 
@@ -66,4 +67,3 @@ end
 
 ManPage ("cm3","1")
 ManPage ("m3makefile","7")
-
