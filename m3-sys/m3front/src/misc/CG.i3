@@ -34,6 +34,8 @@ TYPE (* see M3CG for the interpretation of these types *)
   Frequency   = M3CG.Frequency;
   Cmp         = M3CG.CompareOp;
   Cvt         = M3CG.ConvertOp;
+  AtomicOp    = M3CG.AtomicOp;
+  MemoryOrder = M3CG.MemoryOrder;
   RuntimeError = M3CG.RuntimeError;
   CallingConvention = M3CG.CallingConvention;
 
@@ -678,5 +680,14 @@ PROCEDURE Closure_frame ();
 
 PROCEDURE Comment (offset: INTEGER;  is_const: BOOLEAN;  a, b, c, d: TEXT := NIL);
 (* annotate the output with a&b&c&d as a comment *)
+
+(*--------------------------------------------------------------- atomics ---*)
+
+PROCEDURE Store_ordered (t: MType; order: MemoryOrder);
+PROCEDURE Load_ordered (t: MType; order: MemoryOrder);
+PROCEDURE Exchange (t: MType;  order: MemoryOrder);
+PROCEDURE Compare_exchange (t: MType; u: IType; success, failure: MemoryOrder);
+PROCEDURE Fence (order: MemoryOrder);
+PROCEDURE Fetch_and_op (op: AtomicOp; t: MType; order: MemoryOrder);
 
 END CG.

@@ -13,6 +13,8 @@ IMPORT M3ID, Type, Scope, Value;
 PROCEDURE Parse (): Type.T;
 PROCEDURE ParseFieldList ();
 
+PROCEDURE New (fields: Scope.T): Type.T;
+
 PROCEDURE Split (t: Type.T;  VAR fields: Value.T): BOOLEAN;
 
 PROCEDURE LookUp (t: Type.T;  name: M3ID.T;  VAR field: Value.T): BOOLEAN;
