@@ -687,9 +687,7 @@ PROCEDURE CompileSmall (p: P;  VAR info: Type.Info) =
     EVAL Type.GetBounds (range, min_T, max_T);
     IF NOT TInt.ToInt (min_T, minT)
         OR NOT TInt.ToInt (max_T, maxT) THEN
-      Error.Msg ("set domain too large ("
-            & TargetIntToDiagnosticText("min", min_T)
-            & "," & TargetIntToDiagnosticText("max", max_T) & ")");
+      Error.Msg ("set domain too large");
       minT := FIRST (INTEGER);
       maxT := LAST (INTEGER);
     END;
