@@ -26,7 +26,3 @@ include_dir ("values")
 
 build_standalone ()
 Library ("m3front")
-
-
-
-
