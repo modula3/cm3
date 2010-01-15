@@ -171,7 +171,7 @@ PROCEDURE PrepArgs (t: T) =
     END;
   END PrepArgs;
 
-PROCEDURE NoLValue (<*UNUSED*> t: T; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE NoLValue (<*UNUSED*> t: T; <*UNUSED*> traced: BOOLEAN) =
   BEGIN
     <*ASSERT FALSE*>
   END NoLValue;
@@ -319,14 +319,14 @@ PROCEDURE Compile (p: T) =
     p.methods.compiler (p);
   END Compile;
 
-PROCEDURE PrepLV (p: T; lhs: BOOLEAN) =
+PROCEDURE PrepLV (p: T; traced: BOOLEAN) =
   BEGIN
-    p.methods.prepLV (p, lhs);
+    p.methods.prepLV (p, traced);
   END PrepLV;
 
-PROCEDURE CompileLV (p: T; <*UNUSED*> lhs: BOOLEAN) =
+PROCEDURE CompileLV (p: T; traced: BOOLEAN) =
   BEGIN
-    p.methods.compilerLV (p, lhs := FALSE);
+    p.methods.compilerLV (p, traced);
   END CompileLV;
 
 PROCEDURE PrepBR (p: T;  true, false: CG.Label;  freq: CG.Frequency) =

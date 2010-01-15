@@ -81,7 +81,7 @@ PROCEDURE Check (p: P;  VAR cs: Stmt.CheckState) =
     END;
       
     Variable.BindType (p.var, t, indirect := (p.kind = Kind.designator),
-                       readonly := NOT Expr.IsWritable (p.expr, lhs := FALSE),
+                       readonly := NOT Expr.IsWritable (p.expr, traced := FALSE),
                        open_array_ok := TRUE,  needs_init := FALSE);
 
     Scope.TypeCheck (p.scope, cs);
@@ -99,16 +99,16 @@ PROCEDURE Compile (p: P): Stmt.Outcomes =
     val: CG.Val;
     dope_size: INTEGER;
     t, tlhs: Type.T;
-    global, indirect, lhs: BOOLEAN;
+    global, indirect, traced: BOOLEAN;
   BEGIN
     t := Type.CheckInfo (Value.TypeOf (p.var), info);
 
     (* evaluate the expr outside the new scope and capture its value *)
     CASE p.kind OF
     | Kind.designator =>
-        Variable.Split (p.var, tlhs, global, indirect, lhs);
-        Expr.PrepLValue (p.expr, lhs);
-        Expr.CompileAddress (p.expr, lhs);
+        Variable.Split (p.var, tlhs, global, indirect, traced);
+        Expr.PrepLValue (p.expr, traced);
+        Expr.CompileAddress (p.expr, traced);
         val := CG.Pop ();
     | Kind.structure =>
         AssignStmt.PrepForEmit (Value.TypeOf (p.var), p.expr,
