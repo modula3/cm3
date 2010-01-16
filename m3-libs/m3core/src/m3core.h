@@ -216,12 +216,12 @@ typedef INTEGER m3_uid_t;
 struct _m3_stat_t;
 typedef struct _m3_stat_t m3_stat_t;
 
-int Ustat__fstat(int fd, m3_stat_t* m3st);
-int Ustat__lstat(const char* path, m3_stat_t* m3st);
-int Ustat__stat(const char* path, m3_stat_t* m3st);
+int __cdecl Ustat__fstat(int fd, m3_stat_t* m3st);
+int __cdecl Ustat__lstat(const char* path, m3_stat_t* m3st);
+int __cdecl Ustat__stat(const char* path, m3_stat_t* m3st);
 #ifdef HAS_STAT_FLAGS
-int Ustat__fchflags(int fd, unsigned long flags);
-int Ustat__chflags(const char* path, unsigned long flags);
+int __cdecl Ustat__fchflags(int fd, unsigned long flags);
+int __cdecl Ustat__chflags(const char* path, unsigned long flags);
 #endif
 
 /*
@@ -263,27 +263,27 @@ typedef struct {
     int linger;
 } m3_linger_t;
 
-int Usocket__listen(int s, int backlog);
-int Usocket__shutdown(int s, int how);
-int Usocket__socket(int af, int type, int protocol);
-int Usocket__bind(int s, sockaddr_t* name, m3_socklen_t len);
-int Usocket__connect(int s, sockaddr_t* name, m3_socklen_t len);
-int Usocket__sendto(int s, void* msg, size_t length, int flags, sockaddr_t* dest, m3_socklen_t len);
-int Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len);
-int Usocket__getpeername(int s, sockaddr_t* name, m3_socklen_t* plen);
-int Usocket__getsockname(int s, sockaddr_t* name, m3_socklen_t* plen);
-int Usocket__accept(int s, sockaddr_t* addr, m3_socklen_t* plen);
-int Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen);
-int Usocket__recvfrom(int s, void* buf, size_t len, int flags, sockaddr_t* from, m3_socklen_t* plen);
+int __cdecl Usocket__listen(int s, int backlog);
+int __cdecl Usocket__shutdown(int s, int how);
+int __cdecl Usocket__socket(int af, int type, int protocol);
+int __cdecl Usocket__bind(int s, sockaddr_t* name, m3_socklen_t len);
+int __cdecl Usocket__connect(int s, sockaddr_t* name, m3_socklen_t len);
+int __cdecl Usocket__sendto(int s, void* msg, size_t length, int flags, sockaddr_t* dest, m3_socklen_t len);
+int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len);
+int __cdecl Usocket__getpeername(int s, sockaddr_t* name, m3_socklen_t* plen);
+int __cdecl Usocket__getsockname(int s, sockaddr_t* name, m3_socklen_t* plen);
+int __cdecl Usocket__accept(int s, sockaddr_t* addr, m3_socklen_t* plen);
+int __cdecl Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen);
+int __cdecl Usocket__recvfrom(int s, void* buf, size_t len, int flags, sockaddr_t* from, m3_socklen_t* plen);
 
 
 #ifndef _WIN32
-DIR* Udir__opendir(const char* a);
+DIR* __cdecl Udir__opendir(const char* a);
 #endif
 
-int Umman__mprotect(ADDRESS addr, size_t len, int prot);
-ADDRESS Umman__mmap(ADDRESS addr, size_t len, int prot, int flags, int fd, m3_off_t off);
-int Umman__munmap(ADDRESS addr, size_t len);
+int __cdecl Umman__mprotect(ADDRESS addr, size_t len, int prot);
+ADDRESS __cdecl Umman__mmap(ADDRESS addr, size_t len, int prot, int flags, int fd, m3_off_t off);
+int __cdecl Umman__munmap(ADDRESS addr, size_t len);
 
 /* somewhat idealized, but ideally we'd use INT64 here */
 typedef INTEGER m3_time_t;
@@ -313,24 +313,24 @@ typedef struct {
 } m3_itimerval_t;
 
 
-m3_time_t Utime__get_timezone(void);
-m3_time_t Utime__get_altzone(void);
-int Utime__get_daylight(void);
-const char* Utime__get_tzname(unsigned a);
-int Utime__gettimeofday(m3_timeval_t* m3t);
-int Utime__getitimer(int which, m3_itimerval_t* m3t);
-m3_time_t Utime__time(m3_time_t* tloc);
-m3_time_t Utime__mktime(tm_t* tm);
-char* Utime__ctime(const m3_time_t* m);
-tm_t* Utime__localtime(const m3_time_t* m);
-tm_t* Utime__gmtime(const m3_time_t* m);
-tm_t* Utime__localtime_r(const m3_time_t* clock, tm_t* result);
-tm_t* Utime__gmtime_r(const m3_time_t* clock, tm_t* result);
-int Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old);
-int Utime__nanosleep(const m3_timespec_t* m3req, m3_timespec_t* m3rem);
-void Utime__tzset(void);
-int Unix__utimes(const char* file, const m3_timeval_t* tvp);
-int Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, m3_timeval_t* timeout);
+m3_time_t __cdecl Utime__get_timezone(void);
+m3_time_t __cdecl Utime__get_altzone(void);
+int __cdecl Utime__get_daylight(void);
+const char* __cdecl Utime__get_tzname(unsigned a);
+int __cdecl Utime__gettimeofday(m3_timeval_t* m3t);
+int __cdecl Utime__getitimer(int which, m3_itimerval_t* m3t);
+m3_time_t __cdecl Utime__time(m3_time_t* tloc);
+m3_time_t __cdecl Utime__mktime(tm_t* tm);
+char* __cdecl Utime__ctime(const m3_time_t* m);
+tm_t* __cdecl Utime__localtime(const m3_time_t* m);
+tm_t* __cdecl Utime__gmtime(const m3_time_t* m);
+tm_t* __cdecl Utime__localtime_r(const m3_time_t* clock, tm_t* result);
+tm_t* __cdecl Utime__gmtime_r(const m3_time_t* clock, tm_t* result);
+int __cdecl Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old);
+int __cdecl Utime__nanosleep(const m3_timespec_t* m3req, m3_timespec_t* m3rem);
+void __cdecl Utime__tzset(void);
+int __cdecl Unix__utimes(const char* file, const m3_timeval_t* tvp);
+int __cdecl Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, m3_timeval_t* timeout);
 
 
 /* Some compilers don't like this, will adjust as needed. */
@@ -345,49 +345,49 @@ int Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
 #define M3_FIELD_SIZE(type, field) (sizeof((type*)0)->field)
 #define M3_SIZE_THROUGH_FIELD(type, field) (offsetof(type, field) + M3_FIELD_SIZE(type, field))
 
-void Unix__Assertions(void);
-void Usocket__Assertions(void);
-void Utime__Assertions(void);
+void __cdecl Unix__Assertions(void);
+void __cdecl Usocket__Assertions(void);
+void __cdecl Utime__Assertions(void);
 
 
-int Unix__open(const char* path, int flags, m3_mode_t mode);
-int Unix__mkdir(const char* path, m3_mode_t mode);
-int Unix__ftruncate(int fd, m3_off_t length);
-m3_off_t Unix__lseek(int fd, m3_off_t offset, int whence);
-int Unix__fcntl(int fd, int request, int arg);
-int Unix__ioctl(int fd, int request, void* argp);
-int Unix__mknod(const char* path, m3_mode_t mode, m3_dev_t dev);
-m3_mode_t Unix__umask(m3_mode_t newmask);
+int __cdecl Unix__open(const char* path, int flags, m3_mode_t mode);
+int __cdecl Unix__mkdir(const char* path, m3_mode_t mode);
+int __cdecl Unix__ftruncate(int fd, m3_off_t length);
+m3_off_t __cdecl Unix__lseek(int fd, m3_off_t offset, int whence);
+int __cdecl Unix__fcntl(int fd, int request, int arg);
+int __cdecl Unix__ioctl(int fd, int request, void* argp);
+int __cdecl Unix__mknod(const char* path, m3_mode_t mode, m3_dev_t dev);
+m3_mode_t __cdecl Unix__umask(m3_mode_t newmask);
 
 struct _m3_hostent_t;
 typedef struct _m3_hostent_t m3_hostent_t;
 
-m3_hostent_t* Unetdb__gethostbyname(const char* name, m3_hostent_t* m3);
-m3_hostent_t* Unetdb__gethostbyaddr(const char* addr, int len, int type, m3_hostent_t* m3);
+m3_hostent_t* __cdecl Unetdb__gethostbyname(const char* name, m3_hostent_t* m3);
+m3_hostent_t* __cdecl Unetdb__gethostbyaddr(const char* addr, int len, int type, m3_hostent_t* m3);
 
 
 struct _m3_group_t;
 typedef struct _m3_group_t m3_group_t;
 
-m3_group_t* Ugrp__getgrent(m3_group_t* m3group);
-m3_group_t* Ugrp__getgrgid(m3_group_t* m3group, m3_gid_t gid);
-m3_group_t* Ugrp__getgrnam(m3_group_t* m3group, const char* name);
-void Ugrp__setgrent(void);
-void Ugrp__endgrent(void);
+m3_group_t* __cdecl Ugrp__getgrent(m3_group_t* m3group);
+m3_group_t* __cdecl Ugrp__getgrgid(m3_group_t* m3group, m3_gid_t gid);
+m3_group_t* __cdecl Ugrp__getgrnam(m3_group_t* m3group, const char* name);
+void __cdecl Ugrp__setgrent(void);
+void __cdecl Ugrp__endgrent(void);
 
 
-int Unix__link(const char* name1, const char* name2);
-int Unix__chmod(const char* path, m3_mode_t mode);
-int Unix__fchmod(int fd, m3_mode_t mode);
-int Unix__chown(const char* path, m3_uid_t owner, m3_gid_t group);
-int Unix__fchown(int fd, m3_uid_t owner, m3_gid_t group);
-int Unix__creat(const char* path, m3_mode_t mode);
-int Unix__dup(int oldd);
+int __cdecl Unix__link(const char* name1, const char* name2);
+int __cdecl Unix__chmod(const char* path, m3_mode_t mode);
+int __cdecl Unix__fchmod(int fd, m3_mode_t mode);
+int __cdecl Unix__chown(const char* path, m3_uid_t owner, m3_gid_t group);
+int __cdecl Unix__fchown(int fd, m3_uid_t owner, m3_gid_t group);
+int __cdecl Unix__creat(const char* path, m3_mode_t mode);
+int __cdecl Unix__dup(int oldd);
 
-UINT32 Uin__ntohl(UINT32 x);
-UINT16 Uin__ntohs(UINT16 x);
-UINT32 Uin__htonl(UINT32 x);
-UINT16 Uin__htons(UINT16 x);
+UINT32 __cdecl Uin__ntohl(UINT32 x);
+UINT16 __cdecl Uin__ntohs(UINT16 x);
+UINT32 __cdecl Uin__htonl(UINT32 x);
+UINT16 __cdecl Uin__htons(UINT16 x);
 
 #ifdef __cplusplus
 } /* extern "C" */
