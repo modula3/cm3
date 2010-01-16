@@ -1,3 +1,15 @@
+#ifdef _MSC_VER
+#pragma warning(disable:4514) /* unused inline function removed */
+#pragma warning(disable:4242) /* possible loss of data */
+#pragma warning(disable:4244) /* possible loss of data */
+#pragma warning(disable:4018) /* signed/unsigned mismatch */
+#pragma warning(disable:4365) /* signed/unsigned mismatch */
+#pragma warning(disable:4245) /* signed/unsigned mismatch */
+#pragma warning(disable:4127) /* conditional expression is constant */
+#pragma warning(disable:4706) /* assignment within conditional */
+#pragma warning(disable:4701) /* possibly uninitialized local used */
+#endif
+
 /****************************************************************
  *
  * The author of this software is David M. Gay.
@@ -1927,7 +1939,7 @@ m3_strtod
 					if (j >= 53)
 					 word0(rv) = (P+2)*Exp_msk1;
 					else
-					 word0(rv) &= 0xffffffff << j-32;
+					 word0(rv) &= 0xffffffff << (j-32);
 					}
 				else
 					word1(rv) &= 0xffffffff << j;
@@ -3301,7 +3313,9 @@ m3_dtoa
 		++*s++;
 		}
 	else {
+#ifdef Honor_FLT_ROUNDS
  trimzeros:
+#endif
 		while(*--s == '0');
 		s++;
 		}
