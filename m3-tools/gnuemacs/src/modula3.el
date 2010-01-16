@@ -2565,6 +2565,7 @@ in buffer."
 			  (save-excursion
 			    (forward-word -2)
 			    (looking-at "OF"))))))
+    ("LONGCARD" . (4 (ls-of)))
     ("LOOP" . (2 (ls-only)
 		 (lambda (on-lm starts-ssl)
 		   (save-excursion (forward-word -2)
