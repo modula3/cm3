@@ -82,6 +82,9 @@
 #include <signal.h>
 
 #ifdef _WIN32
+#ifndef WIN32
+#define WIN32
+#endif
 #include <direct.h>
 #include <io.h>
 #include <winsock.h>
