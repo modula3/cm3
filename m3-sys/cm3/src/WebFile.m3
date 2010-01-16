@@ -8,9 +8,10 @@ MODULE WebFile;
 
 IMPORT IntIntTbl, ETimer, File, Text, OSError;
 IMPORT M3Buf, M3ID, M3File, Target;
-IMPORT M3Path, Utils, Msg, FSUtils;
+IMPORT M3Path, Utils, Msg;
 
-CONST InfoFile = ".M3WEB";
+CONST
+  InfoFile = ".M3WEB";
 
 TYPE
   InfoEntry = REF RECORD
@@ -58,12 +59,13 @@ PROCEDURE Inhale (): CharList =
   VAR
     rd  : File.T;
     buf : CharList := NIL;
-    len := FSUtils.GetFileSize32(InfoFile);
+    len : INTEGER;
   BEGIN
     IF Utils.LocalModTime (InfoFile) = Utils.NO_TIME THEN RETURN NIL END;
     rd  := Utils.OpenReader (InfoFile, fatal := FALSE);
     IF (rd = NIL) THEN RETURN NIL END;
     TRY
+      len := VAL(rd.status().size, INTEGER);
       IF (len > 0) THEN
         buf := NEW (CharList, len);
         EVAL M3File.Read (rd, buf^, len);
