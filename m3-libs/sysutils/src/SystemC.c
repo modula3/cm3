@@ -5,7 +5,6 @@ copied from m3core/src/C/Common/Cerrno.i3 for bootstrapping against older releas
  */
 
 #ifdef _MSC_VER
-#pragma optimize("gty", on)
 #undef _DLL
 #ifndef _MT
 #define _MT
