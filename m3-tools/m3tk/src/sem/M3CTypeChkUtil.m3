@@ -50,6 +50,15 @@ PROCEDURE IsSubTypeOfInteger(
   END IsSubTypeOfInteger;
 
 
+PROCEDURE IsSubTypeOfLongint(
+    type: M3AST_SM.TYPE_SPEC_UNSET)
+    : BOOLEAN
+    RAISES {}=
+  BEGIN
+    RETURN M3CTypeRelation.SubType(type, M3CStdTypes.Longint());
+  END IsSubTypeOfLongint;
+
+
 PROCEDURE IsSubTypeOfBoolean(
     type: M3AST_SM.TYPE_SPEC_UNSET)
     : BOOLEAN
@@ -66,6 +75,15 @@ PROCEDURE IsSubTypeOfCardinal(
   BEGIN
     RETURN M3CTypeRelation.SubType(type, M3CStdTypes.Cardinal());
   END IsSubTypeOfCardinal;
+
+
+PROCEDURE IsSubTypeOfLongcard(
+    type: M3AST_SM.TYPE_SPEC_UNSET)
+    : BOOLEAN
+    RAISES {}=
+  BEGIN
+    RETURN M3CTypeRelation.SubType(type, M3CStdTypes.Longcard());
+  END IsSubTypeOfLongcard;
 
 
 PROCEDURE IsSubTypeOfText(type: M3AST_SM.TYPE_SPEC_UNSET): BOOLEAN RAISES {}=

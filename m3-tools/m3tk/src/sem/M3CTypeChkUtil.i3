@@ -28,11 +28,19 @@ PROCEDURE IsSubTypeOfInteger(
     type: M3AST_SM.TYPE_SPEC_UNSET)
     : BOOLEAN
     RAISES {};
+PROCEDURE IsSubTypeOfLongint(
+    type: M3AST_SM.TYPE_SPEC_UNSET)
+    : BOOLEAN
+    RAISES {};
 PROCEDURE IsSubTypeOfBoolean(
     type: M3AST_SM.TYPE_SPEC_UNSET)
     : BOOLEAN
     RAISES {};
 PROCEDURE IsSubTypeOfCardinal(
+    type: M3AST_SM.TYPE_SPEC_UNSET)
+    : BOOLEAN
+    RAISES {};
+PROCEDURE IsSubTypeOfLongcard(
     type: M3AST_SM.TYPE_SPEC_UNSET)
     : BOOLEAN
     RAISES {};
