@@ -19,17 +19,19 @@
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NONSTDC_NO_DEPRECATE
-struct _RPC_ASYNC_STATE; /* warning 4115: named type definition in parentheses */
-struct IRpcStubBuffer;   /* warning 4115: named type definition in parentheses */
+#pragma warning(disable:4616) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
+#pragma warning(disable:4619) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
+#pragma warning(disable:4115) /* named type definition in parentheses */
 #pragma warning(disable:4100) /* unused parameter */
 #pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
 #pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
 #pragma warning(disable:4514) /* unused inline function removed */
-#if _MSC_VER < 1000
 #pragma warning(disable:4705) /* statement has no effect for merely using assert() at -W4 */
 #pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
 #pragma warning(disable:4226) /* nonstandard extension: __export */
-#endif
+#pragma warning(disable:4820) /* padding inserted */
+#pragma warning(disable:4255) /* () change to (void) */
+#pragma warning(disable:4668) /* #if of undefined symbol */
 #endif
 
 #ifdef __OpenBSD__

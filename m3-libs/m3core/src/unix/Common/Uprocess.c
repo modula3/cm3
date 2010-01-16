@@ -3,7 +3,8 @@
 /* See the file COPYRIGHT for a full description.             */
 
 #ifdef _MSC_VER
-#pragma optimize("gty", on)
+#pragma optimize("gt", on)
+#pragma optimize("y", off)
 #undef _DLL
 #ifndef _MT
 #define _MT
