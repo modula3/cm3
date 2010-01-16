@@ -3,8 +3,6 @@
 #endif
 
 #ifdef _MSC_VER
-#pragma optimize("gt", on)
-#pragma optimize("y", off)
 #endif
 
 #ifdef __cplusplus

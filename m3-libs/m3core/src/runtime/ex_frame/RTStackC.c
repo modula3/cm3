@@ -8,8 +8,6 @@
    walking. */
 
 #ifdef _MSC_VER
-#pragma optimize("gt", on)
-#pragma optimize("y", off)
 #undef _DLL
 #ifndef _MT
 #define _MT
