@@ -105,8 +105,6 @@ M3WRAP1_(int, isatty, int)
 M3WRAP2(int, rename, const char*, const char*)
 M3WRAP1_(int, rmdir, const char*)
 M3WRAP1_(int, unlink, const char*)
-M3WRAP2(int, gethostname, char*, size_t)
-M3WRAP2_(char*, getcwd, char*, size_t)
 M3WRAP2_(int, access, const char*, int)
 M3WRAP1_(int, chdir, const char*)
 M3WRAP1_(int, close, int)
@@ -131,6 +129,8 @@ M3WRAP3(int, mknod, const char*, m3_mode_t, m3_dev_t)
 M3WRAP3(m3_off_t, lseek, int, m3_off_t, int)
 M3WRAP2(int, mkdir, const char*, m3_mode_t)
 M3WRAP1(int, pipe, int*)
+M3WRAP2(int, gethostname, char*, size_t)
+M3WRAP2(char*, getcwd, char*, size_t)
 #endif
 
 void __cdecl Unix__underscore_exit(int exit_code)
@@ -144,6 +144,20 @@ void __cdecl Unix__exit(int i)
 }
 
 #ifdef _WIN32
+
+#if 0
+char* __cdecl Unix__getcwd(char* name, size_t len)
+{
+    assert(len < INT_MAX);
+    return _getcwd(name, (int)len);
+}
+
+int __cdecl Unix__gethostname(char* name, size_t len)
+{
+    assert(len < INT_MAX);
+    return gethostname(name, (int)len);
+}
+#endif
 
 int __cdecl Unix__mkdir(const char* path, m3_mode_t mode)
 {
