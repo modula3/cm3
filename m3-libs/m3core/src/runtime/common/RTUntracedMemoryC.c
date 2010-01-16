@@ -6,7 +6,8 @@ reducing C runtime dependency.
 */
 
 #ifdef _MSC_VER
-#pragma optimize("gty", on)
+#pragma optimize("gt", on)
+#pragma optimize("y", off)
 #undef _DLL
 #endif
 
