@@ -21,7 +21,7 @@ TYPE
     string   : Quake.ID;  (* token = QToken.T.{Name,String} *)
     cardinal : CARDINAL;  (* token = OToken.T.Cardinal *)
   METHODS
-    init (path: TEXT; f: File.T;  map: Quake.IDMap): T;
+    init (f: File.T;  map: Quake.IDMap): T;
     initText (txt: TEXT;  map: Quake.IDMap): T;
     next ();  (* update the fields above *)
   END;

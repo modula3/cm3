@@ -48,6 +48,7 @@ PROCEDURE InitAstTable (astTable: RefRefTbl.T) =
     EVAL astTable.put(M3CStdTypes.WideChar(), Type.widechar);
     EVAL astTable.put(M3CStdTypes.Text(), Type.text);
     EVAL astTable.put(M3CStdTypes.Cardinal(), Type.cardinal);
+    EVAL astTable.put(M3CStdTypes.Longcard(), Type.longcard);
     EVAL astTable.put(M3CStdTypes.Boolean(), Type.boolean);
     EVAL astTable.put(M3CStdTypes.Mutex(), Type.mutex);
   END InitAstTable;

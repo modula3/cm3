@@ -65,7 +65,8 @@ TYPE
        WHILE_, WIDECHAR_, WITH_,
        Identifier,
        CharLiteral, WideCharLiteral, TextLiteral, WideTextLiteral,
-           IntegerLiteral, RealLiteral, LongRealLiteral, ExtendedLiteral,
+           IntegerLiteral, LongintLiteral,
+           RealLiteral, LongRealLiteral, ExtendedLiteral,
        Plus, Minus, Times, Divide, Equal, NotEqual, LessThan, GreaterThan,
            LessThanOrEqual, GreaterThanOrEqual,
        Ampersand, Dereference, Dot,
@@ -163,6 +164,7 @@ CONST
   TextLiteral: T = ORD(E.TextLiteral);
   WideTextLiteral: T = ORD(E.WideTextLiteral);
   IntegerLiteral: T = ORD(E.IntegerLiteral);
+  LongintLiteral: T = ORD(E.LongintLiteral);
   RealLiteral: T = ORD(E.RealLiteral);
   LongRealLiteral: T = ORD(E.LongRealLiteral);
   ExtendedLiteral: T = ORD(E.ExtendedLiteral);

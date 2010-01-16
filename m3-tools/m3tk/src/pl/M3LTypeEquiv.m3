@@ -223,6 +223,7 @@ PROCEDURE Initialize() RAISES {}=
     (* Add the basic types *)
     Add(M3CStdTypes.Null());
     Add(M3CStdTypes.Integer());
+    Add(M3CStdTypes.Longint());
     Add(M3CStdTypes.Real());
     Add(M3CStdTypes.LongReal());
     Add(M3CStdTypes.Extended());
@@ -234,6 +235,7 @@ PROCEDURE Initialize() RAISES {}=
     Add(M3CStdTypes.Char());
     Add(M3CStdTypes.Boolean());
     Add(M3CStdTypes.Cardinal());
+    Add(M3CStdTypes.Longcard());
     (* Add the other standard reference types *)
     Add(M3CStdTypes.Text());
     Add(M3CStdTypes.Mutex());

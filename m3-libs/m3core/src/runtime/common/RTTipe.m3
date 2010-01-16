@@ -20,23 +20,24 @@ TYPE (* This list must be kept in sync with TipeDesc.m3.Op, in m3front. *)
      Enum,          (* 05, #elements: INT                   *)
      Extended,      (* 06                                   *)
      Integer,       (* 07                                   *)
-     Longint,       (* 08                                   *)
-     Longreal,      (* 09                                   *)
-     Null,          (* 0a                                   *)
-     Object,        (* 0b, #fields: INT, {fields: TYPE}     *)
-     OpenArray,     (* 0c, #dimensions: INT, element: TYPE  *)
-     Packed,        (* 0d, bit size: INT, base type: TYPE   *)
-     Proc,          (* 0e                                   *)
-     Real,          (* 0f                                   *)
-     Record,        (* 10, #fields: INT, {fields: TYPE}     *)
-     Ref,           (* 11, self id: UID                     *)
-     Refany,        (* 12                                   *)
-     Set,           (* 13, #elements: INT                   *)
-     Subrange,      (* 14, min, max: INT                    *)
-     UntracedRef,   (* 15, self id: UID                     *)
+     Longcard,      (* 08                                   *)
+     Longint,       (* 09                                   *)
+     Longreal,      (* 0a                                   *)
+     Null,          (* 0b                                   *)
+     Object,        (* 0c, #fields: INT, {fields: TYPE}     *)
+     OpenArray,     (* 0d, #dimensions: INT, element: TYPE  *)
+     Packed,        (* 0e, bit size: INT, base type: TYPE   *)
+     Proc,          (* 0f                                   *)
+     Real,          (* 10                                   *)
+     Record,        (* 11, #fields: INT, {fields: TYPE}     *)
+     Ref,           (* 12, self id: UID                     *)
+     Refany,        (* 13                                   *)
+     Set,           (* 14, #elements: INT                   *)
+     Subrange,      (* 15, min, max: INT                    *)
+     UntracedRef,   (* 16, self id: UID                     *)
   (* Widechar is denoted as Enum, with #elements = 2^16.    *)
-     OldN,          (* 16, node #: INT                      *)
-     Old0           (* 17                                   *)
+     OldN,          (* 17, node #: INT                      *)
+     Old0           (* 18                                   *)
   };(* Old1, Old2, ... Old(255-ORD(Old0)) *)
 
 TYPE Byte  = BITS 8 FOR [0..255];
@@ -59,7 +60,7 @@ TYPE
     struct_align  : INTEGER;
     word_size     : INTEGER;
     word_align    : INTEGER;
-    longint_size  : INTEGER;
+    long_size     : INTEGER;
     lazy_align    : BOOLEAN
   (* FIXME: ^ Use this below. *) 
   END;
@@ -87,14 +88,14 @@ PROCEDURE Get
     p.word_size     := packing.word_size;
     p.word_align    := MIN (p.word_size, p.max_align);
     p.lazy_align    := packing.lazy_align;
-    IF packing.longint_size = 8 
-    THEN p.longint_size := BITSIZE(LONGINT)
+    IF packing.long_size = 8 
+    THEN p.long_size := BITSIZE(LONGINT)
          (* ^Compatibility:  This can can happen if we read an old pickle that
             was written before RTPacking was updated to support LONGINT.
             This will preserve the behaviour that existed after addition of
             LONGINT to the compiler, but before LONGINT support in Pickles.
          *)  
-    ELSE p.longint_size  := packing.longint_size;
+    ELSE p.long_size  := packing.long_size;
     END; 
     FixSizes (t, p);
 
@@ -114,6 +115,7 @@ PROCEDURE ReadOp (VAR s: State): T =
     | ORD (Op.Char)     => t := NEW (Builtin, kind := Kind.Char);
     | ORD (Op.Extended) => t := NEW (Builtin, kind := Kind.Extended);
     | ORD (Op.Integer)  => t := NEW (Builtin, kind := Kind.Integer);
+    | ORD (Op.Longcard) => t := NEW (Builtin, kind := Kind.Longcard);
     | ORD (Op.Longint)  => t := NEW (Builtin, kind := Kind.Longint);
     | ORD (Op.Longreal) => t := NEW (Builtin, kind := Kind.Longreal);
     | ORD (Op.Null)     => t := NEW (Builtin, kind := Kind.Null);
@@ -355,8 +357,9 @@ PROCEDURE FixSizes (t: T;  READONLY p: Packing) =
         t.size  := p.word_size;
         t.align := p.word_align;
 
-    | Kind.Longint =>
-        t.size := p.longint_size;
+    | Kind.Longint,
+      Kind.Longcard =>
+        t.size := p.long_size;
         t.align := MIN (t.size, p.max_align);
 
     | Kind.Boolean =>
@@ -562,6 +565,7 @@ PROCEDURE IsAlignedOK (t: T;  offset: INTEGER;  READONLY p: Packing): BOOLEAN =
     | Kind.Address,
       Kind.Cardinal,
       Kind.Integer,
+      Kind.Longcard,
       Kind.Longint,
       Kind.Null,
       Kind.Proc,

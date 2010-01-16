@@ -15,6 +15,7 @@ FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset, No_label;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
+FROM M3CG IMPORT MemoryOrder;
 
 TYPE WrVar    = Var    OBJECT tag: INTEGER END;
 TYPE WrProc   = Proc   OBJECT tag: INTEGER END;
@@ -174,13 +175,12 @@ TYPE
         load_procedure := load_procedure;
         load_static_link := load_static_link;
         comment := comment;
+        store_ordered := store_ordered;
+        load_ordered := load_ordered;
+        exchange := exchange;
+        compare_exchange := compare_exchange;
+        fence := fence;
         fetch_and_op := fetch_and_op;
-        op_and_fetch := op_and_fetch;
-        bool_compare_and_swap := bool_compare_and_swap;
-        val_compare_and_swap := val_compare_and_swap;
-        synchronize := synchronize;
-        lock_test_and_set := lock_test_and_set;
-        lock_release := lock_release;
       END;
         
 
@@ -1755,60 +1755,64 @@ PROCEDURE Cmt (u: U;  t: TEXT;  VAR width: INTEGER) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE fetch_and_op (u: U;  op: AtomicOp;  t: MType) =
-  CONST OpName = ARRAY AtomicOp OF TEXT { "fetch_and_add", "fetch_and_sub",
-                                          "fetch_and_or",  "fetch_and_and",
-                                          "fetch_and_xor", "fetch_and_nand" };
+PROCEDURE store_ordered (u: U;  t: ZType;  z: MType;  order: MemoryOrder) =
   BEGIN
-    Cmd   (u, OpName [op]);
-    TName (u, t);
-    NL    (u);
-  END fetch_and_op;
-
-PROCEDURE op_and_fetch (u: U;  op: AtomicOp;  t: MType) =
-  CONST OpName = ARRAY AtomicOp OF TEXT { "add_and_fetch", "sub_and_fetch",
-                                          "or_and_fetch",  "and_and_fetch",
-                                          "xor_and_fetch", "nand_and_fetch" };
-  BEGIN
-    Cmd   (u, OpName [op]);
-    TName (u, t);
-    NL    (u);
-  END op_and_fetch;
-
-PROCEDURE bool_compare_and_swap (u: U;  t: MType;  z: IType) =
-  BEGIN
-    Cmd   (u, "compare_and_swap");
+    Cmd   (u, "store_ordered");
     TName (u, t);
     TName (u, z);
+    Int   (u, ORD(order));
     NL    (u);
-  END bool_compare_and_swap;
+  END store_ordered;
 
-PROCEDURE val_compare_and_swap (u: U;  t: MType) =
+PROCEDURE load_ordered (u: U;  t: MType;  z: ZType;  order: MemoryOrder) =
   BEGIN
-    Cmd   (u, "val_compare_and_swap");
+    Cmd   (u, "load_ordered");
     TName (u, t);
+    TName (u, z);
+    Int   (u, ORD(order));
     NL    (u);
-  END val_compare_and_swap;
+  END load_ordered;
 
-PROCEDURE synchronize (u: U) =
+PROCEDURE exchange (u: U;  t: MType;  z: ZType;  order: MemoryOrder) =
   BEGIN
-    Cmd (u, "synchronize");
-    NL  (u);
-  END synchronize;
+    Cmd   (u, "exchange");
+    TName (u, t);
+    TName (u, z);
+    Int   (u, ORD(order));
+    NL    (u);
+  END exchange;
 
-PROCEDURE lock_test_and_set (u: U;  t: MType) =
+PROCEDURE compare_exchange (u: U;  t: MType;  z: ZType;  r: IType;
+                            success, failure: MemoryOrder) =
   BEGIN
-    Cmd   (u, "lock_test_and_set");
+    Cmd   (u, "exchange");
     TName (u, t);
+    TName (u, z);
+    TName (u, r);
+    Int   (u, ORD(success));
+    Int   (u, ORD(failure));
     NL    (u);
-  END lock_test_and_set;
-  
-PROCEDURE lock_release (u: U;  t: MType) =
+  END compare_exchange;
+
+PROCEDURE fence (u: U;  order: MemoryOrder) =
   BEGIN
-    Cmd   (u, "lock_release");
-    TName (u, t);
+    Cmd   (u, "fence");
+    Int   (u, ORD(order));
     NL    (u);
-  END lock_release;
+  END fence;
+
+PROCEDURE fetch_and_op (u: U;  op: AtomicOp;  t: MType;  z: ZType;
+                        order: MemoryOrder) =
+  CONST OpName = ARRAY AtomicOp OF TEXT { "fetch_and_add", "fetch_and_sub",
+                                          "fetch_and_or",  "fetch_and_and",
+                                          "fetch_and_xor" };
+  BEGIN
+    Cmd   (u, OpName [op]);
+    TName (u, t);
+    TName (u, z);
+    Int   (u, ORD(order));
+    NL    (u);
+  END fetch_and_op;
 
 BEGIN
 END M3CG_Wr.

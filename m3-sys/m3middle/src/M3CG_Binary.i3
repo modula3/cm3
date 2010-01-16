@@ -37,10 +37,8 @@ TYPE
     start_call_direct, call_direct, start_call_indirect,
     call_indirect, pop_param, pop_struct, pop_static_link,
     load_procedure, load_static_link, comment,
-    fetch_and_add, fetch_and_sub, fetch_and_or, fetch_and_and, fetch_and_xor, fetch_and_nand,
-    add_and_fetch, sub_and_fetch, or_and_fetch, and_and_fetch, xor_and_fetch, nand_and_fetch,
-    bool_compare_and_swap, val_compare_and_swap,
-    synchronize, lock_test_and_set, lock_release
+    store_ordered, load_ordered, exchange, compare_exchange, fence,
+    fetch_and_add, fetch_and_sub, fetch_and_or, fetch_and_and, fetch_and_xor
   };
 
 (* Integers are encoded as sequences of unsigned bytes, [0..255].

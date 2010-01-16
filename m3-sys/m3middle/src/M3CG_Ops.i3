@@ -18,6 +18,7 @@ FROM M3CG IMPORT Type, MType, IType, RType, AType, ZType, Sign;
 FROM M3CG IMPORT Name, Var, Proc, Alignment, TypeUID, Label;
 FROM M3CG IMPORT Frequency, CallingConvention, CompareOp, ConvertOp, AtomicOp;
 FROM M3CG IMPORT BitSize, ByteSize, BitOffset, ByteOffset, RuntimeError;
+FROM M3CG IMPORT MemoryOrder;
 
 TYPE
   ErrorHandler = PROCEDURE (msg: TEXT);
@@ -361,7 +362,7 @@ load_indirect (o: ByteOffset;  t: MType;  u: ZType);
 (* s0.u := Mem [s0.A + o].t  *)
 
 store (v: Var;  o: ByteOffset;  t: ZType;  u: MType);
-(* Mem [ ADR(v) + o : s ].u := s0.t; pop *)
+(* Mem [ ADR(v) + o ].u := s0.t; pop *)
 
 store_indirect (o: ByteOffset;  t: ZType;  u: MType);
 (* Mem [s1.A + o].u := s0.t; pop (2) *)
@@ -611,72 +612,31 @@ comment (a, b, c, d: TEXT := NIL);
    may be NIL. *)
 
 (*--------------------------------------------------------------- atomics ---*)
-(* The following builtins are intended to be compatible with those described
-   in the Intel Itanium Processor-specific Application Binary Interface,
-   section 7.4.
+(* These all operate atomically and affect memory as per "o". *)
 
-   The definition given in the Intel documentation allows only for the use of
-   the types int, long, long long, as well as their unsigned counterparts. GCC
-   will allow any integral scalar or pointer type that is 1, 2, 4 or 8 bytes
-   in length.
+store_ordered (t: ZType; u: MType; order: MemoryOrder);
+(* Mem [s1.A].u := s0.t; pop (2) *)
 
-   Not all operations are supported by all target processors.  If a particular
-   operation cannot be implemented on the target processor, a warning will be
-   generated and a call to an external function will be generated.  The
-   external function will carry the same name as the builtin, with an
-   additional suffix `_n' where n is the size of the data type.
+load_ordered (t: MType; u: ZType; order: MemoryOrder);
+(* s0.u := Mem [s0.A].t  *)
 
-   In most cases, these builtins are considered a full barrier.  That is, no
-   memory operand will be moved across the operation, either forward or
-   backward.  Further, instructions will be issued as necessary to prevent the
-   processor from speculating loads across the operation and from queuing
-   stores after the operation.
+exchange (t: MType;  u: ZType;  order: MemoryOrder);
+(* tmp := Mem [s1.A + o].t;  Mem [s1.A + o].t := s0.u;  s0.u := tmp;  pop *)
 
-   All of the routines are are described in the Intel documentation to take
-   "an optional list of variables protected by the memory barrier".  It's not
-   clear what is meant by that; it could mean that only the following
-   variables are protected, or it could mean that these variables should in
-   addition be protected.  At present GCC ignores this list and protects all
-   variables which are globally accessible.  If in the future we make some use
-   of this list, an empty list will continue to mean all globally accessible
-   variables.  *)
+compare_exchange (t: MType; u: ZType; r: IType; success, failure: MemoryOrder);
+(* t1 := Mem[s1.A].t;  t2 := Mem[s2.A].t;
+   IF (t1.u = t2.u)
+   THEN Mem [s2.A].t := s0.u; s2.r := 1; pop(2);
+   ELSE Mem [s1.A].t := t2;   s2.r := 0; pop(2);
+   END; *)
 
-fetch_and_op (op: AtomicOp;  t: MType);
-(* tmp := Mem [s1.A].t; Mem [s1.A].t := tmp op s0.t; s1.t := tmp; pop *)
-op_and_fetch (op: AtomicOp;  t: MType);
-(* tmp := Mem [s1.A].t op s0.t; Mem [s1.A].t := tmp; s1.t := tmp; pop *)
+fence (o: MemoryOrder);
+(* Memory is affected as per o *)
 
-bool_compare_and_swap (t: MType;  u: IType);
-(* tmp := Mem [s2.A].t;  IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END; s2.u := (tmp = s1.t); pop(2) *)
-val_compare_and_swap (t: MType);
-(* tmp := Mem [s2.A].t;  IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END; s2.t := tmp; pop(2) *)
-
-synchronize ();
-(* This builtin issues a full memory barrier *)
-
-lock_test_and_set (t: MType);
-(* tmp := Mem [s1.A].t;  Mem [s1.A].t := s0.t;  s1.t := tmp;  pop *)
-(* This builtin, as described by Intel, is not a traditional test-and-set
-   operation, but rather an atomic exchange operation. It writes value into
-   *ptr, and returns the previous contents of *ptr.  Many targets have only
-   minimal support for such locks, and do not support a full exchange
-   operation. In this case, a target may support reduced functionality here by
-   which the only valid value to store is the immediate constant 1. The exact
-   value actually stored in *ptr is implementation defined.
-
-   This builtin is not a full barrier, but rather an acquire barrier. This
-   means that references after the builtin cannot move to (or be speculated
-   to) before the builtin, but previous memory stores may not be globally
-   visible yet, and previous memory loads may not yet be satisfied.  *)
-
-lock_release (t: MType);
-(* Mem [s0.A].t := 0;  pop *)
-(* This builtin releases the lock acquired by lock_test_and_set. Normally this
-   means writing the constant 0 to *ptr.  This builtin is not a full barrier,
-   but rather a release barrier. This means that all previous memory stores
-   are globally visible, and all previous memory loads have been satisfied,
-   but following memory reads are not prevented from being speculated to
-   before the barrier. *)
+fetch_and_op (op: AtomicOp;  t: MType;  u: ZType;  order: MemoryOrder);
+(* tmp := Mem [s1.A].t;
+   Mem [s1.A].t := tmp op s0.u;
+   s1.u := tmp; pop *)
 
 END; (* TYPE Public *)
 
