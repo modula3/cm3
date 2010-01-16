@@ -16,7 +16,7 @@ void __cdecl WinNT__MemoryBarrier(void)
     MemoryBarrier();
 #else
     /* older headers */
-    volatile long a;
+    volatile long a = 0;
     InterlockedExchange(&a, a);
 #endif
 }
