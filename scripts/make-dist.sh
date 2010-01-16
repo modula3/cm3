@@ -274,6 +274,7 @@ for c in ${PKG_COLLECTIONS}; do
   ) > install.sh
   chmod 755 install.sh
   cp -p $ROOT/scripts/win/setup.cmd $ROOT/setup.cmd
+  chmod 755 setup.cmd
   (
     echo "<html>"
     cat <<EOF
@@ -379,6 +380,7 @@ if [ `hostname` = 'birch' ]; then
     -czf "${ARCHIVE}" doc www
   ls -l "${ARCHIVE}"
 fi
+
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   RSYNC=${RSYNC:-"rsync -vu"}
   type rsync || RSYNC=scp
