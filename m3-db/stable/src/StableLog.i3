@@ -91,9 +91,15 @@ PROCEDURE OutChars(
 (* Marshal a char array in native format. *)
 
 PROCEDURE OutInteger(log: Wr.T; i: INTEGER);
-(* Marshal an integer. *)
+(* Marshal an INTEGER. *)
+
+PROCEDURE OutLongint(log: Wr.T; i: LONGINT);
+(* Marshal a LONGINT. *)
 
 PROCEDURE OutCardinal(log: Wr.T; card: CARDINAL);
+(* Marshal a cardinal. *)
+
+PROCEDURE OutLongcard(log: Wr.T; card: LONGCARD);
 (* Marshal a cardinal. *)
 
 PROCEDURE OutBoolean(log: Wr.T; bool: BOOLEAN);
@@ -127,10 +133,22 @@ PROCEDURE InInteger(
     min := FIRST(INTEGER);
     max := LAST(INTEGER)): INTEGER
     RAISES {Error};
-(* Unmarshal an integer, checking that its value is in  "[min..max]". *)
+(* Unmarshal an INTEGER, checking that its value is in  "[min..max]". *)
+
+PROCEDURE InLongint(
+    log: Rd.T; 
+    min := FIRST(LONGINT);
+    max := LAST(LONGINT)): LONGINT
+    RAISES {Error};
+(* Unmarshal a LONGINT, checking that its value is in  "[min..max]". *)
 
 PROCEDURE InCardinal(
     log: Rd.T; lim: CARDINAL := LAST(CARDINAL)): CARDINAL
+    RAISES {Error};
+(* Unmarshal a cardinal, checking that its value is in "[0..lim]". *)
+
+PROCEDURE InLongcard(
+    log: Rd.T; lim: LONGCARD := LAST(LONGCARD)): LONGCARD
     RAISES {Error};
 (* Unmarshal a cardinal, checking that its value is in "[0..lim]". *)
 
