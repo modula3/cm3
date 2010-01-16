@@ -38,7 +38,7 @@ PROCEDURE ToText(v: T; type: Type.T): TEXT =
           END;
         END;
     | Longint (i) =>
-        IF (type = Type.longint) THEN
+        IF (type = Type.longint) OR (type = Type.longcard) THEN
           RETURN Fmt.LongInt(i.val); 
         ELSE TYPECASE type OF
           | Type.Subrange (sub) =>

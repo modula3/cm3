@@ -135,10 +135,26 @@ PROCEDURE OutInteger (log: Wr.T; i: INTEGER) =
     END
   END OutInteger;
 
+PROCEDURE OutLongint (log: Wr.T; i: LONGINT) =
+  BEGIN
+    TRY
+      Wr.PutString(log, LOOPHOLE(i, ARRAY [0..BYTESIZE(LONGINT)-1] OF CHAR));
+    EXCEPT
+      Wr.Failure (err) =>
+        StableError.Halt(
+          "Cannot write to logfile: " & RdUtils.FailureText(err))
+    END
+  END OutLongint;
+
 PROCEDURE OutCardinal (log: Wr.T; card: CARDINAL) =
   BEGIN
     OutInteger(log, card)
   END OutCardinal;
+
+PROCEDURE OutLongcard (log: Wr.T; card: LONGCARD) =
+  BEGIN
+    OutLongint(log, card)
+  END OutLongcard;
 
 PROCEDURE OutBoolean (log: Wr.T; bool: BOOLEAN) =
   BEGIN
@@ -267,12 +283,44 @@ PROCEDURE InInteger (log: Rd.T;
     END (*IF*)
   END InInteger;
 
+PROCEDURE InLongint (log: Rd.T;
+                     min         := FIRST(LONGINT);
+                     max         := LAST(LONGINT)   ):
+    LONGINT RAISES {Error} =
+  VAR 
+    i: LONGINT;
+  BEGIN
+    TRY
+      IF Rd.GetSub(log, LOOPHOLE(i, ARRAY [0..BYTESIZE(LONGINT)-1] OF CHAR))
+          # BYTESIZE(LONGINT) THEN
+        RAISE Error
+      END;
+    EXCEPT
+    | Rd.Failure (err) =>
+        StableError.Halt("InLongint: Can not read log file: "
+                           & RdUtils.FailureText(err))
+    END;
+
+    IF min <= i AND i <= max THEN
+      RETURN i
+    ELSE
+      RAISE Error
+    END (*IF*)
+  END InLongint;
+
 PROCEDURE InCardinal (log: Rd.T;
                       lim: CARDINAL := LAST(CARDINAL)):
   CARDINAL RAISES {Error} =
   BEGIN
     RETURN InInteger(log, 0, lim)
   END InCardinal;
+
+PROCEDURE InLongcard (log: Rd.T;
+                      lim: LONGCARD := LAST(LONGCARD)):
+  LONGCARD RAISES {Error} =
+  BEGIN
+    RETURN InLongint(log, 0L, lim)
+  END InLongcard;
 
 PROCEDURE InBoolean (log: Rd.T): BOOLEAN RAISES {Error} =
   BEGIN
