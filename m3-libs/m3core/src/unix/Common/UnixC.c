@@ -27,6 +27,14 @@ However that is not portable.
 So use these wrappers instead.
 */
 
+#ifdef _MSC_VER
+#pragma optimize("gty", on)
+#undef _DLL
+#ifndef _MT
+#define _MT
+#endif
+#endif
+
 #include "m3core.h"
 #include <limits.h>
 #include <stdio.h>
@@ -41,7 +49,7 @@ extern "C"
 {
 #endif
 
-void Unix__Assertions(void)
+void __cdecl Unix__Assertions(void)
 {
     /* make sure things are normal */
     M3_STATIC_ASSERT(CHAR_BIT == 8);
@@ -87,7 +95,6 @@ void Unix__Assertions(void)
 }
 
 M3WRAP3_(int, open, const char*, int, m3_mode_t)
-M3WRAP2_(int, mkdir, const char*, m3_mode_t)
 M3WRAP1_(m3_mode_t, umask, m3_mode_t)
 M3WRAP2_(int, chmod, const char*, m3_mode_t)
 M3WRAP2_(int, creat, const char*, m3_mode_t)
@@ -120,37 +127,43 @@ M3WRAP1(void*, sbrk, INTEGER)
 M3WRAP3(int, execve, const char*, char**, char**)
 M3WRAP1(unsigned, sleep, unsigned)
 M3WRAP3(int, mknod, const char*, m3_mode_t, m3_dev_t)
+M3WRAP3(m3_off_t, lseek, int, m3_off_t, int)
+M3WRAP2(int, mkdir, const char*, m3_mode_t)
+M3WRAP1(int, pipe, int*)
 #endif
 
-void Unix__underscore_exit(int exit_code)
+void __cdecl Unix__underscore_exit(int exit_code)
 {
     _exit(exit_code);
 }
 
-void Unix__exit(int i)
+void __cdecl Unix__exit(int i)
 {
     exit(i);
 }
 
-int Unix__pipe(int files[2])
-{
 #ifdef _WIN32
+
+int __cdecl Unix__mkdir(const char* path, m3_mode_t mode)
+{
+    return _mkdir(path);
+}
+
+int __cdecl Unix__pipe(int* files)
+{
     return _pipe(files, 0, _O_BINARY);
-#else
-    return pipe(files);
-#endif
 }
 
-m3_off_t Unix__lseek(int fd, m3_off_t offset, int whence)
+#if _MSC_VER >= 1000
+
+m3_off_t __cdecl Unix__lseek(int fd, m3_off_t offset, int whence)
 {
-#ifdef _WIN32
     return _lseeki64(fd, offset, whence);
-#else
-    return lseek(fd, offset, whence);
-#endif
 }
 
-#ifndef _WIN32
+#endif
+
+#else
 
 int Unix__fcntl(int fd, int request, int arg)
 /* fcntl is actually fcntl(fd, request, ...).

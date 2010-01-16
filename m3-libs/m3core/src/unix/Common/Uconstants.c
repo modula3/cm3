@@ -15,7 +15,7 @@
 #include <process.h>
 #include <sys/termios.h>
 #endif
-#ifndef __INTERIX
+#if !defined(__INTERIX) && !defined(_WIN32)
 #include <net/if.h>
 #endif
 
