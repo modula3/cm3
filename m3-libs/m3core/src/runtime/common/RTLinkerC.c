@@ -1,18 +1,11 @@
 #if !defined(_MSC_VER) && !defined(__cdecl)
-
 #define __cdecl /* nothing */
-
 #endif
-
-
 
 #ifdef _MSC_VER
-
-#pragma optimize("gty", on)
-
+#pragma optimize("gt", on)
+#pragma optimize("y", off)
 #endif
-
-
 
 #ifdef __cplusplus
 extern "C" {

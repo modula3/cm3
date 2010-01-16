@@ -6,6 +6,15 @@
 /*      modified on Tue Jan 10 15:48:28 PST 1995 by kalsow  */
 /*      modified on Tue Feb 11 15:18:40 PST 1992 by muller  */
 
+#ifdef _MSC_VER
+#pragma optimize("gt", on)
+#pragma optimize("y", off)
+#undef _DLL
+#ifndef _MT
+#define _MT
+#endif
+#endif
+
 #include <limits.h>
 #include <string.h>
 
