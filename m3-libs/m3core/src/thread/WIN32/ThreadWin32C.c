@@ -5,12 +5,26 @@
 /* Portions Copyright 1996-2000, Critical Mass, Inc.               */
 /* See file COPYRIGHT-CMASS for details.                           */
 
+#if defined(_WIN32) && !defined(WIN32)
+#define WIN32
+#endif
 #ifdef _MSC_VER
-struct IRpcStubBuffer;        /* warning 4115: named type definition in parentheses */
+#pragma warning(disable:4616) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
+#pragma warning(disable:4619) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
+#pragma warning(disable:4115) /* named type definition in parentheses */
+#pragma warning(disable:4100) /* unused parameter */
 #pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
-#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
 #pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
 #pragma warning(disable:4514) /* unused inline function removed */
+#pragma warning(disable:4705) /* statement has no effect for merely using assert() at -W4 */
+#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
+#pragma warning(disable:4226) /* nonstandard extension: __export */
+#pragma warning(disable:4820) /* padding inserted */
+#pragma warning(disable:4255) /* () change to (void) */
+#pragma warning(disable:4668) /* #if of undefined symbol */
+#ifdef __cplusplus
+#pragma warning(disable:4611) /* setjmp interaction with destructors is not portable */
+#endif
 #endif
 
 #include <windows.h>
@@ -175,6 +189,7 @@ const static ClonedHeaderCheck_t clonedHeaderCheck = {
     FIELD_INFO(MEMORY_BASIC_INFORMATION, RegionSize),
 };
 void
+__cdecl
 ThreadWin32__ClonedHeaderCheck(
     const ClonedHeaderCheck_t* a,
     size_t aSize)
