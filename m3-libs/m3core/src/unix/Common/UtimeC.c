@@ -1,3 +1,11 @@
+#ifdef _MSC_VER
+#pragma optimize("gty", on)
+#undef _DLL
+#ifndef _MT
+#define _MT
+#endif
+#endif
+
 #include "m3core.h"
 
 #ifdef __cplusplus
@@ -203,7 +211,7 @@ int Utime__getitimer(int which, m3_itimerval_t* m3t)
 
 m3_time_t Utime__time(m3_time_t* tloc)
 {
-    time_t b = tloc ? *tloc : 0;
+    time_t b = tloc ? (time_t)*tloc : 0;
     time_t a = time(tloc ? &b : 0);
     if (tloc) *tloc = b;
     return a;
@@ -216,19 +224,19 @@ m3_time_t Utime__mktime(tm_t* tm)
 
 char* Utime__ctime(const m3_time_t* m)
 {
-    time_t t = m ? *m : 0;
+    time_t t = m ? (time_t)*m : 0;
     return ctime(m ? &t : 0);
 }
 
 tm_t* Utime__localtime(const m3_time_t* m)
 {
-    time_t t = m ? *m : 0;
+    time_t t = m ? (time_t)*m : 0;
     return localtime(m ? &t : 0);
 }
 
 tm_t* Utime__gmtime(const m3_time_t* m)
 {
-    time_t t = m ? *m : 0;
+    time_t t = m ? (time_t)*m : 0;
     return gmtime(m ? &t : 0);
 }
 

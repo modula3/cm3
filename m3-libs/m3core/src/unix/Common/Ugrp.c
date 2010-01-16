@@ -9,12 +9,12 @@
 
 #include "m3core.h"
 
+#ifndef _WIN32
+
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-
-#ifndef _WIN32
 
 struct _m3_group_t
 /* This MUST match Ugrp.i3 */
@@ -59,8 +59,8 @@ void Ugrp__endgrent(void)
     endgrent();
 }
 
-#endif
-
 #ifdef __cplusplus
 } /* extern C */
+#endif
+
 #endif
