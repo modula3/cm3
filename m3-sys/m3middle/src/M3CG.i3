@@ -58,7 +58,10 @@ TYPE
 TYPE
   CompareOp = { EQ, NE, GT, GE, LT, LE };
   ConvertOp = { Round, Trunc, Floor, Ceiling };
-  AtomicOp = { Add, Sub, Or, And, Xor, Nand };
+
+TYPE
+  MemoryOrder = { Relaxed, Release, Acquire, AcquireRelease, Sequential };
+  AtomicOp = { Add, Sub, Or, And, Xor };
 
 CONST (*  A op B  ===  B SwappedCompare[op] A  *)
   SwappedCompare = ARRAY CompareOp OF CompareOp {
@@ -146,6 +149,3 @@ TYPE
      of RuntimeError.T used by the runtime system. *)
 
 END M3CG.
-
-
-

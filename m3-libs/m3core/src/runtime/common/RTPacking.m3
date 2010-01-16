@@ -48,7 +48,7 @@ PROCEDURE Local (): T =
   BEGIN
     IF NOT init_done THEN
       local.word_size     := SizeOf (ADRSIZE (INTEGER));
-      local.longint_size  := SizeOf (ADRSIZE (LONGINT));
+      local.long_size     := SizeOf (ADRSIZE (LONGINT));
       local.max_align     := SizeOf (ADR (a.x) - ADR (a.ch));
       local.struct_align  := SizeOf (ADR (b.x) - ADR (b.ch));
       local.little_endian := (p^ = VAL (1, CHAR));
@@ -76,7 +76,7 @@ PROCEDURE Encode (READONLY t: T): INTEGER =
   VAR n := 0;
   BEGIN
     n := Word.Or (Word.Shift (n, 1), ORD (t.lazy_align));
-    n := Word.Or (Word.Shift (n, 2), BitSize (t.longint_size));
+    n := Word.Or (Word.Shift (n, 2), BitSize (t.long_size));
     n := Word.Or (Word.Shift (n, 2), BitSize (t.word_size));
     n := Word.Or (Word.Shift (n, 2), BitSize (t.max_align));
     n := Word.Or (Word.Shift (n, 2), BitSize (t.struct_align));
@@ -93,7 +93,7 @@ PROCEDURE Decode (i: INTEGER): T =
     t.struct_align  := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
     t.max_align     := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
     t.word_size     := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
-    t.longint_size  := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
+    t.long_size     := Bits[Word.And (i, 3)];    i := Word.Shift (i, -2);
     t.lazy_align  := VAL (Word.And (i, 1), BOOLEAN); i := Word.Shift (i, -1);
     <*ASSERT i = 0*>
     RETURN t;

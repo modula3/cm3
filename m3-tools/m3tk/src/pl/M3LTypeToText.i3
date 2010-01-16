@@ -25,6 +25,7 @@ CONST
   IntegerCh         = 'I';
   LongintCh         = 'J';
   CardinalCh        = 'C';
+  LongcardCh        = 'D';
   CharCh            = 'H';
   WideCharCh        = 'W';
   BooleanCh         = 'B';

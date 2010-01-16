@@ -61,6 +61,10 @@ PROCEDURE OutInteger (writer: Pickle.Writer; i: INTEGER)
   RAISES {Wr.Failure, Thread.Alerted};
 (* Marshal an integer in native format. *)
 
+PROCEDURE OutLongint (writer: Pickle.Writer; i: LONGINT)
+  RAISES {Wr.Failure, Thread.Alerted};
+(* Marshal an integer in native format. *)
+
 PROCEDURE OutInt32 (writer: Pickle.Writer; i: Int32) 
   RAISES {Wr.Failure, Thread.Alerted}; 
 (* Marshal a 32-bit integer in native format. *)
@@ -89,6 +93,10 @@ PROCEDURE OutCardinal (writer: Pickle.Writer; card: CARDINAL)
   RAISES {Wr.Failure, Thread.Alerted};
 (* Marshal a cardinal in native format. *)
 
+PROCEDURE OutLongcard (writer: Pickle.Writer; card: LONGCARD)
+  RAISES {Wr.Failure, Thread.Alerted};
+(* Marshal a cardinal in native format. *)
+
 PROCEDURE InChars (reader: Pickle.Reader; VAR chars: ARRAY OF CHAR)
   RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
 (* Unmarshal a char array of length "NUMBER(chars)". *)
@@ -108,6 +116,12 @@ PROCEDURE InBytes (reader: Pickle.Reader; VAR bytes: ARRAY OF Byte8)
 PROCEDURE InInteger (reader: Pickle.Reader;
                      min            := FIRST(INTEGER);
                      max            := LAST(INTEGER)   ): INTEGER
+  RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
+(* Unmarshal an integer, checking that its value is in "[min..max]". *)
+
+PROCEDURE InLongint (reader: Pickle.Reader;
+                     min            := FIRST(LONGINT);
+                     max            := LAST(LONGINT)   ): LONGINT
   RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
 (* Unmarshal an integer, checking that its value is in "[min..max]". *)
 
@@ -138,6 +152,10 @@ PROCEDURE InExtended (reader: Pickle.Reader): EXTENDED
 
 PROCEDURE InCardinal (reader: Pickle.Reader; lim: CARDINAL := LAST(CARDINAL)):
   CARDINAL RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
+(* Unmarshal a cardinal, checking that its value is in "[0..lim]". *)
+
+PROCEDURE InLongcard (reader: Pickle.Reader; lim: LONGCARD := LAST(LONGCARD)):
+  LONGCARD RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
 (* Unmarshal a cardinal, checking that its value is in "[0..lim]". *)
 
 END PickleStubs.

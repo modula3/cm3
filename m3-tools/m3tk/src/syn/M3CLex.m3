@@ -432,6 +432,8 @@ PROCEDURE ReadNumericLiteral(
         ok := ReadHexDigits(t, hashValue, buffer, pos);
       ELSIF ch = '.' THEN
         result := ReadRealOrRange(t, hashValue, buffer, pos);
+      ELSIF ch = 'l' OR ch = 'L' THEN
+        result := M3CToken.LongintLiteral;
       ELSE
         Unget(t, ch);
       END;

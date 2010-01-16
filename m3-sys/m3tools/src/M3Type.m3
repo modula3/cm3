@@ -957,6 +957,10 @@ PROCEDURE InitBuiltins () =
                      min := TInt.Zero,
                      max := Target.Integer.max,
                      super := Integer);
+    Longcard := NEW (Subrange,
+                     min := TInt.Zero,
+                     max := Target.Longint.max,
+                     super := Longint);
 
     VAR elts := NEW (REF ARRAY OF M3ID.T, 2); BEGIN
       elts[0] := M3ID.Add ("FALSE");

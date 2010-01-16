@@ -41,7 +41,7 @@ PROCEDURE ToText (t: Type.T; byName: BOOLEAN := TRUE): Text.T =
       BEGIN
         IF sub = Type.integer THEN RETURN "INTEGER" END;
         IF sub = Type.longint THEN RETURN "LONGINT" END;
-        IF sub.base = Type.longint THEN
+        IF sub.base = Type.longint OR sub.base = Type.longcard THEN
           WITH min = NARROW(sub.min, Value.Longint).val,
                max = NARROW(sub.max, Value.Longint).val DO
             RETURN "[" & Fmt.LongInt(min) & "L.." & Fmt.LongInt(max) & "L]";

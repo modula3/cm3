@@ -14,14 +14,14 @@ TYPE
 TYPE
   Kind = {
     Address, Array, Boolean, Cardinal, Char, Enum, Extended,
-    Integer, Longint, Longreal, Null, Object, OpenArray, Packed, Proc, Real,
-    Record, Ref, Refany, Set, Subrange, UntracedRef };
+    Integer, Longcard, Longint, Longreal, Null, Object, OpenArray,
+    Packed, Proc, Real, Record, Ref, Refany, Set, Subrange, UntracedRef };
 
 CONST
   BuiltinKinds = SET OF Kind {
     Kind.Address, Kind.Boolean, Kind.Cardinal, Kind.Char, Kind.Extended,
-    Kind.Integer, Kind.Longint, Kind.Longreal, Kind.Null, Kind.Proc, Kind.Real,
-    Kind.Refany
+    Kind.Integer, Kind.Longcard, Kind.Longint, Kind.Longreal, Kind.Null,
+    Kind.Proc, Kind.Real, Kind.Refany
   };
 
 TYPE 

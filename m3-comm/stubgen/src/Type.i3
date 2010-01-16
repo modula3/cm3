@@ -177,6 +177,7 @@ VAR (* READONLY *)
   integer       : Subrange;
   longint       : Subrange;
   cardinal      : Subrange;
+  longcard      : Subrange;
   boolean       : UserDefined;
   char          : Char;
   widechar      : WideChar;

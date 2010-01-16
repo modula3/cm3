@@ -114,6 +114,8 @@ PROCEDURE FindBuiltIns(
           M3CStdTypes.RegisterBoolean(concreteDecl.as_type);
         ELSIF Text.Equal(t, "CARDINAL") THEN
           M3CStdTypes.RegisterCardinal(concreteDecl.as_type);
+        ELSIF Text.Equal(t, "LONGCARD") THEN
+          M3CStdTypes.RegisterLongcard(concreteDecl.as_type);
         END;
     | M3AST_AS.Subtype_decl(subtypeDecl) =>
         t := M3CId.ToText(subtypeDecl.as_id.lx_symrep);

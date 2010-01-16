@@ -147,13 +147,12 @@ REVEAL
     load_procedure := load_procedure;
     load_static_link := load_static_link;
     comment := comment;
+    store_ordered := store_ordered;
+    load_ordered := load_ordered;
+    exchange := exchange;
+    compare_exchange := compare_exchange;
+    fence := fence;
     fetch_and_op := fetch_and_op;
-    op_and_fetch := op_and_fetch;
-    bool_compare_and_swap := bool_compare_and_swap;
-    val_compare_and_swap := val_compare_and_swap;
-    synchronize := synchronize;
-    lock_test_and_set := lock_test_and_set;
-    lock_release := lock_release;
   END; 
 
 (*----------------------------------------------------------- ID counters ---*)
@@ -916,40 +915,37 @@ PROCEDURE comment (xx: T;  a, b, c, d: TEXT := NIL) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE fetch_and_op (xx: T;  op: AtomicOp;  t: MType) =
+PROCEDURE store_ordered (xx: T;  t: ZType;  u: MType;  order: MemoryOrder) =
   BEGIN
-    xx.child.fetch_and_op (op, t);
+    xx.child.store_ordered (t, u, order);
+  END store_ordered;
+
+PROCEDURE load_ordered (xx: T;  t: MType;  u: ZType;  order: MemoryOrder) =
+  BEGIN
+    xx.child.load_ordered (t, u, order);
+  END load_ordered;
+
+PROCEDURE exchange (xx: T;  t: MType;  u: ZType;  order: MemoryOrder) =
+  BEGIN
+    xx.child.exchange (t, u, order);
+  END exchange;
+
+PROCEDURE compare_exchange (xx: T;  s: MType;  t: ZType;  u: IType;
+                            success, failure: MemoryOrder) =
+  BEGIN
+    xx.child.compare_exchange (s, t, u, success, failure);
+  END compare_exchange;
+
+PROCEDURE fence (xx: T;  order: MemoryOrder) =
+  BEGIN
+    xx.child.fence (order);
+  END fence;
+
+PROCEDURE fetch_and_op (xx: T;  op: AtomicOp;  t: MType;  u: ZType;
+                        order: MemoryOrder) =
+  BEGIN
+    xx.child.fetch_and_op (op, t, u, order);
   END fetch_and_op;
-
-PROCEDURE op_and_fetch (xx: T;  op: AtomicOp;  t: MType) =
-  BEGIN
-    xx.child.op_and_fetch (op, t);
-  END op_and_fetch;
-
-PROCEDURE bool_compare_and_swap (xx: T;  t: MType;  u: IType) =
-  BEGIN
-    xx.child.bool_compare_and_swap (t, u);
-  END bool_compare_and_swap;
-
-PROCEDURE val_compare_and_swap (xx: T;  t: MType) =
-  BEGIN
-    xx.child.val_compare_and_swap (t);
-  END val_compare_and_swap;
-
-PROCEDURE synchronize (xx: T) =
-  BEGIN
-    xx.child.synchronize ();
-  END synchronize;
-
-PROCEDURE lock_test_and_set (xx: T;  t: MType) =
-  BEGIN
-    xx.child.lock_test_and_set (t);
-  END lock_test_and_set;
-
-PROCEDURE lock_release (xx: T;  t: MType) =
-  BEGIN
-    xx.child.lock_release (t);
-  END lock_release;
 
 BEGIN
 END M3CG.

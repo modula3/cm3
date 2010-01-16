@@ -37,7 +37,7 @@ IMPORT M3CTypesMisc, M3CStdTypes, M3CBackEnd, M3CExpValue;
 IMPORT M3CBackEnd_C; (* for representation of brands *)
 
 VAR
-  char_g, widechar_g, boolean_g, cardinal_g, text_g: INTEGER;
+  char_g, widechar_g, boolean_g, cardinal_g, longcard_g, text_g: INTEGER;
 
 PROCEDURE Initialize() RAISES {}=
   BEGIN
@@ -49,6 +49,7 @@ PROCEDURE Initialize() RAISES {}=
     widechar_g := M3CStdTypes.WideChar().tmp_type_code;
     boolean_g := M3CStdTypes.Boolean().tmp_type_code;
     cardinal_g := M3CStdTypes.Cardinal().tmp_type_code;
+    longcard_g := M3CStdTypes.Longcard().tmp_type_code;
     text_g := M3CStdTypes.Text().tmp_type_code;
   END Initialize;
 
@@ -224,6 +225,8 @@ PROCEDURE Subrange(
   BEGIN
     IF sub.tmp_type_code = cardinal_g THEN
       Wr.PutChar(s, CardinalCh);
+    ELSIF sub.tmp_type_code = longcard_g THEN
+      Wr.PutChar(s, LongcardCh);
     ELSE
       Wr.PutChar(s, SubrangeCh);
       ComponentType(s, sub.sm_base_type_spec);
@@ -467,6 +470,8 @@ PROCEDURE ComponentType(s: Wr.T; t: M3AST_AS.M3TYPE) RAISES {Wr.Failure, Thread.
         Wr.PutChar(s, WideCharCh);
       ELSIF tc = cardinal_g THEN
         Wr.PutChar(s, CardinalCh);
+      ELSIF tc = longcard_g THEN
+        Wr.PutChar(s, LongcardCh);
       ELSE 
         TypeIndex(s, tc);
       END;

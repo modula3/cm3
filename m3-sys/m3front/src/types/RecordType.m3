@@ -33,11 +33,8 @@ TYPE
       END;
 
 PROCEDURE Parse (): Type.T =
-  VAR p := NEW (P);
+  VAR p := Create (Scope.PushNew (FALSE, M3ID.NoID));
   BEGIN
-    TypeRep.Init (p, Type.Class.Record);
-
-    p.fields := Scope.PushNew (FALSE, M3ID.NoID);
     Match (Token.T.tRECORD);
     ParseFieldList ();
     Match (Token.T.tEND);
@@ -85,6 +82,12 @@ PROCEDURE ParseFieldList () =
     END;
   END ParseFieldList;
 
+PROCEDURE New (fields: Scope.T): Type.T =
+  VAR p := Create (fields);
+  BEGIN
+    RETURN p;
+  END New;
+
 PROCEDURE Reduce (t: Type.T): P =
   BEGIN
     IF (t = NIL) THEN RETURN NIL END;
@@ -110,6 +113,14 @@ PROCEDURE LookUp (t: Type.T;  field: M3ID.T;  VAR obj: Value.T): BOOLEAN =
   END LookUp;
 
 (***********************************************************************)
+
+PROCEDURE Create (fields: Scope.T): P =
+  VAR p := NEW (P);
+  BEGIN
+    TypeRep.Init (p, Type.Class.Record);
+    p.fields := fields;
+    RETURN p;
+  END Create;
 
 PROCEDURE Check (p: P) =
   VAR

@@ -161,7 +161,7 @@ PROCEDURE ReadData(v: ReadVisitor;  dest: ADDRESS; len: INTEGER)
     END;
   END ReadData;
 
-TYPE Int32Rec = RECORD v : Swap.Int32 END; 
+TYPE Int32Rec = BITS 32 FOR RECORD v : Swap.Int32 END; 
 (* We need v to be inside a record.  Otherwise, the language would allow
    a compiler to actually allocate more than the BITS 32 for a value of
    type Swap.Int32.
@@ -1055,7 +1055,7 @@ PROCEDURE GetWordKind(from: RTPacking.T; to: RTPacking.T): Kind =
 PROCEDURE GetLongintKind(from: RTPacking.T; to: RTPacking.T): Kind =
 (* The result is good only for LONGINT. *) 
   BEGIN
-    IF from.longint_size = to.longint_size THEN
+    IF from.long_size = to.long_size THEN
       IF from.little_endian = to.little_endian THEN
         RETURN Kind.Copy;
       ELSE
@@ -1063,13 +1063,13 @@ PROCEDURE GetLongintKind(from: RTPacking.T; to: RTPacking.T): Kind =
       END;
     ELSE
       IF from.little_endian = to.little_endian THEN
-        IF from.longint_size = 32 THEN
+        IF from.long_size = 32 THEN
           RETURN Kind.Copy32to64;
         ELSE
           RETURN Kind.Copy64to32;
         END;
       ELSE
-        IF from.longint_size = 32 THEN
+        IF from.long_size = 32 THEN
           RETURN Kind.Swap32to64;
         ELSE
           RETURN Kind.Swap64to32;
@@ -1217,6 +1217,8 @@ PROCEDURE BuildOne(self: T; fromTipe: RTTipe.T;
         BuildOrdinal(self, fromTipe, toTipe, self.wordKind, signed:=FALSE);  
       | RTTipe.Kind.Integer =>  
         BuildOrdinal(self, fromTipe, toTipe, self.wordKind, signed:=TRUE);  
+      | RTTipe.Kind.Longcard =>
+        BuildOrdinal(self, fromTipe, toTipe, self.longKind, signed:=FALSE);
       | RTTipe.Kind.Longint =>  
         BuildOrdinal(self, fromTipe, toTipe, self.longKind, signed:=TRUE);  
       | RTTipe.Kind.Extended, RTTipe.Kind.Longreal =>
@@ -1470,6 +1472,7 @@ PROCEDURE KindToText(kind: RTTipe.Kind) =
     | RTTipe.Kind.Enum => IO.Put( "Enum");
     | RTTipe.Kind.Extended => IO.Put( "Extended");
     | RTTipe.Kind.Integer => IO.Put( "Integer");
+    | RTTipe.Kind.Longcard => IO.Put( "Longcard");
     | RTTipe.Kind.Longint => IO.Put( "Longint");
     | RTTipe.Kind.Longreal => IO.Put( "Longreal");
     | RTTipe.Kind.Null => IO.Put( "Null");

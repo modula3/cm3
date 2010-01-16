@@ -1220,6 +1220,8 @@ PROCEDURE NewNumericLiteral(token: Token): M3AST_AS.NUMERIC_LITERAL RAISES {}=
     CASE token OF <*NOWARN*>
     | M3CToken.IntegerLiteral =>
         RETURN NEW(M3AST_AS.Integer_literal).init();
+    | M3CToken.LongintLiteral =>
+        RETURN NEW(M3AST_AS.Longint_literal).init();
     | M3CToken.RealLiteral =>
         RETURN NEW(M3AST_AS.Real_literal).init();
     | M3CToken.LongRealLiteral =>
@@ -1237,7 +1239,8 @@ PROCEDURE E8(
     RAISES {Rd.Failure}=
   CONST
     NumericLiterals = TokenSet{
-        M3CToken.IntegerLiteral, M3CToken.RealLiteral, M3CToken.LongRealLiteral,
+        M3CToken.IntegerLiteral, M3CToken.LongintLiteral,
+        M3CToken.RealLiteral, M3CToken.LongRealLiteral,
         M3CToken.ExtendedLiteral};
   VAR
     token := t.lexer.current();

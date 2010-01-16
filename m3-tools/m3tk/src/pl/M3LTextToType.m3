@@ -591,6 +591,7 @@ PROCEDURE FillinTypeSpec(t: T;
     | M3LTypeToText.CharCh =>
     | M3LTypeToText.CardinalCh =>
     | M3LTypeToText.IntegerCh =>
+    | M3LTypeToText.LongcardCh =>
     | M3LTypeToText.LongintCh =>
     | M3LTypeToText.RealCh =>
     | M3LTypeToText.LongRealCh =>
@@ -638,6 +639,8 @@ PROCEDURE NewTS(ch: CHAR): M3AST_AS.TYPE_SPEC RAISES {}=
         RETURN M3CStdTypes.Cardinal();
     | M3LTypeToText.IntegerCh =>
         RETURN M3CStdTypes.Integer();
+    | M3LTypeToText.LongcardCh =>
+        RETURN M3CStdTypes.Longcard();
     | M3LTypeToText.LongintCh =>
         RETURN M3CStdTypes.Longint();
     | M3LTypeToText.RealCh =>

@@ -22,6 +22,7 @@ BEGIN
 
 standard := standard & "TYPE\n";
 standard := standard & "  CARDINAL = [0 .. LAST(INTEGER)];\n";
+standard := standard & "  LONGCARD = [0L .. LAST(LONGINT)];\n";
 standard := standard & "  BOOLEAN = {FALSE, TRUE};\n";
 standard := standard & "  CHAR = {NUL, SOH, STX, ETX, EOT, ENQ, ACK, BEL,\n";
 standard := standard & "         BS, HT, NL, VT, NP, CR, SO, SI, \n";
