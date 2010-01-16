@@ -814,7 +814,7 @@ mult
 	xc0 = c->x;
 #ifdef ULLong
 	for(; xb < xbe; xc0++) {
-		if (y = *xb++) {
+		if ((y = *xb++)) {
 			x = xa;
 			xc = xc0;
 			carry = 0;
@@ -896,7 +896,7 @@ pow5mult
 	int i;
 	static int p05[3] = { 5, 25, 125 };
 
-	if (i = k & 3)
+	if ((i = k & 3))
 		b = multadd(b, p05[i-1], 0);
 
 	if (!(k >>= 2))
@@ -977,7 +977,7 @@ lshift
 			z = *x++ >> k1;
 			}
 			while(x < xe);
-		if (*x1 = z)
+		if ((*x1 = z))
 			++n1;
 		}
 #else
@@ -1279,12 +1279,12 @@ d2b
 	z |= Exp_msk11;
 #endif
 #else
-	if (de = (int)(d0 >> Exp_shift))
+	if ((de = (int)(d0 >> Exp_shift)))
 		z |= Exp_msk1;
 #endif
 #ifdef Pack_32
-	if (y = d1) {
-		if (k = lo0bits(&y)) {
+	if ((y = d1)) {
+		if ((k = lo0bits(&y))) {
 			x[0] = y | z << (32 - k);
 			z >>= k;
 			}
@@ -1478,7 +1478,7 @@ match
 	int c, d;
 	CONST char *s = *sp;
 
-	while(d = *t++) {
+	while((d = *t++)) {
 		if ((c = *++s) >= 'A' && c <= 'Z')
 			c += 'a' - 'A';
 		if (c != d)
@@ -1510,7 +1510,7 @@ hexnan
 		++s;
 	if (s[1] == '0' && (s[2] == 'x' || s[2] == 'X'))
 		s += 2;
-	while(c = *(CONST unsigned char*)++s) {
+	while((c = *(CONST unsigned char*)++s)) {
 		if (c >= '0' && c <= '9')
 			c -= '0';
 		else if (c >= 'a' && c <= 'f')
@@ -1538,7 +1538,7 @@ hexnan
 					*sp = s + 1;
 					break;
 					}
-				} while(c = *++s);
+				} while((c = *++s));
 			break;
 			}
 #endif
@@ -1862,7 +1862,7 @@ m3_strtod
 	/* Get starting approximation = rv * 10**e1 */
 
 	if (e1 > 0) {
-		if (i = e1 & 15)
+		if ((i = e1 & 15))
 			dval(rv) *= tens[i];
 		if (e1 &= ~15) {
 			if (e1 > DBL_MAX_10_EXP) {
@@ -1922,7 +1922,7 @@ m3_strtod
 		}
 	else if (e1 < 0) {
 		e1 = -e1;
-		if (i = e1 & 15)
+		if ((i = e1 & 15))
 			dval(rv) /= tens[i];
 		if (e1 >>= 4) {
 			if (e1 >= 1 << n_bigtens)
@@ -2605,7 +2605,7 @@ nrv_alloc(char *s, char **rve, int n)
 	char *rv, *t;
 
 	t = rv = rv_alloc(n);
-	while(*t = *s++) t++;
+	while((*t = *s++)) t++;
 	if (rve)
 		*rve = t;
 	return rv;
@@ -2785,7 +2785,7 @@ m3_dtoa
 #ifdef Sudden_Underflow
 	i = (int)(word0(d) >> Exp_shift1 & (Exp_mask>>Exp_shift1));
 #else
-	if (i = (int)(word0(d) >> Exp_shift1 & (Exp_mask>>Exp_shift1))) {
+	if ((i = (int)(word0(d) >> Exp_shift1 & (Exp_mask>>Exp_shift1)))) {
 #endif
 		dval(d2) = dval(d);
 		word0(d2) &= Frac_mask1;
@@ -2939,7 +2939,7 @@ m3_dtoa
 					}
 			dval(d) /= ds;
 			}
-		else if (j1 = -k) {
+		else if ((j1 = -k)) {
 			dval(d) *= tens[j1 & 0xf];
 			for(j = j1 >> 4; j; j >>= 1, i++)
 				if (j & 1) {
@@ -3100,7 +3100,7 @@ m3_dtoa
 				Bfree(b);
 				b = b1;
 				}
-			if (j = b5 - m5)
+			if ((j = b5 - m5))
 				b = pow5mult(b, j);
 			}
 		else
@@ -3138,7 +3138,7 @@ m3_dtoa
 	 * can do shifts and ors to compute the numerator for q.
 	 */
 #ifdef Pack_32
-	if (i = ((s5 ? 32 - hi0bits(S->x[S->wds-1]) : 1) + s2) & 0x1f)
+	if ((i = ((s5 ? 32 - hi0bits(S->x[S->wds-1]) : 1) + s2) & 0x1f))
 		i = 32 - i;
 #else
 	if (i = ((s5 ? 32 - hi0bits(S->x[S->wds-1]) : 1) + s2) & 0xf)
