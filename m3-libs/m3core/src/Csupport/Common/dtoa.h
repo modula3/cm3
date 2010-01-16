@@ -8,6 +8,7 @@
 #pragma warning(disable:4127) /* conditional expression is constant */
 #pragma warning(disable:4706) /* assignment within conditional */
 #pragma warning(disable:4701) /* possibly uninitialized local used */
+#pragma warning(disable:4255) /* () changed to (void) */
 #endif
 
 /****************************************************************
