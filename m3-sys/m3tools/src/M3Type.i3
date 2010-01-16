@@ -82,7 +82,7 @@ TYPE
   END;
 
 VAR(*READONLY*)  (* builtin types *)
-  Integer, Longint, Cardinal: T;
+  Integer, Longint, Cardinal, Longcard: T;
   Real, LongReal, Extended  : T;
   Root, UntracedRoot        : T;
   Refany, Address, Null     : T;
