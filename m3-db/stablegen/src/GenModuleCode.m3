@@ -521,6 +521,8 @@ PROCEDURE MarshalTypedVal (fmtWr     : Formatter.T;
             StableLogCall(fmtWr, "Longint", varName, d);
           ELSIF t = Type.cardinal THEN
             StableLogCall(fmtWr, "Cardinal", varName, d);
+          ELSIF t = Type.longcard THEN
+            StableLogCall(fmtWr, "Longcard", varName, d);
           ELSIF d = Direction.Log THEN       (* no value range check
                                                 when writing *)
             IF sub.base = Type.longint THEN

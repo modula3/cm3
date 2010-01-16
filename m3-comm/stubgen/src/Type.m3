@@ -278,6 +278,10 @@ BEGIN
                                         item := Atom.FromText("CARDINAL")),
                   base := integer, min := NEW(Value.Integer, val := 0),
                   max := integer.max);
+  longcard := NEW(Subrange, name := NEW(Qid, intf := nullAtm,
+                                        item := Atom.FromText("LONGCARD")),
+                  base := longint, min := NEW(Value.Longint, val := 0L),
+                  max := longint.max);
 
   boolean := NEW(
                UserDefined, name := NEW(Qid, intf := nullAtm,
