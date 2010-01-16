@@ -1,13 +1,30 @@
+#ifdef _MSC_VER
+#pragma optimize("gty", on)
+#undef _DLL
+#ifndef _MT
+#define _MT
+#endif
+#endif
+
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */
 #endif
+
 #define _FILE_OFFSET_BITS 64
 
 #ifdef _MSC_VER
 typedef __int64 INT64;
-/*#pragma warning(disable:4820)*/
-/*#pragma warning(disable:4668)*/
-/*#pragma warning(disable:4255)*/
+#pragma warning(disable:4616) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
+#pragma warning(disable:4619) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
+#pragma warning(disable:4115) /* named type definition in parentheses */
+#pragma warning(disable:4226) /* nonstandard extension: __export */
+#pragma warning(disable:4514) /* unused inline function removed */
+#pragma warning(disable:4201) /* nonstandard extension: nameless struct/union */
+#pragma warning(disable:4214) /* nonstandard extension: bitfield other than int */
+#pragma warning(disable:4209) /* nonstandard extension: benign re-typedef */
+#pragma warning(disable:4820) /* padding inserted */
+#pragma warning(disable:4668) /* #if of undefined symbol */
+#pragma warning(disable:4255) /* () change to (void) */
 #else
 typedef long long INT64;
 #endif
