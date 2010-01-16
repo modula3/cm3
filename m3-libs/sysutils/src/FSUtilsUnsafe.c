@@ -1,5 +1,4 @@
 #ifdef _MSC_VER
-#pragma optimize("gty", on)
 #undef _DLL
 #ifndef _MT
 #define _MT
