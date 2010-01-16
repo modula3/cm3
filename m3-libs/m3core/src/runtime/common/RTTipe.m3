@@ -60,7 +60,7 @@ TYPE
     struct_align  : INTEGER;
     word_size     : INTEGER;
     word_align    : INTEGER;
-    longint_size  : INTEGER;
+    long_size     : INTEGER;
     lazy_align    : BOOLEAN
   (* FIXME: ^ Use this below. *) 
   END;
@@ -88,14 +88,14 @@ PROCEDURE Get
     p.word_size     := packing.word_size;
     p.word_align    := MIN (p.word_size, p.max_align);
     p.lazy_align    := packing.lazy_align;
-    IF packing.longint_size = 8 
-    THEN p.longint_size := BITSIZE(LONGINT)
+    IF packing.long_size = 8 
+    THEN p.long_size := BITSIZE(LONGINT)
          (* ^Compatibility:  This can can happen if we read an old pickle that
             was written before RTPacking was updated to support LONGINT.
             This will preserve the behaviour that existed after addition of
             LONGINT to the compiler, but before LONGINT support in Pickles.
          *)  
-    ELSE p.longint_size  := packing.longint_size;
+    ELSE p.long_size  := packing.long_size;
     END; 
     FixSizes (t, p);
 
@@ -359,7 +359,7 @@ PROCEDURE FixSizes (t: T;  READONLY p: Packing) =
 
     | Kind.Longint,
       Kind.Longcard =>
-        t.size := p.longint_size;
+        t.size := p.long_size;
         t.align := MIN (t.size, p.max_align);
 
     | Kind.Boolean =>
