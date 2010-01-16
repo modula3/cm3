@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FSUtils.i3,v 1.2 2010-01-15 14:17:32 jkrell Exp $ *)
+ * $Id: FSUtils.i3,v 1.3 2010-01-16 20:27:48 jkrell Exp $ *)
 
 (*--------------------------------------------------------------------------*)
 INTERFACE FSUtils;
@@ -118,6 +118,7 @@ PROCEDURE PutFile(fn : Pathname.T; data : TEXT) RAISES {E};
   (* Write `data' into file `fn'. Create or overwrite `fn' as needed. *)
 
 (*---------------------------------------------------------------------------*)
+PROCEDURE GetFileSize(path:TEXT):INTEGER;
 PROCEDURE GetFileSize32(path:TEXT):INTEGER;
 
 END FSUtils.
