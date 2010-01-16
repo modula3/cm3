@@ -285,8 +285,15 @@ int __cdecl Umman__mprotect(ADDRESS addr, size_t len, int prot);
 ADDRESS __cdecl Umman__mmap(ADDRESS addr, size_t len, int prot, int flags, int fd, m3_off_t off);
 int __cdecl Umman__munmap(ADDRESS addr, size_t len);
 
-/* somewhat idealized, but ideally we'd use INT64 here */
+#ifndef _WIN32
+/* somewhat idealized, but ideally we'd use INT64 here
+ * Win32 varies, sometimes time_t is 32bits, sometimes
+ * 64bits; since this code isn't actually used,
+ * and we don't want to use 32bit time_t if we can
+ * help it, disable
+ */
 typedef INTEGER m3_time_t;
+#endif
 
 typedef struct {
 /* verified to exactly match struct timezone in UnixC.c */
@@ -313,12 +320,15 @@ typedef struct {
 } m3_itimerval_t;
 
 
+#ifndef _WIN32
 m3_time_t __cdecl Utime__get_timezone(void);
 m3_time_t __cdecl Utime__get_altzone(void);
+#endif
 int __cdecl Utime__get_daylight(void);
 const char* __cdecl Utime__get_tzname(unsigned a);
 int __cdecl Utime__gettimeofday(m3_timeval_t* m3t);
 int __cdecl Utime__getitimer(int which, m3_itimerval_t* m3t);
+#ifndef _WIN32
 m3_time_t __cdecl Utime__time(m3_time_t* tloc);
 m3_time_t __cdecl Utime__mktime(tm_t* tm);
 char* __cdecl Utime__ctime(const m3_time_t* m);
@@ -326,6 +336,7 @@ tm_t* __cdecl Utime__localtime(const m3_time_t* m);
 tm_t* __cdecl Utime__gmtime(const m3_time_t* m);
 tm_t* __cdecl Utime__localtime_r(const m3_time_t* clock, tm_t* result);
 tm_t* __cdecl Utime__gmtime_r(const m3_time_t* clock, tm_t* result);
+#endif
 int __cdecl Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old);
 int __cdecl Utime__nanosleep(const m3_timespec_t* m3req, m3_timespec_t* m3rem);
 void __cdecl Utime__tzset(void);

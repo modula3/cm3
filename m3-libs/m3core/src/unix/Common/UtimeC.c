@@ -96,7 +96,7 @@ struct timeval
 wrap up global variables in functions until something else is done
 */
 
-#ifndef M3BSD
+#if !defined(M3BSD) && !defined(_WIN32)
 
 m3_time_t Utime__get_timezone(void)
 {
@@ -136,7 +136,7 @@ const char* Utime__get_tzname(unsigned a)
     return tzname[a & 1];
 }
 
-#endif /* M3BSD */
+#endif /* M3BSD, WIN32 */
 
 #ifndef _WIN32
 
@@ -208,8 +208,6 @@ int Utime__getitimer(int which, m3_itimerval_t* m3t)
     return r;
 }
 
-#endif
-
 m3_time_t Utime__time(m3_time_t* tloc)
 {
     time_t b = tloc ? (time_t)*tloc : 0;
@@ -222,6 +220,7 @@ m3_time_t Utime__mktime(tm_t* tm)
 {
     return mktime(tm);
 }
+
 
 char* Utime__ctime(const m3_time_t* m)
 {
@@ -240,8 +239,6 @@ tm_t* Utime__gmtime(const m3_time_t* m)
     time_t t = m ? (time_t)*m : 0;
     return gmtime(m ? &t : 0);
 }
-
-#ifndef _WIN32
 
 tm_t* Utime__localtime_r(const m3_time_t* m3t, tm_t* result)
 {
