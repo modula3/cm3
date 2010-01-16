@@ -853,6 +853,7 @@ CONST
     & "?195c2a74 INTEGER\n"
     & "?05562176 LONGINT\n"
     & "?97e237e2 CARDINAL\n"
+    & "?9ced36e7 LONGCARD\n"
     & "?1e59237d BOOLEAN\n"
     & "?08402063 ADDRESS\n"
     & "?56e16863 CHAR\n"

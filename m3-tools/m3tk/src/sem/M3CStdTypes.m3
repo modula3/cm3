@@ -40,6 +40,7 @@ VAR
   null: M3AST_AS.Null_type;
   boolean: M3AST_AS.TYPE_SPEC;
   cardinal: M3AST_AS.TYPE_SPEC;
+  longcard: M3AST_AS.TYPE_SPEC;
   refany: M3AST_AS.RefAny_type;
   address: M3AST_AS.Address_type;
   root: M3AST_AS.Root_type;
@@ -100,6 +101,11 @@ PROCEDURE Cardinal(): M3AST_AS.TYPE_SPEC RAISES {}=
   BEGIN
     RETURN cardinal;
   END Cardinal;
+
+PROCEDURE Longcard(): M3AST_AS.TYPE_SPEC RAISES {}=
+  BEGIN
+    RETURN longcard;
+  END Longcard;
 
 PROCEDURE RefAny(): M3AST_AS.RefAny_type RAISES {}=
   BEGIN
@@ -165,6 +171,11 @@ PROCEDURE RegisterCardinal(ts: M3AST_AS.TYPE_SPEC) RAISES {}=
   BEGIN
     cardinal := ts;
   END RegisterCardinal;
+
+PROCEDURE RegisterLongcard(ts: M3AST_AS.TYPE_SPEC) RAISES {}=
+  BEGIN
+    longcard := ts;
+  END RegisterLongcard;
 
 PROCEDURE RegisterMutex(ts: M3AST_AS.TYPE_SPEC) RAISES {}=
   BEGIN
