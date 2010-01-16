@@ -239,8 +239,12 @@ int64 __cdecl m3_mult_64(int64 a, int64 b, BOOL* overflow)
   c = m3_mult_u64(m3_abs64(a), m3_abs64(b), overflow);
   if (*overflow)
     return result;
+
+  if ((a < 0) == (b < 0))
+    *overflow |= (c > (uint64)INT64_MAX);
+  else
+    *overflow |= (c > (((uint64)-(INT64_MIN + 1)) + 1));
   
-  *overflow |= ((c > ((a < 0) == (b < 0))) ? ((uint64)INT64_MAX) : (((uint64)-(INT64_MIN + 1)) + 1));
   return result;
 }
 
