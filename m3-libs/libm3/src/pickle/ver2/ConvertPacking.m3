@@ -1055,7 +1055,7 @@ PROCEDURE GetWordKind(from: RTPacking.T; to: RTPacking.T): Kind =
 PROCEDURE GetLongintKind(from: RTPacking.T; to: RTPacking.T): Kind =
 (* The result is good only for LONGINT. *) 
   BEGIN
-    IF from.longint_size = to.longint_size THEN
+    IF from.long_size = to.long_size THEN
       IF from.little_endian = to.little_endian THEN
         RETURN Kind.Copy;
       ELSE
@@ -1063,13 +1063,13 @@ PROCEDURE GetLongintKind(from: RTPacking.T; to: RTPacking.T): Kind =
       END;
     ELSE
       IF from.little_endian = to.little_endian THEN
-        IF from.longint_size = 32 THEN
+        IF from.long_size = 32 THEN
           RETURN Kind.Copy32to64;
         ELSE
           RETURN Kind.Copy64to32;
         END;
       ELSE
-        IF from.longint_size = 32 THEN
+        IF from.long_size = 32 THEN
           RETURN Kind.Swap32to64;
         ELSE
           RETURN Kind.Swap64to32;
