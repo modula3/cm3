@@ -1,5 +1,5 @@
 #bash
-# $Id: make-dist.sh,v 1.26.2.46 2009-11-02 23:24:02 wagner Exp $
+# $Id: make-dist.sh,v 1.26.2.47 2010-01-16 12:55:13 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
@@ -274,6 +274,7 @@ for c in ${PKG_COLLECTIONS}; do
   ) > install.sh
   chmod 755 install.sh
   cp -p $ROOT/scripts/win/setup.cmd $ROOT/setup.cmd
+  chmod 755 setup.cmd
   (
     echo "<html>"
     cat <<EOF
@@ -379,6 +380,7 @@ if [ `hostname` = 'birch' ]; then
     -czf "${ARCHIVE}" doc www
   ls -l "${ARCHIVE}"
 fi
+
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
   RSYNC=${RSYNC:-"rsync -vu"}
   type rsync || RSYNC=scp
