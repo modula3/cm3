@@ -44,11 +44,15 @@ typedef intptr_t m3_exec_t; /* correct for Win32 but requires newer headers */
 typedef int m3_exec_t;
 #endif
 
+#ifndef _WIN32
+M3WRAP3(m3_pid_t, waitpid, m3_pid_t, int*, int)
 M3WRAP2_(m3_exec_t, execv, const char*, char**)
 M3WRAP2_(m3_exec_t, execvp, const char*, char**)
 M3WRAP3_(m3_exec_t, execve, const char*, char**, char**)
-#ifndef _WIN32
-M3WRAP3(m3_pid_t, waitpid, m3_pid_t, int*, int)
+#else
+M3WRAP2_(m3_exec_t, execv, const char*, char const*const*)
+M3WRAP2_(m3_exec_t, execvp, const char*, char const*const*)
+M3WRAP3_(m3_exec_t, execve, const char*, char const*const*, char**)
 #endif
 
 #ifdef __cplusplus
