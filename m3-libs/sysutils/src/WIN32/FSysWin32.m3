@@ -63,5 +63,13 @@ PROCEDURE GetFileSize32(path:TEXT):INTEGER =
     RETURN res;
   END GetFileSize32;
 
+PROCEDURE GetFileSize(path:TEXT):INTEGER =
+  VAR cpath := M3toC.SharedTtoS(path);
+      res := FSUtilsUnsafe.GetFileSize(cpath);
+  BEGIN
+    M3toC.FreeSharedS(path, cpath);
+    RETURN res;
+  END GetFileSize;
+
 BEGIN
 END FSysWin32.
