@@ -33,7 +33,7 @@ int Unix__link(const char* ExistingFile, const char* NewLink)
         goto Error;
 #else
     typedef BOOL (__stdcall * PFNCreateHardLinkA)(PCSTR NewLink, PCSTR ExistingFile, void* reserved);
-    static PFNCreateHardLinkA pfnCreateHardLinkA;
+    static FARPROC pfnCreateHardLinkA;
     
     if (pfnCreateHardLinkA == NULL)
     {
@@ -41,16 +41,16 @@ int Unix__link(const char* ExistingFile, const char* NewLink)
         HMODULE Kernel32Handle = LoadLibraryW(Kernel32Name);
         if (Kernel32Handle == NULL)
             goto Error;
-        pfnCreateHardLinkA = (PFNCreateHardLinkA)GetProcAddress(Kernel32Handle, "CreateHardLinkA");
+        pfnCreateHardLinkA = GetProcAddress(Kernel32Handle, "CreateHardLinkA");
         if (pfnCreateHardLinkA == NULL)
             goto Error;
     }
-    if (pfnCreateHardLinkA(NewLink, ExistingFile, NULL) == FALSE)
+    if ((*(PFNCreateHardLinkA*)&pfnCreateHardLinkA)(NewLink, ExistingFile, NULL) == FALSE)
         goto Error;
 #endif
     return 0;
 Error:
-    errno = GetLastError();
+    errno = (int)GetLastError();
     return -1;
 #else
     return link(ExistingFile, NewLink);
