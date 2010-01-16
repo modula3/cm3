@@ -61,7 +61,7 @@ void* __cdecl RTUntracedMemory__AllocZV PROTO2(size_t, count, size_t, size)
     size_t max = ~(size_t)0;
     if (count > 1 && size > 1 && count > (max / size)) /* implies count * size > max */
         return 0;
-    return WIN(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, count))
+    return WIN(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, count * size))
            POSIX(calloc(count, size));
 }
 
