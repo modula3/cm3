@@ -235,7 +235,7 @@ PROCEDURE InLongint(reader: Pickle.Reader;
 	IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
 	  RaiseUnmarshalFailure();
 	END;
-	IF reader.wordConvKind = Kind.Swap32to64 THEN
+	IF reader.longConvKind = Kind.Swap32to64 THEN
 	  i32 := Swap.Swap4(i32);
 	END;
 	i := VAL(i32, LONGINT);
@@ -261,7 +261,7 @@ PROCEDURE InLongint(reader: Pickle.Reader;
 	END;
   
 	(* Now, swap it if need be. *)
-	IF reader.wordConvKind = Kind.Swap64to32 THEN
+	IF reader.longConvKind = Kind.Swap64to32 THEN
 	  i := VAL(Swap.Swap4(VAL(i, INTEGER)), LONGINT);
 	END;
       END;
