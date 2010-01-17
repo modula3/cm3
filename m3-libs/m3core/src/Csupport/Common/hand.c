@@ -81,7 +81,7 @@ int __cdecl m3_add(int a, int b, BOOL* overflow)
   /* positive + positive: expect positive
      negative + negative: expect negative
      positive + negative: cannot overflow
-     overflow if input signs equal and output doesn't match them*/
+     overflow if input signs equal and output doesn't match them */
   *overflow |= (asign == (b < 0) && asign != (c < 0));
   return c;
 }
@@ -93,7 +93,7 @@ int64 __cdecl m3_add_64(int64 a, int64 b, BOOL* overflow)
   /* positive + positive: expect positive
      negative + negative: expect negative
      positive + negative: cannot overflow
-     overflow if input signs equal and output doesn't match them*/
+     overflow if input signs equal and output doesn't match them */
   *overflow |= (asign == (b < 0) && asign != (c < 0));
   return c;
 }
@@ -106,7 +106,7 @@ int __cdecl m3_sub(int a, int b, BOOL* overflow)
      negative - negative: cannot overflow
      positive - negative: expect positive
      negative - positive: expect negative
-     overflow if input signs vary and output doesn't match first input*/
+     overflow if input signs vary and output doesn't match first input */
   *overflow |= (asign != (b < 0) && asign != (c < 0));
   return c;
 }
@@ -119,7 +119,7 @@ int64 __cdecl m3_sub_64(int64 a, int64 b, BOOL* overflow)
      negative - negative: cannot overflow
      positive - negative: expect positive
      negative - positive: expect negative
-     overflow if input signs vary and output doesn't match first input*/
+     overflow if input signs vary and output doesn't match first input */
   *overflow |= (asign != (b < 0) && asign != (c < 0));
   return c;
 }
