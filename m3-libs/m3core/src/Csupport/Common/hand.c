@@ -7,6 +7,9 @@
 /*      modified on Tue Feb 11 15:18:40 PST 1992 by muller  */
 
 #ifdef _MSC_VER
+#pragma warning(disable:4255) /* () changed to (void) */
+#pragma warning(disable:4505) /* unused static function removed */
+#pragma warning(disable:4711) /* automatic inlining */
 #undef _DLL
 #ifndef _MT
 #define _MT
@@ -36,6 +39,8 @@ typedef unsigned long long uint64;
 #define INT64_MAX LLONG_MAX
 #elif defined(__LONG_LONG_MAX__)
 #define INT64_MAX __LONG_LONG_MAX__
+#elif defined(_I64_MAX)
+#define INT64_MAX _I64_MAX
 #endif
 #endif
 
@@ -44,6 +49,8 @@ typedef unsigned long long uint64;
 #define INT64_MIN LLONG_MIN
 #elif defined(__LONG_LONG_MIN__)
 #define INT64_MIN __LONG_LONG_MIN__
+#elif defined(_I64_MIN)
+#define INT64_MIN _I64_MIN
 #elif defined(INT64_MAX)
 #define INT64_MIN (-INT64_MAX-(int64)1)
 #endif
@@ -672,6 +679,12 @@ _xx0 () { _crash ("_xx0 (runtime fault)"); }
 
 #if 0 /* change this to 1 and compile and run the program to generate the above tables,
          or to run the test code */
+
+#ifdef _MSC_VER
+#if _MSC_VER < 1000
+#pragma warning(disable:4702) /* unreachable code (due to assertion) */
+#endif
+#endif
 
 #include <stdio.h>
 #include <limits.h>
