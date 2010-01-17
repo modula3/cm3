@@ -835,6 +835,8 @@ static int errors_mod;
 
 static void TestDiv32(long a, long b)
 {
+    if (a == LONG_MIN && b == -1) /* avoid overflow */
+        return;
     if (b)
     {
         long old = m3_div_old(b, a);
@@ -855,6 +857,8 @@ static void TestDiv32(long a, long b)
 
 static void TestDiv64(int64 a, int64 b)
 {
+    if (a == INT64_MIN && b == -1) /* avoid overflow */
+        return;
     if (b)
     {
         int64 old = m3_divL_old(b, a);
@@ -915,10 +919,8 @@ static void TestDiv(void)
 static void TestMod64(int64 a, int64 b)
 {
     int64 old, nu;
-#ifdef __LP64__ /* should probably always do this */
-    if (a == INT64_MIN && b == -1) /* avoid overflow */
+    if ((a == INT64_MIN && b == -1) || b == 0) /* avoid overflow */
         return;
-#endif
     old = m3_modL_old(b, a);
     nu = m3_modL(b, a);
     errors_mod += (old != nu);
@@ -936,7 +938,7 @@ static void TestMod64(int64 a, int64 b)
 static void TestMod32(long a, long b)
 {
     long old, nu;
-    if (a == LONG_MIN && b == -1) /* avoid overflow */
+    if ((a == LONG_MIN && b == -1) || b == 0) /* avoid overflow */
         return;
     old = m3_mod_old(b, a);
     nu = m3_mod(b, a);
