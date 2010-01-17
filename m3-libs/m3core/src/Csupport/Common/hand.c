@@ -33,11 +33,9 @@ typedef unsigned long long uint64;
 #define I64 "ll"
 #endif
 
-#include <stdio.h>
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
-#include <stdlib.h>
 
 #if !defined(INT64_MAX)
 #if defined(LLONG_MAX)
@@ -683,6 +681,7 @@ _xx0 () { _crash ("_xx0 (runtime fault)"); }
 #endif
 #endif
 
+#include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
 
@@ -851,6 +850,7 @@ static void TestDiv(void)
             {
                 e = m3_div(d, c);
                 f = m3_div_old(d, c);
+                errors_div += (e != f);
                 if (e != f && e != -f)
                     printf("%ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
             }
@@ -879,6 +879,7 @@ static void TestDiv(void)
             {
                 e = m3_div_old(d, c);
                 f = m3_div(d, c);
+                errors_div += (e != f);
                 assert(e == f || (e == -f && c == LONG_MIN && d < 0)); /* bug in old version */
                 if ((d < 0) == (c < 0))
                 {
@@ -941,7 +942,7 @@ static void TestDiv(void)
     }
 }
 
-static void TestMod4(int64 a, int64 b)
+static void TestMod64(int64 a, int64 b)
 {
     int64 old, nu;
 #ifdef __LP64__ /* should probably always do this */
@@ -950,6 +951,7 @@ static void TestMod4(int64 a, int64 b)
 #endif
     old = m3_modL_old(b, a);
     nu = m3_modL(b, a);
+    errors_mod += (old != nu);
     /* old version is wrong for INT64_MIN mod negative */
     if (a != INT64_MIN || b >= 0 || old == nu)
     {
@@ -957,18 +959,18 @@ static void TestMod4(int64 a, int64 b)
         assert((b < 0) ? (old > b && old <= 0) : (old < b && old >= 0));
         assert(old == a - b * m3_divL(b, a));
     }
-    errors_mod += (old != nu);
     assert(nu == a - b * m3_divL(b, a));
     assert((b < 0) ? (nu > b && nu <= 0) : (nu < b && nu >= 0));
 }
 
-static void TestMod3(long a, long b)
+static void TestMod32(long a, long b)
 {
     long old, nu;
     if (a == LONG_MIN && b == -1) /* avoid overflow */
         return;
     old = m3_mod_old(b, a);
     nu = m3_mod(b, a);
+    errors_mod += (old != nu);
     /* old version is wrong for LONG_MIN mod negative */
     if (a != LONG_MIN || b >= 0 || old == nu)
     {
@@ -976,17 +978,16 @@ static void TestMod3(long a, long b)
         assert((b < 0) ? (old > b && old <= 0) : (old < b && old >= 0));
         assert(old == a - b * m3_div(b, a));
     }
-    errors_mod += (old != nu);
     assert(nu == a - b * m3_div(b, a));
     assert((b < 0) ? (nu > b && nu <= 0) : (nu < b && nu >= 0));
 }
 
-static void TestMod2(long a, long b, int64 c, int64 d)
+static void TestModCombos(long a, long b, int64 c, int64 d)
 {
-    if (b) TestMod3(a, b);
-    if (a) TestMod3(b, a);
-    if (d) TestMod4(c, d);
-    if (c) TestMod4(d, c);
+    if (b) TestMod32(a, b);
+    if (a) TestMod32(b, a);
+    if (d) TestMod64(c, d);
+    if (c) TestMod64(d, c);
 }
 
 static void TestMod(void)
@@ -1003,8 +1004,8 @@ static void TestMod(void)
             long c = a;
             long d = b;
             
-            TestMod2(c, d, 0, 0);
-            TestMod2(0, 0, c, d);
+            TestModCombos(c, d, 0, 0);
+            TestModCombos(0, 0, c, d);
             if (a > 0)
                 c = LONG_MAX - a;
             else
@@ -1014,8 +1015,8 @@ static void TestMod(void)
             else
                 d = LONG_MIN - b;
 
-            TestMod2(c, d, 0, 0);
-            TestMod2(0, 0, c, d);
+            TestModCombos(c, d, 0, 0);
+            TestModCombos(0, 0, c, d);
         }
     }
 #endif
@@ -1024,7 +1025,7 @@ static void TestMod(void)
     {
         for (b = 0; b < n; ++b)
         {
-            TestMod2(values[a], values[b], values64[a], values64[b]);
+            TestModCombos(values[a], values[b], values64[a], values64[b]);
         }
     }
 }
