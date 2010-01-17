@@ -17,13 +17,17 @@
 #pragma warning(disable:4255) /* () converted to (void) */
 #endif
 
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
+#endif
+
 #include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if defined(__STDC__) || defined(__cplusplus) || defined(_MSC_VER)
+#if 1 /* defined(__STDC__) || defined(__cplusplus) || defined(_MSC_VER) || defined(__GNUC__) */
 #define ANSI(x) x
 #define KR(x)
 #else
