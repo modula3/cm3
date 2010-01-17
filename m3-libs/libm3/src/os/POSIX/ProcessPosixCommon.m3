@@ -18,9 +18,6 @@ CONST
   NoFileDescriptor: INTEGER = -1;
   (* A non-existent file descriptor *)
 
-(* The max time to sleep while retrying fork() on EAGAIN failure *)
-CONST FORKSLEEP_MAX = 16; (* based on bash *)
-
 (* Posix Create just calls this; Cygwin only sometimes. *)
 PROCEDURE Create_ForkExec(
     cmd: Pathname.T;
@@ -39,7 +36,6 @@ PROCEDURE Create_ForkExec(
     forkErrno, execErrno: Ctypes.int;
     waitStatus: Ctypes.int;
     stdin_fd, stdout_fd, stderr_fd: INTEGER := NoFileDescriptor;
-    forksleep := 0; (* based on bash *)
   BEGIN
     VAR path := GetPathToExec(cmd); BEGIN
       (* make sure the result is an absolute pathname if "wd # NIL" *)
@@ -83,16 +79,7 @@ PROCEDURE Create_ForkExec(
     Scheduler.DisableSwitching ();
 
     execResult := 0;
-    LOOP (* based on bash *)
-      forkResult := Unix.fork();
-      IF forkResult >= 0 THEN EXIT END;
-      forkErrno := Cerrno.GetErrno();
-      IF forkErrno # Uerror.EAGAIN AND forkErrno # Uerror.ENOMEM THEN EXIT END;
-      IF forksleep >= FORKSLEEP_MAX THEN EXIT END;
-      IF Unix.sleep(forksleep) # 0 THEN EXIT END;
-      INC(forksleep, forksleep); 
-    END;
-
+    forkResult := Unix.fork();
     IF forkResult = 0 THEN (* in the child *)
       execResult := ExecChild(argx, envp, wdstr, stdin_fd, stdout_fd,
           stderr_fd);
