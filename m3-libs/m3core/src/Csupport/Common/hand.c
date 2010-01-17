@@ -33,9 +33,11 @@ typedef unsigned long long uint64;
 #define I64 "ll"
 #endif
 
+#include <stdio.h>
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
+#include <stdlib.h>
 
 #if !defined(INT64_MAX)
 #if defined(LLONG_MAX)
@@ -321,7 +323,7 @@ int64 __cdecl m3_divL
   }
 }
 
-long __cdecl m3_mod
+long __cdecl m3_mod_old
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
@@ -333,7 +335,7 @@ long __cdecl m3_mod
   return c;
 }
 
-int64 __cdecl m3_modL
+int64 __cdecl m3_modL_old
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
@@ -343,6 +345,36 @@ int64 __cdecl m3_modL
   } else /* a < 0 */ {  c = (b >= 0) ? b - 1 - (-1-a) % (b) : - ((-a) % (-b));
   }
   return c;
+}
+
+long __cdecl m3_mod
+    ANSI((      long b, long a))
+      KR((b, a) long b; long a;)
+{
+  int bneg = (b < 0);
+  if (a == 0 || b == 0 || ((a < 0) == bneg))
+    return (a % b);
+  else
+  {
+    ulong ub = M3_ABS(ulong, b);
+    a = (long)(ub - 1 - (M3_ABS(ulong, a) + ub - 1) % ub);
+    return (bneg ? -a : a);
+  }
+}
+
+int64 __cdecl m3_modL
+    ANSI((      int64 b, int64 a))
+      KR((b, a) int64 b; int64 a;)
+{
+  int bneg = (b < 0);
+  if (a == 0 || b == 0 || ((a < 0) == bneg))
+    return (a % b);
+  else
+  {
+    uint64 ub = M3_ABS(uint64, b);
+    a = (int64)(ub - 1 - (M3_ABS(uint64, a) + ub - 1) % ub);
+    return (bneg ? -a : a);
+  }
 }
 
 #define SET_GRAIN (sizeof (long) * 8)
@@ -762,42 +794,45 @@ static void BuildTables ()
 	printf("\n#else\n#error unknown size of ulong\n#endif\n\n");
 }
 
+static long values[] = {
+    LONG_MIN,
+    LONG_MIN + 1,
+    LONG_MAX,
+    LONG_MAX - 1,
+    LONG_MAX / 2,
+    LONG_MAX / 2 - 1,
+    LONG_MAX / 2 + 1,
+    LONG_MIN / 2,
+    LONG_MIN / 2 + 1,
+    LONG_MIN / 2 - 1,
+    -10, -9, -8, -7, -6, -5, -4, -3, -2, -1,
+    0,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+    99, 100, 101
+};
+static int64 values64[] = {
+    INT64_MIN,
+    INT64_MIN + 1,
+    INT64_MAX,
+    INT64_MAX - 1,
+    INT64_MAX / 2,
+    INT64_MAX / 2 - 1,
+    INT64_MAX / 2 + 1,
+    INT64_MIN / 2,
+    INT64_MIN / 2 + 1,
+    INT64_MIN / 2 - 1,
+    -10, -9, -8, -7, -6, -5, -4, -3, -2, -1,
+    0,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+    99, 100, 101
+};
+
+static int errors_div;
+static int errors_mod;
+
 static void TestDiv(void)
 {
     long a, b;
-    /*BuildTables();*/
-    long values[] = {
-        LONG_MIN,
-        LONG_MIN + 1,
-        LONG_MAX,
-        LONG_MAX - 1,
-        LONG_MAX / 2,
-        LONG_MAX / 2 - 1,
-        LONG_MAX / 2 + 1,
-        LONG_MIN / 2,
-        LONG_MIN / 2 + 1,
-        LONG_MIN / 2 - 1,
-        -10, -9, -8, -7, -6, -5, -4, -3, -2, -1,
-        0,
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-        99, 100, 101
-    };
-    int64 values64[] = {
-        INT64_MIN,
-        INT64_MIN + 1,
-        INT64_MAX,
-        INT64_MAX - 1,
-        INT64_MAX / 2,
-        INT64_MAX / 2 - 1,
-        INT64_MAX / 2 + 1,
-        INT64_MIN / 2,
-        INT64_MIN / 2 + 1,
-        INT64_MIN / 2 - 1,
-        -10, -9, -8, -7, -6, -5, -4, -3, -2, -1,
-        0,
-        1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-        99, 100, 101
-    };
     long n = sizeof(values) / sizeof(values[0]);
     long nL = sizeof(values64) / sizeof(values64[0]);
     
@@ -812,10 +847,10 @@ static void TestDiv(void)
             long d = b;
             long e, f;
             
-            if (!((d == LONG_MIN && e == -1) || c == 0))
+            if (d != 0)
             {
-                e = m3_div(c, d);
-                f = m3_div_old(c, d);
+                e = m3_div(d, c);
+                f = m3_div_old(d, c);
                 if (e != f && e != -f)
                     printf("%ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
             }
@@ -844,10 +879,10 @@ static void TestDiv(void)
             {
                 e = m3_div_old(d, c);
                 f = m3_div(d, c);
-                assert(e == f || e == -f); /* bug in old version */
+                assert(e == f || (e == -f && c == LONG_MIN && d < 0)); /* bug in old version */
                 if ((d < 0) == (c < 0))
                 {
-                    assert(e >= 0 || c == LONG_MIN); /* bug in old version */
+                    assert(e >= 0 || (c == LONG_MIN && d < 0)); /* bug in old version */
                     assert(f >= 0);
                 }
                 else
@@ -855,9 +890,11 @@ static void TestDiv(void)
                     assert(e <= 0);
                     assert(f <= 0);
                 }
-                if (e != f && e == -f)
+                if (e != f && e == -f) {
+#if 0
                     printf("32- %ld / %ld = old:%"I64"d, new:%"I64"d\n", c, d, e, f);
-                else if (e != f)
+#endif
+                } else if (e != f)
                     printf("32  %ld / %ld = old:%"I64"d, new:%"I64"d\n", c, d, e, f);
                 /*printf("33  %ld / %ld = old:%"I64"d, new:%"I64"d\n", c, d, e, f);*/
             }
@@ -865,6 +902,7 @@ static void TestDiv(void)
             {
                 e = m3_divL_old(d64, c64);
                 f = m3_divL(d64, c64);
+                errors_div += (e != f);
                 assert(e == f || e == -f); /* bug in old version */
                 if ((d64 < 0) == (c64 < 0))
                 {
@@ -876,41 +914,127 @@ static void TestDiv(void)
                     assert(e <= 0);
                     assert(f <= 0);
                 }
-                if (e != f && e == -f)
+                if (e != f && e == -f) {
+#if 0
                     printf("64- %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
-                else if (e != f)
+#endif
+                } else if (e != f)
                     printf("64  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
                 /*printf("67  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);*/
-                if (d)
-                {
-                    e = m3_divL_old(d, c);
-                    f = m3_divL(d, c);
-                    if (e != f && e == -f)
-                        printf("65- %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
-                    else if (e != f)
-                        printf("65  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
-                    /*printf("66  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);*/
-                }
+            }
+#ifdef __LP64__ /* should probably always do this, but gcc warns */
+            if (!((c == INT64_MIN && d == -1) || d == 0))
+#else
+            if (d)
+#endif
+            {
+                e = m3_divL_old(d, c);
+                f = m3_divL(d, c);
+                errors_div += (e != f);
+                if (e != f && e == -f)
+                    printf("65- %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
+                else if (e != f)
+                    printf("65  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
+                /*printf("66  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);*/
             }
         }
     }
-#if 0
-    printf(
-        "%ld/%ld: old:%ld new:%ld Lold:%ld Lnew:%ld C:%ld\n",
-        (long)LONG_MIN,
-        (long)-1,
-        (long)m3_div_old(-1, LONG_MIN),
-        (long)m3_div(-1, LONG_MIN),
-        (long)m3_divL_old(-1, LONG_MIN),
-        (long)m3_divL(-1, LONG_MIN),
-        (long)(LONG_MIN / -1));
+}
+
+static void TestMod4(int64 a, int64 b)
+{
+    int64 old, nu;
+#ifdef __LP64__ /* should probably always do this */
+    if (a == INT64_MIN && b == -1) /* avoid overflow */
+        return;
 #endif
+    old = m3_modL_old(b, a);
+    nu = m3_modL(b, a);
+    /* old version is wrong for INT64_MIN mod negative */
+    if (a != INT64_MIN || b >= 0 || old == nu)
+    {
+        assert(old == nu);
+        assert((b < 0) ? (old > b && old <= 0) : (old < b && old >= 0));
+        assert(old == a - b * m3_divL(b, a));
+    }
+    errors_mod += (old != nu);
+    assert(nu == a - b * m3_divL(b, a));
+    assert((b < 0) ? (nu > b && nu <= 0) : (nu < b && nu >= 0));
+}
+
+static void TestMod3(long a, long b)
+{
+    long old, nu;
+    if (a == LONG_MIN && b == -1) /* avoid overflow */
+        return;
+    old = m3_mod_old(b, a);
+    nu = m3_mod(b, a);
+    /* old version is wrong for LONG_MIN mod negative */
+    if (a != LONG_MIN || b >= 0 || old == nu)
+    {
+        assert(old == nu);
+        assert((b < 0) ? (old > b && old <= 0) : (old < b && old >= 0));
+        assert(old == a - b * m3_div(b, a));
+    }
+    errors_mod += (old != nu);
+    assert(nu == a - b * m3_div(b, a));
+    assert((b < 0) ? (nu > b && nu <= 0) : (nu < b && nu >= 0));
+}
+
+static void TestMod2(long a, long b, int64 c, int64 d)
+{
+    if (b) TestMod3(a, b);
+    if (a) TestMod3(b, a);
+    if (d) TestMod4(c, d);
+    if (c) TestMod4(d, c);
+}
+
+static void TestMod(void)
+{
+    long a, b;
+    long n = sizeof(values) / sizeof(values[0]);
+    long nL = sizeof(values64) / sizeof(values64[0]);
+    assert(n == nL);
+#if 1
+    for (a = -1000; a < 1000; ++a)
+    {
+        for (b = -1000; b < 1000; ++b)
+        {
+            long c = a;
+            long d = b;
+            
+            TestMod2(c, d, 0, 0);
+            TestMod2(0, 0, c, d);
+            if (a > 0)
+                c = LONG_MAX - a;
+            else
+                c = LONG_MIN + a;
+            if (b > 0)
+                d = LONG_MIN + b;
+            else
+                d = LONG_MIN - b;
+
+            TestMod2(c, d, 0, 0);
+            TestMod2(0, 0, c, d);
+        }
+    }
+#endif
+
+    for (a = 0; a < n; ++a)
+    {
+        for (b = 0; b < n; ++b)
+        {
+            TestMod2(values[a], values[b], values64[a], values64[b]);
+        }
+    }
 }
 
 int main()
 {
     /*BuildTables();*/
     TestDiv();
+    TestMod();
+    printf("errors_div:%d errors_mod:%d\n", errors_div, errors_mod);
     return 0;
 }
 
