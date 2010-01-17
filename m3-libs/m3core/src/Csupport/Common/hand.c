@@ -288,7 +288,7 @@ long __cdecl m3_div
   else
   {
     /* round negative result down by rounding positive result up
-       unsigned math is much better defined, see gcc -Wstrict-overflow=3 */
+       unsigned math is much better defined, see gcc -Wstrict-overflow=4 */
     ulong ub = M3_ABS(ulong, b);
     return -(long)((M3_ABS(ulong, a) + ub - 1) / ub);
   }
@@ -315,7 +315,7 @@ int64 __cdecl m3_divL
   else
   {
     /* round negative result down by rounding positive result up
-       unsigned math is much better defined, see gcc -Wstrict-overflow=3 */
+       unsigned math is much better defined, see gcc -Wstrict-overflow=4 */
     uint64 ub = M3_ABS(uint64, b);
     return -(int64)((M3_ABS(uint64, a) + ub - 1) / ub);
   }
