@@ -83,7 +83,7 @@ typedef ulong uint32;
 #endif
 
 /* There are problems passing int64 in K&R form! */
-#if 1 /* defined(__cplusplus) || defined(_MSC_VER) */
+#if 1 /* defined(__STDC__) || defined(__cplusplus) || defined(_MSC_VER) */
 #define ANSI(x) x
 #define KR(x)
 #else
@@ -240,13 +240,6 @@ ov:
 #define M3_POS(T, a) (((T)-((a) + 1)) + 1)
 #define M3_ABS(T, a) (((a) < 0) ? M3_POS(T, a) : (T)(a))
 
-#if 0
-static uint   m3_pos(int a)     { assert(a < 0); return M3_POS(uint, a); }
-static ulong  m3_posL(long a)   { assert(a < 0); return M3_POS(ulong, a); }
-static uint64 m3_pos64(int64 a) { assert(a < 0); return M3_POS(uint64, a); }
-static uint   m3_abs(int a)     { return M3_ABS(uint, a); }
-#endif
-static ulong  m3_absL(long a)   { return M3_ABS(ulong, a); }
 static uint64 m3_abs64(int64 a) { return M3_ABS(uint64, a); }
 
 int64 __cdecl m3_mult_64(int64 a, int64 b, BOOL* overflow)
@@ -281,11 +274,7 @@ static long __cdecl m3_div_old
   
   if ((a == 0) && (b != 0))  {  c = 0;
   } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
-  } else /* a < 0 */ {
-    /* LONG_MIN / -1 overflows and depending on compiler/optimizations, gives an exception. */
-    if (a == LONG_MIN && b == -1)
-      return LONG_MIN;
-    c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
+  } else /* a < 0 */ { c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
   }
   return c;
 }
@@ -294,24 +283,14 @@ long __cdecl m3_div
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
-  typedef  long ST; /* signed type */
-  typedef ulong UT; /* unsigned type */
-  /* From here on down, identical to m3_divL. */
-  
-  if (a == 0 && b)
-    return 0;
-  else if (a >= 0 && b >= 0)
+  if (a == 0 || b == 0 || ((a < 0) == (b < 0)))
     return (a / b);
   else
   {
-    UT ua = M3_ABS(UT, a);
-    UT ub = M3_ABS(UT, b);
-    if ((a < 0) != (b < 0))
-      /* round down by rounding the unsigned result up */
-      return -(ST)((ua + ub - 1) / ub);
-    assert(a < 0);
-    assert(b < 0);
-    return (ua / ub);
+    /* round negative result down by rounding positive result up
+       unsigned math is much better defined, see gcc -Wstrict-overflow=3 */
+    ulong ub = M3_ABS(ulong, b);
+    return -(long)((M3_ABS(ulong, a) + ub - 1) / ub);
   }
 }
 
@@ -322,11 +301,7 @@ static int64 __cdecl m3_divL_old
   register int64 c;
   if ((a == 0) && (b != 0))  {  c = 0;
   } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
-  } else /* a < 0 */ {
-    /* INT64_MIN / -1 overflows and depending on compiler/optimizations, gives an exception. */
-    if (a == INT64_MIN && b == -1)
-      return INT64_MIN;
-    c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
+  } else /* a < 0 */ { c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
   }
   return c;
 }
@@ -335,24 +310,14 @@ int64 __cdecl m3_divL
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
-  typedef  int64 ST; /* signed type */
-  typedef uint64 UT; /* unsigned type */
-  /* From here on down, identical to m3_divL. */
-  
-  if (a == 0 && b)
-    return 0;
-  else if (a >= 0 && b >= 0)
+  if (a == 0 || b == 0 || ((a < 0) == (b < 0)))
     return (a / b);
   else
   {
-    UT ua = M3_ABS(UT, a);
-    UT ub = M3_ABS(UT, b);
-    if ((a < 0) != (b < 0))
-      /* round down by rounding the unsigned result up */
-      return -(ST)((ua + ub - 1) / ub);
-    assert(a < 0);
-    assert(b < 0);
-    return (ua / ub);
+    /* round negative result down by rounding positive result up
+       unsigned math is much better defined, see gcc -Wstrict-overflow=3 */
+    uint64 ub = M3_ABS(uint64, b);
+    return -(int64)((M3_ABS(uint64, a) + ub - 1) / ub);
   }
 }
 
@@ -838,42 +803,84 @@ static void TestDiv(void)
     
     assert(n == nL);
     
-    printf("%ld, %lu\n", LONG_MIN, m3_absL(LONG_MIN));
-    printf("%lu\n", m3_absL(0));
-    printf("%lu\n", m3_absL(1));
-    printf("%lu\n", m3_absL(-1));
- 
+#if 1
+    for (a = -1000; a < 1000; ++a)
+    {
+        for (b = -1000; b < 1000; ++b)
+        {
+            long c = a;
+            long d = b;
+            long e, f;
+            
+            if (!((d == LONG_MIN && e == -1) || c == 0))
+            {
+                e = m3_div(c, d);
+                f = m3_div_old(c, d);
+                if (e != f && e != -f)
+                    printf("%ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
+            }
+            c = LONG_MAX + a;
+            d = LONG_MAX + b;
+            e = m3_div(c, d) ;
+            f = m3_div_old(c, d);
+            if (e != f && e != -f)
+                printf("%ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
+        }
+    }
+#endif
+
     for (a = 0; a < n; ++a)
     {
         for (b = 0; b < n; ++b)
         {
+            int64 e, f;
             long c = values[a];
             long d = values[b];
             int64 c64 = values64[a];
             int64 d64 = values64[b];
-            /*printf("%ld %ld\n", c, d);
+            /*printf("%ld %ld %"I64"d %"I64"d\n", c, d, c64, d64);
             fflush(stdout);*/
-            if (d)
+            if (!((c == LONG_MIN && d == -1) || d == 0))
             {
-                long e = m3_div_old(d, c);
-                long f = m3_div(d, c);
+                e = m3_div_old(d, c);
+                f = m3_div(d, c);
+                assert(e == f || e == -f); /* bug in old version */
+                if ((d < 0) == (c < 0))
+                {
+                    assert(e >= 0 || c == LONG_MIN); /* bug in old version */
+                    assert(f >= 0);
+                }
+                else
+                {
+                    assert(e <= 0);
+                    assert(f <= 0);
+                }
                 if (e != f && e == -f)
-                    printf("32- %ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
+                    printf("32- %ld / %ld = old:%"I64"d, new:%"I64"d\n", c, d, e, f);
                 else if (e != f)
-                    printf("32  %ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
-#if 0
-                else if (c == 101 && d == -1)
-                    printf("33  %ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
-#endif
+                    printf("32  %ld / %ld = old:%"I64"d, new:%"I64"d\n", c, d, e, f);
+                /*printf("33  %ld / %ld = old:%"I64"d, new:%"I64"d\n", c, d, e, f);*/
             }
-            if (d64)
+            if (!((c64 == INT64_MIN && d64 == -1) || d64 == 0))
             {
-                int64 e = m3_divL_old(d64, c64);
-                int64 f = m3_divL(d64, c64);
+                e = m3_divL_old(d64, c64);
+                f = m3_divL(d64, c64);
+                assert(e == f || e == -f); /* bug in old version */
+                if ((d64 < 0) == (c64 < 0))
+                {
+                    assert(e >= 0 || c64 == INT64_MIN); /* bug in old version */
+                    assert(f >= 0);
+                }
+                else
+                {
+                    assert(e <= 0);
+                    assert(f <= 0);
+                }
                 if (e != f && e == -f)
                     printf("64- %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
                 else if (e != f)
                     printf("64  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
+                /*printf("67  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);*/
                 if (d)
                 {
                     e = m3_divL_old(d, c);
@@ -882,15 +889,12 @@ static void TestDiv(void)
                         printf("65- %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
                     else if (e != f)
                         printf("65  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
-#if 0
-                    else if (c64 == 101 && d64 == -1)
-                        printf("66  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
-#endif
+                    /*printf("66  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);*/
                 }
             }
         }
     }
-#if 1
+#if 0
     printf(
         "%ld/%ld: old:%ld new:%ld Lold:%ld Lnew:%ld C:%ld\n",
         (long)LONG_MIN,
