@@ -6,6 +6,9 @@
 /*      modified on Tue Jan 10 15:48:28 PST 1995 by kalsow  */
 /*      modified on Tue Feb 11 15:18:40 PST 1992 by muller  */
 
+typedef unsigned int uint;
+typedef unsigned long ulong;
+
 #ifdef _MSC_VER
 #pragma warning(disable:4255) /* () changed to (void) */
 #pragma warning(disable:4505) /* unused static function removed */
@@ -66,9 +69,6 @@ extern "C"
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */
 #endif
-
-typedef unsigned int uint;
-typedef unsigned long ulong;
 
 #if UCHAR_MAX == 0xffffffff
 typedef unsigned char uint32;
