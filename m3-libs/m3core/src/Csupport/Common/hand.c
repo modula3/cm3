@@ -672,7 +672,7 @@ _xx0 () { _crash ("_xx0 (runtime fault)"); }
 
 **************************************************************************/
 
-#if 1 /* change this to 1 and compile and run the program to generate the above tables,
+#if 0 /* change this to 1 and compile and run the program to generate the above tables,
          or to run the test code */
 
 #ifdef _MSC_VER
@@ -794,7 +794,17 @@ static void BuildTables ()
 	printf("\n#else\n#error unknown size of ulong\n#endif\n\n");
 }
 
-static long values[] = {
+static int64 values[] = {
+    INT64_MIN,
+    INT64_MIN + 1,
+    INT64_MAX,
+    INT64_MAX - 1,
+    INT64_MAX / 2,
+    INT64_MAX / 2 - 1,
+    INT64_MAX / 2 + 1,
+    INT64_MIN / 2,
+    INT64_MIN / 2 + 1,
+    INT64_MIN / 2 - 1,
     LONG_MIN,
     LONG_MIN + 1,
     LONG_MAX,
@@ -811,26 +821,10 @@ static long values[] = {
     99, 100, 101,
     -99, -100, -101,
     990, 1000, 1010,
-    -990, -1000, -1010
-};
-static int64 values64[] = {
-    INT64_MIN,
-    INT64_MIN + 1,
-    INT64_MAX,
-    INT64_MAX - 1,
-    INT64_MAX / 2,
-    INT64_MAX / 2 - 1,
-    INT64_MAX / 2 + 1,
-    INT64_MIN / 2,
-    INT64_MIN / 2 + 1,
-    INT64_MIN / 2 - 1,
-    -10, -9, -8, -7, -6, -5, -4, -3, -2, -1,
-    0,
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-    99, 100, 101,
-    -99, -100, -101,
-    990, 1000, 1010,
-    -990, -1000, -1010
+    -990, -1000, -1010,
+    99999,11111,22222,3333,444,55555,
+    -99999,-11111,-22222,-3333,-444,-55555,
+    
 };
 
 static int errors_div;
@@ -840,9 +834,6 @@ static void TestDiv(void)
 {
     long a, b;
     long n = sizeof(values) / sizeof(values[0]);
-    long nL = sizeof(values64) / sizeof(values64[0]);
-    
-    assert(n == nL);
     
 #if 1
     for (a = -1000; a < 1000; ++a)
@@ -876,10 +867,10 @@ static void TestDiv(void)
         for (b = 0; b < n; ++b)
         {
             int64 e, f;
-            long c = values[a];
-            long d = values[b];
-            int64 c64 = values64[a];
-            int64 d64 = values64[b];
+            long c = (long)values[a];
+            long d = (long)values[b];
+            int64 c64 = values[a];
+            int64 d64 = values[b];
             /*printf("%ld %ld %"I64"d %"I64"d\n", c, d, c64, d64);
             fflush(stdout);*/
             if (!((c == LONG_MIN && d == -1) || d == 0))
@@ -1001,8 +992,6 @@ static void TestMod(void)
 {
     long a, b;
     long n = sizeof(values) / sizeof(values[0]);
-    long nL = sizeof(values64) / sizeof(values64[0]);
-    assert(n == nL);
 #if 1
     for (a = -1000; a < 1000; ++a)
     {
@@ -1032,12 +1021,12 @@ static void TestMod(void)
     {
         for (b = 0; b < n; ++b)
         {
-            TestModCombos(values[a], values[b], values64[a], values64[b]);
+            TestModCombos((long)values[a], (long)values[b], values[a], values[b]);
         }
     }
     
     srand((unsigned)time(0));
-    while(1)/*for (a = 0; a < 10000000; ++a)*/
+    for (a = 0; a < 10000000; ++a)
     {
         b = rand();
         n = rand();
