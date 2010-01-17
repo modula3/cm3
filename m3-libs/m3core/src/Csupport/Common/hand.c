@@ -672,7 +672,7 @@ _xx0 () { _crash ("_xx0 (runtime fault)"); }
 
 **************************************************************************/
 
-#if 0 /* change this to 1 and compile and run the program to generate the above tables,
+#if 1 /* change this to 1 and compile and run the program to generate the above tables,
          or to run the test code */
 
 #ifdef _MSC_VER
@@ -824,11 +824,72 @@ static int64 values[] = {
     -990, -1000, -1010,
     99999,11111,22222,3333,444,55555,
     -99999,-11111,-22222,-3333,-444,-55555,
+    0x99999,0x11111,0x22222,0x3333,0x444,0x55555,
+    -0x99999,-0x11111,-0x22222,-0x3333,-0x444,-0x55555,
+    0xFF, 0xFFFF, 0xFFFFFFFF, 0x8000,
     
 };
 
 static int errors_div;
 static int errors_mod;
+
+static void TestDiv32(long a, long b)
+{
+    if (b)
+    {
+        long old = m3_div_old(b, a);
+        long nu = m3_div(b, a);
+        errors_div += (nu != old);
+        if ((b < 0) == (a < 0))
+        {
+            assert(old >= 0 || (old == -nu && a == LONG_MIN && b < 0)); /* bug in old version */
+            assert(nu >= 0);
+        }
+        else
+        {
+            assert(old <= 0);
+            assert(nu <= 0);
+        }
+    }
+}
+
+static void TestDiv64(int64 a, int64 b)
+{
+    if (b)
+    {
+        int64 old = m3_divL_old(b, a);
+        int64 nu = m3_divL(b, a);
+        errors_div += (nu != old);
+        if ((b < 0) == (a < 0))
+        {
+            assert(old >= 0 || (old == -nu && a == INT64_MIN && b < 0)); /* bug in old version */
+            if (nu < 0)
+            {
+                printf("%"I64"d / %"I64"d = nu:%"I64"d old:%"I64"d\n", a, b, nu, old);
+            }
+            assert(nu >= 0);
+        }
+        else
+        {
+            assert(old <= 0);
+            assert(nu <= 0);
+        }
+    }
+}
+
+static void TestDivx(int64 a, int64 b)
+{
+    if (b)
+    {
+        TestDiv32((long)a, (long)b);
+        TestDiv64(a, b);
+    }
+    if (a)
+    {
+        TestDiv32((long)b, (long)a);
+        TestDiv64(b, a);
+    }
+}
 
 static void TestDiv(void)
 {
@@ -840,104 +901,15 @@ static void TestDiv(void)
     {
         for (b = -1000; b < 1000; ++b)
         {
-            long c = a;
-            long d = b;
-            long e, f;
-            
-            if (d != 0)
-            {
-                e = m3_div(d, c);
-                f = m3_div_old(d, c);
-                errors_div += (e != f);
-                if (e != f && e != -f)
-                    printf("%ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
-            }
-            c = LONG_MAX + a;
-            d = LONG_MAX + b;
-            e = m3_div(c, d) ;
-            f = m3_div_old(c, d);
-            if (e != f && e != -f)
-                printf("%ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
+            TestDivx(a, b);
+            TestDivx((a > 0) ? (LONG_MAX - a) : (LONG_MIN + a), (b > 0) ? (LONG_MIN + b) : (LONG_MIN - b));
         }
     }
 #endif
 
     for (a = 0; a < n; ++a)
-    {
         for (b = 0; b < n; ++b)
-        {
-            int64 e, f;
-            long c = (long)values[a];
-            long d = (long)values[b];
-            int64 c64 = values[a];
-            int64 d64 = values[b];
-            /*printf("%ld %ld %"I64"d %"I64"d\n", c, d, c64, d64);
-            fflush(stdout);*/
-            if (!((c == LONG_MIN && d == -1) || d == 0))
-            {
-                e = m3_div_old(d, c);
-                f = m3_div(d, c);
-                errors_div += (e != f);
-                assert(e == f || (e == -f && c == LONG_MIN && d < 0)); /* bug in old version */
-                if ((d < 0) == (c < 0))
-                {
-                    assert(e >= 0 || (c == LONG_MIN && d < 0)); /* bug in old version */
-                    assert(f >= 0);
-                }
-                else
-                {
-                    assert(e <= 0);
-                    assert(f <= 0);
-                }
-                if (e != f && e == -f) {
-#if 0
-                    printf("32- %ld / %ld = old:%"I64"d, new:%"I64"d\n", c, d, e, f);
-#endif
-                } else if (e != f)
-                    printf("32  %ld / %ld = old:%"I64"d, new:%"I64"d\n", c, d, e, f);
-                /*printf("33  %ld / %ld = old:%"I64"d, new:%"I64"d\n", c, d, e, f);*/
-            }
-            if (!((c64 == INT64_MIN && d64 == -1) || d64 == 0))
-            {
-                e = m3_divL_old(d64, c64);
-                f = m3_divL(d64, c64);
-                errors_div += (e != f);
-                assert(e == f || e == -f); /* bug in old version */
-                if ((d64 < 0) == (c64 < 0))
-                {
-                    assert(e >= 0 || c64 == INT64_MIN); /* bug in old version */
-                    assert(f >= 0);
-                }
-                else
-                {
-                    assert(e <= 0);
-                    assert(f <= 0);
-                }
-                if (e != f && e == -f) {
-#if 0
-                    printf("64- %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
-#endif
-                } else if (e != f)
-                    printf("64  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
-                /*printf("67  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);*/
-            }
-#ifdef __LP64__ /* should probably always do this, but gcc warns */
-            if (!((c == INT64_MIN && d == -1) || d == 0))
-#else
-            if (d)
-#endif
-            {
-                e = m3_divL_old(d, c);
-                f = m3_divL(d, c);
-                errors_div += (e != f);
-                if (e != f && e == -f)
-                    printf("65- %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
-                else if (e != f)
-                    printf("65  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
-                /*printf("66  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);*/
-            }
-        }
-    }
+            TestDivx(values[a], values[b]);
 }
 
 static void TestMod64(int64 a, int64 b)
@@ -980,12 +952,18 @@ static void TestMod32(long a, long b)
     assert((b < 0) ? (nu > b && nu <= 0) : (nu < b && nu >= 0));
 }
 
-static void TestModCombos(long a, long b, int64 c, int64 d)
+static void TestModx(int64 a, int64 b)
 {
-    if (b) TestMod32(a, b);
-    if (a) TestMod32(b, a);
-    if (d) TestMod64(c, d);
-    if (c) TestMod64(d, c);
+    if (b)
+    {
+        TestMod32((long)a, (long)b);
+        TestMod64(a, b);
+    }
+    if (a)
+    {
+        TestMod32((long)b, (long)a);
+        TestMod64(b, a);
+    }
 }
 
 static void TestMod(void)
@@ -994,44 +972,20 @@ static void TestMod(void)
     long n = sizeof(values) / sizeof(values[0]);
 #if 1
     for (a = -1000; a < 1000; ++a)
-    {
         for (b = -1000; b < 1000; ++b)
         {
-            long c = a;
-            long d = b;
-            
-            TestModCombos(c, d, 0, 0);
-            TestModCombos(0, 0, c, d);
-            if (a > 0)
-                c = LONG_MAX - a;
-            else
-                c = LONG_MIN + a;
-            if (b > 0)
-                d = LONG_MIN + b;
-            else
-                d = LONG_MIN - b;
-
-            TestModCombos(c, d, 0, 0);
-            TestModCombos(0, 0, c, d);
+            TestModx(a, b);
+            TestModx((a > 0) ? (LONG_MAX - a) : (LONG_MIN + a), (b > 0) ? (LONG_MIN + b) : (LONG_MIN - b));
         }
-    }
 #endif
 
     for (a = 0; a < n; ++a)
-    {
         for (b = 0; b < n; ++b)
-        {
-            TestModCombos((long)values[a], (long)values[b], values[a], values[b]);
-        }
-    }
+            TestModx(values[a], values[b]);
     
     srand((unsigned)time(0));
     for (a = 0; a < 10000000; ++a)
-    {
-        b = rand();
-        n = rand();
-        TestModCombos(b, n, b, n);
-    }
+        TestModx(rand(), rand());
 }
 
 int main()
