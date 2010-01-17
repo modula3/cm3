@@ -15,9 +15,16 @@
 
 #include <limits.h>
 #include <string.h>
+#include <assert.h>
 
 #if defined(LLONG_MIN) && !defined(INT64_MIN)
 #define INT64_MIN LLONG_MIN
+#endif
+
+#ifdef _MSC_VER
+#define I64 "I64"
+#else
+#define I64 "ll"
 #endif
 
 #if defined(LLONG_MAX) && !defined(INT64_MAX)
@@ -66,7 +73,8 @@ typedef ulong uint32;
     typedef unsigned long long uint64;
 #endif
 
-#ifdef __cplusplus
+/* There are problems passing int64 in K&R form! */
+#if 1 /* defined(__cplusplus) */
 #define ANSI(x) x
 #define KR(x)
 #else
@@ -217,10 +225,15 @@ ov:
   return result;
 }
 
-static uint64 m3_abs64(int64 a)
-{
-  return (uint64)((a < 0) ? -a : a);
-}
+
+/* return positive form of a negative value, avoiding overflow */
+static uint m3_pos(int a)       { assert(a < 0); return (((uint  )-(a + 1)) + 1); }
+static ulong m3_posL(long a)    { assert(a < 0); return (((ulong )-(a + 1)) + 1); }
+static uint64 m3_pos64(int64 a) { assert(a < 0); return (((uint64)-(a + 1)) + 1); }
+
+static uint m3_abs(int a)       { return ((a < 0) ? m3_pos  (a) : (uint  )a); }
+static ulong m3_absL(long a)    { return ((a < 0) ? m3_posL (a) : (ulong )a); }
+static uint64 m3_abs64(int64 a) { return ((a < 0) ? m3_pos64(a) : (uint64)a); }
 
 int64 __cdecl m3_mult_64(int64 a, int64 b, BOOL* overflow)
 {
@@ -246,14 +259,57 @@ int64 __cdecl m3_mult_64(int64 a, int64 b, BOOL* overflow)
   return result;
 }
 
-long __cdecl m3_div
+static long __cdecl m3_div_old
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
   register long c;
+  
   if ((a == 0) && (b != 0))  {  c = 0;
   } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
-  } else /* a < 0 */ {  c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
+  } else /* a < 0 */ {
+    /* LONG_MIN / -1 overflows and depending on compiler/optimizations, gives an exception. */
+    if (a == LONG_MIN && b == -1)
+      return LONG_MIN;
+    c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
+  }
+  return c;
+}
+
+long __cdecl m3_div
+    ANSI((      long b, long a))
+      KR((b, a) long b; long a;)
+{
+  ulong ua;
+  ulong ub;
+  
+  if (a == 0 && b)
+    return 0;
+  else if (a >= 0 && b >= 0)
+    return (a / b);
+    
+  ua = m3_absL(a);
+  ub = m3_absL(b);
+  if ((a < 0) != (b < 0))
+    /* round down by rounding the unsigned result up */
+    return -(long)((ua + ub - 1) / ub);
+  assert(a < 0);
+  assert(b < 0);
+  return (ua / ub);
+}
+
+static int64 __cdecl m3_divL_old
+    ANSI((      int64 b, int64 a))
+      KR((b, a) int64 b; int64 a;)
+{
+  register int64 c;
+  if ((a == 0) && (b != 0))  {  c = 0;
+  } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
+  } else /* a < 0 */ {
+    /* INT64_MIN / -1 overflows and depending on compiler/optimizations, gives an exception. */
+    if (a == INT64_MIN && b == -1)
+      return INT64_MIN;
+    c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
   }
   return c;
 }
@@ -262,12 +318,22 @@ int64 __cdecl m3_divL
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
-  register int64 c;
-  if ((a == 0) && (b != 0))  {  c = 0;
-  } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
-  } else /* a < 0 */ {  c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
-  }
-  return c;
+  uint64 ua;
+  uint64 ub;
+  
+  if (a == 0 && b)
+    return 0;
+  else if (a >= 0 && b >= 0)
+    return (a / b);
+    
+  ua = m3_abs64(a);
+  ub = m3_abs64(b);
+  if ((a < 0) != (b < 0))
+    /* round down by rounding the unsigned result up */
+    return -(int64)((ua + ub - 1) / ub);
+  assert(a < 0);
+  assert(b < 0);
+  return (ua / ub);
 }
 
 long __cdecl m3_mod
@@ -591,11 +657,12 @@ _xx0 () { _crash ("_xx0 (runtime fault)"); }
 
 **************************************************************************/
 
-#if 0 /* change this to 1 and compile and run the program to generate the above tables */
+#if 0 /* change this to 1 and compile and run the program to generate the above tables,
+         or to run the test code */
 
+#include <stdio.h>
 #include <assert.h>
 #include <limits.h>
-typedef unsigned long ulong;
 
 void BuildTables ()
 {
@@ -709,8 +776,109 @@ void BuildTables ()
 
 int main()
 {
-    BuildTables();
-    return 0;
+    long a, b;
+    /*BuildTables();*/
+    long values[] = {
+        LONG_MIN,
+        LONG_MIN + 1,
+        LONG_MAX,
+        LONG_MAX - 1,
+        LONG_MAX / 2,
+        LONG_MAX / 2 - 1,
+        LONG_MAX / 2 + 1,
+        LONG_MIN / 2,
+        LONG_MIN / 2 + 1,
+        LONG_MIN / 2 - 1,
+        -10, -9, -8, -7, -6, -5, -4, -3, -2, -1,
+        0,
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        99, 100, 101
+    };
+    int64 values64[] = {
+        INT64_MIN,
+        INT64_MIN + 1,
+        INT64_MAX,
+        INT64_MAX - 1,
+        INT64_MAX / 2,
+        INT64_MAX / 2 - 1,
+        INT64_MAX / 2 + 1,
+        INT64_MIN / 2,
+        INT64_MIN / 2 + 1,
+        INT64_MIN / 2 - 1,
+        -10, -9, -8, -7, -6, -5, -4, -3, -2, -1,
+        0,
+        1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+        99, 100, 101
+    };
+    long n = sizeof(values) / sizeof(values[0]);
+    long nL = sizeof(values64) / sizeof(values64[0]);
+    
+    assert(n == nL);
+    
+    printf("%ld, %lu\n", LONG_MIN, m3_absL(LONG_MIN));
+    printf("%lu\n", m3_absL(0));
+    printf("%lu\n", m3_absL(1));
+    printf("%lu\n", m3_absL(-1));
+ 
+    for (a = 0; a < n; ++a)
+    {
+        for (b = 0; b < n; ++b)
+        {
+            long c = values[a];
+            long d = values[b];
+            int64 c64 = values64[a];
+            int64 d64 = values64[b];
+            /*printf("%ld %ld\n", c, d);
+            fflush(stdout);*/
+            if (d)
+            {
+                long e = m3_div_old(d, c);
+                long f = m3_div(d, c);
+                if (e != f && e == -f)
+                    printf("32- %ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
+                else if (e != f)
+                    printf("32  %ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
+#if 0
+                else if (c == 101 && d == -1)
+                    printf("33  %ld / %ld = old:%ld, new:%ld\n", c, d, e, f);
+#endif
+            }
+            if (d64)
+            {
+                int64 e = m3_divL_old(d64, c64);
+                int64 f = m3_divL(d64, c64);
+                if (e != f && e == -f)
+                    printf("64- %" I64 "d / %" I64 "d = old:%" I64 "d, new:%" I64 "d\n", c64, d64, e, f);
+                else if (e != f)
+                    printf("64  %" I64 "d / %" I64 "d = old:%" I64 "d, new:%" I64 "d\n", c64, d64, e, f);
+                if (d)
+                {
+                    e = m3_divL_old(d, c);
+                    f = m3_divL(d, c);
+                    if (e != f && e == -f)
+                        printf("65- %" I64 "d / %" I64 "d = old:%" I64 "d, new:%" I64 "d\n", c64, d64, e, f);
+                    else if (e != f)
+                        printf("65  %" I64 "d / %" I64 "d = old:%" I64 "d, new:%" I64 "d\n", c64, d64, e, f);
+#if 0
+                    else if (c64 == 101 && d64 == -1)
+                        printf("66  %" I64 "d / %" I64 "d = old:%" I64 "d, new:%" I64 "d\n", c64, d64, e, f);
+#endif
+                }
+            }
+        }
+    }
+#if 1
+    printf(
+        "%ld/%ld: old:%ld new:%ld Lold:%ld Lnew:%ld C:%ld\n",
+        (long)LONG_MIN,
+        (long)-1,
+        (long)m3_div_old(-1, LONG_MIN),
+        (long)m3_div(-1, LONG_MIN),
+        (long)m3_divL_old(-1, LONG_MIN),
+        (long)m3_divL(-1, LONG_MIN),
+        (long)(LONG_MIN / -1));
+#endif
+return 0;
 }
 
 #endif
