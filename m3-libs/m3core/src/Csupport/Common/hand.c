@@ -238,7 +238,7 @@ ov:
 /* return positive form of a negative value, avoiding overflow */
 /* T should be an unsigned type */
 #define M3_POS(T, a) (((T)-((a) + 1)) + 1)
-#define M3_ABS(T, a) ((a < 0) ? M3_POS(T, a) : (T)a)
+#define M3_ABS(T, a) (((a) < 0) ? M3_POS(T, a) : (T)(a))
 
 #if 0
 static uint   m3_pos(int a)     { assert(a < 0); return M3_POS(uint, a); }
