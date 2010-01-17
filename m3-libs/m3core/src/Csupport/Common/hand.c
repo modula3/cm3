@@ -672,7 +672,7 @@ _xx0 () { _crash ("_xx0 (runtime fault)"); }
 
 **************************************************************************/
 
-#if 0 /* change this to 1 and compile and run the program to generate the above tables,
+#if 1 /* change this to 1 and compile and run the program to generate the above tables,
          or to run the test code */
 
 #ifdef _MSC_VER
@@ -684,6 +684,7 @@ _xx0 () { _crash ("_xx0 (runtime fault)"); }
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
+#include <time.h>
 
 static void BuildTables ()
 {
@@ -807,7 +808,10 @@ static long values[] = {
     -10, -9, -8, -7, -6, -5, -4, -3, -2, -1,
     0,
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-    99, 100, 101
+    99, 100, 101,
+    -99, -100, -101,
+    990, 1000, 1010,
+    -990, -1000, -1010
 };
 static int64 values64[] = {
     INT64_MIN,
@@ -823,7 +827,10 @@ static int64 values64[] = {
     -10, -9, -8, -7, -6, -5, -4, -3, -2, -1,
     0,
     1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
-    99, 100, 101
+    99, 100, 101,
+    -99, -100, -101,
+    990, 1000, 1010,
+    -990, -1000, -1010
 };
 
 static int errors_div;
@@ -1027,6 +1034,14 @@ static void TestMod(void)
         {
             TestModCombos(values[a], values[b], values64[a], values64[b]);
         }
+    }
+    
+    srand((unsigned)time(0));
+    while(1)/*for (a = 0; a < 10000000; ++a)*/
+    {
+        b = rand();
+        n = rand();
+        TestModCombos(b, n, b, n);
     }
 }
 
