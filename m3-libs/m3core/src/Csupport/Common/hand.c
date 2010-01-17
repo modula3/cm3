@@ -11,19 +11,20 @@
 #ifndef _MT
 #define _MT
 #endif
-#pragma warning(disable:4131) /* old style */
-    #if _MSC_VER < 900
-        #error __int64 support is required.
-        /* avoid cascade */
-        typedef long int64;
-        typedef ulong uint64;
-    #else
-        typedef __int64 int64;
-        typedef unsigned __int64 uint64;
-    #endif
+#if _MSC_VER < 900
+#error __int64 support is required.
+/* avoid cascade */
+typedef long int64;
+typedef ulong uint64;
 #else
-    typedef long long int64;
-    typedef unsigned long long uint64;
+typedef __int64 int64;
+typedef unsigned __int64 uint64;
+#define I64 "I64"
+#endif
+#else
+typedef long long int64;
+typedef unsigned long long uint64;
+#define I64 "ll"
 #endif
 
 #include <limits.h>
@@ -46,12 +47,6 @@
 #elif defined(INT64_MAX)
 #define INT64_MIN (-INT64_MAX-(int64)1)
 #endif
-#endif
-
-#ifdef _MSC_VER
-#define I64 "I64"
-#else
-#define I64 "ll"
 #endif
 
 typedef int BOOL;
@@ -81,7 +76,7 @@ typedef ulong uint32;
 #endif
 
 /* There are problems passing int64 in K&R form! */
-#if 1 /* defined(__cplusplus) */
+#if 1 /* defined(__cplusplus) || defined(_MSC_VER) */
 #define ANSI(x) x
 #define KR(x)
 #else
@@ -234,13 +229,18 @@ ov:
 
 
 /* return positive form of a negative value, avoiding overflow */
-static uint m3_pos(int a)       { assert(a < 0); return (((uint  )-(a + 1)) + 1); }
-static ulong m3_posL(long a)    { assert(a < 0); return (((ulong )-(a + 1)) + 1); }
-static uint64 m3_pos64(int64 a) { assert(a < 0); return (((uint64)-(a + 1)) + 1); }
+/* T should be an unsigned type */
+#define M3_POS(T, a) (((T)-((a) + 1)) + 1)
+#define M3_ABS(T, a) ((a < 0) ? M3_POS(T, a) : (T)a)
 
-static uint m3_abs(int a)       { return ((a < 0) ? m3_pos  (a) : (uint  )a); }
-static ulong m3_absL(long a)    { return ((a < 0) ? m3_posL (a) : (ulong )a); }
-static uint64 m3_abs64(int64 a) { return ((a < 0) ? m3_pos64(a) : (uint64)a); }
+#if 0
+static uint   m3_pos(int a)     { assert(a < 0); return M3_POS(uint, a); }
+static ulong  m3_posL(long a)   { assert(a < 0); return M3_POS(ulong, a); }
+static uint64 m3_pos64(int64 a) { assert(a < 0); return M3_POS(uint64, a); }
+static uint   m3_abs(int a)     { return M3_ABS(uint, a); }
+#endif
+static ulong  m3_absL(long a)   { return M3_ABS(ulong, a); }
+static uint64 m3_abs64(int64 a) { return M3_ABS(uint64, a); }
 
 int64 __cdecl m3_mult_64(int64 a, int64 b, BOOL* overflow)
 {
@@ -287,22 +287,25 @@ long __cdecl m3_div
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
-  ulong ua;
-  ulong ub;
+  typedef  long ST; /* signed type */
+  typedef ulong UT; /* unsigned type */
+  /* From here on down, identical to m3_divL. */
   
   if (a == 0 && b)
     return 0;
   else if (a >= 0 && b >= 0)
     return (a / b);
-    
-  ua = m3_absL(a);
-  ub = m3_absL(b);
-  if ((a < 0) != (b < 0))
-    /* round down by rounding the unsigned result up */
-    return -(long)((ua + ub - 1) / ub);
-  assert(a < 0);
-  assert(b < 0);
-  return (ua / ub);
+  else
+  {
+    UT ua = M3_ABS(UT, a);
+    UT ub = M3_ABS(UT, b);
+    if ((a < 0) != (b < 0))
+      /* round down by rounding the unsigned result up */
+      return -(ST)((ua + ub - 1) / ub);
+    assert(a < 0);
+    assert(b < 0);
+    return (ua / ub);
+  }
 }
 
 static int64 __cdecl m3_divL_old
@@ -325,22 +328,25 @@ int64 __cdecl m3_divL
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
-  uint64 ua;
-  uint64 ub;
+  typedef  int64 ST; /* signed type */
+  typedef uint64 UT; /* unsigned type */
+  /* From here on down, identical to m3_divL. */
   
   if (a == 0 && b)
     return 0;
   else if (a >= 0 && b >= 0)
     return (a / b);
-    
-  ua = m3_abs64(a);
-  ub = m3_abs64(b);
-  if ((a < 0) != (b < 0))
-    /* round down by rounding the unsigned result up */
-    return -(int64)((ua + ub - 1) / ub);
-  assert(a < 0);
-  assert(b < 0);
-  return (ua / ub);
+  else
+  {
+    UT ua = M3_ABS(UT, a);
+    UT ub = M3_ABS(UT, b);
+    if ((a < 0) != (b < 0))
+      /* round down by rounding the unsigned result up */
+      return -(ST)((ua + ub - 1) / ub);
+    assert(a < 0);
+    assert(b < 0);
+    return (ua / ub);
+  }
 }
 
 long __cdecl m3_mod
@@ -664,14 +670,13 @@ _xx0 () { _crash ("_xx0 (runtime fault)"); }
 
 **************************************************************************/
 
-#if 0 /* change this to 1 and compile and run the program to generate the above tables,
+#if 1 /* change this to 1 and compile and run the program to generate the above tables,
          or to run the test code */
 
 #include <stdio.h>
-#include <assert.h>
 #include <limits.h>
 
-void BuildTables ()
+static void BuildTables ()
 {
 	unsigned i;
 	ulong LoBits[SET_GRAIN] = { 0 };  /* LoBits32[i] = SET { 0..i } */
@@ -779,9 +784,7 @@ void BuildTables ()
 	printf("\n#else\n#error unknown size of ulong\n#endif\n\n");
 }
 
-#include <assert.h>
-
-int main()
+static void TestDiv(void)
 {
     long a, b;
     /*BuildTables();*/
@@ -855,20 +858,20 @@ int main()
                 int64 e = m3_divL_old(d64, c64);
                 int64 f = m3_divL(d64, c64);
                 if (e != f && e == -f)
-                    printf("64- %" I64 "d / %" I64 "d = old:%" I64 "d, new:%" I64 "d\n", c64, d64, e, f);
+                    printf("64- %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
                 else if (e != f)
-                    printf("64  %" I64 "d / %" I64 "d = old:%" I64 "d, new:%" I64 "d\n", c64, d64, e, f);
+                    printf("64  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
                 if (d)
                 {
                     e = m3_divL_old(d, c);
                     f = m3_divL(d, c);
                     if (e != f && e == -f)
-                        printf("65- %" I64 "d / %" I64 "d = old:%" I64 "d, new:%" I64 "d\n", c64, d64, e, f);
+                        printf("65- %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
                     else if (e != f)
-                        printf("65  %" I64 "d / %" I64 "d = old:%" I64 "d, new:%" I64 "d\n", c64, d64, e, f);
+                        printf("65  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
 #if 0
                     else if (c64 == 101 && d64 == -1)
-                        printf("66  %" I64 "d / %" I64 "d = old:%" I64 "d, new:%" I64 "d\n", c64, d64, e, f);
+                        printf("66  %"I64"d / %"I64"d = old:%"I64"d, new:%"I64"d\n", c64, d64, e, f);
 #endif
                 }
             }
@@ -885,7 +888,13 @@ int main()
         (long)m3_divL(-1, LONG_MIN),
         (long)(LONG_MIN / -1));
 #endif
-return 0;
+}
+
+int main()
+{
+    /*BuildTables();*/
+    TestDiv();
+    return 0;
 }
 
 #endif
