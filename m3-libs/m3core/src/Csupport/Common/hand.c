@@ -11,24 +11,47 @@
 #ifndef _MT
 #define _MT
 #endif
+#pragma warning(disable:4131) /* old style */
+    #if _MSC_VER < 900
+        #error __int64 support is required.
+        /* avoid cascade */
+        typedef long int64;
+        typedef ulong uint64;
+    #else
+        typedef __int64 int64;
+        typedef unsigned __int64 uint64;
+    #endif
+#else
+    typedef long long int64;
+    typedef unsigned long long uint64;
 #endif
 
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
 
-#if defined(LLONG_MIN) && !defined(INT64_MIN)
+#if !defined(INT64_MAX)
+#if defined(LLONG_MAX)
+#define INT64_MAX LLONG_MAX
+#elif defined(__LONG_LONG_MAX__)
+#define INT64_MAX __LONG_LONG_MAX__
+#endif
+#endif
+
+#if !defined(INT64_MIN)
+#if defined(LLONG_MIN)
 #define INT64_MIN LLONG_MIN
+#elif defined(__LONG_LONG_MIN__)
+#define INT64_MIN __LONG_LONG_MIN__
+#elif defined(INT64_MAX)
+#define INT64_MIN (-INT64_MAX-(int64)1)
+#endif
 #endif
 
 #ifdef _MSC_VER
 #define I64 "I64"
 #else
 #define I64 "ll"
-#endif
-
-#if defined(LLONG_MAX) && !defined(INT64_MAX)
-#define INT64_MAX LLONG_MAX
 #endif
 
 typedef int BOOL;
@@ -55,22 +78,6 @@ typedef uint uint32;
 typedef ulong uint32;
 #else
 #error no 32 bit integer type
-#endif
-
-#ifdef _MSC_VER
-#pragma warning(disable:4131) /* old style */
-    #if _MSC_VER < 900
-        #error __int64 support is required.
-        /* avoid cascade */
-        typedef long int64;
-        typedef ulong uint64;
-    #else
-        typedef __int64 int64;
-        typedef unsigned __int64 uint64;
-    #endif
-#else
-    typedef long long int64;
-    typedef unsigned long long uint64;
 #endif
 
 /* There are problems passing int64 in K&R form! */
