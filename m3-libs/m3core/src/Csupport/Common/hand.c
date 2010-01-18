@@ -299,7 +299,7 @@ long __cdecl m3_div
   typedef ulong UT; /* unsigned type */
   int aneg = (a < 0);
   int bneg = (b < 0);
-  if (a == 0 || b == 0 || aneg == bneg)
+  if (aneg == bneg || a == 0 || b == 0)
     return (a / b);
   else
   {
@@ -319,7 +319,7 @@ int64 __cdecl m3_divL
   typedef uint64 UT; /* unsigned type */
   int aneg = (a < 0);
   int bneg = (b < 0);
-  if (a == 0 || b == 0 || aneg == bneg)
+  if (aneg == bneg || a == 0 || b == 0)
     return (a / b);
   else
   {
@@ -363,7 +363,7 @@ long __cdecl m3_mod
   typedef ulong UT; /* unsigned type */
   int aneg = (a < 0);
   int bneg = (b < 0);
-  if (a == 0 || b == 0 || aneg == bneg)
+  if (aneg == bneg || a == 0 || b == 0)
     return (a % b);
   else
   {
@@ -382,7 +382,7 @@ int64 __cdecl m3_modL
   typedef uint64 UT; /* unsigned type */
   int aneg = (a < 0);
   int bneg = (b < 0);
-  if (a == 0 || b == 0 || aneg == bneg)
+  if (aneg == bneg || a == 0 || b == 0)
     return (a % b);
   else
   {
