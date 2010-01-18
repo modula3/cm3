@@ -73,6 +73,9 @@ PROCEDURE Add (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 PROCEDURE Subtract (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 (* returns 'a - b' unless there's an overflow *)
 
+PROCEDURE Negate (READONLY a: Int;  VAR r: Int): BOOLEAN;
+(* returns '-a' unless there's an overflow *)
+
 PROCEDURE Multiply (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 (* returns 'a * b' unless there's an overflow *)
 
