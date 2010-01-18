@@ -143,6 +143,12 @@ PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
     r_sign := CheckSign (r, n);  <*ASSERT r_sign # Sign.Bad*>
     RETURN (a_sign = b_sign) OR (a_sign = r_sign);
   END Subtract;
+
+PROCEDURE Negate (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  (* It is safe for r to alias a *)
+  BEGIN
+    RETURN Subtract(Zero, a, r);
+  END Negate;
   
 PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR
