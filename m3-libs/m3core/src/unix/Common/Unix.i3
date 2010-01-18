@@ -154,6 +154,8 @@ PROCEDURE isatty (file: int): int;
 <*EXTERNAL "Unix__system"*>
 PROCEDURE system (string: const_char_star): int;
 
+<*EXTERNAL Unix__sleep*> PROCEDURE sleep (a: unsigned): unsigned;
+
 <*EXTERNAL "Unix__Assertions"*>
 PROCEDURE Assertions();
 

@@ -394,6 +394,8 @@ int Unix__execve(const char* name, char** argv, char** envp)
     return execve(name, argv, envp);
 }
 
+M3WRAP1(unsigned, sleep, unsigned)
+
 #endif
 
 void Unix__exit(int i)
