@@ -279,26 +279,6 @@ static long __cdecl m3_div_old
   return c;
 }
 
-long __cdecl m3_div
-    ANSI((      long b, long a))
-      KR((b, a) long b; long a;)
-{
-  typedef  long ST; /* signed type */
-  typedef ulong UT; /* unsigned type */
-  int aneg = (a < 0);
-  int bneg = (b < 0);
-  if (a == 0 || b == 0 || (aneg == bneg))
-    return (a / b);
-  else
-  {
-    /* round negative result down by rounding positive result up
-       unsigned math is much better defined, see gcc -Wstrict-overflow=4 */
-    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
-    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
-    return -(ST)((ua + ub - 1) / ub);
-  }
-}
-
 static int64 __cdecl m3_divL_old
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
@@ -311,6 +291,26 @@ static int64 __cdecl m3_divL_old
   return c;
 }
 
+long __cdecl m3_div
+    ANSI((      long b, long a))
+      KR((b, a) long b; long a;)
+{
+  typedef  long ST; /* signed type */
+  typedef ulong UT; /* unsigned type */
+  int aneg = (a < 0);
+  int bneg = (b < 0);
+  if (a == 0 || b == 0 || aneg == bneg)
+    return (a / b);
+  else
+  {
+    /* round negative result down by rounding positive result up
+       unsigned math is much better defined, see gcc -Wstrict-overflow=4 */
+    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
+    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
+    return -(ST)((ua + ub - 1) / ub);
+  }
+}
+
 int64 __cdecl m3_divL
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
@@ -319,7 +319,7 @@ int64 __cdecl m3_divL
   typedef uint64 UT; /* unsigned type */
   int aneg = (a < 0);
   int bneg = (b < 0);
-  if (a == 0 || b == 0 || (aneg == bneg))
+  if (a == 0 || b == 0 || aneg == bneg)
     return (a / b);
   else
   {
@@ -363,7 +363,7 @@ long __cdecl m3_mod
   typedef ulong UT; /* unsigned type */
   int aneg = (a < 0);
   int bneg = (b < 0);
-  if (a == 0 || b == 0 || (aneg == bneg))
+  if (a == 0 || b == 0 || aneg == bneg)
     return (a % b);
   else
   {
@@ -382,7 +382,7 @@ int64 __cdecl m3_modL
   typedef uint64 UT; /* unsigned type */
   int aneg = (a < 0);
   int bneg = (b < 0);
-  if (a == 0 || b == 0 || (aneg == bneg))
+  if (a == 0 || b == 0 || aneg == bneg)
     return (a % b);
   else
   {
