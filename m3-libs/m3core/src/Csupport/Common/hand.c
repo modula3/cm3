@@ -858,17 +858,17 @@ static void TestDiv32(long a, long b)
     if (b)
     {
         long old = m3_div_old(b, a);
-        long nu = m3_div(b, a);
-        errors_div += (nu != old);
+        long current = m3_div(b, a);
+        errors_div += (current != old);
         if ((b < 0) == (a < 0))
         {
-            assert(old >= 0 || (old == -nu && a == LONG_MIN && b < 0)); /* bug in old version */
-            assert(nu >= 0);
+            assert(old >= 0 || (old == -current && a == LONG_MIN && b < 0)); /* bug in old version */
+            assert(current >= 0);
         }
         else
         {
             assert(old <= 0);
-            assert(nu <= 0);
+            assert(current <= 0);
         }
     }
 }
@@ -880,21 +880,21 @@ static void TestDiv64(int64 a, int64 b)
     if (b)
     {
         int64 old = m3_divL_old(b, a);
-        int64 nu = m3_divL(b, a);
-        errors_div += (nu != old);
+        int64 current = m3_divL(b, a);
+        errors_div += (current != old);
         if ((b < 0) == (a < 0))
         {
-            assert(old >= 0 || (old == -nu && a == INT64_MIN && b < 0)); /* bug in old version */
-            if (nu < 0)
+            assert(old >= 0 || (old == -current && a == INT64_MIN && b < 0)); /* bug in old version */
+            if (current < 0)
             {
-                printf("%"I64"d / %"I64"d = nu:%"I64"d old:%"I64"d\n", a, b, nu, old);
+                printf("%"I64"d / %"I64"d = current:%"I64"d old:%"I64"d\n", a, b, current, old);
             }
-            assert(nu >= 0);
+            assert(current >= 0);
         }
         else
         {
             assert(old <= 0);
-            assert(nu <= 0);
+            assert(current <= 0);
         }
     }
 }
@@ -936,40 +936,40 @@ static void TestDiv(void)
 
 static void TestMod64(int64 a, int64 b)
 {
-    int64 old, nu;
+    int64 old, current;
     if ((a == INT64_MIN && b == -1) || b == 0) /* avoid overflow */
         return;
     old = m3_modL_old(b, a);
-    nu = m3_modL(b, a);
-    errors_mod += (old != nu);
+    current = m3_modL(b, a);
+    errors_mod += (old != current);
     /* old version is wrong for INT64_MIN mod negative */
-    if (a != INT64_MIN || b >= 0 || old == nu)
+    if (a != INT64_MIN || b >= 0 || old == current)
     {
-        assert(old == nu);
+        assert(old == current);
         assert((b < 0) ? (old > b && old <= 0) : (old < b && old >= 0));
         assert(old == a - b * m3_divL(b, a));
     }
-    assert(nu == a - b * m3_divL(b, a));
-    assert((b < 0) ? (nu > b && nu <= 0) : (nu < b && nu >= 0));
+    assert(current == a - b * m3_divL(b, a));
+    assert((b < 0) ? (current > b && current <= 0) : (current < b && current >= 0));
 }
 
 static void TestMod32(long a, long b)
 {
-    long old, nu;
+    long old, current;
     if ((a == LONG_MIN && b == -1) || b == 0) /* avoid overflow */
         return;
     old = m3_mod_old(b, a);
-    nu = m3_mod(b, a);
-    errors_mod += (old != nu);
+    current = m3_mod(b, a);
+    errors_mod += (old != current);
     /* old version is wrong for LONG_MIN mod negative */
-    if (a != LONG_MIN || b >= 0 || old == nu)
+    if (a != LONG_MIN || b >= 0 || old == current)
     {
-        assert(old == nu);
+        assert(old == current);
         assert((b < 0) ? (old > b && old <= 0) : (old < b && old >= 0));
         assert(old == a - b * m3_div(b, a));
     }
-    assert(nu == a - b * m3_div(b, a));
-    assert((b < 0) ? (nu > b && nu <= 0) : (nu < b && nu >= 0));
+    assert(current == a - b * m3_div(b, a));
+    assert((b < 0) ? (current > b && current <= 0) : (current < b && current >= 0));
 }
 
 static void TestModx(int64 a, int64 b)
