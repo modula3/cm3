@@ -283,14 +283,19 @@ long __cdecl m3_div
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
-  if (a == 0 || b == 0 || ((a < 0) == (b < 0)))
+  typedef  long ST; /* signed type */
+  typedef ulong UT; /* unsigned type */
+  int aneg = (a < 0);
+  int bneg = (b < 0);
+  if (a == 0 || b == 0 || (aneg == bneg))
     return (a / b);
   else
   {
     /* round negative result down by rounding positive result up
        unsigned math is much better defined, see gcc -Wstrict-overflow=4 */
-    ulong ub = M3_ABS(ulong, b);
-    return -(long)((M3_ABS(ulong, a) + ub - 1) / ub);
+    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
+    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
+    return -(ST)((ua + ub - 1) / ub);
   }
 }
 
@@ -310,14 +315,19 @@ int64 __cdecl m3_divL
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
-  if (a == 0 || b == 0 || ((a < 0) == (b < 0)))
+  typedef  int64 ST; /* signed type */
+  typedef uint64 UT; /* unsigned type */
+  int aneg = (a < 0);
+  int bneg = (b < 0);
+  if (a == 0 || b == 0 || (aneg == bneg))
     return (a / b);
   else
   {
     /* round negative result down by rounding positive result up
        unsigned math is much better defined, see gcc -Wstrict-overflow=4 */
-    uint64 ub = M3_ABS(uint64, b);
-    return -(int64)((M3_ABS(uint64, a) + ub - 1) / ub);
+    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
+    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
+    return -(ST)((ua + ub - 1) / ub);
   }
 }
 
@@ -349,13 +359,17 @@ long __cdecl m3_mod
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
+  typedef  long ST; /* signed type */
+  typedef ulong UT; /* unsigned type */
+  int aneg = (a < 0);
   int bneg = (b < 0);
-  if (a == 0 || b == 0 || ((a < 0) == bneg))
+  if (a == 0 || b == 0 || (aneg == bneg))
     return (a % b);
   else
   {
-    ulong ub = M3_ABS(ulong, b);
-    a = (long)(ub - 1 - (M3_ABS(ulong, a) + ub - 1) % ub);
+    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
+    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
+    a = (ST)(ub - 1 - (ua + ub - 1) % ub);
     return (bneg ? -a : a);
   }
 }
@@ -364,13 +378,17 @@ int64 __cdecl m3_modL
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
+  typedef  int64 ST; /* signed type */
+  typedef uint64 UT; /* unsigned type */
+  int aneg = (a < 0);
   int bneg = (b < 0);
-  if (a == 0 || b == 0 || ((a < 0) == bneg))
+  if (a == 0 || b == 0 || (aneg == bneg))
     return (a % b);
   else
   {
-    uint64 ub = M3_ABS(uint64, b);
-    a = (int64)(ub - 1 - (M3_ABS(uint64, a) + ub - 1) % ub);
+    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
+    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
+    a = (ST)(ub - 1 - (ua + ub - 1) % ub);
     return (bneg ? -a : a);
   }
 }
