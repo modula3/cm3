@@ -150,6 +150,15 @@ PROCEDURE Negate (READONLY a: Int;  VAR r: Int): BOOLEAN =
     RETURN Subtract(Zero, a, r);
   END Negate;
   
+PROCEDURE Abs (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  (* It is safe for r to alias a *)
+  BEGIN
+    IF GE(a, Zero) THEN
+      RETURN FALSE;
+    END;
+    RETURN Negate(a, r);
+  END Abs;
+
 PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR
     n := MIN (a.n, b.n);  k, carry: INTEGER;  q: Int;
