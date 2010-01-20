@@ -33,7 +33,7 @@ END Error.
 Error levels:
 
   0 - informational messages
-  1 - "fussy" warnings  (i.e. unsued formals, incomplete CASE...)
+  1 - "fussy" warnings  (i.e. unused formals, incomplete CASE...)
   2 - warnings
   3 - errors
 
