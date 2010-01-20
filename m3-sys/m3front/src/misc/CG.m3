@@ -134,6 +134,7 @@ PROCEDURE Init () =
     cg := cg_check;
 
     cg.set_error_handler (Error.Msg);
+    cg.set_warning_handler (Error.Warn2);
 
     last_offset    := -2;
     last_file      := NIL;
