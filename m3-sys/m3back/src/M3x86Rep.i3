@@ -8,7 +8,7 @@
 
 INTERFACE M3x86Rep;
 
-IMPORT M3CG, M3ID;
+IMPORT M3CG, M3ID, Target, TInt;
 
 FROM M3CG IMPORT ByteOffset, ByteSize, Alignment;
 FROM M3CG IMPORT Var, Proc, Name;
@@ -89,7 +89,7 @@ TYPE
     loc: OLoc;
     mvar: MVar := NoStore;
     reg: Regno := 0;
-    imm: INTEGER := 0;
+    imm: Target.Int := TInt.Zero;
     stackp: INTEGER := 0;
     opcode := FALSE;
   END;

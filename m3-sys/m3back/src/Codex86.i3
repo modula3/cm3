@@ -9,12 +9,9 @@
 INTERFACE Codex86;
 
 IMPORT M3CG, M3ObjFile, TFloat;
-
 FROM M3CG IMPORT MType, Label, ByteOffset, Alignment;
 FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
-
-IMPORT M3x86Rep, Wrx86;
-
+IMPORT M3x86Rep, Wrx86, Target;
 FROM M3x86Rep IMPORT Operand, NRegs, MVar, x86Var, x86Proc, Regno;
 
 TYPE T <: Public;
@@ -48,7 +45,7 @@ TYPE Public = OBJECT
         fstack_swap ();
         fstack_discard ();
         f_loadlit (READONLY flarr: FloatBytes; type: MType);
-        immOp (op: Op; READONLY dest: Operand; imm: INTEGER);
+        immOp (op: Op; READONLY dest: Operand; READONLY imm: Target.Int);
         binOp (op: Op; READONLY dest, src: Operand);
         tableOp (op: Op; READONLY dest, index: Operand; scale: INTEGER;
                  table: MVar);
