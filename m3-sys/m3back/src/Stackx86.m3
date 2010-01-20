@@ -619,7 +619,6 @@ PROCEDURE pushimm (t: T; imm: INTEGER) =
       IF NOT TInt.FromInt(imm, Target.Integer.bytes, stack0.imm) THEN
         t.Err("pushimm: unable to convert to target integer");
       END;
-      <* ASSERT TInt.EQ(stack0.imm, TZero) = (imm = 0) *>
       stack0.stackp := t.stacktop;
     END;
 
