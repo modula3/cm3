@@ -11,7 +11,7 @@ INTERFACE Stackx86;
 FROM M3CG IMPORT MType, ZType, Sign, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
 
-IMPORT M3x86Rep, Codex86, Wrx86;
+IMPORT M3x86Rep, Codex86, Wrx86, Target;
 FROM M3x86Rep IMPORT Operand, OLoc, MVar, Regno, Force, RegSet, FlToInt;
 FROM M3x86Rep IMPORT x86Proc, x86Var;
 
@@ -32,13 +32,13 @@ TYPE Public = OBJECT
         corrupt (reg: Regno);
         set_fstack (stackp: INTEGER);
         set_mvar (stackp: INTEGER; READONLY mvar: MVar);
-        set_imm (stackp, imm: INTEGER);
+        set_imm (stackp: INTEGER; READONLY imm: Target.Int);
         loc (stackp: INTEGER): OLoc;
         op (stackp: INTEGER): Operand;
         pos (depth: INTEGER; place: TEXT): INTEGER;
         discard (depth: INTEGER);
         set_error_handler (err: ErrorHandler);
-        set_warning_handler (err: WarningHandler);
+        set_warning_handler (warn: WarningHandler);
         push (READONLY mvar: MVar);
         pushnew (type: MType; force: Force; set := RegSet {});
         pushimm (imm: INTEGER);
@@ -68,16 +68,16 @@ TYPE Public = OBJECT
         doindex_address (shift, size: INTEGER; neg: BOOLEAN);
         docopy (type: MType; overlap: BOOLEAN);
         docopy_n (n: INTEGER; type: MType; overlap: BOOLEAN);
-        doimm (op: Op; imm: INTEGER; overwritesdest: BOOLEAN);
+        doimm (op: Op; READONLY imm: Target.Int; overwritesdest: BOOLEAN);
         newdest (READONLY op: Operand);
         init ();
         end ();
         set_current_proc (p: x86Proc);
         reg (stackp: INTEGER): Regno;
-        lower (reg: Regno): INTEGER;
-        set_lower (reg: Regno; low: INTEGER);
-        upper (reg: Regno): INTEGER;
-        set_upper (reg: Regno; up: INTEGER);
+        lower (reg: Regno): Target.Int;
+        set_lower (reg: Regno; low: Target.Int);
+        upper (reg: Regno): Target.Int;
+        set_upper (reg: Regno; up: Target.Int);
         non_nil (reg: Regno): BOOLEAN;
         set_non_nil (reg: Regno);
       END;
