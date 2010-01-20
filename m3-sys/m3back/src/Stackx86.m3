@@ -13,7 +13,7 @@ FROM Target IMPORT FloatType;
 FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 
 FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
-FROM M3CG_Ops IMPORT ErrorHandler;
+FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force;
 FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore;
@@ -24,6 +24,7 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         cg            : Codex86.T := NIL;
         parent        : M3x86Rep.U := NIL;
         Err           : ErrorHandler := NIL;
+        Warn          : WarningHandler := NIL;
         debug         := FALSE;
         stacktop      := 0;
         vstack        : REF ARRAY OF Operand := NIL;
@@ -54,6 +55,7 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         pos := pos;
         discard := discard;
         set_error_handler := set_error_handler;
+        set_warning_handler := set_warning_handler;
         push := push;
         pushnew := pushnew;
         pushimm := pushimm;
@@ -1960,6 +1962,11 @@ PROCEDURE set_error_handler (t: T; err: ErrorHandler) =
   BEGIN
     t.Err := err;
   END set_error_handler;
+
+PROCEDURE set_warning_handler (t: T; warn: WarningHandler) =
+  BEGIN
+    t.Warn := warn;
+  END set_warning_handler;
 
 PROCEDURE init (t: T) =
   BEGIN
