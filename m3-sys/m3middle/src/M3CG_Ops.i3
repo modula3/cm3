@@ -22,6 +22,8 @@ FROM M3CG IMPORT MemoryOrder;
 
 TYPE
   ErrorHandler = PROCEDURE (msg: TEXT);
+  WarningHandler = ErrorHandler; (* maybe should take a warning level,
+                                  * but for now presumed to be 2 *)
 
 REVEAL
   M3CG.T <: Public;
@@ -47,6 +49,8 @@ set_error_handler (p: ErrorHandler);
 (* 'p' is called to communicate failures (i.e. creating a stack or module
    that's too big) back to the front-end.  Client or implementation
    programming errors (bugs) result in crashes. *)
+
+set_warning_handler (p: WarningHandler);
 
 (*----------------------------------------------------- compilation units ---*)
 

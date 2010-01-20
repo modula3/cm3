@@ -39,6 +39,7 @@ TYPE
       OVERRIDES
         next_label := next_label;
         set_error_handler := set_error_handler;
+        set_warning_handler := set_warning_handler;
         begin_unit := begin_unit;
         end_unit   := end_unit;
         import_unit := import_unit;
@@ -404,6 +405,12 @@ PROCEDURE set_error_handler (<*UNUSED*> u: U;
   BEGIN
     (* skip -- we don't generate any errors *)
   END set_error_handler;
+
+PROCEDURE set_warning_handler (<*UNUSED*> u: U;
+                               <*UNUSED*> p: M3CG_Ops.WarningHandler) =
+  BEGIN
+    (* skip -- we don't generate any warnings *)
+  END set_warning_handler;
 
 (*----------------------------------------------------- compilation units ---*)
 

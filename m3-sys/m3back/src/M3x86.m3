@@ -19,7 +19,7 @@ FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError;
 
-FROM M3CG_Ops IMPORT ErrorHandler;
+FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
 
 FROM M3ObjFile IMPORT Seg;
 
@@ -45,6 +45,7 @@ REVEAL
         obj             : M3ObjFile.T := NIL;
         debug           := FALSE;
         Err             : ErrorHandler := NIL;
+        Warn            : WarningHandler := NIL;
         runtime         : IntRefTbl.T := NIL;  (* Name -> RuntimeHook *)
         textsym         : INTEGER;
         init_varstore   : x86Var := NIL;
@@ -72,6 +73,7 @@ REVEAL
         NewVar := NewVar;
         next_label := next_label;
         set_error_handler := set_error_handler;
+        set_warning_handler := set_warning_handler;
         begin_unit := begin_unit;
         end_unit   := end_unit;
         import_unit := import_unit;
@@ -269,6 +271,13 @@ PROCEDURE set_error_handler (u: U; p: ErrorHandler) =
     u.cg.set_error_handler(p);
     u.vstack.set_error_handler(p);
   END set_error_handler;
+
+PROCEDURE set_warning_handler (u: U; p: WarningHandler) =
+  BEGIN
+    u.Warn := p;
+    u.cg.set_warning_handler(p);
+    u.vstack.set_warning_handler(p);
+  END set_warning_handler;
 
 (*----------------------------------------------------- compilation units ---*)
 
