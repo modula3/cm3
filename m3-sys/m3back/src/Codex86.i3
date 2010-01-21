@@ -46,7 +46,7 @@ TYPE Public = OBJECT
         fstack_discard ();
         f_loadlit (READONLY flarr: FloatBytes; type: MType);
         immOp (op: Op; READONLY dest: Operand; READONLY imm: Target.Int);
-        binOp (op: Op; READONLY dest, src: Operand);
+        binOp (op: Op; READONLY dest, src: Operand; locked := FALSE);
         tableOp (op: Op; READONLY dest, index: Operand; scale: INTEGER;
                  table: MVar);
         swapOp (READONLY dest, src: Operand);

@@ -431,9 +431,18 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
     END
   END immOp;
 
-PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand) =
+PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
   VAR ins: Instruction;
   BEGIN
+
+    IF locked THEN
+      Mn(t, "LOCK ");
+      <* ASSERT dest.loc = OLoc.mem  *>
+      <* ASSERT src.loc = OLoc.register *>
+      ins.escape := TRUE;
+      ins.lock   := TRUE;
+    END;
+
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
     IF src.loc = OLoc.imm THEN
       immOp(t, op, dest, src.imm);
@@ -571,6 +580,7 @@ PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand) =
     ins.lock   := TRUE;
     build_modrm(t, dest, src, ins);
     writecode(t, ins);
+    log_global_var(t, dest.mvar, -4);
   END lock_compare_exchange;
 
 PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
