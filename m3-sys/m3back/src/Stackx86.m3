@@ -562,12 +562,14 @@ PROCEDURE dealloc_reg (t: T; stackp: INTEGER) =
   END dealloc_reg;
 
 PROCEDURE corrupt (t: T; reg: Regno) =
+  VAR locked: BOOLEAN;
   BEGIN
     IF t.reguse[reg].stackp # -1 THEN
       forceout(t, reg);
     END;
+    locked := t.reguse[reg].locked;
     t.reguse[reg] := InitRegister();
-    t.reguse[reg].locked := t.reguse[reg].locked;
+    t.reguse[reg].locked := locked;
   END corrupt;
 
 PROCEDURE set_fstack (t: T; stackp: INTEGER) =
