@@ -3838,25 +3838,19 @@ PROCEDURE check_atomic_type(u: U; a: Type) =
     u.Err("unsupported (so far) type for atomic operation");
   END check_atomic_type;
 
-PROCEDURE check_atomic_types3(u: U; a, b, c: Type) =
+PROCEDURE check_atomic_types(u: U; a, b: Type) =
   BEGIN
     check_atomic_type(u, a);
     check_atomic_type(u, b);
-    check_atomic_type(u, c);
-    IF a # b OR b # c THEN
+    IF a # b THEN
       u.Err("atomic types must match");
     END;
-  END check_atomic_types3;
-
-PROCEDURE check_atomic_types2(u: U; a, b: Type) =
-  BEGIN
-    check_atomic_types3(u, a, b, b);
-  END check_atomic_types2;
+  END check_atomic_types;
 
 PROCEDURE store_ordered (x: U;  t: ZType;  u: MType;  <*UNUSED*>order: MemoryOrder) =
 (* Mem [s1.A].u := s0.t; pop (2) *)
   BEGIN
-    check_atomic_types2(x, t, u);
+    check_atomic_types(x, t, u);
     x.vstack.unlock();
     x.fence(MemoryOrder.Sequential);
     WITH stack0 = x.vstack.pos(0, "store_ordered"),
@@ -3872,7 +3866,7 @@ PROCEDURE store_ordered (x: U;  t: ZType;  u: MType;  <*UNUSED*>order: MemoryOrd
 PROCEDURE load_ordered (x: U;  t: MType;  u: ZType;  <*UNUSED*>order: MemoryOrder) =
 (* s0.u := Mem [s0.A].t  *)
   BEGIN
-    check_atomic_types2(x, t, u);
+    check_atomic_types(x, t, u);
     x.vstack.unlock();
     x.fence(MemoryOrder.Sequential);
     WITH stack0 = x.vstack.pos(0, "store_ordered") DO
@@ -3885,7 +3879,7 @@ PROCEDURE load_ordered (x: U;  t: MType;  u: ZType;  <*UNUSED*>order: MemoryOrde
 PROCEDURE exchange (u: U;  t: MType;  z: ZType;  <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A + o].t;  Mem [s1.A + o].t := s0.u;  s0.u := tmp;  pop *)
   BEGIN
-    check_atomic_types2(u, t, z);
+    check_atomic_types(u, t, z);
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "exchange"),
          stack1 = u.vstack.pos(1, "exchange") DO
@@ -3905,7 +3899,7 @@ PROCEDURE compare_exchange (x: U;  t: MType;  u: ZType;  r: IType;
    ELSE Mem [s1.A].t := t2;   s2.r := 0; pop(2);
    END; *)
   BEGIN
-    check_atomic_types3(x, t, u, r);
+    check_atomic_types(x, t, u);
     x.vstack.unlock();
     WITH newValue                        = x.vstack.pos(0, "compare_exchange"),
          compareValueAndOldValueIfFailed = x.vstack.pos(1, "compare_exchange"),
@@ -3948,7 +3942,7 @@ PROCEDURE fetch_and_op (u: U;  <*UNUSED*>op: AtomicOp;  m: MType;  z: ZType;
    Mem [s1.A].t := tmp op s0.u;
    s1.u := tmp; pop *)
   BEGIN
-    check_atomic_types2(u, m, z);
+    check_atomic_types(u, m, z);
   END fetch_and_op;
 
 BEGIN
