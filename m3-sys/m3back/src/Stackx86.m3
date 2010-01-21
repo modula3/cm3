@@ -1119,11 +1119,11 @@ PROCEDURE doabs (t: T) =
   BEGIN
     unlock(t);
     WITH stack0 = pos(t, 0, "doabs"), stop0 = t.vstack[stack0] DO
-      BEGIN (* IF stop0.loc = OLoc.imm THEN
+      IF stop0.loc = OLoc.imm THEN
         IF NOT TInt.Abs(stop0.imm, stop0.imm) THEN
           t.Err("doabs: Abs overflowed");
         END;
-      ELSE *)
+      ELSE
         find(t, stack0, Force.anytemp);
 
         IF stop0.loc = OLoc.mem THEN
@@ -1757,14 +1757,8 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
       muldest: Regno;
       tsize: Target.Int;
       tshift: Target.Int;
+      tint: Target.Int;
   BEGIN
-    IF NOT TInt.FromInt(size, Target.Integer.bytes, tsize) THEN
-      t.Err("doindex_address: failed to convert size to target integer");
-    END;
-    IF NOT TInt.FromInt(shift, Target.Integer.bytes, tshift) THEN
-      t.Err("doindex_address: failed to convert size to target integer");
-    END;
-
     unlock(t);
     WITH stack0 = pos(t, 0, "doindex_address"),
          stack1 = pos(t, 1, "doindex_address"),
@@ -1773,13 +1767,13 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
       find(t, stack1, Force.anyreg, RegSet {}, TRUE);
 
       IF stop0.loc = OLoc.imm THEN
-
-        (* Beware TWord.Multiply: x * 1 = 0 *)
-
-        IF NOT TInt.Multiply(stop0.imm, tsize, stop0.imm) THEN
+        IF NOT TInt.FromInt(size, Target.Integer.bytes, tsize) THEN
+          t.Err("doindex_address: failed to convert size to target integer");
+        END;
+        IF NOT TInt.Multiply(stop0.imm, tsize, tint) THEN
           t.Err("doindex_address: multiply overflowed");
         END;
-
+        stop0.imm := tint;
       ELSE
         IF stop0.loc # OLoc.register AND shift >= 0 THEN
           find(t, stack0, Force.anyreg);
@@ -1808,6 +1802,9 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
           END
 
         ELSIF shift > 0 THEN
+          IF NOT TInt.FromInt(shift, Target.Integer.bytes, tshift) THEN
+            t.Err("doindex_address: failed to convert size to target integer");
+          END;
           t.cg.immOp(Op.oSAL, stop0, tshift);
           newdest(t, stop0);
         END
