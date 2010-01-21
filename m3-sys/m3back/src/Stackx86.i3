@@ -41,7 +41,8 @@ TYPE Public = OBJECT
         set_warning_handler (warn: WarningHandler);
         push (READONLY mvar: MVar);
         pushnew (type: MType; force: Force; set := RegSet {});
-        pushimm (imm: INTEGER);
+        pushimmI (imm: INTEGER);
+        pushimmT (imm: Target.Int);
         pop (READONLY mvar: MVar);
         doloadaddress (v: x86Var; o: ByteOffset);
         dobin (op: Op; symmetric, overwritesdest: BOOLEAN): BOOLEAN;

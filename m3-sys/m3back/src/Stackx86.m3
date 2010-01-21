@@ -61,7 +61,8 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         set_warning_handler := set_warning_handler;
         push := push;
         pushnew := pushnew;
-        pushimm := pushimm;
+        pushimmI := pushimmI;
+        pushimmT := pushimmT;
         pop := pop;
         doloadaddress := doloadaddress;
         dobin := dobin;
@@ -608,7 +609,7 @@ PROCEDURE pos (t: T; depth: INTEGER; place: TEXT): INTEGER =
     RETURN -1;
   END pos;
 
-PROCEDURE pushimm (t: T; imm: INTEGER) =
+PROCEDURE pushimmT (t: T; imm: Target.Int) =
   BEGIN
     IF t.stacktop = t.vstacklimit THEN
       expand_stack(t);
@@ -616,14 +617,21 @@ PROCEDURE pushimm (t: T; imm: INTEGER) =
 
     WITH stack0 = t.vstack[t.stacktop] DO
       stack0.loc := OLoc.imm;
-      IF NOT TInt.FromInt(imm, Target.Integer.bytes, stack0.imm) THEN
-        t.Err("pushimm: unable to convert to target integer");
-      END;
+      stack0.imm := imm;
       stack0.stackp := t.stacktop;
     END;
 
     INC(t.stacktop);
-  END pushimm;
+  END pushimmT;
+
+PROCEDURE pushimmI (t: T; immI: INTEGER) =
+  VAR immT: Target.Int;
+  BEGIN
+    IF NOT TInt.FromInt(immI, Target.Integer.bytes, immT) THEN
+      t.Err("pushimmI: unable to convert to target integer");
+    END;
+    t.pushimmT(immT);
+  END pushimmI;
 
 PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
   VAR hintaddr := type = Type.Addr;
