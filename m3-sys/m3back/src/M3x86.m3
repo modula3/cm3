@@ -3907,18 +3907,17 @@ PROCEDURE compare_exchange (x: U;  t: MType;  u: ZType;  r: IType;
   BEGIN
     check_atomic_types3(x, t, u, r);
     x.vstack.unlock();
-
-    (* TODO: don't hardcode the registers *)
-
-    WITH stack0 = x.vstack.pos(0, "compare_exchange"),
-         stack1 = x.vstack.pos(1, "compare_exchange"),
-         stack2 = x.vstack.pos(2, "compare_exchange") DO
-      x.vstack.find(stack0, Force.regset, RegSet{Codex86.EAX});
-      x.vstack.find(stack1, Force.regset, RegSet{Codex86.EDX}); (* pointer *)
-      x.vstack.find(stack2, Force.regset, RegSet{Codex86.ECX});
-      x.cg.lock_compare_exchange();
+    WITH newValue                        = x.vstack.pos(0, "compare_exchange"),
+         compareValueAndOldValueIfFailed = x.vstack.pos(1, "compare_exchange"),
+         atomicVariable                  = x.vstack.pos(2, "compare_exchange") DO
+      x.vstack.find(compareValueAndOldValueIfFailed, Force.regset, RegSet{Codex86.EAX});
+      x.vstack.find(newValue,                        Force.regset, RegSet{Codex86.ECX, Codex86.EDX, Codex86.EBX,
+                                                                          (*Codex86.ESP, Codex86.EBP,*)
+                                                                          Codex86.ESI, Codex86.EDI});
+      x.vstack.find(atomicVariable,                  Force.mem);
+      x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.vstack.op(newValue));
       x.vstack.discard(3);
-      x.vstack.pushnew(Type.Word32, Force.regset, RegSet{Codex86.EAX});
+      condset(x, Cond.E, r);
     END;
   END compare_exchange;
 
