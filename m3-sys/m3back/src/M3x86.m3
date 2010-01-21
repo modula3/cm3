@@ -1742,12 +1742,11 @@ PROCEDURE load_nil (u: U) =
       u.wr.NL    ();
     END;
 
-    u.vstack.pushimm(0);
+    u.vstack.pushimmT(TZero);
   END load_nil;
 
 PROCEDURE load_integer  (u: U;  t: IType;  READONLY i: Target.Int) =
   (* push ; s0.t := i *)
-  VAR int: INTEGER;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_integer");
@@ -1756,11 +1755,8 @@ PROCEDURE load_integer  (u: U;  t: IType;  READONLY i: Target.Int) =
       u.wr.NL    ();
     END;
 
-    IF NOT TInt.ToInt(i, int) THEN
-      u.Err("load_integer: failed to convert target integer");
-    END;
     u.vstack.unlock();
-    u.vstack.pushimm(int);
+    u.vstack.pushimmT(i);
   END load_integer;
 
 PROCEDURE load_float    (u: U;  t: RType;  READONLY f: Target.Float) =
@@ -2011,7 +2007,7 @@ PROCEDURE set_union (u: U;  s: ByteSize) =
     load_stack_param (u, Type.Addr, 1);
     pop_param (u, Type.Addr);
     u.vstack.discard (2);
-    u.vstack.pushimm (s * 8);
+    u.vstack.pushimmI (s * 8);
     pop_param (u, Type.Int32);
     call_int_proc (u, Builtin.set_union);
   END set_union;
@@ -2030,7 +2026,7 @@ PROCEDURE set_difference (u: U;  s: ByteSize) =
     load_stack_param (u, Type.Addr, 1);
     pop_param (u, Type.Addr);
     u.vstack.discard (2);
-    u.vstack.pushimm (s * 8);
+    u.vstack.pushimmI (s * 8);
     pop_param (u, Type.Int32);
     call_int_proc (u, Builtin.set_difference);
   END set_difference;
@@ -2049,7 +2045,7 @@ PROCEDURE set_intersection (u: U;  s: ByteSize) =
     load_stack_param (u, Type.Addr, 1);
     pop_param (u, Type.Addr);
     u.vstack.discard (2);
-    u.vstack.pushimm (s * 8);
+    u.vstack.pushimmI (s * 8);
     pop_param (u, Type.Int32);
     call_int_proc (u, Builtin.set_intersection);
   END set_intersection;
@@ -2068,7 +2064,7 @@ PROCEDURE set_sym_difference (u: U;  s: ByteSize) =
     load_stack_param (u, Type.Addr, 1);
     pop_param (u, Type.Addr);
     u.vstack.discard (2);
-    u.vstack.pushimm (s * 8);
+    u.vstack.pushimmI (s * 8);
     pop_param (u, Type.Int32);
     call_int_proc (u, Builtin.set_sym_difference);
   END set_sym_difference;
@@ -2105,12 +2101,12 @@ PROCEDURE set_compare (u: U;  s: ByteSize;  op: CompareOp;  t: IType) =
     IF op = CompareOp.EQ OR op = CompareOp.NE THEN
       proc := Builtin.memcmp;
       start_int_proc (u, proc);
-      u.vstack.pushimm(s);
+      u.vstack.pushimmI(s);
       pop_param(u, Type.Addr);
       pop_param(u, Type.Addr);
       pop_param(u, Type.Addr);
       call_int_proc (u, proc);
-      u.vstack.pushimm(0);
+      u.vstack.pushimmT(TZero);
       condset(u, CompareOpCond [op], t);
     ELSE
       proc := CompareOpProc [op];
@@ -2118,7 +2114,7 @@ PROCEDURE set_compare (u: U;  s: ByteSize;  op: CompareOp;  t: IType) =
       u.vstack.swap();
       pop_param(u, Type.Addr);
       pop_param(u, Type.Addr);
-      u.vstack.pushimm(s * 8);
+      u.vstack.pushimmI(s * 8);
       pop_param(u, Type.Int32);
       call_int_proc (u, proc);
     END;
@@ -2807,7 +2803,7 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
 
     start_int_proc (u, Builtin.memset);
     pop_param (u, z);
-    u.vstack.pushimm (0);
+    u.vstack.pushimmT (TZero);
     pop_param (u, Type.Int32);
     pop_param (u, Type.Addr);
     call_int_proc (u, Builtin.memset);
@@ -3701,7 +3697,7 @@ PROCEDURE load_static_link (u: U;  p: Proc) =
     END;
 
     IF realproc.lev = 0 THEN
-      u.vstack.pushimm(0);
+      u.vstack.pushimmT(TZero);
     ELSE
       u.vstack.unlock();
       u.vstack.pushnew(Type.Addr, Force.anyreg);

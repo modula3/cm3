@@ -45,22 +45,23 @@ CONST
 
   (* Minimum and Maximum values for Signed and Unsigned values with specified bit count. *)
 
-  MinS8  = Int{NUMBER (IBytes), IBytes{16_80,16_FF,..}};
-  MinS16 = Int{NUMBER (IBytes), IBytes{16_00,16_80,16_FF,..}};
-  MinS32 = Int{NUMBER (IBytes), IBytes{16_00,16_00,16_00,16_80,16_FF,..}};
-  MinS64 = Int{NUMBER (IBytes), IBytes{16_00,16_00,16_00,16_00,16_00,16_00,16_00,16_80}};
-  MaxS8  = Int{NUMBER (IBytes), IBytes{16_7F,16_00,..}};
-  MaxS16 = Int{NUMBER (IBytes), IBytes{16_FF,16_7F,16_00,..}};
-  MaxS32 = Int{NUMBER (IBytes), IBytes{16_FF,16_FF,16_FF,16_7F,16_00,..}};
-  MaxS64 = Int{NUMBER (IBytes), IBytes{16_FF,16_FF,16_FF,16_FF,16_FF,16_FF,16_FF,16_7F}};
-  MinU8  = Zero;
-  MinU16 = Zero;
-  MinU32 = Zero;
-  MinU64 = Zero;
-  MaxU8  = Int{NUMBER (IBytes), IBytes{16_FF,16_00,..}};
-  MaxU16 = Int{NUMBER (IBytes), IBytes{16_FF,16_FF,16_00,..}};
-  MaxU32 = Int{NUMBER (IBytes), IBytes{16_FF,16_FF,16_FF,16_FF,16_00,..}};
-  MaxU64 = Int{NUMBER (IBytes), IBytes{16_FF,16_FF,16_FF,16_FF,16_FF,16_FF,16_FF,16_FF}};
+  MinS8     = Int{NUMBER (IBytes), IBytes{16_80,16_FF,..}};
+  MinS16    = Int{NUMBER (IBytes), IBytes{16_00,16_80,16_FF,..}};
+  MinS32    = Int{NUMBER (IBytes), IBytes{16_00,16_00,16_00,16_80,16_FF,..}};
+  AbsMinS32 = Int{NUMBER (IBytes), IBytes{16_00,16_00,16_00,16_80,16_00,..}}; (* absolute value of MinS32 *)
+  MinS64    = Int{NUMBER (IBytes), IBytes{16_00,16_00,16_00,16_00,16_00,16_00,16_00,16_80}};
+  MaxS8     = Int{NUMBER (IBytes), IBytes{16_7F,16_00,..}};
+  MaxS16    = Int{NUMBER (IBytes), IBytes{16_FF,16_7F,16_00,..}};
+  MaxS32    = Int{NUMBER (IBytes), IBytes{16_FF,16_FF,16_FF,16_7F,16_00,..}};
+  MaxS64    = Int{NUMBER (IBytes), IBytes{16_FF,16_FF,16_FF,16_FF,16_FF,16_FF,16_FF,16_7F}};
+  MinU8     = Zero;
+  MinU16    = Zero;
+  MinU32    = Zero;
+  MinU64    = Zero;
+  MaxU8     = Int{NUMBER (IBytes), IBytes{16_FF,16_00,..}};
+  MaxU16    = Int{NUMBER (IBytes), IBytes{16_FF,16_FF,16_00,..}};
+  MaxU32    = Int{NUMBER (IBytes), IBytes{16_FF,16_FF,16_FF,16_FF,16_00,..}};
+  MaxU64    = Int{NUMBER (IBytes), IBytes{16_FF,16_FF,16_FF,16_FF,16_FF,16_FF,16_FF,16_FF}};
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
