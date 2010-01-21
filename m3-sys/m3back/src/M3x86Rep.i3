@@ -73,6 +73,7 @@ TYPE
     offset := 0;
     bound := FALSE;
     usage: ProcList := NIL;
+    fenceVar: x86Var := NIL;
   END;
 
 TYPE

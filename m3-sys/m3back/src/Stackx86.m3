@@ -152,7 +152,7 @@ PROCEDURE lock (t: T; r: Regno) =
       t.reguse[r].locked := TRUE;
   END lock;
 
-PROCEDURE loadreg (t: T; r: Regno; op: Operand) =
+PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand) =
   BEGIN
     t.cg.movOp(t.cg.reg[r], op);
 
