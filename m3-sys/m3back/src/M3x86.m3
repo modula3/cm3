@@ -3936,13 +3936,28 @@ PROCEDURE fence (u: U;  <*UNUSED*>order: MemoryOrder) =
     u.vstack.discard(1);
   END fence;
 
-PROCEDURE fetch_and_op (u: U;  <*UNUSED*>op: AtomicOp;  m: MType;  z: ZType;
+CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oADD, Op.oSUB, Op.oOR, Op.oAND, Op.oXOR };
+
+PROCEDURE fetch_and_op (x: U;  op: AtomicOp;  t: MType;  z: ZType;
                         <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A].t;
    Mem [s1.A].t := tmp op s0.u;
-   s1.u := tmp; pop *)
+   s1.u := tmp op s0.u; pop *)
   BEGIN
-    check_atomic_types(u, m, z);
+    check_atomic_types(x, t, z);
+    x.vstack.unlock();
+    WITH stack0 = x.vstack.pos(0, "fetch_and_op"),
+         stack1 = x.vstack.pos(1, "fetch_and_op") DO
+      x.vstack.find(stack0, Force.anyreg);
+      x.vstack.find(stack1, Force.mem);
+      x.cg.binOp(AtomicOpToOp[op], x.vstack.op(stack1), x.vstack.op(stack0), locked := TRUE);
+    END;
+    x.vstack.discard(2);
+    x.vstack.unlock();
+    x.vstack.pushnew(z, Force.anyreg);
+    WITH stop0 = x.vstack.op(x.vstack.pos(0, "fetch_and_op")) DO
+      stop0.mvar.var.stack_temp := FALSE;
+    END;
   END fetch_and_op;
 
 BEGIN
