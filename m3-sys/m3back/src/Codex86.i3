@@ -56,6 +56,7 @@ TYPE Public = OBJECT
         MOVSWOp ();
         STOSWOp ();
         CBWOp ();
+        lock_compare_exchange ();
         pushOp (READONLY src: Operand);
         popOp (READONLY dest: Operand);
         decOp (READONLY op: Operand);
@@ -73,7 +74,7 @@ TYPE Public = OBJECT
         allocate_temp (var: x86Var; size, align: INTEGER);
         reserve_labels (n: INTEGER; short := FALSE): Label;
         set_label (l: Label; offset := 0);
-        case_jump (index: Operand; READONLY l: ARRAY OF Label);
+        case_jump (READONLY index: Operand; READONLY l: ARRAY OF Label);
         load_ind (r: Regno; READONLY ind: Operand; o: ByteOffset;
                   type: MType);
         fast_load_ind (r: Regno; READONLY ind: Operand; o: ByteOffset;
