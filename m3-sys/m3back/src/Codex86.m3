@@ -568,6 +568,7 @@ PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand) =
     <* ASSERT src.loc = OLoc.register *>
     ins.escape := TRUE;
     ins.opcode := 16_B1;
+    ins.lock   := TRUE;
     build_modrm(t, dest, src, ins);
     writecode(t, ins);
   END lock_compare_exchange;
@@ -949,6 +950,7 @@ PROCEDURE get_addsize (<*UNUSED*> t: T; READONLY op: Operand): INTEGER =
 TYPE
   Instruction = RECORD
     escape  : BOOLEAN := FALSE;
+    lock    : BOOLEAN := FALSE;
     prefix  : BOOLEAN := FALSE;
     mrmpres : BOOLEAN := FALSE;
     sibpres : BOOLEAN := FALSE;
@@ -1024,6 +1026,7 @@ PROCEDURE debugcode (t: T;  READONLY ins: Instruction) =
     t.wr.OutT(": ");
 
     (* generate the instruction bytes *)
+    IF ins.lock       THEN  Byte(t, 16_F0);       INC(len); END;
     IF ins.escape     THEN  Byte(t, 16_0F);       INC(len); END;
     IF ins.prefix     THEN  Byte(t, 16_66);       INC(len); END;
                             Byte(t, ins.opcode);  INC(len);
