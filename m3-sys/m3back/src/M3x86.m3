@@ -17,7 +17,7 @@ FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
 FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
-FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError;
+FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 
 FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
 
@@ -208,6 +208,12 @@ REVEAL
         load_procedure := load_procedure;
         load_static_link := load_static_link;
         comment := comment;
+        store_ordered := store_ordered;
+        load_ordered := load_ordered;
+        exchange := exchange;
+        compare_exchange := compare_exchange;
+        fence := fence;
+        fetch_and_op := fetch_and_op;
       END;
 
 (*---------------------------------------------------------------------------*)
@@ -1637,6 +1643,10 @@ PROCEDURE procedure_epilogue (u: U) =
 (*------------------------------------------------------------ load/store ---*)
 
 PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  t: MType;  z: ZType) =
+(* push; s0.u := Mem [ ADR(v) + o ].t ;  The only allowed (t->u) conversions
+   are {Int,Word}{8,16} -> {Int,Word}{32,64} and {Int,Word}32 -> {Int,Word}64.
+   The source type, t, determines whether the value is sign-extended or
+   zero-extended. *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load");
@@ -1651,6 +1661,7 @@ PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  t: MType;  z: ZType) =
   END load;
 
 PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  z: ZType;  t: MType;  ) =
+(* Mem [ ADR(v) + o ].u := s0.t; pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("store");
@@ -3814,6 +3825,132 @@ PROCEDURE Cmt (u: U;  t: TEXT;  VAR width: INTEGER) =
       END
     END;
   END Cmt;
+
+(*--------------------------------------------------------------- atomics ---*)
+
+(* for now only 32bit types *)
+
+PROCEDURE check_atomic_type(u: U; a: Type) =
+  BEGIN
+    IF a = Type.Addr OR a = Type.Int32 OR a = Type.Word32 THEN
+      RETURN;
+    END;
+    u.Err("unsupported (so far) type for atomic operation");
+  END check_atomic_type;
+
+PROCEDURE check_atomic_types3(u: U; a, b, c: Type) =
+  BEGIN
+    check_atomic_type(u, a);
+    check_atomic_type(u, b);
+    check_atomic_type(u, c);
+    IF a # b OR b # c THEN
+      u.Err("atomic types must match");
+    END;
+  END check_atomic_types3;
+
+PROCEDURE check_atomic_types2(u: U; a, b: Type) =
+  BEGIN
+    check_atomic_types3(u, a, b, b);
+  END check_atomic_types2;
+
+PROCEDURE store_ordered (x: U;  t: ZType;  u: MType;  <*UNUSED*>order: MemoryOrder) =
+(* Mem [s1.A].u := s0.t; pop (2) *)
+  BEGIN
+    check_atomic_types2(x, t, u);
+    x.vstack.unlock();
+    x.fence(MemoryOrder.Sequential);
+    WITH stack0 = x.vstack.pos(0, "store_ordered"),
+         stack1 = x.vstack.pos(1, "store_ordered") DO
+      x.vstack.find(stack0, Force.anyreg);
+      x.vstack.find(stack1, Force.mem);
+      x.vstack.pop(x.vstack.op(stack1).mvar);
+      x.vstack.discard(1);
+    END;
+    x.fence(MemoryOrder.Sequential);
+  END store_ordered;
+
+PROCEDURE load_ordered (x: U;  t: MType;  u: ZType;  <*UNUSED*>order: MemoryOrder) =
+(* s0.u := Mem [s0.A].t  *)
+  BEGIN
+    check_atomic_types2(x, t, u);
+    x.vstack.unlock();
+    x.fence(MemoryOrder.Sequential);
+    WITH stack0 = x.vstack.pos(0, "store_ordered") DO
+      x.vstack.find(stack0, Force.mem);
+      x.vstack.find(stack0, Force.anyreg);
+    END;
+    x.fence(MemoryOrder.Sequential);
+  END load_ordered;
+
+PROCEDURE exchange (u: U;  t: MType;  z: ZType;  <*UNUSED*>order: MemoryOrder) =
+(* tmp := Mem [s1.A + o].t;  Mem [s1.A + o].t := s0.u;  s0.u := tmp;  pop *)
+  BEGIN
+    check_atomic_types2(u, t, z);
+    u.vstack.unlock();
+    WITH stack0 = u.vstack.pos(0, "exchange"),
+         stack1 = u.vstack.pos(1, "exchange") DO
+      u.vstack.find(stack0, Force.anyreg);
+      u.vstack.find(stack1, Force.mem);
+      u.cg.swapOp(u.vstack.op(stack0), u.vstack.op(stack1));
+      u.vstack.swap();
+      u.vstack.discard(1);
+    END;
+  END exchange;
+
+PROCEDURE compare_exchange (x: U;  t: MType;  u: ZType;  r: IType;
+                            <*UNUSED*>success, failure: MemoryOrder) =
+(* t1 := Mem[s1.A].t;  t2 := Mem[s2.A].t;
+   IF (t1.u = t2.u)
+   THEN Mem [s2.A].t := s0.u; s2.r := 1; pop(2);
+   ELSE Mem [s1.A].t := t2;   s2.r := 0; pop(2);
+   END; *)
+  BEGIN
+    check_atomic_types3(x, t, u, r);
+    x.vstack.unlock();
+
+    (* TODO: don't hardcode the registers *)
+
+    WITH stack0 = x.vstack.pos(0, "compare_exchange"),
+         stack1 = x.vstack.pos(1, "compare_exchange"),
+         stack2 = x.vstack.pos(2, "compare_exchange") DO
+      x.vstack.find(stack0, Force.regset, RegSet{Codex86.EAX});
+      x.vstack.find(stack1, Force.regset, RegSet{Codex86.EDX}); (* pointer *)
+      x.vstack.find(stack2, Force.regset, RegSet{Codex86.ECX});
+      x.cg.lock_compare_exchange();
+      x.vstack.discard(3);
+      x.vstack.pushnew(Type.Word32, Force.regset, RegSet{Codex86.EAX});
+    END;
+  END compare_exchange;
+
+PROCEDURE fence (u: U;  <*UNUSED*>order: MemoryOrder) =
+  VAR reg: Regno;
+  BEGIN
+
+    <* ASSERT u.in_proc *>
+    <* ASSERT u.current_proc # NIL *>
+
+    u.vstack.unlock();
+
+    reg := u.vstack.freereg();
+    IF u.current_proc.fenceVar = NIL THEN
+      u.current_proc.fenceVar := get_temp_var(u, Type.Word32, 4, 4);
+    END;
+    u.vstack.push(MVar{u.current_proc.fenceVar, t := Type.Word32});
+    WITH stack0 = u.vstack.pos(0, "fence") DO
+      u.vstack.find(stack0, Force.mem);
+      u.cg.swapOp(u.vstack.op(stack0), u.cg.reg[reg]);
+    END;
+    u.vstack.discard(1);
+  END fence;
+
+PROCEDURE fetch_and_op (u: U;  <*UNUSED*>op: AtomicOp;  m: MType;  z: ZType;
+                        <*UNUSED*>order: MemoryOrder) =
+(* tmp := Mem [s1.A].t;
+   Mem [s1.A].t := tmp op s0.u;
+   s1.u := tmp; pop *)
+  BEGIN
+    check_atomic_types2(u, m, z);
+  END fetch_and_op;
 
 BEGIN
 END M3x86.

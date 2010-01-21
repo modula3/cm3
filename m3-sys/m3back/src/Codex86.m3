@@ -89,6 +89,7 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         MOVSWOp := MOVSWOp;
         STOSWOp := STOSWOp;
         CBWOp := CBWOp;
+        lock_compare_exchange := lock_compare_exchange;
         pushOp := pushOp;
         popOp := popOp;
         decOp := decOp;
@@ -540,6 +541,7 @@ CONST
   MOVSW = Instruction { prefix := TRUE, opcode := 16_A5 };
   STOSW = Instruction { prefix := TRUE, opcode := 16_AB };
   CBW   = Instruction { prefix := TRUE, opcode := 16_98 };
+  lock_cmpxchg = Instruction { rawBytes := ARRAY OF BYTE{4, 16_F0, 16_0F, 16_B1, 16_0A}};
 
 PROCEDURE MOVSWOp (t: T) =
   BEGIN
@@ -558,6 +560,12 @@ PROCEDURE CBWOp (t: T) =
     Mn(t, "CBW");
     writecode(t, CBW);
   END CBWOp;
+
+PROCEDURE lock_compare_exchange (t: T) =
+  BEGIN
+    Mn(t, "lock cmpxchg DWORD PTR [edx], ecx");
+    writecode(t, lock_cmpxchg);
+  END lock_compare_exchange;
 
 PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
   VAR ins: Instruction;  mnemonic: TEXT := NIL;
@@ -934,6 +942,7 @@ PROCEDURE get_addsize (<*UNUSED*> t: T; READONLY op: Operand): INTEGER =
   END get_addsize;
 
 TYPE
+  BYTE = BITS 8 FOR [0..255];
   Instruction = RECORD
     escape  : BOOLEAN := FALSE;
     prefix  : BOOLEAN := FALSE;
@@ -946,6 +955,7 @@ TYPE
     dsize   : INTEGER := 0;
     imm     : INTEGER := 0;
     imsize  : INTEGER := 0;
+    rawBytes:= ARRAY[0..4] OF BYTE{0,..}; (* first byte is the length *)
   END;
 
 PROCEDURE get_op_size (type: MType;  VAR ins: Instruction) =
@@ -1035,6 +1045,13 @@ PROCEDURE writecode (t: T; READONLY ins: Instruction) =
   BEGIN
     IF t.debug THEN debugcode (t, ins); END;
 
+    IF ins.rawBytes[0] # 0 THEN
+      FOR i := 1 TO ins.rawBytes[0] DO
+        t.obj.append(Seg.Text, ins.rawBytes[i], 1);
+      END;
+      RETURN;
+    END;
+
     IF ins.escape THEN
       t.obj.append(Seg.Text, 16_0F, 1);
     END;
@@ -1066,7 +1083,7 @@ PROCEDURE writecode (t: T; READONLY ins: Instruction) =
 
 (*--------------------------------------------------------- jump routines ---*)
 
-PROCEDURE case_jump (t: T; index: Operand; READONLY labels: ARRAY OF Label) =
+PROCEDURE case_jump (t: T; READONLY index: Operand; READONLY labels: ARRAY OF Label) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT index.loc = OLoc.register *>
