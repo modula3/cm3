@@ -2652,7 +2652,7 @@ PROCEDURE inline_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
   END inline_copy;
 
 PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
-  VAR tn, tNMinus1, tsize, t: Target.Int;
+  VAR tn, tNMinus1, tsize, tint: Target.Int;
   BEGIN
     u.vstack.corrupt(Codex86.ECX);
     u.cg.movImm(u.cg.reg[Codex86.ECX], n);
@@ -2669,12 +2669,11 @@ PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
       IF NOT TInt.Subtract(tn, TInt.One, tNMinus1) THEN
         u.Err("string_copy: Subtract overflowed");
       END;
-      (* Beware TWord.Multiply: x * 1 = 0 *)
-      IF NOT TInt.Multiply(tNMinus1, tsize, t) THEN
+      IF NOT TInt.Multiply(tNMinus1, tsize, tint) THEN
         u.Err("string_copy: Multiply overflowed");
       END;
-      u.cg.immOp(Op.oADD, u.cg.reg[Codex86.ESI], t);
-      u.cg.immOp(Op.oADD, u.cg.reg[Codex86.EDI], t);
+      u.cg.immOp(Op.oADD, u.cg.reg[Codex86.ESI], tint);
+      u.cg.immOp(Op.oADD, u.cg.reg[Codex86.EDI], tint);
       u.cg.noargOp(Op.oSTD);
     END;
 
