@@ -3712,7 +3712,7 @@ PROCEDURE load_static_link (u: U;  p: Proc) =
     ELSE
       u.vstack.unlock();
       u.vstack.pushnew(Type.Addr, Force.anyreg);
-      u.cg.get_frame(u.vstack.op(u.vstack.pos(0, "load_static_link")).reg,
+      u.cg.get_frame(u.vstack.op(u.vstack.pos(0, "load_static_link")).reg[0],
                      realproc.parent, u.current_proc);
     END
   END load_static_link;
