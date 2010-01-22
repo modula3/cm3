@@ -153,11 +153,13 @@ PROCEDURE lock (t: T; r: Regno) =
   END lock;
 
 PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand) =
+  VAR locked: BOOLEAN;
   BEGIN
     t.cg.movOp(t.cg.reg[r], op);
 
+    locked := t.reguse[r].locked;
     t.reguse[r] := InitRegister();
-    t.reguse[r].locked := t.reguse[r].locked;
+    t.reguse[r].locked := locked;
     t.reguse[r].stackp := op.stackp;
 
     IF op.loc = OLoc.mem THEN
