@@ -89,7 +89,8 @@ TYPE
   Operand = RECORD
     loc: OLoc;
     mvar: MVar := NoStore;
-    reg: Regno := 0;
+    reg := ARRAY [0..1] OF Regno{0,0};
+    nreg: [1..2] := 1;
     imm: Target.Int := TInt.Zero;
     stackp: INTEGER := 0;
     opcode := FALSE;
