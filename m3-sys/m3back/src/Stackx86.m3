@@ -131,13 +131,13 @@ PROCEDURE unlock (t: T) =
 
       FOR i := 0 TO NRegs DO
         IF t.reguse[i].stackp # -1 THEN
-          <* ASSERT t.vstack[t.reguse[i].stackp].reg = i *>
+          <* ASSERT t.vstack[t.reguse[i].stackp].reg[0] = i *>
         END
       END;
 
       FOR i := 0 TO t.stacktop - 1 DO
         IF t.vstack[i].loc = OLoc.register THEN
-          <* ASSERT t.reguse[t.vstack[i].reg].stackp = i *>
+          <* ASSERT t.reguse[t.vstack[i].reg[0]].stackp = i *>
         ELSIF t.vstack[i].loc = OLoc.fstack THEN
           INC(flcount);
         END
@@ -182,7 +182,7 @@ PROCEDURE loadphantom (t: T; r: Regno; stackp: INTEGER) =
   BEGIN
     t.reguse[r].stackp := stackp;
     t.vstack[stackp].loc := OLoc.register;
-    t.vstack[stackp].reg := r;
+    t.vstack[stackp].reg[0] := r;
   END loadphantom; 
 
 PROCEDURE copyreg (t: T; stackp: INTEGER; to, from: Regno) =
@@ -253,7 +253,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
     | OLoc.mem =>
         in := inreg(t, t.vstack[stackp].mvar, set);
     | OLoc.register =>
-        in := t.vstack[stackp].reg;
+        in := t.vstack[stackp].reg[0];
     | OLoc.imm =>
         in := immreg(t, t.vstack[stackp].imm, set);
     END;
@@ -264,7 +264,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
 
     (* If it is in a register and shoudn't be, move it *)
     IF force = Force.mem AND t.vstack[stackp].loc = OLoc.register THEN
-      get_temp(t, stackp, t.vstack[stackp].reg);
+      get_temp(t, stackp, t.vstack[stackp].reg[0]);
       RETURN;
     END;
 
@@ -553,14 +553,14 @@ PROCEDURE sweep (t: T; READONLY mvar: MVar) =
 PROCEDURE set_reg (t: T; stackp: INTEGER; r: Regno) =
   BEGIN
     t.vstack[stackp].loc := OLoc.register;
-    t.vstack[stackp].reg := r;
+    t.vstack[stackp].reg[0] := r;
     t.reguse[r].stackp := stackp;
   END set_reg;
 
 PROCEDURE dealloc_reg (t: T; stackp: INTEGER) =
   BEGIN
     <* ASSERT t.vstack[stackp].loc = OLoc.register *>
-    t.reguse[t.vstack[stackp].reg].stackp := -1;
+    t.reguse[t.vstack[stackp].reg[0]].stackp := -1;
   END dealloc_reg;
 
 PROCEDURE corrupt (t: T; reg: Regno) =
@@ -754,8 +754,8 @@ PROCEDURE pop (t: T; READONLY mvar: MVar) =
           t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
           t.cg.store_ind(stack0, t.cg.reg[indreg], mvar.o + mvar.var.offset,
                          mvar.t);
-          t.reguse[stack0.reg].stackp := -1;
-          corrupt(t, stack0.reg);
+          t.reguse[stack0.reg[0]].stackp := -1;
+          corrupt(t, stack0.reg[0]);
 
         ELSE
           sweep(t, mvar);
@@ -767,8 +767,8 @@ PROCEDURE pop (t: T; READONLY mvar: MVar) =
           END;
 
           IF stack0.loc = OLoc.register THEN
-            t.reguse[stack0.reg].stackp := -1;
-            t.reguse[stack0.reg].last_store := mvar;
+            t.reguse[stack0.reg[0]].stackp := -1;
+            t.reguse[stack0.reg[0]].last_store := mvar;
           END;
 
           t.cg.movOp(Operand { loc := OLoc.mem, mvar := mvar }, stack0);
@@ -788,7 +788,7 @@ PROCEDURE doloadaddress (t: T; v: x86Var; o: ByteOffset) =
 
     WITH stop0 = t.vstack[pos(t, 0, "doloadaddress")] DO
       IF v.loc = VLoc.temp AND v.parent # t.current_proc THEN
-        t.cg.get_frame(stop0.reg, v.parent, t.current_proc);
+        t.cg.get_frame(stop0.reg[0], v.parent, t.current_proc);
         IF NOT TInt.FromInt(o, Target.Integer.bytes, to) THEN
           t.Err("doloadaddress: unable to convert o");
         END;
@@ -798,7 +798,7 @@ PROCEDURE doloadaddress (t: T; v: x86Var; o: ByteOffset) =
         IF NOT TInt.Add(to, tvoffset, ti) THEN
           t.Err("dloadaddress: Add overflowed");
         END;
-        t.cg.immOp(Op.oADD, t.cg.reg[stop0.reg], ti);
+        t.cg.immOp(Op.oADD, t.cg.reg[stop0.reg[0]], ti);
 
       ELSE
         t.cg.binOp(Op.oLEA, stop0, Operand {loc := OLoc.mem,
@@ -909,11 +909,11 @@ PROCEDURE doumul (t: T) =
     unlock(t);
     WITH stack0 = pos(t, 0, "doumul"), stack1 = pos(t, 1, "doumul") DO
       WITH stop0 = t.vstack[stack0], stop1 = t.vstack[stack1] DO
-        IF stop0.loc = OLoc.register AND stop0.reg = Codex86.EAX THEN
+        IF stop0.loc = OLoc.register AND stop0.reg[0] = Codex86.EAX THEN
           lock(t, Codex86.EAX);
           find(t, stack1, Force.anydword);
           otherop := stop1;
-        ELSIF stop1.loc = OLoc.register AND stop1.reg = Codex86.EAX THEN
+        ELSIF stop1.loc = OLoc.register AND stop1.reg[0] = Codex86.EAX THEN
           lock(t, Codex86.EAX);
           find(t, stack0, Force.anydword);
           otherop := stop0;
@@ -938,7 +938,7 @@ PROCEDURE doumul (t: T) =
         END
       END;
 
-      IF otherop.loc # OLoc.register OR otherop.reg # Codex86.EDX THEN
+      IF otherop.loc # OLoc.register OR otherop.reg[0] # Codex86.EDX THEN
         corrupt(t, Codex86.EDX);
       END;
 
@@ -1706,13 +1706,13 @@ PROCEDURE swap (t: T) =
       t.vstack[stack1].stackp := stack1;
 
       IF t.vstack[stack0].loc = OLoc.register THEN
-        <* ASSERT t.reguse[t.vstack[stack0].reg].stackp = stack1 *>
-        t.reguse[t.vstack[stack0].reg].stackp := stack0;
+        <* ASSERT t.reguse[t.vstack[stack0].reg[0]].stackp = stack1 *>
+        t.reguse[t.vstack[stack0].reg[0]].stackp := stack0;
       END;
 
       IF t.vstack[stack1].loc = OLoc.register THEN
-        <* ASSERT t.reguse[t.vstack[stack1].reg].stackp = stack0 *>
-        t.reguse[t.vstack[stack1].reg].stackp := stack1;
+        <* ASSERT t.reguse[t.vstack[stack1].reg[0]].stackp = stack0 *>
+        t.reguse[t.vstack[stack1].reg[0]].stackp := stack1;
       END;
 
       IF t.vstack[stack0].loc = OLoc.fstack AND
@@ -1999,7 +1999,7 @@ PROCEDURE inttoflt (t: T) =
 PROCEDURE newdest (t: T; READONLY op: Operand) =
   BEGIN
     IF op.loc = OLoc.register THEN
-      WITH z = t.reguse[op.reg] DO
+      WITH z = t.reguse[op.reg[0]] DO
         z.last_store := NoStore;
         z.upbound    := Target.Integer.max;
         z.lowbound   := Target.Integer.min;
@@ -2033,7 +2033,7 @@ PROCEDURE discard (t: T; depth: INTEGER) =
               t.parent.free_temp(stackp.mvar.var);
             END
         | OLoc.register =>
-            t.reguse[stackp.reg].stackp := -1;
+            t.reguse[stackp.reg[0]].stackp := -1;
         | OLoc.fstack =>
             (* The discards will have been done elsewhere *)
         | OLoc.imm =>
@@ -2046,7 +2046,7 @@ PROCEDURE discard (t: T; depth: INTEGER) =
 
 PROCEDURE reg (t: T; stackp: INTEGER): Regno =
   BEGIN
-    RETURN t.vstack[stackp].reg;
+    RETURN t.vstack[stackp].reg[0];
   END reg;
 
 PROCEDURE lower (t: T; reg: Regno): Target.Int =
@@ -2188,7 +2188,7 @@ PROCEDURE DebugOp (READONLY op: Operand;  wr: Wrx86.T) =
   BEGIN
     wr.OutT (OLocName [op.loc]);
     wr.OutT ("  mvar: ");  DebugMVar (op.mvar, wr);
-    wr.OutT ("  reg: "); wr.OutT (RegName [op.reg]);
+    wr.OutT ("  reg: "); wr.OutT (RegName [op.reg[0]]);
     wr.OutT ("  imm: "); wr.OutT (TInt.ToText (op.imm));
     wr.OutT ("  stackp: ");  wr.OutI (op.stackp);
     IF (op.opcode) THEN wr.OutT ("  OPCODE"); END;

@@ -251,7 +251,7 @@ PROCEDURE setccOp (t: T; READONLY op: Operand; cond: Cond) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT (op.loc = OLoc.register AND
-               op.reg IN RegSet { EAX, EBX, ECX, EDX } ) OR
+               op.reg[0] IN RegSet { EAX, EBX, ECX, EDX } ) OR
               (op.loc = OLoc.mem AND CG_Bytes[op.mvar.t] = 1) *>
     IF op.loc = OLoc.register THEN
       movImm(t, op, 0);
@@ -397,7 +397,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
 
     Mn(t, opcode[op].name);  MnOp(t, dest);  MnImmTInt(t, imm);
 
-    IF dest.loc = OLoc.register AND dest.reg = EAX
+    IF dest.loc = OLoc.register AND dest.reg[0] = EAX
        AND ins.imsize = 4 THEN
       ins.opcode := opcode[op].Aimm32;
       writecode(t, ins);
@@ -483,11 +483,11 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
     ins.mrmpres := TRUE;
     IF (NOT fully_known) OR (ins.disp > 16_7f) OR (ins.disp < -16_80) THEN
       ins.dsize := 4;
-      ins.modrm := dest.reg*8 + 4;
+      ins.modrm := dest.reg[0]*8 + 4;
       IF fully_known THEN INC (ins.modrm, 16_80); END;
     ELSE
       ins.dsize := 1;
-      ins.modrm := 16_40 + dest.reg*8 + 4;
+      ins.modrm := 16_40 + dest.reg[0]*8 + 4;
     END;
 
     ins.sibpres := TRUE;
@@ -498,7 +498,7 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
     | 8 => ins.sib := 16_C0;
     ELSE t.Err("tableOp called with invalid scale parameter");
     END;
-    INC(ins.sib, index.reg*8);
+    INC(ins.sib, index.reg[0]*8);
     INC(ins.sib, 5);
 
     Mn(t, opcode[op].name);  MnOp(t, dest); MnMVar(t, table);
@@ -517,10 +517,10 @@ PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
               (src.loc = OLoc.register OR src.loc = OLoc.mem) *>
 
     IF dest.loc = OLoc.register AND src.loc = OLoc.register
-      AND (dest.reg = EAX OR src.reg = EAX) THEN
-      IF dest.reg = EAX
-        THEN otherreg := src.reg;
-        ELSE otherreg := dest.reg;
+      AND (dest.reg[0] = EAX OR src.reg[0] = EAX) THEN
+      IF dest.reg[0] = EAX
+        THEN otherreg := src.reg[0];
+        ELSE otherreg := dest.reg[0];
       END;
       Mn(t, "XCHG ");  MnOp(t, dest);   MnOp(t, src);
       xchg.opcode := 16_90 + otherreg;
@@ -596,7 +596,7 @@ PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
       RETURN;
     END;
 
-    IF dest.loc = OLoc.register AND dest.reg = EAX AND
+    IF dest.loc = OLoc.register AND dest.reg[0] = EAX AND
        src.loc = OLoc.mem AND CG_Bytes[src.mvar.t] = 4 AND
        src.mvar.var.loc = VLoc.global THEN
       Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
@@ -608,7 +608,7 @@ PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
       RETURN;
     END;
 
-    IF src.loc = OLoc.register AND src.reg = EAX AND
+    IF src.loc = OLoc.register AND src.reg[0] = EAX AND
        dest.loc = OLoc.mem AND dest.mvar.var.loc = VLoc.global THEN
       Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
       ins.opcode := 16_A2;
@@ -625,10 +625,10 @@ PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
       CASE src.mvar.t OF
       | Type.Word8  => ins.opcode := 16_8A;
                        mnemonic := "MOV";
-                       binOp(t, Op.oXOR, t.reg[dest.reg], t.reg[dest.reg]);
+                       binOp(t, Op.oXOR, t.reg[dest.reg[0]], t.reg[dest.reg[0]]);
       | Type.Word16 => ins.opcode := 16_8B;  ins.prefix := TRUE;
                        mnemonic := "MOV";
-                       binOp(t, Op.oXOR, t.reg[dest.reg], t.reg[dest.reg]);
+                       binOp(t, Op.oXOR, t.reg[dest.reg[0]], t.reg[dest.reg[0]]);
       | Type.Int8   => ins.opcode := 16_BE;  ins.escape := TRUE;
                        mnemonic := "MOVSX";
       | Type.Int16  => ins.opcode := 16_BF;  ins.escape := TRUE;
@@ -673,7 +673,7 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
   BEGIN
     <* ASSERT dest.loc = OLoc.register *>
     Mn(t, "MOV");  MnOp(t, dest);  Mn (t, " imm32");
-    ins.opcode := 16_B8 + dest.reg;
+    ins.opcode := 16_B8 + dest.reg[0];
     ins.imm    := 0;
     ins.imsize := 4;
     writecode(t, ins);
@@ -696,7 +696,7 @@ PROCEDURE movImm (t: T; READONLY dest: Operand; imm: INTEGER) =
     ELSIF imm = 0 THEN
       binOp(t, Op.oXOR, dest, dest);
     ELSE
-      ins.opcode := 16_B8 + dest.reg;
+      ins.opcode := 16_B8 + dest.reg[0];
       ins.imm    := imm;
       ins.imsize := 4;
       Mn(t, "MOV");  MnOp(t, dest);  MnImmInt(t, imm);
@@ -717,7 +717,7 @@ PROCEDURE pushOp (t: T; READONLY src: Operand) =
         ins.imsize := 4;
         writecode(t, ins);
     | OLoc.register =>
-        ins.opcode := 16_50 + src.reg;
+        ins.opcode := 16_50 + src.reg[0];
         writecode(t, ins);
     | OLoc.mem =>
         <* ASSERT CG_Bytes[src.mvar.t] = 4 *>
@@ -738,7 +738,7 @@ PROCEDURE popOp (t: T; READONLY dest: Operand) =
     | OLoc.imm =>
         t.Err("Tried to pop into an immediate stack element");
     | OLoc.register =>
-        ins.opcode := 16_58 + dest.reg;
+        ins.opcode := 16_58 + dest.reg[0];
         writecode(t, ins);
     | OLoc.mem =>
         <* ASSERT CG_Bytes[dest.mvar.t] = 4 *>
@@ -757,7 +757,7 @@ PROCEDURE decOp (t: T; READONLY op: Operand) =
     Mn(t, "DEC");  MnOp(t, op);
     <* ASSERT op.loc = OLoc.mem OR op.loc = OLoc.register *>
     IF op.loc = OLoc.register THEN
-      ins.opcode := 16_48 + op.reg;
+      ins.opcode := 16_48 + op.reg[0];
       writecode(t, ins);
     ELSE
       <* ASSERT op.loc = OLoc.mem AND CG_Bytes[op.mvar.t] = 4 *>
@@ -810,7 +810,7 @@ PROCEDURE imulOp (t: T; READONLY dest, src: Operand) =
     <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.t] = 4 *>
     Mn(t, "IMUL");  MnOp(t, dest);  MnOp(t, src);
     IF src.loc = OLoc.imm THEN
-      build_modrm(t, t.reg[dest.reg], dest, ins);
+      build_modrm(t, t.reg[dest.reg[0]], dest, ins);
       ins.opcode := 16_69;
       IF NOT TInt.ToInt(src.imm, ins.imm) THEN
         t.Err("imulOp: unable to convert immediate to INTEGER");
@@ -998,14 +998,14 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
     IF mem.loc = OLoc.register THEN
       ins.disp := 0;
       ins.dsize := 0;
-      ins.modrm := 16_C0 + reg.reg*8 + mem.reg;
+      ins.modrm := 16_C0 + reg.reg[0]*8 + mem.reg[0];
       RETURN;
     END;
 
     <* ASSERT mem.loc = OLoc.mem *>
 
     <* ASSERT CG_Bytes[mem.mvar.t] # 1 OR reg.opcode OR
-              reg.reg IN RegSet { EAX, EBX, ECX, EDX } *>
+              reg.reg[0] IN RegSet { EAX, EBX, ECX, EDX } *>
 
     offset := mem.mvar.o;
     IF mem.mvar.var.loc = VLoc.temp THEN
@@ -1017,13 +1017,13 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
       ins.disp := offset;
       ins.dsize := 4;
       IF NOT fully_known
-        THEN ins.modrm := reg.reg*8 + 5;
-        ELSE ins.modrm := 16_80 + reg.reg*8 + EBP;
+        THEN ins.modrm := reg.reg[0]*8 + 5;
+        ELSE ins.modrm := 16_80 + reg.reg[0]*8 + EBP;
       END;
     ELSE
       ins.disp := offset;
       ins.dsize := 1;
-      ins.modrm := 16_40 + reg.reg*8 + EBP;
+      ins.modrm := 16_40 + reg.reg[0]*8 + EBP;
     END;
   END build_modrm;
 
@@ -1099,7 +1099,7 @@ PROCEDURE case_jump (t: T; READONLY index: Operand; READONLY labels: ARRAY OF La
     WITH curs = t.obj.cursor(Seg.Text) DO
       ins.opcode  := 16_FF;
       ins.modrm   := 16_24;                   ins.mrmpres := TRUE;
-      ins.sib     := 16_85 + index.reg * 8;   ins.sibpres := TRUE;
+      ins.sib     := 16_85 + index.reg[0] * 8;ins.sibpres := TRUE;
       ins.disp    := curs + 7;                ins.dsize   := 4;
       writecode(t, ins); (* Jump to abs address indexed by register 'index'*4 *)
       t.obj.relocate(t.textsym, curs + 3, t.textsym);
@@ -1145,13 +1145,13 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset;
     ins.mrmpres := TRUE;
     ins.disp := o;
     IF o > -16_81 AND o < 16_80 THEN
-      ins.modrm := 16_40 + r * 8 + ind.reg;
+      ins.modrm := 16_40 + r * 8 + ind.reg[0];
       ins.dsize := 1;
     ELSE
-      ins.modrm := 16_80 + r * 8 + ind.reg;
+      ins.modrm := 16_80 + r * 8 + ind.reg[0];
       ins.dsize := 4;
     END;
-    IF ind.reg = ESP THEN  ins.sib := 16_24; ins.sibpres := TRUE;  END;
+    IF ind.reg[0] = ESP THEN  ins.sib := 16_24; ins.sibpres := TRUE;  END;
     writecode (t, ins);
   END load_ind;
 
@@ -1172,13 +1172,13 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset;
     ins.mrmpres := TRUE;
     ins.disp := o;
     IF o > -16_81 AND o < 16_80 THEN
-      ins.modrm := 16_40 + r * 8 + ind.reg;
+      ins.modrm := 16_40 + r * 8 + ind.reg[0];
       ins.dsize := 1;
     ELSE
-      ins.modrm := 16_80 + r * 8 + ind.reg;
+      ins.modrm := 16_80 + r * 8 + ind.reg[0];
       ins.dsize := 4;
     END;
-    IF ind.reg = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
+    IF ind.reg[0] = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
     writecode (t, ins);
   END fast_load_ind;
 
@@ -1204,16 +1204,16 @@ PROCEDURE store_ind (t: T; READONLY val, ind: Operand; o: ByteOffset;
     ins.disp := o;
     IF o >= -16_80 AND o <= 16_7F THEN
       ins.dsize := 1;
-      ins.modrm := 16_40 + ind.reg;
+      ins.modrm := 16_40 + ind.reg[0];
     ELSE
       ins.dsize := 4;
-      ins.modrm := 16_80 + ind.reg;
+      ins.modrm := 16_80 + ind.reg[0];
     END;
 
     IF val.loc # OLoc.imm THEN
-      INC(ins.modrm, val.reg * 8);
+      INC(ins.modrm, val.reg[0] * 8);
     END;
-    IF ind.reg = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
+    IF ind.reg[0] = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
     writecode (t, ins);
   END store_ind;
 
@@ -1227,14 +1227,14 @@ PROCEDURE f_loadind (t: T; READONLY ind: Operand; o: ByteOffset; type: MType) =
       THEN ins.opcode := fopcode[FOp.fLD].m32;
       ELSE ins.opcode := fopcode[FOp.fLD].m64;
     END;
-    ins.modrm := 16_40 + fopcode[FOp.fLD].memop * 8 + ind.reg;
+    ins.modrm := 16_40 + fopcode[FOp.fLD].memop * 8 + ind.reg[0];
     ins.mrmpres := TRUE;
     ins.disp := o;
     IF o >= -16_80 AND o <= 16_7F
       THEN ins.dsize := 1;
       ELSE ins.dsize := 4;  INC (ins.modrm, 16_40);
     END;
-    IF ind.reg = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
+    IF ind.reg[0] = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
     writecode (t, ins);
     INC(t.fstacksize);
     INC(t.fstackloaded);
@@ -1254,14 +1254,14 @@ PROCEDURE f_storeind (t: T; READONLY ind: Operand; o: ByteOffset;
       THEN ins.opcode := fopcode[FOp.fSTP].m32;
       ELSE ins.opcode := fopcode[FOp.fSTP].m64;
     END;
-    ins.modrm := 16_40 + fopcode[FOp.fSTP].memop * 8 + ind.reg;
+    ins.modrm := 16_40 + fopcode[FOp.fSTP].memop * 8 + ind.reg[0];
     ins.mrmpres := TRUE;
     ins.disp := o;
     IF o >= -16_80 AND o <= 16_7F
       THEN ins.dsize := 1;
       ELSE ins.dsize := 4;  INC (ins.modrm, 16_40);
     END;
-    IF ind.reg = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
+    IF ind.reg[0] = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
     writecode (t, ins);
     DEC(t.fstacksize);
     DEC(t.fstackloaded);
@@ -1611,7 +1611,7 @@ PROCEDURE MnOp(t: T; READONLY op: Operand) =
     IF t.debug THEN
       CASE op.loc OF
         OLoc.fstack   => Mn (t, " FST");
-      | OLoc.register => Mn (t, " ", RegName[op.reg]);
+      | OLoc.register => Mn (t, " ", RegName[op.reg[0]]);
       | OLoc.imm      => Mn (t, " $", TInt.ToText (op.imm));
       | OLoc.mem      => MnMVar (t, op.mvar);
       END
@@ -2059,10 +2059,10 @@ PROCEDURE New (parent: M3x86Rep.U; wr: Wrx86.T): T =
 
     FOR i := 0 TO NRegs DO
       code.reg[i].loc := OLoc.register;
-      code.reg[i].reg := i;
+      code.reg[i].reg[0] := i;
       code.reg[i].opcode := FALSE;
       code.opcode[i].loc := OLoc.register;
-      code.opcode[i].reg := i;
+      code.opcode[i].reg[0] := i;
       code.opcode[i].opcode := TRUE;
     END;
 
