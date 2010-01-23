@@ -1678,6 +1678,7 @@ PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  z: ZType;  t: MType;  ) =
   END store;
 
 PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
+(* push; s0.A := ADR(v) + o *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_address");
@@ -1690,6 +1691,7 @@ PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
   END load_address;
 
 PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
+(* s0.z := Mem [s0.A + o].t  *)
   VAR newreg: Regno;
   BEGIN
     IF u.debug THEN
@@ -1723,6 +1725,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
   END load_indirect;
 
 PROCEDURE store_indirect (u: U;  o: ByteOffset;  z: ZType;  t: MType) =
+(* Mem [s1.A + o].t := s0.z; pop (2) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("store_indirect");
