@@ -110,9 +110,9 @@ TYPE
     non_nil    : BOOLEAN := FALSE;
   END;
 
-PROCEDURE InitRegister():Register =
+PROCEDURE InitRegister(locked: BOOLEAN := FALSE):Register =
 BEGIN
-  RETURN Register { lowbound := Target.Integer.min, upbound := Target.Integer.max };
+  RETURN Register { locked := locked, lowbound := Target.Integer.min, upbound := Target.Integer.max };
 END InitRegister;
 
 (*-------------------------------------------- register handling routines ---*)
@@ -153,13 +153,10 @@ PROCEDURE lock (t: T; r: Regno) =
   END lock;
 
 PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand) =
-  VAR locked: BOOLEAN;
   BEGIN
     t.cg.movOp(t.cg.reg[r], op);
 
-    locked := t.reguse[r].locked;
-    t.reguse[r] := InitRegister();
-    t.reguse[r].locked := locked;
+    t.reguse[r] := InitRegister(locked := t.reguse[r].locked);
     t.reguse[r].stackp := op.stackp;
 
     IF op.loc = OLoc.mem THEN
@@ -564,14 +561,11 @@ PROCEDURE dealloc_reg (t: T; stackp: INTEGER) =
   END dealloc_reg;
 
 PROCEDURE corrupt (t: T; reg: Regno) =
-  VAR locked: BOOLEAN;
   BEGIN
     IF t.reguse[reg].stackp # -1 THEN
       forceout(t, reg);
     END;
-    locked := t.reguse[reg].locked;
-    t.reguse[reg] := InitRegister();
-    t.reguse[reg].locked := locked;
+    t.reguse[reg] := InitRegister(locked := t.reguse[reg].locked);
   END corrupt;
 
 PROCEDURE set_fstack (t: T; stackp: INTEGER) =
