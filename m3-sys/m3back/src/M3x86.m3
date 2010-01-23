@@ -1519,30 +1519,32 @@ PROCEDURE if_compare (u: U;  t: ZType;  op: CompareOp;  l: Label;
     END;
 
     CASE t OF
-    | Type.Word32 =>
-        IF u.vstack.dobin(Op.oCMP, TRUE, FALSE) THEN cond := revcond[cond]; END;
-        cond := unscond[cond];
-    | Type.Int32 =>
-        IF u.vstack.dobin(Op.oCMP, TRUE, FALSE) THEN cond := revcond[cond]; END;
-    | Type.Word64 =>
-        IF u.vstack.dobin(Op.oCMP, TRUE, FALSE) THEN cond := revcond[cond]; END;
-        cond := unscond[cond];
-    | Type.Int64 =>
-        IF u.vstack.dobin(Op.oCMP, TRUE, FALSE) THEN cond := revcond[cond]; END;
-    | Type.Addr =>
-        IF u.vstack.dobin(Op.oCMP, TRUE, FALSE) THEN cond := revcond[cond]; END;
-        cond := unscond[cond];
+    | Type.Word32, Type.Int32, Type.Word64, Type.Int64, Type.Addr =>
+        IF u.vstack.dobin(Op.oCMP, TRUE, FALSE) THEN
+          cond := revcond[cond];
+        END;
     | Type.Reel, Type.LReel, Type.XReel =>
-        IF u.cg.ftop_inmem
-          THEN u.cg.binFOp (FOp.fCOMP, 1);
-          ELSE u.cg.binFOp (FOp.fCOMPP, 1);  cond := revcond[cond];
+        IF u.cg.ftop_inmem THEN
+          u.cg.binFOp (FOp.fCOMP, 1);
+        ELSE
+          u.cg.binFOp (FOp.fCOMPP, 1);
+          cond := revcond[cond];
         END;
         u.vstack.discard (2);
         u.vstack.unlock ();
         u.vstack.corrupt (Codex86.EAX);
         u.cg.noargFOp (FOp.fNSTSWAX);
         u.cg.noargOp (Op.oSAHF);
-        cond := unscond[cond]; (* FCOM sets the unsigned compare flags *)
+    END;
+
+    CASE t OF
+    | Type.Word32, Type.Word64, Type.Addr,
+      Type.Reel, Type.LReel, Type.XReel => (* FCOM sets the unsigned compare flags *)
+        cond := unscond[cond];
+        cond := unscond[cond];
+        cond := unscond[cond];
+        cond := unscond[cond];
+    ELSE
     END;
 
     u.cg.brOp(cond, l);
