@@ -1753,6 +1753,7 @@ PROCEDURE load_nil (u: U) =
       u.wr.NL    ();
     END;
 
+    u.vstack.unlock();
     u.vstack.pushimmT(TZero);
   END load_nil;
 
@@ -3707,10 +3708,11 @@ PROCEDURE load_static_link (u: U;  p: Proc) =
       u.wr.NL    ();
     END;
 
+    u.vstack.unlock();
+
     IF realproc.lev = 0 THEN
       u.vstack.pushimmT(TZero);
     ELSE
-      u.vstack.unlock();
       u.vstack.pushnew(Type.Addr, Force.anyreg);
       u.cg.get_frame(u.vstack.op(u.vstack.pos(0, "load_static_link")).reg[0],
                      realproc.parent, u.current_proc);
@@ -3728,6 +3730,7 @@ PROCEDURE load_static_link_toC (u: U;  p: Proc) =
     END;
 
     IF realproc.lev = 0 THEN
+      u.vstack.corrupt(Codex86.ECX);
       u.cg.movImm(u.cg.reg[Codex86.ECX], 0);
     ELSE
       u.vstack.unlock();
