@@ -342,7 +342,7 @@ PROCEDURE ReadLongNumber(rd: Rd.T; defaultBase: [2..16]; signed: BOOLEAN):
     res := ReadLongUnsigned(rd, c, defaultBase);
     IF signed AND
        ((sign = 0 AND Long.GT(res, LAST(LONGINT))) OR
-        (sign = 1 AND Long.GT(res, Long.Plus(-(FIRST(LONGINT) + 1), 1)))) THEN
+        (sign = 1 AND Long.GT(res, Long.Plus(-(FIRST(LONGINT) + 1L), 1L)))) THEN
       RAISE FloatMode.Trap(FloatMode.Flag.IntOverflow)
     END;
     IF sign = 1 THEN res := - res END;
