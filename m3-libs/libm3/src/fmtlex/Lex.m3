@@ -226,7 +226,7 @@ PROCEDURE ReadNumber(rd: Rd.T; defaultBase: [2..16]; signed: BOOLEAN): Word.T
     res := ReadUnsigned(rd, c, defaultBase);
     IF signed AND
        ((sign = 0 AND Word.GT(res, LAST(INTEGER))) OR
-        (sign = 1 AND Word.GT(res, -FIRST(INTEGER)))) THEN
+        (sign = 1 AND Word.GT(res, Word.Plus(-(FIRST(INTEGER) + 1), 1)))) THEN
       RAISE FloatMode.Trap(FloatMode.Flag.IntOverflow)
     END;
     IF sign = 1 THEN res := - res END;
