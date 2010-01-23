@@ -1109,7 +1109,7 @@ PROCEDURE doneg (t: T) =
     WITH stack0 = pos(t, 0, "doneg"), stop0 = t.vstack[stack0] DO
       IF stop0.loc = OLoc.imm THEN
         IF NOT TInt.Negate(stop0.imm, stop0.imm) THEN
-          t.Warn("doneg: Negate overflowed");
+          t.Err("doneg: Negate overflowed");
         END;
       ELSE
         find(t, stack0, Force.anytemp);
