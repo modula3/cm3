@@ -273,6 +273,46 @@ PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
     RETURN TRUE;
   END LE;
 
+PROCEDURE xEQ (READONLY a, b: Int): BOOLEAN =
+  VAR n := MIN (a.n, b.n);
+  BEGIN
+    <*ASSERT n # 0*>
+    FOR i := n-1 TO 0 BY -1 DO
+      IF    a.x[i] # b.x[i] THEN RETURN FALSE;
+      ELSIF a.x[i] # b.x[i] THEN RETURN FALSE;
+      END;
+    END;
+    FOR i := n TO a.n-1 DO IF a.x[i] # 0 THEN RETURN FALSE END END;
+    FOR i := n TO b.n-1 DO IF b.x[i] # 0 THEN RETURN FALSE END END;
+    RETURN TRUE;
+  END xEQ;
+
+PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
+  VAR x := xEQ(a, b);
+  BEGIN
+    <* ASSERT x = xEQ(b, a) *>
+    <* ASSERT x = (LE(a, b) AND LE(b, a)) *>
+    RETURN x;
+  END EQ;
+
+PROCEDURE NE (READONLY a, b: Int): BOOLEAN =
+  VAR x := NOT xEQ(a, b);
+  BEGIN
+    <* ASSERT x = (NOT xEQ(b, a)) *>
+    <* ASSERT x = (LT(a, b) OR LT(b, a)) *>
+    RETURN x;
+  END NE;
+
+PROCEDURE GE (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN LE(b, a);
+  END GE;
+
+PROCEDURE GT (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN LT(b, a);
+  END GT;
+
 PROCEDURE And (READONLY a, b: Int;  VAR r: Int) =
   VAR n := MIN (a.n, b.n);
   BEGIN

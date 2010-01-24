@@ -43,11 +43,12 @@ PROCEDURE Mod (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int);
 (* returns 'q = x DIV y', and 'r = x MOD y', but assumes that 'y # 0' *)
 
-PROCEDURE LT (READONLY a, b: Int): BOOLEAN;
-(* returns 'Word.LT (a, b)' *)
-
-PROCEDURE LE (READONLY a, b: Int): BOOLEAN;
-(* returns 'Word.LE (a, b)' *)
+PROCEDURE LT (READONLY a, b: Int): BOOLEAN; (* a < b *)
+PROCEDURE LE (READONLY a, b: Int): BOOLEAN; (* a <= b *)
+PROCEDURE EQ (READONLY a, b: Int): BOOLEAN; (* a = b *)
+PROCEDURE NE (READONLY a, b: Int): BOOLEAN; (* a # b *)
+PROCEDURE GE (READONLY a, b: Int): BOOLEAN; (* a >= b *)
+PROCEDURE GT (READONLY a, b: Int): BOOLEAN; (* a > b *)
 
 PROCEDURE And (READONLY a, b: Int;  VAR i: Int);
 (* returns 'Word.And (a, b)' *)
