@@ -787,26 +787,32 @@ PROCEDURE SplitOperand(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1.
     END
   END SplitOperand;
 
+PROCEDURE pushImm (t: T; READONLY imm: Target.Int) =
+  VAR ins: Instruction;
+      imma: ARRAY [0..1] OF Target.Int;
+  BEGIN
+    FOR i := SplitImmToArray(imm, imma) - 1 TO 0 BY -1 DO
+      IF TInt.GE(imma[i], TInt.MinS8) AND TInt.LE(imma[i], TInt.MaxS8) THEN
+        ins.opcode := 16_6A;
+        ins.imsize := 1;
+      ELSE
+        ins.opcode := 16_68;
+        ins.imsize := 4;
+      END;
+      IF NOT TInt.ToInt(imma[i], ins.imm) THEN
+        t.Err("pushOp: unable to convert immediate to INTEGER");
+      END;
+      writecode(t, ins);
+    END
+  END pushImm;
+
 PROCEDURE pushOp (t: T; READONLY src: Operand) =
   VAR ins: Instruction;
-      imm: ARRAY [0..1] OF Target.Int;
   BEGIN
     Mn(t, "PUSH");  MnOp(t, src);
     CASE src.loc OF
     | OLoc.imm =>
-        FOR i := SplitImmToArray(src.imm, imm) - 1 TO 0 BY -1 DO
-          IF TInt.GE(imm[i], TInt.MinS8) AND TInt.LE(imm[i], TInt.MaxS8) THEN
-            ins.opcode := 16_6A;
-            ins.imsize := 1;
-          ELSE
-            ins.opcode := 16_68;
-            ins.imsize := 4;
-          END;
-          IF NOT TInt.ToInt(imm[i], ins.imm) THEN
-            t.Err("pushOp: unable to convert immediate to INTEGER");
-          END;
-          writecode(t, ins);
-        END;
+        pushImm(t, src.imm);
     | OLoc.register =>
         ins.opcode := 16_50 + src.reg[0];
         writecode(t, ins);
