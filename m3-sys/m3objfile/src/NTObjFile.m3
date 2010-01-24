@@ -4,7 +4,7 @@
 (*                                                           *)
 (* Last modified on Mon Jan 30 08:33:00 PST 1995 by kalsow   *)
 
-MODULE NTObjFile;
+UNSAFE MODULE NTObjFile;
 
 IMPORT Text, Wr, Word, IntIntTbl, TextIntTbl;
 IMPORT M3ObjFile, M3ID, CoffTime, Target;
@@ -135,6 +135,7 @@ REVEAL
   OVERRIDES
     cursor            := Cursor;
     append            := Append;
+    appendBytes       := AppendBytes;
     patch             := Patch;
     relocate          := Relocate;
     import_symbol     := ImportSymbol;
@@ -349,6 +350,29 @@ PROCEDURE Append (t: T;  s: Seg;  value, length: INTEGER) =
       ELSE AddRaw (t.data, value, length);
     END;
   END Append;
+
+PROCEDURE AppendBytes (t: T;  s: Seg;  READONLY bytes: ARRAY OF [0..255]) =
+  VAR p := ADR(bytes[0]);
+      n := NUMBER(bytes);
+  BEGIN
+    IF (s = Seg.Text)
+      THEN AddRawBytes (t.text, p, n);
+      ELSE AddRawBytes (t.data, p, n);
+    END;
+  END AppendBytes;
+
+PROCEDURE AddRawBytes (VAR s: Section;  value: UNTRACED REF [0..255]; length: CARDINAL) =
+  VAR offs := s.raw_data.n_bytes;
+      seg  := EnsureLength (s.data, offs + length);
+  BEGIN
+    FOR i := 0 TO length - 1 DO
+      seg[offs] := VAL(value^, CHAR);
+      INC (offs);
+      INC (value);
+    END;
+    s.raw_data.n_bytes := offs;
+    s.raw_data.cnt     := offs;
+  END AddRawBytes;
 
 PROCEDURE AddRaw (VAR s: Section;  value, length: INTEGER) =
   VAR
