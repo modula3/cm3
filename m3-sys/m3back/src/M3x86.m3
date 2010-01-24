@@ -3641,13 +3641,6 @@ PROCEDURE FixReturnValue (u: U;  t: Type): Type =
         u.cg.noargOp (Op.oCWDE);
         t := Type.Int32;
 
-    | Type.Int32 => (* 32-bit signed integer *)
-        (* no code, just fix the type *)
-        t := Type.Int32;
-
-    | Type.Int64 =>
-        <*ASSERT FALSE*>
-
     | Type.Word8 => (* 8-bit unsigned integer *)
         u.cg.immOp (Op.oAND, u.cg.reg[Codex86.EAX], TInt.FF);  (* EAX &= 16_FF *)
         t := Type.Word32;
@@ -3655,13 +3648,6 @@ PROCEDURE FixReturnValue (u: U;  t: Type): Type =
     | Type.Word16 => (* 16-bit unsigned integer *)
         u.cg.immOp (Op.oAND, u.cg.reg[Codex86.EAX], TInt.FFFF);  (* EAX &= 16_FFFF *)
         t := Type.Word32;
-
-    | Type.Word32 => (* 32-bit unsigned Integer *)
-        (* no code, just fix the type *)
-        t := Type.Word32;
-
-    | Type.Word64 =>
-        <*ASSERT FALSE*>
 
     ELSE (* value is ok *)
     END;
