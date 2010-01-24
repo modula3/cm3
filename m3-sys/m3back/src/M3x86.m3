@@ -7,7 +7,7 @@
 
 MODULE M3x86 EXPORTS M3x86, M3x86Rep;
  
-IMPORT Wr, Text, Fmt, IntRefTbl, Word, Convert;
+IMPORT Wr, Text, Fmt, IntRefTbl, Word;
 IMPORT M3CG, M3ID, M3CG_Ops, Target, TInt, TFloat, TWord;
 IMPORT M3ObjFile, TargetMap;
 
@@ -847,27 +847,11 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
 
 PROCEDURE mangle_procname (base: M3ID.T; arg_size: INTEGER;
                            std_call: BOOLEAN): M3ID.T =
-  <*FATAL Convert.Failed*>
-  VAR buf: ARRAY [0..99] OF CHAR;
-      txt: TEXT;
-      len: INTEGER;
+  VAR txt := M3ID.ToText(base);
   BEGIN
-    txt := M3ID.ToText(base);
-    len := Text.Length(txt);
-    IF len < (NUMBER(buf)+10) THEN
-      buf [0] := '_';  INC(len);
-      Text.SetChars(SUBARRAY(buf, 1, NUMBER(buf)-1), txt);
-      IF std_call THEN
-        buf [len] := '@'; INC(len);
-        INC (len, Convert.FromInt(SUBARRAY(buf, len, NUMBER(buf)-len),
-                                   arg_size));
-      END;
-      RETURN M3ID.FromStr(buf, len);
-    ELSE
-      IF std_call
-        THEN RETURN M3ID.Add(Fmt.F ("_%s@%s", txt, Fmt.Int (arg_size)));
-        ELSE RETURN M3ID.Add(Fmt.F ("_%s",    txt));
-      END
+    IF std_call
+      THEN RETURN M3ID.Add(Fmt.F ("_%s@%s", txt, Fmt.Int (arg_size)));
+      ELSE RETURN M3ID.Add(Fmt.F ("_%s",    txt));
     END;
   END mangle_procname;
 
