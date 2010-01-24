@@ -52,7 +52,8 @@ TYPE Public = OBJECT
         swapOp (READONLY dest, src: Operand);
         movOp (READONLY dest, src: Operand);
         movDummyReloc (READONLY dest: Operand; sym: INTEGER);
-        movImm (READONLY dest: Operand; imm: INTEGER);
+        movImmT (READONLY dest: Operand; imm: Target.Int);
+        movImmI (READONLY dest: Operand; imm: INTEGER);
         MOVSWOp ();
         STOSWOp ();
         CBWOp ();

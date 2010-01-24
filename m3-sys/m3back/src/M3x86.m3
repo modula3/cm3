@@ -2652,7 +2652,7 @@ PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
   VAR tn, tNMinus1, tsize, tint: Target.Int;
   BEGIN
     u.vstack.corrupt(Codex86.ECX);
-    u.cg.movImm(u.cg.reg[Codex86.ECX], n);
+    u.cg.movImmI(u.cg.reg[Codex86.ECX], n);
 
     IF forward THEN
       u.cg.noargOp(Op.oCLD);
@@ -2847,7 +2847,7 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
       u.vstack.corrupt(Codex86.ECX);
 
       u.cg.binOp(Op.oXOR, u.cg.reg[Codex86.EAX], u.cg.reg[Codex86.EAX]);
-      u.cg.movImm(u.cg.reg[Codex86.ECX], n);
+      u.cg.movImmI(u.cg.reg[Codex86.ECX], n);
 
       u.cg.noargOp(Op.oCLD);
       u.cg.noargOp(Op.oREP);
@@ -3215,7 +3215,7 @@ PROCEDURE check_eq (u: U;  t: IType;  code: RuntimeError) =
 PROCEDURE reportfault (u: U;  code: RuntimeError) =
   VAR info := ORD (code) + u.lineno * 32;
   BEGIN
-    u.cg.movImm(u.cg.reg[Codex86.EAX], info);
+    u.cg.movImmI(u.cg.reg[Codex86.EAX], info);
     u.cg.intCall(u.reportlabel);
     u.usedfault := TRUE;
   END reportfault;
@@ -3467,7 +3467,7 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
         u.vstack.corrupt(Codex86.ECX);
 
         u.cg.movOp(u.cg.reg[Codex86.EDI], u.cg.reg[Codex86.ESP]);
-        u.cg.movImm(u.cg.reg[Codex86.ECX], s DIV 4);
+        u.cg.movImmI(u.cg.reg[Codex86.ECX], s DIV 4);
 
         u.cg.noargOp(Op.oCLD);
         u.cg.noargOp(Op.oREP);
@@ -3706,7 +3706,7 @@ PROCEDURE load_static_link_toC (u: U;  p: Proc) =
 
     IF realproc.lev = 0 THEN
       u.vstack.corrupt(Codex86.ECX);
-      u.cg.movImm(u.cg.reg[Codex86.ECX], 0);
+      u.cg.movImmT(u.cg.reg[Codex86.ECX], TZero);
     ELSE
       u.vstack.unlock();
       u.vstack.corrupt(Codex86.ECX);
