@@ -64,6 +64,12 @@ PROCEDURE Not (READONLY a: Int;  VAR i: Int);
 PROCEDURE Shift (READONLY x: Int;  n: INTEGER;  VAR r: Int);
 (* returns 'Word.Shift (x, n)' *)
 
+PROCEDURE LeftShift (READONLY x: Int;  n: CARDINAL;  VAR r: Int);
+(* returns 'Word.LeftShift (x, n)' *)
+
+PROCEDURE RightShift (READONLY x: Int;  n: CARDINAL;  VAR r: Int);
+(* returns 'Word.RightShift (x, n)' *)
+
 PROCEDURE Rotate (READONLY x: Int;  n: INTEGER;  VAR r: Int);
 (* returns 'Word.Rotate (x, n)' *)
 
