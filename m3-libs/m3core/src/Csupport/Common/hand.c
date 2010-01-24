@@ -9,6 +9,14 @@
 typedef unsigned int uint;
 typedef unsigned long ulong;
 
+#ifdef _WIN32
+#define WIN32_STATIC static
+#else
+#define WIN32_STATIC
+#endif
+
+#define NOT_YET static
+
 #ifdef _MSC_VER
 #pragma warning(disable:4255) /* () changed to (void) */
 #pragma warning(disable:4505) /* unused static function removed */
@@ -91,7 +99,7 @@ typedef ulong uint32;
 #define KR(x) x
 #endif
 
-int __cdecl m3_add(int a, int b, BOOL* overflow)
+NOT_YET int __cdecl m3_add(int a, int b, BOOL* overflow)
 {
   int c = (a + b);
   BOOL asign = (a < 0);
@@ -103,7 +111,7 @@ int __cdecl m3_add(int a, int b, BOOL* overflow)
   return c;
 }
 
-int64 __cdecl m3_add_64(int64 a, int64 b, BOOL* overflow)
+NOT_YET int64 __cdecl m3_add_64(int64 a, int64 b, BOOL* overflow)
 {
   int64 c = (a + b);
   BOOL asign = (a < 0);
@@ -115,7 +123,7 @@ int64 __cdecl m3_add_64(int64 a, int64 b, BOOL* overflow)
   return c;
 }
 
-int __cdecl m3_sub(int a, int b, BOOL* overflow)
+NOT_YET int __cdecl m3_sub(int a, int b, BOOL* overflow)
 {
   int c = (a - b);
   BOOL asign = (a < 0);
@@ -128,7 +136,7 @@ int __cdecl m3_sub(int a, int b, BOOL* overflow)
   return c;
 }
 
-int64 __cdecl m3_sub_64(int64 a, int64 b, BOOL* overflow)
+NOT_YET int64 __cdecl m3_sub_64(int64 a, int64 b, BOOL* overflow)
 {
   int64 c = (a - b);
   BOOL asign = (a < 0);
@@ -141,7 +149,7 @@ int64 __cdecl m3_sub_64(int64 a, int64 b, BOOL* overflow)
   return c;
 }
 
-int __cdecl m3_mult(int a, int b, BOOL* overflow)
+NOT_YET int __cdecl m3_mult(int a, int b, BOOL* overflow)
 {
   /* do work in higher precision and range check result */
   int64 c = (a * (int64)b);
@@ -149,7 +157,7 @@ int __cdecl m3_mult(int a, int b, BOOL* overflow)
   return (int)c;
 }
 
-uint __cdecl m3_add_u(uint a, uint b, BOOL* overflow)
+NOT_YET uint __cdecl m3_add_u(uint a, uint b, BOOL* overflow)
 {
   uint c = (a + b);
   /* overflow if output less than either input */
@@ -157,7 +165,7 @@ uint __cdecl m3_add_u(uint a, uint b, BOOL* overflow)
   return c;
 }
 
-uint64 __cdecl m3_add_u64(uint64 a, uint64 b, BOOL* overflow)
+NOT_YET uint64 __cdecl m3_add_u64(uint64 a, uint64 b, BOOL* overflow)
 {
   uint64 c = (a + b);
   /* overflow if output less than either input */
@@ -165,7 +173,7 @@ uint64 __cdecl m3_add_u64(uint64 a, uint64 b, BOOL* overflow)
   return c;
 }
 
-uint __cdecl m3_sub_u(uint a, uint b, BOOL* overflow)
+NOT_YET uint __cdecl m3_sub_u(uint a, uint b, BOOL* overflow)
 {
   uint c = (a - b);
   /* overflow if output greater than first input */
@@ -173,7 +181,7 @@ uint __cdecl m3_sub_u(uint a, uint b, BOOL* overflow)
   return c;
 }
 
-uint64 __cdecl m3_sub_u64(uint64 a, uint64 b, BOOL* overflow)
+NOT_YET uint64 __cdecl m3_sub_u64(uint64 a, uint64 b, BOOL* overflow)
 {
   uint64 c = (a - b);
   /* overflow if output greater than first input */
@@ -181,7 +189,7 @@ uint64 __cdecl m3_sub_u64(uint64 a, uint64 b, BOOL* overflow)
   return c;
 }
 
-uint __cdecl m3_mult_u(uint a, uint b, BOOL* overflow)
+NOT_YET uint __cdecl m3_mult_u(uint a, uint b, BOOL* overflow)
 {
   /* do work in higher precision and range check result */
   uint64 c = (a * (uint64)b);
@@ -189,7 +197,7 @@ uint __cdecl m3_mult_u(uint a, uint b, BOOL* overflow)
   return (uint)c;
 }
 
-uint64 __cdecl m3_mult_u64(uint64 a, uint64 b, BOOL* overflow)
+NOT_YET uint64 __cdecl m3_mult_u64(uint64 a, uint64 b, BOOL* overflow)
 {
   /* break it down into smaller steps
   hi(x) = x >> 32
@@ -240,9 +248,9 @@ ov:
 #define M3_POS(T, a) (((T)-((a) + 1)) + 1)
 #define M3_ABS(T, a) (((a) < 0) ? M3_POS(T, a) : (T)(a))
 
-static uint64 m3_abs64(int64 a) { return M3_ABS(uint64, a); }
+static uint64 m3_abs64x(int64 a) { return M3_ABS(uint64, a); }
 
-int64 __cdecl m3_mult_64(int64 a, int64 b, BOOL* overflow)
+NOT_YET int64 __cdecl m3_mult_64(int64 a, int64 b, BOOL* overflow)
 {
   /* do the unsigned operation on the magnitudes
     overflow if it overflows
@@ -254,7 +262,7 @@ int64 __cdecl m3_mult_64(int64 a, int64 b, BOOL* overflow)
   if (*overflow)
     return result;
 
-  c = m3_mult_u64(m3_abs64(a), m3_abs64(b), overflow);
+  c = m3_mult_u64(m3_abs64x(a), m3_abs64x(b), overflow);
   if (*overflow)
     return result;
 
@@ -291,7 +299,7 @@ static int64 __cdecl m3_divL_old
   return c;
 }
 
-long __cdecl m3_div
+WIN32_STATIC long __cdecl m3_div
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
@@ -311,7 +319,7 @@ long __cdecl m3_div
   }
 }
 
-int64 __cdecl m3_divL
+WIN32_STATIC int64 __cdecl m3_divL
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
@@ -331,7 +339,7 @@ int64 __cdecl m3_divL
   }
 }
 
-long __cdecl m3_mod_old
+static long __cdecl m3_mod_old
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
@@ -343,7 +351,7 @@ long __cdecl m3_mod_old
   return c;
 }
 
-int64 __cdecl m3_modL_old
+static int64 __cdecl m3_modL_old
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
@@ -355,7 +363,7 @@ int64 __cdecl m3_modL_old
   return c;
 }
 
-long __cdecl m3_mod
+WIN32_STATIC long __cdecl m3_mod
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
@@ -374,7 +382,7 @@ long __cdecl m3_mod
   }
 }
 
-int64 __cdecl m3_modL
+WIN32_STATIC int64 __cdecl m3_modL
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
@@ -392,6 +400,65 @@ int64 __cdecl m3_modL
     return (bneg ? -a : a);
   }
 }
+
+#ifdef _WIN32
+
+/* calling conventions and incorrect signatures here are a trick to get
+ * the C compiler to do our bidding manipulating the stack.
+ */
+
+/* binary operations */
+
+void __stdcall          m3_max64( int64 a)  { if (a > (&a)[1]) (&a)[1] = a; }
+void __stdcall         m3_umax64(uint64 a)  { if (a > (&a)[1]) (&a)[1] = a; }
+void __stdcall          m3_min64( int64 a)  { if (a < (&a)[1]) (&a)[1] = a; }
+void __stdcall         m3_umin64(uint64 a)  { if (a < (&a)[1]) (&a)[1] = a; }
+void __stdcall          m3_add64( int64 a)  { (&a)[1] += a; }
+void __stdcall          m3_sub64( int64 a)  { (&a)[1] -= a; }
+void __stdcall          m3_mul64( int64 a)  { (&a)[1] *= a; }
+void __stdcall         m3_umul64(uint64 a)  { (&a)[1] *= a; }
+void __stdcall          m3_div64( int64 a)  { (&a)[1] = m3_divL((&a)[1], a); }
+void __stdcall         m3_udiv64(uint64 a)  { (&a)[1] /= a; }
+void __stdcall          m3_mod64( int64 a)  { (&a)[1] = m3_modL((&a)[1], a); }
+void __stdcall         m3_umod64(uint64 a)  { (&a)[1] %= a; }
+void __stdcall          m3_and64(uint64 a)  { (&a)[1] &= a; }
+void __stdcall           m3_or64(uint64 a)  { (&a)[1] |= a; }
+void __stdcall          m3_xor64(uint64 a)  { (&a)[1] ^= a; }
+void __stdcall   m3_shift_left64(uint64 a)  { (&a)[1] <<= a; }
+void __stdcall  m3_shift_right64(uint64 a)  { (&a)[1] >>= a; }
+void __stdcall  m3_rotate_left64(uint64 a)  { (&a)[1] = _rotl64((&a)[1], (int)a); }
+void __stdcall m3_rotate_right64(uint64 a)  { (&a)[1] = _rotr64((&a)[1], (int)a); }
+void __stdcall m3_pop64(uint64 a) { }
+
+void __stdcall m3_check_lo64(uint64 a) { }
+
+void __stdcall m3_shift64(int64 a)
+{
+    if (a >= 64 || a <= -64)
+        (&a)[1] = 0;
+    else if (a > 0)
+        (&a)[1] <<= a;
+    else if (a < 0)
+        (&a)[1] >>= -a;
+}
+
+void __stdcall m3_rotate64(int64 a)
+{
+    a &= 63;
+    if (a > 0)
+        (&a)[1] = _rotl64((&a)[1], (int)a);
+    else if (a < 0)
+        (&a)[1] = _rotr64((&a)[1], (int)a);
+}
+
+/* unary operations (or operations that do not change the stack pointer) */
+
+void __cdecl    m3_swap64(volatile int64 a, volatile int64 b)  { int64 t = a; a = b; b = t; }
+void __cdecl    m3_neg64(volatile int64 a)  { a = -a; }
+void __cdecl    m3_abs64(volatile int64 a)  { int64 b = a; if (b < 0) a = -b; }
+void __cdecl    m3_not64(volatile int64 a)  { a = ~a; }
+
+#endif
 
 #define SET_GRAIN (sizeof (long) * 8)
 
