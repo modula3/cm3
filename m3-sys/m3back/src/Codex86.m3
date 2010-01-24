@@ -9,7 +9,7 @@
 MODULE Codex86;
 
 IMPORT Fmt, TargetMap, M3x86Rep, M3ID, M3CG_Ops, Word, M3ObjFile, Wrx86, Target;
-IMPORT TInt;
+IMPORT TInt, TWord;
 
 FROM TargetMap IMPORT CG_Bytes;
 
@@ -85,7 +85,8 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         swapOp := swapOp;
         movOp := movOp;
         movDummyReloc := movDummyReloc;
-        movImm := movImm;
+        movImmT := movImmT;
+        movImmI := movImmI;
         MOVSWOp := MOVSWOp;
         STOSWOp := STOSWOp;
         CBWOp := CBWOp;
@@ -254,7 +255,7 @@ PROCEDURE setccOp (t: T; READONLY op: Operand; cond: Cond) =
                op.reg[0] IN RegSet { EAX, EBX, ECX, EDX } ) OR
               (op.loc = OLoc.mem AND CG_Bytes[op.mvar.t] = 1) *>
     IF op.loc = OLoc.register THEN
-      movImm(t, op, 0);
+      movImmT(t, op, TZero);
     END;
     build_modrm(t, op, t.opcode[0], ins);
     ins.escape := TRUE;
@@ -580,14 +581,10 @@ PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand) =
 
 PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
   VAR ins: Instruction;  mnemonic: TEXT := NIL;
-      imm: INTEGER;
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
     IF src.loc = OLoc.imm THEN
-      IF NOT TInt.ToInt(src.imm, imm) THEN
-        t.Err("movOp: unable to convert immediate to INTEGER");
-      END;
-      movImm(t, dest, imm);
+      movImmT(t, dest, src.imm);
       RETURN;
     END;
 
@@ -675,47 +672,141 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
     t.obj.relocate(t.textsym, t.obj.cursor(Seg.Text) - 4, sym);
   END movDummyReloc;
 
-PROCEDURE movImm (t: T; READONLY dest: Operand; imm: INTEGER) =
+PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.Int) =
   VAR ins: Instruction;
   BEGIN
+    IF NOT TInt.ToInt(imm, ins.imm) THEN
+      t.Err("movImmT: unable to convert immediate to INTEGER");
+    END;
     IF dest.loc # OLoc.register THEN
       <* ASSERT dest.loc = OLoc.mem *>
       ins.opcode := 16_C6;
       get_op_size(dest.mvar.t, ins);
       build_modrm(t, dest, t.opcode[0], ins);
-      Mn(t, "MOV");  MnOp(t, dest);  MnImmInt(t, imm);
-      ins.imm    := imm;
+      Mn(t, "MOV");  MnOp(t, dest);  MnImmTInt(t, imm);
       ins.imsize := CG_Bytes[dest.mvar.t];
       writecode(t, ins);
       log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.t]);
-    ELSIF imm = 0 THEN
+    ELSIF TInt.EQ(imm, TZero) THEN
       binOp(t, Op.oXOR, dest, dest);
     ELSE
       ins.opcode := 16_B8 + dest.reg[0];
-      ins.imm    := imm;
       ins.imsize := 4;
-      Mn(t, "MOV");  MnOp(t, dest);  MnImmInt(t, imm);
+      Mn(t, "MOV");  MnOp(t, dest);  MnImmTInt(t, imm);
       writecode(t, ins);
     END;
-  END movImm;
+  END movImmT;
+
+PROCEDURE movImmI (t: T; READONLY dest: Operand; imm: INTEGER) =
+  VAR immT: Target.Int;
+  BEGIN
+    IF NOT TInt.FromInt(imm, BYTESIZE(imm), immT) THEN
+      t.Err("movImmI: unable to convert INTEGER to Target.Int");
+    END;
+    t.movImmT(dest, immT);
+  END movImmI;
+
+PROCEDURE SplitOperandVar(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2] =
+  VAR t := a.mvar.t;
+  BEGIN
+    <* ASSERT a.loc = OLoc.mem *>
+    <* ASSERT a.mvar.t = a.mvar.var.type *>
+    <* ASSERT a.mvar.var.s = CG_Bytes[t] *>
+
+    IF CG_Bytes[t] <= 4 THEN
+      b[0] := a;
+      <* ASSERT a.size = 1 *>
+      RETURN 1;
+    END;
+
+    <* ASSERT a.size = 2 *>
+    <* ASSERT CG_Bytes[t] = 8 *>
+    <* ASSERT t = Type.Int64 OR t = Type.Word64 *>
+
+    b[0] := a;
+    b[1] := a;
+    b[0].size := 1;
+    b[1].size := 1;
+    b[0].mvar.var.s := 4;
+    b[1].mvar.var.s := 4;
+    INC(b[1].mvar.var.offset, 4);
+    b[0].mvar.t := Type.Word32;        (* low part of 64bit integer is always unsigned *)
+    b[0].mvar.var.type := Type.Word32;
+    IF t = Type.Int64 THEN
+      t := Type.Int32;
+    ELSE
+      t := Type.Word32;
+    END;
+    b[1].mvar.t := t;
+    b[1].mvar.var.type := t;
+    RETURN 2;
+  END SplitOperandVar;
+
+PROCEDURE SplitImmToVars(READONLY a: Target.Int; VAR b, c: Target.Int): [1..2] =
+  BEGIN
+    TWord.And(a, TInt.MaxU32, b);
+    TWord.RightShift(a, 32, c);
+    RETURN 2 - ORD(TWord.EQ(c, TZero));
+  END SplitImmToVars;
+
+PROCEDURE SplitImmToArray(READONLY a: Target.Int; VAR b: ARRAY [0..1] OF Target.Int): [1..2] =
+  BEGIN
+    RETURN SplitImmToVars(a, b[0], b[1]);
+  END SplitImmToArray;
+
+PROCEDURE SplitOperandImm(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2] =
+  BEGIN
+    <* ASSERT a.loc = OLoc.imm *>
+    b[0] := a;
+    b[1] := a;
+    b[0].size := 1;
+    b[1].size := 1;
+    RETURN SplitImmToVars(a.imm, b[0].imm, b[1].imm);
+  END SplitOperandImm;
+
+PROCEDURE SplitOperandReg(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2] =
+  BEGIN
+    <* ASSERT a.loc = OLoc.register *>
+    b[0] := a;
+    b[1] := a;
+    b[0].size := 1;
+    b[1].size := 1;
+    b[1].reg[0] := a.reg[1];
+    RETURN a.size;
+  END SplitOperandReg;
+
+PROCEDURE SplitOperand(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2] =
+  BEGIN
+    CASE a.loc OF
+    | OLoc.imm =>
+        RETURN SplitOperandImm(a, b);
+    | OLoc.register =>
+        RETURN SplitOperandReg(a, b);
+    | OLoc.mem =>
+        RETURN SplitOperandVar(a, b);
+    END
+  END SplitOperand;
 
 PROCEDURE pushOp (t: T; READONLY src: Operand) =
   VAR ins: Instruction;
+      imm: ARRAY [0..1] OF Target.Int;
   BEGIN
     Mn(t, "PUSH");  MnOp(t, src);
     CASE src.loc OF
     | OLoc.imm =>
-        IF TInt.GE(src.imm, TInt.MinS8) AND TInt.LE(src.imm, TInt.MaxS8) THEN
-          ins.opcode := 16_6A;
-          ins.imsize := 1;
-        ELSE
-          ins.opcode := 16_68;
-          ins.imsize := 4;
+        FOR i := SplitImmToArray(src.imm, imm) - 1 TO 0 BY -1 DO
+          IF TInt.GE(imm[i], TInt.MinS8) AND TInt.LE(imm[i], TInt.MaxS8) THEN
+            ins.opcode := 16_6A;
+            ins.imsize := 1;
+          ELSE
+            ins.opcode := 16_68;
+            ins.imsize := 4;
+          END;
+          IF NOT TInt.ToInt(imm[i], ins.imm) THEN
+            t.Err("pushOp: unable to convert immediate to INTEGER");
+          END;
+          writecode(t, ins);
         END;
-        IF NOT TInt.ToInt(src.imm, ins.imm) THEN
-          t.Err("pushOp: unable to convert immediate to INTEGER");
-        END;
-        writecode(t, ins);
     | OLoc.register =>
         ins.opcode := 16_50 + src.reg[0];
         writecode(t, ins);
