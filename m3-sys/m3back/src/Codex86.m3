@@ -705,11 +705,16 @@ PROCEDURE pushOp (t: T; READONLY src: Operand) =
     Mn(t, "PUSH");  MnOp(t, src);
     CASE src.loc OF
     | OLoc.imm =>
-        ins.opcode := 16_68;
+        IF TInt.GE(src.imm, TInt.MinS8) AND TInt.LE(src.imm, TInt.MaxS8) THEN
+          ins.opcode := 16_6A;
+          ins.imsize := 1;
+        ELSE
+          ins.opcode := 16_68;
+          ins.imsize := 4;
+        END;
         IF NOT TInt.ToInt(src.imm, ins.imm) THEN
           t.Err("pushOp: unable to convert immediate to INTEGER");
         END;
-        ins.imsize := 4;
         writecode(t, ins);
     | OLoc.register =>
         ins.opcode := 16_50 + src.reg[0];
