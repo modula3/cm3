@@ -16,6 +16,7 @@ TYPE
   T = OBJECT METHODS
     cursor (s: Seg): INTEGER;
     append (s: Seg;  value, length: INTEGER);
+    appendBytes (s: Seg;  READONLY bytes: ARRAY OF [0..255]);
     patch  (s: Seg;  offset, value, length: INTEGER);
 
     relocate (src_sym, src_offset, target_sym: INTEGER);
