@@ -242,7 +242,6 @@ PROCEDURE find (t: T; stackp: INTEGER;
                 hintaddr := FALSE) =
   (* Find a suitable register to put a stack item in *)
   VAR in, to: Regno;
-      imm: INTEGER;
   BEGIN
     CASE t.vstack[stackp].loc OF
       OLoc.fstack =>
@@ -267,10 +266,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
 
     (* If it is an immediate value and should be in mem, do it *)
     IF force = Force.mem AND t.vstack[stackp].loc = OLoc.imm THEN
-      IF NOT TInt.ToInt(t.vstack[stackp].imm, imm) THEN
-        t.Err("find: unable to convert target integer to host integer");
-      END;
-      get_temp(t, stackp, -1, imm);
+      get_temp(t, stackp, -1, t.vstack[stackp].imm);
       RETURN;
     END;
 
@@ -510,14 +506,14 @@ PROCEDURE precedence (t: T; r: Regno; hintaddr := FALSE): INTEGER =
 
 (*-------------------------------------------------------- stack routines ---*)
 
-PROCEDURE get_temp (t: T; stackp: INTEGER; r: Regno; imm := 0) =
+PROCEDURE get_temp (t: T; stackp: INTEGER; r: Regno; imm := TZero) =
   BEGIN
     set_mvar(t, stackp, MVar { var := t.parent.declare_temp(4, 4, Type.Int32,
                                                             FALSE),
                                o := 0, t := Type.Int32 } );
     t.vstack[stackp].mvar.var.stack_temp := TRUE;
     IF r = -1 THEN
-      t.cg.movImm(t.vstack[stackp], imm);
+      t.cg.movImmT(t.vstack[stackp], imm);
     ELSE
       t.reguse[r].stackp := -1;
       t.cg.movOp(t.vstack[stackp], t.cg.reg[r]);
@@ -1405,7 +1401,7 @@ PROCEDURE doextract_n (t: T; sign: BOOLEAN; n: INTEGER) =
           t.Err("doextract_n: Subtract overflowed");
         END;
 
-        t.cg.movImm(t.cg.reg[Codex86.ECX], 32 - n);
+        t.cg.movImmI(t.cg.reg[Codex86.ECX], 32 - n);
         t.cg.binOp(Op.oSUB, t.cg.reg[Codex86.ECX], stop0);
         t.cg.unOp(Op.oSAL, stop1);
 
