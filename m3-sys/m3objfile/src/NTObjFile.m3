@@ -115,7 +115,6 @@ TYPE
 REVEAL
   T = M3ObjFile.T BRANDED "NTObjFile.T" OBJECT
     n_sections       : INTEGER;
-    drectve          : Section;
     debug_S          : Section;
     text             : Section;
     data             : Section;
@@ -236,7 +235,6 @@ PROCEDURE New (): T =
     t.n_sections    := 0;
 
     IF (t.gen_debugging) THEN
-      InitSection (t, t.drectve, ".drectve", S_ALIGN1 + S_REMOVE + S_INFO);
       InitSection (t, t.debug_S, ".debug$S", DebugFlags);
     END;
     InitSection (t, t.text, ".text", S_READ + S_EXEC + S_ALIGN16 + S_CODE);
@@ -272,7 +270,6 @@ PROCEDURE New (): T =
     t.last_proc        := 0;
     t.last_source_line := 0;
 
-    AddSectSym (t, t.drectve);
     AddSectSym (t, t.debug_S);
     AddSectSym (t, t.text);
     AddSectSym (t, t.data);
@@ -282,12 +279,6 @@ PROCEDURE New (): T =
     IF t.gen_debugging THEN
       AddRaw (t.debug_T, 1, 4); (* CV4 version stamp *)
       AddRaw (t.debug_S, 1, 4); (* CV4 version stamp *)
-
-      AddRaw (t.drectve, 16_6665642d, 4); (* "-defaultlib:LIBC" *)
-      AddRaw (t.drectve, 16_746c7561, 4);
-      AddRaw (t.drectve, 16_3a62696c, 4);
-      AddRaw (t.drectve, 16_4342494c, 4);
-      AddRaw (t.drectve, 16_20,       1);
     END;
 
     RETURN t;
@@ -1000,7 +991,6 @@ PROCEDURE Dump (t: T;  wr: Wr.T) =
     (* compute the file and address space layouts *)
     file_offset := HeaderSize + t.n_sections * SectionSize;
     cur_virtual := 0;
-    LayoutSection (t.drectve, file_offset, cur_virtual);
     LayoutSection (t.debug_S, file_offset, cur_virtual);
     LayoutSection (t.text,    file_offset, cur_virtual);
     LayoutSection (t.data,    file_offset, cur_virtual);
@@ -1017,14 +1007,12 @@ PROCEDURE Dump (t: T;  wr: Wr.T) =
     OutS (t, 0);       (* size of optional header *)
     OutS (t, 0);       (* flags => +reloc, -exec, +lineno, +locals *)
 
-    WriteSectionHeader (t, t.drectve);
     WriteSectionHeader (t, t.debug_S);
     WriteSectionHeader (t, t.text);
     WriteSectionHeader (t, t.data);
     WriteSectionHeader (t, t.bss);
     WriteSectionHeader (t, t.debug_T);
 
-    WriteSection (t, t.drectve);
     WriteSection (t, t.debug_S);
     WriteSection (t, t.text);
     WriteSection (t, t.data);
@@ -1324,8 +1312,7 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
         OutC (t, '\003');      (* storage class = static *)
         OutC (t, '\001');      (* #aux = 1*)
 
-        IF    (sym.offset = t.drectve.id) THEN WriteSectAux (t, t.drectve);
-        ELSIF (sym.offset = t.debug_S.id) THEN WriteSectAux (t, t.debug_S);
+        IF    (sym.offset = t.debug_S.id) THEN WriteSectAux (t, t.debug_S);
         ELSIF (sym.offset = t.text.id)    THEN WriteSectAux (t, t.text);
         ELSIF (sym.offset = t.data.id)    THEN WriteSectAux (t, t.data);
         ELSIF (sym.offset = t.bss.id)     THEN WriteSectAux (t, t.bss);
