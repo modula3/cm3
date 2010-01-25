@@ -706,7 +706,7 @@ PROCEDURE movImmI (t: T; READONLY dest: Operand; imm: INTEGER) =
     t.movImmT(dest, immT);
   END movImmI;
 
-PROCEDURE SplitOperandVar(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2] =
+PROCEDURE SplitOperandVar(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand) =
   VAR t := a.mvar.t;
   BEGIN
     <* ASSERT a.loc = OLoc.mem *>
@@ -716,7 +716,7 @@ PROCEDURE SplitOperandVar(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): 
     IF CG_Bytes[t] <= 4 THEN
       b[0] := a;
       <* ASSERT a.size = 1 *>
-      RETURN 1;
+      RETURN;
     END;
 
     <* ASSERT a.size = 2 *>
@@ -739,72 +739,45 @@ PROCEDURE SplitOperandVar(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): 
     END;
     b[1].mvar.t := t;
     b[1].mvar.var.type := t;
-    RETURN 2;
   END SplitOperandVar;
 
-PROCEDURE SplitImmToVars(READONLY a: Target.Int; VAR b, c: Target.Int): [1..2] =
+PROCEDURE GetOperandSize(READONLY a: Operand): [1..2] =
+  VAR imm:ARRAY [0..7] OF [0..255];
   BEGIN
-    TWord.And(a, TInt.MaxU32, b);
-    TWord.RightShift(a, 32, c);
-    RETURN 2 - ORD(TWord.EQ(c, TZero));
-  END SplitImmToVars;
-
-PROCEDURE SplitImmToArray(READONLY a: Target.Int; VAR b: ARRAY [0..1] OF Target.Int): [1..2] =
-  BEGIN
-    RETURN SplitImmToVars(a, b[0], b[1]);
-  END SplitImmToArray;
-
-PROCEDURE SplitOperandImm(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2] =
-  BEGIN
-    <* ASSERT a.loc = OLoc.imm *>
-    b[0] := a;
-    b[1] := a;
-    b[0].size := 1;
-    b[1].size := 1;
-    RETURN SplitImmToVars(a.imm, b[0].imm, b[1].imm);
-  END SplitOperandImm;
-
-PROCEDURE SplitOperandReg(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2] =
-  BEGIN
-    <* ASSERT a.loc = OLoc.register *>
-    b[0] := a;
-    b[1] := a;
-    b[0].size := 1;
-    b[1].size := 1;
-    b[1].reg[0] := a.reg[1];
-    RETURN a.size;
-  END SplitOperandReg;
+    IF a.size = 2 THEN
+      RETURN 2;
+    END;
+    CASE a.loc OF
+    | OLoc.imm =>
+        RETURN 1 + ORD(TInt.ToBytes(a.imm, imm) > 4);
+    | OLoc.register =>
+        RETURN 1;
+    | OLoc.fstack =>
+        RETURN 1;
+    | OLoc.mem =>
+        RETURN 1 + ORD(a.mvar.t = Type.Int64 OR a.mvar.t = Type.Word64);
+    END;
+  END GetOperandSize;
 
 PROCEDURE SplitOperand(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2] =
   BEGIN
-    CASE a.loc OF
-    | OLoc.imm =>
-        RETURN SplitOperandImm(a, b);
-    | OLoc.register =>
-        RETURN SplitOperandReg(a, b);
-    | OLoc.mem =>
-        RETURN SplitOperandVar(a, b);
-    END
+    IF a.size = 1 AND GetOperandSize(a) = 1 THEN
+      b[0] := a;
+      RETURN 1;
+    END;
+    b[0] := a;
+    b[1] := a;
+    b[0].size := 1;
+    b[1].size := 1;
+    b[0].reg[0] := a.reg[0];
+    b[1].reg[0] := a.reg[1];
+    TWord.And(a.imm, TInt.MaxU32, b[0].imm);
+    TWord.RightShift(a.imm, 32, b[1].imm);
+    IF a.loc = OLoc.mem THEN
+      SplitOperandVar(a, b);
+    END;
+    RETURN 2;
   END SplitOperand;
-
-PROCEDURE pushImm (t: T; READONLY imm: Target.Int) =
-  VAR ins: Instruction;
-      imma: ARRAY [0..1] OF Target.Int;
-  BEGIN
-    FOR i := SplitImmToArray(imm, imma) - 1 TO 0 BY -1 DO
-      IF TInt.GE(imma[i], TInt.MinS8) AND TInt.LE(imma[i], TInt.MaxS8) THEN
-        ins.opcode := 16_6A;
-        ins.imsize := 1;
-      ELSE
-        ins.opcode := 16_68;
-        ins.imsize := 4;
-      END;
-      IF NOT TInt.ToInt(imma[i], ins.imm) THEN
-        t.Err("pushOp: unable to convert immediate to INTEGER");
-      END;
-      writecode(t, ins);
-    END
-  END pushImm;
 
 PROCEDURE pushOp (t: T; READONLY src: Operand) =
   VAR ins: Instruction;
@@ -812,7 +785,12 @@ PROCEDURE pushOp (t: T; READONLY src: Operand) =
     Mn(t, "PUSH");  MnOp(t, src);
     CASE src.loc OF
     | OLoc.imm =>
-        pushImm(t, src.imm);
+        ins.opcode := 16_68;
+        IF NOT TInt.ToInt(src.imm, ins.imm) THEN
+          t.Err("pushOp: unable to convert immediate to INTEGER");
+        END;
+        ins.imsize := 4;
+        writecode(t, ins);
     | OLoc.register =>
         ins.opcode := 16_50 + src.reg[0];
         writecode(t, ins);
