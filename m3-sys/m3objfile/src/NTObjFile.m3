@@ -335,30 +335,28 @@ PROCEDURE AddSectSym (t: T;  READONLY s: Section) =
 
 (*---------------------------------------------------------- construction ---*)
 
+PROCEDURE SegToSection(t: T; s: Seg): UNTRACED REF Section =
+  BEGIN
+    IF s = Seg.Text THEN
+      RETURN ADR(t.text);
+    ELSE
+      RETURN ADR(t.data);
+    END;
+  END SegToSection;
+
 PROCEDURE Cursor (t: T;  s: Seg): INTEGER =
   BEGIN
-    IF (s = Seg.Text)
-      THEN RETURN t.text.raw_data.n_bytes;
-      ELSE RETURN t.data.raw_data.n_bytes;
-    END;
+    RETURN SegToSection(t, s).raw_data.n_bytes;
   END Cursor;
 
 PROCEDURE Append (t: T;  s: Seg;  value, length: INTEGER) =
   BEGIN
-    IF (s = Seg.Text)
-      THEN AddRaw (t.text, value, length);
-      ELSE AddRaw (t.data, value, length);
-    END;
+    AddRaw (SegToSection(t, s)^, value, length);
   END Append;
 
 PROCEDURE AppendBytes (t: T;  s: Seg;  READONLY bytes: ARRAY OF [0..255]) =
-  VAR p := ADR(bytes[0]);
-      n := NUMBER(bytes);
   BEGIN
-    IF (s = Seg.Text)
-      THEN AddRawBytes (t.text, p, n);
-      ELSE AddRawBytes (t.data, p, n);
-    END;
+    AddRawBytes (SegToSection(t, s)^, ADR(bytes[0]), NUMBER(bytes));
   END AppendBytes;
 
 PROCEDURE AddRawBytes (VAR s: Section;  value: UNTRACED REF [0..255]; length: CARDINAL) =
@@ -427,10 +425,7 @@ PROCEDURE EnsureLength (VAR b: Bytes;  length: INTEGER): Bytes =
 
 PROCEDURE Patch (t: T;  s: Seg;  offset, value, length: INTEGER) =
   BEGIN
-    IF (s = Seg.Text)
-      THEN PatchRaw (t.text, offset, value, length);
-      ELSE PatchRaw (t.data, offset, value, length);
-    END;
+    PatchRaw (SegToSection(t, s)^, offset, value, length);
   END Patch;
 
 PROCEDURE PatchRaw (VAR s: Section;  offset, value, length: INTEGER) =
