@@ -236,8 +236,9 @@ CONST
                     FlToInt.Floor, FlToInt.Ceiling };
 
 CONST
-  Alignmask = ARRAY [1 .. 4] OF INTEGER
-    { 16_FFFFFFFF, 16_FFFFFFFE, 0, 16_FFFFFFFC };
+  Alignmask = ARRAY [1 .. 8] OF INTEGER
+    (* 1 => -1     2 => -2      3  4 => -4      5  6  7  8 => -8 *)
+    { 16_FFFFFFFF, 16_FFFFFFFE, 0, 16_FFFFFFFC, 0, 0, 0, 16_FFFFFFF8 };
 
 (*---------------------------------------------------------------------------*)
 
@@ -3503,9 +3504,12 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
 
     <* ASSERT u.in_proc_call > 0 *>
 
-    <* ASSERT a <= 4 *>
-
-    s := Word.And(s + 3, 16_FFFFFFFC);
+    <* ASSERT a <= 4 OR a = 8 *>
+    IF a <= 4 THEN
+      s := Word.And(s + 3, 16_FFFFFFFC);
+    ELSE
+      s := Word.And(s + 7, Alignmask[8]);
+    END;
 
     u.vstack.unlock();
 
