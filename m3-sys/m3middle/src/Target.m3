@@ -509,23 +509,20 @@ PROCEDURE ConventionFromID (id: INTEGER): CallingConvention =
     RETURN NIL;
   END ConventionFromID;
 
+CONST InternalTypeByteSize = ARRAY [CGType.Word8..CGType.XReel] OF [1..8] {
+    1,  1,  2,  2,  (* Word.8, Int.8, Word.16, Int.16 *)
+    4,  4,  8,  8,  (* Word.32, Int.32, Word.64, Int.64 *)
+    4,  8,  8       (* Reel, LReel, XReel *)
+};
+
 PROCEDURE TypeByteSize(t: CGType): CARDINAL =
   BEGIN
-    CASE t OF
-      | CGType.Word8,
-        CGType.Int8     => RETURN 1;
-      | CGType.Word16,
-        CGType.Int16    => RETURN 2;
-      | CGType.Word32,
-        CGType.Int32,
-        CGType.Reel     => RETURN 4;
-      | CGType.Word64,
-        CGType.Int64,
-        CGType.LReel,
-        CGType.XReel    => RETURN 8;
-      | CGType.Addr     => RETURN Address.bytes;
-      | CGType.Struct,
-        CGType.Void     => <*ASSERT FALSE *>
+    IF t <= CGType.XReel THEN
+      RETURN InternalTypeByteSize[t];
+    ELSIF t = CGType.Addr THEN
+      RETURN Address.bytes;
+    ELSE
+      <*ASSERT FALSE *>
     END;
   END TypeByteSize;
 
