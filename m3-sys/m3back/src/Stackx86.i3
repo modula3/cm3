@@ -8,7 +8,7 @@
 
 INTERFACE Stackx86;
 
-FROM M3CG IMPORT MType, ZType, Sign, ByteOffset;
+FROM M3CG IMPORT Type, MType, ZType, Sign, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
 
 IMPORT M3x86Rep, Codex86, Wrx86, Target;
@@ -41,11 +41,11 @@ TYPE Public = OBJECT
         set_warning_handler (warn: WarningHandler);
         push (READONLY mvar: MVar);
         pushnew (type: MType; force: Force; set := RegSet {});
-        pushimmI (imm: INTEGER);
-        pushimmT (imm: Target.Int);
+        pushimmI (imm: INTEGER; type: Type);
+        pushimmT (imm: Target.Int; type: Type);
         pop (READONLY mvar: MVar);
         doloadaddress (v: x86Var; o: ByteOffset);
-        dobin (op: Op; symmetric, overwritesdest: BOOLEAN): BOOLEAN;
+        dobin (op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): BOOLEAN;
         dostoreind (o: ByteOffset; type: MType);
         doumul ();
         doimul ();
@@ -54,7 +54,7 @@ TYPE Public = OBJECT
         doneg ();
         doabs ();
         domaxmin (type: ZType; maxmin: MaxMin);
-        fltoint (mode: FlToInt);
+        fltoint (mode: FlToInt; type: Type);
         inttoflt ();
         doshift ();
         dorotate ();

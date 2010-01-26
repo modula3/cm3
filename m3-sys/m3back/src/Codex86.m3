@@ -18,7 +18,7 @@ FROM M3CG IMPORT Type, MType, Label, Alignment;
 FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs;
-FROM M3x86Rep IMPORT RegSet, RegName;
+FROM M3x86Rep IMPORT RegSet, RegName, SplitOperand;
 
 FROM M3ObjFile IMPORT Seg;
 
@@ -334,7 +334,7 @@ PROCEDURE binFOp (t: T; op: FOp; st: INTEGER) =
         THEN mem.opcode := fopcode[op].m32;
         ELSE mem.opcode := fopcode[op].m64;
       END;
-      build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem},
+      build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, type := t.ftop_mem.t},
                   t.opcode[fopcode[op].memop], mem);
       writecode(t, mem);
       log_global_var(t, t.ftop_mem, -4);
@@ -362,7 +362,7 @@ PROCEDURE memFOp (t: T; op: FOp; mvar: MVar) =
     prepare_stack(t, op);
 
     Mn(t, fopcode[op].name, " m");  MnMVar(t, mvar);
-    build_modrm(t, Operand {loc := OLoc.mem, mvar := mvar},
+    build_modrm(t, Operand {loc := OLoc.mem, mvar := mvar, type := mvar.t},
                 t.opcode[fopcode[op].memop], ins);
     ins.opcode := fopcode[op].m32;
     writecode(t, ins);
@@ -427,7 +427,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
     END
   END immOp;
 
-PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
+PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN) =
   VAR ins: Instruction;
   BEGIN
 
@@ -461,6 +461,25 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
     ELSIF src.loc = OLoc.mem THEN      
       log_global_var(t, src.mvar, -4);
     END;
+  END binOp1;
+
+PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
+  VAR destA: ARRAY [0..1] OF Operand;
+      srcA: ARRAY [0..1] OF Operand;
+      srcSize := SplitOperand(src, srcA);
+      destSize := SplitOperand(dest, destA);
+  BEGIN
+    <* ASSERT srcSize = destSize *>
+    IF destSize = 1 OR op = Op.oXOR OR op = Op.oOR OR op = Op.oAND THEN
+      FOR i := 0 TO destSize - 1 DO
+        binOp1(t, op, destA[i], srcA[i], locked);
+      END;
+      RETURN;
+    END;
+
+    (* Deal with multi-precision add/sub/cmp. (not yet) *)
+    binOp1(t, op, destA[0], srcA[0], locked);
+
   END binOp;
 
 PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
@@ -506,7 +525,7 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
     log_global_var(t, table, -4);
   END tableOp;
 
-PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
+PROCEDURE swapOp1 (t: T; READONLY dest, src: Operand) =
   VAR xchg, ins: Instruction;  otherreg: Regno;
   BEGIN
     <* ASSERT (dest.loc = OLoc.register OR dest.loc = OLoc.mem) AND
@@ -539,6 +558,18 @@ PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
       log_global_var(t, dest.mvar, -4);
     ELSIF src.loc = OLoc.mem THEN
       log_global_var(t, src.mvar, -4);
+    END;
+  END swapOp1;
+
+PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
+  VAR destA: ARRAY [0..1] OF Operand;
+      srcA: ARRAY [0..1] OF Operand;
+      srcSize := SplitOperand(src, srcA);
+      destSize := SplitOperand(dest, destA);
+  BEGIN
+    <* ASSERT srcSize = destSize *>
+    FOR i := 0 TO destSize - 1 DO
+      swapOp1(t, destA[i], srcA[i]);
     END;
   END swapOp;
 
@@ -579,7 +610,7 @@ PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand) =
     log_global_var(t, dest.mvar, -4);
   END lock_compare_exchange;
 
-PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
+PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
   VAR ins: Instruction;  mnemonic: TEXT := NIL;
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
@@ -658,6 +689,18 @@ PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
     ELSIF src.loc = OLoc.mem THEN
       log_global_var(t, src.mvar, -4);
     END;
+  END movOp1;
+
+PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
+  VAR destA: ARRAY [0..1] OF Operand;
+      srcA: ARRAY [0..1] OF Operand;
+      srcSize := SplitOperand(src, srcA);
+      destSize := SplitOperand(dest, destA);
+  BEGIN
+    <* ASSERT srcSize = destSize *>
+    FOR i := 0 TO destSize - 1 DO
+      movOp1(t, destA[i], srcA[i]);
+    END;
   END movOp;
 
 PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
@@ -706,80 +749,7 @@ PROCEDURE movImmI (t: T; READONLY dest: Operand; imm: INTEGER) =
     t.movImmT(dest, immT);
   END movImmI;
 
-PROCEDURE SplitOperandVar(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand) =
-  VAR t := a.mvar.t;
-  BEGIN
-    <* ASSERT a.loc = OLoc.mem *>
-    <* ASSERT a.mvar.t = a.mvar.var.type *>
-    <* ASSERT a.mvar.var.s = CG_Bytes[t] *>
-
-    IF CG_Bytes[t] <= 4 THEN
-      b[0] := a;
-      <* ASSERT a.size = 1 *>
-      RETURN;
-    END;
-
-    <* ASSERT a.size = 2 *>
-    <* ASSERT CG_Bytes[t] = 8 *>
-    <* ASSERT t = Type.Int64 OR t = Type.Word64 *>
-
-    b[0] := a;
-    b[1] := a;
-    b[0].size := 1;
-    b[1].size := 1;
-    b[0].mvar.var.s := 4;
-    b[1].mvar.var.s := 4;
-    INC(b[1].mvar.var.offset, 4);
-    b[0].mvar.t := Type.Word32;        (* low part of 64bit integer is always unsigned *)
-    b[0].mvar.var.type := Type.Word32;
-    IF t = Type.Int64 THEN
-      t := Type.Int32;
-    ELSE
-      t := Type.Word32;
-    END;
-    b[1].mvar.t := t;
-    b[1].mvar.var.type := t;
-  END SplitOperandVar;
-
-PROCEDURE GetOperandSize(READONLY a: Operand): [1..2] =
-  VAR imm:ARRAY [0..7] OF [0..255];
-  BEGIN
-    IF a.size = 2 THEN
-      RETURN 2;
-    END;
-    CASE a.loc OF
-    | OLoc.imm =>
-        RETURN 1 + ORD(TInt.ToBytes(a.imm, imm) > 4);
-    | OLoc.register =>
-        RETURN 1;
-    | OLoc.fstack =>
-        RETURN 1;
-    | OLoc.mem =>
-        RETURN 1 + ORD(a.mvar.t = Type.Int64 OR a.mvar.t = Type.Word64);
-    END;
-  END GetOperandSize;
-
-PROCEDURE SplitOperand(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2] =
-  BEGIN
-    IF a.size = 1 AND GetOperandSize(a) = 1 THEN
-      b[0] := a;
-      RETURN 1;
-    END;
-    b[0] := a;
-    b[1] := a;
-    b[0].size := 1;
-    b[1].size := 1;
-    b[0].reg[0] := a.reg[0];
-    b[1].reg[0] := a.reg[1];
-    TWord.And(a.imm, TInt.MaxU32, b[0].imm);
-    TWord.RightShift(a.imm, 32, b[1].imm);
-    IF a.loc = OLoc.mem THEN
-      SplitOperandVar(a, b);
-    END;
-    RETURN 2;
-  END SplitOperand;
-
-PROCEDURE pushOp (t: T; READONLY src: Operand) =
+PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
   VAR ins: Instruction;
   BEGIN
     Mn(t, "PUSH");  MnOp(t, src);
@@ -803,9 +773,17 @@ PROCEDURE pushOp (t: T; READONLY src: Operand) =
     ELSE
       t.Err("Tried to push an fstack element to the integer stack");
     END
+  END pushOp1;
+
+PROCEDURE pushOp (t: T; READONLY src: Operand) =
+  VAR a: ARRAY [0..1] OF Operand;
+  BEGIN
+    FOR i := SplitOperand(src, a) - 1 TO 0 BY -1 DO
+      pushOp1(t, a[i]);
+    END;
   END pushOp;
 
-PROCEDURE popOp (t: T; READONLY dest: Operand) =
+PROCEDURE popOp1 (t: T; READONLY dest: Operand) =
   VAR ins: Instruction;
   BEGIN
     Mn(t, "POP");  MnOp(t, dest);
@@ -824,6 +802,14 @@ PROCEDURE popOp (t: T; READONLY dest: Operand) =
     ELSE
       t.Err("Tried to pop an fstack element from the integer stack");
     END
+  END popOp1;
+
+PROCEDURE popOp (t: T; READONLY dest: Operand) =
+  VAR a: ARRAY [0..1] OF Operand;
+  BEGIN
+    FOR i := 0 TO SplitOperand(dest, a) - 1 DO
+      popOp1(t, a[i]);
+    END;
   END popOp;
 
 PROCEDURE decOp (t: T; READONLY op: Operand) =
@@ -843,7 +829,7 @@ PROCEDURE decOp (t: T; READONLY op: Operand) =
     END
   END decOp;
 
-PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
+PROCEDURE unOp1 (t: T; op: Op; READONLY dest: Operand) =
   VAR ins: Instruction;
   BEGIN
     ins.opcode := opcode[op].imm32;
@@ -862,6 +848,22 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
     IF dest.loc = OLoc.mem THEN
       log_global_var(t, dest.mvar, -4);
     END
+  END unOp1;
+
+PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
+  VAR destA: ARRAY [0..1] OF Operand;
+      destSize := SplitOperand(dest, destA);
+  BEGIN
+    IF destSize = 1 OR op = Op.oNOT THEN
+      FOR i := 0 TO destSize - 1 DO
+        unOp1(t, op, destA[i]);
+      END;
+      RETURN;
+    END;
+
+    (* Deal with multi-precision neg/shift/etc. (not yet) *)
+    unOp1(t, op, destA[0]);
+
   END unOp;
 
 PROCEDURE mulOp (t: T; READONLY src: Operand) =
@@ -1484,7 +1486,7 @@ PROCEDURE fstack_loadtop (t: T) =
       THEN ins.opcode := fopcode[FOp.fLD].m32;
       ELSE ins.opcode := fopcode[FOp.fLD].m64;
     END;
-    build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem},
+    build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, type := t.ftop_mem.t},
                 t.opcode[fopcode[FOp.fLD].memop], ins);
     writecode(t, ins);
     log_global_var(t, t.ftop_mem, -4);
@@ -1554,7 +1556,7 @@ PROCEDURE fstack_pop (t: T; READONLY mvar: MVar) =
       THEN ins.opcode := fopcode[FOp.fSTP].m32;
       ELSE ins.opcode := fopcode[FOp.fSTP].m64;
     END;
-    build_modrm(t, Operand {loc := OLoc.mem, mvar:= mvar},
+    build_modrm(t, Operand {loc := OLoc.mem, mvar:= mvar, type := t.ftop_mem.t},
                 t.opcode[fopcode[FOp.fSTP].memop], ins);
     writecode(t, ins);
     log_global_var(t, mvar, -4);

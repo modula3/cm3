@@ -90,8 +90,8 @@ TYPE
     loc: OLoc;
     mvar: MVar := NoStore;
     reg := ARRAY [0..1] OF Regno{0,0};
-    size: [1..2] := 1;
     imm: Target.Int := TInt.Zero;
+    type: Type;
     stackp: INTEGER := 0;
     opcode := FALSE;
   END;
@@ -108,5 +108,7 @@ CONST RegName = ARRAY Regno OF TEXT { "*NOREG*", "EAX", "ECX", "EDX",
                                       "EBX", "ESP", "EBP", "ESI", "EDI" };
 
 TYPE RegSet = SET OF Regno;
+
+PROCEDURE SplitOperand(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2];
 
 END M3x86Rep.
