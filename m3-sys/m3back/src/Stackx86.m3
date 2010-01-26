@@ -17,7 +17,7 @@ FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force;
-FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore;
+FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
 
@@ -177,11 +177,9 @@ PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand) =
 
 PROCEDURE loadphantom (t: T; r: Regno; stackp: INTEGER) =
   BEGIN
-    WITH op = t.vstack[stackp] DO
-      t.reguse[r].stackp := stackp;
-      op.loc := OLoc.register;
-      op.reg[0] := r;
-    END;
+    t.reguse[r].stackp := stackp;
+    t.vstack[stackp].loc := OLoc.register;
+    t.vstack[stackp].reg[0] := r;
   END loadphantom; 
 
 PROCEDURE copyreg (t: T; stackp: INTEGER; to, from: Regno) =
@@ -239,21 +237,19 @@ PROCEDURE releaseall (t: T) =
   END releaseall; 
 
 
-PROCEDURE find (t: T; stackp: INTEGER;
-                force: Force := Force.any; set := RegSet {};
-                hintaddr := FALSE) =
-  (* Find a suitable register to put a stack item in. *)
+PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOOLEAN) =
+  (* Find a suitable register to put a stack item in *)
   VAR in, to: Regno;
   BEGIN
     WITH op = t.vstack[stackp] DO
       CASE op.loc OF
         OLoc.fstack =>
           t.Err("Tried to put a float in an int register in 'find'");
-      | OLoc.mem =>
+        | OLoc.mem =>
           in := inreg(t, op.mvar, set);
-      | OLoc.register =>
+        | OLoc.register =>
           in := op.reg[0];
-      | OLoc.imm =>
+        | OLoc.imm =>
           in := immreg(t, op.imm, set);
       END;
 
@@ -261,7 +257,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
         hintaddr := TRUE;
       END;
 
-      (* If it is in a register and shouldn't be, move it *)
+      (* If it is in a register and shoudn't be, move it *)
       IF force = Force.mem AND op.loc = OLoc.register THEN
         get_temp(t, stackp, op.reg[0]);
         RETURN;
@@ -273,7 +269,8 @@ PROCEDURE find (t: T; stackp: INTEGER;
         RETURN;
       END;
 
-      (* If it is immediate and doesn't have to be in a register, then do nothing *)
+      (* If it is immediate and doesn't have to be in a register, then
+         do nothing *)
       IF op.loc = OLoc.imm AND force # Force.anyreg AND force # Force.regset THEN
         RETURN;
       END;
@@ -287,7 +284,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
         RETURN;
       END;
 
-      (* If it is in a temporary variable and can stay there, leave it. *)
+      (* If it is in a temporary variable and can stay there, leave it *)
       IF force = Force.anytemp AND in = -1 AND op.loc = OLoc.mem AND op.mvar.var.stack_temp THEN
         RETURN;
       END;
@@ -296,7 +293,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
         force := Force.regset;
         IF set = RegSet {} THEN
           set := RegSet { Codex86.EAX, Codex86.EBX,
-                        Codex86.ECX, Codex86.EDX };
+                          Codex86.ECX, Codex86.EDX };
         ELSE
           set := set * RegSet { Codex86.EAX, Codex86.EBX,
                                 Codex86.ECX, Codex86.EDX };
@@ -310,7 +307,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
          (t.reguse[in].stackp # -1 AND t.reguse[in].stackp # stackp) THEN
         to := pickreg(t, set, hintaddr);
 
-      (* Otherwise, it is in the right place, so leave it. *)
+      (* Otherwise, it is in the right place, so leave it *)
       ELSE
         loadphantom(t, in, stackp);
         t.reguse[in].locked := TRUE;
@@ -323,12 +320,16 @@ PROCEDURE find (t: T; stackp: INTEGER;
         RETURN;
       END;
 
-      IF force = Force.anydword AND t.reguse[to].stackp # -1 AND op.loc = OLoc.mem AND CG_Bytes[op.mvar.t] = 4 THEN
+      IF force = Force.anydword AND t.reguse[to].stackp # -1 AND
+         op.loc = OLoc.mem
+         AND  CG_Bytes[op.mvar.t] = 4 THEN
         RETURN;
       END;
 
-      (* If it is in a temporary variable and can stay there, leave it. *)
-      IF force = Force.anytemp AND t.reguse[to].stackp # -1 AND op.loc = OLoc.mem AND op.mvar.var.stack_temp THEN
+      (* If it is in a temporary variable & can stay there, leave it *)
+      IF force = Force.anytemp AND t.reguse[to].stackp # -1
+         AND op.loc = OLoc.mem
+         AND op.mvar.var.stack_temp THEN
         RETURN;
       END;
 
@@ -347,11 +348,12 @@ PROCEDURE find (t: T; stackp: INTEGER;
         END;
 
       ELSE
-        (* Otherwise, see if 'in' is used for something other than stackp. If not,
-           swap the registers over. If so, force 'to' out. If there is a free
-           register, 'to' will be moved into it, otherwise it will be stored to
-           memory. *)
-        IF in = -1 OR (t.reguse[in].stackp # -1 AND t.reguse[in].stackp # stackp) THEN
+      (* Otherwise, see if 'in' is used for something other than stackp. If not,
+         swap the registers over. If so, force 'to' out. If there is a free
+         register, 'to' will be moved into it, otherwise it will be stored to
+         memory *)
+        IF in = -1 OR
+            (t.reguse[in].stackp # -1 AND t.reguse[in].stackp # stackp) THEN
           forceout(t, to);
           IF in = -1 THEN
             loadreg(t, to, op);
@@ -366,19 +368,35 @@ PROCEDURE find (t: T; stackp: INTEGER;
 
       t.reguse[to].locked := TRUE;
     END;
+  END find1;
+
+PROCEDURE find (t: T; stackp: INTEGER;
+                force: Force := Force.any; set := RegSet {};
+                hintaddr := FALSE) =
+  (* Find a suitable register to put a stack item in *)
+  VAR op: Operand;
+      ops: ARRAY [0..1] OF Operand;
+      size := SplitOperand(op, ops);
+  BEGIN
+    IF size = 1 THEN
+      find1(t, stackp, force, set, hintaddr);
+      RETURN;
+    END;
   END find;
 
 PROCEDURE freereg (t: T; set := RegSet {}): Regno =
-  VAR to: Regno := pickreg(t, set);
+  VAR to: Regno;
   BEGIN
+    to := pickreg(t, set);
     corrupt(t, to);
     t.reguse[to].locked := TRUE;
     RETURN to;
   END freereg;
 
 PROCEDURE forceout (t: T; r: Regno) =
-  VAR dead: Regno := finddead(t);
+  VAR dead: Regno;
   BEGIN
+    dead := finddead(t);
     IF dead = -1 THEN
       get_temp(t, t.reguse[r].stackp, r);
     ELSE
@@ -425,7 +443,12 @@ PROCEDURE inreg (t: T; READONLY v: MVar; set: RegSet:= RegSet {}): Regno =
   VAR minprec := HighPrec * HighPrec;
       prec := 0;
       bestreg: Regno := -1;
+      hintaddr := FALSE;
   BEGIN
+    IF v.t = Type.Addr THEN
+      hintaddr := TRUE;
+    END;
+
     FOR i := 0 TO NRegs DO
       IF t.reguse[i].last_store # NoStore AND
          v = t.reguse[i].last_store THEN
@@ -448,8 +471,7 @@ PROCEDURE immreg (t: T; READONLY imm: Target.Int; set: RegSet:= RegSet {}): Regn
       bestreg: Regno := -1;
   BEGIN
     FOR i := 0 TO NRegs DO
-      IF t.reguse[i].imm AND
-         TInt.EQ(imm, t.reguse[i].last_imm) THEN
+      IF t.reguse[i].imm AND TInt.EQ(imm, t.reguse[i].last_imm) THEN
         prec := precedence(t, i);
         IF (set # RegSet {}) AND (NOT i IN set) THEN
           prec := prec * HighPrec;
@@ -495,18 +517,16 @@ PROCEDURE precedence (t: T; r: Regno; hintaddr := FALSE): INTEGER =
 
 PROCEDURE get_temp (t: T; stackp: INTEGER; r: Regno; imm := TZero) =
   BEGIN
-    WITH op = t.vstack[stackp] DO
-      set_mvar(t, stackp, MVar { var := t.parent.declare_temp(4, 4, Type.Int32,
-                                                              FALSE),
-                                 o := 0, t := Type.Int32 } );
-      op.mvar.var.stack_temp := TRUE;
-      IF r = -1 THEN
-        t.cg.movImmT(op, imm);
-      ELSE
-        t.reguse[r].stackp := -1;
-        t.cg.movOp(op, t.cg.reg[r]);
-      END
-    END;
+    set_mvar(t, stackp, MVar { var := t.parent.declare_temp(4, 4, Type.Int32,
+                                                            FALSE),
+                               o := 0, t := Type.Int32 } );
+    t.vstack[stackp].mvar.var.stack_temp := TRUE;
+    IF r = -1 THEN
+      t.cg.movImmT(t.vstack[stackp], imm);
+    ELSE
+      t.reguse[r].stackp := -1;
+      t.cg.movOp(t.vstack[stackp], t.cg.reg[r]);
+    END
   END get_temp;
 
 PROCEDURE sweep (t: T; READONLY mvar: MVar) =
@@ -534,19 +554,15 @@ PROCEDURE sweep (t: T; READONLY mvar: MVar) =
 
 PROCEDURE set_reg (t: T; stackp: INTEGER; r: Regno) =
   BEGIN
-    WITH op = t.vstack[stackp] DO
-      op.loc := OLoc.register;
-      op.reg[0] := r;
-      t.reguse[r].stackp := stackp;
-    END;
+    t.vstack[stackp].loc := OLoc.register;
+    t.vstack[stackp].reg[0] := r;
+    t.reguse[r].stackp := stackp;
   END set_reg;
 
 PROCEDURE dealloc_reg (t: T; stackp: INTEGER) =
   BEGIN
-    WITH op = t.vstack[stackp] DO
-      <* ASSERT op.loc = OLoc.register *>
-      t.reguse[op.reg[0]].stackp := -1;
-    END;
+    <* ASSERT t.vstack[stackp].loc = OLoc.register *>
+    t.reguse[t.vstack[stackp].reg[0]].stackp := -1;
   END dealloc_reg;
 
 PROCEDURE corrupt (t: T; reg: Regno) =
@@ -564,18 +580,14 @@ PROCEDURE set_fstack (t: T; stackp: INTEGER) =
 
 PROCEDURE set_mvar (t: T; stackp: INTEGER; READONLY mvar: MVar) =
   BEGIN
-    WITH op = t.vstack[stackp] DO
-      op.loc := OLoc.mem;
-      op.mvar := mvar;
-    END;
+    t.vstack[stackp].loc := OLoc.mem;
+    t.vstack[stackp].mvar := mvar;
   END set_mvar;
 
 PROCEDURE set_imm (t: T; stackp: INTEGER; READONLY imm: Target.Int) =
   BEGIN
-    WITH op = t.vstack[stackp] DO
-      op.loc := OLoc.imm;
-      op.imm := imm;
-    END;
+    t.vstack[stackp].loc := OLoc.imm;
+    t.vstack[stackp].imm := imm;
   END set_imm;
 
 PROCEDURE get_loc (t: T; stackp: INTEGER): OLoc =
@@ -600,7 +612,7 @@ PROCEDURE pos (t: T; depth: INTEGER; place: TEXT): INTEGER =
     RETURN -1;
   END pos;
 
-PROCEDURE pushimmT (t: T; imm: Target.Int) =
+PROCEDURE pushimmT (t: T; imm: Target.Int; type: Type) =
   BEGIN
     IF t.stacktop = t.vstacklimit THEN
       expand_stack(t);
@@ -610,18 +622,19 @@ PROCEDURE pushimmT (t: T; imm: Target.Int) =
       stack0.loc := OLoc.imm;
       stack0.imm := imm;
       stack0.stackp := t.stacktop;
+      stack0.type := type;
     END;
 
     INC(t.stacktop);
   END pushimmT;
 
-PROCEDURE pushimmI (t: T; immI: INTEGER) =
+PROCEDURE pushimmI (t: T; immI: INTEGER; type: Type) =
   VAR immT: Target.Int;
   BEGIN
     IF NOT TInt.FromInt(immI, Target.Integer.bytes, immT) THEN
       t.Err("pushimmI: unable to convert to target integer");
     END;
-    t.pushimmT(immT);
+    t.pushimmT(immT, type);
   END pushimmI;
 
 PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
@@ -632,6 +645,7 @@ PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
       expand_stack(t);
     END;
     WITH stack0 = t.vstack[t.stacktop] DO
+      stack0.type := type;
       stack0.stackp := t.stacktop;
       IF FloatType [type] THEN
         stack0.loc := OLoc.fstack;
@@ -758,7 +772,7 @@ PROCEDURE pop (t: T; READONLY mvar: MVar) =
             t.reguse[stack0.reg[0]].last_store := mvar;
           END;
 
-          t.cg.movOp(Operand { loc := OLoc.mem, mvar := mvar }, stack0);
+          t.cg.movOp(Operand { loc := OLoc.mem, mvar := mvar, type := mvar.t }, stack0);
           set_mvar(t, t.stacktop - 1, mvar);
         END
       END
@@ -788,9 +802,9 @@ PROCEDURE doloadaddress (t: T; v: x86Var; o: ByteOffset) =
         t.cg.immOp(Op.oADD, t.cg.reg[stop0.reg[0]], ti);
 
       ELSE
-        t.cg.binOp(Op.oLEA, stop0, Operand {loc := OLoc.mem,
+        t.cg.binOp(Op.oLEA, stop0, Operand {loc := OLoc.mem, type := Type.Word32,
                                             mvar := MVar {var := v, o := o,
-                                                          t := Type.Int32} } );
+                                                          t := Type.Word32} } );
       END
     END
   END doloadaddress;
@@ -848,14 +862,14 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
     RETURN reversed;
   END findbin;
 
-PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN): BOOLEAN =
+PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): BOOLEAN =
   VAR src, dest: INTEGER;
       reversed: BOOLEAN;
   BEGIN
     reversed := findbin(t, symmetric, overwritesdest, dest, src);
 
     WITH destop = t.vstack[dest],
-         srcop = t.vstack[src] DO
+          srcop = t.vstack[src] DO
       t.cg.binOp(op, destop, srcop);
 
       IF overwritesdest THEN
@@ -1173,6 +1187,7 @@ PROCEDURE doshift (t: T) =
          stack1 = pos(t, 1, "doshift"),
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
+
       IF stop0.loc = OLoc.imm THEN
         IF stop1.loc = OLoc.imm THEN
           IF NOT TInt.ToInt(stop0.imm, shiftCount) THEN
@@ -1322,6 +1337,7 @@ PROCEDURE doextract (t: T; sign: BOOLEAN) =
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1],
          stop2 = t.vstack[stack2] DO
+
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
         IF NOT TInt.ToInt(stop0.imm, int) THEN
@@ -1389,6 +1405,7 @@ PROCEDURE doextract_n (t: T; sign: BOOLEAN; n: INTEGER) =
          stack1 = pos(t, 1, "extract_n"),
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
+
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
         IF NOT TInt.ToInt(stop0.imm, int) THEN
@@ -1509,6 +1526,7 @@ PROCEDURE doinsert (t: T) =
          stop1 = t.vstack[stack1],
          stop2 = t.vstack[stack2],
          stop3 = t.vstack[stack3] DO
+
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
         IF NOT TInt.ToInt(stop0.imm, int) THEN
@@ -1589,6 +1607,7 @@ PROCEDURE doinsert_n (t: T; n: INTEGER) =
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1],
          stop2 = t.vstack[stack2] DO
+
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
         IF NOT TInt.ToInt(stop0.imm, m) THEN
@@ -1645,6 +1664,7 @@ PROCEDURE doinsert_mn (t: T; m, n: INTEGER) =
          stack1 = pos(t, 1, "insert"),
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
+
       find(t, stack1, Force.any);
       find(t, stack0, Force.anyregimm);
 
@@ -1946,7 +1966,7 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
     discard(t, 1);
   END domaxmin;
 
-PROCEDURE fltoint (t: T; mode: FlToInt) =
+PROCEDURE fltoint (t: T; mode: FlToInt; type: Type) =
   VAR status: x86Var;
       statusop, newstat: Operand;
       statreg: Regno;
@@ -1960,10 +1980,10 @@ PROCEDURE fltoint (t: T; mode: FlToInt) =
     t.cg.noargOp(Op.oWAIT);
     t.cg.noargFOp(FOp.fNCLEX);
 
-    statusop := Operand { loc := OLoc.mem,
+    statusop := Operand { loc := OLoc.mem, type := Type.Int32,
                           mvar := MVar { var := status, o := 0,
                                          t := Type.Int32 } };
-    newstat := Operand { loc := OLoc.mem,
+    newstat := Operand { loc := OLoc.mem, type := Type.Int32,
                          mvar := MVar { var := status, o := 4,
                                          t := Type.Int32 } };
     t.cg.memFOp(FOp.fSTCW, statusop.mvar);
@@ -2122,7 +2142,8 @@ PROCEDURE init (t: T) =
       END;
     END;
 
-    t.rmode := ARRAY FlToInt OF Target.Int{ TZero, TInt.x0400, TInt.x0800, TInt.x0F00 };
+    t.rmode := ARRAY FlToInt OF Target.Int
+      { TZero, TInt.x0400, TInt.x0800, TInt.x0F00 };
     t.lowset_table := NIL;
     t.highset_table := NIL;
   END init;
