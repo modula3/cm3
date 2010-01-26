@@ -512,13 +512,20 @@ PROCEDURE ConventionFromID (id: INTEGER): CallingConvention =
 PROCEDURE TypeByteSize(t: CGType): CARDINAL =
   BEGIN
     CASE t OF
-      | CGType.Word8,  CGType.Int8                          => RETURN 1;
-      | CGType.Word16, CGType.Int16                         => RETURN 2;
-      | CGType.Word32, CGType.Int32, CGType.Reel              => RETURN 4;
-      | CGType.Word64, CGType.Int64, CGType.LReel, CGType.XReel => RETURN 8;
-      | CGType.Addr     =>  RETURN Address.bytes; (* The only non-constant part. *)
-      | CGType.Struct   =>  RETURN Word64.bytes;
-      | CGType.Void     =>  RETURN 0;
+      | CGType.Word8,
+        CGType.Int8     => RETURN 1;
+      | CGType.Word16,
+        CGType.Int16    => RETURN 2;
+      | CGType.Word32,
+        CGType.Int32,
+        CGType.Reel     => RETURN 4;
+      | CGType.Word64,
+        CGType.Int64,
+        CGType.LReel,
+        CGType.XReel    => RETURN 8;
+      | CGType.Addr     => RETURN Address.bytes;
+      | CGType.Struct,
+        CGType.Void     => <*ASSERT FALSE *>
     END;
   END TypeByteSize;
 
@@ -537,8 +544,8 @@ PROCEDURE TypeBitAlign(t: CGType): CARDINAL =
       | CGType.Reel   => RETURN Real.align;
       | CGType.LReel  => RETURN Longreal.align;
       | CGType.XReel  => RETURN Extended.align;
-      | CGType.Struct => RETURN Word64.align;
-      | CGType.Void =>   RETURN 0;
+      | CGType.Struct,
+        CGType.Void   => <*ASSERT FALSE *>
     END;
   END TypeBitAlign;
 
