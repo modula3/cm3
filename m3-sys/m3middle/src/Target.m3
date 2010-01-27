@@ -169,6 +169,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
        NT/x86 has a highly optimized equivalent of PushEFrame / PopEFrame, not
        currently used by Modula-3. *)
+
     Has_stack_walker          := FALSE;
 
     (* "Closures" in Modula-3 -- function pointers to nested functions, are
@@ -194,6 +195,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
        instead of 8, if that works (for 64 bit platforms, that care about
        alignment, but with fixed sized aligned 32 bit instructions, which
        probably describes some (e.g., MIPS64 and SPARC64) *)
+
     Aligned_procedures := TRUE;
 
     (* The effect of First_readable_addr is that (static?) array indices
@@ -208,6 +210,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
        not accessible, nor is any address on the same page. As well, setting
        it to getpagesize, whatever the granularity of mmap/VirtualAlloc, often
        larger than a hardware page, is another good guess.  *)
+
     First_readable_addr := 4096 * Char.size;
 
     (* add the system-specific customization *)
@@ -215,43 +218,38 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* 64bit *)
 
     IF TextUtils.StartsWith(system, "ALPHA_")
-            OR TextUtils.Contains(system, "64_") THEN
-        Init64();
+        OR TextUtils.Contains(system, "64_") THEN
+      Init64();
+    END;
+
+    (* SPARC64, HPPA, MIPS64: aligned_procedures *)
+
+    IF TextUtils.StartsWith(system, "SPARC64_")
+        OR TextUtils.StartsWith(system, "PA")
+        OR TextUtils.StartsWith(system, "MIPS64_") THEN
+      Aligned_procedures := FALSE;
     END;
 
     (* big endian *)
 
     IF TextUtils.StartsWith(system, "PA")
-
-            (* MIPS is definitely ambiguous! *)
-            OR TextUtils.StartsWith(system, "MIPS")
-   
-            (* PPC is a little ambiguous? *)
-            OR TextUtils.StartsWith(system, "PPC")
-
-            OR TextUtils.StartsWith(system, "SPARC")
-            OR TextUtils.StartsWith(system, "SOL") THEN
-        Little_endian := FALSE;
+        OR TextUtils.StartsWith(system, "MIPS") (* MIPS is definitely ambiguous! *)
+        OR TextUtils.StartsWith(system, "PPC")  (* PPC is a little ambiguous? *)
+        OR TextUtils.StartsWith(system, "SPARC")
+        OR TextUtils.StartsWith(system, "SOL") THEN
+      Little_endian := FALSE;
     END;
 
-    (* SPARC *)
+    (* SPARC: 8K pages *)
 
-    CASE System OF
-    | Systems.SOLgnu,
-      Systems.SOLsun,
-      Systems.SPARC32_LINUX,
-      Systems.SPARC64_LINUX,
-      Systems.SPARC64_OPENBSD,
-      Systems.SPARC64_SOLARIS
-    =>
-        First_readable_addr := 8192 * Char.size;
-    ELSE
+    IF TextUtils.StartsWith(system, "SPARC")
+        OR TextUtils.StartsWith(system, "SOL") THEN
+      First_readable_addr := 8192 * Char.size;
     END;
 
     CASE System OF
     |  Systems.I386_FREEBSD, Systems.FreeBSD4 =>
                  max_align                 := 32;
-                 First_readable_addr       := 4096;
                  Jumpbuf_size              := 11 * Address.size;
 
     |  Systems.AMD64_NETBSD,
@@ -261,23 +259,18 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     |  Systems.PA32_HPUX =>
                  Structure_size_boundary   := 16;
-                 First_readable_addr       := 16_1000;
                  (* 200 bytes with 8 byte alignment *)
                  Jumpbuf_size              := 50 * Address.size;
                  Jumpbuf_align             := 64;
-                 Aligned_procedures        := FALSE;
 
     |  Systems.PA64_HPUX =>
                  Structure_size_boundary   := 16;
-                 First_readable_addr       := 16_1000;
                  (* 640 bytes with 16 byte alignment *)
                  Jumpbuf_size              := 80 * Address.size;
                  Jumpbuf_align             := 128;
-                 Aligned_procedures        := FALSE;
 
     |  Systems.MIPS64_OPENBSD =>
                  Jumpbuf_size              := 16_53 * Address.size;
-                 Aligned_procedures        := FALSE;
 
     | Systems.I386_INTERIX =>
 
@@ -329,43 +322,26 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  NTCall (7, "__cdecl",    0, backend_mode); (* __cdecl *)
                  NTCall (8, "__stdcall",  1, backend_mode); (* __stdcall *)
 
-    | Systems.SOLgnu,
-      Systems.SOLsun,
-      Systems.SPARC32_LINUX,
-      Systems.SPARC64_LINUX,
-      Systems.SPARC64_OPENBSD,
-      Systems.SPARC64_SOLARIS =>
+    (* SPARC32_SOLARIS *)
+    | Systems.SOLgnu, Systems.SOLsun =>
+                 Jumpbuf_size              := 19 * Address.size;
+                 Has_stack_walker          := TRUE;
 
-                 (* common characteristics of all SPARC targets *)
+    | Systems.SPARC32_LINUX =>
+                 Jumpbuf_size              := 16_90 * Char.size;
 
-                 First_readable_addr       := 8192 * Char.size;
+    | Systems.SPARC64_OPENBSD =>
+                 Jumpbuf_size := 14 * Address.size;
 
-                 CASE System OF <* NOWARN *>
-                 (* SPARC32_SOLARIS *)
-                 | Systems.SOLgnu, Systems.SOLsun =>
-                   Jumpbuf_size              := 19 * Address.size;
-                   Has_stack_walker          := TRUE;
+    | Systems.SPARC64_LINUX =>
+                 Jumpbuf_size := 16_280 * Char.size;
+                 Jumpbuf_align := 16 * Char.size;
 
-                 | Systems.SPARC32_LINUX =>
-                   Jumpbuf_size              := 16_90 * Char.size;
+    | Systems.SPARC64_SOLARIS =>
+                 Jumpbuf_size := 16_90 * Char.size;
 
-                 | Systems.SPARC64_OPENBSD =>
-                   Jumpbuf_size := 14 * Address.size;
-                   Aligned_procedures := FALSE;
-
-                 | Systems.SPARC64_LINUX =>
-                   Jumpbuf_size := 16_280 * Char.size;
-                   Jumpbuf_align := 16 * Char.size;
-                   Aligned_procedures := FALSE;
-
-                 | Systems.SPARC64_SOLARIS =>
-                   Jumpbuf_size := 16_90 * Char.size;
-                   Aligned_procedures := FALSE;
-
-                 |  Systems.I386_SOLARIS =>
-                   Jumpbuf_size := 16_280 * Char.size; (* TBD *)
-
-                  END;
+    |  Systems.I386_SOLARIS =>
+                 Jumpbuf_size := 16_280 * Char.size; (* TBD *)
 
     |  Systems.I386_LINUX, Systems.LINUXLIBC6 =>
                  max_align                 := 32;
@@ -401,7 +377,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  max_align                 := 32;
                  Jumpbuf_size              := 14 * Address.size; (* 13? *)
 
-(*    | Systems.I386_MSDOS =>
+(*  | Systems.I386_MSDOS =>
                  Jumpbuf_size              := 172 * Char.size; TBD *)
 
     | Systems.I386_OPENBSD =>
