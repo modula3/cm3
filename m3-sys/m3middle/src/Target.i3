@@ -189,11 +189,6 @@ CONST
     FALSE, FALSE, FALSE          (* Addr, Struct, Void *)
   };
 
-PROCEDURE TypeByteSize(t: CGType): CARDINAL;
-PROCEDURE TypeByteAlign(t: CGType): CARDINAL;
-PROCEDURE TypeBitAlign(t: CGType): CARDINAL;
-PROCEDURE TypeBitSize(t: CGType): CARDINAL;
-
 (*-------------------------------------------------------- integer values ---*)
 
 (* The bits of a target INTEGER (in 2's complement) are stored in
