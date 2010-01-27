@@ -507,52 +507,5 @@ PROCEDURE ConventionFromID (id: INTEGER): CallingConvention =
     RETURN NIL;
   END ConventionFromID;
 
-CONST InternalTypeByteSize = ARRAY [CGType.Word8..CGType.XReel] OF [1..8] {
-    1,  1,  2,  2,  (* Word.8, Int.8, Word.16, Int.16 *)
-    4,  4,  8,  8,  (* Word.32, Int.32, Word.64, Int.64 *)
-    4,  8,  8       (* Reel, LReel, XReel *)
-};
-
-PROCEDURE TypeByteSize(t: CGType): CARDINAL =
-  BEGIN
-    IF t <= CGType.XReel THEN
-      RETURN InternalTypeByteSize[t];
-    ELSIF t = CGType.Addr THEN
-      RETURN Address.bytes;
-    ELSE
-      <*ASSERT FALSE *>
-    END;
-  END TypeByteSize;
-
-PROCEDURE TypeBitAlign(t: CGType): CARDINAL =
-  BEGIN
-    CASE t OF
-      | CGType.Word8  => RETURN Word8.align;
-      | CGType.Int8   => RETURN Int8.align;
-      | CGType.Word16 => RETURN Word16.align;
-      | CGType.Int16  => RETURN Int16.align;
-      | CGType.Word32 => RETURN Word32.align;
-      | CGType.Int32  => RETURN Int32.align;
-      | CGType.Word64 => RETURN Word64.align;
-      | CGType.Int64  => RETURN Int64.align;
-      | CGType.Addr   => RETURN Address.align;
-      | CGType.Reel   => RETURN Real.align;
-      | CGType.LReel  => RETURN Longreal.align;
-      | CGType.XReel  => RETURN Extended.align;
-      | CGType.Struct,
-        CGType.Void   => <*ASSERT FALSE *>
-    END;
-  END TypeBitAlign;
-
-PROCEDURE TypeBitSize(t: CGType): CARDINAL =
-  BEGIN
-    RETURN 8 * TypeByteSize(t);
-  END TypeBitSize;
-
-PROCEDURE TypeByteAlign(t: CGType): CARDINAL =
-  BEGIN
-    RETURN TypeBitAlign(t) DIV 8;
-  END TypeByteAlign;
-
 BEGIN
 END Target.
