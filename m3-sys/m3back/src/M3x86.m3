@@ -1537,9 +1537,6 @@ PROCEDURE if_compare (u: U;  t: ZType;  op: CompareOp;  l: Label;
     | Type.Word32, Type.Word64, Type.Addr,
       Type.Reel, Type.LReel, Type.XReel => (* FCOM sets the unsigned compare flags *)
         cond := unscond[cond];
-        cond := unscond[cond];
-        cond := unscond[cond];
-        cond := unscond[cond];
     ELSE
     END;
 
