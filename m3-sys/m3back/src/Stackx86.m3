@@ -253,7 +253,7 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
           in := immreg(t, op.imm, set);
       END;
 
-      IF op.mvar.mvartype = Type.Addr THEN
+      IF op.mvar.mvar_type = Type.Addr THEN
         hintaddr := TRUE;
       END;
 
@@ -280,7 +280,7 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
         RETURN;
       END;
 
-      IF force = Force.anydword AND in = -1 AND op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvartype] = 4 THEN
+      IF force = Force.anydword AND in = -1 AND op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 4 THEN
         RETURN;
       END;
 
@@ -289,7 +289,7 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
         RETURN;
       END;
 
-      IF op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvartype] = 1 THEN
+      IF op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 1 THEN
         force := Force.regset;
         IF set = RegSet {} THEN
           set := RegSet { Codex86.EAX, Codex86.EBX,
@@ -322,7 +322,7 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
 
       IF force = Force.anydword AND t.reguse[to].stackp # -1 AND
          op.loc = OLoc.mem
-         AND  CG_Bytes[op.mvar.mvartype] = 4 THEN
+         AND  CG_Bytes[op.mvar.mvar_type] = 4 THEN
         RETURN;
       END;
 
@@ -445,7 +445,7 @@ PROCEDURE inreg (t: T; READONLY v: MVar; set: RegSet:= RegSet {}): Regno =
       bestreg: Regno := -1;
       hintaddr := FALSE;
   BEGIN
-    IF v.mvartype = Type.Addr THEN
+    IF v.mvar_type = Type.Addr THEN
       hintaddr := TRUE;
     END;
 
@@ -519,7 +519,7 @@ PROCEDURE get_temp (t: T; stackp: INTEGER; r: Regno; imm := TZero) =
   BEGIN
     set_mvar(t, stackp, MVar { var := t.parent.declare_temp(4, 4, Type.Int32,
                                                             FALSE),
-                               mvaroffset := 0, mvartype := Type.Int32 } );
+                               mvar_offset := 0, mvar_type := Type.Int32 } );
     t.vstack[stackp].mvar.var.stack_temp := TRUE;
     IF r = -1 THEN
       t.cg.movImmT(t.vstack[stackp], imm);
@@ -542,7 +542,7 @@ PROCEDURE sweep (t: T; READONLY mvar: MVar) =
         t.cg.movOp(t.cg.reg[Codex86.EAX], t.vstack[i]);
         set_mvar(t, i, MVar { var := t.parent.declare_temp(4, 4, Type.Int32,
                                                            FALSE),
-                              mvaroffset := 0, mvartype := Type.Int32 } );
+                              mvar_offset := 0, mvar_type := Type.Int32 } );
         t.vstack[i].mvar.var.stack_temp := TRUE;
         t.cg.movOp(t.vstack[i], t.cg.reg[Codex86.EAX]);
       END
@@ -656,7 +656,7 @@ PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
                    MVar { var :=  t.parent.declare_temp(CG_Bytes[type],
                                                         CG_Align_bytes[type],
                                                         type, FALSE),
-                          mvaroffset := 0, mvartype := type } );
+                          mvar_offset := 0, mvar_type := type } );
           stack0.mvar.var.stack_temp := TRUE;
         ELSE
           corrupt(t, reg);
@@ -676,14 +676,14 @@ PROCEDURE push (t: T; READONLY mvar: MVar) =
 
     WITH stack0 = t.vstack[t.stacktop] DO
       stack0.stackp := t.stacktop;
-      IF FloatType [mvar.mvartype] THEN
+      IF FloatType [mvar.mvar_type] THEN
         IF mvar.var.loc = VLoc.temp AND mvar.var.parent # t.current_proc THEN
           unlock(t);
           indreg := pickreg(t, RegSet {}, TRUE);
           corrupt(t, indreg);
 
           t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
-          t.cg.f_loadind(t.cg.reg[indreg], mvar.mvaroffset + mvar.var.offset, mvar.mvartype);
+          t.cg.f_loadind(t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset, mvar.mvar_type);
           stack0.loc := OLoc.fstack;
         ELSE
           stack0.loc := OLoc.fstack;
@@ -692,11 +692,11 @@ PROCEDURE push (t: T; READONLY mvar: MVar) =
       ELSE
         IF mvar.var.loc = VLoc.temp AND mvar.var.parent # t.current_proc THEN
           unlock(t);
-          IF CG_Bytes[mvar.mvartype] = 1 THEN
+          IF CG_Bytes[mvar.mvar_type] = 1 THEN
             destreg := pickreg(t, RegSet { Codex86.EAX, Codex86.EBX,
                                            Codex86.ECX, Codex86.EDX } );
           ELSE
-            destreg := pickreg(t, RegSet {}, mvar.mvartype = Type.Addr);
+            destreg := pickreg(t, RegSet {}, mvar.mvar_type = Type.Addr);
           END;
 
           corrupt(t, destreg);
@@ -705,8 +705,8 @@ PROCEDURE push (t: T; READONLY mvar: MVar) =
           corrupt(t, indreg);
 
           t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
-          t.cg.load_ind(destreg, t.cg.reg[indreg], mvar.mvaroffset + mvar.var.offset,
-                        mvar.mvartype);
+          t.cg.load_ind(destreg, t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset,
+                        mvar.mvar_type);
           set_reg(t, t.stacktop, destreg);
           newdest(t, stack0);
         ELSE
@@ -734,14 +734,14 @@ PROCEDURE pop (t: T; READONLY mvar: MVar) =
           indreg := pickreg(t, RegSet {}, TRUE);
           corrupt(t, indreg);
           t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
-          t.cg.f_storeind(t.cg.reg[indreg], mvar.mvaroffset + mvar.var.offset, mvar.mvartype);
+          t.cg.f_storeind(t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset, mvar.mvar_type);
 
         ELSE
           t.cg.fstack_pop(mvar);
         END
       ELSE
         unlock(t);
-        IF CG_Bytes[mvar.mvartype] = 1 AND stack0.loc # OLoc.imm THEN
+        IF CG_Bytes[mvar.mvar_type] = 1 AND stack0.loc # OLoc.imm THEN
           find(t, t.stacktop - 1, Force.regset,
                RegSet { Codex86.EAX, Codex86.EBX,
                         Codex86.ECX, Codex86.EDX } );
@@ -753,8 +753,8 @@ PROCEDURE pop (t: T; READONLY mvar: MVar) =
           indreg := pickreg(t, RegSet {}, TRUE);
           corrupt(t, indreg);
           t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
-          t.cg.store_ind(stack0, t.cg.reg[indreg], mvar.mvaroffset + mvar.var.offset,
-                         mvar.mvartype);
+          t.cg.store_ind(stack0, t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset,
+                         mvar.mvar_type);
           t.reguse[stack0.reg[0]].stackp := -1;
           corrupt(t, stack0.reg[0]);
 
@@ -772,7 +772,7 @@ PROCEDURE pop (t: T; READONLY mvar: MVar) =
             t.reguse[stack0.reg[0]].last_store := mvar;
           END;
 
-          t.cg.movOp(Operand { loc := OLoc.mem, mvar := mvar, optype := mvar.mvartype }, stack0);
+          t.cg.movOp(Operand { loc := OLoc.mem, mvar := mvar, optype := mvar.mvar_type }, stack0);
           set_mvar(t, t.stacktop - 1, mvar);
         END
       END
@@ -803,8 +803,8 @@ PROCEDURE doloadaddress (t: T; v: x86Var; o: ByteOffset) =
 
       ELSE
         t.cg.binOp(Op.oLEA, stop0, Operand {loc := OLoc.mem, optype := Type.Word32,
-                                            mvar := MVar {var := v, mvaroffset := o,
-                                                          mvartype := Type.Word32} } );
+                                            mvar := MVar {var := v, mvar_offset := o,
+                                                          mvar_type := Type.Word32} } );
       END
     END
   END doloadaddress;
@@ -850,11 +850,11 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
       END;
 
       IF destop.loc = OLoc.mem AND
-         (CG_Bytes[destop.mvar.mvartype] # 4 OR srcop.loc = OLoc.mem) THEN
+         (CG_Bytes[destop.mvar.mvar_type] # 4 OR srcop.loc = OLoc.mem) THEN
         find(t, dest, Force.anyreg);
       END;
 
-      IF srcop.loc = OLoc.mem AND CG_Bytes[srcop.mvar.mvartype] # 4 THEN
+      IF srcop.loc = OLoc.mem AND CG_Bytes[srcop.mvar.mvar_type] # 4 THEN
         find(t, src, Force.anyreg);
       END
     END;
@@ -1103,8 +1103,8 @@ PROCEDURE doimm (t: T; op: Op; READONLY imm: Target.Int; overwritesdest: BOOLEAN
          stop0 = t.vstack[stack0] DO
       IF (stop0.loc = OLoc.mem AND
          ((overwritesdest AND NOT stop0.mvar.var.stack_temp) OR
-          CG_Bytes[stop0.mvar.mvartype] = 2 OR
-          (CG_Bytes[stop0.mvar.mvartype] = 1 AND (TInt.GT(imm, TInt.MaxS8) OR TInt.LT(imm, TInt.MinS8)))))
+          CG_Bytes[stop0.mvar.mvar_type] = 2 OR
+          (CG_Bytes[stop0.mvar.mvar_type] = 1 AND (TInt.GT(imm, TInt.MaxS8) OR TInt.LT(imm, TInt.MinS8)))))
          OR stop0.loc = OLoc.imm THEN
         find(t, stack0, Force.anyreg);
       ELSE
@@ -1356,7 +1356,7 @@ PROCEDURE doextract (t: T; sign: BOOLEAN) =
         find(t, stack0, Force.regset, RegSet { Codex86.ECX });
         find(t, stack1, Force.any);
         find(t, stack2, Force.anyreg);
-        IF stop1.loc = OLoc.mem AND CG_Bytes[stop1.mvar.mvartype] < 4 THEN
+        IF stop1.loc = OLoc.mem AND CG_Bytes[stop1.mvar.mvar_type] < 4 THEN
           find(t, stack1, Force.anyreg);
         END;
 
@@ -1421,7 +1421,7 @@ PROCEDURE doextract_n (t: T; sign: BOOLEAN; n: INTEGER) =
 
         find(t, stack0, Force.any);
         find(t, stack1, Force.anyreg);
-        IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvartype] < 4 THEN
+        IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
           find(t, stack0, Force.anyreg);
         END;
 
@@ -1644,7 +1644,7 @@ PROCEDURE doinsert_n (t: T; n: INTEGER) =
       ImportLowSet(t, tbl);
       t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], stop0, 4, tbl);
       ImportHighSet(t, tbl);
-      INC(tbl.mvaroffset, n*4);
+      INC(tbl.mvar_offset, n*4);
       t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], stop0, 4, tbl);
 
       t.cg.binOp(Op.oAND, stop2, t.cg.reg[maskreg]);
@@ -1768,13 +1768,13 @@ PROCEDURE doloophole (t: T; from, two: ZType) =
                                                   CG_Align_bytes[two], two,
                                                   FALSE);
           stop0.mvar.var.stack_temp := TRUE;
-          stop0.mvar.mvaroffset := 0;
-          stop0.mvar.mvartype := from;
+          stop0.mvar.mvar_offset := 0;
+          stop0.mvar.mvar_type := from;
           t.cg.fstack_pop(stop0.mvar);
-          stop0.mvar.mvartype := two;
+          stop0.mvar.mvar_type := two;
 
         ELSE (* NOT FloatType [from] *)
-          IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvartype] # 4 THEN
+          IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] # 4 THEN
             unlock(t);
             find(t, stack0, Force.anyreg);
           END;
@@ -1787,7 +1787,7 @@ PROCEDURE doloophole (t: T; from, two: ZType) =
           **********************************************)
 
           <* ASSERT two = Type.Reel *>
-          stop0.mvar.mvartype := two;
+          stop0.mvar.mvar_type := two;
           t.cg.fstack_push(stop0.mvar, TRUE);
           IF stop0.mvar.var.stack_temp THEN
             t.parent.free_temp(stop0.mvar.var);
@@ -1825,7 +1825,7 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
           find(t, stack0, Force.anyreg);
         END;
         IF stop0.loc = OLoc.mem AND shift < 0 AND
-          CG_Bytes[stop0.mvar.mvartype] # 4 THEN
+          CG_Bytes[stop0.mvar.mvar_type] # 4 THEN
           find(t, stack0, Force.anydword);
         END;
 
@@ -1981,11 +1981,11 @@ PROCEDURE fltoint (t: T; mode: FlToInt; type: Type) =
     t.cg.noargFOp(FOp.fNCLEX);
 
     statusop := Operand { loc := OLoc.mem, optype := Type.Int32,
-                          mvar := MVar { var := status, mvaroffset := 0,
-                                         mvartype := Type.Int32 } };
+                          mvar := MVar { var := status, mvar_offset := 0,
+                                         mvar_type := Type.Int32 } };
     newstat := Operand { loc := OLoc.mem, optype := Type.Int32,
-                         mvar := MVar { var := status, mvaroffset := 4,
-                                         mvartype := Type.Int32 } };
+                         mvar := MVar { var := status, mvar_offset := 4,
+                                         mvar_type := Type.Int32 } };
     t.cg.memFOp(FOp.fSTCW, statusop.mvar);
 
     t.cg.movOp(t.cg.reg[statreg], statusop);
@@ -2015,7 +2015,7 @@ PROCEDURE inttoflt (t: T) =
   BEGIN
     WITH stack0 = pos(t, 0, "inttoflt"),
          stop0 = t.vstack[stack0] DO
-      IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvartype] # 4 THEN
+      IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] # 4 THEN
         unlock(t);
         find(t, stack0, Force.anyreg);
       END;
@@ -2154,8 +2154,8 @@ PROCEDURE ImportLowSet (t: T;  VAR(*OUT*)tbl: MVar) =
       t.lowset_table := ImportBitmaskTable (t, "_lowbits");
     END;
     tbl.var := t.lowset_table;
-    tbl.mvaroffset   := 0;
-    tbl.mvartype := Type.Int32;
+    tbl.mvar_offset   := 0;
+    tbl.mvar_type := Type.Int32;
   END ImportLowSet;
 
 PROCEDURE ImportHighSet (t: T;  VAR(*OUT*)tbl: MVar) =
@@ -2164,8 +2164,8 @@ PROCEDURE ImportHighSet (t: T;  VAR(*OUT*)tbl: MVar) =
       t.highset_table := ImportBitmaskTable (t, "_highbits");
     END;
     tbl.var := t.highset_table;
-    tbl.mvaroffset   := 0;
-    tbl.mvartype := Type.Int32;
+    tbl.mvar_offset   := 0;
+    tbl.mvar_type := Type.Int32;
   END ImportHighSet;
 
 PROCEDURE ImportBitmaskTable (t: T;  nm: TEXT): x86Var =
@@ -2261,8 +2261,8 @@ PROCEDURE DebugReg (READONLY r: Register;  wr: Wrx86.T) =
 PROCEDURE DebugMVar (READONLY v: MVar;  wr: Wrx86.T) =
   BEGIN
     wr.OutT ("{ ");  wr.VName (v.var);
-    IF (v.mvaroffset # 0) THEN  wr.OutT ("  offset: ");  wr.OutI (v.mvaroffset);  END;
-    wr.OutT ("  type: ");  wr.TName (v.mvartype);
+    IF (v.mvar_offset # 0) THEN  wr.OutT ("  offset: ");  wr.OutI (v.mvar_offset);  END;
+    wr.OutT ("  type: ");  wr.TName (v.mvar_type);
     wr.OutT (" }");
   END DebugMVar;
 
