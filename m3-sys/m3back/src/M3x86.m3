@@ -687,8 +687,8 @@ PROCEDURE get_runtime_hook (u: U;  n: Name;
 
 PROCEDURE NewVar (u: U; t: Type; uid: TypeUID; s: ByteSize; a: Alignment;
                   name: Name := M3ID.NoID): x86Var =
-  VAR v := NEW (x86Var, tag := u.next_var, type := t, s := s,
-                a := a, seg := Seg.Data);
+  VAR v := NEW (x86Var, tag := u.next_var, vartype := t, size := s,
+                align := a, seg := Seg.Data);
   BEGIN
     IF name = M3ID.NoID THEN
       v.name := M3ID.Add("T$" & Fmt.Int(v.tag));
@@ -755,9 +755,9 @@ PROCEDURE bind_segment (u: U;  v: Var;  s: ByteSize;  a: Alignment;
   BEGIN
     <* ASSERT inited *>
 
-    realvar.type := t;
-    realvar.s := s;
-    realvar.a := a;
+    realvar.vartype := t;
+    realvar.size := s;
+    realvar.align := a;
 
     IF exported THEN
       u.obj.export_symbol(realvar.symbol);
@@ -957,9 +957,9 @@ PROCEDURE get_temp_var (u: U; t: Type; s: ByteSize; a: Alignment;
 
     FOR i := 0 TO u.current_proc.tempsize - 1 DO
       WITH temp = u.current_proc.temparr[i] DO
-        IF temp.free AND temp.var.s = s AND temp.var.a >= a THEN
+        IF temp.free AND temp.var.size = s AND temp.var.align >= a THEN
           temp.free := FALSE;
-          temp.var.type := t;
+          temp.var.vartype := t;
           temp.var.stack_temp := FALSE;
           temp.var.scope := u.next_scope - 1;
           RETURN temp.var;
@@ -1047,8 +1047,8 @@ PROCEDURE begin_init (u: U;  v: Var) =
 
     offs := u.obj.cursor(realvar.seg);
 
-    IF Word.And(offs, realvar.a - 1) # 0 THEN
-      pad := realvar.a - Word.And(offs, realvar.a - 1);
+    IF Word.And(offs, realvar.align - 1) # 0 THEN
+      pad := realvar.align - Word.And(offs, realvar.align - 1);
       INC(offs, pad);
       IF Word.And(pad, 3) # 0 THEN
         u.obj.append(realvar.seg, 0, Word.And(pad, 3));
@@ -1077,7 +1077,7 @@ PROCEDURE end_init (u: U;  v: Var) =
 
     <* ASSERT v = u.init_varstore *>
 
-    pad_init(u, realvar.s);
+    pad_init(u, realvar.size);
     u.init_varstore := NIL;
   END end_init;
 
@@ -1219,7 +1219,7 @@ PROCEDURE init_float (u: U;  o: ByteOffset;  READONLY f: Target.Float) =
 PROCEDURE pad_init (u: U; o: ByteOffset) =
   BEGIN
     <* ASSERT u.init_count <= o *>
-    <* ASSERT o <= u.init_varstore.s *>
+    <* ASSERT o <= u.init_varstore.size *>
 
     FOR i := u.init_count TO o - 1 DO
       u.obj.append(u.init_varstore.seg, 0, 1);
@@ -1233,7 +1233,7 @@ PROCEDURE pad_init (u: U; o: ByteOffset) =
 PROCEDURE NewProc (u: U; n: Name; n_params: INTEGER;
                    ret_type: Type;  cc: CallingConvention): x86Proc =
   VAR p := NEW (x86Proc, tag := u.next_proc, n_params := n_params,
-                type := ret_type, stdcall := (cc.m3cg_id = 1));
+                proctype := ret_type, stdcall := (cc.m3cg_id = 1));
   BEGIN
     IF n = M3ID.NoID
       THEN p.name := M3ID.Add("P$" & Fmt.Int(p.tag));
@@ -1652,7 +1652,7 @@ PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  t: MType;  z: ZType) =
       u.wr.NL    ();
     END;
 
-    u.vstack.push(MVar {var := v, o := o, t := t});
+    u.vstack.push(MVar {var := v, mvaroffset := o, mvartype := t});
   END load;
 
 PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  z: ZType;  t: MType;  ) =
@@ -1667,7 +1667,7 @@ PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  z: ZType;  t: MType;  ) =
       u.wr.NL    ();
     END;
 
-    u.vstack.pop(MVar {var := v, o := o, t := t});
+    u.vstack.pop(MVar {var := v, mvaroffset := o, mvartype := t});
   END store;
 
 PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
@@ -2877,7 +2877,7 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
       WITH stack0 = u.vstack.pos(0, "zero"), stop0 = u.vstack.op(stack0) DO
         u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
         FOR i := 0 TO n - 1 DO
-          u.cg.store_ind(Operand { loc := OLoc.imm, imm := TZero, type := t },
+          u.cg.store_ind(Operand { loc := OLoc.imm, imm := TZero, optype := t },
                          stop0, i * size, faketype[size]);
         END
       END
@@ -3560,7 +3560,7 @@ PROCEDURE pop_static_link (u: U) =
     u.static_link[u.in_proc_call-1] := declare_temp(u, 4, 4, Type.Addr, FALSE);
 
     u.vstack.pop(MVar {var := u.static_link[u.in_proc_call-1],
-                       o := 0, t := Type.Addr} );
+                       mvaroffset := 0, mvartype := Type.Addr} );
   END pop_static_link;
 
 PROCEDURE Is64 (t: Type): BOOLEAN =
@@ -3579,7 +3579,7 @@ PROCEDURE IsInt (t: Type): BOOLEAN =
   END IsInt;
 
 PROCEDURE SplitOperand(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2] =
-  VAR type := a.type;
+  VAR type := a.optype;
   BEGIN
     b[0] := a;
     IF NOT Is64(type) THEN
@@ -3591,23 +3591,23 @@ PROCEDURE SplitOperand(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1.
     TWord.And(a.imm, TInt.MaxU32, b[0].imm);
     TWord.RightShift(a.imm, 32, b[1].imm);
     IF a.loc = OLoc.mem THEN
-      <* ASSERT a.mvar.t = a.mvar.var.type *>
-      <* ASSERT a.type = a.mvar.var.type *>
-      <* ASSERT a.mvar.var.s = CG_Bytes[type] *>
+      <* ASSERT a.mvar.mvartype = a.mvar.var.vartype *>
+      <* ASSERT a.optype = a.mvar.var.vartype *>
+      <* ASSERT a.mvar.var.size = CG_Bytes[type] *>
       <* ASSERT CG_Bytes[type] = 8 *>
       <* ASSERT type = Type.Int64 OR type = Type.Word64 *>
-      b[0].mvar.var.s := 4;
-      b[1].mvar.var.s := 4;
+      b[0].mvar.var.size := 4;
+      b[1].mvar.var.size := 4;
       INC(b[1].mvar.var.offset, 4);
-      b[0].mvar.t := Type.Word32;        (* low part of 64bit integer is always unsigned *)
-      b[0].mvar.var.type := Type.Word32;
+      b[0].mvar.mvartype := Type.Word32;        (* low part of 64bit integer is always unsigned *)
+      b[0].mvar.var.vartype := Type.Word32;
       IF type = Type.Int64 THEN
         type := Type.Int32;
       ELSE
         type := Type.Word32;
       END;
-      b[1].mvar.t := type;
-      b[1].mvar.var.type := type;
+      b[1].mvar.mvartype := type;
+      b[1].mvar.var.vartype := type;
     END;
     RETURN 2;
   END SplitOperand;
@@ -3689,11 +3689,11 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
 
     IF u.static_link[u.in_proc_call-1] # NIL THEN
       u.cg.movOp(u.cg.reg[Codex86.ECX],
-                 Operand { loc := OLoc.mem, type := Type.Addr,
+                 Operand { loc := OLoc.mem, optype := Type.Addr,
                            mvar :=
                              MVar { var := u.static_link[u.in_proc_call-1],
-                                    o := 0,
-                                    t := Type.Addr } } );
+                                    mvaroffset := 0,
+                                    mvartype := Type.Addr } } );
       free_temp(u, u.static_link[u.in_proc_call-1]);
       u.static_link[u.in_proc_call-1] := NIL;
     END;
@@ -4012,7 +4012,7 @@ PROCEDURE fence (u: U;  <*UNUSED*>order: MemoryOrder) =
     IF u.current_proc.fenceVar = NIL THEN
       u.current_proc.fenceVar := get_temp_var(u, Type.Word32, 4, 4);
     END;
-    u.vstack.push(MVar{u.current_proc.fenceVar, t := Type.Word32});
+    u.vstack.push(MVar{u.current_proc.fenceVar, mvartype := Type.Word32});
     WITH stack0 = u.vstack.pos(0, "fence") DO
       u.vstack.find(stack0, Force.mem);
       u.cg.swapOp(u.vstack.op(stack0), u.cg.reg[reg]);

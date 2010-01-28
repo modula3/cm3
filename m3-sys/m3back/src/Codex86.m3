@@ -9,7 +9,7 @@
 MODULE Codex86;
 
 IMPORT Fmt, TargetMap, M3x86Rep, M3ID, M3CG_Ops, Word, M3ObjFile, Wrx86, Target;
-IMPORT TInt, TWord;
+IMPORT TInt;
 
 FROM TargetMap IMPORT CG_Bytes;
 
@@ -253,7 +253,7 @@ PROCEDURE setccOp (t: T; READONLY op: Operand; cond: Cond) =
   BEGIN
     <* ASSERT (op.loc = OLoc.register AND
                op.reg[0] IN RegSet { EAX, EBX, ECX, EDX } ) OR
-              (op.loc = OLoc.mem AND CG_Bytes[op.mvar.t] = 1) *>
+              (op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvartype] = 1) *>
     IF op.loc = OLoc.register THEN
       movImmT(t, op, TZero);
     END;
@@ -330,11 +330,11 @@ PROCEDURE binFOp (t: T; op: FOp; st: INTEGER) =
     prepare_stack(t, op);
     IF t.ftop_inmem THEN
       Mn(t, fopcode[op].name, " ST");  MnMVar(t, t.ftop_mem);
-      IF t.ftop_mem.t = Type.Reel
+      IF t.ftop_mem.mvartype = Type.Reel
         THEN mem.opcode := fopcode[op].m32;
         ELSE mem.opcode := fopcode[op].m64;
       END;
-      build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, type := t.ftop_mem.t},
+      build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, optype := t.ftop_mem.mvartype},
                   t.opcode[fopcode[op].memop], mem);
       writecode(t, mem);
       log_global_var(t, t.ftop_mem, -4);
@@ -362,7 +362,7 @@ PROCEDURE memFOp (t: T; op: FOp; mvar: MVar) =
     prepare_stack(t, op);
 
     Mn(t, fopcode[op].name, " m");  MnMVar(t, mvar);
-    build_modrm(t, Operand {loc := OLoc.mem, mvar := mvar, type := mvar.t},
+    build_modrm(t, Operand {loc := OLoc.mem, mvar := mvar, optype := mvar.mvartype},
                 t.opcode[fopcode[op].memop], ins);
     ins.opcode := fopcode[op].m32;
     writecode(t, ins);
@@ -400,11 +400,11 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
     ELSE
       build_modrm(t, dest, t.opcode[opcode[op].immop], ins);
       IF ins.imsize = 1 THEN
-        IF dest.loc = OLoc.mem AND CG_Bytes[dest.mvar.t] = 1 THEN
+        IF dest.loc = OLoc.mem AND CG_Bytes[dest.mvar.mvartype] = 1 THEN
           ins.opcode := opcode[op].imm32 - 1;
           writecode(t, ins);
           log_global_var(t, dest.mvar, -5);
-        ELSIF dest.loc = OLoc.mem AND CG_Bytes[dest.mvar.t] = 2 THEN
+        ELSIF dest.loc = OLoc.mem AND CG_Bytes[dest.mvar.mvartype] = 2 THEN
           ins.prefix := TRUE;
           ins.opcode := opcode[op].imm8;
           writecode(t, ins);
@@ -417,7 +417,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
           END
         END
       ELSE
-        <* ASSERT dest.loc # OLoc.mem OR CG_Bytes[dest.mvar.t] = 4 *>
+        <* ASSERT dest.loc # OLoc.mem OR CG_Bytes[dest.mvar.mvartype] = 4 *>
         ins.opcode := opcode[op].imm32;
         writecode(t, ins);
         IF dest.loc = OLoc.mem THEN
@@ -448,9 +448,9 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN) =
     IF dest.loc = OLoc.register THEN
       build_modrm(t, src, dest, ins);
       ins.opcode := opcode[op].rrm + 1;
-      IF src.loc = OLoc.mem THEN <* ASSERT CG_Bytes[src.mvar.t] = 4 *> END
+      IF src.loc = OLoc.mem THEN <* ASSERT CG_Bytes[src.mvar.mvartype] = 4 *> END
     ELSE
-      <* ASSERT src.loc = OLoc.register AND CG_Bytes[src.mvar.t] = 4 *>
+      <* ASSERT src.loc = OLoc.register AND CG_Bytes[src.mvar.mvartype] = 4 *>
       build_modrm(t, dest, src, ins);
       ins.opcode := opcode[op].rmr + 1;
     END;
@@ -488,7 +488,7 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
   BEGIN
     <* ASSERT dest.loc = OLoc.register AND index.loc = OLoc.register *>
 
-    ins.disp := table.o;
+    ins.disp := table.mvaroffset;
     IF table.var.loc = VLoc.temp THEN
       <* ASSERT table.var.parent = t.current_proc *>
       INC(ins.disp, table.var.offset);
@@ -544,11 +544,11 @@ PROCEDURE swapOp1 (t: T; READONLY dest, src: Operand) =
     END;
 
     IF dest.loc = OLoc.register THEN
-      <* ASSERT src.loc = OLoc.register OR CG_Bytes[src.mvar.t] = 4 *>
+      <* ASSERT src.loc = OLoc.register OR CG_Bytes[src.mvar.mvartype] = 4 *>
       build_modrm(t, src, dest, ins);
     ELSE
       <* ASSERT src.loc = OLoc.register *>
-      <* ASSERT dest.loc = OLoc.register OR CG_Bytes[dest.mvar.t] = 4 *>
+      <* ASSERT dest.loc = OLoc.register OR CG_Bytes[dest.mvar.mvartype] = 4 *>
       build_modrm (t, dest, src, ins);
     END;
     Mn(t, "XCHG ");  MnOp(t, dest);  MnOp(t, src);
@@ -620,11 +620,11 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
     END;
 
     IF dest.loc = OLoc.register AND dest.reg[0] = EAX AND
-       src.loc = OLoc.mem AND CG_Bytes[src.mvar.t] = 4 AND
+       src.loc = OLoc.mem AND CG_Bytes[src.mvar.mvartype] = 4 AND
        src.mvar.var.loc = VLoc.global THEN
       Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
       ins.opcode := 16_A1;
-      ins.disp   := src.mvar.o;
+      ins.disp   := src.mvar.mvaroffset;
       ins.dsize  := 4;
       writecode (t, ins);
       log_global_var(t, src.mvar, -4);
@@ -635,8 +635,8 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
        dest.loc = OLoc.mem AND dest.mvar.var.loc = VLoc.global THEN
       Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
       ins.opcode := 16_A2;
-      get_op_size(dest.mvar.t, ins);
-      ins.disp := dest.mvar.o;
+      get_op_size(dest.mvar.mvartype, ins);
+      ins.disp := dest.mvar.mvaroffset;
       ins.dsize := 4;
       writecode(t, ins);
       log_global_var(t, dest.mvar, -4);
@@ -644,8 +644,8 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
     END;
 
     IF dest.loc = OLoc.register AND src.loc = OLoc.mem AND
-       CG_Bytes[src.mvar.t] # 4 THEN
-      CASE src.mvar.t OF
+       CG_Bytes[src.mvar.mvartype] # 4 THEN
+      CASE src.mvar.mvartype OF
       | Type.Word8  => ins.opcode := 16_8A;
                        mnemonic := "MOV";
                        binOp(t, Op.oXOR, t.reg[dest.reg[0]], t.reg[dest.reg[0]]);
@@ -670,7 +670,7 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       build_modrm(t, src, dest, ins);
       ins.opcode := 16_8A;
       IF src.loc # OLoc.register THEN
-        get_op_size(src.mvar.t, ins);
+        get_op_size(src.mvar.mvartype, ins);
       ELSE
         INC(ins.opcode);
       END
@@ -678,7 +678,7 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       <* ASSERT src.loc = OLoc.register *>
       build_modrm(t, dest, src, ins);
       ins.opcode := 16_88;
-      get_op_size(dest.mvar.t, ins);
+      get_op_size(dest.mvar.mvartype, ins);
     END;
 
     Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
@@ -724,12 +724,12 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.Int) =
     IF dest.loc # OLoc.register THEN
       <* ASSERT dest.loc = OLoc.mem *>
       ins.opcode := 16_C6;
-      get_op_size(dest.mvar.t, ins);
+      get_op_size(dest.mvar.mvartype, ins);
       build_modrm(t, dest, t.opcode[0], ins);
       Mn(t, "MOV");  MnOp(t, dest);  MnImmTInt(t, imm);
-      ins.imsize := CG_Bytes[dest.mvar.t];
+      ins.imsize := CG_Bytes[dest.mvar.mvartype];
       writecode(t, ins);
-      log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.t]);
+      log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.mvartype]);
     ELSIF TInt.EQ(imm, TZero) THEN
       binOp(t, Op.oXOR, dest, dest);
     ELSE
@@ -765,7 +765,7 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
         ins.opcode := 16_50 + src.reg[0];
         writecode(t, ins);
     | OLoc.mem =>
-        <* ASSERT CG_Bytes[src.mvar.t] = 4 *>
+        <* ASSERT CG_Bytes[src.mvar.mvartype] = 4 *>
         build_modrm(t, src, t.opcode[6], ins);
         ins.opcode := 16_FF;
         writecode(t, ins);
@@ -794,7 +794,7 @@ PROCEDURE popOp1 (t: T; READONLY dest: Operand) =
         ins.opcode := 16_58 + dest.reg[0];
         writecode(t, ins);
     | OLoc.mem =>
-        <* ASSERT CG_Bytes[dest.mvar.t] = 4 *>
+        <* ASSERT CG_Bytes[dest.mvar.mvartype] = 4 *>
         build_modrm(t, dest, t.opcode[6], ins);
         ins.opcode := 16_FF;
         writecode(t, ins);
@@ -821,7 +821,7 @@ PROCEDURE decOp (t: T; READONLY op: Operand) =
       ins.opcode := 16_48 + op.reg[0];
       writecode(t, ins);
     ELSE
-      <* ASSERT op.loc = OLoc.mem AND CG_Bytes[op.mvar.t] = 4 *>
+      <* ASSERT op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvartype] = 4 *>
       build_modrm(t, op, t.opcode[1], ins);
       ins.opcode := 16_FF;
       writecode(t, ins);
@@ -834,7 +834,7 @@ PROCEDURE unOp1 (t: T; op: Op; READONLY dest: Operand) =
   BEGIN
     ins.opcode := opcode[op].imm32;
     IF dest.loc = OLoc.mem THEN
-      get_op_size(dest.mvar.t, ins);
+      get_op_size(dest.mvar.mvartype, ins);
     ELSE
       <* ASSERT dest.loc = OLoc.register *>
       INC(ins.opcode);
@@ -870,7 +870,7 @@ PROCEDURE mulOp (t: T; READONLY src: Operand) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT src.loc = OLoc.register OR (src.loc = OLoc.mem AND
-              CG_Bytes[src.mvar.t] = 4) *>
+              CG_Bytes[src.mvar.mvartype] = 4) *>
     build_modrm(t, src, t.opcode[4], ins);
     Mn(t, "MUL EAX");  MnOp(t, src);
     ins.opcode := 16_F7;
@@ -884,7 +884,7 @@ PROCEDURE imulOp (t: T; READONLY dest, src: Operand) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register *>
-    <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.t] = 4 *>
+    <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.mvartype] = 4 *>
     Mn(t, "IMUL");  MnOp(t, dest);  MnOp(t, src);
     IF src.loc = OLoc.imm THEN
       build_modrm(t, t.reg[dest.reg[0]], dest, ins);
@@ -910,7 +910,7 @@ PROCEDURE imulImm (t: T; READONLY dest, src: Operand; imm: INTEGER; imsize: INTE
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register *>
-    <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.t] = 4 *>
+    <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.mvartype] = 4 *>
     build_modrm(t, src, dest, ins);
     Mn(t, "IMUL");  MnOp(t, dest);  MnOp(t, src);  MnImmInt(t, imm);
     IF imsize = 1
@@ -929,7 +929,7 @@ PROCEDURE divOp (t: T; READONLY divisor: Operand) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT divisor.loc = OLoc.register OR (divisor.loc = OLoc.mem
-              AND CG_Bytes[divisor.mvar.t] = 4) *>
+              AND CG_Bytes[divisor.mvar.mvartype] = 4) *>
     build_modrm(t, divisor, t.opcode[6], ins);
     Mn(t, "DIV EAX");  MnOp(t, divisor);
     ins.opcode := 16_F7;
@@ -943,7 +943,7 @@ PROCEDURE idivOp (t: T; READONLY divisor: Operand) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT divisor.loc = OLoc.register OR (divisor.loc = OLoc.mem
-              AND CG_Bytes[divisor.mvar.t] = 4) *>
+              AND CG_Bytes[divisor.mvar.mvartype] = 4) *>
     build_modrm(t, divisor, t.opcode[7], ins);
     Mn(t, "IDIV EAX");  MnOp(t, divisor);
     ins.opcode := 16_F7;
@@ -1007,8 +1007,8 @@ PROCEDURE must_extend (<*UNUSED*> t: T; READONLY src: Operand): BOOLEAN =
     IF src.loc # OLoc.mem THEN
       RETURN FALSE;
     END;
-    IF src.mvar.t = Type.Word8 OR src.mvar.t = Type.Word16 OR
-       src.mvar.t = Type.Int8 OR src.mvar.t = Type.Int16 THEN
+    IF src.mvar.mvartype = Type.Word8 OR src.mvar.mvartype = Type.Word16 OR
+       src.mvar.mvartype = Type.Int8 OR src.mvar.mvartype = Type.Int16 THEN
       RETURN TRUE;
     ELSE
       RETURN FALSE;
@@ -1025,7 +1025,7 @@ PROCEDURE get_addsize (<*UNUSED*> t: T; READONLY op: Operand): INTEGER =
       RETURN 4;
     END;
 
-    WITH offset = op.mvar.o + op.mvar.var.offset DO
+    WITH offset = op.mvar.mvaroffset + op.mvar.var.offset DO
       IF offset > 16_7F OR offset < -16_80 THEN
         RETURN 4;
       ELSE
@@ -1081,10 +1081,10 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
 
     <* ASSERT mem.loc = OLoc.mem *>
 
-    <* ASSERT CG_Bytes[mem.mvar.t] # 1 OR reg.opcode OR
+    <* ASSERT CG_Bytes[mem.mvar.mvartype] # 1 OR reg.opcode OR
               reg.reg[0] IN RegSet { EAX, EBX, ECX, EDX } *>
 
-    offset := mem.mvar.o;
+    offset := mem.mvar.mvaroffset;
     IF mem.mvar.var.loc = VLoc.temp THEN
       <* ASSERT mem.mvar.var.parent = t.current_proc *>
       INC(offset, mem.mvar.var.offset);
@@ -1482,11 +1482,11 @@ PROCEDURE fstack_loadtop (t: T) =
     fstack_ensure(t, 0); (* ensure will allow an extra space for the item
                             in memory, so height can be 0 not 1 *)
     Mn(t, "FLD ST");  MnMVar(t, t.ftop_mem);
-    IF t.ftop_mem.t = Type.Reel
+    IF t.ftop_mem.mvartype = Type.Reel
       THEN ins.opcode := fopcode[FOp.fLD].m32;
       ELSE ins.opcode := fopcode[FOp.fLD].m64;
     END;
-    build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, type := t.ftop_mem.t},
+    build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, optype := t.ftop_mem.mvartype},
                 t.opcode[fopcode[FOp.fLD].memop], ins);
     writecode(t, ins);
     log_global_var(t, t.ftop_mem, -4);
@@ -1552,11 +1552,11 @@ PROCEDURE fstack_pop (t: T; READONLY mvar: MVar) =
       fstack_loadtop(t);
     END;
     Mn(t, "FSTP ST");  MnMVar(t, mvar);
-    IF mvar.t = Type.Reel
+    IF mvar.mvartype = Type.Reel
       THEN ins.opcode := fopcode[FOp.fSTP].m32;
       ELSE ins.opcode := fopcode[FOp.fSTP].m64;
     END;
-    build_modrm(t, Operand {loc := OLoc.mem, mvar:= mvar, type := t.ftop_mem.t},
+    build_modrm(t, Operand {loc := OLoc.mem, mvar:= mvar, optype := t.ftop_mem.mvartype},
                 t.opcode[fopcode[FOp.fSTP].memop], ins);
     writecode(t, ins);
     log_global_var(t, mvar, -4);
@@ -1608,8 +1608,8 @@ PROCEDURE f_loadlit (t: T; READONLY flarr: FloatBytes; type: MType) =
     t.ftop_inmem := TRUE;
     WITH mvar = t.ftop_mem DO
       mvar.var := t.flitvar;
-      mvar.t := type;
-      mvar.o := 0;
+      mvar.mvartype := type;
+      mvar.mvaroffset := 0;
     END;
 
     INC(t.fstacksize);
@@ -1699,9 +1699,9 @@ PROCEDURE MnMVar(t: T;  READONLY mvar: MVar) =
   BEGIN
     IF t.debug THEN
       MnVar (t, mvar.var);
-      IF mvar.o # 0 THEN  Mn(t, "+", Fmt.Int(mvar.o)); END;
-      IF (mvar.t # Type.Int32) AND (mvar.t # Type.Word32) THEN
-        Mn (t, ":", Target.TypeNames[mvar.t]);
+      IF mvar.mvaroffset # 0 THEN  Mn(t, "+", Fmt.Int(mvar.mvaroffset)); END;
+      IF (mvar.mvartype # Type.Int32) AND (mvar.mvartype # Type.Word32) THEN
+        Mn (t, ":", Target.TypeNames[mvar.mvartype]);
       END;
     END;
   END MnMVar;
@@ -1847,7 +1847,7 @@ PROCEDURE expand_spill (t: T) =
 PROCEDURE aligned (<*UNUSED*> t: T; READONLY var: MVar;
                    align: Alignment): BOOLEAN =
   BEGIN
-    IF Word.And(var.o + var.var.offset, align - 1) = 0 THEN
+    IF Word.And(var.mvaroffset + var.var.offset, align - 1) = 0 THEN
       RETURN TRUE;
     ELSE
       RETURN FALSE;
@@ -1866,11 +1866,11 @@ PROCEDURE log_global_var (t: T; mvar: MVar; reltocurs: INTEGER) =
     patch_loc := t.obj.cursor(Seg.Text) + reltocurs;
     IF mvar.var = t.flitvar THEN
       <* ASSERT t.f_litlist # NIL AND t.f_litlist.loc = 0 *>
-      <* ASSERT t.f_litlist.size = CG_Bytes[mvar.t] *>
-      <* ASSERT mvar.t = Type.Reel OR mvar.t = Type.LReel OR mvar.t = Type.XReel *>
+      <* ASSERT t.f_litlist.size = CG_Bytes[mvar.mvartype] *>
+      <* ASSERT mvar.mvartype = Type.Reel OR mvar.mvartype = Type.LReel OR mvar.mvartype = Type.XReel *>
       t.f_litlist.loc := patch_loc;
     ELSE
-      t.obj.patch(Seg.Text, patch_loc, mvar.o + mvar.var.offset, 4);
+      t.obj.patch(Seg.Text, patch_loc, mvar.mvaroffset + mvar.var.offset, 4);
       t.obj.relocate(t.textsym, patch_loc, mvar.var.symbol);
     END
   END log_global_var;
