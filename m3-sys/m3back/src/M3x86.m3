@@ -3454,7 +3454,7 @@ PROCEDURE pop_param (u: U;  t: MType) =
         END;
 
         u.cg.f_storeind(u.cg.reg[Codex86.ESP], 0, t);
-      ELSIF NOT Is64(t) THEN
+      ELSE
 
         u.vstack.find(stack0, Force.anyregimm);
         u.cg.pushOp(u.vstack.op(stack0));
