@@ -13,6 +13,15 @@ IMPORT IntegerExpr, EnumExpr, Target;
 
 VAR Z: CallExpr.MethodList;
 
+PROCEDURE TypeOf (ce: CallExpr.T): Type.T =
+  VAR t := Expr.TypeOf (ce.args[0]);
+  BEGIN
+    IF Type.IsSubtype (t, LInt.T)
+      THEN RETURN LInt.T
+      ELSE RETURN Int.T;
+    END;
+  END TypeOf;
+
 PROCEDURE Check (ce: CallExpr.T;  <*UNUSED*> VAR cs: Expr.CheckState) =
   VAR t: Type.T;
   BEGIN
@@ -53,8 +62,8 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
 
 PROCEDURE Initialize () =
   BEGIN
-    Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, TRUE, Int.T,
-                                 NIL,
+    Z := CallExpr.NewMethodList (1, 1, TRUE, FALSE, TRUE, NIL,
+                                 TypeOf,
                                  CallExpr.NotAddressable,
                                  Check,
                                  CallExpr.PrepArgs,
