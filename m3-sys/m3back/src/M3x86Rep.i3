@@ -29,10 +29,10 @@ TYPE OLoc = {mem, register, fstack, imm};
 TYPE
   x86Var = Var OBJECT
     tag: INTEGER;
-    type: Type;
+    vartype: Type;
     name: Name;
-    s: ByteSize;
-    a: Alignment;
+    size: ByteSize;
+    align: Alignment;
     exported := FALSE;
     seg: Seg;
     symbol: INTEGER;
@@ -56,7 +56,7 @@ END;
 TYPE
   x86Proc = Proc OBJECT
     tag: INTEGER;
-    type: Type;
+    proctype: Type;
     name: Name;
     lev := 0;
     parent: x86Proc := NIL;
@@ -79,11 +79,11 @@ TYPE
 TYPE
   MVar = RECORD
     var: x86Var;
-    o: ByteOffset := 0;
-    t: MType;
+    mvaroffset: ByteOffset := 0;
+    mvartype: MType;
   END;
 
-CONST NoStore = MVar {var := NIL, t := FIRST(MType)};
+CONST NoStore = MVar {var := NIL, mvartype := FIRST(MType)};
 
 TYPE
   Operand = RECORD
@@ -91,7 +91,7 @@ TYPE
     mvar: MVar := NoStore;
     reg := ARRAY [0..1] OF Regno{0,0};
     imm: Target.Int := TInt.Zero;
-    type: Type;
+    optype: Type;
     stackp: INTEGER := 0;
     opcode := FALSE;
   END;
