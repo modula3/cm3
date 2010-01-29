@@ -1907,6 +1907,7 @@ PROCEDURE div (u: U;  t: IType;  a, b: Sign) =
 
 PROCEDURE mod (u: U;  t: IType;  a, b: Sign) =
   (* s1.t := s1.t MOD s0.t ; pop *)
+  VAR builtin: Builtin;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("mod");
@@ -1919,6 +1920,19 @@ PROCEDURE mod (u: U;  t: IType;  a, b: Sign) =
     IF IsWord(t) THEN
       a := Sign.Positive;
       b := Sign.Positive;
+    END;
+
+    IF Is64(t) THEN
+      IF t = Type.Int64 THEN
+        builtin := Builtin.mod64;
+      ELSE
+        builtin := Builtin.umod64;
+      END;
+      start_int_proc (u, builtin);
+      pop_param (u, t);
+      pop_param (u, t);
+      call_int_proc (u, builtin);
+      RETURN;
     END;
 
     u.vstack.domod(a, b);
@@ -2017,80 +2031,47 @@ PROCEDURE cvt_float (u: U;  t: AType;  x: RType) =
 
 (*------------------------------------------------------------------ sets ---*)
 
-PROCEDURE set_union (u: U;  s: ByteSize) =
-  (* s2.B := s1.B + s0.B ; pop(3) *)
+PROCEDURE set_op3(u: U;  s: ByteSize; builtin: Builtin) =
+  (* s2.B := s1.B op s0.B ; pop(3) *)
   BEGIN
     IF u.debug THEN
-      u.wr.Cmd   ("set_union");
+      u.wr.Cmd   (BuiltinDesc[builtin].name);
       u.wr.Int   (s);
       u.wr.NL    ();
     END;
 
-    start_int_proc (u, Builtin.set_union);
+    start_int_proc (u, builtin);
     load_stack_param (u, Type.Addr, 2);
     load_stack_param (u, Type.Addr, 1);
     load_stack_param (u, Type.Addr, 0);
     u.vstack.discard (3);
     u.vstack.pushimmI (s * 8, Type.Word32);
     pop_param (u, Type.Word32);
-    call_int_proc (u, Builtin.set_union);
+    call_int_proc (u, builtin);
+  END set_op3;
+
+PROCEDURE set_union (u: U;  s: ByteSize) =
+  (* s2.B := s1.B + s0.B ; pop(3) *)
+  BEGIN
+    set_op3(u, s, Builtin.set_union);
   END set_union;
 
 PROCEDURE set_difference (u: U;  s: ByteSize) =
   (* s2.B := s1.B - s0.B ; pop(3) *)
   BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("set_difference");
-      u.wr.Int   (s);
-      u.wr.NL    ();
-    END;
-
-    start_int_proc (u, Builtin.set_difference);
-    load_stack_param (u, Type.Addr, 2);
-    load_stack_param (u, Type.Addr, 1);
-    load_stack_param (u, Type.Addr, 0);
-    u.vstack.discard (3);
-    u.vstack.pushimmI (s * 8, Type.Word32);
-    pop_param (u, Type.Word32);
-    call_int_proc (u, Builtin.set_difference);
+    set_op3(u, s, Builtin.set_difference);
   END set_difference;
 
 PROCEDURE set_intersection (u: U;  s: ByteSize) =
   (* s2.B := s1.B * s0.B ; pop(3) *)
   BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("set_intersection");
-      u.wr.Int   (s);
-      u.wr.NL    ();
-    END;
-
-    start_int_proc (u, Builtin.set_intersection);
-    load_stack_param (u, Type.Addr, 2);
-    load_stack_param (u, Type.Addr, 1);
-    load_stack_param (u, Type.Addr, 0);
-    u.vstack.discard (3);
-    u.vstack.pushimmI (s * 8, Type.Word32);
-    pop_param (u, Type.Word32);
-    call_int_proc (u, Builtin.set_intersection);
+    set_op3(u, s, Builtin.set_intersection);
   END set_intersection;
 
 PROCEDURE set_sym_difference (u: U;  s: ByteSize) =
   (* s2.B := s1.B / s0.B ; pop(3) *)
   BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("set_sym_difference");
-      u.wr.Int   (s);
-      u.wr.NL    ();
-    END;
-
-    start_int_proc (u, Builtin.set_sym_difference);
-    load_stack_param (u, Type.Addr, 2);
-    load_stack_param (u, Type.Addr, 1);
-    load_stack_param (u, Type.Addr, 0);
-    u.vstack.discard (3);
-    u.vstack.pushimmI (s * 8, Type.Word32);
-    pop_param (u, Type.Word32);
-    call_int_proc (u, Builtin.set_sym_difference);
+    set_op3(u, s, Builtin.set_sym_difference);
   END set_sym_difference;
 
 PROCEDURE set_member (u: U;  s: ByteSize;  t: IType) =
@@ -2146,7 +2127,7 @@ PROCEDURE set_compare (u: U;  s: ByteSize;  op: CompareOp;  t: IType) =
   END set_compare;
 
 PROCEDURE set_range (u: U;  s: ByteSize;  t: IType) =
-  (* s2.A [s1.t .. s0.t] := 1's; pop(3)*)
+  (* s2.A [s1.t .. s0.t] := 1's; pop(3) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("set_range");
@@ -2905,7 +2886,10 @@ TYPE
   Builtin = {
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_lt, set_le, set_gt, set_ge, set_member, set_singleton,
-    memmove, memcpy, memset, memcmp
+    memmove, memcpy, memset, memcmp, add64, sub64, mul64, umul64, div64,
+    udiv64, mod64, umod64, neg64, abs64, min64, umin64, max64, umax64,
+    not64, and64, or64, xor64, shift_left64, shift_right64, shift64,
+    rotate_left64, rotate_right64, rotate64
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
@@ -2938,7 +2922,60 @@ CONST
     BP { "memmove",            3, Type.Addr,  "C" },
     BP { "memcpy",             3, Type.Addr,  "C" },
     BP { "memset",             3, Type.Addr,  "C" },
-    BP { "memcmp",             3, Type.Int32, "C" }
+    BP { "memcmp",             3, Type.Int32, "C" },
+
+
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" },
+    BP { "abort",             3, Type.Int32, "C" }
+
+    (*
+    BP { "m3_add64",         4, Type.Word64, "__stdcall" },
+    BP { "m3_sub64",         4, Type.Word64, "__stdcall" },
+    BP { "m3_mul64",         4, Type.Int64,  "__stdcall" },
+    BP { "m3_umul64",        4, Type.Word64, "__stdcall" },
+    BP { "m3_div64",         4, Type.Int64,  "__stdcall" },
+    BP { "m3_udiv64",        4, Type.Word64, "__stdcall" },
+    BP { "m3_mod64",         4, Type.Int64,  "__stdcall" },
+    BP { "m3_umod64",        4, Type.Word64, "__stdcall" },
+    BP { "m3_neg64",         2, Type.Int64,  "__stdcall" },
+    BP { "m3_abs64",         2, Type.Int64,  "__stdcall" },
+    BP { "m3_min64",         4, Type.Int64,  "__stdcall" },
+    BP { "m3_umin64",        4, Type.Word64, "__stdcall" },
+    BP { "m3_max64",         4, Type.Int64,  "__stdcall" },
+    BP { "m3_umax64",        4, Type.Word64, "__stdcall" },
+    BP { "m3_not64",         2, Type.Word64, "__stdcall" },
+    BP { "m3_and64",         4, Type.Word64, "__stdcall" },
+    BP { "m3_or64",          4, Type.Word64, "__stdcall" },
+    BP { "m3_xor64",         4, Type.Word64, "__stdcall" },
+    BP { "m3_shift_left64",  4, Type.Word64, "__stdcall" },
+    BP { "m3_shift_right64", 4, Type.Word64, "__stdcall" },
+    BP { "m3_shift64",       4, Type.Word64, "__stdcall" },
+    BP { "m3_rotate_left64", 4, Type.Word64, "__stdcall" },
+    BP { "m3_rotate_right64",4, Type.Word64, "__stdcall" },
+    BP { "m3_rotate64",      4, Type.Word64, "__stdcall" }
+    *)
   };
 
 
@@ -3408,11 +3445,11 @@ PROCEDURE start_call_indirect (u: U;  t: Type;  cc: CallingConvention) =
 PROCEDURE pop_param (u: U;  t: MType) =
   (* pop s0 and make it the "next" parameter in the current call *)
   BEGIN
-    IF u.debug THEN
+    (*IF u.debug THEN
       u.wr.Cmd   ("pop_param");
       u.wr.TName (t);
       u.wr.NL    ();
-    END;
+    END;*)
 
     load_stack_param(u, t, 0);
     u.vstack.discard(1);
@@ -3421,6 +3458,8 @@ PROCEDURE pop_param (u: U;  t: MType) =
 
 PROCEDURE load_stack_param (u: U; t: MType; depth: INTEGER) =
   (* make value at vstack[depth] the next parameter in the current call *)
+  VAR opA: ARRAY [0..1] OF Operand;
+      size: [1..2];
   BEGIN
 
     IF u.debug THEN
@@ -3445,7 +3484,10 @@ PROCEDURE load_stack_param (u: U; t: MType; depth: INTEGER) =
         u.cg.f_storeind(u.cg.reg[Codex86.ESP], 0, t);
       ELSE
         u.vstack.find(stack, Force.anyregimm);
-        u.cg.pushOp(u.vstack.op(stack));
+        size := SplitOperand(u.vstack.op(stack), opA);
+        FOR i := size - 1 TO 0 BY -1 DO
+          u.cg.pushOp(opA[i]);
+        END;
       END;
     END;
 
@@ -3558,31 +3600,60 @@ PROCEDURE IsInt (t: Type): BOOLEAN =
     RETURN t = Type.Int32 OR t = Type.Int64;
   END IsInt;
 
-PROCEDURE SplitOperand(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2] =
-  VAR type := a.optype;
+PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY [0..1] OF MVar): [1..2] =
+  VAR type := mvar.mvar_type;
   BEGIN
-    b[0] := a;
+    mvarA[0] := mvar;
     IF NOT Is64(type) THEN
       RETURN 1;
     END;
-    b[1] := a;
-    b[0].reg[0] := a.reg[0];
-    b[1].reg[0] := a.reg[1];
-    TWord.And(a.imm, TInt.MaxU32, b[0].imm);
-    TWord.RightShift(a.imm, 32, b[1].imm);
-    IF a.loc = OLoc.mem THEN
-      <* ASSERT a.mvar.var.var_size = CG_Bytes[type] *>
-      <* ASSERT CG_Bytes[type] = 8 *>
-      <* ASSERT type = Type.Int64 OR type = Type.Word64 *>
-      INC(b[1].mvar.var.offset, 4);
-      b[0].mvar.mvar_type := Type.Word32;        (* low part of 64bit integer is always unsigned *)
-      IF type = Type.Int64 THEN
-        type := Type.Int32;
-      ELSE
-        type := Type.Word32;
-      END;
-      b[1].mvar.mvar_type := type;
-      b[1].mvar.var.var_type := type;
+    mvarA[1] := mvar;
+    IF mvar.var # NIL THEN
+      (* <* ASSERT mvar.var.var_size = CG_Bytes[type] *> *)
+    END;
+    INC(mvarA[1].mvar_offset, 4);
+    mvarA[0].mvar_type := Type.Word32;        (* low part of 64bit integer is always unsigned *)
+    IF type = Type.Int64 THEN
+      mvarA[1].mvar_type := Type.Int32;
+    ELSE
+      mvarA[1].mvar_type := Type.Word32;
+    END;
+    RETURN 2;
+  END SplitMVar;
+
+PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY [0..1] OF Target.Int): [1..2] =
+  BEGIN
+    TWord.And(imm, TInt.MaxU32, immA[0]);
+    TWord.RightShift(imm, 32, immA[1]);
+    RETURN 1 + ORD(Is64(type));
+  END SplitImm;
+
+PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY [0..1] OF Operand): [1..2] =
+  VAR type := op.optype;
+      mvarA: ARRAY [0..1] OF MVar;
+      immA: ARRAY [0..1] OF Target.Int;
+  BEGIN
+    opA[0] := op;
+
+    IF NOT Is64(type) THEN
+      RETURN 1;
+    END;
+
+    opA[1] := op;
+
+    CASE op.loc OF
+    | OLoc.fstack => <* ASSERT FALSE *>
+    | OLoc.imm =>
+        EVAL SplitImm(type, op.imm, immA);
+        opA[0].imm := immA[0];
+        opA[1].imm := immA[1];
+    | OLoc.register =>
+        opA[0].reg[0] := op.reg[0];
+        opA[1].reg[0] := op.reg[1];
+    | OLoc.mem =>
+        EVAL SplitMVar(op.mvar, mvarA);
+        opA[0].mvar := mvarA[0];
+        opA[1].mvar := mvarA[1];
     END;
     RETURN 2;
   END SplitOperand;
@@ -3638,8 +3709,12 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
         u.vstack.pushnew(t, Force.any);
         u.cg.f_pushnew();
       ELSE
-        u.vstack.pushnew(FixReturnValue(u, t), Force.regset,
-                         RegSet { Codex86.EAX });
+        IF Is64(t) THEN
+          u.vstack.pushnew(t, Force.regset, RegSet { Codex86.EAX, Codex86.EDX });
+        ELSE
+          u.vstack.pushnew(FixReturnValue(u, t), Force.regset,
+                           RegSet { Codex86.EAX });
+        END;
       END
     END;
 
