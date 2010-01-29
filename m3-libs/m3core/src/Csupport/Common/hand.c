@@ -733,6 +733,33 @@ void __cdecl set_range
     }
 }
 
+#define HIGH_BITS(a) ((~(ulong)0) << (a))
+#define LOW_BITS(a)  ((~(ulong)0) >> (SET_GRAIN - (a) - 1))
+
+static void __cdecl set_range_new
+    ANSI((       ulong b, ulong a, ulong* s))
+    KR((b, a, s) ulong b; ulong a; ulong* s;)
+{
+  if (b < a) {
+      /* no bits to set */
+  } else {
+      ulong a_word = a / SET_GRAIN;
+      ulong a_bit  = a % SET_GRAIN;
+      ulong b_word = b / SET_GRAIN;
+      ulong b_bit  = b % SET_GRAIN;
+      ulong i;
+
+      if (a_word == b_word) {
+          s [a_word] |= (HIGH_BITS(a_bit) & LOW_BITS(b_bit));
+      } else {
+          s [a_word] |= HIGH_BITS(a_bit);
+          for (i = a_word + 1; i < b_word; ++i)
+            s[i] = ~0UL;
+          s [b_word] |= LOW_BITS(b_bit);
+      }
+    }
+}
+
 void __cdecl set_singleton
     ANSI((      ulong a, ulong* s))
       KR((a, s) ulong a; ulong* s;)
@@ -1078,12 +1105,25 @@ static void TestMod(void)
         TestModx(rand(), rand());
 }
 
+static void TestHighLowBits(void)
+{
+    unsigned i;
+    for (i = 0; i < SET_GRAIN; ++i)
+        assert(HIGH_BITS(i) == HiBits[i]);
+
+    for (i = 0; i < SET_GRAIN; ++i)
+        assert(LOW_BITS(i) == LoBits[i + LOW_BITS_ADJUST]);
+}
+
 int main()
 {
     /*BuildTables();*/
-    TestDiv();
-    TestMod();
-    printf("errors_div:%d errors_mod:%d\n", errors_div, errors_mod);
+    /*TestDiv();*/
+    /*TestMod();*/
+    /*printf("errors_div:%d errors_mod:%d\n", errors_div, errors_mod);*/
+
+    TestHighLowBits();
+
     return 0;
 }
 
