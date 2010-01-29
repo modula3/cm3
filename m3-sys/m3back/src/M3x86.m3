@@ -2005,7 +2005,7 @@ PROCEDURE cvt_float (u: U;  t: AType;  x: RType) =
 (*------------------------------------------------------------------ sets ---*)
 
 PROCEDURE set_union (u: U;  s: ByteSize) =
-  (* s1.B := s1.B + s0.B ; pop *)
+  (* s2.B := s1.B + s0.B ; pop(3) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("set_union");
@@ -2016,15 +2016,15 @@ PROCEDURE set_union (u: U;  s: ByteSize) =
     start_int_proc (u, Builtin.set_union);
     load_stack_param (u, Type.Addr, 2);
     load_stack_param (u, Type.Addr, 1);
-    pop_param (u, Type.Addr);
-    u.vstack.discard (2);
+    load_stack_param (u, Type.Addr, 0);
+    u.vstack.discard (3);
     u.vstack.pushimmI (s * 8, Type.Word32);
-    pop_param (u, Type.Int32);
+    pop_param (u, Type.Word32);
     call_int_proc (u, Builtin.set_union);
   END set_union;
 
 PROCEDURE set_difference (u: U;  s: ByteSize) =
-  (* s1.B := s1.B - s0.B ; pop *)
+  (* s2.B := s1.B - s0.B ; pop(3) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("set_difference");
@@ -2035,15 +2035,15 @@ PROCEDURE set_difference (u: U;  s: ByteSize) =
     start_int_proc (u, Builtin.set_difference);
     load_stack_param (u, Type.Addr, 2);
     load_stack_param (u, Type.Addr, 1);
-    pop_param (u, Type.Addr);
-    u.vstack.discard (2);
+    load_stack_param (u, Type.Addr, 0);
+    u.vstack.discard (3);
     u.vstack.pushimmI (s * 8, Type.Word32);
-    pop_param (u, Type.Int32);
+    pop_param (u, Type.Word32);
     call_int_proc (u, Builtin.set_difference);
   END set_difference;
 
 PROCEDURE set_intersection (u: U;  s: ByteSize) =
-  (* s1.B := s1.B * s0.B ; pop *)
+  (* s2.B := s1.B * s0.B ; pop(3) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("set_intersection");
@@ -2054,15 +2054,15 @@ PROCEDURE set_intersection (u: U;  s: ByteSize) =
     start_int_proc (u, Builtin.set_intersection);
     load_stack_param (u, Type.Addr, 2);
     load_stack_param (u, Type.Addr, 1);
-    pop_param (u, Type.Addr);
-    u.vstack.discard (2);
+    load_stack_param (u, Type.Addr, 0);
+    u.vstack.discard (3);
     u.vstack.pushimmI (s * 8, Type.Word32);
-    pop_param (u, Type.Int32);
+    pop_param (u, Type.Word32);
     call_int_proc (u, Builtin.set_intersection);
   END set_intersection;
 
 PROCEDURE set_sym_difference (u: U;  s: ByteSize) =
-  (* s1.B := s1.B / s0.B ; pop *)
+  (* s2.B := s1.B / s0.B ; pop(3) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("set_sym_difference");
@@ -2073,10 +2073,10 @@ PROCEDURE set_sym_difference (u: U;  s: ByteSize) =
     start_int_proc (u, Builtin.set_sym_difference);
     load_stack_param (u, Type.Addr, 2);
     load_stack_param (u, Type.Addr, 1);
-    pop_param (u, Type.Addr);
-    u.vstack.discard (2);
+    load_stack_param (u, Type.Addr, 0);
+    u.vstack.discard (3);
     u.vstack.pushimmI (s * 8, Type.Word32);
-    pop_param (u, Type.Int32);
+    pop_param (u, Type.Word32);
     call_int_proc (u, Builtin.set_sym_difference);
   END set_sym_difference;
 
@@ -3305,7 +3305,7 @@ PROCEDURE makereportproc (u: U) =
       u.cg.rmCall(u.vstack.op(u.vstack.pos(0, "makereportproc")));
     ELSIF (repproc # NIL) THEN
       start_call_direct(u, repproc, 0, Type.Void);
-      INC(u.call_param_size[u.in_proc_call-1], 4); (* remember error code *)
+      INC(u.call_param_size[u.in_proc_call - 1], 4); (* remember error code *)
       load_address(u, u.global_var, 0);
       pop_param(u, Type.Addr);
       call_direct(u, repproc, Type.Void);
@@ -3404,7 +3404,7 @@ PROCEDURE start_call_direct (u: U;  p: Proc;  lev: INTEGER;  t: Type) =
     IF u.debug THEN
       u.wr.Cmd   ("start_call_direct");
       u.wr.PName (p);
-      u.wr.Int   (lev);  
+      u.wr.Int   (lev);
       u.wr.TName (t);
       u.wr.NL    ();
     END;
@@ -3442,54 +3442,55 @@ PROCEDURE pop_param (u: U;  t: MType) =
       u.wr.NL    ();
     END;
 
-    <* ASSERT u.in_proc_call > 0 *>
-
-    u.vstack.unlock();
-    WITH stack0 = u.vstack.pos(0, "pop_param") DO
-      IF Target.FloatType [t] THEN
-        IF t = Type.Reel THEN
-          u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], TInt.Four);
-        ELSE
-          u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], TInt.Eight);
-        END;
-
-        u.cg.f_storeind(u.cg.reg[Codex86.ESP], 0, t);
-      ELSE
-
-        u.vstack.find(stack0, Force.anyregimm);
-        u.cg.pushOp(u.vstack.op(stack0));
-      END
-    END;
-
+    load_stack_param(u, t, 0);
     u.vstack.discard(1);
 
-    IF CG_Bytes[t] <= 4 THEN
-      INC(u.call_param_size[u.in_proc_call-1], 4);
-    ELSE
-      <* ASSERT CG_Bytes[t] = 8 *>
-      INC(u.call_param_size[u.in_proc_call-1], 8);
-    END
   END pop_param;
 
-PROCEDURE load_stack_param (u: U; t: ZType; depth: INTEGER) =
+PROCEDURE load_stack_param (u: U; t: MType; depth: INTEGER) =
+  (* make value at vstack[depth] the next parameter in the current call *)
   BEGIN
+
+    IF u.debug THEN
+      u.wr.Cmd   ("load_stack_param");
+      u.wr.TName (t);
+      u.wr.Int   (depth);
+      u.wr.NL    ();
+    END;
+
     u.vstack.unlock();
 
     <* ASSERT u.in_proc_call > 0 *>
 
     WITH stack = u.vstack.pos(depth, "load_stack_param") DO
-      <* ASSERT NOT Target.FloatType [t] *>
-
-      u.vstack.find(stack, Force.anyregimm);
-      u.cg.pushOp(u.vstack.op(stack));
+      IF Target.FloatType [t] THEN
+        <* ASSERT depth = 0 *>
+        IF t = Type.Reel THEN
+          u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], TInt.Four);
+        ELSE
+          u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], TInt.Eight);
+        END;
+        u.cg.f_storeind(u.cg.reg[Codex86.ESP], 0, t);
+      ELSE
+        u.vstack.find(stack, Force.anyregimm);
+        u.cg.pushOp(u.vstack.op(stack));
+      END;
     END;
 
-    <* ASSERT CG_Bytes[t] = 4 *>
-    INC(u.call_param_size[u.in_proc_call-1], 4);
+    <* ASSERT CG_Bytes[t] <= 4 OR CG_Bytes[t] = 8 *>
+    IF CG_Bytes[t] <= 4 THEN
+      INC(u.call_param_size[u.in_proc_call - 1], 4);
+    ELSE
+      INC(u.call_param_size[u.in_proc_call - 1], 8);
+    END
+
   END load_stack_param;
 
 PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
-  (* pop s0 and make it the "next" parameter in the current call *)
+  (* pop s0 and make it the "next" parameter in the current call
+   * NOTE that we implement call by value, the struct is
+   * copied to temporary space on the machine stack
+   *)
   VAR ts: Target.Int;
   BEGIN
     IF u.debug THEN
@@ -3500,6 +3501,8 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
     END;
 
     <* ASSERT u.in_proc_call > 0 *>
+
+    (* round struct size up to multiple of 4 or 8 *)
 
     <* ASSERT a <= 4 OR a = 8 *>
     IF a <= 4 THEN
@@ -3515,6 +3518,8 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
       IF NOT TInt.FromInt(s, Target.Integer.bytes, ts) THEN
         u.Err("pop_struct: unable to convert s to target int");
       END;
+
+      (* if the struct is "large", use rep mov to copy it to the machine stack *)
 
       IF TInt.GT(ts, TInt.ThirtyTwo) THEN
         u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], ts);
@@ -3532,11 +3537,14 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
 
         u.vstack.newdest(u.cg.reg[Codex86.ESI]);
       ELSE
+
+        (* if the struct is "small", use a few load/push to copy it to the machine stack *)
+
         u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
 
         WITH temp = u.vstack.freereg() DO
           FOR i := 1 TO (s DIV 4) DO
-            u.cg.load_ind(temp, u.vstack.op(stack0), s - (i * 4), Type.Int32);
+            u.cg.load_ind(temp, u.vstack.op(stack0), s - (i * 4), Type.Word32);
             u.cg.pushOp(u.cg.reg[temp]);
           END
         END
@@ -3545,7 +3553,7 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
 
     u.vstack.discard(1);
 
-    INC(u.call_param_size[u.in_proc_call-1], s);
+    INC(u.call_param_size[u.in_proc_call - 1], s);
   END pop_struct;
 
 PROCEDURE pop_static_link (u: U) =
@@ -3557,9 +3565,9 @@ PROCEDURE pop_static_link (u: U) =
 
     <* ASSERT u.in_proc_call > 0 *>
 
-    u.static_link[u.in_proc_call-1] := declare_temp(u, 4, 4, Type.Addr, FALSE);
+    u.static_link[u.in_proc_call - 1] := declare_temp(u, 4, 4, Type.Addr, FALSE);
 
-    u.vstack.pop(MVar {var := u.static_link[u.in_proc_call-1],
+    u.vstack.pop(MVar {var := u.static_link[u.in_proc_call - 1],
                        mvar_offset := 0, mvar_type := Type.Addr} );
   END pop_static_link;
 
@@ -3641,9 +3649,9 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
     END;
 
     IF (NOT realproc.stdcall) (* => caller cleans *)
-       AND u.call_param_size[u.in_proc_call-1] > 0 THEN
+       AND u.call_param_size[u.in_proc_call - 1] > 0 THEN
 
-        IF NOT TInt.FromInt(u.call_param_size[u.in_proc_call-1], Target.Integer.bytes, call_param_size) THEN
+        IF NOT TInt.FromInt(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
           u.Err("call_direct: unable to convert param_size to target integer");
         END;
         u.cg.immOp(Op.oADD, u.cg.reg[Codex86.ESP], call_param_size);
@@ -3682,26 +3690,26 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
 
     u.vstack.releaseall();
 
-    IF u.static_link[u.in_proc_call-1] # NIL THEN
+    IF u.static_link[u.in_proc_call - 1] # NIL THEN
       u.cg.movOp(u.cg.reg[Codex86.ECX],
                  Operand { loc := OLoc.mem, optype := Type.Addr,
                            mvar :=
-                             MVar { var := u.static_link[u.in_proc_call-1],
+                             MVar { var := u.static_link[u.in_proc_call - 1],
                                     mvar_offset := 0,
                                     mvar_type := Type.Addr } } );
-      free_temp(u, u.static_link[u.in_proc_call-1]);
-      u.static_link[u.in_proc_call-1] := NIL;
+      free_temp(u, u.static_link[u.in_proc_call - 1]);
+      u.static_link[u.in_proc_call - 1] := NIL;
     END;
 
     u.cg.rmCall(u.vstack.op(u.vstack.pos(0, "call_indirect")));
     u.vstack.discard(1);
 
     IF (cc.m3cg_id = 0)
-      AND u.call_param_size[u.in_proc_call-1] > 0 THEN
+      AND u.call_param_size[u.in_proc_call - 1] > 0 THEN
 
       (* caller-cleans calling convention *)
 
-      IF NOT TInt.FromInt(u.call_param_size[u.in_proc_call-1], Target.Integer.bytes, call_param_size) THEN
+      IF NOT TInt.FromInt(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
         u.Err("call_indirect: unable to convert param_size to target integer");
       END;
 
