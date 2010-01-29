@@ -23,6 +23,9 @@ PROCEDURE Add (x: TEXT;  class: [0..255] := 0): T;
 PROCEDURE FromStr (READONLY buf: ARRAY OF CHAR;  length: INTEGER := 99999): T;
 (* Returns the ID representing buf[0 .. MIN(HIGH(buf), length-1)]. *)
 
+PROCEDURE Length (t: T): CARDINAL;
+(* Returns the length of the string that "t" represents. *)
+
 PROCEDURE ToText (t: T): TEXT;
 (* Returns a text equal to the one "t" represents. *)
 
