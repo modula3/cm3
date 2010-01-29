@@ -132,6 +132,10 @@ PROCEDURE ToText (t: T): TEXT =
 
 PROCEDURE Length (t: T): CARDINAL =
   BEGIN
+    <*ASSERT t < next_t*>
+    IF t = NoID THEN
+      RETURN 0;
+    END;
     RETURN Text.Length (ToText (t));
   END Length;
 
