@@ -303,12 +303,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  *)
                  END;
 
-                 (* m3back doesn't handle 64 bit integers *)
-                 IF BackendIntegrated[backend_mode] THEN
-                   Longint := Int32;
-                   Long    := Word32;
-                 END;
-
                  (* 0 as third argument is __cdecl, while 1 is __stdcall *)
 
                  CCs := NEW (REF ARRAY OF CallingConvention, 9);
