@@ -1115,6 +1115,74 @@ static void TestHighLowBits(void)
         assert(LOW_BITS(i) == LoBits[i + LOW_BITS_ADJUST]);
 }
 
+static unsigned char reverse(unsigned char a)
+{
+    return ((a & 0x80) ? 0x01 : 0)
+         | ((a & 0x40) ? 0x02 : 0)
+         | ((a & 0x20) ? 0x04 : 0)
+         | ((a & 0x10) ? 0x08 : 0)
+         | ((a & 0x08) ? 0x10 : 0)
+         | ((a & 0x04) ? 0x20 : 0)
+         | ((a & 0x02) ? 0x40 : 0)
+         | ((a & 0x01) ? 0x80 : 0);
+}
+
+static void PrintSet(void* a, ulong b)
+{
+    ulong c;
+    for (c = 0; c < b; ++c)
+        printf("%02x ", reverse(((unsigned char*)a)[c]));
+}
+
+static void TestSetRangex(unsigned a, unsigned b)
+{
+    ulong bits[4];
+    ulong bits_new[4];
+
+    memset(bits, 0, sizeof(bits));
+    memset(bits_new, 0, sizeof(bits_new));
+    set_range(a, b, bits);
+    set_range_new(a, b, bits_new);
+    assert(memcmp(bits, bits_new, sizeof(bits)) == 0);
+    /*
+    printf("set_range(%u, %u):", a, b);
+    PrintSet(bits, sizeof(bits));
+    printf("\n");
+    */
+}
+
+static void TestSetRange(void)
+{
+    ulong bits[100];
+    unsigned a, b;
+    double t1, t2, t3, t4, t5;
+
+    for (a = 0; a < 4 * SET_GRAIN; ++a)
+        for (b = 0; b < 4 * SET_GRAIN; ++b)
+            TestSetRangex(a, b);
+
+    t1 = __rdtsc(); /* read time stamp counter */
+
+    for (a = 0; a < 100 * SET_GRAIN; ++a)
+        for (b = 0; b < 100 * SET_GRAIN; ++b)
+            set_range(a, b, bits);
+
+    t2 = __rdtsc();
+
+    for (a = 0; a < 100 * SET_GRAIN; ++a)
+        for (b = 0; b < 100 * SET_GRAIN; ++b)
+            set_range_new(a, b, bits);
+
+    t3 = __rdtsc();
+
+    t4 = (t2 - t1);
+    t5 = (t3 - t2);
+
+    printf("old:%f\n", t4);
+    printf("new:%f\n", t5);
+    printf("diff:%f\n", (t5 - t4) / t4);
+}
+
 int main()
 {
     /*BuildTables();*/
@@ -1122,7 +1190,9 @@ int main()
     /*TestMod();*/
     /*printf("errors_div:%d errors_mod:%d\n", errors_div, errors_mod);*/
 
-    TestHighLowBits();
+    /*TestHighLowBits();*/
+
+    TestSetRange();
 
     return 0;
 }
