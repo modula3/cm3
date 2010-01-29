@@ -614,9 +614,7 @@ PROCEDURE pos (t: T; depth: INTEGER; place: TEXT): INTEGER =
 
 PROCEDURE pushimmT (t: T; imm: Target.Int; type: Type) =
   BEGIN
-    IF t.stacktop = t.vstacklimit THEN
-      expand_stack(t);
-    END;
+    maybe_expand_stack(t);
 
     WITH stack0 = t.vstack[t.stacktop] DO
       stack0.loc := OLoc.imm;
@@ -641,9 +639,7 @@ PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
   VAR hintaddr := type = Type.Addr;
   VAR reg := pickreg(t, set, hintaddr);
   BEGIN
-    IF t.stacktop = t.vstacklimit THEN
-      expand_stack(t);
-    END;
+    maybe_expand_stack(t);
     WITH stack0 = t.vstack[t.stacktop] DO
       stack0.optype := type;
       stack0.stackp := t.stacktop;
@@ -670,9 +666,7 @@ PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
 PROCEDURE push (t: T; READONLY mvar: MVar) =
   VAR indreg, destreg: Regno;
   BEGIN
-    IF t.stacktop = t.vstacklimit THEN
-      expand_stack(t);
-    END;
+    maybe_expand_stack(t);
 
     WITH stack0 = t.vstack[t.stacktop] DO
       stack0.stackp := t.stacktop;
@@ -2045,16 +2039,19 @@ PROCEDURE newdest (t: T; READONLY op: Operand) =
     END
   END newdest;
 
-PROCEDURE expand_stack (t: T) =
-  VAR newarr := NEW(REF ARRAY OF Operand, t.vstacklimit * 2);
+PROCEDURE maybe_expand_stack (t: T) =
   BEGIN
-    FOR i := 0 TO (t.vstacklimit - 1) DO
-      newarr[i] := t.vstack[i];
-    END;
+    IF t.stacktop = t.vstacklimit THEN
+      WITH newarr = NEW(REF ARRAY OF Operand, t.vstacklimit * 2) DO
+        FOR i := 0 TO (t.vstacklimit - 1) DO
+          newarr[i] := t.vstack[i];
+        END;
 
-    t.vstacklimit := t.vstacklimit * 2;
-    t.vstack := newarr;
-  END expand_stack;
+        t.vstacklimit := t.vstacklimit * 2;
+        t.vstack := newarr;
+      END;
+    END;
+  END maybe_expand_stack;
 
 PROCEDURE discard (t: T; depth: INTEGER) =
   BEGIN
