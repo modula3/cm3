@@ -1268,7 +1268,7 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
 
     u.n_params := n_params;
 
-    IF n_params = 0 OR NOT p.stdcall THEN
+    IF (n_params = 0 OR NOT p.stdcall) AND M3ID.Length(n) > 0 THEN
       p.name := mangle_procname(p.name, 0, p.stdcall);
       p.symbol := u.obj.import_symbol(p.name);
     END;
@@ -2925,30 +2925,30 @@ CONST
     BP { "memcmp",             3, Type.Int32, "C" },
 
 
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" },
-    BP { "abort",             3, Type.Int32, "C" }
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" },
+    BP { "",             3, Type.Int32, "C" }
 
     (*
     BP { "m3_add64",         4, Type.Word64, "__stdcall" },
