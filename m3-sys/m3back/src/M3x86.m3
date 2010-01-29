@@ -2905,10 +2905,7 @@ TYPE
   Builtin = {
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_lt, set_le, set_gt, set_ge, set_member, set_singleton,
-    memmove, memcpy, memset, memcmp, add64, sub64, mul64, umul64, div64,
-    udiv64, mod64, umod64, neg64, abs64, min64, umin64, max64, umax64,
-    not64, and64, or64, xor64, shift_left64, shift_right64, shift64,
-    rotate_left64, rotate_right64, rotate64, swap64, pop64
+    memmove, memcpy, memset, memcmp
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
@@ -2941,45 +2938,7 @@ CONST
     BP { "memmove",            3, Type.Addr,  "C" },
     BP { "memcpy",             3, Type.Addr,  "C" },
     BP { "memset",             3, Type.Addr,  "C" },
-    BP { "memcmp",             3, Type.Int32, "C" },
-
-    (* There are tricks going on here with calling convention here.
-     * We abuse function signature and calling convention such
-     * as to have the C code manage the stack.
-     * Some of the function are __stdcall, some are __cdecl,
-     * but it isn't particularly relevant.
-     * unary operations are just _m3_foo64,
-     * binary operations are _m3_foo64@8, for tricky reasons.
-     * Really @8 is for x = x op y; the C compiler
-     * will strip one int64 from the stack.
-     * For example, swap is binary but not @8.
-     *)
-    BP { "_m3_add64@8",         0, Type.Void, "C" },
-    BP { "_m3_sub64@8",         0, Type.Void, "C" },
-    BP { "_m3_mul64@8",         0, Type.Void, "C" },
-    BP { "_m3_umul64@8",        0, Type.Void, "C" },
-    BP { "_m3_div64@8",         0, Type.Void, "C" },
-    BP { "_m3_udiv64@8",        0, Type.Void, "C" },
-    BP { "_m3_mod64@8",         0, Type.Void, "C" },
-    BP { "_m3_umod64@8",        0, Type.Void, "C" },
-    BP { "_m3_neg64",           0, Type.Void, "C" },
-    BP { "_m3_abs64",           0, Type.Void, "C" },
-    BP { "_m3_min64@8",         0, Type.Void, "C" },
-    BP { "_m3_umin64@8",        0, Type.Void, "C" },
-    BP { "_m3_max64@8",         0, Type.Void, "C" },
-    BP { "_m3_umax64@8",        0, Type.Void, "C" },
-    BP { "_m3_not64",           0, Type.Void, "C" },
-    BP { "_m3_and64@8",         0, Type.Void, "C" },
-    BP { "_m3_or64@8",          0, Type.Void, "C" },
-    BP { "_m3_xor64@8",         0, Type.Void, "C" },
-    BP { "_m3_shift_left64@8",  0, Type.Void, "C" },
-    BP { "_m3_shift_right64@8", 0, Type.Void, "C" },
-    BP { "_m3_shift64@8",        0, Type.Void, "C" },
-    BP { "_m3_rotate_left64@8", 0, Type.Void, "C" },
-    BP { "_m3_rotate_right64@8",0, Type.Void, "C" },
-    BP { "_m3_rotate64@8",      0, Type.Void, "C" },
-    BP { "_m3_swap64",          0, Type.Void, "C" },
-    BP { "_m3_pop64@8",         0, Type.Void, "C" }
+    BP { "memcmp",             3, Type.Int32, "C" }
   };
 
 
