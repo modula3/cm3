@@ -711,17 +711,17 @@ static const ulong HiBits[] = {
 #endif
 
 void __cdecl set_range
-    ANSI((       long b, long a, ulong* s))
-    KR((b, a, s) long b; long a; ulong* s;)
+    ANSI((       ulong b, ulong a, ulong* s))
+    KR((b, a, s) ulong b; ulong a; ulong* s;)
 {
   if (b < a) {
       /* no bits to set */
   } else {
-      long a_word = a / SET_GRAIN;
-      long a_bit  = a % SET_GRAIN;
-      long b_word = b / SET_GRAIN;
-      long b_bit  = b % SET_GRAIN;
-      long i;
+      ulong a_word = a / SET_GRAIN;
+      ulong a_bit  = a % SET_GRAIN;
+      ulong b_word = b / SET_GRAIN;
+      ulong b_bit  = b % SET_GRAIN;
+      ulong i;
 
       if (a_word == b_word) {
           s [a_word] |= (HiBits [a_bit] & LoBits [b_bit + LOW_BITS_ADJUST]);
@@ -734,11 +734,11 @@ void __cdecl set_range
 }
 
 void __cdecl set_singleton
-    ANSI((      long a, ulong* s))
-      KR((a, s) long a; ulong* s;)
+    ANSI((      ulong a, ulong* s))
+      KR((a, s) ulong a; ulong* s;)
 {
-  long a_word = a / SET_GRAIN;
-  long a_bit  = a % SET_GRAIN;
+  ulong a_word = a / SET_GRAIN;
+  ulong a_bit  = a % SET_GRAIN;
   s[a_word] |= (1UL << a_bit);
 }
 
