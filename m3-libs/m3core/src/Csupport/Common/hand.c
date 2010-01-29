@@ -462,96 +462,96 @@ void __cdecl    m3_not64(volatile int64 a)  { a = ~a; }
 
 #define SET_GRAIN (sizeof (long) * 8)
 
-long __cdecl set_member
-    ANSI((          long elt, ulong* set))
-      KR((elt, set) long elt; ulong* set;)
+ulong __cdecl set_member
+    ANSI((          ulong elt, ulong* set))
+      KR((elt, set) ulong elt; ulong* set;)
 {
-  register long word = elt / SET_GRAIN;
-  register long bit  = elt % SET_GRAIN;
+  register ulong word = elt / SET_GRAIN;
+  register ulong bit  = elt % SET_GRAIN;
   return (set[word] & (1UL << bit)) != 0;
 }
 
 void __cdecl set_union
-    ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
-      KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
+    ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
+      KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
 {
-  register long n_words = n_bits / SET_GRAIN;
-  register long i;
+  register ulong n_words = n_bits / SET_GRAIN;
+  register ulong i;
   for (i = 0; i < n_words; i++) {
     a[i] = b[i] | c[i];
   }
 }
 
 void __cdecl set_intersection
-    ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
-      KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
+    ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
+      KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
 {
-  register long n_words = n_bits / SET_GRAIN;
-  register long i;
+  register ulong n_words = n_bits / SET_GRAIN;
+  register ulong i;
   for (i = 0; i < n_words; i++) {
     a[i] = b[i] & c[i];
   }
 }
 
 void __cdecl set_difference
-    ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
-      KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
+    ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
+      KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
 {
-  register long n_words = n_bits / SET_GRAIN;
-  register long i;
+  register ulong n_words = n_bits / SET_GRAIN;
+  register ulong i;
   for (i = 0; i < n_words; i++) {
     a[i] = b[i] & (~ c[i]);
   }
 }
 
 void __cdecl set_sym_difference
-    ANSI((                 long n_bits, ulong* c, ulong* b, ulong* a))
-      KR((n_bits, c, b, a) long n_bits; ulong* c; ulong* b; ulong* a;)
+    ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
+      KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
 {
-  register long n_words = n_bits / SET_GRAIN;
-  register long i;
+  register ulong n_words = n_bits / SET_GRAIN;
+  register ulong i;
   for (i = 0; i < n_words; i++) {
     a[i] = b[i] ^ c[i];
   }
 }
 
-long __cdecl set_eq
-    ANSI((              long n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
+ulong __cdecl set_eq
+    ANSI((              ulong n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 /* The integrated back end calls memcmp directly; the gcc
    backend does not. */
 {
   return (memcmp(a, b, n_bits / 8) == 0);
 }
 
-long __cdecl set_ne
-    ANSI((              long n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
+ulong __cdecl set_ne
+    ANSI((              ulong n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 /* The integrated back end calls memcmp directly; the gcc
    backend does not. */
 {
   return (memcmp(a, b, n_bits / 8) != 0);
 }
 
-long __cdecl set_ge
-    ANSI((              long n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
+ulong __cdecl set_ge
+    ANSI((              ulong n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 {
-  register long n_words = n_bits / SET_GRAIN;
-  register long i;
+  register ulong n_words = n_bits / SET_GRAIN;
+  register ulong i;
   for (i = 0; i < n_words; i++) {
     if ((~ a[i]) & b[i]) return 0;
   }
   return 1;
 }
 
-long __cdecl set_gt
-    ANSI((              long n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
+ulong __cdecl set_gt
+    ANSI((              ulong n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 {
-  register long n_words = n_bits / SET_GRAIN;
-  register long i;
-  register long eq = 0;
+  register ulong n_words = n_bits / SET_GRAIN;
+  register ulong i;
+  register ulong eq = 0;
   for (i = 0; i < n_words; i++) {
     if ((~ a[i]) & b[i]) return 0;
     eq |=  (a[i] ^ b[i]);
@@ -559,25 +559,25 @@ long __cdecl set_gt
   return (eq != 0);
 }
 
-long __cdecl set_le
-    ANSI((              long n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
+ulong __cdecl set_le
+    ANSI((              ulong n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 {
-  register long n_words = n_bits / SET_GRAIN;
-  register long i;
+  register ulong n_words = n_bits / SET_GRAIN;
+  register ulong i;
   for (i = 0; i < n_words; i++) {
     if (a[i] & (~ b[i])) return 0;
   }
   return 1;
 }
 
-long __cdecl set_lt
-    ANSI((              long n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) long n_bits; ulong* b; ulong* a;)
+ulong __cdecl set_lt
+    ANSI((              ulong n_bits, ulong* b, ulong* a))
+      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 {
-  register long n_words = n_bits / SET_GRAIN;
-  register long i;
-  register long eq = 0;
+  register ulong n_words = n_bits / SET_GRAIN;
+  register ulong i;
+  register ulong eq = 0;
   for (i = 0; i < n_words; i++) {
     if (a[i] & (~ b[i])) return 0;
     eq |= (a[i] ^ b[i]);
