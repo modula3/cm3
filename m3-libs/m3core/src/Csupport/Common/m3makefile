@@ -5,5 +5,5 @@
 h_source ("dtoa")
 c_source ("hand")
 if equal(TARGET, "NT386")
-  c_source ("hand2")
+  % c_source ("hand2")
 end
