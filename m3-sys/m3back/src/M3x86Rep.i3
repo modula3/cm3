@@ -109,6 +109,9 @@ CONST RegName = ARRAY Regno OF TEXT { "*NOREG*", "EAX", "ECX", "EDX",
 
 TYPE RegSet = SET OF Regno;
 
-PROCEDURE SplitOperand(READONLY a: Operand; VAR b: ARRAY [0..1] OF Operand): [1..2];
+PROCEDURE Is64 (t: Type): BOOLEAN;
+PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY [0..1] OF MVar): [1..2];
+PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY [0..1] OF Target.Int): [1..2];
+PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY [0..1] OF Operand): [1..2];
 
 END M3x86Rep.
