@@ -154,6 +154,8 @@ PROCEDURE TInt (t: T;  READONLY i: Target.Int) =
   BEGIN
     OutC (t, ' ');
     OutS (t, SUBARRAY (buf, 0, len));
+    OutC (t, ' ');
+    OutT (t, Target.TargetIntToDiagnosticText(i));
   END TInt;
 
 PROCEDURE BInt (t: T;  i: INTEGER) =
