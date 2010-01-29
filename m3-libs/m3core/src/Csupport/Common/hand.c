@@ -426,8 +426,8 @@ void __stdcall           m3_or64(uint64 a)  { (&a)[1] |= a; }
 void __stdcall          m3_xor64(uint64 a)  { (&a)[1] ^= a; }
 void __stdcall   m3_shift_left64(uint64 a)  { (&a)[1] <<= a; }
 void __stdcall  m3_shift_right64(uint64 a)  { (&a)[1] >>= a; }
-unsigned __int64 _rotl64(unsigned __int64 value, int shift);
-unsigned __int64 _rotr64(unsigned __int64 value, int shift);
+uint64 _rotl64(uint64 value, int shift);
+uint64 _rotr64(uint64 value, int shift);
 #pragma intrinsic(_rotl64)
 #pragma intrinsic(_rotr64)
 void __stdcall  m3_rotate_left64(uint64 a)  { (&a)[1] = _rotl64((&a)[1], (int)a); }
