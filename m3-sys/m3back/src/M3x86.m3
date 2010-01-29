@@ -947,6 +947,9 @@ PROCEDURE declare_temp   (u: U;  s: ByteSize;  a: Alignment;  t: Type;
 PROCEDURE get_temp_var (u: U; t: Type; s: ByteSize; a: Alignment;
                         n: Name := M3ID.NoID): x86Var =
   BEGIN
+    
+    (* round size and alignment up to 4 *)
+
     IF s < 4 THEN
       s := 4;
     END;
@@ -955,9 +958,14 @@ PROCEDURE get_temp_var (u: U; t: Type; s: ByteSize; a: Alignment;
       a := 4;
     END;
 
+    (* reuse an existing temporary variable if possible *)
+
     FOR i := 0 TO u.current_proc.tempsize - 1 DO
       WITH temp = u.current_proc.temparr[i] DO
         IF temp.free AND temp.var.var_size = s AND temp.var.var_align >= a THEN
+
+          (* reinitialize existing temporary variable *)
+
           temp.free := FALSE;
           temp.var.var_type := t;
           temp.var.stack_temp := FALSE;
@@ -967,12 +975,17 @@ PROCEDURE get_temp_var (u: U; t: Type; s: ByteSize; a: Alignment;
       END
     END;
 
+    (* grow temporary variable array if necessary *)
+
     IF u.current_proc.tempsize = u.current_proc.templimit THEN
       expand_temp(u);
     END;
 
+    (* initialize new temporary variable *)
+
     WITH temp = u.current_proc.temparr[u.current_proc.tempsize] DO
       temp.var := create_temp_var(u, t, s, a, n);
+      <* ASSERT temp.var.var_type = t *>
       temp.free := FALSE;
       temp.var.scope := u.next_scope - 1;
     END;
