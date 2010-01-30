@@ -97,11 +97,6 @@ PROCEDURE Warn (level: INTEGER;  msg: TEXT) =
     END;
   END Warn;
 
-PROCEDURE Warn2 (msg: TEXT) =
-  BEGIN
-    Warn(2, msg);
-  END Warn2;
-
 PROCEDURE WarnID (level: INTEGER;  id: M3ID.T;  msg: TEXT) =
   BEGIN
     IF Toss (level) THEN RETURN END;
