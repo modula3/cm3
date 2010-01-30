@@ -134,7 +134,6 @@ PROCEDURE Init () =
     cg := cg_check;
 
     cg.set_error_handler (Error.Msg);
-    cg.set_warning_handler (Error.Warn2);
 
     last_offset    := -2;
     last_file      := NIL;
@@ -2698,7 +2697,8 @@ PROCEDURE Exchange (t: MType;  order: MemoryOrder) =
     SPush (StackType[t]);
   END Exchange;
 
-PROCEDURE Compare_exchange (t: MType;  u: IType;  success, failure: MemoryOrder) =
+PROCEDURE Compare_exchange (t: MType;  u: IType;
+                            success, failure: MemoryOrder) =
   BEGIN
     cg.compare_exchange (t, StackType[t], u, success, failure);
     SPop (3, "Compare_exchange");
