@@ -15,6 +15,8 @@ IMPORT BuiltinOps, WordModule, LongModule, M3, Time, Coverage, Marker, TypeFP;
 IMPORT Ident, TextExpr, Procedure, SetExpr, TipeDesc, Pathname;
 IMPORT ESet, CG, TextWr, Target, ProcBody, RunTyme, M3ID, Variable;
 IMPORT Text;
+IMPORT AtomicAddrModule, AtomicBoolModule, AtomicCharrModule, AtomicIntModule;
+IMPORT AtomicLIntModule, AtomicReffModule, AtomicWCharrModule;
 
 VAR mu         : MUTEX    := NEW (MUTEX);
 VAR builtins   : Module.T := NIL;
@@ -89,63 +91,33 @@ PROCEDURE Initialize () =
       LongModule.Initialize ("Long");
     Scanner.Pop ();
 
-(*
-    Scanner.Push ("AtomicAddressRep.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicAddressRep.Initialize ("AtomicAddressRep");
-    Scanner.Pop ();
-
     Scanner.Push ("AtomicAddress.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicAddressModule.Initialize ("AtomicAddress");
-    Scanner.Pop ();
-
-    Scanner.Push ("AtomicBooleanRep.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicBooleanRep.Initialize ("AtomicBooleanRep");
+      AtomicAddrModule.Initialize ("AtomicAddress");
     Scanner.Pop ();
 
     Scanner.Push ("AtomicBoolean.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicBooleanModule.Initialize ("AtomicBoolean");
-    Scanner.Pop ();
-
-    Scanner.Push ("AtomicCharRep.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicCharRep.Initialize ("AtomicCharRep");
+      AtomicBoolModule.Initialize ("AtomicBoolean");
     Scanner.Pop ();
 
     Scanner.Push ("AtomicChar.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicCharModule.Initialize ("AtomicChar");
-    Scanner.Pop ();
-
-    Scanner.Push ("AtomicIntegerRep.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicIntegerRep.Initialize ("AtomicIntegerRep");
+      AtomicCharrModule.Initialize ("AtomicChar");
     Scanner.Pop ();
 
     Scanner.Push ("AtomicInteger.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicIntegerModule.Initialize ("AtomicInteger");
-    Scanner.Pop ();
-
-    Scanner.Push ("AtomicLongintRep.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicLongintRep.Initialize ("AtomicLongintRep");
+      AtomicIntModule.Initialize ("AtomicInteger");
     Scanner.Pop ();
 
     Scanner.Push ("AtomicLongint.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicLongintModule.Initialize ("AtomicLongint");
-    Scanner.Pop ();
-
-    Scanner.Push ("AtomicRefanyRep.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicRefanyRep.Initialize ("AtomicRefanyRep");
+      AtomicLIntModule.Initialize ("AtomicLongint");
     Scanner.Pop ();
 
     Scanner.Push ("AtomicRefany.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicRefanyModule.Initialize ("AtomicRefany");
-    Scanner.Pop ();
-
-    Scanner.Push ("AtomicWideCharRep.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicWideCharRep.Initialize ("AtomicWideCharRep");
+      AtomicReffModule.Initialize ("AtomicRefany");
     Scanner.Pop ();
 
     Scanner.Push ("AtomicWideChar.i3", NIL, is_main := Host.emitBuiltins);
-      AtomicWideCharModule.Initialize ("AtomicWideChar");
+      AtomicWCharrModule.Initialize ("AtomicWideChar");
     Scanner.Pop ();
-*)
 
     Scanner.Push ("Compiler.i3", NIL, is_main := Host.emitBuiltins);
       InfoModule.Initialize ();

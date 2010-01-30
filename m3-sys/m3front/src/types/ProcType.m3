@@ -449,7 +449,7 @@ PROCEDURE CallConv  (t: Type.T): CG.CallingConvention =
     END;
   END CallConv;
 
-PROCEDURE New (result: Type.T;  f0, f1, f2, f3: Value.T := NIL): Type.T =
+PROCEDURE New (result: Type.T;  f0, f1, f2, f3, f4: Value.T := NIL): Type.T =
   VAR p: P;
   BEGIN
     p := Create (Scope.PushNew (FALSE, M3ID.NoID));
@@ -457,6 +457,7 @@ PROCEDURE New (result: Type.T;  f0, f1, f2, f3: Value.T := NIL): Type.T =
     IF (f1 # NIL) THEN  Scope.Insert (f1);  INC (p.nFormals);  END;
     IF (f2 # NIL) THEN  Scope.Insert (f2);  INC (p.nFormals);  END;
     IF (f3 # NIL) THEN  Scope.Insert (f3);  INC (p.nFormals);  END;
+    IF (f4 # NIL) THEN  Scope.Insert (f4);  INC (p.nFormals);  END;
     p.result := result;
     Scope.PopNew ();
     RETURN p;
