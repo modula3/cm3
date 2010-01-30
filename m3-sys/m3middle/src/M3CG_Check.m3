@@ -49,7 +49,6 @@ TYPE
         in_init      := 0;
         init_cursor  := 0;
         note_error   : M3CG_Ops.ErrorHandler := NIL;
-        note_warning : M3CG_Ops.WarningHandler := NIL;
         runtime      : IntIntTbl.T := NIL;  (* Name -> BOOL *)
 (*        temps        : IntIntTbl.T  := NIL; (* Var -> line number *) *)
         stack        : ARRAY [0..50] OF Type;
@@ -60,7 +59,6 @@ TYPE
         s_empty () := Stack_Empty;
       OVERRIDES
         set_error_handler := set_error_handler;
-        set_warning_handler := set_warning_handler;
         begin_unit := begin_unit;
         end_unit   := end_unit;
         set_source_line := set_source_line;
@@ -305,11 +303,9 @@ PROCEDURE New (child: M3CG.T;
                nested_calls, nested_procs: BOOLEAN): M3CG.T =
   BEGIN
     child.set_error_handler (CrashAndBurn);
-    child.set_warning_handler (CrashAndBurn);
     RETURN NEW (U,
                 child        := child,
                 note_error   := CrashAndBurn,
-                note_warning := CrashAndBurn,
                 runtime      := NEW (IntIntTbl.Default).init (20),
                 clean_jumps  := clean_jumps,
                 clean_stores := clean_stores,
@@ -321,7 +317,7 @@ PROCEDURE New (child: M3CG.T;
 PROCEDURE CrashAndBurn (msg: TEXT) =
   <*FATAL Wr.Failure, Thread.Alerted*>
   BEGIN
-    Wr.PutText (Stdio.stdout, "Unhandled M3CG_Check error or warning: " & msg);
+    Wr.PutText (Stdio.stdout, "Unhandled M3CG_Check error: " & msg);
     Wr.Flush (Stdio.stdout);
     Wr.Flush (Stdio.stderr);
     <*ASSERT FALSE*>
@@ -334,12 +330,6 @@ PROCEDURE set_error_handler (self: U;  p: M3CG_Ops.ErrorHandler) =
     self.note_error := p;
     self.child.set_error_handler (p);
   END set_error_handler;
-
-PROCEDURE set_warning_handler (self: U;  p: M3CG_Ops.WarningHandler) =
-  BEGIN
-    self.note_warning := p;
-    self.child.set_warning_handler (p);
-  END set_warning_handler;
 
 (*----------------------------------------------------- compilation units ---*)
 
@@ -1330,53 +1320,54 @@ PROCEDURE load_static_link (self: U;  p: Proc) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE store_ordered (self: U;  z: ZType;  t: MType;  order: MemoryOrder) =
+PROCEDURE store_ordered (self: U;  t: ZType;  u: MType;  order: MemoryOrder) =
   BEGIN
-    IF NOT LegalStore [z, t] THEN PutErr (self, "illegal store conversion"); END;
+    IF NOT LegalStore [t, u] THEN PutErr (self, "illegal store conversion"); END;
     CASE order OF
     | MemoryOrder.Acquire, MemoryOrder.AcquireRelease =>
       PutErr (self, "illegal store memory order");
     ELSE (* ok *) END;
-    self.s_pop (T_to_ST [z], ST.Addr);
+    self.s_pop (T_to_ST [t], ST.Addr);
     IF (self.clean_stores) THEN self.s_empty () END;
-    self.child.store_ordered (z, t, order);
+    self.child.store_ordered (t, u, order);
   END store_ordered;
 
-PROCEDURE load_ordered (self: U;  t: MType;  z: ZType;
-                        order: MemoryOrder) =
+PROCEDURE load_ordered (self: U;  t: MType;  u: ZType;  order: MemoryOrder) =
   BEGIN
-    IF NOT LegalLoad [t, z] THEN PutErr (self, "illegal load conversion"); END;
+    IF NOT LegalLoad [t, u] THEN PutErr (self, "illegal load conversion"); END;
     CASE order OF
     | MemoryOrder.Release, MemoryOrder.AcquireRelease =>
       PutErr (self, "illegal load memory order");
     ELSE (* ok *) END;
     self.s_pop (ST.Addr);
-    self.s_push (z);
-    self.child.load_ordered (t, z, order);
+    self.s_push (u);
+    self.child.load_ordered (t, u, order);
   END load_ordered;
 
-PROCEDURE exchange (self: U;  m: MType;  z: ZType;  order: MemoryOrder) =
+PROCEDURE exchange (self: U;  t: MType;  u: ZType;  order: MemoryOrder) =
   BEGIN
-    IF NOT LegalStore [z, m] THEN PutErr (self, "illegal store conversion"); END;
-    IF NOT LegalLoad  [m, z] THEN PutErr (self, "illegal load conversion");  END;
-    self.s_pop (T_to_ST [z], ST.Addr);
-    self.s_push (z);
-    self.child.exchange (m, z, order);
+    IF NOT LegalStore [u, t] THEN PutErr (self, "illegal store conversion"); END;
+    IF NOT LegalLoad  [t, u] THEN PutErr (self, "illegal load conversion");  END;
+    self.s_pop (T_to_ST [u], ST.Addr);
+    IF (self.clean_stores) THEN self.s_empty () END;
+    self.s_push (u);
+    self.child.exchange (t, u, order);
   END exchange;
 
-PROCEDURE compare_exchange (self: U;  m: MType;  z: ZType;  i: IType;
+PROCEDURE compare_exchange (self: U;  t: MType;  u: ZType;  r: IType;
                             success, failure: MemoryOrder) =
   BEGIN
-    IF NOT LegalStore [z, m] THEN PutErr (self, "illegal store conversion"); END;
-    IF NOT LegalLoad  [m, z] THEN PutErr (self, "illegal load conversion");  END;
+    IF NOT LegalStore [u, t] THEN PutErr (self, "illegal store conversion"); END;
+    IF NOT LegalLoad  [t, u] THEN PutErr (self, "illegal load conversion");  END;
     CASE failure OF
     | MemoryOrder.Release, MemoryOrder.AcquireRelease =>
       PutErr (self, "illegal load memory order");
     ELSE (* ok *) END;
     IF failure > success THEN PutErr (self, "failure stronger than success"); END;
-    self.s_pop (T_to_ST [z], ST.Addr, ST.Addr);
-    self.s_push (i);
-    self.child.compare_exchange (m, z, i, success, failure);
+    self.s_pop (T_to_ST [u], ST.Addr, ST.Addr);
+    IF (self.clean_stores) THEN self.s_empty () END;
+    self.s_push (r);
+    self.child.compare_exchange (t, u, r, success, failure);
   END compare_exchange;
 
 PROCEDURE fence (self: U;  order: MemoryOrder) = 
@@ -1384,14 +1375,15 @@ PROCEDURE fence (self: U;  order: MemoryOrder) =
     self.child.fence (order);
   END fence;
 
-PROCEDURE fetch_and_op (self: U;  op: AtomicOp;  m: MType;  z: ZType;
+PROCEDURE fetch_and_op (self: U;  op: AtomicOp;  t: MType;  u: ZType;
                         order: MemoryOrder) =
   BEGIN
-    IF NOT LegalStore [z, m] THEN PutErr (self, "illegal store conversion"); END;
-    IF NOT LegalLoad  [m, z] THEN PutErr (self, "illegal load conversion");  END;
-    self.s_pop (T_to_ST[z], ST.Addr);
-    self.s_push (z);
-    self.child.fetch_and_op (op, m, z, order);
+    IF NOT LegalStore [u, t] THEN PutErr (self, "illegal store conversion"); END;
+    IF NOT LegalLoad  [t, u] THEN PutErr (self, "illegal load conversion");  END;
+    self.s_pop (T_to_ST[u], ST.Addr);
+    IF (self.clean_stores) THEN self.s_empty () END;
+    self.s_push (u);
+    self.child.fetch_and_op (op, t, u, order);
   END fetch_and_op;
 
 BEGIN
