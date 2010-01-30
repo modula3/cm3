@@ -4915,7 +4915,7 @@ m3cg_exchange (void)
     m3_call_direct (built_in_decls[BUILT_IN_SYNCHRONIZE], t_void);
   }
   m3_start_call ();
-  m3_pop_param (t);
+  m3_pop_param (u);
   m3_pop_param (t_addr);
   CALL_TOP_ARG() = nreverse(CALL_TOP_ARG());
   CALL_TOP_TYPE() = nreverse(CALL_TOP_TYPE());
@@ -4930,7 +4930,7 @@ static void
 m3cg_compare_exchange (void)
 {
   MTYPE2         (t, T);
-  UNUSED_MTYPE2  (u, U);
+  MTYPE2         (u, U);
   MTYPE2         (r, R);
   UNUSED_INTEGER (success);
   UNUSED_INTEGER (failure);
@@ -4948,11 +4948,14 @@ m3cg_compare_exchange (void)
   v = EXPR_REF (-2);
   v = m3_cast (build_pointer_type (t), v);
   v = m3_build1 (INDIRECT_REF, t, v);
+  if (t != u) {
+    v = m3_build1 (CONVERT_EXPR, u, v);
+  }
   EXPR_REF (-2) = v;
 
   m3_start_call ();
-  m3_pop_param (t);
-  m3_pop_param (t);
+  m3_pop_param (u);
+  m3_pop_param (u);
   m3_pop_param (t_addr);
   CALL_TOP_ARG() = nreverse(CALL_TOP_ARG());
   CALL_TOP_TYPE() = nreverse(CALL_TOP_TYPE());
@@ -5009,33 +5012,6 @@ static void
 m3cg_fetch_and_and (void) { m3cg_fetch_and_op (BUILT_IN_FETCH_AND_AND_N); }
 static void
 m3cg_fetch_and_xor (void) { m3cg_fetch_and_op (BUILT_IN_FETCH_AND_XOR_N); }
-
-static void
-m3cg_val_compare_and_swap (void)
-{
-  MTYPE2     (t, T);
-
-  int size;
-  enum built_in_function fncode = BUILT_IN_VAL_COMPARE_AND_SWAP_N;
-
-  if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
-    goto incompatible;
-  size = tree_low_cst (TYPE_SIZE_UNIT (t), 1);
-  if (size != 1 && size != 2 && size != 4 && size != 8)
-    goto incompatible;
-
-  m3_start_call ();
-  m3_pop_param (t);
-  m3_pop_param (t);
-  m3_pop_param (t_addr);
-  CALL_TOP_ARG() = nreverse(CALL_TOP_ARG());
-  CALL_TOP_TYPE() = nreverse(CALL_TOP_TYPE());
-  m3_call_direct (built_in_decls[fncode + exact_log2 (size) + 1], t);
-  return;
-
- incompatible:
-  fatal_error ("incompatible type for argument to atomic op");
-}
 
 static void
 m3cg_lock_test_and_set (void)
