@@ -1794,7 +1794,8 @@ PROCEDURE compare_exchange (VAR s: State) =
       failure:= Scan_int (s);
   BEGIN
     s.cg.compare_exchange (src, dest, result,
-                           VAL(success, MemoryOrder), VAL(failure, MemoryOrder));
+                           VAL(success, MemoryOrder),
+                           VAL(failure, MemoryOrder));
   END compare_exchange;
 
 PROCEDURE fence (VAR s: State) =
