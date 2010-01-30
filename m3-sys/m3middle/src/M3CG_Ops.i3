@@ -22,8 +22,6 @@ FROM M3CG IMPORT MemoryOrder;
 
 TYPE
   ErrorHandler = PROCEDURE (msg: TEXT);
-  WarningHandler = ErrorHandler; (* maybe should take a warning level,
-                                  * but for now presumed to be 2 *)
 
 REVEAL
   M3CG.T <: Public;
@@ -49,8 +47,6 @@ set_error_handler (p: ErrorHandler);
 (* 'p' is called to communicate failures (i.e. creating a stack or module
    that's too big) back to the front-end.  Client or implementation
    programming errors (bugs) result in crashes. *)
-
-set_warning_handler (p: WarningHandler);
 
 (*----------------------------------------------------- compilation units ---*)
 
@@ -618,21 +614,24 @@ comment (a, b, c, d: TEXT := NIL);
 (*--------------------------------------------------------------- atomics ---*)
 (* These all operate atomically and affect memory as per "o". *)
 
-store_ordered (t: ZType; u: MType; order: MemoryOrder);
+store_ordered (t: ZType;  u: MType;  order: MemoryOrder);
 (* Mem [s1.A].u := s0.t; pop (2) *)
 
-load_ordered (t: MType; u: ZType; order: MemoryOrder);
+load_ordered (t: MType;  u: ZType;  order: MemoryOrder);
 (* s0.u := Mem [s0.A].t  *)
 
 exchange (t: MType;  u: ZType;  order: MemoryOrder);
-(* tmp := Mem [s1.A + o].t;  Mem [s1.A + o].t := s0.u;  s0.u := tmp;  pop *)
+(* tmp := Mem [s1.A].t;  Mem [s1.A].t := s0.u;  s0.u := tmp;  pop *)
 
-compare_exchange (t: MType; u: ZType; r: IType; success, failure: MemoryOrder);
-(* t1 := Mem[s1.A].t;  t2 := Mem[s2.A].t;
-   IF (t1.u = t2.u)
+compare_exchange (t: MType;  u: ZType;  r: IType;
+                  success, failure: MemoryOrder);
+(* tmp := Mem[s2.A].t;
+   IF (tmp = Mem[s1.A].t)
    THEN Mem [s2.A].t := s0.u; s2.r := 1; pop(2);
-   ELSE Mem [s1.A].t := t2;   s2.r := 0; pop(2);
-   END; *)
+   ELSE Mem [s1.A].t := tmp;  s2.r := 0; pop(2);
+   END;
+   This is permitted to fail spuriously, leaving Mem [s1.A] unchanged.
+*)
 
 fence (o: MemoryOrder);
 (* Memory is affected as per o *)

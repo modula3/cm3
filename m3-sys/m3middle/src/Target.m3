@@ -143,6 +143,10 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     (* common values *)
 
+    Atomic_lock_free :=
+        ARRAY [CGType.Word8..CGType.Addr] OF BOOLEAN { TRUE, .. };
+    (* this is overly optimistic... *)
+
     Allow_packed_byte_aligned := FALSE;
     EOL                       := "\n";
     Jumpbuf_align             := Address.align;
@@ -225,25 +229,25 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* SPARC64, HPPA, MIPS64: aligned_procedures *)
 
     IF TextUtils.StartsWith(system, "SPARC64_")
-        OR TextUtils.StartsWith(system, "PA")
-        OR TextUtils.StartsWith(system, "MIPS64_") THEN
+      OR TextUtils.StartsWith(system, "PA")
+      OR TextUtils.StartsWith(system, "MIPS64_") THEN
       Aligned_procedures := FALSE;
     END;
 
     (* big endian *)
 
     IF TextUtils.StartsWith(system, "PA")
-        OR TextUtils.StartsWith(system, "MIPS") (* MIPS is definitely ambiguous! *)
-        OR TextUtils.StartsWith(system, "PPC")  (* PPC is a little ambiguous? *)
-        OR TextUtils.StartsWith(system, "SPARC")
-        OR TextUtils.StartsWith(system, "SOL") THEN
+      OR TextUtils.StartsWith(system, "MIPS") (* MIPS is definitely ambiguous! *)
+      OR TextUtils.StartsWith(system, "PPC")  (* PPC is a little ambiguous? *)
+      OR TextUtils.StartsWith(system, "SPARC")
+      OR TextUtils.StartsWith(system, "SOL") THEN
       Little_endian := FALSE;
     END;
 
     (* SPARC: 8K pages *)
 
     IF TextUtils.StartsWith(system, "SPARC")
-        OR TextUtils.StartsWith(system, "SOL") THEN
+      OR TextUtils.StartsWith(system, "SOL") THEN
       First_readable_addr := 8192 * Char.size;
     END;
 
