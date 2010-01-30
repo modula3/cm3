@@ -131,15 +131,13 @@ PROCEDURE unlock (t: T) =
 
       FOR i := 0 TO NRegs DO
         IF t.reguse[i].stackp # -1 THEN
-          (* need to revisit this *)
-          (* ASSERT t.vstack[t.reguse[i].stackp].reg[0] = i *)
+          <* ASSERT t.vstack[t.reguse[i].stackp].reg[0] = i *>
         END
       END;
 
       FOR i := 0 TO t.stacktop - 1 DO
         IF t.vstack[i].loc = OLoc.register THEN
-          (* need to revisit this *)
-          (* ASSERT t.reguse[t.vstack[i].reg[0]].stackp = i *)
+          <* ASSERT t.reguse[t.vstack[i].reg[0]].stackp = i *>
         ELSIF t.vstack[i].loc = OLoc.fstack THEN
           INC(flcount);
         END
@@ -1803,14 +1801,12 @@ PROCEDURE swap (t: T) =
       t.vstack[stack1].stackp := stack1;
 
       IF t.vstack[stack0].loc = OLoc.register THEN
-        (* need to revisit this *)
-        (* ASSERT t.reguse[t.vstack[stack0].reg[0]].stackp = stack1 *)
+        <* ASSERT t.reguse[t.vstack[stack0].reg[0]].stackp = stack1 *>
         t.reguse[t.vstack[stack0].reg[0]].stackp := stack0;
       END;
 
       IF t.vstack[stack1].loc = OLoc.register THEN
-        (* need to revisit this *)
-        (* ASSERT t.reguse[t.vstack[stack1].reg[0]].stackp = stack0 *)
+        <* ASSERT t.reguse[t.vstack[stack1].reg[0]].stackp = stack0 *>
         t.reguse[t.vstack[stack1].reg[0]].stackp := stack1;
       END;
 
