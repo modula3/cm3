@@ -27,7 +27,7 @@ PROCEDURE CallConv  (t: Type.T): CG.CallingConvention;
 PROCEDURE LargeResult (t: Type.T): BOOLEAN;
 PROCEDURE IsCompatible (procSig, objectType, methodSig: Type.T): BOOLEAN;
 
-PROCEDURE New (result: Type.T;  f0, f1, f2, f3: Value.T := NIL): Type.T;
+PROCEDURE New (result: Type.T;  f0, f1, f2, f3, f4: Value.T := NIL): Type.T;
 PROCEDURE SetMethods (t: Type.T;  m: CallExpr.MethodList);
 
 END ProcType.

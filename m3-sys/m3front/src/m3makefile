@@ -14,6 +14,7 @@ import ("libm3")
 import ("m3middle")
 
 % FRONTEND
+include_dir ("builtinAtomic")
 include_dir ("builtinOps")
 include_dir ("builtinWord")
 include_dir ("builtinInfo")

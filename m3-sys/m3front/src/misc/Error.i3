@@ -17,7 +17,6 @@ PROCEDURE QID (READONLY q: M3.QID;  msg: TEXT);
 PROCEDURE Txt (str, msg: TEXT);
 
 PROCEDURE Warn   (level: INTEGER;  msg: TEXT);
-PROCEDURE Warn2  (msg: TEXT); (* level := 2 *)
 PROCEDURE WarnID (level: INTEGER;  id: M3ID.T;  msg: TEXT);
 
 PROCEDURE IgnoreWarning (offset: INTEGER);
