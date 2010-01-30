@@ -670,7 +670,7 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
     END;
 
     IF dest.loc = OLoc.register AND src.loc = OLoc.mem AND
-       CG_Bytes[src.mvar.mvar_type] # 4 THEN
+       CG_Bytes[src.mvar.mvar_type] < 4 THEN
       CASE src.mvar.mvar_type OF
       | Type.Word8  => ins.opcode := 16_8A;
                        mnemonic := "MOV";
@@ -1241,7 +1241,7 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset;
   BEGIN
     <* ASSERT ind.loc = OLoc.register *>
     ins.opcode := 16_8B;
-    IF CG_Bytes[type] # 4 THEN
+    IF CG_Bytes[type] < 4 THEN
       CASE type OF
       | Type.Word8  => ins.opcode := 16_8A;
                        mnemonic := "MOV";

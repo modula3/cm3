@@ -904,11 +904,11 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
       END;
 
       IF destop.loc = OLoc.mem AND
-         (CG_Bytes[destop.mvar.mvar_type] # 4 OR srcop.loc = OLoc.mem) THEN
+         (CG_Bytes[destop.mvar.mvar_type] < 4 OR srcop.loc = OLoc.mem) THEN
         find(t, dest, Force.anyreg);
       END;
 
-      IF srcop.loc = OLoc.mem AND CG_Bytes[srcop.mvar.mvar_type] # 4 THEN
+      IF srcop.loc = OLoc.mem AND CG_Bytes[srcop.mvar.mvar_type] < 4 THEN
         find(t, src, Force.anyreg);
       END
     END;
@@ -921,6 +921,7 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): 
       reversed: BOOLEAN;
   BEGIN
     reversed := findbin(t, symmetric, overwritesdest, dest, src);
+    <* ASSERT reversed = (dest > src) *>
 
     WITH destop = t.vstack[dest],
           srcop = t.vstack[src] DO
@@ -1840,7 +1841,7 @@ PROCEDURE doloophole (t: T; from, two: ZType) =
           stop0.mvar.mvar_type := two;
 
         ELSE (* NOT FloatType [from] *)
-          IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] # 4 THEN
+          IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
             unlock(t);
             find(t, stack0, Force.anyreg);
           END;
@@ -1891,7 +1892,7 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
           find(t, stack0, Force.anyreg);
         END;
         IF stop0.loc = OLoc.mem AND shift < 0 AND
-          CG_Bytes[stop0.mvar.mvar_type] # 4 THEN
+          CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
           find(t, stack0, Force.anydword);
         END;
 
@@ -1960,6 +1961,7 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
       src, dest: INTEGER;
       ftop_inmem: BOOLEAN;
       cond: Cond;
+      reversed: BOOLEAN;
   BEGIN
     IF FloatType [type] THEN
       t.cg.binFOp(FOp.fCOM, 1);
@@ -1998,7 +2000,8 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
       t.cg.set_label(end);
 
     ELSE
-      EVAL findbin(t, TRUE, TRUE, dest, src);
+      reversed := findbin(t, TRUE, TRUE, dest, src);
+      <* ASSERT reversed = (dest > src) *>
 
       WITH destop = t.vstack[dest],
            srcop = t.vstack[src] DO
@@ -2023,7 +2026,7 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
         t.cg.set_label(lab);
 
         newdest(t, destop);
-        IF dest > src THEN
+        IF reversed THEN
           swap(t);
         END;
       END
@@ -2081,7 +2084,7 @@ PROCEDURE inttoflt (t: T) =
   BEGIN
     WITH stack0 = pos(t, 0, "inttoflt"),
          stop0 = t.vstack[stack0] DO
-      IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] # 4 THEN
+      IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
         unlock(t);
         find(t, stack0, Force.anyreg);
       END;
