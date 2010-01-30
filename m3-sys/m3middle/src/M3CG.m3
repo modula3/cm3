@@ -930,10 +930,10 @@ PROCEDURE exchange (xx: T;  t: MType;  u: ZType;  order: MemoryOrder) =
     xx.child.exchange (t, u, order);
   END exchange;
 
-PROCEDURE compare_exchange (xx: T;  s: MType;  t: ZType;  u: IType;
+PROCEDURE compare_exchange (xx: T;  t: MType;  u: ZType;  r: IType;
                             success, failure: MemoryOrder) =
   BEGIN
-    xx.child.compare_exchange (s, t, u, success, failure);
+    xx.child.compare_exchange (t, u, r, success, failure);
   END compare_exchange;
 
 PROCEDURE fence (xx: T;  order: MemoryOrder) =
