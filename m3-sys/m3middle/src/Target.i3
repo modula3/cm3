@@ -315,7 +315,7 @@ PROCEDURE ConventionFromID (id: INTEGER): CallingConvention;
 (*--------------------------------------------------------------- atomics ---*)
 
 VAR (*CONST*)
-  Atomic_lock_free: ARRAY [CGType.Word8..CGType.Addr] OF BOOLEAN;
+  Atomic_lock_free: ARRAY [CGType.Word8 .. CGType.Addr] OF BOOLEAN;
   (* TRUE => platform has lock-free atomic primitives for this type *)
 
 (*--------------------------------------------------- misc. configuration ---*)

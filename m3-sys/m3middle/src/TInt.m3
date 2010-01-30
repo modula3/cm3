@@ -58,8 +58,7 @@ PROCEDURE CheckSign (READONLY r: Int;  n: CARDINAL): Sign =
   END CheckSign;
 
 PROCEDURE IntI (READONLY r: Int;  n: CARDINAL;  VAR x: Int): BOOLEAN =
-  VAR sign := CheckSign (r, n);  j := 0;
-      result := TRUE;
+  VAR sign := CheckSign (r, n);  j := 0;  result := TRUE;
   BEGIN
     CASE sign OF
     | Sign.Bad => result := FALSE;
@@ -155,9 +154,7 @@ PROCEDURE Negate (READONLY a: Int;  VAR r: Int): BOOLEAN =
 PROCEDURE Abs (READONLY a: Int;  VAR r: Int): BOOLEAN =
   (* It is safe for r to alias a *)
   BEGIN
-    IF GE(a, Zero) THEN
-      RETURN FALSE;
-    END;
+    IF GE(a, Zero) THEN RETURN FALSE END;
     RETURN Negate(a, r);
   END Abs;
 

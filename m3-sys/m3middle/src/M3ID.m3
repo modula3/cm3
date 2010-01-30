@@ -130,15 +130,6 @@ PROCEDURE ToText (t: T): TEXT =
     RETURN x;
   END ToText;
 
-PROCEDURE Length (t: T): CARDINAL =
-  BEGIN
-    <*ASSERT t < next_t*>
-    IF t = NoID THEN
-      RETURN 0;
-    END;
-    RETURN Text.Length (ToText (t));
-  END Length;
-
 PROCEDURE Put (wr: M3Buf.T;  t: T) =
   VAR ptr := LOOPHOLE (ids[t].start, CharBuffer);  len: INTEGER;
   BEGIN
