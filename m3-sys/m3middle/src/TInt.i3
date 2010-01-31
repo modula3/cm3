@@ -21,10 +21,6 @@ INTERFACE TInt;
 FROM Target IMPORT Int, IBytes;
 
 CONST
-  F  = 16_0F;
-  FF = 16_FF;
-  F3 = 16_F3;
-
   Zero      = Int{NUMBER (IBytes), IBytes{ 0,0,..}};
   One       = Int{NUMBER (IBytes), IBytes{ 1,0,..}};
   Two       = Int{NUMBER (IBytes), IBytes{ 2,0,..}};
@@ -34,15 +30,15 @@ CONST
   Ten       = Int{NUMBER (IBytes), IBytes{10,0,..}};
   ThirtyOne = Int{NUMBER (IBytes), IBytes{31,0,..}};
   ThirtyTwo = Int{NUMBER (IBytes), IBytes{32,0,..}};
-  F3FF      = Int{NUMBER (IBytes), IBytes{FF,F3,0,..}};
+  F3FF      = Int{NUMBER (IBytes), IBytes{16_FF,16_F3,0,..}};
   x0400     = Int{NUMBER (IBytes), IBytes{0,4,0,..}};
   x0800     = Int{NUMBER (IBytes), IBytes{0,8,0,..}};
-  x0F00     = Int{NUMBER (IBytes), IBytes{0,F,0,..}};
+  x0F00     = Int{NUMBER (IBytes), IBytes{0,16_F,0,..}};
 
   (* 'M' for Minus (negative) *)
 
-  MOne  = Int{NUMBER (IBytes), IBytes{FF,..}};
-  MThirtyOne = Int{NUMBER (IBytes), IBytes{16_E1,FF,..}};
+  MOne  = Int{NUMBER (IBytes), IBytes{16_FF,..}};
+  MThirtyOne = Int{NUMBER (IBytes), IBytes{16_E1,16_FF,..}};
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
