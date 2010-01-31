@@ -912,7 +912,7 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
     RETURN reversed;
   END findbin;
 
-PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): BOOLEAN =
+PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; <*UNUSED*>type: Type): BOOLEAN =
   VAR src, dest: INTEGER;
       reversed: BOOLEAN;
   BEGIN
@@ -2029,7 +2029,7 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
     discard(t, 1);
   END domaxmin;
 
-PROCEDURE fltoint (t: T; mode: FlToInt; type: Type) =
+PROCEDURE fltoint (t: T; mode: FlToInt; <*UNUSED*>type: Type) =
   VAR status: x86Var;
       statusop, newstat: Operand;
       statreg: Regno;
