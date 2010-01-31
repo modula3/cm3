@@ -9,12 +9,12 @@ MODULE Stackx86;
 
 IMPORT M3ID, M3CG, TargetMap, M3CG_Ops, Word, M3x86Rep, Codex86, Wrx86;
 
-IMPORT Target, TInt, TWord, Fmt;
+IMPORT Target, TInt, TWord;
 FROM Target IMPORT FloatType;
 FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 
 FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
-FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
+FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64;
 FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar;
@@ -27,7 +27,6 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         cg            : Codex86.T := NIL;
         parent        : M3x86Rep.U := NIL;
         Err           : ErrorHandler := NIL;
-        Warn          : WarningHandler := NIL;
         debug         := FALSE;
         stacktop      := 0;
         vstack        : REF ARRAY OF Operand := NIL;
@@ -58,7 +57,6 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         pos := pos;
         discard := discard;
         set_error_handler := set_error_handler;
-        set_warning_handler := set_warning_handler;
         push := push;
         pushnew := pushnew;
         pushimmI := pushimmI;
@@ -103,8 +101,8 @@ TYPE
     stackp     : INTEGER := -1;
     last_store : MVar    := NoStore;
     last_imm   : Target.Int := TZero;
-    lowbound   : Target.Int := TInt.MinS32;
-    upbound    : Target.Int := TInt.MaxS32;
+    lowbound   : Target.Int;
+    upbound    : Target.Int;
     imm        : BOOLEAN := FALSE;
     locked     : BOOLEAN := FALSE;
     non_nil    : BOOLEAN := FALSE;
@@ -925,8 +923,8 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): 
           srcop = t.vstack[src] DO
 
       IF Is64(destop.optype) OR Is64(srcop.optype) THEN
-        t.Warn("dobin: src:" & Fmt.Int(src) & " dest:" & Fmt.Int(dest));
-        t.Warn("dobin: destop.optype:" & Target.TypeNames[destop.optype] & " srcop.optype:" & Target.TypeNames[srcop.optype]);
+        (*t.Warn("dobin: src:" & Fmt.Int(src) & " dest:" & Fmt.Int(dest));*)
+        (*t.Warn("dobin: destop.optype:" & Target.TypeNames[destop.optype] & " srcop.optype:" & Target.TypeNames[srcop.optype]);*)
       END;
       t.cg.binOp(op, destop, srcop);
 
@@ -1167,7 +1165,7 @@ PROCEDURE doimm (t: T; op: Op; READONLY imm: Target.Int; overwritesdest: BOOLEAN
       IF (stop0.loc = OLoc.mem AND
          ((overwritesdest AND NOT stop0.mvar.var.stack_temp) OR
           CG_Bytes[stop0.mvar.mvar_type] = 2 OR
-          (CG_Bytes[stop0.mvar.mvar_type] = 1 AND (TInt.GT(imm, TInt.MaxS8) OR TInt.LT(imm, TInt.MinS8)))))
+          (CG_Bytes[stop0.mvar.mvar_type] = 1 AND (TInt.GT(imm, Target.Int8.max) OR TInt.LT(imm, Target.Int8.min)))))
          OR stop0.loc = OLoc.imm THEN
         find(t, stack0, Force.anyreg);
       ELSE
@@ -1510,7 +1508,7 @@ PROCEDURE doextract_n (t: T; sign: BOOLEAN; n: INTEGER) =
         t.cg.unOp(Op.oSHR, stop1);
 
         IF n < 32 THEN
-          TWord.Shift(TInt.FFFFFFFF, n - 32, andval);
+          TWord.Shift(Target.Word32.max, n - 32, andval);
           t.cg.immOp(Op.oAND, stop1, andval);
         END
       END;
@@ -1528,13 +1526,13 @@ PROCEDURE doextract_mn (t: T; sign: BOOLEAN; m, n: INTEGER) =
          stop0 = t.vstack[stack0] DO
       IF stop0.loc = OLoc.imm THEN
         TWord.Shift(stop0.imm, -m, stop0.imm);
-        TWord.Shift(TInt.FFFFFFFF, n - 32, tint);
+        TWord.Shift(Target.Word32.max, n - 32, tint);
         TWord.And(stop0.imm, tint, stop0.imm);
         IF sign THEN
           TWord.Shift(TInt.One, n - 1, tint);
           TWord.And(stop0.imm, tint, tint);
           IF TInt.NE(tint, TZero) THEN
-            TWord.Shift(TInt.FFFFFFFF, n, tint);
+            TWord.Shift(Target.Word32.max, n, tint);
             TWord.Or(stop0.imm, tint, stop0.imm);
           END;
         END;
@@ -1559,7 +1557,7 @@ PROCEDURE doextract_mn (t: T; sign: BOOLEAN; m, n: INTEGER) =
       ELSE
         find(t, stack0, Force.anyreg);
         IF (m + n) < 32 THEN
-          TWord.Shift(TInt.FFFFFFFF, m + n - 32, andval);
+          TWord.Shift(Target.Word32.max, m + n - 32, andval);
           t.cg.immOp(Op.oAND, stop0, andval);
         END;
 
@@ -1641,7 +1639,7 @@ PROCEDURE doinsert (t: T) =
         IF NOT TInt.ToInt(stop1.imm, int) THEN
           t.Err("failed to convert stop1.imm to host integer");
         END;
-        TWord.Shift(TInt.FFFFFFFF, int, tint);
+        TWord.Shift(Target.Word32.max, int, tint);
         t.cg.immOp(Op.oXOR, t.cg.reg[maskreg], tint);
       ELSE
         ImportHighSet (t, tbl);
@@ -1692,7 +1690,7 @@ PROCEDURE doinsert_n (t: T; n: INTEGER) =
       corrupt(t, maskreg);
 
       IF n # 32 THEN
-        TWord.Shift(TInt.FFFFFFFF, n - 32, tint);
+        TWord.Shift(Target.Word32.max, n - 32, tint);
         t.cg.immOp(Op.oAND, stop1, tint);
       END;
 
@@ -1735,7 +1733,7 @@ PROCEDURE doinsert_mn (t: T; m, n: INTEGER) =
         find(t, stack1, Force.anyreg);
       END;
 
-      TWord.Shift(TInt.FFFFFFFF, n - 32, tint);
+      TWord.Shift(Target.Word32.max, n - 32, tint);
       IF NOT TInt.FromInt(m, Target.Integer.bytes, tm) THEN
         t.Err("doinsert_mn: unable to convert m to target integer");
       END;
@@ -2194,11 +2192,6 @@ PROCEDURE set_error_handler (t: T; err: ErrorHandler) =
   BEGIN
     t.Err := err;
   END set_error_handler;
-
-PROCEDURE set_warning_handler (t: T; warn: WarningHandler) =
-  BEGIN
-    t.Warn := warn;
-  END set_warning_handler;
 
 PROCEDURE init (t: T) =
   BEGIN

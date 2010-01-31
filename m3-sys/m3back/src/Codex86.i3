@@ -10,7 +10,7 @@ INTERFACE Codex86;
 
 IMPORT M3CG, M3ObjFile, TFloat;
 FROM M3CG IMPORT MType, Label, ByteOffset, Alignment;
-FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
+FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3x86Rep, Wrx86, Target;
 FROM M3x86Rep IMPORT Operand, NRegs, MVar, x86Var, x86Proc, Regno;
 
@@ -86,7 +86,6 @@ TYPE Public = OBJECT
         log_label_init (var: x86Var; o: ByteOffset; lab: Label);
         get_frame (r: Regno; target, current: x86Proc);
         set_error_handler (err: ErrorHandler);
-        set_warning_handler (warn: WarningHandler);
         init ();
         end ();
       END;
