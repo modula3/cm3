@@ -1259,13 +1259,9 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
 
     u.n_params := n_params;
 
-    IF (n_params = 0 OR NOT p.stdcall) THEN
-      WITH text = M3ID.ToText(n) DO
-        IF text # NIL AND Text.Length(text) > 0 THEN
-          p.name := mangle_procname(p.name, 0, p.stdcall);
-          p.symbol := u.obj.import_symbol(p.name);
-        END;
-      END;
+    IF (n_params = 0 OR NOT p.stdcall) AND Text.Length(M3ID.ToText(n)) > 0 THEN
+      p.name := mangle_procname(p.name, 0, p.stdcall);
+      p.symbol := u.obj.import_symbol(p.name);
     END;
 
     u.param_proc := p;
