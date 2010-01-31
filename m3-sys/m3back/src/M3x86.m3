@@ -19,7 +19,7 @@ FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 
-FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
+FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3ObjFile IMPORT Seg;
 
@@ -45,7 +45,6 @@ REVEAL
         obj             : M3ObjFile.T := NIL;
         debug           := FALSE;
         Err             : ErrorHandler := NIL;
-        Warn            : WarningHandler := NIL;
         runtime         : IntRefTbl.T := NIL;  (* Name -> RuntimeHook *)
         textsym         : INTEGER;
         init_varstore   : x86Var := NIL;
@@ -73,7 +72,6 @@ REVEAL
         NewVar := NewVar;
         next_label := next_label;
         set_error_handler := set_error_handler;
-        set_warning_handler := set_warning_handler;
         begin_unit := begin_unit;
         end_unit   := end_unit;
         import_unit := import_unit;
@@ -279,13 +277,6 @@ PROCEDURE set_error_handler (u: U; p: ErrorHandler) =
     u.cg.set_error_handler(p);
     u.vstack.set_error_handler(p);
   END set_error_handler;
-
-PROCEDURE set_warning_handler (u: U; p: WarningHandler) =
-  BEGIN
-    u.Warn := p;
-    u.cg.set_warning_handler(p);
-    u.vstack.set_warning_handler(p);
-  END set_warning_handler;
 
 (*----------------------------------------------------- compilation units ---*)
 
@@ -1268,9 +1259,13 @@ PROCEDURE import_procedure (u: U;  n: Name;  n_params: INTEGER;
 
     u.n_params := n_params;
 
-    IF (n_params = 0 OR NOT p.stdcall) AND M3ID.Length(n) > 0 THEN
-      p.name := mangle_procname(p.name, 0, p.stdcall);
-      p.symbol := u.obj.import_symbol(p.name);
+    IF (n_params = 0 OR NOT p.stdcall) THEN
+      WITH text = M3ID.ToText(n) DO
+        IF text # NIL AND Text.Length(text) > 0 THEN
+          p.name := mangle_procname(p.name, 0, p.stdcall);
+          p.symbol := u.obj.import_symbol(p.name);
+        END;
+      END;
     END;
 
     u.param_proc := p;
@@ -1369,7 +1364,7 @@ PROCEDURE begin_procedure (u: U;  p: Proc) =
     u.cg.pushOp(u.cg.reg[Codex86.EBP]);
     u.cg.movOp(u.cg.reg[Codex86.EBP], u.cg.reg[Codex86.ESP]);
 
-    u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], TInt.FFFF);
+    u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], Target.Word16.max);
     u.procframe_ptr := u.obj.cursor(Seg.Text) - 4;
 
     u.cg.pushOp(u.cg.reg[Codex86.EBX]);
@@ -3623,7 +3618,7 @@ PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY [0..1] OF MVar): [1..2
 
 PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY [0..1] OF Target.Int): [1..2] =
   BEGIN
-    TWord.And(imm, TInt.MaxU32, immA[0]);
+    TWord.And(imm, Target.Word32.max, immA[0]);
     TWord.RightShift(imm, 32, immA[1]);
     RETURN 1 + ORD(Is64(type));
   END SplitImm;
@@ -3798,11 +3793,11 @@ PROCEDURE FixReturnValue (u: U;  t: Type): Type =
         t := Type.Int32;
 
     | Type.Word8 => (* 8-bit unsigned integer *)
-        u.cg.immOp (Op.oAND, u.cg.reg[Codex86.EAX], TInt.FF);  (* EAX &= 16_FF *)
+        u.cg.immOp (Op.oAND, u.cg.reg[Codex86.EAX], Target.Word8.max);  (* EAX &= 16_FF *)
         t := Type.Word32;
 
     | Type.Word16 => (* 16-bit unsigned integer *)
-        u.cg.immOp (Op.oAND, u.cg.reg[Codex86.EAX], TInt.FFFF);  (* EAX &= 16_FFFF *)
+        u.cg.immOp (Op.oAND, u.cg.reg[Codex86.EAX], Target.Word16.max);  (* EAX &= 16_FFFF *)
         t := Type.Word32;
 
     ELSE (* value is ok *)

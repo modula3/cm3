@@ -9,7 +9,7 @@
 INTERFACE Stackx86;
 
 FROM M3CG IMPORT Type, MType, ZType, Sign, ByteOffset;
-FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
+FROM M3CG_Ops IMPORT ErrorHandler;
 
 IMPORT M3x86Rep, Codex86, Wrx86, Target;
 FROM M3x86Rep IMPORT Operand, OLoc, MVar, Regno, Force, RegSet, FlToInt;
@@ -38,7 +38,6 @@ TYPE Public = OBJECT
         pos (depth: INTEGER; place: TEXT): INTEGER;
         discard (depth: INTEGER);
         set_error_handler (err: ErrorHandler);
-        set_warning_handler (warn: WarningHandler);
         push (READONLY mvar: MVar);
         pushnew (type: MType; force: Force; set := RegSet {});
         pushimmI (imm: INTEGER; type: Type);
