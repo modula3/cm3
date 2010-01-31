@@ -15,7 +15,7 @@ FROM TargetMap IMPORT CG_Bytes;
 
 FROM M3CG IMPORT ByteOffset, ByteSize, No_label;
 FROM M3CG IMPORT Type, MType, Label, Alignment;
-FROM M3CG_Ops IMPORT ErrorHandler, WarningHandler;
+FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs;
 FROM M3x86Rep IMPORT RegSet, RegName, SplitOperand, Is64, SplitImm;
@@ -29,7 +29,6 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         obj           : M3ObjFile.T := NIL;
         debug         := FALSE;
         Err           : ErrorHandler := NIL;
-        Warn          : WarningHandler := NIL;
         opcode        : ARRAY [0 .. NRegs] OF Operand;
         current_proc  : x86Proc;
         textsym       : INTEGER;
@@ -116,7 +115,6 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         log_label_init := log_label_init;
         get_frame := get_frame;
         set_error_handler := set_error_handler;
-        set_warning_handler := set_warning_handler;
       END;
 
 TYPE FLiteral = REF RECORD
@@ -384,9 +382,9 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
     IF NOT TInt.ToInt(imm, ins.imm) THEN
-      t.Warn("immOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));
+      (*t.Warn("immOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));*)
     END;
-    IF TInt.GE(imm, TInt.MinS8) AND TInt.LE(imm, TInt.MaxS8)
+    IF TInt.GE(imm, Target.Int8.min) AND TInt.LE(imm, Target.Int8.max)
       THEN ins.imsize := 1;
       ELSE ins.imsize := 4;
     END;
@@ -789,7 +787,7 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
     | OLoc.imm =>
         ins.opcode := 16_68;
         IF NOT TInt.ToInt(src.imm, ins.imm) THEN
-          t.Warn("pushOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(src.imm));
+          (*t.Warn("pushOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(src.imm));*)
         END;
         ins.imsize := 4;
         writecode(t, ins);
@@ -1920,11 +1918,6 @@ PROCEDURE set_error_handler (t: T; err: ErrorHandler) =
   BEGIN
     t.Err := err;
   END set_error_handler;
-
-PROCEDURE set_warning_handler (t: T; warn: WarningHandler) =
-  BEGIN
-    t.Warn := warn;
-  END set_warning_handler;
 
 (*---------------------------------------------------------------------------*)
 
