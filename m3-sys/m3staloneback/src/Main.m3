@@ -19,11 +19,6 @@ PROCEDURE PrintErr(txt: TEXT) =
     <* ASSERT FALSE *>
   END PrintErr;
 
-PROCEDURE PrintWarn(txt: TEXT) =
-  BEGIN
-    IO.Put (txt, Stdio.stderr);
-  END PrintWarn;
-
 VAR
   cg: M3CG.T;
   obj: M3ObjFile.T;
@@ -77,7 +72,6 @@ BEGIN
     END;
 
     cg.set_error_handler (PrintErr);
-    cg.set_warning_handler (PrintWarn);
     M3CG_Rd.Inhale (in, cg);
 
     IF objformat THEN
