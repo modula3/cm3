@@ -80,7 +80,7 @@ TYPE
 
 VAR (* CONST *)
   n_builtins : CARDINAL := 0;
-  builtins   : ARRAY [0..3] OF RECORD name: M3ID.T;  t: T;  END;
+  builtins   : ARRAY [0..10] OF RECORD name: M3ID.T;  t: T;  END;
 
 VAR
   curModule   : T := NIL;
