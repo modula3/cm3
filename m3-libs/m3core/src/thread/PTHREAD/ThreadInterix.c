@@ -9,6 +9,7 @@ void ThreadInterix__Dummy(void)
 #else
 
 #include "m3core.h"
+#include <sys/procfs.h>
 
 static void Close(int* inoutFile)
 {
@@ -101,7 +102,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
 
   off = lseek(statusFile, 0, L_SET); /* seek is necessary and pread doesn't work */
   assert(off == 0);
-  j = read(status, &lwpstatus, sizeof(lwpstatus));
+  j = read(statusFile, &lwpstatus, sizeof(lwpstatus));
   assert(j == sizeof(lwpstatus));
 
   /* process the stack */
