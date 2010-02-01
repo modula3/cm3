@@ -869,10 +869,11 @@ if _Program != "make-msi.py":
 if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
 # workaround some of it
-    CM3_BuildLocal = CM3_BuildLocal or BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
-    CM3_CleanLocal = CM3_CleanLocal or CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
-    CM3_BuildGlobal = CM3_BuildGlobal or BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
-    CM3_CleanGlobal = CM3_CleanGlobal or CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
+    Debug = "" # " -debug "
+    CM3_BuildLocal = CM3_BuildLocal or BuildLocal or "%(CM3)s %(CM3_FLAGS)s " + Debug + " -build -override %(DEFS)s%(BuildArgs)s"
+    CM3_CleanLocal = CM3_CleanLocal or CleanLocal or "%(CM3)s %(CM3_FLAGS)s " + Debug + " -clean -build -override %(DEFS)s%(CleanArgs)s"
+    CM3_BuildGlobal = CM3_BuildGlobal or BuildGlobal or "%(CM3)s %(CM3_FLAGS)s " + Debug + " -build %(DEFS)s%(BuildArgs)s"
+    CM3_CleanGlobal = CM3_CleanGlobal or CleanGlobal or "%(CM3)s %(CM3_FLAGS)s " + Debug + " -clean %(DEFS)s%(CleanArgs)s"
     CM3_Ship = CM3_Ship or Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
 
 # other commands
@@ -1886,6 +1887,13 @@ if _Program != "make-msi.py":
             "deckscape",
             "webscape",
             "webcat",
+
+            # cvsup
+            "cvsup/suplib",
+            "cvsup/client",
+            "cvsup/server",
+            "cvsup/cvpasswd",
+
             ],
     }
     
