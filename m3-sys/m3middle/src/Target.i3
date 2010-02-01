@@ -197,6 +197,8 @@ TYPE
   IBytes = ARRAY [0..7] OF IByte;
   IByte = BITS 8 FOR [0..16_ff];
 
+PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT;
+
 TYPE
   Int_type = RECORD
     cg_type : CGType;    (* representation *)

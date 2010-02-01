@@ -13,6 +13,21 @@ IMPORT Text, TargetMap, M3RT, TextUtils;
 VAR (*CONST*)
   CCs : REF ARRAY OF CallingConvention;
 
+PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT =
+  VAR t: TEXT;
+  BEGIN
+    t := "n:";
+    t := t & Fmt.Unsigned(a.n);
+    t := t & ",x:";
+    FOR i := 0 TO 7 DO
+      t := t & Fmt.Unsigned(a.x[i]);
+      IF i # 7 THEN
+        t := t & ",";
+      END;
+    END;
+    RETURN t;
+  END TargetIntToDiagnosticText;
+
 PROCEDURE Init64 () =
   BEGIN
     Integer := Int64;
