@@ -3,6 +3,9 @@
 #ifndef _MT
 #define _MT
 #endif
+
+#include <assert.h>
+
 #if _MSC_VER < 900
 #error __int64 support is required.
 /* avoid cascade */
@@ -111,6 +114,36 @@ int64 __stdcall m3_mod64(int64 b, int64 a)
     a = (ST)(ub - 1 - (ua + ub - 1) % ub);
     return (bneg ? -a : a);
   }
+}
+
+/*
+ PROCEDURE Extract (x: T; i, n: CARDINAL): T;
+(* Take n bits from x, with bit i as the least significant bit, and return them
+   as the least significant n bits of a word whose other bits are 0. A checked
+   runtime error if n + i > Word.Size. *)
+
+PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
+(* Return x with n bits replaced, with bit i as the least significant bit, by
+   the least significant n bits of y. The other bits of x are unchanged. A
+   checked runtime error if n + i > Word.Size. *)
+*/
+
+uint64 __stdcall m3_extract64(uint64 x, uint64 i, uint64 n, uint64 sign_extend)
+{
+    assert((n + i) <= 64);
+    x >>= i;
+    x &= ~((~(uint64)0) << n);
+    if (sign_extend && (x & (((uint64)1) << (n - 1))))
+        x |= ((~(uint64)0) << n);
+    return x;
+}
+
+uint64 __stdcall m3_insert64(uint64 x, uint64 y, uint64 i, uint64 n)
+{
+    uint64 mask;
+    assert((n + i) <= 64);
+    mask = ((~((~(uint64)0) << n)) << i);
+    return (x & ~mask) | ((y << i) & mask);
 }
 
 #endif
