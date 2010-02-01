@@ -15,7 +15,6 @@ TYPE
   UINT16 = BasicCtypes.unsigned_short_int;
   UINT32 = BasicCtypes.unsigned_int;
   INT16 = BasicCtypes.short_int;
-  BYTE = UINT8;
 
 CONST
   MaxKeeper    = 10000;            (* max file size we'll hold in memory *)
@@ -25,7 +24,7 @@ CONST
   PadChar      = '\n';
 
 TYPE
-  PIMAGE_SYMBOL = <* UNALIGNED *> UNTRACED REF IMAGE_SYMBOL;
+  PIMAGE_SYMBOL = (* UNALIGNED *) UNTRACED REF IMAGE_SYMBOL;
   IMAGE_SYMBOL = RECORD
     N: ARRAY [0 .. 7] OF UINT8;
     Value              : UINT32;
@@ -418,7 +417,7 @@ PROCEDURE AddExport (sym: TEXT;  f: FileDesc) =
   END AddExport;
 
 PROCEDURE GetSymbolName (READONLY o: ObjFile;  sym: PIMAGE_SYMBOL): TEXT =
-  TYPE IntBytes = ARRAY [0..3] OF BYTE;
+  TYPE IntBytes = ARRAY [0..3] OF UINT8;
   VAR
     max_len, len: INTEGER;
     offset: UINT32;
@@ -697,7 +696,7 @@ PROCEDURE WriteHeader (nm: TEXT;  mode: TEXT;  time: Time.T;  size: INTEGER)
     Wr.PutString (lib_wr, LOOPHOLE (hdr, HdrChars));
   END WriteHeader;
 
-PROCEDURE StuffI (VAR b: ARRAY OF BYTE;  n: INTEGER) =
+PROCEDURE StuffI (VAR b: ARRAY OF UINT8;  n: INTEGER) =
   <*FATAL Convert.Failed*>
   VAR
     buf : ARRAY [0..BITSIZE(INTEGER)] OF CHAR;
@@ -711,7 +710,7 @@ PROCEDURE StuffI (VAR b: ARRAY OF BYTE;  n: INTEGER) =
     END;
   END StuffI;
 
-PROCEDURE StuffT (VAR b: ARRAY OF BYTE;  txt: TEXT) =
+PROCEDURE StuffT (VAR b: ARRAY OF UINT8;  txt: TEXT) =
   VAR len := Text.Length (txt);
   BEGIN
     FOR i := 0 TO MIN (len - 1, LAST (b)) DO
