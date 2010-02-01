@@ -312,6 +312,34 @@ PROCEDURE NewDec(t: TEXT): T =
 (* Handy utility procedures. *)
 (*****************************************************************************)
 
+PROCEDURE AtoI(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Word.T
+  RAISES {Error} =
+  VAR
+    len := Text.Length(t);
+    val: Word.T := 0;
+    digit: INTEGER;
+  BEGIN
+    IF len = 0 THEN RAISE
+      Error("Invalid " & what);
+    END;
+    FOR i := 0 TO len-1 DO
+      WITH ch = Text.GetChar(t, i) DO
+	CASE ch OF
+	| '0'..'9' => digit := ORD(ch) - ORD('0');
+	| 'a'..'f' => digit := ORD(ch) - ORD('a') + 10;
+	| 'A'..'F' => digit := ORD(ch) - ORD('A') + 10;
+	ELSE
+	  digit := radix;
+	END;
+	IF digit >= radix THEN
+	  RAISE Error("Invalid " & what);
+	END;
+	val := Word.Plus(Word.Times(val, radix), digit);
+      END;
+    END;
+    RETURN val;
+  END AtoI;
+
 PROCEDURE AtoL(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Long.T
   RAISES {Error} =
   VAR
@@ -339,12 +367,6 @@ PROCEDURE AtoL(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Long.T
     END;
     RETURN val;
   END AtoL;
-
-PROCEDURE AtoI(t: TEXT; what: TEXT := "integer"; radix: [2..16] := 10): Word.T
-  RAISES {Error} =
-  BEGIN
-    RETURN ORD(AtoL(t, what, radix));
-  END AtoI;
 
 PROCEDURE DecodeTime(text: TEXT): Time.T
   RAISES {Error} =

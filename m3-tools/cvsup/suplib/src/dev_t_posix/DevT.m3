@@ -51,7 +51,8 @@ PROCEDURE Equal(READONLY a, b: T): BOOLEAN =
 
 PROCEDURE Hash(READONLY dev: T): Word.T =
   BEGIN
-    RETURN Word.Xor(ORD(Long.RightShift(dev, 32)), ORD(Long.And(dev, 16_FFFFFFFFL)));
+    RETURN Word.Xor(VAL(Long.RightShift(dev, 32), Word.T),
+                    VAL(Long.And(dev, 16_FFFFFFFFL), Word.T));
   END Hash;
 
 PROCEDURE Mknod(path: TEXT;
