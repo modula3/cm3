@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: UnixMisc.m3,v 1.2 2009-04-12 05:00:50 jkrell Exp $ *)
+ * $Id: UnixMisc.m3,v 1.2.2.1 2010-02-01 13:33:34 jkrell Exp $ *)
 
 UNSAFE MODULE UnixMisc;
 
@@ -147,7 +147,7 @@ PROCEDURE MapFile(p: Pathname.T;
 	OSErrorPosix.Raise0(Uerror.EINVAL);
       END;
       IF statbuf.st_size # VAL(0, off_t) THEN
-	addr := Umman.mmap(NIL, ORD(statbuf.st_size), Umman.PROT_READ,
+	addr := Umman.mmap(NIL, VAL(statbuf.st_size, INTEGER), Umman.PROT_READ,
 	  Umman.MAP_SHARED, fd, VAL(0, off_t));
 	IF addr = LOOPHOLE(-1, ADDRESS) THEN OSErrorPosix.Raise() END;
       ELSE

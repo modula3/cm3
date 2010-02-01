@@ -26,7 +26,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: DevT.m3,v 1.2 2009-04-12 04:55:36 jkrell Exp $ *)
+ * $Id: DevT.m3,v 1.2.2.1 2010-02-01 13:33:36 jkrell Exp $ *)
 
 UNSAFE MODULE DevT;
 
@@ -51,7 +51,8 @@ PROCEDURE Equal(READONLY a, b: T): BOOLEAN =
 
 PROCEDURE Hash(READONLY dev: T): Word.T =
   BEGIN
-    RETURN Word.Xor(ORD(Long.RightShift(dev, 32)), ORD(Long.And(dev, 16_FFFFFFFFL)));
+    RETURN Word.Xor(VAL(Long.RightShift(dev, 32), Word.T),
+                    VAL(Long.And(dev, 16_FFFFFFFFL), Word.T));
   END Hash;
 
 PROCEDURE Mknod(path: TEXT;
