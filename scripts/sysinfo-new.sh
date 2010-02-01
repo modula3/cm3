@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: sysinfo-new.sh,v 1.10 2009-08-25 09:37:45 jkrell Exp $
 
 if [ "$SYSINFO_DONE" != "yes" ] ; then
 

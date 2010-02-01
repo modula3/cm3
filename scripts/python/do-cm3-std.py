@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# $Id: do-cm3-std.py,v 1.7 2009-07-16 19:26:49 jkrell Exp $
 
 import sys
 import os.path

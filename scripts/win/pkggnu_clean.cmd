@@ -1,5 +1,3 @@
-@rem $Id: pkggnu_clean.cmd,v 1.3 2008-05-08 11:36:42 jkrell Exp $
-
 @rem
 @rem This is a little helper to bring up NT386GNU.
 @rem It cleans out all the INSTALLROOT\pkg\*\NT386GNU directories.

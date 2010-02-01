@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: find-src-dirs.sh,v 1.3 2009-09-27 13:11:49 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -21,4 +20,3 @@ fi
 
 $FIND "${root}" -name m3makefile -print | \
   sed -e 's;/m3makefile$;;' -e 's;^;dir ;'
-

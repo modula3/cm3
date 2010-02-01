@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: upgrade.sh,v 1.28 2009-09-27 13:01:36 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"

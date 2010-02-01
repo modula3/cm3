@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: do-cm3-core.sh,v 1.16 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"

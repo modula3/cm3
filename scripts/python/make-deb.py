@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# $Id: make-deb.py,v 1.3 2009-06-27 17:21:05 jkrell Exp $
 
 import sys
 import os.path

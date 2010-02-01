@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: create-skel.sh,v 1.3 2009-06-26 06:56:12 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
