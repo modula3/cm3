@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: do-pkg.sh,v 1.3 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -41,4 +40,3 @@ P=`get_args $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
-

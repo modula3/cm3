@@ -1,5 +1,3 @@
-@rem $Id: upgrade.cmd,v 1.14 2008-06-15 10:34:54 jkrell Exp $
-
 @setlocal
 
 @rem

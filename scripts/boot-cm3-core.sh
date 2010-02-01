@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: boot-cm3-core.sh,v 1.10 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -83,4 +82,3 @@ ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
-

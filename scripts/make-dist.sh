@@ -1,5 +1,4 @@
 #bash
-# $Id: make-dist.sh,v 1.30 2009-09-27 12:59:23 jkrell Exp $
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"

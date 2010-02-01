@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# $Id: loop.py,v 1.1 2009-07-27 05:36:53 jkrell Exp $
 
 import os
 

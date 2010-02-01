@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# $Id: make-msi.py,v 1.3 2009-09-11 15:32:41 jkrell Exp $
 
 import sys
 from pylib import *

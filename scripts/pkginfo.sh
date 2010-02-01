@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: pkginfo.sh,v 1.23 2009-07-24 11:48:09 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"

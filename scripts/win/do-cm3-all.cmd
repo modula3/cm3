@@ -1,5 +1,3 @@
-@rem $Id: do-cm3-all.cmd,v 1.2 2008-05-08 11:36:42 jkrell Exp $
-
 @if "%_echo%" == "" @echo off
 
 SetLocal EnableExtensions EnableDelayedExpansion

@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: make-src-dist-all.sh,v 1.12 2009-09-27 13:07:53 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -65,4 +64,3 @@ if [ -n "${DOSHIP}" ]; then
 fi
 echo "done"
 exit 0
-
