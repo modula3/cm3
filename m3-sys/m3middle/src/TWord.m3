@@ -273,6 +273,46 @@ PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
     RETURN TRUE;
   END LE;
 
+PROCEDURE xEQ (READONLY a, b: Int): BOOLEAN =
+  VAR n := MIN (a.n, b.n);
+  BEGIN
+    <*ASSERT n # 0*>
+    FOR i := n-1 TO 0 BY -1 DO
+      IF    a.x[i] # b.x[i] THEN RETURN FALSE;
+      ELSIF a.x[i] # b.x[i] THEN RETURN FALSE;
+      END;
+    END;
+    FOR i := n TO a.n-1 DO IF a.x[i] # 0 THEN RETURN FALSE END END;
+    FOR i := n TO b.n-1 DO IF b.x[i] # 0 THEN RETURN FALSE END END;
+    RETURN TRUE;
+  END xEQ;
+
+PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
+  VAR x := xEQ(a, b);
+  BEGIN
+    <* ASSERT x = xEQ(b, a) *>
+    <* ASSERT x = (LE(a, b) AND LE(b, a)) *>
+    RETURN x;
+  END EQ;
+
+PROCEDURE NE (READONLY a, b: Int): BOOLEAN =
+  VAR x := NOT xEQ(a, b);
+  BEGIN
+    <* ASSERT x = (NOT xEQ(b, a)) *>
+    <* ASSERT x = (LT(a, b) OR LT(b, a)) *>
+    RETURN x;
+  END NE;
+
+PROCEDURE GE (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN LE(b, a);
+  END GE;
+
+PROCEDURE GT (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN LT(b, a);
+  END GT;
+
 PROCEDURE And (READONLY a, b: Int;  VAR r: Int) =
   VAR n := MIN (a.n, b.n);
   BEGIN
@@ -312,20 +352,16 @@ PROCEDURE Not (READONLY a: Int;  VAR r: Int) =
     END;
   END Not;
 
-PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
+PROCEDURE LeftShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
   VAR w, i, j, z, x1, x2: INTEGER;
       n := a.n;  size := n * BITSIZE (IByte);
   BEGIN
     <*ASSERT n # 0*>
-    IF ABS (b) >= size THEN
+    IF b >= size THEN
       r := Int{n};
-      RETURN;
-    END;
-
-    IF b = 0 THEN (* no shift *)
+    ELSIF b = 0 THEN (* no shift *)
       r := a;
-
-    ELSIF b > 0 THEN (* left shift *)
+    ELSE
       w := b DIV BITSIZE (IByte);
       i := b MOD BITSIZE (IByte);
       j := BITSIZE (IByte) - i;
@@ -336,10 +372,21 @@ PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
         r.x[k] := Word.And (Word.Or (x1, x2), Mask);
       END;
       r.n := a.n;
+    END;
+  END LeftShift;
 
-    ELSE (* right shift *)
-      w := (-b) DIV BITSIZE (IByte);
-      i := (-b) MOD BITSIZE (IByte);
+PROCEDURE RightShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
+  VAR w, i, j, z, x1, x2: INTEGER;
+      n := a.n;  size := n * BITSIZE (IByte);
+  BEGIN
+    <*ASSERT n # 0*>
+    IF b >= size THEN
+      r := Int{n};
+    ELSIF b = 0 THEN (* no shift *)
+      r := a;
+    ELSE
+      w := b DIV BITSIZE (IByte);
+      i := b MOD BITSIZE (IByte);
       j := BITSIZE (IByte) - i;
       FOR k := 0 TO n-1 DO
         z := k + w;  x1 := 0;  x2 := 0;
@@ -349,6 +396,15 @@ PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
       END;
       r.n := a.n;
 
+    END;
+  END RightShift;
+
+PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
+  BEGIN
+    IF b > 0 THEN (* left shift *)
+      LeftShift(a, b, r);
+    ELSE (* right shift *)
+      RightShift(a, -b, r);
     END;
   END Shift;
 

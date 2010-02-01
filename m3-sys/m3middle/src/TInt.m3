@@ -8,7 +8,7 @@
 
 MODULE TInt;
 
-IMPORT Word, TWord;
+IMPORT Word, TWord, Text;
 FROM Target IMPORT Int, IByte, IBytes;
 
 CONST (* IMPORTS *)
@@ -21,7 +21,6 @@ CONST
   SignMask = LShift (1, BITSIZE (IByte) - 1);
   Base     = Mask + 1;
   Digits   = ARRAY [0..9] OF CHAR { '0','1','2','3','4','5','6','7','8','9'};
-  Ten      = Int{NUMBER(IBytes), IBytes{10,0,..}};
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
   BEGIN
@@ -39,44 +38,46 @@ TYPE Sign = {Bad, Neg, Pos};
 PROCEDURE CheckSign (READONLY r: Int;  n: CARDINAL): Sign =
   BEGIN
     <*ASSERT n # 0*>
-    <*ASSERT n <= r.n*>
     IF And (r.x[r.n-1], SignMask) = 0 THEN
-      IF And (r.x[n-1], SignMask) # 0 THEN RETURN Sign.Bad END;
-      FOR i := n TO r.n-1 DO
-        IF r.x[i] # 0 THEN RETURN Sign.Bad END;
+      IF n < r.n THEN
+        IF And (r.x[n-1], SignMask) # 0 THEN RETURN Sign.Bad END;
+        FOR i := n TO r.n-1 DO
+          IF r.x[i] # 0 THEN RETURN Sign.Bad END;
+        END;
       END;
       RETURN Sign.Pos;
     ELSE
-      IF And (r.x[n-1], SignMask) = 0 THEN RETURN Sign.Bad END;
-      FOR i := n TO r.n-1 DO
-        IF r.x[i] # Mask THEN RETURN Sign.Bad END;
+      IF n < r.n THEN
+        IF And (r.x[n-1], SignMask) = 0 THEN RETURN Sign.Bad END;
+        FOR i := n TO r.n-1 DO
+          IF r.x[i] # Mask THEN RETURN Sign.Bad END;
+        END;
       END;
       RETURN Sign.Neg;
     END;
   END CheckSign;
 
 PROCEDURE IntI (READONLY r: Int;  n: CARDINAL;  VAR x: Int): BOOLEAN =
-  VAR sign := CheckSign (r, n);  j := 0;
+  VAR sign := CheckSign (r, n);  j := 0;  result := TRUE;
   BEGIN
     CASE sign OF
-    | Sign.Bad => RETURN FALSE;
+    | Sign.Bad => result := FALSE;
     | Sign.Pos => j := 0;
     | Sign.Neg => j := Mask;
     END;
     x.n := n;
     FOR i := 0 TO r.n-1 DO x.x[i] := r.x[i] END;
     FOR i := r.n TO n-1 DO x.x[i] := j END;
-    RETURN TRUE;
+    RETURN result;
   END IntI;
 
 PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
-  VAR
-    n := MIN (r.n, BITSIZE (INTEGER) DIV BITSIZE (IByte));
-    sign := CheckSign (r, n);
+  VAR sign := CheckSign (r, BITSIZE (INTEGER) DIV BITSIZE (IByte));
+      result := TRUE;
   BEGIN
     (* ensure the result has the right sign extension *)
     CASE sign OF
-    | Sign.Bad => RETURN FALSE;
+    | Sign.Bad => result := FALSE;
     | Sign.Pos => x := 0;
     | Sign.Neg => x := Word.Not (0);
     END;
@@ -86,7 +87,7 @@ PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
       x := Word.Or (LShift (x, BITSIZE (IByte)), r.x[i]);
     END;
 
-    RETURN TRUE;
+    RETURN result;
   END ToInt;
 
 PROCEDURE New (READONLY x: ARRAY OF CHAR;  n: CARDINAL;  VAR r: Int): BOOLEAN =
@@ -143,7 +144,23 @@ PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
     r_sign := CheckSign (r, n);  <*ASSERT r_sign # Sign.Bad*>
     RETURN (a_sign = b_sign) OR (a_sign = r_sign);
   END Subtract;
+
+PROCEDURE Negate (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  (* It is safe for r to alias a *)
+  BEGIN
+    RETURN Subtract(Zero, a, r);
+  END Negate;
   
+PROCEDURE Abs (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  (* It is safe for r to alias a *)
+  BEGIN
+    IF GE(a, Zero) THEN
+      r := a;
+      RETURN TRUE;
+    END;
+    RETURN Negate(a, r);
+  END Abs;
+
 PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR
     n := MIN (a.n, b.n);  k, carry: INTEGER;  q: Int;
@@ -310,6 +327,27 @@ PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
   BEGIN
     RETURN EQ (a, b) OR LT (a, b);
   END LE;
+
+PROCEDURE NE (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN NOT EQ (a, b);
+  END NE;
+
+PROCEDURE GT (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN LT (b, a);
+  END GT;
+
+PROCEDURE GE (READONLY a, b: Int): BOOLEAN = 
+  BEGIN
+    RETURN LE(b, a);
+  END GE;
+
+PROCEDURE ToText (READONLY r: Int): TEXT =
+  VAR result  : ARRAY [0..BITSIZE (IByte) * NUMBER (IBytes)] OF CHAR;
+  BEGIN
+    RETURN Text.FromChars(SUBARRAY(result, 0, ToChars(r, result)));
+  END ToText;
 
 PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
   VAR
