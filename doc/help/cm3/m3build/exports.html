@@ -12,53 +12,62 @@ public directories.
 <P>
 
 <B> BinExport(X) </B>  
-          exports source file <TT>X</TT> to <TT>/bin</TT>.
+          exports source file <TT>X</TT> to <TT>INSTALL_ROOT/bin</TT>.
 <P>
 
 <B> BindExport(X) </B>  
-          exports derived file <TT>X</TT> to <TT>/bin</TT>.
+          exports derived file <TT>X</TT> to <TT>INSTALL_ROOT/bin</TT>.
 <P>
 
 <B> DocExport(X) </B>  
-          exports source file <TT>X</TT> to <TT>/doc</TT>.
+          exports source file <TT>X</TT> to <TT>INSTALL_ROOT/doc</TT>.
 <P>
 
 <B> DocdExport(X) </B>  
-          exports derived file <TT>X</TT> to <TT>/doc</TT>.
+          exports derived file <TT>X</TT> to <TT>INSTALL_ROOT/doc</TT>.
 <P>
 
 <B> EmacsExport(X) </B>  
-          exports source file <TT>X</TT> to <TT>/emacs</TT>.
+          exports source file <TT>X</TT> to <TT>INSTALL_ROOT/emacs</TT>.
 <P>
 
 <B> EmacsdExport(X) </B>  
-          exports derived file <TT>X</TT> to <TT>/emacs</TT>.
+          exports derived file <TT>X</TT> to <TT>INSTALL_ROOT/emacs</TT>.
 <P>
 
 <B> HtmlExport(X) </B>  
-          exports source file <TT>X</TT> to <TT>/html</TT>.
+          exports source file <TT>X</TT> to <TT>INSTALL_ROOT/html</TT>.
 <P>
 
 <B> LibExport(X) </B>  
-          exports source file <TT>X</TT> to <TT>/lib</TT>.
+          exports source file <TT>X</TT> to <TT>INSTALL_ROOT/lib</TT>.
 <P>
 
 <B> LibdExport(X) </B>  
-          exports derived file <TT>X</TT> to <TT>/lib</TT>.
+          exports derived file <TT>X</TT> to <TT>INSTALL_ROOT/lib</TT>.
 <P>
 
 <B> ManExport(X,sec) </B>  
           exports source file <TT>X.sec</TT> to section <TT>sec</TT>
-          of <TT>/man</TT>.
+          of <TT>INSTALL_ROOT/man</TT>.
 <P>
 
 <B> MandExport(X,sec) </B>  
           exports derived file <TT>X.sec</TT> to section <TT>sec</TT>
-          of <TT>/man</TT>.
+          of <TT>INSTALL_ROOT/man</TT>.
+<P>
+
+<B> RootExport(X, DIR) </B> <I>(since 5.8.3)</I>
+          exports source file <TT>X</TT> to <TT>INSTALL_ROOT/DIR</TT>.
+<P>
+
+<B> RootdExport(X, DIR) </B> <I>(since 5.8.3)</I>
+          exports derived file <TT>X</TT> to <TT>INSTALL_ROOT/DIR</TT>.
 <P>
 
 As mentioned on the <A HREF="m3build.html">previous page</A>,
-the actual paths bound to <TT>/bin</TT>, <TT>/lib</TT>, ...
+the actual paths bound to <TT>INSTALL_ROOT/bin</TT>,
+<TT>INSTALL_ROOT/lib</TT>, ...
 depend on your installation's specific configuration.
 
 </BODY>
