@@ -121,8 +121,13 @@ proc IsInterix() is
   return FALSE
 end
 
-proc HasGui() is
+proc HasTrestle() is
   return not IsInterix()
+end
+
+% temporary compat
+proc HasGui() is
+  return HasTrestle()
 end
 
 proc HasOpenGL() is
