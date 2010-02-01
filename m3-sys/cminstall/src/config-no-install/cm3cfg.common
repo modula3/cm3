@@ -311,7 +311,7 @@ end
 proc set_config_options() is
     m3_option("-why")   %-- produce a listing that explains what's happening and why
     m3_debug(TRUE)      %-- produce object code with debugging symbols
-    M3_OPTIONS += "-w1"  %-- produce "level 1" warnings
+    M3_OPTIONS += "-w1" %-- produce "level 1" warnings
 end
 
 %------------------------------------------------------------------------------
