@@ -2,6 +2,9 @@
  * Helper functions for accessing the "h_errno" value.
  */
 
+#if defined(__INTERIX) && !defined(_REENTRANT)
+#define _REENTRANT
+#endif
 #include <netdb.h>
 
 int
