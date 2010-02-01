@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -82,4 +81,3 @@ for p in ${P}; do
   echo ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/${CROSS_TARGET}/${p}/${CROSS_TARGET}/
   ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/${CROSS_TARGET}/${p}/${CROSS_TARGET}/
 done
-

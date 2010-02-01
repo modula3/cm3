@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -94,4 +93,3 @@ for p in ${P}; do
   echo "  ${SRC}/${p} --> ${DEST}/${p}"
   cp -pr ${SRC}/${p} ${DEST}
 done
-

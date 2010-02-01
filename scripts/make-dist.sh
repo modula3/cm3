@@ -1,5 +1,4 @@
 #bash
-# $Id$
 
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"

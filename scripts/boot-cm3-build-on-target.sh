@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -130,4 +129,3 @@ for p in ${P}; do
   ${GMAKE} PROGNAME="${pkg}" \
            LIBS="`get_libs ${pkg}`" all
 done
-

@@ -1,5 +1,3 @@
-@rem $Id$
-
 @if not "%1" == "" (shift & goto :%1)
 
 @if "%SYSINFO_DONE%" == "yes" goto :eof

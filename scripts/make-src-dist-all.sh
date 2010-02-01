@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -65,4 +64,3 @@ if [ -n "${DOSHIP}" ]; then
 fi
 echo "done"
 exit 0
-

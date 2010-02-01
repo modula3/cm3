@@ -1,5 +1,3 @@
-@rem $Id$
-
 @if "%_echo%" == "" @echo off
 
 if not "%1" == "" (shift & goto :%1)
