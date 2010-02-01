@@ -154,7 +154,10 @@ PROCEDURE Negate (READONLY a: Int;  VAR r: Int): BOOLEAN =
 PROCEDURE Abs (READONLY a: Int;  VAR r: Int): BOOLEAN =
   (* It is safe for r to alias a *)
   BEGIN
-    IF GE(a, Zero) THEN RETURN FALSE END;
+    IF GE(a, Zero) THEN
+      r := a;
+      RETURN TRUE;
+    END;
     RETURN Negate(a, r);
   END Abs;
 
