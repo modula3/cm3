@@ -8,7 +8,7 @@
 
 MODULE Target;
 
-IMPORT Text, TargetMap, M3RT, TextUtils;
+IMPORT Text, TargetMap, M3RT, TextUtils, Fmt;
 
 VAR (*CONST*)
   CCs : REF ARRAY OF CallingConvention;
