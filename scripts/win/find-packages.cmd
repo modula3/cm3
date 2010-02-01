@@ -1,5 +1,3 @@
-@rem $Id: find-packages.cmd,v 1.8 2008-08-14 15:05:54 jkrell Exp $
-
 @if "%_echo%" == "" @echo off
 
 setlocal

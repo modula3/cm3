@@ -1,5 +1,3 @@
-@rem $Id: sysinfo.cmd,v 1.24 2009-07-21 08:30:58 jkrell Exp $
-
 @if not "%1" == "" (shift & goto :%1)
 
 @if "%SYSINFO_DONE%" == "yes" goto :eof

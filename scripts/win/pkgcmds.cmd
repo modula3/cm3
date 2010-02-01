@@ -1,5 +1,3 @@
-@rem $Id: pkgcmds.cmd,v 1.5 2009-07-21 08:17:36 jkrell Exp $
-
 @if "%_echo%" == "" @echo off
 
 if not "%1" == "" (shift & goto :%1)

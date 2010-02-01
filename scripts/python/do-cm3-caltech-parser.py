@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# $Id: do-cm3-caltech-parser.py,v 1.7.2.1 2009-09-11 15:38:58 jkrell Exp $
 
 import sys
 import os.path

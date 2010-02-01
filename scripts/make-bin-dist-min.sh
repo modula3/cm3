@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: make-bin-dist-min.sh,v 1.42.2.8 2009-08-29 05:57:27 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"

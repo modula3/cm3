@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: install-cm3-compiler.sh,v 1.7 2009-06-07 16:03:50 wagner Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"

@@ -1,5 +1,4 @@
 #! /usr/bin/env python
-# $Id: upgrade.py,v 1.25 2008-12-19 00:24:21 jkrell Exp $
 
 import sys
 import pylib

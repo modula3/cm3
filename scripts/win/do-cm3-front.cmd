@@ -1,5 +1,3 @@
-@rem $Id: do-cm3-front.cmd,v 1.3 2008-05-08 11:36:42 jkrell Exp $
-
 @echo off
 
 SetLocal EnableExtensions EnableDelayedExpansion

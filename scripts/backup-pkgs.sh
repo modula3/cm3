@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: backup-pkgs.sh,v 1.6 2009-06-29 16:31:37 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"

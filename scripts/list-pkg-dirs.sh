@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id: list-pkg-dirs.sh,v 1.2.2.1 2009-08-02 12:17:21 jkrell Exp $
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -41,4 +40,3 @@ for d in `listpkgs "$@" | sed -e "s;\$;/src;"`; do
 done | sed -e "s;^;${PREFIX};"
 
 #echo "
-

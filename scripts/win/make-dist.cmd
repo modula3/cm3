@@ -1,5 +1,3 @@
-@rem $Id: make-dist.cmd,v 1.29 2008-05-09 22:21:20 jkrell Exp $
-
 @if "%_echo%" == "" @echo off
 
 setlocal
