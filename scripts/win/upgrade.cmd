@@ -1,5 +1,3 @@
-@rem $Id$
-
 @setlocal
 
 @rem

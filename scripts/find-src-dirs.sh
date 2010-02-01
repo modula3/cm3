@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -21,4 +20,3 @@ fi
 
 $FIND "${root}" -name m3makefile -print | \
   sed -e 's;/m3makefile$;;' -e 's;^;dir ;'
-

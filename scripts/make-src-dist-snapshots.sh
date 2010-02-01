@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -24,4 +23,3 @@ DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 ( . ${ROOT}/scripts/make-src-dist-std.sh )
 ( . ${ROOT}/scripts/make-src-dist-sys.sh )
 ( . ${ROOT}/scripts/make-src-dist-gnu.sh )
-

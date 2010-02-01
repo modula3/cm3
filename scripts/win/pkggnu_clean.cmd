@@ -1,5 +1,3 @@
-@rem $Id$
-
 @rem
 @rem This is a little helper to bring up NT386GNU.
 @rem It cleans out all the INSTALLROOT\pkg\*\NT386GNU directories.

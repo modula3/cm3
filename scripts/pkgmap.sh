@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 #set -x
 if [ -n "$ROOT" -a -d "$ROOT" ]; then

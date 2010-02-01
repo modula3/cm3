@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 
 if [ -n "$ROOT" -a -d "$ROOT" ] ; then
   sysinfo="$ROOT/scripts/sysinfo.sh"
@@ -80,4 +79,3 @@ fi
 for p in ${P}; do
   ${ROOT}/scripts/archive-pkg.sh ${CROSS_TARGET} ${p}
 done
-

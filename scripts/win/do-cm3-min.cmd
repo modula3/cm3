@@ -1,5 +1,3 @@
-@rem $Id$
-
 @echo off
 
 SetLocal EnableExtensions EnableDelayedExpansion
