@@ -278,7 +278,7 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
       Error.ID (t.name, "variable has empty type");
     END;
     IF (t.no_type) AND Type.IsEqual (t.tipe, Null.T, NIL) THEN
-      Error.WarnID (1, t.name, "variable has type NULL"); 
+      Error.ID (t.name, "variable has type NULL"); 
     END;
 
     t.global := Scope.OuterMost (t.scope);
