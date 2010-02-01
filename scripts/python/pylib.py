@@ -1661,6 +1661,11 @@ if _Program != "make-msi.py":
             "libm3",
             "sysutils",
     
+            # cvsup
+            "cvsup/suplib",
+            "cvsup/client",
+            "cvsup/server",
+            "cvsup/cvpasswd",
             ],
     
     
@@ -1869,6 +1874,12 @@ if _Program != "make-msi.py":
             "deckscape",
             "webscape",
             "webcat",
+
+            # cvsup
+            "cvsup/suplib",
+            "cvsup/client",
+            "cvsup/server",
+            "cvsup/cvpasswd",
             ],
     }
     
