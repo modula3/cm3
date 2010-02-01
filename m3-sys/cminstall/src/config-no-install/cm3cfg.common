@@ -121,8 +121,12 @@ proc IsInterix() is
   return FALSE
 end
 
+if not defined("HasTrestle")
+
 proc HasTrestle() is
   return not IsInterix()
+end
+
 end
 
 % temporary compat
@@ -130,9 +134,13 @@ proc HasGui() is
   return HasTrestle()
 end
 
+if not defined("HasOpenGL")
+
 proc HasOpenGL() is
   % but see http://www.interix.com/Motif-OpenGL.htm
   return not IsInterix()
+end
+
 end
 
 proc IsOpenBSD() is
