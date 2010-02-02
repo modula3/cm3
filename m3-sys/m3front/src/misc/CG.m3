@@ -2349,12 +2349,12 @@ PROCEDURE Zero (s: Size) =
 
 (*----------------------------------------------------------- conversions ---*)
 
-PROCEDURE Loophole (from, two: Type) =
+PROCEDURE Loophole (from, to: Type) =
   BEGIN
     Force ();
-    cg.loophole (from, two);
+    cg.loophole (from, to);
     SPop (1, "Loophole");
-    SPush (two);
+    SPush (to);
   END Loophole;
 
 (*------------------------------------------------ traps & runtime checks ---*)

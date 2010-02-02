@@ -539,7 +539,7 @@ PROCEDURE Zero (s: Size);
 
 (*----------------------------------------------------------- conversions ---*)
 
-PROCEDURE Loophole (from, two: Type);
+PROCEDURE Loophole (from, to: Type);
 (* s0.to := LOOPHOLE(s0.from, to) *)
 
 (*------------------------------------------------ traps & runtime checks ---*)
