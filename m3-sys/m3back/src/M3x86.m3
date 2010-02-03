@@ -1077,6 +1077,7 @@ PROCEDURE end_init (u: U;  v: Var) =
       u.wr.Cmd   ("end_init");
       u.wr.VName (v);
       u.wr.NL    ();
+      u.wr.Flush ();
     END;
 
     <* ASSERT v = u.init_varstore *>
@@ -2542,7 +2543,7 @@ PROCEDURE swap (u: U;  a, b: Type) =
       u.wr.NL    ();
     END;
 
-    <* ASSERT Is64(a) = Is64(b) *>
+    <* ASSERT GetTypeSize(a) = GetTypeSize(b) *>
 
     u.vstack.swap();
   END swap;
