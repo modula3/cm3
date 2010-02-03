@@ -186,6 +186,13 @@ int __stdcall m3_check_index_64(uint64 a, uint64 limit)
     return (a > limit);
 }
 
+int __stdcall m3_compare64_eq(uint64 a, uint64 b) { return (a == b); }
+int __stdcall m3_compare64_ne(uint64 a, uint64 b) { return (a != b); }
+int __stdcall m3_compare64_lt(uint64 a, uint64 b) { return (a < b); }
+int __stdcall m3_compare64_le(uint64 a, uint64 b) { return (a <= b); }
+int __stdcall m3_compare64_gt(uint64 a, uint64 b) { return (a > b); }
+int __stdcall m3_compare64_ge(uint64 a, uint64 b) { return (a >= b); }
+
 #endif
 
 #ifdef __cplusplus
