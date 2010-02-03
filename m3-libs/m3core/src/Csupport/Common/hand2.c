@@ -146,6 +146,46 @@ uint64 __stdcall m3_insert64(uint64 x, uint64 y, uint64 i, uint64 n)
     return (x & ~mask) | ((y << i) & mask);
 }
 
+uint64 __stdcall m3_check_lo_u64(uint64 a, uint64 limit, uint64 fault_code)
+{
+    return ((a < limit) ? fault_code : 0);
+}
+
+uint64 __stdcall m3_check_hi_u64(uint64 a, uint64 limit, uint64 fault_code)
+{
+    return ((limit < a) ? fault_code : 0);
+}
+
+uint64 __stdcall m3_check_lo_64(int64 a, int64 limit, uint64 fault_code)
+{
+    return ((a < limit) ? fault_code : 0);
+}
+
+uint64 __stdcall m3_check_hi_64(int64 a, int64 limit, uint64 fault_code)
+{
+    return ((limit < a) ? fault_code : 0);
+}
+
+uint64 __stdcall m3_check_range_u64(uint64 a, uint64 limit_lo, uint64 limit_hi, uint64 fault_code)
+{
+    return ((a < limit_lo || a > limit_hi) ?  fault_code : 0);
+}
+
+uint64 __stdcall m3_check_range_64(int64 a, int64 limit_lo, int64 limit_hi, uint64 fault_code)
+{
+    return ((a < limit_lo || a > limit_hi) ?  fault_code : 0);
+}
+
+uint64 __stdcall m3_check_eq_64(uint64 a, uint64 b, uint64 fault_code)
+{
+    return ((a != b) ? fault_code : 0);
+}
+
+uint64 __stdcall m3_check_index_64(uint64 a, uint64 limit, uint64 fault_code)
+{
+    return ((a > limit) ? fault_code : 0);
+}
+
 #endif
 
 #ifdef __cplusplus
