@@ -16,7 +16,7 @@ FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName;
 FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
@@ -2264,8 +2264,6 @@ PROCEDURE New (parent: M3x86Rep.U; cg: Codex86.T; debug: BOOLEAN): T =
 
 CONST
   OLocName = ARRAY OLoc OF TEXT { "MEM", "REG", "FSTACK", "IMM" };
-  RegName  = ARRAY Regno OF TEXT { "***", "EAX", "ECX", "EDX", "EBX",
-                                          "ESP", "EBP", "ESI", "EDI" };
 
 PROCEDURE Debug (t: T;  tag: TEXT;  wr: Wrx86.T) =
   VAR
