@@ -1455,7 +1455,7 @@ PROCEDURE set_label (u: U;  l: Label;  <*UNUSED*> barrier: BOOLEAN) =
   (* define 'l' to be at the current pc *)
   BEGIN
     IF u.debug THEN
-      u.wr.OutT  (".");
+      u.wr.OutT  ("set_label");
       u.wr.Lab   (l);
       u.wr.NL    ();
     END;
