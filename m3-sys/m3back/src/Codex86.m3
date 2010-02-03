@@ -18,7 +18,7 @@ FROM M3CG IMPORT Type, MType, Label, Alignment;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs;
-FROM M3x86Rep IMPORT RegSet, RegName, SplitOperand, Is64, SplitImm;
+FROM M3x86Rep IMPORT RegSet, RegName, SplitOperand, Is64, SplitImm, OperandPart;
 
 FROM M3ObjFile IMPORT Seg;
 
@@ -426,8 +426,8 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
   END immOp1;
 
 PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
-  VAR destA: ARRAY [0..1] OF Operand;
-      immA: ARRAY [0..1] OF Target.Int;
+  VAR destA: ARRAY OperandPart OF Operand;
+      immA: ARRAY OperandPart OF Target.Int;
       immSize := SplitImm(dest.optype, imm, immA);
       destSize := SplitOperand(dest, destA);
   BEGIN
@@ -482,8 +482,8 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN) =
   END binOp1;
 
 PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
-  VAR destA: ARRAY [0..1] OF Operand;
-      srcA: ARRAY [0..1] OF Operand;
+  VAR destA: ARRAY OperandPart OF Operand;
+      srcA: ARRAY OperandPart OF Operand;
       srcSize := SplitOperand(src, srcA);
       destSize := SplitOperand(dest, destA);
   BEGIN
@@ -580,8 +580,8 @@ PROCEDURE swapOp1 (t: T; READONLY dest, src: Operand) =
   END swapOp1;
 
 PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
-  VAR destA: ARRAY [0..1] OF Operand;
-      srcA: ARRAY [0..1] OF Operand;
+  VAR destA: ARRAY OperandPart OF Operand;
+      srcA: ARRAY OperandPart OF Operand;
       srcSize := SplitOperand(src, srcA);
       destSize := SplitOperand(dest, destA);
   BEGIN
@@ -716,8 +716,8 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
   END movOp1;
 
 PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
-  VAR destA: ARRAY [0..1] OF Operand;
-      srcA: ARRAY [0..1] OF Operand;
+  VAR destA: ARRAY OperandPart OF Operand;
+      srcA: ARRAY OperandPart OF Operand;
       srcSize := SplitOperand(src, srcA);
       destSize := SplitOperand(dest, destA);
   BEGIN
@@ -806,7 +806,7 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
   END pushOp1;
 
 PROCEDURE pushOp (t: T; READONLY src: Operand) =
-  VAR a: ARRAY [0..1] OF Operand;
+  VAR a: ARRAY OperandPart OF Operand;
       size := SplitOperand(src, a);
   BEGIN
 
@@ -840,7 +840,7 @@ PROCEDURE popOp1 (t: T; READONLY dest: Operand) =
   END popOp1;
 
 PROCEDURE popOp (t: T; READONLY dest: Operand) =
-  VAR a: ARRAY [0..1] OF Operand;
+  VAR a: ARRAY OperandPart OF Operand;
       size := SplitOperand(dest, a);
   BEGIN
 
@@ -891,7 +891,7 @@ PROCEDURE unOp1 (t: T; op: Op; READONLY dest: Operand) =
   END unOp1;
 
 PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
-  VAR destA: ARRAY [0..1] OF Operand;
+  VAR destA: ARRAY OperandPart OF Operand;
       destSize := SplitOperand(dest, destA);
   BEGIN
 
