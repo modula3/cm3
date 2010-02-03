@@ -13,7 +13,7 @@ IMPORT M3, M3ID, CG, Value, ValueRep, Type, Expr, Error, RunTyme;
 IMPORT Scope, AssignStmt, Formal, M3RT, IntegerExpr, TipeMap, M3String;
 IMPORT OpenArrayType, Target, TInt, Token, Ident, Module, CallExpr;
 IMPORT Decl, Null, Int, LInt, Fmt, Procedure, Tracer, TextExpr, NamedExpr;
-IMPORT PackedType;
+IMPORT PackedType, ErrType;
 FROM Scanner IMPORT GetToken, Match, cur;
 
 CONST
@@ -250,9 +250,8 @@ PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
     IF (t.tipe = NIL) THEN
       IF    (t.init # NIL)   THEN t.tipe := Expr.TypeOf (t.init)
-      ELSIF (t.formal # NIL) THEN t.tipe := Value.TypeOf (t.formal) END;
-      IF t.tipe = NIL THEN
-        Error.ID (t.name, "variable has no type");  t.tipe := Int.T;
+      ELSIF (t.formal # NIL) THEN t.tipe := Value.TypeOf (t.formal)
+      ELSE  Error.ID (t.name, "variable has no type");  t.tipe := ErrType.T;
       END;
     END;
     RETURN t.tipe;
@@ -278,7 +277,8 @@ PROCEDURE Check (t: T;  VAR cs: Value.CheckState) =
     IF (info.isEmpty) THEN
       Error.ID (t.name, "variable has empty type");
     END;
-    IF (t.no_type) AND Type.IsEqual (t.tipe, Null.T, NIL) THEN
+    IF (t.no_type) AND (t.tipe # ErrType.T)
+      AND Type.IsEqual (t.tipe, Null.T, NIL) THEN
       Error.WarnID (1, t.name, "variable has type NULL"); 
     END;
 
