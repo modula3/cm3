@@ -186,12 +186,16 @@ int __stdcall m3_check_index_64(uint64 a, uint64 limit)
     return (a > limit);
 }
 
-int __stdcall m3_compare64_eq(uint64 a, uint64 b) { return (a == b); }
-int __stdcall m3_compare64_ne(uint64 a, uint64 b) { return (a != b); }
-int __stdcall m3_compare64_lt(uint64 a, uint64 b) { return (a < b); }
-int __stdcall m3_compare64_le(uint64 a, uint64 b) { return (a <= b); }
-int __stdcall m3_compare64_gt(uint64 a, uint64 b) { return (a > b); }
-int __stdcall m3_compare64_ge(uint64 a, uint64 b) { return (a >= b); }
+int __stdcall m3_compare_eq_64(uint64 a, uint64 b) { return (a == b); }
+int __stdcall m3_compare_ne_64(uint64 a, uint64 b) { return (a != b); }
+int __stdcall m3_compare_lt_64(int64 a, int64 b) { return (a < b); }
+int __stdcall m3_compare_le_64(int64 a, int64 b) { return (a <= b); }
+int __stdcall m3_compare_gt_64(int64 a, int64 b) { return (a > b); }
+int __stdcall m3_compare_ge_64(int64 a, int64 b) { return (a >= b); }
+int __stdcall m3_compare_lt_u64(uint64 a, uint64 b) { return (a < b); }
+int __stdcall m3_compare_le_u64(uint64 a, uint64 b) { return (a <= b); }
+int __stdcall m3_compare_gt_u64(uint64 a, uint64 b) { return (a > b); }
+int __stdcall m3_compare_ge_u64(uint64 a, uint64 b) { return (a >= b); }
 
 #endif
 
