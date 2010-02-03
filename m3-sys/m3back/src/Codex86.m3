@@ -466,7 +466,9 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN) =
     IF dest.loc = OLoc.register THEN
       build_modrm(t, src, dest, ins);
       ins.opcode := opcode[op].rrm + 1;
-      IF src.loc = OLoc.mem THEN <* ASSERT CG_Bytes[src.mvar.mvar_type] = 4 *> END
+      IF src.loc = OLoc.mem THEN
+        <* ASSERT CG_Bytes[src.mvar.mvar_type] = 4 *>
+      END
     ELSE
       <* ASSERT src.loc = OLoc.register AND CG_Bytes[src.mvar.mvar_type] = 4 *>
       build_modrm(t, dest, src, ins);
