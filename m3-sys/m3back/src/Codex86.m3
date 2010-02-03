@@ -382,7 +382,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
     IF NOT TInt.ToInt(imm, ins.imm) THEN
-      (*t.Warn("immOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));*)
+      (*t.Warn("immOp1: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));*)
     END;
     IF TInt.GE(imm, Target.Int8.min) AND TInt.LE(imm, Target.Int8.max)
       THEN ins.imsize := 1;
