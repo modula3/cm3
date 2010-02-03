@@ -696,39 +696,39 @@ PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
     INC(t.stacktop);
   END pushnew;
 
-PROCEDURE push (t: T; READONLY mvar: MVar) =
+PROCEDURE push (t: T; READONLY src_mvar: MVar) =
   VAR indreg: Regno;
       destreg: ARRAY OperandPart OF Regno;
-      size := 1 + ORD(Is64(mvar.mvar_type));
+      size := 1 + ORD(Is64(src_mvar.mvar_type));
   BEGIN
     maybe_expand_stack(t);
 
     WITH stack0 = t.vstack[t.stacktop] DO
       stack0.stackp := t.stacktop;
-      stack0.optype := mvar.mvar_type;
-      IF FloatType [mvar.mvar_type] THEN
-        IF mvar.var.loc = VLoc.temp AND mvar.var.parent # t.current_proc THEN
+      stack0.optype := src_mvar.mvar_type;
+      IF FloatType [src_mvar.mvar_type] THEN
+        IF src_mvar.var.loc = VLoc.temp AND src_mvar.var.parent # t.current_proc THEN
           unlock(t);
           indreg := pickreg(t, RegSet {}, TRUE);
           corrupt(t, indreg, operandPart := 0);
 
-          t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
-          t.cg.f_loadind(t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset, mvar.mvar_type);
+          t.cg.get_frame(indreg, src_mvar.var.parent, t.current_proc);
+          t.cg.f_loadind(t.cg.reg[indreg], src_mvar.mvar_offset + src_mvar.var.offset, src_mvar.mvar_type);
           stack0.loc := OLoc.fstack;
         ELSE
           stack0.loc := OLoc.fstack;
-          t.cg.fstack_push(mvar);
+          t.cg.fstack_push(src_mvar);
         END
       ELSE
-        IF mvar.var.loc = VLoc.temp AND mvar.var.parent # t.current_proc THEN
+        IF src_mvar.var.loc = VLoc.temp AND src_mvar.var.parent # t.current_proc THEN
           unlock(t);
-          IF CG_Bytes[mvar.mvar_type] = 1 THEN
+          IF CG_Bytes[src_mvar.mvar_type] = 1 THEN
             <* ASSERT size = 1 *>
             destreg[0] := pickreg(t, RegSet { Codex86.EAX, Codex86.EBX,
                                               Codex86.ECX, Codex86.EDX } );
           ELSE
             FOR i := 0 TO size - 1 DO
-              destreg[i] := pickreg(t, RegSet {}, mvar.mvar_type = Type.Addr);
+              destreg[i] := pickreg(t, RegSet {}, src_mvar.mvar_type = Type.Addr);
             END;
           END;
 
@@ -740,16 +740,16 @@ PROCEDURE push (t: T; READONLY mvar: MVar) =
           indreg := pickreg(t, RegSet {}, TRUE);
           corrupt(t, indreg, operandPart := 0);
 
-          t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
+          t.cg.get_frame(indreg, src_mvar.var.parent, t.current_proc);
           FOR i := 0 TO size - 1 DO
-            t.cg.load_ind(destreg[i], t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset,
-                          mvar.mvar_type);
+            t.cg.load_ind(destreg[i], t.cg.reg[indreg], src_mvar.mvar_offset + src_mvar.var.offset,
+                          src_mvar.mvar_type);
             set_reg(t, t.stacktop, destreg[i], operandPart := 0);
           END;
           newdest(t, stack0);
         ELSE
           stack0.loc := OLoc.mem;
-          stack0.mvar := mvar;
+          stack0.mvar := src_mvar;
         END
       END
     END;
