@@ -440,6 +440,8 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
       immOp1(t, op, destA[i], immA[i]);
     END;
 
+    <* ASSERT destA[0].stackp = destA[destSize - 1].stackp *>
+
   END immOp;
 
 PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN) =
@@ -490,15 +492,25 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
       destSize := SplitOperand(dest, destA);
   BEGIN
 
-    <* ASSERT srcSize = destSize *>
     <* ASSERT NOT Is64(srcA[0].optype) *>
     <* ASSERT NOT Is64(destA[0].optype) *>
     <* ASSERT NOT Is64(srcA[srcSize - 1].optype) *>
     <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
+    IF srcSize # destSize THEN
+      t.Err("binOp: size mismatch: destSize:" & Fmt.Int(destSize)
+        & " srcSize:" & Fmt.Int(srcSize)
+        & " src.optype:" & Target.TypeNames[src.optype]
+        & " dest.optype:" & Target.TypeNames[dest.optype]);
+    END;
+    <* ASSERT srcSize = destSize *>
+
     FOR i := 0 TO destSize - 1 DO
       binOp1(t, op, destA[i], srcA[i], locked);
     END;
+
+    <* ASSERT destA[0].stackp = destA[destSize - 1].stackp *>
+    <* ASSERT srcA[0].stackp = srcA[srcSize - 1].stackp *>
 
   END binOp;
 
@@ -588,6 +600,13 @@ PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
       destSize := SplitOperand(dest, destA);
   BEGIN
 
+    IF srcSize # destSize THEN
+      t.Err("swapOp: size mismatch: destSize:" & Fmt.Int(destSize)
+        & " srcSize:" & Fmt.Int(srcSize)
+        & " src.optype:" & Target.TypeNames[src.optype]
+        & " dest.optype:" & Target.TypeNames[dest.optype]);
+    END;
+
     <* ASSERT srcSize = destSize *>
     <* ASSERT NOT Is64(srcA[0].optype) *>
     <* ASSERT NOT Is64(destA[0].optype) *>
@@ -597,6 +616,10 @@ PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
     FOR i := 0 TO destSize - 1 DO
       swapOp1(t, destA[i], srcA[i]);
     END;
+
+    <* ASSERT destA[0].stackp = destA[destSize - 1].stackp *>
+    <* ASSERT srcA[0].stackp = srcA[srcSize - 1].stackp *>
+
   END swapOp;
 
 CONST
@@ -724,6 +747,13 @@ PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
       destSize := SplitOperand(dest, destA);
   BEGIN
 
+    IF srcSize # destSize THEN
+      t.Err("movOp: size mismatch: destSize:" & Fmt.Int(destSize)
+        & " srcSize:" & Fmt.Int(srcSize)
+        & " src.optype:" & Target.TypeNames[src.optype]
+        & " dest.optype:" & Target.TypeNames[dest.optype]);
+    END;
+
     <* ASSERT srcSize = destSize *>
     <* ASSERT NOT Is64(srcA[0].optype) *>
     <* ASSERT NOT Is64(destA[0].optype) *>
@@ -733,6 +763,10 @@ PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
     FOR i := 0 TO destSize - 1 DO
       movOp1(t, destA[i], srcA[i]);
     END;
+
+    <* ASSERT destA[0].stackp = destA[destSize - 1].stackp *>
+    <* ASSERT srcA[0].stackp = srcA[srcSize - 1].stackp *>
+
   END movOp;
 
 PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
