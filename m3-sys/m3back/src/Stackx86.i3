@@ -13,7 +13,7 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 
 IMPORT M3x86Rep, Codex86, Wrx86, Target;
 FROM M3x86Rep IMPORT Operand, OLoc, MVar, Regno, Force, RegSet, FlToInt;
-FROM M3x86Rep IMPORT x86Proc, x86Var;
+FROM M3x86Rep IMPORT x86Proc, x86Var, OperandPart;
 
 FROM Codex86 IMPORT Op;
 
@@ -26,10 +26,10 @@ TYPE Public = OBJECT
         lock (r: Regno);
         find (stackp: INTEGER; force: Force; set := RegSet {};
               hintaddr := FALSE);
-        freereg (set := RegSet {}): Regno;
-        set_reg (stackp: INTEGER; r: Regno);
-        dealloc_reg (stackp: INTEGER);
-        corrupt (reg: Regno);
+        freereg (set := RegSet {}; operandPart: OperandPart): Regno;
+        set_reg (stackp: INTEGER; r: Regno; operandPart: OperandPart);
+        dealloc_reg (stackp: INTEGER; operandPart: OperandPart);
+        corrupt (reg: Regno; operandPart: OperandPart);
         set_fstack (stackp: INTEGER);
         set_mvar (stackp: INTEGER; READONLY mvar: MVar);
         set_imm (stackp: INTEGER; READONLY imm: Target.Int);
