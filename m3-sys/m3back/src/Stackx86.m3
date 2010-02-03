@@ -106,6 +106,7 @@ TYPE
     imm        : BOOLEAN := FALSE;
     locked     : BOOLEAN := FALSE;
     non_nil    : BOOLEAN := FALSE;
+    operandPart: OperandPart := 0;
   END;
 
 PROCEDURE InitRegister(locked: BOOLEAN := FALSE):Register =
@@ -150,7 +151,7 @@ PROCEDURE lock (t: T; r: Regno) =
       t.reguse[r].locked := TRUE;
   END lock;
 
-PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand) =
+PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand; operandPart: OperandPart) =
   BEGIN
     t.cg.movOp(t.cg.reg[r], op);
 
@@ -170,28 +171,28 @@ PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand) =
       t.reguse[r].imm := TRUE;
     END;
 
-    set_reg(t, op.stackp, r);
+    set_reg(t, op.stackp, r, operandPart);
   END loadreg;
 
-PROCEDURE loadphantom (t: T; r: Regno; stackp: INTEGER) =
+PROCEDURE loadphantom (t: T; r: Regno; stackp: INTEGER; operandPart: OperandPart) =
   BEGIN
     t.reguse[r].stackp := stackp;
     t.vstack[stackp].loc := OLoc.register;
-    t.vstack[stackp].reg[0] := r;
+    t.vstack[stackp].reg[operandPart] := r;
   END loadphantom; 
 
-PROCEDURE copyreg (t: T; stackp: INTEGER; to, from: Regno) =
+PROCEDURE copyreg (t: T; stackp: INTEGER; to, from: Regno; operandPart: OperandPart) =
   BEGIN
     t.reguse[to] := t.reguse[from];
-    set_reg(t, stackp, to);
+    set_reg(t, stackp, to, operandPart);
     t.cg.movOp(t.cg.reg[to], t.cg.reg[from]);
   END copyreg;
 
-PROCEDURE movereg (t: T; to, from: Regno) =
+PROCEDURE movereg (t: T; to, from: Regno; operandPart: OperandPart) =
   BEGIN
     t.reguse[to] := t.reguse[from];
     t.reguse[from].stackp := -1;
-    set_reg(t, t.reguse[to].stackp, to);
+    set_reg(t, t.reguse[to].stackp, to, operandPart);
     t.cg.movOp(t.cg.reg[to], t.cg.reg[from]);
   END movereg;
 
@@ -205,11 +206,11 @@ PROCEDURE swapreg (t: T; to, from: Regno) =
     t.reguse[to].last_store := tempstore;
 
     IF t.reguse[from].stackp # -1 THEN
-      set_reg(t, t.reguse[from].stackp, from);
+      set_reg(t, t.reguse[from].stackp, from, operandPart := 0);
     END;
 
     IF tempstack # -1 THEN
-      set_reg(t, tempstack, to);
+      set_reg(t, tempstack, to, operandPart := 0);
     END;
 
     t.cg.swapOp(t.cg.reg[to], t.cg.reg[from]);
@@ -313,7 +314,7 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
       (* Otherwise, it is in the right place, so leave it *)
 
       ELSE
-        loadphantom(t, in, stackp);
+        loadphantom(t, in, stackp, operandPart := 0);
         t.reguse[in].locked := TRUE;
         RETURN;
       END;
@@ -344,12 +345,12 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
       (* If 'to' is unused, this is easy *)
       IF t.reguse[to].stackp = -1 THEN
         IF in = -1 THEN
-          loadreg(t, to, op);
+          loadreg(t, to, op, operandPart := 0);
         ELSE
           IF t.reguse[in].stackp = stackp THEN
-            movereg(t, to, in);
+            movereg(t, to, in, operandPart := 0);
           ELSE
-            copyreg(t, stackp, to, in);
+            copyreg(t, stackp, to, in, operandPart := 0);
           END
         END;
 
@@ -360,15 +361,15 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
          memory *)
         IF in = -1 OR
             (t.reguse[in].stackp # -1 AND t.reguse[in].stackp # stackp) THEN
-          forceout(t, to);
+          forceout(t, to, operandPart := 0);
           IF in = -1 THEN
-            loadreg(t, to, op);
+            loadreg(t, to, op, operandPart := 0);
           ELSE
-            copyreg(t, stackp, to, in);
+            copyreg(t, stackp, to, in, operandPart := 0);
           END
         ELSE
           swapreg(t, to, in);
-          loadphantom(t, to, stackp);
+          loadphantom(t, to, stackp, operandPart := 0);
         END
       END;
 
@@ -404,23 +405,23 @@ PROCEDURE find (t: T; stackp: INTEGER;
     END;
   END find;
 
-PROCEDURE freereg (t: T; set := RegSet {}): Regno =
+PROCEDURE freereg (t: T; set := RegSet {}; operandPart: OperandPart): Regno =
   VAR to: Regno;
   BEGIN
     to := pickreg(t, set);
-    corrupt(t, to);
+    corrupt(t, to, operandPart);
     t.reguse[to].locked := TRUE;
     RETURN to;
   END freereg;
 
-PROCEDURE forceout (t: T; r: Regno) =
+PROCEDURE forceout (t: T; r: Regno; operandPart: OperandPart) =
   VAR dead: Regno;
   BEGIN
     dead := finddead(t);
     IF dead = -1 THEN
       get_temp(t, t.reguse[r].stackp, r);
     ELSE
-      movereg(t, dead, r);
+      movereg(t, dead, r, operandPart);
     END
   END forceout;
 
@@ -572,23 +573,23 @@ PROCEDURE sweep (t: T; READONLY mvar: MVar) =
     END
   END sweep;
 
-PROCEDURE set_reg (t: T; stackp: INTEGER; r: Regno) =
+PROCEDURE set_reg (t: T; stackp: INTEGER; r: Regno; operandPart: OperandPart) =
   BEGIN
     t.vstack[stackp].loc := OLoc.register;
-    t.vstack[stackp].reg[0] := r;
+    t.vstack[stackp].reg[operandPart] := r;
     t.reguse[r].stackp := stackp;
   END set_reg;
 
-PROCEDURE dealloc_reg (t: T; stackp: INTEGER) =
+PROCEDURE dealloc_reg (t: T; stackp: INTEGER; operandPart: OperandPart) =
   BEGIN
     <* ASSERT t.vstack[stackp].loc = OLoc.register *>
-    t.reguse[t.vstack[stackp].reg[0]].stackp := -1;
+    t.reguse[t.vstack[stackp].reg[operandPart]].stackp := -1;
   END dealloc_reg;
 
-PROCEDURE corrupt (t: T; reg: Regno) =
+PROCEDURE corrupt (t: T; reg: Regno; operandPart: OperandPart) =
   BEGIN
     IF t.reguse[reg].stackp # -1 THEN
-      forceout(t, reg);
+      forceout(t, reg, operandPart);
     END;
     t.reguse[reg] := InitRegister(locked := t.reguse[reg].locked);
   END corrupt;
@@ -674,8 +675,8 @@ PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet) =
                           mvar_offset := 0, mvar_type := type } );
           stack0.mvar.var.stack_temp := TRUE;
         ELSE
-          corrupt(t, reg);
-          set_reg(t, t.stacktop, reg);
+          corrupt(t, reg, operandPart := 0);
+          set_reg(t, t.stacktop, reg, operandPart := 0);
         END
       END
     END;
@@ -704,7 +705,7 @@ PROCEDURE push (t: T; READONLY mvar: MVar) =
         IF mvar.var.loc = VLoc.temp AND mvar.var.parent # t.current_proc THEN
           unlock(t);
           indreg := pickreg(t, RegSet {}, TRUE);
-          corrupt(t, indreg);
+          corrupt(t, indreg, operandPart := 0);
 
           t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
           t.cg.f_loadind(t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset, mvar.mvar_type);
@@ -727,18 +728,18 @@ PROCEDURE push (t: T; READONLY mvar: MVar) =
           END;
 
           FOR i := 0 TO size - 1 DO
-            corrupt(t, destreg[i]);
+            corrupt(t, destreg[i], operandPart := 0);
             t.reguse[destreg[i]].locked := TRUE;
           END;
 
           indreg := pickreg(t, RegSet {}, TRUE);
-          corrupt(t, indreg);
+          corrupt(t, indreg, operandPart := 0);
 
           t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
           FOR i := 0 TO size - 1 DO
             t.cg.load_ind(destreg[i], t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset,
                           mvar.mvar_type);
-            set_reg(t, t.stacktop, destreg[i]);
+            set_reg(t, t.stacktop, destreg[i], operandPart := 0);
           END;
           newdest(t, stack0);
         ELSE
@@ -763,7 +764,7 @@ PROCEDURE pop1 (t: T; READONLY mvar: MVar) =
         IF mvar.var.loc = VLoc.temp AND mvar.var.parent # t.current_proc THEN
           unlock(t);
           indreg := pickreg(t, RegSet {}, TRUE);
-          corrupt(t, indreg);
+          corrupt(t, indreg, operandPart := 0);
           t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
           t.cg.f_storeind(t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset, mvar.mvar_type);
 
@@ -782,12 +783,12 @@ PROCEDURE pop1 (t: T; READONLY mvar: MVar) =
 
         IF mvar.var.loc = VLoc.temp AND mvar.var.parent # t.current_proc THEN
           indreg := pickreg(t, RegSet {}, TRUE);
-          corrupt(t, indreg);
+          corrupt(t, indreg, operandPart := 0);
           t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
           t.cg.store_ind(stack0, t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset,
                          mvar.mvar_type);
           t.reguse[stack0.reg[0]].stackp := -1;
-          corrupt(t, stack0.reg[0]);
+          corrupt(t, stack0.reg[0], operandPart := 0);
 
         ELSE
           sweep(t, mvar);
@@ -1002,7 +1003,7 @@ PROCEDURE doumul (t: T) =
       END;
 
       IF otherop.loc # OLoc.register OR otherop.reg[0] # Codex86.EDX THEN
-        corrupt(t, Codex86.EDX);
+        corrupt(t, Codex86.EDX, operandPart := 0);
       END;
 
       t.cg.mulOp(otherop);
@@ -1049,7 +1050,7 @@ PROCEDURE dodiv (t: T; a, b: Sign) =
   BEGIN
     unlock(t);
 
-    corrupt(t, Codex86.EDX);
+    corrupt(t, Codex86.EDX, operandPart := 0);
     lock(t, Codex86.EDX);
 
     WITH stack0 = pos(t, 0, "dodiv"),
@@ -1100,7 +1101,7 @@ PROCEDURE domod (t: T; a, b: Sign) =
   BEGIN
     unlock(t);
 
-    corrupt(t, Codex86.EDX);
+    corrupt(t, Codex86.EDX, operandPart := 0);
     lock(t, Codex86.EDX);
 
     WITH stack0 = pos(t, 0, "domod"),
@@ -1150,8 +1151,8 @@ PROCEDURE domod (t: T; a, b: Sign) =
       END;
 
       newdest(t, t.vstack[stack1]);
-      dealloc_reg(t, stack1);
-      set_reg(t, stack1, Codex86.EDX);
+      dealloc_reg(t, stack1, operandPart := 0);
+      set_reg(t, stack1, Codex86.EDX, operandPart := 0);
       discard(t, 1);
     END
   END domod;
@@ -1477,7 +1478,7 @@ PROCEDURE doextract_n (t: T; sign: BOOLEAN; n: INTEGER) =
       END;
 
       IF sign THEN
-        corrupt(t, Codex86.ECX);
+        corrupt(t, Codex86.ECX, operandPart := 0);
         t.reguse[Codex86.ECX].locked := TRUE;
 
         find(t, stack0, Force.any);
@@ -1616,7 +1617,7 @@ PROCEDURE doinsert (t: T) =
       END;
 
       maskreg := pickreg(t);
-      corrupt(t, maskreg);
+      corrupt(t, maskreg, operandPart := 0);
 
       ImportLowSet (t, tbl);
       t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], stop0, 4, tbl);
@@ -1687,7 +1688,7 @@ PROCEDURE doinsert_n (t: T; n: INTEGER) =
       END;
 
       maskreg := pickreg(t);
-      corrupt(t, maskreg);
+      corrupt(t, maskreg, operandPart := 0);
 
       IF n # 32 THEN
         TWord.Shift(Target.Word32.max, n - 32, tint);
@@ -1899,9 +1900,9 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
 
           IF stop0.loc # OLoc.register THEN
             muldest := pickreg(t);
-            corrupt(t, muldest);
+            corrupt(t, muldest, operandPart := 0);
             t.cg.imulImm(t.cg.reg[muldest], stop0, size, imsize);
-            set_reg(t, stack0, muldest);
+            set_reg(t, stack0, muldest, operandPart := 0);
 
           ELSE
             t.cg.imulImm(stop0, stop0, size, imsize);
@@ -1962,7 +1963,7 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
 
       ftop_inmem := t.cg.ftop_inmem;
 
-      corrupt(t, Codex86.EAX);
+      corrupt(t, Codex86.EAX, operandPart := 0);
       t.cg.noargFOp(FOp.fNSTSWAX);
       t.cg.noargOp(Op.oSAHF);
 
@@ -2038,7 +2039,7 @@ PROCEDURE fltoint (t: T; mode: FlToInt; <*UNUSED*>type: Type) =
 
     unlock(t);
     statreg := pickreg(t);
-    corrupt(t, statreg);
+    corrupt(t, statreg, operandPart := 0);
 
     t.cg.noargOp(Op.oWAIT);
     t.cg.noargFOp(FOp.fNCLEX);
