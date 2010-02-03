@@ -17,7 +17,7 @@ FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName;
-FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar;
+FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
 
@@ -699,7 +699,7 @@ PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
 PROCEDURE push (t: T; READONLY src_mvar: MVar) =
   VAR indreg: Regno;
       destreg: ARRAY OperandPart OF Regno;
-      size := 1 + ORD(Is64(src_mvar.mvar_type));
+      size := GetTypeSize(src_mvar.mvar_type);
   BEGIN
     maybe_expand_stack(t);
 
@@ -722,18 +722,15 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
       ELSE
         IF src_mvar.var.loc = VLoc.temp AND src_mvar.var.parent # t.current_proc THEN
           unlock(t);
-          IF CG_Bytes[src_mvar.mvar_type] = 1 THEN
-            <* ASSERT size = 1 *>
-            destreg[0] := pickreg(t, RegSet { Codex86.EAX, Codex86.EBX,
-                                              Codex86.ECX, Codex86.EDX } );
-          ELSE
-            FOR i := 0 TO size - 1 DO
+          FOR i := 0 TO size - 1 DO
+            IF CG_Bytes[src_mvar.mvar_type] = 1 THEN
+              <* ASSERT size = 1 AND i = 0 *>
+              destreg[i] := pickreg(t, RegSet { Codex86.EAX, Codex86.EBX,
+                                                Codex86.ECX, Codex86.EDX } );
+            ELSE
               destreg[i] := pickreg(t, RegSet {}, src_mvar.mvar_type = Type.Addr);
             END;
-          END;
-
-          FOR i := 0 TO size - 1 DO
-            corrupt(t, destreg[i], operandPart := 0);
+            corrupt(t, destreg[i], operandPart := i);
             t.reguse[destreg[i]].locked := TRUE;
           END;
 
@@ -744,7 +741,7 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
           FOR i := 0 TO size - 1 DO
             t.cg.load_ind(destreg[i], t.cg.reg[indreg], src_mvar.mvar_offset + src_mvar.var.offset,
                           src_mvar.mvar_type);
-            set_reg(t, t.stacktop, destreg[i], operandPart := 0);
+            set_reg(t, t.stacktop, destreg[i], operandPart := i);
           END;
           newdest(t, stack0);
         ELSE
@@ -757,7 +754,7 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
     INC(t.stacktop);
   END push;
 
-PROCEDURE pop1 (t: T; READONLY mvar: MVar) =
+PROCEDURE pop1 (t: T; READONLY mvar: MVar; operandPart: OperandPart) =
   VAR indreg: Regno;
   BEGIN
     IF t.stacktop < 1 THEN
@@ -769,7 +766,7 @@ PROCEDURE pop1 (t: T; READONLY mvar: MVar) =
         IF mvar.var.loc = VLoc.temp AND mvar.var.parent # t.current_proc THEN
           unlock(t);
           indreg := pickreg(t, RegSet {}, TRUE);
-          corrupt(t, indreg, operandPart := 0);
+          corrupt(t, indreg, operandPart);
           t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
           t.cg.f_storeind(t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset, mvar.mvar_type);
 
@@ -788,12 +785,12 @@ PROCEDURE pop1 (t: T; READONLY mvar: MVar) =
 
         IF mvar.var.loc = VLoc.temp AND mvar.var.parent # t.current_proc THEN
           indreg := pickreg(t, RegSet {}, TRUE);
-          corrupt(t, indreg, operandPart := 0);
+          corrupt(t, indreg, operandPart);
           t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
           t.cg.store_ind(stack0, t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset,
                          mvar.mvar_type);
           t.reguse[stack0.reg[0]].stackp := -1;
-          corrupt(t, stack0.reg[0], operandPart := 0);
+          corrupt(t, stack0.reg[0], operandPart);
 
         ELSE
           sweep(t, mvar);
@@ -822,7 +819,7 @@ PROCEDURE pop (t: T; READONLY mvar: MVar) =
       size := SplitMVar(mvar, mvarA);
   BEGIN
     FOR i := 0 TO size - 1 DO
-      pop1(t, mvarA[i]);
+      pop1(t, mvarA[i], i);
     END;
     DEC(t.stacktop);
   END pop;
