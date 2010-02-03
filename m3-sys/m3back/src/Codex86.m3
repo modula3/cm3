@@ -434,7 +434,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
 
     <* ASSERT immSize = destSize *>
     <* ASSERT NOT Is64(destA[0].optype) *>
-    <* ASSERT NOT Is64(destA[1].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     FOR i := 0 TO destSize - 1 DO
       immOp1(t, op, destA[i], immA[i]);
@@ -490,9 +490,9 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
 
     <* ASSERT srcSize = destSize *>
     <* ASSERT NOT Is64(srcA[0].optype) *>
-    <* ASSERT NOT Is64(srcA[1].optype) *>
     <* ASSERT NOT Is64(destA[0].optype) *>
-    <* ASSERT NOT Is64(destA[1].optype) *>
+    <* ASSERT NOT Is64(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     FOR i := 0 TO destSize - 1 DO
       binOp1(t, op, destA[i], srcA[i], locked);
@@ -588,9 +588,9 @@ PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
 
     <* ASSERT srcSize = destSize *>
     <* ASSERT NOT Is64(srcA[0].optype) *>
-    <* ASSERT NOT Is64(srcA[1].optype) *>
     <* ASSERT NOT Is64(destA[0].optype) *>
-    <* ASSERT NOT Is64(destA[1].optype) *>
+    <* ASSERT NOT Is64(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     FOR i := 0 TO destSize - 1 DO
       swapOp1(t, destA[i], srcA[i]);
@@ -724,9 +724,9 @@ PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
 
     <* ASSERT srcSize = destSize *>
     <* ASSERT NOT Is64(srcA[0].optype) *>
-    <* ASSERT NOT Is64(srcA[1].optype) *>
     <* ASSERT NOT Is64(destA[0].optype) *>
-    <* ASSERT NOT Is64(destA[1].optype) *>
+    <* ASSERT NOT Is64(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     FOR i := 0 TO destSize - 1 DO
       movOp1(t, destA[i], srcA[i]);
@@ -811,7 +811,7 @@ PROCEDURE pushOp (t: T; READONLY src: Operand) =
   BEGIN
 
     <* ASSERT NOT Is64(a[0].optype) *>
-    <* ASSERT NOT Is64(a[1].optype) *>
+    <* ASSERT NOT Is64(a[size - 1].optype) *>
 
     FOR i := size - 1 TO 0 BY -1 DO
       pushOp1(t, a[i]);
@@ -845,7 +845,7 @@ PROCEDURE popOp (t: T; READONLY dest: Operand) =
   BEGIN
 
     <* ASSERT NOT Is64(a[0].optype) *>
-    <* ASSERT NOT Is64(a[1].optype) *>
+    <* ASSERT NOT Is64(a[size - 1].optype) *>
 
     FOR i := 0 TO size - 1 DO
       popOp1(t, a[i]);
@@ -896,7 +896,7 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
   BEGIN
 
     <* ASSERT NOT Is64(destA[0].optype) *>
-    <* ASSERT NOT Is64(destA[1].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     FOR i := 0 TO destSize - 1 DO
       unOp1(t, op, destA[i]);
