@@ -85,14 +85,23 @@ TYPE
 
 CONST NoStore = MVar {var := NIL, mvar_type := FIRST(MType)};
 
+(* If an operand requires two registers, it has parts 0 and 1.
+ * etc. This is used to implement multi precision integers,
+ * and possibly enregistering structs. Likewise, if an
+ * operand fits in one register, it has size 1, else 2.
+ *)
+
+TYPE OperandPart = [0..1];
+TYPE OperandSize = [1..2];
+
 TYPE
   Operand = RECORD
     loc: OLoc;
     mvar: MVar := NoStore;
-    reg := ARRAY [0..1] OF Regno{0,0};
+    reg := ARRAY OperandPart OF Regno{0, ..}; (* seems like it should be -1 *)
     imm: Target.Int := TInt.Zero;
-    optype: Type;
-    stackp: INTEGER := 0;
+    optype: Type := Type.Void;
+    stackp: INTEGER := 0; (* seems like it should be -1 *)
     opcode := FALSE;
   END;
 
@@ -110,8 +119,10 @@ CONST RegName = ARRAY Regno OF TEXT { "*NOREG*", "EAX", "ECX", "EDX",
 TYPE RegSet = SET OF Regno;
 
 PROCEDURE Is64 (t: Type): BOOLEAN;
-PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY [0..1] OF MVar): [1..2];
-PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY [0..1] OF Target.Int): [1..2];
-PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY [0..1] OF Operand): [1..2];
+PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize;
+PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY OperandPart OF Target.Int): OperandSize;
+PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize;
+PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize;
+PROCEDURE GetTypeSize(type: Type): OperandSize;
 
 END M3x86Rep.
