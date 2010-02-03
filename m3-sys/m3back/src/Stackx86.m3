@@ -1815,24 +1815,24 @@ PROCEDURE swap (t: T) =
     END
   END swap;
 
-PROCEDURE doloophole (t: T; from, two: ZType) =
+PROCEDURE doloophole (t: T; from, to: ZType) =
   BEGIN
       WITH stack0 = pos(t, 0, "doloophole"),
            stop0 = t.vstack[stack0] DO
-        IF FloatType[from] = FloatType[two] THEN
+        IF FloatType[from] = FloatType[to] THEN
           (* no code is needed *)
 
         ELSIF FloatType[from] THEN
           <* ASSERT stop0.loc = OLoc.fstack *>
           stop0.loc := OLoc.mem;
-          stop0.mvar.var := t.parent.declare_temp(CG_Bytes[two],
-                                                  CG_Align_bytes[two], two,
+          stop0.mvar.var := t.parent.declare_temp(CG_Bytes[to],
+                                                  CG_Align_bytes[to], to,
                                                   FALSE);
           stop0.mvar.var.stack_temp := TRUE;
           stop0.mvar.mvar_offset := 0;
           stop0.mvar.mvar_type := from;
           t.cg.fstack_pop(stop0.mvar);
-          stop0.mvar.mvar_type := two;
+          stop0.mvar.mvar_type := to;
 
         ELSE (* NOT FloatType [from] *)
           IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
@@ -1847,8 +1847,8 @@ PROCEDURE doloophole (t: T; from, two: ZType) =
           find(t, stack0, Force.mem);
           **********************************************)
 
-          <* ASSERT two = Type.Reel *>
-          stop0.mvar.mvar_type := two;
+          <* ASSERT to = Type.Reel *>
+          stop0.mvar.mvar_type := to;
           t.cg.fstack_push(stop0.mvar, TRUE);
           IF stop0.mvar.var.stack_temp THEN
             t.parent.free_temp(stop0.mvar.var);

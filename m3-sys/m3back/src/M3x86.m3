@@ -2992,17 +2992,17 @@ PROCEDURE call_int_proc (u: U;  b: Builtin) =
 
 (*----------------------------------------------------------- conversions ---*)
 
-PROCEDURE loophole (u: U;  from, two: ZType) =
+PROCEDURE loophole (u: U;  from, to: ZType) =
   (* s0.to := LOOPHOLE(s0.from, to) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("loophole");
       u.wr.TName (from);
-      u.wr.TName (two);
+      u.wr.TName (to);
       u.wr.NL    ();
     END;
 
-    u.vstack.doloophole(from, two);
+    u.vstack.doloophole(from, to);
 
   END loophole;
 
