@@ -64,7 +64,7 @@ TYPE Public = OBJECT
         doinsert_n (n: INTEGER);
         doinsert_mn (m, n: INTEGER);
         swap ();
-        doloophole (from, two: ZType);
+        doloophole (from, to: ZType);
         doindex_address (shift, size: INTEGER; neg: BOOLEAN);
         docopy (type: MType; overlap: BOOLEAN);
         docopy_n (n: INTEGER; type: MType; overlap: BOOLEAN);
