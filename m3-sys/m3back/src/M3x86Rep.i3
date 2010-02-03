@@ -113,8 +113,10 @@ CONST NRegs: INTEGER = 7;
 
 TYPE Regno = [-1 .. NRegs];
 
-CONST RegName = ARRAY Regno OF TEXT { "*NOREG*", "EAX", "ECX", "EDX",
-                                      "EBX", "ESP", "EBP", "ESI", "EDI" };
+(* These constants should line up with RegName and I believe
+ * are also carefully chosen in relation to x86 instruction encodings. *)
+CONST                                             EAX=0; ECX=1; EDX=2; EBX=3; ESP=4; EBP=5; ESI=6; EDI=7;
+CONST RegName = ARRAY Regno OF TEXT { "*NOREG*", "EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI" };
 
 TYPE RegSet = SET OF Regno;
 
