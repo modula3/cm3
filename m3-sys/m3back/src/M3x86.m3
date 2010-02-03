@@ -3449,8 +3449,8 @@ PROCEDURE pop_param (u: U;  t: MType) =
 
 PROCEDURE load_stack_param (u: U; t: MType; depth: INTEGER) =
   (* make value at vstack[depth] the next parameter in the current call *)
-  VAR opA: ARRAY [0..1] OF Operand;
-      size: [1..2];
+  VAR opA: ARRAY OperandPart OF Operand;
+      size: OperandSize;
   BEGIN
 
     IF u.debug THEN
@@ -3591,7 +3591,7 @@ PROCEDURE IsInt (t: Type): BOOLEAN =
     RETURN t = Type.Int32 OR t = Type.Int64;
   END IsInt;
 
-PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY [0..1] OF MVar): [1..2] =
+PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize =
   VAR type := mvar.mvar_type;
   BEGIN
     mvarA[0] := mvar;
@@ -3612,17 +3612,17 @@ PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY [0..1] OF MVar): [1..2
     RETURN 2;
   END SplitMVar;
 
-PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY [0..1] OF Target.Int): [1..2] =
+PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY OperandPart OF Target.Int): OperandSize =
   BEGIN
     TWord.And(imm, Target.Word32.max, immA[0]);
     TWord.RightShift(imm, 32, immA[1]);
     RETURN 1 + ORD(Is64(type));
   END SplitImm;
 
-PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY [0..1] OF Operand): [1..2] =
+PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize =
   VAR type := op.optype;
-      mvarA: ARRAY [0..1] OF MVar;
-      immA: ARRAY [0..1] OF Target.Int;
+      mvarA: ARRAY OperandPart OF MVar;
+      immA: ARRAY OperandPart OF Target.Int;
   BEGIN
     opA[0] := op;
 

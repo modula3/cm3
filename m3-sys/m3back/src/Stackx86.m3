@@ -16,7 +16,7 @@ FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart;
 FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
@@ -380,7 +380,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
                 force: Force := Force.any; set := RegSet {};
                 hintaddr := FALSE) =
   (* Find a suitable register to put a stack item in *)
-  VAR opA: ARRAY [0..1] OF Operand;
+  VAR opA: ARRAY OperandPart OF Operand;
   BEGIN
     WITH op = t.vstack[stackp] DO
       IF SplitOperand(op, opA) = 1 THEN
@@ -692,7 +692,7 @@ PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
 
 PROCEDURE push (t: T; READONLY mvar: MVar) =
   VAR indreg: Regno;
-      destreg: ARRAY [0..1] OF Regno;
+      destreg: ARRAY OperandPart OF Regno;
       size := 1 + ORD(Is64(mvar.mvar_type));
   BEGIN
     maybe_expand_stack(t);
@@ -812,7 +812,7 @@ PROCEDURE pop1 (t: T; READONLY mvar: MVar) =
   END pop1;
 
 PROCEDURE pop (t: T; READONLY mvar: MVar) =
-  VAR mvarA: ARRAY [0..1] OF MVar;
+  VAR mvarA: ARRAY OperandPart OF MVar;
       size := SplitMVar(mvar, mvarA);
   BEGIN
     FOR i := 0 TO size - 1 DO
@@ -2109,7 +2109,7 @@ PROCEDURE newdest1 (t: T; READONLY op: Operand) =
   END newdest1;
 
 PROCEDURE newdest (t: T; READONLY op: Operand) =
-  VAR opA: ARRAY [0..1] OF Operand;
+  VAR opA: ARRAY OperandPart OF Operand;
   BEGIN
     FOR i := 0 TO SplitOperand(op, opA) - 1 DO
       newdest1(t, opA[i]);
