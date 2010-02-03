@@ -1532,7 +1532,7 @@ PROCEDURE if_compare (u: U;  t: ZType;  op: CompareOp;  l: Label;
         END;
         u.vstack.discard (2);
         u.vstack.unlock ();
-        u.vstack.corrupt (Codex86.EAX);
+        u.vstack.corrupt (Codex86.EAX, operandPart := 0);
         u.cg.noargFOp (FOp.fNSTSWAX);
         u.cg.noargOp (Op.oSAHF);
     END;
@@ -1704,19 +1704,19 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
       u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
       IF Target.FloatType [t] THEN
         u.cg.f_loadind(u.vstack.op(stack0), o, t);
-        u.vstack.dealloc_reg(stack0);
+        u.vstack.dealloc_reg(stack0, operandPart := 0);
         u.vstack.set_fstack(stack0);
       ELSE
         IF CG_Bytes[t] = 1 THEN
           newreg := u.vstack.freereg(RegSet { Codex86.EAX, Codex86.EBX,
-                                              Codex86.ECX, Codex86.EDX } );
+                                              Codex86.ECX, Codex86.EDX }, operandPart := 0);
         ELSE
-          newreg := u.vstack.freereg();
+          newreg := u.vstack.freereg(operandPart := 0);
         END;
 
         u.cg.load_ind(newreg, u.vstack.op(stack0), o, t);
-        u.vstack.dealloc_reg(stack0);
-        u.vstack.set_reg(stack0, newreg);
+        u.vstack.dealloc_reg(stack0, operandPart := 0);
+        u.vstack.set_reg(stack0, newreg, operandPart := 0);
       END
     END
   END load_indirect;
@@ -2635,7 +2635,7 @@ PROCEDURE inline_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
       start := n - 1; end := 0; step := -1;
     END;
 
-    movereg := u.vstack.freereg();
+    movereg := u.vstack.freereg(operandPart := 0);
 
     WITH stop0 = u.vstack.op(u.vstack.pos(0, "inline_copy")),
          stop1 = u.vstack.op(u.vstack.pos(1, "inline_copy")) DO
@@ -2649,7 +2649,7 @@ PROCEDURE inline_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
 PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
   VAR tn, tNMinus1, tsize, tint: Target.Int;
   BEGIN
-    u.vstack.corrupt(Codex86.ECX);
+    u.vstack.corrupt(Codex86.ECX, operandPart := 0);
     u.cg.movImmI(u.cg.reg[Codex86.ECX], n);
 
     IF forward THEN
@@ -2841,8 +2841,8 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
     IF n > MAXINLINECOPY THEN
       u.vstack.find(u.vstack.pos(0, "zero"), Force.regset,
                     RegSet { Codex86.EDI } );
-      u.vstack.corrupt(Codex86.EAX);
-      u.vstack.corrupt(Codex86.ECX);
+      u.vstack.corrupt(Codex86.EAX, operandPart := 0);
+      u.vstack.corrupt(Codex86.ECX, operandPart := 0);
 
       u.cg.binOp(Op.oXOR, u.cg.reg[Codex86.EAX], u.cg.reg[Codex86.EAX]);
       u.cg.movImmI(u.cg.reg[Codex86.ECX], n);
@@ -3530,8 +3530,8 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
         u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], ts);
 
         u.vstack.find(stack0, Force.regset, RegSet { Codex86.ESI });
-        u.vstack.corrupt(Codex86.EDI);
-        u.vstack.corrupt(Codex86.ECX);
+        u.vstack.corrupt(Codex86.EDI, operandPart := 0);
+        u.vstack.corrupt(Codex86.ECX, operandPart := 0);
 
         u.cg.movOp(u.cg.reg[Codex86.EDI], u.cg.reg[Codex86.ESP]);
         u.cg.movImmI(u.cg.reg[Codex86.ECX], s DIV 4);
@@ -3547,7 +3547,7 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
 
         u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
 
-        WITH temp = u.vstack.freereg() DO
+        WITH temp = u.vstack.freereg(operandPart := 0) DO
           FOR i := 1 TO (s DIV 4) DO
             u.cg.load_ind(temp, u.vstack.op(stack0), s - (i * 4), Type.Word32);
             u.cg.pushOp(u.cg.reg[temp]);
@@ -3852,11 +3852,11 @@ PROCEDURE load_static_link_toC (u: U;  p: Proc) =
     END;
 
     IF realproc.lev = 0 THEN
-      u.vstack.corrupt(Codex86.ECX);
+      u.vstack.corrupt(Codex86.ECX, operandPart := 0);
       u.cg.movImmT(u.cg.reg[Codex86.ECX], TZero);
     ELSE
       u.vstack.unlock();
-      u.vstack.corrupt(Codex86.ECX);
+      u.vstack.corrupt(Codex86.ECX, operandPart := 0);
       u.cg.get_frame(Codex86.ECX, realproc.parent, u.current_proc);
     END
   END load_static_link_toC;
@@ -3890,7 +3890,7 @@ PROCEDURE fltregcmp (u: U; tozero: BOOLEAN): BOOLEAN =
     END;
 
     u.vstack.unlock();
-    u.vstack.corrupt(Codex86.EAX);
+    u.vstack.corrupt(Codex86.EAX, operandPart := 0);
     u.cg.noargFOp(FOp.fNSTSWAX);
     u.cg.noargOp(Op.oSAHF);
 
@@ -4049,7 +4049,7 @@ PROCEDURE fence (u: U;  <*UNUSED*>order: MemoryOrder) =
 
     u.vstack.unlock();
 
-    reg := u.vstack.freereg();
+    reg := u.vstack.freereg(operandPart := 0);
     IF u.current_proc.fenceVar = NIL THEN
       u.current_proc.fenceVar := get_temp_var(u, Type.Word32, 4, 4);
     END;
