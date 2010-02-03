@@ -656,7 +656,7 @@ PROCEDURE pushimmI (t: T; immI: INTEGER; type: Type) =
     t.pushimmT(immT, type);
   END pushimmI;
 
-PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet) =
+PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet; operandPart: OperandPart) =
   VAR hintaddr := type = Type.Addr;
   VAR reg := pickreg(t, set, hintaddr);
   BEGIN
@@ -675,8 +675,8 @@ PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet) =
                           mvar_offset := 0, mvar_type := type } );
           stack0.mvar.var.stack_temp := TRUE;
         ELSE
-          corrupt(t, reg, operandPart := 0);
-          set_reg(t, t.stacktop, reg, operandPart := 0);
+          corrupt(t, reg, operandPart);
+          set_reg(t, t.stacktop, reg, operandPart);
         END
       END
     END;
@@ -685,8 +685,13 @@ PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet) =
 PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
   BEGIN
     maybe_expand_stack(t);
-    FOR i := 0 TO ORD(Is64(type)) DO
-      pushnew1(t, type, force, set);
+    IF Is64(type) AND force = Force.regset AND set = RegSet { Codex86.EAX, Codex86.EDX } THEN
+      pushnew1(t, type, Force.regset, RegSet { Codex86.EDX }, operandPart := 1);
+      pushnew1(t, type, Force.regset, RegSet { Codex86.EAX }, operandPart := 0);
+    ELSE
+      FOR i := 0 TO ORD(Is64(type)) DO
+        pushnew1(t, type, force, set, i);
+      END;
     END;
     INC(t.stacktop);
   END pushnew;
