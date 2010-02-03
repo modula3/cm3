@@ -3619,6 +3619,17 @@ PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY Operand
     RETURN 1 + ORD(Is64(type));
   END SplitImm;
 
+PROCEDURE GetTypeSize(type: Type): OperandSize =
+(* In words: 1 or 2 *)
+  BEGIN
+    RETURN 1 + ORD(Is64(type));
+  END GetTypeSize;
+
+PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize =
+  BEGIN
+    RETURN GetTypeSize(op.optype);
+  END GetOperandSize;
+
 PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize =
   VAR type := op.optype;
       mvarA: ARRAY OperandPart OF MVar;
