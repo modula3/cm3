@@ -236,7 +236,9 @@ PROCEDURE releaseall (t: T) =
   END releaseall; 
 
 
-PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOOLEAN) =
+PROCEDURE find (t: T; stackp: INTEGER;
+                force: Force := Force.any; set := RegSet {};
+                hintaddr := FALSE) =
   (* Find a suitable register to put a stack item in *)
   VAR in, to: Regno;
   BEGIN
@@ -260,25 +262,28 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
         hintaddr := TRUE;
       END;
 
-      (* If it is in a register and shoudn't be, move it *)
+      (* If it is in a register and shouldn't be, move it *)
+
       IF force = Force.mem AND op.loc = OLoc.register THEN
         get_temp(t, stackp, op.reg[0]);
         RETURN;
       END;
 
       (* If it is an immediate value and should be in mem, do it *)
+
       IF force = Force.mem AND op.loc = OLoc.imm THEN
         get_temp(t, stackp, -1, op.imm);
         RETURN;
       END;
 
-      (* If it is immediate and doesn't have to be in a register, then
-         do nothing *)
+      (* If it is immediate and doesn't have to be in a register, then do nothing *)
+
       IF op.loc = OLoc.imm AND force # Force.anyreg AND force # Force.regset THEN
         RETURN;
       END;
 
       (* If it isn't in a register yet, and it doesn't have to be, do nothing *)
+
       IF force = Force.any AND in = -1 THEN
         RETURN;
       END;
@@ -288,6 +293,7 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
       END;
 
       (* If it is in a temporary variable and can stay there, leave it *)
+
       IF force = Force.anytemp AND in = -1 AND op.loc = OLoc.mem AND op.mvar.var.stack_temp THEN
         RETURN;
       END;
@@ -306,14 +312,12 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
       (* If for any reason it isn't in the right register, find the best
          candidate for a register to put it in. *)
 
-      IF (in = -1) OR (force = Force.regset AND (NOT in IN set)) OR
-         t.reguse[in].locked OR
-         (t.reguse[in].stackp # -1 AND t.reguse[in].stackp # stackp) THEN
+      IF (in = -1) OR (force = Force.regset AND (NOT in IN set))
+            OR t.reguse[in].locked
+            OR (t.reguse[in].stackp # -1 AND t.reguse[in].stackp # stackp) THEN
         to := pickreg(t, set, hintaddr);
-
-      (* Otherwise, it is in the right place, so leave it *)
-
       ELSE
+        (* Otherwise, it is in the right place, so leave it *)
         loadphantom(t, in, stackp, operandPart := 0);
         t.reguse[in].locked := TRUE;
         RETURN;
@@ -326,17 +330,16 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
         RETURN;
       END;
 
-      IF force = Force.anydword AND t.reguse[to].stackp # -1 AND
-         op.loc = OLoc.mem
-         AND  CG_Bytes[op.mvar.mvar_type] = 4 THEN
+      IF force = Force.anydword AND t.reguse[to].stackp # -1
+            AND op.loc = OLoc.mem AND  CG_Bytes[op.mvar.mvar_type] = 4 THEN
         RETURN;
       END;
 
-      (* If it is in a temporary variable & can stay there, leave it *)
+      (* If it is in a temporary variable and can stay there, leave it *)
 
       IF force = Force.anytemp AND t.reguse[to].stackp # -1
-         AND op.loc = OLoc.mem
-         AND op.mvar.var.stack_temp THEN
+            AND op.loc = OLoc.mem
+            AND op.mvar.var.stack_temp THEN
         RETURN;
       END;
 
@@ -359,8 +362,7 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
          swap the registers over. If so, force 'to' out. If there is a free
          register, 'to' will be moved into it, otherwise it will be stored to
          memory *)
-        IF in = -1 OR
-            (t.reguse[in].stackp # -1 AND t.reguse[in].stackp # stackp) THEN
+        IF in = -1 OR (t.reguse[in].stackp # -1 AND t.reguse[in].stackp # stackp) THEN
           forceout(t, to, operandPart := 0);
           IF in = -1 THEN
             loadreg(t, to, op, operandPart := 0);
@@ -374,34 +376,6 @@ PROCEDURE find1 (t: T; stackp: INTEGER; force: Force; set: RegSet; hintaddr: BOO
       END;
 
       t.reguse[to].locked := TRUE;
-    END;
-  END find1;
-
-PROCEDURE find (t: T; stackp: INTEGER;
-                force: Force := Force.any; set := RegSet {};
-                hintaddr := FALSE) =
-  (* Find a suitable register to put a stack item in *)
-  VAR opA: ARRAY OperandPart OF Operand;
-  BEGIN
-    WITH op = t.vstack[stackp] DO
-      IF SplitOperand(op, opA) = 1 THEN
-        <* ASSERT NOT Is64(op.optype) *>
-        <* ASSERT NOT Is64(op.mvar.mvar_type) *>
-        find1(t, stackp, force, set, hintaddr);
-        RETURN;
-      END;
-      (* need work here
-       * basic approach can be
-       * to statically allocate registers, we need
-       * up to four (for binary operations) eax, edx, ecx, ?
-       *)
-      op.optype := Type.Word32;
-      CASE op.loc OF
-        | OLoc.imm => (* nothing *)
-        | OLoc.register => (* nothing *)
-        | OLoc.fstack => <* ASSERT FALSE *>
-        | OLoc.mem => op.mvar.mvar_type := Type.Word32;
-      END;
     END;
   END find;
 
