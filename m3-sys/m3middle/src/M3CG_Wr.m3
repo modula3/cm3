@@ -1785,7 +1785,7 @@ PROCEDURE exchange (u: U;  t: MType;  z: ZType;  order: MemoryOrder) =
 PROCEDURE compare_exchange (u: U;  t: MType;  z: ZType;  r: IType;
                             success, failure: MemoryOrder) =
   BEGIN
-    Cmd   (u, "exchange");
+    Cmd   (u, "compare_exchange");
     TName (u, t);
     TName (u, z);
     TName (u, r);
