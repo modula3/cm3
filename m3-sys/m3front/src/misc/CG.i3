@@ -685,9 +685,8 @@ PROCEDURE Comment (offset: INTEGER;  is_const: BOOLEAN;  a, b, c, d: TEXT := NIL
 
 PROCEDURE Store_ordered (t: MType;  order: MemoryOrder);
 PROCEDURE Load_ordered (t: MType;  order: MemoryOrder);
-PROCEDURE Exchange (t: MType;  order: MemoryOrder);
-PROCEDURE Compare_exchange (t: MType;  u: IType;
-                            success, failure: MemoryOrder);
+PROCEDURE Exchange (t: MType;  order: MemoryOrder); (* s2.A must be forced *)
+PROCEDURE Compare_exchange (t: MType;  success, failure: MemoryOrder);
 PROCEDURE Fence (order: MemoryOrder);
 PROCEDURE Fetch_and_op (op: AtomicOp;  t: MType;  order: MemoryOrder);
 

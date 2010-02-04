@@ -2,13 +2,12 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-(* File: FetchDec.mg                                           *)
+(* File: FetchXor.mg                                           *)
 
-GENERIC MODULE FetchDec (Rep, Atomic);
+GENERIC MODULE FetchXor (Rep, Atomic);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TInt, M3ID;
 IMPORT Value, Formal, Type, ProcType, Error, EnumExpr, Addr, Module;
-IMPORT IntegerExpr, Int;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
@@ -29,7 +28,7 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
       | ORD(CG.MemoryOrder.Sequential) =>
         (* ok *)
       ELSE
-        Error.Warn (0, "FetchDec currently only supports Order.Sequential");
+        Error.Warn (0, "FetchXor currently only supports Order.Sequential");
       END;
     ELSE
       Error.Msg ("order must be an enumeration constant");
@@ -48,10 +47,9 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.CompileAddress (ce.args[0], traced := TRUE);
     Expr.Compile (ce.args[1]);
-    CG.Loophole (Target.Integer.cg_type, Type.CGType(Rep.T));
     EVAL EnumExpr.Split (ce.args[2], order, t);
     EVAL TInt.ToInt (order, z);
-    CG.Fetch_and_op (CG.AtomicOp.Sub,
+    CG.Fetch_and_op (CG.AtomicOp.Xor,
                      Type.CGType(Rep.T, in_memory := TRUE),
                      order := VAL(z, CG.MemoryOrder));
     Expr.NoteWrite (ce.args[0]);
@@ -66,13 +64,7 @@ PROCEDURE Initialize () =
                          dfault := NIL,
                          unused := FALSE,
                          trace := NIL };
-    decr := Formal.Info { name := M3ID.Add ("decr"),
-                          mode := Formal.Mode.mVALUE,
-                          offset := 1,
-                          type := Int.T,
-                          dfault := IntegerExpr.New (Int.T, TInt.One),
-                          unused := FALSE,
-                          trace := NIL };
+    mask := Formal.NewBuiltin ("mask", 1, Rep.T);
     order := Formal.Info { name := M3ID.Add ("order"),
                            mode := Formal.Mode.mVALUE,
                            offset := 2,
@@ -80,8 +72,7 @@ PROCEDURE Initialize () =
                            dfault := Atomic.Sequential,
                            unused := FALSE,
                            trace := NIL };
-    t0 := ProcType.New (Rep.T, Formal.New (var), Formal.New (decr),
-                        Formal.New (order));
+    t0 := ProcType.New (Rep.T, Formal.New (var), mask, Formal.New(order));
   BEGIN
     Z := CallExpr.NewMethodList (1, 3, FALSE, TRUE, TRUE, Rep.T,
                                  NIL,
@@ -98,9 +89,9 @@ PROCEDURE Initialize () =
                                  CallExpr.IsNever, (* writable *)
                                  CallExpr.IsNever, (* designator *)
                                  CallExpr.NotWritable (* noteWriter *));
-    Procedure.Define ("FetchDec", Z, FALSE, t0);
+    Procedure.Define ("FetchXor", Z, FALSE, t0);
     formals := ProcType.Formals (t0);
   END Initialize;
 
 BEGIN
-END FetchDec.
+END FetchXor.
