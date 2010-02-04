@@ -147,10 +147,6 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     IF (p.value = NIL) THEN Resolve (p) END;
     Value.TypeCheck (p.value, cs);
     p.type := Value.TypeOf (p.value);
-    IF p.type = NIL THEN
-      Error.ID (p.name, "expression has no type");      
-      p.type := ErrType.T;
-    END;
     p.value := Value.Base (p.value);
   END Check;
 

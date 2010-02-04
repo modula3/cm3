@@ -250,8 +250,9 @@ PROCEDURE TypeOf (t: T): Type.T =
   BEGIN
     IF (t.tipe = NIL) THEN
       IF    (t.init # NIL)   THEN t.tipe := Expr.TypeOf (t.init)
-      ELSIF (t.formal # NIL) THEN t.tipe := Value.TypeOf (t.formal)
-      ELSE  Error.ID (t.name, "variable has no type");  t.tipe := ErrType.T;
+      ELSIF (t.formal # NIL) THEN t.tipe := Value.TypeOf (t.formal) END;
+      IF (t.tipe = NIL)
+        THEN Error.ID (t.name, "variable has no type");  t.tipe := ErrType.T;
       END;
     END;
     RETURN t.tipe;
