@@ -11,11 +11,11 @@ GENERIC MODULE AtomicModule (Rep,
                              FetchInc, FetchDec, FetchOr, FetchXor, FetchAnd);
 
 IMPORT Scope, Tipe, Module, TInt;
-IMPORT Field, PackedType, M3ID, TargetMap, Type, Value, RecordType;
+IMPORT Field, M3ID, Value, RecordType;
 IMPORT EnumType, EnumExpr, EnumElt;
 
 PROCEDURE Initialize (name: TEXT) =
-  VAR zz, elts: Scope.T;  bits: Field.Info;  cs: Value.CheckState;
+  VAR zz, elts: Scope.T;  rep: Field.Info;  cs: Value.CheckState;
   BEGIN
     M := Module.NewDefn (name, TRUE, NIL);
 
@@ -26,17 +26,13 @@ PROCEDURE Initialize (name: TEXT) =
     zz := Scope.Push (Module.ExportScope (M));
 
     elts := Scope.PushNew (FALSE, M3ID.NoID);
-    bits :=
-        Field.Info { name := M3ID.Add ("bits"),
+    rep :=
+        Field.Info { name := M3ID.Add ("rep"),
                      index := 0,
                      offset := 0,
-                     type := PackedType.New (
-                                 TargetMap.CG_Size [Type.CGType (
-                                                        Rep.T,
-                                                        in_memory := TRUE)],
-                                 Rep.T),
+                     type := Rep.T,
                      dfault := NIL };
-    Scope.Insert (Field.New (bits));
+    Scope.Insert (Field.New (rep));
     Scope.PopNew ();
     Scope.TypeCheck (elts, cs);
     T := RecordType.New (elts);
@@ -44,13 +40,11 @@ PROCEDURE Initialize (name: TEXT) =
 
     elts := Scope.PushNew (FALSE, M3ID.NoID);
     Order := EnumType.New (5, elts);
-
     Scope.Insert (EnumElt.New (M3ID.Add ("Relaxed"),        TInt.Zero,  Order));
     Scope.Insert (EnumElt.New (M3ID.Add ("Release"),        TInt.One,   Order));
     Scope.Insert (EnumElt.New (M3ID.Add ("Acquire"),        TInt.Two,   Order));
     Scope.Insert (EnumElt.New (M3ID.Add ("AcquireRelease"), TInt.Three, Order));
     Scope.Insert (EnumElt.New (M3ID.Add ("Sequential"),     TInt.Four,  Order));
-
     Scope.PopNew ();
     Scope.TypeCheck (elts, cs);
     Tipe.Define ("Order", Order, FALSE);

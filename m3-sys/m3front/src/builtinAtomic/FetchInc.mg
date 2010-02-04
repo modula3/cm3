@@ -48,6 +48,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.CompileAddress (ce.args[0], traced := TRUE);
     Expr.Compile (ce.args[1]);
+    CG.Loophole (Target.Integer.cg_type, Type.CGType(Rep.T));
     EVAL EnumExpr.Split (ce.args[2], order, t);
     EVAL TInt.ToInt (order, z);
     CG.Fetch_and_op (CG.AtomicOp.Add,
