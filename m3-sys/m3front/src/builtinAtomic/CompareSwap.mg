@@ -59,6 +59,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
   VAR order: Target.Int;  t: Type.T;  success, failure: INTEGER;
   BEGIN
     Expr.CompileAddress (ce.args[0], traced := TRUE);
+    CG.Force ();
     Expr.CompileLValue (ce.args[1], traced := TRUE);
     Expr.Compile (ce.args[2]);
     EVAL EnumExpr.Split (ce.args[3], order, t);
@@ -66,9 +67,8 @@ PROCEDURE Compile (ce: CallExpr.T) =
     EVAL EnumExpr.Split (ce.args[4], order, t);
     EVAL TInt.ToInt (order, failure);
     CG.Compare_exchange (Type.CGType(Rep.T, in_memory := TRUE),
-                         Type.CGType(Rep.T),
                          success := VAL(success, CG.MemoryOrder),
-                         failure := VAL(success, CG.MemoryOrder));
+                         failure := VAL(failure, CG.MemoryOrder));
     Expr.NoteWrite (ce.args[0]);
     Expr.NoteWrite (ce.args[1]);
   END Compile;
