@@ -586,24 +586,54 @@ PROCEDURE get_temp (t: T; stackp: INTEGER; r: Regno; imm := TZero) =
   END get_temp;
 
 PROCEDURE sweep (t: T; READONLY mvar: MVar) =
+(* I really don't understand the point of this function.
+ * It searches the virtual stack looking for mvar and
+ * anything it finds it moves to new machine stack temporaries.
+ * It is only called from pop. Perhaps the point
+ * is a sort of copy-on-write?
+ *)
   VAR doneswap := FALSE;
+      mvarA: ARRAY OperandPart OF MVar;
+      size: OperandSize := 1;
+      size2: OperandSize;
+      stackOpA: ARRAY OperandPart OF Operand;
+      type := Type.Word32;
   BEGIN
     FOR i := 0 TO t.stacktop - 1 DO
       IF t.vstack[i].loc = OLoc.mem AND
          t.vstack[i].mvar = mvar THEN
         IF NOT doneswap THEN
           doneswap := TRUE;
+          size := SplitMVar(mvar, mvarA);
           t.cg.pushOp(t.cg.reg[Codex86.EAX]);
+          IF size = 2 THEN
+            t.cg.pushOp(t.cg.reg[Codex86.ECX]);
+            type := Type.Word64;
+          END;
         END;
-        t.cg.movOp(t.cg.reg[Codex86.EAX], t.vstack[i]);
-        set_mvar(t, i, MVar { var := t.parent.declare_temp(4, 4, Type.Int32,
-                                                           FALSE),
-                              mvar_offset := 0, mvar_type := Type.Int32 } );
+        size2 := SplitOperand(t.vstack[i], stackOpA);
+        <* ASSERT size = size2 *>
+        IF size = 1 THEN
+          t.cg.movOp(t.cg.reg[Codex86.EAX], t.vstack[i]);
+        ELSE
+          t.cg.movOp(t.cg.reg[Codex86.EAX], stackOpA[0]);
+          t.cg.movOp(t.cg.reg[Codex86.ECX], stackOpA[1]);
+        END;
+        set_mvar(t, i, MVar { var := t.parent.declare_temp(size * 4, 4, type, FALSE),
+                              mvar_offset := 0, mvar_type := type } );
         t.vstack[i].mvar.var.stack_temp := TRUE;
-        t.cg.movOp(t.vstack[i], t.cg.reg[Codex86.EAX]);
+        IF size = 1 THEN
+          t.cg.movOp(t.vstack[i], t.cg.reg[Codex86.EAX]);
+        ELSE
+          t.cg.movOp(stackOpA[0], t.cg.reg[Codex86.EAX]);
+          t.cg.movOp(stackOpA[1], t.cg.reg[Codex86.ECX]);
+        END;
       END
     END;
     IF doneswap THEN
+      IF size = 2 THEN
+        t.cg.popOp(t.cg.reg[Codex86.ECX]);
+      END;
       t.cg.popOp(t.cg.reg[Codex86.EAX]);
     END
   END sweep;
