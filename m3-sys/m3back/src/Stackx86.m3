@@ -159,6 +159,7 @@ PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand; operandPart: OperandPar
 
     t.reguse[r] := InitRegister(locked := t.reguse[r].locked);
     t.reguse[r].stackp := op.stackp;
+    t.reguse[r].operandPart := operandPart;
 
     IF op.loc = OLoc.mem THEN
       IF op.mvar.var.stack_temp THEN
@@ -179,6 +180,7 @@ PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand; operandPart: OperandPar
 PROCEDURE loadphantom (t: T; r: Regno; stackp: INTEGER; operandPart: OperandPart) =
   BEGIN
     t.reguse[r].stackp := stackp;
+    t.reguse[r].operandPart := operandPart;
     t.vstack[stackp].loc := OLoc.register;
     t.vstack[stackp].reg[operandPart] := r;
   END loadphantom; 
@@ -611,6 +613,7 @@ PROCEDURE set_reg (t: T; stackp: INTEGER; r: Regno; operandPart: OperandPart) =
     t.vstack[stackp].loc := OLoc.register;
     t.vstack[stackp].reg[operandPart] := r;
     t.reguse[r].stackp := stackp;
+    t.reguse[r].operandPart := operandPart;
   END set_reg;
 
 PROCEDURE dealloc_reg (t: T; stackp: INTEGER; operandPart: OperandPart) =
