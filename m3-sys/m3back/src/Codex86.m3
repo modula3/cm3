@@ -425,7 +425,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
     END
   END immOp1;
 
-PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
+PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int; compare_label: Label := No_label) =
   VAR destA: ARRAY OperandPart OF Operand;
       immA: ARRAY OperandPart OF Target.Int;
       immSize := SplitImm(dest.optype, imm, immA);
@@ -436,15 +436,33 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
     <* ASSERT NOT Is64(destA[0].optype) *>
     <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
-    FOR i := 0 TO destSize - 1 DO
-      immOp1(t, op, destA[i], immA[i]);
+    IF (immSize = 2) AND (op = Op.oCMP OR op = Op.oADD OR op = Op.oSUB) THEN
+      CASE op OF
+        | Op.oADD =>
+          immOp1(t, Op.oADD, destA[0], immA[0]);
+          immOp1(t, Op.oADC, destA[1], immA[1]);
+        | Op.oSUB =>
+          immOp1(t, Op.oSUB, destA[0], immA[0]);
+          immOp1(t, Op.oSBB, destA[1], immA[1]);
+        | Op.oCMP =>
+          <* ASSERT compare_label # No_label *>
+          immOp1(t, op, destA[1], immA[1]);
+          t.brOp(Cond.NE, compare_label);
+          immOp1(t, op, destA[0], immA[0]);
+        ELSE
+          <* ASSERT FALSE *>
+      END
+    ELSE
+      FOR i := 0 TO destSize - 1 DO
+        immOp1(t, op, destA[i], immA[i]);
+      END;
     END;
 
     <* ASSERT destA[0].stackp = destA[destSize - 1].stackp *>
 
   END immOp;
 
-PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN) =
+PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN := FALSE) =
   VAR ins: Instruction;
   BEGIN
 
@@ -485,7 +503,7 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN) =
     END;
   END binOp1;
 
-PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
+PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE; compare_label: Label := No_label) =
   VAR destA: ARRAY OperandPart OF Operand;
       srcA: ARRAY OperandPart OF Operand;
       srcSize := SplitOperand(src, srcA);
@@ -505,8 +523,26 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
     END;
     <* ASSERT srcSize = destSize *>
 
-    FOR i := 0 TO destSize - 1 DO
-      binOp1(t, op, destA[i], srcA[i], locked);
+    IF (srcSize = 2) AND (op = Op.oCMP OR op = Op.oADD OR op = Op.oSUB) THEN
+      CASE op OF
+        | Op.oADD =>
+            binOp1(t, Op.oADD, destA[0], srcA[0]);
+            binOp1(t, Op.oADC, destA[1], srcA[1]);
+        | Op.oSUB =>
+            binOp1(t, Op.oSUB, destA[0], srcA[0]);
+            binOp1(t, Op.oSBB, destA[1], srcA[1]);
+        | Op.oCMP =>
+            <* ASSERT compare_label # No_label *>
+            binOp1(t, op, destA[1], srcA[1]);
+            t.brOp(Cond.NE, compare_label);
+            binOp1(t, op, destA[0], srcA[0]);
+        ELSE
+          <* ASSERT FALSE *>
+      END
+    ELSE
+      FOR i := 0 TO destSize - 1 DO
+        binOp1(t, op, destA[i], srcA[i], locked);
+      END;
     END;
 
     <* ASSERT destA[0].stackp = destA[destSize - 1].stackp *>

@@ -1010,32 +1010,7 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; c
       size := SplitOperand(srcop, srcA);
       EVAL SplitOperand(destop, destA);
 
-      IF (size = 2) AND (op = Op.oCMP OR op = Op.oADD OR op = Op.oSUB OR op = Op.oXOR OR op = Op.oAND OR op = Op.oOR) THEN
-        CASE op OF
-          | Op.oXOR, Op.oOR, Op.oAND =>
-            t.cg.binOp(op, destA[0], srcA[0]);
-            t.cg.binOp(op, destA[1], srcA[1]);
-          | Op.oADD =>
-            t.cg.binOp(Op.oADD, destA[0], srcA[0]);
-            t.cg.binOp(Op.oADC, destA[1], srcA[1]);
-          | Op.oSUB =>
-            t.cg.binOp(Op.oSUB, destA[0], srcA[0]);
-            t.cg.binOp(Op.oSBB, destA[1], srcA[1]);
-          | Op.oCMP =>
-            (* NOTE: we could avoid loading the low part if the high part compares unequal.
-             * Also, if the low part is already in registers and this just a NE comparison,
-             * we could do that first and avoid the high load if NE.
-             *)
-            <* ASSERT compare_label # No_label *>
-            t.cg.binOp(op, destA[1], srcA[1]);
-            t.cg.brOp(Cond.NE, compare_label);
-            t.cg.binOp(op, destA[0], srcA[0]);
-          ELSE
-            <* ASSERT FALSE *>
-        END
-      ELSE
-        t.cg.binOp(op, destop, srcop);
-      END;
+      t.cg.binOp(op, destop, srcop);
 
       IF overwritesdest THEN
         newdest(t, destop);
