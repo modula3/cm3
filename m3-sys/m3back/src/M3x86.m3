@@ -1831,11 +1831,6 @@ PROCEDURE add (u: U;  t: AType) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      call_64 (u, Builtin.add64);
-      RETURN;
-    END;
-
     IF Target.FloatType [t] THEN
       u.cg.binFOp(FOp.fADDP, 1);
       u.vstack.discard(1);
@@ -1851,11 +1846,6 @@ PROCEDURE subtract (u: U;  t: AType) =
       u.wr.Cmd   ("subtract");
       u.wr.TName (t);
       u.wr.NL    ();
-    END;
-
-    IF Is64(t) THEN
-      call_64 (u, Builtin.sub64);
-      RETURN;
     END;
 
     IF Target.FloatType [t] THEN
@@ -3007,7 +2997,7 @@ TYPE
   Builtin = {
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_lt, set_le, set_gt, set_ge, set_member, set_singleton,
-    memmove, memcpy, memset, memcmp, add64, sub64, mul64, umul64, div64,
+    memmove, memcpy, memset, memcmp, mul64, umul64, div64,
     udiv64, mod64, umod64, neg64, abs64, min64, umin64, max64, umax64,
     shift_left64, shift_right64, shift64,
     rotate_left64, rotate_right64, rotate64, insert64, extract64,
@@ -3050,8 +3040,6 @@ CONST
     BP { "memset",             3, Type.Addr,  "C" },
     BP { "memcmp",             3, Type.Int32, "C" },
 
-    BP { "m3_add64",         2, Type.Word64, "__stdcall", 1 },
-    BP { "m3_sub64",         2, Type.Word64, "__stdcall", 1 },
     BP { "m3_mul64",         2, Type.Int64,  "__stdcall", 1 },
     BP { "m3_umul64",        2, Type.Word64, "__stdcall", 1 },
     BP { "m3_div64",         2, Type.Int64,  "__stdcall", 1 },
