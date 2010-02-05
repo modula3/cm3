@@ -17,8 +17,8 @@ FROM M3CG IMPORT ByteOffset, ByteSize, No_label;
 FROM M3CG IMPORT Type, MType, Label, Alignment;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs;
-FROM M3x86Rep IMPORT RegSet, RegName, SplitOperand, Is64, SplitImm, OperandPart;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs, OperandSize, GetOperandSize;
+FROM M3x86Rep IMPORT RegSet, RegName, SplitOperand, Is64, SplitImm, OperandPart, GetTypeSize;
 
 FROM M3ObjFile IMPORT Seg;
 
@@ -1332,7 +1332,7 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset;
     writecode (t, ins);
   END fast_load_ind;
 
-PROCEDURE store_ind (t: T; READONLY val, ind: Operand; o: ByteOffset;
+PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; o: ByteOffset;
                      type: MType) =
   VAR ins: Instruction;
   BEGIN
@@ -1342,7 +1342,7 @@ PROCEDURE store_ind (t: T; READONLY val, ind: Operand; o: ByteOffset;
     IF val.loc = OLoc.imm THEN
       ins.opcode := 16_C6;
       IF NOT TInt.ToInt(val.imm, ins.imm) THEN
-        t.Err("store_ind: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(val.imm));
+        t.Err("store_ind1: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(val.imm));
       END;
       ins.imsize := CG_Bytes[type];
     END;
@@ -1365,6 +1365,25 @@ PROCEDURE store_ind (t: T; READONLY val, ind: Operand; o: ByteOffset;
     END;
     IF ind.reg[0] = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
     writecode (t, ins);
+  END store_ind1;
+
+PROCEDURE store_ind (t: T; READONLY val, ind: Operand; o: ByteOffset;
+                     type: MType) =
+  VAR valA: ARRAY OperandPart OF Operand;
+      size: OperandSize;
+  BEGIN
+    <* ASSERT ind.loc = OLoc.register AND val.loc # OLoc.mem *>
+    <* ASSERT GetOperandSize(ind) = 1 *>
+
+    size := SplitOperand(val, valA);
+    IF size = 1 THEN
+      store_ind1(t, val, ind, o, type);
+    ELSE
+      <* ASSERT GetOperandSize(val) = GetTypeSize(type) *>
+      FOR i := 0 TO size - 1 DO
+        store_ind1(t, valA[i], ind, o + i * 4, valA[i].optype);
+      END;
+    END;
   END store_ind;
 
 PROCEDURE f_loadind (t: T; READONLY ind: Operand; o: ByteOffset; type: MType) =

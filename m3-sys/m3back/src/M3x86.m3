@@ -1686,7 +1686,8 @@ PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
 
 PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
 (* s0.z := Mem [s0.A + o].t  *)
-  VAR newreg: Regno;
+  VAR newreg: ARRAY OperandPart OF Regno;
+      size: OperandSize;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_indirect");
@@ -1704,16 +1705,26 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
         u.vstack.dealloc_reg(stack0, operandPart := 0);
         u.vstack.set_fstack(stack0);
       ELSE
-        IF CG_Bytes[t] = 1 THEN
-          newreg := u.vstack.freereg(RegSet { Codex86.EAX, Codex86.EBX,
-                                              Codex86.ECX, Codex86.EDX }, operandPart := 0);
-        ELSE
-          newreg := u.vstack.freereg(operandPart := 0);
-        END;
+        size := GetTypeSize(t);
+        <* ASSERT size = GetTypeSize(z) *>
+        FOR i := 0 TO size - 1 DO
+          IF CG_Bytes[t] = 1 THEN
+            <* ASSERT i = 0 AND size = 1 *>
+            newreg[i] := u.vstack.freereg(RegSet { Codex86.EAX, Codex86.EBX,
+                                                   Codex86.ECX, Codex86.EDX }, operandPart := i);
+          ELSE
+            IF i = 0 THEN
+              newreg[i] := u.vstack.freereg(operandPart := i);
+            ELSE
+              newreg[i] := u.vstack.freereg(AllRegisters - RegSet{newreg[0]}, operandPart := i);
+            END;
+          END;
+          <* ASSERT newreg[i] # -1 *>
 
-        u.cg.load_ind(newreg, u.vstack.op(stack0), o, t);
-        u.vstack.dealloc_reg(stack0, operandPart := 0);
-        u.vstack.set_reg(stack0, newreg, operandPart := 0);
+          u.cg.load_ind(newreg[i], u.vstack.op(stack0), o, t);
+          u.vstack.dealloc_reg(stack0, operandPart := i);
+          u.vstack.set_reg(stack0, newreg[i], operandPart := i);
+        END
       END
     END
   END load_indirect;
