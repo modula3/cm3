@@ -1010,9 +1010,9 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; c
       size := SplitOperand(srcop, srcA);
       EVAL SplitOperand(destop, destA);
 
-      IF (size = 2) AND (op = Op.oCMP OR op = Op.oADD OR op = Op.oSUB OR op = Op.oXOR OR op = Op.oAND OR op = Op.oOR OR op = Op.oNOT) THEN
+      IF (size = 2) AND (op = Op.oCMP OR op = Op.oADD OR op = Op.oSUB OR op = Op.oXOR OR op = Op.oAND OR op = Op.oOR) THEN
         CASE op OF
-          | Op.oXOR, Op.oOR, Op.oNOT, Op.oAND =>
+          | Op.oXOR, Op.oOR, Op.oAND =>
             t.cg.binOp(op, destA[0], srcA[0]);
             t.cg.binOp(op, destA[1], srcA[1]);
           | Op.oADD =>
