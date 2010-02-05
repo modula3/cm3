@@ -314,7 +314,7 @@ PROCEDURE immFOp (t: T; op: FOp; im: FIm) =
     writecode(t, ins);
     Mn(t, fopcode[op].name, " ST1");
     ins.opcode := fopcode[op].stbase;
-    ins.modrm  := fopcode[op].stmodrm+1;
+    ins.modrm  := fopcode[op].stmodrm + 1;
     ins.mrmpres := TRUE;
     writecode(t, ins);
     INC(t.fstacksize, fopcode[op].stackdiff);
@@ -552,7 +552,7 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
     Mn(t, "::["); MnOp(t, index); Mn(t, " *"); MnImmInt (t, scale);
     Mn(t, " +");  MnImmInt(t, ins.disp);  Mn(t, " ]");
 
-    ins.opcode := opcode[op].rrm+1;
+    ins.opcode := opcode[op].rrm + 1;
     writecode(t, ins);
     log_global_var(t, table, -4);
   END tableOp;
