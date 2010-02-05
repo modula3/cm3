@@ -7,7 +7,7 @@
 
 GENERIC INTERFACE Atomic(Rep);
 
-TYPE T = RECORD bits: BITS BITSIZE (Rep.T) FOR Rep.T END;
+TYPE T = RECORD rep: Rep.T END;
 (* T must be a type that is not directly assignable to Rep.T, but can be used
    to hold a value of type Rep.T.  It is preferable that T and Rep.T have the
    same size. *)
@@ -81,7 +81,7 @@ PROCEDURE Fence(order := Order.Sequential);
 PROCEDURE FetchInc (VAR var: T; incr := 1; order := Order.Sequential): Rep.T;
 PROCEDURE FetchDec (VAR var: T; decr := 1; order := Order.Sequential): Rep.T;
 PROCEDURE FetchOr  (VAR var: T; mask: Rep.T; order := Order.Sequential): Rep.T;
-PROCEDURE FetchXOr (VAR var: T; mask: Rep.T; order := Order.Sequential): Rep.T;
+PROCEDURE FetchXor (VAR var: T; mask: Rep.T; order := Order.Sequential): Rep.T;
 PROCEDURE FetchAnd (VAR var: T; mask: Rep.T; order := Order.Sequential): Rep.T;
   (* Atomically replace the value in "var" with the result of the operation
      applied to the value in "var" and the given operand.  Memory is affected
