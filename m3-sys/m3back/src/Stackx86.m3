@@ -755,7 +755,7 @@ PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
       pushnew1(t, type, Force.regset, RegSet { Codex86.EDX }, operandPart := 1);
       pushnew1(t, type, Force.regset, RegSet { Codex86.EAX }, operandPart := 0);
     ELSE
-      FOR i := 0 TO ORD(Is64(type)) DO
+      FOR i := 0 TO GetTypeSize(type) - 1 DO
         pushnew1(t, type, force, set, i);
       END;
     END;
@@ -937,10 +937,10 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
 
-      IF Is64(stop0.optype) # Is64(stop1.optype) THEN
+      IF GetTypeSize(stop0.optype) # GetTypeSize(stop1.optype) THEN
         t.Err("findbin: stop0.optype:" & Target.TypeNames[stop0.optype] & " stop1.optype:" & Target.TypeNames[stop1.optype]);
        END;
-      <* ASSERT Is64(stop0.optype) = Is64(stop1.optype) *>
+      <* ASSERT GetTypeSize(stop0.optype) = GetTypeSize(stop1.optype) *>
 
       find(t, stack0, Force.any);
       find(t, stack1, Force.any);
@@ -967,7 +967,7 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
     WITH destop = t.vstack[dest],
          srcop = t.vstack[src] DO
 
-      <* ASSERT Is64(destop.optype) = Is64(srcop.optype) *>
+      <* ASSERT GetTypeSize(destop.optype) = GetTypeSize(srcop.optype) *>
 
       IF destop.loc = OLoc.mem AND NOT destop.mvar.var.stack_temp AND overwritesdest THEN
         find(t, dest, Force.anyreg);
@@ -1000,10 +1000,7 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; <*UNUSED*>typ
     WITH destop = t.vstack[dest],
           srcop = t.vstack[src] DO
 
-      IF Is64(destop.optype) OR Is64(srcop.optype) THEN
-        (*t.Warn("dobin: src:" & Fmt.Int(src) & " dest:" & Fmt.Int(dest));*)
-        (*t.Warn("dobin: destop.optype:" & Target.TypeNames[destop.optype] & " srcop.optype:" & Target.TypeNames[srcop.optype]);*)
-      END;
+      <* ASSERT GetTypeSize(destop.optype) = GetTypeSize(srcop.optype) *>
       t.cg.binOp(op, destop, srcop);
 
       IF overwritesdest THEN
@@ -1186,7 +1183,7 @@ PROCEDURE domod (t: T; a, b: Sign) =
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
 
-      <* ASSERT Is64(stop0.optype) = Is64(stop1.optype) *>
+      <* ASSERT GetTypeSize(stop0.optype) = GetTypeSize(stop1.optype) *>
 
       find(t, stack1, Force.regset, RegSet {Codex86.EAX});
       IF (a = Sign.Positive AND b = Sign.Positive) OR
