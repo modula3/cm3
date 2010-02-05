@@ -31,7 +31,7 @@ TYPE
   Status = RECORD
     type: Type;
     modificationTime: Time.T;
-    size: [0L..LAST(LONGINT)];
+    size: LONGCARD;
   END;
   Type = Atom.T;
 
