@@ -820,8 +820,12 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
     INC(t.stacktop);
   END push;
 
-PROCEDURE pop1 (t: T; READONLY dest_mvar: MVar; operandPart: OperandPart) =
+PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
   VAR indreg: Regno;
+      dest_mvarA: ARRAY OperandPart OF MVar;
+      size := SplitMVar(dest_mvar, dest_mvarA);
+      src_opA: ARRAY OperandPart OF Operand;
+      srcSize: OperandSize := 1;
   BEGIN
     IF t.stacktop < 1 THEN
       t.Err("Stack underflow in pop");
@@ -832,7 +836,7 @@ PROCEDURE pop1 (t: T; READONLY dest_mvar: MVar; operandPart: OperandPart) =
         IF dest_mvar.var.loc = VLoc.temp AND dest_mvar.var.parent # t.current_proc THEN
           unlock(t);
           indreg := pickreg(t, RegSet {}, TRUE);
-          corrupt(t, indreg, operandPart);
+          corrupt(t, indreg, operandPart := 0);
           t.cg.get_frame(indreg, dest_mvar.var.parent, t.current_proc);
           t.cg.f_storeind(t.cg.reg[indreg], dest_mvar.mvar_offset + dest_mvar.var.offset, dest_mvar.mvar_type);
 
@@ -851,12 +855,16 @@ PROCEDURE pop1 (t: T; READONLY dest_mvar: MVar; operandPart: OperandPart) =
 
         IF dest_mvar.var.loc = VLoc.temp AND dest_mvar.var.parent # t.current_proc THEN
           indreg := pickreg(t, RegSet {}, TRUE);
-          corrupt(t, indreg, operandPart);
+          corrupt(t, indreg, operandPart := 0);
           t.cg.get_frame(indreg, dest_mvar.var.parent, t.current_proc);
-          t.cg.store_ind(src_stack0, t.cg.reg[indreg], dest_mvar.mvar_offset + dest_mvar.var.offset,
-                         dest_mvar.mvar_type);
-          t.reguse[src_stack0.reg[0]].stackp := -1;
-          corrupt(t, src_stack0.reg[0], operandPart);
+          srcSize := SplitOperand(src_stack0, src_opA);
+          <* ASSERT srcSize = size *>
+          FOR i := 0 TO size - 1 DO
+            t.cg.store_ind(src_opA[i], t.cg.reg[indreg], dest_mvarA[i].mvar_offset + dest_mvarA[i].var.offset,
+                           dest_mvar.mvar_type);
+            t.reguse[src_stack0.reg[i]].stackp := -1;
+            corrupt(t, src_stack0.reg[i], i);
+          END;
 
         ELSE
           sweep(t, dest_mvar);
@@ -868,25 +876,22 @@ PROCEDURE pop1 (t: T; READONLY dest_mvar: MVar; operandPart: OperandPart) =
           END;
 
           IF src_stack0.loc = OLoc.register THEN
-            t.reguse[src_stack0.reg[0]].stackp := -1;
-            t.reguse[src_stack0.reg[0]].last_store := dest_mvar;
+            FOR i := 0 TO size - 1 DO
+              t.reguse[src_stack0.reg[i]].stackp := -1;
+              t.reguse[src_stack0.reg[i]].last_store := dest_mvar;
+            END;
           END;
 
-          t.cg.movOp(Operand { loc := OLoc.mem, mvar := dest_mvar, optype := dest_mvar.mvar_type }, src_stack0);
+          srcSize := SplitOperand(src_stack0, src_opA);
+          <* ASSERT srcSize = size *>
+          FOR i := 0 TO size - 1 DO
+            t.cg.movOp(Operand { loc := OLoc.mem, mvar := dest_mvarA[i], optype := dest_mvarA[i].mvar_type }, src_opA[i]);
+          END;
           set_mvar(t, t.stacktop - 1, dest_mvar);
         END
       END
     END;
 
-  END pop1;
-
-PROCEDURE pop (t: T; READONLY mvar: MVar) =
-  VAR mvarA: ARRAY OperandPart OF MVar;
-      size := SplitMVar(mvar, mvarA);
-  BEGIN
-    FOR i := 0 TO size - 1 DO
-      pop1(t, mvarA[i], i);
-    END;
     DEC(t.stacktop);
   END pop;
 
