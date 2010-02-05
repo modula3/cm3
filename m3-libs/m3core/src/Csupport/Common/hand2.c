@@ -30,20 +30,9 @@ extern "C"
 
 #ifdef _WIN32
 
- int64 __stdcall  m3_max64( int64 a,  int64 b) { return ((a > b) ? a : b); }
-uint64 __stdcall m3_umax64(uint64 a, uint64 b) { return ((a > b) ? a : b); }
- int64 __stdcall  m3_min64( int64 a,  int64 b) { return ((a < b) ? a : b); }
-uint64 __stdcall m3_umin64(uint64 a, uint64 b) { return ((a < b) ? a : b); }
-
-uint64 __stdcall  m3_add64(uint64 a, uint64 b) { return (a + b); }
-uint64 __stdcall  m3_sub64(uint64 a, uint64 b) { return (a - b); }
 uint64 __stdcall m3_umul64(uint64 a, uint64 b) { return (a * b); }
 uint64 __stdcall m3_udiv64(uint64 a, uint64 b) { return (a / b); }
 uint64 __stdcall m3_umod64(uint64 a, uint64 b) { return (a % b); }
-
-uint64 __stdcall m3_and64(uint64 a, uint64 b)  { return (a & b); }
-uint64 __stdcall  m3_or64(uint64 a, uint64 b)  { return (a | b); }
-uint64 __stdcall m3_xor64(uint64 a, uint64 b)  { return (a ^ b); }
 
 uint64 __stdcall   m3_shift_left64(uint64 a, uint64 b)  { return (a << b); }
 uint64 __stdcall  m3_shift_right64(uint64 a, uint64 b)  { return (a >> b); }
@@ -74,10 +63,6 @@ uint64 __stdcall m3_rotate64(uint64 a, int64 b)
         a = _rotr64(a, (int)-b);
     return a;
 }
-
-int64 __stdcall m3_neg64(int64 a)    { return -a; }
-int64 __stdcall m3_abs64(int64 a)    { return ((a < 0) ? -a : a); }
-uint64 __stdcall m3_not64(uint64 a)  { return ~a; }
 
 #define M3_POS(T, a) (((T)-((a) + 1)) + 1)
 
@@ -145,27 +130,6 @@ uint64 __stdcall m3_insert64(uint64 x, uint64 y, uint64 i, uint64 n)
     mask = ((~((~(uint64)0) << n)) << i);
     return (x & ~mask) | ((y << i) & mask);
 }
-
-int __stdcall m3_check_range_u64(uint64 a, uint64 limit_lo, uint64 limit_hi)
-{
-    return (a < limit_lo || a > limit_hi);
-}
-
-int __stdcall m3_check_range_64(int64 a, int64 limit_lo, int64 limit_hi)
-{
-    return (a < limit_lo || a > limit_hi);
-}
-
-int __stdcall m3_compare_eq_64(uint64 a, uint64 b) { return (a == b); }
-int __stdcall m3_compare_ne_64(uint64 a, uint64 b) { return (a != b); }
-int __stdcall m3_compare_lt_64(int64 a, int64 b) { return (a < b); }
-int __stdcall m3_compare_le_64(int64 a, int64 b) { return (a <= b); }
-int __stdcall m3_compare_gt_64(int64 a, int64 b) { return (a > b); }
-int __stdcall m3_compare_ge_64(int64 a, int64 b) { return (a >= b); }
-int __stdcall m3_compare_lt_u64(uint64 a, uint64 b) { return (a < b); }
-int __stdcall m3_compare_le_u64(uint64 a, uint64 b) { return (a <= b); }
-int __stdcall m3_compare_gt_u64(uint64 a, uint64 b) { return (a > b); }
-int __stdcall m3_compare_ge_u64(uint64 a, uint64 b) { return (a >= b); }
 
 #endif
 
