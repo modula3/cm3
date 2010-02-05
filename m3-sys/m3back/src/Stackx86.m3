@@ -933,19 +933,19 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
   BEGIN
     unlock(t);
     WITH stack0 = pos(t, 0, "findbin"),
-         stack1 = pos(t, 1, "findbin"),
-         stop0 = t.vstack[stack0],
-         stop1 = t.vstack[stack1] DO
-
-      IF GetTypeSize(stop0.optype) # GetTypeSize(stop1.optype) THEN
-        t.Err("findbin: stop0.optype:" & Target.TypeNames[stop0.optype] & " stop1.optype:" & Target.TypeNames[stop1.optype]);
-       END;
-      <* ASSERT GetTypeSize(stop0.optype) = GetTypeSize(stop1.optype) *>
+         stack1 = pos(t, 1, "findbin") DO
 
       find(t, stack0, Force.any);
       find(t, stack1, Force.any);
+
       WITH stop0 = t.vstack[stack0],
            stop1 = t.vstack[stack1] DO
+
+        IF GetTypeSize(stop0.optype) # GetTypeSize(stop1.optype) THEN
+          t.Err("findbin: stop0.optype:" & Target.TypeNames[stop0.optype] & " stop1.optype:" & Target.TypeNames[stop1.optype]);
+         END;
+        <* ASSERT GetTypeSize(stop0.optype) = GetTypeSize(stop1.optype) *>
+
         IF symmetric THEN
           IF stop0.loc = OLoc.register OR stop1.loc = OLoc.imm OR
              (stop0.loc = OLoc.mem AND stop0.mvar.var.stack_temp AND
