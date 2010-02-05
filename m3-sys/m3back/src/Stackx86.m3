@@ -586,7 +586,7 @@ PROCEDURE get_temp (t: T; stackp: INTEGER; r: Regno; imm := TZero) =
   END get_temp;
 
 PROCEDURE sweep (t: T; READONLY mvar: MVar) =
-(* I really don't understand the point of this function.
+(* I do not understand the point of this function.
  * It searches the virtual stack looking for mvar and
  * anything it finds it moves to new machine stack temporaries.
  * It is only called from pop. Perhaps the point
@@ -872,17 +872,17 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
           sweep(t, dest_mvar);
 
           FOR i := 0 TO NRegs DO
-            IF t.reguse[i].last_store = dest_mvar THEN
+            IF t.reguse[i].last_store = dest_mvar
                 OR t.reguse[i].last_store = dest_mvarA[0]
                 OR t.reguse[i].last_store = dest_mvarA[size - 1] THEN
               t.reguse[i].last_store := NoStore;
-            END
+            END;
           END;
 
           IF src_stack0.loc = OLoc.register THEN
             FOR i := 0 TO size - 1 DO
               t.reguse[src_stack0.reg[i]].stackp := -1;
-              t.reguse[src_stack0.reg[i]].last_store := dest_mvar;
+              t.reguse[src_stack0.reg[i]].last_store := dest_mvarA[i];
             END;
           END;
 
