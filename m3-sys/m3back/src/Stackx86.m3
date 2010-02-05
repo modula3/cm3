@@ -860,8 +860,10 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
           srcSize := SplitOperand(src_stack0, src_opA);
           <* ASSERT srcSize = size *>
           FOR i := 0 TO size - 1 DO
-            t.cg.store_ind(src_opA[i], t.cg.reg[indreg], dest_mvarA[i].mvar_offset + dest_mvarA[i].var.offset,
-                           dest_mvar.mvar_type);
+            t.cg.store_ind(src_opA[i],
+                           t.cg.reg[indreg],
+                           dest_mvarA[i].mvar_offset + dest_mvarA[i].var.offset,
+                           dest_mvarA[i].mvar_type);
             t.reguse[src_stack0.reg[i]].stackp := -1;
             corrupt(t, src_stack0.reg[i], i);
           END;
@@ -871,6 +873,8 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
 
           FOR i := 0 TO NRegs DO
             IF t.reguse[i].last_store = dest_mvar THEN
+                OR t.reguse[i].last_store = dest_mvarA[0]
+                OR t.reguse[i].last_store = dest_mvarA[size - 1] THEN
               t.reguse[i].last_store := NoStore;
             END
           END;
