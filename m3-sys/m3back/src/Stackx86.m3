@@ -2264,6 +2264,7 @@ PROCEDURE maybe_expand_stack (t: T) =
   END maybe_expand_stack;
 
 PROCEDURE discard (t: T; depth: INTEGER) =
+  VAR size: OperandSize := 1;
   BEGIN
     IF depth > t.stacktop THEN
       t.Err("Stack underflow in stack_discard");
@@ -2276,7 +2277,10 @@ PROCEDURE discard (t: T; depth: INTEGER) =
               t.parent.free_temp(stackp.mvar.var);
             END
         | OLoc.register =>
-            t.reguse[stackp.reg[0]].stackp := -1;
+            size := GetOperandSize(stackp);
+            FOR j := 0 TO size - 1 DO
+              t.reguse[stackp.reg[j]].stackp := -1;
+            END;
         | OLoc.fstack =>
             (* The discards will have been done elsewhere *)
         | OLoc.imm =>
