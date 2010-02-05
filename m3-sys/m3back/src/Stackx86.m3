@@ -196,21 +196,25 @@ PROCEDURE movereg (t: T; to, from: Regno; operandPart: OperandPart) =
     t.cg.movOp(t.cg.reg[to], t.cg.reg[from]);
   END movereg;
 
-PROCEDURE swapreg (t: T; to, from: Regno; <*UNUSED*>operandPart: OperandPart) =
+PROCEDURE swapreg (t: T; to, from: Regno; operandPart: OperandPart) =
   VAR tempstack := t.reguse[from].stackp;
       tempstore := t.reguse[from].last_store;
+      temppart  := t.reguse[from].operandPart;
   BEGIN
+    <* ASSERT t.reguse[from].stackp = -1 OR t.reguse[from].operandPart = operandPart *>
     t.reguse[from].stackp := t.reguse[to].stackp;
     t.reguse[to].stackp := tempstack;
     t.reguse[from].last_store := t.reguse[to].last_store;
     t.reguse[to].last_store := tempstore;
+    t.reguse[from].operandPart := t.reguse[to].operandPart;
+    t.reguse[to].operandPart := temppart;
 
     IF t.reguse[from].stackp # -1 THEN
-      set_reg(t, t.reguse[from].stackp, from, operandPart := 0);
+      set_reg(t, t.reguse[from].stackp, from, t.reguse[from].operandPart);
     END;
 
     IF tempstack # -1 THEN
-      set_reg(t, tempstack, to, operandPart := 0);
+      set_reg(t, tempstack, to, temppart);
     END;
 
     t.cg.swapOp(t.cg.reg[to], t.cg.reg[from]);
