@@ -1902,11 +1902,64 @@ PROCEDURE swap (t: T) =
   END swap;
 
 PROCEDURE doloophole (t: T; from, to: ZType) =
+  VAR fromSize := GetTypeSize(from);
+      toSize := GetTypeSize(to);
+      changeSize := (fromSize # toSize);
+      fromFloat := FloatType[from];
+      toFloat := FloatType[to];
   BEGIN
       WITH stack0 = pos(t, 0, "doloophole"),
            stop0 = t.vstack[stack0] DO
-        IF FloatType[from] = FloatType[to] THEN
+
+        IF fromFloat AND toFloat THEN
+
           (* no code is needed *)
+
+        ELSIF (NOT fromFloat) AND (NOT toFloat) THEN
+
+          <* ASSERT fromSize = GetTypeSize(stop0.optype) *>
+
+          (* If we are narrowing, free up a register.
+           * If we are widening, allocate and zero a register
+           * OR we should support a notion of an operand being
+           * split reg+imm, such as imm=0
+           * or sign extend?
+           * The notion of split reg+imm could be met by a
+           * design that used multiple stack positions
+           * for larger operands.
+           *)
+
+          IF changeSize THEN
+            CASE stop0.loc OF
+              | OLoc.fstack => <* ASSERT FALSE *>
+              | OLoc.mem => find(t, stack0, Force.anyreg);
+              | OLoc.imm => find(t, stack0, Force.anyreg);
+              | OLoc.register => (* nothing *)
+            END;
+            CASE stop0.loc OF
+              | OLoc.fstack => <* ASSERT FALSE *>
+              | OLoc.mem => <* ASSERT FALSE *>
+              | OLoc.imm => <* ASSERT FALSE *>
+              | OLoc.register =>
+                IF toSize = 1 THEN
+                  t.dealloc_reg(stack0, operandPart := 1);
+                ELSIF toSize = 2 THEN
+                  (* This should be better. We can run out of registers.
+                   * We should favor dead, or else anything but
+                   * the one that holds the other half of this operand.
+                   *)
+                  WITH reg = finddead(t) DO
+                    <* ASSERT reg # -1 *>
+                    <* ASSERT reg # stop0.reg[0] *>
+                    t.set_reg(stack0, reg, operandPart := 1);
+                    t.cg.binOp(Op.oXOR, t.cg.reg[reg], t.cg.reg[reg]);
+                  END;
+                ELSE
+                  <* ASSERT FALSE *>
+                END;
+            END;
+            stop0.optype := to;
+          END;
 
         ELSIF FloatType[from] THEN
           <* ASSERT stop0.loc = OLoc.fstack *>
