@@ -2134,25 +2134,19 @@ PROCEDURE inttoflt (t: T) =
     END
   END inttoflt;
 
-PROCEDURE newdest1 (t: T; READONLY op: Operand) =
+PROCEDURE newdest (t: T; READONLY op: Operand) =
   BEGIN
     IF op.loc = OLoc.register THEN
-      WITH z = t.reguse[op.reg[0]] DO
-        z.last_store := NoStore;
-        z.upbound    := Target.Integer.max;
-        z.lowbound   := Target.Integer.min;
-        z.imm        := FALSE;
-        z.non_nil    := FALSE;
+      FOR i := 0 TO GetTypeSize(op.optype) - 1 DO
+        WITH z = t.reguse[op.reg[i]] DO
+          z.last_store := NoStore;
+          z.upbound    := Target.Integer.max;
+          z.lowbound   := Target.Integer.min;
+          z.imm        := FALSE;
+          z.non_nil    := FALSE;
+        END;
       END;
     END
-  END newdest1;
-
-PROCEDURE newdest (t: T; READONLY op: Operand) =
-  VAR opA: ARRAY OperandPart OF Operand;
-  BEGIN
-    FOR i := 0 TO SplitOperand(op, opA) - 1 DO
-      newdest1(t, opA[i]);
-    END;
   END newdest;
 
 PROCEDURE maybe_expand_stack (t: T) =
