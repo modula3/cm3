@@ -827,8 +827,8 @@ PROCEDURE pop1 (t: T; READONLY dest_mvar: MVar; operandPart: OperandPart) =
       t.Err("Stack underflow in pop");
     END;
 
-    WITH stack0 = t.vstack[t.stacktop - 1] DO
-      IF stack0.loc = OLoc.fstack THEN
+    WITH src_stack0 = t.vstack[t.stacktop - 1] DO
+      IF src_stack0.loc = OLoc.fstack THEN
         IF dest_mvar.var.loc = VLoc.temp AND dest_mvar.var.parent # t.current_proc THEN
           unlock(t);
           indreg := pickreg(t, RegSet {}, TRUE);
@@ -841,7 +841,7 @@ PROCEDURE pop1 (t: T; READONLY dest_mvar: MVar; operandPart: OperandPart) =
         END
       ELSE
         unlock(t);
-        IF CG_Bytes[dest_mvar.mvar_type] = 1 AND stack0.loc # OLoc.imm THEN
+        IF CG_Bytes[dest_mvar.mvar_type] = 1 AND src_stack0.loc # OLoc.imm THEN
           find(t, t.stacktop - 1, Force.regset,
                RegSet { Codex86.EAX, Codex86.EBX,
                         Codex86.ECX, Codex86.EDX } );
@@ -853,10 +853,10 @@ PROCEDURE pop1 (t: T; READONLY dest_mvar: MVar; operandPart: OperandPart) =
           indreg := pickreg(t, RegSet {}, TRUE);
           corrupt(t, indreg, operandPart);
           t.cg.get_frame(indreg, dest_mvar.var.parent, t.current_proc);
-          t.cg.store_ind(stack0, t.cg.reg[indreg], dest_mvar.mvar_offset + dest_mvar.var.offset,
+          t.cg.store_ind(src_stack0, t.cg.reg[indreg], dest_mvar.mvar_offset + dest_mvar.var.offset,
                          dest_mvar.mvar_type);
-          t.reguse[stack0.reg[0]].stackp := -1;
-          corrupt(t, stack0.reg[0], operandPart);
+          t.reguse[src_stack0.reg[0]].stackp := -1;
+          corrupt(t, src_stack0.reg[0], operandPart);
 
         ELSE
           sweep(t, dest_mvar);
@@ -867,12 +867,12 @@ PROCEDURE pop1 (t: T; READONLY dest_mvar: MVar; operandPart: OperandPart) =
             END
           END;
 
-          IF stack0.loc = OLoc.register THEN
-            t.reguse[stack0.reg[0]].stackp := -1;
-            t.reguse[stack0.reg[0]].last_store := dest_mvar;
+          IF src_stack0.loc = OLoc.register THEN
+            t.reguse[src_stack0.reg[0]].stackp := -1;
+            t.reguse[src_stack0.reg[0]].last_store := dest_mvar;
           END;
 
-          t.cg.movOp(Operand { loc := OLoc.mem, mvar := dest_mvar, optype := dest_mvar.mvar_type }, stack0);
+          t.cg.movOp(Operand { loc := OLoc.mem, mvar := dest_mvar, optype := dest_mvar.mvar_type }, src_stack0);
           set_mvar(t, t.stacktop - 1, dest_mvar);
         END
       END
