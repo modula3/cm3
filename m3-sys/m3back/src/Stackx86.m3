@@ -17,7 +17,7 @@ FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize;
-FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize;
+FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
 
@@ -130,13 +130,15 @@ PROCEDURE unlock (t: T) =
 
       FOR i := 0 TO NRegs DO
         IF t.reguse[i].stackp # -1 THEN
-          <* ASSERT t.vstack[t.reguse[i].stackp].reg[0] = i *>
+          <* ASSERT t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart] = i *>
         END
       END;
 
       FOR i := 0 TO t.stacktop - 1 DO
         IF t.vstack[i].loc = OLoc.register THEN
-          <* ASSERT t.reguse[t.vstack[i].reg[0]].stackp = i *>
+          FOR j := 0 TO GetOperandSize(t.vstack[i]) - 1 DO
+            <* ASSERT t.reguse[t.vstack[i].reg[j]].stackp = i *>
+          END;
         ELSIF t.vstack[i].loc = OLoc.fstack THEN
           INC(flcount);
         END
