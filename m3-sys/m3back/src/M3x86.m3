@@ -1451,70 +1451,70 @@ PROCEDURE note_procedure_origin (u: U;  p: Proc) =
 
 (*------------------------------------------------------------ statements ---*)
 
-PROCEDURE set_label (u: U;  l: Label;  <*UNUSED*> barrier: BOOLEAN) =
-  (* define 'l' to be at the current pc *)
+PROCEDURE set_label (u: U;  label: Label;  <*UNUSED*> barrier: BOOLEAN) =
+  (* define 'label' to be at the current pc *)
   BEGIN
     IF u.debug THEN
       u.wr.OutT  ("set_label");
-      u.wr.Lab   (l);
+      u.wr.Lab   (label);
       u.wr.NL    ();
     END;
 
-    u.cg.set_label(l);
+    u.cg.set_label(label);
 
     u.vstack.clearall();
   END set_label;
 
-PROCEDURE jump (u: U; l: Label) =
-  (* GOTO l *)
+PROCEDURE jump (u: U; label: Label) =
+  (* GOTO label *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("jump");
-      u.wr.Lab   (l);
+      u.wr.Lab   (label);
       u.wr.NL    ();
     END;
 
-    u.cg.brOp(Cond.Always, l);
+    u.cg.brOp(Cond.Always, label);
   END jump;
 
-PROCEDURE if_true  (u: U;  t: IType;  l: Label; <*UNUSED*> f: Frequency) =
-  (* IF (s0.t # 0) GOTO l ; pop *)
+PROCEDURE if_true  (u: U;  t: IType;  label: Label; <*UNUSED*> f: Frequency) =
+  (* IF (s0.t # 0) GOTO label ; pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("if_true");
       u.wr.TName (t);
-      u.wr.Lab   (l);
+      u.wr.Lab   (label);
       u.wr.NL    ();
     END;
 
     u.vstack.doimm (Op.oCMP, TZero, FALSE);
-    u.cg.brOp (Cond.NZ, l);
+    u.cg.brOp (Cond.NZ, label);
   END if_true;
 
-PROCEDURE if_false (u: U;   t: IType;  l: Label; <*UNUSED*> f: Frequency) =
-  (* IF (s0.t = 0) GOTO l ; pop *)
+PROCEDURE if_false (u: U;   t: IType;  label: Label; <*UNUSED*> f: Frequency) =
+  (* IF (s0.t = 0) GOTO label ; pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("if_false");
       u.wr.TName (t);
-      u.wr.Lab   (l);
+      u.wr.Lab   (label);
       u.wr.NL    ();
     END;
 
     u.vstack.doimm (Op.oCMP, TZero, FALSE);
-    u.cg.brOp (Cond.Z, l);
+    u.cg.brOp (Cond.Z, label);
   END if_false;
 
-PROCEDURE if_compare (u: U;  t: ZType;  op: CompareOp;  l: Label;
+PROCEDURE if_compare (u: U;  t: ZType;  op: CompareOp;  label: Label;
                       <*UNUSED*> f: Frequency) =
-  (* IF (s1.t  op  s0.t) GOTO l ; pop(2) *)
+  (* IF (s1.t  op  s0.t) GOTO label ; pop(2) *)
   VAR cond := CompareOpCond [op];
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("if_compare");
       u.wr.TName (t);
       u.wr.OutT  (CompareOpName [op]);
-      u.wr.Lab   (l);
+      u.wr.Lab   (label);
       u.wr.NL    ();
     END;
 
@@ -1544,7 +1544,7 @@ PROCEDURE if_compare (u: U;  t: ZType;  op: CompareOp;  l: Label;
     ELSE
     END;
 
-    u.cg.brOp(cond, l);
+    u.cg.brOp(cond, label);
   END if_compare;
 
 PROCEDURE case_jump (u: U;  t: IType;  READONLY labels: ARRAY OF Label) =
