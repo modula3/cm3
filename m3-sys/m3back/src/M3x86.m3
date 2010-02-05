@@ -1982,14 +1982,7 @@ PROCEDURE abs      (u: U;  t: AType) =
 
     IF IsWord(t) THEN
       RETURN;
-    END;
-
-    IF t = Type.Int64 THEN
-      call_64(u, Builtin.abs64);
-      RETURN;
-    END;
-
-    IF IsInt(t) THEN
+    ELSIF IsInt(t) THEN
       u.vstack.doabs();
     ELSE
       u.cg.noargFOp(FOp.fABS);
@@ -2998,7 +2991,7 @@ TYPE
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_lt, set_le, set_gt, set_ge, set_member, set_singleton,
     memmove, memcpy, memset, memcmp, mul64, umul64, div64,
-    udiv64, mod64, umod64, neg64, abs64, min64, umin64, max64, umax64,
+    udiv64, mod64, umod64, min64, umin64, max64, umax64,
     shift_left64, shift_right64, shift64,
     rotate_left64, rotate_right64, rotate64, insert64, extract64,
     compare_eq_64, compare_ne_64,
@@ -3045,8 +3038,6 @@ CONST
     BP { "m3_udiv64",        2, Type.Word64, "__stdcall", 1 },
     BP { "m3_mod64",         2, Type.Int64,  "__stdcall", 1 },
     BP { "m3_umod64",        2, Type.Word64, "__stdcall", 1 },
-    BP { "m3_neg64",         1, Type.Int64,  "__stdcall", 1 },
-    BP { "m3_abs64",         1, Type.Int64,  "__stdcall", 1 },
     BP { "m3_min64",         2, Type.Int64,  "__stdcall", 1 },
     BP { "m3_umin64",        2, Type.Word64, "__stdcall", 1 },
     BP { "m3_max64",         2, Type.Int64,  "__stdcall", 1 },
