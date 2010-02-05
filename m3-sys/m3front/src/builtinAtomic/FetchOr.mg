@@ -20,6 +20,8 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
     IF NOT Type.IsOrdinal (t) THEN
       IF Type.IsSubtype (t, Addr.T) THEN
         IF Module.IsSafe () THEN Error.Msg ("unsafe operation") END;
+      ELSIF Module.Name (Module.Current ()) = M3ID.Add ("AtomicRefany") THEN
+        (* generate a run-time error *)
       ELSE
         Error.Msg ("first argument must be of an ordinal type");
       END;
@@ -45,6 +47,10 @@ PROCEDURE Prep (ce: CallExpr.T) =
 PROCEDURE Compile (ce: CallExpr.T) =
   VAR order: Target.Int;  t: Type.T;  z: INTEGER;
   BEGIN
+    IF Module.Name (Module.Current ()) = M3ID.Add ("AtomicRefany") THEN
+      (* generate a run-time error *)
+      CG.Abort (CG.RuntimeError.ValueOutOfRange);
+    END;
     Expr.CompileAddress (ce.args[0], traced := TRUE);
     Expr.Compile (ce.args[1]);
     EVAL EnumExpr.Split (ce.args[2], order, t);
