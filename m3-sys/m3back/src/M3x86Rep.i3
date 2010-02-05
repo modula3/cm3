@@ -95,6 +95,15 @@ TYPE OperandPart = [0..1];
 TYPE OperandSize = [1..2];
 
 TYPE
+  Operand1 = RECORD
+    loc: OLoc;
+    mvar: MVar := NoStore;
+    reg : Regno := 0; (* seems like it should be -1 *)
+    imm: INTEGER;
+    stackp: INTEGER := 0; (* this field might go away; seems like it should be -1 *)
+    opcode := FALSE;
+  END;
+
   Operand = RECORD
     loc: OLoc;
     mvar: MVar := NoStore;
