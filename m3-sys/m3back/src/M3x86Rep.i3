@@ -98,9 +98,9 @@ TYPE
   Operand1 = RECORD
     loc: OLoc;
     mvar: MVar := NoStore;
-    reg : Regno := 0; (* seems like it should be -1 *)
-    imm: INTEGER;   (* This might change to Target.Int. *)
-    stackp: INTEGER := 0; (* this field might go away; seems like it should be -1 *)
+    reg : Regno := 0;       (* seems like it should be -1 *)
+    imm: INTEGER := 0;      (* This might change to Target.Int. *)
+    stackp: INTEGER := 0;   (* this field might go away; seems like it should be -1 *)
     opcode := FALSE;
   END;
 
