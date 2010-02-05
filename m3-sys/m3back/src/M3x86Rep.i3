@@ -120,6 +120,11 @@ CONST RegName = ARRAY Regno OF TEXT { "*NOREG*", "EAX", "ECX", "EDX", "EBX", "ES
 
 TYPE RegSet = SET OF Regno;
 
+CONST NonVolatileRegisters = RegSet{EDI, ESI, EBP, EBX};
+CONST    VolatileRegisters = RegSet{EAX, ECX, EDX, ESP};
+CONST         AllRegisters = RegSet{EAX, ECX, EDX, EBX,
+                                    ESP, EBP, ESI, EDI};
+
 PROCEDURE Is64 (t: Type): BOOLEAN;
 PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize;
 PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY OperandPart OF Target.Int): OperandSize;
