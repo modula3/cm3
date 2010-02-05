@@ -820,7 +820,7 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
     INC(t.stacktop);
   END push;
 
-PROCEDURE pop1 (t: T; READONLY mvar: MVar; operandPart: OperandPart) =
+PROCEDURE pop1 (t: T; READONLY dest_mvar: MVar; operandPart: OperandPart) =
   VAR indreg: Regno;
   BEGIN
     IF t.stacktop < 1 THEN
@@ -829,19 +829,19 @@ PROCEDURE pop1 (t: T; READONLY mvar: MVar; operandPart: OperandPart) =
 
     WITH stack0 = t.vstack[t.stacktop - 1] DO
       IF stack0.loc = OLoc.fstack THEN
-        IF mvar.var.loc = VLoc.temp AND mvar.var.parent # t.current_proc THEN
+        IF dest_mvar.var.loc = VLoc.temp AND dest_mvar.var.parent # t.current_proc THEN
           unlock(t);
           indreg := pickreg(t, RegSet {}, TRUE);
           corrupt(t, indreg, operandPart);
-          t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
-          t.cg.f_storeind(t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset, mvar.mvar_type);
+          t.cg.get_frame(indreg, dest_mvar.var.parent, t.current_proc);
+          t.cg.f_storeind(t.cg.reg[indreg], dest_mvar.mvar_offset + dest_mvar.var.offset, dest_mvar.mvar_type);
 
         ELSE
-          t.cg.fstack_pop(mvar);
+          t.cg.fstack_pop(dest_mvar);
         END
       ELSE
         unlock(t);
-        IF CG_Bytes[mvar.mvar_type] = 1 AND stack0.loc # OLoc.imm THEN
+        IF CG_Bytes[dest_mvar.mvar_type] = 1 AND stack0.loc # OLoc.imm THEN
           find(t, t.stacktop - 1, Force.regset,
                RegSet { Codex86.EAX, Codex86.EBX,
                         Codex86.ECX, Codex86.EDX } );
@@ -849,31 +849,31 @@ PROCEDURE pop1 (t: T; READONLY mvar: MVar; operandPart: OperandPart) =
           find(t, t.stacktop - 1, Force.anyregimm);
         END;
 
-        IF mvar.var.loc = VLoc.temp AND mvar.var.parent # t.current_proc THEN
+        IF dest_mvar.var.loc = VLoc.temp AND dest_mvar.var.parent # t.current_proc THEN
           indreg := pickreg(t, RegSet {}, TRUE);
           corrupt(t, indreg, operandPart);
-          t.cg.get_frame(indreg, mvar.var.parent, t.current_proc);
-          t.cg.store_ind(stack0, t.cg.reg[indreg], mvar.mvar_offset + mvar.var.offset,
-                         mvar.mvar_type);
+          t.cg.get_frame(indreg, dest_mvar.var.parent, t.current_proc);
+          t.cg.store_ind(stack0, t.cg.reg[indreg], dest_mvar.mvar_offset + dest_mvar.var.offset,
+                         dest_mvar.mvar_type);
           t.reguse[stack0.reg[0]].stackp := -1;
           corrupt(t, stack0.reg[0], operandPart);
 
         ELSE
-          sweep(t, mvar);
+          sweep(t, dest_mvar);
 
           FOR i := 0 TO NRegs DO
-            IF t.reguse[i].last_store = mvar THEN
+            IF t.reguse[i].last_store = dest_mvar THEN
               t.reguse[i].last_store := NoStore;
             END
           END;
 
           IF stack0.loc = OLoc.register THEN
             t.reguse[stack0.reg[0]].stackp := -1;
-            t.reguse[stack0.reg[0]].last_store := mvar;
+            t.reguse[stack0.reg[0]].last_store := dest_mvar;
           END;
 
-          t.cg.movOp(Operand { loc := OLoc.mem, mvar := mvar, optype := mvar.mvar_type }, stack0);
-          set_mvar(t, t.stacktop - 1, mvar);
+          t.cg.movOp(Operand { loc := OLoc.mem, mvar := dest_mvar, optype := dest_mvar.mvar_type }, stack0);
+          set_mvar(t, t.stacktop - 1, dest_mvar);
         END
       END
     END;
