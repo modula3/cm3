@@ -3627,7 +3627,7 @@ PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY Operand
   BEGIN
     TWord.And(imm, Target.Word32.max, immA[0]);
     TWord.RightShift(imm, 32, immA[1]);
-    RETURN 1 + ORD(Is64(type));
+    RETURN GetTypeSize(type);
   END SplitImm;
 
 PROCEDURE GetTypeSize(type: Type): OperandSize =
@@ -3648,7 +3648,7 @@ PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Opera
   BEGIN
     opA[0] := op;
 
-    IF NOT Is64(type) THEN
+    IF GetTypeSize(type) = 1 THEN
       RETURN 1;
     END;
 
