@@ -13,7 +13,7 @@ IMPORT Target, TInt, TWord;
 FROM Target IMPORT FloatType;
 FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 
-FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
+FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset, No_label;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize;
@@ -990,10 +990,17 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
     RETURN reversed;
   END findbin;
 
-PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; <*UNUSED*>compare_label: Label): BOOLEAN =
+PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; compare_label: Label): BOOLEAN =
   VAR src, dest: INTEGER;
       reversed: BOOLEAN;
+      size: OperandSize;
+      srcA: ARRAY OperandPart OF Operand;
+      destA: ARRAY OperandPart OF Operand;
   BEGIN
+
+    <* ASSERT (op = Op.oCMP) = (compare_label # No_label) *> (* only CMP has a label *)
+    <* ASSERT (op # Op.oCMP) OR NOT overwritesdest *>        (* CMP does not overwritedest; the newdest use does not account for it *)
+
     reversed := findbin(t, symmetric, overwritesdest, dest, src);
     <* ASSERT reversed = (dest > src) *>
 
@@ -1002,7 +1009,21 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; <
 
       <* ASSERT GetTypeSize(destop.optype) = GetTypeSize(srcop.optype) *>
       <* ASSERT GetTypeSize(destop.optype) = GetTypeSize(type) *>
-      t.cg.binOp(op, destop, srcop);
+
+      size := SplitOperand(srcop, srcA);
+      EVAL SplitOperand(destop, destA);
+
+      IF op = Op.oCMP AND size = 2 THEN
+        (* NOTE: we could avoid loading the low part if the high part compares unequal.
+         * Also, if the low part is already in registers and this just a NE comparison,
+         * we could do that first and avoid the high load if NE.
+         *)
+        t.cg.binOp(op, destA[1], srcA[1]);
+        t.cg.brOp(Cond.NE, compare_label);
+        t.cg.binOp(op, destA[0], srcA[0]);
+      ELSE
+        t.cg.binOp(op, destop, srcop);
+      END;
 
       IF overwritesdest THEN
         newdest(t, destop);
