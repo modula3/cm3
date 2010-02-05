@@ -931,11 +931,24 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
       destSize := SplitOperand(dest, destA);
   BEGIN
 
-    <* ASSERT NOT Is64(destA[0].optype) *>
-    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
+    IF destSize = 2 AND (op = Op.oNEG OR op = Op.oNOT) THEN
+      CASE op OF
+        | Op.oNOT =>
+          unOp1(t, op, destA[0]);
+          unOp1(t, op, destA[1]);
+        | Op.oNEG =>
+          unOp1(t, op, destA[0]);
+          t.binOp(Op.oADC, destA[1], Operand {loc := OLoc.imm, imm := TZero, optype := Type.Word32});
+        ELSE
+          <* ASSERT FALSE *>
+      END
+    ELSE
+      <* ASSERT NOT Is64(destA[0].optype) *>
+      <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
-    FOR i := 0 TO destSize - 1 DO
-      unOp1(t, op, destA[i]);
+      FOR i := 0 TO destSize - 1 DO
+        unOp1(t, op, destA[i]);
+      END;
     END;
   END unOp;
 
