@@ -213,7 +213,7 @@ TYPE
   END;
 
 TYPE Op = { oAND, oXOR, oOR, oMOV,
-            oADD, oSUB, oCMP, oNEG, oNOT, oLEA,
+            oADD, oADC, oSUB, oSBB, oCMP, oNEG, oNOT, oLEA,
             oSAL, oSAR, oSHR, oROL, oROR, oSAHF, oWAIT, oCLD, oSTD,
             oREP, oMOVSB, oMOVSD, oSTOSB, oSTOSD,
             oCWDE, oCDQ, oLEAVE, oRET, oNOP };
@@ -224,7 +224,9 @@ CONST opcode = ARRAY Op OF OpCode
     OpCode { "OR",   16_0D, 16_83, 16_81, 1, 16_08, 16_0A },
     OpCode { "MOV",  -1,    -1,    -1,    0, 16_88, 16_8A },
     OpCode { "ADD",  16_05, 16_83, 16_81, 0, 16_00, 16_02 },
+    OpCode { "ADC",  16_15, 16_83, 16_81, 2, 16_10, 16_12 },
     OpCode { "SUB",  16_2D, 16_83, 16_81, 5, 16_28, 16_2A },
+    OpCode { "SBB",  16_1D, 16_83, 16_81, 3, 16_18, 16_1A },
     OpCode { "CMP",  16_3D, 16_83, 16_81, 7, 16_38, 16_3A },
     OpCode { "NEG",  -1,    -1,    16_F6, 3, -1,    -1    },
     OpCode { "NOT",  -1,    -1,    16_F6, 2, -1,    -1    },
