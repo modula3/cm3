@@ -49,9 +49,12 @@ REVEAL
         textsym         : INTEGER;
         init_varstore   : x86Var := NIL;
         init_count      : INTEGER;
-        call_param_size := ARRAY [0 .. 1] OF INTEGER { 0, 0 };
-        in_proc_call    := 0;
-        static_link     := ARRAY [0 .. 1] OF x86Var { NIL, NIL };
+
+        (* What determines the sizes here? Historically it was 2. *)
+        call_param_size := ARRAY [0 .. 9] OF INTEGER { 0, .. };
+        in_proc_call    : [0 .. 10] := 0;
+        static_link     := ARRAY [0 .. 9] OF x86Var { NIL, .. };
+
         current_proc    : x86Proc := NIL;
         param_proc      : x86Proc := NIL;
         in_proc         : BOOLEAN;
@@ -3417,7 +3420,7 @@ PROCEDURE start_call_direct (u: U;  p: Proc;  lev: INTEGER;  t: Type) =
       u.wr.NL    ();
     END;
 
-    <* ASSERT u.in_proc_call < 2 *>
+    (* ASSERT u.in_proc_call < 2 *) (* ? *)
 
     u.static_link[u.in_proc_call] := NIL;
     u.call_param_size[u.in_proc_call] := 0;
@@ -3434,7 +3437,7 @@ PROCEDURE start_call_indirect (u: U;  t: Type;  cc: CallingConvention) =
       u.wr.NL    ();
     END;
 
-    <* ASSERT u.in_proc_call < 2 *>
+    (* ASSERT u.in_proc_call < 2 *) (* ? *)
 
     u.static_link[u.in_proc_call] := NIL;
     u.call_param_size[u.in_proc_call] := 0;
