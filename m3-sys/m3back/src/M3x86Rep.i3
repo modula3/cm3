@@ -99,7 +99,7 @@ TYPE
     loc: OLoc;
     mvar: MVar := NoStore;
     reg : Regno := 0; (* seems like it should be -1 *)
-    imm: INTEGER;
+    imm: INTEGER;   (* This might change to Target.Int. *)
     stackp: INTEGER := 0; (* this field might go away; seems like it should be -1 *)
     opcode := FALSE;
   END;
