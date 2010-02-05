@@ -990,7 +990,7 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
     RETURN reversed;
   END findbin;
 
-PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; <*UNUSED*>type: Type): BOOLEAN =
+PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): BOOLEAN =
   VAR src, dest: INTEGER;
       reversed: BOOLEAN;
   BEGIN
@@ -1001,6 +1001,7 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; <*UNUSED*>typ
           srcop = t.vstack[src] DO
 
       <* ASSERT GetTypeSize(destop.optype) = GetTypeSize(srcop.optype) *>
+      <* ASSERT GetTypeSize(destop.optype) = GetTypeSize(type) *>
       t.cg.binOp(op, destop, srcop);
 
       IF overwritesdest THEN
