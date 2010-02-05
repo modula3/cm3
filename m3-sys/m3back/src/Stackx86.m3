@@ -1961,7 +1961,8 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
             stop0.optype := to;
           END;
 
-        ELSIF FloatType[from] THEN
+        ELSIF fromFloat THEN
+          <* ASSERT NOT toFloat *>
           <* ASSERT stop0.loc = OLoc.fstack *>
           stop0.loc := OLoc.mem;
           stop0.mvar.var := t.parent.declare_temp(CG_Bytes[to],
@@ -1973,7 +1974,9 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
           t.cg.fstack_pop(stop0.mvar);
           stop0.mvar.mvar_type := to;
 
-        ELSE (* NOT FloatType [from] *)
+        ELSE
+          <* ASSERT NOT fromFloat *>
+          <* ASSERT toFloat *>
           IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
             unlock(t);
             find(t, stack0, Force.anyreg);
