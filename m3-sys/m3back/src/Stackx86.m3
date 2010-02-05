@@ -990,7 +990,7 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
     RETURN reversed;
   END findbin;
 
-PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): BOOLEAN =
+PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; <*UNUSED*>compare_label: Label): BOOLEAN =
   VAR src, dest: INTEGER;
       reversed: BOOLEAN;
   BEGIN
