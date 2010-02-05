@@ -47,7 +47,7 @@ REVEAL T = Public BRANDED "Wrx86.T" OBJECT
 PROCEDURE NL (t: T) =
   BEGIN
     OutT (t, Wr.EOL);
-    NL (t);
+    Flush (t);
   END NL;
 
 PROCEDURE Cmd (t: T; cmd: TEXT) =
