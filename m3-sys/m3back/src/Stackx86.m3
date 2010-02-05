@@ -16,7 +16,7 @@ FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize;
 FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
@@ -196,7 +196,7 @@ PROCEDURE movereg (t: T; to, from: Regno; operandPart: OperandPart) =
     t.cg.movOp(t.cg.reg[to], t.cg.reg[from]);
   END movereg;
 
-PROCEDURE swapreg (t: T; to, from: Regno) =
+PROCEDURE swapreg (t: T; to, from: Regno; <*UNUSED*>operandPart: OperandPart) =
   VAR tempstack := t.reguse[from].stackp;
       tempstore := t.reguse[from].last_store;
   BEGIN
@@ -240,22 +240,39 @@ PROCEDURE find (t: T; stackp: INTEGER;
                 force: Force := Force.any; set := RegSet {};
                 hintaddr := FALSE) =
   (* Find a suitable register to put a stack item in *)
-  VAR in, to: Regno;
+  VAR in: ARRAY OperandPart OF Regno; (* initialize to -1? *)
+      to: ARRAY OperandPart OF Regno; (* initialize to -1? *)
+      opA: ARRAY OperandPart OF Operand;
+      done := ARRAY OperandPart OF BOOLEAN{FALSE,..};
+      size: OperandSize := 1;
   BEGIN
     WITH op = t.vstack[stackp] DO
 
-      <* ASSERT NOT Is64(op.optype) *>
-      <* ASSERT NOT Is64(op.mvar.mvar_type) *>
+      size := SplitOperand(op, opA);
 
-      CASE op.loc OF
-        OLoc.fstack =>
-          t.Err("Tried to put a float in an int register in 'find'");
-        | OLoc.mem =>
-          in := inreg(t, op.mvar, set);
-        | OLoc.register =>
-          in := op.reg[0];
-        | OLoc.imm =>
-          in := immreg(t, op.imm, set);
+      IF size = 2 AND set = RegSet{} THEN
+        set := RegSet{Codex86.EAX, Codex86.EBX, Codex86.ECX, Codex86.EDX, Codex86.ESI, Codex86.EDI };
+      END;
+
+      <* ASSERT op.stackp = stackp *>
+
+      FOR i := 0 TO size - 1 DO
+        CASE op.loc OF
+          OLoc.fstack =>
+              t.Err("Tried to put a float in an int register in 'find'");
+          | OLoc.mem =>
+              in[i] := inreg(t, opA[i].mvar, set);
+              IF size > 1 THEN
+                set := set - RegSet{in[i]};
+              END;
+          | OLoc.register =>
+              in[i] := op.reg[i];
+          | OLoc.imm =>
+              in[i] := immreg(t, opA[i].imm, set);
+              IF size > 1 THEN
+                set := set - RegSet{in[i]};
+              END;
+          END;
       END;
 
       IF op.mvar.mvar_type = Type.Addr THEN
@@ -265,14 +282,18 @@ PROCEDURE find (t: T; stackp: INTEGER;
       (* If it is in a register and shouldn't be, move it *)
 
       IF force = Force.mem AND op.loc = OLoc.register THEN
-        get_temp(t, stackp, op.reg[0]);
+        FOR i := 0 TO size - 1 DO
+          get_temp(t, stackp, op.reg[i]);
+        END;
         RETURN;
       END;
 
       (* If it is an immediate value and should be in mem, do it *)
 
       IF force = Force.mem AND op.loc = OLoc.imm THEN
-        get_temp(t, stackp, -1, op.imm);
+        FOR i := 0 TO size - 1 DO
+          get_temp(t, stackp, -1, opA[i].imm);
+        END;
         RETURN;
       END;
 
@@ -284,17 +305,17 @@ PROCEDURE find (t: T; stackp: INTEGER;
 
       (* If it isn't in a register yet, and it doesn't have to be, do nothing *)
 
-      IF force = Force.any AND in = -1 THEN
+      IF force = Force.any AND in[0] = -1 AND in[size - 1] = -1 THEN
         RETURN;
       END;
 
-      IF force = Force.anydword AND in = -1 AND op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 4 THEN
+      IF force = Force.anydword AND in[0] = -1 AND in[size - 1] = -1 AND op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = (size * 4) THEN
         RETURN;
       END;
 
       (* If it is in a temporary variable and can stay there, leave it *)
 
-      IF force = Force.anytemp AND in = -1 AND op.loc = OLoc.mem AND op.mvar.var.stack_temp THEN
+      IF force = Force.anytemp AND in[0] = -1 AND in[size - 1] = -1 AND op.loc = OLoc.mem AND op.mvar.var.stack_temp THEN
         RETURN;
       END;
 
@@ -312,32 +333,61 @@ PROCEDURE find (t: T; stackp: INTEGER;
       (* If for any reason it isn't in the right register, find the best
          candidate for a register to put it in. *)
 
-      IF (in = -1) OR (force = Force.regset AND (NOT in IN set))
-            OR t.reguse[in].locked
-            OR (t.reguse[in].stackp # -1 AND t.reguse[in].stackp # stackp) THEN
-        to := pickreg(t, set, hintaddr);
-      ELSE
-        (* Otherwise, it is in the right place, so leave it *)
-        loadphantom(t, in, stackp, operandPart := 0);
-        t.reguse[in].locked := TRUE;
+      FOR i := 0 TO size - 1 DO
+        IF (in[i] = -1) OR (force = Force.regset AND (NOT in[i] IN set))
+              OR t.reguse[in[i]].locked
+              OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp) THEN
+          IF i = 1 AND done[0] = FALSE THEN
+            to[i] := pickreg(t, set - RegSet{to[0]}, hintaddr);
+          ELSE
+            to[i] := pickreg(t, set, hintaddr);
+          END;
+          done[i] := FALSE;
+        ELSE
+          (* Otherwise, it is in the right place, so leave it *)
+          loadphantom(t, in[i], stackp, i);
+          t.reguse[in[i]].locked := TRUE;
+          done[i] := TRUE;
+        END;
+      END;
+
+      IF done[0] AND done[size - 1] THEN
         RETURN;
+      END;
+
+      (* At this point we might be "half" done, so possibly shift things around
+       * so we only try to do the remaining part.
+       *)
+
+      IF size = 2 THEN
+        IF done[0] AND (NOT done[1]) THEN
+          opA[0] := opA[1];
+          size := 1;
+        ELSIF done[1] AND (NOT done[0]) THEN
+          size := 1;
+        ELSE
+          <* ASSERT (NOT done[0]) AND (NOT done[1]) *>
+        END;
       END;
 
       (* If it doesn't have to be in a register, and there are no
          unused registers, do nothing *)
 
-      IF force = Force.any AND t.reguse[to].stackp # -1 THEN
+      IF force = Force.any AND t.reguse[to[0]].stackp # -1 AND t.reguse[to[size - 1]].stackp # -1 THEN
         RETURN;
       END;
 
-      IF force = Force.anydword AND t.reguse[to].stackp # -1
-            AND op.loc = OLoc.mem AND  CG_Bytes[op.mvar.mvar_type] = 4 THEN
+      IF force = Force.anydword
+            AND op.loc = OLoc.mem
+            AND t.reguse[to[0       ]].stackp # -1
+            AND t.reguse[to[size - 1]].stackp # -1
+            AND CG_Bytes[op.mvar.mvar_type] = (size * 4) THEN
         RETURN;
       END;
 
       (* If it is in a temporary variable and can stay there, leave it *)
 
-      IF force = Force.anytemp AND t.reguse[to].stackp # -1
+      IF force = Force.anytemp AND t.reguse[to[0]].stackp # -1 AND t.reguse[in[size - 1]].stackp # -1
             AND op.loc = OLoc.mem
             AND op.mvar.var.stack_temp THEN
         RETURN;
@@ -345,38 +395,41 @@ PROCEDURE find (t: T; stackp: INTEGER;
 
       (* Now we know that we want to put it into 'to' *)
 
-      (* If 'to' is unused, this is easy *)
-      IF t.reguse[to].stackp = -1 THEN
-        IF in = -1 THEN
-          loadreg(t, to, op, operandPart := 0);
-        ELSE
-          IF t.reguse[in].stackp = stackp THEN
-            movereg(t, to, in, operandPart := 0);
+      FOR i := 0 TO size - 1 DO
+
+        (* If 'to' is unused, this is easy *)
+
+        IF t.reguse[to[i]].stackp = -1 THEN
+          IF in[i] = -1 THEN
+            loadreg(t, to[i], opA[i], i);
           ELSE
-            copyreg(t, stackp, to, in, operandPart := 0);
-          END
+            IF t.reguse[in[i]].stackp = stackp THEN
+              movereg(t, to[i], in[i], i);
+            ELSE
+              copyreg(t, stackp, to[i], in[i], i);
+            END
+          END;
+        ELSE
+          (* Otherwise, see if 'in' is used for something other than stackp. If not,
+             swap the registers over. If so, force 'to' out. If there is a free
+             register, 'to' will be moved into it, otherwise it will be stored to
+             memory *)
+          IF in[i] = -1 OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp) THEN
+            forceout(t, to[i], i);
+            IF in[i] = -1 THEN
+              loadreg(t, to[i], opA[i], i);
+            ELSE
+              copyreg(t, stackp, to[i], in[i], i);
+            END
+          ELSE
+            swapreg(t, to[i], in[i], i);
+            loadphantom(t, to[i], stackp, i);
+          END;
         END;
-
-      ELSE
-      (* Otherwise, see if 'in' is used for something other than stackp. If not,
-         swap the registers over. If so, force 'to' out. If there is a free
-         register, 'to' will be moved into it, otherwise it will be stored to
-         memory *)
-        IF in = -1 OR (t.reguse[in].stackp # -1 AND t.reguse[in].stackp # stackp) THEN
-          forceout(t, to, operandPart := 0);
-          IF in = -1 THEN
-            loadreg(t, to, op, operandPart := 0);
-          ELSE
-            copyreg(t, stackp, to, in, operandPart := 0);
-          END
-        ELSE
-          swapreg(t, to, in);
-          loadphantom(t, to, stackp, operandPart := 0);
-        END
       END;
-
-      t.reguse[to].locked := TRUE;
     END;
+    t.reguse[to[0]].locked := TRUE;
+    t.reguse[to[size - 1]].locked := TRUE;
   END find;
 
 PROCEDURE freereg (t: T; set := RegSet {}; operandPart: OperandPart): Regno =
