@@ -990,7 +990,7 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
     RETURN reversed;
   END findbin;
 
-PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; compare_label: Label): BOOLEAN =
+PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): BOOLEAN =
   VAR src, dest: INTEGER;
       reversed: BOOLEAN;
       size: OperandSize;
@@ -2104,6 +2104,8 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
       ftop_inmem: BOOLEAN;
       cond: Cond;
       reversed: BOOLEAN;
+      compare_label: Label := No_label;
+      size: OperandSize;
   BEGIN
     IF FloatType [type] THEN
       t.cg.binFOp(FOp.fCOM, 1);
@@ -2147,7 +2149,19 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
 
       WITH destop = t.vstack[dest],
            srcop = t.vstack[src] DO
-        t.cg.binOp(Op.oCMP, destop, srcop);
+
+        size := GetOperandSize(srcop);
+        <* ASSERT size = GetOperandSize(destop) *>
+        IF size > 1 THEN
+          compare_label := t.cg.reserve_labels(1, TRUE);
+        END;
+
+        t.cg.binOp(Op.oCMP, destop, srcop, compare_label := compare_label);
+
+        IF compare_label # No_label THEN
+          t.cg.set_label(compare_label);
+        END;
+
         lab := t.cg.reserve_labels(1, TRUE);
 
         IF destop.loc = OLoc.register OR srcop.loc = OLoc.imm THEN
