@@ -1998,15 +1998,6 @@ PROCEDURE max      (u: U;  t: ZType) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      IF t = Type.Int64 THEN
-        call_64(u, Builtin.max64);
-      ELSE
-        call_64(u, Builtin.umax64);
-      END;
-      RETURN;
-    END;
-
     u.vstack.domaxmin(t, MaxMin.Max);
   END max;
 
@@ -2017,15 +2008,6 @@ PROCEDURE min      (u: U;  t: ZType) =
       u.wr.Cmd   ("min");
       u.wr.TName (t);
       u.wr.NL    ();
-    END;
-
-    IF Is64(t) THEN
-      IF t = Type.Int64 THEN
-        call_64(u, Builtin.min64);
-      ELSE
-        call_64(u, Builtin.umin64);
-      END;
-      RETURN;
     END;
 
     u.vstack.domaxmin(t, MaxMin.Min);
@@ -2991,7 +2973,7 @@ TYPE
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_lt, set_le, set_gt, set_ge, set_member, set_singleton,
     memmove, memcpy, memset, memcmp, mul64, umul64, div64,
-    udiv64, mod64, umod64, min64, umin64, max64, umax64,
+    udiv64, mod64, umod64,
     shift_left64, shift_right64, shift64,
     rotate_left64, rotate_right64, rotate64, insert64, extract64,
     compare_eq_64, compare_ne_64,
@@ -3038,10 +3020,6 @@ CONST
     BP { "m3_udiv64",        2, Type.Word64, "__stdcall", 1 },
     BP { "m3_mod64",         2, Type.Int64,  "__stdcall", 1 },
     BP { "m3_umod64",        2, Type.Word64, "__stdcall", 1 },
-    BP { "m3_min64",         2, Type.Int64,  "__stdcall", 1 },
-    BP { "m3_umin64",        2, Type.Word64, "__stdcall", 1 },
-    BP { "m3_max64",         2, Type.Int64,  "__stdcall", 1 },
-    BP { "m3_umax64",        2, Type.Word64, "__stdcall", 1 },
     BP { "m3_shift_left64",  2, Type.Word64, "__stdcall", 1 },
     BP { "m3_shift_right64", 2, Type.Word64, "__stdcall", 1 },
     BP { "m3_shift64",       2, Type.Word64, "__stdcall", 1 },

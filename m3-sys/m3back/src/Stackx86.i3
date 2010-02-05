@@ -8,7 +8,7 @@
 
 INTERFACE Stackx86;
 
-FROM M3CG IMPORT Type, MType, ZType, Sign, ByteOffset, Label, No_label;
+FROM M3CG IMPORT Type, MType, ZType, Sign, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 IMPORT M3x86Rep, Codex86, Wrx86, Target;
@@ -44,7 +44,7 @@ TYPE Public = OBJECT
         pushimmT (imm: Target.Int; type: Type);
         pop (READONLY mvar: MVar);
         doloadaddress (v: x86Var; o: ByteOffset);
-        dobin (op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; compare_label: Label := No_label): BOOLEAN;
+        dobin (op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): BOOLEAN;
         dostoreind (o: ByteOffset; type: MType);
         doumul ();
         doimul ();
