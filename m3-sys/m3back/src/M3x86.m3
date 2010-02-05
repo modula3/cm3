@@ -323,7 +323,6 @@ PROCEDURE end_unit   (u: U) =
     IF u.debug THEN
       u.wr.Cmd ("end_unit");
       u.wr.NL  ();
-      u.wr.Flush ();
     END;
 
     u.vstack.end();
@@ -1077,7 +1076,6 @@ PROCEDURE end_init (u: U;  v: Var) =
       u.wr.Cmd   ("end_init");
       u.wr.VName (v);
       u.wr.NL    ();
-      u.wr.Flush ();
     END;
 
     <* ASSERT v = u.init_varstore *>
@@ -1330,8 +1328,6 @@ PROCEDURE begin_procedure (u: U;  p: Proc) =
       u.wr.Cmd   ("begin_procedure");
       u.wr.PName (p);
       u.wr.NL    ();
-
-      u.wr.Flush();
     END;
 
     u.vstack.clearall ();
