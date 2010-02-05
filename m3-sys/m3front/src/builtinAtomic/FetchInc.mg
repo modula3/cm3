@@ -20,7 +20,9 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
     t := Type.Base (Rep.T);
     IF NOT Type.IsOrdinal (t) THEN
       IF Type.IsSubtype (t, Addr.T) THEN
-        IF Module.IsSafe () THEN Error.Msg ("unsafe operation") END;
+        IF Module.Name (Module.Current ()) = M3ID.Add ("AtomicAddress") THEN
+          (* allow it *)
+        ELSIF Module.IsSafe () THEN Error.Msg ("unsafe operation") END;
       ELSIF Module.Name (Module.Current ()) = M3ID.Add ("AtomicRefany") THEN
         (* generate a run-time error *)
       ELSE
