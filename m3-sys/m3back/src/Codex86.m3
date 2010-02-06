@@ -425,11 +425,12 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
     END
   END immOp1;
 
-PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int; compare_label: Label := No_label) =
+PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
   VAR destA: ARRAY OperandPart OF Operand;
       immA: ARRAY OperandPart OF Target.Int;
       immSize := SplitImm(dest.optype, imm, immA);
       destSize := SplitOperand(dest, destA);
+      compare_label: Label;
   BEGIN
 
     <* ASSERT immSize = destSize *>
@@ -445,10 +446,11 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int;
           immOp1(t, Op.oSUB, destA[0], immA[0]);
           immOp1(t, Op.oSBB, destA[1], immA[1]);
         | Op.oCMP =>
-          <* ASSERT compare_label # No_label *>
           immOp1(t, op, destA[1], immA[1]);
+          compare_label := t.reserve_labels(1, TRUE);
           t.brOp(Cond.NE, compare_label);
           immOp1(t, op, destA[0], immA[0]);
+          t.set_label(compare_label);
         ELSE
           <* ASSERT FALSE *>
       END
@@ -503,11 +505,12 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN := 
     END;
   END binOp1;
 
-PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE; compare_label: Label := No_label) =
+PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
   VAR destA: ARRAY OperandPart OF Operand;
       srcA: ARRAY OperandPart OF Operand;
       srcSize := SplitOperand(src, srcA);
       destSize := SplitOperand(dest, destA);
+      compare_label: Label;
   BEGIN
 
     <* ASSERT NOT Is64(srcA[0].optype) *>
@@ -532,10 +535,11 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE; com
             binOp1(t, Op.oSUB, destA[0], srcA[0]);
             binOp1(t, Op.oSBB, destA[1], srcA[1]);
         | Op.oCMP =>
-            <* ASSERT compare_label # No_label *>
             binOp1(t, op, destA[1], srcA[1]);
+            compare_label := t.reserve_labels(1, TRUE);
             t.brOp(Cond.NE, compare_label);
             binOp1(t, op, destA[0], srcA[0]);
+            t.set_label(compare_label);
         ELSE
           <* ASSERT FALSE *>
       END
