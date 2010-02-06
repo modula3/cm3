@@ -206,7 +206,7 @@ PROCEDURE loadphantom (t: T; r: Regno; stackp: INTEGER; operandPart: OperandPart
     t.reguse[r].operandPart := operandPart;
     t.vstack[stackp].loc := OLoc.register;
     t.vstack[stackp].reg[operandPart] := r;
-  END loadphantom; 
+  END loadphantom;
 
 PROCEDURE copyreg (t: T; stackp: INTEGER; to, from: Regno; operandPart: OperandPart) =
   BEGIN
@@ -255,7 +255,7 @@ PROCEDURE clearall (t: T) =
       <* ASSERT t.reguse[r].stackp = -1 *>
       t.reguse[r] := InitRegister();
     END
-  END clearall; 
+  END clearall;
 
 PROCEDURE releaseall (t: T) =
   BEGIN
@@ -264,7 +264,7 @@ PROCEDURE releaseall (t: T) =
     FOR r := 0 TO NRegs DO
       t.reguse[r] := InitRegister();
     END
-  END releaseall; 
+  END releaseall;
 
 
 PROCEDURE find (t: T; stackp: INTEGER;
@@ -755,7 +755,7 @@ PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet; operandPart: O
       IF FloatType [type] THEN
         stack0.loc := OLoc.fstack;
       ELSE
-        IF force = Force.mem OR 
+        IF force = Force.mem OR
            (t.reguse[reg].stackp # -1 AND force = Force.any) THEN
           set_mvar(t, t.stacktop,
                    MVar { var :=  t.parent.declare_temp(CG_Bytes[type],
@@ -1196,7 +1196,7 @@ PROCEDURE dodiv (t: T; a, b: Sign) =
         find(t, stack0, Force.anyreg);
         t.cg.diffdivOp(t.vstack[stack0], a = Sign.Positive);
       END;
-        
+
       newdest(t, t.vstack[stack1]);
       discard(t, 1);
     END

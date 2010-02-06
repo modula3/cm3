@@ -7,7 +7,7 @@
 (*      modified on Tue May 25 14:22:35 PDT 1993 by muller     *)
 
 MODULE Wrx86;
- 
+
 IMPORT Wr, Thread, Text;
 IMPORT M3Buf, M3ID, M3CG, Target, TInt AS TargetInt, TFloat;
 

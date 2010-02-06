@@ -7,7 +7,7 @@
 (*      modified on Tue May 25 14:22:35 PDT 1993 by muller     *)
 
 INTERFACE Wrx86;
- 
+
 IMPORT Wr, Target;
 
 FROM M3CG IMPORT Name, TypeUID;
