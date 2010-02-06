@@ -8,7 +8,7 @@
 
 MODULE SubscriptExpr;
 
-IMPORT CG, Expr, ExprRep, ArrayType, Error, Type, Int;
+IMPORT CG, Expr, ExprRep, ArrayType, Error, Type, Int, LInt;
 IMPORT ArrayExpr, OpenArrayType, Host, EnumExpr;
 IMPORT CheckExpr, SubtractExpr, IntegerExpr, ErrType;
 IMPORT RefType, DerefExpr, Target, TInt, M3RT, RunTyme;
@@ -122,8 +122,12 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
     ELSIF Type.IsSubtype (tb, Type.Base (ti)) THEN
       (* the index value's type has a common base type with the index type *)
       IF NOT TInt.EQ (mini, TInt.Zero) THEN
+        IF Type.IsSubtype (tb, LInt.T)
+          THEN ti := LInt.T;
+          ELSE ti := Int.T;
+        END;
         p.biased_b :=
-            SubtractExpr.New (p.b, IntegerExpr.New (Int.T, mini), TRUE);
+            SubtractExpr.New (p.b, IntegerExpr.New (ti, mini), TRUE);
         p.biased_b.origin := p.origin;
         Expr.TypeCheck (p.biased_b, cs);
       END;
@@ -237,7 +241,9 @@ PROCEDURE CompileLV (p: P; traced := FALSE) =
         CG.Add_offset (subscript * elt_pack);
       ELSE
         Expr.Compile (p.biased_b);
-        CG.Loophole (Type.CGType (tb), Target.Integer.cg_type);
+        IF Type.IsSubtype (tb, LInt.T) THEN
+          CG.Loophole (Target.Longint.cg_type, Target.Integer.cg_type);
+        END;
         ArrayType.GenIndex (ta);
       END;
 
