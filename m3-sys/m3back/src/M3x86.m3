@@ -3024,6 +3024,7 @@ CONST
     BP { "memset",             3, Type.Addr,  "C" },
     BP { "memcmp",             3, Type.Int32, "C" },
 
+    (* custom calling convention: value in edx:eax, shift in cl *)
     BP { "_allshl",          0, Type.Word64, "C", 1 },
     BP { "_uallshr",         0, Type.Word64, "C", 1 },
 
@@ -3497,6 +3498,9 @@ PROCEDURE do_shift_64 (u: U; builtin: Builtin) =
   BEGIN
     WITH stack0 = u.vstack.pos(0, "do_shift_64"),
          stack1 = u.vstack.pos(1, "do_shift_64") DO
+
+      (* custom calling convention: value in edx:eax, shift in cl *)
+
       u.vstack.find(stack0, Force.regset, RegSet { Codex86.ECX });
       u.vstack.find(stack1, Force.regset, RegSet { Codex86.EAX, Codex86.EDX });
       u.vstack.discard (2);
