@@ -13,7 +13,7 @@ IMPORT Target, TInt, TWord;
 FROM Target IMPORT FloatType;
 FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 
-FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset, No_label;
+FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize;
@@ -2104,8 +2104,6 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
       ftop_inmem: BOOLEAN;
       cond: Cond;
       reversed: BOOLEAN;
-      compare_label: Label := No_label;
-      size: OperandSize;
   BEGIN
     IF FloatType [type] THEN
       t.cg.binFOp(FOp.fCOM, 1);
@@ -2150,34 +2148,18 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
       WITH destop = t.vstack[dest],
            srcop = t.vstack[src] DO
 
-        size := GetOperandSize(srcop);
-        <* ASSERT size = GetOperandSize(destop) *>
-        IF size > 1 THEN
-          compare_label := t.cg.reserve_labels(1, TRUE);
-        END;
-
-        t.cg.binOp(Op.oCMP, destop, srcop, compare_label := compare_label);
-
-        IF compare_label # No_label THEN
-          t.cg.set_label(compare_label);
-        END;
-
+        t.cg.binOp(Op.oCMP, destop, srcop);
         lab := t.cg.reserve_labels(1, TRUE);
-
         IF destop.loc = OLoc.register OR srcop.loc = OLoc.imm THEN
           IF srcop.loc = OLoc.register OR srcop.loc = OLoc.imm THEN
             t.cg.brOp(maxmincond[maxmin][type].regreg, lab);
           ELSE
             t.cg.brOp(maxmincond[maxmin][type].regmem, lab);
           END;
-
           t.cg.movOp(destop, srcop);
-
         ELSE
           t.cg.brOp(maxmincond[maxmin][type].memreg, lab);
-
           t.cg.movOp(srcop, destop);
-
         END;
         t.cg.set_label(lab);
 

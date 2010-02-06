@@ -15,7 +15,7 @@ FROM TargetMap IMPORT CG_Bytes;
 
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
-FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset, No_label;
+FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 
@@ -3132,8 +3132,6 @@ PROCEDURE check_nil (u: U;  code: RuntimeError) =
 PROCEDURE check_lo (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeError) =
   (* IF (s0.t < i) THEN abort(code) *)
   VAR safelab: Label;
-      compare_label: Label := No_label;
-      size: OperandSize;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_lo");
@@ -3156,14 +3154,7 @@ PROCEDURE check_lo (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeErro
         ELSIF TInt.LT(u.vstack.upper(u.vstack.reg(stack0)), i) THEN
           reportfault(u, code);
         ELSE
-          size := GetTypeSize(t);
-          IF size > 1 THEN
-            compare_label := u.cg.reserve_labels(1, TRUE);
-          END;
-          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), i, compare_label);
-          IF compare_label # No_label THEN
-            u.cg.set_label(compare_label);
-          END;
+          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), i);
           safelab := u.cg.reserve_labels(1, TRUE);
           u.cg.brOp(Cond.GE, safelab);
           reportfault(u, code);
@@ -3177,8 +3168,6 @@ PROCEDURE check_lo (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeErro
 PROCEDURE check_hi (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeError) =
   (* IF (i < s0.t) THEN abort(code) *)
   VAR safelab: Label;
-      compare_label: Label := No_label;
-      size: OperandSize;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_hi");
@@ -3201,14 +3190,7 @@ PROCEDURE check_hi (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeErro
         ELSIF TInt.GT(u.vstack.lower(u.vstack.reg(stack0)), i) THEN
           reportfault(u, code);
         ELSE
-          size := GetTypeSize(t);
-          IF size > 1 THEN
-            compare_label := u.cg.reserve_labels(1, TRUE);
-          END;
-          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), i, compare_label);
-          IF compare_label # No_label THEN
-            u.cg.set_label(compare_label);
-          END;
+          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), i);
           safelab := u.cg.reserve_labels(1, TRUE);
           u.cg.brOp(Cond.LE, safelab);
           reportfault(u, code);
@@ -3223,9 +3205,6 @@ PROCEDURE check_range (u: U;  t: IType;  READONLY a, b: Target.Int;  code: Runti
   (* IF (s0.t < a) OR (b < s0.t) THEN abort(code) *)
   VAR lo, hi: Target.Int;
       safelab, outrange: Label;
-      compare_label1: Label := No_label;
-      compare_label2: Label := No_label;
-      size: OperandSize;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_range");
@@ -3245,8 +3224,6 @@ PROCEDURE check_range (u: U;  t: IType;  READONLY a, b: Target.Int;  code: Runti
         RETURN;
       END;
 
-      size := GetTypeSize(t);
-
       u.vstack.find(stack0, Force.anyreg);
       WITH reg = u.vstack.reg(stack0) DO
         lo := u.vstack.lower(reg);
@@ -3261,35 +3238,19 @@ PROCEDURE check_range (u: U;  t: IType;  READONLY a, b: Target.Int;  code: Runti
           check_hi(u, t, b, code);
         ELSIF TInt.EQ(a, TZero) THEN
           (* 0 <= x <= b  ==>   UNSIGNED(x) <= b *)
-          IF size > 1 THEN
-            compare_label1 := u.cg.reserve_labels(1, TRUE);
-          END;
           safelab := u.cg.reserve_labels(1, TRUE);
-          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), b, compare_label1);
-          IF compare_label1 # No_label THEN
-            u.cg.set_label(compare_label1);
-          END;
+          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), b);
           u.cg.brOp(unscond [Cond.LE], safelab);
           reportfault(u, code);
           u.cg.set_label(safelab);
           u.vstack.set_upper(reg, b);
           u.vstack.set_lower(reg, a);
         ELSE
-          IF size > 1 THEN
-            compare_label1 := u.cg.reserve_labels(1, TRUE);
-            compare_label2 := u.cg.reserve_labels(1, TRUE);
-          END;
           safelab := u.cg.reserve_labels(1, TRUE);
           outrange := u.cg.reserve_labels(1, TRUE);
-          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), a, compare_label1);
-          IF compare_label1 # No_label THEN
-            u.cg.set_label(compare_label1);
-          END;
+          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), a);
           u.cg.brOp(Cond.L, outrange);
-          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), b, compare_label2);
-          IF compare_label2 # No_label THEN
-            u.cg.set_label(compare_label2);
-          END;
+          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), b);
           u.cg.brOp(Cond.LE, safelab);
           u.cg.set_label(outrange);
           reportfault(u, code);
@@ -3306,8 +3267,6 @@ PROCEDURE check_index (u: U;  t: IType;  code: RuntimeError) =
   (* s0.t is guaranteed to be positive so the unsigned
      check (s0.W <= s1.W) is sufficient. *)
   VAR safelab: Label;
-      compare_label: Label := No_label;
-      size: OperandSize;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_index");
@@ -3325,11 +3284,6 @@ PROCEDURE check_index (u: U;  t: IType;  code: RuntimeError) =
           reportfault(u, code);
         END
       ELSE
-
-        size := GetTypeSize(t);
-        IF size > 1 THEN
-          compare_label := u.cg.reserve_labels(1, TRUE);
-        END;
  
         u.vstack.find(stack0, Force.any);
         u.vstack.find(stack1, Force.anyregimm);
@@ -3340,16 +3294,10 @@ PROCEDURE check_index (u: U;  t: IType;  code: RuntimeError) =
         safelab := u.cg.reserve_labels(1, TRUE);
 
         IF u.vstack.loc(stack0) = OLoc.imm THEN
-          u.cg.binOp(Op.oCMP, u.vstack.op(stack1), u.vstack.op(stack0), compare_label := compare_label);
-          IF compare_label # No_label THEN
-            u.cg.set_label(compare_label);
-          END;
+          u.cg.binOp(Op.oCMP, u.vstack.op(stack1), u.vstack.op(stack0));
           u.cg.brOp(Cond.B, safelab);
         ELSE
-          u.cg.binOp(Op.oCMP, u.vstack.op(stack0), u.vstack.op(stack1), compare_label := compare_label);
-          IF compare_label # No_label THEN
-            u.cg.set_label(compare_label);
-          END;
+          u.cg.binOp(Op.oCMP, u.vstack.op(stack0), u.vstack.op(stack1));
           u.cg.brOp(Cond.A, safelab);
         END;
 
@@ -3364,8 +3312,6 @@ PROCEDURE check_index (u: U;  t: IType;  code: RuntimeError) =
 PROCEDURE check_eq (u: U;  t: IType;  code: RuntimeError) =
   (* IF (s0.t # s1.t) THEN abort(code);  Pop (2) *)
   VAR safelab: Label;
-      compare_label: Label := No_label;
-      size: OperandSize;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_eq");
@@ -3383,18 +3329,10 @@ PROCEDURE check_eq (u: U;  t: IType;  code: RuntimeError) =
         u.vstack.find(stack0, Force.anyregimm);
       END;
 
-      size := GetTypeSize(t);
-      IF size > 1 THEN
-        compare_label := u.cg.reserve_labels(1, TRUE);
-      END;
-
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        u.cg.binOp(Op.oCMP, u.vstack.op(stack1), u.vstack.op(stack0), compare_label := compare_label);
+        u.cg.binOp(Op.oCMP, u.vstack.op(stack1), u.vstack.op(stack0));
       ELSE
-        u.cg.binOp(Op.oCMP, u.vstack.op(stack0), u.vstack.op(stack1), compare_label := compare_label);
-      END;
-      IF compare_label # No_label THEN
-        u.cg.set_label(compare_label);
+        u.cg.binOp(Op.oCMP, u.vstack.op(stack0), u.vstack.op(stack1));
       END;
 
       safelab := u.cg.reserve_labels(1, TRUE);
