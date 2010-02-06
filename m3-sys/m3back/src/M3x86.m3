@@ -1702,6 +1702,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
     END;
 
     u.vstack.unlock();
+
     WITH stack0 = u.vstack.pos(0, "load_indirect") DO
       u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
       IF Target.FloatType [t] THEN
@@ -1711,6 +1712,9 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
       ELSE
         size := GetTypeSize(t);
         <* ASSERT size = GetTypeSize(z) *>
+
+        (* allocate the registers *)
+
         FOR i := 0 TO size - 1 DO
           IF CG_Bytes[t] = 1 THEN
             <* ASSERT i = 0 AND size = 1 *>
@@ -1724,9 +1728,20 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
             END;
           END;
           <* ASSERT newreg[i] # -1 *>
+        END;
 
-          u.cg.load_ind(newreg[i], u.vstack.op(stack0), o, t);
+        (* do the loads *)
+
+        FOR i := 0 TO size - 1 DO
+          u.cg.load_ind(newreg[i], u.vstack.op(stack0), o + 4 * i, t);
+        END;
+
+        (* do the bookkeeping about the loads *)
+
+        FOR i := 0 TO size - 1 DO
           u.vstack.dealloc_reg(stack0, operandPart := i);
+        END;
+        FOR i := 0 TO size - 1 DO
           u.vstack.set_reg(stack0, newreg[i], operandPart := i);
         END
       END
