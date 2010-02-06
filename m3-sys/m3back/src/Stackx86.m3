@@ -604,9 +604,9 @@ PROCEDURE get_temp (t: T; stackp: INTEGER) =
         mvar := t.vstack[stackp].mvar; (* save away *)
         t.vstack[stackp].mvar.mvar_type := Type.Word32; (* make it register sized *)
         t.vstack[stackp].optype := Type.Word32;
-        FOR i := 0 TO size -1 DO
+        FOR i := 0 TO size - 1 DO
           t.reguse[op.reg[i]].stackp := -1;
-          t.vstack[stackp].mvar.mvar_offset := i * 4;
+          t.vstack[stackp].mvar.mvar_offset := i * 4;   (* offset to register sized chunk *)
           t.cg.movOp(t.vstack[stackp], t.cg.reg[op.reg[i]]);
         END;
         t.vstack[stackp].optype := op.optype;
