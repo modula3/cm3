@@ -252,7 +252,7 @@ ov:
 #define M3_POS(T, a) (((T)-((a) + 1)) + 1)
 #define M3_ABS(T, a) (((a) < 0) ? M3_POS(T, a) : (T)(a))
 
-static uint64 m3_abs64x(int64 a) { return M3_ABS(uint64, a); }
+static uint64 m3_abs64(int64 a) { return M3_ABS(uint64, a); }
 
 NOT_YET int64 __stdcall m3_mult_64(int64 a, int64 b, BOOL* overflow)
 {
@@ -266,7 +266,7 @@ NOT_YET int64 __stdcall m3_mult_64(int64 a, int64 b, BOOL* overflow)
   if (*overflow)
     return result;
 
-  c = m3_mult_u64(m3_abs64x(a), m3_abs64x(b), overflow);
+  c = m3_mult_u64(m3_abs64(a), m3_abs64(b), overflow);
   if (*overflow)
     return result;
 
@@ -323,9 +323,11 @@ WIN32_STATIC long __cdecl m3_div
   }
 }
 
-WIN32_STATIC int64 __cdecl m3_divL
-    ANSI((      int64 b, int64 a))
-      KR((b, a) int64 b; int64 a;)
+#ifdef _WIN32
+int64 __stdcall m3_div64(int64 b, int64 a)
+#else
+int64 __cdecl m3_divL(int64 b, int64 a)
+#endif
 {
   typedef  int64 ST; /* signed type */
   typedef uint64 UT; /* unsigned type */
@@ -386,9 +388,11 @@ WIN32_STATIC long __cdecl m3_mod
   }
 }
 
-WIN32_STATIC int64 __cdecl m3_modL
-    ANSI((      int64 b, int64 a))
-      KR((b, a) int64 b; int64 a;)
+#ifdef _WIN32
+int64 __stdcall m3_mod64(int64 b, int64 a)
+#else
+int64 __cdecl m3_modL(int64 b, int64 a)
+#endif
 {
   typedef  int64 ST; /* signed type */
   typedef uint64 UT; /* unsigned type */
@@ -710,6 +714,76 @@ void __cdecl set_singleton
   ulong a_bit  = a % SET_GRAIN;
   s[a_word] |= (1UL << a_bit);
 }
+
+
+#ifdef _WIN32
+
+uint64 __stdcall m3_umul64(uint64 a, uint64 b) { return (a * b); }
+uint64 __stdcall m3_udiv64(uint64 a, uint64 b) { return (a / b); }
+uint64 __stdcall m3_umod64(uint64 a, uint64 b) { return (a % b); }
+
+uint64 __stdcall   m3_shift_left64(uint64 a, uint64 b)  { return (a << b); }
+uint64 __stdcall  m3_shift_right64(uint64 a, uint64 b)  { return (a >> b); }
+uint64 _rotl64(uint64 value, int shift);
+uint64 _rotr64(uint64 value, int shift);
+#pragma intrinsic(_rotl64)
+#pragma intrinsic(_rotr64)
+uint64 __stdcall  m3_rotate_left64(uint64 a, uint64 b)  { return _rotl64(a, (int)b); }
+uint64 __stdcall m3_rotate_right64(uint64 a, uint64 b)  { return _rotr64(a, (int)b); }
+
+uint64 __stdcall m3_shift64(uint64 a, int64 b)
+{
+    if (b >= 64 || b <= -64)
+        a = 0;
+    else if (b > 0)
+        a <<= b;
+    else if (b < 0)
+        a >>= -b;
+    return a;
+}
+
+uint64 __stdcall m3_rotate64(uint64 a, int64 b)
+{
+    b &= 63;
+    if (b > 0)
+        a = _rotl64(a, (int)b);
+    else if (b < 0)
+        a = _rotr64(a, (int)-b);
+    return a;
+}
+
+/*
+ PROCEDURE Extract (x: T; i, n: CARDINAL): T;
+(* Take n bits from x, with bit i as the least significant bit, and return them
+   as the least significant n bits of a word whose other bits are 0. A checked
+   runtime error if n + i > Word.Size. *)
+
+PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
+(* Return x with n bits replaced, with bit i as the least significant bit, by
+   the least significant n bits of y. The other bits of x are unchanged. A
+   checked runtime error if n + i > Word.Size. *)
+*/
+
+uint64 __stdcall m3_extract64(uint64 x, uint64 i, uint64 n, uint64 sign_extend)
+{
+    assert((n + i) <= 64);
+    x >>= i;
+    x &= ~((~(uint64)0) << n);
+    if (sign_extend && (x & (((uint64)1) << (n - 1))))
+        x |= ((~(uint64)0) << n);
+    return x;
+}
+
+uint64 __stdcall m3_insert64(uint64 x, uint64 y, uint64 i, uint64 n)
+{
+    uint64 mask;
+    assert((n + i) <= 64);
+    mask = ((~((~(uint64)0) << n)) << i);
+    return (x & ~mask) | ((y << i) & mask);
+}
+
+#endif /* WIN32 */
+
 
 /************************************************************************
 
