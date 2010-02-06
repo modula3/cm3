@@ -1045,6 +1045,15 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): 
     WITH destop = t.vstack[dest],
           srcop = t.vstack[src] DO
 
+      IF NOT (GetTypeSize(destop.optype) = GetTypeSize(srcop.optype)
+         AND (GetTypeSize(destop.optype) = GetTypeSize(type))) THEN
+        t.Err(" GetTypeSize(destop.optype):" & Fmt.Int(GetTypeSize(destop.optype))
+            & " GetTypeSize(srcop.optype):" & Fmt.Int(GetTypeSize(srcop.optype))
+            & " GetTypeSize(type):" & Fmt.Int(GetTypeSize(type))
+            & " destop.optype:" & Target.TypeNames[destop.optype]
+            & " srcop.optype:" & Target.TypeNames[srcop.optype]
+            & " type:" & Target.TypeNames[type]);
+      END;
       <* ASSERT GetTypeSize(destop.optype) = GetTypeSize(srcop.optype) *>
       <* ASSERT GetTypeSize(destop.optype) = GetTypeSize(type) *>
 
