@@ -824,7 +824,7 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
 PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.Int) =
   VAR ins: Instruction;
   BEGIN
-    IF NOT TInt.ToInt(imm, ins.imm) THEN
+    IF NOT TInt.ToInt(imm, ins.imm) AND TInt.NE(imm, Target.Word32.max) THEN
       t.Err("movImmT: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));
     END;
     IF dest.loc # OLoc.register THEN
