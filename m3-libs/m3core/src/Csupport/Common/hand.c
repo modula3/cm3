@@ -718,7 +718,6 @@ void __cdecl set_singleton
 
 #ifdef _WIN32
 
-uint64 __stdcall m3_umul64(uint64 a, uint64 b) { return (a * b); }
 uint64 __stdcall m3_udiv64(uint64 a, uint64 b) { return (a / b); }
 uint64 __stdcall m3_umod64(uint64 a, uint64 b) { return (a % b); }
 
