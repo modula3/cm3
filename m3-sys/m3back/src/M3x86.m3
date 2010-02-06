@@ -6,7 +6,7 @@
 (*      modified on Wed Nov 23 13:57:47 PST 1994 by isard      *)
 
 MODULE M3x86 EXPORTS M3x86, M3x86Rep;
- 
+
 IMPORT Wr, Text, Fmt, IntRefTbl, Word;
 IMPORT M3CG, M3ID, M3CG_Ops, Target, TInt, TFloat, TWord;
 IMPORT M3ObjFile, TargetMap;
@@ -425,7 +425,7 @@ PROCEDURE declare_enum (u: U;  t: TypeUID;  n_elts: INTEGER;  s: BitSize) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_enum");
-      u.wr.Tipe (t); 
+      u.wr.Tipe (t);
       u.wr.Int  (n_elts);
       u.wr.BInt (s);
       u.wr.NL   ();
@@ -497,7 +497,7 @@ PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
       u.wr.Tipe (t);
       u.wr.Tipe (domain);
       u.wr.TInt (min);
-      u.wr.TInt (max); 
+      u.wr.TInt (max);
       u.wr.BInt (s);
       u.wr.NL   ();
     END
@@ -574,7 +574,7 @@ PROCEDURE declare_object (u: U;  t, super: TypeUID;
       u.wr.Tipe (super);
       u.wr.Txt  (brand);
       u.wr.Bool (traced);
-      u.wr.Int  (n_fields);  
+      u.wr.Int  (n_fields);
       u.wr.Int  (n_methods);
       u.wr.BInt (field_size);
       u.wr.NL   ();
@@ -799,8 +799,8 @@ PROCEDURE DeclareGlobal (u: U;  n: Name;  s: ByteSize;  a: Alignment;
     IF u.debug THEN
       u.wr.Cmd   (DeclTag [is_const]);
       u.wr.ZName (n);
-      u.wr.Int   (s);  
-      u.wr.Int   (a);  
+      u.wr.Int   (s);
+      u.wr.Int   (a);
       u.wr.TName (t);
       u.wr.Tipe  (m3t);
       u.wr.Bool  (exported);
@@ -824,8 +824,8 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
     IF u.debug THEN
       u.wr.Cmd   ("declare_local");
       u.wr.ZName (n);
-      u.wr.Int   (s);  
-      u.wr.Int   (a);  
+      u.wr.Int   (s);
+      u.wr.Int   (a);
       u.wr.TName (t);
       u.wr.Tipe  (m3t);
       u.wr.Bool  (in_memory);
@@ -900,8 +900,8 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
     IF u.debug THEN
       u.wr.Cmd   ("declare_param");
       u.wr.ZName (n);
-      u.wr.Int   (s);  
-      u.wr.Int   (a);  
+      u.wr.Int   (s);
+      u.wr.Int   (a);
       u.wr.TName (t);
       u.wr.Tipe  (m3t);
       u.wr.Bool  (in_memory);
@@ -925,7 +925,7 @@ PROCEDURE declare_temp   (u: U;  s: ByteSize;  a: Alignment;  t: Type;
 
     IF u.debug THEN
       u.wr.Cmd   ("declare_temp");
-      u.wr.Int   (s);  
+      u.wr.Int   (s);
       u.wr.Int   (a);
       u.wr.TName (t);
       u.wr.Bool  (in_memory);
@@ -940,7 +940,7 @@ PROCEDURE declare_temp   (u: U;  s: ByteSize;  a: Alignment;  t: Type;
 PROCEDURE get_temp_var (u: U; t: Type; s: ByteSize; a: Alignment;
                         n: Name := M3ID.NoID): x86Var =
   BEGIN
-    
+
     (* round size and alignment up to 4 *)
 
     IF s < 4 THEN
@@ -1652,7 +1652,7 @@ PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  t: MType;  z: ZType) =
     IF u.debug THEN
       u.wr.Cmd   ("load");
       u.wr.VName (v);
-      u.wr.Int   (o);  
+      u.wr.Int   (o);
       u.wr.TName (t);
       u.wr.TName (z);
       u.wr.NL    ();
@@ -1667,7 +1667,7 @@ PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  z: ZType;  t: MType;  ) =
     IF u.debug THEN
       u.wr.Cmd   ("store");
       u.wr.VName (v);
-      u.wr.Int   (o);  
+      u.wr.Int   (o);
       u.wr.TName (z);
       u.wr.TName (t);
       u.wr.NL    ();
@@ -1696,7 +1696,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_indirect");
-      u.wr.Int   (o);  
+      u.wr.Int   (o);
       u.wr.TName (t);
       u.wr.TName (z);
       u.wr.NL    ();
@@ -1739,7 +1739,7 @@ PROCEDURE store_indirect (u: U;  o: ByteOffset;  z: ZType;  t: MType) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("store_indirect");
-      u.wr.Int   (o);  
+      u.wr.Int   (o);
       u.wr.TName (z);
       u.wr.TName (t);
       u.wr.NL    ();
@@ -2323,7 +2323,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
     WITH stack0 = u.vstack.pos(0, "shift_right"),
          stack1 = u.vstack.pos(1, "shift_right") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF u.vstack.loc(stack1) = OLoc.imm THEN            
+        IF u.vstack.loc(stack1) = OLoc.imm THEN
           IF NOT TInt.ToInt(u.vstack.op(stack0).imm, shiftCount) THEN
             u.Err("unable to convert shift count to host integer");
           END;
@@ -2561,7 +2561,7 @@ PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
       u.wr.Cmd   ("extract_mn");
       u.wr.TName (t);
       u.wr.Bool  (sign);
-      u.wr.Int   (m); 
+      u.wr.Int   (m);
       u.wr.Int   (n);
       u.wr.NL    ();
     END;
@@ -3287,7 +3287,7 @@ PROCEDURE check_index (u: U;  t: IType;  code: RuntimeError) =
           reportfault(u, code);
         END
       ELSE
- 
+
         u.vstack.find(stack0, Force.any);
         u.vstack.find(stack1, Force.anyregimm);
         IF u.vstack.loc(stack0) = OLoc.mem THEN

@@ -309,7 +309,7 @@ PROCEDURE immFOp (t: T; op: FOp; im: FIm) =
   VAR ins: Instruction;
   BEGIN
     prepare_stack(t, op, TRUE);
-    Mn(t, imcode[im].name, " ", FImName[im]); 
+    Mn(t, imcode[im].name, " ", FImName[im]);
     ins.opcode := imcode[im].opcode;
     writecode(t, ins);
     Mn(t, fopcode[op].name, " ST1");
@@ -500,7 +500,7 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN := 
     writecode(t, ins);
     IF dest.loc = OLoc.mem THEN
       log_global_var(t, dest.mvar, -4);
-    ELSIF src.loc = OLoc.mem THEN      
+    ELSIF src.loc = OLoc.mem THEN
       log_global_var(t, src.mvar, -4);
     END;
   END binOp1;
@@ -1605,7 +1605,7 @@ PROCEDURE fill_in_label_thread (t: T; ptr: LabList; val: INTEGER;
         t.obj.patch(ptr.seg, ptr.offs, val, 4);
       ELSE
         <* ASSERT ptr.seg = Seg.Text *>
-          
+
         IF short THEN
           <* ASSERT val - (ptr.offs + 1) <= 16_7F AND
                     val - (ptr.offs + 1) >= -16_80 *>
@@ -1986,7 +1986,7 @@ PROCEDURE expand_spill (t: T) =
     t.fstackspill := newspill;
     t.fspilllimit := t.fspilllimit * 2;
   END expand_spill;
-    
+
 (*------------------------------------------------------- alignment stuff ---*)
 
 PROCEDURE aligned (<*UNUSED*> t: T; READONLY var: MVar;
