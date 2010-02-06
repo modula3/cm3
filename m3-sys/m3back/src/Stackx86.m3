@@ -46,6 +46,7 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         find := find;
         freereg := freereg;
         set_reg := set_reg;
+        set_type := set_type;
         dealloc_reg := dealloc_reg;
         corrupt := corrupt;
         set_fstack := set_fstack;
@@ -669,6 +670,11 @@ PROCEDURE sweep (t: T; READONLY mvar: MVar) =
       t.cg.popOp(t.cg.reg[Codex86.EAX]);
     END
   END sweep;
+
+PROCEDURE set_type (t: T; stackp: INTEGER; type: Type) =
+  BEGIN
+    t.vstack[stackp].optype := type;
+  END set_type;
 
 PROCEDURE set_reg (t: T; stackp: INTEGER; r: Regno; operandPart: OperandPart) =
   BEGIN
