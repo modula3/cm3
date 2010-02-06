@@ -3498,7 +3498,6 @@ PROCEDURE call_64 (u: U; builtin: Builtin; pop := TRUE) =
       u.wr.Int   (n_params);
       u.wr.NL    ();
     END;
-    u.vstack.unlock();
     start_int_proc(u, builtin);
     FOR i := 0 TO n_params - 1 DO
       load_stack_param(u, Type.Word64, n_params - 1 - i);
@@ -3507,7 +3506,6 @@ PROCEDURE call_64 (u: U; builtin: Builtin; pop := TRUE) =
       u.vstack.discard(n_params);
     END;
     call_int_proc (u, builtin);
-    u.vstack.unlock();
   END call_64;
 
 PROCEDURE start_call_direct (u: U;  p: Proc;  lev: INTEGER;  t: Type) =
