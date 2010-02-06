@@ -311,18 +311,14 @@ PROCEDURE find (t: T; stackp: INTEGER;
       (* If it is in a register and shouldn't be, move it *)
 
       IF force = Force.mem AND op.loc = OLoc.register THEN
-        FOR i := 0 TO size - 1 DO
-          get_temp(t, stackp, op.reg[i]);
-        END;
+        get_temp(t, stackp);
         RETURN;
       END;
 
       (* If it is an immediate value and should be in mem, do it *)
 
       IF force = Force.mem AND op.loc = OLoc.imm THEN
-        FOR i := 0 TO size - 1 DO
-          get_temp(t, stackp, -1, opA[i].imm);
-        END;
+        get_temp(t, stackp);
         RETURN;
       END;
 
@@ -475,7 +471,7 @@ PROCEDURE forceout (t: T; r: Regno; operandPart: OperandPart) =
   BEGIN
     dead := finddead(t);
     IF dead = -1 THEN
-      get_temp(t, t.reguse[r].stackp, r);
+      get_temp(t, t.reguse[r].stackp);
     ELSE
       movereg(t, dead, r, operandPart);
     END
@@ -592,17 +588,31 @@ PROCEDURE precedence (t: T; r: Regno; hintaddr := FALSE): INTEGER =
 
 (*-------------------------------------------------------- stack routines ---*)
 
-PROCEDURE get_temp (t: T; stackp: INTEGER; r: Regno; imm := TZero) =
+PROCEDURE get_temp (t: T; stackp: INTEGER) =
+  VAR op := t.vstack[stackp]; (* *copy* this before changing it *)
+      size := GetTypeSize(op.optype);
+      mvar: MVar;
   BEGIN
-    set_mvar(t, stackp, MVar { var := t.parent.declare_temp(4, 4, Type.Int32,
+    set_mvar(t, stackp, MVar { var := t.parent.declare_temp(size * 4, 4, op.optype,
                                                             FALSE),
-                               mvar_offset := 0, mvar_type := Type.Int32 } );
+                               mvar_offset := 0, mvar_type := op.optype } );
     t.vstack[stackp].mvar.var.stack_temp := TRUE;
-    IF r = -1 THEN
-      t.cg.movImmT(t.vstack[stackp], imm);
-    ELSE
-      t.reguse[r].stackp := -1;
-      t.cg.movOp(t.vstack[stackp], t.cg.reg[r]);
+    CASE op.loc OF
+      | OLoc.imm =>
+        t.cg.movImmT(t.vstack[stackp], op.imm);
+      | OLoc.register =>
+        mvar := t.vstack[stackp].mvar; (* save away *)
+        t.vstack[stackp].mvar.mvar_type := Type.Word32; (* make it register sized *)
+        t.vstack[stackp].optype := Type.Word32;
+        FOR i := 0 TO size -1 DO
+          t.reguse[op.reg[i]].stackp := -1;
+          t.vstack[stackp].mvar.mvar_offset := i * 4;
+          t.cg.movOp(t.vstack[stackp], t.cg.reg[op.reg[i]]);
+        END;
+        t.vstack[stackp].optype := op.optype;
+        t.vstack[stackp].mvar := mvar; (* restore *)
+      ELSE
+        <* ASSERT FALSE *>
     END
   END get_temp;
 
