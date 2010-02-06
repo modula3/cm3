@@ -2660,8 +2660,6 @@ PROCEDURE swap (u: U;  a, b: Type) =
       u.wr.NL    ();
     END;
 
-    <* ASSERT GetTypeSize(a) = GetTypeSize(b) *>
-
     u.vstack.swap();
   END swap;
 
