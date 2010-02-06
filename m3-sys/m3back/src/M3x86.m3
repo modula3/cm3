@@ -1866,11 +1866,7 @@ PROCEDURE multiply (u: U;  t: AType) =
     END;
 
     IF Is64(t) THEN
-      IF t = Type.Int64 THEN
-        call_64 (u, Builtin.mul64);
-      ELSE
-        call_64 (u, Builtin.umul64);
-      END;
+      call_64 (u, Builtin.mul64);
       RETURN;
     END;
 
@@ -2984,9 +2980,10 @@ TYPE
   Builtin = {
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_lt, set_le, set_gt, set_ge, set_member, set_singleton,
-    memmove, memcpy, memset, memcmp, mul64, umul64, div64,
+    memmove, memcpy, memset, memcmp,
+    mul64,
     shift_left_64, shift_right_64,
-    udiv64, mod64, umod64,
+    div64, udiv64, mod64, umod64,
     shift64,
     rotate_left64, rotate_right64, rotate64, insert64, extract64
   };
@@ -3024,12 +3021,18 @@ CONST
     BP { "memset",             3, Type.Addr,  "C" },
     BP { "memcmp",             3, Type.Int32, "C" },
 
-    (* custom calling convention: value in edx:eax, shift in cl *)
-    BP { "_allshl",          0, Type.Word64, "C", 1 },
-    BP { "_uallshr",         0, Type.Word64, "C", 1 },
 
-    BP { "m3_mul64",         2, Type.Int64,  "__stdcall", 1 },
-    BP { "m3_umul64",        2, Type.Word64, "__stdcall", 1 },
+    (* custom calling convention: parameters pushed, removed
+     * by callee, but name is not __stdcall
+     * one function for signed and unsigned
+     *)
+    BP { "_allmul",          0, Type.Word64, "C" },
+
+    (* custom calling convention: value in edx:eax, shift in cl (we use all of ecx) *)
+
+    BP { "_allshl",          0, Type.Word64, "C" },
+    BP { "_uallshr",         0, Type.Word64, "C" },
+
     BP { "m3_div64",         2, Type.Int64,  "__stdcall", 1 },
     BP { "m3_udiv64",        2, Type.Word64, "__stdcall", 1 },
     BP { "m3_mod64",         2, Type.Int64,  "__stdcall", 1 },
@@ -3491,6 +3494,11 @@ PROCEDURE call_64 (u: U; builtin: Builtin) =
       load_stack_param(u, Type.Word64, n_params - 1 - i);
     END;
     u.vstack.discard(n_params);
+
+    (* All the 64bit functions pop their parameters, even if they are __cdecl-decorated. *)
+
+    u.call_param_size[u.in_proc_call - 1] := 0;
+
     call_int_proc (u, builtin);
   END call_64;
 
