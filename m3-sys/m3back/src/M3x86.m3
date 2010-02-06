@@ -2987,10 +2987,7 @@ TYPE
     memmove, memcpy, memset, memcmp, mul64, umul64, div64,
     udiv64, mod64, umod64,
     shift_left64, shift_right64, shift64,
-    rotate_left64, rotate_right64, rotate64, insert64, extract64,
-    compare_eq_64, compare_ne_64,
-    compare_lt_64,  compare_le_64,  compare_gt_64,  compare_ge_64,
-    compare_lt_u64, compare_le_u64, compare_gt_u64, compare_ge_u64
+    rotate_left64, rotate_right64, rotate64, insert64, extract64
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
@@ -3039,19 +3036,7 @@ CONST
     BP { "m3_rotate_right64",2, Type.Word64, "__stdcall", 1 },
     BP { "m3_rotate64",      2, Type.Word64, "__stdcall", 1 },
     BP { "m3_insert64",      4, Type.Word64, "__stdcall", 1 },
-    BP { "m3_extract64",     4, Type.Word64, "__stdcall", 1 },
-
-    BP { "m3_compare_eq_64",    2, Type.Int32,  "__stdcall", 1 },
-    BP { "m3_compare_ne_64",    2, Type.Int32,  "__stdcall", 1 },
-    BP { "m3_compare_lt_64",    2, Type.Int32,  "__stdcall", 1 },
-    BP { "m3_compare_le_64",    2, Type.Int32,  "__stdcall", 1 },
-    BP { "m3_compare_gt_64",    2, Type.Int32,  "__stdcall", 1 },
-    BP { "m3_compare_ge_64",    2, Type.Int32,  "__stdcall", 1 },
-    BP { "m3_compare_lt_u64",   2, Type.Int32,  "__stdcall", 1 },
-    BP { "m3_compare_le_u64",   2, Type.Int32,  "__stdcall", 1 },
-    BP { "m3_compare_gt_u64",   2, Type.Int32,  "__stdcall", 1 },
-    BP { "m3_compare_ge_u64",   2, Type.Int32,  "__stdcall", 1 }
-
+    BP { "m3_extract64",     4, Type.Word64, "__stdcall", 1 }
   };
 
 
