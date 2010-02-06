@@ -3031,7 +3031,7 @@ CONST
     (* custom calling convention: value in edx:eax, shift in cl (we use all of ecx) *)
 
     BP { "_allshl",          0, Type.Word64, "C" },
-    BP { "_uallshr",         0, Type.Word64, "C" },
+    BP { "_aullshr",         0, Type.Word64, "C" },
 
     BP { "m3_div64",         2, Type.Int64,  "__stdcall", 1 },
     BP { "m3_udiv64",        2, Type.Word64, "__stdcall", 1 },
