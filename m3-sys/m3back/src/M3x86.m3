@@ -3498,6 +3498,9 @@ PROCEDURE call_64 (u: U; builtin: Builtin) =
 
     u.call_param_size[u.in_proc_call - 1] := 0;
 
+    u.vstack.all_to_mem(); (* hack *)
+    u.vstack.unlock(); (* hack *)
+
     call_int_proc (u, builtin);
   END call_64;
 
