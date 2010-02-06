@@ -9,7 +9,7 @@ MODULE Stackx86;
 
 IMPORT M3ID, M3CG, TargetMap, M3CG_Ops, Word, M3x86Rep, Codex86, Wrx86;
 
-IMPORT Target, TInt, TWord;
+IMPORT Target, TInt, TWord, Fmt;
 FROM Target IMPORT FloatType;
 FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 
@@ -118,33 +118,56 @@ END InitRegister;
 
 CONST HighPrec: INTEGER = NRegs * 1000;
 
-PROCEDURE unlock (t: T) =
+PROCEDURE check (t: T; where: TEXT) =
+  VAR size: OperandSize;
+  BEGIN
+    t.cg.wrFlush();
+
+    FOR i := 0 TO NRegs DO
+      IF t.reguse[i].stackp # -1 THEN
+        <* ASSERT t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart] = i *>
+      END
+    END;
+
+    FOR i := 0 TO t.stacktop - 1 DO
+      IF t.vstack[i].loc = OLoc.register THEN
+        size := GetOperandSize(t.vstack[i]);
+        FOR j := 0 TO size - 1 DO
+          IF NOT (t.reguse[t.vstack[i].reg[j]].stackp = i) THEN
+            t.Err(where
+                & " i:" & Fmt.Int(i)
+                & " j:" & Fmt.Int(j)
+                & " t.vstack[i].reg[j]:" & RegName[t.vstack[i].reg[j]]
+                & " t.reguse[t.vstack[i].reg[j]].stackp:" & Fmt.Int(t.reguse[t.vstack[i].reg[j]].stackp));
+          END;
+          <* ASSERT t.reguse[t.vstack[i].reg[j]].stackp = i *>
+        END;
+      END;
+    END;
+  END check;
+
+PROCEDURE check_float (t: T) =
   VAR flcount := 0;
+  BEGIN
+    t.cg.wrFlush();
+
+    FOR i := 0 TO t.stacktop - 1 DO
+      IF t.vstack[i].loc = OLoc.fstack THEN
+        INC(flcount);
+      END
+    END;
+    t.cg.assert_fstack(flcount);
+  END check_float;
+
+PROCEDURE unlock (t: T) =
   BEGIN
     FOR i := 0 TO NRegs DO
       t.reguse[i].locked := FALSE;
     END;
 
     IF t.debug THEN
-      t.cg.wrFlush();
-
-      FOR i := 0 TO NRegs DO
-        IF t.reguse[i].stackp # -1 THEN
-          <* ASSERT t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart] = i *>
-        END
-      END;
-
-      FOR i := 0 TO t.stacktop - 1 DO
-        IF t.vstack[i].loc = OLoc.register THEN
-          FOR j := 0 TO GetOperandSize(t.vstack[i]) - 1 DO
-            <* ASSERT t.reguse[t.vstack[i].reg[j]].stackp = i *>
-          END;
-        ELSIF t.vstack[i].loc = OLoc.fstack THEN
-          INC(flcount);
-        END
-      END;
-
-      t.cg.assert_fstack(flcount);
+      check(t, "unlock");
+      check_float(t);
     END
   END unlock;
 
