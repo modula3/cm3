@@ -29,6 +29,7 @@ TYPE Public = OBJECT
               hintaddr := FALSE);
         freereg (set := RegSet {}; operandPart: OperandPart): Regno;
         set_reg (stackp: INTEGER; r: Regno; operandPart: OperandPart);
+        set_type (stackp: INTEGER; type: Type);
         dealloc_reg (stackp: INTEGER; operandPart: OperandPart);
         corrupt (reg: Regno; operandPart: OperandPart);
         set_fstack (stackp: INTEGER);

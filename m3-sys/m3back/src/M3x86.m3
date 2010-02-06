@@ -1743,8 +1743,9 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
         END;
         FOR i := 0 TO size - 1 DO
           u.vstack.set_reg(stack0, newreg[i], operandPart := i);
-        END
-      END
+        END;
+      END;
+      u.vstack.set_type(stack0, z);
     END
   END load_indirect;
 
