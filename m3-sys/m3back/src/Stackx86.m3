@@ -16,12 +16,10 @@ FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize, TZero;
 FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
-
-CONST TZero = TInt.Zero;
 
 REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         cg            : Codex86.T := NIL;
