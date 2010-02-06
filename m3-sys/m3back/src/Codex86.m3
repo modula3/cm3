@@ -124,11 +124,11 @@ TYPE FLiteral = REF RECORD
   link: FLiteral;
 END;
 
-PROCEDURE intCall (t: T; l: Label) =
+PROCEDURE intCall (t: T; label: Label) =
   VAR ins: Instruction;
   BEGIN
-    check_label(t, l, "intCall");
-    WITH lab = t.labarr[l], curs = t.obj.cursor(Seg.Text) DO
+    check_label(t, label, "intCall");
+    WITH lab = t.labarr[label], curs = t.obj.cursor(Seg.Text) DO
 
       ins.opcode := 16_E8;
       ins.dsize := 4;
@@ -136,11 +136,11 @@ PROCEDURE intCall (t: T; l: Label) =
         ins.disp := lab.offset - (curs + 5);
       END;
 
-      Mn(t, "CALL");  MnLabel(t, l);
+      Mn(t, "CALL");  MnLabel(t, label);
       writecode(t, ins);
 
       IF lab.no_address THEN
-        log_unknown_label(t, l, t.obj.cursor(Seg.Text) - 4, FALSE);
+        log_unknown_label(t, label, t.obj.cursor(Seg.Text) - 4, FALSE);
       END
     END
   END intCall;
@@ -199,11 +199,11 @@ PROCEDURE cleanretOp (t: T; psize: INTEGER) =
     writecode(t, ins);
   END cleanretOp;
 
-PROCEDURE brOp (t: T; br: Cond; l: Label) =
+PROCEDURE brOp (t: T; br: Cond; label: Label) =
   VAR ins: Instruction;
   BEGIN
-    check_label(t, l, "brOp");
-    WITH lab = t.labarr[l], curs = t.obj.cursor(Seg.Text) DO
+    check_label(t, label, "brOp");
+    WITH lab = t.labarr[label], curs = t.obj.cursor(Seg.Text) DO
       IF NOT lab.no_address THEN
         ins.disp := lab.offset - (curs + 2);
       END;
@@ -215,7 +215,7 @@ PROCEDURE brOp (t: T; br: Cond; l: Label) =
           ELSE ins.disp := lab.offset - (curs + 5);
         END;
 
-        Mn(t, bropcode[br].name);  MnLabel(t, l);
+        Mn(t, bropcode[br].name);  MnLabel(t, label);
 
         IF br # Cond.Always THEN
           DEC(ins.disp);
@@ -227,7 +227,7 @@ PROCEDURE brOp (t: T; br: Cond; l: Label) =
         ins.dsize := 4;
         writecode (t, ins);
       ELSE
-        Mn(t, bropcode[br].name, " rel8");  MnLabel(t, l);
+        Mn(t, bropcode[br].name, " rel8");  MnLabel(t, label);
         IF br # Cond.Always
           THEN ins.opcode := bropcode[br].rel8;
           ELSE ins.opcode := 16_EB;
@@ -238,9 +238,9 @@ PROCEDURE brOp (t: T; br: Cond; l: Label) =
 
       IF lab.no_address THEN
         IF lab.short THEN
-          log_unknown_label(t, l, t.obj.cursor(Seg.Text) - 1, FALSE);
+          log_unknown_label(t, label, t.obj.cursor(Seg.Text) - 1, FALSE);
         ELSE
-          log_unknown_label(t, l, t.obj.cursor(Seg.Text) - 4, FALSE);
+          log_unknown_label(t, label, t.obj.cursor(Seg.Text) - 4, FALSE);
         END
       END
     END
@@ -1532,12 +1532,12 @@ PROCEDURE expand_labels(t: T) =
     t.lablimit := t.lablimit * 2;
   END expand_labels;
 
-PROCEDURE log_unknown_label (t: T; l: Label; loc: ByteOffset; abs: BOOLEAN) =
+PROCEDURE log_unknown_label (t: T; label: Label; loc: ByteOffset; abs: BOOLEAN) =
   BEGIN
-    check_label(t, l, "log_unknown_label");
-    t.labarr[l].usage := NEW(LabList, seg := Seg.Text,
+    check_label(t, label, "log_unknown_label");
+    t.labarr[label].usage := NEW(LabList, seg := Seg.Text,
                              offs := loc, abs := abs,
-                             link := t.labarr[l].usage);
+                             link := t.labarr[label].usage);
   END log_unknown_label;
 
 PROCEDURE log_label_init (t: T; var: x86Var; o: ByteOffset; lab: Label) =
@@ -1573,10 +1573,10 @@ PROCEDURE get_frame (t: T; r: Regno; target, current: x86Proc) =
     END
   END get_frame;
 
-PROCEDURE set_label (t: T; l: Label; offset := 0) =
+PROCEDURE set_label (t: T; label: Label; offset := 0) =
   BEGIN
-    check_label(t, l, "set_label");
-    WITH lab = t.labarr[l] DO
+    check_label(t, label, "set_label");
+    WITH lab = t.labarr[label] DO
       IF NOT lab.no_address THEN
         t.Err("Duplicate label definition");
       END;
@@ -1589,9 +1589,9 @@ PROCEDURE set_label (t: T; l: Label; offset := 0) =
     END
   END set_label;
 
-PROCEDURE check_label(t: T; l: Label; place: TEXT) =
+PROCEDURE check_label(t: T; label: Label; place: TEXT) =
   BEGIN
-    IF l >= t.next_label_id THEN
+    IF label >= t.next_label_id THEN
       t.Err("Tried to reference unknown label in " & place);
     END
   END check_label;
@@ -1866,12 +1866,12 @@ PROCEDURE MnVar(t: T;  READONLY v: x86Var) =
     END;
   END MnVar;
 
-PROCEDURE MnLabel(t: T;  l: Label) =
+PROCEDURE MnLabel(t: T;  label: Label) =
   BEGIN
     IF t.debug THEN
-      IF (l = No_label)
+      IF (label = No_label)
         THEN Mn(t, " *");
-        ELSE Mn(t, " L.", Fmt.Int (l));
+        ELSE Mn(t, " L.", Fmt.Int (label));
       END;
     END;
   END MnLabel;

@@ -29,7 +29,7 @@ TYPE Public = OBJECT
         absCall (p: x86Proc);
         rmCall (READONLY op: Operand);
         cleanretOp (psize: INTEGER);
-        brOp (br: Cond; l: Label);
+        brOp (br: Cond; label: Label);
         setccOp (READONLY op: Operand; cond: Cond);
         noargOp (op: Op);
         noargFOp (op: FOp);
@@ -74,8 +74,8 @@ TYPE Public = OBJECT
         aligned (READONLY var: MVar; align: Alignment): BOOLEAN;
         allocate_temp (var: x86Var; size, align: INTEGER);
         reserve_labels (n: INTEGER; short := FALSE): Label;
-        set_label (l: Label; offset := 0);
-        case_jump (READONLY index: Operand; READONLY l: ARRAY OF Label);
+        set_label (label: Label; offset := 0);
+        case_jump (READONLY index: Operand; READONLY label: ARRAY OF Label);
         load_ind (r: Regno; READONLY ind: Operand; o: ByteOffset;
                   type: MType);
         fast_load_ind (r: Regno; READONLY ind: Operand; o: ByteOffset;
