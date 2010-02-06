@@ -2316,7 +2316,6 @@ PROCEDURE shift_right  (u: U;  t: IType) =
   VAR shiftCount: INTEGER;
       shift: Target.Int;
       and: Target.Int;
-      builtin := ARRAY [0..1] OF Builtin{Builtin.shift_right_64, Builtin.shift_right_u64}[ORD(IsWord(t))];
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("shift_right");
@@ -2339,7 +2338,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
           u.vstack.set_imm(stack0, and);
           IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
             IF Is64(t) THEN
-              do_shift_64 (u, builtin);
+              do_shift_64 (u, Builtin.shift_right_64);
               RETURN;
             END;
             u.vstack.find(stack1, Force.anytemp);
@@ -2350,7 +2349,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
       ELSE
         IF ((u.vstack.loc(stack1) # OLoc.imm) OR (TInt.NE(u.vstack.op(stack1).imm, TZero))) THEN
           IF Is64(t) THEN
-            do_shift_64 (u, builtin);
+            do_shift_64 (u, Builtin.shift_right_64);
             RETURN;
           END;
           u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
@@ -2986,7 +2985,7 @@ TYPE
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_lt, set_le, set_gt, set_ge, set_member, set_singleton,
     memmove, memcpy, memset, memcmp, mul64, umul64, div64,
-    shift_left_64, shift_right_64, shift_right_u64,
+    shift_left_64, shift_right_64,
     udiv64, mod64, umod64,
     shift64,
     rotate_left64, rotate_right64, rotate64, insert64, extract64
@@ -3026,7 +3025,6 @@ CONST
     BP { "memcmp",             3, Type.Int32, "C" },
 
     BP { "_allshl",          0, Type.Word64, "C", 1 },
-    BP { "_allshr",          0, Type.Word64, "C", 1 },
     BP { "_uallshr",         0, Type.Word64, "C", 1 },
 
     BP { "m3_mul64",         2, Type.Int64,  "__stdcall", 1 },
