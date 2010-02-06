@@ -722,8 +722,6 @@ uint64 __stdcall m3_umul64(uint64 a, uint64 b) { return (a * b); }
 uint64 __stdcall m3_udiv64(uint64 a, uint64 b) { return (a / b); }
 uint64 __stdcall m3_umod64(uint64 a, uint64 b) { return (a % b); }
 
-uint64 __stdcall   m3_shift_left64(uint64 a, uint64 b)  { return (a << b); }
-uint64 __stdcall  m3_shift_right64(uint64 a, uint64 b)  { return (a >> b); }
 uint64 _rotl64(uint64 value, int shift);
 uint64 _rotr64(uint64 value, int shift);
 #pragma intrinsic(_rotl64)
