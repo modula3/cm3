@@ -9,7 +9,7 @@
 MODULE Codex86;
 
 IMPORT Fmt, TargetMap, M3x86Rep, M3ID, M3CG_Ops, Word, M3ObjFile, Wrx86, Target;
-IMPORT TInt;
+IMPORT TInt, TWord;
 
 FROM TargetMap IMPORT CG_Bytes;
 
@@ -381,8 +381,8 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
-    IF NOT TInt.ToInt(imm, ins.imm) THEN
-      (*t.Warn("immOp1: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));*)
+    IF (NOT TInt.ToInt(imm, ins.imm)) AND (NOT TWord.LE(imm, Target.Word32.max)) THEN
+      t.Err("immOp1: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));
     END;
     IF TInt.GE(imm, Target.Int8.min) AND TInt.LE(imm, Target.Int8.max)
       THEN ins.imsize := 1;
@@ -824,7 +824,7 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
 PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.Int) =
   VAR ins: Instruction;
   BEGIN
-    IF NOT TInt.ToInt(imm, ins.imm) AND TInt.NE(imm, Target.Word32.max) THEN
+    IF (NOT TInt.ToInt(imm, ins.imm)) AND (NOT TWord.LE(imm, Target.Word32.max)) THEN
       t.Err("movImmT: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));
     END;
     IF dest.loc # OLoc.register THEN
@@ -862,8 +862,8 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
     CASE src.loc OF
     | OLoc.imm =>
         ins.opcode := 16_68;
-        IF NOT TInt.ToInt(src.imm, ins.imm) THEN
-          (*t.Warn("pushOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(src.imm));*)
+        IF (NOT TInt.ToInt(src.imm, ins.imm)) AND (NOT TWord.LE(src.imm, Target.Word32.max)) THEN
+          t.Err("pushOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(src.imm));
         END;
         ins.imsize := 4;
         writecode(t, ins);
@@ -1015,7 +1015,7 @@ PROCEDURE imulOp (t: T; READONLY dest, src: Operand) =
     IF src.loc = OLoc.imm THEN
       build_modrm(t, t.reg[dest.reg[0]], dest, ins);
       ins.opcode := 16_69;
-      IF NOT TInt.ToInt(src.imm, ins.imm) THEN
+      IF (NOT TInt.ToInt(src.imm, ins.imm)) AND (NOT TWord.LE(src.imm, Target.Word32.max)) THEN
         t.Err("imulOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(src.imm));
       END;
       ins.imsize := 4;
@@ -1394,7 +1394,7 @@ PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; o: ByteOffset;
     ins.opcode := 16_88;
     IF val.loc = OLoc.imm THEN
       ins.opcode := 16_C6;
-      IF NOT TInt.ToInt(val.imm, ins.imm) THEN
+      IF (NOT TInt.ToInt(val.imm, ins.imm)) AND (NOT TWord.LE(val.imm, Target.Word32.max)) THEN
         t.Err("store_ind1: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(val.imm));
       END;
       ins.imsize := CG_Bytes[type];
