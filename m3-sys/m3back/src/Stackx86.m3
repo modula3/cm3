@@ -42,6 +42,7 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         lock := lock;
         clearall := clearall;
         releaseall := releaseall;
+        all_to_mem := all_to_mem;
         find := find;
         freereg := freereg;
         set_reg := set_reg;
@@ -690,6 +691,15 @@ PROCEDURE corrupt (t: T; reg: Regno; operandPart: OperandPart) =
     END;
     t.reguse[reg] := InitRegister(locked := t.reguse[reg].locked);
   END corrupt;
+
+PROCEDURE all_to_mem(t: T) =
+  BEGIN
+    FOR i := 0 TO t.stacktop - 1 DO
+      IF t.vstack[i].loc = OLoc.register THEN
+        find(t, i, Force.mem);
+      END;
+    END;
+  END all_to_mem;
 
 PROCEDURE set_fstack (t: T; stackp: INTEGER) =
   BEGIN

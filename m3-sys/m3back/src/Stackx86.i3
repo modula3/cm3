@@ -23,6 +23,7 @@ TYPE Public = OBJECT
         unlock ();
         clearall ();
         releaseall ();
+        all_to_mem ();
         lock (r: Regno);
         find (stackp: INTEGER; force: Force; set := RegSet {};
               hintaddr := FALSE);
