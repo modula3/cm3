@@ -2266,11 +2266,6 @@ PROCEDURE shift_left   (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      call_64 (u, Builtin.shift_left64);
-      RETURN;
-    END;
-
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "shift_left"),
          stack1 = u.vstack.pos(1, "shift_left") DO
@@ -2285,13 +2280,21 @@ PROCEDURE shift_left   (u: U;  t: IType) =
           TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
           u.vstack.set_imm(stack0, and);
           IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
-              u.vstack.find(stack1, Force.anytemp);
-              u.cg.immOp(Op.oSAL, u.vstack.op(stack1), u.vstack.op(stack0).imm);
-              u.vstack.newdest(u.vstack.op(stack1));
+            IF Is64(t) THEN
+              call_64 (u, Builtin.shift_left64);
+              RETURN;
+            END;
+            u.vstack.find(stack1, Force.anytemp);
+            u.cg.immOp(Op.oSAL, u.vstack.op(stack1), u.vstack.op(stack0).imm);
+            u.vstack.newdest(u.vstack.op(stack1));
           END
         END
       ELSE
         IF (u.vstack.loc(stack1) # OLoc.imm) OR TInt.NE(u.vstack.op(stack1).imm, TZero) THEN
+          IF Is64(t) THEN
+            call_64 (u, Builtin.shift_left64);
+            RETURN;
+          END;
           u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
           u.vstack.find(stack1, Force.anytemp);
 
@@ -2320,11 +2323,6 @@ PROCEDURE shift_right  (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      call_64 (u, Builtin.shift_right64);
-      RETURN;
-    END;
-
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "shift_right"),
          stack1 = u.vstack.pos(1, "shift_right") DO
@@ -2339,6 +2337,10 @@ PROCEDURE shift_right  (u: U;  t: IType) =
           TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
           u.vstack.set_imm(stack0, and);
           IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
+            IF Is64(t) THEN
+              call_64 (u, Builtin.shift_right64);
+              RETURN;
+            END;
             u.vstack.find(stack1, Force.anytemp);
             u.cg.immOp(Op.oSHR, u.vstack.op(stack1), u.vstack.op(stack0).imm);
             u.vstack.newdest(u.vstack.op(stack1));
@@ -2346,6 +2348,10 @@ PROCEDURE shift_right  (u: U;  t: IType) =
         END
       ELSE
         IF ((u.vstack.loc(stack1) # OLoc.imm) OR (TInt.NE(u.vstack.op(stack1).imm, TZero))) THEN
+          IF Is64(t) THEN
+            call_64 (u, Builtin.shift_right64);
+            RETURN;
+          END;
           u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
           u.vstack.find(stack1, Force.anytemp);
 
@@ -2391,11 +2397,6 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      call_64 (u, Builtin.rotate_left64);
-      RETURN;
-    END;
-
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "rotate_left"),
          stack1 = u.vstack.pos(1, "rotate_left") DO
@@ -2407,13 +2408,21 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
           TWord.Rotate(u.vstack.op(stack1).imm, rotateCount, rotate);
           u.vstack.set_imm(stack1, rotate);
         ELSE
-          u.vstack.find(stack1, Force.anytemp);
           TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
           u.vstack.set_imm(stack0, and);
+          IF Is64(t) THEN
+            call_64 (u, Builtin.rotate_left64);
+            RETURN;
+          END;
+          u.vstack.find(stack1, Force.anytemp);
           u.cg.immOp(Op.oROL, u.vstack.op(stack1), u.vstack.op(stack0).imm);
           u.vstack.newdest(u.vstack.op(stack1));
         END
       ELSE
+        IF Is64(t) THEN
+          call_64 (u, Builtin.rotate_left64);
+          RETURN;
+        END;
         u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
         u.vstack.find(stack1, Force.anytemp);
 
@@ -2441,11 +2450,6 @@ PROCEDURE rotate_right (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      call_64 (u, Builtin.rotate_right64);
-      RETURN;
-    END;
-
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "rotate_right"),
          stack1 = u.vstack.pos(1, "rotate_right") DO
@@ -2457,13 +2461,21 @@ PROCEDURE rotate_right (u: U;  t: IType) =
           TWord.Rotate(u.vstack.op(stack1).imm, -rotateCount, rotate);
           u.vstack.set_imm(stack1, rotate);
         ELSE
-          u.vstack.find(stack1, Force.anytemp);
           TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
           u.vstack.set_imm(stack0, and);
+          IF Is64(t) THEN
+            call_64 (u, Builtin.rotate_right64);
+            RETURN;
+          END;
+          u.vstack.find(stack1, Force.anytemp);
           u.cg.immOp(Op.oROR, u.vstack.op(stack1), u.vstack.op(stack0).imm);
           u.vstack.newdest(u.vstack.op(stack1));
         END
       ELSE
+        IF Is64(t) THEN
+          call_64 (u, Builtin.rotate_right64);
+          RETURN;
+        END;
         u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
         u.vstack.find(stack1, Force.anytemp);
 
