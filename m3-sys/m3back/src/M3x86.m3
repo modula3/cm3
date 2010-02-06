@@ -220,6 +220,7 @@ REVEAL
 (*---------------------------------------------------------------------------*)
 
 CONST
+  TZero = TInt.Zero;
   CompareOpName = ARRAY CompareOp OF TEXT {
                           " EQ", " NE", " GT", " GE", " LT", " LE" };
   CompareOpCond = ARRAY CompareOp OF Cond {

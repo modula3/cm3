@@ -16,10 +16,12 @@ FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize, Register, RegUse, TZero;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize;
 FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
+
+CONST TZero = TInt.Zero;
 
 REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         cg            : Codex86.T := NIL;
@@ -29,7 +31,7 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         stacktop      := 0;
         vstack        : REF ARRAY OF Operand := NIL;
         vstacklimit   := 0;
-        reguse        : RegUse;
+        reguse        : ARRAY [0 .. NRegs] OF Register;
         current_proc  : x86Proc;
         rmode         : ARRAY FlToInt OF Target.Int;
         lowset_table  : x86Var;
@@ -93,6 +95,19 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         non_nil := non_nil;
         set_non_nil := set_non_nil;
       END;
+
+TYPE
+  Register = RECORD
+    stackp     : INTEGER := -1;
+    last_store : MVar    := NoStore;
+    last_imm   : Target.Int := TZero;
+    lowbound   : Target.Int;
+    upbound    : Target.Int;
+    imm        : BOOLEAN := FALSE;
+    locked     : BOOLEAN := FALSE;
+    non_nil    : BOOLEAN := FALSE;
+    operandPart: OperandPart := 0;
+  END;
 
 PROCEDURE InitRegister(locked: BOOLEAN := FALSE):Register =
 BEGIN

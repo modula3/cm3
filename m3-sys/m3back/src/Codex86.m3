@@ -18,9 +18,11 @@ FROM M3CG IMPORT Type, MType, Label, Alignment;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs, OperandSize, GetOperandSize;
-FROM M3x86Rep IMPORT RegSet, RegName, SplitOperand, Is64, SplitImm, OperandPart, GetTypeSize, TZero;
+FROM M3x86Rep IMPORT RegSet, RegName, SplitOperand, Is64, SplitImm, OperandPart, GetTypeSize;
 
 FROM M3ObjFile IMPORT Seg;
+
+CONST TZero = TInt.Zero;
 
 REVEAL T = Public BRANDED "Codex86.T" OBJECT
         parent        : M3x86Rep.U := NIL;

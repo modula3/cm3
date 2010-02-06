@@ -144,20 +144,4 @@ PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Opera
 PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize;
 PROCEDURE GetTypeSize(type: Type): OperandSize;
 
-CONST TZero = TInt.Zero;
-
-TYPE Register = RECORD
-    stackp     : INTEGER := -1;
-    last_store : MVar    := NoStore;
-    last_imm   : Target.Int := TZero;
-    lowbound   : Target.Int;
-    upbound    : Target.Int;
-    imm        : BOOLEAN := FALSE;
-    locked     : BOOLEAN := FALSE;
-    non_nil    : BOOLEAN := FALSE;
-    operandPart: OperandPart := 0;
-  END;
-
-TYPE RegUse = ARRAY [0 .. NRegs] OF Register;
-
 END M3x86Rep.
