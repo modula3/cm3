@@ -2281,7 +2281,7 @@ PROCEDURE shift_left   (u: U;  t: IType) =
           u.vstack.set_imm(stack0, and);
           IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
             IF Is64(t) THEN
-              call_64 (u, Builtin.shift_left64);
+              do_shift_64 (u, Builtin.shift_left_64);
               RETURN;
             END;
             u.vstack.find(stack1, Force.anytemp);
@@ -2292,7 +2292,7 @@ PROCEDURE shift_left   (u: U;  t: IType) =
       ELSE
         IF (u.vstack.loc(stack1) # OLoc.imm) OR TInt.NE(u.vstack.op(stack1).imm, TZero) THEN
           IF Is64(t) THEN
-            call_64 (u, Builtin.shift_left64);
+            do_shift_64 (u, Builtin.shift_left_64);
             RETURN;
           END;
           u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
@@ -2316,6 +2316,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
   VAR shiftCount: INTEGER;
       shift: Target.Int;
       and: Target.Int;
+      builtin := ARRAY [0..1] OF Builtin{Builtin.shift_right_64, Builtin.shift_right_u64}[ORD(IsWord(t))];
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("shift_right");
@@ -2338,7 +2339,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
           u.vstack.set_imm(stack0, and);
           IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
             IF Is64(t) THEN
-              call_64 (u, Builtin.shift_right64);
+              do_shift_64 (u, builtin);
               RETURN;
             END;
             u.vstack.find(stack1, Force.anytemp);
@@ -2349,7 +2350,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
       ELSE
         IF ((u.vstack.loc(stack1) # OLoc.imm) OR (TInt.NE(u.vstack.op(stack1).imm, TZero))) THEN
           IF Is64(t) THEN
-            call_64 (u, Builtin.shift_right64);
+            do_shift_64 (u, builtin);
             RETURN;
           END;
           u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
@@ -2985,8 +2986,9 @@ TYPE
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_lt, set_le, set_gt, set_ge, set_member, set_singleton,
     memmove, memcpy, memset, memcmp, mul64, umul64, div64,
+    shift_left_64, shift_right_64, shift_right_u64,
     udiv64, mod64, umod64,
-    shift_left64, shift_right64, shift64,
+    shift64,
     rotate_left64, rotate_right64, rotate64, insert64, extract64
   };
 
@@ -3023,14 +3025,16 @@ CONST
     BP { "memset",             3, Type.Addr,  "C" },
     BP { "memcmp",             3, Type.Int32, "C" },
 
+    BP { "_allshl",          0, Type.Word64, "C", 1 },
+    BP { "_allshr",          0, Type.Word64, "C", 1 },
+    BP { "_uallshr",         0, Type.Word64, "C", 1 },
+
     BP { "m3_mul64",         2, Type.Int64,  "__stdcall", 1 },
     BP { "m3_umul64",        2, Type.Word64, "__stdcall", 1 },
     BP { "m3_div64",         2, Type.Int64,  "__stdcall", 1 },
     BP { "m3_udiv64",        2, Type.Word64, "__stdcall", 1 },
     BP { "m3_mod64",         2, Type.Int64,  "__stdcall", 1 },
     BP { "m3_umod64",        2, Type.Word64, "__stdcall", 1 },
-    BP { "m3_shift_left64",  2, Type.Word64, "__stdcall", 1 },
-    BP { "m3_shift_right64", 2, Type.Word64, "__stdcall", 1 },
     BP { "m3_shift64",       2, Type.Word64, "__stdcall", 1 },
     BP { "m3_rotate_left64", 2, Type.Word64, "__stdcall", 1 },
     BP { "m3_rotate_right64",2, Type.Word64, "__stdcall", 1 },
@@ -3474,7 +3478,7 @@ PROCEDURE index_address (u: U;  t: IType;  size: INTEGER) =
 
 (*------------------------------------------------------- procedure calls ---*)
 
-PROCEDURE call_64 (u: U; builtin: Builtin; pop := TRUE) =
+PROCEDURE call_64 (u: U; builtin: Builtin) =
  VAR n_params := BuiltinDesc[builtin].n_params;
   BEGIN
     IF u.debug THEN
@@ -3487,11 +3491,21 @@ PROCEDURE call_64 (u: U; builtin: Builtin; pop := TRUE) =
     FOR i := 0 TO n_params - 1 DO
       load_stack_param(u, Type.Word64, n_params - 1 - i);
     END;
-    IF pop THEN
-      u.vstack.discard(n_params);
-    END;
+    u.vstack.discard(n_params);
     call_int_proc (u, builtin);
   END call_64;
+
+PROCEDURE do_shift_64 (u: U; builtin: Builtin) =
+  BEGIN
+    WITH stack0 = u.vstack.pos(0, "do_shift_64"),
+         stack1 = u.vstack.pos(1, "do_shift_64") DO
+      u.vstack.find(stack0, Force.regset, RegSet { Codex86.ECX });
+      u.vstack.find(stack1, Force.regset, RegSet { Codex86.EAX, Codex86.EDX });
+      u.vstack.discard (2);
+      start_int_proc (u, builtin);
+      call_int_proc (u, builtin);
+    END;
+  END do_shift_64;
 
 PROCEDURE start_call_direct (u: U;  p: Proc;  lev: INTEGER;  t: Type) =
   (* begin a procedure call to a procedure at static level 'lev'. *)
@@ -3845,6 +3859,7 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
     u.vstack.releaseall();
 
     IF u.static_link[u.in_proc_call - 1] # NIL THEN
+      (*u.vstack.corrupt(Codex86.ECX, operandPart := 0);*)
       u.cg.movOp(u.cg.reg[Codex86.ECX],
                  Operand { loc := OLoc.mem, optype := Type.Addr,
                            mvar :=
