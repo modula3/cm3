@@ -173,7 +173,7 @@ PROCEDURE unlock (t: T) =
 
 PROCEDURE lock (t: T; r: Regno) =
   BEGIN
-      t.reguse[r].locked := TRUE;
+    t.reguse[r].locked := TRUE;
   END lock;
 
 PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand; operandPart: OperandPart) =
