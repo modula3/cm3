@@ -2992,9 +2992,9 @@ TYPE
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_lt, set_le, set_gt, set_ge, set_member, set_singleton,
     memmove, memcpy, memset, memcmp,
-    mul64,
+    mul64, udiv64, umod64,
     shift_left_64, shift_right_64,
-    div64, udiv64, mod64, umod64,
+    div64, mod64,
     shift64,
     rotate_left64, rotate_right64, rotate64, insert64, extract64
   };
@@ -3034,20 +3034,19 @@ CONST
 
 
     (* custom calling convention: parameters pushed, removed
-     * by callee, but name is not __stdcall
-     * one function for signed and unsigned
+     * by callee, but name is not __stdcall, call_64 pokes
+     * the parameter size to 0
      *)
-    BP { "_allmul",          0, Type.Word64, "C" },
+    BP { "_allmul",          2, Type.Word64, "C", 1 }, (* 64bit multiply; signed or unsigned *)
+    BP { "_aulldiv",         2, Type.Word64, "C", 1 }, (* 64bit unsigned divide *)
+    BP { "_aullrem",         2, Type.Word64, "C", 1 }, (* 64bit unsigned mod/remainder *)
 
     (* custom calling convention: value in edx:eax, shift in cl (we use all of ecx) *)
-
-    BP { "_allshl",          0, Type.Word64, "C" },
-    BP { "_aullshr",         0, Type.Word64, "C" },
+    BP { "_allshl",          0, Type.Word64, "C", 1 }, (* 64bit shift left *)
+    BP { "_aullshr",         0, Type.Word64, "C", 1 }, (* 64bit unsigned shift right *)
 
     BP { "m3_div64",         2, Type.Int64,  "__stdcall", 1 },
-    BP { "m3_udiv64",        2, Type.Word64, "__stdcall", 1 },
     BP { "m3_mod64",         2, Type.Int64,  "__stdcall", 1 },
-    BP { "m3_umod64",        2, Type.Word64, "__stdcall", 1 },
     BP { "m3_shift64",       2, Type.Word64, "__stdcall", 1 },
     BP { "m3_rotate_left64", 2, Type.Word64, "__stdcall", 1 },
     BP { "m3_rotate_right64",2, Type.Word64, "__stdcall", 1 },
