@@ -1367,8 +1367,7 @@ PROCEDURE begin_procedure (u: U;  p: Proc) =
     u.cg.pushOp(u.cg.reg[EDI]);
 
     IF u.current_proc.lev # 0 THEN
-      u.cg.store_ind(u.cg.reg[ECX], u.cg.reg[EBP],
-                     -4, Type.Addr);
+      u.cg.store_ind(u.cg.reg[ECX], u.cg.reg[EBP], -4, Type.Addr);
     END;
 
     u.current_proc.tempsize := 0;
