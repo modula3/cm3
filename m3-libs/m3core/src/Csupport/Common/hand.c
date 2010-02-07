@@ -778,9 +778,8 @@ T __stdcall name(T x, T i, T n, T sign_extend)          \
 #define M3_INSERT(name, T)                              \
 T __stdcall name(T x, T y, T i, T n)                    \
 {                                                       \
-    T mask;                                             \
+    const T mask = ((~((~(T)0) << n)) << i);            \
     assert((n + i) <= (sizeof(T) * 8));                 \
-    mask = ((~((~(T)0) << n)) << i);                    \
     return (x & ~mask) | ((y << i) & mask);             \
 }
 
