@@ -1879,6 +1879,9 @@ PROCEDURE multiply (u: U;  t: AType) =
     END;
 
     IF Is64(t) THEN
+      start_int_proc (u, Builtin.mul64);
+      pop_param(u, Type.Word64);
+      pop_param(u, Type.Word64);
       call_64 (u, Builtin.mul64);
       RETURN;
     END;
@@ -1910,6 +1913,7 @@ CONST SignName = ARRAY Sign OF TEXT { " P", " N", " X" };
 
 PROCEDURE div (u: U;  t: IType;  a, b: Sign) =
   (* s1.t := s1.t DIV s0.t ; pop *)
+  VAR builtin: Builtin;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("div");
@@ -1920,11 +1924,14 @@ PROCEDURE div (u: U;  t: IType;  a, b: Sign) =
     END;
 
     IF Is64(t) THEN
-      IF t = Type.Int64 THEN
-        call_64 (u, Builtin.div64);
-      ELSE
-        call_64 (u, Builtin.udiv64);
+      CASE t OF Type.Int64  => builtin := Builtin.div64;
+              | Type.Word64 => builtin := Builtin.udiv64;
+              ELSE <* ASSERT FALSE *>
       END;
+      start_int_proc (u, builtin);
+      pop_param(u, Type.Word64);
+      pop_param(u, Type.Word64);
+      call_64 (u, builtin);
       RETURN;
     END;
 
@@ -1938,6 +1945,7 @@ PROCEDURE div (u: U;  t: IType;  a, b: Sign) =
 
 PROCEDURE mod (u: U;  t: IType;  a, b: Sign) =
   (* s1.t := s1.t MOD s0.t ; pop *)
+  VAR builtin: Builtin;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("mod");
@@ -1948,11 +1956,14 @@ PROCEDURE mod (u: U;  t: IType;  a, b: Sign) =
     END;
 
     IF Is64(t) THEN
-      IF t = Type.Int64 THEN
-        call_64 (u, Builtin.mod64);
-      ELSE
-        call_64 (u, Builtin.umod64);
+      CASE t OF Type.Int64  => builtin := Builtin.mod64;
+              | Type.Word64 => builtin := Builtin.umod64;
+              ELSE <* ASSERT FALSE *>
       END;
+      start_int_proc (u, builtin);
+      pop_param(u, Type.Word64);
+      pop_param(u, Type.Word64);
+      call_64 (u, builtin);
       RETURN;
     END;
 
@@ -2256,7 +2267,7 @@ PROCEDURE shift (u: U;  t: IType) =
     END;
 
     IF Is64(t) THEN
-      call_64 (u, Builtin.shift64);
+      do_shift_64 (u, Builtin.shift64);
       RETURN;
     END;
 
@@ -2387,7 +2398,7 @@ PROCEDURE rotate (u: U;  t: IType) =
     END;
 
     IF Is64(t) THEN
-      call_64 (u, Builtin.rotate64);
+      do_rotate_64 (u, Builtin.rotate64);
       RETURN;
     END;
 
@@ -2420,7 +2431,7 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
           TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
           u.vstack.set_imm(stack0, and);
           IF Is64(t) THEN
-            call_64 (u, Builtin.rotate_left64);
+            do_rotate_64(u, Builtin.rotate_left64);
             RETURN;
           END;
           u.vstack.find(stack1, Force.anytemp);
@@ -2429,7 +2440,7 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
         END
       ELSE
         IF Is64(t) THEN
-          call_64 (u, Builtin.rotate_left64);
+          do_rotate_64(u, Builtin.rotate_left64);
           RETURN;
         END;
         u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
@@ -2473,7 +2484,7 @@ PROCEDURE rotate_right (u: U;  t: IType) =
           TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
           u.vstack.set_imm(stack0, and);
           IF Is64(t) THEN
-            call_64 (u, Builtin.rotate_right64);
+            do_rotate_64(u, Builtin.rotate_right64);
             RETURN;
           END;
           u.vstack.find(stack1, Force.anytemp);
@@ -2482,7 +2493,7 @@ PROCEDURE rotate_right (u: U;  t: IType) =
         END
       ELSE
         IF Is64(t) THEN
-          call_64 (u, Builtin.rotate_right64);
+          do_rotate_64(u, Builtin.rotate_right64);
           RETURN;
         END;
         u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
@@ -2533,11 +2544,16 @@ PROCEDURE extract (u: U;  t: IType;  sign: BOOLEAN) =
     END;
 
     IF Is64(t) THEN
+      start_int_proc (u, Builtin.extract64);
       IF sign THEN
-        u.vstack.pushimmT (TInt.One, Type.Word64);
+        u.vstack.pushimmT (TInt.One, Type.Word32);
       ELSE
-        u.vstack.pushimmT (TZero, Type.Word64);
+        u.vstack.pushimmT (TZero, Type.Word32);
       END;
+      pop_param(u, Type.Word32); (* sign extend *)
+      pop_param(u, Type.Word32); (* n *)
+      pop_param(u, Type.Word32); (* m *)
+      pop_param(u, Type.Word64); (* value *)
       call_64 (u, Builtin.extract64);
       RETURN;
     END;
@@ -2558,7 +2574,7 @@ PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
     END;
 
     IF Is64(t) THEN
-      u.vstack.pushimmI(n, Type.Word64);
+      u.vstack.pushimmI(n, Type.Word32);
       extract(u, t, sign);
       RETURN;
     END;
@@ -2580,8 +2596,8 @@ PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
     END;
 
     IF Is64(t) THEN
-      u.vstack.pushimmI(n, Type.Word64);
-      u.vstack.pushimmI(m, Type.Word64);
+      u.vstack.pushimmI(m, Type.Word32);
+      u.vstack.pushimmI(n, Type.Word32);
       extract(u, t, sign);
       RETURN;
     END;
@@ -2599,6 +2615,11 @@ PROCEDURE insert  (u: U;  t: IType) =
     END;
 
     IF Is64(t) THEN
+      start_int_proc (u, Builtin.insert64);
+      pop_param(u, Type.Word32);
+      pop_param(u, Type.Word32);
+      pop_param(u, Type.Word64);
+      pop_param(u, Type.Word64);
       call_64 (u, Builtin.insert64);
       RETURN;
     END;
@@ -2617,8 +2638,8 @@ PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
     END;
 
     IF Is64(t) THEN
-      u.vstack.pushimmI(n, Type.Word64);
-      insert(u, t);
+      u.vstack.pushimmI(n, Type.Word32);
+      u.insert(t);
       RETURN;
     END;
 
@@ -2637,9 +2658,9 @@ PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
     END;
 
     IF Is64(t) THEN
-      u.vstack.pushimmI(m, Type.Word64);
-      u.vstack.pushimmI(n, Type.Word64);
-      insert(u, t);
+      u.vstack.pushimmI(m, Type.Word32);
+      u.vstack.pushimmI(n, Type.Word32);
+      u.insert(t);
       RETURN;
     END;
 
@@ -3008,10 +3029,9 @@ TYPE
 TYPE
   BP = RECORD
     name     : TEXT;
-    n_params : INTEGER;
+    n_params : INTEGER; (* counted in 32bit words *)
     ret_type : Type;
     lang     : TEXT;
-    is64     : [0..1] := 0;
   END;
 
 CONST
@@ -3037,22 +3057,22 @@ CONST
      * by callee, but name is not __stdcall, call_64 pokes
      * the parameter size to 0
      *)
-    BP { "_allmul",          2, Type.Word64, "C", 1 }, (* 64bit multiply; signed or unsigned *)
-    BP { "_aulldiv",         2, Type.Word64, "C", 1 }, (* 64bit unsigned divide *)
-    BP { "_aullrem",         2, Type.Word64, "C", 1 }, (* 64bit unsigned mod/remainder *)
+    BP { "_allmul",          0, Type.Word64, "C" }, (* 64bit multiply; signed or unsigned *)
+    BP { "_aulldiv",         0, Type.Word64, "C" }, (* 64bit unsigned divide *)
+    BP { "_aullrem",         0, Type.Word64, "C" }, (* 64bit unsigned mod/remainder *)
 
     (* custom calling convention: value in edx:eax, shift in cl (we use all of ecx) *)
-    BP { "_allshl",          0, Type.Word64, "C", 1 }, (* 64bit shift left *)
-    BP { "_aullshr",         0, Type.Word64, "C", 1 }, (* 64bit unsigned shift right *)
+    BP { "_allshl",          0, Type.Word64, "C" }, (* 64bit shift left *)
+    BP { "_aullshr",         0, Type.Word64, "C" }, (* 64bit unsigned shift right *)
 
-    BP { "m3_div64",         2, Type.Int64,  "__stdcall", 1 },
-    BP { "m3_mod64",         2, Type.Int64,  "__stdcall", 1 },
-    BP { "m3_shift64",       2, Type.Word64, "__stdcall", 1 },
-    BP { "m3_rotate_left64", 2, Type.Word64, "__stdcall", 1 },
-    BP { "m3_rotate_right64",2, Type.Word64, "__stdcall", 1 },
-    BP { "m3_rotate64",      2, Type.Word64, "__stdcall", 1 },
-    BP { "m3_insert64",      4, Type.Word64, "__stdcall", 1 },
-    BP { "m3_extract64",     4, Type.Word64, "__stdcall", 1 }
+    BP { "m3_div64",         4, Type.Int64,  "__stdcall" },
+    BP { "m3_mod64",         4, Type.Int64,  "__stdcall" },
+    BP { "m3_shift64",       3, Type.Word64, "__stdcall" },
+    BP { "m3_rotate_left64", 3, Type.Word64, "__stdcall" },
+    BP { "m3_rotate_right64",3, Type.Word64, "__stdcall" },
+    BP { "m3_rotate64",      3, Type.Word64, "__stdcall" },
+    BP { "m3_insert64",      6, Type.Word64, "__stdcall" },
+    BP { "m3_extract64",     5, Type.Word64, "__stdcall" }
   };
 
 
@@ -3061,15 +3081,11 @@ PROCEDURE start_int_proc (u: U;  b: Builtin) =
     WITH proc = u.builtins[b],
          desc = BuiltinDesc [b] DO
       IF proc = NIL THEN
-        WITH is64 = desc.is64,
-             paramSizeAndAlign = 4 * (1 + is64),
-             paramType = ARRAY [0..1] OF Type{Type.Addr, Type.Word64}[is64] DO
-          proc := import_procedure (u, M3ID.Add (desc.name),
-                                    desc.n_params, desc.ret_type,
-                                    Target.FindConvention (desc.lang));
-          FOR i := 1 TO desc.n_params DO
-            EVAL declare_param (u, M3ID.NoID, paramSizeAndAlign, paramSizeAndAlign, paramType, 0, FALSE, FALSE, 100);
-          END;
+        proc := import_procedure (u, M3ID.Add (desc.name),
+                                  desc.n_params, desc.ret_type,
+                                  Target.FindConvention (desc.lang));
+        FOR i := 1 TO desc.n_params DO
+          EVAL declare_param (u, M3ID.NoID, 4, 4, Type.Word32, 0, FALSE, FALSE, 100);
         END;
       END;
       start_call_direct (u, proc, 0, desc.ret_type);
@@ -3491,28 +3507,22 @@ PROCEDURE index_address (u: U;  t: IType;  size: INTEGER) =
 (*------------------------------------------------------- procedure calls ---*)
 
 PROCEDURE call_64 (u: U; builtin: Builtin) =
- VAR n_params := BuiltinDesc[builtin].n_params;
   BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("call_64");
-      u.wr.OutT  (BuiltinDesc[builtin].name);
-      u.wr.Int   (n_params);
-      u.wr.NL    ();
-    END;
-    start_int_proc(u, builtin);
-    FOR i := 0 TO n_params - 1 DO
-      load_stack_param(u, Type.Word64, n_params - 1 - i);
-    END;
-    u.vstack.discard(n_params);
 
-    (* All the 64bit functions pop their parameters, even if they are __cdecl-decorated. *)
+    (* all 64bit helpers pop their parameters, even if they are __cdecl named. *)
 
     u.call_param_size[u.in_proc_call - 1] := 0;
 
+    (* There is a problem with our register bookkeeping, such
+     * that we can't preserve non volatiles across function calls,
+     * and we even get confused about volatiles (they
+     * should be computed after the function call, not before).
+     *)
+
     u.vstack.all_to_mem(); (* hack *)
-    u.vstack.unlock(); (* hack *)
 
     call_int_proc (u, builtin);
+
   END call_64;
 
 PROCEDURE do_shift_64 (u: U; builtin: Builtin) =
@@ -3526,9 +3536,17 @@ PROCEDURE do_shift_64 (u: U; builtin: Builtin) =
       u.vstack.find(stack1, Force.regset, RegSet { Codex86.EAX, Codex86.EDX });
       u.vstack.discard (2);
       start_int_proc (u, builtin);
-      call_int_proc (u, builtin);
+      call_64 (u, builtin);
     END;
   END do_shift_64;
+
+PROCEDURE do_rotate_64 (u: U; builtin: Builtin) =
+  BEGIN
+    start_int_proc (u, builtin);
+    pop_param(u, Type.Word32); (* shift count *)
+    pop_param(u, Type.Word64); (* value to shift *)
+    call_64 (u, builtin);
+  END do_rotate_64;
 
 PROCEDURE start_call_direct (u: U;  p: Proc;  lev: INTEGER;  t: Type) =
   (* begin a procedure call to a procedure at static level 'lev'. *)
