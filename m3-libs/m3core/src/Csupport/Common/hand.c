@@ -718,8 +718,11 @@ void __cdecl set_singleton
 
 #ifdef _WIN32
 
-uint64 __stdcall m3_udiv64(uint64 a, uint64 b) { return (a / b); }
-uint64 __stdcall m3_umod64(uint64 a, uint64 b) { return (a % b); }
+/* Several functions are "missing" here because we
+ * call the C compiler helper functions directly.
+ * e.g. multiply, unsigned div/mod, shift left/right.
+ * Also some operations are generated inline, e.g. add, subtract, compare, and, or, xor, not, neg, abs.
+ */
 
 uint64 _rotl64(uint64 value, int shift);
 uint64 _rotr64(uint64 value, int shift);
