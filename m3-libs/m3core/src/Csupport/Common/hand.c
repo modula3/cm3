@@ -690,18 +690,18 @@ static void __cdecl set_range_new
       /* no bits to set */
   } else {
       ulong a_word = a / SET_GRAIN;
-      ulong a_bit  = a % SET_GRAIN;
       ulong b_word = b / SET_GRAIN;
-      ulong b_bit  = b % SET_GRAIN;
       ulong i;
+      ulong high_bits = HIGH_BITS(a % SET_GRAIN);
+      ulong low_bits = LOW_BITS(b % SET_GRAIN);
 
       if (a_word == b_word) {
-          s [a_word] |= (HIGH_BITS(a_bit) & LOW_BITS(b_bit));
+          s [a_word] |= (high_bits & low_bits);
       } else {
-          s [a_word] |= HIGH_BITS(a_bit);
+          s [a_word] |= high_bits;
           for (i = a_word + 1; i < b_word; ++i)
             s[i] = ~0UL;
-          s [b_word] |= LOW_BITS(b_bit);
+          s [b_word] |= low_bits;
       }
     }
 }
