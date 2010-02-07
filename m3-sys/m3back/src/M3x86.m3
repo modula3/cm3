@@ -1737,10 +1737,9 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
         END;
 
         (* do the bookkeeping about the loads *)
+        (* previous contents of stack0 was just an address, no loop over size *)
 
-        FOR i := 0 TO size - 1 DO
-          u.vstack.dealloc_reg(stack0, operandPart := i);
-        END;
+        u.vstack.dealloc_reg(stack0, operandPart := 0);
         FOR i := 0 TO size - 1 DO
           u.vstack.set_reg(stack0, newreg[i], operandPart := i);
         END;
