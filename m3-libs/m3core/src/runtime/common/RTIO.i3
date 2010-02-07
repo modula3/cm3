@@ -56,6 +56,14 @@ PROCEDURE PutG (a: LONGREAL);
 PROCEDURE PutBytes(a: ADDRESS; count: INTEGER);
 (* hex *)
 
+<* EXTERNAL RTIO__PutLong *>
+PROCEDURE PutLong (i: LONGINT);
+(* == printf("%I64d" or "%lld", i) *)
+
+<* EXTERNAL RTIO__PutLongHex *>
+PROCEDURE PutLongHex (i: LONGINT);
+(* == printf("%I64x" or "%llx", i) *)
+
 PROCEDURE Flush ();
 (* Flush any buffered characters to the operating system. *)
 
