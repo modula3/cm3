@@ -1220,13 +1220,13 @@ static void TestInsert()
     unsigned m = { 0 };
     unsigned n = { 0 };
 
-    for (a32 = 0; a32 < 15; ++a32)
+    for (a32 = 0; a32 <= 30; ++a32)
     {
-        for (b32 = 0; b32 < 15; ++b32)
+        for (b32 = 0; b32 <= 20; ++b32)
         {
-            for (m = 0; m < 3; ++m)
+            for (m = 0; m <= 7; ++m)
             {
-                for (n = 0; n < 3; ++n)
+                for (n = 0; n <= 7; ++n)
                 {
                     uint32 result = m3test_insert32(a32, b32, m, n);
                     printf("insert32(a:0x%"I64"X, b:0x%"I64"X, m:0x%"I64"X, n:0x%"I64"X):0x%"I64"X\n", 
@@ -1242,13 +1242,13 @@ static void TestInsert()
         }
     }
 
-    for (a64 = 0; a64 < 15; ++a64)
+    for (a64 = 0; a64 <= 33; ++a64)
     {
-        for (b64 = 0; b64 < 15; ++b64)
+        for (b64 = 0; b64 <= 30; ++b64)
         {
-            for (m = 0; m < 3; ++m)
+            for (m = 0; m <= 7; ++m)
             {
-                for (n = 0; n < 3; ++n)
+                for (n = 0; n <= 7; ++n)
                 {
                     uint64 result = m3_insert64(a64, b64, m, n);
                     printf("insert64(a:0x%"I64"X, b:0x%"I64"X, m:0x%"I64"X, n:0x%"I64"X):0x%"I64"X\n", 
@@ -1273,11 +1273,11 @@ static void TestExtract()
     unsigned m = { 0 };
     unsigned n = { 0 };
 
-    for (a32 = 0; a32 < 15; ++a32)
+    for (a32 = 0; a32 <= 30; ++a32)
     {
-        for (m = 0; m < 3; ++m)
+        for (m = 0; m <= 7; ++m)
         {
-            for (n = 0; n < 3; ++n)
+            for (n = 0; n <= 7; ++n)
             {
                 for (sign_extend = 0; sign_extend < 2; ++sign_extend)
                 {
@@ -1295,11 +1295,11 @@ static void TestExtract()
         }
     }
 
-    for (a64 = 0; a64 < 15; ++a64)
+    for (a64 = 0; a64 <= 33; ++a64)
     {
-        for (m = 0; m < 3; ++m)
+        for (m = 0; m <= 7; ++m)
         {
-            for (n = 0; n < 3; ++n)
+            for (n = 0; n <= 7; ++n)
             {
                 for (sign_extend = 0; sign_extend < 2; ++sign_extend)
                 {
