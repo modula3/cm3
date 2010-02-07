@@ -1220,9 +1220,9 @@ static void TestInsert()
     unsigned m = { 0 };
     unsigned n = { 0 };
 
-    for (a32 = 0; a32 <= 30; ++a32)
+    for (a32 = 0; a32 <= 33; ++a32)
     {
-        for (b32 = 0; b32 <= 20; ++b32)
+        for (b32 = 0; b32 <= 33; ++b32)
         {
             for (m = 0; m <= 7; ++m)
             {
@@ -1244,7 +1244,7 @@ static void TestInsert()
 
     for (a64 = 0; a64 <= 33; ++a64)
     {
-        for (b64 = 0; b64 <= 30; ++b64)
+        for (b64 = 0; b64 <= 33; ++b64)
         {
             for (m = 0; m <= 7; ++m)
             {
@@ -1273,7 +1273,7 @@ static void TestExtract()
     unsigned m = { 0 };
     unsigned n = { 0 };
 
-    for (a32 = 0; a32 <= 30; ++a32)
+    for (a32 = 0; a32 <= 33; ++a32)
     {
         for (m = 0; m <= 7; ++m)
         {
