@@ -4069,10 +4069,10 @@ PROCEDURE fltregcmp (u: U; tozero: BOOLEAN): BOOLEAN =
 PROCEDURE condset (u: U; cond: Cond; t: ZType) =
   VAR reversed := FALSE;
   BEGIN
-    IF NOT Target.FloatType[t] THEN
-      reversed := intregcmp(u, cond < Cond.E, t);
-    ELSE
+    IF Target.FloatType[t] THEN
       reversed := fltregcmp(u, cond < Cond.E);
+    ELSE
+      reversed := intregcmp(u, cond < Cond.E, t);
     END;
 
     IF reversed THEN
