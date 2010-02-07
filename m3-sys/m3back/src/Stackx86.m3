@@ -852,7 +852,7 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
 
           t.cg.get_frame(indreg, src_mvar.var.parent, t.current_proc);
           FOR i := 0 TO size - 1 DO
-            t.cg.load_ind(destreg[i], t.cg.reg[indreg], src_mvar.mvar_offset + src_mvar.var.offset,
+            t.cg.load_ind(destreg[i], t.cg.reg[indreg], src_mvar.mvar_offset + src_mvar.var.offset + i * 4,
                           src_mvar.mvar_type);
             set_reg(t, t.stacktop, destreg[i], operandPart := i);
           END;
