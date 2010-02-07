@@ -1882,10 +1882,7 @@ PROCEDURE multiply (u: U;  t: AType) =
       pop_param(u, Type.Word64);
       pop_param(u, Type.Word64);
       call_64 (u, Builtin.mul64);
-      RETURN;
-    END;
-
-    IF Target.FloatType [t] THEN
+    ELSIF Target.FloatType [t] THEN
       u.cg.binFOp(FOp.fMUL, 1);
       u.vstack.discard(1);
     ELSIF t = Type.Int32 THEN
