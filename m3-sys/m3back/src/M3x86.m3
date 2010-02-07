@@ -2266,7 +2266,7 @@ PROCEDURE shift (u: U;  t: IType) =
     END;
 
     IF Is64(t) THEN
-      do_shift_64 (u, Builtin.shift64);
+      do_rotate_or_shift_64 (u, Builtin.shift64);
       RETURN;
     END;
 
@@ -2300,7 +2300,7 @@ PROCEDURE shift_left   (u: U;  t: IType) =
           u.vstack.set_imm(stack0, and);
           IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
             IF Is64(t) THEN
-              do_shift_64 (u, Builtin.shift_left_64);
+              do_custom_calling_convention_shift_64 (u, Builtin.shift_left_64);
               RETURN;
             END;
             u.vstack.find(stack1, Force.anytemp);
@@ -2311,7 +2311,7 @@ PROCEDURE shift_left   (u: U;  t: IType) =
       ELSE
         IF (u.vstack.loc(stack1) # OLoc.imm) OR TInt.NE(u.vstack.op(stack1).imm, TZero) THEN
           IF Is64(t) THEN
-            do_shift_64 (u, Builtin.shift_left_64);
+            do_custom_calling_convention_shift_64 (u, Builtin.shift_left_64);
             RETURN;
           END;
           u.vstack.find(stack0, Force.regset, RegSet {ECX});
@@ -2357,7 +2357,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
           u.vstack.set_imm(stack0, and);
           IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
             IF Is64(t) THEN
-              do_shift_64 (u, Builtin.shift_right_64);
+              do_custom_calling_convention_shift_64 (u, Builtin.shift_right_64);
               RETURN;
             END;
             u.vstack.find(stack1, Force.anytemp);
@@ -2368,7 +2368,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
       ELSE
         IF ((u.vstack.loc(stack1) # OLoc.imm) OR (TInt.NE(u.vstack.op(stack1).imm, TZero))) THEN
           IF Is64(t) THEN
-            do_shift_64 (u, Builtin.shift_right_64);
+            do_custom_calling_convention_shift_64 (u, Builtin.shift_right_64);
             RETURN;
           END;
           u.vstack.find(stack0, Force.regset, RegSet {ECX});
@@ -2397,7 +2397,7 @@ PROCEDURE rotate (u: U;  t: IType) =
     END;
 
     IF Is64(t) THEN
-      do_rotate_64 (u, Builtin.rotate64);
+      do_rotate_or_shift_64 (u, Builtin.rotate64);
       RETURN;
     END;
 
@@ -2430,7 +2430,7 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
           TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
           u.vstack.set_imm(stack0, and);
           IF Is64(t) THEN
-            do_rotate_64(u, Builtin.rotate_left64);
+            do_rotate_or_shift_64(u, Builtin.rotate_left64);
             RETURN;
           END;
           u.vstack.find(stack1, Force.anytemp);
@@ -2439,7 +2439,7 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
         END
       ELSE
         IF Is64(t) THEN
-          do_rotate_64(u, Builtin.rotate_left64);
+          do_rotate_or_shift_64(u, Builtin.rotate_left64);
           RETURN;
         END;
         u.vstack.find(stack0, Force.regset, RegSet {ECX});
@@ -2483,7 +2483,7 @@ PROCEDURE rotate_right (u: U;  t: IType) =
           TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
           u.vstack.set_imm(stack0, and);
           IF Is64(t) THEN
-            do_rotate_64(u, Builtin.rotate_right64);
+            do_rotate_or_shift_64(u, Builtin.rotate_right64);
             RETURN;
           END;
           u.vstack.find(stack1, Force.anytemp);
@@ -2492,7 +2492,7 @@ PROCEDURE rotate_right (u: U;  t: IType) =
         END
       ELSE
         IF Is64(t) THEN
-          do_rotate_64(u, Builtin.rotate_right64);
+          do_rotate_or_shift_64(u, Builtin.rotate_right64);
           RETURN;
         END;
         u.vstack.find(stack0, Force.regset, RegSet {ECX});
@@ -3523,13 +3523,13 @@ PROCEDURE call_64 (u: U; builtin: Builtin) =
 
   END call_64;
 
-PROCEDURE do_shift_64 (u: U; builtin: Builtin) =
+PROCEDURE do_custom_calling_convention_shift_64 (u: U; builtin: Builtin) =
   BEGIN
 
     u.vstack.unlock();
 
-    WITH stack0 = u.vstack.pos(0, "do_shift_64"),
-         stack1 = u.vstack.pos(1, "do_shift_64") DO
+    WITH stack0 = u.vstack.pos(0, "do_custom_calling_convention_shift_64"),
+         stack1 = u.vstack.pos(1, "do_custom_calling_convention_shift_64") DO
 
       (* custom calling convention: value in edx:eax, shift in cl *)
 
@@ -3539,15 +3539,15 @@ PROCEDURE do_shift_64 (u: U; builtin: Builtin) =
       start_int_proc (u, builtin);
       call_64 (u, builtin);
     END;
-  END do_shift_64;
+  END do_custom_calling_convention_shift_64;
 
-PROCEDURE do_rotate_64 (u: U; builtin: Builtin) =
+PROCEDURE do_rotate_or_shift_64 (u: U; builtin: Builtin) =
   BEGIN
     start_int_proc (u, builtin);
     pop_param(u, Type.Word32); (* shift count *)
     pop_param(u, Type.Word64); (* value to shift *)
     call_64 (u, builtin);
-  END do_rotate_64;
+  END do_rotate_or_shift_64;
 
 PROCEDURE start_call_direct (u: U;  p: Proc;  lev: INTEGER;  t: Type) =
   (* begin a procedure call to a procedure at static level 'lev'. *)
