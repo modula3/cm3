@@ -4146,48 +4146,49 @@ PROCEDURE check_atomic_types(u: U; a, b: Type) =
 PROCEDURE store_ordered (x: U;  t: ZType;  u: MType;  <*UNUSED*>order: MemoryOrder) =
 (* Mem [s1.A].u := s0.t; pop (2) *)
   BEGIN
+    x.vstack.discard(2);
     check_atomic_types(x, t, u);
     x.vstack.unlock();
     x.fence(MemoryOrder.Sequential);
-    WITH stack0 = x.vstack.pos(0, "store_ordered"),
+    (*WITH stack0 = x.vstack.pos(0, "store_ordered"),
          stack1 = x.vstack.pos(1, "store_ordered") DO
       x.vstack.find(stack0, Force.anyreg);
       x.vstack.find(stack1, Force.mem);
       x.vstack.pop(x.vstack.op(stack1).mvar);
       x.vstack.discard(1);
-    END;
+    END;*)
     x.fence(MemoryOrder.Sequential);
   END store_ordered;
 
-PROCEDURE load_ordered (x: U;  t: MType;  u: ZType;  <*UNUSED*>order: MemoryOrder) =
+PROCEDURE load_ordered (x: U;  <*UNUSED*>t: MType;  <*UNUSED*>u: ZType;  <*UNUSED*>order: MemoryOrder) =
 (* s0.u := Mem [s0.A].t  *)
   BEGIN
-    check_atomic_types(x, t, u);
     x.vstack.unlock();
     x.fence(MemoryOrder.Sequential);
-    WITH stack0 = x.vstack.pos(0, "store_ordered") DO
+    (*WITH stack0 = x.vstack.pos(0, "store_ordered") DO
       x.vstack.find(stack0, Force.mem);
       x.vstack.find(stack0, Force.anyreg);
-    END;
+    END;*)
     x.fence(MemoryOrder.Sequential);
   END load_ordered;
 
 PROCEDURE exchange (u: U;  t: MType;  z: ZType;  <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A + o].t;  Mem [s1.A + o].t := s0.u;  s0.u := tmp;  pop *)
   BEGIN
+    u.vstack.discard(1);
     check_atomic_types(u, t, z);
     u.vstack.unlock();
-    WITH stack0 = u.vstack.pos(0, "exchange"),
+    (*WITH stack0 = u.vstack.pos(0, "exchange"),
          stack1 = u.vstack.pos(1, "exchange") DO
       u.vstack.find(stack0, Force.anyreg);
       u.vstack.find(stack1, Force.mem);
       u.cg.swapOp(u.vstack.op(stack0), u.vstack.op(stack1));
       u.vstack.swap();
       u.vstack.discard(1);
-    END;
+    END;*)
   END exchange;
 
-PROCEDURE compare_exchange (x: U;  t: MType;  u: ZType;  r: IType;
+PROCEDURE compare_exchange (x: U;  t: MType;  u: ZType;  <*UNUSED*>r: IType;
                             <*UNUSED*>success, failure: MemoryOrder) =
 (* t1 := Mem[s1.A].t;  t2 := Mem[s2.A].t;
    IF (t1.u = t2.u)
@@ -4195,9 +4196,10 @@ PROCEDURE compare_exchange (x: U;  t: MType;  u: ZType;  r: IType;
    ELSE Mem [s1.A].t := t2;   s2.r := 0; pop(2);
    END; *)
   BEGIN
+    x.vstack.discard(2);
     check_atomic_types(x, t, u);
     x.vstack.unlock();
-    WITH newValue                        = x.vstack.pos(0, "compare_exchange"),
+    (*WITH newValue                        = x.vstack.pos(0, "compare_exchange"),
          compareValueAndOldValueIfFailed = x.vstack.pos(1, "compare_exchange"),
          atomicVariable                  = x.vstack.pos(2, "compare_exchange") DO
       x.vstack.find(compareValueAndOldValueIfFailed, Force.regset, RegSet{EAX});
@@ -4207,7 +4209,7 @@ PROCEDURE compare_exchange (x: U;  t: MType;  u: ZType;  r: IType;
       x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.vstack.op(newValue));
       x.vstack.discard(3);
       condset(x, Cond.E, r);
-    END;
+    END;*)
   END compare_exchange;
 
 PROCEDURE fence (u: U;  <*UNUSED*>order: MemoryOrder) =
@@ -4231,17 +4233,18 @@ PROCEDURE fence (u: U;  <*UNUSED*>order: MemoryOrder) =
     u.vstack.discard(1);
   END fence;
 
-CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oADD, Op.oSUB, Op.oOR, Op.oAND, Op.oXOR };
+<*UNUSED*>CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oADD, Op.oSUB, Op.oOR, Op.oAND, Op.oXOR };
 
-PROCEDURE fetch_and_op (x: U;  op: AtomicOp;  t: MType;  z: ZType;
+PROCEDURE fetch_and_op (x: U;  <*UNUSED*>op: AtomicOp;  t: MType;  z: ZType;
                         <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A].t;
    Mem [s1.A].t := tmp op s0.u;
    s1.u := tmp op s0.u; pop *)
   BEGIN
+    x.vstack.discard(1);
     check_atomic_types(x, t, z);
     x.vstack.unlock();
-    WITH stack0 = x.vstack.pos(0, "fetch_and_op"),
+    (*WITH stack0 = x.vstack.pos(0, "fetch_and_op"),
          stack1 = x.vstack.pos(1, "fetch_and_op") DO
       x.vstack.find(stack0, Force.anyreg);
       x.vstack.find(stack1, Force.mem);
@@ -4252,7 +4255,7 @@ PROCEDURE fetch_and_op (x: U;  op: AtomicOp;  t: MType;  z: ZType;
     x.vstack.pushnew(z, Force.anyreg);
     WITH stop0 = x.vstack.op(x.vstack.pos(0, "fetch_and_op")) DO
       stop0.mvar.var.stack_temp := FALSE;
-    END;
+    END;*)
   END fetch_and_op;
 
 BEGIN
