@@ -19,6 +19,7 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs, OperandSize, GetOperandSize;
 FROM M3x86Rep IMPORT RegistersForByteOperations, RegName, SplitOperand, Is64, SplitImm, OperandPart, GetTypeSize, TZero;
+FROM M3x86Rep IMPORT EAX, EDX, ESP, EBP;
 
 FROM M3ObjFile IMPORT Seg;
 

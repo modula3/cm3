@@ -251,15 +251,6 @@ CONST opcode = ARRAY Op OF OpCode
     OpCode { "RET"  ,-1,    -1,    16_C3, 0, -1,    -1    },
     OpCode { "NOP",  -1,    -1,    -1,    0, -1,    -1    } };
 
-CONST EAX = M3x86Rep.EAX;
-      ECX = M3x86Rep.ECX;
-      EDX = M3x86Rep.EDX;
-      EBX = M3x86Rep.EBX;
-      ESP = M3x86Rep.ESP;
-      EBP = M3x86Rep.EBP;
-      ESI = M3x86Rep.ESI;
-      EDI = M3x86Rep.EDI;
-
 PROCEDURE New (parent: M3x86Rep.U; wr: Wrx86.T): T;
 
 END Codex86.
