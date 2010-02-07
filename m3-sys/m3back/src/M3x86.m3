@@ -1356,18 +1356,18 @@ PROCEDURE begin_procedure (u: U;  p: Proc) =
 
     u.obj.begin_procedure(realproc.symbol);
 
-    u.cg.pushOp(u.cg.reg[Codex86.EBP]);
-    u.cg.movOp(u.cg.reg[Codex86.EBP], u.cg.reg[Codex86.ESP]);
+    u.cg.pushOp(u.cg.reg[EBP]);
+    u.cg.movOp(u.cg.reg[EBP], u.cg.reg[ESP]);
 
-    u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], Target.Word16.max);
+    u.cg.immOp(Op.oSUB, u.cg.reg[ESP], Target.Word16.max);
     u.procframe_ptr := u.obj.cursor(Seg.Text) - 4;
 
-    u.cg.pushOp(u.cg.reg[Codex86.EBX]);
-    u.cg.pushOp(u.cg.reg[Codex86.ESI]);
-    u.cg.pushOp(u.cg.reg[Codex86.EDI]);
+    u.cg.pushOp(u.cg.reg[EBX]);
+    u.cg.pushOp(u.cg.reg[ESI]);
+    u.cg.pushOp(u.cg.reg[EDI]);
 
     IF u.current_proc.lev # 0 THEN
-      u.cg.store_ind(u.cg.reg[Codex86.ECX], u.cg.reg[Codex86.EBP],
+      u.cg.store_ind(u.cg.reg[ECX], u.cg.reg[EBP],
                      -4, Type.Addr);
     END;
 
@@ -1531,7 +1531,7 @@ PROCEDURE if_compare (u: U;  t: ZType;  op: CompareOp;  label: Label;
         END;
         u.vstack.discard (2);
         u.vstack.unlock ();
-        u.vstack.corrupt (Codex86.EAX, operandPart := 0);
+        u.vstack.corrupt (EAX, operandPart := 0);
         u.cg.noargFOp (FOp.fNSTSWAX);
         u.cg.noargOp (Op.oSAHF);
     END;
@@ -1581,9 +1581,9 @@ PROCEDURE exit_proc (u: U; t: Type) =
         IF Target.FloatType[t] THEN
           u.cg.f_exitproc();
         ELSIF Is64(t) THEN
-          u.vstack.find(stack0, Force.regset, RegSet { Codex86.EAX, Codex86.EDX });
+          u.vstack.find(stack0, Force.regset, RegSet { EAX, EDX });
         ELSE
-          u.vstack.find(stack0, Force.regset, RegSet { Codex86.EAX });
+          u.vstack.find(stack0, Force.regset, RegSet { EAX });
         END
       END;
 
@@ -1627,9 +1627,9 @@ PROCEDURE procedure_epilogue (u: U) =
     ELSE
       u.cg.set_label(u.exit_proclabel);
 
-      u.cg.popOp(u.cg.reg[Codex86.EDI]);
-      u.cg.popOp(u.cg.reg[Codex86.ESI]);
-      u.cg.popOp(u.cg.reg[Codex86.EBX]);
+      u.cg.popOp(u.cg.reg[EDI]);
+      u.cg.popOp(u.cg.reg[ESI]);
+      u.cg.popOp(u.cg.reg[EBX]);
 
       u.cg.noargOp(Op.oLEAVE);
       IF callee_cleans THEN
@@ -2315,7 +2315,7 @@ PROCEDURE shift_left   (u: U;  t: IType) =
             do_shift_64 (u, Builtin.shift_left_64);
             RETURN;
           END;
-          u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
+          u.vstack.find(stack0, Force.regset, RegSet {ECX});
           u.vstack.find(stack1, Force.anytemp);
 
           IF u.vstack.loc(stack1) = OLoc.imm THEN
@@ -2372,7 +2372,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
             do_shift_64 (u, Builtin.shift_right_64);
             RETURN;
           END;
-          u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
+          u.vstack.find(stack0, Force.regset, RegSet {ECX});
           u.vstack.find(stack1, Force.anytemp);
 
           IF u.vstack.loc(stack1) = OLoc.imm THEN
@@ -2443,7 +2443,7 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
           do_rotate_64(u, Builtin.rotate_left64);
           RETURN;
         END;
-        u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
+        u.vstack.find(stack0, Force.regset, RegSet {ECX});
         u.vstack.find(stack1, Force.anytemp);
 
         IF u.vstack.loc(stack1) = OLoc.imm THEN
@@ -2496,7 +2496,7 @@ PROCEDURE rotate_right (u: U;  t: IType) =
           do_rotate_64(u, Builtin.rotate_right64);
           RETURN;
         END;
-        u.vstack.find(stack0, Force.regset, RegSet {Codex86.ECX});
+        u.vstack.find(stack0, Force.regset, RegSet {ECX});
         u.vstack.find(stack1, Force.anytemp);
 
         IF u.vstack.loc(stack1) = OLoc.imm THEN
@@ -2784,8 +2784,8 @@ PROCEDURE inline_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
 PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
   VAR tn, tNMinus1, tsize, tint: Target.Int;
   BEGIN
-    u.vstack.corrupt(Codex86.ECX, operandPart := 0);
-    u.cg.movImmI(u.cg.reg[Codex86.ECX], n);
+    u.vstack.corrupt(ECX, operandPart := 0);
+    u.cg.movImmI(u.cg.reg[ECX], n);
 
     IF forward THEN
       u.cg.noargOp(Op.oCLD);
@@ -2802,8 +2802,8 @@ PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
       IF NOT TInt.Multiply(tNMinus1, tsize, tint) THEN
         u.Err("string_copy: Multiply overflowed");
       END;
-      u.cg.immOp(Op.oADD, u.cg.reg[Codex86.ESI], tint);
-      u.cg.immOp(Op.oADD, u.cg.reg[Codex86.EDI], tint);
+      u.cg.immOp(Op.oADD, u.cg.reg[ESI], tint);
+      u.cg.immOp(Op.oADD, u.cg.reg[EDI], tint);
       u.cg.noargOp(Op.oSTD);
     END;
 
@@ -2853,8 +2853,8 @@ PROCEDURE copy (u: U;  n: INTEGER;  t: MType;  overlap: BOOLEAN) =
 
     WITH stack0 = u.vstack.pos(0, "copy"), stack1 = u.vstack.pos(1, "copy") DO
       IF n > MAXINLINECOPY THEN
-        u.vstack.find(stack0, Force.regset, RegSet { Codex86.ESI } );
-        u.vstack.find(stack1, Force.regset, RegSet { Codex86.EDI } );
+        u.vstack.find(stack0, Force.regset, RegSet { ESI } );
+        u.vstack.find(stack1, Force.regset, RegSet { EDI } );
       ELSE
         u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
         u.vstack.find(stack1, Force.anyreg, RegSet {}, TRUE);
@@ -2864,7 +2864,7 @@ PROCEDURE copy (u: U;  n: INTEGER;  t: MType;  overlap: BOOLEAN) =
     IF overlap AND n > 1 THEN
       forward := u.cg.reserve_labels(1, TRUE);
       end := u.cg.reserve_labels(1, TRUE);
-      u.cg.binOp(Op.oCMP, u.cg.reg[Codex86.ESI], u.cg.reg[Codex86.EDI]);
+      u.cg.binOp(Op.oCMP, u.cg.reg[ESI], u.cg.reg[EDI]);
       u.cg.brOp(Cond.GE, forward);
 
       IF n <= MAXINLINECOPY THEN
@@ -2888,8 +2888,8 @@ PROCEDURE copy (u: U;  n: INTEGER;  t: MType;  overlap: BOOLEAN) =
     END;
 
     IF n > MAXINLINECOPY THEN
-      u.vstack.newdest(u.cg.reg[Codex86.ESI]);
-      u.vstack.newdest(u.cg.reg[Codex86.EDI]);
+      u.vstack.newdest(u.cg.reg[ESI]);
+      u.vstack.newdest(u.cg.reg[EDI]);
     END;
 
     u.vstack.discard(2);
@@ -2974,13 +2974,12 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
     u.vstack.unlock();
 
     IF n > MAXINLINECOPY THEN
-      u.vstack.find(u.vstack.pos(0, "zero"), Force.regset,
-                    RegSet { Codex86.EDI } );
-      u.vstack.corrupt(Codex86.EAX, operandPart := 0);
-      u.vstack.corrupt(Codex86.ECX, operandPart := 0);
+      u.vstack.find(u.vstack.pos(0, "zero"), Force.regset, RegSet { EDI } );
+      u.vstack.corrupt(EAX, operandPart := 0);
+      u.vstack.corrupt(ECX, operandPart := 0);
 
-      u.cg.binOp(Op.oXOR, u.cg.reg[Codex86.EAX], u.cg.reg[Codex86.EAX]);
-      u.cg.movImmI(u.cg.reg[Codex86.ECX], n);
+      u.cg.binOp(Op.oXOR, u.cg.reg[EAX], u.cg.reg[EAX]);
+      u.cg.movImmI(u.cg.reg[ECX], n);
 
       u.cg.noargOp(Op.oCLD);
       u.cg.noargOp(Op.oREP);
@@ -2991,7 +2990,7 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
       ELSE
              u.Err("Illegal size in zero");
       END;
-      u.vstack.newdest(u.cg.reg[Codex86.EDI]);
+      u.vstack.newdest(u.cg.reg[EDI]);
 
     ELSE
       WITH stack0 = u.vstack.pos(0, "zero"), stop0 = u.vstack.op(stack0) DO
@@ -3376,7 +3375,7 @@ PROCEDURE check_eq (u: U;  t: IType;  code: RuntimeError) =
 PROCEDURE reportfault (u: U;  code: RuntimeError) =
   VAR info := ORD (code) + u.lineno * 32;
   BEGIN
-    u.cg.movImmI(u.cg.reg[Codex86.EAX], info);
+    u.cg.movImmI(u.cg.reg[EAX], info);
     u.cg.intCall(u.reportlabel);
     u.usedfault := TRUE;
   END reportfault;
@@ -3399,10 +3398,10 @@ PROCEDURE makereportproc (u: U) =
                                         u.obj.cursor(Seg.Text));
     u.obj.begin_procedure(reportsymbol);
 
-    u.cg.pushOp(u.cg.reg[Codex86.EBP]);
-    u.cg.movOp(u.cg.reg[Codex86.EBP], u.cg.reg[Codex86.ESP]);
+    u.cg.pushOp(u.cg.reg[EBP]);
+    u.cg.movOp(u.cg.reg[EBP], u.cg.reg[ESP]);
 
-    u.cg.pushOp(u.cg.reg[Codex86.EAX]);  (* runtime error code + line number *)
+    u.cg.pushOp(u.cg.reg[EAX]);  (* runtime error code + line number *)
 
     IF (repfault # NIL) THEN
       load_address(u, u.global_var, 0);
@@ -3535,8 +3534,8 @@ PROCEDURE do_shift_64 (u: U; builtin: Builtin) =
 
       (* custom calling convention: value in edx:eax, shift in cl *)
 
-      u.vstack.find(stack0, Force.regset, RegSet { Codex86.ECX });
-      u.vstack.find(stack1, Force.regset, RegSet { Codex86.EAX, Codex86.EDX });
+      u.vstack.find(stack0, Force.regset, RegSet { ECX });
+      u.vstack.find(stack1, Force.regset, RegSet { EAX, EDX });
       u.vstack.discard (2);
       start_int_proc (u, builtin);
       call_64 (u, builtin);
@@ -3621,11 +3620,11 @@ PROCEDURE load_stack_param (u: U; t: MType; depth: INTEGER) =
       IF Target.FloatType [t] THEN
         <* ASSERT depth = 0 *>
         IF t = Type.Reel THEN
-          u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], TInt.Four);
+          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TInt.Four);
         ELSE
-          u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], TInt.Eight);
+          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TInt.Eight);
         END;
-        u.cg.f_storeind(u.cg.reg[Codex86.ESP], 0, t);
+        u.cg.f_storeind(u.cg.reg[ESP], 0, t);
       ELSE
         u.vstack.find(stack, Force.anyregimm);
         size := SplitOperand(u.vstack.op(stack), opA);
@@ -3680,20 +3679,20 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
       (* if the struct is "large", use rep mov to copy it to the machine stack *)
 
       IF TInt.GT(ts, TInt.ThirtyTwo) THEN
-        u.cg.immOp(Op.oSUB, u.cg.reg[Codex86.ESP], ts);
+        u.cg.immOp(Op.oSUB, u.cg.reg[ESP], ts);
 
-        u.vstack.find(stack0, Force.regset, RegSet { Codex86.ESI });
-        u.vstack.corrupt(Codex86.EDI, operandPart := 0);
-        u.vstack.corrupt(Codex86.ECX, operandPart := 0);
+        u.vstack.find(stack0, Force.regset, RegSet { ESI });
+        u.vstack.corrupt(EDI, operandPart := 0);
+        u.vstack.corrupt(ECX, operandPart := 0);
 
-        u.cg.movOp(u.cg.reg[Codex86.EDI], u.cg.reg[Codex86.ESP]);
-        u.cg.movImmI(u.cg.reg[Codex86.ECX], s DIV 4);
+        u.cg.movOp(u.cg.reg[EDI], u.cg.reg[ESP]);
+        u.cg.movImmI(u.cg.reg[ECX], s DIV 4);
 
         u.cg.noargOp(Op.oCLD);
         u.cg.noargOp(Op.oREP);
         u.cg.noargOp(Op.oMOVSD);
 
-        u.vstack.newdest(u.cg.reg[Codex86.ESI]);
+        u.vstack.newdest(u.cg.reg[ESI]);
       ELSE
 
         (* if the struct is "small", use a few load/push to copy it to the machine stack *)
@@ -3862,7 +3861,7 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
         IF NOT TInt.FromInt(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
           u.Err("call_direct: unable to convert param_size to target integer");
         END;
-        u.cg.immOp(Op.oADD, u.cg.reg[Codex86.ESP], call_param_size);
+        u.cg.immOp(Op.oADD, u.cg.reg[ESP], call_param_size);
     END;
 
     IF t = Type.Struct THEN
@@ -3875,10 +3874,9 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
         u.cg.f_pushnew();
       ELSE
         IF Is64(t) THEN
-          u.vstack.pushnew(t, Force.regset, RegSet { Codex86.EAX, Codex86.EDX });
+          u.vstack.pushnew(t, Force.regset, RegSet { EAX, EDX });
         ELSE
-          u.vstack.pushnew(FixReturnValue(u, t), Force.regset,
-                           RegSet { Codex86.EAX });
+          u.vstack.pushnew(FixReturnValue(u, t), Force.regset, RegSet { EAX });
         END;
       END
     END;
@@ -3903,8 +3901,8 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
     u.vstack.releaseall();
 
     IF u.static_link[u.in_proc_call - 1] # NIL THEN
-      (*u.vstack.corrupt(Codex86.ECX, operandPart := 0);*)
-      u.cg.movOp(u.cg.reg[Codex86.ECX],
+      (*u.vstack.corrupt(ECX, operandPart := 0);*)
+      u.cg.movOp(u.cg.reg[ECX],
                  Operand { loc := OLoc.mem, optype := Type.Addr,
                            mvar :=
                              MVar { var := u.static_link[u.in_proc_call - 1],
@@ -3926,7 +3924,7 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
         u.Err("call_indirect: unable to convert param_size to target integer");
       END;
 
-      u.cg.immOp(Op.oADD, u.cg.reg[Codex86.ESP], call_param_size);
+      u.cg.immOp(Op.oADD, u.cg.reg[ESP], call_param_size);
     END;
 
     IF t = Type.Struct THEN
@@ -3938,8 +3936,7 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
         u.vstack.pushnew(t, Force.any);
         u.cg.f_pushnew();
       ELSE
-        u.vstack.pushnew(FixReturnValue(u, t), Force.regset,
-                         RegSet { Codex86.EAX });
+        u.vstack.pushnew(FixReturnValue(u, t), Force.regset, RegSet { EAX });
       END
     END;
 
@@ -3964,11 +3961,11 @@ PROCEDURE FixReturnValue (u: U;  t: Type): Type =
         t := Type.Int32;
 
     | Type.Word8 => (* 8-bit unsigned integer *)
-        u.cg.immOp (Op.oAND, u.cg.reg[Codex86.EAX], Target.Word8.max);  (* EAX &= 16_FF *)
+        u.cg.immOp (Op.oAND, u.cg.reg[EAX], Target.Word8.max);  (* EAX &= 16_FF *)
         t := Type.Word32;
 
     | Type.Word16 => (* 16-bit unsigned integer *)
-        u.cg.immOp (Op.oAND, u.cg.reg[Codex86.EAX], Target.Word16.max);  (* EAX &= 16_FFFF *)
+        u.cg.immOp (Op.oAND, u.cg.reg[EAX], Target.Word16.max);  (* EAX &= 16_FFFF *)
         t := Type.Word32;
 
     ELSE (* value is ok *)
@@ -4027,12 +4024,12 @@ PROCEDURE load_static_link_toC (u: U;  p: Proc) =
     END;
 
     IF realproc.lev = 0 THEN
-      u.vstack.corrupt(Codex86.ECX, operandPart := 0);
-      u.cg.movImmT(u.cg.reg[Codex86.ECX], TZero);
+      u.vstack.corrupt(ECX, operandPart := 0);
+      u.cg.movImmT(u.cg.reg[ECX], TZero);
     ELSE
       u.vstack.unlock();
-      u.vstack.corrupt(Codex86.ECX, operandPart := 0);
-      u.cg.get_frame(Codex86.ECX, realproc.parent, u.current_proc);
+      u.vstack.corrupt(ECX, operandPart := 0);
+      u.cg.get_frame(ECX, realproc.parent, u.current_proc);
     END
   END load_static_link_toC;
 
@@ -4065,7 +4062,7 @@ PROCEDURE fltregcmp (u: U; tozero: BOOLEAN): BOOLEAN =
     END;
 
     u.vstack.unlock();
-    u.vstack.corrupt(Codex86.EAX, operandPart := 0);
+    u.vstack.corrupt(EAX, operandPart := 0);
     u.cg.noargFOp(FOp.fNSTSWAX);
     u.cg.noargOp(Op.oSAHF);
 
@@ -4204,9 +4201,9 @@ PROCEDURE compare_exchange (x: U;  t: MType;  u: ZType;  r: IType;
     WITH newValue                        = x.vstack.pos(0, "compare_exchange"),
          compareValueAndOldValueIfFailed = x.vstack.pos(1, "compare_exchange"),
          atomicVariable                  = x.vstack.pos(2, "compare_exchange") DO
-      x.vstack.find(compareValueAndOldValueIfFailed, Force.regset, RegSet{Codex86.EAX});
-      x.vstack.find(newValue,                        Force.regset, RegSet{Codex86.ECX, Codex86.EDX, Codex86.EBX,
-                                                                          Codex86.ESI, Codex86.EDI});
+      x.vstack.find(compareValueAndOldValueIfFailed, Force.regset, RegSet{EAX});
+      x.vstack.find(newValue,                        Force.regset, RegSet{ECX, EDX, EBX,
+                                                                          ESI, EDI});
       x.vstack.find(atomicVariable,                  Force.mem);
       x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.vstack.op(newValue));
       x.vstack.discard(3);

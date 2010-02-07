@@ -18,6 +18,7 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize, TZero;
 FROM M3x86Rep IMPORT RegistersForByteOperations, RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
+FROM M3x86Rep IMPORT EAX, ECX, EDX, EBX, ESI, EDI;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
 
@@ -282,7 +283,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
       size := SplitOperand(op, opA);
 
       IF size = 2 AND set = RegSet{} THEN
-        set := RegSet{Codex86.EAX, Codex86.EBX, Codex86.ECX, Codex86.EDX, Codex86.ESI, Codex86.EDI };
+        set := RegSet{EAX, EBX, ECX, EDX, ESI, EDI };
       END;
 
       <* ASSERT op.stackp = stackp *>
@@ -636,36 +637,36 @@ PROCEDURE sweep (t: T; READONLY mvar: MVar) =
         IF NOT doneswap THEN
           doneswap := TRUE;
           size := SplitMVar(mvar, mvarA);
-          t.cg.pushOp(t.cg.reg[Codex86.EAX]);
+          t.cg.pushOp(t.cg.reg[EAX]);
           IF size = 2 THEN
-            t.cg.pushOp(t.cg.reg[Codex86.ECX]);
+            t.cg.pushOp(t.cg.reg[ECX]);
             type := Type.Word64;
           END;
         END;
         size2 := SplitOperand(t.vstack[i], stackOpA);
         <* ASSERT size = size2 *>
         IF size = 1 THEN
-          t.cg.movOp(t.cg.reg[Codex86.EAX], t.vstack[i]);
+          t.cg.movOp(t.cg.reg[EAX], t.vstack[i]);
         ELSE
-          t.cg.movOp(t.cg.reg[Codex86.EAX], stackOpA[0]);
-          t.cg.movOp(t.cg.reg[Codex86.ECX], stackOpA[1]);
+          t.cg.movOp(t.cg.reg[EAX], stackOpA[0]);
+          t.cg.movOp(t.cg.reg[ECX], stackOpA[1]);
         END;
         set_mvar(t, i, MVar { var := t.parent.declare_temp(size * 4, 4, type, FALSE),
                               mvar_offset := 0, mvar_type := type } );
         t.vstack[i].mvar.var.stack_temp := TRUE;
         IF size = 1 THEN
-          t.cg.movOp(t.vstack[i], t.cg.reg[Codex86.EAX]);
+          t.cg.movOp(t.vstack[i], t.cg.reg[EAX]);
         ELSE
-          t.cg.movOp(stackOpA[0], t.cg.reg[Codex86.EAX]);
-          t.cg.movOp(stackOpA[1], t.cg.reg[Codex86.ECX]);
+          t.cg.movOp(stackOpA[0], t.cg.reg[EAX]);
+          t.cg.movOp(stackOpA[1], t.cg.reg[ECX]);
         END;
       END
     END;
     IF doneswap THEN
       IF size = 2 THEN
-        t.cg.popOp(t.cg.reg[Codex86.ECX]);
+        t.cg.popOp(t.cg.reg[ECX]);
       END;
-      t.cg.popOp(t.cg.reg[Codex86.EAX]);
+      t.cg.popOp(t.cg.reg[EAX]);
     END
   END sweep;
 
@@ -796,9 +797,9 @@ PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet; operandPart: O
 PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
   BEGIN
     maybe_expand_stack(t);
-    IF Is64(type) AND force = Force.regset AND set = RegSet { Codex86.EAX, Codex86.EDX } THEN
-      pushnew1(t, type, Force.regset, RegSet { Codex86.EDX }, operandPart := 1);
-      pushnew1(t, type, Force.regset, RegSet { Codex86.EAX }, operandPart := 0);
+    IF Is64(type) AND force = Force.regset AND set = RegSet { EAX, EDX } THEN
+      pushnew1(t, type, Force.regset, RegSet { EDX }, operandPart := 1);
+      pushnew1(t, type, Force.regset, RegSet { EAX }, operandPart := 0);
     ELSE
       FOR i := 0 TO GetTypeSize(type) - 1 DO
         pushnew1(t, type, force, set, i);
@@ -836,8 +837,7 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
           FOR i := 0 TO size - 1 DO
             IF CG_Bytes[src_mvar.mvar_type] = 1 THEN
               <* ASSERT size = 1 AND i = 0 *>
-              destreg[i] := pickreg(t, RegSet { Codex86.EAX, Codex86.EBX,
-                                                Codex86.ECX, Codex86.EDX } );
+              destreg[i] := pickreg(t, RegSet { EAX, EBX, ECX, EDX } );
             ELSE
               destreg[i] := pickreg(t, RegSet {}, src_mvar.mvar_type = Type.Addr);
             END;
@@ -892,8 +892,7 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
         unlock(t);
         IF CG_Bytes[dest_mvar.mvar_type] = 1 AND src_stack0.loc # OLoc.imm THEN
           find(t, t.stacktop - 1, Force.regset,
-               RegSet { Codex86.EAX, Codex86.EBX,
-                        Codex86.ECX, Codex86.EDX } );
+               RegSet { EAX, EBX, ECX, EDX } );
         ELSE
           find(t, t.stacktop - 1, Force.anyregimm);
         END;
@@ -1109,20 +1108,20 @@ PROCEDURE doumul (t: T) =
          stack1 = pos(t, 1, "doumul") DO
       WITH stop0 = t.vstack[stack0],
            stop1 = t.vstack[stack1] DO
-        IF stop0.loc = OLoc.register AND stop0.reg[0] = Codex86.EAX THEN
-          lock(t, Codex86.EAX);
+        IF stop0.loc = OLoc.register AND stop0.reg[0] = EAX THEN
+          lock(t, EAX);
           find(t, stack1, Force.anydword);
           otherop := stop1;
-        ELSIF stop1.loc = OLoc.register AND stop1.reg[0] = Codex86.EAX THEN
-          lock(t, Codex86.EAX);
+        ELSIF stop1.loc = OLoc.register AND stop1.reg[0] = EAX THEN
+          lock(t, EAX);
           find(t, stack0, Force.anydword);
           otherop := stop0;
         ELSIF stop0.loc = OLoc.register THEN
-          find(t, stack0, Force.regset, RegSet {Codex86.EAX});
+          find(t, stack0, Force.regset, RegSet {EAX});
           find(t, stack1, Force.anydword);
           otherop := stop1;
         ELSE
-          find(t, stack1, Force.regset, RegSet {Codex86.EAX});
+          find(t, stack1, Force.regset, RegSet {EAX});
           find(t, stack0, Force.anydword);
           otherop := stop0;
         END
@@ -1138,8 +1137,8 @@ PROCEDURE doumul (t: T) =
         END
       END;
 
-      IF otherop.loc # OLoc.register OR otherop.reg[0] # Codex86.EDX THEN
-        corrupt(t, Codex86.EDX, operandPart := 0);
+      IF otherop.loc # OLoc.register OR otherop.reg[0] # EDX THEN
+        corrupt(t, EDX, operandPart := 0);
       END;
 
       t.cg.mulOp(otherop);
@@ -1147,8 +1146,8 @@ PROCEDURE doumul (t: T) =
         swap(t);
       END;
 
-      newdest(t, t.cg.reg[Codex86.EDX]);
-      newdest(t, t.cg.reg[Codex86.EAX]);
+      newdest(t, t.cg.reg[EDX]);
+      newdest(t, t.cg.reg[EAX]);
       discard(t, 1);
     END
   END doumul;
@@ -1186,12 +1185,12 @@ PROCEDURE dodiv (t: T; a, b: Sign) =
   BEGIN
     unlock(t);
 
-    corrupt(t, Codex86.EDX, operandPart := 0);
-    lock(t, Codex86.EDX);
+    corrupt(t, EDX, operandPart := 0);
+    lock(t, EDX);
 
     WITH stack0 = pos(t, 0, "dodiv"),
          stack1 = pos(t, 1, "dodiv") DO
-      find(t, stack1, Force.regset, RegSet {Codex86.EAX});
+      find(t, stack1, Force.regset, RegSet {EAX});
 
       IF a # Sign.Unknown AND b # Sign.Unknown THEN
         find(t, stack0, Force.anydword);
@@ -1200,7 +1199,7 @@ PROCEDURE dodiv (t: T; a, b: Sign) =
         END;
 
         IF a = Sign.Positive THEN
-          t.cg.binOp(Op.oXOR, t.cg.reg[Codex86.EDX], t.cg.reg[Codex86.EDX]);
+          t.cg.binOp(Op.oXOR, t.cg.reg[EDX], t.cg.reg[EDX]);
         ELSE
           t.cg.noargOp(Op.oCDQ);
         END;
@@ -1213,12 +1212,12 @@ PROCEDURE dodiv (t: T; a, b: Sign) =
 
         IF (a = Sign.Positive AND b = Sign.Negative) OR
            (a = Sign.Negative AND b = Sign.Positive) THEN
-          t.cg.immOp(Op.oCMP, t.cg.reg[Codex86.EDX], TZero);
+          t.cg.immOp(Op.oCMP, t.cg.reg[EDX], TZero);
 
           neglabel := t.cg.reserve_labels(1, TRUE);
 
           t.cg.brOp(Cond.E, neglabel);
-          t.cg.decOp(t.cg.reg[Codex86.EAX]);
+          t.cg.decOp(t.cg.reg[EAX]);
 
           t.cg.set_label(neglabel);
         END
@@ -1237,8 +1236,8 @@ PROCEDURE domod (t: T; a, b: Sign) =
   BEGIN
     unlock(t);
 
-    corrupt(t, Codex86.EDX, operandPart := 0);
-    lock(t, Codex86.EDX);
+    corrupt(t, EDX, operandPart := 0);
+    lock(t, EDX);
 
     WITH stack0 = pos(t, 0, "domod"),
          stack1 = pos(t, 1, "domod"),
@@ -1247,7 +1246,7 @@ PROCEDURE domod (t: T; a, b: Sign) =
 
       <* ASSERT GetTypeSize(stop0.optype) = GetTypeSize(stop1.optype) *>
 
-      find(t, stack1, Force.regset, RegSet {Codex86.EAX});
+      find(t, stack1, Force.regset, RegSet {EAX});
       IF (a = Sign.Positive AND b = Sign.Positive) OR
          (a = Sign.Negative AND b = Sign.Negative) THEN
         find(t, stack0, Force.anydword);
@@ -1260,7 +1259,7 @@ PROCEDURE domod (t: T; a, b: Sign) =
 
       IF a # Sign.Unknown AND b # Sign.Unknown THEN
         IF a = Sign.Positive THEN
-          t.cg.binOp(Op.oXOR, t.cg.reg[Codex86.EDX], t.cg.reg[Codex86.EDX]);
+          t.cg.binOp(Op.oXOR, t.cg.reg[EDX], t.cg.reg[EDX]);
         ELSE
           t.cg.noargOp(Op.oCDQ);
         END;
@@ -1273,12 +1272,12 @@ PROCEDURE domod (t: T; a, b: Sign) =
 
         IF (a = Sign.Positive AND b = Sign.Negative) OR
            (a = Sign.Negative AND b = Sign.Positive) THEN
-          t.cg.immOp(Op.oCMP, t.cg.reg[Codex86.EDX], TZero);
+          t.cg.immOp(Op.oCMP, t.cg.reg[EDX], TZero);
 
           neglabel := t.cg.reserve_labels(1, TRUE);
 
           t.cg.brOp(Cond.E, neglabel);
-          t.cg.binOp(Op.oADD, t.cg.reg[Codex86.EDX], t.vstack[stack0]);
+          t.cg.binOp(Op.oADD, t.cg.reg[EDX], t.vstack[stack0]);
 
           t.cg.set_label(neglabel);
         END
@@ -1288,7 +1287,7 @@ PROCEDURE domod (t: T; a, b: Sign) =
 
       newdest(t, t.vstack[stack1]);
       dealloc_reg(t, stack1, operandPart := 0);
-      set_reg(t, stack1, Codex86.EDX, operandPart := 0);
+      set_reg(t, stack1, EDX, operandPart := 0);
       discard(t, 1);
     END
   END domod;
@@ -1420,7 +1419,7 @@ PROCEDURE doshift (t: T) =
 
         IF ((stop1.loc # OLoc.imm) OR (TInt.NE(stop1.imm, TZero))) THEN
 
-          find(t, stack0, Force.regset, RegSet {Codex86.ECX});
+          find(t, stack0, Force.regset, RegSet {ECX});
 
           find(t, stack1, Force.anytemp);
           IF stop1.loc = OLoc.imm THEN
@@ -1494,7 +1493,7 @@ PROCEDURE dorotate (t: T) =
           END
         END
       ELSE
-        find(t, stack0, Force.regset, RegSet {Codex86.ECX});
+        find(t, stack0, Force.regset, RegSet {ECX});
 
         find(t, stack1, Force.anytemp);
         IF stop1.loc = OLoc.imm THEN
@@ -1551,7 +1550,7 @@ PROCEDURE doextract (t: T; sign: BOOLEAN) =
          really messy to cover all the special cases correctly *)
 
       IF sign THEN
-        find(t, stack0, Force.regset, RegSet { Codex86.ECX });
+        find(t, stack0, Force.regset, RegSet { ECX });
         find(t, stack1, Force.any);
         find(t, stack2, Force.anyreg);
         IF stop1.loc = OLoc.mem AND CG_Bytes[stop1.mvar.mvar_type] < 4 THEN
@@ -1570,7 +1569,7 @@ PROCEDURE doextract (t: T; sign: BOOLEAN) =
         IF stop1.loc = OLoc.imm THEN
           TWord.And(stop1.imm, TInt.ThirtyOne, stop1.imm);
         ELSE
-          find(t, stack1, Force.regset, RegSet { Codex86.ECX });
+          find(t, stack1, Force.regset, RegSet { ECX });
         END;
 
         find(t, stack0, Force.any);
@@ -1614,8 +1613,8 @@ PROCEDURE doextract_n (t: T; sign: BOOLEAN; n: INTEGER) =
       END;
 
       IF sign THEN
-        corrupt(t, Codex86.ECX, operandPart := 0);
-        t.reguse[Codex86.ECX].locked := TRUE;
+        corrupt(t, ECX, operandPart := 0);
+        t.reguse[ECX].locked := TRUE;
 
         find(t, stack0, Force.any);
         find(t, stack1, Force.anyreg);
@@ -1631,15 +1630,15 @@ PROCEDURE doextract_n (t: T; sign: BOOLEAN; n: INTEGER) =
           t.Err("doextract_n: Subtract overflowed");
         END;
 
-        t.cg.movImmI(t.cg.reg[Codex86.ECX], 32 - n);
-        t.cg.binOp(Op.oSUB, t.cg.reg[Codex86.ECX], stop0);
+        t.cg.movImmI(t.cg.reg[ECX], 32 - n);
+        t.cg.binOp(Op.oSUB, t.cg.reg[ECX], stop0);
         t.cg.unOp(Op.oSAL, stop1);
 
         IF n < 32 THEN
           t.cg.immOp(Op.oSAR, stop1, t32MinusN);
         END
       ELSE
-        find(t, stack0, Force.regset, RegSet { Codex86.ECX });
+        find(t, stack0, Force.regset, RegSet { ECX });
         find(t, stack1, Force.anyreg);
 
         t.cg.unOp(Op.oSHR, stop1);
@@ -1737,7 +1736,7 @@ PROCEDURE doinsert (t: T) =
       IF stop1.loc = OLoc.imm THEN
         TWord.And(stop1.imm, TInt.ThirtyOne, stop1.imm);
       ELSE
-        find(t, stack1, Force.regset, RegSet { Codex86.ECX });
+        find(t, stack1, Force.regset, RegSet { ECX });
       END;
 
       find(t, stack2, Force.any);
@@ -1815,7 +1814,7 @@ PROCEDURE doinsert_n (t: T; n: INTEGER) =
         RETURN;
       END;
 
-      find(t, stack0, Force.regset, RegSet { Codex86.ECX });
+      find(t, stack0, Force.regset, RegSet { ECX });
       find(t, stack2, Force.any);
       find(t, stack1, Force.anyreg);
 
@@ -2163,7 +2162,7 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
 
       ftop_inmem := t.cg.ftop_inmem;
 
-      corrupt(t, Codex86.EAX, operandPart := 0);
+      corrupt(t, EAX, operandPart := 0);
       t.cg.noargFOp(FOp.fNSTSWAX);
       t.cg.noargOp(Op.oSAHF);
 
