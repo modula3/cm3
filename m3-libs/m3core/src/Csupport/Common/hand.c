@@ -778,7 +778,7 @@ T __stdcall name(T x, T i, T n, T sign_extend)          \
 #define M3_INSERT(name, T)                              \
 T __stdcall name(T x, T y, T i, T n)                    \
 {                                                       \
-    const T mask = ((~((~(T)0) << n)) << i);            \
+    T mask = ((~((~(T)0) << n)) << i);                  \
     assert((n + i) <= (sizeof(T) * 8));                 \
     return (x & ~mask) | ((y << i) & mask);             \
 }
@@ -993,6 +993,11 @@ static void TestDiv32(long a, long b)
     }
 }
 
+#ifndef _WIN32
+static int64 __stdcall m3_div64(int64 b, int64 a) { return m3_divL(b, a); }
+static int64 __stdcall m3_mod64(int64 b, int64 a) { return m3_modL(b, a); }
+#endif
+
 static void TestDiv64(int64 a, int64 b)
 {
     if (a == INT64_MIN && b == -1) /* avoid overflow */
@@ -1000,7 +1005,7 @@ static void TestDiv64(int64 a, int64 b)
     if (b)
     {
         int64 old = m3_divL_old(b, a);
-        int64 current = m3_divL(b, a);
+        int64 current = m3_div64(b, a);
         errors_div += (current != old);
         if ((b < 0) == (a < 0))
         {
@@ -1060,16 +1065,16 @@ static void TestMod64(int64 a, int64 b)
     if ((a == INT64_MIN && b == -1) || b == 0) /* avoid overflow */
         return;
     old = m3_modL_old(b, a);
-    current = m3_modL(b, a);
+    current = m3_mod64(b, a);
     errors_mod += (old != current);
     /* old version is wrong for INT64_MIN mod negative */
     if (a != INT64_MIN || b >= 0 || old == current)
     {
         assert(old == current);
         assert((b < 0) ? (old > b && old <= 0) : (old < b && old >= 0));
-        assert(old == a - b * m3_divL(b, a));
+        assert(old == a - b * m3_div64(b, a));
     }
-    assert(current == a - b * m3_divL(b, a));
+    assert(current == a - b * m3_div64(b, a));
     assert((b < 0) ? (current > b && current <= 0) : (current < b && current >= 0));
 }
 
@@ -1184,19 +1189,19 @@ static void TestSetRange(void)
         for (b = 0; b < 4 * SET_GRAIN; ++b)
             TestSetRangex(a, b);
 
-    t1 = __rdtsc(); /* read time stamp counter */
+    t1 = (double)__rdtsc(); /* read time stamp counter */
 
     for (a = 0; a < 100 * SET_GRAIN; ++a)
         for (b = 0; b < 100 * SET_GRAIN; ++b)
             set_range(a, b, bits);
 
-    t2 = __rdtsc();
+    t2 = (double)__rdtsc();
 
     for (a = 0; a < 100 * SET_GRAIN; ++a)
         for (b = 0; b < 100 * SET_GRAIN; ++b)
             set_range_new(a, b, bits);
 
-    t3 = __rdtsc();
+    t3 = (double)__rdtsc();
 
     t4 = (t2 - t1);
     t5 = (t3 - t2);
@@ -1204,6 +1209,113 @@ static void TestSetRange(void)
     printf("old:%f\n", t4);
     printf("new:%f\n", t5);
     printf("diff:%f\n", (t5 - t4) / t4);
+}
+
+static void TestInsert()
+{
+    uint32 a32 = { 0 };
+    uint32 b32 = { 0 };
+    uint64 a64 = { 0 };
+    uint64 b64 = { 0 };
+    unsigned m = { 0 };
+    unsigned n = { 0 };
+
+    for (a32 = 0; a32 < 15; ++a32)
+    {
+        for (b32 = 0; b32 < 15; ++b32)
+        {
+            for (m = 0; m < 3; ++m)
+            {
+                for (n = 0; n < 3; ++n)
+                {
+                    uint32 result = m3test_insert32(a32, b32, m, n);
+                    printf("insert32(a:%I64x, b:%I64x, m:%I64x, n:%I64x):%I64x\n", 
+                            (uint64)a32,
+                            (uint64)b32,
+                            (uint64)m,
+                            (uint64)n,
+                            (uint64)result);
+                    if (n == 0)
+                        assert(result == a32);
+                }
+            }
+        }
+    }
+
+    for (a64 = 0; a64 < 15; ++a64)
+    {
+        for (b64 = 0; b64 < 15; ++b64)
+        {
+            for (m = 0; m < 3; ++m)
+            {
+                for (n = 0; n < 3; ++n)
+                {
+                    uint64 result = m3_insert64(a64, b64, m, n);
+                    printf("insert64(a:%I64x, b:%I64x, m:%I64x, n:%I64x):%I64x\n", 
+                            (uint64)a64,
+                            (uint64)b64,
+                            (uint64)m,
+                            (uint64)n,
+                            (uint64)result);
+                    if (n == 0)
+                        assert(result == a64);
+                }
+            }
+        }
+    }
+}
+
+static void TestExtract()
+{
+    uint32 a32 = { 0 };
+    uint64 a64 = { 0 };
+    uint32 sign_extend = { 0 };
+    unsigned m = { 0 };
+    unsigned n = { 0 };
+
+    for (a32 = 0; a32 < 15; ++a32)
+    {
+        for (m = 0; m < 3; ++m)
+        {
+            for (n = 0; n < 3; ++n)
+            {
+                for (sign_extend = 0; sign_extend < 2; ++sign_extend)
+                {
+                    uint32 result = m3test_extract32(a32, m, n, sign_extend);
+                    printf("extract32(value:%I64x, m:%I64x, n:%I64x, sign_extend:%I64x):%I64x\n", 
+                            (uint64)a32,
+                            (uint64)m,
+                            (uint64)n,
+                            (uint64)sign_extend,
+                            (uint64)result);
+                    if (n == 0)
+                        assert(result == 0);
+                }
+            }
+        }
+    }
+
+    for (a64 = 0; a64 < 15; ++a64)
+    {
+        for (m = 0; m < 3; ++m)
+        {
+            for (n = 0; n < 3; ++n)
+            {
+                for (sign_extend = 0; sign_extend < 2; ++sign_extend)
+                {
+                    uint64 result = m3_extract64(a64, m, n, sign_extend);
+                    printf("extract64(value:%I64x, m:%I64x, n:%I64x, sign_extend:%I64x):%I64x\n", 
+                            (uint64)a64,
+                            (uint64)m,
+                            (uint64)n,
+                            (uint64)sign_extend,
+                            (uint64)result);
+                    if (n == 0)
+                        assert(result == 0);
+                }
+            }
+        }
+    }
 }
 
 int main()
@@ -1215,7 +1327,10 @@ int main()
 
     /*TestHighLowBits();*/
 
-    TestSetRange();
+    /*TestSetRange();*/
+
+    TestInsert();
+    TestExtract();
 
     return 0;
 }
