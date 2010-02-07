@@ -978,6 +978,7 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
         | Op.oNEG =>
           unOp1(t, op, destA[0]);
           t.binOp(Op.oADC, destA[1], Operand {loc := OLoc.imm, imm := TZero, optype := Type.Word32});
+          unOp1(t, op, destA[1]);
         ELSE
           <* ASSERT FALSE *>
       END
