@@ -1379,7 +1379,7 @@ PROCEDURE doabs (t: T) =
       ELSE
         find(t, stack0, Force.anytemp);
 
-        IF stop0.loc = OLoc.mem THEN
+        IF (stop0.loc = OLoc.mem) OR (GetOperandSize(stop0) > 1) THEN
           t.cg.immOp(Op.oCMP, stop0, TZero);
 
           lab := t.cg.reserve_labels(1, TRUE);
