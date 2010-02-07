@@ -524,8 +524,7 @@ PROCEDURE inreg (t: T; READONLY v: MVar; set: RegSet:= RegSet {}): Regno =
     END;
 
     FOR i := 0 TO NRegs DO
-      IF t.reguse[i].last_store # NoStore AND
-         v = t.reguse[i].last_store THEN
+      IF t.reguse[i].last_store # NoStore AND v = t.reguse[i].last_store THEN
         prec := precedence(t, i);
         IF (set # RegSet {}) AND (NOT i IN set) THEN
           prec := prec * HighPrec;
