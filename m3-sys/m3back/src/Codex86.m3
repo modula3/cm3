@@ -18,7 +18,7 @@ FROM M3CG IMPORT Type, MType, Label, Alignment;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs, OperandSize, GetOperandSize;
-FROM M3x86Rep IMPORT RegSet, RegName, SplitOperand, Is64, SplitImm, OperandPart, GetTypeSize, TZero;
+FROM M3x86Rep IMPORT RegistersForByteOperations, RegName, SplitOperand, Is64, SplitImm, OperandPart, GetTypeSize, TZero;
 
 FROM M3ObjFile IMPORT Seg;
 
@@ -248,7 +248,7 @@ PROCEDURE setccOp (t: T; READONLY op: Operand; cond: Cond) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT (op.loc = OLoc.register AND
-               op.reg[0] IN RegSet { EAX, EBX, ECX, EDX } ) OR
+               op.reg[0] IN RegistersForByteOperations) OR
               (op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 1) *>
     IF op.loc = OLoc.register THEN
       movImmT(t, op, TZero);
@@ -1206,7 +1206,7 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
     <* ASSERT mem.loc = OLoc.mem *>
 
     <* ASSERT CG_Bytes[mem.mvar.mvar_type] # 1 OR reg.opcode OR
-              reg.reg[0] IN RegSet { EAX, EBX, ECX, EDX } *>
+              reg.reg[0] IN RegistersForByteOperations *>
 
     offset := mem.mvar.mvar_offset;
     IF mem.mvar.var.loc = VLoc.temp THEN
