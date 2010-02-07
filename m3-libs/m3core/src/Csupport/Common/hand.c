@@ -728,10 +728,10 @@ uint64 _rotl64(uint64 value, int shift);
 uint64 _rotr64(uint64 value, int shift);
 #pragma intrinsic(_rotl64)
 #pragma intrinsic(_rotr64)
-uint64 __stdcall  m3_rotate_left64(uint64 a, uint64 b)  { return _rotl64(a, (int)b); }
-uint64 __stdcall m3_rotate_right64(uint64 a, uint64 b)  { return _rotr64(a, (int)b); }
+uint64 __stdcall  m3_rotate_left64(uint64 a, uint b)  { return _rotl64(a, (int)b); }
+uint64 __stdcall m3_rotate_right64(uint64 a, uint b)  { return _rotr64(a, (int)b); }
 
-uint64 __stdcall m3_shift64(uint64 a, int64 b)
+uint64 __stdcall m3_shift64(uint64 a, int b)
 {
     if (b >= 64 || b <= -64)
         a = 0;
@@ -742,13 +742,13 @@ uint64 __stdcall m3_shift64(uint64 a, int64 b)
     return a;
 }
 
-uint64 __stdcall m3_rotate64(uint64 a, int64 b)
+uint64 __stdcall m3_rotate64(uint64 a, int b)
 {
     b &= 63;
     if (b > 0)
-        a = _rotl64(a, (int)b);
+        a = _rotl64(a, b);
     else if (b < 0)
-        a = _rotr64(a, (int)-b);
+        a = _rotr64(a, -b);
     return a;
 }
 
@@ -765,7 +765,7 @@ PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
 */
 
 #define M3_EXTRACT(name, T)                             \
-T __stdcall name(T x, T i, T n, T sign_extend)          \
+T __stdcall name(T x, uint i, uint n, uint sign_extend) \
 {                                                       \
     assert((n + i) <= (sizeof(T) * 8));                 \
     x >>= i;                                            \
@@ -775,12 +775,12 @@ T __stdcall name(T x, T i, T n, T sign_extend)          \
     return x;                                           \
 }
 
-#define M3_INSERT(name, T)                              \
-T __stdcall name(T x, T y, T i, T n)                    \
-{                                                       \
-    T mask = ((~((~(T)0) << n)) << i);                  \
-    assert((n + i) <= (sizeof(T) * 8));                 \
-    return (x & ~mask) | ((y << i) & mask);             \
+#define M3_INSERT(name, T)                  \
+T __stdcall name(T x, T y, uint i, uint n)  \
+{                                           \
+    T mask = ((~((~(T)0) << n)) << i);      \
+    assert((n + i) <= (sizeof(T) * 8));     \
+    return (x & ~mask) | ((y << i) & mask); \
 }
 
 M3_EXTRACT(m3_extract64, uint64)
