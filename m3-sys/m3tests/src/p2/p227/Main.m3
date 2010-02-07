@@ -118,6 +118,7 @@ VAR a, b, c: LONGINT;
 VAR d: INTEGER;
 CONST expect_true = ARRAY BOOLEAN OF TEXT{"bad\n","good\n"};
 CONST expect_false = ARRAY BOOLEAN OF TEXT{"good\n","bad\n"};
+CONST falsetrue = ARRAY BOOLEAN OF TEXT{"false\n","true\n"};
 
 <*UNUSED*>PROCEDURE Add(a, b: LONGINT): LONGINT =
 BEGIN
@@ -215,6 +216,20 @@ BEGIN
 
   PutT("       100L:"); PutLH(NotConstL(100L)); NL();
   <* ASSERT 100L = NotConstL(100L) *>
+
+  PutT(falsetrue[           100L  >           0L]);
+  PutT(falsetrue[           100L  <           0L]);
+  PutT(falsetrue[          -100L  >           0L]);
+  PutT(falsetrue[          -100L  <           0L]);
+  PutT(falsetrue[NotConstL( 100L) > NotConstL(0L)]);
+  PutT(falsetrue[NotConstL( 100L) < NotConstL(0L)]);
+  PutT(falsetrue[NotConstL(-100L) > NotConstL(0L)]);
+  PutT(falsetrue[NotConstL(-100L) < NotConstL(0L)]);
+
+  <* ASSERT (NotConstL(  100L) > NotConstL(0L)) = TRUE *>
+  <* ASSERT (NotConstL(  100L) < NotConstL(0L)) = FALSE *>
+  <* ASSERT (NotConstL( -100L) > NotConstL(0L)) = FALSE *>
+  <* ASSERT (NotConstL( -100L) < NotConstL(0L)) = TRUE *>
 
   PutT("        abs:"); PutLH(ABS(NotConstL(-100L))); NL();
   <* ASSERT ABS(-100L) = ABS(NotConstL(-100L)) *>
