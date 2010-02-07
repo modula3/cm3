@@ -1,6 +1,6 @@
 MODULE Main;
 IMPORT RTIO, Word, Long;
-FROM RTIO IMPORT PutLong, PutText, PutHex, PutLongHex, Flush;
+FROM RTIO IMPORT PutText, PutLong, PutHex, PutLongHex, Flush;
 
 
 (* decrease these for faster runs *)
@@ -13,10 +13,18 @@ BEGIN
   RETURN a;
 END NotConstL;
 
+PROCEDURE NotConstI(a: INTEGER): INTEGER =
+BEGIN
+  RETURN a;
+END NotConstI;
+
 PROCEDURE NL() =
 BEGIN
-  PutText("\n");
+  PutT("\n");
 END NL;
+
+CONST PutT = PutText;
+CONST PutLH = PutLongHex;
 
 PROCEDURE TestInsert() =
 VAR result32: CARDINAL := 0;
@@ -27,11 +35,11 @@ BEGIN
       FOR m := 0 TO insertextract_max_mn DO
         FOR n := 0 TO insertextract_max_mn DO
           result32 := Word.Insert(a32, b32, m, n);
-          PutText("insert32(a:"); PutHex(a32);
-          PutText(", b:"); PutHex(b32);
-          PutText(", m:"); PutHex(m);
-          PutText(", n:"); PutHex(n);
-          PutText("):"); PutHex(result32);
+          PutT("insert32(a:"); PutHex(a32);
+          PutT(", b:"); PutHex(b32);
+          PutT(", m:"); PutHex(m);
+          PutT(", n:"); PutHex(n);
+          PutT("):"); PutHex(result32);
           NL();
           IF n = 0 THEN
             <* ASSERT result32 = a32 *>
@@ -46,11 +54,11 @@ BEGIN
       FOR m := 0 TO insertextract_max_mn DO
         FOR n := 0 TO insertextract_max_mn DO
           result64 := Long.Insert(a64, b64, m, n);
-          PutText("insert64(a:"); PutLongHex(a64);
-          PutText(", b:"); PutLongHex(b64);
-          PutText(", m:"); PutHex(m);
-          PutText(", n:"); PutHex(n);
-          PutText("):"); PutLongHex(result64);
+          PutT("insert64(a:"); PutLH(a64);
+          PutT(", b:"); PutLH(b64);
+          PutT(", m:"); PutHex(m);
+          PutT(", n:"); PutHex(n);
+          PutT("):"); PutLH(result64);
           NL();
           IF n = 0 THEN
             <* ASSERT result64 = a64 *>
@@ -71,11 +79,11 @@ BEGIN
      FOR m := 0 TO insertextract_max_mn DO
       FOR n := 0 TO insertextract_max_mn DO
         result32 := Word.Extract(a32, m, n);
-        PutText("extract32(value:"); PutHex(a32);
-        PutText(", m:"); PutHex(m);
-        PutText(", n:"); PutHex(n);
-        PutText(", sign_extend:"); PutHex(sign_extend);
-        PutText("):"); PutHex(result32);
+        PutT("extract32(value:"); PutHex(a32);
+        PutT(", m:"); PutHex(m);
+        PutT(", n:"); PutHex(n);
+        PutT(", sign_extend:"); PutHex(sign_extend);
+        PutT("):"); PutHex(result32);
         NL();
         IF n = 0 THEN
           <* ASSERT result32 = 0 *>
@@ -88,11 +96,11 @@ BEGIN
     FOR m := 0 TO insertextract_max_mn DO
       FOR n := 0 TO insertextract_max_mn DO
         result64 := Long.Extract(a64, m, n);
-        PutText("extract64(value:"); PutLongHex(a64);
-        PutText(", m:"); PutHex(m);
-        PutText(", n:"); PutHex(n);
-        PutText(", sign_extend:"); PutHex(sign_extend);
-        PutText("):"); PutLongHex(result64);
+        PutT("extract64(value:"); PutLH(a64);
+        PutT(", m:"); PutHex(m);
+        PutT(", n:"); PutHex(n);
+        PutT(", sign_extend:"); PutHex(sign_extend);
+        PutT("):"); PutLH(result64);
         NL();
         IF n = 0 THEN
           <* ASSERT result64 = 0L *>
@@ -169,11 +177,27 @@ END NE;
 BEGIN
   PutLong(a);
   NL();
-  PutLongHex(c);
+  PutLH(c);
   NL();
 
   EVAL Long.Insert(1L, 2L, 3, 4);
   EVAL Long.Extract(1L, 3, 4);
+
+  PutT("     Rotate:"); PutLH(Long.Rotate(NotConstL(16_11112222L), NotConstI(2))); NL();
+  PutT("    -Rotate:"); PutLH(Long.Rotate(NotConstL(16_111113333L), -NotConstI(2))); NL();
+  PutT("RightRotate:"); PutLH(Long.RightRotate(NotConstL(16_11114444L), NotConstI(2))); NL();
+  PutT(" LeftRotate:"); PutLH(Long.LeftRotate(NotConstL(16_11115555L), NotConstI(2))); NL();
+  PutT("      Shift:"); PutLH(Long.Shift(NotConstL(16_1000L), NotConstI(2))); NL();
+  PutT("     -Shift:"); PutLH(Long.Shift(NotConstL(16_1000L), -NotConstI(2))); NL();
+  PutT(" RightShift:"); PutLH(Long.RightShift(NotConstL(16_1000L), NotConstI(2))); NL();
+  PutT("  LeftShift:"); PutLH(Long.LeftShift(NotConstL(16_1000L), NotConstI(2))); NL();
+  PutT("        min:"); PutLH(MIN(NotConstL(16_1000L), NotConstL(16_876543210L))); NL();
+  PutT("        max:"); PutLH(MAX(NotConstL(16_1000L), NotConstL(16_876543210L))); NL();
+  PutT("       100L:"); PutLH(NotConstL(100L)); NL();
+  PutT("        abs:"); PutLH(ABS(NotConstL(-100L))); NL();
+  PutT("        abs:"); PutLH(ABS(NotConstL(100L))); NL();
+  PutT("        neg:"); PutLH(-NotConstL(100L)); NL();
+  PutT("        neg:"); PutLH(-NotConstL(-NotConstL(100L))); NL();
 
   PutLong(a);
   NL();
@@ -182,9 +206,9 @@ BEGIN
   b := 1L + 2L;
   c := a + b;
   c := a - b;
-  PutText(expect_true[c = (a - b)]);
-  PutText(expect_false[c = (a + b)]);
-  PutText(expect_true[(a + b) > a]);
+  PutT(expect_true[c = (a - b)]);
+  PutT(expect_false[c = (a + b)]);
+  PutT(expect_true[(a + b) > a]);
   Flush();
 
   d := -1;
@@ -237,4 +261,5 @@ BEGIN
   TestInsert();
   TestExtract();
   Flush();
+
 END Main.
