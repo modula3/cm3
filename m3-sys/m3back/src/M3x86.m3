@@ -1888,14 +1888,12 @@ PROCEDURE multiply (u: U;  t: AType) =
     IF Target.FloatType [t] THEN
       u.cg.binFOp(FOp.fMUL, 1);
       u.vstack.discard(1);
+    ELSIF t = Type.Int32 THEN
+      u.vstack.doimul();
     ELSE
-      IF t = Type.Int32 THEN
-        u.vstack.doimul();
-      ELSE
-        <* ASSERT t = Type.Word32 *>
-        u.vstack.doumul();
-      END
-    END;
+      <* ASSERT t = Type.Word32 *>
+      u.vstack.doumul();
+    END
   END multiply;
 
 PROCEDURE divide (u: U;  t: RType) =
