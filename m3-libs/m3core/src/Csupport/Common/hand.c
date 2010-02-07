@@ -810,8 +810,8 @@ _xx0 () { _crash ("_xx0 (runtime fault)"); }
 
 **************************************************************************/
 
-#ifdef M3CORE_TEST_HAND /* change this to 1 and compile and run the program to generate the above tables,
-                           or to run the test code */
+#if 0 /* change this to 1 and compile and run the program to generate the above tables,
+         or to run the test code */
 
 #ifdef _MSC_VER
 #if _MSC_VER < 1000
