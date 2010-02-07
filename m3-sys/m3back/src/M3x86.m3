@@ -3872,12 +3872,10 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
       IF Target.FloatType [t] THEN
         u.vstack.pushnew(t, Force.any);
         u.cg.f_pushnew();
+      ELSIF Is64(t) THEN
+        u.vstack.pushnew(t, Force.regset, RegSet { EAX, EDX });
       ELSE
-        IF Is64(t) THEN
-          u.vstack.pushnew(t, Force.regset, RegSet { EAX, EDX });
-        ELSE
-          u.vstack.pushnew(FixReturnValue(u, t), Force.regset, RegSet { EAX });
-        END;
+        u.vstack.pushnew(FixReturnValue(u, t), Force.regset, RegSet { EAX });
       END
     END;
 
@@ -3935,6 +3933,8 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
       IF Target.FloatType [t] THEN
         u.vstack.pushnew(t, Force.any);
         u.cg.f_pushnew();
+      ELSIF Is64(t) THEN
+        u.vstack.pushnew(t, Force.regset, RegSet { EAX, EDX });
       ELSE
         u.vstack.pushnew(FixReturnValue(u, t), Force.regset, RegSet { EAX });
       END
