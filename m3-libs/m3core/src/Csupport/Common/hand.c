@@ -1229,7 +1229,7 @@ static void TestInsert()
                 for (n = 0; n < 3; ++n)
                 {
                     uint32 result = m3test_insert32(a32, b32, m, n);
-                    printf("insert32(a:%I64x, b:%I64x, m:%I64x, n:%I64x):%I64x\n", 
+                    printf("insert32(a:%"I64"x, b:%"I64"x, m:%"I64"x, n:%"I64"x):%"I64"x\n", 
                             (uint64)a32,
                             (uint64)b32,
                             (uint64)m,
@@ -1251,7 +1251,7 @@ static void TestInsert()
                 for (n = 0; n < 3; ++n)
                 {
                     uint64 result = m3_insert64(a64, b64, m, n);
-                    printf("insert64(a:%I64x, b:%I64x, m:%I64x, n:%I64x):%I64x\n", 
+                    printf("insert64(a:%"I64"x, b:%"I64"x, m:%"I64"x, n:%"I64"x):%"I64"x\n", 
                             (uint64)a64,
                             (uint64)b64,
                             (uint64)m,
@@ -1282,7 +1282,7 @@ static void TestExtract()
                 for (sign_extend = 0; sign_extend < 2; ++sign_extend)
                 {
                     uint32 result = m3test_extract32(a32, m, n, sign_extend);
-                    printf("extract32(value:%I64x, m:%I64x, n:%I64x, sign_extend:%I64x):%I64x\n", 
+                    printf("extract32(value:%"I64"x, m:%"I64"x, n:%"I64"x, sign_extend:%"I64"x):%"I64"x\n", 
                             (uint64)a32,
                             (uint64)m,
                             (uint64)n,
@@ -1304,7 +1304,7 @@ static void TestExtract()
                 for (sign_extend = 0; sign_extend < 2; ++sign_extend)
                 {
                     uint64 result = m3_extract64(a64, m, n, sign_extend);
-                    printf("extract64(value:%I64x, m:%I64x, n:%I64x, sign_extend:%I64x):%I64x\n", 
+                    printf("extract64(value:%"I64"x, m:%"I64"x, n:%"I64"x, sign_extend:%"I64"x):%"I64"x\n", 
                             (uint64)a64,
                             (uint64)m,
                             (uint64)n,
