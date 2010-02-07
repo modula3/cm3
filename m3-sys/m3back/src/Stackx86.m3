@@ -17,7 +17,7 @@ FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize, TZero;
-FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
+FROM M3x86Rep IMPORT RegistersForByteOperations, RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
 
@@ -349,11 +349,9 @@ PROCEDURE find (t: T; stackp: INTEGER;
       IF op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 1 THEN
         force := Force.regset;
         IF set = RegSet {} THEN
-          set := RegSet { Codex86.EAX, Codex86.EBX,
-                          Codex86.ECX, Codex86.EDX };
+          set := RegistersForByteOperations;
         ELSE
-          set := set * RegSet { Codex86.EAX, Codex86.EBX,
-                                Codex86.ECX, Codex86.EDX };
+          set := set * RegistersForByteOperations;
         END
       END;
 
@@ -1088,8 +1086,7 @@ PROCEDURE dostoreind (t: T; o: ByteOffset; type: MType) =
          stack1 = pos(t, 1, "store_indirect") DO
       find(t, stack1, Force.any, RegSet {}, TRUE);
       IF CG_Bytes[type] = 1 AND t.vstack[stack0].loc # OLoc.imm THEN
-        find(t, stack0, Force.regset, RegSet { Codex86.EAX, Codex86.EBX,
-                                               Codex86.ECX, Codex86.EDX } );
+        find(t, stack0, Force.regset, RegistersForByteOperations);
       ELSE
         find(t, stack0, Force.anyregimm);
       END;

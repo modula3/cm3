@@ -136,7 +136,7 @@ CONST NonVolatileRegisters = RegSet{EDI, ESI, (*EBP,*) EBX};
 CONST    VolatileRegisters = RegSet{EAX, ECX, EDX (*,ESP*)};
 CONST         AllRegisters = RegSet{EAX, ECX, EDX, EBX,
                                     (*ESP,*) (*EBP,*) ESI, EDI};
-CONST RegistersForByteOperations = RegSet{EAX, ECX, EDX, EBX};
+CONST RegistersForByteOperations = RegSet{EAX, EBX, ECX, EDX};
 
 PROCEDURE Is64 (t: Type): BOOLEAN;
 PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize;
