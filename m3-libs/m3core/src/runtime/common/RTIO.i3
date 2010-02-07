@@ -62,7 +62,7 @@ PROCEDURE PutLong (i: LONGINT);
 
 <* EXTERNAL RTIO__PutLongHex *>
 PROCEDURE PutLongHex (i: LONGINT);
-(* == printf("0x%I64X" or "%llX", i) *)
+(* == printf("0x%I64x" or "%llx", i) *)
 
 PROCEDURE Flush ();
 (* Flush any buffered characters to the operating system. *)
