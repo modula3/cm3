@@ -126,6 +126,12 @@ PROCEDURE check (t: T; where: TEXT) =
 
     FOR i := 0 TO NRegs DO
       IF t.reguse[i].stackp # -1 THEN
+        IF NOT (t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart] = i) THEN
+          t.Err(where
+              & " i:" & RegName[i]
+              & " t.reguse[i].stackp:" & Fmt.Int(t.reguse[i].stackp)
+              & " t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart]:" & RegName[t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart]]);
+        END;
         <* ASSERT t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart] = i *>
       END
     END;
@@ -253,6 +259,10 @@ PROCEDURE clearall (t: T) =
     t.cg.wrFlush();
 
     FOR r := 0 TO NRegs DO
+      IF NOT (t.reguse[r].stackp = -1) THEN
+        t.Err("r:" & RegName[r]
+            & " t.reguse[r].stackp:" & Fmt.Int(t.reguse[r].stackp));
+      END;
       <* ASSERT t.reguse[r].stackp = -1 *>
       t.reguse[r] := InitRegister();
     END
@@ -277,16 +287,20 @@ PROCEDURE find (t: T; stackp: INTEGER;
       opA: ARRAY OperandPart OF Operand;
       done := ARRAY OperandPart OF BOOLEAN{FALSE,..};
       size: OperandSize := 1;
+      ret64: BOOLEAN := FALSE;
   BEGIN
     WITH op = t.vstack[stackp] DO
 
-      size := SplitOperand(op, opA);
-
-      IF size = 2 AND set = RegSet{} THEN
-        set := RegSet{EAX, EBX, ECX, EDX, ESI, EDI };
-      END;
-
       <* ASSERT op.stackp = stackp *>
+
+      size := SplitOperand(op, opA);
+      IF size = 2 THEN
+        IF set = RegSet{} THEN
+          (* Why? Probably because of the set subtraction below (pickreg). *)
+          set := RegSet{EAX, EBX, ECX, EDX, ESI, EDI};
+        END;
+        ret64 := (force = Force.regset AND set = RegSet{EAX, EDX});
+      END;
 
       FOR i := 0 TO size - 1 DO
         CASE op.loc OF
@@ -361,9 +375,26 @@ PROCEDURE find (t: T; stackp: INTEGER;
 
       FOR i := 0 TO size - 1 DO
         IF (in[i] = -1) OR (force = Force.regset AND (NOT in[i] IN set))
-              OR t.reguse[in[i]].locked
-              OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp) THEN
-          IF i = 1 AND done[0] = FALSE THEN
+            OR t.reguse[in[i]].locked
+
+            (* For the case of a 64bit return value, be sure
+             * EDX is high, EAX is low. Note that we
+             * could get here in other cases, and
+             * it could be that the registers are already
+             * allocated and reversed and this will
+             * unnecessarily swap them. This is easily
+             * fixed by having actual return paths/values
+             * identify themselves to find() instead of
+             * just deducing it from aspects of the parameters.
+             *)
+            OR (ret64 AND (in[0] # EAX OR in[1] # EDX))
+
+            OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp) THEN
+
+          IF ret64 THEN
+            to[0] := EAX;
+            to[1] := EDX;
+          ELSIF i = 1 AND done[0] = FALSE THEN
             to[i] := pickreg(t, set - RegSet{to[0]}, hintaddr);
           ELSE
             to[i] := pickreg(t, set, hintaddr);
