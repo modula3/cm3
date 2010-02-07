@@ -93,7 +93,7 @@ void __cdecl RTIO__PutLong(int64 i)
 void __cdecl RTIO__PutLongHex(uint64 i)
 {
     Flush();
-    printf("%"I64"X", i);
+    printf("0x%"I64"X", i);
     fflush(NULL);
 }
 
