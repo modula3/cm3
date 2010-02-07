@@ -3527,6 +3527,9 @@ PROCEDURE call_64 (u: U; builtin: Builtin) =
 
 PROCEDURE do_shift_64 (u: U; builtin: Builtin) =
   BEGIN
+
+    u.vstack.unlock();
+
     WITH stack0 = u.vstack.pos(0, "do_shift_64"),
          stack1 = u.vstack.pos(1, "do_shift_64") DO
 
