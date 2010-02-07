@@ -1,5 +1,7 @@
 MODULE Main;
 IMPORT RTIO, Word, Long;
+FROM RTIO IMPORT PutLong, PutText, PutHex, PutLongHex, Flush;
+
 
 PROCEDURE TestInsert() =
 VAR result32: CARDINAL := 0;
@@ -10,12 +12,12 @@ BEGIN
       FOR m := 0 TO 10 DO
         FOR n := 0 TO 10 DO
           result32 := Word.Insert(a32, b32, m, n);
-          RTIO.PutText("insert32(a:"); RTIO.PutHex(a32);
-          RTIO.PutText(", b:"); RTIO.PutHex(b32);
-          RTIO.PutText(", m:"); RTIO.PutHex(m);
-          RTIO.PutText(", n:"); RTIO.PutHex(n);
-          RTIO.PutText("):"); RTIO.PutHex(result32);
-          RTIO.PutText("\n"); RTIO.Flush();
+          PutText("insert32(a:"); PutHex(a32);
+          PutText(", b:"); PutHex(b32);
+          PutText(", m:"); PutHex(m);
+          PutText(", n:"); PutHex(n);
+          PutText("):"); PutHex(result32);
+          PutText("\n");
           IF n = 0 THEN
             <* ASSERT result32 = a32 *>
           END
@@ -29,19 +31,20 @@ BEGIN
       FOR m := 0 TO 10 DO
         FOR n := 0 TO 10 DO
           result64 := Long.Insert(a64, b64, m, n);
-          RTIO.PutText("insert64(a:"); RTIO.PutLongHex(a64);
-          RTIO.PutText(", b:"); RTIO.PutLongHex(b64);
-          RTIO.PutText(", m:"); RTIO.PutHex(m);
-          RTIO.PutText(", n:"); RTIO.PutHex(n);
-          RTIO.PutText("):"); RTIO.PutLongHex(result64);
-          RTIO.PutText("\n"); RTIO.Flush();
+          PutText("insert64(a:"); PutLongHex(a64);
+          PutText(", b:"); PutLongHex(b64);
+          PutText(", m:"); PutHex(m);
+          PutText(", n:"); PutHex(n);
+          PutText("):"); PutLongHex(result64);
+          PutText("\n");
           IF n = 0 THEN
             <* ASSERT result64 = a64 *>
           END
         END
       END
     END
-  END
+  END;
+  Flush();
 END TestInsert;
 
 PROCEDURE TestExtract() =
@@ -53,12 +56,12 @@ BEGIN
      FOR m := 0 TO 10 DO
       FOR n := 0 TO 10 DO
         result32 := Word.Extract(a32, m, n);
-        RTIO.PutText("extract32(value:"); RTIO.PutHex(a32);
-        RTIO.PutText(", m:"); RTIO.PutHex(m);
-        RTIO.PutText(", n:"); RTIO.PutHex(n);
-        RTIO.PutText(", sign_extend:"); RTIO.PutHex(sign_extend);
-        RTIO.PutText("):"); RTIO.PutHex(result32);
-        RTIO.PutText("\n"); RTIO.Flush();
+        PutText("extract32(value:"); PutHex(a32);
+        PutText(", m:"); PutHex(m);
+        PutText(", n:"); PutHex(n);
+        PutText(", sign_extend:"); PutHex(sign_extend);
+        PutText("):"); PutHex(result32);
+        PutText("\n");
         IF n = 0 THEN
           <* ASSERT result32 = 0 *>
         END
@@ -70,18 +73,19 @@ BEGIN
     FOR m := 0 TO 10 DO
       FOR n := 0 TO 10 DO
         result64 := Long.Extract(a64, m, n);
-        RTIO.PutText("extract64(value:"); RTIO.PutLongHex(a64);
-        RTIO.PutText(", m:"); RTIO.PutHex(m);
-        RTIO.PutText(", n:"); RTIO.PutHex(n);
-        RTIO.PutText(", sign_extend:"); RTIO.PutHex(sign_extend);
-        RTIO.PutText("):"); RTIO.PutLongHex(result64);
-        RTIO.PutText("\n"); RTIO.Flush();
+        PutText("extract64(value:"); PutLongHex(a64);
+        PutText(", m:"); PutHex(m);
+        PutText(", n:"); PutHex(n);
+        PutText(", sign_extend:"); PutHex(sign_extend);
+        PutText("):"); PutLongHex(result64);
+        PutText("\n");
         IF n = 0 THEN
           <* ASSERT result64 = 0L *>
         END
       END
     END
-  END
+  END;
+  Flush();
 END TestExtract;
 
 (*VAR a := 1234L;
@@ -147,25 +151,25 @@ BEGIN
 END NE;
 
 BEGIN
-  RTIO.PutLong(a);
-  RTIO.PutText("\n");
-  RTIO.PutLongHex(c);
-  RTIO.PutText("\n");
+  PutLong(a);
+  PutText("\n");
+  PutLongHex(c);
+  PutText("\n");
 
   EVAL Long.Insert(1L, 2L, 3, 4);
   EVAL Long.Extract(1L, 3, 4);
 
-  RTIO.PutLong(a);
-  RTIO.PutText("\n");
-  RTIO.Flush();
+  PutLong(a);
+  PutText("\n");
+  Flush();
   a := 1L;
   b := 1L + 2L;
   c := a + b;
   c := a - b;
-  RTIO.PutText(expect_true[c = (a - b)]);
-  RTIO.PutText(expect_false[c = (a + b)]);
-  RTIO.PutText(expect_true[(a + b) > a]);
-  RTIO.Flush();
+  PutText(expect_true[c = (a - b)]);
+  PutText(expect_false[c = (a + b)]);
+  PutText(expect_true[(a + b) > a]);
+  Flush();
   TestInsert();
   TestExtract();
 END Main.
