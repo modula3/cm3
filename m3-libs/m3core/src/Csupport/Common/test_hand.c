@@ -13,6 +13,9 @@ extern "C"
 {           
 #endif
 
+M3_EXTRACT(m3test_extract32, uint32)
+M3_INSERT(m3test_insert32, uint32)
+
 #ifdef _MSC_VER
 #if _MSC_VER < 1000
 #pragma warning(disable:4702) /* unreachable code (due to assertion) */

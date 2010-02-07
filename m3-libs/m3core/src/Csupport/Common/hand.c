@@ -786,9 +786,6 @@ T __stdcall name(T x, T y, uint i, uint n)  \
 M3_EXTRACT(m3_extract64, uint64)
 M3_INSERT(m3_insert64, uint64)
 
-M3_EXTRACT(m3test_extract32, uint32)
-M3_INSERT(m3test_insert32, uint32)
-
 #endif /* WIN32 */
 
 
