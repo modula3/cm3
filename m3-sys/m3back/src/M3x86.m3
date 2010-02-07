@@ -1701,22 +1701,18 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
       u.wr.NL    ();
     END;
 
-    size := GetTypeSize(t);
-    <* ASSERT size = GetTypeSize(z) *>
-
     u.vstack.unlock();
 
-    WITH stack0 = u.vstack.pos(0, "load_indirect"),
-         stop0 = u.vstack.op(stack0) DO
-
-      <* ASSERT stop0.optype = Type.Addr *>
+    WITH stack0 = u.vstack.pos(0, "load_indirect") DO
       u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
-
       IF Target.FloatType [t] THEN
-        u.cg.f_loadind(stop0, o, t);
+        u.cg.f_loadind(u.vstack.op(stack0), o, t);
         u.vstack.dealloc_reg(stack0, operandPart := 0);
         u.vstack.set_fstack(stack0);
       ELSE
+        size := GetTypeSize(t);
+        <* ASSERT size = GetTypeSize(z) *>
+
         (* allocate the registers *)
 
         FOR i := 0 TO size - 1 DO
@@ -1725,7 +1721,11 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
             newreg[i] := u.vstack.freereg(RegSet { Codex86.EAX, Codex86.EBX,
                                                    Codex86.ECX, Codex86.EDX }, operandPart := i);
           ELSE
-            newreg[i] := u.vstack.freereg(operandPart := i);
+            IF i = 0 THEN
+              newreg[i] := u.vstack.freereg(operandPart := i);
+            ELSE
+              newreg[i] := u.vstack.freereg(AllRegisters - RegSet{newreg[0]}, operandPart := i);
+            END;
           END;
           <* ASSERT newreg[i] # -1 *>
         END;
@@ -1733,10 +1733,10 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
         (* do the loads *)
 
         FOR i := 0 TO size - 1 DO
-          u.cg.load_ind(newreg[i], stop0, o + 4 * i, t);
+          u.cg.load_ind(newreg[i], u.vstack.op(stack0), o + 4 * i, t);
         END;
 
-        (* do the bookkeeping *)
+        (* do the bookkeeping about the loads *)
         (* previous contents of stack0 was just an address, no loop over size *)
 
         u.vstack.dealloc_reg(stack0, operandPart := 0);
