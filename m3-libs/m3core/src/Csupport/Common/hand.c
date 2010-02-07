@@ -764,23 +764,31 @@ PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
    checked runtime error if n + i > Word.Size. *)
 */
 
-uint64 __stdcall m3_extract64(uint64 x, uint64 i, uint64 n, uint64 sign_extend)
-{
-    assert((n + i) <= 64);
-    x >>= i;
-    x &= ~((~(uint64)0) << n);
-    if (sign_extend && (x & (((uint64)1) << (n - 1))))
-        x |= ((~(uint64)0) << n);
-    return x;
+#define M3_EXTRACT(name, T)                             \
+T __stdcall name(T x, T i, T n, T sign_extend)          \
+{                                                       \
+    assert((n + i) <= (sizeof(T) * 8));                 \
+    x >>= i;                                            \
+    x &= ~((~(T)0) << n);                               \
+    if (sign_extend && (x & (((T)1) << (n - 1))))       \
+        x |= ((~(T)0) << n);                            \
+    return x;                                           \
 }
 
-uint64 __stdcall m3_insert64(uint64 x, uint64 y, uint64 i, uint64 n)
-{
-    uint64 mask;
-    assert((n + i) <= 64);
-    mask = ((~((~(uint64)0) << n)) << i);
-    return (x & ~mask) | ((y << i) & mask);
+#define M3_INSERT(name, T)                              \
+T __stdcall name(T x, T y, T i, T n)                    \
+{                                                       \
+    T mask;                                             \
+    assert((n + i) <= (sizeof(T) * 8));                 \
+    mask = ((~((~(T)0) << n)) << i);                    \
+    return (x & ~mask) | ((y << i) & mask);             \
 }
+
+M3_EXTRACT(m3_extract64, uint64)
+M3_INSERT(m3_insert64, uint64)
+
+M3_EXTRACT(m3test_extract32, uint32)
+M3_INSERT(m3test_insert32, uint32)
 
 #endif /* WIN32 */
 
