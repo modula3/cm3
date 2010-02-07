@@ -184,17 +184,17 @@ BEGIN
   EVAL Long.Insert(1L, 2L, 3, 4);
   EVAL Long.Extract(1L, 3, 4);
 
-  PutT("     Rotate:"); PutLH(Long.Rotate(NotConstL(16_11112222L), NotConstI(22))); NL();
-  <* ASSERT Long.Rotate(16_11112222L, 22) = Long.Rotate(NotConstL(16_11112222L), NotConstI(22)) *>
+  PutT("     Rotate:"); PutLH(Long.Rotate(NotConstL(16_11112222L), NotConstI(40))); NL();
+  <* ASSERT Long.Rotate(16_11112222L, 40) = Long.Rotate(NotConstL(16_11112222L), NotConstI(40)) *>
 
-  PutT("    -Rotate:"); PutLH(Long.Rotate(NotConstL(16_111113333L), -NotConstI(22))); NL();
-  <* ASSERT Long.Rotate(16_111113333L, -22) = Long.Rotate(NotConstL(16_111113333L), -NotConstI(22)) *>
+  PutT("    -Rotate:"); PutLH(Long.Rotate(NotConstL(16_111113333L), -NotConstI(40))); NL();
+  <* ASSERT Long.Rotate(16_111113333L, -40) = Long.Rotate(NotConstL(16_111113333L), -NotConstI(40)) *>
 
-  PutT("RightRotate:"); PutLH(Long.RightRotate(NotConstL(16_11114444L), NotConstI(22))); NL();
-  <* ASSERT Long.RightRotate(16_11114444L, 22) = Long.RightRotate(NotConstL(16_11114444L), NotConstI(22)) *>
+  PutT("RightRotate:"); PutLH(Long.RightRotate(NotConstL(16_11114444L), NotConstI(40))); NL();
+  <* ASSERT Long.RightRotate(16_11114444L, 40) = Long.RightRotate(NotConstL(16_11114444L), NotConstI(40)) *>
 
-  PutT(" LeftRotate:"); PutLH(Long.LeftRotate(NotConstL(16_11115555L), NotConstI(22))); NL();
-  <* ASSERT Long.LeftRotate(16_11115555L, 22) = Long.LeftRotate(NotConstL(16_11115555L), NotConstI(22)) *>
+  PutT(" LeftRotate:"); PutLH(Long.LeftRotate(NotConstL(16_11115555L), NotConstI(40))); NL();
+  <* ASSERT Long.LeftRotate(16_11115555L, 40) = Long.LeftRotate(NotConstL(16_11115555L), NotConstI(40)) *>
 
   PutT("      Shift:"); PutLH(Long.Shift(NotConstL(16_1000L), NotConstI(2))); NL();
   <* ASSERT Long.Shift(16_1000L, 2) = Long.Shift(NotConstL(16_1000L), NotConstI(2)) *>
