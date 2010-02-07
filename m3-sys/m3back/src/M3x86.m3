@@ -1718,8 +1718,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
         FOR i := 0 TO size - 1 DO
           IF CG_Bytes[t] = 1 THEN
             <* ASSERT i = 0 AND size = 1 *>
-            newreg[i] := u.vstack.freereg(RegSet { Codex86.EAX, Codex86.EBX,
-                                                   Codex86.ECX, Codex86.EDX }, operandPart := i);
+            newreg[i] := u.vstack.freereg(RegistersForByteOperations, operandPart := i);
           ELSE
             IF i = 0 THEN
               newreg[i] := u.vstack.freereg(operandPart := i);
