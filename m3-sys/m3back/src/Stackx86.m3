@@ -17,7 +17,7 @@ FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize, TZero;
-FROM M3x86Rep IMPORT RegistersForByteOperations, RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
+FROM M3x86Rep IMPORT RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
 
@@ -279,19 +279,13 @@ PROCEDURE find (t: T; stackp: INTEGER;
   BEGIN
     WITH op = t.vstack[stackp] DO
 
-      <* ASSERT op.stackp = stackp *>
-
-      (* If it is already in registers and can be in any registers, then nothing to do. *)
-
-      IF force = Force.anyreg AND op.loc = OLoc.register THEN
-        RETURN;
-      END;
-
       size := SplitOperand(op, opA);
 
       IF size = 2 AND set = RegSet{} THEN
         set := RegSet{Codex86.EAX, Codex86.EBX, Codex86.ECX, Codex86.EDX, Codex86.ESI, Codex86.EDI };
       END;
+
+      <* ASSERT op.stackp = stackp *>
 
       FOR i := 0 TO size - 1 DO
         CASE op.loc OF
@@ -355,9 +349,11 @@ PROCEDURE find (t: T; stackp: INTEGER;
       IF op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 1 THEN
         force := Force.regset;
         IF set = RegSet {} THEN
-          set := RegistersForByteOperations;
+          set := RegSet { Codex86.EAX, Codex86.EBX,
+                          Codex86.ECX, Codex86.EDX };
         ELSE
-          set := set * RegistersForByteOperations;
+          set := set * RegSet { Codex86.EAX, Codex86.EBX,
+                                Codex86.ECX, Codex86.EDX };
         END
       END;
 
@@ -529,7 +525,8 @@ PROCEDURE inreg (t: T; READONLY v: MVar; set: RegSet:= RegSet {}): Regno =
     END;
 
     FOR i := 0 TO NRegs DO
-      IF t.reguse[i].last_store # NoStore AND v = t.reguse[i].last_store THEN
+      IF t.reguse[i].last_store # NoStore AND
+         v = t.reguse[i].last_store THEN
         prec := precedence(t, i);
         IF (set # RegSet {}) AND (NOT i IN set) THEN
           prec := prec * HighPrec;
@@ -841,7 +838,8 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
           FOR i := 0 TO size - 1 DO
             IF CG_Bytes[src_mvar.mvar_type] = 1 THEN
               <* ASSERT size = 1 AND i = 0 *>
-              destreg[i] := pickreg(t, RegistersForByteOperations);
+              destreg[i] := pickreg(t, RegSet { Codex86.EAX, Codex86.EBX,
+                                                Codex86.ECX, Codex86.EDX } );
             ELSE
               destreg[i] := pickreg(t, RegSet {}, src_mvar.mvar_type = Type.Addr);
             END;
@@ -895,7 +893,9 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
       ELSE
         unlock(t);
         IF CG_Bytes[dest_mvar.mvar_type] = 1 AND src_stack0.loc # OLoc.imm THEN
-          find(t, t.stacktop - 1, Force.regset, RegistersForByteOperations);
+          find(t, t.stacktop - 1, Force.regset,
+               RegSet { Codex86.EAX, Codex86.EBX,
+                        Codex86.ECX, Codex86.EDX } );
         ELSE
           find(t, t.stacktop - 1, Force.anyregimm);
         END;
@@ -1088,12 +1088,16 @@ PROCEDURE dostoreind (t: T; o: ByteOffset; type: MType) =
          stack1 = pos(t, 1, "store_indirect") DO
       find(t, stack1, Force.any, RegSet {}, TRUE);
       IF CG_Bytes[type] = 1 AND t.vstack[stack0].loc # OLoc.imm THEN
-        find(t, stack0, Force.regset, RegistersForByteOperations);
+        find(t, stack0, Force.regset, RegSet { Codex86.EAX, Codex86.EBX,
+                                               Codex86.ECX, Codex86.EDX } );
       ELSE
         find(t, stack0, Force.anyregimm);
       END;
 
-      find(t, stack1, Force.anyreg, RegSet {}, TRUE);
+      IF t.vstack[stack1].loc # OLoc.register THEN
+        find(t, stack1, Force.anyreg, RegSet {}, TRUE);
+      END;
+
       t.cg.store_ind(t.vstack[stack0], t.vstack[stack1], o, type);
     END;
 
