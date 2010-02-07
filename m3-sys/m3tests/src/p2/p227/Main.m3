@@ -184,17 +184,17 @@ BEGIN
   EVAL Long.Insert(1L, 2L, 3, 4);
   EVAL Long.Extract(1L, 3, 4);
 
-  PutT("     Rotate:"); PutLH(Long.Rotate(NotConstL(16_11112222L), NotConstI(2))); NL();
-  <* ASSERT Long.Rotate(16_11112222L, 2) = Long.Rotate(NotConstL(16_11112222L), NotConstI(2)) *>
+  PutT("     Rotate:"); PutLH(Long.Rotate(NotConstL(16_11112222L), NotConstI(22))); NL();
+  <* ASSERT Long.Rotate(16_11112222L, 22) = Long.Rotate(NotConstL(16_11112222L), NotConstI(22)) *>
 
-  PutT("    -Rotate:"); PutLH(Long.Rotate(NotConstL(16_111113333L), -NotConstI(2))); NL();
-  <* ASSERT Long.Rotate(16_111113333L, -2) = Long.Rotate(NotConstL(16_111113333L), -NotConstI(2)) *>
+  PutT("    -Rotate:"); PutLH(Long.Rotate(NotConstL(16_111113333L), -NotConstI(22))); NL();
+  <* ASSERT Long.Rotate(16_111113333L, -22) = Long.Rotate(NotConstL(16_111113333L), -NotConstI(22)) *>
 
-  PutT("RightRotate:"); PutLH(Long.RightRotate(NotConstL(16_11114444L), NotConstI(2))); NL();
-  <* ASSERT Long.RightRotate(16_11114444L, 2) = Long.RightRotate(NotConstL(16_11114444L), NotConstI(2)) *>
+  PutT("RightRotate:"); PutLH(Long.RightRotate(NotConstL(16_11114444L), NotConstI(22))); NL();
+  <* ASSERT Long.RightRotate(16_11114444L, 22) = Long.RightRotate(NotConstL(16_11114444L), NotConstI(22)) *>
 
-  PutT(" LeftRotate:"); PutLH(Long.LeftRotate(NotConstL(16_11115555L), NotConstI(2))); NL();
-  <* ASSERT Long.LeftRotate(16_11115555L, 2) = Long.LeftRotate(NotConstL(16_11115555L), NotConstI(2)) *>
+  PutT(" LeftRotate:"); PutLH(Long.LeftRotate(NotConstL(16_11115555L), NotConstI(22))); NL();
+  <* ASSERT Long.LeftRotate(16_11115555L, 22) = Long.LeftRotate(NotConstL(16_11115555L), NotConstI(22)) *>
 
   PutT("      Shift:"); PutLH(Long.Shift(NotConstL(16_1000L), NotConstI(2))); NL();
   <* ASSERT Long.Shift(16_1000L, 2) = Long.Shift(NotConstL(16_1000L), NotConstI(2)) *>
@@ -217,25 +217,19 @@ BEGIN
   PutT("       100L:"); PutLH(NotConstL(100L)); NL();
   <* ASSERT 100L = NotConstL(100L) *>
 
-  PutT(falsetrue[           100L  >           0L]);
-  PutT(falsetrue[           100L  <           0L]);
-  PutT(falsetrue[          -100L  >           0L]);
-  PutT(falsetrue[          -100L  <           0L]);
-  PutT(falsetrue[NotConstL( 100L) > NotConstL(0L)]);
-  PutT(falsetrue[NotConstL( 100L) < NotConstL(0L)]);
-  PutT(falsetrue[NotConstL(-100L) > NotConstL(0L)]);
-  PutT(falsetrue[NotConstL(-100L) < NotConstL(0L)]);
+  PutT(falsetrue[           100L  >           0L]); Flush();
+  PutT(falsetrue[           100L  <           0L]); Flush();
+  PutT(falsetrue[          -100L  >           0L]); Flush();
+  PutT(falsetrue[          -100L  <           0L]); Flush();
+  PutT(falsetrue[NotConstL( 100L) > NotConstL(0L)]); Flush();
+  PutT(falsetrue[NotConstL( 100L) < NotConstL(0L)]); Flush();
+  PutT(falsetrue[NotConstL(-100L) > NotConstL(0L)]); Flush();
+  PutT(falsetrue[NotConstL(-100L) < NotConstL(0L)]); Flush();
 
   <* ASSERT (NotConstL(  100L) > NotConstL(0L)) = TRUE *>
   <* ASSERT (NotConstL(  100L) < NotConstL(0L)) = FALSE *>
   <* ASSERT (NotConstL( -100L) > NotConstL(0L)) = FALSE *>
   <* ASSERT (NotConstL( -100L) < NotConstL(0L)) = TRUE *>
-
-  PutT("        abs:"); PutLH(ABS(NotConstL(-100L))); NL();
-  <* ASSERT ABS(-100L) = ABS(NotConstL(-100L)) *>
-
-  PutT("        abs:"); PutLH(ABS(NotConstL(100L))); NL();
-  <* ASSERT ABS(100L) = ABS(NotConstL(100L)) *>
 
   PutT("        neg:"); PutLH(-NotConstL(100L)); NL();
   <* ASSERT -100L = -NotConstL(100L) *>
@@ -243,6 +237,11 @@ BEGIN
   PutT("        neg:"); PutLH(-NotConstL(-NotConstL(100L))); NL();
   <* ASSERT -(-100L) = -NotConstL(-(NotConstL(100L))) *>
 
+  PutT("        abs:"); PutLH(ABS(NotConstL(-100L))); NL();
+  <* ASSERT ABS(-100L) = ABS(NotConstL(-100L)) *>
+
+  PutT("        abs:"); PutLH(ABS(NotConstL(100L))); NL();
+  <* ASSERT ABS(100L) = ABS(NotConstL(100L)) *>
 
   PutLong(a);
   NL();
