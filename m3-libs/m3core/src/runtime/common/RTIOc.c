@@ -9,15 +9,27 @@
 #define __cdecl /* nothing */
 #endif
 
+#ifdef _MSC_VER
+typedef __int64 int64;
+typedef unsigned __int64 uint64;
+#define I64 "I64"
+#else
+typedef long long int64;
+typedef unsigned long long uint64;
+#define I64 "ll"
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define Flush   RTIO__Flush
-#define PutE    RTIO__PutE
-#define PutF    RTIO__PutF
-#define PutG    RTIO__PutG
-#define PutBytes RTIO__PutBytes
+#define Flush       RTIO__Flush
+#define PutE        RTIO__PutE
+#define PutF        RTIO__PutF
+#define PutG        RTIO__PutG
+#define PutBytes    RTIO__PutBytes
+#define PutLong     RTIO__PutLong
+#define PutLongHex  RTIO__PutLongHex
 
 void __cdecl Flush(void);
 
@@ -64,6 +76,20 @@ void __cdecl PutBytes(const unsigned char* p, size_t count)
     }
     buffer[j++] = 0;
     printf("%s", buffer);
+    fflush(NULL);
+}
+
+void __cdecl RTIO__PutLong(int64 i)
+{
+    Flush();
+    printf("%"I64"d", i);
+    fflush(NULL);
+}
+
+void __cdecl RTIO__PutLongHex(uint64 i)
+{
+    Flush();
+    printf("%"I64"x", i);
     fflush(NULL);
 }
 
