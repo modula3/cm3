@@ -4071,19 +4071,21 @@ PROCEDURE condset (u: U; cond: Cond; t: ZType) =
   BEGIN
     IF NOT Target.FloatType[t] THEN
       reversed := intregcmp(u, cond < Cond.E, t);
-      IF reversed THEN
-        cond := revcond[cond];
-      END;
-      IF t # Type.Int32 THEN
-        cond := unscond[cond];
-      END
     ELSE
       reversed := fltregcmp(u, cond < Cond.E);
-      IF reversed THEN
-        cond := revcond[cond];
-      END;
-      cond := unscond[cond]; (* FCOM sets the unsigned compare flags *)
     END;
+
+    IF reversed THEN
+      cond := revcond[cond];
+    END;
+
+    CASE t OF
+    | Type.Word32, Type.Word64, Type.Addr,
+      Type.Reel, Type.LReel, Type.XReel => (* FCOM sets the unsigned compare flags *)
+        cond := unscond[cond];
+    ELSE
+    END;
+
     u.vstack.unlock();
     u.vstack.pushnew(Type.Word8, Force.mem);
     WITH stop0 = u.vstack.op(u.vstack.pos(0, "condset")) DO
