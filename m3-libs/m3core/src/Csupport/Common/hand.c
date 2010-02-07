@@ -1282,7 +1282,7 @@ static void TestExtract()
                 for (sign_extend = 0; sign_extend < 2; ++sign_extend)
                 {
                     uint32 result = m3test_extract32(a32, m, n, sign_extend);
-                    printf("extract32(value:0x%"I64"X, m:%"I64"X, n:%"I64"X, sign_extend:%"I64"X):0x%"I64"X\n", 
+                    printf("extract32(value:0x%"I64"X, m:0x%"I64"X, n:0x%"I64"X, sign_extend:0x%"I64"X):0x%"I64"X\n", 
                             (uint64)a32,
                             (uint64)m,
                             (uint64)n,
