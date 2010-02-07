@@ -620,15 +620,15 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local ShipUconstants = equal (lib, "m3core") and FileExists("Uconstants" & Obj)
     local ShipWinConstants = equal (lib, "m3core") and FileExists("WinConstants" & Obj)
 
-    if ShipHand
+    if ShipHand or not shared
         UseHand = ""
     end
 
-    if ShipUconstants
+    if ShipUconstants or not shared
         UseUconstants = ""
     end
 
-    if ShipWinConstants
+    if ShipWinConstants or not shared
         UseWinConstants = ""
     end
 
@@ -916,14 +916,6 @@ proc m3_link_gnu(prog, options, objects, imported_libs, shared, pgm_file, listin
     %   options += "-mconsole"
     % end
 
-    if not shared
-        UseUconstants = ""
-    end
-
-    if not shared
-        UseWinConstants = ""
-    end
-
     return try_exec(
             "@gcc",
             "-gstabs+",
@@ -971,6 +963,12 @@ proc m3_link(prog, options, objects, imported_libs, shared) is
     % make sure files get cleaned up
     DeleteFiles(Outputs)
     deriveds("", Outputs)
+
+    if not shared
+      UseHand = ""
+      UseUconstants = ""
+      UseWinConstants = ""
+    end
 
     imported_libs = ConvertLibsToStandalone(imported_libs, shared)
 
