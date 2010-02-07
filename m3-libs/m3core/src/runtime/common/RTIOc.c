@@ -12,10 +12,14 @@
 #ifdef _MSC_VER
 typedef __int64 int64;
 typedef unsigned __int64 uint64;
-#define I64 "I64"
 #else
 typedef long long int64;
 typedef unsigned long long uint64;
+#endif
+
+#ifdef _WIN32
+#define I64 "I64"
+#else
 #define I64 "ll"
 #endif
 
@@ -89,7 +93,7 @@ void __cdecl RTIO__PutLong(int64 i)
 void __cdecl RTIO__PutLongHex(uint64 i)
 {
     Flush();
-    printf("%"I64"x", i);
+    printf("%"I64"X", i);
     fflush(NULL);
 }
 
