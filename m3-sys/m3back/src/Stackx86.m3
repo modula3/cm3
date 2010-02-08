@@ -13,7 +13,7 @@ IMPORT Target, TInt, TWord, Fmt;
 FROM Target IMPORT FloatType;
 FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 
-FROM M3CG IMPORT Type, MType, ZType, Sign, Label, ByteOffset;
+FROM M3CG IMPORT Type, MType, ZType, IType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize, TZero;
@@ -1404,7 +1404,7 @@ PROCEDURE doabs (t: T) =
     END
   END doabs;
 
-PROCEDURE doshift (t: T) =
+PROCEDURE doshift (t: T; <*UNUSED*>type: IType) =
   VAR ovflshift, leftlab, endlab: Label;
       tShiftCount: Target.Int;
       shiftCount: INTEGER;
@@ -1489,7 +1489,7 @@ PROCEDURE doshift (t: T) =
     END
   END doshift;
 
-PROCEDURE dorotate (t: T) =
+PROCEDURE dorotate (t: T; <*UNUSED*>type: IType) =
   VAR leftlab, endlab: Label;
       rotateCount: INTEGER;
   BEGIN
@@ -1553,7 +1553,7 @@ PROCEDURE dorotate (t: T) =
     END
   END dorotate;
 
-PROCEDURE doextract (t: T; sign: BOOLEAN) =
+PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN) =
   VAR tbl: MVar;
       int: INTEGER;
   BEGIN
@@ -1570,7 +1570,7 @@ PROCEDURE doextract (t: T; sign: BOOLEAN) =
         IF NOT TInt.ToInt(stop0.imm, int) THEN
           t.Err("doextract: failed to convert to host integer");
         END;
-        doextract_n(t, sign, int);
+        doextract_n(t, type, sign, int);
         RETURN;
       END;
 
@@ -1623,7 +1623,7 @@ PROCEDURE doextract (t: T; sign: BOOLEAN) =
     END
   END doextract;
 
-PROCEDURE doextract_n (t: T; sign: BOOLEAN; n: INTEGER) =
+PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER) =
   VAR tn, t32MinusN, andval: Target.Int;
       int: INTEGER;
   BEGIN
@@ -1638,7 +1638,7 @@ PROCEDURE doextract_n (t: T; sign: BOOLEAN; n: INTEGER) =
         IF NOT TInt.ToInt(stop0.imm, int) THEN
           t.Err("doextract_n: failed to convert to host integer");
         END;
-        doextract_mn(t, sign, int, n);
+        doextract_mn(t, type, sign, int, n);
         RETURN;
       END;
 
@@ -1684,7 +1684,7 @@ PROCEDURE doextract_n (t: T; sign: BOOLEAN; n: INTEGER) =
     END
   END doextract_n;
 
-PROCEDURE doextract_mn (t: T; sign: BOOLEAN; m, n: INTEGER) =
+PROCEDURE doextract_mn (t: T; <*UNUSED*>type: IType; sign: BOOLEAN; m, n: INTEGER) =
   VAR andval, tint: Target.Int;
   BEGIN
     unlock(t);
@@ -1739,7 +1739,7 @@ PROCEDURE doextract_mn (t: T; sign: BOOLEAN; m, n: INTEGER) =
     END
   END doextract_mn;
 
-PROCEDURE doinsert (t: T) =
+PROCEDURE doinsert (t: T; type: IType) =
   VAR maskreg: Regno;  tbl: MVar;
       int: INTEGER;
       tint: Target.Int;
@@ -1759,7 +1759,7 @@ PROCEDURE doinsert (t: T) =
         IF NOT TInt.ToInt(stop0.imm, int) THEN
           t.Err("doinsert: failed to convert to host integer");
         END;
-        doinsert_n(t, int);
+        doinsert_n(t, type, int);
         RETURN;
       END;
 
@@ -1822,7 +1822,7 @@ PROCEDURE doinsert (t: T) =
     END
   END doinsert;
 
-PROCEDURE doinsert_n (t: T; n: INTEGER) =
+PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER) =
   VAR tbl: MVar;  maskreg: Regno;
       m: INTEGER;
       tint: Target.Int;
@@ -1840,7 +1840,7 @@ PROCEDURE doinsert_n (t: T; n: INTEGER) =
         IF NOT TInt.ToInt(stop0.imm, m) THEN
           t.Err("doinsert_n: failed to convert to host integer");
         END;
-        doinsert_mn(t, m, n);
+        doinsert_mn(t, type, m, n);
         RETURN;
       END;
 
@@ -1883,7 +1883,7 @@ PROCEDURE doinsert_n (t: T; n: INTEGER) =
     END
   END doinsert_n;
 
-PROCEDURE doinsert_mn (t: T; m, n: INTEGER) =
+PROCEDURE doinsert_mn (t: T; <*UNUSED*>type: IType; m, n: INTEGER) =
   VAR tm, tint: Target.Int;
   BEGIN
     unlock(t);
