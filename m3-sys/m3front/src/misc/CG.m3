@@ -1397,7 +1397,13 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
     save_bits  : Var;
     save_temp  : BOOLEAN;
     const_bits : INTEGER;
+    int_type := Target.Longint;
   BEGIN
+
+    IF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type) THEN
+      int_type := Target.Integer;
+    END;
+
     WITH x = stack [SCheck (1, "Load_indirect")] DO
       IF (x.kind = VKind.Direct) THEN
         (* there's no lazy form of MEM(x) *)
@@ -1446,9 +1452,9 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
           IF (s # best_size) THEN
             Force ();
             IF Target.Little_endian
-              THEN cg.extract_mn (Target.Integer.cg_type,
+              THEN cg.extract_mn (int_type.cg_type,
                                   Target.SignedType[t], 0, s);
-              ELSE cg.extract_mn (Target.Integer.cg_type,
+              ELSE cg.extract_mn (int_type.cg_type,
                                   Target.SignedType[t], best_size - s, s);
             END;
           END;
@@ -1458,16 +1464,16 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
           SimpleIndirectLoad (x, best_type);
           Force ();
           IF Target.Little_endian
-            THEN cg.extract_mn (Target.Integer.cg_type, Target.SignedType[t],
+            THEN cg.extract_mn (int_type.cg_type, Target.SignedType[t],
                                 bit_offset, s);
-            ELSE cg.extract_mn (Target.Integer.cg_type, Target.SignedType[t],
+            ELSE cg.extract_mn (int_type.cg_type, Target.SignedType[t],
                                 best_size - bit_offset - s, s);
           END;
         ELSE
           (* unaligned, partial load with variable offset *)
           IF (best_align > x.align) THEN Err ("unaligned base variable"); END;
 
-          a := MIN (base_align, Target.Integer.size);
+          a := MIN (base_align, int_type.size);
           IF (best_size < a) THEN
             (* make sure we load the largest possible aligned value,
                because we can't tell how far the variable bit-offset
@@ -1491,95 +1497,19 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
 
           (* compute the full bit offset *)
           IF Target.Little_endian THEN
-            cg.load (save_bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
+            cg.load (save_bits, 0, int_type.cg_type, int_type.cg_type);
             IF (const_bits # 0) THEN
               Push_int (const_bits);
-              cg.add (Target.Integer.cg_type);
+              cg.add (int_type.cg_type);
             END;
           ELSE (* big endian *)
             Push_int (best_size - const_bits - s);
-            cg.load (save_bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
-            cg.subtract (Target.Integer.cg_type);
+            cg.load (save_bits, 0, int_type.cg_type, int_type.cg_type);
+            cg.subtract (int_type.cg_type);
           END;
 
           (* extract the needed bits *)
-          cg.extract_n (Target.Integer.cg_type, Target.SignedType[t], s);
-
-          (* restore the hidden bit offset *)
-          x.bits := save_bits;
-          x.temp_bits := save_temp;
-        END;
-      ELSIF (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
-        base_align := Base_align (x);
-        best_type  := FindIntType (t, s, x.offset, base_align);
-        best_size  := TargetMap.CG_Size [best_type];
-        best_align := TargetMap.CG_Align [best_type];
-        bit_offset := x.offset MOD best_align;
-        IF (bit_offset = 0) AND (x.bits = NIL) THEN
-          (* this is a simple partial word load *)
-          SimpleIndirectLoad (x, best_type);
-          (** x.type := TargetMap.CG_Base [best_type]; -- nope **)
-          IF (s # best_size) THEN
-            Force ();
-            IF Target.Little_endian
-              THEN cg.extract_mn (Target.Longint.cg_type,
-                                  Target.SignedType[t], 0, s);
-              ELSE cg.extract_mn (Target.Longint.cg_type,
-                                  Target.SignedType[t], best_size - s, s);
-            END;
-          END;
-        ELSIF (x.bits = NIL) THEN
-          (* partial load with unaligned constant offset *)
-          x.offset := x.offset - bit_offset;
-          SimpleIndirectLoad (x, best_type);
-          Force ();
-          IF Target.Little_endian
-            THEN cg.extract_mn (Target.Longint.cg_type, Target.SignedType[t],
-                                bit_offset, s);
-            ELSE cg.extract_mn (Target.Longint.cg_type, Target.SignedType[t],
-                                best_size - bit_offset - s, s);
-          END;
-        ELSE
-          (* unaligned, partial load with variable offset *)
-          IF (best_align > x.align) THEN Err ("unaligned base variable"); END;
-
-          a := MIN (base_align, Target.Longint.size);
-          IF (best_size < a) THEN
-            (* make sure we load the largest possible aligned value,
-               because we can't tell how far the variable bit-offset
-               will take us.  *)
-            best_type  := FindIntType (t, MAX (s, a),
-                                       x.offset MOD a, base_align);
-            best_size  := TargetMap.CG_Size [best_type];
-            best_align := TargetMap.CG_Align [best_type];
-            bit_offset := x.offset MOD best_align;
-          END;
-
-          (* hide the bit offset *)
-          save_bits := x.bits;       x.bits := NIL;
-          save_temp := x.temp_bits;  x.temp_bits := FALSE;
-
-          (* generate the aligned load *)
-          const_bits := x.offset MOD best_align;
-          DEC (x.offset, const_bits);
-          SimpleIndirectLoad (x, best_type);
-          Force ();
-
-          (* compute the full bit offset *)
-          IF Target.Little_endian THEN
-            cg.load (save_bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
-            IF (const_bits # 0) THEN
-              Push_int (const_bits);
-              cg.add (Target.Integer.cg_type);
-            END;
-          ELSE (* big endian *)
-            Push_int (best_size - const_bits - s);
-            cg.load (save_bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
-            cg.subtract (Target.Integer.cg_type);
-          END;
-
-          (* extract the needed bits *)
-          cg.extract_n (Target.Longint.cg_type, Target.SignedType[t], s);
+          cg.extract_n (int_type.cg_type, Target.SignedType[t], s);
 
           (* restore the hidden bit offset *)
           x.bits := save_bits;
