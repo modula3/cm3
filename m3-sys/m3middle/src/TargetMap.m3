@@ -27,11 +27,6 @@ PROCEDURE Init () =
     InitI (CGType.Struct, Target.Void);
     InitI (CGType.Void,   Target.Void);
 
-    CGTypeToIntType[CGType.Int32] := Target.Int32;
-    CGTypeToIntType[CGType.Word32] := Target.Word32;
-    CGTypeToIntType[CGType.Int64] := Target.Int64;
-    CGTypeToIntType[CGType.Word64] := Target.Word64;
-
     Word_types[0] := Target.Word8;
     Word_types[1] := Target.Word16;
     Word_types[2] := Target.Word32;
@@ -41,7 +36,6 @@ PROCEDURE Init () =
     Integer_types[1] := Target.Int16;
     Integer_types[2] := Target.Int32;
     Integer_types[3] := Target.Int64;
-
   END Init;
 
 PROCEDURE InitI (type: CGType;  READONLY x: Target.Int_type) =

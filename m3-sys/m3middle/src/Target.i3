@@ -174,11 +174,6 @@ CONST
   };
 
 CONST
-  ToUnsignedType = ARRAY (*IType*)[CGType.Word32..CGType.Int64] OF (*IType*)[CGType.Word32..CGType.Word64] {
-    CGType.Word32, CGType.Word32,
-    CGType.Word64, CGType.Word64 };
-
-CONST
   OrdinalType = ARRAY CGType OF BOOLEAN {
     TRUE,  TRUE,  TRUE,  TRUE,   (* Word.8, Int.8, Word.16, Int.16 *)
     TRUE,  TRUE,  TRUE,  TRUE,   (* Word.32, Int.32, Word.64, Int.64 *)
