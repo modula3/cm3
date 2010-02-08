@@ -1439,7 +1439,8 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
         Force (); (* to connect the error message with the code *)
         SimpleIndirectLoad (x, t);
 
-      ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type) THEN
+      ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type)
+         OR (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
         base_align := Base_align (x);
         best_type  := FindIntType (t, s, x.offset, base_align);
         best_size  := TargetMap.CG_Size [best_type];
@@ -1557,7 +1558,13 @@ PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
     best_align : Alignment;
     best_size  : Size;
     best_type  : MType;
+    int_type := Target.Longint;
   BEGIN
+
+    IF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type) THEN
+      int_type := Target.Integer;
+    END;
+
     Force ();  (* materialize the value to be stored *)
 
     IF (size = s) AND ((a+o) MOD align) = 0 THEN
@@ -1566,41 +1573,24 @@ PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
     ELSIF (size < s) THEN
       Err ("store size too large");
       cg.store (v, AsBytes (o), StackType[t], t);
-    ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type) THEN
+    ELSIF  (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type)
+        OR (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
       best_type  := FindIntType (t, s, o, a);
       best_size  := TargetMap.CG_Size [best_type];
       best_align := TargetMap.CG_Align [best_type];
       align := (a+o) MOD best_align;
       IF (s = best_size) AND (align = 0) THEN
         (* this is a simple partial word store *)
-        cg.store (v, AsBytes (o), Target.Integer.cg_type, best_type);
+        cg.store (v, AsBytes (o), int_type.cg_type, best_type);
       ELSE
         (* unaligned, partial store *)
-        cg.load (v, AsBytes (o - align), best_type, Target.Integer.cg_type);
+        cg.load (v, AsBytes (o - align), best_type, int_type.cg_type);
         cg.swap (t, t);
         IF Target.Little_endian
-          THEN cg.insert_mn (Target.Integer.cg_type, align, s);
-          ELSE cg.insert_mn (Target.Integer.cg_type, best_size - align - s, s);
+          THEN cg.insert_mn (int_type.cg_type, align, s);
+          ELSE cg.insert_mn (int_type.cg_type, best_size - align - s, s);
         END;
-        cg.store (v, AsBytes (o - align), Target.Integer.cg_type, best_type);
-      END;
-    ELSIF (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
-      best_type  := FindIntType (t, s, o, a);
-      best_size  := TargetMap.CG_Size [best_type];
-      best_align := TargetMap.CG_Align [best_type];
-      align := (a+o) MOD best_align;
-      IF (s = best_size) AND (align = 0) THEN
-        (* this is a simple partial word store *)
-        cg.store (v, AsBytes (o), Target.Longint.cg_type, best_type);
-      ELSE
-        (* unaligned, partial store *)
-        cg.load (v, AsBytes (o - align), best_type, Target.Longint.cg_type);
-        cg.swap (t, t);
-        IF Target.Little_endian
-          THEN cg.insert_mn (Target.Longint.cg_type, align, s);
-          ELSE cg.insert_mn (Target.Longint.cg_type, best_size - align - s, s);
-        END;
-        cg.store (v, AsBytes (o - align), Target.Longint.cg_type, best_type);
+        cg.store (v, AsBytes (o - align), int_type.cg_type, best_type);
       END;
     ELSE
       (* unaligned non-integer value *)
