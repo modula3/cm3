@@ -2263,12 +2263,11 @@ PROCEDURE shift (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      do_rotate_or_shift_64 (u, Builtin.shift64);
+    IF u.vstack.doshift (t) THEN
       RETURN;
     END;
 
-    u.vstack.doshift (t);
+    do_rotate_or_shift_64 (u, Builtin.shift64);
   END shift;
 
 PROCEDURE shift_left   (u: U;  t: IType) =
@@ -2394,12 +2393,11 @@ PROCEDURE rotate (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      do_rotate_or_shift_64 (u, Builtin.rotate64);
+    IF u.vstack.dorotate(t) THEN
       RETURN;
     END;
 
-    u.vstack.dorotate(t);
+    do_rotate_or_shift_64 (u, Builtin.rotate64);
   END rotate;
 
 PROCEDURE rotate_left  (u: U;  t: IType) =
@@ -2541,18 +2539,18 @@ PROCEDURE extract (u: U;  t: IType;  sign_extend: BOOLEAN) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      IF sign_extend THEN
-        builtin := Builtin.extract_and_sign_extend64;
-      END;
-      start_int_proc (u, builtin);
-      pop_param(u, Type.Word32); (* n *)
-      pop_param(u, Type.Word32); (* m *)
-      pop_param(u, Type.Word64); (* value *)
-      call_64 (u, builtin);
-    ELSE
-      u.vstack.doextract(t, sign_extend);
-    END
+    IF u.vstack.doextract(t, sign_extend) THEN
+      RETURN;
+    END;
+
+    IF sign_extend THEN
+      builtin := Builtin.extract_and_sign_extend64;
+    END;
+    start_int_proc (u, builtin);
+    pop_param(u, Type.Word32); (* n *)
+    pop_param(u, Type.Word32); (* m *)
+    pop_param(u, Type.Word64); (* value *)
+    call_64 (u, builtin);
   END extract;
 
 PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
@@ -2567,12 +2565,12 @@ PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      u.vstack.pushimmI(n, Type.Word32);
-      extract(u, t, sign);
-    ELSE
-      u.vstack.doextract_n(t, sign, n);
-    END
+    IF u.vstack.doextract_n(t, sign, n) THEN 
+      RETURN;
+    END;
+
+    u.vstack.pushimmI(n, Type.Word32);
+    extract(u, t, sign);
   END extract_n;
 
 PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
@@ -2588,13 +2586,13 @@ PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      u.vstack.pushimmI(m, Type.Word32);
-      u.vstack.pushimmI(n, Type.Word32);
-      extract(u, t, sign);
-    ELSE
-      u.vstack.doextract_mn(t, sign, m, n);
-    END
+    IF u.vstack.doextract_mn(t, sign, m, n) THEN
+      RETURN;
+    END;
+
+    u.vstack.pushimmI(m, Type.Word32);
+    u.vstack.pushimmI(n, Type.Word32);
+    extract(u, t, sign);
   END extract_mn;
 
 PROCEDURE insert  (u: U;  t: IType) =
@@ -2606,16 +2604,15 @@ PROCEDURE insert  (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      start_int_proc (u, Builtin.insert64);
-      pop_param(u, Type.Word32);
-      pop_param(u, Type.Word32);
-      pop_param(u, Type.Word64);
-      pop_param(u, Type.Word64);
-      call_64 (u, Builtin.insert64);
-    ELSE
-      u.vstack.doinsert(t);
-    END
+    IF u.vstack.doinsert(t) THEN
+      RETURN;
+    END;
+    start_int_proc (u, Builtin.insert64);
+    pop_param(u, Type.Word32);
+    pop_param(u, Type.Word32);
+    pop_param(u, Type.Word64);
+    pop_param(u, Type.Word64);
+    call_64 (u, Builtin.insert64);
   END insert;
 
 PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
@@ -2628,12 +2625,11 @@ PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      u.vstack.pushimmI(n, Type.Word32);
-      u.insert(t);
-    ELSE
-      u.vstack.doinsert_n(t, n);
-    END
+    IF u.vstack.doinsert_n(t, n) THEN
+      RETURN;
+    END;
+    u.vstack.pushimmI(n, Type.Word32);
+    u.insert(t);
   END insert_n;
 
 PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
@@ -2647,13 +2643,12 @@ PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      u.vstack.pushimmI(m, Type.Word32);
-      u.vstack.pushimmI(n, Type.Word32);
-      u.insert(t);
-    ELSE
-      u.vstack.doinsert_mn(t, m, n);
-    END
+    IF u.vstack.doinsert_mn(t, m, n) THEN
+      RETURN;
+    END;
+    u.vstack.pushimmI(m, Type.Word32);
+    u.vstack.pushimmI(n, Type.Word32);
+    u.insert(t);
   END insert_mn;
 
 (*------------------------------------------------ misc. stack/memory ops ---*)

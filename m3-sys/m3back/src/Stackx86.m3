@@ -1404,11 +1404,16 @@ PROCEDURE doabs (t: T) =
     END
   END doabs;
 
-PROCEDURE doshift (t: T; <*UNUSED*>type: IType) =
+PROCEDURE doshift (t: T; type: IType): BOOLEAN =
   VAR ovflshift, leftlab, endlab: Label;
       tShiftCount: Target.Int;
       shiftCount: INTEGER;
   BEGIN
+
+    IF Is64(type) THEN
+      RETURN FALSE;
+    END;
+
     unlock(t);
     WITH stack0 = pos(t, 0, "doshift"),
          stack1 = pos(t, 1, "doshift"),
@@ -1486,13 +1491,20 @@ PROCEDURE doshift (t: T; <*UNUSED*>type: IType) =
       END;
 
       discard(t, 1);
-    END
+    END;
+
+    RETURN TRUE;
   END doshift;
 
-PROCEDURE dorotate (t: T; <*UNUSED*>type: IType) =
+PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
   VAR leftlab, endlab: Label;
       rotateCount: INTEGER;
   BEGIN
+
+    IF Is64(type) THEN
+      RETURN FALSE;
+    END;
+
     unlock(t);
     WITH stack0 = pos(t, 0, "dorotate"),
          stack1 = pos(t, 1, "dorotate"),
@@ -1550,13 +1562,20 @@ PROCEDURE dorotate (t: T; <*UNUSED*>type: IType) =
       END;
 
       discard(t, 1);
-    END
+    END;
+
+    RETURN TRUE;
   END dorotate;
 
-PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN) =
+PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
   VAR tbl: MVar;
       int: INTEGER;
   BEGIN
+
+    IF Is64(type) THEN
+      RETURN FALSE;
+    END;
+
     unlock(t);
     WITH stack0 = pos(t, 0, "extract"),
          stack1 = pos(t, 1, "extract"),
@@ -1570,8 +1589,7 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN) =
         IF NOT TInt.ToInt(stop0.imm, int) THEN
           t.Err("doextract: failed to convert to host integer");
         END;
-        doextract_n(t, type, sign, int);
-        RETURN;
+        RETURN doextract_n(t, type, sign, int);
       END;
 
       (* The register allocation will sometimes do more memory operations
@@ -1620,13 +1638,20 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN) =
 
       newdest(t, stop2);
       discard(t, 2);
-    END
+    END;
+
+    RETURN TRUE;
   END doextract;
 
-PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER) =
+PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
   VAR tn, t32MinusN, andval: Target.Int;
       int: INTEGER;
   BEGIN
+
+    IF Is64(type) THEN
+      RETURN FALSE;
+    END;
+
     unlock(t);
     WITH stack0 = pos(t, 0, "extract_n"),
          stack1 = pos(t, 1, "extract_n"),
@@ -1638,8 +1663,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER) =
         IF NOT TInt.ToInt(stop0.imm, int) THEN
           t.Err("doextract_n: failed to convert to host integer");
         END;
-        doextract_mn(t, type, sign, int, n);
-        RETURN;
+        RETURN doextract_mn(t, type, sign, int, n);
       END;
 
       IF sign THEN
@@ -1681,12 +1705,19 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER) =
 
       newdest(t, stop1);
       discard(t, 1);
-    END
+    END;
+
+    RETURN TRUE;
   END doextract_n;
 
-PROCEDURE doextract_mn (t: T; <*UNUSED*>type: IType; sign: BOOLEAN; m, n: INTEGER) =
+PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEAN =
   VAR andval, tint: Target.Int;
   BEGIN
+
+    IF Is64(type) THEN
+      RETURN FALSE;
+    END;
+
     unlock(t);
     WITH stack0 = pos(t, 0, "extract_mn"),
          stop0 = t.vstack[stack0] DO
@@ -1702,7 +1733,7 @@ PROCEDURE doextract_mn (t: T; <*UNUSED*>type: IType; sign: BOOLEAN; m, n: INTEGE
             TWord.Or(stop0.imm, tint, stop0.imm);
           END;
         END;
-        RETURN;
+        RETURN TRUE;
       END;
 
       IF sign THEN
@@ -1736,14 +1767,21 @@ PROCEDURE doextract_mn (t: T; <*UNUSED*>type: IType; sign: BOOLEAN; m, n: INTEGE
       END;
 
       newdest(t, stop0);
-    END
+    END;
+
+    RETURN TRUE;
   END doextract_mn;
 
-PROCEDURE doinsert (t: T; type: IType) =
+PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
   VAR maskreg: Regno;  tbl: MVar;
       int: INTEGER;
       tint: Target.Int;
   BEGIN
+
+    IF Is64(type) THEN
+      RETURN FALSE;
+    END;
+
     unlock(t);
     WITH stack0 = pos(t, 0, "insert"),
          stack1 = pos(t, 1, "insert"),
@@ -1759,8 +1797,7 @@ PROCEDURE doinsert (t: T; type: IType) =
         IF NOT TInt.ToInt(stop0.imm, int) THEN
           t.Err("doinsert: failed to convert to host integer");
         END;
-        doinsert_n(t, type, int);
-        RETURN;
+        RETURN doinsert_n(t, type, int);
       END;
 
       IF stop1.loc = OLoc.imm THEN
@@ -1819,14 +1856,21 @@ PROCEDURE doinsert (t: T; type: IType) =
       newdest(t, stop2);
       newdest(t, stop3);
       discard(t, 3);
-    END
+    END;
+
+    RETURN TRUE;
   END doinsert;
 
-PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER) =
+PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
   VAR tbl: MVar;  maskreg: Regno;
       m: INTEGER;
       tint: Target.Int;
   BEGIN
+
+    IF Is64(type) THEN
+      RETURN FALSE;
+    END;
+
     unlock(t);
     WITH stack0 = pos(t, 0, "insert"),
          stack1 = pos(t, 1, "insert"),
@@ -1840,8 +1884,7 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER) =
         IF NOT TInt.ToInt(stop0.imm, m) THEN
           t.Err("doinsert_n: failed to convert to host integer");
         END;
-        doinsert_mn(t, type, m, n);
-        RETURN;
+        RETURN doinsert_mn(t, type, m, n);
       END;
 
       find(t, stack0, Force.regset, RegSet { ECX });
@@ -1880,12 +1923,19 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER) =
       newdest(t, stop1);
       newdest(t, stop2);
       discard(t, 2);
-    END
+    END;
+
+    RETURN TRUE;
   END doinsert_n;
 
-PROCEDURE doinsert_mn (t: T; <*UNUSED*>type: IType; m, n: INTEGER) =
+PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
   VAR tm, tint: Target.Int;
   BEGIN
+
+    IF Is64(type) THEN
+      RETURN FALSE;
+    END;
+
     unlock(t);
     WITH stack0 = pos(t, 0, "insert"),
          stack1 = pos(t, 1, "insert"),
@@ -1949,7 +1999,9 @@ PROCEDURE doinsert_mn (t: T; <*UNUSED*>type: IType; m, n: INTEGER) =
       newdest(t, stop0);
       newdest(t, stop1);
       discard(t, 1);
-    END
+    END;
+
+    RETURN TRUE;
   END doinsert_mn;
 
 PROCEDURE swap (t: T) =
