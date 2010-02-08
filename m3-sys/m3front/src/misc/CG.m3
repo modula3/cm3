@@ -143,7 +143,7 @@ PROCEDURE Init () =
     fields[TRUE]   := NIL;
     in_init        := FALSE;
     init_pc        := 0;
-    init_bits      := TInt.Zero;
+    init_bits      := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
     free_temps     := NIL;
     busy_temps     := NIL;
     free_values    := NIL;
@@ -797,7 +797,7 @@ PROCEDURE Begin_init (v: Var) =
     cg.begin_init (v);
     in_init := TRUE;
     init_pc := 0;
-    init_bits := TInt.Zero;
+    init_bits := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   END Begin_init;
 
 PROCEDURE End_init (v: Var) =
@@ -943,7 +943,7 @@ PROCEDURE AdvanceInit (o: Offset) =
         excess := Target.Integer.size - size;
         IF (excess = 0) THEN
           cg.init_int (init_pc DIV Target.Byte, init_bits, t);
-          init_bits := TInt.Zero;
+          init_bits := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
         ELSIF Target.Little_endian
           AND TWord.Extract (init_bits, 0, size, tmp)
           AND TWord.Extract (init_bits, size, excess, new_bits) THEN
