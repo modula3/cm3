@@ -247,6 +247,12 @@ PROCEDURE New (logfile: Wr.T; obj: M3ObjFile.T): M3CG.T =
                 obj := obj,
                 runtime := NEW (IntRefTbl.Default).init (20));
   BEGIN
+
+    IntType[Type. Int32] := Target.Int32;
+    IntType[Type. Int64] := Target.Int64;
+    IntType[Type.Word32] := Target.Word32;
+    IntType[Type.Word64] := Target.Word64;
+
     IF logfile # NIL THEN
       u.debug := TRUE;
       u.wr := Wrx86.New (logfile);
@@ -3715,17 +3721,17 @@ PROCEDURE pop_static_link (u: U) =
 
 PROCEDURE Is64 (t: Type): BOOLEAN =
   BEGIN
-    RETURN t = Type.Int64 OR t = Type.Word64;
+    RETURN t IN (SET OF Type{Type.Int64, Type.Word64});
   END Is64;
 
 PROCEDURE IsWord (t: Type): BOOLEAN =
   BEGIN
-    RETURN t = Type.Word32 OR t = Type.Word64;
+    RETURN t IN (SET OF Type{Type.Word32, Type.Word64});
   END IsWord;
 
 PROCEDURE IsInt (t: Type): BOOLEAN =
   BEGIN
-    RETURN t = Type.Int32 OR t = Type.Int64;
+    RETURN t IN (SET OF Type{Type.Int32, Type.Int64});
   END IsInt;
 
 PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize =

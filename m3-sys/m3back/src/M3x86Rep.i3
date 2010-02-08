@@ -12,7 +12,7 @@ IMPORT M3CG, M3ID, Target, TInt;
 
 FROM M3CG IMPORT ByteOffset, ByteSize, Alignment;
 FROM M3CG IMPORT Var, Proc, Name;
-FROM M3CG IMPORT Type, MType, TypeUID;
+FROM M3CG IMPORT Type, MType, IType, TypeUID;
 FROM M3ObjFile IMPORT Seg;
 
 TYPE U <: Public;
@@ -146,5 +146,18 @@ PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize;
 PROCEDURE GetTypeSize(type: Type): OperandSize;
 
 CONST TZero = TInt.Zero;
+
+CONST UnsignedType = ARRAY IType OF IType { Type.Word32, Type.Word32,
+                                            Type.Word64, Type.Word64 };
+
+CONST MaximumShift = ARRAY IType OF Target.Int { TInt.ThirtyOne, TInt.ThirtyOne,
+                                                 TInt.SixtyThree, TInt.SixtyThree };
+
+CONST MinimumShift = ARRAY IType OF Target.Int { TInt.MThirtyOne, TInt.MThirtyOne,
+                                                 TInt.MSixtyThree, TInt.MSixtyThree };
+
+CONST BitCountMask = MaximumShift;
+ 
+VAR(*CONST*) IntType: ARRAY IType OF Target.Int_type;
 
 END M3x86Rep.
