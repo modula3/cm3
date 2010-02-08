@@ -12,7 +12,6 @@ IMPORT Text, IntIntTbl, IntRefTbl, Fmt, Word;
 IMPORT Scanner, Error, Module, RunTyme, WebInfo;
 IMPORT M3, M3CG, M3CG_Ops, M3CG_Check;
 IMPORT Host, Target, TInt, TFloat, TWord, TargetMap, M3RT (**, RTObject **);
-IMPORT RTIO;
 
 CONST
   Max_init_chars = 256; (* max size of a single init_chars string *)
@@ -89,7 +88,7 @@ VAR
   fields      : ARRAY BOOLEAN OF Node;
   in_init     : BOOLEAN     := FALSE;
   init_pc     : INTEGER     := 0;
-  init_bits   : Target.Int;
+  init_bits   : Target.Int  := TInt.Zero;
   free_temps  : TempWrapper := NIL;
   busy_temps  : TempWrapper := NIL;
   free_values : Val         := NIL;
@@ -107,16 +106,16 @@ VAR (*CONST*)
 (*---------------------------------------------------------------------------*)
 
 PROCEDURE Init () =
-  VAR ZeroI := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
     Max_alignment := Target.Alignments [LAST (Target.Alignments)];
 
     FOR t := FIRST (Type) TO LAST (Type) DO StackType[t] := t; END;
-    FOR t := Type.Word8 TO Type.Int32 DO
-      StackType[t] := Target.Integer.cg_type;
+    FOR t := Type.Word8 TO Type.Int64 DO
+      IF TargetMap.CG_Size[t] <= Target.Integer.size
+        THEN StackType[t] := Target.Integer.cg_type;
+        ELSE StackType[t] := Target.Longint.cg_type;
+      END;
     END;
-    StackType[Type.Int64]  := Type.Int64;
-    StackType[Type.Word64] := Type.Int64;
 
     cg_wr := Host.env.init_code_generator ();
     IF (cg_wr = NIL) THEN
@@ -144,7 +143,7 @@ PROCEDURE Init () =
     fields[TRUE]   := NIL;
     in_init        := FALSE;
     init_pc        := 0;
-    init_bits      := ZeroI;
+    init_bits      := TInt.Zero;
     free_temps     := NIL;
     busy_temps     := NIL;
     free_values    := NIL;
@@ -794,12 +793,11 @@ PROCEDURE Force2 (tag: TEXT;  commute: BOOLEAN): BOOLEAN =
 (*---------------------------------------- static variable initialization ---*)
 
 PROCEDURE Begin_init (v: Var) =
-  VAR ZeroI := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
     cg.begin_init (v);
     in_init := TRUE;
     init_pc := 0;
-    init_bits := ZeroI;
+    init_bits := TInt.Zero;
   END Begin_init;
 
 PROCEDURE End_init (v: Var) =
@@ -928,9 +926,8 @@ PROCEDURE AdvanceInit (o: Offset) =
   VAR
     n_bytes := (o - init_pc) DIV Target.Byte;
     tmp, new_bits: Target.Int;
-    size, n_bits: CARDINAL;
+    size, excess: CARDINAL;
     t: Type;
-    ZeroI := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
     <*ASSERT n_bytes >= 0*>
     <*ASSERT in_init*>
@@ -943,20 +940,20 @@ PROCEDURE AdvanceInit (o: Offset) =
         (* send out some number of bytes *)
         EVAL FindInitType (n_bytes, init_pc, t);
         size := TargetMap.CG_Size[t];
-        n_bits := Target.Integer.size - size;
-        IF (n_bits = 0) THEN
+        excess := Target.Integer.size - size;
+        IF (excess = 0) THEN
           cg.init_int (init_pc DIV Target.Byte, init_bits, t);
-          init_bits := ZeroI;
+          init_bits := TInt.Zero;
         ELSIF Target.Little_endian
           AND TWord.Extract (init_bits, 0, size, tmp)
-          AND TWord.Extract (init_bits, size, n_bits, new_bits) THEN
+          AND TWord.Extract (init_bits, size, excess, new_bits) THEN
           cg.init_int (init_pc DIV Target.Byte, tmp, t);
           init_bits := new_bits;
         ELSIF (NOT Target.Little_endian)
-          AND TWord.Extract (init_bits, n_bits, size, tmp) THEN
-          TWord.Shift (init_bits, size, new_bits);
+          AND TWord.Extract (init_bits, excess, size, tmp)
+          AND TWord.Extract (init_bits, 0, excess, new_bits) THEN
           cg.init_int (init_pc DIV Target.Byte, tmp, t);
-          init_bits := new_bits;
+          TWord.LeftShift (new_bits, size, init_bits);
         ELSE
           Err ("unable to convert or initialize bit field value??  n_bytes="
                 & Fmt.Int(n_bytes) & "  size=" & Fmt.Int (size));
@@ -1065,20 +1062,11 @@ PROCEDURE DumpLabel (x: LabelNode) =
 
 PROCEDURE Init_var (o: Offset;  value: Var;  bias: Offset;  is_const: BOOLEAN) =
   BEGIN
-    IF NOT (((o MOD Target.Address.align) = 0)
-        AND ((bias MOD Target.Byte) = 0)) THEN
-      RTIO.PutText ("o is 0x" & Fmt.Unsigned(o) & "\n");
-      RTIO.PutText ("init_pc is 0x" & Fmt.Unsigned(init_pc) & "\n");
-      RTIO.PutText ("bias is 0x" & Fmt.Unsigned(bias) & "\n");
-      RTIO.PutText ("Target.Address.align is 0x" & Fmt.Unsigned(Target.Address.align) & "\n");
-      RTIO.PutText ("Target.Byte is 0x" & Fmt.Unsigned(Target.Byte) & "\n");
-      RTIO.Flush ();
-    END;
-    <* ASSERT ((o MOD Target.Address.align) = 0) *>
-    <* ASSERT ((bias MOD Target.Byte) = 0) *>
     IF (in_init) THEN
       AdvanceInit (o);
-      <* ASSERT (o = init_pc) *>
+      <*ASSERT o = init_pc*>
+      <*ASSERT o MOD Target.Address.align = 0 *>
+      <*ASSERT bias MOD Target.Byte = 0*>
       cg.init_var (AsBytes (o), value, AsBytes (bias));
     ELSE
       PushPending (NEW (VarNode, o := o, v := value, b := bias), is_const);
@@ -1093,10 +1081,10 @@ PROCEDURE DumpVar (x: VarNode) =
 
 PROCEDURE Init_offset (o: Offset;  value: Var;  is_const: BOOLEAN) =
   BEGIN
-    <*ASSERT o MOD Target.Integer.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
+      <*ASSERT o MOD Target.Integer.align = 0 *>
       cg.init_offset (AsBytes (o), value);
     ELSE
       PushPending (NEW (OffsetNode, o := o, v := value), is_const);
@@ -1112,10 +1100,10 @@ PROCEDURE DumpOffset (x: OffsetNode) =
 PROCEDURE Init_chars (o: Offset;  value: TEXT;  is_const: BOOLEAN) =
   VAR len, start: INTEGER;
   BEGIN
-    <*ASSERT o MOD Target.Char.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
+      <*ASSERT o MOD Target.Char.align = 0 *>
       start := 0;
       len := Text.Length (value);
       WHILE (len - start > Max_init_chars) DO
@@ -1139,10 +1127,10 @@ PROCEDURE DumpChars (x: CharsNode) =
 
 PROCEDURE Init_float (o: Offset;  READONLY f: Target.Float;  is_const: BOOLEAN) =
   BEGIN
-    <*ASSERT o MOD Target.Real.align = 0 *>
     IF (in_init) THEN
       AdvanceInit (o);
       <*ASSERT o = init_pc*>
+      <*ASSERT o MOD Target.Real.align = 0 *>
       cg.init_float (AsBytes (o), f);
     ELSE
       PushPending (NEW (FloatNode, o := o, f := f), is_const);
@@ -1290,14 +1278,7 @@ PROCEDURE Load (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
     best_align : Alignment;
     best_size  : Size;
     best_type  : MType;
-    itype := Type.Void;
   BEGIN
-    IF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type) THEN
-      itype := Target.Integer.cg_type;
-    ELSIF (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
-      itype := Target.Longint.cg_type;
-    END;
-
     IF (size = s) AND ((a+o) MOD align) = 0 THEN
       (* a simple aligned load *)
       SimpleLoad (v, o, t);
@@ -1307,7 +1288,8 @@ PROCEDURE Load (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
       SimpleLoad (v, o, t);
       Force ();  (* to connect the error message to the bad code *)
 
-    ELSIF (itype # Type.Void) THEN
+    ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type)
+     OR   (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
       best_type  := FindIntType (t, s, o, a);
       best_size  := TargetMap.CG_Size [best_type];
       best_align := TargetMap.CG_Align [best_type];
@@ -1317,11 +1299,11 @@ PROCEDURE Load (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
         SimpleLoad (v, o, best_type);
       ELSE
         (* unaligned, partial load *)
-        cg.load (v, AsBytes (o - align), best_type, itype);
+        cg.load (v, AsBytes (o - align), best_type, StackType[t]);
         IF Target.Little_endian
-          THEN cg.extract_mn (itype, Target.SignedType[t],
+          THEN cg.extract_mn (StackType[t], Target.SignedType[t],
                               align, s);
-          ELSE cg.extract_mn (itype, Target.SignedType[t],
+          ELSE cg.extract_mn (StackType[t], Target.SignedType[t],
                               best_size - align - s, s);
         END;
         SPush (t);
@@ -1396,14 +1378,7 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
     save_bits  : Var;
     save_temp  : BOOLEAN;
     const_bits : INTEGER;
-    itype := Type.Void;
   BEGIN
-    IF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type) THEN
-      itype := Target.Integer.cg_type;
-    ELSIF (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
-      itype := Target.Longint.cg_type;
-    END;
-
     WITH x = stack [SCheck (1, "Load_indirect")] DO
       IF (x.kind = VKind.Direct) THEN
         (* there's no lazy form of MEM(x) *)
@@ -1430,7 +1405,7 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
         (* a simple aligned load *)
         SimpleIndirectLoad (x, t);
 
-      ELSIF (size = s) AND (a MOD 8) = 0 AND Target.Allow_packed_byte_aligned THEN
+      ELSIF (size = s) AND (a MOD Target.Byte) = 0 AND Target.Allow_packed_byte_aligned THEN
         (* a byte aligned load, used by packed structures, supported by the processor *)
         SimpleIndirectLoad (x, t);
 
@@ -1439,7 +1414,8 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
         Force (); (* to connect the error message with the code *)
         SimpleIndirectLoad (x, t);
 
-      ELSIF (itype # Type.Void) THEN
+      ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type)
+        OR  (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
         base_align := Base_align (x);
         best_type  := FindIntType (t, s, x.offset, base_align);
         best_size  := TargetMap.CG_Size [best_type];
@@ -1452,9 +1428,9 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
           IF (s # best_size) THEN
             Force ();
             IF Target.Little_endian
-              THEN cg.extract_mn (itype,
+              THEN cg.extract_mn (StackType[t],
                                   Target.SignedType[t], 0, s);
-              ELSE cg.extract_mn (itype,
+              ELSE cg.extract_mn (StackType[t],
                                   Target.SignedType[t], best_size - s, s);
             END;
           END;
@@ -1464,16 +1440,16 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
           SimpleIndirectLoad (x, best_type);
           Force ();
           IF Target.Little_endian
-            THEN cg.extract_mn (itype, Target.SignedType[t],
+            THEN cg.extract_mn (StackType[t], Target.SignedType[t],
                                 bit_offset, s);
-            ELSE cg.extract_mn (itype, Target.SignedType[t],
+            ELSE cg.extract_mn (StackType[t], Target.SignedType[t],
                                 best_size - bit_offset - s, s);
           END;
         ELSE
           (* unaligned, partial load with variable offset *)
           IF (best_align > x.align) THEN Err ("unaligned base variable"); END;
 
-          a := MIN (base_align, itype.size);
+          a := MIN (base_align, TargetMap.CG_Size[t]);
           IF (best_size < a) THEN
             (* make sure we load the largest possible aligned value,
                because we can't tell how far the variable bit-offset
@@ -1509,7 +1485,7 @@ PROCEDURE Load_indirect (t: Type;  o: Offset;  s: Size) =
           END;
 
           (* extract the needed bits *)
-          cg.extract_n (itype, Target.SignedType[t], s);
+          cg.extract_n (StackType[t], Target.SignedType[t], s);
 
           (* restore the hidden bit offset *)
           x.bits := save_bits;
@@ -1557,14 +1533,7 @@ PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
     best_align : Alignment;
     best_size  : Size;
     best_type  : MType;
-    itype := Type.Void;
   BEGIN
-    IF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type) THEN
-      itype := Target.Integer.cg_type;
-    ELSIF (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
-      itype := Target.Longint.cg_type;
-    END;
-
     Force ();  (* materialize the value to be stored *)
 
     IF (size = s) AND ((a+o) MOD align) = 0 THEN
@@ -1573,23 +1542,24 @@ PROCEDURE Store (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
     ELSIF (size < s) THEN
       Err ("store size too large");
       cg.store (v, AsBytes (o), StackType[t], t);
-    ELSIF (itype # Type.Void) THEN
+    ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type)
+      OR  (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
       best_type  := FindIntType (t, s, o, a);
       best_size  := TargetMap.CG_Size [best_type];
       best_align := TargetMap.CG_Align [best_type];
       align := (a+o) MOD best_align;
       IF (s = best_size) AND (align = 0) THEN
         (* this is a simple partial word store *)
-        cg.store (v, AsBytes (o), itype, best_type);
+        cg.store (v, AsBytes (o), StackType[t], best_type);
       ELSE
         (* unaligned, partial store *)
-        cg.load (v, AsBytes (o - align), best_type, itype);
+        cg.load (v, AsBytes (o - align), best_type, StackType[t]);
         cg.swap (t, t);
         IF Target.Little_endian
-          THEN cg.insert_mn (itype, align, s);
-          ELSE cg.insert_mn (itype, best_size - align - s, s);
+          THEN cg.insert_mn (StackType[t], align, s);
+          ELSE cg.insert_mn (StackType[t], best_size - align - s, s);
         END;
-        cg.store (v, AsBytes (o - align), itype, best_type);
+        cg.store (v, AsBytes (o - align), StackType[t], best_type);
       END;
     ELSE
       (* unaligned non-integer value *)
@@ -1623,14 +1593,7 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
     save_bits : Var     := NIL;
     save_temp : BOOLEAN := FALSE;
     const_bits: INTEGER := 0;
-    itype := Type.Void;
   BEGIN
-    IF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type) THEN
-      itype := Target.Integer.cg_type;
-    ELSIF (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
-      itype := Target.Longint.cg_type;
-    END;
-
     Force (); (* materialize the value to be stored *)
 
     WITH x = stack [SCheck (2, "Store_indirect-x")],
@@ -1697,13 +1660,14 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
       IF (size = s) AND (a MOD align) = 0 THEN
         (* a simple aligned store *)
         SimpleIndirectStore (x, t);
-      ELSIF (size = s) AND (a MOD 8) = 0 AND Target.Allow_packed_byte_aligned THEN
+      ELSIF (size = s) AND (a MOD Target.Byte) = 0 AND Target.Allow_packed_byte_aligned THEN
         (* a byte aligned store, used by packed structures, supported by the processor *)
         SimpleIndirectStore (x, t);
       ELSIF (size < s) THEN
         Err ("store_indirect size too large");
         SimpleIndirectStore (x, t);
-      ELSIF (itype # Type.Void) THEN
+      ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type)
+        OR  (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
         base_align := Base_align (x);
         best_type  := FindIntType (t, s, x.offset, base_align);
         best_size  := TargetMap.CG_Size [best_type];
@@ -1721,8 +1685,8 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
           Swap ();
           EVAL Force_pair (commute := FALSE);
           IF Target.Little_endian
-            THEN cg.insert_mn (itype, 0, s);
-            ELSE cg.insert_mn (itype, best_size - s, s);
+            THEN cg.insert_mn (StackType[t], 0, s);
+            ELSE cg.insert_mn (StackType[t], best_size - s, s);
           END;
           SPop (1, "Store_indirect #1");
           Push (tmp);  XForce ();
@@ -1739,8 +1703,8 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
           Swap ();
           EVAL Force_pair (commute := FALSE);
           IF Target.Little_endian
-            THEN cg.insert_mn (itype, const_bits, s);
-            ELSE cg.insert_mn (itype, best_size - const_bits - s, s);
+            THEN cg.insert_mn (StackType[t], const_bits, s);
+            ELSE cg.insert_mn (StackType[t], best_size - const_bits - s, s);
           END;
           SPop (1, "Store_indirect #2");
           Push (tmp);  XForce ();
@@ -1753,7 +1717,7 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
             Err ("unaligned base variable in store");
           END;
 
-          a := MIN (base_align, itype.size);
+          a := MIN (base_align, TargetMap.CG_Size[t]);
           IF (best_size < a) THEN
             (* make sure we load and store the largest possible aligned value,
                because we can't tell how far the variable bit-offset
@@ -1791,7 +1755,7 @@ PROCEDURE Store_indirect (t: Type;  o: Offset;  s: Size) =
             cg.load (save_bits, 0, Target.Integer.cg_type, Target.Integer.cg_type);
             cg.subtract (Target.Integer.cg_type);
           END;
-          cg.insert_n (itype.cg_type, s);
+          cg.insert_n (StackType[t], s);
           SPop (1, "Store_indirect #3");
 
           (* finally, store the result *)
@@ -2609,10 +2573,9 @@ PROCEDURE Hdr_to_info (offset, size: INTEGER) =
   VAR base: INTEGER;
   BEGIN
     Force ();
-    IF Target.Little_endian THEN
-      base := offset;
-    ELSE
-      base := Target.Integer.size - offset - size;
+    IF Target.Little_endian
+      THEN base := offset;
+      ELSE base := Target.Integer.size - offset - size;
     END;
     cg.extract_mn (Target.Integer.cg_type, FALSE, base, size);
   END Hdr_to_info;
@@ -2883,7 +2846,7 @@ PROCEDURE FindIntType (t: Type;  s: Size;  o: Offset;  a: Alignment): MType =
   END FindIntType;
 
 PROCEDURE ScanTypes (READONLY x: ARRAY [0..3] OF Target.Int_type;
-                     t: Type;  s: Size;  o: Offset;  a: Alignment): Type (* MType *) =
+                     t: Type;  s: Size;  o: Offset;  a: Alignment): Type =
   VAR
     best_s := TargetMap.CG_Size [t] + 1;
     best_a := TargetMap.CG_Align [t] + 1;
