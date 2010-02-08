@@ -43,6 +43,9 @@ CONST
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
 
+PROCEDURE IntI (READONLY x: Int;  n: CARDINAL;  VAR i: Int): BOOLEAN;
+(* converts a target integer 'x' to a target integer 'i' *)
+
 PROCEDURE ToInt (READONLY i: Int;  VAR x: INTEGER): BOOLEAN;
 (* converts a target integer 'i' to a host integer 'x' *)
 
