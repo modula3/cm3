@@ -453,7 +453,7 @@ PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
   BEGIN
     IF i + n > size THEN RETURN FALSE; END;
 
-    Shift (x, -i, r);
+    RightShift (x, i, r);
 
     w := n DIV BITSIZE (IByte);
     b := n MOD BITSIZE (IByte);
@@ -469,17 +469,17 @@ PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
   BEGIN
     IF i + n > size THEN RETURN FALSE; END;
 
-    Shift (x, -(i + n), yy);
-    Shift (yy, n, r);
+    RightShift (x, i + n, yy);
+    LeftShift (yy, n, r);
 
-    Shift (y, size - n, yy);
-    Shift (yy, -(size - n), yyy);
+    LeftShift (y, size - n, yy);
+    RightShift (yy, size - n, yyy);
     Or (r, yyy, r);
-    Shift (r, i, yyyy);
+    LeftShift (r, i, yyyy);
     r := yyyy;
 
-    Shift (x, size - i, yy);
-    Shift (yy, -(size - i), yyy);
+    LeftShift (x, size - i, yy);
+    RightShift (yy, size - i, yyy);
     Or (r, yyy, r);
 
     RETURN TRUE;
