@@ -452,7 +452,7 @@ PROCEDURE declare_packed  (u: U;  t: TypeUID;  s: BitSize;  base: TypeUID) =
   END declare_packed;
 
 PROCEDURE declare_record (u: U; t: TypeUID;  s: BitSize;
-                          n_fields: INTEGER)=
+                          n_fields: INTEGER) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_record");
@@ -464,7 +464,7 @@ PROCEDURE declare_record (u: U; t: TypeUID;  s: BitSize;
   END declare_record;
 
 PROCEDURE declare_field (u: U;  n: Name;  o: BitOffset;  s: BitSize;
-                         t: TypeUID)=
+                         t: TypeUID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_field");
