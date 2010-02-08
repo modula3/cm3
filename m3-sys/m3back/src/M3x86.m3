@@ -2268,7 +2268,7 @@ PROCEDURE shift (u: U;  t: IType) =
       RETURN;
     END;
 
-    u.vstack.doshift ();
+    u.vstack.doshift (t);
   END shift;
 
 PROCEDURE shift_left   (u: U;  t: IType) =
@@ -2399,7 +2399,7 @@ PROCEDURE rotate (u: U;  t: IType) =
       RETURN;
     END;
 
-    u.vstack.dorotate();
+    u.vstack.dorotate(t);
   END rotate;
 
 PROCEDURE rotate_left  (u: U;  t: IType) =
@@ -2551,7 +2551,7 @@ PROCEDURE extract (u: U;  t: IType;  sign_extend: BOOLEAN) =
       pop_param(u, Type.Word64); (* value *)
       call_64 (u, builtin);
     ELSE
-      u.vstack.doextract(sign_extend);
+      u.vstack.doextract(t, sign_extend);
     END
   END extract;
 
@@ -2571,7 +2571,7 @@ PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
       u.vstack.pushimmI(n, Type.Word32);
       extract(u, t, sign);
     ELSE
-      u.vstack.doextract_n(sign, n);
+      u.vstack.doextract_n(t, sign, n);
     END
   END extract_n;
 
@@ -2593,7 +2593,7 @@ PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
       u.vstack.pushimmI(n, Type.Word32);
       extract(u, t, sign);
     ELSE
-      u.vstack.doextract_mn(sign, m, n);
+      u.vstack.doextract_mn(t, sign, m, n);
     END
   END extract_mn;
 
@@ -2614,7 +2614,7 @@ PROCEDURE insert  (u: U;  t: IType) =
       pop_param(u, Type.Word64);
       call_64 (u, Builtin.insert64);
     ELSE
-      u.vstack.doinsert();
+      u.vstack.doinsert(t);
     END
   END insert;
 
@@ -2632,7 +2632,7 @@ PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
       u.vstack.pushimmI(n, Type.Word32);
       u.insert(t);
     ELSE
-      u.vstack.doinsert_n(n);
+      u.vstack.doinsert_n(t, n);
     END
   END insert_n;
 
@@ -2652,7 +2652,7 @@ PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
       u.vstack.pushimmI(n, Type.Word32);
       u.insert(t);
     ELSE
-      u.vstack.doinsert_mn(m, n);
+      u.vstack.doinsert_mn(t, m, n);
     END
   END insert_mn;
 
