@@ -31,6 +31,7 @@ CONST
   ThirtyOne = Int{NUMBER (IBytes), IBytes{31,0,..}};
   ThirtyTwo = Int{NUMBER (IBytes), IBytes{32,0,..}};
   SixtyThree= Int{NUMBER (IBytes), IBytes{63,0,..}};
+  SixtyFour = Int{NUMBER (IBytes), IBytes{64,0,..}};
   F3FF      = Int{NUMBER (IBytes), IBytes{16_FF,16_F3,0,..}};
   x0400     = Int{NUMBER (IBytes), IBytes{0,4,0,..}};
   x0800     = Int{NUMBER (IBytes), IBytes{0,8,0,..}};
@@ -40,6 +41,7 @@ CONST
 
   MOne  = Int{NUMBER (IBytes), IBytes{16_FF,..}};
   MThirtyOne = Int{NUMBER (IBytes), IBytes{16_E1,16_FF,..}};
+  MSixtyThree= Int{NUMBER (IBytes), IBytes{16_C1,16_FF,..}};
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
