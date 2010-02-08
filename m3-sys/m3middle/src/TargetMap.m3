@@ -36,6 +36,7 @@ PROCEDURE Init () =
     Integer_types[1] := Target.Int16;
     Integer_types[2] := Target.Int32;
     Integer_types[3] := Target.Int64;
+
   END Init;
 
 PROCEDURE InitI (type: CGType;  READONLY x: Target.Int_type) =
@@ -44,6 +45,7 @@ PROCEDURE InitI (type: CGType;  READONLY x: Target.Int_type) =
     CG_Align_bytes [type] := x.align DIV Target.Byte;
     CG_Size [type]        := x.size;
     CG_Bytes [type]       := x.bytes;
+    CGTypeToIntType[type] := x;
   END InitI;
 
 PROCEDURE InitF (type: CGType;  READONLY x: Target.Float_type) =
