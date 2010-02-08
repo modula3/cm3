@@ -2575,11 +2575,9 @@ PROCEDURE Add_offset (i: INTEGER) =
         Force ();
         x.kind   := VKind.Pointer;
         x.offset := i;
-      ELSIF (x.kind = VKind.Absolute) THEN
-        INC (x.offset, i);
-      ELSIF (x.kind = VKind.Indirect) THEN
-        INC (x.offset, i);
-      ELSIF (x.kind = VKind.Pointer) THEN
+      ELSIF   (x.kind = VKind.Absolute)
+           OR (x.kind = VKind.Indirect)
+           OR (x.kind = VKind.Pointer) THEN
         INC (x.offset, i);
       ELSE
         Err ("add_offset on non-address form");
