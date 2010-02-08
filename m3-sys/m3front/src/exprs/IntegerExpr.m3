@@ -38,18 +38,21 @@ TYPE
 VAR cache := ARRAY BOOLEAN, [-7 .. 64] OF P {ARRAY [-7 .. 64] OF P{NIL, ..},..};
 
 PROCEDURE New (type: Type.T;  READONLY value: Target.Int): Expr.T =
-  VAR p: P;  n: INTEGER;  min, max: Target.Int;  t := type = LInt.T;
+  VAR p: P;  n: INTEGER;  v: Target.Int;  t := type = LInt.T;
   BEGIN
     IF TInt.ToInt (value, n)
       AND (FIRST (cache[t]) <= n) AND (n <= LAST (cache[t])) THEN
       p := cache[t][n];
       IF (p # NIL) THEN RETURN p; END;
     END;
-    IF NOT Type.GetBounds (type, min, max) THEN RETURN NIL END;
-    IF TInt.LT (value, min) OR TInt.LT (max, value) THEN RETURN NIL END;
+    IF type = Int.T THEN
+      IF NOT TInt.IntI (value, Target.Integer.bytes, v) THEN RETURN NIL END;
+    ELSIF type = LInt.T THEN
+      IF NOT TInt.IntI (value, Target.Longint.bytes, v) THEN RETURN NIL END;
+    ELSE RETURN NIL END;
     p := NEW (P);
     ExprRep.Init (p);
-    p.value   := value;
+    p.value   := v;
     p.type    := type;
     p.checked := TRUE;
     IF TInt.ToInt (value, n)
