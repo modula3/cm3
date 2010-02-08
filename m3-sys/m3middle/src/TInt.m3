@@ -57,6 +57,20 @@ PROCEDURE CheckSign (READONLY r: Int;  n: CARDINAL): Sign =
     END;
   END CheckSign;
 
+PROCEDURE IntI (READONLY r: Int;  n: CARDINAL;  VAR x: Int): BOOLEAN =
+  VAR sign := CheckSign (r, n);  j := 0;  result := TRUE;
+  BEGIN
+    CASE sign OF
+    | Sign.Bad => result := FALSE;
+    | Sign.Pos => j := 0;
+    | Sign.Neg => j := Mask;
+    END;
+    x.n := n;
+    FOR i := 0 TO r.n-1 DO x.x[i] := r.x[i] END;
+    FOR i := r.n TO n-1 DO x.x[i] := j END;
+    RETURN result;
+  END IntI;
+
 PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
   VAR sign := CheckSign (r, BITSIZE (INTEGER) DIV BITSIZE (IByte));
       result := TRUE;
