@@ -13,8 +13,7 @@ extern "C"
 {           
 #endif
 
-M3_EXTRACT(m3test_extract32, uint32)
-M3_INSERT(m3test_insert32, uint32)
+M3_EXTRACT_INSERT(m3test_extract32, m3test_extract_and_sign_extend32, m3test_insert32, uint32)
 
 #ifdef _MSC_VER
 #if _MSC_VER < 1000
@@ -484,7 +483,11 @@ static void TestExtract()
             {
                 for (sign_extend = 0; sign_extend < 2; ++sign_extend)
                 {
-                    uint32 result = m3test_extract32(a32, m, n, sign_extend);
+                    uint32 result;
+                    if (sign_extend)
+                        result = m3test_extract_and_sign_extend32(a32, m, n);
+                    else
+                        result = m3test_extract32(a32, m, n);
                     printf("extract32(value:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x, sign_extend:0x%"I64"x):0x%"I64"x\n", 
                             (uint64)a32,
                             (uint64)m,
@@ -506,7 +509,11 @@ static void TestExtract()
             {
                 for (sign_extend = 0; sign_extend < 2; ++sign_extend)
                 {
-                    uint64 result = m3_extract64(a64, m, n, sign_extend);
+                    uint64 result;
+                    if (sign_extend)
+                        result = m3_extract_and_sign_extend64(a64, m, n);
+                    else
+                        result = m3_extract64(a64, m, n);
                     printf("extract64(value:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x, sign_extend:0x%"I64"x):0x%"I64"x\n", 
                             (uint64)a64,
                             (uint64)m,

@@ -758,33 +758,43 @@ uint64 __stdcall m3_rotate64(uint64 a, int b)
    as the least significant n bits of a word whose other bits are 0. A checked
    runtime error if n + i > Word.Size. *)
 
+The extract call in the backend has a boolean sign_extend parameter as well.
+This is used for signed integer division by a power of two.
+
 PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
 (* Return x with n bits replaced, with bit i as the least significant bit, by
    the least significant n bits of y. The other bits of x are unchanged. A
    checked runtime error if n + i > Word.Size. *)
 */
 
-#define M3_EXTRACT(name, T)                             \
-T __stdcall name(T x, uint i, uint n, uint sign_extend) \
-{                                                       \
-    assert((n + i) <= (sizeof(T) * 8));                 \
-    x >>= i;                                            \
-    x &= ~((~(T)0) << n);                               \
-    if (sign_extend && (x & (((T)1) << (n - 1))))       \
-        x |= ((~(T)0) << n);                            \
-    return x;                                           \
-}
+#define M3_EXTRACT_INSERT(extract, extract_and_sign_extend, insert, T)  \
+                                                \
+T __stdcall extract(T x, uint i, uint n)        \
+{                                               \
+    assert((n + i) <= (sizeof(T) * 8));         \
+    x >>= i;                                    \
+    x &= ~((~(T)0) << n);                       \
+    return x;                                   \
+}                                               \
+                                                \
+T __stdcall extract_and_sign_extend(T x, uint i, uint n) \
+{                                               \
+    assert((n + i) <= (sizeof(T) * 8));         \
+    x >>= i;                                    \
+    x &= ~((~(T)0) << n);                       \
+    if (x & (((T)1) << (n - 1)))                \
+        x |= ((~(T)0) << n);                    \
+    return x;                                   \
+}                                               \
+                                                \
+T __stdcall insert(T x, T y, uint i, uint n)    \
+{                                               \
+    T mask = ((~((~(T)0) << n)) << i);          \
+    assert((n + i) <= (sizeof(T) * 8));         \
+    return (x & ~mask) | ((y << i) & mask);     \
+}                                               \
 
-#define M3_INSERT(name, T)                  \
-T __stdcall name(T x, T y, uint i, uint n)  \
-{                                           \
-    T mask = ((~((~(T)0) << n)) << i);      \
-    assert((n + i) <= (sizeof(T) * 8));     \
-    return (x & ~mask) | ((y << i) & mask); \
-}
-
-M3_EXTRACT(m3_extract64, uint64)
-M3_INSERT(m3_insert64, uint64)
+M3_EXTRACT_INSERT(m3_extract64, m3_extract_and_sign_extend64, m3_insert64, uint64)
 
 #endif /* WIN32 */
 

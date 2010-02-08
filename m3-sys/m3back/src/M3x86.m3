@@ -2529,33 +2529,30 @@ PROCEDURE chop (u: U) =
     <*ASSERT FALSE*>
   END chop;
 
-PROCEDURE extract (u: U;  t: IType;  sign: BOOLEAN) =
+PROCEDURE extract (u: U;  t: IType;  sign_extend: BOOLEAN) =
   (* s2.t := Word.Extract(s2.t, s1.t, s0.t);
-     IF sign THEN SignExtend s2 END; pop(2) *)
+     IF sign_extend THEN SignExtend s2 END; pop(2) *)
+  VAR builtin := Builtin.extract64;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("extract");
       u.wr.TName (t);
-      u.wr.Bool  (sign);
+      u.wr.Bool  (sign_extend);
       u.wr.NL    ();
     END;
 
     IF Is64(t) THEN
-      start_int_proc (u, Builtin.extract64);
-      IF sign THEN
-        u.vstack.pushimmT (TInt.One, Type.Word32);
-      ELSE
-        u.vstack.pushimmT (TZero, Type.Word32);
+      IF sign_extend THEN
+        builtin := Builtin.extract_and_sign_extend64;
       END;
-      pop_param(u, Type.Word32); (* sign extend *)
+      start_int_proc (u, builtin);
       pop_param(u, Type.Word32); (* n *)
       pop_param(u, Type.Word32); (* m *)
       pop_param(u, Type.Word64); (* value *)
-      call_64 (u, Builtin.extract64);
-      RETURN;
-    END;
-
-    u.vstack.doextract(sign);
+      call_64 (u, builtin);
+    ELSE
+      u.vstack.doextract(sign_extend);
+    END
   END extract;
 
 PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
@@ -2573,10 +2570,9 @@ PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
     IF Is64(t) THEN
       u.vstack.pushimmI(n, Type.Word32);
       extract(u, t, sign);
-      RETURN;
-    END;
-
-    u.vstack.doextract_n(sign, n);
+    ELSE
+      u.vstack.doextract_n(sign, n);
+    END
   END extract_n;
 
 PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
@@ -2596,10 +2592,9 @@ PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
       u.vstack.pushimmI(m, Type.Word32);
       u.vstack.pushimmI(n, Type.Word32);
       extract(u, t, sign);
-      RETURN;
-    END;
-
-    u.vstack.doextract_mn(sign, m, n);
+    ELSE
+      u.vstack.doextract_mn(sign, m, n);
+    END
   END extract_mn;
 
 PROCEDURE insert  (u: U;  t: IType) =
@@ -2618,10 +2613,9 @@ PROCEDURE insert  (u: U;  t: IType) =
       pop_param(u, Type.Word64);
       pop_param(u, Type.Word64);
       call_64 (u, Builtin.insert64);
-      RETURN;
-    END;
-
-    u.vstack.doinsert();
+    ELSE
+      u.vstack.doinsert();
+    END
   END insert;
 
 PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
@@ -2637,10 +2631,9 @@ PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
     IF Is64(t) THEN
       u.vstack.pushimmI(n, Type.Word32);
       u.insert(t);
-      RETURN;
-    END;
-
-    u.vstack.doinsert_n(n);
+    ELSE
+      u.vstack.doinsert_n(n);
+    END
   END insert_n;
 
 PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
@@ -2658,10 +2651,9 @@ PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
       u.vstack.pushimmI(m, Type.Word32);
       u.vstack.pushimmI(n, Type.Word32);
       u.insert(t);
-      RETURN;
-    END;
-
-    u.vstack.doinsert_mn(m, n);
+    ELSE
+      u.vstack.doinsert_mn(m, n);
+    END
   END insert_mn;
 
 (*------------------------------------------------ misc. stack/memory ops ---*)
@@ -3013,7 +3005,7 @@ TYPE
     shift_left_64, shift_right_64,
     div64, mod64,
     shift64,
-    rotate_left64, rotate_right64, rotate64, insert64, extract64
+    rotate_left64, rotate_right64, rotate64, insert64, extract64, extract_and_sign_extend64
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
@@ -3068,7 +3060,8 @@ CONST
     BP { "m3_rotate_right64",3, Type.Word64, "__stdcall" },
     BP { "m3_rotate64",      3, Type.Word64, "__stdcall" },
     BP { "m3_insert64",      6, Type.Word64, "__stdcall" },
-    BP { "m3_extract64",     5, Type.Word64, "__stdcall" }
+    BP { "m3_extract64",     4, Type.Word64, "__stdcall" },
+    BP { "m3_extract_and_sign_extend64", 4, Type.Word64, "__stdcall" }
   };
 
 
