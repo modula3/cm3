@@ -37,6 +37,34 @@ PROCEDURE Init64 () =
     Jumpbuf_align := Address.align;
   END Init64;
 
+PROCEDURE IsX86(): BOOLEAN =
+  BEGIN
+    IF TextUtils.StartsWith(System_name, "I") AND
+          (TextUtils.StartsWith(System_name, "I386_")
+        OR TextUtils.StartsWith(System_name, "I486_")
+        OR TextUtils.StartsWith(System_name, "I586_")
+        OR TextUtils.StartsWith(System_name, "I686_")) THEN
+      RETURN TRUE;
+    END;
+    CASE System OF
+    | Systems.FreeBSD4, Systems.NT386, Systems.NT386GNU,
+      Systems.LINUXLIBC6, Systems.NetBSD2_i386 => RETURN TRUE;
+    ELSE RETURN FALSE;
+    END;
+  END IsX86;
+
+PROCEDURE IsAMD64(): BOOLEAN =
+  BEGIN
+    RETURN TextUtils.StartsWith(System_name, "AMD64_");
+  END IsAMD64;
+
+PROCEDURE IsSPARC(): BOOLEAN =
+  BEGIN
+    RETURN (TextUtils.StartsWith(System_name, "S")
+            AND (TextUtils.StartsWith(System_name, "SPARC")
+              OR TextUtils.StartsWith(System_name, "SOL")));
+  END IsSPARC;
+  
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
   CONST FF = 16_ff;
   VAR sys := 0;  max_align := 64;
@@ -246,9 +274,15 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     (* SPARC: 8K pages *)
 
-    IF TextUtils.StartsWith(system, "SPARC")
-      OR TextUtils.StartsWith(system, "SOL") THEN
+    IF IsSPARC() THEN
       First_readable_addr := 8192 * Char.size;
+    END;
+    
+    (* x86 and AMD64 allow unaligned loads/stores *)
+
+    IF IsX86() OR IsAMD64() THEN
+      Allow_packed_byte_aligned := TRUE;
+      Aligned_procedures := TRUE; (* This means assume they are aligned: unaligned is ok. *)
     END;
 
     CASE System OF
