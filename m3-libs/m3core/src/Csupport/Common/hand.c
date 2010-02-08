@@ -74,10 +74,6 @@ extern "C"
 {           
 #endif
 
-#if !defined(_MSC_VER) && !defined(__cdecl)
-#define __cdecl /* nothing */
-#endif
-
 #if !defined(_MSC_VER) && !defined(__stdcall)
 #define __stdcall /* nothing */
 #endif
@@ -278,7 +274,7 @@ NOT_YET int64 __stdcall m3_mult_64(int64 a, int64 b, BOOL* overflow)
   return result;
 }
 
-static long __cdecl m3_div_old
+static long __stdcall m3_div_old
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
@@ -291,7 +287,7 @@ static long __cdecl m3_div_old
   return c;
 }
 
-static int64 __cdecl m3_divL_old
+static int64 __stdcall m3_divL_old
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
@@ -303,7 +299,7 @@ static int64 __cdecl m3_divL_old
   return c;
 }
 
-WIN32_STATIC long __cdecl m3_div
+WIN32_STATIC long __stdcall m3_div
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
@@ -326,7 +322,7 @@ WIN32_STATIC long __cdecl m3_div
 #ifdef _WIN32
 int64 __stdcall m3_div64(int64 b, int64 a)
 #else
-int64 __cdecl m3_divL(int64 b, int64 a)
+int64 __stdcall m3_divL(int64 b, int64 a)
 #endif
 {
   typedef  int64 ST; /* signed type */
@@ -345,7 +341,7 @@ int64 __cdecl m3_divL(int64 b, int64 a)
   }
 }
 
-static long __cdecl m3_mod_old
+static long __stdcall m3_mod_old
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
@@ -357,7 +353,7 @@ static long __cdecl m3_mod_old
   return c;
 }
 
-static int64 __cdecl m3_modL_old
+static int64 __stdcall m3_modL_old
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
 {
@@ -369,7 +365,7 @@ static int64 __cdecl m3_modL_old
   return c;
 }
 
-WIN32_STATIC long __cdecl m3_mod
+WIN32_STATIC long __stdcall m3_mod
     ANSI((      long b, long a))
       KR((b, a) long b; long a;)
 {
@@ -391,7 +387,7 @@ WIN32_STATIC long __cdecl m3_mod
 #ifdef _WIN32
 int64 __stdcall m3_mod64(int64 b, int64 a)
 #else
-int64 __cdecl m3_modL(int64 b, int64 a)
+int64 __stdcall m3_modL(int64 b, int64 a)
 #endif
 {
   typedef  int64 ST; /* signed type */
@@ -411,7 +407,7 @@ int64 __cdecl m3_modL(int64 b, int64 a)
 
 #define SET_GRAIN (sizeof (long) * 8)
 
-ulong __cdecl set_member
+ulong __stdcall set_member
     ANSI((          ulong elt, ulong* set))
       KR((elt, set) ulong elt; ulong* set;)
 {
@@ -420,7 +416,7 @@ ulong __cdecl set_member
   return (set[word] & (1UL << bit)) != 0;
 }
 
-void __cdecl set_union
+void __stdcall set_union
     ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
       KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
 {
@@ -431,7 +427,7 @@ void __cdecl set_union
   }
 }
 
-void __cdecl set_intersection
+void __stdcall set_intersection
     ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
       KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
 {
@@ -442,7 +438,7 @@ void __cdecl set_intersection
   }
 }
 
-void __cdecl set_difference
+void __stdcall set_difference
     ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
       KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
 {
@@ -453,7 +449,7 @@ void __cdecl set_difference
   }
 }
 
-void __cdecl set_sym_difference
+void __stdcall set_sym_difference
     ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
       KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
 {
@@ -464,7 +460,7 @@ void __cdecl set_sym_difference
   }
 }
 
-ulong __cdecl set_eq
+ulong __stdcall set_eq
     ANSI((              ulong n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 /* The integrated back end calls memcmp directly; the gcc
@@ -473,7 +469,7 @@ ulong __cdecl set_eq
   return (memcmp(a, b, n_bits / 8) == 0);
 }
 
-ulong __cdecl set_ne
+ulong __stdcall set_ne
     ANSI((              ulong n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 /* The integrated back end calls memcmp directly; the gcc
@@ -482,7 +478,7 @@ ulong __cdecl set_ne
   return (memcmp(a, b, n_bits / 8) != 0);
 }
 
-ulong __cdecl set_ge
+ulong __stdcall set_ge
     ANSI((              ulong n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 {
@@ -494,7 +490,7 @@ ulong __cdecl set_ge
   return 1;
 }
 
-ulong __cdecl set_gt
+ulong __stdcall set_gt
     ANSI((              ulong n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 {
@@ -508,7 +504,7 @@ ulong __cdecl set_gt
   return (eq != 0);
 }
 
-ulong __cdecl set_le
+ulong __stdcall set_le
     ANSI((              ulong n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 {
@@ -520,7 +516,7 @@ ulong __cdecl set_le
   return 1;
 }
 
-ulong __cdecl set_lt
+ulong __stdcall set_lt
     ANSI((              ulong n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
 {
@@ -656,7 +652,7 @@ static const ulong HiBits[] = {
 #error unknown size of ulong
 #endif
 
-void __cdecl set_range
+void __stdcall set_range
     ANSI((       ulong b, ulong a, ulong* s))
     KR((b, a, s) ulong b; ulong a; ulong* s;)
 {
@@ -682,7 +678,7 @@ void __cdecl set_range
 #define HIGH_BITS(a) ((~(ulong)0) << (a))
 #define LOW_BITS(a)  ((~(ulong)0) >> (SET_GRAIN - (a) - 1))
 
-static void __cdecl set_range_new
+static void __stdcall set_range_new
     ANSI((       ulong b, ulong a, ulong* s))
     KR((b, a, s) ulong b; ulong a; ulong* s;)
 {
@@ -706,7 +702,7 @@ static void __cdecl set_range_new
     }
 }
 
-void __cdecl set_singleton
+void __stdcall set_singleton
     ANSI((      ulong a, ulong* s))
       KR((a, s) ulong a; ulong* s;)
 {
