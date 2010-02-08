@@ -24,7 +24,6 @@ VAR(* CONST *)
   Word_types     : ARRAY [0..3] OF Int_type;
   Integer_types  : ARRAY [0..3] OF Int_type;
   Float_types    : ARRAY Precision OF Float_type;
-  CGTypeToIntType: ARRAY (*IType*)[CGType.Word32..CGType.Int64] OF Int_type;
 
 PROCEDURE Init();
 (* initializes the maps from the values exported by Target *)
