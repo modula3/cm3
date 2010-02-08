@@ -2982,11 +2982,11 @@ m3cg_declare_segment (void)
   if (option_vars_trace)
     fprintf(stderr, "  segment %s typeid 0x%lx\n",
 	    IDENTIFIER_POINTER(DECL_NAME(v)), id);
-  /* we really don't have an idea of what the type of this var is; let's try
-     to put something that will be good enough for all the uses of this var we
-     are going to see before we have a bind_segment. Use a large size so that
-     gcc doesn't think it fits in a register, so that loads out of it do get
-     their offsets applied. */
+  /* We really don't have an idea of what the type of this var is; let's try
+     to put something that will be good enough for all the uses of this var
+     we are going to see before we have a bind_segment. If the size is too
+     small -- if it fits in a register -- then on some targets (mips64) the
+     generated code leaves out the offseting. */
   TREE_TYPE (v)
     = m3_build_type (T_struct, BIGGEST_ALIGNMENT * 2, BIGGEST_ALIGNMENT);
   layout_decl (v, BIGGEST_ALIGNMENT);
