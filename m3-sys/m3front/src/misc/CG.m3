@@ -1290,7 +1290,13 @@ PROCEDURE Load (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
     best_align : Alignment;
     best_size  : Size;
     best_type  : MType;
+    int_type := Target.Longint;
   BEGIN
+
+    IF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type) THEN
+      int_type := Target.Integer;
+    END;
+
     IF (size = s) AND ((a+o) MOD align) = 0 THEN
       (* a simple aligned load *)
       SimpleLoad (v, o, t);
@@ -1300,7 +1306,8 @@ PROCEDURE Load (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
       SimpleLoad (v, o, t);
       Force ();  (* to connect the error message to the bad code *)
 
-    ELSIF (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type) THEN
+    ELSIF  (t = Target.Word.cg_type) OR (t = Target.Integer.cg_type)
+        OR (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
       best_type  := FindIntType (t, s, o, a);
       best_size  := TargetMap.CG_Size [best_type];
       best_align := TargetMap.CG_Align [best_type];
@@ -1310,35 +1317,16 @@ PROCEDURE Load (v: Var;  o: Offset;  s: Size;  a: Alignment;  t: Type) =
         SimpleLoad (v, o, best_type);
       ELSE
         (* unaligned, partial load *)
-        cg.load (v, AsBytes (o - align), best_type, Target.Integer.cg_type);
+        cg.load (v, AsBytes (o - align), best_type, int_type.cg_type);
         IF Target.Little_endian
-          THEN cg.extract_mn (Target.Integer.cg_type, Target.SignedType[t],
+          THEN cg.extract_mn (int_type.cg_type, Target.SignedType[t],
                               align, s);
-          ELSE cg.extract_mn (Target.Integer.cg_type, Target.SignedType[t],
+          ELSE cg.extract_mn (int_type.cg_type, Target.SignedType[t],
                               best_size - align - s, s);
         END;
         SPush (t);
       END;
 
-    ELSIF (t = Target.Long.cg_type) OR (t = Target.Longint.cg_type) THEN
-      best_type  := FindIntType (t, s, o, a);
-      best_size  := TargetMap.CG_Size [best_type];
-      best_align := TargetMap.CG_Align [best_type];
-      align := (a+o) MOD best_align;
-      IF (s = best_size) AND (align = 0) THEN
-        (* this is a simple partial word load *)
-        SimpleLoad (v, o, best_type);
-      ELSE
-        (* unaligned, partial load *)
-        cg.load (v, AsBytes (o - align), best_type, Target.Longint.cg_type);
-        IF Target.Little_endian
-          THEN cg.extract_mn (Target.Longint.cg_type, Target.SignedType[t],
-                              align, s);
-          ELSE cg.extract_mn (Target.Longint.cg_type, Target.SignedType[t],
-                              best_size - align - s, s);
-        END;
-        SPush (t);
-      END;
     ELSE
       (* unaligned non-integer value *)
       Err ("unaligned load  type="& Fmt.Int (ORD (t))
