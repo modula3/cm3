@@ -180,7 +180,7 @@ PROCEDURE Floor (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
     IF NOT Split (a, x) THEN RETURN FALSE END;
     IF NOT TInt.FromInt (TFloat.Floor (x), n, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
-    RETURN TRUE;
+    RETURN c # NIL;
   END Floor;
 
 PROCEDURE Ceiling (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
@@ -192,7 +192,7 @@ PROCEDURE Ceiling (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
     IF NOT Split (a, x) THEN RETURN FALSE END;
     IF NOT TInt.FromInt (TFloat.Ceiling (x), n, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
-    RETURN TRUE;
+    RETURN c # NIL;
   END Ceiling;
 
 PROCEDURE Trunc (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
@@ -204,7 +204,7 @@ PROCEDURE Trunc (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
     IF NOT Split (a, x) THEN RETURN FALSE END;
     IF NOT TInt.FromInt (TFloat.Trunc (x), n, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
-    RETURN TRUE;
+    RETURN c # NIL;
   END Trunc;
 
 PROCEDURE Round (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
@@ -216,7 +216,7 @@ PROCEDURE Round (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
     IF NOT Split (a, x) THEN RETURN FALSE END;
     IF NOT TInt.FromInt (TFloat.Round (x), n, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
-    RETURN TRUE;
+    RETURN c # NIL;
   END Round;
 
 PROCEDURE Float (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =

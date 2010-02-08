@@ -96,7 +96,7 @@ PROCEDURE Add (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF NOT TInt.Add (x, y, res) THEN RETURN FALSE END;
     c := New (t, res);
-    RETURN TRUE;
+    RETURN c # NIL;
   END Add;
 
 PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
@@ -105,7 +105,7 @@ PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF NOT TInt.Subtract (x, y, res) THEN RETURN FALSE END;
     c := New (t, res);
-    RETURN TRUE;
+    RETURN c # NIL;
   END Subtract;
 
 PROCEDURE Multiply (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
@@ -114,7 +114,7 @@ PROCEDURE Multiply (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF NOT TInt.Multiply (x, y, res) THEN RETURN FALSE END;
     c := New (t, res);
-    RETURN TRUE;
+    RETURN c # NIL;
   END Multiply;
 
 PROCEDURE Div (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
@@ -127,7 +127,7 @@ PROCEDURE Div (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     END;
     IF NOT TInt.Div (x, y, res) THEN RETURN FALSE END;
     c := New (t, res);
-    RETURN TRUE;
+    RETURN c # NIL;
   END Div;
 
 PROCEDURE Mod (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
@@ -140,7 +140,7 @@ PROCEDURE Mod (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     END;
     IF NOT TInt.Mod (x, y, res) THEN RETURN FALSE END;
     c := New (t, res);
-    RETURN TRUE;
+    RETURN c # NIL;
   END Mod;
 
 PROCEDURE Negate (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
@@ -151,7 +151,7 @@ PROCEDURE Negate (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
     | P(p) => IF NOT TInt.Subtract (TInt.Zero, p.value, res) THEN
                 RETURN FALSE;
               END;
-              c := New (p.type, res);  RETURN TRUE;
+              c := New (p.type, res);  RETURN c # NIL;
     ELSE      RETURN FALSE;
     END;
   END Negate;
@@ -167,7 +167,7 @@ PROCEDURE Abs (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
               IF NOT TInt.Subtract (TInt.Zero, p.value, res) THEN
                 RETURN FALSE;
               END;
-              c := New (p.type, res);  RETURN TRUE;
+              c := New (p.type, res);  RETURN c # NIL;
     ELSE      RETURN FALSE;
     END;
   END Abs;
