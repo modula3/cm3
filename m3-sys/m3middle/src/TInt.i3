@@ -29,8 +29,8 @@ CONST
   Eight     = Int{NUMBER (IBytes), IBytes{ 8,0,..}};
   Ten       = Int{NUMBER (IBytes), IBytes{10,0,..}};
   ThirtyOne = Int{NUMBER (IBytes), IBytes{31,0,..}};
-  SixtyThree= Int{NUMBER (IBytes), IBytes{63,0,..}};
   ThirtyTwo = Int{NUMBER (IBytes), IBytes{32,0,..}};
+  SixtyThree= Int{NUMBER (IBytes), IBytes{63,0,..}};
   F3FF      = Int{NUMBER (IBytes), IBytes{16_FF,16_F3,0,..}};
   x0400     = Int{NUMBER (IBytes), IBytes{0,4,0,..}};
   x0800     = Int{NUMBER (IBytes), IBytes{0,8,0,..}};
