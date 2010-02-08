@@ -39,6 +39,7 @@ TYPE
 PROCEDURE New (READONLY value: Target.Int): Expr.T =
   VAR p: P;
   BEGIN
+    IF TWord.LT (Target.Address.max, value) THEN RETURN NIL END;
     p := NEW (P);
     ExprRep.Init (p);
     p.value   := value;
@@ -65,7 +66,7 @@ PROCEDURE Add (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     IF NOT IntegerExpr.Split (b, i, t) THEN RETURN FALSE END;
     TYPECASE a OF
     | NULL => RETURN FALSE;
-    | P(p) => TWord.Add (p.value, i, j);  c := New (j);  RETURN TRUE;
+    | P(p) => TWord.Add (p.value, i, j);  c := New (j);  RETURN c # NIL;
     ELSE      RETURN FALSE;
     END;
   END Add;
@@ -89,7 +90,7 @@ PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
       ELSE      RETURN FALSE;
       END;
     END;
-    RETURN TRUE;
+    RETURN c # NIL;
   END Subtract;
 
 PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
