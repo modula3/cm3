@@ -8,7 +8,7 @@
 
 INTERFACE Stackx86;
 
-FROM M3CG IMPORT Type, MType, ZType, Sign, ByteOffset;
+FROM M3CG IMPORT Type, MType, ZType, IType, Sign, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 IMPORT M3x86Rep, Codex86, Wrx86, Target;
@@ -57,14 +57,14 @@ TYPE Public = OBJECT
         domaxmin (type: ZType; maxmin: MaxMin);
         fltoint (mode: FlToInt; type: Type);
         inttoflt ();
-        doshift ();
-        dorotate ();
-        doextract (sign: BOOLEAN);
-        doextract_n (sign: BOOLEAN; n: INTEGER);
-        doextract_mn (sign: BOOLEAN; m, n: INTEGER);
-        doinsert ();
-        doinsert_n (n: INTEGER);
-        doinsert_mn (m, n: INTEGER);
+        doshift (type: IType);
+        dorotate (type: IType);
+        doextract (type: IType; sign: BOOLEAN);
+        doextract_n (type: IType; sign: BOOLEAN; n: INTEGER);
+        doextract_mn (type: IType; sign: BOOLEAN; m, n: INTEGER);
+        doinsert (type: IType);
+        doinsert_n (type: IType; n: INTEGER);
+        doinsert_mn (type: IType; m, n: INTEGER);
         swap ();
         doloophole (from, to: ZType);
         doindex_address (shift, size: INTEGER; neg: BOOLEAN);
