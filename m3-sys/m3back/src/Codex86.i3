@@ -212,11 +212,11 @@ TYPE
     Aimm32, imm8, imm32, immop, rmr, rrm: INTEGER;
   END;
 
-TYPE Op = { oAND, oXOR, oOR, oMOV,
-            oADD, oADC, oSUB, oSBB, oCMP, oNEG, oNOT, oLEA,
-            oSHL, oSAR, oSHR, oROL, oROR, oSAHF, oWAIT, oCLD, oSTD,
-            oREP, oMOVSB, oMOVSD, oSTOSB, oSTOSD,
-            oCWDE, oCDQ, oLEAVE, oRET, oNOP };
+TYPE Op = { oAND,   oXOR,   oOR,    oMOV,   oADD,  oADC,  oSUB,   oSBB,
+            oCMP,   oNEG,   oNOT,   oLEA,   oSHL,  oSAR,  oSHR,   oSHLD,
+            oSHRD,  oROL,   oROR,   oSAHF,  oWAIT, oCLD,  oSTD,   oREP,
+            oMOVSB, oMOVSD, oSTOSB, oSTOSD, oCWDE, oCDQ,  oLEAVE, oRET,
+            oNOP };
 
 CONST opcode = ARRAY Op OF OpCode
   { OpCode { "AND",  16_25, 16_83, 16_81, 4, 16_20, 16_22 },
@@ -231,9 +231,11 @@ CONST opcode = ARRAY Op OF OpCode
     OpCode { "NEG",  -1,    -1,    16_F6, 3, -1,    -1    },
     OpCode { "NOT",  -1,    -1,    16_F6, 2, -1,    -1    },
     OpCode { "LEA",  -1,    -1,    -1,    0, -1,    16_8C },
-    OpCode { "SAL",  -1,    16_C1, 16_D2, 4, -1,    -1    },
+    OpCode { "SHL",  -1,    16_C1, 16_D2, 4, -1,    -1    },
     OpCode { "SAR",  -1,    16_C1, 16_D2, 7, -1,    -1    },
     OpCode { "SHR",  -1,    16_C1, 16_D2, 5, -1,    -1    },
+    OpCode { "SHLD", -1,    -1,    -1,   -1, -1,    -1    },
+    OpCode { "SHRD", -1,    -1,    -1,   -1, -1,    -1    },
     OpCode { "ROL",  -1,    16_C1, 16_D2, 0, -1,    -1    },
     OpCode { "ROR",  -1,    16_C1, 16_D2, 1, -1,    -1    },
     OpCode { "SAHF", -1,    -1,    16_9E, 0, -1,    -1    },
