@@ -1,6 +1,6 @@
 MODULE Main;
 IMPORT RTIO, Word, Long;
-FROM RTIO IMPORT PutText, PutLong, PutHex, PutLongHex, Flush;
+FROM RTIO IMPORT Flush;
 
 
 (* decrease these for faster runs *)
@@ -23,9 +23,11 @@ BEGIN
   PutT("\n");
 END NL;
 
-CONST PutT = PutText;
-CONST PutH = PutHex;
-CONST PutLH = PutLongHex;
+CONST PutT = RTIO.PutText;
+CONST PutI = RTIO.PutInt;
+CONST PutH = RTIO.PutHex;
+CONST PutL = RTIO.PutLong;
+CONST PutLH = RTIO.PutLongHex;
 
 PROCEDURE TestInsert() =
 VAR result32: CARDINAL := 0;
@@ -184,7 +186,7 @@ BEGIN
   PutT("\nTestShiftLeftInteger\n");
   a := NotConstI(1);
   FOR i := 0 TO 40 DO
-    PutT("1 << "); PutH(i); PutT(":"); PutH(a); PutT("\n");
+    PutT("1 << "); PutI(i); PutT(":"); PutH(a); PutT("\n");
     a := Word.LeftShift(a, NotConstI(1));
   END;
 END TestShiftLeftInteger;
@@ -195,7 +197,7 @@ BEGIN
   PutT("\nTestShiftLeftLongint\n");
   a := NotConstL(1L);
   FOR i := 0 TO 40 DO
-    PutT("1 << "); PutH(i); PutT(":"); PutLH(a); PutT("\n");
+    PutT("1 << "); PutI(i); PutT(":"); PutLH(a); PutT("\n");
     a := Long.LeftShift(a, NotConstI(1));
   END;
 END TestShiftLeftLongint;
@@ -206,7 +208,7 @@ BEGIN
   PutT("\nTestShiftRightInteger\n");
   a := NotConstI(FIRST(INTEGER));
   FOR i := 0 TO 40 DO
-    PutT("FIRST(INTEGER) >> "); PutH(i); PutT(":"); PutH(a); PutT("\n");
+    PutT("FIRST(INTEGER) >> "); PutI(i); PutT(":"); PutH(a); PutT("\n");
     a := Word.RightShift(a, NotConstI(1));
   END;
 END TestShiftRightInteger;
@@ -214,10 +216,10 @@ END TestShiftRightInteger;
 PROCEDURE TestShiftRightLongint() =
 VAR a: LONGINT;
 BEGIN
-  PutT("\nTestShiftLeftInteger\n");
+  PutT("\nTestShiftRightLongint\n");
   a := NotConstL(FIRST(LONGINT));
   FOR i := 0 TO 40 DO
-    PutT("FIRST(LONGINT) >> "); PutH(i); PutT(":"); PutLH(a); PutT("\n");
+    PutT("FIRST(LONGINT) >> "); PutI(i); PutT(":"); PutLH(a); PutT("\n");
     a := Long.RightShift(a, NotConstI(1));
   END;
 END TestShiftRightLongint;
@@ -226,10 +228,10 @@ END TestShiftRightLongint;
 PROCEDURE TestShiftInteger() =
 VAR a: INTEGER;
 BEGIN
-  PutT("\nTestShiftLeftInteger\n");
+  PutT("\nTestShiftInteger\n");
   a := Word.Shift(NotConstI(1), NotConstI(15));
   FOR i := -30 TO 30 DO
-    PutT("1 << "); PutH(i); PutT(":"); PutH(a); PutT("\n");
+    PutT("1 << "); PutI(i); PutT(":"); PutH(a); PutT("\n");
     a := Word.Shift(a, NotConstI(1));
   END;
 END TestShiftInteger;
@@ -237,10 +239,10 @@ END TestShiftInteger;
 PROCEDURE TestShiftLongint() =
 VAR a: LONGINT;
 BEGIN
-  PutT("\nTestShiftLeftInteger\n");
+  PutT("\nTestShiftLongint\n");
   a := Long.Shift(NotConstL(1L), NotConstI(15));
   FOR i := -30 TO 30 DO
-    PutT("1 << "); PutH(i); PutT(":"); PutLH(a); PutT("\n");
+    PutT("1 << "); PutI(i); PutT(":"); PutLH(a); PutT("\n");
     a := Long.Shift(a, NotConstI(1));
   END;
 END TestShiftLongint;
@@ -374,7 +376,7 @@ END TestShiftMLongint;
 
 
 BEGIN
-  PutLong(a);
+  PutL(a);
   NL();
   PutLH(c);
   NL();
@@ -477,7 +479,7 @@ BEGIN
   PutT("        abs:"); PutLH(ABS(NotConstL(100L))); NL();
   <* ASSERT ABS(100L) = ABS(NotConstL(100L)) *>
 
-  PutLong(a);
+  PutL(a);
   NL();
   Flush();
   a := 1L;
@@ -491,49 +493,49 @@ BEGIN
 
   d := -1;
   a := VAL(d, LONGINT);
-  PutLong(a);
+  PutL(a);
   NL();
 
   a := -1L;
-  PutLong(a);
+  PutL(a);
   NL();
 
   a := VAL(LAST(INTEGER), LONGINT);
   INC(a);
-  PutLong(a);
+  PutL(a);
   NL();
 
   a := VAL(FIRST(INTEGER), LONGINT);
-  PutLong(a);
+  PutL(a);
   NL();
 
   a := VAL(FIRST(INTEGER), LONGINT);
   DEC(a);
-  PutLong(a);
+  PutL(a);
   NL();
 
   insertextract_max_ab := 2;
   insertextract_max_mn := 2;
 
-  PutLong(FIRST(LONGINT));
+  PutL(FIRST(LONGINT));
   NL();
 
-  PutLong(NotConstL(FIRST(LONGINT)));
+  PutL(NotConstL(FIRST(LONGINT)));
   NL();
 
-  PutLong(LAST(LONGINT));
+  PutL(LAST(LONGINT));
   NL();
 
-  PutLong(NotConstL(LAST(LONGINT)));
+  PutL(NotConstL(LAST(LONGINT)));
   NL();
 
-  PutLong(NotConstL(LAST(LONGINT)) DIV NotConstL(2L));
+  PutL(NotConstL(LAST(LONGINT)) DIV NotConstL(2L));
   NL();
 
-  PutLong(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
+  PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
   NL();
 
-  PutLong(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
+  PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
   NL();
 
   TestInsert();
