@@ -2,6 +2,10 @@ MODULE Main;
 IMPORT RTIO, Word, Long;
 FROM RTIO IMPORT Flush;
 
+(* This test covers various longint and bit operations.
+ * Shift, extract, insert, etc.
+ *)
+
 (* NOTE: The NT386 backend does constant folding, but not inlining.
  * This test code takes advantage of that and compares
  * the constant folded values against the non-constant folded values.
@@ -552,10 +556,10 @@ END TestShiftNLongint;
 PROCEDURE TestLeftShiftMNInteger() =
 BEGIN
   PutT("\nTestLeftShiftMNInteger\n");
-  PutT("1 << 0"); PutT(":"); PutH(Word.LeftShift(1, 0)); PutT("\n");
-  PutT("1 << 1"); PutT(":"); PutH(Word.LeftShift(1, 1)); PutT("\n");
-  PutT("1 << 2"); PutT(":"); PutH(Word.LeftShift(1, 2)); PutT("\n");
-  PutT("1 << 3"); PutT(":"); PutH(Word.LeftShift(1, 3)); PutT("\n");
+  PutT("1 <<  0"); PutT(":"); PutH(Word.LeftShift(1,  0)); PutT("\n");
+  PutT("1 <<  1"); PutT(":"); PutH(Word.LeftShift(1,  1)); PutT("\n");
+  PutT("1 <<  2"); PutT(":"); PutH(Word.LeftShift(1,  2)); PutT("\n");
+  PutT("1 <<  3"); PutT(":"); PutH(Word.LeftShift(1,  3)); PutT("\n");
   PutT("1 << 30"); PutT(":"); PutH(Word.LeftShift(1, 30)); PutT("\n");
   PutT("1 << 31"); PutT(":"); PutH(Word.LeftShift(1, 31)); PutT("\n");
 END TestLeftShiftMNInteger;
@@ -563,10 +567,10 @@ END TestLeftShiftMNInteger;
 PROCEDURE TestLeftShiftMNLongint() =
 BEGIN
   PutT("\nTestLeftShiftMNLongint\n");
-  PutT("1L << 0"); PutT(":"); PutLH(Long.LeftShift(1L, 0)); PutT("\n");
-  PutT("1L << 1"); PutT(":"); PutLH(Long.LeftShift(1L, 1)); PutT("\n");
-  PutT("1L << 2"); PutT(":"); PutLH(Long.LeftShift(1L, 2)); PutT("\n");
-  PutT("1L << 3"); PutT(":"); PutLH(Long.LeftShift(1L, 3)); PutT("\n");
+  PutT("1L <<  0"); PutT(":"); PutLH(Long.LeftShift(1L, 0)); PutT("\n");
+  PutT("1L <<  1"); PutT(":"); PutLH(Long.LeftShift(1L, 1)); PutT("\n");
+  PutT("1L <<  2"); PutT(":"); PutLH(Long.LeftShift(1L, 2)); PutT("\n");
+  PutT("1L <<  3"); PutT(":"); PutLH(Long.LeftShift(1L, 3)); PutT("\n");
   PutT("1L << 30"); PutT(":"); PutLH(Long.LeftShift(1L, 30)); PutT("\n");
   PutT("1L << 40"); PutT(":"); PutLH(Long.LeftShift(1L, 40)); PutT("\n");
   PutT("1L << 50"); PutT(":"); PutLH(Long.LeftShift(1L, 50)); PutT("\n");
@@ -576,20 +580,20 @@ END TestLeftShiftMNLongint;
 PROCEDURE TestShiftRightMNInteger() =
 BEGIN
   PutT("\nTestShiftRightMNInteger\n");
-  PutT("16_80000000 >> 0"); PutT(":"); PutH(Word.RightShift(16_80000000, 0)); PutT("\n");
-  PutT("16_80000000 >> 1"); PutT(":"); PutH(Word.RightShift(16_80000000, 1)); PutT("\n");
-  PutT("16_80000000 >> 2"); PutT(":"); PutH(Word.RightShift(16_80000000, 2)); PutT("\n");
-  PutT("16_80000000 >> 3"); PutT(":"); PutH(Word.RightShift(16_80000000, 3)); PutT("\n");
+  PutT("16_80000000 >>  0"); PutT(":"); PutH(Word.RightShift(16_80000000,  0)); PutT("\n");
+  PutT("16_80000000 >>  1"); PutT(":"); PutH(Word.RightShift(16_80000000,  1)); PutT("\n");
+  PutT("16_80000000 >>  2"); PutT(":"); PutH(Word.RightShift(16_80000000,  2)); PutT("\n");
+  PutT("16_80000000 >>  3"); PutT(":"); PutH(Word.RightShift(16_80000000,  3)); PutT("\n");
   PutT("16_80000000 >> 30"); PutT(":"); PutH(Word.RightShift(16_80000000, 30)); PutT("\n");
 END TestShiftRightMNInteger;
 
 PROCEDURE TestShiftRightMNLongint() =
 BEGIN
   PutT("\nTestShiftRightMNLongint\n");
-  PutT("FIRST(LONGINT) >> 0"); PutT(":"); PutLH(Long.RightShift(FIRST(LONGINT), 0)); PutT("\n");
-  PutT("FIRST(LONGINT) >> 1"); PutT(":"); PutLH(Long.RightShift(FIRST(LONGINT), 1)); PutT("\n");
-  PutT("FIRST(LONGINT) >> 2"); PutT(":"); PutLH(Long.RightShift(FIRST(LONGINT), 2)); PutT("\n");
-  PutT("FIRST(LONGINT) >> 3"); PutT(":"); PutLH(Long.RightShift(FIRST(LONGINT), 3)); PutT("\n");
+  PutT("FIRST(LONGINT) >>  0"); PutT(":"); PutLH(Long.RightShift(FIRST(LONGINT),  0)); PutT("\n");
+  PutT("FIRST(LONGINT) >>  1"); PutT(":"); PutLH(Long.RightShift(FIRST(LONGINT),  1)); PutT("\n");
+  PutT("FIRST(LONGINT) >>  2"); PutT(":"); PutLH(Long.RightShift(FIRST(LONGINT),  2)); PutT("\n");
+  PutT("FIRST(LONGINT) >>  3"); PutT(":"); PutLH(Long.RightShift(FIRST(LONGINT),  3)); PutT("\n");
   PutT("FIRST(LONGINT) >> 30"); PutT(":"); PutLH(Long.RightShift(FIRST(LONGINT), 30)); PutT("\n");
   PutT("FIRST(LONGINT) >> 31"); PutT(":"); PutLH(Long.RightShift(FIRST(LONGINT), 31)); PutT("\n");
   PutT("FIRST(LONGINT) >> 32"); PutT(":"); PutLH(Long.RightShift(FIRST(LONGINT), 32)); PutT("\n");
@@ -608,11 +612,11 @@ BEGIN
   PutT("16_8000 << -40:"); PutH(Word.Shift(16_8000, -40)); PutT("\n");
   PutT("16_8000 << -30:"); PutH(Word.Shift(16_8000, -30)); PutT("\n");
   PutT("16_8000 << -20:"); PutH(Word.Shift(16_8000, -20)); PutT("\n");
-  PutT("16_8000 << -1:"); PutH(Word.Shift(16_8000, -1)); PutT("\n");
-  PutT("16_8000 <<  1:"); PutH(Word.Shift(16_8000,  1)); PutT("\n");
-  PutT("16_8000 << 20:"); PutH(Word.Shift(16_8000, 20)); PutT("\n");
-  PutT("16_8000 << 30:"); PutH(Word.Shift(16_8000, 30)); PutT("\n");
-  PutT("16_8000 << 40:"); PutH(Word.Shift(16_8000, 40)); PutT("\n");
+  PutT("16_8000 <<  -1:"); PutH(Word.Shift(16_8000,  -1)); PutT("\n");
+  PutT("16_8000 <<   1:"); PutH(Word.Shift(16_8000,   1)); PutT("\n");
+  PutT("16_8000 <<  20:"); PutH(Word.Shift(16_8000,  20)); PutT("\n");
+  PutT("16_8000 <<  30:"); PutH(Word.Shift(16_8000,  30)); PutT("\n");
+  PutT("16_8000 <<  40:"); PutH(Word.Shift(16_8000,  40)); PutT("\n");
 END TestShiftMNInteger;
 
 PROCEDURE TestShiftMNLongint() =
@@ -621,11 +625,11 @@ BEGIN
   PutT("16_8000L << -40:"); PutLH(Long.Shift(16_8000L, -40)); PutT("\n");
   PutT("16_8000L << -30:"); PutLH(Long.Shift(16_8000L, -30)); PutT("\n");
   PutT("16_8000L << -20:"); PutLH(Long.Shift(16_8000L, -20)); PutT("\n");
-  PutT("16_8000L << -1:"); PutLH(Long.Shift(16_8000L, -1)); PutT("\n");
-  PutT("16_8000L <<  1:"); PutLH(Long.Shift(16_8000L,  1)); PutT("\n");
-  PutT("16_8000L << 20:"); PutLH(Long.Shift(16_8000L, 20)); PutT("\n");
-  PutT("16_8000L << 30:"); PutLH(Long.Shift(16_8000L, 30)); PutT("\n");
-  PutT("16_8000L << 40:"); PutLH(Long.Shift(16_8000L, 40)); PutT("\n");
+  PutT("16_8000L <<  -1:"); PutLH(Long.Shift(16_8000L,  -1)); PutT("\n");
+  PutT("16_8000L <<   1:"); PutLH(Long.Shift(16_8000L,   1)); PutT("\n");
+  PutT("16_8000L <<  20:"); PutLH(Long.Shift(16_8000L,  20)); PutT("\n");
+  PutT("16_8000L <<  30:"); PutLH(Long.Shift(16_8000L,  30)); PutT("\n");
+  PutT("16_8000L <<  40:"); PutLH(Long.Shift(16_8000L,  40)); PutT("\n");
 END TestShiftMNLongint;
 
 (* shifting constant by a non-constant (not particularly special, except for shifting zero) *)
@@ -659,13 +663,13 @@ PROCEDURE TestShiftRightMInteger() =
 BEGIN
   PutT("\nTestShiftRightMInteger\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
-    PutT("       0 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(0, shift[i])); PutT("\n");
-    PutT(" 16_8000 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(16_8000, shift[i])); PutT("\n");
-    PutT(" 16_4000 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(16_4000, shift[i])); PutT("\n");
+    PutT("       0 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(       0, shift[i])); PutT("\n");
+    PutT(" 16_8000 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift( 16_8000, shift[i])); PutT("\n");
+    PutT(" 16_4000 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift( 16_4000, shift[i])); PutT("\n");
     PutT("16_10000 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(16_10000, shift[i])); PutT("\n");
-    PutT("      -1 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(-1, shift[i])); PutT("\n");
-    PutT("      -2 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(-2, shift[i])); PutT("\n");
-    PutT("      -3 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(-3, shift[i])); PutT("\n");
+    PutT("      -1 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(      -1, shift[i])); PutT("\n");
+    PutT("      -2 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(      -2, shift[i])); PutT("\n");
+    PutT("      -3 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(      -3, shift[i])); PutT("\n");
   END;
 END TestShiftRightMInteger;
 
@@ -674,13 +678,13 @@ PROCEDURE TestShiftRightMLongint() =
 BEGIN
   PutT("\nTestShiftRightMLongint\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
-    PutT("       0L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift(0L, shift[i])); PutT("\n");
-    PutT(" 16_8000L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift(16_8000L, shift[i])); PutT("\n");
-    PutT(" 16_4000L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift(16_4000L, shift[i])); PutT("\n");
+    PutT("       0L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift(       0L, shift[i])); PutT("\n");
+    PutT(" 16_8000L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift( 16_8000L, shift[i])); PutT("\n");
+    PutT(" 16_4000L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift( 16_4000L, shift[i])); PutT("\n");
     PutT("16_10000L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift(16_10000L, shift[i])); PutT("\n");
-    PutT("      -1L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift(-1L, shift[i])); PutT("\n");
-    PutT("      -2L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift(-2L, shift[i])); PutT("\n");
-    PutT("      -3L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift(-3L, shift[i])); PutT("\n");
+    PutT("      -1L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift(      -1L, shift[i])); PutT("\n");
+    PutT("      -2L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift(      -2L, shift[i])); PutT("\n");
+    PutT("      -3L >> "); PutI(shift[i], 2); PutT(":"); PutLH(Long.RightShift(      -3L, shift[i])); PutT("\n");
   END;
 END TestShiftRightMLongint;
 
@@ -689,9 +693,9 @@ PROCEDURE TestShiftMInteger() =
 BEGIN
   PutT("\nTestShiftMInteger\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
-    PutT("       0 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift(0, shift[i])); PutT("\n");
-    PutT(" 16_8000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift(16_8000, shift[i])); PutT("\n");
-    PutT(" 16_4000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift(16_4000, shift[i])); PutT("\n");
+    PutT("       0 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift(       0, shift[i])); PutT("\n");
+    PutT(" 16_8000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift( 16_8000, shift[i])); PutT("\n");
+    PutT(" 16_4000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift( 16_4000, shift[i])); PutT("\n");
     PutT("16_10000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift(16_10000, shift[i])); PutT("\n");
   END;
 END TestShiftMInteger;
@@ -701,9 +705,9 @@ PROCEDURE TestShiftMLongint() =
 BEGIN
   PutT("\nTestShiftMLongint\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
-    PutT("       0L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.Shift(0L, shift[i])); PutT("\n");
-    PutT(" 16_8000L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.Shift(16_8000L, shift[i])); PutT("\n");
-    PutT(" 16_4000L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.Shift(16_4000L, shift[i])); PutT("\n");
+    PutT("       0L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.Shift(       0L, shift[i])); PutT("\n");
+    PutT(" 16_8000L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.Shift( 16_8000L, shift[i])); PutT("\n");
+    PutT(" 16_4000L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.Shift( 16_4000L, shift[i])); PutT("\n");
     PutT("16_10000L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.Shift(16_10000L, shift[i])); PutT("\n");
   END;
 END TestShiftMLongint;
