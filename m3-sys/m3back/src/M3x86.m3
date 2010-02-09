@@ -2296,16 +2296,17 @@ PROCEDURE shift_left   (u: U;  t: IType) =
           IF NOT TInt.ToInt(u.vstack.op(stack0).imm, shiftCount) THEN
             u.Err("unable to convert shift count to host integer");
           END;
+
+          (* shift constant by a constant *)
+
           TWord.Shift(u.vstack.op(stack1).imm, shiftCount, shiftResult);
           u.vstack.set_imm(stack1, shiftResult);
         ELSE
+          (* shift non-constant by a constant *)
+
           TWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
           IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
-            IF Is64(t) THEN
-              do_custom_calling_convention_shift_64 (u, Builtin.shift_left_64);
-              RETURN;
-            END;
             u.vstack.find(stack1, Force.anytemp);
             u.cg.immOp(Op.oSHL, u.vstack.op(stack1), u.vstack.op(stack0).imm);
             u.vstack.newdest(u.vstack.op(stack1));
@@ -2313,6 +2314,9 @@ PROCEDURE shift_left   (u: U;  t: IType) =
         END
       ELSE
         IF (u.vstack.loc(stack1) # OLoc.imm) OR TInt.NE(u.vstack.op(stack1).imm, TZero) THEN
+
+          (* shift non-constant *)
+
           IF Is64(t) THEN
             do_custom_calling_convention_shift_64 (u, Builtin.shift_left_64);
             RETURN;
@@ -2350,25 +2354,30 @@ PROCEDURE shift_right  (u: U;  t: IType) =
          stack1 = u.vstack.pos(1, "shift_right") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF u.vstack.loc(stack1) = OLoc.imm THEN
+
+          (* shift constant by a constant *)
+
           IF NOT TInt.ToInt(u.vstack.op(stack0).imm, shiftCount) THEN
             u.Err("unable to convert shift count to host integer");
           END;
           TWord.Shift(u.vstack.op(stack1).imm, -shiftCount, shift);
           u.vstack.set_imm(stack1, shift);
         ELSE
+
+          (* shift a non-constant by a constant *)
+
           TWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
           IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
-            IF Is64(t) THEN
-              do_custom_calling_convention_shift_64 (u, Builtin.shift_right_64);
-              RETURN;
-            END;
             u.vstack.find(stack1, Force.anytemp);
             u.cg.immOp(Op.oSHR, u.vstack.op(stack1), u.vstack.op(stack0).imm);
             u.vstack.newdest(u.vstack.op(stack1));
           END
         END
       ELSE
+
+        (* shift a non-constant or non-zero *)
+
         IF ((u.vstack.loc(stack1) # OLoc.imm) OR (TInt.NE(u.vstack.op(stack1).imm, TZero))) THEN
           IF Is64(t) THEN
             do_custom_calling_convention_shift_64 (u, Builtin.shift_right_64);
