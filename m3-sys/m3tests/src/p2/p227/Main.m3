@@ -245,24 +245,51 @@ VAR a := NotConstI(1);
 BEGIN
   PutT("\nTestShiftLeftNInteger\n");
   PutT("1 << 0"); PutT(":"); PutH(Word.Shift(a, 0)); PutT("\n");
+  <* ASSERT Word.Shift(1, 0) = Word.Shift(a, 0) *>
+
   PutT("1 << 1"); PutT(":"); PutH(Word.Shift(a, 1)); PutT("\n");
+  <* ASSERT Word.Shift(1, 1) = Word.Shift(a, 1) *>
+
   PutT("1 << 2"); PutT(":"); PutH(Word.Shift(a, 2)); PutT("\n");
+  <* ASSERT Word.Shift(1, 2) = Word.Shift(a, 2) *>
+
   PutT("1 << 3"); PutT(":"); PutH(Word.Shift(a, 3)); PutT("\n");
+  <* ASSERT Word.Shift(1, 3) = Word.Shift(a, 3) *>
+
   PutT("1 << 30"); PutT(":"); PutH(Word.Shift(a, 30)); PutT("\n");
+  <* ASSERT Word.Shift(1, 30) = Word.Shift(a, 30) *>
+
 END TestShiftLeftNInteger;
 
 PROCEDURE TestShiftLeftNLongint() =
 VAR a := NotConstL(1L);
 BEGIN
   PutT("\nTestShiftLeftNLongint\n");
+
   PutT("1L << 0"); PutT(":"); PutLH(Long.Shift(a, 0)); PutT("\n");
+  <* ASSERT Long.Shift(1L, 0) = Long.Shift(a, 0) *>
+
   PutT("1L << 1"); PutT(":"); PutLH(Long.Shift(a, 1)); PutT("\n");
+  <* ASSERT Long.Shift(1L, 1) = Long.Shift(a, 1) *>
+
   PutT("1L << 2"); PutT(":"); PutLH(Long.Shift(a, 2)); PutT("\n");
+  <* ASSERT Long.Shift(1L, 2) = Long.Shift(a, 2) *>
+
   PutT("1L << 3"); PutT(":"); PutLH(Long.Shift(a, 3)); PutT("\n");
+  <* ASSERT Long.Shift(1L, 3) = Long.Shift(a, 3) *>
+
   PutT("1L << 30"); PutT(":"); PutLH(Long.Shift(a, 30)); PutT("\n");
+  <* ASSERT Long.Shift(1L, 30) = Long.Shift(a, 30) *>
+
   PutT("1L << 40"); PutT(":"); PutLH(Long.Shift(a, 40)); PutT("\n");
+  <* ASSERT Long.Shift(1L, 40) = Long.Shift(a, 40) *>
+
   PutT("1L << 50"); PutT(":"); PutLH(Long.Shift(a, 50)); PutT("\n");
+  <* ASSERT Long.Shift(1L, 50) = Long.Shift(a, 50) *>
+
   PutT("1L << 60"); PutT(":"); PutLH(Long.Shift(a, 60)); PutT("\n");
+  <* ASSERT Long.Shift(1L, 60) = Long.Shift(a, 60) *>
+
 END TestShiftLeftNLongint;
 
 PROCEDURE TestShiftRightNInteger() =
