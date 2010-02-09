@@ -749,6 +749,7 @@ BEGIN
   TestShiftMInteger();
   TestShiftMLongint();
 
+  NL();
 
   PutT("           :"); PutLH(NotConstL(16_123456789L)); NL();
   <* ASSERT Long.Rotate(16_123456789L, 56) = Long.Rotate(NotConstL(16_123456789L), NotConstI(56)) *>
