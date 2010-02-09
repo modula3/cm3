@@ -2299,7 +2299,7 @@ PROCEDURE shift_left   (u: U;  t: IType) =
           TWord.Shift(u.vstack.op(stack1).imm, shiftCount, shiftResult);
           u.vstack.set_imm(stack1, shiftResult);
         ELSE
-          TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
+          TWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
           IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
             IF Is64(t) THEN
@@ -2356,7 +2356,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
           TWord.Shift(u.vstack.op(stack1).imm, -shiftCount, shift);
           u.vstack.set_imm(stack1, shift);
         ELSE
-          TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
+          TWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
           IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
             IF Is64(t) THEN
@@ -2429,7 +2429,7 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
           TWord.Rotate(u.vstack.op(stack1).imm, rotateCount, rotate);
           u.vstack.set_imm(stack1, rotate);
         ELSE
-          TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
+          TWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
           IF Is64(t) THEN
             do_rotate_or_shift_64(u, Builtin.rotate_left64);
@@ -2482,7 +2482,7 @@ PROCEDURE rotate_right (u: U;  t: IType) =
           TWord.Rotate(u.vstack.op(stack1).imm, -rotateCount, rotate);
           u.vstack.set_imm(stack1, rotate);
         ELSE
-          TWord.And(u.vstack.op(stack0).imm, TInt.ThirtyOne, and);
+          TWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
           IF Is64(t) THEN
             do_rotate_or_shift_64(u, Builtin.rotate_right64);
