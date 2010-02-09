@@ -312,7 +312,7 @@ BEGIN
   FOR i := FIRST(b) TO LAST (b) DO
     a := NotConstL(b[i]);
 
-    PutT("1L << 0"); PutT(":"); PutLH(Long.LeftShift(a, 0)); PutT("\n");
+    PutLH(a); PutT(" << 0"); PutT(":"); PutLH(Long.LeftShift(a, 0)); PutT("\n");
     <* ASSERT a #               1L OR Long.LeftShift(              1L, 0) = Long.LeftShift(a, 0) *>
     <* ASSERT a #               2L OR Long.LeftShift(              2L, 0) = Long.LeftShift(a, 0) *>
     <* ASSERT a #               3L OR Long.LeftShift(              3L, 0) = Long.LeftShift(a, 0) *>
@@ -322,7 +322,7 @@ BEGIN
     <* ASSERT a #     16_ABCD0000L OR Long.LeftShift(    16_ABCD0000L, 0) = Long.LeftShift(a, 0) *>
     <* ASSERT a # 16_ABCD00001234L OR Long.LeftShift(16_ABCD00001234L, 0) = Long.LeftShift(a, 0) *>
 
-    PutT("1L << 1"); PutT(":"); PutLH(Long.LeftShift(a, 1)); PutT(" \n");
+    PutLH(a); PutT(" << 1"); PutT(":"); PutLH(Long.LeftShift(a, 1)); PutT(" \n");
     <* ASSERT a #               1L OR Long.LeftShift(              1L, 1) = Long.LeftShift(a, 1) *>
     <* ASSERT a #               2L OR Long.LeftShift(              2L, 1) = Long.LeftShift(a, 1) *>
     <* ASSERT a #               3L OR Long.LeftShift(              3L, 1) = Long.LeftShift(a, 1) *>
@@ -332,7 +332,7 @@ BEGIN
     <* ASSERT a #     16_ABCD0000L OR Long.LeftShift(    16_ABCD0000L, 1) = Long.LeftShift(a, 1) *>
     <* ASSERT a # 16_ABCD00001234L OR Long.LeftShift(16_ABCD00001234L, 1) = Long.LeftShift(a, 1) *>
 
-    PutT("1L << 2"); PutT(":"); PutLH(Long.LeftShift(a, 2)); PutT("\n");
+    PutLH(a); PutT(" << 2"); PutT(":"); PutLH(Long.LeftShift(a, 2)); PutT("\n");
     <* ASSERT a #               1L OR Long.LeftShift(              1L, 2) = Long.LeftShift(a, 2) *>
     <* ASSERT a #               2L OR Long.LeftShift(              2L, 2) = Long.LeftShift(a, 2) *>
     <* ASSERT a #               3L OR Long.LeftShift(              3L, 2) = Long.LeftShift(a, 2) *>
@@ -342,7 +342,7 @@ BEGIN
     <* ASSERT a #     16_ABCD0000L OR Long.LeftShift(    16_ABCD0000L, 2) = Long.LeftShift(a, 2) *>
     <* ASSERT a # 16_ABCD00001234L OR Long.LeftShift(16_ABCD00001234L, 2) = Long.LeftShift(a, 2) *>
 
-    PutT("1L << 3"); PutT(":"); PutLH(Long.LeftShift(a, 3)); PutT("\n");
+    PutLH(a); PutT(" << 3"); PutT(":"); PutLH(Long.LeftShift(a, 3)); PutT("\n");
     <* ASSERT a #               1L OR Long.LeftShift(              1L, 3) = Long.LeftShift(a, 3) *>
     <* ASSERT a #               2L OR Long.LeftShift(              2L, 3) = Long.LeftShift(a, 3) *>
     <* ASSERT a #               3L OR Long.LeftShift(              3L, 3) = Long.LeftShift(a, 3) *>
@@ -352,7 +352,7 @@ BEGIN
     <* ASSERT a #     16_ABCD0000L OR Long.LeftShift(    16_ABCD0000L, 3) = Long.LeftShift(a, 3) *>
     <* ASSERT a # 16_ABCD00001234L OR Long.LeftShift(16_ABCD00001234L, 3) = Long.LeftShift(a, 3) *>
 
-    PutT("1L << 30"); PutT(":"); PutLH(Long.LeftShift(a, 30)); PutT("\n");
+    PutLH(a); PutT(" << 30"); PutT(":"); PutLH(Long.LeftShift(a, 30)); PutT("\n");
     <* ASSERT a #               1L OR Long.LeftShift(              1L, 30) = Long.LeftShift(a, 30) *>
     <* ASSERT a #               2L OR Long.LeftShift(              2L, 30) = Long.LeftShift(a, 30) *>
     <* ASSERT a #               3L OR Long.LeftShift(              3L, 30) = Long.LeftShift(a, 30) *>
@@ -362,7 +362,7 @@ BEGIN
     <* ASSERT a #     16_ABCD0000L OR Long.LeftShift(    16_ABCD0000L, 30) = Long.LeftShift(a, 30) *>
     <* ASSERT a # 16_ABCD00001234L OR Long.LeftShift(16_ABCD00001234L, 30) = Long.LeftShift(a, 30) *>
 
-    PutT("1L << 40"); PutT(":"); PutLH(Long.LeftShift(a, 40)); PutT("\n");
+    PutLH(a); PutT(" << 40"); PutT(":"); PutLH(Long.LeftShift(a, 40)); PutT("\n");
     <* ASSERT a #               1L OR Long.LeftShift(              1L, 40) = Long.LeftShift(a, 40) *>
     <* ASSERT a #               2L OR Long.LeftShift(              2L, 40) = Long.LeftShift(a, 40) *>
     <* ASSERT a #               3L OR Long.LeftShift(              3L, 40) = Long.LeftShift(a, 40) *>
@@ -372,7 +372,7 @@ BEGIN
     <* ASSERT a #     16_ABCD0000L OR Long.LeftShift(    16_ABCD0000L, 40) = Long.LeftShift(a, 40) *>
     <* ASSERT a # 16_ABCD00001234L OR Long.LeftShift(16_ABCD00001234L, 40) = Long.LeftShift(a, 40) *>
 
-    PutT("1L << 50"); PutT(":"); PutLH(Long.LeftShift(a, 50)); PutT("\n");
+    PutLH(a); PutT(" << 50"); PutT(":"); PutLH(Long.LeftShift(a, 50)); PutT("\n");
     <* ASSERT a #               1L OR Long.LeftShift(              1L, 50) = Long.LeftShift(a, 50) *>
     <* ASSERT a #               2L OR Long.LeftShift(              2L, 50) = Long.LeftShift(a, 50) *>
     <* ASSERT a #               3L OR Long.LeftShift(              3L, 50) = Long.LeftShift(a, 50) *>
@@ -382,7 +382,7 @@ BEGIN
     <* ASSERT a #     16_ABCD0000L OR Long.LeftShift(    16_ABCD0000L, 50) = Long.LeftShift(a, 50) *>
     <* ASSERT a # 16_ABCD00001234L OR Long.LeftShift(16_ABCD00001234L, 50) = Long.LeftShift(a, 50) *>
 
-    PutT("1L << 60"); PutT(":"); PutLH(Long.LeftShift(a, 60)); PutT("\n");
+    PutLH(a); PutT(" << 60"); PutT(":"); PutLH(Long.LeftShift(a, 60)); PutT("\n");
     <* ASSERT a #               1L OR Long.LeftShift(              1L, 60) = Long.LeftShift(a, 60) *>
     <* ASSERT a #               2L OR Long.LeftShift(              2L, 60) = Long.LeftShift(a, 60) *>
     <* ASSERT a #               3L OR Long.LeftShift(              3L, 60) = Long.LeftShift(a, 60) *>
