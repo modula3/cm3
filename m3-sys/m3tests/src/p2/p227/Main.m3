@@ -245,7 +245,6 @@ BEGIN
   END;
 END TestShiftLongint;
 
-
 (* shifting by a constant *)
 
 PROCEDURE TestShiftLeftNInteger() =
@@ -399,91 +398,65 @@ BEGIN
   PutT("16_8000L << 40:"); PutLH(Long.Shift(16_8000L, 40)); PutT("\n");
 END TestShiftMNLongint;
 
-
 (* shifting constant by a non-constant (not particularly special, except for shifting zero) *)
 
 PROCEDURE TestShiftLeftMInteger() =
+
+  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30 };
 BEGIN
-  PutT("\nTestShiftLeftMInteger\n");
-  PutT("0 <<  1:"); PutH(Word.LeftShift(0,  NotConstI(1))); PutT("\n");
-  PutT("0 << 20:"); PutH(Word.LeftShift(0, NotConstI(20))); PutT("\n");
-  PutT("0 << 30:"); PutH(Word.LeftShift(0, NotConstI(30))); PutT("\n");
-  PutT("1 <<  1:"); PutH(Word.LeftShift(1,  NotConstI(1))); PutT("\n");
-  PutT("1 << 20:"); PutH(Word.LeftShift(1, NotConstI(20))); PutT("\n");
-  PutT("1 << 30:"); PutH(Word.LeftShift(1, NotConstI(30))); PutT("\n");
-  PutT("2 <<  1:"); PutH(Word.LeftShift(2,  NotConstI(1))); PutT("\n");
-  PutT("2 << 20:"); PutH(Word.LeftShift(2, NotConstI(20))); PutT("\n");
-  PutT("2 << 30:"); PutH(Word.LeftShift(2, NotConstI(30))); PutT("\n");
-  PutT("3 <<  1:"); PutH(Word.LeftShift(3,  NotConstI(1))); PutT("\n");
-  PutT("3 << 20:"); PutH(Word.LeftShift(3, NotConstI(20))); PutT("\n");
-  PutT("3 << 30:"); PutH(Word.LeftShift(3, NotConstI(30))); PutT("\n");
+  PutT("\nTestShiftLeftMLongint\n");
+  FOR i := FIRST(shift) TO LAST(shift) DO
+    PutT(" 0 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.LeftShift(0, shift[i])); PutT("\n");
+    PutT(" 1 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.LeftShift(1, shift[i])); PutT("\n");
+    PutT(" 2 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.LeftShift(2, shift[i])); PutT("\n");
+    PutT(" 3 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.LeftShift(3, shift[i])); PutT("\n");
+  END;
 END TestShiftLeftMInteger;
 
 PROCEDURE TestShiftLeftMLongint() =
+  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 40, 50, 60 };
 BEGIN
   PutT("\nTestShiftLeftMLongint\n");
-  PutT("0L <<  1:"); PutLH(Long.LeftShift(0L,  NotConstI(1))); PutT("\n");
-  PutT("0L << 20:"); PutLH(Long.LeftShift(0L, NotConstI(20))); PutT("\n");
-  PutT("0L << 30:"); PutLH(Long.LeftShift(0L, NotConstI(30))); PutT("\n");
-  PutT("0L << 40:"); PutLH(Long.LeftShift(0L, NotConstI(40))); PutT("\n");
-  PutT("0L << 50:"); PutLH(Long.LeftShift(0L, NotConstI(50))); PutT("\n");
-  PutT("0L << 60:"); PutLH(Long.LeftShift(0L, NotConstI(60))); PutT("\n");
-  PutT("1L <<  1:"); PutLH(Long.LeftShift(1L,  NotConstI(1))); PutT("\n");
-  PutT("1L << 20:"); PutLH(Long.LeftShift(1L, NotConstI(20))); PutT("\n");
-  PutT("1L << 30:"); PutLH(Long.LeftShift(1L, NotConstI(30))); PutT("\n");
-  PutT("1L << 40:"); PutLH(Long.LeftShift(1L, NotConstI(40))); PutT("\n");
-  PutT("1L << 50:"); PutLH(Long.LeftShift(1L, NotConstI(50))); PutT("\n");
-  PutT("1L << 60:"); PutLH(Long.LeftShift(1L, NotConstI(60))); PutT("\n");
-  PutT("2L <<  1:"); PutLH(Long.LeftShift(2L,  NotConstI(1))); PutT("\n");
-  PutT("2L << 20:"); PutLH(Long.LeftShift(2L, NotConstI(20))); PutT("\n");
-  PutT("2L << 30:"); PutLH(Long.LeftShift(2L, NotConstI(30))); PutT("\n");
-  PutT("2L << 40:"); PutLH(Long.LeftShift(2L, NotConstI(40))); PutT("\n");
-  PutT("2L << 50:"); PutLH(Long.LeftShift(2L, NotConstI(50))); PutT("\n");
-  PutT("2L << 60:"); PutLH(Long.LeftShift(2L, NotConstI(60))); PutT("\n");
-  PutT("3L <<  1:"); PutLH(Long.LeftShift(3L,  NotConstI(1))); PutT("\n");
-  PutT("3L << 20:"); PutLH(Long.LeftShift(3L, NotConstI(20))); PutT("\n");
-  PutT("3L << 30:"); PutLH(Long.LeftShift(3L, NotConstI(30))); PutT("\n");
-  PutT("3L << 40:"); PutLH(Long.LeftShift(3L, NotConstI(40))); PutT("\n");
-  PutT("3L << 50:"); PutLH(Long.LeftShift(3L, NotConstI(50))); PutT("\n");
-  PutT("3L << 60:"); PutLH(Long.LeftShift(3L, NotConstI(60))); PutT("\n");
+  FOR i := FIRST(shift) TO LAST(shift) DO
+    PutT(" 0L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.LeftShift(0L, shift[i])); PutT("\n");
+    PutT(" 1L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.LeftShift(1L, shift[i])); PutT("\n");
+    PutT(" 2L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.LeftShift(2L, shift[i])); PutT("\n");
+    PutT(" 3L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.LeftShift(3L, shift[i])); PutT("\n");
+  END;
 END TestShiftLeftMLongint;
 
 PROCEDURE TestShiftRightMInteger() =
+  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30 };
 BEGIN
   PutT("\nTestShiftRightMInteger\n");
-  PutT("0 >>  1:"); PutH(Word.RightShift(0,  NotConstI(1))); PutT("\n");
-  PutT("0 >> 20:"); PutH(Word.RightShift(0, NotConstI(20))); PutT("\n");
-  PutT("0 >> 30:"); PutH(Word.RightShift(0, NotConstI(30))); PutT("\n");
-  PutT("-1 >>  1:"); PutH(Word.RightShift(-1,  NotConstI(1))); PutT("\n");
-  PutT("-1 >> 20:"); PutH(Word.RightShift(-1, NotConstI(20))); PutT("\n");
-  PutT("-1 >> 30:"); PutH(Word.RightShift(-1, NotConstI(30))); PutT("\n");
-  PutT("-2 >>  1:"); PutH(Word.RightShift(-2,  NotConstI(1))); PutT("\n");
-  PutT("-2 >> 20:"); PutH(Word.RightShift(-2, NotConstI(20))); PutT("\n");
-  PutT("-2 >> 30:"); PutH(Word.RightShift(-2, NotConstI(30))); PutT("\n");
-  PutT("-3 >>  1:"); PutH(Word.RightShift(-3,  NotConstI(1))); PutT("\n");
-  PutT("-3 >> 20:"); PutH(Word.RightShift(-3, NotConstI(20))); PutT("\n");
-  PutT("-3 >> 30:"); PutH(Word.RightShift(-3, NotConstI(30))); PutT("\n");
+  FOR i := FIRST(shift) TO LAST(shift) DO
+    PutT("       0 >> "); PutI(shift[i], 3); PutT(":"); PutH(Word.RightShift(0, shift[i])); PutT("\n");
+    PutT(" 16_8000 >> "); PutI(shift[i], 3); PutT(":"); PutH(Word.RightShift(16_8000, shift[i])); PutT("\n");
+    PutT(" 16_4000 >> "); PutI(shift[i], 3); PutT(":"); PutH(Word.RightShift(16_4000, shift[i])); PutT("\n");
+    PutT("16_10000 >> "); PutI(shift[i], 3); PutT(":"); PutH(Word.RightShift(16_10000, shift[i])); PutT("\n");
+    PutT("      -1 >> "); PutI(shift[i], 3); PutT(":"); PutH(Word.RightShift(-1, shift[i])); PutT("\n");
+    PutT("      -2 >> "); PutI(shift[i], 3); PutT(":"); PutH(Word.RightShift(-2, shift[i])); PutT("\n");
+    PutT("      -3 >> "); PutI(shift[i], 3); PutT(":"); PutH(Word.RightShift(-3, shift[i])); PutT("\n");
+  END;
 END TestShiftRightMInteger;
 
 PROCEDURE TestShiftRightMLongint() =
+  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 40, 50, 60 };
 BEGIN
   PutT("\nTestShiftRightMLongint\n");
-  PutT("0 >>  1:"); PutLH(Long.RightShift(0L,  NotConstI(1))); PutT("\n");
-  PutT("0 >> 20:"); PutLH(Long.RightShift(0L, NotConstI(20))); PutT("\n");
-  PutT("0 >> 30:"); PutLH(Long.RightShift(0L, NotConstI(30))); PutT("\n");
-  PutT("-1L >>  1:"); PutLH(Long.RightShift(-1L,  NotConstI(1))); PutT("\n");
-  PutT("-1L >> 20:"); PutLH(Long.RightShift(-1L, NotConstI(20))); PutT("\n");
-  PutT("-1L >> 30:"); PutLH(Long.RightShift(-1L, NotConstI(30))); PutT("\n");
-  PutT("-2L >>  1:"); PutLH(Long.RightShift(-2L,  NotConstI(1))); PutT("\n");
-  PutT("-2L >> 20:"); PutLH(Long.RightShift(-2L, NotConstI(20))); PutT("\n");
-  PutT("-2L >> 30:"); PutLH(Long.RightShift(-2L, NotConstI(30))); PutT("\n");
-  PutT("-3L >>  1:"); PutLH(Long.RightShift(-3L,  NotConstI(1))); PutT("\n");
-  PutT("-3L >> 20:"); PutLH(Long.RightShift(-3L, NotConstI(20))); PutT("\n");
-  PutT("-3L >> 30:"); PutLH(Long.RightShift(-3L, NotConstI(30))); PutT("\n");
+  FOR i := FIRST(shift) TO LAST(shift) DO
+    PutT("       0L >> "); PutI(shift[i], 3); PutT(":"); PutLH(Long.RightShift(0L, shift[i])); PutT("\n");
+    PutT(" 16_8000L >> "); PutI(shift[i], 3); PutT(":"); PutLH(Long.RightShift(16_8000L, shift[i])); PutT("\n");
+    PutT(" 16_4000L >> "); PutI(shift[i], 3); PutT(":"); PutLH(Long.RightShift(16_4000L, shift[i])); PutT("\n");
+    PutT("16_10000L >> "); PutI(shift[i], 3); PutT(":"); PutLH(Long.RightShift(16_10000L, shift[i])); PutT("\n");
+    PutT("      -1L >> "); PutI(shift[i], 3); PutT(":"); PutLH(Long.RightShift(-1L, shift[i])); PutT("\n");
+    PutT("      -2L >> "); PutI(shift[i], 3); PutT(":"); PutLH(Long.RightShift(-2L, shift[i])); PutT("\n");
+    PutT("      -3L >> "); PutI(shift[i], 3); PutT(":"); PutLH(Long.RightShift(-3L, shift[i])); PutT("\n");
+  END;
 END TestShiftRightMLongint;
 
 PROCEDURE TestShiftMInteger() =
-  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 40, 50, 60, -1, -10, -20, -30, -40, -50, -60 };
+  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, -1, -10, -20, -30 };
 BEGIN
   PutT("\nTestShiftMInteger\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
