@@ -214,7 +214,7 @@ TYPE
 
 TYPE Op = { oAND, oXOR, oOR, oMOV,
             oADD, oADC, oSUB, oSBB, oCMP, oNEG, oNOT, oLEA,
-            oSAL, oSAR, oSHR, oROL, oROR, oSAHF, oWAIT, oCLD, oSTD,
+            oSHL, oSAR, oSHR, oROL, oROR, oSAHF, oWAIT, oCLD, oSTD,
             oREP, oMOVSB, oMOVSD, oSTOSB, oSTOSD,
             oCWDE, oCDQ, oLEAVE, oRET, oNOP };
 
