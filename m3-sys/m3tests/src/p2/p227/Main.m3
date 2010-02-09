@@ -265,14 +265,14 @@ VAR a: LONGINT;
 BEGIN
   PutT("\nTestShiftLeftNLongint\n");
   a := NotConstL(1L);
-  PutT("1 << 0"); PutT(":"); PutLH(Long.Shift(a, 0)); PutT("\n");
-  PutT("1 << 1"); PutT(":"); PutLH(Long.Shift(a, 1)); PutT("\n");
-  PutT("1 << 2"); PutT(":"); PutLH(Long.Shift(a, 2)); PutT("\n");
-  PutT("1 << 3"); PutT(":"); PutLH(Long.Shift(a, 3)); PutT("\n");
-  PutT("1 << 30"); PutT(":"); PutLH(Long.Shift(a, 30)); PutT("\n");
-  PutT("1 << 40"); PutT(":"); PutLH(Long.Shift(a, 40)); PutT("\n");
-  PutT("1 << 50"); PutT(":"); PutLH(Long.Shift(a, 50)); PutT("\n");
-  PutT("1 << 60"); PutT(":"); PutLH(Long.Shift(a, 60)); PutT("\n");
+  PutT("1L << 0"); PutT(":"); PutLH(Long.Shift(a, 0)); PutT("\n");
+  PutT("1L << 1"); PutT(":"); PutLH(Long.Shift(a, 1)); PutT("\n");
+  PutT("1L << 2"); PutT(":"); PutLH(Long.Shift(a, 2)); PutT("\n");
+  PutT("1L << 3"); PutT(":"); PutLH(Long.Shift(a, 3)); PutT("\n");
+  PutT("1L << 30"); PutT(":"); PutLH(Long.Shift(a, 30)); PutT("\n");
+  PutT("1L << 40"); PutT(":"); PutLH(Long.Shift(a, 40)); PutT("\n");
+  PutT("1L << 50"); PutT(":"); PutLH(Long.Shift(a, 50)); PutT("\n");
+  PutT("1L << 60"); PutT(":"); PutLH(Long.Shift(a, 60)); PutT("\n");
 END TestShiftLeftNLongint;
 
 PROCEDURE TestShiftRightNInteger() =
@@ -323,21 +323,54 @@ END TestShiftNLongint;
 PROCEDURE TestShiftLeftMNInteger() =
 BEGIN
   PutT("\nTestShiftLeftMNInteger\n");
+  PutT("1 << 0"); PutT(":"); PutH(Word.LeftShift(1, 0)); PutT("\n");
+  PutT("1 << 1"); PutT(":"); PutH(Word.LeftShift(1, 1)); PutT("\n");
+  PutT("1 << 2"); PutT(":"); PutH(Word.LeftShift(1, 2)); PutT("\n");
+  PutT("1 << 3"); PutT(":"); PutH(Word.LeftShift(1, 3)); PutT("\n");
+  PutT("1 << 30"); PutT(":"); PutH(Word.LeftShift(1, 30)); PutT("\n");
+  PutT("1 << 31"); PutT(":"); PutH(Word.LeftShift(1, 31)); PutT("\n");
 END TestShiftLeftMNInteger;
 
 PROCEDURE TestShiftLeftMNLongint() =
 BEGIN
   PutT("\nTestShiftLeftNLongint\n");
+  PutT("1L << 0"); PutT(":"); PutLH(Long.Shift(1L, 0)); PutT("\n");
+  PutT("1L << 1"); PutT(":"); PutLH(Long.Shift(1L, 1)); PutT("\n");
+  PutT("1L << 2"); PutT(":"); PutLH(Long.Shift(1L, 2)); PutT("\n");
+  PutT("1L << 3"); PutT(":"); PutLH(Long.Shift(1L, 3)); PutT("\n");
+  PutT("1L << 30"); PutT(":"); PutLH(Long.Shift(1L, 30)); PutT("\n");
+  PutT("1L << 40"); PutT(":"); PutLH(Long.Shift(1L, 40)); PutT("\n");
+  PutT("1L << 50"); PutT(":"); PutLH(Long.Shift(1L, 50)); PutT("\n");
+  PutT("1L << 60"); PutT(":"); PutLH(Long.Shift(1L, 60)); PutT("\n");
 END TestShiftLeftMNLongint;
 
 PROCEDURE TestShiftRightMNInteger() =
 BEGIN
   PutT("\nTestShiftRightMNInteger\n");
+  PutT("FIRST(INTEGER) >> 0"); PutT(":"); PutH(Word.RightShift(1, 0)); PutT("\n");
+  PutT("FIRST(INTEGER) >> 1"); PutT(":"); PutH(Word.RightShift(1, 1)); PutT("\n");
+  PutT("FIRST(INTEGER) >> 2"); PutT(":"); PutH(Word.RightShift(1, 2)); PutT("\n");
+  PutT("FIRST(INTEGER) >> 3"); PutT(":"); PutH(Word.RightShift(1, 3)); PutT("\n");
+  PutT("FIRST(INTEGER) >> 30"); PutT(":"); PutH(Word.RightShift(1, 30)); PutT("\n");
 END TestShiftRightMNInteger;
 
 PROCEDURE TestShiftRightMNLongint() =
 BEGIN
   PutT("\nTestShiftRightMNLongint\n");
+  PutT("FIRST(LONGINT) >> 0"); PutT(":"); PutLH(Long.RightShift(1L, 0)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 1"); PutT(":"); PutLH(Long.RightShift(1L, 1)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 2"); PutT(":"); PutLH(Long.RightShift(1L, 2)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 3"); PutT(":"); PutLH(Long.RightShift(1L, 3)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 30"); PutT(":"); PutLH(Long.RightShift(1L, 30)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 31"); PutT(":"); PutLH(Long.RightShift(1L, 31)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 32"); PutT(":"); PutLH(Long.RightShift(1L, 32)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 33"); PutT(":"); PutLH(Long.RightShift(1L, 33)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 40"); PutT(":"); PutLH(Long.RightShift(1L, 40)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 50"); PutT(":"); PutLH(Long.RightShift(1L, 50)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 60"); PutT(":"); PutLH(Long.RightShift(1L, 60)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 61"); PutT(":"); PutLH(Long.RightShift(1L, 61)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 62"); PutT(":"); PutLH(Long.RightShift(1L, 62)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 63"); PutT(":"); PutLH(Long.RightShift(1L, 63)); PutT("\n");
 END TestShiftRightMNLongint;
 
 PROCEDURE TestShiftMNInteger() =
