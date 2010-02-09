@@ -241,24 +241,57 @@ END TestShiftLongint;
 (* shifting by a constant *)
 
 PROCEDURE TestLeftShiftNInteger() =
-VAR a := NotConstI(1);
+CONST b = ARRAY OF INTEGER { 1, 2, 3, 16_8000, 16_12345, 16_ABCD1234, 16_ABCD0000 };
+VAR a: INTEGER;
 BEGIN
   PutT("\nTestLeftShiftNInteger\n");
-  PutT("1 << 0"); PutT(":"); PutH(Word.LeftShift(a, 0)); PutT("\n");
-  <* ASSERT Word.LeftShift(1, 0) = Word.LeftShift(a, 0) *>
+  FOR i := FIRST(b) TO LAST (b) DO
+    a := NotConstI(b[i]);
+    PutH(a); PutT(" << 0"); PutT(":"); PutH(Word.LeftShift(a, 0)); PutT("\n");
+    <* ASSERT a #           1 OR Word.LeftShift(          1, 0) = Word.LeftShift(a, 0) *>
+    <* ASSERT a #           2 OR Word.LeftShift(          2, 0) = Word.LeftShift(a, 0) *>
+    <* ASSERT a #           3 OR Word.LeftShift(          3, 0) = Word.LeftShift(a, 0) *>
+    <* ASSERT a #     16_8000 OR Word.LeftShift(    16_8000, 0) = Word.LeftShift(a, 0) *>
+    <* ASSERT a #    16_12345 OR Word.LeftShift(   16_12345, 0) = Word.LeftShift(a, 0) *>
+    <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 0) = Word.LeftShift(a, 0) *>
+    <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 0) = Word.LeftShift(a, 0) *>
 
-  PutT("1 << 1"); PutT(":"); PutH(Word.LeftShift(a, 1)); PutT("\n");
-  <* ASSERT Word.LeftShift(1, 1) = Word.LeftShift(a, 1) *>
+    PutH(a); PutT(" << 1"); PutT(":"); PutH(Word.LeftShift(a, 1)); PutT("\n");
+    <* ASSERT a #           1 OR Word.LeftShift(          1, 1) = Word.LeftShift(a, 1) *>
+    <* ASSERT a #           2 OR Word.LeftShift(          2, 1) = Word.LeftShift(a, 1) *>
+    <* ASSERT a #           3 OR Word.LeftShift(          3, 1) = Word.LeftShift(a, 1) *>
+    <* ASSERT a #     16_8000 OR Word.LeftShift(    16_8000, 1) = Word.LeftShift(a, 1) *>
+    <* ASSERT a #    16_12345 OR Word.LeftShift(   16_12345, 1) = Word.LeftShift(a, 1) *>
+    <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 1) = Word.LeftShift(a, 1) *>
+    <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 1) = Word.LeftShift(a, 1) *>
 
-  PutT("1 << 2"); PutT(":"); PutH(Word.LeftShift(a, 2)); PutT("\n");
-  <* ASSERT Word.LeftShift(1, 2) = Word.LeftShift(a, 2) *>
+    PutH(a); PutT(" << 2"); PutT(":"); PutH(Word.LeftShift(a, 2)); PutT("\n");
+    <* ASSERT a #           1 OR Word.LeftShift(          1, 2) = Word.LeftShift(a, 2) *>
+    <* ASSERT a #           2 OR Word.LeftShift(          2, 2) = Word.LeftShift(a, 2) *>
+    <* ASSERT a #           3 OR Word.LeftShift(          3, 2) = Word.LeftShift(a, 2) *>
+    <* ASSERT a #     16_8000 OR Word.LeftShift(    16_8000, 2) = Word.LeftShift(a, 2) *>
+    <* ASSERT a #    16_12345 OR Word.LeftShift(   16_12345, 2) = Word.LeftShift(a, 2) *>
+    <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 2) = Word.LeftShift(a, 2) *>
+    <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 2) = Word.LeftShift(a, 2) *>
 
-  PutT("1 << 3"); PutT(":"); PutH(Word.LeftShift(a, 3)); PutT("\n");
-  <* ASSERT Word.LeftShift(1, 3) = Word.LeftShift(a, 3) *>
+    PutH(a); PutT(" << 3"); PutT(":"); PutH(Word.LeftShift(a, 3)); PutT("\n");
+    <* ASSERT a #           1 OR Word.LeftShift(          1, 3) = Word.LeftShift(a, 3) *>
+    <* ASSERT a #           2 OR Word.LeftShift(          2, 3) = Word.LeftShift(a, 3) *>
+    <* ASSERT a #           3 OR Word.LeftShift(          3, 3) = Word.LeftShift(a, 3) *>
+    <* ASSERT a #     16_8000 OR Word.LeftShift(    16_8000, 3) = Word.LeftShift(a, 3) *>
+    <* ASSERT a #    16_12345 OR Word.LeftShift(   16_12345, 3) = Word.LeftShift(a, 3) *>
+    <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 3) = Word.LeftShift(a, 3) *>
+    <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 3) = Word.LeftShift(a, 3) *>
 
-  PutT("1 << 30"); PutT(":"); PutH(Word.LeftShift(a, 30)); PutT("\n");
-  <* ASSERT Word.LeftShift(1, 30) = Word.LeftShift(a, 30) *>
-
+    PutH(a); PutT(" << 30"); PutT(":"); PutH(Word.LeftShift(a, 30)); PutT("\n");
+    <* ASSERT a #           1 OR Word.LeftShift(          1, 30) = Word.LeftShift(a, 30) *>
+    <* ASSERT a #           2 OR Word.LeftShift(          2, 30) = Word.LeftShift(a, 30) *>
+    <* ASSERT a #           3 OR Word.LeftShift(          3, 30) = Word.LeftShift(a, 30) *>
+    <* ASSERT a #     16_8000 OR Word.LeftShift(    16_8000, 30) = Word.LeftShift(a, 30) *>
+    <* ASSERT a #    16_12345 OR Word.LeftShift(   16_12345, 30) = Word.LeftShift(a, 30) *>
+    <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 30) = Word.LeftShift(a, 30) *>
+    <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 30) = Word.LeftShift(a, 30) *>
+  END;
 END TestLeftShiftNInteger;
 
 PROCEDURE TestLeftShiftNLongint() =
