@@ -231,8 +231,7 @@ BEGIN
   PutT("\nTestShiftInteger\n");
   a := Word.Shift(NotConstI(1), NotConstI(15));
   FOR i := -30 TO 30 DO
-    PutT("1 << "); PutI(i); PutT(":"); PutH(a); PutT("\n");
-    a := Word.Shift(a, NotConstI(1));
+    PutT("1 << 15 << "); PutI(i); PutT(":"); PutH(Word.Shift(a, NotConstI(i))); PutT("\n");
   END;
 END TestShiftInteger;
 
@@ -242,8 +241,7 @@ BEGIN
   PutT("\nTestShiftLongint\n");
   a := Long.Shift(NotConstL(1L), NotConstI(15));
   FOR i := -30 TO 30 DO
-    PutT("1 << "); PutI(i); PutT(":"); PutLH(a); PutT("\n");
-    a := Long.Shift(a, NotConstI(1));
+    PutT("1 << 15 << "); PutI(i); PutT(":"); PutLH(Long.Shift(a, NotConstI(i))); PutT("\n");
   END;
 END TestShiftLongint;
 
