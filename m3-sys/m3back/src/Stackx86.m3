@@ -1407,6 +1407,7 @@ PROCEDURE doabs (t: T) =
 PROCEDURE doshift (t: T; type: IType): BOOLEAN =
   VAR ovflshift, leftlab, endlab: Label;
       tShiftCount: Target.Int;
+      shiftResult: Target.Int;
       shiftCount: INTEGER;
       is64 := Is64(type);
   BEGIN
@@ -1422,27 +1423,43 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
           IF NOT TInt.ToInt(stop0.imm, shiftCount) THEN
             t.Err("doshift: unable to convert target integer to host integer");
           END;
-          TWord.Shift(stop1.imm, shiftCount, stop1.imm);
+
+          (* shift constant by a constant *)
+
+          TWord.Shift(stop1.imm, shiftCount, shiftResult);
+          stop1.imm := shiftResult;
         ELSE
+
+          (* shift non-constant by a constant *)
+
           IF TInt.NE(stop0.imm, TZero) THEN
+
+            (* shift non-constant by a non-zero constant *)
+
             find(t, stack1, Force.anytemp);
 
             IF     TInt.GT(stop0.imm, MaximumShift[type])
                 OR TInt.LT(stop0.imm, MinimumShift[type]) THEN
+
+              (* shifting "too far" just yields zero *)
+
               t.cg.binOp(Op.oXOR, stop1, stop1);
+
             ELSIF TInt.GT(stop0.imm, TZero) THEN
-              IF is64 THEN (* needs work *)
-                RETURN FALSE;
-              END;
+
+              (* positive shift is left shift *)
+
               t.cg.immOp(Op.oSHL, stop1, stop0.imm);
+
             ELSE
               IF NOT TInt.Negate(stop0.imm, tShiftCount) THEN
                 t.Err("doshift: Negate overflowed");
               END;
-              IF is64 THEN (* needs work *)
-                RETURN FALSE;
-              END;
+
+              (* negative shift is right shift *)
+
               t.cg.immOp(Op.oSHR, stop1, tShiftCount);
+
             END;
 
             newdest(t, stop1);
@@ -1450,11 +1467,13 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
         END
       ELSE
 
-        IF is64 THEN (* needs work *)
-          RETURN FALSE;
-        END;
-
         IF ((stop1.loc # OLoc.imm) OR (TInt.NE(stop1.imm, TZero))) THEN
+
+          (* shift by a non-constant *)
+
+          IF is64 THEN
+            RETURN FALSE; (* will generate function call *)
+          END;
 
           find(t, stack0, Force.regset, RegSet {ECX});
 
@@ -1510,10 +1529,6 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
 
-      IF is64 AND (stop0.loc # OLoc.imm OR stop1.loc # OLoc.imm) THEN
-        RETURN FALSE;
-      END;
-
       IF stop0.loc = OLoc.imm THEN
         IF stop1.loc = OLoc.imm THEN
           IF NOT TInt.ToInt(stop0.imm, rotateCount) THEN
@@ -1545,31 +1560,34 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
         END
       ELSE
 
-        IF is64 THEN (* needs work *)
-          RETURN FALSE;
+        IF ((stop0.loc # OLoc.imm) OR (TInt.NE(stop0.imm, TZero))) THEN
+
+          IF is64 THEN (* needs work *)
+            RETURN FALSE;
+          END;
+
+          find(t, stack0, Force.regset, RegSet {ECX});
+
+          find(t, stack1, Force.anytemp);
+          IF stop1.loc = OLoc.imm THEN
+            find(t, stack1, Force.anyreg);
+          END;
+
+          t.cg.immOp(Op.oCMP, stop0, TZero);
+
+          leftlab := t.cg.reserve_labels(1, TRUE);
+          endlab := t.cg.reserve_labels(1, TRUE);
+
+          t.cg.brOp(Cond.GE, leftlab);
+          t.cg.unOp(Op.oNEG, stop0);
+          t.cg.unOp(Op.oROR, stop1);
+          t.cg.brOp(Cond.Always, endlab);
+          t.cg.set_label(leftlab);
+          (* .leftlab *)
+          t.cg.unOp(Op.oROL, stop1);
+          t.cg.set_label(endlab);
+          (* .endlab  *)
         END;
-
-        find(t, stack0, Force.regset, RegSet {ECX});
-
-        find(t, stack1, Force.anytemp);
-        IF stop1.loc = OLoc.imm THEN
-          find(t, stack1, Force.anyreg);
-        END;
-
-        t.cg.immOp(Op.oCMP, stop0, TZero);
-
-        leftlab := t.cg.reserve_labels(1, TRUE);
-        endlab := t.cg.reserve_labels(1, TRUE);
-
-        t.cg.brOp(Cond.GE, leftlab);
-        t.cg.unOp(Op.oNEG, stop0);
-        t.cg.unOp(Op.oROR, stop1);
-        t.cg.brOp(Cond.Always, endlab);
-        t.cg.set_label(leftlab);
-        (* .leftlab *)
-        t.cg.unOp(Op.oROL, stop1);
-        t.cg.set_label(endlab);
-        (* .endlab  *)
 
         newdest(t, stop1);
         newdest(t, stop0);
