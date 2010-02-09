@@ -2,6 +2,12 @@ MODULE Main;
 IMPORT RTIO, Word, Long;
 FROM RTIO IMPORT Flush;
 
+(* NOTE: The NT386 backend does constant folding, but not inlining.
+ * This test code takes advantage of that and compares
+ * the constant folded values against the non-constant folded values.
+ * If an optimizing backend is used, that is ok, but the asserts won't
+ * be useful.
+ *)
 
 (* decrease these for faster runs *)
 VAR insertextract_max_ab := 33;
