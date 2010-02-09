@@ -379,19 +379,23 @@ PROCEDURE noargOp (t: T; op: Op) =
 PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
   VAR ins: Instruction;
   BEGIN
+
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
+
     IF (NOT TInt.ToInt(imm, ins.imm)) AND (NOT TWord.LE(imm, Target.Word32.max)) THEN
       t.Err("immOp1: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));
     END;
-    IF TInt.GE(imm, Target.Int8.min) AND TInt.LE(imm, Target.Int8.max)
-      THEN ins.imsize := 1;
-      ELSE ins.imsize := 4;
+
+    IF TInt.GE(imm, Target.Int8.min) AND TInt.LE(imm, Target.Int8.max) THEN
+      ins.imsize := 1;
+    ELSE
+      ins.imsize := 4;
     END;
 
     Mn(t, opcode[op].name);  MnOp(t, dest);  MnImmTInt(t, imm);
 
-    IF dest.loc = OLoc.register AND dest.reg[0] = EAX
-       AND ins.imsize = 4 THEN
+    IF dest.loc = OLoc.register AND dest.reg[0] = EAX AND ins.imsize = 4 THEN
+      <* ASSERT opcode[op].Aimm32 # -1 *>
       ins.opcode := opcode[op].Aimm32;
       writecode(t, ins);
     ELSE
@@ -439,19 +443,19 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
     IF (immSize = 2) AND (op = Op.oCMP OR op = Op.oADD OR op = Op.oSUB) THEN
       CASE op OF
         | Op.oADD =>
-          immOp1(t, Op.oADD, destA[0], immA[0]);
-          immOp1(t, Op.oADC, destA[1], immA[1]);
+            immOp1(t, Op.oADD, destA[0], immA[0]);
+            immOp1(t, Op.oADC, destA[1], immA[1]);
         | Op.oSUB =>
-          immOp1(t, Op.oSUB, destA[0], immA[0]);
-          immOp1(t, Op.oSBB, destA[1], immA[1]);
+            immOp1(t, Op.oSUB, destA[0], immA[0]);
+            immOp1(t, Op.oSBB, destA[1], immA[1]);
         | Op.oCMP =>
-          immOp1(t, op, destA[1], immA[1]);
-          compare_label := t.reserve_labels(1, TRUE);
-          t.brOp(Cond.NE, compare_label);
-          immOp1(t, op, destA[0], immA[0]);
-          t.set_label(compare_label);
+            immOp1(t, op, destA[1], immA[1]);
+            compare_label := t.reserve_labels(1, TRUE);
+            t.brOp(Cond.NE, compare_label);
+            immOp1(t, op, destA[0], immA[0]);
+            t.set_label(compare_label);
         ELSE
-          <* ASSERT FALSE *>
+            <* ASSERT FALSE *>
       END
     ELSE
       FOR i := 0 TO destSize - 1 DO
@@ -495,7 +499,9 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN := 
       build_modrm(t, dest, src, ins);
       ins.opcode := opcode[op].rmr + 1;
     END;
+
     Mn(t, opcode[op].name);  MnOp(t, dest);  MnOp(t, src);
+
     writecode(t, ins);
     IF dest.loc = OLoc.mem THEN
       log_global_var(t, dest.mvar, -4);
@@ -719,8 +725,7 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       RETURN;
     END;
 
-    IF src.loc = OLoc.register AND src.reg[0] = EAX AND
-       dest.loc = OLoc.mem AND dest.mvar.var.loc = VLoc.global THEN
+    IF src.loc = OLoc.register AND src.reg[0] = EAX AND dest.loc = OLoc.mem AND dest.mvar.var.loc = VLoc.global THEN
       Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
       ins.opcode := 16_A2;
       get_op_size(dest.mvar.mvar_type, ins);
@@ -731,8 +736,7 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       RETURN;
     END;
 
-    IF dest.loc = OLoc.register AND src.loc = OLoc.mem AND
-       CG_Bytes[src.mvar.mvar_type] < 4 THEN
+    IF dest.loc = OLoc.register AND src.loc = OLoc.mem AND CG_Bytes[src.mvar.mvar_type] < 4 THEN
       CASE src.mvar.mvar_type OF
       | Type.Word8  => ins.opcode := 16_8A;
                        mnemonic := "MOV";
@@ -1039,9 +1043,10 @@ PROCEDURE imulImm (t: T; READONLY dest, src: Operand; imm: INTEGER; imsize: INTE
     <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.mvar_type] = 4 *>
     build_modrm(t, src, dest, ins);
     Mn(t, "IMUL");  MnOp(t, dest);  MnOp(t, src);  MnImmInt(t, imm);
-    IF imsize = 1
-      THEN ins.opcode := 16_6B;
-      ELSE ins.opcode := 16_69;
+    IF imsize = 1 THEN
+      ins.opcode := 16_6B;
+    ELSE
+      ins.opcode := 16_69;
     END;
     ins.imm := imm;
     ins.imsize := imsize;
