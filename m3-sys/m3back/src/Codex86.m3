@@ -19,7 +19,7 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs, OperandSize, GetOperandSize;
 FROM M3x86Rep IMPORT RegistersForByteOperations, RegName, SplitOperand, Is64, SplitImm, OperandPart, GetTypeSize, TZero;
-FROM M3x86Rep IMPORT EAX, EDX, ESP, EBP;
+FROM M3x86Rep IMPORT EAX, EDX, ESP, EBP, ECX;
 
 FROM M3ObjFile IMPORT Seg;
 
@@ -379,7 +379,6 @@ PROCEDURE noargOp (t: T; op: Op) =
 PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
   VAR ins: Instruction;
   BEGIN
-
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
     IF (NOT TInt.ToInt(imm, ins.imm)) AND (NOT TWord.LE(imm, Target.Word32.max)) THEN
@@ -395,7 +394,6 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
     Mn(t, opcode[op].name);  MnOp(t, dest);  MnImmTInt(t, imm);
 
     IF dest.loc = OLoc.register AND dest.reg[0] = EAX AND ins.imsize = 4 THEN
-      <* ASSERT opcode[op].Aimm32 # -1 *>
       ins.opcode := opcode[op].Aimm32;
       writecode(t, ins);
     ELSE
@@ -434,13 +432,15 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
       immSize := SplitImm(dest.optype, imm, immA);
       destSize := SplitOperand(dest, destA);
       compare_label: Label;
+      immMinus32: Target.Int;
+      shiftCount := Operand{loc := OLoc.imm, imm := imm};
   BEGIN
 
     <* ASSERT immSize = destSize *>
     <* ASSERT NOT Is64(destA[0].optype) *>
     <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
-    IF (immSize = 2) AND (op = Op.oCMP OR op = Op.oADD OR op = Op.oSUB) THEN
+    IF (immSize = 2) AND (op IN SET OF Op{Op.oCMP, Op.oADD, Op.oSUB, Op.oSHL, Op.oSHR}) THEN
       CASE op OF
         | Op.oADD =>
             immOp1(t, Op.oADD, destA[0], immA[0]);
@@ -454,6 +454,41 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
             t.brOp(Cond.NE, compare_label);
             immOp1(t, op, destA[0], immA[0]);
             t.set_label(compare_label);
+
+        | Op.oSHL =>
+            IF TInt.GE(imm, TInt.ThirtyTwo) THEN
+              IF TInt.NE(imm, TInt.ThirtyTwo) THEN
+                EVAL TInt.Subtract(imm, TInt.ThirtyTwo, immMinus32);
+                (* Ideally we'd do a virtual move in the register alloator. *)
+                movOp1(t, destA[1], destA[0]);
+                immOp1(t, op, destA[1], immMinus32);
+              ELSE
+                movOp1(t, destA[1], destA[0]);
+              END;
+              binOp1(t, Op.oXOR, destA[0], destA[0]);
+            ELSE
+              (* dest/src seem backwards, should be shifting low into high, not high into low, but it works? *)
+              binOp1WithShiftCount(t, Op.oSHLD, destA[0], destA[1], locked := FALSE, shiftCount := shiftCount);
+              immOp1(t, op, destA[0], imm);
+            END
+
+        | Op.oSHR =>
+            IF TInt.GE(imm, TInt.ThirtyTwo) THEN
+              IF TInt.NE(imm, TInt.ThirtyTwo) THEN
+                EVAL TInt.Subtract(imm, TInt.ThirtyTwo, immMinus32);
+                (* Ideally we'd do a virtual move in the register alloator. *)
+                movOp1(t, destA[0], destA[1]);
+                immOp1(t, op, destA[0], immMinus32);
+              ELSE
+                movOp1(t, destA[0], destA[1]);
+              END;
+              binOp1(t, Op.oXOR, destA[1], destA[1]);
+            ELSE
+              (* dest/src seem backwards, should be shifting high into low, not low into high, but it works? *)
+              binOp1WithShiftCount(t, Op.oSHRD, destA[1], destA[0], locked := FALSE, shiftCount := shiftCount);
+              immOp1(t, op, destA[1], imm);
+            END
+
         ELSE
             <* ASSERT FALSE *>
       END
@@ -467,7 +502,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
 
   END immOp;
 
-PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN := FALSE) =
+PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN; READONLY shiftCount: Operand) =
   VAR ins: Instruction;
   BEGIN
 
@@ -483,6 +518,7 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN := 
     END;
 
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
+
     IF src.loc = OLoc.imm THEN
       immOp(t, op, dest, src.imm);
       RETURN;
@@ -500,6 +536,31 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN := 
       ins.opcode := opcode[op].rmr + 1;
     END;
 
+    (* SHLD and SHRD are three operand instructions.
+     * The source is where to shift bits from, must be a register.
+     * The shift count is either [-128..127] or in CL (we use all of ECX).
+     *)
+    IF op IN SET OF Op{Op.oSHLD, Op.oSHRD} THEN
+
+      ins.escape := TRUE;
+
+      <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
+      <* ASSERT src.loc = OLoc.register *>
+      <* ASSERT shiftCount.loc = OLoc.register OR shiftCount.loc = OLoc.imm *>
+
+      <* ASSERT shiftCount.loc # OLoc.register OR shiftCount.reg[0] = ECX *>
+      <* ASSERT shiftCount.loc # OLoc.imm OR (TInt.GE(shiftCount.imm, Target.Int8.min) AND TInt.LE(shiftCount.imm, Target.Int8.max)) *>
+
+      IF shiftCount.loc = OLoc.imm THEN
+        IF NOT TInt.ToInt(shiftCount.imm, ins.imm) THEN
+          t.Err("binOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(shiftCount.imm));
+        END;
+        ins.imsize := 1;
+      ELSE
+        INC(ins.opcode);
+      END;
+    END;
+
     Mn(t, opcode[op].name);  MnOp(t, dest);  MnOp(t, src);
 
     writecode(t, ins);
@@ -508,6 +569,12 @@ PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN := 
     ELSIF src.loc = OLoc.mem THEN
       log_global_var(t, src.mvar, -4);
     END;
+  END binOp1WithShiftCount;
+
+PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand; locked: BOOLEAN := FALSE) =
+  VAR shiftCount: Operand;
+  BEGIN
+    binOp1WithShiftCount(t, op, dest, src, locked, shiftCount := shiftCount);
   END binOp1;
 
 PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
@@ -531,7 +598,7 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
     END;
     <* ASSERT srcSize = destSize *>
 
-    IF (srcSize = 2) AND (op = Op.oCMP OR op = Op.oADD OR op = Op.oSUB) THEN
+    IF (srcSize = 2) AND (op IN SET OF Op{Op.oCMP, Op.oADD, Op.oSUB, Op.oSHR, Op.oSHL}) THEN
       CASE op OF
         | Op.oADD =>
             binOp1(t, Op.oADD, destA[0], srcA[0]);
@@ -545,6 +612,15 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
             t.brOp(Cond.NE, compare_label);
             binOp1(t, op, destA[0], srcA[0]);
             t.set_label(compare_label);
+
+        | Op.oSHL =>
+            binOp1WithShiftCount(t, Op.oSHLD, destA[1], destA[0], locked := FALSE, shiftCount := src);
+            binOp1(t, op, destA[0], src);
+
+        | Op.oSHR =>
+            binOp1WithShiftCount(t, Op.oSHRD, destA[0], destA[1], locked := FALSE, shiftCount := src);
+            binOp1(t, op, destA[1], src);
+
         ELSE
           <* ASSERT FALSE *>
       END
@@ -725,7 +801,8 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       RETURN;
     END;
 
-    IF src.loc = OLoc.register AND src.reg[0] = EAX AND dest.loc = OLoc.mem AND dest.mvar.var.loc = VLoc.global THEN
+    IF src.loc = OLoc.register AND src.reg[0] = EAX AND
+       dest.loc = OLoc.mem AND dest.mvar.var.loc = VLoc.global THEN
       Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
       ins.opcode := 16_A2;
       get_op_size(dest.mvar.mvar_type, ins);
@@ -736,7 +813,8 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       RETURN;
     END;
 
-    IF dest.loc = OLoc.register AND src.loc = OLoc.mem AND CG_Bytes[src.mvar.mvar_type] < 4 THEN
+    IF dest.loc = OLoc.register AND src.loc = OLoc.mem AND
+       CG_Bytes[src.mvar.mvar_type] < 4 THEN
       CASE src.mvar.mvar_type OF
       | Type.Word8  => ins.opcode := 16_8A;
                        mnemonic := "MOV";
@@ -974,15 +1052,15 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
       destSize := SplitOperand(dest, destA);
   BEGIN
 
-    IF destSize = 2 AND (op = Op.oNEG OR op = Op.oNOT) THEN
+    IF destSize = 2 AND (op IN SET OF Op{Op.oNEG, Op.oNOT}) THEN
       CASE op OF
         | Op.oNOT =>
-          unOp1(t, op, destA[0]);
-          unOp1(t, op, destA[1]);
+            unOp1(t, op, destA[0]);
+            unOp1(t, op, destA[1]);
         | Op.oNEG =>
-          unOp1(t, op, destA[0]);
-          t.binOp(Op.oADC, destA[1], Operand {loc := OLoc.imm, imm := TZero, optype := Type.Word32});
-          unOp1(t, op, destA[1]);
+            unOp1(t, op, destA[0]);
+            t.binOp(Op.oADC, destA[1], Operand {loc := OLoc.imm, imm := TZero, optype := Type.Word32});
+            unOp1(t, op, destA[1]);
         ELSE
           <* ASSERT FALSE *>
       END
@@ -1043,10 +1121,9 @@ PROCEDURE imulImm (t: T; READONLY dest, src: Operand; imm: INTEGER; imsize: INTE
     <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.mvar_type] = 4 *>
     build_modrm(t, src, dest, ins);
     Mn(t, "IMUL");  MnOp(t, dest);  MnOp(t, src);  MnImmInt(t, imm);
-    IF imsize = 1 THEN
-      ins.opcode := 16_6B;
-    ELSE
-      ins.opcode := 16_69;
+    IF imsize = 1
+      THEN ins.opcode := 16_6B;
+      ELSE ins.opcode := 16_69;
     END;
     ins.imm := imm;
     ins.imsize := imsize;
@@ -1203,6 +1280,7 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
     ins.mrmpres := TRUE;
 
     <* ASSERT reg.loc = OLoc.register *>
+
     IF mem.loc = OLoc.register THEN
       ins.disp := 0;
       ins.dsize := 0;
@@ -1267,6 +1345,9 @@ PROCEDURE debugcode (t: T;  READONLY ins: Instruction) =
 
 PROCEDURE writecode (t: T; READONLY ins: Instruction) =
   BEGIN
+
+    <* ASSERT ins.opcode # -1 *>
+
     IF t.debug THEN debugcode (t, ins); END;
 
     IF ins.escape THEN
