@@ -454,7 +454,7 @@ END TestLeftShiftMNInteger;
 
 PROCEDURE TestLeftShiftMNLongint() =
 BEGIN
-  PutT("\nTestLeftShiftNLongint\n");
+  PutT("\nTestLeftShiftMNLongint\n");
   PutT("1L << 0"); PutT(":"); PutLH(Long.LeftShift(1L, 0)); PutT("\n");
   PutT("1L << 1"); PutT(":"); PutLH(Long.LeftShift(1L, 1)); PutT("\n");
   PutT("1L << 2"); PutT(":"); PutLH(Long.LeftShift(1L, 2)); PutT("\n");
