@@ -2307,7 +2307,7 @@ PROCEDURE shift_left   (u: U;  t: IType) =
               RETURN;
             END;
             u.vstack.find(stack1, Force.anytemp);
-            u.cg.immOp(Op.oSAL, u.vstack.op(stack1), u.vstack.op(stack0).imm);
+            u.cg.immOp(Op.oSHL, u.vstack.op(stack1), u.vstack.op(stack0).imm);
             u.vstack.newdest(u.vstack.op(stack1));
           END
         END
@@ -2324,7 +2324,7 @@ PROCEDURE shift_left   (u: U;  t: IType) =
            u.vstack.find(stack1, Force.anyreg);
           END;
 
-          u.cg.unOp(Op.oSAL, u.vstack.op(stack1));
+          u.cg.unOp(Op.oSHL, u.vstack.op(stack1));
           u.vstack.newdest(u.vstack.op(stack1));
         END;
       END;
@@ -2732,7 +2732,7 @@ PROCEDURE copy_n (u: U;  z: IType;  t: MType;  overlap: BOOLEAN) =
 
         u.vstack.find(stack0, Force.anyreg);
 
-        u.cg.immOp(Op.oSAL, u.vstack.op(stack0), shift);
+        u.cg.immOp(Op.oSHL, u.vstack.op(stack0), shift);
       END
     END;
 
@@ -2921,7 +2921,7 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
           u.Err("Unknown MType size in zero_n");
         END;
 
-        u.cg.immOp(Op.oSAL, u.vstack.op(stack0), shift);
+        u.cg.immOp(Op.oSHL, u.vstack.op(stack0), shift);
       END
     END;
 

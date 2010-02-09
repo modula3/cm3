@@ -1434,7 +1434,7 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
               IF is64 THEN (* needs work *)
                 RETURN FALSE;
               END;
-              t.cg.immOp(Op.oSAL, stop1, stop0.imm);
+              t.cg.immOp(Op.oSHL, stop1, stop0.imm);
             ELSE
               IF NOT TInt.Negate(stop0.imm, tShiftCount) THEN
                 t.Err("doshift: Negate overflowed");
@@ -1483,7 +1483,7 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
           (* .leftlab *)
           t.cg.immOp(Op.oCMP, stop0, TInt.ThirtyTwo);
           t.cg.brOp(Cond.GE, ovflshift);
-          t.cg.unOp(Op.oSAL, stop1);
+          t.cg.unOp(Op.oSHL, stop1);
           t.cg.set_label(endlab);
           (* .endlab  *)
 
@@ -1622,7 +1622,7 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
 
         t.cg.binOp(Op.oADD, stop0, stop1);
         t.cg.unOp(Op.oNEG, stop0);
-        t.cg.unOp(Op.oSAL, stop2);
+        t.cg.unOp(Op.oSHL, stop2);
         t.cg.binOp(Op.oADD, stop0, stop1);
         t.cg.unOp(Op.oSAR, stop2);
 
@@ -1703,7 +1703,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
 
         t.cg.movImmI(t.cg.reg[ECX], 32 - n);
         t.cg.binOp(Op.oSUB, t.cg.reg[ECX], stop0);
-        t.cg.unOp(Op.oSAL, stop1);
+        t.cg.unOp(Op.oSHL, stop1);
 
         IF n < 32 THEN
           t.cg.immOp(Op.oSAR, stop1, t32MinusN);
@@ -1761,7 +1761,7 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
           IF NOT TInt.FromInt(32 - (m + n), Target.Integer.bytes, tint) THEN
             t.Err("doextract_mn: failed to convert 32 - (m + n) to target integer");
           END;
-          t.cg.immOp(Op.oSAL, stop0, tint);
+          t.cg.immOp(Op.oSHL, stop0, tint);
         END;
 
         IF n < 32 THEN
@@ -1847,11 +1847,11 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
 
       IF stop1.loc = OLoc.imm THEN
         IF TInt.NE(stop1.imm, TZero) THEN
-          t.cg.immOp(Op.oSAL, stop2, stop1.imm);
+          t.cg.immOp(Op.oSHL, stop2, stop1.imm);
           t.cg.immOp(Op.oADD, stop0, stop1.imm);
         END
       ELSE
-        t.cg.unOp(Op.oSAL, stop2);
+        t.cg.unOp(Op.oSHL, stop2);
         t.cg.binOp(Op.oADD, stop0, stop1);
       END;
 
@@ -1924,7 +1924,7 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
         t.cg.immOp(Op.oAND, stop1, tint);
       END;
 
-      t.cg.unOp(Op.oSAL, stop1);
+      t.cg.unOp(Op.oSHL, stop1);
 
 (****
       intable := t.lowset_table;
@@ -1988,7 +1988,7 @@ PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
           IF NOT TInt.FromInt(m, Target.Integer.bytes, tint_m) THEN
             t.Err("doinsert_mn: unable to convert m to target integer");
           END;
-          t.cg.immOp(Op.oSAL, stop0, tint_m);
+          t.cg.immOp(Op.oSHL, stop0, tint_m);
         END
       END;
 
@@ -2217,7 +2217,7 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
           IF NOT TInt.FromInt(shift, Target.Integer.bytes, tshift) THEN
             t.Err("doindex_address: failed to convert size to target integer");
           END;
-          t.cg.immOp(Op.oSAL, stop0, tshift);
+          t.cg.immOp(Op.oSHL, stop0, tshift);
           newdest(t, stop0);
         END
       END;
