@@ -181,9 +181,9 @@ END NE;
 PROCEDURE TestShiftLeftInteger() =
 VAR a: INTEGER;
 BEGIN
-  PutT("TestShiftLeftInteger\n");
+  PutT("\nTestShiftLeftInteger\n");
   a := NotConstI(1);
-  FOR i := 0 TO 10 DO
+  FOR i := 0 TO 40 DO
     PutT("1 << "); PutH(i); PutT(":"); PutH(a); PutT("\n");
     a := Word.LeftShift(a, NotConstI(1));
   END;
@@ -192,9 +192,9 @@ END TestShiftLeftInteger;
 PROCEDURE TestShiftLeftLongint() =
 VAR a: LONGINT;
 BEGIN
-  PutT("TestShiftLeftLongint\n");
+  PutT("\nTestShiftLeftLongint\n");
   a := NotConstL(1L);
-  FOR i := 0 TO 10 DO
+  FOR i := 0 TO 40 DO
     PutT("1 << "); PutH(i); PutT(":"); PutLH(a); PutT("\n");
     a := Long.LeftShift(a, NotConstI(1));
   END;
@@ -203,10 +203,10 @@ END TestShiftLeftLongint;
 PROCEDURE TestShiftRightInteger() =
 VAR a: INTEGER;
 BEGIN
-  PutT("TestShiftRightInteger\n");
-  a := NotConstI(1);
-  FOR i := 0 TO 10 DO
-    PutT("1 >> "); PutH(i); PutT(":"); PutH(a); PutT("\n");
+  PutT("\nTestShiftRightInteger\n");
+  a := NotConstI(FIRST(INTEGER));
+  FOR i := 0 TO 40 DO
+    PutT("FIRST(INTEGER) >> "); PutH(i); PutT(":"); PutH(a); PutT("\n");
     a := Word.RightShift(a, NotConstI(1));
   END;
 END TestShiftRightInteger;
@@ -214,10 +214,10 @@ END TestShiftRightInteger;
 PROCEDURE TestShiftRightLongint() =
 VAR a: LONGINT;
 BEGIN
-  PutT("TestShiftLeftInteger\n");
-  a := NotConstL(1L);
-  FOR i := 0 TO 10 DO
-    PutT("1 >> "); PutH(i); PutT(":"); PutLH(a); PutT("\n");
+  PutT("\nTestShiftLeftInteger\n");
+  a := NotConstL(FIRST(LONGINT));
+  FOR i := 0 TO 40 DO
+    PutT("FIRST(LONGINT) >> "); PutH(i); PutT(":"); PutLH(a); PutT("\n");
     a := Long.RightShift(a, NotConstI(1));
   END;
 END TestShiftRightLongint;
@@ -226,9 +226,9 @@ END TestShiftRightLongint;
 PROCEDURE TestShiftInteger() =
 VAR a: INTEGER;
 BEGIN
-  PutT("TestShiftLeftInteger\n");
+  PutT("\nTestShiftLeftInteger\n");
   a := Word.Shift(NotConstI(1), NotConstI(15));
-  FOR i := -10 TO 10 DO
+  FOR i := -30 TO 30 DO
     PutT("1 << "); PutH(i); PutT(":"); PutH(a); PutT("\n");
     a := Word.Shift(a, NotConstI(1));
   END;
@@ -237,9 +237,9 @@ END TestShiftInteger;
 PROCEDURE TestShiftLongint() =
 VAR a: LONGINT;
 BEGIN
-  PutT("TestShiftLeftInteger\n");
+  PutT("\nTestShiftLeftInteger\n");
   a := Long.Shift(NotConstL(1L), NotConstI(15));
-  FOR i := -10 TO 10 DO
+  FOR i := -30 TO 30 DO
     PutT("1 << "); PutH(i); PutT(":"); PutLH(a); PutT("\n");
     a := Long.Shift(a, NotConstI(1));
   END;
@@ -249,65 +249,94 @@ END TestShiftLongint;
 (* shifting by a constant *)
 
 PROCEDURE TestShiftLeftNInteger() =
+VAR a: INTEGER;
 BEGIN
-  PutT("TestShiftLeftNInteger\n");
+  PutT("\nTestShiftLeftNInteger\n");
+  a := NotConstI(1);
+  PutT("1 << 1"); PutT(":"); PutH(Word.Shift(a, 1)); PutT("\n");
+  PutT("1 << 2"); PutT(":"); PutH(Word.Shift(a, 2)); PutT("\n");
+  PutT("1 << 3"); PutT(":"); PutH(Word.Shift(a, 3)); PutT("\n");
 END TestShiftLeftNInteger;
 
 PROCEDURE TestShiftLeftNLongint() =
+VAR a: LONGINT;
 BEGIN
-  PutT("TestShiftLeftNLongint\n");
+  PutT("\nTestShiftLeftNLongint\n");
+  a := NotConstL(1L);
+  PutT("1 << 1"); PutT(":"); PutLH(Long.Shift(a, 1)); PutT("\n");
+  PutT("1 << 2"); PutT(":"); PutLH(Long.Shift(a, 2)); PutT("\n");
+  PutT("1 << 3"); PutT(":"); PutLH(Long.Shift(a, 3)); PutT("\n");
+  PutT("1 << 30"); PutT(":"); PutLH(Long.Shift(a, 30)); PutT("\n");
+  PutT("1 << 40"); PutT(":"); PutLH(Long.Shift(a, 40)); PutT("\n");
+  PutT("1 << 50"); PutT(":"); PutLH(Long.Shift(a, 50)); PutT("\n");
 END TestShiftLeftNLongint;
 
 PROCEDURE TestShiftRightNInteger() =
+VAR a: INTEGER;
 BEGIN
-  PutT("TestShiftRightNInteger\n");
+  PutT("\nTestShiftRightNInteger\n");
+  a := NotConstI(FIRST(INTEGER));
+  PutT("FIRST(INTEGER) >> 1"); PutT(":"); PutH(Word.Shift(a, 1)); PutT("\n");
+  PutT("FIRST(INTEGER) >> 2"); PutT(":"); PutH(Word.Shift(a, 2)); PutT("\n");
+  PutT("FIRST(INTEGER) >> 3"); PutT(":"); PutH(Word.Shift(a, 3)); PutT("\n");
+  PutT("FIRST(INTEGER) >> 30"); PutT(":"); PutH(Word.Shift(a, 30)); PutT("\n");
+  PutT("FIRST(INTEGER) >> 40"); PutT(":"); PutH(Word.Shift(a, 40)); PutT("\n");
+  PutT("FIRST(INTEGER) >> 50"); PutT(":"); PutH(Word.Shift(a, 50)); PutT("\n");
 END TestShiftRightNInteger;
 
 PROCEDURE TestShiftRightNLongint() =
+VAR a: LONGINT;
 BEGIN
-  PutT("TestShiftRightNLongint\n");
+  PutT("\nTestShiftRightNLongint\n");
+  a := NotConstL(FIRST(LONGINT));
+  PutT("FIRST(LONGINT) >> 1"); PutT(":"); PutLH(Long.Shift(a, 1)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 2"); PutT(":"); PutLH(Long.Shift(a, 2)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 3"); PutT(":"); PutLH(Long.Shift(a, 3)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 30"); PutT(":"); PutLH(Long.Shift(a, 30)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 40"); PutT(":"); PutLH(Long.Shift(a, 40)); PutT("\n");
+  PutT("FIRST(LONGINT) >> 50"); PutT(":"); PutLH(Long.Shift(a, 50)); PutT("\n");
 END TestShiftRightNLongint;
 
 PROCEDURE TestShiftNInteger() =
 BEGIN
-  PutT("TestShiftNInteger\n");
+  PutT("\nTestShiftNInteger\n");
 END TestShiftNInteger;
 
 PROCEDURE TestShiftNLongint() =
 BEGIN
-  PutT("TestShiftNLongint\n");
+  PutT("\nTestShiftNLongint\n");
 END TestShiftNLongint;
 
 (* shifting constant by a constant *)
 
 PROCEDURE TestShiftLeftMNInteger() =
 BEGIN
-  PutT("TestShiftLeftMNInteger\n");
+  PutT("\nTestShiftLeftMNInteger\n");
 END TestShiftLeftMNInteger;
 
 PROCEDURE TestShiftLeftMNLongint() =
 BEGIN
-  PutT("TestShiftLeftNLongint\n");
+  PutT("\nTestShiftLeftNLongint\n");
 END TestShiftLeftMNLongint;
 
 PROCEDURE TestShiftRightMNInteger() =
 BEGIN
-  PutT("TestShiftRightMNInteger\n");
+  PutT("\nTestShiftRightMNInteger\n");
 END TestShiftRightMNInteger;
 
 PROCEDURE TestShiftRightMNLongint() =
 BEGIN
-  PutT("TestShiftRightMNLongint\n");
+  PutT("\nTestShiftRightMNLongint\n");
 END TestShiftRightMNLongint;
 
 PROCEDURE TestShiftMNInteger() =
 BEGIN
-  PutT("TestShiftMNInteger\n");
+  PutT("\nTestShiftMNInteger\n");
 END TestShiftMNInteger;
 
 PROCEDURE TestShiftMNLongint() =
 BEGIN
-  PutT("TestShiftMNLongint\n");
+  PutT("\nTestShiftMNLongint\n");
 END TestShiftMNLongint;
 
 
@@ -315,32 +344,32 @@ END TestShiftMNLongint;
 
 PROCEDURE TestShiftLeftMInteger() =
 BEGIN
-  PutT("TestShiftLeftMInteger\n");
+  PutT("\nTestShiftLeftMInteger\n");
 END TestShiftLeftMInteger;
 
 PROCEDURE TestShiftLeftMLongint() =
 BEGIN
-  PutT("TestShiftLeftNLongint\n");
+  PutT("\nTestShiftLeftNLongint\n");
 END TestShiftLeftMLongint;
 
 PROCEDURE TestShiftRightMInteger() =
 BEGIN
-  PutT("TestShiftRightMInteger\n");
+  PutT("\nTestShiftRightMInteger\n");
 END TestShiftRightMInteger;
 
 PROCEDURE TestShiftRightMLongint() =
 BEGIN
-  PutT("TestShiftRightMLongint\n");
+  PutT("\nTestShiftRightMLongint\n");
 END TestShiftRightMLongint;
 
 PROCEDURE TestShiftMInteger() =
 BEGIN
-  PutT("TestShiftMInteger\n");
+  PutT("\nTestShiftMInteger\n");
 END TestShiftMInteger;
 
 PROCEDURE TestShiftMLongint() =
 BEGIN
-  PutT("TestShiftMLongint\n");
+  PutT("\nTestShiftMLongint\n");
 END TestShiftMLongint;
 
 
