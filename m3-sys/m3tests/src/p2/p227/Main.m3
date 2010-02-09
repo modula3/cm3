@@ -220,7 +220,6 @@ BEGIN
   END;
 END TestShiftRightLongint;
 
-
 PROCEDURE TestShiftInteger() =
 VAR a := NotConstI(16_8000);
 BEGIN
@@ -415,7 +414,6 @@ END TestShiftMNLongint;
 (* shifting constant by a non-constant (not particularly special, except for shifting zero) *)
 
 PROCEDURE TestShiftLeftMInteger() =
-
   CONST shift = ARRAY OF INTEGER {1, 10, 20, 30 };
 BEGIN
   PutT("\nTestShiftLeftMLongint\n");
@@ -492,7 +490,6 @@ BEGIN
     PutT("16_10000L << "); PutI(shift[i], 3); PutT(":"); PutLH(Long.Shift(16_10000L, shift[i])); PutT("\n");
   END;
 END TestShiftMLongint;
-
 
 BEGIN
   PutL(a);
