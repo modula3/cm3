@@ -39,6 +39,18 @@ CONST PutH = RTIO.PutHex;
 CONST PutL = RTIO.PutLong;
 CONST PutLH = RTIO.PutLongHex;
 
+PROCEDURE NotPortableL(<*UNUSED*>a: LONGINT) =
+BEGIN
+   (* PutL(a); *)
+   PutT("notportable");
+END NotPortableL;
+
+PROCEDURE NotPortableH(<*UNUSED*>a: INTEGER) =
+BEGIN
+   (* PutH(a); *)
+   PutT("notportable");
+END NotPortableH;
+
 PROCEDURE TestInsert() =
 VAR result32: CARDINAL := 0;
     result64: LONGINT := 0L;
@@ -195,7 +207,11 @@ VAR a := NotConstI(1);
 BEGIN
   PutT("\nTestLeftShiftInteger\n");
   FOR i := 0 TO 40 DO
-    PutT("1 << "); PutI(i); PutT(":"); PutH(a); PutT("\n");
+    IF i < 32 THEN
+      PutT("1 << "); PutI(i); PutT(":"); PutH(a); PutT("\n");
+    ELSE
+      PutT("1 << "); PutI(i); PutT(":"); NotPortableH(a); PutT("\n");
+    END;
     a := Word.LeftShift(a, NotConstI(1));
   END;
 END TestLeftShiftInteger;
@@ -235,7 +251,11 @@ VAR a := NotConstI(16_8000);
 BEGIN
   PutT("\nTestShiftInteger\n");
   FOR i := -30 TO 30 DO
-    PutT("16_8000 << "); PutI(i); PutT(":"); PutH(Word.Shift(a, NotConstI(i))); PutT("\n");
+    IF i <= 16 THEN
+      PutT("16_8000 << "); PutI(i); PutT(":"); PutH(Word.Shift(a, NotConstI(i))); PutT("\n");
+    ELSE
+      PutT("16_8000 << "); PutI(i); PutT(":"); NotPortableH(Word.Shift(a, NotConstI(i))); PutT("\n");
+    END;
   END;
 END TestShiftInteger;
 
@@ -266,7 +286,11 @@ BEGIN
     <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 0) = Word.LeftShift(a, 0) *>
     <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 0) = Word.LeftShift(a, 0) *>
 
-    PutH(a); PutT(" << 1"); PutT(":"); PutH(Word.LeftShift(a, 1)); PutT("\n");
+    IF a < 10 THEN
+      PutH(a); PutT(" << 1"); PutT(":"); PutH(Word.LeftShift(a, 1)); PutT("\n");
+    ELSE
+      PutH(a); PutT(" << 1"); PutT(":"); NotPortableH(Word.LeftShift(a, 1)); PutT("\n");
+    END;
     <* ASSERT a #           1 OR Word.LeftShift(          1, 1) = Word.LeftShift(a, 1) *>
     <* ASSERT a #           2 OR Word.LeftShift(          2, 1) = Word.LeftShift(a, 1) *>
     <* ASSERT a #           3 OR Word.LeftShift(          3, 1) = Word.LeftShift(a, 1) *>
@@ -275,7 +299,11 @@ BEGIN
     <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 1) = Word.LeftShift(a, 1) *>
     <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 1) = Word.LeftShift(a, 1) *>
 
-    PutH(a); PutT(" << 2"); PutT(":"); PutH(Word.LeftShift(a, 2)); PutT("\n");
+    IF a < 10 THEN
+      PutH(a); PutT(" << 2"); PutT(":"); PutH(Word.LeftShift(a, 2)); PutT("\n");
+    ELSE
+      PutH(a); PutT(" << 2"); PutT(":"); NotPortableH(Word.LeftShift(a, 2)); PutT("\n");
+    END;
     <* ASSERT a #           1 OR Word.LeftShift(          1, 2) = Word.LeftShift(a, 2) *>
     <* ASSERT a #           2 OR Word.LeftShift(          2, 2) = Word.LeftShift(a, 2) *>
     <* ASSERT a #           3 OR Word.LeftShift(          3, 2) = Word.LeftShift(a, 2) *>
@@ -284,7 +312,11 @@ BEGIN
     <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 2) = Word.LeftShift(a, 2) *>
     <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 2) = Word.LeftShift(a, 2) *>
 
-    PutH(a); PutT(" << 3"); PutT(":"); PutH(Word.LeftShift(a, 3)); PutT("\n");
+    IF a < 10 THEN
+      PutH(a); PutT(" << 3"); PutT(":"); PutH(Word.LeftShift(a, 3)); PutT("\n");
+    ELSE
+      PutH(a); PutT(" << 3"); PutT(":"); NotPortableH(Word.LeftShift(a, 3)); PutT("\n");
+    END;
     <* ASSERT a #           1 OR Word.LeftShift(          1, 3) = Word.LeftShift(a, 3) *>
     <* ASSERT a #           2 OR Word.LeftShift(          2, 3) = Word.LeftShift(a, 3) *>
     <* ASSERT a #           3 OR Word.LeftShift(          3, 3) = Word.LeftShift(a, 3) *>
@@ -293,7 +325,11 @@ BEGIN
     <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 3) = Word.LeftShift(a, 3) *>
     <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 3) = Word.LeftShift(a, 3) *>
 
-    PutH(a); PutT(" << 30"); PutT(":"); PutH(Word.LeftShift(a, 30)); PutT("\n");
+    IF a < 2 THEN
+      PutH(a); PutT(" << 30"); PutT(":"); PutH(Word.LeftShift(a, 30)); PutT("\n");
+    ELSE
+      PutH(a); PutT(" << 30"); PutT(":"); NotPortableH(Word.LeftShift(a, 30)); PutT("\n");
+    END;
     <* ASSERT a #           1 OR Word.LeftShift(          1, 30) = Word.LeftShift(a, 30) *>
     <* ASSERT a #           2 OR Word.LeftShift(          2, 30) = Word.LeftShift(a, 30) *>
     <* ASSERT a #           3 OR Word.LeftShift(          3, 30) = Word.LeftShift(a, 30) *>
@@ -489,16 +525,16 @@ BEGIN
   PutT("16_8000 <<  10:"); PutH(Word.Shift(a,  10)); PutT("\n");
   <* ASSERT Word.Shift(16_8000, 10) = Word.Shift(a, 10) *>
 
-  PutT("16_8000 << -20:"); PutH(Word.Shift(a, -20)); PutT("\n");
+  PutT("16_8000 << -20:"); NotPortableH(Word.Shift(a, -20)); PutT("\n");
   <* ASSERT Word.Shift(16_8000, -20) = Word.Shift(a, -20) *>
 
-  PutT("16_8000 <<  20:"); PutH(Word.Shift(a,  20)); PutT("\n");
+  PutT("16_8000 <<  20:"); NotPortableH(Word.Shift(a,  20)); PutT("\n");
   <* ASSERT Word.Shift(16_8000, 20) = Word.Shift(a, 20) *>
 
-  PutT("16_8000 << -30:"); PutH(Word.Shift(a, -30)); PutT("\n");
+  PutT("16_8000 << -30:"); NotPortableH(Word.Shift(a, -30)); PutT("\n");
   <* ASSERT Word.Shift(16_8000, -30) = Word.Shift(a, -30) *>
 
-  PutT("16_8000 <<  30:"); PutH(Word.Shift(a,  30)); PutT("\n");
+  PutT("16_8000 <<  30:"); NotPortableH(Word.Shift(a,  30)); PutT("\n");
   <* ASSERT Word.Shift(16_8000, 30) = Word.Shift(a, 30) *>
 
 END TestShiftNInteger;
@@ -609,14 +645,14 @@ END TestShiftRightMNLongint;
 PROCEDURE TestShiftMNInteger() =
 BEGIN
   PutT("\nTestShiftMNInteger\n");
-  PutT("16_8000 << -40:"); PutH(Word.Shift(16_8000, -40)); PutT("\n");
-  PutT("16_8000 << -30:"); PutH(Word.Shift(16_8000, -30)); PutT("\n");
-  PutT("16_8000 << -20:"); PutH(Word.Shift(16_8000, -20)); PutT("\n");
+  PutT("16_8000 << -40:"); NotPortableH(Word.Shift(16_8000, -40)); PutT("\n");
+  PutT("16_8000 << -30:"); NotPortableH(Word.Shift(16_8000, -30)); PutT("\n");
+  PutT("16_8000 << -20:"); NotPortableH(Word.Shift(16_8000, -20)); PutT("\n");
   PutT("16_8000 <<  -1:"); PutH(Word.Shift(16_8000,  -1)); PutT("\n");
   PutT("16_8000 <<   1:"); PutH(Word.Shift(16_8000,   1)); PutT("\n");
-  PutT("16_8000 <<  20:"); PutH(Word.Shift(16_8000,  20)); PutT("\n");
-  PutT("16_8000 <<  30:"); PutH(Word.Shift(16_8000,  30)); PutT("\n");
-  PutT("16_8000 <<  40:"); PutH(Word.Shift(16_8000,  40)); PutT("\n");
+  PutT("16_8000 <<  20:"); NotPortableH(Word.Shift(16_8000,  20)); PutT("\n");
+  PutT("16_8000 <<  30:"); NotPortableH(Word.Shift(16_8000,  30)); PutT("\n");
+  PutT("16_8000 <<  40:"); NotPortableH(Word.Shift(16_8000,  40)); PutT("\n");
 END TestShiftMNInteger;
 
 PROCEDURE TestShiftMNLongint() =
@@ -667,9 +703,9 @@ BEGIN
     PutT(" 16_8000 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift( 16_8000, shift[i])); PutT("\n");
     PutT(" 16_4000 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift( 16_4000, shift[i])); PutT("\n");
     PutT("16_10000 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(16_10000, shift[i])); PutT("\n");
-    PutT("      -1 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(      -1, shift[i])); PutT("\n");
-    PutT("      -2 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(      -2, shift[i])); PutT("\n");
-    PutT("      -3 >> "); PutI(shift[i], 2); PutT(":"); PutH(Word.RightShift(      -3, shift[i])); PutT("\n");
+    PutT("      -1 >> "); PutI(shift[i], 2); PutT(":"); NotPortableH(Word.RightShift(      -1, shift[i])); PutT("\n");
+    PutT("      -2 >> "); PutI(shift[i], 2); PutT(":"); NotPortableH(Word.RightShift(      -2, shift[i])); PutT("\n");
+    PutT("      -3 >> "); PutI(shift[i], 2); PutT(":"); NotPortableH(Word.RightShift(      -3, shift[i])); PutT("\n");
   END;
 END TestShiftRightMInteger;
 
@@ -840,16 +876,16 @@ BEGIN
 
   a := VAL(LAST(INTEGER), LONGINT);
   INC(a);
-  PutL(a);
+  NotPortableL(a);
   NL();
 
   a := VAL(FIRST(INTEGER), LONGINT);
-  PutL(a);
+  NotPortableL(a);
   NL();
 
   a := VAL(FIRST(INTEGER), LONGINT);
   DEC(a);
-  PutL(a);
+  NotPortableL(a);
   NL();
 
 (*insertextract_max_ab := 2;
