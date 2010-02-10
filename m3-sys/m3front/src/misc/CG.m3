@@ -107,6 +107,9 @@ VAR (*CONST*)
 
 PROCEDURE Init () =
   BEGIN
+
+    <* ASSERT TInt.Zero.n = Target.Longint.bytes *>
+
     Max_alignment := Target.Alignments [LAST (Target.Alignments)];
 
     FOR t := FIRST (Type) TO LAST (Type) DO StackType[t] := t; END;
@@ -143,7 +146,7 @@ PROCEDURE Init () =
     fields[TRUE]   := NIL;
     in_init        := FALSE;
     init_pc        := 0;
-    init_bits      := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
+    init_bits      := TInt.Zero;
     free_temps     := NIL;
     busy_temps     := NIL;
     free_values    := NIL;
@@ -797,7 +800,7 @@ PROCEDURE Begin_init (v: Var) =
     cg.begin_init (v);
     in_init := TRUE;
     init_pc := 0;
-    init_bits := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
+    init_bits := TInt.Zero;
   END Begin_init;
 
 PROCEDURE End_init (v: Var) =
@@ -940,10 +943,10 @@ PROCEDURE AdvanceInit (o: Offset) =
         (* send out some number of bytes *)
         EVAL FindInitType (n_bytes, init_pc, t);
         size := TargetMap.CG_Size[t];
-        excess := Target.Integer.size - size;
+        excess := Target.Longint.size - size;
         IF (excess = 0) THEN
           cg.init_int (init_pc DIV Target.Byte, init_bits, t);
-          init_bits := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
+          init_bits := TInt.Zero;
         ELSIF Target.Little_endian
           AND TWord.Extract (init_bits, 0, size, tmp)
           AND TWord.Extract (init_bits, size, excess, new_bits) THEN
@@ -970,7 +973,7 @@ PROCEDURE FindInitType (n_bytes, offset: INTEGER;  VAR t: Type): BOOLEAN =
     FOR i := LAST (TargetMap.Integer_types)
           TO FIRST (TargetMap.Integer_types) BY -1 DO
       WITH z = TargetMap.Integer_types[i] DO
-        IF (z.bytes <= n_bytes) AND (z.size <= Target.Integer.size)
+        IF (z.bytes <= n_bytes)
           AND (offset MOD z.align = 0) THEN
           t := z.cg_type;
           RETURN TRUE;
@@ -994,7 +997,7 @@ PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
     AdvanceInit (o);
     IF Target.Little_endian
       THEN bit_offset := o - init_pc;
-      ELSE bit_offset := Target.Integer.size - (o - init_pc) - s;
+      ELSE bit_offset := Target.Longint.size - (o - init_pc) - s;
     END;
 
     IF (o = init_pc)
