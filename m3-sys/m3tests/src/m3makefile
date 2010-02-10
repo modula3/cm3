@@ -45,9 +45,12 @@ library ("test")
 %  include (PKG_INSTALL & "/m3core/src/float/m3makefile")
 %end
 
-proc File64(Path) is
+proc WordSizeSpecificFile(Path) is
   if equal (WORD_SIZE, "64BITS") and FileExists (Path & "64")
-    Path = Path & "64"
+    return Path & "64"
+  end
+  if equal (WORD_SIZE, "32BITS") and FileExists (Path & "32")
+    return Path & "32"
   end
   return Path
 end
@@ -79,7 +82,7 @@ proc compare_file (dir, OutputPath) is
   ExpectedPath = subst_chars (ExpectedPath, "/", diff_slash)
   OutputPath = subst_chars (OutputPath, "/", diff_slash)
 
-  ExpectedPath = File64(ExpectedPath)
+  ExpectedPath = WordSizeSpecificFile(ExpectedPath)
 
   exec (diff, ExpectedPath, OutputPath, head)
   if defined("HTML")
@@ -104,7 +107,7 @@ proc cmp_file (dir, file) is
   local ExpectedPath = dir & "/" & file
   local OutputPath = dir & "/" & BUILD_DIR & "/" & file
 
-  ExpectedPath = File64(ExpectedPath)
+  ExpectedPath = WordSizeSpecificFile(ExpectedPath)
 
   %write ("cmp OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
   if stale (OutputPath, OutputPath)
