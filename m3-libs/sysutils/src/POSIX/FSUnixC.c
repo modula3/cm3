@@ -24,7 +24,6 @@
 #endif
 #endif
 
-#include <errno.h>
 #include <unistd.h>
 
 #ifdef __cplusplus
