@@ -32,7 +32,7 @@ BEGIN
   Test.checkN(J, LAST(LONGINT));
   Test.checkN(16_8000000000000000L, FIRST(LONGINT));
 
-  i := -8_20000000000;
+  i := ((-(8_20000000000 - 1)) - 1);
   I := -8_20000000000L;
   IF I32 THEN
     Test.checkI (i, FIRST(INTEGER));
