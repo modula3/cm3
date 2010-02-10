@@ -41,7 +41,7 @@ extern "C"
 
 M3WRAP2(int, access, const char*, int)
 
-#define X(x) const int FSUnix__##x = x;
+#define X(x) const int FSUtils__##x = x;
 
 X(X_OK)
 X(R_OK)
