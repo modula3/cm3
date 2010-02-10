@@ -720,9 +720,15 @@ BEGIN
   PutT("\nTestShiftMInteger\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
     PutT("       0 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift(       0, shift[i])); PutT("\n");
-    PutT(" 16_8000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift( 16_8000, shift[i])); PutT("\n");
-    PutT(" 16_4000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift( 16_4000, shift[i])); PutT("\n");
-    PutT("16_10000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift(16_10000, shift[i])); PutT("\n");
+    IF ABS(shift[i]) <= 10 THEN
+      PutT(" 16_8000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift( 16_8000, shift[i])); PutT("\n");
+      PutT(" 16_4000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift( 16_4000, shift[i])); PutT("\n");
+      PutT("16_10000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift(16_10000, shift[i])); PutT("\n");
+    ELSE
+      PutT(" 16_8000 << "); PutI(shift[i], 3); PutT(":"); NotPortableH(Word.Shift( 16_8000, shift[i])); PutT("\n");
+      PutT(" 16_4000 << "); PutI(shift[i], 3); PutT(":"); NotPortableH(Word.Shift( 16_4000, shift[i])); PutT("\n");
+      PutT("16_10000 << "); PutI(shift[i], 3); PutT(":"); NotPortableH(Word.Shift(16_10000, shift[i])); PutT("\n");
+    END
   END;
 END TestShiftMInteger;
 
