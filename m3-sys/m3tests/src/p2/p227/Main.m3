@@ -493,7 +493,7 @@ BEGIN
   <* ASSERT Word.Shift(16_8000, -20) = Word.Shift(a, -20) *>
 
   PutT("16_8000 <<  20:"); PutH(Word.Shift(a,  20)); PutT("\n");
-  <* ASSERT Word.Shift(16_8000, 20) = Word.Shift(a, -20) *>
+  <* ASSERT Word.Shift(16_8000, 20) = Word.Shift(a, 20) *>
 
   PutT("16_8000 << -30:"); PutH(Word.Shift(a, -30)); PutT("\n");
   <* ASSERT Word.Shift(16_8000, -30) = Word.Shift(a, -30) *>
