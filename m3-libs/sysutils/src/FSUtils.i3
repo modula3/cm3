@@ -121,4 +121,9 @@ PROCEDURE PutFile(fn : Pathname.T; data : TEXT) RAISES {E};
 PROCEDURE GetFileSize(path:TEXT):INTEGER;
 PROCEDURE GetFileSize32(path:TEXT):INTEGER;
 
+<*EXTERNAL FSUtils__X_OK*> VAR X_OK: int; (* executable *)
+<*EXTERNAL FSUtils__W_OK*> VAR W_OK: int; (* writable *)
+<*EXTERNAL FSUtils__R_OK*> VAR R_OK: int; (* readable *)
+<*EXTERNAL FSUtils__access*>PROCEDURE access (path: const_char_star; mode: int): int;
+
 END FSUtils.

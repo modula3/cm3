@@ -32,3 +32,4 @@ if equal(M3_VARIANT, "PM3")
 else
   implementation("FSUnix_cm3")
 end
+c_source("FSUnixC")

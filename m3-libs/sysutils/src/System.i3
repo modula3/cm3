@@ -192,4 +192,11 @@ TYPE pid_t = INTEGER; (* generally only 32 bits but ok *)
 <*EXTERNAL System__waitpid*>
 PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF int; options: int): pid_t;
 
+<*EXTERNAL System__gethostname*>
+PROCEDURE gethostname (name: char_star; namelen: size_t): int;
+
+<*EXTERNAL System__EINVAL*> VAR EINVAL: int;
+<*EXTERNAL System__ECHILD*> VAR ECHILD: int;
+<*EXTERNAL System__EINTR*>  VAR EINTR: int;
+
 END System.
