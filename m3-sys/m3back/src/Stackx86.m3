@@ -18,7 +18,7 @@ FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize, TZero;
 FROM M3x86Rep IMPORT RegistersForByteOperations, RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
-FROM M3x86Rep IMPORT EAX, ECX, EDX, EBX, ESI, EDI, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
+FROM M3x86Rep IMPORT IsInt, IsWord, EAX, ECX, EDX, EBX, ESI, EDI, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
 
@@ -2113,11 +2113,21 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
            *)
 
           IF changeSize THEN
+            unlock(t);
             CASE stop0.loc OF
               | OLoc.fstack => <* ASSERT FALSE *>
-              | OLoc.mem => find(t, stack0, Force.anyreg);
-              | OLoc.imm => find(t, stack0, Force.anyreg);
-              | OLoc.register => (* nothing *)
+              | OLoc.mem,
+                OLoc.imm,        
+                OLoc.register =>
+                  IF fromSize = 2 THEN
+                    find(t, stack0, Force.anyreg);
+                  ELSE
+                    IF IsInt(from) THEN
+                      find(t, stack0, Force.regset, RegSet{EAX});
+                    ELSE
+                      find(t, stack0, Force.anyreg);
+                    END;
+                  END;
             END;
             CASE stop0.loc OF
               | OLoc.fstack => <* ASSERT FALSE *>
@@ -2125,17 +2135,26 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
               | OLoc.imm => <* ASSERT FALSE *>
               | OLoc.register =>
                 IF toSize = 1 THEN
+                  (* just free up the upper register *)
                   t.dealloc_reg(stack0, operandPart := 1);
                 ELSIF toSize = 2 THEN
                   (* This should be better. We can run out of registers.
                    * We should favor dead, or else anything but
                    * the one that holds the other half of this operand.
                    *)
-                  WITH reg = finddead(t) DO
-                    <* ASSERT reg # -1 *>
-                    <* ASSERT reg # stop0.reg[0] *>
-                    t.set_reg(stack0, reg, operandPart := 1);
-                    t.cg.binOp(Op.oXOR, t.cg.reg[reg], t.cg.reg[reg]);
+                  IF IsWord(from) THEN
+                    (* zero extend by allocating another register and xoring *)
+                    WITH reg = finddead(t) DO
+                      <* ASSERT reg # -1 *>
+                      <* ASSERT reg # stop0.reg[0] *>
+                      t.set_reg(stack0, reg, operandPart := 1);
+                      t.cg.binOp(Op.oXOR, t.cg.reg[reg], t.cg.reg[reg]);
+                    END;
+                  ELSE
+                    (* sign extend EAX to EDX with CDQ *)
+                    t.corrupt(EDX, operandPart := 1);
+                    t.set_reg(stack0, EDX, operandPart := 1);
+                    t.cg.noargOp(Op.oCDQ);
                   END;
                 ELSE
                   <* ASSERT FALSE *>
@@ -2161,7 +2180,6 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
           <* ASSERT NOT fromFloat *>
           <* ASSERT toFloat *>
           IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
-            unlock(t);
             find(t, stack0, Force.anyreg);
           END;
 
