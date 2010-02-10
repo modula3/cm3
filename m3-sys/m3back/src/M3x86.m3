@@ -1094,8 +1094,7 @@ PROCEDURE end_init (u: U;  v: Var) =
 
 PROCEDURE init_int (u: U;  o: ByteOffset;  READONLY value: Target.Int;
                     t: Type) =
-  VAR bytes := ARRAY [0..7] OF [0..255]{0, ..};
-      len: CARDINAL := 0;
+  VAR int: INTEGER;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("init_int");
@@ -1107,19 +1106,8 @@ PROCEDURE init_int (u: U;  o: ByteOffset;  READONLY value: Target.Int;
 
     pad_init(u, o);
 
-    len := TInt.ToBytes(value, bytes);
-    IF NOT (len <= NUMBER(bytes) AND len <= CG_Bytes[t] AND len > 0) THEN
-      u.Err("init_int: len:" & Fmt.Int(len) & " type:" & Target.TypeNames[t] & " value:" & Target.TargetIntToDiagnosticText(value));
-    END;
-    <* ASSERT len > 0 *>
-    <* ASSERT len <= NUMBER(bytes) *>
-    <* ASSERT len <= CG_Bytes[t] *>
-    IF TInt.LT(value, TZero) THEN
-      FOR i := len TO CG_Bytes[t] - 1 DO
-        bytes[i] := 16_FF;
-      END;
-    END;
-    u.obj.appendBytes(u.init_varstore.seg, SUBARRAY(bytes, 0, CG_Bytes[t]));
+    EVAL TInt.ToInt(value, int);
+    u.obj.append(u.init_varstore.seg, int, CG_Bytes[t]);
     INC(u.init_count, CG_Bytes[t]);
   END init_int;
 
