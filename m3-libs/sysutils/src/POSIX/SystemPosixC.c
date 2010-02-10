@@ -16,6 +16,7 @@
 #include <sys/wait.h>
 #include <stddef.h>
 #include <unistd.h>
+#include <errno.h>
 
 /* copied from m3core/src/unix/Common to fix bootstrapping error:
 /cm3/pkg/sysutils/LINUXLIBC6/libsysutils.so: undefined reference to `Uerror__EINVAL'

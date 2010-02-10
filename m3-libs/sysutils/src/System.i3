@@ -33,7 +33,7 @@ INTERFACE System;
 
 IMPORT Thread, AtomList, TextSeq, Rd, Wr, File, Process;
 IMPORT ProcessEnv, MsgIF;
-FROM Ctypes IMPORT int, const_char_star;
+FROM Ctypes IMPORT int, char_star;
 FROM Cstddef IMPORT size_t;
 
 (*---------------------------------------------------------------------------*)
