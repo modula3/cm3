@@ -40,16 +40,12 @@ extern "C"
 #define M3MODULE FSUnix
 
 M3WRAP2(int, access, const char*, int)
-M3WRAP2(int, gethostname, char*, size_t)
 
 #define X(x) const int FSUnix__##x = x;
 
-X(EINVAL)
 X(X_OK)
 X(R_OK)
 X(W_OK)
-X(ECHILD)
-X(EINTR)
 
 #ifdef __cplusplus
 } /* extern C */

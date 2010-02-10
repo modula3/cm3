@@ -49,6 +49,12 @@ m3_pid_t System__waitpid(m3_pid_t pid, int* status, int options)
     return waitpid(pid, status, options);
 }
 
+#define X(x) const int System__##x = x;
+
+X(EINVAL)
+X(ECHILD)
+X(EINTR)
+
 #ifdef __cplusplus
 }
 #endif

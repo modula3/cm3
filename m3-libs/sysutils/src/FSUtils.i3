@@ -21,12 +21,13 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: FSUtils.i3,v 1.4 2010-02-10 10:49:21 jkrell Exp $ *)
+ * $Id: FSUtils.i3,v 1.5 2010-02-10 10:51:39 jkrell Exp $ *)
 
 (*--------------------------------------------------------------------------*)
 INTERFACE FSUtils;
 
 IMPORT Pathname, TextSeq;
+FROM Ctypes IMPORT int, const_char_star;
 
 (*--------------------------------------------------------------------------*)
 EXCEPTION E(TEXT);
