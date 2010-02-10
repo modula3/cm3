@@ -26,14 +26,15 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*---------------------------------------------------------------------------
- * $Id: System.i3,v 1.6 2010-02-10 10:49:22 jkrell Exp $ *)
+ * $Id: System.i3,v 1.7 2010-02-10 10:51:39 jkrell Exp $ *)
 (*---------------------------------------------------------------------------*)
 
 INTERFACE System;
 
 IMPORT Thread, AtomList, TextSeq, Rd, Wr, File, Process;
 IMPORT ProcessEnv, MsgIF;
-FROM Ctypes IMPORT int;
+FROM Ctypes IMPORT int, const_char_star;
+FROM Cstddef IMPORT size_t;
 
 (*---------------------------------------------------------------------------*)
 EXCEPTION
