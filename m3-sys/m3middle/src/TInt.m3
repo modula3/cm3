@@ -17,9 +17,9 @@ CONST (* IMPORTS *)
   And    = Word.And;
 
 CONST
-  Mask     = RShift (Word.Not (0), Word.Size - BITSIZE (IByte)); (* fancy way of saying 16_FF *)
-  SignMask = LShift (1, BITSIZE (IByte) - 1);                    (* fancy way of saying 16_80 *)
-  Base     = Mask + 1;                                           (* fancy way of saying 16_100 *)
+  Mask     = 16_FF;
+  SignMask = 16_80;
+  Base     = 16_100;
   Digits   = ARRAY [0..9] OF CHAR { '0','1','2','3','4','5','6','7','8','9'};
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
@@ -430,10 +430,8 @@ PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): INTEGER =
       IF r.x[i] # j THEN EXIT END;
       DEC (k);
     END;
-    IF k = 0 THEN
-      <* ASSERT EQ(r, Zero) OR EQ(r, MOne) *>
-      k := 1;
-    END;
+    <* ASSERT (k = 0) = (EQ(r, Zero) OR EQ(r, MOne)) *>
+    INC(k, ORD(k = 0)); (* increment if 0 *)
     IF k > NUMBER (buf) THEN RETURN -1 END;
     (* unpack the bytes *)
     FOR i := 0 TO k-1 DO buf[i] := r.x[i] END;
@@ -441,7 +439,4 @@ PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): INTEGER =
   END ToBytes;
 
 BEGIN
-  <* ASSERT Mask = 16_FF *>
-  <* ASSERT SignMask = 16_80 *>
-  <* ASSERT Base = 16_100 *>
 END TInt.
