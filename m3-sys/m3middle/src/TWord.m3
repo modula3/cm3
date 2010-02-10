@@ -16,8 +16,8 @@ CONST (* IMPORTS *)
   LShift = Word.LeftShift;
 
 CONST
-  Mask = RShift (Word.Not (0), Word.Size - BITSIZE (IByte));
-  Base = Mask + 1;
+  Mask = 16_FF;
+  Base = 16_100;
 
 (*------------------------------------------- unsigned integer operations ---*)
 
@@ -278,8 +278,8 @@ PROCEDURE xEQ (READONLY a, b: Int): BOOLEAN =
   BEGIN
     <*ASSERT n # 0*>
     FOR i := n-1 TO 0 BY -1 DO
-      IF    a.x[i] # b.x[i] THEN RETURN FALSE;
-      ELSIF a.x[i] # b.x[i] THEN RETURN FALSE;
+      IF a.x[i] # b.x[i] THEN
+        RETURN FALSE;
       END;
     END;
     FOR i := n TO a.n-1 DO IF a.x[i] # 0 THEN RETURN FALSE END END;
