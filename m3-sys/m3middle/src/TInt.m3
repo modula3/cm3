@@ -116,8 +116,9 @@ PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR n := MIN (a.n, b.n);  carry := 0;  r_sign := Sign.Bad;
       a_sign := CheckSign (a, n);  b_sign := CheckSign (b, n);
   BEGIN
-    IF a_sign = Sign.Bad THEN RETURN FALSE END;
-    IF b_sign = Sign.Bad THEN RETURN FALSE END;
+    IF (a_sign = Sign.Bad) OR (b_sign = Sign.Bad) THEN
+      RETURN FALSE
+    END;
     r.n := n;
     FOR i := 0 TO n-1 DO
       carry := a.x[i] + b.x[i] + carry;
@@ -133,8 +134,9 @@ PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR n := MIN (a.n, b.n);  borrow := 0; r_sign := Sign.Bad;
       a_sign := CheckSign (a, n);  b_sign := CheckSign (b, n);
   BEGIN
-    IF a_sign = Sign.Bad THEN RETURN FALSE END;
-    IF b_sign = Sign.Bad THEN RETURN FALSE END;
+    IF (a_sign = Sign.Bad) OR (b_sign = Sign.Bad) THEN
+      RETURN FALSE
+    END;
     r.n := n;
     FOR i := 0 TO n-1 DO
       borrow := a.x[i] - b.x[i] - borrow;
@@ -167,8 +169,9 @@ PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
     p := ARRAY [0.. 2 * NUMBER (IBytes) - 1] OF IByte {0, ..};
     a_sign := CheckSign (a, n);  b_sign := CheckSign (b, n);
   BEGIN
-    IF a_sign = Sign.Bad THEN RETURN FALSE END;
-    IF b_sign = Sign.Bad THEN RETURN FALSE END;
+    IF (a_sign = Sign.Bad) OR (b_sign = Sign.Bad) THEN
+      RETURN FALSE
+    END;
     FOR i := 0 TO n-1 DO
       FOR j := 0 TO n-1 DO
         k := i + j;
@@ -228,8 +231,9 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
     b_sign := CheckSign (b, n);
     min: Int;
   BEGIN
-    IF a_sign = Sign.Bad THEN RETURN FALSE END;
-    IF b_sign = Sign.Bad THEN RETURN FALSE END;
+    IF (a_sign = Sign.Bad) OR (b_sign = Sign.Bad) THEN
+      RETURN FALSE
+    END;
 
     IF EQ (b, Zero) THEN  RETURN FALSE;  END;
     IF EQ (a, Zero) THEN  q := Zero;  r := Zero;  RETURN TRUE;  END;
@@ -294,8 +298,9 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
 PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
   VAR n := MIN (a.n, b.n);
   BEGIN
-    IF CheckSign (a, n) = Sign.Bad THEN RETURN FALSE END;
-    IF CheckSign (b, n) = Sign.Bad THEN RETURN FALSE END;
+    IF (CheckSign (a, n) = Sign.Bad) OR (CheckSign (b, n) = Sign.Bad) THEN
+      RETURN FALSE;
+    END;
     FOR i := 0 TO n-1 DO
       IF a.x[i] # b.x[i] THEN RETURN FALSE; END;
     END;
