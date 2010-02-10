@@ -37,7 +37,7 @@ extern "C"
 #define M3WRAP(ret, name, in, out)  ret M3WRAPNAME(M3MODULE, name) in { return name out; }
 #define M3WRAP2(ret, name, a, b)    M3WRAP(ret, name, (a i, b j), (i, j))
 
-#define M3MODULE FSUnix
+#define M3MODULE FSUtils
 
 M3WRAP2(int, access, const char*, int)
 
