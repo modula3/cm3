@@ -136,10 +136,9 @@ BEGIN
   Flush();
 END TestExtract;
 
-(*VAR a := 1234L;
+VAR a := 1234L;
 VAR b := 5678L;
-VAR c := 1024L * 1024L * 1024L * 8L;*)
-VAR a, b, c: LONGINT;
+VAR c := 1024L * 1024L * 1024L * 8L;
 VAR d: INTEGER;
 CONST expect_true = ARRAY BOOLEAN OF TEXT{"bad\n","good\n"};
 CONST expect_false = ARRAY BOOLEAN OF TEXT{"good\n","bad\n"};
@@ -286,7 +285,7 @@ BEGIN
     <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 0) = Word.LeftShift(a, 0) *>
     <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 0) = Word.LeftShift(a, 0) *>
 
-    IF a < 10 THEN
+    IF a > 0 AND a < 10 THEN
       PutH(a); PutT(" << 1"); PutT(":"); PutH(Word.LeftShift(a, 1)); PutT("\n");
     ELSE
       PutH(a); PutT(" << 1"); PutT(":"); NotPortableH(Word.LeftShift(a, 1)); PutT("\n");
@@ -299,7 +298,7 @@ BEGIN
     <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 1) = Word.LeftShift(a, 1) *>
     <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 1) = Word.LeftShift(a, 1) *>
 
-    IF a < 10 THEN
+    IF a > 0 AND a < 10 THEN
       PutH(a); PutT(" << 2"); PutT(":"); PutH(Word.LeftShift(a, 2)); PutT("\n");
     ELSE
       PutH(a); PutT(" << 2"); PutT(":"); NotPortableH(Word.LeftShift(a, 2)); PutT("\n");
@@ -312,7 +311,7 @@ BEGIN
     <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 2) = Word.LeftShift(a, 2) *>
     <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 2) = Word.LeftShift(a, 2) *>
 
-    IF a < 10 THEN
+    IF a > 0 AND a < 10 THEN
       PutH(a); PutT(" << 3"); PutT(":"); PutH(Word.LeftShift(a, 3)); PutT("\n");
     ELSE
       PutH(a); PutT(" << 3"); PutT(":"); NotPortableH(Word.LeftShift(a, 3)); PutT("\n");
@@ -325,7 +324,7 @@ BEGIN
     <* ASSERT a # 16_ABCD1234 OR Word.LeftShift(16_ABCD1234, 3) = Word.LeftShift(a, 3) *>
     <* ASSERT a # 16_ABCD0000 OR Word.LeftShift(16_ABCD0000, 3) = Word.LeftShift(a, 3) *>
 
-    IF a < 2 THEN
+    IF a > 0 AND a < 2 THEN
       PutH(a); PutT(" << 30"); PutT(":"); PutH(Word.LeftShift(a, 30)); PutT("\n");
     ELSE
       PutH(a); PutT(" << 30"); PutT(":"); NotPortableH(Word.LeftShift(a, 30)); PutT("\n");
@@ -341,18 +340,9 @@ BEGIN
 END TestLeftShiftNInteger;
 
 PROCEDURE TestLeftShiftNLongint() =
-(* front end can't initialize this *)
-VAR b: ARRAY [0..8] OF LONGINT;
+VAR b := ARRAY [0..7] OF LONGINT{1L, 2L, 3L, 16_8000L, 16_12345L, 16_ABCD1234L, 16_ABCD0000L, 16_ABCD00001234L};
 VAR a: LONGINT;
 BEGIN
-  b[0] := 1L;
-  b[1] := 2L;
-  b[3] := 3L;
-  b[4] := 16_8000L;
-  b[5] := 16_12345L;
-  b[6] := 16_ABCD1234L;
-  b[7] := 16_ABCD0000L;
-  b[8] := 16_ABCD00001234L;
   PutT("\nTestLeftShiftNLongint\n");
 
   FOR i := FIRST(b) TO LAST (b) DO
