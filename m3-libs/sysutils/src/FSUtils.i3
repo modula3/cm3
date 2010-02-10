@@ -27,6 +27,7 @@
 INTERFACE FSUtils;
 
 IMPORT Pathname, TextSeq;
+FROM Ctypes IMPORT int, const_char_star;
 
 (*--------------------------------------------------------------------------*)
 EXCEPTION E(TEXT);
