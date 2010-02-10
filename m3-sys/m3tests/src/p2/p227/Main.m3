@@ -852,8 +852,8 @@ BEGIN
   PutL(a);
   NL();
 
-  insertextract_max_ab := 2;
-  insertextract_max_mn := 2;
+(*insertextract_max_ab := 2;
+  insertextract_max_mn := 2; *)
 
   PutL(FIRST(LONGINT));
   NL();
