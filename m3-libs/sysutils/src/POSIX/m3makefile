@@ -21,7 +21,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: m3makefile,v 1.11 2010-02-10 10:44:38 jkrell Exp $
+% $Id: m3makefile,v 1.12 2010-02-10 11:20:55 jkrell Exp $
 
 implementation("OSSpecialsPosix")
 implementation("PathReprPosix")
@@ -33,3 +33,20 @@ else
   implementation("FSUnix_cm3")
 end
 c_source("FSUnixC")
+
+> "UserThreads.i3.tmp" in
+  write("INTERFACE UserThreads;\n")
+  if defined("TARGET_OS")
+    if equal(TARGET_OS, "OPENBSD")
+      write("CONST Value = TRUE;\n")
+    else
+      write("CONST Value = FALSE;\n")
+    end
+  else
+    write("CONST Value = FALSE;\n")
+  end
+  write("END UserThreads.\n")
+end
+cp_if("UserThreads.i3.tmp", "UserThreads.i3")
+
+derived_interface("UserThreads", HIDDEN)
