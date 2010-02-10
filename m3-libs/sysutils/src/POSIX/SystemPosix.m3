@@ -26,7 +26,7 @@
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
 
-IMPORT Unix, Text, Ctypes, (*Uexec,*) Process, Fmt, Uerror;
+IMPORT Text, Ctypes, (*Uexec,*) Process, Fmt, Uerror;
 IMPORT (*SchedulerPosix*) Word;
 
 (*---------------------------------------------------------------------------*)

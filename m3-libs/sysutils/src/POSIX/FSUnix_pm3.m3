@@ -1,7 +1,7 @@
 (*--------------------------------------------------------------------------*)
 UNSAFE MODULE FSUnix_pm3 EXPORTS FSUtils;
 
-IMPORT Pathname, Unix, M3toC;
+IMPORT Pathname, M3toC;
 IMPORT PathRepr;
 
 (*--------------------------------------------------------------------------*)
