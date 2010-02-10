@@ -1349,14 +1349,20 @@ PROCEDURE doimm (t: T; op: Op; READONLY imm: Target.Int; overwritesdest: BOOLEAN
   END doimm;
 
 PROCEDURE doneg (t: T) =
+  VAR neg: Target.Int;
   BEGIN
     unlock(t);
     WITH stack0 = pos(t, 0, "doneg"),
          stop0 = t.vstack[stack0] DO
       IF stop0.loc = OLoc.imm THEN
-        IF NOT TInt.Negate(stop0.imm, stop0.imm) THEN
-          t.Err("doneg: Negate overflowed");
+        IF NOT TInt.Negate(stop0.imm, neg) THEN
+          IF TInt.EQ(stop0.imm, Target.Int32.min) THEN
+            neg := stop0.imm;
+          ELSE
+            t.Err("doneg: Negate overflowed");
+          END;
         END;
+        stop0.imm := neg;
       ELSE
         find(t, stack0, Force.anytemp);
         t.cg.unOp(Op.oNEG, stop0);
