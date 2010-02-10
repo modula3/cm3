@@ -1356,11 +1356,7 @@ PROCEDURE doneg (t: T) =
          stop0 = t.vstack[stack0] DO
       IF stop0.loc = OLoc.imm THEN
         IF NOT TInt.Negate(stop0.imm, neg) THEN
-          IF TInt.EQ(stop0.imm, Target.Int32.min) THEN
-            neg := stop0.imm;
-          ELSE
-            t.Err("doneg: Negate overflowed");
-          END;
+          t.Err("doneg: Negate overflowed");
         END;
         stop0.imm := neg;
       ELSE
