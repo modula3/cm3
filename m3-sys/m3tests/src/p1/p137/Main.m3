@@ -26,6 +26,8 @@ BEGIN
   J := 16_7FFFFFFFFFFFFFFFL;
   IF I32 THEN
     Test.checkI (j, LAST(INTEGER));
+  ELSE
+    Test.check (j < LAST(INTEGER));
   END;
   Test.checkI (j, LAST(int));
 
@@ -36,6 +38,8 @@ BEGIN
   I := -8_20000000000L;
   IF I32 THEN
     Test.checkI (i, FIRST(INTEGER));
+  ELSE
+    Test.check (i > FIRST(INTEGER));
   END;
   Test.checkI (j, LAST(int));
 
