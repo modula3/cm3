@@ -449,10 +449,7 @@ PROCEDURE Rotate (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
 
 PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
   VAR w, b: INTEGER;
-      size := x.n * BITSIZE (IByte);
   BEGIN
-    IF i + n > size THEN RETURN FALSE; END;
-
     RightShift (x, i, r);
 
     w := n DIV BITSIZE (IByte);
