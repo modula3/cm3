@@ -926,12 +926,19 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
           find(t, t.stacktop - 1, Force.anyregimm);
         END;
 
+        srcSize := SplitOperand(src_stack0, src_opA);
+        IF NOT (srcSize = destSize) THEN
+          t.Err(" srcSize:" & Fmt.Int(srcSize)
+              & " destSize:" & Fmt.Int(destSize)
+              & " dest_mvar.mvar_type:" & Target.TypeNames[dest_mvar.mvar_type]
+              & " src_stack0.optype:" & Target.TypeNames[src_stack0.optype]);
+        END;
+        <* ASSERT srcSize = destSize *>
+
         IF dest_mvar.var.loc = VLoc.temp AND dest_mvar.var.parent # t.current_proc THEN
           indreg := pickreg(t, RegSet {}, TRUE);
           corrupt(t, indreg, operandPart := 0);
           t.cg.get_frame(indreg, dest_mvar.var.parent, t.current_proc);
-          srcSize := SplitOperand(src_stack0, src_opA);
-          <* ASSERT srcSize = destSize *>
           FOR i := 0 TO destSize - 1 DO
             t.cg.store_ind(src_opA[i],
                            t.cg.reg[indreg],
@@ -958,16 +965,6 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
               t.reguse[src_stack0.reg[i]].last_store := dest_mvarA[i];
             END;
           END;
-
-          srcSize := SplitOperand(src_stack0, src_opA);
-          IF NOT (srcSize = destSize) THEN
-            t.Err(" srcSize:" & Fmt.Int(srcSize)
-                & " destSize:" & Fmt.Int(destSize)
-                & " dest_mvar.mvar_type:" & Target.TypeNames[dest_mvar.mvar_type]
-                & " src_stack0.optype:" & Target.TypeNames[src_stack0.optype]);
-          END;
-
-          <* ASSERT srcSize = destSize *>
 
           FOR i := 0 TO destSize - 1 DO
             t.cg.movOp(Operand { loc := OLoc.mem, mvar := dest_mvarA[i], optype := dest_mvarA[i].mvar_type }, src_opA[i]);
