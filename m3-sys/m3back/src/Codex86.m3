@@ -410,6 +410,10 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
           log_global_var(t, dest.mvar, -5);
         ELSE
           ins.opcode := opcode[op].imm8;
+          IF op IN SET OF Op{Op.oSHL, Op.oSHR} AND TInt.EQ(imm, TInt.One) THEN
+            INC(ins.opcode, 16_10);
+            ins.imsize := 0;
+          END;
           writecode(t, ins);
           IF dest.loc = OLoc.mem THEN
             log_global_var(t, dest.mvar, -5);
