@@ -3,11 +3,11 @@
 (* See the file COPYRIGHT for a full description.              *)
 
 INTERFACE Cstddef;
-IMPORT Ctypes;
+IMPORT Word;
 
 TYPE
-  size_t = Ctypes.unsigned_long;
-  ssize_t = Ctypes.long;
-  ptrdiff_t = Ctypes.long;
+  size_t = Word.T;
+  ssize_t = INTEGER;
+  ptrdiff_t = INTEGER;
 
 END Cstddef.
