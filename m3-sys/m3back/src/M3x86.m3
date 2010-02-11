@@ -4149,7 +4149,7 @@ PROCEDURE check_atomic_type(u: U; a: Type) =
     u.Err("unsupported (so far) type for atomic operation");
   END check_atomic_type;
 
-<*UNUSED*>PROCEDURE check_atomic_types(u: U; a, b: Type) =
+PROCEDURE check_atomic_types(u: U; a, b: Type) =
   BEGIN
     check_atomic_type(u, a);
     check_atomic_type(u, b);
@@ -4158,20 +4158,26 @@ PROCEDURE check_atomic_type(u: U; a: Type) =
     END;
   END check_atomic_types;
 
-PROCEDURE store_ordered (x: U; <*UNUSED*>t: ZType; <*UNUSED*>u: MType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE store_ordered (x: U; t: ZType; u: MType; <*UNUSED*>order: MemoryOrder) =
 (* Mem [s1.A].u := s0.t; pop (2) *)
   BEGIN
+    IF x.debug THEN
+      x.wr.Cmd   ("store_ordered");
+      x.wr.TName (t);
+      x.wr.TName (u);
+      x.wr.NL    ();
+    END;
+
     x.fence(MemoryOrder.Sequential);
-    x.vstack.discard(2);
     x.vstack.unlock();
-    (*check_atomic_types(x, t, u);
+    check_atomic_types(x, t, u);
     WITH stack0 = x.vstack.pos(0, "store_ordered"),
          stack1 = x.vstack.pos(1, "store_ordered") DO
-      x.vstack.find(stack0, Force.anyreg);
+      x.vstack.find(stack0, Force.any);
       x.vstack.find(stack1, Force.mem);
       x.vstack.pop(x.vstack.op(stack1).mvar);
       x.vstack.discard(1);
-    END;*)
+    END;
     x.fence(MemoryOrder.Sequential);
   END store_ordered;
 
@@ -4229,6 +4235,10 @@ PROCEDURE compare_exchange (x: U; <*UNUSED*>t: MType; <*UNUSED*>u: ZType; <*UNUS
 
 PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
   BEGIN
+    IF u.debug THEN
+      u.wr.Cmd   ("fence");
+      u.wr.NL    ();
+    END;
 
     <* ASSERT u.in_proc *>
     <* ASSERT u.current_proc # NIL *>
