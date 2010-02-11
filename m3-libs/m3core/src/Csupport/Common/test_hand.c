@@ -541,10 +541,6 @@ static void TestExtract()
     }
 }
 
-void TestHighBitsLowBits()
-{
-}
-
 int main()
 {
     /*BuildTables();*/
