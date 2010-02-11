@@ -106,6 +106,8 @@ END PrintS;
 PROCEDURE Test_AtomicInteger_Fence() =
 BEGIN
     AtomicInteger.Fence();
+    AtomicInteger.Fence();
+    AtomicInteger.Fence();
 END Test_AtomicInteger_Fence;
 
 PROCEDURE Test_AtomicInteger_CompareSwap() =
@@ -143,15 +145,13 @@ BEGIN
     EVAL AtomicInteger.IsLockFree();
 END Test_AtomicInteger_IsLockFree;
 
-PROCEDURE Test_AtomicInteger_Load() =
+PROCEDURE Test_AtomicInteger_LoadStore() =
 BEGIN
     b := AtomicInteger.Load(atomicIntegerA);
-END Test_AtomicInteger_Load;
-
-PROCEDURE Test_AtomicInteger_Store() =
-BEGIN
-    AtomicInteger.Store(atomicIntegerA, b);
-END Test_AtomicInteger_Store;
+    AtomicInteger.Store(atomicIntegerA, 1 + 2 + 3);
+    b := AtomicInteger.Load(atomicIntegerA);
+    AtomicInteger.Store(atomicIntegerA, 1 + 2 + 3 + 4);
+END Test_AtomicInteger_LoadStore;
 
 PROCEDURE Test_AtomicInteger_Swap() =
 BEGIN
@@ -168,8 +168,7 @@ BEGIN
   Test_AtomicInteger_FetchOr();
   Test_AtomicInteger_FetchXor();
   Test_AtomicInteger_IsLockFree();
-  Test_AtomicInteger_Load();
-  Test_AtomicInteger_Store();
+  Test_AtomicInteger_LoadStore();
   Test_AtomicInteger_Swap();
 END Test_AtomicInteger;
 
