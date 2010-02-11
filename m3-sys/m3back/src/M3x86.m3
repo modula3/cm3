@@ -4180,15 +4180,20 @@ PROCEDURE store_ordered (x: U; t: ZType; u: MType; <*UNUSED*>order: MemoryOrder)
     x.fence(MemoryOrder.Sequential);
   END store_ordered;
 
-PROCEDURE load_ordered (x: U; <*UNUSED*>t: MType; <*UNUSED*>u: ZType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE load_ordered (x: U; t: MType; u: ZType; <*UNUSED*>order: MemoryOrder) =
 (* s0.u := Mem [s0.A].t  *)
   BEGIN
+
+    IF x.debug THEN
+      x.wr.Cmd   ("load_ordered");
+      x.wr.TName (t);
+      x.wr.TName (u);
+      x.wr.NL    ();
+    END;
+
     x.vstack.unlock();
     x.fence(MemoryOrder.Sequential);
-    (*WITH stack0 = x.vstack.pos(0, "store_ordered") DO
-      x.vstack.find(stack0, Force.mem);
-      x.vstack.find(stack0, Force.anyreg);
-    END;*)
+    x.load_indirect(0, t, u);
     x.fence(MemoryOrder.Sequential);
   END load_ordered;
 
