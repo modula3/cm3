@@ -18,7 +18,6 @@ TYPE
      uint32_t = BITS 32 FOR Ctypes.unsigned;
       int64_t = BITS 64 FOR Ctypes.long_long;
      uint64_t = BITS 64 FOR Ctypes.unsigned_long_long;
-    (* Avoid "long". On Win64 it is 32 bits. On other 64 bit systems, it is 64 bits. *)
      intptr_t = BITS BITSIZE(ADDRESS) FOR INTEGER;
     uintptr_t = BITS BITSIZE(ADDRESS) FOR Word.T;
 
@@ -34,7 +33,7 @@ CONST
 
      UINT8_MAX = LAST(uint8_t);
     UINT16_MAX = LAST(uint16_t);
-    UINT32_MAX = 16_FFFFFFFFL;
+    UINT32_MAX = 16_FFFFFFFFL; (* Perhaps not the desired type, alas. *)
     (* UINT64_MAX cannot be defined. *)
 
 END Cstdint.
