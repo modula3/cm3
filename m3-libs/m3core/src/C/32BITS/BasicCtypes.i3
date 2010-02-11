@@ -21,7 +21,7 @@ TYPE
   unsigned_char      = [16_0 .. 16_ff];
   unsigned_short_int = [16_0 .. 16_ffff];
   unsigned_int       = Word.T;
-  unsigned_long_int  = unsigned_int;
+  unsigned_long_int  = Word.T;
   unsigned_long_long = Long.T;
 
   (* the three floating types *)
