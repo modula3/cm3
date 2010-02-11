@@ -867,7 +867,7 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
           FOR i := 0 TO size - 1 DO
             IF CG_Bytes[src_mvar.mvar_type] = 1 THEN
               <* ASSERT size = 1 AND i = 0 *>
-              destreg[i] := pickreg(t, RegSet { EAX, EBX, ECX, EDX } );
+              destreg[i] := pickreg(t, RegSet{EAX, EBX, ECX, EDX});
             ELSE
               destreg[i] := pickreg(t, RegSet {}, src_mvar.mvar_type = Type.Addr);
             END;
@@ -921,8 +921,7 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
       ELSE
         unlock(t);
         IF CG_Bytes[dest_mvar.mvar_type] = 1 AND src_stack0.loc # OLoc.imm THEN
-          find(t, t.stacktop - 1, Force.regset,
-               RegSet { EAX, EBX, ECX, EDX } );
+          find(t, t.stacktop - 1, Force.regset, RegSet { EAX, EBX, ECX, EDX } );
         ELSE
           find(t, t.stacktop - 1, Force.anyregimm);
         END;
@@ -961,7 +960,15 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
           END;
 
           srcSize := SplitOperand(src_stack0, src_opA);
+          IF NOT (srcSize = size) THEN
+            t.Err(" srcSize:" & Fmt.Int(srcSize)
+                & " size:" & Fmt.Int(size)
+                & " dest_mvar.mvar_type:" & Target.TypeNames[dest_mvar.mvar_type]
+                & " src_stack0.optype:" & Target.TypeNames[src_stack0.optype]);
+          END;
+
           <* ASSERT srcSize = size *>
+
           FOR i := 0 TO size - 1 DO
             t.cg.movOp(Operand { loc := OLoc.mem, mvar := dest_mvarA[i], optype := dest_mvarA[i].mvar_type }, src_opA[i]);
           END;
