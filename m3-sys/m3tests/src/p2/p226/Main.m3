@@ -1,5 +1,5 @@
 UNSAFE MODULE Main;
-FROM Cstdint IMPORT uint8_t, uint16_t, uint32_t;
+FROM Cstdint IMPORT uint8_t, uint16_t, uint32_t, uint64_t;
 IMPORT RTIO;
 
 VAR
@@ -15,10 +15,10 @@ VAR
     b32: uint32_t := 200;
     c32: uint32_t := 300;
     d32: uint32_t := 400;
- (* a64: uint64_t := 1000;
-    b64: uint64_t := 2000;
-    c64: uint64_t := 3000;
-    d64: uint64_t := 4000; *)
+    a64: uint64_t := 1000L;
+    b64: uint64_t := 2000L;
+    c64: uint64_t := 3000L;
+    d64: uint64_t := 4000L;
     ap := LOOPHOLE(16_1000, ADDRESS);
     bp := LOOPHOLE(16_2000, ADDRESS);
     cp := LOOPHOLE(16_3000, ADDRESS);
@@ -121,26 +121,26 @@ BEGIN
   PrintI("d8", d8);
 
   PrintS("\n");
-  d16 := CAS(a16, b16, c16);
-    b := CASP(a16, b16, c16);
+(*d16 := CAS(a16, b16, c16);
+    b := CASP(a16, b16, c16);*)
   PrintB("b", b);
   PrintI("d16", d16);
 
   PrintS("\n");
-  d32 := CAS(a32, b32, b32);
-    b := CASP(a32, b32, c32);
+(* d32 := CAS(a32, b32, b32);
+    b := CASP(a32, b32, c32); *)
   PrintB("b", b);
   PrintI("d32", d32);
 
 (*PrintS("\n");
-  d64 := CAS(a64, b64, b64);
-    b := CASP(a64, b64, c64);
+(* d64 := CAS(a64, b64, b64);
+    b := CASP(a64, b64, c64); *)
   PrintB("b", b);
   PrintI("d64", d64);*)
 
   PrintS("\n");
-   dp := CAS(ap, bp, cp);
-    b := CASP(ap, bp, cp);
+ (* dp := CAS(ap, bp, cp);
+    b := CASP(ap, bp, cp); *)
   PrintB("b", b);
   PrintA("dp", dp);
 
@@ -162,10 +162,10 @@ BEGIN
   INC(b32);
   INC(c32);
   INC(d32);
-(*INC(a64);
+  INC(a64);
   INC(b64);
   INC(c64);
-  INC(d64); *)
+  INC(d64);
   INC(ap);
   INC(bp);
   INC(cp);
@@ -178,14 +178,14 @@ BEGIN
   PrintB("b", b);
   PrintI("d8", d8);
 
-  d16 := CAS(a16, a16, c16);
-    b := CASP(a16, a16, c16);
+(*  d16 := CAS(a16, a16, c16);
+    b := CASP(a16, a16, c16);*)
   PrintB("b", b);
   PrintI("d16", d16);
 
   PrintS("\n");
-  d32 := CAS(a32, a32, b32);
-    b := CASP(a32, a32, c32);
+(* d32 := CAS(a32, a32, b32);
+    b := CASP(a32, a32, c32); *)
   PrintB("b", b);
   PrintI("d32", d32);
 
@@ -196,12 +196,10 @@ BEGIN
   PrintI("d64", d64);*)
 
   PrintS("\n");
-   dp := CAS(ap, ap, cp);
-    b := CASP(ap, ap, cp);
+(*   dp := CAS(ap, ap, cp);
+    b := CASP(ap, ap, cp);*)
   PrintB("b", b);
   PrintA("dp", dp);
-
-
 
 
 END Main.
