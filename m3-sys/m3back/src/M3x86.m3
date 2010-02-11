@@ -4228,7 +4228,6 @@ PROCEDURE compare_exchange (x: U; <*UNUSED*>t: MType; <*UNUSED*>u: ZType; <*UNUS
   END compare_exchange;
 
 PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
-  VAR reg: Regno;
   BEGIN
 
     <* ASSERT u.in_proc *>
@@ -4236,15 +4235,12 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
 
     u.vstack.unlock();
 
-    reg := u.vstack.freereg(operandPart := 0);
     IF u.current_proc.fenceVar = NIL THEN
       u.current_proc.fenceVar := get_temp_var(u, Type.Word32, 4, 4);
     END;
     u.vstack.push(MVar{u.current_proc.fenceVar, mvar_type := Type.Word32});
-    WITH stack0 = u.vstack.pos(0, "fence") DO
-      u.vstack.find(stack0, Force.mem);
-      u.cg.swapOp(u.vstack.op(stack0), u.cg.reg[reg]);
-    END;
+    u.vstack.pushnew(Type.Word32, Force.anyreg);
+    EVAL u.vstack.dobin(Op.oXCHG, TRUE, TRUE, Type.Word32);
     u.vstack.discard(1);
   END fence;
 
