@@ -34,6 +34,7 @@ CONST
 
     UINT8_MAX = LAST(uint8_t);
     UINT16_MAX = LAST(uint16_t);
-    (* UINT32_MAX, UINT64_MAX cannot be portably defined. *)
+    UINT32_MAX = 16_FFFFFFFFL; (* Unfortunately this cannot be portably stored in an INTEGER, only a LONGINT. *)
+    (* UINT64_MAX cannot be portably defined. *)
 
 END Cstdint.
