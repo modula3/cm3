@@ -11,8 +11,10 @@ typedef unsigned long ulong;
 
 #ifdef _WIN32
 #define WIN32_STATIC static
+#define M3_EXTRACT_INSERT_LINKAGE
 #else
 #define WIN32_STATIC
+#define M3_EXTRACT_INSERT_LINKAGE static /* for testing */
 #endif
 
 #define NOT_YET static
@@ -536,6 +538,9 @@ ulong __stdcall set_lt
   return (eq != 0);
 }
 
+#define _LOWBITS(a)  ((a) ? ((~(ulong)0) >> ((sizeof(ulong) * 8) - (a))) : 0)
+#define _HIGHBITS(a) (((a) < (sizeof(ulong) * 8)) ? ((~(ulong)0) << (a)) : 0)
+
 /* _lowbits[i] = bits{(i-1)..0} for 32-bit integer masks */
 #ifdef __cplusplus
 extern
@@ -754,6 +759,8 @@ uint64 __stdcall m3_rotate64(uint64 a, int b)
     return a;
 }
 
+#endif /* WIN32 */
+
 /*
  PROCEDURE Extract (x: T; i, n: CARDINAL): T;
 (* Take n bits from x, with bit i as the least significant bit, and return them
@@ -771,6 +778,7 @@ PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
 
 #define M3_EXTRACT_INSERT(extract, extract_and_sign_extend, insert, T)  \
                                                 \
+M3_EXTRACT_INSERT_LINKAGE                       \
 T __stdcall extract(T x, uint i, uint n)        \
 {                                               \
     assert((n + i) <= (sizeof(T) * 8));         \
@@ -779,6 +787,7 @@ T __stdcall extract(T x, uint i, uint n)        \
     return x;                                   \
 }                                               \
                                                 \
+M3_EXTRACT_INSERT_LINKAGE                       \
 T __stdcall extract_and_sign_extend(T x, uint i, uint n) \
 {                                               \
     assert((n + i) <= (sizeof(T) * 8));         \
@@ -789,6 +798,7 @@ T __stdcall extract_and_sign_extend(T x, uint i, uint n) \
     return x;                                   \
 }                                               \
                                                 \
+M3_EXTRACT_INSERT_LINKAGE                       \
 T __stdcall insert(T x, T y, uint i, uint n)    \
 {                                               \
     T mask = ((~((~(T)0) << n)) << i);          \
@@ -797,9 +807,6 @@ T __stdcall insert(T x, T y, uint i, uint n)    \
 }                                               \
 
 M3_EXTRACT_INSERT(m3_extract64, m3_extract_and_sign_extend64, m3_insert64, uint64)
-
-#endif /* WIN32 */
-
 
 /************************************************************************
 

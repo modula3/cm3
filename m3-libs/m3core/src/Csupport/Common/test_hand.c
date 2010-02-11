@@ -338,11 +338,18 @@ static void TestMod(void)
 static void TestHighLowBits(void)
 {
     unsigned i;
-    for (i = 0; i < SET_GRAIN; ++i)
-        assert(HIGH_BITS(i) == HiBits[i]);
 
     for (i = 0; i < SET_GRAIN; ++i)
+    {
+        assert(HIGH_BITS(i) == HiBits[i]);
         assert(LOW_BITS(i) == LoBits[i + LOW_BITS_ADJUST]);
+    }
+	
+    for (i = 0; i <= 32; ++i)
+    {
+        assert(_LOWBITS(i) == _lowbits[i]);
+        assert(_HIGHBITS(i) == _highbits[i]);
+    }
 }
 
 static unsigned char reverse(unsigned char a)
@@ -385,25 +392,31 @@ static void TestSetRange(void)
 {
     ulong bits[100];
     unsigned a, b;
-    double t1, t2, t3, t4, t5;
+    double t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
 
     for (a = 0; a < 4 * SET_GRAIN; ++a)
         for (b = 0; b < 4 * SET_GRAIN; ++b)
             TestSetRangex(a, b);
 
+#ifdef _MSC_VER
     t1 = (double)__rdtsc(); /* read time stamp counter */
+#endif
 
     for (a = 0; a < 100 * SET_GRAIN; ++a)
         for (b = 0; b < 100 * SET_GRAIN; ++b)
             set_range(a, b, bits);
 
+#ifdef _MSC_VER
     t2 = (double)__rdtsc();
+#endif
 
     for (a = 0; a < 100 * SET_GRAIN; ++a)
         for (b = 0; b < 100 * SET_GRAIN; ++b)
             set_range_new(a, b, bits);
 
+#ifdef _MSC_VER
     t3 = (double)__rdtsc();
+#endif
 
     t4 = (t2 - t1);
     t5 = (t3 - t2);
@@ -528,6 +541,10 @@ static void TestExtract()
     }
 }
 
+void TestHighBitsLowBits()
+{
+}
+
 int main()
 {
     /*BuildTables();*/
@@ -535,12 +552,12 @@ int main()
     /*TestMod();*/
     /*printf("errors_div:%d errors_mod:%d\n", errors_div, errors_mod);*/
 
-    /*TestHighLowBits();*/
+    TestHighLowBits();
 
     /*TestSetRange();*/
 
-    TestInsert();
-    TestExtract();
+    /*TestInsert();*/
+    /*TestExtract();*/
 
     return 0;
 }
