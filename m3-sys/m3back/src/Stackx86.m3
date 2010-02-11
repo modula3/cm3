@@ -841,7 +841,7 @@ PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
 PROCEDURE push (t: T; READONLY src_mvar: MVar) =
   VAR indreg: Regno;
       destreg: ARRAY OperandPart OF Regno;
-      size := GetTypeSize(src_mvar.mvar_type);
+      srcSize := GetTypeSize(src_mvar.mvar_type);
   BEGIN
     maybe_expand_stack(t);
 
@@ -864,9 +864,9 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
       ELSE
         IF src_mvar.var.loc = VLoc.temp AND src_mvar.var.parent # t.current_proc THEN
           unlock(t);
-          FOR i := 0 TO size - 1 DO
+          FOR i := 0 TO srcSize - 1 DO
             IF CG_Bytes[src_mvar.mvar_type] = 1 THEN
-              <* ASSERT size = 1 AND i = 0 *>
+              <* ASSERT srcSize = 1 AND i = 0 *>
               destreg[i] := pickreg(t, RegSet{EAX, EBX, ECX, EDX});
             ELSE
               destreg[i] := pickreg(t, RegSet {}, src_mvar.mvar_type = Type.Addr);
@@ -879,7 +879,7 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
           corrupt(t, indreg, operandPart := 0);
 
           t.cg.get_frame(indreg, src_mvar.var.parent, t.current_proc);
-          FOR i := 0 TO size - 1 DO
+          FOR i := 0 TO srcSize - 1 DO
             t.cg.load_ind(destreg[i], t.cg.reg[indreg], src_mvar.mvar_offset + src_mvar.var.offset + i * 4,
                           src_mvar.mvar_type);
             set_reg(t, t.stacktop, destreg[i], operandPart := i);
@@ -898,7 +898,7 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
 PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
   VAR indreg: Regno;
       dest_mvarA: ARRAY OperandPart OF MVar;
-      size := SplitMVar(dest_mvar, dest_mvarA);
+      destSize := SplitMVar(dest_mvar, dest_mvarA);
       src_opA: ARRAY OperandPart OF Operand;
       srcSize: OperandSize := 1;
   BEGIN
@@ -931,8 +931,8 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
           corrupt(t, indreg, operandPart := 0);
           t.cg.get_frame(indreg, dest_mvar.var.parent, t.current_proc);
           srcSize := SplitOperand(src_stack0, src_opA);
-          <* ASSERT srcSize = size *>
-          FOR i := 0 TO size - 1 DO
+          <* ASSERT srcSize = destSize *>
+          FOR i := 0 TO destSize - 1 DO
             t.cg.store_ind(src_opA[i],
                            t.cg.reg[indreg],
                            dest_mvarA[i].mvar_offset + dest_mvarA[i].var.offset,
@@ -947,29 +947,29 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
           FOR i := 0 TO NRegs DO
             IF t.reguse[i].last_store = dest_mvar
                 OR t.reguse[i].last_store = dest_mvarA[0]
-                OR t.reguse[i].last_store = dest_mvarA[size - 1] THEN
+                OR t.reguse[i].last_store = dest_mvarA[destSize - 1] THEN
               t.reguse[i].last_store := NoStore;
             END;
           END;
 
           IF src_stack0.loc = OLoc.register THEN
-            FOR i := 0 TO size - 1 DO
+            FOR i := 0 TO destSize - 1 DO
               t.reguse[src_stack0.reg[i]].stackp := -1;
               t.reguse[src_stack0.reg[i]].last_store := dest_mvarA[i];
             END;
           END;
 
           srcSize := SplitOperand(src_stack0, src_opA);
-          IF NOT (srcSize = size) THEN
+          IF NOT (srcSize = destSize) THEN
             t.Err(" srcSize:" & Fmt.Int(srcSize)
-                & " size:" & Fmt.Int(size)
+                & " destSize:" & Fmt.Int(destSize)
                 & " dest_mvar.mvar_type:" & Target.TypeNames[dest_mvar.mvar_type]
                 & " src_stack0.optype:" & Target.TypeNames[src_stack0.optype]);
           END;
 
-          <* ASSERT srcSize = size *>
+          <* ASSERT srcSize = destSize *>
 
-          FOR i := 0 TO size - 1 DO
+          FOR i := 0 TO destSize - 1 DO
             t.cg.movOp(Operand { loc := OLoc.mem, mvar := dest_mvarA[i], optype := dest_mvarA[i].mvar_type }, src_opA[i]);
           END;
           set_mvar(t, t.stacktop - 1, dest_mvar);
