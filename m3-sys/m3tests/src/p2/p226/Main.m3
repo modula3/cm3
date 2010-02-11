@@ -146,11 +146,15 @@ BEGIN
 END Test_AtomicInteger_IsLockFree;
 
 PROCEDURE Test_AtomicInteger_LoadStore() =
+VAR integerC: Integer.T;
 BEGIN
     b := AtomicInteger.Load(atomicIntegerA);
     AtomicInteger.Store(atomicIntegerA, 1 + 2 + 3);
     b := AtomicInteger.Load(atomicIntegerA);
     AtomicInteger.Store(atomicIntegerA, 1 + 2 + 3 + 4);
+
+    integerC := AtomicInteger.Load(atomicIntegerA);
+    integerC := AtomicInteger.Load(atomicIntegerA);
 END Test_AtomicInteger_LoadStore;
 
 PROCEDURE Test_AtomicInteger_Swap() =
