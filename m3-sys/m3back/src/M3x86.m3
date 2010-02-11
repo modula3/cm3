@@ -4175,8 +4175,7 @@ PROCEDURE store_ordered (x: U; t: ZType; u: MType; <*UNUSED*>order: MemoryOrder)
          stack1 = x.vstack.pos(1, "store_ordered") DO
       x.vstack.find(stack0, Force.any);
       x.vstack.find(stack1, Force.mem);
-      x.vstack.pop(x.vstack.op(stack1).mvar);
-      x.vstack.discard(1);
+      x.vstack.dostoreind(0, u);
     END;
     x.fence(MemoryOrder.Sequential);
   END store_ordered;
