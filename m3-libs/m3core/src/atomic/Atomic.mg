@@ -2,7 +2,7 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-GENERIC MODULE Atomic(Rep,Impl);
+GENERIC MODULE Atomic(Rep, Impl);
 
 PROCEDURE IsLockFree (): BOOLEAN =
   BEGIN
