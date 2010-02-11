@@ -216,7 +216,7 @@ TYPE Op = { oAND,   oXOR,   oOR,    oMOV,   oADD,  oADC,  oSUB,   oSBB,
             oCMP,   oNEG,   oNOT,   oLEA,   oSHL,  oSAR,  oSHR,   oSHLD,
             oSHRD,  oROL,   oROR,   oSAHF,  oWAIT, oCLD,  oSTD,   oREP,
             oMOVSB, oMOVSD, oSTOSB, oSTOSD, oCWDE, oCDQ,  oLEAVE, oRET,
-            oNOP };
+            oNOP, oXCHG };
 
 CONST opcode = ARRAY Op OF OpCode
   { OpCode { "AND",  16_25, 16_83, 16_81, 4, 16_20, 16_22 },
@@ -234,8 +234,8 @@ CONST opcode = ARRAY Op OF OpCode
     OpCode { "SHL",  -1,    16_C1, 16_D2, 4, -1,    -1    },
     OpCode { "SAR",  -1,    16_C1, 16_D2, 7, -1,    -1    },
     OpCode { "SHR",  -1,    16_C1, 16_D2, 5, -1,    -1    },
-    OpCode { "SHLD", 16_A3, 16_A3, 16_A3, 16_A3, 16_A3, 16_A3 },
-    OpCode { "SHRD", 16_AB, 16_AB, 16_AB, 16_AB, 16_AB, 16_AB },
+    OpCode { "SHLD", 16_A3, 16_A3, 16_A3, 16_A3, 16_A3, 16_A3 }, (* hack; cleanup *)
+    OpCode { "SHRD", 16_AB, 16_AB, 16_AB, 16_AB, 16_AB, 16_AB }, (* hack; cleanup *)
     OpCode { "ROL",  -1,    16_C1, 16_D2, 0, -1,    -1    },
     OpCode { "ROR",  -1,    16_C1, 16_D2, 1, -1,    -1    },
     OpCode { "SAHF", -1,    -1,    16_9E, 0, -1,    -1    },
@@ -251,7 +251,9 @@ CONST opcode = ARRAY Op OF OpCode
     OpCode { "CDQ",  -1,    -1,    16_99, 0, -1,    -1    },
     OpCode { "LEAVE",-1,    -1,    16_C9, 0, -1,    -1    },
     OpCode { "RET"  ,-1,    -1,    16_C3, 0, -1,    -1    },
-    OpCode { "NOP",  -1,    -1,    -1,    0, -1,    -1    } };
+    OpCode { "NOP",  -1,    -1,    -1,    0, -1,    -1    },
+    OpCode { "XCHG", 16_86, 16_86, 16_86, 16_86, 16_86, 16_86 } (* hack; cleanup *)
+    };
 
 PROCEDURE New (parent: M3x86Rep.U; wr: Wrx86.T): T;
 
