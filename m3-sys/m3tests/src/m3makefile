@@ -351,6 +351,8 @@ end
 %p_test ("p2", "p209", "open array initializers compile failure")
 %p_test ("p2", "p210", "open array initializers runtime failure")
 
+p_test ("p2", "p227", "some longint operations, some word operations (insert, extract)")
+
 p_test ("p0", "p001", "Hello world")
 p_test ("p2", "p211", "float and double constants work")
 p_test ("p2", "p212", "float and double constants, jmpbuf, Usysdep")
