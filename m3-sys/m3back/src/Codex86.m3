@@ -533,6 +533,7 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; locke
     END;
 
     IF dest.loc = OLoc.register THEN
+      <* ASSERT NOT locked *>
       build_modrm(t, src, dest, ins);
       ins.opcode := opcode[op].rrm + 1;
       IF src.loc = OLoc.mem THEN
