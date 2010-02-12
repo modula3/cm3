@@ -4322,7 +4322,9 @@ PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; t: MType; z: ZType;
 
     (* optimize add 1 => inc, add -1 => dec, sub 1 => dec, sub -1 => inc
      * to save a byte encoding the immediate value.
-     * NOTE: We should do this for reg where t.reguse[reg].last_imm = 1 or -1 also.
+     * NOTE: We should do this for reg where t.reguse[reg].last_imm = 1 or -1 also?
+     *       Maybe, maybe not. add foo, eax, and inc foo I think are the same size.
+     *       Same speed?
      *)
 
     WITH stack0 = x.vstack.pos(0, "fetch_and_op"),
