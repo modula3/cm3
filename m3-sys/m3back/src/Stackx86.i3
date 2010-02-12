@@ -46,7 +46,7 @@ TYPE Public = OBJECT
         pushimmT (imm: Target.Int; type: Type);
         pop (READONLY mvar: MVar);
         doloadaddress (v: x86Var; o: ByteOffset);
-        dobin (op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): BOOLEAN;
+        dobin (op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; locked: BOOLEAN := FALSE): BOOLEAN;
         dostoreind (o: ByteOffset; type: MType);
         doumul ();
         doimul ();

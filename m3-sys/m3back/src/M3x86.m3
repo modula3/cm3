@@ -4141,21 +4141,25 @@ PROCEDURE Cmt (u: U;  t: TEXT;  VAR width: INTEGER) =
 
 (* for now only 32bit types *)
 
-PROCEDURE check_atomic_type(u: U; a: Type) =
+PROCEDURE check_atomic_type(<*UNUSED*>u: U; a: Type): BOOLEAN =
   BEGIN
     IF a = Type.Addr OR a = Type.Int32 OR a = Type.Word32 THEN
-      RETURN;
+      RETURN TRUE;
     END;
-    u.Err("unsupported (so far) type for atomic operation");
+    (*u.Err("unsupported (so far) type for atomic operation");*)
+    RETURN FALSE;
   END check_atomic_type;
 
-PROCEDURE check_atomic_types(u: U; a, b: Type) =
+PROCEDURE check_atomic_types(u: U; a, b: Type): BOOLEAN =
   BEGIN
-    check_atomic_type(u, a);
-    check_atomic_type(u, b);
-    IF a # b THEN
-      u.Err("atomic types must match");
+    IF NOT (check_atomic_type(u, a) AND check_atomic_type(u, b)) THEN
+      RETURN FALSE;
     END;
+    IF a # b THEN
+      (*u.Err("atomic types must match");*)
+      RETURN FALSE;
+    END;
+    RETURN TRUE;
   END check_atomic_types;
 
 PROCEDURE store_ordered (x: U; t: ZType; u: MType; <*UNUSED*>order: MemoryOrder) =
@@ -4170,7 +4174,7 @@ PROCEDURE store_ordered (x: U; t: ZType; u: MType; <*UNUSED*>order: MemoryOrder)
 
     x.fence(MemoryOrder.Sequential);
     x.vstack.unlock();
-    (*check_atomic_types(x, t, u);*)
+    EVAL check_atomic_types(x, t, u);
     WITH stack0 = x.vstack.pos(0, "store_ordered"),
          stack1 = x.vstack.pos(1, "store_ordered") DO
       x.vstack.find(stack0, Force.any);
@@ -4206,12 +4210,13 @@ PROCEDURE exchange (u: U; t: MType; z: ZType; <*UNUSED*>order: MemoryOrder) =
       u.wr.NL    ();
     END;
 
-    u.vstack.unlock();
-    u.vstack.discard(1);
-    u.load_indirect(0, t, z);
-    RETURN;
+    IF NOT check_atomic_types(u, t, z) THEN
+      u.vstack.unlock();
+      u.vstack.discard(1);
+      u.load_indirect(0, t, z);
+      RETURN;
+    END;
 
-(*  check_atomic_types(u, t, z);
     WITH stack0 = u.vstack.pos(0, "exchange"),
          stack1 = u.vstack.pos(1, "exchange") DO
       u.vstack.find(stack0, Force.anyreg);
@@ -4219,7 +4224,7 @@ PROCEDURE exchange (u: U; t: MType; z: ZType; <*UNUSED*>order: MemoryOrder) =
       u.cg.swapOp(u.vstack.op(stack0), u.vstack.op(stack1));
       u.vstack.swap();
       u.vstack.discard(1);
-    END;*)
+    END;
   END exchange;
 
 PROCEDURE compare_exchange (x: U; t: MType; u: ZType; r: IType;
@@ -4246,7 +4251,7 @@ PROCEDURE compare_exchange (x: U; t: MType; u: ZType; r: IType;
     END;
 
     x.vstack.unlock();
-    (*check_atomic_types(x, t, u);*)
+    EVAL check_atomic_types(x, t, u);
     WITH newValue                        = x.vstack.pos(0, "compare_exchange"),
          compareValueAndOldValueIfFailed = x.vstack.pos(1, "compare_exchange"),
          atomicVariable                  = x.vstack.pos(2, "compare_exchange") DO
@@ -4306,25 +4311,15 @@ PROCEDURE fetch_and_op (x: U; op: AtomicOp; t: MType; z: ZType;
       x.wr.NL    ();
     END;
 
-    x.vstack.unlock();
-    x.vstack.discard(1);
-    x.load_indirect(0, t, z);
-    RETURN;
-(*
-    check_atomic_types(x, t, z);
-    WITH stack0 = x.vstack.pos(0, "fetch_and_op"),
-         stack1 = x.vstack.pos(1, "fetch_and_op") DO
-      x.vstack.find(stack0, Force.anyreg);
-      x.vstack.find(stack1, Force.mem);
-      x.cg.binOp(AtomicOpToOp[op], x.vstack.op(stack1), x.vstack.op(stack0), locked := TRUE);
+    IF NOT check_atomic_types(x, t, z) THEN
+      x.vstack.unlock();
+      x.vstack.discard(1);
+      x.load_indirect(0, t, z);
+      RETURN;
     END;
-    x.vstack.discard(2);
-    x.vstack.unlock();
-    x.vstack.pushnew(z, Force.anyreg);
-    WITH stop0 = x.vstack.op(x.vstack.pos(0, "fetch_and_op")) DO
-      stop0.mvar.var.stack_temp := FALSE;
-    END;
-*)
+
+    EVAL x.vstack.dobin(AtomicOpToOp[op], (*symmetric*) op # AtomicOp.Sub, (*overwritesdest*) TRUE, t, locked := TRUE);
+
   END fetch_and_op;
 
 BEGIN

@@ -1006,15 +1006,22 @@ PROCEDURE doloadaddress (t: T; v: x86Var; o: ByteOffset) =
   END doloadaddress;
 
 PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
-                   VAR dest, src: INTEGER): BOOLEAN =
+                   VAR dest, src: INTEGER; locked := FALSE): BOOLEAN =
   VAR reversed := FALSE;
   BEGIN
     unlock(t);
     WITH stack0 = pos(t, 0, "findbin"),
          stack1 = pos(t, 1, "findbin") DO
 
-      find(t, stack0, Force.any);
-      find(t, stack1, Force.any);
+      IF locked THEN
+        (* This could be better. *)
+        find(t, stack0, Force.regset, RegSet{EAX, EBX, ECX, EDX});
+        find(t, stack1, Force.mem);
+        symmetric := FALSE;
+      ELSE
+        find(t, stack0, Force.any);
+        find(t, stack1, Force.any);
+      END;
 
       WITH stop0 = t.vstack[stack0],
            stop1 = t.vstack[stack1] DO
@@ -1068,7 +1075,7 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
     RETURN reversed;
   END findbin;
 
-PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): BOOLEAN =
+PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; locked: BOOLEAN := FALSE): BOOLEAN =
   VAR src, dest: INTEGER;
       reversed: BOOLEAN;
       size: OperandSize;
@@ -1076,7 +1083,7 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): 
       destA: ARRAY OperandPart OF Operand;
   BEGIN
 
-    reversed := findbin(t, symmetric, overwritesdest, dest, src);
+    reversed := findbin(t, symmetric, overwritesdest, dest, src, locked);
     <* ASSERT reversed = (dest > src) *>
 
     WITH destop = t.vstack[dest],
@@ -1097,7 +1104,7 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): 
       size := SplitOperand(srcop, srcA);
       EVAL SplitOperand(destop, destA);
 
-      t.cg.binOp(op, destop, srcop);
+      t.cg.binOp(op, destop, srcop, locked);
 
       IF overwritesdest THEN
         newdest(t, destop);
