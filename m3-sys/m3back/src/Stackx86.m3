@@ -1014,10 +1014,9 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
          stack1 = pos(t, 1, "findbin") DO
 
       IF locked THEN
-        (* This could be better. *)
-        find(t, stack0, Force.regset, RegSet{EAX, EBX, ECX, EDX});
-        find(t, stack1, Force.mem);
-        symmetric := FALSE;
+        (* hack/workaround *)
+        find(t, stack0, Force.anyreg);
+        find(t, stack1, Force.anyreg);
       ELSE
         find(t, stack0, Force.any);
         find(t, stack1, Force.any);
