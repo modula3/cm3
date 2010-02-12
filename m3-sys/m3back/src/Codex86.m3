@@ -778,12 +778,15 @@ PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand) =
   VAR ins: Instruction;
   BEGIN
     Mn(t, "LOCK CMPXCHG ");  MnOp(t, dest);  MnOp(t, src);
-    <* ASSERT dest.loc = OLoc.mem  *>
+    <* ASSERT dest.loc = OLoc.register *> (* mem should be ok, but we have a bug *)
     <* ASSERT src.loc = OLoc.register *>
     ins.escape := TRUE;
     ins.opcode := 16_B1;
     ins.lock   := TRUE;
-    build_modrm(t, dest, src, ins);
+    ins.mrmpres := TRUE;
+    ins.disp := 0;
+    ins.dsize := 0;
+    ins.modrm := dest.reg[0] * 8 + src.reg[0];
     writecode(t, ins);
     log_global_var(t, dest.mvar, -4);
   END lock_compare_exchange;
