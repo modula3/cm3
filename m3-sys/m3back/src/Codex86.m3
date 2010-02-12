@@ -1358,6 +1358,10 @@ PROCEDURE writecode (t: T; READONLY ins: Instruction) =
 
     IF t.debug THEN debugcode (t, ins); END;
 
+    IF ins.lock THEN
+      t.obj.append(Seg.Text, 16_F0, 1);
+    END;
+
     IF ins.escape THEN
       t.obj.append(Seg.Text, 16_0F, 1);
     END;
