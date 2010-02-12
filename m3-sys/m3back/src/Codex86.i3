@@ -45,8 +45,8 @@ TYPE Public = OBJECT
         fstack_swap ();
         fstack_discard ();
         f_loadlit (READONLY flarr: FloatBytes; type: MType);
-        immOp (op: Op; READONLY dest: Operand; READONLY imm: Target.Int; locked := FALSE);
-        binOp (op: Op; READONLY dest, src: Operand; locked := FALSE);
+        immOp (op: Op; READONLY dest: Operand; READONLY imm: Target.Int);
+        binOp (op: Op; READONLY dest, src: Operand);
         tableOp (op: Op; READONLY dest, index: Operand; scale: INTEGER;
                  table: MVar);
         swapOp (READONLY dest, src: Operand);
@@ -60,9 +60,8 @@ TYPE Public = OBJECT
         lock_compare_exchange (READONLY dest, src: Operand);
         pushOp (READONLY src: Operand);
         popOp (READONLY dest: Operand);
-        decOp (READONLY op: Operand; locked := FALSE);
-        incOp (READONLY op: Operand; locked := FALSE);
-        unOp (op: Op; READONLY dest: Operand; locked := FALSE);
+        decOp (READONLY op: Operand);
+        unOp (op: Op; READONLY dest: Operand);
         mulOp (READONLY src: Operand);
         imulOp (READONLY dest, src: Operand);
         imulImm (READONLY dest, src: Operand; imm, imsize: INTEGER);

@@ -4299,7 +4299,7 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
     u.vstack.discard(1);
   END fence;
 
-CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oADD, Op.oSUB, Op.oOR, Op.oAND, Op.oXOR };
+<*UNUSED*>CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oADD, Op.oSUB, Op.oOR, Op.oAND, Op.oXOR };
 CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
 
 PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; t: MType; z: ZType;
@@ -4308,7 +4308,6 @@ PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; t: MType; z: ZType;
    Mem [s1.A].t := tmp;
    s1.u := tmp op s0.u;
    pop *)
-  VAR op := AtomicOpToOp[atomic_op];
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("fetch_and_op");
