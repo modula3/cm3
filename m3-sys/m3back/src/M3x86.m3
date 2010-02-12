@@ -4183,7 +4183,6 @@ PROCEDURE store_ordered (x: U; t: ZType; u: MType; <*UNUSED*>order: MemoryOrder)
 PROCEDURE load_ordered (x: U; t: MType; u: ZType; <*UNUSED*>order: MemoryOrder) =
 (* s0.u := Mem [s0.A].t  *)
   BEGIN
-
     IF x.debug THEN
       x.wr.Cmd   ("load_ordered");
       x.wr.TName (t);
@@ -4197,12 +4196,18 @@ PROCEDURE load_ordered (x: U; t: MType; u: ZType; <*UNUSED*>order: MemoryOrder) 
     x.fence(MemoryOrder.Sequential);
   END load_ordered;
 
-PROCEDURE exchange (u: U; <*UNUSED*>t: MType; <*UNUSED*>z: ZType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE exchange (u: U; t: MType; z: ZType; <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A + o].t;  Mem [s1.A + o].t := s0.u;  s0.u := tmp;  pop *)
   BEGIN
-    u.vstack.discard(1);
+    IF u.debug THEN
+      u.wr.Cmd   ("exchange");
+      u.wr.TName (t);
+      u.wr.TName (z);
+      u.wr.NL    ();
+    END;
+
     u.vstack.unlock();
-    (*check_atomic_types(u, t, z);
+    check_atomic_types(u, t, z);
     WITH stack0 = u.vstack.pos(0, "exchange"),
          stack1 = u.vstack.pos(1, "exchange") DO
       u.vstack.find(stack0, Force.anyreg);
@@ -4210,31 +4215,50 @@ PROCEDURE exchange (u: U; <*UNUSED*>t: MType; <*UNUSED*>z: ZType; <*UNUSED*>orde
       u.cg.swapOp(u.vstack.op(stack0), u.vstack.op(stack1));
       u.vstack.swap();
       u.vstack.discard(1);
-    END;*)
+    END;
   END exchange;
 
-PROCEDURE compare_exchange (x: U; <*UNUSED*>t: MType; <*UNUSED*>u: ZType; <*UNUSED*>r: IType;
+PROCEDURE compare_exchange (x: U; t: MType; u: ZType; r: IType;
                             <*UNUSED*>success, failure: MemoryOrder) =
-(* t1 := Mem[s1.A].t;  t2 := Mem[s2.A].t;
-   IF (t1.u = t2.u)
-   THEN Mem [s2.A].t := s0.u; s2.r := 1; pop(2);
-   ELSE Mem [s1.A].t := t2;   s2.r := 0; pop(2);
-   END; *)
+(* tmp := Mem[s2.A].t THEN
+   IF Mem[s2.A].t = Mem[s1.A].t THEN
+     Mem [s2.A].t := s0.u;
+     s2.r := 1;
+   ELSE
+     Mem [s2.A].t := tmp; x86 really does rewrite the original value, atomically
+     s2.r := 0;
+   END;
+   pop(2);
+   This is permitted to fail spuriously, leaving Mem [s1.A] unchanged.
+*)
   BEGIN
+    IF x.debug THEN
+      x.wr.Cmd   ("compare_exchange");
+      x.wr.TName (t);
+      x.wr.TName (u);
+      x.wr.TName (r);
+      x.wr.NL    ();
+    END;
+
     x.vstack.unlock();
-    x.vstack.discard(2);
-    (*check_atomic_types(x, t, u);
+    check_atomic_types(x, t, u);
     WITH newValue                        = x.vstack.pos(0, "compare_exchange"),
          compareValueAndOldValueIfFailed = x.vstack.pos(1, "compare_exchange"),
          atomicVariable                  = x.vstack.pos(2, "compare_exchange") DO
       x.vstack.find(compareValueAndOldValueIfFailed, Force.regset, RegSet{EAX});
-      x.vstack.find(newValue,                        Force.regset, RegSet{ECX, EDX, EBX,
-                                                                          ESI, EDI});
-      x.vstack.find(atomicVariable,                  Force.mem);
+      x.vstack.find(newValue,                        Force.anyreg);
+      (*x.vstack.find(atomicVariable,                  Force.mem);*)
       x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.vstack.op(newValue));
       x.vstack.discard(3);
-      condset(x, Cond.E, r);
-    END;*)
+    END;
+
+    (* the rest is based on procedure condset *)
+    x.vstack.unlock();
+    x.vstack.pushnew(Type.Word8, Force.mem);
+    WITH stop0 = x.vstack.op(x.vstack.pos(0, "condset")) DO
+      stop0.mvar.var.stack_temp := FALSE;
+      x.cg.setccOp(stop0, Cond.E);
+    END;
   END compare_exchange;
 
 PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
@@ -4258,17 +4282,25 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
     u.vstack.discard(1);
   END fence;
 
-<*UNUSED*>CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oADD, Op.oSUB, Op.oOR, Op.oAND, Op.oXOR };
+CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oADD, Op.oSUB, Op.oOR, Op.oAND, Op.oXOR };
+CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
 
-PROCEDURE fetch_and_op (x: U; <*UNUSED*>op: AtomicOp; <*UNUSED*>t: MType; <*UNUSED*>z: ZType;
+PROCEDURE fetch_and_op (x: U; op: AtomicOp; t: MType; z: ZType;
                         <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A].t;
    Mem [s1.A].t := tmp op s0.u;
    s1.u := tmp op s0.u; pop *)
   BEGIN
-    x.vstack.discard(1);
+    IF x.debug THEN
+      x.wr.Cmd   ("fetch_and_op");
+      x.wr.OutT  (AtomicOpName[op]);
+      x.wr.TName (t);
+      x.wr.TName (z);
+      x.wr.NL    ();
+    END;
+
     x.vstack.unlock();
-    (*check_atomic_types(x, t, z);
+    check_atomic_types(x, t, z);
     WITH stack0 = x.vstack.pos(0, "fetch_and_op"),
          stack1 = x.vstack.pos(1, "fetch_and_op") DO
       x.vstack.find(stack0, Force.anyreg);
@@ -4280,7 +4312,7 @@ PROCEDURE fetch_and_op (x: U; <*UNUSED*>op: AtomicOp; <*UNUSED*>t: MType; <*UNUS
     x.vstack.pushnew(z, Force.anyreg);
     WITH stop0 = x.vstack.op(x.vstack.pos(0, "fetch_and_op")) DO
       stop0.mvar.var.stack_temp := FALSE;
-    END;*)
+    END;
   END fetch_and_op;
 
 BEGIN
