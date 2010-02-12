@@ -4335,7 +4335,7 @@ PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; t: MType; z: ZType;
           WITH imm = stop0.imm DO
             IF (TInt.EQ(imm, TInt.One) OR TInt.EQ(imm, TInt.MOne)) THEN
               x.vstack.unlock();
-              x.vstack.find(stack1, Force.anyreg);
+              x.vstack.find(stack1, Force.any);
               IF (op = Op.oADD) = TInt.EQ(imm, TInt.One) THEN
                 x.cg.incOp(x.vstack.op(stack1), locked := TRUE);
               ELSE
