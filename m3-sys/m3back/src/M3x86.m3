@@ -4164,7 +4164,8 @@ PROCEDURE check_atomic_types(u: U; a, b: Type): BOOLEAN =
   END check_atomic_types;
 
 PROCEDURE store_ordered (x: U; t: ZType; u: MType; <*UNUSED*>order: MemoryOrder) =
-(* Mem [s1.A].u := s0.t; pop (2) *)
+(* Mem [s1.A].u := s0.t;
+   pop (2) *)
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("store_ordered");
@@ -4202,7 +4203,10 @@ PROCEDURE load_ordered (x: U; t: MType; u: ZType; <*UNUSED*>order: MemoryOrder) 
   END load_ordered;
 
 PROCEDURE exchange (u: U; t: MType; z: ZType; <*UNUSED*>order: MemoryOrder) =
-(* tmp := Mem [s1.A + o].t;  Mem [s1.A + o].t := s0.u;  s0.u := tmp;  pop *)
+(* tmp := Mem [s1.A + o].t;
+   Mem [s1.A + o].t := s0.u;
+   s0.u := tmp;
+   pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("exchange");
@@ -4300,9 +4304,10 @@ CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" }
 
 PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; t: MType; z: ZType;
                         <*UNUSED*>order: MemoryOrder) =
-(* tmp := Mem [s1.A].t;
-   Mem [s1.A].t := tmp op s0.u;
-   s1.u := tmp op s0.u; pop *)
+(* tmp := Mem [s1.A].t op s0.u;
+   Mem [s1.A].t := tmp;
+   s1.u := tmp op s0.u;
+   pop *)
   VAR op := AtomicOpToOp[atomic_op];
   BEGIN
     IF x.debug THEN
@@ -4313,44 +4318,11 @@ PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; t: MType; z: ZType;
       x.wr.NL    ();
     END;
 
-    IF NOT check_atomic_types(x, t, z) THEN
-      x.vstack.unlock();
-      x.vstack.discard(1);
-      x.load_indirect(0, t, z);
-      RETURN;
-    END;
+    (* TODO *)
 
-    (* optimize add 1 => inc, add -1 => dec, sub 1 => dec, sub -1 => inc
-     * to save a byte encoding the immediate value.
-     * NOTE: We should do this for reg where t.reguse[reg].last_imm = 1 or -1 also?
-     *       Maybe, maybe not. add foo, eax, and inc foo I think are the same size.
-     *       Same speed?
-     *)
-
-    WITH stack0 = x.vstack.pos(0, "fetch_and_op"),
-         stack1 = x.vstack.pos(1, "fetch_and_op"),
-         stop0 = x.vstack.op(stack0) DO
-      IF op IN SET OF Op{Op.oADD, Op.oSUB} THEN
-        IF stop0.loc = OLoc.imm THEN
-          WITH imm = stop0.imm DO
-            IF (TInt.EQ(imm, TInt.One) OR TInt.EQ(imm, TInt.MOne)) THEN
-              x.vstack.unlock();
-              x.vstack.find(stack1, Force.any);
-              IF (op = Op.oADD) = TInt.EQ(imm, TInt.One) THEN
-                x.cg.incOp(x.vstack.op(stack1), locked := TRUE);
-              ELSE
-                x.cg.decOp(x.vstack.op(stack1), locked := TRUE);
-              END;
-              x.vstack.newdest(x.vstack.op(stack1));
-              x.vstack.discard(1);
-              RETURN;
-            END;
-          END;
-        END;
-      END;
-    END;
-
-    EVAL x.vstack.dobin(op, (*symmetric*) (*op # AtomicOp.Sub*) FALSE, (*overwritesdest*) TRUE, t, locked := TRUE);
+    x.vstack.unlock();
+    x.vstack.discard(1);
+    x.load_indirect(0, t, z);
 
   END fetch_and_op;
 
