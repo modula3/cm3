@@ -519,9 +519,8 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; locke
 
     IF locked THEN
       Mn(t, "LOCK ");
-      <* ASSERT dest.loc = OLoc.mem  *>
+      (* ASSERT dest.loc = OLoc.mem  *)
       <* ASSERT src.loc = OLoc.register *>
-      ins.escape := TRUE;
       ins.lock   := TRUE;
     END;
 
@@ -533,7 +532,7 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; locke
     END;
 
     IF dest.loc = OLoc.register THEN
-      <* ASSERT NOT locked *>
+      (* ASSERT NOT locked *)
       build_modrm(t, src, dest, ins);
       ins.opcode := opcode[op].rrm + 1;
       IF src.loc = OLoc.mem THEN
@@ -556,7 +555,6 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; locke
       <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
       <* ASSERT src.loc = OLoc.register *>
       <* ASSERT shiftCount.loc = OLoc.register OR shiftCount.loc = OLoc.imm *>
-
       <* ASSERT shiftCount.loc # OLoc.register OR shiftCount.reg[0] = ECX *>
       <* ASSERT shiftCount.loc # OLoc.imm OR (TInt.GE(shiftCount.imm, Target.Int8.min) AND TInt.LE(shiftCount.imm, Target.Int8.max)) *>
 
