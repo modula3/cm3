@@ -377,7 +377,7 @@ PROCEDURE noargOp (t: T; op: Op) =
     writecode(t, ins);
   END noargOp;
 
-PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
+PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int; <*UNUSED*>locked := FALSE) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
@@ -435,7 +435,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
     END
   END immOp1;
 
-PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
+PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int; <*UNUSED*>locked: BOOLEAN := FALSE) =
   VAR destA: ARRAY OperandPart OF Operand;
       immA: ARRAY OperandPart OF Target.Int;
       immSize := SplitImm(dest.optype, imm, immA);
@@ -528,12 +528,11 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; locke
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
     IF src.loc = OLoc.imm THEN
-      immOp(t, op, dest, src.imm);
+      immOp(t, op, dest, src.imm, locked);
       RETURN;
     END;
 
-    IF dest.loc = OLoc.register THEN
-      (* ASSERT NOT locked *)
+    IF (dest.loc = OLoc.register) AND (NOT locked (* hack *)) THEN
       build_modrm(t, src, dest, ins);
       ins.opcode := opcode[op].rrm + 1;
       IF src.loc = OLoc.mem THEN
@@ -605,6 +604,7 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand; locked := FALSE) =
         & " dest.optype:" & Target.TypeNames[dest.optype]);
     END;
     <* ASSERT srcSize = destSize *>
+    <* ASSERT (srcSize = 1 AND destSize = 1) OR (NOT locked) *>
 
     IF (srcSize = 2) AND (op IN SET OF Op{Op.oCMP, Op.oADD, Op.oSUB, Op.oSHR, Op.oSHL}) THEN
       CASE op OF
@@ -1321,7 +1321,10 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
     IF mem.loc = OLoc.register THEN
       ins.disp := 0;
       ins.dsize := 0;
-      ins.modrm := 16_C0 + reg.reg[0]*8 + mem.reg[0];
+      ins.modrm := reg.reg[0]*8 + mem.reg[0];
+      IF NOT ins.lock THEN (* hack *)
+        INC(ins.modrm, 16_C0);
+      END;
       RETURN;
     END;
 
