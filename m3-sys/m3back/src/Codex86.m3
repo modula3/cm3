@@ -92,6 +92,7 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         pushOp := pushOp;
         popOp := popOp;
         decOp := decOp;
+        incOp := incOp;
         unOp := unOp;
         mulOp := mulOp;
         imulOp := imulOp;
@@ -1019,26 +1020,49 @@ PROCEDURE popOp (t: T; READONLY dest: Operand) =
     END;
   END popOp;
 
-PROCEDURE decOp (t: T; READONLY op: Operand) =
+
+PROCEDURE incOrDecOp (t: T; READONLY op: Operand; locked: BOOLEAN; incOrDec: [0..1]) =
   VAR ins: Instruction;
+      name := ARRAY [0..1] OF TEXT{"INC", "DEC"}[incOrDec];
   BEGIN
-    Mn(t, "DEC");  MnOp(t, op);
+    ins.lock := locked;
+    Mn(t, name);  MnOp(t, op);
+
     <* ASSERT op.loc = OLoc.mem OR op.loc = OLoc.register *>
-    IF op.loc = OLoc.register THEN
-      ins.opcode := 16_48 + op.reg[0];
+
+    IF locked THEN
+      ins.mrmpres := TRUE;
+      ins.disp := 0;
+      ins.dsize := 0;
+      ins.modrm := 8 * incOrDec + op.reg[0];
+      ins.opcode := 16_FF;
+      writecode(t, ins);
+    ELSIF op.loc = OLoc.register THEN
+      ins.opcode := 16_40 + 8 * incOrDec + op.reg[0];
       writecode(t, ins);
     ELSE
       <* ASSERT op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 4 *>
-      build_modrm(t, op, t.opcode[1], ins);
+      build_modrm(t, op, t.opcode[incOrDec], ins);
       ins.opcode := 16_FF;
       writecode(t, ins);
       log_global_var(t, op.mvar, -4);
     END
+  END incOrDecOp;
+
+PROCEDURE incOp (t: T; READONLY op: Operand; locked := FALSE) =
+  BEGIN
+    incOrDecOp(t, op, locked, 0);
+  END incOp;
+
+PROCEDURE decOp (t: T; READONLY op: Operand; locked := FALSE) =
+  BEGIN
+    incOrDecOp(t, op, locked, 1);
   END decOp;
 
-PROCEDURE unOp1 (t: T; op: Op; READONLY dest: Operand) =
+PROCEDURE unOp1 (t: T; op: Op; READONLY dest: Operand; locked := FALSE) =
   VAR ins: Instruction;
   BEGIN
+    ins.lock := locked;
     ins.opcode := opcode[op].imm32;
     IF dest.loc = OLoc.mem THEN
       get_op_size(dest.mvar.mvar_type, ins);
@@ -1057,10 +1081,13 @@ PROCEDURE unOp1 (t: T; op: Op; READONLY dest: Operand) =
     END
   END unOp1;
 
-PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
+PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand; locked := FALSE) =
   VAR destA: ARRAY OperandPart OF Operand;
       destSize := SplitOperand(dest, destA);
   BEGIN
+
+    (* future: we could use cmpxchg loop *)
+    <* ASSERT (destSize = 1) OR (NOT locked) *>
 
     IF destSize = 2 AND (op IN SET OF Op{Op.oNEG, Op.oNOT}) THEN
       CASE op OF
@@ -1079,7 +1106,7 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
       <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
       FOR i := 0 TO destSize - 1 DO
-        unOp1(t, op, destA[i]);
+        unOp1(t, op, destA[i], locked);
       END;
     END;
   END unOp;

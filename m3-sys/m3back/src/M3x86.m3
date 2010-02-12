@@ -3004,7 +3004,8 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
       u.vstack.newdest(u.cg.reg[EDI]);
 
     ELSE
-      WITH stack0 = u.vstack.pos(0, "zero"), stop0 = u.vstack.op(stack0) DO
+      WITH stack0 = u.vstack.pos(0, "zero"),
+           stop0 = u.vstack.op(stack0) DO
         u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
         FOR i := 0 TO n - 1 DO
           u.cg.store_ind(Operand { loc := OLoc.imm, imm := TZero, optype := t },
@@ -4297,15 +4298,16 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
 CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oADD, Op.oSUB, Op.oOR, Op.oAND, Op.oXOR };
 CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
 
-PROCEDURE fetch_and_op (x: U; op: AtomicOp; t: MType; z: ZType;
+PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; t: MType; z: ZType;
                         <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A].t;
    Mem [s1.A].t := tmp op s0.u;
    s1.u := tmp op s0.u; pop *)
+  VAR op := AtomicOpToOp[atomic_op];
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("fetch_and_op");
-      x.wr.OutT  (AtomicOpName[op]);
+      x.wr.OutT  (AtomicOpName[atomic_op]);
       x.wr.TName (t);
       x.wr.TName (z);
       x.wr.NL    ();
@@ -4318,7 +4320,35 @@ PROCEDURE fetch_and_op (x: U; op: AtomicOp; t: MType; z: ZType;
       RETURN;
     END;
 
-    EVAL x.vstack.dobin(AtomicOpToOp[op], (*symmetric*) op # AtomicOp.Sub, (*overwritesdest*) TRUE, t, locked := TRUE);
+    (* optimize add 1 => inc, add -1 => dec, sub 1 => dec, sub -1 => inc
+     * to save a byte encoding the immediate value.
+     * NOTE: We should do this for reg where t.reguse[reg].last_imm = 1 or -1 also.
+     *)
+
+    WITH stack0 = x.vstack.pos(0, "fetch_and_op"),
+         stack1 = x.vstack.pos(1, "fetch_and_op"),
+         stop0 = x.vstack.op(stack0) DO
+      IF op IN SET OF Op{Op.oADD, Op.oSUB} THEN
+        IF stop0.loc = OLoc.imm THEN
+          WITH imm = stop0.imm DO
+            IF (TInt.EQ(imm, TInt.One) OR TInt.EQ(imm, TInt.MOne)) THEN
+              x.vstack.unlock();
+              x.vstack.find(stack1, Force.anyreg);
+              IF (op = Op.oADD) = TInt.EQ(imm, TInt.One) THEN
+                x.cg.incOp(x.vstack.op(stack1), locked := TRUE);
+              ELSE
+                x.cg.decOp(x.vstack.op(stack1), locked := TRUE);
+              END;
+              x.vstack.newdest(x.vstack.op(stack1));
+              x.vstack.discard(1);
+              RETURN;
+            END;
+          END;
+        END;
+      END;
+    END;
+
+    EVAL x.vstack.dobin(op, (*symmetric*) (*op # AtomicOp.Sub*) FALSE, (*overwritesdest*) TRUE, t, locked := TRUE);
 
   END fetch_and_op;
 
