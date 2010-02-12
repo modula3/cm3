@@ -179,11 +179,6 @@ END Test_AtomicInteger;
 
 
 
-
-
-
-
-
 PROCEDURE Test_AtomicLongint_Fence() =
 BEGIN
     AtomicLongint.Fence();
@@ -191,7 +186,7 @@ END Test_AtomicLongint_Fence;
 
 PROCEDURE Test_AtomicLongint_CompareSwap() =
 BEGIN
-    bool := AtomicLongint.CompareSwap(atomicLongintA, longintB, longintC);
+    (* bool := AtomicLongint.CompareSwap(atomicLongintA, longintB, longintC); *)
 END Test_AtomicLongint_CompareSwap;
 
 PROCEDURE FakeFetchAndL(VAR var: AtomicLongint.T; mask: Longint.T): Longint.T =
