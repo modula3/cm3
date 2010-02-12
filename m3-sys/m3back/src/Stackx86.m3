@@ -1074,7 +1074,7 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
     RETURN reversed;
   END findbin;
 
-PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; locked: BOOLEAN := FALSE): BOOLEAN =
+PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): BOOLEAN =
   VAR src, dest: INTEGER;
       reversed: BOOLEAN;
       size: OperandSize;
@@ -1082,7 +1082,7 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; l
       destA: ARRAY OperandPart OF Operand;
   BEGIN
 
-    reversed := findbin(t, symmetric, overwritesdest, dest, src, locked);
+    reversed := findbin(t, symmetric, overwritesdest, dest, src);
     <* ASSERT reversed = (dest > src) *>
 
     WITH destop = t.vstack[dest],
@@ -1103,7 +1103,7 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type; l
       size := SplitOperand(srcop, srcA);
       EVAL SplitOperand(destop, destA);
 
-      t.cg.binOp(op, destop, srcop, locked);
+      t.cg.binOp(op, destop, srcop);
 
       IF overwritesdest THEN
         newdest(t, destop);
