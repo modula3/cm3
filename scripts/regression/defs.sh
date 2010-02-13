@@ -561,7 +561,8 @@ test_build_system()
       exit 1
     fi
   else
-    echo " === perform cm3 upgrade"
+    echo " === perform cm3 upgrade after cleaning everything"
+    $BUILDSCRIPT realclean || exit 1
     UPGRADE_CM3_CFG=yes ./scripts/upgrade.sh || exit 1
     echo " >>> OK build_upgrade ${DS} ${WS}"
   fi
