@@ -551,8 +551,10 @@ test_build_system()
   if [ -z "$NOCLEAN" ]; then
     $BUILDSCRIPT realclean || exit 1
   fi
-  if $BUILDSCRIPT buildship; then
-    echo " >>> OK build_system ${DS} ${WS}"
+  if $BUILDSCRIPT build; then
+    echo " >>> OK build_system ${DS} ${WS}; now rebuild and ship"
+    $BUILDSCRIPT buildship
+    echo " === install new compiler"
     if ./scripts/install-cm3-compiler.sh upgrade; then
       echo "compiler upgraded successfully"
       cm3 -version
