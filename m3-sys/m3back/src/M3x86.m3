@@ -3962,10 +3962,11 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
   END call_indirect;
 
 PROCEDURE FixReturnValue (u: U;  t: Type): Type =
-  (* Apparently, the Microsoft C compiler doesn't return full 32-bit values
-     in EAX for procedures with 8 or 16-bit return types, but this code generator
-     assumes that registers always contain 32-bit values.  So, we compensate
-     here... *)
+  (* The Microsoft C compiler does not return full 32-bit values in EAX
+     for functions that return 8-bit return types.
+     Likewise for 16-bit return types prior to Visual C++ 5.0.
+     This code generator assumes that registers always contain 32-bit values.
+     We compensate here. *)
   BEGIN
     CASE t OF
     | Type.Int8 => (* 8-bit signed integer *)
