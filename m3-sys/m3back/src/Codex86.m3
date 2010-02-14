@@ -1408,24 +1408,27 @@ PROCEDURE case_jump (t: T; READONLY index: Operand; READONLY labels: ARRAY OF La
     END
   END case_jump;
 
-PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset;
-                    type: MType) =
+PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset; type: MType) =
   VAR ins: Instruction;
       mnemonic := "MOV";
   BEGIN
     <* ASSERT ind.loc = OLoc.register *>
     ins.opcode := 16_8B;
+
     IF CG_Bytes[type] < 4 THEN
       CASE type OF
       | Type.Word8  => ins.opcode := 16_8A;
                        mnemonic := "MOV";
                        binOp(t, Op.oXOR, t.reg[r], t.reg[r]);
-      | Type.Word16 => ins.opcode := 16_8B;  ins.prefix := TRUE;
+      | Type.Word16 => ins.opcode := 16_8B;
+                       ins.prefix := TRUE;
                        mnemonic := "MOV";
                        binOp(t, Op.oXOR, t.reg[r], t.reg[r]);
-      | Type.Int8   => ins.opcode := 16_BE;  ins.escape := TRUE;
+      | Type.Int8   => ins.opcode := 16_BE;
+                       ins.escape := TRUE;
                        mnemonic := "MOVSX";
-      | Type.Int16  => ins.opcode := 16_BF;  ins.escape := TRUE;
+      | Type.Int16  => ins.opcode := 16_BF;
+                       ins.escape := TRUE;
                        mnemonic := "MOVSX";
       ELSE
         t.Err("Unknown type of size other than dword in load_ind");
@@ -1441,21 +1444,29 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset;
       ins.modrm := 16_80 + r * 8 + ind.reg[0];
       ins.dsize := 4;
     END;
-    IF ind.reg[0] = ESP THEN  ins.sib := 16_24; ins.sibpres := TRUE;  END;
+    IF ind.reg[0] = ESP THEN
+      ins.sib := 16_24;
+      ins.sibpres := TRUE;
+    END;
     writecode (t, ins);
   END load_ind;
 
-PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset;
-                    size: INTEGER) =
-  VAR ins: Instruction;  type := Type.Int32;
+PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset; size: INTEGER) =
+  VAR ins: Instruction;
+      type := Type.Int32;
   BEGIN
     <* ASSERT ind.loc = OLoc.register *>
     ins.opcode := 16_8B;
     CASE size OF
-    | 1 => ins.opcode := 16_8A;  type := Type.Int8;
-    | 2 => ins.opcode := 16_8B;  ins.prefix := TRUE;  type := Type.Int16;
-    | 4 => ins.opcode := 16_8B;  type := Type.Int32;
-    ELSE   t.Err("Illegal size in fast_load_ind");
+    | 1 => ins.opcode := 16_8A;
+           type := Type.Int8;
+    | 2 => ins.opcode := 16_8B;
+           ins.prefix := TRUE;
+           type := Type.Int16;
+    | 4 => ins.opcode := 16_8B;
+           type := Type.Int32;
+    ELSE
+      t.Err("Illegal size in fast_load_ind");
     END;
 
     Mn(t, "MOV ", RegName[r]);  MnPtr(t, ind, o, type);
@@ -1468,7 +1479,10 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset;
       ins.modrm := 16_80 + r * 8 + ind.reg[0];
       ins.dsize := 4;
     END;
-    IF ind.reg[0] = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
+    IF ind.reg[0] = ESP THEN
+      ins.sib := 16_24;
+      ins.sibpres := TRUE;
+    END;
     writecode (t, ins);
   END fast_load_ind;
 
