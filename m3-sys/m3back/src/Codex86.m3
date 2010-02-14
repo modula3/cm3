@@ -1436,7 +1436,7 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffset; t
       IF offset > -16_81 AND offset < 16_80 THEN
         ins.dsize := 1;
       ELSE
-        INC(ins.modrm, 16_40);
+        INC(ins.modrm, 16_40); (* two increments => 0x80 *)
         ins.dsize := 4;
       END;
     END;
