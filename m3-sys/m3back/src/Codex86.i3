@@ -57,6 +57,7 @@ TYPE Public = OBJECT
         MOVSWOp ();
         STOSWOp ();
         CBWOp ();
+        lock_exchange (READONLY dest, src: Operand);
         lock_compare_exchange (READONLY dest, src: Operand);
         pushOp (READONLY src: Operand);
         popOp (READONLY dest: Operand);
