@@ -92,6 +92,7 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         lock_compare_exchange := lock_compare_exchange;
         pushOp := pushOp;
         popOp := popOp;
+        incOp := incOp;
         decOp := decOp;
         unOp := unOp;
         mulOp := mulOp;
@@ -1023,21 +1024,31 @@ PROCEDURE popOp (t: T; READONLY dest: Operand) =
     END;
   END popOp;
 
-PROCEDURE decOp (t: T; READONLY op: Operand) =
+PROCEDURE incDecOp (t: T; READONLY op: Operand; isDec: [0..1]) =
   VAR ins: Instruction;
   BEGIN
-    Mn(t, "DEC");  MnOp(t, op);
+    Mn(t, ARRAY [0..1] OF TEXT{"INC", "DEC"}[isDec]); MnOp(t, op);
     <* ASSERT op.loc = OLoc.mem OR op.loc = OLoc.register *>
     IF op.loc = OLoc.register THEN
-      ins.opcode := 16_48 + op.reg[0];
+      ins.opcode := isDec * 8 + op.reg[0];
       writecode(t, ins);
     ELSE
       <* ASSERT op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 4 *>
-      build_modrm(t, op, t.opcode[1], ins);
+      build_modrm(t, op, t.opcode[isDec], ins);
       ins.opcode := 16_FF;
       writecode(t, ins);
       log_global_var(t, op.mvar, -4);
     END
+  END incDecOp;
+
+PROCEDURE incOp (t: T; READONLY op: Operand) =
+  BEGIN
+    incDecOp(t, op, 0);
+  END incOp;
+
+PROCEDURE decOp (t: T; READONLY op: Operand) =
+  BEGIN
+    incDecOp(t, op, 1);
   END decOp;
 
 PROCEDURE unOp1 (t: T; op: Op; READONLY dest: Operand) =
