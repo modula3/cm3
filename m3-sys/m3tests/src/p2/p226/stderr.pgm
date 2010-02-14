@@ -26,13 +26,13 @@ b:FALSE
 d8:4
 
 b:FALSE
-d16:10
+d16:40
 
 b:FALSE
-d32:100
+d32:400
 
 b:FALSE
-dp:0x1000
+dp:0x4000
 
 
 
@@ -40,11 +40,11 @@ should print true
 
 b:FALSE
 d8:104
-b:TRUE
-d16:11
+b:FALSE
+d16:41
 
-b:TRUE
-d32:101
+b:FALSE
+d32:401
 
-b:TRUE
-dp:0x1001
+b:FALSE
+dp:0x4001
