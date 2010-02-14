@@ -1280,13 +1280,15 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
   VAR offset: ByteOffset;
       fully_known := FALSE;
   BEGIN
+
+    <* ASSERT ins.disp = 0 *>
+    <* ASSERT ins.dsize = 0 *>
+
     ins.mrm_present := TRUE;
 
     <* ASSERT reg.loc = OLoc.register *>
 
     IF mem.loc = OLoc.register THEN
-      ins.disp := 0;
-      ins.dsize := 0;
       ins.modrm := 16_C0 + reg.reg[0] * 8 + mem.reg[0];
       RETURN;
     END;
@@ -1302,18 +1304,18 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
       INC(offset, mem.mvar.var.offset);
       fully_known := TRUE;
     END;
-    IF (NOT fully_known) OR (offset > 16_7f) OR (offset < -16_80) THEN
+    ins.modrm := reg.reg[0] * 8 + EBP;
+    IF (NOT fully_known) OR (offset # 0) THEN
       ins.disp := offset;
-      ins.dsize := 4;
-      IF NOT fully_known THEN
-        ins.modrm := reg.reg[0] * 8 + EBP;
+      IF (NOT fully_known) OR (offset > 16_7f) OR (offset < -16_80) THEN
+        ins.dsize := 4;
+        IF fully_known THEN
+          INC (ins.modrm, 16_80);
+        END;
       ELSE
-        ins.modrm := 16_80 + reg.reg[0] * 8 + EBP;
-      END;
-    ELSE
-      ins.disp := offset;
-      ins.dsize := 1;
-      ins.modrm := 16_40 + reg.reg[0] * 8 + EBP;
+        ins.dsize := 1;
+        INC (ins.modrm, 16_40);
+      END
     END;
   END build_modrm;
 
@@ -1443,11 +1445,11 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffset; t
     ins.modrm := r * 8 + ind.reg[0];
     IF offset # 0 THEN
       ins.disp := offset;
-      INC(ins.modrm, 16_40);
       IF offset > -16_81 AND offset < 16_80 THEN
         ins.dsize := 1;
+        INC(ins.modrm, 16_40);
       ELSE
-        INC(ins.modrm, 16_40); (* two increments => 0x80 *)
+        INC(ins.modrm, 16_80);
         ins.dsize := 4;
       END;
     END;
@@ -1479,11 +1481,12 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffs
     Mn(t, "MOV ", RegName[r]);  MnPtr(t, ind, offset, type);
     ins.mrm_present := TRUE;
     ins.disp := offset;
+    ins.modrm := r * 8 + ind.reg[0];
     IF offset > -16_81 AND offset < 16_80 THEN
-      ins.modrm := 16_40 + r * 8 + ind.reg[0];
+      INC(ins.modrm, 16_40);
       ins.dsize := 1;
     ELSE
-      ins.modrm := 16_80 + r * 8 + ind.reg[0];
+      INC(ins.modrm, 16_80);
       ins.dsize := 4;
     END;
     IF ind.reg[0] = ESP THEN
@@ -1512,13 +1515,16 @@ PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset;
     Mn(t, "MOV");  MnPtr(t, ind, offset, type);  MnOp(t, val);
 
     ins.mrm_present := TRUE;
-    ins.disp := offset;
-    IF offset >= -16_80 AND offset <= 16_7F THEN
-      ins.dsize := 1;
-      ins.modrm := 16_40 + ind.reg[0];
-    ELSE
-      ins.dsize := 4;
-      ins.modrm := 16_80 + ind.reg[0];
+    ins.modrm := ind.reg[0];
+    IF offset # 0 THEN
+      ins.disp := offset;
+      IF offset >= -16_80 AND offset <= 16_7F THEN
+        ins.dsize := 1;
+        INC(ins.modrm, 16_40);
+      ELSE
+        ins.dsize := 4;
+        INC(ins.modrm, 16_80);
+      END;
     END;
 
     IF val.loc # OLoc.imm THEN
@@ -1561,14 +1567,17 @@ PROCEDURE f_loadind (t: T; READONLY ind: Operand; offset: ByteOffset; type: MTyp
     ELSE
       ins.opcode := fopcode[FOp.fLD].m64;
     END;
-    ins.modrm := 16_40 + fopcode[FOp.fLD].memop * 8 + ind.reg[0];
+    ins.modrm := fopcode[FOp.fLD].memop * 8 + ind.reg[0];
     ins.mrm_present := TRUE;
-    ins.disp := offset;
-    IF offset >= -16_80 AND offset <= 16_7F THEN
-      ins.dsize := 1;
-    ELSE
-      ins.dsize := 4;
-      INC (ins.modrm, 16_40);
+    IF offset # 0 THEN
+      ins.disp := offset;
+      IF offset >= -16_80 AND offset <= 16_7F THEN
+        ins.dsize := 1;
+        INC(ins.modrm, 16_40);
+      ELSE
+        ins.dsize := 4;
+        INC(ins.modrm, 16_80);
+      END;
     END;
     IF ind.reg[0] = ESP THEN
       ins.sib := 16_24;
@@ -1594,14 +1603,17 @@ PROCEDURE f_storeind (t: T; READONLY ind: Operand; offset: ByteOffset;
     ELSE
       ins.opcode := fopcode[FOp.fSTP].m64;
     END;
-    ins.modrm := 16_40 + fopcode[FOp.fSTP].memop * 8 + ind.reg[0];
+    ins.modrm := fopcode[FOp.fSTP].memop * 8 + ind.reg[0];
     ins.mrm_present := TRUE;
-    ins.disp := offset;
-    IF offset >= -16_80 AND offset <= 16_7F THEN
-      ins.dsize := 1;
-    ELSE
-      ins.dsize := 4;
-      INC (ins.modrm, 16_40);
+    IF offset # 0 THEN
+      ins.disp := offset;
+      IF offset >= -16_80 AND offset <= 16_7F THEN
+        ins.dsize := 1;
+        INC (ins.modrm, 16_40);
+      ELSE
+        ins.dsize := 4;
+        INC (ins.modrm, 16_80);
+      END;
     END;
     IF ind.reg[0] = ESP THEN
       ins.sib := 16_24;
@@ -1846,12 +1858,13 @@ PROCEDURE fstack_swap (t: T) =
     get_temp(t);
 
     Mn(t, "FLD ST, m80real");
-    build_modrm(t, t.fstackspill[t.fspilltop-2], t.opcode[5], ins);
+    build_modrm(t, t.fstackspill[t.fspilltop - 2], t.opcode[5], ins);
     ins.opcode := 16_DB;
     writecode(t, ins);
 
     Mn(t, "FLD ST, m80real");
-    build_modrm(t, t.fstackspill[t.fspilltop-1], t.opcode[5], ins);
+    ins := Instruction{};
+    build_modrm(t, t.fstackspill[t.fspilltop - 1], t.opcode[5], ins);
     ins.opcode := 16_DB;
     writecode(t, ins);
 
