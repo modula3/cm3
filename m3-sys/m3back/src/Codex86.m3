@@ -1513,7 +1513,10 @@ PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset;
     IF val.loc # OLoc.imm THEN
       INC(ins.modrm, val.reg[0] * 8);
     END;
-    IF ind.reg[0] = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
+    IF ind.reg[0] = ESP THEN
+      ins.sib := 16_24;
+      ins.sibpres := TRUE;
+    END;
     writecode (t, ins);
   END store_ind1;
 
