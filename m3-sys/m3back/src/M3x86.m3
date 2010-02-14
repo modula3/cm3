@@ -4212,6 +4212,7 @@ PROCEDURE exchange (u: U; t: MType; z: ZType; <*UNUSED*>order: MemoryOrder) =
    Mem [s1.A + o].t := s0.u;
    s0.u := tmp;
    pop *)
+  VAR reg: Regno;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("exchange");
@@ -4227,13 +4228,15 @@ PROCEDURE exchange (u: U; t: MType; z: ZType; <*UNUSED*>order: MemoryOrder) =
       RETURN;
     END;
 
-    WITH stack0 = u.vstack.pos(0, "exchange"),
-         stack1 = u.vstack.pos(1, "exchange") DO
-      u.vstack.find(stack0, Force.anyreg);
-      u.vstack.find(stack1, Force.mem);
-      u.cg.swapOp(u.vstack.op(stack0), u.vstack.op(stack1));
-      u.vstack.swap();
-      u.vstack.discard(1);
+    WITH newValue       = u.vstack.pos(0, "fetch_and_op"),
+         atomicVariable = u.vstack.pos(1, "fetch_and_op") DO
+      u.vstack.find(newValue, Force.anyreg);
+      u.vstack.find(atomicVariable, Force.anyreg);
+      reg := u.vstack.op(newValue).reg[0];
+      u.cg.lock_exchange(u.vstack.op(atomicVariable), u.vstack.op(newValue));
+      u.vstack.discard(2);
+      u.vstack.unlock();
+      u.vstack.pushnew(t, Force.regset, RegSet{reg});
     END;
   END exchange;
 

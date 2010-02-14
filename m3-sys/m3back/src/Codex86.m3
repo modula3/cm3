@@ -88,6 +88,7 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         MOVSWOp := MOVSWOp;
         STOSWOp := STOSWOp;
         CBWOp := CBWOp;
+        lock_exchange := lock_exchange;
         lock_compare_exchange := lock_compare_exchange;
         pushOp := pushOp;
         popOp := popOp;
@@ -780,6 +781,18 @@ PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand) =
     writecode(t, Instruction{escape := TRUE, opcode := 16_B1,
                              mrm_present := TRUE, modrm := src.reg[0] * 8 + dest.reg[0]});
   END lock_compare_exchange;
+
+PROCEDURE lock_exchange (t: T; READONLY dest, src: Operand) =
+  BEGIN
+    Mn(t, "XCHG ");  MnOp(t, dest);  MnOp(t, src);
+    <* ASSERT dest.loc = OLoc.register *> (* mem would be correct, but we have a bug *)
+    <* ASSERT src.loc = OLoc.register *>
+    (* No lock prefix needed, as long as one operand references memory, the
+     * xchg instruction is special and is always locked.
+     *)
+    writecode(t, Instruction{opcode := 16_87,
+                             mrm_present := TRUE, modrm := src.reg[0] * 8 + dest.reg[0]});
+  END lock_exchange;
 
 PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
   VAR ins: Instruction;  mnemonic: TEXT := NIL;
