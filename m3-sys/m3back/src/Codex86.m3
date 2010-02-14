@@ -1401,7 +1401,7 @@ PROCEDURE case_jump (t: T; READONLY index: Operand; READONLY labels: ARRAY OF La
     END
   END case_jump;
 
-PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset; type: MType) =
+PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffset; type: MType) =
   VAR ins: Instruction;
       mnemonic := "MOV";
   BEGIN
@@ -1427,10 +1427,10 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset; type: 
         t.Err("Unknown type of size other than dword in load_ind");
       END;
     END;
-    Mn(t, mnemonic, " ", RegName[r]);  MnPtr(t, ind, o, type);
+    Mn(t, mnemonic, " ", RegName[r]);  MnPtr(t, ind, offset, type);
     ins.mrmpres := TRUE;
-    ins.disp := o;
-    IF o > -16_81 AND o < 16_80 THEN
+    ins.disp := offset;
+    IF offset > -16_81 AND offset < 16_80 THEN
       ins.modrm := 16_40 + r * 8 + ind.reg[0];
       ins.dsize := 1;
     ELSE
@@ -1444,7 +1444,7 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset; type: 
     writecode (t, ins);
   END load_ind;
 
-PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset; size: INTEGER) =
+PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffset; size: INTEGER) =
   VAR ins: Instruction;
       type := Type.Int32;
   BEGIN
@@ -1462,10 +1462,10 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset; s
       t.Err("Illegal size in fast_load_ind");
     END;
 
-    Mn(t, "MOV ", RegName[r]);  MnPtr(t, ind, o, type);
+    Mn(t, "MOV ", RegName[r]);  MnPtr(t, ind, offset, type);
     ins.mrmpres := TRUE;
-    ins.disp := o;
-    IF o > -16_81 AND o < 16_80 THEN
+    ins.disp := offset;
+    IF offset > -16_81 AND offset < 16_80 THEN
       ins.modrm := 16_40 + r * 8 + ind.reg[0];
       ins.dsize := 1;
     ELSE
@@ -1479,7 +1479,7 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; o: ByteOffset; s
     writecode (t, ins);
   END fast_load_ind;
 
-PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; o: ByteOffset;
+PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset;
                      type: MType) =
   VAR ins: Instruction;
   BEGIN
@@ -1495,11 +1495,11 @@ PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; o: ByteOffset;
     END;
 
     get_op_size(type, ins);
-    Mn(t, "MOV");  MnPtr(t, ind, o, type);  MnOp(t, val);
+    Mn(t, "MOV");  MnPtr(t, ind, offset, type);  MnOp(t, val);
 
     ins.mrmpres := TRUE;
-    ins.disp := o;
-    IF o >= -16_80 AND o <= 16_7F THEN
+    ins.disp := offset;
+    IF offset >= -16_80 AND offset <= 16_7F THEN
       ins.dsize := 1;
       ins.modrm := 16_40 + ind.reg[0];
     ELSE
@@ -1514,7 +1514,7 @@ PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; o: ByteOffset;
     writecode (t, ins);
   END store_ind1;
 
-PROCEDURE store_ind (t: T; READONLY val, ind: Operand; o: ByteOffset;
+PROCEDURE store_ind (t: T; READONLY val, ind: Operand; offset: ByteOffset;
                      type: MType) =
   VAR valA: ARRAY OperandPart OF Operand;
       size: OperandSize;
@@ -1524,29 +1524,29 @@ PROCEDURE store_ind (t: T; READONLY val, ind: Operand; o: ByteOffset;
 
     size := SplitOperand(val, valA);
     IF size = 1 THEN
-      store_ind1(t, val, ind, o, type);
+      store_ind1(t, val, ind, offset, type);
     ELSE
       <* ASSERT GetOperandSize(val) = GetTypeSize(type) *>
       FOR i := 0 TO size - 1 DO
-        store_ind1(t, valA[i], ind, o + i * 4, valA[i].optype);
+        store_ind1(t, valA[i], ind, offset + i * 4, valA[i].optype);
       END;
     END;
   END store_ind;
 
-PROCEDURE f_loadind (t: T; READONLY ind: Operand; o: ByteOffset; type: MType) =
+PROCEDURE f_loadind (t: T; READONLY ind: Operand; offset: ByteOffset; type: MType) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT ind.loc = OLoc.register *>
     prepare_stack(t, FOp.fLD, TRUE);
-    Mn(t, "FLD");  MnPtr(t, ind, o, type);
+    Mn(t, "FLD");  MnPtr(t, ind, offset, type);
     IF type = Type.Reel
       THEN ins.opcode := fopcode[FOp.fLD].m32;
       ELSE ins.opcode := fopcode[FOp.fLD].m64;
     END;
     ins.modrm := 16_40 + fopcode[FOp.fLD].memop * 8 + ind.reg[0];
     ins.mrmpres := TRUE;
-    ins.disp := o;
-    IF o >= -16_80 AND o <= 16_7F THEN
+    ins.disp := offset;
+    IF offset >= -16_80 AND offset <= 16_7F THEN
       ins.dsize := 1;
     ELSE
       ins.dsize := 4;
@@ -1561,7 +1561,7 @@ PROCEDURE f_loadind (t: T; READONLY ind: Operand; o: ByteOffset; type: MType) =
     INC(t.fstackloaded);
   END f_loadind;
 
-PROCEDURE f_storeind (t: T; READONLY ind: Operand; o: ByteOffset;
+PROCEDURE f_storeind (t: T; READONLY ind: Operand; offset: ByteOffset;
                       type: MType) =
   VAR ins: Instruction;
   BEGIN
@@ -1570,15 +1570,15 @@ PROCEDURE f_storeind (t: T; READONLY ind: Operand; o: ByteOffset;
     IF t.ftop_inmem THEN
       fstack_loadtop(t);
     END;
-    Mn(t, "FSTP");  MnPtr(t, ind, o, type);
+    Mn(t, "FSTP");  MnPtr(t, ind, offset, type);
     IF type = Type.Reel
       THEN ins.opcode := fopcode[FOp.fSTP].m32;
       ELSE ins.opcode := fopcode[FOp.fSTP].m64;
     END;
     ins.modrm := 16_40 + fopcode[FOp.fSTP].memop * 8 + ind.reg[0];
     ins.mrmpres := TRUE;
-    ins.disp := o;
-    IF o >= -16_80 AND o <= 16_7F THEN
+    ins.disp := offset;
+    IF offset >= -16_80 AND offset <= 16_7F THEN
       ins.dsize := 1;
     ELSE
       ins.dsize := 4;
@@ -1644,11 +1644,11 @@ PROCEDURE log_unknown_label (t: T; label: Label; loc: ByteOffset; abs: BOOLEAN) 
                              link := t.labarr[label].usage);
   END log_unknown_label;
 
-PROCEDURE log_label_init (t: T; var: x86Var; o: ByteOffset; lab: Label) =
+PROCEDURE log_label_init (t: T; var: x86Var; offset: ByteOffset; lab: Label) =
   BEGIN
     check_label(t, lab, "log_label_init");
 
-    t.obj.relocate(var.symbol, o, t.textsym);
+    t.obj.relocate(var.symbol, offset, t.textsym);
 
     IF t.labarr[lab].no_address THEN
       t.labarr[lab].usage := NEW(LabList, seg := var.seg,
