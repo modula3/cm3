@@ -690,8 +690,7 @@ PROCEDURE swapOp1 (t: T; READONLY dest, src: Operand) =
     <* ASSERT (dest.loc = OLoc.register OR dest.loc = OLoc.mem) AND
               (src.loc = OLoc.register OR src.loc = OLoc.mem) *>
 
-    IF dest.loc = OLoc.register AND src.loc = OLoc.register
-      AND (dest.reg[0] = EAX OR src.reg[0] = EAX) THEN
+    IF dest.loc = OLoc.register AND src.loc = OLoc.register AND (dest.reg[0] = EAX OR src.reg[0] = EAX) THEN
       IF dest.reg[0] = EAX THEN
         otherreg := src.reg[0];
       ELSE
