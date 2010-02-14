@@ -779,8 +779,7 @@ PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand) =
     <* ASSERT dest.loc = OLoc.register *> (* mem would be correct, but we have a bug *)
     <* ASSERT src.loc = OLoc.register *>
     t.obj.append(Seg.Text, 16_F0, 1); (* lock prefix *)
-    writecode(t, Instruction{escape := TRUE, opcode := 16_B1,
-                             mrm_present := TRUE, modrm := src.reg[0] * 8 + dest.reg[0]});
+    writecode(t, Instruction{escape := TRUE, opcode := 16_B1, mrm_present := TRUE, modrm := src.reg[0] * 8 + dest.reg[0]});
   END lock_compare_exchange;
 
 PROCEDURE lock_exchange (t: T; READONLY dest, src: Operand) =
@@ -791,8 +790,7 @@ PROCEDURE lock_exchange (t: T; READONLY dest, src: Operand) =
     (* No lock prefix needed, as long as one operand references memory, the
      * xchg instruction is special and is always locked.
      *)
-    writecode(t, Instruction{opcode := 16_87,
-                             mrm_present := TRUE, modrm := src.reg[0] * 8 + dest.reg[0]});
+    writecode(t, Instruction{opcode := 16_87, mrm_present := TRUE, modrm := src.reg[0] * 8 + dest.reg[0]});
   END lock_exchange;
 
 PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
@@ -804,9 +802,7 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       RETURN;
     END;
 
-    IF dest.loc = OLoc.register AND dest.reg[0] = EAX AND
-       src.loc = OLoc.mem AND CG_Bytes[src.mvar.mvar_type] = 4 AND
-       src.mvar.var.loc = VLoc.global THEN
+    IF dest.loc = OLoc.register AND dest.reg[0] = EAX AND src.loc = OLoc.mem AND CG_Bytes[src.mvar.mvar_type] = 4 AND src.mvar.var.loc = VLoc.global THEN
       Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
       ins.opcode := 16_A1;
       ins.disp   := src.mvar.mvar_offset;
@@ -816,8 +812,7 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       RETURN;
     END;
 
-    IF src.loc = OLoc.register AND src.reg[0] = EAX AND
-       dest.loc = OLoc.mem AND dest.mvar.var.loc = VLoc.global THEN
+    IF src.loc = OLoc.register AND src.reg[0] = EAX AND dest.loc = OLoc.mem AND dest.mvar.var.loc = VLoc.global THEN
       Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
       ins.opcode := 16_A2;
       get_op_size(dest.mvar.mvar_type, ins);
@@ -828,8 +823,7 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       RETURN;
     END;
 
-    IF dest.loc = OLoc.register AND src.loc = OLoc.mem AND
-       CG_Bytes[src.mvar.mvar_type] < 4 THEN
+    IF dest.loc = OLoc.register AND src.loc = OLoc.mem AND CG_Bytes[src.mvar.mvar_type] < 4 THEN
       CASE src.mvar.mvar_type OF
       | Type.Word8  => ins.opcode := 16_8A;
                        mnemonic := "MOV";
