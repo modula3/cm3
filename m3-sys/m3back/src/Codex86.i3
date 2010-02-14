@@ -61,6 +61,7 @@ TYPE Public = OBJECT
         lock_compare_exchange (READONLY dest, src: Operand);
         pushOp (READONLY src: Operand);
         popOp (READONLY dest: Operand);
+        incOp (READONLY op: Operand);
         decOp (READONLY op: Operand);
         unOp (op: Op; READONLY dest: Operand);
         mulOp (READONLY src: Operand);
