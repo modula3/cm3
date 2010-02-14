@@ -227,9 +227,10 @@ PROCEDURE brOp (t: T; br: Cond; label: Label) =
         writecode (t, ins);
       ELSE
         Mn(t, bropcode[br].name, " rel8");  MnLabel(t, label);
-        IF br # Cond.Always
-          THEN ins.opcode := bropcode[br].rel8;
-          ELSE ins.opcode := 16_EB;
+        IF br # Cond.Always THEN
+          ins.opcode := bropcode[br].rel8;
+        ELSE
+          ins.opcode := 16_EB;
         END;
         ins.dsize  := 1;
         writecode (t, ins);
@@ -327,9 +328,10 @@ PROCEDURE binFOp (t: T; op: FOp; st: INTEGER) =
     prepare_stack(t, op);
     IF t.ftop_inmem THEN
       Mn(t, fopcode[op].name, " ST");  MnMVar(t, t.ftop_mem);
-      IF t.ftop_mem.mvar_type = Type.Reel
-        THEN mem.opcode := fopcode[op].m32;
-        ELSE mem.opcode := fopcode[op].m64;
+      IF t.ftop_mem.mvar_type = Type.Reel THEN
+        mem.opcode := fopcode[op].m32;
+      ELSE
+        mem.opcode := fopcode[op].m64;
       END;
       build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, optype := t.ftop_mem.mvar_type},
                   t.opcode[fopcode[op].memop], mem);
@@ -651,7 +653,9 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
     IF (NOT fully_known) OR (ins.disp > 16_7f) OR (ins.disp < -16_80) THEN
       ins.dsize := 4;
       ins.modrm := dest.reg[0] * 8 + 4;
-      IF fully_known THEN INC (ins.modrm, 16_80); END;
+      IF fully_known THEN
+        INC (ins.modrm, 16_80);
+      END;
     ELSE
       ins.dsize := 1;
       ins.modrm := 16_40 + dest.reg[0] * 8 + 4;
@@ -663,7 +667,8 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
     | 2 => ins.sib := 16_40;
     | 4 => ins.sib := 16_80;
     | 8 => ins.sib := 16_C0;
-    ELSE t.Err("tableOp called with invalid scale parameter");
+    ELSE
+      t.Err("tableOp called with invalid scale parameter");
     END;
     INC(ins.sib, index.reg[0] * 8);
     INC(ins.sib, 5);
@@ -685,9 +690,10 @@ PROCEDURE swapOp1 (t: T; READONLY dest, src: Operand) =
 
     IF dest.loc = OLoc.register AND src.loc = OLoc.register
       AND (dest.reg[0] = EAX OR src.reg[0] = EAX) THEN
-      IF dest.reg[0] = EAX
-        THEN otherreg := src.reg[0];
-        ELSE otherreg := dest.reg[0];
+      IF dest.reg[0] = EAX THEN
+        otherreg := src.reg[0];
+      ELSE
+        otherreg := dest.reg[0];
       END;
       Mn(t, "XCHG ");  MnOp(t, dest);   MnOp(t, src);
       xchg.opcode := 16_90 + otherreg;
@@ -1116,9 +1122,10 @@ PROCEDURE imulImm (t: T; READONLY dest, src: Operand; imm: INTEGER; imsize: INTE
     <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.mvar_type] = 4 *>
     build_modrm(t, src, dest, ins);
     Mn(t, "IMUL");  MnOp(t, dest);  MnOp(t, src);  MnImmInt(t, imm);
-    IF imsize = 1
-      THEN ins.opcode := 16_6B;
-      ELSE ins.opcode := 16_69;
+    IF imsize = 1 THEN
+      ins.opcode := 16_6B;
+    ELSE
+      ins.opcode := 16_69;
     END;
     ins.imm := imm;
     ins.imsize := imsize;
@@ -1165,9 +1172,10 @@ PROCEDURE diffdivOp (t: T; READONLY divisor: Operand; apos: BOOLEAN) =
     movOp(t, t.reg[EDX], t.reg[EAX]);                 (*   MOV EDX, EAX      *)
     binOp(t, Op.oXOR, t.reg[EDX], divisor);           (*   XOR EDX, divisor  *)
     brOp(t, Cond.L, diffsignlab);                     (*   JL  diffsignlab   *)
-    IF apos
-      THEN binOp(t, Op.oXOR, t.reg[EDX], t.reg[EDX]); (*   XOR EDX, EDX      *)
-      ELSE noargOp(t, Op.oCDQ);                       (*   CDQ               *)
+    IF apos THEN
+      binOp(t, Op.oXOR, t.reg[EDX], t.reg[EDX]);      (*   XOR EDX, EDX      *)
+    ELSE
+      noargOp(t, Op.oCDQ);                            (*   CDQ               *)
     END;
     idivOp(t, divisor);                               (*   IDIV EAX, divisor *)
     brOp(t, Cond.Always, endlab);                     (*   JMP endlab        *)
@@ -1190,9 +1198,10 @@ PROCEDURE diffmodOp (t: T; READONLY divisor: Operand; apos: BOOLEAN) =
     movOp(t, t.reg[EDX], t.reg[EAX]);                 (*    MOV EDX, EAX      *)
     binOp(t, Op.oXOR, t.reg[EDX], divisor);           (*    XOR EDX, divisor  *)
     brOp(t, Cond.L, diffsignlab);                     (*    JL  diffsignlab   *)
-    IF apos
-      THEN binOp(t, Op.oXOR, t.reg[EDX], t.reg[EDX]); (*    XOR EDX, EDX      *)
-      ELSE noargOp(t, Op.oCDQ);                       (*    CDQ               *)
+    IF apos THEN
+      binOp(t, Op.oXOR, t.reg[EDX], t.reg[EDX]);      (*    XOR EDX, EDX      *)
+    ELSE
+      noargOp(t, Op.oCDQ);                            (*    CDQ               *)
     END;
     idivOp(t, divisor);                               (*    IDIV EAX, divisor *)
     brOp(t, Cond.Always, endlab);                     (*    JMP endlab        *)
@@ -1342,7 +1351,9 @@ PROCEDURE writecode (t: T; READONLY ins: Instruction) =
 
     <* ASSERT ins.opcode # -1 *>
 
-    IF t.debug THEN debugcode (t, ins); END;
+    IF t.debug THEN
+      debugcode (t, ins);
+    END;
 
     IF ins.escape THEN
       t.obj.append(Seg.Text, 16_0F, 1);
@@ -1545,9 +1556,10 @@ PROCEDURE f_loadind (t: T; READONLY ind: Operand; offset: ByteOffset; type: MTyp
     <* ASSERT ind.loc = OLoc.register *>
     prepare_stack(t, FOp.fLD, TRUE);
     Mn(t, "FLD");  MnPtr(t, ind, offset, type);
-    IF type = Type.Reel
-      THEN ins.opcode := fopcode[FOp.fLD].m32;
-      ELSE ins.opcode := fopcode[FOp.fLD].m64;
+    IF type = Type.Reel THEN
+      ins.opcode := fopcode[FOp.fLD].m32;
+    ELSE
+      ins.opcode := fopcode[FOp.fLD].m64;
     END;
     ins.modrm := 16_40 + fopcode[FOp.fLD].memop * 8 + ind.reg[0];
     ins.mrm_present := TRUE;
@@ -1577,9 +1589,10 @@ PROCEDURE f_storeind (t: T; READONLY ind: Operand; offset: ByteOffset;
       fstack_loadtop(t);
     END;
     Mn(t, "FSTP");  MnPtr(t, ind, offset, type);
-    IF type = Type.Reel
-      THEN ins.opcode := fopcode[FOp.fSTP].m32;
-      ELSE ins.opcode := fopcode[FOp.fSTP].m64;
+    IF type = Type.Reel THEN
+      ins.opcode := fopcode[FOp.fSTP].m32;
+    ELSE
+      ins.opcode := fopcode[FOp.fSTP].m64;
     END;
     ins.modrm := 16_40 + fopcode[FOp.fSTP].memop * 8 + ind.reg[0];
     ins.mrm_present := TRUE;
@@ -1737,9 +1750,10 @@ PROCEDURE fstack_loadtop (t: T) =
     fstack_ensure(t, 0); (* ensure will allow an extra space for the item
                             in memory, so height can be 0 not 1 *)
     Mn(t, "FLD ST");  MnMVar(t, t.ftop_mem);
-    IF t.ftop_mem.mvar_type = Type.Reel
-      THEN ins.opcode := fopcode[FOp.fLD].m32;
-      ELSE ins.opcode := fopcode[FOp.fLD].m64;
+    IF t.ftop_mem.mvar_type = Type.Reel THEN
+      ins.opcode := fopcode[FOp.fLD].m32;
+    ELSE
+      ins.opcode := fopcode[FOp.fLD].m64;
     END;
     build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, optype := t.ftop_mem.mvar_type},
                 t.opcode[fopcode[FOp.fLD].memop], ins);
@@ -1807,9 +1821,10 @@ PROCEDURE fstack_pop (t: T; READONLY mvar: MVar) =
       fstack_loadtop(t);
     END;
     Mn(t, "FSTP ST");  MnMVar(t, mvar);
-    IF mvar.mvar_type = Type.Reel
-      THEN ins.opcode := fopcode[FOp.fSTP].m32;
-      ELSE ins.opcode := fopcode[FOp.fSTP].m64;
+    IF mvar.mvar_type = Type.Reel THEN
+      ins.opcode := fopcode[FOp.fSTP].m32;
+    ELSE
+      ins.opcode := fopcode[FOp.fSTP].m64;
     END;
     build_modrm(t, Operand {loc := OLoc.mem, mvar:= mvar, optype := t.ftop_mem.mvar_type},
                 t.opcode[fopcode[FOp.fSTP].memop], ins);
@@ -1823,7 +1838,9 @@ PROCEDURE fstack_pop (t: T; READONLY mvar: MVar) =
 PROCEDURE fstack_swap (t: T) =
   VAR ins: Instruction;
   BEGIN
-    IF t.ftop_inmem THEN fstack_loadtop(t); END;
+    IF t.ftop_inmem THEN
+      fstack_loadtop(t);
+    END;
 
     get_temp(t);
     get_temp(t);
@@ -1979,9 +1996,10 @@ PROCEDURE MnVar(t: T;  READONLY v: x86Var) =
 PROCEDURE MnLabel(t: T;  label: Label) =
   BEGIN
     IF t.debug THEN
-      IF (label = No_label)
-        THEN Mn(t, " *");
-        ELSE Mn(t, " L.", Fmt.Int (label));
+      IF (label = No_label) THEN
+        Mn(t, " *");
+      ELSE
+        Mn(t, " L.", Fmt.Int (label));
       END;
     END;
   END MnLabel;
