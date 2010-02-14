@@ -207,11 +207,11 @@ PROCEDURE brOp (t: T; br: Cond; label: Label) =
         ins.disp := lab.offset - (curs + 2);
       END;
 
-      IF ins.disp > 16_7F OR ins.disp < -16_80
-        OR lab.no_address AND NOT lab.short THEN
-        IF lab.no_address
-          THEN ins.disp := 0;
-          ELSE ins.disp := lab.offset - (curs + 5);
+      IF ins.disp > 16_7F OR ins.disp < -16_80 OR lab.no_address AND NOT lab.short THEN
+        IF lab.no_address THEN
+          ins.disp := 0;
+        ELSE
+          ins.disp := lab.offset - (curs + 5);
         END;
 
         Mn(t, bropcode[br].name);  MnLabel(t, label);
@@ -650,11 +650,11 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
     ins.mrmpres := TRUE;
     IF (NOT fully_known) OR (ins.disp > 16_7f) OR (ins.disp < -16_80) THEN
       ins.dsize := 4;
-      ins.modrm := dest.reg[0]*8 + 4;
+      ins.modrm := dest.reg[0] * 8 + 4;
       IF fully_known THEN INC (ins.modrm, 16_80); END;
     ELSE
       ins.dsize := 1;
-      ins.modrm := 16_40 + dest.reg[0]*8 + 4;
+      ins.modrm := 16_40 + dest.reg[0] * 8 + 4;
     END;
 
     ins.sibpres := TRUE;
@@ -665,7 +665,7 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
     | 8 => ins.sib := 16_C0;
     ELSE t.Err("tableOp called with invalid scale parameter");
     END;
-    INC(ins.sib, index.reg[0]*8);
+    INC(ins.sib, index.reg[0] * 8);
     INC(ins.sib, 5);
 
     Mn(t, opcode[op].name);  MnOp(t, dest); MnMVar(t, table);
@@ -770,7 +770,8 @@ PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand) =
     Mn(t, "LOCK CMPXCHG ");  MnOp(t, dest);  MnOp(t, src);
     <* ASSERT dest.loc = OLoc.register *> (* mem would be correct, but we have a bug *)
     <* ASSERT src.loc = OLoc.register *>
-    writecode(t, Instruction{escape := TRUE, lock := TRUE, opcode := 16_B1,
+    t.obj.append(Seg.Text, 16_F0, 1); (* lock prefix *)
+    writecode(t, Instruction{escape := TRUE, opcode := 16_B1,
                              mrmpres := TRUE, modrm := src.reg[0] * 8 + dest.reg[0]});
   END lock_compare_exchange;
 
@@ -1239,7 +1240,6 @@ PROCEDURE get_addsize (<*UNUSED*> t: T; READONLY op: Operand): INTEGER =
 TYPE
   Instruction = RECORD
     escape  : BOOLEAN := FALSE;
-    lock    : BOOLEAN := FALSE;
     prefix  : BOOLEAN := FALSE;
     mrmpres : BOOLEAN := FALSE;
     sibpres : BOOLEAN := FALSE;
@@ -1278,10 +1278,7 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
     IF mem.loc = OLoc.register THEN
       ins.disp := 0;
       ins.dsize := 0;
-      ins.modrm := reg.reg[0]*8 + mem.reg[0];
-      IF NOT ins.lock THEN (* hack *)
-        INC(ins.modrm, 16_C0);
-      END;
+      ins.modrm := 16_C0 + reg.reg[0] * 8 + mem.reg[0];
       RETURN;
     END;
 
@@ -1299,14 +1296,15 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
     IF (NOT fully_known) OR (offset > 16_7f) OR (offset < -16_80) THEN
       ins.disp := offset;
       ins.dsize := 4;
-      IF NOT fully_known
-        THEN ins.modrm := reg.reg[0]*8 + 5;
-        ELSE ins.modrm := 16_80 + reg.reg[0]*8 + EBP;
+      IF NOT fully_known THEN
+        ins.modrm := reg.reg[0] * 8 + EBP;
+      ELSE
+        ins.modrm := 16_80 + reg.reg[0] * 8 + EBP;
       END;
     ELSE
       ins.disp := offset;
       ins.dsize := 1;
-      ins.modrm := 16_40 + reg.reg[0]*8 + EBP;
+      ins.modrm := 16_40 + reg.reg[0] * 8 + EBP;
     END;
   END build_modrm;
 
@@ -1319,7 +1317,6 @@ PROCEDURE debugcode (t: T;  READONLY ins: Instruction) =
     t.wr.OutT(": ");
 
     (* generate the instruction bytes *)
-    IF ins.lock       THEN  Byte(t, 16_F0);       INC(len); END;
     IF ins.escape     THEN  Byte(t, 16_0F);       INC(len); END;
     IF ins.prefix     THEN  Byte(t, 16_66);       INC(len); END;
                             Byte(t, ins.opcode);  INC(len);
@@ -1346,10 +1343,6 @@ PROCEDURE writecode (t: T; READONLY ins: Instruction) =
     <* ASSERT ins.opcode # -1 *>
 
     IF t.debug THEN debugcode (t, ins); END;
-
-    IF ins.lock THEN
-      t.obj.append(Seg.Text, 16_F0, 1);
-    END;
 
     IF ins.escape THEN
       t.obj.append(Seg.Text, 16_0F, 1);
@@ -1553,11 +1546,16 @@ PROCEDURE f_loadind (t: T; READONLY ind: Operand; o: ByteOffset; type: MType) =
     ins.modrm := 16_40 + fopcode[FOp.fLD].memop * 8 + ind.reg[0];
     ins.mrmpres := TRUE;
     ins.disp := o;
-    IF o >= -16_80 AND o <= 16_7F
-      THEN ins.dsize := 1;
-      ELSE ins.dsize := 4;  INC (ins.modrm, 16_40);
+    IF o >= -16_80 AND o <= 16_7F THEN
+      ins.dsize := 1;
+    ELSE
+      ins.dsize := 4;
+      INC (ins.modrm, 16_40);
     END;
-    IF ind.reg[0] = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
+    IF ind.reg[0] = ESP THEN
+      ins.sib := 16_24;
+      ins.sibpres := TRUE;
+    END;
     writecode (t, ins);
     INC(t.fstacksize);
     INC(t.fstackloaded);
@@ -1580,11 +1578,16 @@ PROCEDURE f_storeind (t: T; READONLY ind: Operand; o: ByteOffset;
     ins.modrm := 16_40 + fopcode[FOp.fSTP].memop * 8 + ind.reg[0];
     ins.mrmpres := TRUE;
     ins.disp := o;
-    IF o >= -16_80 AND o <= 16_7F
-      THEN ins.dsize := 1;
-      ELSE ins.dsize := 4;  INC (ins.modrm, 16_40);
+    IF o >= -16_80 AND o <= 16_7F THEN
+      ins.dsize := 1;
+    ELSE
+      ins.dsize := 4;
+      INC (ins.modrm, 16_40);
     END;
-    IF ind.reg[0] = ESP THEN  ins.sib := 16_24;  ins.sibpres := TRUE;  END;
+    IF ind.reg[0] = ESP THEN
+      ins.sib := 16_24;
+      ins.sibpres := TRUE;
+    END;
     writecode (t, ins);
     DEC(t.fstacksize);
     DEC(t.fstackloaded);
@@ -2023,14 +2026,14 @@ PROCEDURE Mn (t: T; mn1, mn2, mn3: TEXT := NIL) =
 PROCEDURE HexBE (t: T; val: INTEGER; size: INTEGER) =
   BEGIN
     FOR i := size-1 TO 0 BY -1 DO
-      Byte(t, Word.Extract(val, i*8, 8));
+      Byte(t, Word.Extract(val, i * 8, 8));
     END;
   END HexBE;
 
 PROCEDURE HexLE (t: T; val: INTEGER; size: INTEGER) =
   BEGIN
     FOR i := 0 TO size-1 DO
-      Byte(t, Word.Extract(val, i*8, 8));
+      Byte(t, Word.Extract(val, i * 8, 8));
     END;
   END HexLE;
 
