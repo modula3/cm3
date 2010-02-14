@@ -779,7 +779,7 @@ PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand) =
     ins.dsize := 0;
     ins.modrm := dest.reg[0] * 8 + src.reg[0];
     writecode(t, ins);
-    log_global_var(t, dest.mvar, -4);
+    (*log_global_var(t, dest.mvar, -4);*)
   END lock_compare_exchange;
 
 PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
