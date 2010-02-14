@@ -4239,8 +4239,9 @@ PROCEDURE exchange (u: U; t: MType; z: ZType; <*UNUSED*>order: MemoryOrder) =
 
 PROCEDURE compare_exchange (x: U; t: MType; u: ZType; r: IType;
                             <*UNUSED*>success, failure: MemoryOrder) =
-(* tmp := Mem[s2.A].t THEN
-   IF Mem[s2.A].t = Mem[s1.A].t THEN
+(* tmp := Mem[s2.A].t;
+   spurious_failure := whatever;
+   IF tmp = Mem[s1.A].t AND NOT spurious_failure THEN
      Mem [s2.A].t := s0.u;
      s2.r := 1;
    ELSE
@@ -4248,7 +4249,9 @@ PROCEDURE compare_exchange (x: U; t: MType; u: ZType; r: IType;
      s2.r := 0;
    END;
    pop(2);
-   This is permitted to fail spuriously, leaving Mem [s2.A] unchanged.
+   This is permitted to fail spuriously.
+   That is, even if Mem[s2.a] = Mem[s1.a], we might
+     still go down the then branch.
 *)
   BEGIN
 
