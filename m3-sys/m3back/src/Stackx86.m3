@@ -994,21 +994,15 @@ PROCEDURE doloadaddress (t: T; v: x86Var; o: ByteOffset) =
   END doloadaddress;
 
 PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
-                   VAR dest, src: INTEGER; locked := FALSE): BOOLEAN =
+                   VAR dest, src: INTEGER): BOOLEAN =
   VAR reversed := FALSE;
   BEGIN
     unlock(t);
     WITH stack0 = pos(t, 0, "findbin"),
          stack1 = pos(t, 1, "findbin") DO
 
-      IF locked THEN
-        (* hack/workaround *)
-        find(t, stack0, Force.anyreg);
-        find(t, stack1, Force.anyreg);
-      ELSE
-        find(t, stack0, Force.any);
-        find(t, stack1, Force.any);
-      END;
+      find(t, stack0, Force.any);
+      find(t, stack1, Force.any);
 
       WITH stop0 = t.vstack[stack0],
            stop1 = t.vstack[stack1] DO
