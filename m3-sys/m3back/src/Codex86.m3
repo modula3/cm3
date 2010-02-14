@@ -766,20 +766,12 @@ PROCEDURE CBWOp (t: T) =
   END CBWOp;
 
 PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand) =
-  VAR ins: Instruction;
   BEGIN
     Mn(t, "LOCK CMPXCHG ");  MnOp(t, dest);  MnOp(t, src);
-    <* ASSERT dest.loc = OLoc.register *> (* mem should be ok, but we have a bug *)
+    <* ASSERT dest.loc = OLoc.register *> (* mem would be correct, but we have a bug *)
     <* ASSERT src.loc = OLoc.register *>
-    ins.escape := TRUE;
-    ins.opcode := 16_B1;
-    ins.lock   := TRUE;
-    ins.mrmpres := TRUE;
-    ins.disp := 0;
-    ins.dsize := 0;
-    ins.modrm := dest.reg[0] * 8 + src.reg[0];
-    writecode(t, ins);
-    (*log_global_var(t, dest.mvar, -4);*)
+    writecode(t, Instruction{escape := TRUE, lock := TRUE, opcode := 16_B1,
+                             mrmpres := TRUE, modrm := src.reg[0] * 8 + dest.reg[0]});
   END lock_compare_exchange;
 
 PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
