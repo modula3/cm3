@@ -871,6 +871,13 @@ BEGIN
   NL();
 
   a := VAL(LAST(INTEGER), LONGINT);
+  NotPortableL(a);
+  INC(a);
+  NotPortableL(a);
+  NL();
+
+  a := VAL(NotConstI(LAST(INTEGER)), LONGINT);
+  NotPortableL(a);
   INC(a);
   NotPortableL(a);
   NL();
@@ -880,6 +887,13 @@ BEGIN
   NL();
 
   a := VAL(FIRST(INTEGER), LONGINT);
+  NotPortableL(a);
+  DEC(a);
+  NotPortableL(a);
+  NL();
+
+  a := VAL(NotConstI(FIRST(INTEGER)), LONGINT);
+  NotPortableL(a);
   DEC(a);
   NotPortableL(a);
   NL();
