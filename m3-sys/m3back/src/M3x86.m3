@@ -4318,6 +4318,7 @@ PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; t: MType; z: ZType;
    pop *)
   VAR label: Label;
        rNewValue: Regno;
+       rEAX: Regno;
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("fetch_and_op");
@@ -4346,14 +4347,15 @@ retry:
     ; eax contains old value
     ; r1 containes new value
 *)
-    EVAL x.vstack.freereg(RegSet{EAX}, operandPart := 0);
+    rEAX := x.vstack.freereg(RegSet{EAX}, operandPart := 0);
+    <* ASSERT rEAX = EAX *>
     rNewValue := x.vstack.freereg(operandPart := 0);
     WITH operand        = x.vstack.pos(0, "fetch_and_op"),
          atomicVariable = x.vstack.pos(1, "fetch_and_op") DO
       x.vstack.find(operand, Force.anyreg);
       (* x.vstack.find(atomicVariable, Force.any); bug *)
       x.vstack.find(atomicVariable, Force.anyreg);
-      x.cg.movOp(x.cg.reg[EAX], x.vstack.op(atomicVariable));
+      x.cg.load_ind(rEAX, x.vstack.op(atomicVariable), 0, t);
       label := x.next_label();
       debug_set_label(x, label);
       x.cg.set_label(label);
@@ -4361,7 +4363,9 @@ retry:
       x.cg.binOp(AtomicOpToOp[atomic_op], x.cg.reg[rNewValue], x.vstack.op(operand));
       x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.cg.reg[rNewValue]);
       x.cg.brOp(Cond.NE, label);
-      x.vstack.discard(1);
+      x.vstack.discard(2);
+      x.vstack.unlock();
+      x.vstack.pushnew(t, Force.regset, RegSet{rNewValue});
     END;
 
   END fetch_and_op;
