@@ -4248,7 +4248,7 @@ PROCEDURE compare_exchange (x: U; t: MType; u: ZType; r: IType;
      s2.r := 0;
    END;
    pop(2);
-   This is permitted to fail spuriously, leaving Mem [s1.A] unchanged.
+   This is permitted to fail spuriously, leaving Mem [s2.A] unchanged.
 *)
   BEGIN
 
