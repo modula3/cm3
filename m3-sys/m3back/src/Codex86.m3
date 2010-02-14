@@ -657,7 +657,7 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
       ins.modrm := 16_40 + dest.reg[0] * 8 + 4;
     END;
 
-    ins.sibpres := TRUE;
+    ins.sib_present := TRUE;
     CASE scale OF
     | 1 => ins.sib := 0;
     | 2 => ins.sib := 16_40;
@@ -1242,7 +1242,7 @@ TYPE
     escape  : BOOLEAN := FALSE;
     prefix  : BOOLEAN := FALSE;
     mrmpres : BOOLEAN := FALSE;
-    sibpres : BOOLEAN := FALSE;
+    sib_present : BOOLEAN := FALSE;
     opcode  : INTEGER := 0;
     modrm   : INTEGER := 0;
     sib     : INTEGER := 0;
@@ -1321,7 +1321,7 @@ PROCEDURE debugcode (t: T;  READONLY ins: Instruction) =
     IF ins.prefix     THEN  Byte(t, 16_66);       INC(len); END;
                             Byte(t, ins.opcode);  INC(len);
     IF ins.mrmpres    THEN  Byte(t, ins.modrm);   INC(len); END;
-    IF ins.sibpres    THEN  Byte(t, ins.sib);     INC(len); END;
+    IF ins.sib_present THEN  Byte(t, ins.sib);    INC(len); END;
     IF ins.dsize # 0  THEN  HexLE(t, ins.disp, ins.dsize); INC(len,ins.dsize); END;
     IF ins.imsize # 0 THEN  HexLE(t, ins.imm, ins.imsize); INC(len,ins.imsize); END;
 
@@ -1359,7 +1359,7 @@ PROCEDURE writecode (t: T; READONLY ins: Instruction) =
       t.obj.append(Seg.Text, ins.modrm, 1);
     END;
 
-    IF ins.sibpres THEN
+    IF ins.sib_present THEN
       t.obj.append(Seg.Text, ins.sib, 1);
     END;
 
@@ -1382,7 +1382,7 @@ PROCEDURE case_jump (t: T; READONLY index: Operand; READONLY labels: ARRAY OF La
     WITH curs = t.obj.cursor(Seg.Text) DO
       ins.opcode  := 16_FF;
       ins.modrm   := 16_24;                   ins.mrmpres := TRUE;
-      ins.sib     := 16_85 + index.reg[0] * 8;ins.sibpres := TRUE;
+      ins.sib     := 16_85 + index.reg[0] * 8;ins.sib_present := TRUE;
       ins.disp    := curs + 7;                ins.dsize   := 4;
       writecode(t, ins); (* Jump to abs address indexed by register 'index'*4 *)
       t.obj.relocate(t.textsym, curs + 3, t.textsym);
@@ -1442,7 +1442,7 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffset; t
     END;
     IF ind.reg[0] = ESP THEN
       ins.sib := 16_24;
-      ins.sibpres := TRUE;
+      ins.sib_present := TRUE;
     END;
     writecode (t, ins);
   END load_ind;
@@ -1477,7 +1477,7 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffs
     END;
     IF ind.reg[0] = ESP THEN
       ins.sib := 16_24;
-      ins.sibpres := TRUE;
+      ins.sib_present := TRUE;
     END;
     writecode (t, ins);
   END fast_load_ind;
@@ -1515,7 +1515,7 @@ PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset;
     END;
     IF ind.reg[0] = ESP THEN
       ins.sib := 16_24;
-      ins.sibpres := TRUE;
+      ins.sib_present := TRUE;
     END;
     writecode (t, ins);
   END store_ind1;
@@ -1560,7 +1560,7 @@ PROCEDURE f_loadind (t: T; READONLY ind: Operand; offset: ByteOffset; type: MTyp
     END;
     IF ind.reg[0] = ESP THEN
       ins.sib := 16_24;
-      ins.sibpres := TRUE;
+      ins.sib_present := TRUE;
     END;
     writecode (t, ins);
     INC(t.fstacksize);
@@ -1592,7 +1592,7 @@ PROCEDURE f_storeind (t: T; READONLY ind: Operand; offset: ByteOffset;
     END;
     IF ind.reg[0] = ESP THEN
       ins.sib := 16_24;
-      ins.sibpres := TRUE;
+      ins.sib_present := TRUE;
     END;
     writecode (t, ins);
     DEC(t.fstacksize);
