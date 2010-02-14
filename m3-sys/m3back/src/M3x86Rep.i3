@@ -122,9 +122,8 @@ CONST NRegs: INTEGER = 7;
 
 TYPE Regno = [-1 .. NRegs];
 
-(* These constants should line up with RegName and are chosen
- * specifically to related to how x86 instructions are encoded.
- *)
+(* These constants relate to how x86 instructions are encoded. Do not change them. *)
+
 CONST                                             EAX=0; ECX=1; EDX=2; EBX=3; ESP=4; EBP=5; ESI=6; EDI=7;
 CONST RegName = ARRAY Regno OF TEXT { "*NOREG*", "EAX", "ECX", "EDX", "EBX", "ESP", "EBP", "ESI", "EDI" };
 
