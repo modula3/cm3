@@ -1429,13 +1429,16 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffset; t
     END;
     Mn(t, mnemonic, " ", RegName[r]);  MnPtr(t, ind, offset, type);
     ins.mrmpres := TRUE;
-    ins.disp := offset;
-    IF offset > -16_81 AND offset < 16_80 THEN
-      ins.modrm := 16_40 + r * 8 + ind.reg[0];
-      ins.dsize := 1;
-    ELSE
-      ins.modrm := 16_80 + r * 8 + ind.reg[0];
-      ins.dsize := 4;
+    ins.modrm := r * 8 + ind.reg[0];
+    IF offset # 0 THEN
+      ins.disp := offset;
+      INC(ins.modrm, 16_40);
+      IF offset > -16_81 AND offset < 16_80 THEN
+        ins.dsize := 1;
+      ELSE
+        INC(ins.modrm, 16_40);
+        ins.dsize := 4;
+      END;
     END;
     IF ind.reg[0] = ESP THEN
       ins.sib := 16_24;
