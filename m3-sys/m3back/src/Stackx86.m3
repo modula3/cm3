@@ -412,21 +412,6 @@ PROCEDURE find (t: T; stackp: INTEGER;
         RETURN;
       END;
 
-      (* At this point we might be "half" done, so possibly shift things around
-       * so we only try to do the remaining part.
-       *)
-
-      IF size = 2 THEN
-        IF done[0] AND (NOT done[1]) THEN
-          opA[0] := opA[1];
-          size := 1;
-        ELSIF done[1] AND (NOT done[0]) THEN
-          size := 1;
-        ELSE
-          <* ASSERT (NOT done[0]) AND (NOT done[1]) *>
-        END;
-      END;
-
       (* If it doesn't have to be in a register, and there are no
          unused registers, do nothing *)
 
@@ -454,33 +439,36 @@ PROCEDURE find (t: T; stackp: INTEGER;
 
       FOR i := 0 TO size - 1 DO
 
-        (* If 'to' is unused, this is easy *)
+        IF NOT done[i] THEN
 
-        IF t.reguse[to[i]].stackp = -1 THEN
-          IF in[i] = -1 THEN
-            loadreg(t, to[i], opA[i], i);
-          ELSE
-            IF t.reguse[in[i]].stackp = stackp THEN
-              movereg(t, to[i], in[i], i);
-            ELSE
-              copyreg(t, stackp, to[i], in[i], i);
-            END
-          END;
-        ELSE
-          (* Otherwise, see if 'in' is used for something other than stackp. If not,
-             swap the registers over. If so, force 'to' out. If there is a free
-             register, 'to' will be moved into it, otherwise it will be stored to
-             memory *)
-          IF in[i] = -1 OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp) THEN
-            forceout(t, to[i], i);
+          (* If 'to' is unused, this is easy *)
+
+          IF t.reguse[to[i]].stackp = -1 THEN
             IF in[i] = -1 THEN
               loadreg(t, to[i], opA[i], i);
             ELSE
-              copyreg(t, stackp, to[i], in[i], i);
-            END
+              IF t.reguse[in[i]].stackp = stackp THEN
+                movereg(t, to[i], in[i], i);
+              ELSE
+                copyreg(t, stackp, to[i], in[i], i);
+              END
+            END;
           ELSE
-            swapreg(t, to[i], in[i], i);
-            loadphantom(t, to[i], stackp, i);
+            (* Otherwise, see if 'in' is used for something other than stackp. If not,
+               swap the registers over. If so, force 'to' out. If there is a free
+               register, 'to' will be moved into it, otherwise it will be stored to
+               memory *)
+            IF in[i] = -1 OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp) THEN
+              forceout(t, to[i], i);
+              IF in[i] = -1 THEN
+                loadreg(t, to[i], opA[i], i);
+              ELSE
+                copyreg(t, stackp, to[i], in[i], i);
+              END
+            ELSE
+              swapreg(t, to[i], in[i], i);
+              loadphantom(t, to[i], stackp, i);
+            END;
           END;
         END;
       END;
