@@ -143,7 +143,7 @@ PROCEDURE Init () =
     fields[TRUE]   := NIL;
     in_init        := FALSE;
     init_pc        := 0;
-    init_bits      := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
+    init_bits      := TInt.Zero;
     free_temps     := NIL;
     busy_temps     := NIL;
     free_values    := NIL;
@@ -797,7 +797,7 @@ PROCEDURE Begin_init (v: Var) =
     cg.begin_init (v);
     in_init := TRUE;
     init_pc := 0;
-    init_bits := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
+    init_bits := TInt.Zero;
   END Begin_init;
 
 PROCEDURE End_init (v: Var) =
@@ -926,8 +926,7 @@ PROCEDURE AdvanceInit (o: Offset) =
   VAR
     n_bytes := (o - init_pc) DIV Target.Byte;
     tmp, new_bits: Target.Int;
-    size: CARDINAL;
-    excess: INTEGER;
+    size, excess: CARDINAL;
     t: Type;
   BEGIN
     <*ASSERT n_bytes >= 0*>
@@ -941,10 +940,10 @@ PROCEDURE AdvanceInit (o: Offset) =
         (* send out some number of bytes *)
         EVAL FindInitType (n_bytes, init_pc, t);
         size := TargetMap.CG_Size[t];
-        excess := Target.Integer.size - size;
-        IF (excess <= 0) THEN
+        excess := Target.Longint.size - size;
+        IF (excess = 0) THEN
           cg.init_int (init_pc DIV Target.Byte, init_bits, t);
-          init_bits := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
+          init_bits := TInt.Zero;
         ELSIF Target.Little_endian
           AND TWord.Extract (init_bits, 0, size, tmp)
           AND TWord.Extract (init_bits, size, excess, new_bits) THEN
@@ -985,17 +984,18 @@ PROCEDURE FindInitType (n_bytes, offset: INTEGER;  VAR t: Type): BOOLEAN =
 
 PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
                     is_const: BOOLEAN) =
-  VAR bit_offset: CARDINAL;  itype: Type;  tmp: Target.Int;
+  VAR bit_offset: CARDINAL;  itype: Type;  v, tmp: Target.Int;
   BEGIN
     IF (NOT in_init) THEN
       PushPending (NEW (IntNode, o := o, s := s, v := value), is_const);
       RETURN;
     END;
+    EVAL TInt.IntI (value, Target.Longint.bytes, v);
 
     AdvanceInit (o);
     IF Target.Little_endian
       THEN bit_offset := o - init_pc;
-      ELSE bit_offset := Target.Integer.size - (o - init_pc) - s;
+      ELSE bit_offset := Target.Longint.size - (o - init_pc) - s;
     END;
 
     IF (o = init_pc)
@@ -1003,8 +1003,8 @@ PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
       AND (FindInitType (s DIV Target.Byte, init_pc, itype))
       AND (TargetMap.CG_Size[itype] = s) THEN
       (* simple, aligned integer initialization *)
-      cg.init_int (o DIV Target.Byte, value, itype);
-    ELSIF TWord.Insert (init_bits, value, bit_offset, s, tmp) THEN
+      cg.init_int (o DIV Target.Byte, v, itype);
+    ELSIF TWord.Insert (init_bits, v, bit_offset, s, tmp) THEN
       init_bits := tmp;
     ELSE
       Err ("unable to stuff bit field value??");
