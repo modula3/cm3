@@ -904,16 +904,16 @@ BEGIN
 (*InsertExtractMaxAB := 2;
   InsertExtractMaxMN := 2; *)
 
-  PutT("LINE "); PutI(ThisLine()); PutT(" FIRST(INTEGER): "); PutI(FIRST(INTEGER));
-  PutT("LINE "); PutI(ThisLine()); PutT(" LAST(INTEGER): "); PutI(LAST(INTEGER));
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(FIRST(INTEGER)): "); PutI(NotConstI(FIRST(INTEGER)));
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(LAST(INTEGER)): "); PutI(NotConstI(LAST(INTEGER)));
+  PutT("LINE "); PutI(ThisLine()); PutT(" FIRST(INTEGER): "); PutI(FIRST(INTEGER)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" LAST(INTEGER): "); PutI(LAST(INTEGER)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(FIRST(INTEGER)): "); PutI(NotConstI(FIRST(INTEGER))); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(LAST(INTEGER)): "); PutI(NotConstI(LAST(INTEGER))); NL();
   NL();
 
-  PutT("LINE "); PutI(ThisLine()); PutT(" FIRST(LONGINT): "); PutL(FIRST(LONGINT));
-  PutT("LINE "); PutI(ThisLine()); PutT(" LAST(LONGINT): "); PutL(LAST(LONGINT));
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)): "); PutL(NotConstL(FIRST(LONGINT)));
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(LAST(LONGINT)): "); PutL(NotConstL(LAST(LONGINT)));
+  PutT("LINE "); PutI(ThisLine()); PutT(" FIRST(LONGINT): "); PutL(FIRST(LONGINT)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" LAST(LONGINT): "); PutL(LAST(LONGINT)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)): "); PutL(NotConstL(FIRST(LONGINT))); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(LAST(LONGINT)): "); PutL(NotConstL(LAST(LONGINT))); NL();
   NL();
 
 
