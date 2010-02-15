@@ -1513,8 +1513,7 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffs
     writecode (t, ins);
   END fast_load_ind;
 
-PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset;
-                     type: MType) =
+PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset; type: MType) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT ind.loc = OLoc.register AND val.loc # OLoc.mem *>
@@ -1554,8 +1553,7 @@ PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset;
     writecode (t, ins);
   END store_ind1;
 
-PROCEDURE store_ind (t: T; READONLY val, ind: Operand; offset: ByteOffset;
-                     type: MType) =
+PROCEDURE store_ind (t: T; READONLY val, ind: Operand; offset: ByteOffset; type: MType) =
   VAR valA: ARRAY OperandPart OF Operand;
       size: OperandSize;
   BEGIN
