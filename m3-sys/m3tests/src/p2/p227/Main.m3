@@ -32,6 +32,7 @@ END NotConstI;
 PROCEDURE NL() =
 BEGIN
   PutT("\n");
+  Flush();
 END NL;
 
 CONST PutT = RTIO.PutText;
