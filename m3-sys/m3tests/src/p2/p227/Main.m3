@@ -915,13 +915,13 @@ BEGIN
   PutT("NotConstL(LAST(LONGINT)) "); PutL(NotConstL(LAST(LONGINT)));
   NL();
 
-  PutT("NotConstL(LAST(LONGINT)) DIV NotConstL(2L)"); PutL(NotConstL(LAST(LONGINT)) DIV NotConstL(2L));
+  PutT("NotConstL(LAST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(LAST(LONGINT)) DIV NotConstL(2L));
   NL();
 
-  PutT("NotConstL(FIRST(LONGINT)) DIV NotConstL(2L)"); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
+  PutT("NotConstL(FIRST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
   NL();
 
-  PutT("NotConstL(FIRST(LONGINT)) DIV NotConstL(2L)"); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
+  PutT("NotConstL(FIRST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
   NL();
 
   TestInsert();
