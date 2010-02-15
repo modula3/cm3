@@ -358,6 +358,8 @@ end
 e_test ("e0", "e029", "use type instead of value as an initializer")
 p_test ("p2", "p226", "atomics")
 p_test ("p2", "p227", "some longint operations, some word operations (insert, extract) (a little slow)")
+p_test ("p2", "p228", "sign/zero extend return values of functions returning types smaller than 32bits")
+p_test ("p2", "p229", "minimal 64bit divide test")
 
 p_test ("p0", "p001", "Hello world")
 p_test ("p2", "p211", "float and double constants work")
