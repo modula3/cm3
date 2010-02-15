@@ -14,8 +14,8 @@ FROM RTIO IMPORT Flush;
  *)
 
 (* decrease these for faster runs *)
-VAR insertextract_max_ab := 33;
-VAR insertextract_max_mn := 10;
+VAR InsertExtractMaxAB := 33;
+VAR InsertExtractMaxMN := 10;
 
 (* turn a constant into not a constant, from m3back's point of view *)
 PROCEDURE NotConstL(a: LONGINT): LONGINT =
@@ -42,23 +42,23 @@ CONST PutLH = RTIO.PutLongHex;
 PROCEDURE NotPortableL(<*UNUSED*>a: LONGINT) =
 BEGIN
    (* PutL(a); *)
-   PutT("notportable");
+   PutT("NotPortableL");
 END NotPortableL;
 
 PROCEDURE NotPortableH(<*UNUSED*>a: INTEGER) =
 BEGIN
    (* PutH(a); *)
-   PutT("notportable");
+   PutT("NotPortableH");
 END NotPortableH;
 
 PROCEDURE TestInsert() =
 VAR result32: CARDINAL := 0;
     result64: LONGINT := 0L;
 BEGIN
-  FOR a32 := 0 TO insertextract_max_ab DO
-    FOR b32 := 0 TO insertextract_max_ab DO
-      FOR m := 0 TO insertextract_max_mn DO
-        FOR n := 0 TO insertextract_max_mn DO
+  FOR a32 := 0 TO InsertExtractMaxAB DO
+    FOR b32 := 0 TO InsertExtractMaxAB DO
+      FOR m := 0 TO InsertExtractMaxMN DO
+        FOR n := 0 TO InsertExtractMaxMN DO
           result32 := Word.Insert(a32, b32, m, n);
           PutT("insert32(a:"); PutH(a32);
           PutT(", b:"); PutH(b32);
@@ -74,10 +74,10 @@ BEGIN
     END
   END;
 
-  FOR a64 := 0L TO VAL(insertextract_max_ab, LONGINT) DO
-    FOR b64 := 0L TO VAL(insertextract_max_ab, LONGINT) DO
-      FOR m := 0 TO insertextract_max_mn DO
-        FOR n := 0 TO insertextract_max_mn DO
+  FOR a64 := 0L TO VAL(InsertExtractMaxAB, LONGINT) DO
+    FOR b64 := 0L TO VAL(InsertExtractMaxAB, LONGINT) DO
+      FOR m := 0 TO InsertExtractMaxMN DO
+        FOR n := 0 TO InsertExtractMaxMN DO
           result64 := Long.Insert(a64, b64, m, n);
           PutT("insert64(a:"); PutLH(a64);
           PutT(", b:"); PutLH(b64);
@@ -100,9 +100,9 @@ CONST sign_extend = 0;
 VAR result32: CARDINAL := 0;
     result64: LONGINT := 0L;
 BEGIN
-  FOR a32 := 0 TO insertextract_max_ab DO
-     FOR m := 0 TO insertextract_max_mn DO
-      FOR n := 0 TO insertextract_max_mn DO
+  FOR a32 := 0 TO InsertExtractMaxAB DO
+     FOR m := 0 TO InsertExtractMaxMN DO
+      FOR n := 0 TO InsertExtractMaxMN DO
         result32 := Word.Extract(a32, m, n);
         PutT("extract32(value:"); PutH(a32);
         PutT(", m:"); PutH(m);
@@ -117,9 +117,9 @@ BEGIN
     END
   END;
 
-  FOR a64 := 0L TO VAL(insertextract_max_ab, LONGINT) DO
-    FOR m := 0 TO insertextract_max_mn DO
-      FOR n := 0 TO insertextract_max_mn DO
+  FOR a64 := 0L TO VAL(InsertExtractMaxAB, LONGINT) DO
+    FOR m := 0 TO InsertExtractMaxMN DO
+      FOR n := 0 TO InsertExtractMaxMN DO
         result64 := Long.Extract(a64, m, n);
         PutT("extract64(value:"); PutLH(a64);
         PutT(", m:"); PutH(m);
@@ -140,9 +140,9 @@ VAR a := 1234L;
 VAR b := 5678L;
 VAR c := 1024L * 1024L * 1024L * 8L;
 VAR d: INTEGER;
-CONST expect_true = ARRAY BOOLEAN OF TEXT{"bad\n","good\n"};
-CONST expect_false = ARRAY BOOLEAN OF TEXT{"good\n","bad\n"};
-CONST falsetrue = ARRAY BOOLEAN OF TEXT{"false\n","true\n"};
+CONST ExectTrue = ARRAY BOOLEAN OF TEXT{"bad\n","good\n"};
+CONST ExpectFalse = ARRAY BOOLEAN OF TEXT{"good\n","bad\n"};
+CONST FalseTrue = ARRAY BOOLEAN OF TEXT{"false\n","true\n"};
 
 <*UNUSED*>PROCEDURE Add(a, b: LONGINT): LONGINT =
 BEGIN
@@ -823,14 +823,14 @@ BEGIN
   PutT("       100L:"); PutLH(NotConstL(100L)); NL();
   <* ASSERT 100L = NotConstL(100L) *>
 
-  PutT(falsetrue[           100L  >           0L]); Flush();
-  PutT(falsetrue[           100L  <           0L]); Flush();
-  PutT(falsetrue[          -100L  >           0L]); Flush();
-  PutT(falsetrue[          -100L  <           0L]); Flush();
-  PutT(falsetrue[NotConstL( 100L) > NotConstL(0L)]); Flush();
-  PutT(falsetrue[NotConstL( 100L) < NotConstL(0L)]); Flush();
-  PutT(falsetrue[NotConstL(-100L) > NotConstL(0L)]); Flush();
-  PutT(falsetrue[NotConstL(-100L) < NotConstL(0L)]); Flush();
+  PutT(FalseTrue[           100L  >           0L]); Flush();
+  PutT(FalseTrue[           100L  <           0L]); Flush();
+  PutT(FalseTrue[          -100L  >           0L]); Flush();
+  PutT(FalseTrue[          -100L  <           0L]); Flush();
+  PutT(FalseTrue[NotConstL( 100L) > NotConstL(0L)]); Flush();
+  PutT(FalseTrue[NotConstL( 100L) < NotConstL(0L)]); Flush();
+  PutT(FalseTrue[NotConstL(-100L) > NotConstL(0L)]); Flush();
+  PutT(FalseTrue[NotConstL(-100L) < NotConstL(0L)]); Flush();
 
   <* ASSERT (NotConstL(  100L) > NotConstL(0L)) = TRUE *>
   <* ASSERT (NotConstL(  100L) < NotConstL(0L)) = FALSE *>
@@ -843,10 +843,10 @@ BEGIN
   PutT("        neg:"); PutLH(-NotConstL(-NotConstL(100L))); NL();
   <* ASSERT -(-100L) = -NotConstL(-(NotConstL(100L))) *>
 
-  PutT("        abs:"); PutLH(ABS(NotConstL(-100L))); NL();
+  PutT("        ABS:"); PutLH(ABS(NotConstL(-100L))); NL();
   <* ASSERT ABS(-100L) = ABS(NotConstL(-100L)) *>
 
-  PutT("        abs:"); PutLH(ABS(NotConstL(100L))); NL();
+  PutT("        ABS:"); PutLH(ABS(NotConstL(100L))); NL();
   <* ASSERT ABS(100L) = ABS(NotConstL(100L)) *>
 
   PutL(a);
@@ -856,16 +856,18 @@ BEGIN
   b := 1L + 2L;
   c := a + b;
   c := a - b;
-  PutT(expect_true[c = (a - b)]);
-  PutT(expect_false[c = (a + b)]);
-  PutT(expect_true[(a + b) > a]);
+  PutT(ExectTrue[c = (a - b)]);
+  PutT(ExpectFalse[c = (a + b)]);
+  PutT(ExectTrue[(a + b) > a]);
   Flush();
 
+  PutT("VAL(-1, LONGINT) ");
   d := -1;
   a := VAL(d, LONGINT);
   PutL(a);
   NL();
 
+  PutT("-1L ");
   a := -1L;
   PutL(a);
   NL();
@@ -898,28 +900,28 @@ BEGIN
   NotPortableL(a);
   NL();
 
-(*insertextract_max_ab := 2;
-  insertextract_max_mn := 2; *)
+(*InsertExtractMaxAB := 2;
+  InsertExtractMaxMN := 2; *)
 
-  PutL(FIRST(LONGINT));
+  PutT("FIRST(LONGINT) "); PutL(FIRST(LONGINT));
   NL();
 
-  PutL(NotConstL(FIRST(LONGINT)));
+  PutT("NotConstL(FIRST(LONGINT)) "); PutL(NotConstL(FIRST(LONGINT)));
   NL();
 
-  PutL(LAST(LONGINT));
+  PutT("LAST(LONGINT) "); PutL(LAST(LONGINT));
   NL();
 
-  PutL(NotConstL(LAST(LONGINT)));
+  PutT("NotConstL(LAST(LONGINT)) "); PutL(NotConstL(LAST(LONGINT)));
   NL();
 
-  PutL(NotConstL(LAST(LONGINT)) DIV NotConstL(2L));
+  PutT("NotConstL(LAST(LONGINT)) DIV NotConstL(2L)"); PutL(NotConstL(LAST(LONGINT)) DIV NotConstL(2L));
   NL();
 
-  PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
+  PutT("NotConstL(FIRST(LONGINT)) DIV NotConstL(2L)"); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
   NL();
 
-  PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
+  PutT("NotConstL(FIRST(LONGINT)) DIV NotConstL(2L)"); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
   NL();
 
   TestInsert();
