@@ -1948,6 +1948,7 @@ PROCEDURE div (u: U;  t: IType;  a, b: Sign) =
               | Type.Word64 => builtin := Builtin.udiv64;
               ELSE <* ASSERT FALSE *>
       END;
+      u.vstack.swap();
       start_int_proc (u, builtin);
       pop_param(u, Type.Word64);
       pop_param(u, Type.Word64);
@@ -1980,6 +1981,7 @@ PROCEDURE mod (u: U;  t: IType;  a, b: Sign) =
               | Type.Word64 => builtin := Builtin.umod64;
               ELSE <* ASSERT FALSE *>
       END;
+      u.vstack.swap();
       start_int_proc (u, builtin);
       pop_param(u, Type.Word64);
       pop_param(u, Type.Word64);
