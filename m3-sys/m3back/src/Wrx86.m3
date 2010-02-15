@@ -63,9 +63,10 @@ PROCEDURE Cmd (t: T; cmd: TEXT) =
 PROCEDURE ZName (t: T;  n: Name) =
   BEGIN
     OutC (t, ' ');
-    IF (n = M3ID.NoID)
-      THEN OutC (t, '*');
-      ELSE OutN (t, n);
+    IF (n = M3ID.NoID) THEN
+      OutC (t, '*');
+    ELSE
+      OutN (t, n);
     END;
   END ZName;
 
@@ -130,9 +131,10 @@ PROCEDURE Bool (t: T;  b: BOOLEAN) =
 PROCEDURE Lab (t: T;  i: Label) =
   BEGIN
     OutC (t, ' ');
-    IF (i = No_label)
-      THEN OutC (t, '*');
-      ELSE OutT (t, "L."); OutI (t, i);
+    IF (i = No_label) THEN
+      OutC (t, '*');
+    ELSE
+      OutT (t, "L."); OutI (t, i);
     END;
   END Lab;
 
@@ -170,9 +172,10 @@ PROCEDURE BInt (t: T;  i: INTEGER) =
   VAR x := i MOD Target.Byte;
       y := i DIV Target.Byte;
   BEGIN
-    IF (x = 0)
-      THEN Int (t, y);
-      ELSE Int (t, y);  OutC (t, '+');  OutI (t, x);
+    IF (x = 0) THEN
+      Int (t, y);
+    ELSE
+      Int (t, y);  OutC (t, '+');  OutI (t, x);
     END;
   END BInt;
 ***************)
