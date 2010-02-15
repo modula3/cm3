@@ -904,25 +904,50 @@ BEGIN
 (*InsertExtractMaxAB := 2;
   InsertExtractMaxMN := 2; *)
 
-  PutT("LINE "); PutI(ThisLine()); PutT(" FIRST(LONGINT) "); PutL(FIRST(LONGINT));
+  PutT("LINE "); PutI(ThisLine()); PutT(" FIRST(LONGINT): "); PutL(FIRST(LONGINT));
+  PutT("LINE "); PutI(ThisLine()); PutT(" LAST(LONGINT): "); PutL(LAST(LONGINT));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)): "); PutL(NotConstL(FIRST(LONGINT)));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(LAST(LONGINT)): "); PutL(NotConstL(LAST(LONGINT)));
   NL();
 
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) "); PutL(NotConstL(FIRST(LONGINT)));
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT) DIV           1L : "); PutL(          FIRST(LONGINT)  DIV 1L);
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV           1L : "); PutL(NotConstL(FIRST(LONGINT)) DIV 1L);
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT) DIV NotConstL(1L): "); PutL(          FIRST(LONGINT)  DIV NotConstL(1L));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV NotConstL(1L): "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(1L));
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT) DIV           1L : "); PutL(           LAST(LONGINT)  DIV 1L);
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( LAST(LONGINT)) DIV           1L : "); PutL(NotConstL( LAST(LONGINT)) DIV 1L);
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT) DIV NotConstL(1L): "); PutL(           LAST(LONGINT)  DIV NotConstL(1L));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( LAST(LONGINT)) DIV NotConstL(1L): "); PutL(NotConstL( LAST(LONGINT)) DIV NotConstL(1L));
   NL();
 
-  PutT("LINE "); PutI(ThisLine()); PutT(" LAST(LONGINT) "); PutL(LAST(LONGINT));
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT) DIV           2L : "); PutL(          FIRST(LONGINT)  DIV 2L);
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV           2L : "); PutL(NotConstL(FIRST(LONGINT)) DIV 2L);
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT) DIV NotConstL(2L): "); PutL(          FIRST(LONGINT)  DIV NotConstL(2L));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV NotConstL(2L): "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT) DIV           2L : "); PutL(           LAST(LONGINT)  DIV 2L);
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( LAST(LONGINT)) DIV           2L : "); PutL(NotConstL( LAST(LONGINT)) DIV 2L);
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT) DIV NotConstL(2L): "); PutL(           LAST(LONGINT)  DIV NotConstL(2L));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( LAST(LONGINT)) DIV NotConstL(2L): "); PutL(NotConstL( LAST(LONGINT)) DIV NotConstL(2L));
   NL();
 
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(LAST(LONGINT)) "); PutL(NotConstL(LAST(LONGINT)));
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT) DIV           3L : "); PutL(          FIRST(LONGINT)  DIV 3L);
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV           3L : "); PutL(NotConstL(FIRST(LONGINT)) DIV 3L);
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT) DIV NotConstL(3L): "); PutL(          FIRST(LONGINT)  DIV NotConstL(3L));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV NotConstL(3L): "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(3L));
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT) DIV           3L : "); PutL(           LAST(LONGINT)  DIV 3L);
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( LAST(LONGINT)) DIV           3L : "); PutL(NotConstL( LAST(LONGINT)) DIV 3L);
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT) DIV NotConstL(3L): "); PutL(           LAST(LONGINT)  DIV NotConstL(3L));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( LAST(LONGINT)) DIV NotConstL(3L): "); PutL(NotConstL( LAST(LONGINT)) DIV NotConstL(3L));
   NL();
 
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(LAST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(LAST(LONGINT)) DIV NotConstL(2L));
-  NL();
-
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
-  NL();
-
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT) DIV           4L : "); PutL(          FIRST(LONGINT)  DIV 4L);
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV           4L : "); PutL(NotConstL(FIRST(LONGINT)) DIV 4L);
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT) DIV NotConstL(4L): "); PutL(          FIRST(LONGINT)  DIV NotConstL(4L));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV NotConstL(4L): "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(4L));
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT) DIV           4L : "); PutL(           LAST(LONGINT)  DIV 4L);
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( LAST(LONGINT)) DIV           4L : "); PutL(NotConstL( LAST(LONGINT)) DIV 4L);
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT) DIV NotConstL(4L): "); PutL(           LAST(LONGINT)  DIV NotConstL(4L));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( LAST(LONGINT)) DIV NotConstL(4L): "); PutL(NotConstL( LAST(LONGINT)) DIV NotConstL(4L));
   NL();
 
   TestInsert();
