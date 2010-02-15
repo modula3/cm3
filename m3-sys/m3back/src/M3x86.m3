@@ -794,9 +794,10 @@ PROCEDURE DeclareGlobal (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   BEGIN
     v.loc := VLoc.global;
     v.seg := SegMap [is_const];
-    IF inited
-      THEN v.symbol := u.obj.define_symbol (v.name, v.seg, 0);
-      ELSE v.symbol := u.obj.define_bss_symbol (v.name, s, a);
+    IF inited THEN
+      v.symbol := u.obj.define_symbol (v.name, v.seg, 0);
+    ELSE
+      v.symbol := u.obj.define_bss_symbol (v.name, s, a);
     END;
     IF exported THEN
       u.obj.export_symbol (v.symbol);
@@ -821,9 +822,10 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          f: Frequency): Var =
   VAR v: x86Var;
   BEGIN
-    IF u.in_proc
-      THEN v := get_temp_var (u, t, s, a, n);
-      ELSE v := create_temp_var (u, t, s, a, n);
+    IF u.in_proc THEN
+      v := get_temp_var (u, t, s, a, n);
+    ELSE
+      v := create_temp_var (u, t, s, a, n);
     END;
 
     IF u.debug THEN
@@ -859,9 +861,10 @@ PROCEDURE mangle_procname (base: M3ID.T; arg_size: INTEGER;
       END;
     END;
 
-    IF std_call
-      THEN RETURN M3ID.Add(Fmt.F ("_%s@%s", txt, Fmt.Int (arg_size)));
-      ELSE RETURN M3ID.Add(Fmt.F ("_%s",    txt));
+    IF std_call THEN
+      RETURN M3ID.Add(Fmt.F ("_%s@%s", txt, Fmt.Int (arg_size)));
+    ELSE
+      RETURN M3ID.Add(Fmt.F ("_%s",    txt));
     END;
   END mangle_procname;
 
@@ -1258,9 +1261,10 @@ PROCEDURE NewProc (u: U; n: Name; n_params: INTEGER;
   VAR p := NEW (x86Proc, tag := u.next_proc, n_params := n_params,
                 proc_type := ret_type, stdcall := (cc.m3cg_id = 1));
   BEGIN
-    IF n = M3ID.NoID
-      THEN p.name := M3ID.Add("P$" & Fmt.Int(p.tag));
-      ELSE p.name := n;
+    IF n = M3ID.NoID THEN
+      p.name := M3ID.Add("P$" & Fmt.Int(p.tag));
+    ELSE
+      p.name := n;
     END;
 
     p.templimit := 16;
