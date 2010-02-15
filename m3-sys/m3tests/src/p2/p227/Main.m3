@@ -965,7 +965,7 @@ BEGIN
   PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT)  DIV NotConstL(1L): "); PutL(          FIRST(LONGINT)  DIV NotConstL(1L)); NL();
   PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( FIRST(LONGINT)) DIV NotConstL(1L): "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(1L)); NL();
   PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT)  DIV           1L : "); PutL(           LAST(LONGINT)  DIV 1L); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(  LAST(LONGINT)) DIV           1L : "); PutL(NotConstL( LAST(LONGINT)) DIV 1L);
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(  LAST(LONGINT)) DIV           1L : "); PutL(NotConstL( LAST(LONGINT)) DIV 1L); NL();
   PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT)  DIV NotConstL(1L): "); PutL(           LAST(LONGINT)  DIV NotConstL(1L)); NL();
   PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(  LAST(LONGINT)) DIV NotConstL(1L): "); PutL(NotConstL( LAST(LONGINT)) DIV NotConstL(1L)); NL();
   NL();
