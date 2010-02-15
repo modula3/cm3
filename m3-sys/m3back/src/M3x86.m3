@@ -457,8 +457,7 @@ PROCEDURE declare_packed  (u: U;  t: TypeUID;  s: BitSize;  base: TypeUID) =
     END
   END declare_packed;
 
-PROCEDURE declare_record (u: U; t: TypeUID;  s: BitSize;
-                          n_fields: INTEGER) =
+PROCEDURE declare_record (u: U; t: TypeUID;  s: BitSize; n_fields: INTEGER) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_record");
@@ -469,8 +468,7 @@ PROCEDURE declare_record (u: U; t: TypeUID;  s: BitSize;
     END
   END declare_record;
 
-PROCEDURE declare_field (u: U;  n: Name;  o: BitOffset;  s: BitSize;
-                         t: TypeUID) =
+PROCEDURE declare_field (u: U; n: Name; o: BitOffset; s: BitSize; t: TypeUID) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("declare_field");
@@ -508,8 +506,7 @@ PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
     END
   END declare_subrange;
 
-PROCEDURE declare_pointer (u: U;  t, target: TypeUID;  brand: TEXT;
-                           traced: BOOLEAN) =
+PROCEDURE declare_pointer (u: U; t, target: TypeUID; brand: TEXT; traced: BOOLEAN) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_pointer");
@@ -896,8 +893,7 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
       IF u.param_proc.import THEN
         u.param_proc.symbol := u.obj.import_symbol(u.param_proc.name);
       ELSE
-        u.param_proc.symbol := u.obj.define_symbol(u.param_proc.name,
-                                                   Seg.Text, 0);
+        u.param_proc.symbol := u.obj.define_symbol(u.param_proc.name, Seg.Text, 0);
       END;
 
       IF u.param_proc.exported THEN
@@ -923,8 +919,7 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
     RETURN v;
   END declare_param;
 
-PROCEDURE declare_temp   (u: U;  s: ByteSize;  a: Alignment;  t: Type;
-                          in_memory:BOOLEAN): Var =
+PROCEDURE declare_temp (u: U; s: ByteSize; a: Alignment; t: Type; in_memory:BOOLEAN): Var =
   VAR v: x86Var;
   BEGIN
     <* ASSERT u.in_proc *>
@@ -1095,8 +1090,7 @@ PROCEDURE end_init (u: U;  v: Var) =
     u.init_varstore := NIL;
   END end_init;
 
-PROCEDURE init_int (u: U;  o: ByteOffset;  READONLY value: Target.Int;
-                    t: Type) =
+PROCEDURE init_int (u: U; o: ByteOffset; READONLY value: Target.Int; t: Type) =
   VAR bytes := ARRAY [0..7] OF [0..255]{0, ..};
       len: CARDINAL := 0;
   BEGIN
@@ -3315,7 +3309,10 @@ PROCEDURE check_range (u: U;  t: IType;  READONLY a, b: Target.Int;  code: Runti
   END check_range;
 
 PROCEDURE check_index (u: U;  t: IType;  code: RuntimeError) =
-  (* IF NOT (0 <= s1.t < s0.t) THEN abort(code) END; pop *)
+  (* IF NOT (0 <= s1.t < s0.t) THEN
+       abort(code)
+     END;
+     pop *)
   (* s0.t is guaranteed to be positive so the unsigned
      check (s0.W <= s1.W) is sufficient. *)
   VAR safelab: Label;
@@ -3362,7 +3359,10 @@ PROCEDURE check_index (u: U;  t: IType;  code: RuntimeError) =
   END check_index;
 
 PROCEDURE check_eq (u: U;  t: IType;  code: RuntimeError) =
-  (* IF (s0.t # s1.t) THEN abort(code);  Pop (2) *)
+  (* IF (s0.t # s1.t) THEN
+       abort(code);
+       Pop (2)
+  *)
   VAR safelab: Label;
   BEGIN
     IF u.debug THEN
@@ -3937,8 +3937,7 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
     u.cg.rmCall(u.vstack.op(u.vstack.pos(0, "call_indirect")));
     u.vstack.discard(1);
 
-    IF (cc.m3cg_id = 0)
-      AND u.call_param_size[u.in_proc_call - 1] > 0 THEN
+    IF (cc.m3cg_id = 0) AND u.call_param_size[u.in_proc_call - 1] > 0 THEN
 
       (* caller-cleans calling convention *)
 
@@ -4137,10 +4136,15 @@ PROCEDURE comment (u: U;  a, b, c, d: TEXT := NIL) =
 PROCEDURE Cmt (u: U;  t: TEXT;  VAR width: INTEGER) =
   VAR ch: CHAR;
   BEGIN
-    IF (NOT u.debug OR t = NIL) THEN RETURN END;
+    IF (NOT u.debug) OR (t = NIL) THEN
+      RETURN
+    END;
     FOR i := 0 TO Text.Length (t) - 1 DO
       ch := Text.GetChar (t, i);
-      IF (width = -1) THEN u.wr.OutT ("\t# "); width := 0; END;
+      IF (width = -1) THEN
+        u.wr.OutT ("\t# ");
+        width := 0;
+      END;
       IF (ch = '\n') THEN
         u.wr.NL ();
         width := -1;
