@@ -1561,10 +1561,10 @@ PROCEDURE store_ind (t: T; READONLY val, ind: Operand; offset: ByteOffset; type:
     <* ASSERT GetOperandSize(ind) = 1 *>
 
     size := SplitOperand(val, valA);
+    <* ASSERT (size = 1) OR (GetOperandSize(val) = GetTypeSize(type)) *>
     IF size = 1 THEN
       store_ind1(t, val, ind, offset, type);
     ELSE
-      <* ASSERT GetOperandSize(val) = GetTypeSize(type) *>
       FOR i := 0 TO size - 1 DO
         store_ind1(t, valA[i], ind, offset + i * 4, valA[i].optype);
       END;
