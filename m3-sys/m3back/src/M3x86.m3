@@ -3068,7 +3068,6 @@ CONST
     BP { "memset",             3, Type.Addr,  "C" },
     BP { "memcmp",             3, Type.Int32, "C" },
 
-
     (* custom calling convention: parameters pushed, removed
      * by callee, but name is not __stdcall, call_64 pokes
      * the parameter size to 0
@@ -3361,8 +3360,7 @@ PROCEDURE check_index (u: U;  t: IType;  code: RuntimeError) =
 PROCEDURE check_eq (u: U;  t: IType;  code: RuntimeError) =
   (* IF (s0.t # s1.t) THEN
        abort(code);
-       Pop (2)
-  *)
+       Pop (2) *)
   VAR safelab: Label;
   BEGIN
     IF u.debug THEN
