@@ -2,6 +2,21 @@
 /* All rights reserved.                               */
 /* See the file COPYRIGHT for a full description.     */
 
+
+typedef   signed char       INT8;
+typedef unsigned char      UINT8;
+typedef   signed short      INT16;
+typedef unsigned short     UINT16;
+typedef   signed int        INT32;
+typedef unsigned int       UINT32;
+#ifdef _MSC_VER
+typedef   signed __int64  INT64;
+typedef unsigned __int64 UINT64;
+#else
+typedef   signed long long  INT64;
+typedef unsigned long long UINT64;
+#endif
+
 #include <stddef.h>
 #include <setjmp.h>
 #include <time.h>
@@ -23,6 +38,18 @@ typedef struct T T;
 #include <sys/socket.h>
 #include <netdb.h>
 
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(disable:4035) /* no return value */
+#endif
+
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
+#endif
+
+#ifdef __cplusplus
+extern "C" {
 #endif
 
 typedef struct tm tm_t;
@@ -52,7 +79,7 @@ static const T t1 =
     0
 };
 
-void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
+void __cdecl Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
 {
 #ifndef _WIN32
     if (size != SIZE(t1))
@@ -100,3 +127,70 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
     }
 #endif
 }
+
+/* Test sign/zero extension of
+ * the return value of functions returning types
+ * smaller than 32bits. It is most effective
+ * to test it on NT386, esp. with older versions of
+ * Visual C++, or hand written assembly.
+ */
+
+INT8 __cdecl FInt8(void)
+{
+#ifdef _M_IX86
+    __asm mov al, -1
+#else
+    return -1;
+#endif
+}
+
+UINT8 __cdecl FUInt8(void)
+{
+#ifdef _M_IX86
+    __asm mov al, -2
+#else
+    return -2;
+#endif
+}
+
+INT16 __cdecl FInt16(void)
+{
+#ifdef _M_IX86
+    __asm mov ax, -3
+#else
+    return -3;
+#endif
+}
+
+UINT16 __cdecl FUInt16(void)
+{
+#ifdef _M_IX86
+    __asm mov ax, -4
+#else
+    return -4;
+#endif
+}
+
+INT32 __cdecl FInt32(void)
+{
+    return -5;
+}
+
+UINT32 __cdecl FUInt32(void)
+{
+    return (UINT32)-6;
+}
+
+INT64  __cdecl FInt64(void)
+{
+    return -7;
+}
+
+UINT64 __cdecl FUInt64(void)
+{
+    return (UINT64)-8;
+}
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif

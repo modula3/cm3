@@ -7,6 +7,7 @@ INTERFACE Test;
 IMPORT Text;
 IMPORT Usysdep;
 IMPORT Csetjmp;
+IMPORT Cstdint;
 
 VAR
   errors:   INTEGER := 0;
@@ -47,5 +48,20 @@ PROCEDURE Out (a, b, c, d, e: TEXT := NIL);
 
 PROCEDURE done ();
 
-END Test.
+(* Test sign/zero extension of
+ * the return value of functions returning types
+ * smaller than 32bits. It is most effective
+ * to test it on NT386, esp. with older versions of
+ * Visual C++, or hand written assembly.
+ *)
 
+<*EXTERNAL*>PROCEDURE  FInt8():    Cstdint.int8_t;
+<*EXTERNAL*>PROCEDURE FUInt8():   Cstdint.uint8_t;
+<*EXTERNAL*>PROCEDURE  FInt16():  Cstdint.int16_t;
+<*EXTERNAL*>PROCEDURE FUInt16(): Cstdint.uint16_t;
+<*EXTERNAL*>PROCEDURE  FInt32():  Cstdint.int32_t;
+<*EXTERNAL*>PROCEDURE FUInt32(): Cstdint.uint32_t;
+<*EXTERNAL*>PROCEDURE  FInt64():  Cstdint.int64_t;
+<*EXTERNAL*>PROCEDURE FUInt64(): Cstdint.uint64_t;
+
+END Test.
