@@ -135,7 +135,7 @@ void __cdecl Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
  * Visual C++, or hand written assembly.
  */
 
-INT8 __cdecl FInt8(void)
+INT8 __cdecl NegativeInt8(void)
 {
 #ifdef _M_IX86
     __asm mov al, -1
@@ -144,7 +144,7 @@ INT8 __cdecl FInt8(void)
 #endif
 }
 
-UINT8 __cdecl FUInt8(void)
+UINT8 __cdecl NegativeUInt8(void)
 {
 #ifdef _M_IX86
     __asm mov al, -2
@@ -153,7 +153,7 @@ UINT8 __cdecl FUInt8(void)
 #endif
 }
 
-INT16 __cdecl FInt16(void)
+INT16 __cdecl NegativeInt16(void)
 {
 #ifdef _M_IX86
     __asm mov ax, -3
@@ -162,7 +162,7 @@ INT16 __cdecl FInt16(void)
 #endif
 }
 
-UINT16 __cdecl FUInt16(void)
+UINT16 __cdecl NegativeUInt16(void)
 {
 #ifdef _M_IX86
     __asm mov ax, -4
@@ -171,25 +171,82 @@ UINT16 __cdecl FUInt16(void)
 #endif
 }
 
-INT32 __cdecl FInt32(void)
+INT32 __cdecl NegativeInt32(void)
 {
     return -5;
 }
 
-UINT32 __cdecl FUInt32(void)
+UINT32 __cdecl NegativeUInt32(void)
 {
     return (UINT32)-6;
 }
 
-INT64  __cdecl FInt64(void)
+INT64  __cdecl NegativeInt64(void)
 {
     return -7;
 }
 
-UINT64 __cdecl FUInt64(void)
+UINT64 __cdecl NegativeUInt64(void)
 {
     return (UINT64)-8;
 }
+
+INT8 __cdecl PositiveInt8(void)
+{
+#ifdef _M_IX86
+    __asm mov al, 1
+#else
+    return 1;
+#endif
+}
+
+UINT8 __cdecl PositiveUInt8(void)
+{
+#ifdef _M_IX86
+    __asm mov al, 2
+#else
+    return 2;
+#endif
+}
+
+INT16 __cdecl PositiveInt16(void)
+{
+#ifdef _M_IX86
+    __asm mov ax, 3
+#else
+    return 3;
+#endif
+}
+
+UINT16 __cdecl PositiveUInt16(void)
+{
+#ifdef _M_IX86
+    __asm mov ax, 4
+#else
+    return 4;
+#endif
+}
+
+INT32 __cdecl PositiveInt32(void)
+{
+    return 5;
+}
+
+UINT32 __cdecl PositiveUInt32(void)
+{
+    return 6;
+}
+
+INT64  __cdecl PositiveInt64(void)
+{
+    return 7;
+}
+
+UINT64 __cdecl PositiveUInt64(void)
+{
+    return 8;
+}
+
 
 #ifdef __cplusplus
 } /* extern "C" */
