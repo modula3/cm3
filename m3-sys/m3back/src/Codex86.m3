@@ -14,7 +14,7 @@ IMPORT TInt, TWord;
 FROM TargetMap IMPORT CG_Bytes;
 
 FROM M3CG IMPORT ByteOffset, ByteSize, No_label;
-FROM M3CG IMPORT Type, MType, Label, Alignment;
+FROM M3CG IMPORT Type, MType, Label;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs, OperandSize, GetOperandSize;
@@ -102,9 +102,6 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         idivOp := idivOp;
         diffdivOp := diffdivOp;
         diffmodOp := diffmodOp;
-        must_extend := must_extend;
-        get_addsize := get_addsize;
-        aligned := aligned;
         reserve_labels := reserve_labels;
         set_label := set_label;
         case_jump := case_jump;
@@ -1231,38 +1228,6 @@ PROCEDURE diffmodOp (t: T; READONLY divisor: Operand; apos: BOOLEAN) =
     set_label(t, endlab);                             (* .endlab              *)
   END diffmodOp;
 
-PROCEDURE must_extend (<*UNUSED*> t: T; READONLY src: Operand): BOOLEAN =
-  BEGIN
-    IF src.loc # OLoc.mem THEN
-      RETURN FALSE;
-    END;
-    IF src.mvar.mvar_type = Type.Word8 OR src.mvar.mvar_type = Type.Word16 OR
-       src.mvar.mvar_type = Type.Int8 OR src.mvar.mvar_type = Type.Int16 THEN
-      RETURN TRUE;
-    ELSE
-      RETURN FALSE;
-    END
-  END must_extend;
-
-PROCEDURE get_addsize (<*UNUSED*> t: T; READONLY op: Operand): INTEGER =
-  BEGIN
-    IF op.loc # OLoc.mem THEN
-      RETURN 0;
-    END;
-
-    IF op.mvar.var.loc = VLoc.global THEN
-      RETURN 4;
-    END;
-
-    WITH offset = op.mvar.mvar_offset + op.mvar.var.offset DO
-      IF offset > 16_7F OR offset < -16_80 THEN
-        RETURN 4;
-      ELSE
-        RETURN 1;
-      END
-    END
-  END get_addsize;
-
 TYPE
   Instruction = RECORD
     escape  : BOOLEAN := FALSE;
@@ -2142,18 +2107,6 @@ PROCEDURE expand_spill (t: T) =
     t.fstackspill := newspill;
     t.fspilllimit := t.fspilllimit * 2;
   END expand_spill;
-
-(*------------------------------------------------------- alignment stuff ---*)
-
-PROCEDURE aligned (<*UNUSED*> t: T; READONLY var: MVar;
-                   align: Alignment): BOOLEAN =
-  BEGIN
-    IF Word.And(var.mvar_offset + var.var.offset, align - 1) = 0 THEN
-      RETURN TRUE;
-    ELSE
-      RETURN FALSE;
-    END
-  END aligned;
 
 (*---------------------------------------------- future update list stuff ---*)
 

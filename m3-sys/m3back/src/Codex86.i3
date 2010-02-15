@@ -9,7 +9,7 @@
 INTERFACE Codex86;
 
 IMPORT M3CG, M3ObjFile, TFloat;
-FROM M3CG IMPORT MType, Label, ByteOffset, Alignment;
+FROM M3CG IMPORT MType, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3x86Rep, Wrx86, Target;
 FROM M3x86Rep IMPORT Operand, NRegs, MVar, x86Var, x86Proc, Regno;
@@ -71,9 +71,6 @@ TYPE Public = OBJECT
         idivOp (READONLY divisor: Operand);
         diffdivOp (READONLY divisor: Operand; apos: BOOLEAN);
         diffmodOp (READONLY divisor: Operand; apos: BOOLEAN);
-        must_extend (READONLY operand: Operand): BOOLEAN;
-        get_addsize (READONLY Op: Operand): INTEGER;
-        aligned (READONLY var: MVar; align: Alignment): BOOLEAN;
         allocate_temp (var: x86Var; size, align: INTEGER);
         reserve_labels (n: INTEGER; short := FALSE): Label;
         set_label (label: Label; offset := 0);
