@@ -1023,7 +1023,7 @@ PROCEDURE incDecOp (t: T; READONLY op: Operand; isDec: [0..1]) =
     Mn(t, ARRAY [0..1] OF TEXT{"INC", "DEC"}[isDec]); MnOp(t, op);
     <* ASSERT op.loc = OLoc.mem OR op.loc = OLoc.register *>
     IF op.loc = OLoc.register THEN
-      ins.opcode := isDec * 8 + op.reg[0];
+      ins.opcode := isDec * 8 + 16_40 + op.reg[0];
       writecode(t, ins);
     ELSE
       <* ASSERT op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 4 *>
