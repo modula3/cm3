@@ -7,7 +7,8 @@
 
 MODULE Main;
 IMPORT RTIO;
-FROM Test IMPORT FInt8, FUInt8, FInt16, FUInt16, FInt32, FUInt32, FInt64, FUInt64;
+FROM Test IMPORT NegativeInt8, NegativeUInt8, NegativeInt16, NegativeUInt16, NegativeInt32, NegativeUInt32, NegativeInt64, NegativeUInt64,
+                 PositiveInt8, PositiveUInt8, PositiveInt16, PositiveUInt16, PositiveInt32, PositiveUInt32, PositiveInt64, PositiveUInt64;
 FROM RTIO IMPORT Flush;
 
 CONST PutI = RTIO.PutInt;
@@ -20,32 +21,63 @@ BEGIN
 END NL;
 
 BEGIN
-  PutT("FInt8   ");   PutI(FInt8()); NL();
-  PutT("FUInt8  ");  PutI(FUInt8()); NL();
-  PutT("FInt16  ");  PutI(FInt16()); NL();
-  PutT("FUInt16 "); PutI(FUInt16()); NL();
-  PutT("FInt32  ");  PutI(FInt32()); NL();
-  PutT("FUInt32 "); PutI(FUInt32()); NL();
-  PutT("FInt64  ");  PutL(FInt64()); NL();
-  PutT("FUInt64 "); PutL(FUInt64()); NL();
+  PutT("NegativeInt8 "); PutI(NegativeInt8()); NL();
+  PutT("NegativeUInt8 "); PutI(NegativeUInt8()); NL();
+  PutT("NegativeInt16 "); PutI(NegativeInt16()); NL();
+  PutT("NegativeUInt16 "); PutI(NegativeUInt16()); NL();
+  PutT("NegativeInt32 "); PutI(NegativeInt32()); NL();
+  PutT("NegativeUInt32 "); PutI(NegativeUInt32()); NL();
+  PutT("NegativeInt64 "); PutL(NegativeInt64()); NL();
+  PutT("NegativeUInt64 "); PutL(NegativeUInt64()); NL();
 
-  PutT("FInt8   => LONGINT ");   PutL(VAL(FInt8(), LONGINT)); NL();
-  PutT("FUInt8  => LONGINT ");  PutL(VAL(FUInt8(), LONGINT)); NL();
-  PutT("FInt16  => LONGINT ");  PutL(VAL(FInt16(), LONGINT)); NL();
-  PutT("FUInt16 => LONGINT "); PutL(VAL(FUInt16(), LONGINT)); NL();
-  PutT("FInt32  => LONGINT ");  PutL(VAL(FInt32(), LONGINT)); NL();
-  PutT("FUInt32 => LONGINT "); PutL(VAL(FUInt32(), LONGINT)); NL();
-  PutT("FInt64  => LONGINT ");  PutL(VAL(FInt64(), LONGINT)); NL();
-  PutT("FUInt64 => LONGINT "); PutL(VAL(FUInt64(), LONGINT)); NL();
+  PutT("NegativeInt8  => LONGINT "); PutL(VAL(NegativeInt8(), LONGINT)); NL();
+  PutT("NegativeUInt8 => LONGINT "); PutL(VAL(NegativeUInt8(), LONGINT)); NL();
+  PutT("NegativeInt16 => LONGINT "); PutL(VAL(NegativeInt16(), LONGINT)); NL();
+  PutT("NegativeUInt16 => LONGINT "); PutL(VAL(NegativeUInt16(), LONGINT)); NL();
+  PutT("NegativeInt32 => LONGINT "); PutL(VAL(NegativeInt32(), LONGINT)); NL();
+  PutT("NegativeUInt32 => LONGINT "); PutL(VAL(NegativeUInt32(), LONGINT)); NL();
+  PutT("NegativeInt64 => LONGINT "); PutL(VAL(NegativeInt64(), LONGINT)); NL();
+  PutT("NegativeUInt64 => LONGINT "); PutL(VAL(NegativeUInt64(), LONGINT)); NL();
 
-  (* PutT("FInt8   => LONGCARD ");   PutL(VAL(FInt8(), LONGCARD)); NL(); *)
-  PutT("FUInt8  => LONGCARD ");  PutL(VAL(FUInt8(), LONGCARD)); NL();
-  (* PutT("FInt16  => LONGCARD ");  PutL(VAL(FInt16(), LONGCARD)); NL(); *)
-  PutT("FUInt16 => LONGCARD "); PutL(VAL(FUInt16(), LONGCARD)); NL();
-  (* PutT("FInt32  => LONGCARD ");  PutL(VAL(FInt32(), LONGCARD)); NL(); *)
-  (* PutT("FUInt32 => LONGCARD "); PutL(VAL(FUInt32(), LONGCARD)); NL();    bug *)
-  (* PutT("FInt64  => LONGCARD ");  PutL(VAL(FInt64(), LONGCARD)); NL(); *)
-  (* PutT("FUInt64 => LONGCARD "); PutL(VAL(FUInt64(), LONGCARD)); NL(); *)
+  (* PutT("NegativeInt8 => LONGCARD "); PutL(VAL(NegativeInt8(), LONGCARD)); NL(); *)
+  PutT("NegativeUInt8 => LONGCARD "); PutL(VAL(NegativeUInt8(), LONGCARD)); NL();
+  (* PutT("NegativeInt16 => LONGCARD "); PutL(VAL(NegativeInt16(), LONGCARD)); NL(); *)
+  PutT("NegativeUInt16 => LONGCARD "); PutL(VAL(NegativeUInt16(), LONGCARD)); NL();
+  (* PutT("NegativeInt32 => LONGCARD "); PutL(VAL(NegativeInt32(), LONGCARD)); NL(); *)
+  (* PutT("NegativeUInt32 => LONGCARD "); PutL(VAL(NegativeUInt32(), LONGCARD)); NL(); bug? *)
+  (* PutT("NegativeInt64 => LONGCARD "); PutL(VAL(NegativeInt64(), LONGCARD)); NL(); *)
+  (* PutT("NegativeUInt64 => LONGCARD "); PutL(VAL(NegativeUInt64(), LONGCARD)); NL(); *)
+
+
+
+
+  PutT("PositiveInt8 "); PutI(PositiveInt8()); NL();
+  PutT("PositiveUInt8 "); PutI(PositiveUInt8()); NL();
+  PutT("PositiveInt16 "); PutI(PositiveInt16()); NL();
+  PutT("PositiveUInt16 "); PutI(PositiveUInt16()); NL();
+  PutT("PositiveInt32 "); PutI(PositiveInt32()); NL();
+  PutT("PositiveUInt32 "); PutI(PositiveUInt32()); NL();
+  PutT("PositiveInt64 "); PutL(PositiveInt64()); NL();
+  PutT("PositiveUInt64 "); PutL(PositiveUInt64()); NL();
+
+  PutT("PositiveInt8 => LONGINT "); PutL(VAL(PositiveInt8(), LONGINT)); NL();
+  PutT("PositiveUInt8 => LONGINT "); PutL(VAL(PositiveUInt8(), LONGINT)); NL();
+  PutT("PositiveInt16 => LONGINT "); PutL(VAL(PositiveInt16(), LONGINT)); NL();
+  PutT("PositiveUInt16 => LONGINT "); PutL(VAL(PositiveUInt16(), LONGINT)); NL();
+  PutT("PositiveInt32 => LONGINT "); PutL(VAL(PositiveInt32(), LONGINT)); NL();
+  PutT("PositiveUInt32 => LONGINT "); PutL(VAL(PositiveUInt32(), LONGINT)); NL();
+  PutT("PositiveInt64 => LONGINT "); PutL(VAL(PositiveInt64(), LONGINT)); NL();
+  PutT("PositiveUInt64 => LONGINT "); PutL(VAL(PositiveUInt64(), LONGINT)); NL();
+
+  PutT("PositiveInt8  => LONGCARD "); PutL(VAL(PositiveInt8(), LONGCARD)); NL();
+  PutT("PositiveUInt8 => LONGCARD "); PutL(VAL(PositiveUInt8(), LONGCARD)); NL();
+  PutT("PositiveInt16 => LONGCARD "); PutL(VAL(PositiveInt16(), LONGCARD)); NL();
+  PutT("PositiveUInt16 => LONGCARD "); PutL(VAL(PositiveUInt16(), LONGCARD)); NL();
+  PutT("PositiveInt32 => LONGCARD "); PutL(VAL(PositiveInt32(), LONGCARD)); NL();
+  PutT("PositiveUInt32 => LONGCARD "); PutL(VAL(PositiveUInt32(), LONGCARD)); NL();
+  PutT("PositiveInt64 => LONGCARD "); PutL(VAL(PositiveInt64(), LONGCARD)); NL();
+  PutT("PositiveUInt64 => LONGCARD "); PutL(VAL(PositiveUInt64(), LONGCARD)); NL();
+
 
   Flush();
 END Main.

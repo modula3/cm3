@@ -55,13 +55,22 @@ PROCEDURE done ();
  * Visual C++, or hand written assembly.
  *)
 
-<*EXTERNAL*>PROCEDURE  FInt8():    Cstdint.int8_t;
-<*EXTERNAL*>PROCEDURE FUInt8():   Cstdint.uint8_t;
-<*EXTERNAL*>PROCEDURE  FInt16():  Cstdint.int16_t;
-<*EXTERNAL*>PROCEDURE FUInt16(): Cstdint.uint16_t;
-<*EXTERNAL*>PROCEDURE  FInt32():  Cstdint.int32_t;
-<*EXTERNAL*>PROCEDURE FUInt32(): Cstdint.uint32_t;
-<*EXTERNAL*>PROCEDURE  FInt64():  Cstdint.int64_t;
-<*EXTERNAL*>PROCEDURE FUInt64(): Cstdint.uint64_t;
+<*EXTERNAL*>PROCEDURE  NegativeInt8():    Cstdint.int8_t;
+<*EXTERNAL*>PROCEDURE NegativeUInt8():   Cstdint.uint8_t;
+<*EXTERNAL*>PROCEDURE  NegativeInt16():  Cstdint.int16_t;
+<*EXTERNAL*>PROCEDURE NegativeUInt16(): Cstdint.uint16_t;
+<*EXTERNAL*>PROCEDURE  NegativeInt32():  Cstdint.int32_t;
+<*EXTERNAL*>PROCEDURE NegativeUInt32(): Cstdint.uint32_t;
+<*EXTERNAL*>PROCEDURE  NegativeInt64():  Cstdint.int64_t;
+<*EXTERNAL*>PROCEDURE NegativeUInt64(): Cstdint.uint64_t;
+
+<*EXTERNAL*>PROCEDURE  PositiveInt8():    Cstdint.int8_t;
+<*EXTERNAL*>PROCEDURE PositiveUInt8():   Cstdint.uint8_t;
+<*EXTERNAL*>PROCEDURE  PositiveInt16():  Cstdint.int16_t;
+<*EXTERNAL*>PROCEDURE PositiveUInt16(): Cstdint.uint16_t;
+<*EXTERNAL*>PROCEDURE  PositiveInt32():  Cstdint.int32_t;
+<*EXTERNAL*>PROCEDURE PositiveUInt32(): Cstdint.uint32_t;
+<*EXTERNAL*>PROCEDURE  PositiveInt64():  Cstdint.int64_t;
+<*EXTERNAL*>PROCEDURE PositiveUInt64(): Cstdint.uint64_t;
 
 END Test.
