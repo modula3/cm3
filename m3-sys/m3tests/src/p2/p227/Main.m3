@@ -1,6 +1,7 @@
 MODULE Main;
 IMPORT RTIO, Word, Long;
 FROM RTIO IMPORT Flush;
+FROM Compiler IMPORT ThisLine;
 
 (* This test covers various longint and bit operations.
  * Shift, extract, insert, etc.
@@ -903,25 +904,25 @@ BEGIN
 (*InsertExtractMaxAB := 2;
   InsertExtractMaxMN := 2; *)
 
-  PutT("FIRST(LONGINT) "); PutL(FIRST(LONGINT));
+  PutT("LINE "); PutI(ThisLine()); PutT(" FIRST(LONGINT) "); PutL(FIRST(LONGINT));
   NL();
 
-  PutT("NotConstL(FIRST(LONGINT)) "); PutL(NotConstL(FIRST(LONGINT)));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) "); PutL(NotConstL(FIRST(LONGINT)));
   NL();
 
-  PutT("LAST(LONGINT) "); PutL(LAST(LONGINT));
+  PutT("LINE "); PutI(ThisLine()); PutT(" LAST(LONGINT) "); PutL(LAST(LONGINT));
   NL();
 
-  PutT("NotConstL(LAST(LONGINT)) "); PutL(NotConstL(LAST(LONGINT)));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(LAST(LONGINT)) "); PutL(NotConstL(LAST(LONGINT)));
   NL();
 
-  PutT("NotConstL(LAST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(LAST(LONGINT)) DIV NotConstL(2L));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(LAST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(LAST(LONGINT)) DIV NotConstL(2L));
   NL();
 
-  PutT("NotConstL(FIRST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
   NL();
 
-  PutT("NotConstL(FIRST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(FIRST(LONGINT)) DIV NotConstL(2L) "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(2L));
   NL();
 
   TestInsert();
