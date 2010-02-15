@@ -39,9 +39,9 @@ BEGIN
   PutT("FUInt64 => LONGINT "); PutL(VAL(FUInt64(), LONGINT)); NL();
 
   (* PutT("FInt8   => LONGCARD ");   PutL(VAL(FInt8(), LONGCARD)); NL(); *)
-  (* PutT("FUInt8  => LONGCARD ");  PutL(VAL(FUInt8(), LONGCARD)); NL(); *)
+  PutT("FUInt8  => LONGCARD ");  PutL(VAL(FUInt8(), LONGCARD)); NL();
   (* PutT("FInt16  => LONGCARD ");  PutL(VAL(FInt16(), LONGCARD)); NL(); *)
-  (* PutT("FUInt16 => LONGCARD "); PutL(VAL(FUInt16(), LONGCARD)); NL(); *)
+  PutT("FUInt16 => LONGCARD "); PutL(VAL(FUInt16(), LONGCARD)); NL();
   (* PutT("FInt32  => LONGCARD ");  PutL(VAL(FInt32(), LONGCARD)); NL(); *)
   (* PutT("FUInt32 => LONGCARD "); PutL(VAL(FUInt32(), LONGCARD)); NL();    bug *)
   (* PutT("FInt64  => LONGCARD ");  PutL(VAL(FInt64(), LONGCARD)); NL(); *)
