@@ -635,8 +635,7 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand) =
 
   END binOp;
 
-PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand;
-                   scale: INTEGER; table: MVar) =
+PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand; scale: INTEGER; table: MVar) =
   VAR ins: Instruction;  fully_known := FALSE;
   BEGIN
     <* ASSERT dest.loc = OLoc.register AND index.loc = OLoc.register *>
@@ -1568,8 +1567,7 @@ PROCEDURE f_loadind (t: T; READONLY ind: Operand; offset: ByteOffset; type: MTyp
     INC(t.fstackloaded);
   END f_loadind;
 
-PROCEDURE f_storeind (t: T; READONLY ind: Operand; offset: ByteOffset;
-                      type: MType) =
+PROCEDURE f_storeind (t: T; READONLY ind: Operand; offset: ByteOffset; type: MType) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT ind.loc = OLoc.register *>
@@ -1711,8 +1709,7 @@ PROCEDURE check_label(t: T; label: Label; place: TEXT) =
     END
   END check_label;
 
-PROCEDURE fill_in_label_thread (t: T; ptr: LabList; val: INTEGER;
-                                short: BOOLEAN) =
+PROCEDURE fill_in_label_thread (t: T; ptr: LabList; val: INTEGER; short: BOOLEAN) =
   BEGIN
     WHILE ptr # NIL DO
       IF ptr.abs THEN
