@@ -1,0 +1,11 @@
+MODULE Main;
+
+PROCEDURE NotConstL(a: LONGINT): LONGINT =
+  BEGIN
+    RETURN a;
+  END NotConstL;
+
+BEGIN
+  <* ASSERT NotConstL(FIRST(LONGINT)) = (NotConstL(FIRST(LONGINT)) DIV NotConstL(1L)) *>
+  <* ASSERT NotConstL(LAST(LONGINT)) = (NotConstL(LAST(LONGINT)) DIV NotConstL(1L)) *>
+END Main.
