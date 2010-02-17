@@ -451,7 +451,7 @@ end
 
 %------------------------------------------------------------------------------
 
-readonly proc ConvertLibsToStandalone(imported_libs, shared) is
+proc ConvertLibsToStandalone(imported_libs, shared) is
     if shared
         return imported_libs
     end
