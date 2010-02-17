@@ -1457,7 +1457,6 @@ def _FilterPackage(Package):
             "NT386GNU" : True,
             }.get(Target, False),
 
-        "fix_nl": BuildAll or OSType == "WIN32",
         "tcl": BuildAll or HAVE_TCL,
         "tapi": BuildAll or OSType == "WIN32",
         "serial": BuildAll or HAVE_SERIAL,
