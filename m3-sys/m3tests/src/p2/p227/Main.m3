@@ -174,21 +174,30 @@ END TestMult;
 
 
 PROCEDURE TestDivI(a, b: INTEGER): INTEGER =
+  VAR k: INTEGER;
 BEGIN
   <* ASSERT (0 DIV 1) = 0 *>
   <* ASSERT (1 DIV 1) = 1 *>
   <* ASSERT (FIRST(INTEGER) DIV NotConstI(1 )) = FIRST(INTEGER) *>
   <* ASSERT (LAST(INTEGER) DIV NotConstI(1 )) = LAST(INTEGER) *>
 
-  FOR i := -10 TO 10 DO
-    FOR j := -10 TO 10 DO
+  FOR i := -1000 TO 1000 DO
+    FOR j := -1000 TO 1000 DO
       IF j # 0 THEN
-        PutI(i);
-        PutT(" DIVI ");
-        PutI(j);
-        PutT(":");
-        PutI(i DIV j);
-        NL();
+        k := (i DIV j);
+        IF ABS(i) <= 10 AND ABS(j) <= 10 THEN
+          PutI(i);
+          PutT(" DIVI ");
+          PutI(j);
+          PutT(":");
+          PutI(k);
+          NL();
+        END;
+        IF (i < 0) = (j < 0) THEN
+          <* ASSERT k >= 0 *>
+        ELSE
+          <* ASSERT k <= 0 *>
+        END;
       END;
     END;
   END;
@@ -197,21 +206,30 @@ BEGIN
 END TestDivI;
 
 PROCEDURE TestDivL(a, b: LONGINT): LONGINT =
+  VAR k: LONGINT;
 BEGIN
   <* ASSERT (0L DIV 1L) = 0L *>
   <* ASSERT (1L DIV 1L) = 1L *>
   <* ASSERT (FIRST(LONGINT) DIV NotConstL(1L)) = FIRST(LONGINT) *>
   <* ASSERT (LAST(LONGINT) DIV NotConstL(1L)) = LAST(LONGINT) *>
 
-  FOR i := -10L TO 10L DO
-    FOR j := -10L TO 10L DO
+  FOR i := -1000L TO 1000L DO
+    FOR j := -1000L TO 1000L DO
       IF j # 0L THEN
-        PutL(i);
-        PutT(" DIVL ");
-        PutL(j);
-        PutT(":");
-        PutL(i DIV j);
-        NL();
+        k := (i DIV j);
+        IF ABS(i) <= 10L AND ABS(j) <= 10L THEN
+          PutL(i);
+          PutT(" DIVL ");
+          PutL(j);
+          PutT(":");
+          PutL(k);
+          NL();
+        END;
+        IF (i < 0L) = (j < 0L) THEN
+          <* ASSERT k >= 0L *>
+        ELSE
+          <* ASSERT k <= 0L *>
+        END;
       END;
     END;
   END;
@@ -220,6 +238,7 @@ BEGIN
 END TestDivL;
 
 PROCEDURE TestModI(a, b: INTEGER): INTEGER =
+  VAR k: INTEGER;
 BEGIN
 
   <* ASSERT (0 MOD 1) = 0 *>
@@ -227,16 +246,24 @@ BEGIN
   <* ASSERT (FIRST(INTEGER) MOD NotConstI(1 )) = 0 *>
   <* ASSERT (LAST(INTEGER) MOD NotConstI(1 )) = 0 *>
 
-  FOR i := -10 TO 10 DO
-    FOR j := -10 TO 10 DO
+  FOR i := -1000 TO 1000 DO
+    FOR j := -1000 TO 1000 DO
       IF j # 0 THEN
-        PutI(i);
-        PutT(" MODI ");
-        PutI(j);
-        PutT(":");
-        PutI(i MOD j);
-        <* ASSERT (i # j) OR ((i MOD j) = 0) *>
-        NL();
+        k := (i MOD j);
+        IF ABS(i) <= 10 AND ABS(j) <= 10 THEN
+          PutI(i);
+          PutT(" MODI ");
+          PutI(j);
+          PutT(":");
+          PutI(k);
+          NL();
+        END;
+        <* ASSERT k = i - j * (i DIV j) *>
+        IF j < 0 THEN
+          <* ASSERT k > j AND k <= 0 *>
+        ELSE
+          <* ASSERT k < j AND k >= 0 *>
+        END;
       END;
     END;
   END;
@@ -245,6 +272,7 @@ BEGIN
 END TestModI;
 
 PROCEDURE TestModL(a, b: LONGINT): LONGINT =
+  VAR k: LONGINT;
 BEGIN
 
   <* ASSERT (0 MOD 1) = 0 *>
@@ -256,16 +284,25 @@ BEGIN
   <* ASSERT (LAST(INTEGER) MOD NotConstI(1 )) = 0 *>
   <* ASSERT (LAST(LONGINT) MOD NotConstL(1L)) = 0L *>
 
-  FOR i := -10L TO 10L DO
-    FOR j := -10L TO 10L DO
+  FOR i := -1000L TO 1000L DO
+    FOR j := -1000L TO 1000L DO
       IF j # 0L THEN
-        PutL(i);
-        PutT(" MODL ");
-        PutL(j);
-        PutT(":");
-        PutL(i MOD j);
+        k := (i MOD j);
+        IF ABS(i) <= 10L AND ABS(j) <= 10L THEN
+          PutL(i);
+          PutT(" MODL ");
+          PutL(j);
+          PutT(":");
+          PutL(k);
+          NL();
+        END;
         <* ASSERT (i # j) OR ((i MOD j) = 0L) *>
-        NL();
+        <* ASSERT k = i - j * (i DIV j) *>
+        IF j < 0L THEN
+          <* ASSERT k > j AND k <= 0L *>
+        ELSE
+          <* ASSERT k < j AND k >= 0L *>
+        END;
       END;
     END;
   END;
@@ -274,6 +311,7 @@ BEGIN
 END TestModL;
 
 PROCEDURE TestDivUL(a, b: LONGCARD): LONGCARD =
+  VAR k: LONGINT;
 BEGIN
 
   <* ASSERT (0 DIV 1) = 0 *>
@@ -285,12 +323,16 @@ BEGIN
 
   FOR i := 0L TO 10L DO
     FOR j := 1L TO 10L DO
-      PutL(i);
-      PutT(" DIVUL ");
-      PutL(j);
-      PutT(":");
-      PutL(i DIV j);
-      NL();
+      k := (i DIV j);
+      IF i <= 10L AND j <= 10L THEN
+        PutL(i);
+        PutT(" DIVUL ");
+        PutL(j);
+        PutT(":");
+        PutL(k);
+        NL();
+      END;
+      <* ASSERT k >= 0L *>
     END;
   END;
 
@@ -298,6 +340,7 @@ BEGIN
 END TestDivUL;
 
 PROCEDURE TestModUL(a, b: LONGCARD): LONGCARD =
+  VAR k: LONGINT;
 BEGIN
 
   <* ASSERT (0 MOD 1) = 0 *>
@@ -307,15 +350,20 @@ BEGIN
   <* ASSERT (LAST(INTEGER) MOD NotConstI(1 )) = 0 *>
   <* ASSERT (LAST(LONGINT) MOD NotConstL(1L)) = 0L *>
 
-  FOR i := 0L TO 10L DO
-    FOR j := 1L TO 10L DO
-      PutL(i);
-      PutT(" MODUL ");
-      PutL(j);
-      PutT(":");
-      PutL(i MOD j);
+  FOR i := 0L TO 1000L DO
+    FOR j := 1L TO 1000L DO
+      k := (i DIV j);
+      IF i <= 10L AND j <= 10L THEN
+        PutL(i);
+        PutT(" MODUL ");
+        PutL(j);
+        PutT(":");
+        PutL(k);
+        NL();
+      END;
       <* ASSERT (i # j) OR ((i MOD j) = 0L) *>
-      NL();
+      <* ASSERT k = i - j * (i DIV j) *>
+      <* ASSERT k < j AND k >= 0L *>
     END;
   END;
 
