@@ -112,9 +112,7 @@ BEGIN
         PutT(", sign_extend:"); PutH(sign_extend);
         PutT("):"); PutH(result32);
         NL();
-        IF n = 0 THEN
-          <* ASSERT result32 = 0 *>
-        END
+        <* ASSERT (n # 0) OR (result32 = 0) *>
       END
     END
   END;
@@ -129,9 +127,7 @@ BEGIN
         PutT(", sign_extend:"); PutH(sign_extend);
         PutT("):"); PutLH(result64);
         NL();
-        IF n = 0 THEN
-          <* ASSERT result64 = 0L *>
-        END
+        <* ASSERT (n # 0) OR (result64 = 0L) *>
       END
     END
   END;
@@ -146,60 +142,139 @@ CONST ExectTrue = ARRAY BOOLEAN OF TEXT{"bad\n","good\n"};
 CONST ExpectFalse = ARRAY BOOLEAN OF TEXT{"good\n","bad\n"};
 CONST FalseTrue = ARRAY BOOLEAN OF TEXT{"false\n","true\n"};
 
-<*UNUSED*>PROCEDURE Add(a, b: LONGINT): LONGINT =
+PROCEDURE TestAdd(a, b: LONGINT): LONGINT =
 BEGIN
+  <* ASSERT (1 + 0) = 1 *>
+  <* ASSERT (FIRST(INTEGER) + NotConstI(0 )) = FIRST(INTEGER) *>
+  <* ASSERT (FIRST(LONGINT) + NotConstL(0L)) = FIRST(LONGINT) *>
+  <* ASSERT (LAST(INTEGER) + NotConstI(0 )) = LAST(INTEGER) *>
+  <* ASSERT (LAST(LONGINT) + NotConstL(0L)) = LAST(LONGINT) *>
   RETURN a + b;
-END Add;
+END TestAdd;
 
-<*UNUSED*>PROCEDURE Sub(a, b: LONGINT): LONGINT =
+PROCEDURE TestSub(a, b: LONGINT): LONGINT =
 BEGIN
+  <* ASSERT (1 - 0) = 1 *>
+  <* ASSERT (FIRST(INTEGER) - NotConstI(0 )) = FIRST(INTEGER) *>
+  <* ASSERT (FIRST(LONGINT) - NotConstL(0L)) = FIRST(LONGINT) *>
+  <* ASSERT (LAST(INTEGER) - NotConstI(0 )) = LAST(INTEGER) *>
+  <* ASSERT (LAST(LONGINT) - NotConstL(0L)) = LAST(LONGINT) *>
   RETURN a - b;
-END Sub;
+END TestSub;
 
-<*UNUSED*>PROCEDURE Mult(a, b: LONGINT): LONGINT =
+PROCEDURE TestMult(a, b: LONGINT): LONGINT =
 BEGIN
+  <* ASSERT (1 * 0) = 0 *>
+  <* ASSERT (FIRST(INTEGER) * NotConstI(0 )) = 0 *>
+  <* ASSERT (FIRST(LONGINT) * NotConstL(0L)) = 0L *>
+  <* ASSERT (FIRST(INTEGER) * NotConstI(1 )) = FIRST(INTEGER) *>
+  <* ASSERT (FIRST(LONGINT) * NotConstL(1L)) = FIRST(LONGINT) *>
+  <* ASSERT (LAST(INTEGER) * NotConstI(0 )) = 0 *>
+  <* ASSERT (LAST(LONGINT) * NotConstL(0L)) = 0L *>
+  <* ASSERT (LAST(INTEGER) * NotConstI(1 )) = LAST(INTEGER) *>
+  <* ASSERT (LAST(LONGINT) * NotConstL(1L)) = LAST(LONGINT) *>
   RETURN a * b;
-END Mult;
+END TestMult;
 
-<*UNUSED*>PROCEDURE Div(a, b: LONGINT): LONGINT =
+PROCEDURE TestDiv(a, b: LONGINT): LONGINT =
 BEGIN
+  <* ASSERT (0 DIV 1) = 0 *>
+  <* ASSERT (1 DIV 1) = 1 *>
+  <* ASSERT (0L DIV 1L) = 0L *>
+  <* ASSERT (1L DIV 1L) = 1L *>
+  <* ASSERT (FIRST(INTEGER) DIV NotConstI(1 )) = FIRST(INTEGER) *>
+  <* ASSERT (FIRST(LONGINT) DIV NotConstL(1L)) = FIRST(LONGINT) *>
+  <* ASSERT (LAST(INTEGER) DIV NotConstI(1 )) = LAST(INTEGER) *>
+  <* ASSERT (LAST(LONGINT) DIV NotConstL(1L)) = LAST(LONGINT) *>
   RETURN a DIV b;
-END Div;
+END TestDiv;
 
-<*UNUSED*>PROCEDURE Rem(a, b: LONGINT): LONGINT =
+PROCEDURE TestRem(a, b: LONGINT): LONGINT =
 BEGIN
+
+  <* ASSERT (0 MOD 1) = 0 *>
+  <* ASSERT (1 MOD 1) = 0 *>
+  <* ASSERT (0L MOD 1L) = 0L *>
+  <* ASSERT (1L MOD 1L) = 0L *>
+  <* ASSERT (FIRST(INTEGER) MOD NotConstI(1 )) = 0 *>
+  <* ASSERT (FIRST(LONGINT) MOD NotConstL(1L)) = 0L *>
+  <* ASSERT (LAST(INTEGER) MOD NotConstI(1 )) = 0 *>
+  <* ASSERT (LAST(LONGINT) MOD NotConstL(1L)) = 0L *>
+
+  FOR i := -10L TO 10L DO
+    FOR j := -10L TO 10L DO
+      IF j # 0L THEN
+        PutL(i);
+        PutT(" MOD ");
+        PutL(j);
+        PutT(":");
+        PutL(i MOD j);
+        <* ASSERT (i # j) OR ((i MOD j) = 0L) *>
+        NL();
+      END;
+    END;
+  END;
+
   RETURN a MOD b;
-END Rem;
+END TestRem;
 
-<*UNUSED*>PROCEDURE DivU(a, b: LONGCARD): LONGCARD =
+PROCEDURE TestDivU(a, b: LONGCARD): LONGCARD =
 BEGIN
+
+  <* ASSERT (0 DIV 1) = 0 *>
+  <* ASSERT (1 DIV 1) = 1 *>
+  <* ASSERT (0L DIV 1L) = 0L *>
+  <* ASSERT (1L DIV 1L) = 1L *>
+  <* ASSERT (LAST(INTEGER) DIV NotConstI(1 )) = LAST(INTEGER) *>
+  <* ASSERT (LAST(LONGINT) DIV NotConstL(1L)) = LAST(LONGINT) *>
+
   RETURN a DIV b;
-END DivU;
+END TestDivU;
 
-<*UNUSED*>PROCEDURE RemU(a, b: LONGCARD): LONGCARD =
+PROCEDURE TestRemU(a, b: LONGCARD): LONGCARD =
 BEGIN
-  RETURN a MOD b;
-END RemU;
 
-<*UNUSED*>PROCEDURE LT(a, b: LONGINT): BOOLEAN =
+  <* ASSERT (0 MOD 1) = 0 *>
+  <* ASSERT (1 MOD 1) = 0 *>
+  <* ASSERT (0L MOD 1L) = 0L *>
+  <* ASSERT (1L MOD 1L) = 0L *>
+  <* ASSERT (LAST(INTEGER) MOD NotConstI(1 )) = 0 *>
+  <* ASSERT (LAST(LONGINT) MOD NotConstL(1L)) = 0L *>
+
+  FOR i := 0L TO 10L DO
+    FOR j := 1L TO 10L DO
+      PutL(i);
+      PutT(" MODU ");
+      PutL(j);
+      PutT(":");
+      PutL(i MOD j);
+      <* ASSERT (i # j) OR ((i MOD j) = 0L) *>
+      NL();
+    END;
+  END;
+
+  RETURN a MOD b;
+END TestRemU;
+
+PROCEDURE TestLT(a, b: LONGINT): BOOLEAN =
 BEGIN
   RETURN a < b;
-END LT;
+END TestLT;
 
-<*UNUSED*>PROCEDURE LTU(a, b: LONGINT): BOOLEAN =
+PROCEDURE TestLTU(a, b: LONGINT): BOOLEAN =
 BEGIN
   RETURN Long.LT(a, b);
-END LTU;
+END TestLTU;
 
-<*UNUSED*>PROCEDURE EQ(a, b: LONGINT): BOOLEAN =
+PROCEDURE TestEQ(a, b: LONGINT): BOOLEAN =
 BEGIN
   RETURN a = b;
-END EQ;
+END TestEQ;
 
-<*UNUSED*>PROCEDURE NE(a, b: LONGINT): BOOLEAN =
+PROCEDURE TestNE(a, b: LONGINT): BOOLEAN =
 BEGIN
   RETURN a # b;
-END NE;
+END TestNE;
 
 (* shifting without constants *)
 
@@ -1000,8 +1075,22 @@ BEGIN
   PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(  LAST(LONGINT)) DIV NotConstL(4L): "); PutL(NotConstL( LAST(LONGINT)) DIV NotConstL(4L)); NL();
   NL();
 
+  EVAL TestAdd(1L, 1L);
+  EVAL TestSub(1L, 1L);
+  EVAL TestMult(1L, 1L);
+  EVAL TestDiv(1L, 1L);
+  EVAL TestDivU(1L, 1L);
+  EVAL TestRem(1L, 1L);
+  EVAL TestRemU(1L, 1L);
+  EVAL TestLT(1L, 1L);
+  EVAL TestLTU(1L, 1L);
+  EVAL TestEQ(1L, 1L);
+  EVAL TestNE(1L, 1L);
+
+
   TestInsert();
   TestExtract();
+
   Flush();
 
 END Main.
