@@ -13,7 +13,7 @@ UNSAFE MODULE FSWin32 EXPORTS FS;
 
 IMPORT Ctypes, File, FileWin32, M3toC, OSError, OSErrorWin32, OSWin32,
   Pathname, RegularFile, Text, Time, TimeWin32, WinBase, WinDef,
-  WinError, WinNT, Word;
+  WinError, WinNT, Word, Long;
 
 CONST
   False: WinDef.BOOL = 0;
@@ -432,7 +432,7 @@ PROCEDURE Status(p: Pathname.T): File.Status RAISES {OSError.E} =
 PROCEDURE BuildStatus (READONLY ffd  : WinBase.WIN32_FIND_DATA;
                      VAR(*OUT*) stat : File.Status) =
   BEGIN
-    stat.size := VAL(ffd.nFileSizeLow, LONGINT);
+    stat.size := Long.LeftShift(VAL(ffd.nFileSizeHigh, LONGINT), 32) + VAL(ffd.nFileSizeLow, LONGINT);
     stat.modificationTime := TimeWin32.FromFileTime(ffd.ftLastWriteTime);
     IF Word.And(ffd.dwFileAttributes, WinNT.FILE_ATTRIBUTE_DIRECTORY) # 0
       THEN stat.type := DirectoryFileType;
