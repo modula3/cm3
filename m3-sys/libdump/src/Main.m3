@@ -1,13 +1,30 @@
 UNSAFE MODULE Main;
 
-IMPORT IO, Params, Rd, Wr, FileRd, Process, WinNT, WinDef, Stdio;
+IMPORT IO, Params, Rd, Wr, FileRd, Process, Stdio;
 IMPORT CoffTime, Text, Fmt, Cstring, Thread, Word, OSError;
-IMPORT Date, Convert;
-
+IMPORT Date, Convert, M3toC, Ctypes;
 
 TYPE
-  Header = WinNT.IMAGE_ARCHIVE_MEMBER_HEADER;
-  BYTE   = WinDef.BYTE;
+  UINT8 = BITS 8 FOR Ctypes.unsigned_char;
+
+CONST IMAGE_ARCHIVE_START_SIZE = 8;
+VAR (* CONST *) IMAGE_ARCHIVE_START := M3toC.FlatTtoS("!<arch>\n");
+
+TYPE
+  IMAGE_ARCHIVE_MEMBER_HEADER = RECORD
+    Name     : ARRAY [0 .. 15] OF UINT8;  (* member name - `/' terminated. *)
+    Date     : ARRAY [0 .. 11] OF UINT8;  (* member date - decimal secs since 1970 *)
+    UserID   : ARRAY [0 .. 5]  OF UINT8;  (* member user id - decimal. *)
+    GroupID  : ARRAY [0 .. 5]  OF UINT8;  (* member group id - decimal. *)
+    Mode     : ARRAY [0 .. 7]  OF UINT8;  (* member mode - octal. *)
+    Size     : ARRAY [0 .. 9]  OF UINT8;  (* member size - decimal. *)
+    EndHeader: ARRAY [0 .. 1]  OF UINT8;  (* String to end header. *)
+  END;
+
+CONST IMAGE_SIZEOF_ARCHIVE_MEMBER_HDR = 60;
+
+TYPE
+  Header = IMAGE_ARCHIVE_MEMBER_HEADER;
   Buffer = REF ARRAY OF CHAR;
 
 VAR
@@ -43,11 +60,11 @@ PROCEDURE DumpLib (lib: TEXT) =
 
 PROCEDURE CheckMagic (rd: Rd.T;  lib: TEXT)
   RAISES {Rd.Failure, Thread.Alerted} =
-  VAR buf: ARRAY [0..WinNT.IMAGE_ARCHIVE_START_SIZE-1] OF CHAR;
+  VAR buf: ARRAY [0..IMAGE_ARCHIVE_START_SIZE-1] OF CHAR;
   BEGIN
     Read (rd, buf);
-    IF Cstring.strncmp (ADR (buf), WinNT.IMAGE_ARCHIVE_START,
-                        WinNT.IMAGE_ARCHIVE_START_SIZE) = 0 THEN
+    IF Cstring.strncmp (ADR (buf), IMAGE_ARCHIVE_START,
+                        IMAGE_ARCHIVE_START_SIZE) = 0 THEN
       IO.Put (Wr.EOL & lib & ": magic ok." & Wr.EOL & Wr.EOL);
       IO.Put (" offset  UserID  GrpID   Mode           Date            Size    Name" & Wr.EOL);
       IO.Put ("-------- ------ ------ -------- -------------------- ---------- ----------------" & Wr.EOL);
@@ -257,7 +274,7 @@ PROCEDURE Read (rd: Rd.T;  VAR buf: ARRAY OF CHAR)
     IF (len # BYTESIZE (buf)) THEN Die ("incomplete read."); END;
   END Read;
 
-PROCEDURE OutS (READONLY s: ARRAY OF BYTE)
+PROCEDURE OutS (READONLY s: ARRAY OF UINT8)
   RAISES {Wr.Failure, Thread.Alerted} =
   VAR n := NUMBER (s);
   BEGIN
@@ -265,7 +282,7 @@ PROCEDURE OutS (READONLY s: ARRAY OF BYTE)
     FOR i := 0 TO n-1 DO OutC (VAL (s[i], CHAR)); END;
   END OutS;
 
-PROCEDURE OutSL (READONLY s: ARRAY OF BYTE)
+PROCEDURE OutSL (READONLY s: ARRAY OF UINT8)
   RAISES {Wr.Failure, Thread.Alerted} =
   BEGIN
     FOR i := 0 TO LAST (s) DO
@@ -286,7 +303,7 @@ PROCEDURE OutI (n: INTEGER;  width: INTEGER)
     Wr.PutText (Stdio.stdout, Fmt.Pad (Fmt.Int (n), width));
   END OutI;
 
-PROCEDURE OutD (READONLY s: ARRAY OF BYTE)
+PROCEDURE OutD (READONLY s: ARRAY OF UINT8)
   RAISES {Wr.Failure, Thread.Alerted} =
   (* Archive dates are represented as seconds since Jan 1, 1970. *)
   TYPE Buffer = RECORD len: INTEGER;  buf: ARRAY [0..31] OF CHAR END;
@@ -346,7 +363,7 @@ PROCEDURE OutC (ch: CHAR)
     Wr.PutChar (Stdio.stdout, ch);
   END OutC;
 
-PROCEDURE NameMatch (READONLY nm: ARRAY OF BYTE;  txt: TEXT): BOOLEAN =
+PROCEDURE NameMatch (READONLY nm: ARRAY OF UINT8;  txt: TEXT): BOOLEAN =
   VAR len := Text.Length (txt);
   BEGIN
     IF len > NUMBER (nm) THEN RETURN FALSE; END;
@@ -359,7 +376,7 @@ PROCEDURE NameMatch (READONLY nm: ARRAY OF BYTE;  txt: TEXT): BOOLEAN =
     RETURN TRUE;
   END NameMatch;
 
-PROCEDURE ToInt (READONLY s: ARRAY OF BYTE): INTEGER =
+PROCEDURE ToInt (READONLY s: ARRAY OF UINT8): INTEGER =
   VAR n := 0;
   BEGIN
     FOR i := FIRST (s) TO LAST (s) DO
@@ -378,7 +395,9 @@ PROCEDURE Die (msg: TEXT) =
   END Die;
 
 BEGIN
-  <*ASSERT BYTESIZE (Header) = WinNT.IMAGE_SIZEOF_ARCHIVE_MEMBER_HDR *>
+  IMAGE_ARCHIVE_START            := M3toC.FlatTtoS("!<arch>\n");
+
+  <*ASSERT BYTESIZE (Header) = IMAGE_SIZEOF_ARCHIVE_MEMBER_HDR *>
   IF Params.Count # 2 THEN Die ("usage:  libdump <foo.lib>"); END;
   DumpLib (Params.Get (1));
 END Main.
