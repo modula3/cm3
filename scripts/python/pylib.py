@@ -1449,7 +1449,6 @@ def _FilterPackage(Package):
             "NT386GNU" : True,
             }.get(Target, False),
 
-        "fix_nl": BuildAll or OSType == "WIN32",
         "tcl": BuildAll or HAVE_TCL,
         "tapi": BuildAll or OSType == "WIN32",
         "serial": BuildAll or HAVE_SERIAL,
@@ -1920,6 +1919,7 @@ if _Program != "make-msi.py":
         "m3objfile",
         "m3linker",
         "m3back",
+        "m3staloneback",
         "m3cc",
         "cm3",
         "m3front",
