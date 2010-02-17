@@ -112,6 +112,43 @@ end
 
 %------------------------------------------------------------------------------
 
+proc IsInterix() is
+  if defined("TARGET_OS")
+    if equal(TARGET_OS, "INTERIX")
+      return TRUE
+    end
+  end
+  return FALSE
+end
+
+if not defined("HasTrestle")
+
+proc HasTrestle() is
+  return not IsInterix()
+end
+
+end
+
+if not defined("HasOpenGL")
+
+proc HasOpenGL() is
+  % but see http://www.interix.com/Motif-OpenGL.htm
+  return not IsInterix()
+end
+
+end
+
+proc IsOpenBSD() is
+  if defined("TARGET_OS")
+    if equal(TARGET_OS, "OPENBSD")
+      return TRUE
+    end
+  end
+  return FALSE
+end
+
+%------------------------------------------------------------------------------
+
 if not defined("subst_chars")
     %
     % Ok, some cross builds will fail with older tools, but
@@ -148,10 +185,22 @@ end
 end
 
 proc GetM3Back() is
+
   if defined("m3back")
     % write("using " & m3back & "\n")
     return m3back
   end
+
+  local proc GetSparcSolarisAlternate(x) is
+    if equal (x, "SOLsun")
+      return "SOLgnu"
+    end
+    if equal (x, "SOLgnu")
+      return "SOLsun"
+    end
+    return x
+  end
+
   % probe all of these?
   % rationale:
   %  probe the built one ahead of the installed one
@@ -201,57 +250,40 @@ proc GetM3Back() is
   % Work on this more later.
   %
   if not defined("HOST")
-      HOST = TARGET
+    HOST = TARGET
   end
   local ALTHOST = HOST
-  local ALTTARGET = TARGET
   if equal (HOST, "NT386")
     ALTHOST = "NT386GNU"
   end
-  if equal (HOST, "SOLsun")
-    ALTHOST = "SOLgnu"
-  end
-  if equal (HOST, "SOLgnu")
-    ALTHOST = "SOLsun"
-  end
-  if equal (TARGET, "SOLsun")
-    ALTTARGET = "SOLgnu"
-  end
-  if equal (TARGET, "SOLgnu")
-    ALTTARGET = "SOLsun"
-  end
+  ALTHOST = GetSparcSolarisAlternate(ALTHOST)
+  local ALTTARGET = GetSparcSolarisAlternate(TARGET)
   %
   % NOTE that if you share one file system across multiple hosts, then
   % host and target can get confused, if one is empty. For that reason,
   % we should probe all variants where both are non-empty before we probe
   % any where either is empty, but we don't.
   %
-  % The repeated checks for "not defined("m3back")" are present
-  % because older cm3 does not tolerate return from such a deep nesting,
-  % but we still want to skip most loop iterations upon finding the result.
-  % (at least the inner most part for correctness, and the outer ones
-  % for efficiency)
-  %
   foreach host in [ HOST & SL, HOST & "-", ALTHOST & SL, ALTHOST & "-", ""]
-    if (not defined("m3back")) and (not equal (host, "-"))
+    if not equal (host, "-")
       foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
-        if (not defined("m3back")) and not equal (target, "-")
-           if (not defined("m3back")) and (not equal (target, "") or equal (HOST, TARGET))
-            if (not defined("m3back")) and (not equal (host, "") or equal (HOST, TARGET))
+        if not equal (target, "-")
+          if not equal (target, "") or equal (HOST, TARGET)
+            if not equal (host, "") or equal (HOST, TARGET)
               foreach root in [ m3cc, bin ]
                 if root
-                   foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
+                  foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
                     foreach exe in [".exe", ""]
-                      local a = root & host & target & gcc & exe
-                      if (not defined("m3back")) and (not Cache contains a)
-                        % write("probing " & a & "\n")
-                        if FileExists(a)
-                          if (not defined("m3back"))
-                             % write("using " & a & "\n")
+                      if not defined("m3back")
+                        local a = root & host & target & gcc & exe
+                        if not Cache contains a
+                          % write("probing " & a & "\n")
+                          if FileExists(a)
+                            % write("using " & a & "\n")
                             m3back = "@" & a & " " & GetM3BackFlags()
+                          else
+                            Cache{a} = 1
                           end
-                        else
-                          Cache{a} = 1
                         end
                       end
                     end
@@ -408,6 +440,24 @@ proc skip_link(prog, shared) is
     PdbExport(pdb_file)
 
     return 0
+end
+
+%------------------------------------------------------------------------------
+
+proc ConvertLibsToStandalone(imported_libs, shared) is
+    if shared
+        return imported_libs
+    end
+    local imports = [ ]
+    foreach f in imported_libs
+        local ff = f & ".sa"
+        if FileExists(ff)
+            imports += ff
+        else
+            imports += f
+        end
+    end
+    return imports
 end
 
 %------------------------------------------------------------------------------
