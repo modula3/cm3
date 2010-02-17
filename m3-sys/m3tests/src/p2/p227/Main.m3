@@ -186,6 +186,20 @@ BEGIN
   <* ASSERT (FIRST(LONGINT) DIV NotConstL(1L)) = FIRST(LONGINT) *>
   <* ASSERT (LAST(INTEGER) DIV NotConstI(1 )) = LAST(INTEGER) *>
   <* ASSERT (LAST(LONGINT) DIV NotConstL(1L)) = LAST(LONGINT) *>
+
+  FOR i := -10L TO 10L DO
+    FOR j := -10L TO 10L DO
+      IF j # 0L THEN
+        PutL(i);
+        PutT(" DIV ");
+        PutL(j);
+        PutT(":");
+        PutL(i DIV j);
+        NL();
+      END;
+    END;
+  END;
+
   RETURN a DIV b;
 END TestDiv;
 
@@ -227,6 +241,17 @@ BEGIN
   <* ASSERT (1L DIV 1L) = 1L *>
   <* ASSERT (LAST(INTEGER) DIV NotConstI(1 )) = LAST(INTEGER) *>
   <* ASSERT (LAST(LONGINT) DIV NotConstL(1L)) = LAST(LONGINT) *>
+
+  FOR i := 0L TO 10L DO
+    FOR j := 1L TO 10L DO
+      PutL(i);
+      PutT(" DIVU ");
+      PutL(j);
+      PutT(":");
+      PutL(i DIV j);
+      NL();
+    END;
+  END;
 
   RETURN a DIV b;
 END TestDivU;
