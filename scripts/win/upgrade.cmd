@@ -18,7 +18,6 @@
  m3objfile ^
  m3linker ^
  m3back ^
- m3staloneback ^
  m3front ^
  m3quake ^
  cm3 ^

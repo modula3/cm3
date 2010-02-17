@@ -1920,7 +1920,6 @@ if _Program != "make-msi.py":
         "m3objfile",
         "m3linker",
         "m3back",
-        "m3staloneback",
         "m3cc",
         "cm3",
         "m3front",
