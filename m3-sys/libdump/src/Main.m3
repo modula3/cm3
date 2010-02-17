@@ -395,8 +395,6 @@ PROCEDURE Die (msg: TEXT) =
   END Die;
 
 BEGIN
-  IMAGE_ARCHIVE_START            := M3toC.FlatTtoS("!<arch>\n");
-
   <*ASSERT BYTESIZE (Header) = IMAGE_SIZEOF_ARCHIVE_MEMBER_HDR *>
   IF Params.Count # 2 THEN Die ("usage:  libdump <foo.lib>"); END;
   DumpLib (Params.Get (1));
