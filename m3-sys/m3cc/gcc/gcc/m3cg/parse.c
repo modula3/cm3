@@ -4091,7 +4091,7 @@ m3cg_div (void)
     m3_pop_param (t);
     m3_pop_param (t);
     if (TYPE_SIZE (t) == TYPE_SIZE (long_long_integer_type_node))
-      m3_call_direct (divL_proc, TREE_TYPE (TREE_TYPE (mod_proc)));
+      m3_call_direct (divL_proc, TREE_TYPE (TREE_TYPE (divL_proc)));
     else
       m3_call_direct (div_proc, TREE_TYPE (TREE_TYPE (div_proc)));
   }
@@ -4114,7 +4114,7 @@ m3cg_mod (void)
     m3_pop_param (t);
     m3_pop_param (t);
     if (TYPE_SIZE (t) == TYPE_SIZE (long_long_integer_type_node))
-      m3_call_direct (modL_proc, TREE_TYPE (TREE_TYPE (mod_proc)));
+      m3_call_direct (modL_proc, TREE_TYPE (TREE_TYPE (modL_proc)));
     else
       m3_call_direct (mod_proc, TREE_TYPE (TREE_TYPE (mod_proc)));
   }
