@@ -11,9 +11,11 @@ typedef unsigned long ulong;
 
 #ifdef _WIN32
 #define WIN32_STATIC static
+#define POSIX_STATIC /* nothing */
 #define M3_EXTRACT_INSERT_LINKAGE
 #else
 #define WIN32_STATIC
+#define POSIX_STATIC static
 #define M3_EXTRACT_INSERT_LINKAGE static /* for testing */
 #endif
 
@@ -276,19 +278,6 @@ NOT_YET int64 __stdcall m3_mult_64(int64 a, int64 b, BOOL* overflow)
   return result;
 }
 
-static long __stdcall m3_div_old
-    ANSI((      long b, long a))
-      KR((b, a) long b; long a;)
-{
-  register long c;
-  
-  if ((a == 0) && (b != 0))  {  c = 0;
-  } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
-  } else /* a < 0 */ { c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
-  }
-  return c;
-}
-
 static int64 __stdcall m3_divL_old
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
@@ -301,31 +290,8 @@ static int64 __stdcall m3_divL_old
   return c;
 }
 
-WIN32_STATIC long __stdcall m3_div
-    ANSI((      long b, long a))
-      KR((b, a) long b; long a;)
-{
-  typedef  long ST; /* signed type */
-  typedef ulong UT; /* unsigned type */
-  int aneg = (a < 0);
-  int bneg = (b < 0);
-  if (aneg == bneg || a == 0 || b == 0)
-    return (a / b);
-  else
-  {
-    /* round negative result down by rounding positive result up
-       unsigned math is much better defined, see gcc -Wstrict-overflow=4 */
-    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
-    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
-    return -(ST)((ua + ub - 1) / ub);
-  }
-}
 
-#ifdef _WIN32
-int64 __stdcall m3_div64(int64 b, int64 a)
-#else
-int64 __stdcall m3_divL(int64 b, int64 a)
-#endif
+POSIX_STATIC int64 __stdcall m3_div64(int64 b, int64 a)
 {
   typedef  int64 ST; /* signed type */
   typedef uint64 UT; /* unsigned type */
@@ -343,18 +309,6 @@ int64 __stdcall m3_divL(int64 b, int64 a)
   }
 }
 
-static long __stdcall m3_mod_old
-    ANSI((      long b, long a))
-      KR((b, a) long b; long a;)
-{
-  register long c;
-  if ((a == 0) && (b != 0)) {  c = 0;
-  } else if (a > 0)  {  c = (b >= 0) ? a % b : b + 1 + (a-1) % (-b);
-  } else /* a < 0 */ {  c = (b >= 0) ? b - 1 - (-1-a) % (b) : - ((-a) % (-b));
-  }
-  return c;
-}
-
 static int64 __stdcall m3_modL_old
     ANSI((      int64 b, int64 a))
       KR((b, a) int64 b; int64 a;)
@@ -367,30 +321,7 @@ static int64 __stdcall m3_modL_old
   return c;
 }
 
-WIN32_STATIC long __stdcall m3_mod
-    ANSI((      long b, long a))
-      KR((b, a) long b; long a;)
-{
-  typedef  long ST; /* signed type */
-  typedef ulong UT; /* unsigned type */
-  int aneg = (a < 0);
-  int bneg = (b < 0);
-  if (aneg == bneg || a == 0 || b == 0)
-    return (a % b);
-  else
-  {
-    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
-    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
-    a = (ST)(ub - 1 - (ua + ub - 1) % ub);
-    return (bneg ? -a : a);
-  }
-}
-
-#ifdef _WIN32
-int64 __stdcall m3_mod64(int64 b, int64 a)
-#else
-int64 __stdcall m3_modL(int64 b, int64 a)
-#endif
+POSIX_STATIC int64 __stdcall m3_mod64(int64 b, int64 a)
 {
   typedef  int64 ST; /* signed type */
   typedef uint64 UT; /* unsigned type */
