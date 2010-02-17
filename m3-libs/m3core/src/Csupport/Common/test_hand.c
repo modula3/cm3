@@ -173,33 +173,6 @@ static int64 values[] = {
 static int errors_div;
 static int errors_mod;
 
-static void TestDiv32(long a, long b)
-{
-    if (a == LONG_MIN && b == -1) /* avoid overflow */
-        return;
-    if (b)
-    {
-        long old = m3_div_old(b, a);
-        long current = m3_div(b, a);
-        errors_div += (current != old);
-        if ((b < 0) == (a < 0))
-        {
-            assert(old >= 0 || (old == -current && a == LONG_MIN && b < 0)); /* bug in old version */
-            assert(current >= 0);
-        }
-        else
-        {
-            assert(old <= 0);
-            assert(current <= 0);
-        }
-    }
-}
-
-#ifndef _WIN32
-static int64 __stdcall m3_div64(int64 b, int64 a) { return m3_divL(b, a); }
-static int64 __stdcall m3_mod64(int64 b, int64 a) { return m3_modL(b, a); }
-#endif
-
 static void TestDiv64(int64 a, int64 b)
 {
     if (a == INT64_MIN && b == -1) /* avoid overflow */
@@ -230,12 +203,10 @@ static void TestDivx(int64 a, int64 b)
 {
     if (b)
     {
-        TestDiv32((long)a, (long)b);
         TestDiv64(a, b);
     }
     if (a)
     {
-        TestDiv32((long)b, (long)a);
         TestDiv64(b, a);
     }
 }
@@ -280,35 +251,14 @@ static void TestMod64(int64 a, int64 b)
     assert((b < 0) ? (current > b && current <= 0) : (current < b && current >= 0));
 }
 
-static void TestMod32(long a, long b)
-{
-    long old, current;
-    if ((a == LONG_MIN && b == -1) || b == 0) /* avoid overflow */
-        return;
-    old = m3_mod_old(b, a);
-    current = m3_mod(b, a);
-    errors_mod += (old != current);
-    /* old version is wrong for LONG_MIN mod negative */
-    if (a != LONG_MIN || b >= 0 || old == current)
-    {
-        assert(old == current);
-        assert((b < 0) ? (old > b && old <= 0) : (old < b && old >= 0));
-        assert(old == a - b * m3_div(b, a));
-    }
-    assert(current == a - b * m3_div(b, a));
-    assert((b < 0) ? (current > b && current <= 0) : (current < b && current >= 0));
-}
-
 static void TestModx(int64 a, int64 b)
 {
     if (b)
     {
-        TestMod32((long)a, (long)b);
         TestMod64(a, b);
     }
     if (a)
     {
-        TestMod32((long)b, (long)a);
         TestMod64(b, a);
     }
 }
