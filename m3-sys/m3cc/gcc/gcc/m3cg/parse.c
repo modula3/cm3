@@ -191,10 +191,6 @@ static GTY (()) tree m3_global_trees[M3TI_MAX];
 #define memcpy_proc	m3_global_trees[M3TI_MEMCPY]
 #define memmove_proc	m3_global_trees[M3TI_MEMMOVE]
 #define memset_proc	m3_global_trees[M3TI_MEMSET]
-#define div_proc	m3_global_trees[M3TI_DIV]
-#define mod_proc	m3_global_trees[M3TI_MOD]
-#define divL_proc	m3_global_trees[M3TI_DIVL]
-#define modL_proc	m3_global_trees[M3TI_MODL]
 #define set_union_proc	m3_global_trees[M3TI_SET_UNION]
 #define set_diff_proc	m3_global_trees[M3TI_SET_DIFF]
 #define set_inter_proc	m3_global_trees[M3TI_SET_INTER]
@@ -1228,14 +1224,6 @@ m3_init_decl_processing (void)
   memset_proc = built_in_decls[BUILT_IN_MEMSET];
 #endif
 
-  t = build_function_type_list (t_int, t_int, t_int, NULL_TREE);
-  div_proc = builtin_function ("m3_div", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
-  mod_proc = builtin_function ("m3_mod", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
-
-  t = build_function_type_list (t_int_64, t_int_64, t_int_64, NULL_TREE);
-  divL_proc = builtin_function ("m3_divL", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
-  modL_proc = builtin_function ("m3_modL", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
-
   t = build_function_type_list (t_void, NULL_TREE);
   set_union_proc  = builtin_function ("set_union",
 				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
@@ -1517,7 +1505,6 @@ scan_mtype (m3_type *T)
 
 /*----------------------------------------------------------------- signs ---*/
 
-#define SIGN(x) char x = scan_sign ()
 static char
 scan_sign (void)
 {
@@ -2426,7 +2413,7 @@ emit_fault_proc (void)
   current_function_decl = NULL_TREE;
 }
 
-// FIXME: jdp says 0x0f and 4; cm3 may need more
+/* FIXME: jdp says 0x0f and 4; cm3 may need more */
 #define FAULT_MASK 0x1f
 #define LINE_SHIFT 5
 
@@ -4076,46 +4063,26 @@ static void
 m3cg_div (void)
 {
   MTYPE2 (t, T);
-  SIGN   (a);
-  SIGN   (b);
+  scan_sign ();
+  scan_sign ();
 
-  if ((b == 'P' && a == 'P') || IS_WORD_TYPE(T)) {
-    EXPR_REF (-2) = m3_build2 (FLOOR_DIV_EXPR, t,
-			       m3_cast (t, EXPR_REF (-2)),
-			       m3_cast (t, EXPR_REF (-1)));
-    EXPR_POP ();
-  } else {
-    m3_start_call ();
-    m3_pop_param (t);
-    m3_pop_param (t);
-    if (TYPE_SIZE (t) == TYPE_SIZE (long_long_integer_type_node))
-      m3_call_direct (divL_proc, TREE_TYPE (TREE_TYPE (divL_proc)));
-    else
-      m3_call_direct (div_proc, TREE_TYPE (TREE_TYPE (div_proc)));
-  }
+  EXPR_REF (-2) = m3_build2 (FLOOR_DIV_EXPR, t,
+                             m3_cast (t, EXPR_REF (-2)),
+                             m3_cast (t, EXPR_REF (-1)));
+  EXPR_POP ();
 }
 
 static void
 m3cg_mod (void)
 {
   MTYPE2 (t, T);
-  SIGN   (a);
-  SIGN   (b);
+  scan_sign ();
+  scan_sign ();
 
-  if ((b == 'P' && a == 'P') || IS_WORD_TYPE(T)) {
-    EXPR_REF (-2) = m3_build2 (FLOOR_MOD_EXPR, t,
-			       m3_cast (t, EXPR_REF (-2)),
-			       m3_cast (t, EXPR_REF (-1)));
-    EXPR_POP ();
-  } else {
-    m3_start_call ();
-    m3_pop_param (t);
-    m3_pop_param (t);
-    if (TYPE_SIZE (t) == TYPE_SIZE (long_long_integer_type_node))
-      m3_call_direct (modL_proc, TREE_TYPE (TREE_TYPE (modL_proc)));
-    else
-      m3_call_direct (mod_proc, TREE_TYPE (TREE_TYPE (mod_proc)));
-  }
+  EXPR_REF (-2) = m3_build2 (FLOOR_MOD_EXPR, t,
+                             m3_cast (t, EXPR_REF (-2)),
+                             m3_cast (t, EXPR_REF (-1)));
+  EXPR_POP ();
 }
 
 static void
