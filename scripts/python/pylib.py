@@ -1232,9 +1232,7 @@ def Boot():
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
     P = [ "m3cc", "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
-          "m3objfile", "m3linker", "m3back", "m3front", "cm3" ]
-    if Target == "NT386":
-        P += ["mklib"]
+          "m3objfile", "m3linker", "m3back", "m3front", "cm3", "mklib" ]
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
