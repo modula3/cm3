@@ -68,9 +68,7 @@ BEGIN
           PutT(", n:"); PutH(n);
           PutT("):"); PutH(result32);
           NL();
-          IF n = 0 THEN
-            <* ASSERT result32 = a32 *>
-          END
+          <* ASSERT (n # 0) OR (result32 = a32) *>
         END
       END
     END
@@ -87,9 +85,7 @@ BEGIN
           PutT(", n:"); PutH(n);
           PutT("):"); PutLH(result64);
           NL();
-          IF n = 0 THEN
-            <* ASSERT result64 = a64 *>
-          END
+          <* ASSERT (n # 0) OR (result64 = a64) *>
         END
       END
     END
@@ -283,21 +279,55 @@ END TestRemU;
 
 PROCEDURE TestLT(a, b: LONGINT): BOOLEAN =
 BEGIN
+  FOR i := -100L TO 100L DO
+    FOR j := (i + 1L) TO 100L DO
+      <* ASSERT (i < j) *>
+    END;
+  END;
+
   RETURN a < b;
 END TestLT;
 
 PROCEDURE TestLTU(a, b: LONGINT): BOOLEAN =
 BEGIN
+  FOR i := 0L TO 10L DO
+    FOR j := (i + 1L) TO 10L DO
+      <* ASSERT Long.LT(i, j) *>
+    END;
+  END;
+ 
+  <* ASSERT Long.LT(0L, -1L) *>
+  <* ASSERT Long.LT(LAST(LONGINT), FIRST(LONGINT)) *>
+
+  FOR i := -100L TO 100L DO
+    FOR j := -100L TO 100L DO
+      IF (i < 0L) # (j < 0L) THEN
+        <* ASSERT (i < j) # Long.LT(i, j) *>
+        <* ASSERT Word.LT(VAL(i, INTEGER), VAL(j, INTEGER)) = Long.LT(i, j) *>
+      END
+    END
+  END;
+
   RETURN Long.LT(a, b);
 END TestLTU;
 
 PROCEDURE TestEQ(a, b: LONGINT): BOOLEAN =
 BEGIN
+  FOR i := -10L TO 10L DO
+    FOR j := (i + 1L) TO 10L DO
+      <* ASSERT NOT (i = j) *>
+    END;
+  END;
   RETURN a = b;
 END TestEQ;
 
 PROCEDURE TestNE(a, b: LONGINT): BOOLEAN =
 BEGIN
+  FOR i := -10L TO 10L DO
+    FOR j := (i + 1L) TO 10L DO
+      <* ASSERT (i # j) *>
+    END;
+  END;
   RETURN a # b;
 END TestNE;
 
