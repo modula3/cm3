@@ -15,7 +15,6 @@ DoPackage(sys.argv, [
     "m3objfile",
     "m3linker",
     "m3back",
-    "m3staloneback",
     "m3front",
     "m3quake",
     "m3cc",
