@@ -137,7 +137,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
         % leaf only path -- does it work? And require environment varilable?
         %"-install_name", lib_sox,
-        
+
         % relative to the executable, computed at runtime,
         % can still be override with environment for uninstalled binaries
         "-install_name", "@executable_path/../lib/" & lib_sox,
@@ -219,7 +219,7 @@ proc m3_link (prog, options, objects, imported_libs, shared) is
     "-dead_strip",
     % "-dead_strip_dylibs", % requires 10.5
     % allow user to run install_name_tool with maximum flexibility
-    "-headerpad_max_install_names" ]  
+    "-headerpad_max_install_names" ]
   if M3_PROFILING args += "-pg" end
   return try_exec ("@" & SYSTEM_CC, args)
 end
