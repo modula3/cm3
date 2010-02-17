@@ -236,21 +236,23 @@ proc GetM3Back() is
       if (not defined("m3back")) and (not equal (host, "-"))
         foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
           if (not defined("m3back")) and not equal (target, "-")
-            if (not defined("m3back")) and (not equal (target, "") or equal (HOST, TARGET)) and (not equal (host, "") or equal (HOST, TARGET))
-              foreach root in [ m3cc, bin ]
-                if root
-                  foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
-                    foreach exe in [".exe", ""]
-                      local a = root & host & target & gcc & exe
-                      if (not defined("m3back")) and (not Cache contains a)
-                        % write("probing " & a & "\n")
-                        if FileExists(a)
-                          if (not defined("m3back"))
-                            % write("using " & a & "\n")
-                            m3back = "@" & a & " " & GetM3BackFlags()
+            if (not defined("m3back")) and (not equal (target, "") or equal (HOST, TARGET))
+              if (not defined("m3back")) and (not equal (host, "") or equal (HOST, TARGET))
+                foreach root in [ m3cc, bin ]
+                  if root
+                    foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
+                      foreach exe in [".exe", ""]
+                        local a = root & host & target & gcc & exe
+                        if (not defined("m3back")) and (not Cache contains a)
+                          % write("probing " & a & "\n")
+                          if FileExists(a)
+                            if (not defined("m3back"))
+                              % write("using " & a & "\n")
+                              m3back = "@" & a & " " & GetM3BackFlags()
+                            end
+                          else
+                            Cache{a} = 1
                           end
-                        else
-                          Cache{a} = 1
                         end
                       end
                     end
