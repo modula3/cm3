@@ -32,7 +32,7 @@ END NotConstI;
 PROCEDURE NL() =
 BEGIN
   PutT("\n");
-  Flush();
+  (*Flush();*)
 END NL;
 
 CONST PutT = RTIO.PutText;
@@ -172,22 +172,42 @@ BEGIN
   RETURN a * b;
 END TestMult;
 
-PROCEDURE TestDiv(a, b: LONGINT): LONGINT =
+
+PROCEDURE TestDivI(a, b: INTEGER): INTEGER =
 BEGIN
   <* ASSERT (0 DIV 1) = 0 *>
   <* ASSERT (1 DIV 1) = 1 *>
+  <* ASSERT (FIRST(INTEGER) DIV NotConstI(1 )) = FIRST(INTEGER) *>
+  <* ASSERT (LAST(INTEGER) DIV NotConstI(1 )) = LAST(INTEGER) *>
+
+  FOR i := -10 TO 10 DO
+    FOR j := -10 TO 10 DO
+      IF j # 0 THEN
+        PutI(i);
+        PutT(" DIVI ");
+        PutI(j);
+        PutT(":");
+        PutI(i DIV j);
+        NL();
+      END;
+    END;
+  END;
+
+  RETURN a DIV b;
+END TestDivI;
+
+PROCEDURE TestDivL(a, b: LONGINT): LONGINT =
+BEGIN
   <* ASSERT (0L DIV 1L) = 0L *>
   <* ASSERT (1L DIV 1L) = 1L *>
-  <* ASSERT (FIRST(INTEGER) DIV NotConstI(1 )) = FIRST(INTEGER) *>
   <* ASSERT (FIRST(LONGINT) DIV NotConstL(1L)) = FIRST(LONGINT) *>
-  <* ASSERT (LAST(INTEGER) DIV NotConstI(1 )) = LAST(INTEGER) *>
   <* ASSERT (LAST(LONGINT) DIV NotConstL(1L)) = LAST(LONGINT) *>
 
   FOR i := -10L TO 10L DO
     FOR j := -10L TO 10L DO
       IF j # 0L THEN
         PutL(i);
-        PutT(" DIV ");
+        PutT(" DIVL ");
         PutL(j);
         PutT(":");
         PutL(i DIV j);
@@ -197,9 +217,34 @@ BEGIN
   END;
 
   RETURN a DIV b;
-END TestDiv;
+END TestDivL;
 
-PROCEDURE TestRem(a, b: LONGINT): LONGINT =
+PROCEDURE TestModI(a, b: INTEGER): INTEGER =
+BEGIN
+
+  <* ASSERT (0 MOD 1) = 0 *>
+  <* ASSERT (1 MOD 1) = 0 *>
+  <* ASSERT (FIRST(INTEGER) MOD NotConstI(1 )) = 0 *>
+  <* ASSERT (LAST(INTEGER) MOD NotConstI(1 )) = 0 *>
+
+  FOR i := -10 TO 10 DO
+    FOR j := -10 TO 10 DO
+      IF j # 0 THEN
+        PutI(i);
+        PutT(" MODI ");
+        PutI(j);
+        PutT(":");
+        PutI(i MOD j);
+        <* ASSERT (i # j) OR ((i MOD j) = 0) *>
+        NL();
+      END;
+    END;
+  END;
+
+  RETURN a MOD b;
+END TestModI;
+
+PROCEDURE TestModL(a, b: LONGINT): LONGINT =
 BEGIN
 
   <* ASSERT (0 MOD 1) = 0 *>
@@ -215,7 +260,7 @@ BEGIN
     FOR j := -10L TO 10L DO
       IF j # 0L THEN
         PutL(i);
-        PutT(" MOD ");
+        PutT(" MODL ");
         PutL(j);
         PutT(":");
         PutL(i MOD j);
@@ -226,9 +271,9 @@ BEGIN
   END;
 
   RETURN a MOD b;
-END TestRem;
+END TestModL;
 
-PROCEDURE TestDivU(a, b: LONGCARD): LONGCARD =
+PROCEDURE TestDivUL(a, b: LONGCARD): LONGCARD =
 BEGIN
 
   <* ASSERT (0 DIV 1) = 0 *>
@@ -241,7 +286,7 @@ BEGIN
   FOR i := 0L TO 10L DO
     FOR j := 1L TO 10L DO
       PutL(i);
-      PutT(" DIVU ");
+      PutT(" DIVUL ");
       PutL(j);
       PutT(":");
       PutL(i DIV j);
@@ -250,9 +295,9 @@ BEGIN
   END;
 
   RETURN a DIV b;
-END TestDivU;
+END TestDivUL;
 
-PROCEDURE TestRemU(a, b: LONGCARD): LONGCARD =
+PROCEDURE TestModUL(a, b: LONGCARD): LONGCARD =
 BEGIN
 
   <* ASSERT (0 MOD 1) = 0 *>
@@ -265,7 +310,7 @@ BEGIN
   FOR i := 0L TO 10L DO
     FOR j := 1L TO 10L DO
       PutL(i);
-      PutT(" MODU ");
+      PutT(" MODUL ");
       PutL(j);
       PutT(":");
       PutL(i MOD j);
@@ -275,7 +320,7 @@ BEGIN
   END;
 
   RETURN a MOD b;
-END TestRemU;
+END TestModUL;
 
 PROCEDURE TestLT(a, b: LONGINT): BOOLEAN =
 BEGIN
@@ -1133,10 +1178,12 @@ BEGIN
   EVAL TestAdd(1L, 1L);
   EVAL TestSub(1L, 1L);
   EVAL TestMult(1L, 1L);
-  EVAL TestDiv(1L, 1L);
-  EVAL TestDivU(1L, 1L);
-  EVAL TestRem(1L, 1L);
-  EVAL TestRemU(1L, 1L);
+  EVAL TestDivI(1, 1);
+  EVAL TestDivL(1L, 1L);
+  EVAL TestDivUL(1L, 1L);
+  EVAL TestModI(1, 1);
+  EVAL TestModL(1L, 1L);
+  EVAL TestModUL(1L, 1L);
   EVAL TestLT(1L, 1L);
   EVAL TestLTU(1L, 1L);
   EVAL TestEQ(1L, 1L);
