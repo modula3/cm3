@@ -1482,8 +1482,8 @@ if _Program != "make-msi.py":
     # in order to depend on OrderPackages working.
     #
     # This needs to be still further data driven,
-    # and a full ordering is not necessarily, only
-    # a partial ordering -- stuff can be build in parallel.
+    # and a full ordering is not necessary, only
+    # a partial ordering -- stuff could build in parallel.
     #
         "min" :
             [
