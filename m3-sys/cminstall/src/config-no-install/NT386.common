@@ -451,24 +451,6 @@ end
 
 %------------------------------------------------------------------------------
 
-proc ConvertLibsToStandalone(imported_libs, shared) is
-    if shared
-        return imported_libs
-    end
-    local imports = [ ]
-    foreach f in imported_libs
-        local ff = f & ".sa"
-        if FileExists(ff)
-            imports += ff
-        else
-            imports += f
-        end
-    end
-    return imports
-end
-
-%------------------------------------------------------------------------------
-
 readonly proc ManifestTool(DllOrExe, ManifestFile, ResourceId) is
     local ret = 0
     %
