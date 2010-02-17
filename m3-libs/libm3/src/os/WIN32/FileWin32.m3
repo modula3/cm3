@@ -14,7 +14,7 @@ UNSAFE MODULE FileWin32;
 
 IMPORT File, RegularFile, Terminal, Pipe, OSError;
 IMPORT WinDef, WinError, WinNT, WinBase, WinCon;
-IMPORT OSErrorWin32, TimeWin32;
+IMPORT OSErrorWin32, TimeWin32, Long;
 
 REVEAL
   File.T = T BRANDED OBJECT
@@ -106,7 +106,7 @@ PROCEDURE FileStatus(h: File.T): File.Status  RAISES {OSError.E}=
         END;
         status.type := RegularFile.FileType;
         status.modificationTime := TimeWin32.FromFileTime(ffd.ftLastWriteTime);
-        status.size := VAL(ffd.nFileSizeLow, LONGINT)
+        status.size := Long.LeftShift(VAL(ffd.nFileSizeHigh, LONGINT), 32) + VAL(ffd.nFileSizeLow, LONGINT);
     | WinBase.FILE_TYPE_CHAR => status.type := Terminal.FileType
     | WinBase.FILE_TYPE_PIPE => status.type := Pipe.FileType
     | WinBase.FILE_TYPE_UNKNOWN => 
