@@ -1,5 +1,5 @@
 % Copyright 1996 Critical Mass, Inc. All rights reserved.
-% 
+%
 % common configuration file for various platforms
 %
 
@@ -189,7 +189,7 @@ if not defined("skip_lib")
 proc skip_lib(lib, shared) is
     local suffix = "so"
     if equal (TARGET, "PA32_HPUX")
-      suffix = "sl" 
+      suffix = "sl"
     end
 
     local lib_a   = format("lib%s.a", lib)
