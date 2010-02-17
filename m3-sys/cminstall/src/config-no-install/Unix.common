@@ -107,6 +107,26 @@ proc assemble(source, object) is
     return try_exec("@" & SYSTEM_ASM, source, "-o", object)
 end
 
+%------------------------------------------------------------------------------
+
+proc AdjustShared(shared) is
+
+  return shared
+
+    % for now at least, no shared on Interix
+
+    and (not IsInterix())
+
+    % Do not support shared with older compilers.
+    % There are, I vaguely recall, problems due to the way
+    % we changed the directory layout. Older compilers combined
+    % with this config file need only support building a static compiler,
+    % so this is ok.
+
+    and defined("install_symbolic_link")
+
+end
+
 %--------------------------------------------------------- library creation ---
 % "make_lib" is called to combine a collection of object modules into
 % a library.
@@ -187,6 +207,7 @@ end
 if not defined("skip_lib")
 
 proc skip_lib(lib, shared) is
+    shared = AdjustShared(shared)
     local suffix = "so"
     if equal (TARGET, "PA32_HPUX")
       suffix = "sl"
@@ -223,6 +244,7 @@ end
 if not defined("m3_link")
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
+    shared = AdjustShared(shared)
     local args =
     [
         "-o", prog,
