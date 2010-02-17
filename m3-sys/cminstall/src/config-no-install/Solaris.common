@@ -47,7 +47,7 @@ if equal (C_COMPILER, "SUN")
       end
       if equal(try_exec("@" & cc & " " & old & " 2>&1 | grep \" " & new
             & " \" > /dev/null"), 0)
-        cc = cc & " " & new 
+        cc = cc & " " & new
       else
         cc = cc & " " & old
       end

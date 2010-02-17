@@ -567,7 +567,7 @@ end
 %------------------------------------------------------------------------------
 
 proc make_dll_gnu(options, objects, imported_libs, lib_file, def_file, dll_file, listing, LinkResponseFile) is
-    if M3_PROFILING 
+    if M3_PROFILING
         objects += "-pg"
     end
 
