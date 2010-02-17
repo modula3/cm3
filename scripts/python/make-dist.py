@@ -196,7 +196,6 @@ Packages = [
     "m3quake",
     "m3objfile",
     "m3back",
-    "m3staloneback",
     "m3objfile",
     "m3cc",
     "cm3",
