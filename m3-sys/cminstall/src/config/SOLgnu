@@ -1,6 +1,6 @@
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
-% 
+%
 % Standard configuration file for SOLgnu (Solaris 2.x w/gcc)
 %
 
@@ -10,7 +10,7 @@
 %M3_PROFILING = FALSE
 
 readonly TARGET       = "SOLgnu"              % code generation target
-if M3_PROFILING 
+if M3_PROFILING
   readonly BUILD_DIR  = TARGET & "p"          % code generation target
 else
   readonly BUILD_DIR  = TARGET                % directory for results
@@ -289,10 +289,10 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   if shared
     % then, build the shared library
     if M3_PROFILING  % FIXME: This is probably wrong (untested)
-      ret_code = try_exec ("@" & SYSTEM_LD, "-pg -dy -G -z text -o", 
+      ret_code = try_exec ("@" & SYSTEM_LD, "-pg -dy -G -z text -o",
                            lib_sox, "-h", lib_sox, objects)
     else
-      ret_code = try_exec ("@" & SYSTEM_LD, "-dy -G -z text -o", 
+      ret_code = try_exec ("@" & SYSTEM_LD, "-dy -G -z text -o",
                            lib_sox, "-h", lib_sox, objects)
     end
     if not equal (ret_code, 0) return ret_code end
