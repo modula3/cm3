@@ -190,6 +190,12 @@ end
 end
 
 proc GetM3Back() is
+
+  if defined("m3back")
+    % write("using " & m3back & "\n")
+    return m3back
+  end
+
   local proc GetSparcSolarisAlternate(x) is
     if equal (x, "SOLsun")
       return "SOLgnu"
@@ -200,10 +206,6 @@ proc GetM3Back() is
     return x
   end
 
-  if defined("m3back")
-    % write("using " & m3back & "\n")
-    return m3back
-  end
   % probe all of these?
   % rationale:
   %  probe the built one ahead of the installed one
