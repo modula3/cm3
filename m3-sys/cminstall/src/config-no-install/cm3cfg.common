@@ -268,41 +268,37 @@ proc GetM3Back() is
     % we should probe all variants where both are non-empty before we probe
     % any where either is empty, but we don't.
     %
-    % The repeated checks for "not defined("m3back")" are present
-    % because older cm3 does not tolerate return from such a deep nesting,
-    % but we still want to skip most loop iterations upon finding the result.
-    %
     foreach host in [ HOST & SL, HOST & "-", ALTHOST & SL, ALTHOST & "-", ""]
-        if (not defined("m3back")) and (not equal (host, "-"))
-            foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
-                if (not defined("m3back")) and not equal (target, "-")
-                    if (not defined("m3back")) and (not equal (target, "") or equal (HOST, TARGET))
-                        if (not defined("m3back")) and (not equal (host, "") or equal (HOST, TARGET))
-                            foreach root in [ m3cc, bin ]
-                                if root
-                                    foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
-                                        foreach exe in [".exe", ""]
-                                            local a = root & host & target & gcc & exe
-                                            if (not defined("m3back")) and (not Cache contains a)
-                                                % write("probing " & a & "\n")
-                                                if FileExists(a)
-                                                    if (not defined("m3back"))
-                                                      % write("using " & a & "\n")
-                                                      m3back = "@" & a & " " & GetM3BackFlags()
-                                                    end
-                                                else
-                                                    Cache{a} = 1
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
+      if not equal (host, "-")
+        foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
+          if not equal (target, "-")
+            if not equal (target, "") or equal (HOST, TARGET)
+              if not equal (host, "") or equal (HOST, TARGET)
+                foreach root in [ m3cc, bin ]
+                  if root
+                    foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
+                      foreach exe in [".exe", ""]
+                        if not defined("m3back")
+                          local a = root & host & target & gcc & exe
+                          if not Cache contains a
+                            % write("probing " & a & "\n")
+                            if FileExists(a)
+                              % write("using " & a & "\n")
+                              m3back = "@" & a & " " & GetM3BackFlags()
+                            else
+                              Cache{a} = 1
                             end
+                          end
                         end
+                      end
                     end
+                  end
                 end
+              end
             end
+          end
         end
+      end
     end
     if not defined("m3back")
       % write("using cm3cg in PATH (if there is one)\n")
@@ -416,6 +412,7 @@ M3_NEED_STANDALONE_LINKS = FALSE
 
 readonly proc PdbExport(pdb) is
     if FileExists(pdb)
+        % This isn't quite right. The compiler should handle it.
         BindExport(pdb)
     end
 end
