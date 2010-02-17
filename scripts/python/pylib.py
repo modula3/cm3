@@ -1229,13 +1229,9 @@ def Boot():
     Assemble = re.sub("  +", " ", Assemble)
     Assemble = re.sub(" +$", "", Assemble)
 
-    if Target.find("INTERIX") != -1:
-        a = " -I /dev/fs/C/dev2/cm3.2/m3-win/w32api/include"
-        Compile = Compile + a + a + "/ddk"
-
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
-    P = [ "m3cc", "ntdll", "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
+    P = [ "m3cc", "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
           "m3objfile", "m3linker", "m3back", "m3front", "cm3" ]
     if Target == "NT386":
         P += ["mklib"]
@@ -1293,11 +1289,8 @@ def Boot():
     for a in [Make, Makefile]:
         if Target.find("INTERIX") == -1:
             a.write("$(Link) -o cm3 *.o\n")
-        else:
-            a.write("rm -f ntdll.def ntdll.lib ntdll.dll ntdll.o ntdll.c.o a.out a.exe cm3 cm3.exe libntdll.a\n")
-            a.write("gcc -c ntdll.c\n")
-            a.write("/opt/gcc.3.3/i586-pc-interix3/bin/dlltool --dllname ntdll.dll --kill-at --output-lib libntdll.a --export-all-symbols ntdll.o\n")
-            a.write("rm -f ntdll.o ntdll.c.o _m3main.c.o _m3main.o\n")
+        else: # Do we still need this variation?
+            a.write("rm -f ntdll.def ntdll.lib ntdll.dll ntdll.o ntdll.c.o a.out a.exe cm3 cm3.exe libntdll.a _m3main.c.o _m3main.o\n")
             a.write("gcc -g -o cm3 _m3main.c *.o -lm -L . -lntdll\n")
 
     Common = "Common"
@@ -1495,7 +1488,6 @@ if _Program != "make-msi.py":
     #
         "min" :
             [
-            "ntdll",
             "import-libs",
             "libm3",
             "m3core",
@@ -1672,7 +1664,6 @@ if _Program != "make-msi.py":
             "webscape",
             "webcat",
     
-            "ntdll",
             "import-libs",
             "m3core",
             "libm3",
@@ -1693,7 +1684,6 @@ if _Program != "make-msi.py":
     
         # base libraries
     
-            "ntdll",
             "import-libs",
             "m3core",
             "libm3",
@@ -1902,7 +1892,6 @@ if _Program != "make-msi.py":
     }
     
     PackageSets_CoreBaseCommon = [
-        "ntdll",
         "import-libs",
         "m3core",
         "libm3",
