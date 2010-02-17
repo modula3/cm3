@@ -1889,55 +1889,6 @@ if _Program != "make-msi.py":
             "cvsup/cvpasswd",
             ],
     }
-    
-    PackageSets_CoreBaseCommon = [
-        "import-libs",
-        "m3core",
-        "libm3",
-        "windowsResources",
-        "sysutils",
-        "m3middle",
-        "m3quake",
-        "m3scanner",
-        "m3tools",
-        "m3cgcat",
-        "m3cggen",
-        "m3gdb",
-        "m3bundle",
-        "mklib",
-        "fix_nl",
-        "libdump",
-        "bitvector",
-        "digraph",
-        "parseparams",
-        "realgeometry",
-        "set",
-        "slisp",
-        "sortedtableextras",
-        "table-list",
-        "tempfiles",
-        "tcl",
-        ]
-    
-    PackageSets["core"] = PackageSets_CoreBaseCommon
-    PackageSets["base"] = PackageSets_CoreBaseCommon
-    
-    PackageSets["core"] += [
-        "patternmatching",
-        "m3objfile",
-        "m3linker",
-        "m3back",
-        "m3cc",
-        "cm3",
-        "m3front",
-        "m3gdb",
-        ]
-    
-    PackageSets["base"] += [
-        "tcp",
-        "tapi",
-        "serial",
-        ]
 
 #-----------------------------------------------------------------------------
 
