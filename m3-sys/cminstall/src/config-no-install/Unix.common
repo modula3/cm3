@@ -124,14 +124,6 @@ end
 
 %------------------------------------------------------------------------------
 
-if IsInterix()
-  UseNtdll = PKG_INSTALL & SL & "ntdll" & SL & TARGET & SL & "libntdll.a"
-else
-  UseNtdll = ""
-end
-
-%------------------------------------------------------------------------------
-
 proc AdjustShared(shared) is
 
   return shared
@@ -173,10 +165,6 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     local expfile = "lib" & lib & ".exp" % libfoo.exp
 
     DeleteFiles([lib_a, lib0_file, lib_so, lib_sox, expfile])
-
-    if not equal(lib, "m3core")
-        UseNtdll = ""
-    end
 
     % first build the non-shared library in the usual ar/ranlib way
 
@@ -223,7 +211,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         end
         configure_linker()
         if IsInterix()
-          ret_code = try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, "--whole-archive", lib0_file, "--no-whole-archive", imported_libs, expfile, UseNtdll)
+          ret_code = try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, "--whole-archive", lib0_file, "--no-whole-archive", imported_libs, expfile)
         else
           ret_code = try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, objects, imported_libs)
         end
