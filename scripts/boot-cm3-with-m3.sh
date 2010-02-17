@@ -43,7 +43,7 @@ P="${P} m3quake"
 [ "${GCC_BACKEND}" = yes ] && P="${P} m3cc"
 P="${P} cm3"
 echo ${BUILDARGS} | grep PM3 >/dev/null 2>/dev/null || P="${P} cminstall"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
+P="${P} mklib"
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]
