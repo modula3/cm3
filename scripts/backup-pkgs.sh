@@ -57,8 +57,6 @@ P="${P} m3cgcat"
 P="${P} m3cggen"
 P="${P} m3bundle"
 P="${P} mklib"
-P="${P} fix_nl"
-P="${P} libdump"
 
 USAGE="
   `basename $0` [ generic_options ] [ generic_cmd ]

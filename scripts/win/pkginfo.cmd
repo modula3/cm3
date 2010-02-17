@@ -32,13 +32,11 @@ goto :eof
 
 :FilterOnePackage
     @rem goto :FilterOnePackage_%1
-    for %%a in (mklib fix_nl libdump import_libs tcl serial X11R4 m3cc m3gdb) do if /i "%1" == "%%a" goto :FilterOnePackage_%1
+    for %%a in (mklib import_libs tcl serial X11R4 m3cc m3gdb) do if /i "%1" == "%%a" goto :FilterOnePackage_%1
     exit /b 0
     goto :eof
 
 :FilterOnePackage_mklib
-:FilterOnePackage_fix_nl
-:FilterOnePackage_libdump
 :FilterOnePackage_import-libs
 :FilterOnePackage_tapi
     if /i "%M3OSTYPE%" == "WIN32" exit /b 0
