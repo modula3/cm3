@@ -226,39 +226,46 @@ proc GetM3Back() is
     % we should probe all variants where both are non-empty before we probe
     % any where either is empty, but we don't.
     %
+    % The repeated checks for "not defined("m3back")" are present
+    % because older cm3 does not tolerate return from such a deep nesting,
+    % but we still want to skip most loop iterations upon finding the result.
+    % (at least the inner most part for correctness, and the outer ones
+    % for efficiency)
+    %
     foreach host in [ HOST & SL, HOST & "-", ALTHOST & SL, ALTHOST & "-", ""]
-        if not equal (host, "-")
-            foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
-                if not equal (target, "-")
-                    if not equal (target, "") or equal (HOST, TARGET)
-                        if not equal (host, "") or equal (HOST, TARGET)
-                            foreach root in [ m3cc, bin ]
-                                if root
-                                    foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
-                                        foreach exe in [".exe", ""]
-                                            local a = root & host & target & gcc & exe
-                                            if not Cache contains a
-                                                % write("probing " & a & "\n")
-                                                if FileExists(a)
-                                                    % write("using " & a & "\n")
-                                                    m3back = "@" & a & " " & GetM3BackFlags()
-                                                    return m3back
-                                                else
-                                                    Cache{a} = 1
-                                                end
-                                            end
-                                        end
-                                    end
-                                end
-                            end
+      if (not defined("m3back")) and (not equal (host, "-"))
+        foreach target in [ TARGET & SL, TARGET & "-", ALTTARGET & SL, ALTTARGET & "-", ""]
+          if (not defined("m3back")) and not equal (target, "-")
+            if (not defined("m3back")) and (not equal (target, "") or equal (HOST, TARGET)) and (not equal (host, "") or equal (HOST, TARGET))
+              foreach root in [ m3cc, bin ]
+                if root
+                  foreach gcc in ["gcc" & SL & "m3cgc1", "cm3cg"]
+                    foreach exe in [".exe", ""]
+                      local a = root & host & target & gcc & exe
+                      if (not defined("m3back")) and (not Cache contains a)
+                        % write("probing " & a & "\n")
+                        if FileExists(a)
+                          if (not defined("m3back"))
+                            % write("using " & a & "\n")
+                            m3back = "@" & a & " " & GetM3BackFlags()
+                          end
+                        else
+                          Cache{a} = 1
                         end
+                      end
                     end
+                  end
                 end
+              end
             end
+          end
         end
+      end
     end
-    % write("using cm3cg in PATH (if there is one)\n")
-    m3back = "@cm3cg " & GetM3BackFlags()
+    if not defined("m3back")
+      % write("using cm3cg in PATH (if there is one)\n")
+      m3back = "@cm3cg " & GetM3BackFlags()
+    end
     return m3back
 end
 
@@ -269,7 +276,7 @@ end
 proc set_config_options() is
     m3_option("-why")   %-- produce a listing that explains what's happening and why
     m3_debug(TRUE)      %-- produce object code with debugging symbols
-    M3_OPTIONS += "-w1"  %-- produce "level 1" warnings
+    M3_OPTIONS += "-w1" %-- produce "level 1" warnings
 end
 
 %------------------------------------------------------------------------------
@@ -400,6 +407,5 @@ proc skip_link(prog, shared) is
 
     return 0
 end
-
 
 %------------------------------------------------------------------------------
