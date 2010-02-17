@@ -1505,6 +1505,8 @@ scan_mtype (m3_type *T)
 
 /*----------------------------------------------------------------- signs ---*/
 
+#define SIGN(x) char x = scan_sign ()
+#define UNUSED_SIGN(x) char x ATTRIBUTE_UNUSED = scan_sign ()
 static char
 scan_sign (void)
 {
@@ -4063,8 +4065,8 @@ static void
 m3cg_div (void)
 {
   MTYPE2 (t, T);
-  scan_sign ();
-  scan_sign ();
+  UNUSED_SIGN   (a);
+  UNUSED_SIGN   (b);
 
   EXPR_REF (-2) = m3_build2 (FLOOR_DIV_EXPR, t,
                              m3_cast (t, EXPR_REF (-2)),
@@ -4076,8 +4078,8 @@ static void
 m3cg_mod (void)
 {
   MTYPE2 (t, T);
-  scan_sign ();
-  scan_sign ();
+  UNUSED_SIGN   (a);
+  UNUSED_SIGN   (b);
 
   EXPR_REF (-2) = m3_build2 (FLOOR_MOD_EXPR, t,
                              m3_cast (t, EXPR_REF (-2)),
