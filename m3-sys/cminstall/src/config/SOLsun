@@ -1,6 +1,6 @@
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
-% 
+%
 % Standard configuration file for SOLsun (Solaris 2.x w/Sun C)
 %
 
@@ -244,7 +244,7 @@ M3_BACKEND_MODE = "3"
 % is only called if your program or library explicitly includes C source
 % code, the system distributed by Critical Mass does not.
 
-% WHAT TO USE IF YOU DON'T HAVE '/usr/ucb/cc' 
+% WHAT TO USE IF YOU DON'T HAVE '/usr/ucb/cc'
 %   For the Solaris C compiler, we use the SunPro v2.0.1 cc (when invoked
 %   with the -V option, it prints "cc: C Development Set (CDS)
 %   SPARCompilers 2.0.1 3/25/93").  This may often be found in
