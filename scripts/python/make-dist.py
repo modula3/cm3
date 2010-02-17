@@ -184,8 +184,6 @@ Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previo
 
 # build just compiler this pass, not the runtime
 # That is, assuming we have m3core and libm3, build the rest of the compiler.
-# We don't build mklib here because it can't be built against older non-Windows m3core, and
-# because we don't need it to build the compiler.
 
 Packages = [
     "import-libs",
@@ -196,9 +194,9 @@ Packages = [
     "m3quake",
     "m3objfile",
     "m3back",
-    "m3objfile",
     "m3cc",
     "cm3",
+    "mklib",
     ]
 
 def CopyRecursive(From, To):
