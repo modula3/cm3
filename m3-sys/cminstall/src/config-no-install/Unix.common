@@ -80,9 +80,7 @@ if not defined ("compile_c")
 
 proc compile_c(source, object, options, optimize, debug) is
 
-    %
     % hack
-    %
 
     if equal(source, "../src/runtime/SOLgnu/RTMachineASM.s")
         return assemble(source, object)
@@ -113,10 +111,6 @@ proc AdjustShared(shared) is
 
   return shared
 
-    % for now at least, no shared on Interix
-
-    and (not IsInterix())
-
     % Do not support shared with older compilers.
     % There are, I vaguely recall, problems due to the way
     % we changed the directory layout. Older compilers combined
@@ -125,6 +119,32 @@ proc AdjustShared(shared) is
 
     and defined("install_symbolic_link")
 
+    % for now at least, no shared on Interix
+
+    and (not IsInterix())
+
+end
+
+%------------------------------------------------------------------------------
+
+% workaround for old toolsets (e.g. LINUXLIBC6 release 5.4.0)
+
+xNeedOldGCAdjust = 2
+    
+proc NeedOldGCAdjust() is
+  if equal(xNeedOldGCAdjust, 2)
+    xNeedOldGCAdjust = ((not defined("install_symbolic_link"))
+                        and (equal(TARGET, "LINUXLIBC6") or equal(TARGET, "PPC_LINUX"))
+                        and equal(try_exec("@fgrep m3gcdefs " & PKG_USE & "/m3core/" & TARGET & "/.M3EXPORTS 2>/dev/null >/dev/null"), 0))
+  end
+  return xNeedOldGCAdjust
+end   
+ 
+proc OldGCAdjust(imported_libs) is
+  if NeedOldGCAdjust()
+    imported_libs += ["-Wl,--wrap,adjtime,--wrap,getdirentries,--wrap,readv,--wrap,utimes,--wrap,wait3", LIB_USE & "/libm3gcdefs.a"]
+  end
+  return imported_libs
 end
 
 %--------------------------------------------------------- library creation ---
@@ -134,6 +154,8 @@ end
 if not defined("make_lib")
 
 proc make_lib(lib, options, objects, imported_libs, shared) is
+    shared = AdjustShared(shared)
+    imported_libs = OldGCAdjust(imported_libs)
     local suffix = "so"
     local hpux_flags = ""
     local soname_flag = "-soname"
@@ -166,7 +188,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         end
     end
 
-    if shared and defined("install_symbolic_link")
+    if shared
 
         local soname_opt = "-Wl," & soname_flag & "," & lib_sox
         if equal (TARGET, "I386_INTERIX")
@@ -178,15 +200,7 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         if M3_PROFILING
             pg = "-pg"
         end
-        ret_code =
-            try_exec(
-                "@" & SYSTEM_LD,
-                pg,
-                "-shared",
-                soname_opt,
-                "-o", lib_sox,
-                objects,
-                imported_libs)
+        ret_code = try_exec("@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, objects, imported_libs)
         if not equal(ret_code, 0)
             return ret_code
         end
@@ -217,11 +231,12 @@ proc skip_lib(lib, shared) is
     local lib_so = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
 
-    if shared and defined("install_symbolic_link")
+    if shared
         % create the version aliases
         link_file(lib_sox, lib_so)
 
         % make sure the shared library stuff gets installed properly
+
         LibdExport(lib_sox)
         install_link_to_derived(lib_a, LIB_INSTALL)
         install_symbolic_link(lib_sox, LIB_INSTALL & "/" & lib_so)
@@ -245,18 +260,16 @@ if not defined("m3_link")
 
 proc m3_link(prog, options, objects, imported_libs, shared) is
     shared = AdjustShared(shared)
-    local args =
-    [
-        "-o", prog,
-        options,
-        objects,
-        imported_libs,
-    ]
+    imported_libs = OldGCAdjust(ConvertLibsToStandalone(imported_libs, shared))
+    local args = [ "-o", prog, options, objects, imported_libs ]
     if M3_PROFILING
         args += "-pg"
     end
     if defined("POSITION_INDEPENDENT_EXECUTABLE")
         args += POSITION_INDEPENDENT_EXECUTABLE
+    end
+    if not shared and defined("LINK_STATIC")
+        args += LINK_STATIC
     end
     return try_exec("@" & SYSTEM_LD, args)
 end
