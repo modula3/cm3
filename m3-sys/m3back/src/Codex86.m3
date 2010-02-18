@@ -8,8 +8,8 @@
 
 MODULE Codex86;
 
-IMPORT Fmt, TargetMap, M3x86Rep, M3ID, M3CG_Ops, Word, M3ObjFile, Wrx86, Target;
-IMPORT TInt, TWord;
+IMPORT Fmt, TargetMap, M3x86Rep, M3ID, M3CG_Ops, Word, M3ObjFile, Wrx86;
+IMPORT M3BackInt AS Target, M3BackInt AS TInt, M3BackWord AS TWord;
 
 FROM TargetMap IMPORT CG_Bytes;
 
@@ -2316,7 +2316,7 @@ PROCEDURE log_abscall_use (t: T; VAR internal_size: INTEGER;
 PROCEDURE init_intvar (t: T; size: ByteSize; f_lit: FLiteral; abscall: AbsCall):
             x86Var =
   VAR intvar: x86Var;
-      tint: Target.Int;
+      tint: TInt.TargetInt;
   BEGIN
     intvar := t.parent.declare_global(M3ID.NoID, size, 4,
                                       Type.Struct, 0, FALSE, TRUE);
@@ -2324,7 +2324,7 @@ PROCEDURE init_intvar (t: T; size: ByteSize; f_lit: FLiteral; abscall: AbsCall):
 
     WHILE f_lit # NIL DO
       FOR i := 0 TO f_lit.flit_size - 1 DO
-        EVAL TInt.FromInt(f_lit.arr[i], Target.Integer.bytes, tint);
+        EVAL TInt.IntToTargetInt(f_lit.arr[i], tint);
         t.parent.init_int(f_lit.loc + i, tint, Type.Word8);
       END;
 
@@ -2332,7 +2332,7 @@ PROCEDURE init_intvar (t: T; size: ByteSize; f_lit: FLiteral; abscall: AbsCall):
     END;
 
     WHILE abscall # NIL DO
-      t.parent.init_int(abscall.loc, TZero, Type.Int32);
+      t.parent.init_int(abscall.loc, TInt.TargetIntZero, Type.Int32);
       t.obj.relocate(intvar.symbol, abscall.loc, abscall.sym);
       abscall := abscall.link;
     END;

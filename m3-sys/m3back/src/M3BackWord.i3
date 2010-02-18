@@ -6,7 +6,7 @@
 (* Last Modified On Fri Nov 19 09:32:50 PST 1993 By kalsow     *)
 (*      Modified On Thu May 20 08:20:38 PDT 1993 By muller     *)
 
-INTERFACE M3BackWord;
+INTERFACE M3BackWord; (* also known as TWord *)
 
 (*  Modula-3 target description
 
@@ -18,7 +18,7 @@ INTERFACE M3BackWord;
     otherwise they return FALSE.
 *)
 
-FROM Target IMPORT Int;
+FROM M3BackInt IMPORT Int;
 
 PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16];  n: CARDINAL;
                VAR i: Int): BOOLEAN;

@@ -8,7 +8,7 @@
 
 INTERFACE M3x86Rep;
 
-IMPORT M3CG, M3ID, Target, TInt;
+IMPORT M3CG, M3ID, M3BackInt AS TInt, M3BackInt AS Target;
 
 FROM M3CG IMPORT ByteOffset, ByteSize, Alignment;
 FROM M3CG IMPORT Var, Proc, Name;
@@ -160,5 +160,7 @@ CONST MinimumShift = ARRAY IType OF Target.Int { TInt.MThirtyOne, TInt.MThirtyOn
 CONST BitCountMask = MaximumShift;
  
 VAR(*CONST*) IntType: ARRAY IType OF Target.Int_type;
+
+CONST TargetIntToBackInt = TInt.FromTargetInt;
 
 END M3x86Rep.

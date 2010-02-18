@@ -8,7 +8,7 @@
 
 INTERFACE Wrx86;
 
-IMPORT Wr, Target;
+IMPORT Wr, M3BackInt AS Target;
 
 FROM M3CG IMPORT Name, TypeUID;
 FROM M3CG IMPORT Var, Proc, Label;
