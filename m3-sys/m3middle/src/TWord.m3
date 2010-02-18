@@ -9,24 +9,22 @@
 MODULE TWord;
 
 IMPORT Word, TInt;
-FROM Target IMPORT Int, IByte, IBytes;
+FROM Target IMPORT Int, IByte;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;
   LShift = Word.LeftShift;
 
 CONST
-  Mask = 16_FF;
-  Base = 16_100;
+  Mask = RShift (Word.Not (0), Word.Size - BITSIZE (IByte));
+  Base = Mask + 1;
 
 (*------------------------------------------- unsigned integer operations ---*)
 
-PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  n: CARDINAL;
-               VAR r: Int): BOOLEAN =
-  VAR rr: IBytes;  digit: INTEGER;  ch: CHAR;
+PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  VAR r: Int): BOOLEAN =
+  VAR rr: Int;  digit: INTEGER;  ch: CHAR;
   BEGIN
-    <*ASSERT n # 0*>
-    r := Int{n};
+    r := TInt.Zero;
     FOR i := FIRST (x) TO LAST (x) DO
       ch := x [i];
       IF    ('0' <= ch) AND (ch <= '9') THEN  digit := ORD (ch) - ORD ('0');
@@ -36,14 +34,14 @@ PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  n: CARDINAL;
       END;
   
       (* rr := r * base *)
-      rr := IBytes {0,..};
-      FOR i := 0 TO n-1 DO
-        VAR carry := Word.Times (r.x[i], base);
+      rr := TInt.Zero;
+      FOR i := 0 TO LAST(Int) DO
+        VAR carry := Word.Times (r[i], base);
         BEGIN
-          FOR j := i TO n-1 DO
+          FOR j := i TO LAST(Int) DO
             IF carry = 0 THEN EXIT END;
-            INC (carry, rr[j]);
-            rr[j] := Word.And (carry, Mask);
+            INC (carry, rr [j]);
+            rr [j] := Word.And (carry, Mask);
             carry := RShift (carry, BITSIZE (IByte));
           END;
           IF carry # 0 THEN RETURN FALSE END;
@@ -53,9 +51,9 @@ PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  n: CARDINAL;
       (* r := rr + digit *)
       VAR carry := digit;
       BEGIN
-        FOR i := 0 TO n-1 DO
-          INC (carry, rr[i]);
-          r.x[i] := Word.And (carry, Mask);
+        FOR i := 0 TO LAST(Int) DO
+          INC (carry, rr [i]);
+          r[i] := Word.And (carry, Mask);
           carry := RShift (carry, BITSIZE (IByte));
         END;
         IF carry # 0 THEN RETURN FALSE END;
@@ -66,41 +64,36 @@ PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  n: CARDINAL;
   END New;
 
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
-  VAR carry := 0;  n := MIN (a.n, b.n);
+  VAR carry := 0;
   BEGIN
-    <*ASSERT n # 0*>
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      carry := a.x[i] + b.x[i] + carry;
-      r.x[i] := Word.And (carry, Mask);
+    FOR i := 0 TO LAST(Int) DO
+      carry := a[i] + b[i] + carry;
+      r[i] := Word.And (carry, Mask);
       carry := RShift (carry, BITSIZE (IByte));
     END;
   END Add;
 
 PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int) =
-  VAR borrow := 0;  n := MIN (a.n, b.n);
+  VAR borrow := 0;
   BEGIN
-    <*ASSERT n # 0*>
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      borrow := a.x[i] - b.x[i] - borrow;
-      r.x[i] := Word.And (borrow, Mask);
+    FOR i := 0 TO LAST(Int) DO
+      borrow := a [i] - b [i] - borrow;
+      r [i] := Word.And (borrow, Mask);
       borrow := Word.And (RShift (borrow, BITSIZE (IByte)), 1);
     END;
   END Subtract;
 
 PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
-  VAR carry: INTEGER;  n := MIN (a.n, b.n);
+  VAR carry: INTEGER;
   BEGIN
-    <*ASSERT n # 0*>
-    r := Int{n};
-    FOR i := 0 TO n-1 DO
-      FOR j := 0 TO n-1 DO
-        carry := Word.Times (a.x[i], b.x[j]);
-        FOR k := i + j TO n-1 DO
+    r := TInt.Zero;
+    FOR i := 0 TO LAST(Int) DO
+      FOR j := 0 TO LAST(Int) DO
+        carry := Word.Times (a[i], b[j]);
+        FOR k := i + j TO LAST(Int) DO
           IF carry = 0 THEN EXIT END;
-          carry := carry + r.x[k];
-          r.x[k] := Word.And (carry, Mask);
+          carry := carry + r[k];
+          r[k] := Word.And (carry, Mask);
           carry := RShift (carry, BITSIZE (IByte));
         END;
       END;
@@ -136,33 +129,27 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
     quo_est : INTEGER;
     num_hi  : INTEGER;
     x1,x2,x3: INTEGER;
-    num, den: ARRAY [0..NUMBER (IBytes)+1] OF INTEGER;
-    n := MIN (x.n, y.n);
+    num, den := ARRAY [0..NUMBER (Int)+1] OF INTEGER {0,..};
   BEGIN
-    <*ASSERT n # 0*>
     (* initialize the numerator and denominator,
        and find the highest non-zero digits *)
-    FOR i := 0 TO n-1 DO
-      num[i] := x.x[i];  IF num[i] # 0 THEN max_num := i END;
-      den[i] := y.x[i];  IF den[i] # 0 THEN max_den := i END;
-    END;
-    FOR i := n TO LAST (num) DO
-      num[i] := 0;
-      den[i] := 0;
+    FOR i := 0 TO LAST(Int) DO
+      num[i] := x[i];  IF num[i] # 0 THEN max_num := i; END;
+      den[i] := y[i];  IF den[i] # 0 THEN max_den := i; END;
     END;
 
-    q := Int{n};
-    r := Int{n};
+    q := TInt.Zero;
+    r := TInt.Zero;
 
     IF max_den = 0 THEN
       (* single digit denominator case *)
       carry := 0;
       FOR j := max_num TO 0 BY -1 DO
         tmp := carry * Base + num [j];
-        q.x [j] := tmp DIV den[0];
+        q [j] := tmp DIV den[0];
         carry := tmp MOD den[0];
       END;
-      r.x[0] := carry;
+      r[0] := carry;
       RETURN;
     END;
       
@@ -237,7 +224,7 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
       END;
 
       (* store the quotient digit.  *)
-      q.x [i - 1] := quo_est;
+      q [i - 1] := quo_est;
     END;
 
     (* finally, compute the remainder *)
@@ -246,175 +233,106 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
   END DivMod;
 
 PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
-  VAR n := MIN (a.n, b.n);
   BEGIN
-    <*ASSERT n # 0*>
-    FOR i := n TO a.n-1 DO IF a.x[i] # 0 THEN RETURN FALSE END END;
-    FOR i := n TO b.n-1 DO IF b.x[i] # 0 THEN RETURN TRUE  END END;
-    FOR i := n-1 TO 0 BY -1 DO
-      IF    a.x[i] < b.x[i] THEN RETURN TRUE;
-      ELSIF a.x[i] > b.x[i] THEN RETURN FALSE;
+    FOR i := LAST(Int) TO 0 BY -1 DO
+      IF    a [i] < b [i] THEN RETURN TRUE;
+      ELSIF a [i] > b [i] THEN RETURN FALSE;
       END;
     END;
     RETURN FALSE;
   END LT;
 
 PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
-  VAR n := MIN (a.n, b.n);
   BEGIN
-    <*ASSERT n # 0*>
-    FOR i := n TO a.n-1 DO IF a.x[i] # 0 THEN RETURN FALSE END END;
-    FOR i := n TO b.n-1 DO IF b.x[i] # 0 THEN RETURN TRUE  END END;
-    FOR i := n-1 TO 0 BY -1 DO
-      IF    a.x[i] < b.x[i] THEN RETURN TRUE;
-      ELSIF a.x[i] > b.x[i] THEN RETURN FALSE;
+    FOR i := LAST(Int) TO 0 BY -1 DO
+      IF    a [i] < b [i] THEN RETURN TRUE;
+      ELSIF a [i] > b [i] THEN RETURN FALSE;
       END;
     END;
     RETURN TRUE;
   END LE;
 
-PROCEDURE xEQ (READONLY a, b: Int): BOOLEAN =
-  VAR n := MIN (a.n, b.n);
-  BEGIN
-    <*ASSERT n # 0*>
-    FOR i := n-1 TO 0 BY -1 DO
-      IF a.x[i] # b.x[i] THEN
-        RETURN FALSE;
-      END;
-    END;
-    FOR i := n TO a.n-1 DO IF a.x[i] # 0 THEN RETURN FALSE END END;
-    FOR i := n TO b.n-1 DO IF b.x[i] # 0 THEN RETURN FALSE END END;
-    RETURN TRUE;
-  END xEQ;
-
-PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
-  VAR x := xEQ(a, b);
-  BEGIN
-    <* ASSERT x = xEQ(b, a) *>
-    <* ASSERT x = (LE(a, b) AND LE(b, a)) *>
-    RETURN x;
-  END EQ;
-
-PROCEDURE NE (READONLY a, b: Int): BOOLEAN =
-  VAR x := NOT xEQ(a, b);
-  BEGIN
-    <* ASSERT x = (NOT xEQ(b, a)) *>
-    <* ASSERT x = (LT(a, b) OR LT(b, a)) *>
-    RETURN x;
-  END NE;
-
-PROCEDURE GE (READONLY a, b: Int): BOOLEAN =
-  BEGIN
-    RETURN LE(b, a);
-  END GE;
-
-PROCEDURE GT (READONLY a, b: Int): BOOLEAN =
-  BEGIN
-    RETURN LT(b, a);
-  END GT;
-
 PROCEDURE And (READONLY a, b: Int;  VAR r: Int) =
-  VAR n := MIN (a.n, b.n);
   BEGIN
-    <*ASSERT n # 0*>
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      r.x[i] := Word.And (a.x[i], b.x[i]);
+    FOR i := 0 TO LAST(Int) DO
+      r [i] := Word.And (a [i], b[i]);
     END;
   END And;
 
 PROCEDURE Or (READONLY a, b: Int;  VAR r: Int) =
-  VAR n := MIN (a.n, b.n);
   BEGIN
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      r.x[i] := Word.Or (a.x[i], b.x[i]);
+    FOR i := 0 TO LAST(Int) DO
+      r [i] := Word.Or (a [i], b[i]);
     END;
   END Or;
 
 PROCEDURE Xor (READONLY a, b: Int;  VAR r: Int) =
-  VAR n := MIN (a.n, b.n);
   BEGIN
-    <*ASSERT n # 0*>
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      r.x[i] := Word.Xor (a.x[i], b.x[i]);
+    FOR i := 0 TO LAST(Int) DO
+      r [i] := Word.Xor (a [i], b[i]);
     END;
   END Xor;
 
 PROCEDURE Not (READONLY a: Int;  VAR r: Int) =
-  VAR n := a.n;
   BEGIN
-    <*ASSERT n # 0*>
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      r.x[i] := Word.And (Word.Not (a.x[i]), Mask);
+    FOR i := 0 TO LAST(Int) DO
+      r [i] := Word.And (Word.Not (a [i]), Mask);
     END;
   END Not;
 
-PROCEDURE LeftShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
-  VAR w, i, j, z, x1, x2: INTEGER;
-      n := a.n;  size := n * BITSIZE (IByte);
+PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
   BEGIN
-    <*ASSERT n # 0*>
-    IF b >= size THEN
-      r := Int{n};
-    ELSIF b = 0 THEN (* no shift *)
+    IF ABS (b) >= Size THEN
+      r := TInt.Zero;
+    ELSIF b > 0
+      THEN LeftShift(a, b, r);
+      ELSE RightShift(a, -b, r);
+    END;
+  END Shift;
+
+PROCEDURE LeftShift (READONLY a: Int;  b: [0..Size-1];  VAR r: Int) =
+  VAR w, i, j, z, x1, x2: INTEGER;
+  BEGIN
+    IF b = 0 THEN (* no shift *)
       r := a;
     ELSE
       w := b DIV BITSIZE (IByte);
       i := b MOD BITSIZE (IByte);
       j := BITSIZE (IByte) - i;
-      FOR k := n-1 TO 0 BY -1 DO
+      FOR k := LAST(Int) TO 0 BY -1 DO
         z := k - w;  x1 := 0;  x2 := 0;
-        IF z   >= 0 THEN  x1 := LShift (a.x[z], i);   END;
-        IF z-1 >= 0 THEN  x2 := RShift (a.x[z-1], j); END;
-        r.x[k] := Word.And (Word.Or (x1, x2), Mask);
+        IF z   >= 0 THEN  x1 := LShift (a[z], i);   END;
+        IF z-1 >= 0 THEN  x2 := RShift (a[z-1], j); END;
+        r[k] := Word.And (Word.Or (x1, x2), Mask);
       END;
-      r.n := a.n;
     END;
   END LeftShift;
 
-PROCEDURE RightShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
+PROCEDURE RightShift (READONLY a: Int;  b: [0..Size-1];  VAR r: Int) =
   VAR w, i, j, z, x1, x2: INTEGER;
-      n := a.n;  size := n * BITSIZE (IByte);
   BEGIN
-    <*ASSERT n # 0*>
-    IF b >= size THEN
-      r := Int{n};
-    ELSIF b = 0 THEN (* no shift *)
+    IF b = 0 THEN (* no shift *)
       r := a;
     ELSE
       w := b DIV BITSIZE (IByte);
       i := b MOD BITSIZE (IByte);
       j := BITSIZE (IByte) - i;
-      FOR k := 0 TO n-1 DO
+      FOR k := 0 TO LAST(Int) DO
         z := k + w;  x1 := 0;  x2 := 0;
-        IF z   <= n-1 THEN x1 := RShift (a.x[z], i);   END;
-        IF z+1 <= n-1 THEN x2 := LShift (a.x[z+1], j); END;
-        r.x[k] := Word.And (Word.Or (x1, x2), Mask);
+        IF z   <= LAST(Int) THEN x1 := RShift (a[z], i);   END;
+        IF z+1 <= LAST(Int) THEN x2 := LShift (a[z+1], j); END;
+        r[k] := Word.And (Word.Or (x1, x2), Mask);
       END;
-      r.n := a.n;
 
     END;
   END RightShift;
 
-PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
-  BEGIN
-    IF b > 0 THEN (* left shift *)
-      LeftShift(a, b, r);
-    ELSE (* right shift *)
-      RightShift(a, -b, r);
-    END;
-  END Shift;
-
-PROCEDURE Rotate (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
+PROCEDURE Rotate (READONLY a: Int;  b: INTEGER;  n: CARDINAL;  VAR r: Int) =
   VAR
     w, i, j, z, x1, x2: INTEGER;
-    tmp: IBytes;
-    n := a.n;  size := n * BITSIZE (IByte);
+    tmp: Int;
+    size := n * BITSIZE (IByte);
   BEGIN
-    <*ASSERT n # 0*>
     b := b MOD size;
 
     IF b = 0 THEN
@@ -426,11 +344,11 @@ PROCEDURE Rotate (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
       j := BITSIZE (IByte) - i;
       FOR k := 0 TO n-1 DO
         z := k - w;  x1 := 0;  x2 := 0;
-        x1 := LShift (a.x[z MOD n], i);
-        x2 := RShift (a.x[(z-1) MOD n], j);
+        x1 := LShift (a[z MOD n], i);
+        x2 := RShift (a[(z-1) MOD n], j);
         tmp[k] := Word.And (Word.Or (x1, x2), Mask);
       END;
-      r := Int {a.n, tmp};
+      r := tmp;
 
     ELSE (* right rotate *)
       w := (-b) DIV BITSIZE (IByte);
@@ -438,48 +356,46 @@ PROCEDURE Rotate (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
       j := BITSIZE (IByte) - i;
       FOR k := 0 TO n-1 DO
         z := k + w;  x1 := 0;  x2 := 0;
-        x1 := RShift (a.x[z MOD n], i);
-        x2 := LShift (a.x[(z+1) MOD n], j);
+        x1 := RShift (a[z MOD n], i);
+        x2 := LShift (a[(z+1) MOD n], j);
         tmp[k] := Word.And (Word.Or (x1, x2), Mask);
       END;
-      r := Int {a.n, tmp};
+      r := tmp;
 
     END;
   END Rotate;
 
 PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
   VAR w, b: INTEGER;
-      size := x.n * BITSIZE (IByte);
   BEGIN
-    IF i + n > size THEN RETURN FALSE; END;
+    IF i + n > Size THEN RETURN FALSE; END;
 
-    RightShift (x, i, r);
+    Shift (x, -i, r);
 
     w := n DIV BITSIZE (IByte);
     b := n MOD BITSIZE (IByte);
-    r.x[w] := Word.And (r.x[w], RShift (Mask, BITSIZE (IByte) - b));
-    FOR k := w + 1 TO LAST (IBytes) DO r.x[k] := 0; END;
+    r[w] := Word.And (r[w], RShift (Mask, BITSIZE (IByte) - b));
+    FOR k := w + 1 TO LAST(Int) DO r[k] := 0; END;
 
     RETURN TRUE;
   END Extract;
 
 PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
   VAR yy, yyy, yyyy: Int;
-      size := x.n * BITSIZE (IByte);
   BEGIN
-    IF i + n > size THEN RETURN FALSE; END;
+    IF i + n > Size THEN RETURN FALSE; END;
 
-    RightShift (x, i + n, yy);
-    LeftShift (yy, n, r);
+    Shift (x, -(i + n), yy);
+    Shift (yy, n, r);
 
-    LeftShift (y, size - n, yy);
-    RightShift (yy, size - n, yyy);
+    Shift (y, Size - n, yy);
+    Shift (yy, -(Size - n), yyy);
     Or (r, yyy, r);
-    LeftShift (r, i, yyyy);
+    Shift (r, i, yyyy);
     r := yyyy;
 
-    LeftShift (x, size - i, yy);
-    RightShift (yy, size - i, yyy);
+    Shift (x, Size - i, yy);
+    Shift (yy, -(Size - i), yyy);
     Or (r, yyy, r);
 
     RETURN TRUE;

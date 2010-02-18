@@ -111,11 +111,13 @@ PROCEDURE DoFold (e: Expr.T;  unit: INTEGER): Expr.T =
       IF (info.class = Type.Class.OpenArray) THEN RETURN NIL END;
     END;
     t := Type.CheckInfo (t, info);
-    IF    TInt.FromInt (info.size, Target.Integer.bytes, size)
-      AND TInt.FromInt (unit, Target.Integer.bytes, a)
-      AND TInt.FromInt (unit - 1, Target.Integer.bytes, b)
+    IF    TInt.FromInt (info.size, size)
+      AND TInt.FromInt (unit, a)
+      AND TInt.FromInt (unit - 1, b)
       AND TInt.Add (size, b, c)
       AND TInt.Div (c, a, d)
+      AND NOT TInt.LT (d, Target.Integer.min)
+      AND NOT TInt.LT (Target.Integer.max, d)
       THEN RETURN IntegerExpr.New (Int.T, d);
       ELSE RETURN NIL;
     END;

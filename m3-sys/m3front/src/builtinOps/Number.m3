@@ -64,7 +64,6 @@ PROCEDURE Compile (ce: CallExpr.T) =
     e := ce.args[0];
     t, index, element: Type.T;
     min, max, tmp, num: Target.Int;
-    One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     IF NOT TypeExpr.Split (e, t) THEN t := Expr.TypeOf (e) END;
     IF ArrayType.Split (t, index, element) THEN t := index END;
@@ -77,7 +76,8 @@ PROCEDURE Compile (ce: CallExpr.T) =
       IF TInt.LT (max, min) THEN
         CG.Load_integer (Target.Integer.cg_type, TInt.Zero);
       ELSIF TInt.Subtract (max, min, tmp)
-        AND TInt.Add (tmp, One, num) THEN
+        AND TInt.Add (tmp, TInt.One, num)
+        AND NOT TInt.LT (Target.Integer.max, num) THEN
         CG.Load_integer (Target.Integer.cg_type, num);
       ELSE
         Error.Warn (2, "result of NUMBER too large");
@@ -90,7 +90,6 @@ PROCEDURE Compile (ce: CallExpr.T) =
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR min, max, tmp, num: Target.Int;  t, index, elem: Type.T;  e: Expr.T;
-      One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     e := ce.args[0];
     IF NOT TypeExpr.Split (e, t) THEN
@@ -102,7 +101,9 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
         IF (e = NIL) THEN RETURN NIL END;
         IF ArrayExpr.GetBounds (e, min, max)
           AND TInt.Subtract (max, min, tmp)
-          AND TInt.Add (tmp, One, num)
+          AND TInt.Add (tmp, TInt.One, num)
+          AND NOT TInt.LT (num, Target.Integer.max)
+          AND NOT TInt.LT (Target.Integer.max, num)
           THEN RETURN IntegerExpr.New (Int.T, num);
           ELSE RETURN NIL;
         END;
@@ -114,7 +115,8 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     IF TInt.LT (max, min) THEN
       RETURN IntegerExpr.New (Int.T, TInt.Zero);
     ELSIF TInt.Subtract (max, min, tmp)
-      AND TInt.Add (tmp, One, num) THEN
+      AND TInt.Add (tmp, TInt.One, num)
+      AND NOT TInt.LT (Target.Integer.max, num) THEN
       RETURN IntegerExpr.New (Int.T, num);
     ELSE
       RETURN NIL;

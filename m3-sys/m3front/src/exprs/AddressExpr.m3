@@ -39,7 +39,6 @@ TYPE
 PROCEDURE New (READONLY value: Target.Int): Expr.T =
   VAR p: P;
   BEGIN
-    IF TWord.LT (Target.Address.max, value) THEN RETURN NIL END;
     p := NEW (P);
     ExprRep.Init (p);
     p.value   := value;
@@ -66,7 +65,11 @@ PROCEDURE Add (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     IF NOT IntegerExpr.Split (b, i, t) THEN RETURN FALSE END;
     TYPECASE a OF
     | NULL => RETURN FALSE;
-    | P(p) => TWord.Add (p.value, i, j);  c := New (j);  RETURN c # NIL;
+    | P(p) =>
+      TWord.Add (p.value, i, j);
+      TInt.Chop (j, Target.Address.bytes);
+      c := New (j);
+      RETURN TRUE;
     ELSE      RETURN FALSE;
     END;
   END Add;
@@ -82,21 +85,27 @@ PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
 
     IF IntegerExpr.Split (b, j, t) THEN
       TWord.Subtract (i, j, k);
+      TInt.Chop (k, Target.Address.bytes);
       c := New (k);
     ELSE (* address - address *)
       TYPECASE b OF
       | NULL => RETURN FALSE;
-      | P(p) => TWord.Subtract (i, p.value, k);  c := IntegerExpr.New (t, k);
+      | P(p) =>
+        TWord.Subtract (i, p.value, k);
+        TInt.Chop (k, Target.Address.bytes);
+        c := IntegerExpr.New (t, k);
       ELSE      RETURN FALSE;
       END;
     END;
-    RETURN c # NIL;
+    RETURN TRUE;
   END Subtract;
 
 PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
   VAR x, y: Target.Int;
   BEGIN
     IF  NOT SplitPair (a, b, x, y) THEN RETURN FALSE END;
+    TWord.And (x, Target.Address.max, x);
+    TWord.And (y, Target.Address.max, y);
     IF TWord.LT (x, y) THEN
       sign := -1
     ELSIF TWord.LT (y, x) THEN

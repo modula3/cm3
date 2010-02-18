@@ -5,7 +5,7 @@
 GENERIC MODULE Not (Rep);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Target, TWord;
-IMPORT IntegerExpr, Value, Formal, Type, ProcType;
+IMPORT IntegerExpr, Value, Formal, Type, ProcType, TInt;
 FROM Rep IMPORT T;
 FROM TargetMap IMPORT Integer_types;
 
@@ -31,6 +31,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     e := Expr.ConstValue (ce.args[0]);
     IF (e # NIL) AND IntegerExpr.Split (e, w, t) THEN
       TWord.Not (w, result);
+      TInt.Chop (result, Integer_types[rep].bytes);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;

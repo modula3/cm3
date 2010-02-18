@@ -15,8 +15,7 @@ FROM TargetMap IMPORT Word_types;
 PROCEDURE SetRep (): INTEGER =
   VAR min, max: Target.Int;  b: BOOLEAN;
   BEGIN
-    b := Type.GetBounds (T, min, max);
-    <*ASSERT b*>
+    b := Type.GetBounds (T, min, max);  <*ASSERT b*>
     FOR i := FIRST (Word_types) TO LAST (Word_types) DO
       WITH t = Word_types[i] DO
         IF TWord.LE (max, t.max) THEN
@@ -30,8 +29,7 @@ PROCEDURE SetRep (): INTEGER =
 PROCEDURE Initialize (name: TEXT) =
   VAR zz: Scope.T;  size: Target.Int;  b: BOOLEAN;  rep := SetRep ();
   BEGIN
-    b := TInt.FromInt (Word_types[rep].size, Target.Integer.bytes, size);
-    <*ASSERT b*>
+    b := TInt.FromInt (Word_types[rep].size, size);  <*ASSERT b*>
     M := Module.NewDefn (name, TRUE, NIL);
 
     (* WARNING: The following list must be in the same order

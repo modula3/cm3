@@ -71,7 +71,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
     dec    : Expr.T;
     check  : [0..3] := 0;
     lvalue : CG.Val;
-    bmin, bmax: Target.Int;
+    tmin, tmax, bmin, bmax: Target.Int;
     cg_type: CG.Type;
   BEGIN
     tlhs := Type.CheckInfo (tlhs, info);
@@ -79,22 +79,16 @@ PROCEDURE Compile (ce: CallExpr.T) =
       THEN tlhs := LInt.T; cg_type := Target.Longint.cg_type;
       ELSE tlhs := Int.T;  cg_type := Target.Integer.cg_type;
     END;
+    EVAL Type.GetBounds (tlhs, tmin, tmax);
     IF (NUMBER (ce.args^) > 1)
       THEN dec := ce.args[1];
-    ELSIF tlhs = LInt.T
-      THEN dec := IntegerExpr.New (LInt.T, TInt.One);  Expr.Prep (dec);
-      ELSE dec := IntegerExpr.New (Int.T,  TInt.One);  Expr.Prep (dec);
+      ELSE dec := IntegerExpr.New (tlhs, TInt.One);  Expr.Prep (dec);
     END;
     Expr.GetBounds (lhs, bmin, bmax);
 
     IF Host.doRangeChk THEN
-      IF tlhs = LInt.T THEN
-        IF TInt.LT (Target.Longint.min, bmin) THEN INC (check) END;
-        IF TInt.LT (bmax, Target.Longint.max) THEN INC (check, 2) END;
-      ELSE
-        IF TInt.LT (Target.Integer.min, bmin) THEN INC (check) END;
-        IF TInt.LT (bmax, Target.Integer.max) THEN INC (check, 2) END;
-      END;
+      IF TInt.LT (tmin, bmin) THEN INC (check) END;
+      IF TInt.LT (bmax, tmax) THEN INC (check, 2) END;
     END;
 
     Expr.CompileLValue (lhs, traced := FALSE);

@@ -45,11 +45,10 @@ PROCEDURE IsOrdinal (t: T): BOOLEAN =
 
 PROCEDURE Number (t: T): Target.Int =
   VAR min, max, tmp: Target.Int;
-      One := Target.Int{Target.Integer.bytes, TInt.One.x};
   BEGIN
     IF t.get_bounds (min, max)
       AND TInt.Subtract (max, min, tmp)
-      AND TInt.Add (tmp, One, max) THEN
+      AND TInt.Add (tmp, TInt.One, max) THEN
       RETURN max;
     END;
     RETURN Target.Integer.max;
@@ -248,7 +247,7 @@ REVEAL
 PROCEDURE GetEnumInfo (self: Enum;  VAR x: Info) RAISES {Error} =
   VAR n_elts := NUMBER (self.elements^);   max: Target.Int;  rep: EnumRep;
   BEGIN
-    IF NOT TInt.FromInt (n_elts-1, Target.Integer.bytes, max) THEN
+    IF NOT TInt.FromInt (n_elts-1, max) THEN
       Err ("enumeration type too large");
     END;
     rep := FindEnumRep (max);
@@ -289,8 +288,7 @@ PROCEDURE EnumBounds (self: Enum;  VAR min, max: Target.Int): BOOLEAN =
   VAR b: BOOLEAN;
   BEGIN
     min := TInt.Zero;
-    b := TInt.FromInt (NUMBER (self.elements^) - 1, Target.Integer.size, max);
-    <*ASSERT b*>
+    b := TInt.FromInt (NUMBER (self.elements^) - 1, max);  <*ASSERT b*>
     RETURN TRUE;
   END EnumBounds;
 

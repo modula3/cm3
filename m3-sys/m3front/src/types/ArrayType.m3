@@ -309,7 +309,7 @@ PROCEDURE InitCoster (p: P; zeroed: BOOLEAN): INTEGER =
   VAR n, m, res: Target.Int;  x: INTEGER;
   BEGIN
     x := Type.InitCost (p.element, zeroed);
-    IF NOT TInt.FromInt (x, Target.Integer.bytes, m) THEN
+    IF NOT TInt.FromInt (x, m) THEN
       RETURN LAST (INTEGER);
     END;
     n := Type.Number (p.index);

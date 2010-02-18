@@ -247,7 +247,6 @@ PROCEDURE AddToTree (p: P;  old, new: Tree): Tree =
 
 PROCEDURE CompleteTree (t: Tree;  min, max: Target.Int): BOOLEAN =
   VAR x, y: Target.Int;
-      One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     WHILE (t # NIL) DO
       IF TInt.LT (t.max, min) OR TInt.LT (max, t.min) THEN
@@ -256,18 +255,26 @@ PROCEDURE CompleteTree (t: Tree;  min, max: Target.Int): BOOLEAN =
       IF    TInt.Subtract (t.min, min, x)
         AND TInt.Subtract (max, t.max, y)
         AND TInt.LT (y, x) THEN
-        IF TInt.Add (t.max, One, x) THEN
+        IF TInt.Add (t.max, TInt.One, x)
+          AND NOT TInt.LT (x, Target.Integer.min)
+          AND NOT TInt.LT (Target.Integer.max, x) THEN
           IF NOT CompleteTree (t.greater, x, max) THEN RETURN FALSE END;
         END;
-        IF NOT TInt.Subtract (t.min, One, max) THEN
+        IF NOT TInt.Subtract (t.min, TInt.One, max)
+          OR TInt.LT (x, Target.Integer.min)
+          OR TInt.LT (Target.Integer.max, x) THEN
           RETURN TRUE;
         END;
         t := t.less;
       ELSE
-        IF TInt.Subtract (t.min, One, x) THEN
+        IF TInt.Subtract (t.min, TInt.One, x)
+          AND NOT TInt.LT (x, Target.Integer.min)
+          AND NOT TInt.LT (Target.Integer.max, x) THEN
           IF NOT CompleteTree (t.less, min, x) THEN RETURN FALSE END;
         END;
-        IF NOT TInt.Add (t.max, One, min) THEN
+        IF NOT TInt.Add (t.max, TInt.One, min)
+          OR TInt.LT (x, Target.Integer.min)
+          OR TInt.LT (Target.Integer.max, x) THEN
           RETURN TRUE;
         END;
         t := t.greater;  
@@ -458,7 +465,6 @@ PROCEDURE GenIfTable (p: P): Stmt.Outcomes =
     next: Target.Int;
     oc, xc: Stmt.Outcomes;
     l_bodies, l_else, l_end: INTEGER;
-    One := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
   BEGIN
     p.tree := CollapseTree (p.tree);
     l_bodies := CG.Next_label (p.nCases);
@@ -485,7 +491,9 @@ PROCEDURE GenIfTable (p: P): Stmt.Outcomes =
       CG.Push (x);
       CG.Load_integer (Target.Integer.cg_type, t.max);
       CG.If_compare (Target.Integer.cg_type, CG.Cmp.LE, l_bodies+t.body, CG.Maybe);
-      IF NOT TInt.Add (t.max, One, next) THEN
+      IF NOT TInt.Add (t.max, TInt.One, next)
+        OR TInt.LT (next, Target.Integer.min)
+        OR TInt.LT (Target.Integer.max, next) THEN
         IF (t.greater # NIL) THEN Error.Msg ("case label too large") END;
         next := t.max;
       END;

@@ -38,21 +38,22 @@ TYPE
 VAR cache := ARRAY BOOLEAN, [-7 .. 64] OF P {ARRAY [-7 .. 64] OF P{NIL, ..},..};
 
 PROCEDURE New (type: Type.T;  READONLY value: Target.Int): Expr.T =
-  VAR p: P;  n: INTEGER;  v: Target.Int;  t := type = LInt.T;
+  VAR p: P;  n: INTEGER;  t := Type.IsSubtype (type, LInt.T);
+      min, max: Target.Int;
   BEGIN
     IF TInt.ToInt (value, n)
       AND (FIRST (cache[t]) <= n) AND (n <= LAST (cache[t])) THEN
       p := cache[t][n];
       IF (p # NIL) THEN RETURN p; END;
     END;
-    IF type = Int.T THEN
-      IF NOT TInt.IntI (value, Target.Integer.bytes, v) THEN RETURN NIL END;
-    ELSIF type = LInt.T THEN
-      IF NOT TInt.IntI (value, Target.Longint.bytes, v) THEN RETURN NIL END;
-    ELSE RETURN NIL END;
+    IF NOT Type.GetBounds (type, min, max)
+      OR TInt.LT (value, min)
+      OR TInt.LT (max, value) THEN
+      <*ASSERT FALSE*>
+    END;
     p := NEW (P);
     ExprRep.Init (p);
-    p.value   := v;
+    p.value   := value;
     p.type    := type;
     p.checked := TRUE;
     IF TInt.ToInt (value, n)
@@ -94,34 +95,40 @@ PROCEDURE Compare (a, b: Expr.T;  VAR sign: INTEGER): BOOLEAN =
   END Compare;
 
 PROCEDURE Add (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x, y, res: Target.Int;  t: Type.T;
+  VAR x, y, min, max, res: Target.Int;  t: Type.T;
   BEGIN
     IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF NOT TInt.Add (x, y, res) THEN RETURN FALSE END;
+    IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
+    IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := New (t, res);
-    RETURN c # NIL;
+    RETURN TRUE;
   END Add;
 
 PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x, y, res: Target.Int;  t: Type.T;
+  VAR x, y, min, max, res: Target.Int;  t: Type.T;
   BEGIN
     IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF NOT TInt.Subtract (x, y, res) THEN RETURN FALSE END;
+    IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
+    IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := New (t, res);
-    RETURN c # NIL;
+    RETURN TRUE;
   END Subtract;
 
 PROCEDURE Multiply (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x, y, res: Target.Int;  t: Type.T;
+  VAR x, y, min, max, res: Target.Int;  t: Type.T;
   BEGIN
     IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF NOT TInt.Multiply (x, y, res) THEN RETURN FALSE END;
+    IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
+    IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := New (t, res);
-    RETURN c # NIL;
+    RETURN TRUE;
   END Multiply;
 
 PROCEDURE Div (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x, y, res: Target.Int;  t: Type.T;
+  VAR x, y, min, max, res: Target.Int;  t: Type.T;
   BEGIN
     IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF TInt.EQ (y, TInt.Zero) THEN
@@ -129,12 +136,14 @@ PROCEDURE Div (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
       RETURN FALSE;
     END;
     IF NOT TInt.Div (x, y, res) THEN RETURN FALSE END;
+    IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
+    IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := New (t, res);
-    RETURN c # NIL;
+    RETURN TRUE;
   END Div;
 
 PROCEDURE Mod (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x, y, res: Target.Int;  t: Type.T;
+  VAR x, y, min, max, res: Target.Int;  t: Type.T;
   BEGIN
     IF NOT SplitPair (a, b, x, y, t) THEN RETURN FALSE END;
     IF TInt.EQ (y, TInt.Zero) THEN
@@ -142,49 +151,44 @@ PROCEDURE Mod (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
       RETURN FALSE;
     END;
     IF NOT TInt.Mod (x, y, res) THEN RETURN FALSE END;
+    IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
+    IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := New (t, res);
-    RETURN c # NIL;
+    RETURN TRUE;
   END Mod;
 
 PROCEDURE Negate (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR res: Target.Int;
+  VAR x, min, max, res: Target.Int;  t: Type.T;
   BEGIN
-    TYPECASE a OF
-    | NULL => RETURN FALSE;
-    | P(p) => IF NOT TInt.Subtract (TInt.Zero, p.value, res) THEN
-                RETURN FALSE;
-              END;
-              c := New (p.type, res);  RETURN c # NIL;
-    ELSE      RETURN FALSE;
-    END;
+    IF NOT Split (a, x, t) THEN RETURN FALSE END;
+    IF NOT TInt.Subtract (TInt.Zero, x, res) THEN RETURN FALSE END;
+    IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
+    IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
+    c := New (t, res);
+    RETURN TRUE;
   END Negate;
 
 PROCEDURE Abs (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
-  VAR res: Target.Int;
+  VAR x, min, max, res: Target.Int;  t: Type.T;
   BEGIN
-    TYPECASE a OF
-    | NULL => RETURN FALSE;
-    | P(p) => IF TInt.LE (TInt.Zero, p.value) THEN
-                c := a;  RETURN TRUE;
-              END;
-              IF NOT TInt.Subtract (TInt.Zero, p.value, res) THEN
-                RETURN FALSE;
-              END;
-              c := New (p.type, res);  RETURN c # NIL;
-    ELSE      RETURN FALSE;
+    IF NOT Split (a, x, t) THEN RETURN FALSE END;
+    IF TInt.LT (x, TInt.Zero) THEN
+      IF NOT TInt.Subtract (TInt.Zero, x, res) THEN RETURN FALSE END;
+      IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
+      IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
+      c := New (t, res);
+    ELSE
+      c := a;
     END;
+    RETURN TRUE;
   END Abs;
 
 PROCEDURE ToInt (a: Expr.T;  VAR i: INTEGER): BOOLEAN =
+  VAR x: Target.Int;  t: Type.T;
   BEGIN
-    TYPECASE a OF
-    | NULL => RETURN FALSE;
-    | P(p) => IF NOT TInt.ToInt (p.value, i) THEN
-                RETURN FALSE;
-              END;
-              RETURN TRUE;
-    ELSE      RETURN FALSE;
-    END;
+    IF NOT Split (a, x, t) THEN RETURN FALSE END;
+    IF NOT TInt.ToInt (x, i) THEN RETURN FALSE END;
+    RETURN TRUE;
   END ToInt;
 
 PROCEDURE SplitPair (a, b: Expr.T;  VAR x, y: Target.Int;  VAR t: Type.T):

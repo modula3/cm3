@@ -7,11 +7,11 @@ GENERIC MODULE And (Rep);
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Type, ProcType;
 IMPORT IntegerExpr, Formal, Value, Target, TWord, TInt;
 FROM Rep IMPORT T;
-FROM TargetMap IMPORT Integer_types;
+FROM TargetMap IMPORT Word_types;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
-VAR rep: [FIRST (Integer_types) .. LAST (Integer_types)];
+VAR rep: [FIRST (Word_types) .. LAST (Word_types)];
 
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
@@ -23,7 +23,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
   BEGIN
     Expr.Compile (ce.args[0]);
     Expr.Compile (ce.args[1]);
-    CG.And (Integer_types[rep].cg_type);
+    CG.And (Word_types[rep].cg_type);
   END Compile;
 
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
@@ -31,6 +31,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   BEGIN
     IF GetArgs (ce.args, w0, w1) THEN
       TWord.And (w0, w1, result);
+      TInt.Chop (result, Word_types[rep].bytes);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;

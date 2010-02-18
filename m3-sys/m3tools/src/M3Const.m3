@@ -861,8 +861,7 @@ PROCEDURE EvalSubscript (VAR s: State;  VAR val: T)
       Err ("bad operand for subscript operation");
     ELSIF (b.class = Class.Integer) THEN
       (* ok *)
-    ELSIF (b.class = Class.Enum)
-      AND TInt.FromInt (b.info, Target.Integer.bytes, b.int) THEN
+    ELSIF (b.class = Class.Enum) AND TInt.FromInt (b.info, b.int) THEN
       (* ok *)
     ELSE
       Err ("bad operand for subscript operation");
@@ -1161,7 +1160,7 @@ PROCEDURE EvalInt (VAR s: State;  VAR val: T)
   BEGIN
     val.class := Class.Integer;
     val.type  := M3Type.Integer;
-    IF NOT TInt.FromInt (s.info, Target.Integer.bytes, val.int) THEN
+    IF NOT TInt.FromInt (s.info, val.int) THEN
       Err ("illegal integer value");
     END;
   END EvalInt;
@@ -1171,7 +1170,7 @@ PROCEDURE EvalLInt (VAR s: State;  VAR val: T)
   BEGIN
     val.class := Class.Integer;
     val.type  := M3Type.Longint;
-    IF NOT TInt.FromInt (s.info, Target.Longint.bytes, val.int) THEN
+    IF NOT TInt.FromInt (s.info, val.int) THEN
       Err ("illegal integer value");
     END;
   END EvalLInt;

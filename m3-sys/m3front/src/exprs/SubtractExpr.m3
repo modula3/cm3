@@ -62,7 +62,7 @@ PROCEDURE TypeOf (p: P): Type.T =
   VAR ta: Type.T;
   BEGIN
     ta := Type.Base (Expr.TypeOf (p.a));
-    IF (p.extended) THEN
+    IF (p.extended) AND EnumType.Is (ta) THEN
       ta := Int.T;
     ELSIF Type.IsSubtype (ta, Addr.T) AND
       Type.IsSubtype (Type.Base (Expr.TypeOf (p.b)), Addr.T) THEN
@@ -189,7 +189,9 @@ PROCEDURE Fold (p: P): Expr.T =
     ELSIF (p.extended)
       AND EnumExpr.Split (e1, x1, t1)
       AND IntegerExpr.Split (e2, x2, t1)
-      AND TInt.Subtract (x1, x2, x3) THEN
+      AND TInt.Subtract (x1, x2, x3)
+      AND NOT TInt.LT (x3, Target.Integer.min)
+      AND NOT TInt.LT (Target.Integer.max, x3) THEN
       e3 := IntegerExpr.New (t1, x3);
     ELSIF ReelExpr.Subtract    (e1, e2, e3) THEN
     ELSIF AddressExpr.Subtract (e1, e2, e3) THEN
@@ -205,7 +207,9 @@ PROCEDURE GetBounds (p: P;  VAR min, max: Target.Int) =
     Expr.GetBounds (p.a, min_a, max_a);
     Expr.GetBounds (p.b, min_b, max_b);
     IF TInt.Subtract (min_a, max_b, smin)
-      AND TInt.Subtract (max_a, min_b, smax) THEN
+      AND NOT TInt.LT (smin, min) AND NOT TInt.LT (max, smin)
+      AND TInt.Subtract (max_a, min_b, smax)
+      AND NOT TInt.LT (smax, min) AND NOT TInt.LT (max, smax) THEN
       IF TInt.LT (min, smin) THEN min := smin END;
       IF TInt.LT (smax, max) THEN max := smax END;
     END;

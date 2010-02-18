@@ -9,7 +9,7 @@
 MODULE TInt;
 
 IMPORT Word, TWord, Text;
-FROM Target IMPORT Int, IByte, IBytes;
+FROM Target IMPORT Int, IByte;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;
@@ -17,93 +17,58 @@ CONST (* IMPORTS *)
   And    = Word.And;
 
 CONST
-  Mask     = 16_FF;
-  SignMask = 16_80;
-  Base     = 16_100;
+  Mask     = RShift (Word.Not (0), Word.Size - BITSIZE (IByte));
+  SignMask = LShift (1, BITSIZE (IByte) - 1);
+  Base     = Mask + 1;
   Digits   = ARRAY [0..9] OF CHAR { '0','1','2','3','4','5','6','7','8','9'};
+  Ten      = Int{10,0,..};
 
-PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
+PROCEDURE FromInt (x: INTEGER;  VAR r: Int): BOOLEAN =
   BEGIN
-    <*ASSERT n # 0*>
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      r.x[i] := And (x, Mask);
+    FOR i := 0 TO LAST(Int) DO
+      r [i] := And (x, Mask);
       x := x DIV Base;
     END;
-    RETURN (n > 0) AND (x = 0 OR x = -1);
+    RETURN (x = 0 OR x = -1);
   END FromInt;
 
-TYPE Sign = {Bad, Neg, Pos};
-
-PROCEDURE CheckSign (READONLY r: Int;  n: CARDINAL): Sign =
-  BEGIN
-    <*ASSERT n # 0*>
-    IF And (r.x[r.n-1], SignMask) = 0 THEN
-      IF n < r.n THEN
-        IF And (r.x[n-1], SignMask) # 0 THEN RETURN Sign.Bad END;
-        FOR i := n TO r.n-1 DO
-          IF r.x[i] # 0 THEN RETURN Sign.Bad END;
-        END;
-      END;
-      RETURN Sign.Pos;
-    ELSE
-      IF n < r.n THEN
-        IF And (r.x[n-1], SignMask) = 0 THEN RETURN Sign.Bad END;
-        FOR i := n TO r.n-1 DO
-          IF r.x[i] # Mask THEN RETURN Sign.Bad END;
-        END;
-      END;
-      RETURN Sign.Neg;
-    END;
-  END CheckSign;
-
-PROCEDURE IntI (READONLY r: Int;  n: CARDINAL;  VAR x: Int): BOOLEAN =
-  VAR sign := CheckSign (r, n);  j := 0;  result := TRUE;
-  BEGIN
-    CASE sign OF
-    | Sign.Bad => result := FALSE;
-    | Sign.Pos => j := 0;
-    | Sign.Neg => j := Mask;
-    END;
-    x.n := n;
-    FOR i := 0 TO r.n-1 DO x.x[i] := r.x[i] END;
-    FOR i := r.n TO n-1 DO x.x[i] := j END;
-    RETURN result;
-  END IntI;
-
 PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
-  VAR sign := CheckSign (r, BITSIZE (INTEGER) DIV BITSIZE (IByte));
-      result := TRUE;
+  CONST Extras = BITSIZE (INTEGER) DIV BITSIZE (IByte);
+  VAR j := 0;  sign_chunk := MIN (Extras - 1, LAST(Int));
   BEGIN
+    (* check that any extra bits are the same as the sign bit *)
+    IF And (r [sign_chunk], SignMask) # 0 THEN j := Mask; END;
+    FOR i := Extras TO LAST(Int) DO
+      IF r [i] # j THEN RETURN FALSE; END;
+    END;
+
     (* ensure the result has the right sign extension *)
-    CASE sign OF
-    | Sign.Bad => result := FALSE;
-    | Sign.Pos => x := 0;
-    | Sign.Neg => x := Word.Not (0);
+    IF j = 0
+      THEN x := 0;
+      ELSE x := Word.Not (0);
     END;
 
     (* finally, pack the bits *)
-    FOR i := r.n-1 TO 0 BY -1  DO
-      x := Word.Or (LShift (x, BITSIZE (IByte)), r.x[i]);
+    FOR i := LAST(Int) TO 0 BY -1  DO
+      x := Word.Or (LShift (x, BITSIZE (IByte)), r[i]);
     END;
 
-    RETURN result;
+    RETURN TRUE;
   END ToInt;
 
-PROCEDURE New (READONLY x: ARRAY OF CHAR;  n: CARDINAL;  VAR r: Int): BOOLEAN =
+PROCEDURE New (READONLY x: ARRAY OF CHAR;  VAR r: Int): BOOLEAN =
   CONST ZERO = ORD ('0');   ZEROZERO = 10 * ZERO + ZERO;
   VAR tmp, digit: Int;
   BEGIN
-    <*ASSERT n # 0*>
-    r := Int{n};
+    r := Zero;
     IF (NUMBER (x) = 1) THEN
-      r.x[0] := ORD (x[0]) - ZERO;
+      r[0] := ORD (x[0]) - ZERO;
     ELSIF (NUMBER (x) = 2) THEN
-      r.x[0] := 10 * ORD (x[0]) + ORD (x[1]) - ZEROZERO;
+      r[0] := 10 * ORD (x[0]) + ORD (x[1]) - ZEROZERO;
     ELSE
-      digit := Int{n};
+      digit := Zero;
       FOR i := FIRST (x) TO LAST (x) DO
-        digit.x[0] := ORD (x[i]) - ZERO;
+        digit [0] := ORD (x[i]) - ZERO;
         IF NOT Multiply (r, Ten, tmp) THEN RETURN FALSE; END;
         IF NOT Add (tmp, digit, r)    THEN RETURN FALSE; END;
       END;
@@ -113,94 +78,68 @@ PROCEDURE New (READONLY x: ARRAY OF CHAR;  n: CARDINAL;  VAR r: Int): BOOLEAN =
 
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   (* It is safe for r to alias a or b *)
-  VAR n := MIN (a.n, b.n);  carry := 0;  r_sign := Sign.Bad;
-      a_sign := CheckSign (a, n);  b_sign := CheckSign (b, n);
+  VAR carry := 0;
+      a_sign := And (a [LAST(Int)], SignMask);
+      b_sign := And (b [LAST(Int)], SignMask);
+      r_sign : Word.T;
   BEGIN
-    IF (a_sign = Sign.Bad) OR (b_sign = Sign.Bad) THEN
-      RETURN FALSE
-    END;
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      carry := a.x[i] + b.x[i] + carry;
-      r.x[i] := And (carry, Mask);
+    FOR i := 0 TO LAST(Int) DO
+      carry := a [i] + b [i] + carry;
+      r [i] := And (carry, Mask);
       carry := RShift (carry, BITSIZE (IByte));
     END;
-    r_sign := CheckSign (r, n);  <*ASSERT r_sign # Sign.Bad*>
+    r_sign := And (r [LAST(Int)], SignMask);
     RETURN (a_sign # b_sign) OR (a_sign = r_sign);
   END Add;
 
 PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   (* It is safe for r to alias a or b *)
-  VAR n := MIN (a.n, b.n);  borrow := 0; r_sign := Sign.Bad;
-      a_sign := CheckSign (a, n);  b_sign := CheckSign (b, n);
+  VAR borrow := 0;
+      a_sign := And (a [LAST(Int)], SignMask);
+      b_sign := And (b [LAST(Int)], SignMask);
+      r_sign : Word.T;
   BEGIN
-    IF (a_sign = Sign.Bad) OR (b_sign = Sign.Bad) THEN
-      RETURN FALSE
-    END;
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      borrow := a.x[i] - b.x[i] - borrow;
-      r.x[i] := And (borrow, Mask);
+    FOR i := 0 TO LAST(Int) DO
+      borrow := a [i] - b [i] - borrow;
+      r [i] := And (borrow, Mask);
       borrow := And (RShift (borrow, BITSIZE (IByte)), 1);
     END;
-    r_sign := CheckSign (r, n);  <*ASSERT r_sign # Sign.Bad*>
+    r_sign := And (r [LAST(Int)], SignMask);
     RETURN (a_sign = b_sign) OR (a_sign = r_sign);
   END Subtract;
 
-PROCEDURE Negate (READONLY a: Int;  VAR r: Int): BOOLEAN =
-  (* It is safe for r to alias a *)
-  BEGIN
-    RETURN Subtract(Zero, a, r);
-  END Negate;
-  
-PROCEDURE Abs (READONLY a: Int;  VAR r: Int): BOOLEAN =
-  (* It is safe for r to alias a *)
-  BEGIN
-    IF GE(a, Zero) THEN
-      r := a;
-      RETURN TRUE;
-    END;
-    RETURN Negate(a, r);
-  END Abs;
-
 PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR
-    n := MIN (a.n, b.n);  k, carry: INTEGER;  q: Int;
-    p := ARRAY [0.. 2 * NUMBER (IBytes) - 1] OF IByte {0, ..};
-    a_sign := CheckSign (a, n);  b_sign := CheckSign (b, n);
+    k, carry: INTEGER;
+    q: Int;
+    p := ARRAY [0.. 2 * NUMBER(Int) - 1] OF IByte {0, ..};
   BEGIN
-    IF (a_sign = Sign.Bad) OR (b_sign = Sign.Bad) THEN
-      RETURN FALSE
-    END;
-    FOR i := 0 TO n-1 DO
-      FOR j := 0 TO n-1 DO
+    FOR i := 0 TO LAST(Int) DO
+      FOR j := 0 TO LAST(Int) DO
         k := i + j;
-        carry := Word.Times (a.x[i], b.x[j]);
+        carry := Word.Times (a [i], b [j]);
         WHILE carry # 0 DO
-          carry := carry + p[k];
-          p[k] := And (carry, Mask);
+          carry := carry + p [k];
+          p [k] := And (carry, Mask);
           carry := RShift (carry, BITSIZE (IByte));
           INC (k);
         END;
       END;
     END;
 
-    r.n := n; FOR i := 0 TO n-1 DO r.x[i] := p[i]; END;
-    q.n := n; FOR i := 0 TO n-1 DO q.x[i] := p[i+n]; END;
+    FOR i := 0 TO LAST(Int) DO r[i] := p[i]; END;
+    FOR i := 0 TO LAST(Int) DO q[i] := p[i+NUMBER(Int)]; END;
 
     (* compute the top half *)
-    IF And (a.x[n-1], SignMask) # 0 THEN EVAL Subtract (q, b, q); END;
-    IF And (b.x[n-1], SignMask) # 0 THEN EVAL Subtract (q, a, q); END;
+    IF And (a [LAST(Int)], SignMask) # 0 THEN EVAL Subtract (q, b, q); END;
+    IF And (b [LAST(Int)], SignMask) # 0 THEN EVAL Subtract (q, a, q); END;
 
     (* there is overflow if the top half is not equal to
        to the sign bit of the low half *)
-    CASE CheckSign (r, n) OF
-    | Sign.Bad => <*ASSERT FALSE*>
-    | Sign.Pos => carry := 0;
-    | Sign.Neg => carry := Mask;
-    END;
-    FOR i := 0 TO n-1 DO
-      IF q.x[i] # carry THEN RETURN FALSE; END;
+    carry := 0;
+    IF And (r [LAST(Int)], SignMask) # 0 THEN carry := Mask;  END;
+    FOR i := 0 TO LAST(Int) DO
+      IF q[i] # carry THEN RETURN FALSE; END;
     END;
 
     RETURN TRUE;
@@ -224,27 +163,20 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
   VAR
     num     := a;
     den     := b;
-    num_neg: BOOLEAN;
-    den_neg: BOOLEAN;
-    n := MIN (a.n, b.n);
-    a_sign := CheckSign (a, n);
-    b_sign := CheckSign (b, n);
-    min: Int;
+    num_neg : BOOLEAN;
+    den_neg : BOOLEAN;
+    min     : Int;
   BEGIN
-    IF (a_sign = Sign.Bad) OR (b_sign = Sign.Bad) THEN
-      RETURN FALSE
-    END;
-
     IF EQ (b, Zero) THEN  RETURN FALSE;  END;
     IF EQ (a, Zero) THEN  q := Zero;  r := Zero;  RETURN TRUE;  END;
 
     (* grab the signs *)
-    num_neg := a_sign = Sign.Neg;
-    den_neg := b_sign = Sign.Neg;
+    num_neg := And (a [LAST(Int)], SignMask) # 0;
+    den_neg := And (b [LAST(Int)], SignMask) # 0;
 
-    (* check for the only possible overflow:  FIRST DIV -1 *)
+    (* check for the only possible overflow:  FIRST(Int) DIV -1 *)
     IF num_neg AND den_neg THEN
-      TWord.Shift (MOne, n * BITSIZE (IByte) - 1, min);
+      TWord.Shift (MOne, Size - 1, min);
       IF EQ (a, min) AND EQ (b, MOne) THEN
         RETURN FALSE;
       END;
@@ -296,32 +228,22 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
 *)
 
 PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
-  VAR n := MIN (a.n, b.n);
   BEGIN
-    IF (CheckSign (a, n) = Sign.Bad) OR (CheckSign (b, n) = Sign.Bad) THEN
-      RETURN FALSE;
-    END;
-    FOR i := 0 TO n-1 DO
-      IF a.x[i] # b.x[i] THEN RETURN FALSE; END;
+    FOR i := 0 TO LAST(Int) DO
+      IF a[i] # b[i] THEN RETURN FALSE; END;
     END;
     RETURN TRUE;
   END EQ;
 
 PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
-  VAR a_sign := CheckSign (a, a.n);
-      b_sign := CheckSign (b, b.n);
-      n := MIN (a.n, b.n);
+  VAR a_sign := And (a [LAST(Int)], SignMask);
+      b_sign := And (b [LAST(Int)], SignMask);
   BEGIN
-    <*ASSERT a_sign # Sign.Bad*>
-    <*ASSERT b_sign # Sign.Bad*>
-    IF (a_sign # b_sign) THEN RETURN (a_sign = Sign.Neg); END;
+    IF (a_sign # b_sign) THEN RETURN (a_sign # 0); END;
 
-    IF CheckSign (a, n) = Sign.Bad THEN RETURN a_sign = Sign.Neg END;
-    IF CheckSign (b, n) = Sign.Bad THEN RETURN b_sign = Sign.Pos END;
-
-    FOR i := n-1 TO 0 BY -1 DO
-      IF    a.x[i] < b.x[i] THEN  RETURN TRUE;
-      ELSIF a.x[i] > b.x[i] THEN  RETURN FALSE;
+    FOR i := LAST(Int) TO 0 BY -1 DO
+      IF    a [i] < b [i] THEN  RETURN TRUE;
+      ELSIF a [i] > b [i] THEN  RETURN FALSE;
       END;
     END;
 
@@ -333,23 +255,8 @@ PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
     RETURN EQ (a, b) OR LT (a, b);
   END LE;
 
-PROCEDURE NE (READONLY a, b: Int): BOOLEAN =
-  BEGIN
-    RETURN NOT EQ (a, b);
-  END NE;
-
-PROCEDURE GT (READONLY a, b: Int): BOOLEAN =
-  BEGIN
-    RETURN LT (b, a);
-  END GT;
-
-PROCEDURE GE (READONLY a, b: Int): BOOLEAN = 
-  BEGIN
-    RETURN LE(b, a);
-  END GE;
-
 PROCEDURE ToText (READONLY r: Int): TEXT =
-  VAR result  : ARRAY [0..BITSIZE (IByte) * NUMBER (IBytes)] OF CHAR;
+  VAR result: ARRAY [0..BITSIZE (Int)] OF CHAR;
   BEGIN
     RETURN Text.FromChars(SUBARRAY(result, 0, ToChars(r, result)));
   END ToText;
@@ -360,10 +267,10 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
     minus   : BOOLEAN := FALSE;
     bump    : BOOLEAN := FALSE;
     i, j    : INTEGER;
-    result  : ARRAY [0..BITSIZE (IByte) * NUMBER (IBytes)] OF CHAR;
+    result  : ARRAY [0..Size] OF CHAR;
     rr      := r;
-    quo, rem, min: Int;
-    n := r.n;
+    quo, rem: Int;
+    min     : Int;
   BEGIN
     IF EQ (r, Zero) THEN
       result [0] := '0';
@@ -372,10 +279,10 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
     ELSE (* handle a non-zero number *)
 
       (* get rid of negative numbers *)
-      IF And (r.x[n-1], SignMask) # 0 THEN
-        TWord.Shift (MOne, n * BITSIZE (IByte) - 1, min);
+      IF And (r [LAST(Int)], SignMask) # 0 THEN
+        TWord.Shift (MOne, Size - 1, min);
         IF EQ (r, min) THEN
-          (* 2's complement makes FIRST a special case *)
+          (* 2's complement makes FIRST(Int) a special case *)
           bump := TRUE;
 	  EVAL Add (rr, One, rr);
         END;
@@ -386,12 +293,12 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
       (* convert the bulk of the digits *)
       WHILE LT (Zero, rr) DO
         TWord.DivMod (rr, Ten, quo, rem);
-        result [nDigits] := Digits [rem.x [0]];
+        result [nDigits] := Digits [rem [0]];
         rr := quo;
         INC (nDigits);
       END;
 
-      (* fixup FIRST *)
+      (* fixup FIRST (Int) *)
       IF (bump) THEN
         result [nDigits] := '0';
         j := 0;
@@ -399,7 +306,7 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
           i := ORD (result [j]) - ORD ('0');
           INC (i);
 	  IF (i < 10) THEN
-            result [j] := Digits [i]; 
+            result [j] := Digits [i];
             EXIT;
           END;
 	  result [j] := '0';
@@ -416,7 +323,7 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
 
     (* build the result buffer *)
     j := 0;
-    IF (minus)  THEN 
+    IF (minus) THEN
       buf [0] := '-';
       j := 1; END;
     FOR k := nDigits-1 TO 0 BY -1 DO
@@ -426,22 +333,33 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
     RETURN j;
   END ToChars;
 
-PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): INTEGER =
-  VAR n := r.n;  j := 0;  k := n;
+PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL =
+  VAR j := NUMBER(Int);
   BEGIN
     (* strip the sign extension *)
-    IF And (r.x[n-1], SignMask) # 0 THEN j := Mask END;
-    FOR i := n-1 TO 0 BY -1 DO
-      IF r.x[i] # j THEN EXIT END;
-      DEC (k);
+    DEC (j);
+    IF (r[j] = 0) THEN
+      WHILE (j > 0) AND (r[j] = 0) AND (r[j-1] < 16_80) DO DEC (j); END;
+    ELSIF (r[j] = 16_ff) THEN
+      WHILE (j > 0) AND (r[j] = 16_ff) AND (r[j-1] >= 16_80) DO DEC (j); END;
     END;
-    <* ASSERT (k = 0) = (EQ(r, Zero) OR EQ(r, MOne)) *>
-    INC(k, ORD(k = 0)); (* increment if 0 *)
-    IF k > NUMBER (buf) THEN RETURN -1 END;
+    INC (j);
+
+    IF j > NUMBER (buf) THEN RETURN 0 END;
+
     (* unpack the bytes *)
-    FOR i := 0 TO k-1 DO buf[i] := r.x[i] END;
-    RETURN k;
+    FOR i := 0 TO j-1 DO buf[i] := r[i] END;
+
+    RETURN j;
   END ToBytes;
+
+PROCEDURE Chop (VAR r: Int;  n: CARDINAL) =
+  BEGIN
+    IF And (r [n-1], SignMask) = 0
+      THEN FOR i := n TO LAST(Int) DO r [i] := 0    END;
+      ELSE FOR i := n TO LAST(Int) DO r [i] := Mask END;
+    END;
+  END Chop;
 
 BEGIN
 END TInt.

@@ -78,14 +78,13 @@ PROCEDURE Split (t: Type.T;  VAR min, max: Target.Int): BOOLEAN =
 
 PROCEDURE SetRep (p: P) =
   BEGIN
-    IF Type.IsSubtype (p.baseType, LInt.T)
-      THEN p.rep := Target.Longint.cg_type;
-      ELSE p.rep := Target.Integer.cg_type;
-    END;
-
     IF TInt.LT (p.max, p.min) THEN
       p.min := TInt.Zero;
       p.max := TInt.MOne;
+      IF Type.IsSubtype (p.baseType, LInt.T)
+        THEN p.rep := Target.Longint.cg_type;
+        ELSE p.rep := Target.Integer.cg_type;
+      END;
       RETURN;
     END;
 
@@ -102,8 +101,7 @@ PROCEDURE SetRep (p: P) =
       (* look for a signed type *)
       FOR i := FIRST (TargetMap.Integer_types) TO LAST (TargetMap.Integer_types) DO
         WITH z = TargetMap.Integer_types[i] DO
-          IF TInt.LE (z.min, p.min)
-            AND TInt.LE (p.max, z.max) THEN
+          IF TInt.LE (z.min, p.min) AND TInt.LE (p.max, z.max) THEN
             p.rep := z.cg_type; RETURN;
           END;
         END;
@@ -277,7 +275,7 @@ PROCEDURE BitWidth (n: Target.Int;  VAR width: INTEGER;  VAR neg: BOOLEAN) =
   END BitWidth;
 
 VAR (*CONST*)
-  power : ARRAY [0..BITSIZE (Target.Int)] OF Target.Int;
+  power : ARRAY [0..TInt.Size] OF Target.Int;
   powers_done := FALSE;
 
 PROCEDURE BuildPowerTables () =
@@ -306,7 +304,8 @@ PROCEDURE InitCoster (p: P;  zeroed: BOOLEAN): INTEGER =
       rep_max := Target.Integer.max;
     END;
 
-    IF zeroed AND TInt.LE (p.min, TInt.Zero)
+    IF zeroed
+      AND TInt.LE (p.min, TInt.Zero)
       AND TInt.LE (TInt.Zero, p.max) THEN
       RETURN 0;
     END;
@@ -340,8 +339,7 @@ PROCEDURE GenInit (p: P;  zeroed: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
     EVAL Type.CheckInfo (p, info);
-    IF TInt.LT (TInt.Zero, p.min)
-      OR TInt.LT (p.max, TInt.Zero) THEN
+    IF TInt.LT (TInt.Zero, p.min) OR TInt.LT (p.max, TInt.Zero) THEN
       CG.Load_integer (info.stk_type, p.min);
       CG.Store_indirect (info.stk_type, 0, info.size);
     ELSIF zeroed THEN

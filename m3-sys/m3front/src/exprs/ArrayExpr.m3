@@ -103,15 +103,14 @@ PROCEDURE Subscript (array, index: Expr.T;  VAR e: Expr.T): BOOLEAN =
     END;
     IF p.index = NIL THEN
       min := TInt.Zero (* FIRST (p.args^) *);
-      b := TInt.FromInt (LAST (p.args^), Target.Integer.bytes, max);
-      <* ASSERT b *>
+      b := TInt.FromInt (LAST (p.args^), max);  <* ASSERT b *>
     ELSE
       EVAL Type.GetBounds (p.index, min, max);
     END;
     
     (* correct for the base index of the array *)
     IF NOT TInt.Subtract (int, min, offs) THEN RETURN FALSE END;
-    IF TInt.LT (offs, TInt.Zero)  THEN RETURN FALSE END;
+    IF TInt.LT (offs, TInt.Zero) THEN RETURN FALSE END;
     b := TInt.ToInt (offs, i); <* ASSERT b *>
 
     n := LAST (p.args^);
@@ -125,16 +124,17 @@ PROCEDURE GetBounds (array: Expr.T;  VAR min, max: Target.Int): BOOLEAN =
   BEGIN
     TYPECASE array OF 
     | NULL => RETURN FALSE;
-    | P(p) => IF p.index = NIL THEN
-                (* open array type *)
-                min := TInt.Zero (* FIRST (p.args^) *);
-                b := TInt.FromInt (LAST (p.args^), Target.Integer.bytes, max);
-                <*ASSERT b*>
-                RETURN TRUE;
-              ELSE
-                RETURN Type.GetBounds (p.index, min, max);
-              END;
-    ELSE     RETURN FALSE;
+    | P(p) =>
+      IF p.index = NIL THEN
+        (* open array type *)
+        min := TInt.Zero (* FIRST (p.args^) *);
+        b := TInt.FromInt (LAST (p.args^), max);  <*ASSERT b*>
+        RETURN TRUE;
+      ELSE
+        RETURN Type.GetBounds (p.index, min, max);
+      END;
+    ELSE
+      RETURN FALSE;
     END;
   END GetBounds;
 
@@ -214,7 +214,9 @@ PROCEDURE Check (p: P;  VAR cs: Expr.CheckState) =
       END;
  
       IF (solidElt # NIL)
-        AND TInt.FromInt (LAST (p.args^), Target.Integer.bytes, nn) THEN
+        AND TInt.FromInt (LAST (p.args^), nn)
+        AND NOT TInt.LT (nn, Target.Integer.min)
+        AND NOT TInt.LT (Target.Integer.max, nn) THEN
         p.kind := Kind.FixedOpen;
         index := SubrangeType.New (TInt.Zero, nn, Int.T, FALSE);
         p.solidType := ArrayType.New (index, solidElt);
@@ -335,7 +337,7 @@ PROCEDURE DoFixed (p: P;  element: Type.T;  elt_pack: INTEGER) =
     EVAL Type.CheckInfo (p.tipe, info);
     align := info.alignment;
     b := TInt.ToInt (nn_elts, n_elts);    <*ASSERT b*>
-    b := TInt.FromInt (n_args, Target.Integer.bytes, nn_args);  <*ASSERT b*>
+    b := TInt.FromInt (n_args, nn_args);  <*ASSERT b*>
 
     (* If this is a direct structure assignment, the LHS has already
      * been prepped and compiled -- save it.

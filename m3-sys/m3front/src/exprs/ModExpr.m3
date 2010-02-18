@@ -181,22 +181,18 @@ PROCEDURE Fold (p: P): Expr.T =
   END Fold;
 
 PROCEDURE GetBounds (p: P;  VAR min, max: Target.Int) =
-  VAR min_b, max_b: Target.Int;
-      OneI := Target.Int{Target.Integer.bytes, Target.IBytes{1,0,..}};
-      OneL := Target.Int{Target.Longint.bytes, Target.IBytes{1,0,..}};
-      One := ARRAY[Class.cINT..Class.cLINT] OF Target.Int { OneI, OneL };
-      MaxI := Target.Integer.max;
-      MaxL := Target.Longint.max;
-      Max := ARRAY [Class.cINT..Class.cLINT] OF Target.Int { MaxI, MaxL };
+  VAR tmin, tmax, min_b, max_b: Target.Int;
   BEGIN
     IF (p.class = Class.cINT) OR (p.class = Class.cLINT) THEN
+      EVAL Type.GetBounds (p.type, tmin, tmax);
       Expr.GetBounds (p.b, min_b, max_b);
       IF TInt.LT (min_b, TInt.Zero) OR TInt.LT (max_b, TInt.Zero) THEN
         ExprRep.NoBounds (p, min, max);
       ELSE
         min := TInt.Zero;
-        IF NOT TInt.Subtract (max_b, One[p.class], max) THEN
-          max := Max[p.class];
+        IF NOT TInt.Subtract (max_b, TInt.One, max)
+          OR TInt.LT (max, tmin) OR TInt.LT (tmax, max) THEN
+          max := tmax;
         END;
       END;
     ELSE
