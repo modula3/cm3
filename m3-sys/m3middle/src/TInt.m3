@@ -38,7 +38,7 @@ PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
   BEGIN
     (* check that any extra bits are the same as the sign bit *)
     IF And (r [sign_chunk], SignMask) # 0 THEN j := Mask; END;
-    FOR i := Extras TO LAST(Int) DO
+    FOR i := Extras TO LAST(Int) DO <*NOWARN*>
       IF r [i] # j THEN RETURN FALSE; END;
     END;
 
