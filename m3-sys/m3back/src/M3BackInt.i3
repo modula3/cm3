@@ -109,7 +109,7 @@ PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ARRAY OF [0..255]): INTEGER;
    which when sign-extended equal 'i'.  Returns the number of
    significant bytes in the result.  Returns -1 if 'buf' is too short. *)
 
-PROCEDURE FromTargetInt (READONLY i: Target.Int): Int;
+PROCEDURE FromTargetInt (READONLY i: Target.Int; byteSize: CARDINAL): Int;
 
 TYPE
   Int_type = RECORD (* Like Target.Int_type *)

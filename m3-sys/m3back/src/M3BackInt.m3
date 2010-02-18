@@ -408,22 +408,17 @@ PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): INTEGER =
     RETURN k;
   END ToBytes;
 
-PROCEDURE FromTargetInt (READONLY i: Target.Int): Int =
+PROCEDURE FromTargetInt (READONLY i: Target.Int; byteSize: CARDINAL): Int =
   BEGIN
-    FOR j := 4 TO 7 DO
-      IF i[j] # 0 AND i[j] # 16_FF THEN
-        RETURN Int{n := 8, x := i};
-      END;
-    END;
-    RETURN Int{n := 4, x := i};
+    RETURN Int{n := byteSize, x := i};
   END FromTargetInt;
 
 PROCEDURE InitInt(VAR a: Int_type; READONLY b: Target.Int_type) =
   BEGIN
     a.size := b.size;
     a.bytes := b.bytes;
-    a.min := FromTargetInt(b.min);
-    a.max := FromTargetInt(b.max);
+    a.min := FromTargetInt(b.min, 8);
+    a.max := FromTargetInt(b.max, 8);
   END InitInt;
 
 PROCEDURE Init() =
