@@ -2,11 +2,11 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* File: TInt.m3                                               *)
+(* File: M3BackInt.m3                                          *)
 (* Last Modified On Tue Jul 12 08:31:56 PDT 1994 By kalsow     *)
 (*      Modified On Thu May 20 08:46:32 PDT 1993 By muller     *)
 
-MODULE TInt;
+MODULE M3BackInt;
 
 IMPORT Word, TWord, Text;
 FROM Target IMPORT Int, IByte, IBytes;
@@ -444,4 +444,4 @@ PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): INTEGER =
   END ToBytes;
 
 BEGIN
-END TInt.
+END M3BackInt.

@@ -2,11 +2,11 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* File: TInt.i3                                               *)
+(* File: M3BackInt.i3                                          *)
 (* Last Modified On Thu Mar 10 13:42:53 PST 1994 By kalsow     *)
 (*      Modified On Thu May 20 08:20:38 PDT 1993 By muller     *)
 
-INTERFACE TInt;
+INTERFACE M3BackInt;
 
 (*  Modula-3 target description
 
@@ -108,4 +108,4 @@ PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ARRAY OF [0..255]): INTEGER;
    which when sign-extended equal 'i'.  Returns the number of
    significant bytes in the result.  Returns -1 if 'buf' is too short. *)
 
-END TInt.
+END M3BackInt.
