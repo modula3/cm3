@@ -2,11 +2,11 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* File: TWord.m3                                              *)
+(* File: M3BackWord.m3                                         *)
 (* Last Modified On Fri Nov 19 09:32:56 PST 1993 By kalsow     *)
 (*      Modified On Thu May 20 08:46:32 PDT 1993 By muller     *)
 
-MODULE TWord;
+MODULE M3BackWord;
 
 IMPORT Word, TInt;
 FROM Target IMPORT Int, IByte, IBytes;
@@ -486,4 +486,4 @@ PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
   END Insert;
 
 BEGIN
-END TWord.
+END M3BackWord.

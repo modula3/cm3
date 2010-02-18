@@ -2,11 +2,11 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* File: TWord.i3                                              *)
+(* File: M3BackWord.i3                                         *)
 (* Last Modified On Fri Nov 19 09:32:50 PST 1993 By kalsow     *)
 (*      Modified On Thu May 20 08:20:38 PDT 1993 By muller     *)
 
-INTERFACE TWord;
+INTERFACE M3BackWord;
 
 (*  Modula-3 target description
 
@@ -80,4 +80,4 @@ PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN;
 PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN;
 (* returns 'Word.Insert (x, y, i, n)' *)
 
-END TWord.
+END M3BackWord.
