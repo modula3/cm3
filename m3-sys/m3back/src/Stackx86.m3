@@ -9,7 +9,8 @@ MODULE Stackx86;
 
 IMPORT M3ID, M3CG, TargetMap, M3CG_Ops, M3x86Rep, Codex86, Wrx86;
 
-IMPORT Target, TInt, TWord, Fmt;
+IMPORT M3BackInt AS TInt, M3BackWord AS TWord;
+IMPORT M3BackInt AS Target, Fmt;
 FROM Target IMPORT FloatType;
 FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 

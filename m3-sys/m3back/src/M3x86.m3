@@ -8,7 +8,8 @@
 MODULE M3x86 EXPORTS M3x86, M3x86Rep;
 
 IMPORT Wr, Text, Fmt, IntRefTbl, Word;
-IMPORT M3CG, M3ID, M3CG_Ops, Target, TInt, TFloat, TWord;
+IMPORT M3CG, M3ID, M3CG_Ops, M3BackInt AS Target, TFloat;
+IMPORT M3BackInt AS TInt, M3BackWord AS TWord;
 IMPORT M3ObjFile, TargetMap;
 
 FROM TargetMap IMPORT CG_Bytes;
@@ -25,6 +26,7 @@ FROM M3ObjFile IMPORT Seg;
 
 IMPORT Wrx86, Stackx86, Codex86;
 
+FROM M3BackInt IMPORT TargetInt;
 FROM Stackx86 IMPORT MaxMin;
 FROM Codex86 IMPORT Cond, Op, FOp, FIm, unscond, revcond, FloatBytes;
 
@@ -252,6 +254,7 @@ PROCEDURE New (logfile: Wr.T; obj: M3ObjFile.T): M3CG.T =
     IntType[Type. Int64] := Target.Int64;
     IntType[Type.Word32] := Target.Word32;
     IntType[Type.Word64] := Target.Word64;
+    TInt.Init();
 
     IF logfile # NIL THEN
       u.debug := TRUE;
@@ -492,8 +495,10 @@ PROCEDURE declare_set (u: U;  t, domain: TypeUID;  s: BitSize) =
   END declare_set;
 
 PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
-                            READONLY min, max: Target.Int;
+                            READONLY xmin, xmax: TargetInt;
                             s: BitSize) =
+  VAR min := TInt.FromTargetInt(xmin);
+      max := TInt.FromTargetInt(xmax);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_subrange");
@@ -1090,9 +1095,10 @@ PROCEDURE end_init (u: U;  v: Var) =
     u.init_varstore := NIL;
   END end_init;
 
-PROCEDURE init_int (u: U; o: ByteOffset; READONLY value: Target.Int; t: Type) =
+PROCEDURE init_int (u: U; o: ByteOffset; READONLY xvalue: TargetInt; t: Type) =
   VAR bytes := ARRAY [0..7] OF [0..255]{0, ..};
       len: CARDINAL := 0;
+      value := TargetIntToBackInt(xvalue);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("init_int");
@@ -1805,8 +1811,9 @@ PROCEDURE load_nil (u: U) =
     u.vstack.pushimmT(TZero, Type.Addr);
   END load_nil;
 
-PROCEDURE load_integer  (u: U;  t: IType;  READONLY i: Target.Int) =
+PROCEDURE load_integer  (u: U;  t: IType;  READONLY j: TargetInt) =
   (* push ; s0.t := i *)
+  VAR i := TInt.FromTargetInt(j);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_integer");
@@ -3174,9 +3181,10 @@ PROCEDURE check_nil (u: U;  code: RuntimeError) =
     END;
   END check_nil;
 
-PROCEDURE check_lo (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeError) =
+PROCEDURE check_lo (u: U;  t: IType;  READONLY j: TargetInt;  code: RuntimeError) =
   (* IF (s0.t < i) THEN abort(code) *)
   VAR safelab: Label;
+      i := TInt.FromTargetInt(j);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_lo");
@@ -3210,9 +3218,10 @@ PROCEDURE check_lo (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeErro
     END
   END check_lo;
 
-PROCEDURE check_hi (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeError) =
+PROCEDURE check_hi (u: U;  t: IType;  READONLY j: TargetInt;  code: RuntimeError) =
   (* IF (i < s0.t) THEN abort(code) *)
   VAR safelab: Label;
+      i := TInt.FromTargetInt(j);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_hi");
@@ -3246,10 +3255,12 @@ PROCEDURE check_hi (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeErro
     END
   END check_hi;
 
-PROCEDURE check_range (u: U;  t: IType;  READONLY a, b: Target.Int;  code: RuntimeError) =
+PROCEDURE check_range (u: U;  t: IType;  READONLY xa, xb: TargetInt;  code: RuntimeError) =
   (* IF (s0.t < a) OR (b < s0.t) THEN abort(code) *)
   VAR lo, hi: Target.Int;
       safelab, outrange: Label;
+      a := TInt.FromTargetInt(xa);
+      b := TInt.FromTargetInt(xb);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_range");
@@ -3278,9 +3289,9 @@ PROCEDURE check_range (u: U;  t: IType;  READONLY a, b: Target.Int;  code: Runti
         ELSIF TInt.LT(hi, a) OR TInt.LT(b, lo) THEN
           reportfault(u, code);
         ELSIF TInt.LE(hi, b) THEN
-          check_lo(u, t, a, code);
+          check_lo(u, t, xa, code);
         ELSIF TInt.GE(lo, a) THEN
-          check_hi(u, t, b, code);
+          check_hi(u, t, xb, code);
         ELSIF TInt.EQ(a, TZero) THEN
           (* 0 <= x <= b  ==>   UNSIGNED(x) <= b *)
           safelab := u.cg.reserve_labels(1, TRUE);

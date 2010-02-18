@@ -6,10 +6,10 @@
 (* Last Modified On Tue Jul 12 08:31:56 PDT 1994 By kalsow     *)
 (*      Modified On Thu May 20 08:46:32 PDT 1993 By muller     *)
 
-MODULE M3BackInt;
+MODULE M3BackInt; (* also known as TInt *)
 
-IMPORT Word, TWord, Text;
-FROM Target IMPORT Int, IByte, IBytes;
+IMPORT Target, Word, Text, Fmt;
+IMPORT M3BackWord AS TWord;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;
@@ -442,6 +442,53 @@ PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): INTEGER =
     FOR i := 0 TO k-1 DO buf[i] := r.x[i] END;
     RETURN k;
   END ToBytes;
+
+PROCEDURE FromTargetInt (READONLY i: Target.Int): Int =
+  BEGIN
+    FOR j := 4 TO 7 DO
+      IF i[j] # 0 AND i[j] # 16_FF THEN
+        RETURN Int{n := 8, x := i};
+      END;
+    END;
+    RETURN Int{n := 4, x := i};
+  END FromTargetInt;
+
+PROCEDURE InitInt(VAR a: Int_type; READONLY b: Target.Int_type) =
+  BEGIN
+    a.size := b.size;
+    a.bytes := b.bytes;
+    a.min := FromTargetInt(b.min);
+    a.max := FromTargetInt(b.max);
+  END InitInt;
+
+PROCEDURE Init() =
+  BEGIN
+    InitInt(Int8, Target.Int8);
+    InitInt(Int16, Target.Int16);
+    InitInt(Int32, Target.Int32);
+    InitInt(Int64, Target.Int64);
+    InitInt(Word8, Target.Word8);
+    InitInt(Word16, Target.Word16);
+    InitInt(Word32, Target.Word32);
+    InitInt(Word64, Target.Word64);
+    InitInt(Integer, Target.Integer);
+    Extended := Target.Extended;
+  END Init;
+
+PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT =
+  VAR t: TEXT;
+  BEGIN
+    t := "n:";
+    t := t & Fmt.Unsigned(a.n);
+    t := t & ",x:";
+    FOR i := 0 TO 7 DO
+      t := t & Fmt.Unsigned(a.x[i]);
+      IF i # 7 THEN
+        t := t & ",";
+      END;
+    END;
+    RETURN t;
+  END TargetIntToDiagnosticText;
 
 BEGIN
 END M3BackInt.
