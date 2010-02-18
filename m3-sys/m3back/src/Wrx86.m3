@@ -153,9 +153,12 @@ PROCEDURE Int (t: T;  i: INTEGER) =
 PROCEDURE TInt (t: T;  READONLY i: Target.Int) =
   VAR
     buf : ARRAY [0..BITSIZE (Target.Integer)] OF CHAR;
+    len := TargetInt.ToChars (i, buf);
   BEGIN
     OutC (t, ' ');
-    OutS (t, SUBARRAY (buf, 0, TargetInt.ToChars (i, buf)));
+    OutS (t, SUBARRAY (buf, 0, len));
+    OutC (t, ' ');
+    OutT (t, Target.TargetIntToDiagnosticText(i));
   END TInt;
 
 PROCEDURE BInt (t: T;  i: INTEGER) =
