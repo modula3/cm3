@@ -161,6 +161,4 @@ CONST BitCountMask = MaximumShift;
  
 VAR(*CONST*) IntType: ARRAY IType OF Target.Int_type;
 
-CONST TargetIntToBackInt = TInt.FromTargetInt;
-
 END M3x86Rep.
