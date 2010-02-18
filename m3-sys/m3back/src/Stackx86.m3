@@ -16,9 +16,9 @@ FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 FROM M3CG IMPORT Type, MType, ZType, IType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, TypeIs64, OperandPart, RegName, OperandSize;
 FROM M3x86Rep IMPORT RegistersForByteOperations, RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
-FROM M3x86Rep IMPORT IsInt, IsWord, EAX, ECX, EDX, EBX, ESI, EDI, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
+FROM M3x86Rep IMPORT TypeIsSignedInt, TypeIsUnsignedInt, EAX, ECX, EDX, EBX, ESI, EDI, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
 
@@ -815,7 +815,7 @@ PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet; operandPart: O
 PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
   BEGIN
     maybe_expand_stack(t);
-    IF Is64(type) AND force = Force.regset AND set = RegSet { EAX, EDX } THEN
+    IF TypeIs64(type) AND force = Force.regset AND set = RegSet { EAX, EDX } THEN
       pushnew1(t, type, Force.regset, RegSet { EDX }, operandPart := 1);
       pushnew1(t, type, Force.regset, RegSet { EAX }, operandPart := 0);
     ELSE
@@ -1405,7 +1405,7 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
       tShiftCount: Target.Int;
       shiftResult: Target.Int;
       shiftCount: INTEGER;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1516,7 +1516,7 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
 PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
   VAR leftlab, endlab: Label;
       rotateCount: INTEGER;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1599,7 +1599,7 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
 PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
   VAR tbl: MVar;
       int: INTEGER;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1677,7 +1677,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
   VAR tn, t32MinusN, andval: Target.Int;
       int: INTEGER;
       uint_type := IntType[UnsignedType[type]];
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1744,7 +1744,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
 
 PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEAN =
   VAR andval, tint: Target.Int;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1810,7 +1810,7 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
   VAR maskreg: Regno;  tbl: MVar;
       int: INTEGER;
       tint: Target.Int;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1900,7 +1900,7 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
   VAR tbl: MVar;  maskreg: Regno;
       m: INTEGER;
       tint: Target.Int;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1967,7 +1967,7 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
 PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
   VAR tint_m, mask_m, mask_m_n, mask: Target.Int;
       uint_type := IntType[UnsignedType[type]];
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -2117,7 +2117,7 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
                   IF fromSize = 2 THEN
                     find(t, stack0, Force.anyreg);
                   ELSE
-                    IF IsInt(from) THEN
+                    IF TypeIsSignedInt(from) THEN
                       find(t, stack0, Force.regset, RegSet{EAX});
                     ELSE
                       find(t, stack0, Force.anyreg);
@@ -2137,7 +2137,7 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
                    * We should favor dead, or else anything but
                    * the one that holds the other half of this operand.
                    *)
-                  IF IsWord(from) THEN
+                  IF TypeIsUnsignedInt(from) THEN
                     (* zero extend by allocating another register and xoring *)
                     WITH reg = finddead(t) DO
                       <* ASSERT reg # -1 *>
