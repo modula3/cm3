@@ -137,26 +137,25 @@ CONST         AllRegisters = RegSet{EAX, ECX, EDX, EBX,
                                     (*ESP,*) (*EBP,*) ESI, EDI};
 CONST RegistersForByteOperations = RegSet{EAX, EBX, ECX, EDX};
 
-PROCEDURE TypeIsUnsignedInt (t: Type): BOOLEAN;
-PROCEDURE TypeIsSignedInt (t: Type): BOOLEAN;
-PROCEDURE TypeIs64 (t: Type): BOOLEAN;
+PROCEDURE IsWord (t: Type): BOOLEAN; (* IsUnsigned *)
+PROCEDURE IsInt (t: Type): BOOLEAN;  (* IsSigned *)
+PROCEDURE Is64 (t: Type): BOOLEAN;
 PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize;
 PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY OperandPart OF Target.Int): OperandSize;
 PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize;
 PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize;
 PROCEDURE GetTypeSize(type: Type): OperandSize;
 
-CONST UnsignedType = ARRAY IType OF IType {
-  Type.Word32, Type.Word32,
-  Type.Word64, Type.Word64 };
+CONST TZero = TInt.Zero;
 
-CONST MaximumShift = ARRAY IType OF Target.Int {
-  Target.Int{31,0,..}, Target.Int{31,0,..},
-  Target.Int{63,0,..}, Target.Int{63,0,..}};
+CONST UnsignedType = ARRAY IType OF IType { Type.Word32, Type.Word32,
+                                            Type.Word64, Type.Word64 };
 
-CONST MinimumShift = ARRAY IType OF Target.Int {
-  Target.Int{31,0,..}, Target.Int{31,0,..},
-  Target.Int{63,0,..}, Target.Int{63,0,..}};
+CONST MaximumShift = ARRAY IType OF Target.Int { TInt.ThirtyOne, TInt.ThirtyOne,
+                                                 TInt.SixtyThree, TInt.SixtyThree };
+
+CONST MinimumShift = ARRAY IType OF Target.Int { TInt.MThirtyOne, TInt.MThirtyOne,
+                                                 TInt.MSixtyThree, TInt.MSixtyThree };
 
 CONST BitCountMask = MaximumShift;
  
