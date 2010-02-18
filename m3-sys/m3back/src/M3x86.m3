@@ -1093,6 +1093,7 @@ PROCEDURE end_init (u: U;  v: Var) =
 PROCEDURE init_int (u: U; o: ByteOffset; READONLY value: Target.Int; t: Type) =
   VAR bytes := ARRAY [0..7] OF [0..255]{0, ..};
       len: CARDINAL := 0;
+      buf: ARRAY [0..BITSIZE(Target.Int)] OF CHAR;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("init_int");
@@ -1105,9 +1106,18 @@ PROCEDURE init_int (u: U; o: ByteOffset; READONLY value: Target.Int; t: Type) =
     pad_init(u, o);
 
     len := TInt.ToBytes(value, bytes);
+    IF NOT ((len > 0) AND (len <= NUMBER(bytes)) AND (len <= CG_Bytes[t])) THEN
+      u.Err("len:" & Fmt.Int(len)
+          & " t:" & Target.TypeNames[t]
+          & " CG_Bytes[t]:" & Fmt.Int(CG_Bytes[t])
+          & " " & Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(value, buf))));
+    END;
     <* ASSERT len > 0 *>
     <* ASSERT len <= NUMBER(bytes) *>
     <* ASSERT len <= CG_Bytes[t] *>
+
+    (* sign extend negative values to the size of the type *)
+
     IF TInt.LT(value, TInt.Zero) THEN
       FOR i := len TO CG_Bytes[t] - 1 DO
         bytes[i] := 16_FF;
