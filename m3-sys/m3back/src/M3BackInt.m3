@@ -57,20 +57,6 @@ PROCEDURE CheckSign (READONLY r: Int;  n: CARDINAL): Sign =
     END;
   END CheckSign;
 
-PROCEDURE IntI (READONLY r: Int;  n: CARDINAL;  VAR x: Int): BOOLEAN =
-  VAR sign := CheckSign (r, n);  j := 0;  result := TRUE;
-  BEGIN
-    CASE sign OF
-    | Sign.Bad => result := FALSE;
-    | Sign.Pos => j := 0;
-    | Sign.Neg => j := Mask;
-    END;
-    x.n := n;
-    FOR i := 0 TO r.n-1 DO x.x[i] := r.x[i] END;
-    FOR i := r.n TO n-1 DO x.x[i] := j END;
-    RETURN result;
-  END IntI;
-
 PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
   VAR sign := CheckSign (r, BITSIZE (INTEGER) DIV BITSIZE (IByte));
       result := TRUE;
@@ -89,27 +75,6 @@ PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
 
     RETURN result;
   END ToInt;
-
-PROCEDURE New (READONLY x: ARRAY OF CHAR;  n: CARDINAL;  VAR r: Int): BOOLEAN =
-  CONST ZERO = ORD ('0');   ZEROZERO = 10 * ZERO + ZERO;
-  VAR tmp, digit: Int;
-  BEGIN
-    <*ASSERT n # 0*>
-    r := Int{n};
-    IF (NUMBER (x) = 1) THEN
-      r.x[0] := ORD (x[0]) - ZERO;
-    ELSIF (NUMBER (x) = 2) THEN
-      r.x[0] := 10 * ORD (x[0]) + ORD (x[1]) - ZEROZERO;
-    ELSE
-      digit := Int{n};
-      FOR i := FIRST (x) TO LAST (x) DO
-        digit.x[0] := ORD (x[i]) - ZERO;
-        IF NOT Multiply (r, Ten, tmp) THEN RETURN FALSE; END;
-        IF NOT Add (tmp, digit, r)    THEN RETURN FALSE; END;
-      END;
-    END;
-    RETURN TRUE;
-  END New;
 
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   (* It is safe for r to alias a or b *)
