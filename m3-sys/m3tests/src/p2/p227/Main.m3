@@ -352,7 +352,7 @@ BEGIN
 
   FOR i := 0L TO 1000L DO
     FOR j := 1L TO 1000L DO
-      k := (i DIV j);
+      k := (i MOD j);
       IF i <= 10L AND j <= 10L THEN
         PutL(i);
         PutT(" MODUL ");
