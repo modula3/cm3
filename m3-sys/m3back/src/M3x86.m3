@@ -497,8 +497,8 @@ PROCEDURE declare_set (u: U;  t, domain: TypeUID;  s: BitSize) =
 PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
                             READONLY xmin, xmax: TargetInt;
                             s: BitSize) =
-  VAR min := TInt.FromTargetInt(xmin);
-      max := TInt.FromTargetInt(xmax);
+  VAR min := TInt.FromTargetInt(xmin, NUMBER(xmin));
+      max := TInt.FromTargetInt(xmax, NUMBER(xmax));
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_subrange");
@@ -1098,7 +1098,7 @@ PROCEDURE end_init (u: U;  v: Var) =
 PROCEDURE init_int (u: U; o: ByteOffset; READONLY xvalue: TargetInt; t: Type) =
   VAR bytes := ARRAY [0..7] OF [0..255]{0, ..};
       len: CARDINAL := 0;
-      value := TargetIntToBackInt(xvalue);
+      value := TInt.FromTargetInt(xvalue, CG_Bytes[t]);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("init_int");
@@ -1813,7 +1813,7 @@ PROCEDURE load_nil (u: U) =
 
 PROCEDURE load_integer  (u: U;  t: IType;  READONLY j: TargetInt) =
   (* push ; s0.t := i *)
-  VAR i := TInt.FromTargetInt(j);
+  VAR i := TInt.FromTargetInt(j, CG_Bytes[t]);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_integer");
@@ -2293,7 +2293,7 @@ PROCEDURE shift (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doshift (t) THEN
+    IF (NOT Is64(t)) AND u.vstack.doshift (t) THEN
       RETURN;
     END;
 
@@ -3184,7 +3184,7 @@ PROCEDURE check_nil (u: U;  code: RuntimeError) =
 PROCEDURE check_lo (u: U;  t: IType;  READONLY j: TargetInt;  code: RuntimeError) =
   (* IF (s0.t < i) THEN abort(code) *)
   VAR safelab: Label;
-      i := TInt.FromTargetInt(j);
+      i := TInt.FromTargetInt(j, CG_Bytes[t]);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_lo");
@@ -3221,7 +3221,7 @@ PROCEDURE check_lo (u: U;  t: IType;  READONLY j: TargetInt;  code: RuntimeError
 PROCEDURE check_hi (u: U;  t: IType;  READONLY j: TargetInt;  code: RuntimeError) =
   (* IF (i < s0.t) THEN abort(code) *)
   VAR safelab: Label;
-      i := TInt.FromTargetInt(j);
+      i := TInt.FromTargetInt(j, CG_Bytes[t]);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_hi");
@@ -3259,8 +3259,8 @@ PROCEDURE check_range (u: U;  t: IType;  READONLY xa, xb: TargetInt;  code: Runt
   (* IF (s0.t < a) OR (b < s0.t) THEN abort(code) *)
   VAR lo, hi: Target.Int;
       safelab, outrange: Label;
-      a := TInt.FromTargetInt(xa);
-      b := TInt.FromTargetInt(xb);
+      a := TInt.FromTargetInt(xa, CG_Bytes[t]);
+      b := TInt.FromTargetInt(xb, CG_Bytes[t]);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_range");
