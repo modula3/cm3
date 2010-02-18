@@ -401,6 +401,7 @@ PROCEDURE RightShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
 
 PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
   BEGIN
+    <*ASSERT a.n # 0*>
     IF b > 0 THEN (* left shift *)
       LeftShift(a, b, r);
     ELSE (* right shift *)
