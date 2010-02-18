@@ -9,7 +9,7 @@
 MODULE Codex86;
 
 IMPORT Fmt, TargetMap, M3x86Rep, M3ID, M3CG_Ops, Word, M3ObjFile, Wrx86, Target;
-IMPORT TInt, TWord, Text;
+IMPORT TInt, TWord;
 
 FROM TargetMap IMPORT CG_Bytes;
 
@@ -18,7 +18,7 @@ FROM M3CG IMPORT Type, MType, Label;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs, OperandSize, GetOperandSize;
-FROM M3x86Rep IMPORT RegistersForByteOperations, RegName, SplitOperand, TypeIs64, SplitImm, OperandPart, GetTypeSize;
+FROM M3x86Rep IMPORT RegistersForByteOperations, RegName, SplitOperand, Is64, SplitImm, OperandPart, GetTypeSize, TZero;
 FROM M3x86Rep IMPORT EAX, EDX, ESP, EBP, ECX;
 
 FROM M3ObjFile IMPORT Seg;
@@ -252,7 +252,7 @@ PROCEDURE setccOp (t: T; READONLY op: Operand; cond: Cond) =
                op.reg[0] IN RegistersForByteOperations ) OR
               (op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 1) *>
     IF op.loc = OLoc.register THEN
-      movImmT(t, op, TInt.Zero);
+      movImmT(t, op, TZero);
     END;
     build_modrm(t, op, t.opcode[0], ins);
     ins.escape := TRUE;
@@ -379,17 +379,14 @@ PROCEDURE noargOp (t: T; op: Op) =
 
 PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
   VAR ins: Instruction;
-      buf: ARRAY [0..BITSIZE(Target.Int)] OF CHAR;
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
-    IF (NOT TInt.ToInt(imm, ins.imm))
-      AND (NOT TWord.LE(imm, Target.Word32.max)) THEN
-      t.Err("immOp1: unable to convert immediate to INTEGER: " &
-        Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(imm, buf))));
+    IF (NOT TInt.ToInt(imm, ins.imm)) AND (NOT TWord.LE(imm, Target.Word32.max)) THEN
+      t.Err("immOp1: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));
     END;
 
-    IF TInt.LE(Target.Int8.min, imm) AND TInt.LE(imm, Target.Int8.max) THEN
+    IF TInt.GE(imm, Target.Int8.min) AND TInt.LE(imm, Target.Int8.max) THEN
       ins.imsize := 1;
     ELSE
       ins.imsize := 4;
@@ -449,8 +446,8 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
   BEGIN
 
     <* ASSERT immSize = destSize *>
-    <* ASSERT NOT TypeIs64(destA[0].optype) *>
-    <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
+    <* ASSERT NOT Is64(destA[0].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     IF (immSize = 2) AND (op IN SET OF Op{Op.oCMP, Op.oADD, Op.oSUB, Op.oSHL, Op.oSHR}) THEN
       CASE op OF
@@ -468,9 +465,9 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
             t.set_label(compare_label);
 
         | Op.oSHL =>
-            IF TInt.LE(Target.Int{32,0,..}, imm) THEN
-              IF NOT TInt.EQ(imm, Target.Int{32,0,..}) THEN
-                EVAL TInt.Subtract(imm, Target.Int{32,0,..}, immMinus32);
+            IF TInt.GE(imm, TInt.ThirtyTwo) THEN
+              IF TInt.NE(imm, TInt.ThirtyTwo) THEN
+                EVAL TInt.Subtract(imm, TInt.ThirtyTwo, immMinus32);
                 (* Ideally we'd do a virtual move in the register alloator. *)
                 movOp1(t, destA[1], destA[0]);
                 immOp1(t, op, destA[1], immMinus32);
@@ -485,9 +482,9 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
             END
 
         | Op.oSHR =>
-            IF TInt.LE(Target.Int{32,0,..}, imm) THEN
-              IF NOT TInt.EQ(imm, Target.Int{32,0,..}) THEN
-                EVAL TInt.Subtract(imm, Target.Int{32,0,..}, immMinus32);
+            IF TInt.GE(imm, TInt.ThirtyTwo) THEN
+              IF TInt.NE(imm, TInt.ThirtyTwo) THEN
+                EVAL TInt.Subtract(imm, TInt.ThirtyTwo, immMinus32);
                 (* Ideally we'd do a virtual move in the register alloator. *)
                 movOp1(t, destA[0], destA[1]);
                 immOp1(t, op, destA[0], immMinus32);
@@ -516,11 +513,10 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
 
 PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READONLY shiftCount: Operand) =
   VAR ins: Instruction;
-      buf: ARRAY [0..BITSIZE(Target.Int)] OF CHAR;
   BEGIN
 
-    <* ASSERT NOT TypeIs64(src.optype) *>
-    <* ASSERT NOT TypeIs64(dest.optype) *>
+    <* ASSERT NOT Is64(src.optype) *>
+    <* ASSERT NOT Is64(dest.optype) *>
 
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
@@ -553,12 +549,11 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
       <* ASSERT src.loc = OLoc.register *>
       <* ASSERT shiftCount.loc = OLoc.register OR shiftCount.loc = OLoc.imm *>
       <* ASSERT shiftCount.loc # OLoc.register OR shiftCount.reg[0] = ECX *>
-      <* ASSERT shiftCount.loc # OLoc.imm OR (TInt.LE(Target.Int8.min, shiftCount.imm) AND TInt.LE(shiftCount.imm, Target.Int8.max)) *>
+      <* ASSERT shiftCount.loc # OLoc.imm OR (TInt.GE(shiftCount.imm, Target.Int8.min) AND TInt.LE(shiftCount.imm, Target.Int8.max)) *>
 
       IF shiftCount.loc = OLoc.imm THEN
         IF NOT TInt.ToInt(shiftCount.imm, ins.imm) THEN
-          t.Err("binOp: unable to convert immediate to INTEGER:" &
-            Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(shiftCount.imm, buf))));
+          t.Err("binOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(shiftCount.imm));
         END;
         ins.imsize := 1;
       ELSE
@@ -590,10 +585,10 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand) =
       compare_label: Label;
   BEGIN
 
-    <* ASSERT NOT TypeIs64(srcA[0].optype) *>
-    <* ASSERT NOT TypeIs64(destA[0].optype) *>
-    <* ASSERT NOT TypeIs64(srcA[srcSize - 1].optype) *>
-    <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
+    <* ASSERT NOT Is64(srcA[0].optype) *>
+    <* ASSERT NOT Is64(destA[0].optype) *>
+    <* ASSERT NOT Is64(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     IF srcSize # destSize THEN
       t.Err("binOp: size mismatch: destSize:" & Fmt.Int(destSize)
@@ -736,10 +731,10 @@ PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
     END;
 
     <* ASSERT srcSize = destSize *>
-    <* ASSERT NOT TypeIs64(srcA[0].optype) *>
-    <* ASSERT NOT TypeIs64(destA[0].optype) *>
-    <* ASSERT NOT TypeIs64(srcA[srcSize - 1].optype) *>
-    <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
+    <* ASSERT NOT Is64(srcA[0].optype) *>
+    <* ASSERT NOT Is64(destA[0].optype) *>
+    <* ASSERT NOT Is64(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     FOR i := 0 TO destSize - 1 DO
       swapOp1(t, destA[i], srcA[i]);
@@ -885,10 +880,10 @@ PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
     END;
 
     <* ASSERT srcSize = destSize *>
-    <* ASSERT NOT TypeIs64(srcA[0].optype) *>
-    <* ASSERT NOT TypeIs64(destA[0].optype) *>
-    <* ASSERT NOT TypeIs64(srcA[srcSize - 1].optype) *>
-    <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
+    <* ASSERT NOT Is64(srcA[0].optype) *>
+    <* ASSERT NOT Is64(destA[0].optype) *>
+    <* ASSERT NOT Is64(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     FOR i := 0 TO destSize - 1 DO
       movOp1(t, destA[i], srcA[i]);
@@ -913,12 +908,9 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
 
 PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.Int) =
   VAR ins: Instruction;
-      buf: ARRAY [0..BITSIZE(Target.Int)] OF CHAR;
   BEGIN
-    IF (NOT TInt.ToInt(imm, ins.imm))
-      AND (NOT TWord.LE(imm, Target.Word32.max)) THEN
-      t.Err("movImmT: unable to convert immediate to INTEGER: " &
-        Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(imm, buf))));
+    IF (NOT TInt.ToInt(imm, ins.imm)) AND (NOT TWord.LE(imm, Target.Word32.max)) THEN
+      t.Err("movImmT: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));
     END;
     IF dest.loc # OLoc.register THEN
       <* ASSERT dest.loc = OLoc.mem *>
@@ -929,7 +921,7 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.Int) =
       ins.imsize := CG_Bytes[dest.mvar.mvar_type];
       writecode(t, ins);
       log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.mvar_type]);
-    ELSIF TInt.EQ(imm, TInt.Zero) THEN
+    ELSIF TInt.EQ(imm, TZero) THEN
       binOp(t, Op.oXOR, dest, dest);
     ELSE
       ins.opcode := 16_B8 + dest.reg[0];
@@ -942,7 +934,7 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.Int) =
 PROCEDURE movImmI (t: T; READONLY dest: Operand; imm: INTEGER) =
   VAR immT: Target.Int;
   BEGIN
-    IF NOT TInt.FromInt(imm, immT) THEN
+    IF NOT TInt.FromInt(imm, BYTESIZE(imm), immT) THEN
       t.Err("movImmI: unable to convert INTEGER to Target.Int");
     END;
     t.movImmT(dest, immT);
@@ -950,17 +942,13 @@ PROCEDURE movImmI (t: T; READONLY dest: Operand; imm: INTEGER) =
 
 PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
   VAR ins: Instruction;
-      buf: ARRAY [0..BITSIZE(Target.Int)] OF CHAR;
   BEGIN
     Mn(t, "PUSH");  MnOp(t, src);
     CASE src.loc OF
     | OLoc.imm =>
         ins.opcode := 16_68;
-        IF (NOT TInt.ToInt(src.imm, ins.imm))
-          AND (NOT TWord.LE(src.imm, Target.Word32.max))
-        THEN
-          t.Err("pushOp: unable to convert immediate to INTEGER: " &
-            Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(src.imm, buf))));
+        IF (NOT TInt.ToInt(src.imm, ins.imm)) AND (NOT TWord.LE(src.imm, Target.Word32.max)) THEN
+          t.Err("pushOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(src.imm));
         END;
         ins.imsize := 4;
         writecode(t, ins);
@@ -983,8 +971,8 @@ PROCEDURE pushOp (t: T; READONLY src: Operand) =
       size := SplitOperand(src, a);
   BEGIN
 
-    <* ASSERT NOT TypeIs64(a[0].optype) *>
-    <* ASSERT NOT TypeIs64(a[size - 1].optype) *>
+    <* ASSERT NOT Is64(a[0].optype) *>
+    <* ASSERT NOT Is64(a[size - 1].optype) *>
 
     FOR i := size - 1 TO 0 BY -1 DO
       pushOp1(t, a[i]);
@@ -1017,8 +1005,8 @@ PROCEDURE popOp (t: T; READONLY dest: Operand) =
       size := SplitOperand(dest, a);
   BEGIN
 
-    <* ASSERT NOT TypeIs64(a[0].optype) *>
-    <* ASSERT NOT TypeIs64(a[size - 1].optype) *>
+    <* ASSERT NOT Is64(a[0].optype) *>
+    <* ASSERT NOT Is64(a[size - 1].optype) *>
 
     FOR i := 0 TO size - 1 DO
       popOp1(t, a[i]);
@@ -1085,14 +1073,14 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
             unOp1(t, op, destA[1]);
         | Op.oNEG =>
             unOp1(t, op, destA[0]);
-            t.binOp(Op.oADC, destA[1], Operand {loc := OLoc.imm, imm := TInt.Zero, optype := Type.Word32});
+            t.binOp(Op.oADC, destA[1], Operand {loc := OLoc.imm, imm := TZero, optype := Type.Word32});
             unOp1(t, op, destA[1]);
         ELSE
           <* ASSERT FALSE *>
       END
     ELSE
-      <* ASSERT NOT TypeIs64(destA[0].optype) *>
-      <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
+      <* ASSERT NOT Is64(destA[0].optype) *>
+      <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
       FOR i := 0 TO destSize - 1 DO
         unOp1(t, op, destA[i]);
@@ -1116,7 +1104,6 @@ PROCEDURE mulOp (t: T; READONLY src: Operand) =
 
 PROCEDURE imulOp (t: T; READONLY dest, src: Operand) =
   VAR ins: Instruction;
-      buf: ARRAY [0..BITSIZE(Target.Int)] OF CHAR;
   BEGIN
     <* ASSERT dest.loc = OLoc.register *>
     <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.mvar_type] = 4 *>
@@ -1124,11 +1111,8 @@ PROCEDURE imulOp (t: T; READONLY dest, src: Operand) =
     IF src.loc = OLoc.imm THEN
       build_modrm(t, t.reg[dest.reg[0]], dest, ins);
       ins.opcode := 16_69;
-      IF (NOT TInt.ToInt(src.imm, ins.imm))
-        AND (NOT TWord.LE(src.imm, Target.Word32.max))
-      THEN
-        t.Err("imulOp: unable to convert immediate to INTEGER: " &
-          Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(src.imm, buf))));
+      IF (NOT TInt.ToInt(src.imm, ins.imm)) AND (NOT TWord.LE(src.imm, Target.Word32.max)) THEN
+        t.Err("imulOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(src.imm));
       END;
       ins.imsize := 4;
       writecode(t, ins);
@@ -1211,7 +1195,7 @@ PROCEDURE diffdivOp (t: T; READONLY divisor: Operand; apos: BOOLEAN) =
     set_label(t, diffsignlab);                        (* .diffsignlab        *)
     noargOp(t, Op.oCDQ);                              (*   CDQ               *)
     idivOp(t, divisor);                               (*   IDIV EAX, divisor *)
-    immOp(t, Op.oCMP, t.reg[EDX], TInt.Zero);         (*   CMP EDX, #0       *)
+    immOp(t, Op.oCMP, t.reg[EDX], TZero);             (*   CMP EDX, #0       *)
     brOp(t, Cond.E, endlab);                          (*   JE  endlab        *)
     decOp(t, t.reg[EAX]);                             (*   DEC EAX           *)
     set_label(t, endlab);                             (* .endlab             *)
@@ -1237,7 +1221,7 @@ PROCEDURE diffmodOp (t: T; READONLY divisor: Operand; apos: BOOLEAN) =
     set_label(t, diffsignlab);                        (* .diffsignlab         *)
     noargOp(t, Op.oCDQ);                              (*    CDQ               *)
     idivOp(t, divisor);                               (*    IDIV EAX, divisor *)
-    immOp(t, Op.oCMP, t.reg[EDX], TInt.Zero);         (*    CMP EDX, #0       *)
+    immOp(t, Op.oCMP, t.reg[EDX], TZero);             (*    CMP EDX, #0       *)
     brOp(t, Cond.E, endlab);                          (*    JE  endlab        *)
     binOp(t, Op.oADD, t.reg[EDX], divisor);           (*    ADD EDX, divisor  *)
     set_label(t, endlab);                             (* .endlab              *)
@@ -1495,18 +1479,14 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffs
 
 PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset; type: MType) =
   VAR ins: Instruction;
-      buf: ARRAY [0..BITSIZE(Target.Int)] OF CHAR;
   BEGIN
     <* ASSERT ind.loc = OLoc.register AND val.loc # OLoc.mem *>
 
     ins.opcode := 16_88;
     IF val.loc = OLoc.imm THEN
       ins.opcode := 16_C6;
-      IF (NOT TInt.ToInt(val.imm, ins.imm))
-        AND (NOT TWord.LE(val.imm, Target.Word32.max))
-      THEN
-        t.Err("store_ind1: unable to convert immediate to INTEGER: " &
-          Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(val.imm, buf))));
+      IF (NOT TInt.ToInt(val.imm, ins.imm)) AND (NOT TWord.LE(val.imm, Target.Word32.max)) THEN
+        t.Err("store_ind1: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(val.imm));
       END;
       ins.imsize := CG_Bytes[type];
     END;
@@ -2344,7 +2324,7 @@ PROCEDURE init_intvar (t: T; size: ByteSize; f_lit: FLiteral; abscall: AbsCall):
 
     WHILE f_lit # NIL DO
       FOR i := 0 TO f_lit.flit_size - 1 DO
-        EVAL TInt.FromInt(f_lit.arr[i], tint);
+        EVAL TInt.FromInt(f_lit.arr[i], Target.Integer.bytes, tint);
         t.parent.init_int(f_lit.loc + i, tint, Type.Word8);
       END;
 
@@ -2352,7 +2332,7 @@ PROCEDURE init_intvar (t: T; size: ByteSize; f_lit: FLiteral; abscall: AbsCall):
     END;
 
     WHILE abscall # NIL DO
-      t.parent.init_int(abscall.loc, TInt.Zero, Type.Int32);
+      t.parent.init_int(abscall.loc, TZero, Type.Int32);
       t.obj.relocate(intvar.symbol, abscall.loc, abscall.sym);
       abscall := abscall.link;
     END;
