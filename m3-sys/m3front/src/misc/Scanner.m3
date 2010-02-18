@@ -509,7 +509,7 @@ PROCEDURE ScanNumber () =
 
     IF (ch = '_') THEN
       (* scan a based integer *)
-      IF    NOT TInt.New (SUBARRAY (buf, 0, len), Target.Integer.bytes, val)
+      IF    NOT TInt.New (SUBARRAY (buf, 0, len), val)
          OR NOT TInt.ToInt (val, base)
          OR (base < 2)
          OR (16 < base) THEN
@@ -524,19 +524,23 @@ PROCEDURE ScanNumber () =
       END;
       IF (ch = 'l') OR (ch = 'L') THEN
         GetCh (); (* eat the precision character *)
-        IF (len = 0) OR NOT (TWord.New (SUBARRAY (buf, 0, len), base,
-                                        Target.Long.bytes, val)) THEN
+        IF (len = 0)
+          OR NOT (TWord.New (SUBARRAY (buf, 0, len), base, val))
+          OR TWord.LT (Target.Long.max, val) THEN
           Error.Msg ("illegal based LONGINT literal, zero used");
           val := TInt.Zero;
         END;
+        TInt.Chop (val, Target.Longint.bytes);
         cur.token := TK.tLONGINTCONST;
         cur.int   := val;
       ELSE
-        IF (len = 0) OR NOT (TWord.New (SUBARRAY (buf, 0, len), base,
-                                        Target.Word.bytes, val)) THEN
+        IF (len = 0)
+          OR NOT TWord.New (SUBARRAY (buf, 0, len), base, val)
+          OR TWord.LT (Target.Word.max, val) THEN
           Error.Msg ("illegal based INTEGER literal, zero used");
           val := TInt.Zero;
         END;
+        TInt.Chop (val, Target.Integer.bytes);
         cur.token := TK.tINTEGERCONST;
         cur.int   := val;
       END;
@@ -551,8 +555,9 @@ PROCEDURE ScanNumber () =
         (*****  Rd.UnGetChar (input);  *****)
         DEC (input_ptr);  input_buf[input_ptr] := ORD ('.');
 
-        IF NOT TInt.New (SUBARRAY (buf, 0, len-1),
-                         Target.Integer.bytes, val) THEN
+        IF NOT TInt.New (SUBARRAY (buf, 0, len-1), val)
+          OR TInt.LT (val, Target.Integer.min)
+          OR TInt.LT (Target.Integer.max, val) THEN
           Error.Msg ("illegal INTEGER literal, zero used");
           val := TInt.Zero;
         END;
@@ -617,16 +622,18 @@ PROCEDURE ScanNumber () =
       (* already scanned a decimal integer *)
       IF (ch = 'l') OR (ch = 'L') THEN
         GetCh (); (* eat the precision character *)
-        IF NOT TInt.New (SUBARRAY (buf, 0, len),
-                         Target.Longint.bytes, val) THEN
+        IF NOT TInt.New (SUBARRAY (buf, 0, len), val)
+          OR TInt.LT (val, Target.Longint.min)
+          OR TInt.LT (Target.Longint.max, val) THEN
           Error.Msg ("illegal LONGINT literal, zero used");
           val := TInt.Zero;
         END;
         cur.token := TK.tLONGINTCONST;
         cur.int   := val;
       ELSE
-        IF NOT TInt.New (SUBARRAY (buf, 0, len),
-                         Target.Integer.bytes, val) THEN
+        IF NOT TInt.New (SUBARRAY (buf, 0, len), val)
+          OR TInt.LT (val, Target.Integer.min)
+          OR TInt.LT (Target.Integer.max, val) THEN
           Error.Msg ("illegal INTEGER literal, zero used");
           val := TInt.Zero;
         END;
@@ -675,7 +682,7 @@ PROCEDURE ScanChar (wide: BOOLEAN) =
       THEN Error.Msg ("missing closing quote on character literal");
       ELSE GetCh ();
     END;
-    IF NOT TInt.FromInt (val, Target.Integer.bytes, cur.int) THEN
+    IF NOT TInt.FromInt (val, cur.int) THEN
       Error.Msg ("illegal character literal");
     END;
   END ScanChar;

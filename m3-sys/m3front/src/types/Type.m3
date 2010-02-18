@@ -392,8 +392,7 @@ PROCEDURE Number (t: T): Target.Int =
     IF (c = Class.Subrange) THEN
       b := SubrangeType.Split (u, min, max);  <*ASSERT b*>
     ELSIF (c = Class.Enum) THEN
-      b := TInt.FromInt (EnumType.NumElts (u), Target.Integer.bytes, max);
-      <*ASSERT b*>
+      b := TInt.FromInt (EnumType.NumElts (u), max);  <*ASSERT b*>
       RETURN max;
     ELSIF (c = Class.Integer) THEN
       min := Target.Integer.min;
@@ -411,7 +410,8 @@ PROCEDURE Number (t: T): Target.Int =
     END;
     IF TInt.Subtract (max, min, tmp)
       AND TInt.Add (tmp, TInt.One, max)
-      AND TInt.LE (max, Target.Integer.max) THEN
+      AND NOT TInt.LT (max, Target.Integer.min)
+      AND NOT TInt.LT (Target.Integer.max, max) THEN
       RETURN max;
     END;
     Error.Msg ("type has too many elements");
@@ -425,8 +425,7 @@ PROCEDURE GetBounds (t: T;  VAR min, max: Target.Int): BOOLEAN =
       b := SubrangeType.Split (u, min, max);  <*ASSERT b*>
       RETURN TRUE;
     ELSIF (c = Class.Enum) THEN
-      b := TInt.FromInt (EnumType.NumElts (u), Target.Integer.bytes, min);
-      <*ASSERT b*>
+      b := TInt.FromInt (EnumType.NumElts (u), min);  <*ASSERT b*>
       b := TInt.Subtract (min, TInt.One, max);   <*ASSERT b*>
       min := TInt.Zero;
       RETURN TRUE;

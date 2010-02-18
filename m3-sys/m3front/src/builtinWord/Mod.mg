@@ -32,6 +32,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
     IF GetArgs (ce.args, w0, w1) AND TWord.Mod (w0, w1, result) THEN
+      TInt.Chop (result, Word_types[rep].bytes);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;
@@ -42,8 +43,15 @@ PROCEDURE GetArgs (args: Expr.List;  VAR w0, w1: Target.Int): BOOLEAN =
   BEGIN
     e0 := Expr.ConstValue (args[0]);
     e1 := Expr.ConstValue (args[1]);
-    RETURN (e0 # NIL) AND IntegerExpr.Split (e0, w0, t) AND 
-           (e1 # NIL) AND IntegerExpr.Split (e1, w1, t);
+    IF    (e0 # NIL) AND IntegerExpr.Split (e0, w0, t)
+      AND (e1 # NIL) AND IntegerExpr.Split (e1, w1, t)
+    THEN
+      TWord.And (w0, Word_types[rep].max, w0);
+      TWord.And (w1, Word_types[rep].max, w1);
+      RETURN TRUE;
+    ELSE
+      RETURN FALSE;
+    END;
   END GetArgs;
 
 PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
@@ -56,6 +64,7 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
     ELSE
       min := TInt.Zero;
       TWord.Subtract (max_b, TInt.One, max);
+      TInt.Chop (max, Word_types[rep].bytes);
     END;
   END GetBounds;
 

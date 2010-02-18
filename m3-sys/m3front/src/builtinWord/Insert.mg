@@ -8,11 +8,11 @@ IMPORT CG, CallExpr, Expr, ExprRep, Procedure;
 IMPORT IntegerExpr, Type, ProcType, CheckExpr, Card;
 IMPORT Target, TInt, TWord, Value, Formal, Host;
 FROM Rep IMPORT T;
-FROM TargetMap IMPORT Integer_types;
+FROM TargetMap IMPORT Word_types;
 
 VAR Z: CallExpr.MethodList;
 VAR formals: Value.T;
-VAR rep: [FIRST (Integer_types) .. LAST (Integer_types)];
+VAR rep: [FIRST (Word_types) .. LAST (Word_types)];
 
 PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   BEGIN
@@ -30,8 +30,7 @@ PROCEDURE Compile (ce: CallExpr.T) =
                           CG.RuntimeError.ValueOutOfRange);
     t3 := CG.Pop ();
     IF Host.doRangeChk THEN
-      b := TInt.FromInt (Integer_types[rep].size, Target.Integer.bytes, max);
-      <*ASSERT b*>
+      b := TInt.FromInt (Word_types[rep].size, max);  <*ASSERT b*>
       CG.Push (t2);
       CG.Push (t3);
       CG.Add (Target.Integer.cg_type);
@@ -45,26 +44,34 @@ PROCEDURE Compile (ce: CallExpr.T) =
     CG.Force ();
     CG.Push (t2);
     CG.Push (t3);
-    CG.Insert (Integer_types[rep].cg_type);
+    CG.Insert (Word_types[rep].cg_type);
     CG.Free (t2);
     CG.Free (t3);
   END Compile;
 
+PROCEDURE GetBitIndex (e: Expr.T;  VAR i: INTEGER): BOOLEAN =
+  BEGIN
+    e := Expr.ConstValue (e);
+    IF (e = NIL) THEN RETURN FALSE END;
+    RETURN IntegerExpr.ToInt (e, i)
+       AND (0 <= i) AND (i <= Word_types[rep].size);
+  END GetBitIndex;
+
 PROCEDURE Fold (ce: CallExpr.T): Expr.T =
-  VAR e0, e1, e2, e3: Expr.T;  w0, w1, result: Target.Int; i2, i3: INTEGER;
-      t: Type.T;
+  VAR e0, e1: Expr.T;  w0, w1, result: Target.Int; i2, i3: INTEGER;  t: Type.T;
   BEGIN
     e0 := Expr.ConstValue (ce.args[0]);
     e1 := Expr.ConstValue (ce.args[1]);
-    e2 := Expr.ConstValue (ce.args[2]);
-    e3 := Expr.ConstValue (ce.args[3]);
-    IF (e0 = NIL) OR (NOT IntegerExpr.Split (e0, w0, t)) OR
-       (e1 = NIL) OR (NOT IntegerExpr.Split (e1, w1, t)) OR 
-       (e2 = NIL) OR (NOT IntegerExpr.ToInt (e2, i2)) OR 
-       (e3 = NIL) OR (NOT IntegerExpr.ToInt (e3, i3)) OR
-       NOT TWord.Insert (w0, w1, i2, i3, result) THEN
+    IF   (e0 = NIL) OR (e1 = NIL)
+      OR NOT IntegerExpr.Split (e0, w0, t)
+      OR NOT IntegerExpr.Split (e1, w1, t)
+      OR NOT GetBitIndex (ce.args[2], i2)
+      OR NOT GetBitIndex (ce.args[3], i3)
+      OR i2 + i3 > Word_types[rep].size
+      OR NOT TWord.Insert (w0, w1, i2, i3, result) THEN
       RETURN NIL;
     END;
+    TInt.Chop (result, Word_types[rep].bytes);
     RETURN IntegerExpr.New (T, result);
   END Fold;
 

@@ -89,8 +89,8 @@ PROCEDURE NextToken (t: T) =
         SUPER.next (t);
         CASE t.token OF
         | TK_Ident          => FixID (t);
-        | TK_Card_const     => FixInt (t, Target.Integer.bytes);
-        | TK_Long_const     => FixInt (t, Target.Longint.bytes);
+        | TK_Card_const     => FixInt (t);
+        | TK_Long_const     => FixInt (t);
         | TK_Real_const     => FixFloat (t, Target.Precision.Short);
         | TK_Longreal_const => FixFloat (t, Target.Precision.Long);
         | TK_Extended_const => FixFloat (t, Target.Precision.Extended);
@@ -108,7 +108,7 @@ PROCEDURE FixID (t: T) =
     t.id := M3ID.FromStr (SUBARRAY (t.buffer^, t.offset, t.length));
   END FixID;
 
-PROCEDURE FixInt (t: T;  bytes: CARDINAL) =
+PROCEDURE FixInt (t: T) =
   VAR break := -1;  base: INTEGER;
   BEGIN
     FOR i := t.offset TO t.offset + t.length - 1 DO
@@ -120,16 +120,16 @@ PROCEDURE FixInt (t: T;  bytes: CARDINAL) =
     END;
 
     IF (break < 0) THEN (* scan a simple integer *)
-      IF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, t.length), bytes, t.int) THEN
+      IF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, t.length), t.int) THEN
         Err (t, "illegal integer literal");
       END;
-    ELSIF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, break - t.offset), bytes, t.int)
+    ELSIF NOT TInt.New (SUBARRAY (t.buffer^, t.offset, break - t.offset), t.int)
        OR NOT TInt.ToInt (t.int, base)
        OR (base < 2) OR (16 < base) THEN
       Err (t, "illegal base for integer literal");
     ELSIF NOT TWord.New (SUBARRAY (t.buffer^, break+1,
                                    t.offset + t.length - break - 1),
-                         base, bytes, t.int) THEN
+                         base, t.int) THEN
       Err (t, "illegal based integer literal");
     END;
   END FixInt;

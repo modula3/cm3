@@ -5,7 +5,7 @@
 GENERIC MODULE Minus (Rep);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Type, ProcType;
-IMPORT IntegerExpr, Value, Formal, Target, TWord;
+IMPORT IntegerExpr, Value, Formal, Target, TWord, TInt;
 FROM Rep IMPORT T;
 FROM TargetMap IMPORT Word_types;
 
@@ -31,6 +31,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   BEGIN
     IF GetArgs (ce.args, w0, w1) THEN
       TWord.Subtract (w0, w1, result);
+      TInt.Chop (result, Word_types[rep].bytes);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;

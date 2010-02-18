@@ -145,11 +145,14 @@ PROCEDURE AddX (READONLY i: Target.Int) =
 
 PROCEDURE AddBigX (READONLY ii: Target.Int) =
   CONST Sign = ARRAY BOOLEAN OF INTEGER { 16_40, 16_c0 };
-  VAR x: ARRAY [0..LAST (Target.IBytes)] OF [0..255];
+  VAR x: ARRAY [0..LAST (Target.Int)] OF [0..255];
       key, n_bytes: INTEGER;  i := ii;
   BEGIN
     key := Sign [TInt.LT (i, TInt.Zero)];
-    IF (key # 16_40) THEN TWord.Subtract (TInt.Zero, ii, i); END;
+    IF (key # 16_40) THEN
+      TWord.Subtract (TInt.Zero, ii, i);
+      TInt.Chop (i, Target.Integer.bytes);
+    END;
 
     (* extract the bytes *)
     n_bytes := TInt.ToBytes (i, x);

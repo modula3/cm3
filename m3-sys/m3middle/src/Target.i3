@@ -191,19 +191,13 @@ CONST
 
 (*-------------------------------------------------------- integer values ---*)
 
-(* The bits of a target INTEGER (in 2's complement) are stored in
+(* The bits of a target integer (in 2's complement) are stored in
    an array of small host values, with the low order bits in the first
    element of the array. *)
 
 TYPE
-  Int = (* OPAQUE *) RECORD
-    n: CARDINAL;          (* only bytes [0..n-1] contain valid bits *)
-    x := IBytes{0,..};    (* default is Zero *)
-  END;
-  IBytes = ARRAY [0..7] OF IByte;
+  Int = (* OPAQUE *) ARRAY [0..7] OF IByte;
   IByte = BITS 8 FOR [0..16_ff];
-
-PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT;
 
 TYPE
   Int_type = RECORD

@@ -940,7 +940,7 @@ PROCEDURE AdvanceInit (o: Offset) =
         (* send out some number of bytes *)
         EVAL FindInitType (n_bytes, init_pc, t);
         size := TargetMap.CG_Size[t];
-        excess := Target.Longint.size - size;
+        excess := TWord.Size - size;
         IF (excess = 0) THEN
           cg.init_int (init_pc DIV Target.Byte, init_bits, t);
           init_bits := TInt.Zero;
@@ -984,18 +984,17 @@ PROCEDURE FindInitType (n_bytes, offset: INTEGER;  VAR t: Type): BOOLEAN =
 
 PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
                     is_const: BOOLEAN) =
-  VAR bit_offset: CARDINAL;  itype: Type;  v, tmp: Target.Int;
+  VAR bit_offset: CARDINAL;  itype: Type;  tmp: Target.Int;
   BEGIN
     IF (NOT in_init) THEN
       PushPending (NEW (IntNode, o := o, s := s, v := value), is_const);
       RETURN;
     END;
-    EVAL TInt.IntI (value, Target.Longint.bytes, v);
 
     AdvanceInit (o);
     IF Target.Little_endian
       THEN bit_offset := o - init_pc;
-      ELSE bit_offset := Target.Longint.size - (o - init_pc) - s;
+      ELSE bit_offset := TWord.Size - (o - init_pc) - s;
     END;
 
     IF (o = init_pc)
@@ -1003,8 +1002,8 @@ PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
       AND (FindInitType (s DIV Target.Byte, init_pc, itype))
       AND (TargetMap.CG_Size[itype] = s) THEN
       (* simple, aligned integer initialization *)
-      cg.init_int (o DIV Target.Byte, v, itype);
-    ELSIF TWord.Insert (init_bits, v, bit_offset, s, tmp) THEN
+      cg.init_int (o DIV Target.Byte, value, itype);
+    ELSIF TWord.Insert (init_bits, value, bit_offset, s, tmp) THEN
       init_bits := tmp;
     ELSE
       Err ("unable to stuff bit field value??");
@@ -1013,9 +1012,12 @@ PROCEDURE Init_int (o: Offset;  s: Size;  READONLY value: Target.Int;
   END Init_int;
 
 PROCEDURE Init_intt (o: Offset;  s: Size;  value: INTEGER;  is_const: BOOLEAN) =
-  VAR val: Target.Int;  b := TInt.FromInt (value, Target.Integer.bytes, val);
+  VAR val: Target.Int;  b := TInt.FromInt (value, val);
   BEGIN
-    IF NOT b THEN ErrI (value, "integer const not representable") END;
+    IF NOT b
+      OR TInt.LT (val, Target.Integer.min)
+      OR TInt.LT (Target.Integer.max, val)
+    THEN ErrI (value, "integer const not representable") END;
     Init_int (o, s, val, is_const);
   END Init_intt;
 
@@ -1807,9 +1809,12 @@ PROCEDURE Load_byte_address (x: INTEGER) =
   END Load_byte_address;
 
 PROCEDURE Load_intt (i: INTEGER) =
-  VAR val: Target.Int;  b := TInt.FromInt (i, Target.Integer.bytes, val);
+  VAR val: Target.Int;  b := TInt.FromInt (i, val);
   BEGIN
-    IF NOT b THEN ErrI (i, "integer not representable") END;
+    IF NOT b
+      OR TInt.LT (val, Target.Integer.min)
+      OR TInt.LT (Target.Integer.max, val)
+    THEN ErrI (i, "integer not representable") END;
     Load_integer (Target.Integer.cg_type, val);
   END Load_intt;
 
@@ -2760,9 +2765,12 @@ PROCEDURE AsBytes (n: INTEGER): INTEGER =
   END AsBytes;
 
 PROCEDURE Push_int (i: INTEGER) =
-  VAR val: Target.Int;  b := TInt.FromInt (i, Target.Integer.bytes, val);
+  VAR val: Target.Int;  b := TInt.FromInt (i, val);
   BEGIN
-    IF NOT b THEN ErrI (i, "integer not representable") END;
+    IF NOT b
+      OR TInt.LT (val, Target.Integer.min)
+      OR TInt.LT (Target.Integer.max, val)
+    THEN ErrI (i, "integer not representable") END;
     cg.load_integer (Target.Integer.cg_type, val);
   END Push_int;
 

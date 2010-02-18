@@ -1105,13 +1105,10 @@ PROCEDURE init_int (u: U; o: ByteOffset; READONLY value: Target.Int; t: Type) =
     pad_init(u, o);
 
     len := TInt.ToBytes(value, bytes);
-    IF NOT (len <= NUMBER(bytes) AND len <= CG_Bytes[t] AND len > 0) THEN
-      u.Err("init_int: len:" & Fmt.Int(len) & " type:" & Target.TypeNames[t] & " value:" & Target.TargetIntToDiagnosticText(value));
-    END;
     <* ASSERT len > 0 *>
     <* ASSERT len <= NUMBER(bytes) *>
     <* ASSERT len <= CG_Bytes[t] *>
-    IF TInt.LT(value, TZero) THEN
+    IF TInt.LT(value, TInt.Zero) THEN
       FOR i := len TO CG_Bytes[t] - 1 DO
         bytes[i] := 16_FF;
       END;
@@ -1506,7 +1503,7 @@ PROCEDURE if_true  (u: U;  t: IType;  label: Label; <*UNUSED*> f: Frequency) =
       u.wr.NL    ();
     END;
 
-    u.vstack.doimm (Op.oCMP, TZero, FALSE);
+    u.vstack.doimm (Op.oCMP, TInt.Zero, FALSE);
     u.cg.brOp (Cond.NZ, label);
   END if_true;
 
@@ -1520,7 +1517,7 @@ PROCEDURE if_false (u: U;   t: IType;  label: Label; <*UNUSED*> f: Frequency) =
       u.wr.NL    ();
     END;
 
-    u.vstack.doimm (Op.oCMP, TZero, FALSE);
+    u.vstack.doimm (Op.oCMP, TInt.Zero, FALSE);
     u.cg.brOp (Cond.Z, label);
   END if_false;
 
@@ -1802,7 +1799,7 @@ PROCEDURE load_nil (u: U) =
     END;
 
     u.vstack.unlock();
-    u.vstack.pushimmT(TZero, Type.Addr);
+    u.vstack.pushimmT(TInt.Zero, Type.Addr);
   END load_nil;
 
 PROCEDURE load_integer  (u: U;  t: IType;  READONLY i: Target.Int) =
@@ -2166,7 +2163,7 @@ PROCEDURE set_compare (u: U;  s: ByteSize;  op: CompareOp;  t: IType) =
       pop_param(u, Type.Addr);
       pop_param(u, Type.Addr);
       call_int_proc (u, proc);
-      u.vstack.pushimmT(TZero, Type.Word32);
+      u.vstack.pushimmT(TInt.Zero, Type.Word32);
       condset(u, CompareOpCond [op], t);
     ELSE
       proc := CompareOpProc [op];
@@ -2323,14 +2320,14 @@ PROCEDURE shift_left   (u: U;  t: IType) =
 
           TWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
-          IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
+          IF NOT TInt.EQ(u.vstack.op(stack0).imm, TInt.Zero) THEN
             u.vstack.find(stack1, Force.anytemp);
             u.cg.immOp(Op.oSHL, u.vstack.op(stack1), u.vstack.op(stack0).imm);
             u.vstack.newdest(u.vstack.op(stack1));
           END
         END
       ELSE
-        IF (u.vstack.loc(stack1) # OLoc.imm) OR TInt.NE(u.vstack.op(stack1).imm, TZero) THEN
+        IF (u.vstack.loc(stack1) # OLoc.imm) OR NOT TInt.EQ(u.vstack.op(stack1).imm, TInt.Zero) THEN
 
           (* shift non-constant *)
 
@@ -2385,7 +2382,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
 
           TWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
-          IF TInt.NE(u.vstack.op(stack0).imm, TZero) THEN
+          IF NOT TInt.EQ(u.vstack.op(stack0).imm, TInt.Zero) THEN
             u.vstack.find(stack1, Force.anytemp);
             u.cg.immOp(Op.oSHR, u.vstack.op(stack1), u.vstack.op(stack0).imm);
             u.vstack.newdest(u.vstack.op(stack1));
@@ -2395,7 +2392,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
 
         (* shift a non-constant or non-zero *)
 
-        IF ((u.vstack.loc(stack1) # OLoc.imm) OR (TInt.NE(u.vstack.op(stack1).imm, TZero))) THEN
+        IF ((u.vstack.loc(stack1) # OLoc.imm) OR (NOT TInt.EQ(u.vstack.op(stack1).imm, TInt.Zero))) THEN
           IF Is64(t) THEN
             do_custom_calling_convention_shift_64 (u, Builtin.shift_right_64);
             RETURN;
@@ -2452,7 +2449,8 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
           IF NOT TInt.ToInt(u.vstack.op(stack0).imm, rotateCount) THEN
             u.Err("unable to convert rotate count to host integer");
           END;
-          TWord.Rotate(u.vstack.op(stack1).imm, rotateCount, rotate);
+          TWord.Rotate(u.vstack.op(stack1).imm, rotateCount,
+                       Target.Integer.bytes, rotate);
           u.vstack.set_imm(stack1, rotate);
         ELSE
           TWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
@@ -2505,7 +2503,8 @@ PROCEDURE rotate_right (u: U;  t: IType) =
           IF NOT TInt.ToInt(u.vstack.op(stack0).imm, rotateCount) THEN
             u.Err("unable to convert rotate count to host integer");
           END;
-          TWord.Rotate(u.vstack.op(stack1).imm, -rotateCount, rotate);
+          TWord.Rotate(u.vstack.op(stack1).imm, -rotateCount,
+                       Target.Integer.bytes, rotate);
           u.vstack.set_imm(stack1, rotate);
         ELSE
           TWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
@@ -2749,9 +2748,9 @@ PROCEDURE copy_n (u: U;  z: IType;  t: MType;  overlap: BOOLEAN) =
         u.vstack.unlock();
 
         CASE CG_Bytes[t] OF
-          2 => shift := TInt.One;
-        | 4 => shift := TInt.Two;
-        | 8 => shift := TInt.Three;
+          2 => shift := Target.Int{1,0,..};
+        | 4 => shift := Target.Int{2,0,..};
+        | 8 => shift := Target.Int{3,0,..};
         ELSE
           u.Err("Unknown MType size in copy_n");
         END;
@@ -2806,10 +2805,10 @@ PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
     IF forward THEN
       u.cg.noargOp(Op.oCLD);
     ELSE
-      IF NOT TInt.FromInt(n, Target.Integer.bytes, tn) THEN
+      IF NOT TInt.FromInt(n, tn) THEN
         u.Err("string_copy: unable to convert n to target int");
       END;
-      IF NOT TInt.FromInt(size, Target.Integer.bytes, tsize) THEN
+      IF NOT TInt.FromInt(size, tsize) THEN
         u.Err("string_copy: unable to convert size to target int");
       END;
       IF NOT TInt.Subtract(tn, TInt.One, tNMinus1) THEN
@@ -2940,9 +2939,9 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
         u.vstack.find(stack0, Force.anyreg);
 
         CASE CG_Bytes[t] OF
-          2 => shift := TInt.One;
-        | 4 => shift := TInt.Two;
-        | 8 => shift := TInt.Three;
+          2 => shift := Target.Int{1,0,..};
+        | 4 => shift := Target.Int{2,0,..};
+        | 8 => shift := Target.Int{3,0,..};
         ELSE
           u.Err("Unknown MType size in zero_n");
         END;
@@ -2953,7 +2952,7 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
 
     start_int_proc (u, Builtin.memset);
     pop_param (u, z);
-    u.vstack.pushimmT (TZero, Type.Word32);
+    u.vstack.pushimmT (TInt.Zero, Type.Word32);
     pop_param (u, Type.Word32);
     pop_param (u, Type.Addr);
     call_int_proc (u, Builtin.memset);
@@ -3013,7 +3012,7 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
            stop0 = u.vstack.op(stack0) DO
         u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
         FOR i := 0 TO n - 1 DO
-          u.cg.store_ind(Operand { loc := OLoc.imm, imm := TZero, optype := t },
+          u.cg.store_ind(Operand { loc := OLoc.imm, imm := TInt.Zero, optype := t },
                          stop0, i * size, faketype[size]);
         END
       END
@@ -3155,14 +3154,14 @@ PROCEDURE check_nil (u: U;  code: RuntimeError) =
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "check_nil") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF TInt.EQ(u.vstack.op(stack0).imm, TZero) THEN
+        IF TInt.EQ(u.vstack.op(stack0).imm, TInt.Zero) THEN
           reportfault(u, code);
         END
       ELSE
         u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
 
         IF NOT u.vstack.non_nil(u.vstack.reg(stack0)) THEN
-          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), TZero);
+          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), TInt.Zero);
           safelab := u.cg.reserve_labels(1, TRUE);
           u.cg.brOp(Cond.NE, safelab);
           reportfault(u, code);
@@ -3194,7 +3193,7 @@ PROCEDURE check_lo (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeErro
         END
       ELSE
         u.vstack.find(stack0, Force.anyreg);
-        IF TInt.GE(u.vstack.lower(u.vstack.reg(stack0)), i) THEN
+        IF TInt.LE(i, u.vstack.lower(u.vstack.reg(stack0))) THEN
           (* ok *)
         ELSIF TInt.LT(u.vstack.upper(u.vstack.reg(stack0)), i) THEN
           reportfault(u, code);
@@ -3232,7 +3231,7 @@ PROCEDURE check_hi (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeErro
         u.vstack.find(stack0, Force.anyreg);
         IF TInt.LE(u.vstack.upper(u.vstack.reg(stack0)), i) THEN
           (* ok *)
-        ELSIF TInt.GT(u.vstack.lower(u.vstack.reg(stack0)), i) THEN
+        ELSIF TInt.LT(i, u.vstack.lower(u.vstack.reg(stack0))) THEN
           reportfault(u, code);
         ELSE
           u.cg.immOp(Op.oCMP, u.vstack.op(stack0), i);
@@ -3279,9 +3278,9 @@ PROCEDURE check_range (u: U;  t: IType;  READONLY a, b: Target.Int;  code: Runti
           reportfault(u, code);
         ELSIF TInt.LE(hi, b) THEN
           check_lo(u, t, a, code);
-        ELSIF TInt.GE(lo, a) THEN
+        ELSIF TInt.LE(a, lo) THEN
           check_hi(u, t, b, code);
-        ELSIF TInt.EQ(a, TZero) THEN
+        ELSIF TInt.EQ(a, TInt.Zero) THEN
           (* 0 <= x <= b  ==>   UNSIGNED(x) <= b *)
           safelab := u.cg.reserve_labels(1, TRUE);
           u.cg.immOp(Op.oCMP, u.vstack.op(stack0), b);
@@ -3457,7 +3456,7 @@ PROCEDURE add_offset (u: U; i: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF NOT TInt.FromInt(i, Target.Integer.bytes, ti) THEN
+    IF NOT TInt.FromInt(i, ti) THEN
       u.Err("add_offset: failed to convert i to target integer");
     END;
 
@@ -3642,9 +3641,9 @@ PROCEDURE load_stack_param (u: U; t: MType; depth: INTEGER) =
       IF Target.FloatType [t] THEN
         <* ASSERT depth = 0 *>
         IF t = Type.Reel THEN
-          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TInt.Four);
+          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], Target.Int{4,0,..});
         ELSE
-          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TInt.Eight);
+          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], Target.Int{8,0,..});
         END;
         u.cg.f_storeind(u.cg.reg[ESP], 0, t);
       ELSE
@@ -3694,13 +3693,13 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
 
     WITH stack0 = u.vstack.pos(0, "pop_struct") DO
 
-      IF NOT TInt.FromInt(s, Target.Integer.bytes, ts) THEN
+      IF NOT TInt.FromInt(s, ts) THEN
         u.Err("pop_struct: unable to convert s to target int");
       END;
 
       (* if the struct is "large", use rep mov to copy it to the machine stack *)
 
-      IF TInt.GT(ts, TInt.ThirtyTwo) THEN
+      IF TInt.LT(Target.Int{32,0,..}, ts) THEN
         u.cg.immOp(Op.oSUB, u.cg.reg[ESP], ts);
 
         u.vstack.find(stack0, Force.regset, RegSet { ESI });
@@ -3880,7 +3879,7 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
     IF (NOT realproc.stdcall) (* => caller cleans *)
        AND u.call_param_size[u.in_proc_call - 1] > 0 THEN
 
-        IF NOT TInt.FromInt(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
+        IF NOT TInt.FromInt(u.call_param_size[u.in_proc_call - 1], call_param_size) THEN
           u.Err("call_direct: unable to convert param_size to target integer");
         END;
         u.cg.immOp(Op.oADD, u.cg.reg[ESP], call_param_size);
@@ -3939,7 +3938,7 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
 
       (* caller-cleans calling convention *)
 
-      IF NOT TInt.FromInt(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
+      IF NOT TInt.FromInt(u.call_param_size[u.in_proc_call - 1], call_param_size) THEN
         u.Err("call_indirect: unable to convert param_size to target integer");
       END;
 
@@ -4027,7 +4026,7 @@ PROCEDURE load_static_link (u: U;  p: Proc) =
     u.vstack.unlock();
 
     IF realproc.lev = 0 THEN
-      u.vstack.pushimmT(TZero, Type.Word32);
+      u.vstack.pushimmT(TInt.Zero, Type.Word32);
     ELSE
       u.vstack.pushnew(Type.Addr, Force.anyreg);
       u.cg.get_frame(u.vstack.op(u.vstack.pos(0, "load_static_link")).reg[0],
@@ -4047,7 +4046,7 @@ PROCEDURE load_static_link_toC (u: U;  p: Proc) =
 
     IF realproc.lev = 0 THEN
       u.vstack.corrupt(ECX, operandPart := 0);
-      u.cg.movImmT(u.cg.reg[ECX], TZero);
+      u.cg.movImmT(u.cg.reg[ECX], TInt.Zero);
     ELSE
       u.vstack.unlock();
       u.vstack.corrupt(ECX, operandPart := 0);
@@ -4060,7 +4059,7 @@ PROCEDURE load_static_link_toC (u: U;  p: Proc) =
 PROCEDURE intregcmp (u: U; tozero: BOOLEAN; type: Type): BOOLEAN =
   BEGIN
     IF tozero THEN
-      u.vstack.doimm(Op.oCMP, TZero, FALSE);
+      u.vstack.doimm(Op.oCMP, TInt.Zero, FALSE);
       RETURN FALSE;
     ELSE
       RETURN u.vstack.dobin(Op.oCMP, TRUE, FALSE, type);

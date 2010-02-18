@@ -364,14 +364,12 @@ PROCEDURE Scan_Tint (VAR s: State): Target.Int =
       result, tmp: Target.Int;   value, used: INTEGER;
   BEGIN
     value := Convert.ToInt (SUBARRAY (buf, 0, len), used);
-    IF (used = len) AND TInt.FromInt (value, NUMBER (result.x), result) THEN
+    IF (used = len) AND TInt.FromInt (value, result) THEN
       RETURN result;
     ELSIF (buf[0] # '-') THEN
-      IF TInt.New (SUBARRAY (buf, 0, len), NUMBER (result.x), result) THEN
-        RETURN result;
-      END;
+      IF TInt.New (SUBARRAY (buf, 0, len), result) THEN RETURN result END;
     ELSE (* Target doesn't handle negative values *)
-      IF TInt.New (SUBARRAY (buf, 1, len-1), NUMBER (tmp.x), tmp)
+      IF TInt.New (SUBARRAY (buf, 1, len-1), tmp)
         AND TInt.Subtract (TInt.Zero, tmp, result) THEN
         RETURN result;
       END;

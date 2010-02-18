@@ -10,7 +10,7 @@ MODULE SetExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, Error, IntegerExpr, EnumExpr;
 IMPORT RangeExpr, KeywordExpr, SetType, AssignStmt, CheckExpr;
-IMPORT M3ID, Target, TInt, TWord, Bool, M3Buf, Module;
+IMPORT M3ID, Target, TInt, TWord, Bool, M3Buf, Module, Text;
 
 TYPE
   Node = REF RECORD
@@ -564,16 +564,6 @@ PROCEDURE Compile (p: P) =
     END;
   END Compile;
 
-PROCEDURE TargetIntToDiagnosticText(name: TEXT; a: Target.Int): TEXT =
-  VAR t := "";
-      b: INTEGER;
-  BEGIN
-    IF NOT TInt.ToInt(a, b) THEN
-      t := "**";
-    END;
-    RETURN t & name & ":" & Target.TargetIntToDiagnosticText(a);
-  END TargetIntToDiagnosticText;
-
 PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
   VAR
     range        : Type.T;
@@ -590,14 +580,15 @@ PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
     n            : Node;
     b            : BOOLEAN;
     tmp          : Target.Int;
+    buf: ARRAY [0..TInt.Size] OF CHAR;
   BEGIN
     b := SetType.Split (p.tipe, range); <* ASSERT b *>
     EVAL Type.GetBounds (range, min_T, max_T);
     IF NOT TInt.ToInt (min_T, minT)
         OR NOT TInt.ToInt (max_T, maxT) THEN
-      Error.Msg ("set domain too large ("
-            & TargetIntToDiagnosticText("min", min_T)
-            & "," & TargetIntToDiagnosticText("max", max_T) & ")");
+      Error.Msg ("set domain too large (" &
+        Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(min_T, buf))) & ".." &
+        Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(max_T, buf))) & ")");
       minT := FIRST (INTEGER);
       maxT := LAST (INTEGER);
     END;
@@ -659,8 +650,10 @@ PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
 
 PROCEDURE EmitAssign (set: CG.Var;  index: INTEGER; 
                       READONLY value: Target.Int) =
+  VAR tmp := value;
   BEGIN
-    CG.Load_integer (Target.Integer.cg_type, value);
+    TInt.Chop (tmp, Target.Integer.bytes);
+    CG.Load_integer (Target.Integer.cg_type, tmp);
     CG.Store_int (Target.Integer.cg_type, set, index * Grain);
     <* ASSERT Grain = Target.Integer.size *>
   END EmitAssign;
@@ -689,6 +682,7 @@ PROCEDURE CompileSmall (p: P;  VAR info: Type.Info) =
     n            : Node;
     b            : BOOLEAN;
     tmp          : Target.Int;
+    buf: ARRAY [0..TInt.Size] OF CHAR;
   BEGIN
     Type.Compile (p.tipe);
     nWords  := info.size DIV Grain;
@@ -699,9 +693,9 @@ PROCEDURE CompileSmall (p: P;  VAR info: Type.Info) =
     EVAL Type.GetBounds (range, min_T, max_T);
     IF NOT TInt.ToInt (min_T, minT)
         OR NOT TInt.ToInt (max_T, maxT) THEN
-      Error.Msg ("set domain too large ("
-            & TargetIntToDiagnosticText("min", min_T)
-            & "," & TargetIntToDiagnosticText("max", max_T) & ")");
+      Error.Msg ("set domain too large (" &
+        Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(min_T, buf))) & ".." &
+        Text.FromChars (SUBARRAY(buf, 0, TInt.ToChars(max_T, buf))) & ")");
       minT := FIRST (INTEGER);
       maxT := LAST (INTEGER);
     END;
@@ -793,8 +787,10 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
       IF (w1 # curWord) THEN
         (* write the mask we've accumulated *)
         IF NOT TInt.EQ (curMask, TInt.Zero) THEN
+          tmp := curMask;
+          TInt.Chop (tmp, Target.Integer.bytes);
           CG.Init_int (offset + curWord*Target.Integer.pack,
-                        Target.Integer.size, curMask, is_const);
+                        Target.Integer.size, tmp, is_const);
         END;
         curWord := w1;
         curMask := TInt.Zero;
@@ -802,11 +798,14 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
       IF (w1 # w2) THEN
         (* write the full words [w1..w2-1] *)
         TWord.Or (curMask, left [b1], tmp);
+        TInt.Chop (tmp, Target.Integer.bytes);
         CG.Init_int (offset + w1 * Target.Integer.pack, Target.Integer.size,
                      tmp, is_const);
         FOR i := w1 + 1 TO w2 - 1 DO
+          tmp := full;
+          TInt.Chop (tmp, Target.Integer.bytes);
           CG.Init_int (offset + i * Target.Integer.pack, Target.Integer.size,
-                       full, is_const);
+                       tmp, is_const);
         END;
         curWord := w2;
         curMask := right [b2];
@@ -819,19 +818,23 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
 
     (* write the last mask *)
     IF NOT TInt.EQ (curMask, TInt.Zero) THEN
+      tmp := curMask;
+      TInt.Chop (tmp, Target.Integer.bytes);
       CG.Init_int (offset + curWord * Target.Integer.pack,
-                   Target.Integer.size, curMask, is_const);
+                   Target.Integer.size, tmp, is_const);
     END;
   END GenLiteral;
 
 PROCEDURE Init () =
-  VAR Zero := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
     Grain := MAX (Target.Integer.size, Target.Set_grain);
-    TWord.Not (Zero, full);
+    TWord.Not (TInt.Zero, full);
+    TWord.And (full, Target.Word.max, full);
     FOR i := 0 TO Grain - 1 DO
       TWord.Shift (full, i + 1 - Grain, right [i]);
+      TWord.And (right[i], Target.Word.max, right[i]);
       TWord.Shift (full, i, left [i]);
+      TWord.And (left[i], Target.Word.max, left[i]);
     END;
   END Init;
 
