@@ -11,7 +11,7 @@ INTERFACE Stackx86;
 FROM M3CG IMPORT Type, MType, ZType, IType, Sign, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-IMPORT M3x86Rep, Codex86, Wrx86, Target;
+IMPORT M3x86Rep, Codex86, Wrx86, M3BackInt AS Target;
 FROM M3x86Rep IMPORT Operand, OLoc, MVar, Regno, Force, RegSet, FlToInt;
 FROM M3x86Rep IMPORT x86Proc, x86Var, OperandPart;
 

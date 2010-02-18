@@ -6,10 +6,10 @@
 (* Last Modified On Fri Nov 19 09:32:56 PST 1993 By kalsow     *)
 (*      Modified On Thu May 20 08:46:32 PDT 1993 By muller     *)
 
-MODULE M3BackWord;
+MODULE M3BackWord; (* also known as TWord *)
 
-IMPORT Word, TInt;
-FROM Target IMPORT Int, IByte, IBytes;
+IMPORT Word, M3BackInt, M3BackInt AS TInt;
+FROM M3BackInt IMPORT Int, IByte, IBytes;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;

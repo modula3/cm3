@@ -6,7 +6,7 @@
 (* Last Modified On Thu Mar 10 13:42:53 PST 1994 By kalsow     *)
 (*      Modified On Thu May 20 08:20:38 PDT 1993 By muller     *)
 
-INTERFACE M3BackInt;
+INTERFACE M3BackInt; (* also known as TInt *)
 
 (*  Modula-3 target description
 
@@ -18,7 +18,16 @@ INTERFACE M3BackInt;
     otherwise they return FALSE.
 *)
 
-FROM Target IMPORT Int, IBytes;
+IMPORT TInt, Target;
+
+TYPE
+  Int = (* OPAQUE *) RECORD
+    n: CARDINAL;          (* only bytes [0..n-1] contain valid bits *)
+    x := IBytes{0,..};    (* default is Zero *)
+  END;
+  TargetInt = Target.Int;
+  IBytes = ARRAY [0..7] OF IByte;
+  IByte = BITS 8 FOR [0..16_ff];
 
 CONST
   Zero      = Int{NUMBER (IBytes), IBytes{ 0,0,..}};
@@ -107,5 +116,39 @@ PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ARRAY OF [0..255]): INTEGER;
 (* converts 'i' to the shortest sequence of bytes in little-endian order
    which when sign-extended equal 'i'.  Returns the number of
    significant bytes in the result.  Returns -1 if 'buf' is too short. *)
+
+PROCEDURE FromTargetInt (READONLY i: Target.Int): Int;
+
+TYPE
+  Int_type = RECORD (* Like Target.Int_type *)
+    size    : CARDINAL;  (* bit size *)
+    bytes   : CARDINAL;  (* byte size *)
+    min     : Int;       (* minimum value of this type *)
+    max     : Int;       (* maximum value of this type *)
+  END;
+
+VAR (* CONST *)
+  Integer: Int_type;
+  Int8: Int_type;
+  Int16: Int_type;
+  Int32: Int_type;
+  Int64: Int_type;
+  Word8: Int_type;
+  Word16: Int_type;
+  Word32: Int_type;
+  Word64: Int_type;
+
+PROCEDURE Init();
+
+(* renaming for diff minimization *)
+CONST TypeNames = Target.TypeNames;
+CONST FindConvention = Target.FindConvention;
+CONST IntToTargetInt = TInt.FromInt;
+CONST TargetIntZero = TInt.Zero;
+TYPE Float = Target.Float;
+TYPE Precision = Target.Precision;
+VAR Extended: Target.Float_type;
+CONST FloatType = Target.FloatType;
+PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT;
 
 END M3BackInt.

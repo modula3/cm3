@@ -9,7 +9,7 @@
 MODULE Wrx86;
 
 IMPORT Wr, Thread, Text;
-IMPORT M3Buf, M3ID, M3CG, Target, TInt AS TargetInt, TFloat;
+IMPORT M3Buf, M3ID, M3CG, M3BackInt, M3BackInt AS Target, TFloat;
 
 FROM M3CG IMPORT Name, TypeUID;
 FROM M3CG IMPORT Var, Proc, Label, No_label;
@@ -153,8 +153,8 @@ PROCEDURE Int (t: T;  i: INTEGER) =
 PROCEDURE TInt (t: T;  READONLY i: Target.Int) =
   VAR
     buf : ARRAY [0..BITSIZE (Target.Integer)] OF CHAR;
-    len := TargetInt.ToChars (i, buf);
-  BEGIN
+    len := M3BackInt.ToChars (i, buf);
+ BEGIN
     OutC (t, ' ');
     OutS (t, SUBARRAY (buf, 0, len));
     OutC (t, ' ');

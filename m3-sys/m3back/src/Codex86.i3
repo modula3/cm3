@@ -11,7 +11,7 @@ INTERFACE Codex86;
 IMPORT M3CG, M3ObjFile, TFloat;
 FROM M3CG IMPORT MType, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
-IMPORT M3x86Rep, Wrx86, Target;
+IMPORT M3x86Rep, Wrx86, M3BackInt AS Target;
 FROM M3x86Rep IMPORT Operand, NRegs, MVar, x86Var, x86Proc, Regno;
 
 TYPE T <: Public;
