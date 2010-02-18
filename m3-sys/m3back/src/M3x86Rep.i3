@@ -146,16 +146,17 @@ PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Opera
 PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize;
 PROCEDURE GetTypeSize(type: Type): OperandSize;
 
-CONST TZero = TInt.Zero;
+CONST UnsignedType = ARRAY IType OF IType {
+  Type.Word32, Type.Word32,
+  Type.Word64, Type.Word64 };
 
-CONST UnsignedType = ARRAY IType OF IType { Type.Word32, Type.Word32,
-                                            Type.Word64, Type.Word64 };
+CONST MaximumShift = ARRAY IType OF Target.Int {
+  Target.Int{31,0,..}, Target.Int{31,0,..},
+  Target.Int{63,0,..}, Target.Int{63,0,..}};
 
-CONST MaximumShift = ARRAY IType OF Target.Int { TInt.ThirtyOne, TInt.ThirtyOne,
-                                                 TInt.SixtyThree, TInt.SixtyThree };
-
-CONST MinimumShift = ARRAY IType OF Target.Int { TInt.MThirtyOne, TInt.MThirtyOne,
-                                                 TInt.MSixtyThree, TInt.MSixtyThree };
+CONST MinimumShift = ARRAY IType OF Target.Int {
+  Target.Int{31,0,..}, Target.Int{31,0,..},
+  Target.Int{63,0,..}, Target.Int{63,0,..}};
 
 CONST BitCountMask = MaximumShift;
  

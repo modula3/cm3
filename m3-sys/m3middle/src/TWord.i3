@@ -10,8 +10,8 @@ INTERFACE TWord;
 
 (*  Modula-3 target description
 
-    This interface provides simulations of the target machine's
-    unsigned integer operations.
+    This interface provides simulations of unsigned integer operations, at the
+    maximum precision supported by any target.
 
     Unless otherwise specified, the arithmetic operations defined
     below return TRUE if they succeed in producing a new target value,
@@ -20,7 +20,9 @@ INTERFACE TWord;
 
 FROM Target IMPORT Int;
 
-PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16];  n: CARDINAL;
+CONST Size = BITSIZE(Int);
+
+PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16];
                VAR i: Int): BOOLEAN;
 (* converts the string of characters in 'chars' representing a base 'base'
    number to an integer value in 'i' *)
@@ -43,12 +45,11 @@ PROCEDURE Mod (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
 PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int);
 (* returns 'q = x DIV y', and 'r = x MOD y', but assumes that 'y # 0' *)
 
-PROCEDURE LT (READONLY a, b: Int): BOOLEAN; (* a < b *)
-PROCEDURE LE (READONLY a, b: Int): BOOLEAN; (* a <= b *)
-PROCEDURE EQ (READONLY a, b: Int): BOOLEAN; (* a = b *)
-PROCEDURE NE (READONLY a, b: Int): BOOLEAN; (* a # b *)
-PROCEDURE GE (READONLY a, b: Int): BOOLEAN; (* a >= b *)
-PROCEDURE GT (READONLY a, b: Int): BOOLEAN; (* a > b *)
+PROCEDURE LT (READONLY a, b: Int): BOOLEAN;
+(* returns 'Word.LT (a, b)' *)
+
+PROCEDURE LE (READONLY a, b: Int): BOOLEAN;
+(* returns 'Word.LE (a, b)' *)
 
 PROCEDURE And (READONLY a, b: Int;  VAR i: Int);
 (* returns 'Word.And (a, b)' *)
@@ -62,22 +63,22 @@ PROCEDURE Xor (READONLY a, b: Int;  VAR i: Int);
 PROCEDURE Not (READONLY a: Int;  VAR i: Int);
 (* returns 'Word.Not (a)' *)
 
-PROCEDURE Shift (READONLY x: Int;  n: INTEGER;  VAR r: Int);
-(* returns 'Word.Shift (x, n)' *)
+PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int);
+(* returns 'Word.Shift (a, b)' *)
 
-PROCEDURE LeftShift (READONLY x: Int;  n: CARDINAL;  VAR r: Int);
-(* returns 'Word.LeftShift (x, n)' *)
+PROCEDURE LeftShift (READONLY a: Int;  b: [0..Size-1];  VAR r: Int);
+(* returns 'Word.LeftShift (a, b)' *)
 
-PROCEDURE RightShift (READONLY x: Int;  n: CARDINAL;  VAR r: Int);
-(* returns 'Word.RightShift (x, n)' *)
+PROCEDURE RightShift (READONLY a: Int;  b: [0..Size-1];  VAR r: Int);
+(* returns 'Word.RightShift (a, b)' *)
 
-PROCEDURE Rotate (READONLY x: Int;  n: INTEGER;  VAR r: Int);
-(* returns 'Word.Rotate (x, n)' *)
+PROCEDURE Rotate (READONLY a: Int;  b: INTEGER;  n: CARDINAL;  VAR r: Int);
+(* returns 'Word.Rotate (a, b)' *)
 
-PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN;
-(* returns 'Word.Extract (x, i, n)' *)
+PROCEDURE Extract (READONLY a: Int;  b, c: CARDINAL;  VAR r: Int): BOOLEAN;
+(* returns 'Word.Extract (a, b, c)' *)
 
-PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN;
-(* returns 'Word.Insert (x, y, i, n)' *)
+PROCEDURE Insert (READONLY a, b: Int;  c, d: CARDINAL;  VAR r: Int): BOOLEAN;
+(* returns 'Word.Insert (a, b, c, d)' *)
 
 END TWord.

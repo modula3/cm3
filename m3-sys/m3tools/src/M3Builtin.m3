@@ -111,7 +111,7 @@ PROCEDURE Eval (p: Proc;  READONLY args: ARRAY OF M3Const.T;
               val.type  := M3Type.Integer;
               val.class := M3Const.Class.Integer;
               MustBe (info.size >= 0);
-              MustBe (TInt.FromInt (info.size, Target.Integer.bytes, val.int));
+              MustBe (TInt.FromInt (info.size, val.int));
             END;
           ELSE
             NotImpl ("BYTESIZE(expr)");

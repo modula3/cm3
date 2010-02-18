@@ -172,7 +172,10 @@ PROCEDURE GetBounds (p: P;  VAR min, max: Target.Int) =
     EVAL Type.GetBounds (p.type, min, max);
     Expr.GetBounds (p.a, min_a, max_a);
     Expr.GetBounds (p.b, min_b, max_b);
-    IF TInt.Add (min_a, min_b, smin) AND TInt.Add (max_a, max_b, smax) THEN
+    IF TInt.Add (min_a, min_b, smin)
+      AND NOT TInt.LT (smin, min) AND NOT TInt.LT (max, smin)
+      AND TInt.Add (max_a, max_b, smax)
+      AND NOT TInt.LT (smax, min) AND NOT TInt.LT (max, smax) THEN
       IF TInt.LT (min, smin) THEN min := smin END;
       IF TInt.LT (smax, max) THEN max := smax END;
     END;

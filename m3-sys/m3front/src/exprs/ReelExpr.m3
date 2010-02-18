@@ -9,7 +9,7 @@
 MODULE ReelExpr;
 
 IMPORT M3, CG, Expr, ExprRep, Type, Target, TInt, TFloat;
-IMPORT M3Buf, Int, LInt, Reel, LReel, EReel, IntegerExpr;
+IMPORT M3Buf, Reel, LReel, EReel, IntegerExpr;
 
 TYPE
   P = Expr.T OBJECT
@@ -172,51 +172,47 @@ PROCEDURE Abs (a: Expr.T;  VAR c: Expr.T): BOOLEAN =
   END Abs;
 
 PROCEDURE Floor (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;  n: CARDINAL;
+  VAR x: Target.Float;  min, max, res: Target.Int;
   BEGIN
-    IF    t = Int.T  THEN n := Target.Integer.bytes;
-    ELSIF t = LInt.T THEN n := Target.Longint.bytes;
-    ELSE RETURN FALSE END;
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TInt.FromInt (TFloat.Floor (x), n, res) THEN RETURN FALSE END;
+    IF NOT TInt.FromInt (TFloat.Floor (x), res) THEN RETURN FALSE END;
+    IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
+    IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
-    RETURN c # NIL;
+    RETURN TRUE;
   END Floor;
 
 PROCEDURE Ceiling (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;  n: CARDINAL;
+  VAR x: Target.Float;  min, max, res: Target.Int;
   BEGIN
-    IF    t = Int.T  THEN n := Target.Integer.bytes;
-    ELSIF t = LInt.T THEN n := Target.Longint.bytes;
-    ELSE RETURN FALSE END;
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TInt.FromInt (TFloat.Ceiling (x), n, res) THEN RETURN FALSE END;
+    IF NOT TInt.FromInt (TFloat.Ceiling (x), res) THEN RETURN FALSE END;
+    IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
+    IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
-    RETURN c # NIL;
+    RETURN TRUE;
   END Ceiling;
 
 PROCEDURE Trunc (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;  n: CARDINAL;
+  VAR x: Target.Float;  min, max, res: Target.Int;
   BEGIN
-    IF    t = Int.T  THEN n := Target.Integer.bytes;
-    ELSIF t = LInt.T THEN n := Target.Longint.bytes;
-    ELSE RETURN FALSE END;
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TInt.FromInt (TFloat.Trunc (x), n, res) THEN RETURN FALSE END;
+    IF NOT TInt.FromInt (TFloat.Trunc (x), res) THEN RETURN FALSE END;
+    IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
+    IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
-    RETURN c # NIL;
+    RETURN TRUE;
   END Trunc;
 
 PROCEDURE Round (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =
-  VAR x: Target.Float;  res: Target.Int;  n: CARDINAL;
+  VAR x: Target.Float;  min, max, res: Target.Int;
   BEGIN
-    IF    t = Int.T  THEN n := Target.Integer.bytes;
-    ELSIF t = LInt.T THEN n := Target.Longint.bytes;
-    ELSE RETURN FALSE END;
     IF NOT Split (a, x) THEN RETURN FALSE END;
-    IF NOT TInt.FromInt (TFloat.Round (x), n, res) THEN RETURN FALSE END;
+    IF NOT TInt.FromInt (TFloat.Round (x), res) THEN RETURN FALSE END;
+    IF NOT Type.GetBounds (t, min, max) THEN RETURN FALSE END;
+    IF TInt.LT (res, min) OR TInt.LT (max, res) THEN RETURN FALSE END;
     c := IntegerExpr.New (t, res);
-    RETURN c # NIL;
+    RETURN TRUE;
   END Round;
 
 PROCEDURE Float (a: Expr.T;  t: Type.T;  VAR c: Expr.T): BOOLEAN =

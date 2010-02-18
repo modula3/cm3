@@ -42,8 +42,15 @@ PROCEDURE GetArgs (args: Expr.List;  VAR w0, w1: Target.Int): BOOLEAN =
   BEGIN
     e0 := Expr.ConstValue (args[0]);
     e1 := Expr.ConstValue (args[1]);
-    RETURN (e0 # NIL) AND IntegerExpr.Split (e0, w0, t) AND 
-           (e1 # NIL) AND IntegerExpr.Split (e1, w1, t);
+    IF    (e0 # NIL) AND IntegerExpr.Split (e0, w0, t)
+      AND (e1 # NIL) AND IntegerExpr.Split (e1, w1, t)
+    THEN
+      TWord.And (w0, Word_types[rep].max, w0);
+      TWord.And (w1, Word_types[rep].max, w1);
+      RETURN TRUE;
+    ELSE
+      RETURN FALSE;
+    END;
   END GetArgs;
 
 PROCEDURE Initialize (r: INTEGER) =

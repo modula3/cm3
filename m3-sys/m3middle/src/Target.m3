@@ -8,25 +8,10 @@
 
 MODULE Target;
 
-IMPORT Text, TargetMap, M3RT, TextUtils, Fmt;
+IMPORT Text, TargetMap, M3RT, TextUtils;
 
 VAR (*CONST*)
   CCs : REF ARRAY OF CallingConvention;
-
-PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT =
-  VAR t: TEXT;
-  BEGIN
-    t := "n:";
-    t := t & Fmt.Unsigned(a.n);
-    t := t & ",x:";
-    FOR i := 0 TO 7 DO
-      t := t & Fmt.Unsigned(a.x[i]);
-      IF i # 7 THEN
-        t := t & ",";
-      END;
-    END;
-    RETURN t;
-  END TargetIntToDiagnosticText;
 
 PROCEDURE Init64 () =
   BEGIN
@@ -82,50 +67,50 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Int8.cg_type     := CGType.Int8;
     Int8.size        := 8;
     Int8.align       := 8;
-    Int8.min         := Int{NUMBER(IBytes), IBytes{16_80,FF,..}};
-    Int8.max         := Int{NUMBER(IBytes), IBytes{16_7f,00,..}};
+    Int8.min         := Int{16_80,FF,..};
+    Int8.max         := Int{16_7f,00,..};
 
     Int16.cg_type    := CGType.Int16;
     Int16.size       := 16;
     Int16.align      := 16;
-    Int16.min        := Int{NUMBER(IBytes), IBytes{00,16_80,FF,..}};
-    Int16.max        := Int{NUMBER(IBytes), IBytes{FF,16_7f,00,..}};
+    Int16.min        := Int{00,16_80,FF,..};
+    Int16.max        := Int{FF,16_7f,00,..};
 
     Int32.cg_type    := CGType.Int32;
     Int32.size       := 32;
     Int32.align      := 32;
-    Int32.min        := Int{NUMBER(IBytes), IBytes{00,00,00,16_80,FF,..}};
-    Int32.max        := Int{NUMBER(IBytes), IBytes{FF,FF,FF,16_7f,00,..}};
+    Int32.min        := Int{00,00,00,16_80,FF,..};
+    Int32.max        := Int{FF,FF,FF,16_7f,00,..};
 
     Int64.cg_type    := CGType.Int64;
     Int64.size       := 64;
     Int64.align      := 64;
-    Int64.min        := Int{NUMBER(IBytes), IBytes{00,00,00,00,00,00,00,16_80}};
-    Int64.max        := Int{NUMBER(IBytes), IBytes{FF,FF,FF,FF,FF,FF,FF,16_7f}};
+    Int64.min        := Int{00,00,00,00,00,00,00,16_80};
+    Int64.max        := Int{FF,FF,FF,FF,FF,FF,FF,16_7f};
 
     Word8.cg_type    := CGType.Word8;
     Word8.size       := 8;
     Word8.align      := 8;
-    Word8.min        := Int{NUMBER(IBytes), IBytes{00,00,..}};
-    Word8.max        := Int{NUMBER(IBytes), IBytes{FF,00,..}};
+    Word8.min        := Int{00,00,..};
+    Word8.max        := Int{FF,00,..};
 
     Word16.cg_type   := CGType.Word16;
     Word16.size      := 16;
     Word16.align     := 16;
-    Word16.min       := Int{NUMBER(IBytes), IBytes{00,00,00,..}};
-    Word16.max       := Int{NUMBER(IBytes), IBytes{FF,FF,00,..}};
+    Word16.min       := Int{00,00,00,..};
+    Word16.max       := Int{FF,FF,00,..};
 
     Word32.cg_type   := CGType.Word32;
     Word32.size      := 32;
     Word32.align     := 32;
-    Word32.min       := Int{NUMBER(IBytes), IBytes{00,00,00,00,00,..}};
-    Word32.max       := Int{NUMBER(IBytes), IBytes{FF,FF,FF,FF,00,..}};
+    Word32.min       := Int{00,00,00,00,00,..};
+    Word32.max       := Int{FF,FF,FF,FF,00,..};
 
     Word64.cg_type   := CGType.Word64;
     Word64.size      := 64;
     Word64.align     := 64;
-    Word64.min       := Int{NUMBER(IBytes), IBytes{00,00,00,00,00,00,00,00}};
-    Word64.max       := Int{NUMBER(IBytes), IBytes{FF,FF,FF,FF,FF,FF,FF,FF}};
+    Word64.min       := Int{00,00,00,00,00,00,00,00};
+    Word64.max       := Int{FF,FF,FF,FF,FF,FF,FF,FF};
 
     Integer          := Int32;  (* default for the 32-bit platforms *)
     Longint          := Int64;
@@ -137,8 +122,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Void.cg_type     := CGType.Void;
     Void.size        := 0;
     Void.align       := Byte;
-    Void.min         := Int{0};
-    Void.max         := Int{0};
+    Void.min         := Int{0,..};
+    Void.max         := Int{0,..};
 
     Real.cg_type     := CGType.Reel;
     Real.pre         := Precision.Short;

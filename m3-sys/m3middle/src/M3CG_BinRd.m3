@@ -407,20 +407,18 @@ PROCEDURE Scan_Tint (VAR s: State): Target.Int =
     | M3CG_Binary.Int8  =>  n_bytes := 8;  sign := +1;
     | M3CG_Binary.NInt8 =>  n_bytes := 8;  sign := -1;
     ELSE
-      ok := TInt.FromInt (i, NUMBER (val.x), val);  <*ASSERT ok*>
+      ok := TInt.FromInt (i, val);  <*ASSERT ok*>
       RETURN val;
     END;
 
     val := TInt.Zero;  shift := 0;
     FOR i := 0 TO n_bytes-1 DO
-      ok := TInt.FromInt (GetByte (s), NUMBER (byte.x), byte);  <*ASSERT ok*>
+      ok := TInt.FromInt (GetByte (s), byte);  <*ASSERT ok*>
       TWord.Shift (byte, shift, byte);
       TWord.Or (val, byte, val);
       INC (shift, 8);
     END;
-    IF (sign < 0) THEN
-      TWord.Subtract (TInt.Zero, val, val);
-    END;
+    IF (sign < 0) THEN TWord.Subtract (TInt.Zero, val, val); END;
 
     RETURN val;
   END Scan_Tint;

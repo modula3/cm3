@@ -5,7 +5,7 @@
 GENERIC MODULE Times (Rep);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure, Type, ProcType;
-IMPORT IntegerExpr, Value, Formal, Target, TWord;
+IMPORT IntegerExpr, Value, Formal, Target, TWord, TInt;
 FROM Rep IMPORT T;
 FROM TargetMap IMPORT Word_types;
 
@@ -31,6 +31,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   BEGIN
     IF GetArgs (ce.args, w0, w1) THEN
       TWord.Multiply (w0, w1, result);
+      TInt.Chop (result, Word_types[rep].bytes);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;
@@ -41,8 +42,15 @@ PROCEDURE GetArgs (args: Expr.List;  VAR w0, w1: Target.Int): BOOLEAN =
   BEGIN
     e0 := Expr.ConstValue (args[0]);
     e1 := Expr.ConstValue (args[1]);
-    RETURN (e0 # NIL) AND IntegerExpr.Split (e0, w0, t) AND 
-           (e1 # NIL) AND IntegerExpr.Split (e1, w1, t);
+    IF    (e0 # NIL) AND IntegerExpr.Split (e0, w0, t)
+      AND (e1 # NIL) AND IntegerExpr.Split (e1, w1, t)
+    THEN
+      TWord.And (w0, Word_types[rep].max, w0);
+      TWord.And (w1, Word_types[rep].max, w1);
+      RETURN TRUE;
+    ELSE
+      RETURN FALSE;
+    END;
   END GetArgs;
 
 PROCEDURE Initialize (r: INTEGER) =
