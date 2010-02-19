@@ -128,10 +128,10 @@ enum m3_tree_index
   /* 14 */ M3TI_MEMCPY,
   /* 15 */ M3TI_MEMMOVE,
   /* 16 */ M3TI_MEMSET,
-  /* 17 */ M3TI_DIV,
-  /* 18 */ M3TI_DIVL,
-  /* 19 */ M3TI_MOD,
-  /* 1A */ M3TI_MODL,
+  /* 17 */ M3TI_MEMCMP,
+  /* 18 */ /* not used */
+  /* 19 */ /* not used */
+  /* 1A */ /* not used */
   /* 1B */ M3TI_SET_UNION,
   /* 1C */ M3TI_SET_DIFF,
   /* 1D */ M3TI_SET_INTER,
@@ -191,12 +191,11 @@ static GTY (()) tree m3_global_trees[M3TI_MAX];
 #define memcpy_proc	m3_global_trees[M3TI_MEMCPY]
 #define memmove_proc	m3_global_trees[M3TI_MEMMOVE]
 #define memset_proc	m3_global_trees[M3TI_MEMSET]
+#define memcmp_proc m3_global_trees[M3TI_MEMCMP]
 #define set_union_proc	m3_global_trees[M3TI_SET_UNION]
 #define set_diff_proc	m3_global_trees[M3TI_SET_DIFF]
 #define set_inter_proc	m3_global_trees[M3TI_SET_INTER]
 #define set_sdiff_proc	m3_global_trees[M3TI_SET_SDIFF]
-#define set_eq_proc	m3_global_trees[M3TI_SET_EQ]
-#define set_ne_proc	m3_global_trees[M3TI_SET_NE]
 #define set_gt_proc	m3_global_trees[M3TI_SET_GT]
 #define set_ge_proc	m3_global_trees[M3TI_SET_GE]
 #define set_lt_proc	m3_global_trees[M3TI_SET_LT]
@@ -1222,6 +1221,7 @@ m3_init_decl_processing (void)
   memcpy_proc = built_in_decls[BUILT_IN_MEMCPY];
   memmove_proc = built_in_decls[BUILT_IN_MEMMOVE];
   memset_proc = built_in_decls[BUILT_IN_MEMSET];
+  memcmp_proc = built_in_decls[BUILT_IN_MEMCMP];
 #endif
 
   t = build_function_type_list (t_void, NULL_TREE);
@@ -1241,10 +1241,6 @@ m3_init_decl_processing (void)
   t = build_function_type_list (t_int, NULL_TREE);
   set_member_proc
     = builtin_function ("set_member", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
-  set_eq_proc
-    = builtin_function ("set_eq", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
-  set_ne_proc
-    = builtin_function ("set_ne", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_gt_proc
     = builtin_function ("set_gt", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_ge_proc
@@ -2061,10 +2057,11 @@ m3_pop_param (tree t)
 
 #ifdef GCC42
 
-static void
+static tree
 m3_call_direct (tree p, tree t)
 {
   tree call;
+  tree result_call = NULL;
 
   TREE_USED (p) = 1;
   call = fold_build3 (CALL_EXPR, t, proc_addr (p), CALL_TOP_ARG (),
@@ -2074,8 +2071,10 @@ m3_call_direct (tree p, tree t)
   } else {
     TREE_SIDE_EFFECTS (call) = 1;
     EXPR_PUSH (call);
+    result_call = call;
   }
   CALL_POP ();
+  return result_call;
 }
 
 static void
@@ -2114,10 +2113,11 @@ m3_volatilize_decl (tree decl)
   }
 }
 
-static void
+static tree
 m3_call_direct (tree p, tree t)
 {
   tree call;
+  tree result_call = NULL;
   tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
   int flags;
   if (slot) p = *slot;
@@ -2133,6 +2133,7 @@ m3_call_direct (tree p, tree t)
   } else {
     TREE_SIDE_EFFECTS (call) = 1;
     EXPR_PUSH (call);
+    result_call = call;
   }
   CALL_POP ();
   flags = call_expr_flags (call);
@@ -2152,6 +2153,7 @@ m3_call_direct (tree p, tree t)
       m3_volatilize_decl(decl);
     }
   }
+  return result_call;
 }
 
 static void
@@ -2235,19 +2237,22 @@ m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
   EXPR_POP ();
 }
 
-static void
-setop (tree p, int n, int q)
+static tree
+setop (tree p, int n, int q, bool eq_or_ne)
 {
-  tree t;
-
   m3_start_call ();
-  EXPR_PUSH (size_int (n));
-  m3_pop_param (t_int);
+  if (!eq_or_ne) {
+    EXPR_PUSH (size_int (n));
+    m3_pop_param (t_int);
+  }
   while (q--) {
     m3_pop_param (t_addr);
   }
-  t = TREE_TYPE (TREE_TYPE (p));
-  m3_call_direct (p, t);
+  if (eq_or_ne) {
+    EXPR_PUSH (size_int (n));
+    m3_pop_param (t_int);
+  }
+  return m3_call_direct (p, TREE_TYPE (TREE_TYPE (p)));
 }
 
 static void
@@ -4092,7 +4097,7 @@ m3cg_set_union (void)
 {
   BYTESIZE (n);
 
-  setop (set_union_proc, n, 3);
+  setop (set_union_proc, n, 3, false);
 }
 
 static void
@@ -4100,7 +4105,7 @@ m3cg_set_difference (void)
 {
   BYTESIZE (n);
 
-  setop (set_diff_proc, n, 3);
+  setop (set_diff_proc, n, 3, false);
 }
 
 static void
@@ -4108,7 +4113,7 @@ m3cg_set_intersection (void)
 {
   BYTESIZE (n);
 
-  setop (set_inter_proc, n, 3);
+  setop (set_inter_proc, n, 3, false);
 }
 
 static void
@@ -4116,7 +4121,7 @@ m3cg_set_sym_difference (void)
 {
   BYTESIZE (n);
 
-  setop (set_sdiff_proc, n, 3);
+  setop (set_sdiff_proc, n, 3, false);
 }
 
 static void
@@ -4136,11 +4141,23 @@ m3cg_set_compare (tree proc)
   MTYPE    (t);
 
   gcc_assert (t == t_int);
-  setop (proc, n, 2);
+  setop (proc, n, 2, false);
 }
 
-static void m3cg_set_eq (void) { m3cg_set_compare (set_eq_proc); }
-static void m3cg_set_ne (void) { m3cg_set_compare (set_ne_proc); }
+static void
+m3cg_set_eq_or_ne (enum tree_code code)
+{
+  BYTESIZE (n);
+  MTYPE    (t);
+
+  gcc_assert (t == t_int);
+  gcc_assert ((n % 32) == 0);
+  gcc_assert (n >= 8);
+  EXPR_PUSH(m3_build2(code, t_int, setop(memcmp_proc, n / 8, 2, true), v_zero));
+}
+
+static void m3cg_set_eq (void) { m3cg_set_eq_or_ne(EQ_EXPR); }
+static void m3cg_set_ne (void) { m3cg_set_eq_or_ne(NE_EXPR); }
 static void m3cg_set_gt (void) { m3cg_set_compare (set_gt_proc); }
 static void m3cg_set_ge (void) { m3cg_set_compare (set_ge_proc); }
 static void m3cg_set_lt (void) { m3cg_set_compare (set_lt_proc); }
