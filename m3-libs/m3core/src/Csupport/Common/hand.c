@@ -393,30 +393,6 @@ void __stdcall set_sym_difference
   }
 }
 
-ulong __stdcall set_eq
-    ANSI((              ulong n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
-/* The integrated back end calls memcmp directly; the gcc
-   backend does not. This could be put under #ifndef, but which?
-   _WIN32 would break I386_MINGWIN. _MSC_VER would break
-   Interix+gcc backend+Visual C+. Definitely consider
-   changing the gcc backend though. */
-{
-  return (memcmp(a, b, n_bits / 8) == 0);
-}
-
-ulong __stdcall set_ne
-    ANSI((              ulong n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
-/* The integrated back end calls memcmp directly; the gcc
-   backend does not. This could be put under #ifndef, but which?
-   _WIN32 would break I386_MINGWIN. _MSC_VER would break
-   Interix+gcc backend+Visual C+. Definitely consider
-   changing the gcc backend though. */
-{
-  return (memcmp(a, b, n_bits / 8) != 0);
-}
-
 ulong __stdcall set_ge
     ANSI((              ulong n_bits, ulong* b, ulong* a))
       KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
