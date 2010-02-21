@@ -18,14 +18,13 @@ INTERFACE M3BackInt; (* also known as TInt *)
     otherwise they return FALSE.
 *)
 
-IMPORT TInt, Target;
+IMPORT Target;
 
 TYPE
   Int = (* OPAQUE *) RECORD
     n: CARDINAL;          (* only bytes [0..n-1] contain valid bits *)
     x := IBytes{0,..};    (* default is Zero *)
   END;
-  TargetInt = Target.Int;
   IBytes = ARRAY [0..7] OF IByte;
   IByte = BITS 8 FOR [0..16_ff];
 
@@ -132,15 +131,6 @@ VAR (* CONST *)
 
 PROCEDURE Init();
 
-(* renaming for diff minimization *)
-CONST TypeNames = Target.TypeNames;
-CONST FindConvention = Target.FindConvention;
-CONST IntToTargetInt = TInt.FromInt;
-CONST TargetIntZero = TInt.Zero;
-TYPE Float = Target.Float;
-TYPE Precision = Target.Precision;
-VAR Extended: Target.Float_type;
-CONST FloatType = Target.FloatType;
 PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT;
 
 END M3BackInt.

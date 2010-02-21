@@ -8,8 +8,7 @@
 
 MODULE M3BackInt; (* also known as TInt *)
 
-IMPORT Target, Word, Text, Fmt;
-IMPORT M3BackWord AS TWord;
+IMPORT Target, Word, Text, Fmt, M3BackWord;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;
@@ -209,7 +208,7 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
 
     (* check for the only possible overflow:  FIRST DIV -1 *)
     IF num_neg AND den_neg THEN
-      TWord.Shift (MOne, n * BITSIZE (IByte) - 1, min);
+      M3BackWord.Shift (MOne, n * BITSIZE (IByte) - 1, min);
       IF EQ (a, min) AND EQ (b, MOne) THEN
         RETURN FALSE;
       END;
@@ -220,7 +219,7 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
     IF den_neg THEN  EVAL Subtract (Zero, b, den);  END;
 
     (* compute the unsigned quotient and remainder *)
-    TWord.DivMod (num, den, q, r);
+    M3BackWord.DivMod (num, den, q, r);
 
     (* fix-up the results to match the signs (see note below) *)
     IF EQ (r, Zero) THEN
@@ -338,7 +337,7 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
 
       (* get rid of negative numbers *)
       IF And (r.x[n-1], SignMask) # 0 THEN
-        TWord.Shift (MOne, n * BITSIZE (IByte) - 1, min);
+        M3BackWord.Shift (MOne, n * BITSIZE (IByte) - 1, min);
         IF EQ (r, min) THEN
           (* 2's complement makes FIRST a special case *)
           bump := TRUE;
@@ -350,7 +349,7 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
 
       (* convert the bulk of the digits *)
       WHILE LT (Zero, rr) DO
-        TWord.DivMod (rr, Ten, quo, rem);
+        M3BackWord.DivMod (rr, Ten, quo, rem);
         result [nDigits] := Digits [rem.x [0]];
         rr := quo;
         INC (nDigits);
@@ -432,7 +431,6 @@ PROCEDURE Init() =
     InitInt(Word32, Target.Word32);
     InitInt(Word64, Target.Word64);
     InitInt(Integer, Target.Integer);
-    Extended := Target.Extended;
   END Init;
 
 PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT =
