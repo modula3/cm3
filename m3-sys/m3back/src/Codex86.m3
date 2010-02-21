@@ -9,7 +9,7 @@
 MODULE Codex86;
 
 IMPORT Fmt, TargetMap, M3x86Rep, M3ID, M3CG_Ops, Word, M3ObjFile, Wrx86;
-IMPORT M3BackInt AS Target, M3BackInt AS TInt, M3BackWord AS TWord;
+IMPORT M3BackInt, M3BackWord, Target, TInt;
 
 FROM TargetMap IMPORT CG_Bytes;
 
@@ -377,16 +377,16 @@ PROCEDURE noargOp (t: T; op: Op) =
     writecode(t, ins);
   END noargOp;
 
-PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
+PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.Int) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
-    IF (NOT TInt.ToInt(imm, ins.imm)) AND (NOT TWord.LE(imm, Target.Word32.max)) THEN
-      t.Err("immOp1: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));
+    IF (NOT M3BackInt.ToInt(imm, ins.imm)) AND (NOT M3BackWord.LE(imm, M3BackInt.Word32.max)) THEN
+      t.Err("immOp1: unable to convert immediate to INTEGER:" & M3BackInt.TargetIntToDiagnosticText(imm));
     END;
 
-    IF TInt.GE(imm, Target.Int8.min) AND TInt.LE(imm, Target.Int8.max) THEN
+    IF M3BackInt.GE(imm, M3BackInt.Int8.min) AND M3BackInt.LE(imm, M3BackInt.Int8.max) THEN
       ins.imsize := 1;
     ELSE
       ins.imsize := 4;
@@ -414,7 +414,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
         
           (* shifts by a constant 1 have a smaller encoding available *)
 
-          IF op IN SET OF Op{Op.oSHL, Op.oSHR} AND TInt.EQ(imm, TInt.One) THEN
+          IF op IN SET OF Op{Op.oSHL, Op.oSHR} AND M3BackInt.EQ(imm, M3BackInt.One) THEN
             INC(ins.opcode, 16_10);
             ins.imsize := 0;
           END;
@@ -435,13 +435,13 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
     END
   END immOp1;
 
-PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
+PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.Int) =
   VAR destA: ARRAY OperandPart OF Operand;
-      immA: ARRAY OperandPart OF Target.Int;
+      immA: ARRAY OperandPart OF M3BackInt.Int;
       immSize := SplitImm(dest.optype, imm, immA);
       destSize := SplitOperand(dest, destA);
       compare_label: Label;
-      immMinus32: Target.Int;
+      immMinus32: M3BackInt.Int;
       shiftCount := Operand{loc := OLoc.imm, imm := imm};
   BEGIN
 
@@ -465,9 +465,9 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
             t.set_label(compare_label);
 
         | Op.oSHL =>
-            IF TInt.GE(imm, TInt.ThirtyTwo) THEN
-              IF TInt.NE(imm, TInt.ThirtyTwo) THEN
-                EVAL TInt.Subtract(imm, TInt.ThirtyTwo, immMinus32);
+            IF M3BackInt.GE(imm, M3BackInt.ThirtyTwo) THEN
+              IF M3BackInt.NE(imm, M3BackInt.ThirtyTwo) THEN
+                EVAL M3BackInt.Subtract(imm, M3BackInt.ThirtyTwo, immMinus32);
                 (* Ideally we'd do a virtual move in the register alloator. *)
                 movOp1(t, destA[1], destA[0]);
                 immOp1(t, op, destA[1], immMinus32);
@@ -482,9 +482,9 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
             END
 
         | Op.oSHR =>
-            IF TInt.GE(imm, TInt.ThirtyTwo) THEN
-              IF TInt.NE(imm, TInt.ThirtyTwo) THEN
-                EVAL TInt.Subtract(imm, TInt.ThirtyTwo, immMinus32);
+            IF M3BackInt.GE(imm, M3BackInt.ThirtyTwo) THEN
+              IF M3BackInt.NE(imm, M3BackInt.ThirtyTwo) THEN
+                EVAL M3BackInt.Subtract(imm, M3BackInt.ThirtyTwo, immMinus32);
                 (* Ideally we'd do a virtual move in the register alloator. *)
                 movOp1(t, destA[0], destA[1]);
                 immOp1(t, op, destA[0], immMinus32);
@@ -549,11 +549,11 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
       <* ASSERT src.loc = OLoc.register *>
       <* ASSERT shiftCount.loc = OLoc.register OR shiftCount.loc = OLoc.imm *>
       <* ASSERT shiftCount.loc # OLoc.register OR shiftCount.reg[0] = ECX *>
-      <* ASSERT shiftCount.loc # OLoc.imm OR (TInt.GE(shiftCount.imm, Target.Int8.min) AND TInt.LE(shiftCount.imm, Target.Int8.max)) *>
+      <* ASSERT shiftCount.loc # OLoc.imm OR (M3BackInt.GE(shiftCount.imm, M3BackInt.Int8.min) AND M3BackInt.LE(shiftCount.imm, M3BackInt.Int8.max)) *>
 
       IF shiftCount.loc = OLoc.imm THEN
-        IF NOT TInt.ToInt(shiftCount.imm, ins.imm) THEN
-          t.Err("binOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(shiftCount.imm));
+        IF NOT M3BackInt.ToInt(shiftCount.imm, ins.imm) THEN
+          t.Err("binOp: unable to convert immediate to INTEGER:" & M3BackInt.TargetIntToDiagnosticText(shiftCount.imm));
         END;
         ins.imsize := 1;
       ELSE
@@ -906,11 +906,11 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
     t.obj.relocate(t.textsym, t.obj.cursor(Seg.Text) - 4, sym);
   END movDummyReloc;
 
-PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.Int) =
+PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: M3BackInt.Int) =
   VAR ins: Instruction;
   BEGIN
-    IF (NOT TInt.ToInt(imm, ins.imm)) AND (NOT TWord.LE(imm, Target.Word32.max)) THEN
-      t.Err("movImmT: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(imm));
+    IF (NOT M3BackInt.ToInt(imm, ins.imm)) AND (NOT M3BackWord.LE(imm, M3BackInt.Word32.max)) THEN
+      t.Err("movImmT: unable to convert immediate to INTEGER:" & M3BackInt.TargetIntToDiagnosticText(imm));
     END;
     IF dest.loc # OLoc.register THEN
       <* ASSERT dest.loc = OLoc.mem *>
@@ -921,7 +921,7 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.Int) =
       ins.imsize := CG_Bytes[dest.mvar.mvar_type];
       writecode(t, ins);
       log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.mvar_type]);
-    ELSIF TInt.EQ(imm, TZero) THEN
+    ELSIF M3BackInt.EQ(imm, TZero) THEN
       binOp(t, Op.oXOR, dest, dest);
     ELSE
       ins.opcode := 16_B8 + dest.reg[0];
@@ -932,10 +932,10 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.Int) =
   END movImmT;
 
 PROCEDURE movImmI (t: T; READONLY dest: Operand; imm: INTEGER) =
-  VAR immT: Target.Int;
+  VAR immT: M3BackInt.Int;
   BEGIN
-    IF NOT TInt.FromInt(imm, BYTESIZE(imm), immT) THEN
-      t.Err("movImmI: unable to convert INTEGER to Target.Int");
+    IF NOT M3BackInt.FromInt(imm, BYTESIZE(imm), immT) THEN
+      t.Err("movImmI: unable to convert INTEGER to M3BackInt.Int");
     END;
     t.movImmT(dest, immT);
   END movImmI;
@@ -947,8 +947,8 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
     CASE src.loc OF
     | OLoc.imm =>
         ins.opcode := 16_68;
-        IF (NOT TInt.ToInt(src.imm, ins.imm)) AND (NOT TWord.LE(src.imm, Target.Word32.max)) THEN
-          t.Err("pushOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(src.imm));
+        IF (NOT M3BackInt.ToInt(src.imm, ins.imm)) AND (NOT M3BackWord.LE(src.imm, M3BackInt.Word32.max)) THEN
+          t.Err("pushOp: unable to convert immediate to INTEGER:" & M3BackInt.TargetIntToDiagnosticText(src.imm));
         END;
         ins.imsize := 4;
         writecode(t, ins);
@@ -1111,8 +1111,8 @@ PROCEDURE imulOp (t: T; READONLY dest, src: Operand) =
     IF src.loc = OLoc.imm THEN
       build_modrm(t, t.reg[dest.reg[0]], dest, ins);
       ins.opcode := 16_69;
-      IF (NOT TInt.ToInt(src.imm, ins.imm)) AND (NOT TWord.LE(src.imm, Target.Word32.max)) THEN
-        t.Err("imulOp: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(src.imm));
+      IF (NOT M3BackInt.ToInt(src.imm, ins.imm)) AND (NOT M3BackWord.LE(src.imm, M3BackInt.Word32.max)) THEN
+        t.Err("imulOp: unable to convert immediate to INTEGER:" & M3BackInt.TargetIntToDiagnosticText(src.imm));
       END;
       ins.imsize := 4;
       writecode(t, ins);
@@ -1485,8 +1485,8 @@ PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset; type
     ins.opcode := 16_88;
     IF val.loc = OLoc.imm THEN
       ins.opcode := 16_C6;
-      IF (NOT TInt.ToInt(val.imm, ins.imm)) AND (NOT TWord.LE(val.imm, Target.Word32.max)) THEN
-        t.Err("store_ind1: unable to convert immediate to INTEGER:" & Target.TargetIntToDiagnosticText(val.imm));
+      IF (NOT M3BackInt.ToInt(val.imm, ins.imm)) AND (NOT M3BackWord.LE(val.imm, M3BackInt.Word32.max)) THEN
+        t.Err("store_ind1: unable to convert immediate to INTEGER:" & M3BackInt.TargetIntToDiagnosticText(val.imm));
       END;
       ins.imsize := CG_Bytes[type];
     END;
@@ -1951,7 +1951,7 @@ PROCEDURE MnOp(t: T; READONLY op: Operand) =
       CASE op.loc OF
         OLoc.fstack   => Mn (t, " FST");
       | OLoc.register => Mn (t, " ", RegName[op.reg[0]]);
-      | OLoc.imm      => Mn (t, " $", TInt.ToText (op.imm));
+      | OLoc.imm      => Mn (t, " $", M3BackInt.ToText (op.imm));
       | OLoc.mem      => MnMVar (t, op.mvar);
       END
     END
@@ -2008,10 +2008,10 @@ PROCEDURE MnProc(t: T;  p: x86Proc) =
     END;
   END MnProc;
 
-PROCEDURE MnImmTInt(t: T; READONLY imm: Target.Int) =
+PROCEDURE MnImmTInt(t: T; READONLY imm: M3BackInt.Int) =
   BEGIN
     IF t.debug THEN
-      Mn(t, " $", TInt.ToText (imm));
+      Mn(t, " $", M3BackInt.ToText (imm));
     END;
   END MnImmTInt;
 
@@ -2316,7 +2316,7 @@ PROCEDURE log_abscall_use (t: T; VAR internal_size: INTEGER;
 PROCEDURE init_intvar (t: T; size: ByteSize; f_lit: FLiteral; abscall: AbsCall):
             x86Var =
   VAR intvar: x86Var;
-      tint: TInt.TargetInt;
+      tint: Target.Int;
   BEGIN
     intvar := t.parent.declare_global(M3ID.NoID, size, 4,
                                       Type.Struct, 0, FALSE, TRUE);
@@ -2324,7 +2324,7 @@ PROCEDURE init_intvar (t: T; size: ByteSize; f_lit: FLiteral; abscall: AbsCall):
 
     WHILE f_lit # NIL DO
       FOR i := 0 TO f_lit.flit_size - 1 DO
-        EVAL TInt.IntToTargetInt(f_lit.arr[i], tint);
+        EVAL TInt.FromInt(f_lit.arr[i], tint);
         t.parent.init_int(f_lit.loc + i, tint, Type.Word8);
       END;
 
@@ -2332,7 +2332,7 @@ PROCEDURE init_intvar (t: T; size: ByteSize; f_lit: FLiteral; abscall: AbsCall):
     END;
 
     WHILE abscall # NIL DO
-      t.parent.init_int(abscall.loc, TInt.TargetIntZero, Type.Int32);
+      t.parent.init_int(abscall.loc, TInt.Zero, Type.Int32);
       t.obj.relocate(intvar.symbol, abscall.loc, abscall.sym);
       abscall := abscall.link;
     END;
