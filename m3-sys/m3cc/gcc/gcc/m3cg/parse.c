@@ -1389,7 +1389,7 @@ get_byte (void)
 
 
 #define INTEGER(x) long x = get_int()
-#define UNUSED_INTEGER(x) int x ATTRIBUTE_UNUSED = get_int()
+#define UNUSED_INTEGER(x) long x ATTRIBUTE_UNUSED = get_int()
 static long
 get_int (void)
 {
