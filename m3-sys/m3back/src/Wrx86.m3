@@ -55,7 +55,9 @@ PROCEDURE Cmd (t: T; cmd: TEXT) =
   BEGIN
     OutC (t, '\t');
     OutT (t, cmd);
-    FOR i := 0 TO 14-len DO OutC (t, ' ') END;
+    FOR i := 0 TO 14-len DO
+      OutC (t, ' ')
+    END;
     OutC (t, ' ');
     OutC (t, ' ');
   END Cmd;
@@ -217,39 +219,42 @@ PROCEDURE Flush (t: T) =
     Wr.Flush (t.wr);
   END Flush;
 
+PROCEDURE IncLength (t: T; approximateIncrease: CARDINAL) =
+  BEGIN
+    INC (t.buf_len, approximateIncrease);
+    IF (t.buf_len >= 1024) OR (t.buf_len < 0) THEN
+      Flush (t)
+    END;
+  END IncLength;
+
 PROCEDURE OutC (t: T;  c: CHAR) =
   BEGIN
     M3Buf.PutChar (t.buf, c);
-    INC (t.buf_len);
-    IF (t.buf_len >= 1024) THEN Flush (t) END;
+    IncLength (t, 1);
   END OutC;
 
 PROCEDURE OutT (t: T;  txt: TEXT) =
   BEGIN
     M3Buf.PutText (t.buf, txt);
-    INC (t.buf_len, Text.Length (txt));
-    IF (t.buf_len >= 1024) THEN Flush (t) END;
+    IncLength (t, Text.Length (txt));
   END OutT;
 
 PROCEDURE OutN (t: T;  n: Name) =
   BEGIN
     M3ID.Put (t.buf, n);
-    INC (t.buf_len, 10); (* we don't really care if it's accurate *)
-    IF (t.buf_len >= 1024) THEN Flush (t) END;
+    IncLength (t, 10); (* This does not have to be accurate. *)
   END OutN;
 
 PROCEDURE OutS (t: T;  READONLY buf: ARRAY OF CHAR) =
   BEGIN
     M3Buf.PutSub (t.buf, buf);
-    INC (t.buf_len, NUMBER (buf));
-    IF (t.buf_len >= 1024) THEN Flush (t) END;
+    IncLength (t, NUMBER (buf));
   END OutS;
 
 PROCEDURE OutI  (t: T;  i: INTEGER) =
   BEGIN
     M3Buf.PutInt (t.buf, i);
-    INC (t.buf_len, 4); (* we don't really care if it's accurate *)
-    IF (t.buf_len >= 1024) THEN Flush (t) END;
+    IncLength (t, 4); (* This does not have to be accurate. *)
   END OutI;
 
 
