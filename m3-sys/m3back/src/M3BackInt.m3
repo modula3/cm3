@@ -8,16 +8,11 @@
 
 MODULE M3BackInt; (* also known as TInt *)
 
-IMPORT Target, Word, Text, Fmt, TInt, RTIO;
-
-CONST (* IMPORTS *)
-  LShift = Word.LeftShift;
-  And    = Word.And;
+IMPORT Target, Word, Text, Fmt, TInt;
 
 CONST
   Mask     = 16_FF;
   SignMask = 16_80;
-  Base     = 16_100;
 
 PROCEDURE SignExtend(READONLY a: Int): Target.Int =
 (*
@@ -64,103 +59,14 @@ PROCEDURE SignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN =
 
   END SignedTruncate;
 
-PROCEDURE xFromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
-  BEGIN
-    <*ASSERT n # 0*>
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      r.x[i] := And (x, Mask);
-      x := x DIV Base;
-    END;
-    RETURN (n > 0) AND (x = 0 OR x = -1);
-  END xFromInt;
-
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
-  VAR result1, result2: BOOLEAN;
-      r2: Int;
   BEGIN
-    result1 :=     xFromInt(x, n, r) AND SignedTruncate(r, n);
-    result2 := TInt.FromInt(x, r2.x) AND SignedTruncate(r2, n);
-    IF result1 # result2 OR NE(r, r2) THEN
-      RTIO.PutText("FromInt error\n ");
-      RTIO.PutHex(ORD(result1));
-      RTIO.PutText(" ");
-      RTIO.PutHex(ORD(result2));
-      RTIO.PutText("\n ");
-      RTIO.PutText(ToDiagnosticText(r));
-      RTIO.PutText("\n ");
-      RTIO.PutText(ToDiagnosticText(r2));
-      RTIO.Flush();
-    END;
-    <* ASSERT result1 = result2 *>
-    IF result1 AND result2 THEN
-      <* ASSERT EQ(r, r2) *>
-    END;
-    RETURN result1;
+    RETURN TInt.FromInt(x, r.x) AND SignedTruncate(r, n);
   END FromInt;
 
-TYPE Sign = {Bad, Neg, Pos};
-
-PROCEDURE CheckSign (READONLY r: Int;  n: CARDINAL): Sign =
-  BEGIN
-    <*ASSERT n # 0*>
-    IF And (r.x[r.n-1], SignMask) = 0 THEN
-      IF n < r.n THEN
-        IF And (r.x[n-1], SignMask) # 0 THEN
-          RETURN Sign.Bad;
-        END;
-        FOR i := n TO r.n-1 DO
-          IF r.x[i] # 0 THEN
-            RETURN Sign.Bad;
-          END;
-        END;
-      END;
-      RETURN Sign.Pos;
-    ELSE
-      IF n < r.n THEN
-        IF And (r.x[n-1], SignMask) = 0 THEN
-          RETURN Sign.Bad;
-        END;
-        FOR i := n TO r.n-1 DO
-          IF r.x[i] # Mask THEN RETURN
-            Sign.Bad;
-          END;
-        END;
-      END;
-      RETURN Sign.Neg;
-    END;
-  END CheckSign;
-
-PROCEDURE xToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
-  VAR sign := CheckSign (r, BITSIZE (INTEGER) DIV BITSIZE (IByte));
-      result := TRUE;
-  BEGIN
-    (* ensure the result has the right sign extension *)
-    CASE sign OF
-    | Sign.Bad => result := FALSE;
-    | Sign.Pos => x := 0;
-    | Sign.Neg => x := Word.Not (0);
-    END;
-
-    (* finally, pack the bits *)
-    FOR i := r.n-1 TO 0 BY -1  DO
-      x := Word.Or (LShift (x, BITSIZE (IByte)), r.x[i]);
-    END;
-
-    RETURN result;
-  END xToInt;
-
 PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
-  VAR y: INTEGER;
-      result1, result2: BOOLEAN;
   BEGIN
-    result1 := xToInt(r, x);
-    result2 := TInt.ToInt(SignExtend(r), y);
-    <* ASSERT result1 = result2 *>
-    IF result1 AND result2 THEN
-      <* ASSERT x = y *>
-    END;
-    RETURN result1;
+    RETURN TInt.ToInt(SignExtend(r), x);
   END ToInt;
 
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
@@ -251,7 +157,7 @@ PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): INTEGER =
 
     (* strip the sign extension *)
 
-    IF And (r.x[n - 1], SignMask) # 0 THEN
+    IF Word.And (r.x[n - 1], SignMask) # 0 THEN
       j := Mask;
     END;
 
