@@ -21,50 +21,6 @@ CONST
 
 (*------------------------------------------- unsigned integer operations ---*)
 
-PROCEDURE New (READONLY x: ARRAY OF CHAR; base: [2..16];  n: CARDINAL;
-               VAR r: Int): BOOLEAN =
-  VAR rr: IBytes;  digit: INTEGER;  ch: CHAR;
-  BEGIN
-    <*ASSERT n # 0*>
-    r := Int{n};
-    FOR i := FIRST (x) TO LAST (x) DO
-      ch := x [i];
-      IF    ('0' <= ch) AND (ch <= '9') THEN  digit := ORD (ch) - ORD ('0');
-      ELSIF ('A' <= ch) AND (ch <= 'F') THEN  digit := ORD (ch) - ORD ('A')+10;
-      ELSIF ('a' <= ch) AND (ch <= 'f') THEN  digit := ORD (ch) - ORD ('a')+10;
-      ELSE  RETURN FALSE;
-      END;
-  
-      (* rr := r * base *)
-      rr := IBytes {0,..};
-      FOR i := 0 TO n-1 DO
-        VAR carry := Word.Times (r.x[i], base);
-        BEGIN
-          FOR j := i TO n-1 DO
-            IF carry = 0 THEN EXIT END;
-            INC (carry, rr[j]);
-            rr[j] := Word.And (carry, Mask);
-            carry := RShift (carry, BITSIZE (IByte));
-          END;
-          IF carry # 0 THEN RETURN FALSE END;
-        END;
-      END;
-
-      (* r := rr + digit *)
-      VAR carry := digit;
-      BEGIN
-        FOR i := 0 TO n-1 DO
-          INC (carry, rr[i]);
-          r.x[i] := Word.And (carry, Mask);
-          carry := RShift (carry, BITSIZE (IByte));
-        END;
-        IF carry # 0 THEN RETURN FALSE END;
-      END;
-    END;
-
-    RETURN TRUE;
-  END New;
-
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
   VAR carry := 0;  n := MIN (a.n, b.n);
   BEGIN
