@@ -8,20 +8,12 @@
 
 MODULE M3BackWord; (* also known as TWord *)
 
-IMPORT Word, M3BackInt, TWord, TInt, Target;
-FROM M3BackInt IMPORT Int, IByte, IBytes;
-
-CONST (* IMPORTS *)
-  RShift = Word.RightShift;
-  LShift = Word.LeftShift;
-
-CONST
-  Mask = 16_FF;
-  Base = 16_100;
+IMPORT M3BackInt, TWord, TInt, Target;
+FROM M3BackInt IMPORT Int;
 
 (*------------------------------------------- unsigned integer operations ---*)
 
-PROCEDURE ToTargetInt(READONLY a: Int): Target.Int =
+PROCEDURE ZeroExtend(READONLY a: Int): Target.Int =
 (*
     zero extend to the precision of Target.Int
 *)
@@ -34,7 +26,7 @@ PROCEDURE ToTargetInt(READONLY a: Int): Target.Int =
      b[i] := 0;
    END;
    RETURN b;
-  END ToTargetInt;
+  END ZeroExtend;
 
 PROCEDURE Chop(VAR a: Int; n: CARDINAL) =
   BEGIN
@@ -47,26 +39,26 @@ PROCEDURE Chop(VAR a: Int; n: CARDINAL) =
 
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
   BEGIN
-    TWord.Add(ToTargetInt(a), ToTargetInt(b), r.x);
+    TWord.Add(ZeroExtend(a), ZeroExtend(b), r.x);
     Chop(r, MIN(a.n, b.n));
   END Add;
 
 PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int) =
   BEGIN
-    TWord.Subtract(ToTargetInt(a), ToTargetInt(b), r.x);
+    TWord.Subtract(ZeroExtend(a), ZeroExtend(b), r.x);
     Chop(r, MIN(a.n, b.n));
   END Subtract;
 
 PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
   BEGIN
-    TWord.Multiply(ToTargetInt(a), ToTargetInt(b), r.x);
+    TWord.Multiply(ZeroExtend(a), ZeroExtend(b), r.x);
     Chop(r, MIN(a.n, b.n));
   END Multiply;
 
 PROCEDURE Div (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    result := TWord.Div(ToTargetInt(num), ToTargetInt(den), q.x);
+    result := TWord.Div(ZeroExtend(num), ZeroExtend(den), q.x);
     Chop(q, MIN(num.n, den.n));
     RETURN result;
   END Div;
@@ -74,31 +66,31 @@ PROCEDURE Div (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
 PROCEDURE Mod (READONLY num, den: Int;  VAR r: Int): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    result := TWord.Mod(ToTargetInt(num), ToTargetInt(den), r.x);
+    result := TWord.Mod(ZeroExtend(num), ZeroExtend(den), r.x);
     Chop(r, MIN(num.n, den.n));
     RETURN result;
   END Mod;
 
 PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
   BEGIN
-    TWord.DivMod(ToTargetInt(x), ToTargetInt(y), q.x, r.x);
+    TWord.DivMod(ZeroExtend(x), ZeroExtend(y), q.x, r.x);
     Chop(r, MIN(x.n, y.n));
     Chop(q, MIN(x.n, y.n));
   END DivMod;
 
 PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
   BEGIN
-    RETURN TWord.LT(ToTargetInt(a), ToTargetInt(b));
+    RETURN TWord.LT(ZeroExtend(a), ZeroExtend(b));
   END LT;
 
 PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
   BEGIN
-    RETURN TWord.LE(ToTargetInt(a), ToTargetInt(b));
+    RETURN TWord.LE(ZeroExtend(a), ZeroExtend(b));
   END LE;
 
 PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
   BEGIN
-    RETURN TInt.EQ(ToTargetInt(a), ToTargetInt(b));
+    RETURN TInt.EQ(ZeroExtend(a), ZeroExtend(b));
   END EQ;
 
 PROCEDURE NE (READONLY a, b: Int): BOOLEAN =
@@ -118,56 +110,56 @@ PROCEDURE GT (READONLY a, b: Int): BOOLEAN =
 
 PROCEDURE And (READONLY a, b: Int;  VAR r: Int) =
   BEGIN
-    TWord.And(ToTargetInt(a), ToTargetInt(b), r.x);
+    TWord.And(ZeroExtend(a), ZeroExtend(b), r.x);
     Chop(r, MIN(a.n, b.n));
   END And;
 
 PROCEDURE Or (READONLY a, b: Int;  VAR r: Int) =
   BEGIN
-    TWord.Or(ToTargetInt(a), ToTargetInt(b), r.x);
+    TWord.Or(ZeroExtend(a), ZeroExtend(b), r.x);
     Chop(r, MIN(a.n, b.n));
   END Or;
 
 PROCEDURE Xor (READONLY a, b: Int;  VAR r: Int) =
   BEGIN
-    TWord.Xor(ToTargetInt(a), ToTargetInt(b), r.x);
+    TWord.Xor(ZeroExtend(a), ZeroExtend(b), r.x);
     Chop(r, MIN(a.n, b.n));
   END Xor;
 
 PROCEDURE Not (READONLY a: Int;  VAR r: Int) =
   BEGIN
-    TWord.Not(ToTargetInt(a), r.x);
+    TWord.Not(ZeroExtend(a), r.x);
     Chop(r, a.n);
   END Not;
 
 PROCEDURE LeftShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
   BEGIN
-    TWord.LeftShift(ToTargetInt(a), b, r.x);
+    TWord.LeftShift(ZeroExtend(a), b, r.x);
     Chop(r, a.n);
   END LeftShift;
 
 PROCEDURE RightShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
   BEGIN
-    TWord.RightShift(ToTargetInt(a), b, r.x);
+    TWord.RightShift(ZeroExtend(a), b, r.x);
     Chop(r, a.n);
   END RightShift;
 
 PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
   BEGIN
-    TWord.Shift(ToTargetInt(a), b, r.x);
+    TWord.Shift(ZeroExtend(a), b, r.x);
     Chop(r, a.n);
   END Shift;
 
 PROCEDURE Rotate (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
   BEGIN
-    TWord.Rotate(ToTargetInt(a), b, a.n, r.x);
+    TWord.Rotate(ZeroExtend(a), b, a.n, r.x);
     Chop(r, a.n);
   END Rotate;
 
 PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    result := TWord.Extract(ToTargetInt(x), i, n, r.x);
+    result := TWord.Extract(ZeroExtend(x), i, n, r.x);
     Chop(r, x.n);
     RETURN result;
   END Extract;
@@ -175,7 +167,7 @@ PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
 PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    result := TWord.Insert(ToTargetInt(x), ToTargetInt(y), i, n, r.x);
+    result := TWord.Insert(ZeroExtend(x), ZeroExtend(y), i, n, r.x);
     Chop(r, MIN(x.n, y.n));
     RETURN result;
   END Insert;
