@@ -316,7 +316,7 @@ PROCEDURE ToDiagnosticText(a: Int): TEXT =
 PROCEDURE TargetIntToDiagnosticText(a: Target.Int): TEXT =
   VAR t := "";
   BEGIN
-    FOR i := FIRST(a) TO LAST(a) TO  DO
+    FOR i := FIRST(a) TO LAST(a) DO
       t := t & Fmt.Unsigned(a[i]);
       IF i # LAST(a) THEN
         t := t & ",";
