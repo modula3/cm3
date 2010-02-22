@@ -87,9 +87,9 @@ PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
       RTIO.PutText(" ");
       RTIO.PutHex(ORD(result2));
       RTIO.PutText("\n ");
-      RTIO.PutText(TargetIntToDiagnosticText(r));
+      RTIO.PutText(ToDiagnosticText(r));
       RTIO.PutText("\n ");
-      RTIO.PutText(TargetIntToDiagnosticText(r2));
+      RTIO.PutText(ToDiagnosticText(r2));
       RTIO.Flush();
     END;
     <* ASSERT result1 = result2 *>
@@ -308,12 +308,12 @@ PROCEDURE Init() =
     InitInt(Integer, Target.Integer);
   END Init;
 
-PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT =
+PROCEDURE ToDiagnosticText(a: Int): TEXT =
   BEGIN
-    RETURN "n:" & Fmt.Unsigned(a.n) & ",x:" & TIntToDiagnosticText(a.x);
-  END TargetIntToDiagnosticText;
+    RETURN "n:" & Fmt.Unsigned(a.n) & ",x:" & TargetIntToDiagnosticText(a.x);
+  END ToDiagnosticText;
 
-PROCEDURE TIntToDiagnosticText(a: Target.Int): TEXT =
+PROCEDURE TargetIntToDiagnosticText(a: Target.Int): TEXT =
   VAR t := "";
   BEGIN
     FOR i := 0 TO 7 DO
@@ -323,7 +323,7 @@ PROCEDURE TIntToDiagnosticText(a: Target.Int): TEXT =
       END;
     END;
     RETURN t;
-  END TIntToDiagnosticText;
+  END TargetIntToDiagnosticText;
 
 BEGIN
 END M3BackInt.

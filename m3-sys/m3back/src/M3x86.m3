@@ -1111,7 +1111,7 @@ PROCEDURE init_int (u: U; o: ByteOffset; READONLY xvalue: Target.Int; t: Type) =
 
     len := M3BackInt.ToBytes(value, bytes);
     IF NOT (len <= NUMBER(bytes) AND len <= CG_Bytes[t] AND len > 0) THEN
-      u.Err("init_int: len:" & Fmt.Int(len) & " type:" & Target.TypeNames[t] & " value:" & M3BackInt.TargetIntToDiagnosticText(value));
+      u.Err("init_int: len:" & Fmt.Int(len) & " type:" & Target.TypeNames[t] & " value:" & M3BackInt.ToDiagnosticText(value));
     END;
     <* ASSERT len > 0 *>
     <* ASSERT len <= NUMBER(bytes) *>
