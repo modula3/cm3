@@ -20,11 +20,6 @@ INTERFACE M3BackWord; (* also known as TWord *)
 
 FROM M3BackInt IMPORT Int;
 
-PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16];  n: CARDINAL;
-               VAR i: Int): BOOLEAN;
-(* converts the string of characters in 'chars' representing a base 'base'
-   number to an integer value in 'i' *)
-
 PROCEDURE Add (READONLY a, b: Int;  VAR i: Int);
 (* returns 'Word.Plus (a, b)' *)
 
