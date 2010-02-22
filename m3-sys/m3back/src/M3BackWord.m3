@@ -14,6 +14,9 @@ FROM M3BackInt IMPORT Int;
 (*------------------------------------------- unsigned integer operations ---*)
 
 PROCEDURE ToTargetInt(READONLY a: Int): Target.Int =
+(*
+    zero extend to the precision of Target.Int
+*)
   VAR b: Target.Int;
   BEGIN
     FOR i := 0 TO a.n - 1 DO
@@ -51,15 +54,17 @@ PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
   END Multiply;
 
 PROCEDURE Div (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
-  VAR success := TWord.Div(ToTargetInt(num), ToTargetInt(den), q.x);
+  VAR success: BOOLEAN;
   BEGIN
+    success := TWord.Div(ToTargetInt(num), ToTargetInt(den), q.x);
     Chop(q, MIN (num.n, den.n));
     RETURN success;
   END Div;
 
 PROCEDURE Mod (READONLY num, den: Int;  VAR r: Int): BOOLEAN =
-  VAR success := TWord.Mod(ToTargetInt(num), ToTargetInt(den), r.x);
+  VAR success: BOOLEAN;
   BEGIN
+    success := TWord.Mod(ToTargetInt(num), ToTargetInt(den), r.x);
     Chop(r, MIN (num.n, den.n));
     RETURN success;
   END Mod;
