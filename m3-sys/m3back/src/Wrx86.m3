@@ -160,7 +160,7 @@ PROCEDURE TInt (t: T;  READONLY i: M3BackInt.Int) =
     OutC (t, ' ');
     OutS (t, SUBARRAY (buf, 0, len));
     OutC (t, ' ');
-    OutT (t, M3BackInt.TargetIntToDiagnosticText(i));
+    OutT (t, M3BackInt.ToDiagnosticText(i));
   END TInt;
 
 PROCEDURE BInt (t: T;  i: INTEGER) =
