@@ -8,7 +8,7 @@
 
 MODULE M3BackWord; (* also known as TWord *)
 
-IMPORT Word, M3BackInt, M3BackInt AS TInt;
+IMPORT Word, M3BackInt;
 FROM M3BackInt IMPORT Int, IByte, IBytes;
 
 CONST (* IMPORTS *)
@@ -110,8 +110,8 @@ PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
 PROCEDURE Div (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
   VAR r: Int;
   BEGIN
-    IF TInt.EQ (den, TInt.Zero) THEN  RETURN FALSE;  END;
-    IF TInt.EQ (num, TInt.Zero) THEN  q := TInt.Zero;  RETURN TRUE;  END;
+    IF M3BackInt.EQ (den, M3BackInt.Zero) THEN  RETURN FALSE;  END;
+    IF M3BackInt.EQ (num, M3BackInt.Zero) THEN  q := M3BackInt.Zero;  RETURN TRUE;  END;
     DivMod (num, den, q, r);
     RETURN TRUE;
   END Div;
@@ -119,8 +119,8 @@ PROCEDURE Div (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
 PROCEDURE Mod (READONLY num, den: Int;  VAR r: Int): BOOLEAN =
   VAR q: Int;
   BEGIN
-    IF TInt.EQ (den, TInt.Zero) THEN  RETURN FALSE;  END;
-    IF TInt.EQ (num, TInt.Zero) THEN  r := TInt.Zero;  RETURN TRUE;  END;
+    IF M3BackInt.EQ (den, M3BackInt.Zero) THEN  RETURN FALSE;  END;
+    IF M3BackInt.EQ (num, M3BackInt.Zero) THEN  r := M3BackInt.Zero;  RETURN TRUE;  END;
     DivMod (num, den, q, r);
     RETURN TRUE;
   END Mod;
