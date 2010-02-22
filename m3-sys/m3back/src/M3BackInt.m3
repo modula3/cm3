@@ -8,7 +8,7 @@
 
 MODULE M3BackInt; (* also known as TInt *)
 
-IMPORT Target, Word, Text, Fmt, TInt;
+IMPORT Target, Word, Text, Fmt, TInt, RTIO;
 
 CONST (* IMPORTS *)
   LShift = Word.LeftShift;
@@ -64,7 +64,7 @@ PROCEDURE SignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN =
 
   END SignedTruncate;
 
-PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
+PROCEDURE xFromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
   BEGIN
     <*ASSERT n # 0*>
     r.n := n;
@@ -73,6 +73,30 @@ PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
       x := x DIV Base;
     END;
     RETURN (n > 0) AND (x = 0 OR x = -1);
+  END xFromInt;
+
+PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
+  VAR result1, result2: BOOLEAN;
+      r2: Int;
+  BEGIN
+    result1 :=     xFromInt(x, n, r) AND SignedTruncate(r, n);
+    result2 := TInt.FromInt(x, r2.x) AND SignedTruncate(r2, n);
+    IF result1 # result2 OR NE(r, r2) THEN
+      RTIO.PutText("FromInt error\n ");
+      RTIO.PutHex(ORD(result1));
+      RTIO.PutText(" ");
+      RTIO.PutHex(ORD(result2));
+      RTIO.PutText("\n ");
+      RTIO.PutText(TargetIntToDiagnosticText(r));
+      RTIO.PutText("\n ");
+      RTIO.PutText(TargetIntToDiagnosticText(r2));
+      RTIO.Flush();
+    END;
+    <* ASSERT result1 = result2 *>
+    IF result1 AND result2 THEN
+      <* ASSERT EQ(r, r2) *>
+    END;
+    RETURN result1;
   END FromInt;
 
 TYPE Sign = {Bad, Neg, Pos};
@@ -107,7 +131,7 @@ PROCEDURE CheckSign (READONLY r: Int;  n: CARDINAL): Sign =
     END;
   END CheckSign;
 
-PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
+PROCEDURE xToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
   VAR sign := CheckSign (r, BITSIZE (INTEGER) DIV BITSIZE (IByte));
       result := TRUE;
   BEGIN
@@ -124,6 +148,19 @@ PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
     END;
 
     RETURN result;
+  END xToInt;
+
+PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
+  VAR y: INTEGER;
+      result1, result2: BOOLEAN;
+  BEGIN
+    result1 := xToInt(r, x);
+    result2 := TInt.ToInt(SignExtend(r), y);
+    <* ASSERT result1 = result2 *>
+    IF result1 AND result2 THEN
+      <* ASSERT x = y *>
+    END;
+    RETURN result1;
   END ToInt;
 
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
