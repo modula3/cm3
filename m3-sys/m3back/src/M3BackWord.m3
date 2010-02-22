@@ -8,7 +8,7 @@
 
 MODULE M3BackWord; (* also known as TWord *)
 
-IMPORT Word, M3BackInt;
+IMPORT Word, M3BackInt, TWord, TInt, Target;
 FROM M3BackInt IMPORT Int, IByte, IBytes;
 
 CONST (* IMPORTS *)
@@ -21,7 +21,31 @@ CONST
 
 (*------------------------------------------- unsigned integer operations ---*)
 
-PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE ToTargetInt(READONLY a: Int): Target.Int =
+(*
+    zero extend to the precision of Target.Int
+*)
+  VAR b: Target.Int;
+  BEGIN
+   FOR i := 0 TO a.n - 1 DO
+     b[i] := a.x[i];
+   END;
+   FOR i := a.n TO LAST(b) DO
+     b[i] := 0;
+   END;
+   RETURN b;
+  END ToTargetInt;
+
+PROCEDURE Chop(VAR a: Int; n: CARDINAL) =
+  BEGIN
+    <*ASSERT n # 0*>
+    a.n := n;
+    FOR i := n TO LAST(a.x) DO
+      a.x[i] := 0;
+    END;
+  END Chop;
+
+PROCEDURE xAdd (READONLY a, b: Int;  VAR r: Int) =
   VAR carry := 0;  n := MIN (a.n, b.n);
   BEGIN
     <*ASSERT n # 0*>
@@ -31,9 +55,21 @@ PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
       r.x[i] := Word.And (carry, Mask);
       carry := RShift (carry, BITSIZE (IByte));
     END;
+  END xAdd;
+
+PROCEDURE Add (READONLY xa, xb: Int;  VAR r: Int) =
+  VAR a := xa; (* copy to avoid alias *)
+      b := xb; (* copy to avoid alias *)
+      r2: Int;
+  BEGIN
+    xAdd(a, b, r);
+    TWord.Add(ToTargetInt(a), ToTargetInt(b), r2.x);
+    Chop(r,  MIN(a.n, b.n));
+    Chop(r2, MIN(a.n, b.n));
+    <* ASSERT r = r2 *>
   END Add;
 
-PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE xSubtract (READONLY a, b: Int;  VAR r: Int) =
   VAR borrow := 0;  n := MIN (a.n, b.n);
   BEGIN
     <*ASSERT n # 0*>
@@ -43,9 +79,21 @@ PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int) =
       r.x[i] := Word.And (borrow, Mask);
       borrow := Word.And (RShift (borrow, BITSIZE (IByte)), 1);
     END;
+  END xSubtract;
+
+PROCEDURE Subtract (READONLY xa, xb: Int;  VAR r: Int) =
+  VAR a := xa; (* copy to avoid alias *)
+      b := xb; (* copy to avoid alias *)
+      r2: Int;
+  BEGIN
+    xSubtract(a, b, r);
+    TWord.Subtract(ToTargetInt(a), ToTargetInt(b), r2.x);
+    Chop(r,  MIN(a.n, b.n));
+    Chop(r2, MIN(a.n, b.n));
+    <* ASSERT r = r2 *>
   END Subtract;
 
-PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE xMultiply (READONLY a, b: Int;  VAR r: Int) =
   VAR carry: INTEGER;  n := MIN (a.n, b.n);
   BEGIN
     <*ASSERT n # 0*>
@@ -61,27 +109,74 @@ PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
         END;
       END;
     END;
+  END xMultiply;
+
+PROCEDURE Multiply (READONLY xa, xb: Int;  VAR r: Int) =
+  VAR a := xa; (* copy to avoid alias *)
+      b := xb; (* copy to avoid alias *)
+      r2: Int;
+  BEGIN
+    xMultiply(a, b, r);
+    TWord.Multiply(ToTargetInt(a), ToTargetInt(b), r2.x);
+    Chop(r,  MIN(a.n, b.n));
+    Chop(r2, MIN(a.n, b.n));
+    <* ASSERT r = r2 *>
   END Multiply;
 
-PROCEDURE Div (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
+PROCEDURE xDiv (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
   VAR r: Int;
   BEGIN
     IF M3BackInt.EQ (den, M3BackInt.Zero) THEN  RETURN FALSE;  END;
-    IF M3BackInt.EQ (num, M3BackInt.Zero) THEN  q := M3BackInt.Zero;  RETURN TRUE;  END;
+    IF M3BackInt.EQ (num, M3BackInt.Zero) THEN  r := Int{MIN(num.n, den.n)}; RETURN TRUE;  END;
     DivMod (num, den, q, r);
     RETURN TRUE;
+  END xDiv;
+
+PROCEDURE Div (READONLY xnum, xden: Int;  VAR q: Int): BOOLEAN =
+  VAR num := xnum; (* copy to avoid alias *)
+      den := xden; (* copy to avoid alias *)
+      q2: Int;
+      result1, result2: BOOLEAN;
+  BEGIN
+    result1 := xDiv(num, den, q);
+    result2 := TWord.Div(ToTargetInt(num), ToTargetInt(den), q2.x);
+    Chop(q,  MIN(num.n, den.n));
+    Chop(q2, MIN(num.n, den.n));
+    <* ASSERT result1 = result2 *>
+    IF result1 AND result2 THEN
+      <* ASSERT q = q2 *>
+      <* ASSERT TInt.EQ(ToTargetInt(q), q2.x) *>
+    END;
+    RETURN result1;
   END Div;
 
-PROCEDURE Mod (READONLY num, den: Int;  VAR r: Int): BOOLEAN =
+PROCEDURE xMod (READONLY num, den: Int;  VAR r: Int): BOOLEAN =
   VAR q: Int;
   BEGIN
     IF M3BackInt.EQ (den, M3BackInt.Zero) THEN  RETURN FALSE;  END;
-    IF M3BackInt.EQ (num, M3BackInt.Zero) THEN  r := M3BackInt.Zero;  RETURN TRUE;  END;
+    IF M3BackInt.EQ (num, M3BackInt.Zero) THEN  r := Int{MIN(num.n, den.n)}; RETURN TRUE;  END;
     DivMod (num, den, q, r);
     RETURN TRUE;
+  END xMod;
+
+PROCEDURE Mod (READONLY xnum, xden: Int;  VAR r: Int): BOOLEAN =
+  VAR num := xnum; (* copy to avoid alias *)
+      den := xden; (* copy to avoid alias *)
+      r2: Int;
+      result1, result2: BOOLEAN;
+  BEGIN
+    result1 := xMod(num, den, r);
+    result2 := TWord.Mod(ToTargetInt(num), ToTargetInt(den), r2.x);
+    Chop(r,  MIN(num.n, den.n));
+    Chop(r2, MIN(num.n, den.n));
+    <* ASSERT result1 = result2 *>
+    IF result1 AND result2 THEN
+      <* ASSERT r = r2 *>
+    END;
+    RETURN result1;
   END Mod;
 
-PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
+PROCEDURE xDivMod (READONLY x, y: Int;  VAR q, r: Int) =
   VAR
     carry   : INTEGER;
     borrow  : INTEGER;
@@ -199,9 +294,22 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
     (* finally, compute the remainder *)
     Multiply (q, y, r);
     Subtract (x, r, r);
+  END xDivMod;
+
+PROCEDURE DivMod (READONLY x0, y0: Int;  VAR q, r: Int) =
+  VAR x := x0; (* copy to avoid alias *)
+      y := y0; (* copy to avoid alias *)
+      q2, r2: Int;
+  BEGIN
+    xDivMod(x, y, q, r);
+    TWord.DivMod(ToTargetInt(x), ToTargetInt(y), q2.x, r2.x);
+    Chop(r2, MIN(x.n, y.n));
+    Chop(q2, MIN(x.n, y.n));
+    <* ASSERT r = r2 *>
+    <* ASSERT q = q2 *>
   END DivMod;
 
-PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
+PROCEDURE xLT (READONLY a, b: Int): BOOLEAN =
   VAR n := MIN (a.n, b.n);
   BEGIN
     <*ASSERT n # 0*>
@@ -213,9 +321,17 @@ PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
       END;
     END;
     RETURN FALSE;
+  END xLT;
+
+PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
+  VAR result1 := xLT(a, b);
+      result2 := TWord.LT(ToTargetInt(a), ToTargetInt(b));
+  BEGIN
+    <*ASSERT result1 = result2*>
+    RETURN result1;
   END LT;
 
-PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
+PROCEDURE xLE (READONLY a, b: Int): BOOLEAN =
   VAR n := MIN (a.n, b.n);
   BEGIN
     <*ASSERT n # 0*>
@@ -227,6 +343,14 @@ PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
       END;
     END;
     RETURN TRUE;
+  END xLE;
+
+PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
+  VAR result1 := xLE(a, b);
+      result2 := TWord.LE(ToTargetInt(a), ToTargetInt(b));
+  BEGIN
+    <* ASSERT result1 = result2 *>
+    RETURN result1;
   END LE;
 
 PROCEDURE xEQ (READONLY a, b: Int): BOOLEAN =
@@ -244,19 +368,16 @@ PROCEDURE xEQ (READONLY a, b: Int): BOOLEAN =
   END xEQ;
 
 PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
-  VAR x := xEQ(a, b);
+  VAR result1 := xEQ(a, b);
+      result2 := TInt.EQ(ToTargetInt(a), ToTargetInt(b));
   BEGIN
-    <* ASSERT x = xEQ(b, a) *>
-    <* ASSERT x = (LE(a, b) AND LE(b, a)) *>
-    RETURN x;
+    <* ASSERT result1 = result2 *>
+    RETURN result1;
   END EQ;
 
 PROCEDURE NE (READONLY a, b: Int): BOOLEAN =
-  VAR x := NOT xEQ(a, b);
   BEGIN
-    <* ASSERT x = (NOT xEQ(b, a)) *>
-    <* ASSERT x = (LT(a, b) OR LT(b, a)) *>
-    RETURN x;
+    RETURN NOT EQ(a, b);
   END NE;
 
 PROCEDURE GE (READONLY a, b: Int): BOOLEAN =
@@ -269,7 +390,7 @@ PROCEDURE GT (READONLY a, b: Int): BOOLEAN =
     RETURN LT(b, a);
   END GT;
 
-PROCEDURE And (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE xAnd (READONLY a, b: Int;  VAR r: Int) =
   VAR n := MIN (a.n, b.n);
   BEGIN
     <*ASSERT n # 0*>
@@ -277,18 +398,42 @@ PROCEDURE And (READONLY a, b: Int;  VAR r: Int) =
     FOR i := 0 TO n-1 DO
       r.x[i] := Word.And (a.x[i], b.x[i]);
     END;
+  END xAnd;
+
+PROCEDURE And (READONLY xa, xb: Int;  VAR r: Int) =
+  VAR a := xa; (* copy to avoid alias *)
+      b := xb; (* copy to avoid alias *)
+      r2: Int;
+  BEGIN
+    xAnd(a, b, r);
+    TWord.And(ToTargetInt(a), ToTargetInt(b), r2.x);
+    Chop(r,  MIN(a.n, b.n));
+    Chop(r2, MIN(a.n, b.n));
+    <* ASSERT r = r2 *>
   END And;
 
-PROCEDURE Or (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE xOr (READONLY a, b: Int;  VAR r: Int) =
   VAR n := MIN (a.n, b.n);
   BEGIN
     r.n := n;
     FOR i := 0 TO n-1 DO
       r.x[i] := Word.Or (a.x[i], b.x[i]);
     END;
+  END xOr;
+
+PROCEDURE Or (READONLY xa, xb: Int;  VAR r: Int) =
+  VAR a := xa; (* copy to avoid alias *)
+      b := xb; (* copy to avoid alias *)
+      r2: Int;
+  BEGIN
+    xOr(a, b, r);
+    TWord.Or(ToTargetInt(a), ToTargetInt(b), r2.x);
+    Chop(r,  MIN(a.n, b.n));
+    Chop(r2, MIN(a.n, b.n));
+    <* ASSERT r = r2 *>
   END Or;
 
-PROCEDURE Xor (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE xXor (READONLY a, b: Int;  VAR r: Int) =
   VAR n := MIN (a.n, b.n);
   BEGIN
     <*ASSERT n # 0*>
@@ -296,9 +441,21 @@ PROCEDURE Xor (READONLY a, b: Int;  VAR r: Int) =
     FOR i := 0 TO n-1 DO
       r.x[i] := Word.Xor (a.x[i], b.x[i]);
     END;
+  END xXor;
+
+PROCEDURE Xor (READONLY xa, xb: Int;  VAR r: Int) =
+  VAR a := xa; (* copy to avoid alias *)
+      b := xb; (* copy to avoid alias *)
+      r2: Int;
+  BEGIN
+    xXor(a, b, r);
+    TWord.Xor(ToTargetInt(a), ToTargetInt(b), r2.x);
+    Chop(r,  MIN(a.n, b.n));
+    Chop(r2, MIN(a.n, b.n));
+    <* ASSERT r = r2 *>
   END Xor;
 
-PROCEDURE Not (READONLY a: Int;  VAR r: Int) =
+PROCEDURE xNot (READONLY a: Int;  VAR r: Int) =
   VAR n := a.n;
   BEGIN
     <*ASSERT n # 0*>
@@ -306,9 +463,20 @@ PROCEDURE Not (READONLY a: Int;  VAR r: Int) =
     FOR i := 0 TO n-1 DO
       r.x[i] := Word.And (Word.Not (a.x[i]), Mask);
     END;
+  END xNot;
+
+PROCEDURE Not (READONLY xa: Int;  VAR r: Int) =
+  VAR a := xa; (* copy to avoid alias *)
+      r2: Int;
+  BEGIN
+    xNot(a, r);
+    TWord.Not(ToTargetInt(a), r2.x);
+    Chop(r,  a.n);
+    Chop(r2, a.n);
+    <* ASSERT r = r2 *>
   END Not;
 
-PROCEDURE LeftShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
+PROCEDURE xLeftShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
   VAR w, i, j, z, x1, x2: INTEGER;
       n := a.n;  size := n * BITSIZE (IByte);
   BEGIN
@@ -322,16 +490,33 @@ PROCEDURE LeftShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
       i := b MOD BITSIZE (IByte);
       j := BITSIZE (IByte) - i;
       FOR k := n-1 TO 0 BY -1 DO
-        z := k - w;  x1 := 0;  x2 := 0;
-        IF z   >= 0 THEN  x1 := LShift (a.x[z], i);   END;
-        IF z-1 >= 0 THEN  x2 := RShift (a.x[z-1], j); END;
+        z := k - w;
+        x1 := 0;
+        x2 := 0;
+        IF z >= 0 THEN
+          x1 := LShift (a.x[z], i);
+        END;
+        IF z-1 >= 0 THEN
+          x2 := RShift (a.x[z-1], j);
+        END;
         r.x[k] := Word.And (Word.Or (x1, x2), Mask);
       END;
       r.n := a.n;
     END;
+  END xLeftShift;
+
+PROCEDURE LeftShift (READONLY xa: Int;  b: CARDINAL;  VAR r: Int) =
+  VAR a := xa; (* copy to avoid alias *)
+      r2: Int;
+  BEGIN
+    xLeftShift(a, b, r);
+    TWord.LeftShift(ToTargetInt(a), b, r2.x);
+    Chop(r,  a.n);
+    Chop(r2, a.n);
+    <* ASSERT r = r2 *>
   END LeftShift;
 
-PROCEDURE RightShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
+PROCEDURE xRightShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
   VAR w, i, j, z, x1, x2: INTEGER;
       n := a.n;  size := n * BITSIZE (IByte);
   BEGIN
@@ -351,20 +536,41 @@ PROCEDURE RightShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
         r.x[k] := Word.And (Word.Or (x1, x2), Mask);
       END;
       r.n := a.n;
-
     END;
+  END xRightShift;
+
+PROCEDURE RightShift (READONLY xa: Int;  b: CARDINAL;  VAR r: Int) =
+  VAR a := xa; (* copy to avoid alias *)
+      r2: Int;
+  BEGIN
+    xRightShift(a, b, r);
+    TWord.RightShift(ToTargetInt(a), b, r2.x);
+    Chop(r,  a.n);
+    Chop(r2, a.n);
+    <* ASSERT r = r2 *>
   END RightShift;
 
-PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
+PROCEDURE xShift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
   BEGIN
     IF b > 0 THEN (* left shift *)
       LeftShift(a, b, r);
     ELSE (* right shift *)
       RightShift(a, -b, r);
     END;
+  END xShift;
+
+PROCEDURE Shift (READONLY xa: Int;  b: INTEGER;  VAR r: Int) =
+  VAR a := xa; (* copy to avoid alias *)
+      r2: Int;
+  BEGIN
+    xShift(a, b, r);
+    TWord.Shift(ToTargetInt(a), b, r2.x);
+    Chop(r,  a.n);
+    Chop(r2, a.n);
+    <* ASSERT r = r2 *>
   END Shift;
 
-PROCEDURE Rotate (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
+PROCEDURE xRotate (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
   VAR
     w, i, j, z, x1, x2: INTEGER;
     tmp: IBytes;
@@ -401,9 +607,20 @@ PROCEDURE Rotate (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
       r := Int {a.n, tmp};
 
     END;
+  END xRotate;
+
+PROCEDURE Rotate (READONLY xa: Int;  b: INTEGER;  VAR r: Int) =
+  VAR a := xa; (* copy to avoid alias *)
+      r2: Int;
+  BEGIN
+    xRotate(a, b, r);
+    TWord.Rotate(ToTargetInt(a), b, a.n, r2.x);
+    Chop(r,  a.n);
+    Chop(r2, a.n);
+    <* ASSERT r = r2 *>
   END Rotate;
 
-PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
+PROCEDURE xExtract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
   VAR w, b: INTEGER;
       size := x.n * BITSIZE (IByte);
   BEGIN
@@ -417,9 +634,25 @@ PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
     FOR k := w + 1 TO LAST (IBytes) DO r.x[k] := 0; END;
 
     RETURN TRUE;
+  END xExtract;
+
+PROCEDURE Extract (READONLY x0: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
+  VAR x := x0; (* copy to avoid alias *)
+      r2: Int;
+      result1, result2: BOOLEAN;
+  BEGIN
+    result1 := xExtract(x, i, n, r);
+    result2 := TWord.Extract(ToTargetInt(x), i, n, r2.x);
+    Chop(r,  x.n);
+    Chop(r2, x.n);
+    <* ASSERT result1 = result2 *>
+    IF result1 AND result2 THEN
+      <* ASSERT r = r2 *>
+    END;
+    RETURN result1;
   END Extract;
 
-PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
+PROCEDURE xInsert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
   VAR yy, yyy, yyyy: Int;
       size := x.n * BITSIZE (IByte);
   BEGIN
@@ -439,6 +672,23 @@ PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
     Or (r, yyy, r);
 
     RETURN TRUE;
+  END xInsert;
+
+PROCEDURE Insert (READONLY x0, y0: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
+  VAR x := x0; (* copy to avoid alias *)
+      y := y0; (* copy to avoid alias *)
+      r2: Int;
+      result1, result2: BOOLEAN;
+  BEGIN
+    result1 := xInsert(x, y, i, n, r);
+    result2 := TWord.Insert(ToTargetInt(x), ToTargetInt(y), i, n, r2.x);
+    Chop(r,  MIN(x.n, y.n));
+    Chop(r2, MIN(x.n, y.n));
+    <* ASSERT result1 = result2 *>
+    IF result1 AND result2 THEN
+      <* ASSERT r = r2 *>
+    END;
+    RETURN result1;
   END Insert;
 
 BEGIN
