@@ -23,7 +23,7 @@ IMPORT Target, TInt;
 TYPE
   Int = (* OPAQUE *) RECORD
     n: CARDINAL := NUMBER (IBytes); (* only bytes [0..n-1] contain valid bits *)
-    x := IBytes{0,..};              (* default is Zero *)
+    x := TInt.Zero;                 (* default is Zero *)
   END;
   IBytes = Target.Int;
   IByte = Target.IByte;
@@ -132,5 +132,6 @@ VAR (* CONST *)
 PROCEDURE Init();
 
 PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT;
+PROCEDURE TIntToDiagnosticText(a: Target.Int): TEXT;
 
 END M3BackInt.
