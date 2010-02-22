@@ -18,38 +18,38 @@ INTERFACE M3BackInt; (* also known as TInt *)
     otherwise they return FALSE.
 *)
 
-IMPORT Target;
+IMPORT Target, TInt;
 
 TYPE
   Int = (* OPAQUE *) RECORD
-    n: CARDINAL;          (* only bytes [0..n-1] contain valid bits *)
-    x := IBytes{0,..};    (* default is Zero *)
+    n: CARDINAL := NUMBER (IBytes); (* only bytes [0..n-1] contain valid bits *)
+    x := IBytes{0,..};              (* default is Zero *)
   END;
   IBytes = Target.Int;
   IByte = Target.IByte;
 
 CONST
-  Zero      = Int{NUMBER (IBytes), IBytes{ 0,0,..}};
-  One       = Int{NUMBER (IBytes), IBytes{ 1,0,..}};
-  Two       = Int{NUMBER (IBytes), IBytes{ 2,0,..}};
-  Three     = Int{NUMBER (IBytes), IBytes{ 3,0,..}};
-  Four      = Int{NUMBER (IBytes), IBytes{ 4,0,..}};
-  Eight     = Int{NUMBER (IBytes), IBytes{ 8,0,..}};
-  Ten       = Int{NUMBER (IBytes), IBytes{10,0,..}};
-  ThirtyOne = Int{NUMBER (IBytes), IBytes{31,0,..}};
-  ThirtyTwo = Int{NUMBER (IBytes), IBytes{32,0,..}};
-  SixtyThree= Int{NUMBER (IBytes), IBytes{63,0,..}};
-  SixtyFour = Int{NUMBER (IBytes), IBytes{64,0,..}};
-  F3FF      = Int{NUMBER (IBytes), IBytes{16_FF,16_F3,0,..}};
-  x0400     = Int{NUMBER (IBytes), IBytes{0,4,0,..}};
-  x0800     = Int{NUMBER (IBytes), IBytes{0,8,0,..}};
-  x0F00     = Int{NUMBER (IBytes), IBytes{0,16_F,0,..}};
+  Zero      = Int{x := TInt.Zero};
+  One       = Int{x := TInt.One};
+  Two       = Int{x := IBytes{ 2,0,..}};
+  Three     = Int{x := IBytes{ 3,0,..}};
+  Four      = Int{x := IBytes{ 4,0,..}};
+  Eight     = Int{x := IBytes{ 8,0,..}};
+  Ten       = Int{x := IBytes{10,0,..}};
+  ThirtyOne = Int{x := IBytes{31,0,..}};
+  ThirtyTwo = Int{x := IBytes{32,0,..}};
+  SixtyThree= Int{x := IBytes{63,0,..}};
+  SixtyFour = Int{x := IBytes{64,0,..}};
+  F3FF      = Int{x := IBytes{16_FF,16_F3,0,..}};
+  x0400     = Int{x := IBytes{0,4,0,..}};
+  x0800     = Int{x := IBytes{0,8,0,..}};
+  x0F00     = Int{x := IBytes{0,16_F,0,..}};
 
   (* 'M' for Minus (negative) *)
 
-  MOne  = Int{NUMBER (IBytes), IBytes{16_FF,..}};
-  MThirtyOne = Int{NUMBER (IBytes), IBytes{16_E1,16_FF,..}};
-  MSixtyThree= Int{NUMBER (IBytes), IBytes{16_C1,16_FF,..}};
+  MOne       = Int{x := TInt.MOne};
+  MThirtyOne = Int{x := IBytes{16_E1,16_FF,..}};
+  MSixtyThree= Int{x := IBytes{16_C1,16_FF,..}};
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)

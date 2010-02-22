@@ -8,7 +8,7 @@
 
 MODULE M3BackInt; (* also known as TInt *)
 
-IMPORT Target, Word, Text, Fmt, M3BackWord;
+IMPORT Target, Word, Text, Fmt, TInt, M3BackWord, RTIO;
 
 CONST (* IMPORTS *)
   RShift = Word.RightShift;
@@ -20,6 +20,49 @@ CONST
   SignMask = 16_80;
   Base     = 16_100;
   Digits   = ARRAY [0..9] OF CHAR { '0','1','2','3','4','5','6','7','8','9'};
+
+PROCEDURE ToTargetInt(READONLY a: Int): Target.Int =
+  (* sign extend *)
+  VAR b: Target.Int;
+      extend := 0;
+  BEGIN
+
+    <* ASSERT LAST(a.x) = LAST(b) *>
+
+    FOR i := 0 TO a.n - 1 DO
+      b[i] := a.x[i];
+    END;
+    IF Word.And(a.x[a.n - 1], SignMask) # 0 THEN
+      extend := Mask;
+    END;
+    FOR i := a.n TO LAST(b) DO
+      b[i] := extend;
+    END;
+    RETURN b;
+  END ToTargetInt;
+
+PROCEDURE Chop(VAR a: Int; n: CARDINAL): BOOLEAN =
+  (* check that it fits, by seeing if the sign extension is correct *)
+  VAR extend := 0;
+  BEGIN
+    <* ASSERT n # 0 *>
+    <* ASSERT n <= NUMBER(a.x) *>
+
+    (* be sure it fits by checking the sign extension *)
+
+    IF Word.And(a.x[LAST(a.x)], SignMask) # 0 THEN
+      extend := Mask;
+    END;
+    FOR i := n TO LAST(a.x) DO
+      IF a.x[i] # extend THEN
+        RETURN FALSE;
+      END;
+    END;
+    a.n := n;
+
+    RETURN TRUE;
+
+  END Chop;
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
   BEGIN
@@ -39,17 +82,25 @@ PROCEDURE CheckSign (READONLY r: Int;  n: CARDINAL): Sign =
     <*ASSERT n # 0*>
     IF And (r.x[r.n-1], SignMask) = 0 THEN
       IF n < r.n THEN
-        IF And (r.x[n-1], SignMask) # 0 THEN RETURN Sign.Bad END;
+        IF And (r.x[n-1], SignMask) # 0 THEN
+          RETURN Sign.Bad;
+        END;
         FOR i := n TO r.n-1 DO
-          IF r.x[i] # 0 THEN RETURN Sign.Bad END;
+          IF r.x[i] # 0 THEN
+            RETURN Sign.Bad;
+          END;
         END;
       END;
       RETURN Sign.Pos;
     ELSE
       IF n < r.n THEN
-        IF And (r.x[n-1], SignMask) = 0 THEN RETURN Sign.Bad END;
+        IF And (r.x[n-1], SignMask) = 0 THEN
+          RETURN Sign.Bad;
+        END;
         FOR i := n TO r.n-1 DO
-          IF r.x[i] # Mask THEN RETURN Sign.Bad END;
+          IF r.x[i] # Mask THEN RETURN
+            Sign.Bad;
+          END;
         END;
       END;
       RETURN Sign.Neg;
@@ -75,50 +126,95 @@ PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
     RETURN result;
   END ToInt;
 
-PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
-  (* It is safe for r to alias a or b *)
-  VAR n := MIN (a.n, b.n);  carry := 0;  r_sign := Sign.Bad;
+PROCEDURE Add (READONLY xa, xb: Int;  VAR r: Int): BOOLEAN =
+  VAR a := xa;
+      b := xb;
+      n := MIN (a.n, b.n);  carry := 0;  r_sign := Sign.Bad;
       a_sign := CheckSign (a, n);  b_sign := CheckSign (b, n);
+      r2: Int;
+      result1, result2: BOOLEAN;
   BEGIN
     IF (a_sign = Sign.Bad) OR (b_sign = Sign.Bad) THEN
-      RETURN FALSE
+      result1 := FALSE;
+    ELSE
+      r.n := n;
+      FOR i := 0 TO n-1 DO
+        carry := a.x[i] + b.x[i] + carry;
+        r.x[i] := And (carry, Mask);
+        carry := RShift (carry, BITSIZE (IByte));
+      END;
+      r_sign := CheckSign (r, n);  <*ASSERT r_sign # Sign.Bad*>
+      result1 := (a_sign # b_sign) OR (a_sign = r_sign); 
     END;
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      carry := a.x[i] + b.x[i] + carry;
-      r.x[i] := And (carry, Mask);
-      carry := RShift (carry, BITSIZE (IByte));
-    END;
-    r_sign := CheckSign (r, n);  <*ASSERT r_sign # Sign.Bad*>
-    RETURN (a_sign # b_sign) OR (a_sign = r_sign);
+
+    result2 := TInt.Add(ToTargetInt(a), ToTargetInt(b), r2.x) AND Chop(r2, MIN(a.n, b.n));
+    <* ASSERT result1 = result2 *>
+    <* ASSERT (NOT result1) OR EQ(r, r2) *>
+
+    RETURN result1;
+
   END Add;
 
-PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
-  (* It is safe for r to alias a or b *)
-  VAR n := MIN (a.n, b.n);  borrow := 0; r_sign := Sign.Bad;
+PROCEDURE Subtract (READONLY xa, xb: Int;  VAR r: Int): BOOLEAN =
+  VAR a := xa;
+      b := xb;
+      n := MIN (a.n, b.n);  borrow := 0; r_sign := Sign.Bad;
       a_sign := CheckSign (a, n);  b_sign := CheckSign (b, n);
+      r2: Int;
+      result1, result2: BOOLEAN;
   BEGIN
     IF (a_sign = Sign.Bad) OR (b_sign = Sign.Bad) THEN
-      RETURN FALSE
+      result1 := FALSE;
+    ELSE
+      r.n := n;
+      FOR i := 0 TO n-1 DO
+        borrow := a.x[i] - b.x[i] - borrow;
+        r.x[i] := And (borrow, Mask);
+        borrow := And (RShift (borrow, BITSIZE (IByte)), 1);
+      END;
+      r_sign := CheckSign (r, n);
+      <*ASSERT r_sign # Sign.Bad*>
+      result1 := ((a_sign = b_sign) OR (a_sign = r_sign));
     END;
-    r.n := n;
-    FOR i := 0 TO n-1 DO
-      borrow := a.x[i] - b.x[i] - borrow;
-      r.x[i] := And (borrow, Mask);
-      borrow := And (RShift (borrow, BITSIZE (IByte)), 1);
+    result2 := TInt.Subtract(ToTargetInt(a), ToTargetInt(b), r2.x) AND Chop(r2, MIN(a.n, b.n));
+
+    IF result1 AND a.x[0] = 0 AND b.x[0] # 16_80 AND b.x[0] # 0 THEN
+      <* ASSERT r.x[0] # b.x[0] *>
     END;
-    r_sign := CheckSign (r, n);  <*ASSERT r_sign # Sign.Bad*>
-    RETURN (a_sign = b_sign) OR (a_sign = r_sign);
+
+    IF (result1 # result2) OR (result1 AND result2 AND NOT EQ(r, r2)) THEN
+      RTIO.PutText("Subtract disagrees ");
+      RTIO.PutText(TargetIntToDiagnosticText(a));
+      RTIO.PutText(" - ");
+      RTIO.PutText(TargetIntToDiagnosticText(b));
+      RTIO.PutText(":");
+      RTIO.PutInt(ORD(result1));
+      RTIO.PutText(",");
+      RTIO.PutText(TargetIntToDiagnosticText(r));
+      RTIO.PutText("\n");
+
+      RTIO.PutText("Subtract disagrees ");
+      RTIO.PutText(TIntToDiagnosticText(ToTargetInt(a)));
+      RTIO.PutText(" - ");
+      RTIO.PutText(TIntToDiagnosticText(ToTargetInt(b)));
+      RTIO.PutText(":");
+      RTIO.PutInt(ORD(result2));
+      RTIO.PutText(",");
+      RTIO.PutText(TIntToDiagnosticText(r2.x));
+      RTIO.PutText("\n");
+
+      RTIO.Flush();
+      <*ASSERT FALSE*>
+    END;
+    RETURN result1;
   END Subtract;
 
 PROCEDURE Negate (READONLY a: Int;  VAR r: Int): BOOLEAN =
-  (* It is safe for r to alias a *)
   BEGIN
     RETURN Subtract(Zero, a, r);
   END Negate;
   
 PROCEDURE Abs (READONLY a: Int;  VAR r: Int): BOOLEAN =
-  (* It is safe for r to alias a *)
   BEGIN
     IF GE(a, Zero) THEN
       r := a;
@@ -127,59 +223,104 @@ PROCEDURE Abs (READONLY a: Int;  VAR r: Int): BOOLEAN =
     RETURN Negate(a, r);
   END Abs;
 
-PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
+PROCEDURE Multiply (READONLY xa, xb: Int;  VAR r: Int): BOOLEAN =
   VAR
-    n := MIN (a.n, b.n);  k, carry: INTEGER;  q: Int;
+    a := xa;
+    b := xb;
+    n := MIN (a.n, b.n);
+    k: INTEGER;
+    carry: INTEGER; 
+    q: Int;
     p := ARRAY [0.. 2 * NUMBER (IBytes) - 1] OF IByte {0, ..};
-    a_sign := CheckSign (a, n);  b_sign := CheckSign (b, n);
+    a_sign := CheckSign (a, n);
+    b_sign := CheckSign (b, n);
+    r2: Int;
+    result1: BOOLEAN;
+    result2: BOOLEAN;
   BEGIN
     IF (a_sign = Sign.Bad) OR (b_sign = Sign.Bad) THEN
-      RETURN FALSE
-    END;
-    FOR i := 0 TO n-1 DO
-      FOR j := 0 TO n-1 DO
-        k := i + j;
-        carry := Word.Times (a.x[i], b.x[j]);
-        WHILE carry # 0 DO
-          carry := carry + p[k];
-          p[k] := And (carry, Mask);
-          carry := RShift (carry, BITSIZE (IByte));
-          INC (k);
+      result1 := FALSE
+    ELSE
+      FOR i := 0 TO n-1 DO
+        FOR j := 0 TO n-1 DO
+          k := i + j;
+          carry := Word.Times (a.x[i], b.x[j]);
+          WHILE carry # 0 DO
+            carry := carry + p[k];
+            p[k] := And (carry, Mask);
+            carry := RShift (carry, BITSIZE (IByte));
+            INC (k);
+          END;
+        END;
+      END;
+
+      r.n := n;
+      FOR i := 0 TO n-1 DO
+        r.x[i] := p[i];
+      END;
+      q.n := n;
+      FOR i := 0 TO n-1 DO
+        q.x[i] := p[i+n];
+      END;
+
+      (* compute the top half *)
+      IF And (a.x[n-1], SignMask) # 0 THEN
+        EVAL Subtract (q, b, q);
+      END;
+      IF And (b.x[n-1], SignMask) # 0 THEN
+        EVAL Subtract (q, a, q);
+      END;
+
+      (* there is overflow if the top half is not equal to
+         to the sign bit of the low half *)
+      CASE CheckSign (r, n) OF
+      | Sign.Bad => <*ASSERT FALSE*>
+      | Sign.Pos => carry := 0;
+      | Sign.Neg => carry := Mask;
+      END;
+      result1 := TRUE;
+      FOR i := 0 TO n-1 DO
+        IF q.x[i] # carry THEN
+          result1 := FALSE;
+          EXIT;
         END;
       END;
     END;
 
-    r.n := n; FOR i := 0 TO n-1 DO r.x[i] := p[i]; END;
-    q.n := n; FOR i := 0 TO n-1 DO q.x[i] := p[i+n]; END;
+    result2 := TInt.Multiply(ToTargetInt(a), ToTargetInt(b), r2.x) AND Chop(r2, MIN(a.n, b.n));
+    <* ASSERT result1 = result2 *>
+    <* ASSERT (NOT result1) OR EQ(r, r2) *>
 
-    (* compute the top half *)
-    IF And (a.x[n-1], SignMask) # 0 THEN EVAL Subtract (q, b, q); END;
-    IF And (b.x[n-1], SignMask) # 0 THEN EVAL Subtract (q, a, q); END;
-
-    (* there is overflow if the top half is not equal to
-       to the sign bit of the low half *)
-    CASE CheckSign (r, n) OF
-    | Sign.Bad => <*ASSERT FALSE*>
-    | Sign.Pos => carry := 0;
-    | Sign.Neg => carry := Mask;
-    END;
-    FOR i := 0 TO n-1 DO
-      IF q.x[i] # carry THEN RETURN FALSE; END;
-    END;
-
-    RETURN TRUE;
+    RETURN result1;
   END Multiply;
 
-PROCEDURE Div (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
-  VAR r: Int;
+PROCEDURE Div (READONLY xnum, xden: Int;  VAR q: Int): BOOLEAN =
+  VAR num := xnum;
+      den := xden;
+      r: Int;
+      q2: Int;
+      result1: BOOLEAN;
+      result2: BOOLEAN;
   BEGIN
-    RETURN DivMod (num, den, q, r);
+    result1 := DivMod (num, den, q, r);
+    result2 := TInt.Div(ToTargetInt(num), ToTargetInt(den), q2.x) AND Chop(q2, MIN(num.n, den.n));
+    <* ASSERT result1 = result2 *>
+    <* ASSERT (NOT result1) OR EQ(q, q2) *>
+    RETURN result1;
   END Div;
 
-PROCEDURE Mod (READONLY num, den: Int;  VAR r: Int): BOOLEAN =
-  VAR q: Int;
+PROCEDURE Mod (READONLY xnum, xden: Int;  VAR r: Int): BOOLEAN =
+  VAR num := xnum;
+      den := xden;
+      q: Int;
+      r2: Int;
+      result1, result2: BOOLEAN;
   BEGIN
-    RETURN DivMod (num, den, q, r);
+    result1 := DivMod (num, den, q, r);
+    result2 := TInt.Mod(ToTargetInt(num), ToTargetInt(den), r2.x) AND Chop(r2, MIN(num.n, den.n));
+    <* ASSERT result1 = result2 *>
+    <* ASSERT (NOT result1) OR EQ(r, r2) *>
+    RETURN result1;
   END Mod;
 
 PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
@@ -203,8 +344,8 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
     IF EQ (a, Zero) THEN  q := Zero;  r := Zero;  RETURN TRUE;  END;
 
     (* grab the signs *)
-    num_neg := a_sign = Sign.Neg;
-    den_neg := b_sign = Sign.Neg;
+    num_neg := (a_sign = Sign.Neg);
+    den_neg := (b_sign = Sign.Neg);
 
     (* check for the only possible overflow:  FIRST DIV -1 *)
     IF num_neg AND den_neg THEN
@@ -261,35 +402,82 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
 
 PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
   VAR n := MIN (a.n, b.n);
+      result := TRUE;
   BEGIN
     IF (CheckSign (a, n) = Sign.Bad) OR (CheckSign (b, n) = Sign.Bad) THEN
-      RETURN FALSE;
+      result := FALSE;
     END;
     FOR i := 0 TO n-1 DO
-      IF a.x[i] # b.x[i] THEN RETURN FALSE; END;
+      IF a.x[i] # b.x[i] THEN
+        result := FALSE;
+        EXIT;
+      END;
     END;
-    RETURN TRUE;
+    <* ASSERT result = TInt.EQ(ToTargetInt(a), ToTargetInt(b)) *>
+    RETURN result;
   END EQ;
 
 PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
   VAR a_sign := CheckSign (a, a.n);
       b_sign := CheckSign (b, b.n);
       n := MIN (a.n, b.n);
+      result := FALSE;
   BEGIN
     <*ASSERT a_sign # Sign.Bad*>
     <*ASSERT b_sign # Sign.Bad*>
-    IF (a_sign # b_sign) THEN RETURN (a_sign = Sign.Neg); END;
 
-    IF CheckSign (a, n) = Sign.Bad THEN RETURN a_sign = Sign.Neg END;
-    IF CheckSign (b, n) = Sign.Bad THEN RETURN b_sign = Sign.Pos END;
-
-    FOR i := n-1 TO 0 BY -1 DO
-      IF    a.x[i] < b.x[i] THEN  RETURN TRUE;
-      ELSIF a.x[i] > b.x[i] THEN  RETURN FALSE;
+    (* negative is less than positive
+    *)
+    IF (a_sign # b_sign) THEN
+      result := (a_sign = Sign.Neg);
+    ELSE
+      (* If a doesn't fit in b's precision and a is negative, then a is less.
+       *)
+      IF CheckSign (a, n) = Sign.Bad THEN
+        result := (a_sign = Sign.Neg);
+      (* If b doesn't fit in a's precision and b is positive, then b is greater.
+       *)
+      ELSIF CheckSign (b, n) = Sign.Bad THEN
+        result := (b_sign = Sign.Pos);
+      ELSE
+        (* Otherwise they have the same sign and fit in the smaller precision,
+         * so compare magnitudes. Even this is tricky.
+         * Notice that -1 = FF, -2 = FE, so -1 > -2, which is correct.
+         *)
+        FOR i := n-1 TO 0 BY -1 DO
+          IF a.x[i] # b.x[i] THEN
+            IF a.x[i] < b.x[i] THEN
+              result := TRUE;
+            ELSIF a.x[i] > b.x[i] THEN
+              result := FALSE;
+            END;
+            EXIT;
+          END;
+        END;
       END;
     END;
 
-    RETURN FALSE;
+    IF result # TInt.LT(ToTargetInt(a), ToTargetInt(b)) THEN
+      RTIO.PutText("LT disagrees ");
+      RTIO.PutText(TargetIntToDiagnosticText(a));
+      RTIO.PutText(" < ");
+      RTIO.PutText(TargetIntToDiagnosticText(b));
+      RTIO.PutText(":");
+      RTIO.PutInt(ORD(result));
+      RTIO.PutText("\n");
+
+      RTIO.PutText("LT disagrees ");
+      RTIO.PutText(TIntToDiagnosticText(ToTargetInt(a)));
+      RTIO.PutText(" < ");
+      RTIO.PutText(TIntToDiagnosticText(ToTargetInt(b)));
+      RTIO.PutText(":");
+      RTIO.PutInt(ORD(TInt.LT(ToTargetInt(a), ToTargetInt(b))));
+      RTIO.PutText("\n");
+
+      RTIO.Flush();
+      <*ASSERT FALSE*>
+    END;
+    RETURN result;
   END LT;
 
 PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
@@ -447,6 +635,18 @@ PROCEDURE TargetIntToDiagnosticText(a: Int): TEXT =
     END;
     RETURN t;
   END TargetIntToDiagnosticText;
+
+PROCEDURE TIntToDiagnosticText(a: Target.Int): TEXT =
+  VAR t := "";
+  BEGIN
+    FOR i := 0 TO 7 DO
+      t := t & Fmt.Unsigned(a[i]);
+      IF i # 7 THEN
+        t := t & ",";
+      END;
+    END;
+    RETURN t;
+  END TIntToDiagnosticText;
 
 BEGIN
 END M3BackInt.
