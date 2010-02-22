@@ -25,8 +25,8 @@ TYPE
     n: CARDINAL;          (* only bytes [0..n-1] contain valid bits *)
     x := IBytes{0,..};    (* default is Zero *)
   END;
-  IBytes = ARRAY [0..7] OF IByte;
-  IByte = BITS 8 FOR [0..16_ff];
+  IBytes = Target.Int;
+  IByte = Target.IByte;
 
 CONST
   Zero      = Int{NUMBER (IBytes), IBytes{ 0,0,..}};
