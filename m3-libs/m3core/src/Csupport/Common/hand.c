@@ -48,6 +48,7 @@ typedef unsigned long long uint64;
 #include <limits.h>
 #include <string.h>
 #include <assert.h>
+#include <stddef.h>
 
 #if !defined(INT64_MAX)
 #if defined(LLONG_MAX)
@@ -338,80 +339,80 @@ POSIX_STATIC int64 __stdcall m3_mod64(int64 b, int64 a)
   }
 }
 
-#define SET_GRAIN (sizeof (long) * 8)
+#define SET_GRAIN (sizeof (size_t) * 8)
 
-ulong __stdcall set_member
-    ANSI((          ulong elt, ulong* set))
-      KR((elt, set) ulong elt; ulong* set;)
+size_t __stdcall set_member
+    ANSI((          size_t elt, size_t* set))
+      KR((elt, set) size_t elt; size_t* set;)
 {
-  register ulong word = elt / SET_GRAIN;
-  register ulong bit  = elt % SET_GRAIN;
+  register size_t word = elt / SET_GRAIN;
+  register size_t bit  = elt % SET_GRAIN;
   return (set[word] & (1UL << bit)) != 0;
 }
 
 void __stdcall set_union
-    ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
-      KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
+    ANSI((                 size_t n_bits, size_t* c, size_t* b, size_t* a))
+      KR((n_bits, c, b, a) size_t n_bits; size_t* c; size_t* b; size_t* a;)
 {
-  register ulong n_words = n_bits / SET_GRAIN;
-  register ulong i;
+  register size_t n_words = n_bits / SET_GRAIN;
+  register size_t i;
   for (i = 0; i < n_words; i++) {
     a[i] = b[i] | c[i];
   }
 }
 
 void __stdcall set_intersection
-    ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
-      KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
+    ANSI((                 size_t n_bits, size_t* c, size_t* b, size_t* a))
+      KR((n_bits, c, b, a) size_t n_bits; size_t* c; size_t* b; size_t* a;)
 {
-  register ulong n_words = n_bits / SET_GRAIN;
-  register ulong i;
+  register size_t n_words = n_bits / SET_GRAIN;
+  register size_t i;
   for (i = 0; i < n_words; i++) {
     a[i] = b[i] & c[i];
   }
 }
 
 void __stdcall set_difference
-    ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
-      KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
+    ANSI((                 size_t n_bits, size_t* c, size_t* b, size_t* a))
+      KR((n_bits, c, b, a) size_t n_bits; size_t* c; size_t* b; size_t* a;)
 {
-  register ulong n_words = n_bits / SET_GRAIN;
-  register ulong i;
+  register size_t n_words = n_bits / SET_GRAIN;
+  register size_t i;
   for (i = 0; i < n_words; i++) {
     a[i] = b[i] & (~ c[i]);
   }
 }
 
 void __stdcall set_sym_difference
-    ANSI((                 ulong n_bits, ulong* c, ulong* b, ulong* a))
-      KR((n_bits, c, b, a) ulong n_bits; ulong* c; ulong* b; ulong* a;)
+    ANSI((                 size_t n_bits, size_t* c, size_t* b, size_t* a))
+      KR((n_bits, c, b, a) size_t n_bits; size_t* c; size_t* b; size_t* a;)
 {
-  register ulong n_words = n_bits / SET_GRAIN;
-  register ulong i;
+  register size_t n_words = n_bits / SET_GRAIN;
+  register size_t i;
   for (i = 0; i < n_words; i++) {
     a[i] = b[i] ^ c[i];
   }
 }
 
-ulong __stdcall set_ge
-    ANSI((              ulong n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
+size_t __stdcall set_ge
+    ANSI((              size_t n_bits, size_t* b, size_t* a))
+      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
 {
-  register ulong n_words = n_bits / SET_GRAIN;
-  register ulong i;
+  register size_t n_words = n_bits / SET_GRAIN;
+  register size_t i;
   for (i = 0; i < n_words; i++) {
     if ((~ a[i]) & b[i]) return 0;
   }
   return 1;
 }
 
-ulong __stdcall set_gt
-    ANSI((              ulong n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
+size_t __stdcall set_gt
+    ANSI((              size_t n_bits, size_t* b, size_t* a))
+      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
 {
-  register ulong n_words = n_bits / SET_GRAIN;
-  register ulong i;
-  register ulong eq = 0;
+  register size_t n_words = n_bits / SET_GRAIN;
+  register size_t i;
+  register size_t eq = 0;
   for (i = 0; i < n_words; i++) {
     if ((~ a[i]) & b[i]) return 0;
     eq |=  (a[i] ^ b[i]);
@@ -419,25 +420,25 @@ ulong __stdcall set_gt
   return (eq != 0);
 }
 
-ulong __stdcall set_le
-    ANSI((              ulong n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
+size_t __stdcall set_le
+    ANSI((              size_t n_bits, size_t* b, size_t* a))
+      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
 {
-  register ulong n_words = n_bits / SET_GRAIN;
-  register ulong i;
+  register size_t n_words = n_bits / SET_GRAIN;
+  register size_t i;
   for (i = 0; i < n_words; i++) {
     if (a[i] & (~ b[i])) return 0;
   }
   return 1;
 }
 
-ulong __stdcall set_lt
-    ANSI((              ulong n_bits, ulong* b, ulong* a))
-      KR((n_bits, b, a) ulong n_bits; ulong* b; ulong* a;)
+size_t __stdcall set_lt
+    ANSI((              size_t n_bits, size_t* b, size_t* a))
+      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
 {
-  register ulong n_words = n_bits / SET_GRAIN;
-  register ulong i;
-  register ulong eq = 0;
+  register size_t n_words = n_bits / SET_GRAIN;
+  register size_t i;
+  register size_t eq = 0;
   for (i = 0; i < n_words; i++) {
     if (a[i] & (~ b[i])) return 0;
     eq |= (a[i] ^ b[i]);
@@ -528,7 +529,7 @@ static const ulong HiBits[] = {
 
 #elif ULONG_MAX == 0xffffffffffffffff
 
-static const ulong LoBits[] = {
+static const size_t LoBits[] = {
 0x0000000000000001,0x0000000000000003,0x0000000000000007,0x000000000000000f,
 0x000000000000001f,0x000000000000003f,0x000000000000007f,0x00000000000000ff,
 0x00000000000001ff,0x00000000000003ff,0x00000000000007ff,0x0000000000000fff,
@@ -547,7 +548,7 @@ static const ulong LoBits[] = {
 0x1fffffffffffffff,0x3fffffffffffffff,0x7fffffffffffffff,0xffffffffffffffff
 };
 
-static const ulong HiBits[] = {
+static const size_t HiBits[] = {
 0xffffffffffffffff,0xfffffffffffffffe,0xfffffffffffffffc,0xfffffffffffffff8,
 0xfffffffffffffff0,0xffffffffffffffe0,0xffffffffffffffc0,0xffffffffffffff80,
 0xffffffffffffff00,0xfffffffffffffe00,0xfffffffffffffc00,0xfffffffffffff800,
@@ -571,17 +572,17 @@ static const ulong HiBits[] = {
 #endif
 
 void __stdcall set_range
-    ANSI((       ulong b, ulong a, ulong* s))
-    KR((b, a, s) ulong b; ulong a; ulong* s;)
+    ANSI((       size_t b, size_t a, size_t* s))
+    KR((b, a, s) size_t b; size_t a; size_t* s;)
 {
   if (b < a) {
       /* no bits to set */
   } else {
-      ulong a_word = a / SET_GRAIN;
-      ulong a_bit  = a % SET_GRAIN;
-      ulong b_word = b / SET_GRAIN;
-      ulong b_bit  = b % SET_GRAIN;
-      ulong i;
+      size_t a_word = a / SET_GRAIN;
+      size_t a_bit  = a % SET_GRAIN;
+      size_t b_word = b / SET_GRAIN;
+      size_t b_bit  = b % SET_GRAIN;
+      size_t i;
 
       if (a_word == b_word) {
           s [a_word] |= (HiBits [a_bit] & LoBits [b_bit + LOW_BITS_ADJUST]);
@@ -593,21 +594,21 @@ void __stdcall set_range
     }
 }
 
-#define HIGH_BITS(a) ((~(ulong)0) << (a))
-#define LOW_BITS(a)  ((~(ulong)0) >> (SET_GRAIN - (a) - 1))
+#define HIGH_BITS(a) ((~(size_t)0) << (a))
+#define LOW_BITS(a)  ((~(size_t)0) >> (SET_GRAIN - (a) - 1))
 
 static void __stdcall set_range_new
-    ANSI((       ulong b, ulong a, ulong* s))
-    KR((b, a, s) ulong b; ulong a; ulong* s;)
+    ANSI((       size_t b, size_t a, size_t* s))
+    KR((b, a, s) size_t b; size_t a; size_t* s;)
 {
   if (b < a) {
       /* no bits to set */
   } else {
-      ulong a_word = a / SET_GRAIN;
-      ulong b_word = b / SET_GRAIN;
-      ulong i;
-      ulong high_bits = HIGH_BITS(a % SET_GRAIN);
-      ulong low_bits = LOW_BITS(b % SET_GRAIN);
+      size_t a_word = a / SET_GRAIN;
+      size_t b_word = b / SET_GRAIN;
+      size_t i;
+      size_t high_bits = HIGH_BITS(a % SET_GRAIN);
+      size_t low_bits = LOW_BITS(b % SET_GRAIN);
 
       if (a_word == b_word) {
           s [a_word] |= (high_bits & low_bits);
@@ -621,11 +622,11 @@ static void __stdcall set_range_new
 }
 
 void __stdcall set_singleton
-    ANSI((      ulong a, ulong* s))
-      KR((a, s) ulong a; ulong* s;)
+    ANSI((      size_t a, size_t* s))
+      KR((a, s) size_t a; size_t* s;)
 {
-  ulong a_word = a / SET_GRAIN;
-  ulong a_bit  = a % SET_GRAIN;
+  size_t a_word = a / SET_GRAIN;
+  size_t a_bit  = a % SET_GRAIN;
   s[a_word] |= (1UL << a_bit);
 }
 
