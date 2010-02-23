@@ -58,6 +58,8 @@ TYPE
     slot := 0;                          (* LL = slotMu; index in slots *)
     floatState : FloatMode.ThreadState; (* per-thread floating point state *)
     heapState : RTHeapRep.ThreadState;  (* per-thread heap state *)
+    controlFile: int := -1;             (* for Interix *)
+    statusFile: int := -1;              (* for Interix *)
   END;
 
 PROCEDURE SetState (act: Activation;  state: ActState) =
@@ -265,11 +267,14 @@ VAR (* LL = slotMu *)
   slots: REF ARRAY OF T;    (* NOTE: we don't use slots[0] *)
 
 PROCEDURE InitActivations (me: Activation) =
+  VAR r: int;
   BEGIN
     me.handle := pthread_self();
     me.next := me;
     me.prev := me;
     SetActivation(me);
+    r := OpenCurrentThreadInterixFiles(me.controlFile, me.statusFile);
+    <*ASSERT r=0*>
     <* ASSERT next_slot = 1 *>    (* no threads created yet *)
     <* ASSERT slots = NIL *>      (* no threads created yet *)
     <* ASSERT n_slotted = 0 *>    (* no threads created yet *)
@@ -395,6 +400,12 @@ PROCEDURE CleanThread (r: REFANY) =
   BEGIN
     pthread_mutex_delete(t.act.mutex);
     pthread_cond_delete(t.act.cond);
+    IF t.act.controlFile # -1 THEN
+        EVAL Unix.close(t.act.controlFile);
+    END;
+    IF t.act.statusFile # -1 THEN
+        EVAL Unix.close(t.act.statusFile);
+    END;
     DISPOSE(t.act);
   END CleanThread;
 
@@ -497,7 +508,7 @@ PROCEDURE Fork (closure: Closure): T =
     | SizedClosure (scl) => size := scl.stackSize;
     ELSE (*skip*)
     END;
-    WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act) DO
+    WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act, act.controlFile, act.statusFile) DO
       IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
     RETURN t;
@@ -968,7 +979,7 @@ PROCEDURE ProcessOther (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
       RTIO.PutText("Processing act="); RTIO.PutAddr(act); RTIO.PutText("\n"); RTIO.Flush();
     END;
     RTHeapRep.FlushThreadState(act.heapState);
-    ProcessStopped(act.handle, act.stackbase, act.context, p);
+    ProcessStopped(act.handle, act.stackbase, act.context, p, act.statusFile);
   END ProcessOther;
 
 (* Signal based suspend/resume *)
@@ -991,9 +1002,9 @@ PROCEDURE StopThread (act: Activation): BOOLEAN =
   BEGIN
     <*ASSERT act.state = ActState.Stopping*>
     <*ASSERT SIG_SUSPEND = 0*>
-    IF NOT SuspendThread(act.handle) THEN RETURN FALSE END;
+    IF NOT SuspendThread(act.handle, act.controlFile) THEN RETURN FALSE END;
     IF act.heapState.inCritical # 0 THEN
-      IF NOT RestartThread(act.handle) THEN <*ASSERT FALSE*> END;
+      IF NOT RestartThread(act.handle, act.controlFile) THEN <*ASSERT FALSE*> END;
       RETURN FALSE;
     END;
     RETURN TRUE;
@@ -1004,7 +1015,7 @@ PROCEDURE StartThread (act: Activation): BOOLEAN =
   BEGIN
     <*ASSERT act.state = ActState.Starting*>
     <*ASSERT SIG_SUSPEND = 0*>
-    RETURN RestartThread(act.handle);
+    RETURN RestartThread(act.handle, act.controlFile);
   END StartThread;
 
 PROCEDURE StopWorld () =
@@ -1295,9 +1306,8 @@ PROCEDURE PerfRunning () =
 (*-------------------------------------------------------- Initialization ---*)
 
 PROCEDURE Init ()=
-  VAR
-    self: T;
-    me: Activation;
+  VAR self: T;
+      me: Activation;
   BEGIN
     InitC(ADR(self));
 

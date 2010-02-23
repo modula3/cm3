@@ -114,20 +114,23 @@ ThreadPThread__sigsuspend(void)
 }
 
 int
-ThreadPThread__SuspendThread (m3_pthread_t mt)
+ThreadPThread__SuspendThread(m3_pthread_t mt,
+                             int controlFile)
 {
   abort();
 }
 
 int
-ThreadPThread__RestartThread (m3_pthread_t mt)
+ThreadPThread__RestartThread(m3_pthread_t mt,
+                             int controlFile)
 {
   abort();
 }
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
-                               void (*p)(void *start, void *limit))
+ThreadPThread__ProcessStopped(m3_pthread_t mt, char *bottom, char *context,
+                              void (*p)(void *start, void *limit),
+                              int statusFile)
 {
   /* process stack */
   if (!bottom) return;
@@ -196,12 +199,17 @@ typedef void *(*start_routine_t)(void *);
 int
 ThreadPThread__thread_create(size_t stackSize,
                              start_routine_t start_routine,
-                             void *arg)
+                             void *arg,
+                             int* controlFile,
+                             int* statusFile)
 {
   int r;
   size_t bytes;
   pthread_attr_t attr;
   pthread_t pthread;
+
+  *controlFile = -1;
+  *statusFile = -1;
 
   M3_RETRY(pthread_attr_init(&attr));
 #ifdef __hpux
@@ -221,6 +229,11 @@ ThreadPThread__thread_create(size_t stackSize,
   pthread_attr_setstacksize(&attr, bytes);
 
   M3_RETRY(pthread_create(&pthread, &attr, start_routine, arg));
+
+#ifdef __INTERIX
+  if (r == 0)
+    r = ThreadPThread__OpenInterixFiles(pthread, controlFile, statusFile);
+#endif
 
   pthread_attr_destroy(&attr);
 
