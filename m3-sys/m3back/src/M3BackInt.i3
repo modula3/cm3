@@ -132,6 +132,5 @@ VAR (* CONST *)
 PROCEDURE Init();
 
 PROCEDURE ToDiagnosticText(a: Int): TEXT;
-PROCEDURE TargetIntToDiagnosticText(a: Target.Int): TEXT;
 
 END M3BackInt.
