@@ -94,6 +94,7 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         popOp := popOp;
         incOp := incOp;
         decOp := decOp;
+        bitTestAndSetOp := bitTestAndSetOp;
         unOp := unOp;
         mulOp := mulOp;
         imulOp := imulOp;
@@ -1013,6 +1014,41 @@ PROCEDURE popOp (t: T; READONLY dest: Operand) =
     END;
   END popOp;
 
+PROCEDURE bitTestAndSetOp (t: T; READONLY bits, index: Operand) =
+  VAR ins: Instruction;
+  BEGIN
+    Mn(t, "BTS");
+    MnPtr(t, bits, 0, Type.Word32);
+    MnOp(t, index);
+
+    ins.escape := TRUE;
+
+    <* ASSERT index.loc = OLoc.register OR index.loc = OLoc.imm *>
+    <* ASSERT bits.loc = OLoc.register OR bits.loc = OLoc.mem *>
+
+    IF index.loc = OLoc.imm THEN
+      IF (NOT M3BackInt.ToInt(index.imm, ins.imm)) AND (NOT M3BackWord.LE(index.imm, M3BackInt.Word8.max)) THEN
+        t.Err("bitTestAndSetOp: unable to convert immediate to INTEGER:" & M3BackInt.ToDiagnosticText(index.imm));
+        <* ASSERT FALSE *>
+      END;
+      ins.opcode := 16_BA;
+      build_modrm(t, bits, t.opcode[5], ins);
+      t.Err("bitTestAndSetOp: index=imm not tested due to inability to find a test case");
+      <* ASSERT FALSE *>
+    ELSE
+      IF bits.loc = OLoc.mem THEN
+        t.Err("bitTestAndSetOp: bits=mem not tested due to inability to find a test case");
+        <* ASSERT FALSE *>
+      END;
+      ins.opcode := 16_AB;
+      load_like_helper(t, index.reg[0], bits, 0, ins);
+    END;
+    writecode(t, ins);
+    IF bits.loc = OLoc.mem THEN
+      log_global_var(t, bits.mvar, -4);
+    END;
+  END bitTestAndSetOp;
+
 PROCEDURE incDecOp (t: T; READONLY op: Operand; isDec: [0..1]) =
   VAR ins: Instruction;
   BEGIN
@@ -1476,6 +1512,33 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffs
     END;
     writecode (t, ins);
   END fast_load_ind;
+
+PROCEDURE load_like_helper (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffset; VAR ins: Instruction) =
+(* This helps with bts, but can surely help with others.
+ * It is based on load_ind, but there are similarities to others.
+ *)
+  BEGIN
+    ins.mrm_present := TRUE;
+    ins.modrm := r * 8 + ind.reg[0];
+    IF offset # 0 THEN
+      t.Err("load_like_helper: untested path #1 (offset # 0)");
+      <* ASSERT FALSE *>
+      ins.disp := offset; <* NOWARN *>
+      IF offset > -16_81 AND offset < 16_80 THEN
+        ins.dsize := 1;
+        INC(ins.modrm, 16_40);
+      ELSE
+        INC(ins.modrm, 16_80);
+        ins.dsize := 4;
+      END;
+    END;
+    IF ind.reg[0] = ESP THEN
+      t.Err("load_like_helper: untested path #2 (reg # ESP)");
+      <* ASSERT FALSE *>
+      ins.sib := 16_24; <* NOWARN *>
+      ins.sib_present := TRUE;
+    END;
+  END load_like_helper;
 
 PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset; type: MType) =
   VAR ins: Instruction;
