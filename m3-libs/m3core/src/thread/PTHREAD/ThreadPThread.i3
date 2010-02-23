@@ -56,7 +56,13 @@ PROCEDURE sigsuspend ();
 
 <*EXTERNAL "ThreadPThread__thread_create"*>
 PROCEDURE thread_create(stackSize: size_t;
-                        start_routine: PROCEDURE(arg: ADDRESS): ADDRESS; arg: ADDRESS): int;
+                        start_routine: PROCEDURE(arg: ADDRESS): ADDRESS; arg: ADDRESS;
+                        VAR controlFile: int;
+                        VAR statusFile: int): int;
+
+<*EXTERNAL ThreadPThread__OpenCurrentThreadInterixFiles*>
+PROCEDURE OpenCurrentThreadInterixFiles(VAR controlFile: int;
+                                        VAR statusFile: int): int;
 
 <*EXTERNAL ThreadPThread__pthread_detach_self*>
 PROCEDURE pthread_detach_self(): int;
@@ -133,18 +139,18 @@ PROCEDURE Nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): i
 (*---------------------------------------------------------------------------*)
 
 <*EXTERNAL "ThreadPThread__SuspendThread"*>
-PROCEDURE SuspendThread (t: pthread_t): BOOLEAN;
+PROCEDURE SuspendThread(t: pthread_t; controlFile: int): BOOLEAN;
 
 <*EXTERNAL "ThreadPThread__RestartThread"*>
-PROCEDURE RestartThread (t: pthread_t): BOOLEAN;
+PROCEDURE RestartThread(t: pthread_t; controlFile: int): BOOLEAN;
 
 <*EXTERNAL "ThreadPThread__ProcessLive"*>
-PROCEDURE ProcessLive
-  (bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
+PROCEDURE ProcessLive(bottom: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 
 <*EXTERNAL "ThreadPThread__ProcessStopped"*>
-PROCEDURE ProcessStopped
-  (t: pthread_t; bottom, context: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
+PROCEDURE ProcessStopped(t: pthread_t; bottom, context: ADDRESS;
+                         p: PROCEDURE(start, limit: ADDRESS);
+                         statusFile: int);
 (*---------------------------------------------------------------------------*)
 
 END ThreadPThread.

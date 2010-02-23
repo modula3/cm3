@@ -1,14 +1,26 @@
+#include "m3core.h"
+
 #ifndef __INTERIX
 
-/* avoid empty file */
-
-void ThreadInterix__Dummy(void)
+int ThreadPThread__OpenInterixFiles(pthread_t xpthread,
+                                    int *outControlFile,
+                                    int *outStatusFile)
 {
+    *outControlFile = -1;
+    *outStatusFile = -1;
+    return 0;
+}
+
+int ThreadPThread__OpenCurrentThreadInterixFiles(int *outControlFile,
+                                                 int *outStatusFile)
+{
+    *outControlFile = -1;
+    *outStatusFile = -1;
+    return 0;
 }
 
 #else
 
-#include "m3core.h"
 #include <sys/procfs.h>
 
 static void Close(int* inoutFile)
@@ -19,19 +31,25 @@ static void Close(int* inoutFile)
         close(file);
 }
 
-int ThreadPThread__OpenInterixFiles(m3_pthread_t m3pthread,
-                                    int *outStatusFile,
-                                    int *outControlFile)
+int ThreadPThread__OpenCurrentThreadInterixFiles(int *outControlFile,
+                                                 int *outStatusFile)
+{
+    return ThreadPThread__OpenInterixFiles(pthread_self(), outControlFile, outStatusFile);
+}
+
+int ThreadPThread__OpenInterixFiles(pthread_t xpthread,
+                                    int *outControlFile,
+                                    int *outStatusFile)
 {
     long pid = getpid();
-    long pthread = PTHREAD_FROM_M3(m3pthread);
+    long pthread = xpthread;
     char buffer[255];
     int i = 0;
     int controlFile = -1;
     int statusFile = -1;
 
-    *outStatusFile = -1;
     *outControlFile = -1;
+    *outStatusFile = -1;
 
     i = snprintf(buffer, sizeof(buffer), "/proc/%ld/lwp/%ld/lwpstatus", pid, pthread);
     assert(i > 0 && i < sizeof(buffer));
@@ -51,10 +69,10 @@ int ThreadPThread__OpenInterixFiles(m3_pthread_t m3pthread,
     if (statusFile < 0)
         goto Error;
 
-    *outStatusFile = statusFile;
     *outControlFile = controlFile;
-    statusFile = -1;
+    *outStatusFile = statusFile;
     controlFile = -1;
+    statusFile = -1;
     i = 0;
 Exit:
     Close(&statusFile);
@@ -71,7 +89,7 @@ InternalError:
 }
 
 int
-ThreadPThread__SuspendThread (m3_pthread_t m3pthread,
+ThreadPThread__SuspendThread(m3_pthread_t m3pthread,
                              int controlFile)
 {
   const static PROC_CTL_WORD_TYPE stop[] = { PCSTOP };
@@ -80,7 +98,7 @@ ThreadPThread__SuspendThread (m3_pthread_t m3pthread,
 }
 
 int
-ThreadPThread__RestartThread (m3_pthread_t m3pthread,
+ThreadPThread__RestartThread(m3_pthread_t m3pthread,
                              int controlFile)
 {
   const static PROC_CTL_WORD_TYPE run[] = { PCRUN, 0 };
@@ -89,7 +107,7 @@ ThreadPThread__RestartThread (m3_pthread_t m3pthread,
 }
 
 void
-ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
+ThreadPThread__ProcessStopped(m3_pthread_t mt, void *bottom, void *context,
                               void (*p)(void *start, void *limit),
                               int statusFile)
 {
