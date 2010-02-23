@@ -351,7 +351,7 @@ size_t __stdcall set_member
 {
   register size_t word = elt / SET_GRAIN;
   register size_t bit  = elt % SET_GRAIN;
-  return (set[word] & (1UL << bit)) != 0;
+  return (set[word] & (((size_t)1) << bit)) != 0;
 }
 
 void __stdcall set_union
@@ -631,7 +631,7 @@ void __stdcall set_singleton(size_t a, size_t* s)
 {
   size_t a_word = a / SET_GRAIN;
   size_t a_bit  = a % SET_GRAIN;
-  s[a_word] |= (1UL << a_bit);
+  s[a_word] |= (((size_t)1) << a_bit);
 }
 
 #endif
