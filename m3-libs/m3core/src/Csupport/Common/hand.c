@@ -83,6 +83,10 @@ extern "C"
 #define __stdcall /* nothing */
 #endif
 
+#if !defined(_MSC_VER) && !defined(__fastcall)
+#define __fastcall /* nothing */
+#endif
+
 #if UCHAR_MAX == 0xffffffff
 typedef unsigned char uint32;
 #elif USHRT_MAX == 0xffffffff
@@ -621,15 +625,16 @@ static void __stdcall set_range_new
     }
 }
 
-void __stdcall set_singleton
-    ANSI((      size_t a, size_t* s))
-      KR((a, s) size_t a; size_t* s;)
+#if !defined(_M_IX86) || defined(__INTERIX) /* integrated backend uses bts instruction */
+
+void __stdcall set_singleton(size_t a, size_t* s)
 {
   size_t a_word = a / SET_GRAIN;
   size_t a_bit  = a % SET_GRAIN;
   s[a_word] |= (1UL << a_bit);
 }
 
+#endif
 
 #ifdef _WIN32
 
