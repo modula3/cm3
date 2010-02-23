@@ -3,6 +3,7 @@ IMPORT RTIO;
 
 TYPE S1 = SET OF [0..512];
 TYPE S2 = SET OF [0..5000];
+TYPE S3 = SET OF [-30..30];
 
 VAR
   a := S1{0};
@@ -13,7 +14,7 @@ VAR
   B := S2{1};
   D := S2{c};
 
-PROCEDURE Put1(VAR a: S1) =
+PROCEDURE Put1(READONLY a: S1) =
   BEGIN
     RTIO.Flush();
     RTIO.PutBytes(ADR(a), BYTESIZE(a));
@@ -22,7 +23,7 @@ PROCEDURE Put1(VAR a: S1) =
     RTIO.Flush();
   END Put1;
 
-PROCEDURE Put2(VAR a: S2) =
+PROCEDURE Put2(READONLY a: S2) =
   BEGIN
     RTIO.Flush();
     RTIO.PutBytes(ADR(a), BYTESIZE(a));
@@ -30,6 +31,15 @@ PROCEDURE Put2(VAR a: S2) =
     RTIO.PutText("\n");
     RTIO.Flush();
   END Put2;
+
+PROCEDURE Put3(READONLY a: S3) =
+  BEGIN
+    RTIO.Flush();
+    RTIO.PutBytes(ADR(a), BYTESIZE(a));
+    RTIO.Flush();
+    RTIO.PutText("\n");
+    RTIO.Flush();
+  END Put3;
 
 BEGIN
   <* ASSERT a = d *>
@@ -67,6 +77,17 @@ BEGIN
     a := a + S1{i};
   END;
   Put1(a);
+
+  FOR i := 0 TO 512 DO
+    a := S1{i};
+    Put1(a);
+  END;
+
+  FOR i := -30 TO 30 DO
+    WITH a = S3{i} DO
+      Put3(a);
+    END;
+  END;
 
   Put2(A);
   Put2(B);
