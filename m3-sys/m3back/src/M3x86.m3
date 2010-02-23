@@ -2215,11 +2215,25 @@ PROCEDURE set_singleton (u: U;  s: ByteSize;  t: IType) =
       u.wr.NL    ();
     END;
 
-    start_int_proc (u, Builtin.set_singleton);
-    u.vstack.swap();
-    pop_param(u, Type.Addr);
-    pop_param(u, t);
-    call_int_proc (u, Builtin.set_singleton);
+    (* bit test and set -- we don't care about the test *)
+
+    WITH stack0 = u.vstack.pos(0, "set_singleton"),
+         stack1 = u.vstack.pos(1, "set_singleton") DO
+
+      u.vstack.unlock();
+
+      (* single byte constants can be immediate *)
+
+      IF u.vstack.loc(stack0) # OLoc.imm OR M3BackWord.GT(u.vstack.op(stack0).imm, M3BackInt.MaxU8) THEN
+        u.vstack.find(stack0, Force.anyreg);
+      ELSE
+        u.vstack.find(stack0, Force.any);
+      END;
+      u.vstack.find(stack1, Force.any);
+      u.cg.bitTestAndSetOp(u.vstack.op(stack1), u.vstack.op(stack0));
+      u.vstack.discard(2);
+    END
+
   END set_singleton;
 
 (*------------------------------------------------- Word.T bit operations ---*)
@@ -3033,7 +3047,7 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
 TYPE
   Builtin = {
     set_union, set_difference, set_intersection, set_sym_difference,
-    set_range, set_lt, set_le, set_gt, set_ge, set_member, set_singleton,
+    set_range, set_lt, set_le, set_gt, set_ge, set_member,
     memmove, memcpy, memset, memcmp,
     mul64, udiv64, umod64,
     shift_left_64, shift_right_64,
@@ -3068,7 +3082,6 @@ CONST
     BP { "set_gt",             3, Type.Int32, "__stdcall" },
     BP { "set_ge",             3, Type.Int32, "__stdcall" },
     BP { "set_member",         2, Type.Int32, "__stdcall" },
-    BP { "set_singleton",      2, Type.Void,  "__stdcall" },
     BP { "memmove",            3, Type.Addr,  "C" },
     BP { "memcpy",             3, Type.Addr,  "C" },
     BP { "memset",             3, Type.Addr,  "C" },

@@ -44,6 +44,7 @@ CONST
   x0400     = Int{x := IBytes{0,4,0,..}};
   x0800     = Int{x := IBytes{0,8,0,..}};
   x0F00     = Int{x := IBytes{0,16_F,0,..}};
+  MaxU8     = Int{x := IBytes{16_FF,0,..}};
 
   (* 'M' for Minus (negative) *)
 
