@@ -44,6 +44,34 @@ BEGIN
   FOR i := 0 TO LAST (v) DO checkB (v[i] IN s, c[i]); END;
 END TestIn;
 
+PROCEDURE In (READONLY s1: T2) =
+  VAR i := -5;
+BEGIN
+  checkB(-4 IN s1, FALSE); checkB(-3 IN s1, FALSE); checkB(-2 IN s1, FALSE); checkB(-1 IN s1, FALSE); checkB(-0 IN s1, FALSE);
+  checkB( 0 IN s1, FALSE); checkB( 1 IN s1, FALSE); checkB( 2 IN s1, FALSE); checkB( 3 IN s1, FALSE); checkB( 4 IN s1, FALSE);
+  checkB( 5 IN s1, TRUE ); checkB( 6 IN s1, FALSE); checkB( 7 IN s1, TRUE ); checkB( 8 IN s1, FALSE); checkB( 9 IN s1, FALSE);
+  checkB(10 IN s1, FALSE); checkB(11 IN s1, TRUE ); checkB(12 IN s1, FALSE); checkB(13 IN s1, FALSE); checkB(14 IN s1, FALSE);
+  checkB(15 IN s1, FALSE); checkB(16 IN s1, FALSE); checkB(17 IN s1, FALSE); checkB(18 IN s1, FALSE); checkB(19 IN s1, FALSE);
+  checkB(20 IN s1, FALSE); checkB(21 IN s1, FALSE); checkB(22 IN s1, FALSE); checkB(23 IN s1, FALSE); checkB(24 IN s1, FALSE);
+  checkB(25 IN s1, FALSE); checkB(26 IN s1, FALSE); checkB(27 IN s1, FALSE); checkB(28 IN s1, FALSE); checkB(29 IN s1, FALSE);
+  checkB(30 IN s1, FALSE); checkB(31 IN s1, FALSE); checkB(32 IN s1, FALSE); checkB(33 IN s1, FALSE); checkB(34 IN s1, FALSE);
+  checkB(35 IN s1, FALSE); checkB(36 IN s1, FALSE); checkB(37 IN s1, FALSE); checkB(38 IN s1, FALSE); checkB(39 IN s1, FALSE);
+  checkB(40 IN s1, FALSE); checkB(41 IN s1, FALSE); checkB(42 IN s1, FALSE); checkB(43 IN s1, FALSE); checkB(44 IN s1, TRUE );
+  checkB(45 IN s1, FALSE); checkB(46 IN s1, FALSE); checkB(47 IN s1, FALSE); checkB(48 IN s1, FALSE); checkB(49 IN s1, FALSE);
+
+  INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+  INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+  INC(i); checkB(i IN s1, TRUE ); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, TRUE ); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+  INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, TRUE ); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+  INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+  INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+  INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+  INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+  INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+  INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, TRUE );
+  INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+END In;
+
 BEGIN
 
 checkB(-4 IN s1, FALSE); checkB(-3 IN s1, FALSE); checkB(-2 IN s1, FALSE); checkB(-1 IN s1, FALSE); checkB(-0 IN s1, FALSE);
@@ -69,6 +97,8 @@ INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i
 INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
 INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, TRUE );
 INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+
+In(s1);
 
 TestIn (s1, v1);
 TestIn (s2, v2);
