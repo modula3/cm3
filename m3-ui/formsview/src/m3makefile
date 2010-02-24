@@ -1,4 +1,4 @@
-if HasGui()
+if HasTrestle()
 
 import("formsvbt")
 implementation("formsview")

@@ -5,7 +5,7 @@
 /* Last modified on Thu Oct 17 13:12:01 PDT 1996 by najork                   */
 /*       Created on Tue Oct 15 13:38:07 PDT 1996 by najork                   */
 
-if HasGui()
+if HasTrestle()
 
 import ("libm3")
 import ("ui")
