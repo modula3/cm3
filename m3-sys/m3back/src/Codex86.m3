@@ -95,6 +95,7 @@ REVEAL T = Public BRANDED "Codex86.T" OBJECT
         incOp := incOp;
         decOp := decOp;
         bitTestAndSetOp := bitTestAndSetOp;
+        bitTestOp := bitTestOp;
         unOp := unOp;
         mulOp := mulOp;
         imulOp := imulOp;
@@ -1014,40 +1015,64 @@ PROCEDURE popOp (t: T; READONLY dest: Operand) =
     END;
   END popOp;
 
-PROCEDURE bitTestAndSetOp (t: T; READONLY bits, index: Operand) =
+TYPE BitOp = RECORD
+  name: TEXT;
+  bitIndexInImm8Opcode1: [16_80..16_FF];
+  bitIndexInImm8Opcode2: [0..7];
+  bitIndexInRegOpcode:   [16_80..16_FF];
+END;
+
+PROCEDURE bitOp (t: T; READONLY bits, index: Operand; op: BitOp) =
   VAR ins: Instruction;
   BEGIN
-    Mn(t, "BTS");
+    Mn(t, op.name);
     MnPtr(t, bits, 0, Type.Word32);
     MnOp(t, index);
 
     ins.escape := TRUE;
 
-    <* ASSERT index.loc = OLoc.register OR index.loc = OLoc.imm *>
-    <* ASSERT bits.loc = OLoc.register OR bits.loc = OLoc.mem *>
+    (* Correct would be: *)
+        <* ASSERT index.loc = OLoc.register OR index.loc = OLoc.imm *>
+        <* ASSERT bits.loc = OLoc.register OR bits.loc = OLoc.mem *>
+
+    (* Our caller only gives a subset that I could get to work: *)
+        <* ASSERT index.loc = OLoc.register *>
+        <* ASSERT bits.loc = OLoc.register *>
 
     IF index.loc = OLoc.imm THEN
       IF (NOT M3BackInt.ToInt(index.imm, ins.imm)) AND (NOT M3BackWord.LE(index.imm, M3BackInt.Word8.max)) THEN
-        t.Err("bitTestAndSetOp: unable to convert immediate to INTEGER:" & M3BackInt.ToDiagnosticText(index.imm));
+        t.Err("bitOp: unable to convert immediate to INTEGER:" & M3BackInt.ToDiagnosticText(index.imm));
         <* ASSERT FALSE *>
       END;
-      ins.opcode := 16_BA;
-      build_modrm(t, bits, t.opcode[5], ins);
-      t.Err("bitTestAndSetOp: index=imm not tested due to inability to find a test case");
+      ins.opcode := op.bitIndexInImm8Opcode1;
+      build_modrm(t, bits, t.opcode[op.bitIndexInImm8Opcode2], ins);
+      t.Err("bitOp: untested, non-working code reached #1");
       <* ASSERT FALSE *>
     ELSE
+      ins.opcode := op.bitIndexInRegOpcode;
       IF bits.loc = OLoc.mem THEN
-        t.Err("bitTestAndSetOp: bits=mem not tested due to inability to find a test case");
+        t.Err("bitOp: untested, non-working code reached #2");
         <* ASSERT FALSE *>
+        build_modrm(t, bits, index, ins);
+      ELSE
+        load_like_helper(t, index.reg[0], bits, 0, ins);
       END;
-      ins.opcode := 16_AB;
-      load_like_helper(t, index.reg[0], bits, 0, ins);
     END;
     writecode(t, ins);
     IF bits.loc = OLoc.mem THEN
       log_global_var(t, bits.mvar, -4);
     END;
+  END bitOp;
+
+PROCEDURE bitTestAndSetOp (t: T; READONLY bits, index: Operand) =
+  BEGIN
+    bitOp(t, bits, index, BitOp{"BTS", 16_BA, 5, 16_AB});
   END bitTestAndSetOp;
+
+PROCEDURE bitTestOp (t: T; READONLY bits, index: Operand) =
+  BEGIN
+    bitOp(t, bits, index, BitOp{"BT", 16_BA, 4, 16_A3});
+  END bitTestOp;
 
 PROCEDURE incDecOp (t: T; READONLY op: Operand; isDec: [0..1]) =
   VAR ins: Instruction;
