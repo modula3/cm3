@@ -64,6 +64,7 @@ TYPE Public = OBJECT
         incOp (READONLY op: Operand);
         decOp (READONLY op: Operand);
         bitTestAndSetOp (READONLY bits, index: Operand); (* we don't care about test -- set_singleton *)
+        bitTestOp (READONLY bits, index: Operand); (* set_member *)
         unOp (op: Op; READONLY dest: Operand);
         mulOp (READONLY src: Operand);
         imulOp (READONLY dest, src: Operand);
@@ -90,10 +91,15 @@ TYPE Public = OBJECT
         end ();
       END;
 
-TYPE Cond = { Z, NZ, E, NE, G, GE, L, LE, A, AE, B, BE, Always };
-
-CONST CondName = ARRAY Cond OF TEXT { "Z", "NZ", "E", "NE", "G", "GE",
-                                      "L", "LE", "A", "AE", "B", "BE", "*" };
+(* B is unsigned below
+   A is unsigned above
+   L is signed less
+   G is signed greater
+   B for unsigned below is also known as C for carry
+   below and less are roughly synonyms in English, but one applies to unsigned, the other signed
+   likewise for above and greater *)
+TYPE Cond =                          { Z,   NZ,   E,   NE,   G,   GE,   L,   LE,   A,   AE,   B,   BE,   Always };
+CONST CondName = ARRAY Cond OF TEXT { "Z", "NZ", "E", "NE", "G", "GE", "L", "LE", "A", "AE", "B", "BE", "*" };
 
 CONST revcond = ARRAY Cond OF Cond
   { Cond.Z, Cond.NZ, Cond.E, Cond.NE, Cond.L, Cond.LE,

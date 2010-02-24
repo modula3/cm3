@@ -2145,11 +2145,55 @@ PROCEDURE set_member (u: U;  s: ByteSize;  t: IType) =
       u.wr.NL    ();
     END;
 
-    start_int_proc (u, Builtin.set_member);
-    u.vstack.swap();
-    pop_param(u, Type.Addr);
-    pop_param(u, t);
-    call_int_proc (u, Builtin.set_member);
+    u.vstack.unlock();
+
+    WITH stack0 = u.vstack.pos(0, "set_singleton"),
+         stack1 = u.vstack.pos(1, "set_singleton") DO
+
+      (* Better would be:
+      IF u.vstack.loc(stack0) # OLoc.imm OR M3BackWord.GT(u.vstack.op(stack0).imm, M3BackInt.MaxU8) THEN
+        u.vstack.find(stack0, Force.anyreg);
+      ELSE
+        u.vstack.find(stack0, Force.any);
+      END;
+      u.vstack.find(stack1, Force.any);
+
+      but we don't have things quite right, so settle.
+      *)
+      u.vstack.find(stack0, Force.anyreg);
+      u.vstack.find(stack1, Force.anyreg);
+
+      u.cg.bitTestOp(u.vstack.op(stack1), u.vstack.op(stack0));
+      u.vstack.discard(2);
+    END;
+
+    u.vstack.unlock();
+
+    (* see the end of condset
+
+    u.vstack.pushnew(Type.Word8, Force.mem);
+    WITH stop0 = u.vstack.op(u.vstack.pos(0, "set_singleton")) DO
+      stop0.mvar.var.stack_temp := FALSE;
+      u.cg.setccOp(stop0, Cond.B);          B = unsigned below = C = carry
+    END;
+
+    4 instructions:
+
+    0000003F: 0F 92 45 F0        setb        byte ptr [ebp-10h]
+    00000043: 33 D2              xor         edx,edx
+    00000045: 8A 55 F0           mov         dl,byte ptr [ebp-10h]
+    00000048: 89 55 F4           mov         dword ptr [ebp-0Ch],edx
+
+    Let's try something else.
+    Goal is to capture the carry flag as a boolean in a Word.
+    *)
+
+    u.vstack.pushnew(Type.Word32, Force.anyreg);
+    WITH stop0 = u.vstack.op(u.vstack.pos(0, "set_singleton")) DO
+      u.cg.binOp(Op.oSBB, stop0, stop0);
+      u.cg.unOp(Op.oNEG, stop0);
+    END;
+
   END set_member;
 
 PROCEDURE set_compare (u: U;  s: ByteSize;  op: CompareOp;  t: IType) =
@@ -2222,13 +2266,17 @@ PROCEDURE set_singleton (u: U;  s: ByteSize;  t: IType) =
 
       u.vstack.unlock();
 
-      (* single byte constants can be immediate *)
+      (* single byte constants can be immediate
+       * but the front end never generates that
+       *)
 
-      IF u.vstack.loc(stack0) # OLoc.imm OR M3BackWord.GT(u.vstack.op(stack0).imm, M3BackInt.MaxU8) THEN
+      <* ASSERT u.vstack.loc(stack0) # OLoc.imm *>
+
+      (*IF u.vstack.loc(stack0) # OLoc.imm OR M3BackWord.GT(u.vstack.op(stack0).imm, M3BackInt.MaxU8) THEN*)
         u.vstack.find(stack0, Force.anyreg);
-      ELSE
-        u.vstack.find(stack0, Force.any);
-      END;
+      (*ELSE*)
+        (*u.vstack.find(stack0, Force.any);*)
+      (*END;*)
       u.vstack.find(stack1, Force.any);
       u.cg.bitTestAndSetOp(u.vstack.op(stack1), u.vstack.op(stack0));
       u.vstack.discard(2);
@@ -3047,7 +3095,7 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
 TYPE
   Builtin = {
     set_union, set_difference, set_intersection, set_sym_difference,
-    set_range, set_lt, set_le, set_gt, set_ge, set_member,
+    set_range, set_lt, set_le, set_gt, set_ge,
     memmove, memcpy, memset, memcmp,
     mul64, udiv64, umod64,
     shift_left_64, shift_right_64,
@@ -3081,7 +3129,6 @@ CONST
     BP { "set_le",             3, Type.Int32, "__stdcall" },
     BP { "set_gt",             3, Type.Int32, "__stdcall" },
     BP { "set_ge",             3, Type.Int32, "__stdcall" },
-    BP { "set_member",         2, Type.Int32, "__stdcall" },
     BP { "memmove",            3, Type.Addr,  "C" },
     BP { "memcpy",             3, Type.Addr,  "C" },
     BP { "memset",             3, Type.Addr,  "C" },
