@@ -37,6 +37,7 @@ VAR r1 := T1 {5, 7,    11,     34};
     v1inter2 := ARRAY A OF BOOLEAN { f, f, f, t, f, f, t, f};
     v1diff2 := ARRAY A OF BOOLEAN  { f, t, f, f, f, f, f, f};
     v1div2 := ARRAY A OF BOOLEAN   { f, t, f, f, t, f, f, f};
+    i := -5;
 
 PROCEDURE TestIn (s: T2; READONLY c: ARRAY OF BOOLEAN) =
 BEGIN
@@ -45,7 +46,7 @@ END TestIn;
 
 BEGIN
 
-checkB(-0 IN s1, FALSE); checkB(-1 IN s1, FALSE); checkB(-2 IN s1, FALSE); checkB(-3 IN s1, FALSE); checkB(-4 IN s1, FALSE);
+checkB(-4 IN s1, FALSE); checkB(-3 IN s1, FALSE); checkB(-2 IN s1, FALSE); checkB(-1 IN s1, FALSE); checkB(-0 IN s1, FALSE);
 checkB( 0 IN s1, FALSE); checkB( 1 IN s1, FALSE); checkB( 2 IN s1, FALSE); checkB( 3 IN s1, FALSE); checkB( 4 IN s1, FALSE);
 checkB( 5 IN s1, TRUE ); checkB( 6 IN s1, FALSE); checkB( 7 IN s1, TRUE ); checkB( 8 IN s1, FALSE); checkB( 9 IN s1, FALSE);
 checkB(10 IN s1, FALSE); checkB(11 IN s1, TRUE ); checkB(12 IN s1, FALSE); checkB(13 IN s1, FALSE); checkB(14 IN s1, FALSE);
@@ -56,6 +57,18 @@ checkB(30 IN s1, FALSE); checkB(31 IN s1, FALSE); checkB(32 IN s1, FALSE); check
 checkB(35 IN s1, FALSE); checkB(36 IN s1, FALSE); checkB(37 IN s1, FALSE); checkB(38 IN s1, FALSE); checkB(39 IN s1, FALSE);
 checkB(40 IN s1, FALSE); checkB(41 IN s1, FALSE); checkB(42 IN s1, FALSE); checkB(43 IN s1, FALSE); checkB(44 IN s1, TRUE );
 checkB(45 IN s1, FALSE); checkB(46 IN s1, FALSE); checkB(47 IN s1, FALSE); checkB(48 IN s1, FALSE); checkB(49 IN s1, FALSE);
+
+INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+INC(i); checkB(i IN s1, TRUE ); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, TRUE ); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, TRUE ); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
+INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, TRUE );
+INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE); INC(i); checkB(i IN s1, FALSE);
 
 TestIn (s1, v1);
 TestIn (s2, v2);
