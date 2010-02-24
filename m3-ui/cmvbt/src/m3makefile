@@ -1,4 +1,4 @@
-if not HasGui()
+if not HasTrestle()
   build_standalone()
 end
 

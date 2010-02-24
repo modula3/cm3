@@ -8,7 +8,7 @@
 /*                                                                           */
 /* m3makefile for /proj/m3/pkgs/juno-app/src                                 */
 
-if HasGui()
+if HasTrestle()
 
 /* imported packages */
 import		("libm3")
