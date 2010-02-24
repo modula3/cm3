@@ -4,7 +4,7 @@
 /*                                                                           */
 /* Last modified on Thu May 18 20:05:48 PDT 1995 by najork                   */
 
-if HasGui()
+if HasTrestle()
 
 if equal (TARGET, "NT386")
   override ("formsvbt", "..\\..")
