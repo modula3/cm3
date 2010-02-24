@@ -345,6 +345,8 @@ POSIX_STATIC int64 __stdcall m3_mod64(int64 b, int64 a)
 
 #define SET_GRAIN (sizeof (size_t) * 8)
 
+#if !defined(_M_IX86) || defined(__INTERIX) /* integrated backend uses bt instruction */
+
 size_t __stdcall set_member
     ANSI((          size_t elt, size_t* set))
       KR((elt, set) size_t elt; size_t* set;)
@@ -353,6 +355,8 @@ size_t __stdcall set_member
   register size_t bit  = elt % SET_GRAIN;
   return (set[word] & (((size_t)1) << bit)) != 0;
 }
+
+#endif
 
 void __stdcall set_union
     ANSI((                 size_t n_bits, size_t* c, size_t* b, size_t* a))
