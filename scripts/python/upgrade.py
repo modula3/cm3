@@ -41,10 +41,7 @@ if cleangcc:
 #
 DoPackage(argv_BuildShip, [ "import-libs", "m3bundle", "m3middle", "m3quake", "m3objfile",
                             "m3linker", "m3back", "m3front", "sysutils",
-                            "cm3",
-                            # only Win32 can build mklib in the first pass, since preexisting
-                            # m3core will not have the types it needs
-                            #"mklib",
+                            "cm3", "mklib",
     ]) or sys.exit(1)
 
 #
