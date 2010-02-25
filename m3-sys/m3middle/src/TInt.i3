@@ -27,6 +27,23 @@ CONST
   One    = Int{ 1, 0,..};
   MOne   = Int{16_FF,..};
 
+  Two       = Int{ 2,0,..};
+  Three     = Int{ 3,0,..};
+  Four      = Int{ 4,0,..};
+  Eight     = Int{ 8,0,..};
+  ThirtyOne = Int{31,0,..};
+  ThirtyTwo = Int{32,0,..};
+  SixtyThree= Int{63,0,..};
+  F3FF      = Int{16_FF,16_F3,0,..};
+  x0400     = Int{0,4,0,..};
+  x0800     = Int{0,8,0,..};
+  x0F00     = Int{0,16_F,0,..};
+
+  (* 'M' for Minus (negative) *)
+
+  MThirtyOne = Int{16_E1,16_FF,..};
+  MSixtyThree= Int{16_C1,16_FF,..};
+
 PROCEDURE FromInt (x: INTEGER;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
 
@@ -60,6 +77,21 @@ PROCEDURE LT (READONLY a, b: Int): BOOLEAN;
 
 PROCEDURE LE (READONLY a, b: Int): BOOLEAN;
 (* returns 'a <= b' *)
+
+PROCEDURE NE (READONLY a, b: Int): BOOLEAN;
+(* 'a # b' *)
+
+PROCEDURE GT (READONLY a, b: Int): BOOLEAN;
+(* 'a > b' *)
+
+PROCEDURE GE (READONLY a, b: Int): BOOLEAN;
+(* 'a >= b' *)
+
+PROCEDURE Abs (READONLY a: Int;  VAR r: Int): BOOLEAN;
+(* ABS(a) or FALSE if overflow *)
+
+PROCEDURE Negate (READONLY a: Int;  VAR r: Int): BOOLEAN;
+(* '-a' or FALSE if overflow *)
 
 PROCEDURE ToText (READONLY i: Int): TEXT;
 (* converts 'i' to a printable string. *)

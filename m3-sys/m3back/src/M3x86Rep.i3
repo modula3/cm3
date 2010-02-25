@@ -8,7 +8,7 @@
 
 INTERFACE M3x86Rep;
 
-IMPORT M3CG, M3ID, M3BackInt;
+IMPORT M3CG, M3ID, M3BackInt, Target, TInt;
 
 FROM M3CG IMPORT ByteOffset, ByteSize, Alignment;
 FROM M3CG IMPORT Var, Proc, Name;
@@ -99,7 +99,7 @@ TYPE
     loc: OLoc;
     mvar: MVar := NoStore;
     reg : Regno := 0;       (* seems like it should be -1 *)
-    imm: INTEGER := 0;      (* This might change to M3BackInt.Int. *)
+    imm: INTEGER := 0;      (* This might change to Target.Int. *)
     stackp: INTEGER := 0;   (* this field might go away; seems like it should be -1 *)
     opcode := FALSE;
   END;
@@ -108,7 +108,7 @@ TYPE
     loc: OLoc;
     mvar: MVar := NoStore;
     reg := ARRAY OperandPart OF Regno{0, ..}; (* seems like it should be -1 *)
-    imm: M3BackInt.Int := M3BackInt.Zero;
+    imm: Target.Int := TInt.Zero;
     optype: Type := Type.Void;
     stackp: INTEGER := 0; (* seems like it should be -1 *)
     opcode := FALSE;
@@ -141,24 +141,24 @@ PROCEDURE IsWord (t: Type): BOOLEAN; (* IsUnsigned *)
 PROCEDURE IsInt (t: Type): BOOLEAN;  (* IsSigned *)
 PROCEDURE Is64 (t: Type): BOOLEAN;
 PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize;
-PROCEDURE SplitImm(type: Type; READONLY imm: M3BackInt.Int; VAR immA: ARRAY OperandPart OF M3BackInt.Int): OperandSize;
+PROCEDURE SplitImm(type: Type; READONLY imm: Target.Int; VAR immA: ARRAY OperandPart OF Target.Int): OperandSize;
 PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize;
 PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize;
 PROCEDURE GetTypeSize(type: Type): OperandSize;
 
-CONST TZero = M3BackInt.Zero;
+CONST TZero = TInt.Zero;
 
 CONST UnsignedType = ARRAY IType OF IType { Type.Word32, Type.Word32,
                                             Type.Word64, Type.Word64 };
 
-CONST MaximumShift = ARRAY IType OF M3BackInt.Int { M3BackInt.ThirtyOne, M3BackInt.ThirtyOne,
-                                                 M3BackInt.SixtyThree, M3BackInt.SixtyThree };
+CONST MaximumShift = ARRAY IType OF Target.Int { TInt.ThirtyOne, TInt.ThirtyOne,
+                                                 TInt.SixtyThree, TInt.SixtyThree };
 
-CONST MinimumShift = ARRAY IType OF M3BackInt.Int { M3BackInt.MThirtyOne, M3BackInt.MThirtyOne,
-                                                 M3BackInt.MSixtyThree, M3BackInt.MSixtyThree };
+CONST MinimumShift = ARRAY IType OF Target.Int { TInt.MThirtyOne, TInt.MThirtyOne,
+                                                 TInt.MSixtyThree, TInt.MSixtyThree };
 
 CONST BitCountMask = MaximumShift;
  
-VAR(*CONST*) IntType: ARRAY IType OF M3BackInt.Int_type;
+VAR(*CONST*) IntType: ARRAY IType OF Target.Int_type;
 
 END M3x86Rep.

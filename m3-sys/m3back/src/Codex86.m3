@@ -379,7 +379,7 @@ PROCEDURE noargOp (t: T; op: Op) =
     writecode(t, ins);
   END noargOp;
 
-PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.Int) =
+PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
@@ -388,7 +388,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.
       t.Err("immOp1: unable to convert immediate to INTEGER:" & M3BackInt.ToDiagnosticText(imm));
     END;
 
-    IF M3BackInt.GE(imm, M3BackInt.Int8.min) AND M3BackInt.LE(imm, M3BackInt.Int8.max) THEN
+    IF TInt.GE(imm, Target.Int8.min) AND TInt.LE(imm, Target.Int8.max) THEN
       ins.imsize := 1;
     ELSE
       ins.imsize := 4;
@@ -416,7 +416,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.
         
           (* shifts by a constant 1 have a smaller encoding available *)
 
-          IF op IN SET OF Op{Op.oSHL, Op.oSHR} AND M3BackInt.EQ(imm, M3BackInt.One) THEN
+          IF op IN SET OF Op{Op.oSHL, Op.oSHR} AND TInt.EQ(imm, TInt.One) THEN
             INC(ins.opcode, 16_10);
             ins.imsize := 0;
           END;
@@ -437,13 +437,13 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.
     END
   END immOp1;
 
-PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.Int) =
+PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int) =
   VAR destA: ARRAY OperandPart OF Operand;
-      immA: ARRAY OperandPart OF M3BackInt.Int;
+      immA: ARRAY OperandPart OF Target.Int;
       immSize := SplitImm(dest.optype, imm, immA);
       destSize := SplitOperand(dest, destA);
       compare_label: Label;
-      immMinus32: M3BackInt.Int;
+      immMinus32: Target.Int;
       shiftCount := Operand{loc := OLoc.imm, imm := imm};
   BEGIN
 
@@ -467,9 +467,9 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.I
             t.set_label(compare_label);
 
         | Op.oSHL =>
-            IF M3BackInt.GE(imm, M3BackInt.ThirtyTwo) THEN
-              IF M3BackInt.NE(imm, M3BackInt.ThirtyTwo) THEN
-                EVAL M3BackInt.Subtract(imm, M3BackInt.ThirtyTwo, immMinus32);
+            IF TInt.GE(imm, TInt.ThirtyTwo) THEN
+              IF TInt.NE(imm, TInt.ThirtyTwo) THEN
+                EVAL TInt.Subtract(imm, TInt.ThirtyTwo, immMinus32);
                 (* Ideally we'd do a virtual move in the register alloator. *)
                 movOp1(t, destA[1], destA[0]);
                 immOp1(t, op, destA[1], immMinus32);
@@ -484,9 +484,9 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.I
             END
 
         | Op.oSHR =>
-            IF M3BackInt.GE(imm, M3BackInt.ThirtyTwo) THEN
-              IF M3BackInt.NE(imm, M3BackInt.ThirtyTwo) THEN
-                EVAL M3BackInt.Subtract(imm, M3BackInt.ThirtyTwo, immMinus32);
+            IF TInt.GE(imm, TInt.ThirtyTwo) THEN
+              IF TInt.NE(imm, TInt.ThirtyTwo) THEN
+                EVAL TInt.Subtract(imm, TInt.ThirtyTwo, immMinus32);
                 (* Ideally we'd do a virtual move in the register alloator. *)
                 movOp1(t, destA[0], destA[1]);
                 immOp1(t, op, destA[0], immMinus32);
@@ -551,7 +551,7 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
       <* ASSERT src.loc = OLoc.register *>
       <* ASSERT shiftCount.loc = OLoc.register OR shiftCount.loc = OLoc.imm *>
       <* ASSERT shiftCount.loc # OLoc.register OR shiftCount.reg[0] = ECX *>
-      <* ASSERT shiftCount.loc # OLoc.imm OR (M3BackInt.GE(shiftCount.imm, M3BackInt.Int8.min) AND M3BackInt.LE(shiftCount.imm, M3BackInt.Int8.max)) *>
+      <* ASSERT shiftCount.loc # OLoc.imm OR (TInt.GE(shiftCount.imm, Target.Int8.min) AND TInt.LE(shiftCount.imm, Target.Int8.max)) *>
 
       IF shiftCount.loc = OLoc.imm THEN
         IF NOT M3BackInt.ToInt(shiftCount.imm, ins.imm) THEN
@@ -908,7 +908,7 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
     t.obj.relocate(t.textsym, t.obj.cursor(Seg.Text) - 4, sym);
   END movDummyReloc;
 
-PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: M3BackInt.Int) =
+PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.Int) =
   VAR ins: Instruction;
   BEGIN
     IF NOT M3BackInt.ToInt(imm, ins.imm) THEN
@@ -923,7 +923,7 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: M3BackInt.Int) =
       ins.imsize := CG_Bytes[dest.mvar.mvar_type];
       writecode(t, ins);
       log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.mvar_type]);
-    ELSIF M3BackInt.EQ(imm, TZero) THEN
+    ELSIF TInt.EQ(imm, TZero) THEN
       binOp(t, Op.oXOR, dest, dest);
     ELSE
       ins.opcode := 16_B8 + dest.reg[0];
@@ -934,10 +934,10 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: M3BackInt.Int) =
   END movImmT;
 
 PROCEDURE movImmI (t: T; READONLY dest: Operand; imm: INTEGER) =
-  VAR immT: M3BackInt.Int;
+  VAR immT: Target.Int;
   BEGIN
     IF NOT M3BackInt.FromInt(imm, BYTESIZE(imm), immT) THEN
-      t.Err("movImmI: unable to convert INTEGER to M3BackInt.Int");
+      t.Err("movImmI: unable to convert INTEGER to Target.Int");
     END;
     t.movImmT(dest, immT);
   END movImmI;
@@ -2039,7 +2039,7 @@ PROCEDURE MnOp(t: T; READONLY op: Operand) =
       CASE op.loc OF
         OLoc.fstack   => Mn (t, " FST");
       | OLoc.register => Mn (t, " ", RegName[op.reg[0]]);
-      | OLoc.imm      => Mn (t, " $", M3BackInt.ToText (op.imm));
+      | OLoc.imm      => Mn (t, " $", TInt.ToText (op.imm));
       | OLoc.mem      => MnMVar (t, op.mvar);
       END
     END
@@ -2096,10 +2096,10 @@ PROCEDURE MnProc(t: T;  p: x86Proc) =
     END;
   END MnProc;
 
-PROCEDURE MnImmTInt(t: T; READONLY imm: M3BackInt.Int) =
+PROCEDURE MnImmTInt(t: T; READONLY imm: Target.Int) =
   BEGIN
     IF t.debug THEN
-      Mn(t, " $", M3BackInt.ToText (imm));
+      Mn(t, " $", TInt.ToText (imm));
     END;
   END MnImmTInt;
 
