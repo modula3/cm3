@@ -1094,35 +1094,20 @@ PROCEDURE end_init (u: U;  v: Var) =
     u.init_varstore := NIL;
   END end_init;
 
-PROCEDURE init_int (u: U; o: ByteOffset; READONLY xvalue: Target.Int; t: Type) =
-  VAR bytes := ARRAY [0..7] OF [0..255]{0, ..};
-      len: CARDINAL := 0;
-      value := M3BackInt.FromTargetInt(xvalue, CG_Bytes[t]);
+PROCEDURE init_int (u: U; o: ByteOffset; READONLY value: Target.Int; t: Type) =
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("init_int");
       u.wr.Int   (o);
-      u.wr.TInt  (value);
+      u.wr.TInt  (M3BackInt.FromTargetInt(value, CG_Bytes[t]));
       u.wr.TName (t);
       u.wr.NL    ();
     END;
 
     pad_init(u, o);
-
-    len := M3BackInt.ToBytes(value, bytes);
-    IF NOT (len <= NUMBER(bytes) AND len <= CG_Bytes[t] AND len > 0) THEN
-      u.Err("init_int: len:" & Fmt.Int(len) & " type:" & Target.TypeNames[t] & " value:" & M3BackInt.ToDiagnosticText(value));
-    END;
-    <* ASSERT len > 0 *>
-    <* ASSERT len <= NUMBER(bytes) *>
-    <* ASSERT len <= CG_Bytes[t] *>
-    IF M3BackInt.LT(value, TZero) THEN
-      FOR i := len TO CG_Bytes[t] - 1 DO
-        bytes[i] := 16_FF;
-      END;
-    END;
-    u.obj.appendBytes(u.init_varstore.seg, SUBARRAY(bytes, 0, CG_Bytes[t]));
+    u.obj.appendBytes(u.init_varstore.seg, SUBARRAY(value, 0, CG_Bytes[t]));
     INC(u.init_count, CG_Bytes[t]);
+
   END init_int;
 
 PROCEDURE init_proc (u: U;  o: ByteOffset;  value: Proc) =

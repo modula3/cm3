@@ -104,11 +104,6 @@ PROCEDURE ToChars (READONLY i: Int;  VAR buf: ARRAY OF CHAR): INTEGER;
 (* converts 'i' to a printable string in 'buf'.  Returns the
    number of characters in the string.  Returns -1 if 'buf' is too short. *)
 
-PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ARRAY OF [0..255]): INTEGER;
-(* converts 'i' to the shortest sequence of bytes in little-endian order
-   which when sign-extended equal 'i'.  Returns the number of
-   significant bytes in the result.  Returns -1 if 'buf' is too short. *)
-
 PROCEDURE FromTargetInt (READONLY i: Target.Int; byteSize: CARDINAL): Int;
 
 TYPE

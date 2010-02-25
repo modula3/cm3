@@ -12,7 +12,7 @@ FROM M3CG IMPORT Name, BitOffset, BitSize, ByteOffset, ByteSize, TypeUID;
 IMPORT RTError;
 
 TYPE
-  UINT8 = BITS 8 FOR [0..255];
+  UINT8 = M3ObjFile.UINT8;
   Seg = M3ObjFile.Seg;
 
 TYPE
@@ -346,12 +346,12 @@ PROCEDURE Append (t: T;  s: Seg;  value, length: INTEGER) =
     AddRaw (SegToSection(t, s)^, value, length);
   END Append;
 
-PROCEDURE AppendBytes (t: T;  s: Seg;  READONLY bytes: ARRAY OF [0..255]) =
+PROCEDURE AppendBytes (t: T;  s: Seg;  READONLY bytes: ARRAY OF UINT8) =
   BEGIN
     AddRawBytes (SegToSection(t, s)^, ADR(bytes[0]), NUMBER(bytes));
   END AppendBytes;
 
-PROCEDURE AddRawBytes (VAR s: Section;  value: UNTRACED REF [0..255]; length: CARDINAL) =
+PROCEDURE AddRawBytes (VAR s: Section;  value: UNTRACED REF UINT8; length: CARDINAL) =
   VAR offs := s.raw_data.n_bytes;
       seg  := EnsureLength (s.data, offs + length);
   BEGIN
