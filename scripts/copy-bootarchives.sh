@@ -51,7 +51,9 @@ P="${P} m3-sys/cm3"
 #P="${P} m3cggen"
 #[ "${M3GDB}" = yes ] && P="${P} m3gdb"
 P="${P} m3-tools/m3bundle"
-#[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
+#P="${P} mklib"
+#P="${P} fix_nl"
+#P="${P} libdump"
 #P="${P} bitvector"
 #P="${P} digraph"
 #P="${P} parseparams"
@@ -78,4 +80,3 @@ for p in ${P}; do
   echo ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/${CROSS_TARGET}/${p}/${CROSS_TARGET}/
   ${RSYNC} -avz ${ROOT}/${p}/${CROSS_TARGET}/ ${DEST}/${CROSS_TARGET}/${p}/${CROSS_TARGET}/
 done
-
