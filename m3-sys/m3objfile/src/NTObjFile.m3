@@ -101,7 +101,7 @@ TYPE
   OutputStream = RECORD
     wr    : Wr.T := NIL;
     len   : INTEGER := 0;
-    buf   : ARRAY [0..2047] OF CHAR;
+    buf   : ARRAY [0..16_10000 - 1] OF CHAR;
   END;
 
 TYPE
