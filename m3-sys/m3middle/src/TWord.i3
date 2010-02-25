@@ -48,8 +48,14 @@ PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int);
 PROCEDURE LT (READONLY a, b: Int): BOOLEAN;
 (* returns 'Word.LT (a, b)' *)
 
+PROCEDURE GT (READONLY a, b: Int): BOOLEAN;
+(* returns 'Word.GT (a, b)' *)
+
 PROCEDURE LE (READONLY a, b: Int): BOOLEAN;
 (* returns 'Word.LE (a, b)' *)
+
+PROCEDURE GE (READONLY a, b: Int): BOOLEAN;
+(* returns 'Word.GE (a, b)' *)
 
 PROCEDURE And (READONLY a, b: Int;  VAR i: Int);
 (* returns 'Word.And (a, b)' *)
