@@ -9,7 +9,7 @@
 MODULE Codex86;
 
 IMPORT Fmt, TargetMap, M3x86Rep, M3ID, M3CG_Ops, Word, M3ObjFile, Wrx86;
-IMPORT M3BackInt, M3BackWord, Target, TInt;
+IMPORT M3BackInt, Target, TInt;
 
 FROM TargetMap IMPORT CG_Bytes;
 
@@ -1053,7 +1053,7 @@ PROCEDURE bitOp (t: T; READONLY bits, index: Operand; op: BitOp) =
       IF bits.loc = OLoc.mem THEN
         t.Err("bitOp: untested, non-working code reached #2");
         <* ASSERT FALSE *>
-        build_modrm(t, bits, index, ins);
+        <*NOWARN*>build_modrm(t, bits, index, ins);
       ELSE
         load_like_helper(t, index.reg[0], bits, 0, ins);
       END;

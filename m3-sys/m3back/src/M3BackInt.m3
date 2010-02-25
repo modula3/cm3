@@ -151,45 +151,6 @@ PROCEDURE ToChars (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
     RETURN TInt.ToChars(SignExtend(r), buf);
   END ToChars;
 
-PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): INTEGER =
-  VAR n := r.n;
-      j := 0;
-      k := n;
-  BEGIN
-
-    (* strip the sign extension *)
-
-    IF Word.And (r.x[n - 1], SignMask) # 0 THEN
-      j := Mask;
-    END;
-
-    FOR i := n-1 TO 0 BY -1 DO
-      IF r.x[i] # j THEN
-        EXIT;
-      END;
-      DEC (k);
-    END;
-
-    (* 0 and -1 appear to require 0 bytes per above code, bump up to 1 *)
-
-    <* ASSERT (k = 0) = (EQ(r, Zero) OR EQ(r, MOne)) *>
-    INC(k, ORD(k = 0)); (* increment if 0 *)
-
-    (* Check if it fits. *)
-
-    IF k > NUMBER (buf) THEN
-      RETURN -1;
-    END;
-
-    (* unpack the bytes *)
-
-    FOR i := 0 TO k-1 DO
-      buf[i] := r.x[i];
-    END;
-
-    RETURN k;
-  END ToBytes;
-
 PROCEDURE FromTargetInt (READONLY i: Target.Int; byteSize: CARDINAL): Int =
   BEGIN
     RETURN Int{n := byteSize, x := i};
