@@ -389,7 +389,7 @@ PROCEDURE AddName (VAR s: Section;  name: TEXT) =
     INC (offs);
 
     (* add the bytes *)
-    FOR i := 0 TO len-1 DO
+    FOR i := 0 TO len - 1 DO
       seg[offs] := Text.GetChar (name, i);
       INC (offs);
     END;
@@ -644,7 +644,7 @@ PROCEDURE ObjectName (src: TEXT): TEXT =
     ch: CHAR;
   BEGIN
     (* chop off any path prefix *)
-    FOR i := 0 TO len-1 DO
+    FOR i := 0 TO len - 1 DO
       ch := Text.GetChar (src, i);
       IF (ch = '/') OR (ch = '\134') THEN last_slash := i; END;
     END;
@@ -656,7 +656,7 @@ PROCEDURE ObjectName (src: TEXT): TEXT =
     IF (len > 3) THEN
       ext := Text.Sub (src, len-3);
       IF Text.Equal (ext, ".m3") OR Text.Equal (ext, ".i3") THEN
-        src := Text.Sub (src, 0, len-1) & "o";
+        src := Text.Sub (src, 0, len - 1) & "o";
       END;
     END;
 
@@ -682,7 +682,7 @@ PROCEDURE AddSourceLine (t: T;  addr, line: INTEGER) =
         ExpandLines (t.text);
       END;
       IF (line # 0) AND (c.cnt > 0) THEN
-        WITH last_ln = list[c.cnt-1] DO
+        WITH last_ln = list[c.cnt - 1] DO
           IF (last_ln.line # 0) AND (last_ln.addr = addr) THEN
             (* forget the last line number, it's at the same pc *)
             DEC (c.cnt);
@@ -1125,13 +1125,13 @@ PROCEDURE WriteSection (t: T;  VAR s: Section) =
 
     (* raw data *)
     IF (s.data # NIL) THEN
-      FOR i := 0 TO s.raw_data.n_bytes-1 DO
+      FOR i := 0 TO s.raw_data.n_bytes - 1 DO
         OutC (t, s.data[i]);
       END;
     END;
 
     (* relocation info *)
-    FOR i := 0 TO s.relocation.cnt-1 DO
+    FOR i := 0 TO s.relocation.cnt - 1 DO
       WITH r = s.relocs[i] DO
         CASE r.kind OF
         | RelocKind.Symbol =>
@@ -1152,7 +1152,7 @@ PROCEDURE WriteSection (t: T;  VAR s: Section) =
 
     (* line numbers *)
     base_line := 0;
-    FOR i := 0 TO s.line_numbers.cnt-1 DO
+    FOR i := 0 TO s.line_numbers.cnt - 1 DO
       WITH ln = s.line_nums[i] DO
         IF (ln.line = 0) THEN
           WITH sym = t.symtab.list[ln.addr] DO
@@ -1300,7 +1300,7 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
           start := sym.offset;
           stop  := MIN (start + SymTabSize, len);
         BEGIN
-          FOR i := start TO stop-1 DO OutP (t, Text.GetChar (name, i)); END;
+          FOR i := start TO stop - 1 DO OutP (t, Text.GetChar (name, i)); END;
           FOR i := stop TO start + SymTabSize - 1 DO OutC (t, '\000'); END;
         END;
 
@@ -1337,7 +1337,7 @@ PROCEDURE WriteStrings (t: T) =
     WITH s = t.strings DO
       IF (s.cnt = 0) THEN OutI (t, 0); RETURN; END;
       OutI (t, s.n_bytes);
-      FOR i := 0 TO s.cnt-1 DO
+      FOR i := 0 TO s.cnt - 1 DO
         OutT (t, s.list[i]);
         OutC (t, '\000');
       END;
@@ -1351,7 +1351,7 @@ PROCEDURE OutN (t: T;  nm: TEXT) =
   VAR len := Text.Length (nm);
   BEGIN
     IF (len <= 8) THEN
-      FOR i := 0 TO len-1 DO OutC (t, Text.GetChar (nm, i)); END;
+      FOR i := 0 TO len - 1 DO OutC (t, Text.GetChar (nm, i)); END;
       FOR i := len TO 7   DO OutC (t, '\000'); END;
     ELSE
       OutI (t, 0);
@@ -1376,7 +1376,7 @@ PROCEDURE OutS (t: T;  i: INTEGER) =
 PROCEDURE OutT (t: T;  txt: TEXT) =
   VAR len := Text.Length (txt);
   BEGIN
-    FOR i := 0 TO len-1 DO OutC (t, Text.GetChar (txt, i)); END;
+    FOR i := 0 TO len - 1 DO OutC (t, Text.GetChar (txt, i)); END;
   END OutT;
 
 PROCEDURE OutP (t: T;  c: CHAR) =
