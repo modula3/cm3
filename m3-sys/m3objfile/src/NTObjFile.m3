@@ -613,7 +613,7 @@ PROCEDURE SetSourceFile (t: T;  filename: TEXT) =
     END;
 
     (* add the auxillary symbols for the filename *)
-    FOR i := 0 TO n_aux-1 DO
+    FOR i := 0 TO n_aux - 1 DO
       z := NextSym (t);
       WITH sym = t.symtab.list[z] DO
         sym.id          := M3ID.NoID;
@@ -1181,7 +1181,7 @@ PROCEDURE WriteSection (t: T;  VAR s: Section) =
 PROCEDURE WriteSymbols (t: T;  n_symbols: INTEGER) =
   BEGIN
     WITH s = t.symtab DO
-      FOR i := 0 TO n_symbols-1 DO
+      FOR i := 0 TO n_symbols - 1 DO
         WriteSym (t, s.list [t.symtab.remap [i]]);
       END;
     END;
@@ -1237,11 +1237,11 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
 
           (* ".bf" aux entry *)
           Out32 (t, 0);             (* unused *)
-          Out16 (t, sym.first_line-1);  (* actual source line number *)
+          Out16 (t, sym.first_line - 1);  (* actual source line number *)
           Out32 (t, 0);             (* unused *)
           Out16 (t, 0);             (* unused *)
           IF (next_func # 0)        (* next ".bf" entry *)
-            THEN Out32 (t, next_func+2);
+            THEN Out32 (t, next_func + 2);
             ELSE Out32 (t, 0);
           END;
           Out16 (t, 0);             (* unused *)
