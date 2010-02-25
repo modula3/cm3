@@ -3862,6 +3862,8 @@ PROCEDURE SplitImm(type: Type; READONLY imm: M3BackInt.Int; VAR immA: ARRAY Oper
   BEGIN
     M3BackWord.And(imm, M3BackInt.Word32.max, immA[0]);
     M3BackWord.RightShift(imm, 32, immA[1]);
+    immA[0].n := 4;
+    immA[1].n := 4;
     RETURN GetTypeSize(type);
   END SplitImm;
 
