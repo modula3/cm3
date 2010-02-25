@@ -2900,11 +2900,18 @@ def MakeDebianPackage(name, input, output, prefix):
 #     payload
 # User has no choice where the install goes.
 #
-    compresser = "lzma"
-    compressed_extension = "lzma"
+    if SearchPath("lzma"):
+        compresser = "lzma"
+        compressed_extension = "lzma"
+    elif isfile("/home/jkrell/bin/lzma"):
+        compresser = "/home/jkrell/bin/lzma"
+        compressed_extension = "lzma"
+    else:
+        compresser = "gzip"
+        compressed_extension = "gz"
     # while testing, gzip is much faster
-    #compresser = "gzip"
-    #compressed_extension = "gz"
+    # compresser = "gzip"
+    # compressed_extension = "gz"
     print("cd " + input)
     os.chdir(input)
     CreateDirectory("./debian")
@@ -2913,12 +2920,14 @@ def MakeDebianPackage(name, input, output, prefix):
     open("./debian-binary", "w").write("2.0" + newline)
     os.chdir("./debian")
     architecture = DebianArchitecture.get(Target) or DebianArchitecture.get(Target[:Target.index("_")])
-    open("./control", "w").write(
-      "Package: cm3-" + name + newline
+    control = (
+      "Package: cm3-" + Target + "-" + CM3VERSION + newline
     + "Version: 1.0" + newline
     + "Maintainer: somebody@somewhere.com" + newline
     + "Architecture: " + architecture + newline
     + "Description: good stuff" + newline)
+    print("control:" + control)
+    open("./control", "w").write(control)
 
     command = "tar cfz ../control.tar.gz ."    
     print(command)
