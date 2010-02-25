@@ -35,12 +35,11 @@ PROCEDURE FromInt (x: INTEGER;  VAR r: Int): BOOLEAN =
 PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
   CONST Extras = BITSIZE (INTEGER) DIV BITSIZE (IByte);
   VAR j := 0;  sign_chunk := MIN (Extras - 1, LAST(Int));
-      result := TRUE;
   BEGIN
     (* check that any extra bits are the same as the sign bit *)
     IF And (r [sign_chunk], SignMask) # 0 THEN j := Mask; END;
     FOR i := Extras TO LAST(Int) DO <*NOWARN*>
-      IF r [i] # j THEN result := FALSE; END;
+      IF r [i] # j THEN RETURN FALSE; END;
     END;
 
     (* ensure the result has the right sign extension *)
@@ -54,7 +53,7 @@ PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
       x := Word.Or (LShift (x, BITSIZE (IByte)), r[i]);
     END;
 
-    RETURN result;
+    RETURN TRUE;
   END ToInt;
 
 PROCEDURE New (READONLY x: ARRAY OF CHAR;  VAR r: Int): BOOLEAN =
