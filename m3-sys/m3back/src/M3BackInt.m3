@@ -65,8 +65,10 @@ PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
   END FromInt;
 
 PROCEDURE ToInt (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
+  VAR r4 := r;
   BEGIN
-    RETURN TInt.ToInt(SignExtend(r), x);
+    r4.n := 4;
+    RETURN TInt.ToInt(SignExtend(r4), x);
   END ToInt;
 
 PROCEDURE Add (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
