@@ -1308,8 +1308,12 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
           start := sym.offset;
           stop  := MIN (start + SymTabSize, len);
         BEGIN
-          FOR i := start TO stop - 1 DO OutP (t, Text.GetChar (name, i)); END;
-          FOR i := stop TO start + SymTabSize - 1 DO Out8 (t, 0); END;
+          FOR i := start TO stop - 1 DO
+            OutPathChar (t, Text.GetChar (name, i));
+          END;
+          FOR i := stop TO start + SymTabSize - 1 DO
+            Out8 (t, 0);
+          END;
         END;
 
     | SymKind.Section =>
@@ -1387,12 +1391,14 @@ PROCEDURE OutT (t: T;  txt: TEXT) =
     FOR i := 0 TO len - 1 DO Out8 (t, ORD(Text.GetChar (txt, i))); END;
   END OutT;
 
-PROCEDURE OutP (t: T;  c: CHAR) =
+PROCEDURE OutPathChar (t: T;  c: CHAR) =
   (* convert Unix path name characters to NT characters *)
   BEGIN
-    IF (c = '/') THEN c := '\134'; END;
+    IF (c = '/') THEN
+      c := '\134'; (* backward slash *)
+    END;
     Out8 (t, ORD(c));
-  END OutP;
+  END OutPathChar;
 
 PROCEDURE Out8 (t: T;  c: UINT8) =
   BEGIN
