@@ -284,7 +284,7 @@ readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopt
     tstop = compress (q_exec_get ("date '+%s'")[1])
     %write (tstop, CR)
     ret = q_exec ("echo " & tstop & "-" & tstart & " | bc > ttime")
-    ttime = compress (q_exec_get ("cat ttime")[1])
+    ttime = compress ( fs_contents ("ttime"))
 
     if ok1 and ok2
       html (["<tr class=\"bggreen tl\"><td>", uid,
@@ -840,8 +840,8 @@ if defined("HTML")
       write ("<testsuite name=\"m3tests\">", CR)
     end
   end
-  ret = q_exec ("cat " & jureport & ">> " & juxreport)
   >> juxreport in
+    write(fs_contents(jureport))
     write ("</testsuite>", CR)
   end
 end
