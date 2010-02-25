@@ -26,6 +26,19 @@ if equal ($OS, "Windows_NT")
   end
 end
 
+proc GetFileSize(a) is
+  return len(fs_contents(a))
+end
+
+proc GetFileLineCount(a) is
+  return len(split(fs_contents(a), "\n"))
+end
+
+proc GetFileLineCount2(a, b) is
+% add up the line counts of two files
+  return len(split(fs_contents(a) & fs_contents(b), "\n"))
+end
+
 proc PickExe(a) is
   if equal(OS_TYPE, "POSIX")
     return a
@@ -39,9 +52,6 @@ end
 
 DATE = PickExe("date")
 BC = PickExe("bc")
-AWK = PickExe("awk")
-WC = PickExe("wc")
-CAT = PickExe("cat")
 
 %------------------------------------------------------------------------------
 % build the test library
@@ -845,25 +855,13 @@ html(["  </body>", CR])
 html(["</html>", CR])
 
 if defined("HTML")
-  if AWK and CAT and WC
-    ret = q_exec (WC & " res.ok | " & AWK & " '{print $1}' > nok")
-    ret = q_exec (WC & " res.ko | " & AWK & " '{print $1}' > nko")
-    ret = q_exec (CAT & " res.ok res.ko | " & WC & " > nall1")
-    ret = q_exec (AWK & " '{print $1}' nall1 > nall")
-    nok = compress(fs_contents ("nok"))
-    nko = compress(fs_contents ("nko"))
-    nall = compress(fs_contents ("nall"))
-    > juxreport in
-      write ("<testsuite name=\"m3tests\" ")
-      write ("tests=\"" & nall & "\" ")
-      write ("errors=\"" & nko & "\">", CR)
-    end
-  else
-    > juxreport in
-      write ("<testsuite name=\"m3tests\">", CR)
-    end
-  end
-  >> juxreport in
+  nok = GetFileLineCount("res.ok")
+  nko = GetFileLineCount("res.ko")
+  nall = GetFileLineCount2("res.ok", "res.ko")
+  > juxreport in
+    write ("<testsuite name=\"m3tests\" ")
+    write ("tests=\"" & nall & "\" ")
+    write ("errors=\"" & nko & "\">", CR)
     write(fs_contents(jureport))
     write ("</testsuite>", CR)
   end
