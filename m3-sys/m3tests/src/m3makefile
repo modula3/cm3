@@ -26,6 +26,23 @@ if equal ($OS, "Windows_NT")
   end
 end
 
+proc PickExe(a) is
+  if equal(OS_TYPE, "POSIX")
+    return a
+  end
+  a = "\\cygwin\\bin\\" & a & ".exe"
+  if FileExists(a)
+    return a
+  end
+  return FALSE
+end
+
+DATE = PickExe("date")
+BC = PickExe("bc")
+AWK = PickExe("awk")
+WC = PickExe("wc")
+CAT = PickExe("cat")
+
 %------------------------------------------------------------------------------
 % build the test library
 %
@@ -251,8 +268,10 @@ end
 readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopts) is
   local dir = "../src/" & group & "/" & uid
   fs_rmrec (dir & "/" & BUILD_DIR)
-  tstart = compress (q_exec_get ("date '+%s'")[1]) % second resolution only
-  %write (tstart, CR)
+  if DATE
+    tstart = compress (q_exec_get (DATE & " '+%s'")[1]) % second resolution only
+    %write (tstart, CR)
+  end
 
   if defined ("_all") or defined (class) or defined ("_" & uid)
     write ("--- ", uid, " --- ", comment, CR)
@@ -281,10 +300,14 @@ readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopt
       ok2 = cmp_file (dir, "stdout.pgm") and
             cmp_file (dir, "stderr.pgm")
     end
-    tstop = compress (q_exec_get ("date '+%s'")[1])
-    %write (tstop, CR)
-    ret = q_exec ("echo " & tstop & "-" & tstart & " | bc > ttime")
-    ttime = compress ( fs_contents ("ttime"))
+    if DATE and BC
+      tstop = compress (q_exec_get ("date '+%s'")[1])
+      %write (tstop, CR)
+      ret = q_exec ("echo " & tstop & "-" & tstart & " | " & BC & " > ttime")
+      ttime = compress ( fs_contents ("ttime"))
+    else
+      ttime = "0"
+    end
 
     if ok1 and ok2
       html (["<tr class=\"bggreen tl\"><td>", uid,
@@ -822,11 +845,11 @@ html(["  </body>", CR])
 html(["</html>", CR])
 
 if defined("HTML")
-  if equal(OS_TYPE, "POSIX")
-    ret = q_exec ("wc res.ok | awk '{print $1}' > nok")
-    ret = q_exec ("wc res.ko | awk '{print $1}' > nko")
-    ret = q_exec ("cat res.ok res.ko | wc > nall1")
-    ret = q_exec ("awk '{print $1}' nall1 > nall")
+  if AWK and CAT and WC
+    ret = q_exec (WC & " res.ok | " & AWK & " '{print $1}' > nok")
+    ret = q_exec (WC & " res.ko | " & AWK & " '{print $1}' > nko")
+    ret = q_exec (CAT & " res.ok res.ko | " & WC & " > nall1")
+    ret = q_exec (AWK & " '{print $1}' nall1 > nall")
     nok = compress(fs_contents ("nok"))
     nko = compress(fs_contents ("nko"))
     nall = compress(fs_contents ("nall"))
