@@ -12,6 +12,7 @@ FROM M3CG IMPORT Name, BitOffset, BitSize, ByteOffset, ByteSize, TypeUID;
 IMPORT RTError;
 
 TYPE
+  UINT8 = BITS 8 FOR [0..255];
   Seg = M3ObjFile.Seg;
 
 TYPE
@@ -63,7 +64,7 @@ TYPE
   LineNum  = RECORD addr, line: INTEGER;  END;
 
 TYPE
-  Bytes    = REF ARRAY OF CHAR;
+  Bytes    = REF ARRAY OF UINT8;
   Ints     = REF ARRAY OF INTEGER;
   TextList = REF ARRAY OF TEXT;
 
@@ -101,7 +102,7 @@ TYPE
   OutputStream = RECORD
     wr    : Wr.T := NIL;
     len   : INTEGER := 0;
-    buf   : ARRAY [0..16_10000 - 1] OF CHAR;
+    buf   : ARRAY [0..16_10000 - 1] OF UINT8;
   END;
 
 TYPE
@@ -355,7 +356,7 @@ PROCEDURE AddRawBytes (VAR s: Section;  value: UNTRACED REF [0..255]; length: CA
       seg  := EnsureLength (s.data, offs + length);
   BEGIN
     FOR i := 0 TO length - 1 DO
-      seg[offs] := VAL(value^, CHAR);
+      seg[offs] := value^;
       INC (offs);
       INC (value);
     END;
@@ -369,7 +370,7 @@ PROCEDURE AddRaw (VAR s: Section;  value, length: INTEGER) =
     seg  := EnsureLength (s.data, offs + length);
   BEGIN
     WHILE (length > 0) DO
-      seg[offs] := VAL (Word.And (value, 16_ff), CHAR);
+      seg[offs] := Word.And (value, 16_FF);
       value := Word.RightShift (value, 8);
       INC (offs);
       DEC (length);
@@ -385,12 +386,12 @@ PROCEDURE AddName (VAR s: Section;  name: TEXT) =
     seg  := EnsureLength (s.data, offs + len + 1);
   BEGIN
     (* add the length prefix byte *)
-    seg[offs] := VAL (Word.And (len, 16_ff), CHAR);
+    seg[offs] := Word.And (len, 16_FF);
     INC (offs);
 
     (* add the bytes *)
     FOR i := 0 TO len - 1 DO
-      seg[offs] := Text.GetChar (name, i);
+      seg[offs] := ORD(Text.GetChar (name, i));
       INC (offs);
     END;
 
@@ -423,7 +424,7 @@ PROCEDURE PatchRaw (VAR s: Section;  offset, value, length: INTEGER) =
   BEGIN
     <*ASSERT s.raw_data.n_bytes >= offset + length *>
     WHILE (length > 0) DO
-      s.data[offset] := VAL (Word.And (value, 16_ff), CHAR);
+      s.data[offset] := Word.And (value, 16_FF);
       value := Word.RightShift (value, 8);
       INC (offset);
       DEC (length);
@@ -1197,14 +1198,14 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
         Out16 (t, t.text.id);       (* section = Text *)
         IF (has_body) THEN
           Out16 (t, 16_20);         (* type = function *)
-          Out8 (t, VAL (SClass [TRUE], CHAR));
+          Out8 (t, SClass [TRUE]);
                                     (* storage class = static/extern *)
-          Out8 (t, '\001');         (* #aux = 1 *)
+          Out8 (t, 1);              (* #aux = 1 *)
         ELSE
           Out16 (t, 0);             (* type = no type *)
-          Out8 (t, VAL (SClass [sym.export], CHAR));
+          Out8 (t, SClass [sym.export]);
                                     (* storage class = static/extern *)
-          Out8 (t, '\000');         (* #aux = 0 *)
+          Out8 (t, 0);              (* #aux = 0 *)
         END;
 
         (** HACK: We make all procedures with source lines external so
@@ -1297,8 +1298,8 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
         Out32 (t, 0);           (* value = 0 *)
         Out16 (t, -2);          (* section = debug *)
         Out16 (t, 0);           (* type = no type *)
-        Out8 (t, '\147');       (* storage class = file *)
-        Out8 (t, VAL (sym.offset, CHAR)); (* #aux *)
+        Out8 (t, ORD('\147'));  (* storage class = file *)
+        Out8 (t, VAL (sym.offset, UINT8)); (* #aux *)
 
     | SymKind.FileAux =>
         VAR
@@ -1308,7 +1309,7 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
           stop  := MIN (start + SymTabSize, len);
         BEGIN
           FOR i := start TO stop - 1 DO OutP (t, Text.GetChar (name, i)); END;
-          FOR i := stop TO start + SymTabSize - 1 DO Out8 (t, '\000'); END;
+          FOR i := stop TO start + SymTabSize - 1 DO Out8 (t, 0); END;
         END;
 
     | SymKind.Section =>
@@ -1316,8 +1317,8 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
         Out32 (t, 0);           (* value = 0 *)
         Out16 (t, sym.offset);  (* section # *)
         Out16 (t, 0);           (* type = no type *)
-        Out8 (t, '\003');       (* storage class = static *)
-        Out8 (t, '\001');       (* #aux = 1*)
+        Out8 (t, 3);            (* storage class = static *)
+        Out8 (t, 1);            (* #aux = 1*)
 
         IF    (sym.offset = t.debug_S.id) THEN WriteSectAux (t, t.debug_S);
         ELSIF (sym.offset = t.text.id)    THEN WriteSectAux (t, t.text);
@@ -1346,7 +1347,7 @@ PROCEDURE WriteStrings (t: T) =
       Out32 (t, s.n_bytes);
       FOR i := 0 TO s.cnt - 1 DO
         OutT (t, s.list[i]);
-        Out8 (t, '\000');
+        Out8 (t, 0);
       END;
     END;
   END WriteStrings;
@@ -1358,8 +1359,8 @@ PROCEDURE OutN (t: T;  nm: TEXT) =
   VAR len := Text.Length (nm);
   BEGIN
     IF (len <= 8) THEN
-      FOR i := 0 TO len - 1 DO Out8 (t, Text.GetChar (nm, i)); END;
-      FOR i := len TO 7   DO Out8 (t, '\000'); END;
+      FOR i := 0 TO len - 1 DO Out8 (t, ORD(Text.GetChar (nm, i))); END;
+      FOR i := len TO 7   DO Out8 (t, 0); END;
     ELSE
       Out32 (t, 0);
       Out32 (t, AddString (t, nm));
@@ -1368,32 +1369,32 @@ PROCEDURE OutN (t: T;  nm: TEXT) =
 
 PROCEDURE Out32 (t: T;  i: INTEGER) =
   BEGIN
-    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
-    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
-    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
-    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));
+    Out8 (t, Word.And (i, 16_FF));  i := Word.RightShift (i, 8);
+    Out8 (t, Word.And (i, 16_FF));  i := Word.RightShift (i, 8);
+    Out8 (t, Word.And (i, 16_FF));  i := Word.RightShift (i, 8);
+    Out8 (t, Word.And (i, 16_FF));
   END Out32;
 
 PROCEDURE Out16 (t: T;  i: INTEGER) =
   BEGIN
-    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
-    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));
+    Out8 (t, Word.And (i, 16_FF));  i := Word.RightShift (i, 8);
+    Out8 (t, Word.And (i, 16_FF));
   END Out16;
 
 PROCEDURE OutT (t: T;  txt: TEXT) =
   VAR len := Text.Length (txt);
   BEGIN
-    FOR i := 0 TO len - 1 DO Out8 (t, Text.GetChar (txt, i)); END;
+    FOR i := 0 TO len - 1 DO Out8 (t, ORD(Text.GetChar (txt, i))); END;
   END OutT;
 
 PROCEDURE OutP (t: T;  c: CHAR) =
   (* convert Unix path name characters to NT characters *)
   BEGIN
     IF (c = '/') THEN c := '\134'; END;
-    Out8 (t, c);
+    Out8 (t, ORD(c));
   END OutP;
 
-PROCEDURE Out8 (t: T;  c: CHAR) =
+PROCEDURE Out8 (t: T;  c: UINT8) =
   BEGIN
     IF (t.out.len >= NUMBER (t.out.buf)) THEN Flush (t); END;
     t.out.buf [t.out.len] := c;
@@ -1403,7 +1404,7 @@ PROCEDURE Out8 (t: T;  c: CHAR) =
 PROCEDURE Flush (t: T) =
   <*FATAL ANY*>
   BEGIN
-    Wr.PutString (t.out.wr, SUBARRAY (t.out.buf, 0, t.out.len));
+    Wr.PutString (t.out.wr, SUBARRAY (LOOPHOLE(t.out.buf, ARRAY OF CHAR), 0, t.out.len));
     t.out.len := 0;
   END Flush;
 
