@@ -470,7 +470,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
             IF TInt.GE(imm, TInt.ThirtyTwo) THEN
               IF TInt.NE(imm, TInt.ThirtyTwo) THEN
                 EVAL TInt.Subtract(imm, TInt.ThirtyTwo, immMinus32);
-                (* Ideally we'd do a virtual move in the register alloator. *)
+                (* Ideally we'd do a virtual move in the register allocator. *)
                 movOp1(t, destA[1], destA[0]);
                 immOp1(t, op, destA[1], immMinus32);
               ELSE
@@ -487,7 +487,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int)
             IF TInt.GE(imm, TInt.ThirtyTwo) THEN
               IF TInt.NE(imm, TInt.ThirtyTwo) THEN
                 EVAL TInt.Subtract(imm, TInt.ThirtyTwo, immMinus32);
-                (* Ideally we'd do a virtual move in the register alloator. *)
+                (* Ideally we'd do a virtual move in the register allocator. *)
                 movOp1(t, destA[0], destA[1]);
                 immOp1(t, op, destA[0], immMinus32);
               ELSE
