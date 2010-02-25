@@ -534,7 +534,7 @@ PROCEDURE Dump (t: T;  wr: Wr.T) =
 
     (* dump the imported symbols *)
     NL(s);
-    FOR i := 0 TO t.n_syms-1 DO
+    FOR i := 0 TO t.n_syms - 1 DO
       WITH sym = t.symbols[i] DO
         IF (sym.kind = SKind.Extern) AND (sym.used) THEN
           M3Buf.PutText (s.buf, "EXTRN\t");
@@ -546,7 +546,7 @@ PROCEDURE Dump (t: T;  wr: Wr.T) =
 
     (* dump the exported symbols *)
     NL(s);
-    FOR i := 0 TO t.n_syms-1 DO
+    FOR i := 0 TO t.n_syms - 1 DO
       WITH sym = t.symbols[i] DO
         IF sym.export AND (sym.kind <= SKind.Data) THEN
           M3Buf.PutText (s.buf, "PUBLIC\t");
@@ -559,7 +559,7 @@ PROCEDURE Dump (t: T;  wr: Wr.T) =
     (* dump the common symbols *)
     NL (s);
     M3Buf.PutText (s.buf, "_DATA\tSEGMENT"); NL(s);
-    FOR i := 0 TO t.n_syms-1 DO
+    FOR i := 0 TO t.n_syms - 1 DO
       WITH sym = t.symbols[i] DO
         IF (sym.kind = SKind.Bss) AND (sym.export) THEN
           M3Buf.PutText (s.buf, "COMM\t");
@@ -576,7 +576,7 @@ PROCEDURE Dump (t: T;  wr: Wr.T) =
     (* dump the bss symbols *)
     NL (s);
     M3Buf.PutText (s.buf, "_BSS\tSEGMENT"); NL(s);
-    FOR i := 0 TO t.n_syms-1 DO
+    FOR i := 0 TO t.n_syms - 1 DO
       WITH sym = t.symbols[i] DO
         IF (sym.kind = SKind.Bss) AND NOT (sym.export) AND (sym.used) THEN
           M3ID.Put (s.buf, sym.id);
