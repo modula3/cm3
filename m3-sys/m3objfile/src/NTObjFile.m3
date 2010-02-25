@@ -406,7 +406,9 @@ PROCEDURE EnsureLength (VAR b: Bytes;  length: INTEGER): Bytes =
     n := NUMBER (b^);
     IF (n < length) THEN
       m := n;
-      WHILE (m < length) DO INC (m, m); END;
+      WHILE (m < length) DO
+        INC (m, m);
+      END;
       VAR new := NEW (Bytes, m); BEGIN
         SUBARRAY (new^, 0, n) := b^;
         b := new;
@@ -1363,8 +1365,12 @@ PROCEDURE OutN (t: T;  nm: TEXT) =
   VAR len := Text.Length (nm);
   BEGIN
     IF (len <= 8) THEN
-      FOR i := 0 TO len - 1 DO Out8 (t, ORD(Text.GetChar (nm, i))); END;
-      FOR i := len TO 7   DO Out8 (t, 0); END;
+      FOR i := 0 TO len - 1 DO
+        Out8 (t, ORD(Text.GetChar (nm, i)));
+      END;
+      FOR i := len TO 7 DO
+        Out8 (t, 0);
+      END;
     ELSE
       Out32 (t, 0);
       Out32 (t, AddString (t, nm));
@@ -1388,7 +1394,9 @@ PROCEDURE Out16 (t: T;  i: INTEGER) =
 PROCEDURE OutT (t: T;  txt: TEXT) =
   VAR len := Text.Length (txt);
   BEGIN
-    FOR i := 0 TO len - 1 DO Out8 (t, ORD(Text.GetChar (txt, i))); END;
+    FOR i := 0 TO len - 1 DO
+      Out8 (t, ORD(Text.GetChar (txt, i)));
+    END;
   END OutT;
 
 PROCEDURE OutPathChar (t: T;  c: CHAR) =
