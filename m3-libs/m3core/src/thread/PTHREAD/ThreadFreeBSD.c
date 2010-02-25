@@ -22,8 +22,7 @@ extern "C" {
 #endif
 
 int
-ThreadPThread__SuspendThread (m3_pthread_t mt,
-                              int controlFile)
+ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
   int a = pthread_suspend_np(PTHREAD_FROM_M3(mt));
   int success = (a == 0);
@@ -32,8 +31,7 @@ ThreadPThread__SuspendThread (m3_pthread_t mt,
 }
 
 int
-ThreadPThread__RestartThread (m3_pthread_t mt,
-                              int controlFile)
+ThreadPThread__RestartThread (m3_pthread_t mt)
 {
   int a = pthread_resume_np(PTHREAD_FROM_M3(mt));
   int success = (a == 0);
@@ -43,8 +41,7 @@ ThreadPThread__RestartThread (m3_pthread_t mt,
 
 void
 ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
-                              void (*p)(void *start, void *limit),
-                              int statusFile)
+                              void (*p)(void *start, void *limit))
 {
   pthread_attr_t attr;
   char *stackaddr;
