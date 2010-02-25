@@ -50,7 +50,9 @@ P="${P} m3cgcat"
 P="${P} m3cggen"
 [ "${M3GDB}" = yes ] && P="${P} m3gdb"
 P="${P} m3bundle"
-[ "${M3OSTYPE}" = "WIN32" ] && P="${P} mklib"
+P="${P} mklib"
+P="${P} fix_nl"
+P="${P} libdump"
 P="${P} bitvector"
 P="${P} digraph"
 P="${P} parseparams"
@@ -79,4 +81,3 @@ ADDARGS=`add_action_opts $@`
 
 echo "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c \""${ACTION}"\" ${P}
 "$ROOT/scripts/pkgmap.sh" ${OPTIONS} ${ADDARGS} -c "${ACTION}" ${P}
-
