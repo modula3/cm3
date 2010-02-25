@@ -1006,13 +1006,13 @@ PROCEDURE Dump (t: T;  wr: Wr.T) =
     LayoutChunk   (t.symtab.chunk, file_offset, t.symtab.list);
 
     (* write the file header *)
-    OutS (t, 16_14c);  (* == Intel 386 *)
-    OutS (t, t.n_sections);
-    OutI (t, now);
-    OutI (t, t.symtab.chunk.file_offset);
-    OutI (t, t.symtab.chunk.cnt);
-    OutS (t, 0);       (* size of optional header *)
-    OutS (t, 0);       (* flags => +reloc, -exec, +lineno, +locals *)
+    Out16 (t, 16_14C);  (* == Intel 386 *)
+    Out16 (t, t.n_sections);
+    Out32 (t, now);
+    Out32 (t, t.symtab.chunk.file_offset);
+    Out32 (t, t.symtab.chunk.cnt);
+    Out16 (t, 0);       (* size of optional header *)
+    Out16 (t, 0);       (* flags => +reloc, -exec, +lineno, +locals *)
 
     WriteSectionHeader (t, t.debug_S);
     WriteSectionHeader (t, t.text);
@@ -1114,15 +1114,15 @@ PROCEDURE WriteSectionHeader (t: T;  VAR s: Section) =
   BEGIN
     IF (s.id <= 0) THEN RETURN END;
     OutN (t, s.name);
-    OutI (t, s.address);  (* physical address *)
-    OutI (t, 0);  (* virtual address *)
-    OutI (t, s.raw_data.n_bytes);
-    OutI (t, s.raw_data.file_offset);
-    OutI (t, s.relocation.file_offset);
-    OutI (t, s.line_numbers.file_offset);
-    OutS (t, s.relocation.cnt);
-    OutS (t, s.line_numbers.cnt);
-    OutI (t, s.flags);
+    Out32 (t, s.address);  (* physical address *)
+    Out32 (t, 0);  (* virtual address *)
+    Out32 (t, s.raw_data.n_bytes);
+    Out32 (t, s.raw_data.file_offset);
+    Out32 (t, s.relocation.file_offset);
+    Out32 (t, s.line_numbers.file_offset);
+    Out16 (t, s.relocation.cnt);
+    Out16 (t, s.line_numbers.cnt);
+    Out32 (t, s.flags);
   END WriteSectionHeader;
 
 PROCEDURE WriteSection (t: T;  VAR s: Section) =
@@ -1133,7 +1133,7 @@ PROCEDURE WriteSection (t: T;  VAR s: Section) =
     (* raw data *)
     IF (s.data # NIL) THEN
       FOR i := 0 TO s.raw_data.n_bytes - 1 DO
-        OutC (t, s.data[i]);
+        Out8 (t, s.data[i]);
       END;
     END;
 
@@ -1142,17 +1142,17 @@ PROCEDURE WriteSection (t: T;  VAR s: Section) =
       WITH r = s.relocs[i] DO
         CASE r.kind OF
         | RelocKind.Symbol =>
-            OutI (t, r.src_offset + t.symtab.list[r.src_sym].offset);
-            OutI (t, t.symtab.list[r.target_sym].index);
-            OutS (t, REL_I386_DIR32);  (* 32-bit direct relocation *)
+            Out32 (t, r.src_offset + t.symtab.list[r.src_sym].offset);
+            Out32 (t, t.symtab.list[r.target_sym].index);
+            Out16 (t, REL_I386_DIR32);  (* 32-bit direct relocation *)
         | RelocKind.Offset =>
-            OutI (t, r.src_offset);
-            OutI (t, t.symtab.list[r.target_sym].index);
-            OutS (t, REL_I386_SECREL); (* section offset *)
+            Out32 (t, r.src_offset);
+            Out32 (t, t.symtab.list[r.target_sym].index);
+            Out16 (t, REL_I386_SECREL); (* section offset *)
         | RelocKind.Segment =>
-            OutI (t, r.src_offset);
-            OutI (t, t.symtab.list[r.target_sym].index);
-            OutS (t, REL_I386_SECTION);  (* section id *)
+            Out32 (t, r.src_offset);
+            Out32 (t, t.symtab.list[r.target_sym].index);
+            Out16 (t, REL_I386_SECTION);  (* section id *)
         END;
       END;
     END;
@@ -1164,12 +1164,12 @@ PROCEDURE WriteSection (t: T;  VAR s: Section) =
         IF (ln.line = 0) THEN
           WITH sym = t.symtab.list[ln.addr] DO
             base_line := sym.first_line - 1;
-            OutI (t, sym.index);
-            OutS (t, 0);
+            Out32 (t, sym.index);
+            Out16 (t, 0);
           END;
         ELSE
-          OutI (t, ln.addr);
-          OutS (t, ln.line - base_line);
+          Out32 (t, ln.addr);
+          Out16 (t, ln.line - base_line);
         END;
       END;
     END;
@@ -1193,18 +1193,18 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
     | SymKind.Text =>
         has_body := (sym.first_line # 0);
         OutN (t, M3ID.ToText (sym.id));
-        OutI (t, sym.offset);
-        OutS (t, t.text.id);       (* section = Text *)
+        Out32 (t, sym.offset);
+        Out16 (t, t.text.id);       (* section = Text *)
         IF (has_body) THEN
-          OutS (t, 16_20);         (* type = function *)
-          OutC (t, VAL (SClass [TRUE], CHAR));
-                                   (* storage class = static/extern *)
-          OutC (t, '\001');        (* #aux = 1 *)
+          Out16 (t, 16_20);         (* type = function *)
+          Out8 (t, VAL (SClass [TRUE], CHAR));
+                                    (* storage class = static/extern *)
+          Out8 (t, '\001');         (* #aux = 1 *)
         ELSE
-          OutS (t, 0);             (* type = no type *)
-          OutC (t, VAL (SClass [sym.export], CHAR));
-                                   (* storage class = static/extern *)
-          OutC (t, '\000');        (* #aux = 0 *)
+          Out16 (t, 0);             (* type = no type *)
+          Out8 (t, VAL (SClass [sym.export], CHAR));
+                                    (* storage class = static/extern *)
+          Out8 (t, '\000');         (* #aux = 0 *)
         END;
 
         (** HACK: We make all procedures with source lines external so
@@ -1218,87 +1218,87 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
           END;
 
           (* function definiton auxillary info *)
-          OutI (t, sym.index + 2); (* pointer to ".bf" entry *)
-          OutI (t, sym.last_offset - sym.offset);  (* size of code *)
-          OutI (t, t.text.line_numbers.file_offset + sym.lineno_offs);
-                                   (* pointer into line number table *)
-          OutI (t, next_func);     (* pointer to next function *)
-          OutS (t, 0); (* unused *)
+          Out32 (t, sym.index + 2); (* pointer to ".bf" entry *)
+          Out32 (t, sym.last_offset - sym.offset);  (* size of code *)
+          Out32 (t, t.text.line_numbers.file_offset + sym.lineno_offs);
+                                    (* pointer into line number table *)
+          Out32 (t, next_func);     (* pointer to next function *)
+          Out16 (t, 0);             (* unused *)
 
           (* ".bf" entry *)
           OutN (t, ".bf");
-          OutI (t, sym.offset);      (* initial pc *)
-          OutS (t, t.text.id);       (* section = Text *)
-          OutS (t, 0);               (* type = none *)
-          OutS (t, 101 + 256);       (* class = function, #aux = 1 *)
+          Out32 (t, sym.offset);    (* initial pc *)
+          Out16 (t, t.text.id);     (* section = Text *)
+          Out16 (t, 0);             (* type = none *)
+          Out16 (t, 101 + 256);     (* class = function, #aux = 1 *)
 
           (* ".bf" aux entry *)
-          OutI (t, 0);               (* unused *)
-          OutS (t, sym.first_line-1);  (* actual source line number *)
-          OutI (t, 0);               (* unused *)
-          OutS (t, 0);               (* unused *)
-          IF (next_func # 0)         (* next ".bf" entry *)
-            THEN OutI (t, next_func+2);
-            ELSE OutI (t, 0);
+          Out32 (t, 0);             (* unused *)
+          Out16 (t, sym.first_line-1);  (* actual source line number *)
+          Out32 (t, 0);             (* unused *)
+          Out16 (t, 0);             (* unused *)
+          IF (next_func # 0)        (* next ".bf" entry *)
+            THEN Out32 (t, next_func+2);
+            ELSE Out32 (t, 0);
           END;
-          OutS (t, 0);               (* unused *)
+          Out16 (t, 0);             (* unused *)
 
           (* ".lf" entry *)
           OutN (t, ".lf");
           (***
-          OutI (t, sym.last_line - sym.first_line + 1);  (* # source lines *)
+          Out32 (t, sym.last_line - sym.first_line + 1);  (* # source lines *)
           ***)
-          OutI (t, sym.lineno_cnt);  (* # line number entries *)
-          OutS (t, t.text.id);       (* section = Text *)
-          OutS (t, 0);               (* type = none *)
-          OutS (t, 101);             (* class = function, #aux = 0 *)
+          Out32 (t, sym.lineno_cnt); (* # line number entries *)
+          Out16 (t, t.text.id);      (* section = Text *)
+          Out16 (t, 0);              (* type = none *)
+          Out16 (t, 101);            (* class = function, #aux = 0 *)
 
           (* ".ef" entry *)
           OutN (t, ".ef");
-          OutI (t, sym.last_offset); (* final pc *)
-          OutS (t, t.text.id);       (* section = Text *)
-          OutS (t, 0);               (* type = none *)
-          OutS (t, 101 + 256);       (* class = function, #aux = 1 *)
+          Out32 (t, sym.last_offset); (* final pc *)
+          Out16 (t, t.text.id);       (* section = Text *)
+          Out16 (t, 0);               (* type = none *)
+          Out16 (t, 101 + 256);       (* class = function, #aux = 1 *)
 
           (* ".ef" aux entry *)
-          OutI (t, 0);               (* unused *)
-          OutS (t, sym.last_line);   (* actual source line number *)
-          OutI (t, 0);               (* unused *)
-          OutS (t, 0);               (* unused *)
-          OutI (t, 0);               (* unused *)
-          OutS (t, 0);               (* unused *)
+          Out32 (t, 0);             (* unused *)
+          Out16 (t, sym.last_line); (* actual source line number *)
+          Out32 (t, 0);             (* unused *)
+          Out16 (t, 0);             (* unused *)
+          Out32 (t, 0);             (* unused *)
+          Out16 (t, 0);             (* unused *)
         END;
 
     | SymKind.Data =>
         OutN (t, M3ID.ToText (sym.id));
-        OutI (t, sym.offset);
-        OutS (t, t.data.id);   (* section = Data *)
-        OutS (t, 0);           (* type = no type *)
-        OutS (t, SClass [sym.export]);
-                               (* storage class = static/extern, #aux = 0 *)
+        Out32 (t, sym.offset);
+        Out16 (t, t.data.id);   (* section = Data *)
+        Out16 (t, 0);           (* type = no type *)
+        Out16 (t, SClass [sym.export]);
+                                (* storage class = static/extern, #aux = 0 *)
 
     | SymKind.Bss  =>
         OutN (t, M3ID.ToText (sym.id));
-        OutI (t, sym.offset);
-        OutS (t, t.bss.id);    (* section = bss *)
-        OutS (t, 0);           (* type = no type *)
-        OutS (t, SClass [sym.export]);
-                               (* storage class = static/extern, #aux = 0 *)
+        Out32 (t, sym.offset);
+        Out16 (t, t.bss.id);    (* section = bss *)
+        Out16 (t, 0);           (* type = no type *)
+        Out16 (t, SClass [sym.export]);
+                                (* storage class = static/extern, #aux = 0 *)
 
     | SymKind.Extern =>
         OutN (t, M3ID.ToText (sym.id));
-        OutI (t, 0);           (* value = 0 *)
-        OutS (t, 0);           (* section = extern *)
-        OutS (t, 0);           (* type = no type *)
-        OutS (t, 2);           (* storage class = extern, #aux = 0 *)
+        Out32 (t, 0);           (* value = 0 *)
+        Out16 (t, 0);           (* section = extern *)
+        Out16 (t, 0);           (* type = no type *)
+        Out16 (t, 2);           (* storage class = extern, #aux = 0 *)
 
     | SymKind.File =>
         OutN (t, ".file");
-        OutI (t, 0);           (* value = 0 *)
-        OutS (t, -2);          (* section = debug *)
-        OutS (t, 0);           (* type = no type *)
-        OutC (t, '\147');      (* storage class = file *)
-        OutC (t, VAL (sym.offset, CHAR)); (* #aux *)
+        Out32 (t, 0);           (* value = 0 *)
+        Out16 (t, -2);          (* section = debug *)
+        Out16 (t, 0);           (* type = no type *)
+        Out8 (t, '\147');       (* storage class = file *)
+        Out8 (t, VAL (sym.offset, CHAR)); (* #aux *)
 
     | SymKind.FileAux =>
         VAR
@@ -1308,16 +1308,16 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
           stop  := MIN (start + SymTabSize, len);
         BEGIN
           FOR i := start TO stop - 1 DO OutP (t, Text.GetChar (name, i)); END;
-          FOR i := stop TO start + SymTabSize - 1 DO OutC (t, '\000'); END;
+          FOR i := stop TO start + SymTabSize - 1 DO Out8 (t, '\000'); END;
         END;
 
     | SymKind.Section =>
         OutN (t, M3ID.ToText (sym.id));
-        OutI (t, 0);           (* value = 0 *)
-        OutS (t, sym.offset);  (* section # *)
-        OutS (t, 0);           (* type = no type *)
-        OutC (t, '\003');      (* storage class = static *)
-        OutC (t, '\001');      (* #aux = 1*)
+        Out32 (t, 0);           (* value = 0 *)
+        Out16 (t, sym.offset);  (* section # *)
+        Out16 (t, 0);           (* type = no type *)
+        Out8 (t, '\003');       (* storage class = static *)
+        Out8 (t, '\001');       (* #aux = 1*)
 
         IF    (sym.offset = t.debug_S.id) THEN WriteSectAux (t, t.debug_S);
         ELSIF (sym.offset = t.text.id)    THEN WriteSectAux (t, t.text);
@@ -1331,22 +1331,22 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
 PROCEDURE WriteSectAux (t: T;  READONLY s: Section) =
   BEGIN
     <*ASSERT s.id > 0 *>
-    OutI (t, s.raw_data.n_bytes);
-    OutS (t, s.relocation.cnt);
-    OutS (t, s.line_numbers.cnt);
-    OutI (t, 0);  (* checksum *)
-    OutS (t, 0 (*** s.id -- Microsoft C compiler generates zero *****));
-    OutI (t, 0);  (* unused *)
+    Out32 (t, s.raw_data.n_bytes);
+    Out16 (t, s.relocation.cnt);
+    Out16 (t, s.line_numbers.cnt);
+    Out32 (t, 0);   (* checksum *)
+    Out16 (t, 0);   (*** s.id -- Microsoft C compiler generates zero *****)
+    Out32 (t, 0);   (* unused *)
   END WriteSectAux;
 
 PROCEDURE WriteStrings (t: T) =
   BEGIN
     WITH s = t.strings DO
-      IF (s.cnt = 0) THEN OutI (t, 0); RETURN; END;
-      OutI (t, s.n_bytes);
+      IF (s.cnt = 0) THEN Out32 (t, 0); RETURN; END;
+      Out32 (t, s.n_bytes);
       FOR i := 0 TO s.cnt - 1 DO
         OutT (t, s.list[i]);
-        OutC (t, '\000');
+        Out8 (t, '\000');
       END;
     END;
   END WriteStrings;
@@ -1358,47 +1358,47 @@ PROCEDURE OutN (t: T;  nm: TEXT) =
   VAR len := Text.Length (nm);
   BEGIN
     IF (len <= 8) THEN
-      FOR i := 0 TO len - 1 DO OutC (t, Text.GetChar (nm, i)); END;
-      FOR i := len TO 7   DO OutC (t, '\000'); END;
+      FOR i := 0 TO len - 1 DO Out8 (t, Text.GetChar (nm, i)); END;
+      FOR i := len TO 7   DO Out8 (t, '\000'); END;
     ELSE
-      OutI (t, 0);
-      OutI (t, AddString (t, nm));
+      Out32 (t, 0);
+      Out32 (t, AddString (t, nm));
     END;
   END OutN;
 
-PROCEDURE OutI (t: T;  i: INTEGER) =
+PROCEDURE Out32 (t: T;  i: INTEGER) =
   BEGIN
-    OutC (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
-    OutC (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
-    OutC (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
-    OutC (t, VAL (Word.And (i, 16_ff), CHAR));
-  END OutI;
+    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
+    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
+    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
+    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));
+  END Out32;
 
-PROCEDURE OutS (t: T;  i: INTEGER) =
+PROCEDURE Out16 (t: T;  i: INTEGER) =
   BEGIN
-    OutC (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
-    OutC (t, VAL (Word.And (i, 16_ff), CHAR));
-  END OutS;
+    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));  i := Word.RightShift (i, 8);
+    Out8 (t, VAL (Word.And (i, 16_ff), CHAR));
+  END Out16;
 
 PROCEDURE OutT (t: T;  txt: TEXT) =
   VAR len := Text.Length (txt);
   BEGIN
-    FOR i := 0 TO len - 1 DO OutC (t, Text.GetChar (txt, i)); END;
+    FOR i := 0 TO len - 1 DO Out8 (t, Text.GetChar (txt, i)); END;
   END OutT;
 
 PROCEDURE OutP (t: T;  c: CHAR) =
   (* convert Unix path name characters to NT characters *)
   BEGIN
     IF (c = '/') THEN c := '\134'; END;
-    OutC (t, c);
+    Out8 (t, c);
   END OutP;
 
-PROCEDURE OutC (t: T;  c: CHAR) =
+PROCEDURE Out8 (t: T;  c: CHAR) =
   BEGIN
     IF (t.out.len >= NUMBER (t.out.buf)) THEN Flush (t); END;
     t.out.buf [t.out.len] := c;
     INC (t.out.len);
-  END OutC;
+  END Out8;
 
 PROCEDURE Flush (t: T) =
   <*FATAL ANY*>
