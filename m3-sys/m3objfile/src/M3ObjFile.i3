@@ -16,7 +16,7 @@ TYPE
   T = OBJECT METHODS
     cursor (s: Seg): INTEGER;
     append (s: Seg;  value, length: INTEGER);
-    appendBytes (s: Seg;  READONLY bytes: ARRAY OF [0..255]);
+    appendBytes (s: Seg;  READONLY bytes: ARRAY OF UINT8);
     patch  (s: Seg;  offset, value, length: INTEGER);
 
     relocate (src_sym, src_offset, target_sym: INTEGER);
@@ -75,6 +75,7 @@ TYPE
   END;
 
 TYPE
+  UINT8 = BITS 8 FOR [0..255];
   Seg = {Text, Data};
 
 END M3ObjFile.
