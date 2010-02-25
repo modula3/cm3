@@ -10,9 +10,9 @@ INTERFACE Coff;
 
 TYPE
   UINT8     = BITS  8 FOR [0..255];
-  UINT16    = BITS 16 FOR [0..16_ffff];
-  INT16     = BITS 16 FOR [-16_8000..16_7fff];
-  INT32     = BITS 32 FOR [-16_7fffffff-1 .. 16_7fffffff];
+  UINT16    = BITS 16 FOR [0..16_FFFF];
+  INT16     = BITS 16 FOR [-16_8000..16_7FFF];
+  INT32     = BITS 32 FOR [-16_7FFFFFFF-1 .. 16_7FFFFFFF];
 
 TYPE
   FileHeader = RECORD

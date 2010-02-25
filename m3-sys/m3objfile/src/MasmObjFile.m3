@@ -132,7 +132,7 @@ PROCEDURE Append (t: T;  s: Seg;  value, length: INTEGER) =
     seg  := EnsureLength (t.bytes[s], offs + length);
   BEGIN
     WHILE (length > 0) DO
-      seg[offs] := Word.And (value, 16_ff);
+      seg[offs] := Word.And (value, 16_FF);
       value := Word.RightShift (value, 8);
       INC (offs);
       DEC (length);
@@ -161,7 +161,7 @@ PROCEDURE Patch (t: T;  s: Seg;  offset, value, length: INTEGER) =
   BEGIN
     <*ASSERT t.size [s] > offset *>
     WHILE (length > 0) DO
-      seg[offset] := Word.And (value, 16_ff);
+      seg[offset] := Word.And (value, 16_FF);
       value := Word.RightShift (value, 8);
       INC (offset);
       DEC (length);
