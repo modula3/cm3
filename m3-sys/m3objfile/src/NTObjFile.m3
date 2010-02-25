@@ -527,7 +527,9 @@ PROCEDURE ExportSymbol (t: T;  sym: INTEGER) =
 PROCEDURE FindAlign (align: INTEGER): Alignment =
   BEGIN
     FOR i := FIRST (AlignBytes) TO LAST (AlignBytes) DO
-      IF (AlignBytes[i] = align) THEN RETURN i; END;
+      IF (AlignBytes[i] = align) THEN
+        RETURN i;
+      END;
     END;
     <*ASSERT FALSE*>
   END FindAlign;
@@ -646,7 +648,9 @@ PROCEDURE ObjectName (src: TEXT): TEXT =
     (* chop off any path prefix *)
     FOR i := 0 TO len - 1 DO
       ch := Text.GetChar (src, i);
-      IF (ch = '/') OR (ch = '\134') THEN last_slash := i; END;
+      IF (ch = '/') OR (ch = '\134') THEN
+        last_slash := i;
+      END;
     END;
     INC (last_slash);
     src := Text.Sub (src, last_slash);
@@ -889,9 +893,10 @@ PROCEDURE BeginProcedure (t: T;  sym: INTEGER) =
     AddSourceLine (t, sym, 0);
     AddSourceLine (t, t.text.raw_data.n_bytes, t.last_source_line);
 
-    IF (t.last_proc = 0)
-      THEN t.first_proc := sym;
-      ELSE t.symtab.list [t.last_proc].next_func := sym;
+    IF (t.last_proc = 0) THEN
+      t.first_proc := sym;
+    ELSE
+      t.symtab.list [t.last_proc].next_func := sym;
     END;
     t.last_proc := sym;
   END BeginProcedure;
@@ -985,7 +990,9 @@ PROCEDURE Dump (t: T;  wr: Wr.T) =
       s.cnt     := 0;
       s.n_bytes := 4; (* leave room for the count *)
       s.map     := NEW (TextIntTbl.Default).init ();
-      IF (s.list = NIL) THEN s.list := NEW (TextList, 100); END;
+      IF (s.list = NIL) THEN
+        s.list := NEW (TextList, 100);
+      END;
     END;
 
     (* compute the file and address space layouts *)
