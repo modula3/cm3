@@ -1116,7 +1116,7 @@ PROCEDURE LayoutChunk (VAR c: Chunk;  VAR offs: INTEGER;  data: REFANY) =
 PROCEDURE WriteSectionHeader (t: T;  VAR s: Section) =
   BEGIN
     IF (s.id <= 0) THEN RETURN END;
-    OutN (t, s.name);
+    OutN  (t, s.name);
     Out32 (t, s.address);  (* physical address *)
     Out32 (t, 0);  (* virtual address *)
     Out32 (t, s.raw_data.n_bytes);
@@ -1195,19 +1195,19 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
 
     | SymKind.Text =>
         has_body := (sym.first_line # 0);
-        OutN (t, M3ID.ToText (sym.id));
+        OutN  (t, M3ID.ToText (sym.id));
         Out32 (t, sym.offset);
         Out16 (t, t.text.id);       (* section = Text *)
         IF (has_body) THEN
           Out16 (t, 16_20);         (* type = function *)
-          Out8 (t, SClass [TRUE]);
+          Out8  (t, SClass [TRUE]);
                                     (* storage class = static/extern *)
-          Out8 (t, 1);              (* #aux = 1 *)
+          Out8  (t, 1);             (* #aux = 1 *)
         ELSE
           Out16 (t, 0);             (* type = no type *)
-          Out8 (t, SClass [sym.export]);
+          Out8  (t, SClass [sym.export]);
                                     (* storage class = static/extern *)
-          Out8 (t, 0);              (* #aux = 0 *)
+          Out8  (t, 0);             (* #aux = 0 *)
         END;
 
         (** HACK: We make all procedures with source lines external so
@@ -1229,7 +1229,7 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
           Out16 (t, 0);             (* unused *)
 
           (* ".bf" entry *)
-          OutN (t, ".bf");
+          OutN  (t, ".bf");
           Out32 (t, sym.offset);    (* initial pc *)
           Out16 (t, t.text.id);     (* section = Text *)
           Out16 (t, 0);             (* type = none *)
@@ -1247,7 +1247,7 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
           Out16 (t, 0);             (* unused *)
 
           (* ".lf" entry *)
-          OutN (t, ".lf");
+          OutN  (t, ".lf");
           (***
           Out32 (t, sym.last_line - sym.first_line + 1);  (* # source lines *)
           ***)
@@ -1257,7 +1257,7 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
           Out16 (t, 101);            (* class = function, #aux = 0 *)
 
           (* ".ef" entry *)
-          OutN (t, ".ef");
+          OutN  (t, ".ef");
           Out32 (t, sym.last_offset); (* final pc *)
           Out16 (t, t.text.id);       (* section = Text *)
           Out16 (t, 0);               (* type = none *)
@@ -1273,7 +1273,7 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
         END;
 
     | SymKind.Data =>
-        OutN (t, M3ID.ToText (sym.id));
+        OutN  (t, M3ID.ToText (sym.id));
         Out32 (t, sym.offset);
         Out16 (t, t.data.id);   (* section = Data *)
         Out16 (t, 0);           (* type = no type *)
@@ -1281,7 +1281,7 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
                                 (* storage class = static/extern, #aux = 0 *)
 
     | SymKind.Bss  =>
-        OutN (t, M3ID.ToText (sym.id));
+        OutN  (t, M3ID.ToText (sym.id));
         Out32 (t, sym.offset);
         Out16 (t, t.bss.id);    (* section = bss *)
         Out16 (t, 0);           (* type = no type *)
@@ -1289,19 +1289,19 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
                                 (* storage class = static/extern, #aux = 0 *)
 
     | SymKind.Extern =>
-        OutN (t, M3ID.ToText (sym.id));
+        OutN  (t, M3ID.ToText (sym.id));
         Out32 (t, 0);           (* value = 0 *)
         Out16 (t, 0);           (* section = extern *)
         Out16 (t, 0);           (* type = no type *)
         Out16 (t, 2);           (* storage class = extern, #aux = 0 *)
 
     | SymKind.File =>
-        OutN (t, ".file");
+        OutN  (t, ".file");
         Out32 (t, 0);           (* value = 0 *)
         Out16 (t, -2);          (* section = debug *)
         Out16 (t, 0);           (* type = no type *)
-        Out8 (t, ORD('\147'));  (* storage class = file *)
-        Out8 (t, VAL (sym.offset, UINT8)); (* #aux *)
+        Out8  (t, ORD('\147')); (* storage class = file *)
+        Out8  (t, sym.offset);  (* #aux *)
 
     | SymKind.FileAux =>
         VAR
@@ -1314,17 +1314,17 @@ PROCEDURE WriteSym (t: T;  READONLY sym: Symbol) =
             OutPathChar (t, Text.GetChar (name, i));
           END;
           FOR i := stop TO start + SymTabSize - 1 DO
-            Out8 (t, 0);
+            Out8  (t, 0);
           END;
         END;
 
     | SymKind.Section =>
-        OutN (t, M3ID.ToText (sym.id));
+        OutN  (t, M3ID.ToText (sym.id));
         Out32 (t, 0);           (* value = 0 *)
         Out16 (t, sym.offset);  (* section # *)
         Out16 (t, 0);           (* type = no type *)
-        Out8 (t, 3);            (* storage class = static *)
-        Out8 (t, 1);            (* #aux = 1*)
+        Out8  (t, 3);           (* storage class = static *)
+        Out8  (t, 1);           (* #aux = 1*)
 
         IF    (sym.offset = t.debug_S.id) THEN WriteSectAux (t, t.debug_S);
         ELSIF (sym.offset = t.text.id)    THEN WriteSectAux (t, t.text);
@@ -1379,16 +1379,18 @@ PROCEDURE OutN (t: T;  nm: TEXT) =
 
 PROCEDURE Out32 (t: T;  i: INTEGER) =
   BEGIN
-    Out8 (t, Word.And (i, 16_FF));  i := Word.RightShift (i, 8);
-    Out8 (t, Word.And (i, 16_FF));  i := Word.RightShift (i, 8);
-    Out8 (t, Word.And (i, 16_FF));  i := Word.RightShift (i, 8);
-    Out8 (t, Word.And (i, 16_FF));
+    FOR j := 0 TO 3 DO
+      Out8 (t, Word.And (i, 16_FF));
+      i := Word.RightShift (i, 8);
+    END;
   END Out32;
 
 PROCEDURE Out16 (t: T;  i: INTEGER) =
   BEGIN
-    Out8 (t, Word.And (i, 16_FF));  i := Word.RightShift (i, 8);
-    Out8 (t, Word.And (i, 16_FF));
+    FOR j := 0 TO 1 DO
+      Out8 (t, Word.And (i, 16_FF));
+      i := Word.RightShift (i, 8);
+    END;
   END Out16;
 
 PROCEDURE OutT (t: T;  txt: TEXT) =
