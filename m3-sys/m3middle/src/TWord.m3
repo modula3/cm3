@@ -252,6 +252,16 @@ PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
     RETURN TRUE;
   END LE;
 
+PROCEDURE GE (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN LE(b, a);
+  END GE;
+
+PROCEDURE GT (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN LT(b, a);
+  END GT;
+
 PROCEDURE And (READONLY a, b: Int;  VAR r: Int) =
   BEGIN
     FOR i := 0 TO LAST(Int) DO

@@ -108,6 +108,20 @@ PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
     RETURN (a_sign = b_sign) OR (a_sign = r_sign);
   END Subtract;
 
+PROCEDURE Negate (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  BEGIN
+    RETURN Subtract(Zero, a, r);
+  END Negate;
+  
+PROCEDURE Abs (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  BEGIN
+    IF GE(a, Zero) THEN
+      r := a;
+      RETURN TRUE;
+    END;
+    RETURN Negate(a, r);
+  END Abs;
+
 PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR
     k, carry: INTEGER;
@@ -229,10 +243,7 @@ PROCEDURE DivMod (READONLY a, b: Int;  VAR q, r: Int): BOOLEAN =
 
 PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
   BEGIN
-    FOR i := 0 TO LAST(Int) DO
-      IF a[i] # b[i] THEN RETURN FALSE; END;
-    END;
-    RETURN TRUE;
+    RETURN (a = b);
   END EQ;
 
 PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
@@ -254,6 +265,21 @@ PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
   BEGIN
     RETURN EQ (a, b) OR LT (a, b);
   END LE;
+
+PROCEDURE NE (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN (a # b);
+  END NE;
+
+PROCEDURE GT (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN LT (b, a);
+  END GT;
+
+PROCEDURE GE (READONLY a, b: Int): BOOLEAN = 
+  BEGIN
+    RETURN LE(b, a);
+  END GE;
 
 PROCEDURE ToText (READONLY r: Int): TEXT =
   VAR result: ARRAY [0..BITSIZE (Int)] OF CHAR;
