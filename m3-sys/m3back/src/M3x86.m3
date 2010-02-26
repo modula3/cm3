@@ -493,17 +493,15 @@ PROCEDURE declare_set (u: U;  t, domain: TypeUID;  s: BitSize) =
   END declare_set;
 
 PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
-                            READONLY xmin, xmax: Target.Int;
+                            READONLY min, max: Target.Int;
                             s: BitSize) =
-  VAR min := TIntN.FromTargetInt(xmin, NUMBER(xmin));
-      max := TIntN.FromTargetInt(xmax, NUMBER(xmax));
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_subrange");
       u.wr.Tipe (t);
       u.wr.Tipe (domain);
-      u.wr.TInt (min);
-      u.wr.TInt (max);
+      u.wr.TInt (TIntN.FromTargetInt(min, NUMBER(min)));
+      u.wr.TInt (TIntN.FromTargetInt(min, NUMBER(max)));
       u.wr.BInt (s);
       u.wr.NL   ();
     END
