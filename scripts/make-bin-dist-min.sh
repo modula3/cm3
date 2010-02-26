@@ -80,11 +80,9 @@ if [ "${GCC_BACKEND}" = yes ] ; then
   cp "${ROOT}/m3-sys/m3cc/${TARGET}/cm3cg${EXE}" "${INSTALLROOT}/bin" || exit 1
   strip_exe "${INSTALLROOT}/bin/cm3cg${EXE}"
 fi
-if [ "${M3OSTYPE}" = "WIN32" ] ; then
-  echo "installing ${INSTALLROOT}/bin/mklib${EXE}"
-  cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin" || exit 1
-  strip_exe "${INSTALLROOT}/bin/mklib${EXE}"
-fi
+echo "installing ${INSTALLROOT}/bin/mklib${EXE}"
+cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin" || exit 1
+strip_exe "${INSTALLROOT}/bin/mklib${EXE}"
 
 #-----------------------------------------------------------------------------
 # configure a temporary config file
