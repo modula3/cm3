@@ -38,7 +38,6 @@ CONST
   x0400     = Int{0,4,0,..};
   x0800     = Int{0,8,0,..};
   x0F00     = Int{0,16_F,0,..};
-  MaxU8     = Int{16_FF,0,..};
 
   (* 'M' for Minus (negative) *)
 

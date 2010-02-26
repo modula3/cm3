@@ -35,7 +35,6 @@ CONST
   x0400     = IntN{x := TInt.x0400};
   x0800     = IntN{x := TInt.x0800};
   x0F00     = IntN{x := TInt.x0F00};
-  MaxU8     = IntN{x := TInt.MaxU8};
 
   (* 'M' for Minus (negative) *)
 

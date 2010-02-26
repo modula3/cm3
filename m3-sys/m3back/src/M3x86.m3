@@ -2135,7 +2135,7 @@ PROCEDURE set_member (u: U;  s: ByteSize;  t: IType) =
          stack1 = u.vstack.pos(1, "set_singleton") DO
 
       (* Better would be:
-      IF u.vstack.loc(stack0) # OLoc.imm OR TWordN.GT(u.vstack.op(stack0).imm, TIntN.MaxU8) THEN
+      IF u.vstack.loc(stack0) # OLoc.imm OR TWordN.GT(u.vstack.op(stack0).imm, Target.Word8.maxN) THEN
         u.vstack.find(stack0, Force.anyreg);
       ELSE
         u.vstack.find(stack0, Force.any);
@@ -2256,7 +2256,7 @@ PROCEDURE set_singleton (u: U;  s: ByteSize;  t: IType) =
 
       <* ASSERT u.vstack.loc(stack0) # OLoc.imm *>
 
-      (*IF u.vstack.loc(stack0) # OLoc.imm OR TWordN.GT(u.vstack.op(stack0).imm, TIntN.MaxU8) THEN*)
+      (*IF u.vstack.loc(stack0) # OLoc.imm OR TWordN.GT(u.vstack.op(stack0).imm, Target.Word8.maxN) THEN*)
         u.vstack.find(stack0, Force.anyreg);
       (*ELSE*)
         (*u.vstack.find(stack0, Force.any);*)
@@ -4291,8 +4291,8 @@ PROCEDURE exchange (u: U; t: MType; z: ZType; <*UNUSED*>order: MemoryOrder) =
       RETURN;
     END;
 
-    WITH newValue       = u.vstack.pos(0, "fetch_and_op"),
-         atomicVariable = u.vstack.pos(1, "fetch_and_op") DO
+    WITH newValue       = u.vstack.pos(0, "exchange"),
+         atomicVariable = u.vstack.pos(1, "exchange") DO
       u.vstack.find(newValue, Force.anyreg);
       u.vstack.find(atomicVariable, Force.anyreg);
       reg := u.vstack.op(newValue).reg[0];
