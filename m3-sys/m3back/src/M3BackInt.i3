@@ -31,20 +31,18 @@ TYPE
 CONST
   Zero      = Int{x := TInt.Zero};
   One       = Int{x := TInt.One};
-  Two       = Int{x := IBytes{ 2,0,..}};
-  Three     = Int{x := IBytes{ 3,0,..}};
-  Four      = Int{x := IBytes{ 4,0,..}};
-  Eight     = Int{x := IBytes{ 8,0,..}};
-  Ten       = Int{x := IBytes{10,0,..}};
-  ThirtyOne = Int{x := IBytes{31,0,..}};
-  ThirtyTwo = Int{x := IBytes{32,0,..}};
-  SixtyThree= Int{x := IBytes{63,0,..}};
-  SixtyFour = Int{x := IBytes{64,0,..}};
-  F3FF      = Int{x := IBytes{16_FF,16_F3,0,..}};
-  x0400     = Int{x := IBytes{0,4,0,..}};
-  x0800     = Int{x := IBytes{0,8,0,..}};
-  x0F00     = Int{x := IBytes{0,16_F,0,..}};
-  MaxU8     = Int{x := IBytes{16_FF,0,..}};
+  Two       = Int{x := TInt.Two};
+  Three     = Int{x := TInt.Three};
+  Four      = Int{x := TInt.Four};
+  Eight     = Int{x := TInt.Eight};
+  ThirtyOne = Int{x := TInt.ThirtyOne};
+  ThirtyTwo = Int{x := TInt.ThirtyTwo};
+  SixtyThree= Int{x := TInt.SixtyThree};
+  F3FF      = Int{x := TInt.F3FF};
+  x0400     = Int{x := TInt.x0400};
+  x0800     = Int{x := TInt.x0800};
+  x0F00     = Int{x := TInt.x0F00};
+  MaxU8     = Int{x := TInt.MaxU8};
 
   (* 'M' for Minus (negative) *)
 
