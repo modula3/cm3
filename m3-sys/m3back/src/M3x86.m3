@@ -9,7 +9,7 @@ MODULE M3x86 EXPORTS M3x86, M3x86Rep;
 
 IMPORT Wr, Text, Fmt, IntRefTbl, Word;
 IMPORT M3CG, M3ID, M3CG_Ops, Target, TFloat;
-IMPORT M3BackInt, M3BackWord;
+IMPORT TIntN, TWordN;
 IMPORT M3ObjFile, TargetMap;
 
 FROM TargetMap IMPORT CG_Bytes;
@@ -249,11 +249,10 @@ PROCEDURE New (logfile: Wr.T; obj: M3ObjFile.T): M3CG.T =
                 runtime := NEW (IntRefTbl.Default).init (20));
   BEGIN
 
-    M3BackInt.Init();
-    IntType[Type. Int32] := M3BackInt.Int32;
-    IntType[Type. Int64] := M3BackInt.Int64;
-    IntType[Type.Word32] := M3BackInt.Word32;
-    IntType[Type.Word64] := M3BackInt.Word64;
+    IntType[Type. Int32] := Target.Int32;
+    IntType[Type. Int64] := Target.Int64;
+    IntType[Type.Word32] := Target.Word32;
+    IntType[Type.Word64] := Target.Word64;
 
     IF logfile # NIL THEN
       u.debug := TRUE;
@@ -496,8 +495,8 @@ PROCEDURE declare_set (u: U;  t, domain: TypeUID;  s: BitSize) =
 PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
                             READONLY xmin, xmax: Target.Int;
                             s: BitSize) =
-  VAR min := M3BackInt.FromTargetInt(xmin, NUMBER(xmin));
-      max := M3BackInt.FromTargetInt(xmax, NUMBER(xmax));
+  VAR min := TIntN.FromTargetInt(xmin, NUMBER(xmin));
+      max := TIntN.FromTargetInt(xmax, NUMBER(xmax));
   BEGIN
     IF u.debug THEN
       u.wr.Cmd  ("declare_subrange");
@@ -1099,7 +1098,7 @@ PROCEDURE init_int (u: U; o: ByteOffset; READONLY value: Target.Int; t: Type) =
     IF u.debug THEN
       u.wr.Cmd   ("init_int");
       u.wr.Int   (o);
-      u.wr.TInt  (M3BackInt.FromTargetInt(value, CG_Bytes[t]));
+      u.wr.TInt  (TIntN.FromTargetInt(value, CG_Bytes[t]));
       u.wr.TName (t);
       u.wr.NL    ();
     END;
@@ -1365,7 +1364,7 @@ PROCEDURE begin_procedure (u: U;  p: Proc) =
     u.cg.pushOp(u.cg.reg[EBP]);
     u.cg.movOp(u.cg.reg[EBP], u.cg.reg[ESP]);
 
-    u.cg.immOp(Op.oSUB, u.cg.reg[ESP], M3BackInt.Word16.max);
+    u.cg.immOp(Op.oSUB, u.cg.reg[ESP], Target.Word16.maxN);
     u.procframe_ptr := u.obj.cursor(Seg.Text) - 4;
 
     u.cg.pushOp(u.cg.reg[EBX]);
@@ -1797,7 +1796,7 @@ PROCEDURE load_nil (u: U) =
 
 PROCEDURE load_integer  (u: U;  t: IType;  READONLY j: Target.Int) =
   (* push ; s0.t := i *)
-  VAR i := M3BackInt.FromTargetInt(j, CG_Bytes[t]);
+  VAR i := TIntN.FromTargetInt(j, CG_Bytes[t]);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_integer");
@@ -2136,7 +2135,7 @@ PROCEDURE set_member (u: U;  s: ByteSize;  t: IType) =
          stack1 = u.vstack.pos(1, "set_singleton") DO
 
       (* Better would be:
-      IF u.vstack.loc(stack0) # OLoc.imm OR M3BackWord.GT(u.vstack.op(stack0).imm, M3BackInt.MaxU8) THEN
+      IF u.vstack.loc(stack0) # OLoc.imm OR TWordN.GT(u.vstack.op(stack0).imm, TIntN.MaxU8) THEN
         u.vstack.find(stack0, Force.anyreg);
       ELSE
         u.vstack.find(stack0, Force.any);
@@ -2257,7 +2256,7 @@ PROCEDURE set_singleton (u: U;  s: ByteSize;  t: IType) =
 
       <* ASSERT u.vstack.loc(stack0) # OLoc.imm *>
 
-      (*IF u.vstack.loc(stack0) # OLoc.imm OR M3BackWord.GT(u.vstack.op(stack0).imm, M3BackInt.MaxU8) THEN*)
+      (*IF u.vstack.loc(stack0) # OLoc.imm OR TWordN.GT(u.vstack.op(stack0).imm, TIntN.MaxU8) THEN*)
         u.vstack.find(stack0, Force.anyreg);
       (*ELSE*)
         (*u.vstack.find(stack0, Force.any);*)
@@ -2273,7 +2272,7 @@ PROCEDURE set_singleton (u: U;  s: ByteSize;  t: IType) =
 
 PROCEDURE not (u: U;  t: IType) =
   (* s0.t := Word.Not (s0.t) *)
-  VAR not: M3BackInt.Int;
+  VAR not: Target.IntN;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("not");
@@ -2283,7 +2282,7 @@ PROCEDURE not (u: U;  t: IType) =
 
     WITH stack0 = u.vstack.pos(0, "not") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        M3BackWord.Not (u.vstack.op(stack0).imm, not);
+        TWordN.Not (u.vstack.op(stack0).imm, not);
         u.vstack.set_imm(stack0, not);
       ELSE
         u.vstack.unlock();
@@ -2348,8 +2347,8 @@ PROCEDURE shift (u: U;  t: IType) =
 
 PROCEDURE shift_left   (u: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
-  VAR shiftResult: M3BackInt.Int;
-      and: M3BackInt.Int;
+  VAR shiftResult: Target.IntN;
+      and: Target.IntN;
       shiftCount: INTEGER;
   BEGIN
     IF u.debug THEN
@@ -2363,27 +2362,27 @@ PROCEDURE shift_left   (u: U;  t: IType) =
          stack1 = u.vstack.pos(1, "shift_left") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF u.vstack.loc(stack1) = OLoc.imm THEN
-          IF NOT M3BackInt.ToInt(u.vstack.op(stack0).imm, shiftCount) THEN
+          IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, shiftCount) THEN
             u.Err("unable to convert shift count to host integer");
           END;
 
           (* shift constant by a constant *)
 
-          M3BackWord.Shift(u.vstack.op(stack1).imm, shiftCount, shiftResult);
+          TWordN.Shift(u.vstack.op(stack1).imm, shiftCount, shiftResult);
           u.vstack.set_imm(stack1, shiftResult);
         ELSE
           (* shift non-constant by a constant *)
 
-          M3BackWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
+          TWordN.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
-          IF M3BackInt.NE(u.vstack.op(stack0).imm, TZero) THEN
+          IF TIntN.NE(u.vstack.op(stack0).imm, TZero) THEN
             u.vstack.find(stack1, Force.anytemp);
             u.cg.immOp(Op.oSHL, u.vstack.op(stack1), u.vstack.op(stack0).imm);
             u.vstack.newdest(u.vstack.op(stack1));
           END
         END
       ELSE
-        IF (u.vstack.loc(stack1) # OLoc.imm) OR M3BackInt.NE(u.vstack.op(stack1).imm, TZero) THEN
+        IF (u.vstack.loc(stack1) # OLoc.imm) OR TIntN.NE(u.vstack.op(stack1).imm, TZero) THEN
 
           (* shift non-constant *)
 
@@ -2410,8 +2409,8 @@ PROCEDURE shift_left   (u: U;  t: IType) =
 PROCEDURE shift_right  (u: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, -s0.t) ; pop *)
   VAR shiftCount: INTEGER;
-      shift: M3BackInt.Int;
-      and: M3BackInt.Int;
+      shift: Target.IntN;
+      and: Target.IntN;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("shift_right");
@@ -2427,18 +2426,18 @@ PROCEDURE shift_right  (u: U;  t: IType) =
 
           (* shift constant by a constant *)
 
-          IF NOT M3BackInt.ToInt(u.vstack.op(stack0).imm, shiftCount) THEN
+          IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, shiftCount) THEN
             u.Err("unable to convert shift count to host integer");
           END;
-          M3BackWord.Shift(u.vstack.op(stack1).imm, -shiftCount, shift);
+          TWordN.Shift(u.vstack.op(stack1).imm, -shiftCount, shift);
           u.vstack.set_imm(stack1, shift);
         ELSE
 
           (* shift a non-constant by a constant *)
 
-          M3BackWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
+          TWordN.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
-          IF M3BackInt.NE(u.vstack.op(stack0).imm, TZero) THEN
+          IF TIntN.NE(u.vstack.op(stack0).imm, TZero) THEN
             u.vstack.find(stack1, Force.anytemp);
             u.cg.immOp(Op.oSHR, u.vstack.op(stack1), u.vstack.op(stack0).imm);
             u.vstack.newdest(u.vstack.op(stack1));
@@ -2448,7 +2447,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
 
         (* shift a non-constant or non-zero *)
 
-        IF ((u.vstack.loc(stack1) # OLoc.imm) OR (M3BackInt.NE(u.vstack.op(stack1).imm, TZero))) THEN
+        IF ((u.vstack.loc(stack1) # OLoc.imm) OR (TIntN.NE(u.vstack.op(stack1).imm, TZero))) THEN
           IF Is64(t) THEN
             do_custom_calling_convention_shift_64 (u, Builtin.shift_right_64);
             RETURN;
@@ -2488,8 +2487,8 @@ PROCEDURE rotate (u: U;  t: IType) =
 PROCEDURE rotate_left  (u: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, s0.t) ; pop *)
   VAR rotateCount: INTEGER;
-      rotate: M3BackInt.Int;
-      and: M3BackInt.Int;
+      rotate: Target.IntN;
+      and: Target.IntN;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("rotate_left");
@@ -2502,13 +2501,13 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
          stack1 = u.vstack.pos(1, "rotate_left") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF u.vstack.loc(stack1) = OLoc.imm THEN
-          IF NOT M3BackInt.ToInt(u.vstack.op(stack0).imm, rotateCount) THEN
+          IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, rotateCount) THEN
             u.Err("unable to convert rotate count to host integer");
           END;
-          M3BackWord.Rotate(u.vstack.op(stack1).imm, rotateCount, rotate);
+          TWordN.Rotate(u.vstack.op(stack1).imm, rotateCount, rotate);
           u.vstack.set_imm(stack1, rotate);
         ELSE
-          M3BackWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
+          TWordN.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
           IF Is64(t) THEN
             do_rotate_or_shift_64(u, Builtin.rotate_left64);
@@ -2541,8 +2540,8 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
 PROCEDURE rotate_right (u: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, -s0.t) ; pop *)
   VAR rotateCount: INTEGER;
-      rotate: M3BackInt.Int;
-      and: M3BackInt.Int;
+      rotate: Target.IntN;
+      and: Target.IntN;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("rotate_right");
@@ -2555,13 +2554,13 @@ PROCEDURE rotate_right (u: U;  t: IType) =
          stack1 = u.vstack.pos(1, "rotate_right") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF u.vstack.loc(stack1) = OLoc.imm THEN
-          IF NOT M3BackInt.ToInt(u.vstack.op(stack0).imm, rotateCount) THEN
+          IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, rotateCount) THEN
             u.Err("unable to convert rotate count to host integer");
           END;
-          M3BackWord.Rotate(u.vstack.op(stack1).imm, -rotateCount, rotate);
+          TWordN.Rotate(u.vstack.op(stack1).imm, -rotateCount, rotate);
           u.vstack.set_imm(stack1, rotate);
         ELSE
-          M3BackWord.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
+          TWordN.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
           IF Is64(t) THEN
             do_rotate_or_shift_64(u, Builtin.rotate_right64);
@@ -2776,7 +2775,7 @@ PROCEDURE copy_n (u: U;  z: IType;  t: MType;  overlap: BOOLEAN) =
   (* Mem[s2.A:s0.z] := Mem[s1.A:s0.z]; pop(3)*)
   CONST Mover = ARRAY BOOLEAN OF Builtin { Builtin.memcpy, Builtin.memmove };
   VAR n: INTEGER;  mover := Mover [overlap];
-      shift: M3BackInt.Int;
+      shift: Target.IntN;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("copy_n");
@@ -2788,7 +2787,7 @@ PROCEDURE copy_n (u: U;  z: IType;  t: MType;  overlap: BOOLEAN) =
 
     WITH stack0 = u.vstack.pos(0, "copy_n") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF NOT M3BackInt.ToInt(u.vstack.op(stack0).imm, n) THEN
+        IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, n) THEN
           u.Err("copy_n: unable to convert to host integer");
         END;
         u.vstack.discard(1);
@@ -2802,9 +2801,9 @@ PROCEDURE copy_n (u: U;  z: IType;  t: MType;  overlap: BOOLEAN) =
         u.vstack.unlock();
 
         CASE CG_Bytes[t] OF
-          2 => shift := M3BackInt.One;
-        | 4 => shift := M3BackInt.Two;
-        | 8 => shift := M3BackInt.Three;
+          2 => shift := TIntN.One;
+        | 4 => shift := TIntN.Two;
+        | 8 => shift := TIntN.Three;
         ELSE
           u.Err("Unknown MType size in copy_n");
         END;
@@ -2851,7 +2850,7 @@ PROCEDURE inline_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
   END inline_copy;
 
 PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
-  VAR tn, tNMinus1, tsize, tint: M3BackInt.Int;
+  VAR tn, tNMinus1, tsize, tint: Target.IntN;
   BEGIN
     u.vstack.corrupt(ECX, operandPart := 0);
     u.cg.movImmI(u.cg.reg[ECX], n);
@@ -2859,16 +2858,16 @@ PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
     IF forward THEN
       u.cg.noargOp(Op.oCLD);
     ELSE
-      IF NOT M3BackInt.FromInt(n, M3BackInt.Integer.bytes, tn) THEN
+      IF NOT TIntN.FromHostInteger(n, Target.Integer.bytes, tn) THEN
         u.Err("string_copy: unable to convert n to target int");
       END;
-      IF NOT M3BackInt.FromInt(size, M3BackInt.Integer.bytes, tsize) THEN
+      IF NOT TIntN.FromHostInteger(size, Target.Integer.bytes, tsize) THEN
         u.Err("string_copy: unable to convert size to target int");
       END;
-      IF NOT M3BackInt.Subtract(tn, M3BackInt.One, tNMinus1) THEN
+      IF NOT TIntN.Subtract(tn, TIntN.One, tNMinus1) THEN
         u.Err("string_copy: Subtract overflowed");
       END;
-      IF NOT M3BackInt.Multiply(tNMinus1, tsize, tint) THEN
+      IF NOT TIntN.Multiply(tNMinus1, tsize, tint) THEN
         u.Err("string_copy: Multiply overflowed");
       END;
       u.cg.immOp(Op.oADD, u.cg.reg[ESI], tint);
@@ -2967,7 +2966,7 @@ PROCEDURE copy (u: U;  n: INTEGER;  t: MType;  overlap: BOOLEAN) =
 PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
   (* Mem[s1.A:s0.z] := 0; pop(2) *)
   VAR n: INTEGER;
-      shift: M3BackInt.Int;
+      shift: Target.IntN;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("zero_n");
@@ -2978,7 +2977,7 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
 
     WITH stack0 = u.vstack.pos(0, "zero_n") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF NOT M3BackInt.ToInt(u.vstack.op(stack0).imm, n) THEN
+        IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, n) THEN
           u.Err("zero_n: unable to convert to host integer");
         END;
         u.vstack.discard(1);
@@ -2993,9 +2992,9 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
         u.vstack.find(stack0, Force.anyreg);
 
         CASE CG_Bytes[t] OF
-          2 => shift := M3BackInt.One;
-        | 4 => shift := M3BackInt.Two;
-        | 8 => shift := M3BackInt.Three;
+          2 => shift := TIntN.One;
+        | 4 => shift := TIntN.Two;
+        | 8 => shift := TIntN.Three;
         ELSE
           u.Err("Unknown MType size in zero_n");
         END;
@@ -3206,7 +3205,7 @@ PROCEDURE check_nil (u: U;  code: RuntimeError) =
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "check_nil") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF M3BackInt.EQ(u.vstack.op(stack0).imm, TZero) THEN
+        IF TIntN.EQ(u.vstack.op(stack0).imm, TZero) THEN
           reportfault(u, code);
         END
       ELSE
@@ -3228,7 +3227,7 @@ PROCEDURE check_nil (u: U;  code: RuntimeError) =
 PROCEDURE check_lo (u: U;  t: IType;  READONLY j: Target.Int;  code: RuntimeError) =
   (* IF (s0.t < i) THEN abort(code) *)
   VAR safelab: Label;
-      i := M3BackInt.FromTargetInt(j, CG_Bytes[t]);
+      i := TIntN.FromTargetInt(j, CG_Bytes[t]);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_lo");
@@ -3241,14 +3240,14 @@ PROCEDURE check_lo (u: U;  t: IType;  READONLY j: Target.Int;  code: RuntimeErro
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "check_lo") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF M3BackInt.LT(u.vstack.op(stack0).imm, i) THEN
+        IF TIntN.LT(u.vstack.op(stack0).imm, i) THEN
           reportfault(u, code);
         END
       ELSE
         u.vstack.find(stack0, Force.anyreg);
-        IF M3BackInt.GE(u.vstack.lower(u.vstack.reg(stack0)), i) THEN
+        IF TIntN.GE(u.vstack.lower(u.vstack.reg(stack0)), i) THEN
           (* ok *)
-        ELSIF M3BackInt.LT(u.vstack.upper(u.vstack.reg(stack0)), i) THEN
+        ELSIF TIntN.LT(u.vstack.upper(u.vstack.reg(stack0)), i) THEN
           reportfault(u, code);
         ELSE
           u.cg.immOp(Op.oCMP, u.vstack.op(stack0), i);
@@ -3265,7 +3264,7 @@ PROCEDURE check_lo (u: U;  t: IType;  READONLY j: Target.Int;  code: RuntimeErro
 PROCEDURE check_hi (u: U;  t: IType;  READONLY j: Target.Int;  code: RuntimeError) =
   (* IF (i < s0.t) THEN abort(code) *)
   VAR safelab: Label;
-      i := M3BackInt.FromTargetInt(j, CG_Bytes[t]);
+      i := TIntN.FromTargetInt(j, CG_Bytes[t]);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_hi");
@@ -3278,14 +3277,14 @@ PROCEDURE check_hi (u: U;  t: IType;  READONLY j: Target.Int;  code: RuntimeErro
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "check_hi") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF M3BackInt.LT(i, u.vstack.op(stack0).imm) THEN
+        IF TIntN.LT(i, u.vstack.op(stack0).imm) THEN
           reportfault(u, code);
         END
       ELSE
         u.vstack.find(stack0, Force.anyreg);
-        IF M3BackInt.LE(u.vstack.upper(u.vstack.reg(stack0)), i) THEN
+        IF TIntN.LE(u.vstack.upper(u.vstack.reg(stack0)), i) THEN
           (* ok *)
-        ELSIF M3BackInt.GT(u.vstack.lower(u.vstack.reg(stack0)), i) THEN
+        ELSIF TIntN.GT(u.vstack.lower(u.vstack.reg(stack0)), i) THEN
           reportfault(u, code);
         ELSE
           u.cg.immOp(Op.oCMP, u.vstack.op(stack0), i);
@@ -3301,10 +3300,10 @@ PROCEDURE check_hi (u: U;  t: IType;  READONLY j: Target.Int;  code: RuntimeErro
 
 PROCEDURE check_range (u: U;  t: IType;  READONLY xa, xb: Target.Int;  code: RuntimeError) =
   (* IF (s0.t < a) OR (b < s0.t) THEN abort(code) *)
-  VAR lo, hi: M3BackInt.Int;
+  VAR lo, hi: Target.IntN;
       safelab, outrange: Label;
-      a := M3BackInt.FromTargetInt(xa, CG_Bytes[t]);
-      b := M3BackInt.FromTargetInt(xb, CG_Bytes[t]);
+      a := TIntN.FromTargetInt(xa, CG_Bytes[t]);
+      b := TIntN.FromTargetInt(xb, CG_Bytes[t]);
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_range");
@@ -3318,7 +3317,7 @@ PROCEDURE check_range (u: U;  t: IType;  READONLY xa, xb: Target.Int;  code: Run
     WITH stack0 = u.vstack.pos(0, "check_range") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         lo := u.vstack.op(stack0).imm;
-        IF M3BackInt.LT(lo, a) OR M3BackInt.LT(b, lo) THEN
+        IF TIntN.LT(lo, a) OR TIntN.LT(b, lo) THEN
           reportfault(u, code);
         END;
         RETURN;
@@ -3328,15 +3327,15 @@ PROCEDURE check_range (u: U;  t: IType;  READONLY xa, xb: Target.Int;  code: Run
       WITH reg = u.vstack.reg(stack0) DO
         lo := u.vstack.lower(reg);
         hi := u.vstack.upper(reg);
-        IF M3BackInt.LE(a, lo) AND M3BackInt.LE(hi, b) THEN
+        IF TIntN.LE(a, lo) AND TIntN.LE(hi, b) THEN
           (* ok *)
-        ELSIF M3BackInt.LT(hi, a) OR M3BackInt.LT(b, lo) THEN
+        ELSIF TIntN.LT(hi, a) OR TIntN.LT(b, lo) THEN
           reportfault(u, code);
-        ELSIF M3BackInt.LE(hi, b) THEN
+        ELSIF TIntN.LE(hi, b) THEN
           check_lo(u, t, xa, code);
-        ELSIF M3BackInt.GE(lo, a) THEN
+        ELSIF TIntN.GE(lo, a) THEN
           check_hi(u, t, xb, code);
-        ELSIF M3BackInt.EQ(a, TZero) THEN
+        ELSIF TIntN.EQ(a, TZero) THEN
           (* 0 <= x <= b  ==>   UNSIGNED(x) <= b *)
           safelab := u.cg.reserve_labels(1, TRUE);
           u.cg.immOp(Op.oCMP, u.vstack.op(stack0), b);
@@ -3383,7 +3382,7 @@ PROCEDURE check_index (u: U;  t: IType;  code: RuntimeError) =
          stack1 = u.vstack.pos(1, "check_index") DO
       IF u.vstack.loc(stack0) = OLoc.imm AND
          u.vstack.loc(stack1) = OLoc.imm THEN
-        IF M3BackWord.LE(u.vstack.op(stack0).imm, u.vstack.op(stack1).imm) THEN
+        IF TWordN.LE(u.vstack.op(stack0).imm, u.vstack.op(stack1).imm) THEN
           reportfault(u, code);
         END
       ELSE
@@ -3504,7 +3503,7 @@ PROCEDURE makereportproc (u: U) =
 
 PROCEDURE add_offset (u: U; i: INTEGER) =
   (* s0.A := s0.A + i *)
-  VAR ti, imm_plus_i: M3BackInt.Int;
+  VAR ti, imm_plus_i: Target.IntN;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("add_offset");
@@ -3512,14 +3511,14 @@ PROCEDURE add_offset (u: U; i: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF NOT M3BackInt.FromInt(i, M3BackInt.Integer.bytes, ti) THEN
+    IF NOT TIntN.FromHostInteger(i, Target.Integer.bytes, ti) THEN
       u.Err("add_offset: failed to convert i to target integer");
     END;
 
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "add_offset") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF NOT M3BackInt.Add(u.vstack.op(stack0).imm, ti, imm_plus_i) THEN
+        IF NOT TIntN.Add(u.vstack.op(stack0).imm, ti, imm_plus_i) THEN
           u.Err("add_offset: Add overflowed");
         END;
         u.vstack.set_imm(stack0, imm_plus_i);
@@ -3697,9 +3696,9 @@ PROCEDURE load_stack_param (u: U; t: MType; depth: INTEGER) =
       IF Target.FloatType [t] THEN
         <* ASSERT depth = 0 *>
         IF t = Type.Reel THEN
-          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], M3BackInt.Four);
+          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TIntN.Four);
         ELSE
-          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], M3BackInt.Eight);
+          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TIntN.Eight);
         END;
         u.cg.f_storeind(u.cg.reg[ESP], 0, t);
       ELSE
@@ -3725,7 +3724,7 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
    * NOTE that we implement call by value, the struct is
    * copied to temporary space on the machine stack
    *)
-  VAR ts: M3BackInt.Int;
+  VAR ts: Target.IntN;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("pop_struct");
@@ -3749,13 +3748,13 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
 
     WITH stack0 = u.vstack.pos(0, "pop_struct") DO
 
-      IF NOT M3BackInt.FromInt(s, M3BackInt.Integer.bytes, ts) THEN
+      IF NOT TIntN.FromHostInteger(s, Target.Integer.bytes, ts) THEN
         u.Err("pop_struct: unable to convert s to target int");
       END;
 
       (* if the struct is "large", use rep mov to copy it to the machine stack *)
 
-      IF M3BackInt.GT(ts, M3BackInt.ThirtyTwo) THEN
+      IF TIntN.GT(ts, TIntN.ThirtyTwo) THEN
         u.cg.immOp(Op.oSUB, u.cg.reg[ESP], ts);
 
         u.vstack.find(stack0, Force.regset, RegSet { ESI });
@@ -3843,10 +3842,10 @@ PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): 
     RETURN 2;
   END SplitMVar;
 
-PROCEDURE SplitImm(type: Type; READONLY imm: M3BackInt.Int; VAR immA: ARRAY OperandPart OF M3BackInt.Int): OperandSize =
+PROCEDURE SplitImm(type: Type; READONLY imm: Target.IntN; VAR immA: ARRAY OperandPart OF Target.IntN): OperandSize =
   BEGIN
-    M3BackWord.And(imm, M3BackInt.Word32.max, immA[0]);
-    M3BackWord.RightShift(imm, 32, immA[1]);
+    TWordN.And(imm, Target.Word32.maxN, immA[0]);
+    TWordN.RightShift(imm, 32, immA[1]);
     RETURN GetTypeSize(type);
   END SplitImm;
 
@@ -3864,7 +3863,7 @@ PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize =
 PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize =
   VAR type := op.optype;
       mvarA: ARRAY OperandPart OF MVar;
-      immA: ARRAY OperandPart OF M3BackInt.Int;
+      immA: ARRAY OperandPart OF Target.IntN;
   BEGIN
     opA[0] := op;
 
@@ -3901,7 +3900,7 @@ PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Opera
 
 PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
   VAR realproc := NARROW(p, x86Proc);
-      call_param_size: M3BackInt.Int;
+      call_param_size: Target.IntN;
   (* call the procedure identified by block b.  The procedure
      returns a value of type t. *)
   BEGIN
@@ -3935,7 +3934,7 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
     IF (NOT realproc.stdcall) (* => caller cleans *)
        AND u.call_param_size[u.in_proc_call - 1] > 0 THEN
 
-        IF NOT M3BackInt.FromInt(u.call_param_size[u.in_proc_call - 1], M3BackInt.Integer.bytes, call_param_size) THEN
+        IF NOT TIntN.FromHostInteger(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
           u.Err("call_direct: unable to convert param_size to target integer");
         END;
         u.cg.immOp(Op.oADD, u.cg.reg[ESP], call_param_size);
@@ -3962,7 +3961,7 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
 PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
   (* call the procedure whose address is in s0.A and pop s0.  The
      procedure returns a value of type t. *)
-  VAR call_param_size: M3BackInt.Int;
+  VAR call_param_size: Target.IntN;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("call_indirect");
@@ -3994,7 +3993,7 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
 
       (* caller-cleans calling convention *)
 
-      IF NOT M3BackInt.FromInt(u.call_param_size[u.in_proc_call - 1], M3BackInt.Integer.bytes, call_param_size) THEN
+      IF NOT TIntN.FromHostInteger(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
         u.Err("call_indirect: unable to convert param_size to target integer");
       END;
 
@@ -4038,11 +4037,11 @@ PROCEDURE FixReturnValue (u: U;  t: Type): Type =
         t := Type.Int32;
 
     | Type.Word8 => (* 8-bit unsigned integer *)
-        u.cg.immOp (Op.oAND, u.cg.reg[EAX], M3BackInt.Word8.max);  (* EAX &= 16_FF *)
+        u.cg.immOp (Op.oAND, u.cg.reg[EAX], Target.Word8.maxN);  (* EAX &= 16_FF *)
         t := Type.Word32;
 
     | Type.Word16 => (* 16-bit unsigned integer *)
-        u.cg.immOp (Op.oAND, u.cg.reg[EAX], M3BackInt.Word16.max);  (* EAX &= 16_FFFF *)
+        u.cg.immOp (Op.oAND, u.cg.reg[EAX], Target.Word16.maxN);  (* EAX &= 16_FFFF *)
         t := Type.Word32;
 
     ELSE (* value is ok *)

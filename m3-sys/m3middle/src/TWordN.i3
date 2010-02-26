@@ -2,11 +2,11 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* File: M3BackWord.i3                                         *)
+(* File: TWordN.i3                                             *)
 (* Last Modified On Fri Nov 19 09:32:50 PST 1993 By kalsow     *)
 (*      Modified On Thu May 20 08:20:38 PDT 1993 By muller     *)
 
-INTERFACE M3BackWord; (* also known as TWord *)
+INTERFACE TWordN; (* also known as TWord *)
 
 (*  Modula-3 target description
 
@@ -18,61 +18,61 @@ INTERFACE M3BackWord; (* also known as TWord *)
     otherwise they return FALSE.
 *)
 
-FROM M3BackInt IMPORT Int;
+FROM Target IMPORT IntN;
 
-PROCEDURE Add (READONLY a, b: Int;  VAR i: Int);
+PROCEDURE Add (READONLY a, b: IntN;  VAR i: IntN);
 (* returns 'Word.Plus (a, b)' *)
 
-PROCEDURE Subtract (READONLY a, b: Int;  VAR i: Int);
+PROCEDURE Subtract (READONLY a, b: IntN;  VAR i: IntN);
 (* returns 'Word.Minus (a, b)' *)
 
-PROCEDURE Multiply (READONLY a, b: Int;  VAR i: Int);
+PROCEDURE Multiply (READONLY a, b: IntN;  VAR i: IntN);
 (* returns 'Word.Times (a, b)' *)
 
-PROCEDURE Div (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
+PROCEDURE Div (READONLY a, b: IntN;  VAR i: IntN): BOOLEAN;
 (* returns 'Word.Divide (a, b)' unless b is zero. *)
 
-PROCEDURE Mod (READONLY a, b: Int;  VAR i: Int): BOOLEAN;
+PROCEDURE Mod (READONLY a, b: IntN;  VAR i: IntN): BOOLEAN;
 (* returns 'Word.Mod (a, b)' unless b is zero. *)
 
-PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int);
+PROCEDURE DivMod (READONLY x, y: IntN;  VAR q, r: IntN);
 (* returns 'q = x DIV y', and 'r = x MOD y', but assumes that 'y # 0' *)
 
-PROCEDURE LT (READONLY a, b: Int): BOOLEAN; (* a < b *)
-PROCEDURE LE (READONLY a, b: Int): BOOLEAN; (* a <= b *)
-PROCEDURE EQ (READONLY a, b: Int): BOOLEAN; (* a = b *)
-PROCEDURE NE (READONLY a, b: Int): BOOLEAN; (* a # b *)
-PROCEDURE GE (READONLY a, b: Int): BOOLEAN; (* a >= b *)
-PROCEDURE GT (READONLY a, b: Int): BOOLEAN; (* a > b *)
+PROCEDURE LT (READONLY a, b: IntN): BOOLEAN; (* a < b *)
+PROCEDURE LE (READONLY a, b: IntN): BOOLEAN; (* a <= b *)
+PROCEDURE EQ (READONLY a, b: IntN): BOOLEAN; (* a = b *)
+PROCEDURE NE (READONLY a, b: IntN): BOOLEAN; (* a # b *)
+PROCEDURE GE (READONLY a, b: IntN): BOOLEAN; (* a >= b *)
+PROCEDURE GT (READONLY a, b: IntN): BOOLEAN; (* a > b *)
 
-PROCEDURE And (READONLY a, b: Int;  VAR i: Int);
+PROCEDURE And (READONLY a, b: IntN;  VAR i: IntN);
 (* returns 'Word.And (a, b)' *)
 
-PROCEDURE Or (READONLY a, b: Int;  VAR i: Int);
+PROCEDURE Or (READONLY a, b: IntN;  VAR i: IntN);
 (* returns 'Word.Or (a, b)' *)
 
-PROCEDURE Xor (READONLY a, b: Int;  VAR i: Int);
+PROCEDURE Xor (READONLY a, b: IntN;  VAR i: IntN);
 (* returns 'Word.Xor (a, b)' *)
 
-PROCEDURE Not (READONLY a: Int;  VAR i: Int);
+PROCEDURE Not (READONLY a: IntN;  VAR i: IntN);
 (* returns 'Word.Not (a)' *)
 
-PROCEDURE Shift (READONLY x: Int;  n: INTEGER;  VAR r: Int);
+PROCEDURE Shift (READONLY x: IntN;  n: INTEGER;  VAR r: IntN);
 (* returns 'Word.Shift (x, n)' *)
 
-PROCEDURE LeftShift (READONLY x: Int;  n: CARDINAL;  VAR r: Int);
+PROCEDURE LeftShift (READONLY x: IntN;  n: CARDINAL;  VAR r: IntN);
 (* returns 'Word.LeftShift (x, n)' *)
 
-PROCEDURE RightShift (READONLY x: Int;  n: CARDINAL;  VAR r: Int);
+PROCEDURE RightShift (READONLY x: IntN;  n: CARDINAL;  VAR r: IntN);
 (* returns 'Word.RightShift (x, n)' *)
 
-PROCEDURE Rotate (READONLY x: Int;  n: INTEGER;  VAR r: Int);
+PROCEDURE Rotate (READONLY x: IntN;  n: INTEGER;  VAR r: IntN);
 (* returns 'Word.Rotate (x, n)' *)
 
-PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN;
+PROCEDURE Extract (READONLY x: IntN;  i, n: CARDINAL;  VAR r: IntN): BOOLEAN;
 (* returns 'Word.Extract (x, i, n)' *)
 
-PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN;
+PROCEDURE Insert (READONLY x, y: IntN;  i, n: CARDINAL;  VAR r: IntN): BOOLEAN;
 (* returns 'Word.Insert (x, y, i, n)' *)
 
-END M3BackWord.
+END TWordN.

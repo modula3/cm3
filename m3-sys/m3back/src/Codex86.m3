@@ -9,7 +9,7 @@
 MODULE Codex86;
 
 IMPORT Fmt, TargetMap, M3x86Rep, M3ID, M3CG_Ops, Word, M3ObjFile, Wrx86;
-IMPORT M3BackInt, Target, TInt;
+IMPORT TIntN, Target, TInt;
 
 FROM TargetMap IMPORT CG_Bytes;
 
@@ -379,16 +379,16 @@ PROCEDURE noargOp (t: T; op: Op) =
     writecode(t, ins);
   END noargOp;
 
-PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.Int) =
+PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.IntN) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
-    IF NOT M3BackInt.ToInt(imm, ins.imm) THEN
-      t.Err("immOp1: unable to convert immediate to INTEGER:" & M3BackInt.ToDiagnosticText(imm));
+    IF NOT TIntN.ToHostInteger(imm, ins.imm) THEN
+      t.Err("immOp1: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
     END;
 
-    IF M3BackInt.GE(imm, M3BackInt.Int8.min) AND M3BackInt.LE(imm, M3BackInt.Int8.max) THEN
+    IF TIntN.GE(imm, Target.Int8.minN) AND TIntN.LE(imm, Target.Int8.maxN) THEN
       ins.imsize := 1;
     ELSE
       ins.imsize := 4;
@@ -416,7 +416,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.
         
           (* shifts by a constant 1 have a smaller encoding available *)
 
-          IF op IN SET OF Op{Op.oSHL, Op.oSHR} AND M3BackInt.EQ(imm, M3BackInt.One) THEN
+          IF op IN SET OF Op{Op.oSHL, Op.oSHR} AND TIntN.EQ(imm, TIntN.One) THEN
             INC(ins.opcode, 16_10);
             ins.imsize := 0;
           END;
@@ -437,13 +437,13 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.
     END
   END immOp1;
 
-PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.Int) =
+PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.IntN) =
   VAR destA: ARRAY OperandPart OF Operand;
-      immA: ARRAY OperandPart OF M3BackInt.Int;
+      immA: ARRAY OperandPart OF Target.IntN;
       immSize := SplitImm(dest.optype, imm, immA);
       destSize := SplitOperand(dest, destA);
       compare_label: Label;
-      immMinus32: M3BackInt.Int;
+      immMinus32: Target.IntN;
       shiftCount := Operand{loc := OLoc.imm, imm := imm};
   BEGIN
 
@@ -467,9 +467,9 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.I
             t.set_label(compare_label);
 
         | Op.oSHL =>
-            IF M3BackInt.GE(imm, M3BackInt.ThirtyTwo) THEN
-              IF M3BackInt.NE(imm, M3BackInt.ThirtyTwo) THEN
-                EVAL M3BackInt.Subtract(imm, M3BackInt.ThirtyTwo, immMinus32);
+            IF TIntN.GE(imm, TIntN.ThirtyTwo) THEN
+              IF TIntN.NE(imm, TIntN.ThirtyTwo) THEN
+                EVAL TIntN.Subtract(imm, TIntN.ThirtyTwo, immMinus32);
                 (* Ideally we'd do a virtual move in the register alloator. *)
                 movOp1(t, destA[1], destA[0]);
                 immOp1(t, op, destA[1], immMinus32);
@@ -484,9 +484,9 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.I
             END
 
         | Op.oSHR =>
-            IF M3BackInt.GE(imm, M3BackInt.ThirtyTwo) THEN
-              IF M3BackInt.NE(imm, M3BackInt.ThirtyTwo) THEN
-                EVAL M3BackInt.Subtract(imm, M3BackInt.ThirtyTwo, immMinus32);
+            IF TIntN.GE(imm, TIntN.ThirtyTwo) THEN
+              IF TIntN.NE(imm, TIntN.ThirtyTwo) THEN
+                EVAL TIntN.Subtract(imm, TIntN.ThirtyTwo, immMinus32);
                 (* Ideally we'd do a virtual move in the register alloator. *)
                 movOp1(t, destA[0], destA[1]);
                 immOp1(t, op, destA[0], immMinus32);
@@ -551,11 +551,11 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
       <* ASSERT src.loc = OLoc.register *>
       <* ASSERT shiftCount.loc = OLoc.register OR shiftCount.loc = OLoc.imm *>
       <* ASSERT shiftCount.loc # OLoc.register OR shiftCount.reg[0] = ECX *>
-      <* ASSERT shiftCount.loc # OLoc.imm OR (M3BackInt.GE(shiftCount.imm, M3BackInt.Int8.min) AND M3BackInt.LE(shiftCount.imm, M3BackInt.Int8.max)) *>
+      <* ASSERT shiftCount.loc # OLoc.imm OR (TIntN.GE(shiftCount.imm, Target.Int8.minN) AND TIntN.LE(shiftCount.imm, Target.Int8.maxN)) *>
 
       IF shiftCount.loc = OLoc.imm THEN
-        IF NOT M3BackInt.ToInt(shiftCount.imm, ins.imm) THEN
-          t.Err("binOp: unable to convert immediate to INTEGER:" & M3BackInt.ToDiagnosticText(shiftCount.imm));
+        IF NOT TIntN.ToHostInteger(shiftCount.imm, ins.imm) THEN
+          t.Err("binOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(shiftCount.imm));
         END;
         ins.imsize := 1;
       ELSE
@@ -908,11 +908,11 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
     t.obj.relocate(t.textsym, t.obj.cursor(Seg.Text) - 4, sym);
   END movDummyReloc;
 
-PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: M3BackInt.Int) =
+PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.IntN) =
   VAR ins: Instruction;
   BEGIN
-    IF NOT M3BackInt.ToInt(imm, ins.imm) THEN
-      t.Err("movImmT: unable to convert immediate to INTEGER:" & M3BackInt.ToDiagnosticText(imm));
+    IF NOT TIntN.ToHostInteger(imm, ins.imm) THEN
+      t.Err("movImmT: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
     END;
     IF dest.loc # OLoc.register THEN
       <* ASSERT dest.loc = OLoc.mem *>
@@ -923,7 +923,7 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: M3BackInt.Int) =
       ins.imsize := CG_Bytes[dest.mvar.mvar_type];
       writecode(t, ins);
       log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.mvar_type]);
-    ELSIF M3BackInt.EQ(imm, TZero) THEN
+    ELSIF TIntN.EQ(imm, TZero) THEN
       binOp(t, Op.oXOR, dest, dest);
     ELSE
       ins.opcode := 16_B8 + dest.reg[0];
@@ -934,10 +934,10 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: M3BackInt.Int) =
   END movImmT;
 
 PROCEDURE movImmI (t: T; READONLY dest: Operand; imm: INTEGER) =
-  VAR immT: M3BackInt.Int;
+  VAR immT: Target.IntN;
   BEGIN
-    IF NOT M3BackInt.FromInt(imm, BYTESIZE(imm), immT) THEN
-      t.Err("movImmI: unable to convert INTEGER to M3BackInt.Int");
+    IF NOT TIntN.FromHostInteger(imm, BYTESIZE(imm), immT) THEN
+      t.Err("movImmI: unable to convert INTEGER to Target.IntN");
     END;
     t.movImmT(dest, immT);
   END movImmI;
@@ -949,8 +949,8 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
     CASE src.loc OF
     | OLoc.imm =>
         ins.opcode := 16_68;
-        IF NOT M3BackInt.ToInt(src.imm, ins.imm) THEN
-          t.Err("pushOp: unable to convert immediate to INTEGER:" & M3BackInt.ToDiagnosticText(src.imm));
+        IF NOT TIntN.ToHostInteger(src.imm, ins.imm) THEN
+          t.Err("pushOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(src.imm));
         END;
         ins.imsize := 4;
         writecode(t, ins);
@@ -1040,8 +1040,8 @@ PROCEDURE bitOp (t: T; READONLY bits, index: Operand; op: BitOp) =
         <* ASSERT bits.loc = OLoc.register *>
 
     IF index.loc = OLoc.imm THEN
-      IF NOT M3BackInt.ToInt(index.imm, ins.imm) THEN
-        t.Err("bitOp: unable to convert immediate to INTEGER:" & M3BackInt.ToDiagnosticText(index.imm));
+      IF NOT TIntN.ToHostInteger(index.imm, ins.imm) THEN
+        t.Err("bitOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(index.imm));
         <* ASSERT FALSE *>
       END;
       ins.opcode := op.bitIndexInImm8Opcode1;
@@ -1172,8 +1172,8 @@ PROCEDURE imulOp (t: T; READONLY dest, src: Operand) =
     IF src.loc = OLoc.imm THEN
       build_modrm(t, t.reg[dest.reg[0]], dest, ins);
       ins.opcode := 16_69;
-      IF NOT M3BackInt.ToInt(src.imm, ins.imm) THEN
-        t.Err("imulOp: unable to convert immediate to INTEGER:" & M3BackInt.ToDiagnosticText(src.imm));
+      IF NOT TIntN.ToHostInteger(src.imm, ins.imm) THEN
+        t.Err("imulOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(src.imm));
       END;
       ins.imsize := 4;
       writecode(t, ins);
@@ -1573,8 +1573,8 @@ PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset; type
     ins.opcode := 16_88;
     IF val.loc = OLoc.imm THEN
       ins.opcode := 16_C6;
-      IF NOT M3BackInt.ToInt(val.imm, ins.imm) THEN
-        t.Err("store_ind1: unable to convert immediate to INTEGER:" & M3BackInt.ToDiagnosticText(val.imm));
+      IF NOT TIntN.ToHostInteger(val.imm, ins.imm) THEN
+        t.Err("store_ind1: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(val.imm));
       END;
       ins.imsize := CG_Bytes[type];
     END;
@@ -2039,7 +2039,7 @@ PROCEDURE MnOp(t: T; READONLY op: Operand) =
       CASE op.loc OF
         OLoc.fstack   => Mn (t, " FST");
       | OLoc.register => Mn (t, " ", RegName[op.reg[0]]);
-      | OLoc.imm      => Mn (t, " $", M3BackInt.ToText (op.imm));
+      | OLoc.imm      => Mn (t, " $", TIntN.ToText (op.imm));
       | OLoc.mem      => MnMVar (t, op.mvar);
       END
     END
@@ -2096,10 +2096,10 @@ PROCEDURE MnProc(t: T;  p: x86Proc) =
     END;
   END MnProc;
 
-PROCEDURE MnImmTInt(t: T; READONLY imm: M3BackInt.Int) =
+PROCEDURE MnImmTInt(t: T; READONLY imm: Target.IntN) =
   BEGIN
     IF t.debug THEN
-      Mn(t, " $", M3BackInt.ToText (imm));
+      Mn(t, " $", TIntN.ToText (imm));
     END;
   END MnImmTInt;
 
