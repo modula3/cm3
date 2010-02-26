@@ -217,7 +217,10 @@ EOF
 
 quote_xml() {
   while [ -n "$1" ]; do
-    echo "$1" | sed -e 's/&/&amp;/g' -e 's/</\&lt;/g' -e 's/>/\&gt;/g'
+    echo "$1" | sed -e 's/&/&amp;/g' \
+                    -e 's/</\&lt;/g' \
+                    -e 's/>/\&gt;/g' \
+              | tr -d '\001\002\003\004\005\006\007\010'
     shift
   done
 }
