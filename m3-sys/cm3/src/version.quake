@@ -166,7 +166,7 @@ proc version_impl(name) is
                 end
             end
             exec("@chmod +x ./_m3version.sh")
-            exec("@./_m3version.sh > " & datefn)
+            exec("@./_m3version.sh | grep ^CM3_ > " & datefn)
         end
     end
     if FileExists(datefn)
