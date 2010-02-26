@@ -2,175 +2,167 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 (*                                                             *)
-(* File: M3BackWord.m3                                         *)
+(* File: TWordN.m3                                             *)
 (* Last Modified On Fri Nov 19 09:32:56 PST 1993 By kalsow     *)
 (*      Modified On Thu May 20 08:46:32 PDT 1993 By muller     *)
 
-MODULE M3BackWord; (* also known as TWord *)
+MODULE TWordN; (* also known as TWord *)
 
-IMPORT M3BackInt, TWord, TInt, Target;
-FROM M3BackInt IMPORT Int;
+IMPORT TWord, TInt;
+FROM Target IMPORT Int, IntN;
 
 (*------------------------------------------- unsigned integer operations ---*)
 
-PROCEDURE ZeroExtend(READONLY a: Int): Target.Int =
-(*
-    zero extend to the precision of Target.Int
-*)
-  VAR b: Target.Int;
+PROCEDURE ToInt(READONLY a: IntN): Int =
+  VAR b: Int;
   BEGIN
-   FOR i := 0 TO a.n - 1 DO
-     b[i] := a.x[i];
-   END;
-   FOR i := a.n TO LAST(b) DO
-     b[i] := 0;
-   END;
+   b:= a.x;
+   TInt.ZeroExtend(b, a.n);
    RETURN b;
-  END ZeroExtend;
+  END ToInt;
 
-PROCEDURE UnsignedTruncate(VAR a: Int; n: CARDINAL) =
+PROCEDURE FromInt(VAR a: IntN; n: CARDINAL) =
   BEGIN
     <*ASSERT n # 0*>
     a.n := n;
-    FOR i := n TO LAST(a.x) DO
-      a.x[i] := 0;
-    END;
-  END UnsignedTruncate;
+    (* overflow always ignored *)
+    EVAL TInt.UnsignedTruncate(a.x, n);
+  END FromInt;
 
-PROCEDURE Add (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE Add (READONLY a, b: IntN;  VAR r: IntN) =
   BEGIN
-    TWord.Add(ZeroExtend(a), ZeroExtend(b), r.x);
-    UnsignedTruncate(r, MIN(a.n, b.n));
+    TWord.Add(ToInt(a), ToInt(b), r.x);
+    FromInt(r, MIN(a.n, b.n));
   END Add;
 
-PROCEDURE Subtract (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE Subtract (READONLY a, b: IntN;  VAR r: IntN) =
   BEGIN
-    TWord.Subtract(ZeroExtend(a), ZeroExtend(b), r.x);
-    UnsignedTruncate(r, MIN(a.n, b.n));
+    TWord.Subtract(ToInt(a), ToInt(b), r.x);
+    FromInt(r, MIN(a.n, b.n));
   END Subtract;
 
-PROCEDURE Multiply (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE Multiply (READONLY a, b: IntN;  VAR r: IntN) =
   BEGIN
-    TWord.Multiply(ZeroExtend(a), ZeroExtend(b), r.x);
-    UnsignedTruncate(r, MIN(a.n, b.n));
+    TWord.Multiply(ToInt(a), ToInt(b), r.x);
+    FromInt(r, MIN(a.n, b.n));
   END Multiply;
 
-PROCEDURE Div (READONLY num, den: Int;  VAR q: Int): BOOLEAN =
+PROCEDURE Div (READONLY num, den: IntN;  VAR q: IntN): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    result := TWord.Div(ZeroExtend(num), ZeroExtend(den), q.x);
-    UnsignedTruncate(q, MIN(num.n, den.n));
+    result := TWord.Div(ToInt(num), ToInt(den), q.x);
+    FromInt(q, MIN(num.n, den.n));
     RETURN result;
   END Div;
 
-PROCEDURE Mod (READONLY num, den: Int;  VAR r: Int): BOOLEAN =
+PROCEDURE Mod (READONLY num, den: IntN;  VAR r: IntN): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    result := TWord.Mod(ZeroExtend(num), ZeroExtend(den), r.x);
-    UnsignedTruncate(r, MIN(num.n, den.n));
+    result := TWord.Mod(ToInt(num), ToInt(den), r.x);
+    FromInt(r, MIN(num.n, den.n));
     RETURN result;
   END Mod;
 
-PROCEDURE DivMod (READONLY x, y: Int;  VAR q, r: Int) =
+PROCEDURE DivMod (READONLY x, y: IntN;  VAR q, r: IntN) =
   BEGIN
-    TWord.DivMod(ZeroExtend(x), ZeroExtend(y), q.x, r.x);
-    UnsignedTruncate(r, MIN(x.n, y.n));
-    UnsignedTruncate(q, MIN(x.n, y.n));
+    TWord.DivMod(ToInt(x), ToInt(y), q.x, r.x);
+    FromInt(r, MIN(x.n, y.n));
+    FromInt(q, MIN(x.n, y.n));
   END DivMod;
 
-PROCEDURE LT (READONLY a, b: Int): BOOLEAN =
+PROCEDURE LT (READONLY a, b: IntN): BOOLEAN =
   BEGIN
-    RETURN TWord.LT(ZeroExtend(a), ZeroExtend(b));
+    RETURN TWord.LT(ToInt(a), ToInt(b));
   END LT;
 
-PROCEDURE LE (READONLY a, b: Int): BOOLEAN =
+PROCEDURE LE (READONLY a, b: IntN): BOOLEAN =
   BEGIN
-    RETURN TWord.LE(ZeroExtend(a), ZeroExtend(b));
+    RETURN TWord.LE(ToInt(a), ToInt(b));
   END LE;
 
-PROCEDURE EQ (READONLY a, b: Int): BOOLEAN =
+PROCEDURE EQ (READONLY a, b: IntN): BOOLEAN =
   BEGIN
-    RETURN TInt.EQ(ZeroExtend(a), ZeroExtend(b));
+    RETURN TInt.EQ(ToInt(a), ToInt(b));
   END EQ;
 
-PROCEDURE NE (READONLY a, b: Int): BOOLEAN =
+PROCEDURE NE (READONLY a, b: IntN): BOOLEAN =
   BEGIN
-    RETURN NOT EQ(a, b);
+    RETURN TInt.NE(ToInt(a), ToInt(b));
   END NE;
 
-PROCEDURE GE (READONLY a, b: Int): BOOLEAN =
+PROCEDURE GE (READONLY a, b: IntN): BOOLEAN =
   BEGIN
-    RETURN LE(b, a);
+    RETURN TWord.GE(ToInt(a), ToInt(b));
   END GE;
 
-PROCEDURE GT (READONLY a, b: Int): BOOLEAN =
+PROCEDURE GT (READONLY a, b: IntN): BOOLEAN =
   BEGIN
-    RETURN LT(b, a);
+    RETURN TWord.GT(ToInt(a), ToInt(b));
   END GT;
 
-PROCEDURE And (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE And (READONLY a, b: IntN;  VAR r: IntN) =
   BEGIN
-    TWord.And(ZeroExtend(a), ZeroExtend(b), r.x);
-    UnsignedTruncate(r, MIN(a.n, b.n));
+    TWord.And(ToInt(a), ToInt(b), r.x);
+    FromInt(r, MIN(a.n, b.n));
   END And;
 
-PROCEDURE Or (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE Or (READONLY a, b: IntN;  VAR r: IntN) =
   BEGIN
-    TWord.Or(ZeroExtend(a), ZeroExtend(b), r.x);
-    UnsignedTruncate(r, MIN(a.n, b.n));
+    TWord.Or(ToInt(a), ToInt(b), r.x);
+    FromInt(r, MIN(a.n, b.n));
   END Or;
 
-PROCEDURE Xor (READONLY a, b: Int;  VAR r: Int) =
+PROCEDURE Xor (READONLY a, b: IntN;  VAR r: IntN) =
   BEGIN
-    TWord.Xor(ZeroExtend(a), ZeroExtend(b), r.x);
-    UnsignedTruncate(r, MIN(a.n, b.n));
+    TWord.Xor(ToInt(a), ToInt(b), r.x);
+    FromInt(r, MIN(a.n, b.n));
   END Xor;
 
-PROCEDURE Not (READONLY a: Int;  VAR r: Int) =
+PROCEDURE Not (READONLY a: IntN;  VAR r: IntN) =
   BEGIN
-    TWord.Not(ZeroExtend(a), r.x);
-    UnsignedTruncate(r, a.n);
+    TWord.Not(ToInt(a), r.x);
+    FromInt(r, a.n);
   END Not;
 
-PROCEDURE LeftShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
+PROCEDURE LeftShift (READONLY a: IntN;  b: CARDINAL;  VAR r: IntN) =
   BEGIN
-    TWord.LeftShift(ZeroExtend(a), b, r.x);
-    UnsignedTruncate(r, a.n);
+    TWord.LeftShift(ToInt(a), b, r.x);
+    FromInt(r, a.n);
   END LeftShift;
 
-PROCEDURE RightShift (READONLY a: Int;  b: CARDINAL;  VAR r: Int) =
+PROCEDURE RightShift (READONLY a: IntN;  b: CARDINAL;  VAR r: IntN) =
   BEGIN
-    TWord.RightShift(ZeroExtend(a), b, r.x);
-    UnsignedTruncate(r, a.n);
+    TWord.RightShift(ToInt(a), b, r.x);
+    FromInt(r, a.n);
   END RightShift;
 
-PROCEDURE Shift (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
+PROCEDURE Shift (READONLY a: IntN;  b: INTEGER;  VAR r: IntN) =
   BEGIN
-    TWord.Shift(ZeroExtend(a), b, r.x);
-    UnsignedTruncate(r, a.n);
+    TWord.Shift(ToInt(a), b, r.x);
+    FromInt(r, a.n);
   END Shift;
 
-PROCEDURE Rotate (READONLY a: Int;  b: INTEGER;  VAR r: Int) =
+PROCEDURE Rotate (READONLY a: IntN;  b: INTEGER;  VAR r: IntN) =
   BEGIN
-    TWord.Rotate(ZeroExtend(a), b, a.n, r.x);
-    UnsignedTruncate(r, a.n);
+    TWord.Rotate(ToInt(a), b, a.n, r.x);
+    FromInt(r, a.n);
   END Rotate;
 
-PROCEDURE Extract (READONLY x: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
+PROCEDURE Extract (READONLY x: IntN;  i, n: CARDINAL;  VAR r: IntN): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    result := TWord.Extract(ZeroExtend(x), i, n, r.x);
-    UnsignedTruncate(r, x.n);
+    result := TWord.Extract(ToInt(x), i, n, r.x);
+    FromInt(r, x.n);
     RETURN result;
   END Extract;
 
-PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
+PROCEDURE Insert (READONLY x, y: IntN;  i, n: CARDINAL;  VAR r: IntN): BOOLEAN =
   VAR result: BOOLEAN;
   BEGIN
-    result := TWord.Insert(ZeroExtend(x), ZeroExtend(y), i, n, r.x);
-    UnsignedTruncate(r, MIN(x.n, y.n));
+    result := TWord.Insert(ToInt(x), ToInt(y), i, n, r.x);
+    FromInt(r, MIN(x.n, y.n));
     RETURN result;
   END Insert;
 
 BEGIN
-END M3BackWord.
+END TWordN.

@@ -199,6 +199,13 @@ TYPE
   Int = (* OPAQUE *) ARRAY [0..7] OF IByte;
   IByte = BITS 8 FOR [0..16_ff];
 
+  (* Int but with user-specified precision *)
+
+  IntN = (* OPAQUE *) RECORD
+    n: CARDINAL := NUMBER (Int);    (* only bytes [0..n-1] contain valid bits *)
+    x: Int;                         (* default is Zero *)
+  END;
+
 TYPE
   Int_type = RECORD
     cg_type : CGType;    (* representation *)
@@ -207,7 +214,9 @@ TYPE
     pack    : CARDINAL;  (* minimum width bit packing *)
     bytes   : CARDINAL;  (* byte size *)
     min     : Int;       (* minimum value of this type *)
+    minN    : IntN;      (* minimum value of this type *)
     max     : Int;       (* maximum value of this type *)
+    maxN    : IntN;      (* maximum value of this type *)
   END;
 
 (*------------------------------------------------- floating point values ---*)
