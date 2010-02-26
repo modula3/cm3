@@ -35,30 +35,48 @@ COLLDEPS="${ROOT}/www/releng/collection-deps.txt"
 
 cd "${ROOT}" || exit 1
 
+#if [ -z "${OMIT_UPDATE}" ]; then
+#  case ${DS} in
+#    RC*)
+#        echo cvs -q up -r release_CM3_5_8_${DS} -dP
+#        cvs -q up -r release_CM3_5_8_${DS} -dP
+#        N=`echo ${DS} | sed -e 's/RC//'`
+#        VERSION="5.8.${N}"
+#        CM3VERSION="${VERSION}"
+#        export VERSION CM3VERSION
+#    ;;
+#    *)
+#        echo cvs -q up -r release_branch_cm3_5_8 -dP
+#        cvs -q up -r release_branch_cm3_5_8 -dP;;
+#  esac
+#fi
+
 # keep short runpaths
 M3_PORTABLE_RUN_PATH=1
 export M3_PORTABLE_RUN_PATH
 
+ERROR_INDICATORS='version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error|collect2: ld returned|librarian failed building'
 if [ -z "${NOBUILD}" ]; then
   DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" \
     2>&1 | tee build-min.log
-  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-min.log; then
+  if egrep "${ERROR_INDICATORS}" build-min.log; then
     echo "building cm3-bin-min archive failed" 1>&2
     exit 1
   fi
   DIST=core NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" \
     2>&1 | tee build-core.log
-  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-core.log; then
+  if egrep "${ERROR_INDICATORS}" build-core.log; then
     echo "building cm3-bin-core archive failed" 1>&2
     exit 1
   fi
   if [ `hostname` = 'birch' ]; then
     SYSINFO_DONE="" "$ROOT/scripts/make-src-dist-all.sh"
   fi
+  echo PATH="${INSTALLROOT}/bin:${PATH}"
   PATH="${INSTALLROOT}/bin:${PATH}"
   "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution \
     -group-writable 2>&1 |tee build-all.log
-  if egrep 'version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error' build-all.log; then
+  if egrep "${ERROR_INDICATORS}" build-all.log; then
     echo "errors during build-all; some packages will be missing" 1>&2
   fi
 fi
@@ -244,9 +262,13 @@ for c in ${PKG_COLLECTIONS}; do
   (
     echo '#!/bin/sh'
     echo 'HERE=`pwd`'
+    echo 'ACTION=${ACTION:-"cm3 -ship"}'
     echo "for p in ${PKGS}; do"
+      echo 'echo "installing package ${p}"'
       echo 'cd $p'
-      echo 'cm3 -ship ${SHIPARGS}'
+      echo '${ACTION} ${SHIPARGS} || {'
+      echo '  echo "installation of ${p} failed" 1>&2'
+      echo '}'
       echo 'cd $HERE'
     echo "done"
   ) > install.sh
