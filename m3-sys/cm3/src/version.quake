@@ -29,7 +29,7 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 %
-% $Id: version.quake,v 1.26 2009-07-03 10:51:27 jkrell Exp $
+% $Id: version.quake,v 1.27 2010-02-26 13:12:01 jkrell Exp $
 
 
 %------------------------------------------------------------------------------
@@ -166,7 +166,7 @@ proc version_impl(name) is
                 end
             end
             exec("@chmod +x ./_m3version.sh")
-            exec("@./_m3version.sh > " & datefn)
+            exec("@./_m3version.sh | grep ^CM3_ > " & datefn)
         end
     end
     if FileExists(datefn)
