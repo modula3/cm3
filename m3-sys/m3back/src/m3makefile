@@ -12,6 +12,7 @@ import ("m3middle")
 import ("m3objfile")
 
 module ("M3BackInt")
+module ("M3BackWord")
 Module    ("M3x86")
 interface ("M3x86Rep")
 module    ("Wrx86")

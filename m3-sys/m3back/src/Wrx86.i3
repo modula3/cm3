@@ -29,7 +29,7 @@ TYPE Public = OBJECT
         Lab (i: Label);
         Tipe (t: TypeUID);
         Int (i: INTEGER);
-        TInt (READONLY i: Target.Int);
+        TInt (READONLY i: M3BackInt.Int);
         BInt (i: INTEGER);
         Txt (t: TEXT);
         OutC (c: CHAR);
