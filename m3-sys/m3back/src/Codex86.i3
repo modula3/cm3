@@ -8,10 +8,10 @@
 
 INTERFACE Codex86;
 
-IMPORT M3CG, M3ObjFile, TFloat;
+IMPORT M3CG, M3ObjFile, TFloat, Target;
 FROM M3CG IMPORT MType, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
-IMPORT M3x86Rep, Wrx86, M3BackInt;
+IMPORT M3x86Rep, Wrx86;
 FROM M3x86Rep IMPORT Operand, NRegs, MVar, x86Var, x86Proc, Regno;
 
 TYPE T <: Public;
@@ -45,14 +45,14 @@ TYPE Public = OBJECT
         fstack_swap ();
         fstack_discard ();
         f_loadlit (READONLY flarr: FloatBytes; type: MType);
-        immOp (op: Op; READONLY dest: Operand; READONLY imm: M3BackInt.Int);
+        immOp (op: Op; READONLY dest: Operand; READONLY imm: Target.IntN);
         binOp (op: Op; READONLY dest, src: Operand);
         tableOp (op: Op; READONLY dest, index: Operand; scale: INTEGER;
                  table: MVar);
         swapOp (READONLY dest, src: Operand);
         movOp (READONLY dest, src: Operand);
         movDummyReloc (READONLY dest: Operand; sym: INTEGER);
-        movImmT (READONLY dest: Operand; imm: M3BackInt.Int);
+        movImmT (READONLY dest: Operand; imm: Target.IntN);
         movImmI (READONLY dest: Operand; imm: INTEGER);
         MOVSWOp ();
         STOSWOp ();

@@ -109,4 +109,16 @@ PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL;
 PROCEDURE Chop (VAR i: Int;  n: CARDINAL);
 (* Extract the low-order 'n' bytes of 'i', sign extended. *)
 
+PROCEDURE SignExtend(VAR a: Int; n: CARDINAL);
+(* sign extend from n to the precision of Int *)
+
+PROCEDURE SignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN;
+(* truncate to n bytes; return FALSE if the value did not previously fit *)
+
+PROCEDURE ZeroExtend(VAR a: Int; n: CARDINAL);
+(* zero extend from n bytes to the precision of Int *)
+
+PROCEDURE UnsignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN;
+(* truncate to n bytes; return FALSE if the value did not previously fit *)
+
 END TInt.
