@@ -141,7 +141,7 @@ PROCEDURE GE (READONLY a, b: Int): BOOLEAN =
   END GE;
 
 PROCEDURE ToText (READONLY r: Int): TEXT =
-  VAR result  : ARRAY [0..BITSIZE (IByte) * NUMBER (IBytes)] OF CHAR;
+  VAR result  : ARRAY [0..BITSIZE (Int)] OF CHAR;
   BEGIN
     RETURN Text.FromChars(SUBARRAY(result, 0, ToChars(r, result)));
   END ToText;
