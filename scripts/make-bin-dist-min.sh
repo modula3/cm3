@@ -135,11 +135,22 @@ CLEANGLOBAL="${CM3} -clean -DROOT='${CM3ROOT}'"
 SHIP="${CM3} -ship -DROOT='${CM3ROOT}'"
 export BUILDLOCAL CLEANLOCAL BUILDGLOBAL CLEANGLOBAL SHIP
 
-[ ${TARGET} != NT386 ] && "${ROOT}/scripts/do-pkg.sh" buildship
+echo "${ROOT}/scripts/do-cm3-${DIST}.sh" buildlocal
 "${ROOT}/scripts/do-cm3-${DIST}.sh" buildlocal || exit 1
 
 header "stage 4: installing libraries using new cm3 compiler"
+echo "${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal
 "${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal || exit 1
+
+if [ "${NEWCFG}" != "y" ]; then
+  header "stage 5: re-adjusting cm3.cfg"
+  echo "${CFG2} -->" "${INSTALLROOT}/bin/cm3.cfg"
+  cp "${CFG2}" "${INSTALLROOT}/bin/cm3.cfg"
+  echo "${CFG1} -->" "${INSTALLROOT}/bin/cm3.cfg--default"
+  cp "${CFG1}" "${INSTALLROOT}/bin/cm3.cfg--default"
+else
+  echo "no new config"
+fi
 
 #-----------------------------------------------------------------------------
 # build binary distribution archives
@@ -150,7 +161,7 @@ ABSARCH2="`cygpath -u ${STAGE}/${ARCHIVE2}`"
 DUSK="du-sk"
 ABSDUSK="`cygpath -u ${STAGE}/du-sk`"
 INSTDATA="cminstall${EXE} COPYRIGHT-CMASS ${ARCHIVE1} ${DUSK}"
-header "stage 5: building archive in ${ARCHIVE2}"
+header "stage 6: building archive in ${ARCHIVE2}"
 echo "creating system archive in ${ABSARCH1}"
 du -sk "${INSTALLROOT}" > "${ABSDUSK}"
 echo "cat ${ABSDUSK}"
