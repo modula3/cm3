@@ -82,8 +82,7 @@ if [ "${GCC_BACKEND}" = yes ] ; then
 fi
 if [ "${M3OSTYPE}" = "WIN32" ] ; then
   echo "installing ${INSTALLROOT}/bin/mklib${EXE}"
-  cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin" \
-    || exit 1
+  cp "${ROOT}/m3-sys/mklib/${TARGET}/mklib${EXE}" "${INSTALLROOT}/bin" || exit 1
   strip_exe "${INSTALLROOT}/bin/mklib${EXE}"
 fi
 
