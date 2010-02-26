@@ -22,11 +22,9 @@ IMPORT Target, TInt;
 
 TYPE
   Int = (* OPAQUE *) RECORD
-    n: CARDINAL := NUMBER (IBytes); (* only bytes [0..n-1] contain valid bits *)
+    n: CARDINAL := NUMBER (Target.Int); (* only bytes [0..n-1] contain valid bits *)
     x := TInt.Zero;                 (* default is Zero *)
   END;
-  IBytes = Target.Int;
-  IByte = Target.IByte;
 
 CONST
   Zero      = Int{x := TInt.Zero};
@@ -47,8 +45,8 @@ CONST
   (* 'M' for Minus (negative) *)
 
   MOne       = Int{x := TInt.MOne};
-  MThirtyOne = Int{x := IBytes{16_E1,16_FF,..}};
-  MSixtyThree= Int{x := IBytes{16_C1,16_FF,..}};
+  MThirtyOne = Int{x := TInt.MThirtyOne};
+  MSixtyThree= Int{x := TInt.MSixtyThree};
 
 PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
