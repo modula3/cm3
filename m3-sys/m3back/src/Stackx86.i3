@@ -11,7 +11,7 @@ INTERFACE Stackx86;
 FROM M3CG IMPORT Type, MType, ZType, IType, Sign, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-IMPORT M3x86Rep, Codex86, Wrx86, Target;
+IMPORT M3x86Rep, Codex86, Wrx86, M3BackInt;
 FROM M3x86Rep IMPORT Operand, OLoc, MVar, Regno, Force, RegSet, FlToInt;
 FROM M3x86Rep IMPORT x86Proc, x86Var, OperandPart;
 
@@ -34,7 +34,7 @@ TYPE Public = OBJECT
         corrupt (reg: Regno; operandPart: OperandPart);
         set_fstack (stackp: INTEGER);
         set_mvar (stackp: INTEGER; READONLY mvar: MVar);
-        set_imm (stackp: INTEGER; READONLY imm: Target.Int);
+        set_imm (stackp: INTEGER; READONLY imm: M3BackInt.Int);
         loc (stackp: INTEGER): OLoc;
         op (stackp: INTEGER): Operand;
         pos (depth: INTEGER; place: TEXT): INTEGER;
@@ -43,7 +43,7 @@ TYPE Public = OBJECT
         push (READONLY mvar: MVar);
         pushnew (type: MType; force: Force; set := RegSet {});
         pushimmI (imm: INTEGER; type: Type);
-        pushimmT (imm: Target.Int; type: Type);
+        pushimmT (imm: M3BackInt.Int; type: Type);
         pop (READONLY mvar: MVar);
         doloadaddress (v: x86Var; o: ByteOffset);
         dobin (op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): BOOLEAN;
@@ -70,16 +70,16 @@ TYPE Public = OBJECT
         doindex_address (shift, size: INTEGER; neg: BOOLEAN);
         docopy (type: MType; overlap: BOOLEAN);
         docopy_n (n: INTEGER; type: MType; overlap: BOOLEAN);
-        doimm (op: Op; READONLY imm: Target.Int; overwritesdest: BOOLEAN);
+        doimm (op: Op; READONLY imm: M3BackInt.Int; overwritesdest: BOOLEAN);
         newdest (READONLY op: Operand);
         init ();
         end ();
         set_current_proc (p: x86Proc);
         reg (stackp: INTEGER): Regno;
-        lower (reg: Regno): Target.Int;
-        set_lower (reg: Regno; low: Target.Int);
-        upper (reg: Regno): Target.Int;
-        set_upper (reg: Regno; up: Target.Int);
+        lower (reg: Regno): M3BackInt.Int;
+        set_lower (reg: Regno; low: M3BackInt.Int);
+        upper (reg: Regno): M3BackInt.Int;
+        set_upper (reg: Regno; up: M3BackInt.Int);
         non_nil (reg: Regno): BOOLEAN;
         set_non_nil (reg: Regno);
       END;
