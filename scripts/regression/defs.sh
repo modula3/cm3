@@ -54,6 +54,13 @@ COVERSION=${COVERSION:-"-P -r release_branch_cm3_5_8"} # version to checkout, de
 # CMINSTALL: set this to override the installer binary (full path)
 # NOCLEAN: set to avoid cleaning for re-starts
 
+if [ "x$CLEAN" = "xtrue" ]; then # Hudson CLEAN support
+  unset NOCLEAN
+else
+  NOCLEAN=yes
+  export NOCLEAN
+fi
+
 # last release for installation
 LASTREL=${LASTREL:-5.4.0}
 
@@ -81,8 +88,7 @@ RLOG=${RLOG:-${HTMP}/cm3-rlog-${DS}}
 # number of last run results to keep (for cleanup in main)
 CM3_NKEEP=${CM3_NKEEP:-7}
 
-UNAME=${UNAME:-`uname`}
-UNAMEM=${UNAMEM:-`uname -m`}
+#-----------------------------------------------------------------------------
 
 TMP=${TMP:-/tmp}
 TMPDIR=${TMPDIR:-${TMP}}
@@ -90,11 +96,12 @@ if [ ! -d "${TMPDIR}" ]; then
   TMPDIR="${HTMP}"
 fi
 
-case "${UNAME}" in
+CM3_OSTYPE=POSIX
+
+case "`uname`" in
 
   Windows*|WinNT*|Cygwin*|CYGWIN*)
     if [ x$TARGET = xNT386GNU ] ; then
-      CM3_OSTYPE=POSIX
       CM3_TARGET=NT386GNU
     else
       CM3_OSTYPE=WIN32
@@ -103,73 +110,67 @@ case "${UNAME}" in
   ;;
 
   NT386GNU*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=NT386GNU
   ;;
 
   FreeBSD*)
-    CM3_OSTYPE=POSIX
-    if [ "`uname -m`" = i386 ] ; then
-      case "`uname -r`" in
-        1*) CM3_TARGET=FreeBSD;;
-        2*) CM3_TARGET=FreeBSD2;;
-        3*) CM3_TARGET=FreeBSD3;;
-        4*) CM3_TARGET=FreeBSD4;;
-        *) CM3_TARGET=FreeBSD4;;
-      esac
-    else
-      CM3_TARGET=FBSD_ALPHA
-    fi
+    case "`uname -p`" in
+      amd64)    CM3_TARGET=${CM3_TARGET:-AMD64_FREEBSD};;
+      i*86)     CM3_TARGET=${CM3_TARGET:-FreeBSD4};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
   ;;
 
   Darwin*)
-    CM3_OSTYPE=POSIX
     case "`uname -p`" in
       powerpc*)
-        CM3_TARGET=PPC_DARWIN;;
+        CM3_TARGET=${CM3_TARGET:-PPC_DARWIN};;
       i[3456]86*)
-        CM3_TARGET=I386_DARWIN;;
+        if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
+          CM3_TARGET=${CM3_TARGET:-AMD64_DARWIN}
+        else
+          CM3_TARGET=${CM3_TARGET:-I386_DARWIN}
+        fi
+        ;;
+      *) echo "$0 does not know about `uname -a`"
+         exit 1;;
     esac
   ;;
 
   SunOS*)
-    CM3_OSTYPE=POSIX
-    CM3_TARGET=SOLgnu
+    CM3_TARGET=${CM3_TARGET:-SOLgnu}
+    #CM3_TARGET=${CM3_TARGET:-SOLsun}
+  ;;
+
+  Interix*)
+    CM3_TARGET=${CM3_TARGET:-I386_INTERIX}
   ;;
 
   Linux*)
-    CM3_OSTYPE=POSIX
-    if [ "${UNAMEM}" = "ppc" ] ; then
-      CM3_TARGET=PPC_LINUX
-    elif [ "${UNAMEM}" = "x86_64" ] ; then
-      CM3_TARGET=AMD64_LINUX
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC32_LINUX
-    else
-      CM3_TARGET=LINUXLIBC6
-    fi
+    case "`uname -m`" in
+      ppc*)    CM3_TARGET=${CM3_TARGET:-PPC_LINUX};;
+      x86_64)  CM3_TARGET=${CM3_TARGET:-AMD64_LINUX};;
+      sparc64) CM3_TARGET=${CM3_TARGET:-SPARC32_LINUX};;
+      i*86)    CM3_TARGET=${CM3_TARGET:-LINUXLIBC6};;
+      *)       echo "$0 does not know about `uname -a`"
+               exit 1;;
+    esac
   ;;
 
   NetBSD*)
-    CM3_OSTYPE=POSIX
     CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
   ;;
 
   OpenBSD*)
-    CM3_OSTYPE=POSIX
-    ARCH=`arch -s`
-    if [ "${UNAMEM}" = "macppc" ] ; then
-      CM3_TARGET=PPC32_OPENBSD
-    elif [ "${UNAMEM}" = "sparc64" ] ; then
-      CM3_TARGET=SPARC64_OPENBSD
-    elif [ "${ARCH}" = "mips64" ] ; then
-      CM3_TARGET=MIPS64_OPENBSD
-    elif [ "${ARCH}" = "i386" ] ; then
-      CM3_TARGET=I386_OPENBSD
-    else
-      echo Update $0 for ${ARCH}
-      exit 1
-    fi
+    case "`arch -s`" in
+      macppc)   CM3_TARGET=${CM3_TARGET:-PPC32_OPENBSD};;
+      sparc64)  CM3_TARGET=${CM3_TARGET:-SPARC64_OPENBSD};;
+      mips64)   CM3_TARGET=${CM3_TARGET:-MIPS64_OPENBSD};;
+      i386)     CM3_TARGET=${CM3_TARGET:-I386_OPENBSD};;
+      *)        echo "$0 does not know about `uname -a`"
+                exit 1;;
+    esac
   ;;
 esac
 
@@ -245,8 +246,8 @@ prependpathelem()
 
 prependpath()
 {
-  # $1 elem to append to the path
-  PATH=`prependpathelem $1 $PATH`
+  # $1 elem to prepend to the path
+  PATH="$1:$PATH"
   export PATH
 }
 
@@ -530,6 +531,93 @@ test_build_current() # this in an internal function: $1 = rel | lastok | std
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 release build done"
 }
 
+test_build_system()
+{
+  cm3config ${INSTROOT_CUR}
+  prependpath ${INSTROOT_CUR}/bin
+  LD_LIBRARY_PATH=${INSTROOT_CUR}/lib
+  DYLD_LIBRARY_PATH=${LD_LIBRARY_PATH}
+  INSTALLROOT=${INSTROOT_CUR}
+  export LD_LIBRARY_PATH DYLD_LIBRARY_PATH INSTALLROOT
+
+  if type cm3; then
+    cm3 -version
+  else
+    echo "cm3 not found" 1>&2
+    exit 1
+  fi
+
+  # checkout must have been done before
+  if cd "${WS}/cm3"; then
+    true
+  else
+    echo "cannot cd to ${WS}/cm3" 1>2
+    exit 1
+  fi
+
+  echo " === build core system with current compiler"
+  BUILDSCRIPT="./scripts/do-cm3-core.sh"
+  if [ -z "$NOCLEAN" ]; then
+    $BUILDSCRIPT realclean || exit 1
+  fi
+  if $BUILDSCRIPT build; then
+    echo " >>> OK build_system ${DS} ${WS}; now rebuild and ship"
+    $BUILDSCRIPT buildship
+    echo " === install new compiler"
+    if ./scripts/install-cm3-compiler.sh upgrade; then
+      echo "compiler upgraded successfully"
+      cm3 -version
+    else
+      echo "compiler upgrade failed" 1>&2
+      exit 1
+    fi
+  else
+    echo " === perform cm3 upgrade after cleaning everything"
+    $BUILDSCRIPT realclean || exit 1
+    UPGRADE_CM3_CFG=yes ./scripts/upgrade.sh || exit 1
+    echo " >>> OK build_upgrade ${DS} ${WS}"
+  fi
+
+  echo " === build intermediate lastok in ${INSTROOT_LOK}.$$"
+  [ -d ${INSTROOT_LOK} ] && cp -pR ${INSTROOT_LOK}   ${INSTROOT_LOK}.$$
+  if [ -d ${INSTROOT_LOK}.$$ ]; then
+    cp -pR ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
+  else
+    mv ${INSTROOT_CUR}/* ${INSTROOT_LOK}.$$
+  fi
+
+  if [ -d ${INSTROOT_LOK} -a -d ${INSTROOT_POK} ]; then
+    echo " === remove previous ok version at ${INSTROOT_POK}"
+    rm -rf ${INSTROOT_POK}
+  fi
+
+  echo " === move last ok version at ${INSTROOT_LOK} to previous ok version"
+  if [ -d "${INSTROOT_LOK}" ]; then
+    mv ${INSTROOT_LOK} ${INSTROOT_POK}
+    cm3config ${INSTROOT_POK}
+  else
+    echo " === no installation in ${INSTROOT_LOK}"
+  fi
+
+  echo " === update last ok from ${INSTROOT_CUR}"
+  mv ${INSTROOT_LOK}.$$ ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+    sleep 30
+    echo "update of ${INSTROOT_LOK} failed... trying to restore..."
+    [ -d ${INSTROOT_POK} -a ! -d ${INSTROOT_LOK} ] && \
+    mv ${INSTROOT_POK} ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+      echo "restore of ${INSTROOT_LOK} failed!" 1>&2
+    }
+    # try again later...
+    sleep 30
+    [ -d ${INSTROOT_POK} -a ! -d ${INSTROOT_LOK} ] && \
+    mv ${INSTROOT_POK} ${INSTROOT_LOK} && cm3config ${INSTROOT_LOK} || {
+      echo "HELP: restore of ${INSTROOT_LOK} failed!" 1>&2
+    }
+  }
+  echo " >>> OK build_system ${DS} ${WS} ${INSTROOT_LOK}"
+  echo " === `date -u +'%Y-%m-%d %H:%M:%S'` cm3 build done"
+}
+
 test_build_core_lastok()
 {
   echo " === `date -u +'%Y-%m-%d %H:%M:%S'` build cm3 core in ${WS} with lastok version"
@@ -666,7 +754,7 @@ test_m3tests()
   fi
   
   echo " >>> test_m3tests error extract:"
-  find ${CM3_TARGET} -type f -name stderr.pgm -print | \
+  $FIND ${CM3_TARGET} -type f -name stderr.pgm -print | \
     xargs egrep '^\*\*|error.*and.*warning|fail' | grep -v '0 error' | \
     tee ${M3TERR}.extract 1>&2
 
