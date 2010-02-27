@@ -378,14 +378,6 @@ PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL =
 
     RETURN j;
   END ToBytes;
-
-PROCEDURE Chop (VAR r: Int;  n: CARDINAL) =
-  BEGIN
-    IF And (r [n-1], SignMask) = 0
-      THEN FOR i := n TO LAST(Int) DO r [i] := 0    END;
-      ELSE FOR i := n TO LAST(Int) DO r [i] := Mask END;
-    END;
-  END Chop;
   
 PROCEDURE Extend (READONLY a: Int;  n: CARDINAL;  VAR r: Int): BOOLEAN =
   VAR result := TRUE;
