@@ -9,7 +9,7 @@
 %      modified on Thu Oct  1 14:00:19 PDT 1992 by steveg
 %      modified on Tue Sep  8 21:54:03 PDT 1992 by johnh
 
-if HasGui()
+if HasTrestle()
 
 %  To build a version of mentor with a single chunk, foo,
 %  run "m3build -Dfoo".
