@@ -131,6 +131,7 @@ REVEAL
         end_block := end_block;
         note_procedure_origin := note_procedure_origin;
         set_label := set_label;
+        debug_set_label := debug_set_label;
         jump := jump;
         if_true  := if_true;
         if_false := if_false;
@@ -1465,8 +1466,6 @@ PROCEDURE debug_set_label (u: U;  label: Label) =
 PROCEDURE set_label (u: U;  label: Label;  <*UNUSED*> barrier: BOOLEAN) =
   (* define 'label' to be at the current pc *)
   BEGIN
-    debug_set_label(u, label);
-
     u.cg.set_label(label);
 
     u.vstack.clearall();
@@ -4422,7 +4421,6 @@ retry:
       x.vstack.find(atomicVariable, Force.anyreg);
       x.cg.load_ind(rEAX, x.vstack.op(atomicVariable), 0, t);
       label := x.next_label();
-      debug_set_label(x, label);
       x.cg.set_label(label);
       x.cg.movOp(x.cg.reg[rNewValue], x.cg.reg[EAX]);
       x.cg.binOp(AtomicOpToOp[atomic_op], x.cg.reg[rNewValue], x.vstack.op(operand));
