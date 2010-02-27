@@ -1,42 +1,129 @@
+(* Copyright (C) 1993, Digital Equipment Corporation           *)
+(* All rights reserved.                                        *)
+(* See the file COPYRIGHT for a full description.              *)
+(*                                                             *)
+(* File: TIntN.m3                                              *)
+(* Last Modified On Tue Jul 12 08:31:56 PDT 1994 By kalsow     *)
+(*      Modified On Thu May 20 08:46:32 PDT 1993 By muller     *)
+
 MODULE TIntN; (* TInt but with specified precision, in bytes *)
 
-IMPORT Fmt, TInt;
+IMPORT Fmt, TInt, Word, Target;
 FROM Target IMPORT Int;
 
-PROCEDURE FromTInt (READONLY x: Int;  n: CARDINAL;  VAR r: T): BOOLEAN =
-  BEGIN
-    r.n := n;
-    RETURN TInt.Extend(x, n, r.x);
-  END FromTInt;
+CONST
+  Mask     = 16_FF;
+  SignMask = 16_80;
 
-PROCEDURE ToTInt (READONLY r: T): Int =
-  VAR x: Int;
+PROCEDURE Init() =
   BEGIN
-    EVAL TInt.Extend(r.x, r.n, x);
-    RETURN x;
-  END ToTInt;
+    TargetIntegerMin := T{x := Target.Integer.min};
+    TargetIntegerMax := T{x := Target.Integer.max};
+  END Init;
 
-PROCEDURE FromInt (a: INTEGER;  n: CARDINAL;  VAR r: T): BOOLEAN =
-  VAR x: Int;
+PROCEDURE SignExtend(VAR a: Int; n: CARDINAL) =
+(*
+    sign extend from n to the precision of Int
+*)
+  VAR extend := 0;
   BEGIN
-    RETURN TInt.FromInt(a, x) AND FromTInt(x, n, r);
-  END FromInt;
 
-PROCEDURE ToInt (READONLY r: T;  VAR x: INTEGER): BOOLEAN =
+    IF Word.And(a[n - 1], SignMask) # 0 THEN
+      extend := Mask;
+    END;
+    FOR i := n TO LAST(a) DO
+      a[i] := extend;
+    END;
+  END SignExtend;
+
+PROCEDURE SignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN =
+(*
+    truncate to n bytes
+    return FALSE if the value did not previously fit
+*)
+  VAR result := TRUE;
+      extend := 0;
   BEGIN
-    RETURN TInt.ToInt(ToTInt(r), x);
+    <* ASSERT n # 0 *>
+    <* ASSERT n <= NUMBER(a) *>
+
+    IF Word.And(a[LAST(a)], SignMask) # 0 THEN
+      extend := Mask;
+    END;
+    FOR i := n TO LAST(a) DO
+      IF a[i] # extend THEN
+        result := FALSE;
+        a[i] := extend;
+      END;
+    END;
+
+    RETURN result;
+  END SignedTruncate;
+
+PROCEDURE ZeroExtend(VAR a: Int; n: CARDINAL) =
+(*
+    zero extend from n bytes to the precision of Int
+*)
+  BEGIN
+    <*ASSERT n # 0*>
+    FOR i := n TO LAST(a) DO
+      a[i] := 0;
+    END;
+  END ZeroExtend;
+
+PROCEDURE UnsignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN =
+(*
+    truncate to n bytes
+    return FALSE if the value did not previously fit
+*)
+  VAR result := TRUE;
+  BEGIN
+    <*ASSERT n # 0*>
+    FOR i := n TO LAST(a) DO
+      IF a[i] # 0 THEN
+        result := FALSE;
+        a[i] := 0;
+      END;
+    END;
+    RETURN result;
+  END UnsignedTruncate;
+
+PROCEDURE ToInt(READONLY a: T): Int =
+  VAR b: Int;
+  BEGIN
+    b := a.x;
+    SignExtend(b, a.n);
+    RETURN b;
   END ToInt;
 
-PROCEDURE Add (READONLY a, b: T;  VAR r: T): BOOLEAN =
-  VAR x: Int;
+PROCEDURE FromInt(VAR a: T; n: CARDINAL): BOOLEAN =
   BEGIN
-    RETURN TInt.Add(ToTInt(a), ToTInt(b), x) AND FromTInt(x, MIN(a.n, b.n), r);
+    <* ASSERT n # 0 *>
+    <* ASSERT n <= NUMBER(Int) *>
+    a.n := n;
+    RETURN SignedTruncate(a.x, n);
+  END FromInt;
+
+PROCEDURE FromHostInteger (x: INTEGER;  n: CARDINAL;  VAR r: T): BOOLEAN =
+  BEGIN
+    RETURN TInt.FromInt(x, r.x) AND FromInt(r, n);
+  END FromHostInteger;
+
+PROCEDURE ToHostInteger (READONLY r: T;  VAR x: INTEGER): BOOLEAN =
+  VAR i := r;
+  BEGIN
+    i.n := BYTESIZE(INTEGER);
+    RETURN TInt.ToInt(ToInt(i), x);
+  END ToHostInteger;
+
+PROCEDURE Add (READONLY a, b: T;  VAR r: T): BOOLEAN =
+  BEGIN
+    RETURN TInt.Add(ToInt(a), ToInt(b), r.x) AND FromInt(r, MIN(a.n, b.n));
   END Add;
 
 PROCEDURE Subtract (READONLY a, b: T;  VAR r: T): BOOLEAN =
-  VAR x: Int;
   BEGIN
-    RETURN TInt.Subtract(ToTInt(a), ToTInt(b), x) AND FromTInt(x, MIN(a.n, b.n), r);
+    RETURN TInt.Subtract(ToInt(a), ToInt(b), r.x) AND FromInt(r, MIN(a.n, b.n));
   END Subtract;
 
 PROCEDURE Negate (READONLY a: T;  VAR r: T): BOOLEAN =
@@ -54,62 +141,64 @@ PROCEDURE Abs (READONLY a: T;  VAR r: T): BOOLEAN =
   END Abs;
 
 PROCEDURE Multiply (READONLY a, b: T;  VAR r: T): BOOLEAN =
-  VAR x: Int;
   BEGIN
-    RETURN TInt.Multiply(ToTInt(a), ToTInt(b), x) AND FromTInt(x, MIN(a.n, b.n), r);
+    RETURN TInt.Multiply(ToInt(a), ToInt(b), r.x) AND FromInt(r, MIN(a.n, b.n));
   END Multiply;
 
 PROCEDURE Div (READONLY num, den: T;  VAR q: T): BOOLEAN =
-  VAR x: Int;
   BEGIN
-    RETURN TInt.Div(ToTInt(num), ToTInt(den), x) AND FromTInt(x, MIN(num.n, den.n), q);
+    RETURN TInt.Div(ToInt(num), ToInt(den), q.x) AND FromInt(q, MIN(num.n, den.n));
   END Div;
 
 PROCEDURE Mod (READONLY num, den: T;  VAR r: T): BOOLEAN =
-  VAR x: Int;
   BEGIN
-    RETURN TInt.Mod(ToTInt(num), ToTInt(den), x) AND FromTInt(x, MIN(num.n, den.n), r);
+    RETURN TInt.Mod(ToInt(num), ToInt(den), r.x) AND FromInt(r, MIN(num.n, den.n));
   END Mod;
 
 PROCEDURE EQ (READONLY a, b: T): BOOLEAN =
   BEGIN
-    RETURN TInt.EQ(ToTInt(a), ToTInt(b));
+    RETURN TInt.EQ(ToInt(a), ToInt(b));
   END EQ;
 
 PROCEDURE LT (READONLY a, b: T): BOOLEAN =
   BEGIN
-    RETURN TInt.LT(ToTInt(a), ToTInt(b));
+    RETURN TInt.LT(ToInt(a), ToInt(b));
   END LT;
 
 PROCEDURE LE (READONLY a, b: T): BOOLEAN =
   BEGIN
-    RETURN TInt.LE(ToTInt(a), ToTInt(b));
+    RETURN TInt.LE(ToInt(a), ToInt(b));
   END LE;
 
 PROCEDURE NE (READONLY a, b: T): BOOLEAN =
   BEGIN
-    RETURN TInt.NE(ToTInt(a), ToTInt(b));
+    RETURN TInt.NE(ToInt(a), ToInt(b));
   END NE;
 
 PROCEDURE GT (READONLY a, b: T): BOOLEAN =
   BEGIN
-    RETURN TInt.GT(ToTInt(a), ToTInt(b));
+    RETURN TInt.GT(ToInt(a), ToInt(b));
   END GT;
 
 PROCEDURE GE (READONLY a, b: T): BOOLEAN = 
   BEGIN
-    RETURN TInt.GE(ToTInt(a), ToTInt(b));
+    RETURN TInt.GE(ToInt(a), ToInt(b));
   END GE;
 
 PROCEDURE ToText (READONLY r: T): TEXT =
   BEGIN
-    RETURN TInt.ToText(ToTInt(r));
+    RETURN TInt.ToText(ToInt(r));
   END ToText;
 
 PROCEDURE ToChars (READONLY r: T;  VAR buf: ARRAY OF CHAR): INTEGER =
   BEGIN
-    RETURN TInt.ToChars(ToTInt(r), buf);
+    RETURN TInt.ToChars(ToInt(r), buf);
   END ToChars;
+
+PROCEDURE FromTargetInt (READONLY i: Int; byteSize: CARDINAL): T =
+  BEGIN
+    RETURN T{n := byteSize, x := i};
+  END FromTargetInt;
 
 PROCEDURE ToDiagnosticText(a: T): TEXT =
   BEGIN

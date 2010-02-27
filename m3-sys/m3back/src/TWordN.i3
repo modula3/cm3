@@ -1,4 +1,12 @@
-INTERFACE TWordN; (* also known as TWord *)
+(* Copyright (C) 1993, Digital Equipment Corporation           *)
+(* All rights reserved.                                        *)
+(* See the file COPYRIGHT for a full description.              *)
+(*                                                             *)
+(* File: TWordN.i3                                             *)
+(* Last Modified On Fri Nov 19 09:32:50 PST 1993 By kalsow     *)
+(*      Modified On Thu May 20 08:20:38 PDT 1993 By muller     *)
+
+INTERFACE TWordN;
 
 (*  Modula-3 target description
 
@@ -11,13 +19,13 @@ INTERFACE TWordN; (* also known as TWord *)
 *)
 
 IMPORT TIntN, TWord;
-TYPE T = TIntN.T;
+FROM TIntN IMPORT T;
 
 CONST
-  Max8  = T{1, TWord.Max8};
-  Max16 = T{2, TWord.Max16};
-  Max32 = T{4, TWord.Max32};
-  Max64 = T{8, TWord.Max64};
+  Max8  = T{x := TWord.Max8};
+  Max16 = T{x := TWord.Max16};
+  Max32 = T{x := TWord.Max32};
+  Max64 = T{x := TWord.Max64};
 
 PROCEDURE Add (READONLY a, b: T;  VAR i: T);
 (* returns 'Word.Plus (a, b)' *)
