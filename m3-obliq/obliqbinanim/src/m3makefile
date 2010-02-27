@@ -5,7 +5,7 @@
 % Last modified on Wed Mar 23 14:09:14 1994 by luca      
 %      modified on Wed Dec 22 15:43:58 PST 1993 by kalsow
 
-if HasGui()
+if HasTrestle()
 
 import("obliqlibm3")
 import("obliqlibui")
