@@ -120,10 +120,10 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Char             := Word8;
 
     Void.cg_type     := CGType.Void;
-    <* ASSERT Void.size = 0 *>
+    Void.size        := 0;
     Void.align       := Byte;
-    <* ASSERT Void.min = Int{0,..} *>
-    <* ASSERT Void.max = Int{0,..} *>
+    Void.min         := Int{0,..};
+    Void.max         := Int{0,..};
 
     Real.cg_type     := CGType.Reel;
     Real.pre         := Precision.Short;
@@ -477,8 +477,6 @@ PROCEDURE FixI (VAR i: Int_type;  max_align: INTEGER) =
     i.align := MIN (i.align, max_align);
     i.bytes := i.size DIV Byte;
     i.pack  := (i.size + i.align - 1) DIV i.align * i.align;
-    i.minN.x := i.min;
-    i.maxN.x := i.max;
   END FixI;
 
 PROCEDURE FixF (VAR f: Float_type;  max_align: INTEGER) =

@@ -411,5 +411,16 @@ PROCEDURE Insert (READONLY x, y: Int;  i, n: CARDINAL;  VAR r: Int): BOOLEAN =
     RETURN TRUE;
   END Insert;
 
+PROCEDURE Truncate (READONLY a: Int;  n: CARDINAL;  VAR r: Int): BOOLEAN =
+  VAR result := TRUE;
+  BEGIN
+    FOR i := 0 TO n-1 DO r[i] := a[i] END;
+    FOR i := n TO LAST(Int) DO
+      IF a[i] # 0 THEN result := FALSE END;
+      r[i] := 0;
+    END;
+    RETURN result;
+  END Truncate;
+
 BEGIN
 END TWord.
