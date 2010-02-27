@@ -1937,6 +1937,8 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
       maskreg := pickreg(t);
       corrupt(t, maskreg, operandPart := 0);
 
+      <* ASSERT NOT is64 *>
+
       IF n # 32 THEN
         TWordN.Shift(TWordN.Max32, n - 32, tint);
         t.cg.immOp(Op.oAND, stop1, tint);
