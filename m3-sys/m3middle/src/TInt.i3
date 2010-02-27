@@ -27,22 +27,14 @@ CONST
   One    = Int{ 1, 0,..};
   MOne   = Int{16_FF,..};
 
-  Two       = Int{ 2,0,..};
-  Three     = Int{ 3,0,..};
-  Four      = Int{ 4,0,..};
-  Eight     = Int{ 8,0,..};
-  ThirtyOne = Int{31,0,..};
-  ThirtyTwo = Int{32,0,..};
-  SixtyThree= Int{63,0,..};
-  F3FF      = Int{16_FF,16_F3,0,..};
-  x0400     = Int{0,4,0,..};
-  x0800     = Int{0,8,0,..};
-  x0F00     = Int{0,16_F,0,..};
-
-  (* 'M' for Minus (negative) *)
-
-  MThirtyOne = Int{16_E1,16_FF,..};
-  MSixtyThree= Int{16_C1,16_FF,..};
+  Min8   = Int{16_80, 16_FF,..};
+  Max8   = Int{16_7f, 16_00,..};
+  Min16  = Int{16_00, 16_80, 16_FF,..};
+  Max16  = Int{16_FF, 16_7f, 16_00,..};
+  Min32  = Int{16_00, 16_00, 16_00, 16_80, 16_FF,..};
+  Max32  = Int{16_FF, 16_FF, 16_FF, 16_7f, 16_00,..};
+  Min64  = Int{16_00, 16_00, 16_00, 16_00, 16_00, 16_00, 16_00, 16_80};
+  Max64  = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_7f};
 
 PROCEDURE FromInt (x: INTEGER;  VAR i: Int): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
@@ -105,19 +97,8 @@ PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL;
    which when sign-extended equal 'i'.  Returns the number of
    significant bytes in the result.  Returns 0 if 'buf' is too short. *)
 
-PROCEDURE Chop (VAR i: Int;  n: CARDINAL);
-(* Extract the low-order 'n' bytes of 'i', sign extended. *)
-
-PROCEDURE SignExtend(VAR a: Int; n: CARDINAL);
-(* sign extend from n to the precision of Int *)
-
-PROCEDURE SignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN;
-(* truncate to n bytes; return FALSE if the value did not previously fit *)
-
-PROCEDURE ZeroExtend(VAR a: Int; n: CARDINAL);
-(* zero extend from n bytes to the precision of Int *)
-
-PROCEDURE UnsignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN;
-(* truncate to n bytes; return FALSE if the value did not previously fit *)
+PROCEDURE Extend (READONLY i: Int;  n: CARDINAL;  VAR r: Int): BOOLEAN;
+(* sign-extends from the low-order 'n' bytes of 'i'.
+   Returns TRUE if 'i' has at most 'n' significant bytes, FALSE otherwise. *)
 
 END TInt.
