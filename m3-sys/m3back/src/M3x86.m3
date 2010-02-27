@@ -250,8 +250,12 @@ PROCEDURE New (logfile: Wr.T; obj: M3ObjFile.T): M3CG.T =
                 runtime := NEW (IntRefTbl.Default).init (20));
   BEGIN
 
-    IntType[Type. Int32] := Target.Int32;
-    IntType[Type. Int64] := Target.Int64;
+    IntType[Type.Int8]   := Target.Int8;
+    IntType[Type.Int16]  := Target.Int16;
+    IntType[Type.Int32]  := Target.Int32;
+    IntType[Type.Int64]  := Target.Int64;
+    IntType[Type.Word8]  := Target.Word8;
+    IntType[Type.Word16] := Target.Word16;
     IntType[Type.Word32] := Target.Word32;
     IntType[Type.Word64] := Target.Word64;
     TIntN.Init();
