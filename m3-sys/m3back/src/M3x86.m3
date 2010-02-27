@@ -500,8 +500,8 @@ PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
       u.wr.Cmd  ("declare_subrange");
       u.wr.Tipe (t);
       u.wr.Tipe (domain);
-      u.wr.TInt (TIntN.FromTargetInt(min, NUMBER(min)));
-      u.wr.TInt (TIntN.FromTargetInt(min, NUMBER(max)));
+      u.wr.TInt (min);
+      u.wr.TInt (max);
       u.wr.BInt (s);
       u.wr.NL   ();
     END
