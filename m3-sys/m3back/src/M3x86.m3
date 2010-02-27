@@ -3849,7 +3849,7 @@ PROCEDURE SplitImm(type: Type; READONLY imm: TIntN.T; VAR immA: ARRAY OperandPar
   END SplitImm;
 
 PROCEDURE GetTypeSize(type: Type): OperandSize =
-(* In words: 1 or 2 *)
+(* In "words" or "registers": 1 or 2 *)
   BEGIN
     RETURN 1 + ORD(TypeIs64(type));
   END GetTypeSize;
