@@ -152,13 +152,12 @@ PROCEDURE Int (t: T;  i: INTEGER) =
     OutI (t, i);
   END Int;
 
-PROCEDURE TInt (t: T;  READONLY i: Target.IntN) =
+PROCEDURE TInt (t: T;  READONLY i: TIntN.T) =
   VAR
-    buf : ARRAY [0..BITSIZE (Target.IntN)] OF CHAR;
-    len := TIntN.ToChars (i, buf);
+    buf : ARRAY [0..BITSIZE (TIntN.T)] OF CHAR;
  BEGIN
     OutC (t, ' ');
-    OutS (t, SUBARRAY (buf, 0, len));
+    OutS (t, SUBARRAY (buf, 0, TIntN.ToChars (i, buf)));
     OutC (t, ' ');
     OutT (t, TIntN.ToDiagnosticText(i));
   END TInt;

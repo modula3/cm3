@@ -8,7 +8,7 @@
 
 INTERFACE Wrx86;
 
-IMPORT Wr, Target;
+IMPORT Wr, Target, TIntN;
 
 FROM M3CG IMPORT Name, TypeUID;
 FROM M3CG IMPORT Var, Proc, Label;
@@ -29,7 +29,7 @@ TYPE Public = OBJECT
         Lab (i: Label);
         Tipe (t: TypeUID);
         Int (i: INTEGER);
-        TInt (READONLY i: Target.IntN);
+        TInt (READONLY i: TIntN.T);
         BInt (i: INTEGER);
         Txt (t: TEXT);
         OutC (c: CHAR);
