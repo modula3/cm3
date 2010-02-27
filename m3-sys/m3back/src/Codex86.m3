@@ -470,7 +470,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
             IF TIntN.GE(imm, TIntN.ThirtyTwo) THEN
               IF TIntN.NE(imm, TIntN.ThirtyTwo) THEN
                 EVAL TIntN.Subtract(imm, TIntN.ThirtyTwo, immMinus32);
-                (* Ideally we'd do a virtual move in the register alloator. *)
+                (* Ideally we'd do a virtual move in the register allocator. *)
                 movOp1(t, destA[1], destA[0]);
                 immOp1(t, op, destA[1], immMinus32);
               ELSE
@@ -478,8 +478,8 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
               END;
               binOp1(t, Op.oXOR, destA[0], destA[0]);
             ELSE
-              (* dest/src seem backwards, should be shifting low into high, not high into low, but it works? *)
-              binOp1WithShiftCount(t, Op.oSHLD, destA[0], destA[1], shiftCount := shiftCount);
+              (* shift low into high *)
+              binOp1WithShiftCount(t, Op.oSHLD, destA[1], destA[0], shiftCount := shiftCount);
               immOp1(t, op, destA[0], imm);
             END
 
@@ -487,7 +487,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
             IF TIntN.GE(imm, TIntN.ThirtyTwo) THEN
               IF TIntN.NE(imm, TIntN.ThirtyTwo) THEN
                 EVAL TIntN.Subtract(imm, TIntN.ThirtyTwo, immMinus32);
-                (* Ideally we'd do a virtual move in the register alloator. *)
+                (* Ideally we'd do a virtual move in the register allocator. *)
                 movOp1(t, destA[0], destA[1]);
                 immOp1(t, op, destA[0], immMinus32);
               ELSE
@@ -495,8 +495,8 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
               END;
               binOp1(t, Op.oXOR, destA[1], destA[1]);
             ELSE
-              (* dest/src seem backwards, should be shifting high into low, not low into high, but it works? *)
-              binOp1WithShiftCount(t, Op.oSHRD, destA[1], destA[0], shiftCount := shiftCount);
+              (* shift high into low *)
+              binOp1WithShiftCount(t, Op.oSHRD, destA[0], destA[1], shiftCount := shiftCount);
               immOp1(t, op, destA[1], imm);
             END
 
@@ -515,6 +515,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
 
 PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READONLY shiftCount: Operand) =
   VAR ins: Instruction;
+      shiftDouble := op IN SET OF Op{Op.oSHLD, Op.oSHRD};
   BEGIN
 
     <* ASSERT NOT TypeIs64(src.optype) *>
@@ -527,31 +528,21 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
       RETURN;
     END;
 
-    IF dest.loc = OLoc.register THEN
-      build_modrm(t, src, dest, ins);
-      ins.opcode := opcode[op].rrm + 1;
-      IF src.loc = OLoc.mem THEN
-        <* ASSERT CG_Bytes[src.mvar.mvar_type] = 4 *>
-      END
-    ELSE
-      <* ASSERT src.loc = OLoc.register AND CG_Bytes[src.mvar.mvar_type] = 4 *>
-      build_modrm(t, dest, src, ins);
-      ins.opcode := opcode[op].rmr + 1;
-    END;
-
     (* SHLD and SHRD are three operand instructions.
      * The source is where to shift bits from, must be a register.
      * The shift count is either [-128..127] or in CL (we use all of ECX).
      *)
-    IF op IN SET OF Op{Op.oSHLD, Op.oSHRD} THEN
-
-      ins.escape := TRUE;
+    IF shiftDouble THEN
 
       <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
       <* ASSERT src.loc = OLoc.register *>
       <* ASSERT shiftCount.loc = OLoc.register OR shiftCount.loc = OLoc.imm *>
       <* ASSERT shiftCount.loc # OLoc.register OR shiftCount.reg[0] = ECX *>
       <* ASSERT shiftCount.loc # OLoc.imm OR (TIntN.GE(shiftCount.imm, TIntN.Min8) AND TIntN.LE(shiftCount.imm, TIntN.Max8)) *>
+
+      build_modrm(t, dest, src, ins);
+      ins.escape := TRUE;
+      ins.opcode := opcode[op].rmr + 1;
 
       IF shiftCount.loc = OLoc.imm THEN
         IF NOT TIntN.ToHostInteger(shiftCount.imm, ins.imm) THEN
@@ -561,9 +552,24 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
       ELSE
         INC(ins.opcode);
       END;
+    ELSE
+      IF dest.loc = OLoc.register THEN
+        build_modrm(t, src, dest, ins);
+        ins.opcode := opcode[op].rrm + 1;
+        IF src.loc = OLoc.mem THEN
+          <* ASSERT CG_Bytes[src.mvar.mvar_type] = 4 *>
+        END
+      ELSE
+        <* ASSERT src.loc = OLoc.register AND CG_Bytes[src.mvar.mvar_type] = 4 *>
+        build_modrm(t, dest, src, ins);
+        ins.opcode := opcode[op].rmr + 1;
+      END;
     END;
 
     Mn(t, opcode[op].name);  MnOp(t, dest);  MnOp(t, src);
+    IF shiftDouble THEN
+      MnOp(t, shiftCount);
+    END;
 
     writecode(t, ins);
     IF dest.loc = OLoc.mem THEN

@@ -160,6 +160,6 @@ CONST MinimumShift = ARRAY IType OF TIntN.T { TIntN.MThirtyOne, TIntN.MThirtyOne
 
 CONST BitCountMask = MaximumShift;
  
-VAR(*CONST*) IntType: ARRAY IType OF Target.Int_type;
+VAR(*CONST*) IntType: ARRAY M3CG.MType OF Target.Int_type;
 
 END M3x86Rep.

@@ -1408,6 +1408,7 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
       shiftResult: TIntN.T;
       shiftCount: INTEGER;
       is64 := TypeIs64(type);
+      typeBitSize := TIntN.T{x := Target.Int{IntType[type].size, 0, ..}};
   BEGIN
 
     unlock(t);
@@ -1415,6 +1416,8 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
          stack1 = pos(t, 1, "doshift"),
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
+
+      <* ASSERT TypeIs64(type) = TypeIs64(stop1.optype) *>
 
       IF stop0.loc = OLoc.imm THEN
         IF stop1.loc = OLoc.imm THEN
@@ -1488,7 +1491,7 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
 
           t.cg.brOp(Cond.GE, leftlab);
           t.cg.unOp(Op.oNEG, stop0);
-          t.cg.immOp(Op.oCMP, stop0, TIntN.ThirtyTwo);
+          t.cg.immOp(Op.oCMP, stop0, typeBitSize);
           t.cg.brOp(Cond.GE, ovflshift);
           t.cg.unOp(Op.oSHR, stop1);
           t.cg.brOp(Cond.Always, endlab);
@@ -1498,7 +1501,7 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
           t.cg.brOp(Cond.Always, endlab);
           t.cg.set_label(leftlab);
           (* .leftlab *)
-          t.cg.immOp(Op.oCMP, stop0, TIntN.ThirtyTwo);
+          t.cg.immOp(Op.oCMP, stop0, typeBitSize);
           t.cg.brOp(Cond.GE, ovflshift);
           t.cg.unOp(Op.oSHL, stop1);
           t.cg.set_label(endlab);
@@ -1675,12 +1678,13 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
   END doextract;
 
 PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
-  VAR tn, t32MinusN, andval: TIntN.T;
+  VAR tn, typeBitSizeMinusN, andval: TIntN.T;
       int: INTEGER;
-      uint_type := IntType[UnsignedType[type]];
       is64 := TypeIs64(type);
+      uint_type := IntType[UnsignedType[type]];
       max := TIntN.T{x := uint_type.max};
       typeBitSize := uint_type.size;
+      typeBitSizeT := TIntN.T{x := Target.Int{typeBitSize, 0, ..}};
   BEGIN
 
     unlock(t);
@@ -1717,7 +1721,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
           t.Err("doextract_n: failed to convert n to target integer");
         END;
 
-        IF NOT TIntN.Subtract(TIntN.ThirtyTwo, tn, t32MinusN) THEN
+        IF NOT TIntN.Subtract(typeBitSizeT, tn, typeBitSizeMinusN) THEN
           t.Err("doextract_n: Subtract overflowed");
         END;
 
@@ -1728,7 +1732,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
         t.cg.unOp(Op.oSHL, stop1);
 
         IF n < typeBitSize THEN
-          t.cg.immOp(Op.oSAR, stop1, t32MinusN);
+          t.cg.immOp(Op.oSAR, stop1, typeBitSizeMinusN);
         END
       ELSE
         find(t, stack0, Force.regset, RegSet { ECX });
