@@ -1701,6 +1701,8 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
         RETURN doextract_mn(t, type, sign, int, n);
       END;
 
+      <* ASSERT NOT is64 *>
+
       IF sign THEN
         corrupt(t, ECX, operandPart := 0);
         t.reguse[ECX].locked := TRUE;
@@ -1719,11 +1721,13 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
           t.Err("doextract_n: Subtract overflowed");
         END;
 
-        t.cg.movImmI(t.cg.reg[ECX], 32 - n);
+        <* ASSERT NOT is64 *>
+
+        t.cg.movImmI(t.cg.reg[ECX], typeBitSize - n);
         t.cg.binOp(Op.oSUB, t.cg.reg[ECX], stop0);
         t.cg.unOp(Op.oSHL, stop1);
 
-        IF n < 32 THEN
+        IF n < typeBitSize THEN
           t.cg.immOp(Op.oSAR, stop1, t32MinusN);
         END
       ELSE
@@ -1748,6 +1752,9 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
 PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEAN =
   VAR andval, tint: TIntN.T;
       is64 := TypeIs64(type);
+      uint_type := IntType[UnsignedType[type]];
+      max := TIntN.T{x := uint_type.max};
+      typeBitSize := uint_type.size;
   BEGIN
 
     unlock(t);
@@ -1760,38 +1767,40 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
 
       IF stop0.loc = OLoc.imm THEN
         TWordN.Shift(stop0.imm, -m, stop0.imm);
-        TWordN.Shift(TWordN.Max32, n - 32, tint);
+        TWordN.Shift(max, n - typeBitSize, tint);
         TWordN.And(stop0.imm, tint, stop0.imm);
         IF sign THEN
           TWordN.Shift(TIntN.One, n - 1, tint);
           TWordN.And(stop0.imm, tint, tint);
           IF TIntN.NE(tint, TZero) THEN
-            TWordN.Shift(TWordN.Max32, n, tint);
+            TWordN.Shift(max, n, tint);
             TWordN.Or(stop0.imm, tint, stop0.imm);
           END;
         END;
         RETURN TRUE;
       END;
 
+      <* ASSERT NOT is64 *>
+
       IF sign THEN
         find(t, stack0, Force.anyreg);
-        IF (m + n) < 32 THEN
-          IF NOT TIntN.FromHostInteger(32 - (m + n), Target.Integer.bytes, tint) THEN
-            t.Err("doextract_mn: failed to convert 32 - (m + n) to target integer");
+        IF (m + n) < typeBitSize THEN
+          IF NOT TIntN.FromHostInteger(typeBitSize - (m + n), Target.Integer.bytes, tint) THEN
+            t.Err("doextract_mn: failed to convert " & Fmt.Int(typeBitSize) & " - (m + n) to target integer");
           END;
           t.cg.immOp(Op.oSHL, stop0, tint);
         END;
 
-        IF n < 32 THEN
-          IF NOT TIntN.FromHostInteger(32 - n, Target.Integer.bytes, tint) THEN
-            t.Err("doextract_mn: failed to convert 32 - n to target integer");
+        IF n < typeBitSize THEN
+          IF NOT TIntN.FromHostInteger(typeBitSize - n, Target.Integer.bytes, tint) THEN
+            t.Err("doextract_mn: failed to convert " & Fmt.Int(typeBitSize) & " - n to target integer");
           END;
           t.cg.immOp(Op.oSAR, stop0, tint);
         END
       ELSE
         find(t, stack0, Force.anyreg);
-        IF (m + n) < 32 THEN
-          TWordN.Shift(TWordN.Max32, m + n - 32, andval);
+        IF (m + n) < typeBitSize THEN
+          TWordN.Shift(max, m + n - typeBitSize, andval);
           t.cg.immOp(Op.oAND, stop0, andval);
         END;
 
@@ -1813,7 +1822,9 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
   VAR maskreg: Regno;  tbl: MVar;
       int: INTEGER;
       tint: TIntN.T;
+      uint_type := IntType[UnsignedType[type]];
       is64 := TypeIs64(type);
+      max := TIntN.T{x := uint_type.max};
   BEGIN
 
     unlock(t);
@@ -1880,7 +1891,7 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
         IF NOT TIntN.ToHostInteger(stop1.imm, int) THEN
           t.Err("failed to convert stop1.imm to host integer");
         END;
-        TWordN.Shift(TWordN.Max32, int, tint);
+        TWordN.Shift(max, int, tint);
         t.cg.immOp(Op.oXOR, t.cg.reg[maskreg], tint);
       ELSE
         ImportHighSet (t, tbl);
@@ -1904,6 +1915,9 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
       m: INTEGER;
       tint: TIntN.T;
       is64 := TypeIs64(type);
+      uint_type := IntType[UnsignedType[type]];
+      typeBitSize := uint_type.size;
+      max := TIntN.T{x := uint_type.max};
   BEGIN
 
     unlock(t);
@@ -1926,6 +1940,8 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
         RETURN doinsert_mn(t, type, m, n);
       END;
 
+      <* ASSERT NOT is64 *>
+
       find(t, stack0, Force.regset, RegSet { ECX });
       find(t, stack2, Force.any);
       find(t, stack1, Force.anyreg);
@@ -1939,8 +1955,8 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
 
       <* ASSERT NOT is64 *>
 
-      IF n # 32 THEN
-        TWordN.Shift(TWordN.Max32, n - 32, tint);
+      IF n # typeBitSize THEN
+        TWordN.Shift(max, n - typeBitSize, tint);
         t.cg.immOp(Op.oAND, stop1, tint);
       END;
 
