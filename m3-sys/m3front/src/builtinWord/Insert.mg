@@ -71,7 +71,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
       OR NOT TWord.Insert (w0, w1, i2, i3, result) THEN
       RETURN NIL;
     END;
-    TInt.Chop (result, Word_types[rep].bytes);
+    EVAL TInt.Extend (result, Word_types[rep].bytes, result);
     RETURN IntegerExpr.New (T, result);
   END Fold;
 

@@ -67,7 +67,7 @@ PROCEDURE Add (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
     | NULL => RETURN FALSE;
     | P(p) =>
       TWord.Add (p.value, i, j);
-      TInt.Chop (j, Target.Address.bytes);
+      EVAL TInt.Extend (j, Target.Address.bytes, j);
       c := New (j);
       RETURN TRUE;
     ELSE      RETURN FALSE;
@@ -85,14 +85,14 @@ PROCEDURE Subtract (a, b: Expr.T;  VAR c: Expr.T): BOOLEAN =
 
     IF IntegerExpr.Split (b, j, t) THEN
       TWord.Subtract (i, j, k);
-      TInt.Chop (k, Target.Address.bytes);
+      EVAL TInt.Extend (k, Target.Address.bytes, k);
       c := New (k);
     ELSE (* address - address *)
       TYPECASE b OF
       | NULL => RETURN FALSE;
       | P(p) =>
         TWord.Subtract (i, p.value, k);
-        TInt.Chop (k, Target.Address.bytes);
+        EVAL TInt.Extend (k, Target.Address.bytes, k);
         c := IntegerExpr.New (t, k);
       ELSE      RETURN FALSE;
       END;

@@ -32,7 +32,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   VAR w0, w1, result: Target.Int;
   BEGIN
     IF GetArgs (ce.args, w0, w1) AND TWord.Mod (w0, w1, result) THEN
-      TInt.Chop (result, Word_types[rep].bytes);
+      EVAL TInt.Extend (result, Word_types[rep].bytes, result);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;
@@ -64,7 +64,7 @@ PROCEDURE GetBounds (ce: CallExpr.T;  VAR min, max: Target.Int) =
     ELSE
       min := TInt.Zero;
       TWord.Subtract (max_b, TInt.One, max);
-      TInt.Chop (max, Word_types[rep].bytes);
+      EVAL TInt.Extend (max, Word_types[rep].bytes, max);
     END;
   END GetBounds;
 
