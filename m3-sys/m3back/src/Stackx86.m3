@@ -17,9 +17,9 @@ FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 FROM M3CG IMPORT Type, MType, ZType, IType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize, TZero;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Types64, OperandPart, RegName, OperandSize, TZero;
 FROM M3x86Rep IMPORT RegistersForByteOperations, RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
-FROM M3x86Rep IMPORT IsInt, IsWord, EAX, ECX, EDX, EBX, ESI, EDI, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
+FROM M3x86Rep IMPORT Unsigned, Signed, EAX, ECX, EDX, EBX, ESI, EDI, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
 
@@ -33,7 +33,7 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         vstacklimit   := 0;
         reguse        : ARRAY [0 .. NRegs] OF Register;
         current_proc  : x86Proc;
-        rmode         : ARRAY FlToInt OF Target.IntN;
+        rmode         : ARRAY FlToInt OF TIntN.T;
         lowset_table  : x86Var;
         highset_table : x86Var;
       OVERRIDES
@@ -102,19 +102,14 @@ TYPE
   Register = RECORD
     stackp     : INTEGER := -1;
     last_store : MVar    := NoStore;
-    last_imm   : Target.IntN := TZero;
-    lowbound   : Target.IntN;
-    upbound    : Target.IntN;
+    last_imm   : TIntN.T := TZero;
+    lowbound   : TIntN.T := TIntN.Min32;
+    upbound    : TIntN.T := TIntN.Max32;
     imm        : BOOLEAN := FALSE;
     locked     : BOOLEAN := FALSE;
     non_nil    : BOOLEAN := FALSE;
     operandPart: OperandPart := 0;
   END;
-
-PROCEDURE InitRegister(locked: BOOLEAN := FALSE):Register =
-BEGIN
-  RETURN Register { locked := locked, lowbound := Target.Integer.minN, upbound := Target.Integer.maxN };
-END InitRegister;
 
 (*-------------------------------------------- register handling routines ---*)
 
@@ -188,7 +183,7 @@ PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand; operandPart: OperandPar
   BEGIN
     t.cg.movOp(t.cg.reg[r], op);
 
-    t.reguse[r] := InitRegister(locked := t.reguse[r].locked);
+    t.reguse[r] := Register { locked := t.reguse[r].locked };
     t.reguse[r].stackp := op.stackp;
     t.reguse[r].operandPart := operandPart;
 
@@ -260,12 +255,8 @@ PROCEDURE clearall (t: T) =
     t.cg.wrFlush();
 
     FOR r := 0 TO NRegs DO
-      IF NOT (t.reguse[r].stackp = -1) THEN
-        t.Err("r:" & RegName[r]
-            & " t.reguse[r].stackp:" & Fmt.Int(t.reguse[r].stackp));
-      END;
       <* ASSERT t.reguse[r].stackp = -1 *>
-      t.reguse[r] := InitRegister();
+      t.reguse[r] := Register {};
     END
   END clearall;
 
@@ -274,7 +265,7 @@ PROCEDURE releaseall (t: T) =
     t.cg.wrFlush();
 
     FOR r := 0 TO NRegs DO
-      t.reguse[r] := InitRegister();
+      t.reguse[r] := Register {};
     END
   END releaseall;
 
@@ -322,7 +313,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
           END;
       END;
 
-      IF op.mvar.mvar_type = Type.Addr THEN
+      IF op.mvar.type = Type.Addr THEN
         hintaddr := TRUE;
       END;
 
@@ -352,7 +343,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
         RETURN;
       END;
 
-      IF force = Force.anydword AND in[0] = -1 AND in[size - 1] = -1 AND op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = (size * 4) THEN
+      IF force = Force.anydword AND in[0] = -1 AND in[size - 1] = -1 AND op.loc = OLoc.mem AND CG_Bytes[op.mvar.type] = (size * 4) THEN
         RETURN;
       END;
 
@@ -362,7 +353,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
         RETURN;
       END;
 
-      IF op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 1 THEN
+      IF op.loc = OLoc.mem AND CG_Bytes[op.mvar.type] = 1 THEN
         force := Force.regset;
         IF set = RegSet {} THEN
           set := RegistersForByteOperations;
@@ -424,7 +415,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
             AND op.loc = OLoc.mem
             AND t.reguse[to[0       ]].stackp # -1
             AND t.reguse[to[size - 1]].stackp # -1
-            AND CG_Bytes[op.mvar.mvar_type] = (size * 4) THEN
+            AND CG_Bytes[op.mvar.type] = (size * 4) THEN
         RETURN;
       END;
 
@@ -539,7 +530,7 @@ PROCEDURE inreg (t: T; READONLY v: MVar; set: RegSet:= RegSet {}): Regno =
       bestreg: Regno := -1;
       hintaddr := FALSE;
   BEGIN
-    IF v.mvar_type = Type.Addr THEN
+    IF v.type = Type.Addr THEN
       hintaddr := TRUE;
     END;
 
@@ -558,7 +549,7 @@ PROCEDURE inreg (t: T; READONLY v: MVar; set: RegSet:= RegSet {}): Regno =
     RETURN bestreg;
   END inreg;
 
-PROCEDURE immreg (t: T; READONLY imm: Target.IntN; set: RegSet:= RegSet {}): Regno =
+PROCEDURE immreg (t: T; READONLY imm: TIntN.T; set: RegSet:= RegSet {}): Regno =
   VAR minprec := HighPrec * HighPrec;
       prec := 0;
       bestreg: Regno := -1;
@@ -615,18 +606,18 @@ PROCEDURE get_temp (t: T; stackp: INTEGER) =
   BEGIN
     set_mvar(t, stackp, MVar { var := t.parent.declare_temp(size * 4, 4, op.optype,
                                                             FALSE),
-                               mvar_offset := 0, mvar_type := op.optype } );
+                               offset := 0, type := op.optype } );
     t.vstack[stackp].mvar.var.stack_temp := TRUE;
     CASE op.loc OF
       | OLoc.imm =>
         t.cg.movImmT(t.vstack[stackp], op.imm);
       | OLoc.register =>
         mvar := t.vstack[stackp].mvar; (* save away *)
-        t.vstack[stackp].mvar.mvar_type := Type.Word32; (* make it register sized *)
+        t.vstack[stackp].mvar.type := Type.Word32; (* make it register sized *)
         t.vstack[stackp].optype := Type.Word32;
         FOR i := 0 TO size - 1 DO
           t.reguse[op.reg[i]].stackp := -1;
-          t.vstack[stackp].mvar.mvar_offset := i * 4;   (* offset to register sized chunk *)
+          t.vstack[stackp].mvar.offset := i * 4;   (* offset to register sized chunk *)
           t.cg.movOp(t.vstack[stackp], t.cg.reg[op.reg[i]]);
         END;
         t.vstack[stackp].optype := op.optype;
@@ -671,7 +662,7 @@ PROCEDURE sweep (t: T; READONLY mvar: MVar) =
           t.cg.movOp(t.cg.reg[ECX], stackOpA[1]);
         END;
         set_mvar(t, i, MVar { var := t.parent.declare_temp(size * 4, 4, type, FALSE),
-                              mvar_offset := 0, mvar_type := type } );
+                              offset := 0, type := type } );
         t.vstack[i].mvar.var.stack_temp := TRUE;
         IF size = 1 THEN
           t.cg.movOp(t.vstack[i], t.cg.reg[EAX]);
@@ -713,7 +704,7 @@ PROCEDURE corrupt (t: T; reg: Regno; operandPart: OperandPart) =
     IF t.reguse[reg].stackp # -1 THEN
       forceout(t, reg, operandPart);
     END;
-    t.reguse[reg] := InitRegister(locked := t.reguse[reg].locked);
+    t.reguse[reg] := Register { locked := t.reguse[reg].locked };
   END corrupt;
 
 PROCEDURE all_to_mem(t: T) =
@@ -736,7 +727,7 @@ PROCEDURE set_mvar (t: T; stackp: INTEGER; READONLY mvar: MVar) =
     t.vstack[stackp].mvar := mvar;
   END set_mvar;
 
-PROCEDURE set_imm (t: T; stackp: INTEGER; READONLY imm: Target.IntN) =
+PROCEDURE set_imm (t: T; stackp: INTEGER; READONLY imm: TIntN.T) =
   BEGIN
     t.vstack[stackp].loc := OLoc.imm;
     t.vstack[stackp].imm := imm;
@@ -764,7 +755,7 @@ PROCEDURE pos (t: T; depth: INTEGER; place: TEXT): INTEGER =
     RETURN -1;
   END pos;
 
-PROCEDURE pushimmT (t: T; imm: Target.IntN; type: Type) =
+PROCEDURE pushimmT (t: T; imm: TIntN.T; type: Type) =
   BEGIN
     maybe_expand_stack(t);
 
@@ -779,9 +770,9 @@ PROCEDURE pushimmT (t: T; imm: Target.IntN; type: Type) =
   END pushimmT;
 
 PROCEDURE pushimmI (t: T; immI: INTEGER; type: Type) =
-  VAR immT: Target.IntN;
+  VAR immT: TIntN.T;
   BEGIN
-    IF NOT TIntN.FromHostInteger(immI, Target.Integer.bytes, immT) THEN
+    IF NOT TIntN.FromInt(immI, Target.Integer.bytes, immT) THEN
       t.Err("pushimmI: unable to convert to target integer");
     END;
     t.pushimmT(immT, type);
@@ -803,7 +794,7 @@ PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet; operandPart: O
                    MVar { var :=  t.parent.declare_temp(CG_Bytes[type],
                                                         CG_Align_bytes[type],
                                                         type, FALSE),
-                          mvar_offset := 0, mvar_type := type } );
+                          offset := 0, type := type } );
           stack0.mvar.var.stack_temp := TRUE;
         ELSE
           corrupt(t, reg, operandPart);
@@ -816,7 +807,7 @@ PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet; operandPart: O
 PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
   BEGIN
     maybe_expand_stack(t);
-    IF Is64(type) AND force = Force.regset AND set = RegSet { EAX, EDX } THEN
+    IF type IN Types64 AND force = Force.regset AND set = RegSet { EAX, EDX } THEN
       pushnew1(t, type, Force.regset, RegSet { EDX }, operandPart := 1);
       pushnew1(t, type, Force.regset, RegSet { EAX }, operandPart := 0);
     ELSE
@@ -830,21 +821,21 @@ PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
 PROCEDURE push (t: T; READONLY src_mvar: MVar) =
   VAR indreg: Regno;
       destreg: ARRAY OperandPart OF Regno;
-      srcSize := GetTypeSize(src_mvar.mvar_type);
+      srcSize := GetTypeSize(src_mvar.type);
   BEGIN
     maybe_expand_stack(t);
 
     WITH stack0 = t.vstack[t.stacktop] DO
       stack0.stackp := t.stacktop;
-      stack0.optype := src_mvar.mvar_type;
-      IF FloatType [src_mvar.mvar_type] THEN
+      stack0.optype := src_mvar.type;
+      IF FloatType [src_mvar.type] THEN
         IF src_mvar.var.loc = VLoc.temp AND src_mvar.var.parent # t.current_proc THEN
           unlock(t);
           indreg := pickreg(t, RegSet {}, TRUE);
           corrupt(t, indreg, operandPart := 0);
 
           t.cg.get_frame(indreg, src_mvar.var.parent, t.current_proc);
-          t.cg.f_loadind(t.cg.reg[indreg], src_mvar.mvar_offset + src_mvar.var.offset, src_mvar.mvar_type);
+          t.cg.f_loadind(t.cg.reg[indreg], src_mvar.offset + src_mvar.var.offset, src_mvar.type);
           stack0.loc := OLoc.fstack;
         ELSE
           stack0.loc := OLoc.fstack;
@@ -854,11 +845,11 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
         IF src_mvar.var.loc = VLoc.temp AND src_mvar.var.parent # t.current_proc THEN
           unlock(t);
           FOR i := 0 TO srcSize - 1 DO
-            IF CG_Bytes[src_mvar.mvar_type] = 1 THEN
+            IF CG_Bytes[src_mvar.type] = 1 THEN
               <* ASSERT srcSize = 1 AND i = 0 *>
               destreg[i] := pickreg(t, RegSet{EAX, EBX, ECX, EDX});
             ELSE
-              destreg[i] := pickreg(t, RegSet {}, src_mvar.mvar_type = Type.Addr);
+              destreg[i] := pickreg(t, RegSet {}, src_mvar.type = Type.Addr);
             END;
             corrupt(t, destreg[i], operandPart := i);
             t.reguse[destreg[i]].locked := TRUE;
@@ -869,8 +860,8 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
 
           t.cg.get_frame(indreg, src_mvar.var.parent, t.current_proc);
           FOR i := 0 TO srcSize - 1 DO
-            t.cg.load_ind(destreg[i], t.cg.reg[indreg], src_mvar.mvar_offset + src_mvar.var.offset + i * 4,
-                          src_mvar.mvar_type);
+            t.cg.load_ind(destreg[i], t.cg.reg[indreg], src_mvar.offset + src_mvar.var.offset + i * 4,
+                          src_mvar.type);
             set_reg(t, t.stacktop, destreg[i], operandPart := i);
           END;
           newdest(t, stack0);
@@ -902,14 +893,14 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
           indreg := pickreg(t, RegSet {}, TRUE);
           corrupt(t, indreg, operandPart := 0);
           t.cg.get_frame(indreg, dest_mvar.var.parent, t.current_proc);
-          t.cg.f_storeind(t.cg.reg[indreg], dest_mvar.mvar_offset + dest_mvar.var.offset, dest_mvar.mvar_type);
+          t.cg.f_storeind(t.cg.reg[indreg], dest_mvar.offset + dest_mvar.var.offset, dest_mvar.type);
 
         ELSE
           t.cg.fstack_pop(dest_mvar);
         END
       ELSE
         unlock(t);
-        IF CG_Bytes[dest_mvar.mvar_type] = 1 AND src_stack0.loc # OLoc.imm THEN
+        IF CG_Bytes[dest_mvar.type] = 1 AND src_stack0.loc # OLoc.imm THEN
           find(t, t.stacktop - 1, Force.regset, RegSet { EAX, EBX, ECX, EDX } );
         ELSE
           find(t, t.stacktop - 1, Force.anyregimm);
@@ -919,7 +910,7 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
         IF NOT (srcSize = destSize) THEN
           t.Err(" srcSize:" & Fmt.Int(srcSize)
               & " destSize:" & Fmt.Int(destSize)
-              & " dest_mvar.mvar_type:" & Target.TypeNames[dest_mvar.mvar_type]
+              & " dest_mvar.type:" & Target.TypeNames[dest_mvar.type]
               & " src_stack0.optype:" & Target.TypeNames[src_stack0.optype]);
         END;
         <* ASSERT srcSize = destSize *>
@@ -931,8 +922,8 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
           FOR i := 0 TO destSize - 1 DO
             t.cg.store_ind(src_opA[i],
                            t.cg.reg[indreg],
-                           dest_mvarA[i].mvar_offset + dest_mvarA[i].var.offset,
-                           dest_mvarA[i].mvar_type);
+                           dest_mvarA[i].offset + dest_mvarA[i].var.offset,
+                           dest_mvarA[i].type);
             t.reguse[src_stack0.reg[i]].stackp := -1;
             corrupt(t, src_stack0.reg[i], i);
           END;
@@ -956,7 +947,7 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
           END;
 
           FOR i := 0 TO destSize - 1 DO
-            t.cg.movOp(Operand { loc := OLoc.mem, mvar := dest_mvarA[i], optype := dest_mvarA[i].mvar_type }, src_opA[i]);
+            t.cg.movOp(Operand { loc := OLoc.mem, mvar := dest_mvarA[i], optype := dest_mvarA[i].type }, src_opA[i]);
           END;
           set_mvar(t, t.stacktop - 1, dest_mvar);
         END
@@ -967,7 +958,7 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
   END pop;
 
 PROCEDURE doloadaddress (t: T; v: x86Var; o: ByteOffset) =
-  VAR to, tvoffset, ti: Target.IntN;
+  VAR to, tvoffset, ti: TIntN.T;
   BEGIN
     unlock(t);
     pushnew(t, Type.Addr, Force.anyreg);
@@ -975,10 +966,10 @@ PROCEDURE doloadaddress (t: T; v: x86Var; o: ByteOffset) =
     WITH stop0 = t.vstack[pos(t, 0, "doloadaddress")] DO
       IF v.loc = VLoc.temp AND v.parent # t.current_proc THEN
         t.cg.get_frame(stop0.reg[0], v.parent, t.current_proc);
-        IF NOT TIntN.FromHostInteger(o, Target.Integer.bytes, to) THEN
+        IF NOT TIntN.FromInt(o, Target.Integer.bytes, to) THEN
           t.Err("doloadaddress: unable to convert o");
         END;
-        IF NOT TIntN.FromHostInteger(v.offset, Target.Integer.bytes, tvoffset) THEN
+        IF NOT TIntN.FromInt(v.offset, Target.Integer.bytes, tvoffset) THEN
           t.Err("doloadaddress: unable to convert v.offset");
         END;
         IF NOT TIntN.Add(to, tvoffset, ti) THEN
@@ -988,8 +979,8 @@ PROCEDURE doloadaddress (t: T; v: x86Var; o: ByteOffset) =
 
       ELSE
         t.cg.binOp(Op.oLEA, stop0, Operand {loc := OLoc.mem, optype := Type.Word32,
-                                            mvar := MVar {var := v, mvar_offset := o,
-                                                          mvar_type := Type.Word32} } );
+                                            mvar := MVar {var := v, offset := o,
+                                                          type := Type.Word32} } );
       END
     END
   END doloadaddress;
@@ -1045,11 +1036,11 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
       END;
 
       IF destop.loc = OLoc.mem AND
-         (CG_Bytes[destop.mvar.mvar_type] < 4 OR srcop.loc = OLoc.mem) THEN
+         (CG_Bytes[destop.mvar.type] < 4 OR srcop.loc = OLoc.mem) THEN
         find(t, dest, Force.anyreg);
       END;
 
-      IF srcop.loc = OLoc.mem AND CG_Bytes[srcop.mvar.mvar_type] < 4 THEN
+      IF srcop.loc = OLoc.mem AND CG_Bytes[srcop.mvar.type] < 4 THEN
         find(t, src, Force.anyreg);
       END
     END;
@@ -1315,7 +1306,7 @@ PROCEDURE domod (t: T; a, b: Sign) =
     END
   END domod;
 
-PROCEDURE doimm (t: T; op: Op; READONLY imm: Target.IntN; overwritesdest: BOOLEAN) =
+PROCEDURE doimm (t: T; op: Op; READONLY imm: TIntN.T; overwritesdest: BOOLEAN) =
   BEGIN
     unlock(t);
 
@@ -1323,8 +1314,8 @@ PROCEDURE doimm (t: T; op: Op; READONLY imm: Target.IntN; overwritesdest: BOOLEA
          stop0 = t.vstack[stack0] DO
       IF (stop0.loc = OLoc.mem AND
          ((overwritesdest AND NOT stop0.mvar.var.stack_temp) OR
-          CG_Bytes[stop0.mvar.mvar_type] = 2 OR
-          (CG_Bytes[stop0.mvar.mvar_type] = 1 AND (TIntN.GT(imm, Target.Int8.maxN) OR TIntN.LT(imm, Target.Int8.minN)))))
+          CG_Bytes[stop0.mvar.type] = 2 OR
+          (CG_Bytes[stop0.mvar.type] = 1 AND (TIntN.GT(imm, TIntN.Max8) OR TIntN.LT(imm, TIntN.Min8)))))
          OR stop0.loc = OLoc.imm THEN
         find(t, stack0, Force.anyreg);
       ELSE
@@ -1342,7 +1333,7 @@ PROCEDURE doimm (t: T; op: Op; READONLY imm: Target.IntN; overwritesdest: BOOLEA
   END doimm;
 
 PROCEDURE doneg (t: T) =
-  VAR neg: Target.IntN;
+  VAR neg: TIntN.T;
   BEGIN
     unlock(t);
     WITH stack0 = pos(t, 0, "doneg"),
@@ -1401,10 +1392,10 @@ PROCEDURE doabs (t: T) =
 
 PROCEDURE doshift (t: T; type: IType): BOOLEAN =
   VAR ovflshift, leftlab, endlab: Label;
-      tShiftCount: Target.IntN;
-      shiftResult: Target.IntN;
+      tShiftCount: TIntN.T;
+      shiftResult: TIntN.T;
       shiftCount: INTEGER;
-      is64 := Is64(type);
+      is64 := type IN Types64;
   BEGIN
 
     unlock(t);
@@ -1415,7 +1406,7 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
 
       IF stop0.loc = OLoc.imm THEN
         IF stop1.loc = OLoc.imm THEN
-          IF NOT TIntN.ToHostInteger(stop0.imm, shiftCount) THEN
+          IF NOT TIntN.ToInt(stop0.imm, shiftCount) THEN
             t.Err("doshift: unable to convert target integer to host integer");
           END;
 
@@ -1515,7 +1506,7 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
 PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
   VAR leftlab, endlab: Label;
       rotateCount: INTEGER;
-      is64 := Is64(type);
+      is64 := type IN Types64;
   BEGIN
 
     unlock(t);
@@ -1526,7 +1517,7 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
 
       IF stop0.loc = OLoc.imm THEN
         IF stop1.loc = OLoc.imm THEN
-          IF NOT TIntN.ToHostInteger(stop0.imm, rotateCount) THEN
+          IF NOT TIntN.ToInt(stop0.imm, rotateCount) THEN
             t.Err("dorotate: failed to convert rotateCount to host integer");
           END;
           TWordN.Rotate(stop1.imm, rotateCount, stop1.imm);
@@ -1597,7 +1588,7 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
 PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
   VAR tbl: MVar;
       int: INTEGER;
-      is64 := Is64(type);
+      is64 := type IN Types64;
   BEGIN
 
     unlock(t);
@@ -1614,7 +1605,7 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
 
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
-        IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
+        IF NOT TIntN.ToInt(stop0.imm, int) THEN
           t.Err("doextract: failed to convert to host integer");
         END;
         RETURN doextract_n(t, type, sign, int);
@@ -1629,7 +1620,7 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
         find(t, stack0, Force.regset, RegSet { ECX });
         find(t, stack1, Force.any);
         find(t, stack2, Force.anyreg);
-        IF stop1.loc = OLoc.mem AND CG_Bytes[stop1.mvar.mvar_type] < 4 THEN
+        IF stop1.loc = OLoc.mem AND CG_Bytes[stop1.mvar.type] < 4 THEN
           find(t, stack1, Force.anyreg);
         END;
 
@@ -1672,10 +1663,10 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
   END doextract;
 
 PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
-  VAR tn, t32MinusN, andval: Target.IntN;
+  VAR tn, t32MinusN, andval: TIntN.T;
       int: INTEGER;
       uint_type := IntType[UnsignedType[type]];
-      is64 := Is64(type);
+      is64 := type IN Types64;
   BEGIN
 
     unlock(t);
@@ -1690,7 +1681,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
 
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
-        IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
+        IF NOT TIntN.ToInt(stop0.imm, int) THEN
           t.Err("doextract_n: failed to convert to host integer");
         END;
         RETURN doextract_mn(t, type, sign, int, n);
@@ -1702,11 +1693,11 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
 
         find(t, stack0, Force.any);
         find(t, stack1, Force.anyreg);
-        IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
+        IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.type] < 4 THEN
           find(t, stack0, Force.anyreg);
         END;
 
-        IF NOT TIntN.FromHostInteger(n, Target.Integer.bytes, tn) THEN
+        IF NOT TIntN.FromInt(n, Target.Integer.bytes, tn) THEN
           t.Err("doextract_n: failed to convert n to target integer");
         END;
 
@@ -1728,7 +1719,10 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
         t.cg.unOp(Op.oSHR, stop1);
 
         IF n < uint_type.size THEN
-          TWordN.Shift(uint_type.maxN, n - uint_type.size, andval);
+          IF is64
+            THEN TWordN.Shift(TWordN.Max64, n - uint_type.size, andval);
+            ELSE TWordN.Shift(TWordN.Max32, n - uint_type.size, andval);
+          END;
           t.cg.immOp(Op.oAND, stop1, andval);
         END
       END;
@@ -1741,8 +1735,8 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
   END doextract_n;
 
 PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEAN =
-  VAR andval, tint: Target.IntN;
-      is64 := Is64(type);
+  VAR andval, tint: TIntN.T;
+      is64 := type IN Types64;
   BEGIN
 
     unlock(t);
@@ -1755,13 +1749,13 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
 
       IF stop0.loc = OLoc.imm THEN
         TWordN.Shift(stop0.imm, -m, stop0.imm);
-        TWordN.Shift(Target.Word32.maxN, n - 32, tint);
+        TWordN.Shift(TWordN.Max32, n - 32, tint);
         TWordN.And(stop0.imm, tint, stop0.imm);
         IF sign THEN
           TWordN.Shift(TIntN.One, n - 1, tint);
           TWordN.And(stop0.imm, tint, tint);
           IF TIntN.NE(tint, TZero) THEN
-            TWordN.Shift(Target.Word32.maxN, n, tint);
+            TWordN.Shift(TWordN.Max32, n, tint);
             TWordN.Or(stop0.imm, tint, stop0.imm);
           END;
         END;
@@ -1771,14 +1765,14 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
       IF sign THEN
         find(t, stack0, Force.anyreg);
         IF (m + n) < 32 THEN
-          IF NOT TIntN.FromHostInteger(32 - (m + n), Target.Integer.bytes, tint) THEN
+          IF NOT TIntN.FromInt(32 - (m + n), Target.Integer.bytes, tint) THEN
             t.Err("doextract_mn: failed to convert 32 - (m + n) to target integer");
           END;
           t.cg.immOp(Op.oSHL, stop0, tint);
         END;
 
         IF n < 32 THEN
-          IF NOT TIntN.FromHostInteger(32 - n, Target.Integer.bytes, tint) THEN
+          IF NOT TIntN.FromInt(32 - n, Target.Integer.bytes, tint) THEN
             t.Err("doextract_mn: failed to convert 32 - n to target integer");
           END;
           t.cg.immOp(Op.oSAR, stop0, tint);
@@ -1786,12 +1780,12 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
       ELSE
         find(t, stack0, Force.anyreg);
         IF (m + n) < 32 THEN
-          TWordN.Shift(Target.Word32.maxN, m + n - 32, andval);
+          TWordN.Shift(TWordN.Max32, m + n - 32, andval);
           t.cg.immOp(Op.oAND, stop0, andval);
         END;
 
         IF m > 0 THEN
-          IF NOT TIntN.FromHostInteger(m, Target.Integer.bytes, tint) THEN
+          IF NOT TIntN.FromInt(m, Target.Integer.bytes, tint) THEN
             t.Err("doextract_mn: failed to m to target integer");
           END;
           t.cg.immOp(Op.oSHR, stop0, tint);
@@ -1807,8 +1801,8 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
 PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
   VAR maskreg: Regno;  tbl: MVar;
       int: INTEGER;
-      tint: Target.IntN;
-      is64 := Is64(type);
+      tint: TIntN.T;
+      is64 := type IN Types64;
   BEGIN
 
     unlock(t);
@@ -1827,7 +1821,7 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
 
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
-        IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
+        IF NOT TIntN.ToInt(stop0.imm, int) THEN
           t.Err("doinsert: failed to convert to host integer");
         END;
         RETURN doinsert_n(t, type, int);
@@ -1872,10 +1866,10 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
       t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], stop0, 4, tbl);
 
       IF stop1.loc = OLoc.imm THEN
-        IF NOT TIntN.ToHostInteger(stop1.imm, int) THEN
+        IF NOT TIntN.ToInt(stop1.imm, int) THEN
           t.Err("failed to convert stop1.imm to host integer");
         END;
-        TWordN.Shift(Target.Word32.maxN, int, tint);
+        TWordN.Shift(TWordN.Max32, int, tint);
         t.cg.immOp(Op.oXOR, t.cg.reg[maskreg], tint);
       ELSE
         ImportHighSet (t, tbl);
@@ -1897,8 +1891,8 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
 PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
   VAR tbl: MVar;  maskreg: Regno;
       m: INTEGER;
-      tint: Target.IntN;
-      is64 := Is64(type);
+      tint: TIntN.T;
+      is64 := type IN Types64;
   BEGIN
 
     unlock(t);
@@ -1915,7 +1909,7 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
 
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
-        IF NOT TIntN.ToHostInteger(stop0.imm, m) THEN
+        IF NOT TIntN.ToInt(stop0.imm, m) THEN
           t.Err("doinsert_n: failed to convert to host integer");
         END;
         RETURN doinsert_mn(t, type, m, n);
@@ -1933,7 +1927,7 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
       corrupt(t, maskreg, operandPart := 0);
 
       IF n # 32 THEN
-        TWordN.Shift(Target.Word32.maxN, n - 32, tint);
+        TWordN.Shift(TWordN.Max32, n - 32, tint);
         t.cg.immOp(Op.oAND, stop1, tint);
       END;
 
@@ -1948,7 +1942,7 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
       ImportLowSet(t, tbl);
       t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], stop0, 4, tbl);
       ImportHighSet(t, tbl);
-      INC(tbl.mvar_offset, n*4);
+      INC(tbl.offset, n*4);
       t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], stop0, 4, tbl);
 
       t.cg.binOp(Op.oAND, stop2, t.cg.reg[maskreg]);
@@ -1963,10 +1957,15 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
   END doinsert_n;
   
 PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
-  VAR tint_m, mask_m, mask_m_n, mask: Target.IntN;
+  VAR tint_m, mask_m, mask_m_n, mask: TIntN.T;
       uint_type := IntType[UnsignedType[type]];
-      is64 := Is64(type);
+      is64 := type IN Types64;
+      Max: TIntN.T;
   BEGIN
+    IF is64
+      THEN Max := TWordN.Max64;
+      ELSE Max := TWordN.Max32;
+    END;
 
     unlock(t);
     WITH stack0 = pos(t, 0, "insert"),
@@ -1987,7 +1986,7 @@ PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
         find(t, stack1, Force.anyreg);
       END;
 
-      TWordN.Shift(uint_type.maxN, n - uint_type.size, mask);
+      TWordN.Shift(Max, n - uint_type.size, mask);
 
       IF stop0.loc = OLoc.imm THEN
         TWordN.And(stop0.imm, mask, stop0.imm);
@@ -1998,18 +1997,18 @@ PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
         END;
 
         IF m # 0 THEN
-          IF NOT TIntN.FromHostInteger(m, Target.Integer.bytes, tint_m) THEN
+          IF NOT TIntN.FromInt(m, Target.Integer.bytes, tint_m) THEN
             t.Err("doinsert_mn: unable to convert m to target integer");
           END;
           t.cg.immOp(Op.oSHL, stop0, tint_m);
         END
       END;
 
-      TWordN.Shift(uint_type.maxN, m, mask_m);
-      TWordN.Shift(uint_type.maxN, m + n - uint_type.size, mask_m_n);
+      TWordN.Shift(Max, m, mask_m);
+      TWordN.Shift(Max, m + n - uint_type.size, mask_m_n);
       TWordN.Xor(mask_m, mask_m_n, mask);
 
-      IF TWordN.NE(mask, uint_type.maxN) THEN
+      IF TWordN.NE(mask, Max) THEN
         IF stop1.loc = OLoc.imm THEN
           TWordN.And(stop1.imm, mask, stop1.imm);
         ELSE
@@ -2115,7 +2114,7 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
                   IF fromSize = 2 THEN
                     find(t, stack0, Force.anyreg);
                   ELSE
-                    IF IsInt(from) THEN
+                    IF from IN Signed THEN
                       find(t, stack0, Force.regset, RegSet{EAX});
                     ELSE
                       find(t, stack0, Force.anyreg);
@@ -2135,7 +2134,7 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
                    * We should favor dead, or else anything but
                    * the one that holds the other half of this operand.
                    *)
-                  IF IsWord(from) THEN
+                  IF from IN Unsigned THEN
                     (* zero extend by allocating another register and xoring *)
                     WITH reg = finddead(t) DO
                       <* ASSERT reg # -1 *>
@@ -2164,15 +2163,15 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
                                                   CG_Align_bytes[to], to,
                                                   FALSE);
           stop0.mvar.var.stack_temp := TRUE;
-          stop0.mvar.mvar_offset := 0;
-          stop0.mvar.mvar_type := from;
+          stop0.mvar.offset := 0;
+          stop0.mvar.type := from;
           t.cg.fstack_pop(stop0.mvar);
-          stop0.mvar.mvar_type := to;
+          stop0.mvar.type := to;
 
         ELSE
           <* ASSERT NOT fromFloat *>
           <* ASSERT toFloat *>
-          IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
+          IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.type] < 4 THEN
             find(t, stack0, Force.anyreg);
           END;
 
@@ -2184,7 +2183,7 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
           **********************************************)
 
           <* ASSERT to = Type.Reel *>
-          stop0.mvar.mvar_type := to;
+          stop0.mvar.type := to;
           t.cg.fstack_push(stop0.mvar, TRUE);
           IF stop0.mvar.var.stack_temp THEN
             t.parent.free_temp(stop0.mvar.var);
@@ -2197,9 +2196,9 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
 PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
   VAR imsize: INTEGER;
       muldest: Regno;
-      tsize: Target.IntN;
-      tshift: Target.IntN;
-      tint: Target.IntN;
+      tsize: TIntN.T;
+      tshift: TIntN.T;
+      tint: TIntN.T;
   BEGIN
     unlock(t);
     WITH stack0 = pos(t, 0, "doindex_address"),
@@ -2210,7 +2209,7 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
       find(t, stack1, Force.anyreg, RegSet {}, TRUE);
 
       IF stop0.loc = OLoc.imm THEN
-        IF NOT TIntN.FromHostInteger(size, Target.Integer.bytes, tsize) THEN
+        IF NOT TIntN.FromInt(size, Target.Integer.bytes, tsize) THEN
           t.Err("doindex_address: failed to convert size to target integer");
         END;
         IF NOT TIntN.Multiply(stop0.imm, tsize, tint) THEN
@@ -2222,7 +2221,7 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
           find(t, stack0, Force.anyreg);
         END;
         IF stop0.loc = OLoc.mem AND shift < 0 AND
-          CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
+          CG_Bytes[stop0.mvar.type] < 4 THEN
           find(t, stack0, Force.anydword);
         END;
 
@@ -2245,7 +2244,7 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
           END
 
         ELSIF shift > 0 THEN
-          IF NOT TIntN.FromHostInteger(shift, Target.Integer.bytes, tshift) THEN
+          IF NOT TIntN.FromInt(shift, Target.Integer.bytes, tshift) THEN
             t.Err("doindex_address: failed to convert size to target integer");
           END;
           t.cg.immOp(Op.oSHL, stop0, tshift);
@@ -2376,11 +2375,11 @@ PROCEDURE fltoint (t: T; mode: FlToInt; <*UNUSED*>type: Type) =
     t.cg.noargFOp(FOp.fNCLEX);
 
     statusop := Operand { loc := OLoc.mem, optype := Type.Int32,
-                          mvar := MVar { var := status, mvar_offset := 0,
-                                         mvar_type := Type.Int32 } };
+                          mvar := MVar { var := status, offset := 0,
+                                         type := Type.Int32 } };
     newstat := Operand { loc := OLoc.mem, optype := Type.Int32,
-                         mvar := MVar { var := status, mvar_offset := 4,
-                                         mvar_type := Type.Int32 } };
+                         mvar := MVar { var := status, offset := 4,
+                                         type := Type.Int32 } };
     t.cg.memFOp(FOp.fSTCW, statusop.mvar);
 
     t.cg.movOp(t.cg.reg[statreg], statusop);
@@ -2410,7 +2409,7 @@ PROCEDURE inttoflt (t: T) =
   BEGIN
     WITH stack0 = pos(t, 0, "inttoflt"),
          stop0 = t.vstack[stack0] DO
-      IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
+      IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.type] < 4 THEN
         unlock(t);
         find(t, stack0, Force.anyreg);
       END;
@@ -2433,8 +2432,8 @@ PROCEDURE newdest (t: T; READONLY op: Operand) =
       FOR i := 0 TO GetTypeSize(op.optype) - 1 DO
         WITH z = t.reguse[op.reg[i]] DO
           z.last_store := NoStore;
-          z.upbound    := Target.Integer.maxN;
-          z.lowbound   := Target.Integer.minN;
+          z.upbound    := TIntN.Max32;
+          z.lowbound   := TIntN.Min32;
           z.imm        := FALSE;
           z.non_nil    := FALSE;
         END;
@@ -2488,22 +2487,22 @@ PROCEDURE reg (t: T; stackp: INTEGER): Regno =
     RETURN t.vstack[stackp].reg[0];
   END reg;
 
-PROCEDURE lower (t: T; reg: Regno): Target.IntN =
+PROCEDURE lower (t: T; reg: Regno): TIntN.T =
   BEGIN
     RETURN t.reguse[reg].lowbound;
   END lower;
 
-PROCEDURE upper (t: T; reg: Regno): Target.IntN =
+PROCEDURE upper (t: T; reg: Regno): TIntN.T =
   BEGIN
     RETURN t.reguse[reg].upbound;
   END upper;
 
-PROCEDURE set_lower (t: T; reg: Regno; newlow: Target.IntN) =
+PROCEDURE set_lower (t: T; reg: Regno; newlow: TIntN.T) =
   BEGIN
     t.reguse[reg].lowbound := newlow;
   END set_lower;
 
-PROCEDURE set_upper (t: T; reg: Regno; newup: Target.IntN) =
+PROCEDURE set_upper (t: T; reg: Regno; newup: TIntN.T) =
   BEGIN
     t.reguse[reg].upbound := newup;
   END set_upper;
@@ -2532,15 +2531,15 @@ PROCEDURE init (t: T) =
       WITH z = t.reguse[i] DO
         z.stackp     := -1;
         z.last_store := NoStore;
-        z.upbound    := Target.Integer.maxN;
-        z.lowbound   := Target.Integer.minN;
+        z.upbound    := TIntN.Max32;
+        z.lowbound   := TIntN.Min32;
         z.imm        := FALSE;
         z.non_nil    := FALSE;
         z.locked     := FALSE;
       END;
     END;
 
-    t.rmode := ARRAY FlToInt OF Target.IntN
+    t.rmode := ARRAY FlToInt OF TIntN.T
       { TZero, TIntN.x0400, TIntN.x0800, TIntN.x0F00 };
     t.lowset_table := NIL;
     t.highset_table := NIL;
@@ -2552,8 +2551,8 @@ PROCEDURE ImportLowSet (t: T;  VAR(*OUT*)tbl: MVar) =
       t.lowset_table := ImportBitmaskTable (t, "_lowbits");
     END;
     tbl.var := t.lowset_table;
-    tbl.mvar_offset   := 0;
-    tbl.mvar_type := Type.Int32;
+    tbl.offset   := 0;
+    tbl.type := Type.Int32;
   END ImportLowSet;
 
 PROCEDURE ImportHighSet (t: T;  VAR(*OUT*)tbl: MVar) =
@@ -2562,8 +2561,8 @@ PROCEDURE ImportHighSet (t: T;  VAR(*OUT*)tbl: MVar) =
       t.highset_table := ImportBitmaskTable (t, "_highbits");
     END;
     tbl.var := t.highset_table;
-    tbl.mvar_offset   := 0;
-    tbl.mvar_type := Type.Int32;
+    tbl.offset   := 0;
+    tbl.type := Type.Int32;
   END ImportHighSet;
 
 PROCEDURE ImportBitmaskTable (t: T;  nm: TEXT): x86Var =
@@ -2637,10 +2636,10 @@ PROCEDURE DebugReg (READONLY r: Register;  wr: Wrx86.T) =
     IF (NOT TIntN.EQ(r.last_imm, TZero)) THEN
       wr.OutT ("  imm: ");  wr.OutT (TIntN.ToText (r.last_imm));
     END;
-    IF (NOT TIntN.EQ(r.lowbound, Target.Integer.minN)) THEN
+    IF (NOT TIntN.EQ(r.lowbound, TIntN.Min32)) THEN
       wr.OutT ("  lo: ");  wr.OutT (TIntN.ToText (r.lowbound));
     END;
-    IF (NOT TIntN.EQ(r.upbound, Target.Integer.maxN)) THEN
+    IF (NOT TIntN.EQ(r.upbound, TIntN.Max32)) THEN
       wr.OutT ("  hi: ");  wr.OutT (TIntN.ToText (r.upbound));
     END;
     IF (r.imm # FALSE) THEN
@@ -2657,8 +2656,8 @@ PROCEDURE DebugReg (READONLY r: Register;  wr: Wrx86.T) =
 PROCEDURE DebugMVar (READONLY v: MVar;  wr: Wrx86.T) =
   BEGIN
     wr.OutT ("{ ");  wr.VName (v.var);
-    IF (v.mvar_offset # 0) THEN  wr.OutT ("  offset: ");  wr.OutI (v.mvar_offset);  END;
-    wr.OutT ("  type: ");  wr.TName (v.mvar_type);
+    IF (v.offset # 0) THEN  wr.OutT ("  offset: ");  wr.OutI (v.offset);  END;
+    wr.OutT ("  type: ");  wr.TName (v.type);
     wr.OutT (" }");
   END DebugMVar;
 
