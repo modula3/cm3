@@ -31,7 +31,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
   BEGIN
     IF GetArgs (ce.args, w0, w1) THEN
       TWord.Xor (w0, w1, result);
-      TInt.Chop (result, Word_types[rep].bytes);
+      EVAL TInt.Extend (result, Word_types[rep].bytes, result);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;

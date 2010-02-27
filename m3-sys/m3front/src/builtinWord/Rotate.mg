@@ -65,7 +65,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     THEN
       TWord.And (w0, Word_types[rep].max, w0);
       TWord.Rotate (w0, i1, Word_types[rep].bytes, result);
-      TInt.Chop (result, Word_types[rep].bytes);
+      EVAL TInt.Extend (result, Word_types[rep].bytes, result);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;
@@ -82,7 +82,7 @@ PROCEDURE FoldL (ce: CallExpr.T): Expr.T =
     THEN
       TWord.And (w0, Word_types[rep].max, w0);
       TWord.Rotate (w0, i1, Word_types[rep].bytes, result);
-      TInt.Chop (result, Word_types[rep].bytes);
+      EVAL TInt.Extend (result, Word_types[rep].bytes, result);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;
@@ -99,7 +99,7 @@ PROCEDURE FoldR (ce: CallExpr.T): Expr.T =
     THEN
       TWord.And (w0, Word_types[rep].max, w0);
       TWord.Rotate (w0, -i1, Word_types[rep].bytes, result);
-      TInt.Chop (result, Word_types[rep].bytes);
+      EVAL TInt.Extend (result, Word_types[rep].bytes, result);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;

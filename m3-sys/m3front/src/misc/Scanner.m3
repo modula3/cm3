@@ -530,9 +530,8 @@ PROCEDURE ScanNumber () =
           Error.Msg ("illegal based LONGINT literal, zero used");
           val := TInt.Zero;
         END;
-        TInt.Chop (val, Target.Longint.bytes);
         cur.token := TK.tLONGINTCONST;
-        cur.int   := val;
+        EVAL TInt.Extend (val, Target.Longint.bytes, cur.int);
       ELSE
         IF (len = 0)
           OR NOT TWord.New (SUBARRAY (buf, 0, len), base, val)
@@ -540,9 +539,8 @@ PROCEDURE ScanNumber () =
           Error.Msg ("illegal based INTEGER literal, zero used");
           val := TInt.Zero;
         END;
-        TInt.Chop (val, Target.Integer.bytes);
         cur.token := TK.tINTEGERCONST;
-        cur.int   := val;
+        EVAL TInt.Extend (val, Target.Integer.bytes, cur.int);
       END;
 
     ELSIF (ch = '.') THEN

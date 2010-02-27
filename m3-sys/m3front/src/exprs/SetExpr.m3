@@ -650,9 +650,9 @@ PROCEDURE CompileBig (p: P;  VAR info: Type.Info): CG.Var =
 
 PROCEDURE EmitAssign (set: CG.Var;  index: INTEGER; 
                       READONLY value: Target.Int) =
-  VAR tmp := value;
+  VAR tmp: Target.Int;
   BEGIN
-    TInt.Chop (tmp, Target.Integer.bytes);
+    EVAL TInt.Extend (value, Target.Integer.bytes, tmp);
     CG.Load_integer (Target.Integer.cg_type, tmp);
     CG.Store_int (Target.Integer.cg_type, set, index * Grain);
     <* ASSERT Grain = Target.Integer.size *>
@@ -787,8 +787,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
       IF (w1 # curWord) THEN
         (* write the mask we've accumulated *)
         IF NOT TInt.EQ (curMask, TInt.Zero) THEN
-          tmp := curMask;
-          TInt.Chop (tmp, Target.Integer.bytes);
+          EVAL TInt.Extend (curMask, Target.Integer.bytes, tmp);
           CG.Init_int (offset + curWord*Target.Integer.pack,
                         Target.Integer.size, tmp, is_const);
         END;
@@ -798,12 +797,11 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
       IF (w1 # w2) THEN
         (* write the full words [w1..w2-1] *)
         TWord.Or (curMask, left [b1], tmp);
-        TInt.Chop (tmp, Target.Integer.bytes);
+        EVAL TInt.Extend (tmp, Target.Integer.bytes, tmp);
         CG.Init_int (offset + w1 * Target.Integer.pack, Target.Integer.size,
                      tmp, is_const);
         FOR i := w1 + 1 TO w2 - 1 DO
-          tmp := full;
-          TInt.Chop (tmp, Target.Integer.bytes);
+          EVAL TInt.Extend (full, Target.Integer.bytes, tmp);
           CG.Init_int (offset + i * Target.Integer.pack, Target.Integer.size,
                        tmp, is_const);
         END;
@@ -818,8 +816,7 @@ PROCEDURE GenLiteral (p: P;  offset: INTEGER;  type: Type.T;  is_const: BOOLEAN)
 
     (* write the last mask *)
     IF NOT TInt.EQ (curMask, TInt.Zero) THEN
-      tmp := curMask;
-      TInt.Chop (tmp, Target.Integer.bytes);
+      EVAL TInt.Extend (curMask, Target.Integer.bytes, tmp);
       CG.Init_int (offset + curWord * Target.Integer.pack,
                    Target.Integer.size, tmp, is_const);
     END;

@@ -151,7 +151,7 @@ PROCEDURE AddBigX (READONLY ii: Target.Int) =
     key := Sign [TInt.LT (i, TInt.Zero)];
     IF (key # 16_40) THEN
       TWord.Subtract (TInt.Zero, ii, i);
-      TInt.Chop (i, Target.Integer.bytes);
+      EVAL TInt.Extend (i, Target.Integer.bytes, i);
     END;
 
     (* extract the bytes *)

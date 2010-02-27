@@ -31,7 +31,7 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
     e := Expr.ConstValue (ce.args[0]);
     IF (e # NIL) AND IntegerExpr.Split (e, w, t) THEN
       TWord.Not (w, result);
-      TInt.Chop (result, Integer_types[rep].bytes);
+      EVAL TInt.Extend (result, Integer_types[rep].bytes, result);
       RETURN IntegerExpr.New (T, result);
     END;
     RETURN NIL;
