@@ -9,7 +9,7 @@
 MODULE Wrx86;
 
 IMPORT Wr, Thread, Text;
-IMPORT M3Buf, M3ID, M3CG, Target, TInt AS TargetInt, TFloat;
+IMPORT M3Buf, M3ID, M3CG, TIntN, Target, TFloat;
 
 FROM M3CG IMPORT Name, TypeUID;
 FROM M3CG IMPORT Var, Proc, Label, No_label;
@@ -55,7 +55,9 @@ PROCEDURE Cmd (t: T; cmd: TEXT) =
   BEGIN
     OutC (t, '\t');
     OutT (t, cmd);
-    FOR i := 0 TO 14-len DO OutC (t, ' ') END;
+    FOR i := 0 TO 14-len DO
+      OutC (t, ' ')
+    END;
     OutC (t, ' ');
     OutC (t, ' ');
   END Cmd;
@@ -63,9 +65,10 @@ PROCEDURE Cmd (t: T; cmd: TEXT) =
 PROCEDURE ZName (t: T;  n: Name) =
   BEGIN
     OutC (t, ' ');
-    IF (n = M3ID.NoID)
-      THEN OutC (t, '*');
-      ELSE OutN (t, n);
+    IF (n = M3ID.NoID) THEN
+      OutC (t, '*');
+    ELSE
+      OutN (t, n);
     END;
   END ZName;
 
@@ -130,9 +133,10 @@ PROCEDURE Bool (t: T;  b: BOOLEAN) =
 PROCEDURE Lab (t: T;  i: Label) =
   BEGIN
     OutC (t, ' ');
-    IF (i = No_label)
-      THEN OutC (t, '*');
-      ELSE OutT (t, "L."); OutI (t, i);
+    IF (i = No_label) THEN
+      OutC (t, '*');
+    ELSE
+      OutT (t, "L."); OutI (t, i);
     END;
   END Lab;
 
@@ -148,13 +152,15 @@ PROCEDURE Int (t: T;  i: INTEGER) =
     OutI (t, i);
   END Int;
 
-PROCEDURE TInt (t: T;  READONLY i: Target.Int) =
+PROCEDURE TInt (t: T;  READONLY i: Target.IntN) =
   VAR
-    buf : ARRAY [0..BITSIZE (Target.Int)] OF CHAR;
-    len := TargetInt.ToChars (i, buf);
+    buf : ARRAY [0..BITSIZE (Target.IntN)] OF CHAR;
+    len := TIntN.ToChars (i, buf);
  BEGIN
     OutC (t, ' ');
     OutS (t, SUBARRAY (buf, 0, len));
+    OutC (t, ' ');
+    OutT (t, TIntN.ToDiagnosticText(i));
   END TInt;
 
 PROCEDURE BInt (t: T;  i: INTEGER) =
@@ -165,12 +171,13 @@ PROCEDURE BInt (t: T;  i: INTEGER) =
 
 (*********
 PROCEDURE BInt (t: T;  i: INTEGER) =
-  VAR x := i MOD Target.Byte;
-      y := i DIV Target.Byte;
+  VAR x := i MOD TIntN.Byte;
+      y := i DIV TIntN.Byte;
   BEGIN
-    IF (x = 0)
-      THEN Int (t, y);
-      ELSE Int (t, y);  OutC (t, '+');  OutI (t, x);
+    IF (x = 0) THEN
+      Int (t, y);
+    ELSE
+      Int (t, y);  OutC (t, '+');  OutI (t, x);
     END;
   END BInt;
 ***************)
@@ -212,39 +219,42 @@ PROCEDURE Flush (t: T) =
     Wr.Flush (t.wr);
   END Flush;
 
+PROCEDURE IncLength (t: T; approximateIncrease: CARDINAL) =
+  BEGIN
+    INC (t.buf_len, approximateIncrease);
+    IF (t.buf_len >= 1024) OR (t.buf_len < 0) THEN
+      Flush (t)
+    END;
+  END IncLength;
+
 PROCEDURE OutC (t: T;  c: CHAR) =
   BEGIN
     M3Buf.PutChar (t.buf, c);
-    INC (t.buf_len);
-    IF (t.buf_len >= 1024) THEN Flush (t) END;
+    IncLength (t, 1);
   END OutC;
 
 PROCEDURE OutT (t: T;  txt: TEXT) =
   BEGIN
     M3Buf.PutText (t.buf, txt);
-    INC (t.buf_len, Text.Length (txt));
-    IF (t.buf_len >= 1024) THEN Flush (t) END;
+    IncLength (t, Text.Length (txt));
   END OutT;
 
 PROCEDURE OutN (t: T;  n: Name) =
   BEGIN
     M3ID.Put (t.buf, n);
-    INC (t.buf_len, 10); (* we don't really care if it's accurate *)
-    IF (t.buf_len >= 1024) THEN Flush (t) END;
+    IncLength (t, 10); (* This does not have to be accurate. *)
   END OutN;
 
 PROCEDURE OutS (t: T;  READONLY buf: ARRAY OF CHAR) =
   BEGIN
     M3Buf.PutSub (t.buf, buf);
-    INC (t.buf_len, NUMBER (buf));
-    IF (t.buf_len >= 1024) THEN Flush (t) END;
+    IncLength (t, NUMBER (buf));
   END OutS;
 
 PROCEDURE OutI  (t: T;  i: INTEGER) =
   BEGIN
     M3Buf.PutInt (t.buf, i);
-    INC (t.buf_len, 4); (* we don't really care if it's accurate *)
-    IF (t.buf_len >= 1024) THEN Flush (t) END;
+    IncLength (t, 4); (* This does not have to be accurate. *)
   END OutI;
 
 
