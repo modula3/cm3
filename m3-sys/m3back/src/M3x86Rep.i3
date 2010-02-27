@@ -29,10 +29,10 @@ TYPE OLoc = {mem, register, fstack, imm};
 TYPE
   x86Var = Var OBJECT
     tag: INTEGER;
-    type: Type;
+    var_type: Type;
     name: Name;
-    size: ByteSize;
-    align: Alignment;
+    var_size: ByteSize;
+    var_align: Alignment;
     exported := FALSE;
     seg: Seg;
     symbol: INTEGER;
@@ -56,7 +56,7 @@ END;
 TYPE
   x86Proc = Proc OBJECT
     tag: INTEGER;
-    type: Type;
+    proc_type: Type;
     name: Name;
     lev := 0;
     parent: x86Proc := NIL;
@@ -79,11 +79,11 @@ TYPE
 TYPE
   MVar = RECORD
     var: x86Var;
-    offset: ByteOffset := 0;
-    type: MType;
+    mvar_offset: ByteOffset := 0;
+    mvar_type: MType;
   END;
 
-CONST NoStore = MVar {var := NIL, type := FIRST(MType)};
+CONST NoStore = MVar {var := NIL, mvar_type := FIRST(MType)};
 
 (* If an operand requires two registers, it has parts 0 and 1.
  * etc. This is used to implement multi precision integers,
@@ -99,7 +99,7 @@ TYPE
     loc: OLoc;
     mvar: MVar := NoStore;
     reg : Regno := 0;       (* seems like it should be -1 *)
-    imm: INTEGER := 0;      (* This might change to Target.TIntN. *)
+    imm: INTEGER := 0;      (* This might change to Target.IntN. *)
     stackp: INTEGER := 0;   (* this field might go away; seems like it should be -1 *)
     opcode := FALSE;
   END;
@@ -108,7 +108,7 @@ TYPE
     loc: OLoc;
     mvar: MVar := NoStore;
     reg := ARRAY OperandPart OF Regno{0, ..}; (* seems like it should be -1 *)
-    imm := TIntN.Zero;
+    imm: Target.IntN := TIntN.Zero;
     optype: Type := Type.Void;
     stackp: INTEGER := 0; (* seems like it should be -1 *)
     opcode := FALSE;
@@ -137,12 +137,11 @@ CONST         AllRegisters = RegSet{EAX, ECX, EDX, EBX,
                                     (*ESP,*) (*EBP,*) ESI, EDI};
 CONST RegistersForByteOperations = RegSet{EAX, EBX, ECX, EDX};
 
-CONST Unsigned = SET OF Type{Type.Word32, Type.Word64};
-CONST Signed = SET OF Type{Type.Int32, Type.Int64};
-CONST Types64 = SET OF Type{Type.Int64, Type.Word64};
-
+PROCEDURE IsWord (t: Type): BOOLEAN; (* IsUnsigned *)
+PROCEDURE IsInt (t: Type): BOOLEAN;  (* IsSigned *)
+PROCEDURE Is64 (t: Type): BOOLEAN;
 PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize;
-PROCEDURE SplitImm(type: Type; READONLY imm: TIntN.T; VAR immA: ARRAY OperandPart OF TIntN.T): OperandSize;
+PROCEDURE SplitImm(type: Type; READONLY imm: Target.IntN; VAR immA: ARRAY OperandPart OF Target.IntN): OperandSize;
 PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize;
 PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize;
 PROCEDURE GetTypeSize(type: Type): OperandSize;
@@ -152,11 +151,11 @@ CONST TZero = TIntN.Zero;
 CONST UnsignedType = ARRAY IType OF IType { Type.Word32, Type.Word32,
                                             Type.Word64, Type.Word64 };
 
-CONST MaximumShift = ARRAY IType OF TIntN.T { TIntN.ThirtyOne, TIntN.ThirtyOne,
-                                             TIntN.SixtyThree, TIntN.SixtyThree };
+CONST MaximumShift = ARRAY IType OF Target.IntN { TIntN.ThirtyOne, TIntN.ThirtyOne,
+                                                  TIntN.SixtyThree, TIntN.SixtyThree };
 
-CONST MinimumShift = ARRAY IType OF TIntN.T { TIntN.MThirtyOne, TIntN.MThirtyOne,
-                                             TIntN.MSixtyThree, TIntN.MSixtyThree };
+CONST MinimumShift = ARRAY IType OF Target.IntN { TIntN.MThirtyOne, TIntN.MThirtyOne,
+                                                  TIntN.MSixtyThree, TIntN.MSixtyThree };
 
 CONST BitCountMask = MaximumShift;
  
