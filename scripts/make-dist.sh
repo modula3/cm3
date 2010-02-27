@@ -27,7 +27,8 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
-DS=${DS:-"pre-RC4"}; export DS
+#DS=${DS:-"RC4"}; export DS
+DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
@@ -57,8 +58,8 @@ export M3_PORTABLE_RUN_PATH
 
 ERROR_INDICATORS='version stamp mismatch|bad version stamps|Fatal Error|package build failed|quake runtime error|collect2: ld returned|librarian failed building'
 if [ -z "${NOBUILD}" ]; then
-  echo DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
-  DIST=min  NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" 2>&1 | tee build-min.log
+  echo DIST=min NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh"
+  DIST=min NOCLEAN=yes SYSINFO_DONE="" "$ROOT/scripts/make-bin-dist-min.sh" 2>&1 | tee build-min.log
   if egrep "${ERROR_INDICATORS}" build-min.log; then
     echo "building cm3-bin-min archive failed" 1>&2
     exit 1
@@ -75,7 +76,7 @@ if [ -z "${NOBUILD}" ]; then
   echo PATH="${INSTALLROOT}/bin:${PATH}"
   PATH="${INSTALLROOT}/bin:${PATH}"
   echo "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable
-  "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable 2>&1 |tee build-all.log
+  "$ROOT/scripts/do-cm3-all.sh" buildship -no-m3ship-resolution -group-writable 2>&1 | tee build-all.log
   if egrep "${ERROR_INDICATORS}" build-all.log; then
     echo "errors during build-all; some packages will be missing" 1>&2
   fi
@@ -84,7 +85,7 @@ fi
 if [ `uname` = 'Interix' ]; then
   PKG_COLLECTIONS="devlib m3devtool webdev obliq caltech-parser tool math game core"
 else
-  PKG_COLLECTIONS="devlib m3devtool m3gdb webdev gui anim database cvsup obliq juno caltech-parser demo tool math game core min"
+  PKG_COLLECTIONS="min core devlib gui webdev m3gdb m3devtool anim database cvsup obliq juno caltech-parser demo tool math game"
 fi
 
 DESC_devlib='<p>
@@ -290,7 +291,15 @@ for c in ${PKG_COLLECTIONS}; do
   <body>
     <h1>CM3 Package Collection $c</h1>
 EOF
-    echo "<p>This collections contains the following packages:</p>"
+    if [ -r ${COLLDEPS} ]; then
+      CHEADER=`${EGREP} -C 5 "^collection $c" ${COLLDEPS} | tail -5`
+      echo "<h2 style=\"text-align:left\">Dependencies</h2>"
+      echo "<pre>${CHEADER}</pre>"
+    fi
+    echo "<h2 style=\"text-align:left\">Description</h2>"
+    ddd=${ddd:=DESC_${c}}
+    echo ${ddd}
+    echo "<h2 style=\"text-align:left\">Package Details</h2>"
     echo "<ul>"
     for p in ${PKGS}; do
       b=`basename ${p}`
@@ -342,6 +351,9 @@ EOF
 done
 
 set -x
+
+# cleanup after previous failed runs of package making
+rm -rf $STAGE/usr/local/cm3
 
 if type python; then
   if [ "x$TARGET" = "xNT386" ]; then
