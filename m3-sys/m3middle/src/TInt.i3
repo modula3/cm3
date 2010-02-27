@@ -97,6 +97,9 @@ PROCEDURE ToBytes (READONLY i: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL;
    which when sign-extended equal 'i'.  Returns the number of
    significant bytes in the result.  Returns 0 if 'buf' is too short. *)
 
+PROCEDURE Chop (VAR i: Int;  n: CARDINAL);
+(* Extract the low-order 'n' bytes of 'i', sign extended. *)
+
 PROCEDURE Extend (READONLY i: Int;  n: CARDINAL;  VAR r: Int): BOOLEAN;
 (* sign-extends from the low-order 'n' bytes of 'i'.
    Returns TRUE if 'i' has at most 'n' significant bytes, FALSE otherwise. *)
