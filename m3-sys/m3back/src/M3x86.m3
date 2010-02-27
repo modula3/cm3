@@ -253,6 +253,7 @@ PROCEDURE New (logfile: Wr.T; obj: M3ObjFile.T): M3CG.T =
     IntType[Type. Int64] := Target.Int64;
     IntType[Type.Word32] := Target.Word32;
     IntType[Type.Word64] := Target.Word64;
+    TIntN.Init();
 
     IF logfile # NIL THEN
       u.debug := TRUE;
@@ -500,8 +501,8 @@ PROCEDURE declare_subrange (u: U; t, domain: TypeUID;
       u.wr.Cmd  ("declare_subrange");
       u.wr.Tipe (t);
       u.wr.Tipe (domain);
-      u.wr.TInt (TIntN.FromTargetInt(min, NUMBER(min)));
-      u.wr.TInt (TIntN.FromTargetInt(min, NUMBER(max)));
+      u.wr.TInt (TIntN.FromTargetInt(min, NUMBER(min))); (* What about s for size? *)
+      u.wr.TInt (TIntN.FromTargetInt(max, NUMBER(max))); (* What about s for size? *)
       u.wr.BInt (s);
       u.wr.NL   ();
     END
@@ -1362,7 +1363,7 @@ PROCEDURE begin_procedure (u: U;  p: Proc) =
     u.cg.pushOp(u.cg.reg[EBP]);
     u.cg.movOp(u.cg.reg[EBP], u.cg.reg[ESP]);
 
-    u.cg.immOp(Op.oSUB, u.cg.reg[ESP], Target.Word16.maxN);
+    u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TWordN.Max16);
     u.procframe_ptr := u.obj.cursor(Seg.Text) - 4;
 
     u.cg.pushOp(u.cg.reg[EBX]);
@@ -2133,7 +2134,7 @@ PROCEDURE set_member (u: U;  s: ByteSize;  t: IType) =
          stack1 = u.vstack.pos(1, "set_singleton") DO
 
       (* Better would be:
-      IF u.vstack.loc(stack0) # OLoc.imm OR TWordN.GT(u.vstack.op(stack0).imm, Target.Word8.maxN) THEN
+      IF u.vstack.loc(stack0) # OLoc.imm OR TWordN.GT(u.vstack.op(stack0).imm, TWordN.Max8) THEN
         u.vstack.find(stack0, Force.anyreg);
       ELSE
         u.vstack.find(stack0, Force.any);
@@ -2254,7 +2255,7 @@ PROCEDURE set_singleton (u: U;  s: ByteSize;  t: IType) =
 
       <* ASSERT u.vstack.loc(stack0) # OLoc.imm *>
 
-      (*IF u.vstack.loc(stack0) # OLoc.imm OR TWordN.GT(u.vstack.op(stack0).imm, Target.Word8.maxN) THEN*)
+      (*IF u.vstack.loc(stack0) # OLoc.imm OR TWordN.GT(u.vstack.op(stack0).imm, TWordN.Max8) THEN*)
         u.vstack.find(stack0, Force.anyreg);
       (*ELSE*)
         (*u.vstack.find(stack0, Force.any);*)
@@ -2270,7 +2271,7 @@ PROCEDURE set_singleton (u: U;  s: ByteSize;  t: IType) =
 
 PROCEDURE not (u: U;  t: IType) =
   (* s0.t := Word.Not (s0.t) *)
-  VAR not: Target.IntN;
+  VAR not: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("not");
@@ -2345,8 +2346,8 @@ PROCEDURE shift (u: U;  t: IType) =
 
 PROCEDURE shift_left   (u: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
-  VAR shiftResult: Target.IntN;
-      and: Target.IntN;
+  VAR shiftResult: TIntN.T;
+      and: TIntN.T;
       shiftCount: INTEGER;
   BEGIN
     IF u.debug THEN
@@ -2407,8 +2408,8 @@ PROCEDURE shift_left   (u: U;  t: IType) =
 PROCEDURE shift_right  (u: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, -s0.t) ; pop *)
   VAR shiftCount: INTEGER;
-      shift: Target.IntN;
-      and: Target.IntN;
+      shift: TIntN.T;
+      and: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("shift_right");
@@ -2485,8 +2486,8 @@ PROCEDURE rotate (u: U;  t: IType) =
 PROCEDURE rotate_left  (u: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, s0.t) ; pop *)
   VAR rotateCount: INTEGER;
-      rotate: Target.IntN;
-      and: Target.IntN;
+      rotate: TIntN.T;
+      and: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("rotate_left");
@@ -2538,8 +2539,8 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
 PROCEDURE rotate_right (u: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, -s0.t) ; pop *)
   VAR rotateCount: INTEGER;
-      rotate: Target.IntN;
-      and: Target.IntN;
+      rotate: TIntN.T;
+      and: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("rotate_right");
@@ -2773,7 +2774,7 @@ PROCEDURE copy_n (u: U;  z: IType;  t: MType;  overlap: BOOLEAN) =
   (* Mem[s2.A:s0.z] := Mem[s1.A:s0.z]; pop(3)*)
   CONST Mover = ARRAY BOOLEAN OF Builtin { Builtin.memcpy, Builtin.memmove };
   VAR n: INTEGER;  mover := Mover [overlap];
-      shift: Target.IntN;
+      shift: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("copy_n");
@@ -2848,7 +2849,7 @@ PROCEDURE inline_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
   END inline_copy;
 
 PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
-  VAR tn, tNMinus1, tsize, tint: Target.IntN;
+  VAR tn, tNMinus1, tsize, tint: TIntN.T;
   BEGIN
     u.vstack.corrupt(ECX, operandPart := 0);
     u.cg.movImmI(u.cg.reg[ECX], n);
@@ -2964,7 +2965,7 @@ PROCEDURE copy (u: U;  n: INTEGER;  t: MType;  overlap: BOOLEAN) =
 PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
   (* Mem[s1.A:s0.z] := 0; pop(2) *)
   VAR n: INTEGER;
-      shift: Target.IntN;
+      shift: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("zero_n");
@@ -3298,7 +3299,7 @@ PROCEDURE check_hi (u: U;  t: IType;  READONLY j: Target.Int;  code: RuntimeErro
 
 PROCEDURE check_range (u: U;  t: IType;  READONLY xa, xb: Target.Int;  code: RuntimeError) =
   (* IF (s0.t < a) OR (b < s0.t) THEN abort(code) *)
-  VAR lo, hi: Target.IntN;
+  VAR lo, hi: TIntN.T;
       safelab, outrange: Label;
       a := TIntN.FromTargetInt(xa, CG_Bytes[t]);
       b := TIntN.FromTargetInt(xb, CG_Bytes[t]);
@@ -3501,7 +3502,7 @@ PROCEDURE makereportproc (u: U) =
 
 PROCEDURE add_offset (u: U; i: INTEGER) =
   (* s0.A := s0.A + i *)
-  VAR ti, imm_plus_i: Target.IntN;
+  VAR ti, imm_plus_i: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("add_offset");
@@ -3722,7 +3723,7 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
    * NOTE that we implement call by value, the struct is
    * copied to temporary space on the machine stack
    *)
-  VAR ts: Target.IntN;
+  VAR ts: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("pop_struct");
@@ -3840,9 +3841,9 @@ PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): 
     RETURN 2;
   END SplitMVar;
 
-PROCEDURE SplitImm(type: Type; READONLY imm: Target.IntN; VAR immA: ARRAY OperandPart OF Target.IntN): OperandSize =
+PROCEDURE SplitImm(type: Type; READONLY imm: TIntN.T; VAR immA: ARRAY OperandPart OF TIntN.T): OperandSize =
   BEGIN
-    TWordN.And(imm, Target.Word32.maxN, immA[0]);
+    TWordN.And(imm, TWordN.Max32, immA[0]);
     TWordN.RightShift(imm, 32, immA[1]);
     RETURN GetTypeSize(type);
   END SplitImm;
@@ -3861,7 +3862,7 @@ PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize =
 PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize =
   VAR type := op.optype;
       mvarA: ARRAY OperandPart OF MVar;
-      immA: ARRAY OperandPart OF Target.IntN;
+      immA: ARRAY OperandPart OF TIntN.T;
   BEGIN
     opA[0] := op;
 
@@ -3898,7 +3899,7 @@ PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Opera
 
 PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
   VAR realproc := NARROW(p, x86Proc);
-      call_param_size: Target.IntN;
+      call_param_size: TIntN.T;
   (* call the procedure identified by block b.  The procedure
      returns a value of type t. *)
   BEGIN
@@ -3959,7 +3960,7 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
 PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
   (* call the procedure whose address is in s0.A and pop s0.  The
      procedure returns a value of type t. *)
-  VAR call_param_size: Target.IntN;
+  VAR call_param_size: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("call_indirect");
@@ -4035,11 +4036,11 @@ PROCEDURE FixReturnValue (u: U;  t: Type): Type =
         t := Type.Int32;
 
     | Type.Word8 => (* 8-bit unsigned integer *)
-        u.cg.immOp (Op.oAND, u.cg.reg[EAX], Target.Word8.maxN);  (* EAX &= 16_FF *)
+        u.cg.immOp (Op.oAND, u.cg.reg[EAX], TWordN.Max8);  (* EAX &= 16_FF *)
         t := Type.Word32;
 
     | Type.Word16 => (* 16-bit unsigned integer *)
-        u.cg.immOp (Op.oAND, u.cg.reg[EAX], Target.Word16.maxN);  (* EAX &= 16_FFFF *)
+        u.cg.immOp (Op.oAND, u.cg.reg[EAX], TWordN.Max16);  (* EAX &= 16_FFFF *)
         t := Type.Word32;
 
     ELSE (* value is ok *)

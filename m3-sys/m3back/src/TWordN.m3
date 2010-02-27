@@ -1,14 +1,24 @@
+(* Copyright (C) 1993, Digital Equipment Corporation           *)
+(* All rights reserved.                                        *)
+(* See the file COPYRIGHT for a full description.              *)
+(*                                                             *)
+(* File: TWordN.m3                                             *)
+(* Last Modified On Fri Nov 19 09:32:56 PST 1993 By kalsow     *)
+(*      Modified On Thu May 20 08:46:32 PDT 1993 By muller     *)
+
 MODULE TWordN; (* also known as TWord *)
 
-IMPORT TWord, TInt;
+IMPORT TWord, TInt, TIntN;
 FROM Target IMPORT Int;
+TYPE T = TIntN.T;
 
 (*------------------------------------------- unsigned integer operations ---*)
 
 PROCEDURE ToInt(READONLY a: T): Int =
   VAR b: Int;
   BEGIN
-   EVAL TWord.Truncate(a.x, a.n, b);
+   b:= a.x;
+   TIntN.ZeroExtend(b, a.n);
    RETURN b;
   END ToInt;
 
@@ -17,7 +27,7 @@ PROCEDURE FromInt(VAR a: T; n: CARDINAL) =
     <*ASSERT n # 0*>
     a.n := n;
     (* overflow always ignored *)
-    EVAL TWord.Truncate(a.x, n, a.x);
+    EVAL TIntN.UnsignedTruncate(a.x, n);
   END FromInt;
 
 PROCEDURE Add (READONLY a, b: T;  VAR r: T) =

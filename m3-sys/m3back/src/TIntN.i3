@@ -1,4 +1,12 @@
-INTERFACE TIntN; (* also known as TInt *)
+(* Copyright (C) 1993, Digital Equipment Corporation           *)
+(* All rights reserved.                                        *)
+(* See the file COPYRIGHT for a full description.              *)
+(*                                                             *)
+(* File: TIntN.i3                                              *)
+(* Last Modified On Thu Mar 10 13:42:53 PST 1994 By kalsow     *)
+(*      Modified On Thu May 20 08:20:38 PDT 1993 By muller     *)
+
+INTERFACE TIntN;
 
 (*  Modula-3 target description
 
@@ -10,13 +18,15 @@ INTERFACE TIntN; (* also known as TInt *)
     otherwise they return FALSE.
 *)
 
-IMPORT Target, TInt;
+IMPORT TInt;
 FROM Target IMPORT Int;
 
-TYPE T = (* OPAQUE *) RECORD
-  n: CARDINAL := NUMBER (Int);    (* only bytes [0..n-1] contain valid bits *)
-  x: Int;                         (* default is Zero *)
-END;
+TYPE
+ (* Int but with user-specified precision *)
+  T = (* OPAQUE *) RECORD
+    n: CARDINAL := NUMBER (Int);    (* only bytes [0..n-1] contain valid bits *)
+    x: Int;                         (* default is Zero *)
+  END;
 
 CONST
   Zero      = T{x := TInt.Zero};
@@ -25,6 +35,8 @@ CONST
 
   Min8      = T{x := TInt.Min8};
   Max8      = T{x := TInt.Max8};
+  Min16     = T{x := TInt.Min16};
+  Max16     = T{x := TInt.Max16};
   Min32     = T{x := TInt.Min32};
   Max32     = T{x := TInt.Max32};
   Min64     = T{x := TInt.Min64};
@@ -45,16 +57,22 @@ CONST
   MThirtyOne = T{x := Int{16_E1,16_FF,..}};
   MSixtyThree= T{x := Int{16_C1,16_FF,..}};
 
-PROCEDURE FromTInt (READONLY x: Int;  n: CARDINAL;  VAR i: T): BOOLEAN;
+PROCEDURE SignExtend(VAR a: Int; n: CARDINAL);
+(* sign extend from n to the precision of Int *)
+
+PROCEDURE SignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN;
+(* truncate to n bytes; return FALSE if the value did not previously fit *)
+
+PROCEDURE ZeroExtend(VAR a: Int; n: CARDINAL);
+(* zero extend from n bytes to the precision of Int *)
+
+PROCEDURE UnsignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN;
+(* truncate to n bytes; return FALSE if the value did not previously fit *)
+
+PROCEDURE FromHostInteger (x: INTEGER;  n: CARDINAL;  VAR i: T): BOOLEAN;
 (* converts a host integer 'x' to a target integer 'i' *)
 
-PROCEDURE ToTInt (READONLY i: T): Int;
-(* converts a target integer 'i' to a host integer 'x' *)
-
-PROCEDURE FromInt (x: INTEGER;  n: CARDINAL;  VAR i: T): BOOLEAN;
-(* converts a host integer 'x' to a target integer 'i' *)
-
-PROCEDURE ToInt (READONLY i: T;  VAR x: INTEGER): BOOLEAN;
+PROCEDURE ToHostInteger (READONLY i: T;  VAR x: INTEGER): BOOLEAN;
 (* converts a target integer 'i' to a host integer 'x' *)
 
 PROCEDURE Abs (READONLY a: T;  VAR r: T): BOOLEAN;
@@ -103,6 +121,13 @@ PROCEDURE ToChars (READONLY i: T;  VAR buf: ARRAY OF CHAR): INTEGER;
 (* converts 'i' to a printable string in 'buf'.  Returns the
    number of characters in the string.  Returns -1 if 'buf' is too short. *)
 
+PROCEDURE FromTargetInt (READONLY i: Int; byteSize: CARDINAL): T;
+
 PROCEDURE ToDiagnosticText(a: T): TEXT;
+
+VAR (*CONST*) TargetIntegerMin: T;
+VAR (*CONST*) TargetIntegerMax: T;
+
+PROCEDURE Init();
 
 END TIntN.

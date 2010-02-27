@@ -99,7 +99,7 @@ TYPE
     loc: OLoc;
     mvar: MVar := NoStore;
     reg : Regno := 0;       (* seems like it should be -1 *)
-    imm: INTEGER := 0;      (* This might change to Target.IntN. *)
+    imm: INTEGER := 0;      (* This might change to TIntN.T. *)
     stackp: INTEGER := 0;   (* this field might go away; seems like it should be -1 *)
     opcode := FALSE;
   END;
@@ -108,7 +108,7 @@ TYPE
     loc: OLoc;
     mvar: MVar := NoStore;
     reg := ARRAY OperandPart OF Regno{0, ..}; (* seems like it should be -1 *)
-    imm: Target.IntN := TIntN.Zero;
+    imm: TIntN.T := TIntN.Zero;
     optype: Type := Type.Void;
     stackp: INTEGER := 0; (* seems like it should be -1 *)
     opcode := FALSE;
@@ -141,7 +141,7 @@ PROCEDURE IsWord (t: Type): BOOLEAN; (* IsUnsigned *)
 PROCEDURE IsInt (t: Type): BOOLEAN;  (* IsSigned *)
 PROCEDURE Is64 (t: Type): BOOLEAN;
 PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize;
-PROCEDURE SplitImm(type: Type; READONLY imm: Target.IntN; VAR immA: ARRAY OperandPart OF Target.IntN): OperandSize;
+PROCEDURE SplitImm(type: Type; READONLY imm: TIntN.T; VAR immA: ARRAY OperandPart OF TIntN.T): OperandSize;
 PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize;
 PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize;
 PROCEDURE GetTypeSize(type: Type): OperandSize;
@@ -151,11 +151,11 @@ CONST TZero = TIntN.Zero;
 CONST UnsignedType = ARRAY IType OF IType { Type.Word32, Type.Word32,
                                             Type.Word64, Type.Word64 };
 
-CONST MaximumShift = ARRAY IType OF Target.IntN { TIntN.ThirtyOne, TIntN.ThirtyOne,
-                                                  TIntN.SixtyThree, TIntN.SixtyThree };
+CONST MaximumShift = ARRAY IType OF TIntN.T { TIntN.ThirtyOne, TIntN.ThirtyOne,
+                                              TIntN.SixtyThree, TIntN.SixtyThree };
 
-CONST MinimumShift = ARRAY IType OF Target.IntN { TIntN.MThirtyOne, TIntN.MThirtyOne,
-                                                  TIntN.MSixtyThree, TIntN.MSixtyThree };
+CONST MinimumShift = ARRAY IType OF TIntN.T { TIntN.MThirtyOne, TIntN.MThirtyOne,
+                                              TIntN.MSixtyThree, TIntN.MSixtyThree };
 
 CONST BitCountMask = MaximumShift;
  

@@ -33,7 +33,7 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         vstacklimit   := 0;
         reguse        : ARRAY [0 .. NRegs] OF Register;
         current_proc  : x86Proc;
-        rmode         : ARRAY FlToInt OF Target.IntN;
+        rmode         : ARRAY FlToInt OF TIntN.T;
         lowset_table  : x86Var;
         highset_table : x86Var;
       OVERRIDES
@@ -102,9 +102,9 @@ TYPE
   Register = RECORD
     stackp     : INTEGER := -1;
     last_store : MVar    := NoStore;
-    last_imm   : Target.IntN := TZero;
-    lowbound   : Target.IntN;
-    upbound    : Target.IntN;
+    last_imm   : TIntN.T := TZero;
+    lowbound   : TIntN.T;
+    upbound    : TIntN.T;
     imm        : BOOLEAN := FALSE;
     locked     : BOOLEAN := FALSE;
     non_nil    : BOOLEAN := FALSE;
@@ -113,7 +113,10 @@ TYPE
 
 PROCEDURE InitRegister(locked: BOOLEAN := FALSE):Register =
 BEGIN
-  RETURN Register { locked := locked, lowbound := Target.Integer.minN, upbound := Target.Integer.maxN };
+  RETURN Register { locked := locked,
+                    (* BUG? Upbound/lowbound should adapt to the type? *)
+                    lowbound := TIntN.TargetIntegerMin,
+                     upbound := TIntN.TargetIntegerMax};
 END InitRegister;
 
 (*-------------------------------------------- register handling routines ---*)
@@ -558,7 +561,7 @@ PROCEDURE inreg (t: T; READONLY v: MVar; set: RegSet:= RegSet {}): Regno =
     RETURN bestreg;
   END inreg;
 
-PROCEDURE immreg (t: T; READONLY imm: Target.IntN; set: RegSet:= RegSet {}): Regno =
+PROCEDURE immreg (t: T; READONLY imm: TIntN.T; set: RegSet:= RegSet {}): Regno =
   VAR minprec := HighPrec * HighPrec;
       prec := 0;
       bestreg: Regno := -1;
@@ -736,7 +739,7 @@ PROCEDURE set_mvar (t: T; stackp: INTEGER; READONLY mvar: MVar) =
     t.vstack[stackp].mvar := mvar;
   END set_mvar;
 
-PROCEDURE set_imm (t: T; stackp: INTEGER; READONLY imm: Target.IntN) =
+PROCEDURE set_imm (t: T; stackp: INTEGER; READONLY imm: TIntN.T) =
   BEGIN
     t.vstack[stackp].loc := OLoc.imm;
     t.vstack[stackp].imm := imm;
@@ -764,7 +767,7 @@ PROCEDURE pos (t: T; depth: INTEGER; place: TEXT): INTEGER =
     RETURN -1;
   END pos;
 
-PROCEDURE pushimmT (t: T; imm: Target.IntN; type: Type) =
+PROCEDURE pushimmT (t: T; imm: TIntN.T; type: Type) =
   BEGIN
     maybe_expand_stack(t);
 
@@ -779,7 +782,7 @@ PROCEDURE pushimmT (t: T; imm: Target.IntN; type: Type) =
   END pushimmT;
 
 PROCEDURE pushimmI (t: T; immI: INTEGER; type: Type) =
-  VAR immT: Target.IntN;
+  VAR immT: TIntN.T;
   BEGIN
     IF NOT TIntN.FromHostInteger(immI, Target.Integer.bytes, immT) THEN
       t.Err("pushimmI: unable to convert to target integer");
@@ -967,7 +970,7 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
   END pop;
 
 PROCEDURE doloadaddress (t: T; v: x86Var; o: ByteOffset) =
-  VAR to, tvoffset, ti: Target.IntN;
+  VAR to, tvoffset, ti: TIntN.T;
   BEGIN
     unlock(t);
     pushnew(t, Type.Addr, Force.anyreg);
@@ -1315,7 +1318,7 @@ PROCEDURE domod (t: T; a, b: Sign) =
     END
   END domod;
 
-PROCEDURE doimm (t: T; op: Op; READONLY imm: Target.IntN; overwritesdest: BOOLEAN) =
+PROCEDURE doimm (t: T; op: Op; READONLY imm: TIntN.T; overwritesdest: BOOLEAN) =
   BEGIN
     unlock(t);
 
@@ -1324,7 +1327,7 @@ PROCEDURE doimm (t: T; op: Op; READONLY imm: Target.IntN; overwritesdest: BOOLEA
       IF (stop0.loc = OLoc.mem AND
          ((overwritesdest AND NOT stop0.mvar.var.stack_temp) OR
           CG_Bytes[stop0.mvar.mvar_type] = 2 OR
-          (CG_Bytes[stop0.mvar.mvar_type] = 1 AND (TIntN.GT(imm, Target.Int8.maxN) OR TIntN.LT(imm, Target.Int8.minN)))))
+          (CG_Bytes[stop0.mvar.mvar_type] = 1 AND (TIntN.GT(imm, TIntN.Max8) OR TIntN.LT(imm, TIntN.Min8)))))
          OR stop0.loc = OLoc.imm THEN
         find(t, stack0, Force.anyreg);
       ELSE
@@ -1342,7 +1345,7 @@ PROCEDURE doimm (t: T; op: Op; READONLY imm: Target.IntN; overwritesdest: BOOLEA
   END doimm;
 
 PROCEDURE doneg (t: T) =
-  VAR neg: Target.IntN;
+  VAR neg: TIntN.T;
   BEGIN
     unlock(t);
     WITH stack0 = pos(t, 0, "doneg"),
@@ -1401,8 +1404,8 @@ PROCEDURE doabs (t: T) =
 
 PROCEDURE doshift (t: T; type: IType): BOOLEAN =
   VAR ovflshift, leftlab, endlab: Label;
-      tShiftCount: Target.IntN;
-      shiftResult: Target.IntN;
+      tShiftCount: TIntN.T;
+      shiftResult: TIntN.T;
       shiftCount: INTEGER;
       is64 := Is64(type);
   BEGIN
@@ -1672,10 +1675,11 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
   END doextract;
 
 PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
-  VAR tn, t32MinusN, andval: Target.IntN;
+  VAR tn, t32MinusN, andval: TIntN.T;
       int: INTEGER;
       uint_type := IntType[UnsignedType[type]];
       is64 := Is64(type);
+      max := TIntN.T{n := NUMBER(Target.Int), x := uint_type.max};
   BEGIN
 
     unlock(t);
@@ -1728,7 +1732,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
         t.cg.unOp(Op.oSHR, stop1);
 
         IF n < uint_type.size THEN
-          TWordN.Shift(uint_type.maxN, n - uint_type.size, andval);
+          TWordN.Shift(max, n - uint_type.size, andval);
           t.cg.immOp(Op.oAND, stop1, andval);
         END
       END;
@@ -1741,7 +1745,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
   END doextract_n;
 
 PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEAN =
-  VAR andval, tint: Target.IntN;
+  VAR andval, tint: TIntN.T;
       is64 := Is64(type);
   BEGIN
 
@@ -1755,13 +1759,13 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
 
       IF stop0.loc = OLoc.imm THEN
         TWordN.Shift(stop0.imm, -m, stop0.imm);
-        TWordN.Shift(Target.Word32.maxN, n - 32, tint);
+        TWordN.Shift(TWordN.Max32, n - 32, tint);
         TWordN.And(stop0.imm, tint, stop0.imm);
         IF sign THEN
           TWordN.Shift(TIntN.One, n - 1, tint);
           TWordN.And(stop0.imm, tint, tint);
           IF TIntN.NE(tint, TZero) THEN
-            TWordN.Shift(Target.Word32.maxN, n, tint);
+            TWordN.Shift(TWordN.Max32, n, tint);
             TWordN.Or(stop0.imm, tint, stop0.imm);
           END;
         END;
@@ -1786,7 +1790,7 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
       ELSE
         find(t, stack0, Force.anyreg);
         IF (m + n) < 32 THEN
-          TWordN.Shift(Target.Word32.maxN, m + n - 32, andval);
+          TWordN.Shift(TWordN.Max32, m + n - 32, andval);
           t.cg.immOp(Op.oAND, stop0, andval);
         END;
 
@@ -1807,7 +1811,7 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
 PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
   VAR maskreg: Regno;  tbl: MVar;
       int: INTEGER;
-      tint: Target.IntN;
+      tint: TIntN.T;
       is64 := Is64(type);
   BEGIN
 
@@ -1875,7 +1879,7 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
         IF NOT TIntN.ToHostInteger(stop1.imm, int) THEN
           t.Err("failed to convert stop1.imm to host integer");
         END;
-        TWordN.Shift(Target.Word32.maxN, int, tint);
+        TWordN.Shift(TWordN.Max32, int, tint);
         t.cg.immOp(Op.oXOR, t.cg.reg[maskreg], tint);
       ELSE
         ImportHighSet (t, tbl);
@@ -1897,7 +1901,7 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
 PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
   VAR tbl: MVar;  maskreg: Regno;
       m: INTEGER;
-      tint: Target.IntN;
+      tint: TIntN.T;
       is64 := Is64(type);
   BEGIN
 
@@ -1933,7 +1937,7 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
       corrupt(t, maskreg, operandPart := 0);
 
       IF n # 32 THEN
-        TWordN.Shift(Target.Word32.maxN, n - 32, tint);
+        TWordN.Shift(TWordN.Max32, n - 32, tint);
         t.cg.immOp(Op.oAND, stop1, tint);
       END;
 
@@ -1963,9 +1967,10 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
   END doinsert_n;
   
 PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
-  VAR tint_m, mask_m, mask_m_n, mask: Target.IntN;
+  VAR tint_m, mask_m, mask_m_n, mask: TIntN.T;
       uint_type := IntType[UnsignedType[type]];
       is64 := Is64(type);
+      max := TIntN.T{n := NUMBER(Target.Int), x := uint_type.max};
   BEGIN
 
     unlock(t);
@@ -1987,7 +1992,7 @@ PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
         find(t, stack1, Force.anyreg);
       END;
 
-      TWordN.Shift(uint_type.maxN, n - uint_type.size, mask);
+      TWordN.Shift(max, n - uint_type.size, mask);
 
       IF stop0.loc = OLoc.imm THEN
         TWordN.And(stop0.imm, mask, stop0.imm);
@@ -2005,11 +2010,11 @@ PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
         END
       END;
 
-      TWordN.Shift(uint_type.maxN, m, mask_m);
-      TWordN.Shift(uint_type.maxN, m + n - uint_type.size, mask_m_n);
+      TWordN.Shift(max, m, mask_m);
+      TWordN.Shift(max, m + n - uint_type.size, mask_m_n);
       TWordN.Xor(mask_m, mask_m_n, mask);
 
-      IF TWordN.NE(mask, uint_type.maxN) THEN
+      IF TWordN.NE(mask, max) THEN
         IF stop1.loc = OLoc.imm THEN
           TWordN.And(stop1.imm, mask, stop1.imm);
         ELSE
@@ -2197,9 +2202,9 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
 PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
   VAR imsize: INTEGER;
       muldest: Regno;
-      tsize: Target.IntN;
-      tshift: Target.IntN;
-      tint: Target.IntN;
+      tsize: TIntN.T;
+      tshift: TIntN.T;
+      tint: TIntN.T;
   BEGIN
     unlock(t);
     WITH stack0 = pos(t, 0, "doindex_address"),
@@ -2433,8 +2438,9 @@ PROCEDURE newdest (t: T; READONLY op: Operand) =
       FOR i := 0 TO GetTypeSize(op.optype) - 1 DO
         WITH z = t.reguse[op.reg[i]] DO
           z.last_store := NoStore;
-          z.upbound    := Target.Integer.maxN;
-          z.lowbound   := Target.Integer.minN;
+          (* BUG? Upbound/lowbound should adapt to the type? *)
+          z.upbound    := TIntN.TargetIntegerMax;
+          z.lowbound   := TIntN.TargetIntegerMin;
           z.imm        := FALSE;
           z.non_nil    := FALSE;
         END;
@@ -2488,22 +2494,22 @@ PROCEDURE reg (t: T; stackp: INTEGER): Regno =
     RETURN t.vstack[stackp].reg[0];
   END reg;
 
-PROCEDURE lower (t: T; reg: Regno): Target.IntN =
+PROCEDURE lower (t: T; reg: Regno): TIntN.T =
   BEGIN
     RETURN t.reguse[reg].lowbound;
   END lower;
 
-PROCEDURE upper (t: T; reg: Regno): Target.IntN =
+PROCEDURE upper (t: T; reg: Regno): TIntN.T =
   BEGIN
     RETURN t.reguse[reg].upbound;
   END upper;
 
-PROCEDURE set_lower (t: T; reg: Regno; newlow: Target.IntN) =
+PROCEDURE set_lower (t: T; reg: Regno; newlow: TIntN.T) =
   BEGIN
     t.reguse[reg].lowbound := newlow;
   END set_lower;
 
-PROCEDURE set_upper (t: T; reg: Regno; newup: Target.IntN) =
+PROCEDURE set_upper (t: T; reg: Regno; newup: TIntN.T) =
   BEGIN
     t.reguse[reg].upbound := newup;
   END set_upper;
@@ -2532,15 +2538,16 @@ PROCEDURE init (t: T) =
       WITH z = t.reguse[i] DO
         z.stackp     := -1;
         z.last_store := NoStore;
-        z.upbound    := Target.Integer.maxN;
-        z.lowbound   := Target.Integer.minN;
+        (* BUG? Upbound/lowbound should adapt to the type? *)
+        z.upbound    := TIntN.TargetIntegerMax;
+        z.lowbound   := TIntN.TargetIntegerMin;
         z.imm        := FALSE;
         z.non_nil    := FALSE;
         z.locked     := FALSE;
       END;
     END;
 
-    t.rmode := ARRAY FlToInt OF Target.IntN
+    t.rmode := ARRAY FlToInt OF TIntN.T
       { TZero, TIntN.x0400, TIntN.x0800, TIntN.x0F00 };
     t.lowset_table := NIL;
     t.highset_table := NIL;
@@ -2637,10 +2644,10 @@ PROCEDURE DebugReg (READONLY r: Register;  wr: Wrx86.T) =
     IF (NOT TIntN.EQ(r.last_imm, TZero)) THEN
       wr.OutT ("  imm: ");  wr.OutT (TIntN.ToText (r.last_imm));
     END;
-    IF (NOT TIntN.EQ(r.lowbound, Target.Integer.minN)) THEN
+    IF (NOT TIntN.EQ(r.lowbound, TIntN.TargetIntegerMin)) THEN
       wr.OutT ("  lo: ");  wr.OutT (TIntN.ToText (r.lowbound));
     END;
-    IF (NOT TIntN.EQ(r.upbound, Target.Integer.maxN)) THEN
+    IF (NOT TIntN.EQ(r.upbound, TIntN.TargetIntegerMax)) THEN
       wr.OutT ("  hi: ");  wr.OutT (TIntN.ToText (r.upbound));
     END;
     IF (r.imm # FALSE) THEN

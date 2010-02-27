@@ -379,7 +379,7 @@ PROCEDURE noargOp (t: T; op: Op) =
     writecode(t, ins);
   END noargOp;
 
-PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.IntN) =
+PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
@@ -388,7 +388,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
       t.Err("immOp1: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
     END;
 
-    IF TIntN.GE(imm, Target.Int8.minN) AND TIntN.LE(imm, Target.Int8.maxN) THEN
+    IF TIntN.GE(imm, TIntN.Min8) AND TIntN.LE(imm, TIntN.Max8) THEN
       ins.imsize := 1;
     ELSE
       ins.imsize := 4;
@@ -437,13 +437,13 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.Int
     END
   END immOp1;
 
-PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.IntN) =
+PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
   VAR destA: ARRAY OperandPart OF Operand;
-      immA: ARRAY OperandPart OF Target.IntN;
+      immA: ARRAY OperandPart OF TIntN.T;
       immSize := SplitImm(dest.optype, imm, immA);
       destSize := SplitOperand(dest, destA);
       compare_label: Label;
-      immMinus32: Target.IntN;
+      immMinus32: TIntN.T;
       shiftCount := Operand{loc := OLoc.imm, imm := imm};
   BEGIN
 
@@ -551,7 +551,7 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
       <* ASSERT src.loc = OLoc.register *>
       <* ASSERT shiftCount.loc = OLoc.register OR shiftCount.loc = OLoc.imm *>
       <* ASSERT shiftCount.loc # OLoc.register OR shiftCount.reg[0] = ECX *>
-      <* ASSERT shiftCount.loc # OLoc.imm OR (TIntN.GE(shiftCount.imm, Target.Int8.minN) AND TIntN.LE(shiftCount.imm, Target.Int8.maxN)) *>
+      <* ASSERT shiftCount.loc # OLoc.imm OR (TIntN.GE(shiftCount.imm, TIntN.Min8) AND TIntN.LE(shiftCount.imm, TIntN.Max8)) *>
 
       IF shiftCount.loc = OLoc.imm THEN
         IF NOT TIntN.ToHostInteger(shiftCount.imm, ins.imm) THEN
@@ -908,7 +908,7 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
     t.obj.relocate(t.textsym, t.obj.cursor(Seg.Text) - 4, sym);
   END movDummyReloc;
 
-PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.IntN) =
+PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
   VAR ins: Instruction;
   BEGIN
     IF NOT TIntN.ToHostInteger(imm, ins.imm) THEN
@@ -934,10 +934,10 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.IntN) =
   END movImmT;
 
 PROCEDURE movImmI (t: T; READONLY dest: Operand; imm: INTEGER) =
-  VAR immT: Target.IntN;
+  VAR immT: TIntN.T;
   BEGIN
     IF NOT TIntN.FromHostInteger(imm, BYTESIZE(imm), immT) THEN
-      t.Err("movImmI: unable to convert INTEGER to Target.IntN");
+      t.Err("movImmI: unable to convert INTEGER to TIntN.T");
     END;
     t.movImmT(dest, immT);
   END movImmI;
@@ -951,6 +951,7 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
         ins.opcode := 16_68;
         IF NOT TIntN.ToHostInteger(src.imm, ins.imm) THEN
           t.Err("pushOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(src.imm));
+          <* ASSERT FALSE *>
         END;
         ins.imsize := 4;
         writecode(t, ins);
@@ -2096,7 +2097,7 @@ PROCEDURE MnProc(t: T;  p: x86Proc) =
     END;
   END MnProc;
 
-PROCEDURE MnImmTInt(t: T; READONLY imm: Target.IntN) =
+PROCEDURE MnImmTInt(t: T; READONLY imm: TIntN.T) =
   BEGIN
     IF t.debug THEN
       Mn(t, " $", TIntN.ToText (imm));
