@@ -8,7 +8,7 @@
 MODULE M3x86 EXPORTS M3x86, M3x86Rep;
 
 IMPORT Wr, Text, Fmt, IntRefTbl, Word;
-IMPORT M3CG, M3ID, M3CG_Ops, Target, TFloat;
+IMPORT M3CG, M3ID, M3CG_Ops, Target, TInt AS TargetInt, TFloat AS TargetFloat;
 IMPORT TIntN, TWordN;
 IMPORT M3ObjFile, TargetMap;
 
@@ -51,7 +51,7 @@ REVEAL
         init_varstore   : x86Var := NIL;
         init_count      : INTEGER;
 
-        (* What determines the sizes here? Historically it was 2. *)
+        (* What determines the sizes here? Historically it was [0..1]. *)
         call_param_size := ARRAY [0 .. 9] OF INTEGER { 0, .. };
         in_proc_call    : [0 .. 10] := 0;
         static_link     := ARRAY [0 .. 9] OF x86Var { NIL, .. };
@@ -683,8 +683,8 @@ PROCEDURE get_runtime_hook (u: U;  n: Name;
 
 PROCEDURE NewVar (u: U; t: Type; uid: TypeUID; s: ByteSize; a: Alignment;
                   name: Name := M3ID.NoID): x86Var =
-  VAR v := NEW (x86Var, tag := u.next_var, var_type := t, var_size := s,
-                var_align := a, seg := Seg.Data);
+  VAR v := NEW (x86Var, tag := u.next_var, type := t, size := s,
+                align := a, seg := Seg.Data);
   BEGIN
     IF name = M3ID.NoID THEN
       v.name := M3ID.Add("T$" & Fmt.Int(v.tag));
@@ -751,9 +751,9 @@ PROCEDURE bind_segment (u: U;  v: Var;  s: ByteSize;  a: Alignment;
   BEGIN
     <* ASSERT inited *>
 
-    realvar.var_type := t;
-    realvar.var_size := s;
-    realvar.var_align := a;
+    realvar.type := t;
+    realvar.size := s;
+    realvar.align := a;
 
     IF exported THEN
       u.obj.export_symbol(realvar.symbol);
@@ -792,10 +792,9 @@ PROCEDURE DeclareGlobal (u: U;  n: Name;  s: ByteSize;  a: Alignment;
   BEGIN
     v.loc := VLoc.global;
     v.seg := SegMap [is_const];
-    IF inited THEN
-      v.symbol := u.obj.define_symbol (v.name, v.seg, 0);
-    ELSE
-      v.symbol := u.obj.define_bss_symbol (v.name, s, a);
+    IF inited
+      THEN v.symbol := u.obj.define_symbol (v.name, v.seg, 0);
+      ELSE v.symbol := u.obj.define_bss_symbol (v.name, s, a);
     END;
     IF exported THEN
       u.obj.export_symbol (v.symbol);
@@ -820,10 +819,9 @@ PROCEDURE declare_local (u: U;  n: Name;  s: ByteSize;  a: Alignment;
                          f: Frequency): Var =
   VAR v: x86Var;
   BEGIN
-    IF u.in_proc THEN
-      v := get_temp_var (u, t, s, a, n);
-    ELSE
-      v := create_temp_var (u, t, s, a, n);
+    IF u.in_proc
+      THEN v := get_temp_var (u, t, s, a, n);
+      ELSE v := create_temp_var (u, t, s, a, n);
     END;
 
     IF u.debug THEN
@@ -859,10 +857,9 @@ PROCEDURE mangle_procname (base: M3ID.T; arg_size: INTEGER;
       END;
     END;
 
-    IF std_call THEN
-      RETURN M3ID.Add(Fmt.F ("_%s@%s", txt, Fmt.Int (arg_size)));
-    ELSE
-      RETURN M3ID.Add(Fmt.F ("_%s",    txt));
+    IF std_call
+      THEN RETURN M3ID.Add(Fmt.F ("_%s@%s", txt, Fmt.Int (arg_size)));
+      ELSE RETURN M3ID.Add(Fmt.F ("_%s",    txt));
     END;
   END mangle_procname;
 
@@ -894,7 +891,8 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
       IF u.param_proc.import THEN
         u.param_proc.symbol := u.obj.import_symbol(u.param_proc.name);
       ELSE
-        u.param_proc.symbol := u.obj.define_symbol(u.param_proc.name, Seg.Text, 0);
+        u.param_proc.symbol := u.obj.define_symbol(u.param_proc.name,
+                                                   Seg.Text, 0);
       END;
 
       IF u.param_proc.exported THEN
@@ -920,7 +918,8 @@ PROCEDURE declare_param (u: U;  n: Name;  s: ByteSize;  a: Alignment;
     RETURN v;
   END declare_param;
 
-PROCEDURE declare_temp (u: U; s: ByteSize; a: Alignment; t: Type; in_memory:BOOLEAN): Var =
+PROCEDURE declare_temp   (u: U;  s: ByteSize;  a: Alignment;  t: Type;
+                          in_memory:BOOLEAN): Var =
   VAR v: x86Var;
   BEGIN
     <* ASSERT u.in_proc *>
@@ -959,12 +958,12 @@ PROCEDURE get_temp_var (u: U; t: Type; s: ByteSize; a: Alignment;
 
     FOR i := 0 TO u.current_proc.tempsize - 1 DO
       WITH temp = u.current_proc.temparr[i] DO
-        IF temp.free AND temp.var.var_size = s AND temp.var.var_align >= a THEN
+        IF temp.free AND temp.var.size = s AND temp.var.align >= a THEN
 
           (* reinitialize existing temporary variable *)
 
           temp.free := FALSE;
-          temp.var.var_type := t;
+          temp.var.type := t;
           temp.var.stack_temp := FALSE;
           temp.var.scope := u.next_scope - 1;
           RETURN temp.var;
@@ -982,7 +981,7 @@ PROCEDURE get_temp_var (u: U; t: Type; s: ByteSize; a: Alignment;
 
     WITH temp = u.current_proc.temparr[u.current_proc.tempsize] DO
       temp.var := create_temp_var(u, t, s, a, n);
-      <* ASSERT temp.var.var_type = t *>
+      <* ASSERT temp.var.type = t *>
       temp.free := FALSE;
       temp.var.scope := u.next_scope - 1;
     END;
@@ -1057,8 +1056,8 @@ PROCEDURE begin_init (u: U;  v: Var) =
 
     offs := u.obj.cursor(realvar.seg);
 
-    IF Word.And(offs, realvar.var_align - 1) # 0 THEN
-      pad := realvar.var_align - Word.And(offs, realvar.var_align - 1);
+    IF Word.And(offs, realvar.align - 1) # 0 THEN
+      pad := realvar.align - Word.And(offs, realvar.align - 1);
       INC(offs, pad);
       IF Word.And(pad, 3) # 0 THEN
         u.obj.append(realvar.seg, 0, Word.And(pad, 3));
@@ -1087,24 +1086,29 @@ PROCEDURE end_init (u: U;  v: Var) =
 
     <* ASSERT v = u.init_varstore *>
 
-    pad_init(u, realvar.var_size);
+    pad_init(u, realvar.size);
     u.init_varstore := NIL;
   END end_init;
 
-PROCEDURE init_int (u: U; o: ByteOffset; READONLY value: Target.Int; t: Type) =
+PROCEDURE init_int (u: U; o: ByteOffset; READONLY value: Target.Int;
+                    t: Type) =
+  VAR int: INTEGER;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("init_int");
       u.wr.Int   (o);
-      u.wr.TInt  (TIntN.FromTargetInt(value, CG_Bytes[t]));
+      u.wr.TInt  (value);
       u.wr.TName (t);
       u.wr.NL    ();
     END;
 
     pad_init(u, o);
-    u.obj.appendBytes(u.init_varstore.seg, SUBARRAY(value, 0, CG_Bytes[t]));
-    INC(u.init_count, CG_Bytes[t]);
 
+    IF NOT TargetInt.ToInt(value, int) THEN
+      u.Err("Failed to convert target integer in init_int");
+    END;
+    u.obj.append(u.init_varstore.seg, int, CG_Bytes[t]);
+    INC(u.init_count, CG_Bytes[t]);
   END init_int;
 
 PROCEDURE init_proc (u: U;  o: ByteOffset;  value: Proc) =
@@ -1211,7 +1215,7 @@ PROCEDURE init_float (u: U;  o: ByteOffset;  READONLY f: Target.Float) =
       u.wr.NL    ();
     END;
 
-    size := TFloat.ToBytes(f, flarr);
+    size := TargetFloat.ToBytes(f, flarr);
 
     <* ASSERT size = 4 OR size = 8 *>
 
@@ -1226,7 +1230,7 @@ PROCEDURE init_float (u: U;  o: ByteOffset;  READONLY f: Target.Float) =
 PROCEDURE pad_init (u: U; o: ByteOffset) =
   BEGIN
     <* ASSERT u.init_count <= o *>
-    <* ASSERT o <= u.init_varstore.var_size *>
+    <* ASSERT o <= u.init_varstore.size *>
 
     FOR i := u.init_count TO o - 1 DO
       u.obj.append(u.init_varstore.seg, 0, 1);
@@ -1240,12 +1244,11 @@ PROCEDURE pad_init (u: U; o: ByteOffset) =
 PROCEDURE NewProc (u: U; n: Name; n_params: INTEGER;
                    ret_type: Type;  cc: CallingConvention): x86Proc =
   VAR p := NEW (x86Proc, tag := u.next_proc, n_params := n_params,
-                proc_type := ret_type, stdcall := (cc.m3cg_id = 1));
+                type := ret_type, stdcall := (cc.m3cg_id = 1));
   BEGIN
-    IF n = M3ID.NoID THEN
-      p.name := M3ID.Add("P$" & Fmt.Int(p.tag));
-    ELSE
-      p.name := n;
+    IF n = M3ID.NoID
+      THEN p.name := M3ID.Add("P$" & Fmt.Int(p.tag));
+      ELSE p.name := n;
     END;
 
     p.templimit := 16;
@@ -1362,7 +1365,7 @@ PROCEDURE begin_procedure (u: U;  p: Proc) =
     u.cg.pushOp(u.cg.reg[EBP]);
     u.cg.movOp(u.cg.reg[EBP], u.cg.reg[ESP]);
 
-    u.cg.immOp(Op.oSUB, u.cg.reg[ESP], Target.Word16.maxN);
+    u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TWordN.Max16);
     u.procframe_ptr := u.obj.cursor(Seg.Text) - 4;
 
     u.cg.pushOp(u.cg.reg[EBX]);
@@ -1452,105 +1455,93 @@ PROCEDURE note_procedure_origin (u: U;  p: Proc) =
 
 (*------------------------------------------------------------ statements ---*)
 
-PROCEDURE debug_set_label (u: U;  label: Label) =
+PROCEDURE set_label (u: U;  l: Label;  <*UNUSED*> barrier: BOOLEAN) =
+  (* define 'l' to be at the current pc *)
   BEGIN
     IF u.debug THEN
-      u.wr.OutT  ("set_label");
-      u.wr.Lab   (label);
+      u.wr.OutT  (".");
+      u.wr.Lab   (l);
       u.wr.NL    ();
     END;
-  END debug_set_label;
 
-PROCEDURE set_label (u: U;  label: Label;  <*UNUSED*> barrier: BOOLEAN) =
-  (* define 'label' to be at the current pc *)
-  BEGIN
-    debug_set_label(u, label);
-
-    u.cg.set_label(label);
+    u.cg.set_label(l);
 
     u.vstack.clearall();
   END set_label;
 
-PROCEDURE jump (u: U; label: Label) =
-  (* GOTO label *)
+PROCEDURE jump (u: U; l: Label) =
+  (* GOTO l *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("jump");
-      u.wr.Lab   (label);
+      u.wr.Lab   (l);
       u.wr.NL    ();
     END;
 
-    u.cg.brOp(Cond.Always, label);
+    u.cg.brOp(Cond.Always, l);
   END jump;
 
-PROCEDURE if_true  (u: U;  t: IType;  label: Label; <*UNUSED*> f: Frequency) =
-  (* IF (s0.t # 0) GOTO label ; pop *)
+PROCEDURE if_true  (u: U;  t: IType;  l: Label; <*UNUSED*> f: Frequency) =
+  (* IF (s0.t # 0) GOTO l ; pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("if_true");
       u.wr.TName (t);
-      u.wr.Lab   (label);
+      u.wr.Lab   (l);
       u.wr.NL    ();
     END;
 
     u.vstack.doimm (Op.oCMP, TZero, FALSE);
-    u.cg.brOp (Cond.NZ, label);
+    u.cg.brOp (Cond.NZ, l);
   END if_true;
 
-PROCEDURE if_false (u: U;   t: IType;  label: Label; <*UNUSED*> f: Frequency) =
-  (* IF (s0.t = 0) GOTO label ; pop *)
+PROCEDURE if_false (u: U;   t: IType;  l: Label; <*UNUSED*> f: Frequency) =
+  (* IF (s0.t = 0) GOTO l ; pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("if_false");
       u.wr.TName (t);
-      u.wr.Lab   (label);
+      u.wr.Lab   (l);
       u.wr.NL    ();
     END;
 
     u.vstack.doimm (Op.oCMP, TZero, FALSE);
-    u.cg.brOp (Cond.Z, label);
+    u.cg.brOp (Cond.Z, l);
   END if_false;
 
-PROCEDURE if_compare (u: U;  t: ZType;  op: CompareOp;  label: Label;
+PROCEDURE if_compare (u: U;  t: ZType;  op: CompareOp;  l: Label;
                       <*UNUSED*> f: Frequency) =
-  (* IF (s1.t  op  s0.t) GOTO label ; pop(2) *)
+  (* IF (s1.t  op  s0.t) GOTO l ; pop(2) *)
   VAR cond := CompareOpCond [op];
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("if_compare");
       u.wr.TName (t);
       u.wr.OutT  (CompareOpName [op]);
-      u.wr.Lab   (label);
+      u.wr.Lab   (l);
       u.wr.NL    ();
     END;
 
     CASE t OF
-    | Type.Word32, Type.Int32, Type.Word64, Type.Int64, Type.Addr =>
-        IF u.vstack.dobin(Op.oCMP, TRUE, FALSE, t) THEN
-          cond := revcond[cond];
-        END;
+    | Type.Int32, Type.Int64 =>
+        IF u.vstack.dobin(Op.oCMP, TRUE, FALSE, t) THEN cond := revcond[cond]; END;
+    | Type.Word32, Type.Word64, Type.Addr =>
+        IF u.vstack.dobin(Op.oCMP, TRUE, FALSE, t) THEN cond := revcond[cond]; END;
+        cond := unscond[cond];
     | Type.Reel, Type.LReel, Type.XReel =>
-        IF u.cg.ftop_inmem THEN
-          u.cg.binFOp (FOp.fCOMP, 1);
-        ELSE
-          u.cg.binFOp (FOp.fCOMPP, 1);
-          cond := revcond[cond];
+        IF u.cg.ftop_inmem
+          THEN u.cg.binFOp (FOp.fCOMP, 1);
+          ELSE u.cg.binFOp (FOp.fCOMPP, 1);  cond := revcond[cond];
         END;
         u.vstack.discard (2);
         u.vstack.unlock ();
         u.vstack.corrupt (EAX, operandPart := 0);
         u.cg.noargFOp (FOp.fNSTSWAX);
         u.cg.noargOp (Op.oSAHF);
+        cond := unscond[cond]; (* FCOM sets the unsigned compare flags *)
     END;
 
-    CASE t OF
-    | Type.Word32, Type.Word64, Type.Addr,
-      Type.Reel, Type.LReel, Type.XReel => (* FCOM sets the unsigned compare flags *)
-        cond := unscond[cond];
-    ELSE
-    END;
-
-    u.cg.brOp(cond, label);
+    u.cg.brOp(cond, l);
   END if_compare;
 
 PROCEDURE case_jump (u: U;  t: IType;  READONLY labels: ARRAY OF Label) =
@@ -1585,9 +1576,10 @@ PROCEDURE exit_proc (u: U; t: Type) =
       u.vstack.unlock();
 
       WITH stack0 = u.vstack.pos(0, "exit_proc") DO
-        IF Target.FloatType[t] THEN
+        CASE t OF
+        | Type.Reel, Type.LReel, Type.XReel =>
           u.cg.f_exitproc();
-        ELSIF Is64(t) THEN
+        | Type.Int64, Type.Word64 =>
           u.vstack.find(stack0, Force.regset, RegSet { EAX, EDX });
         ELSE
           u.vstack.find(stack0, Force.regset, RegSet { EAX });
@@ -1664,7 +1656,7 @@ PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  t: MType;  z: ZType) =
       u.wr.NL    ();
     END;
 
-    u.vstack.push(MVar {var := v, mvar_offset := o, mvar_type := t});
+    u.vstack.push(MVar {var := v, offset := o, type := t});
   END load;
 
 PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  z: ZType;  t: MType;  ) =
@@ -1679,7 +1671,7 @@ PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  z: ZType;  t: MType;  ) =
       u.wr.NL    ();
     END;
 
-    u.vstack.pop(MVar {var := v, mvar_offset := o, mvar_type := t});
+    u.vstack.pop(MVar {var := v, offset := o, type := t});
   END store;
 
 PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
@@ -1697,8 +1689,7 @@ PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
 
 PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
 (* s0.z := Mem [s0.A + o].t  *)
-  VAR newreg: ARRAY OperandPart OF Regno;
-      size: OperandSize;
+  VAR newreg, newreg1: Regno;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_indirect");
@@ -1709,46 +1700,32 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
     END;
 
     u.vstack.unlock();
-
     WITH stack0 = u.vstack.pos(0, "load_indirect") DO
       u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
-      IF Target.FloatType [t] THEN
+      CASE t OF
+      | Type.Reel, Type.LReel, Type.XReel =>
         u.cg.f_loadind(u.vstack.op(stack0), o, t);
         u.vstack.dealloc_reg(stack0, operandPart := 0);
         u.vstack.set_fstack(stack0);
-      ELSE
-        size := GetTypeSize(t);
-        <* ASSERT size = GetTypeSize(z) *>
-
-        (* allocate the registers *)
-
-        FOR i := 0 TO size - 1 DO
-          IF CG_Bytes[t] = 1 THEN
-            <* ASSERT i = 0 AND size = 1 *>
-            newreg[i] := u.vstack.freereg(RegistersForByteOperations, operandPart := i);
-          ELSE
-            IF i = 0 THEN
-              newreg[i] := u.vstack.freereg(operandPart := i);
-            ELSE
-              newreg[i] := u.vstack.freereg(AllRegisters - RegSet{newreg[0]}, operandPart := i);
-            END;
-          END;
-          <* ASSERT newreg[i] # -1 *>
-        END;
-
-        (* do the loads *)
-
-        FOR i := 0 TO size - 1 DO
-          u.cg.load_ind(newreg[i], u.vstack.op(stack0), o + 4 * i, t);
-        END;
-
-        (* do the bookkeeping about the loads *)
-        (* previous contents of stack0 was just an address, no loop over size *)
-
+      | Type.Int64, Type.Word64 =>
+        newreg := u.vstack.freereg(operandPart := 0);
+        newreg1 := u.vstack.freereg(AllRegisters - RegSet{newreg},
+                                    operandPart := 1);
+        u.cg.load_ind(newreg, u.vstack.op(stack0), o, t);
+        u.cg.load_ind(newreg1, u.vstack.op(stack0), o + 4, t);
         u.vstack.dealloc_reg(stack0, operandPart := 0);
-        FOR i := 0 TO size - 1 DO
-          u.vstack.set_reg(stack0, newreg[i], operandPart := i);
+        u.vstack.set_reg(stack0, newreg, operandPart := 0);
+        u.vstack.set_reg(stack0, newreg1, operandPart := 1);
+      ELSE
+        IF CG_Bytes[t] = 1 THEN
+          newreg := u.vstack.freereg(RegSet { EAX, EBX, ECX, EDX },
+                                     operandPart := 0);
+        ELSE
+          newreg := u.vstack.freereg(operandPart := 0);
         END;
+        u.cg.load_ind(newreg, u.vstack.op(stack0), o, t);
+        u.vstack.dealloc_reg(stack0, operandPart := 0);
+        u.vstack.set_reg(stack0, newreg, operandPart := 0);
       END;
       u.vstack.set_type(stack0, z);
     END
@@ -1792,9 +1769,9 @@ PROCEDURE load_nil (u: U) =
     u.vstack.pushimmT(TZero, Type.Addr);
   END load_nil;
 
-PROCEDURE load_integer  (u: U;  t: IType;  READONLY j: Target.Int) =
+PROCEDURE load_integer  (u: U;  t: IType;  READONLY i: Target.Int) =
   (* push ; s0.t := i *)
-  VAR i := TIntN.FromTargetInt(j, CG_Bytes[t]);
+  VAR int: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_integer");
@@ -1803,8 +1780,11 @@ PROCEDURE load_integer  (u: U;  t: IType;  READONLY j: Target.Int) =
       u.wr.NL    ();
     END;
 
+    IF NOT TIntN.FromTInt(i, CG_Bytes[t], int) THEN
+      u.Err("Failed to convert target integer in load_integer");
+    END;
     u.vstack.unlock();
-    u.vstack.pushimmT(i, t);
+    u.vstack.pushimmT(int, t);
   END load_integer;
 
 PROCEDURE load_float    (u: U;  t: RType;  READONLY f: Target.Float) =
@@ -1820,7 +1800,7 @@ PROCEDURE load_float    (u: U;  t: RType;  READONLY f: Target.Float) =
     END;
 
     u.vstack.pushnew(t, Force.any);
-    size := TFloat.ToBytes(f, flarr);
+    size := TargetFloat.ToBytes(f, flarr);
     IF size # CG_Bytes[t] THEN
       u.Err("Floating size mismatch in load_float");
     END;
@@ -1886,20 +1866,20 @@ PROCEDURE multiply (u: U;  t: AType) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      start_int_proc (u, Builtin.mul64);
-      pop_param(u, Type.Word64);
-      pop_param(u, Type.Word64);
-      call_64 (u, Builtin.mul64);
-    ELSIF Target.FloatType [t] THEN
+    CASE t OF
+    | Type.Reel, Type.LReel, Type.XReel =>
       u.cg.binFOp(FOp.fMUL, 1);
       u.vstack.discard(1);
-    ELSIF t = Type.Int32 THEN
+    | Type.Int32 =>
       u.vstack.doimul();
-    ELSE
-      <* ASSERT t = Type.Word32 *>
+    | Type.Word32 =>
       u.vstack.doumul();
-    END
+    | Type.Int64, Type.Word64 =>
+      start_int_proc (u, Builtin.mul64);
+      pop_param(u, t);
+      pop_param(u, t);
+      call_64 (u, Builtin.mul64);
+    END;
   END multiply;
 
 PROCEDURE divide (u: U;  t: RType) =
@@ -1919,7 +1899,6 @@ CONST SignName = ARRAY Sign OF TEXT { " P", " N", " X" };
 
 PROCEDURE div (u: U;  t: IType;  a, b: Sign) =
   (* s1.t := s1.t DIV s0.t ; pop *)
-  VAR builtin: Builtin;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("div");
@@ -1929,30 +1908,30 @@ PROCEDURE div (u: U;  t: IType;  a, b: Sign) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      CASE t OF Type.Int64  => builtin := Builtin.div64;
-              | Type.Word64 => builtin := Builtin.udiv64;
-              ELSE <* ASSERT FALSE *>
-      END;
-      u.vstack.swap();
-      start_int_proc (u, builtin);
-      pop_param(u, Type.Word64);
-      pop_param(u, Type.Word64);
-      call_64 (u, builtin);
-      RETURN;
-    END;
-
-    IF IsWord(t) THEN
+    CASE t OF
+    | Type.Int32 =>
+      u.vstack.dodiv(a, b);
+    | Type.Word32 =>
       a := Sign.Positive;
       b := Sign.Positive;
+      u.vstack.dodiv(a, b);
+    | Type.Int64 =>
+      u.vstack.swap();
+      start_int_proc (u, Builtin.div64);
+      pop_param(u, t);
+      pop_param(u, t);
+      call_64 (u, Builtin.div64);
+    | Type.Word64 =>
+      u.vstack.swap();
+      start_int_proc (u, Builtin.udiv64);
+      pop_param(u, t);
+      pop_param(u, t);
+      call_64 (u, Builtin.udiv64);
     END;
-
-    u.vstack.dodiv(a, b);
   END div;
 
 PROCEDURE mod (u: U;  t: IType;  a, b: Sign) =
   (* s1.t := s1.t MOD s0.t ; pop *)
-  VAR builtin: Builtin;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("mod");
@@ -1962,25 +1941,26 @@ PROCEDURE mod (u: U;  t: IType;  a, b: Sign) =
       u.wr.NL    ();
     END;
 
-    IF Is64(t) THEN
-      CASE t OF Type.Int64  => builtin := Builtin.mod64;
-              | Type.Word64 => builtin := Builtin.umod64;
-              ELSE <* ASSERT FALSE *>
-      END;
-      u.vstack.swap();
-      start_int_proc (u, builtin);
-      pop_param(u, Type.Word64);
-      pop_param(u, Type.Word64);
-      call_64 (u, builtin);
-      RETURN;
-    END;
-
-    IF IsWord(t) THEN
+    CASE t OF
+    | Type.Int32 =>
+      u.vstack.domod(a, b);
+    | Type.Word32 =>
       a := Sign.Positive;
       b := Sign.Positive;
+      u.vstack.domod(a, b);
+    | Type.Int64 =>
+      u.vstack.swap();
+      start_int_proc (u, Builtin.mod64);
+      pop_param(u, t);
+      pop_param(u, t);
+      call_64 (u, Builtin.mod64);
+    | Type.Word64 =>
+      u.vstack.swap();
+      start_int_proc (u, Builtin.umod64);
+      pop_param(u, t);
+      pop_param(u, t);
+      call_64 (u, Builtin.umod64);
     END;
-
-    u.vstack.domod(a, b);
   END mod;
 
 PROCEDURE negate (u: U;  t: AType) =
@@ -2008,11 +1988,10 @@ PROCEDURE abs      (u: U;  t: AType) =
       u.wr.NL    ();
     END;
 
-    IF IsWord(t) THEN
-      RETURN;
-    ELSIF IsInt(t) THEN
-      u.vstack.doabs();
-    ELSE
+    CASE t OF
+    | Type.Word32, Type.Word64 => (* no-op *)
+    | Type.Int32, Type.Int64 => u.vstack.doabs();
+    | Type.Reel, Type.LReel, Type.XReel =>
       u.cg.noargFOp(FOp.fABS);
     END
   END abs;
@@ -2074,47 +2053,80 @@ PROCEDURE cvt_float (u: U;  t: AType;  x: RType) =
 
 (*------------------------------------------------------------------ sets ---*)
 
-PROCEDURE set_op3(u: U;  s: ByteSize; builtin: Builtin) =
-  (* s2.B := s1.B op s0.B ; pop(3) *)
+PROCEDURE set_union (u: U;  s: ByteSize) =
+  (* s2.B := s1.B + s0.B ; pop(3) *)
   BEGIN
     IF u.debug THEN
-      u.wr.Cmd   (BuiltinDesc[builtin].name);
+      u.wr.Cmd   ("set_union");
       u.wr.Int   (s);
       u.wr.NL    ();
     END;
 
-    start_int_proc (u, builtin);
+    start_int_proc (u, Builtin.set_union);
     load_stack_param (u, Type.Addr, 2);
     load_stack_param (u, Type.Addr, 1);
     load_stack_param (u, Type.Addr, 0);
     u.vstack.discard (3);
     u.vstack.pushimmI (s * 8, Type.Word32);
     pop_param (u, Type.Word32);
-    call_int_proc (u, builtin);
-  END set_op3;
-
-PROCEDURE set_union (u: U;  s: ByteSize) =
-  (* s2.B := s1.B + s0.B ; pop(3) *)
-  BEGIN
-    set_op3(u, s, Builtin.set_union);
+    call_int_proc (u, Builtin.set_union);
   END set_union;
 
 PROCEDURE set_difference (u: U;  s: ByteSize) =
   (* s2.B := s1.B - s0.B ; pop(3) *)
   BEGIN
-    set_op3(u, s, Builtin.set_difference);
+    IF u.debug THEN
+      u.wr.Cmd   ("set_difference");
+      u.wr.Int   (s);
+      u.wr.NL    ();
+    END;
+
+    start_int_proc (u, Builtin.set_difference);
+    load_stack_param (u, Type.Addr, 2);
+    load_stack_param (u, Type.Addr, 1);
+    load_stack_param (u, Type.Addr, 0);
+    u.vstack.discard (3);
+    u.vstack.pushimmI (s * 8, Type.Word32);
+    pop_param (u, Type.Word32);
+    call_int_proc (u, Builtin.set_difference);
   END set_difference;
 
 PROCEDURE set_intersection (u: U;  s: ByteSize) =
   (* s2.B := s1.B * s0.B ; pop(3) *)
   BEGIN
-    set_op3(u, s, Builtin.set_intersection);
+    IF u.debug THEN
+      u.wr.Cmd   ("set_intersection");
+      u.wr.Int   (s);
+      u.wr.NL    ();
+    END;
+
+    start_int_proc (u, Builtin.set_intersection);
+    load_stack_param (u, Type.Addr, 2);
+    load_stack_param (u, Type.Addr, 1);
+    load_stack_param (u, Type.Addr, 0);
+    u.vstack.discard (3);
+    u.vstack.pushimmI (s * 8, Type.Word32);
+    pop_param (u, Type.Word32);
+    call_int_proc (u, Builtin.set_intersection);
   END set_intersection;
 
 PROCEDURE set_sym_difference (u: U;  s: ByteSize) =
   (* s2.B := s1.B / s0.B ; pop(3) *)
   BEGIN
-    set_op3(u, s, Builtin.set_sym_difference);
+    IF u.debug THEN
+      u.wr.Cmd   ("set_sym_difference");
+      u.wr.Int   (s);
+      u.wr.NL    ();
+    END;
+
+    start_int_proc (u, Builtin.set_sym_difference);
+    load_stack_param (u, Type.Addr, 2);
+    load_stack_param (u, Type.Addr, 1);
+    load_stack_param (u, Type.Addr, 0);
+    u.vstack.discard (3);
+    u.vstack.pushimmI (s * 8, Type.Word32);
+    pop_param (u, Type.Word32);
+    call_int_proc (u, Builtin.set_sym_difference);
   END set_sym_difference;
 
 PROCEDURE set_member (u: U;  s: ByteSize;  t: IType) =
@@ -2270,7 +2282,7 @@ PROCEDURE set_singleton (u: U;  s: ByteSize;  t: IType) =
 
 PROCEDURE not (u: U;  t: IType) =
   (* s0.t := Word.Not (s0.t) *)
-  VAR not: Target.IntN;
+  VAR not: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("not");
@@ -2336,17 +2348,20 @@ PROCEDURE shift (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF (NOT Is64(t)) AND u.vstack.doshift (t) THEN
-      RETURN;
+    CASE t OF
+    | Type.Int32, Type.Word32 =>
+      IF NOT u.vstack.doshift (t) THEN
+        do_rotate_or_shift_64 (u, Builtin.shift64);
+      END;
+    | Type.Int64, Type.Word64 =>
+      do_rotate_or_shift_64 (u, Builtin.shift64);
     END;
-
-    do_rotate_or_shift_64 (u, Builtin.shift64);
   END shift;
 
 PROCEDURE shift_left   (u: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
-  VAR shiftResult: Target.IntN;
-      and: Target.IntN;
+  VAR shiftResult: TIntN.T;
+      and: TIntN.T;
       shiftCount: INTEGER;
   BEGIN
     IF u.debug THEN
@@ -2360,7 +2375,7 @@ PROCEDURE shift_left   (u: U;  t: IType) =
          stack1 = u.vstack.pos(1, "shift_left") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF u.vstack.loc(stack1) = OLoc.imm THEN
-          IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, shiftCount) THEN
+          IF NOT TIntN.ToInt(u.vstack.op(stack0).imm, shiftCount) THEN
             u.Err("unable to convert shift count to host integer");
           END;
 
@@ -2384,7 +2399,10 @@ PROCEDURE shift_left   (u: U;  t: IType) =
 
           (* shift non-constant *)
 
-          IF Is64(t) THEN
+          CASE t OF
+          | Type.Int32, Type.Word32 =>
+            (* continue *)
+          | Type.Int64, Type.Word64 =>
             do_custom_calling_convention_shift_64 (u, Builtin.shift_left_64);
             RETURN;
           END;
@@ -2407,8 +2425,8 @@ PROCEDURE shift_left   (u: U;  t: IType) =
 PROCEDURE shift_right  (u: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, -s0.t) ; pop *)
   VAR shiftCount: INTEGER;
-      shift: Target.IntN;
-      and: Target.IntN;
+      shift: TIntN.T;
+      and: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("shift_right");
@@ -2424,7 +2442,7 @@ PROCEDURE shift_right  (u: U;  t: IType) =
 
           (* shift constant by a constant *)
 
-          IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, shiftCount) THEN
+          IF NOT TIntN.ToInt(u.vstack.op(stack0).imm, shiftCount) THEN
             u.Err("unable to convert shift count to host integer");
           END;
           TWordN.Shift(u.vstack.op(stack1).imm, -shiftCount, shift);
@@ -2446,7 +2464,10 @@ PROCEDURE shift_right  (u: U;  t: IType) =
         (* shift a non-constant or non-zero *)
 
         IF ((u.vstack.loc(stack1) # OLoc.imm) OR (TIntN.NE(u.vstack.op(stack1).imm, TZero))) THEN
-          IF Is64(t) THEN
+          CASE t OF
+          | Type.Int32, Type.Word32 =>
+            (* continue *)
+          | Type.Int64, Type.Word64 =>
             do_custom_calling_convention_shift_64 (u, Builtin.shift_right_64);
             RETURN;
           END;
@@ -2475,18 +2496,16 @@ PROCEDURE rotate (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF u.vstack.dorotate(t) THEN
-      RETURN;
+    IF NOT u.vstack.dorotate(t) THEN
+      do_rotate_or_shift_64 (u, Builtin.rotate64);
     END;
-
-    do_rotate_or_shift_64 (u, Builtin.rotate64);
   END rotate;
 
 PROCEDURE rotate_left  (u: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, s0.t) ; pop *)
   VAR rotateCount: INTEGER;
-      rotate: Target.IntN;
-      and: Target.IntN;
+      rotate: TIntN.T;
+      and: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("rotate_left");
@@ -2499,7 +2518,7 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
          stack1 = u.vstack.pos(1, "rotate_left") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF u.vstack.loc(stack1) = OLoc.imm THEN
-          IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, rotateCount) THEN
+          IF NOT TIntN.ToInt(u.vstack.op(stack0).imm, rotateCount) THEN
             u.Err("unable to convert rotate count to host integer");
           END;
           TWordN.Rotate(u.vstack.op(stack1).imm, rotateCount, rotate);
@@ -2507,7 +2526,10 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
         ELSE
           TWordN.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
-          IF Is64(t) THEN
+          CASE t OF
+          | Type.Int32, Type.Word32 =>
+            (* continue *)
+          | Type.Int64, Type.Word64 =>
             do_rotate_or_shift_64(u, Builtin.rotate_left64);
             RETURN;
           END;
@@ -2516,7 +2538,10 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
           u.vstack.newdest(u.vstack.op(stack1));
         END
       ELSE
-        IF Is64(t) THEN
+        CASE t OF
+        | Type.Int32, Type.Word32 =>
+          (* continue *)
+        | Type.Int64, Type.Word64 =>
           do_rotate_or_shift_64(u, Builtin.rotate_left64);
           RETURN;
         END;
@@ -2538,8 +2563,8 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
 PROCEDURE rotate_right (u: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, -s0.t) ; pop *)
   VAR rotateCount: INTEGER;
-      rotate: Target.IntN;
-      and: Target.IntN;
+      rotate: TIntN.T;
+      and: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("rotate_right");
@@ -2552,7 +2577,7 @@ PROCEDURE rotate_right (u: U;  t: IType) =
          stack1 = u.vstack.pos(1, "rotate_right") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF u.vstack.loc(stack1) = OLoc.imm THEN
-          IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, rotateCount) THEN
+          IF NOT TIntN.ToInt(u.vstack.op(stack0).imm, rotateCount) THEN
             u.Err("unable to convert rotate count to host integer");
           END;
           TWordN.Rotate(u.vstack.op(stack1).imm, -rotateCount, rotate);
@@ -2560,7 +2585,10 @@ PROCEDURE rotate_right (u: U;  t: IType) =
         ELSE
           TWordN.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
           u.vstack.set_imm(stack0, and);
-          IF Is64(t) THEN
+          CASE t OF
+          | Type.Int32, Type.Word32 =>
+            (* continue *)
+          | Type.Int64, Type.Word64 =>
             do_rotate_or_shift_64(u, Builtin.rotate_right64);
             RETURN;
           END;
@@ -2569,7 +2597,10 @@ PROCEDURE rotate_right (u: U;  t: IType) =
           u.vstack.newdest(u.vstack.op(stack1));
         END
       ELSE
-        IF Is64(t) THEN
+        CASE t OF
+        | Type.Int32, Type.Word32 =>
+          (* continue *)
+        | Type.Int64, Type.Word64 =>
           do_rotate_or_shift_64(u, Builtin.rotate_right64);
           RETURN;
         END;
@@ -2609,30 +2640,32 @@ PROCEDURE chop (u: U) =
     <*ASSERT FALSE*>
   END chop;
 
-PROCEDURE extract (u: U;  t: IType;  sign_extend: BOOLEAN) =
+PROCEDURE extract (u: U;  t: IType;  sign: BOOLEAN) =
   (* s2.t := Word.Extract(s2.t, s1.t, s0.t);
-     IF sign_extend THEN SignExtend s2 END; pop(2) *)
-  VAR builtin := Builtin.extract64;
+     IF sign THEN SignExtend s2 END; pop(2) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("extract");
       u.wr.TName (t);
-      u.wr.Bool  (sign_extend);
+      u.wr.Bool  (sign);
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doextract(t, sign_extend) THEN
-      RETURN;
+    IF NOT u.vstack.doextract(t, sign) THEN
+      IF sign THEN
+        start_int_proc (u, Builtin.extract_and_sign_extend64);
+        pop_param(u, Type.Word32); (* n *)
+        pop_param(u, Type.Word32); (* m *)
+        pop_param(u, Type.Word64); (* value *)
+        call_64 (u, Builtin.extract_and_sign_extend64);
+      ELSE
+        start_int_proc (u, Builtin.extract64);
+        pop_param(u, Type.Word32); (* n *)
+        pop_param(u, Type.Word32); (* m *)
+        pop_param(u, Type.Word64); (* value *)
+        call_64 (u, Builtin.extract64);
+      END;
     END;
-
-    IF sign_extend THEN
-      builtin := Builtin.extract_and_sign_extend64;
-    END;
-    start_int_proc (u, builtin);
-    pop_param(u, Type.Word32); (* n *)
-    pop_param(u, Type.Word32); (* m *)
-    pop_param(u, Type.Word64); (* value *)
-    call_64 (u, builtin);
   END extract;
 
 PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
@@ -2647,12 +2680,10 @@ PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doextract_n(t, sign, n) THEN 
-      RETURN;
+    IF NOT u.vstack.doextract_n(t, sign, n) THEN
+      u.vstack.pushimmI(n, Type.Word32);
+      extract(u, t, sign);
     END;
-
-    u.vstack.pushimmI(n, Type.Word32);
-    extract(u, t, sign);
   END extract_n;
 
 PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
@@ -2668,13 +2699,11 @@ PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doextract_mn(t, sign, m, n) THEN
-      RETURN;
+    IF NOT u.vstack.doextract_mn(t, sign, m, n) THEN
+      u.vstack.pushimmI(m, Type.Word32);
+      u.vstack.pushimmI(n, Type.Word32);
+      extract(u, t, sign);
     END;
-
-    u.vstack.pushimmI(m, Type.Word32);
-    u.vstack.pushimmI(n, Type.Word32);
-    extract(u, t, sign);
   END extract_mn;
 
 PROCEDURE insert  (u: U;  t: IType) =
@@ -2686,15 +2715,14 @@ PROCEDURE insert  (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doinsert(t) THEN
-      RETURN;
+    IF NOT u.vstack.doinsert(t) THEN
+      start_int_proc (u, Builtin.insert64);
+      pop_param(u, Type.Word32);
+      pop_param(u, Type.Word32);
+      pop_param(u, Type.Word64);
+      pop_param(u, Type.Word64);
+      call_64 (u, Builtin.insert64);
     END;
-    start_int_proc (u, Builtin.insert64);
-    pop_param(u, Type.Word32);
-    pop_param(u, Type.Word32);
-    pop_param(u, Type.Word64);
-    pop_param(u, Type.Word64);
-    call_64 (u, Builtin.insert64);
   END insert;
 
 PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
@@ -2707,11 +2735,10 @@ PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doinsert_n(t, n) THEN
-      RETURN;
+    IF NOT u.vstack.doinsert_n(t, n) THEN
+      u.vstack.pushimmI(n, Type.Word32);
+      u.insert(t);
     END;
-    u.vstack.pushimmI(n, Type.Word32);
-    u.insert(t);
   END insert_n;
 
 PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
@@ -2725,12 +2752,11 @@ PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doinsert_mn(t, m, n) THEN
-      RETURN;
+    IF NOT u.vstack.doinsert_mn(t, m, n) THEN
+      u.vstack.pushimmI(m, Type.Word32);
+      u.vstack.pushimmI(n, Type.Word32);
+      u.insert(t);
     END;
-    u.vstack.pushimmI(m, Type.Word32);
-    u.vstack.pushimmI(n, Type.Word32);
-    u.insert(t);
   END insert_mn;
 
 (*------------------------------------------------ misc. stack/memory ops ---*)
@@ -2758,7 +2784,6 @@ PROCEDURE pop (u: U;  t: Type) =
     END;
 
     u.vstack.unlock();
-
     IF Target.FloatType [t] THEN
       WITH stack0 = u.vstack.pos(0, "pop") DO
         <* ASSERT u.vstack.loc(stack0) = OLoc.fstack *>
@@ -2772,8 +2797,7 @@ PROCEDURE pop (u: U;  t: Type) =
 PROCEDURE copy_n (u: U;  z: IType;  t: MType;  overlap: BOOLEAN) =
   (* Mem[s2.A:s0.z] := Mem[s1.A:s0.z]; pop(3)*)
   CONST Mover = ARRAY BOOLEAN OF Builtin { Builtin.memcpy, Builtin.memmove };
-  VAR n: INTEGER;  mover := Mover [overlap];
-      shift: Target.IntN;
+  VAR shift: TIntN.T;  n: INTEGER;  mover := Mover [overlap];
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("copy_n");
@@ -2785,7 +2809,7 @@ PROCEDURE copy_n (u: U;  z: IType;  t: MType;  overlap: BOOLEAN) =
 
     WITH stack0 = u.vstack.pos(0, "copy_n") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, n) THEN
+        IF NOT TIntN.ToInt(u.vstack.op(stack0).imm, n) THEN
           u.Err("copy_n: unable to convert to host integer");
         END;
         u.vstack.discard(1);
@@ -2848,7 +2872,7 @@ PROCEDURE inline_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
   END inline_copy;
 
 PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
-  VAR tn, tNMinus1, tsize, tint: Target.IntN;
+  VAR tn, tNMinus1, tsize, tint: TIntN.T;
   BEGIN
     u.vstack.corrupt(ECX, operandPart := 0);
     u.cg.movImmI(u.cg.reg[ECX], n);
@@ -2856,10 +2880,10 @@ PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
     IF forward THEN
       u.cg.noargOp(Op.oCLD);
     ELSE
-      IF NOT TIntN.FromHostInteger(n, Target.Integer.bytes, tn) THEN
+      IF NOT TIntN.FromInt(n, Target.Integer.bytes, tn) THEN
         u.Err("string_copy: unable to convert n to target int");
       END;
-      IF NOT TIntN.FromHostInteger(size, Target.Integer.bytes, tsize) THEN
+      IF NOT TIntN.FromInt(size, Target.Integer.bytes, tsize) THEN
         u.Err("string_copy: unable to convert size to target int");
       END;
       IF NOT TIntN.Subtract(tn, TIntN.One, tNMinus1) THEN
@@ -2963,8 +2987,7 @@ PROCEDURE copy (u: U;  n: INTEGER;  t: MType;  overlap: BOOLEAN) =
 
 PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
   (* Mem[s1.A:s0.z] := 0; pop(2) *)
-  VAR n: INTEGER;
-      shift: Target.IntN;
+  VAR shift: TIntN.T;  n: INTEGER;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("zero_n");
@@ -2975,7 +2998,7 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
 
     WITH stack0 = u.vstack.pos(0, "zero_n") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, n) THEN
+        IF NOT TIntN.ToInt(u.vstack.op(stack0).imm, n) THEN
           u.Err("zero_n: unable to convert to host integer");
         END;
         u.vstack.discard(1);
@@ -3146,8 +3169,8 @@ PROCEDURE start_int_proc (u: U;  b: Builtin) =
          desc = BuiltinDesc [b] DO
       IF proc = NIL THEN
         proc := import_procedure (u, M3ID.Add (desc.name),
-                                  desc.n_params, desc.ret_type,
-                                  Target.FindConvention (desc.lang));
+                                        desc.n_params, desc.ret_type,
+                                        Target.FindConvention (desc.lang));
         FOR i := 1 TO desc.n_params DO
           EVAL declare_param (u, M3ID.NoID, 4, 4, Type.Word32, 0, FALSE, FALSE, 100);
         END;
@@ -3222,10 +3245,9 @@ PROCEDURE check_nil (u: U;  code: RuntimeError) =
     END;
   END check_nil;
 
-PROCEDURE check_lo (u: U;  t: IType;  READONLY j: Target.Int;  code: RuntimeError) =
+PROCEDURE check_lo (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeError) =
   (* IF (s0.t < i) THEN abort(code) *)
-  VAR safelab: Label;
-      i := TIntN.FromTargetInt(j, CG_Bytes[t]);
+  VAR int: TIntN.T;  safelab: Label;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_lo");
@@ -3235,34 +3257,37 @@ PROCEDURE check_lo (u: U;  t: IType;  READONLY j: Target.Int;  code: RuntimeErro
       u.wr.NL    ();
     END;
 
+    IF NOT TIntN.FromTInt(i, CG_Bytes[t], int) THEN
+      u.Err("Failed to convert target integer in check_lo");
+    END;
+
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "check_lo") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF TIntN.LT(u.vstack.op(stack0).imm, i) THEN
+        IF TIntN.LT(u.vstack.op(stack0).imm, int) THEN
           reportfault(u, code);
         END
       ELSE
         u.vstack.find(stack0, Force.anyreg);
-        IF TIntN.GE(u.vstack.lower(u.vstack.reg(stack0)), i) THEN
+        IF TIntN.GE(u.vstack.lower(u.vstack.reg(stack0)), int) THEN
           (* ok *)
-        ELSIF TIntN.LT(u.vstack.upper(u.vstack.reg(stack0)), i) THEN
+        ELSIF TIntN.LT(u.vstack.upper(u.vstack.reg(stack0)), int) THEN
           reportfault(u, code);
         ELSE
-          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), i);
+          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), int);
           safelab := u.cg.reserve_labels(1, TRUE);
           u.cg.brOp(Cond.GE, safelab);
           reportfault(u, code);
           u.cg.set_label(safelab);
-          u.vstack.set_lower(u.vstack.reg(stack0), i);
+          u.vstack.set_lower(u.vstack.reg(stack0), int);
         END
       END
     END
   END check_lo;
 
-PROCEDURE check_hi (u: U;  t: IType;  READONLY j: Target.Int;  code: RuntimeError) =
+PROCEDURE check_hi (u: U;  t: IType;  READONLY i: Target.Int;  code: RuntimeError) =
   (* IF (i < s0.t) THEN abort(code) *)
-  VAR safelab: Label;
-      i := TIntN.FromTargetInt(j, CG_Bytes[t]);
+  VAR int: TIntN.T;  safelab: Label;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_hi");
@@ -3272,36 +3297,37 @@ PROCEDURE check_hi (u: U;  t: IType;  READONLY j: Target.Int;  code: RuntimeErro
       u.wr.NL    ();
     END;
 
+    IF NOT TIntN.FromTInt(i, CG_Bytes[t], int) THEN
+      u.Err("Failed to convert target integer in check_hi");
+    END;
+
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "check_hi") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF TIntN.LT(i, u.vstack.op(stack0).imm) THEN
+        IF TIntN.LT(int, u.vstack.op(stack0).imm) THEN
           reportfault(u, code);
         END
       ELSE
         u.vstack.find(stack0, Force.anyreg);
-        IF TIntN.LE(u.vstack.upper(u.vstack.reg(stack0)), i) THEN
+        IF TIntN.LE(u.vstack.upper(u.vstack.reg(stack0)), int) THEN
           (* ok *)
-        ELSIF TIntN.GT(u.vstack.lower(u.vstack.reg(stack0)), i) THEN
+        ELSIF TIntN.GT(u.vstack.lower(u.vstack.reg(stack0)), int) THEN
           reportfault(u, code);
         ELSE
-          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), i);
+          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), int);
           safelab := u.cg.reserve_labels(1, TRUE);
           u.cg.brOp(Cond.LE, safelab);
           reportfault(u, code);
           u.cg.set_label(safelab);
-          u.vstack.set_upper(u.vstack.reg(stack0), i);
+          u.vstack.set_upper(u.vstack.reg(stack0), int);
         END
       END
     END
   END check_hi;
 
-PROCEDURE check_range (u: U;  t: IType;  READONLY xa, xb: Target.Int;  code: RuntimeError) =
+PROCEDURE check_range (u: U;  t: IType;  READONLY a, b: Target.Int;  code: RuntimeError) =
   (* IF (s0.t < a) OR (b < s0.t) THEN abort(code) *)
-  VAR lo, hi: Target.IntN;
-      safelab, outrange: Label;
-      a := TIntN.FromTargetInt(xa, CG_Bytes[t]);
-      b := TIntN.FromTargetInt(xb, CG_Bytes[t]);
+  VAR inta, intb, lo, hi: TIntN.T;  safelab, outrange: Label;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("check_range");
@@ -3311,11 +3337,18 @@ PROCEDURE check_range (u: U;  t: IType;  READONLY xa, xb: Target.Int;  code: Run
       u.wr.NL    ();
     END;
 
+    IF NOT TIntN.FromTInt(a, CG_Bytes[t], inta) THEN
+      u.Err("Failed to convert target integer in check_range");
+    END;
+    IF NOT TIntN.FromTInt(b, CG_Bytes[t], intb) THEN
+      u.Err("Failed to convert target integer in check_range");
+    END;
+
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "check_range") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         lo := u.vstack.op(stack0).imm;
-        IF TIntN.LT(lo, a) OR TIntN.LT(b, lo) THEN
+        IF TIntN.LT(lo, inta) OR TIntN.LT(intb, lo) THEN
           reportfault(u, code);
         END;
         RETURN;
@@ -3325,45 +3358,42 @@ PROCEDURE check_range (u: U;  t: IType;  READONLY xa, xb: Target.Int;  code: Run
       WITH reg = u.vstack.reg(stack0) DO
         lo := u.vstack.lower(reg);
         hi := u.vstack.upper(reg);
-        IF TIntN.LE(a, lo) AND TIntN.LE(hi, b) THEN
+        IF TIntN.LE(inta, lo) AND TIntN.LE(hi, intb) THEN
           (* ok *)
-        ELSIF TIntN.LT(hi, a) OR TIntN.LT(b, lo) THEN
+        ELSIF TIntN.LT(hi, inta) OR TIntN.LT(intb, lo) THEN
           reportfault(u, code);
-        ELSIF TIntN.LE(hi, b) THEN
-          check_lo(u, t, xa, code);
-        ELSIF TIntN.GE(lo, a) THEN
-          check_hi(u, t, xb, code);
-        ELSIF TIntN.EQ(a, TZero) THEN
+        ELSIF TIntN.LE(hi, intb) THEN
+          check_lo(u, t, a, code);
+        ELSIF TIntN.GE(lo, inta) THEN
+          check_hi(u, t, b, code);
+        ELSIF TIntN.EQ(inta, TZero) THEN
           (* 0 <= x <= b  ==>   UNSIGNED(x) <= b *)
           safelab := u.cg.reserve_labels(1, TRUE);
-          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), b);
+          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), intb);
           u.cg.brOp(unscond [Cond.LE], safelab);
           reportfault(u, code);
           u.cg.set_label(safelab);
-          u.vstack.set_upper(reg, b);
-          u.vstack.set_lower(reg, a);
+          u.vstack.set_upper(reg, intb);
+          u.vstack.set_lower(reg, inta);
         ELSE
           safelab := u.cg.reserve_labels(1, TRUE);
           outrange := u.cg.reserve_labels(1, TRUE);
-          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), a);
+          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), inta);
           u.cg.brOp(Cond.L, outrange);
-          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), b);
+          u.cg.immOp(Op.oCMP, u.vstack.op(stack0), intb);
           u.cg.brOp(Cond.LE, safelab);
           u.cg.set_label(outrange);
           reportfault(u, code);
           u.cg.set_label(safelab);
-          u.vstack.set_upper(reg, b);
-          u.vstack.set_lower(reg, a);
+          u.vstack.set_upper(reg, intb);
+          u.vstack.set_lower(reg, inta);
         END;
       END
     END
   END check_range;
 
 PROCEDURE check_index (u: U;  t: IType;  code: RuntimeError) =
-  (* IF NOT (0 <= s1.t < s0.t) THEN
-       abort(code)
-     END;
-     pop *)
+  (* IF NOT (0 <= s1.t < s0.t) THEN abort(code) END; pop *)
   (* s0.t is guaranteed to be positive so the unsigned
      check (s0.W <= s1.W) is sufficient. *)
   VAR safelab: Label;
@@ -3410,9 +3440,7 @@ PROCEDURE check_index (u: U;  t: IType;  code: RuntimeError) =
   END check_index;
 
 PROCEDURE check_eq (u: U;  t: IType;  code: RuntimeError) =
-  (* IF (s0.t # s1.t) THEN
-       abort(code);
-       Pop (2) *)
+  (* IF (s0.t # s1.t) THEN abort(code);  Pop (2) *)
   VAR safelab: Label;
   BEGIN
     IF u.debug THEN
@@ -3486,7 +3514,7 @@ PROCEDURE makereportproc (u: U) =
       u.cg.rmCall(u.vstack.op(u.vstack.pos(0, "makereportproc")));
     ELSIF (repproc # NIL) THEN
       start_call_direct(u, repproc, 0, Type.Void);
-      INC(u.call_param_size[u.in_proc_call - 1], 4); (* remember error code *)
+      INC(u.call_param_size[u.in_proc_call-1], 4); (* remember error code *)
       load_address(u, u.global_var, 0);
       pop_param(u, Type.Addr);
       call_direct(u, repproc, Type.Void);
@@ -3501,7 +3529,7 @@ PROCEDURE makereportproc (u: U) =
 
 PROCEDURE add_offset (u: U; i: INTEGER) =
   (* s0.A := s0.A + i *)
-  VAR ti, imm_plus_i: Target.IntN;
+  VAR int, imm_plus_i: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("add_offset");
@@ -3509,21 +3537,21 @@ PROCEDURE add_offset (u: U; i: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF NOT TIntN.FromHostInteger(i, Target.Integer.bytes, ti) THEN
+    IF NOT TIntN.FromInt(i, Target.Integer.bytes, int) THEN
       u.Err("add_offset: failed to convert i to target integer");
     END;
 
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "add_offset") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF NOT TIntN.Add(u.vstack.op(stack0).imm, ti, imm_plus_i) THEN
+        IF NOT TIntN.Add(u.vstack.op(stack0).imm, int, imm_plus_i) THEN
           u.Err("add_offset: Add overflowed");
         END;
         u.vstack.set_imm(stack0, imm_plus_i);
       ELSE
         u.vstack.find(stack0, Force.anytemp, RegSet {}, TRUE);
 
-        u.cg.immOp(Op.oADD, u.vstack.op(stack0), ti);
+        u.cg.immOp(Op.oADD, u.vstack.op(stack0), int);
 
         u.vstack.newdest(u.vstack.op(stack0));
       END
@@ -3662,21 +3690,47 @@ PROCEDURE start_call_indirect (u: U;  t: Type;  cc: CallingConvention) =
 PROCEDURE pop_param (u: U;  t: MType) =
   (* pop s0 and make it the "next" parameter in the current call *)
   BEGIN
-    (*IF u.debug THEN
+    IF u.debug THEN
       u.wr.Cmd   ("pop_param");
       u.wr.TName (t);
       u.wr.NL    ();
-    END;*)
+    END;
 
-    load_stack_param(u, t, 0);
+    <* ASSERT u.in_proc_call > 0 *>
+
+    u.vstack.unlock();
+    WITH stack0 = u.vstack.pos(0, "pop_param") DO
+      IF Target.FloatType [t] THEN
+        IF t = Type.Reel THEN
+          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TIntN.Four);
+        ELSE
+          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TIntN.Eight);
+        END;
+
+        u.cg.f_storeind(u.cg.reg[ESP], 0, t);
+      ELSE
+        u.vstack.find(stack0, Force.anyregimm);
+        VAR
+          opA: ARRAY OperandPart OF Operand;
+          size := SplitOperand(u.vstack.op(stack0), opA);
+        BEGIN
+          FOR i := size - 1 TO 0 BY -1 DO u.cg.pushOp(opA[i]) END;
+        END;
+      END;
+    END;
+
     u.vstack.discard(1);
 
+    IF CG_Bytes[t] <= 4 THEN
+      INC(u.call_param_size[u.in_proc_call-1], 4);
+    ELSE
+      <* ASSERT CG_Bytes[t] = 8 *>
+      INC(u.call_param_size[u.in_proc_call-1], 8);
+    END
   END pop_param;
 
-PROCEDURE load_stack_param (u: U; t: MType; depth: INTEGER) =
+PROCEDURE load_stack_param (u: U; t: ZType; depth: INTEGER) =
   (* make value at vstack[depth] the next parameter in the current call *)
-  VAR opA: ARRAY OperandPart OF Operand;
-      size: OperandSize;
   BEGIN
 
     IF u.debug THEN
@@ -3691,20 +3745,13 @@ PROCEDURE load_stack_param (u: U; t: MType; depth: INTEGER) =
     <* ASSERT u.in_proc_call > 0 *>
 
     WITH stack = u.vstack.pos(depth, "load_stack_param") DO
-      IF Target.FloatType [t] THEN
-        <* ASSERT depth = 0 *>
-        IF t = Type.Reel THEN
-          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TIntN.Four);
-        ELSE
-          u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TIntN.Eight);
-        END;
-        u.cg.f_storeind(u.cg.reg[ESP], 0, t);
-      ELSE
-        u.vstack.find(stack, Force.anyregimm);
+      <* ASSERT NOT Target.FloatType [t] *>
+      u.vstack.find(stack, Force.anyregimm);
+      VAR
+        opA: ARRAY OperandPart OF Operand;
         size := SplitOperand(u.vstack.op(stack), opA);
-        FOR i := size - 1 TO 0 BY -1 DO
-          u.cg.pushOp(opA[i]);
-        END;
+      BEGIN
+        FOR i := size - 1 TO 0 BY -1 DO u.cg.pushOp(opA[i]) END;
       END;
     END;
 
@@ -3714,7 +3761,6 @@ PROCEDURE load_stack_param (u: U; t: MType; depth: INTEGER) =
     ELSE
       INC(u.call_param_size[u.in_proc_call - 1], 8);
     END
-
   END load_stack_param;
 
 PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
@@ -3722,7 +3768,7 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
    * NOTE that we implement call by value, the struct is
    * copied to temporary space on the machine stack
    *)
-  VAR ts: Target.IntN;
+  VAR ts: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("pop_struct");
@@ -3735,24 +3781,23 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
 
     (* round struct size up to multiple of 4 or 8 *)
 
-    <* ASSERT a <= 4 OR a = 8 *>
-    IF a <= 4 THEN
-      s := Word.And(s + 3, 16_FFFFFFFC);
+    CASE a OF
+    | 4 => s := Word.And(s + 3, 16_FFFFFFFC);
+    | 8 => s := Word.And(s + 7, Alignmask[8]);
     ELSE
-      s := Word.And(s + 7, Alignmask[8]);
+      <*ASSERT FALSE*>
     END;
 
     u.vstack.unlock();
 
     WITH stack0 = u.vstack.pos(0, "pop_struct") DO
 
-      IF NOT TIntN.FromHostInteger(s, Target.Integer.bytes, ts) THEN
-        u.Err("pop_struct: unable to convert s to target int");
-      END;
+      IF s > 32 THEN
+        (* "large", use rep mov to copy it to the machine stack *)
 
-      (* if the struct is "large", use rep mov to copy it to the machine stack *)
-
-      IF TIntN.GT(ts, TIntN.ThirtyTwo) THEN
+        IF NOT TIntN.FromInt(s, Target.Integer.bytes, ts) THEN
+          u.Err("pop_struct: unable to convert s to target int");
+        END;
         u.cg.immOp(Op.oSUB, u.cg.reg[ESP], ts);
 
         u.vstack.find(stack0, Force.regset, RegSet { ESI });
@@ -3768,8 +3813,7 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
 
         u.vstack.newdest(u.cg.reg[ESI]);
       ELSE
-
-        (* if the struct is "small", use a few load/push to copy it to the machine stack *)
+        (* "small", use a few load/push to copy it to the machine stack *)
 
         u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
 
@@ -3784,7 +3828,7 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
 
     u.vstack.discard(1);
 
-    INC(u.call_param_size[u.in_proc_call - 1], s);
+    INC(u.call_param_size[u.in_proc_call-1], s);
   END pop_struct;
 
 PROCEDURE pop_static_link (u: U) =
@@ -3796,53 +3840,41 @@ PROCEDURE pop_static_link (u: U) =
 
     <* ASSERT u.in_proc_call > 0 *>
 
-    u.static_link[u.in_proc_call - 1] := declare_temp(u, 4, 4, Type.Addr, FALSE);
+    u.static_link[u.in_proc_call-1] := declare_temp(u, 4, 4, Type.Addr, FALSE);
 
-    u.vstack.pop(MVar {var := u.static_link[u.in_proc_call - 1],
-                       mvar_offset := 0, mvar_type := Type.Addr} );
+    u.vstack.pop(MVar {var := u.static_link[u.in_proc_call-1],
+                       offset := 0, type := Type.Addr} );
   END pop_static_link;
 
-PROCEDURE Is64 (t: Type): BOOLEAN =
-  BEGIN
-    RETURN t IN (SET OF Type{Type.Int64, Type.Word64});
-  END Is64;
-
-PROCEDURE IsWord (t: Type): BOOLEAN =
-  BEGIN
-    RETURN t IN (SET OF Type{Type.Word32, Type.Word64});
-  END IsWord;
-
-PROCEDURE IsInt (t: Type): BOOLEAN =
-  BEGIN
-    RETURN t IN (SET OF Type{Type.Int32, Type.Int64});
-  END IsInt;
-
 PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize =
-  VAR type := mvar.mvar_type;
+  VAR type := mvar.type;
   BEGIN
     mvarA[0] := mvar;
-    IF NOT Is64(type) THEN
+    CASE type OF
+    | Type.Int64, Type.Word64 =>
+      (* continue *)
+    ELSE
       RETURN 1;
     END;
     mvarA[1] := mvar;
     IF mvar.var # NIL THEN
       (* <* ASSERT mvar.var.var_size = CG_Bytes[type] *> *)
     END;
-    INC(mvarA[1].mvar_offset, 4);
-    mvarA[0].mvar_type := Type.Word32;      (* low part of 64bit integer is always unsigned *)
+    INC(mvarA[1].offset, 4);
+    mvarA[0].type := Type.Word32;      (* low part of 64bit integer is always unsigned *)
     IF type = Type.Int64 THEN
-      mvarA[1].mvar_type := Type.Int32;     (* high part signedness is same as unsplit type *)
+      mvarA[1].type := Type.Int32;     (* high part signedness is same as unsplit type *)
     ELSIF type = Type.Word64 THEN
-      mvarA[1].mvar_type := Type.Word32;    (* high part signedness is same as unsplit type *)
+      mvarA[1].type := Type.Word32;    (* high part signedness is same as unsplit type *)
     ELSE
       <* ASSERT FALSE *>
     END;
     RETURN 2;
   END SplitMVar;
 
-PROCEDURE SplitImm(type: Type; READONLY imm: Target.IntN; VAR immA: ARRAY OperandPart OF Target.IntN): OperandSize =
+PROCEDURE SplitImm(type: Type; READONLY imm: TIntN.T; VAR immA: ARRAY OperandPart OF TIntN.T): OperandSize =
   BEGIN
-    TWordN.And(imm, Target.Word32.maxN, immA[0]);
+    TWordN.And(imm, TWordN.Max32, immA[0]);
     TWordN.RightShift(imm, 32, immA[1]);
     RETURN GetTypeSize(type);
   END SplitImm;
@@ -3850,7 +3882,7 @@ PROCEDURE SplitImm(type: Type; READONLY imm: Target.IntN; VAR immA: ARRAY Operan
 PROCEDURE GetTypeSize(type: Type): OperandSize =
 (* In words: 1 or 2 *)
   BEGIN
-    RETURN 1 + ORD(Is64(type));
+    RETURN 1 + ORD(type IN Types64);
   END GetTypeSize;
 
 PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize =
@@ -3861,11 +3893,14 @@ PROCEDURE GetOperandSize(READONLY op: Operand): OperandSize =
 PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize =
   VAR type := op.optype;
       mvarA: ARRAY OperandPart OF MVar;
-      immA: ARRAY OperandPart OF Target.IntN;
+      immA: ARRAY OperandPart OF TIntN.T;
   BEGIN
     opA[0] := op;
 
-    IF GetTypeSize(type) = 1 THEN
+    CASE type OF
+    | Type.Int64, Type.Word64 =>
+      (* continue *)
+    ELSE
       RETURN 1;
     END;
 
@@ -3898,7 +3933,7 @@ PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Opera
 
 PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
   VAR realproc := NARROW(p, x86Proc);
-      call_param_size: Target.IntN;
+      call_param_size: TIntN.T;
   (* call the procedure identified by block b.  The procedure
      returns a value of type t. *)
   BEGIN
@@ -3930,9 +3965,9 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
     END;
 
     IF (NOT realproc.stdcall) (* => caller cleans *)
-       AND u.call_param_size[u.in_proc_call - 1] > 0 THEN
-
-        IF NOT TIntN.FromHostInteger(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
+       AND u.call_param_size[u.in_proc_call-1] > 0 THEN
+        IF NOT TIntN.FromInt(u.call_param_size[u.in_proc_call-1],
+                             Target.Integer.bytes, call_param_size) THEN
           u.Err("call_direct: unable to convert param_size to target integer");
         END;
         u.cg.immOp(Op.oADD, u.cg.reg[ESP], call_param_size);
@@ -3943,10 +3978,11 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
     END;
 
     IF t # Type.Void THEN
-      IF Target.FloatType [t] THEN
+      CASE t OF
+      | Type.Reel, Type.LReel, Type.XReel =>
         u.vstack.pushnew(t, Force.any);
         u.cg.f_pushnew();
-      ELSIF Is64(t) THEN
+      | Type.Int64, Type.Word64 =>
         u.vstack.pushnew(t, Force.regset, RegSet { EAX, EDX });
       ELSE
         u.vstack.pushnew(FixReturnValue(u, t), Force.regset, RegSet { EAX });
@@ -3959,7 +3995,7 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
 PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
   (* call the procedure whose address is in s0.A and pop s0.  The
      procedure returns a value of type t. *)
-  VAR call_param_size: Target.IntN;
+  VAR call_param_size: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("call_indirect");
@@ -3972,29 +4008,28 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
 
     u.vstack.releaseall();
 
-    IF u.static_link[u.in_proc_call - 1] # NIL THEN
-      (*u.vstack.corrupt(ECX, operandPart := 0);*)
+    IF u.static_link[u.in_proc_call-1] # NIL THEN
       u.cg.movOp(u.cg.reg[ECX],
-                 Operand { loc := OLoc.mem, optype := Type.Addr,
+                 Operand { loc := OLoc.mem,
+                           optype := Type.Addr,
                            mvar :=
-                             MVar { var := u.static_link[u.in_proc_call - 1],
-                                    mvar_offset := 0,
-                                    mvar_type := Type.Addr } } );
-      free_temp(u, u.static_link[u.in_proc_call - 1]);
-      u.static_link[u.in_proc_call - 1] := NIL;
+                             MVar { var := u.static_link[u.in_proc_call-1],
+                                    offset := 0,
+                                    type := Type.Addr } } );
+      free_temp(u, u.static_link[u.in_proc_call-1]);
+      u.static_link[u.in_proc_call-1] := NIL;
     END;
 
     u.cg.rmCall(u.vstack.op(u.vstack.pos(0, "call_indirect")));
     u.vstack.discard(1);
 
-    IF (cc.m3cg_id = 0) AND u.call_param_size[u.in_proc_call - 1] > 0 THEN
-
+    IF (cc.m3cg_id = 0)
+      AND u.call_param_size[u.in_proc_call-1] > 0 THEN
       (* caller-cleans calling convention *)
-
-      IF NOT TIntN.FromHostInteger(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
+      IF NOT TIntN.FromInt(u.call_param_size[u.in_proc_call - 1],
+                           Target.Integer.bytes, call_param_size) THEN
         u.Err("call_indirect: unable to convert param_size to target integer");
       END;
-
       u.cg.immOp(Op.oADD, u.cg.reg[ESP], call_param_size);
     END;
 
@@ -4003,10 +4038,11 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
     END;
 
     IF t # Type.Void THEN
-      IF Target.FloatType [t] THEN
+      CASE t OF
+      | Type.Reel, Type.LReel, Type.XReel =>
         u.vstack.pushnew(t, Force.any);
         u.cg.f_pushnew();
-      ELSIF Is64(t) THEN
+      | Type.Int64, Type.Word64 =>
         u.vstack.pushnew(t, Force.regset, RegSet { EAX, EDX });
       ELSE
         u.vstack.pushnew(FixReturnValue(u, t), Force.regset, RegSet { EAX });
@@ -4035,11 +4071,11 @@ PROCEDURE FixReturnValue (u: U;  t: Type): Type =
         t := Type.Int32;
 
     | Type.Word8 => (* 8-bit unsigned integer *)
-        u.cg.immOp (Op.oAND, u.cg.reg[EAX], Target.Word8.maxN);  (* EAX &= 16_FF *)
+        u.cg.immOp (Op.oAND, u.cg.reg[EAX], TWordN.Max8);  (* EAX &= 16_FF *)
         t := Type.Word32;
 
     | Type.Word16 => (* 16-bit unsigned integer *)
-        u.cg.immOp (Op.oAND, u.cg.reg[EAX], Target.Word16.maxN);  (* EAX &= 16_FFFF *)
+        u.cg.immOp (Op.oAND, u.cg.reg[EAX], TWordN.Max16);  (* EAX &= 16_FFFF *)
         t := Type.Word32;
 
     ELSE (* value is ok *)
@@ -4146,23 +4182,25 @@ PROCEDURE fltregcmp (u: U; tozero: BOOLEAN): BOOLEAN =
 PROCEDURE condset (u: U; cond: Cond; t: ZType) =
   VAR reversed := FALSE;
   BEGIN
-    IF Target.FloatType[t] THEN
-      reversed := fltregcmp(u, cond < Cond.E);
-    ELSE
-      reversed := intregcmp(u, cond < Cond.E, t);
-    END;
-
-    IF reversed THEN
-      cond := revcond[cond];
-    END;
-
     CASE t OF
-    | Type.Word32, Type.Word64, Type.Addr,
-      Type.Reel, Type.LReel, Type.XReel => (* FCOM sets the unsigned compare flags *)
-        cond := unscond[cond];
-    ELSE
+    | Type.Int32, Type.Int64 =>
+      reversed := intregcmp(u, cond < Cond.E, t);
+      IF reversed THEN
+        cond := revcond[cond];
+      END;
+    | Type.Word32, Type.Word64, Type.Addr =>
+      reversed := intregcmp(u, cond < Cond.E, t);
+      IF reversed THEN
+        cond := revcond[cond];
+      END;
+      cond := unscond[cond];
+    | Type.Reel, Type.LReel, Type.XReel =>
+      reversed := fltregcmp(u, cond < Cond.E);
+      IF reversed THEN
+        cond := revcond[cond];
+      END;
+      cond := unscond[cond]; (* FCOM sets the unsigned compare flags *)
     END;
-
     u.vstack.unlock();
     u.vstack.pushnew(Type.Word8, Force.mem);
     WITH stop0 = u.vstack.op(u.vstack.pos(0, "condset")) DO
@@ -4186,15 +4224,10 @@ PROCEDURE comment (u: U;  a, b, c, d: TEXT := NIL) =
 PROCEDURE Cmt (u: U;  t: TEXT;  VAR width: INTEGER) =
   VAR ch: CHAR;
   BEGIN
-    IF (NOT u.debug) OR (t = NIL) THEN
-      RETURN
-    END;
+    IF (NOT u.debug OR t = NIL) THEN RETURN END;
     FOR i := 0 TO Text.Length (t) - 1 DO
       ch := Text.GetChar (t, i);
-      IF (width = -1) THEN
-        u.wr.OutT ("\t# ");
-        width := 0;
-      END;
+      IF (width = -1) THEN u.wr.OutT ("\t# "); width := 0; END;
       IF (ch = '\n') THEN
         u.wr.NL ();
         width := -1;
@@ -4365,7 +4398,7 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
     IF u.current_proc.fenceVar = NIL THEN
       u.current_proc.fenceVar := get_temp_var(u, Type.Word32, 4, 4);
     END;
-    u.vstack.push(MVar{u.current_proc.fenceVar, mvar_type := Type.Word32});
+    u.vstack.push(MVar{u.current_proc.fenceVar, type := Type.Word32});
     u.vstack.pushnew(Type.Word32, Force.anyreg);
     EVAL u.vstack.dobin(Op.oXCHG, TRUE, TRUE, Type.Word32);
     u.vstack.discard(1);
@@ -4421,7 +4454,11 @@ retry:
       x.vstack.find(atomicVariable, Force.anyreg);
       x.cg.load_ind(rEAX, x.vstack.op(atomicVariable), 0, t);
       label := x.next_label();
-      debug_set_label(x, label);
+      IF x.debug THEN
+        x.wr.OutT  (".");
+        x.wr.Lab   (label);
+        x.wr.NL    ();
+      END;
       x.cg.set_label(label);
       x.cg.movOp(x.cg.reg[rNewValue], x.cg.reg[EAX]);
       x.cg.binOp(AtomicOpToOp[atomic_op], x.cg.reg[rNewValue], x.vstack.op(operand));
