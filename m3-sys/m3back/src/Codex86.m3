@@ -1777,6 +1777,7 @@ PROCEDURE get_frame (t: T; r: Regno; target, current: x86Proc) =
 
 PROCEDURE set_label (t: T; label: Label; offset := 0) =
   BEGIN
+    t.parent.debug_set_label(label);
     check_label(t, label, "set_label");
     WITH lab = t.labarr[label] DO
       IF NOT lab.no_address THEN
