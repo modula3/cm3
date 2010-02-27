@@ -25,7 +25,7 @@ CONST
   Max8  = T{x := TWord.Max8};
   Max16 = T{x := TWord.Max16};
   Max32 = T{x := TWord.Max32};
-  Max64 = T{x := TWord.Max64};
+  (*Max64 = T{x := TWord.Max64};*)
 
 PROCEDURE Add (READONLY a, b: T;  VAR i: T);
 (* returns 'Word.Plus (a, b)' *)
