@@ -64,13 +64,6 @@ PROCEDURE Mod (READONLY num, den: T;  VAR r: T): BOOLEAN =
     RETURN result;
   END Mod;
 
-PROCEDURE DivMod (READONLY x, y: T;  VAR q, r: T) =
-  BEGIN
-    TWord.DivMod(ToInt(x), ToInt(y), q.x, r.x);
-    FromInt(r, MIN(x.n, y.n));
-    FromInt(q, MIN(x.n, y.n));
-  END DivMod;
-
 PROCEDURE LT (READONLY a, b: T): BOOLEAN =
   BEGIN
     RETURN TWord.LT(ToInt(a), ToInt(b));

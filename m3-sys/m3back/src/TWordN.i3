@@ -42,9 +42,6 @@ PROCEDURE Div (READONLY a, b: T;  VAR i: T): BOOLEAN;
 PROCEDURE Mod (READONLY a, b: T;  VAR i: T): BOOLEAN;
 (* returns 'Word.Mod (a, b)' unless b is zero. *)
 
-PROCEDURE DivMod (READONLY x, y: T;  VAR q, r: T);
-(* returns 'q = x DIV y', and 'r = x MOD y', but assumes that 'y # 0' *)
-
 PROCEDURE LT (READONLY a, b: T): BOOLEAN; (* a < b *)
 PROCEDURE LE (READONLY a, b: T): BOOLEAN; (* a <= b *)
 PROCEDURE EQ (READONLY a, b: T): BOOLEAN; (* a = b *)
