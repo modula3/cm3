@@ -35,12 +35,12 @@ CONST
 
   Min8      = T{x := TInt.Min8};
   Max8      = T{x := TInt.Max8};
-  Min16     = T{x := TInt.Min16};
+  (*Min16     = T{x := TInt.Min16};*)
   Max16     = T{x := TInt.Max16};
-  Min32     = T{x := TInt.Min32};
+  (*Min32     = T{x := TInt.Min32};*)
   Max32     = T{x := TInt.Max32};
-  Min64     = T{x := TInt.Min64};
-  Max64     = T{x := TInt.Max64};
+  (*Min64     = T{x := TInt.Min64};*)
+  (*Max64     = T{x := TInt.Max64};*)
 
   Two       = T{x := Int{ 2,0,..}};
   Three     = T{x := Int{ 3,0,..}};
