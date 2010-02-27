@@ -137,9 +137,9 @@ CONST         AllRegisters = RegSet{EAX, ECX, EDX, EBX,
                                     (*ESP,*) (*EBP,*) ESI, EDI};
 CONST RegistersForByteOperations = RegSet{EAX, EBX, ECX, EDX};
 
-PROCEDURE IsWord (t: Type): BOOLEAN; (* IsUnsigned *)
-PROCEDURE IsInt (t: Type): BOOLEAN;  (* IsSigned *)
-PROCEDURE Is64 (t: Type): BOOLEAN;
+PROCEDURE TypeIsUnsigned (t: Type): BOOLEAN;
+PROCEDURE TypeIsSigned (t: Type): BOOLEAN;
+PROCEDURE TypeIs64 (t: Type): BOOLEAN;
 PROCEDURE SplitMVar(READONLY mvar: MVar; VAR mvarA: ARRAY OperandPart OF MVar): OperandSize;
 PROCEDURE SplitImm(type: Type; READONLY imm: TIntN.T; VAR immA: ARRAY OperandPart OF TIntN.T): OperandSize;
 PROCEDURE SplitOperand(READONLY op: Operand; VAR opA: ARRAY OperandPart OF Operand): OperandSize;

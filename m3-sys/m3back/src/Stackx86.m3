@@ -17,9 +17,9 @@ FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 FROM M3CG IMPORT Type, MType, ZType, IType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, Is64, OperandPart, RegName, OperandSize, TZero;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, TypeIs64, OperandPart, RegName, OperandSize, TZero;
 FROM M3x86Rep IMPORT RegistersForByteOperations, RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
-FROM M3x86Rep IMPORT IsInt, IsWord, EAX, ECX, EDX, EBX, ESI, EDI, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
+FROM M3x86Rep IMPORT TypeIsSigned, TypeIsUnsigned, EAX, ECX, EDX, EBX, ESI, EDI, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
 
@@ -819,7 +819,7 @@ PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet; operandPart: O
 PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
   BEGIN
     maybe_expand_stack(t);
-    IF Is64(type) AND force = Force.regset AND set = RegSet { EAX, EDX } THEN
+    IF TypeIs64(type) AND force = Force.regset AND set = RegSet { EAX, EDX } THEN
       pushnew1(t, type, Force.regset, RegSet { EDX }, operandPart := 1);
       pushnew1(t, type, Force.regset, RegSet { EAX }, operandPart := 0);
     ELSE
@@ -1407,7 +1407,7 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
       tShiftCount: TIntN.T;
       shiftResult: TIntN.T;
       shiftCount: INTEGER;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1518,7 +1518,7 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
 PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
   VAR leftlab, endlab: Label;
       rotateCount: INTEGER;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1536,7 +1536,7 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
         ELSE
           IF TIntN.NE(stop0.imm, TZero) THEN
 
-            IF is64 THEN (* needs work *)
+            IF is64 THEN (* needs work to be more efficient, but ok *)
               RETURN FALSE;
             END;
 
@@ -1560,7 +1560,7 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
 
         IF ((stop0.loc # OLoc.imm) OR (TIntN.NE(stop0.imm, TZero))) THEN
 
-          IF is64 THEN (* needs work *)
+          IF is64 THEN (* needs work to be more efficient, but ok *)
             RETURN FALSE;
           END;
 
@@ -1600,7 +1600,7 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
 PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
   VAR tbl: MVar;
       int: INTEGER;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1678,8 +1678,9 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
   VAR tn, t32MinusN, andval: TIntN.T;
       int: INTEGER;
       uint_type := IntType[UnsignedType[type]];
-      is64 := Is64(type);
-      max := TIntN.T{n := NUMBER(Target.Int), x := uint_type.max};
+      is64 := TypeIs64(type);
+      max := TIntN.T{x := uint_type.max};
+      typeBitSize := uint_type.size;
   BEGIN
 
     unlock(t);
@@ -1731,8 +1732,8 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
 
         t.cg.unOp(Op.oSHR, stop1);
 
-        IF n < uint_type.size THEN
-          TWordN.Shift(max, n - uint_type.size, andval);
+        IF n < typeBitSize THEN
+          TWordN.Shift(max, n - typeBitSize, andval);
           t.cg.immOp(Op.oAND, stop1, andval);
         END
       END;
@@ -1746,7 +1747,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
 
 PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEAN =
   VAR andval, tint: TIntN.T;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1812,7 +1813,7 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
   VAR maskreg: Regno;  tbl: MVar;
       int: INTEGER;
       tint: TIntN.T;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1902,7 +1903,7 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
   VAR tbl: MVar;  maskreg: Regno;
       m: INTEGER;
       tint: TIntN.T;
-      is64 := Is64(type);
+      is64 := TypeIs64(type);
   BEGIN
 
     unlock(t);
@@ -1969,8 +1970,9 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
 PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
   VAR tint_m, mask_m, mask_m_n, mask: TIntN.T;
       uint_type := IntType[UnsignedType[type]];
-      is64 := Is64(type);
-      max := TIntN.T{n := NUMBER(Target.Int), x := uint_type.max};
+      is64 := TypeIs64(type);
+      max := TIntN.T{x := uint_type.max};
+      typeBitSize := uint_type.size;
   BEGIN
 
     unlock(t);
@@ -1979,7 +1981,12 @@ PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
 
-      (* This check should be removed. *)
+      (* This check should be removed;
+       * It is ok though, it is here because
+       * I haven't implemented some optimizations.
+       * RETURN FALSE just means "generate a function
+       * call instead of inline code".
+       *)
 
       IF is64 AND (stop0.loc # OLoc.imm OR stop1.loc # OLoc.imm) THEN
         RETURN FALSE;
@@ -1992,13 +1999,13 @@ PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
         find(t, stack1, Force.anyreg);
       END;
 
-      TWordN.Shift(max, n - uint_type.size, mask);
+      TWordN.Shift(max, n - typeBitSize, mask);
 
       IF stop0.loc = OLoc.imm THEN
         TWordN.And(stop0.imm, mask, stop0.imm);
         TWordN.Shift(stop0.imm, m, stop0.imm);
       ELSE
-        IF (n + m) < uint_type.size THEN
+        IF (n + m) < typeBitSize THEN
           t.cg.immOp(Op.oAND, stop0, mask);
         END;
 
@@ -2011,7 +2018,7 @@ PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
       END;
 
       TWordN.Shift(max, m, mask_m);
-      TWordN.Shift(max, m + n - uint_type.size, mask_m_n);
+      TWordN.Shift(max, m + n - typeBitSize, mask_m_n);
       TWordN.Xor(mask_m, mask_m_n, mask);
 
       IF TWordN.NE(mask, max) THEN
@@ -2120,7 +2127,7 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
                   IF fromSize = 2 THEN
                     find(t, stack0, Force.anyreg);
                   ELSE
-                    IF IsInt(from) THEN
+                    IF TypeIsSigned(from) THEN
                       find(t, stack0, Force.regset, RegSet{EAX});
                     ELSE
                       find(t, stack0, Force.anyreg);
@@ -2140,7 +2147,7 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
                    * We should favor dead, or else anything but
                    * the one that holds the other half of this operand.
                    *)
-                  IF IsWord(from) THEN
+                  IF TypeIsUnsigned(from) THEN
                     (* zero extend by allocating another register and xoring *)
                     WITH reg = finddead(t) DO
                       <* ASSERT reg # -1 *>
