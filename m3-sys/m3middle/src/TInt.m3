@@ -23,73 +23,6 @@ CONST
   Digits   = ARRAY [0..9] OF CHAR { '0','1','2','3','4','5','6','7','8','9'};
   Ten      = Int{10,0,..};
 
-PROCEDURE SignExtend(VAR a: Int; n: CARDINAL) =
-(*
-    sign extend from n to the precision of Int
-*)
-  VAR extend := 0;
-  BEGIN
-
-    IF Word.And(a[n - 1], SignMask) # 0 THEN
-      extend := Mask;
-    END;
-    FOR i := n TO LAST(a) DO
-      a[i] := extend;
-    END;
-  END SignExtend;
-
-PROCEDURE SignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN =
-(*
-    truncate to n bytes
-    return FALSE if the value did not previously fit
-*)
-  VAR result := TRUE;
-      extend := 0;
-  BEGIN
-    <* ASSERT n # 0 *>
-    <* ASSERT n <= NUMBER(a) *>
-
-    IF Word.And(a[LAST(a)], SignMask) # 0 THEN
-      extend := Mask;
-    END;
-    FOR i := n TO LAST(a) DO
-      IF a[i] # extend THEN
-        result := FALSE;
-        a[i] := extend;
-      END;
-    END;
-
-    RETURN result;
-  END SignedTruncate;
-
-PROCEDURE ZeroExtend(VAR a: Int; n: CARDINAL) =
-(*
-    zero extend from n bytes to the precision of Int
-*)
-  BEGIN
-    <*ASSERT n # 0*>
-    FOR i := n TO LAST(a) DO
-      a[i] := 0;
-    END;
-  END ZeroExtend;
-
-PROCEDURE UnsignedTruncate(VAR a: Int; n: CARDINAL): BOOLEAN =
-(*
-    truncate to n bytes
-    return FALSE if the value did not previously fit
-*)
-  VAR result := TRUE;
-  BEGIN
-    <*ASSERT n # 0*>
-    FOR i := n TO LAST(a) DO
-      IF a[i] # 0 THEN
-        result := FALSE;
-        a[i] := 0;
-      END;
-    END;
-    RETURN result;
-  END UnsignedTruncate;
-
 PROCEDURE FromInt (x: INTEGER;  VAR r: Int): BOOLEAN =
   BEGIN
     FOR i := 0 TO LAST(Int) DO
@@ -445,14 +378,24 @@ PROCEDURE ToBytes (READONLY r: Int;  VAR buf: ARRAY OF [0..255]): CARDINAL =
 
     RETURN j;
   END ToBytes;
-
-PROCEDURE Chop (VAR r: Int;  n: CARDINAL) =
+  
+PROCEDURE Extend (READONLY a: Int;  n: CARDINAL;  VAR r: Int): BOOLEAN =
+  VAR result := TRUE;
   BEGIN
-    IF And (r [n-1], SignMask) = 0
-      THEN FOR i := n TO LAST(Int) DO r [i] := 0    END;
-      ELSE FOR i := n TO LAST(Int) DO r [i] := Mask END;
+    FOR i := 0 TO n-1 DO r[i] := a[i] END;
+    IF And (a[n-1], SignMask) = 0 THEN
+      FOR i := n TO LAST(Int) DO
+        IF a[i] # 0 THEN result := FALSE END;
+        r[i] := 0;
+      END;
+    ELSE
+      FOR i := n TO LAST(Int) DO
+        IF a[i] # Mask THEN result := FALSE END;
+        r[i] := Mask;
+      END;
     END;
-  END Chop;
+    RETURN result;
+  END Extend;
 
 BEGIN
 END TInt.

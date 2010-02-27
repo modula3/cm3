@@ -22,6 +22,12 @@ FROM Target IMPORT Int;
 
 CONST Size = BITSIZE(Int);
 
+CONST
+  Max8  = Int{16_FF, 0, ..};
+  Max16 = Int{16_FF, 16_FF, 0, ..};
+  Max32 = Int{16_FF, 16_FF, 16_FF, 16_FF, 0, ..};
+  Max64 = Int{16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF, 16_FF};
+
 PROCEDURE New (READONLY chars: ARRAY OF CHAR;  base: [2..16];
                VAR i: Int): BOOLEAN;
 (* converts the string of characters in 'chars' representing a base 'base'
@@ -86,5 +92,9 @@ PROCEDURE Extract (READONLY a: Int;  b, c: CARDINAL;  VAR r: Int): BOOLEAN;
 
 PROCEDURE Insert (READONLY a, b: Int;  c, d: CARDINAL;  VAR r: Int): BOOLEAN;
 (* returns 'Word.Insert (a, b, c, d)' *)
+
+PROCEDURE Truncate (READONLY a: Int;  n: CARDINAL;  VAR r: Int): BOOLEAN;
+(* truncates to the low-order 'n' bytes of 'i'.
+   Returns TRUE if 'i' has at most 'n' significant bytes, FALSE otherwise. *)
 
 END TWord.
