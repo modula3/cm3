@@ -18,7 +18,7 @@ FROM M3CG IMPORT Type, MType, Label;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, x86Var, x86Proc, NRegs, OperandSize, GetOperandSize;
-FROM M3x86Rep IMPORT RegistersForByteOperations, RegName, SplitOperand, Types64, SplitImm, OperandPart, GetTypeSize, TZero;
+FROM M3x86Rep IMPORT RegistersForByteOperations, RegName, SplitOperand, Is64, SplitImm, OperandPart, GetTypeSize, TZero;
 FROM M3x86Rep IMPORT EAX, EDX, ESP, EBP, ECX;
 
 FROM M3ObjFile IMPORT Seg;
@@ -252,7 +252,7 @@ PROCEDURE setccOp (t: T; READONLY op: Operand; cond: Cond) =
   BEGIN
     <* ASSERT (op.loc = OLoc.register AND
                op.reg[0] IN RegistersForByteOperations ) OR
-              (op.loc = OLoc.mem AND CG_Bytes[op.mvar.type] = 1) *>
+              (op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 1) *>
     IF op.loc = OLoc.register THEN
       movImmT(t, op, TZero);
     END;
@@ -329,12 +329,12 @@ PROCEDURE binFOp (t: T; op: FOp; st: INTEGER) =
     prepare_stack(t, op);
     IF t.ftop_inmem THEN
       Mn(t, fopcode[op].name, " ST");  MnMVar(t, t.ftop_mem);
-      IF t.ftop_mem.type = Type.Reel THEN
+      IF t.ftop_mem.mvar_type = Type.Reel THEN
         mem.opcode := fopcode[op].m32;
       ELSE
         mem.opcode := fopcode[op].m64;
       END;
-      build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, optype := t.ftop_mem.type},
+      build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, optype := t.ftop_mem.mvar_type},
                   t.opcode[fopcode[op].memop], mem);
       writecode(t, mem);
       log_global_var(t, t.ftop_mem, -4);
@@ -362,7 +362,7 @@ PROCEDURE memFOp (t: T; op: FOp; mvar: MVar) =
     prepare_stack(t, op);
 
     Mn(t, fopcode[op].name, " m");  MnMVar(t, mvar);
-    build_modrm(t, Operand {loc := OLoc.mem, mvar := mvar, optype := mvar.type},
+    build_modrm(t, Operand {loc := OLoc.mem, mvar := mvar, optype := mvar.mvar_type},
                 t.opcode[fopcode[op].memop], ins);
     ins.opcode := fopcode[op].m32;
     writecode(t, ins);
@@ -379,16 +379,16 @@ PROCEDURE noargOp (t: T; op: Op) =
     writecode(t, ins);
   END noargOp;
 
-PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
+PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.IntN) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
-    IF NOT TIntN.ToInt(imm, ins.imm) THEN
+    IF NOT TIntN.ToHostInteger(imm, ins.imm) THEN
       t.Err("immOp1: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
     END;
 
-    IF TIntN.GE(imm, TIntN.Min8) AND TIntN.LE(imm, TIntN.Min8) THEN
+    IF TIntN.GE(imm, Target.Int8.minN) AND TIntN.LE(imm, Target.Int8.maxN) THEN
       ins.imsize := 1;
     ELSE
       ins.imsize := 4;
@@ -402,11 +402,11 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
     ELSE
       build_modrm(t, dest, t.opcode[opcode[op].immop], ins);
       IF ins.imsize = 1 THEN
-        IF dest.loc = OLoc.mem AND CG_Bytes[dest.mvar.type] = 1 THEN
+        IF dest.loc = OLoc.mem AND CG_Bytes[dest.mvar.mvar_type] = 1 THEN
           ins.opcode := opcode[op].imm32 - 1;
           writecode(t, ins);
           log_global_var(t, dest.mvar, -5);
-        ELSIF dest.loc = OLoc.mem AND CG_Bytes[dest.mvar.type] = 2 THEN
+        ELSIF dest.loc = OLoc.mem AND CG_Bytes[dest.mvar.mvar_type] = 2 THEN
           ins.prefix := TRUE;
           ins.opcode := opcode[op].imm8;
           writecode(t, ins);
@@ -427,7 +427,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
           END
         END
       ELSE
-        <* ASSERT dest.loc # OLoc.mem OR CG_Bytes[dest.mvar.type] = 4 *>
+        <* ASSERT dest.loc # OLoc.mem OR CG_Bytes[dest.mvar.mvar_type] = 4 *>
         ins.opcode := opcode[op].imm32;
         writecode(t, ins);
         IF dest.loc = OLoc.mem THEN
@@ -437,19 +437,19 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
     END
   END immOp1;
 
-PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
+PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: Target.IntN) =
   VAR destA: ARRAY OperandPart OF Operand;
-      immA: ARRAY OperandPart OF TIntN.T;
+      immA: ARRAY OperandPart OF Target.IntN;
       immSize := SplitImm(dest.optype, imm, immA);
       destSize := SplitOperand(dest, destA);
       compare_label: Label;
-      immMinus32: TIntN.T;
+      immMinus32: Target.IntN;
       shiftCount := Operand{loc := OLoc.imm, imm := imm};
   BEGIN
 
     <* ASSERT immSize = destSize *>
-    <* ASSERT NOT destA[0].optype IN Types64 *>
-    <* ASSERT NOT destA[destSize - 1].optype IN Types64 *>
+    <* ASSERT NOT Is64(destA[0].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     IF (immSize = 2) AND (op IN SET OF Op{Op.oCMP, Op.oADD, Op.oSUB, Op.oSHL, Op.oSHR}) THEN
       CASE op OF
@@ -517,8 +517,8 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
   VAR ins: Instruction;
   BEGIN
 
-    <* ASSERT NOT src.optype IN Types64 *>
-    <* ASSERT NOT dest.optype IN Types64 *>
+    <* ASSERT NOT Is64(src.optype) *>
+    <* ASSERT NOT Is64(dest.optype) *>
 
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
@@ -531,10 +531,10 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
       build_modrm(t, src, dest, ins);
       ins.opcode := opcode[op].rrm + 1;
       IF src.loc = OLoc.mem THEN
-        <* ASSERT CG_Bytes[src.mvar.type] = 4 *>
+        <* ASSERT CG_Bytes[src.mvar.mvar_type] = 4 *>
       END
     ELSE
-      <* ASSERT src.loc = OLoc.register AND CG_Bytes[src.mvar.type] = 4 *>
+      <* ASSERT src.loc = OLoc.register AND CG_Bytes[src.mvar.mvar_type] = 4 *>
       build_modrm(t, dest, src, ins);
       ins.opcode := opcode[op].rmr + 1;
     END;
@@ -551,10 +551,10 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
       <* ASSERT src.loc = OLoc.register *>
       <* ASSERT shiftCount.loc = OLoc.register OR shiftCount.loc = OLoc.imm *>
       <* ASSERT shiftCount.loc # OLoc.register OR shiftCount.reg[0] = ECX *>
-      <* ASSERT shiftCount.loc # OLoc.imm OR (TIntN.GE(shiftCount.imm, TIntN.Min8) AND TIntN.LE(shiftCount.imm, TIntN.Max8)) *>
+      <* ASSERT shiftCount.loc # OLoc.imm OR (TIntN.GE(shiftCount.imm, Target.Int8.minN) AND TIntN.LE(shiftCount.imm, Target.Int8.maxN)) *>
 
       IF shiftCount.loc = OLoc.imm THEN
-        IF NOT TIntN.ToInt(shiftCount.imm, ins.imm) THEN
+        IF NOT TIntN.ToHostInteger(shiftCount.imm, ins.imm) THEN
           t.Err("binOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(shiftCount.imm));
         END;
         ins.imsize := 1;
@@ -587,10 +587,10 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand) =
       compare_label: Label;
   BEGIN
 
-    <* ASSERT NOT srcA[0].optype IN Types64 *>
-    <* ASSERT NOT destA[0].optype IN Types64 *>
-    <* ASSERT NOT srcA[srcSize - 1].optype IN Types64 *>
-    <* ASSERT NOT destA[destSize - 1].optype IN Types64 *>
+    <* ASSERT NOT Is64(srcA[0].optype) *>
+    <* ASSERT NOT Is64(destA[0].optype) *>
+    <* ASSERT NOT Is64(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     IF srcSize # destSize THEN
       t.Err("binOp: size mismatch: destSize:" & Fmt.Int(destSize)
@@ -642,7 +642,7 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand; scale: INTEGER; 
   BEGIN
     <* ASSERT dest.loc = OLoc.register AND index.loc = OLoc.register *>
 
-    ins.disp := table.offset;
+    ins.disp := table.mvar_offset;
     IF table.var.loc = VLoc.temp THEN
       <* ASSERT table.var.parent = t.current_proc *>
       INC(ins.disp, table.var.offset);
@@ -701,11 +701,11 @@ PROCEDURE swapOp1 (t: T; READONLY dest, src: Operand) =
     END;
 
     IF dest.loc = OLoc.register THEN
-      <* ASSERT src.loc = OLoc.register OR CG_Bytes[src.mvar.type] = 4 *>
+      <* ASSERT src.loc = OLoc.register OR CG_Bytes[src.mvar.mvar_type] = 4 *>
       build_modrm(t, src, dest, ins);
     ELSE
       <* ASSERT src.loc = OLoc.register *>
-      <* ASSERT dest.loc = OLoc.register OR CG_Bytes[dest.mvar.type] = 4 *>
+      <* ASSERT dest.loc = OLoc.register OR CG_Bytes[dest.mvar.mvar_type] = 4 *>
       build_modrm (t, dest, src, ins);
     END;
     Mn(t, "XCHG ");  MnOp(t, dest);  MnOp(t, src);
@@ -733,10 +733,10 @@ PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
     END;
 
     <* ASSERT srcSize = destSize *>
-    <* ASSERT NOT srcA[0].optype IN Types64 *>
-    <* ASSERT NOT destA[0].optype IN Types64 *>
-    <* ASSERT NOT srcA[srcSize - 1].optype IN Types64 *>
-    <* ASSERT NOT destA[destSize - 1].optype IN Types64 *>
+    <* ASSERT NOT Is64(srcA[0].optype) *>
+    <* ASSERT NOT Is64(destA[0].optype) *>
+    <* ASSERT NOT Is64(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     FOR i := 0 TO destSize - 1 DO
       swapOp1(t, destA[i], srcA[i]);
@@ -799,10 +799,10 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       RETURN;
     END;
 
-    IF dest.loc = OLoc.register AND dest.reg[0] = EAX AND src.loc = OLoc.mem AND CG_Bytes[src.mvar.type] = 4 AND src.mvar.var.loc = VLoc.global THEN
+    IF dest.loc = OLoc.register AND dest.reg[0] = EAX AND src.loc = OLoc.mem AND CG_Bytes[src.mvar.mvar_type] = 4 AND src.mvar.var.loc = VLoc.global THEN
       Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
       ins.opcode := 16_A1;
-      ins.disp   := src.mvar.offset;
+      ins.disp   := src.mvar.mvar_offset;
       ins.dsize  := 4;
       writecode (t, ins);
       log_global_var(t, src.mvar, -4);
@@ -812,16 +812,16 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
     IF src.loc = OLoc.register AND src.reg[0] = EAX AND dest.loc = OLoc.mem AND dest.mvar.var.loc = VLoc.global THEN
       Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
       ins.opcode := 16_A2;
-      get_op_size(dest.mvar.type, ins);
-      ins.disp := dest.mvar.offset;
+      get_op_size(dest.mvar.mvar_type, ins);
+      ins.disp := dest.mvar.mvar_offset;
       ins.dsize := 4;
       writecode(t, ins);
       log_global_var(t, dest.mvar, -4);
       RETURN;
     END;
 
-    IF dest.loc = OLoc.register AND src.loc = OLoc.mem AND CG_Bytes[src.mvar.type] < 4 THEN
-      CASE src.mvar.type OF
+    IF dest.loc = OLoc.register AND src.loc = OLoc.mem AND CG_Bytes[src.mvar.mvar_type] < 4 THEN
+      CASE src.mvar.mvar_type OF
       | Type.Word8  => ins.opcode := 16_8A;
                        mnemonic := "MOV";
                        binOp(t, Op.oXOR, t.reg[dest.reg[0]], t.reg[dest.reg[0]]);
@@ -846,7 +846,7 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       build_modrm(t, src, dest, ins);
       ins.opcode := 16_8A;
       IF src.loc # OLoc.register THEN
-        get_op_size(src.mvar.type, ins);
+        get_op_size(src.mvar.mvar_type, ins);
       ELSE
         INC(ins.opcode);
       END
@@ -854,7 +854,7 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       <* ASSERT src.loc = OLoc.register *>
       build_modrm(t, dest, src, ins);
       ins.opcode := 16_88;
-      get_op_size(dest.mvar.type, ins);
+      get_op_size(dest.mvar.mvar_type, ins);
     END;
 
     Mn(t, "MOV");  MnOp(t, dest);  MnOp(t, src);
@@ -882,10 +882,10 @@ PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
     END;
 
     <* ASSERT srcSize = destSize *>
-    <* ASSERT NOT srcA[0].optype IN Types64 *>
-    <* ASSERT NOT destA[0].optype IN Types64 *>
-    <* ASSERT NOT srcA[srcSize - 1].optype IN Types64 *>
-    <* ASSERT NOT destA[destSize - 1].optype IN Types64 *>
+    <* ASSERT NOT Is64(srcA[0].optype) *>
+    <* ASSERT NOT Is64(destA[0].optype) *>
+    <* ASSERT NOT Is64(srcA[srcSize - 1].optype) *>
+    <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
     FOR i := 0 TO destSize - 1 DO
       movOp1(t, destA[i], srcA[i]);
@@ -908,21 +908,21 @@ PROCEDURE movDummyReloc(t: T; READONLY dest: Operand; sym: INTEGER) =
     t.obj.relocate(t.textsym, t.obj.cursor(Seg.Text) - 4, sym);
   END movDummyReloc;
 
-PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
+PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: Target.IntN) =
   VAR ins: Instruction;
   BEGIN
-    IF NOT TIntN.ToInt(imm, ins.imm) THEN
+    IF NOT TIntN.ToHostInteger(imm, ins.imm) THEN
       t.Err("movImmT: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
     END;
     IF dest.loc # OLoc.register THEN
       <* ASSERT dest.loc = OLoc.mem *>
       ins.opcode := 16_C6;
-      get_op_size(dest.mvar.type, ins);
+      get_op_size(dest.mvar.mvar_type, ins);
       build_modrm(t, dest, t.opcode[0], ins);
       Mn(t, "MOV");  MnOp(t, dest);  MnImmTInt(t, imm);
-      ins.imsize := CG_Bytes[dest.mvar.type];
+      ins.imsize := CG_Bytes[dest.mvar.mvar_type];
       writecode(t, ins);
-      log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.type]);
+      log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.mvar_type]);
     ELSIF TIntN.EQ(imm, TZero) THEN
       binOp(t, Op.oXOR, dest, dest);
     ELSE
@@ -934,10 +934,10 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
   END movImmT;
 
 PROCEDURE movImmI (t: T; READONLY dest: Operand; imm: INTEGER) =
-  VAR immT: TIntN.T;
+  VAR immT: Target.IntN;
   BEGIN
-    IF NOT TIntN.FromInt(imm, BYTESIZE(imm), immT) THEN
-      t.Err("movImmI: unable to convert INTEGER to TIntN.T");
+    IF NOT TIntN.FromHostInteger(imm, BYTESIZE(imm), immT) THEN
+      t.Err("movImmI: unable to convert INTEGER to Target.IntN");
     END;
     t.movImmT(dest, immT);
   END movImmI;
@@ -949,7 +949,7 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
     CASE src.loc OF
     | OLoc.imm =>
         ins.opcode := 16_68;
-        IF NOT TIntN.ToInt(src.imm, ins.imm) THEN
+        IF NOT TIntN.ToHostInteger(src.imm, ins.imm) THEN
           t.Err("pushOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(src.imm));
         END;
         ins.imsize := 4;
@@ -958,7 +958,7 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
         ins.opcode := 16_50 + src.reg[0];
         writecode(t, ins);
     | OLoc.mem =>
-        <* ASSERT CG_Bytes[src.mvar.type] = 4 *>
+        <* ASSERT CG_Bytes[src.mvar.mvar_type] = 4 *>
         build_modrm(t, src, t.opcode[6], ins);
         ins.opcode := 16_FF;
         writecode(t, ins);
@@ -973,8 +973,8 @@ PROCEDURE pushOp (t: T; READONLY src: Operand) =
       size := SplitOperand(src, a);
   BEGIN
 
-    <* ASSERT NOT a[0].optype IN Types64 *>
-    <* ASSERT NOT a[size - 1].optype IN Types64 *>
+    <* ASSERT NOT Is64(a[0].optype) *>
+    <* ASSERT NOT Is64(a[size - 1].optype) *>
 
     FOR i := size - 1 TO 0 BY -1 DO
       pushOp1(t, a[i]);
@@ -992,7 +992,7 @@ PROCEDURE popOp1 (t: T; READONLY dest: Operand) =
         ins.opcode := 16_58 + dest.reg[0];
         writecode(t, ins);
     | OLoc.mem =>
-        <* ASSERT CG_Bytes[dest.mvar.type] = 4 *>
+        <* ASSERT CG_Bytes[dest.mvar.mvar_type] = 4 *>
         build_modrm(t, dest, t.opcode[6], ins);
         ins.opcode := 16_FF;
         writecode(t, ins);
@@ -1007,8 +1007,8 @@ PROCEDURE popOp (t: T; READONLY dest: Operand) =
       size := SplitOperand(dest, a);
   BEGIN
 
-    <* ASSERT NOT a[0].optype IN Types64 *>
-    <* ASSERT NOT a[size - 1].optype IN Types64 *>
+    <* ASSERT NOT Is64(a[0].optype) *>
+    <* ASSERT NOT Is64(a[size - 1].optype) *>
 
     FOR i := 0 TO size - 1 DO
       popOp1(t, a[i]);
@@ -1040,7 +1040,7 @@ PROCEDURE bitOp (t: T; READONLY bits, index: Operand; op: BitOp) =
         <* ASSERT bits.loc = OLoc.register *>
 
     IF index.loc = OLoc.imm THEN
-      IF NOT TIntN.ToInt(index.imm, ins.imm) THEN
+      IF NOT TIntN.ToHostInteger(index.imm, ins.imm) THEN
         t.Err("bitOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(index.imm));
         <* ASSERT FALSE *>
       END;
@@ -1083,7 +1083,7 @@ PROCEDURE incDecOp (t: T; READONLY op: Operand; isDec: [0..1]) =
       ins.opcode := isDec * 8 + 16_40 + op.reg[0];
       writecode(t, ins);
     ELSE
-      <* ASSERT op.loc = OLoc.mem AND CG_Bytes[op.mvar.type] = 4 *>
+      <* ASSERT op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 4 *>
       build_modrm(t, op, t.opcode[isDec], ins);
       ins.opcode := 16_FF;
       writecode(t, ins);
@@ -1106,7 +1106,7 @@ PROCEDURE unOp1 (t: T; op: Op; READONLY dest: Operand) =
   BEGIN
     ins.opcode := opcode[op].imm32;
     IF dest.loc = OLoc.mem THEN
-      get_op_size(dest.mvar.type, ins);
+      get_op_size(dest.mvar.mvar_type, ins);
     ELSE
       <* ASSERT dest.loc = OLoc.register *>
       INC(ins.opcode);
@@ -1140,8 +1140,8 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
           <* ASSERT FALSE *>
       END
     ELSE
-      <* ASSERT NOT destA[0].optype IN Types64 *>
-      <* ASSERT NOT destA[destSize - 1].optype IN Types64 *>
+      <* ASSERT NOT Is64(destA[0].optype) *>
+      <* ASSERT NOT Is64(destA[destSize - 1].optype) *>
 
       FOR i := 0 TO destSize - 1 DO
         unOp1(t, op, destA[i]);
@@ -1153,7 +1153,7 @@ PROCEDURE mulOp (t: T; READONLY src: Operand) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT src.loc = OLoc.register OR (src.loc = OLoc.mem AND
-              CG_Bytes[src.mvar.type] = 4) *>
+              CG_Bytes[src.mvar.mvar_type] = 4) *>
     build_modrm(t, src, t.opcode[4], ins);
     Mn(t, "MUL EAX");  MnOp(t, src);
     ins.opcode := 16_F7;
@@ -1167,12 +1167,12 @@ PROCEDURE imulOp (t: T; READONLY dest, src: Operand) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register *>
-    <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.type] = 4 *>
+    <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.mvar_type] = 4 *>
     Mn(t, "IMUL");  MnOp(t, dest);  MnOp(t, src);
     IF src.loc = OLoc.imm THEN
       build_modrm(t, t.reg[dest.reg[0]], dest, ins);
       ins.opcode := 16_69;
-      IF NOT TIntN.ToInt(src.imm, ins.imm) THEN
+      IF NOT TIntN.ToHostInteger(src.imm, ins.imm) THEN
         t.Err("imulOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(src.imm));
       END;
       ins.imsize := 4;
@@ -1193,7 +1193,7 @@ PROCEDURE imulImm (t: T; READONLY dest, src: Operand; imm: INTEGER; imsize: INTE
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register *>
-    <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.type] = 4 *>
+    <* ASSERT src.loc # OLoc.mem OR CG_Bytes[src.mvar.mvar_type] = 4 *>
     build_modrm(t, src, dest, ins);
     Mn(t, "IMUL");  MnOp(t, dest);  MnOp(t, src);  MnImmInt(t, imm);
     IF imsize = 1 THEN
@@ -1213,7 +1213,7 @@ PROCEDURE divOp (t: T; READONLY divisor: Operand) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT divisor.loc = OLoc.register OR (divisor.loc = OLoc.mem
-              AND CG_Bytes[divisor.mvar.type] = 4) *>
+              AND CG_Bytes[divisor.mvar.mvar_type] = 4) *>
     build_modrm(t, divisor, t.opcode[6], ins);
     Mn(t, "DIV EAX");  MnOp(t, divisor);
     ins.opcode := 16_F7;
@@ -1227,7 +1227,7 @@ PROCEDURE idivOp (t: T; READONLY divisor: Operand) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT divisor.loc = OLoc.register OR (divisor.loc = OLoc.mem
-              AND CG_Bytes[divisor.mvar.type] = 4) *>
+              AND CG_Bytes[divisor.mvar.mvar_type] = 4) *>
     build_modrm(t, divisor, t.opcode[7], ins);
     Mn(t, "IDIV EAX");  MnOp(t, divisor);
     ins.opcode := 16_F7;
@@ -1337,10 +1337,10 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
 
     <* ASSERT mem.loc = OLoc.mem *>
 
-    <* ASSERT CG_Bytes[mem.mvar.type] # 1 OR reg.opcode OR
+    <* ASSERT CG_Bytes[mem.mvar.mvar_type] # 1 OR reg.opcode OR
               reg.reg[0] IN RegistersForByteOperations *>
 
-    offset := mem.mvar.offset;
+    offset := mem.mvar.mvar_offset;
     IF mem.mvar.var.loc = VLoc.temp THEN
       <* ASSERT mem.mvar.var.parent = t.current_proc *>
       INC(offset, mem.mvar.var.offset);
@@ -1573,7 +1573,7 @@ PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset; type
     ins.opcode := 16_88;
     IF val.loc = OLoc.imm THEN
       ins.opcode := 16_C6;
-      IF NOT TIntN.ToInt(val.imm, ins.imm) THEN
+      IF NOT TIntN.ToHostInteger(val.imm, ins.imm) THEN
         t.Err("store_ind1: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(val.imm));
       END;
       ins.imsize := CG_Bytes[type];
@@ -1827,12 +1827,12 @@ PROCEDURE fstack_loadtop (t: T) =
     fstack_ensure(t, 0); (* ensure will allow an extra space for the item
                             in memory, so height can be 0 not 1 *)
     Mn(t, "FLD ST");  MnMVar(t, t.ftop_mem);
-    IF t.ftop_mem.type = Type.Reel THEN
+    IF t.ftop_mem.mvar_type = Type.Reel THEN
       ins.opcode := fopcode[FOp.fLD].m32;
     ELSE
       ins.opcode := fopcode[FOp.fLD].m64;
     END;
-    build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, optype := t.ftop_mem.type},
+    build_modrm(t, Operand {loc := OLoc.mem, mvar := t.ftop_mem, optype := t.ftop_mem.mvar_type},
                 t.opcode[fopcode[FOp.fLD].memop], ins);
     writecode(t, ins);
     log_global_var(t, t.ftop_mem, -4);
@@ -1898,12 +1898,12 @@ PROCEDURE fstack_pop (t: T; READONLY mvar: MVar) =
       fstack_loadtop(t);
     END;
     Mn(t, "FSTP ST");  MnMVar(t, mvar);
-    IF mvar.type = Type.Reel THEN
+    IF mvar.mvar_type = Type.Reel THEN
       ins.opcode := fopcode[FOp.fSTP].m32;
     ELSE
       ins.opcode := fopcode[FOp.fSTP].m64;
     END;
-    build_modrm(t, Operand {loc := OLoc.mem, mvar:= mvar, optype := t.ftop_mem.type},
+    build_modrm(t, Operand {loc := OLoc.mem, mvar:= mvar, optype := t.ftop_mem.mvar_type},
                 t.opcode[fopcode[FOp.fSTP].memop], ins);
     writecode(t, ins);
     log_global_var(t, mvar, -4);
@@ -1958,8 +1958,8 @@ PROCEDURE f_loadlit (t: T; READONLY flarr: FloatBytes; type: MType) =
     t.ftop_inmem := TRUE;
     WITH mvar = t.ftop_mem DO
       mvar.var := t.flitvar;
-      mvar.type := type;
-      mvar.offset := 0;
+      mvar.mvar_type := type;
+      mvar.mvar_offset := 0;
     END;
 
     INC(t.fstacksize);
@@ -2049,9 +2049,9 @@ PROCEDURE MnMVar(t: T;  READONLY mvar: MVar) =
   BEGIN
     IF t.debug THEN
       MnVar (t, mvar.var);
-      IF mvar.offset # 0 THEN  Mn(t, "+", Fmt.Int(mvar.offset)); END;
-      IF (mvar.type # Type.Int32) AND (mvar.type # Type.Word32) THEN
-        Mn (t, ":", Target.TypeNames[mvar.type]);
+      IF mvar.mvar_offset # 0 THEN  Mn(t, "+", Fmt.Int(mvar.mvar_offset)); END;
+      IF (mvar.mvar_type # Type.Int32) AND (mvar.mvar_type # Type.Word32) THEN
+        Mn (t, ":", Target.TypeNames[mvar.mvar_type]);
       END;
     END;
   END MnMVar;
@@ -2096,7 +2096,7 @@ PROCEDURE MnProc(t: T;  p: x86Proc) =
     END;
   END MnProc;
 
-PROCEDURE MnImmTInt(t: T; READONLY imm: TIntN.T) =
+PROCEDURE MnImmTInt(t: T; READONLY imm: Target.IntN) =
   BEGIN
     IF t.debug THEN
       Mn(t, " $", TIntN.ToText (imm));
@@ -2205,11 +2205,11 @@ PROCEDURE log_global_var (t: T; mvar: MVar; reltocurs: INTEGER) =
     patch_loc := t.obj.cursor(Seg.Text) + reltocurs;
     IF mvar.var = t.flitvar THEN
       <* ASSERT t.f_litlist # NIL AND t.f_litlist.loc = 0 *>
-      <* ASSERT t.f_litlist.flit_size = CG_Bytes[mvar.type] *>
-      <* ASSERT mvar.type = Type.Reel OR mvar.type = Type.LReel OR mvar.type = Type.XReel *>
+      <* ASSERT t.f_litlist.flit_size = CG_Bytes[mvar.mvar_type] *>
+      <* ASSERT mvar.mvar_type = Type.Reel OR mvar.mvar_type = Type.LReel OR mvar.mvar_type = Type.XReel *>
       t.f_litlist.loc := patch_loc;
     ELSE
-      t.obj.patch(Seg.Text, patch_loc, mvar.offset + mvar.var.offset, 4);
+      t.obj.patch(Seg.Text, patch_loc, mvar.mvar_offset + mvar.var.offset, 4);
       t.obj.relocate(t.textsym, patch_loc, mvar.var.symbol);
     END
   END log_global_var;
