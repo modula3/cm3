@@ -11,7 +11,7 @@ INTERFACE M3x86Rep;
 IMPORT M3CG, M3ID, TIntN, Target;
 
 FROM M3CG IMPORT ByteOffset, ByteSize, Alignment;
-FROM M3CG IMPORT Var, Proc, Name;
+FROM M3CG IMPORT Var, Proc, Name, Label;
 FROM M3CG IMPORT Type, MType, IType, TypeUID;
 FROM M3ObjFile IMPORT Seg;
 
@@ -20,6 +20,7 @@ TYPE Public = M3CG.T OBJECT
       METHODS
         NewVar (t: Type; m3t: TypeUID; s: ByteSize; a: Alignment;
                 name: Name := M3ID.NoID): x86Var;
+        debug_set_label (label: Label);
       END;
 
 TYPE VLoc = {global, temp};
