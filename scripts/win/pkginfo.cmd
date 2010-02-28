@@ -32,7 +32,7 @@ goto :eof
 
 :FilterOnePackage
     @rem goto :FilterOnePackage_%1
-    for %%a in (import_libs tcl serial X11R4 m3staloneback m3cc m3gdb) do if /i "%1" == "%%a" goto :FilterOnePackage_%1
+    for %%a in (import_libs tcl serial X11R4 m3cc m3gdb) do if /i "%1" == "%%a" goto :FilterOnePackage_%1
     exit /b 0
     goto :eof
 
@@ -52,10 +52,6 @@ goto :eof
 :FilterOnePackage_X11R4
     if /i "%M3OSTYPE%" == "WIN32" exit /b 1
     exit /b 0
-
-:FilterOnePackage_m3staloneback
-    if /i not "%GCC_BACKEND%" == "yes" exit /b 0
-    exit /b 1
 
 :FilterOnePackage_m3cc
     if /i "%GCC_BACKEND%" == "yes" if "%OMIT_GCC%" == "" exit /b 0
