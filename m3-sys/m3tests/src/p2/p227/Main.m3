@@ -1,7 +1,7 @@
 MODULE Main;
 IMPORT RTIO, Word, Long, Text;
 FROM RTIO IMPORT Flush;
-FROM Compiler IMPORT ThisLine;
+<*NOWARN*>IMPORT Compiler;
 IMPORT Params;
 
 (* This test covers various longint and bit operations.
@@ -25,6 +25,14 @@ VAR InsertExtractMaxMN := 10;
  *  (note that big endian 64bit targets are presently rare/nonfunctional: PPC64_DARWIN, MIPS64_OPENBSD, SPARC64_SOLARIS)
  *)
 VAR IncludeLessPortableOutput := Params.Count > 1 AND Text.Equal(Params.Get(1), "-include-less-portable-output");
+
+(* useful for debuggging *)
+(* CONST ThisLine = Compiler.ThisLine; *)
+
+PROCEDURE ThisLine(): INTEGER =
+  BEGIN
+    RETURN -1;
+  END ThisLine;
 
 (* turn a constant into not a constant, from m3back's point of view *)
 PROCEDURE NotConstL(a: LONGINT): LONGINT =
