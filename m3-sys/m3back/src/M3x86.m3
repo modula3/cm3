@@ -2340,7 +2340,7 @@ PROCEDURE shift (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF (NOT TypeIs64(t)) AND u.vstack.doshift (t) THEN
+    IF u.vstack.doshift (t) THEN
       RETURN;
     END;
 
