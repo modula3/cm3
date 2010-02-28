@@ -12,6 +12,14 @@ include ("Test.common")
 
 %------------------------------------------------------------------------------
 
+if not defined("TARGET_ENDIAN")
+  error("TARGET_ENDIAN must be defined")
+else
+  if not equal(TARGET_ENDIAN, "LITTLE") and not equal(TARGET_ARCH, "BIG")
+    error("TARGET_ENDIAN must be BIG or LITTLE")
+  end
+end
+
 diff = "@-diff -u -b"
 diff_slash = "/"
 head = "| head -30"
@@ -72,12 +80,19 @@ library ("test")
 %  include (PKG_INSTALL & "/m3core/src/float/m3makefile")
 %end
 
-proc WordSizeSpecificFile(Path) is
-  if equal (WORD_SIZE, "64BITS") and FileExists (Path & "64")
-    return Path & "64"
-  end
-  if equal (WORD_SIZE, "32BITS") and FileExists (Path & "32")
-    return Path & "32"
+proc ProbeForTargetSpecificFile(Path) is
+%
+% For file "foo", this looks for, e.g.:
+% foo-big_endian32, foo32, foo-big_endian
+% and then gives up and returns foo.
+% "32" and "big" are tailored to the platform: can be 64 or "little"
+%
+  local wordSize = {"32BITS" : "32", "64BITS" : "64"}{WORD_SIZE}
+  local endian =   {"BIG":"-big","LITTLE":"-little"}{TARGET_ENDIAN} & "_endian"
+  foreach a in [wordSize, endian, endian & wordSize]
+    if FileExists (Path & a)
+      return Path & a
+    end
   end
   return Path
 end
@@ -87,7 +102,7 @@ if not defined ("LIB_ONLY")
 % misc. utilities
 %
 
-proc compare_file (dir, OutputPath) is
+proc compare_file (dir, OutputPath, probeForTargetSpecificFile) is
   local ExpectedPath = dir & "/" & OutputPath
   OutputPath = dir & "/" & BUILD_DIR & "/" & OutputPath
 
@@ -100,6 +115,14 @@ proc compare_file (dir, OutputPath) is
   end
 
   if stale (ExpectedPath, ExpectedPath)
+
+    % missing file compares equal to zero length file, ok
+
+    if equal(GetFileSize(OutputPath), 0)
+      %write (ExpectedPath, " is missing, compares equal to zero size ", OutputPath, CR)
+      return
+    end
+
     write (ExpectedPath, " is missing", CR)
     html ([ExpectedPath, "missing"])
     jux ([ExpectedPath, "missing", CR])
@@ -109,7 +132,10 @@ proc compare_file (dir, OutputPath) is
   ExpectedPath = subst_chars (ExpectedPath, "/", diff_slash)
   OutputPath = subst_chars (OutputPath, "/", diff_slash)
 
-  ExpectedPath = WordSizeSpecificFile(ExpectedPath)
+  if probeForTargetSpecificFile
+    ExpectedPath = ProbeForTargetSpecificFile(ExpectedPath)
+    %write("comparing to ", ExpectedPath, CR)
+  end
 
   exec (diff, ExpectedPath, OutputPath, head)
   if defined("HTML")
@@ -130,11 +156,13 @@ proc FileExists(x) is
     return not stale(x, x)
 end
 
-proc cmp_file (dir, file) is
+proc cmp_file (dir, file, probeForTargetSpecificFile) is
   local ExpectedPath = dir & "/" & file
   local OutputPath = dir & "/" & BUILD_DIR & "/" & file
 
-  ExpectedPath = WordSizeSpecificFile(ExpectedPath)
+  if probeForTargetSpecificFile
+    ExpectedPath = ProbeForTargetSpecificFile(ExpectedPath)
+  end
 
   %write ("cmp OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
   if stale (OutputPath, OutputPath)
@@ -147,7 +175,15 @@ proc cmp_file (dir, file) is
 
   local ComparisonLogData = []
   if defined ("LOG_CMPS")
-    ComparisonLogData += "cmp_file(" & ExpectedPath & ", " & OutputPath & ")\n"
+    %
+    % not sure about this -- how is it used?
+    %
+    local str_probeForTargetSpecificFile = "FALSE"
+    if probeForTargetSpecificFile
+      str_probeForTargetSpecificFile = "\"" & probeForTargetSpecificFile & "\""
+    end
+    ComparisonLogData += "cmp_file(" & ExpectedPath & ", " & OutputPath & ", " & str_probeForTargetSpecificFile & ")\n"
+    write(ComparisonLogData)
   end
 
   local OutputContents = fs_contents (OutputPath)
@@ -269,13 +305,10 @@ html(["      <tbody>", CR])
 % run a test case
 %
 
-readonly proc run_test (class, group, uid, comment, should_run) is
-  local cm3opts = ""
-  local runopts = ""
-  run_test2 (class, group, uid, comment, should_run, cm3opts, runopts)
-end
+cm3opts = ""
+runopts = ""
 
-readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopts) is
+readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts, probeForTargetSpecificFiles) is
   local dir = "../src/" & group & "/" & uid
   fs_rmrec (dir & "/" & BUILD_DIR)
   if DATE
@@ -294,21 +327,21 @@ readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopt
     NormalizeFile (dir & "/" & BUILD_DIR & "/stderr.build")
 
     if defined ("CAPTURE_BUILD")
-      if not cmp_file (dir, "stdout.build")
+      if not cmp_file (dir, "stdout.build", probeForTargetSpecificFiles)
         cp_if (dir & "/" & BUILD_DIR & "/stdout.build", dir & "/stdout.build")
       end
-      if not cmp_file (dir, "stderr.build")
+      if not cmp_file (dir, "stderr.build", probeForTargetSpecificFiles)
         cp_if (dir & "/" & BUILD_DIR & "/stderr.build", dir & "/stderr.build")
       end
     end
 
-    local ok1 = cmp_file (dir, "stdout.build") and
-                cmp_file (dir, "stderr.build")
+    local ok1 = cmp_file (dir, "stdout.build", probeForTargetSpecificFiles) and
+                cmp_file (dir, "stderr.build", probeForTargetSpecificFiles)
     local ok2 = "T"
 
     if should_run
-      ok2 = cmp_file (dir, "stdout.pgm") and
-            cmp_file (dir, "stderr.pgm")
+      ok2 = cmp_file (dir, "stdout.pgm", probeForTargetSpecificFiles) and
+            cmp_file (dir, "stderr.pgm", probeForTargetSpecificFiles)
     end
     if DATE and BC
       tstop = compress (q_exec_get ("date '+%s'")[1])
@@ -341,11 +374,11 @@ readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopt
     end
 
     html ("</td><td class=\"small\"><pre>")
-    compare_file (dir, "stdout.build")
-    compare_file (dir, "stderr.build")
+    compare_file (dir, "stdout.build", probeForTargetSpecificFiles)
+    compare_file (dir, "stderr.build", probeForTargetSpecificFiles)
     if should_run
-      compare_file (dir, "stdout.pgm")
-      compare_file (dir, "stderr.pgm")
+      compare_file (dir, "stdout.pgm", probeForTargetSpecificFiles)
+      compare_file (dir, "stderr.pgm", probeForTargetSpecificFiles)
     end
     if not ok1 or not ok2
        jux (["</error>", CR])
@@ -362,18 +395,34 @@ end
 
 %------------------------------------------------------------------- ptests ---
 % PROG tests: complete programs where the output of the program
-%   is what's of interest.
+%   is what is of interest.
 
 readonly proc p_test (group, uid, comment) is
-  run_test ("_ptests", group, uid, comment, "run")
+  run_test ("_ptests", group, uid, comment, "run", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
-readonly proc pr_test (group, uid, comment, runopts) is
-  run_test2 ("_ptests", group, uid, comment, "run", "", runopts)
+% programs with extra command line flags
+
+readonly proc p_run_flags_test (group, uid, comment, runopts) is
+  local cm3opts = ""
+  run_test ("_p_run_flags_test", group, uid, comment, "run", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
-readonly proc pb_test (group, uid, comment, cm3opts) is
-  run_test2 ("_ctests", group, uid, comment, "", cm3opts, "")
+% programs that we do not actually run
+
+readonly proc build_flags_test (group, uid, comment, cm3opts) is
+  local run = FALSE
+  local runopts = ""
+  run_test ("_build_flags_tests", group, uid, comment, run, cm3opts, runopts, "probeForTargetSpecificFiles")
+end
+
+% programs that we run with and without an agreed upon flag,
+% to hide or reveal output that will vary some across target platforms (wordsize and/or endian specific,
+% hopefully never "fully target specific")
+
+readonly proc mixed_portability_test (group, uid, comment) is
+  run_test ("_mixed_portability_tests_less_portable", group, uid, comment, "", cm3opts, runopts, FALSE)
+  run_test ("_mixed_portability_tests_portable", group, uid, comment, "run", cm3opts, runopts & " -include-less-portable-output", "probeForTargetSpecificFiles")
 end
 
 % some currently failing tests...
@@ -384,13 +433,9 @@ end
 %p_test ("p2", "p209", "open array initializers compile failure")
 %p_test ("p2", "p210", "open array initializers runtime failure")
 
-readonly proc e_test (group, uid, comment) is
-  run_test ("_etests", group, uid, comment, "")
-end
-
+mixed_portability_test ("p2", "p227", "longint, word, add, insert, extract, etc. (slow)")
 e_test ("e0", "e029", "use type instead of value as an initializer")
 p_test ("p2", "p226", "atomics")
-p_test ("p2", "p227", "some longint operations, some word operations (insert, extract) (a little slow)")
 p_test ("p2", "p228", "sign/zero extend return values of functions returning types smaller than 32bits")
 p_test ("p2", "p229", "minimal 64bit divide test")
 
@@ -608,19 +653,19 @@ p_test ("p2", "p208", "catching runtime errors")
 p_test ("p2", "p209", "open array initializers compile failure")
 p_test ("p2", "p210", "open array initializers runtime failure")
 
-pr_test ("p2", "p213", "runtime arguments: @M3paranoidgc", "@M3paranoidgc")
-pr_test ("p2", "p214", "runtime arguments: @M3noincremental", "@M3noincremental")
-pr_test ("p2", "p215", "runtime arguments: @M3nogenerational", "@M3nogenerational")
-pr_test ("p2", "p216", "runtime arguments: @M3nogc", "@M3nogc")
+p_run_flags_test ("p2", "p213", "runtime arguments: @M3paranoidgc", "@M3paranoidgc")
+p_run_flags_test ("p2", "p214", "runtime arguments: @M3noincremental", "@M3noincremental")
+p_run_flags_test ("p2", "p215", "runtime arguments: @M3nogenerational", "@M3nogenerational")
+p_run_flags_test ("p2", "p216", "runtime arguments: @M3nogc", "@M3nogc")
 
-pb_test ("p2", "p217", ".M3SHIP program", "-no-m3ship-resolution")
-pb_test ("p2", "p218", ".M3SHIP Program", "-no-m3ship-resolution")
-pb_test ("p2", "p219", ".M3SHIP Program group-writable", "-no-m3ship-resolution -group-writable")
-pb_test ("p2", "p220", ".M3SHIP library", "-no-m3ship-resolution")
-pb_test ("p2", "p221", ".M3SHIP Library", "-no-m3ship-resolution")
-pb_test ("p2", "p222", ".M3SHIP Library", "-no-m3ship-resolution -group-writable")
+build_flags_test ("p2", "p217", ".M3SHIP program", "-no-m3ship-resolution")
+build_flags_test ("p2", "p218", ".M3SHIP Program", "-no-m3ship-resolution")
+build_flags_test ("p2", "p219", ".M3SHIP Program group-writable", "-no-m3ship-resolution -group-writable")
+build_flags_test ("p2", "p220", ".M3SHIP library", "-no-m3ship-resolution")
+build_flags_test ("p2", "p221", ".M3SHIP Library", "-no-m3ship-resolution")
+build_flags_test ("p2", "p222", ".M3SHIP Library", "-no-m3ship-resolution -group-writable")
 % The following test won't run until FSUtils.RmRec() is fixed
-%pb_test ("p2", "p223", ".M3SHIP Library", "-no-m3ship-resolution -group-writable")
+%build_flags_test ("p2", "p223", ".M3SHIP Library", "-no-m3ship-resolution -group-writable")
 
 p_test ("p2", "p224", "mutex checker (approx. 4 to 5 minutes)")
 p_test ("p2", "p225", "__try/__finally")
@@ -630,7 +675,7 @@ p_test ("p2", "p225", "__try/__finally")
 %    error messages are of interest.
 
 readonly proc r_test (group, uid, comment) is
-  run_test ("_rtests", group, uid, comment, "run")
+  run_test ("_rtests", group, uid, comment, "run", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
 r_test ("r0", "r001", "unhandled exception")
@@ -643,7 +688,7 @@ r_test ("r0", "r004", "negative size for an open array")
 %   error messages are of interest.
 
 readonly proc e_test (group, uid, comment) is
-  run_test ("_etests", group, uid, comment, "")
+  run_test ("_etests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
 e_test ("e0", "e001", "assigning non-overlapping subrange types")
@@ -687,7 +732,7 @@ e_test ("e0", "e035", "illegal recursive declaration")
 
 readonly proc x_test (group, uid, comment) is
   if defined ("_all") return end
-  run_test ("_xtests", group, uid, comment, "run")
+  run_test ("_xtests", group, uid, comment, "run", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
 x_test ("x0", "x001", "Wr.PutChar (Rd.GetChar) loop")
@@ -708,7 +753,7 @@ x_test ("x0", "x007", "thread.alerted/shutdown exercise")
 
 readonly proc c_test (group, uid, comment) is
   if defined ("_all") return end
-  run_test ("_ctests", group, uid, comment, "")
+  run_test ("_ctests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
 c_test ("c0", "c001", "empty program")
