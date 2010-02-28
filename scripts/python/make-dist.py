@@ -196,6 +196,7 @@ Packages = [
     "m3back",
     "m3cc",
     "cm3",
+    "mklib",
     ]
 
 def CopyRecursive(From, To):
