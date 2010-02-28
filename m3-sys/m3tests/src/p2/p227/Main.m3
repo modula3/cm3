@@ -1,7 +1,8 @@
 MODULE Main;
-IMPORT RTIO, Word, Long;
+IMPORT RTIO, Word, Long, Text;
 FROM RTIO IMPORT Flush;
 FROM Compiler IMPORT ThisLine;
+IMPORT Params;
 
 (* This test covers various longint and bit operations.
  * Shift, extract, insert, etc.
@@ -17,6 +18,13 @@ FROM Compiler IMPORT ThisLine;
 (* decrease these for faster runs *)
 VAR InsertExtractMaxAB := 33;
 VAR InsertExtractMaxMN := 10;
+
+(* Can be run in two modes:
+ * default which only prints portable output
+ * -include-less-portable-output which includes word size and/or endian-specific output -- checkin 3 or 5 outputs
+ *  (note that big endian 64bit targets are presently rare/nonfunctional: PPC64_DARWIN, MIPS64_OPENBSD, SPARC64_SOLARIS)
+ *)
+VAR IncludeLessPortableOutput := Params.Count > 1 AND Text.Equal(Params.Get(1), "-include-less-portable-output");
 
 (* turn a constant into not a constant, from m3back's point of view *)
 PROCEDURE NotConstL(a: LONGINT): LONGINT =
@@ -41,16 +49,22 @@ CONST PutH = RTIO.PutHex;
 CONST PutL = RTIO.PutLong;
 CONST PutLH = RTIO.PutLongHex;
 
-PROCEDURE NotPortableL(<*UNUSED*>a: LONGINT) =
+PROCEDURE NotPortableL(a: LONGINT) =
 BEGIN
-   (* PutL(a); *)
-   PutT("NotPortableL");
+  IF IncludeLessPortableOutput THEN
+    PutL(a);
+  ELSE
+    PutT("NotPortableL");
+  END;
 END NotPortableL;
 
-PROCEDURE NotPortableH(<*UNUSED*>a: INTEGER) =
+PROCEDURE NotPortableH(a: INTEGER) =
 BEGIN
-   (* PutH(a); *)
-   PutT("NotPortableH");
+  IF IncludeLessPortableOutput THEN
+    PutH(a);
+  ELSE
+    PutT("NotPortableH");
+  END;
 END NotPortableH;
 
 PROCEDURE TestInsert() =
@@ -970,6 +984,7 @@ BEGIN
 END TestShiftMLongint;
 
 BEGIN
+
   PutL(a);
   NL();
   PutLH(c);
