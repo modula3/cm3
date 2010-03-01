@@ -295,7 +295,7 @@ PROCEDURE FileStatus(args: RefList.T): Sx.T RAISES {Subr.Usage, OSError.E} =
     RETURN RefList.List3(
       status.type,
       FmtTime.Long(status.modificationTime),
-      Sx.FromInt(status.size))
+      Sx.FromInt(VAL(status.size, INTEGER)))
   END FileStatus;
 
 PROCEDURE FileLock(args: RefList.T): Sx.T RAISES {Subr.Usage, OSError.E} =
