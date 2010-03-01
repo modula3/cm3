@@ -379,6 +379,165 @@ PROCEDURE noargOp (t: T; op: Op) =
     writecode(t, ins);
   END noargOp;
 
+<*UNUSED*>PROCEDURE shift_double_tail(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand; READONLY shiftCount: Operand) =
+  VAR left: [0..1] := ORD(singleOp = Op.oSHL);
+      right: [0..1] := ORD(singleOp = Op.oSHR);
+      end_label: Label;
+  BEGIN
+    t.binOp(Op.oADD(*Op.oTEST*), shiftCount, Operand{loc := OLoc.imm, imm := TIntN.ThirtyTwo});
+    end_label := t.reserve_labels(1, TRUE);
+    brOp(t, Cond.E, end_label);
+    t.movOp(destA[left], destA[right]);
+    t.binOp(Op.oXOR, destA[right], destA[right]);
+  END shift_double_tail;
+
+PROCEDURE shift_double_immediate(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand; READONLY imm: TIntN.T) =
+  VAR left: [0..1] := ORD(singleOp = Op.oSHL);
+      right: [0..1] := ORD(singleOp = Op.oSHR);
+      doubleOp: Op := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
+      immMinus32: TIntN.T;
+  BEGIN
+    IF TIntN.GE(imm, TIntN.ThirtyTwo) THEN
+      IF TIntN.NE(imm, TIntN.ThirtyTwo) THEN
+        EVAL TIntN.Subtract(imm, TIntN.ThirtyTwo, immMinus32);
+        (* Ideally we'd do a virtual move in the register allocator. *)
+        movOp1(t, destA[left], destA[right]);
+        immOp1(t, singleOp, destA[left], immMinus32);
+      ELSE
+        movOp1(t, destA[left], destA[right]);
+      END;
+      binOp1(t, Op.oXOR, destA[right], destA[right]);
+    ELSE
+      (* shift low into high *)
+      binOp1WithShiftCount(t, doubleOp, destA[left], destA[right], Operand{loc := OLoc.imm, imm := imm});
+      immOp1(t, singleOp, destA[right], imm);
+    END
+  END shift_double_immediate;
+
+PROCEDURE shift_double(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand; READONLY shiftCount: Operand) =
+  VAR left: [0..1] := ORD(singleOp = Op.oSHL);
+      right: [0..1] := ORD(singleOp = Op.oSHR);
+      doubleOp: Op := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
+  BEGIN
+    binOp1WithShiftCount(t, doubleOp, destA[left], destA[right], shiftCount);
+    binOp1(t, singleOp, destA[right], shiftCount);
+  END shift_double;
+
+PROCEDURE add_double_immediate(t: T; READONLY destA: ARRAY OperandPart OF Operand; immA: ARRAY OperandPart OF TIntN.T) =
+  BEGIN
+    immOp1(t, Op.oADD, destA[0], immA[0]);
+    immOp1(t, Op.oADC, destA[1], immA[1]);
+  END add_double_immediate;
+
+PROCEDURE add_double(t: T; READONLY destA, srcA: ARRAY OperandPart OF Operand) =
+  BEGIN
+    binOp1(t, Op.oADD, destA[0], srcA[0]);
+    binOp1(t, Op.oADC, destA[1], srcA[1]);
+  END add_double;
+
+PROCEDURE subtract_double_immediate(t: T; READONLY destA: ARRAY OperandPart OF Operand; immA: ARRAY OperandPart OF TIntN.T) =
+  BEGIN
+    immOp1(t, Op.oSUB, destA[0], immA[0]);
+    immOp1(t, Op.oSBB, destA[1], immA[1]);
+  END subtract_double_immediate;
+
+PROCEDURE subtract_double(t: T; READONLY destA, srcA: ARRAY OperandPart OF Operand) =
+  BEGIN
+    binOp1(t, Op.oSUB, destA[0], srcA[0]);
+    binOp1(t, Op.oSBB, destA[1], srcA[1]);
+  END subtract_double;
+
+PROCEDURE compare_double_immediate(t: T; READONLY destA: ARRAY OperandPart OF Operand; immA: ARRAY OperandPart OF TIntN.T) =
+  VAR end_label: Label;
+  BEGIN
+    immOp1(t, Op.oCMP, destA[1], immA[1]);
+    end_label := t.reserve_labels(1, TRUE);
+    t.brOp(Cond.NE, end_label);
+    immOp1(t, Op.oCMP, destA[0], immA[0]);
+    t.set_label(end_label);
+  END compare_double_immediate;
+
+PROCEDURE compare_double(t: T; READONLY destA, srcA: ARRAY OperandPart OF Operand) =
+  VAR end_label: Label;
+  BEGIN
+    binOp1(t, Op.oCMP, destA[1], srcA[1]);
+    end_label := t.reserve_labels(1, TRUE);
+    t.brOp(Cond.NE, end_label);
+    binOp1(t, Op.oCMP, destA[0], srcA[0]);
+    t.set_label(end_label);
+  END compare_double;
+
+<*UNUSED*>PROCEDURE shift_double_ecx(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand) =
+  VAR left: [0..1] := ORD(singleOp = Op.oSHL);
+      right: [0..1] := ORD(singleOp = Op.oSHR);
+      doubleOp: Op := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
+  BEGIN
+    (* caller already put shift count in ECX *)
+    binOp1WithShiftCount(t, doubleOp, destA[left], destA[right], t.reg[ECX]);
+    unOp(t, singleOp, destA[right]);
+    (*shift_double_tail(t, destA, t.reg[ECX]);*)
+  END shift_double_ecx;
+
+PROCEDURE not_double(t: T; READONLY destA: ARRAY OperandPart OF Operand) =
+  BEGIN
+    unOp1(t, Op.oNOT, destA[0]);
+    unOp1(t, Op.oNOT, destA[1]);
+  END not_double;
+
+PROCEDURE negate_double(t: T; READONLY destA: ARRAY OperandPart OF Operand) =
+  BEGIN
+    unOp1(t, Op.oNEG, destA[0]);
+    t.binOp(Op.oADC, destA[1], Operand {loc := OLoc.imm, imm := TZero, optype := Type.Word32});
+    unOp1(t, Op.oNEG, destA[1]);
+  END negate_double;
+
+PROCEDURE shift_double_op (t: T; op: Op; READONLY dest, src, shiftCount: Operand) =
+  (* SHLD and SHRD are three operand instructions.
+   * The source is where to shift bits from, must be a register.
+   * The shift count is either [-128..127] or in CL (we use all of ECX).
+   *)
+  VAR ins: Instruction;
+  BEGIN
+
+    <* ASSERT NOT TypeIs64(src.optype) *>
+    <* ASSERT NOT TypeIs64(dest.optype) *>
+    <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
+
+    IF src.loc = OLoc.imm THEN
+      immOp(t, op, dest, src.imm);
+      RETURN;
+    END;
+
+    <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
+    <* ASSERT src.loc = OLoc.register *>
+    <* ASSERT shiftCount.loc = OLoc.register OR shiftCount.loc = OLoc.imm *>
+    <* ASSERT shiftCount.loc # OLoc.register OR shiftCount.reg[0] = ECX *>
+    <* ASSERT shiftCount.loc # OLoc.imm OR (TIntN.GE(shiftCount.imm, TIntN.Min8) AND TIntN.LE(shiftCount.imm, TIntN.Max8)) *>
+
+    build_modrm(t, dest, src, ins);
+    ins.escape := TRUE;
+    ins.opcode := opcode[op].rmr + 1;
+    (* ASSERT ins.opcode # 0 *) (* add byte ptr[reg], al *)
+
+    IF shiftCount.loc = OLoc.imm THEN
+      IF NOT TIntN.ToHostInteger(shiftCount.imm, ins.imm) THEN
+        t.Err("binOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(shiftCount.imm));
+      END;
+      ins.imsize := 1;
+    ELSE
+      INC(ins.opcode);
+    END;
+
+    Mn(t, opcode[op].name);  MnOp(t, dest);  MnOp(t, src); MnOp(t, shiftCount);
+
+    writecode(t, ins);
+    IF dest.loc = OLoc.mem THEN
+      log_global_var(t, dest.mvar, -4);
+    ELSIF src.loc = OLoc.mem THEN
+      log_global_var(t, src.mvar, -4);
+    END;
+  END shift_double_op;
+
 PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
   VAR ins: Instruction;
   BEGIN
@@ -442,9 +601,6 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
       immA: ARRAY OperandPart OF TIntN.T;
       immSize := SplitImm(dest.optype, imm, immA);
       destSize := SplitOperand(dest, destA);
-      compare_label: Label;
-      immMinus32: TIntN.T;
-      shiftCount := Operand{loc := OLoc.imm, imm := imm};
   BEGIN
 
     <* ASSERT immSize = destSize *>
@@ -453,53 +609,11 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
 
     IF (immSize = 2) AND (op IN SET OF Op{Op.oCMP, Op.oADD, Op.oSUB, Op.oSHL, Op.oSHR}) THEN
       CASE op OF
-        | Op.oADD =>
-            immOp1(t, Op.oADD, destA[0], immA[0]);
-            immOp1(t, Op.oADC, destA[1], immA[1]);
-        | Op.oSUB =>
-            immOp1(t, Op.oSUB, destA[0], immA[0]);
-            immOp1(t, Op.oSBB, destA[1], immA[1]);
-        | Op.oCMP =>
-            immOp1(t, op, destA[1], immA[1]);
-            compare_label := t.reserve_labels(1, TRUE);
-            t.brOp(Cond.NE, compare_label);
-            immOp1(t, op, destA[0], immA[0]);
-            t.set_label(compare_label);
-
-        | Op.oSHL =>
-            IF TIntN.GE(imm, TIntN.ThirtyTwo) THEN
-              IF TIntN.NE(imm, TIntN.ThirtyTwo) THEN
-                EVAL TIntN.Subtract(imm, TIntN.ThirtyTwo, immMinus32);
-                (* Ideally we'd do a virtual move in the register allocator. *)
-                movOp1(t, destA[1], destA[0]);
-                immOp1(t, op, destA[1], immMinus32);
-              ELSE
-                movOp1(t, destA[1], destA[0]);
-              END;
-              binOp1(t, Op.oXOR, destA[0], destA[0]);
-            ELSE
-              (* shift low into high *)
-              binOp1WithShiftCount(t, Op.oSHLD, destA[1], destA[0], shiftCount := shiftCount);
-              immOp1(t, op, destA[0], imm);
-            END
-
-        | Op.oSHR =>
-            IF TIntN.GE(imm, TIntN.ThirtyTwo) THEN
-              IF TIntN.NE(imm, TIntN.ThirtyTwo) THEN
-                EVAL TIntN.Subtract(imm, TIntN.ThirtyTwo, immMinus32);
-                (* Ideally we'd do a virtual move in the register allocator. *)
-                movOp1(t, destA[0], destA[1]);
-                immOp1(t, op, destA[0], immMinus32);
-              ELSE
-                movOp1(t, destA[0], destA[1]);
-              END;
-              binOp1(t, Op.oXOR, destA[1], destA[1]);
-            ELSE
-              (* shift high into low *)
-              binOp1WithShiftCount(t, Op.oSHRD, destA[0], destA[1], shiftCount := shiftCount);
-              immOp1(t, op, destA[1], imm);
-            END
-
+        | Op.oADD => add_double_immediate(t, destA, immA);
+        | Op.oSUB => subtract_double_immediate(t, destA, immA);
+        | Op.oCMP => compare_double_immediate(t, destA, immA);
+        | Op.oSHL,
+          Op.oSHR => shift_double_immediate(t, op, destA, imm);
         ELSE
             <* ASSERT FALSE *>
       END
@@ -515,12 +629,10 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
 
 PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READONLY shiftCount: Operand) =
   VAR ins: Instruction;
-      shiftDouble := op IN SET OF Op{Op.oSHLD, Op.oSHRD};
   BEGIN
 
     <* ASSERT NOT TypeIs64(src.optype) *>
     <* ASSERT NOT TypeIs64(dest.optype) *>
-
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
     IF src.loc = OLoc.imm THEN
@@ -528,48 +640,24 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
       RETURN;
     END;
 
-    (* SHLD and SHRD are three operand instructions.
-     * The source is where to shift bits from, must be a register.
-     * The shift count is either [-128..127] or in CL (we use all of ECX).
-     *)
-    IF shiftDouble THEN
+    IF op IN SET OF Op{Op.oSHLD, Op.oSHRD} THEN
+      shift_double_op(t, op, dest, src, shiftCount);
+      RETURN;
+    END;
 
-      <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
-      <* ASSERT src.loc = OLoc.register *>
-      <* ASSERT shiftCount.loc = OLoc.register OR shiftCount.loc = OLoc.imm *>
-      <* ASSERT shiftCount.loc # OLoc.register OR shiftCount.reg[0] = ECX *>
-      <* ASSERT shiftCount.loc # OLoc.imm OR (TIntN.GE(shiftCount.imm, TIntN.Min8) AND TIntN.LE(shiftCount.imm, TIntN.Max8)) *>
-
-      build_modrm(t, dest, src, ins);
-      ins.escape := TRUE;
-      ins.opcode := opcode[op].rmr + 1;
-
-      IF shiftCount.loc = OLoc.imm THEN
-        IF NOT TIntN.ToHostInteger(shiftCount.imm, ins.imm) THEN
-          t.Err("binOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(shiftCount.imm));
-        END;
-        ins.imsize := 1;
-      ELSE
-        INC(ins.opcode);
-      END;
+    IF dest.loc = OLoc.register THEN
+      build_modrm(t, src, dest, ins);
+      ins.opcode := opcode[op].rrm + 1;
+      IF src.loc = OLoc.mem THEN
+        <* ASSERT CG_Bytes[src.mvar.mvar_type] = 4 *>
+      END
     ELSE
-      IF dest.loc = OLoc.register THEN
-        build_modrm(t, src, dest, ins);
-        ins.opcode := opcode[op].rrm + 1;
-        IF src.loc = OLoc.mem THEN
-          <* ASSERT CG_Bytes[src.mvar.mvar_type] = 4 *>
-        END
-      ELSE
-        <* ASSERT src.loc = OLoc.register AND CG_Bytes[src.mvar.mvar_type] = 4 *>
-        build_modrm(t, dest, src, ins);
-        ins.opcode := opcode[op].rmr + 1;
-      END;
+      <* ASSERT src.loc = OLoc.register AND CG_Bytes[src.mvar.mvar_type] = 4 *>
+      build_modrm(t, dest, src, ins);
+      ins.opcode := opcode[op].rmr + 1;
     END;
 
     Mn(t, opcode[op].name);  MnOp(t, dest);  MnOp(t, src);
-    IF shiftDouble THEN
-      MnOp(t, shiftCount);
-    END;
 
     writecode(t, ins);
     IF dest.loc = OLoc.mem THEN
@@ -590,7 +678,6 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand) =
       srcA: ARRAY OperandPart OF Operand;
       srcSize := SplitOperand(src, srcA);
       destSize := SplitOperand(dest, destA);
-      compare_label: Label;
   BEGIN
 
     <* ASSERT NOT TypeIs64(srcA[0].optype) *>
@@ -608,31 +695,16 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand) =
 
     IF (srcSize = 2) AND (op IN SET OF Op{Op.oCMP, Op.oADD, Op.oSUB, Op.oSHR, Op.oSHL}) THEN
       CASE op OF
-        | Op.oADD =>
-            binOp1(t, Op.oADD, destA[0], srcA[0]);
-            binOp1(t, Op.oADC, destA[1], srcA[1]);
-        | Op.oSUB =>
-            binOp1(t, Op.oSUB, destA[0], srcA[0]);
-            binOp1(t, Op.oSBB, destA[1], srcA[1]);
-        | Op.oCMP =>
-            binOp1(t, op, destA[1], srcA[1]);
-            compare_label := t.reserve_labels(1, TRUE);
-            t.brOp(Cond.NE, compare_label);
-            binOp1(t, op, destA[0], srcA[0]);
-            t.set_label(compare_label);
-
-        | Op.oSHL =>
-            binOp1WithShiftCount(t, Op.oSHLD, destA[1], destA[0], shiftCount := src);
-            binOp1(t, op, destA[0], src);
-
-        | Op.oSHR =>
-            binOp1WithShiftCount(t, Op.oSHRD, destA[0], destA[1], shiftCount := src);
-            binOp1(t, op, destA[1], src);
-
+        | Op.oADD => add_double(t, destA, srcA);
+        | Op.oSUB => subtract_double(t, destA, srcA);
+        | Op.oCMP => compare_double(t, destA, srcA);
+        | Op.oSHL,
+          Op.oSHR => shift_double(t, op, destA, shiftCount := src);
         ELSE
           <* ASSERT FALSE *>
       END
     ELSE
+      (* ASSERT srcSize = 1 *)
       FOR i := 0 TO destSize - 1 DO
         binOp1(t, op, destA[i], srcA[i]);
       END;
@@ -1136,13 +1208,10 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
 
     IF destSize = 2 AND (op IN SET OF Op{Op.oNEG, Op.oNOT}) THEN
       CASE op OF
-        | Op.oNOT =>
-            unOp1(t, op, destA[0]);
-            unOp1(t, op, destA[1]);
-        | Op.oNEG =>
-            unOp1(t, op, destA[0]);
-            t.binOp(Op.oADC, destA[1], Operand {loc := OLoc.imm, imm := TZero, optype := Type.Word32});
-            unOp1(t, op, destA[1]);
+        | Op.oNOT => not_double(t, destA);
+        | Op.oNEG => negate_double(t, destA);
+        | Op.oSHL,
+          Op.oSHR => <* ASSERT FALSE *> (* shift_double_ecx(t, op, destA); *)
         ELSE
           <* ASSERT FALSE *>
       END
