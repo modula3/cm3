@@ -448,7 +448,7 @@ END TestNE;
 
 (* shifting without constants *)
 
-PROCEDURE TestLeftShiftInteger() =
+PROCEDURE TestLeftShiftIntegerA() =
 VAR a := NotConstI(1);
 BEGIN
   PutT("\nTestLeftShiftInteger\n");
@@ -460,7 +460,21 @@ BEGIN
     END;
     a := Word.LeftShift(a, NotConstI(1));
   END;
-END TestLeftShiftInteger;
+END TestLeftShiftIntegerA;
+
+PROCEDURE TestLeftShiftIntegerB() =
+VAR a := NotConstI(1);
+BEGIN
+  PutT("\nTestLeftShiftInteger\n");
+  FOR i := 0 TO BITSIZE(INTEGER) - 1 DO
+    a := Word.LeftShift(NotConstI(1), i);
+    IF i < 32 THEN
+      PutT("1 << "); PutI(i); PutT(":"); PutH(a); PutT("\n");
+    ELSE
+      PutT("1 << "); PutI(i); PutT(":"); NotPortableH(a); PutT("\n");
+    END;
+  END;
+END TestLeftShiftIntegerB;
 
 PROCEDURE TestLeftShiftLongint() =
 VAR a := NotConstL(1L);
@@ -993,6 +1007,10 @@ END TestShiftMLongint;
 
 BEGIN
 
+  NL();
+  PutH(Word.LeftShift(NotConstI(1), NotConstI(1)));
+  NL();
+
   PutL(a);
   NL();
   PutLH(c);
@@ -1002,7 +1020,8 @@ BEGIN
   EVAL Long.Extract(1L, 3, 4);
 
   (* shifting with no constants *)
-  TestLeftShiftInteger();
+  TestLeftShiftIntegerA();
+  TestLeftShiftIntegerB();
   TestLeftShiftLongint();
   TestShiftRightInteger();
   TestShiftRightLongint();
