@@ -26,6 +26,7 @@ CONST
   Max16 = T{x := TWord.Max16};
   Max32 = T{x := TWord.Max32};
   (*Max64 = T{x := TWord.Max64};*)
+   Size = TWord.Size;
 
 PROCEDURE Add (READONLY a, b: T;  VAR i: T);
 (* returns 'Word.Plus (a, b)' *)
@@ -64,10 +65,10 @@ PROCEDURE Not (READONLY a: T;  VAR i: T);
 PROCEDURE Shift (READONLY x: T;  n: INTEGER;  VAR r: T);
 (* returns 'Word.Shift (x, n)' *)
 
-PROCEDURE LeftShift (READONLY x: T;  n: CARDINAL;  VAR r: T);
+PROCEDURE LeftShift (READONLY x: T;  n: [0..Size - 1];  VAR r: T);
 (* returns 'Word.LeftShift (x, n)' *)
 
-PROCEDURE RightShift (READONLY x: T;  n: CARDINAL;  VAR r: T);
+PROCEDURE RightShift (READONLY x: T;  n: [0..Size - 1];  VAR r: T);
 (* returns 'Word.RightShift (x, n)' *)
 
 PROCEDURE Rotate (READONLY x: T;  n: INTEGER;  VAR r: T);
