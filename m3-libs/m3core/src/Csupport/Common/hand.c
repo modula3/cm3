@@ -655,17 +655,6 @@ uint64 _rotr64(uint64 value, int shift);
 uint64 __stdcall  m3_rotate_left64(uint64 a, uint b)  { return _rotl64(a, (int)b); }
 uint64 __stdcall m3_rotate_right64(uint64 a, uint b)  { return _rotr64(a, (int)b); }
 
-uint64 __stdcall m3_shift64(uint64 a, int b)
-{
-    if (b >= 64 || b <= -64)
-        a = 0;
-    else if (b > 0)
-        a <<= b;
-    else if (b < 0)
-        a >>= -b;
-    return a;
-}
-
 uint64 __stdcall m3_rotate64(uint64 a, int b)
 {
     b &= 63;
