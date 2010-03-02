@@ -400,9 +400,9 @@ PROCEDURE testOp(t: T; READONLY a, b: Operand) =
   END testOp;
 
 PROCEDURE shift_double_immediate(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand; READONLY imm: TIntN.T) =
-  VAR left: [0..1] := ORD(singleOp = Op.oSHL);
-      right: [0..1] := ORD(singleOp = Op.oSHR);
-      doubleOp: Op := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
+  VAR left := ORD(singleOp = Op.oSHL);
+      right := ORD(singleOp = Op.oSHR);
+      doubleOp := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
       immMinus32: TIntN.T;
   BEGIN
     IF TIntN.GE(imm, TIntN.ThirtyTwo) THEN
@@ -416,7 +416,7 @@ PROCEDURE shift_double_immediate(t: T; singleOp: Op; READONLY destA: ARRAY Opera
       END;
       binOp1(t, Op.oXOR, destA[right], destA[right]);
     ELSE
-      (* shift low into high *)
+      (* left shift low into high or right shift high into low *)
       shift_double_op(t, doubleOp, destA[left], destA[right], Operand{loc := OLoc.imm, imm := imm});
       immOp1(t, singleOp, destA[right], imm);
     END
@@ -447,20 +447,18 @@ PROCEDURE subtract_double(t: T; READONLY destA, srcA: ARRAY OperandPart OF Opera
   END subtract_double;
 
 PROCEDURE compare_double_immediate(t: T; READONLY destA: ARRAY OperandPart OF Operand; immA: ARRAY OperandPart OF TIntN.T) =
-  VAR end_label: Label;
+  VAR end_label := t.reserve_labels(1, TRUE);
   BEGIN
     immOp1(t, Op.oCMP, destA[1], immA[1]);
-    end_label := t.reserve_labels(1, TRUE);
     t.brOp(Cond.NE, end_label);
     immOp1(t, Op.oCMP, destA[0], immA[0]);
     t.set_label(end_label);
   END compare_double_immediate;
 
 PROCEDURE compare_double(t: T; READONLY destA, srcA: ARRAY OperandPart OF Operand) =
-  VAR end_label: Label;
+  VAR end_label := t.reserve_labels(1, TRUE);
   BEGIN
     binOp1(t, Op.oCMP, destA[1], srcA[1]);
-    end_label := t.reserve_labels(1, TRUE);
     t.brOp(Cond.NE, end_label);
     binOp1(t, Op.oCMP, destA[0], srcA[0]);
     t.set_label(end_label);
@@ -481,10 +479,10 @@ PROCEDURE unOp_double(t: T; op: Op; READONLY destA: ARRAY OperandPart OF Operand
   END unOp_double;
 
 PROCEDURE shift_double_ecx(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand) =
-  VAR left: [0..1] := ORD(singleOp = Op.oSHL);
-      right: [0..1] := ORD(singleOp = Op.oSHR);
-      doubleOp: Op := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
-      end_label: Label := t.reserve_labels(1, TRUE);
+  VAR left  := ORD(singleOp = Op.oSHL);
+      right := ORD(singleOp = Op.oSHR);
+      doubleOp := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
+      end_label := t.reserve_labels(1, TRUE);
   BEGIN
     (* caller already put shift count in ECX *)
     shift_double_op(t, doubleOp, destA[left], destA[right], t.reg[ECX]);
