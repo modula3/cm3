@@ -399,19 +399,6 @@ PROCEDURE testOp(t: T; READONLY a, b: Operand) =
 
   END testOp;
 
-PROCEDURE shift_double_tail(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand) =
-  VAR left: [0..1] := ORD(singleOp = Op.oSHL);
-      right: [0..1] := ORD(singleOp = Op.oSHR);
-      end_label: Label;
-  BEGIN
-    testOp(t, t.reg[ECX], Operand{loc := OLoc.imm, imm := TIntN.ThirtyTwo});
-    end_label := t.reserve_labels(1, TRUE);
-    brOp(t, Cond.E, end_label);
-    t.movOp(destA[left], destA[right]);
-    t.binOp(Op.oXOR, destA[right], destA[right]);
-    t.set_label(end_label);
-  END shift_double_tail;
-
 PROCEDURE shift_double_immediate(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand; READONLY imm: TIntN.T) =
   VAR left: [0..1] := ORD(singleOp = Op.oSHL);
       right: [0..1] := ORD(singleOp = Op.oSHR);
@@ -497,11 +484,16 @@ PROCEDURE shift_double_ecx(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart
   VAR left: [0..1] := ORD(singleOp = Op.oSHL);
       right: [0..1] := ORD(singleOp = Op.oSHR);
       doubleOp: Op := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
+      end_label: Label := t.reserve_labels(1, TRUE);
   BEGIN
     (* caller already put shift count in ECX *)
     shift_double_op(t, doubleOp, destA[left], destA[right], t.reg[ECX]);
     unOp(t, singleOp, destA[right]);
-    shift_double_tail(t, singleOp, destA);
+    testOp(t, t.reg[ECX], Operand{loc := OLoc.imm, imm := TIntN.ThirtyTwo});
+    brOp(t, Cond.E, end_label);
+    t.movOp(destA[left], destA[right]);
+    t.binOp(Op.oXOR, destA[right], destA[right]);
+    t.set_label(end_label);
   END shift_double_ecx;
 
 PROCEDURE negate_double(t: T; READONLY destA: ARRAY OperandPart OF Operand) =
