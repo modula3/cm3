@@ -728,7 +728,7 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand; scale: INTEGER; 
     END;
 
     ins.mrm_present := TRUE;
-    IF (NOT fully_known) OR (ins.disp > 16_7f) OR (ins.disp < -16_80) THEN
+    IF (NOT fully_known) OR (ins.disp > 16_7F) OR (ins.disp < -16_80) THEN
       ins.dsize := 4;
       ins.modrm := dest.reg[0] * 8 + 4;
       IF fully_known THEN
@@ -1425,7 +1425,7 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
     ins.modrm := reg.reg[0] * 8 + EBP;
     IF (NOT fully_known) OR (offset # 0) THEN
       ins.disp := offset;
-      IF (NOT fully_known) OR (offset > 16_7f) OR (offset < -16_80) THEN
+      IF (NOT fully_known) OR (offset > 16_7F) OR (offset < -16_80) THEN
         ins.dsize := 4;
         IF fully_known THEN
           INC (ins.modrm, 16_80);
@@ -1451,8 +1451,8 @@ PROCEDURE debugcode (t: T;  READONLY ins: Instruction) =
                             Byte(t, ins.opcode);  INC(len);
     IF ins.mrm_present THEN  Byte(t, ins.modrm);  INC(len); END;
     IF ins.sib_present THEN  Byte(t, ins.sib);    INC(len); END;
-    IF ins.dsize # 0  THEN  HexLE(t, ins.disp, ins.dsize); INC(len,ins.dsize); END;
-    IF ins.imsize # 0 THEN  HexLE(t, ins.imm, ins.imsize); INC(len,ins.imsize); END;
+    IF ins.dsize # 0  THEN  HexLE(t, ins.disp, ins.dsize); INC(len, ins.dsize); END;
+    IF ins.imsize # 0 THEN  HexLE(t, ins.imm, ins.imsize); INC(len, ins.imsize); END;
 
     (* finally, generate the instruction mnemonic info *)
     WHILE (len < 9) DO  t.wr.OutT("  ");  INC(len); END;
