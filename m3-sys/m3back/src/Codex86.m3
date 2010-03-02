@@ -2204,14 +2204,14 @@ PROCEDURE Mn (t: T; mn1, mn2, mn3: TEXT := NIL) =
 
 PROCEDURE HexBE (t: T; val: INTEGER; size: INTEGER) =
   BEGIN
-    FOR i := size-1 TO 0 BY -1 DO
+    FOR i := size - 1 TO 0 BY -1 DO
       Byte(t, Word.Extract(val, i * 8, 8));
     END;
   END HexBE;
 
 PROCEDURE HexLE (t: T; val: INTEGER; size: INTEGER) =
   BEGIN
-    FOR i := 0 TO size-1 DO
+    FOR i := 0 TO size - 1 DO
       Byte(t, Word.Extract(val, i * 8, 8));
     END;
   END HexLE;
