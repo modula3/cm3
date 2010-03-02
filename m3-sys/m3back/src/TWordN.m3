@@ -118,13 +118,13 @@ PROCEDURE Not (READONLY a: T;  VAR r: T) =
     FromInt(r, a.n);
   END Not;
 
-PROCEDURE LeftShift (READONLY a: T;  b: CARDINAL;  VAR r: T) =
+PROCEDURE LeftShift (READONLY a: T;  b: [0..Size - 1];  VAR r: T) =
   BEGIN
     TWord.LeftShift(ToInt(a), b, r.x);
     FromInt(r, a.n);
   END LeftShift;
 
-PROCEDURE RightShift (READONLY a: T;  b: CARDINAL;  VAR r: T) =
+PROCEDURE RightShift (READONLY a: T;  b: [0..Size - 1];  VAR r: T) =
   BEGIN
     TWord.RightShift(ToInt(a), b, r.x);
     FromInt(r, a.n);
