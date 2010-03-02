@@ -49,6 +49,7 @@ CONST
   ThirtyOne = T{x := Int{31,0,..}};
   ThirtyTwo = T{x := Int{32,0,..}};
   SixtyThree= T{x := Int{63,0,..}};
+  SixtyFour = T{x := Int{64,0,..}};
   F3FF      = T{x := Int{16_FF,16_F3,16_00,..}};
   x0400     = T{x := Int{16_00,16_04,16_00,..}};
   x0800     = T{x := Int{16_00,16_08,16_00,..}};

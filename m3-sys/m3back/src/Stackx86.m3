@@ -1418,7 +1418,7 @@ PROCEDURE doshift (t: T; type: IType; shiftType: ShiftType): BOOLEAN =
 
       <* ASSERT TypeIs64(type) = TypeIs64(stop1.optype) *>
 
-      IF stop0.loc = OLoc.imm THEN
+      IF stop0.loc = OLoc.imm AND TWordN.LT(stop0.imm, TIntN.SixtyFour) THEN
         IF stop1.loc = OLoc.imm THEN
           IF NOT TIntN.ToHostInteger(stop0.imm, shiftCount) THEN
             t.Err("doshift: unable to convert target integer to host integer");
