@@ -1402,12 +1402,11 @@ PROCEDURE doabs (t: T) =
     END
   END doabs;
 
-PROCEDURE doshift (t: T; type: IType): BOOLEAN =
+PROCEDURE doshift (t: T; type: IType; shiftType: ShiftType): BOOLEAN =
   VAR ovflshift, leftlab, endlab: Label;
       tShiftCount: TIntN.T;
       shiftResult: TIntN.T;
       shiftCount: INTEGER;
-      is64 := TypeIs64(type);
       typeBitSize := TIntN.T{x := Target.Int{IntType[type].size, 0, ..}};
   BEGIN
 
@@ -1427,11 +1426,20 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
 
           (* shift constant by a constant *)
 
-          TWordN.Shift(stop1.imm, shiftCount, shiftResult);
+          CASE shiftType OF
+            | ShiftType.UnboundedPositiveIsLeft =>
+                TWordN.Shift(stop1.imm, shiftCount, shiftResult);
+            | ShiftType.LeftAlreadyBounded =>
+                TWordN.LeftShift(stop1.imm, shiftCount, shiftResult);
+            | ShiftType.RightAlreadyBounded =>
+                TWordN.RightShift(stop1.imm, shiftCount, shiftResult);
+          END;
+
           stop1.imm := shiftResult;
         ELSE
 
           (* shift non-constant by a constant *)
+          (* NOTE: binOp/immOp know how to do double precision shifts *)
 
           IF TIntN.NE(stop0.imm, TZero) THEN
 
@@ -1439,28 +1447,28 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
 
             find(t, stack1, Force.anytemp);
 
-            IF     TIntN.GT(stop0.imm, MaximumShift[type])
-                OR TIntN.LT(stop0.imm, MinimumShift[type]) THEN
-
-              (* shifting "too far" just yields zero *)
-
-              t.cg.binOp(Op.oXOR, stop1, stop1);
-
-            ELSIF TIntN.GT(stop0.imm, TZero) THEN
-
-              (* positive shift is left shift *)
-
-              t.cg.immOp(Op.oSHL, stop1, stop0.imm);
-
-            ELSE
-              IF NOT TIntN.Negate(stop0.imm, tShiftCount) THEN
-                t.Err("doshift: Negate overflowed");
-              END;
-
-              (* negative shift is right shift *)
-
-              t.cg.immOp(Op.oSHR, stop1, tShiftCount);
-
+            CASE shiftType OF
+              | ShiftType.UnboundedPositiveIsLeft =>
+                IF     TIntN.GT(stop0.imm, MaximumShift[type])
+                    OR TIntN.LT(stop0.imm, MinimumShift[type]) THEN
+                  t.cg.binOp(Op.oXOR, stop1, stop1);        (* shifting "too far" just yields zero *)
+                ELSIF TIntN.GT(stop0.imm, TZero) THEN
+                  t.cg.immOp(Op.oSHL, stop1, stop0.imm);    (* positive shift is left shift *)
+                ELSE
+                  IF NOT TIntN.Negate(stop0.imm, tShiftCount) THEN
+                    t.Err("doshift: Negate overflowed");
+                  END;
+                  t.cg.immOp(Op.oSHR, stop1, tShiftCount);  (* negative shift is right shift *)
+                END;
+              | ShiftType.LeftAlreadyBounded,
+                 ShiftType.RightAlreadyBounded =>
+                  TWordN.And(stop0.imm, MaximumShift[type], tShiftCount);
+                  stop0.imm := tShiftCount;
+                  IF shiftType = ShiftType.LeftAlreadyBounded THEN
+                    t.cg.immOp(Op.oSHL, stop1, stop0.imm);
+                  ELSE
+                    t.cg.immOp(Op.oSHR, stop1, stop0.imm);
+                  END;
             END;
 
             newdest(t, stop1);
@@ -1470,45 +1478,52 @@ PROCEDURE doshift (t: T; type: IType): BOOLEAN =
 
         IF ((stop1.loc # OLoc.imm) OR (TIntN.NE(stop1.imm, TZero))) THEN
 
-          (* shift by a non-constant *)
+          (* shift by a non-constant
+           * NOTE: binOp/immOp know how to do double precision compares/xor/shift
+           *)
 
-          IF is64 THEN
+          IF FALSE (* is64 *) THEN
             RETURN FALSE; (* will generate function call *)
           END;
 
           find(t, stack0, Force.regset, RegSet {ECX});
-
           find(t, stack1, Force.anytemp);
           IF stop1.loc = OLoc.imm THEN
             find(t, stack1, Force.anyreg);
           END;
 
-          t.cg.immOp(Op.oCMP, stop0, TZero);
+          CASE shiftType OF
+            | ShiftType.UnboundedPositiveIsLeft =>
+              t.cg.immOp(Op.oCMP, stop0, TZero);
 
-          leftlab := t.cg.reserve_labels(1, TRUE);
-          ovflshift := t.cg.reserve_labels(1, TRUE);
-          endlab := t.cg.reserve_labels(1, TRUE);
+              leftlab := t.cg.reserve_labels(1, TRUE);
+              ovflshift := t.cg.reserve_labels(1, TRUE);
+              endlab := t.cg.reserve_labels(1, TRUE);
 
-          t.cg.brOp(Cond.GE, leftlab);
-          t.cg.unOp(Op.oNEG, stop0);
-          t.cg.immOp(Op.oCMP, stop0, typeBitSize);
-          t.cg.brOp(Cond.GE, ovflshift);
-          t.cg.unOp(Op.oSHR, stop1);
-          t.cg.brOp(Cond.Always, endlab);
-          t.cg.set_label(ovflshift);
-          (* .ovflshift *)
-          t.cg.binOp(Op.oXOR, stop1, stop1);
-          t.cg.brOp(Cond.Always, endlab);
-          t.cg.set_label(leftlab);
-          (* .leftlab *)
-          t.cg.immOp(Op.oCMP, stop0, typeBitSize);
-          t.cg.brOp(Cond.GE, ovflshift);
-          t.cg.unOp(Op.oSHL, stop1);
-          t.cg.set_label(endlab);
-          (* .endlab  *)
+              t.cg.brOp(Cond.GE, leftlab);
+              t.cg.unOp(Op.oNEG, stop0);
+              t.cg.immOp(Op.oCMP, stop0, typeBitSize);
+              t.cg.brOp(Cond.GE, ovflshift);
+              t.cg.unOp(Op.oSHR, stop1);
+              t.cg.brOp(Cond.Always, endlab);
+              t.cg.set_label(ovflshift);
+              (* .ovflshift *)
+              t.cg.binOp(Op.oXOR, stop1, stop1);
+              t.cg.brOp(Cond.Always, endlab);
+              t.cg.set_label(leftlab);
+              (* .leftlab *)
+              t.cg.immOp(Op.oCMP, stop0, typeBitSize);
+              t.cg.brOp(Cond.GE, ovflshift);
+              t.cg.unOp(Op.oSHL, stop1);
+              t.cg.set_label(endlab);
+              (* .endlab  *)
+
+            | ShiftType.LeftAlreadyBounded => t.cg.unOp(Op.oSHL, stop1); (* shift count in ecx *)
+            | ShiftType.RightAlreadyBounded => t.cg.unOp(Op.oSHR, stop1); (* shift count in ecx *)
+          END;
 
           newdest(t, stop1);
-          newdest(t, stop0);
+          newdest(t, stop0); (* Is this needed? We did not change the value and we are going to discard it. *)
         END;
       END;
 
