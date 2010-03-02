@@ -1223,7 +1223,7 @@ PROCEDURE init_float (u: U;  o: ByteOffset;  READONLY f: Target.Float) =
 
     pad_init(u, o);
 
-    FOR i := 0 TO size-1 DO
+    FOR i := 0 TO size - 1 DO
       u.obj.append(u.init_varstore.seg, flarr[i], 1);
       INC(u.init_count);
     END;
