@@ -17,6 +17,11 @@ FROM M3x86Rep IMPORT x86Proc, x86Var, OperandPart;
 
 FROM Codex86 IMPORT Op;
 
+(* "bounded" means the shift count has already been checked to be less than 32 or such,
+ * unbounded means it might be arbitrarily high.
+ *)
+TYPE ShiftType = { LeftAlreadyBounded, RightAlreadyBounded, UnboundedPositiveIsLeft };
+
 TYPE T <: Public;
 TYPE Public = OBJECT
       METHODS
@@ -57,7 +62,7 @@ TYPE Public = OBJECT
         domaxmin (type: ZType; maxmin: MaxMin);
         fltoint (mode: FlToInt; type: Type);
         inttoflt ();
-        doshift (type: IType): BOOLEAN;
+        doshift (type: IType; shiftType: ShiftType): BOOLEAN;
         dorotate (type: IType): BOOLEAN;
         doextract (type: IType; sign: BOOLEAN): BOOLEAN;
         doextract_n (type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN;

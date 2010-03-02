@@ -9,7 +9,7 @@
 MODULE Codex86;
 
 IMPORT Fmt, TargetMap, M3x86Rep, M3ID, M3CG_Ops, Word, M3ObjFile, Wrx86;
-IMPORT TIntN, Target, TInt;
+IMPORT TIntN, TWordN, Target, TInt;
 
 FROM TargetMap IMPORT CG_Bytes;
 
@@ -379,16 +379,37 @@ PROCEDURE noargOp (t: T; op: Op) =
     writecode(t, ins);
   END noargOp;
 
-<*UNUSED*>PROCEDURE shift_double_tail(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand; READONLY shiftCount: Operand) =
+PROCEDURE testOp(t: T; READONLY a, b: Operand) =
+  (* This is very limited, because the tables and build_modrm are
+   * so difficult to understand.
+   * This is enough for shift_double.
+   *)
+  VAR ins: Instruction;
+  BEGIN
+    <* ASSERT a.loc = OLoc.register AND a.reg[0] = ECX *>
+    <* ASSERT b.loc = OLoc.imm AND TIntN.EQ(b.imm, TIntN.ThirtyTwo) *>
+
+    Mn(t, "TEST"); MnOp(t, a); MnOp(t, b);
+    ins.opcode := 16_F6;
+    ins.mrm_present := TRUE;
+    ins.modrm := 16_C1;
+    ins.imsize := 1;
+    ins.imm := 32;
+    writecode(t, ins);
+
+  END testOp;
+
+PROCEDURE shift_double_tail(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand) =
   VAR left: [0..1] := ORD(singleOp = Op.oSHL);
       right: [0..1] := ORD(singleOp = Op.oSHR);
       end_label: Label;
   BEGIN
-    t.binOp(Op.oADD(*Op.oTEST*), shiftCount, Operand{loc := OLoc.imm, imm := TIntN.ThirtyTwo});
+    testOp(t, t.reg[ECX], Operand{loc := OLoc.imm, imm := TIntN.ThirtyTwo});
     end_label := t.reserve_labels(1, TRUE);
     brOp(t, Cond.E, end_label);
     t.movOp(destA[left], destA[right]);
     t.binOp(Op.oXOR, destA[right], destA[right]);
+    t.set_label(end_label);
   END shift_double_tail;
 
 PROCEDURE shift_double_immediate(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand; READONLY imm: TIntN.T) =
@@ -409,19 +430,10 @@ PROCEDURE shift_double_immediate(t: T; singleOp: Op; READONLY destA: ARRAY Opera
       binOp1(t, Op.oXOR, destA[right], destA[right]);
     ELSE
       (* shift low into high *)
-      binOp1WithShiftCount(t, doubleOp, destA[left], destA[right], Operand{loc := OLoc.imm, imm := imm});
+      shift_double_op(t, doubleOp, destA[left], destA[right], Operand{loc := OLoc.imm, imm := imm});
       immOp1(t, singleOp, destA[right], imm);
     END
   END shift_double_immediate;
-
-PROCEDURE shift_double(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand; READONLY shiftCount: Operand) =
-  VAR left: [0..1] := ORD(singleOp = Op.oSHL);
-      right: [0..1] := ORD(singleOp = Op.oSHR);
-      doubleOp: Op := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
-  BEGIN
-    binOp1WithShiftCount(t, doubleOp, destA[left], destA[right], shiftCount);
-    binOp1(t, singleOp, destA[right], shiftCount);
-  END shift_double;
 
 PROCEDURE add_double_immediate(t: T; READONLY destA: ARRAY OperandPart OF Operand; immA: ARRAY OperandPart OF TIntN.T) =
   BEGIN
@@ -467,22 +479,30 @@ PROCEDURE compare_double(t: T; READONLY destA, srcA: ARRAY OperandPart OF Operan
     t.set_label(end_label);
   END compare_double;
 
-<*UNUSED*>PROCEDURE shift_double_ecx(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand) =
+PROCEDURE binOp_double(t: T; op: Op; READONLY destA, srcA: ARRAY OperandPart OF Operand) =
+(* oOR, oXOR, oAND *)
+  BEGIN
+    binOp1(t, op, destA[0], srcA[0]);
+    binOp1(t, op, destA[1], srcA[1]);
+  END binOp_double;
+
+PROCEDURE unOp_double(t: T; op: Op; READONLY destA: ARRAY OperandPart OF Operand) =
+(* oNOT *)
+  BEGIN
+    unOp1(t, op, destA[0]);
+    unOp1(t, op, destA[1]);
+  END unOp_double;
+
+PROCEDURE shift_double_ecx(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand) =
   VAR left: [0..1] := ORD(singleOp = Op.oSHL);
       right: [0..1] := ORD(singleOp = Op.oSHR);
       doubleOp: Op := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
   BEGIN
     (* caller already put shift count in ECX *)
-    binOp1WithShiftCount(t, doubleOp, destA[left], destA[right], t.reg[ECX]);
+    shift_double_op(t, doubleOp, destA[left], destA[right], t.reg[ECX]);
     unOp(t, singleOp, destA[right]);
-    (*shift_double_tail(t, destA, t.reg[ECX]);*)
+    shift_double_tail(t, singleOp, destA);
   END shift_double_ecx;
-
-PROCEDURE not_double(t: T; READONLY destA: ARRAY OperandPart OF Operand) =
-  BEGIN
-    unOp1(t, Op.oNOT, destA[0]);
-    unOp1(t, Op.oNOT, destA[1]);
-  END not_double;
 
 PROCEDURE negate_double(t: T; READONLY destA: ARRAY OperandPart OF Operand) =
   BEGIN
@@ -503,10 +523,7 @@ PROCEDURE shift_double_op (t: T; op: Op; READONLY dest, src, shiftCount: Operand
     <* ASSERT NOT TypeIs64(dest.optype) *>
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
-    IF src.loc = OLoc.imm THEN
-      immOp(t, op, dest, src.imm);
-      RETURN;
-    END;
+    ins.escape := TRUE;
 
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
     <* ASSERT src.loc = OLoc.register *>
@@ -515,17 +532,17 @@ PROCEDURE shift_double_op (t: T; op: Op; READONLY dest, src, shiftCount: Operand
     <* ASSERT shiftCount.loc # OLoc.imm OR (TIntN.GE(shiftCount.imm, TIntN.Min8) AND TIntN.LE(shiftCount.imm, TIntN.Max8)) *>
 
     build_modrm(t, dest, src, ins);
-    ins.escape := TRUE;
-    ins.opcode := opcode[op].rmr + 1;
-    (* ASSERT ins.opcode # 0 *) (* add byte ptr[reg], al *)
+    ins.opcode := opcode[op].rmr;
 
     IF shiftCount.loc = OLoc.imm THEN
+      IF TWordN.GT(shiftCount.imm, TWordN.Max8) THEN
+        t.Err("shift_double_op: shift count must fit in a byte:" & TIntN.ToDiagnosticText(shiftCount.imm));
+      END;
       IF NOT TIntN.ToHostInteger(shiftCount.imm, ins.imm) THEN
-        t.Err("binOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(shiftCount.imm));
+        t.Err("shift_double_op: ToHostInteger(shiftCount.imm) failed:" & TIntN.ToDiagnosticText(shiftCount.imm));
       END;
       ins.imsize := 1;
-    ELSE
-      INC(ins.opcode);
+      ins.opcode := opcode[op].imm8;
     END;
 
     Mn(t, opcode[op].name);  MnOp(t, dest);  MnOp(t, src); MnOp(t, shiftCount);
@@ -627,7 +644,7 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
 
   END immOp;
 
-PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READONLY shiftCount: Operand) =
+PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand) =
   VAR ins: Instruction;
   BEGIN
 
@@ -640,10 +657,7 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
       RETURN;
     END;
 
-    IF op IN SET OF Op{Op.oSHLD, Op.oSHRD} THEN
-      shift_double_op(t, op, dest, src, shiftCount);
-      RETURN;
-    END;
+    <* ASSERT NOT (op IN SET OF Op{Op.oSHLD, Op.oSHRD}) *>
 
     IF dest.loc = OLoc.register THEN
       build_modrm(t, src, dest, ins);
@@ -665,12 +679,6 @@ PROCEDURE binOp1WithShiftCount (t: T; op: Op; READONLY dest, src: Operand; READO
     ELSIF src.loc = OLoc.mem THEN
       log_global_var(t, src.mvar, -4);
     END;
-  END binOp1WithShiftCount;
-
-PROCEDURE binOp1 (t: T; op: Op; READONLY dest, src: Operand) =
-  VAR shiftCount: Operand;
-  BEGIN
-    binOp1WithShiftCount(t, op, dest, src, shiftCount := shiftCount);
   END binOp1;
 
 PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand) =
@@ -693,21 +701,20 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand) =
     END;
     <* ASSERT srcSize = destSize *>
 
-    IF (srcSize = 2) AND (op IN SET OF Op{Op.oCMP, Op.oADD, Op.oSUB, Op.oSHR, Op.oSHL}) THEN
+    IF srcSize = 2 THEN
       CASE op OF
         | Op.oADD => add_double(t, destA, srcA);
         | Op.oSUB => subtract_double(t, destA, srcA);
         | Op.oCMP => compare_double(t, destA, srcA);
-        | Op.oSHL,
-          Op.oSHR => shift_double(t, op, destA, shiftCount := src);
+        | Op.oOR,
+          Op.oXOR,
+          Op.oAND => binOp_double(t, op, destA, srcA);
         ELSE
           <* ASSERT FALSE *>
       END
     ELSE
-      (* ASSERT srcSize = 1 *)
-      FOR i := 0 TO destSize - 1 DO
-        binOp1(t, op, destA[i], srcA[i]);
-      END;
+      <* ASSERT srcSize = 1 *>
+      binOp1(t, op, destA[0], srcA[0]);
     END;
 
     <* ASSERT destA[0].stackp = destA[destSize - 1].stackp *>
@@ -1206,22 +1213,21 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
       destSize := SplitOperand(dest, destA);
   BEGIN
 
-    IF destSize = 2 AND (op IN SET OF Op{Op.oNEG, Op.oNOT}) THEN
+    IF destSize > 1 THEN
       CASE op OF
-        | Op.oNOT => not_double(t, destA);
+        | Op.oNOT => unOp_double(t, op, destA);
         | Op.oNEG => negate_double(t, destA);
         | Op.oSHL,
-          Op.oSHR => <* ASSERT FALSE *> (* shift_double_ecx(t, op, destA); *)
+          Op.oSHR => shift_double_ecx(t, op, destA);
         ELSE
           <* ASSERT FALSE *>
       END
     ELSE
       <* ASSERT NOT TypeIs64(destA[0].optype) *>
       <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
+      <* ASSERT destSize = 1 *>
 
-      FOR i := 0 TO destSize - 1 DO
-        unOp1(t, op, destA[i]);
-      END;
+      unOp1(t, op, destA[0]);
     END;
   END unOp;
 
@@ -1381,6 +1387,7 @@ TYPE
 
 PROCEDURE get_op_size (type: MType;  VAR ins: Instruction) =
   BEGIN
+    <* ASSERT ins.opcode # 0 *> (* add byte ptr[reg], al *)
     <* ASSERT ins.opcode # -1 *>
     CASE type OF
     | Type.Int8, Type.Word8 =>
@@ -1413,8 +1420,7 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
 
     <* ASSERT mem.loc = OLoc.mem *>
 
-    <* ASSERT CG_Bytes[mem.mvar.mvar_type] # 1 OR reg.opcode OR
-              reg.reg[0] IN RegistersForByteOperations *>
+    <* ASSERT CG_Bytes[mem.mvar.mvar_type] # 1 OR reg.opcode OR reg.reg[0] IN RegistersForByteOperations *>
 
     offset := mem.mvar.mvar_offset;
     IF mem.mvar.var.loc = VLoc.temp THEN
@@ -1440,6 +1446,11 @@ PROCEDURE build_modrm (t: T; READONLY mem, reg: Operand;  VAR ins: Instruction) 
 PROCEDURE debugcode (t: T;  READONLY ins: Instruction) =
   VAR len := 0;
   BEGIN
+
+    IF NOT t.debug THEN
+      RETURN;
+    END;
+
     (* generate the PC label *)
     t.wr.OutC(' ');
     HexBE(t, t.obj.cursor(Seg.Text), 4);
@@ -1469,6 +1480,7 @@ PROCEDURE debugcode (t: T;  READONLY ins: Instruction) =
 PROCEDURE writecode (t: T; READONLY ins: Instruction) =
   BEGIN
 
+    <* ASSERT ins.opcode # 0 *> (* add byte ptr[reg], al *)
     <* ASSERT ins.opcode # -1 *>
 
     IF t.debug THEN

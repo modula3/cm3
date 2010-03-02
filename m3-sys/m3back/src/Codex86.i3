@@ -215,6 +215,14 @@ CONST imcode = ARRAY FIm OF FImOp
 TYPE
   OpCode = RECORD
     name: TEXT;
+    (* rmr means dest is in register or memory, source is in register
+     * rrm means dest is in register, source is in register or memory
+     *  "op r/m,r" or "op r,r/m", given Intel syntax wher dest
+     * is on the left. The values undergo varous increments
+     * depending on operand size and such; confusing.
+     * immop is the "reg" value or second operand byte in like 12/3, the 3.
+     * This table and x86 instruction encoding are NOT easy to understand.
+     *)
     Aimm32, imm8, imm32, immop, rmr, rrm: INTEGER;
   END;
 
@@ -237,11 +245,11 @@ CONST opcode = ARRAY Op OF OpCode
     OpCode { "NEG",  -1,    -1,    16_F6, 3, -1,    -1    },
     OpCode { "NOT",  -1,    -1,    16_F6, 2, -1,    -1    },
     OpCode { "LEA",  -1,    -1,    -1,    0, -1,    16_8C },
-    OpCode { "SHL",  -1,    16_C1, 16_D2, 4, -1,    -1    },
+    OpCode { "SHL",  -1,    16_C1, 16_D2, 4, 16_D3, -1    }, (* rmr is reg/mem/cl, not reg/mem/reg *)
     OpCode { "SAR",  -1,    16_C1, 16_D2, 7, -1,    -1    },
-    OpCode { "SHR",  -1,    16_C1, 16_D2, 5, -1,    -1    },
-    OpCode { "SHLD", 16_A3, 16_A3, 16_A3, 16_A3, 16_A3, 16_A3 }, (* hack; cleanup *)
-    OpCode { "SHRD", 16_AB, 16_AB, 16_AB, 16_AB, 16_AB, 16_AB }, (* hack; cleanup *)
+    OpCode { "SHR",  -1,    16_C1, 16_D2, 5, 16_D3, -1    }, (* rmr is reg/mem/cl, not reg/mem/reg *)
+    OpCode { "SHLD", -1,    16_A4, -1,   -1, 16_A5, -1    }, (* third register always CL, imsize always 1 *)
+    OpCode { "SHRD", -1,    16_AC, -1,   -1, 16_AD, -1    }, (* third register always CL, imsize always 1 *)
     OpCode { "ROL",  -1,    16_C1, 16_D2, 0, -1,    -1    },
     OpCode { "ROR",  -1,    16_C1, 16_D2, 1, -1,    -1    },
     OpCode { "SAHF", -1,    -1,    16_9E, 0, -1,    -1    },

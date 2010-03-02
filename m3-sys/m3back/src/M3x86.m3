@@ -26,7 +26,7 @@ FROM M3ObjFile IMPORT Seg;
 
 IMPORT Wrx86, Stackx86, Codex86;
 
-FROM Stackx86 IMPORT MaxMin;
+FROM Stackx86 IMPORT MaxMin, ShiftType;
 FROM Codex86 IMPORT Cond, Op, FOp, FIm, unscond, revcond, FloatBytes;
 
 TYPE
@@ -2331,6 +2331,30 @@ PROCEDURE xor (u: U;  t: IType) =
     EVAL u.vstack.dobin(Op.oXOR, TRUE, TRUE, t);
   END xor;
 
+PROCEDURE shift_left   (u: U;  t: IType) =
+  (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
+  BEGIN
+    IF u.debug THEN
+      u.wr.Cmd   ("shift_left");
+      u.wr.TName (t);
+      u.wr.NL    ();
+    END;
+
+    EVAL u.vstack.doshift (t, ShiftType.LeftAlreadyBounded);
+  END shift_left;
+
+PROCEDURE shift_right  (u: U;  t: IType) =
+  (* s1.t := Word.Shift  (s1.t, -s0.t) ; pop *)
+  BEGIN
+    IF u.debug THEN
+      u.wr.Cmd   ("shift_right");
+      u.wr.TName (t);
+      u.wr.NL    ();
+    END;
+
+    EVAL u.vstack.doshift (t, ShiftType.RightAlreadyBounded);
+  END shift_right;
+
 PROCEDURE shift (u: U;  t: IType) =
   (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
   BEGIN
@@ -2340,135 +2364,8 @@ PROCEDURE shift (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doshift (t) THEN
-      RETURN;
-    END;
-
-    do_rotate_or_shift_64 (u, Builtin.shift64);
+    EVAL u.vstack.doshift (t, ShiftType.UnboundedPositiveIsLeft);
   END shift;
-
-PROCEDURE shift_left   (u: U;  t: IType) =
-  (* s1.t := Word.Shift  (s1.t, s0.t) ; pop *)
-  VAR shiftResult: TIntN.T;
-      and: TIntN.T;
-      shiftCount: INTEGER;
-  BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("shift_left");
-      u.wr.TName (t);
-      u.wr.NL    ();
-    END;
-
-    u.vstack.unlock();
-    WITH stack0 = u.vstack.pos(0, "shift_left"),
-         stack1 = u.vstack.pos(1, "shift_left") DO
-      IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF u.vstack.loc(stack1) = OLoc.imm THEN
-          IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, shiftCount) THEN
-            u.Err("unable to convert shift count to host integer");
-          END;
-
-          (* shift constant by a constant *)
-
-          TWordN.Shift(u.vstack.op(stack1).imm, shiftCount, shiftResult);
-          u.vstack.set_imm(stack1, shiftResult);
-        ELSE
-          (* shift non-constant by a constant *)
-
-          TWordN.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
-          u.vstack.set_imm(stack0, and);
-          IF TIntN.NE(u.vstack.op(stack0).imm, TZero) THEN
-            u.vstack.find(stack1, Force.anytemp);
-            u.cg.immOp(Op.oSHL, u.vstack.op(stack1), u.vstack.op(stack0).imm);
-            u.vstack.newdest(u.vstack.op(stack1));
-          END
-        END
-      ELSE
-        IF (u.vstack.loc(stack1) # OLoc.imm) OR TIntN.NE(u.vstack.op(stack1).imm, TZero) THEN
-
-          (* shift non-constant *)
-
-          IF TypeIs64(t) THEN
-            do_custom_calling_convention_shift_64 (u, Builtin.shift_left_64);
-            RETURN;
-          END;
-          u.vstack.find(stack0, Force.regset, RegSet {ECX});
-          u.vstack.find(stack1, Force.anytemp);
-
-          IF u.vstack.loc(stack1) = OLoc.imm THEN
-           u.vstack.find(stack1, Force.anyreg);
-          END;
-
-          u.cg.unOp(Op.oSHL, u.vstack.op(stack1));
-          u.vstack.newdest(u.vstack.op(stack1));
-        END;
-      END;
-
-      u.vstack.discard(1);
-    END
-  END shift_left;
-
-PROCEDURE shift_right  (u: U;  t: IType) =
-  (* s1.t := Word.Shift  (s1.t, -s0.t) ; pop *)
-  VAR shiftCount: INTEGER;
-      shift: TIntN.T;
-      and: TIntN.T;
-  BEGIN
-    IF u.debug THEN
-      u.wr.Cmd   ("shift_right");
-      u.wr.TName (t);
-      u.wr.NL    ();
-    END;
-
-    u.vstack.unlock();
-    WITH stack0 = u.vstack.pos(0, "shift_right"),
-         stack1 = u.vstack.pos(1, "shift_right") DO
-      IF u.vstack.loc(stack0) = OLoc.imm THEN
-        IF u.vstack.loc(stack1) = OLoc.imm THEN
-
-          (* shift constant by a constant *)
-
-          IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, shiftCount) THEN
-            u.Err("unable to convert shift count to host integer");
-          END;
-          TWordN.Shift(u.vstack.op(stack1).imm, -shiftCount, shift);
-          u.vstack.set_imm(stack1, shift);
-        ELSE
-
-          (* shift a non-constant by a constant *)
-
-          TWordN.And(u.vstack.op(stack0).imm, MaximumShift[t], and);
-          u.vstack.set_imm(stack0, and);
-          IF TIntN.NE(u.vstack.op(stack0).imm, TZero) THEN
-            u.vstack.find(stack1, Force.anytemp);
-            u.cg.immOp(Op.oSHR, u.vstack.op(stack1), u.vstack.op(stack0).imm);
-            u.vstack.newdest(u.vstack.op(stack1));
-          END
-        END
-      ELSE
-
-        (* shift a non-constant or non-zero *)
-
-        IF ((u.vstack.loc(stack1) # OLoc.imm) OR (TIntN.NE(u.vstack.op(stack1).imm, TZero))) THEN
-          IF TypeIs64(t) THEN
-            do_custom_calling_convention_shift_64 (u, Builtin.shift_right_64);
-            RETURN;
-          END;
-          u.vstack.find(stack0, Force.regset, RegSet {ECX});
-          u.vstack.find(stack1, Force.anytemp);
-
-          IF u.vstack.loc(stack1) = OLoc.imm THEN
-            u.vstack.find(stack1, Force.anyreg);
-          END;
-
-          u.cg.unOp(Op.oSHR, u.vstack.op(stack1));
-          u.vstack.newdest(u.vstack.op(stack1));
-        END;
-      END;
-
-      u.vstack.discard(1);
-    END
-  END shift_right;
 
 PROCEDURE rotate (u: U;  t: IType) =
   (* s1.t := Word.Rotate (s1.t, s0.t) ; pop *)
@@ -3084,9 +2981,7 @@ TYPE
     set_range, set_lt, set_le, set_gt, set_ge,
     memmove, memcpy, memset, memcmp,
     mul64, udiv64, umod64,
-    shift_left_64, shift_right_64,
     div64, mod64,
-    shift64,
     rotate_left64, rotate_right64, rotate64, insert64, extract64, extract_and_sign_extend64
   };
 
@@ -3128,13 +3023,8 @@ CONST
     BP { "_aulldiv",         0, Type.Word64, "C" }, (* 64bit unsigned divide *)
     BP { "_aullrem",         0, Type.Word64, "C" }, (* 64bit unsigned mod/remainder *)
 
-    (* custom calling convention: value in edx:eax, shift in cl (we use all of ecx) *)
-    BP { "_allshl",          0, Type.Word64, "C" }, (* 64bit shift left *)
-    BP { "_aullshr",         0, Type.Word64, "C" }, (* 64bit unsigned shift right *)
-
     BP { "m3_div64",         4, Type.Int64,  "__stdcall" },
     BP { "m3_mod64",         4, Type.Int64,  "__stdcall" },
-    BP { "m3_shift64",       3, Type.Word64, "__stdcall" },
     BP { "m3_rotate_left64", 3, Type.Word64, "__stdcall" },
     BP { "m3_rotate_right64",3, Type.Word64, "__stdcall" },
     BP { "m3_rotate64",      3, Type.Word64, "__stdcall" },
@@ -3601,24 +3491,6 @@ PROCEDURE call_64 (u: U; builtin: Builtin) =
     call_int_proc (u, builtin);
 
   END call_64;
-
-PROCEDURE do_custom_calling_convention_shift_64 (u: U; builtin: Builtin) =
-  BEGIN
-
-    u.vstack.unlock();
-
-    WITH stack0 = u.vstack.pos(0, "do_custom_calling_convention_shift_64"),
-         stack1 = u.vstack.pos(1, "do_custom_calling_convention_shift_64") DO
-
-      (* custom calling convention: value in edx:eax, shift in cl *)
-
-      u.vstack.find(stack0, Force.regset, RegSet { ECX });
-      u.vstack.find(stack1, Force.regset, RegSet { EAX, EDX });
-      u.vstack.discard (2);
-      start_int_proc (u, builtin);
-      call_64 (u, builtin);
-    END;
-  END do_custom_calling_convention_shift_64;
 
 PROCEDURE do_rotate_or_shift_64 (u: U; builtin: Builtin) =
   BEGIN
