@@ -550,8 +550,6 @@ PROCEDURE shift_double_op (t: T; op: Op; READONLY dest, src, shiftCount: Operand
     writecode(t, ins);
     IF dest.loc = OLoc.mem THEN
       log_global_var(t, dest.mvar, -4);
-    ELSIF src.loc = OLoc.mem THEN
-      log_global_var(t, src.mvar, -4);
     END;
   END shift_double_op;
 
