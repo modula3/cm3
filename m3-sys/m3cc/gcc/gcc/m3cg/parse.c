@@ -4144,7 +4144,7 @@ static void m3cg_set_eq (void)
   m3_pop_param (t_addr);
   EXPR_PUSH (size_int (n));
   m3_pop_param (t_int);
-  m3_call_direct (memcmp_proc);
+  m3_call_direct (memcmp_proc, TREE_TYPE (TREE_TYPE (memcmp_proc)));
   EXPR_REF(-1) = m3_build2 (EQ_EXPR, t_int, EXPR_REF(-1), v_zero);
 }
 
@@ -4159,7 +4159,7 @@ static void m3cg_set_ne (void)
   m3_pop_param (t_addr);
   EXPR_PUSH (size_int (n));
   m3_pop_param (t_int);
-  m3_call_direct (memcmp_proc);
+  m3_call_direct (memcmp_proc, TREE_TYPE (TREE_TYPE (memcmp_proc)));
   EXPR_REF(-1) = m3_build2 (NE_EXPR, t_int, EXPR_REF(-1), v_zero);
 }
 
