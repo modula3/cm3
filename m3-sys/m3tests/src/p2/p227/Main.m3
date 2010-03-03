@@ -15,9 +15,9 @@ IMPORT Params;
  * asserts might not be useful.
  *)
 
-(* decrease these for faster runs *)
-VAR InsertExtractMaxAB := 33;
-VAR InsertExtractMaxMN := 10;
+(* decrease these for faster runs; increase for more coverage *)
+VAR InsertExtractMaxAB := 17;
+VAR InsertExtractMaxMN := 5;
 
 (* Can be run in two modes:
  * default which only prints portable output
@@ -88,11 +88,19 @@ BEGIN
               FOR m := 0 TO InsertExtractMaxMN DO
                 FOR n := 0 TO InsertExtractMaxMN DO
                   result32 := Word.Insert((*flipA **) a32, flipB * b32, m, n);
-                  PutT("insert32(a:"); PutH((*flipA **) a32);
-                  PutT(", b:"); PutH(flipB * b32);
-                  PutT(", m:"); PutH(m);
-                  PutT(", n:"); PutH(n);
-                  PutT("):"); PutH(result32);
+                  IF (flipA = 1 AND flipB = 1) OR IncludeLessPortableOutput THEN
+                    PutT("insert32(a:"); PutH((*flipA **) a32);
+                    PutT(", b:"); PutH(flipB * b32);
+                    PutT(", m:"); PutH(m);
+                    PutT(", n:"); PutH(n);
+                    PutT("):"); PutH(result32);
+                  ELSE
+                    PutT("insert32(a:"); PutI((*flipA **) a32);
+                    PutT(", b:"); PutI(flipB * b32);
+                    PutT(", m:"); PutH(m);
+                    PutT(", n:"); PutH(n);
+                    PutT("):"); PutI(result32);
+                  END;
                   NL();
                   <* ASSERT (n # 0) OR (result32 = (*flipA **) a32) *>
                 END
