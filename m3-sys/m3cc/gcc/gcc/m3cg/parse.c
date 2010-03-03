@@ -4712,7 +4712,7 @@ m3cg_index_address (void)
   BYTESIZE (n);
 
   if (option_vars_trace) {
-    fprintf(stderr, "  index address n 0x%lx n_bytes 0x%x type 0x%x\n",
+    fprintf(stderr, "  index address n 0x%lx n_bytes 0x%lx type 0x%x\n",
             n, n / BITS_PER_UNIT, T);
   }
   EXPR_REF (-2) = m3_build2 (PLUS_EXPR, t_addr,
