@@ -4138,14 +4138,14 @@ static void m3cg_set_le (void) { m3cg_set_compare (set_le_proc); }
 
 static void m3cg_set_eq (void)
 {
-  INTEGER  (n);
+  BYTESIZE (n);
   MTYPE    (t);
 
   gcc_assert (t == t_int);
   m3_start_call ();
   m3_pop_param (t_addr);
   m3_pop_param (t_addr);
-  EXPR_PUSH (size_int (n));
+  EXPR_PUSH (size_int (n / BITS_PER_UNIT));
   m3_pop_param (t_int);
   m3_call_direct (memcmp_proc, TREE_TYPE (TREE_TYPE (memcmp_proc)));
   EXPR_REF(-1) = m3_build2 (EQ_EXPR, t_int, EXPR_REF(-1), v_zero);
@@ -4153,14 +4153,14 @@ static void m3cg_set_eq (void)
 
 static void m3cg_set_ne (void)
 {
-  INTEGER  (n);
+  BYTESIZE (n);
   MTYPE    (t);
 
   gcc_assert (t == t_int);
   m3_start_call ();
   m3_pop_param (t_addr);
   m3_pop_param (t_addr);
-  EXPR_PUSH (size_int (n));
+  EXPR_PUSH (size_int (n / BITS_PER_UNIT));
   m3_pop_param (t_int);
   m3_call_direct (memcmp_proc, TREE_TYPE (TREE_TYPE (memcmp_proc)));
   EXPR_REF(-1) = m3_build2 (NE_EXPR, t_int, EXPR_REF(-1), v_zero);
@@ -4711,25 +4711,14 @@ m3cg_index_address (void)
   MTYPE2   (t, T);
   BYTESIZE (n);
 
-  int n_bytes = n / BITS_PER_UNIT;
-  tree incr = EXPR_REF (-1);
-
   if (option_vars_trace) {
     fprintf(stderr, "  index address n 0x%lx n_bytes 0x%x type 0x%x\n",
-            n, n_bytes, T);
+            n, n / BITS_PER_UNIT, T);
   }
-  if (n_bytes != 1) {
-    if (host_integerp (incr, 1) && (TREE_INT_CST_LOW (incr) < 1024) &&
-	(0 <= n_bytes) && (n_bytes < 1024)) {
-      incr = size_int (TREE_INT_CST_LOW (incr) * n_bytes);
-    } else {
-      incr = m3_build2 (MULT_EXPR, t, incr, size_int (n_bytes));
-    }
-  }
-
   EXPR_REF (-2) = m3_build2 (PLUS_EXPR, t_addr,
-                             m3_cast (t_addr, EXPR_REF (-2)),
-                             incr);
+			     m3_cast (t_addr, EXPR_REF (-2)),
+			     m3_build2 (MULT_EXPR, t, EXPR_REF (-1),
+					size_int (n / BITS_PER_UNIT)));
   EXPR_POP ();
 }
 
