@@ -191,7 +191,7 @@ static GTY (()) tree m3_global_trees[M3TI_MAX];
 #define memcpy_proc	m3_global_trees[M3TI_MEMCPY]
 #define memmove_proc	m3_global_trees[M3TI_MEMMOVE]
 #define memset_proc	m3_global_trees[M3TI_MEMSET]
-#define memcmp_proc m3_global_trees[M3TI_MEMCMP]
+#define memcmp_proc     m3_global_trees[M3TI_MEMCMP]
 #define set_union_proc	m3_global_trees[M3TI_SET_UNION]
 #define set_diff_proc	m3_global_trees[M3TI_SET_DIFF]
 #define set_inter_proc	m3_global_trees[M3TI_SET_INTER]
@@ -2057,11 +2057,10 @@ m3_pop_param (tree t)
 
 #ifdef GCC42
 
-static tree
+static void
 m3_call_direct (tree p, tree t)
 {
   tree call;
-  tree result_call = NULL;
 
   TREE_USED (p) = 1;
   call = fold_build3 (CALL_EXPR, t, proc_addr (p), CALL_TOP_ARG (),
@@ -2071,10 +2070,8 @@ m3_call_direct (tree p, tree t)
   } else {
     TREE_SIDE_EFFECTS (call) = 1;
     EXPR_PUSH (call);
-    result_call = call;
   }
   CALL_POP ();
-  return result_call;
 }
 
 static void
@@ -2113,11 +2110,10 @@ m3_volatilize_decl (tree decl)
   }
 }
 
-static tree
+static void
 m3_call_direct (tree p, tree t)
 {
   tree call;
-  tree result_call = NULL;
   tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
   int flags;
   if (slot) p = *slot;
@@ -2133,7 +2129,6 @@ m3_call_direct (tree p, tree t)
   } else {
     TREE_SIDE_EFFECTS (call) = 1;
     EXPR_PUSH (call);
-    result_call = call;
   }
   CALL_POP ();
   flags = call_expr_flags (call);
@@ -2153,7 +2148,6 @@ m3_call_direct (tree p, tree t)
       m3_volatilize_decl(decl);
     }
   }
-  return result_call;
 }
 
 static void
@@ -2237,22 +2231,16 @@ m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
   EXPR_POP ();
 }
 
-static tree
-setop (tree p, int n, int q, bool eq_or_ne)
+static void
+setop (tree p, int n, int q)
 {
   m3_start_call ();
-  if (!eq_or_ne) {
-    EXPR_PUSH (size_int (n));
-    m3_pop_param (t_int);
-  }
+  EXPR_PUSH (size_int (n));
+  m3_pop_param (t_int);
   while (q--) {
     m3_pop_param (t_addr);
   }
-  if (eq_or_ne) {
-    EXPR_PUSH (size_int (n));
-    m3_pop_param (t_int);
-  }
-  return m3_call_direct (p, TREE_TYPE (TREE_TYPE (p)));
+  m3_call_direct (p, TREE_TYPE (TREE_TYPE (p)));
 }
 
 static void
@@ -4097,7 +4085,7 @@ m3cg_set_union (void)
 {
   BYTESIZE (n);
 
-  setop (set_union_proc, n, 3, false);
+  setop (set_union_proc, n, 3);
 }
 
 static void
@@ -4105,7 +4093,7 @@ m3cg_set_difference (void)
 {
   BYTESIZE (n);
 
-  setop (set_diff_proc, n, 3, false);
+  setop (set_diff_proc, n, 3);
 }
 
 static void
@@ -4113,7 +4101,7 @@ m3cg_set_intersection (void)
 {
   BYTESIZE (n);
 
-  setop (set_inter_proc, n, 3, false);
+  setop (set_inter_proc, n, 3);
 }
 
 static void
@@ -4121,7 +4109,7 @@ m3cg_set_sym_difference (void)
 {
   BYTESIZE (n);
 
-  setop (set_sdiff_proc, n, 3, false);
+  setop (set_sdiff_proc, n, 3);
 }
 
 static void
@@ -4141,23 +4129,40 @@ m3cg_set_compare (tree proc)
   MTYPE    (t);
 
   gcc_assert (t == t_int);
-  setop (proc, n, 2, false);
+  setop (proc, n, 2);
 }
 
-static void
-m3cg_set_eq_or_ne (enum tree_code code)
+static void m3cg_set_eq (void)
 {
-  BYTESIZE (n);
+  INTEGER  (n);
   MTYPE    (t);
 
   gcc_assert (t == t_int);
-  gcc_assert ((n % 32) == 0);
-  gcc_assert (n >= 8);
-  EXPR_PUSH(m3_build2(code, t_int, setop(memcmp_proc, n / 8, 2, true), v_zero));
+
+  m3_start_call ();
+  m3_pop_param (t_addr);
+  m3_pop_param (t_addr);
+  EXPR_PUSH (size_int (n));
+  m3_pop_param (t_int);
+  m3_call_direct (memcmp_proc);
+  EXPR_REF(-1) = m3_build2 (EQ_EXPR, t_int, EXPR_REF(-1), v_zero);
 }
 
-static void m3cg_set_eq (void) { m3cg_set_eq_or_ne(EQ_EXPR); }
-static void m3cg_set_ne (void) { m3cg_set_eq_or_ne(NE_EXPR); }
+static void m3cg_set_ne (void)
+{
+  INTEGER  (n);
+  MTYPE    (t);
+
+  gcc_assert (t == t_int);
+  m3_start_call ();
+  m3_pop_param (t_addr);
+  m3_pop_param (t_addr);
+  EXPR_PUSH (size_int (n));
+  m3_pop_param (t_int);
+  m3_call_direct (memcmp_proc);
+  EXPR_REF(-1) = m3_build2 (NE_EXPR, t_int, EXPR_REF(-1), v_zero);
+}
+
 static void m3cg_set_gt (void) { m3cg_set_compare (set_gt_proc); }
 static void m3cg_set_ge (void) { m3cg_set_compare (set_ge_proc); }
 static void m3cg_set_lt (void) { m3cg_set_compare (set_lt_proc); }
