@@ -4503,6 +4503,12 @@ m3cg_zero_n (void)
 
   int chunk_size = TREE_INT_CST_LOW (TYPE_SIZE (mem_t)) / BITS_PER_UNIT;
 
+  /* Between zero and zero_n, they cannot both be correct.
+   * Nominate and kill zero_n as the dead one.
+   */
+
+  gcc_assert(0);
+
   gcc_assert (cnt_t == t_int);
   if (chunk_size > 1) {
     EXPR_REF(-1) = m3_build2(MULT_EXPR, cnt_t, EXPR_REF(-1),
