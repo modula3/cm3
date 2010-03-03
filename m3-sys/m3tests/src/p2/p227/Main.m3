@@ -24,7 +24,10 @@ VAR InsertExtractMaxMN := 4;
  * -include-less-portable-output which includes word size and/or endian-specific output -- checkin 3 or 5 outputs
  *  (note that big endian 64bit targets are presently rare/nonfunctional: PPC64_DARWIN, MIPS64_OPENBSD, SPARC64_SOLARIS)
  *)
-VAR IncludeLessPortableOutput := Params.Count > 1 AND Text.Equal(Params.Get(1), "-include-less-portable-output");
+VAR IncludeLessPortableOutput := Params.Count > 1 AND (
+    Text.Equal(Params.Get(1), "-lp")
+    OR Text.Equal(Params.Get(1), "-less-portable")
+    OR Text.Equal(Params.Get(1), "-include-less-portable-output"));
 
 (* useful for debuggging *)
 (* CONST ThisLine = Compiler.ThisLine; *)
