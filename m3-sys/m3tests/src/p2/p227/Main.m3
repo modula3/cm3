@@ -90,6 +90,7 @@ END NotPortableI;
 PROCEDURE TestInsert() =
 VAR result32: CARDINAL := 0;
     result64: LONGINT := 0L;
+    putI := PutI;
 BEGIN
   FOR a32 := 0 TO InsertExtractMaxAB DO
     FOR flipA := -1 TO 1 DO
@@ -101,18 +102,15 @@ BEGIN
                 FOR n := 0 TO InsertExtractMaxMN DO
                   result32 := Word.Insert((*flipA **) a32, flipB * b32, m, n);
                   IF (flipA = 1 AND flipB = 1) OR IncludeLessPortableOutput THEN
-                    PutT("insert32(a:"); PutH((*flipA **) a32);
-                    PutT(", b:"); PutH(flipB * b32);
-                    PutT(", m:"); PutH(m);
-                    PutT(", n:"); PutH(n);
-                    PutT("):"); PutH(result32);
+                    putI := PutH;
                   ELSE
-                    PutT("insert32(a:"); PutI((*flipA **) a32);
-                    PutT(", b:"); PutI(flipB * b32);
-                    PutT(", m:"); PutH(m);
-                    PutT(", n:"); PutH(n);
-                    PutT("):"); PutI(result32);
+                    putI := PutI;
                   END;
+                  PutT("insert32(a:"); putI((*flipA **) a32);
+                  PutT(", b:"); putI(flipB * b32);
+                  PutT(", m:"); putI(m);
+                  PutT(", n:"); putI(n);
+                  PutT("):"); putI(result32);
                   NL();
                   <* ASSERT (n # 0) OR (result32 = (*flipA **) a32) *>
                 END
