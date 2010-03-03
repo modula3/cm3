@@ -1043,6 +1043,7 @@ PROCEDURE free_temp (u: U;  v: Var) =
     END;
 
     u.Err("Couldn't find var to free in 'free_temp'");
+    <* ASSERT FALSE *>
   END free_temp;
 
 (*---------------------------------------- static variable initialization ---*)
