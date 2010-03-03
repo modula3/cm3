@@ -928,7 +928,8 @@ PROCEDURE AdvanceInit (o: Offset) =
   VAR
     n_bytes := (o - init_pc) DIV Target.Byte;
     tmp, new_bits: Target.Int;
-    size, n_bits: CARDINAL;
+    size: CARDINAL;
+    n_bits: INTEGER;
     t: Type;
     ZeroI := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
@@ -944,7 +945,7 @@ PROCEDURE AdvanceInit (o: Offset) =
         EVAL FindInitType (n_bytes, init_pc, t);
         size := TargetMap.CG_Size[t];
         n_bits := Target.Integer.size - size;
-        IF (n_bits = 0) THEN
+        IF (n_bits <= 0) THEN
           cg.init_int (init_pc DIV Target.Byte, init_bits, t);
           init_bits := ZeroI;
         ELSIF Target.Little_endian
@@ -973,7 +974,7 @@ PROCEDURE FindInitType (n_bytes, offset: INTEGER;  VAR t: Type): BOOLEAN =
     FOR i := LAST (TargetMap.Integer_types)
           TO FIRST (TargetMap.Integer_types) BY -1 DO
       WITH z = TargetMap.Integer_types[i] DO
-        IF (z.bytes <= n_bytes) AND (z.size <= Target.Integer.size)
+        IF (z.bytes <= n_bytes)
           AND (offset MOD z.align = 0) THEN
           t := z.cg_type;
           RETURN TRUE;
