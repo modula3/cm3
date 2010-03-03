@@ -88,7 +88,7 @@ BEGIN
 END NotPortableI;
 
 PROCEDURE TestInsert() =
-VAR result32: CARDINAL := 0;
+VAR result32: INTEGER := 0;
     result64: LONGINT := 0L;
     putI := PutI;
 BEGIN
@@ -105,14 +105,14 @@ BEGIN
                   ELSE
                     putI := PutI;
                   END;
-                  PutT("insert32(a:"); putI((*flipA **) a32);
+                  PutT("insert32(a:"); putI(flipA * a32);
                   PutT(", b:"); putI(flipB * b32);
                   PutT(", m:"); putI(m);
                   PutT(", n:"); putI(n);
-                  result32 := Word.Insert((*flipA **) a32, flipB * b32, m, n);
+                  result32 := Word.Insert(flipA * a32, flipB * b32, m, n);
                   PutT("):"); putI(result32);
                   NL();
-                  <* ASSERT (n # 0) OR (result32 = (*flipA **) a32) *>
+                  <* ASSERT (n # 0) OR (result32 = flipA * a32) *>
                 END
               END
             END
@@ -152,7 +152,7 @@ END TestInsert;
 
 PROCEDURE TestExtract() =
 CONST sign_extend = 0;
-VAR result32: CARDINAL := 0;
+VAR result32: INTEGER := 0;
     result64: LONGINT := 0L;
 BEGIN
   FOR a32 := 0 TO InsertExtractMaxAB DO
