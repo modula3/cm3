@@ -80,34 +80,50 @@ VAR result32: CARDINAL := 0;
     result64: LONGINT := 0L;
 BEGIN
   FOR a32 := 0 TO InsertExtractMaxAB DO
-    FOR b32 := 0 TO InsertExtractMaxAB DO
-      FOR m := 0 TO InsertExtractMaxMN DO
-        FOR n := 0 TO InsertExtractMaxMN DO
-          result32 := Word.Insert(a32, b32, m, n);
-          PutT("insert32(a:"); PutH(a32);
-          PutT(", b:"); PutH(b32);
-          PutT(", m:"); PutH(m);
-          PutT(", n:"); PutH(n);
-          PutT("):"); PutH(result32);
-          NL();
-          <* ASSERT (n # 0) OR (result32 = a32) *>
-        END
-      END
-    END
+    FOR flipA := -1 TO 1 DO
+      IF flipA # 0 THEN
+        FOR b32 := 0 TO InsertExtractMaxAB DO
+          FOR flipB := -1 TO 1 DO
+            IF flipB # 0 THEN
+              FOR m := 0 TO InsertExtractMaxMN DO
+                FOR n := 0 TO InsertExtractMaxMN DO
+                  result32 := Word.Insert((*flipA **) a32, flipB * b32, m, n);
+                  PutT("insert32(a:"); PutH((*flipA **) a32);
+                  PutT(", b:"); PutH(flipB * b32);
+                  PutT(", m:"); PutH(m);
+                  PutT(", n:"); PutH(n);
+                  PutT("):"); PutH(result32);
+                  NL();
+                  <* ASSERT (n # 0) OR (result32 = (*flipA **) a32) *>
+                END
+              END
+            END
+          END
+        END;
+      END;
+    END;
   END;
 
   FOR a64 := 0L TO VAL(InsertExtractMaxAB, LONGINT) DO
-    FOR b64 := 0L TO VAL(InsertExtractMaxAB, LONGINT) DO
-      FOR m := 0 TO InsertExtractMaxMN DO
-        FOR n := 0 TO InsertExtractMaxMN DO
-          result64 := Long.Insert(a64, b64, m, n);
-          PutT("insert64(a:"); PutLH(a64);
-          PutT(", b:"); PutLH(b64);
-          PutT(", m:"); PutH(m);
-          PutT(", n:"); PutH(n);
-          PutT("):"); PutLH(result64);
-          NL();
-          <* ASSERT (n # 0) OR (result64 = a64) *>
+    FOR flipA := -1L TO 1L DO
+      IF flipA # 0L THEN
+        FOR b64 := 0L TO VAL(InsertExtractMaxAB, LONGINT) DO
+          FOR flipB := -1L TO 1L DO
+            IF flipB # 0L THEN
+              FOR m := 0 TO InsertExtractMaxMN DO
+                FOR n := 0 TO InsertExtractMaxMN DO
+                  result64 := Long.Insert((*flipA **) a64, flipB * b64, m, n);
+                  PutT("insert64(a:"); PutLH((*flipA **) a64);
+                  PutT(", b:"); PutLH(flipB * b64);
+                  PutT(", m:"); PutH(m);
+                  PutT(", n:"); PutH(n);
+                  PutT("):"); PutLH(result64);
+                  NL();
+                  <* ASSERT (n # 0) OR (result64 = (*flipA **) a64) *>
+                END
+              END
+            END
+          END
         END
       END
     END
@@ -896,14 +912,16 @@ END TestShiftRightMNLongint;
 PROCEDURE TestShiftMNInteger() =
 BEGIN
   PutT("\nTestShiftMNInteger\n");
-  PutT("16_8000 << -40:"); NotPortableH(Word.Shift(16_8000, -40)); PutT("\n");
-  PutT("16_8000 << -30:"); NotPortableH(Word.Shift(16_8000, -30)); PutT("\n");
-  PutT("16_8000 << -20:"); NotPortableH(Word.Shift(16_8000, -20)); PutT("\n");
-  PutT("16_8000 <<  -1:"); PutH(Word.Shift(16_8000,  -1)); PutT("\n");
-  PutT("16_8000 <<   1:"); PutH(Word.Shift(16_8000,   1)); PutT("\n");
-  PutT("16_8000 <<  20:"); NotPortableH(Word.Shift(16_8000,  20)); PutT("\n");
-  PutT("16_8000 <<  30:"); NotPortableH(Word.Shift(16_8000,  30)); PutT("\n");
-  PutT("16_8000 <<  40:"); NotPortableH(Word.Shift(16_8000,  40)); PutT("\n");
+  PutT("16_8000 << -10000:"); PutH(Word.Shift(16_8000, -10000)); PutT("\n");
+  PutT("16_8000 <<    -40:"); NotPortableH(Word.Shift(16_8000, -40)); PutT("\n");
+  PutT("16_8000 <<    -30:"); NotPortableH(Word.Shift(16_8000, -30)); PutT("\n");
+  PutT("16_8000 <<    -20:"); NotPortableH(Word.Shift(16_8000, -20)); PutT("\n");
+  PutT("16_8000 <<     -1:"); PutH(Word.Shift(16_8000,  -1)); PutT("\n");
+  PutT("16_8000 <<      1:"); PutH(Word.Shift(16_8000,   1)); PutT("\n");
+  PutT("16_8000 <<     20:"); NotPortableH(Word.Shift(16_8000,  20)); PutT("\n");
+  PutT("16_8000 <<     30:"); NotPortableH(Word.Shift(16_8000,  30)); PutT("\n");
+  PutT("16_8000 <<     40:"); NotPortableH(Word.Shift(16_8000,  40)); PutT("\n");
+  PutT("16_8000 <<  10000:"); PutH(Word.Shift(16_8000,  10000)); PutT("\n");
 END TestShiftMNInteger;
 
 PROCEDURE TestShiftMNLongint() =
@@ -922,7 +940,7 @@ END TestShiftMNLongint;
 (* shifting constant by a non-constant (not particularly special, except for shifting zero) *)
 
 PROCEDURE TestLeftShiftMInteger() =
-  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30 };
+  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 31 };
 BEGIN
   PutT("\nTestLeftShiftMLongint\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
@@ -934,7 +952,7 @@ BEGIN
 END TestLeftShiftMInteger;
 
 PROCEDURE TestLeftShiftMLongint() =
-  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 40, 50, 60 };
+  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 40, 50, 60, 63 };
 BEGIN
   PutT("\nTestLeftShiftMLongint\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
@@ -946,7 +964,7 @@ BEGIN
 END TestLeftShiftMLongint;
 
 PROCEDURE TestShiftRightMInteger() =
-  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30 };
+  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 31 };
 BEGIN
   PutT("\nTestShiftRightMInteger\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
@@ -961,7 +979,7 @@ BEGIN
 END TestShiftRightMInteger;
 
 PROCEDURE TestShiftRightMLongint() =
-  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 40, 50, 60 };
+  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 40, 50, 60, 63 };
 BEGIN
   PutT("\nTestShiftRightMLongint\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
@@ -976,12 +994,12 @@ BEGIN
 END TestShiftRightMLongint;
 
 PROCEDURE TestShiftMInteger() =
-  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, -1, -10, -20, -30 };
+  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 100000, -1, -10, -20, -30, -100000 };
 BEGIN
   PutT("\nTestShiftMInteger\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
     PutT("       0 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift(       0, shift[i])); PutT("\n");
-    IF ABS(shift[i]) <= 10 THEN
+    IF ABS(shift[i]) <= 10 OR ABS(shift[i]) > 100 THEN
       PutT(" 16_8000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift( 16_8000, shift[i])); PutT("\n");
       PutT(" 16_4000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift( 16_4000, shift[i])); PutT("\n");
       PutT("16_10000 << "); PutI(shift[i], 3); PutT(":"); PutH(Word.Shift(16_10000, shift[i])); PutT("\n");
@@ -994,7 +1012,7 @@ BEGIN
 END TestShiftMInteger;
 
 PROCEDURE TestShiftMLongint() =
-  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 40, 50, 60, -1, -10, -20, -30, -40, -50, -60 };
+  CONST shift = ARRAY OF INTEGER {1, 10, 20, 30, 40, 50, 60, 64, 10000, -1, -10, -20, -30, -40, -50, -60, -64, -10000 };
 BEGIN
   PutT("\nTestShiftMLongint\n");
   FOR i := FIRST(shift) TO LAST(shift) DO
