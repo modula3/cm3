@@ -105,14 +105,17 @@ BEGIN
                   ELSE
                     putI := PutI;
                   END;
-                  PutT("insert32(a:"); putI(flipA * a32);
-                  PutT(", b:"); putI(flipB * b32);
-                  PutT(", m:"); putI(m);
-                  PutT(", n:"); putI(n);
-                  result32 := Word.Insert(flipA * a32, flipB * b32, m, n);
-                  PutT("):"); putI(result32);
-                  NL();
-                  <* ASSERT (n # 0) OR (result32 = flipA * a32) *>
+                  IF n # 0 THEN
+                    PutT("insert32(a:"); putI(flipA * a32);
+                    PutT(", b:"); putI(flipB * b32);
+                    PutT(", m:"); putI(m);
+                    PutT(", n:"); putI(n);
+                    result32 := Word.Insert(flipA * a32, flipB * b32, m, n);
+                    PutT("):"); putI(result32);
+                    NL();
+                  ELSE
+                    <* ASSERT result32 = flipA * a32 *>
+                  END;
                 END
               END
             END
@@ -130,15 +133,18 @@ BEGIN
             IF flipB # 0L THEN
               FOR m := 0 TO InsertExtractMaxMN DO
                 FOR n := 0 TO InsertExtractMaxMN DO
-                  PutT("insert64(a:"); PutLH((*flipA **) a64);
-                  PutT("L, b:"); PutLH(flipB * b64);
-                  PutT("L, m:"); PutH(m);
-                  PutT(", n:"); PutH(n);
-                  result64 := Long.Insert((*flipA **) a64, flipB * b64, m, n);
-                  PutT("):"); PutLH(result64);
-                  PutT("L");
-                  NL();
-                  <* ASSERT (n # 0) OR (result64 = (*flipA **) a64) *>
+                  IF n # 0 THEN
+                    PutT("insert64(a:"); PutLH((*flipA **) a64);
+                    PutT("L, b:"); PutLH(flipB * b64);
+                    PutT("L, m:"); PutH(m);
+                    PutT(", n:"); PutH(n);
+                    result64 := Long.Insert((*flipA **) a64, flipB * b64, m, n);
+                    PutT("):"); PutLH(result64);
+                    PutT("L");
+                    NL();
+                  ELSE
+                    <* ASSERT result64 = (*flipA **) a64 *>
+                  END;
                 END
               END
             END
@@ -159,13 +165,16 @@ BEGIN
      FOR m := 0 TO InsertExtractMaxMN DO
       FOR n := 0 TO InsertExtractMaxMN DO
         result32 := Word.Extract(a32, m, n);
-        PutT("extract32(value:"); PutH(a32);
-        PutT(", m:"); PutH(m);
-        PutT(", n:"); PutH(n);
-        PutT(", sign_extend:"); PutH(sign_extend);
-        PutT("):"); PutH(result32);
-        NL();
-        <* ASSERT (n # 0) OR (result32 = 0) *>
+        IF n # 0 THEN
+          PutT("extract32(value:"); PutH(a32);
+          PutT(", m:"); PutH(m);
+          PutT(", n:"); PutH(n);
+          PutT(", sign_extend:"); PutH(sign_extend);
+          PutT("):"); PutH(result32);
+          NL();
+        ELSE
+          <* ASSERT result32 = 0 *>
+        END;
       END
     END
   END;
@@ -174,13 +183,16 @@ BEGIN
     FOR m := 0 TO InsertExtractMaxMN DO
       FOR n := 0 TO InsertExtractMaxMN DO
         result64 := Long.Extract(a64, m, n);
-        PutT("extract64(value:"); PutLH(a64);
-        PutT(", m:"); PutH(m);
-        PutT(", n:"); PutH(n);
-        PutT(", sign_extend:"); PutH(sign_extend);
-        PutT("):"); PutLH(result64);
-        NL();
-        <* ASSERT (n # 0) OR (result64 = 0L) *>
+        IF n # 0 THEN
+          PutT("extract64(value:"); PutLH(a64);
+          PutT(", m:"); PutH(m);
+          PutT(", n:"); PutH(n);
+          PutT(", sign_extend:"); PutH(sign_extend);
+          PutT("):"); PutLH(result64);
+          NL();
+        ELSE
+          <* ASSERT result64 = 0L *>
+        END;
       END
     END
   END;
