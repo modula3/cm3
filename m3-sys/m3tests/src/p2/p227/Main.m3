@@ -16,8 +16,8 @@ IMPORT Params;
  *)
 
 (* decrease these for faster runs; increase for more coverage *)
-VAR InsertExtractMaxAB := 17;
-VAR InsertExtractMaxMN := 5;
+VAR InsertExtractMaxAB := 16;
+VAR InsertExtractMaxMN := 4;
 
 (* Can be run in two modes:
  * default which only prints portable output
@@ -74,6 +74,15 @@ BEGIN
     PutT("NotPortableH");
   END;
 END NotPortableH;
+
+PROCEDURE NotPortableI(a: INTEGER) =
+BEGIN
+  IF IncludeLessPortableOutput THEN
+    PutI(a);
+  ELSE
+    PutT("NotPortableI");
+  END;
+END NotPortableI;
 
 PROCEDURE TestInsert() =
 VAR result32: CARDINAL := 0;
@@ -1196,10 +1205,10 @@ BEGIN
 (*InsertExtractMaxAB := 2;
   InsertExtractMaxMN := 2; *)
 
-  PutT("LINE "); PutI(ThisLine()); PutT(" FIRST(INTEGER): "); PutI(FIRST(INTEGER)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" LAST(INTEGER): "); PutI(LAST(INTEGER)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(FIRST(INTEGER)): "); PutI(NotConstI(FIRST(INTEGER))); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(LAST(INTEGER)): "); PutI(NotConstI(LAST(INTEGER))); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" FIRST(INTEGER): "); NotPortableI(FIRST(INTEGER)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" LAST(INTEGER): "); NotPortableI(LAST(INTEGER)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(FIRST(INTEGER)): "); NotPortableI(NotConstI(FIRST(INTEGER))); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(LAST(INTEGER)): "); NotPortableI(NotConstI(LAST(INTEGER))); NL();
   NL();
 
   PutT("LINE "); PutI(ThisLine()); PutT(" FIRST(LONGINT): "); PutL(FIRST(LONGINT)); NL();
@@ -1210,44 +1219,44 @@ BEGIN
 
 
 
-  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV           1 : "); PutI(          FIRST(INTEGER)  DIV 1); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV           1 : "); PutI(NotConstI(FIRST(INTEGER)) DIV 1); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV NotConstI(1): "); PutI(          FIRST(INTEGER)  DIV NotConstI(1)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV NotConstI(1): "); PutI(NotConstI(FIRST(INTEGER)) DIV NotConstI(1)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV           1 : "); PutI(           LAST(INTEGER)  DIV 1); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV           1 : "); PutI(NotConstI( LAST(INTEGER)) DIV 1); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV NotConstI(1): "); PutI(           LAST(INTEGER)  DIV NotConstI(1)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV NotConstI(1): "); PutI(NotConstI( LAST(INTEGER)) DIV NotConstI(1)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV           1 : "); NotPortableI(          FIRST(INTEGER)  DIV 1); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV           1 : "); NotPortableI(NotConstI(FIRST(INTEGER)) DIV 1); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV NotConstI(1): "); NotPortableI(          FIRST(INTEGER)  DIV NotConstI(1)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV NotConstI(1): "); NotPortableI(NotConstI(FIRST(INTEGER)) DIV NotConstI(1)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV           1 : "); NotPortableI(           LAST(INTEGER)  DIV 1); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV           1 : "); NotPortableI(NotConstI( LAST(INTEGER)) DIV 1); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV NotConstI(1): "); NotPortableI(           LAST(INTEGER)  DIV NotConstI(1)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV NotConstI(1): "); NotPortableI(NotConstI( LAST(INTEGER)) DIV NotConstI(1)); NL();
   NL();
 
-  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV           2 : "); PutI(          FIRST(INTEGER)  DIV 2); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV           2 : "); PutI(NotConstI(FIRST(INTEGER)) DIV 2); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV NotConstI(2): "); PutI(          FIRST(INTEGER)  DIV NotConstI(2)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV NotConstI(2): "); PutI(NotConstI(FIRST(INTEGER)) DIV NotConstI(2)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV           2 : "); PutI(           LAST(INTEGER)  DIV 2); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV           2 : "); PutI(NotConstI( LAST(INTEGER)) DIV 2); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV NotConstI(2): "); PutI(           LAST(INTEGER)  DIV NotConstI(2)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV NotConstI(2): "); PutI(NotConstI( LAST(INTEGER)) DIV NotConstI(2)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV           2 : "); NotPortableI(          FIRST(INTEGER)  DIV 2); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV           2 : "); NotPortableI(NotConstI(FIRST(INTEGER)) DIV 2); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV NotConstI(2): "); NotPortableI(          FIRST(INTEGER)  DIV NotConstI(2)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV NotConstI(2): "); NotPortableI(NotConstI(FIRST(INTEGER)) DIV NotConstI(2)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV           2 : "); NotPortableI(           LAST(INTEGER)  DIV 2); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV           2 : "); NotPortableI(NotConstI( LAST(INTEGER)) DIV 2); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV NotConstI(2): "); NotPortableI(           LAST(INTEGER)  DIV NotConstI(2)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV NotConstI(2): "); NotPortableI(NotConstI( LAST(INTEGER)) DIV NotConstI(2)); NL();
   NL();
 
-  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV           3 : "); PutI(          FIRST(INTEGER)  DIV 3); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV           3 : "); PutI(NotConstI(FIRST(INTEGER)) DIV 3); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV NotConstI(3): "); PutI(          FIRST(INTEGER)  DIV NotConstI(3)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV NotConstI(3): "); PutI(NotConstI(FIRST(INTEGER)) DIV NotConstI(3)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV           3 : "); PutI(           LAST(INTEGER)  DIV 3); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV           3 : "); PutI(NotConstI( LAST(INTEGER)) DIV 3); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV NotConstI(3): "); PutI(           LAST(INTEGER)  DIV NotConstI(3)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV NotConstI(3): "); PutI(NotConstI( LAST(INTEGER)) DIV NotConstI(3)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV           3 : "); NotPortableI(          FIRST(INTEGER)  DIV 3); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV           3 : "); NotPortableI(NotConstI(FIRST(INTEGER)) DIV 3); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV NotConstI(3): "); NotPortableI(          FIRST(INTEGER)  DIV NotConstI(3)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV NotConstI(3): "); NotPortableI(NotConstI(FIRST(INTEGER)) DIV NotConstI(3)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV           3 : "); NotPortableI(           LAST(INTEGER)  DIV 3); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV           3 : "); NotPortableI(NotConstI( LAST(INTEGER)) DIV 3); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV NotConstI(3): "); NotPortableI(           LAST(INTEGER)  DIV NotConstI(3)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV NotConstI(3): "); NotPortableI(NotConstI( LAST(INTEGER)) DIV NotConstI(3)); NL();
   NL();
 
-  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV           4 : "); PutI(          FIRST(INTEGER)  DIV 4); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV           4 : "); PutI(NotConstI(FIRST(INTEGER)) DIV 4); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV NotConstI(4): "); PutI(          FIRST(INTEGER)  DIV NotConstI(4)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV NotConstI(4): "); PutI(NotConstI(FIRST(INTEGER)) DIV NotConstI(4)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV           4 : "); PutI(           LAST(INTEGER)  DIV 4); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV           4 : "); PutI(NotConstI( LAST(INTEGER)) DIV 4); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV NotConstI(4): "); PutI(           LAST(INTEGER)  DIV NotConstI(4)); NL();
-  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV NotConstI(4): "); PutI(NotConstI( LAST(INTEGER)) DIV NotConstI(4)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV           4 : "); NotPortableI(          FIRST(INTEGER)  DIV 4); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV           4 : "); NotPortableI(NotConstI(FIRST(INTEGER)) DIV 4); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(INTEGER)  DIV NotConstI(4): "); NotPortableI(          FIRST(INTEGER)  DIV NotConstI(4)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI( FIRST(INTEGER)) DIV NotConstI(4): "); NotPortableI(NotConstI(FIRST(INTEGER)) DIV NotConstI(4)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV           4 : "); NotPortableI(           LAST(INTEGER)  DIV 4); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV           4 : "); NotPortableI(NotConstI( LAST(INTEGER)) DIV 4); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(INTEGER)  DIV NotConstI(4): "); NotPortableI(           LAST(INTEGER)  DIV NotConstI(4)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstI(  LAST(INTEGER)) DIV NotConstI(4): "); NotPortableI(NotConstI( LAST(INTEGER)) DIV NotConstI(4)); NL();
   NL();
   NL();
 
