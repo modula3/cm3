@@ -4131,6 +4131,10 @@ m3cg_set_compare (tree proc)
   gcc_assert (t == t_int);
   setop (proc, n, 2);
 }
+static void m3cg_set_gt (void) { m3cg_set_compare (set_gt_proc); }
+static void m3cg_set_ge (void) { m3cg_set_compare (set_ge_proc); }
+static void m3cg_set_lt (void) { m3cg_set_compare (set_lt_proc); }
+static void m3cg_set_le (void) { m3cg_set_compare (set_le_proc); }
 
 static void m3cg_set_eq (void)
 {
@@ -4138,7 +4142,6 @@ static void m3cg_set_eq (void)
   MTYPE    (t);
 
   gcc_assert (t == t_int);
-
   m3_start_call ();
   m3_pop_param (t_addr);
   m3_pop_param (t_addr);
@@ -4162,11 +4165,6 @@ static void m3cg_set_ne (void)
   m3_call_direct (memcmp_proc, TREE_TYPE (TREE_TYPE (memcmp_proc)));
   EXPR_REF(-1) = m3_build2 (NE_EXPR, t_int, EXPR_REF(-1), v_zero);
 }
-
-static void m3cg_set_gt (void) { m3cg_set_compare (set_gt_proc); }
-static void m3cg_set_ge (void) { m3cg_set_compare (set_ge_proc); }
-static void m3cg_set_lt (void) { m3cg_set_compare (set_lt_proc); }
-static void m3cg_set_le (void) { m3cg_set_compare (set_le_proc); }
 
 static void
 m3cg_set_range (void)
