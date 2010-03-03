@@ -100,7 +100,6 @@ BEGIN
             IF flipB # 0 THEN
               FOR m := 0 TO InsertExtractMaxMN DO
                 FOR n := 0 TO InsertExtractMaxMN DO
-                  result32 := Word.Insert((*flipA **) a32, flipB * b32, m, n);
                   IF (flipA = 1 AND flipB = 1) OR IncludeLessPortableOutput THEN
                     putI := PutH;
                   ELSE
@@ -110,6 +109,7 @@ BEGIN
                   PutT(", b:"); putI(flipB * b32);
                   PutT(", m:"); putI(m);
                   PutT(", n:"); putI(n);
+                  result32 := Word.Insert((*flipA **) a32, flipB * b32, m, n);
                   PutT("):"); putI(result32);
                   NL();
                   <* ASSERT (n # 0) OR (result32 = (*flipA **) a32) *>
@@ -130,11 +130,11 @@ BEGIN
             IF flipB # 0L THEN
               FOR m := 0 TO InsertExtractMaxMN DO
                 FOR n := 0 TO InsertExtractMaxMN DO
-                  result64 := Long.Insert((*flipA **) a64, flipB * b64, m, n);
                   PutT("insert64(a:"); PutLH((*flipA **) a64);
                   PutT("L, b:"); PutLH(flipB * b64);
                   PutT("L, m:"); PutH(m);
                   PutT(", n:"); PutH(n);
+                  result64 := Long.Insert((*flipA **) a64, flipB * b64, m, n);
                   PutT("):"); PutLH(result64);
                   PutT("L");
                   NL();
