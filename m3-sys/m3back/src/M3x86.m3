@@ -2874,6 +2874,12 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
       u.wr.NL    ();
     END;
 
+    <* ASSERT FALSE *>
+
+    (* zero_n is implemented incorrectly in the gcc backend,
+     * therefore it must not be used.
+     *)
+
     WITH stack0 = u.vstack.pos(0, "zero_n") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, n) THEN
