@@ -4459,8 +4459,7 @@ m3cg_copy_n (void)
   EXPR_REF (-1) =
     m3_build2 (MULT_EXPR, t_int,
                EXPR_REF (-1),
-               size_int (TREE_INT_CST_LOW (TYPE_SIZE (mem_t)) /
-                         BITS_PER_UNIT));
+	       TYPE_SIZE_UNIT (mem_t));
   m3_pop_param (cnt_t);
   m3_call_direct (overlap ? memmove_proc : memcpy_proc, t_void);
 }
@@ -4504,25 +4503,15 @@ m3cg_zero_n (void)
   MTYPE (cnt_t);
   MTYPE (mem_t);
 
-  int chunk_size = TREE_INT_CST_LOW (TYPE_SIZE (mem_t)) / BITS_PER_UNIT;
-
-  /* Between zero and zero_n, they cannot both be correct.
-   * Nominate and kill zero_n as the dead one.
-   */
-
-  gcc_assert(0);
-
   gcc_assert (cnt_t == t_int);
-  if (chunk_size > 1) {
-    EXPR_REF(-1) = m3_build2(MULT_EXPR, cnt_t, EXPR_REF(-1),
-			     build_int_cst (t_int, chunk_size));
-  }
+  EXPR_REF(-1) = m3_build2(MULT_EXPR, t_int, EXPR_REF(-1),
+			   TYPE_SIZE_UNIT(mem_t));
 
   m3_start_call ();
   m3_swap ();
   m3_pop_param (t_addr);
-  m3_pop_param (cnt_t);
   EXPR_PUSH (v_zero);
+  m3_pop_param (t_int);
   m3_pop_param (t_int);
   m3_call_direct (memset_proc, t_void);
 }
@@ -4533,13 +4522,11 @@ m3cg_zero (void)
   INTEGER (n);
   MTYPE   (mem_t);
 
-  int chunk_size = TREE_INT_CST_LOW (TYPE_SIZE (mem_t)) / BITS_PER_UNIT;
-
   m3_start_call ();
   m3_pop_param (t_addr);
   EXPR_PUSH (v_zero);
   m3_pop_param (t_int);
-  EXPR_PUSH (size_int (n * chunk_size));
+  EXPR_PUSH (m3_build2 (MULT_EXPR, t_int, size_int(n), TYPE_SIZE_UNIT (mem_t)));
   m3_pop_param (t_int);
   m3_call_direct (memset_proc, t_void);
 }
