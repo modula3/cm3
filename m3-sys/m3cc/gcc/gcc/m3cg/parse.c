@@ -129,9 +129,9 @@ enum m3_tree_index
   /* 15 */ M3TI_MEMMOVE,
   /* 16 */ M3TI_MEMSET,
   /* 17 */ M3TI_MEMCMP,
-  /* 18 */ /* not used */
-  /* 19 */ /* not used */
-  /* 1A */ /* not used */
+  /* 18 */ unused_18,
+  /* 19 */ unused_19,
+  /* 1A */ unused_1A,
   /* 1B */ M3TI_SET_UNION,
   /* 1C */ M3TI_SET_DIFF,
   /* 1D */ M3TI_SET_INTER,
@@ -142,9 +142,9 @@ enum m3_tree_index
   /* 22 */ M3TI_SET_GE,
   /* 23 */ M3TI_SET_LT,
   /* 24 */ M3TI_SET_LE,
-  /* 25 */ M3TI_SET_MEMBER,
+  /* 25 */ unused_25,
   /* 26 */ M3TI_SET_RANGE,
-  /* 27 */ M3TI_SET_SING,
+  /* 27 */ unused_27,
   /* 28 */ M3TI_FAULT_PROC,
   /* 29 */ M3TI_FAULT_HANDLER,
 
@@ -200,9 +200,7 @@ static GTY (()) tree m3_global_trees[M3TI_MAX];
 #define set_ge_proc	m3_global_trees[M3TI_SET_GE]
 #define set_lt_proc	m3_global_trees[M3TI_SET_LT]
 #define set_le_proc	m3_global_trees[M3TI_SET_LE]
-#define set_member_proc	m3_global_trees[M3TI_SET_MEMBER]
 #define set_range_proc	m3_global_trees[M3TI_SET_RANGE]
-#define set_sing_proc	m3_global_trees[M3TI_SET_SING]
 #define fault_proc	m3_global_trees[M3TI_FAULT_PROC]
 #define fault_handler	m3_global_trees[M3TI_FAULT_HANDLER]
 
@@ -1233,14 +1231,10 @@ m3_init_decl_processing (void)
 				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_sdiff_proc  = builtin_function ("set_sym_difference",
 				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
-  set_sing_proc   = builtin_function ("set_singleton",
-				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_range_proc  = builtin_function ("set_range",
 				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
 
   t = build_function_type_list (t_int, NULL_TREE);
-  set_member_proc
-    = builtin_function ("set_member", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_gt_proc
     = builtin_function ("set_gt", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_ge_proc
@@ -4113,13 +4107,77 @@ m3cg_set_sym_difference (void)
 }
 
 static void
-m3cg_set_member (void)
+m3cg_set_member_ref (tree* word_ref, tree* bit_within_word)
 {
   UNUSED_BYTESIZE (n);
-  MTYPE    (t);
+  MTYPE    (type);
+  tree bit_index;
+  tree set;
+  tree uint8_index;
+  tree word_index;
+  tree bit_index_within_word;
+  tree t;
+  static tree bits_per_word;
+  static tree bytes_per_word;
 
-  gcc_assert (t == t_int);
-  setop2 (set_member_proc, 2);
+  /*
+  Common code for set_member and set_singleton.
+  Something like:
+  set_member_ref(const size_t* set, size_t bit_index, tree* word_ref, tree* bit_within_word)
+  {
+      #define grain (sizeof(size_t) * 8) // 32 or 64
+      #define mask  (grain - 1) // 31 or 63
+      #define shift (log_base_2(grain)) // 5 or 6
+
+      *word_ref = set[bit_index >> shift];
+      *bit_within_word = (((size_t)1) << (bit_index & mask));
+  }
+  */
+
+  gcc_assert (type == t_int);
+
+  bit_index = m3_cast(size_type_node, EXPR_REF (-1));
+  set = m3_cast(t_addr, EXPR_REF (-2));
+  EXPR_POP ();
+  EXPR_POP ();
+
+  bits_per_word = bits_per_word ? bits_per_word : build_int_cst(size_type_node, BITS_PER_WORD);
+  bytes_per_word = bytes_per_word ? bytes_per_word : build_int_cst(size_type_node, BITS_PER_WORD / 8);
+
+  /* gcc does just as well with div and mod as with shifting, even when not optimizing. */
+
+  word_index = m3_build2(TRUNC_DIV_EXPR, size_type_node, bit_index, bits_per_word);
+  bit_index_within_word = m3_build2(TRUNC_MOD_EXPR, size_type_node, bit_index, bits_per_word);
+  uint8_index = m3_build2(MULT_EXPR, size_type_node, word_index, bytes_per_word);
+  t = m3_build2 (POINTER_PLUS_EXPR, t_addr, set, uint8_index);
+  t = m3_build1 (INDIRECT_REF, size_type_node, t);
+  t = stabilize_reference(t); /* This helps set_singleton avoid recomputing address. */
+  *word_ref = t;
+  *bit_within_word = m3_build2(LSHIFT_EXPR, size_type_node, m3_cast(size_type_node, v_one), bit_index_within_word);
+}
+
+static void
+m3cg_set_member (void)
+{
+  tree t;
+  tree word_ref;
+  tree bit_within_word;
+
+  /*
+  Equivalent to
+  int set_member(const size_t* set, size_t bit_index)
+  {
+      #define grain (sizeof(size_t) * 8) // 32 or 64
+      #define mask  (grain - 1) // 31 or 63
+      #define shift (log_base_2(grain)) // 5 or 6
+      return ((set[bit_index >> shift] & (((size_t)1) << (bit_index & mask))) != 0);
+  }
+  */
+
+  m3cg_set_member_ref(&word_ref, &bit_within_word);
+  t = m3_build2 (BIT_AND_EXPR, size_type_node, word_ref, bit_within_word);
+  t = m3_build2 (NE_EXPR, boolean_type_node, t, m3_cast(t_int, v_zero));
+  EXPR_PUSH (t);
 }
 
 static void
@@ -4179,11 +4237,25 @@ m3cg_set_range (void)
 static void
 m3cg_set_singleton (void)
 {
-  UNUSED_BYTESIZE (n);
-  MTYPE    (t);
+  tree t;
+  tree word_ref;
+  tree bit_within_word;
 
-  gcc_assert (t == t_int);
-  setop2 (set_sing_proc, 2);
+  /*
+  Equivalent to
+  int set_singleton(size_t* set, size_t bit_index)
+  {
+      #define grain (sizeof(size_t) * 8) // 32 or 64
+      #define mask  (grain - 1) // 31 or 63
+      #define shift (log_base_2(grain)) // 5 or 6
+      set[bit_index >> shift] |= (((size_t)1) << (bit_index & mask));
+  }
+  */
+
+  m3cg_set_member_ref(&word_ref, &bit_within_word);
+  t = m3_build2(BIT_IOR_EXPR, size_type_node, word_ref, bit_within_word);
+  t = m3_build2(MODIFY_EXPR, size_type_node, word_ref, t);
+  add_stmt(t);
 }
 
 static void
