@@ -135,7 +135,7 @@ def ConvertToCygwinPath(a):
 
 #-----------------------------------------------------------------------------
 
-def _ConvertFromCygwinPath(a):
+def ConvertFromCygwinPath(a):
     if IsInterix() or env_OS != "Windows_NT" or a == None:
         return a
     a = a.replace("/", "\\")
@@ -160,14 +160,14 @@ def GetFullPath(a):
     return a
 
 def ConvertPathForWin32(a):
-    return _ConvertFromCygwinPath(a)
+    return ConvertFromCygwinPath(a)
 
 if os.name == "posix":
     def ConvertPathForPython(a):
         return ConvertToCygwinPath(a)
 else:
     def ConvertPathForPython(a):
-        return _ConvertFromCygwinPath(a)
+        return ConvertFromCygwinPath(a)
 
 #-----------------------------------------------------------------------------
 
@@ -797,7 +797,7 @@ def IsCygwinBinary(a):
     a = a.replace("/cygdrive/c/", "c:\\")
     a = a.replace("/cygdrive/d/", "d:\\")
     a = a.replace("/", "\\")
-    a = _ConvertFromCygwinPath(a)
+    a = ConvertFromCygwinPath(a)
     #print("a is " + a)
     return (os.system("findstr 2>&1 >" + os.devnull + " /m cygwin1.dll \"" + a + "\"") == 0)
 
@@ -813,7 +813,7 @@ if _Program != "make-msi.py":
     else:
         CM3IsCygwin = False
         def ConvertPathForCM3(a):
-            return _ConvertFromCygwinPath(a)
+            return ConvertFromCygwinPath(a)
 
 #-----------------------------------------------------------------------------
 #
@@ -2993,8 +2993,8 @@ if __name__ == "__main__":
         print("GetLastPathElement(%s):%s" % (a, GetLastPathElement(a)))
     sys.exit(1)
 
-    print(_ConvertFromCygwinPath("\\cygdrive/c/foo"))
-    print(_ConvertFromCygwinPath("//foo"))
+    print(ConvertFromCygwinPath("\\cygdrive/c/foo"))
+    print(ConvertFromCygwinPath("//foo"))
     sys.exit(1)
 
     print(SearchPath("juno"))
