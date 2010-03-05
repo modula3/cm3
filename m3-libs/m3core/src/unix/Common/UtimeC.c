@@ -49,7 +49,7 @@ struct timespec
       M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, tv_sec) + M3_FIELD_SIZE(T, tv_nsec)); }
 #endif
     /* verify timeval (microtime) contains just the two fields we know about, in either order */
-#if defined(__APPLE__) && defined(__x86_64__)
+#if defined(__APPLE__) && defined(__LP64__)
 /* AMD64_DARWIN has:
 struct timeval
 {
