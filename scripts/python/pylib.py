@@ -1163,6 +1163,7 @@ def Boot():
     Compile = Compile + ({
         "AMD64_LINUX"     : " -m64 -mno-align-double ",
         "AMD64_DARWIN"    : " -arch x86_64 ",
+        "PPC64_DARWIN"    : " -arch ppc64 ",
         "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
         "LINUXLIBC6"      : " -m32 -mno-align-double ",
         "MIPS64_OPENBSD"  : " -mabi=64 ",
@@ -1205,6 +1206,7 @@ def Boot():
 
     Assemble = (Assemble + ({
         "AMD64_DARWIN"      : " -arch x86_64 ",
+        "PPC64_DARWIN"      : " -arch ppc64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
         "SOLgnu"            : " -s -xarch=v8plus ",
         "SOLsun"            : " -s -xarch=v8plus ",
