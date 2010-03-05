@@ -7,6 +7,9 @@
 
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
 %M3_PROFILING = FALSE
+if not defined("M3_PROFILING")
+  M3_PROFILING = FALSE
+end
 
 %-------------------------------------------------------------------
 % defined by cm3, but not the other MxConfig users
