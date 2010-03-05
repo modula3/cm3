@@ -14,5 +14,5 @@ if not FileExists(SYSTEM_ASM)
     SYSTEM_ASM = "as"
 end
 
-include("PPC.common")
+include("PPC64.common")
 include("Darwin.common")
