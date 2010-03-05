@@ -1196,7 +1196,7 @@ def Boot():
     else:
         Assemble = "as "
 
-    if Target != "PPC32_OPENBSD":
+    if Target != "PPC32_OPENBSD" and Target != "PPC_LINUX":
         if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
             if Target.find("64") != -1 or Target.find("ALPHA") != -1:
                 Assemble = Assemble + " --64"
@@ -1231,8 +1231,9 @@ def Boot():
 
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
-    P = [ "m3cc", "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
-          "m3objfile", "m3linker", "m3back", "m3front", "cm3", "mklib" ]
+    P = [ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
+          "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
+          "m3front", "cm3" ]
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
