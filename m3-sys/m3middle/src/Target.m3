@@ -52,7 +52,6 @@ PROCEDURE IsSPARC(): BOOLEAN =
   
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
   CONST FF = 16_FF;
-        bits = 8;
   VAR sys := 0;  max_align := 64;
   BEGIN
     (* lookup the system *)
@@ -384,13 +383,13 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 28 * Address.size;
 
     |  Systems.PPC_DARWIN =>
-                 Jumpbuf_size  := 768 * bits;
-                 Jumpbuf_align := 32 * bits;
+                 Jumpbuf_size  := 768 * Byte;
+                 Jumpbuf_align := 32 * Byte;
                  (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
 
     | Systems.PPC64_DARWIN =>
-                 Jumpbuf_size  := 872 * bits;
-                 Jumpbuf_align := 32 * bits;
+                 Jumpbuf_size  := 872 * Byte;
+                 Jumpbuf_align := 32 * Byte;
 
     |  Systems.PPC_LINUX => 
                  Jumpbuf_size              := 74 * Int64.size;
