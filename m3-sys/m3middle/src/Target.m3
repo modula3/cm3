@@ -383,9 +383,13 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 28 * Address.size;
 
     |  Systems.PPC_DARWIN =>
-                 Jumpbuf_size              := (26 + 18*2 + 129 + 1) * Address.size;
-                 Jumpbuf_align             := Word64.align;
+                 Jumpbuf_size  := 768 * 8; (* bits *)
+                 Jumpbuf_align := 32; (* bits *)
                  (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
+
+    | Systems.PPC64_DARWIN =>
+                 Jumpbuf_size  := 872 * 8; (* bits *)
+                 Jumpbuf_align := 32; (* bits *)
 
     |  Systems.PPC_LINUX => 
                  Jumpbuf_size              := 74 * Int64.size;
