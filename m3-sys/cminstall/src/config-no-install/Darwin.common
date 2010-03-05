@@ -70,21 +70,18 @@ SYSTEM_LIBS = {
 % "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
   "OPENGL"     : [ "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib", "-L/usr/X11R6/lib", "-lGLU", "-lGL", "-lXext" ],
 % "MOTIF"      : [ "-lXm" ],
-  "X11"        : [
-    "-L/usr/X11R6/lib",
-    "-lXaw",
-    "-lXmu",
-    "-lXext",
-    "-lXt",
-    "-lSM",
-    "-lICE",
-    "-lX11"
-    ],
   "TCP"        : [ ]
 }
 
-if not equal(TARGET, "PPC64_DARWIN")
-  SYSTEM_LIBS{"ODBC"} = [ "-liodbc", "-liodbcinst" ]
+% MacOSX 10.4 lacks a lot of PPC64 support, that 10.5 has. We need a better answer here.
+
+if equal(TARGET, "PPC64_DARWIN")
+  proc HasTrestle() is
+    return FALSE
+  end
+else
+  SYSTEM_LIBS{"ODBC"} = [ "-liodbc", "-liodbcinst" ],
+  SYSTEM_LIBS{""X11"} = [ "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
 end
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
