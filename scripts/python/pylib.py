@@ -123,7 +123,7 @@ def GetPathBaseName(a):
 
 #-----------------------------------------------------------------------------
 
-def _ConvertToCygwinPath(a):
+def ConvertToCygwinPath(a):
     if IsInterix() or env_OS != "Windows_NT" or a == None:
         return a
     if (a.find('\\') == -1) and (a.find(':') == -1):
@@ -164,7 +164,7 @@ def ConvertPathForWin32(a):
 
 if os.name == "posix":
     def ConvertPathForPython(a):
-        return _ConvertToCygwinPath(a)
+        return ConvertToCygwinPath(a)
 else:
     def ConvertPathForPython(a):
         return _ConvertFromCygwinPath(a)
@@ -809,7 +809,7 @@ if _Program != "make-msi.py":
     if IsCygwinBinary(CM3):
         CM3IsCygwin = True
         def ConvertPathForCM3(a):
-            return _ConvertToCygwinPath(a)
+            return ConvertToCygwinPath(a)
     else:
         CM3IsCygwin = False
         def ConvertPathForCM3(a):
@@ -3000,13 +3000,13 @@ if __name__ == "__main__":
     print(SearchPath("juno"))
     sys.exit(1)
 
-    print(_ConvertToCygwinPath("a"))
-    print(_ConvertToCygwinPath("a\\b"))
-    print(_ConvertToCygwinPath("//a\\b"))
-    print(_ConvertToCygwinPath("c:\\b"))
-    print(_ConvertToCygwinPath("c:/b"))
-    print(_ConvertToCygwinPath("/b"))
-    print(_ConvertToCygwinPath("\\b"))
+    print(ConvertToCygwinPath("a"))
+    print(ConvertToCygwinPath("a\\b"))
+    print(ConvertToCygwinPath("//a\\b"))
+    print(ConvertToCygwinPath("c:\\b"))
+    print(ConvertToCygwinPath("c:/b"))
+    print(ConvertToCygwinPath("/b"))
+    print(ConvertToCygwinPath("\\b"))
     sys.exit(1)
     print(IsCygwinBinary("c:\\cygwin\\bin\\gcc.exe"))
     print(IsCygwinBinary("c:\\bin\\cdb.exe"))
