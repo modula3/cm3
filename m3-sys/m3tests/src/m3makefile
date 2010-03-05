@@ -15,8 +15,8 @@ include ("Test.common")
 if not defined("TARGET_ENDIAN")
   error("TARGET_ENDIAN must be defined")
 else
-  if not equal(TARGET_ENDIAN, "LITTLE") and not equal(TARGET_ARCH, "BIG")
-    error("TARGET_ENDIAN must be BIG or LITTLE")
+  if not equal(TARGET_ENDIAN, "LITTLE") and not equal(TARGET_ENDIAN, "BIG")
+    error("TARGET_ENDIAN must be BIG or LITTLE but it is " & TARGET_ENDIAN)
   end
 end
 
