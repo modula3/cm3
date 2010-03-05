@@ -384,12 +384,12 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     |  Systems.PPC_DARWIN =>
                  Jumpbuf_size  := 768 * Byte;
-                 Jumpbuf_align := 32 * Byte;
+                 Jumpbuf_align := 32; (* bits *)
                  (* Allow_packed_byte_aligned := TRUE; use <*LAZYALIGN*>*)
 
     | Systems.PPC64_DARWIN =>
                  Jumpbuf_size  := 872 * Byte;
-                 Jumpbuf_align := 32 * Byte;
+                 Jumpbuf_align := 32; (* bits *)
 
     |  Systems.PPC_LINUX => 
                  Jumpbuf_size              := 74 * Int64.size;
