@@ -81,7 +81,7 @@ if equal(TARGET, "PPC64_DARWIN")
   end
 else
   SYSTEM_LIBS{"ODBC"} = [ "-liodbc", "-liodbcinst" ]
-  SYSTEM_LIBS{""X11"} = [ "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
+  SYSTEM_LIBS{"X11"} = [ "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
 end
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
