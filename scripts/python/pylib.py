@@ -632,9 +632,12 @@ elif UName.startswith("openbsd"):
 
 elif UName.startswith("darwin"):
 
-    # detect the m3 platform (Darwin runs on ppc32, ppc64, x86, amd64)
+    # detect the m3 platform (Darwin runs on ppc32, ppc64, x86, amd64, arm)
     if UNameArchP == "powerpc":
-        Host = "PPC_DARWIN"
+        if "ppc970\n" == os.popen("machine").read().lower():
+          Host = "PPC64_DARWIN"
+        else:
+          Host = "PPC_DARWIN"
     elif re.match("i[3456]86", UNameArchP):
         if os.popen("sysctl hw.cpu64bit_capable").read() == "hw.cpu64bit_capable: 1\n":
             Host = "AMD64_DARWIN"
