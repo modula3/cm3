@@ -1,6 +1,8 @@
 MODULE Main;
 IMPORT Long;
 
+(* This valid program as of March 6 2010 fails to compile for NT386 (m3back) *)
+
 VAR a: LONGINT;
 
 PROCEDURE F1() =
