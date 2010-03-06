@@ -197,7 +197,9 @@ PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand; operandPart: OperandPar
 
     IF op.loc = OLoc.mem THEN
       IF op.mvar.var.stack_temp THEN
-        t.parent.free_temp(op.mvar.var);
+        IF operandPart = 0 THEN
+          t.parent.free_temp(op.mvar.var);
+        END;
       ELSE
         t.reguse[r].last_store := op.mvar;
       END
