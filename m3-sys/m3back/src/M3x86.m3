@@ -1704,6 +1704,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
 (* s0.z := Mem [s0.A + o].t  *)
   VAR newreg: ARRAY OperandPart OF Regno;
       size: OperandSize;
+      regset: RegSet;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("load_indirect");
@@ -1716,7 +1717,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
     u.vstack.unlock();
 
     WITH stack0 = u.vstack.pos(0, "load_indirect") DO
-      u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
+      u.vstack.find(stack0, Force.anyreg, AllRegisters, TRUE);
       IF Target.FloatType [t] THEN
         u.cg.f_loadind(u.vstack.op(stack0), o, t);
         u.vstack.dealloc_reg(stack0, operandPart := 0);
@@ -1727,17 +1728,16 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  t: MType;  z: ZType) =
 
         (* allocate the registers *)
 
+        IF CG_Bytes[t] = 1 THEN
+          <* ASSERT size = 1 *>
+          regset := RegistersForByteOperations;
+        ELSE
+          regset := AllRegisters;
+        END;
+
         FOR i := 0 TO size - 1 DO
-          IF CG_Bytes[t] = 1 THEN
-            <* ASSERT i = 0 AND size = 1 *>
-            newreg[i] := u.vstack.freereg(RegistersForByteOperations, operandPart := i);
-          ELSE
-            IF i = 0 THEN
-              newreg[i] := u.vstack.freereg(operandPart := i);
-            ELSE
-              newreg[i] := u.vstack.freereg(AllRegisters - RegSet{newreg[0]}, operandPart := i);
-            END;
-          END;
+          newreg[i] := u.vstack.freereg(regset, operandPart := i);
+          regset := (regset - RegSet{newreg[i]});
           <* ASSERT newreg[i] # -1 *>
         END;
 
@@ -1774,7 +1774,7 @@ PROCEDURE store_indirect (u: U;  o: ByteOffset;  z: ZType;  t: MType) =
     WITH (* stack0 = u.vstack.pos(0, "store_indirect"), *)
          stack1 = u.vstack.pos(1, "store_indirect") DO
       IF Target.FloatType [t] THEN
-        u.vstack.find(stack1, Force.anyreg, RegSet {}, TRUE);
+        u.vstack.find(stack1, Force.anyreg, AllRegisters, TRUE);
         u.cg.f_storeind(u.vstack.op(stack1), o, t);
         u.vstack.discard(2);
       ELSE
@@ -2824,8 +2824,8 @@ PROCEDURE copy (u: U;  n: INTEGER;  t: MType;  overlap: BOOLEAN) =
         u.vstack.find(stack0, Force.regset, RegSet { ESI } );
         u.vstack.find(stack1, Force.regset, RegSet { EDI } );
       ELSE
-        u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
-        u.vstack.find(stack1, Force.anyreg, RegSet {}, TRUE);
+        u.vstack.find(stack0, Force.anyreg, AllRegisters, TRUE);
+        u.vstack.find(stack1, Force.anyreg, AllRegisters, TRUE);
       END
     END;
 
@@ -2865,8 +2865,8 @@ PROCEDURE copy (u: U;  n: INTEGER;  t: MType;  overlap: BOOLEAN) =
 
 PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
   (* Mem[s1.A:s0.z] := 0; pop(2) *)
-  VAR n: INTEGER;
-      shift: TIntN.T;
+(*VAR n: INTEGER;
+      shift: TIntN.T;*)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("zero_n");
@@ -2879,7 +2879,6 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
 
     (* zero_n is implemented incorrectly in the gcc backend,
      * therefore it must not be used.
-     *)
 
     WITH stack0 = u.vstack.pos(0, "zero_n") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
@@ -2917,6 +2916,7 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
     call_int_proc (u, Builtin.memset);
 
     u.vstack.discard(1);
+    *)
   END zero_n;
 
 PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
@@ -2969,7 +2969,7 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
     ELSE
       WITH stack0 = u.vstack.pos(0, "zero"),
            stop0 = u.vstack.op(stack0) DO
-        u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
+        u.vstack.find(stack0, Force.anyreg, AllRegisters, TRUE);
         FOR i := 0 TO n - 1 DO
           u.cg.store_ind(Operand { loc := OLoc.imm, imm := TZero, optype := t },
                          stop0, i * size, faketype[size]);
@@ -3108,7 +3108,7 @@ PROCEDURE check_nil (u: U;  code: RuntimeError) =
           reportfault(u, code);
         END
       ELSE
-        u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
+        u.vstack.find(stack0, Force.anyreg, AllRegisters, TRUE);
 
         IF NOT u.vstack.non_nil(u.vstack.reg(stack0)) THEN
           u.cg.immOp(Op.oCMP, u.vstack.op(stack0), TZero);
@@ -3422,7 +3422,7 @@ PROCEDURE add_offset (u: U; i: INTEGER) =
         END;
         u.vstack.set_imm(stack0, imm_plus_i);
       ELSE
-        u.vstack.find(stack0, Force.anytemp, RegSet {}, TRUE);
+        u.vstack.find(stack0, Force.anytemp, AllRegisters, TRUE);
 
         u.cg.immOp(Op.oADD, u.vstack.op(stack0), ti);
 
@@ -3654,7 +3654,7 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
 
         (* if the struct is "small", use a few load/push to copy it to the machine stack *)
 
-        u.vstack.find(stack0, Force.anyreg, RegSet {}, TRUE);
+        u.vstack.find(stack0, Force.anyreg, AllRegisters, TRUE);
 
         WITH temp = u.vstack.freereg(operandPart := 0) DO
           FOR i := 1 TO (s DIV 4) DO

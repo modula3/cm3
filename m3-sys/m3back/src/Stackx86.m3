@@ -17,9 +17,9 @@ FROM TargetMap IMPORT CG_Bytes, CG_Align_bytes;
 FROM M3CG IMPORT Type, MType, ZType, IType, Sign, Label, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
-FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, TypeIs64, OperandPart, RegName, OperandSize, TZero;
+FROM M3x86Rep IMPORT Operand, MVar, Regno, OLoc, VLoc, NRegs, Force, TypeIs64, OperandPart, RegName, OperandSize, TZero, AllRegisters;
 FROM M3x86Rep IMPORT RegistersForByteOperations, RegSet, FlToInt, x86Var, x86Proc, NoStore, SplitOperand, SplitMVar, GetTypeSize, GetOperandSize;
-FROM M3x86Rep IMPORT TypeIsSigned, TypeIsUnsigned, EAX, ECX, EDX, EBX, ESI, EDI, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
+FROM M3x86Rep IMPORT TypeIsSigned, TypeIsUnsigned, EAX, ECX, EDX, EBX, UnsignedType, MaximumShift, MinimumShift, BitCountMask, IntType;
 
 FROM Codex86 IMPORT Op, FOp, Cond, revcond;
 
@@ -283,7 +283,7 @@ PROCEDURE releaseall (t: T) =
 
 
 PROCEDURE find (t: T; stackp: INTEGER;
-                force: Force := Force.any; set := RegSet {};
+                force: Force := Force.any; set := AllRegisters;
                 hintaddr := FALSE) =
   (* Find a suitable register to put a stack item in *)
   VAR in: ARRAY OperandPart OF Regno; (* initialize to -1? *)
@@ -299,10 +299,6 @@ PROCEDURE find (t: T; stackp: INTEGER;
 
       size := SplitOperand(op, opA);
       IF size = 2 THEN
-        IF set = RegSet{} THEN
-          (* Why? Probably because of the set subtraction below (pickreg). *)
-          set := RegSet{EAX, EBX, ECX, EDX, ESI, EDI};
-        END;
         ret64 := (force = Force.regset AND set = RegSet{EAX, EDX});
       END;
 
@@ -367,11 +363,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
 
       IF op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 1 THEN
         force := Force.regset;
-        IF set = RegSet {} THEN
-          set := RegistersForByteOperations;
-        ELSE
-          set := set * RegistersForByteOperations;
-        END
+        set := set * RegistersForByteOperations;
       END;
 
       (* If for any reason it isn't in the right register, find the best
@@ -481,7 +473,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
     t.reguse[to[size - 1]].locked := TRUE;
   END find;
 
-PROCEDURE freereg (t: T; set := RegSet {}; operandPart: OperandPart): Regno =
+PROCEDURE freereg (t: T; set := AllRegisters; operandPart: OperandPart): Regno =
   VAR to: Regno;
   BEGIN
     to := pickreg(t, set);
@@ -518,12 +510,12 @@ PROCEDURE finddead (t: T): Regno =
     RETURN bestreg;
   END finddead;
 
-PROCEDURE pickreg (t: T; set: RegSet:= RegSet {}; hintaddr := FALSE): Regno =
+PROCEDURE pickreg (t: T; set: RegSet:= AllRegisters; hintaddr := FALSE): Regno =
   VAR minprec := HighPrec;
       bestreg: Regno := -1;
   BEGIN
     FOR i := 0 TO NRegs DO
-      IF set = RegSet {} OR i IN set THEN
+      IF i IN set THEN
         WITH prec = precedence(t, i, hintaddr) DO
           IF prec < minprec THEN
             minprec := prec;
@@ -536,7 +528,7 @@ PROCEDURE pickreg (t: T; set: RegSet:= RegSet {}; hintaddr := FALSE): Regno =
     RETURN bestreg;
   END pickreg;
 
-PROCEDURE inreg (t: T; READONLY v: MVar; set: RegSet:= RegSet {}): Regno =
+PROCEDURE inreg (t: T; READONLY v: MVar; set: RegSet:= AllRegisters): Regno =
   VAR minprec := HighPrec * HighPrec;
       prec := 0;
       bestreg: Regno := -1;
@@ -549,7 +541,7 @@ PROCEDURE inreg (t: T; READONLY v: MVar; set: RegSet:= RegSet {}): Regno =
     FOR i := 0 TO NRegs DO
       IF t.reguse[i].last_store # NoStore AND v = t.reguse[i].last_store THEN
         prec := precedence(t, i);
-        IF (set # RegSet {}) AND (NOT i IN set) THEN
+        IF NOT i IN set THEN
           prec := prec * HighPrec;
         END;
         IF prec < minprec THEN
@@ -561,7 +553,7 @@ PROCEDURE inreg (t: T; READONLY v: MVar; set: RegSet:= RegSet {}): Regno =
     RETURN bestreg;
   END inreg;
 
-PROCEDURE immreg (t: T; READONLY imm: TIntN.T; set: RegSet:= RegSet {}): Regno =
+PROCEDURE immreg (t: T; READONLY imm: TIntN.T; set: RegSet:= AllRegisters): Regno =
   VAR minprec := HighPrec * HighPrec;
       prec := 0;
       bestreg: Regno := -1;
@@ -569,7 +561,7 @@ PROCEDURE immreg (t: T; READONLY imm: TIntN.T; set: RegSet:= RegSet {}): Regno =
     FOR i := 0 TO NRegs DO
       IF t.reguse[i].imm AND TIntN.EQ(imm, t.reguse[i].last_imm) THEN
         prec := precedence(t, i);
-        IF (set # RegSet {}) AND (NOT i IN set) THEN
+        IF NOT i IN set THEN
           prec := prec * HighPrec;
         END;
         IF prec < minprec THEN
@@ -816,7 +808,7 @@ PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet; operandPart: O
     END;
   END pushnew1;
 
-PROCEDURE pushnew (t: T; type: MType; force: Force; set := RegSet {}) =
+PROCEDURE pushnew (t: T; type: MType; force: Force; set := AllRegisters) =
   BEGIN
     maybe_expand_stack(t);
     IF TypeIs64(type) AND force = Force.regset AND set = RegSet { EAX, EDX } THEN
@@ -843,7 +835,7 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
       IF FloatType [src_mvar.mvar_type] THEN
         IF src_mvar.var.loc = VLoc.temp AND src_mvar.var.parent # t.current_proc THEN
           unlock(t);
-          indreg := pickreg(t, RegSet {}, TRUE);
+          indreg := pickreg(t, AllRegisters, TRUE);
           corrupt(t, indreg, operandPart := 0);
 
           t.cg.get_frame(indreg, src_mvar.var.parent, t.current_proc);
@@ -859,15 +851,15 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
           FOR i := 0 TO srcSize - 1 DO
             IF CG_Bytes[src_mvar.mvar_type] = 1 THEN
               <* ASSERT srcSize = 1 AND i = 0 *>
-              destreg[i] := pickreg(t, RegSet{EAX, EBX, ECX, EDX});
+              destreg[i] := pickreg(t, RegistersForByteOperations);
             ELSE
-              destreg[i] := pickreg(t, RegSet {}, src_mvar.mvar_type = Type.Addr);
+              destreg[i] := pickreg(t, AllRegisters, src_mvar.mvar_type = Type.Addr);
             END;
             corrupt(t, destreg[i], operandPart := i);
             t.reguse[destreg[i]].locked := TRUE;
           END;
 
-          indreg := pickreg(t, RegSet {}, TRUE);
+          indreg := pickreg(t, AllRegisters, TRUE);
           corrupt(t, indreg, operandPart := 0);
 
           t.cg.get_frame(indreg, src_mvar.var.parent, t.current_proc);
@@ -902,7 +894,7 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
       IF src_stack0.loc = OLoc.fstack THEN
         IF dest_mvar.var.loc = VLoc.temp AND dest_mvar.var.parent # t.current_proc THEN
           unlock(t);
-          indreg := pickreg(t, RegSet {}, TRUE);
+          indreg := pickreg(t, AllRegisters, TRUE);
           corrupt(t, indreg, operandPart := 0);
           t.cg.get_frame(indreg, dest_mvar.var.parent, t.current_proc);
           t.cg.f_storeind(t.cg.reg[indreg], dest_mvar.mvar_offset + dest_mvar.var.offset, dest_mvar.mvar_type);
@@ -928,7 +920,7 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
         <* ASSERT srcSize = destSize *>
 
         IF dest_mvar.var.loc = VLoc.temp AND dest_mvar.var.parent # t.current_proc THEN
-          indreg := pickreg(t, RegSet {}, TRUE);
+          indreg := pickreg(t, AllRegisters, TRUE);
           corrupt(t, indreg, operandPart := 0);
           t.cg.get_frame(indreg, dest_mvar.var.parent, t.current_proc);
           FOR i := 0 TO destSize - 1 DO
@@ -1109,7 +1101,7 @@ PROCEDURE dostoreind (t: T; o: ByteOffset; type: MType) =
   BEGIN
     WITH stack0 = pos(t, 0, "store_indirect"),
          stack1 = pos(t, 1, "store_indirect") DO
-      find(t, stack1, Force.any, RegSet {}, TRUE);
+      find(t, stack1, Force.any, AllRegisters, TRUE);
       IF CG_Bytes[type] = 1 AND t.vstack[stack0].loc # OLoc.imm THEN
         find(t, stack0, Force.regset, RegistersForByteOperations);
       ELSE
@@ -1117,7 +1109,7 @@ PROCEDURE dostoreind (t: T; o: ByteOffset; type: MType) =
       END;
 
       IF t.vstack[stack1].loc # OLoc.register THEN
-        find(t, stack1, Force.anyreg, RegSet {}, TRUE);
+        find(t, stack1, Force.anyreg, AllRegisters, TRUE);
       END;
 
       t.cg.store_ind(t.vstack[stack0], t.vstack[stack1], o, type);
@@ -2256,7 +2248,7 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
       find(t, stack0, Force.any);
-      find(t, stack1, Force.anyreg, RegSet {}, TRUE);
+      find(t, stack1, Force.anyreg, AllRegisters, TRUE);
 
       IF stop0.loc = OLoc.imm THEN
         IF NOT TIntN.FromHostInteger(size, Target.Integer.bytes, tsize) THEN
