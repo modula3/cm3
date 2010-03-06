@@ -12,8 +12,8 @@ FROM M3CG IMPORT Type, MType, ZType, IType, Sign, ByteOffset;
 FROM M3CG_Ops IMPORT ErrorHandler;
 
 IMPORT M3x86Rep, Codex86, Wrx86, TIntN;
-FROM M3x86Rep IMPORT Operand, OLoc, MVar, Regno, Force, RegSet, FlToInt;
-FROM M3x86Rep IMPORT x86Proc, x86Var, OperandPart;
+FROM M3x86Rep IMPORT Operand, OLoc, MVar, Regno, Force, FlToInt;
+FROM M3x86Rep IMPORT x86Proc, x86Var, OperandPart, AllRegisters;
 
 FROM Codex86 IMPORT Op;
 
@@ -30,9 +30,9 @@ TYPE Public = OBJECT
         releaseall ();
         all_to_mem ();
         lock (r: Regno);
-        find (stackp: INTEGER; force: Force; set := RegSet {};
+        find (stackp: INTEGER; force: Force; set := AllRegisters;
               hintaddr := FALSE);
-        freereg (set := RegSet {}; operandPart: OperandPart): Regno;
+        freereg (set := AllRegisters; operandPart: OperandPart): Regno;
         set_reg (stackp: INTEGER; r: Regno; operandPart: OperandPart);
         set_type (stackp: INTEGER; type: Type);
         dealloc_reg (stackp: INTEGER; operandPart: OperandPart);
@@ -46,7 +46,7 @@ TYPE Public = OBJECT
         discard (depth: INTEGER);
         set_error_handler (err: ErrorHandler);
         push (READONLY mvar: MVar);
-        pushnew (type: MType; force: Force; set := RegSet {});
+        pushnew (type: MType; force: Force; set := AllRegisters);
         pushimmI (imm: INTEGER; type: Type);
         pushimmT (imm: TIntN.T; type: Type);
         pop (READONLY mvar: MVar);
