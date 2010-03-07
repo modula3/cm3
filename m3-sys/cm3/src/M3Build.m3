@@ -22,16 +22,18 @@ REVEAL
     build_dir         : M3ID.T; (* name of the derived directory *)
     text_build_dir    : TEXT;   (* " *)
 
-    (* READONLY state that is fixed by the configuration file *)
-    install_root      : TEXT;     (* Root directory *)
-    pkg_use           : TEXT;     (* Root directory for public packages *)
-    pkg_install       : TEXT;     (* Root directory for public packages *)
-    bin_install       : TEXT;     (* Directory to install binaries *)
-    lib_install       : TEXT;     (* Directory to install libraries *)
-    emacs_install     : TEXT;     (* Directory to install emacs e-lisp code *)
-    doc_install       : TEXT;     (* Directory to install documents *)
-    man_install       : TEXT;     (* Directory to install man pages *)
-    html_install      : TEXT;     (* Directory to install HTML files *)
+    (* READONLY state that is fixed by the configuration file
+     * "alt" means "forward slash", used by noM3ShipResolution
+     *)
+    install_root, install_root_alt   : TEXT;    (* Root directory *)
+    pkg_use, pkg_use_alt             : TEXT;    (* Root directory for public packages *)
+    pkg_install, pkg_install_alt     : TEXT;    (* Root directory for public packages *)
+    bin_install, bin_install_alt     : TEXT;    (* Directory to install binaries *)
+    lib_install, lib_install_alt     : TEXT;    (* Directory to install libraries *)
+    emacs_install, emacs_install_alt : TEXT;    (* Directory to install emacs e-lisp code *)
+    doc_install, doc_install_alt     : TEXT;    (* Directory to install documents *)
+    man_install, man_install_alt     : TEXT;    (* Directory to install man pages *)
+    html_install, html_install_alt   : TEXT;    (* Directory to install HTML files *)
     have_pkgtools     : BOOLEAN;  (* Using the SRC package tools ? *)
     at_SRC            : BOOLEAN;  (* include SRC-only packages ? *)
     system_libs       : QVTbl.T;  (* Available system libraries *)
@@ -156,6 +158,36 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     t.at_SRC          := GetConfigBool (t, "AT_SRC");
     t.system_liborder := QVal.ToArray (t, ConfigDefn (t, "SYSTEM_LIBORDER").value);
     t.system_libs     := QVal.ToTable (t, ConfigDefn (t, "SYSTEM_LIBS").value);
+
+    (* alternate path form for noM3ShipResolution
+     * Multiple options here:
+     * We could replace \ with /.
+     * We could replace M3Path.SlashText with /.
+     * We could replace M3Path.SlashText with \.
+     * We could replace \ with M3Path.SlashText.
+     * We could replace / with M3Path.SlashText.
+     * We could even replace / with \.
+     * Or use some other strange value for the replacement (>255?).
+     * M3Path.SlashText is \ or /, depending on the host (not the target).
+     * We just have to be consistent with DoUnresolve, and we should be aware
+     * that certain options disallow certain usages, for example if we
+     * unconditionally replace \ with /, then Posix users can't use \ as a
+     * "normal" character in their paths. Of course that is problematic anyway,
+     * since it will be easily confused as an escape character and the usage
+     * won't be portable, so ok. The limitation also only holds if you use
+     * noM3ShipResolution, though it is also reasonable to make that the default
+     * and only option.
+     *)
+
+    t.pkg_use_alt       := TextUtils.Substitute(t.pkg_use, "\\", "/");
+    t.pkg_install_alt   := TextUtils.Substitute(t.install_root, "\\", "/");
+    t.install_root_alt  := TextUtils.Substitute(t.pkg_use, "\\", "/");
+    t.bin_install_alt   := TextUtils.Substitute(t.bin_install, "\\", "/");
+    t.lib_install_alt   := TextUtils.Substitute(t.lib_install, "\\", "/");
+    t.emacs_install_alt := TextUtils.Substitute(t.emacs_install, "\\", "/");
+    t.doc_install_alt   := TextUtils.Substitute(t.doc_install, "\\", "/");
+    t.man_install_alt   := TextUtils.Substitute(t.doc_install, "\\", "/");
+    t.html_install_alt  := TextUtils.Substitute(t.html_install, "\\", "/");
 
     t.cur_pkg         := t.build_pkg;
     t.cur_pkg_dir     := t.build_pkg_dir;
@@ -1859,19 +1891,17 @@ PROCEDURE MakeRoom (t: T;  space: INTEGER) =
 
 PROCEDURE DoUnresolve (t: T;  res: TEXT): TEXT =
   BEGIN
-    res := TextUtils.Substitute(res, "/", M3Path.SlashText);
-    res := TextUtils.Substitute(res, t.bin_install, "\" & BIN_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.lib_install, "\" & LIB_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.doc_install, "\" & DOC_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.man_install, "\" & MAN_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.html_install, "\" & HTML_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.emacs_install, "\" & EMACS_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.pkg_install, "\" & PKG_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.pkg_use, "\" & PKG_USE & \"");
+    res := TextUtils.Substitute(res, "\\", "/");
+    res := TextUtils.Substitute(res, t.bin_install_alt, "\" & BIN_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.lib_install_alt, "\" & LIB_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.doc_install_alt, "\" & DOC_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.man_install_alt, "\" & MAN_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.html_install_alt, "\" & HTML_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.emacs_install_alt, "\" & EMACS_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.pkg_install_alt, "\" & PKG_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.pkg_use_alt, "\" & PKG_USE & \"");
     res := TextUtils.Substitute(res, t.text_build_dir, "\" & TARGET & \"");
-    res := TextUtils.Substitute(res, t.install_root, "\" & INSTALL_ROOT & \"");
-    (* res := TextUtils.Substitute(res, M3Path.SlashText, "\" & SL & \""); *)
-    res := TextUtils.Substitute(res, M3Path.SlashText, "/");
+    res := TextUtils.Substitute(res, t.install_root_alt, "\" & INSTALL_ROOT & \"");
     res := TextUtils.Substitute(res, "\"\" & ", "");
     res := TextUtils.Substitute(res, " & \"\"", "");
     RETURN res;
