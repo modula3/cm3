@@ -6,10 +6,8 @@
 /*      modified on Tue Jan 10 15:48:28 PST 1995 by kalsow  */
 /*      modified on Tue Feb 11 15:18:40 PST 1992 by muller  */
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(M3_EXTRACT_INSERT_LINKAGE)
 #define M3_EXTRACT_INSERT_LINKAGE
-#else
-#define M3_EXTRACT_INSERT_LINKAGE static /* for testing */
 #endif
 
 #ifdef _MSC_VER
@@ -290,6 +288,8 @@ uint64 __stdcall m3_rotate64(uint64 a, int b)
 
 #endif /* WIN32 */
 
+#ifdef M3_EXTRACT_INSERT_LINKAGE
+
 /*
  PROCEDURE Extract (x: T; i, n: CARDINAL): T;
 (* Take n bits from x, with bit i as the least significant bit, and return them
@@ -348,6 +348,8 @@ UT __stdcall insert(UT x, UT y, uint32 i, uint32 n) \
 }                                               \
 
 M3_EXTRACT_INSERT(m3_extract64, m3_extract_and_sign_extend64, m3_insert64, uint64, int64)
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
