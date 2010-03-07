@@ -526,10 +526,10 @@ PROCEDURE shift_double_op (t: T; op: Op; READONLY dest, src, shiftCount: Operand
 
     IF shiftCount.loc = OLoc.imm THEN
       IF TWordN.GT(shiftCount.imm, TWordN.Max8) THEN
-        t.Err("shift_double_op: shift count must fit in a byte:" & TIntN.ToDiagnosticText(shiftCount.imm));
+        Err(t, "shift_double_op: shift count must fit in a byte:" & TIntN.ToDiagnosticText(shiftCount.imm));
       END;
       IF NOT TIntN.ToHostInteger(shiftCount.imm, ins.imm) THEN
-        t.Err("shift_double_op: ToHostInteger(shiftCount.imm) failed:" & TIntN.ToDiagnosticText(shiftCount.imm));
+        Err(t, "shift_double_op: ToHostInteger(shiftCount.imm) failed:" & TIntN.ToDiagnosticText(shiftCount.imm));
       END;
       ins.imsize := 1;
       ins.opcode := opcode[op].imm8;
@@ -549,7 +549,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
     IF NOT TIntN.ToHostInteger(imm, ins.imm) THEN
-      t.Err("immOp1: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
+      Err(t, "immOp1: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
     END;
 
     IF TIntN.GE(imm, TIntN.Min8) AND TIntN.LE(imm, TIntN.Max8) THEN
@@ -682,12 +682,11 @@ PROCEDURE binOp (t: T; op: Op; READONLY dest, src: Operand) =
     <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
 
     IF srcSize # destSize THEN
-      t.Err("binOp: size mismatch: destSize:" & Fmt.Int(destSize)
+      Err(t, "binOp: size mismatch: destSize:" & Fmt.Int(destSize)
         & " srcSize:" & Fmt.Int(srcSize)
         & " src.optype:" & Target.TypeNames[src.optype]
         & " dest.optype:" & Target.TypeNames[dest.optype]);
     END;
-    <* ASSERT srcSize = destSize *>
 
     IF srcSize = 2 THEN
       CASE op OF
@@ -741,7 +740,7 @@ PROCEDURE tableOp (t: T; op: Op; READONLY dest, index: Operand; scale: INTEGER; 
     | 4 => ins.sib := 16_80;
     | 8 => ins.sib := 16_C0;
     ELSE
-      t.Err("tableOp called with invalid scale parameter");
+      Err(t, "tableOp called with invalid scale parameter");
     END;
     INC(ins.sib, index.reg[0] * 8);
     INC(ins.sib, 5);
@@ -799,13 +798,12 @@ PROCEDURE swapOp (t: T; READONLY dest, src: Operand) =
   BEGIN
 
     IF srcSize # destSize THEN
-      t.Err("swapOp: size mismatch: destSize:" & Fmt.Int(destSize)
+      Err(t, "swapOp: size mismatch: destSize:" & Fmt.Int(destSize)
         & " srcSize:" & Fmt.Int(srcSize)
         & " src.optype:" & Target.TypeNames[src.optype]
         & " dest.optype:" & Target.TypeNames[dest.optype]);
     END;
 
-    <* ASSERT srcSize = destSize *>
     <* ASSERT NOT TypeIs64(srcA[0].optype) *>
     <* ASSERT NOT TypeIs64(destA[0].optype) *>
     <* ASSERT NOT TypeIs64(srcA[srcSize - 1].optype) *>
@@ -906,7 +904,7 @@ PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
       | Type.Int16  => ins.opcode := 16_BF;  ins.escape := TRUE;
                        mnemonic := "MOVSX";
       ELSE
-        t.Err("Unknown type of size other than dword in movOp");
+        Err(t, "Unknown type of size other than dword in movOp");
       END;
       build_modrm(t, src, dest, ins);
       Mn(t, mnemonic);  MnOp(t, dest);  MnOp(t, src);
@@ -948,13 +946,12 @@ PROCEDURE movOp (t: T; READONLY dest, src: Operand) =
   BEGIN
 
     IF srcSize # destSize THEN
-      t.Err("movOp: size mismatch: destSize:" & Fmt.Int(destSize)
+      Err(t, "movOp: size mismatch: destSize:" & Fmt.Int(destSize)
         & " srcSize:" & Fmt.Int(srcSize)
         & " src.optype:" & Target.TypeNames[src.optype]
         & " dest.optype:" & Target.TypeNames[dest.optype]);
     END;
 
-    <* ASSERT srcSize = destSize *>
     <* ASSERT NOT TypeIs64(srcA[0].optype) *>
     <* ASSERT NOT TypeIs64(destA[0].optype) *>
     <* ASSERT NOT TypeIs64(srcA[srcSize - 1].optype) *>
@@ -985,7 +982,7 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
   VAR ins: Instruction;
   BEGIN
     IF NOT TIntN.ToHostInteger(imm, ins.imm) THEN
-      t.Err("movImmT: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
+      Err(t, "movImmT: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
     END;
     IF dest.loc # OLoc.register THEN
       <* ASSERT dest.loc = OLoc.mem *>
@@ -1010,7 +1007,7 @@ PROCEDURE movImmI (t: T; READONLY dest: Operand; imm: INTEGER) =
   VAR immT: TIntN.T;
   BEGIN
     IF NOT TIntN.FromHostInteger(imm, BYTESIZE(imm), immT) THEN
-      t.Err("movImmI: unable to convert INTEGER to TIntN.T");
+      Err(t, "movImmI: unable to convert INTEGER to TIntN.T");
     END;
     t.movImmT(dest, immT);
   END movImmI;
@@ -1023,8 +1020,7 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
     | OLoc.imm =>
         ins.opcode := 16_68;
         IF NOT TIntN.ToHostInteger(src.imm, ins.imm) THEN
-          t.Err("pushOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(src.imm));
-          <* ASSERT FALSE *>
+          Err(t, "pushOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(src.imm));
         END;
         ins.imsize := 4;
         writecode(t, ins);
@@ -1038,7 +1034,7 @@ PROCEDURE pushOp1 (t: T; READONLY src: Operand) =
         writecode(t, ins);
         log_global_var(t, src.mvar, -4);
     ELSE
-      t.Err("Tried to push an fstack element to the integer stack");
+      Err(t, "Tried to push an fstack element to the integer stack");
     END
   END pushOp1;
 
@@ -1061,7 +1057,7 @@ PROCEDURE popOp1 (t: T; READONLY dest: Operand) =
     Mn(t, "POP");  MnOp(t, dest);
     CASE dest.loc OF
     | OLoc.imm =>
-        t.Err("Tried to pop into an immediate stack element");
+        Err(t, "Tried to pop into an immediate stack element");
     | OLoc.register =>
         ins.opcode := 16_58 + dest.reg[0];
         writecode(t, ins);
@@ -1072,7 +1068,7 @@ PROCEDURE popOp1 (t: T; READONLY dest: Operand) =
         writecode(t, ins);
         log_global_var(t, dest.mvar, -4);
     ELSE
-      t.Err("Tried to pop an fstack element from the integer stack");
+      Err(t, "Tried to pop an fstack element from the integer stack");
     END
   END popOp1;
 
@@ -1115,18 +1111,15 @@ PROCEDURE bitOp (t: T; READONLY bits, index: Operand; op: BitOp) =
 
     IF index.loc = OLoc.imm THEN
       IF NOT TIntN.ToHostInteger(index.imm, ins.imm) THEN
-        t.Err("bitOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(index.imm));
-        <* ASSERT FALSE *>
+        Err(t, "bitOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(index.imm));
       END;
       ins.opcode := op.bitIndexInImm8Opcode1;
       build_modrm(t, bits, t.opcode[op.bitIndexInImm8Opcode2], ins);
-      t.Err("bitOp: untested, non-working code reached #1");
-      <* ASSERT FALSE *>
+      Err(t, "bitOp: untested, non-working code reached #1");
     ELSE
       ins.opcode := op.bitIndexInRegOpcode;
       IF bits.loc = OLoc.mem THEN
-        t.Err("bitOp: untested, non-working code reached #2");
-        <* ASSERT FALSE *>
+        Err(t, "bitOp: untested, non-working code reached #2");
         <*NOWARN*>build_modrm(t, bits, index, ins);
       ELSE
         load_like_helper(t, index.reg[0], bits, 0, ins);
@@ -1243,7 +1236,7 @@ PROCEDURE imulOp (t: T; READONLY dest, src: Operand) =
       build_modrm(t, t.reg[dest.reg[0]], dest, ins);
       ins.opcode := 16_69;
       IF NOT TIntN.ToHostInteger(src.imm, ins.imm) THEN
-        t.Err("imulOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(src.imm));
+        Err(t, "imulOp: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(src.imm));
       END;
       ins.imsize := 4;
       writecode(t, ins);
@@ -1555,7 +1548,7 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffset; t
                        ins.escape := TRUE;
                        mnemonic := "MOVSX";
       ELSE
-        t.Err("Unknown type of size other than dword in load_ind");
+        Err(t, "Unknown type of size other than dword in load_ind");
       END;
     END;
     Mn(t, mnemonic, " ", RegName[r]);  MnPtr(t, ind, offset, type);
@@ -1593,7 +1586,7 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffs
     | 4 => ins.opcode := 16_8B;
            type := Type.Int32;
     ELSE
-      t.Err("Illegal size in fast_load_ind");
+      Err(t, "Illegal size in fast_load_ind");
     END;
 
     Mn(t, "MOV ", RegName[r]);  MnPtr(t, ind, offset, type);
@@ -1622,8 +1615,7 @@ PROCEDURE load_like_helper (t: T; r: Regno; READONLY ind: Operand; offset: ByteO
     ins.mrm_present := TRUE;
     ins.modrm := r * 8 + ind.reg[0];
     IF offset # 0 THEN
-      t.Err("load_like_helper: untested path #1 (offset # 0)");
-      <* ASSERT FALSE *>
+      Err(t, "load_like_helper: untested path #1 (offset # 0)");
       ins.disp := offset; <* NOWARN *>
       IF offset > -16_81 AND offset < 16_80 THEN
         ins.dsize := 1;
@@ -1634,8 +1626,7 @@ PROCEDURE load_like_helper (t: T; r: Regno; READONLY ind: Operand; offset: ByteO
       END;
     END;
     IF ind.reg[0] = ESP THEN
-      t.Err("load_like_helper: untested path #2 (reg # ESP)");
-      <* ASSERT FALSE *>
+      Err(t, "load_like_helper: untested path #2 (reg # ESP)");
       ins.sib := 16_24; <* NOWARN *>
       ins.sib_present := TRUE;
     END;
@@ -1650,7 +1641,7 @@ PROCEDURE store_ind1 (t: T; READONLY val, ind: Operand; offset: ByteOffset; type
     IF val.loc = OLoc.imm THEN
       ins.opcode := 16_C6;
       IF NOT TIntN.ToHostInteger(val.imm, ins.imm) THEN
-        t.Err("store_ind1: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(val.imm));
+        Err(t, "store_ind1: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(val.imm));
       END;
       ins.imsize := CG_Bytes[type];
     END;
@@ -1856,7 +1847,7 @@ PROCEDURE set_label (t: T; label: Label; offset := 0) =
     check_label(t, label, "set_label");
     WITH lab = t.labarr[label] DO
       IF NOT lab.no_address THEN
-        t.Err("Duplicate label definition");
+        Err(t, "Duplicate label definition");
       END;
       lab.offset := t.obj.cursor(Seg.Text) + offset;
       lab.no_address := FALSE;
@@ -1870,7 +1861,7 @@ PROCEDURE set_label (t: T; label: Label; offset := 0) =
 PROCEDURE check_label(t: T; label: Label; place: TEXT) =
   BEGIN
     IF label >= t.next_label_id THEN
-      t.Err("Tried to reference unknown label in " & place);
+      Err(t, "Tried to reference unknown label in " & place);
     END
   END check_label;
 
@@ -2048,7 +2039,7 @@ PROCEDURE f_loadlit (t: T; READONLY flarr: FloatBytes; type: MType) =
 PROCEDURE fstack_check (t: T; depth: INTEGER; place: TEXT) =
   BEGIN
     IF t.fstacksize < depth THEN
-      t.Err("Floating stack underflow in " & place);
+      Err(t, "Floating stack underflow in " & place);
     END;
     IF t.ftop_inmem THEN
       IF t.fstackloaded + 1 < depth THEN
@@ -2082,10 +2073,10 @@ PROCEDURE fstack_ensure (t: T; height: INTEGER) =
 PROCEDURE fstack_wipeup(t: T; wipeup: INTEGER) =
   BEGIN
     IF wipeup + t.fstackloaded > 8 THEN
-      t.Err("Stack overflow in fstack_wipeup");
+      Err(t, "Stack overflow in fstack_wipeup");
     END;
     IF wipeup > t.fspilltop THEN
-      t.Err("Not enough spilled fstack elements to replace in fstack_wipeup");
+      Err(t, "Not enough spilled fstack elements to replace in fstack_wipeup");
     END;
     FOR i := 1 TO wipeup DO
       retrieve_temp(t);
@@ -2556,6 +2547,12 @@ PROCEDURE New (parent: M3x86Rep.U; wr: Wrx86.T): T =
 
     RETURN code;
   END New;
+
+PROCEDURE Err(t: T; err: TEXT) =
+  BEGIN
+    t.Err(err);
+    <* ASSERT FALSE *>
+  END Err;
 
 BEGIN
 END Codex86.
