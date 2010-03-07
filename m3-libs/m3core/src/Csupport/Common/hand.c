@@ -73,10 +73,6 @@ extern "C"
 #define __stdcall /* nothing */
 #endif
 
-#if !defined(_MSC_VER) && !defined(__fastcall)
-#define __fastcall /* nothing */
-#endif
-
 #if (UINT_MAX <= 0xFFFF) || (UINT_MAX != 0xFFFFFFFF) || (UINT_MAX != 0xFFFFFFFFUL)
 #error uint is not 32bits
 #endif
