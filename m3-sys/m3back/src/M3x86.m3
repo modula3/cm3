@@ -1042,7 +1042,7 @@ PROCEDURE free_temp (u: U;  v: Var) =
       END
     END;
 
-    u.Err("Couldn't find var to free in 'free_temp'");
+    Err(u, "Couldn't find var to free in 'free_temp'");
     <* ASSERT FALSE *>
   END free_temp;
 
@@ -1827,7 +1827,7 @@ PROCEDURE load_float    (u: U;  t: RType;  READONLY f: Target.Float) =
     u.vstack.pushnew(t, Force.any);
     size := TFloat.ToBytes(f, flarr);
     IF size # CG_Bytes[t] THEN
-      u.Err("Floating size mismatch in load_float");
+      Err(u, "Floating size mismatch in load_float");
     END;
     u.cg.f_loadlit(flarr, t);
   END load_float;
@@ -2402,7 +2402,7 @@ PROCEDURE rotate_left  (u: U;  t: IType) =
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF u.vstack.loc(stack1) = OLoc.imm THEN
           IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, rotateCount) THEN
-            u.Err("unable to convert rotate count to host integer");
+            Err(u, "unable to convert rotate count to host integer");
           END;
           TWordN.Rotate(u.vstack.op(stack1).imm, rotateCount, rotate);
           u.vstack.set_imm(stack1, rotate);
@@ -2455,7 +2455,7 @@ PROCEDURE rotate_right (u: U;  t: IType) =
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF u.vstack.loc(stack1) = OLoc.imm THEN
           IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, rotateCount) THEN
-            u.Err("unable to convert rotate count to host integer");
+            Err(u, "unable to convert rotate count to host integer");
           END;
           TWordN.Rotate(u.vstack.op(stack1).imm, -rotateCount, rotate);
           u.vstack.set_imm(stack1, rotate);
@@ -2688,7 +2688,7 @@ PROCEDURE copy_n (u: U;  z: IType;  t: MType;  overlap: BOOLEAN) =
     WITH stack0 = u.vstack.pos(0, "copy_n") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, n) THEN
-          u.Err("copy_n: unable to convert to host integer");
+          Err(u, "copy_n: unable to convert to host integer");
         END;
         u.vstack.discard(1);
         copy(u, n, t, overlap);
@@ -2705,7 +2705,7 @@ PROCEDURE copy_n (u: U;  z: IType;  t: MType;  overlap: BOOLEAN) =
         | 4 => shift := TIntN.Two;
         | 8 => shift := TIntN.Three;
         ELSE
-          u.Err("Unknown MType size in copy_n");
+          Err(u, "Unknown MType size in copy_n");
         END;
 
         u.vstack.find(stack0, Force.anyreg);
@@ -2759,16 +2759,16 @@ PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
       u.cg.noargOp(Op.oCLD);
     ELSE
       IF NOT TIntN.FromHostInteger(n, Target.Integer.bytes, tn) THEN
-        u.Err("string_copy: unable to convert n to target int");
+        Err(u, "string_copy: unable to convert n to target int");
       END;
       IF NOT TIntN.FromHostInteger(size, Target.Integer.bytes, tsize) THEN
-        u.Err("string_copy: unable to convert size to target int");
+        Err(u, "string_copy: unable to convert size to target int");
       END;
       IF NOT TIntN.Subtract(tn, TIntN.One, tNMinus1) THEN
-        u.Err("string_copy: Subtract overflowed");
+        Err(u, "string_copy: Subtract overflowed");
       END;
       IF NOT TIntN.Multiply(tNMinus1, tsize, tint) THEN
-        u.Err("string_copy: Multiply overflowed");
+        Err(u, "string_copy: Multiply overflowed");
       END;
       u.cg.immOp(Op.oADD, u.cg.reg[ESI], tint);
       u.cg.immOp(Op.oADD, u.cg.reg[EDI], tint);
@@ -2781,7 +2781,7 @@ PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
     | 2 => u.cg.MOVSWOp();
     | 4 => u.cg.noargOp(Op.oMOVSD);
     ELSE
-      u.Err("Illegal size in copy");
+      Err(u, "Illegal size in copy");
     END;
 
     IF NOT forward THEN
@@ -2883,7 +2883,7 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
     WITH stack0 = u.vstack.pos(0, "zero_n") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF NOT TIntN.ToHostInteger(u.vstack.op(stack0).imm, n) THEN
-          u.Err("zero_n: unable to convert to host integer");
+          Err(u, "zero_n: unable to convert to host integer");
         END;
         u.vstack.discard(1);
         zero(u, n, t);
@@ -2901,7 +2901,7 @@ PROCEDURE zero_n (u: U;  z: IType;  t: MType) =
         | 4 => shift := TIntN.Two;
         | 8 => shift := TIntN.Three;
         ELSE
-          u.Err("Unknown MType size in zero_n");
+          Err(u, "Unknown MType size in zero_n");
         END;
 
         u.cg.immOp(Op.oSHL, u.vstack.op(stack0), shift);
@@ -2962,7 +2962,7 @@ PROCEDURE zero (u: U;  n: INTEGER;  t: MType) =
       | 2 => u.cg.STOSWOp();
       | 4 => u.cg.noargOp(Op.oSTOSD);
       ELSE
-             u.Err("Illegal size in zero");
+             Err(u, "Illegal size in zero");
       END;
       u.vstack.newdest(u.cg.reg[EDI]);
 
@@ -3411,14 +3411,14 @@ PROCEDURE add_offset (u: U; i: INTEGER) =
     END;
 
     IF NOT TIntN.FromHostInteger(i, Target.Integer.bytes, ti) THEN
-      u.Err("add_offset: failed to convert i to target integer");
+      Err(u, "add_offset: failed to convert i to target integer");
     END;
 
     u.vstack.unlock();
     WITH stack0 = u.vstack.pos(0, "add_offset") DO
       IF u.vstack.loc(stack0) = OLoc.imm THEN
         IF NOT TIntN.Add(u.vstack.op(stack0).imm, ti, imm_plus_i) THEN
-          u.Err("add_offset: Add overflowed");
+          Err(u, "add_offset: Add overflowed");
         END;
         u.vstack.set_imm(stack0, imm_plus_i);
       ELSE
@@ -3465,7 +3465,7 @@ PROCEDURE index_address (u: U;  t: IType;  size: INTEGER) =
     END;
 
     IF size = 0 THEN
-      u.Err("size = 0 in index_address");
+      Err(u, "size = 0 in index_address");
     END;
 
     IF size < 0 THEN
@@ -3630,7 +3630,7 @@ PROCEDURE pop_struct (u: U;  s: ByteSize;  a: Alignment) =
     WITH stack0 = u.vstack.pos(0, "pop_struct") DO
 
       IF NOT TIntN.FromHostInteger(s, Target.Integer.bytes, ts) THEN
-        u.Err("pop_struct: unable to convert s to target int");
+        Err(u, "pop_struct: unable to convert s to target int");
       END;
 
       (* if the struct is "large", use rep mov to copy it to the machine stack *)
@@ -3816,7 +3816,7 @@ PROCEDURE call_direct (u: U; p: Proc;  t: Type) =
        AND u.call_param_size[u.in_proc_call - 1] > 0 THEN
 
         IF NOT TIntN.FromHostInteger(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
-          u.Err("call_direct: unable to convert param_size to target integer");
+          Err(u, "call_direct: unable to convert param_size to target integer");
         END;
         u.cg.immOp(Op.oADD, u.cg.reg[ESP], call_param_size);
     END;
@@ -3875,7 +3875,7 @@ PROCEDURE call_indirect (u: U; t: Type;  cc: CallingConvention) =
       (* caller-cleans calling convention *)
 
       IF NOT TIntN.FromHostInteger(u.call_param_size[u.in_proc_call - 1], Target.Integer.bytes, call_param_size) THEN
-        u.Err("call_indirect: unable to convert param_size to target integer");
+        Err(u, "call_indirect: unable to convert param_size to target integer");
       END;
 
       u.cg.immOp(Op.oADD, u.cg.reg[ESP], call_param_size);
@@ -4096,7 +4096,7 @@ PROCEDURE check_atomic_type(<*UNUSED*>u: U; a: Type): BOOLEAN =
     IF a = Type.Addr OR a = Type.Int32 OR a = Type.Word32 THEN
       RETURN TRUE;
     END;
-    (*u.Err("unsupported (so far) type for atomic operation");*)
+    (*Err(u, "unsupported (so far) type for atomic operation");*)
     RETURN FALSE;
   END check_atomic_type;
 
@@ -4106,7 +4106,7 @@ PROCEDURE check_atomic_types(u: U; a, b: Type): BOOLEAN =
       RETURN FALSE;
     END;
     IF a # b THEN
-      (*u.Err("atomic types must match");*)
+      (*Err(u, "atomic types must match");*)
       RETURN FALSE;
     END;
     RETURN TRUE;
@@ -4315,6 +4315,12 @@ retry:
     END;
 
   END fetch_and_op;
+
+PROCEDURE Err(t: U; err: TEXT) =
+  BEGIN
+    t.Err(err);
+    <* ASSERT FALSE *>
+  END Err;
 
 BEGIN
 END M3x86.
