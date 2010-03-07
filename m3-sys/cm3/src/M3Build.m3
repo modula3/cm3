@@ -144,10 +144,6 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     (* M3Path.New is used to canonicalize the paths -- to remove dots *)
 
     t.pkg_use         := M3Path.New (GetConfig (t, "PKG_USE"));
-(* not in Quake.Machine
-    t.bin_use         := M3Path.New (GetConfig (t, "BIN_USE"));
-    t.lib_use         := M3Path.New (GetConfig (t, "LIB_USE"));
-*)
     t.pkg_install     := M3Path.New (GetConfig (t, "PKG_INSTALL"));
     t.install_root    := M3Path.New (GetConfig (t, "INSTALL_ROOT"));
     t.bin_install     := M3Path.New (GetConfig (t, "BIN_INSTALL"));
