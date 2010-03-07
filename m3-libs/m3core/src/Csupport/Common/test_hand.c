@@ -62,121 +62,6 @@ static int64 values[] = {
     
 };
 
-static int errors_div;
-static int errors_mod;
-
-static void TestDiv64(int64 a, int64 b)
-{
-    if (a == INT64_MIN && b == -1) /* avoid overflow */
-        return;
-    if (b)
-    {
-        int64 old = m3_divL_old(b, a);
-        int64 current = m3_div64(b, a);
-        errors_div += (current != old);
-        if ((b < 0) == (a < 0))
-        {
-            assert(old >= 0 || (old == -current && a == INT64_MIN && b < 0)); /* bug in old version */
-            if (current < 0)
-            {
-                printf("%"I64"d / %"I64"d = current:%"I64"d old:%"I64"d\n", a, b, current, old);
-            }
-            assert(current >= 0);
-        }
-        else
-        {
-            assert(old <= 0);
-            assert(current <= 0);
-        }
-    }
-}
-
-static void TestDivx(int64 a, int64 b)
-{
-    if (b)
-    {
-        TestDiv64(a, b);
-    }
-    if (a)
-    {
-        TestDiv64(b, a);
-    }
-}
-
-static void TestDiv(void)
-{
-    long a, b;
-    long n = sizeof(values) / sizeof(values[0]);
-    
-#if 1
-    for (a = -1000; a < 1000; ++a)
-    {
-        for (b = -1000; b < 1000; ++b)
-        {
-            TestDivx(a, b);
-            TestDivx((a > 0) ? (LONG_MAX - a) : (LONG_MIN + a), (b > 0) ? (LONG_MIN + b) : (LONG_MIN - b));
-        }
-    }
-#endif
-
-    for (a = 0; a < n; ++a)
-        for (b = 0; b < n; ++b)
-            TestDivx(values[a], values[b]);
-}
-
-static void TestMod64(int64 a, int64 b)
-{
-    int64 old, current;
-    if ((a == INT64_MIN && b == -1) || b == 0) /* avoid overflow */
-        return;
-    old = m3_modL_old(b, a);
-    current = m3_mod64(b, a);
-    errors_mod += (old != current);
-    /* old version is wrong for INT64_MIN mod negative */
-    if (a != INT64_MIN || b >= 0 || old == current)
-    {
-        assert(old == current);
-        assert((b < 0) ? (old > b && old <= 0) : (old < b && old >= 0));
-        assert(old == a - b * m3_div64(b, a));
-    }
-    assert(current == a - b * m3_div64(b, a));
-    assert((b < 0) ? (current > b && current <= 0) : (current < b && current >= 0));
-}
-
-static void TestModx(int64 a, int64 b)
-{
-    if (b)
-    {
-        TestMod64(a, b);
-    }
-    if (a)
-    {
-        TestMod64(b, a);
-    }
-}
-
-static void TestMod(void)
-{
-    long a, b;
-    long n = sizeof(values) / sizeof(values[0]);
-#if 1
-    for (a = -1000; a < 1000; ++a)
-        for (b = -1000; b < 1000; ++b)
-        {
-            TestModx(a, b);
-            TestModx((a > 0) ? (LONG_MAX - a) : (LONG_MIN + a), (b > 0) ? (LONG_MIN + b) : (LONG_MIN - b));
-        }
-#endif
-
-    for (a = 0; a < n; ++a)
-        for (b = 0; b < n; ++b)
-            TestModx(values[a], values[b]);
-    
-    srand((unsigned)time(0));
-    for (a = 0; a < 10000000; ++a)
-        TestModx(rand(), rand());
-}
-
 static void TestHighLowBits(void)
 {
     unsigned i;
@@ -320,12 +205,6 @@ static void TestExtract()
 
 int main()
 {
-    /*TestDiv();*/
-    /*TestMod();*/
-    /*printf("errors_div:%d errors_mod:%d\n", errors_div, errors_mod);*/
-
-    TestHighLowBits();
-
     /*TestInsert();*/
     /*TestExtract();*/
 
