@@ -26,114 +26,6 @@ M3_EXTRACT_INSERT(m3test_extract32, m3test_extract_and_sign_extend32, m3test_ins
 #include <limits.h>
 #include <time.h>
 
-static void BuildTables ()
-{
-	unsigned i;
-	size_t LoBits[SET_GRAIN] = { 0 };  /* LoBits32[i] = SET { 0..i } */
-	size_t HiBits[SET_GRAIN] = { 0 };  /* HiBits32[i] = SET { i..31 } */
-	uint32 LoBits32[32] = { 0 };  /* LoBits32[i] = SET { 0..i } */
-	uint32 HiBits32[32] = { 0 };  /* HiBits32[i] = SET { i..31 } */
-	uint64 LoBits64[64] = { 0 };  /* LoBits64[i] = SET { 0..i } */
-	uint64 HiBits64[64] = { 0 };  /* HiBits64[i] = SET { i..63 } */
-
-	{
-		uint32 j;
-
-		/* LoBits [i] = SET { 0..i } */
-		j = 0;  /* == SET { } */
-		for (i = 0; i != 32; i++) {
-			j = (j << 1) + 1;
-			LoBits32[i] = j;
-		}
-
-		/* HiBits [i] = SET { i..GRAIN-1 } */
-		j = ~ (uint32) 0; /* == SET { 0..GRAIN-1 } */
-		for (i = 0; i != 32; i++) {
-			HiBits32[i] = j;
-			j = (j << 1);
-		}
-	}
-
-	{
-		uint64 j;
-
-		/* LoBits [i] = SET { 0..i } */
-		j = 0;  /* == SET { } */
-		for (i = 0; i != 64; i++) {
-			j = (j << 1) + 1;
-			LoBits64[i] = j;
-		}
-
-		/* HiBits [i] = SET { i..GRAIN-1 } */
-		j = ~ (uint64) 0; /* == SET { 0..GRAIN-1 } */
-		for (i = 0; i != 64; i++) {
-			HiBits64[i] = j;
-			j = (j << 1);
-		}
-	}
-
-	{
-		size_t j;
-
-		/* LoBits [i] = SET { 0..i } */
-		j = 0;  /* == SET { } */
-		for (i = 0; i != SET_GRAIN; i++) {
-			j = (j << 1) + 1;
-			LoBits[i] = j;
-		}
-
-		/* HiBits [i] = SET { i..GRAIN-1 } */
-		j = ~ (size_t) 0; /* == SET { 0..GRAIN-1 } */
-		for (i = 0; i != SET_GRAIN; i++) {
-			HiBits[i] = j;
-			j = (j << 1);
-		}
-
-		for (i = 0; i != SET_GRAIN; i++) {
-#ifdef _WIN32
-			assert(LoBits[i] == LoBits32[i]);
-			assert(HiBits[i] == HiBits32[i]);
-			assert(LoBits[i] == _lowbits[i + 1]);
-			assert(HiBits[i] == _highbits[i]);
-#else
-			assert((LoBits[i] == LoBits32[i]) || (LoBits[i] == LoBits64[i]));
-			assert((HiBits[i] == HiBits32[i]) || (HiBits[i] == HiBits64[i]));
-#endif
-		}
-	}
-
-	printf("#include <limits.h>\n\n");
-
-	printf("typedef unsigned long ulong;\n\n");
-
-	printf("#if ULONG_MAX == 0xffffffff\n\n");
-
-	printf("static const size_t LoBits[] = {\n");
-
-	for (i = 0; i != 32; i++)
-		printf("0x%08lx%s%s", (ulong) LoBits32[i], &","[i == 31], &"\n"[!!((i + 1) % 4)]);
-
-	printf("};\n\nstatic const size_t HiBits[] = {\n");
-
-	for (i = 0; i != 32; i++)
-		printf("0x%08lx%s%s", (ulong) HiBits32[i], &","[i == 31], &"\n"[!!((i + 1) % 4)]);
-
-	printf("};\n\n");
-	printf("#elif ULONG_MAX == 0xffffffffffffffff\n\n");
-
-	printf("static const size_t LoBits[] = {\n");
-
-	for (i = 0; i != 64; i++)
-		printf("0x%08lx%08lx%s%s", (ulong) (LoBits64[i] >> 32), (ulong) LoBits64[i], &","[i == 63], &"\n"[!!((i + 1) % 4)]);
-
-	printf("};\n\nstatic const size_t HiBits[] = {\n");
-
-	for (i = 0; i != 64; i++)
-		printf("0x%08lx%08lx%s%s", (ulong) (HiBits64[i] >> 32), (ulong) HiBits64[i], &","[i == 63], &"\n"[!!((i + 1) % 4)]);
-
-	printf("\n#else\n#error unknown size of ulong\n#endif\n\n");
-}
-
 static int64 values[] = {
     INT64_MIN,
     INT64_MIN + 1,
@@ -289,12 +181,6 @@ static void TestHighLowBits(void)
 {
     unsigned i;
 
-    for (i = 0; i < SET_GRAIN; ++i)
-    {
-        assert(HIGH_BITS(i) == HiBits[i]);
-        assert(LOW_BITS(i) == LoBits[i + LOW_BITS_ADJUST]);
-    }
-
     if (sizeof(int) == sizeof(size_t))
     {
         for (i = 0; i <= 32; ++i)
@@ -315,74 +201,6 @@ static unsigned char reverse(unsigned char a)
          | ((a & 0x04) ? 0x20 : 0)
          | ((a & 0x02) ? 0x40 : 0)
          | ((a & 0x01) ? 0x80 : 0);
-}
-
-static void PrintSet(void* a, size_t b)
-{
-    size_t c;
-    for (c = 0; c < b; ++c)
-        printf("%02x ", reverse(((unsigned char*)a)[c]));
-}
-
-static void TestSetRangex(unsigned a, unsigned b)
-{
-    size_t bits[4];
-    size_t bits_new[4];
-
-    memset(bits, 0, sizeof(bits));
-    memset(bits_new, 0, sizeof(bits_new));
-    set_range(a, b, bits);
-    set_range_new(a, b, bits_new);
-    assert(memcmp(bits, bits_new, sizeof(bits)) == 0);
-    /*
-    printf("set_range(%u, %u):", a, b);
-    PrintSet(bits, sizeof(bits));
-    printf("\n");
-    */
-}
-
-static void TestSetRange(void)
-{
-    size_t bits[100];
-    unsigned a, b;
-    double t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
-
-    for (a = 0; a < 4 * SET_GRAIN; ++a)
-        for (b = 0; b < 4 * SET_GRAIN; ++b)
-            TestSetRangex(a, b);
-
-#ifdef _MSC_VER
-    t1 = (double)__rdtsc(); /* read time stamp counter */
-#else
-    t1 = (double)time(NULL);
-#endif
-
-    for (a = 0; a < 100 * SET_GRAIN; ++a)
-        for (b = 0; b < 100 * SET_GRAIN; ++b)
-            set_range(a, b, bits);
-
-#ifdef _MSC_VER
-    t2 = (double)__rdtsc();
-#else
-    t2 = (double)time(NULL);
-#endif
-
-    for (a = 0; a < 100 * SET_GRAIN; ++a)
-        for (b = 0; b < 100 * SET_GRAIN; ++b)
-            set_range_new(a, b, bits);
-
-#ifdef _MSC_VER
-    t3 = (double)__rdtsc();
-#else
-    t3 = (double)time(NULL);
-#endif
-
-    t4 = (t2 - t1);
-    t5 = (t3 - t2);
-
-    printf("old:%f\n", t4);
-    printf("new:%f\n", t5);
-    printf("diff:%f\n", (t5 - t4) / t4);
 }
 
 static void TestInsert()
@@ -502,14 +320,11 @@ static void TestExtract()
 
 int main()
 {
-    /*BuildTables();*/
     /*TestDiv();*/
     /*TestMod();*/
     /*printf("errors_div:%d errors_mod:%d\n", errors_div, errors_mod);*/
 
     TestHighLowBits();
-
-    TestSetRange();
 
     /*TestInsert();*/
     /*TestExtract();*/
