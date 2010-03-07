@@ -80,7 +80,7 @@ extern "C"
 #define __fastcall /* nothing */
 #endif
 
-#if UINT_MAX != 0xffffffff
+#if (UINT_MAX <= 0xFFFF) || (UINT_MAX != 0xFFFFFFFF) || (UINT_MAX != 0xFFFFFFFFUL)
 #error uint is not 32bits
 #endif
 
