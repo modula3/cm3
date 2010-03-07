@@ -241,7 +241,7 @@ const uint _highbits [33] = {
 #define HIGH_BITS(a) ((~(size_t)0) << (a))
 #define LOW_BITS(a)  ((~(size_t)0) >> (SET_GRAIN - (a) - 1))
 
-static void __stdcall set_range
+void __stdcall set_range
     ANSI((       size_t b, size_t a, size_t* s))
     KR((b, a, s) size_t b; size_t a; size_t* s;)
 {
