@@ -2490,12 +2490,12 @@ PROCEDURE rotate_right (u: U;  t: IType) =
     END
   END rotate_right;
 
-PROCEDURE widen (u: U;  sign: BOOLEAN) =
-  (* s0.I64 := s0.I32;  IF sign THEN SignExtend s0;  *)
+PROCEDURE widen (u: U;  sign_extend: BOOLEAN) =
+  (* s0.I64 := s0.I32;  IF sign_extend THEN SignExtend s0;  *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("widen");
-      u.wr.Bool  (sign);
+      u.wr.Bool  (sign_extend);
       u.wr.NL    ();
     END;
     <*ASSERT FALSE*>
@@ -2537,46 +2537,46 @@ PROCEDURE extract (u: U;  t: IType;  sign_extend: BOOLEAN) =
     call_64 (u, builtin);
   END extract;
 
-PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
+PROCEDURE extract_n (u: U;  t: IType;  sign_extend: BOOLEAN;  n: INTEGER) =
   (* s1.t := Word.Extract(s1.t, s0.t, n);
-     IF sign THEN SignExtend s1 END; pop(1) *)
+     IF sign_extend THEN SignExtend s1 END; pop(1) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("extract_n");
       u.wr.TName (t);
-      u.wr.Bool  (sign);
+      u.wr.Bool  (sign_extend);
       u.wr.Int   (n);
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doextract_n(t, sign, n) THEN 
+    IF u.vstack.doextract_n(t, sign_extend, n) THEN 
       RETURN;
     END;
 
     u.vstack.pushimmI(n, Type.Word32);
-    extract(u, t, sign);
+    extract(u, t, sign_extend);
   END extract_n;
 
-PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
+PROCEDURE extract_mn (u: U;  t: IType;  sign_extend: BOOLEAN;  m, n: INTEGER) =
   (* s0.t := Word.Extract(s0.t, m, n);
-     IF sign THEN SignExtend s0 END; *)
+     IF sign_extend THEN SignExtend s0 END; *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("extract_mn");
       u.wr.TName (t);
-      u.wr.Bool  (sign);
+      u.wr.Bool  (sign_extend);
       u.wr.Int   (m);
       u.wr.Int   (n);
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doextract_mn(t, sign, m, n) THEN
+    IF u.vstack.doextract_mn(t, sign_extend, m, n) THEN
       RETURN;
     END;
 
     u.vstack.pushimmI(m, Type.Word32);
     u.vstack.pushimmI(n, Type.Word32);
-    extract(u, t, sign);
+    extract(u, t, sign_extend);
   END extract_mn;
 
 PROCEDURE insert  (u: U;  t: IType) =
