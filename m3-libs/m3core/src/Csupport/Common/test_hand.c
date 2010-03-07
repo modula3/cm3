@@ -6,6 +6,8 @@
 /*      modified on Tue Jan 10 15:48:28 PST 1995 by kalsow  */
 /*      modified on Tue Feb 11 15:18:40 PST 1992 by muller  */
 
+#define M3_EXTRACT_INSERT_LINKAGE static /* for testing */
+
 #include "hand.c"
 
 #ifdef __cplusplus
@@ -92,6 +94,7 @@ static int64 values[] = {
 
 static void TestHighLowBits(void)
 {
+#ifdef _WIN32
     unsigned i;
 
     if (sizeof(int) == sizeof(size_t))
@@ -102,6 +105,7 @@ static void TestHighLowBits(void)
             assert(_HIGHBITS(i) == _highbits[i]);
         }
     }
+#endif
 }
 
 static unsigned char reverse(unsigned char a)
