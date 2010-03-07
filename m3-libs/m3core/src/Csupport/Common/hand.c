@@ -255,7 +255,7 @@ void __stdcall set_range
     } else {
       s [a_word] |= high_bits;
       for (i = a_word + 1; i < b_word; ++i)
-        s[i] = ~0UL;
+        s[i] = ~(size_t)0;
       s [b_word] |= low_bits;
     }
   }
