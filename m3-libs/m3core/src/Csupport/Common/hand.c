@@ -10,11 +10,9 @@ typedef unsigned int uint, uint32; /* verified below via UINT_MAX */
 
 #ifdef _WIN32
 #define WIN32_STATIC static
-#define POSIX_STATIC /* nothing */
 #define M3_EXTRACT_INSERT_LINKAGE
 #else
 #define WIN32_STATIC
-#define POSIX_STATIC static
 #define M3_EXTRACT_INSERT_LINKAGE static /* for testing */
 #endif
 
@@ -86,24 +84,13 @@ extern "C"
 #define KR(x) x
 #endif
 
+#ifdef _WIN32
+
 /* return positive form of a negative value, avoiding overflow */
 /* T should be an unsigned type */
 #define M3_POS(T, a) (((T)-((a) + 1)) + 1)
-#define M3_ABS(T, a) (((a) < 0) ? M3_POS(T, a) : (T)(a))
 
-static int64 __stdcall m3_divL_old
-    ANSI((      int64 b, int64 a))
-      KR((b, a) int64 b; int64 a;)
-{
-  register int64 c;
-  if ((a == 0) && (b != 0))  {  c = 0;
-  } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
-  } else /* a < 0 */ { c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
-  }
-  return c;
-}
-
-POSIX_STATIC int64 __stdcall m3_div64(int64 b, int64 a)
+int64 __stdcall m3_div64(int64 b, int64 a)
 {
   typedef  int64 ST; /* signed type */
   typedef uint64 UT; /* unsigned type */
@@ -121,19 +108,7 @@ POSIX_STATIC int64 __stdcall m3_div64(int64 b, int64 a)
   }
 }
 
-static int64 __stdcall m3_modL_old
-    ANSI((      int64 b, int64 a))
-      KR((b, a) int64 b; int64 a;)
-{
-  register int64 c;
-  if ((a == 0) && (b != 0)) {  c = 0;
-  } else if (a > 0)  {  c = (b >= 0) ? a % b : b + 1 + (a-1) % (-b);
-  } else /* a < 0 */ {  c = (b >= 0) ? b - 1 - (-1-a) % (b) : - ((-a) % (-b));
-  }
-  return c;
-}
-
-POSIX_STATIC int64 __stdcall m3_mod64(int64 b, int64 a)
+int64 __stdcall m3_mod64(int64 b, int64 a)
 {
   typedef  int64 ST; /* signed type */
   typedef uint64 UT; /* unsigned type */
@@ -149,6 +124,8 @@ POSIX_STATIC int64 __stdcall m3_mod64(int64 b, int64 a)
     return (bneg ? -a : a);
   }
 }
+
+#endif
 
 #define SET_GRAIN (sizeof (size_t) * 8)
 
