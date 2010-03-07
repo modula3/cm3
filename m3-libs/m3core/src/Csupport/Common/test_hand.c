@@ -13,7 +13,7 @@ extern "C"
 {
 #endif
 
-M3_EXTRACT_INSERT(m3test_extract32, m3test_extract_and_sign_extend32, m3test_insert32, uint32)
+M3_EXTRACT_INSERT(m3test_extract32, m3test_extract_and_sign_extend32, m3test_insert32, uint32, int32)
 
 #ifdef _MSC_VER
 #if _MSC_VER < 1000
@@ -25,6 +25,7 @@ M3_EXTRACT_INSERT(m3test_extract32, m3test_extract_and_sign_extend32, m3test_ins
 #include <stdio.h>
 #include <limits.h>
 #include <time.h>
+#include <assert.h>
 
 #if !defined(INT64_MAX)
 #if defined(LLONG_MAX)
@@ -180,16 +181,35 @@ static void TestExtract()
                 for (sign_extend = 0; sign_extend < 2; ++sign_extend)
                 {
                     uint32 result;
+                    uint32 result2;
                     if (sign_extend)
+                    {
                         result = m3test_extract_and_sign_extend32(a32, m, n);
+                        result2 = result;
+#if defined(_M_IX86) || defined(_X86_)
+                        if (n)
+                        {
+                            result2 = m3test_extract_and_sign_extend32_x86(a32, m, n);
+                        }
+#endif
+                    }
                     else
+                    {
                         result = m3test_extract32(a32, m, n);
-                    printf("extract32(value:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x, sign_extend:0x%"I64"x):0x%"I64"x\n",
+                        result2 = result;
+                    }
+                    printf("extract32(value:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x, sign_extend:0x%"I64"x):0x%"I64"x 0x%"I64"x\n",
                             (uint64)a32,
                             (uint64)m,
                             (uint64)n,
                             (uint64)sign_extend,
-                            (uint64)result);
+                            (uint64)result,
+                            (uint64)result2);
+                    if (result != result2)
+                    {
+                        fflush(stdout);
+                        assert(result == result2);
+                    }
                     if (n == 0)
                         assert(result == 0);
                 }
@@ -206,16 +226,30 @@ static void TestExtract()
                 for (sign_extend = 0; sign_extend < 2; ++sign_extend)
                 {
                     uint64 result;
+                    uint64 result2;
                     if (sign_extend)
+                    {
                         result = m3_extract_and_sign_extend64(a64, m, n);
+                        result2 = result;
+#if defined(_M_IX86) || defined(_X86_)
+                        if (n)
+                        {
+                            result2 = m3_extract_and_sign_extend64_x86(a64, m, n);
+                        }
+#endif
+                    }
                     else
+                    {
                         result = m3_extract64(a64, m, n);
-                    printf("extract64(value:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x, sign_extend:0x%"I64"x):0x%"I64"x\n",
+                        result2 = result;
+                    }
+                    printf("extract64(value:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x, sign_extend:0x%"I64"x):0x%"I64"x 0x%"I64"x\n",
                             (uint64)a64,
                             (uint64)m,
                             (uint64)n,
                             (uint64)sign_extend,
-                            (uint64)result);
+                            (uint64)result,
+                            (uint64)result2);
                     if (n == 0)
                         assert(result == 0);
                 }
@@ -227,7 +261,7 @@ static void TestExtract()
 int main()
 {
     /*TestInsert();*/
-    /*TestExtract();*/
+    TestExtract();
 
     return 0;
 }
