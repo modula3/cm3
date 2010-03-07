@@ -10,7 +10,7 @@
 
 #ifdef __cplusplus
 extern "C"
-{           
+{
 #endif
 
 M3_EXTRACT_INSERT(m3test_extract32, m3test_extract_and_sign_extend32, m3test_insert32, uint32)
@@ -59,7 +59,6 @@ static int64 values[] = {
     0x99999,0x11111,0x22222,0x3333,0x444,0x55555,
     -0x99999,-0x11111,-0x22222,-0x3333,-0x444,-0x55555,
     0xFF, 0xFFFF, 0xFFFFFFFF, 0x8000,
-    
 };
 
 static void TestHighLowBits(void)
@@ -106,7 +105,7 @@ static void TestInsert()
                 for (n = 0; n <= 10; ++n)
                 {
                     uint32 result = m3test_insert32(a32, b32, m, n);
-                    printf("insert32(a:0x%"I64"x, b:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x):0x%"I64"x\n", 
+                    printf("insert32(a:0x%"I64"x, b:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x):0x%"I64"x\n",
                             (uint64)a32,
                             (uint64)b32,
                             (uint64)m,
@@ -128,7 +127,7 @@ static void TestInsert()
                 for (n = 0; n <= 10; ++n)
                 {
                     uint64 result = m3_insert64(a64, b64, m, n);
-                    printf("insert64(a:0x%"I64"x, b:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x):0x%"I64"x\n", 
+                    printf("insert64(a:0x%"I64"x, b:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x):0x%"I64"x\n",
                             (uint64)a64,
                             (uint64)b64,
                             (uint64)m,
@@ -163,7 +162,7 @@ static void TestExtract()
                         result = m3test_extract_and_sign_extend32(a32, m, n);
                     else
                         result = m3test_extract32(a32, m, n);
-                    printf("extract32(value:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x, sign_extend:0x%"I64"x):0x%"I64"x\n", 
+                    printf("extract32(value:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x, sign_extend:0x%"I64"x):0x%"I64"x\n",
                             (uint64)a32,
                             (uint64)m,
                             (uint64)n,
@@ -189,7 +188,7 @@ static void TestExtract()
                         result = m3_extract_and_sign_extend64(a64, m, n);
                     else
                         result = m3_extract64(a64, m, n);
-                    printf("extract64(value:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x, sign_extend:0x%"I64"x):0x%"I64"x\n", 
+                    printf("extract64(value:0x%"I64"x, m:0x%"I64"x, n:0x%"I64"x, sign_extend:0x%"I64"x):0x%"I64"x\n",
                             (uint64)a64,
                             (uint64)m,
                             (uint64)n,
