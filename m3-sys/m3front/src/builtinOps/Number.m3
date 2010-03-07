@@ -102,8 +102,8 @@ PROCEDURE Fold (ce: CallExpr.T): Expr.T =
         IF ArrayExpr.GetBounds (e, min, max)
           AND TInt.Subtract (max, min, tmp)
           AND TInt.Add (tmp, TInt.One, num)
-          AND NOT TInt.LT (num, Target.Integer.max)
-          AND NOT TInt.LT (Target.Integer.max, num)
+          AND TInt.GE (num, Target.Integer.min)
+          AND TInt.LE (num, Target.Integer.max)
           THEN RETURN IntegerExpr.New (Int.T, num);
           ELSE RETURN NIL;
         END;
