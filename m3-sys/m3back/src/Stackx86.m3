@@ -265,11 +265,10 @@ PROCEDURE clearall (t: T) =
     t.cg.wrFlush();
 
     FOR r := 0 TO NRegs DO
-      IF NOT (t.reguse[r].stackp = -1) THEN
-        t.Err("r:" & RegName[r]
+      IF t.reguse[r].stackp # -1 THEN
+        Err(t, "r:" & RegName[r]
             & " t.reguse[r].stackp:" & Fmt.Int(t.reguse[r].stackp));
       END;
-      <* ASSERT t.reguse[r].stackp = -1 *>
       t.reguse[r] := InitRegister();
     END
   END clearall;
@@ -307,7 +306,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
       FOR i := 0 TO size - 1 DO
         CASE op.loc OF
           OLoc.fstack =>
-              t.Err("Tried to put a float in an int register in 'find'");
+              Err(t, "Tried to put a float in an int register in 'find'");
           | OLoc.mem =>
               in[i] := inreg(t, opA[i].mvar, set);
               IF size > 1 THEN
@@ -755,7 +754,7 @@ PROCEDURE pos (t: T; depth: INTEGER; place: TEXT): INTEGER =
       IF pos >= 0 THEN
         RETURN pos;
       ELSE
-        t.Err("Stack underflow in " & place);
+        Err(t, "Stack underflow in " & place);
       END
     END;
     RETURN -1;
@@ -779,7 +778,7 @@ PROCEDURE pushimmI (t: T; immI: INTEGER; type: Type) =
   VAR immT: TIntN.T;
   BEGIN
     IF NOT TIntN.FromHostInteger(immI, Target.Integer.bytes, immT) THEN
-      t.Err("pushimmI: unable to convert to target integer");
+      Err(t, "pushimmI: unable to convert to target integer");
     END;
     t.pushimmT(immT, type);
   END pushimmI;
@@ -889,7 +888,7 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
       srcSize: OperandSize := 1;
   BEGIN
     IF t.stacktop < 1 THEN
-      t.Err("Stack underflow in pop");
+      Err(t, "Stack underflow in pop");
     END;
 
     WITH src_stack0 = t.vstack[t.stacktop - 1] DO
@@ -913,13 +912,12 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
         END;
 
         srcSize := SplitOperand(src_stack0, src_opA);
-        IF NOT (srcSize = destSize) THEN
-          t.Err(" srcSize:" & Fmt.Int(srcSize)
+        IF srcSize # destSize THEN
+          Err(t, " srcSize:" & Fmt.Int(srcSize)
               & " destSize:" & Fmt.Int(destSize)
               & " dest_mvar.mvar_type:" & Target.TypeNames[dest_mvar.mvar_type]
               & " src_stack0.optype:" & Target.TypeNames[src_stack0.optype]);
         END;
-        <* ASSERT srcSize = destSize *>
 
         IF dest_mvar.var.loc = VLoc.temp AND dest_mvar.var.parent # t.current_proc THEN
           indreg := pickreg(t, AllRegisters, TRUE);
@@ -973,13 +971,13 @@ PROCEDURE doloadaddress (t: T; v: x86Var; o: ByteOffset) =
       IF v.loc = VLoc.temp AND v.parent # t.current_proc THEN
         t.cg.get_frame(stop0.reg[0], v.parent, t.current_proc);
         IF NOT TIntN.FromHostInteger(o, Target.Integer.bytes, to) THEN
-          t.Err("doloadaddress: unable to convert o");
+          Err(t, "doloadaddress: unable to convert o");
         END;
         IF NOT TIntN.FromHostInteger(v.offset, Target.Integer.bytes, tvoffset) THEN
-          t.Err("doloadaddress: unable to convert v.offset");
+          Err(t, "doloadaddress: unable to convert v.offset");
         END;
         IF NOT TIntN.Add(to, tvoffset, ti) THEN
-          t.Err("dloadaddress: Add overflowed");
+          Err(t, "dloadaddress: Add overflowed");
         END;
         t.cg.immOp(Op.oADD, t.cg.reg[stop0.reg[0]], ti);
 
@@ -1006,9 +1004,8 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
            stop1 = t.vstack[stack1] DO
 
         IF GetTypeSize(stop0.optype) # GetTypeSize(stop1.optype) THEN
-          t.Err("findbin: stop0.optype:" & Target.TypeNames[stop0.optype] & " stop1.optype:" & Target.TypeNames[stop1.optype]);
+          Err(t, "findbin: stop0.optype:" & Target.TypeNames[stop0.optype] & " stop1.optype:" & Target.TypeNames[stop1.optype]);
          END;
-        <* ASSERT GetTypeSize(stop0.optype) = GetTypeSize(stop1.optype) *>
 
         IF symmetric THEN
           IF stop0.loc = OLoc.register OR stop1.loc = OLoc.imm OR
@@ -1068,17 +1065,15 @@ PROCEDURE dobin (t: T; op: Op; symmetric, overwritesdest: BOOLEAN; type: Type): 
     WITH destop = t.vstack[dest],
           srcop = t.vstack[src] DO
 
-      IF NOT (GetTypeSize(destop.optype) = GetTypeSize(srcop.optype)
-         AND (GetTypeSize(destop.optype) = GetTypeSize(type))) THEN
-        t.Err(" GetTypeSize(destop.optype):" & Fmt.Int(GetTypeSize(destop.optype))
+      IF (GetTypeSize(destop.optype) # GetTypeSize(srcop.optype))
+         OR (GetTypeSize(destop.optype) # GetTypeSize(type)) THEN
+        Err(t, " GetTypeSize(destop.optype):" & Fmt.Int(GetTypeSize(destop.optype))
             & " GetTypeSize(srcop.optype):" & Fmt.Int(GetTypeSize(srcop.optype))
             & " GetTypeSize(type):" & Fmt.Int(GetTypeSize(type))
             & " destop.optype:" & Target.TypeNames[destop.optype]
             & " srcop.optype:" & Target.TypeNames[srcop.optype]
             & " type:" & Target.TypeNames[type]);
       END;
-      <* ASSERT GetTypeSize(destop.optype) = GetTypeSize(srcop.optype) *>
-      <* ASSERT GetTypeSize(destop.optype) = GetTypeSize(type) *>
 
       size := SplitOperand(srcop, srcA);
       EVAL SplitOperand(destop, destA);
@@ -1346,7 +1341,7 @@ PROCEDURE doneg (t: T) =
          stop0 = t.vstack[stack0] DO
       IF stop0.loc = OLoc.imm THEN
         IF NOT TIntN.Negate(stop0.imm, neg) THEN
-          t.Err("doneg: Negate overflowed");
+          Err(t, "doneg: Negate overflowed");
         END;
         stop0.imm := neg;
       ELSE
@@ -1366,7 +1361,7 @@ PROCEDURE doabs (t: T) =
          stop0 = t.vstack[stack0] DO
       IF stop0.loc = OLoc.imm THEN
         IF NOT TIntN.Abs(stop0.imm, stop0.imm) THEN
-          t.Err("doabs: Abs overflowed");
+          Err(t, "doabs: Abs overflowed");
         END;
       ELSE
         find(t, stack0, Force.anytemp);
@@ -1415,7 +1410,7 @@ PROCEDURE doshift (t: T; type: IType; shiftType: ShiftType): BOOLEAN =
       IF stop0.loc = OLoc.imm AND TWordN.LT(stop0.imm, TIntN.SixtyFour) THEN
         IF stop1.loc = OLoc.imm THEN
           IF NOT TIntN.ToHostInteger(stop0.imm, shiftCount) THEN
-            t.Err("doshift: unable to convert target integer to host integer");
+            Err(t, "doshift: unable to convert target integer to host integer");
           END;
 
           (* shift constant by a constant *)
@@ -1450,7 +1445,7 @@ PROCEDURE doshift (t: T; type: IType; shiftType: ShiftType): BOOLEAN =
                   t.cg.immOp(Op.oSHL, stop1, stop0.imm);    (* positive shift is left shift *)
                 ELSE
                   IF NOT TIntN.Negate(stop0.imm, tShiftCount) THEN
-                    t.Err("doshift: Negate overflowed");
+                    Err(t, "doshift: Negate overflowed");
                   END;
                   t.cg.immOp(Op.oSHR, stop1, tShiftCount);  (* negative shift is right shift *)
                 END;
@@ -1542,7 +1537,7 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
       IF stop0.loc = OLoc.imm THEN
         IF stop1.loc = OLoc.imm THEN
           IF NOT TIntN.ToHostInteger(stop0.imm, rotateCount) THEN
-            t.Err("dorotate: failed to convert rotateCount to host integer");
+            Err(t, "dorotate: failed to convert rotateCount to host integer");
           END;
           TWordN.Rotate(stop1.imm, rotateCount, stop1.imm);
         ELSE
@@ -1559,7 +1554,7 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
               t.cg.immOp(Op.oROL, stop1, stop0.imm);
             ELSE
               IF NOT TIntN.Negate(stop0.imm, stop0.imm) THEN
-                t.Err("dorotate: negate overflowed");
+                Err(t, "dorotate: negate overflowed");
               END;
               TWordN.And(stop0.imm, BitCountMask[type], stop0.imm);
               t.cg.immOp(Op.oROR, stop1, stop0.imm);
@@ -1630,7 +1625,7 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
         IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
-          t.Err("doextract: failed to convert to host integer");
+          Err(t, "doextract: failed to convert to host integer");
         END;
         RETURN doextract_n(t, type, sign, int);
       END;
@@ -1645,10 +1640,9 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
         (* The method used here does not work for extracting zero bits.
          * Make sure we are not asked to do that.
          *)
-        IF NOT (stop2.loc = OLoc.imm AND TIntN.NE(stop2.imm, TZero)) THEN
-          t.Err("doextract: not able to extract and sign extend zero bits");
+        IF (stop2.loc # OLoc.imm) OR TIntN.EQ(stop2.imm, TZero) THEN
+          Err(t, "doextract: not able to extract and sign extend zero bits");
         END;
-        <* ASSERT stop2.loc = OLoc.imm AND TIntN.NE(stop2.imm, TZero) *>
 
         find(t, stack0, Force.regset, RegSet { ECX });
         find(t, stack1, Force.any);
@@ -1718,7 +1712,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
         IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
-          t.Err("doextract_n: failed to convert to host integer");
+          Err(t, "doextract_n: failed to convert to host integer");
         END;
         RETURN doextract_mn(t, type, sign, int, n);
       END;
@@ -1736,11 +1730,11 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
         END;
 
         IF NOT TIntN.FromHostInteger(n, Target.Integer.bytes, tn) THEN
-          t.Err("doextract_n: failed to convert n to target integer");
+          Err(t, "doextract_n: failed to convert n to target integer");
         END;
 
         IF NOT TIntN.Subtract(typeBitSizeT, tn, typeBitSizeMinusN) THEN
-          t.Err("doextract_n: Subtract overflowed");
+          Err(t, "doextract_n: Subtract overflowed");
         END;
 
         <* ASSERT NOT is64 *>
@@ -1808,14 +1802,14 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
         find(t, stack0, Force.anyreg);
         IF (m + n) < typeBitSize THEN
           IF NOT TIntN.FromHostInteger(typeBitSize - (m + n), Target.Integer.bytes, tint) THEN
-            t.Err("doextract_mn: failed to convert " & Fmt.Int(typeBitSize) & " - (m + n) to target integer");
+            Err(t, "doextract_mn: failed to convert " & Fmt.Int(typeBitSize) & " - (m + n) to target integer");
           END;
           t.cg.immOp(Op.oSHL, stop0, tint);
         END;
 
         IF n < typeBitSize THEN
           IF NOT TIntN.FromHostInteger(typeBitSize - n, Target.Integer.bytes, tint) THEN
-            t.Err("doextract_mn: failed to convert " & Fmt.Int(typeBitSize) & " - n to target integer");
+            Err(t, "doextract_mn: failed to convert " & Fmt.Int(typeBitSize) & " - n to target integer");
           END;
           t.cg.immOp(Op.oSAR, stop0, tint);
         END
@@ -1828,7 +1822,7 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
 
         IF m > 0 THEN
           IF NOT TIntN.FromHostInteger(m, Target.Integer.bytes, tint) THEN
-            t.Err("doextract_mn: failed to m to target integer");
+            Err(t, "doextract_mn: failed to m to target integer");
           END;
           t.cg.immOp(Op.oSHR, stop0, tint);
         END
@@ -1866,7 +1860,7 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
         IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
-          t.Err("doinsert: failed to convert to host integer");
+          Err(t, "doinsert: failed to convert to host integer");
         END;
         RETURN doinsert_n(t, type, int);
       END;
@@ -1911,7 +1905,7 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
 
       IF stop1.loc = OLoc.imm THEN
         IF NOT TIntN.ToHostInteger(stop1.imm, int) THEN
-          t.Err("failed to convert stop1.imm to host integer");
+          Err(t, "failed to convert stop1.imm to host integer");
         END;
         TWordN.Shift(max, int, tint);
         t.cg.immOp(Op.oXOR, t.cg.reg[maskreg], tint);
@@ -1957,7 +1951,7 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
         IF NOT TIntN.ToHostInteger(stop0.imm, m) THEN
-          t.Err("doinsert_n: failed to convert to host integer");
+          Err(t, "doinsert_n: failed to convert to host integer");
         END;
         RETURN doinsert_mn(t, type, m, n);
       END;
@@ -2051,7 +2045,7 @@ PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
 
         IF m # 0 THEN
           IF NOT TIntN.FromHostInteger(m, Target.Integer.bytes, tint_m) THEN
-            t.Err("doinsert_mn: unable to convert m to target integer");
+            Err(t, "doinsert_mn: unable to convert m to target integer");
           END;
           t.cg.immOp(Op.oSHL, stop0, tint_m);
         END
@@ -2263,10 +2257,10 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
 
       IF stop0.loc = OLoc.imm THEN
         IF NOT TIntN.FromHostInteger(size, Target.Integer.bytes, tsize) THEN
-          t.Err("doindex_address: failed to convert size to target integer");
+          Err(t, "doindex_address: failed to convert size to target integer");
         END;
         IF NOT TIntN.Multiply(stop0.imm, tsize, tint) THEN
-          t.Err("doindex_address: multiply overflowed");
+          Err(t, "doindex_address: multiply overflowed");
         END;
         stop0.imm := tint;
       ELSE
@@ -2298,7 +2292,7 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
 
         ELSIF shift > 0 THEN
           IF NOT TIntN.FromHostInteger(shift, Target.Integer.bytes, tshift) THEN
-            t.Err("doindex_address: failed to convert size to target integer");
+            Err(t, "doindex_address: failed to convert size to target integer");
           END;
           t.cg.immOp(Op.oSHL, stop0, tshift);
           newdest(t, stop0);
@@ -2512,7 +2506,7 @@ PROCEDURE discard (t: T; depth: INTEGER) =
   VAR size: OperandSize := 1;
   BEGIN
     IF depth > t.stacktop THEN
-      t.Err("Stack underflow in stack_discard");
+      Err(t, "Stack underflow in stack_discard");
     END;
     FOR i := t.stacktop - depth TO t.stacktop - 1 DO
       WITH stackp = t.vstack[i] DO
@@ -2715,6 +2709,12 @@ PROCEDURE DebugMVar (READONLY v: MVar;  wr: Wrx86.T) =
     wr.OutT ("  type: ");  wr.TName (v.mvar_type);
     wr.OutT (" }");
   END DebugMVar;
+
+PROCEDURE Err(t: T; err: TEXT) =
+  BEGIN
+    t.Err(err);
+    <* ASSERT FALSE *>
+  END Err;
 
 BEGIN
 END Stackx86.
