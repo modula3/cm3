@@ -1634,6 +1634,18 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN): BOOLEAN =
          stop1 = t.vstack[stack1],
          stop2 = t.vstack[stack2] DO
 
+      IF sign_extend AND stop0.loc # OLoc.imm THEN
+
+        (* Code below apparently does not work for n = 0.
+         * sign_extend = TRUE is not available via the Word/Long interfaces,
+         * it is used by the front end in some cases for division, and
+         * those cases apparently use constant n # 0 so ok.
+         *)
+
+        Err(t, "doextract: dead suspicious code, extracting with non-constant n");
+
+      END;
+
       IF is64 AND (stop0.loc # OLoc.imm OR stop1.loc # OLoc.imm OR stop2.loc # OLoc.imm) THEN
         RETURN FALSE;
       END;
@@ -1653,13 +1665,8 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN): BOOLEAN =
 
       IF sign_extend THEN
 
-        (* The method used here does not work for extracting zero bits.
-         * Make sure we are not asked to do that.
-         *)
-        IF (stop2.loc # OLoc.imm) OR TIntN.EQ(stop2.imm, TZero) THEN
-          Err(t, "doextract: not able to extract and sign extend zero bits");
-        END;
-
+        <* ASSERT FALSE *>
+        (*
         find(t, stack0, Force.regset, RegSet { ECX });
         find(t, stack1, Force.any);
         find(t, stack2, Force.anyreg);
@@ -1674,6 +1681,7 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN): BOOLEAN =
         t.cg.unOp(Op.oSAR, stop2);
 
         newdest(t, stop0);
+        *)
 
       ELSE
         IF stop1.loc = OLoc.imm THEN
@@ -1715,6 +1723,13 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER): BOO
       typeBitSizeT := TIntN.T{x := Target.Int{typeBitSize, 0, ..}};
   BEGIN
 
+    IF n < 0 THEN
+      Err(t, "doextract_n: n must be positive");
+    END;
+    IF sign_extend AND (n < 1) THEN
+      Err(t, "doextract_n: n must at least 1 if sign extending");
+    END;
+
     unlock(t);
     WITH stack0 = pos(t, 0, "extract_n"),
          stack1 = pos(t, 1, "extract_n"),
@@ -1736,6 +1751,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER): BOO
       <* ASSERT NOT is64 *>
 
       IF sign_extend THEN
+
         corrupt(t, ECX, operandPart := 0);
         t.reguse[ECX].locked := TRUE;
 
@@ -1788,6 +1804,16 @@ PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER):
       max := TIntN.T{x := uint_type.max};
       typeBitSize := uint_type.size;
   BEGIN
+
+    IF m < 0 THEN
+      Err(t, "doextract_mn: m must be positive");
+    END;
+    IF n < 0 THEN
+      Err(t, "doextract_mn: n must be positive");
+    END;
+    IF sign_extend AND (n < 1) THEN
+      Err(t, "doextract_mn: n must at least 1 if sign extending");
+    END;
 
     unlock(t);
     WITH stack0 = pos(t, 0, "extract_mn"),
