@@ -6,9 +6,6 @@
 /*      modified on Tue Jan 10 15:48:28 PST 1995 by kalsow  */
 /*      modified on Tue Feb 11 15:18:40 PST 1992 by muller  */
 
-typedef unsigned uint32; /* verified below via UINT_MAX */
-typedef int int32;
-
 #ifdef _WIN32
 #define M3_EXTRACT_INSERT_LINKAGE
 #else
@@ -34,8 +31,8 @@ typedef unsigned long long uint64;
 
 #include <limits.h>
 #include <string.h>
-#include <stddef.h>
 #include <assert.h>
+#include <stddef.h>
 
 typedef int BOOL;
 
@@ -51,6 +48,8 @@ extern "C"
 #if (UINT_MAX <= 0xFFFF) || (UINT_MAX != 0xFFFFFFFF) || (UINT_MAX != 0xFFFFFFFFUL)
 #error uint is not 32bits
 #endif
+typedef unsigned uint32;
+typedef int int32;
 
 /* There are problems passing int64 in K&R form! */
 #if 1 /* defined(__STDC__) || defined(__cplusplus) || defined(_MSC_VER) */
@@ -316,6 +315,7 @@ PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
 M3_EXTRACT_INSERT_LINKAGE                       \
 UT __stdcall extract(UT x, uint32 i, uint32 n)  \
 {                                               \
+    assert((n + i) <= (sizeof(UT) * 8));        \
     x >>= i;                                    \
     x &= ~((~(UT)0) << n);                      \
     return x;                                   \
@@ -324,6 +324,7 @@ UT __stdcall extract(UT x, uint32 i, uint32 n)  \
 M3_EXTRACT_INSERT_LINKAGE                       \
 UT __stdcall extract_and_sign_extend(UT x, uint32 i, uint32 n) \
 {                                               \
+    assert((n + i) <= (sizeof(UT) * 8));        \
     x >>= i;                                    \
     x &= ~((~(UT)0) << n);                      \
     if (x & (((UT)1) << (n - 1)))               \
@@ -336,6 +337,7 @@ UT __stdcall extract_and_sign_extend##_x86(UT x, uint32 i, uint32 n) \
 /* x86 shift counts are mod 32 so this works, for n != 0 */ \
 {                                               \
     assert(n);                                  \
+    assert((n + i) <= (sizeof(UT) * 8));        \
     return (UT)(((ST)(x << -(i + n))) >> -n);   \
 }                                               \
                                                 \
@@ -343,6 +345,7 @@ M3_EXTRACT_INSERT_LINKAGE                       \
 UT __stdcall insert(UT x, UT y, uint32 i, uint32 n) \
 {                                               \
     UT mask = ((~((~(UT)0) << n)) << i);        \
+    assert((n + i) <= (sizeof(UT) * 8));        \
     return (x & ~mask) | ((y << i) & mask);     \
 }                                               \
 
