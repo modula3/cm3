@@ -29,16 +29,9 @@ typedef unsigned long ulong;
 #ifndef _MT
 #define _MT
 #endif
-#if _MSC_VER < 900
-#error __int64 support is required.
-/* avoid cascade */
-typedef long int64;
-typedef ulong uint64;
-#else
 typedef __int64 int64;
 typedef unsigned __int64 uint64;
 #define I64 "I64"
-#endif
 #else
 typedef long long int64;
 typedef unsigned long long uint64;
