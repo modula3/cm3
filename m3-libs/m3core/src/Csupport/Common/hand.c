@@ -251,6 +251,8 @@ size_t __stdcall set_lt
 #define _LOWBITS(a)  ((a) ? ((~(size_t)0) >> ((sizeof(size_t) * 8) - (a))) : 0)
 #define _HIGHBITS(a) (((a) < (sizeof(size_t) * 8)) ? ((~(size_t)0) << (a)) : 0)
 
+#ifdef _WIN32
+
 /* _lowbits[i] = bits{(i-1)..0} for 32-bit integer masks */
 #ifdef __cplusplus
 extern
@@ -280,6 +282,8 @@ const uint _highbits [33] = {
   0xff000000, 0xfe000000, 0xfc000000, 0xf8000000,
   0xf0000000, 0xe0000000, 0xc0000000, 0x80000000,
   0x0 };
+
+#endif
 
 #define HIGH_BITS(a) ((~(size_t)0) << (a))
 #define LOW_BITS(a)  ((~(size_t)0) >> (SET_GRAIN - (a) - 1))
