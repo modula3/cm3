@@ -454,8 +454,8 @@ size_t __stdcall set_lt
   return (eq != 0);
 }
 
-#define _LOWBITS(a)  ((a) ? ((~(ulong)0) >> ((sizeof(ulong) * 8) - (a))) : 0)
-#define _HIGHBITS(a) (((a) < (sizeof(ulong) * 8)) ? ((~(ulong)0) << (a)) : 0)
+#define _LOWBITS(a)  ((a) ? ((~(size_t)0) >> ((sizeof(size_t) * 8) - (a))) : 0)
+#define _HIGHBITS(a) (((a) < (sizeof(size_t) * 8)) ? ((~(size_t)0) << (a)) : 0)
 
 /* _lowbits[i] = bits{(i-1)..0} for 32-bit integer masks */
 #ifdef __cplusplus
