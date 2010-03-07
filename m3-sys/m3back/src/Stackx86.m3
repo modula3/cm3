@@ -1620,7 +1620,7 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
     RETURN TRUE;
   END dorotate;
 
-PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
+PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN): BOOLEAN =
   VAR tbl: MVar;
       int: INTEGER;
       is64 := TypeIs64(type);
@@ -1643,7 +1643,7 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
         IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
           Err(t, "doextract: failed to convert to host integer");
         END;
-        RETURN doextract_n(t, type, sign, int);
+        RETURN doextract_n(t, type, sign_extend, int);
       END;
 
       (* The register allocation will sometimes do more memory operations
@@ -1651,7 +1651,7 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
          was worth the easier debugging task, since it was going to be
          really messy to cover all the special cases correctly *)
 
-      IF sign THEN
+      IF sign_extend THEN
 
         (* The method used here does not work for extracting zero bits.
          * Make sure we are not asked to do that.
@@ -1705,7 +1705,7 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
     RETURN TRUE;
   END doextract;
 
-PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
+PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER): BOOLEAN =
   VAR tn, typeBitSizeMinusN, andval: TIntN.T;
       int: INTEGER;
       is64 := TypeIs64(type);
@@ -1730,12 +1730,12 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
         IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
           Err(t, "doextract_n: failed to convert to host integer");
         END;
-        RETURN doextract_mn(t, type, sign, int, n);
+        RETURN doextract_mn(t, type, sign_extend, int, n);
       END;
 
       <* ASSERT NOT is64 *>
 
-      IF sign THEN
+      IF sign_extend THEN
         corrupt(t, ECX, operandPart := 0);
         t.reguse[ECX].locked := TRUE;
 
@@ -1781,7 +1781,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign: BOOLEAN; n: INTEGER): BOOLEAN =
     RETURN TRUE;
   END doextract_n;
 
-PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEAN =
+PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER): BOOLEAN =
   VAR andval, tint: TIntN.T;
       is64 := TypeIs64(type);
       uint_type := IntType[UnsignedType[type]];
@@ -1801,7 +1801,7 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
         TWordN.Shift(stop0.imm, -m, stop0.imm);
         TWordN.Shift(max, n - typeBitSize, tint);
         TWordN.And(stop0.imm, tint, stop0.imm);
-        IF sign THEN
+        IF sign_extend THEN
           TWordN.Shift(TIntN.One, n - 1, tint);
           TWordN.And(stop0.imm, tint, tint);
           IF TIntN.NE(tint, TZero) THEN
@@ -1814,7 +1814,7 @@ PROCEDURE doextract_mn (t: T; type: IType; sign: BOOLEAN; m, n: INTEGER): BOOLEA
 
       <* ASSERT NOT is64 *>
 
-      IF sign THEN
+      IF sign_extend THEN
         find(t, stack0, Force.anyreg);
         IF (m + n) < typeBitSize THEN
           IF NOT TIntN.FromHostInteger(typeBitSize - (m + n), Target.Integer.bytes, tint) THEN
