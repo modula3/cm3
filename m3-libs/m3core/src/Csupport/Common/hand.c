@@ -244,21 +244,21 @@ void __stdcall set_range
   if (b < a) {
       /* no bits to set */
   } else {
-      size_t a_word = a / SET_GRAIN;
-      size_t b_word = b / SET_GRAIN;
-      size_t i;
-      size_t high_bits = HIGH_BITS(a % SET_GRAIN);
-      size_t low_bits = LOW_BITS(b % SET_GRAIN);
+    size_t a_word = a / SET_GRAIN;
+    size_t b_word = b / SET_GRAIN;
+    size_t i;
+    size_t high_bits = HIGH_BITS(a % SET_GRAIN);
+    size_t low_bits = LOW_BITS(b % SET_GRAIN);
 
-      if (a_word == b_word) {
-          s [a_word] |= (high_bits & low_bits);
-      } else {
-          s [a_word] |= high_bits;
-          for (i = a_word + 1; i < b_word; ++i)
-            s[i] = ~0UL;
-          s [b_word] |= low_bits;
-      }
+    if (a_word == b_word) {
+      s [a_word] |= (high_bits & low_bits);
+    } else {
+      s [a_word] |= high_bits;
+      for (i = a_word + 1; i < b_word; ++i)
+        s[i] = ~0UL;
+      s [b_word] |= low_bits;
     }
+  }
 }
 
 #ifdef _WIN32
