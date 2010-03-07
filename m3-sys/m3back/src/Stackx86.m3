@@ -1715,18 +1715,22 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN): BOOLEAN =
   END doextract;
 
 PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER): BOOLEAN =
-  VAR tn, typeBitSizeMinusN, andval: TIntN.T;
+  VAR andval: TIntN.T;
       int: INTEGER;
       is64 := TypeIs64(type);
       uint_type := IntType[UnsignedType[type]];
       max := TIntN.T{x := uint_type.max};
       typeBitSize := uint_type.size;
-      typeBitSizeT := TIntN.T{x := Target.Int{typeBitSize, 0, ..}};
+   (* typeBitSizeT := TIntN.T{x := Target.Int{typeBitSize, 0, ..}};
+    * tn: TIntN.T;
+    * typeBitSizeMinusN: TIntN.T;
+    *)
   BEGIN
 
     IF n < 0 THEN
       Err(t, "doextract_n: n must be positive");
     END;
+
     IF sign_extend AND (n < 1) THEN
       Err(t, "doextract_n: n must at least 1 if sign extending");
     END;
@@ -1736,6 +1740,14 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER): BOO
          stack1 = pos(t, 1, "extract_n"),
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
+
+      IF sign_extend AND stop0.loc # OLoc.imm THEN
+
+        (* Code for this is not reachable and not testable. *)
+
+        Err(t, "doextract: sign_extend requires constant m/n");
+
+      END;
 
       IF is64 AND (stop0.loc # OLoc.imm OR stop1.loc # OLoc.imm) THEN
         RETURN FALSE;
@@ -1753,32 +1765,38 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER): BOO
 
       IF sign_extend THEN
 
-        corrupt(t, ECX, operandPart := 0);
-        t.reguse[ECX].locked := TRUE;
+        Err(t, "doextract: sign_extend requires constant m/n");
 
-        find(t, stack0, Force.any);
-        find(t, stack1, Force.anyreg);
-        IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
-          find(t, stack0, Force.anyreg);
-        END;
+        (* This is not reachable and not testable.
+         *
+         * corrupt(t, ECX, operandPart := 0);
+         * t.reguse[ECX].locked := TRUE;
+         *
+         * find(t, stack0, Force.any);
+         * find(t, stack1, Force.anyreg);
+         * IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
+         *   find(t, stack0, Force.anyreg);
+         * END;
+         *
+         * IF NOT TIntN.FromHostInteger(n, Target.Integer.bytes, tn) THEN
+         *   Err(t, "doextract_n: failed to convert n to target integer");
+         * END;
+         *
+         * IF NOT TIntN.Subtract(typeBitSizeT, tn, typeBitSizeMinusN) THEN
+         *   Err(t, "doextract_n: Subtract overflowed");
+         * END;
+         *
+         * <* ASSERT NOT is64 *>
+         *
+         * t.cg.movImmI(t.cg.reg[ECX], typeBitSize - n);
+         * t.cg.binOp(Op.oSUB, t.cg.reg[ECX], stop0);
+         * t.cg.unOp(Op.oSHL, stop1);
+         *
+         * IF n < typeBitSize THEN
+         *   t.cg.immOp(Op.oSAR, stop1, typeBitSizeMinusN);
+         * END
+         *)
 
-        IF NOT TIntN.FromHostInteger(n, Target.Integer.bytes, tn) THEN
-          Err(t, "doextract_n: failed to convert n to target integer");
-        END;
-
-        IF NOT TIntN.Subtract(typeBitSizeT, tn, typeBitSizeMinusN) THEN
-          Err(t, "doextract_n: Subtract overflowed");
-        END;
-
-        <* ASSERT NOT is64 *>
-
-        t.cg.movImmI(t.cg.reg[ECX], typeBitSize - n);
-        t.cg.binOp(Op.oSUB, t.cg.reg[ECX], stop0);
-        t.cg.unOp(Op.oSHL, stop1);
-
-        IF n < typeBitSize THEN
-          t.cg.immOp(Op.oSAR, stop1, typeBitSizeMinusN);
-        END
       ELSE
         find(t, stack0, Force.regset, RegSet { ECX });
         find(t, stack1, Force.anyreg);

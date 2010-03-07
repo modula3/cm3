@@ -2527,9 +2527,14 @@ PROCEDURE extract (u: U;  t: IType;  sign_extend: BOOLEAN) =
       RETURN;
     END;
 
+    IF NOT TypeIs64(t) THEN
+      Err(u, "extract: stack.doextract should have handled all 32bit cases");
+    END;
+
     IF sign_extend THEN
       builtin := Builtin.extract_and_sign_extend64;
     END;
+
     start_int_proc (u, builtin);
     pop_param(u, Type.Word32); (* n *)
     pop_param(u, Type.Word32); (* m *)
@@ -2553,6 +2558,10 @@ PROCEDURE extract_n (u: U;  t: IType;  sign_extend: BOOLEAN;  n: INTEGER) =
       RETURN;
     END;
 
+    IF NOT TypeIs64(t) THEN
+      Err(u, "extract_n: stack.doextract_n should have handled all 32bit cases");
+    END;
+
     u.vstack.pushimmI(n, Type.Word32);
     extract(u, t, sign_extend);
   END extract_n;
@@ -2574,6 +2583,10 @@ PROCEDURE extract_mn (u: U;  t: IType;  sign_extend: BOOLEAN;  m, n: INTEGER) =
       RETURN;
     END;
 
+    IF NOT TypeIs64(t) THEN
+      Err(u, "extract_mn: stack.doextract_mn should have handled all 32bit cases");
+    END;
+
     u.vstack.pushimmI(m, Type.Word32);
     u.vstack.pushimmI(n, Type.Word32);
     extract(u, t, sign_extend);
@@ -2591,6 +2604,11 @@ PROCEDURE insert  (u: U;  t: IType) =
     IF u.vstack.doinsert(t) THEN
       RETURN;
     END;
+
+    IF NOT TypeIs64(t) THEN
+      Err(u, "insert: stack.doinsert should have handled all 32bit cases");
+    END;
+
     start_int_proc (u, Builtin.insert64);
     pop_param(u, Type.Word32);
     pop_param(u, Type.Word32);
@@ -2612,6 +2630,11 @@ PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
     IF u.vstack.doinsert_n(t, n) THEN
       RETURN;
     END;
+
+    IF NOT TypeIs64(t) THEN
+      Err(u, "insert_n: stack.doinsert_n should have handled all 32bit cases");
+    END;
+
     u.vstack.pushimmI(n, Type.Word32);
     u.insert(t);
   END insert_n;
@@ -2630,6 +2653,11 @@ PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
     IF u.vstack.doinsert_mn(t, m, n) THEN
       RETURN;
     END;
+
+    IF NOT TypeIs64(t) THEN
+      Err(u, "insert_mn: stack.doinsert_mn should have handled all 32bit cases");
+    END;
+
     u.vstack.pushimmI(m, Type.Word32);
     u.vstack.pushimmI(n, Type.Word32);
     u.insert(t);
@@ -2987,9 +3015,11 @@ TYPE
     set_union, set_difference, set_intersection, set_sym_difference,
     set_range, set_lt, set_le, set_gt, set_ge,
     memmove, memcpy, memset, memcmp,
-    mul64, udiv64, umod64,
+    mul64,
+    udiv64, umod64,
     div64, mod64,
-    rotate_left64, rotate_right64, rotate64, insert64, extract64, extract_and_sign_extend64
+    rotate_left64, rotate_right64, rotate64,
+    insert64, extract64, extract_and_sign_extend64
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
