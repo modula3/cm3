@@ -9,10 +9,8 @@
 typedef unsigned int uint, uint32; /* verified below via UINT_MAX */
 
 #ifdef _WIN32
-#define WIN32_STATIC static
 #define M3_EXTRACT_INSERT_LINKAGE
 #else
-#define WIN32_STATIC
 #define M3_EXTRACT_INSERT_LINKAGE static /* for testing */
 #endif
 
