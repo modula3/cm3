@@ -286,7 +286,9 @@ PROCEDURE releaseall (t: T) =
 PROCEDURE find (t: T; stackp: INTEGER;
                 force: Force := Force.any; set := AllRegisters;
                 hintaddr := FALSE) =
-  (* Find a suitable register to put a stack item in *)
+(*
+ * Find a suitable register to put a stack item in.
+ *)
   VAR in: ARRAY OperandPart OF Regno; (* initialize to -1? *)
       to: ARRAY OperandPart OF Regno; (* initialize to -1? *)
       opA: ARRAY OperandPart OF Operand;
@@ -299,6 +301,7 @@ PROCEDURE find (t: T; stackp: INTEGER;
       <* ASSERT op.stackp = stackp *>
 
       size := SplitOperand(op, opA);
+      <* ASSERT (size = 1) OR (size = 2) *>
       IF size = 2 THEN
         ret64 := (force = Force.regset AND set = RegSet{EAX, EDX});
       END;
@@ -308,16 +311,18 @@ PROCEDURE find (t: T; stackp: INTEGER;
           OLoc.fstack =>
               Err(t, "Tried to put a float in an int register in 'find'");
           | OLoc.mem =>
-              in[i] := inreg(t, opA[i].mvar, set);
-              IF size > 1 THEN
-                set := set - RegSet{in[i]};
+              IF i = 0 THEN
+                in[i] := inreg(t, opA[i].mvar, set);
+              ELSE
+                in[i] := inreg(t, opA[i].mvar, set - RegSet{in[0]});
               END;
           | OLoc.register =>
               in[i] := op.reg[i];
           | OLoc.imm =>
-              in[i] := immreg(t, opA[i].imm, set);
-              IF size > 1 THEN
-                set := set - RegSet{in[i]};
+              IF i = 0 THEN
+                in[i] := immreg(t, opA[i].imm, set);
+              ELSE
+                in[i] := immreg(t, opA[i].imm, set - RegSet{in[0]});
               END;
           END;
       END;
@@ -398,7 +403,9 @@ PROCEDURE find (t: T; stackp: INTEGER;
           END;
           done[i] := FALSE;
         ELSE
+
           (* Otherwise, it is in the right place, so leave it *)
+
           loadphantom(t, in[i], stackp, i);
           t.reguse[in[i]].locked := TRUE;
           done[i] := TRUE;
@@ -451,10 +458,12 @@ PROCEDURE find (t: T; stackp: INTEGER;
               END
             END;
           ELSE
+
             (* Otherwise, see if 'in' is used for something other than stackp. If not,
                swap the registers over. If so, force 'to' out. If there is a free
                register, 'to' will be moved into it, otherwise it will be stored to
                memory *)
+
             IF in[i] = -1 OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp) THEN
               forceout(t, to[i], i);
               IF in[i] = -1 THEN
@@ -617,16 +626,16 @@ PROCEDURE get_temp (t: T; stackp: INTEGER) =
       | OLoc.imm =>
         t.cg.movImmT(t.vstack[stackp], op.imm);
       | OLoc.register =>
-        mvar := t.vstack[stackp].mvar; (* save away *)
-        t.vstack[stackp].mvar.mvar_type := Type.Word32; (* make it register sized *)
+        mvar := t.vstack[stackp].mvar;                  (* temporarily save away *)
+        t.vstack[stackp].mvar.mvar_type := Type.Word32; (* temporarily make it register sized *)
         t.vstack[stackp].optype := Type.Word32;
         FOR i := 0 TO size - 1 DO
           t.reguse[op.reg[i]].stackp := -1;
-          t.vstack[stackp].mvar.mvar_offset := i * 4;   (* offset to register sized chunk *)
+          t.vstack[stackp].mvar.mvar_offset := i * 4;   (* temporary offset to register sized chunk *)
           t.cg.movOp(t.vstack[stackp], t.cg.reg[op.reg[i]]);
         END;
         t.vstack[stackp].optype := op.optype;
-        t.vstack[stackp].mvar := mvar; (* restore *)
+        t.vstack[stackp].mvar := mvar;                  (* restore *)
       ELSE
         <* ASSERT FALSE *>
     END
@@ -762,7 +771,7 @@ PROCEDURE pos (t: T; depth: INTEGER; place: TEXT): INTEGER =
 
 PROCEDURE pushimmT (t: T; imm: TIntN.T; type: Type) =
   BEGIN
-    maybe_expand_stack(t);
+    expand_stack(t);
 
     WITH stack0 = t.vstack[t.stacktop] DO
       stack0.loc := OLoc.imm;
@@ -783,42 +792,49 @@ PROCEDURE pushimmI (t: T; immI: INTEGER; type: Type) =
     t.pushimmT(immT, type);
   END pushimmI;
 
-PROCEDURE pushnew1 (t: T; type: MType; force: Force; set: RegSet; operandPart: OperandPart) =
-  VAR hintaddr := type = Type.Addr;
-  VAR reg := pickreg(t, set, hintaddr);
+PROCEDURE pushnew (t: T; type: MType; force: Force; set := AllRegisters) =
+  VAR hintaddr := (type = Type.Addr);
+      reg: ARRAY OperandPart OF Regno;
+      r: Regno;
+      size := GetTypeSize(type);
+      any_reg_in_use := FALSE;
   BEGIN
+    expand_stack(t);
+    FOR i := 0 TO size - 1 DO
+
+      (* Be sure 64 bit values have low in EAX, high in EDX *)
+
+      IF size = 2 AND i = 0 AND force = Force.regset AND set = RegSet{EAX, EDX} THEN
+        r := pickreg(t, RegSet{EAX}, hintaddr);
+      ELSE
+        r := pickreg(t, set, hintaddr);
+      END;
+      reg[i] := r;
+      set := (set - RegSet{r});
+      IF t.reguse[r].stackp # -1 THEN
+        any_reg_in_use := TRUE;
+      END;
+    END;
     WITH stack0 = t.vstack[t.stacktop] DO
       stack0.optype := type;
       stack0.stackp := t.stacktop;
       IF FloatType [type] THEN
         stack0.loc := OLoc.fstack;
       ELSE
-        IF force = Force.mem OR
-           (t.reguse[reg].stackp # -1 AND force = Force.any) THEN
+        IF force = Force.mem OR (any_reg_in_use AND force = Force.any) THEN
           set_mvar(t, t.stacktop,
-                   MVar { var :=  t.parent.declare_temp(CG_Bytes[type],
-                                                        CG_Align_bytes[type],
-                                                        type, FALSE),
+                   MVar { var := t.parent.declare_temp(CG_Bytes[type],
+                                                       CG_Align_bytes[type],
+                                                       type, FALSE),
                           mvar_offset := 0, mvar_type := type } );
           stack0.mvar.var.stack_temp := TRUE;
         ELSE
-          corrupt(t, reg, operandPart);
-          set_reg(t, t.stacktop, reg, operandPart);
+          FOR i := 0 TO size - 1 DO
+            corrupt(t, reg[i], operandPart := i);
+            set_reg(t, t.stacktop, reg[i], operandPart := i);
+          END;
         END
       END
-    END;
-  END pushnew1;
-
-PROCEDURE pushnew (t: T; type: MType; force: Force; set := AllRegisters) =
-  BEGIN
-    maybe_expand_stack(t);
-    IF TypeIs64(type) AND force = Force.regset AND set = RegSet { EAX, EDX } THEN
-      pushnew1(t, type, Force.regset, RegSet { EDX }, operandPart := 1);
-      pushnew1(t, type, Force.regset, RegSet { EAX }, operandPart := 0);
-    ELSE
-      FOR i := 0 TO GetTypeSize(type) - 1 DO
-        pushnew1(t, type, force, set, i);
-      END;
     END;
     INC(t.stacktop);
   END pushnew;
@@ -828,7 +844,7 @@ PROCEDURE push (t: T; READONLY src_mvar: MVar) =
       destreg: ARRAY OperandPart OF Regno;
       srcSize := GetTypeSize(src_mvar.mvar_type);
   BEGIN
-    maybe_expand_stack(t);
+    expand_stack(t);
 
     WITH stack0 = t.vstack[t.stacktop] DO
       stack0.stackp := t.stacktop;
@@ -2489,7 +2505,7 @@ PROCEDURE newdest (t: T; READONLY op: Operand) =
     END
   END newdest;
 
-PROCEDURE maybe_expand_stack (t: T) =
+PROCEDURE expand_stack (t: T) =
   BEGIN
     IF t.stacktop = t.vstacklimit THEN
       WITH newarr = NEW(REF ARRAY OF Operand, t.vstacklimit * 2) DO
@@ -2500,10 +2516,9 @@ PROCEDURE maybe_expand_stack (t: T) =
         t.vstack := newarr;
       END;
     END;
-  END maybe_expand_stack;
+  END expand_stack;
 
 PROCEDURE discard (t: T; depth: INTEGER) =
-  VAR size: OperandSize := 1;
   BEGIN
     IF depth > t.stacktop THEN
       Err(t, "Stack underflow in stack_discard");
@@ -2516,8 +2531,7 @@ PROCEDURE discard (t: T; depth: INTEGER) =
               t.parent.free_temp(stackp.mvar.var);
             END
         | OLoc.register =>
-            size := GetOperandSize(stackp);
-            FOR j := 0 TO size - 1 DO
+            FOR j := 0 TO GetOperandSize(stackp) - 1 DO
               t.reguse[stackp.reg[j]].stackp := -1;
             END;
         | OLoc.fstack =>
@@ -2630,10 +2644,7 @@ PROCEDURE set_current_proc (t: T; p: x86Proc) =
   END set_current_proc;
 
 PROCEDURE New (parent: M3x86Rep.U; cg: Codex86.T; debug: BOOLEAN): T =
-  VAR stack := NEW(T,
-                   parent := parent,
-                   cg := cg,
-                   debug := debug);
+  VAR stack := NEW(T, parent := parent, cg := cg, debug := debug);
   BEGIN
     stack.vstacklimit := 16;
     stack.vstack := NEW(REF ARRAY OF Operand, stack.vstacklimit);
