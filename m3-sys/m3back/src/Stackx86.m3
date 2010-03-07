@@ -1636,13 +1636,11 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN): BOOLEAN =
 
       IF sign_extend AND stop0.loc # OLoc.imm THEN
 
-        (* Code below apparently does not work for n = 0.
-         * sign_extend = TRUE is not available via the Word/Long interfaces,
-         * it is used by the front end in some cases for division, and
-         * those cases apparently use constant n # 0 so ok.
+        (* Code for this is not reachable and not testable.
+         * It appears tricky and correct, unless n = 0.
          *)
 
-        Err(t, "doextract: dead suspicious code, extracting with non-constant n");
+        Err(t, "doextract: sign_extend requires constant m/n");
 
       END;
 
@@ -1665,23 +1663,26 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN): BOOLEAN =
 
       IF sign_extend THEN
 
-        <* ASSERT FALSE *>
-        (*
-        find(t, stack0, Force.regset, RegSet { ECX });
-        find(t, stack1, Force.any);
-        find(t, stack2, Force.anyreg);
-        IF stop1.loc = OLoc.mem AND CG_Bytes[stop1.mvar.mvar_type] < 4 THEN
-          find(t, stack1, Force.anyreg);
-        END;
+        Err(t, "doextract: sign_extend requires constant m/n");
 
-        t.cg.binOp(Op.oADD, stop0, stop1);
-        t.cg.unOp(Op.oNEG, stop0);
-        t.cg.unOp(Op.oSHL, stop2);
-        t.cg.binOp(Op.oADD, stop0, stop1);
-        t.cg.unOp(Op.oSAR, stop2);
-
-        newdest(t, stop0);
-        *)
+        (* This code is not reachable and not testable.
+         * It appears tricky and correct, unless n = 0.
+         *
+         * find(t, stack0, Force.regset, RegSet { ECX });
+         * find(t, stack1, Force.any);
+         * find(t, stack2, Force.anyreg);
+         * IF stop1.loc = OLoc.mem AND CG_Bytes[stop1.mvar.mvar_type] < 4 THEN
+         *   find(t, stack1, Force.anyreg);
+         * END;
+         *
+         * t.cg.binOp(Op.oADD, stop0, stop1);
+         * t.cg.unOp(Op.oNEG, stop0);
+         * t.cg.unOp(Op.oSHL, stop2);
+         * t.cg.binOp(Op.oADD, stop0, stop1);
+         * t.cg.unOp(Op.oSAR, stop2);
+         * 
+         * newdest(t, stop0);
+         *)
 
       ELSE
         IF stop1.loc = OLoc.imm THEN
