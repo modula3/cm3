@@ -29,8 +29,8 @@ M3_EXTRACT_INSERT(m3test_extract32, m3test_extract_and_sign_extend32, m3test_ins
 static void BuildTables ()
 {
 	unsigned i;
-	ulong LoBits[SET_GRAIN] = { 0 };  /* LoBits32[i] = SET { 0..i } */
-	ulong HiBits[SET_GRAIN] = { 0 };  /* HiBits32[i] = SET { i..31 } */
+	size_t LoBits[SET_GRAIN] = { 0 };  /* LoBits32[i] = SET { 0..i } */
+	size_t HiBits[SET_GRAIN] = { 0 };  /* HiBits32[i] = SET { i..31 } */
 	uint32 LoBits32[32] = { 0 };  /* LoBits32[i] = SET { 0..i } */
 	uint32 HiBits32[32] = { 0 };  /* HiBits32[i] = SET { i..31 } */
 	uint64 LoBits64[64] = { 0 };  /* LoBits64[i] = SET { 0..i } */
@@ -73,7 +73,7 @@ static void BuildTables ()
 	}
 
 	{
-		ulong j;
+		size_t j;
 
 		/* LoBits [i] = SET { 0..i } */
 		j = 0;  /* == SET { } */
@@ -83,7 +83,7 @@ static void BuildTables ()
 		}
 
 		/* HiBits [i] = SET { i..GRAIN-1 } */
-		j = ~ (ulong) 0; /* == SET { 0..GRAIN-1 } */
+		j = ~ (size_t) 0; /* == SET { 0..GRAIN-1 } */
 		for (i = 0; i != SET_GRAIN; i++) {
 			HiBits[i] = j;
 			j = (j << 1);
@@ -108,28 +108,28 @@ static void BuildTables ()
 
 	printf("#if ULONG_MAX == 0xffffffff\n\n");
 
-	printf("static const ulong LoBits[] = {\n");
+	printf("static const size_t LoBits[] = {\n");
 
 	for (i = 0; i != 32; i++)
-		printf("0x%08lx%s%s", (ulong) LoBits32[i], &","[i == 31], &"\n"[!!((i + 1) % 4)]);
+		printf("0x%08lx%s%s", (size_t) LoBits32[i], &","[i == 31], &"\n"[!!((i + 1) % 4)]);
 
-	printf("};\n\nstatic const ulong HiBits[] = {\n");
+	printf("};\n\nstatic const size_t HiBits[] = {\n");
 
 	for (i = 0; i != 32; i++)
-		printf("0x%08lx%s%s", (ulong) HiBits32[i], &","[i == 31], &"\n"[!!((i + 1) % 4)]);
+		printf("0x%08lx%s%s", (size_t) HiBits32[i], &","[i == 31], &"\n"[!!((i + 1) % 4)]);
 
 	printf("};\n\n");
 	printf("#elif ULONG_MAX == 0xffffffffffffffff\n\n");
 
-	printf("static const ulong LoBits[] = {\n");
+	printf("static const size_t LoBits[] = {\n");
 
 	for (i = 0; i != 64; i++)
-		printf("0x%08lx%08lx%s%s", (ulong) (LoBits64[i] >> 32), (ulong) LoBits64[i], &","[i == 63], &"\n"[!!((i + 1) % 4)]);
+		printf("0x%08lx%08lx%s%s", (size_t) (LoBits64[i] >> 32), (size_t) LoBits64[i], &","[i == 63], &"\n"[!!((i + 1) % 4)]);
 
-	printf("};\n\nstatic const ulong HiBits[] = {\n");
+	printf("};\n\nstatic const size_t HiBits[] = {\n");
 
 	for (i = 0; i != 64; i++)
-		printf("0x%08lx%08lx%s%s", (ulong) (HiBits64[i] >> 32), (ulong) HiBits64[i], &","[i == 63], &"\n"[!!((i + 1) % 4)]);
+		printf("0x%08lx%08lx%s%s", (size_t) (HiBits64[i] >> 32), (size_t) HiBits64[i], &","[i == 63], &"\n"[!!((i + 1) % 4)]);
 
 	printf("\n#else\n#error unknown size of ulong\n#endif\n\n");
 }
@@ -317,17 +317,17 @@ static unsigned char reverse(unsigned char a)
          | ((a & 0x01) ? 0x80 : 0);
 }
 
-static void PrintSet(void* a, ulong b)
+static void PrintSet(void* a, size_t b)
 {
-    ulong c;
+    size_t c;
     for (c = 0; c < b; ++c)
         printf("%02x ", reverse(((unsigned char*)a)[c]));
 }
 
 static void TestSetRangex(unsigned a, unsigned b)
 {
-    ulong bits[4];
-    ulong bits_new[4];
+    size_t bits[4];
+    size_t bits_new[4];
 
     memset(bits, 0, sizeof(bits));
     memset(bits_new, 0, sizeof(bits_new));
@@ -343,7 +343,7 @@ static void TestSetRangex(unsigned a, unsigned b)
 
 static void TestSetRange(void)
 {
-    ulong bits[100];
+    size_t bits[100];
     unsigned a, b;
     double t1 = 0, t2 = 0, t3 = 0, t4 = 0, t5 = 0;
 
