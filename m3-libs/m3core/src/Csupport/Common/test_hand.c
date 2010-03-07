@@ -294,11 +294,14 @@ static void TestHighLowBits(void)
         assert(HIGH_BITS(i) == HiBits[i]);
         assert(LOW_BITS(i) == LoBits[i + LOW_BITS_ADJUST]);
     }
-	
-    for (i = 0; i <= 32; ++i)
+
+    if (sizeof(int) == sizeof(size_t))
     {
-        assert(_LOWBITS(i) == _lowbits[i]);
-        assert(_HIGHBITS(i) == _highbits[i]);
+        for (i = 0; i <= 32; ++i)
+        {
+            assert(_LOWBITS(i) == _lowbits[i]);
+            assert(_HIGHBITS(i) == _highbits[i]);
+        }
     }
 }
 
