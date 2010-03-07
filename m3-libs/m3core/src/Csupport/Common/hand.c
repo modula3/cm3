@@ -363,24 +363,6 @@ T __stdcall insert(T x, T y, uint i, uint n)    \
 
 M3_EXTRACT_INSERT(m3_extract64, m3_extract_and_sign_extend64, m3_insert64, uint64)
 
-/************************************************************************
-
-#include <stdio.h>
-
-static _crash (msg)
-char *msg;
-{
-  fprintf (stderr, "\n**** UNIMPLEMENTED: %s ***\n", msg);
-  fflush (stderr);
-
-  *((long*)0L) = 1L;    /  * bad memory reference => crash! *  /
-  while (1L);           /  * if not, loop forever           *  /
-}
-
-_xx0 () { _crash ("_xx0 (runtime fault)"); }
-
-**************************************************************************/
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
