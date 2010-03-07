@@ -1641,6 +1641,15 @@ PROCEDURE doextract (t: T; type: IType; sign: BOOLEAN): BOOLEAN =
          really messy to cover all the special cases correctly *)
 
       IF sign THEN
+
+        (* The method used here does not work for extracting zero bits.
+         * Make sure we are not asked to do that.
+         *)
+        IF NOT (stop2.loc = OLoc.imm AND TIntN.NE(stop2.imm, TZero)) THEN
+          t.Err("doextract: not able to extract and sign extend zero bits");
+        END;
+        <* ASSERT stop2.loc = OLoc.imm AND TIntN.NE(stop2.imm, TZero) *>
+
         find(t, stack0, Force.regset, RegSet { ECX });
         find(t, stack1, Force.any);
         find(t, stack2, Force.anyreg);
