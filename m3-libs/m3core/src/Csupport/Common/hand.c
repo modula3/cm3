@@ -18,8 +18,6 @@ typedef unsigned int uint, uint32; /* verified below via UINT_MAX */
 #define M3_EXTRACT_INSERT_LINKAGE static /* for testing */
 #endif
 
-#define NOT_YET static
-
 #ifdef _MSC_VER
 #pragma warning(disable:4255) /* () changed to (void) */
 #pragma warning(disable:4505) /* unused static function removed */
@@ -92,180 +90,10 @@ extern "C"
 #define KR(x) x
 #endif
 
-NOT_YET int __stdcall m3_add(int a, int b, BOOL* overflow)
-{
-  int c = (a + b);
-  BOOL asign = (a < 0);
-  /* positive + positive: expect positive
-     negative + negative: expect negative
-     positive + negative: cannot overflow
-     overflow if input signs equal and output doesn't match them */
-  *overflow |= (asign == (b < 0) && asign != (c < 0));
-  return c;
-}
-
-NOT_YET int64 __stdcall m3_add_64(int64 a, int64 b, BOOL* overflow)
-{
-  int64 c = (a + b);
-  BOOL asign = (a < 0);
-  /* positive + positive: expect positive
-     negative + negative: expect negative
-     positive + negative: cannot overflow
-     overflow if input signs equal and output doesn't match them */
-  *overflow |= (asign == (b < 0) && asign != (c < 0));
-  return c;
-}
-
-NOT_YET int __stdcall m3_sub(int a, int b, BOOL* overflow)
-{
-  int c = (a - b);
-  BOOL asign = (a < 0);
-  /* positive - positive: cannot overflow
-     negative - negative: cannot overflow
-     positive - negative: expect positive
-     negative - positive: expect negative
-     overflow if input signs vary and output doesn't match first input */
-  *overflow |= (asign != (b < 0) && asign != (c < 0));
-  return c;
-}
-
-NOT_YET int64 __stdcall m3_sub_64(int64 a, int64 b, BOOL* overflow)
-{
-  int64 c = (a - b);
-  BOOL asign = (a < 0);
-  /* positive - positive: cannot overflow
-     negative - negative: cannot overflow
-     positive - negative: expect positive
-     negative - positive: expect negative
-     overflow if input signs vary and output doesn't match first input */
-  *overflow |= (asign != (b < 0) && asign != (c < 0));
-  return c;
-}
-
-NOT_YET int __stdcall m3_mult(int a, int b, BOOL* overflow)
-{
-  /* do work in higher precision and range check result */
-  int64 c = (a * (int64)b);
-  *overflow |= (c < INT_MIN || c > INT_MAX);
-  return (int)c;
-}
-
-NOT_YET uint __stdcall m3_add_u(uint a, uint b, BOOL* overflow)
-{
-  uint c = (a + b);
-  /* overflow if output less than either input */
-  *overflow |= (c < a);
-  return c;
-}
-
-NOT_YET uint64 __stdcall m3_add_u64(uint64 a, uint64 b, BOOL* overflow)
-{
-  uint64 c = (a + b);
-  /* overflow if output less than either input */
-  *overflow |= (c < a);
-  return c;
-}
-
-NOT_YET uint __stdcall m3_sub_u(uint a, uint b, BOOL* overflow)
-{
-  uint c = (a - b);
-  /* overflow if output greater than first input */
-  *overflow |= (c > a);
-  return c;
-}
-
-NOT_YET uint64 __stdcall m3_sub_u64(uint64 a, uint64 b, BOOL* overflow)
-{
-  uint64 c = (a - b);
-  /* overflow if output greater than first input */
-  *overflow |= (c > a);
-  return c;
-}
-
-NOT_YET uint __stdcall m3_mult_u(uint a, uint b, BOOL* overflow)
-{
-  /* do work in higher precision and range check result */
-  uint64 c = (a * (uint64)b);
-  *overflow |= (c > UINT_MAX);
-  return (uint)c;
-}
-
-NOT_YET uint64 __stdcall m3_mult_u64(uint64 a, uint64 b, BOOL* overflow)
-{
-  /* break it down into smaller steps
-  hi(x) = x >> 32
-  lo(x) = (uint32)x
-  result =    (hi(a) * hi(b)) << 64
-            + (hi(a) * lo(b)) << 32
-            + (lo(a) * hi(b)) << 32
-            + (a * b)
-  checking for overflow on the additions and shifts
-  */
-  uint32 ahi;
-  uint32 alo;
-  uint32 bhi;
-  uint32 blo;
-  uint64 c;
-  uint64 result = a * b;
-
-  if (*overflow)
-    return result;
-
-  ahi = (uint32)(a >> 32);
-  bhi = (uint32)(b >> 32);
-
-  if (ahi && bhi)
-    goto ov;
-
-  alo = (uint32)a;
-  blo = (uint32)b;
- 
-  c = m3_add_u64(alo * (uint64)bhi, ahi * (uint64)blo, overflow);
-  if (*overflow)
-    return result;
-
-  if ((c >> 32) != 0)
-    goto ov;
-
-  m3_add_u64(alo * (uint64)blo, c << 32, overflow);
-  return result;
-
-ov:
-  *overflow = 1;
-  return result;
-}
-
-
 /* return positive form of a negative value, avoiding overflow */
 /* T should be an unsigned type */
 #define M3_POS(T, a) (((T)-((a) + 1)) + 1)
 #define M3_ABS(T, a) (((a) < 0) ? M3_POS(T, a) : (T)(a))
-
-static uint64 m3_abs64(int64 a) { return M3_ABS(uint64, a); }
-
-NOT_YET int64 __stdcall m3_mult_64(int64 a, int64 b, BOOL* overflow)
-{
-  /* do the unsigned operation on the magnitudes
-    overflow if it overflows
-    range check result for smaller signed range,
-    figuring the range based on the input signs */
-  uint64 c;
-  int64 result = a * b;
-
-  if (*overflow)
-    return result;
-
-  c = m3_mult_u64(m3_abs64(a), m3_abs64(b), overflow);
-  if (*overflow)
-    return result;
-
-  if ((a < 0) == (b < 0))
-    *overflow |= (c > (uint64)INT64_MAX);
-  else
-    *overflow |= (c > M3_POS(uint64, INT64_MIN));
-  
-  return result;
-}
 
 static int64 __stdcall m3_divL_old
     ANSI((      int64 b, int64 a))
@@ -278,7 +106,6 @@ static int64 __stdcall m3_divL_old
   }
   return c;
 }
-
 
 POSIX_STATIC int64 __stdcall m3_div64(int64 b, int64 a)
 {
