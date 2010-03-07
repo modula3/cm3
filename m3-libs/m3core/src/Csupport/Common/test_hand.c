@@ -111,12 +111,12 @@ static void BuildTables ()
 	printf("static const size_t LoBits[] = {\n");
 
 	for (i = 0; i != 32; i++)
-		printf("0x%08lx%s%s", (size_t) LoBits32[i], &","[i == 31], &"\n"[!!((i + 1) % 4)]);
+		printf("0x%08lx%s%s", (ulong) LoBits32[i], &","[i == 31], &"\n"[!!((i + 1) % 4)]);
 
 	printf("};\n\nstatic const size_t HiBits[] = {\n");
 
 	for (i = 0; i != 32; i++)
-		printf("0x%08lx%s%s", (size_t) HiBits32[i], &","[i == 31], &"\n"[!!((i + 1) % 4)]);
+		printf("0x%08lx%s%s", (ulong) HiBits32[i], &","[i == 31], &"\n"[!!((i + 1) % 4)]);
 
 	printf("};\n\n");
 	printf("#elif ULONG_MAX == 0xffffffffffffffff\n\n");
@@ -124,12 +124,12 @@ static void BuildTables ()
 	printf("static const size_t LoBits[] = {\n");
 
 	for (i = 0; i != 64; i++)
-		printf("0x%08lx%08lx%s%s", (size_t) (LoBits64[i] >> 32), (size_t) LoBits64[i], &","[i == 63], &"\n"[!!((i + 1) % 4)]);
+		printf("0x%08lx%08lx%s%s", (ulong) (LoBits64[i] >> 32), (ulong) LoBits64[i], &","[i == 63], &"\n"[!!((i + 1) % 4)]);
 
 	printf("};\n\nstatic const size_t HiBits[] = {\n");
 
 	for (i = 0; i != 64; i++)
-		printf("0x%08lx%08lx%s%s", (size_t) (HiBits64[i] >> 32), (size_t) HiBits64[i], &","[i == 63], &"\n"[!!((i + 1) % 4)]);
+		printf("0x%08lx%08lx%s%s", (ulong) (HiBits64[i] >> 32), (ulong) HiBits64[i], &","[i == 63], &"\n"[!!((i + 1) % 4)]);
 
 	printf("\n#else\n#error unknown size of ulong\n#endif\n\n");
 }
