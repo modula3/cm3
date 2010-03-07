@@ -36,28 +36,6 @@ typedef unsigned long long uint64;
 #include <assert.h>
 #include <stddef.h>
 
-#if !defined(INT64_MAX)
-#if defined(LLONG_MAX)
-#define INT64_MAX LLONG_MAX
-#elif defined(__LONG_LONG_MAX__)
-#define INT64_MAX __LONG_LONG_MAX__
-#elif defined(_I64_MAX)
-#define INT64_MAX _I64_MAX
-#endif
-#endif
-
-#if !defined(INT64_MIN)
-#if defined(LLONG_MIN)
-#define INT64_MIN LLONG_MIN
-#elif defined(__LONG_LONG_MIN__)
-#define INT64_MIN __LONG_LONG_MIN__
-#elif defined(_I64_MIN)
-#define INT64_MIN _I64_MIN
-#elif defined(INT64_MAX)
-#define INT64_MIN (-INT64_MAX-(int64)1)
-#endif
-#endif
-
 typedef int BOOL;
 
 #ifdef __cplusplus
