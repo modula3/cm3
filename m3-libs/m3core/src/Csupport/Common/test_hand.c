@@ -21,6 +21,12 @@ M3_EXTRACT_INSERT(m3test_extract32, m3test_extract_and_sign_extend32, m3test_ins
 #endif
 #endif
 
+#ifdef _MSC_VER
+#define I64 "I64"
+#else
+#define I64 "ll"
+#endif
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <limits.h>
