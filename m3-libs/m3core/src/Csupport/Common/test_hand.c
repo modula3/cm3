@@ -353,6 +353,8 @@ static void TestSetRange(void)
 
 #ifdef _MSC_VER
     t1 = (double)__rdtsc(); /* read time stamp counter */
+#else
+    t1 = (double)time(NULL);
 #endif
 
     for (a = 0; a < 100 * SET_GRAIN; ++a)
@@ -361,6 +363,8 @@ static void TestSetRange(void)
 
 #ifdef _MSC_VER
     t2 = (double)__rdtsc();
+#else
+    t2 = (double)time(NULL);
 #endif
 
     for (a = 0; a < 100 * SET_GRAIN; ++a)
@@ -369,6 +373,8 @@ static void TestSetRange(void)
 
 #ifdef _MSC_VER
     t3 = (double)__rdtsc();
+#else
+    t3 = (double)time(NULL);
 #endif
 
     t4 = (t2 - t1);
@@ -503,7 +509,7 @@ int main()
 
     TestHighLowBits();
 
-    /*TestSetRange();*/
+    TestSetRange();
 
     /*TestInsert();*/
     /*TestExtract();*/
