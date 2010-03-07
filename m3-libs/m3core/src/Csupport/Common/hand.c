@@ -6,7 +6,8 @@
 /*      modified on Tue Jan 10 15:48:28 PST 1995 by kalsow  */
 /*      modified on Tue Feb 11 15:18:40 PST 1992 by muller  */
 
-typedef unsigned int uint, uint32; /* verified below via UINT_MAX */
+typedef unsigned uint32; /* verified below via UINT_MAX */
+typedef int int32;
 
 #ifdef _WIN32
 #define M3_EXTRACT_INSERT_LINKAGE
@@ -33,8 +34,8 @@ typedef unsigned long long uint64;
 
 #include <limits.h>
 #include <string.h>
-#include <assert.h>
 #include <stddef.h>
+#include <assert.h>
 
 typedef int BOOL;
 
@@ -210,7 +211,7 @@ size_t __stdcall set_lt
 #ifdef __cplusplus
 extern
 #endif
-const uint _lowbits [33] = {
+const uint32 _lowbits [33] = {
   0x0,
   0x1, 0x3, 0x7, 0xf,
   0x1f, 0x3f, 0x7f, 0xff,
@@ -225,7 +226,7 @@ const uint _lowbits [33] = {
 #ifdef __cplusplus
 extern
 #endif
-const uint _highbits [33] = {
+const uint32 _highbits [33] = {
   0xffffffff, 0xfffffffe, 0xfffffffc, 0xfffffff8,
   0xfffffff0, 0xffffffe0, 0xffffffc0, 0xffffff80,
   0xffffff00, 0xfffffe00, 0xfffffc00, 0xfffff800,
@@ -277,8 +278,8 @@ uint64 _rotl64(uint64 value, int shift);
 uint64 _rotr64(uint64 value, int shift);
 #pragma intrinsic(_rotl64)
 #pragma intrinsic(_rotr64)
-uint64 __stdcall  m3_rotate_left64(uint64 a, uint b)  { return _rotl64(a, (int)b); }
-uint64 __stdcall m3_rotate_right64(uint64 a, uint b)  { return _rotr64(a, (int)b); }
+uint64 __stdcall  m3_rotate_left64(uint64 a, uint32 b)  { return _rotl64(a, (int)b); }
+uint64 __stdcall m3_rotate_right64(uint64 a, uint32 b)  { return _rotr64(a, (int)b); }
 
 uint64 __stdcall m3_rotate64(uint64 a, int b)
 {
@@ -307,37 +308,45 @@ PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
    checked runtime error if n + i > Word.Size. *)
 */
 
-#define M3_EXTRACT_INSERT(extract, extract_and_sign_extend, insert, T)  \
+/* UT: unsigned type
+ * ST: signed type
+ */
+#define M3_EXTRACT_INSERT(extract, extract_and_sign_extend, insert, UT, ST)  \
                                                 \
 M3_EXTRACT_INSERT_LINKAGE                       \
-T __stdcall extract(T x, uint i, uint n)        \
+UT __stdcall extract(UT x, uint32 i, uint32 n)  \
 {                                               \
-    assert((n + i) <= (sizeof(T) * 8));         \
     x >>= i;                                    \
-    x &= ~((~(T)0) << n);                       \
+    x &= ~((~(UT)0) << n);                      \
     return x;                                   \
 }                                               \
                                                 \
 M3_EXTRACT_INSERT_LINKAGE                       \
-T __stdcall extract_and_sign_extend(T x, uint i, uint n) \
+UT __stdcall extract_and_sign_extend(UT x, uint32 i, uint32 n) \
 {                                               \
-    assert((n + i) <= (sizeof(T) * 8));         \
     x >>= i;                                    \
-    x &= ~((~(T)0) << n);                       \
-    if (x & (((T)1) << (n - 1)))                \
-        x |= ((~(T)0) << n);                    \
+    x &= ~((~(UT)0) << n);                      \
+    if (x & (((UT)1) << (n - 1)))               \
+        x |= ((~(UT)0) << n);                   \
     return x;                                   \
 }                                               \
                                                 \
 M3_EXTRACT_INSERT_LINKAGE                       \
-T __stdcall insert(T x, T y, uint i, uint n)    \
+UT __stdcall extract_and_sign_extend##_x86(UT x, uint32 i, uint32 n) \
+/* x86 shift counts are mod 32 so this works, for n != 0 */ \
 {                                               \
-    T mask = ((~((~(T)0) << n)) << i);          \
-    assert((n + i) <= (sizeof(T) * 8));         \
+    assert(n);                                  \
+    return (UT)(((ST)(x << -(i + n))) >> -n);   \
+}                                               \
+                                                \
+M3_EXTRACT_INSERT_LINKAGE                       \
+UT __stdcall insert(UT x, UT y, uint32 i, uint32 n) \
+{                                               \
+    UT mask = ((~((~(UT)0) << n)) << i);        \
     return (x & ~mask) | ((y << i) & mask);     \
 }                                               \
 
-M3_EXTRACT_INSERT(m3_extract64, m3_extract_and_sign_extend64, m3_insert64, uint64)
+M3_EXTRACT_INSERT(m3_extract64, m3_extract_and_sign_extend64, m3_insert64, uint64, int64)
 
 #ifdef __cplusplus
 } /* extern "C" */
