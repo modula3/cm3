@@ -400,8 +400,9 @@ PROCEDURE testOp(t: T; READONLY a, b: Operand) =
   END testOp;
 
 PROCEDURE shift_double_immediate(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand; READONLY imm: TIntN.T) =
-  VAR left := ORD(singleOp = Op.oSHL);
-      right := ORD(singleOp = Op.oSHR);
+  VAR right_signed := (singleOp = Op.oSAR);
+      left  := ORD(singleOp = Op.oSHL);
+      right := ORD((singleOp = Op.oSHR) OR right_signed);
       doubleOp := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
       immMinus32: TIntN.T;
   BEGIN
@@ -414,7 +415,11 @@ PROCEDURE shift_double_immediate(t: T; singleOp: Op; READONLY destA: ARRAY Opera
       ELSE
         movOp1(t, destA[left], destA[right]);
       END;
-      binOp1(t, Op.oXOR, destA[right], destA[right]);
+      IF right_signed THEN
+        immOp1(t, singleOp, destA[right], TIntN.ThirtyOne);
+      ELSE
+        binOp1(t, Op.oXOR, destA[right], destA[right]);
+      END;
     ELSE
       (* left shift low into high or right shift high into low *)
       shift_double_op(t, doubleOp, destA[left], destA[right], Operand{loc := OLoc.imm, imm := imm});
@@ -479,8 +484,9 @@ PROCEDURE unOp_double(t: T; op: Op; READONLY destA: ARRAY OperandPart OF Operand
   END unOp_double;
 
 PROCEDURE shift_double_ecx(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand) =
-  VAR left  := ORD(singleOp = Op.oSHL);
-      right := ORD(singleOp = Op.oSHR);
+  VAR right_signed := (singleOp = Op.oSAR);
+      left  := ORD(singleOp = Op.oSHL);
+      right := ORD((singleOp = Op.oSHR) OR right_signed);
       doubleOp := VAL(left * ORD(Op.oSHLD) + right * ORD(Op.oSHRD), Op);
       end_label := t.reserve_labels(1, TRUE);
   BEGIN
@@ -490,7 +496,11 @@ PROCEDURE shift_double_ecx(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart
     testOp(t, t.reg[ECX], Operand{loc := OLoc.imm, imm := TIntN.ThirtyTwo});
     brOp(t, Cond.E, end_label);
     t.movOp(destA[left], destA[right]);
-    t.binOp(Op.oXOR, destA[right], destA[right]);
+    IF right_signed THEN
+      t.immOp(t, singleOp, destA[right], TIntN.ThirtyOne);
+    ELSE
+      t.binOp(Op.oXOR, destA[right], destA[right]);
+    END;
     t.set_label(end_label);
   END shift_double_ecx;
 
@@ -580,7 +590,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
         
           (* shifts by a constant 1 have a smaller encoding available *)
 
-          IF op IN SET OF Op{Op.oSHL, Op.oSHR} AND TIntN.EQ(imm, TIntN.One) THEN
+          IF op IN SET OF Op{Op.oSHL, Op.oSHR, Op.oSAR} AND TIntN.EQ(imm, TIntN.One) THEN
             INC(ins.opcode, 16_10);
             ins.imsize := 0;
           END;
@@ -612,13 +622,14 @@ PROCEDURE immOp (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
     <* ASSERT NOT TypeIs64(destA[0].optype) *>
     <* ASSERT NOT TypeIs64(destA[destSize - 1].optype) *>
 
-    IF (immSize = 2) AND (op IN SET OF Op{Op.oCMP, Op.oADD, Op.oSUB, Op.oSHL, Op.oSHR}) THEN
+    IF (immSize = 2) AND (op IN SET OF Op{Op.oCMP, Op.oADD, Op.oSUB, Op.oSHL, Op.oSHR, Op.oSAR}) THEN
       CASE op OF
         | Op.oADD => add_double_immediate(t, destA, immA);
         | Op.oSUB => subtract_double_immediate(t, destA, immA);
         | Op.oCMP => compare_double_immediate(t, destA, immA);
         | Op.oSHL,
-          Op.oSHR => shift_double_immediate(t, op, destA, imm);
+          Op.oSHR,
+          Op.oSAR => shift_double_immediate(t, op, destA, imm);
         ELSE
             <* ASSERT FALSE *>
       END
@@ -1199,7 +1210,8 @@ PROCEDURE unOp (t: T; op: Op; READONLY dest: Operand) =
         | Op.oNOT => unOp_double(t, op, destA);
         | Op.oNEG => negate_double(t, destA);
         | Op.oSHL,
-          Op.oSHR => shift_double_ecx(t, op, destA);
+          Op.oSHR,
+          Op.oSAR => shift_double_ecx(t, op, destA);
         ELSE
           <* ASSERT FALSE *>
       END

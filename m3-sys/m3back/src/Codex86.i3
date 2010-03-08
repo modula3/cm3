@@ -245,9 +245,9 @@ CONST opcode = ARRAY Op OF OpCode
     OpCode { "NEG",  -1,    -1,    16_F6, 3, -1,    -1    },
     OpCode { "NOT",  -1,    -1,    16_F6, 2, -1,    -1    },
     OpCode { "LEA",  -1,    -1,    -1,    0, -1,    16_8C },
-    OpCode { "SHL",  -1,    16_C1, 16_D2, 4, 16_D3, -1    }, (* rmr is reg/mem/cl, not reg/mem/reg *)
-    OpCode { "SAR",  -1,    16_C1, 16_D2, 7, -1,    -1    },
-    OpCode { "SHR",  -1,    16_C1, 16_D2, 5, 16_D3, -1    }, (* rmr is reg/mem/cl, not reg/mem/reg *)
+    OpCode { "SHL",  -1,    16_C1, 16_D2, 4, 16_D3, -1    }, (* rmr is reg/mem/cl, not reg/mem/anyreg *)
+    OpCode { "SAR",  -1,    16_C1, 16_D2, 7, 16_D3, -1    }, (* rmr is reg/mem/cl, not reg/mem/anyreg *)
+    OpCode { "SHR",  -1,    16_C1, 16_D2, 5, 16_D3, -1    }, (* rmr is reg/mem/cl, not reg/mem/anyreg *)
     OpCode { "SHLD", -1,    16_A4, -1,   -1, 16_A5, -1    }, (* third register always CL, imsize always 1 *)
     OpCode { "SHRD", -1,    16_AC, -1,   -1, 16_AD, -1    }, (* third register always CL, imsize always 1 *)
     OpCode { "ROL",  -1,    16_C1, 16_D2, 0, -1,    -1    },

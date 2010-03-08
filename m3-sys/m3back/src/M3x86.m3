@@ -2514,7 +2514,6 @@ PROCEDURE chop (u: U) =
 PROCEDURE extract (u: U;  t: IType;  sign_extend: BOOLEAN) =
   (* s2.t := Word.Extract(s2.t, s1.t, s0.t);
      IF sign_extend THEN SignExtend s2 END; pop(2) *)
-  VAR builtin := Builtin.extract64;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("extract");
@@ -2532,14 +2531,14 @@ PROCEDURE extract (u: U;  t: IType;  sign_extend: BOOLEAN) =
     END;
 
     IF sign_extend THEN
-      builtin := Builtin.extract_and_sign_extend64;
+      Err(u, "extract: stack.doextract should have handled all sign_extend cases");
     END;
 
-    start_int_proc (u, builtin);
+    start_int_proc (u, Builtin.extract64);
     pop_param(u, Type.Word32); (* n *)
     pop_param(u, Type.Word32); (* m *)
     pop_param(u, Type.Word64); (* value *)
-    call_64 (u, builtin);
+    call_64 (u, Builtin.extract64);
   END extract;
 
 PROCEDURE extract_n (u: U;  t: IType;  sign_extend: BOOLEAN;  n: INTEGER) =
@@ -2562,8 +2561,12 @@ PROCEDURE extract_n (u: U;  t: IType;  sign_extend: BOOLEAN;  n: INTEGER) =
       Err(u, "extract_n: stack.doextract_n should have handled all 32bit cases");
     END;
 
+    IF sign_extend THEN
+      Err(u, "extract_n: stack.doextract_n should have handled all sign_extend cases");
+    END;
+
     u.vstack.pushimmI(n, Type.Word32);
-    extract(u, t, sign_extend);
+    extract(u, t, sign_extend := FALSE);
   END extract_n;
 
 PROCEDURE extract_mn (u: U;  t: IType;  sign_extend: BOOLEAN;  m, n: INTEGER) =
@@ -2587,9 +2590,13 @@ PROCEDURE extract_mn (u: U;  t: IType;  sign_extend: BOOLEAN;  m, n: INTEGER) =
       Err(u, "extract_mn: stack.doextract_mn should have handled all 32bit cases");
     END;
 
+    IF sign_extend THEN
+      Err(u, "extract_mn: stack.doextract_mn should have handled all sign_extend cases");
+    END;
+
     u.vstack.pushimmI(m, Type.Word32);
     u.vstack.pushimmI(n, Type.Word32);
-    extract(u, t, sign_extend);
+    extract(u, t, sign_extend := FALSE);
   END extract_mn;
 
 PROCEDURE insert  (u: U;  t: IType) =
@@ -3019,7 +3026,7 @@ TYPE
     udiv64, umod64,
     div64, mod64,
     rotate_left64, rotate_right64, rotate64,
-    insert64, extract64, extract_and_sign_extend64
+    insert64, extract64
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
@@ -3066,8 +3073,7 @@ CONST
     BP { "m3_rotate_right64",3, Type.Word64, "__stdcall" },
     BP { "m3_rotate64",      3, Type.Word64, "__stdcall" },
     BP { "m3_insert64",      6, Type.Word64, "__stdcall" },
-    BP { "m3_extract64",     4, Type.Word64, "__stdcall" },
-    BP { "m3_extract_and_sign_extend64", 4, Type.Word64, "__stdcall" }
+    BP { "m3_extract64",     4, Type.Word64, "__stdcall" }
   };
 
 
