@@ -87,9 +87,8 @@ BEGIN
   END;
 END NotPortableI;
 
-PROCEDURE TestInsert() =
+PROCEDURE TestInsert32() =
 VAR result32: INTEGER := 0;
-    result64: LONGINT := 0L;
     putI := PutI;
 BEGIN
   FOR a32 := 0 TO InsertExtractMaxAB DO
@@ -124,7 +123,12 @@ BEGIN
       END;
     END;
   END;
+  Flush();
+END TestInsert32;
 
+PROCEDURE TestInsert64() =
+VAR result64: LONGINT := 0L;
+BEGIN
   FOR a64 := 0L TO VAL(InsertExtractMaxAB, LONGINT) DO
     FOR flipA := -1L TO 1L DO
       IF flipA # 0L THEN
@@ -154,12 +158,17 @@ BEGIN
     END
   END;
   Flush();
+END TestInsert64;
+
+PROCEDURE TestInsert() =
+BEGIN
+  TestInsert32();
+  TestInsert64();
 END TestInsert;
 
-PROCEDURE TestExtract() =
+PROCEDURE TestExtract32() =
 CONST sign_extend = 0;
 VAR result32: INTEGER := 0;
-    result64: LONGINT := 0L;
 BEGIN
   FOR a32 := 0 TO InsertExtractMaxAB DO
      FOR m := 0 TO InsertExtractMaxMN DO
@@ -178,7 +187,13 @@ BEGIN
       END
     END
   END;
+  Flush();
+END TestExtract32;
 
+PROCEDURE TestExtract64() =
+CONST sign_extend = 0;
+VAR result64: LONGINT := 0L;
+BEGIN
   FOR a64 := 0L TO VAL(InsertExtractMaxAB, LONGINT) DO
     FOR m := 0 TO InsertExtractMaxMN DO
       FOR n := 0 TO InsertExtractMaxMN DO
@@ -197,6 +212,12 @@ BEGIN
     END
   END;
   Flush();
+END TestExtract64;
+
+PROCEDURE TestExtract() =
+BEGIN
+  TestExtract32();
+  TestExtract64();
 END TestExtract;
 
 VAR a := 1234L;
