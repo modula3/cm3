@@ -6,10 +6,6 @@
 /*      modified on Tue Jan 10 15:48:28 PST 1995 by kalsow  */
 /*      modified on Tue Feb 11 15:18:40 PST 1992 by muller  */
 
-#if defined(_WIN32) && !defined(M3_EXTRACT_INSERT_LINKAGE)
-#define M3_EXTRACT_INSERT_LINKAGE
-#endif
-
 #ifdef _MSC_VER
 #pragma warning(disable:4255) /* () changed to (void) */
 #pragma warning(disable:4505) /* unused static function removed */
@@ -196,43 +192,6 @@ size_t __stdcall set_lt
   return (eq != 0);
 }
 
-#define _LOWBITS(a)  ((a) ? ((~(size_t)0) >> ((sizeof(size_t) * 8) - (a))) : 0)
-#define _HIGHBITS(a) (((a) < (sizeof(size_t) * 8)) ? ((~(size_t)0) << (a)) : 0)
-
-#ifdef _WIN32
-
-/* _lowbits[i] = bits{(i-1)..0} for 32-bit integer masks */
-#ifdef __cplusplus
-extern
-#endif
-const uint32 _lowbits [33] = {
-  0x0,
-  0x1, 0x3, 0x7, 0xf,
-  0x1f, 0x3f, 0x7f, 0xff,
-  0x1ff, 0x3ff, 0x7ff, 0xfff,
-  0x1fff, 0x3fff, 0x7fff, 0xffff,
-  0x1ffff, 0x3ffff, 0x7ffff, 0xfffff,
-  0x1fffff, 0x3fffff, 0x7fffff, 0xffffff,
-  0x1ffffff, 0x3ffffff, 0x7ffffff, 0xfffffff,
-  0x1fffffff, 0x3fffffff, 0x7fffffff, 0xffffffff };
-
-/* _highbits[i] = bits{31..i} for 32-bit integer masks */
-#ifdef __cplusplus
-extern
-#endif
-const uint32 _highbits [33] = {
-  0xffffffff, 0xfffffffe, 0xfffffffc, 0xfffffff8,
-  0xfffffff0, 0xffffffe0, 0xffffffc0, 0xffffff80,
-  0xffffff00, 0xfffffe00, 0xfffffc00, 0xfffff800,
-  0xfffff000, 0xffffe000, 0xffffc000, 0xffff8000,
-  0xffff0000, 0xfffe0000, 0xfffc0000, 0xfff80000,
-  0xfff00000, 0xffe00000, 0xffc00000, 0xff800000,
-  0xff000000, 0xfe000000, 0xfc000000, 0xf8000000,
-  0xf0000000, 0xe0000000, 0xc0000000, 0x80000000,
-  0x0 };
-
-#endif
-
 #define HIGH_BITS(a) ((~(size_t)0) << (a))
 #define LOW_BITS(a)  ((~(size_t)0) >> (SET_GRAIN - (a) - 1))
 
@@ -286,47 +245,6 @@ uint64 __stdcall m3_rotate64(uint64 a, int b)
 }
 
 #endif /* WIN32 */
-
-#ifdef M3_EXTRACT_INSERT_LINKAGE
-
-/*
- PROCEDURE Extract (x: T; i, n: CARDINAL): T;
-(* Take n bits from x, with bit i as the least significant bit, and return them
-   as the least significant n bits of a word whose other bits are 0. A checked
-   runtime error if n + i > Word.Size. *)
-
-The extract call in the backend has a boolean sign_extend parameter as well.
-This is used for signed integer division by a power of two.
-Those all have constant i/n (aka m/n) and are handled inline.
-
-PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
-(* Return x with n bits replaced, with bit i as the least significant bit, by
-   the least significant n bits of y. The other bits of x are unchanged. A
-   checked runtime error if n + i > Word.Size. *)
-*/
-
-/* UT: unsigned type
- */
-#define M3_EXTRACT_INSERT(extract, insert, UT)  \
-                                                \
-M3_EXTRACT_INSERT_LINKAGE                       \
-UT __stdcall extract(UT x, uint32 i, uint32 n)  \
-{                                               \
-    x >>= i;                                    \
-    x &= ~((~(UT)0) << n);                      \
-    return x;                                   \
-}                                               \
-                                                \
-M3_EXTRACT_INSERT_LINKAGE                       \
-UT __stdcall insert(UT x, UT y, uint32 i, uint32 n) \
-{                                               \
-    UT mask = ((~((~(UT)0) << n)) << i);        \
-    return (x & ~mask) | ((y << i) & mask);     \
-}                                               \
-
-M3_EXTRACT_INSERT(m3_extract64, m3_insert64, uint64)
-
-#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
