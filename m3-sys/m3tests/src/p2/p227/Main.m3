@@ -1370,6 +1370,25 @@ BEGIN
   PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(  LAST(LONGINT)) DIV NotConstL(-16_100000000L): "); PutL(NotConstL( LAST(LONGINT)) DIV NotConstL(-16_100000000L)); NL();
   NL();
 
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT)  DIV           16_800000000L : "); PutL(          FIRST(LONGINT)  DIV 16_800000000L); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( FIRST(LONGINT)) DIV           16_800000000L : "); PutL(NotConstL(FIRST(LONGINT)) DIV 16_800000000L); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT)  DIV NotConstL(16_800000000L): "); PutL(          FIRST(LONGINT)  DIV NotConstL(16_800000000L)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( FIRST(LONGINT)) DIV NotConstL(16_800000000L): "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(16_800000000L)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT)  DIV           16_800000000L : "); PutL(           LAST(LONGINT)  DIV 16_800000000L); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(  LAST(LONGINT)) DIV           16_800000000L : "); PutL(NotConstL( LAST(LONGINT)) DIV 16_800000000L); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT)  DIV NotConstL(16_800000000L): "); PutL(           LAST(LONGINT)  DIV NotConstL(16_800000000L)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(  LAST(LONGINT)) DIV NotConstL(16_800000000L): "); PutL(NotConstL( LAST(LONGINT)) DIV NotConstL(16_800000000L)); NL();
+
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT)  DIV           -16_800000000L : "); PutL(          FIRST(LONGINT)  DIV -16_800000000L); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( FIRST(LONGINT)) DIV           -16_800000000L : "); PutL(NotConstL(FIRST(LONGINT)) DIV -16_800000000L); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT)  DIV NotConstL(-16_800000000L): "); PutL(          FIRST(LONGINT)  DIV NotConstL(-16_800000000L)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( FIRST(LONGINT)) DIV NotConstL(-16_800000000L): "); PutL(NotConstL(FIRST(LONGINT)) DIV NotConstL(-16_800000000L)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT)  DIV           -16_800000000L : "); PutL(           LAST(LONGINT)  DIV -16_800000000L); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(  LAST(LONGINT)) DIV           -16_800000000L : "); PutL(NotConstL( LAST(LONGINT)) DIV -16_800000000L); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT("             LAST(LONGINT)  DIV NotConstL(-16_800000000L): "); PutL(           LAST(LONGINT)  DIV NotConstL(-16_800000000L)); NL();
+  PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL(  LAST(LONGINT)) DIV NotConstL(-16_800000000L): "); PutL(NotConstL( LAST(LONGINT)) DIV NotConstL(-16_800000000L)); NL();
+  NL();
+
   PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT)  DIV           16_FF00000000L : "); PutL(          FIRST(LONGINT)  DIV 16_FF00000000L); NL();
   PutT("LINE "); PutI(ThisLine()); PutT(" NotConstL( FIRST(LONGINT)) DIV           16_FF00000000L : "); PutL(NotConstL(FIRST(LONGINT)) DIV 16_FF00000000L); NL();
   PutT("LINE "); PutI(ThisLine()); PutT("            FIRST(LONGINT)  DIV NotConstL(16_FF00000000L): "); PutL(          FIRST(LONGINT)  DIV NotConstL(16_FF00000000L)); NL();
