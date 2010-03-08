@@ -492,12 +492,12 @@ PROCEDURE shift_double_ecx(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart
   BEGIN
     (* caller already put shift count in ECX *)
     shift_double_op(t, doubleOp, destA[left], destA[right], t.reg[ECX]);
-    unOp(t, singleOp, destA[right]);
+    t.unOp(singleOp, destA[right]);
     testOp(t, t.reg[ECX], Operand{loc := OLoc.imm, imm := TIntN.ThirtyTwo});
-    brOp(t, Cond.E, end_label);
+    t.brOp(Cond.E, end_label);
     t.movOp(destA[left], destA[right]);
     IF right_signed THEN
-      t.immOp(t, singleOp, destA[right], TIntN.ThirtyOne);
+      t.immOp(singleOp, destA[right], TIntN.ThirtyOne);
     ELSE
       t.binOp(Op.oXOR, destA[right], destA[right]);
     END;
