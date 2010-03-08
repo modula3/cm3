@@ -410,77 +410,77 @@ PROCEDURE shift_double_immediate(t: T; singleOp: Op; READONLY destA: ARRAY Opera
       IF TIntN.NE(imm, TIntN.ThirtyTwo) THEN
         EVAL TIntN.Subtract(imm, TIntN.ThirtyTwo, immMinus32);
         (* Ideally we'd do a virtual move in the register allocator. *)
-        movOp1(t, destA[left], destA[right]);
-        immOp1(t, singleOp, destA[left], immMinus32);
+        t.movOp(destA[left], destA[right]);
+        t.immOp(singleOp, destA[left], immMinus32);
       ELSE
-        movOp1(t, destA[left], destA[right]);
+        t.movOp(destA[left], destA[right]);
       END;
       IF right_signed THEN
-        immOp1(t, singleOp, destA[right], TIntN.ThirtyOne);
+        t.immOp(singleOp, destA[right], TIntN.ThirtyOne);
       ELSE
-        binOp1(t, Op.oXOR, destA[right], destA[right]);
+        t.binOp(Op.oXOR, destA[right], destA[right]);
       END;
     ELSE
       (* left shift low into high or right shift high into low *)
       shift_double_op(t, doubleOp, destA[left], destA[right], Operand{loc := OLoc.imm, imm := imm});
-      immOp1(t, singleOp, destA[right], imm);
+      t.immOp(singleOp, destA[right], imm);
     END
   END shift_double_immediate;
 
 PROCEDURE add_double_immediate(t: T; READONLY destA: ARRAY OperandPart OF Operand; immA: ARRAY OperandPart OF TIntN.T) =
   BEGIN
-    immOp1(t, Op.oADD, destA[0], immA[0]);
-    immOp1(t, Op.oADC, destA[1], immA[1]);
+    t.immOp(Op.oADD, destA[0], immA[0]);
+    t.immOp(Op.oADC, destA[1], immA[1]);
   END add_double_immediate;
 
 PROCEDURE add_double(t: T; READONLY destA, srcA: ARRAY OperandPart OF Operand) =
   BEGIN
-    binOp1(t, Op.oADD, destA[0], srcA[0]);
-    binOp1(t, Op.oADC, destA[1], srcA[1]);
+    t.binOp(Op.oADD, destA[0], srcA[0]);
+    t.binOp(Op.oADC, destA[1], srcA[1]);
   END add_double;
 
 PROCEDURE subtract_double_immediate(t: T; READONLY destA: ARRAY OperandPart OF Operand; immA: ARRAY OperandPart OF TIntN.T) =
   BEGIN
-    immOp1(t, Op.oSUB, destA[0], immA[0]);
-    immOp1(t, Op.oSBB, destA[1], immA[1]);
+    t.immOp(Op.oSUB, destA[0], immA[0]);
+    t.immOp(Op.oSBB, destA[1], immA[1]);
   END subtract_double_immediate;
 
 PROCEDURE subtract_double(t: T; READONLY destA, srcA: ARRAY OperandPart OF Operand) =
   BEGIN
-    binOp1(t, Op.oSUB, destA[0], srcA[0]);
-    binOp1(t, Op.oSBB, destA[1], srcA[1]);
+    t.binOp(Op.oSUB, destA[0], srcA[0]);
+    t.binOp(Op.oSBB, destA[1], srcA[1]);
   END subtract_double;
 
 PROCEDURE compare_double_immediate(t: T; READONLY destA: ARRAY OperandPart OF Operand; immA: ARRAY OperandPart OF TIntN.T) =
   VAR end_label := t.reserve_labels(1, TRUE);
   BEGIN
-    immOp1(t, Op.oCMP, destA[1], immA[1]);
+    t.immOp(Op.oCMP, destA[1], immA[1]);
     t.brOp(Cond.NE, end_label);
-    immOp1(t, Op.oCMP, destA[0], immA[0]);
+    t.immOp(Op.oCMP, destA[0], immA[0]);
     t.set_label(end_label);
   END compare_double_immediate;
 
 PROCEDURE compare_double(t: T; READONLY destA, srcA: ARRAY OperandPart OF Operand) =
   VAR end_label := t.reserve_labels(1, TRUE);
   BEGIN
-    binOp1(t, Op.oCMP, destA[1], srcA[1]);
+    t.binOp(Op.oCMP, destA[1], srcA[1]);
     t.brOp(Cond.NE, end_label);
-    binOp1(t, Op.oCMP, destA[0], srcA[0]);
+    t.binOp(Op.oCMP, destA[0], srcA[0]);
     t.set_label(end_label);
   END compare_double;
 
 PROCEDURE binOp_double(t: T; op: Op; READONLY destA, srcA: ARRAY OperandPart OF Operand) =
 (* oOR, oXOR, oAND *)
   BEGIN
-    binOp1(t, op, destA[0], srcA[0]);
-    binOp1(t, op, destA[1], srcA[1]);
+    t.binOp(op, destA[0], srcA[0]);
+    t.binOp(op, destA[1], srcA[1]);
   END binOp_double;
 
 PROCEDURE unOp_double(t: T; op: Op; READONLY destA: ARRAY OperandPart OF Operand) =
 (* oNOT *)
   BEGIN
-    unOp1(t, op, destA[0]);
-    unOp1(t, op, destA[1]);
+    t.unOp(op, destA[0]);
+    t.unOp(op, destA[1]);
   END unOp_double;
 
 PROCEDURE shift_double_ecx(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart OF Operand) =
@@ -506,9 +506,9 @@ PROCEDURE shift_double_ecx(t: T; singleOp: Op; READONLY destA: ARRAY OperandPart
 
 PROCEDURE negate_double(t: T; READONLY destA: ARRAY OperandPart OF Operand) =
   BEGIN
-    unOp1(t, Op.oNEG, destA[0]);
+    t.unOp(Op.oNEG, destA[0]);
     t.binOp(Op.oADC, destA[1], Operand {loc := OLoc.imm, imm := TZero, optype := Type.Word32});
-    unOp1(t, Op.oNEG, destA[1]);
+    t.unOp(Op.oNEG, destA[1]);
   END negate_double;
 
 PROCEDURE shift_double_op (t: T; op: Op; READONLY dest, src, shiftCount: Operand) =
