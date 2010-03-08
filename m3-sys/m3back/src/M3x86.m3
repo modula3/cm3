@@ -2565,20 +2565,7 @@ PROCEDURE insert  (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doinsert(t) THEN
-      RETURN;
-    END;
-
-    IF NOT TypeIs64(t) THEN
-      Err(u, "insert: stack.doinsert should have handled all 32bit cases");
-    END;
-
-    start_int_proc (u, Builtin.insert64);
-    pop_param(u, Type.Word32);
-    pop_param(u, Type.Word32);
-    pop_param(u, Type.Word64);
-    pop_param(u, Type.Word64);
-    call_64 (u, Builtin.insert64);
+    u.vstack.doinsert(t);
   END insert;
 
 PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
@@ -2591,16 +2578,7 @@ PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doinsert_n(t, n) THEN
-      RETURN;
-    END;
-
-    IF NOT TypeIs64(t) THEN
-      Err(u, "insert_n: stack.doinsert_n should have handled all 32bit cases");
-    END;
-
-    u.vstack.pushimmI(n, Type.Word32);
-    u.insert(t);
+    u.vstack.doinsert_n(t, n);
   END insert_n;
 
 PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
@@ -2614,17 +2592,7 @@ PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
       u.wr.NL    ();
     END;
 
-    IF u.vstack.doinsert_mn(t, m, n) THEN
-      RETURN;
-    END;
-
-    IF NOT TypeIs64(t) THEN
-      Err(u, "insert_mn: stack.doinsert_mn should have handled all 32bit cases");
-    END;
-
-    u.vstack.pushimmI(m, Type.Word32);
-    u.vstack.pushimmI(n, Type.Word32);
-    u.insert(t);
+    u.vstack.doinsert_mn(t, m, n);
   END insert_mn;
 
 (*------------------------------------------------ misc. stack/memory ops ---*)
@@ -2982,8 +2950,7 @@ TYPE
     mul64,
     udiv64, umod64,
     div64, mod64,
-    rotate_left64, rotate_right64, rotate64,
-    insert64
+    rotate_left64, rotate_right64, rotate64
   };
 
 (* union .. sym_difference -> (n_bits, *c, *b, *a): Void
@@ -3028,8 +2995,7 @@ CONST
     BP { "m3_mod64",         4, Type.Int64,  "__stdcall" },
     BP { "m3_rotate_left64", 3, Type.Word64, "__stdcall" },
     BP { "m3_rotate_right64",3, Type.Word64, "__stdcall" },
-    BP { "m3_rotate64",      3, Type.Word64, "__stdcall" },
-    BP { "m3_insert64",      6, Type.Word64, "__stdcall" }
+    BP { "m3_rotate64",      3, Type.Word64, "__stdcall" }
   };
 
 
