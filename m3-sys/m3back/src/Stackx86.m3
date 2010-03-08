@@ -1818,7 +1818,6 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER): BOO
 
 PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER): BOOLEAN =
   VAR andval, tint: TIntN.T;
-      is64 := TypeIs64(type);
       uint_type := IntType[UnsignedType[type]];
       max := TIntN.T{x := uint_type.max};
       typeBitSize := uint_type.size;
@@ -1838,10 +1837,6 @@ PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER):
     WITH stack0 = pos(t, 0, "extract_mn"),
          stop0 = t.vstack[stack0] DO
 
-      IF is64 AND stop0.loc # OLoc.imm THEN
-        RETURN FALSE;
-      END;
-
       IF stop0.loc = OLoc.imm THEN
         TWordN.Shift(stop0.imm, -m, stop0.imm);
         TWordN.Shift(max, n - typeBitSize, tint);
@@ -1856,8 +1851,6 @@ PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER):
         END;
         RETURN TRUE;
       END;
-
-      <* ASSERT NOT is64 *>
 
       IF sign_extend THEN
         find(t, stack0, Force.anyreg);
