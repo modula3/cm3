@@ -1625,21 +1625,21 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
   BEGIN
 
     unlock(t);
-    WITH count = t.vstack[pos(t, 0, "extract")] DO
+    WITH op_count = t.vstack[pos(t, 0, "extract")] DO
 
-      IF sign_extend AND count.loc # OLoc.imm THEN
+      IF sign_extend AND op_count.loc # OLoc.imm THEN
 
         (* Code for this is not reachable and not testable.
-         * It appears tricky and correct, unless n = 0.
+         * It appears tricky and correct, unless count = 0.
          *)
 
-        Err(t, "doextract: sign_extend requires constant m/n");
+        Err(t, "doextract: sign_extend requires constant offset/count");
 
       END;
 
-      IF count.loc = OLoc.imm THEN
+      IF op_count.loc = OLoc.imm THEN
         discard(t, 1);
-        IF NOT TIntN.ToHostInteger(count.imm, int) THEN
+        IF NOT TIntN.ToHostInteger(op_count.imm, int) THEN
           Err(t, "doextract: failed to convert to host integer");
         END;
         doextract_n(t, type, sign_extend, int);
@@ -1653,25 +1653,25 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
 
       IF sign_extend THEN
 
-        Err(t, "doextract: sign_extend requires constant m/n");
+        Err(t, "doextract: sign_extend requires constant offset/count");
 
         (* This code is not reachable and not testable.
-         * It appears tricky and correct, unless n = 0.
+         * It appears tricky and correct, unless count = 0.
          *
          * find(t, stack0, Force.regset, RegSet { ECX });
          * find(t, stack1, Force.any);
          * find(t, stack2, Force.anyreg);
-         * IF stop1.loc = OLoc.mem AND CG_Bytes[stop1.mvar.mvar_type] < 4 THEN
+         * IF op_offset.loc = OLoc.mem AND CG_Bytes[op_offset.mvar.mvar_type] < 4 THEN
          *   find(t, stack1, Force.anyreg);
          * END;
          *
-         * t.cg.binOp(Op.oADD, count, stop1);
-         * t.cg.unOp(Op.oNEG, count);
-         * t.cg.unOp(Op.oSHL, stop2);
-         * t.cg.binOp(Op.oADD, count, stop1);
-         * t.cg.unOp(Op.oSAR, stop2);
+         * t.cg.binOp(Op.oADD, op_count, op_offset);
+         * t.cg.unOp(Op.oNEG, op_count);
+         * t.cg.unOp(Op.oSHL, op_value);
+         * t.cg.binOp(Op.oADD, op_count, op_offset);
+         * t.cg.unOp(Op.oSAR, op_value);
          * 
-         * newdest(t, count);
+         * newdest(t, op_count);
          *)
       END;
     END;
@@ -1682,13 +1682,13 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
          stack_count = pos(t, 1, "extract"),
          stack_offset = pos(t, 2, "extract"),
          stack_value = pos(t, 3, "extract"),
-         mask = t.vstack[stack_mask],
-         count = t.vstack[stack_count],
-         offset = t.vstack[stack_offset],
-         value = t.vstack[stack_value] DO
+         op_mask = t.vstack[stack_mask],
+         (*op_count = t.vstack[stack_count],*)
+         op_offset = t.vstack[stack_offset],
+         op_value = t.vstack[stack_value] DO
 
-      IF offset.loc = OLoc.imm THEN
-        TWordN.And(offset.imm, BitCountMask[type], offset.imm); (* This should be redundant. *)
+      IF op_offset.loc = OLoc.imm THEN
+        TWordN.And(op_offset.imm, BitCountMask[type], op_offset.imm); (* This should be redundant. *)
       ELSE
         find(t, stack_offset, Force.regset, RegSet {ECX});
       END;
@@ -1701,26 +1701,26 @@ UT __stdcall extract(UT x, uint32 offset, uint32 count)
     return x;
 }
 *)
-      IF offset.loc = OLoc.imm THEN
-        t.cg.immOp(Op.oSHR, value, offset.imm); (* shift by ECX *)
+      IF op_offset.loc = OLoc.imm THEN
+        t.cg.immOp(Op.oSHR, op_value, op_offset.imm); (* shift by ECX *)
       ELSE
-        t.cg.unOp(Op.oSHR, value); (* shift by ECX *)
+        t.cg.unOp(Op.oSHR, op_value); (* shift by ECX *)
       END;
 
       unlock(t);
       find(t, stack_count, Force.regset, RegSet{ECX});
       find(t, stack_value, Force.anyreg);
       find(t, stack_mask, Force.anyreg);
-      t.cg.unOp(Op.oSHL, mask); (* shift by ECX *)
-      t.cg.unOp(Op.oNOT, mask);
-      t.cg.binOp(Op.oAND, value, mask);
+      t.cg.unOp(Op.oSHL, op_mask); (* shift by ECX *)
+      t.cg.unOp(Op.oNOT, op_mask);
+      t.cg.binOp(Op.oAND, op_value, op_mask);
 
-      newdest(t, value);
+      newdest(t, op_value);
       discard(t, 3);
     END;
   END doextract;
 
-PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER) =
+PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; count: INTEGER) =
   VAR andval: TIntN.T;
       int: INTEGER;
       uint_type := IntType[UnsignedType[type]];
@@ -1732,54 +1732,54 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER) =
     *)
   BEGIN
 
-    IF n < 0 THEN
-      Err(t, "doextract_n: n must be positive");
+    IF count < 0 THEN
+      Err(t, "doextract_n: count must be positive");
     END;
 
-    IF sign_extend AND (n < 1) THEN
-      Err(t, "doextract_n: n must at least 1 if sign extending");
+    IF sign_extend AND (count < 1) THEN
+      Err(t, "doextract_n: count must at least 1 if sign extending");
     END;
 
     unlock(t);
-    WITH stack0 = pos(t, 0, "extract_n"),
-         stack1 = pos(t, 1, "extract_n"),
-         stop0 = t.vstack[stack0],
-         stop1 = t.vstack[stack1] DO
+    WITH stack_offset = pos(t, 0, "extract_n"),
+         stack_value = pos(t, 1, "extract_n"),
+         op_offset = t.vstack[stack_offset],
+         op_value = t.vstack[stack_value] DO
 
-      IF sign_extend AND stop0.loc # OLoc.imm THEN
+      IF sign_extend AND op_offset.loc # OLoc.imm THEN
 
         (* Code for this is not reachable and not testable. *)
 
-        Err(t, "doextract: sign_extend requires constant m/n");
+        Err(t, "doextract: sign_extend requires constant offset/count");
 
       END;
 
-      IF stop0.loc = OLoc.imm THEN
+      IF op_offset.loc = OLoc.imm THEN
         discard(t, 1);
-        IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
+        IF NOT TIntN.ToHostInteger(op_offset.imm, int) THEN
           Err(t, "doextract_n: failed to convert to host integer");
         END;
-        doextract_mn(t, type, sign_extend, int, n);
+        doextract_mn(t, type, sign_extend, int, count);
         RETURN;
       END;
 
       IF sign_extend THEN
 
-        Err(t, "doextract: sign_extend requires constant m/n");
+        Err(t, "doextract: sign_extend requires constant offset/count");
 
         (* This is not reachable and not testable.
          *
          * corrupt(t, ECX, operandPart := 0);
          * t.reguse[ECX].locked := TRUE;
          *
-         * find(t, stack0, Force.any);
-         * find(t, stack1, Force.anyreg);
-         * IF stop0.loc = OLoc.mem AND CG_Bytes[stop0.mvar.mvar_type] < 4 THEN
-         *   find(t, stack0, Force.anyreg);
+         * find(t, stack_offset, Force.any);
+         * find(t, stack_value, Force.anyreg);
+         * IF op_offset.loc = OLoc.mem AND CG_Bytes[op_offset.mvar.mvar_type] < 4 THEN
+         *   find(t, stack_offset, Force.anyreg);
          * END;
          *
-         * IF NOT TIntN.FromHostInteger(n, Target.Integer.bytes, tn) THEN
-         *   Err(t, "doextract_n: failed to convert n to target integer");
+         * IF NOT TIntN.FromHostInteger(count, Target.Integer.bytes, tn) THEN
+         *   Err(t, "doextract_n: failed to convert count to target integer");
          * END;
          *
          * IF NOT TIntN.Subtract(typeBitSizeT, tn, typeBitSizeMinusN) THEN
@@ -1788,47 +1788,47 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER) =
          *
          * <* ASSERT NOT is64 *>
          *
-         * t.cg.movImmI(t.cg.reg[ECX], typeBitSize - n);
-         * t.cg.binOp(Op.oSUB, t.cg.reg[ECX], stop0);
-         * t.cg.unOp(Op.oSHL, stop1);
+         * t.cg.movImmI(t.cg.reg[ECX], typeBitSize - count);
+         * t.cg.binOp(Op.oSUB, t.cg.reg[ECX], op_offset);
+         * t.cg.unOp(Op.oSHL, op_value);
          *
-         * IF n < typeBitSize THEN
-         *   t.cg.immOp(Op.oSAR, stop1, typeBitSizeMinusN);
+         * IF count < typeBitSize THEN
+         *   t.cg.immOp(Op.oSAR, op_value, typeBitSizeMinusN);
          * END
          *)
 
       ELSE
-        find(t, stack0, Force.regset, RegSet { ECX });
-        find(t, stack1, Force.anyreg);
+        find(t, stack_offset, Force.regset, RegSet { ECX });
+        find(t, stack_value, Force.anyreg);
 
-        t.cg.unOp(Op.oSHR, stop1); (* shift by ECX *)
+        t.cg.unOp(Op.oSHR, op_value); (* shift by ECX *)
 
-        IF n < typeBitSize THEN
-          TWordN.Shift(max, n - typeBitSize, andval);
-          t.cg.immOp(Op.oAND, stop1, andval);
+        IF count < typeBitSize THEN
+          TWordN.Shift(max, count - typeBitSize, andval);
+          t.cg.immOp(Op.oAND, op_value, andval);
         END
       END;
 
-      newdest(t, stop1);
+      newdest(t, op_value);
       discard(t, 1);
     END;
   END doextract_n;
 
-PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER) =
+PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; offset, count: INTEGER) =
   VAR andval, tint: TIntN.T;
       uint_type := IntType[UnsignedType[type]];
       max := TIntN.T{x := uint_type.max};
       typeBitSize := uint_type.size;
   BEGIN
 
-    IF m < 0 THEN
-      Err(t, "doextract_mn: m must be positive");
+    IF offset < 0 THEN
+      Err(t, "doextract_mn: offset must be positive");
     END;
-    IF n < 0 THEN
-      Err(t, "doextract_mn: n must be positive");
+    IF count < 0 THEN
+      Err(t, "doextract_mn: count must be positive");
     END;
-    IF sign_extend AND (n < 1) THEN
-      Err(t, "doextract_mn: n must at least 1 if sign extending");
+    IF sign_extend AND (count < 1) THEN
+      Err(t, "doextract_mn: count must at least 1 if sign extending");
     END;
 
     unlock(t);
@@ -1836,14 +1836,14 @@ PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER) 
          stop0 = t.vstack[stack0] DO
 
       IF stop0.loc = OLoc.imm THEN
-        TWordN.Shift(stop0.imm, -m, stop0.imm);
-        TWordN.Shift(max, n - typeBitSize, tint);
+        TWordN.Shift(stop0.imm, -offset, stop0.imm);
+        TWordN.Shift(max, count - typeBitSize, tint);
         TWordN.And(stop0.imm, tint, stop0.imm);
         IF sign_extend THEN
-          TWordN.Shift(TIntN.One, n - 1, tint);
+          TWordN.Shift(TIntN.One, count - 1, tint);
           TWordN.And(stop0.imm, tint, tint);
           IF TIntN.NE(tint, TZero) THEN
-            TWordN.Shift(max, n, tint);
+            TWordN.Shift(max, count, tint);
             TWordN.Or(stop0.imm, tint, stop0.imm);
           END;
         END;
@@ -1852,29 +1852,29 @@ PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER) 
 
       IF sign_extend THEN
         find(t, stack0, Force.anyreg);
-        IF (m + n) < typeBitSize THEN
-          IF NOT TIntN.FromHostInteger(typeBitSize - (m + n), Target.Integer.bytes, tint) THEN
-            Err(t, "doextract_mn: failed to convert " & Fmt.Int(typeBitSize) & " - (m + n) to target integer");
+        IF (offset + count) < typeBitSize THEN
+          IF NOT TIntN.FromHostInteger(typeBitSize - (offset + count), Target.Integer.bytes, tint) THEN
+            Err(t, "doextract_mn: failed to convert " & Fmt.Int(typeBitSize) & " - (offset + count) to target integer");
           END;
           t.cg.immOp(Op.oSHL, stop0, tint);
         END;
 
-        IF n < typeBitSize THEN
-          IF NOT TIntN.FromHostInteger(typeBitSize - n, Target.Integer.bytes, tint) THEN
-            Err(t, "doextract_mn: failed to convert " & Fmt.Int(typeBitSize) & " - n to target integer");
+        IF count < typeBitSize THEN
+          IF NOT TIntN.FromHostInteger(typeBitSize - count, Target.Integer.bytes, tint) THEN
+            Err(t, "doextract_mn: failed to convert " & Fmt.Int(typeBitSize) & " - count to target integer");
           END;
           t.cg.immOp(Op.oSAR, stop0, tint);
         END
       ELSE
         find(t, stack0, Force.anyreg);
-        IF (m + n) < typeBitSize THEN
-          TWordN.Shift(max, m + n - typeBitSize, andval);
+        IF (offset + count) < typeBitSize THEN
+          TWordN.Shift(max, offset + count - typeBitSize, andval);
           t.cg.immOp(Op.oAND, stop0, andval);
         END;
 
-        IF m > 0 THEN
-          IF NOT TIntN.FromHostInteger(m, Target.Integer.bytes, tint) THEN
-            Err(t, "doextract_mn: failed to m to target integer");
+        IF offset > 0 THEN
+          IF NOT TIntN.FromHostInteger(offset, Target.Integer.bytes, tint) THEN
+            Err(t, "doextract_mn: failed to offset to target integer");
           END;
           t.cg.immOp(Op.oSHR, stop0, tint);
         END
@@ -1894,73 +1894,73 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
   BEGIN
 
     unlock(t);
-    WITH stack0 = pos(t, 0, "insert"),
-         stack1 = pos(t, 1, "insert"),
-         stack2 = pos(t, 2, "insert"),
-         stack3 = pos(t, 3, "insert"),
-         stop0 = t.vstack[stack0],
-         stop1 = t.vstack[stack1],
-         stop2 = t.vstack[stack2],
-         stop3 = t.vstack[stack3] DO
+    WITH stack_count = pos(t, 0, "insert"),
+         stack_offset = pos(t, 1, "insert"),
+         stack_from = pos(t, 2, "insert"),
+         stack_to = pos(t, 3, "insert"),
+         op_count = t.vstack[stack_count],
+         op_offset = t.vstack[stack_offset],
+         op_from = t.vstack[stack_from],
+         stop3 = t.vstack[stack_to] DO
 
-      IF is64 AND (stop0.loc # OLoc.imm OR stop1.loc # OLoc.imm OR stop2.loc # OLoc.imm OR stop3.loc # OLoc.imm) THEN
+      IF is64 AND (op_count.loc # OLoc.imm OR op_offset.loc # OLoc.imm OR op_from.loc # OLoc.imm OR stop3.loc # OLoc.imm) THEN
         RETURN FALSE;
       END;
 
-      IF stop0.loc = OLoc.imm THEN
+      IF op_count.loc = OLoc.imm THEN
         discard(t, 1);
-        IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
+        IF NOT TIntN.ToHostInteger(op_count.imm, int) THEN
           Err(t, "doinsert: failed to convert to host integer");
         END;
         RETURN doinsert_n(t, type, int);
       END;
 
-      IF stop1.loc = OLoc.imm THEN
-        TWordN.And(stop1.imm, BitCountMask[type], stop1.imm);
+      IF op_offset.loc = OLoc.imm THEN
+        TWordN.And(op_offset.imm, BitCountMask[type], op_offset.imm);
       ELSE
-        find(t, stack1, Force.regset, RegSet { ECX });
+        find(t, stack_offset, Force.regset, RegSet { ECX });
       END;
 
-      find(t, stack2, Force.anyreg);
-      find(t, stack3, Force.anyreg);
-      find(t, stack0, Force.anyreg);
+      find(t, stack_from, Force.anyreg);
+      find(t, stack_to, Force.anyreg);
+      find(t, stack_count, Force.anyreg);
 
       maskreg := pickreg(t);
       corrupt(t, maskreg, operandPart := 0);
 
       ImportLowSet (t, tbl);
-      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], stop0, 4, tbl);
-      t.cg.binOp(Op.oAND, stop2, t.cg.reg[maskreg]);
+      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], op_count, 4, tbl);
+      t.cg.binOp(Op.oAND, op_from, t.cg.reg[maskreg]);
 
-      IF stop1.loc = OLoc.imm THEN
-        IF TIntN.NE(stop1.imm, TZero) THEN
-          t.cg.immOp(Op.oSHL, stop2, stop1.imm);
-          t.cg.immOp(Op.oADD, stop0, stop1.imm);
+      IF op_offset.loc = OLoc.imm THEN
+        IF TIntN.NE(op_offset.imm, TZero) THEN
+          t.cg.immOp(Op.oSHL, op_from, op_offset.imm);
+          t.cg.immOp(Op.oADD, op_count, op_offset.imm);
         END
       ELSE
-        t.cg.unOp(Op.oSHL, stop2);
-        t.cg.binOp(Op.oADD, stop0, stop1);
+        t.cg.unOp(Op.oSHL, op_from);
+        t.cg.binOp(Op.oADD, op_count, op_offset);
       END;
 
       ImportLowSet (t, tbl);
-      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], stop0, 4, tbl);
+      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], op_count, 4, tbl);
 
-      IF stop1.loc = OLoc.imm THEN
-        IF NOT TIntN.ToHostInteger(stop1.imm, int) THEN
-          Err(t, "failed to convert stop1.imm to host integer");
+      IF op_offset.loc = OLoc.imm THEN
+        IF NOT TIntN.ToHostInteger(op_offset.imm, int) THEN
+          Err(t, "failed to convert op_offset.imm to host integer");
         END;
         TWordN.Shift(max, int, tint);
         t.cg.immOp(Op.oXOR, t.cg.reg[maskreg], tint);
       ELSE
         ImportHighSet (t, tbl);
-        t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], stop1, 4, tbl);
+        t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], op_offset, 4, tbl);
       END;
 
       t.cg.binOp(Op.oAND, stop3, t.cg.reg[maskreg]);
-      t.cg.binOp(Op.oOR, stop3, stop2);
+      t.cg.binOp(Op.oOR, stop3, op_from);
 
-      newdest(t, stop0);
-      newdest(t, stop2);
+      newdest(t, op_count);
+      newdest(t, op_from);
       newdest(t, stop3);
       discard(t, 3);
     END;
@@ -1968,9 +1968,9 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
     RETURN TRUE;
   END doinsert;
 
-PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
+PROCEDURE doinsert_n (t: T; type: IType; count: INTEGER): BOOLEAN =
   VAR tbl: MVar;  maskreg: Regno;
-      m: INTEGER;
+      offset: INTEGER;
       tint: TIntN.T;
       is64 := TypeIs64(type);
       uint_type := IntType[UnsignedType[type]];
@@ -1979,67 +1979,67 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
   BEGIN
 
     unlock(t);
-    WITH stack0 = pos(t, 0, "insert"),
-         stack1 = pos(t, 1, "insert"),
-         stack2 = pos(t, 2, "insert"),
-         stop0 = t.vstack[stack0],
-         stop1 = t.vstack[stack1],
-         stop2 = t.vstack[stack2] DO
+    WITH stack_offset = pos(t, 0, "insert"),
+         stack_from = pos(t, 1, "insert"),
+         stack_to = pos(t, 2, "insert"),
+         op_offset = t.vstack[stack_offset],
+         op_from = t.vstack[stack_from],
+         op_to = t.vstack[stack_to] DO
 
-      IF is64 AND (stop0.loc # OLoc.imm OR stop1.loc # OLoc.imm OR stop2.loc # OLoc.imm) THEN
+      IF is64 AND (op_offset.loc # OLoc.imm OR op_from.loc # OLoc.imm OR op_to.loc # OLoc.imm) THEN
         RETURN FALSE;
       END;
 
-      IF stop0.loc = OLoc.imm THEN
+      IF op_offset.loc = OLoc.imm THEN
         discard(t, 1);
-        IF NOT TIntN.ToHostInteger(stop0.imm, m) THEN
+        IF NOT TIntN.ToHostInteger(op_offset.imm, offset) THEN
           Err(t, "doinsert_n: failed to convert to host integer");
         END;
-        RETURN doinsert_mn(t, type, m, n);
+        RETURN doinsert_mn(t, type, offset, count);
       END;
 
       <* ASSERT NOT is64 *>
 
-      find(t, stack0, Force.regset, RegSet { ECX });
-      find(t, stack2, Force.anyreg);
-      find(t, stack1, Force.anyreg);
+      find(t, stack_offset, Force.regset, RegSet { ECX });
+      find(t, stack_to, Force.anyreg);
+      find(t, stack_from, Force.anyreg);
 
       maskreg := pickreg(t);
       corrupt(t, maskreg, operandPart := 0);
 
       <* ASSERT NOT is64 *>
 
-      IF n # typeBitSize THEN
-        TWordN.Shift(max, n - typeBitSize, tint);
-        t.cg.immOp(Op.oAND, stop1, tint);
+      IF count # typeBitSize THEN
+        TWordN.Shift(max, count - typeBitSize, tint);
+        t.cg.immOp(Op.oAND, op_from, tint);
       END;
 
-      t.cg.unOp(Op.oSHL, stop1);
+      t.cg.unOp(Op.oSHL, op_from);
 
 (****
       intable := t.lowset_table;
-      INC(intable.o, Word.Shift(n*4, 16));
-      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], stop0, 4, intable);
-      t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], stop0, 4, t.highset_table);
+      INC(intable.o, Word.Shift(count*4, 16));
+      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], op_offset, 4, intable);
+      t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], op_offset, 4, t.highset_table);
 ****)
       ImportLowSet(t, tbl);
-      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], stop0, 4, tbl);
+      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], op_offset, 4, tbl);
       ImportHighSet(t, tbl);
-      INC(tbl.mvar_offset, n*4);
-      t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], stop0, 4, tbl);
+      INC(tbl.mvar_offset, count*4);
+      t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], op_offset, 4, tbl);
 
-      t.cg.binOp(Op.oAND, stop2, t.cg.reg[maskreg]);
-      t.cg.binOp(Op.oOR, stop2, stop1);
+      t.cg.binOp(Op.oAND, op_to, t.cg.reg[maskreg]);
+      t.cg.binOp(Op.oOR, op_to, op_from);
 
-      newdest(t, stop1);
-      newdest(t, stop2);
+      newdest(t, op_from);
+      newdest(t, op_to);
       discard(t, 2);
     END;
 
     RETURN TRUE;
   END doinsert_n;
   
-PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
+PROCEDURE doinsert_mn (t: T; type: IType; offset, count: INTEGER): BOOLEAN =
   VAR tint_m, mask_m, mask_m_n, mask: TIntN.T;
       uint_type := IntType[UnsignedType[type]];
       is64 := TypeIs64(type);
@@ -2048,10 +2048,10 @@ PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
   BEGIN
 
     unlock(t);
-    WITH stack0 = pos(t, 0, "insert"),
-         stack1 = pos(t, 1, "insert"),
-         stop0 = t.vstack[stack0],
-         stop1 = t.vstack[stack1] DO
+    WITH stack_from = pos(t, 0, "insert"),
+         stack_to = pos(t, 1, "insert"),
+         op_from = t.vstack[stack_from],
+         op_to = t.vstack[stack_to] DO
 
       (* This check should be removed;
        * It is ok though, it is here because
@@ -2060,64 +2060,64 @@ PROCEDURE doinsert_mn (t: T; type: IType; m, n: INTEGER): BOOLEAN =
        * call instead of inline code".
        *)
 
-      IF is64 AND (stop0.loc # OLoc.imm OR stop1.loc # OLoc.imm) THEN
+      IF is64 AND (op_from.loc # OLoc.imm OR op_to.loc # OLoc.imm) THEN
         RETURN FALSE;
       END;
 
-      find(t, stack1, Force.any);
-      find(t, stack0, Force.anyregimm);
+      find(t, stack_to, Force.any);
+      find(t, stack_from, Force.anyregimm);
 
-      IF stop1.loc = OLoc.mem THEN
-        find(t, stack1, Force.anyreg);
+      IF op_to.loc = OLoc.mem THEN
+        find(t, stack_to, Force.anyreg);
       END;
 
-      TWordN.Shift(max, n - typeBitSize, mask);
+      TWordN.Shift(max, count - typeBitSize, mask);
 
-      IF stop0.loc = OLoc.imm THEN
-        TWordN.And(stop0.imm, mask, stop0.imm);
-        TWordN.Shift(stop0.imm, m, stop0.imm);
+      IF op_from.loc = OLoc.imm THEN
+        TWordN.And(op_from.imm, mask, op_from.imm);
+        TWordN.Shift(op_from.imm, offset, op_from.imm);
       ELSE
-        IF (n + m) < typeBitSize THEN
-          t.cg.immOp(Op.oAND, stop0, mask);
+        IF (count + offset) < typeBitSize THEN
+          t.cg.immOp(Op.oAND, op_from, mask);
         END;
 
-        IF m # 0 THEN
-          IF NOT TIntN.FromHostInteger(m, Target.Integer.bytes, tint_m) THEN
-            Err(t, "doinsert_mn: unable to convert m to target integer");
+        IF offset # 0 THEN
+          IF NOT TIntN.FromHostInteger(offset, Target.Integer.bytes, tint_m) THEN
+            Err(t, "doinsert_mn: unable to convert offset to target integer");
           END;
-          t.cg.immOp(Op.oSHL, stop0, tint_m);
+          t.cg.immOp(Op.oSHL, op_from, tint_m);
         END
       END;
 
-      TWordN.Shift(max, m, mask_m);
-      TWordN.Shift(max, m + n - typeBitSize, mask_m_n);
+      TWordN.Shift(max, offset, mask_m);
+      TWordN.Shift(max, offset + count - typeBitSize, mask_m_n);
       TWordN.Xor(mask_m, mask_m_n, mask);
 
       IF TWordN.NE(mask, max) THEN
-        IF stop1.loc = OLoc.imm THEN
-          TWordN.And(stop1.imm, mask, stop1.imm);
+        IF op_to.loc = OLoc.imm THEN
+          TWordN.And(op_to.imm, mask, op_to.imm);
         ELSE
-          t.cg.immOp(Op.oAND, stop1, mask);
+          t.cg.immOp(Op.oAND, op_to, mask);
         END
       END;
 
-      IF stop1.loc = OLoc.imm THEN
-        IF stop0.loc = OLoc.imm THEN
-          TWordN.Or(stop1.imm, stop0.imm, stop1.imm);
+      IF op_to.loc = OLoc.imm THEN
+        IF op_from.loc = OLoc.imm THEN
+          TWordN.Or(op_to.imm, op_from.imm, op_to.imm);
         ELSE
           swap(t);
-          IF stop0.loc # OLoc.imm OR TIntN.NE(stop0.imm, TZero) THEN
-            t.cg.binOp(Op.oOR, stop1, stop0);
+          IF op_from.loc # OLoc.imm OR TIntN.NE(op_from.imm, TZero) THEN
+            t.cg.binOp(Op.oOR, op_to, op_from);
           END
         END
       ELSE
-        IF stop0.loc # OLoc.imm OR TIntN.NE(stop0.imm, TZero) THEN
-          t.cg.binOp(Op.oOR, stop1, stop0);
+        IF op_from.loc # OLoc.imm OR TIntN.NE(op_from.imm, TZero) THEN
+          t.cg.binOp(Op.oOR, op_to, op_from);
         END
       END;
 
-      newdest(t, stop0);
-      newdest(t, stop1);
+      newdest(t, op_from);
+      newdest(t, op_to);
       discard(t, 1);
     END;
 
