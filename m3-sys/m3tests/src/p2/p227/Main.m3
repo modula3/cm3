@@ -167,7 +167,6 @@ BEGIN
 END TestInsert;
 
 PROCEDURE TestExtract32() =
-CONST sign_extend = 0;
 VAR result32: INTEGER := 0;
 BEGIN
   FOR a32 := 0 TO InsertExtractMaxAB DO
@@ -178,7 +177,6 @@ BEGIN
           PutT("extract32(value:"); PutH(a32);
           PutT(", m:"); PutH(m);
           PutT(", n:"); PutH(n);
-          PutT(", sign_extend:"); PutH(sign_extend);
           PutT("):"); PutH(result32);
           NL();
         ELSE
@@ -191,7 +189,6 @@ BEGIN
 END TestExtract32;
 
 PROCEDURE TestExtract64() =
-CONST sign_extend = 0;
 VAR result64: LONGINT := 0L;
 BEGIN
   FOR a64 := 0L TO VAL(InsertExtractMaxAB, LONGINT) DO
@@ -202,7 +199,6 @@ BEGIN
           PutT("extract64(value:"); PutLH(a64);
           PutT(", m:"); PutH(m);
           PutT(", n:"); PutH(n);
-          PutT(", sign_extend:"); PutH(sign_extend);
           PutT("):"); PutLH(result64);
           NL();
         ELSE
