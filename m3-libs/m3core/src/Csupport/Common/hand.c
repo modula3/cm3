@@ -298,6 +298,7 @@ uint64 __stdcall m3_rotate64(uint64 a, int b)
 
 The extract call in the backend has a boolean sign_extend parameter as well.
 This is used for signed integer division by a power of two.
+Those all have constant i/n (aka m/n) and are handled inline.
 
 PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
 (* Return x with n bits replaced, with bit i as the least significant bit, by
@@ -306,9 +307,8 @@ PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
 */
 
 /* UT: unsigned type
- * ST: signed type
  */
-#define M3_EXTRACT_INSERT(extract, extract_and_sign_extend, insert, UT, ST)  \
+#define M3_EXTRACT_INSERT(extract, insert, UT)  \
                                                 \
 M3_EXTRACT_INSERT_LINKAGE                       \
 UT __stdcall extract(UT x, uint32 i, uint32 n)  \
@@ -320,26 +320,6 @@ UT __stdcall extract(UT x, uint32 i, uint32 n)  \
 }                                               \
                                                 \
 M3_EXTRACT_INSERT_LINKAGE                       \
-UT __stdcall extract_and_sign_extend(UT x, uint32 i, uint32 n) \
-{                                               \
-    assert((n + i) <= (sizeof(UT) * 8));        \
-    x >>= i;                                    \
-    x &= ~((~(UT)0) << n);                      \
-    if (x & (((UT)1) << (n - 1)))               \
-        x |= ((~(UT)0) << n);                   \
-    return x;                                   \
-}                                               \
-                                                \
-M3_EXTRACT_INSERT_LINKAGE                       \
-UT __stdcall extract_and_sign_extend##_x86(UT x, uint32 i, uint32 n) \
-/* x86 shift counts are mod 32 so this works, for n != 0 */ \
-{                                               \
-    assert(n);                                  \
-    assert((n + i) <= (sizeof(UT) * 8));        \
-    return (UT)(((ST)(x << -(i + n))) >> -n);   \
-}                                               \
-                                                \
-M3_EXTRACT_INSERT_LINKAGE                       \
 UT __stdcall insert(UT x, UT y, uint32 i, uint32 n) \
 {                                               \
     UT mask = ((~((~(UT)0) << n)) << i);        \
@@ -347,7 +327,7 @@ UT __stdcall insert(UT x, UT y, uint32 i, uint32 n) \
     return (x & ~mask) | ((y << i) & mask);     \
 }                                               \
 
-M3_EXTRACT_INSERT(m3_extract64, m3_extract_and_sign_extend64, m3_insert64, uint64, int64)
+M3_EXTRACT_INSERT(m3_extract64, m3_insert64, uint64)
 
 #endif
 
