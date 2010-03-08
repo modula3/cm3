@@ -1620,63 +1620,29 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
   END dorotate;
 
 PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
-  VAR int: INTEGER;
+  VAR count: INTEGER;
       utype := UnsignedType[type];
   BEGIN
 
-    unlock(t);
     WITH op_count = t.vstack[pos(t, 0, "extract")] DO
 
       IF sign_extend AND op_count.loc # OLoc.imm THEN
-
-        (* Code for this is not reachable and not testable.
-         * It appears tricky and correct, unless count = 0.
-         *)
-
         Err(t, "doextract: sign_extend requires constant offset/count");
-
       END;
 
       IF op_count.loc = OLoc.imm THEN
-        discard(t, 1);
-        IF NOT TIntN.ToHostInteger(op_count.imm, int) THEN
+        IF NOT TIntN.ToHostInteger(op_count.imm, count) THEN
           Err(t, "doextract: failed to convert to host integer");
         END;
-        doextract_n(t, type, sign_extend, int);
+        discard(t, 1);
+        doextract_n(t, type, sign_extend, count);
         RETURN;
-      END;
-
-      (* The register allocation will sometimes do more memory operations
-         than necessary, however I thought the time wasted in rare cases
-         was worth the easier debugging task, since it was going to be
-         really messy to cover all the special cases correctly *)
-
-      IF sign_extend THEN
-
-        Err(t, "doextract: sign_extend requires constant offset/count");
-
-        (* This code is not reachable and not testable.
-         * It appears tricky and correct, unless count = 0.
-         *
-         * find(t, stack0, Force.regset, RegSet { ECX });
-         * find(t, stack1, Force.any);
-         * find(t, stack2, Force.anyreg);
-         * IF op_offset.loc = OLoc.mem AND CG_Bytes[op_offset.mvar.mvar_type] < 4 THEN
-         *   find(t, stack1, Force.anyreg);
-         * END;
-         *
-         * t.cg.binOp(Op.oADD, op_count, op_offset);
-         * t.cg.unOp(Op.oNEG, op_count);
-         * t.cg.unOp(Op.oSHL, op_value);
-         * t.cg.binOp(Op.oADD, op_count, op_offset);
-         * t.cg.unOp(Op.oSAR, op_value);
-         * 
-         * newdest(t, op_count);
-         *)
       END;
     END;
 
     t.pushimmT(TIntN.T{x := IntType[utype].max}, utype);
+
+    unlock(t);
 
     WITH stack_mask = pos(t, 0, "extract"),
          stack_count = pos(t, 1, "extract"),
@@ -1722,14 +1688,10 @@ UT __stdcall extract(UT x, uint32 offset, uint32 count)
 
 PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; count: INTEGER) =
   VAR andval: TIntN.T;
-      int: INTEGER;
+      offset: INTEGER;
       uint_type := IntType[UnsignedType[type]];
       max := TIntN.T{x := uint_type.max};
       typeBitSize := uint_type.size;
-   (* typeBitSizeT := TIntN.T{x := Target.Int{typeBitSize, 0, ..}};
-    * tn: TIntN.T;
-    * typeBitSizeMinusN: TIntN.T;
-    *)
   BEGIN
 
     IF count < 0 THEN
@@ -1747,66 +1709,26 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; count: INTEGER) 
          op_value = t.vstack[stack_value] DO
 
       IF sign_extend AND op_offset.loc # OLoc.imm THEN
-
-        (* Code for this is not reachable and not testable. *)
-
         Err(t, "doextract: sign_extend requires constant offset/count");
-
       END;
 
       IF op_offset.loc = OLoc.imm THEN
-        discard(t, 1);
-        IF NOT TIntN.ToHostInteger(op_offset.imm, int) THEN
+        IF NOT TIntN.ToHostInteger(op_offset.imm, offset) THEN
           Err(t, "doextract_n: failed to convert to host integer");
         END;
-        doextract_mn(t, type, sign_extend, int, count);
+        discard(t, 1);
+        doextract_mn(t, type, sign_extend, offset, count);
         RETURN;
       END;
 
-      IF sign_extend THEN
+      find(t, stack_offset, Force.regset, RegSet { ECX });
+      find(t, stack_value, Force.anyreg);
 
-        Err(t, "doextract: sign_extend requires constant offset/count");
+      t.cg.unOp(Op.oSHR, op_value); (* shift by ECX *)
 
-        (* This is not reachable and not testable.
-         *
-         * corrupt(t, ECX, operandPart := 0);
-         * t.reguse[ECX].locked := TRUE;
-         *
-         * find(t, stack_offset, Force.any);
-         * find(t, stack_value, Force.anyreg);
-         * IF op_offset.loc = OLoc.mem AND CG_Bytes[op_offset.mvar.mvar_type] < 4 THEN
-         *   find(t, stack_offset, Force.anyreg);
-         * END;
-         *
-         * IF NOT TIntN.FromHostInteger(count, Target.Integer.bytes, tn) THEN
-         *   Err(t, "doextract_n: failed to convert count to target integer");
-         * END;
-         *
-         * IF NOT TIntN.Subtract(typeBitSizeT, tn, typeBitSizeMinusN) THEN
-         *   Err(t, "doextract_n: Subtract overflowed");
-         * END;
-         *
-         * <* ASSERT NOT is64 *>
-         *
-         * t.cg.movImmI(t.cg.reg[ECX], typeBitSize - count);
-         * t.cg.binOp(Op.oSUB, t.cg.reg[ECX], op_offset);
-         * t.cg.unOp(Op.oSHL, op_value);
-         *
-         * IF count < typeBitSize THEN
-         *   t.cg.immOp(Op.oSAR, op_value, typeBitSizeMinusN);
-         * END
-         *)
-
-      ELSE
-        find(t, stack_offset, Force.regset, RegSet { ECX });
-        find(t, stack_value, Force.anyreg);
-
-        t.cg.unOp(Op.oSHR, op_value); (* shift by ECX *)
-
-        IF count < typeBitSize THEN
-          TWordN.Shift(max, count - typeBitSize, andval);
-          t.cg.immOp(Op.oAND, op_value, andval);
-        END
+      IF count < typeBitSize THEN
+        TWordN.Shift(max, count - typeBitSize, andval);
+        t.cg.immOp(Op.oAND, op_value, andval);
       END;
 
       newdest(t, op_value);
@@ -1901,9 +1823,9 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
          op_count = t.vstack[stack_count],
          op_offset = t.vstack[stack_offset],
          op_from = t.vstack[stack_from],
-         stop3 = t.vstack[stack_to] DO
+         op_to = t.vstack[stack_to] DO
 
-      IF is64 AND (op_count.loc # OLoc.imm OR op_offset.loc # OLoc.imm OR op_from.loc # OLoc.imm OR stop3.loc # OLoc.imm) THEN
+      IF is64 AND (op_count.loc # OLoc.imm OR op_offset.loc # OLoc.imm OR op_from.loc # OLoc.imm OR op_to.loc # OLoc.imm) THEN
         RETURN FALSE;
       END;
 
@@ -1956,12 +1878,12 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
         t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], op_offset, 4, tbl);
       END;
 
-      t.cg.binOp(Op.oAND, stop3, t.cg.reg[maskreg]);
-      t.cg.binOp(Op.oOR, stop3, op_from);
+      t.cg.binOp(Op.oAND, op_to, t.cg.reg[maskreg]);
+      t.cg.binOp(Op.oOR, op_to, op_from);
 
       newdest(t, op_count);
       newdest(t, op_from);
-      newdest(t, stop3);
+      newdest(t, op_to);
       discard(t, 3);
     END;
 
