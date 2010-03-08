@@ -27,7 +27,6 @@ typedef unsigned long long uint64;
 
 #include <limits.h>
 #include <string.h>
-#include <assert.h>
 #include <stddef.h>
 
 typedef int BOOL;
@@ -313,7 +312,6 @@ PROCEDURE Insert (x, y: T; i, n: CARDINAL): T;
 M3_EXTRACT_INSERT_LINKAGE                       \
 UT __stdcall extract(UT x, uint32 i, uint32 n)  \
 {                                               \
-    assert((n + i) <= (sizeof(UT) * 8));        \
     x >>= i;                                    \
     x &= ~((~(UT)0) << n);                      \
     return x;                                   \
@@ -323,7 +321,6 @@ M3_EXTRACT_INSERT_LINKAGE                       \
 UT __stdcall insert(UT x, UT y, uint32 i, uint32 n) \
 {                                               \
     UT mask = ((~((~(UT)0) << n)) << i);        \
-    assert((n + i) <= (sizeof(UT) * 8));        \
     return (x & ~mask) | ((y << i) & mask);     \
 }                                               \
 
