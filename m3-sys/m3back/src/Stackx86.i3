@@ -64,9 +64,9 @@ TYPE Public = OBJECT
         inttoflt ();
         doshift (type: IType; shiftType: ShiftType): BOOLEAN;
         dorotate (type: IType): BOOLEAN;
-        doextract (type: IType; sign_extend: BOOLEAN): BOOLEAN;
-        doextract_n (type: IType; sign_extend: BOOLEAN; n: INTEGER): BOOLEAN;
-        doextract_mn (type: IType; sign_extend: BOOLEAN; m, n: INTEGER): BOOLEAN;
+        doextract (type: IType; sign_extend: BOOLEAN);
+        doextract_n (type: IType; sign_extend: BOOLEAN; n: INTEGER);
+        doextract_mn (type: IType; sign_extend: BOOLEAN; m, n: INTEGER);
         doinsert (type: IType): BOOLEAN;
         doinsert_n (type: IType; n: INTEGER): BOOLEAN;
         doinsert_mn (type: IType; m, n: INTEGER): BOOLEAN;
