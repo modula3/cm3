@@ -67,9 +67,9 @@ TYPE Public = OBJECT
         doextract (type: IType; sign_extend: BOOLEAN);
         doextract_n (type: IType; sign_extend: BOOLEAN; n: INTEGER);
         doextract_mn (type: IType; sign_extend: BOOLEAN; m, n: INTEGER);
-        doinsert (type: IType): BOOLEAN;
-        doinsert_n (type: IType; n: INTEGER): BOOLEAN;
-        doinsert_mn (type: IType; m, n: INTEGER): BOOLEAN;
+        doinsert (type: IType);
+        doinsert_n (type: IType; n: INTEGER);
+        doinsert_mn (type: IType; m, n: INTEGER);
         swap ();
         doloophole (from, to: ZType);
         doindex_address (shift, size: INTEGER; neg: BOOLEAN);
