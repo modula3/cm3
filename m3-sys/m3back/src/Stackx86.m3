@@ -1523,8 +1523,8 @@ PROCEDURE doshift (t: T; type: IType; shiftType: ShiftType): BOOLEAN =
               t.cg.set_label(endlab);
               (* .endlab  *)
 
-            | ShiftType.LeftAlreadyBounded => t.cg.unOp(Op.oSHL, stop1); (* shift count in ecx *)
-            | ShiftType.RightAlreadyBounded => t.cg.unOp(Op.oSHR, stop1); (* shift count in ecx *)
+            | ShiftType.LeftAlreadyBounded => t.cg.unOp(Op.oSHL, stop1); (* shift count in ECX *)
+            | ShiftType.RightAlreadyBounded => t.cg.unOp(Op.oSHR, stop1); (* shift count in ECX *)
           END;
 
           newdest(t, stop1);
@@ -1616,25 +1616,18 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
 
       discard(t, 1);
     END;
-
     RETURN TRUE;
   END dorotate;
 
-PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN): BOOLEAN =
-  VAR tbl: MVar;
-      int: INTEGER;
-      is64 := TypeIs64(type);
+PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
+  VAR int: INTEGER;
+      utype := UnsignedType[type];
   BEGIN
 
     unlock(t);
-    WITH stack0 = pos(t, 0, "extract"),
-         stack1 = pos(t, 1, "extract"),
-         stack2 = pos(t, 2, "extract"),
-         stop0 = t.vstack[stack0],
-         stop1 = t.vstack[stack1],
-         stop2 = t.vstack[stack2] DO
+    WITH count = t.vstack[pos(t, 0, "extract")] DO
 
-      IF sign_extend AND stop0.loc # OLoc.imm THEN
+      IF sign_extend AND count.loc # OLoc.imm THEN
 
         (* Code for this is not reachable and not testable.
          * It appears tricky and correct, unless n = 0.
@@ -1644,16 +1637,13 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN): BOOLEAN =
 
       END;
 
-      IF is64 AND (stop0.loc # OLoc.imm OR stop1.loc # OLoc.imm OR stop2.loc # OLoc.imm) THEN
-        RETURN FALSE;
-      END;
-
-      IF stop0.loc = OLoc.imm THEN
+      IF count.loc = OLoc.imm THEN
         discard(t, 1);
-        IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
+        IF NOT TIntN.ToHostInteger(count.imm, int) THEN
           Err(t, "doextract: failed to convert to host integer");
         END;
-        RETURN doextract_n(t, type, sign_extend, int);
+        doextract_n(t, type, sign_extend, int);
+        RETURN;
       END;
 
       (* The register allocation will sometimes do more memory operations
@@ -1675,49 +1665,64 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN): BOOLEAN =
          *   find(t, stack1, Force.anyreg);
          * END;
          *
-         * t.cg.binOp(Op.oADD, stop0, stop1);
-         * t.cg.unOp(Op.oNEG, stop0);
+         * t.cg.binOp(Op.oADD, count, stop1);
+         * t.cg.unOp(Op.oNEG, count);
          * t.cg.unOp(Op.oSHL, stop2);
-         * t.cg.binOp(Op.oADD, stop0, stop1);
+         * t.cg.binOp(Op.oADD, count, stop1);
          * t.cg.unOp(Op.oSAR, stop2);
          * 
-         * newdest(t, stop0);
+         * newdest(t, count);
          *)
-
-      ELSE
-        IF stop1.loc = OLoc.imm THEN
-          TWordN.And(stop1.imm, BitCountMask[type], stop1.imm);
-        ELSE
-          find(t, stack1, Force.regset, RegSet { ECX });
-        END;
-
-        find(t, stack0, Force.any);
-        find(t, stack2, Force.anyreg);
-        IF stop0.loc # OLoc.register THEN
-          find(t, stack0, Force.anyreg);
-        END;
-
-        IF stop1.loc = OLoc.imm THEN
-          t.cg.immOp(Op.oSHR, stop2, stop1.imm);
-        ELSE
-          t.cg.unOp(Op.oSHR, stop2);
-        END;
-
-        ImportLowSet (t, tbl);
-        t.cg.tableOp(Op.oAND, stop2, stop0, 4, tbl);
       END;
-
-      newdest(t, stop2);
-      discard(t, 2);
     END;
 
-    RETURN TRUE;
+    t.pushimmT(TIntN.T{x := IntType[utype].max}, utype);
+
+    WITH stack_mask = pos(t, 0, "extract"),
+         stack_count = pos(t, 1, "extract"),
+         stack_offset = pos(t, 2, "extract"),
+         stack_value = pos(t, 3, "extract"),
+         mask = t.vstack[stack_mask],
+         count = t.vstack[stack_count],
+         offset = t.vstack[stack_offset],
+         value = t.vstack[stack_value] DO
+
+      IF offset.loc = OLoc.imm THEN
+        TWordN.And(offset.imm, BitCountMask[type], offset.imm); (* This should be redundant. *)
+      ELSE
+        find(t, stack_offset, Force.regset, RegSet {ECX});
+      END;
+      find(t, stack_value, Force.anyreg);
+(*
+UT __stdcall extract(UT x, uint32 offset, uint32 count) 
+{
+    x >>= offset;
+    x &= ~((~(UT)0) << count);
+    return x;
+}
+*)
+      IF offset.loc = OLoc.imm THEN
+        t.cg.immOp(Op.oSHR, value, offset.imm); (* shift by ECX *)
+      ELSE
+        t.cg.unOp(Op.oSHR, value); (* shift by ECX *)
+      END;
+
+      unlock(t);
+      find(t, stack_count, Force.regset, RegSet{ECX});
+      find(t, stack_value, Force.anyreg);
+      find(t, stack_mask, Force.anyreg);
+      t.cg.unOp(Op.oSHL, mask); (* shift by ECX *)
+      t.cg.unOp(Op.oNOT, mask);
+      t.cg.binOp(Op.oAND, value, mask);
+
+      newdest(t, value);
+      discard(t, 3);
+    END;
   END doextract;
 
-PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER): BOOLEAN =
+PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER) =
   VAR andval: TIntN.T;
       int: INTEGER;
-      is64 := TypeIs64(type);
       uint_type := IntType[UnsignedType[type]];
       max := TIntN.T{x := uint_type.max};
       typeBitSize := uint_type.size;
@@ -1749,19 +1754,14 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER): BOO
 
       END;
 
-      IF is64 AND (stop0.loc # OLoc.imm OR stop1.loc # OLoc.imm) THEN
-        RETURN FALSE;
-      END;
-
       IF stop0.loc = OLoc.imm THEN
         discard(t, 1);
         IF NOT TIntN.ToHostInteger(stop0.imm, int) THEN
           Err(t, "doextract_n: failed to convert to host integer");
         END;
-        RETURN doextract_mn(t, type, sign_extend, int, n);
+        doextract_mn(t, type, sign_extend, int, n);
+        RETURN;
       END;
-
-      <* ASSERT NOT is64 *>
 
       IF sign_extend THEN
 
@@ -1801,7 +1801,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER): BOO
         find(t, stack0, Force.regset, RegSet { ECX });
         find(t, stack1, Force.anyreg);
 
-        t.cg.unOp(Op.oSHR, stop1);
+        t.cg.unOp(Op.oSHR, stop1); (* shift by ECX *)
 
         IF n < typeBitSize THEN
           TWordN.Shift(max, n - typeBitSize, andval);
@@ -1812,11 +1812,9 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; n: INTEGER): BOO
       newdest(t, stop1);
       discard(t, 1);
     END;
-
-    RETURN TRUE;
   END doextract_n;
 
-PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER): BOOLEAN =
+PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER) =
   VAR andval, tint: TIntN.T;
       uint_type := IntType[UnsignedType[type]];
       max := TIntN.T{x := uint_type.max};
@@ -1849,7 +1847,7 @@ PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER):
             TWordN.Or(stop0.imm, tint, stop0.imm);
           END;
         END;
-        RETURN TRUE;
+        RETURN;
       END;
 
       IF sign_extend THEN
@@ -1884,8 +1882,6 @@ PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; m, n: INTEGER):
 
       newdest(t, stop0);
     END;
-
-    RETURN TRUE;
   END doextract_mn;
 
 PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
@@ -1925,17 +1921,9 @@ PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
         find(t, stack1, Force.regset, RegSet { ECX });
       END;
 
-      find(t, stack2, Force.any);
-      find(t, stack3, Force.any);
+      find(t, stack2, Force.anyreg);
+      find(t, stack3, Force.anyreg);
       find(t, stack0, Force.anyreg);
-
-      IF stop2.loc # OLoc.register THEN
-        find(t, stack2, Force.anyreg);
-      END;
-
-      IF stop3.loc # OLoc.register THEN
-        find(t, stack3, Force.anyreg);
-      END;
 
       maskreg := pickreg(t);
       corrupt(t, maskreg, operandPart := 0);
@@ -2013,12 +2001,8 @@ PROCEDURE doinsert_n (t: T; type: IType; n: INTEGER): BOOLEAN =
       <* ASSERT NOT is64 *>
 
       find(t, stack0, Force.regset, RegSet { ECX });
-      find(t, stack2, Force.any);
+      find(t, stack2, Force.anyreg);
       find(t, stack1, Force.anyreg);
-
-      IF stop2.loc # OLoc.register THEN
-        find(t, stack2, Force.anyreg);
-      END;
 
       maskreg := pickreg(t);
       corrupt(t, maskreg, operandPart := 0);
