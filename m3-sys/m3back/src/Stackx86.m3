@@ -7,7 +7,7 @@
 
 MODULE Stackx86;
 
-IMPORT M3ID, M3CG, TargetMap, M3CG_Ops, M3x86Rep, Codex86, Wrx86;
+IMPORT M3CG, TargetMap, M3CG_Ops, M3x86Rep, Codex86, Wrx86;
 
 IMPORT TIntN, TWordN;
 IMPORT Target, Fmt;
@@ -34,8 +34,6 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
         reguse        : ARRAY [0 .. NRegs] OF Register;
         current_proc  : x86Proc;
         rmode         : ARRAY FlToInt OF TIntN.T;
-        lowset_table  : x86Var;
-        highset_table : x86Var;
       OVERRIDES
         init := init;
         end := end;
@@ -130,13 +128,12 @@ PROCEDURE check (t: T; where: TEXT) =
 
     FOR i := 0 TO NRegs DO
       IF t.reguse[i].stackp # -1 THEN
-        IF NOT (t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart] = i) THEN
+        IF t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart] # i THEN
           t.Err(where
               & " i:" & RegName[i]
               & " t.reguse[i].stackp:" & Fmt.Int(t.reguse[i].stackp)
               & " t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart]:" & RegName[t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart]]);
         END;
-        <* ASSERT t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart] = i *>
       END
     END;
 
@@ -144,14 +141,13 @@ PROCEDURE check (t: T; where: TEXT) =
       IF t.vstack[i].loc = OLoc.register THEN
         size := GetOperandSize(t.vstack[i]);
         FOR j := 0 TO size - 1 DO
-          IF NOT (t.reguse[t.vstack[i].reg[j]].stackp = i) THEN
+          IF t.reguse[t.vstack[i].reg[j]].stackp # i THEN
             t.Err(where
                 & " i:" & Fmt.Int(i)
                 & " j:" & Fmt.Int(j)
                 & " t.vstack[i].reg[j]:" & RegName[t.vstack[i].reg[j]]
                 & " t.reguse[t.vstack[i].reg[j]].stackp:" & Fmt.Int(t.reguse[t.vstack[i].reg[j]].stackp));
           END;
-          <* ASSERT t.reguse[t.vstack[i].reg[j]].stackp = i *>
         END;
       END;
     END;
@@ -1528,7 +1524,7 @@ PROCEDURE doshift (t: T; type: IType; shiftType: ShiftType): BOOLEAN =
           END;
 
           newdest(t, stop1);
-          newdest(t, stop0); (* Is this needed? We did not change the value and we are going to discard it. *)
+          newdest(t, stop0);
         END;
       END;
 
@@ -1649,38 +1645,61 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
          stack_offset = pos(t, 2, "extract"),
          stack_value = pos(t, 3, "extract"),
          op_mask = t.vstack[stack_mask],
-         (*op_count = t.vstack[stack_count],*)
+         op_count = t.vstack[stack_count],
          op_offset = t.vstack[stack_offset],
          op_value = t.vstack[stack_value] DO
 
+(* T extract(T x, uint32 offset, uint32 count) 
+   {
+     x >>= offset;
+     x &= ~((~(T)0) << count);
+     return x;
+   }
+*)
       IF op_offset.loc = OLoc.imm THEN
         TWordN.And(op_offset.imm, BitCountMask[type], op_offset.imm); (* This should be redundant. *)
       ELSE
         find(t, stack_offset, Force.regset, RegSet {ECX});
       END;
       find(t, stack_value, Force.anyreg);
-(*
-UT __stdcall extract(UT x, uint32 offset, uint32 count) 
-{
-    x >>= offset;
-    x &= ~((~(UT)0) << count);
-    return x;
-}
-*)
       IF op_offset.loc = OLoc.imm THEN
-        t.cg.immOp(Op.oSHR, op_value, op_offset.imm); (* shift by ECX *)
+        t.cg.immOp(Op.oSHR, op_value, op_offset.imm);
       ELSE
         t.cg.unOp(Op.oSHR, op_value); (* shift by ECX *)
       END;
 
+      (* throw out offset; what is the right way?
+       * Without most of this, we save it away
+       * in another register and never use that.
+       * With it we get an assertion failure.
+       *)
+      (*IF op_offset.loc = OLoc.register THEN
+        t.newdest(op_offset);
+        t.dealloc_reg(stack_offset, operandPart := 0);
+        t.vstack[stack_offset].loc := OLoc.imm;
+      END;*)
       unlock(t);
-      find(t, stack_count, Force.regset, RegSet{ECX});
-      find(t, stack_value, Force.anyreg);
+
+      IF op_count.loc = OLoc.imm THEN
+        TWordN.And(op_count.imm, BitCountMask[type], op_count.imm); (* This should be redundant. *)
+      ELSE
+        find(t, stack_count, Force.regset, RegSet {ECX});
+      END;
+
       find(t, stack_mask, Force.anyreg);
-      t.cg.unOp(Op.oSHL, op_mask); (* shift by ECX *)
+
+      IF op_count.loc = OLoc.imm THEN
+        t.cg.immOp(Op.oSHL, op_mask, op_count.imm);
+      ELSE
+        t.cg.unOp(Op.oSHL, op_mask); (* shift by ECX *)
+      END;
+
       t.cg.unOp(Op.oNOT, op_mask);
       t.cg.binOp(Op.oAND, op_value, op_mask);
 
+      newdest(t, op_count);
+      newdest(t, op_offset);
+      newdest(t, op_mask);
       newdest(t, op_value);
       discard(t, 3);
     END;
@@ -1806,165 +1825,154 @@ PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; offset, count: 
     END;
   END doextract_mn;
 
-PROCEDURE doinsert (t: T; type: IType): BOOLEAN =
-  VAR maskreg: Regno;  tbl: MVar;
-      int: INTEGER;
-      tint: TIntN.T;
-      uint_type := IntType[UnsignedType[type]];
-      is64 := TypeIs64(type);
-      max := TIntN.T{x := uint_type.max};
+PROCEDURE doinsert (t: T; type: IType) =
+  VAR count: INTEGER;
+      offset: INTEGER;
+      utype := UnsignedType[type];
   BEGIN
 
-    unlock(t);
     WITH stack_count = pos(t, 0, "insert"),
          stack_offset = pos(t, 1, "insert"),
-         stack_from = pos(t, 2, "insert"),
-         stack_to = pos(t, 3, "insert"),
+         op_count = t.vstack[stack_count],
+         op_offset = t.vstack[stack_offset] DO
+
+      IF op_count.loc = OLoc.imm AND op_offset.loc = OLoc.imm THEN
+        IF NOT TIntN.ToHostInteger(op_count.imm, count) THEN
+          Err(t, "doinsert: failed to convert count to host integer");
+        END;
+        IF NOT TIntN.ToHostInteger(op_offset.imm, offset) THEN
+          Err(t, "doinsert: failed to convert offset to host integer");
+        END;
+        discard(t, 2);
+        doinsert_mn(t, type, offset, count);
+        RETURN;
+      END;
+    END;
+
+    t.pushimmT(TIntN.T{x := IntType[utype].max}, utype);
+
+    unlock(t);
+
+    WITH stack_mask = pos(t, 0, "insert"),
+         stack_count = pos(t, 1, "insert"),
+         stack_offset = pos(t, 2, "insert"),
+         stack_from = pos(t, 3, "insert"),
+         stack_to = pos(t, 4, "insert"),
+         op_mask = t.vstack[stack_mask],
          op_count = t.vstack[stack_count],
          op_offset = t.vstack[stack_offset],
          op_from = t.vstack[stack_from],
          op_to = t.vstack[stack_to] DO
 
-      IF is64 AND (op_count.loc # OLoc.imm OR op_offset.loc # OLoc.imm OR op_from.loc # OLoc.imm OR op_to.loc # OLoc.imm) THEN
-        RETURN FALSE;
+
+(* T insert(T to, T from, uint32 offset, uint32 count)
+   {
+     T mask = ((~((~(T)0) << count)) << offset);
+     return (to & ~mask) | ((from << offset) & mask);
+   }
+*)
+
+      IF op_offset.loc = OLoc.imm THEN
+        TWordN.And(op_offset.imm, BitCountMask[type], op_offset.imm); (* shouldn't be needed *)
       END;
 
       IF op_count.loc = OLoc.imm THEN
-        discard(t, 1);
-        IF NOT TIntN.ToHostInteger(op_count.imm, int) THEN
-          Err(t, "doinsert: failed to convert to host integer");
-        END;
-        RETURN doinsert_n(t, type, int);
+        TWordN.And(op_count.imm, BitCountMask[type], op_count.imm); (* shouldn't be needed *)
+      ELSE
+        find(t, stack_count, Force.regset, RegSet{ECX});
       END;
 
-      IF op_offset.loc = OLoc.imm THEN
-        TWordN.And(op_offset.imm, BitCountMask[type], op_offset.imm);
+      find(t, stack_mask, Force.anyreg);
+
+      IF op_count.loc = OLoc.register THEN
+        t.cg.unOp(Op.oSHL, op_mask); (* shift by ECX *)
       ELSE
-        find(t, stack_offset, Force.regset, RegSet { ECX });
+        t.cg.immOp(Op.oSHL, op_mask, op_count.imm);
+      END;
+      t.cg.unOp(Op.oNOT, op_mask);
+
+      (* done with count; I can't figure out how to properly dispose of it.
+       * Without most of this, we save it away
+       * and we end up short on registers and save it to the stack.
+       * With it we get an assertion failure.
+       *)
+      (*IF op_count.loc = OLoc.register THEN
+        t.newdest(op_count);
+        t.dealloc_reg(stack_count, operandPart := 0);
+        t.vstack[stack_count].loc := OLoc.imm;
+      END;*)
+      unlock(t);
+      
+      find(t, stack_offset, Force.regset, RegSet{ECX});
+      find(t, stack_mask, Force.anyreg);
+
+      IF op_offset.loc = OLoc.register THEN
+        t.cg.unOp(Op.oSHL, op_mask); (* shift by ECX *)
+      ELSE
+        t.cg.immOp(Op.oSHL, op_mask, op_offset.imm);
       END;
 
       find(t, stack_from, Force.anyreg);
+      IF op_offset.loc = OLoc.register THEN
+        t.cg.unOp(Op.oSHL, op_from); (* shift by ECX *)
+      ELSE
+        t.cg.immOp(Op.oSHL, op_from, op_offset.imm);
+      END;
+
+      (* done with offset; I can't figure out how to properly dispose of it.
+       * Without most of this, we save it away
+       * and we end up short on registers and save it to the stack.
+       * With it we get an assertion failure.
+       *)
+      (*IF op_offset.loc = OLoc.register THEN
+        t.newdest(op_offset);
+        t.dealloc_reg(stack_offset, operandPart := 0);
+        t.vstack[stack_offset].loc := OLoc.imm;
+      END;*)
+      unlock(t);
+
+      find(t, stack_from, Force.anyreg);
+      find(t, stack_mask, Force.anyreg);
+
+      t.cg.binOp(Op.oAND, op_from, op_mask);
+      t.cg.unOp(Op.oNOT, op_mask);
       find(t, stack_to, Force.anyreg);
-      find(t, stack_count, Force.anyreg);
-
-      maskreg := pickreg(t);
-      corrupt(t, maskreg, operandPart := 0);
-
-      ImportLowSet (t, tbl);
-      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], op_count, 4, tbl);
-      t.cg.binOp(Op.oAND, op_from, t.cg.reg[maskreg]);
-
-      IF op_offset.loc = OLoc.imm THEN
-        IF TIntN.NE(op_offset.imm, TZero) THEN
-          t.cg.immOp(Op.oSHL, op_from, op_offset.imm);
-          t.cg.immOp(Op.oADD, op_count, op_offset.imm);
-        END
-      ELSE
-        t.cg.unOp(Op.oSHL, op_from);
-        t.cg.binOp(Op.oADD, op_count, op_offset);
-      END;
-
-      ImportLowSet (t, tbl);
-      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], op_count, 4, tbl);
-
-      IF op_offset.loc = OLoc.imm THEN
-        IF NOT TIntN.ToHostInteger(op_offset.imm, int) THEN
-          Err(t, "failed to convert op_offset.imm to host integer");
-        END;
-        TWordN.Shift(max, int, tint);
-        t.cg.immOp(Op.oXOR, t.cg.reg[maskreg], tint);
-      ELSE
-        ImportHighSet (t, tbl);
-        t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], op_offset, 4, tbl);
-      END;
-
-      t.cg.binOp(Op.oAND, op_to, t.cg.reg[maskreg]);
+      t.cg.binOp(Op.oAND, op_to, op_mask);
       t.cg.binOp(Op.oOR, op_to, op_from);
 
       newdest(t, op_count);
-      newdest(t, op_from);
+      newdest(t, op_offset);
       newdest(t, op_to);
-      discard(t, 3);
+      newdest(t, op_from);
+      newdest(t, op_mask);
+      discard(t, 4);
     END;
-
-    RETURN TRUE;
   END doinsert;
 
-PROCEDURE doinsert_n (t: T; type: IType; count: INTEGER): BOOLEAN =
-  VAR tbl: MVar;  maskreg: Regno;
-      offset: INTEGER;
-      tint: TIntN.T;
-      is64 := TypeIs64(type);
-      uint_type := IntType[UnsignedType[type]];
-      typeBitSize := uint_type.size;
-      max := TIntN.T{x := uint_type.max};
+PROCEDURE doinsert_n (t: T; type: IType; count: INTEGER) =
+  VAR offset: INTEGER;
   BEGIN
-
-    unlock(t);
     WITH stack_offset = pos(t, 0, "insert"),
-         stack_from = pos(t, 1, "insert"),
-         stack_to = pos(t, 2, "insert"),
-         op_offset = t.vstack[stack_offset],
-         op_from = t.vstack[stack_from],
-         op_to = t.vstack[stack_to] DO
-
-      IF is64 AND (op_offset.loc # OLoc.imm OR op_from.loc # OLoc.imm OR op_to.loc # OLoc.imm) THEN
-        RETURN FALSE;
-      END;
+         op_offset = t.vstack[stack_offset] DO
 
       IF op_offset.loc = OLoc.imm THEN
-        discard(t, 1);
         IF NOT TIntN.ToHostInteger(op_offset.imm, offset) THEN
           Err(t, "doinsert_n: failed to convert to host integer");
         END;
-        RETURN doinsert_mn(t, type, offset, count);
+        discard(t, 1);
+        doinsert_mn(t, type, offset, count);
+        RETURN;
       END;
-
-      <* ASSERT NOT is64 *>
-
-      find(t, stack_offset, Force.regset, RegSet { ECX });
-      find(t, stack_to, Force.anyreg);
-      find(t, stack_from, Force.anyreg);
-
-      maskreg := pickreg(t);
-      corrupt(t, maskreg, operandPart := 0);
-
-      <* ASSERT NOT is64 *>
-
-      IF count # typeBitSize THEN
-        TWordN.Shift(max, count - typeBitSize, tint);
-        t.cg.immOp(Op.oAND, op_from, tint);
-      END;
-
-      t.cg.unOp(Op.oSHL, op_from);
-
-(****
-      intable := t.lowset_table;
-      INC(intable.o, Word.Shift(count*4, 16));
-      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], op_offset, 4, intable);
-      t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], op_offset, 4, t.highset_table);
-****)
-      ImportLowSet(t, tbl);
-      t.cg.tableOp(Op.oMOV, t.cg.reg[maskreg], op_offset, 4, tbl);
-      ImportHighSet(t, tbl);
-      INC(tbl.mvar_offset, count*4);
-      t.cg.tableOp(Op.oXOR, t.cg.reg[maskreg], op_offset, 4, tbl);
-
-      t.cg.binOp(Op.oAND, op_to, t.cg.reg[maskreg]);
-      t.cg.binOp(Op.oOR, op_to, op_from);
-
-      newdest(t, op_from);
-      newdest(t, op_to);
-      discard(t, 2);
     END;
 
-    RETURN TRUE;
+    t.pushimmI(count, UnsignedType[type]);
+    t.doinsert(type);
+
   END doinsert_n;
   
-PROCEDURE doinsert_mn (t: T; type: IType; offset, count: INTEGER): BOOLEAN =
+PROCEDURE doinsert_mn (t: T; type: IType; offset, count: INTEGER) =
   VAR tint_m, mask_m, mask_m_n, mask: TIntN.T;
       uint_type := IntType[UnsignedType[type]];
-      is64 := TypeIs64(type);
       max := TIntN.T{x := uint_type.max};
       typeBitSize := uint_type.size;
   BEGIN
@@ -1974,17 +1982,6 @@ PROCEDURE doinsert_mn (t: T; type: IType; offset, count: INTEGER): BOOLEAN =
          stack_to = pos(t, 1, "insert"),
          op_from = t.vstack[stack_from],
          op_to = t.vstack[stack_to] DO
-
-      (* This check should be removed;
-       * It is ok though, it is here because
-       * I haven't implemented some optimizations.
-       * RETURN FALSE just means "generate a function
-       * call instead of inline code".
-       *)
-
-      IF is64 AND (op_from.loc # OLoc.imm OR op_to.loc # OLoc.imm) THEN
-        RETURN FALSE;
-      END;
 
       find(t, stack_to, Force.any);
       find(t, stack_from, Force.anyregimm);
@@ -2042,8 +2039,6 @@ PROCEDURE doinsert_mn (t: T; type: IType; offset, count: INTEGER): BOOLEAN =
       newdest(t, op_to);
       discard(t, 1);
     END;
-
-    RETURN TRUE;
   END doinsert_mn;
 
 PROCEDURE swap (t: T) =
@@ -2212,6 +2207,7 @@ PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
          stack1 = pos(t, 1, "doindex_address"),
          stop0 = t.vstack[stack0],
          stop1 = t.vstack[stack1] DO
+
       find(t, stack0, Force.any);
       find(t, stack1, Force.anyreg, AllRegisters, TRUE);
 
@@ -2548,35 +2544,7 @@ PROCEDURE init (t: T) =
 
     t.rmode := ARRAY FlToInt OF TIntN.T
       { TZero, TIntN.x0400, TIntN.x0800, TIntN.x0F00 };
-    t.lowset_table := NIL;
-    t.highset_table := NIL;
   END init;
-
-PROCEDURE ImportLowSet (t: T;  VAR(*OUT*)tbl: MVar) =
-  BEGIN
-    IF (t.lowset_table = NIL) THEN
-      t.lowset_table := ImportBitmaskTable (t, "_lowbits");
-    END;
-    tbl.var := t.lowset_table;
-    tbl.mvar_offset   := 0;
-    tbl.mvar_type := Type.Int32;
-  END ImportLowSet;
-
-PROCEDURE ImportHighSet (t: T;  VAR(*OUT*)tbl: MVar) =
-  BEGIN
-    IF (t.highset_table = NIL) THEN
-      t.highset_table := ImportBitmaskTable (t, "_highbits");
-    END;
-    tbl.var := t.highset_table;
-    tbl.mvar_offset   := 0;
-    tbl.mvar_type := Type.Int32;
-  END ImportHighSet;
-
-PROCEDURE ImportBitmaskTable (t: T;  nm: TEXT): x86Var =
-  BEGIN
-    RETURN t.parent.import_global (M3ID.Add (nm), 33 * 4 (*byte size*),
-               4 (*align*), Type.Struct, 0 (*typeuid*));
-  END ImportBitmaskTable;
 
 PROCEDURE end (<*UNUSED*> t: T) =
   BEGIN
