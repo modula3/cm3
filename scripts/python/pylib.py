@@ -2250,20 +2250,21 @@ def _CopyCompiler(From, To):
         CopyFile(from_cm3, To) or FatalError("3")
         CopyFileIfExist(os.path.join(From, "cm3.pdb"), To) or FatalError("5")
 
-    if FileExists(from_cm3cgexe):
-        from_cm3cg = from_cm3cgexe
-    elif FileExists(from_cm3cg):
-        pass
-    else:
-        from_cm3cg = None
-        from_cm3cgexe = None
-    if from_cm3cg:
-        #
-        # delete .exe first to avoid being fooled by Cygwin
-        #
-        DeleteFile(os.path.join(To, "cm3cg.exe"))
-        DeleteFile(os.path.join(To, "cm3cg"))
-        CopyFile(from_cm3cg, To) or FatalError("4")
+    if Config != "NT386":
+        if FileExists(from_cm3cgexe):
+            from_cm3cg = from_cm3cgexe
+        elif FileExists(from_cm3cg):
+            pass
+        else:
+            from_cm3cg = None
+            from_cm3cgexe = None
+        if from_cm3cg:
+            #
+            # delete .exe first to avoid being fooled by Cygwin
+            #
+            DeleteFile(os.path.join(To, "cm3cg.exe"))
+            DeleteFile(os.path.join(To, "cm3cg"))
+            CopyFile(from_cm3cg, To) or FatalError("4")
 
     return True
 
