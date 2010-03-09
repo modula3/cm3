@@ -2341,7 +2341,7 @@ def GetProgramFiles():
             ProgramFiles.append(a)
     return ProgramFiles
 
-def DetermineVisualCPlusPlusVersion():
+def GetVisualCPlusPlusVersion():
     a = os.popen("cl 2>&1 >nul").read().lower()
     if a.find("9.00") != -1:
         return "20"
@@ -2719,10 +2719,13 @@ def GetStage():
 # For now though, we only build min.
 
 def FormInstallRoot(PackageSetName):
-    return os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
+    a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
+    if Config == "NT386":
+        a = a + "-VC" + GetVisualCPlusPlusVersion()
+    return a
 
 def MakeMSIWithWix(input):
-# input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1
+# input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1-VC90
 # The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)M
     import uuid
     
@@ -2991,7 +2994,7 @@ if __name__ == "__main__":
     # run test code if module run directly
     #
 
-    print("DetermineVisualCPlusPlusVersion:" + DetermineVisualCPlusPlusVersion())
+    print("GetVisualCPlusPlusVersion:" + GetVisualCPlusPlusVersion())
     sys.exit(1)
 
     print("CM3VERSION is " + GetVersion("CM3VERSION"))
