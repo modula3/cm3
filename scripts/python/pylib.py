@@ -123,7 +123,7 @@ def GetPathBaseName(a):
 
 #-----------------------------------------------------------------------------
 
-def _ConvertToCygwinPath(a):
+def ConvertToCygwinPath(a):
     if IsInterix() or env_OS != "Windows_NT" or a == None:
         return a
     if (a.find('\\') == -1) and (a.find(':') == -1):
@@ -135,7 +135,7 @@ def _ConvertToCygwinPath(a):
 
 #-----------------------------------------------------------------------------
 
-def _ConvertFromCygwinPath(a):
+def ConvertFromCygwinPath(a):
     if IsInterix() or env_OS != "Windows_NT" or a == None:
         return a
     a = a.replace("/", "\\")
@@ -160,14 +160,14 @@ def GetFullPath(a):
     return a
 
 def ConvertPathForWin32(a):
-    return _ConvertFromCygwinPath(a)
+    return ConvertFromCygwinPath(a)
 
 if os.name == "posix":
     def ConvertPathForPython(a):
-        return _ConvertToCygwinPath(a)
+        return ConvertToCygwinPath(a)
 else:
     def ConvertPathForPython(a):
-        return _ConvertFromCygwinPath(a)
+        return ConvertFromCygwinPath(a)
 
 #-----------------------------------------------------------------------------
 
@@ -632,9 +632,12 @@ elif UName.startswith("openbsd"):
 
 elif UName.startswith("darwin"):
 
-    # detect the m3 platform (Darwin runs on ppc32, ppc64, x86, amd64)
+    # detect the m3 platform (Darwin runs on ppc32, ppc64, x86, amd64, arm)
     if UNameArchP == "powerpc":
-        Host = "PPC_DARWIN"
+        if "ppc970\n" == os.popen("machine").read().lower():
+          Host = "PPC64_DARWIN"
+        else:
+          Host = "PPC_DARWIN"
     elif re.match("i[3456]86", UNameArchP):
         if os.popen("sysctl hw.cpu64bit_capable").read() == "hw.cpu64bit_capable: 1\n":
             Host = "AMD64_DARWIN"
@@ -794,7 +797,7 @@ def IsCygwinBinary(a):
     a = a.replace("/cygdrive/c/", "c:\\")
     a = a.replace("/cygdrive/d/", "d:\\")
     a = a.replace("/", "\\")
-    a = _ConvertFromCygwinPath(a)
+    a = ConvertFromCygwinPath(a)
     #print("a is " + a)
     return (os.system("findstr 2>&1 >" + os.devnull + " /m cygwin1.dll \"" + a + "\"") == 0)
 
@@ -806,11 +809,11 @@ if _Program != "make-msi.py":
     if IsCygwinBinary(CM3):
         CM3IsCygwin = True
         def ConvertPathForCM3(a):
-            return _ConvertToCygwinPath(a)
+            return ConvertToCygwinPath(a)
     else:
         CM3IsCygwin = False
         def ConvertPathForCM3(a):
-            return _ConvertFromCygwinPath(a)
+            return ConvertFromCygwinPath(a)
 
 #-----------------------------------------------------------------------------
 #
@@ -869,10 +872,11 @@ if _Program != "make-msi.py":
 if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
 # workaround some of it
-    CM3_BuildLocal = CM3_BuildLocal or BuildLocal or "%(CM3)s %(CM3_FLAGS)s -build -override %(DEFS)s%(BuildArgs)s"
-    CM3_CleanLocal = CM3_CleanLocal or CleanLocal or "%(CM3)s %(CM3_FLAGS)s -clean -build -override %(DEFS)s%(CleanArgs)s"
-    CM3_BuildGlobal = CM3_BuildGlobal or BuildGlobal or "%(CM3)s %(CM3_FLAGS)s -build %(DEFS)s%(BuildArgs)s"
-    CM3_CleanGlobal = CM3_CleanGlobal or CleanGlobal or "%(CM3)s %(CM3_FLAGS)s -clean %(DEFS)s%(CleanArgs)s"
+    Debug = " " # " -debug "
+    CM3_BuildLocal = CM3_BuildLocal or BuildLocal or "%(CM3)s %(CM3_FLAGS)s " + Debug + " -build -override %(DEFS)s%(BuildArgs)s"
+    CM3_CleanLocal = CM3_CleanLocal or CleanLocal or "%(CM3)s %(CM3_FLAGS)s " + Debug + " -clean -build -override %(DEFS)s%(CleanArgs)s"
+    CM3_BuildGlobal = CM3_BuildGlobal or BuildGlobal or "%(CM3)s %(CM3_FLAGS)s " + Debug + " -build %(DEFS)s%(BuildArgs)s"
+    CM3_CleanGlobal = CM3_CleanGlobal or CleanGlobal or "%(CM3)s %(CM3_FLAGS)s " + Debug + " -clean %(DEFS)s%(CleanArgs)s"
     CM3_Ship = CM3_Ship or Ship or "%(CM3)s %(CM3_FLAGS)s -ship %(DEFS)s%(ShipArgs)s"
 
 # other commands
@@ -1139,7 +1143,7 @@ def _MakeArchive(a):
 def Boot():
 
     global BuildLocal
-    BuildLocal += " -boot -keep "
+    BuildLocal += " -boot -keep -DM3CC_TARGET=" + Target
 
     Version = "1"
 
@@ -1162,6 +1166,7 @@ def Boot():
     Compile = Compile + ({
         "AMD64_LINUX"     : " -m64 -mno-align-double ",
         "AMD64_DARWIN"    : " -arch x86_64 ",
+        "PPC64_DARWIN"    : " -arch ppc64 ",
         "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
         "LINUXLIBC6"      : " -m32 -mno-align-double ",
         "MIPS64_OPENBSD"  : " -mabi=64 ",
@@ -1194,19 +1199,21 @@ def Boot():
         Assemble = "/usr/ccs/bin/as "
     else:
         Assemble = "as "
-        
-    if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
-        if Target.find("64") != -1 or Target.find("ALPHA") != -1:
-            Assemble = Assemble + " --64"
-        else:
-            Assemble = Assemble + " --32"
+
+    if Target != "PPC32_OPENBSD" and Target != "PPC_LINUX":
+        if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
+            if Target.find("64") != -1 or Target.find("ALPHA") != -1:
+                Assemble = Assemble + " --64"
+            else:
+                Assemble = Assemble + " --32"
 
     Assemble = (Assemble + ({
         "AMD64_DARWIN"      : " -arch x86_64 ",
+        "PPC64_DARWIN"      : " -arch ppc64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
-        "SOLgnu"            : " -s -K PIC -xarch=v8plus ",
-        "SOLsun"            : " -s -K PIC -xarch=v8plus ",
-        "SPARC64_SOLARIS"   : " -s -K PIC -xarch=v9 ",
+        "SOLgnu"            : " -s -xarch=v8plus ",
+        "SOLsun"            : " -s -xarch=v8plus ",
+        "SPARC64_SOLARIS"   : " -s -xarch=v9 ",
         }.get(Target) or ""))
 
     GnuPlatformPrefix = {
@@ -1229,10 +1236,9 @@ def Boot():
 
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
-    P = [ "import-libs", "m3core", "libm3", "sysutils", "m3middle", "m3quake",
-          "m3objfile", "m3linker", "m3back", "m3front", "cm3" ]
-    if Target == "NT386":
-        P += ["mklib"]
+    P = [ "m3cc", "import-libs", "m3core", "libm3", "sysutils",
+          "m3middle", "m3quake", "m3objfile", "m3linker", "m3back",
+          "m3front", "cm3" ]
 
     #DoPackage(["", "realclean"] + P) or sys.exit(1)
     DoPackage(["", "buildlocal"] + P) or sys.exit(1)
@@ -1261,7 +1267,7 @@ def Boot():
     for a in [Makefile]:
         a.write("# edit up here\n\n")
         a.write("Assemble=" + Assemble + "\nCompile=" + Compile + "\nLink=" + Link + "\n")
-        a.write("\n\n# no more editing should be needed\n\n")
+        a.write("\n\n# no more editing should be needed (except on Interix, look at the bottom)\n\n")
 
     for a in [Make]:
         a.write("Assemble=\"" + Assemble + "\"\nCompile=\"" + Compile + "\"\nLink=\"" + Link + "\"\n")
@@ -1269,21 +1275,27 @@ def Boot():
     for q in P:
         dir = GetPackagePath(q)
         for a in os.listdir(os.path.join(Root, dir, Config)):
-            if (a.endswith(".ms") or a.endswith(".is") or a.endswith(".s") or a.endswith(".c")):
-                CopyFile(os.path.join(Root, dir, Config, a), BootDir)
-                Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
-                if a.endswith(".c"):
-                    Command = "Compile"
-                else:
-                    Command = "Assemble"
-                for b in [Make, Makefile]:
-                    b.write("${" + Command + "} " + a + " -o " + a + ".o\n")
+            if not (a.endswith(".ms") or a.endswith(".is") or a.endswith(".s") or a.endswith(".c") or a.endswith(".h")):
+                continue
+            CopyFile(os.path.join(Root, dir, Config, a), BootDir)
             if a.endswith(".h"):
-                CopyFile(os.path.join(Root, dir, Config, a), BootDir)
+                continue
+            Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
+            if a.endswith(".c"):
+                Command = "Compile"
+            else:
+                Command = "Assemble"
+            for b in [Make, Makefile]:
+                b.write("${" + Command + "} " + a + " -o " + a + ".o\n")
 
     Makefile.write("cm3: $(Objects)\n\t")
+
     for a in [Make, Makefile]:
-        a.write("$(Link) -o cm3 *.o\n")
+        if Target.find("INTERIX") == -1:
+            a.write("$(Link) -o cm3 *.o\n")
+        else: # Do we still need this variation?
+            a.write("rm -f ntdll.def ntdll.lib ntdll.dll ntdll.o ntdll.c.o a.out a.exe cm3 cm3.exe libntdll.a _m3main.c.o _m3main.o\n")
+            a.write("gcc -g -o cm3 _m3main.c *.o -lm -L . -lntdll\n")
 
     Common = "Common"
 
@@ -1474,8 +1486,8 @@ if _Program != "make-msi.py":
     # in order to depend on OrderPackages working.
     #
     # This needs to be still further data driven,
-    # and a full ordering is not necessarily, only
-    # a partial ordering -- stuff can be build in parallel.
+    # and a full ordering is not necessary, only
+    # a partial ordering -- stuff could build in parallel.
     #
         "min" :
             [
@@ -1881,56 +1893,6 @@ if _Program != "make-msi.py":
             "cvsup/cvpasswd",
             ],
     }
-    
-    PackageSets_CoreBaseCommon = [
-        "import-libs",
-        "m3core",
-        "libm3",
-        "windowsResources",
-        "sysutils",
-        "m3middle",
-        "m3quake",
-        "m3scanner",
-        "m3tools",
-        "m3cgcat",
-        "m3cggen",
-        "m3gdb",
-        "m3bundle",
-        "mklib",
-        "fix_nl",
-        "libdump",
-        "bitvector",
-        "digraph",
-        "parseparams",
-        "realgeometry",
-        "set",
-        "slisp",
-        "sortedtableextras",
-        "table-list",
-        "tempfiles",
-        "tcl",
-        ]
-    
-    PackageSets["core"] = PackageSets_CoreBaseCommon
-    PackageSets["base"] = PackageSets_CoreBaseCommon
-    
-    PackageSets["core"] += [
-        "patternmatching",
-        "m3objfile",
-        "m3linker",
-        "m3back",
-        "m3staloneback",
-        "m3cc",
-        "cm3",
-        "m3front",
-        "m3gdb",
-        ]
-    
-    PackageSets["base"] += [
-        "tcp",
-        "tapi",
-        "serial",
-        ]
 
 #-----------------------------------------------------------------------------
 
@@ -2288,20 +2250,21 @@ def _CopyCompiler(From, To):
         CopyFile(from_cm3, To) or FatalError("3")
         CopyFileIfExist(os.path.join(From, "cm3.pdb"), To) or FatalError("5")
 
-    if FileExists(from_cm3cgexe):
-        from_cm3cg = from_cm3cgexe
-    elif FileExists(from_cm3cg):
-        pass
-    else:
-        from_cm3cg = None
-        from_cm3cgexe = None
-    if from_cm3cg:
-        #
-        # delete .exe first to avoid being fooled by Cygwin
-        #
-        DeleteFile(os.path.join(To, "cm3cg.exe"))
-        DeleteFile(os.path.join(To, "cm3cg"))
-        CopyFile(from_cm3cg, To) or FatalError("4")
+    if Config != "NT386":
+        if FileExists(from_cm3cgexe):
+            from_cm3cg = from_cm3cgexe
+        elif FileExists(from_cm3cg):
+            pass
+        else:
+            from_cm3cg = None
+            from_cm3cgexe = None
+        if from_cm3cg:
+            #
+            # delete .exe first to avoid being fooled by Cygwin
+            #
+            DeleteFile(os.path.join(To, "cm3cg.exe"))
+            DeleteFile(os.path.join(To, "cm3cg"))
+            CopyFile(from_cm3cg, To) or FatalError("4")
 
     return True
 
@@ -2377,6 +2340,31 @@ def GetProgramFiles():
         if isdir(a):
             ProgramFiles.append(a)
     return ProgramFiles
+
+def GetVisualCPlusPlusVersion():
+    a = os.popen("cl 2>&1 >nul").read().lower()
+    if a.find("9.00") != -1:
+        return "20"
+    if a.find("10.00") != -1:
+        return "40"
+    if a.find("10.10") != -1:
+        return "41"
+    if a.find("10.20") != -1:
+        return "42"
+    if a.find("11.00") != -1:
+        return "50"
+    if a.find("12.00") != -1:
+        return "60"
+    if a.find("13.00") != -1:
+        return "70"
+    if a.find("13.10") != -1:
+        return "71"
+    if a.find("14.00") != -1:
+        return "80"
+    if a.find("15.00") != -1:
+        return "90"
+    FatalError("unable to detect Visual C++ version, maybe cl is not in %PATH%?")
+
 
 def SetupEnvironment():
     SystemDrive = os.environ.get("SystemDrive", "")
@@ -2731,10 +2719,13 @@ def GetStage():
 # For now though, we only build min.
 
 def FormInstallRoot(PackageSetName):
-    return os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
+    a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
+    if Config == "NT386":
+        a = a + "-VC" + GetVisualCPlusPlusVersion()
+    return a
 
 def MakeMSIWithWix(input):
-# input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1
+# input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1-VC90
 # The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)M
     import uuid
     
@@ -2929,9 +2920,10 @@ DebianArchitecture = {
   "SOLgnu" : "sparc",
   "SPARC" : "sparc",
   "SPARC32" : "sparc",
-  "SPARC64" : "sparc", }
+  "SPARC64" : "sparc",
+  }
 
-def MakeDebianPackage(input, prefix):
+def MakeDebianPackage(name, input, output, prefix):
 #
 # .deb file format:
 # an ar archive containing (I think the order matters):
@@ -3002,6 +2994,9 @@ if __name__ == "__main__":
     # run test code if module run directly
     #
 
+    print("GetVisualCPlusPlusVersion:" + GetVisualCPlusPlusVersion())
+    sys.exit(1)
+
     print("CM3VERSION is " + GetVersion("CM3VERSION"))
     print("CM3VERSIONNUM is " + GetVersion("CM3VERSIONNUM"))
     print("CM3LASTCHANGED is " + GetVersion("CM3LASTCHANGED"))
@@ -3030,20 +3025,20 @@ if __name__ == "__main__":
         print("GetLastPathElement(%s):%s" % (a, GetLastPathElement(a)))
     sys.exit(1)
 
-    print(_ConvertFromCygwinPath("\\cygdrive/c/foo"))
-    print(_ConvertFromCygwinPath("//foo"))
+    print(ConvertFromCygwinPath("\\cygdrive/c/foo"))
+    print(ConvertFromCygwinPath("//foo"))
     sys.exit(1)
 
     print(SearchPath("juno"))
     sys.exit(1)
 
-    print(_ConvertToCygwinPath("a"))
-    print(_ConvertToCygwinPath("a\\b"))
-    print(_ConvertToCygwinPath("//a\\b"))
-    print(_ConvertToCygwinPath("c:\\b"))
-    print(_ConvertToCygwinPath("c:/b"))
-    print(_ConvertToCygwinPath("/b"))
-    print(_ConvertToCygwinPath("\\b"))
+    print(ConvertToCygwinPath("a"))
+    print(ConvertToCygwinPath("a\\b"))
+    print(ConvertToCygwinPath("//a\\b"))
+    print(ConvertToCygwinPath("c:\\b"))
+    print(ConvertToCygwinPath("c:/b"))
+    print(ConvertToCygwinPath("/b"))
+    print(ConvertToCygwinPath("\\b"))
     sys.exit(1)
     print(IsCygwinBinary("c:\\cygwin\\bin\\gcc.exe"))
     print(IsCygwinBinary("c:\\bin\\cdb.exe"))
