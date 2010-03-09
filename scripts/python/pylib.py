@@ -872,7 +872,7 @@ if _Program != "make-msi.py":
 if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
 # workaround some of it
-    Debug = "" # " -debug "
+    Debug = " " # " -debug "
     CM3_BuildLocal = CM3_BuildLocal or BuildLocal or "%(CM3)s %(CM3_FLAGS)s " + Debug + " -build -override %(DEFS)s%(BuildArgs)s"
     CM3_CleanLocal = CM3_CleanLocal or CleanLocal or "%(CM3)s %(CM3_FLAGS)s " + Debug + " -clean -build -override %(DEFS)s%(CleanArgs)s"
     CM3_BuildGlobal = CM3_BuildGlobal or BuildGlobal or "%(CM3)s %(CM3_FLAGS)s " + Debug + " -build %(DEFS)s%(BuildArgs)s"
@@ -2340,6 +2340,31 @@ def GetProgramFiles():
             ProgramFiles.append(a)
     return ProgramFiles
 
+def DetermineVisualCPlusPlusVersion():
+    a = os.popen("cl 2>&1 >nul").read().lower()
+    if a.find("9.00") != -1:
+        return "20"
+    if a.find("10.00") != -1:
+        return "40"
+    if a.find("10.10") != -1:
+        return "41"
+    if a.find("10.20") != -1:
+        return "42"
+    if a.find("11.00") != -1:
+        return "50"
+    if a.find("12.00") != -1:
+        return "60"
+    if a.find("13.00") != -1:
+        return "70"
+    if a.find("13.10") != -1:
+        return "71"
+    if a.find("14.00") != -1:
+        return "80"
+    if a.find("15.00") != -1:
+        return "90"
+    FatalError("unable to detect Visual C++ version, maybe cl is not in %PATH%?")
+
+
 def SetupEnvironment():
     SystemDrive = os.environ.get("SystemDrive", "")
     if os.environ.get("OS") == "Windows_NT":
@@ -2964,6 +2989,9 @@ if __name__ == "__main__":
     #
     # run test code if module run directly
     #
+
+    print("DetermineVisualCPlusPlusVersion:" + DetermineVisualCPlusPlusVersion())
+    sys.exit(1)
 
     print("CM3VERSION is " + GetVersion("CM3VERSION"))
     print("CM3VERSIONNUM is " + GetVersion("CM3VERSIONNUM"))
