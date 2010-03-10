@@ -25,8 +25,6 @@
 (* Copyright (C) 1990, Digital Equipment Corporation           *)
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
-(*---------------------------------------------------------------------------
- * $Id: System.i3,v 1.8 2010-02-10 10:53:27 jkrell Exp $ *)
 (*---------------------------------------------------------------------------*)
 
 INTERFACE System;
