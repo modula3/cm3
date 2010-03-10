@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TextUtils.m3,v 1.7 2010-03-10 10:32:47 jkrell Exp $ *)
+ * $Id: TextUtils.m3,v 1.8 2010-03-10 10:34:05 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 MODULE TextUtils EXPORTS TextUtils;
@@ -757,6 +757,9 @@ PROCEDURE TextExtras_CIEqual(t, u: Text.T): BOOLEAN RAISES {} =
     i: CARDINAL := 0;
   BEGIN
     IF lt = lu THEN
+      IF Text.Equal(t, u) THEN
+        RETURN TRUE;
+      END;
       WHILE i<lt DO
         IF ASCII.Upper[Text.GetChar (t, i)] # ASCII.Upper[Text.GetChar (u, i)] THEN
           RETURN FALSE
