@@ -80,6 +80,9 @@ PROCEDURE SubstChar(t : TEXT; a, b : CHAR) : TEXT =
     res :  Text8.T;
     c   :  CHAR;
   BEGIN
+    IF a = b THEN
+      RETURN t;
+    END;
     res := Text8.Create(len);
     FOR i := 0 TO len - 1 DO
       c := TextClass.GetChar(t, i);
@@ -129,6 +132,9 @@ PROCEDURE Substitute(READONLY t, a, b : TEXT; times := 0) : TEXT =
     n : CARDINAL := 0;
     r : TEXT := NIL;
   BEGIN
+    IF Text.Equal(a, b) THEN
+      RETURN t;
+    END;
     WHILE ((times = 0) OR (n < times)) AND
       TextExtras_FindSub(t, a, i) DO
       INC(n);
