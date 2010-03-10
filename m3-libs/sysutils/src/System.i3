@@ -41,7 +41,7 @@ EXCEPTION
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE AtomListToText(l : AtomList.T) : TEXT;
-  (* Convert an AtomList.T to a text, inserting spaces between all 
+  (* Convert an AtomList.T to a text, inserting spaces between all
      elements. *)
 
 (*---------------------------------------------------------------------------*)
@@ -54,11 +54,11 @@ PROCEDURE ExecWithFileHandles(pgm : TEXT; params : TextSeq.T;
                               env : ProcessEnv.T := NIL;
                               msgif : MsgIF.T := NIL;
                               wd : TEXT := NIL;
-                              ) : INTEGER 
+                              ) : INTEGER
   RAISES {ExecuteError};
   (* Execute `pgm' with `params' and the given standard file handles.
      If any of the handles is NIL, the handle of the current process
-     is used. 
+     is used.
      IF `wd' is non-NIL, it is used as the working directory of the
      process.
   *)
@@ -68,7 +68,7 @@ PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
                msgif : MsgIF.T := NIL; wd : TEXT := NIL;
                pstdin  : File.T := NIL;
                pstdout : File.T := NIL;
-               pstderr : File.T := NIL) : INTEGER 
+               pstderr : File.T := NIL) : INTEGER
   RAISES {ExecuteError};
   (* Execute `pgm' with `params' as parameters. `Params' may contain
      simple input and output redirections. If param[i] is any of
@@ -91,8 +91,8 @@ PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
   *)
 
 (*---------------------------------------------------------------------------*)
-PROCEDURE Execute(cmd : TEXT; env : ProcessEnv.T := NIL; 
-                  msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER 
+PROCEDURE Execute(cmd : TEXT; env : ProcessEnv.T := NIL;
+                  msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER
   RAISES {ExecuteError, Thread.Alerted};
   (* Split `cmd' into program name and parameters and try to execute it
      directly. No input and output redirections are performed.
@@ -102,12 +102,12 @@ PROCEDURE Execute(cmd : TEXT; env : ProcessEnv.T := NIL;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE RdExecute(cmd : TEXT; VAR rd : Rd.T; wd : TEXT := NIL;
-                    env : ProcessEnv.T := NIL; 
+                    env : ProcessEnv.T := NIL;
                     msgif : MsgIF.T := NIL) : Process.T
    RAISES {ExecuteError, Thread.Alerted};
   (* Split `cmd' into program name and parameters and try to execute it
-     directly. Via `rd' the stdout and stderr streams of the created 
-     program-process (the return result) can be read. 
+     directly. Via `rd' the stdout and stderr streams of the created
+     program-process (the return result) can be read.
      `wd' is the working directory of the program.
 
      Command sequentialization (as in 'ExecuteList') is not supported
@@ -135,23 +135,23 @@ PROCEDURE Filter(cmd : TEXT; VAR rd : Rd.T; VAR wr : Wr.T; wd : TEXT := NIL;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE ExecuteShell(cmd : TEXT; shell := "/bin/sh";
-                       env : ProcessEnv.T := NIL; 
+                       env : ProcessEnv.T := NIL;
                        msgif : MsgIF.T := NIL;
                        wd : TEXT := NIL) : INTEGER
   RAISES {ExecuteError};
   (* Try to execute the given `cmd' via `shell', that is, call
-     `shell -c cmd'. 
+     `shell -c cmd'.
      IF `wd' is non-NIL, it is used as the working directory of the
      process.
   *)
 
 (*---------------------------------------------------------------------------*)
-PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL; 
-                      msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER 
+PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
+                      msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER
   RAISES {ExecuteError, Thread.Alerted};
   (* Parse `cmd', split it into single commands at every `;', `|', `&&', and
      `||', and execute every command via `Exec'. The concatenation
-     characters have the usual Bourne Shell meaning. 
+     characters have the usual Bourne Shell meaning.
      Token may be grouped by single or double quotes.
 
      Since Exec() is called internally, all input and output redirections

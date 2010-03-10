@@ -32,27 +32,27 @@ EXCEPTION Error(TEXT);
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE SkipLeft(t : TEXT; s : ASCII.Set := ASCII.Spaces) : TEXT;
-  (* return a text from which all leading elements of `s' 
+  (* return a text from which all leading elements of `s'
      have been stripped *)
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE SkipRight(t : TEXT; s : ASCII.Set := ASCII.Spaces) : TEXT;
-  (* return a text from which all trailing elements of `s' 
+  (* return a text from which all trailing elements of `s'
      have been stripped *)
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Compress(t : TEXT; s : ASCII.Set := ASCII.Spaces) : TEXT;
-  (* return a text from which all leading and trailing elements of `s' 
+  (* return a text from which all leading and trailing elements of `s'
      have been stripped *)
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE SubstChar(t : TEXT; a, b : CHAR) : TEXT;
-  (* return a text in which each occurrence of `a' has been 
+  (* return a text in which each occurrence of `a' has been
      replaced by `b' *)
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE SubstChars(t : TEXT; READONLY a, b : ARRAY OF CHAR) : TEXT;
-  (* return a text in which each occurrence of an element of `a' has been 
+  (* return a text in which each occurrence of an element of `a' has been
      replaced by the corresponding element of `b' *)
 
 (*---------------------------------------------------------------------------*)
@@ -83,21 +83,21 @@ PROCEDURE TextSeqToText(seq : TextSeq.T; sep := " "; maxCol := 0;
 PROCEDURE TextSeqToArray(seq : TextSeq.T) : REF ARRAY OF TEXT;
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE SubstEnvVars(READONLY t : TEXT; 
+PROCEDURE SubstEnvVars(READONLY t : TEXT;
                        env : TextTextTbl.T := NIL) : TEXT;
   (* Return the text `t' in which all environment variables of the
      form ${name} or $name have been substituted by their values
-     in the current environment. 
+     in the current environment.
   *)
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE AddPrefix(seq : TextSeq.T; prefix : TEXT) : TextSeq.T;
-  (* Add `prefix' to every element of the sequence. The returned 
+  (* Add `prefix' to every element of the sequence. The returned
      sequence is a new object. *)
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE AddSuffix(seq : TextSeq.T; suffix : TEXT) : TextSeq.T;
-  (* Add `suffix' to every element of the sequence. The returned 
+  (* Add `suffix' to every element of the sequence. The returned
      sequence is a new object.*)
 
 (*--------------------------------------------------------------------------*)
@@ -110,7 +110,7 @@ PROCEDURE Tokenize(text : TEXT; sepchars := ASCII.Spaces;
                    squeeze := TRUE) : TextSeq.T;
   (* Split `text' into elements at each occurence of a separating
      character from `sepchars'. Discard all `sepchars' in the returned
-     sequence. Do not return empty elements if `sqeueeze' is TRUE. *)  
+     sequence. Do not return empty elements if `sqeueeze' is TRUE. *)
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE Lower(text : TEXT) : TEXT;

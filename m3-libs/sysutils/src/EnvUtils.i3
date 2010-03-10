@@ -40,7 +40,7 @@ TYPE T = TextTextTbl.T;
 PROCEDURE ToText(env : T; sepChar := '\t') : TEXT RAISES {Error};
 
 (*---------------------------------------------------------------------------*)
-PROCEDURE FromRd(rd : Rd.T; sepChars := Separators; skipStart := FALSE) : T 
+PROCEDURE FromRd(rd : Rd.T; sepChars := Separators; skipStart := FALSE) : T
   RAISES {Error};
 
 (*---------------------------------------------------------------------------*)

@@ -44,7 +44,7 @@ BEGIN
   TRY
     RootDir := Root(Process.GetWorkingDirectory());
   EXCEPT
-    OSError.E => RootDir := Pathname.Current; 
+    OSError.E => RootDir := Pathname.Current;
     (* ignore error and let other subsystems fail if they need this *)
   END;
 END PathReprCommon.
