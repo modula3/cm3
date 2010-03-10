@@ -129,7 +129,7 @@ PROCEDURE check (t: T; where: TEXT) =
     FOR i := 0 TO NRegs DO
       IF t.reguse[i].stackp # -1 THEN
         IF t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart] # i THEN
-          t.Err(where
+          Err(t, where
               & " i:" & RegName[i]
               & " t.reguse[i].stackp:" & Fmt.Int(t.reguse[i].stackp)
               & " t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart]:" & RegName[t.vstack[t.reguse[i].stackp].reg[t.reguse[i].operandPart]]);
@@ -142,7 +142,7 @@ PROCEDURE check (t: T; where: TEXT) =
         size := GetOperandSize(t.vstack[i]);
         FOR j := 0 TO size - 1 DO
           IF t.reguse[t.vstack[i].reg[j]].stackp # i THEN
-            t.Err(where
+            Err(t, where
                 & " i:" & Fmt.Int(i)
                 & " j:" & Fmt.Int(j)
                 & " t.vstack[i].reg[j]:" & RegName[t.vstack[i].reg[j]]
