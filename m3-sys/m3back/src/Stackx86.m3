@@ -98,7 +98,8 @@ REVEAL T = Public BRANDED "Stackx86.T" OBJECT
 
 TYPE
   Register = RECORD
-    stackp     : INTEGER := -1;
+    stackp     : INTEGER(*CARDINAL*) := -1;
+    operandPart: INTEGER(*OperandPart*) := -1;
     last_store : MVar    := NoStore;
     last_imm   : TIntN.T := TZero;
     lowbound   : TIntN.T;
@@ -106,7 +107,6 @@ TYPE
     imm        : BOOLEAN := FALSE;
     locked     : BOOLEAN := FALSE;
     non_nil    : BOOLEAN := FALSE;
-    operandPart: OperandPart := 0;
   END;
 
 PROCEDURE InitRegister(locked: BOOLEAN := FALSE):Register =
@@ -228,6 +228,7 @@ PROCEDURE movereg (t: T; to, from: Regno; operandPart: OperandPart) =
   BEGIN
     t.reguse[to] := t.reguse[from];
     t.reguse[from].stackp := -1;
+    t.reguse[from].operandPart := -1;
     set_reg(t, t.reguse[to].stackp, to, operandPart);
     t.cg.movOp(t.cg.reg[to], t.cg.reg[from]);
   END movereg;
@@ -630,6 +631,7 @@ PROCEDURE get_temp (t: T; stackp: CARDINAL) =
         t.vstack[stackp].optype := Type.Word32;
         FOR i := 0 TO size - 1 DO
           t.reguse[op.reg[i]].stackp := -1;
+          t.reguse[op.reg[i]].operandPart := -1;
           t.vstack[stackp].mvar.mvar_offset := i * 4;   (* temporary offset to register sized chunk *)
           t.cg.movOp(t.vstack[stackp], t.cg.reg[op.reg[i]]);
         END;
@@ -710,6 +712,7 @@ PROCEDURE dealloc_reg (t: T; stackp: CARDINAL; operandPart: OperandPart) =
   BEGIN
     <* ASSERT t.vstack[stackp].loc = OLoc.register *>
     t.reguse[t.vstack[stackp].reg[operandPart]].stackp := -1;
+    t.reguse[t.vstack[stackp].reg[operandPart]].operandPart := -1;
   END dealloc_reg;
 
 PROCEDURE corrupt (t: T; reg: Regno; operandPart: OperandPart) =
@@ -944,6 +947,7 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
                            dest_mvarA[i].mvar_offset + dest_mvarA[i].var.offset,
                            dest_mvarA[i].mvar_type);
             t.reguse[src_stack0.reg[i]].stackp := -1;
+            t.reguse[src_stack0.reg[i]].operandPart := -1;
             corrupt(t, src_stack0.reg[i], i);
           END;
 
@@ -961,6 +965,7 @@ PROCEDURE pop (t: T; READONLY dest_mvar: MVar) =
           IF src_stack0.loc = OLoc.register THEN
             FOR i := 0 TO destSize - 1 DO
               t.reguse[src_stack0.reg[i]].stackp := -1;
+              t.reguse[src_stack0.reg[i]].operandPart := -1;
               t.reguse[src_stack0.reg[i]].last_store := dest_mvarA[i];
             END;
           END;
@@ -2476,6 +2481,7 @@ PROCEDURE discard (t: T; depth: CARDINAL) =
         | OLoc.register =>
             FOR j := 0 TO GetOperandSize(stackp) - 1 DO
               t.reguse[stackp.reg[j]].stackp := -1;
+              t.reguse[stackp.reg[j]].operandPart := -1;
             END;
         | OLoc.fstack =>
             (* The discards will have been done elsewhere *)
