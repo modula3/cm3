@@ -1631,7 +1631,7 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
  *  }
  *  for T = UINT32 or UINT64
  *
- * or, broken down but the same:
+ * in this order, so that we can pop "count" first:
  *
  *  T extract(T value, UINT32 offset, UINT32 count) 
  *  {
@@ -1640,30 +1640,60 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
  *      value &= ~mask;
  *      return value;
  *  }
+ *  for T = UINT32 or UINT64
  *
  *)
-  VAR count: INTEGER;
+  VAR count_value: INTEGER;
       utype := UnsignedType[type];
+      mask, count, offset, value: CARDINAL;
+      get_mask := FALSE;
+      get_offset := TRUE;
+      get_count := TRUE;
+
+  (* There is quite a dance here, in order to discard stack items
+   * as we finish with them, in order to avoid preserving dead values (count).
+   * There should be an easier way but I couldn't find it and this
+   * at least clearly "plays by the rules".
+   *)
+
+  PROCEDURE GetOperands() =
+    VAR n: CARDINAL := 0;
+    BEGIN
+      IF get_mask THEN 
+        mask := pos(t, 0, "extract");
+        INC(n);
+      END;
+      IF get_count THEN
+        count := pos(t, n, "extract");
+        INC(n);
+      END;
+      IF get_offset THEN
+        offset := pos(t, n, "extract");
+        INC(n);
+      END;
+      value := pos(t, n, "extract");
+    END GetOperands;
+
   BEGIN
 
     (* See if count is a constant, in which case
      * call the more optimal doextract_n.
      *)
 
-    WITH op_count = t.vstack[pos(t, 0, "extract")] DO
+    unlock(t);
+    GetOperands();
 
-      IF sign_extend AND op_count.loc # OLoc.imm THEN
-        Err(t, "doextract: sign_extend requires constant offset/count");
-      END;
+    IF sign_extend AND t.vstack[count].loc # OLoc.imm THEN
+      Err(t, "doextract: sign_extend requires constant offset/count");
+    END;
 
-      IF op_count.loc = OLoc.imm THEN
-        IF NOT TIntN.ToHostInteger(op_count.imm, count) THEN
-          Err(t, "doextract: failed to convert to host integer");
-        END;
-        discard(t, 1);
-        doextract_n(t, type, sign_extend, count);
-        RETURN;
+    IF t.vstack[count].loc = OLoc.imm THEN
+      IF NOT TIntN.ToHostInteger(t.vstack[count].imm, count_value) THEN
+        Err(t, "doextract: failed to convert to host integer");
       END;
+      discard(t, 1);
+      doextract_n(t, type, sign_extend, count_value);
+      RETURN;
     END;
 
     (* Push the mask on the virtual stack,
@@ -1674,86 +1704,87 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
      *)
 
     t.pushimmT(TIntN.T{x := IntType[utype].max}, utype);
-
+    get_mask := TRUE;
     unlock(t);
+    GetOperands();
 
-    WITH stack_mask = pos(t, 0, "extract"),
-         stack_count = pos(t, 1, "extract"),
-         stack_offset = pos(t, 2, "extract"),
-         stack_value = pos(t, 3, "extract"),
-         op_mask = t.vstack[stack_mask],
-         op_count = t.vstack[stack_count],
-         op_offset = t.vstack[stack_offset],
-         op_value = t.vstack[stack_value] DO
+    (* Get count into ECX if it is not immediate. *)
 
-      (* Get offset into ECX if it is not immediate. *)
-
-      IF op_offset.loc = OLoc.imm THEN
-        (* Mask offset to 31 or 63 -- should be redundant but is safe. *)
-        TWordN.And(op_offset.imm, BitCountMask[type], op_offset.imm);
-      ELSE
-        find(t, stack_offset, Force.regset, RegSet {ECX});
-      END;
-
-      (* Get value into registers. Do this after offset possibly takes ECX,
-       * so that value doesn't needlessly do so and then we'd swap them.
-       *)
-
-      find(t, stack_value, Force.anyreg);
-
-      (* Shift value right by offset. *)
-
-      IF op_offset.loc = OLoc.imm THEN
-        t.cg.immOp(Op.oSHR, op_value, op_offset.imm);
-      ELSE
-        t.cg.unOp(Op.oSHR, op_value); (* shift by ECX *)
-      END;
-
-      (* throw out offset; what is the right way?
-       * Without most of this, we save it away
-       * in another register and never use that.
-       * With it we get an assertion failure.
-       *)
-      (*IF op_offset.loc = OLoc.register THEN
-        t.newdest(op_offset);
-        t.dealloc_reg(stack_offset, operandPart := 0);
-        t.vstack[stack_offset].loc := OLoc.imm;
-      END;*)
-      unlock(t);
-
-      (* Get count into ECX if is not immediate. *)
-
-      IF op_count.loc = OLoc.imm THEN
+    IF t.vstack[count].loc = OLoc.imm THEN
       (* Mask count to 31 or 63 -- should be redundant but is safe. *)
-        TWordN.And(op_count.imm, BitCountMask[type], op_count.imm);
-      ELSE
-        find(t, stack_count, Force.regset, RegSet {ECX});
-      END;
-
-      (* Get mask into registers. Do this after count
-       * so that mask doesn't needlessly go into ECX
-       * and have to be swapped.
-       *)
-
-      find(t, stack_mask, Force.anyreg);
-
-      (* Shift mask left by count. *)
-
-      IF op_count.loc = OLoc.imm THEN
-        t.cg.immOp(Op.oSHL, op_mask, op_count.imm);
-      ELSE
-        t.cg.unOp(Op.oSHL, op_mask); (* shift by ECX *)
-      END;
-
-      t.cg.unOp(Op.oNOT, op_mask);
-      t.cg.binOp(Op.oAND, op_value, op_mask);
-
-      newdest(t, op_count);  (* Is this needed? *)
-      newdest(t, op_offset); (* Is this needed? *)
-      newdest(t, op_mask);   (* Is this needed? *)
-      newdest(t, op_value);
-      discard(t, 3);
+      TWordN.And(t.vstack[count].imm, BitCountMask[type], t.vstack[count].imm);
+    ELSE
+      find(t, count, Force.regset, RegSet{ECX});
     END;
+
+    (* Get mask into registers. Do this after count possibly takes ECX,
+     * so that mask doesn't needlessly do so and then we'd swap them.
+     *)
+
+    find(t, mask, Force.anyreg);
+
+    (* Shift mask left by count. *)
+
+    IF t.vstack[count].loc = OLoc.imm THEN
+      t.cg.immOp(Op.oSHL, t.vstack[mask], t.vstack[count].imm);
+    ELSE
+      t.cg.unOp(Op.oSHL, t.vstack[mask]); (* shift by ECX *)
+    END;
+
+    (* done with count *)
+
+    newdest(t, t.vstack[count]); (* Is this needed? *)
+    swap(t);
+    discard(t, 1);
+    unlock(t);
+    get_count := FALSE;
+    GetOperands();
+
+    (* Get offset into ECX if is not immediate. *)
+
+    IF t.vstack[offset].loc = OLoc.imm THEN
+      (* Mask count to 31 or 63 -- should be redundant but is safe. *)
+      TWordN.And(t.vstack[offset].imm, BitCountMask[type], t.vstack[offset].imm);
+    ELSE
+      find(t, offset, Force.regset, RegSet{ECX});
+    END;
+
+    (* Get value into registers. Do this after offset
+     * so that value doesn't needlessly go into ECX
+     * and have to be swapped.
+     *)
+
+    find(t, value, Force.anyreg);
+
+    (* Shift value right by offset. *)
+
+    IF t.vstack[offset].loc = OLoc.imm THEN
+      t.cg.immOp(Op.oSHR, t.vstack[value], t.vstack[offset].imm);
+    ELSE
+      t.cg.unOp(Op.oSHR, t.vstack[value]); (* shift by ECX *)
+    END;
+
+    (* done with offset *)
+
+    newdest(t, t.vstack[offset]); (* Is this needed? *)
+    swap(t);
+    discard(t, 1);
+    unlock(t);
+    get_offset := FALSE;
+    GetOperands();
+
+    (* Ensure mask and value are in registers. *)
+
+    find(t, mask, Force.anyreg);
+    find(t, value, Force.anyreg);
+
+    t.cg.unOp(Op.oNOT, t.vstack[mask]);
+    t.cg.binOp(Op.oAND, t.vstack[value], t.vstack[mask]);
+
+    newdest(t, t.vstack[mask]); (* Is this needed? *)
+    newdest(t, t.vstack[value]);
+    discard(t, 1);
+
   END doextract;
 
 PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; count: INTEGER) =
@@ -1886,132 +1917,130 @@ PROCEDURE doinsert (t: T; type: IType) =
  *  for T = UINT32 or UINT64
  *
  *)
-  VAR count: INTEGER;
-      offset: INTEGER;
+  VAR count_value: INTEGER;
+      offset_value: INTEGER;
       utype := UnsignedType[type];
+      mask, count, offset, from, to: CARDINAL;
+      get_mask := FALSE;
+      get_offset := TRUE;
+      get_count := TRUE;
+
+  (* There is quite a dance here, in order to discard stack items
+   * as we finish with them, in order to avoid preserving dead values (count, offset).
+   * There should be an easier way but I couldn't find it and this
+   * at least clearly "plays by the rules".
+   *)
+
+  PROCEDURE GetOperands() =
+    VAR n: CARDINAL := 0;
+    BEGIN
+      IF get_mask THEN 
+        mask := pos(t, 0, "insert");
+        INC(n);
+      END;
+      IF get_count THEN
+        count := pos(t, n, "insert");
+        INC(n);
+      END;
+      IF get_offset THEN
+        offset := pos(t, n, "insert");
+        INC(n);
+      END;
+      from := pos(t, n, "insert");
+      to := pos(t, n + 1, "insert");
+    END GetOperands;
+
   BEGIN
+
+    unlock(t);
+    GetOperands();
 
     (* If offset and count are constant, call the more efficient doinsert_mn.
      * We don't try to call doinsert_n here, because it might just
      * call us back and infinitely recurse.
      *)
 
-    WITH stack_count = pos(t, 0, "insert"),
-         stack_offset = pos(t, 1, "insert"),
-         op_count = t.vstack[stack_count],
-         op_offset = t.vstack[stack_offset] DO
-
-      IF op_count.loc = OLoc.imm AND op_offset.loc = OLoc.imm THEN
-        IF NOT TIntN.ToHostInteger(op_count.imm, count) THEN
-          Err(t, "doinsert: failed to convert count to host integer");
-        END;
-        IF NOT TIntN.ToHostInteger(op_offset.imm, offset) THEN
-          Err(t, "doinsert: failed to convert offset to host integer");
-        END;
-        discard(t, 2);
-        doinsert_mn(t, type, offset, count);
-        RETURN;
+    IF t.vstack[count].loc = OLoc.imm AND t.vstack[offset].loc = OLoc.imm THEN
+      IF NOT TIntN.ToHostInteger(t.vstack[count].imm, count_value) THEN
+        Err(t, "doinsert: failed to convert count to host integer");
       END;
+      IF NOT TIntN.ToHostInteger(t.vstack[offset].imm, offset_value) THEN
+        Err(t, "doinsert: failed to convert offset to host integer");
+      END;
+      discard(t, 2);
+      doinsert_mn(t, type, offset_value, count_value);
+      RETURN;
     END;
 
     t.pushimmT(TIntN.T{x := IntType[utype].max}, utype);
+    get_mask := TRUE;
 
     unlock(t);
+    GetOperands();
 
-    WITH stack_mask = pos(t, 0, "insert"),
-         stack_count = pos(t, 1, "insert"),
-         stack_offset = pos(t, 2, "insert"),
-         stack_from = pos(t, 3, "insert"),
-         stack_to = pos(t, 4, "insert"),
-         op_mask = t.vstack[stack_mask],
-         op_count = t.vstack[stack_count],
-         op_offset = t.vstack[stack_offset],
-         op_from = t.vstack[stack_from],
-         op_to = t.vstack[stack_to] DO
-
-      IF op_offset.loc = OLoc.imm THEN
-        (* Mask offset to 31 or 63 -- should be redundant but is safe. *)
-        TWordN.And(op_offset.imm, BitCountMask[type], op_offset.imm);
-      END;
-
-      IF op_count.loc = OLoc.imm THEN
-        (* Mask count to 31 or 63 -- should be redundant but is safe. *)
-        TWordN.And(op_count.imm, BitCountMask[type], op_count.imm);
-      ELSE
-        find(t, stack_count, Force.regset, RegSet{ECX});
-      END;
-
-      (* Get mask into registers. Do this after count possibly takes ECX,
-       * so that mask doesn't needlessly do so and then we'd swap them.
-       *)
-
-      find(t, stack_mask, Force.anyreg);
-
-      (* Shift mask left by count. *)
-
-      IF op_count.loc = OLoc.register THEN
-        t.cg.unOp(Op.oSHL, op_mask); (* shift by ECX *)
-      ELSE
-        t.cg.immOp(Op.oSHL, op_mask, op_count.imm);
-      END;
-      t.cg.unOp(Op.oNOT, op_mask);
-
-      (* done with count; I can't figure out how to properly dispose of it.
-       * Without most of this, we save it away
-       * and we end up short on registers and save it to the stack.
-       * With it we get an assertion failure.
-       *)
-      (*IF op_count.loc = OLoc.register THEN
-        t.newdest(op_count);
-        t.dealloc_reg(stack_count, operandPart := 0);
-        t.vstack[stack_count].loc := OLoc.imm;
-      END;*)
-      unlock(t);
-      
-      find(t, stack_offset, Force.regset, RegSet{ECX});
-      find(t, stack_mask, Force.anyreg);
-
-      IF op_offset.loc = OLoc.register THEN
-        t.cg.unOp(Op.oSHL, op_mask); (* shift by ECX *)
-      ELSE
-        t.cg.immOp(Op.oSHL, op_mask, op_offset.imm);
-      END;
-
-      find(t, stack_from, Force.anyreg);
-      IF op_offset.loc = OLoc.register THEN
-        t.cg.unOp(Op.oSHL, op_from); (* shift by ECX *)
-      ELSE
-        t.cg.immOp(Op.oSHL, op_from, op_offset.imm);
-      END;
-
-      (* done with offset; I can't figure out how to properly dispose of it.
-       * Without most of this, we save it away
-       * and we end up short on registers and save it to the stack.
-       * With it we get an assertion failure.
-       *)
-      (*IF op_offset.loc = OLoc.register THEN
-        t.newdest(op_offset);
-        t.dealloc_reg(stack_offset, operandPart := 0);
-        t.vstack[stack_offset].loc := OLoc.imm;
-      END;*)
-      unlock(t);
-
-      find(t, stack_from, Force.anyreg);
-      find(t, stack_mask, Force.anyreg);
-
-      t.cg.binOp(Op.oAND, op_from, op_mask);
-      t.cg.unOp(Op.oNOT, op_mask);
-      find(t, stack_to, Force.anyreg);
-      t.cg.binOp(Op.oAND, op_to, op_mask);
-      t.cg.binOp(Op.oOR, op_to, op_from);
-
-      newdest(t, op_count);  (* Is this needed? *)
-      newdest(t, op_offset); (* Is this needed? *)
-      newdest(t, op_to);
-      newdest(t, op_from);   (* Is this needed? *)
-      newdest(t, op_mask);   (* Is this needed? *)
-      discard(t, 4);
+    IF t.vstack[count].loc = OLoc.imm THEN
+      TWordN.And(t.vstack[count].imm, BitCountMask[type], t.vstack[count].imm); (* shouldn't be needed *)
+    ELSE
+      find(t, count, Force.regset, RegSet{ECX});
     END;
+
+    find(t, mask, Force.anyreg);
+
+    IF t.vstack[count].loc = OLoc.register THEN
+      t.cg.unOp(Op.oSHL, t.vstack[mask]); (* shift by ECX *)
+    ELSE
+      t.cg.immOp(Op.oSHL, t.vstack[mask], t.vstack[count].imm);
+    END;
+    t.cg.unOp(Op.oNOT, t.vstack[mask]);
+
+    (* done with count *)
+
+    newdest(t, t.vstack[count]); (* Is this needed? *)
+    swap(t);
+    discard(t, 1);
+    unlock(t);
+    get_count := FALSE;
+    GetOperands();
+      
+    IF t.vstack[offset].loc = OLoc.imm THEN
+      TWordN.And(t.vstack[offset].imm, BitCountMask[type], t.vstack[offset].imm); (* shouldn't be needed *)
+    ELSE
+      find(t, offset, Force.regset, RegSet{ECX});
+    END;
+    find(t, mask, Force.anyreg);
+    find(t, from, Force.anyreg);
+
+    IF t.vstack[offset].loc = OLoc.register THEN
+      t.cg.unOp(Op.oSHL, t.vstack[mask]); (* shift by ECX *)
+      t.cg.unOp(Op.oSHL, t.vstack[from]); (* shift by ECX *)
+    ELSE
+      t.cg.immOp(Op.oSHL, t.vstack[mask], t.vstack[offset].imm);
+      t.cg.immOp(Op.oSHL, t.vstack[from], t.vstack[offset].imm);
+    END;
+
+    (* done with offset *)
+
+    newdest(t, t.vstack[offset]); (* Is this needed? *)
+    swap(t);
+    discard(t, 1);
+    unlock(t);
+    get_offset := FALSE;
+    GetOperands();
+
+    find(t, from, Force.anyreg);
+    find(t, mask, Force.anyreg);
+
+    t.cg.binOp(Op.oAND, t.vstack[from], t.vstack[mask]);
+    t.cg.unOp(Op.oNOT, t.vstack[mask]);
+    find(t, to, Force.anyreg);
+    t.cg.binOp(Op.oAND, t.vstack[to], t.vstack[mask]);
+    t.cg.binOp(Op.oOR, t.vstack[to], t.vstack[from]);
+
+    newdest(t, t.vstack[to]);
+    newdest(t, t.vstack[from]); (* Is this needed? *)
+    newdest(t, t.vstack[mask]); (* Is this needed? *)
+    discard(t, 2);
+
   END doinsert;
 
 PROCEDURE doinsert_n (t: T; type: IType; count: INTEGER) =
