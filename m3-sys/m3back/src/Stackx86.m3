@@ -2117,10 +2117,7 @@ PROCEDURE swap (t: T) =
   VAR tmp: Operand;
   BEGIN
     WITH stack0 = pos(t, 0, "swap"),
-         stack1 = pos(t, 1, "swap"),
-         (* sizes are deliberately swapped here *)
-         size1 = GetOperandSize(t.vstack[stack0]),
-         size0 = GetOperandSize(t.vstack[stack1]) DO
+         stack1 = pos(t, 1, "swap") DO
 
       tmp := t.vstack[stack0];
       t.vstack[stack0] := t.vstack[stack1];
@@ -2130,14 +2127,14 @@ PROCEDURE swap (t: T) =
       t.vstack[stack1].stackp := stack1;
 
       IF t.vstack[stack0].loc = OLoc.register THEN
-        FOR i := 0 TO size0 - 1 DO
+        FOR i := 0 TO GetOperandSize(t.vstack[stack0]) - 1 DO
           <* ASSERT t.reguse[t.vstack[stack0].reg[i]].stackp = stack1 *>
           t.reguse[t.vstack[stack0].reg[i]].stackp := stack0;
         END;
       END;
 
       IF t.vstack[stack1].loc = OLoc.register THEN
-        FOR i := 0 TO size1 - 1 DO
+        FOR i := 0 TO GetOperandSize(t.vstack[stack1]) - 1 DO
           <* ASSERT t.reguse[t.vstack[stack1].reg[i]].stackp = stack0 *>
           t.reguse[t.vstack[stack1].reg[i]].stackp := stack1;
         END;
