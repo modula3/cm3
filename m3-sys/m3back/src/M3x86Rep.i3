@@ -101,7 +101,7 @@ TYPE
     mvar: MVar := NoStore;
     reg : Regno := 0;       (* seems like it should be -1 *)
     imm: INTEGER := 0;      (* This might change to TIntN.T. *)
-    stackp: INTEGER := 0;   (* this field might go away; seems like it should be -1 *)
+    stackp: CARDINAL := 0;   (* this field might go away; seems like it should be -1 *)
     opcode := FALSE;
   END;
 
@@ -111,7 +111,7 @@ TYPE
     reg := ARRAY OperandPart OF Regno{0, ..}; (* seems like it should be -1 *)
     imm: TIntN.T := TIntN.Zero;
     optype: Type := Type.Void;
-    stackp: INTEGER := 0; (* seems like it should be -1 *)
+    stackp: CARDINAL := 0; (* seems like it should be -1 *)
     opcode := FALSE;
   END;
 

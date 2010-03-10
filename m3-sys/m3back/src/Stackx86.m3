@@ -209,7 +209,7 @@ PROCEDURE loadreg (t: T; r: Regno; READONLY op: Operand; operandPart: OperandPar
     set_reg(t, op.stackp, r, operandPart);
   END loadreg;
 
-PROCEDURE loadphantom (t: T; r: Regno; stackp: INTEGER; operandPart: OperandPart) =
+PROCEDURE loadphantom (t: T; r: Regno; stackp: CARDINAL; operandPart: OperandPart) =
   BEGIN
     t.reguse[r].stackp := stackp;
     t.reguse[r].operandPart := operandPart;
@@ -217,7 +217,7 @@ PROCEDURE loadphantom (t: T; r: Regno; stackp: INTEGER; operandPart: OperandPart
     t.vstack[stackp].reg[operandPart] := r;
   END loadphantom;
 
-PROCEDURE copyreg (t: T; stackp: INTEGER; to, from: Regno; operandPart: OperandPart) =
+PROCEDURE copyreg (t: T; stackp: CARDINAL; to, from: Regno; operandPart: OperandPart) =
   BEGIN
     t.reguse[to] := t.reguse[from];
     set_reg(t, stackp, to, operandPart);
@@ -279,7 +279,7 @@ PROCEDURE releaseall (t: T) =
   END releaseall;
 
 
-PROCEDURE find (t: T; stackp: INTEGER;
+PROCEDURE find (t: T; stackp: CARDINAL;
                 force: Force := Force.any; set := AllRegisters;
                 hintaddr := FALSE) =
 (*
@@ -609,7 +609,7 @@ PROCEDURE precedence (t: T; r: Regno; hintaddr := FALSE): INTEGER =
 
 (*-------------------------------------------------------- stack routines ---*)
 
-PROCEDURE get_temp (t: T; stackp: INTEGER) =
+PROCEDURE get_temp (t: T; stackp: CARDINAL) =
   VAR op := t.vstack[stackp]; (* *copy* this before changing it *)
       size := GetTypeSize(op.optype);
       mvar: MVar;
@@ -690,12 +690,12 @@ PROCEDURE sweep (t: T; READONLY mvar: MVar) =
     END
   END sweep;
 
-PROCEDURE set_type (t: T; stackp: INTEGER; type: Type) =
+PROCEDURE set_type (t: T; stackp: CARDINAL; type: Type) =
   BEGIN
     t.vstack[stackp].optype := type;
   END set_type;
 
-PROCEDURE set_reg (t: T; stackp: INTEGER; r: Regno; operandPart: OperandPart) =
+PROCEDURE set_reg (t: T; stackp: CARDINAL; r: Regno; operandPart: OperandPart) =
   BEGIN
     t.vstack[stackp].loc := OLoc.register;
     t.vstack[stackp].reg[operandPart] := r;
@@ -703,7 +703,7 @@ PROCEDURE set_reg (t: T; stackp: INTEGER; r: Regno; operandPart: OperandPart) =
     t.reguse[r].operandPart := operandPart;
   END set_reg;
 
-PROCEDURE dealloc_reg (t: T; stackp: INTEGER; operandPart: OperandPart) =
+PROCEDURE dealloc_reg (t: T; stackp: CARDINAL; operandPart: OperandPart) =
   BEGIN
     <* ASSERT t.vstack[stackp].loc = OLoc.register *>
     t.reguse[t.vstack[stackp].reg[operandPart]].stackp := -1;
@@ -726,43 +726,43 @@ PROCEDURE all_to_mem(t: T) =
     END;
   END all_to_mem;
 
-PROCEDURE set_fstack (t: T; stackp: INTEGER) =
+PROCEDURE set_fstack (t: T; stackp: CARDINAL) =
   BEGIN
     t.vstack[stackp].loc := OLoc.fstack;
   END set_fstack;
 
-PROCEDURE set_mvar (t: T; stackp: INTEGER; READONLY mvar: MVar) =
+PROCEDURE set_mvar (t: T; stackp: CARDINAL; READONLY mvar: MVar) =
   BEGIN
     t.vstack[stackp].loc := OLoc.mem;
     t.vstack[stackp].mvar := mvar;
   END set_mvar;
 
-PROCEDURE set_imm (t: T; stackp: INTEGER; READONLY imm: TIntN.T) =
+PROCEDURE set_imm (t: T; stackp: CARDINAL; READONLY imm: TIntN.T) =
   BEGIN
     t.vstack[stackp].loc := OLoc.imm;
     t.vstack[stackp].imm := imm;
   END set_imm;
 
-PROCEDURE get_loc (t: T; stackp: INTEGER): OLoc =
+PROCEDURE get_loc (t: T; stackp: CARDINAL): OLoc =
   BEGIN
     RETURN t.vstack[stackp].loc;
   END get_loc;
 
-PROCEDURE get_op (t: T; stackp: INTEGER): Operand =
+PROCEDURE get_op (t: T; stackp: CARDINAL): Operand =
   BEGIN
     RETURN t.vstack[stackp];
   END get_op;
 
-PROCEDURE pos (t: T; depth: INTEGER; place: TEXT): INTEGER =
+PROCEDURE pos (t: T; depth: CARDINAL; place: TEXT): CARDINAL =
+  VAR pos: CARDINAL;
   BEGIN
-    WITH pos = t.stacktop - 1 - depth DO
-      IF pos >= 0 THEN
-        RETURN pos;
-      ELSE
-        Err(t, "Stack underflow in " & place);
-      END
+    pos := t.stacktop - 1 - depth;
+    IF pos >= 0 THEN
+      RETURN pos;
+    ELSE
+      Err(t, "Stack underflow in " & place);
     END;
-    RETURN -1;
+    RETURN -1;<*NOWARN*>
   END pos;
 
 PROCEDURE pushimmT (t: T; imm: TIntN.T; type: Type) =
@@ -2196,7 +2196,7 @@ PROCEDURE doloophole (t: T; from, to: ZType) =
   END doloophole;
 
 PROCEDURE doindex_address (t: T; shift, size: INTEGER; neg: BOOLEAN) =
-  VAR imsize: INTEGER;
+  VAR imsize: CARDINAL;
       muldest: Regno;
       tsize: TIntN.T;
       tshift: TIntN.T;
@@ -2458,7 +2458,7 @@ PROCEDURE expand_stack (t: T) =
     END;
   END expand_stack;
 
-PROCEDURE discard (t: T; depth: INTEGER) =
+PROCEDURE discard (t: T; depth: CARDINAL) =
   BEGIN
     IF depth > t.stacktop THEN
       Err(t, "Stack underflow in stack_discard");
@@ -2484,7 +2484,7 @@ PROCEDURE discard (t: T; depth: INTEGER) =
     t.stacktop := t.stacktop - depth;
   END discard;
 
-PROCEDURE reg (t: T; stackp: INTEGER): Regno =
+PROCEDURE reg (t: T; stackp: CARDINAL): Regno =
   BEGIN
     RETURN t.vstack[stackp].reg[0];
   END reg;

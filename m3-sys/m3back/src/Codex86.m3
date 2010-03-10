@@ -1264,7 +1264,7 @@ PROCEDURE imulOp (t: T; READONLY dest, src: Operand) =
     END
   END imulOp;
 
-PROCEDURE imulImm (t: T; READONLY dest, src: Operand; imm: INTEGER; imsize: INTEGER) =
+PROCEDURE imulImm (t: T; READONLY dest, src: Operand; imm: INTEGER; imsize: CARDINAL) =
   VAR ins: Instruction;
   BEGIN
     <* ASSERT dest.loc = OLoc.register *>
@@ -1369,13 +1369,13 @@ TYPE
     prefix  : BOOLEAN := FALSE;
     mrm_present : BOOLEAN := FALSE;
     sib_present : BOOLEAN := FALSE;
-    opcode  : INTEGER := 0;
-    modrm   : INTEGER := 0;
-    sib     : INTEGER := 0;
-    disp    : INTEGER := 0;
-    dsize   : INTEGER := 0;
-    imm     : INTEGER := 0;
-    imsize  : INTEGER := 0;
+    opcode  : INTEGER  := 0;
+    modrm   : INTEGER  := 0;
+    sib     : INTEGER  := 0;
+    disp    : INTEGER  := 0;
+    dsize   : CARDINAL := 0;
+    imm     : INTEGER  := 0;
+    imsize  : CARDINAL := 0;
   END;
 
 PROCEDURE get_op_size (type: MType;  VAR ins: Instruction) =
