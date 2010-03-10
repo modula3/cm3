@@ -68,7 +68,7 @@ TYPE Public = OBJECT
         unOp (op: Op; READONLY dest: Operand);
         mulOp (READONLY src: Operand);
         imulOp (READONLY dest, src: Operand);
-        imulImm (READONLY dest, src: Operand; imm, imsize: INTEGER);
+        imulImm (READONLY dest, src: Operand; imm: INTEGER; imsize: CARDINAL);
         divOp (READONLY divisor: Operand);
         idivOp (READONLY divisor: Operand);
         diffdivOp (READONLY divisor: Operand; apos: BOOLEAN);
