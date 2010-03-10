@@ -20,8 +20,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: OSSpecialsPosix.m3,v 1.1 2008-01-30 23:45:43 wagner Exp $ *)
+ *)
 
 (*---------------------------------------------------------------------------*)
 MODULE OSSpecialsPosix EXPORTS OSSpecials;

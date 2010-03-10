@@ -20,8 +20,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: SystemWin32.m3,v 1.2 2008-02-11 11:09:20 jkrell Exp $ *)
+ *)
 
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemWin32 EXPORTS System;
