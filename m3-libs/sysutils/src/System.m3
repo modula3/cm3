@@ -21,12 +21,12 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: System.m3,v 1.5 2008-04-09 13:11:46 jkrell Exp $ *)
+ * $Id: System.m3,v 1.6 2010-03-10 10:31:36 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 MODULE System EXPORTS System;
 
-IMPORT ASCII, Process, TextRd, Rd, RdExtras, Wr, Pipe,
+IMPORT ASCII, Process, TextRd, Rd, Wr, Pipe,
        File, FileRd, FileWr, Thread, 
        AtomList, Atom, Text, TextSeq, OSError, Pathname, RegularFile,
        RefSeq, IntRefTbl;
@@ -614,7 +614,7 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
         WHILE NOT done AND NOT Rd.EOF(rd) DO
           readOp := FALSE;
           token := NIL;
-          c := RdExtras.Skip(rd, unget := TRUE);
+          c := RdExtras_Skip(rd, unget := TRUE);
           IF c IN NUM THEN
             token := TextReadingUtils.GetToken(rd, terminate := NUMEND,
                                                unget := TRUE);
@@ -916,5 +916,23 @@ PROCEDURE Filter(cmd : TEXT; VAR rd : Rd.T; VAR wr : Wr.T; wd : TEXT := NIL;
   END Filter;
   
 (*---------------------------------------------------------------------------*)
+
+PROCEDURE RdExtras_Skip(
+    s: Rd.T;
+    READONLY skip := ASCII.Spaces;
+    unget := TRUE)
+    : CHAR
+    RAISES {Rd.Failure, Rd.EndOfFile, Thread.Alerted}=
+  VAR ch: CHAR;
+  BEGIN
+    REPEAT
+      ch := Rd.GetChar(s);
+    UNTIL NOT(ch IN skip);
+    IF unget THEN Rd.UnGetChar(s) END;
+    RETURN ch;
+  END RdExtras_Skip;
+
+(*---------------------------------------------------------------------------*)
+
 BEGIN
 END System.
