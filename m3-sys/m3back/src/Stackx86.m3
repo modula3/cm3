@@ -458,24 +458,22 @@ PROCEDURE find (t: T; stackp: CARDINAL;
         VAR do_loads := FALSE;
         BEGIN
           IF NOT done[0] AND NOT done[1] AND in[0] = to[1] AND in[1] = to[0] THEN
-            swapreg(t, in[1], in[0], 0);
             do_loads := TRUE;
             done[0] := TRUE;
             done[1] := TRUE;
           ELSE
             (* Some of these might be better as "copy" or "move" but should be ok. *)
             IF NOT done[1] AND in[0] = to[1] THEN
-              swapreg(t, in[1], in[0], 0);
               do_loads := TRUE;
               done[1] := TRUE;
             END;
             IF NOT done[0] AND in[1] = to[0] THEN
-              swapreg(t, in[0], in[1], 1);
               do_loads := TRUE;
               done[0] := TRUE;
             END;
           END;
           IF do_loads THEN
+            swapreg(t, in[1], in[0], 0);
             loadphantom(t, in[0], stackp, 0);
             loadphantom(t, in[1], stackp, 1);
           END;
