@@ -238,6 +238,7 @@ PROCEDURE swapreg (t: T; to, from: Regno; operandPart: OperandPart) =
       tempstore := t.reguse[from].last_store;
       temppart  := t.reguse[from].operandPart;
   BEGIN
+    <* ASSERT to # from *>
     <* ASSERT t.reguse[from].stackp = -1 OR t.reguse[from].operandPart = operandPart *>
     t.reguse[from].stackp := t.reguse[to].stackp;
     t.reguse[to].stackp := tempstack;
@@ -386,7 +387,8 @@ PROCEDURE find (t: T; stackp: CARDINAL;
              * identify themselves to find() instead of
              * just deducing it from aspects of the parameters.
              *)
-            OR (ret64 AND (in[0] # EAX OR in[1] # EDX))
+            OR (ret64 AND i = 0 AND in[0] # EAX)
+            OR (ret64 AND i = 1 AND in[1] # EDX)
 
             OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp)
             OR (t.reguse[in[i]].stackp = stackp AND t.reguse[in[i]].operandPart # i) THEN
@@ -412,6 +414,16 @@ PROCEDURE find (t: T; stackp: CARDINAL;
 
       IF done[0] AND done[size - 1] THEN
         RETURN;
+      END;
+
+      (* Favor putting EAX in the low part of 64bit operands, in
+       * case this ends up being the return value.
+       *)
+
+      <* ASSERT size < 2 OR to[0] # to[1] *>
+      IF size = 2 AND in[0] = -1 AND in[1] = -1 AND to[1] = EAX AND NOT done[0] AND NOT done[1] THEN
+        to[1] := to[0];
+        to[0] := EAX;
       END;
 
       (* If it doesn't have to be in a register, and there are no
