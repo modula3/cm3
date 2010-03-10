@@ -555,6 +555,7 @@ PROCEDURE shift_double_op (t: T; op: Op; READONLY dest, src, shiftCount: Operand
 
 PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
   VAR ins: Instruction;
+      immalt := TIntN.T{n := 4 * GetOperandSize(dest), x := imm.x};
   BEGIN
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
 
@@ -562,7 +563,7 @@ PROCEDURE immOp1 (t: T; op: Op; READONLY dest: Operand; READONLY imm: TIntN.T) =
       Err(t, "immOp1: unable to convert immediate to INTEGER:" & TIntN.ToDiagnosticText(imm));
     END;
 
-    IF TIntN.GE(imm, TIntN.Min8) AND TIntN.LE(imm, TIntN.Max8) THEN
+    IF TIntN.GE(immalt, TIntN.Min8) AND TIntN.LE(immalt, TIntN.Max8) THEN
       ins.imsize := 1;
     ELSE
       ins.imsize := 4;
@@ -1006,6 +1007,8 @@ PROCEDURE movImmT (t: T; READONLY dest: Operand; imm: TIntN.T) =
       log_global_var(t, dest.mvar, -4 - CG_Bytes[dest.mvar.mvar_type]);
     ELSIF TIntN.EQ(imm, TZero) THEN
       binOp(t, Op.oXOR, dest, dest);
+    ELSIF TWordN.EQ(imm, TIntN.T{n := 4 * GetOperandSize(dest), x := TInt.MOne}) THEN
+      immOp(t, Op.oOR, dest, imm);
     ELSE
       ins.opcode := 16_B8 + dest.reg[0];
       ins.imsize := 4;
