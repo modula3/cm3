@@ -25,7 +25,7 @@
 (*--------------------------------------------------------------------------*)
 MODULE FSUtils;
 
-IMPORT Pathname, File, RegularFile, Process, OSError, Rd, FileRd, 
+IMPORT Pathname, File, RegularFile, Process, OSError, Rd, FileRd,
        Wr, FileWr, Thread, Text, TextSeq;
 IMPORT SMsg AS Msg, PathRepr;
 IMPORT (* FSFixed AS *) FS;
@@ -105,7 +105,7 @@ PROCEDURE MakeDir(path : Pathname.T) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE SubDirs(path : Pathname.T; relative := FALSE) : TextSeq.T
   RAISES {E} =
-  VAR 
+  VAR
     iter : FS.Iterator;
     name : TEXT;
     stat : File.Status;
@@ -135,7 +135,7 @@ PROCEDURE SubDirs(path : Pathname.T; relative := FALSE) : TextSeq.T
 (*--------------------------------------------------------------------------*)
 PROCEDURE SubFiles(path : Pathname.T; relative := FALSE) : TextSeq.T
   RAISES {E} =
-  VAR 
+  VAR
     iter : FS.Iterator;
     name : TEXT;
     stat : File.Status;
@@ -145,7 +145,7 @@ PROCEDURE SubFiles(path : Pathname.T; relative := FALSE) : TextSeq.T
       iter := FS.Iterate(path);
       TRY
         WHILE iter.nextWithStatus(name, stat) DO
-          IF stat.type = RegularFile.FileType THEN 
+          IF stat.type = RegularFile.FileType THEN
             IF relative THEN
               res.addhi(name);
             ELSE
@@ -273,7 +273,7 @@ PROCEDURE Rmdir(fn : Pathname.T) RAISES {E} =
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
-  VAR 
+  VAR
     iter : FS.Iterator;
     name : TEXT;
     stat : File.Status;
@@ -289,7 +289,7 @@ PROCEDURE RmRec(fn : Pathname.T) RAISES {E} =
             WITH fnext = Pathname.Join(fn, name, NIL) DO
               IF stat.type = FS.DirectoryFileType THEN
                 RmRec(fnext);
-              ELSIF stat.type = RegularFile.FileType THEN 
+              ELSIF stat.type = RegularFile.FileType THEN
                 Rm(fnext);
               ELSE
               END;
@@ -312,7 +312,7 @@ PROCEDURE Touch(fn : Pathname.T) RAISES {E} =
   VAR f : File.T;
   BEGIN
     TRY
-      f := FS.OpenFile(PathRepr.Native(fn), truncate := FALSE, 
+      f := FS.OpenFile(PathRepr.Native(fn), truncate := FALSE,
                        create := FS.CreateOption.Ok);
       f.close();
     EXCEPT
@@ -321,7 +321,7 @@ PROCEDURE Touch(fn : Pathname.T) RAISES {E} =
   END Touch;
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE LongestExistingPrefix(path     : Pathname.T; 
+PROCEDURE LongestExistingPrefix(path     : Pathname.T;
                                 VAR rest : Pathname.T) : Pathname.T
   RAISES {E} =
   VAR
@@ -358,7 +358,7 @@ PROCEDURE LongestExistingPrefix(path     : Pathname.T;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE CanonicalPathname(fn : Pathname.T) : Pathname.T RAISES {E} =
-  VAR 
+  VAR
     wd, existingPath, rest, res : Pathname.T;
   BEGIN
     fn := PathRepr.Native(fn);
@@ -383,7 +383,7 @@ PROCEDURE CanonicalPathname(fn : Pathname.T) : Pathname.T RAISES {E} =
         IF Text.Empty(rest) THEN
           res := FS.GetAbsolutePathname(existingPath);
         ELSE
-          res := Pathname.Join(FS.GetAbsolutePathname(existingPath), 
+          res := Pathname.Join(FS.GetAbsolutePathname(existingPath),
                                rest, NIL);
         END;
       EXCEPT ELSE
@@ -395,13 +395,13 @@ PROCEDURE CanonicalPathname(fn : Pathname.T) : Pathname.T RAISES {E} =
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE Cp(src, dest : Pathname.T) RAISES {E} =
-  VAR 
+  VAR
     rd  : File.T;
     wr  : File.T;
     buf : ARRAY [0..4095] OF File.Byte;
     n   : INTEGER;
   BEGIN
-    IF NOT Exists(src) THEN 
+    IF NOT Exists(src) THEN
       RAISE E("file not found: " & src);
     END;
     TRY
@@ -452,14 +452,14 @@ PROCEDURE FileContents(fn : Pathname.T) : TEXT RAISES {E} =
       TRY
         data := Rd.GetText(rd, LAST(CARDINAL));
       EXCEPT
-        Rd.Failure, 
+        Rd.Failure,
         Thread.Alerted => RAISE E("cannot read file " & fn);
       END;
     FINALLY
       TRY
         Rd.Close(rd);
       EXCEPT
-        Rd.Failure, 
+        Rd.Failure,
         Thread.Alerted => RAISE E("cannot close file " & fn);
       END;
     END;
@@ -481,14 +481,14 @@ PROCEDURE PutFile(fn : Pathname.T; data : TEXT) RAISES {E} =
         Wr.PutText(wr, data);
         Wr.Close(wr);
       EXCEPT
-        Wr.Failure, 
+        Wr.Failure,
         Thread.Alerted => RAISE E("cannot write to file " & fn);
       END;
     FINALLY
       TRY
         Wr.Close(wr);
       EXCEPT
-        Wr.Failure, 
+        Wr.Failure,
         Thread.Alerted => RAISE E("cannot close file " & fn);
       END;
     END;

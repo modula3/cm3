@@ -39,7 +39,7 @@ PROCEDURE GetUntil(
             EXIT
           END;
           chars[i] := ch; INC(i);
-        ELSE 
+        ELSE
           INC(i);
           EXIT
         END;
@@ -82,5 +82,5 @@ PROCEDURE GetText(
     RETURN result;
   END GetText;
 
-BEGIN    
+BEGIN
 END RdExtras.

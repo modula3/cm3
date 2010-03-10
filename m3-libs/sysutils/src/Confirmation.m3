@@ -6,7 +6,7 @@ IMPORT SMsg AS Msg, TextUtils, System;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE OkayStdio(<*UNUSED*> self : StdIOClosure; msg : TEXT) : BOOLEAN =
-  VAR 
+  VAR
     answer : TEXT;
   BEGIN
     LOOP
@@ -15,7 +15,7 @@ PROCEDURE OkayStdio(<*UNUSED*> self : StdIOClosure; msg : TEXT) : BOOLEAN =
         Wr.Flush(Stdio.stdout);
         answer := Rd.GetLine(Stdio.stdin);
         answer := TextUtils.Compress(answer);
-      EXCEPT 
+      EXCEPT
         Rd.Failure => Msg.Error("reader failure on stdin"); RETURN FALSE;
       | Rd.EndOfFile => Msg.Error("eof on stdin"); RETURN FALSE;
       | Wr.Failure => Msg.Error("writer failure on stdout"); RETURN FALSE;
@@ -77,9 +77,8 @@ PROCEDURE SetDefault(cl : Closure) =
   END SetDefault;
 
 (*---------------------------------------------------------------------------*)
-VAR 
+VAR
   confirmation : Closure;
 BEGIN
   confirmation := NEW(StdIOClosure);
 END Confirmation.
-

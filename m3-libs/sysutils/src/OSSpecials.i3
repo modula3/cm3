@@ -40,7 +40,7 @@ PROCEDURE QuotedProcessArgument(arg : TEXT) : TEXT;
      a program. So if one argument contains one or more blanks (or other
      white space), it gets broken up into several arguments. This
      procedure is a workaround for this problem, not the correct
-     solution... 
+     solution...
    *)
 
 END OSSpecials.

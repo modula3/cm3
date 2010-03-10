@@ -94,7 +94,7 @@ PROCEDURE Compress(t : TEXT; s : ASCII.Set := ASCII.Spaces) : TEXT =
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE SubstChar(t : TEXT; a, b : CHAR) : TEXT =
-  VAR 
+  VAR
     len := Text.Length(t);
     res :  CharacterArray;
   BEGIN
@@ -111,7 +111,7 @@ PROCEDURE SubstChar(t : TEXT; a, b : CHAR) : TEXT =
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE SubstChars(t : TEXT; READONLY a, b : ARRAY OF CHAR) : TEXT =
-  VAR 
+  VAR
     len := Text.Length(t);
     res :  CharacterArray;
     found : BOOLEAN;
@@ -138,7 +138,7 @@ PROCEDURE SubstChars(t : TEXT; READONLY a, b : ARRAY OF CHAR) : TEXT =
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Substitute(READONLY t, a, b : TEXT; times := 0) : TEXT =
-  VAR 
+  VAR
     i : CARDINAL := 0;
     k : CARDINAL := 0;
     n : CARDINAL := 0;
@@ -164,7 +164,7 @@ PROCEDURE Substitute(READONLY t, a, b : TEXT; times := 0) : TEXT =
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE RemoveChars(t : TEXT; s : ASCII.Set := ASCII.Spaces) : TEXT =
-  VAR 
+  VAR
     len := Text.Length(t);
     res :  CharacterArray;
     cc  := 0;
@@ -193,7 +193,7 @@ PROCEDURE Squeeze(READONLY t : TEXT) : TEXT =
     WHILE NOT Rd.EOF(in) DO <* NOWARN *>
       c := Rd.GetChar(in); <* NOWARN *>
       IF c = '\n' THEN
-        INC(nlc); 
+        INC(nlc);
       ELSE
         nlc := 0;
       END;
@@ -220,8 +220,8 @@ PROCEDURE MemberOfTextSeq(tl : TextSeq.T; elem : TEXT) : BOOLEAN =
 (*--------------------------------------------------------------------------*)
 PROCEDURE TextSeqToText(seq : TextSeq.T; sep := " "; maxCol := 0;
                         contToken := "\\\n") : TEXT =
-  VAR 
-    t    := ""; 
+  VAR
+    t    := "";
     col  := 0;
     e    :  TEXT;
     len  :  CARDINAL;
@@ -288,7 +288,7 @@ PROCEDURE TextSeqToText(seq : TextSeq.T; sep := " "; maxCol := 0;
           IF col + len + slen > maxCol THEN
             col := len + slen;
             SUBARRAY(res^, j, slen) := SUBARRAY(sep^, 0, slen); INC(j, slen);
-            SUBARRAY(res^, j, scon) := SUBARRAY(contToken^, 0, scon); 
+            SUBARRAY(res^, j, scon) := SUBARRAY(contToken^, 0, scon);
             INC(j, scon);
           ELSE
             SUBARRAY(res^, j, slen) := SUBARRAY(sep^, 0, slen); INC(j, slen);
@@ -336,7 +336,7 @@ PROCEDURE TextSeqToText(seq : TextSeq.T; sep := " "; maxCol := 0;
 
 (*--------------------------------------------------------------------------*)
 (* old interface
-PROCEDURE SubstEnvVars(READONLY t : TEXT; 
+PROCEDURE SubstEnvVars(READONLY t : TEXT;
                        READONLY vars : ARRAY OF TEXT;
                        env : TextTextTbl.T := NIL) : TEXT =
   VAR
@@ -364,7 +364,7 @@ PROCEDURE SubstEnvVars(READONLY t : TEXT;
 *)
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE SubstEnvVars(READONLY t : TEXT; 
+PROCEDURE SubstEnvVars(READONLY t : TEXT;
                        env : TextTextTbl.T := NIL) : TEXT =
   VAR
     name, val, res : TEXT;
@@ -490,7 +490,7 @@ PROCEDURE Tokenize(text : TEXT; sepchars := ASCII.Spaces;
 (*--------------------------------------------------------------------------*)
 PROCEDURE Lower(t : TEXT) : TEXT =
   (* return a text where all alphas are in lower case *)
-  VAR 
+  VAR
     len := Text.Length(t);
     res :  CharacterArray;
   BEGIN
@@ -502,9 +502,9 @@ PROCEDURE Lower(t : TEXT) : TEXT =
   END Lower;
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE Upper(t : TEXT) : TEXT = 
+PROCEDURE Upper(t : TEXT) : TEXT =
   (* return a text where all alphas are in upper case *)
-  VAR 
+  VAR
     len := Text.Length(t);
     res :  CharacterArray;
   BEGIN
@@ -513,7 +513,7 @@ PROCEDURE Upper(t : TEXT) : TEXT =
       res^[i] := ASCII.Upper[t^[i]]
     END;
     RETURN Text.FromChars(res^);
-  END Upper; 
+  END Upper;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE CountChar(s : TEXT; ch: CHAR; caseSensitive := TRUE) : INTEGER =
@@ -556,7 +556,7 @@ PROCEDURE SubstituteVariables(t : TEXT; parameters : TextTextTbl.T) : TEXT
         IF TextEx.FindChar(t, '}', k) THEN
           pre  := Text.Sub(t, 0, i);
           name := Text.Sub(t, j, k - j);
-          (* check for default values, either 
+          (* check for default values, either
              {:varname?varname},
              {:varname:const}, or
              {:varname?varname:const}
@@ -571,13 +571,13 @@ PROCEDURE SubstituteVariables(t : TEXT; parameters : TextTextTbl.T) : TEXT
               defaultVarName := Text.Sub(expr, l + 1, m - l -1);
               IF parameters # NIL AND
                 parameters.get(defaultVarName, defaultValue) THEN
-                (* Msg.V("  defaultValue(1) for " & name & " from " & 
+                (* Msg.V("  defaultValue(1) for " & name & " from " &
                    defaultVarName & ": " & defaultValue); *)
                 defaultValue := SubstituteVariables(defaultValue, parameters);
               ELSE
                 defaultValue := Text.Sub(expr, m + 1);
               END;
-              (* Msg.V("  defaultValue(2) for " & name & ": " & 
+              (* Msg.V("  defaultValue(2) for " & name & ": " &
                  defaultValue); *)
             ELSE
               RAISE Error("invalid default value syntax: " & expr);
@@ -588,10 +588,10 @@ PROCEDURE SubstituteVariables(t : TEXT; parameters : TextTextTbl.T) : TEXT
             defaultVarName := Text.Sub(expr, l + 1);
             IF parameters # NIL AND
               parameters.get(defaultVarName, defaultValue) THEN
-              (* Msg.V("  defaultValue(3) for " & name & " from " & 
+              (* Msg.V("  defaultValue(3) for " & name & " from " &
                  defaultVarName & ": " & defaultValue); *)
               defaultValue := SubstituteVariables(defaultValue, parameters);
-              (* Msg.V("  defaultValue(4) for " & name & ": " & 
+              (* Msg.V("  defaultValue(4) for " & name & ": " &
                  defaultValue); *)
             ELSE
               defaultValue := NIL;
@@ -602,7 +602,7 @@ PROCEDURE SubstituteVariables(t : TEXT; parameters : TextTextTbl.T) : TEXT
             defaultValue := Text.Sub(expr, m + 1);
             (* Msg.V("  defaultValue(5) for " & name & ": " & defaultValue); *)
           END;
-          (* If there is a default value, it is now contained in defaultValue, 
+          (* If there is a default value, it is now contained in defaultValue,
              and name is adapted appropriately. *)
           suf  := Text.Sub(t, k + 1, LAST(CARDINAL));
           IF parameters # NIL THEN

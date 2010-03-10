@@ -46,7 +46,7 @@ PROCEDURE GetString(rd : Rd.T) : TEXT
   END GetString;
 
 (*--------------------------------------------------------------------*)
-PROCEDURE GetToken(rd : Rd.T; skip := ASCII.Spaces; 
+PROCEDURE GetToken(rd : Rd.T; skip := ASCII.Spaces;
                    terminate := ASCII.Spaces; unget := FALSE) : TEXT
   RAISES {Rd.Failure, Rd.EndOfFile, Alerted} =
   BEGIN
@@ -54,7 +54,7 @@ PROCEDURE GetToken(rd : Rd.T; skip := ASCII.Spaces;
   END GetToken;
 
 (*--------------------------------------------------------------------*)
-PROCEDURE GetTokenOrString(rd : Rd.T; skip := ASCII.Spaces; 
+PROCEDURE GetTokenOrString(rd : Rd.T; skip := ASCII.Spaces;
                            terminate := ASCII.Spaces) : TEXT
   RAISES {Rd.Failure, Rd.EndOfFile, Alerted} =
   VAR c : CHAR;
@@ -92,7 +92,7 @@ PROCEDURE Tokenize(t : TEXT; sep := ASCII.Spaces) : TextSeq.T =
           res.addhi(token);
         END;
       END;
-    EXCEPT ELSE 
+    EXCEPT ELSE
     END;
     RETURN res;
   END Tokenize;
