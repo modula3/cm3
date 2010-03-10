@@ -21,7 +21,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TextUtils.m3,v 1.5 2009-07-24 05:45:33 jkrell Exp $ *)
+ * $Id: TextUtils.m3,v 1.6 2010-03-10 10:31:36 jkrell Exp $ *)
 
 (*---------------------------------------------------------------------------*)
 MODULE TextUtils EXPORTS TextUtils;
@@ -29,7 +29,6 @@ MODULE TextUtils EXPORTS TextUtils;
 IMPORT ASCII, Text, TextClass, Text8, TextSeq, TextTextTbl, TextRd,
        TextArraySort, TextWr, Rd, Wr, ProcessEnv, FastLex, UnsafeRd;
 IMPORT SMsg AS Msg;
-IMPORT TextExtras AS TextEx;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE SkipLeft(t : TEXT; s : ASCII.Set := ASCII.Spaces) : TEXT =
@@ -131,7 +130,7 @@ PROCEDURE Substitute(READONLY t, a, b : TEXT; times := 0) : TEXT =
     r : TEXT := NIL;
   BEGIN
     WHILE ((times = 0) OR (n < times)) AND
-      TextEx.FindSub(t, a, i) DO
+      TextExtras_FindSub(t, a, i) DO
       INC(n);
       IF r = NIL THEN
         r := Text.Sub(t, k, i - k) & b;
@@ -441,7 +440,7 @@ PROCEDURE Split(text : TEXT; sep : TEXT) : TextSeq.T =
     seplen := Text.Length(sep);
     res := NEW(TextSeq.T).init();
   BEGIN
-    WHILE TextEx.FindSub(text, sep, i) DO
+    WHILE TextExtras_FindSub(text, sep, i) DO
       WITH elem = Text.Sub(text, b, i - b) DO
         res.addhi(elem);
         (* next begin is after the current separator *)
@@ -544,14 +543,14 @@ PROCEDURE SubstituteVariables(t : TEXT; parameters : TextTextTbl.T) : TEXT
     defaultValue, defaultVarName, expr : TEXT;
   BEGIN
     (* Msg.V("SubstituteVariables(" & t & ")"); *)
-    WHILE TextEx.FindChar(t, '{', i) DO
+    WHILE TextExtras_FindChar(t, '{', i) DO
       j := i;
-      IF TextEx.FindCharSet(t, vchars, j) AND (j = i + 1) THEN
+      IF TextExtras_FindCharSet(t, vchars, j) AND (j = i + 1) THEN
         (* found {: or {! or {? *)
         c := TextClass.GetChar(t, j);
         INC(j);
         k := j;
-        IF TextEx.FindChar(t, '}', k) THEN
+        IF TextExtras_FindChar(t, '}', k) THEN
           pre  := Text.Sub(t, 0, i);
           name := Text.Sub(t, j, k - j);
           (* check for default values, either 
@@ -560,8 +559,8 @@ PROCEDURE SubstituteVariables(t : TEXT; parameters : TextTextTbl.T) : TEXT
              {:varname?varname:const}
           *)
           defaultValue := NIL; l:= 0 ; m := 0;
-          defVar := TextEx.FindChar(name, '?', l);
-          defConst := TextEx.FindChar(name, ':', m);
+          defVar := TextExtras_FindChar(name, '?', l);
+          defConst := TextExtras_FindChar(name, ':', m);
           IF defVar AND defConst THEN
             IF l < m THEN
               expr := name;
@@ -657,7 +656,7 @@ PROCEDURE Pos(READONLY s, t : TEXT; caseSensitive := TRUE) : INTEGER =
       ss := Lower(s);
       tt := Lower(t);
     END;
-    IF TextEx.FindSub(ss, tt, i) THEN
+    IF TextExtras_FindSub(ss, tt, i) THEN
       RETURN i;
     ELSE
       RETURN -1;
@@ -684,7 +683,7 @@ PROCEDURE StartsWith(s, t : TEXT; caseSensitive := TRUE) : BOOLEAN =
     IF caseSensitive THEN
       RETURN Text.Equal(sub, t);
     END;
-    RETURN TextEx.CIEqual(sub, t);
+    RETURN TextExtras_CIEqual(sub, t);
   END StartsWith;
 
 (*---------------------------------------------------------------------------*)
@@ -702,32 +701,32 @@ PROCEDURE EndsWith(s, t : TEXT; caseSensitive := TRUE) : BOOLEAN =
     IF caseSensitive THEN
       RETURN Text.Equal(sub, t);
     END;
-    RETURN TextEx.CIEqual(sub, t);
+    RETURN TextExtras_CIEqual(sub, t);
   END EndsWith;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE BoolVal(READONLY s : TEXT; default := FALSE) : BOOLEAN =
   BEGIN
     WITH t = Compress(s) DO
-      IF TextEx.CIEqual(t, "1") THEN
+      IF TextExtras_CIEqual(t, "1") THEN
         RETURN TRUE;
-      ELSIF TextEx.CIEqual(t, "0") THEN
+      ELSIF TextExtras_CIEqual(t, "0") THEN
         RETURN FALSE;
-      ELSIF TextEx.CIEqual(t, "on") THEN
+      ELSIF TextExtras_CIEqual(t, "on") THEN
         RETURN TRUE;
-      ELSIF TextEx.CIEqual(t, "no") THEN
+      ELSIF TextExtras_CIEqual(t, "no") THEN
         RETURN FALSE;
-      ELSIF TextEx.CIEqual(t, "n") THEN
+      ELSIF TextExtras_CIEqual(t, "n") THEN
         RETURN FALSE;
-      ELSIF TextEx.CIEqual(t, "yes") THEN
+      ELSIF TextExtras_CIEqual(t, "yes") THEN
         RETURN TRUE;
-      ELSIF TextEx.CIEqual(t, "y") THEN
+      ELSIF TextExtras_CIEqual(t, "y") THEN
         RETURN TRUE;
-      ELSIF TextEx.CIEqual(t, "off") THEN
+      ELSIF TextExtras_CIEqual(t, "off") THEN
         RETURN FALSE;
-      ELSIF TextEx.CIEqual(t, "true") THEN
+      ELSIF TextExtras_CIEqual(t, "true") THEN
         RETURN TRUE;
-      ELSIF TextEx.CIEqual(t, "false") THEN
+      ELSIF TextExtras_CIEqual(t, "false") THEN
         RETURN FALSE;
       ELSE
         RETURN default;
@@ -750,6 +749,120 @@ PROCEDURE Sort (VAR a: ARRAY OF TEXT;  cmp := Elem_Compare) =
   END Sort;
 
 (*--------------------------------------------------------------------------*)
+
+PROCEDURE TextExtras_CIEqual(t, u: Text.T): BOOLEAN RAISES {} =
+  VAR
+    lt: CARDINAL := Text.Length(t);
+    lu: CARDINAL := Text.Length(u);
+    i: CARDINAL := 0;
+  BEGIN
+    IF lt = lu THEN 
+      WHILE i<lt DO
+        IF ASCII.Upper[Text.GetChar (t, i)] # ASCII.Upper[Text.GetChar (u, i)] THEN 
+          RETURN FALSE 
+        ELSE INC(i) 
+        END;
+      END;
+      RETURN TRUE;
+    ELSE RETURN FALSE
+    END;
+  END TextExtras_CIEqual;
+
+(*--------------------------------------------------------------------------*)
+
+PROCEDURE TextExtras_FindChar(t: Text.T; ch: CHAR; VAR index: CARDINAL): BOOLEAN RAISES {} =
+  VAR
+    i: CARDINAL := index;
+    lt: CARDINAL := Text.Length(t);
+  BEGIN
+    IF i >= lt THEN
+      IF i = lt THEN RETURN FALSE ELSE 
+        <*FATAL BadFind *> BEGIN RAISE BadFind END;
+      END;
+    END;
+    REPEAT
+      IF Text.GetChar (t, i) = ch THEN index := i; RETURN TRUE END;
+      INC(i);
+    UNTIL i = lt;
+    index := i;
+    RETURN FALSE;
+  END TextExtras_FindChar;
+
+(*--------------------------------------------------------------------------*)
+
+PROCEDURE TextExtras_FindSub(t, sub: Text.T; VAR index: CARDINAL): BOOLEAN RAISES {} =
+  VAR
+    i: CARDINAL := index;
+    lt: CARDINAL := Text.Length(t);
+    lsub: CARDINAL := Text.Length(sub);
+  BEGIN
+    IF i > lt THEN <*FATAL BadFind*> BEGIN RAISE BadFind END; END;
+    IF lsub = 0 THEN
+      RETURN TRUE 
+    ELSE
+      IF lsub <= lt THEN
+        VAR
+          lastStart := lt - lsub;
+          firstCh := Text.GetChar (sub, 0);
+        BEGIN
+          WHILE i <= lastStart DO
+            IF Text.GetChar (t, i) = firstCh THEN 
+              VAR 
+                j: CARDINAL := 1;
+              BEGIN
+                LOOP
+                  IF j = lsub THEN
+                    index := i;
+                    RETURN TRUE;
+                  ELSIF i + j >= lt
+                    OR Text.GetChar (t, i+j) # Text.GetChar (sub, j) THEN
+                    EXIT
+                  ELSE
+                    INC(j);
+                  END;
+                END;
+              END;
+            END;
+            INC(i);
+          END;
+        END;
+      END;
+      index := lt;
+      RETURN FALSE;
+    END;
+  END TextExtras_FindSub;
+
+(*--------------------------------------------------------------------------*)
+
+EXCEPTION BadFind;
+
+(*--------------------------------------------------------------------------*)
+
+PROCEDURE TextExtras_FindCharSet(
+    t: Text.T;
+    READONLY charSet: ASCII.Set;
+    VAR index: CARDINAL)
+    : BOOLEAN
+    RAISES {} =
+  VAR
+    i: CARDINAL := index;
+    lt: CARDINAL := Text.Length(t);
+  BEGIN
+    IF i >= lt THEN
+      IF i = lt THEN RETURN FALSE ELSE
+        <*FATAL BadFind*> BEGIN RAISE BadFind END;
+      END
+    END;
+    REPEAT
+      IF Text.GetChar (t, i) IN charSet THEN index := i; RETURN TRUE END;
+      INC(i);
+    UNTIL i = lt;
+    index := i;
+    RETURN FALSE;
+  END TextExtras_FindCharSet;
+
+(*--------------------------------------------------------------------------*)
+
 BEGIN
 END TextUtils.
 
