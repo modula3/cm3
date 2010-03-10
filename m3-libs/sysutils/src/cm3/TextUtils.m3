@@ -757,6 +757,9 @@ PROCEDURE TextExtras_CIEqual(t, u: Text.T): BOOLEAN RAISES {} =
     i: CARDINAL := 0;
   BEGIN
     IF lt = lu THEN
+      IF Text.Equal(t, u) THEN
+        RETURN TRUE;
+      END;
       WHILE i<lt DO
         IF ASCII.Upper[Text.GetChar (t, i)] # ASCII.Upper[Text.GetChar (u, i)] THEN
           RETURN FALSE
