@@ -387,7 +387,8 @@ PROCEDURE find (t: T; stackp: CARDINAL;
              *)
             OR (ret64 AND (in[0] # EAX OR in[1] # EDX))
 
-            OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp) THEN
+            OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp)
+            OR (t.reguse[in[i]].stackp = stackp AND t.reguse[in[i]].operandPart # i) THEN
 
           IF ret64 THEN
             to[0] := EAX;
@@ -460,7 +461,9 @@ PROCEDURE find (t: T; stackp: CARDINAL;
                register, 'to' will be moved into it, otherwise it will be stored to
                memory *)
 
-            IF in[i] = -1 OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp) THEN
+            IF in[i] = -1
+                OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp)
+                OR (t.reguse[in[i]].stackp = stackp AND t.reguse[in[i]].operandPart # i) THEN
               forceout(t, to[i], i);
               IF in[i] = -1 THEN
                 loadreg(t, to[i], opA[i], i);
