@@ -461,16 +461,13 @@ PROCEDURE find (t: T; stackp: CARDINAL;
             do_loads := TRUE;
             done[0] := TRUE;
             done[1] := TRUE;
-          ELSE
-            (* Some of these might be better as "copy" or "move" but should be ok. *)
-            IF NOT done[1] AND in[0] = to[1] THEN
-              do_loads := TRUE;
-              done[1] := TRUE;
-            END;
-            IF NOT done[0] AND in[1] = to[0] THEN
-              do_loads := TRUE;
-              done[0] := TRUE;
-            END;
+          (* Some of these might be better as "copy" or "move" but should be ok. *)
+          ELSIF NOT done[1] AND in[0] = to[1] THEN
+            do_loads := TRUE;
+            done[1] := TRUE;
+           ELSIF NOT done[0] AND in[1] = to[0] THEN
+            do_loads := TRUE;
+            done[0] := TRUE;
           END;
           IF do_loads THEN
             swapreg(t, in[1], in[0], 0);
