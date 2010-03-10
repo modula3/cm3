@@ -31,7 +31,7 @@ IMPORT Wr, Pathname, OSError;
 TYPE
   T <: Public;
 
-  
+
   (*------------------------------------------------------------------------*)
   (* A MsgIF.T is an objectified version of the Msg interface. It contains
      several writer references to use for different output methods. The

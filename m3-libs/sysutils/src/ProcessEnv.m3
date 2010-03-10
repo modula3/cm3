@@ -58,15 +58,15 @@ PROCEDURE Copy(env : T) : T =
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE SystemRepr(env : T) : REF ARRAY OF TEXT =
-  VAR 
+  VAR
     e : REF ARRAY OF TEXT;
     s : INTEGER;
   BEGIN
     IF env = NIL THEN RETURN NIL END;
     s := env.size();
     e := NEW(REF ARRAY OF TEXT, s);
-    VAR 
-      iter := env.iterate(); 
+    VAR
+      iter := env.iterate();
       i    := 0;
       name :  TEXT;
       val  :  TEXT;
@@ -81,15 +81,15 @@ PROCEDURE SystemRepr(env : T) : REF ARRAY OF TEXT =
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Names(env : T) : REF ARRAY OF TEXT =
-  VAR 
+  VAR
     e : REF ARRAY OF TEXT;
     s : INTEGER;
   BEGIN
     IF env = NIL THEN RETURN NIL END;
     s := env.size();
     e := NEW(REF ARRAY OF TEXT, s);
-    VAR 
-      iter := env.iterate(); 
+    VAR
+      iter := env.iterate();
       i    := 0;
       name :  TEXT;
       val  :  TEXT;
@@ -135,7 +135,7 @@ PROCEDURE Delete(env : T; name : TEXT) =
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Add(env : T; env2 : T) =
-  VAR 
+  VAR
     iter := env2.iterate();
     name, val : TEXT;
   BEGIN

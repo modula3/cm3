@@ -33,7 +33,7 @@ PROCEDURE Error(msg : TEXT);
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE Fatal(msg : TEXT; exitCode : INTEGER := 1);
-  (* write `msg' tagged as fatal error to `fatalWr' and terminate 
+  (* write `msg' tagged as fatal error to `fatalWr' and terminate
      the program *)
 
 (*--------------------------------------------------------------------------*)
@@ -50,7 +50,7 @@ PROCEDURE Error2(proc, msg : TEXT);
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE Fatal2(proc, msg : TEXT; exitCode : INTEGER := 1);
-  (* write `proc: msg' tagged as fatal error to `fatalWr' and terminate 
+  (* write `proc: msg' tagged as fatal error to `fatalWr' and terminate
      the program *)
 
 (*--------------------------------------------------------------------------*)

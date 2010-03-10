@@ -59,7 +59,7 @@ PROCEDURE Warning2(msgif : MsgIF.T; proc, msg : TEXT);
 PROCEDURE Debug2(msgif : MsgIF.T; proc, msg : TEXT; level := 1);
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE V(msgif : MsgIF.T; msg : TEXT; unconditionalNewLine := TRUE; 
+PROCEDURE V(msgif : MsgIF.T; msg : TEXT; unconditionalNewLine := TRUE;
             level := 1);
 
 (*--------------------------------------------------------------------------*)
@@ -67,7 +67,7 @@ PROCEDURE V2(msgif : MsgIF.T; proc, msg : TEXT; unconditionalNewLine := TRUE;
              level := 1);
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE T(msgif : MsgIF.T; msg : TEXT; unconditionalNewLine := TRUE; 
+PROCEDURE T(msgif : MsgIF.T; msg : TEXT; unconditionalNewLine := TRUE;
             level := 1);
 
 (*--------------------------------------------------------------------------*)
@@ -75,7 +75,7 @@ PROCEDURE T2(msgif : MsgIF.T; proc, msg : TEXT; unconditionalNewLine := TRUE;
              level := 1);
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE D(msgif : MsgIF.T; msg : TEXT; unconditionalNewLine := TRUE; 
+PROCEDURE D(msgif : MsgIF.T; msg : TEXT; unconditionalNewLine := TRUE;
             level := 1);
 
 (*--------------------------------------------------------------------------*)
