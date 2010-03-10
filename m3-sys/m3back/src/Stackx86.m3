@@ -1624,9 +1624,31 @@ PROCEDURE dorotate (t: T; type: IType): BOOLEAN =
   END dorotate;
 
 PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
+(*
+ *  T extract(T value, UINT32 offset, UINT32 count) 
+ *  {
+ *      return ((value >> offset) & ~((~(T)0) << count));
+ *  }
+ *  for T = UINT32 or UINT64
+ *
+ * or, broken down but the same:
+ *
+ *  T extract(T value, UINT32 offset, UINT32 count) 
+ *  {
+ *      T mask = ((~(T)0) << count);
+ *      value >>= offset;
+ *      value &= ~mask;
+ *      return value;
+ *  }
+ *
+ *)
   VAR count: INTEGER;
       utype := UnsignedType[type];
   BEGIN
+
+    (* See if count is a constant, in which case
+     * call the more optimal doextract_n.
+     *)
 
     WITH op_count = t.vstack[pos(t, 0, "extract")] DO
 
@@ -1644,6 +1666,13 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
       END;
     END;
 
+    (* Push the mask on the virtual stack,
+     * with an initial value of ~0.
+     * This could be done using lower level
+     * primitives, but this works just as well
+     * and is easier to code.
+     *)
+
     t.pushimmT(TIntN.T{x := IntType[utype].max}, utype);
 
     unlock(t);
@@ -1657,19 +1686,23 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
          op_offset = t.vstack[stack_offset],
          op_value = t.vstack[stack_value] DO
 
-(* T extract(T x, uint32 offset, uint32 count) 
-   {
-     x >>= offset;
-     x &= ~((~(T)0) << count);
-     return x;
-   }
-*)
+      (* Get offset into ECX if it is not immediate. *)
+
       IF op_offset.loc = OLoc.imm THEN
-        TWordN.And(op_offset.imm, BitCountMask[type], op_offset.imm); (* This should be redundant. *)
+        (* Mask offset to 31 or 63 -- should be redundant but is safe. *)
+        TWordN.And(op_offset.imm, BitCountMask[type], op_offset.imm);
       ELSE
         find(t, stack_offset, Force.regset, RegSet {ECX});
       END;
+
+      (* Get value into registers. Do this after offset possibly takes ECX,
+       * so that value doesn't needlessly do so and then we'd swap them.
+       *)
+
       find(t, stack_value, Force.anyreg);
+
+      (* Shift value right by offset. *)
+
       IF op_offset.loc = OLoc.imm THEN
         t.cg.immOp(Op.oSHR, op_value, op_offset.imm);
       ELSE
@@ -1688,13 +1721,23 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
       END;*)
       unlock(t);
 
+      (* Get count into ECX if is not immediate. *)
+
       IF op_count.loc = OLoc.imm THEN
-        TWordN.And(op_count.imm, BitCountMask[type], op_count.imm); (* This should be redundant. *)
+      (* Mask count to 31 or 63 -- should be redundant but is safe. *)
+        TWordN.And(op_count.imm, BitCountMask[type], op_count.imm);
       ELSE
         find(t, stack_count, Force.regset, RegSet {ECX});
       END;
 
+      (* Get mask into registers. Do this after count
+       * so that mask doesn't needlessly go into ECX
+       * and have to be swapped.
+       *)
+
       find(t, stack_mask, Force.anyreg);
+
+      (* Shift mask left by count. *)
 
       IF op_count.loc = OLoc.imm THEN
         t.cg.immOp(Op.oSHL, op_mask, op_count.imm);
@@ -1705,9 +1748,9 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
       t.cg.unOp(Op.oNOT, op_mask);
       t.cg.binOp(Op.oAND, op_value, op_mask);
 
-      newdest(t, op_count);
-      newdest(t, op_offset);
-      newdest(t, op_mask);
+      newdest(t, op_count);  (* Is this needed? *)
+      newdest(t, op_offset); (* Is this needed? *)
+      newdest(t, op_mask);   (* Is this needed? *)
       newdest(t, op_value);
       discard(t, 3);
     END;
@@ -1834,10 +1877,24 @@ PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; offset, count: 
   END doextract_mn;
 
 PROCEDURE doinsert (t: T; type: IType) =
+(*
+ *  T insert(T to, T from, UINT32 offset, UINT32 count)
+ *  {
+ *      T mask = ((~((~(T)0) << count)) << offset);
+ *      return (to & ~mask) | ((from << offset) & mask);
+ *  }
+ *  for T = UINT32 or UINT64
+ *
+ *)
   VAR count: INTEGER;
       offset: INTEGER;
       utype := UnsignedType[type];
   BEGIN
+
+    (* If offset and count are constant, call the more efficient doinsert_mn.
+     * We don't try to call doinsert_n here, because it might just
+     * call us back and infinitely recurse.
+     *)
 
     WITH stack_count = pos(t, 0, "insert"),
          stack_offset = pos(t, 1, "insert"),
@@ -1872,25 +1929,25 @@ PROCEDURE doinsert (t: T; type: IType) =
          op_from = t.vstack[stack_from],
          op_to = t.vstack[stack_to] DO
 
-
-(* T insert(T to, T from, uint32 offset, uint32 count)
-   {
-     T mask = ((~((~(T)0) << count)) << offset);
-     return (to & ~mask) | ((from << offset) & mask);
-   }
-*)
-
       IF op_offset.loc = OLoc.imm THEN
-        TWordN.And(op_offset.imm, BitCountMask[type], op_offset.imm); (* shouldn't be needed *)
+        (* Mask offset to 31 or 63 -- should be redundant but is safe. *)
+        TWordN.And(op_offset.imm, BitCountMask[type], op_offset.imm);
       END;
 
       IF op_count.loc = OLoc.imm THEN
-        TWordN.And(op_count.imm, BitCountMask[type], op_count.imm); (* shouldn't be needed *)
+        (* Mask count to 31 or 63 -- should be redundant but is safe. *)
+        TWordN.And(op_count.imm, BitCountMask[type], op_count.imm);
       ELSE
         find(t, stack_count, Force.regset, RegSet{ECX});
       END;
 
+      (* Get mask into registers. Do this after count possibly takes ECX,
+       * so that mask doesn't needlessly do so and then we'd swap them.
+       *)
+
       find(t, stack_mask, Force.anyreg);
+
+      (* Shift mask left by count. *)
 
       IF op_count.loc = OLoc.register THEN
         t.cg.unOp(Op.oSHL, op_mask); (* shift by ECX *)
@@ -1948,11 +2005,11 @@ PROCEDURE doinsert (t: T; type: IType) =
       t.cg.binOp(Op.oAND, op_to, op_mask);
       t.cg.binOp(Op.oOR, op_to, op_from);
 
-      newdest(t, op_count);
-      newdest(t, op_offset);
+      newdest(t, op_count);  (* Is this needed? *)
+      newdest(t, op_offset); (* Is this needed? *)
       newdest(t, op_to);
-      newdest(t, op_from);
-      newdest(t, op_mask);
+      newdest(t, op_from);   (* Is this needed? *)
+      newdest(t, op_mask);   (* Is this needed? *)
       discard(t, 4);
     END;
   END doinsert;
@@ -1960,6 +2017,11 @@ PROCEDURE doinsert (t: T; type: IType) =
 PROCEDURE doinsert_n (t: T; type: IType; count: INTEGER) =
   VAR offset: INTEGER;
   BEGIN
+
+    (* If offset is also a constant (count already is),
+     * call the more efficient doinsert_mn.
+     *)
+
     WITH stack_offset = pos(t, 0, "insert"),
          op_offset = t.vstack[stack_offset] DO
 
@@ -1972,6 +2034,8 @@ PROCEDURE doinsert_n (t: T; type: IType; count: INTEGER) =
         RETURN;
       END;
     END;
+
+    (* Just call the general doinsert. *)
 
     t.pushimmI(count, UnsignedType[type]);
     t.doinsert(type);
