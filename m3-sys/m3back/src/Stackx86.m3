@@ -449,19 +449,32 @@ PROCEDURE find (t: T; stackp: CARDINAL;
         RETURN;
       END;
 
+      (* Handle the case where one or both registers are
+       * allocated to this operand, but the wrong operandPart.
+       * This could be written without enumerating every case separately.
+       *)
 
       IF size = 2 THEN
-        IF NOT done[1] AND in[0] = to[1] THEN
+        IF NOT done[0] AND NOT done[1] AND in[0] = to[1] AND in[1] = to[0] THEN
           swapreg(t, in[1], in[0], 0);
           loadphantom(t, in[0], stackp, 0);
           loadphantom(t, in[1], stackp, 1);
-          done[1] := TRUE;
-        END;
-        IF NOT done[0] AND in[1] = to[0] THEN
-          swapreg(t, in[0], in[1], 1);
-          loadphantom(t, in[0], stackp, 0);
-          loadphantom(t, in[1], stackp, 1);
           done[0] := TRUE;
+          done[1] := TRUE;
+        ELSE
+          (* Some of these might be better as "copy" or "move. *)
+          IF NOT done[1] AND in[0] = to[1] THEN
+            swapreg(t, in[1], in[0], 0);
+            loadphantom(t, in[0], stackp, 0);
+            loadphantom(t, in[1], stackp, 1);
+            done[1] := TRUE;
+          END;
+          IF NOT done[0] AND in[1] = to[0] THEN
+            swapreg(t, in[0], in[1], 1);
+            loadphantom(t, in[0], stackp, 0);
+            loadphantom(t, in[1], stackp, 1);
+            done[0] := TRUE;
+          END;
         END;
       END;
 
