@@ -13,6 +13,7 @@ rem ---------------------------------------------------------------------------
 rem VERSION HISTORY:
 rem ---------------
 rem v1.00, 10/26/2009, R.Coleburn, Initial Release.  This version is an "improved" replacement for my prior "cm3SetupCmdEnv.CMD" script.  It also adds support for Windows Vista.
+rem v1.10, 03/11/2010, R.Coleburn, check location of the running script, and also the PATH environment variable, as a potential locations for "bin/cm3.exe" when looking for the root of the cm3 installation.
 rem ---------------------------------------------------------------------------
 rem EXIT CODES:
 rem ----------
@@ -61,21 +62,16 @@ REM !!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!===!!!
 
 
 
-:Init
-:----
+:Welcome
+:-------
 set _cm3_ExitCode=0
 echo.
-echo +----------------------------------------------------+
-echo ^|                cm3CommandShell.CMD                 ^|
-echo ^|                -------------------                 ^|
-echo ^| v1.00, October 26, 2009, written by Randy Coleburn ^|
-echo +----------------------------------------------------+
+echo +--------------------------------------------------+
+echo ^|               cm3CommandShell.CMD                ^|
+echo ^|               -------------------                ^|
+echo ^| v1.10, March 11, 2010, written by Randy Coleburn ^|
+echo +--------------------------------------------------+
 echo.
-if "%_cm3_Root%"=="" if defined CM3_ROOT if exist "%CM3_ROOT%\bin\cm3.exe" set _cm3_Root=%CM3_ROOT%
-if "%_cm3_IDE%"=="" if defined CM3_IDE for %%a in (cm3IDE Reactor) do if /I "%%a"=="%CM3_IDE%" set _cm3_IDE=%%a
-if "%_cm3_IDE%"=="" set _cm3_IDE=cm3IDE
-if /I "%_cm3_IDE%"=="cm3IDE" if defined CM3_IDE_HOME if exist "%CM3_IDE_HOME%" set _cm3_HOME=%CM3_IDE_HOME%
-if /I "%_cm3_IDE%"=="Reactor" if defined REACTOR_HOME if exist "%REACTOR_HOME%" set _cm3_HOME=%REACTOR_HOME%
 
 
 
@@ -90,7 +86,7 @@ ver | (find /I "Windows XP" >>NUL:) && set _cm3_ThisOS=XP
 ver | (find /I "Windows Version 5.2" >>NUL:) && set _cm3_ThisOS=XP_64bit
 ver | (find /I "Version 6." >>NUL:) && set _cm3_ThisOS=Vista
 rem ver | (find /I "Version 7." >>NUL:) && set _cm3_ThisOS=Windows7
-if not "%_cm3_ThisOS%"=="" goto LaunchControl
+if not "%_cm3_ThisOS%"=="" goto Init
 
 :UnsupportedOS
 echo.
@@ -101,6 +97,30 @@ echo         This computer is operating:
 ver
 set _cm3_ExitCode=1
 goto END
+
+
+
+:Init
+:----
+if "%_cm3_IDE%"=="" if defined CM3_IDE for %%a in (cm3IDE Reactor) do if /I "%%a"=="%CM3_IDE%" set _cm3_IDE=%%a
+if "%_cm3_IDE%"=="" set _cm3_IDE=cm3IDE
+if /I "%_cm3_IDE%"=="cm3IDE" if defined CM3_IDE_HOME if exist "%CM3_IDE_HOME%" set _cm3_HOME=%CM3_IDE_HOME%
+if /I "%_cm3_IDE%"=="Reactor" if defined REACTOR_HOME if exist "%REACTOR_HOME%" set _cm3_HOME=%REACTOR_HOME%
+
+rem if CM3_ROOT env var is defined and valid, use it as root of cm3 installation
+if "%_cm3_Root%"=="" if defined CM3_ROOT if exist "%CM3_ROOT%\bin\cm3.exe" set _cm3_Root=%CM3_ROOT%
+
+rem otherwise, see if this CMD file is being run out of the cm3\bin folder, and if so, use this to locate the root of the cm3 installation
+if "%_cm3_Root%"=="" if exist "%~dp0..\bin\cm3.exe" call :FN_FQPathNoSpaces _cm3_Root "%~dp0.."
+if defined _cm3_Root if NOT exist "%_cm3_Root%\bin\cm3.exe" set _cm3_Root=
+if NOT "%_cm3_Root%"=="" goto LaunchControl
+
+rem otherwise, search the existing PATH environment variable to try and find the root of the cm3 installation
+for %%F in (cm3.exe) do set _cm3_Root=%%~dp$PATH:F..
+if defined _cm3_Root if exist "%_cm3_Root%\bin\cm3.exe" call :FN_FQPathNoSpaces _cm3_Root "%_cm3_Root%"
+if defined _cm3_Root if NOT exist "%_cm3_Root%\bin\cm3.exe" set _cm3_Root=
+
+rem otherwise, we will default later on to "%SystemDrive%\cm3" for _cm3_Root
 
 
 
@@ -147,6 +167,7 @@ set _cm3_SeenIDEOpt=
 set _cm3_SeenRootOpt=
 set _cm3_SeenWinOpt=
 set _cm3_startIDE=
+set _cm3_Temp=
 set _cm3_ThisOS=
 set _cm3_VCSetup=
 goto :EOF
