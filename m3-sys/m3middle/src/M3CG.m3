@@ -741,12 +741,12 @@ PROCEDURE extract (xx: T;  t: IType;  sign: BOOLEAN) =
     xx.child.extract (t, sign);
   END extract;
 
-PROCEDURE extract_n (xx: T;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
+PROCEDURE extract_n (xx: T;  t: IType;  sign: BOOLEAN;  n: CARDINAL) =
   BEGIN
     xx.child.extract_n (t, sign, n);
   END extract_n;
 
-PROCEDURE extract_mn (xx: T;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
+PROCEDURE extract_mn (xx: T;  t: IType;  sign: BOOLEAN;  m, n: CARDINAL) =
   BEGIN
     xx.child.extract_mn (t, sign, m, n);
   END extract_mn;
@@ -756,12 +756,12 @@ PROCEDURE insert (xx: T;  t: IType) =
     xx.child.insert (t);
   END insert;
 
-PROCEDURE insert_n (xx: T;  t: IType;  n: INTEGER) =
+PROCEDURE insert_n (xx: T;  t: IType;  n: CARDINAL) =
   BEGIN
     xx.child.insert_n (t, n);
   END insert_n;
 
-PROCEDURE insert_mn (xx: T;  t: IType;  m, n: INTEGER) =
+PROCEDURE insert_mn (xx: T;  t: IType;  m, n: CARDINAL) =
   BEGIN
     xx.child.insert_mn (t, m, n);
   END insert_mn;
