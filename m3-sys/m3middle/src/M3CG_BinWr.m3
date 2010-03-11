@@ -1340,7 +1340,7 @@ PROCEDURE extract (u: U;  t: IType;  sign: BOOLEAN) =
     Bool  (u, sign);
   END extract;
 
-PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
+PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: CARDINAL) =
   (* s1.t := Word.Extract(s1.t, s0.t, n);
      IF sign THEN SignExtend s1 END; pop(1) *)
   BEGIN
@@ -1350,7 +1350,7 @@ PROCEDURE extract_n (u: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
     Int   (u, n);
   END extract_n;
 
-PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
+PROCEDURE extract_mn (u: U;  t: IType;  sign: BOOLEAN;  m, n: CARDINAL) =
   (* s0.t := Word.Extract(s0.t, m, n);
      IF sign THEN SignExtend s0 END; *)
   BEGIN
@@ -1368,7 +1368,7 @@ PROCEDURE insert  (u: U;  t: IType) =
     TName (u, t);
   END insert;
 
-PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
+PROCEDURE insert_n  (u: U;  t: IType;  n: CARDINAL) =
   (* s2.t := Word.Insert (s2.t, s1.t, s0.t, n) ; pop(2) *)
   BEGIN
     Cmd   (u, Bop.insert_n);
@@ -1376,7 +1376,7 @@ PROCEDURE insert_n  (u: U;  t: IType;  n: INTEGER) =
     Int   (u, n);
   END insert_n;
 
-PROCEDURE insert_mn  (u: U;  t: IType;  m, n: INTEGER) =
+PROCEDURE insert_mn  (u: U;  t: IType;  m, n: CARDINAL) =
   (* s1.t := Word.Insert (s1.t, s0.t, m, n) ; pop(2) *)
   BEGIN
     Cmd   (u, Bop.insert_mn);

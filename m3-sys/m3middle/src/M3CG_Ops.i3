@@ -465,21 +465,21 @@ extract (t: IType;  sign: BOOLEAN);
 (* s2.t := Word.Extract(s2.t, s1.t, s0.t);
    IF sign THEN SignExtend s2; pop(2) *)
 
-extract_n (t: IType;  sign: BOOLEAN;  n: INTEGER);
+extract_n (t: IType;  sign: BOOLEAN;  n: CARDINAL);
 (* s1.t := Word.Extract(s1.t, s0.t, n);
    IF sign THEN SignExtend s1; pop(1) *)
 
-extract_mn (t: IType;  sign: BOOLEAN;  m, n: INTEGER);
+extract_mn (t: IType;  sign: BOOLEAN;  m, n: CARDINAL);
 (* s0.t := Word.Extract(s0.t, m, n);
    IF sign THEN SignExtend s0 *)
 
 insert (t: IType);
 (* s3.t := Word.Insert (s3.t, s2.t, s1.t, s0.t); pop(3) *)
 
-insert_n (t: IType;  n: INTEGER);
+insert_n (t: IType;  n: CARDINAL);
 (* s2.t := Word.Insert (s2.t, s1.t, s0.t, n); pop(2) *)
 
-insert_mn (t: IType;  m, n: INTEGER);
+insert_mn (t: IType;  m, n: CARDINAL);
 (* s1.t := Word.Insert (s1.t, s0.t, m, n); pop(1) *)
 
 (*------------------------------------------------ misc. stack/memory ops ---*)

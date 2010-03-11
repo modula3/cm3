@@ -1051,7 +1051,7 @@ PROCEDURE extract (self: U;  t: IType;  sign: BOOLEAN) =
     self.child.extract (t, sign);
   END extract;
 
-PROCEDURE extract_n (self: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
+PROCEDURE extract_n (self: U;  t: IType;  sign: BOOLEAN;  n: CARDINAL) =
   (* s1.t := Word.Extract(s1.t, s0.t, n);
      IF sign THEN SignExtend s1 END; pop(1) *)
   BEGIN
@@ -1061,7 +1061,7 @@ PROCEDURE extract_n (self: U;  t: IType;  sign: BOOLEAN;  n: INTEGER) =
     self.child.extract_n (t, sign, n);
   END extract_n;
 
-PROCEDURE extract_mn (self: U;  t: IType;  sign: BOOLEAN;  m, n: INTEGER) =
+PROCEDURE extract_mn (self: U;  t: IType;  sign: BOOLEAN;  m, n: CARDINAL) =
   (* s0.t := Word.Extract(s0.t, m, n);
      IF sign THEN SignExtend s0 END; *)
   BEGIN
@@ -1079,7 +1079,7 @@ PROCEDURE insert  (self: U;  t: IType) =
     self.child.insert (t);
   END insert;
 
-PROCEDURE insert_n  (self: U;  t: IType;  n: INTEGER) =
+PROCEDURE insert_n  (self: U;  t: IType;  n: CARDINAL) =
   (* s2.t := Word.Insert (s2.t, s1.t, s0.t, n) ; pop(2) *)
   BEGIN
     self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST[t], T_to_ST[t]);
@@ -1087,7 +1087,7 @@ PROCEDURE insert_n  (self: U;  t: IType;  n: INTEGER) =
     self.child.insert_n (t, n);
   END insert_n;
 
-PROCEDURE insert_mn  (self: U;  t: IType;  m, n: INTEGER) =
+PROCEDURE insert_mn  (self: U;  t: IType;  m, n: CARDINAL) =
   (* s1.t := Word.Insert (s1.t, s0.t, m, n) ; pop(2) *)
   BEGIN
     self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST[t]);
