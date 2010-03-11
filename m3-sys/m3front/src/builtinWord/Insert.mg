@@ -5,8 +5,8 @@
 GENERIC MODULE Insert (Rep);
 
 IMPORT CG, CallExpr, Expr, ExprRep, Procedure;
-IMPORT IntegerExpr, Type, ProcType, CheckExpr, Card;
-IMPORT Target, TInt, TWord, Value, Formal, Host;
+IMPORT IntegerExpr, Type, ProcType, Host, Card;
+IMPORT Target, TInt, TWord, Value, Formal, CheckExpr, Error;
 FROM Rep IMPORT T;
 FROM TargetMap IMPORT Word_types;
 
@@ -21,32 +21,78 @@ PROCEDURE Check (ce: CallExpr.T;  VAR cs: Expr.CheckState) =
   END Check;
 
 PROCEDURE Compile (ce: CallExpr.T) =
-  VAR t2, t3: CG.Val;  b: BOOLEAN;  max: Target.Int;
+  VAR
+    t2, t3: CG.Val;
+    max: Target.Int;
+    b, x2, x3: BOOLEAN;
+    i2, i3: INTEGER;
   BEGIN
-    CheckExpr.EmitChecks (ce.args[2], TInt.Zero, Target.Integer.max,
-                          CG.RuntimeError.ValueOutOfRange);
-    t2 := CG.Pop ();
-    CheckExpr.EmitChecks (ce.args[3], TInt.Zero, Target.Integer.max,
-                          CG.RuntimeError.ValueOutOfRange);
-    t3 := CG.Pop ();
-    IF Host.doRangeChk THEN
-      b := TInt.FromInt (Word_types[rep].size, max);  <*ASSERT b*>
+    x2 := GetBitIndex (ce.args[2], i2);
+    x3 := GetBitIndex (ce.args[3], i3);
+
+    IF x2 AND x3 THEN
+      (* we can use the insert_mn operator *)
+      IF (i2 + i3 > Word_types[rep].size) THEN
+        Error.Warn (2, "Word.Insert: i+n value out of range");
+        CG.Load_integer (Target.Integer.cg_type, TInt.One);
+        CG.Check_hi (Target.Integer.cg_type, TInt.Zero,
+                     CG.RuntimeError.ValueOutOfRange);
+      ELSE
+        Expr.Compile (ce.args[0]);
+        Expr.Compile (ce.args[1]);
+        CG.Insert_mn (Word_types[rep].cg_type, i2, i3);
+      END;
+
+    ELSIF x3 THEN
+      (* we can use the insert_n operator *)
+      b := TInt.FromInt (Word_types[rep].size - i3, max);  <*ASSERT b*>
+      Expr.Compile (ce.args[0]);
+      CG.Force ();
+      Expr.Compile (ce.args[1]);
+      CheckExpr.EmitChecks (ce.args[2], TInt.Zero, max,
+                            CG.RuntimeError.ValueOutOfRange);
+      CG.Insert_n (Word_types[rep].cg_type, i3);
+
+    ELSIF x2 THEN
+      (* we need the general purpose insert operator, but can simplify
+         the range checking code *)
+      b := TInt.FromInt (Word_types[rep].size - i2, max);  <*ASSERT b*>
+      Expr.Compile (ce.args[0]);
+      CG.Force ();
+      Expr.Compile (ce.args[1]);
+      CG.Force ();
+      CG.Load_intt (i2);
+      CheckExpr.EmitChecks (ce.args[3], TInt.Zero, max,
+                            CG.RuntimeError.ValueOutOfRange);
+      CG.Insert (Word_types[rep].cg_type);
+
+    ELSE
+      (* we need the general purpose insert operator *)
+      CheckExpr.EmitChecks (ce.args[2], TInt.Zero, Target.Integer.max,
+                            CG.RuntimeError.ValueOutOfRange);
+      t2 := CG.Pop ();
+      CheckExpr.EmitChecks (ce.args[3], TInt.Zero, Target.Integer.max,
+                            CG.RuntimeError.ValueOutOfRange);
+      t3 := CG.Pop ();
+      IF Host.doRangeChk THEN
+        b := TInt.FromInt (Word_types[rep].size, max);  <*ASSERT b*>
+        CG.Push (t2);
+        CG.Push (t3);
+        CG.Add (Target.Integer.cg_type);
+        CG.Check_hi (Target.Integer.cg_type, max,
+                     CG.RuntimeError.ValueOutOfRange);
+        CG.Discard (Target.Integer.cg_type);
+      END;
+      Expr.Compile (ce.args[0]);
+      CG.Force ();
+      Expr.Compile (ce.args[1]);
+      CG.Force ();
       CG.Push (t2);
       CG.Push (t3);
-      CG.Add (Target.Integer.cg_type);
-      CG.Check_hi (Target.Integer.cg_type, max,
-                   CG.RuntimeError.ValueOutOfRange);
-      CG.Discard (Target.Integer.cg_type);
+      CG.Insert (Word_types[rep].cg_type);
+      CG.Free (t2);
+      CG.Free (t3);
     END;
-    Expr.Compile (ce.args[0]);
-    CG.Force ();
-    Expr.Compile (ce.args[1]);
-    CG.Force ();
-    CG.Push (t2);
-    CG.Push (t3);
-    CG.Insert (Word_types[rep].cg_type);
-    CG.Free (t2);
-    CG.Free (t3);
   END Compile;
 
 PROCEDURE GetBitIndex (e: Expr.T;  VAR i: INTEGER): BOOLEAN =
