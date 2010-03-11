@@ -656,30 +656,6 @@ m3_do_extract (tree x, tree i, tree n, tree t)
 }
 
 static tree
-m3_do_fixed_extract (tree x, int i, int n, tree t)
-{
-  /* ??? Use BIT_FIELD_REF ???  */
-  int a = TYPE_PRECISION (t) - n;
-  int b = TYPE_PRECISION (t) - n - i;
-  tree c, d, e;
-
-  if ((a < 0) || (a >= TYPE_PRECISION (t)) ||
-      (b < 0) || (b >= TYPE_PRECISION (t)))
-    {
-      return m3_do_extract (x,
-			    build_int_cst (t_int, i),
-			    build_int_cst (t_int, n),
-			    t);
-    }
-
-  c = m3_build1 (CONVERT_EXPR, m3_unsigned_type (t), x);
-  d = (b == 0) ? c : m3_build2 (LSHIFT_EXPR, t, c, build_int_cst (t_int, b));
-  e = (a == 0) ? d :
-    m3_build2 (RSHIFT_EXPR, t, d, build_int_cst (t_int, a));
-  return e;
-}
-
-static tree
 m3_do_rotate (enum tree_code code, tree t, tree val, tree cnt)
 {
   /* ??? Use LROTATE_EXPR/RROTATE_EXPR.  */
@@ -4117,7 +4093,7 @@ static tree
 m3cg_bytes_per_word(void)
 {
     static tree t;
-    return (t = (t ? t : build_int_cst(t_word, BITS_PER_WORD / 8)));
+    return (t = (t ? t : build_int_cst(t_word, BITS_PER_WORD / BITS_PER_UNIT)));
 }
 
 static tree
@@ -4424,11 +4400,21 @@ m3cg_extract_mn (void)
   BOOLEAN (sign_extend);
   INTEGER (m);
   INTEGER (n);
+  tree v;
 
   gcc_assert (INTEGRAL_TYPE_P (t));
 
-  t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
-  EXPR_REF (-1) = m3_do_fixed_extract (EXPR_REF (-1), m, n, t);
+  if ((m < 0) || (n < 0) || (m + n > TYPE_PRECISION (t))) {
+    t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
+    v = m3_do_extract (EXPR_REF (-1),
+		       build_int_cst (t_int, m),
+		       build_int_cst (t_int, n), t);
+  } else {
+    v = m3_build3 (BIT_FIELD_REF, t, EXPR_REF (-1),
+		   bitsize_int (n), bitsize_int (m));
+    BIT_FIELD_REF_UNSIGNED(v) = !sign_extend;
+  }
+  EXPR_REF (-1) = v;
 }
 
 static void
