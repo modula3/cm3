@@ -4032,18 +4032,19 @@ PROCEDURE Cmt (u: U;  t: TEXT;  VAR width: INTEGER) =
     END;
     FOR i := 0 TO Text.Length (t) - 1 DO
       ch := Text.GetChar (t, i);
-      IF (width = -1) THEN
-        u.wr.OutT ("\t# ");
-        width := 0;
-      END;
-      IF (ch = '\n') THEN
-        u.wr.NL ();
+      IF (ch = '\n' OR ch = '\r') THEN
+        u.wr.OutC (ch);
         width := -1;
       ELSE
+        IF (width = -1) THEN
+          u.wr.OutT ("\t# ");
+          width := 0;
+        END;
         u.wr.OutC (ch);
       END
     END;
   END Cmt;
+
 
 (*--------------------------------------------------------------- atomics ---*)
 
