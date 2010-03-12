@@ -2854,10 +2854,7 @@ PROCEDURE PullForBootstrap (u: M3Unit.T;  text_file: BOOLEAN) =
   BEGIN
     IF NOT Text.Equal (path, u.object) THEN
       Utils.Remove (u.object);
-      IF text_file AND NOT Text.Equal (Wr.EOL, Wr.EOL)
-        THEN Utils.CopyText (path, u.object);
-        ELSE Utils.Copy (path, u.object);
-      END;
+      Utils.Copy (path, u.object);
     END;
   END PullForBootstrap;
 

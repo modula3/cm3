@@ -28,7 +28,6 @@ PROCEDURE RemoveTempFiles ();
 
 PROCEDURE Remove (file: TEXT);
 PROCEDURE Copy (old_file, new_file: TEXT);
-PROCEDURE CopyText (old_file, new_file: TEXT);
 PROCEDURE IsEqual (a, b: TEXT): BOOLEAN;
 PROCEDURE SymbolicLinkFile (from, to: TEXT);
 PROCEDURE HardLinkFile (from, to: TEXT);

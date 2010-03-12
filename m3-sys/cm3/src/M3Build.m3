@@ -1595,7 +1595,7 @@ PROCEDURE BuildManPage (t: T;  nm, sec: TEXT)
   BEGIN
     IF (t.mode = MM.Build) THEN
       IF IsStale (dest, src) THEN
-        Utils.CopyText (src, dest);
+        Utils.Copy (src, dest);
       END;
     END;
     DeleteDeriveds (t, dest, NoExtension);
