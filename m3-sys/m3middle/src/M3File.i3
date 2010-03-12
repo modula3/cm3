@@ -20,10 +20,6 @@ PROCEDURE Read (f: File.T; VAR(*OUT*)buf: Buffer; len: BufferLength): INTEGER
 PROCEDURE Copy (src, dest: TEXT) RAISES {OSError.E};
 (* Copy the contents of file "src" to file "dest". *)
 
-PROCEDURE CopyText (src, dest: TEXT;  eol: TEXT) RAISES {OSError.E};
-(* Copy the contents of file "src" to file "dest", dropping all
-   "\r" characters and mapping "\n" into "eol".  *)
-
 PROCEDURE IsEqual (a, b: TEXT): BOOLEAN RAISES {OSError.E};
 (* Return "TRUE" if the files "a" and "b" are equal. *)
 
