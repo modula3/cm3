@@ -321,7 +321,12 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
     fs_mkdir (dir & "/" & BUILD_DIR)
     fs_putfile (dir & "/" & BUILD_DIR & "/runopts", runopts)
 
-    exec ("-cd", dir, "&& cm3", "-silent", "-DM3TESTS", cm3opts, ">" & BUILD_DIR & "/stdout.build.raw 2>" & BUILD_DIR & "/stderr.build.raw")
+    local silent = "-silent"
+    if defined("debug")
+      silent = "-debug"
+    end
+
+    exec ("-cd", dir, "&& cm3", silent, "-DM3TESTS", cm3opts, ">" & BUILD_DIR & "/stdout.build.raw 2>" & BUILD_DIR & "/stderr.build.raw")
 
     NormalizeFile (dir & "/" & BUILD_DIR & "/stdout.build")
     NormalizeFile (dir & "/" & BUILD_DIR & "/stderr.build")
