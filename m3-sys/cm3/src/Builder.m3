@@ -2314,16 +2314,16 @@ PROCEDURE WriteProgramDesc (s: State;  desc_file, main_o: TEXT) =
         Wr.PutText (wr, "-out:");
         Wr.PutText (wr, s.result_name);
         Wr.PutText (wr, ".exe");
-        Wr.PutText (wr, Target.EOL);
+        Wr.PutText (wr, Wr.EOL);
         IF (s.gui)
           THEN Wr.PutText (wr, "-subsystem:windows");
           ELSE Wr.PutText (wr, "-subsystem:console");
         END;
-        Wr.PutText (wr, Target.EOL);
+        Wr.PutText (wr, Wr.EOL);
       ELSE
         Wr.PutText (wr, "-o ");
         Wr.PutText (wr, s.result_name);
-        Wr.PutText (wr, Target.EOL);
+        Wr.PutText (wr, Wr.EOL);
       END;
 
       (* write the library timestamps *)
@@ -2334,7 +2334,7 @@ PROCEDURE WriteProgramDesc (s: State;  desc_file, main_o: TEXT) =
           Wr.PutText (wr, lib_file);
           Wr.PutChar (wr, ' ');
           Wr.PutText (wr, Fmt.Int (Utils.ModificationTime (lib_file)));
-          Wr.PutText (wr, Target.EOL);
+          Wr.PutText (wr, Wr.EOL);
         END;
         u := u.next;
       END;
@@ -2343,7 +2343,7 @@ PROCEDURE WriteProgramDesc (s: State;  desc_file, main_o: TEXT) =
         Wr.PutText (wr, s.link_coverage);
         Wr.PutChar (wr, ' ');
         Wr.PutText (wr, Fmt.Int (Utils.ModificationTime (s.link_coverage)));
-        Wr.PutText (wr, Target.EOL);
+        Wr.PutText (wr, Wr.EOL);
       END;
 
       (* write the object timestamps *)
@@ -2353,7 +2353,7 @@ PROCEDURE WriteProgramDesc (s: State;  desc_file, main_o: TEXT) =
           Wr.PutText (wr, u.object);
           Wr.PutChar (wr, ' ');
           Wr.PutText (wr, Fmt.Int (Utils.LocalModTime (u.object)));
-          Wr.PutText (wr, Target.EOL);
+          Wr.PutText (wr, Wr.EOL);
         END;
         u := u.next;
       END;
@@ -2362,7 +2362,7 @@ PROCEDURE WriteProgramDesc (s: State;  desc_file, main_o: TEXT) =
       Wr.PutText (wr, main_o);
       Wr.PutChar (wr, ' ');
       Wr.PutText (wr, Fmt.Int (Utils.LocalModTime (main_o)));
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
     END Emit;
 
   BEGIN
@@ -2377,16 +2377,16 @@ PROCEDURE BuildBootProgram (s: State) =
   PROCEDURE Emit (wr: Wr.T) RAISES {Wr.Failure, Thread.Alerted} =
     BEGIN
       Wr.PutText (wr, "# objects for program " & s.result_name);
-      Wr.PutText (wr, Target.EOL);
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
+      Wr.PutText (wr, Wr.EOL);
       GenObjectList (s, wr, M3Path.Join (NIL, "_m3main", UK.O));
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
 
       Wr.PutText (wr, "# libraries for program " & s.result_name);
-      Wr.PutText (wr, Target.EOL);
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
+      Wr.PutText (wr, Wr.EOL);
       GenLibraryList (s, wr);
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
     END Emit;
 
   PROCEDURE EmitMain (wr: Wr.T) RAISES {} =
@@ -2430,7 +2430,7 @@ PROCEDURE GenLibraryList (s: State;  wr: Wr.T)
   VAR u: M3Unit.T;  x: Arg.T;
   BEGIN
     Wr.PutText (wr, s.result_name & "_LIBS = \134");
-    Wr.PutText (wr, Target.EOL);
+    Wr.PutText (wr, Wr.EOL);
 
     (* emit the imported libraries *)
     u := s.units.head;
@@ -2447,7 +2447,7 @@ PROCEDURE GenLibraryList (s: State;  wr: Wr.T)
         IF (u.next # NIL) OR (s.sys_libs.cnt > 0) THEN
           Wr.PutText (wr, "\134");
         END;
-        Wr.PutText (wr, Target.EOL);
+        Wr.PutText (wr, Wr.EOL);
       END;
       u := u.next;
     END;
@@ -2460,12 +2460,12 @@ PROCEDURE GenLibraryList (s: State;  wr: Wr.T)
       IF (x.next # NIL) THEN
         Wr.PutText (wr, "\134");
       END;
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
       x := x.next;
     END;
 
-    Wr.PutText (wr, Target.EOL);
-    Wr.PutText (wr, Target.EOL);
+    Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Wr.EOL);
   END GenLibraryList;
 
 PROCEDURE BuildLibrary (s: State;  shared: BOOLEAN) =
@@ -2543,11 +2543,11 @@ PROCEDURE BuildBootLibrary (s: State) =
   PROCEDURE Emit (wr: Wr.T) RAISES {Wr.Failure, Thread.Alerted} =
     BEGIN
       Wr.PutText (wr, "% objects for Modula-3 library " & s.result_name);
-      Wr.PutText (wr, Target.EOL);
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
+      Wr.PutText (wr, Wr.EOL);
       GenObjectList (s, wr, NIL);
-      Wr.PutText (wr, Target.EOL);
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
+      Wr.PutText (wr, Wr.EOL);
     END Emit;
 
   BEGIN
@@ -2576,7 +2576,7 @@ PROCEDURE GenLibDef (libname: TEXT) =
     BEGIN
       Wr.PutText (wr, "LIBRARY ");
       Wr.PutText (wr, libname);
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
     END Emit;
 
   BEGIN
@@ -2592,7 +2592,7 @@ PROCEDURE GenObjectList (s: State;  wr: Wr.T;  extra: TEXT)
     BEGIN
       IF (width > 65) THEN
         Wr.PutText (wr, " \134");
-        Wr.PutText (wr, Target.EOL);
+        Wr.PutText (wr, Wr.EOL);
         Wr.PutText (wr, "  ");
         width := 0;
       END;
@@ -2613,7 +2613,7 @@ PROCEDURE GenObjectList (s: State;  wr: Wr.T;  extra: TEXT)
     IF (cnt < MaxChunk) THEN
       (* this is the easy case, there's just one list *)
       Wr.PutText (wr, s.result_name & "_OBJECTS = \134");
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
       Wr.PutText (wr, "  ");
       u := s.units.head;
       WHILE (u # NIL) DO
@@ -2621,8 +2621,8 @@ PROCEDURE GenObjectList (s: State;  wr: Wr.T;  extra: TEXT)
         u := u.next;
       END;
       IF (extra # NIL) THEN Out (extra); END;
-      Wr.PutText (wr, Target.EOL);
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
+      Wr.PutText (wr, Wr.EOL);
       RETURN;
     END;
 
@@ -2631,34 +2631,34 @@ PROCEDURE GenObjectList (s: State;  wr: Wr.T;  extra: TEXT)
 
     u := s.units.head;
     WHILE (u # NIL) DO
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
       Wr.PutText (wr, s.result_name & "_OBJ_" & Fmt.Int (subunit) & " = \134");
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
       Wr.PutText (wr, "  ");
       width := 0; cnt := 0;
       WHILE (cnt < MaxChunk) AND (u # NIL) DO
         IF (u.object # NIL) THEN Out (u.object); INC (cnt); END;
         u := u.next;
       END;
-      Wr.PutText (wr, Target.EOL);
-      Wr.PutText (wr, Target.EOL);
+      Wr.PutText (wr, Wr.EOL);
+      Wr.PutText (wr, Wr.EOL);
       INC (subunit);
     END;
     IF (extra # NIL) THEN Out (extra); END;
-    Wr.PutText (wr, Target.EOL);
-    Wr.PutText (wr, Target.EOL);
+    Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Wr.EOL);
 
     width := 0;
-    Wr.PutText (wr, Target.EOL);
+    Wr.PutText (wr, Wr.EOL);
     Wr.PutText (wr, s.result_name & "_OBJECTS = \134");
-    Wr.PutText (wr, Target.EOL);
+    Wr.PutText (wr, Wr.EOL);
     Wr.PutText (wr, "  ");
     FOR i := 0 TO n_chunks-1 DO
       Out (s.result_name & "_OBJ_" & Fmt.Int (i));
     END;
-    Wr.PutText (wr, Target.EOL);
-    Wr.PutText (wr, Target.EOL);
-    Wr.PutText (wr, Target.EOL);
+    Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Wr.EOL);
+    Wr.PutText (wr, Wr.EOL);
   END GenObjectList;
 
 (*--------------------------------------------------------- version stamps --*)
@@ -2854,7 +2854,7 @@ PROCEDURE PullForBootstrap (u: M3Unit.T;  text_file: BOOLEAN) =
   BEGIN
     IF NOT Text.Equal (path, u.object) THEN
       Utils.Remove (u.object);
-      IF text_file AND NOT Text.Equal (Wr.EOL, Target.EOL)
+      IF text_file AND NOT Text.Equal (Wr.EOL, Wr.EOL)
         THEN Utils.CopyText (path, u.object);
         ELSE Utils.Copy (path, u.object);
       END;

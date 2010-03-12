@@ -188,7 +188,7 @@ TYPE
 
 PROCEDURE NL (u: U) =
   BEGIN
-    OutT (u, Target.EOL);
+    OutT (u, Wr.EOL);
   END NL;
 
 PROCEDURE Cmd (u: U; cmd: TEXT) =
@@ -445,7 +445,7 @@ PROCEDURE set_source_file (u: U; file: TEXT) =
     OutT (u, "\t\t\t\t\t-----FILE ");
     OutT (u, file);
     OutT (u, "  -----");
-    OutT (u, Target.EOL);
+    OutT (u, Wr.EOL);
   END set_source_file;
 
 PROCEDURE set_source_line (u: U; line: INTEGER) =
@@ -455,7 +455,7 @@ PROCEDURE set_source_line (u: U; line: INTEGER) =
     OutT (u, "\t\t\t\t\t-----LINE");
     Int  (u, line);
     OutT (u, "  -----");
-    OutT (u, Target.EOL);
+    OutT (u, Wr.EOL);
   END set_source_line;
 
 
@@ -1732,7 +1732,7 @@ PROCEDURE comment (u: U;  a, b, c, d: TEXT := NIL) =
     Cmt (u, b, i);
     Cmt (u, c, i);
     Cmt (u, d, i);
-    Cmt (u, Target.EOL, i);
+    Cmt (u, Wr.EOL, i);
   END comment;
 
 PROCEDURE Cmt (u: U;  t: TEXT;  VAR width: INTEGER) =
@@ -1745,7 +1745,7 @@ PROCEDURE Cmt (u: U;  t: TEXT;  VAR width: INTEGER) =
       IF (ch = '\r') THEN
         (* eat carriage returns *)
       ELSIF (ch = '\n') THEN
-        OutT (u, Target.EOL);
+        OutT (u, Wr.EOL);
         width := -1;
       ELSE
         OutC (u, ch);
