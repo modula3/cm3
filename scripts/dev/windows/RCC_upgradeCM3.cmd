@@ -8,7 +8,8 @@ REM v1.1, 08/02/2009, R.Coleburn, min is not sufficient, use m3front
 REM v1.2, 08/03/2009, R.Coleburn, change cm3.cfg to replace HOST by "NT386"
 REM v1.3, 10/29/2009, R.Coleburn, adapt to work with new cm3CommandShell.CMD.
 REM v1.4, 01/13/2010, R.Coleburn, skip m3core, libm3, and mklib in 1st phase; using revised do-cm3.cmd.  Force argument keywords to be prefixed by "-".  Pass thru control args to do-cm3.cmd.  Add -all argument keyword.
-REM v1.5. 01/15/2010, R.Coleburn, add extra checks at end of each stage to ensure new cm3.exe was produced and copied to target bin folder.
+REM v1.5, 01/15/2010, R.Coleburn, add extra checks at end of each stage to ensure new cm3.exe was produced and copied to target bin folder.
+REM v1.6, 03/11/2010, R.Coleburn, add feature to search PATH env var when trying to locate root of cm3 installation
 REM ===========================================================================
 
 :Init
@@ -73,7 +74,7 @@ rem no more parameters, so make sure we've got the minimum required
 REM Identify this script.
 echo.
 echo =============== ---------------------------------
-echo  RCC_upgradeCM3, v1.5, 01/15/2010, Randy Coleburn
+echo  RCC_upgradeCM3, v1.6, 03/11/2010, Randy Coleburn
 echo =============== ---------------------------------
 echo.
 if /I "%_z_NoPause%"=="TRUE" echo "NoPause" Option in Effect.
@@ -86,16 +87,21 @@ echo.
 :SetupCM3
 :--------
 REM Find root of CM3 installation, copy required files to bin, and Ensure CM3 command line environment has been setup.
-if not "%CM3_ROOT%"=="" if exist "%CM3_ROOT%\bin" if exist "%CM3_ROOT%\pkg" goto FoundRoot
+if not "%CM3_ROOT%"=="" if exist "%CM3_ROOT%\bin\cm3.exe" if exist "%CM3_ROOT%\pkg" goto FoundRoot
 if not "%CM3_ROOT%"=="" echo ERROR:  Specified CM3_ROOT (%CM3_ROOT%) is missing a required folder. & goto END
 pushd ..
 cd ..
 cd ..
-if exist "bin" if exist "pkg" set CM3_ROOT=%CD%& popd & goto :FoundRoot
+if exist "bin\cm3.exe" if exist "pkg" set CM3_ROOT=%CD%& popd & goto FoundRoot
 cd ..
-if exist "bin" if exist "pkg" set CM3_ROOT=%CD%& popd & goto :FoundRoot
-if exist "C:\cm3\bin" if exist "C:\cm3\pkg" set CM3_ROOT=C:\cm3& popd & goto :FoundRoot
+if exist "bin\cm3.exe" if exist "pkg" set CM3_ROOT=%CD%& popd & goto FoundRoot
+if exist "C:\cm3\bin\cm3.exe" if exist "C:\cm3\pkg" set CM3_ROOT=C:\cm3& popd & goto FoundRoot
 popd
+rem otherwise, search the existing PATH environment variable to try and find the root of the cm3 installation
+for %%F in (cm3.exe) do set CM3_ROOT=%%~dp$PATH:F..
+if defined CM3_ROOT if exist "%CM3_ROOT%\bin\cm3.exe" call :FN_FQPathNoSpaces CM3_ROOT "%_cm3_Root%"
+if defined CM3_ROOT if exist "%CM3_ROOT%\bin\cm3.exe" if exist "%CM3_ROOT%\pkg" goto FoundRoot
+set CM3_ROOT=
 echo ERROR:  Could not find root of CM3 installation.
 goto END
 
