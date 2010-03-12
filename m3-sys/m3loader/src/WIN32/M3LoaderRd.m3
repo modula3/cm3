@@ -120,7 +120,7 @@ PROCEDURE fill_object (t: T; obj: ObjModule; file: RegularFile.T): BOOLEAN =
       END;
 
       IF obj.whole_file THEN
-        size := file.status().size;
+        size := VAL(file.status().size, INTEGER);
       ELSE
         size := obj.length;
         IF file.seek(RegularFile.Origin.Beginning, obj.start) # obj.start
