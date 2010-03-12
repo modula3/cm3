@@ -1045,7 +1045,7 @@ PROCEDURE CompileO (s: State;  u: M3Unit.T) =
 
     IF s.bootstrap_mode THEN
       Msg.Explain ("new object -> copying ", u.object);
-      PullForBootstrap (u, text_file := FALSE);
+      PullForBootstrap (u);
     END;
     EVAL Utils.NoteModification (u.object);
   END CompileO;
@@ -1060,7 +1060,7 @@ PROCEDURE CompileS (s: State;  u: M3Unit.T) =
     ELSIF NOT ObjectIsStale (u) THEN
       (* already done *)
     ELSIF s.bootstrap_mode THEN
-      PullForBootstrap (u, text_file := TRUE);
+      PullForBootstrap (u);
       EVAL Utils.NoteModification (u.object);
     ELSIF (u.kind = UK.S) THEN
       RunCC (s, UnitPath (u), u.object, u.debug, u.optimize);
@@ -1083,7 +1083,7 @@ PROCEDURE CompileC (s: State;  u: M3Unit.T) =
       (* already done *)
     ELSIF (u.kind = UK.C) THEN
       IF (s.bootstrap_mode)
-        THEN PullForBootstrap (u, text_file := TRUE);
+        THEN PullForBootstrap (u);
         ELSE RunCC (s, UnitPath (u), u.object, u.debug, u.optimize);
       END;
       Utils.NoteNewFile (u.object);
@@ -1124,7 +1124,7 @@ PROCEDURE CompileH (s: State;  u: M3Unit.T) =
     ELSIF NOT ObjectIsStale (u) THEN
       (* already done *)
     ELSE
-      PullForBootstrap (u, text_file := TRUE);
+      PullForBootstrap (u);
       EVAL Utils.NoteModification (u.object);
     END;
   END CompileH;
@@ -2849,7 +2849,7 @@ PROCEDURE ObjectName (s: State;  u: M3Unit.T): TEXT =
 
 (*------------------------------------------------------------------ misc ---*)
 
-PROCEDURE PullForBootstrap (u: M3Unit.T;  text_file: BOOLEAN) =
+PROCEDURE PullForBootstrap (u: M3Unit.T) =
   VAR path := UnitPath (u);
   BEGIN
     IF NOT Text.Equal (path, u.object) THEN
