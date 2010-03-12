@@ -7,7 +7,7 @@
 
 UNSAFE MODULE M3File;
 
-IMPORT Compiler, FS, File, OSError, Text;
+IMPORT Compiler, FS, File, OSError;
 
 TYPE
   BufPtr = UNTRACED REF ARRAY BufferLength OF File.Byte;
@@ -57,65 +57,6 @@ PROCEDURE Copy (src, dest: TEXT) RAISES {OSError.E} =
       EXCEPT ELSE END;
     END;
   END Copy;
-
-PROCEDURE CopyText (src, dest: TEXT;  eol: TEXT) RAISES {OSError.E} =
-  VAR
-    rd, wr  : File.T := NIL;
-    in_len  : INTEGER;
-    out_len : INTEGER;
-    ch      : File.Byte;
-    in_buf  : ARRAY [0..1023] OF File.Byte;
-    out_buf : ARRAY [0..1023] OF File.Byte;
-    eol_buf : ARRAY [0..7] OF File.Byte;
-    eol_last: INTEGER;
-    status  : File.Status;
-  BEGIN
-    eol_last := Text.Length (eol) - 1;
-    FOR i := 0 TO eol_last DO eol_buf[i] := ORD(Text.GetChar (eol, i)); END;
-    TRY
-      rd := FS.OpenFileReadonly (src);
-      (* delete in case someone else is reading *)
-      TRY FS.DeleteFile (dest);
-      EXCEPT OSError.E => (* nope *)
-      END;
-      wr := OpenDestination (dest, rd);
-      status := FS.Status(src);
-      out_len := 0;
-      LOOP
-        in_len := rd.read (in_buf);
-        IF (in_len <= 0) THEN EXIT; END;
-        FOR i := 0 TO in_len-1 DO
-          IF (out_len >= NUMBER (out_buf)) THEN
-            wr.write (out_buf);
-            out_len := 0;
-          END;
-          ch := in_buf [i];
-          IF (ch = ORD ('\r')) THEN
-            (* eat it. *)
-          ELSIF (ch = ORD ('\n')) THEN
-            FOR i := 0 TO eol_last DO
-              IF (out_len >= NUMBER (out_buf)) THEN
-                wr.write (out_buf);
-                out_len := 0;
-              END;
-              out_buf [out_len] := eol_buf[i];
-              INC (out_len);
-            END;
-          ELSE
-            out_buf [out_len] := ch;
-            INC (out_len);
-          END;
-        END;
-      END;
-      IF (out_len > 0) THEN wr.write (SUBARRAY (out_buf, 0, out_len)); END;
-    FINALLY
-      IF (wr # NIL) THEN wr.close (); END;
-      IF (rd # NIL) THEN rd.close (); END;
-      TRY 
-        FS.SetModificationTime(dest, status.modificationTime);
-      EXCEPT ELSE END;
-    END;
-  END CopyText;
 
 PROCEDURE OpenDestination (dest: TEXT;  src: File.T): File.T RAISES {OSError.E} =
   BEGIN
