@@ -161,7 +161,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* this is overly optimistic... *)
 
     Allow_packed_byte_aligned := FALSE;
-    EOL                       := "\n";
     Jumpbuf_align             := Address.align;
     All_floats_legal          := TRUE;
     PCC_bitfield_type_matters := TRUE;
@@ -315,16 +314,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                     and _setjmp3 appears to use more. Consider switching to _setjmp3.
                  *)
                  Jumpbuf_size := (18 * Address.size);
-
-                 IF Text.Equal(OS_name, "WIN32") THEN
-                   EOL := "\r\n";
-                 (*
-                 ELSIF Text.Equal(OS_name, "POSIX") THEN
-                   EOL := "\n";
-                 ELSE
-                   RETURN FALSE;
-                 *)
-                 END;
 
                  (* m3back doesn't handle 64 bit integers *)
                  (*IF BackendIntegrated[backend_mode] THEN
