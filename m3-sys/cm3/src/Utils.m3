@@ -8,7 +8,7 @@ UNSAFE MODULE Utils;
 
 IMPORT File, FileWr, Wr, Thread, Fmt, Process, TextIntTbl, M3toC;
 IMPORT Stdio, OSError, ETimer, FS, RegularFile, Time, Text;
-IMPORT Msg, Arg, M3Timers, Target, CoffTime, M3File, Pathname;
+IMPORT Msg, Arg, M3Timers, CoffTime, M3File, Pathname;
 FROM Ctypes IMPORT const_char_star, char_star, int;
 
 (*--------------------------------------------------------------- writers ---*)
@@ -188,7 +188,7 @@ PROCEDURE Copy (old, new: TEXT) =
   END Copy;
 
 PROCEDURE CopyText (old, new: TEXT) =
-  VAR eol := Target.EOL;
+  VAR eol := Wr.EOL;
   BEGIN
     Msg.Commands ("copy ", old, " -> ", new);
     IF (eol = NIL) THEN

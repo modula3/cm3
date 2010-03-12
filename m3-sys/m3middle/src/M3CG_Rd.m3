@@ -250,12 +250,12 @@ PROCEDURE Init () =
 
 PROCEDURE Error (<*UNUSED*> VAR s: State;  a, b, c: TEXT := NIL) =
   <*FATAL Wr.Failure, Thread.Alerted*>
-  VAR msg := Target.EOL & "** ERROR in M3CG_Rd.Inhale: ";
+  VAR msg := Wr.EOL & "** ERROR in M3CG_Rd.Inhale: ";
   BEGIN
     IF (a # NIL) THEN msg := msg & a END;
     IF (b # NIL) THEN msg := msg & b END;
     IF (c # NIL) THEN msg := msg & c END;
-    msg := msg & " **" & Target.EOL;
+    msg := msg & " **" & Wr.EOL;
     Wr.PutText (Stdio.stdout, msg);
   END Error;
 

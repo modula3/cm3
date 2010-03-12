@@ -64,7 +64,7 @@ PROCEDURE GenerateMain (base: Mx.LinkSet;  c_output: Wr.T;  cg_output: M3CG.T;
     s.errors    := Stdio.stdout;
     s.gui       := windowsGUI;
     s.genC      := (s.wr # NIL);
-    s.eol       := Target.EOL;
+    s.eol       := Wr.EOL;
     s.lazyInit  := lazy;
 
     IF verbose THEN

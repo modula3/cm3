@@ -7,7 +7,7 @@
 MODULE WebInfo;
 
 IMPORT Word, Target, M3Buf, M3ID, Value, Scope, Module, Scanner;
-IMPORT Expr, UserProc;
+IMPORT Expr, UserProc, Wr;
 
 VAR
   info: M3Buf.T := NIL;
@@ -310,7 +310,7 @@ PROCEDURE PutHex (i: INTEGER) =
 
 PROCEDURE NL () =
   BEGIN
-    M3Buf.PutText (info, Target.EOL);
+    M3Buf.PutText (info, Wr.EOL);
   END NL;
 
 BEGIN
