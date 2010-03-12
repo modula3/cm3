@@ -183,10 +183,15 @@ PROCEDURE BuildProc (READONLY desc: ItemDesc;  prog: TEXT): TEXT =
       IF (prog = NIL) THEN prog := ""; END;
       IF Default.on_unix
         THEN mid := z.unix_middle;
-		     proc_tail := unix_proc_tail; (* this line added by R.Coleburn for quick-fix patch *)
         ELSE mid := z.win32_middle;
-		     proc_tail := win32_proc_tail; (* this line added by R.Coleburn for quick-fix patch *)
       END;
+	  IF z.id = T.Start_browser THEN         (* this line added by R.Coleburn for quick-fix patch *)
+	    IF Default.on_unix                   (* this line added by R.Coleburn for quick-fix patch *)
+		  THEN proc_tail := unix_proc_tail;  (* this line added by R.Coleburn for quick-fix patch *)
+		  ELSE proc_tail := win32_proc_tail; (* this line added by R.Coleburn for quick-fix patch *)
+		END;                                 (* this line added by R.Coleburn for quick-fix patch *)
+	  ELSE proc_tail := z.proc_tail;         (* this line added by R.Coleburn for quick-fix patch *)
+	  END;                                   (* this line added by R.Coleburn for quick-fix patch *)
 (* for quick-fix patch by R.Coleburn, replace this line with the next one:      RETURN z.proc_head & mid & FindCm3 (z.cm3) & prog & z.proc_tail; *)
       RETURN z.proc_head & mid & FindCm3 (z.cm3) & prog & proc_tail; (* this line replaces prior line for quick-fix patch by R.Coleburn *)
     END;
