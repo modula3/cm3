@@ -65,11 +65,11 @@ TYPE Public = OBJECT
         doshift (type: IType; shiftType: ShiftType): BOOLEAN;
         dorotate (type: IType): BOOLEAN;
         doextract (type: IType; sign_extend: BOOLEAN);
-        doextract_n (type: IType; sign_extend: BOOLEAN; n: INTEGER);
-        doextract_mn (type: IType; sign_extend: BOOLEAN; m, n: INTEGER);
+        doextract_n (type: IType; sign_extend: BOOLEAN; count: CARDINAL);
+        doextract_mn (type: IType; sign_extend: BOOLEAN; offset, count: CARDINAL);
         doinsert (type: IType);
-        doinsert_n (type: IType; n: INTEGER);
-        doinsert_mn (type: IType; m, n: INTEGER);
+        doinsert_n (type: IType; count: CARDINAL);
+        doinsert_mn (type: IType; offset, count: CARDINAL);
         swap ();
         doloophole (from, to: ZType);
         doindex_address (shift, size: INTEGER; neg: BOOLEAN);

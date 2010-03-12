@@ -1828,7 +1828,7 @@ PROCEDURE doextract (t: T; type: IType; sign_extend: BOOLEAN) =
 
   END doextract;
 
-PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; count: INTEGER) =
+PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; count: CARDINAL) =
   VAR andval: TIntN.T;
       offset: INTEGER;
       uint_type := IntType[UnsignedType[type]];
@@ -1878,7 +1878,7 @@ PROCEDURE doextract_n (t: T; type: IType; sign_extend: BOOLEAN; count: INTEGER) 
     END;
   END doextract_n;
 
-PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; offset, count: INTEGER) =
+PROCEDURE doextract_mn (t: T; type: IType; sign_extend: BOOLEAN; offset, count: CARDINAL) =
   VAR andval, tint: TIntN.T;
       uint_type := IntType[UnsignedType[type]];
       max := TIntN.T{x := uint_type.max};
@@ -2084,7 +2084,7 @@ PROCEDURE doinsert (t: T; type: IType) =
 
   END doinsert;
 
-PROCEDURE doinsert_n (t: T; type: IType; count: INTEGER) =
+PROCEDURE doinsert_n (t: T; type: IType; count: CARDINAL) =
   VAR offset: INTEGER;
   BEGIN
 
@@ -2112,7 +2112,7 @@ PROCEDURE doinsert_n (t: T; type: IType; count: INTEGER) =
 
   END doinsert_n;
   
-PROCEDURE doinsert_mn (t: T; type: IType; offset, count: INTEGER) =
+PROCEDURE doinsert_mn (t: T; type: IType; offset, count: CARDINAL) =
   VAR tint_m, mask_m, mask_m_n, mask: TIntN.T;
       uint_type := IntType[UnsignedType[type]];
       max := TIntN.T{x := uint_type.max};
