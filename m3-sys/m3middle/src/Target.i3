@@ -370,8 +370,4 @@ VAR (*CONST*)
      test for nested procedures passed as parameters must be more
      elaborate (e.g. HPPA). *)
 
-  EOL: TEXT;
-  (* The sequence of characters that conventionally terminate a
-     text line on the target system:  '\n' on Unix, '\r\n' on DOS *)
-
 END Target.
