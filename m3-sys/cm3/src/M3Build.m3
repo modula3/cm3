@@ -2003,7 +2003,7 @@ PROCEDURE InstallDir (t: T;  dir: TEXT;  wr: Wr.T)
   BEGIN
     IF NOT Text.Equal (dir, t.last_ship_dir) THEN
       IF t.have_pkgtools THEN
-        Out (wr, "-l ", dir, "\n");
+        Out (wr, "-l ", dir, Wr.EOL);
       ELSIF NOT t.all_ship_dirs.put (M3ID.Add (dir), NIL) THEN
         Out (wr, "make_dir(", Unresolve (t, M3Path.Convert (dir)), RPCR);
       END;
@@ -2022,7 +2022,7 @@ PROCEDURE InstallFile (t: T;  src, dest, mode: TEXT;  derived: BOOLEAN)
   
       (* generate the code to install the file *)
       IF t.have_pkgtools THEN
-        Out (wr, M3ID.ToText (t.build_dir), "/", src, "\n");
+        Out (wr, M3ID.ToText (t.build_dir), "/", src, Wr.EOL);
       ELSE
         Out (wr, "install_file(", Unresolve (t, M3Path.Convert (src)), C); (* Unresolve needed here? *)
         Out (wr, Unresolve(t, M3Path.Convert (dest)), CQ, mode, QRPCR);
@@ -2076,7 +2076,7 @@ PROCEDURE InstallSource (t: T;  src, dest, mode: TEXT) =
       (* make sure the install directory is built *)
       InstallDir (t, dest, wr);
       IF t.have_pkgtools THEN
-        Out (wr, src, "\n");
+        Out (wr, src, Wr.EOL);
       ELSE
         Out (wr, "install_file(", Unresolve (t, M3Path.Convert (src)), C); (* Unresolve needed here? *)
         Out (wr, Unresolve (t, M3Path.Convert (dest)), CQ, mode, QRPCR);
@@ -2384,10 +2384,10 @@ PROCEDURE DoGenTFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       FOR i := 0 TO LAST (map^) DO
         uu := srcs [map[i]];
         IF (uu.loc # last_loc) THEN
-          Out (wr, "@", uu.loc.path, "\n");
+          Out (wr, "@", uu.loc.path, Wr.EOL);
           last_loc := uu.loc;
         END;
-        Out (wr, M3Unit.FileName (uu), "\n");
+        Out (wr, M3Unit.FileName (uu), Wr.EOL);
       END;
     END Emit;
 

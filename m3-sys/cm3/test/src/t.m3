@@ -1,5 +1,5 @@
 MODULE t EXPORTS Main;
-IMPORT IO, Text, M3Path;
+IMPORT IO, Text, M3Path, Wr;
 
 PROCEDURE T(text: TEXT) =
 VAR length := Text.Length(text);
@@ -10,7 +10,7 @@ BEGIN
      M3Path.SetOS(ARRAY OF M3Path.OSKind {M3Path.OSKind.Unix, M3Path.OSKind.Win32}[i], host := TRUE);
      Text.SetChars(buf^, text);
      t2 := M3Path.FixPath(buf^);
-     IO.Put(ARRAY OF TEXT {"Unix", "Win32"}[i] & " " &  text & " => " & t2 & "\n");
+     IO.Put(ARRAY OF TEXT {"Unix", "Win32"}[i] & " " &  text & " => " & t2 & Wr.EOL);
   END;
 END T;
 
@@ -55,11 +55,11 @@ BEGIN
   T("\\\\\\");
   T("//foo//bar////");
 
-  IO.Put("x in Letters1:" & BoolToText('x' IN Letters1) & "\n");
-  IO.Put("X in Letters1:" & BoolToText('X' IN Letters1) & "\n");
-  IO.Put("1 in Letters1:" & BoolToText('1' IN Letters1) & "\n");
+  IO.Put("x in Letters1:" & BoolToText('x' IN Letters1) & Wr.EOL);
+  IO.Put("X in Letters1:" & BoolToText('X' IN Letters1) & Wr.EOL);
+  IO.Put("1 in Letters1:" & BoolToText('1' IN Letters1) & Wr.EOL);
 
-  IO.Put("x in Letters2:" & BoolToText('x' IN Letters2) & "\n");
-  IO.Put("X in Letters2:" & BoolToText('X' IN Letters2) & "\n");
-  IO.Put("1 in Letters2:" & BoolToText('1' IN Letters2) & "\n");
+  IO.Put("x in Letters2:" & BoolToText('x' IN Letters2) & Wr.EOL);
+  IO.Put("X in Letters2:" & BoolToText('X' IN Letters2) & Wr.EOL);
+  IO.Put("1 in Letters2:" & BoolToText('1' IN Letters2) & Wr.EOL);
 END t.
