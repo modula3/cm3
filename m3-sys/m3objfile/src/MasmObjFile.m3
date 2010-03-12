@@ -691,7 +691,7 @@ PROCEDURE Dump (t: T;  wr: Wr.T) =
 
 PROCEDURE NL (VAR s: DState) =
   BEGIN
-    M3Buf.PutText (s.buf, Target.EOL);
+    M3Buf.PutText (s.buf, Wr.EOL);
   END NL;
 
 PROCEDURE SortSymbols (VAR s: DState) =
