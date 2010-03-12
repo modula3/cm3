@@ -10,7 +10,7 @@
 MODULE MxOut;
 
 IMPORT Wr, IntIntTbl;
-IMPORT M3Buf, M3ID, Target;
+IMPORT M3Buf, M3ID;
 IMPORT Mx, MxVS, MxIO;
 
 TYPE
@@ -38,7 +38,7 @@ PROCEDURE WriteUnits (units: Mx.UnitList;  output: Wr.T) =
 
     M3Buf.AttachDrain (s.buf, s.wr);
 
-    MxIO.PutTxt (s.buf,  Mx.LinkerMagic, Target.EOL);
+    MxIO.PutTxt (s.buf,  Mx.LinkerMagic, Wr.EOL);
     WHILE (units # NIL) DO
       WriteUnit (s, units.unit);
       units := units.next;
@@ -57,7 +57,7 @@ PROCEDURE WriteUnit (VAR s: State;  u: Mx.Unit) =
   CONST Tag = ARRAY BOOLEAN OF TEXT {"M", "I"};
   VAR nm := WriteName (s, u.name);
   BEGIN
-    MxIO.PutTxt (s.buf, Target.EOL, Tag[u.interface]);
+    MxIO.PutTxt (s.buf, Wr.EOL, Tag[u.interface]);
     MxIO.PutInt (s.buf, nm, " ");
     MxIO.PutInt (s.buf, u.exported_units.cnt, " ");
     MxIO.PutInt (s.buf, u.imported_units.cnt, " ");
@@ -70,7 +70,7 @@ PROCEDURE WriteUnit (VAR s: State;  u: Mx.Unit) =
     MxIO.PutInt (s.buf, u.export_use_syms.cnt, " ");
     MxIO.PutInt (s.buf, u.imported_types.cnt, " ");
     MxIO.PutInt (s.buf, u.exported_types.cnt, " ");
-    MxIO.PutInt (s.buf, u.wishes.cnt, Target.EOL);
+    MxIO.PutInt (s.buf, u.wishes.cnt, Wr.EOL);
 
     WriteNameInfo    (s, u, u.exported_units,    "A");
     WriteNameInfo    (s, u, u.imported_units,    "B");
@@ -97,7 +97,7 @@ PROCEDURE WriteNameInfo (VAR s: State;  u: Mx.Unit;
     FOR i := x.start TO x.start + x.cnt - 1 DO
       nm := WriteName (s, u.info[i]);
       MxIO.PutTxt (s.buf,  tag);
-      MxIO.PutInt (s.buf, nm, Target.EOL);
+      MxIO.PutInt (s.buf, nm, Wr.EOL);
     END;
   END WriteNameInfo;
 
@@ -108,7 +108,7 @@ PROCEDURE WriteVSInfo (VAR s: State;  u: Mx.Unit;
     FOR i := x.start TO x.start + x.cnt - 1 DO
       vs := WriteVS (s, u.info[i]);
       MxIO.PutTxt (s.buf,  tag);
-      MxIO.PutInt (s.buf, vs, Target.EOL);
+      MxIO.PutInt (s.buf, vs, Wr.EOL);
     END;
   END WriteVSInfo;
 
@@ -117,7 +117,7 @@ PROCEDURE WriteTypeInfo (VAR s: State;  u: Mx.Unit;
   BEGIN
     FOR i := x.start TO x.start + x.cnt - 1 DO
       MxIO.PutTxt (s.buf,  tag);
-      MxIO.PutHex (s.buf,  u.info[i], Target.EOL);
+      MxIO.PutHex (s.buf,  u.info[i], Wr.EOL);
     END;
   END WriteTypeInfo;
 
@@ -126,7 +126,7 @@ PROCEDURE WriteOpaques (VAR s: State;  o: Mx.OpaqueType) =
     WHILE (o # NIL) DO
       MxIO.PutTxt (s.buf,  "Q");
       MxIO.PutHex (s.buf,  o.type, " ");
-      MxIO.PutHex (s.buf,  o.super_type, Target.EOL);
+      MxIO.PutHex (s.buf,  o.super_type, Wr.EOL);
       o := o.next;
     END;
   END WriteOpaques;
@@ -150,7 +150,7 @@ PROCEDURE WriteObjects (VAR s: State;  obj: Mx.ObjectType;  export: BOOLEAN) =
       MxIO.PutHex (s.buf, obj.super_type, " ");
       MxIO.PutInt (s.buf, obj.data_size, " ");
       MxIO.PutInt (s.buf, obj.data_align, " ");
-      MxIO.PutInt (s.buf, obj.method_size, Target.EOL);
+      MxIO.PutInt (s.buf, obj.method_size, Wr.EOL);
       obj := obj.next;
     END;
   END WriteObjects;
@@ -169,7 +169,7 @@ PROCEDURE WriteRevelations (VAR s: State;  r: Mx.Revelation) =
       MxIO.PutTxt (s.buf,  tag);
       MxIO.PutInt (s.buf, nm, " ");
       MxIO.PutHex (s.buf, r.lhs, " ");
-      MxIO.PutHex (s.buf, r.rhs, Target.EOL);
+      MxIO.PutHex (s.buf, r.rhs, Wr.EOL);
       r := r.next;
     END;
   END WriteRevelations;
@@ -187,7 +187,7 @@ PROCEDURE WriteVS (VAR s: State;  vs: MxVS.T): INTEGER =
       MxIO.PutInt (s.buf, id, " ");
       MxIO.PutInt (s.buf, src, " ");
       MxIO.PutInt (s.buf, sym, " ");
-      MxIO.PutFP  (s.buf, info.stamp, Target.EOL);
+      MxIO.PutFP  (s.buf, info.stamp, Wr.EOL);
     END;
     RETURN id;
   END WriteVS;
@@ -201,7 +201,7 @@ PROCEDURE WriteName (VAR s: State;  nm: Mx.Name): INTEGER =
       MxIO.PutTxt (s.buf, "N");
       MxIO.PutInt (s.buf, id, " ");
       M3ID.Put    (s.buf, nm);
-      MxIO.PutTxt (s.buf, Target.EOL);
+      MxIO.PutTxt (s.buf, Wr.EOL);
     END;
     RETURN id;
   END WriteName;

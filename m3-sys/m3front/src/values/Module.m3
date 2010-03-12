@@ -11,7 +11,7 @@ UNSAFE MODULE Module;
 IMPORT M3, M3ID, CG, Value, ValueRep, Scope, Stmt, Error, ESet,  External;
 IMPORT Variable, Type, Procedure, Ident, M3Buf, BlockStmt, Int;
 IMPORT Host, Token, Revelation, Coverage, Decl, Scanner, WebInfo;
-IMPORT ProcBody, Target, M3RT, Marker, File, Tracer;
+IMPORT ProcBody, Target, M3RT, Marker, File, Tracer, Wr;
 
 FROM Scanner IMPORT GetToken, Fail, Match, MatchID, cur;
 
@@ -634,10 +634,10 @@ PROCEDURE SetGlobals (t: T) =
   BEGIN
     IF (t.has_errors) THEN (*don't bother *) RETURN END;
     IF (Host.verbose) OR (Host.load_map AND Scanner.in_main) THEN
-      Out (TRUE, Target.EOL, Target.EOL, " global constants for ");
-      Out (TRUE, DataName (t), Target.EOL);
-      Out (FALSE, Target.EOL, Target.EOL, " global data allocation for ");
-      Out (FALSE, DataName (t), Target.EOL);
+      Out (TRUE, Wr.EOL, Wr.EOL, " global constants for ");
+      Out (TRUE, DataName (t), Wr.EOL);
+      Out (FALSE, Wr.EOL, Wr.EOL, " global data allocation for ");
+      Out (FALSE, DataName (t), Wr.EOL);
     END;
     IF (t.globals[FALSE].size = 0) THEN
       EVAL Allocate (M3RT.MI_SIZE, Target.Address.align, FALSE, "*module info*");
@@ -666,7 +666,7 @@ PROCEDURE Allocate (size, align: INTEGER;  is_const : BOOLEAN;
       OutI (align  DIV Target.Byte, 3, is_const);
       Out  (is_const, "  ", tag);
       IF (id # M3ID.NoID) THEN M3ID.Put (load_map[is_const], id); END;
-      Out  (is_const, Target.EOL);
+      Out  (is_const, Wr.EOL);
     END;
 
     RETURN offset;
@@ -837,7 +837,7 @@ PROCEDURE Compile (t: T) =
         ELSE CompileModule (t);
       END;
       IF (load_map[FALSE] # NIL) THEN
-        CG.Comment (-1, FALSE, "load map", Target.EOL,
+        CG.Comment (-1, FALSE, "load map", Wr.EOL,
                     M3Buf.ToText (load_map[FALSE]),
                     M3Buf.ToText (load_map[TRUE]));
         load_map[FALSE] := NIL;
