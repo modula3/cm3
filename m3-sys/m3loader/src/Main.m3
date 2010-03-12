@@ -7,7 +7,7 @@
 
 MODULE Main;
 
-IMPORT FileRd, Wr, Lex, Text, TextF, IO, Fmt, WinBase, Time, FS;
+IMPORT FileRd, Wr, Lex, Text, IO, Fmt, WinBase, Time, FS;
 IMPORT WinDef, WinUser, Process, Rd, OSError, Stdio, Thread, FloatMode;
 IMPORT M3ID, M3Loader, M3LoaderDebug AS Debug;
 

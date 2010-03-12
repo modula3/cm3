@@ -4,7 +4,7 @@
  
 MODULE OWr EXPORTS OWr;
 
-IMPORT Text, TextF;
+IMPORT Text;
 
 PROCEDURE PutText (self: T; t: Text.T) RAISES {Closed} =
   BEGIN 
