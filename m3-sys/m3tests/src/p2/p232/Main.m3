@@ -23,8 +23,10 @@ UNSAFE MODULE Main;
 
 <*UNUSED*>PROCEDURE RealLT(a,b:REAL):BOOLEAN=BEGIN RETURN a<b; END RealLT;
 <*UNUSED*>PROCEDURE RealLE(a,b:REAL):BOOLEAN=BEGIN RETURN a<=b; END RealLE;
+
 <*UNUSED*>PROCEDURE RealGT(a,b:REAL):BOOLEAN=BEGIN RETURN a>b; END RealGT;
 <*UNUSED*>PROCEDURE RealGE(a,b:REAL):BOOLEAN=BEGIN RETURN a>=b; END RealGE;
+
 <*UNUSED*>PROCEDURE RealEQ(a,b:REAL):BOOLEAN=BEGIN RETURN a=b; END RealEQ;
 <*UNUSED*>PROCEDURE RealNE(a,b:REAL):BOOLEAN=BEGIN RETURN a#b; END RealNE;
 
@@ -58,18 +60,13 @@ UNSAFE MODULE Main;
 (* CARDINAL is really the same as INTEGER.
  * To get unsigned, use ADDRESS.
  *)
+
 <*UNUSED*>PROCEDURE CardinalLT(a,b:CARDINAL):BOOLEAN=BEGIN RETURN a<b; END CardinalLT;
 <*UNUSED*>PROCEDURE CardinalLE(a,b:CARDINAL):BOOLEAN=BEGIN RETURN a<=b; END CardinalLE;
 <*UNUSED*>PROCEDURE CardinalGT(a,b:CARDINAL):BOOLEAN=BEGIN RETURN a>b; END CardinalGT;
 <*UNUSED*>PROCEDURE CardinalGE(a,b:CARDINAL):BOOLEAN=BEGIN RETURN a>=b; END CardinalGE;
 <*UNUSED*>PROCEDURE CardinalEQ(a,b:CARDINAL):BOOLEAN=BEGIN RETURN a=b; END CardinalEQ;
 <*UNUSED*>PROCEDURE CardinalNE(a,b:CARDINAL):BOOLEAN=BEGIN RETURN a#b; END CardinalNE;
-<*UNUSED*>PROCEDURE CardinalLT0(a:CARDINAL):BOOLEAN=BEGIN RETURN a<0; END CardinalLT0;
-<*UNUSED*>PROCEDURE CardinalLE0(a:CARDINAL):BOOLEAN=BEGIN RETURN a<=0; END CardinalLE0;
-<*UNUSED*>PROCEDURE CardinalGT0(a:CARDINAL):BOOLEAN=BEGIN RETURN a>0; END CardinalGT0;
-<*UNUSED*>PROCEDURE CardinalGE0(a:CARDINAL):BOOLEAN=BEGIN RETURN a>=0; END CardinalGE0;
-<*UNUSED*>PROCEDURE CardinalEQ0(a:CARDINAL):BOOLEAN=BEGIN RETURN a=0; END CardinalEQ0;
-<*UNUSED*>PROCEDURE CardinalNE0(a:CARDINAL):BOOLEAN=BEGIN RETURN a#0; END CardinalNE0;
 
 
 <*UNUSED*>PROCEDURE LongintLT(a,b:LONGINT):BOOLEAN=BEGIN RETURN a<b; END LongintLT;
@@ -91,12 +88,7 @@ UNSAFE MODULE Main;
 <*UNUSED*>PROCEDURE LongcardGE(a,b:LONGCARD):BOOLEAN=BEGIN RETURN a>=b; END LongcardGE;
 <*UNUSED*>PROCEDURE LongcardEQ(a,b:LONGCARD):BOOLEAN=BEGIN RETURN a=b; END LongcardEQ;
 <*UNUSED*>PROCEDURE LongcardNE(a,b:LONGCARD):BOOLEAN=BEGIN RETURN a#b; END LongcardNE;
-<*UNUSED*>PROCEDURE LongcardLT0(a:LONGCARD):BOOLEAN=BEGIN RETURN a<0L; END LongcardLT0;
-<*UNUSED*>PROCEDURE LongcardLE0(a:LONGCARD):BOOLEAN=BEGIN RETURN a<=0L; END LongcardLE0;
-<*UNUSED*>PROCEDURE LongcardGT0(a:LONGCARD):BOOLEAN=BEGIN RETURN a>0L; END LongcardGT0;
-<*UNUSED*>PROCEDURE LongcardGE0(a:LONGCARD):BOOLEAN=BEGIN RETURN a>=0L; END LongcardGE0;
-<*UNUSED*>PROCEDURE LongcardEQ0(a:LONGCARD):BOOLEAN=BEGIN RETURN a=0L; END LongcardEQ0;
-<*UNUSED*>PROCEDURE LongcardNE0(a:LONGCARD):BOOLEAN=BEGIN RETURN a#0L; END LongcardNE0;
+
 
 TYPE Set = SET OF [0..1023];
 <*UNUSED*>PROCEDURE SetLT(READONLY a,b:Set):BOOLEAN=BEGIN RETURN a<b; END SetLT;
@@ -105,6 +97,53 @@ TYPE Set = SET OF [0..1023];
 <*UNUSED*>PROCEDURE SetGE(READONLY a,b:Set):BOOLEAN=BEGIN RETURN a>=b; END SetGE;
 <*UNUSED*>PROCEDURE SetEQ(READONLY a,b:Set):BOOLEAN=BEGIN RETURN a=b; END SetEQ;
 <*UNUSED*>PROCEDURE SetNE(READONLY a,b:Set):BOOLEAN=BEGIN RETURN a#b; END SetNE;
+
+
+<*UNUSED*>PROCEDURE CardinalLT0(a:CARDINAL):BOOLEAN=BEGIN RETURN a<0; END CardinalLT0;
+<*UNUSED*>PROCEDURE CardinalLE0(a:CARDINAL):BOOLEAN=BEGIN RETURN a<=0; END CardinalLE0;
+<*UNUSED*>PROCEDURE CardinalGT0(a:CARDINAL):BOOLEAN=BEGIN RETURN a>0; END CardinalGT0;
+<*UNUSED*>PROCEDURE CardinalGE0(a:CARDINAL):BOOLEAN=BEGIN RETURN a>=0; END CardinalGE0;
+<*UNUSED*>PROCEDURE CardinalEQ0(a:CARDINAL):BOOLEAN=BEGIN RETURN a=0; END CardinalEQ0;
+<*UNUSED*>PROCEDURE CardinalNE0(a:CARDINAL):BOOLEAN=BEGIN RETURN a#0; END CardinalNE0;
+
+<*UNUSED*>PROCEDURE LongcardLT0(a:LONGCARD):BOOLEAN=BEGIN RETURN a<0L; END LongcardLT0;
+<*UNUSED*>PROCEDURE LongcardLE0(a:LONGCARD):BOOLEAN=BEGIN RETURN a<=0L; END LongcardLE0;
+<*UNUSED*>PROCEDURE LongcardGT0(a:LONGCARD):BOOLEAN=BEGIN RETURN a>0L; END LongcardGT0;
+<*UNUSED*>PROCEDURE LongcardGE0(a:LONGCARD):BOOLEAN=BEGIN RETURN a>=0L; END LongcardGE0;
+<*UNUSED*>PROCEDURE LongcardEQ0(a:LONGCARD):BOOLEAN=BEGIN RETURN a=0L; END LongcardEQ0;
+<*UNUSED*>PROCEDURE LongcardNE0(a:LONGCARD):BOOLEAN=BEGIN RETURN a#0L; END LongcardNE0;
+
+
+<*UNUSED*>PROCEDURE no_overlap_less_LT(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a<b; END no_overlap_less_LT;
+<*UNUSED*>PROCEDURE no_overlap_less_LE(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a<=b; END no_overlap_less_LE;
+<*UNUSED*>PROCEDURE no_overlap_less_GT(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a>b; END no_overlap_less_GT;
+<*UNUSED*>PROCEDURE no_overlap_less_GE(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a>=b; END no_overlap_less_GE;
+<*UNUSED*>PROCEDURE no_overlap_less_EQ(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a=b; END no_overlap_less_EQ;
+<*UNUSED*>PROCEDURE no_overlap_less_NE(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a#b; END no_overlap_less_NE;
+
+<*UNUSED*>PROCEDURE minimum_overlap_less_LT(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a<b; END minimum_overlap_less_LT;
+<*UNUSED*>PROCEDURE minimum_overlap_less_LE(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a<=b; END minimum_overlap_less_LE;
+<*UNUSED*>PROCEDURE minimum_overlap_less_GT(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a>b; END minimum_overlap_less_GT;
+<*UNUSED*>PROCEDURE minimum_overlap_less_GE(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a>=b; END minimum_overlap_less_GE;
+<*UNUSED*>PROCEDURE minimum_overlap_less_EQ(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a=b; END minimum_overlap_less_EQ;
+<*UNUSED*>PROCEDURE minimum_overlap_less_NE(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a#b; END minimum_overlap_less_NE;
+
+
+<*UNUSED*>PROCEDURE no_overlap_greater_LT(a:[2..3]; b:[0..1]):BOOLEAN=BEGIN RETURN a<b; END no_overlap_greater_LT;
+<*UNUSED*>PROCEDURE no_overlap_greater_LE(a:[2..3]; b:[0..1]):BOOLEAN=BEGIN RETURN a<=b; END no_overlap_greater_LE;
+<*UNUSED*>PROCEDURE no_overlap_greater_GT(a:[2..3]; b:[0..1]):BOOLEAN=BEGIN RETURN a>b; END no_overlap_greater_GT;
+<*UNUSED*>PROCEDURE no_overlap_greater_GE(a:[2..3]; b:[0..1]):BOOLEAN=BEGIN RETURN a>=b; END no_overlap_greater_GE;
+<*UNUSED*>PROCEDURE no_overlap_greater_EQ(a:[2..3]; b:[0..1]):BOOLEAN=BEGIN RETURN a=b; END no_overlap_greater_EQ;
+<*UNUSED*>PROCEDURE no_overlap_greater_NE(a:[2..3]; b:[0..1]):BOOLEAN=BEGIN RETURN a#b; END no_overlap_greater_NE;
+
+
+<*UNUSED*>PROCEDURE minimum_overlap_greater_LT(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a<b; END minimum_overlap_greater_LT;
+<*UNUSED*>PROCEDURE minimum_overlap_greater_LE(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a<=b; END minimum_overlap_greater_LE;
+<*UNUSED*>PROCEDURE minimum_overlap_greater_GT(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a>b; END minimum_overlap_greater_GT;
+<*UNUSED*>PROCEDURE minimum_overlap_greater_GE(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a>=b; END minimum_overlap_greater_GE;
+<*UNUSED*>PROCEDURE minimum_overlap_greater_EQ(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a=b; END minimum_overlap_greater_EQ;
+<*UNUSED*>PROCEDURE minimum_overlap_greater_NE(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a#b; END minimum_overlap_greater_NE;
+
 
 BEGIN
 END Main.
