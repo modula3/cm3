@@ -27,7 +27,7 @@ FROM M3ObjFile IMPORT Seg;
 IMPORT Wrx86, Stackx86, Codex86;
 
 FROM Stackx86 IMPORT MaxMin, ShiftType;
-FROM Codex86 IMPORT Cond, Op, FOp, FIm, unscond, revcond, FloatBytes;
+FROM Codex86 IMPORT Cond, Op, FOp, unscond, revcond, FloatBytes;
 
 TYPE
   RuntimeHook = REF RECORD
@@ -1845,7 +1845,7 @@ PROCEDURE compare (u: U;  t: ZType;  z: IType;  op: CompareOp) =
       u.wr.NL    ();
     END;
 
-    condset(u, CompareOpCond [op], t);
+    condset(u, op, t);
   END compare;
 
 PROCEDURE add (u: U;  t: AType) =
@@ -2204,7 +2204,7 @@ PROCEDURE set_compare (u: U;  s: ByteSize;  op: CompareOp;  t: IType) =
       pop_param(u, Type.Addr);
       call_int_proc (u, proc);
       u.vstack.pushimmT(TZero, Type.Word32);
-      condset(u, CompareOpCond [op], t);
+      condset(u, op, t);
     ELSE
       proc := CompareOpProc [op];
       start_int_proc (u, proc);
@@ -3950,31 +3950,21 @@ PROCEDURE load_static_link_toC (u: U;  p: Proc) =
 
 (*---------------------------------------------------------- produce code ---*)
 
-PROCEDURE intregcmp (u: U; tozero: BOOLEAN; type: Type): BOOLEAN =
+PROCEDURE intregcmp (u: U; type: Type): BOOLEAN =
   BEGIN
-    IF tozero THEN
-      u.vstack.doimm(Op.oCMP, TZero, FALSE);
-      RETURN FALSE;
-    ELSE
-      RETURN u.vstack.dobin(Op.oCMP, TRUE, FALSE, type);
-    END
+    RETURN u.vstack.dobin(Op.oCMP, TRUE, FALSE, type);
   END intregcmp;
 
-PROCEDURE fltregcmp (u: U; tozero: BOOLEAN): BOOLEAN =
+PROCEDURE fltregcmp (u: U): BOOLEAN =
   VAR reversed := FALSE;
   BEGIN
-    IF tozero THEN
-      u.cg.immFOp(FOp.fCOMP, FIm.Z);
-      u.vstack.discard(1);
+    IF u.cg.ftop_inmem THEN
+      u.cg.binFOp(FOp.fCOMP, 1);
     ELSE
-      IF u.cg.ftop_inmem THEN
-        u.cg.binFOp(FOp.fCOMP, 1);
-      ELSE
-        u.cg.binFOp(FOp.fCOMPP, 1);
-        reversed := TRUE;
-      END;
-      u.vstack.discard(2);
+      u.cg.binFOp(FOp.fCOMPP, 1);
+      reversed := TRUE;
     END;
+    u.vstack.discard(2);
 
     u.vstack.unlock();
     u.vstack.corrupt(EAX, operandPart := 0);
@@ -3984,13 +3974,16 @@ PROCEDURE fltregcmp (u: U; tozero: BOOLEAN): BOOLEAN =
     RETURN reversed;
   END fltregcmp;
 
-PROCEDURE condset (u: U; cond: Cond; t: ZType) =
+PROCEDURE condset (u: U; op: CompareOp; t: ZType) =
   VAR reversed := FALSE;
+      cond := CompareOpCond[op];
   BEGIN
+    <* ASSERT cond # Cond.Z AND cond # Cond.NZ *>
+
     IF Target.FloatType[t] THEN
-      reversed := fltregcmp(u, cond < Cond.E);
+      reversed := fltregcmp(u);
     ELSE
-      reversed := intregcmp(u, cond < Cond.E, t);
+      reversed := intregcmp(u, t);
     END;
 
     IF reversed THEN
