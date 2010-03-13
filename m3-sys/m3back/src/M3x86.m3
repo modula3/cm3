@@ -1531,6 +1531,7 @@ PROCEDURE if_compare (u: U;  t: ZType;  op: CompareOp;  label: Label;
 
     CASE t OF
     | Type.Word32, Type.Int32, Type.Word64, Type.Int64, Type.Addr =>
+        u.vstack.unlock();
         IF u.vstack.dobin(Op.oCMP, TRUE, FALSE, t) THEN
           cond := revcond[cond];
         END;
@@ -1834,18 +1835,266 @@ PROCEDURE load_float    (u: U;  t: RType;  READONLY f: Target.Float) =
 
 (*------------------------------------------------------------ arithmetic ---*)
 
-PROCEDURE compare (u: U;  t: ZType;  z: IType;  op: CompareOp) =
-  (* s1.z := (s1.t  op  s0.t)  ; pop *)
+PROCEDURE compare (u: U;  type: ZType; result_type: IType;  op: CompareOp) =
+  (* s1.result_type := (s1.type  op  s0.type)  ; pop *)
+
+  (*
+    Comparison often needs to convert part of EFLAGS to a register-sized boolean.
+      Or if one is lucky, just do a conditional branch based on EFLAGS
+      and never materialize a register-sized boolean.
+
+    Historically Modula-3 m3back did comparisons like this.
+      cmp
+      setCcOp to memory temporary on stack; setcc only sets one byte
+      xor result_reg, result_reg ; result_reg := 0
+      mov result_reg_low, memory ; now have a register-sized boolean
+
+    We can do much better.
+
+    setCcOp is a family of instructions that materialize
+    a computation of EFLAGS as an 8 bit boolean.
+    There is sete, setne, setg, setl, seta, setb, etc.
+    Anything you might conditionally branch on jcc, also has setcc.
+    A "catch" however is it only gives you an 8 bit boolean, and
+    code often wants a register sized boolean.
+
+    Let's take the following C code as representative of our tasks,
+    and observe how the C compiler optimizes it, and match it.
+    That is a general technique I often follow, look
+    at the optimized C output and match it.
+    
+        signed
+
+        int signed_LT(int a, int b) { return a < b; }
+            xor eax, eax
+            cmp
+            setl al
+
+        int signed_LE(int a, int b) { return a <= b; }
+            xor eax, eax
+            cmp
+            setle al
+
+        EQ and NE are the same for signed vs. unsigned
+
+        int EQ(int a, int b) { return a == b; }
+            xor eax, eax
+            cmp
+            sete al
+
+        int NE(int a, int b) { return a != b; }
+            xor eax, eax
+            cmp
+            setne al
+
+        GE and GT are the same as LT and LE but with either operands reversed
+            or the setcc condition altered.
+
+        int signed_GE(int a, int b) { return a >= b; }
+            xor eax, eax
+            cmp
+            setge al
+
+        int signed_GT(int a, int b) { return a > b; }
+            xor eax, eax
+            cmp
+            setg al
+
+        unsigned
+
+        int unsigned_LT(unsigned a, unsigned b) { return a < b; }
+            cmp
+            sbb eax, eax
+            neg eax
+            
+        Let's understand this.
+            sbb is subtract with carry/borrow.
+            subtract from self is zero, and then carry/borrow
+            is one more -- either 0 or -1.
+            And then neg to turn -1 to 1.
+            So sbb, neg materialize carry as a register-sized boolean. 
+
+        int unsigned_LE(unsigned a, unsigned b) { return a <= b; }
+            cmp
+            sbb eax, eax
+            inc eax
+
+        Let's understand this.
+            sbb is subtract with carry/borrow.
+            subtract from self is zero, and then carry/borrow
+            is one more -- either 0 or -1.
+            And then inc turns -1 to 0, 0 to 1.
+            So sbb, inc materialize carry as a register-sized boolean, inverted. 
+
+        int unsigned_GE(unsigned a, unsigned b) { return a >= b; }
+            cmp parameters reversed vs. LT
+            sbb eax, eax ; see unsigned_LE for explanation
+            inc eax      ; see unsigned_LE for explanation
+
+        int unsigned_GT(unsigned a, unsigned b) { return a > b; }
+            cmp
+            sbb eax, eax ; see unsigned_LT for explanation
+            neg eax      ; see unsigned_LE for explanation
+
+        int unsigned_EQ(unsigned a, unsigned b) { return a == b; }
+            same as signed:
+            xor eax, eax
+            cmp
+            sete al
+
+        int unsigned_NE(unsigned a, unsigned b) { return a != b; }
+            same as signed:
+            xor eax, eax
+            cmp
+            setne al
+
+        Fill these in if they prove interesting.
+        Actually they are.
+        Signed comparison to zero of a value in a register is
+        sometimes done with test reg, reg.
+        Sometimes the zero for the return value in progress
+        doubles as the zero for the comparison.
+        Also unsigned compare to zero is special. For example,
+            unsigned values are always GE zero, never LT zero.
+
+        int signed_GE0(int a) { return a >= 0; }
+            xor eax, eax
+            if a is in memory
+                cmp a to eax
+            else if a is in register (__fastcall to simulate)
+                test a, a
+            setge al
+
+        int signed_GT0(int a) { return a > 0; }
+            xor eax, eax
+            if a is in memory
+                cmp a to eax
+            else if a is in register (__fastcall to simulate)
+                test a, a
+            setg al
+
+        int signed_LT0(int a) { return a < 0; }
+            xor eax, eax
+            if a is in memory
+                cmp a to eax
+            else if a is in register (__fastcall to simulate)
+                test a, a
+            setl al
+
+        int signed_LE0(int a) { return a <= 0; }
+            xor eax, eax
+            cmp to eax
+            setle al
+
+        int signed_EQ0(int a) { return a == 0; }
+            xor eax, eax
+            cmp to eax
+            sete al
+
+        int signed_NE0(int a, int b) { return a != 0; }
+            xor eax, eax
+            cmp to eax
+            setne al
+
+        int unsigned_GE0(unsigned a) { return a >= 0; }
+            This is always true.
+            xor eax, eax
+            inc eax
+
+        int unsigned_GT0(unsigned a) { return a > 0; }
+            xor eax, eax
+            cmp to eax (reversed?)
+            sbb eax, eax ; see unsigned_LT for explanation
+            neg eax      ; see unsigned_LT for explanation
+
+        int unsigned_LT0(unsigned a) { return a < 0; }
+            This is always false.
+            xor eax, eax
+
+        int unsigned_LE0(unsigned a) { return a <= 0; }
+            Same as EQ0.
+
+        int unsigned_EQ0(unsigned a) { return a == 0; }
+            input is in memory
+            xor eax, eax
+            cmp to eax
+            sete al
+            
+        int __fastcall unsigned_EQ0(unsigned a) { return a == 0; }
+            input is in a register
+            xor eax, eax
+            test reg, reg
+            sete al
+
+        int unsigned_NE0(unsigned a) { return a != 0; }
+            same as EQ0 but setne instead of set
+
+    From the code for these functions, we observe that
+    there are multiple approaches, depending on what in EFLAGS is needed.
+
+    There is:
+        xor reg,reg
+        cmp
+        setcc reg_low_byte
+
+    and
+        cmp
+        some math involving EFLAGS, such as sbb.
+
+    The xor presumably has to precede the cmp in order to not lose the EFLAGS.
+
+  *)
+  VAR r: Regno := -1;
+      reversed := FALSE;
+      cond := CompareOpCond [op];
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("compare");
-      u.wr.TName (t);
-      u.wr.TName (z);
+      u.wr.TName (type);
+      u.wr.TName (result_type);
       u.wr.OutT  (CompareOpName [op]);
       u.wr.NL    ();
     END;
 
-    condset(u, op, t);
+    <* ASSERT cond # Cond.Z AND cond # Cond.NZ *>
+
+    IF Target.FloatType [type] THEN
+      condset(u, cond, type);
+      RETURN;
+    END;
+
+    IF TypeIsSigned(type) OR op IN SET OF CompareOp{CompareOp.EQ, CompareOp.NE} THEN
+      u.vstack.unlock();
+      r := u.vstack.freereg(RegistersForByteOperations, operandPart := 0);
+      u.cg.binOp(Op.oXOR, u.cg.reg[r], u.cg.reg[r]);
+      reversed := u.vstack.dobin(Op.oCMP, TRUE, FALSE, type);
+      IF reversed THEN
+        cond := revcond[cond];
+      END;
+      u.cg.setccOp(u.cg.reg[r], cond);
+    ELSE
+      u.vstack.unlock();
+      IF op IN SET OF CompareOp{CompareOp.LE, CompareOp.GT} THEN
+        u.vstack.swap();
+        IF op = CompareOp.LE THEN
+          op := CompareOp.GE;
+        ELSE
+          op := CompareOp.LT;
+        END;
+      END;
+      reversed := u.vstack.dobin(Op.oCMP, FALSE, FALSE, type);
+      <* ASSERT NOT reversed *>
+      u.vstack.unlock();
+      r := u.vstack.freereg(operandPart := 0);
+      u.cg.binOp(Op.oSBB, u.cg.reg[r], u.cg.reg[r]);
+      IF op = CompareOp.LT THEN
+        u.cg.unOp(Op.oNEG, u.cg.reg[r]);
+      ELSE
+        u.cg.incOp(u.cg.reg[r]);
+      END;
+    END;
+    u.vstack.unlock();
+    u.vstack.pushnew(Type.Word32, Force.regset, RegSet{r});
   END compare;
 
 PROCEDURE add (u: U;  t: AType) =
@@ -1861,6 +2110,7 @@ PROCEDURE add (u: U;  t: AType) =
       u.cg.binFOp(FOp.fADDP, 1);
       u.vstack.discard(1);
     ELSE
+      u.vstack.unlock();
       EVAL u.vstack.dobin(Op.oADD, TRUE, TRUE, t);
     END;
   END add;
@@ -1878,6 +2128,7 @@ PROCEDURE subtract (u: U;  t: AType) =
       u.cg.binFOp(FOp.fSUBP, 1);
       u.vstack.discard(1);
     ELSE
+      u.vstack.unlock();
       EVAL u.vstack.dobin(Op.oSUB, FALSE, TRUE, t);
     END;
   END subtract;
@@ -2175,10 +2426,12 @@ PROCEDURE set_member (u: U;  s: ByteSize;  t: IType) =
     Goal is to capture the carry flag as a boolean in a Word.
     *)
 
+    (* Convert carry to register-sized boolean. *)
+
     u.vstack.pushnew(Type.Word32, Force.anyreg);
-    WITH stop0 = u.vstack.op(u.vstack.pos(0, "set_singleton")) DO
-      u.cg.binOp(Op.oSBB, stop0, stop0);
-      u.cg.unOp(Op.oNEG, stop0);
+    WITH stop0 = u.vstack.op(u.vstack.pos(0, "set_member")) DO
+      u.cg.binOp(Op.oSBB, stop0, stop0); (* 0 if carry was clear, -1 if carry was set *)
+      u.cg.unOp(Op.oNEG, stop0);         (* 0 if carry was clear,  1 if carry was set *)
     END;
 
   END set_member;
@@ -2203,8 +2456,20 @@ PROCEDURE set_compare (u: U;  s: ByteSize;  op: CompareOp;  t: IType) =
       pop_param(u, Type.Addr);
       pop_param(u, Type.Addr);
       call_int_proc (u, proc);
-      u.vstack.pushimmT(TZero, Type.Word32);
-      condset(u, op, t);
+
+      (* If EAX = 0, we want 1, if EAX # 0, we want 0.
+       * Compile this and match it:
+       * int F1();
+       * int F2() { return F1() == 0; }
+       * int F3() { return F1() != 0; }
+       *)
+      u.cg.unOp(Op.oNEG, u.cg.reg[EAX]);
+      u.cg.binOp(Op.oSBB, u.cg.reg[EAX], u.cg.reg[EAX]);
+      IF op = CompareOp.EQ THEN
+        u.cg.incOp(u.cg.reg[EAX]);
+      ELSE
+        u.cg.unOp(Op.oNEG, u.cg.reg[EAX]);
+      END
     ELSE
       proc := CompareOpProc [op];
       start_int_proc (u, proc);
@@ -2305,6 +2570,7 @@ PROCEDURE and (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
+    u.vstack.unlock();
     EVAL u.vstack.dobin(Op.oAND, TRUE, TRUE, t);
   END and;
 
@@ -2317,6 +2583,7 @@ PROCEDURE or  (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
+    u.vstack.unlock();
     EVAL u.vstack.dobin(Op.oOR, TRUE, TRUE, t);
   END or;
 
@@ -2329,6 +2596,7 @@ PROCEDURE xor (u: U;  t: IType) =
       u.wr.NL    ();
     END;
 
+    u.vstack.unlock();
     EVAL u.vstack.dobin(Op.oXOR, TRUE, TRUE, t);
   END xor;
 
@@ -3950,11 +4218,6 @@ PROCEDURE load_static_link_toC (u: U;  p: Proc) =
 
 (*---------------------------------------------------------- produce code ---*)
 
-PROCEDURE intregcmp (u: U; type: Type): BOOLEAN =
-  BEGIN
-    RETURN u.vstack.dobin(Op.oCMP, TRUE, FALSE, type);
-  END intregcmp;
-
 PROCEDURE fltregcmp (u: U): BOOLEAN =
   VAR reversed := FALSE;
   BEGIN
@@ -3974,30 +4237,23 @@ PROCEDURE fltregcmp (u: U): BOOLEAN =
     RETURN reversed;
   END fltregcmp;
 
-PROCEDURE condset (u: U; op: CompareOp; t: ZType) =
+PROCEDURE condset (u: U; cond: Cond; type: ZType) =
   VAR reversed := FALSE;
-      cond := CompareOpCond[op];
   BEGIN
-    <* ASSERT cond # Cond.Z AND cond # Cond.NZ *>
 
-    IF Target.FloatType[t] THEN
-      reversed := fltregcmp(u);
-    ELSE
-      reversed := intregcmp(u, t);
-    END;
+    (* This function used to deal with any integer type
+     * as well, but that isn't needed presently.
+     *)
+    <* ASSERT Target.FloatType[type] *>
 
+    reversed := fltregcmp(u);
     IF reversed THEN
       cond := revcond[cond];
     END;
 
-    CASE t OF
-    | Type.Word32, Type.Word64, Type.Addr,
-      Type.Reel, Type.LReel, Type.XReel => (* FCOM sets the unsigned compare flags *)
-        cond := unscond[cond];
-    ELSE
-    END;
+    (* FCOM sets the unsigned compare flags *)
+    cond := unscond[cond];
 
-    u.vstack.unlock();
     u.vstack.pushnew(Type.Word8, Force.mem);
     WITH stop0 = u.vstack.op(u.vstack.pos(0, "condset")) DO
       stop0.mvar.var.stack_temp := FALSE;
@@ -4174,9 +4430,11 @@ PROCEDURE compare_exchange (x: U; t: MType; u: ZType; r: IType;
       x.vstack.discard(3);
     END;
 
-    (* the rest is based on procedure condset *)
+    (* Based on procedure condset. Is there a better way?
+     * There are better ways to capture the carry flag,
+     * but we are after the zero flag.
+     *)
 
-    x.vstack.unlock();
     x.vstack.pushnew(Type.Word8, Force.mem);
     WITH stop0 = x.vstack.op(x.vstack.pos(0, "condset")) DO
       stop0.mvar.var.stack_temp := FALSE;

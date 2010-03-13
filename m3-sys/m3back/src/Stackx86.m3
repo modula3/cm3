@@ -1054,7 +1054,6 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
                    VAR dest, src: INTEGER): BOOLEAN =
   VAR reversed := FALSE;
   BEGIN
-    unlock(t);
     WITH stack0 = pos(t, 0, "findbin"),
          stack1 = pos(t, 1, "findbin") DO
 
@@ -1099,8 +1098,7 @@ PROCEDURE findbin (t: T; symmetric, overwritesdest: BOOLEAN;
         find(t, dest, Force.anyreg);
       END;
 
-      IF destop.loc = OLoc.mem AND
-         (CG_Bytes[destop.mvar.mvar_type] < 4 OR srcop.loc = OLoc.mem) THEN
+      IF destop.loc = OLoc.mem AND (CG_Bytes[destop.mvar.mvar_type] < 4 OR srcop.loc = OLoc.mem) THEN
         find(t, dest, Force.anyreg);
       END;
 
@@ -2471,6 +2469,7 @@ PROCEDURE domaxmin (t: T; type: ZType; maxmin: MaxMin) =
       t.cg.set_label(end);
 
     ELSE
+      unlock(t);
       reversed := findbin(t, TRUE, TRUE, dest, src);
       <* ASSERT reversed = (dest > src) *>
 
