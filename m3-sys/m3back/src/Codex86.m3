@@ -250,12 +250,11 @@ PROCEDURE brOp (t: T; br: Cond; label: Label) =
 PROCEDURE setccOp (t: T; READONLY op: Operand; cond: Cond) =
   VAR ins: Instruction;
   BEGIN
-    <* ASSERT (op.loc = OLoc.register AND
-               op.reg[0] IN RegistersForByteOperations ) OR
+    (* Be careful using registers here. setccOp only sets the lower byte.
+     * Caller must zero the upper bytes, before setting the condition flags.
+     *)
+    <* ASSERT op.loc = OLoc.register OR
               (op.loc = OLoc.mem AND CG_Bytes[op.mvar.mvar_type] = 1) *>
-    IF op.loc = OLoc.register THEN
-      movImmT(t, op, TZero);
-    END;
     build_modrm(t, op, t.opcode[0], ins);
     ins.escape := TRUE;
     ins.opcode := condopcode[cond].opc;
