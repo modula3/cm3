@@ -145,5 +145,40 @@ TYPE Set = SET OF [0..1023];
 <*UNUSED*>PROCEDURE minimum_overlap_greater_NE(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a#b; END minimum_overlap_greater_NE;
 
 
+TYPE Numbers = {Zero, One, Two, Three, Four};
+TYPE LowNumbers = [Numbers.Zero..Numbers.One];
+TYPE HighNumbers = [Numbers.Three..Numbers.Four];
+TYPE MiddleNumbers = [Numbers.One..Numbers.Three];
+
+<*UNUSED*>PROCEDURE no_overlap_less_enum_LT(a:LowNumbers; b:HighNumbers):BOOLEAN=BEGIN RETURN a<b; END no_overlap_less_enum_LT;
+<*UNUSED*>PROCEDURE no_overlap_less_enum_LE(a:LowNumbers; b:HighNumbers):BOOLEAN=BEGIN RETURN a<=b; END no_overlap_less_enum_LE;
+<*UNUSED*>PROCEDURE no_overlap_less_enum_GT(a:LowNumbers; b:HighNumbers):BOOLEAN=BEGIN RETURN a>b; END no_overlap_less_enum_GT;
+<*UNUSED*>PROCEDURE no_overlap_less_enum_GE(a:LowNumbers; b:HighNumbers):BOOLEAN=BEGIN RETURN a>=b; END no_overlap_less_enum_GE;
+<*UNUSED*>PROCEDURE no_overlap_less_enum_EQ(a:LowNumbers; b:HighNumbers):BOOLEAN=BEGIN RETURN a=b; END no_overlap_less_enum_EQ;
+<*UNUSED*>PROCEDURE no_overlap_less_enum_NE(a:LowNumbers; b:HighNumbers):BOOLEAN=BEGIN RETURN a#b; END no_overlap_less_enum_NE;
+
+<*UNUSED*>PROCEDURE minimum_overlap_less_enum_LT(a:LowNumbers; b:MiddleNumbers):BOOLEAN=BEGIN RETURN a<b; END minimum_overlap_less_enum_LT;
+<*UNUSED*>PROCEDURE minimum_overlap_less_enum_LE(a:LowNumbers; b:MiddleNumbers):BOOLEAN=BEGIN RETURN a<=b; END minimum_overlap_less_enum_LE;
+<*UNUSED*>PROCEDURE minimum_overlap_less_enum_GT(a:LowNumbers; b:MiddleNumbers):BOOLEAN=BEGIN RETURN a>b; END minimum_overlap_less_enum_GT;
+<*UNUSED*>PROCEDURE minimum_overlap_less_enum_GE(a:LowNumbers; b:MiddleNumbers):BOOLEAN=BEGIN RETURN a>=b; END minimum_overlap_less_enum_GE;
+<*UNUSED*>PROCEDURE minimum_overlap_less_enum_EQ(a:LowNumbers; b:MiddleNumbers):BOOLEAN=BEGIN RETURN a=b; END minimum_overlap_less_enum_EQ;
+<*UNUSED*>PROCEDURE minimum_overlap_less_enum_NE(a:LowNumbers; b:MiddleNumbers):BOOLEAN=BEGIN RETURN a#b; END minimum_overlap_less_enum_NE;
+
+
+<*UNUSED*>PROCEDURE no_overlap_greater_enum_LT(a:HighNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a<b; END no_overlap_greater_enum_LT;
+<*UNUSED*>PROCEDURE no_overlap_greater_enum_LE(a:HighNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a<=b; END no_overlap_greater_enum_LE;
+<*UNUSED*>PROCEDURE no_overlap_greater_enum_GT(a:HighNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a>b; END no_overlap_greater_enum_GT;
+<*UNUSED*>PROCEDURE no_overlap_greater_enum_GE(a:HighNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a>=b; END no_overlap_greater_enum_GE;
+<*UNUSED*>PROCEDURE no_overlap_greater_enum_EQ(a:HighNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a=b; END no_overlap_greater_enum_EQ;
+<*UNUSED*>PROCEDURE no_overlap_greater_enum_NE(a:HighNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a#b; END no_overlap_greater_enum_NE;
+
+
+<*UNUSED*>PROCEDURE minimum_overlap_greater_enum_LT(a:MiddleNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a<b; END minimum_overlap_greater_enum_LT;
+<*UNUSED*>PROCEDURE minimum_overlap_greater_enum_LE(a:MiddleNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a<=b; END minimum_overlap_greater_enum_LE;
+<*UNUSED*>PROCEDURE minimum_overlap_greater_enum_GT(a:MiddleNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a>b; END minimum_overlap_greater_enum_GT;
+<*UNUSED*>PROCEDURE minimum_overlap_greater_enum_GE(a:MiddleNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a>=b; END minimum_overlap_greater_enum_GE;
+<*UNUSED*>PROCEDURE minimum_overlap_greater_enum_EQ(a:MiddleNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a=b; END minimum_overlap_greater_enum_EQ;
+<*UNUSED*>PROCEDURE minimum_overlap_greater_enum_NE(a:MiddleNumbers; b:LowNumbers):BOOLEAN=BEGIN RETURN a#b; END minimum_overlap_greater_enum_NE;
+
 BEGIN
 END Main.
