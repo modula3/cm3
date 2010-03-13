@@ -19,8 +19,8 @@ BEGIN
     message := message & Params.Get(i) & " ";
   END;
   EVAL WinUser.MessageBox(NIL,
-                          M3toC.TtoS(message), 
-                          M3toC.TtoS("A CM3_IDE Example"),
+                          M3toC.SharedTtoS(message), 
+                          M3toC.SharedTtoS("A CM3_IDE Example"),
                           0);
 
 
