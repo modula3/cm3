@@ -226,17 +226,109 @@ PROCEDURE PrepBR (p: P;  true, false: CG.Label;  freq: CG.Frequency) =
   END PrepBR;
 
 PROCEDURE Fold (p: P): Expr.T =
-  VAR e1, e2: Expr.T;  s: INTEGER;
+  VAR left_constant, right_constant: Expr.T;  s: INTEGER;
+    left_min, left_max, right_min, right_max: Target.Int;
   BEGIN
-    e1 := Expr.ConstValue (p.a);
-    IF (e1 = NIL) THEN RETURN NIL END;
-    e2 := Expr.ConstValue (p.b);
-    IF (e2 = NIL) THEN RETURN NIL END;
-    IF   IntegerExpr.Compare (e1, e2, s)
-      OR EnumExpr.Compare (e1, e2, s)
-      OR ReelExpr.Compare (e1, e2, s)
-      OR AddressExpr.Compare (e1, e2, s)
-      OR SetExpr.Compare (e1, e2, s)
+
+    (* This is very similar/related between CompareExpr.m3 and EqualExpr.m3.
+     *
+     * Comparing subranges that either don't overlap or
+     * whose min/max are equal can be often reduced.
+     *
+     * cases with no overlap:
+     * A [0..1] <  [2..3] is always true
+     * B [0..1] <= [2..3] is always true
+     * C [0..1] >  [2..3] is always false
+     * D [0..1] >= [2..3] is always false
+     * E [2..3] >  [0..1] is always true
+     * F [2..3] >= [0..1] is always true
+     * G [2..3] <  [0..1] is always false
+     * H [2..3] <= [0..1] is always false
+     *
+     * cases with minimal overlap (min or max equal):
+     * I [0..1] <= [1..2] is always true
+     * J [0..1] <  [1..2] is indeterminate but can be converted to #
+     * K [0..1] >  [1..2] is always false
+     * L [0..1] >= [1..2] is indeterminate but can be converted to =
+     * M [1..2] >= [0..1] is always true
+     * N [1..2] <= [0..1] is indeterminate but can be converted to =
+     * O [1..2] <  [0..1] is always false
+     * P [1..2] >  [0..1] is indeterminate but can be converted to #
+     *
+     * This should also cover comparing subranges with constants, e.g.
+     * CARDINAL >= 0 always true
+     * CARDINAL < 0 always false
+     * CARDINAL = -1 always false
+     * ADDRESS >= NIL is always true (addresses are unsigned) (this doesn't work; address has an empty range)
+     * ADDRESS < NIL is always false (this doesn't work; address has an empty range)
+     *)
+
+    (* One would hope thet GetBounds(p.a) on a constant would
+     * return the constant as the min/max, but apparently not.
+     *)
+
+    left_constant := Expr.ConstValue (p.a);
+    right_constant := Expr.ConstValue (p.b);
+
+    IF left_constant # NIL THEN
+      Expr.GetBounds(left_constant, left_min, left_max);
+    ELSE
+      Expr.GetBounds(p.a, left_min, left_max);
+    END;
+    IF right_constant # NIL THEN
+      Expr.GetBounds(right_constant, right_min, right_max);
+    ELSE
+      Expr.GetBounds(p.b, right_min, right_max);
+    END;
+
+    (* Both subranges must be non-empty. *)
+
+    IF TInt.GE(left_max, left_min) AND TInt.GE(right_max, right_min) THEN
+      IF TInt.LT(left_max, right_min) THEN
+        IF p.op = CG.Cmp.LT OR p.op = CG.Cmp.LE THEN
+          RETURN Bool.Map[TRUE]; (* A, B *)
+        ELSIF p.op = CG.Cmp.GT OR p.op = CG.Cmp.GE THEN
+          RETURN Bool.Map[FALSE]; (* C, D *)
+        END;
+      ELSIF TInt.GT(left_min, right_max) THEN
+        IF p.op = CG.Cmp.GT OR p.op = CG.Cmp.GE THEN
+          RETURN Bool.Map[TRUE];  (* E, F *)
+        ELSIF p.op = CG.Cmp.LT OR p.op = CG.Cmp.LE THEN
+          RETURN Bool.Map[FALSE];  (* G, H *)
+        END;
+      ELSIF TInt.EQ(left_max, right_min) THEN
+        IF p.op = CG.Cmp.LE THEN
+          RETURN Bool.Map[TRUE]; (* I *)
+        ELSIF p.op = CG.Cmp.GT THEN
+          RETURN Bool.Map[FALSE]; (* K *)
+        END;
+      ELSIF TInt.EQ(left_min, right_max) THEN
+        IF p.op = CG.Cmp.GE THEN
+          RETURN Bool.Map[TRUE]; (* M *)
+        ELSIF p.op = CG.Cmp.LT THEN
+          RETURN Bool.Map[FALSE]; (* O *)
+        END;
+      END;
+
+      (* Handle equal subranges with one element, not likely to occur. *)
+
+      IF      TInt.EQ(left_max, left_min)
+          AND TInt.EQ(left_max, right_max)
+          AND TInt.EQ(left_max, right_min) THEN
+        RETURN Bool.Map[p.op = CG.Cmp.LE OR p.op = CG.Cmp.GE];
+      END;
+
+    END;
+
+    IF left_constant = NIL OR right_constant = NIL THEN
+      RETURN NIL;
+    END;
+
+    IF   IntegerExpr.Compare (left_constant, right_constant, s)
+      OR EnumExpr.Compare (left_constant, right_constant, s)
+      OR ReelExpr.Compare (left_constant, right_constant, s)
+      OR AddressExpr.Compare (left_constant, right_constant, s)
+      OR SetExpr.Compare (left_constant, right_constant, s)
       THEN
       RETURN Bool.Map[(s = Ops[p.op].signA) OR (s = Ops[p.op].signB)];
     END;
