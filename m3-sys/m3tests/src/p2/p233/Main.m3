@@ -1,5 +1,4 @@
 UNSAFE MODULE Main;
-IMPORT Word, Long;
 
 (* This program endeavors to exercise comparisons
  * for subranges and enums that don't overlap
