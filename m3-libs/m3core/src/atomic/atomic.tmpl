@@ -7,5 +7,9 @@
 
 readonly proc Atomic (T) is
   build_generic_intf ("Atomic" & T, "Atomic", [T], VISIBLE)
-  build_generic_impl ("Atomic" & T, "Atomic", [T, "Atomic" & T])
+  if equal(TARGET, "NT386")
+    build_generic_impl ("Atomic" & T, "AtomicSequential", [T, "Atomic" & T])
+  else
+    build_generic_impl ("Atomic" & T, "Atomic", [T, "Atomic" & T])
+  end
 end
