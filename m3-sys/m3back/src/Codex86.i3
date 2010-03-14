@@ -9,7 +9,7 @@
 INTERFACE Codex86;
 
 IMPORT M3CG, M3ObjFile, TFloat, TIntN;
-FROM M3CG IMPORT MType, Label, ByteOffset;
+FROM M3CG IMPORT MType, Label, ByteOffset, Type;
 FROM M3CG_Ops IMPORT ErrorHandler;
 IMPORT M3x86Rep, Wrx86;
 FROM M3x86Rep IMPORT Operand, NRegs, MVar, x86Var, x86Proc, Regno;
@@ -57,8 +57,8 @@ TYPE Public = OBJECT
         MOVSWOp ();
         STOSWOp ();
         CBWOp ();
-        lock_exchange (READONLY dest, src: Operand);
-        lock_compare_exchange (READONLY dest, src: Operand);
+        lock_exchange (READONLY dest, src: Operand; type: Type);
+        lock_compare_exchange (READONLY dest, src: Operand; type: Type);
         pushOp (READONLY src: Operand);
         popOp (READONLY dest: Operand);
         incOp (READONLY op: Operand);

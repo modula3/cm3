@@ -852,24 +852,53 @@ PROCEDURE CBWOp (t: T) =
     writecode(t, CBW);
   END CBWOp;
 
-PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand) =
+PROCEDURE lock_compare_exchange (t: T; READONLY dest, src: Operand; type: Type) =
+  VAR opcode := 16_B1;
+      src_reg := src.reg[0];
+      dest_reg := dest.reg[0];
   BEGIN
     Mn(t, "LOCK CMPXCHG ");  MnOp(t, dest);  MnOp(t, src);
+
     <* ASSERT dest.loc = OLoc.register *> (* mem would be correct, but we have a bug *)
-    <* ASSERT src.loc = OLoc.register *>
+    (* ASSERT src.loc = OLoc.register *)
+
     t.obj.append(Seg.Text, 16_F0, 1); (* lock prefix *)
-    writecode(t, Instruction{escape := TRUE, opcode := 16_B1, mrm_present := TRUE, modrm := src.reg[0] * 8 + dest.reg[0]});
+
+    CASE type OF
+      | Type.Int8, Type.Word8 => DEC(opcode);        
+      | Type.Int16, Type.Word16 => t.obj.append(Seg.Text, 16_66, 1); (* 16 bit size prefix *)
+      | Type.Int32, Type.Word32, Type.Addr => (* nothing *)
+      | Type.Int64, Type.Word64 => opcode := 16_C7;
+                                   src_reg := 1;
+      ELSE
+        Err(t, "invalid type in lock_compare_exchange");
+    END;
+
+    writecode(t, Instruction{escape := TRUE, opcode := opcode, mrm_present := TRUE, modrm := src_reg * 8 + dest_reg});
+
   END lock_compare_exchange;
 
-PROCEDURE lock_exchange (t: T; READONLY dest, src: Operand) =
+PROCEDURE lock_exchange (t: T; READONLY dest, src: Operand; type: Type) =
+  VAR opcode := 16_87;
   BEGIN
     Mn(t, "XCHG ");  MnOp(t, dest);  MnOp(t, src);
+
     <* ASSERT dest.loc = OLoc.register *> (* mem would be correct, but we have a bug *)
     <* ASSERT src.loc = OLoc.register *>
+
     (* No lock prefix needed, as long as one operand references memory, the
      * xchg instruction is special and is always locked.
      *)
-    writecode(t, Instruction{opcode := 16_87, mrm_present := TRUE, modrm := src.reg[0] * 8 + dest.reg[0]});
+
+    CASE type OF
+      | Type.Int8, Type.Word8 => DEC(opcode);        
+      | Type.Int16, Type.Word16 => t.obj.append(Seg.Text, 16_66, 1); (* 16 bit size prefix *)
+      | Type.Int32, Type.Word32, Type.Addr => (* nothing *)
+      ELSE
+        Err(t, "invalid type in lock_exchange");
+    END;
+
+    writecode(t, Instruction{opcode := opcode, mrm_present := TRUE, modrm := src.reg[0] * 8 + dest.reg[0]});
   END lock_exchange;
 
 PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
