@@ -55,9 +55,9 @@ TYPE
   Sign = { Positive, Negative, Unknown };
   (* extra compile-time information for DIV and MOD *)
 
-TYPE  CompareOp      =                        {  EQ,   NE,   GT,   GE,   LT,   LE  };
-CONST CompareOpNames = ARRAY CompareOp OF TEXT{ "EQ", "NE", "GT", "GE", "LT", "LE" };
-TYPE  ConvertOp = { Round, Trunc, Floor, Ceiling };
+TYPE
+  CompareOp = { EQ, NE, GT, GE, LT, LE };
+  ConvertOp = { Round, Trunc, Floor, Ceiling };
 
 TYPE
   MemoryOrder = { Relaxed, Release, Acquire, AcquireRelease, Sequential };
