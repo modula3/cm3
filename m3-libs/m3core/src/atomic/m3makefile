@@ -1,9 +1,4 @@
-Generic_interface("Atomic")
-if equal(TARGET, "NT386")
-  Generic_implementation("AtomicSequential")
-else
-  Generic_implementation("Atomic")
-end
+Generic_module("Atomic")
 template("atomic")
 Atomic("Address")
 Atomic("Boolean")
