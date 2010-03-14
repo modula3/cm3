@@ -1655,7 +1655,7 @@ PROCEDURE procedure_epilogue (u: U) =
 
 (*------------------------------------------------------------ load/store ---*)
 
-PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  type: MType;  type_that_is_a_multiple_of_32bits: ZType) =
+PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  type: MType;  type_multiple_of_32: ZType) =
 (* push; s0.u := Mem [ ADR(v) + o ].type ;  The only allowed (type->u) conversions
    are {Int,Word}{8,16} -> {Int,Word}{32,64} and {Int,Word}32 -> {Int,Word}64.
    The source type, type, determines whether the value is sign-extended or
@@ -1666,28 +1666,28 @@ PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  type: MType;  type_that_is_a_mu
       u.wr.VName (v);
       u.wr.Int   (o);
       u.wr.TName (type);
-      u.wr.TName (type_that_is_a_multiple_of_32bits);
+      u.wr.TName (type_multiple_of_32);
       u.wr.NL    ();
     END;
 
-    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
     u.vstack.push(MVar {var := v, mvar_offset := o, mvar_type := type});
   END load;
 
-PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  type_that_is_a_multiple_of_32bits: ZType;  type: MType;  ) =
+PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  type_multiple_of_32: ZType;  type: MType;  ) =
 (* Mem [ ADR(v) + o ].u := s0.type; pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("store");
       u.wr.VName (v);
       u.wr.Int   (o);
-      u.wr.TName (type_that_is_a_multiple_of_32bits);
+      u.wr.TName (type_multiple_of_32);
       u.wr.TName (type);
       u.wr.NL    ();
     END;
 
-    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
     u.vstack.pop(MVar {var := v, mvar_offset := o, mvar_type := type});
   END store;
@@ -1705,8 +1705,8 @@ PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
     u.vstack.doloadaddress(v, o);
   END load_address;
 
-PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  type_that_is_a_multiple_of_32bits: ZType) =
-(* s0.type_that_is_a_multiple_of_32bits := Mem [s0.A + o].type  *)
+PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  type_multiple_of_32: ZType) =
+(* s0.type_multiple_of_32 := Mem [s0.A + o].type  *)
   VAR newreg: ARRAY OperandPart OF Regno;
       size: OperandSize;
       regset: RegSet;
@@ -1715,11 +1715,11 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  type_that_is_a_mul
       u.wr.Cmd   ("load_indirect");
       u.wr.Int   (o);
       u.wr.TName (type);
-      u.wr.TName (type_that_is_a_multiple_of_32bits);
+      u.wr.TName (type_multiple_of_32);
       u.wr.NL    ();
     END;
 
-    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
     u.vstack.unlock();
 
@@ -1731,7 +1731,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  type_that_is_a_mul
         u.vstack.set_fstack(stack0);
       ELSE
         size := GetTypeSize(type);
-        <* ASSERT size = GetTypeSize(type_that_is_a_multiple_of_32bits) *>
+        <* ASSERT size = GetTypeSize(type_multiple_of_32) *>
 
         (* allocate the registers *)
 
@@ -1762,22 +1762,22 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  type_that_is_a_mul
           u.vstack.set_reg(stack0, newreg[i], operandPart := i);
         END;
       END;
-      u.vstack.set_type(stack0, type_that_is_a_multiple_of_32bits);
+      u.vstack.set_type(stack0, type_multiple_of_32);
     END
   END load_indirect;
 
-PROCEDURE store_indirect (u: U;  o: ByteOffset;  type_that_is_a_multiple_of_32bits: ZType;  type: MType) =
-(* Mem [s1.A + o].type := s0.type_that_is_a_multiple_of_32bits; pop (2) *)
+PROCEDURE store_indirect (u: U;  o: ByteOffset;  type_multiple_of_32: ZType;  type: MType) =
+(* Mem [s1.A + o].type := s0.type_multiple_of_32; pop (2) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("store_indirect");
       u.wr.Int   (o);
-      u.wr.TName (type_that_is_a_multiple_of_32bits);
+      u.wr.TName (type_multiple_of_32);
       u.wr.TName (type);
       u.wr.NL    ();
     END;
 
-    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
     u.vstack.unlock();
     WITH (* stack0 = u.vstack.pos(0, "store_indirect"), *)
@@ -2907,15 +2907,15 @@ PROCEDURE pop (u: U;  type: Type) =
     u.vstack.discard(1);
   END pop;
 
-PROCEDURE copy_n (u: U;  type_that_is_a_multiple_of_32bits: IType;  type: MType;  overlap: BOOLEAN) =
-  (* Mem[s2.A:s0.type_that_is_a_multiple_of_32bits] := Mem[s1.A:s0.type_that_is_a_multiple_of_32bits]; pop(3)*)
+PROCEDURE copy_n (u: U;  type_multiple_of_32: IType;  type: MType;  overlap: BOOLEAN) =
+  (* Mem[s2.A:s0.type_multiple_of_32] := Mem[s1.A:s0.type_multiple_of_32]; pop(3)*)
   CONST Mover = ARRAY BOOLEAN OF Builtin { Builtin.memcpy, Builtin.memmove };
   VAR n: INTEGER;  mover := Mover [overlap];
       shift: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("copy_n");
-      u.wr.TName (type_that_is_a_multiple_of_32bits);
+      u.wr.TName (type_multiple_of_32);
       u.wr.TName (type);
       u.wr.Bool  (overlap);
       u.wr.NL    ();
@@ -2951,7 +2951,7 @@ PROCEDURE copy_n (u: U;  type_that_is_a_multiple_of_32bits: IType;  type: MType;
     END;
 
     start_int_proc (u, mover);
-    pop_param (u, type_that_is_a_multiple_of_32bits);
+    pop_param (u, type_multiple_of_32);
     pop_param (u, Type.Addr);
     pop_param (u, Type.Addr);
     call_int_proc (u, mover);
@@ -3099,14 +3099,14 @@ PROCEDURE copy (u: U;  n: INTEGER;  type: MType;  overlap: BOOLEAN) =
     u.vstack.discard(2);
   END copy;
 
-PROCEDURE zero_n (u: U;  type_that_is_a_multiple_of_32bits: IType;  type: MType) =
-  (* Mem[s1.A:s0.type_that_is_a_multiple_of_32bits] := 0; pop(2) *)
+PROCEDURE zero_n (u: U;  type_multiple_of_32: IType;  type: MType) =
+  (* Mem[s1.A:s0.type_multiple_of_32] := 0; pop(2) *)
 (*VAR n: INTEGER;
       shift: TIntN.T;*)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("zero_n");
-      u.wr.TName (type_that_is_a_multiple_of_32bits);
+      u.wr.TName (type_multiple_of_32);
       u.wr.TName (type);
       u.wr.NL    ();
     END;
@@ -3145,7 +3145,7 @@ PROCEDURE zero_n (u: U;  type_that_is_a_multiple_of_32bits: IType;  type: MType)
     END;
 
     start_int_proc (u, Builtin.memset);
-    pop_param (u, type_that_is_a_multiple_of_32bits);
+    pop_param (u, type_multiple_of_32);
     u.vstack.pushimmT (TZero, Type.Word32);
     pop_param (u, Type.Word32);
     pop_param (u, Type.Addr);
@@ -4305,18 +4305,18 @@ PROCEDURE Cmt (u: U;  text: TEXT;  VAR width: INTEGER) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-PROCEDURE store_ordered (x: U; type_that_is_a_multiple_of_32bits: ZType; type: MType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE store_ordered (x: U; type_multiple_of_32: ZType; type: MType; <*UNUSED*>order: MemoryOrder) =
 (* Mem [s1.A].u := s0.type;
    pop (2) *)
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("store_ordered");
-      x.wr.TName (type_that_is_a_multiple_of_32bits);
+      x.wr.TName (type_multiple_of_32);
       x.wr.TName (type);
       x.wr.NL    ();
     END;
 
-    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
     x.fence(MemoryOrder.Sequential);
     x.vstack.unlock();
@@ -4329,17 +4329,17 @@ PROCEDURE store_ordered (x: U; type_that_is_a_multiple_of_32bits: ZType; type: M
     x.fence(MemoryOrder.Sequential);
   END store_ordered;
 
-PROCEDURE load_ordered (x: U; type: MType; type_that_is_a_multiple_of_32bits: ZType; <*UNUSED*>order: MemoryOrder) =
-(* s0.type_that_is_a_multiple_of_32bits := Mem [s0.A].type  *)
+PROCEDURE load_ordered (x: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*>order: MemoryOrder) =
+(* s0.type_multiple_of_32 := Mem [s0.A].type  *)
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("load_ordered");
       x.wr.TName (type);
-      x.wr.TName (type_that_is_a_multiple_of_32bits);
+      x.wr.TName (type_multiple_of_32);
       x.wr.NL    ();
     END;
 
-    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
     IF TypeIs64(type) THEN
 
@@ -4357,25 +4357,25 @@ PROCEDURE load_ordered (x: U; type: MType; type_that_is_a_multiple_of_32bits: ZT
 
     x.vstack.unlock();
     x.fence(MemoryOrder.Sequential);
-    x.load_indirect(0, type, type_that_is_a_multiple_of_32bits);
+    x.load_indirect(0, type, type_multiple_of_32);
     x.fence(MemoryOrder.Sequential);
   END load_ordered;
 
-PROCEDURE exchange (u: U; type: MType; type_that_is_a_multiple_of_32bits: ZType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE exchange (u: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A + o].type;
-   Mem [s1.A + o].type := s0.type_that_is_a_multiple_of_32bits;
-   s0.type_that_is_a_multiple_of_32bits := tmp;
+   Mem [s1.A + o].type := s0.type_multiple_of_32;
+   s0.type_multiple_of_32 := tmp;
    pop *)
   VAR reg: Regno;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("exchange");
       u.wr.TName (type);
-      u.wr.TName (type_that_is_a_multiple_of_32bits);
+      u.wr.TName (type_multiple_of_32);
       u.wr.NL    ();
     END;
 
-    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
     IF TypeIs64(type) THEN
       (* Push arbitrary value for the first compare. *)
@@ -4426,12 +4426,12 @@ PROCEDURE compare_exchange_helper (x: U; type: Type) =
 
   END compare_exchange_helper;
 
-PROCEDURE compare_exchange (x: U; type: MType; type_that_is_a_multiple_of_32bits: ZType; result_type: IType;
+PROCEDURE compare_exchange (x: U; type: MType; type_multiple_of_32: ZType; result_type: IType;
                             <*UNUSED*>success, failure: MemoryOrder) =
 (* original := Mem[s2.A].type;
    spurious_failure := whatever;
    IF original = Mem[s1.A].type AND NOT spurious_failure THEN
-     Mem [s2.A].type := s0.type_that_is_a_multiple_of_32bits;
+     Mem [s2.A].type := s0.type_multiple_of_32;
      s2.result_type := 1;
    ELSE
      Mem [s2.A].type := original; x86 really does rewrite the original value, atomically
@@ -4447,12 +4447,12 @@ PROCEDURE compare_exchange (x: U; type: MType; type_that_is_a_multiple_of_32bits
     IF x.debug THEN
       x.wr.Cmd   ("compare_exchange");
       x.wr.TName (type);
-      x.wr.TName (type_that_is_a_multiple_of_32bits);
+      x.wr.TName (type_multiple_of_32);
       x.wr.TName (result_type);
       x.wr.NL    ();
     END;
 
-    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
     <* ASSERT CG_Bytes[result_type] = 4 *>
 
     compare_exchange_helper(x, type);
@@ -4495,11 +4495,11 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
 CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oADD, Op.oSUB, Op.oOR, Op.oAND, Op.oXOR };
 CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
 
-PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; type: MType; type_that_is_a_multiple_of_32bits: ZType;
+PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; type: MType; type_multiple_of_32: ZType;
                         <*UNUSED*>order: MemoryOrder) =
 (* original := Mem [s1.A].type;
-   Mem [s1.A].type := original op s0.type_that_is_a_multiple_of_32bits;
-   s1.type_that_is_a_multiple_of_32bits := original;
+   Mem [s1.A].type := original op s0.type_multiple_of_32;
+   s1.type_multiple_of_32 := original;
    pop
 
 => store the new value, return the old value
@@ -4514,11 +4514,11 @@ Some operations can be done better though.
       x.wr.Cmd   ("fetch_and_op");
       x.wr.OutT  (AtomicOpName[atomic_op]);
       x.wr.TName (type);
-      x.wr.TName (type_that_is_a_multiple_of_32bits);
+      x.wr.TName (type_multiple_of_32);
       x.wr.NL    ();
     END;
 
-    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
 
     x.vstack.unlock();
     IF is64 THEN
