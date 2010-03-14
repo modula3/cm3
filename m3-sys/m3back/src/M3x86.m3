@@ -4382,7 +4382,7 @@ PROCEDURE load_ordered (x: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*
       x.vstack.pushimmT(TZero, Type.Word64);
       compare_exchange_helper(x, type);
       x.vstack.unlock();
-      x.vstack.pushnew(Type.Word64, Force.regset, RegSet{EAX, EDX});
+      x.vstack.pushnew(type, Force.regset, RegSet{EAX, EDX});
       RETURN;
     END;
 
@@ -4414,7 +4414,7 @@ PROCEDURE exchange (u: U; type: MType; type_multiple_of_32: ZType; <*UNUSED*>ord
       u.vstack.swap();
       compare_exchange_helper(u, type);
       u.vstack.unlock();
-      u.vstack.pushnew(Type.Word64, Force.regset, RegSet{EAX, EDX});
+      u.vstack.pushnew(type, Force.regset, RegSet{EAX, EDX});
       RETURN;
     END;
 
