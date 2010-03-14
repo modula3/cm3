@@ -4308,6 +4308,7 @@ PROCEDURE Cmt (u: U;  text: TEXT;  VAR width: INTEGER) =
 PROCEDURE store_ordered (x: U; type_multiple_of_32: ZType; type: MType; <*UNUSED*>order: MemoryOrder) =
 (* Mem [s1.A].u := s0.type;
    pop (2) *)
+  VAR retry: Label;
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("store_ordered");
@@ -4317,6 +4318,36 @@ PROCEDURE store_ordered (x: U; type_multiple_of_32: ZType; type: MType; <*UNUSED
     END;
 
     <* ASSERT CG_Bytes[type_multiple_of_32] >= CG_Bytes[type] *>
+
+    IF TypeIs64(type) THEN
+      (* see:
+       * http://niallryan.com/node/137
+       * see fetch_and_op
+       *)
+
+      x.vstack.unlock();
+      x.vstack.pushnew(type, Force.regset, RegSet{EDX, EAX});
+ 
+      WITH oldValue       = x.vstack.pos(0, "fetch_and_op"),
+           newValue       = x.vstack.pos(1, "fetch_and_op"),
+           atomicVariable = x.vstack.pos(2, "fetch_and_op") DO
+ 
+        x.vstack.find(newValue, Force.regset, RegSet{ECX, EBX});
+        (* x.vstack.find(atomicVariable, Force.any); bug *)
+        x.vstack.find(atomicVariable, Force.anyreg);
+        x.cg.load_ind(EAX, x.vstack.op(atomicVariable), 0, type);
+        x.cg.load_ind(EDX, x.vstack.op(atomicVariable), 4, type);
+        retry := x.next_label();
+        x.cg.set_label(retry);
+        x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.vstack.op(newValue), type);
+        x.cg.brOp(Cond.NE, retry);
+        x.vstack.newdest(x.vstack.op(atomicVariable)); (* Is this needed? *)
+        x.vstack.newdest(x.vstack.op(newValue));       (* Is this needed? *)
+        x.vstack.newdest(x.vstack.op(oldValue));       (* Is this needed? *)
+        x.vstack.discard(3);
+      END;
+      RETURN;
+    END;
 
     x.fence(MemoryOrder.Sequential);
     x.vstack.unlock();
