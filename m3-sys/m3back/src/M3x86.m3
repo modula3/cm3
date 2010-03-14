@@ -4341,6 +4341,20 @@ PROCEDURE load_ordered (x: U; type: MType; type_that_is_a_multiple_of_32bits: ZT
 
     <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
 
+    IF TypeIs64(type) THEN
+
+      (* see:
+       * http://niallryan.com/node/137
+       *)
+
+      x.vstack.pushimmT(TZero, Type.Word64);
+      x.vstack.pushimmT(TZero, Type.Word64);
+      compare_exchange_helper(x, type);
+      x.vstack.unlock();
+      x.vstack.pushnew(Type.Word64, Force.regset, RegSet{EAX, EDX});
+      RETURN;
+    END;
+
     x.vstack.unlock();
     x.fence(MemoryOrder.Sequential);
     x.load_indirect(0, type, type_that_is_a_multiple_of_32bits);
@@ -4367,7 +4381,7 @@ PROCEDURE exchange (u: U; type: MType; type_that_is_a_multiple_of_32bits: ZType;
       (* Push arbitrary value for the first compare. *)
       u.vstack.pushimmT(TZero, Type.Word64);
       u.vstack.swap();
-      compare_exchange_helper(u, type, type_that_is_a_multiple_of_32bits, Type.Word32);
+      compare_exchange_helper(u, type);
       u.vstack.unlock();
       u.vstack.pushnew(Type.Word64, Force.regset, RegSet{EAX, EDX});
       RETURN;
@@ -4386,32 +4400,8 @@ PROCEDURE exchange (u: U; type: MType; type_that_is_a_multiple_of_32bits: ZType;
     END;
   END exchange;
 
-PROCEDURE compare_exchange_helper (x: U; type: MType; type_that_is_a_multiple_of_32bits: ZType; result_type: IType) =
-(* original := Mem[s2.A].type;
-   spurious_failure := whatever;
-   IF original = Mem[s1.A].type AND NOT spurious_failure THEN
-     Mem [s2.A].type := s0.type_that_is_a_multiple_of_32bits;
-     s2.result_type := 1;
-   ELSE
-     Mem [s2.A].type := original; x86 really does rewrite the original value, atomically
-     s2.result_type := 0;
-   END;
-   pop(2);
-   This is permitted to fail spuriously.
-   That is, even if Mem[s2.a] = Mem[s1.a], we might
-     still go down the then branch.
-*)
+PROCEDURE compare_exchange_helper (x: U; type: Type) =
   BEGIN
-
-    IF x.debug THEN
-      x.wr.Cmd   ("compare_exchange");
-      x.wr.TName (type);
-      x.wr.TName (type_that_is_a_multiple_of_32bits);
-      x.wr.TName (result_type);
-      x.wr.NL    ();
-    END;
-
-    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
 
     x.vstack.unlock();
 
@@ -4438,11 +4428,34 @@ PROCEDURE compare_exchange_helper (x: U; type: MType; type_that_is_a_multiple_of
 
 PROCEDURE compare_exchange (x: U; type: MType; type_that_is_a_multiple_of_32bits: ZType; result_type: IType;
                             <*UNUSED*>success, failure: MemoryOrder) =
+(* original := Mem[s2.A].type;
+   spurious_failure := whatever;
+   IF original = Mem[s1.A].type AND NOT spurious_failure THEN
+     Mem [s2.A].type := s0.type_that_is_a_multiple_of_32bits;
+     s2.result_type := 1;
+   ELSE
+     Mem [s2.A].type := original; x86 really does rewrite the original value, atomically
+     s2.result_type := 0;
+   END;
+   pop(2);
+   This is permitted to fail spuriously.
+   That is, even if Mem[s2.a] = Mem[s1.a], we might
+     still go down the then branch.
+*)
   BEGIN
 
-    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+    IF x.debug THEN
+      x.wr.Cmd   ("compare_exchange");
+      x.wr.TName (type);
+      x.wr.TName (type_that_is_a_multiple_of_32bits);
+      x.wr.TName (result_type);
+      x.wr.NL    ();
+    END;
 
-    compare_exchange_helper(x, type, type_that_is_a_multiple_of_32bits, result_type);
+    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+    <* ASSERT CG_Bytes[result_type] = 4 *>
+
+    compare_exchange_helper(x, type);
 
     (* Get the zero flag into a register. Is there a better way? *)
 
