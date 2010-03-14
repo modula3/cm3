@@ -814,75 +814,18 @@ PROCEDURE GCD (x, y: INTEGER): INTEGER =
 ********************************)
 
 PROCEDURE Fold (p: P): Expr.T =
-  VAR left_constant, right_constant: Expr.T;  s: INTEGER;
-    left_min, left_max, right_min, right_max: Target.Int;
+  VAR e1, e2: Expr.T;  s: INTEGER;
   BEGIN
-
-    (* This is very similar/related between CompareExpr.m3 and EqualExpr.m3.
-     *
-     * Comparing subranges that either don't overlap or
-     * that both contain just one element often reduced.
-     *
-     * cases with no overlap:
-     * [0..1] # [2..3] is always true
-     * [0..1] = [2..3] is always false
-     * [2..3] # [0..1] is always true
-     * [2..3] = [0..1] is always false
-     *
-     * overlap and size = 1 (not likely)
-     * A [0..0] # [0..0] is always false
-     * B [0..0] = [0..0] is always true
-     *
-     * This should also cover comparing subranges with constants, e.g.
-     * CARDINAL = -1 always false
-     * CARDINAL # -1 always true
-     *)
-
-    (* One would hope thet GetBounds(p.a) on a constant would
-     * return the constant as the min/max, but apparently not.
-     *)
-
-    left_constant := Expr.ConstValue (p.a);
-    right_constant := Expr.ConstValue (p.b);
-
-    IF left_constant # NIL THEN
-      Expr.GetBounds(left_constant, left_min, left_max);
-    ELSE
-      Expr.GetBounds(p.a, left_min, left_max);
-    END;
-    IF right_constant # NIL THEN
-      Expr.GetBounds(right_constant, right_min, right_max);
-    ELSE
-      Expr.GetBounds(p.b, right_min, right_max);
-    END;
-
-    (* Both subranges must be non-empty. *)
-
-    IF TInt.GE(left_max, left_min) AND TInt.GE(right_max, right_min) THEN
-
-      IF TInt.LT(left_max, right_min) OR TInt.GT(left_min, right_max) THEN
-        RETURN Bool.Map[p.op = CG.Cmp.NE];
-      END;
-
-      (* Handle equal subranges with one element, not likely to occur. *)
-
-      IF      TInt.EQ(left_max, left_min)
-          AND TInt.EQ(left_max, right_max)
-          AND TInt.EQ(left_max, right_min) THEN
-        RETURN Bool.Map[p.op = CG.Cmp.EQ];
-      END;
-    END;
-
-    IF left_constant = NIL OR right_constant = NIL THEN
-      RETURN NIL;
-    END;
-
-    IF   IntegerExpr.Compare (left_constant, right_constant, s)
-      OR EnumExpr.Compare (left_constant, right_constant, s)
-      OR ReelExpr.Compare (left_constant, right_constant, s)
-      OR AddressExpr.Compare (left_constant, right_constant, s)
-      OR SetExpr.Compare (left_constant, right_constant, s)
-      OR ProcExpr.Compare (left_constant, right_constant, s) THEN
+    e1 := Expr.ConstValue (p.a);
+    IF (e1 = NIL) THEN RETURN NIL END;
+    e2 := Expr.ConstValue (p.b);
+    IF (e2 = NIL) THEN RETURN NIL END;
+    IF   IntegerExpr.Compare (e1, e2, s)
+      OR EnumExpr.Compare (e1, e2, s)
+      OR ReelExpr.Compare (e1, e2, s)
+      OR AddressExpr.Compare (e1, e2, s)
+      OR SetExpr.Compare (e1, e2, s)
+      OR ProcExpr.Compare (e1, e2, s) THEN
       RETURN Bool.Map[(p.op = CG.Cmp.EQ) = (s = 0)];
     END;
     RETURN NIL;
