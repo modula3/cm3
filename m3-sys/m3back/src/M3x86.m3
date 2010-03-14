@@ -1655,7 +1655,7 @@ PROCEDURE procedure_epilogue (u: U) =
 
 (*------------------------------------------------------------ load/store ---*)
 
-PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  type: MType;  z: ZType) =
+PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  type: MType;  type_that_is_a_multiple_of_32bits: ZType) =
 (* push; s0.u := Mem [ ADR(v) + o ].type ;  The only allowed (type->u) conversions
    are {Int,Word}{8,16} -> {Int,Word}{32,64} and {Int,Word}32 -> {Int,Word}64.
    The source type, type, determines whether the value is sign-extended or
@@ -1666,21 +1666,21 @@ PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  type: MType;  z: ZType) =
       u.wr.VName (v);
       u.wr.Int   (o);
       u.wr.TName (type);
-      u.wr.TName (z);
+      u.wr.TName (type_that_is_a_multiple_of_32bits);
       u.wr.NL    ();
     END;
 
     u.vstack.push(MVar {var := v, mvar_offset := o, mvar_type := type});
   END load;
 
-PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  z: ZType;  type: MType;  ) =
+PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  type_that_is_a_multiple_of_32bits: ZType;  type: MType;  ) =
 (* Mem [ ADR(v) + o ].u := s0.type; pop *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("store");
       u.wr.VName (v);
       u.wr.Int   (o);
-      u.wr.TName (z);
+      u.wr.TName (type_that_is_a_multiple_of_32bits);
       u.wr.TName (type);
       u.wr.NL    ();
     END;
@@ -1701,8 +1701,8 @@ PROCEDURE load_address (u: U;  v: Var;  o: ByteOffset) =
     u.vstack.doloadaddress(v, o);
   END load_address;
 
-PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  z: ZType) =
-(* s0.z := Mem [s0.A + o].type  *)
+PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  type_that_is_a_multiple_of_32bits: ZType) =
+(* s0.type_that_is_a_multiple_of_32bits := Mem [s0.A + o].type  *)
   VAR newreg: ARRAY OperandPart OF Regno;
       size: OperandSize;
       regset: RegSet;
@@ -1711,7 +1711,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  z: ZType) =
       u.wr.Cmd   ("load_indirect");
       u.wr.Int   (o);
       u.wr.TName (type);
-      u.wr.TName (z);
+      u.wr.TName (type_that_is_a_multiple_of_32bits);
       u.wr.NL    ();
     END;
 
@@ -1725,7 +1725,7 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  z: ZType) =
         u.vstack.set_fstack(stack0);
       ELSE
         size := GetTypeSize(type);
-        <* ASSERT size = GetTypeSize(z) *>
+        <* ASSERT size = GetTypeSize(type_that_is_a_multiple_of_32bits) *>
 
         (* allocate the registers *)
 
@@ -1756,17 +1756,17 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  z: ZType) =
           u.vstack.set_reg(stack0, newreg[i], operandPart := i);
         END;
       END;
-      u.vstack.set_type(stack0, z);
+      u.vstack.set_type(stack0, type_that_is_a_multiple_of_32bits);
     END
   END load_indirect;
 
-PROCEDURE store_indirect (u: U;  o: ByteOffset;  z: ZType;  type: MType) =
-(* Mem [s1.A + o].type := s0.z; pop (2) *)
+PROCEDURE store_indirect (u: U;  o: ByteOffset;  type_that_is_a_multiple_of_32bits: ZType;  type: MType) =
+(* Mem [s1.A + o].type := s0.type_that_is_a_multiple_of_32bits; pop (2) *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("store_indirect");
       u.wr.Int   (o);
-      u.wr.TName (z);
+      u.wr.TName (type_that_is_a_multiple_of_32bits);
       u.wr.TName (type);
       u.wr.NL    ();
     END;
@@ -2899,15 +2899,15 @@ PROCEDURE pop (u: U;  type: Type) =
     u.vstack.discard(1);
   END pop;
 
-PROCEDURE copy_n (u: U;  z: IType;  type: MType;  overlap: BOOLEAN) =
-  (* Mem[s2.A:s0.z] := Mem[s1.A:s0.z]; pop(3)*)
+PROCEDURE copy_n (u: U;  type_that_is_a_multiple_of_32bits: IType;  type: MType;  overlap: BOOLEAN) =
+  (* Mem[s2.A:s0.type_that_is_a_multiple_of_32bits] := Mem[s1.A:s0.type_that_is_a_multiple_of_32bits]; pop(3)*)
   CONST Mover = ARRAY BOOLEAN OF Builtin { Builtin.memcpy, Builtin.memmove };
   VAR n: INTEGER;  mover := Mover [overlap];
       shift: TIntN.T;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("copy_n");
-      u.wr.TName (z);
+      u.wr.TName (type_that_is_a_multiple_of_32bits);
       u.wr.TName (type);
       u.wr.Bool  (overlap);
       u.wr.NL    ();
@@ -2943,7 +2943,7 @@ PROCEDURE copy_n (u: U;  z: IType;  type: MType;  overlap: BOOLEAN) =
     END;
 
     start_int_proc (u, mover);
-    pop_param (u, z);
+    pop_param (u, type_that_is_a_multiple_of_32bits);
     pop_param (u, Type.Addr);
     pop_param (u, Type.Addr);
     call_int_proc (u, mover);
@@ -3091,14 +3091,14 @@ PROCEDURE copy (u: U;  n: INTEGER;  type: MType;  overlap: BOOLEAN) =
     u.vstack.discard(2);
   END copy;
 
-PROCEDURE zero_n (u: U;  z: IType;  type: MType) =
-  (* Mem[s1.A:s0.z] := 0; pop(2) *)
+PROCEDURE zero_n (u: U;  type_that_is_a_multiple_of_32bits: IType;  type: MType) =
+  (* Mem[s1.A:s0.type_that_is_a_multiple_of_32bits] := 0; pop(2) *)
 (*VAR n: INTEGER;
       shift: TIntN.T;*)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("zero_n");
-      u.wr.TName (z);
+      u.wr.TName (type_that_is_a_multiple_of_32bits);
       u.wr.TName (type);
       u.wr.NL    ();
     END;
@@ -3137,7 +3137,7 @@ PROCEDURE zero_n (u: U;  z: IType;  type: MType) =
     END;
 
     start_int_proc (u, Builtin.memset);
-    pop_param (u, z);
+    pop_param (u, type_that_is_a_multiple_of_32bits);
     u.vstack.pushimmT (TZero, Type.Word32);
     pop_param (u, Type.Word32);
     pop_param (u, Type.Addr);
@@ -4359,7 +4359,7 @@ PROCEDURE load_ordered (x: U; type: MType; u: ZType; <*UNUSED*>order: MemoryOrde
     x.fence(MemoryOrder.Sequential);
   END load_ordered;
 
-PROCEDURE exchange (u: U; type: MType; z: ZType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE exchange (u: U; type: MType; type_that_is_a_multiple_of_32bits: ZType; <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A + o].type;
    Mem [s1.A + o].type := s0.u;
    s0.u := tmp;
@@ -4369,14 +4369,14 @@ PROCEDURE exchange (u: U; type: MType; z: ZType; <*UNUSED*>order: MemoryOrder) =
     IF u.debug THEN
       u.wr.Cmd   ("exchange");
       u.wr.TName (type);
-      u.wr.TName (z);
+      u.wr.TName (type_that_is_a_multiple_of_32bits);
       u.wr.NL    ();
     END;
 
-    IF NOT check_atomic_types(u, type, z) THEN
+    IF NOT check_atomic_types(u, type, type_that_is_a_multiple_of_32bits) THEN
       u.vstack.unlock();
       u.vstack.discard(1);
-      u.load_indirect(0, type, z);
+      u.load_indirect(0, type, type_that_is_a_multiple_of_32bits);
       RETURN;
     END;
 
@@ -4467,7 +4467,7 @@ PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
 CONST AtomicOpToOp = ARRAY AtomicOp OF Op { Op.oADD, Op.oSUB, Op.oOR, Op.oAND, Op.oXOR };
 CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" };
 
-PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; type: MType; z: ZType;
+PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; type: MType; type_that_is_a_multiple_of_32bits: ZType;
                         <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A].type op s0.u;
    Mem [s1.A].type := tmp;
@@ -4481,16 +4481,16 @@ PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; type: MType; z: ZType;
       x.wr.Cmd   ("fetch_and_op");
       x.wr.OutT  (AtomicOpName[atomic_op]);
       x.wr.TName (type);
-      x.wr.TName (z);
+      x.wr.TName (type_that_is_a_multiple_of_32bits);
       x.wr.NL    ();
     END;
 
     (* TODO *)
 
     x.vstack.unlock();
-    IF NOT check_atomic_types(x, type, z) THEN
+    IF NOT check_atomic_types(x, type, type_that_is_a_multiple_of_32bits) THEN
       x.vstack.discard(1);
-      x.load_indirect(0, type, z);
+      x.load_indirect(0, type, type_that_is_a_multiple_of_32bits);
       RETURN;
     END;
 
