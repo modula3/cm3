@@ -5,69 +5,56 @@ IMPORT Word, Long;
  * for subranges and enums that don't overlap
  * or overlap only at the edge.
  * This should probably be in the "c for code" section.
- * What is being tested is that many of these functions
+ * What is being tested is that all of these functions
  * return just a constant TRUE or FALSE.
  *)
 
-(* address < NIL should probably always be false, but ADDRESS is the only
- * case that isn't working (being optimized).
- *)
-
-<*UNUSED*>PROCEDURE AddressLT0(a:ADDRESS):BOOLEAN=BEGIN RETURN a<NIL; END AddressLT0;
-<*UNUSED*>PROCEDURE AddressLE0(a:ADDRESS):BOOLEAN=BEGIN RETURN a<=NIL; END AddressLE0;
-<*UNUSED*>PROCEDURE AddressGE0(a:ADDRESS):BOOLEAN=BEGIN RETURN a>=NIL; END AddressGE0;
-
-
 (* Cardinal is always >= 0, etc. *)
 
-<*UNUSED*>PROCEDURE CardinalLT0(a:CARDINAL):BOOLEAN=BEGIN RETURN a<0; END CardinalLT0;
-<*UNUSED*>PROCEDURE CardinalGE0(a:CARDINAL):BOOLEAN=BEGIN RETURN a>=0; END CardinalGE0;
+<*UNUSED*>PROCEDURE CardinalLT0_false(a:CARDINAL):BOOLEAN=BEGIN RETURN a<0; END CardinalLT0_false;
+<*UNUSED*>PROCEDURE CardinalGE0_true(a:CARDINAL):BOOLEAN=BEGIN RETURN a>=0; END CardinalGE0_true;
 
 
 (* Cardinal is always > -1, etc. *)
 
-<*UNUSED*>PROCEDURE CardinalLTNeg1(a:CARDINAL):BOOLEAN=BEGIN RETURN a<-1; END CardinalLTNeg1;
-<*UNUSED*>PROCEDURE CardinalLENeg1(a:CARDINAL):BOOLEAN=BEGIN RETURN a<=-1; END CardinalLENeg1;
-<*UNUSED*>PROCEDURE CardinalGTNeg1(a:CARDINAL):BOOLEAN=BEGIN RETURN a>-1; END CardinalGTNeg1;
-<*UNUSED*>PROCEDURE CardinalGENeg1(a:CARDINAL):BOOLEAN=BEGIN RETURN a>=-1; END CardinalGENeg1;
-<*UNUSED*>PROCEDURE CardinalNENeg1(a:CARDINAL):BOOLEAN=BEGIN RETURN a#-1; END CardinalNENeg1;
-<*UNUSED*>PROCEDURE CardinalEQNeg1(a:CARDINAL):BOOLEAN=BEGIN RETURN a=-1; END CardinalEQNeg1;
+<*UNUSED*>PROCEDURE CardinalLTNeg1_false(a:CARDINAL):BOOLEAN=BEGIN RETURN a<-1; END CardinalLTNeg1_false;
+<*UNUSED*>PROCEDURE CardinalLENeg1_false(a:CARDINAL):BOOLEAN=BEGIN RETURN a<=-1; END CardinalLENeg1_false;
+<*UNUSED*>PROCEDURE CardinalGTNeg1_true(a:CARDINAL):BOOLEAN=BEGIN RETURN a>-1; END CardinalGTNeg1_true;
+<*UNUSED*>PROCEDURE CardinalGENeg1_true(a:CARDINAL):BOOLEAN=BEGIN RETURN a>=-1; END CardinalGENeg1_true;
+<*UNUSED*>PROCEDURE CardinalNENeg1_true(a:CARDINAL):BOOLEAN=BEGIN RETURN a#-1; END CardinalNENeg1_true;
+<*UNUSED*>PROCEDURE CardinalEQNeg1_false(a:CARDINAL):BOOLEAN=BEGIN RETURN a=-1; END CardinalEQNeg1_false;
 
 
 (* Cardinal is always > -2, etc. (same as -1) *)
 
-<*UNUSED*>PROCEDURE CardinalLTNeg2(a:CARDINAL):BOOLEAN=BEGIN RETURN a<-2; END CardinalLTNeg2;
-<*UNUSED*>PROCEDURE CardinalLENeg2(a:CARDINAL):BOOLEAN=BEGIN RETURN a<=-2; END CardinalLENeg2;
-<*UNUSED*>PROCEDURE CardinalGTNeg2(a:CARDINAL):BOOLEAN=BEGIN RETURN a>-2; END CardinalGTNeg2;
-<*UNUSED*>PROCEDURE CardinalGENeg2(a:CARDINAL):BOOLEAN=BEGIN RETURN a>=-2; END CardinalGENeg2;
-<*UNUSED*>PROCEDURE CardinalNENeg2(a:CARDINAL):BOOLEAN=BEGIN RETURN a#-2; END CardinalNENeg2;
-<*UNUSED*>PROCEDURE CardinalEQNeg2(a:CARDINAL):BOOLEAN=BEGIN RETURN a=-2; END CardinalEQNeg2;
+<*UNUSED*>PROCEDURE CardinalLTNeg2_false(a:CARDINAL):BOOLEAN=BEGIN RETURN a<-2; END CardinalLTNeg2_false;
+<*UNUSED*>PROCEDURE CardinalLENeg2_false(a:CARDINAL):BOOLEAN=BEGIN RETURN a<=-2; END CardinalLENeg2_false;
+<*UNUSED*>PROCEDURE CardinalGTNeg2_true(a:CARDINAL):BOOLEAN=BEGIN RETURN a>-2; END CardinalGTNeg2_true;
+<*UNUSED*>PROCEDURE CardinalGENeg2_true(a:CARDINAL):BOOLEAN=BEGIN RETURN a>=-2; END CardinalGENeg2_true;
+<*UNUSED*>PROCEDURE CardinalNENeg2_true(a:CARDINAL):BOOLEAN=BEGIN RETURN a#-2; END CardinalNENeg2_true;
+<*UNUSED*>PROCEDURE CardinalEQNeg2_false(a:CARDINAL):BOOLEAN=BEGIN RETURN a=-2; END CardinalEQNeg2_false;
 
 
 (* Longcard is always > -1, etc. (same as Cardinal) *)
 
-<*UNUSED*>PROCEDURE LongcardLT0(a:LONGCARD):BOOLEAN=BEGIN RETURN a<0L; END LongcardLT0;
-<*UNUSED*>PROCEDURE LongcardGE0(a:LONGCARD):BOOLEAN=BEGIN RETURN a>=0L; END LongcardGE0;
+<*UNUSED*>PROCEDURE LongcardLT0_false(a:LONGCARD):BOOLEAN=BEGIN RETURN a<0L; END LongcardLT0_false;
+<*UNUSED*>PROCEDURE LongcardGE0_true(a:LONGCARD):BOOLEAN=BEGIN RETURN a>=0L; END LongcardGE0_true;
 
 
 (* subranges with no overlap, left always less than right *)
 
-<*UNUSED*>PROCEDURE no_overlap_less_LT(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a<b; END no_overlap_less_LT;
-<*UNUSED*>PROCEDURE no_overlap_less_LE(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a<=b; END no_overlap_less_LE;
-<*UNUSED*>PROCEDURE no_overlap_less_GT(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a>b; END no_overlap_less_GT;
-<*UNUSED*>PROCEDURE no_overlap_less_GE(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a>=b; END no_overlap_less_GE;
-<*UNUSED*>PROCEDURE no_overlap_less_EQ(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a=b; END no_overlap_less_EQ;
-<*UNUSED*>PROCEDURE no_overlap_less_NE(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a#b; END no_overlap_less_NE;
+<*UNUSED*>PROCEDURE no_overlap_less_LT_true(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a<b; END no_overlap_less_LT_true;
+<*UNUSED*>PROCEDURE no_overlap_less_LE_true(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a<=b; END no_overlap_less_LE_true;
+<*UNUSED*>PROCEDURE no_overlap_less_GT_false(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a>b; END no_overlap_less_GT_false;
+<*UNUSED*>PROCEDURE no_overlap_less_GE_false(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a>=b; END no_overlap_less_GE_false;
+<*UNUSED*>PROCEDURE no_overlap_less_EQ_false(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a=b; END no_overlap_less_EQ_false;
+<*UNUSED*>PROCEDURE no_overlap_less_NE_true(a:[0..1]; b:[2..3]):BOOLEAN=BEGIN RETURN a#b; END no_overlap_less_NE_true;
 
 
 (* subranges with overlap only on the edige, left always less or equal than right *)
 
-<*UNUSED*>PROCEDURE minimum_overlap_less_LT(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a<b; END minimum_overlap_less_LT;
 <*UNUSED*>PROCEDURE minimum_overlap_less_LE(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a<=b; END minimum_overlap_less_LE;
 <*UNUSED*>PROCEDURE minimum_overlap_less_GT(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a>b; END minimum_overlap_less_GT;
-<*UNUSED*>PROCEDURE minimum_overlap_less_GE(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a>=b; END minimum_overlap_less_GE;
-<*UNUSED*>PROCEDURE minimum_overlap_less_EQ(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a=b; END minimum_overlap_less_EQ;
-<*UNUSED*>PROCEDURE minimum_overlap_less_NE(a:[0..1]; b:[1..2]):BOOLEAN=BEGIN RETURN a#b; END minimum_overlap_less_NE;
 
 
 (* subranges with no overlap, left always greater than right *)
@@ -83,11 +70,7 @@ IMPORT Word, Long;
 (* subranges with overlap only on the edige, left always greater or equal than right *)
 
 <*UNUSED*>PROCEDURE minimum_overlap_greater_LT(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a<b; END minimum_overlap_greater_LT;
-<*UNUSED*>PROCEDURE minimum_overlap_greater_LE(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a<=b; END minimum_overlap_greater_LE;
-<*UNUSED*>PROCEDURE minimum_overlap_greater_GT(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a>b; END minimum_overlap_greater_GT;
 <*UNUSED*>PROCEDURE minimum_overlap_greater_GE(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a>=b; END minimum_overlap_greater_GE;
-<*UNUSED*>PROCEDURE minimum_overlap_greater_EQ(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a=b; END minimum_overlap_greater_EQ;
-<*UNUSED*>PROCEDURE minimum_overlap_greater_NE(a:[1..2]; b:[0..1]):BOOLEAN=BEGIN RETURN a#b; END minimum_overlap_greater_NE;
 
 
 (* now enums instead of integer subranges *)
@@ -141,12 +124,12 @@ TYPE MiddleNumbers = [Numbers.One..Numbers.Three];
 
 (* unlikely, but test the case of single element subranges *)
 
-<*UNUSED*>PROCEDURE overlap_1_LT(a,b:[0..0]):BOOLEAN=BEGIN RETURN a<b; END overlap_1_LT;
-<*UNUSED*>PROCEDURE overlap_1_LE(a,b:[0..0]):BOOLEAN=BEGIN RETURN a<=b; END overlap_1_LE;
-<*UNUSED*>PROCEDURE overlap_1_GT(a,b:[0..0]):BOOLEAN=BEGIN RETURN a>b; END overlap_1_GT;
-<*UNUSED*>PROCEDURE overlap_1_GE(a,b:[0..0]):BOOLEAN=BEGIN RETURN a>=b; END overlap_1_GE;
-<*UNUSED*>PROCEDURE overlap_1_EQ(a,b:[0..0]):BOOLEAN=BEGIN RETURN a=b; END overlap_1_EQ;
-<*UNUSED*>PROCEDURE overlap_1_NE(a,b:[0..0]):BOOLEAN=BEGIN RETURN a#b; END overlap_1_NE;
+<*UNUSED*>PROCEDURE overlap_1_LT_false(a,b:[0..0]):BOOLEAN=BEGIN RETURN a<b; END overlap_1_LT_false;
+<*UNUSED*>PROCEDURE overlap_1_LE_true(a,b:[0..0]):BOOLEAN=BEGIN RETURN a<=b; END overlap_1_LE_true;
+<*UNUSED*>PROCEDURE overlap_1_GT_false(a,b:[0..0]):BOOLEAN=BEGIN RETURN a>b; END overlap_1_GT_false;
+<*UNUSED*>PROCEDURE overlap_1_GE_true(a,b:[0..0]):BOOLEAN=BEGIN RETURN a>=b; END overlap_1_GE_true;
+<*UNUSED*>PROCEDURE overlap_1_EQ_true(a,b:[0..0]):BOOLEAN=BEGIN RETURN a=b; END overlap_1_EQ_true;
+<*UNUSED*>PROCEDURE overlap_1_NE_false(a,b:[0..0]):BOOLEAN=BEGIN RETURN a#b; END overlap_1_NE_false;
 
 
 (* ORD(enum) vs. negative *)
