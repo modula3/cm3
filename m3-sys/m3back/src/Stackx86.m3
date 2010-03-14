@@ -293,6 +293,7 @@ PROCEDURE find (t: T; stackp: CARDINAL;
       done := ARRAY OperandPart OF BOOLEAN{FALSE,..};
       size: OperandSize := 1;
       ret64: BOOLEAN := FALSE;
+      compare_exchange_64: BOOLEAN := FALSE;
   BEGIN
     WITH op = t.vstack[stackp] DO
 
@@ -302,6 +303,7 @@ PROCEDURE find (t: T; stackp: CARDINAL;
       <* ASSERT (size = 1) OR (size = 2) *>
       IF size = 2 THEN
         ret64 := (force = Force.regset AND set = RegSet{EAX, EDX});
+        compare_exchange_64 := (force = Force.regset AND set = RegSet{ECX, EBX});
       END;
 
       FOR i := 0 TO size - 1 DO
@@ -390,12 +392,19 @@ PROCEDURE find (t: T; stackp: CARDINAL;
             OR (ret64 AND i = 0 AND in[0] # EAX)
             OR (ret64 AND i = 1 AND in[1] # EDX)
 
+            (* compare_exchange_64 similar to ret64 *)
+            OR (compare_exchange_64 AND i = 0 AND in[0] # EBX)
+            OR (compare_exchange_64 AND i = 1 AND in[1] # ECX)
+
             OR (t.reguse[in[i]].stackp # -1 AND t.reguse[in[i]].stackp # stackp)
             OR (t.reguse[in[i]].stackp = stackp AND t.reguse[in[i]].operandPart # i) THEN
 
           IF ret64 THEN
             to[0] := EAX;
             to[1] := EDX;
+          ELSIF compare_exchange_64 THEN
+            to[0] := EBX;
+            to[1] := ECX;
           ELSIF i = 1 AND done[0] = FALSE THEN
             to[i] := pickreg(t, set - RegSet{to[0]}, hintaddr);
           ELSE

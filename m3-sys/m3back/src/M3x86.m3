@@ -1670,6 +1670,8 @@ PROCEDURE load  (u: U;  v: Var;  o: ByteOffset;  type: MType;  type_that_is_a_mu
       u.wr.NL    ();
     END;
 
+    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+
     u.vstack.push(MVar {var := v, mvar_offset := o, mvar_type := type});
   END load;
 
@@ -1684,6 +1686,8 @@ PROCEDURE store (u: U;  v: Var;  o: ByteOffset;  type_that_is_a_multiple_of_32bi
       u.wr.TName (type);
       u.wr.NL    ();
     END;
+
+    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
 
     u.vstack.pop(MVar {var := v, mvar_offset := o, mvar_type := type});
   END store;
@@ -1714,6 +1718,8 @@ PROCEDURE load_indirect (u: U;  o: ByteOffset;  type: MType;  type_that_is_a_mul
       u.wr.TName (type_that_is_a_multiple_of_32bits);
       u.wr.NL    ();
     END;
+
+    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
 
     u.vstack.unlock();
 
@@ -1770,6 +1776,8 @@ PROCEDURE store_indirect (u: U;  o: ByteOffset;  type_that_is_a_multiple_of_32bi
       u.wr.TName (type);
       u.wr.NL    ();
     END;
+
+    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
 
     u.vstack.unlock();
     WITH (* stack0 = u.vstack.pos(0, "store_indirect"), *)
@@ -4297,72 +4305,52 @@ PROCEDURE Cmt (u: U;  text: TEXT;  VAR width: INTEGER) =
 
 (*--------------------------------------------------------------- atomics ---*)
 
-(* for now only 32bit types *)
-
-PROCEDURE check_atomic_type(<*UNUSED*>u: U; a: Type): BOOLEAN =
-  BEGIN
-    IF a = Type.Addr OR a = Type.Int32 OR a = Type.Word32 THEN
-      RETURN TRUE;
-    END;
-    (*Err(u, "unsupported (so far) type for atomic operation");*)
-    RETURN FALSE;
-  END check_atomic_type;
-
-PROCEDURE check_atomic_types(u: U; a, b: Type): BOOLEAN =
-  BEGIN
-    IF NOT (check_atomic_type(u, a) AND check_atomic_type(u, b)) THEN
-      RETURN FALSE;
-    END;
-    IF a # b THEN
-      (*Err(u, "atomic types must match");*)
-      RETURN FALSE;
-    END;
-    RETURN TRUE;
-  END check_atomic_types;
-
-PROCEDURE store_ordered (x: U; type: ZType; u: MType; <*UNUSED*>order: MemoryOrder) =
+PROCEDURE store_ordered (x: U; type_that_is_a_multiple_of_32bits: ZType; type: MType; <*UNUSED*>order: MemoryOrder) =
 (* Mem [s1.A].u := s0.type;
    pop (2) *)
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("store_ordered");
+      x.wr.TName (type_that_is_a_multiple_of_32bits);
       x.wr.TName (type);
-      x.wr.TName (u);
       x.wr.NL    ();
     END;
 
+    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+
     x.fence(MemoryOrder.Sequential);
     x.vstack.unlock();
-    EVAL check_atomic_types(x, type, u);
     WITH stack0 = x.vstack.pos(0, "store_ordered"),
          stack1 = x.vstack.pos(1, "store_ordered") DO
       x.vstack.find(stack0, Force.any);
       x.vstack.find(stack1, Force.mem);
-      x.vstack.dostoreind(0, u);
+      x.vstack.dostoreind(0, type);
     END;
     x.fence(MemoryOrder.Sequential);
   END store_ordered;
 
-PROCEDURE load_ordered (x: U; type: MType; u: ZType; <*UNUSED*>order: MemoryOrder) =
-(* s0.u := Mem [s0.A].type  *)
+PROCEDURE load_ordered (x: U; type: MType; type_that_is_a_multiple_of_32bits: ZType; <*UNUSED*>order: MemoryOrder) =
+(* s0.type_that_is_a_multiple_of_32bits := Mem [s0.A].type  *)
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("load_ordered");
       x.wr.TName (type);
-      x.wr.TName (u);
+      x.wr.TName (type_that_is_a_multiple_of_32bits);
       x.wr.NL    ();
     END;
 
+    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+
     x.vstack.unlock();
     x.fence(MemoryOrder.Sequential);
-    x.load_indirect(0, type, u);
+    x.load_indirect(0, type, type_that_is_a_multiple_of_32bits);
     x.fence(MemoryOrder.Sequential);
   END load_ordered;
 
 PROCEDURE exchange (u: U; type: MType; type_that_is_a_multiple_of_32bits: ZType; <*UNUSED*>order: MemoryOrder) =
 (* tmp := Mem [s1.A + o].type;
-   Mem [s1.A + o].type := s0.u;
-   s0.u := tmp;
+   Mem [s1.A + o].type := s0.type_that_is_a_multiple_of_32bits;
+   s0.type_that_is_a_multiple_of_32bits := tmp;
    pop *)
   VAR reg: Regno;
   BEGIN
@@ -4373,35 +4361,40 @@ PROCEDURE exchange (u: U; type: MType; type_that_is_a_multiple_of_32bits: ZType;
       u.wr.NL    ();
     END;
 
-    IF NOT check_atomic_types(u, type, type_that_is_a_multiple_of_32bits) THEN
+    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+
+    IF TypeIs64(type) THEN
+      (* Push arbitrary value for the first compare. *)
+      u.vstack.pushimmT(TZero, Type.Word64);
+      u.vstack.swap();
+      compare_exchange_helper(u, type, type_that_is_a_multiple_of_32bits, Type.Word32);
       u.vstack.unlock();
-      u.vstack.discard(1);
-      u.load_indirect(0, type, type_that_is_a_multiple_of_32bits);
+      u.vstack.pushnew(Type.Word64, Force.regset, RegSet{EAX, EDX});
       RETURN;
     END;
 
     WITH newValue       = u.vstack.pos(0, "exchange"),
          atomicVariable = u.vstack.pos(1, "exchange") DO
+      u.vstack.unlock();
       u.vstack.find(newValue, Force.anyreg);
       u.vstack.find(atomicVariable, Force.anyreg);
       reg := u.vstack.op(newValue).reg[0];
-      u.cg.lock_exchange(u.vstack.op(atomicVariable), u.vstack.op(newValue));
+      u.cg.lock_exchange(u.vstack.op(atomicVariable), u.vstack.op(newValue), type);
       u.vstack.discard(2);
       u.vstack.unlock();
       u.vstack.pushnew(type, Force.regset, RegSet{reg});
     END;
   END exchange;
 
-PROCEDURE compare_exchange (x: U; type: MType; u: ZType; r: IType;
-                            <*UNUSED*>success, failure: MemoryOrder) =
-(* tmp := Mem[s2.A].type;
+PROCEDURE compare_exchange_helper (x: U; type: MType; type_that_is_a_multiple_of_32bits: ZType; result_type: IType) =
+(* original := Mem[s2.A].type;
    spurious_failure := whatever;
-   IF tmp = Mem[s1.A].type AND NOT spurious_failure THEN
-     Mem [s2.A].type := s0.u;
-     s2.r := 1;
+   IF original = Mem[s1.A].type AND NOT spurious_failure THEN
+     Mem [s2.A].type := s0.type_that_is_a_multiple_of_32bits;
+     s2.result_type := 1;
    ELSE
-     Mem [s2.A].type := tmp; x86 really does rewrite the original value, atomically
-     s2.r := 0;
+     Mem [s2.A].type := original; x86 really does rewrite the original value, atomically
+     s2.result_type := 0;
    END;
    pop(2);
    This is permitted to fail spuriously.
@@ -4413,28 +4406,47 @@ PROCEDURE compare_exchange (x: U; type: MType; u: ZType; r: IType;
     IF x.debug THEN
       x.wr.Cmd   ("compare_exchange");
       x.wr.TName (type);
-      x.wr.TName (u);
-      x.wr.TName (r);
+      x.wr.TName (type_that_is_a_multiple_of_32bits);
+      x.wr.TName (result_type);
       x.wr.NL    ();
     END;
 
+    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+
     x.vstack.unlock();
-    EVAL check_atomic_types(x, type, u);
+
     WITH newValue                        = x.vstack.pos(0, "compare_exchange"),
          compareValueAndOldValueIfFailed = x.vstack.pos(1, "compare_exchange"),
          atomicVariable                  = x.vstack.pos(2, "compare_exchange") DO
-      x.vstack.find(compareValueAndOldValueIfFailed, Force.regset, RegSet{EAX});
-      x.vstack.find(newValue,                        Force.anyreg);
-      x.vstack.find(atomicVariable,                  Force.anyreg);
-      x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.vstack.op(newValue));
+
+      IF TypeIs64(type) THEN
+        (*
+         * 64 bit form has very particular register allocation requirements.
+         *)
+        x.vstack.find(compareValueAndOldValueIfFailed, Force.regset, RegSet{EAX, EDX});
+        x.vstack.find(newValue, Force.regset, RegSet{ECX, EBX});
+      ELSE
+        x.vstack.find(compareValueAndOldValueIfFailed, Force.regset, RegSet{EAX});
+        x.vstack.find(newValue, Force.anyreg);
+      END;
+      x.vstack.find(atomicVariable, Force.anyreg);
+      x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.vstack.op(newValue), type);
       x.vstack.discard(3);
     END;
 
-    (* Based on procedure condset. Is there a better way?
-     * There are better ways to capture the carry flag,
-     * but we are after the zero flag.
-     *)
+  END compare_exchange_helper;
 
+PROCEDURE compare_exchange (x: U; type: MType; type_that_is_a_multiple_of_32bits: ZType; result_type: IType;
+                            <*UNUSED*>success, failure: MemoryOrder) =
+  BEGIN
+
+    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
+
+    compare_exchange_helper(x, type, type_that_is_a_multiple_of_32bits, result_type);
+
+    (* Get the zero flag into a register. Is there a better way? *)
+
+    x.vstack.unlock();
     x.vstack.pushnew(Type.Word8, Force.mem);
     WITH stop0 = x.vstack.op(x.vstack.pos(0, "condset")) DO
       stop0.mvar.var.stack_temp := FALSE;
@@ -4444,6 +4456,9 @@ PROCEDURE compare_exchange (x: U; type: MType; u: ZType; r: IType;
   END compare_exchange;
 
 PROCEDURE fence (u: U; <*UNUSED*>order: MemoryOrder) =
+(*
+ * Exchanging any memory with any register is a serializing instruction.
+ *)
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("fence");
@@ -4469,13 +4484,18 @@ CONST AtomicOpName = ARRAY AtomicOp OF TEXT { "add", "sub", "or", "and", "xor" }
 
 PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; type: MType; type_that_is_a_multiple_of_32bits: ZType;
                         <*UNUSED*>order: MemoryOrder) =
-(* tmp := Mem [s1.A].type op s0.u;
-   Mem [s1.A].type := tmp;
-   s1.u := tmp op s0.u;
-   pop *)
-  VAR label: Label;
-       rNewValue: Regno;
-       rEAX: Regno;
+(* original := Mem [s1.A].type;
+   Mem [s1.A].type := original op s0.type_that_is_a_multiple_of_32bits;
+   s1.type_that_is_a_multiple_of_32bits := original;
+   pop
+
+=> store the new value, return the old value
+
+Generally we use interlocked compare exchange loop.
+Some operations can be done better though.
+*)
+  VAR retry: Label;
+      is64 := TypeIs64(type);
   BEGIN
     IF x.debug THEN
       x.wr.Cmd   ("fetch_and_op");
@@ -4485,43 +4505,59 @@ PROCEDURE fetch_and_op (x: U; atomic_op: AtomicOp; type: MType; type_that_is_a_m
       x.wr.NL    ();
     END;
 
-    (* TODO *)
+    <* ASSERT CG_Bytes[type_that_is_a_multiple_of_32bits] >= CG_Bytes[type] *>
 
     x.vstack.unlock();
-    IF NOT check_atomic_types(x, type, type_that_is_a_multiple_of_32bits) THEN
-      x.vstack.discard(1);
-      x.load_indirect(0, type, type_that_is_a_multiple_of_32bits);
-      RETURN;
+    IF is64 THEN
+      x.vstack.pushnew(type, Force.regset, RegSet{EDX, EAX});
+      x.vstack.pushnew(type, Force.regset, RegSet{ECX, EBX});
+    ELSE
+      x.vstack.pushnew(type, Force.regset, RegSet{EAX});
+      x.vstack.pushnew(type, Force.anyreg);
     END;
 
-(*  mov eax_oldValue, mem-or-reg
+(*
+    mov oldValue, mem-or-reg; oldValue is EAX or EDX:EAX
 retry:
-    mov r1_newValue, eax_oldValue
-    op  r1_newValue, r2_secondOperand
-    lock cmpxchg DWORD PTR [r3_atomicVariable], r1_newValue ; other forms are ok for r3, eax is implied
-    ; original value is in eax, eq or ne.
+    mov newValue, oldValue; oldValue is EAX or EDX:EAX
+    op  newValue, secondOperand; newValue is whatever register allocator decides, or ECX:EBX
+    lock cmpxchg[8b] DWORD PTR [atomicVariable], newValue
+    ; original value is in EAX or EDX:EAX, eq or ne.
     jne retry
-    ; eax contains old value
-    ; r1 containes new value
+    ; EAX or EDX:EAX contains old value
 *)
-    rEAX := x.vstack.freereg(RegSet{EAX}, operandPart := 0);
-    <* ASSERT rEAX = EAX *>
-    rNewValue := x.vstack.freereg(operandPart := 0);
-    WITH operand        = x.vstack.pos(0, "fetch_and_op"),
-         atomicVariable = x.vstack.pos(1, "fetch_and_op") DO
-      x.vstack.find(operand, Force.anyreg);
+    WITH newValue       = x.vstack.pos(0, "fetch_and_op"),
+         oldValue       = x.vstack.pos(1, "fetch_and_op"),
+         operand        = x.vstack.pos(2, "fetch_and_op"),
+         atomicVariable = x.vstack.pos(3, "fetch_and_op") DO
+      IF CG_Bytes[type] < 4 THEN
+        x.vstack.find(operand, Force.anyreg);
+      ELSE
+        x.vstack.find(operand, Force.any);
+      END;
       (* x.vstack.find(atomicVariable, Force.any); bug *)
       x.vstack.find(atomicVariable, Force.anyreg);
-      x.cg.load_ind(rEAX, x.vstack.op(atomicVariable), 0, type);
-      label := x.next_label();
-      x.cg.set_label(label);
-      x.cg.movOp(x.cg.reg[rNewValue], x.cg.reg[EAX]);
-      x.cg.binOp(AtomicOpToOp[atomic_op], x.cg.reg[rNewValue], x.vstack.op(operand));
-      x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.cg.reg[rNewValue]);
-      x.cg.brOp(Cond.NE, label);
-      x.vstack.discard(2);
-      x.vstack.unlock();
-      x.vstack.pushnew(type, Force.regset, RegSet{rNewValue});
+      x.cg.load_ind(EAX, x.vstack.op(atomicVariable), 0, type);
+      IF is64 THEN
+        x.cg.load_ind(EDX, x.vstack.op(atomicVariable), 4, type);
+      END;
+      retry := x.next_label();
+      x.cg.set_label(retry);
+      x.cg.movOp(x.vstack.op(newValue), x.vstack.op(oldValue));
+      x.cg.binOp(AtomicOpToOp[atomic_op], x.vstack.op(newValue), x.vstack.op(operand));
+      x.cg.lock_compare_exchange(x.vstack.op(atomicVariable), x.vstack.op(newValue), type);
+      x.cg.brOp(Cond.NE, retry);
+      x.vstack.newdest(x.vstack.op(atomicVariable)); (* Is this needed? Probably. *)
+      x.vstack.newdest(x.vstack.op(operand));        (* Is this needed? *)
+      x.vstack.newdest(x.vstack.op(newValue));       (* Is this needed? *)
+      x.vstack.newdest(x.vstack.op(oldValue));       (* Is this needed? *)
+
+      (* Store the new value (already done), return the old value (these discard/swaps). *)
+      x.vstack.discard(1);
+      x.vstack.swap();
+      x.vstack.discard(1);
+      x.vstack.swap();
+      x.vstack.discard(1);
     END;
 
   END fetch_and_op;
