@@ -1530,10 +1530,6 @@ PROCEDURE doshift (t: T; type: IType; shiftType: ShiftType): BOOLEAN =
            * NOTE: binOp/immOp know how to do double precision compares/xor/shift
            *)
 
-          IF FALSE (* is64 *) THEN
-            RETURN FALSE; (* will generate function call *)
-          END;
-
           find(t, stack0, Force.regset, RegSet {ECX});
           find(t, stack1, Force.anytemp);
           IF stop1.loc = OLoc.imm THEN
