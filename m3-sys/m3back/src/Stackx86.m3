@@ -405,6 +405,7 @@ PROCEDURE find (t: T; stackp: CARDINAL;
           ELSIF compare_exchange_64 THEN
             to[0] := EBX;
             to[1] := ECX;
+            t.parent.proc_reguse[EBX] := TRUE;
           ELSIF i = 1 AND done[0] = FALSE THEN
             to[i] := pickreg(t, set - RegSet{to[0]}, hintaddr);
           ELSE
@@ -531,6 +532,8 @@ PROCEDURE find (t: T; stackp: CARDINAL;
     END;
     t.reguse[to[0]].locked := TRUE;
     t.reguse[to[size - 1]].locked := TRUE;
+    t.parent.proc_reguse[to[0]] := TRUE;
+    t.parent.proc_reguse[to[size - 1]] := TRUE;
   END find;
 
 PROCEDURE freereg (t: T; set := AllRegisters; operandPart: OperandPart): Regno =
@@ -756,6 +759,7 @@ PROCEDURE set_reg (t: T; stackp: CARDINAL; r: Regno; operandPart: OperandPart) =
     t.vstack[stackp].reg[operandPart] := r;
     t.reguse[r].stackp := stackp;
     t.reguse[r].operandPart := operandPart;
+    t.parent.proc_reguse[r] := TRUE;
   END set_reg;
 
 PROCEDURE dealloc_reg (t: T; stackp: CARDINAL; operandPart: OperandPart) =
@@ -770,6 +774,7 @@ PROCEDURE corrupt (t: T; reg: Regno; operandPart: OperandPart) =
     IF t.reguse[reg].stackp # -1 THEN
       forceout(t, reg, operandPart);
     END;
+    t.parent.proc_reguse[reg] := TRUE;
     t.reguse[reg] := InitRegister(locked := t.reguse[reg].locked);
   END corrupt;
 
