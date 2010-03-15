@@ -285,7 +285,7 @@ RealClean(Packages) or FatalError()
 BuildShip(Packages) or FatalError()
 ShipCompiler() or FatalError()
 
-AllPackages = pylib.PackageSets["all"]
+AllPackages = pylib.GetPackageSets()["all"]
 for a in ["m3cc", "cm3"]:
     if a in AllPackages:
         AllPackages.remove(a)
@@ -304,7 +304,7 @@ if False:
 else:
 
     Setup(InstallRoot_CompilerWithSelf, InstallRoot_Min)
-    Packages = pylib.PackageSets["min"]
+    Packages = pylib.GetPackageSets()["min"]
     if "m3cc" in Packages:
         Packages.remove("m3cc")
     RealClean(Packages) or FatalError()
@@ -323,7 +323,7 @@ if False:
 else:
 
     Setup(InstallRoot_CompilerWithSelf, InstallRoot_Standard)
-    Packages = pylib.FilterPackages(pylib.PackageSets["std"])
+    Packages = pylib.FilterPackages(pylib.GetPackageSets()["std"])
     if "m3cc" in Packages:
         Packages.remove("m3cc")
     RealClean(Packages) or FatalError()
