@@ -22,7 +22,6 @@ FROM M3x86Rep IMPORT RegistersForByteOperations, RegName, SplitOperand, TypeIs64
 FROM M3x86Rep IMPORT EAX, EDX, ESP, EBP, ECX;
 
 FROM M3ObjFile IMPORT Seg;
-IMPORT RTIO;
 
 REVEAL T = Public BRANDED "Codex86.T" OBJECT
         parent        : M3x86Rep.U := NIL;
@@ -905,11 +904,6 @@ PROCEDURE lock_exchange (t: T; READONLY dest, src: Operand; type: Type) =
 PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
   VAR ins: Instruction;  mnemonic: TEXT := NIL;
   BEGIN
-
-    IF dest.loc = OLoc.register THEN
-      M3x86Rep.NoteRegisterUsed(t.parent, dest.reg[0]);
-    END;
-
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
     IF src.loc = OLoc.imm THEN
       movImmT(t, dest, src.imm);
@@ -1578,9 +1572,6 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffset; t
   VAR ins: Instruction;
       mnemonic := "MOV";
   BEGIN
-
-    M3x86Rep.NoteRegisterUsed(t.parent, r);
-
     <* ASSERT ind.loc = OLoc.register *>
     ins.opcode := 16_8B;
 
@@ -1627,9 +1618,6 @@ PROCEDURE fast_load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffs
   VAR ins: Instruction;
       type := Type.Int32;
   BEGIN
-
-    M3x86Rep.NoteRegisterUsed(t.parent, r);
-
     <* ASSERT ind.loc = OLoc.register *>
     ins.opcode := 16_8B;
     CASE size OF
@@ -1921,26 +1909,20 @@ PROCEDURE check_label(t: T; label: Label; place: TEXT) =
   END check_label;
 
 PROCEDURE fill_in_label_thread (t: T; ptr: LabList; val: INTEGER; short: BOOLEAN) =
-  VAR lastBranchToExit := t.parent.GetLastBranchToExit() + 1;
   BEGIN
     WHILE ptr # NIL DO
-      (* We backed up over this and m3objfile is rightfully
-       * unwilling to patch it (assertion failure).
-       *)
-      IF lastBranchToExit # ptr.offs THEN
-        IF ptr.abs THEN
-          t.obj.relocate(t.textsym, ptr.offs, t.textsym);
+      IF ptr.abs THEN
+        t.obj.relocate(t.textsym, ptr.offs, t.textsym);
         t.obj.patch(ptr.seg, ptr.offs, val, 4);
-        ELSE
-          <* ASSERT ptr.seg = Seg.Text *>
+      ELSE
+        <* ASSERT ptr.seg = Seg.Text *>
 
-          IF short THEN
-            <* ASSERT val - (ptr.offs + 1) <= 16_7F AND
-                      val - (ptr.offs + 1) >= -16_80 *>
-            t.obj.patch(ptr.seg, ptr.offs, val - (ptr.offs + 1), 1);
-          ELSE
-            t.obj.patch(ptr.seg, ptr.offs, val - (ptr.offs + 4), 4);
-          END;
+        IF short THEN
+          <* ASSERT val - (ptr.offs + 1) <= 16_7F AND
+                    val - (ptr.offs + 1) >= -16_80 *>
+          t.obj.patch(ptr.seg, ptr.offs, val - (ptr.offs + 1), 1);
+        ELSE
+          t.obj.patch(ptr.seg, ptr.offs, val - (ptr.offs + 4), 4);
         END
       END;
       ptr := ptr.link;
