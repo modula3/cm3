@@ -1623,33 +1623,20 @@ PROCEDURE procedure_epilogue (u: U) =
     IF u.last_exitbranch = u.obj.cursor(Seg.Text) - 5 THEN
       (* Don't generate a branch to the epilogue at the last exit
          point of the procedure *)
-      u.cg.set_label(u.exit_proclabel, offset := -5);
+      u.obj.backup(Seg.Text, 5);
+    END;
+      
+    u.cg.set_label(u.exit_proclabel);
 
-      u.obj.patch(Seg.Text, u.obj.cursor(Seg.Text) - 5, 16_C95B5E5F, 4);
-      (* Intel for POP EDI, POP ESI, POP EBX, LEAVE *)
+    u.cg.popOp(u.cg.reg[EDI]);
+    u.cg.popOp(u.cg.reg[ESI]);
+    u.cg.popOp(u.cg.reg[EBX]);
 
-      IF callee_cleans THEN
-        u.obj.patch(Seg.Text, u.obj.cursor(Seg.Text) - 1, 16_C2, 1);
-        (* Intel for RET imm16 *)
-        u.obj.append(Seg.Text, u.current_proc.paramsize - 8, 2);
-        (* And the argument *)
-      ELSE
-        u.obj.patch(Seg.Text, u.obj.cursor(Seg.Text) - 1, 16_C3, 1);
-        (* Intel for RET *)
-      END
+    u.cg.noargOp(Op.oLEAVE);
+    IF callee_cleans THEN
+      u.cg.cleanretOp(u.current_proc.paramsize - 8);
     ELSE
-      u.cg.set_label(u.exit_proclabel);
-
-      u.cg.popOp(u.cg.reg[EDI]);
-      u.cg.popOp(u.cg.reg[ESI]);
-      u.cg.popOp(u.cg.reg[EBX]);
-
-      u.cg.noargOp(Op.oLEAVE);
-      IF callee_cleans THEN
-        u.cg.cleanretOp(u.current_proc.paramsize - 8);
-      ELSE
-        u.cg.noargOp(Op.oRET);
-      END
+      u.cg.noargOp(Op.oRET);
     END
   END procedure_epilogue;
 

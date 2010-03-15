@@ -1922,7 +1922,16 @@ PROCEDURE fill_in_label_thread (t: T; ptr: LabList; val: INTEGER; short: BOOLEAN
                     val - (ptr.offs + 1) >= -16_80 *>
           t.obj.patch(ptr.seg, ptr.offs, val - (ptr.offs + 1), 1);
         ELSE
-          t.obj.patch(ptr.seg, ptr.offs, val - (ptr.offs + 4), 4);
+          (* Filling labels at the end (really, past the end)
+           * of the object file occurs when we generate
+           * an epilogue. There should be a cleaner way to handle this.
+           * In the past, it was handled another way but not cleanly,
+           * where procedure_epilogue would use patch to generate
+           * the epilogue.
+           *)
+          IF ptr.offs < t.obj.cursor(Seg.Text) THEN
+            t.obj.patch(ptr.seg, ptr.offs, val - (ptr.offs + 4), 4);
+          END
         END
       END;
       ptr := ptr.link;
