@@ -18,6 +18,7 @@ TYPE
     append (s: Seg;  value, length: INTEGER);
     appendBytes (s: Seg;  READONLY bytes: ARRAY OF UINT8);
     patch  (s: Seg;  offset, value, length: INTEGER);
+    backup(s: Seg;  length: CARDINAL);
 
     relocate (src_sym, src_offset, target_sym: INTEGER);
 
