@@ -16,7 +16,7 @@ FROM TargetMap IMPORT CG_Bytes;
 
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
-FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
+FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset, No_label;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 
@@ -36,6 +36,8 @@ TYPE
     var    : Var;
     offset : ByteOffset;
   END;
+
+CONST NOP = 16_90;
 
 REVEAL
   U = Public BRANDED "M3x86.U" OBJECT
@@ -60,7 +62,6 @@ REVEAL
         param_proc      : x86Proc := NIL;
         in_proc         : BOOLEAN;
         procframe_ptr   : ByteOffset;
-        exit_proclabel  : Label := -1;
         last_exitbranch := -1;
         n_params        : INTEGER;
         next_var        := 1;
@@ -72,8 +73,36 @@ REVEAL
         source_file     : TEXT := NIL;
         reportlabel     : Label;
         usedfault       := FALSE;
+
+
+        (* There are three non-volatile registers: EDI, ESI, EBX.
+         * Historically every function saved and restored all three.
+         * Obviously for small functions that is overkill.
+         * Now we only save/restore what we use.
+         * However, at any point, a function can branch to its
+         * exit point. Therefore, we need up to 4 exit points,
+         * depending on which registers have been saved prior
+         * to the branch.
+         *
+         * Furthermore, the register allocator should perhaps
+         * consider save/restore cost in deciding to use
+         * these registers, but it does not.
+         *)
+        savedRegisterSet: RegSet := RegSet{};
+        savedRegisterOrder := ARRAY Regno OF Regno{-1,..};
+        savedRegisterCount: Regno := 0;
+
+        (* A label per non-volatile register, these
+         * point either to the pop instruction that
+         * restores the register, or to the instruction
+         * after all such pops, if the register
+         * is never used by the function.
+         *)
+        exit_proclabel: ARRAY Regno OF Label;
+
       OVERRIDES
         NewVar := NewVar;
+        GetLastBranchToExit := GetLastBranchToExit;
         next_label := next_label;
         set_error_handler := set_error_handler;
         begin_unit := begin_unit;
@@ -1351,7 +1380,7 @@ PROCEDURE begin_procedure (u: U;  p: Proc) =
     u.cg.set_current_proc(p);
     u.vstack.set_current_proc(p);
     u.last_exitbranch := -1;
-    u.exit_proclabel := -1;
+    ClearEpilogueLabels(u);
 
     realproc.offset := u.obj.cursor(Seg.Text);
     realproc.bound := TRUE;
@@ -1371,10 +1400,6 @@ PROCEDURE begin_procedure (u: U;  p: Proc) =
 
     u.cg.immOp(Op.oSUB, u.cg.reg[ESP], TWordN.Max16);
     u.procframe_ptr := u.obj.cursor(Seg.Text) - 4;
-
-    u.cg.pushOp(u.cg.reg[EBX]);
-    u.cg.pushOp(u.cg.reg[ESI]);
-    u.cg.pushOp(u.cg.reg[EDI]);
 
     IF u.current_proc.lev # 0 THEN
       u.cg.store_ind(u.cg.reg[ECX], u.cg.reg[EBP], -4, Type.Addr);
@@ -1603,54 +1628,34 @@ PROCEDURE exit_proc (u: U; type: Type) =
       u.vstack.discard(1);
     END;
 
-    IF u.exit_proclabel = -1 THEN
-      u.exit_proclabel := u.cg.reserve_labels(1, FALSE);
-    END;
-
+    AllocateEpilogueLabels(u);
     u.last_exitbranch := u.obj.cursor(Seg.Text);
+    u.cg.brOp(Cond.Always, GetCurrentExitLabel(u));
 
-    u.cg.brOp(Cond.Always, u.exit_proclabel);
   END exit_proc;
 
 PROCEDURE procedure_epilogue (u: U) =
-  VAR callee_cleans := u.current_proc.stdcall;
   BEGIN
-    IF u.exit_proclabel = -1 THEN
+    IF u.exit_proclabel[-1] = -1 THEN
       RETURN;
-      (* Strange as it may seem, some procedures have no exit points... *)
+      (* Strange as it may seem, some procedures have no exit points. *)
     END;
 
     IF u.last_exitbranch = u.obj.cursor(Seg.Text) - 5 THEN
       (* Don't generate a branch to the epilogue at the last exit
          point of the procedure *)
-      u.cg.set_label(u.exit_proclabel, offset := -5);
+      u.obj.backup(Seg.Text, 5);
+    END;
 
-      u.obj.patch(Seg.Text, u.obj.cursor(Seg.Text) - 5, 16_C95B5E5F, 4);
-      (* Intel for POP EDI, POP ESI, POP EBX, LEAVE *)
+    RestoreRegisters(u);
+    u.last_exitbranch := -1;
 
-      IF callee_cleans THEN
-        u.obj.patch(Seg.Text, u.obj.cursor(Seg.Text) - 1, 16_C2, 1);
-        (* Intel for RET imm16 *)
-        u.obj.append(Seg.Text, u.current_proc.paramsize - 8, 2);
-        (* And the argument *)
-      ELSE
-        u.obj.patch(Seg.Text, u.obj.cursor(Seg.Text) - 1, 16_C3, 1);
-        (* Intel for RET *)
-      END
+    u.cg.noargOp(Op.oLEAVE);
+    IF u.current_proc.stdcall THEN
+      u.cg.cleanretOp(u.current_proc.paramsize - 8);
     ELSE
-      u.cg.set_label(u.exit_proclabel);
-
-      u.cg.popOp(u.cg.reg[EDI]);
-      u.cg.popOp(u.cg.reg[ESI]);
-      u.cg.popOp(u.cg.reg[EBX]);
-
-      u.cg.noargOp(Op.oLEAVE);
-      IF callee_cleans THEN
-        u.cg.cleanretOp(u.current_proc.paramsize - 8);
-      ELSE
-        u.cg.noargOp(Op.oRET);
-      END
-    END
+      u.cg.noargOp(Op.oRET);
+    END;
   END procedure_epilogue;
 
 (*------------------------------------------------------------ load/store ---*)
@@ -4611,6 +4616,105 @@ PROCEDURE Err(t: U; err: TEXT) =
     t.Err(err);
     <* ASSERT FALSE *>
   END Err;
+
+PROCEDURE ClearEpilogueLabels(u: U) =
+(*
+ * Clear the epilogue labels -- set them to No_label.
+ *)
+  BEGIN
+    <* ASSERT u.in_proc *>
+    FOR r := FIRST(Regno) TO LAST(Regno) DO
+      IF r IN NonVolatileRegisters THEN
+        u.exit_proclabel[r] := No_label;
+      END;
+    END;
+    u.exit_proclabel[-1] := No_label;
+    u.savedRegisterCount := 0;
+    u.savedRegisterSet := RegSet{};
+  END ClearEpilogueLabels;
+
+PROCEDURE AllocateEpilogueLabels(u: U) =
+(*
+ * Allocate the epilogue labels, one per non-volatile register.
+ *)
+  BEGIN
+    <* ASSERT u.in_proc *>
+    IF u.exit_proclabel[-1] = No_label THEN
+      FOR r := FIRST(Regno) TO LAST(Regno) DO
+        IF r IN NonVolatileRegisters THEN
+          u.exit_proclabel[r] := u.cg.reserve_labels(1, FALSE);
+        END;
+      END;
+      u.exit_proclabel[-1] := u.cg.reserve_labels(1, FALSE);
+    END;
+  END AllocateEpilogueLabels;
+
+PROCEDURE RestoreRegisters(u: U) =
+(*
+ * Generate the part of the epilogue that restores saved non-volatile registers.
+ *)
+  VAR r: Regno;
+  BEGIN
+
+    <* ASSERT u.in_proc *>
+
+    (* Any register saved, generate a pop and set the label.
+     * Of course, in reverse order of saves.
+     *)
+    FOR i := u.savedRegisterCount - 1 TO 0 BY -1 DO
+      r := u.savedRegisterOrder[i];
+      <* ASSERT u.exit_proclabel[r] # No_label *>
+      <* ASSERT r # -1 *>
+      u.cg.set_label(u.exit_proclabel[r]);
+      u.cg.popOp(u.cg.reg[r]);
+    END;
+
+    (* Any registers we didn't save, set their exit label to
+     * after all restoration done.
+     *)
+    FOR r := FIRST(Regno) TO LAST(Regno) DO
+      IF r IN NonVolatileRegisters AND NOT (r IN u.savedRegisterSet) THEN
+        <* ASSERT u.exit_proclabel[r] # No_label *>
+        u.cg.set_label(u.exit_proclabel[r]);
+      END;
+    END;
+
+    (* Handle the case of no saves. *)
+
+    u.cg.set_label(u.exit_proclabel[-1]);
+
+    ClearEpilogueLabels(u);
+
+  END RestoreRegisters;
+
+PROCEDURE NoteRegisterUsed(u: U; r: Regno) =
+(*
+ * This is called every time a register is used.
+ * If the register is not volatile and hasn't yet been saved,
+ * it pushes it and makes a note.
+ *)
+  BEGIN
+    IF u.in_proc THEN
+      IF r IN NonVolatileRegisters AND NOT (r IN u.savedRegisterSet) THEN
+        u.savedRegisterOrder[u.savedRegisterCount] := r;
+        u.savedRegisterSet := u.savedRegisterSet + RegSet{r};
+        INC(u.savedRegisterCount);
+        (*u.cg.pushOp(u.cg.reg[r]);*)
+      END;
+    ELSE
+      (* e.g. makereportproc *)
+    END;
+  END NoteRegisterUsed;
+
+PROCEDURE GetCurrentExitLabel(u: U): Label =
+  BEGIN
+    RETURN u.exit_proclabel[u.savedRegisterOrder[u.savedRegisterCount - 1]];
+  END GetCurrentExitLabel;
+
+PROCEDURE GetLastBranchToExit(u: U): INTEGER =
+  BEGIN
+    RETURN u.last_exitbranch;
+  END GetLastBranchToExit;
 
 BEGIN
 END M3x86.
