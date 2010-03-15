@@ -1,165 +1,460 @@
 UNSAFE MODULE Main;
-FROM Cstdint IMPORT uint8_t, uint16_t, uint32_t, uint64_t;
-IMPORT RTIO;
-IMPORT AtomicAddress;
-IMPORT AtomicBoolean;
-IMPORT AtomicChar;
-IMPORT AtomicInteger;
-IMPORT AtomicLongint;
-IMPORT AtomicRefany;
-IMPORT AtomicWideChar;
-IMPORT Address;
-IMPORT Boolean;
-IMPORT Char;
-IMPORT Integer;
-IMPORT Longint;
-IMPORT Refany;
-IMPORT WideChar;
+IMPORT AtomicAddress, AtomicBoolean, AtomicChar, AtomicInteger, AtomicLongint, AtomicRefany;
+IMPORT AtomicWideChar, Address, Boolean, Char, Integer, Longint, Refany, WideChar;
 
 VAR
-    atomicBooleanA: AtomicBoolean.T;
-    atomicCharA: AtomicChar.T;
-    atomicIntegerA: AtomicInteger.T;
-    atomicLongintA: AtomicLongint.T;
-    atomicRefanyA: AtomicRefany.T;
-    atomicWidecharA: AtomicWideChar.T;
-
-    integerA: Integer.T;
-    booleanA: Boolean.T;
-    charA: Char.T;
-    longintA: Longint.T;
-    refanyA: Refany.T;
-    widecharA: WideChar.T;
-
-    integerB: Integer.T;
-    booleanB: Boolean.T;
-    charB: Char.T;
-    longintB: Longint.T;
-    refanyB: Refany.T;
-    widecharB: WideChar.T;
-
-    integerC: Integer.T;
-    booleanC: Boolean.T;
-    charC: Char.T;
-    longintC: Longint.T;
-    refanyC: Refany.T;
-    widecharC: WideChar.T;
+  atomicBooleanA: AtomicBoolean.T;
+  atomicCharA: AtomicChar.T;
+  atomicIntegerA: AtomicInteger.T;
+  atomicLongintA: AtomicLongint.T;
+  atomicRefanyA: AtomicRefany.T;
+  atomicWidecharA: AtomicWideChar.T;
+  atomicAddressA: AtomicAddress.T;
+  integerB, integerC: Integer.T;
+  booleanB, booleanC: Boolean.T;
+  charB, charC: Char.T;
+  longintB, longintC: Longint.T;
+  refanyB, refanyC: Refany.T;
+  widecharB, widecharC: WideChar.T;
+  addressB, addressC: Address.T;
+  bool:BOOLEAN;
 
 
-    b := 2;
-    c := 3;
-    a8: uint8_t := 1;
-    b8: uint8_t := 2;
-    c8: uint8_t := 3;
-    d8: uint8_t := 4;
-    a16: uint16_t := 10;
-    b16: uint16_t := 20;
-    c16: uint16_t := 30;
-    d16: uint16_t := 40;
-    a32: uint32_t := 100;
-    b32: uint32_t := 200;
-    c32: uint32_t := 300;
-    d32: uint32_t := 400;
-    a64: uint64_t := 1000L;
-    b64: uint64_t := 2000L;
-    c64: uint64_t := 3000L;
-    d64: uint64_t := 4000L;
-    ap := LOOPHOLE(16_1000, ADDRESS);
-    bp := LOOPHOLE(16_2000, ADDRESS);
-    cp := LOOPHOLE(16_3000, ADDRESS);
-    dp := LOOPHOLE(16_4000, ADDRESS);
-    bool:BOOLEAN;
-
-PROCEDURE PrintA(integerA:TEXT; b:ADDRESS)=
+PROCEDURE Test_AtomicBoolean_Fence() =
 BEGIN
-  RTIO.PutText(integerA);
-  RTIO.PutText(":");
-  RTIO.PutAddr(b);
-  RTIO.PutText("\n");
-  RTIO.Flush();
-END PrintA;
+  AtomicBoolean.Fence();
+END Test_AtomicBoolean_Fence;
 
-PROCEDURE PrintI(integerA:TEXT; b:INTEGER)=
+PROCEDURE Test_AtomicBoolean_CompareSwap() =
 BEGIN
-  RTIO.PutText(integerA);
-  RTIO.PutText(":");
-  RTIO.PutInt(b);
-  RTIO.PutText("\n");
-  RTIO.Flush();
-END PrintI;
+  bool := AtomicBoolean.CompareSwap(atomicBooleanA, booleanB, booleanC);
+END Test_AtomicBoolean_CompareSwap;
 
-PROCEDURE PrintB(integerA:TEXT; b:BOOLEAN)=
+PROCEDURE Test_AtomicBoolean_FetchAnd() =
 BEGIN
-  RTIO.PutText(integerA);
-  RTIO.PutText(":");
-  RTIO.PutText(ARRAY [FALSE..TRUE] OF TEXT{"FALSE", "TRUE"}[b]);
-  RTIO.PutText("\n");
-  RTIO.Flush();
-END PrintB;
+  booleanC := AtomicBoolean.FetchAnd(atomicBooleanA, booleanB);
+END Test_AtomicBoolean_FetchAnd;
 
-PROCEDURE PrintS(integerA:TEXT)=
+PROCEDURE Test_AtomicBoolean_FetchDec() =
 BEGIN
-  RTIO.PutText(integerA);
-END PrintS;
+  booleanC := AtomicBoolean.FetchDec(atomicBooleanA);
+END Test_AtomicBoolean_FetchDec;
+
+PROCEDURE Test_AtomicBoolean_FetchInc() =
+BEGIN
+  booleanC := AtomicBoolean.FetchInc(atomicBooleanA);
+END Test_AtomicBoolean_FetchInc;
+
+PROCEDURE Test_AtomicBoolean_FetchOr() =
+BEGIN
+  booleanC := AtomicBoolean.FetchOr(atomicBooleanA, booleanB);
+END Test_AtomicBoolean_FetchOr;
+
+PROCEDURE Test_AtomicBoolean_FetchXor() =
+BEGIN
+  booleanC := AtomicBoolean.FetchXor(atomicBooleanA, booleanB);
+END Test_AtomicBoolean_FetchXor;
+
+PROCEDURE Test_AtomicBoolean_IsLockFree() =
+BEGIN
+  EVAL AtomicBoolean.IsLockFree();
+END Test_AtomicBoolean_IsLockFree;
+
+PROCEDURE Test_AtomicBoolean_LoadStore() =
+BEGIN
+  booleanB := AtomicBoolean.Load(atomicBooleanA);
+  AtomicBoolean.Store(atomicBooleanA, FALSE);
+  booleanB := AtomicBoolean.Load(atomicBooleanA);
+  AtomicBoolean.Store(atomicBooleanA, TRUE);
+
+  booleanC := AtomicBoolean.Load(atomicBooleanA);
+  booleanC := AtomicBoolean.Load(atomicBooleanA);
+END Test_AtomicBoolean_LoadStore;
+
+PROCEDURE Test_AtomicBoolean_Swap() =
+BEGIN
+  booleanC := AtomicBoolean.Swap(atomicBooleanA, booleanB);
+END Test_AtomicBoolean_Swap;
+
+PROCEDURE Test_AtomicBoolean() =
+BEGIN
+  Test_AtomicBoolean_Fence();
+  Test_AtomicBoolean_CompareSwap();
+  Test_AtomicBoolean_FetchAnd();
+  Test_AtomicBoolean_FetchDec();
+  Test_AtomicBoolean_FetchInc();
+  Test_AtomicBoolean_FetchOr();
+  Test_AtomicBoolean_FetchXor();
+  Test_AtomicBoolean_IsLockFree();
+  Test_AtomicBoolean_LoadStore();
+  Test_AtomicBoolean_Swap();
+END Test_AtomicBoolean;
+
+
+
+PROCEDURE Test_AtomicChar_Fence() =
+BEGIN
+  AtomicChar.Fence();
+END Test_AtomicChar_Fence;
+
+PROCEDURE Test_AtomicChar_CompareSwap() =
+BEGIN
+  bool := AtomicChar.CompareSwap(atomicCharA, charB, charC);
+END Test_AtomicChar_CompareSwap;
+
+PROCEDURE Test_AtomicChar_FetchAnd() =
+BEGIN
+  charC := AtomicChar.FetchAnd(atomicCharA, charB);
+END Test_AtomicChar_FetchAnd;
+
+PROCEDURE Test_AtomicChar_FetchDec() =
+BEGIN
+  charC := AtomicChar.FetchDec(atomicCharA);
+END Test_AtomicChar_FetchDec;
+
+PROCEDURE Test_AtomicChar_FetchInc() =
+BEGIN
+  charC := AtomicChar.FetchInc(atomicCharA);
+END Test_AtomicChar_FetchInc;
+
+PROCEDURE Test_AtomicChar_FetchOr() =
+BEGIN
+  charC := AtomicChar.FetchOr(atomicCharA, charB);
+END Test_AtomicChar_FetchOr;
+
+PROCEDURE Test_AtomicChar_FetchXor() =
+BEGIN
+  charC := AtomicChar.FetchXor(atomicCharA, charB);
+END Test_AtomicChar_FetchXor;
+
+PROCEDURE Test_AtomicChar_IsLockFree() =
+BEGIN
+  EVAL AtomicChar.IsLockFree();
+END Test_AtomicChar_IsLockFree;
+
+PROCEDURE Test_AtomicChar_LoadStore() =
+BEGIN
+  charB := AtomicChar.Load(atomicCharA);
+  AtomicChar.Store(atomicCharA, VAL(1 + 2 + 3, CHAR));
+  charB := AtomicChar.Load(atomicCharA);
+  AtomicChar.Store(atomicCharA, VAL(1 + 2 + 3, CHAR));
+
+  charC := AtomicChar.Load(atomicCharA);
+  charC := AtomicChar.Load(atomicCharA);
+END Test_AtomicChar_LoadStore;
+
+PROCEDURE Test_AtomicChar_Swap() =
+BEGIN
+  charC := AtomicChar.Swap(atomicCharA, charB);
+END Test_AtomicChar_Swap;
+
+PROCEDURE Test_AtomicChar() =
+BEGIN
+  Test_AtomicChar_Fence();
+  Test_AtomicChar_CompareSwap();
+  Test_AtomicChar_FetchAnd();
+  Test_AtomicChar_FetchDec();
+  Test_AtomicChar_FetchInc();
+  Test_AtomicChar_FetchOr();
+  Test_AtomicChar_FetchXor();
+  Test_AtomicChar_IsLockFree();
+  Test_AtomicChar_LoadStore();
+  Test_AtomicChar_Swap();
+END Test_AtomicChar;
+
+
+
+
+
+
+
+PROCEDURE Test_AtomicWidechar_Fence() =
+BEGIN
+  AtomicWideChar.Fence();
+END Test_AtomicWidechar_Fence;
+
+PROCEDURE Test_AtomicWidechar_CompareSwap() =
+BEGIN
+  bool := AtomicWideChar.CompareSwap(atomicWidecharA, widecharB, widecharC);
+END Test_AtomicWidechar_CompareSwap;
+
+PROCEDURE Test_AtomicWidechar_FetchAnd() =
+BEGIN
+  widecharC := AtomicWideChar.FetchAnd(atomicWidecharA, widecharB);
+END Test_AtomicWidechar_FetchAnd;
+
+PROCEDURE Test_AtomicWidechar_FetchDec() =
+BEGIN
+  widecharC := AtomicWideChar.FetchDec(atomicWidecharA);
+END Test_AtomicWidechar_FetchDec;
+
+PROCEDURE Test_AtomicWidechar_FetchInc() =
+BEGIN
+  widecharC := AtomicWideChar.FetchInc(atomicWidecharA);
+END Test_AtomicWidechar_FetchInc;
+
+PROCEDURE Test_AtomicWidechar_FetchOr() =
+BEGIN
+  widecharC := AtomicWideChar.FetchOr(atomicWidecharA, widecharB);
+END Test_AtomicWidechar_FetchOr;
+
+PROCEDURE Test_AtomicWidechar_FetchXor() =
+BEGIN
+  widecharC := AtomicWideChar.FetchXor(atomicWidecharA, widecharB);
+END Test_AtomicWidechar_FetchXor;
+
+PROCEDURE Test_AtomicWidechar_IsLockFree() =
+BEGIN
+  EVAL AtomicWideChar.IsLockFree();
+END Test_AtomicWidechar_IsLockFree;
+
+PROCEDURE Test_AtomicWidechar_LoadStore() =
+VAR integerC: WideChar.T;
+BEGIN
+  widecharB := AtomicWideChar.Load(atomicWidecharA);
+  AtomicWideChar.Store(atomicWidecharA, VAL(1 + 2 + 3, WIDECHAR));
+  widecharB := AtomicWideChar.Load(atomicWidecharA);
+  AtomicWideChar.Store(atomicWidecharA, VAL(1 + 2 + 3, WIDECHAR));
+
+  integerC := AtomicWideChar.Load(atomicWidecharA);
+  integerC := AtomicWideChar.Load(atomicWidecharA);
+END Test_AtomicWidechar_LoadStore;
+
+PROCEDURE Test_AtomicWidechar_Swap() =
+BEGIN
+  widecharC := AtomicWideChar.Swap(atomicWidecharA, widecharB);
+END Test_AtomicWidechar_Swap;
+
+PROCEDURE Test_AtomicWidechar() =
+BEGIN
+  Test_AtomicWidechar_Fence();
+  Test_AtomicWidechar_CompareSwap();
+  Test_AtomicWidechar_FetchAnd();
+  Test_AtomicWidechar_FetchDec();
+  Test_AtomicWidechar_FetchInc();
+  Test_AtomicWidechar_FetchOr();
+  Test_AtomicWidechar_FetchXor();
+  Test_AtomicWidechar_IsLockFree();
+  Test_AtomicWidechar_LoadStore();
+  Test_AtomicWidechar_Swap();
+END Test_AtomicWidechar;
+
+
+
+
+
+PROCEDURE Test_AtomicRefany_Fence() =
+BEGIN
+  AtomicRefany.Fence();
+  AtomicRefany.Fence();
+  AtomicRefany.Fence();
+END Test_AtomicRefany_Fence;
+
+PROCEDURE Test_AtomicRefany_CompareSwap() =
+BEGIN
+  bool := AtomicRefany.CompareSwap(atomicRefanyA, refanyB, refanyC);
+END Test_AtomicRefany_CompareSwap;
+
+PROCEDURE Test_AtomicRefany_FetchAnd() =
+BEGIN
+  (*refanyC := AtomicRefany.FetchAnd(atomicRefanyA, refanyB);*)
+END Test_AtomicRefany_FetchAnd;
+
+PROCEDURE Test_AtomicRefany_FetchDec() =
+BEGIN
+  (*refanyC := AtomicRefany.FetchDec(atomicRefanyA);*)
+END Test_AtomicRefany_FetchDec;
+
+PROCEDURE Test_AtomicRefany_FetchInc() =
+BEGIN
+  (*refanyC := AtomicRefany.FetchInc(atomicRefanyA);*)
+END Test_AtomicRefany_FetchInc;
+
+PROCEDURE Test_AtomicRefany_FetchOr() =
+BEGIN
+  (*refanyC := AtomicRefany.FetchOr(atomicRefanyA, refanyB);*)
+END Test_AtomicRefany_FetchOr;
+
+PROCEDURE Test_AtomicRefany_FetchXor() =
+BEGIN
+  (*refanyC := AtomicRefany.FetchXor(atomicRefanyA, refanyB);*)
+END Test_AtomicRefany_FetchXor;
+
+PROCEDURE Test_AtomicRefany_IsLockFree() =
+BEGIN
+  EVAL AtomicRefany.IsLockFree();
+END Test_AtomicRefany_IsLockFree;
+
+PROCEDURE Test_AtomicRefany_LoadStore() =
+VAR refanyC: Refany.T;
+BEGIN
+  refanyB := AtomicRefany.Load(atomicRefanyA);
+  AtomicRefany.Store(atomicRefanyA, LOOPHOLE(1 + 2 + 3, REFANY));
+  refanyB := AtomicRefany.Load(atomicRefanyA);
+  AtomicRefany.Store(atomicRefanyA, LOOPHOLE(1 + 2 + 3, REFANY));
+
+  refanyC := AtomicRefany.Load(atomicRefanyA);
+  refanyC := AtomicRefany.Load(atomicRefanyA);
+END Test_AtomicRefany_LoadStore;
+
+PROCEDURE Test_AtomicRefany_Swap() =
+BEGIN
+  refanyC := AtomicRefany.Swap(atomicRefanyA, refanyB);
+END Test_AtomicRefany_Swap;
+
+PROCEDURE Test_AtomicRefany() =
+BEGIN
+  Test_AtomicRefany_Fence();
+  Test_AtomicRefany_CompareSwap();
+  Test_AtomicRefany_FetchAnd();
+  Test_AtomicRefany_FetchDec();
+  Test_AtomicRefany_FetchInc();
+  Test_AtomicRefany_FetchOr();
+  Test_AtomicRefany_FetchXor();
+  Test_AtomicRefany_IsLockFree();
+  Test_AtomicRefany_LoadStore();
+  Test_AtomicRefany_Swap();
+END Test_AtomicRefany;
+
+
+
+
+
+PROCEDURE Test_AtomicAddress_Fence() =
+BEGIN
+  AtomicAddress.Fence();
+  AtomicAddress.Fence();
+  AtomicAddress.Fence();
+END Test_AtomicAddress_Fence;
+
+PROCEDURE Test_AtomicAddress_CompareSwap() =
+BEGIN
+  bool := AtomicAddress.CompareSwap(atomicAddressA, addressB, addressC);
+END Test_AtomicAddress_CompareSwap;
+
+PROCEDURE Test_AtomicAddress_FetchAnd() =
+BEGIN
+  (*addressC := AtomicAddress.FetchAnd(atomicAddressA, addressB);*)
+END Test_AtomicAddress_FetchAnd;
+
+PROCEDURE Test_AtomicAddress_FetchDec() =
+BEGIN
+  (*addressC := AtomicAddress.FetchDec(atomicAddressA);*)
+END Test_AtomicAddress_FetchDec;
+
+PROCEDURE Test_AtomicAddress_FetchInc() =
+BEGIN
+  (*addressC := AtomicAddress.FetchInc(atomicAddressA);*)
+END Test_AtomicAddress_FetchInc;
+
+PROCEDURE Test_AtomicAddress_FetchOr() =
+BEGIN
+  (*addressC := AtomicAddress.FetchOr(atomicAddressA, addressB);*)
+END Test_AtomicAddress_FetchOr;
+
+PROCEDURE Test_AtomicAddress_FetchXor() =
+BEGIN
+  (*addressC := AtomicAddress.FetchXor(atomicAddressA, addressB);*)
+END Test_AtomicAddress_FetchXor;
+
+PROCEDURE Test_AtomicAddress_IsLockFree() =
+BEGIN
+  EVAL AtomicAddress.IsLockFree();
+END Test_AtomicAddress_IsLockFree;
+
+PROCEDURE Test_AtomicAddress_LoadStore() =
+VAR addressC: Address.T;
+BEGIN
+  addressB := AtomicAddress.Load(atomicAddressA);
+  AtomicAddress.Store(atomicAddressA, LOOPHOLE(1 + 2 + 3, ADDRESS));
+  addressB := AtomicAddress.Load(atomicAddressA);
+  AtomicAddress.Store(atomicAddressA, LOOPHOLE(1 + 2 + 3, ADDRESS));
+
+  addressC := AtomicAddress.Load(atomicAddressA);
+  addressC := AtomicAddress.Load(atomicAddressA);
+END Test_AtomicAddress_LoadStore;
+
+PROCEDURE Test_AtomicAddress_Swap() =
+BEGIN
+  addressC := AtomicAddress.Swap(atomicAddressA, addressB);
+END Test_AtomicAddress_Swap;
+
+PROCEDURE Test_AtomicAddress() =
+BEGIN
+  Test_AtomicAddress_Fence();
+  Test_AtomicAddress_CompareSwap();
+  Test_AtomicAddress_FetchAnd();
+  Test_AtomicAddress_FetchDec();
+  Test_AtomicAddress_FetchInc();
+  Test_AtomicAddress_FetchOr();
+  Test_AtomicAddress_FetchXor();
+  Test_AtomicAddress_IsLockFree();
+  Test_AtomicAddress_LoadStore();
+  Test_AtomicAddress_Swap();
+END Test_AtomicAddress;
+
+
+
+
 
 
 PROCEDURE Test_AtomicInteger_Fence() =
 BEGIN
-    AtomicInteger.Fence();
-    AtomicInteger.Fence();
-    AtomicInteger.Fence();
+  AtomicInteger.Fence();
+  AtomicInteger.Fence();
+  AtomicInteger.Fence();
 END Test_AtomicInteger_Fence;
 
 PROCEDURE Test_AtomicInteger_CompareSwap() =
 BEGIN
-    bool := AtomicInteger.CompareSwap(atomicIntegerA, b, c);
+  bool := AtomicInteger.CompareSwap(atomicIntegerA, integerB, integerC);
 END Test_AtomicInteger_CompareSwap;
 
 PROCEDURE Test_AtomicInteger_FetchAnd() =
 BEGIN
-    c := AtomicInteger.FetchAnd(atomicIntegerA, b);
+  integerC := AtomicInteger.FetchAnd(atomicIntegerA, integerB);
 END Test_AtomicInteger_FetchAnd;
 
 PROCEDURE Test_AtomicInteger_FetchDec() =
 BEGIN
-    c := AtomicInteger.FetchDec(atomicIntegerA);
+  integerC := AtomicInteger.FetchDec(atomicIntegerA);
 END Test_AtomicInteger_FetchDec;
 
 PROCEDURE Test_AtomicInteger_FetchInc() =
 BEGIN
-    c := AtomicInteger.FetchInc(atomicIntegerA);
+  integerC := AtomicInteger.FetchInc(atomicIntegerA);
 END Test_AtomicInteger_FetchInc;
 
 PROCEDURE Test_AtomicInteger_FetchOr() =
 BEGIN
-    c := AtomicInteger.FetchOr(atomicIntegerA, b);
+  integerC := AtomicInteger.FetchOr(atomicIntegerA, integerB);
 END Test_AtomicInteger_FetchOr;
 
 PROCEDURE Test_AtomicInteger_FetchXor() =
 BEGIN
-    c := AtomicInteger.FetchXor(atomicIntegerA, b);
+  integerC := AtomicInteger.FetchXor(atomicIntegerA, integerB);
 END Test_AtomicInteger_FetchXor;
 
 PROCEDURE Test_AtomicInteger_IsLockFree() =
 BEGIN
-    EVAL AtomicInteger.IsLockFree();
+  EVAL AtomicInteger.IsLockFree();
 END Test_AtomicInteger_IsLockFree;
 
 PROCEDURE Test_AtomicInteger_LoadStore() =
 VAR integerC: Integer.T;
 BEGIN
-    b := AtomicInteger.Load(atomicIntegerA);
-    AtomicInteger.Store(atomicIntegerA, 1 + 2 + 3);
-    b := AtomicInteger.Load(atomicIntegerA);
-    AtomicInteger.Store(atomicIntegerA, 1 + 2 + 3 + 4);
+  integerB := AtomicInteger.Load(atomicIntegerA);
+  AtomicInteger.Store(atomicIntegerA, 1 + 2 + 3);
+  integerB := AtomicInteger.Load(atomicIntegerA);
+  AtomicInteger.Store(atomicIntegerA, 1 + 2 + 3 + 4);
 
-    integerC := AtomicInteger.Load(atomicIntegerA);
-    integerC := AtomicInteger.Load(atomicIntegerA);
+  integerC := AtomicInteger.Load(atomicIntegerA);
+  integerC := AtomicInteger.Load(atomicIntegerA);
 END Test_AtomicInteger_LoadStore;
 
 PROCEDURE Test_AtomicInteger_Swap() =
 BEGIN
-    c := AtomicInteger.Swap(atomicIntegerA, b);
+  integerC := AtomicInteger.Swap(atomicIntegerA, integerB);
 END Test_AtomicInteger_Swap;
 
 PROCEDURE Test_AtomicInteger() =
@@ -181,63 +476,57 @@ END Test_AtomicInteger;
 
 PROCEDURE Test_AtomicLongint_Fence() =
 BEGIN
-    AtomicLongint.Fence();
+  AtomicLongint.Fence();
 END Test_AtomicLongint_Fence;
 
 PROCEDURE Test_AtomicLongint_CompareSwap() =
 BEGIN
-    (* bool := AtomicLongint.CompareSwap(atomicLongintA, longintB, longintC); *)
+  bool := AtomicLongint.CompareSwap(atomicLongintA, longintB, longintC); 
 END Test_AtomicLongint_CompareSwap;
-
-PROCEDURE FakeFetchAndL(VAR var: AtomicLongint.T; mask: Longint.T): Longint.T =
-BEGIN
-  RETURN var.rep;
-END FakeFetchAndL;
 
 PROCEDURE Test_AtomicLongint_FetchAnd() =
 BEGIN
-    longintC := FakeFetchAndL(atomicLongintA, longintB);
-    (*longintC := AtomicLongint.FetchAnd(atomicLongintA, longintB);*)
+  longintC := AtomicLongint.FetchAnd(atomicLongintA, longintB);
 END Test_AtomicLongint_FetchAnd;
 
 PROCEDURE Test_AtomicLongint_FetchDec() =
 BEGIN
-    (*longintB := AtomicLongint.FetchDec(atomicLongintA);*)
+  longintB := AtomicLongint.FetchDec(atomicLongintA);
 END Test_AtomicLongint_FetchDec;
 
 PROCEDURE Test_AtomicLongint_FetchInc() =
 BEGIN
-    (*longintB := AtomicLongint.FetchInc(atomicLongintA);*)
+  longintB := AtomicLongint.FetchInc(atomicLongintA);
 END Test_AtomicLongint_FetchInc;
 
 PROCEDURE Test_AtomicLongint_FetchOr() =
 BEGIN
-    (*longintC := AtomicLongint.FetchOr(atomicLongintA, longintB);*)
+  longintC := AtomicLongint.FetchOr(atomicLongintA, longintB);
 END Test_AtomicLongint_FetchOr;
 
 PROCEDURE Test_AtomicLongint_FetchXor() =
 BEGIN
-    (*longintC := AtomicLongint.FetchXor(atomicLongintA, longintB);*)
+  longintC := AtomicLongint.FetchXor(atomicLongintA, longintB);
 END Test_AtomicLongint_FetchXor;
 
 PROCEDURE Test_AtomicLongint_IsLockFree() =
 BEGIN
-    EVAL AtomicLongint.IsLockFree();
+  EVAL AtomicLongint.IsLockFree();
 END Test_AtomicLongint_IsLockFree;
 
 PROCEDURE Test_AtomicLongint_Load() =
 BEGIN
-    (*longintB := AtomicLongint.Load(atomicLongintA);*)
+  longintB := AtomicLongint.Load(atomicLongintA);
 END Test_AtomicLongint_Load;
 
 PROCEDURE Test_AtomicLongint_Store() =
 BEGIN
-    (*AtomicLongint.Store(atomicLongintA, longintB);*)
+  AtomicLongint.Store(atomicLongintA, longintB);
 END Test_AtomicLongint_Store;
 
 PROCEDURE Test_AtomicLongint_Swap() =
 BEGIN
-    (*longintC := AtomicLongint.Swap(atomicLongintA, longintB);*)
+  longintC := AtomicLongint.Swap(atomicLongintA, longintB);
 END Test_AtomicLongint_Swap;
 
 
@@ -262,152 +551,12 @@ END Test_AtomicLongint;
 
 BEGIN
 
-(* not portable, just for debugging
-  PrintS("addresses for debugging\n\n");
-  PrintA("b", ADR(b));
-  PrintA("a8", ADR(a8));
-  PrintA("b8", ADR(b8));
-  PrintA("c8", ADR(c8));
-  PrintA("d8", ADR(d8));
-  PrintA("a16", ADR(a16));
-  PrintA("b16", ADR(b16));
-  PrintA("c16", ADR(c16));
-  PrintA("d16", ADR(d16));
-  PrintA("a32", ADR(a32));
-  PrintA("b32", ADR(b32));
-  PrintA("c32", ADR(c32));
-  PrintA("d32", ADR(d32));
-  PrintA("a64", ADR(a64));
-  PrintA("b64", ADR(b64));
-  PrintA("c64", ADR(c64));
-  PrintA("d64", ADR(d64));
-  PrintA("ap", ADR(ap));
-  PrintA("bp", ADR(bp));
-  PrintA("cp", ADR(cp));
-  PrintA("dp", ADR(dp));
-  PrintS("\n");
-  PrintS("\n");
-*)
-  PrintS("initial values\n\n");
-
-  PrintB("b", bool);
-  PrintI("a8", a8);
-  PrintI("b8", b8);
-  PrintI("c8", c8);
-  PrintI("d8", d8);
-  PrintI("a16", a16);
-  PrintI("b16", b16);
-  PrintI("c16", c16);
-  PrintI("d16", d16);
-  PrintI("a32", a32);
-  PrintI("b32", b32);
-  PrintI("c32", c32);
-  PrintI("d32", d32);
-(*PrintI("a64", a64);
-  PrintI("b64", b64);
-  PrintI("c64", c64);
-  PrintI("d64", d64); *)
-  PrintA("ap", ap);
-  PrintA("bp", bp);
-  PrintA("cp", cp);
-  PrintA("dp", dp);
-  PrintS("\n");
-  PrintS("\n");
-
-  PrintS("\nshould print false\n\n");
-
-(* 8 bit parameters not yet supported by integrated backend *)
-
-(* d8 := CAS(a8, b8, c8);*)
-  (*b := CASP(a8, b8, c8); *)
-  PrintB("b", bool);
-  PrintI("d8", d8);
-
-  PrintS("\n");
-(*d16 := CAS(a16, b16, c16);
-    b := CASP(a16, b16, c16);*)
-  PrintB("b", bool);
-  PrintI("d16", d16);
-
-  PrintS("\n");
-(* d32 := CAS(a32, b32, b32);
-    b := CASP(a32, b32, c32); *)
-  PrintB("b", bool);
-  PrintI("d32", d32);
-
-
-  Test_AtomicInteger();
+  Test_AtomicBoolean();
+  Test_AtomicChar();
+  Test_AtomicWidechar();
   Test_AtomicLongint();
-
-
-(*PrintS("\n");
-(* d64 := CAS(a64, b64, b64);
-    b := CASP(a64, b64, c64); *)
-  PrintB("b", bool);
-  PrintI("d64", d64);*)
-
-  PrintS("\n");
- (* dp := CAS(ap, bp, cp);
-    b := CASP(ap, bp, cp); *)
-  PrintB("b", bool);
-  PrintA("dp", dp);
-
-
-  PrintS("\n");
-  PrintS("\n");
-
-  (* generate new values *)
-
-  INC(a8, 100);
-  INC(b8, 100);
-  INC(c8, 100);
-  INC(d8, 100);
-  INC(a16);
-  INC(b16);
-  INC(c16);
-  INC(d16);
-  INC(a32);
-  INC(b32);
-  INC(c32);
-  INC(d32);
-  INC(a64);
-  INC(b64);
-  INC(c64);
-  INC(d64);
-  INC(ap);
-  INC(bp);
-  INC(cp);
-  INC(dp);
-
-  PrintS("\nshould print true\n\n");
-
-(*d8 := CAS(a8, a8, c8);
-    b := CASP(a8, a8, c8);*)
-  PrintB("b", bool);
-  PrintI("d8", d8);
-
-(*  d16 := CAS(a16, a16, c16);
-    b := CASP(a16, a16, c16);*)
-  PrintB("b", bool);
-  PrintI("d16", d16);
-
-  PrintS("\n");
-(* d32 := CAS(a32, a32, b32);
-    b := CASP(a32, a32, c32); *)
-  PrintB("b", bool);
-  PrintI("d32", d32);
-
-(*PrintS("\n");
-  d64 := CAS(a64, a64, b64);
-    b := CASP(a64, a64, c64);
-  PrintB("b", bool);
-  PrintI("d64", d64);*)
-
-  PrintS("\n");
-(*   dp := CAS(ap, ap, cp);
-    b := CASP(ap, ap, cp);*)
-  PrintB("b", bool);
-  PrintA("dp", dp);
-
+  Test_AtomicInteger();
+  Test_AtomicAddress();
+  Test_AtomicRefany();
 
 END Main.
