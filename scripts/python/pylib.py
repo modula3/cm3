@@ -758,7 +758,8 @@ if Target.startswith("NT386"):
 #-----------------------------------------------------------------------------
 
 M3GDB = (M3GDB or CM3_GDB)
-PKGSDB = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "PKGS")
+Scripts = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+PKGSDB = os.path.join(Scripts, "PKGS")
 
 #-----------------------------------------------------------------------------
 
@@ -1044,11 +1045,12 @@ def IsPackageDefined(a):
 #-----------------------------------------------------------------------------
 
 def GetPackagePath(a):
-    a = a.replace('\\', '/')
+    a = a.replace('\\', '/').lower()
     ReadPackageDB()
-    b = ('/' + a).lower()
+    b = ('/' + a)
     for i in PackageDB:
-        if i.lower().endswith(b):
+        j = i.lower()
+        if j.endswith(b) or j == a:
             return i.replace('/', os.path.sep)
     File = __file__
     sys.stderr.write("%(File)s: package %(a)s not found (%(b)s)\n" % vars())
@@ -1475,424 +1477,43 @@ def FilterPackages(Packages):
     Packages = filter(_FilterPackage, Packages)
     return Packages
 
+def GroupsToPackages(Packages):
+    result = [ ]
+    global PackageSets
+    for Package in Packages:
+        result += PackageSets.get(Package, [Package])
+    return result
+
 #-----------------------------------------------------------------------------
+
+PackageSets = None
+
+#-----------------------------------------------------------------------------
+
+def GetPackageSets():
+    if PackageSets:
+        return PackageSets
+    #print("reading pkginfo.txt")
+    result = { }
+    for line in open(os.path.join(Scripts, "pkginfo.txt")):
+        line = line.replace("\n", "").replace("\r", "")
+        fields = line.split(" ")
+        name1 = fields[0]
+        name2 = name1.split("/")[-1]
+        for group in ["all"] + fields[1:]:
+            if not (group in result):
+                result[group] = [ ]
+            result[group] += [name1]
+            if name1 != name2:
+                result[group] += [name2]
+    #print("all:" + str(result["all"]))
+    #sys.exit(1)
+    return result
 
 if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
 # workaround some of it
-    PackageSets = {
-    #
-    # These lists are deliberately in a jumbled order
-    # in order to depend on OrderPackages working.
-    #
-    # This needs to be still further data driven,
-    # and a full ordering is not necessary, only
-    # a partial ordering -- stuff could build in parallel.
-    #
-        "min" :
-            [
-            "import-libs",
-            "libm3",
-            "m3core",
-            ],
-    
-        "std" :
-            [
-    
-        # demo programs
-    
-            "cube",
-            "calculator",
-            "fisheye",
-            "mentor",
-    
-        # system / compiler libraries and tools
-    
-            "m3quake",
-            "m3middle",
-            "m3scanner",
-            "m3tools",
-            "m3cgcat",
-            "m3cggen",
-            "m3cc",
-            "m3objfile",
-            "m3linker",
-            "m3back",
-            "m3staloneback",
-            "m3front",
-            "cm3",
-            "m3gdb",
-            "m3bundle",
-            "mklib",
-            "fix_nl",
-            "libdump",
-            "windowsResources",
-            "cm3ide",
-    
-        # more useful quasi-standard libraries
-    
-            "arithmetic",
-            "bitvector",
-            "digraph",
-            "parseparams",
-            "realgeometry",
-            "set",
-            "slisp",
-            "sortedtableextras",
-            "table-list",
-            "tempfiles",
-            "tcl",
-            "tcp",
-            "udp",
-            "libsio",
-            "libbuf",
-            "debug",
-            "listfuncs",
-            "embutils",
-            "m3tk-misc",
-            "http",
-            "binIO",
-            "deepcopy",
-            "sgml",
-            "commandrw",
-    
-            # some CM3 communication extensions
-    
-            "tapi",
-            "serial",
-    
-            # tools
-    
-            "m3tk",
-            "mtex",
-            "m3totex",
-            "m3tohtml",
-            "m3scan",
-            "m3markup",
-            "m3browser",
-            "cmpdir",
-            "cmpfp",
-            "dirfp",
-            "uniq",
-            "pp",
-            # "kate"   # can be shipped only on systems with KDE
-            # "nedit",
-    
-            # network objects -- distributed programming
-    
-            "netobj",
-            "netobjd",
-            "stubgen",
-            "events",
-            "rdwr",
-            "sharedobj",
-            "sharedobjgen",
-    
-            # database packages
-    
-            "odbc",
-            "postgres95",
-            "db",
-            "smalldb",
-            "stable",
-            "stablegen",
-    
-            # the standard graphical user interface: trestle and formsvbt
-    
-            "X11R4",
-            "ui",
-            "PEX",
-            "vbtkit",
-            "cmvbt",
-            "jvideo",
-            "videovbt",
-            "web",
-            "formsvbtpixmaps",
-            "formsvbt",
-            "formsview",
-            "formsedit",
-            "codeview",
-            "mg",
-            "mgkit",
-            "opengl",
-            "anim3D",
-            "zeus",
-            "m3zume",
-    
-            # obliq
-            "synloc",
-            "synex",
-            "metasyn",
-            "obliqrt",
-            "obliqparse",
-            "obliqprint",
-            "obliq",
-            "obliqlibemb",
-            "obliqlibm3",
-            "obliqlibui",
-            "obliqlibanim",
-            "obliqlib3D",
-            "obliqsrvstd",
-            "obliqsrvui",
-            "obliqbinmin",
-            "obliqbinstd",
-            "obliqbinui",
-            "obliqbinanim",
-            "visualobliq",
-            "vocgi",
-            "voquery",
-            "vorun",
-    
-            # more graphics depending on obliq
-    
-            "webvbt",
-    
-            # more tools
-    
-            "recordheap",
-            "rehearsecode",
-            "replayheap",
-            "showheap",
-            "shownew",
-            "showthread",
-    
-            # The Juno-2 graphical constraint based editor
-    
-            "pkl-fonts",
-            "juno-machine",
-            "juno-compiler",
-            "juno-app",
-    
-            "deckscape",
-            "webscape",
-            "webcat",
-    
-            "import-libs",
-            "m3core",
-            "libm3",
-            "sysutils",
-    
-            # cvsup
-            "cvsup/suplib",
-            "cvsup/client",
-            "cvsup/server",
-            "cvsup/cvpasswd",
-            ],
-    
-    
-        "all": # in order
-            [
-        # backend
-            "m3cc",
-    
-        # base libraries
-    
-            "import-libs",
-            "m3core",
-            "libm3",
-            "windowsResources",
-            "sysutils",
-            "patternmatching",
-    
-        # system / compiler libraries and tools
-    
-            "m3middle",
-            "m3objfile",
-            "m3linker",
-            "m3back",
-            "m3staloneback",
-            "m3front",
-            "m3quake",
-            "cm3",
-            "m3scanner",
-            "m3tools",
-            "m3cgcat",
-            "m3cggen",
-    
-            "m3gdb",
-            "m3bundle",
-            "mklib",
-            "fix_nl",
-            "libdump",
-    
-        # more useful quasi-standard libraries
-    
-            "arithmetic",
-            "bitvector",
-            "digraph",
-            "parseparams",
-            "realgeometry",
-            "set",
-            "slisp",
-            "sortedtableextras",
-            "table-list",
-            "tempfiles",
-            "tcl",
-            "tcp",
-            "udp",
-            "libsio",
-            "libbuf",
-            "debug",
-            "listfuncs",
-            "embutils",
-            "m3tk-misc",
-            "http",
-            "binIO",
-            "deepcopy",
-            "sgml",
-            "commandrw",
-    
-            "cm3ide",
-    
-            # some CM3 communication extensions
-    
-            "tapi",
-            "serial",
-    
-            # tools
-    
-            "m3tk",
-            "mtex",
-            "m3totex",
-            "m3tohtml",
-            "m3scan",
-            "m3markup",
-            "m3browser",
-            "cmpdir",
-            "cmpfp",
-            "dirfp",
-            "uniq",
-            # "kate"   # can be shipped only on systems with KDE
-            # "nedit",
-    
-            # network objects -- distributed programming
-    
-            "netobj",
-            "netobjd",
-            "stubgen",
-            "events",
-            "rdwr",
-            "sharedobj",
-            "sharedobjgen",
-    
-            # database packages
-    
-            "odbc",
-            "postgres95",
-            "db",
-            "smalldb",
-            "stable",
-            "stablegen",
-    
-            # the standard graphical user interface: trestle and formsvbt
-    
-            "X11R4",
-            "ui",
-            "PEX",
-            "vbtkit",
-            "cmvbt",
-            "jvideo",
-            "videovbt",
-            "web",
-            "formsvbtpixmaps",
-            "formsvbt",
-            "formsview",
-            "formsedit",
-            "codeview",
-            "mg",
-            "mgkit",
-            "opengl",
-            "anim3D",
-            "zeus",
-            "m3zume",
-    
-            # obliq
-            "synloc",
-            "synex",
-            "metasyn",
-            "obliqrt",
-            "obliqparse",
-            "obliqprint",
-            "obliq",
-            "obliqlibemb",
-            "obliqlibm3",
-            "obliqlibui",
-            "obliqlibanim",
-            "obliqlib3D",
-            "obliqsrvstd",
-            "obliqsrvui",
-            "obliqbinmin",
-            "obliqbinstd",
-            "obliqbinui",
-            "obliqbinanim",
-            "visualobliq",
-            "vocgi",
-            "voquery",
-            "vorun",
-    
-            # more graphics depending on obliq
-    
-            "webvbt",
-    
-            # more tools
-    
-            "recordheap",
-            "rehearsecode",
-            "replayheap",
-            "showheap",
-            "shownew",
-            "showthread",
-    
-            # The Juno-2 graphical constraint based editor
-    
-            "pkl-fonts",
-            "juno-machine",
-            "juno-compiler",
-            "juno-app",
-    
-            # demo programs
-    
-            "cube",
-            "calculator",
-            "fisheye",
-            "mentor",
-    
-            "cit_common",
-            "m3tmplhack",
-            "cit_util",
-            "term",
-            "deepcopy",
-            "paneman",
-            "paneman/kemacs",
-            "drawcontext",
-            "drawcontext/dcpane",
-            "drawcontext/kgv",
-            "hack",
-            "m3browserhack",
-            "parserlib/ktoklib",
-            "parserlib/klexlib",
-            "parserlib/kyacclib",
-            "parserlib/ktok",
-            "parserlib/klex",
-            "parserlib/kyacc",
-            "parserlib/kext",
-            "parserlib/parserlib",
-            #"parserlib/parserlib/test",
-            "pp",
-            #"kate",
-            "sgml",
-    
-            "deckscape",
-            "webscape",
-            "webcat",
-
-            # cvsup
-            "cvsup/suplib",
-            "cvsup/client",
-            "cvsup/server",
-            "cvsup/cvpasswd",
-            ],
-    }
+    PackageSets = GetPackageSets();
 
 #-----------------------------------------------------------------------------
 
@@ -1923,12 +1544,13 @@ def DoPackage(args, PackagesFromCaller = None):
 
     SetupEnvironment()
 
+    args = filter(lambda(a): not a.startswith(os.path.dirname(__file__)) and a != "", args)
+
     # print("args is " + str(args))
     # sys.stdout.flush()
 
     if not (PackagesFromCaller is None):
-        PackagesFromCaller = FilterPackages(PackagesFromCaller)
-        PackagesFromCaller = OrderPackages(PackagesFromCaller)
+        PackagesFromCaller = OrderPackages(FilterPackages(GroupsToPackages(PackagesFromCaller)))
         if not PackagesFromCaller:
             print("no packages left")
             return True
@@ -1977,7 +1599,7 @@ GenericCommand:
     KeepGoing = False
     NoAction = False
     AllTargets = _GetAllTargets()
-    for arg in args[1:]:
+    for arg in args:
         if ((arg == "")
             or (arg in AllTargets)
             or (arg == "keep")
@@ -2008,8 +1630,7 @@ GenericCommand:
             else:
                 PackagesFromCommandLine.append(arg)
 
-    PackagesFromCommandLine = FilterPackages(PackagesFromCommandLine)
-    PackagesFromCommandLine = OrderPackages(PackagesFromCommandLine)
+    PackagesFromCommandLine = OrderPackages(FilterPackages(GroupsToPackages(PackagesFromCommandLine)))
 
     if not ActionCommands:
         if PackagesFromCaller:
