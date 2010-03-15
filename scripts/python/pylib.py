@@ -2008,6 +2008,9 @@ GenericCommand:
             else:
                 PackagesFromCommandLine.append(arg)
 
+    PackagesFromCommandLine = FilterPackages(PackagesFromCommandLine)
+    PackagesFromCommandLine = OrderPackages(PackagesFromCommandLine)
+
     if not ActionCommands:
         if PackagesFromCaller:
             ActionCommands = ActionInfo["build"]["Commands"]
