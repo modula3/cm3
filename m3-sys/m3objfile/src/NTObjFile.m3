@@ -137,6 +137,7 @@ REVEAL
     append            := Append;
     appendBytes       := AppendBytes;
     patch             := Patch;
+    backup            := Backup;
     relocate          := Relocate;
     import_symbol     := ImportSymbol;
     define_symbol     := DefineSymbol;
@@ -351,6 +352,11 @@ PROCEDURE AppendBytes (t: T;  s: Seg;  READONLY bytes: ARRAY OF UINT8) =
     AddRawBytes (SegToSection(t, s)^, ADR(bytes[0]), NUMBER(bytes));
   END AppendBytes;
 
+PROCEDURE Backup (t: T;  s: Seg;  length: CARDINAL) =
+  BEGIN
+    BackupRaw (SegToSection(t, s)^, length);
+  END Backup;
+
 PROCEDURE AddRawBytes (VAR s: Section;  value: UNTRACED REF UINT8; length: CARDINAL) =
   VAR offs := s.raw_data.n_bytes;
       seg  := EnsureLength (s.data, offs + length);
@@ -360,6 +366,7 @@ PROCEDURE AddRawBytes (VAR s: Section;  value: UNTRACED REF UINT8; length: CARDI
       INC (offs);
       INC (value);
     END;
+    <* ASSERT s.raw_data.n_bytes = s.raw_data.cnt *>
     s.raw_data.n_bytes := offs;
     s.raw_data.cnt     := offs;
   END AddRawBytes;
@@ -375,9 +382,19 @@ PROCEDURE AddRaw (VAR s: Section;  value, length: INTEGER) =
       INC (offs);
       DEC (length);
     END;
+    <* ASSERT s.raw_data.n_bytes = s.raw_data.cnt *>
     s.raw_data.n_bytes := offs;
     s.raw_data.cnt     := offs;
   END AddRaw;
+
+PROCEDURE BackupRaw (VAR s: Section;  length: CARDINAL) =
+  VAR n_bytes := s.raw_data.n_bytes;
+  BEGIN
+    <* ASSERT n_bytes >= length *>
+    <* ASSERT n_bytes = s.raw_data.cnt *>
+    DEC(s.raw_data.n_bytes, length);
+    DEC(s.raw_data.cnt, length);
+  END BackupRaw;
 
 PROCEDURE AddName (VAR s: Section;  name: TEXT) =
   VAR
@@ -395,6 +412,7 @@ PROCEDURE AddName (VAR s: Section;  name: TEXT) =
       INC (offs);
     END;
 
+    <* ASSERT s.raw_data.n_bytes = s.raw_data.cnt *>
     s.raw_data.n_bytes := offs;
     s.raw_data.cnt     := offs;
   END AddName;
@@ -423,8 +441,10 @@ PROCEDURE Patch (t: T;  s: Seg;  offset, value, length: INTEGER) =
   END Patch;
 
 PROCEDURE PatchRaw (VAR s: Section;  offset, value, length: INTEGER) =
+  VAR n_bytes := s.raw_data.n_bytes;
   BEGIN
-    <*ASSERT s.raw_data.n_bytes >= offset + length *>
+    <* ASSERT n_bytes = s.raw_data.cnt *>
+    <* ASSERT n_bytes >= offset + length *>
     WHILE (length > 0) DO
       s.data[offset] := Word.And (value, 16_FF);
       value := Word.RightShift (value, 8);
