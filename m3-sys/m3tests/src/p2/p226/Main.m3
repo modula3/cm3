@@ -55,9 +55,9 @@ BEGIN
   booleanC := AtomicBoolean.FetchXor(atomicBooleanA, booleanB);
 END Test_AtomicBoolean_FetchXor;
 
-PROCEDURE Test_AtomicBoolean_IsLockFree() =
+PROCEDURE Test_AtomicBoolean_IsLockFree():BOOLEAN =
 BEGIN
-  EVAL AtomicBoolean.IsLockFree();
+  RETURN AtomicBoolean.IsLockFree();
 END Test_AtomicBoolean_IsLockFree;
 
 PROCEDURE Test_AtomicBoolean_LoadStore() =
@@ -85,7 +85,7 @@ BEGIN
   Test_AtomicBoolean_FetchInc();
   Test_AtomicBoolean_FetchOr();
   Test_AtomicBoolean_FetchXor();
-  Test_AtomicBoolean_IsLockFree();
+  EVAL Test_AtomicBoolean_IsLockFree();
   Test_AtomicBoolean_LoadStore();
   Test_AtomicBoolean_Swap();
 END Test_AtomicBoolean;
@@ -127,9 +127,9 @@ BEGIN
   charC := AtomicChar.FetchXor(atomicCharA, charB);
 END Test_AtomicChar_FetchXor;
 
-PROCEDURE Test_AtomicChar_IsLockFree() =
+PROCEDURE Test_AtomicChar_IsLockFree():BOOLEAN =
 BEGIN
-  EVAL AtomicChar.IsLockFree();
+  RETURN AtomicChar.IsLockFree();
 END Test_AtomicChar_IsLockFree;
 
 PROCEDURE Test_AtomicChar_LoadStore() =
@@ -157,7 +157,7 @@ BEGIN
   Test_AtomicChar_FetchInc();
   Test_AtomicChar_FetchOr();
   Test_AtomicChar_FetchXor();
-  Test_AtomicChar_IsLockFree();
+  EVAL Test_AtomicChar_IsLockFree();
   Test_AtomicChar_LoadStore();
   Test_AtomicChar_Swap();
 END Test_AtomicChar;
@@ -203,9 +203,9 @@ BEGIN
   widecharC := AtomicWideChar.FetchXor(atomicWidecharA, widecharB);
 END Test_AtomicWidechar_FetchXor;
 
-PROCEDURE Test_AtomicWidechar_IsLockFree() =
+PROCEDURE Test_AtomicWidechar_IsLockFree():BOOLEAN =
 BEGIN
-  EVAL AtomicWideChar.IsLockFree();
+  RETURN AtomicWideChar.IsLockFree();
 END Test_AtomicWidechar_IsLockFree;
 
 PROCEDURE Test_AtomicWidechar_LoadStore() =
@@ -234,7 +234,7 @@ BEGIN
   Test_AtomicWidechar_FetchInc();
   Test_AtomicWidechar_FetchOr();
   Test_AtomicWidechar_FetchXor();
-  Test_AtomicWidechar_IsLockFree();
+  EVAL Test_AtomicWidechar_IsLockFree();
   Test_AtomicWidechar_LoadStore();
   Test_AtomicWidechar_Swap();
 END Test_AtomicWidechar;
@@ -280,9 +280,9 @@ BEGIN
   (*refanyC := AtomicRefany.FetchXor(atomicRefanyA, refanyB);*)
 END Test_AtomicRefany_FetchXor;
 
-PROCEDURE Test_AtomicRefany_IsLockFree() =
+PROCEDURE Test_AtomicRefany_IsLockFree():BOOLEAN =
 BEGIN
-  EVAL AtomicRefany.IsLockFree();
+  RETURN AtomicRefany.IsLockFree();
 END Test_AtomicRefany_IsLockFree;
 
 PROCEDURE Test_AtomicRefany_LoadStore() =
@@ -311,7 +311,7 @@ BEGIN
   Test_AtomicRefany_FetchInc();
   Test_AtomicRefany_FetchOr();
   Test_AtomicRefany_FetchXor();
-  Test_AtomicRefany_IsLockFree();
+  EVAL Test_AtomicRefany_IsLockFree();
   Test_AtomicRefany_LoadStore();
   Test_AtomicRefany_Swap();
 END Test_AtomicRefany;
@@ -357,9 +357,9 @@ BEGIN
   (*addressC := AtomicAddress.FetchXor(atomicAddressA, addressB);*)
 END Test_AtomicAddress_FetchXor;
 
-PROCEDURE Test_AtomicAddress_IsLockFree() =
+PROCEDURE Test_AtomicAddress_IsLockFree():BOOLEAN =
 BEGIN
-  EVAL AtomicAddress.IsLockFree();
+  RETURN AtomicAddress.IsLockFree();
 END Test_AtomicAddress_IsLockFree;
 
 PROCEDURE Test_AtomicAddress_LoadStore() =
@@ -388,7 +388,7 @@ BEGIN
   Test_AtomicAddress_FetchInc();
   Test_AtomicAddress_FetchOr();
   Test_AtomicAddress_FetchXor();
-  Test_AtomicAddress_IsLockFree();
+  EVAL Test_AtomicAddress_IsLockFree();
   Test_AtomicAddress_LoadStore();
   Test_AtomicAddress_Swap();
 END Test_AtomicAddress;
@@ -435,9 +435,9 @@ BEGIN
   integerC := AtomicInteger.FetchXor(atomicIntegerA, integerB);
 END Test_AtomicInteger_FetchXor;
 
-PROCEDURE Test_AtomicInteger_IsLockFree() =
+PROCEDURE Test_AtomicInteger_IsLockFree():BOOLEAN =
 BEGIN
-  EVAL AtomicInteger.IsLockFree();
+  RETURN AtomicInteger.IsLockFree();
 END Test_AtomicInteger_IsLockFree;
 
 PROCEDURE Test_AtomicInteger_LoadStore() =
@@ -466,7 +466,7 @@ BEGIN
   Test_AtomicInteger_FetchInc();
   Test_AtomicInteger_FetchOr();
   Test_AtomicInteger_FetchXor();
-  Test_AtomicInteger_IsLockFree();
+  EVAL Test_AtomicInteger_IsLockFree();
   Test_AtomicInteger_LoadStore();
   Test_AtomicInteger_Swap();
 END Test_AtomicInteger;
@@ -509,9 +509,9 @@ BEGIN
   longintC := AtomicLongint.FetchXor(atomicLongintA, longintB);
 END Test_AtomicLongint_FetchXor;
 
-PROCEDURE Test_AtomicLongint_IsLockFree() =
+PROCEDURE Test_AtomicLongint_IsLockFree():BOOLEAN =
 BEGIN
-  EVAL AtomicLongint.IsLockFree();
+  RETURN AtomicLongint.IsLockFree();
 END Test_AtomicLongint_IsLockFree;
 
 PROCEDURE Test_AtomicLongint_Load() =
@@ -539,7 +539,7 @@ BEGIN
   Test_AtomicLongint_FetchInc();
   Test_AtomicLongint_FetchOr();
   Test_AtomicLongint_FetchXor();
-  Test_AtomicLongint_IsLockFree();
+  EVAL Test_AtomicLongint_IsLockFree();
   Test_AtomicLongint_Load();
   Test_AtomicLongint_Store();
   Test_AtomicLongint_Swap();
