@@ -859,10 +859,12 @@ PROCEDURE pushnew (t: T; type: MType; force: Force; set := AllRegisters) =
     expand_stack(t);
     FOR i := 0 TO size - 1 DO
 
-      (* Be sure 64 bit values have low in EAX, high in EDX *)
+      (* Be sure 64 bit values have low in EAX, high in EDX (or ECX, EBX for lock compare exchange). *)
 
       IF size = 2 AND i = 0 AND force = Force.regset AND set = RegSet{EAX, EDX} THEN
         r := pickreg(t, RegSet{EAX}, hintaddr);
+      ELSIF size = 2 AND i = 0 AND force = Force.regset AND set = RegSet{ECX, EBX} THEN
+        r := pickreg(t, RegSet{EBX}, hintaddr);
       ELSE
         r := pickreg(t, set, hintaddr);
       END;
