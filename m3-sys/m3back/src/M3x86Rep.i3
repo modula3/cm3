@@ -17,6 +17,7 @@ FROM M3ObjFile IMPORT Seg;
 
 TYPE U <: Public;
 TYPE Public = M3CG.T OBJECT
+        proc_reguse := ARRAY Regno OF BOOLEAN{FALSE,..};
       METHODS
         NewVar (t: Type; m3t: TypeUID; s: ByteSize; a: Alignment;
                 name: Name := M3ID.NoID): x86Var;
