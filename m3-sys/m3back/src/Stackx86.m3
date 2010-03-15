@@ -752,7 +752,6 @@ PROCEDURE set_type (t: T; stackp: CARDINAL; type: Type) =
 
 PROCEDURE set_reg (t: T; stackp: CARDINAL; r: Regno; operandPart: OperandPart) =
   BEGIN
-    M3x86Rep.NoteRegisterUsed(t.parent, r);
     t.vstack[stackp].loc := OLoc.register;
     t.vstack[stackp].reg[operandPart] := r;
     t.reguse[r].stackp := stackp;
@@ -771,7 +770,6 @@ PROCEDURE corrupt (t: T; reg: Regno; operandPart: OperandPart) =
     IF t.reguse[reg].stackp # -1 THEN
       forceout(t, reg, operandPart);
     END;
-    M3x86Rep.NoteRegisterUsed(t.parent, reg);
     t.reguse[reg] := InitRegister(locked := t.reguse[reg].locked);
   END corrupt;
 

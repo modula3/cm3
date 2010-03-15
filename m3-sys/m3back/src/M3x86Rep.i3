@@ -21,7 +21,6 @@ TYPE Public = M3CG.T OBJECT
         NewVar (t: Type; m3t: TypeUID; s: ByteSize; a: Alignment;
                 name: Name := M3ID.NoID): x86Var;
         debug_set_label (label: Label);
-        GetLastBranchToExit(): INTEGER;
       END;
 
 TYPE VLoc = {global, temp};
@@ -77,8 +76,6 @@ TYPE
     usage: ProcList := NIL;
     fenceVar: x86Var := NIL;
   END;
-
-PROCEDURE NoteRegisterUsed(u: U; r: Regno);
 
 TYPE
   MVar = RECORD
