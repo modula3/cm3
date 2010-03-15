@@ -1353,6 +1353,12 @@ PROCEDURE begin_procedure (u: U;  p: Proc) =
     u.last_exitbranch := -1;
     u.exit_proclabel := -1;
 
+    (* Mark non-volatiles as not used, until known otherwise. *)
+
+    u.proc_reguse[EBX] := FALSE;
+    u.proc_reguse[ESI] := FALSE;
+    u.proc_reguse[EDI] := FALSE;
+
     realproc.offset := u.obj.cursor(Seg.Text);
     realproc.bound := TRUE;
 
@@ -1613,27 +1619,42 @@ PROCEDURE exit_proc (u: U; type: Type) =
   END exit_proc;
 
 PROCEDURE procedure_epilogue (u: U) =
-  VAR callee_cleans := u.current_proc.stdcall;
+  CONST NOP = 16_90;
   BEGIN
     IF u.exit_proclabel = -1 THEN
       RETURN;
-      (* Strange as it may seem, some procedures have no exit points... *)
+      (* Strange as it may seem, some procedures have no exit points. *)
     END;
 
     IF u.last_exitbranch = u.obj.cursor(Seg.Text) - 5 THEN
       (* Don't generate a branch to the epilogue at the last exit
          point of the procedure *)
+      u.cg.set_label(u.exit_proclabel, offset := -5);
       u.obj.backup(Seg.Text, 5);
+    ELSE
+      u.cg.set_label(u.exit_proclabel);
     END;
-      
-    u.cg.set_label(u.exit_proclabel);
 
-    u.cg.popOp(u.cg.reg[EDI]);
-    u.cg.popOp(u.cg.reg[ESI]);
-    u.cg.popOp(u.cg.reg[EBX]);
+    IF u.proc_reguse[EDI] THEN
+      u.cg.popOp(u.cg.reg[EDI]);
+    ELSE
+      u.obj.patch(Seg.Text, u.procframe_ptr + 6, NOP, 1);
+    END;
+
+    IF u.proc_reguse[ESI] THEN
+      u.cg.popOp(u.cg.reg[ESI]);
+    ELSE
+      u.obj.patch(Seg.Text, u.procframe_ptr + 5, NOP, 1);
+    END;
+
+    IF u.proc_reguse[EBX] THEN
+      u.cg.popOp(u.cg.reg[EBX]);
+    ELSE
+      u.obj.patch(Seg.Text, u.procframe_ptr + 4, NOP, 1);
+    END;
 
     u.cg.noargOp(Op.oLEAVE);
-    IF callee_cleans THEN
+    IF u.current_proc.stdcall THEN
       u.cg.cleanretOp(u.current_proc.paramsize - 8);
     ELSE
       u.cg.noargOp(Op.oRET);
@@ -3046,6 +3067,8 @@ PROCEDURE copy (u: U;  n: INTEGER;  type: MType;  overlap: BOOLEAN) =
       IF n > MAXINLINECOPY THEN
         u.vstack.find(stack0, Force.regset, RegSet { ESI } );
         u.vstack.find(stack1, Force.regset, RegSet { EDI } );
+        u.proc_reguse[ESI] := TRUE;
+        u.proc_reguse[EDI] := TRUE;
       ELSE
         u.vstack.find(stack0, Force.anyreg, AllRegisters, TRUE);
         u.vstack.find(stack1, Force.anyreg, AllRegisters, TRUE);
@@ -4320,6 +4343,8 @@ PROCEDURE store_ordered (x: U; type_multiple_of_32: ZType; type: MType; <*UNUSED
            atomicVariable = x.vstack.pos(2, "fetch_and_op") DO
  
         x.vstack.find(newValue, Force.regset, RegSet{ECX, EBX});
+        x.proc_reguse[EBX] := TRUE;
+
         (* x.vstack.find(atomicVariable, Force.any); bug *)
         x.vstack.find(atomicVariable, Force.anyreg);
         x.cg.load_ind(EAX, x.vstack.op(atomicVariable), 0, type);
@@ -4433,6 +4458,7 @@ PROCEDURE compare_exchange_helper (x: U; type: Type) =
          *)
         x.vstack.find(compareValueAndOldValueIfFailed, Force.regset, RegSet{EAX, EDX});
         x.vstack.find(newValue, Force.regset, RegSet{ECX, EBX});
+        x.proc_reguse[EBX] := TRUE;
       ELSE
         x.vstack.find(compareValueAndOldValueIfFailed, Force.regset, RegSet{EAX});
         x.vstack.find(newValue, Force.anyreg);
@@ -4542,6 +4568,7 @@ Some operations can be done better though.
     IF is64 THEN
       x.vstack.pushnew(type, Force.regset, RegSet{EDX, EAX});
       x.vstack.pushnew(type, Force.regset, RegSet{ECX, EBX});
+      x.proc_reguse[EBX] := TRUE;
     ELSE
       x.vstack.pushnew(type, Force.regset, RegSet{EAX});
       x.vstack.pushnew(type, Force.anyreg);

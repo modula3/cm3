@@ -904,6 +904,11 @@ PROCEDURE lock_exchange (t: T; READONLY dest, src: Operand; type: Type) =
 PROCEDURE movOp1 (t: T; READONLY dest, src: Operand) =
   VAR ins: Instruction;  mnemonic: TEXT := NIL;
   BEGIN
+
+    IF dest.loc = OLoc.register THEN
+      t.parent.proc_reguse[dest.reg[0]] := TRUE;
+    END;
+
     <* ASSERT dest.loc = OLoc.register OR dest.loc = OLoc.mem *>
     IF src.loc = OLoc.imm THEN
       movImmT(t, dest, src.imm);
@@ -1572,6 +1577,9 @@ PROCEDURE load_ind (t: T; r: Regno; READONLY ind: Operand; offset: ByteOffset; t
   VAR ins: Instruction;
       mnemonic := "MOV";
   BEGIN
+
+    t.parent.proc_reguse[r] := TRUE;
+
     <* ASSERT ind.loc = OLoc.register *>
     ins.opcode := 16_8B;
 
@@ -1922,16 +1930,7 @@ PROCEDURE fill_in_label_thread (t: T; ptr: LabList; val: INTEGER; short: BOOLEAN
                     val - (ptr.offs + 1) >= -16_80 *>
           t.obj.patch(ptr.seg, ptr.offs, val - (ptr.offs + 1), 1);
         ELSE
-          (* Filling labels at the end (really, past the end)
-           * of the object file occurs when we generate
-           * an epilogue. There should be a cleaner way to handle this.
-           * In the past, it was handled another way but not cleanly,
-           * where procedure_epilogue would use patch to generate
-           * the epilogue.
-           *)
-          IF ptr.offs < t.obj.cursor(Seg.Text) THEN
-            t.obj.patch(ptr.seg, ptr.offs, val - (ptr.offs + 4), 4);
-          END
+          t.obj.patch(ptr.seg, ptr.offs, val - (ptr.offs + 4), 4);
         END
       END;
       ptr := ptr.link;
