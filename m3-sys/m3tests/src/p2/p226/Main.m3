@@ -246,8 +246,6 @@ END Test_AtomicWidechar;
 PROCEDURE Test_AtomicRefany_Fence() =
 BEGIN
   AtomicRefany.Fence();
-  AtomicRefany.Fence();
-  AtomicRefany.Fence();
 END Test_AtomicRefany_Fence;
 
 PROCEDURE Test_AtomicRefany_CompareSwap() =
@@ -322,8 +320,6 @@ END Test_AtomicRefany;
 
 PROCEDURE Test_AtomicAddress_Fence() =
 BEGIN
-  AtomicAddress.Fence();
-  AtomicAddress.Fence();
   AtomicAddress.Fence();
 END Test_AtomicAddress_Fence;
 
@@ -400,8 +396,6 @@ END Test_AtomicAddress;
 
 PROCEDURE Test_AtomicInteger_Fence() =
 BEGIN
-  AtomicInteger.Fence();
-  AtomicInteger.Fence();
   AtomicInteger.Fence();
 END Test_AtomicInteger_Fence;
 
