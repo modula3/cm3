@@ -8,7 +8,7 @@ import ("m3middle")
 
 Module ("Coff")
 Module ("M3ObjFile")
-%Module ("MasmObjFile")
+Module ("MasmObjFile")
 Module ("NTObjFile")
 
 build_standalone ()
