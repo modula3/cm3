@@ -55,6 +55,10 @@ tablerow() {
 	[ "$coll" = "caltech" ] && coll="caltech-parser"
         echo "<a href=\"collection-${coll}.html\">optional</a>"
       ;;
+      *.deb)
+        echo 'Debian package';;
+      *.msi*)
+        echo 'Microsoft installer package';;
       *) echo "-";;
     esac
   fi
@@ -70,7 +74,7 @@ for rc in RC4 RC5 RC6 RC7 RC8 RC9; do
   echo "  <h2><a name=\"doc-${rc}\">Sources, Documentation and Support Scripts ${rc}</a></h2>" >> ${INDEX}
   echo "" >> ${INDEX}
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>" >> ${INDEX}
-  for f in cm3-src-*${rc}.tgz cm3-doc-*${rc}.tgz cm3-scripts-*${rc}.tgz; do
+  for f in cm3-src-*${rc}.tgz cm3-doc-*${rc}.tgz cm3-scripts-*${rc}.tgz cm3-*${rc}.deb cm3-*${rc}.msi; do
     case $f in
       *-pre-*);;
       *) [ -s "$f" ] && tablerow $f;;
