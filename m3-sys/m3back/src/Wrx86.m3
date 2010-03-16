@@ -115,12 +115,10 @@ PROCEDURE TName (t: T;  type: Type) =
 
 PROCEDURE Flt (t: T;  READONLY f: Target.Float) =
   CONST FType = ARRAY Target.Precision OF TEXT { " R ", " L ", " X " };
-  VAR
-    buf : ARRAY [0..BITSIZE (Target.Extended)] OF CHAR;
-    len := TFloat.ToChars (f, buf);
+  VAR buf : ARRAY [0..BITSIZE (Target.Extended)] OF CHAR;
   BEGIN
     OutT (t, FType [TFloat.Prec (f)]);
-    OutS (t, SUBARRAY (buf, 0, len));
+    OutS (t, SUBARRAY (buf, 0, TFloat.ToChars (f, buf)));
   END Flt;
 
 PROCEDURE Bool (t: T;  b: BOOLEAN) =
