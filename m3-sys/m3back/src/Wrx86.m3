@@ -152,9 +152,9 @@ PROCEDURE Int (t: T;  i: INTEGER) =
     OutI (t, i);
   END Int;
 
-PROCEDURE TInt (t: T;  READONLY i: Target.Int) =
-  VAR buf : ARRAY [0..BITSIZE (Target.Integer)] OF CHAR;
-  BEGIN
+PROCEDURE TInt (t: T;  READONLY i: TIntN.T) =
+  VAR buf : ARRAY [0..BITSIZE (TIntN.T)] OF CHAR;
+ BEGIN
     OutC (t, ' ');
     OutS (t, SUBARRAY (buf, 0, TIntN.ToChars (i, buf)));
   END TInt;
