@@ -234,11 +234,11 @@ void __stdcall set_range
 
 /* compat: not referenced by any backend */
 
-void __cdecl set_singleton(size_t bit_index, size_t* s)
+void __cdecl set_singleton(size_t bit_index, size_t* set)
 {
   size_t word = bit_index / SET_GRAIN;
   size_t bit  = bit_index % SET_GRAIN;
-  s[word] |= (((size_t)1) << bit);
+  set[word] |= (((size_t)1) << bit);
 }
 
 #ifdef _WIN32
