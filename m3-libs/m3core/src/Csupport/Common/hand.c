@@ -29,11 +29,15 @@ typedef int BOOL;
 
 #ifdef __cplusplus
 extern "C"
-{           
+{
 #endif
 
 #if !defined(_MSC_VER) && !defined(__stdcall)
 #define __stdcall /* nothing */
+#endif
+
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
 #endif
 
 #if (UINT_MAX <= 0xFFFF) || (UINT_MAX != 0xFFFFFFFF) || (UINT_MAX != 0xFFFFFFFFUL)
@@ -95,6 +99,15 @@ int64 __stdcall m3_mod64(int64 b, int64 a)
 #endif
 
 #define SET_GRAIN (sizeof (size_t) * 8)
+
+/* compat: not referenced by any backend */
+
+size_t __cdecl set_member(size_t bit_index, size_t* set)
+{
+  size_t word = bit_index / SET_GRAIN;
+  size_t bit  = bit_index % SET_GRAIN;
+  return (set[word] & (((size_t)1) << bit)) != 0;
+}
 
 void __stdcall set_union
     ANSI((                 size_t n_bits, size_t* c, size_t* b, size_t* a))
@@ -217,6 +230,15 @@ void __stdcall set_range
       s [b_word] |= low_bits;
     }
   }
+}
+
+/* compat: not referenced by any backend */
+
+void __cdecl set_singleton(size_t bit_index, size_t* s)
+{
+  size_t word = bit_index / SET_GRAIN;
+  size_t bit  = bit_index % SET_GRAIN;
+  s[word] |= (((size_t)1) << bit);
 }
 
 #ifdef _WIN32
