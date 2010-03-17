@@ -109,7 +109,6 @@ M3WRAP1_(int, close, int)
 M3WRAP2_(int, dup2, int, int)
 
 #ifndef _WIN32
-M3WRAP0(m3_pid_t, fork)
 M3WRAP2(int, fchmod, int, m3_mode_t)
 M3WRAP3(int, chown, const char*, m3_uid_t, m3_gid_t)
 M3WRAP3(int, fchown, int, m3_uid_t, m3_gid_t)
@@ -129,6 +128,20 @@ M3WRAP2(int, mkdir, const char*, m3_mode_t)
 M3WRAP1(int, pipe, int*)
 M3WRAP2(int, gethostname, char*, size_t)
 M3WRAP2(char*, getcwd, char*, size_t)
+
+m3_pid_t __cdecl Unix__fork(void)
+{
+#if defined(__sun)
+    /* Prior to Solaris 2.10, fork() was fork1() or forkall() depending
+     * on which library used. In Solaris 2.10, fork() is always fork1(),
+     * and a separate forkall() is available. fork1()'s declaration
+     * does have some #ifdef guards around it; hopefully ok.
+     */
+    return fork1();
+#else
+    return fork();
+#endif
+}
 #endif
 
 void __cdecl Unix__underscore_exit(int exit_code)
