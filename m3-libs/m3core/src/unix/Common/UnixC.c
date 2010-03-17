@@ -131,7 +131,7 @@ M3WRAP2(char*, getcwd, char*, size_t)
 
 m3_pid_t __cdecl Unix__fork(void)
 {
-#if defined(__sun)
+#ifdef __sun
     /* Prior to Solaris 2.10, fork() was fork1() or forkall() depending
      * on which library used. In Solaris 2.10, fork() is always fork1(),
      * and a separate forkall() is available. fork1()'s declaration
