@@ -160,16 +160,29 @@ PROCEDURE DoDispatch(self: Dispatcher) =
     EXCEPT Thread.Alerted => END;
   END DoDispatch;
 
+PROCEDURE FileClose(VAR file: INTEGER) =
+  BEGIN
+    IF file >= 0 THEN
+      EVAL Unix.close(file);
+      file := -1;
+    END;
+  END FileClose; 
+
+PROCEDURE SignalHandlerRemove(sig: Ctypes.int; VAR handler: T) =
+  BEGIN
+    IF handler # NIL THEN
+      EVAL UnixMisc.Signal(sig, NIL);
+      handler := NIL;
+    END;
+  END SignalHandlerRemove;
+
 PROCEDURE DoShutDown(self: Dispatcher) =
   BEGIN
-    EVAL Unix.close(wfd);
-    EVAL Unix.close(self.rfd);
+    FileClose(wfd);
+    FileClose(self.rfd);
     LOCK self.mu DO
       FOR sig := FIRST(self.handlers) TO LAST(self.handlers) DO
-	IF self.handlers[sig] # NIL THEN
-	  EVAL UnixMisc.Signal(sig, NIL);
-	  self.handlers[sig] := NIL;
-	END;
+        SignalHandlerRemove(sig, self.handlers[sig]);
       END;
     END;
   END DoShutDown;
