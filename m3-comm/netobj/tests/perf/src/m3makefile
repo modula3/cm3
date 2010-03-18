@@ -16,7 +16,7 @@ interface("Test")
 module("XRd")
 implementation("NetObjTest")
 netobj("Test","T")
-netobj("Test,Return")
+netobj("Test","Return")
 
 build_standalone()
 
