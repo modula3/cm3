@@ -55,7 +55,7 @@ TYPE
     stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
     context: ADDRESS := NIL;            (* LL = activeMu *)
     state := ActState.Started;          (* LL = activeMu *)
-    slot := 0;                          (* LL = slotMu; index in slots *)
+    slot: CARDINAL := 0;                (* LL = slotMu; index in slots *)
     floatState : FloatMode.ThreadState; (* per-thread floating point state *)
     heapState : RTHeapRep.ThreadState;  (* per-thread heap state *)
   END;
@@ -260,8 +260,8 @@ PROCEDURE TestAlert (): BOOLEAN =
 (*------------------------------------------------------------------ Self ---*)
 
 VAR (* LL = slotMu *)
-  n_slotted := 0;
-  next_slot := 1;
+  n_slotted: CARDINAL;
+  next_slot: CARDINAL;      (* NOTE: we don't use slots[0] *)
   slots: REF ARRAY OF T;    (* NOTE: we don't use slots[0] *)
 
 PROCEDURE InitActivations (me: Activation) =
@@ -270,10 +270,10 @@ PROCEDURE InitActivations (me: Activation) =
     me.next := me;
     me.prev := me;
     SetActivation(me);
-    <* ASSERT next_slot = 1 *>    (* no threads created yet *)
-    <* ASSERT slots = NIL *>      (* no threads created yet *)
-    <* ASSERT n_slotted = 0 *>    (* no threads created yet *)
-    <* ASSERT allThreads = NIL *> (* no threads created yet *)
+    (* Explicitly (re)initialize to handle fork(). *)
+    next_slot := 1;     (* no threads created yet *)
+    slots := NIL;       (* no threads created yet *)
+    n_slotted := 0;     (* no threads created yet *)
     allThreads := me;
     FloatMode.InitThread(me.floatState);
   END InitActivations;
