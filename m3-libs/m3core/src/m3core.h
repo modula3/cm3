@@ -85,6 +85,7 @@
 #ifndef WIN32
 #define WIN32
 #endif
+
 #include <direct.h>
 #include <io.h>
 #include <winsock.h>
