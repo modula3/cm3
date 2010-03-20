@@ -203,32 +203,6 @@ void __stdcall set_sym_difference
   }
 }
 
-size_t __stdcall set_ge
-    ANSI((              size_t n_bits, size_t* b, size_t* a))
-      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
-{
-  register size_t n_words = n_bits / SET_GRAIN;
-  register size_t i;
-  for (i = 0; i < n_words; i++) {
-    if ((~ a[i]) & b[i]) return 0;
-  }
-  return 1;
-}
-
-size_t __stdcall set_gt
-    ANSI((              size_t n_bits, size_t* b, size_t* a))
-      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
-{
-  register size_t n_words = n_bits / SET_GRAIN;
-  register size_t i;
-  register size_t eq = 0;
-  for (i = 0; i < n_words; i++) {
-    if ((~ a[i]) & b[i]) return 0;
-    eq |=  (a[i] ^ b[i]);
-  }
-  return (eq != 0);
-}
-
 size_t __stdcall set_le
     ANSI((              size_t n_bits, size_t* b, size_t* a))
       KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
@@ -253,6 +227,20 @@ size_t __stdcall set_lt
     eq |= (a[i] ^ b[i]);
   }
   return (eq != 0);
+}
+
+size_t __stdcall set_ge
+    ANSI((              size_t n_bits, size_t* b, size_t* a))
+      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
+{
+  return set_le(n_bits, a, b);
+}
+
+size_t __stdcall set_gt
+    ANSI((              size_t n_bits, size_t* b, size_t* a))
+      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
+{
+  return set_lt(n_bits, a, b);
 }
 
 #define HIGH_BITS(a) ((~(size_t)0) << (a))
