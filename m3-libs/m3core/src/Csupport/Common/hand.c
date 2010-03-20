@@ -43,8 +43,6 @@ extern "C"
 #if (UINT_MAX <= 0xFFFF) || (UINT_MAX != 0xFFFFFFFF) || (UINT_MAX != 0xFFFFFFFFUL)
 #error uint is not 32bits
 #endif
-typedef unsigned uint32;
-typedef int int32;
 
 /* There are problems passing int64 in K&R form! */
 #if 1 /* defined(__STDC__) || defined(__cplusplus) || defined(_MSC_VER) */
@@ -55,13 +53,40 @@ typedef int int32;
 #define KR(x) x
 #endif
 
-#ifdef _WIN32
-
 /* return positive form of a negative value, avoiding overflow */
 /* T should be an unsigned type */
 #define M3_POS(T, a) (((T)-((a) + 1)) + 1)
 
+/* compat: not referenced by any backend */
+
+#ifndef _WIN32
+long
+m3_div(long b, long a)
+{
+  typedef          long ST; /* signed type */
+  typedef unsigned long UT; /* unsigned type */
+  int aneg = (a < 0);
+  int bneg = (b < 0);
+  if (aneg == bneg || a == 0 || b == 0)
+    return (a / b);
+  else
+  {
+    /* round negative result down by rounding positive result up
+       unsigned math is much better defined, see gcc -Wstrict-overflow=4 */
+    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
+    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
+    return -(ST)((ua + ub - 1) / ub);
+  }
+}
+#endif
+
+/* compat: not referenced by gcc backend */
+
+#ifdef _WIN32
 int64 __stdcall m3_div64(int64 b, int64 a)
+#else
+int64 __stdcall m3_divL(int64 b, int64 a)
+#endif
 {
   typedef  int64 ST; /* signed type */
   typedef uint64 UT; /* unsigned type */
@@ -79,7 +104,34 @@ int64 __stdcall m3_div64(int64 b, int64 a)
   }
 }
 
+/* compat: not referenced by any backend */
+
+#ifndef _WIN32
+long __stdcall m3_mod(long b, long a)
+{
+  typedef          long ST; /* signed type */
+  typedef unsigned long UT; /* unsigned type */
+  int aneg = (a < 0);
+  int bneg = (b < 0);
+  if (aneg == bneg || a == 0 || b == 0)
+    return (a % b);
+  else
+  {
+    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
+    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
+    a = (ST)(ub - 1 - (ua + ub - 1) % ub);
+    return (bneg ? -a : a);
+  }
+}
+#endif
+
+/* compat: not referenced by gcc backend */
+
+#ifdef _WIN32
 int64 __stdcall m3_mod64(int64 b, int64 a)
+#else
+int64 __stdcall m3_modL(int64 b, int64 a)
+#endif
 {
   typedef  int64 ST; /* signed type */
   typedef uint64 UT; /* unsigned type */
@@ -95,8 +147,6 @@ int64 __stdcall m3_mod64(int64 b, int64 a)
     return (bneg ? -a : a);
   }
 }
-
-#endif
 
 #define SET_GRAIN (sizeof (size_t) * 8)
 
@@ -243,18 +293,12 @@ void __cdecl set_singleton(size_t bit_index, size_t* set)
 
 #ifdef _WIN32
 
-/* Several functions are "missing" here because we
- * call the C compiler helper functions directly.
- * e.g. multiply, unsigned div/mod, shift left/right.
- * Also some operations are generated inline, e.g. add, subtract, compare, and, or, xor, not, neg, abs.
- */
-
 uint64 _rotl64(uint64 value, int shift);
 uint64 _rotr64(uint64 value, int shift);
 #pragma intrinsic(_rotl64)
 #pragma intrinsic(_rotr64)
-uint64 __stdcall  m3_rotate_left64(uint64 a, uint32 b)  { return _rotl64(a, (int)b); }
-uint64 __stdcall m3_rotate_right64(uint64 a, uint32 b)  { return _rotr64(a, (int)b); }
+uint64 __stdcall  m3_rotate_left64(uint64 a, int b)  { return _rotl64(a, b); }
+uint64 __stdcall m3_rotate_right64(uint64 a, int b)  { return _rotr64(a, b); }
 
 uint64 __stdcall m3_rotate64(uint64 a, int b)
 {
