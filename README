@@ -10,3 +10,5 @@ m3-sys and m3-libs. All the rest is more or less optional. Complete
 documentation in HTML and other formats can be found in the doc
 sub-directory.
 
+trivial text edit for debugging purposes
+
