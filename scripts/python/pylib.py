@@ -2923,7 +2923,7 @@ DebianArchitecture = {
   "SPARC64" : "sparc",
   }
 
-def MakeDebianPackage(name, input, output, prefix):
+def MakeDebianPackage(input, prefix):
 #
 # .deb file format:
 # an ar archive containing (I think the order matters):
