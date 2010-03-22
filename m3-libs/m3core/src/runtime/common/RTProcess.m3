@@ -97,6 +97,3 @@ PROCEDURE RegisterInterruptSetup (enable, disable: PROCEDURE ()) =
 
 BEGIN
 END RTProcess.
-
-
-
