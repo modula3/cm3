@@ -156,11 +156,6 @@ PROCEDURE Reset () =
 PROCEDURE DoCompile () =
   VAR m: Module.T;  cs := M3.OuterCheckState;  m_name, filename: M3ID.T;
   BEGIN
-(***
-RTCollectorSRC.gcRatio := 0.5; (* don't bother collecting much *)
-RTCollectorSRC.incremental := FALSE;
-RTCollector.Disable ();
-***)
     Scanner.Push (Host.filename, Host.source, is_main := TRUE);
 
     StartPhase ("initializing builtins");
@@ -201,9 +196,6 @@ RTCollector.Disable ();
                     & ") doesn't match module name ("
                     & M3ID.ToText (m_name) & ")");
     END;
-(***
-RTCollector.Enable ();
-***)
     IF Failed () THEN RETURN END;
 
     StartPhase ("type checking");
