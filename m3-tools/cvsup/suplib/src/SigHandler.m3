@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: SigHandler.m3,v 1.3 2010-03-18 10:55:48 jkrell Exp $ *)
+ *)
 
 (* This module works as follows.  A Unix pipe is created, but unlike
    typical pipes, it is used entirely within a single process.  When

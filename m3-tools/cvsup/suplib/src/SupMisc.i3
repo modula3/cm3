@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: SupMisc.i3,v 1.2 2009-04-12 05:33:21 jkrell Exp $ *)
+ *)
 
 (* The "SupMisc" interface gathers together various constants and
    procedures that are somehow associated with CVSup and/or CVS. *)

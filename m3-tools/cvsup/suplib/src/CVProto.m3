@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: CVProto.m3,v 1.1.1.1 2009-04-09 17:01:52 jkrell Exp $ *)
+ *)
 
 (* To add a new protocol version, define the new fields in the interface
    file.  Then, add code to the module initialization block to

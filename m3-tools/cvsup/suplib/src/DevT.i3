@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: DevT.i3,v 1.1.1.1 2009-04-09 17:01:52 jkrell Exp $ *)
+ *)
 
 (* The "DevT" interface abstracts out some operations involving
    the Unix "dev_t" type.  This is intended to solve some portability

@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: EscapedRd.i3,v 1.1.1.1 2009-04-09 17:01:53 jkrell Exp $ *)
+ *)
 
 (* The "EscapedRd" interface provides a subclass of "Rd.T" which
    decodes the record-oriented stream produced by an "EscapedWr.T".  See

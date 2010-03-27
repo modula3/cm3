@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: SplitLogger.i3,v 1.1.1.1 2009-04-09 17:01:59 jkrell Exp $ *)
+ *)
 
 (* A "SplitLogger.T", or split logger, is a general-purpose device for
    splitting, teeing, or filtering log messages according to their

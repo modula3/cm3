@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: RCSString.i3,v 1.1.1.1 2009-04-09 17:01:58 jkrell Exp $ *)
+ *)
 
 (* The "RCSString" interface provides an abstract interface to the text
    strings associated with RCS files.  Behind the abstract interface are

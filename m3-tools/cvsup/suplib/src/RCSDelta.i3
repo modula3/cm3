@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: RCSDelta.i3,v 1.1.1.1 2009-04-09 17:01:56 jkrell Exp $ *)
+ *)
 
 (* The "RCSDelta" interface supports operations on the individual deltas
    of an RCS file. *)
