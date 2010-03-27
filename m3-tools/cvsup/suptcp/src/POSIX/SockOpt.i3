@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: SockOpt.i3,v 1.1.1.1 2009-04-09 17:02:04 jkrell Exp $ *)
+ *)
 
 (* This interface provides a temporary work-around for a bug in the
    FreeBSD version of the "Usocket" interface of SRC Modula-3 release

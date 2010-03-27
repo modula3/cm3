@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: SigHandler.i3,v 1.1.1.1 2009-04-09 17:01:59 jkrell Exp $ *)
+ *)
 
 (* The "SigHandler" interface allows Unix signals to be serviced in
    normal application code, where all the facilities of the thread

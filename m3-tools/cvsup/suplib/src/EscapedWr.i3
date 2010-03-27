@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: EscapedWr.i3,v 1.1.1.1 2009-04-09 17:01:53 jkrell Exp $ *)
+ *)
 
 (* The "EscapedWr" interface provides a subclass of "Wr.T" which
    supports record-oriented writes to a stream.  All text is passed on
