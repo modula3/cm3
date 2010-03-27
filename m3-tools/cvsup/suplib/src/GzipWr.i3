@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id$ *)
+ *)
 
 (* The "GzipWr" interface defines a subclass of "StreamWr.T" which writes to
    a compressed stream, compressing the data written in the process. *)
