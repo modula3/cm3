@@ -5,9 +5,6 @@
  * can do whatever you want with this stuff. If we meet some day, and you think
  * this stuff is worth it, you can buy me a beer in return.   Poul-Henning Kamp
  * ----------------------------------------------------------------------------
- *
- * $Id: md5hl.c,v 1.2 2009-11-27 08:24:53 jkrell Exp $
- *
  */
 
 #if defined(__INTERIX) && !defined(_REENTRANT)

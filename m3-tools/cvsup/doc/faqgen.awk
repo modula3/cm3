@@ -2,7 +2,6 @@
 #
 # Copyright 1998-2003 John D. Polstra
 # All rights reserved.
-# $Id: faqgen.awk,v 1.1.1.1 2009-04-09 17:01:44 jkrell Exp $
 
 BEGIN {
     secH = "H3";
