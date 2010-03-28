@@ -2,7 +2,6 @@
 #
 # Copyright 1998-2003 John D. Polstra
 # All rights reserved.
-# $Id$
 
 BEGIN {
     secH = "H3";

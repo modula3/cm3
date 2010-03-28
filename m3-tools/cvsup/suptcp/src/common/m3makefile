@@ -2,7 +2,6 @@
 /* Copyright 1993 Digital Equipment Corporation. */
 /* Distributed only by permission. */
 /* Last modified on Tue Jan 25 18:07:39 PST 1994 by wobber     */
-/* $Id$ */
 
 Interface("SupErrno")
 c_source("SupErrnoC")

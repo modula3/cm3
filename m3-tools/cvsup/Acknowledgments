@@ -83,5 +83,3 @@ supported the development of portions of this work.
 This software uses the RSA Data Security, Inc. MD5 Message-Digest
 Algorithm.  It also incorporates Poul-Henning Kamp's higher-level
 interfaces to the MD5 functions.
-
-$Id$

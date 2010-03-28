@@ -4,7 +4,6 @@
 (* Last modified on Thu Jun  3 10:04:16 PDT 1993 by wobber *)
 (*      modified on Sun Jan 12 16:16:54 PST 1992 by meehan *)
 (*      modified on Sat Jan 11 16:55:00 PST 1992 by gnelson *)
-(* $Id$ *)
 
 INTERFACE SupTCP;
 

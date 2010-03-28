@@ -22,8 +22,6 @@
  * These notices must be retained in any copies of any part of this
  * documentation and/or software.
  *
- * $Id$
- *
  * This code is the same as the code published by RSA Inc.  It has been
  * edited for clarity and style only.
  */

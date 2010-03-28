@@ -1,7 +1,6 @@
 (* Copyright 1992 Digital Equipment Corporation. *)
 (* Distributed only by permission. *)
 (* Created on Sat Jan 11 15:49:00 PST 1992 by wobber *)
-(* $Id$ *)
 
 INTERFACE SupTCPPosix;
 

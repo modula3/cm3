@@ -24,8 +24,6 @@
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
 # 
-# $Id
-# 
 # cvsup2httplog - convert a cvsup log file to a HTTP log file
 #
 # usage: cvsup2httplog < cvsupd.log > httpd.log
