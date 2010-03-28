@@ -1307,6 +1307,10 @@ PROCEDURE Init() =
   VAR xx: INTEGER;
   BEGIN
     inCritical := 1;
+
+      xx := RTProcess.RegisterForkHandlers(AtForkPrepare, AtForkParent, AtForkChild);
+      <* ASSERT xx = 0 *>
+
       self := NEW (T, state := State.alive, id := nextId,
                    stackbase := ADR(xx),
                    context := MakeContext(NIL, 0));
@@ -1347,6 +1351,25 @@ PROCEDURE QQ(): ADDRESS =
   BEGIN
     RETURN ADR (xx);
   END QQ;
+
+PROCEDURE AtForkPrepare() =
+  BEGIN
+    INC(inCritical);
+  END AtForkPrepare;
+
+PROCEDURE AtForkParent() =
+  BEGIN
+    DEC(inCritical);
+  END AtForkParent;
+
+PROCEDURE AtForkChild() =
+  BEGIN
+    pausedThreads := NIL;
+    self.next := self;
+    self.previous := self;
+    multipleThreads := FALSE;
+    AtForkParent();
+  END AtForkChild;
 
 (*------------------------------------------------------------- collector ---*)
 (* These procedures provide synchronization primitives for the allocator

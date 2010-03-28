@@ -7,7 +7,7 @@ Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep,
        RTCollectorSRC, RTError, RTHeapRep, RTIO, RTParams,
-       RTPerfTool, RTProcess, ThreadEvent, Time,
+       RTPerfTool, RTProcess, Thread, ThreadEvent, Time,
        Unix, Utime, Word, Usched,
        Uerror, Uexec;
 FROM Compiler IMPORT ThisFile, ThisLine;
@@ -271,10 +271,10 @@ PROCEDURE InitActivations (): Activation =
     me.next := me;
     me.prev := me;
     SetActivation(me);
-    <* ASSERT next_slot = 1 *> (* no threads created yet *)
-    <* ASSERT slots = NIL *> (* no threads created yet *)
-    <* ASSERT n_slotted = 0 *> (* no threads created yet *)
-    <* ASSERT allThreads = NIL *> (* no threads created yet *)
+    (* Explicitly (re)initialize to handle fork(). *)
+    next_slot := 1;     (* no threads created yet *)
+    slots := NIL;       (* no threads created yet *)
+    n_slotted := 0;     (* no threads created yet *)
     allThreads := me;
     FloatMode.InitThread(me.floatState);
     RETURN me;
@@ -1310,15 +1310,15 @@ PROCEDURE PerfRunning () =
 
 (*-------------------------------------------------------- Initialization ---*)
 
-PROCEDURE Init ()=
+PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
   VAR
     self: T;
     me: Activation;
   BEGIN
-    InitC(ADR(self));
+    InitC(stackbase);
 
     me := InitActivations();
-    me.stackbase := ADR(self); (* not quite accurate but hopefully ok *)
+    me.stackbase := stackbase;
 
     self := CreateT(me);
     joinMu := NEW(MUTEX);
@@ -1332,6 +1332,92 @@ PROCEDURE Init ()=
       RTCollectorSRC.StartForegroundCollection();
     END;
   END Init;
+
+PROCEDURE Init ()=
+  VAR r: INTEGER;
+  BEGIN
+    r := RTProcess.RegisterForkHandlers(AtForkPrepare, AtForkParent, AtForkChild);
+    IF r # 0 THEN DieI(ThisLine(), r) END;
+    InitWithStackBase(ADR(r)); (* not quite accurate but hopefully ok *)
+  END Init;
+
+VAR locks := ARRAY [0..3] OF pthread_mutex_t{
+			 activeMu, slotsMu, initMu, perfMu};
+
+PROCEDURE PThreadLockMutex(mutex: pthread_mutex_t; line: INTEGER) =
+  VAR r: INTEGER;
+  BEGIN
+	IF mutex # NIL THEN
+      r := pthread_mutex_lock(mutex);
+      IF r # 0 THEN DieI(line, r) END;
+    END;
+  END PThreadLockMutex;
+
+PROCEDURE PThreadUnlockMutex(mutex: pthread_mutex_t; line: INTEGER) =
+  VAR r: INTEGER;
+  BEGIN
+	IF mutex # NIL THEN
+      r := pthread_mutex_unlock(mutex);
+      IF r # 0 THEN DieI(line, r) END;
+    END;
+  END PThreadUnlockMutex;
+
+PROCEDURE AtForkPrepare() =
+  VAR me := GetActivation();
+      act: Activation;
+      cond: Condition;
+  BEGIN
+    Thread.Acquire(joinMu);
+    LockHeap();
+    FOR i := FIRST(locks) TO LAST(locks) DO
+      PThreadLockMutex(locks[i], ThisLine());
+    END;
+    (* Walk activations and lock all threads, conditions.
+     * NOTE: We have initMu, activeMu, so slots
+     * won't change, conditions and mutexes
+     * won't be initialized on-demand.
+     *)
+    act := me;
+    REPEAT
+      PThreadLockMutex(act.mutex, ThisLine());
+      (*PThreadLockMutex(act.waitingOn, ThisLine());*)
+      cond := slots[act.slot].join;
+      IF cond # NIL THEN
+		PThreadLockMutex(cond.mutex, ThisLine());
+      END;
+      act := act.next;
+    UNTIL act = me;
+  END AtForkPrepare;
+
+PROCEDURE AtForkParent() =
+  VAR me := GetActivation();
+      act: Activation;
+      cond: Condition;
+  BEGIN
+    (* Walk activations and unlock all threads, conditions. *)
+    act := me;
+    REPEAT
+      cond := slots[act.slot].join;
+      IF cond # NIL THEN
+		PThreadUnlockMutex(cond.mutex, ThisLine());
+      END;
+      (*PThreadUnlockMutex(act.waitingOn, ThisLine());*)
+      PThreadUnlockMutex(act.mutex, ThisLine());
+      act := act.next;
+    UNTIL act = me;
+
+    FOR i := LAST(locks) TO FIRST(locks) BY -1 DO
+      PThreadUnlockMutex(locks[i], ThisLine());
+    END;
+    UnlockHeap();
+    Thread.Release(joinMu);
+  END AtForkParent;
+
+PROCEDURE AtForkChild() =
+  BEGIN
+    AtForkParent();
+    InitWithStackBase(GetActivation().stackbase);
+  END AtForkChild;
 
 (*------------------------------------------------------------- collector ---*)
 (* These procedures provide synchronization primitives for the allocator
