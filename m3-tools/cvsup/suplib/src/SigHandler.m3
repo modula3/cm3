@@ -166,9 +166,9 @@ PROCEDURE SignalHandlerRemove(sig: Ctypes.int; VAR handler: T) =
 
 PROCEDURE DoShutDown() =
   BEGIN
-    FileClose(wfd);
-    FileClose(rfd);
     LOCK mu DO
+      FileClose(wfd);
+      FileClose(rfd);
       FOR sig := FIRST(handlers) TO LAST(handlers) DO
         SignalHandlerRemove(sig, handlers[sig]);
       END;
