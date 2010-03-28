@@ -39,8 +39,6 @@ find_in_list() {
 find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
 find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
 
-set -x
-
 # our hostname
 TESTHOSTNAME=${TESTHOSTNAME:-`hostname | sed -e 's/\..*//'`}
 # a user-local temporary files directory
