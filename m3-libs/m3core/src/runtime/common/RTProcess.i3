@@ -37,5 +37,13 @@ PROCEDURE RegisterInterruptSetup (enable, disable: PROCEDURE ());
 (* Registers "enable" and "disable" as the machine-specific setup procedures
    to enable and disable respectively control-C handling. *)
 
-END RTProcess.
+TYPE ForkHandler = PROCEDURE();
 
+(* RegisterForkHandlers = pthread_atfork or just 0 on Win32. *)
+<* EXTERNAL RTProcess__RegisterForkHandlers *>
+PROCEDURE RegisterForkHandlers(prep, parent, child: ForkHandler): INTEGER;
+ 
+<* EXTERNAL RTProcess__Fork *>
+PROCEDURE Fork(): INTEGER;
+
+END RTProcess.
