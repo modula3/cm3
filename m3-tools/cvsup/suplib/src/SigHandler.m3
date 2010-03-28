@@ -44,9 +44,8 @@
 UNSAFE MODULE SigHandler;
 
 IMPORT
-  Ctypes, SchedulerPosix, Thread, Uerror, Unix, UnixMisc, Uuio, Word;
-
-IMPORT Cerrno;
+  Ctypes, SchedulerPosix, Thread, Uerror, Unix, UnixMisc, Uuio, Word,
+  Cerrno, RTProcess;
 
 TYPE State = { Running, Blocked, ShutDown };
 
@@ -112,7 +111,7 @@ PROCEDURE DispatcherRun(<* UNUSED *> closure: Thread.Closure): REFANY =
       CASE newState OF
       | State.Running  => DoDispatch();
       | State.Blocked  => DoBlock();
-      | State.ShutDown => DoShutDown();  EXIT;
+      | State.ShutDown => ShutDown();  EXIT;
       END;
     END;
     RETURN NIL;
@@ -164,16 +163,16 @@ PROCEDURE SignalHandlerRemove(sig: Ctypes.int; VAR handler: T) =
     END;
   END SignalHandlerRemove;
 
-PROCEDURE DoShutDown() =
+PROCEDURE ShutDown() =
   BEGIN
     LOCK mu DO
-      FileClose(wfd);
       FileClose(rfd);
+      FileClose(wfd);
       FOR sig := FIRST(handlers) TO LAST(handlers) DO
         SignalHandlerRemove(sig, handlers[sig]);
       END;
     END;
-  END DoShutDown;
+  END ShutDown;
 
 PROCEDURE Init() =
   VAR
@@ -239,15 +238,35 @@ PROCEDURE Register(sig: SigNum;
     END;
   END Register;
 
-PROCEDURE ShutDown() =
-  BEGIN
-    ChangeState(State.ShutDown);
-  END ShutDown;
-
 PROCEDURE Unblock() =
   BEGIN
     ChangeState(State.Running);
   END Unblock;
 
+PROCEDURE AtForkPrepare() =
+  BEGIN
+    Thread.Acquire(mu);
+  END AtForkPrepare;
+
+PROCEDURE AtForkParent() =
+  BEGIN
+    Thread.Release(mu);
+  END AtForkParent;
+
+PROCEDURE AtForkChild() =
+  (* Child is not intended to inherit the handlers or the threads, so just
+   * shutdown rather than reinitializing.
+   *)
+  BEGIN
+    AtForkParent();
+    ShutDown();
+  END AtForkChild;
+
 BEGIN
+  VAR r: INTEGER;
+  BEGIN
+    r := RTProcess.RegisterForkHandlers(
+            AtForkPrepare, AtForkParent, AtForkChild);
+    <* ASSERT r = 0 *>
+  END;
 END SigHandler.
