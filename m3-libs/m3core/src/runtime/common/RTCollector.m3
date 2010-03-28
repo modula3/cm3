@@ -2771,8 +2771,29 @@ PROCEDURE FinishBench() =
 
 (*** INITIALIZATION ***)
 
-PROCEDURE Init () =
+PROCEDURE AtForkPrepare() =
   BEGIN
+    RTOS.LockHeap();
+  END AtForkPrepare;
+
+PROCEDURE AtForkParent() =
+  BEGIN
+    RTOS.UnlockHeap();
+  END AtForkParent;
+
+PROCEDURE AtForkChild() =
+  BEGIN
+    startedForeground := FALSE;
+    startedBackground := FALSE;
+    startedWeakCleaner := FALSE;
+    AtForkParent();
+  END AtForkChild;
+
+PROCEDURE Init () =
+  VAR r: INTEGER;
+  BEGIN
+    r := RTProcess.RegisterForkHandlers(AtForkPrepare, AtForkParent, AtForkChild);
+    <* ASSERT r = 0 *>
     IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
     IF RTParams.IsPresent("nogc") THEN disableCount := 1; END;
     IF RTParams.IsPresent("noincremental") THEN incremental := FALSE; END;
