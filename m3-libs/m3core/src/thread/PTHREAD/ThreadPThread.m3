@@ -1331,7 +1331,7 @@ PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
     IF RTParams.IsPresent("foregroundgc") THEN
       RTCollectorSRC.StartForegroundCollection();
     END;
-  END Init;
+  END InitWithStackBase;
 
 PROCEDURE Init ()=
   VAR r: INTEGER;
