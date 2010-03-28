@@ -25,8 +25,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: Merger.ig,v 1.1.1.1 2009-04-09 17:01:56 jkrell Exp $ *)
+ *)
 
 (* "Merger" is a generic interface defining an iterator for merging two
    ordered sequences. *)

@@ -6,7 +6,6 @@
 (*      modified on Fri Jan  7 13:31:11 PST 1994 by msm    *)
 (*      modified on Sun Jan 12 16:16:54 PST 1992 by meehan *)
 (*      modified on Sat Jan 11 16:55:00 PST 1992 by gnelson *)
-(* $Id: SupTCP.m3,v 1.2 2009-04-09 19:24:45 jkrell Exp $ *)
 
 UNSAFE MODULE SupTCP EXPORTS SupTCP, TCPMisc;
 

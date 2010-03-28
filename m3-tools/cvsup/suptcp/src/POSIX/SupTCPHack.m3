@@ -1,7 +1,6 @@
 (* Copyright 1994 Digital Equipment Corporation. *)
 (* Distributed only by permission. *)
 (* Created on Sat Jan 11 15:49:00 PST 1992 by wobber *)
-(* $Id: SupTCPHack.m3,v 1.2 2009-04-15 11:09:55 jkrell Exp $ *)
 
 UNSAFE MODULE SupTCPHack;
 
