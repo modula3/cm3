@@ -54,9 +54,10 @@ TYPE
   END;
 
 (* The multiplier == 2^BITSIZE(Word.T) / phi *)
-CONST Multiplier: INTEGER = (ORD(BITSIZE (Word.T) = 32) * 16_9e3779b9)
-  + (ORD(BITSIZE (Word.T) = 64) * (Word.Plus (Word.Shift (16_9e3779b9, 32), 16_7f4a7c15)));
-
+CONST Multiplier32: INTEGER = 16_9e3779b9;
+CONST Multiplier64: INTEGER = (Word.Plus (Word.Shift (Multiplier32, 32), 16_7f4a7c15));
+CONST Multiplier: INTEGER = (ORD(BITSIZE (Word.T) = 32) * Multiplier32)
+                          + (ORD(BITSIZE (Word.T) = 64) * Multiplier64);
 CONST
   MaxLogBuckets = BITSIZE(Word.T) - 2;
   MaxBuckets = Word.Shift(1, MaxLogBuckets);
@@ -124,16 +125,14 @@ PROCEDURE Put(tbl: Default; READONLY key: Key.T; READONLY val: Value.T)
       IF this # NIL THEN
         this.value := val;
         RETURN TRUE
-      ELSE
-        first :=
-          NEW(EntryList, key := key, value := val, tail := first);
-        INC(tbl.numEntries);
-        IF tbl.logBuckets < MaxLogBuckets
-             AND tbl.numEntries > tbl.maxEntries THEN
-          Rehash(tbl, tbl.logBuckets + 1) (* too crowded *)
-        END;
-        RETURN FALSE
-      END
+      END;
+      first := NEW(EntryList, key := key, value := val, tail := first);
+      INC(tbl.numEntries);
+      IF tbl.logBuckets < MaxLogBuckets
+           AND tbl.numEntries > tbl.maxEntries THEN
+        Rehash(tbl, tbl.logBuckets + 1) (* too crowded *)
+      END;
+      RETURN FALSE
     END
   END Put;
 
@@ -150,22 +149,21 @@ PROCEDURE Delete(tbl: Default; READONLY key: Key.T; VAR val: Value.T)
         prev := this;
         this := this.tail
       END;
-      IF this # NIL THEN
-        val := this.value;
-        IF prev = NIL THEN
-          first := this.tail
-        ELSE
-          prev.tail := this.tail
-        END;
-        DEC(tbl.numEntries);
-        IF tbl.logBuckets > tbl.minLogBuckets
-             AND tbl.numEntries < tbl.minEntries THEN
-          Rehash(tbl, tbl.logBuckets - 1) (* too sparse *)
-        END;
-        RETURN TRUE
+      IF this = NIL THEN
+        RETURN FALSE;
+      END;
+      val := this.value;
+      IF prev = NIL THEN
+        first := this.tail
       ELSE
-        RETURN FALSE
-      END
+        prev.tail := this.tail
+      END;
+      DEC(tbl.numEntries);
+      IF tbl.logBuckets > tbl.minLogBuckets
+           AND tbl.numEntries < tbl.minEntries THEN
+        Rehash(tbl, tbl.logBuckets - 1) (* too sparse *)
+      END;
+      RETURN TRUE
     END
   END Delete;
 
