@@ -53,8 +53,9 @@ TYPE
     tail: EntryList
   END;
 
-VAR (*CONST*)
-  Multiplier: INTEGER;
+(* The multiplier == 2^BITSIZE(Word.T) / phi *)
+CONST Multiplier: INTEGER = (ORD(BITSIZE (Word.T) = 32) * 16_9e3779b9)
+  + (ORD(BITSIZE (Word.T) = 64) * (Word.Plus (Word.Shift (16_9e3779b9, 32), 16_7f4a7c15)));
 
 CONST
   MaxLogBuckets = BITSIZE(Word.T) - 2;
@@ -326,12 +327,5 @@ PROCEDURE Dump (tbl: Default;  key_dump: PROCEDURE (key: Key.T)) =
 **************)
 
 BEGIN
-  (* The multiplier == 2^BITSIZE(Word.T) / phi *)
-  IF BITSIZE (Word.T) = 32 THEN
-    Multiplier := 16_9e3779b9;
-  ELSIF BITSIZE (Word.T) = 64 THEN
-    Multiplier := Word.Plus (Word.Shift (16_9e3779b9, 32), 16_7f4a7c15);
-  ELSE
-    <*ASSERT FALSE*>
-  END;
+  <* ASSERT BITSIZE (Word.T) = 32 OR BITSIZE (Word.T) = 64 *>
 END Table.
