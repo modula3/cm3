@@ -43,21 +43,19 @@ REVEAL
     keyHash := KeyHash
   END;
 
-TYPE
-  Buckets = REF ARRAY OF EntryList;
-
-TYPE
-  EntryList = REF RECORD
+TYPE Buckets = REF ARRAY OF EntryList;
+TYPE EntryList = REF RECORD
     key: Key.T;
     value: Value.T;
     tail: EntryList
   END;
 
 (* The multiplier == 2^BITSIZE(Word.T) / phi *)
-CONST Multiplier32: INTEGER = 16_9e3779b9;
-CONST Multiplier64: INTEGER = (Word.Plus (Word.Shift (Multiplier32, 32), 16_7f4a7c15));
-CONST Multiplier: INTEGER = (ORD(BITSIZE (Word.T) = 32) * Multiplier32)
-                          + (ORD(BITSIZE (Word.T) = 64) * Multiplier64);
+CONST Multiplier32 = 16_9e3779b9;
+CONST Multiplier64 = (Word.Plus (Word.Shift (Multiplier32, 32), 16_7f4a7c15));
+CONST Multiplier
+  = (ORD(BITSIZE (Word.T) = 32) * Multiplier32)
+  + (ORD(BITSIZE (Word.T) = 64) * Multiplier64);
 CONST
   MaxLogBuckets = BITSIZE(Word.T) - 2;
   MaxBuckets = Word.Shift(1, MaxLogBuckets);
@@ -78,7 +76,6 @@ TYPE DefaultIterator = Iterator BRANDED OBJECT
     bucket : CARDINAL  := 0;     (* next bucket if < NUMBER(tbl.buckets^) *)
     done   : BOOLEAN   := FALSE; (* TRUE if next() has returned FALSE *)
   OVERRIDES
-    init := InitIterator;
     next := Next
   END;
 
@@ -125,14 +122,16 @@ PROCEDURE Put(tbl: Default; READONLY key: Key.T; READONLY val: Value.T)
       IF this # NIL THEN
         this.value := val;
         RETURN TRUE
-      END;
-      first := NEW(EntryList, key := key, value := val, tail := first);
-      INC(tbl.numEntries);
-      IF tbl.logBuckets < MaxLogBuckets
-           AND tbl.numEntries > tbl.maxEntries THEN
-        Rehash(tbl, tbl.logBuckets + 1) (* too crowded *)
-      END;
-      RETURN FALSE
+      ELSE
+        first :=
+          NEW(EntryList, key := key, value := val, tail := first);
+        INC(tbl.numEntries);
+        IF tbl.logBuckets < MaxLogBuckets
+             AND tbl.numEntries > tbl.maxEntries THEN
+          Rehash(tbl, tbl.logBuckets + 1) (* too crowded *)
+        END;
+        RETURN FALSE
+      END
     END
   END Put;
 
@@ -149,21 +148,22 @@ PROCEDURE Delete(tbl: Default; READONLY key: Key.T; VAR val: Value.T)
         prev := this;
         this := this.tail
       END;
-      IF this = NIL THEN
-        RETURN FALSE;
-      END;
-      val := this.value;
-      IF prev = NIL THEN
-        first := this.tail
+      IF this # NIL THEN
+        val := this.value;
+        IF prev = NIL THEN
+          first := this.tail
+        ELSE
+          prev.tail := this.tail
+        END;
+        DEC(tbl.numEntries);
+        IF tbl.logBuckets > tbl.minLogBuckets
+             AND tbl.numEntries < tbl.minEntries THEN
+          Rehash(tbl, tbl.logBuckets - 1) (* too sparse *)
+        END;
+        RETURN TRUE
       ELSE
-        prev.tail := this.tail
-      END;
-      DEC(tbl.numEntries);
-      IF tbl.logBuckets > tbl.minLogBuckets
-           AND tbl.numEntries < tbl.minEntries THEN
-        Rehash(tbl, tbl.logBuckets - 1) (* too sparse *)
-      END;
-      RETURN TRUE
+        RETURN FALSE
+      END
     END
   END Delete;
 
@@ -174,7 +174,7 @@ PROCEDURE Size(tbl: Default): CARDINAL =
 
 PROCEDURE Iterate(tbl: Default): Iterator =
   BEGIN
-    RETURN NEW(DefaultIterator, tbl := tbl).init();
+    RETURN NEW(DefaultIterator, tbl := tbl);
   END Iterate;
 
 PROCEDURE KeyHash(<*UNUSED*> tbl: Default; READONLY k: Key.T): Word.T =
@@ -255,14 +255,6 @@ PROCEDURE Rehash(tbl: Default; logBuckets: CARDINAL) =
 (********************)
 (* Iterator methods *)
 (********************)
-
-PROCEDURE InitIterator (i: DefaultIterator): Iterator =
-  BEGIN
-    i.this   := NIL;
-    i.bucket := 0;
-    i.done   := FALSE;
-    RETURN i;
-  END InitIterator;
 
 PROCEDURE Next(i: DefaultIterator; VAR key: Key.T; VAR val: Value.T): BOOLEAN =
   BEGIN
