@@ -108,6 +108,10 @@ M3WRAP1_(int, chdir, const char*)
 M3WRAP1_(int, close, int)
 M3WRAP2_(int, dup2, int, int)
 
+#ifdef __sun
+M3WRAP1(m3_off_t, tell, int)
+#endif
+
 #ifndef _WIN32
 M3WRAP2(int, fchmod, int, m3_mode_t)
 M3WRAP3(int, chown, const char*, m3_uid_t, m3_gid_t)
@@ -185,6 +189,11 @@ int __cdecl Unix__pipe(int* files)
 m3_off_t __cdecl Unix__lseek(int fd, m3_off_t offset, int whence)
 {
     return _lseeki64(fd, offset, whence);
+}
+
+m3_off_t __cdecl Unix__tell(int fd)
+{
+    return _telli64(fd);
 }
 
 #endif
