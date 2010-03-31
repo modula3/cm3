@@ -369,6 +369,7 @@ int __cdecl Unix__open(const char* path, int flags, m3_mode_t mode);
 int __cdecl Unix__mkdir(const char* path, m3_mode_t mode);
 int __cdecl Unix__ftruncate(int fd, m3_off_t length);
 m3_off_t __cdecl Unix__lseek(int fd, m3_off_t offset, int whence);
+m3_off_t __cdecl Unix__tell(int fd);
 int __cdecl Unix__fcntl(int fd, int request, int arg);
 int __cdecl Unix__ioctl(int fd, int request, void* argp);
 int __cdecl Unix__mknod(const char* path, m3_mode_t mode, m3_dev_t dev);
