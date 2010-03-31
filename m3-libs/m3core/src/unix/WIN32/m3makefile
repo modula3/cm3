@@ -1,4 +1,1 @@
-% $Id$
-
-Interface ("Unix")
-Interface ("Uuio")
+interface("Usysdep")
