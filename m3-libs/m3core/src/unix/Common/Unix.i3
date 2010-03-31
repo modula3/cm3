@@ -73,6 +73,9 @@ PROCEDURE ioctl (d, request: int; argp: ADDRESS): int;
 <*EXTERNAL "Unix__lseek"*>
 PROCEDURE lseek (d: int; offset: off_t; whence: int): off_t;
 
+<*EXTERNAL "Unix__tell"*>
+PROCEDURE tell (d: int): off_t;
+
 <*EXTERNAL "Unix__mkdir"*>
 PROCEDURE mkdir (path: const_char_star; mode: int(*mode_t*)): int;
 
