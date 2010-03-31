@@ -137,6 +137,7 @@ PROCEDURE InitOSName () =
 
 PROCEDURE InitUserName () =
   VAR buf: ARRAY [0..127] OF CHAR;  len: INTEGER;
+      name, domain: TEXT;
   BEGIN
     IF user_name # NIL THEN RETURN; END;
 
@@ -149,15 +150,38 @@ PROCEDURE InitUserName () =
     END;
     IF user_name # NIL THEN RETURN; END;
 
+    domain := Env.Get("USERDOMAIN");
+    name := Env.Get("USERNAME");
+    IF domain # NIL AND name # NIL THEN
+      user_name := domain & "\\" & name;
+    ELSIF name # NIL THEN
+      user_name := name;
+    END;
+
     user_name := "<unknown user>";
   END InitUserName;
 
 PROCEDURE InitUserHome () =
+  VAR home_drive, home_path: TEXT;
   BEGIN
     IF user_home # NIL THEN RETURN; END;
 
     user_home := Env.Get ("HOME");
     IF user_home # NIL THEN RETURN; END;
+
+    user_home := Env.Get ("HOMESHARE");
+    IF user_home # NIL THEN RETURN; END;
+
+    user_home := Env.Get ("USERPROFILE");
+    IF user_home # NIL THEN RETURN; END;
+
+    home_drive := Env.Get("HOMEDRIVE");
+    home_path := Env.Get("HOMEPATH");
+    IF home_drive # NIL AND home_path # NIL THEN
+      user_home := home_drive & home_path;
+    END;
+
+    (* really lame fallbacks *)
 
     TRY user_home := Process.GetWorkingDirectory ();
     EXCEPT OSError.E =>
