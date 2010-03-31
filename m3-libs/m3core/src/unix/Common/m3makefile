@@ -38,6 +38,8 @@ Interface ("Ustat")
 Interface ("Udir")
 c_source("UdirC")
 
+if not equal (OS_TYPE, "WIN32")
 if equal (TARGET, "NT386")
     Interface ("Utermio")
+end
 end

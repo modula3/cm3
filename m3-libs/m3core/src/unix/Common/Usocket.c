@@ -4,8 +4,6 @@
 
 #include "m3core.h"
 
-#ifndef _WIN32
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -43,6 +41,8 @@ void Usocket__Assertions(void)
 #endif
 #endif
 }
+
+#ifndef _WIN32
 
 /* wrap everything */
 
@@ -179,8 +179,8 @@ int Usocket__recvfrom(int s, void* buf, size_t length, int flags, sockaddr_t* ad
     }
 }
 
-#ifdef __cplusplus
-} /* extern "C" */
 #endif
 
+#ifdef __cplusplus
+} /* extern "C" */
 #endif

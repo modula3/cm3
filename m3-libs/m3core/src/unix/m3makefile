@@ -38,11 +38,12 @@ readonly _UnixPieces = {
   "SPARC64_SOLARIS" : [ "solaris-common", "uin-common" ],
 }
 
+include_dir ("Common")
+
 if equal (OS_TYPE, "WIN32")
   include_dir ("WIN32")
+  include_dir ("uin-common")
 else
-
-include_dir ("Common")
 
 if _UnixPieces contains TARGET
   local pieces = _UnixPieces {TARGET}
