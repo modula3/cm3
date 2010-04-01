@@ -146,11 +146,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Extended.min     := Float{Precision.Extended, 0,-1.79769313486231570x+308};
     Extended.max     := Float{Precision.Extended, 0, 1.79769313486231570x+308};
 
-    Alignments[0] := 8;
-    Alignments[1] := 16;
-    Alignments[2] := 32;
-    Alignments[3] := 64;
-
     CCs := NIL;
     OS_name := in_OS_name;
 
@@ -271,7 +266,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     CASE System OF
     |  Systems.I386_FREEBSD, Systems.FreeBSD4 =>
-                 max_align                 := 32;
                  Jumpbuf_size              := 11 * Address.size;
 
     |  Systems.AMD64_NETBSD,
@@ -350,7 +344,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size := 16_280 * Char.size; (* TBD *)
 
     |  Systems.I386_LINUX, Systems.LINUXLIBC6 =>
-                 max_align                 := 32;
                  Jumpbuf_size              := 39 * Address.size;
 
     |  Systems.AMD64_LINUX =>
@@ -384,7 +377,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_align             := Word64.align;
 
     | Systems.NetBSD2_i386 =>
-                 max_align                 := 32;
                  Jumpbuf_size              := 14 * Address.size; (* 13? *)
 
 (*  | Systems.I386_MSDOS =>
@@ -436,7 +428,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     (* fix the alignments *)
     FOR i := FIRST (Alignments) TO LAST (Alignments) DO
-      Alignments[i] := MIN (Alignments[i], max_align);
+      <* ASSERT Alignments[i] = MIN (Alignments[i], max_align) *>
     END;
 
     (* initialize the other target-specific modules *)

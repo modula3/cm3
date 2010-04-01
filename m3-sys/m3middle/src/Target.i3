@@ -255,8 +255,8 @@ VAR (*CONST*)
   Void      : Int_type;
   Char      : Int_type;
 
-VAR (*CONST*) (* sorted list of supported machine alignments *)
-  Alignments: ARRAY [0..3] OF CARDINAL;
+CONST (* sorted list of supported machine alignments *)
+  Alignments = ARRAY [0..3] OF CARDINAL{8, 16, 32, 64};
 
 (*------------------------------------------------------- procedure calls ---*)
 
