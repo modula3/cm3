@@ -30,17 +30,17 @@ TYPE
   SymbolList = REF ARRAY OF Symbol;
   Symbol = RECORD
     id          : M3ID.T;
-    offset      : INTEGER; (* segment offset *)
+    offset      : INTEGER := 0; (* segment offset *)
     kind        : SymKind;
-    export      : BOOLEAN;
-    used        : BOOLEAN;
-    index       : INTEGER; (* final symbol table index *)
-    next_func   : INTEGER; (* symtab index of next procedure entry *)
-    first_line  : INTEGER; (* source line number *)
-    last_line   : INTEGER;
-    last_offset : INTEGER;
-    lineno_offs : INTEGER;
-    lineno_cnt  : INTEGER;
+    export      : BOOLEAN := FALSE;
+    used        : BOOLEAN := FALSE;
+    index       : INTEGER := -1; (* final symbol table index *)
+    next_func   : INTEGER := 0; (* symtab index of next procedure entry *)
+    first_line  : INTEGER := 0; (* source line number *)
+    last_line   : INTEGER := 0;
+    last_offset : INTEGER := 0;
+    lineno_offs : INTEGER := 0;
+    lineno_cnt  : INTEGER := 0;
   END;
 
 TYPE
@@ -72,7 +72,6 @@ TYPE
   Chunk = RECORD
     cnt         : INTEGER := 0;
     n_bytes     : INTEGER := 0;
-    entry_size  : INTEGER := 0;
     file_offset : INTEGER := 0;
   END;
 
@@ -115,7 +114,7 @@ TYPE
 
 REVEAL
   T = M3ObjFile.T BRANDED "NTObjFile.T" OBJECT
-    n_sections       : INTEGER;
+    n_sections       : INTEGER := 0;
     debug_S          : Section;
     text             : Section;
     data             : Section;
@@ -124,14 +123,14 @@ REVEAL
     symtab           : SymbolTable;
     strings          : StringTable;
     out              : OutputStream;
-    filename         : TEXT;
-    filesym          : INTEGER;
-    gen_debugging    : BOOLEAN;
-    sect_syms        : BOOLEAN;
-    in_procedure     : BOOLEAN;
-    first_proc       : INTEGER;
-    last_proc        : INTEGER;
-    last_source_line : INTEGER;
+    filename         : TEXT := NIL;
+    filesym          : INTEGER := -1;
+    gen_debugging    : BOOLEAN := FALSE;
+    sect_syms        : BOOLEAN := FALSE;
+    in_procedure     : BOOLEAN := FALSE;
+    first_proc       : INTEGER := 0;
+    last_proc        : INTEGER := 0;
+    last_source_line : INTEGER := 0;
   OVERRIDES
     cursor            := Cursor;
     append            := AppendIntegerToSegment;
@@ -233,9 +232,6 @@ PROCEDURE New (): T =
   CONST DebugFlags = S_READ + S_DISCARD + S_ALIGN1 + S_DATA + S_NO_PAD;
   VAR t := NEW (T);
   BEGIN
-    t.gen_debugging := FALSE;
-    t.n_sections    := 0;
-
     IF (t.gen_debugging) THEN
       InitSection (t, t.debug_S, ".debug$S", DebugFlags);
     END;
@@ -246,31 +242,7 @@ PROCEDURE New (): T =
       InitSection (t, t.debug_T, ".debug$T", DebugFlags);
     END;
 
-    WITH s = t.symtab DO
-      s.map  := NIL;
-      (* preserve the space in s.list *)
-      InitChunk (s.chunk, SymTabSize);
-    END;
-
-    WITH s = t.strings DO
-      s.cnt     := 0;
-      s.n_bytes := 0;
-      s.list    := NIL;
-      s.map     := NIL;
-    END;
-
-    WITH o = t.out DO
-      o.wr  := NIL;
-      o.len := 0;
-    END;
-
-    t.filename         := NIL;
     t.filesym          := -1;
-    t.sect_syms        := FALSE;
-    t.in_procedure     := FALSE;
-    t.first_proc       := 0;
-    t.last_proc        := 0;
-    t.last_source_line := 0;
 
     AddSectSym (t, t.debug_S);
     AddSectSym (t, t.text);
@@ -292,20 +264,7 @@ PROCEDURE InitSection (t: T;  VAR s: Section;  name: TEXT;  flags: INTEGER) =
     s.id      := t.n_sections;
     s.name    := name;
     s.flags   := flags;
-    s.address := 0;
-    InitChunk (s.raw_data,     1);
-    InitChunk (s.relocation,   RelocSize);
-    InitChunk (s.line_numbers, LineNumSize);
-    (* preserve the space allocated for data, line_nums & relocs *)
   END InitSection;
-
-PROCEDURE InitChunk (VAR c: Chunk;  sz: INTEGER) =
-  BEGIN
-    c.cnt         := 0;
-    c.n_bytes     := 0;
-    c.entry_size  := sz;
-    c.file_offset := 0;
-  END InitChunk;
 
 PROCEDURE AddSectSym (t: T;  READONLY s: Section) =
   VAR z: INTEGER;
@@ -317,12 +276,6 @@ PROCEDURE AddSectSym (t: T;  READONLY s: Section) =
       sym.offset      := s.id;
       sym.used        := TRUE;
       sym.index       := -1;
-      sym.next_func   := 0;
-      sym.first_line  := 0;
-      sym.last_line   := 0;
-      sym.last_offset := 0;
-      sym.lineno_offs := 0;
-      sym.lineno_cnt  := 0;
     END;
   END AddSectSym;
 
@@ -575,17 +528,8 @@ PROCEDURE NewSym (t: T;  id: M3ID.T): INTEGER =
 
     WITH sym = t.symtab.list[x] DO
       sym.id          := id;
-      sym.offset      := 0;
       sym.kind        := SymKind.Extern;
-      sym.export      := FALSE;
-      sym.used        := FALSE;
       sym.index       := -1;
-      sym.next_func   := 0;
-      sym.first_line  := 0;
-      sym.last_line   := 0;
-      sym.last_offset := 0;
-      sym.lineno_offs := 0;
-      sym.lineno_cnt  := 0;
     END;
     RETURN x;
   END NewSym;
@@ -640,13 +584,6 @@ PROCEDURE SetSourceFile (t: T;  filename: TEXT) =
         sym.kind        := SymKind.FileAux;
         sym.offset      := i * SymTabSize;
         sym.used        := TRUE;
-        sym.index       := -1;
-        sym.next_func   := 0;
-        sym.first_line  := 0;
-        sym.last_line   := 0;
-        sym.last_offset := 0;
-        sym.lineno_offs := 0;
-        sym.lineno_cnt  := 0;
       END;
     END;
 
