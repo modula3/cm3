@@ -134,10 +134,10 @@ REVEAL
     last_source_line : INTEGER;
   OVERRIDES
     cursor            := Cursor;
-    append            := Append;
-    appendBytes       := AppendBytes;
-    patch             := Patch;
-    backup            := Backup;
+    append            := AppendIntegerToSegment;
+    appendBytes       := AppendBytesToSegment;
+    patch             := PatchSegment;
+    backup            := BackupInSegment;
     relocate          := Relocate;
     import_symbol     := ImportSymbol;
     define_symbol     := DefineSymbol;
@@ -279,8 +279,8 @@ PROCEDURE New (): T =
     AddSectSym (t, t.debug_T);
 
     IF t.gen_debugging THEN
-      AddRaw (t.debug_T, 1, 4); (* CV4 version stamp *)
-      AddRaw (t.debug_S, 1, 4); (* CV4 version stamp *)
+      AppendIntegerToSection (t.debug_T, 1, 4); (* CV4 version stamp *)
+      AppendIntegerToSection (t.debug_S, 1, 4); (* CV4 version stamp *)
     END;
 
     RETURN t;
@@ -328,36 +328,36 @@ PROCEDURE AddSectSym (t: T;  READONLY s: Section) =
 
 (*---------------------------------------------------------- construction ---*)
 
-PROCEDURE SegToSection(t: T; s: Seg): UNTRACED REF Section =
+PROCEDURE SegmentToSection(t: T; s: Seg): UNTRACED REF Section =
   BEGIN
     IF s = Seg.Text THEN
       RETURN ADR(t.text);
     ELSE
       RETURN ADR(t.data);
     END;
-  END SegToSection;
+  END SegmentToSection;
 
 PROCEDURE Cursor (t: T;  s: Seg): INTEGER =
   BEGIN
-    RETURN SegToSection(t, s).raw_data.n_bytes;
+    RETURN SegmentToSection(t, s).raw_data.n_bytes;
   END Cursor;
 
-PROCEDURE Append (t: T;  s: Seg;  value, length: INTEGER) =
+PROCEDURE AppendIntegerToSegment (t: T;  s: Seg;  value, length: INTEGER) =
   BEGIN
-    AddRaw (SegToSection(t, s)^, value, length);
-  END Append;
+    AppendIntegerToSection (SegmentToSection(t, s)^, value, length);
+  END AppendIntegerToSegment;
 
-PROCEDURE AppendBytes (t: T;  s: Seg;  READONLY bytes: ARRAY OF UINT8) =
+PROCEDURE AppendBytesToSegment (t: T;  s: Seg;  READONLY bytes: ARRAY OF UINT8) =
   BEGIN
-    AddRawBytes (SegToSection(t, s)^, ADR(bytes[0]), NUMBER(bytes));
-  END AppendBytes;
+    AppendBytesToSection (SegmentToSection(t, s)^, ADR(bytes[0]), NUMBER(bytes));
+  END AppendBytesToSegment;
 
-PROCEDURE Backup (t: T;  s: Seg;  length: CARDINAL) =
+PROCEDURE BackupInSegment (t: T;  s: Seg;  length: CARDINAL) =
   BEGIN
-    BackupRaw (SegToSection(t, s)^, length);
-  END Backup;
+    BackupInSection (SegmentToSection(t, s)^, length);
+  END BackupInSegment;
 
-PROCEDURE AddRawBytes (VAR s: Section;  value: UNTRACED REF UINT8; length: CARDINAL) =
+PROCEDURE AppendBytesToSection (VAR s: Section;  value: UNTRACED REF UINT8; length: CARDINAL) =
   VAR offs := s.raw_data.n_bytes;
       seg  := EnsureLength (s.data, offs + length);
   BEGIN
@@ -369,9 +369,9 @@ PROCEDURE AddRawBytes (VAR s: Section;  value: UNTRACED REF UINT8; length: CARDI
     <* ASSERT s.raw_data.n_bytes = s.raw_data.cnt *>
     s.raw_data.n_bytes := offs;
     s.raw_data.cnt     := offs;
-  END AddRawBytes;
+  END AppendBytesToSection;
 
-PROCEDURE AddRaw (VAR s: Section;  value, length: INTEGER) =
+PROCEDURE AppendIntegerToSection (VAR s: Section;  value, length: INTEGER) =
   VAR
     offs := s.raw_data.n_bytes;
     seg  := EnsureLength (s.data, offs + length);
@@ -385,16 +385,16 @@ PROCEDURE AddRaw (VAR s: Section;  value, length: INTEGER) =
     <* ASSERT s.raw_data.n_bytes = s.raw_data.cnt *>
     s.raw_data.n_bytes := offs;
     s.raw_data.cnt     := offs;
-  END AddRaw;
+  END AppendIntegerToSection;
 
-PROCEDURE BackupRaw (VAR s: Section;  length: CARDINAL) =
+PROCEDURE BackupInSection (VAR s: Section;  length: CARDINAL) =
   VAR n_bytes := s.raw_data.n_bytes;
   BEGIN
     <* ASSERT n_bytes >= length *>
     <* ASSERT n_bytes = s.raw_data.cnt *>
     DEC(s.raw_data.n_bytes, length);
     DEC(s.raw_data.cnt, length);
-  END BackupRaw;
+  END BackupInSection;
 
 PROCEDURE AddName (VAR s: Section;  name: TEXT) =
   VAR
@@ -435,12 +435,12 @@ PROCEDURE EnsureLength (VAR b: Bytes;  length: INTEGER): Bytes =
     RETURN b;
   END EnsureLength;
 
-PROCEDURE Patch (t: T;  s: Seg;  offset, value, length: INTEGER) =
+PROCEDURE PatchSegment (t: T;  s: Seg;  offset, value, length: INTEGER) =
   BEGIN
-    PatchRaw (SegToSection(t, s)^, offset, value, length);
-  END Patch;
+    PatchSection (SegmentToSection(t, s)^, offset, value, length);
+  END PatchSegment;
 
-PROCEDURE PatchRaw (VAR s: Section;  offset, value, length: INTEGER) =
+PROCEDURE PatchSection (VAR s: Section;  offset, value, length: INTEGER) =
   VAR n_bytes := s.raw_data.n_bytes;
   BEGIN
     <* ASSERT n_bytes = s.raw_data.cnt *>
@@ -451,7 +451,7 @@ PROCEDURE PatchRaw (VAR s: Section;  offset, value, length: INTEGER) =
       INC (offset);
       DEC (length);
     END;
-  END PatchRaw;
+  END PatchSection;
 
 PROCEDURE Relocate (t: T;  src_sym, src_offs, tar_sym: INTEGER) =
   BEGIN
@@ -653,9 +653,9 @@ PROCEDURE SetSourceFile (t: T;  filename: TEXT) =
     IF (t.gen_debugging) THEN
       (* add the debugging info *)
       obj := ObjectName (filename);
-      AddRaw  (t.debug_S, 7 + Text.Length (obj), 2);
-      AddRaw  (t.debug_S, S_OBJNAME, 2);
-      AddRaw  (t.debug_S, 0, 4); (* checksum for precompiled types *)
+      AppendIntegerToSection  (t.debug_S, 7 + Text.Length (obj), 2);
+      AppendIntegerToSection  (t.debug_S, S_OBJNAME, 2);
+      AppendIntegerToSection  (t.debug_S, 0, 4); (* checksum for precompiled types *)
       AddName (t.debug_S, obj);
     END;
 
@@ -945,19 +945,19 @@ PROCEDURE EndProcedure (t: T;  sym: INTEGER) =
     IF NOT t.gen_debugging THEN RETURN END;
 
     (* generate a fake debugging entry *)
-    AddRaw (t.debug_S, 36 + Text.Length (procname), 2);
-    AddRaw (t.debug_S, ProcTag [export], 2);
-    AddRaw (t.debug_S, 0, 4); (* pParent *)
-    AddRaw (t.debug_S, 0, 4); (* pEnd *)
-    AddRaw (t.debug_S, 0, 4); (* pNext *)
-    AddRaw (t.debug_S, code_len, 4);
-    AddRaw (t.debug_S, PrologueLength, 4);
-    AddRaw (t.debug_S, code_len - EpilogueLength, 4);
+    AppendIntegerToSection (t.debug_S, 36 + Text.Length (procname), 2);
+    AppendIntegerToSection (t.debug_S, ProcTag [export], 2);
+    AppendIntegerToSection (t.debug_S, 0, 4); (* pParent *)
+    AppendIntegerToSection (t.debug_S, 0, 4); (* pEnd *)
+    AppendIntegerToSection (t.debug_S, 0, 4); (* pNext *)
+    AppendIntegerToSection (t.debug_S, code_len, 4);
+    AppendIntegerToSection (t.debug_S, PrologueLength, 4);
+    AppendIntegerToSection (t.debug_S, code_len - EpilogueLength, 4);
     reloc_offs := t.debug_S.raw_data.n_bytes;
-    AddRaw (t.debug_S, 0, 4);  (* procedure offset *)
-    AddRaw (t.debug_S, 0, 2);  (* procedure segment *)
-    AddRaw (t.debug_S, 16_104, 2); (* type = proc():INTEGER;  HACK! *)
-    AddRaw (t.debug_S, 0, 1);      (* flags = {} *)
+    AppendIntegerToSection (t.debug_S, 0, 4);  (* procedure offset *)
+    AppendIntegerToSection (t.debug_S, 0, 2);  (* procedure segment *)
+    AppendIntegerToSection (t.debug_S, 16_104, 2); (* type = proc():INTEGER;  HACK! *)
+    AppendIntegerToSection (t.debug_S, 0, 1);      (* flags = {} *)
     AddName (t.debug_S, procname);
 
     (* relocate the offset and segment *)
@@ -965,8 +965,8 @@ PROCEDURE EndProcedure (t: T;  sym: INTEGER) =
     AddReloc (t.debug_S, RelocKind.Segment, 0, reloc_offs+4, sym);
 
     (* generate the matching end *)
-    AddRaw (t.debug_S, 2, 2);
-    AddRaw (t.debug_S, S_END, 2);
+    AppendIntegerToSection (t.debug_S, 2, 2);
+    AppendIntegerToSection (t.debug_S, S_END, 2);
 
   END EndProcedure;
 
@@ -999,10 +999,10 @@ PROCEDURE Dump (t: T;  wr: Wr.T) =
 
     IF (t.gen_debugging) THEN
       (* add a final debugging entry that identifies the compiler *)
-      AddRaw  (t.debug_S, 7 + Text.Length (CompilerName), 2);
-      AddRaw  (t.debug_S, S_COMPILE, 2);
-      AddRaw  (t.debug_S, 4, 1); (* Intel 486 *)
-      AddRaw  (t.debug_S, 0, 3); (* lang=C, near data & code, hardware FP *)
+      AppendIntegerToSection  (t.debug_S, 7 + Text.Length (CompilerName), 2);
+      AppendIntegerToSection  (t.debug_S, S_COMPILE, 2);
+      AppendIntegerToSection  (t.debug_S, 4, 1); (* Intel 486 *)
+      AppendIntegerToSection  (t.debug_S, 0, 3); (* lang=C, near data & code, hardware FP *)
       AddName (t.debug_S, CompilerName);
     END;
 
