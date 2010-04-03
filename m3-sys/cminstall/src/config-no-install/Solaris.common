@@ -1,8 +1,9 @@
 %-------------------------------------------------------------------
 % defined by cm3, but not the other MxConfig users
-if not defined("SL") SL = "/" end
 if not defined("CR") CR = "\n" end
+if not defined("EOL") EOL = "\n" end
 if not defined("M3_PROFILING") M3_PROFILING = FALSE end
+if not defined("SL") SL = "/" end
 %-------------------------------------------------------------------
 
 readonly TARGET_OS = "SOLARIS"
