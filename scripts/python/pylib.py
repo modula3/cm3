@@ -2435,10 +2435,10 @@ def MakeMSIWithWix(input):
 
     # This is similar to the toplevel README in the source tree.
     licenseText = \
-"""The Critical Mass Modula-3 Software Distribution may
-be freely distributed as open source according to the
-various copyrights under which different parts of the sources
-are placed. Please read the files found in the license directory."""
+"""The Critical Mass Modula-3 Software Distribution may be
+freely distributed as open source according to the various
+copyrights under which different parts of the sources are
+placed. Please read the files found in the license directory."""
 
     license = input + "-license.rtf"
     open(license, "w").write(
