@@ -1500,7 +1500,7 @@ def GetPackageSets():
         fields = line.split(" ")
         name1 = fields[0]
         name2 = name1.split("/")[-1]
-        for group in ["all"] + fields[1:]:
+        for group in ["all", "std"] + fields[1:]:
             if not (group in result):
                 result[group] = [ ]
             result[group] += [name1]
