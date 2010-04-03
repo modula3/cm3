@@ -187,19 +187,17 @@ Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previo
 # build just compiler this pass, not the runtime
 # That is, assuming we have m3core and libm3, build the rest of the compiler.
 
-Packages = [
-    "import-libs",
-    "sysutils",
-    "m3middle",
-    "m3linker",
-    "m3front",
-    "m3quake",
-    "m3objfile",
-    "m3back",
-    "m3cc",
-    "cm3",
-    "mklib",
-    ]
+Packages = [ "import-libs",
+             "sysutils",
+             "m3middle",
+             "m3linker",
+             "m3front",
+             "m3quake",
+             "m3objfile",
+             "m3back",
+             "m3cc",
+             "cm3",
+             "mklib" ]
 
 def CopyRecursive(From, To):
     CopyCommand = "xcopy /fiverdh "
