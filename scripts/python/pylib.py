@@ -954,7 +954,7 @@ def PrintList4(strings):
 #-----------------------------------------------------------------------------
 
 def ShowUsage(args, Usage, P):
-    for arg in args[1:]:
+    for arg in args:
         if arg in ["-h", "-help", "--help", "-?"]:
             print("")
             print("usage " + os.path.basename(args[0]) + ":")
@@ -2343,14 +2343,15 @@ def GetStage():
 # For now though, we only build min.
 
 def FormInstallRoot(PackageSetName):
-    a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
+    a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION.replace("pre-", "pre"))
     if Config == "NT386":
         a = a + "-VC" + GetVisualCPlusPlusVersion()
     return a
 
 def MakeMSIWithWix(input):
 # input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1-VC90
-# The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)M
+# The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)
+# (We edit the filename slightly for friendlyness.)
     import uuid
     
     InstallLicense(Root, input)
@@ -2435,17 +2436,21 @@ def MakeMSIWithWix(input):
 
     # This is similar to the toplevel README in the source tree.
     licenseText = \
-"""The Critical Mass Modula-3 Software Distribution may be freely distributed as
-open source according to the various copyrights under which different parts of
-the sources are placed. Please read the files found in the license directory."""
+"""The Critical Mass Modula-3 Software Distribution may be
+freely distributed as open source according to the various
+copyrights under which different parts of the sources are
+placed. Please read the files found in the license directory."""
 
     license = input + "-license.rtf"
     open(license, "w").write(
 """{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0\\fnil\\fcharset0 Courier New;}}
-{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", "\\par\n")
+{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", " ")
 + "}")
 
-    command = "light -out " + ConvertPathForWin32(input) + ".msi " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license) + " 2>&1"
+    msiPath = ConvertPathForWin32(input) + ".msi"
+    msiPath = os.path.join(RemoveLastPathElement(msiPath), GetLastPathElement(msiPath).replace("NT386", "x86").replace("-pre-", "-pre"))
+
+    command = "light -out " + msiPath + " " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license) + " 2>&1"
     if os.name == "posix":
         command = command.replace("\\", "\\\\")
     print(command)
@@ -2672,6 +2677,7 @@ if __name__ == "__main__":
     print("\n\nbase: " + str(OrderPackages(PackageSets["base"])))
     print("\n\nmin: " + str(OrderPackages(PackageSets["min"])))
     print("\n\nstd: " + str(OrderPackages(PackageSets["std"])))
+    print("\n\nall: " + str(OrderPackages(PackageSets["all"])))
     sys.exit(1)
 
     #print(listpkgs("libm3"))
