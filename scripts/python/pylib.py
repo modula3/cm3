@@ -2448,7 +2448,7 @@ placed. Please read the files found in the license directory."""
 + "}")
 
     msiPath = ConvertPathForWin32(input) + ".msi"
-    msiPath = RemoveLastPathElement(msiPath) + GetLastPathElement(msiPath).replace("NT386", "x86").replace("-pre-", "-pre")
+    msiPath = os.path.join(RemoveLastPathElement(msiPath), GetLastPathElement(msiPath).replace("NT386", "x86").replace("-pre-", "-pre"))
 
     command = "light -out " + msiPath + " " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license) + " 2>&1"
     if os.name == "posix":
