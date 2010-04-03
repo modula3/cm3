@@ -2,7 +2,7 @@
 UNSAFE MODULE FSUnix_cm3 EXPORTS FSUtils;
 
 IMPORT Pathname, M3toC;
-IMPORT PathRepr, FSUtilsUnsafe;
+IMPORT PathRepr;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE IsReadable(fn : Pathname.T) : BOOLEAN =
@@ -38,22 +38,6 @@ PROCEDURE IsExecutable(fn : Pathname.T) : BOOLEAN =
   END IsExecutable;
 
 (*--------------------------------------------------------------------------*)
-
-PROCEDURE GetFileSize32(path:TEXT):INTEGER =
-  VAR cpath := M3toC.SharedTtoS(path);
-      res := FSUtilsUnsafe.GetFileSize32(cpath);
-  BEGIN
-    M3toC.FreeSharedS(path, cpath);
-    RETURN res;
-  END GetFileSize32;
-
-PROCEDURE GetFileSize(path:TEXT):INTEGER =
-  VAR cpath := M3toC.SharedTtoS(path);
-      res := FSUtilsUnsafe.GetFileSize(cpath);
-  BEGIN
-    M3toC.FreeSharedS(path, cpath);
-    RETURN res;
-  END GetFileSize;
 
 BEGIN
 END FSUnix_cm3.
