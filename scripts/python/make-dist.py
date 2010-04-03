@@ -151,7 +151,14 @@ InstallRoot_CompilerWithPrevious = os.path.join(STAGE, "compiler_with_previous")
 InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
 
 def FormArchiveName(PackageSetName, Suffix):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION + Suffix)
+    ArchiveConfig = Config
+    if Config == "NT386" and Suffix == ".zip":
+      ArchiveConfig = "x86"
+    a = os.path.join(STAGE, "cm3-" + PackageSetName + "-" + ArchiveConfig + "-" + CM3VERSION)
+    if Config == "NT386":
+        a = a + "-VC" + GetVisualCPlusPlusVersion()
+    a = a + Suffix
+    return a
 
 InstallRoot_Min = FormInstallRoot("min")
 InstallRoot_All = FormInstallRoot("all")
