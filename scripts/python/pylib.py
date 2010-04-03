@@ -2343,14 +2343,15 @@ def GetStage():
 # For now though, we only build min.
 
 def FormInstallRoot(PackageSetName):
-    a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION)
+    a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION.replace("pre-", "pre"))
     if Config == "NT386":
         a = a + "-VC" + GetVisualCPlusPlusVersion()
     return a
 
 def MakeMSIWithWix(input):
 # input is a directory such as c:\stage1\cm3-min-NT386-d5.8.1-VC90
-# The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)M
+# The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)
+# (We edit the filename slightly for friendlyness.)
     import uuid
     
     InstallLicense(Root, input)
