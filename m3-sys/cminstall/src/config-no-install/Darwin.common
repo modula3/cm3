@@ -106,6 +106,7 @@ SYSTEM_LIBORDER =
 % a library.
 
 proc make_lib (lib, options, objects, imported_libs, shared) is
+  shared = AdjustShared(shared)
   local vmaj     = "5"
   local vmin     = "2"
   local version  = vmaj & "." & vmin
@@ -124,7 +125,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   ret_code = try_exec ("@" & SYSTEM_LIBTOOL, arch, "-static", "-o", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
 
-  if shared and defined("install_symbolic_link")
+  if shared
     % build the shared library
     ret_code = try_exec (
         "@" & SYSTEM_CC, "-dynamiclib",
@@ -171,6 +172,7 @@ end
 % files that should be deleted or shipped.
 
 proc skip_lib (lib, shared) is
+  shared = AdjustShared(shared)
   local vmaj     = "5"
   local vmin     = "2"
   local version  = vmaj & "." & vmin
@@ -179,7 +181,10 @@ proc skip_lib (lib, shared) is
   local lib_sox  = format ("lib%s.%s.dylib", lib, vmaj)
   local lib_soxx = format ("lib%s.%s.dylib", lib, version)
 
-  if shared and defined("install_symbolic_link")
+  % Tell clean what to delete.
+  deriveds([lib_a, lib_so, lib_sox, lib_soxx])
+
+  if shared
     % create the version aliases
     link_file(lib_soxx, lib_sox)
     link_file(lib_sox, lib_so)
@@ -194,9 +199,7 @@ proc skip_lib (lib, shared) is
     install_derived_link("../../../lib/" & lib_soxx, lib_soxx)
 
   else
-    delete_file (lib_so)
-    delete_file (lib_sox)
-    delete_file (lib_soxx)
+    DeleteFiles([lib_so, lib_sox, lib_soxx])
   end
 
   return 0
