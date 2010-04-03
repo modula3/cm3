@@ -267,6 +267,7 @@ proc skip_lib(lib, shared) is
     local lib_a   = format("lib%s.a", lib)
     local lib_so = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
+    local readonly lib0_file = lib_a & ".sa" % standalone
 
     if shared
         % create the version aliases
@@ -280,8 +281,7 @@ proc skip_lib(lib, shared) is
         install_derived_link("../../../lib/" & lib_sox, lib_so)
         install_derived_link("../../../lib/" & lib_sox, lib_sox)
     else
-        delete_file(lib_so)
-        delete_file(lib_sox)
+        DeleteFiles([lib0_file, lib_so, lib_sox])
     end
 
     return 0
