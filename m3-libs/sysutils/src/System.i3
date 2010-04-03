@@ -22,11 +22,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *)
 (*---------------------------------------------------------------------------*)
-(* Copyright (C) 1990, Digital Equipment Corporation           *)
-(* All rights reserved.                                        *)
-(* See the file COPYRIGHT for a full description.              *)
-(*---------------------------------------------------------------------------
- * $Id: System.i3,v 1.3.2.4 2010-04-03 12:23:30 jkrell Exp $ *)
+(* Copyright (C) 1990, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
 (*---------------------------------------------------------------------------*)
 
 INTERFACE System;
