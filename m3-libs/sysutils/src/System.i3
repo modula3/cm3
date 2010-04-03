@@ -22,11 +22,9 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *)
 (*---------------------------------------------------------------------------*)
-(* Copyright (C) 1990, Digital Equipment Corporation           *)
-(* All rights reserved.                                        *)
-(* See the file COPYRIGHT for a full description.              *)
-(*---------------------------------------------------------------------------
- * $Id$ *)
+(* Copyright (C) 1990, Digital Equipment Corporation                         *)
+(* All rights reserved.                                                      *)
+(* See the file COPYRIGHT for a full description.                            *)
 (*---------------------------------------------------------------------------*)
 
 INTERFACE System;
