@@ -203,11 +203,7 @@ if equal(OS_TYPE, "WIN32")
     end
 
     if not defined("USE_MSVCRT")
-        if equal($USE_MSVCRT, "0")
-            USE_MSVCRT = FALSE
-        else
-            USE_MSVCRT = TRUE
-        end
+        USE_MSVCRT = not equal($USE_MSVCRT, "0")
     end
 
     if USE_MSVCRT
@@ -295,21 +291,36 @@ proc compile_c_ms(source, object, options, optimize, debug) is
 % in any log.
 %
         "-nologo",
-%
-% Put type information in .objs/.libs instead of shared in vc80.pdb, etc.
-% vc80.pdb can be renamed with /Fd, we'd need the target name.
-% This is bigger/slower but has advantages too.
-% Debug information does not inhibit optimization so always generate it.
-%
-% Remove this to "bootstrap backwards" -- build with newer toolsets
-% such that you can subsequently build with older toolsets.
-        "-Z7",
+
 %
 % needed for older headers such as with Visual C++ 2.0
 %
         "-DWIN32",
+
+%
+% Don't put any default library names in .objs.
+%
+        "-Zl",
         options
     ]
+
+    %
+    % Put type information in .objs/.libs instead of shared in vc80.pdb, etc.
+    % vc80.pdb can be renamed with /Fd, we'd need the target name.
+    % This is bigger/slower but has advantages too.
+    % Debug information does not inhibit optimization so always generate it.
+    %
+    % Set CM3_NO_SYMBOLS to "bootstrap backwards" -- build with newer toolsets
+    % such that you can subsequently build with older toolsets.
+    %
+    if not defined("NO_SYMBOLS")
+        NO_SYMBOLS = equal($CM3_NO_SYMBOLS, "1")
+    end
+
+    if not NO_SYMBOLS
+        args += ["-Z7"]
+    end
+
     if USE_MSVCRT
         %
         % Use msvcrt.lib and define _MT and _DLL.
@@ -530,7 +541,12 @@ proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, 
     % On the other hand, it would be nice to get back a backend that generates
     % portable C, in order to get good codegen, on more platforms, without gcc.
     %
-    if USE_MSVCRT
+
+    if not defined("LINK_NO_ENTRY")
+        LINK_NO_ENTRY = equal($CM3_LINK_NO_ENTRY, "1")
+    end
+
+    if LINK_NO_ENTRY
         options += "-noentry"
     end
 
