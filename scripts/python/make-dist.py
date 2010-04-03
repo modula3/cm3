@@ -157,8 +157,7 @@ def FormArchiveName(PackageSetName, Suffix):
     a = os.path.join(STAGE, "cm3-" + PackageSetName + "-" + ArchiveConfig + "-" + CM3VERSION)
     if Config == "NT386":
         a = a + "-VC" + GetVisualCPlusPlusVersion()
-    a = a + Suffix
-    return a
+    return a + Suffix
 
 InstallRoot_Min = FormInstallRoot("min")
 InstallRoot_All = FormInstallRoot("all")
