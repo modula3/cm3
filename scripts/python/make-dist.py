@@ -96,7 +96,7 @@ def TarBzip2(PackageSetName):
     MakeArchive(PackageSetName, "tar cfvj", "tar.bz2")
 
 def MakeArchives():
-    for PackageSetName in ["min", "std"]:
+    for PackageSetName in ["min", "all"]:
         if Config == "NT386":
             Zip(PackageSetName)
         else:
@@ -154,12 +154,8 @@ def FormArchiveName(PackageSetName, Suffix):
     return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION + Suffix)
 
 InstallRoot_Min = FormInstallRoot("min")
-InstallRoot_Standard = FormInstallRoot("std")
-
-InstallRoots = [
-    InstallRoot_Min,
-    InstallRoot_Standard,
-   ]
+InstallRoot_All = FormInstallRoot("all")
+InstallRoots = [InstallRoot_Min, InstallRoot_All]
 
 OriginalLIB = os.getenv("LIB")
 if OriginalLIB:
@@ -322,8 +318,8 @@ if False:
 
 else:
 
-    Setup(InstallRoot_CompilerWithSelf, InstallRoot_Standard)
-    Packages = pylib.FilterPackages(pylib.GetPackageSets()["std"])
+    Setup(InstallRoot_CompilerWithSelf, InstallRoot_All)
+    Packages = pylib.FilterPackages(pylib.GetPackageSets()["all"])
     if "m3cc" in Packages:
         Packages.remove("m3cc")
     RealClean(Packages) or FatalError()
@@ -341,11 +337,11 @@ def contains(s, t):
     return s.find(t) != -1
 
 if contains(t, "linux"):
-    for name in ["min", "std"]:
+    for name in ["min", "all"]:
         MakeDebianPackage(name, FormInstallRoot(name), GetStage() + "/cm3-" + name + ".deb", "/usr/local/cm3")
 
 if contains(t, "nt386") or contains(t, "interix") or contains(t, "cygwin") or contains(t, "mingw")  or contains(t, "uwin") or t.endswith("_nt"):
-    for name in ["min", "std"]:
+    for name in ["min", "all"]:
         MakeMSIWithWix(FormInstallRoot(name))
 
 for a in glob.glob(os.path.join(STAGE, "*")):

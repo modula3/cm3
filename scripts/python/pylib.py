@@ -954,7 +954,7 @@ def PrintList4(strings):
 #-----------------------------------------------------------------------------
 
 def ShowUsage(args, Usage, P):
-    for arg in args[1:]:
+    for arg in args:
         if arg in ["-h", "-help", "--help", "-?"]:
             print("")
             print("usage " + os.path.basename(args[0]) + ":")
@@ -2672,6 +2672,7 @@ if __name__ == "__main__":
     print("\n\nbase: " + str(OrderPackages(PackageSets["base"])))
     print("\n\nmin: " + str(OrderPackages(PackageSets["min"])))
     print("\n\nstd: " + str(OrderPackages(PackageSets["std"])))
+    print("\n\nall: " + str(OrderPackages(PackageSets["all"])))
     sys.exit(1)
 
     #print(listpkgs("libm3"))
