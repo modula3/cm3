@@ -7,13 +7,27 @@
    the RTStack interface for platforms that don't support stack
    walking. */
 
+#ifdef _MSC_VER
+#undef _DLL
+#ifndef _MT
+#define _MT
+#endif
+#pragma warning(disable:4514) /* unused inline function */
+#pragma warning(disable:4100) /* unused parameter */
+#pragma warning(disable:4255) /* () converted to (void) */
+#endif
+
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
+#endif
+
 #include <stdlib.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#if defined(__STDC__) || defined(__cplusplus)
+#if 1 /* defined(__STDC__) || defined(__cplusplus) || defined(_MSC_VER) || defined(__GNUC__) */
 #define ANSI(x) x
 #define KR(x)
 #else
@@ -33,7 +47,7 @@ typedef struct {
    Return in "f" the frame of the thread whose machine state is in bytes
    [start .. start+len).  Returns with f.pc=NIL on failure. */
 
-void RTStack__GetThreadFrame ANSI((Frame *f, char *start, int len))
+void __cdecl RTStack__GetThreadFrame ANSI((Frame *f, char *start, int len))
       KR((f, start, len) Frame *f; char *start; int len;)
 {
   abort ();
@@ -43,7 +57,7 @@ void RTStack__GetThreadFrame ANSI((Frame *f, char *start, int len))
 /* PROCEDURE CurrentFrame (VAR(*OUT*) f: Frame);
    Return in "f" the frame of its caller.  Returns with pc = NIL on failure. */
 
-void RTStack__CurFrame ANSI((Frame *f))
+void __cdecl RTStack__CurFrame ANSI((Frame *f))
      KR((f) Frame *f;)
 {
   abort ();
@@ -54,7 +68,7 @@ void RTStack__CurFrame ANSI((Frame *f))
    Return the stack frame that called "f".  Returns with pc = NIL if
    "f" is the first frame on the stack or its predecessor is ill-formed. */
 
-void RTStack__PrevFrame ANSI((Frame *callee, Frame *caller))
+void __cdecl RTStack__PrevFrame ANSI((Frame *callee, Frame *caller))
     KR((callee, caller) Frame *callee; Frame *caller;)
 {
   abort ();
@@ -66,7 +80,7 @@ void RTStack__PrevFrame ANSI((Frame *callee, Frame *caller))
    registers must be restored to the state they were in when frame "f"
    made its last call. */
 
-void RTStack__Unwind ANSI((Frame *target))
+void __cdecl RTStack__Unwind ANSI((Frame *target))
     KR((target) Frame *target;)
 {
   abort ();
@@ -78,7 +92,7 @@ void RTStack__Unwind ANSI((Frame *target))
    corresponding to the stack frame "f".  Returns NIL if no name is
    known. */
 
-char* RTStack__ProcName ANSI((Frame *f))
+char* __cdecl RTStack__ProcName ANSI((Frame *f))
     KR((f) Frame *f;)
 {
   return (char*)0;
