@@ -182,8 +182,12 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     end
     local ret_code = 0
     local lib_a   = format("lib%s.a", lib)
+    local readonly lib0_file = lib_a & ".sa" % standalone
     local lib_so  = format("lib%s.%s", lib, suffix)
     local lib_sox = format("lib%s.%s.5", lib, suffix)
+    local expfile = "lib" & lib & ".exp" % libfoo.exp
+
+    DeleteFiles([lib_a, lib0_file, lib_so, lib_sox, expfile])
 
     % first build the non-shared library in the usual ar/ranlib way
 
@@ -208,8 +212,19 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
     if shared
 
         local soname_opt = "-Wl," & soname_flag & "," & lib_sox
-        if equal (TARGET, "I386_INTERIX")
+
+        if IsInterix()
+
+            % move libfoo.a to libfoo.a.sa; sa for standalone (or static)
+            % libfoo.a is the import library for libfoo.so
+            % libfoo.a.sa is a static library if the dependency is being avoided
+
+            MoveFile(lib_a, lib0_file)
             soname_opt = ""
+            expfile = "lib" & lib & ".exp" % libfoo.exp
+            exec(DLLTOOL,  "--dllname", lib_sox, "--kill-at","--output-lib", "lib" & lib & ".a", "--export-all-symbols", lib0_file, "--output-exp", expfile)
+        else
+            expfile = ""
         end
 
         % build the shared library
@@ -217,7 +232,12 @@ proc make_lib(lib, options, objects, imported_libs, shared) is
         if M3_PROFILING
             pg = "-pg"
         end
-        ret_code = try_exec("@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, objects, imported_libs)
+        configure_linker()
+        if IsInterix()
+          ret_code = try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, "--whole-archive", lib0_file, "--no-whole-archive", imported_libs, expfile)
+        else
+          ret_code = try_exec( "@" & SYSTEM_LD, pg, "-shared", soname_opt, "-o", lib_sox, objects, imported_libs)
+        end
         if not equal(ret_code, 0)
             return ret_code
         end
