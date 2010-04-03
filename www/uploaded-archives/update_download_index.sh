@@ -39,7 +39,12 @@ EOF
 
 # echo $TARGETS
 for t in ${TARGETS}; do
-  all=`eval ls -1t cm3-*${t}-* 2>/dev/null | sort`
+  echo "1$t" >> 1.txt
+  if [ $t = NT386 ]; then
+    all=`ls -1t cm3*msi cm3-*${t}-* 2>/dev/null | sort`
+  else
+    all=`ls -1t cm3-*${t}-* 2>/dev/null | sort`
+  fi
   echo "<h3>Target Platform ${t}</h3>"
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>"
   for f in ${all}; do
