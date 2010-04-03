@@ -8,7 +8,7 @@ UNSAFE MODULE Main;
 IMPORT Process, IO, Rd, Wr, FileRd, FileWr, Thread, OSError, TextRefTbl;
 IMPORT Convert, CoffTime, File, FS, Text, Word, TextWr, TextSeq;
 IMPORT Fmt, Time, IntArraySort, RegularFile, Params, Pathname;
-IMPORT TextExtras, BasicCtypes;
+IMPORT ASCII, BasicCtypes;
 
 TYPE
   UINT8 = BasicCtypes.unsigned_char;
@@ -151,7 +151,7 @@ PROCEDURE ProcessArg (arg: TEXT) =
       END;
       ReadCommandFile (arg);
     ELSIF (ch = '-') THEN
-      IF TextExtras.CIEqual (Text.Sub (arg, 0, 5), "-out:") THEN
+      IF TextExtras_CIEqual (Text.Sub (arg, 0, 5), "-out:") THEN
         IF (lib_name # NIL) THEN
           Die ("multiple library names specified: \"", lib_name, "\" and \"",
                 Text.Sub (arg, 5), "\".");
@@ -160,19 +160,19 @@ PROCEDURE ProcessArg (arg: TEXT) =
         IF Text.Length (lib_name) <= 0 THEN
           Die ("missing library name: -out:<lib>");
         END;
-      ELSIF TextExtras.CIEqual (Text.Sub (arg, 0, 5), "-ign:") THEN
+      ELSIF TextExtras_CIEqual (Text.Sub (arg, 0, 5), "-ign:") THEN
         WITH ignText = Text.Sub (arg, 5) DO
           IF ignoreTexts = NIL THEN
             ignoreTexts := NEW(TextSeq.T).init();
           END;
           ignoreTexts.addhi(ignText);
         END;
-      ELSIF TextExtras.CIEqual (arg, "-v") THEN
+      ELSIF TextExtras_CIEqual (arg, "-v") THEN
         verbose := TRUE;
-      ELSIF TextExtras.CIEqual (arg, "-h") OR TextExtras.CIEqual (arg, "-help") THEN
+      ELSIF TextExtras_CIEqual (arg, "-h") OR TextExtras_CIEqual (arg, "-help") THEN
         Usage();
         Process.Exit(0);
-      ELSIF TextExtras.CIEqual (arg, "-noclean") THEN
+      ELSIF TextExtras_CIEqual (arg, "-noclean") THEN
         cleanSymbols := FALSE;
       ELSE
         Die ("unrecognized option: \"", arg, "\"");
@@ -254,9 +254,9 @@ PROCEDURE CheckLibName () =
       (* add on a ".LIB" extension *)
       def_name := Pathname.Join (NIL, lib_name, "def");
       lib_name := Pathname.Join (NIL, lib_name, "lib");
-    ELSIF TextExtras.CIEqual (ext, "lib") OR TextExtras.CIEqual (ext, "a") THEN
+    ELSIF TextExtras_CIEqual (ext, "lib") OR TextExtras_CIEqual (ext, "a") THEN
       def_name := Pathname.ReplaceExt (lib_name, "def");
-    ELSIF TextExtras.CIEqual (ext, "def") THEN
+    ELSIF TextExtras_CIEqual (ext, "def") THEN
       def_name := lib_name;
       lib_name := Pathname.ReplaceExt (lib_name, "lib");
     ELSE
@@ -859,6 +859,31 @@ PROCEDURE Die (a, b, c, d, e: TEXT := NIL) =
     END;
     Process.Exit (1);
   END Die;
+
+(*--------------------------------------------------------------------------*)
+
+PROCEDURE TextExtras_CIEqual(t, u: Text.T): BOOLEAN RAISES {} =
+  VAR
+    lt: CARDINAL := Text.Length(t);
+    lu: CARDINAL := Text.Length(u);
+    i: CARDINAL := 0;
+  BEGIN
+    IF lt = lu THEN
+      IF Text.Equal(t, u) THEN
+        RETURN TRUE;
+      END;
+      WHILE i<lt DO
+        IF ASCII.Upper[Text.GetChar (t, i)] # ASCII.Upper[Text.GetChar (u, i)] THEN
+          RETURN FALSE
+        ELSE INC(i)
+        END;
+      END;
+      RETURN TRUE;
+    ELSE RETURN FALSE
+    END;
+  END TextExtras_CIEqual;
+
+(*--------------------------------------------------------------------------*)
 
 BEGIN
   DoIt ();
