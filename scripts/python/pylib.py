@@ -2445,7 +2445,10 @@ the sources are placed. Please read the files found in the license directory."""
 {\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", "\\par\n")
 + "}")
 
-    command = "light -out " + ConvertPathForWin32(input) + ".msi " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license) + " 2>&1"
+    msiPath = ConvertPathForWin32(input) + ".msi"
+    msiPath = RemoveLastPathElement(msiPath) + GetLastPathElement(msiPath).replace("NT386", "x86")
+
+    command = "light -out " + msiPath + " " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license) + " 2>&1"
     if os.name == "posix":
         command = command.replace("\\", "\\\\")
     print(command)
