@@ -21,6 +21,10 @@
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+c_source("FSUnixC")
+
+if equal (OS_TYPE, "POSIX")
+
 implementation("OSSpecialsPosix")
 implementation("PathReprPosix")
 implementation("SystemPosix")
@@ -30,7 +34,6 @@ if equal(M3_VARIANT, "PM3")
 else
   implementation("FSUnix_cm3")
 end
-c_source("FSUnixC")
 
 > "UserThreads.i3.tmp" in
   write("INTERFACE UserThreads;\n")
@@ -48,3 +51,5 @@ end
 cp_if("UserThreads.i3.tmp", "UserThreads.i3")
 
 derived_interface("UserThreads", HIDDEN)
+
+end
