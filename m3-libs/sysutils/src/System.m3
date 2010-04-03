@@ -25,7 +25,7 @@
 (*---------------------------------------------------------------------------*)
 MODULE System EXPORTS System;
 
-IMPORT ASCII, Process, TextRd, Rd, RdExtras, Wr, Pipe,
+IMPORT ASCII, Process, TextRd, Rd, Wr, Pipe,
        File, FileRd, FileWr, Thread,
        AtomList, Atom, Text, TextSeq, OSError, Pathname, RegularFile,
        RefSeq, IntRefTbl;
@@ -613,7 +613,7 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
         WHILE NOT done AND NOT Rd.EOF(rd) DO
           readOp := FALSE;
           token := NIL;
-          c := RdExtras.Skip(rd, unget := TRUE);
+          c := RdExtras_Skip(rd, unget := TRUE);
           IF c IN NUM THEN
             token := TextReadingUtils.GetToken(rd, terminate := NUMEND,
                                                unget := TRUE);
@@ -915,5 +915,23 @@ PROCEDURE Filter(cmd : TEXT; VAR rd : Rd.T; VAR wr : Wr.T; wd : TEXT := NIL;
   END Filter;
 
 (*---------------------------------------------------------------------------*)
+
+PROCEDURE RdExtras_Skip(
+    s: Rd.T;
+    READONLY skip := ASCII.Spaces;
+    unget := TRUE)
+    : CHAR
+    RAISES {Rd.Failure, Rd.EndOfFile, Thread.Alerted}=
+  VAR ch: CHAR;
+  BEGIN
+    REPEAT
+      ch := Rd.GetChar(s);
+    UNTIL NOT(ch IN skip);
+    IF unget THEN Rd.UnGetChar(s) END;
+    RETURN ch;
+  END RdExtras_Skip;
+
+(*---------------------------------------------------------------------------*)
+
 BEGIN
 END System.

@@ -8,7 +8,7 @@ IMPORT TextUtils;
 PROCEDURE Posix(pn : TEXT) : TEXT =
   BEGIN
     RETURN TextUtils.SubstChar(pn, '\\', '/');
-    (* Unconditinal substitution actually performs better than this:
+    (* Unconditional substitution actually performs better than this:
     IF Text.FindChar(pn, '\\') > -1  THEN
       RETURN TextUtils.SubstChar(pn, '\\', '/');
     ELSE
@@ -21,7 +21,7 @@ PROCEDURE Posix(pn : TEXT) : TEXT =
 PROCEDURE Win32(pn : TEXT) : TEXT =
   BEGIN
     RETURN TextUtils.SubstChar(pn, '/', '\\');
-    (* Unconditinal substitution actually performs better than this:
+    (* Unconditional substitution actually performs better than this:
     IF Text.FindChar(pn, '/') > -1  THEN
       RETURN TextUtils.SubstChar(pn, '/', '\\');
     ELSE

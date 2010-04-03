@@ -45,4 +45,3 @@ PROCEDURE SetDefault(cl : Closure);
   (* Define the default way to get a confirmation. *)
 
 END Confirmation.
-
