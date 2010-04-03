@@ -25,7 +25,7 @@
 (*---------------------------------------------------------------------------*)
 UNSAFE MODULE SystemPosix EXPORTS System;
 
-IMPORT Unix, Text, Ctypes, (*Uexec,*) Process, Fmt, Uerror;
+IMPORT Text, Ctypes, (*Uexec,*) Process, Fmt, Uerror;
 IMPORT (*SchedulerPosix*) Word;
 
 (*---------------------------------------------------------------------------*)
@@ -34,7 +34,7 @@ PROCEDURE Hostname() : TEXT =
     buf : ARRAY [0..1024] OF CHAR;
     len := 1024;
   BEGIN
-    IF Unix.gethostname(ADR(buf), len) = 0 THEN
+    IF gethostname(ADR(buf), len) = 0 THEN
       buf[1024] := '\000';
       len := 0;
       WHILE len < 1024 AND buf[len] # '\000' DO
@@ -71,7 +71,7 @@ PROCEDURE Wait(p: Process.T): Process.ExitCode RAISES {Error} =
     Uexec.RepackStatus(status);
 *)
     (* ensure non-zero implies lower bits non-zero *)
-    IF (Word.And(status, 16_FFFFFF00) # 0) AND (Word.And(status, 16_FF) = 0) THEN
+    IF (status # 0) AND (Word.And(status, 16_FF) = 0) THEN
       status := 1;
     END;
     RETURN MIN(LAST(Process.ExitCode), status);

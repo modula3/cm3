@@ -82,4 +82,3 @@ VAR
 BEGIN
   confirmation := NEW(StdIOClosure);
 END Confirmation.
-

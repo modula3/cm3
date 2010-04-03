@@ -3,17 +3,52 @@ UNSAFE MODULE FSysWin32 EXPORTS FSUtils;
 
 IMPORT Pathname, Text, OSError, File;
 IMPORT PathRepr, (* FSFixed AS *) FS;
-IMPORT FSUtilsUnsafe, M3toC;
+IMPORT ASCII, M3toC;
+
+(*--------------------------------------------------------------------------*)
+PROCEDURE PosixIsReadable(fn : Pathname.T) : BOOLEAN =
+(* This is really just an existance check. *)
+  VAR
+    fna := PathRepr.Native(fn);
+    fname := M3toC.SharedTtoS(fna);
+    res := access(fname, R_OK) = 0;
+  BEGIN
+    M3toC.FreeSharedS(fna, fname);
+    RETURN res;
+  END PosixIsReadable;
+
+(*--------------------------------------------------------------------------*)
+PROCEDURE PosixIsWritable(fn : Pathname.T) : BOOLEAN =
+(* This is really just an existance and read-only attribute check. *)
+  VAR
+    fna := PathRepr.Native(fn);
+    fname := M3toC.SharedTtoS(fna);
+    res := access(fname, W_OK) = 0;
+  BEGIN
+    M3toC.FreeSharedS(fna, fname);
+    RETURN res;
+  END PosixIsWritable;
+
+(*--------------------------------------------------------------------------*)
+PROCEDURE PosixIsExecutable(fn : Pathname.T) : BOOLEAN =
+(* This is really just an existance check. *)
+  VAR
+    fna := PathRepr.Native(fn);
+    fname := M3toC.SharedTtoS(fna);
+    res := access(fname, X_OK) = 0;
+  BEGIN
+    M3toC.FreeSharedS(fna, fname);
+    RETURN res;
+  END PosixIsExecutable;
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE IsReadable(fn : Pathname.T) : BOOLEAN =
   VAR f : File.T;
   BEGIN
-    (* POSIX implementation:
-      RETURN Unix.access(M3toC.TtoS(PathRepr.Native(fn)), Unix.R_OK) = 0;
-    *)
-    (* FIXME: write me! *)
-    (* workaround inserted: just try to open it *)
+    IF NOT PosixIsReadable(fn) THEN
+      RETURN FALSE;
+    END;
+    (* and try to open it *)
     TRY
       f := FS.OpenFileReadonly(PathRepr.Native(fn));
       f.close();
@@ -27,11 +62,10 @@ PROCEDURE IsReadable(fn : Pathname.T) : BOOLEAN =
 PROCEDURE IsWritable(fn : Pathname.T) : BOOLEAN =
   VAR f : File.T;
   BEGIN
-    (* POSIX implementation:
-       RETURN Unix.access(M3toC.TtoS(PathRepr.Native(fn)), Unix.W_OK) = 0;
-    *)
-    (* FIXME: write me! *)
-    (* workaround inserted: just try to open it *)
+    IF NOT PosixIsWritable(fn) THEN
+      RETURN FALSE;
+    END;
+    (* and try to open it *)
     TRY
       f := FS.OpenFile(PathRepr.Native(fn), FALSE);
       f.close();
@@ -42,26 +76,30 @@ PROCEDURE IsWritable(fn : Pathname.T) : BOOLEAN =
   END IsWritable;
 
 (*--------------------------------------------------------------------------*)
+
 PROCEDURE IsExecutable(fn : Pathname.T) : BOOLEAN =
+  VAR ext: TEXT;
+      len: CARDINAL;
+      ext0, ext1, ext2: CHAR;
   BEGIN
-    (* POSIX implementation:
-       RETURN Unix.access(M3toC.TtoS(PathRepr.Native(fn)), Unix.X_OK) = 0;
-    *)
-    (* FIXME: write me! *)
-    WITH ext = Pathname.LastExt(fn) DO
-      RETURN Text.Equal(ext, "exe") OR Text.Equal(ext, "com");
+    IF NOT PosixIsExecutable(fn) THEN
+      RETURN FALSE;
     END;
+    ext := Pathname.LastExt(fn);
+    len := Text.Length(ext);
+    IF len # 3 THEN
+      RETURN FALSE;
+    END;
+    ext0 := ASCII.Upper[Text.GetChar(ext, 0)];
+    ext1 := ASCII.Upper[Text.GetChar(ext, 1)];
+    ext2 := ASCII.Upper[Text.GetChar(ext, 2)];
+    RETURN (ext0 = 'E' AND ext1 = 'X' AND ext2 = 'E')
+        OR (ext0 = 'C' AND ext1 = 'O' AND ext2 = 'M')
+        OR (ext0 = 'B' AND ext1 = 'A' AND ext2 = 'T')
+        OR (ext0 = 'C' AND ext1 = 'M' AND ext2 = 'D');
   END IsExecutable;
 
 (*--------------------------------------------------------------------------*)
-
-PROCEDURE GetFileSize32(path:TEXT):INTEGER =
-  VAR cpath := M3toC.SharedTtoS(path);
-      res := FSUtilsUnsafe.GetFileSize32(cpath);
-  BEGIN
-    M3toC.FreeSharedS(path, cpath);
-    RETURN res;
-  END GetFileSize32;
 
 BEGIN
 END FSysWin32.

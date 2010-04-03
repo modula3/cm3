@@ -45,8 +45,6 @@ c_source("SystemC")
 module("EnvUtils")
 module("FingerprintFmt")
 module("FSUtils")
-c_source("FSUtilsUnsafe")
-interface("FSUtilsUnsafe")
 module("SMsg")
 module("MsgIF")
 module("MsgX")
@@ -82,6 +80,7 @@ export_interface("OSSpecials")
 
 if equal (OS_TYPE, "WIN32")
   include_dir("WIN32")
+  include_dir("POSIX")
 else
   include_dir("POSIX")
 end
