@@ -8,7 +8,7 @@ INTERFACE FastLex;
 IMPORT Lex, Rd, Thread;
 
 PROCEDURE Scan(
-    rd: Rd.T; READONLY cs: SET OF CHAR := Lex.NonBlanks): TEXT 
+    rd: Rd.T; READONLY cs: SET OF CHAR := Lex.NonBlanks): TEXT
   RAISES {Rd.Failure, Thread.Alerted};
 
 PROCEDURE Skip(

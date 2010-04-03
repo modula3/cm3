@@ -35,14 +35,14 @@ PROCEDURE GetString(rd : Rd.T) : TEXT
      read upto the following matching quote and return this text *)
 
 (*--------------------------------------------------------------------*)
-PROCEDURE GetToken(rd : Rd.T; skip := ASCII.Spaces; 
+PROCEDURE GetToken(rd : Rd.T; skip := ASCII.Spaces;
                    terminate := ASCII.Spaces; unget := FALSE) : TEXT
   RAISES {Rd.Failure, Rd.EndOfFile, Alerted};
   (* get the next token, that is everything that is not considered
      to be ASCII white space *)
 
 (*--------------------------------------------------------------------*)
-PROCEDURE GetTokenOrString(rd : Rd.T; skip := ASCII.Spaces; 
+PROCEDURE GetTokenOrString(rd : Rd.T; skip := ASCII.Spaces;
                            terminate := ASCII.Spaces) : TEXT
   RAISES {Rd.Failure, Rd.EndOfFile, Alerted};
   (* skip white space. If the next character is a single or a double

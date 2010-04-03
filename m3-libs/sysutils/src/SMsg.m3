@@ -30,8 +30,8 @@ IMPORT Wr, Stdio, Process, Text;
 (*--------------------------------------------------------------------------*)
 PROCEDURE Error(msg : TEXT) =
   BEGIN
-    TRY 
-      IF beepFlag THEN 
+    TRY
+      IF beepFlag THEN
         Wr.PutChar(errorWr, '\007');
       END;
       Wr.PutText(errorWr, " *** error: " & msg & "\n");
@@ -42,8 +42,8 @@ PROCEDURE Error(msg : TEXT) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Fatal(msg : TEXT; exitCode : INTEGER := 1) =
   BEGIN
-    TRY 
-      IF beepFlag THEN 
+    TRY
+      IF beepFlag THEN
         Wr.PutChar(fatalWr, '\007');
       END;
       Wr.PutText(fatalWr, " ### fatal: " & msg & "\n");
@@ -55,8 +55,8 @@ PROCEDURE Fatal(msg : TEXT; exitCode : INTEGER := 1) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Warning(msg : TEXT) =
   BEGIN
-    TRY 
-      IF beepFlag THEN 
+    TRY
+      IF beepFlag THEN
         Wr.PutChar(warningWr, '\007');
       END;
       Wr.PutText(warningWr, " !!! warning: " & msg & "\n");
@@ -67,7 +67,7 @@ PROCEDURE Warning(msg : TEXT) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Debug(msg : TEXT) =
   BEGIN
-    TRY 
+    TRY
       Wr.PutText(debugWr, " === debug: " & msg & "\n");
       Wr.Flush(debugWr);
     EXCEPT ELSE END;
@@ -76,8 +76,8 @@ PROCEDURE Debug(msg : TEXT) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Error2(proc, msg : TEXT) =
   BEGIN
-    TRY 
-      IF beepFlag THEN 
+    TRY
+      IF beepFlag THEN
         Wr.PutChar(errorWr, '\007');
       END;
       Wr.PutText(errorWr, " *** error in " & proc & ": " & msg & "\n");
@@ -88,8 +88,8 @@ PROCEDURE Error2(proc, msg : TEXT) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Fatal2(proc, msg : TEXT; exitCode : INTEGER := 1) =
   BEGIN
-    TRY 
-      IF beepFlag THEN 
+    TRY
+      IF beepFlag THEN
         Wr.PutChar(fatalWr, '\007');
       END;
       Wr.PutText(fatalWr, " ### fatal in " & proc & ": " & msg & "\n");
@@ -101,8 +101,8 @@ PROCEDURE Fatal2(proc, msg : TEXT; exitCode : INTEGER := 1) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Warning2(proc, msg : TEXT) =
   BEGIN
-    TRY 
-      IF beepFlag THEN 
+    TRY
+      IF beepFlag THEN
         Wr.PutChar(warningWr, '\007');
       END;
       Wr.PutText(warningWr, " !!! warning in " & proc & ": " & msg & "\n");
@@ -137,7 +137,7 @@ PROCEDURE V(msg : TEXT; unconditionalNewLine := TRUE) =
 PROCEDURE V2(proc, msg : TEXT; unconditionalNewLine := TRUE) =
   BEGIN
     IF vFlag THEN
-      TRY 
+      TRY
         IF unconditionalNewLine OR NOT Text.Empty(msg) THEN
           Wr.PutText(vWr, proc & ": " & msg & "\n");
           Wr.Flush(vWr);
@@ -189,7 +189,7 @@ PROCEDURE D(msg : TEXT; unconditionalNewLine := TRUE) =
 PROCEDURE D2(proc, msg : TEXT; unconditionalNewLine := TRUE) =
   BEGIN
     IF dFlag THEN
-      TRY 
+      TRY
         IF unconditionalNewLine OR NOT Text.Empty(msg) THEN
           Wr.PutText(dWr, proc & ": " & msg & "\n");
           Wr.Flush(dWr);

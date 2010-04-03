@@ -32,7 +32,7 @@ PROCEDURE Init(self : T; rd : Rd.T; wr : Wr.T; name : TEXT; killpid := 0) : T =
 
 CONST Threshold = LAST(CARDINAL) DIV 4;
 
-PROCEDURE Apply(self : T) : REFANY = 
+PROCEDURE Apply(self : T) : REFANY =
   VAR
     lrr := NEW(REF LONGREAL);
     n, w :  CARDINAL;
@@ -42,9 +42,9 @@ PROCEDURE Apply(self : T) : REFANY =
       TRY
         WHILE NOT Rd.EOF(self.rd) DO
           n := Rd.CharsReady(self.rd);
-          IF n > 0 THEN                
+          IF n > 0 THEN
             w := RdCopy.ToWriter(self.rd, self.wr, MIN(NUMBER(self.buf^), n));
-            Wr.Flush(self.wr); 
+            Wr.Flush(self.wr);
           END;
 
           RdClass.Lock(self.rd);
@@ -57,7 +57,7 @@ PROCEDURE Apply(self : T) : REFANY =
           RdClass.Unlock(self.rd);
 
         END;
-        
+
       EXCEPT
       | Rd.Failure(code) => RETURN D(self, "EXCEPTION RdFailure: " & System.AtomListToText(code));
       | Thread.Alerted => RETURN D(self, "EXCEPTION Thread.Alerted");
@@ -68,13 +68,13 @@ PROCEDURE Apply(self : T) : REFANY =
 (*
       IF self.killpid # 0 THEN
         Thread.Pause(1.0d0);
-        EVAL Usignal.kill(self.killpid, Usignal.SIGTERM); 
+        EVAL Usignal.kill(self.killpid, Usignal.SIGTERM);
         Thread.Pause(1.0d0);
-        EVAL Usignal.kill(self.killpid, Usignal.SIGKILL); 
+        EVAL Usignal.kill(self.killpid, Usignal.SIGKILL);
       END;
 *)
       TRY Wr.Close(self.wr);
-      EXCEPT 
+      EXCEPT
         Wr.Failure(code) => RETURN D(self, "EXCEPTION WrFailure (while closing): " & System.AtomListToText(code));
       | Thread.Alerted => RETURN D(self, "EXCEPTION Thread.Alerted");
       END;
@@ -83,7 +83,7 @@ PROCEDURE Apply(self : T) : REFANY =
     RETURN NIL;
   END Apply;
 
-PROCEDURE D(self : T; s : TEXT; l : CARDINAL := 2) : TEXT = 
+PROCEDURE D(self : T; s : TEXT; l : CARDINAL := 2) : TEXT =
   BEGIN
     IF Debug >= l THEN
       IO.Put(self.name & ": " & s  & "\n", Stdio.stderr);
