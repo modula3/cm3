@@ -26,7 +26,7 @@
 MODULE System EXPORTS System;
 
 IMPORT ASCII, Process, TextRd, Rd, RdExtras, Wr, Pipe,
-       File, FileRd, FileWr, Thread, 
+       File, FileRd, FileWr, Thread,
        AtomList, Atom, Text, TextSeq, OSError, Pathname, RegularFile,
        RefSeq, IntRefTbl;
 IMPORT (* SMsg, *) MsgX, MsgIF, ProcessEnv, TextReadingUtils, OSSpecials;
@@ -58,9 +58,9 @@ PROCEDURE ParListToText(params : TextSeq.T) : TEXT =
 (*---------------------------------------------------------------------------*)
 PROCEDURE ExecWithFileHandles(pgm : TEXT; params : TextSeq.T;
                               stdin, stdout, stderr : File.T;
-                              env : ProcessEnv.T := NIL; 
+                              env : ProcessEnv.T := NIL;
                               msgif : MsgIF.T := NIL;
-                              wd : TEXT := NIL) : INTEGER 
+                              wd : TEXT := NIL) : INTEGER
   RAISES {ExecuteError} =
   VAR p: Process.T;
   BEGIN
@@ -76,7 +76,7 @@ PROCEDURE ExecWithFileHandles(pgm : TEXT; params : TextSeq.T;
 (*---------------------------------------------------------------------------*)
 PROCEDURE RunWithFileHandles(pgm : TEXT; params : TextSeq.T;
                              stdin, stdout, stderr : File.T;
-                             env : ProcessEnv.T := NIL; 
+                             env : ProcessEnv.T := NIL;
                              msgif : MsgIF.T := NIL;
                              wd : TEXT := NIL) : Process.T
   RAISES {ExecuteError} =
@@ -86,7 +86,7 @@ PROCEDURE RunWithFileHandles(pgm : TEXT; params : TextSeq.T;
     child :  Process.T;
     senv  := ProcessEnv.SystemRepr(env);
   BEGIN
-    MsgX.D(msgif, "System.RunWithFileHandles(" & pgm & 
+    MsgX.D(msgif, "System.RunWithFileHandles(" & pgm &
       ParListToText(params) & ")");
 
     FOR i := 0 TO params.size() - 1 DO
@@ -105,8 +105,8 @@ PROCEDURE RunWithFileHandles(pgm : TEXT; params : TextSeq.T;
     TRY
       (*
       IF Text.Equal(pgm, "echo") THEN
-        VAR 
-          wr := NEW(FileWr.T).init(stdout, TRUE); 
+        VAR
+          wr := NEW(FileWr.T).init(stdout, TRUE);
           nl := TRUE;
         BEGIN
           FOR i := 0 TO params.size() - 1 DO
@@ -135,8 +135,8 @@ PROCEDURE RunWithFileHandles(pgm : TEXT; params : TextSeq.T;
       *)
       child := Process.Create(pgm, args^, senv, wd, stdin, stdout, stderr);
       (*END;*)
-    EXCEPT 
-      OSError.E(list) => RAISE ExecuteError("execution of `" & pgm & 
+    EXCEPT
+      OSError.E(list) => RAISE ExecuteError("execution of `" & pgm &
         "' failed: " & AtomListToText(list));
     END;
     RETURN child;
@@ -146,7 +146,7 @@ PROCEDURE RunWithFileHandles(pgm : TEXT; params : TextSeq.T;
 PROCEDURE ExecNW(VAR estdin: File.T;
                  VAR estdout: File.T;
                  VAR estderr: File.T;
-                 pgm: TEXT; 
+                 pgm: TEXT;
                  params: TextSeq.T;
                  env: ProcessEnv.T := NIL;
                  msgif: MsgIF.T := NIL;
@@ -163,8 +163,8 @@ PROCEDURE ExecNW(VAR estdin: File.T;
       ELSE
         RETURN Pathname.Join(wd, pn, NIL);
       END;
-    END MakeAbsolute; 
- 
+    END MakeAbsolute;
+
   VAR
     stdin, stdout, stderr : RegularFile.T;
     args   := NEW(TextSeq.T).init(params.size());
@@ -179,7 +179,7 @@ PROCEDURE ExecNW(VAR estdin: File.T;
            arglen = Text.Length(arg) DO
         IF (arglen = 1) AND Text.Equal(arg, "<") THEN
           INC(i);
-          IF i = psize THEN 
+          IF i = psize THEN
             RAISE ExecuteError("missing redirection argument");
           END;
           IF stdin # NIL THEN
@@ -198,7 +198,7 @@ PROCEDURE ExecNW(VAR estdin: File.T;
           END;
         ELSIF (arglen < 3) AND (Text.Equal(arg, ">") OR Text.Equal(arg, "1>")) THEN
           INC(i);
-          IF i = psize THEN 
+          IF i = psize THEN
             RAISE ExecuteError("missing redirection argument");
           END;
           IF stdout # NIL THEN
@@ -217,7 +217,7 @@ PROCEDURE ExecNW(VAR estdin: File.T;
           END;
         ELSIF (arglen < 4) AND (Text.Equal(arg, ">>") OR Text.Equal(arg, "1>>")) THEN
           INC(i);
-          IF i = psize THEN 
+          IF i = psize THEN
             RAISE ExecuteError("missing redirection argument");
           END;
           IF stdout # NIL THEN
@@ -237,7 +237,7 @@ PROCEDURE ExecNW(VAR estdin: File.T;
           END;
         ELSIF (arglen = 2) AND Text.Equal(arg, "2>") THEN
           INC(i);
-          IF i = psize THEN 
+          IF i = psize THEN
             RAISE ExecuteError("missing redirection argument");
           END;
           IF stderr # NIL THEN
@@ -256,7 +256,7 @@ PROCEDURE ExecNW(VAR estdin: File.T;
           END;
         ELSIF (arglen = 3) AND Text.Equal(arg, "2>>") THEN
           INC(i);
-          IF i = psize THEN 
+          IF i = psize THEN
             RAISE ExecuteError("missing redirection argument");
           END;
           IF stderr # NIL THEN
@@ -276,7 +276,7 @@ PROCEDURE ExecNW(VAR estdin: File.T;
           END;
         ELSIF (arglen = 2) AND Text.Equal(arg, "&>") THEN
           INC(i);
-          IF i = psize THEN 
+          IF i = psize THEN
             RAISE ExecuteError("missing redirection argument");
           END;
           IF stdout # NIL OR stderr # NIL THEN
@@ -296,7 +296,7 @@ PROCEDURE ExecNW(VAR estdin: File.T;
           stderr := stdout;
         ELSIF (arglen = 3) AND Text.Equal(arg, "&>>") THEN
           INC(i);
-          IF i = psize THEN 
+          IF i = psize THEN
             RAISE ExecuteError("missing redirection argument");
           END;
           IF stdout # NIL OR stderr # NIL THEN
@@ -335,20 +335,20 @@ PROCEDURE ExecNW(VAR estdin: File.T;
                 END;
               EXCEPT
                 Rd.Failure,
-                Thread.Alerted => RAISE ExecuteError("cannot read file " & 
+                Thread.Alerted => RAISE ExecuteError("cannot read file " &
                                                           fn);
                 | Rd.EndOfFile => (* skip *)
               END;
               TRY
                 Rd.Close(rd);
               EXCEPT
-                Rd.Failure, 
+                Rd.Failure,
                 Thread.Alerted => RAISE ExecuteError("cannot close file " & fn);
               END;
             END;
             INC(i);
           END;
-          IF i = psize THEN 
+          IF i = psize THEN
             RAISE ExecuteError("missing file contents closing `>' ");
           END;
         ELSIF (arglen = 2) AND Text.Equal(arg, "$(") THEN (* command substitution *)
@@ -373,7 +373,7 @@ PROCEDURE ExecNW(VAR estdin: File.T;
     IF estderr = NIL AND pstderr # NIL THEN
       estderr := pstderr;
     END;
-    RETURN RunWithFileHandles(pgm, args, estdin, estdout, estderr, env, 
+    RETURN RunWithFileHandles(pgm, args, estdin, estdout, estderr, env,
                               msgif, wd);
   END ExecNW;
 
@@ -382,7 +382,7 @@ PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
                msgif : MsgIF.T := NIL; wd : TEXT := NIL;
                pstdin  : File.T := NIL;
                pstdout : File.T := NIL;
-               pstderr : File.T := NIL) : INTEGER 
+               pstderr : File.T := NIL) : INTEGER
   RAISES {ExecuteError} =
 
   VAR
@@ -404,7 +404,7 @@ PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
       TRY
         stdin.close();
       EXCEPT
-        OSError.E(list) => RAISE ExecuteError("close failed on stdin: " & 
+        OSError.E(list) => RAISE ExecuteError("close failed on stdin: " &
           AtomListToText(list));
       END;
     END;
@@ -412,7 +412,7 @@ PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
       TRY
         stdout.close();
       EXCEPT
-        OSError.E(list) => RAISE ExecuteError("close failed on stdout: " & 
+        OSError.E(list) => RAISE ExecuteError("close failed on stdout: " &
           AtomListToText(list));
       END;
     END;
@@ -420,7 +420,7 @@ PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
       TRY
         stderr.close();
       EXCEPT
-        OSError.E(list) => RAISE ExecuteError("close failed on stderr: " & 
+        OSError.E(list) => RAISE ExecuteError("close failed on stderr: " &
           AtomListToText(list));
       END;
     END;
@@ -428,7 +428,7 @@ PROCEDURE Exec(pgm : TEXT; params : TextSeq.T; env : ProcessEnv.T := NIL;
   END Exec;
 
 (*---------------------------------------------------------------------------*)
-PROCEDURE Execute(cmd : TEXT; env : ProcessEnv.T := NIL; 
+PROCEDURE Execute(cmd : TEXT; env : ProcessEnv.T := NIL;
                   msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER
   RAISES {ExecuteError, Thread.Alerted} =
   VAR
@@ -439,7 +439,7 @@ PROCEDURE Execute(cmd : TEXT; env : ProcessEnv.T := NIL;
   BEGIN
     MsgX.D(msgif, "System.Execute(" & cmd & ")");
     TRY
-      pgm := TextReadingUtils.GetToken(rd); 
+      pgm := TextReadingUtils.GetToken(rd);
       WHILE NOT Rd.EOF(rd) DO
         token := TextReadingUtils.GetTokenOrString(rd);
         args.addhi(token);
@@ -452,9 +452,9 @@ PROCEDURE Execute(cmd : TEXT; env : ProcessEnv.T := NIL;
   END Execute;
 
 (*---------------------------------------------------------------------------*)
-PROCEDURE ExecuteShell(cmd : TEXT; shell := "/bin/sh"; 
-                       env : ProcessEnv.T := NIL; 
-                       msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER 
+PROCEDURE ExecuteShell(cmd : TEXT; shell := "/bin/sh";
+                       env : ProcessEnv.T := NIL;
+                       msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER
   RAISES {ExecuteError} =
   VAR
     stdin, stdout, stderr: File.T;
@@ -467,20 +467,20 @@ PROCEDURE ExecuteShell(cmd : TEXT; shell := "/bin/sh";
     args[1] := "-c";
     args[2] := OSSpecials.QuotedProcessArgument(cmd);
     TRY
-      child := Process.Create(shell, args, senv, wd, 
+      child := Process.Create(shell, args, senv, wd,
                               stdin, stdout, stderr);
-    EXCEPT 
-      OSError.E(list) => 
-      RAISE ExecuteError("execution of `" & shell & " -c " & cmd & 
+    EXCEPT
+      OSError.E(list) =>
+      RAISE ExecuteError("execution of `" & shell & " -c " & cmd &
             "' failed: " & AtomListToText(list));
     END;
 
     RETURN Process.Wait(child);
-  END ExecuteShell; 
+  END ExecuteShell;
 
 (*---------------------------------------------------------------------------*)
-PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL; 
-                      msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER 
+PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
+                      msgif : MsgIF.T := NIL; wd : TEXT := NIL) : INTEGER
   RAISES {ExecuteError, Thread.Alerted} =
 
   CONST
@@ -507,7 +507,7 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
     args  : TextSeq.T := NIL;
     done  : BOOLEAN;
     ret   : INTEGER := 0;
-    childWr, 
+    childWr,
     childRd : Pipe.T := NIL;
     stdin, stdout, stderr: File.T;
     child: Process.T;
@@ -594,7 +594,7 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
       END CheckOp;
 
     PROCEDURE CurrentChar( rd: Rd.T ): CHAR
-      RAISES {Thread.Alerted, Rd.Failure, Rd.EndOfFile} = 
+      RAISES {Thread.Alerted, Rd.Failure, Rd.EndOfFile} =
       VAR c: CHAR;
       BEGIN
         c := Rd.GetChar( rd );
@@ -700,11 +700,11 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
                 Pipe.Open(hr := childRd, hw := childWr);
               EXCEPT
                 OSError.E(l) =>
-                RAISE ExecuteError("pipe creation error (" & 
-                      AtomListToText(l) & ")"); 
+                RAISE ExecuteError("pipe creation error (" &
+                      AtomListToText(l) & ")");
               END;
               child := ExecNW(stdin, stdout, stderr,
-                              pgm, args, env, msgif, wd, 
+                              pgm, args, env, msgif, wd,
                               pstdin := lastChildRd,
                               pstdout := childWr);
             END;
@@ -740,14 +740,14 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE SplitCmd(cmd : TEXT; VAR prog : TEXT;
-                               VAR pargs : REF ARRAY OF TEXT) 
+                               VAR pargs : REF ARRAY OF TEXT)
   RAISES {Thread.Alerted} =
   VAR
     args   := NEW(TextSeq.T).init(10);
   BEGIN
     TRY
       WITH tmpRd = TextRd.New(cmd) DO
-        prog := TextReadingUtils.GetToken(tmpRd); 
+        prog := TextReadingUtils.GetToken(tmpRd);
         WHILE NOT Rd.EOF(tmpRd) DO
           args.addhi(TextReadingUtils.GetTokenOrString(tmpRd));
         END;
@@ -763,13 +763,13 @@ PROCEDURE SplitCmd(cmd : TEXT; VAR prog : TEXT;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE RdExecute(cmd : TEXT; VAR rd : Rd.T; wd : TEXT := NIL;
-                    env : ProcessEnv.T := NIL; 
+                    env : ProcessEnv.T := NIL;
                     msgif : MsgIF.T := NIL) : Process.T
   RAISES {ExecuteError, Thread.Alerted} =
   VAR
     prog   : TEXT;
     pargs  : REF ARRAY OF TEXT;
-    childWr, 
+    childWr,
     selfRd : Pipe.T;
     pid    : Process.T;
     senv  := ProcessEnv.SystemRepr(env);
@@ -782,10 +782,10 @@ PROCEDURE RdExecute(cmd : TEXT; VAR rd : Rd.T; wd : TEXT := NIL;
     SplitCmd(cmd, prog, pargs);
     TRY
       Pipe.Open(hr := selfRd, hw := childWr);
-      pid := Process.Create(prog, pargs^, senv, wd, stdinParent, 
+      pid := Process.Create(prog, pargs^, senv, wd, stdinParent,
                             childWr, childWr);
     EXCEPT
-      OSError.E(l) => 
+      OSError.E(l) =>
       VAR t := AtomListToText(l);
       BEGIN
         IF Text.Equal(t, "errno=2") THEN
@@ -805,21 +805,21 @@ PROCEDURE RdExecute(cmd : TEXT; VAR rd : Rd.T; wd : TEXT := NIL;
     TRY
       rd := NEW(FileRd.T).init(selfRd);
     EXCEPT
-      OSError.E(l) => 
-      RAISE ExecuteError("pipe read error. (" & AtomListToText(l) & ")"); 
+      OSError.E(l) =>
+      RAISE ExecuteError("pipe read error. (" & AtomListToText(l) & ")");
     END;
     RETURN pid;
-  END RdExecute;  
+  END RdExecute;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE PipeTo(cmd : TEXT; VAR wr : Wr.T; wd : TEXT := NIL;
-                 env : ProcessEnv.T := NIL; 
+                 env : ProcessEnv.T := NIL;
                  msgif : MsgIF.T := NIL) : Process.T
   RAISES {ExecuteError, Thread.Alerted} =
   VAR
     prog   : TEXT;
     pargs  : REF ARRAY OF TEXT;
-    childRd, 
+    childRd,
     selfWr : Pipe.T;
     pid    : Process.T;
     senv  := ProcessEnv.SystemRepr(env);
@@ -832,10 +832,10 @@ PROCEDURE PipeTo(cmd : TEXT; VAR wr : Wr.T; wd : TEXT := NIL;
     SplitCmd(cmd, prog, pargs);
     TRY
       Pipe.Open(hr := childRd, hw := selfWr);
-      pid := Process.Create(prog, pargs^, senv, wd, childRd, 
+      pid := Process.Create(prog, pargs^, senv, wd, childRd,
                             stdoutParent, stderrParent);
     EXCEPT
-      OSError.E(l) => 
+      OSError.E(l) =>
       VAR t := AtomListToText(l);
       BEGIN
         IF Text.Equal(t, "errno=2") THEN
@@ -855,11 +855,11 @@ PROCEDURE PipeTo(cmd : TEXT; VAR wr : Wr.T; wd : TEXT := NIL;
     TRY
       wr := NEW(FileWr.T).init(selfWr);
     EXCEPT
-      OSError.E(l) => 
-      RAISE ExecuteError("pipe write error. (" & AtomListToText(l) & ")"); 
+      OSError.E(l) =>
+      RAISE ExecuteError("pipe write error. (" & AtomListToText(l) & ")");
     END;
     RETURN pid;
-  END PipeTo;   
+  END PipeTo;
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE Filter(cmd : TEXT; VAR rd : Rd.T; VAR wr : Wr.T; wd : TEXT := NIL;
@@ -869,7 +869,7 @@ PROCEDURE Filter(cmd : TEXT; VAR rd : Rd.T; VAR wr : Wr.T; wd : TEXT := NIL;
     prog   : TEXT;
     pargs  : REF ARRAY OF TEXT;
     childRd,
-    childWr, 
+    childWr,
     selfRd ,
     selfWr : Pipe.T;
     pid    : Process.T;
@@ -878,16 +878,16 @@ PROCEDURE Filter(cmd : TEXT; VAR rd : Rd.T; VAR wr : Wr.T; wd : TEXT := NIL;
   BEGIN
     IF wd = NIL THEN wd := "." END;
     MsgX.D(msgif, "Filter(" & cmd & ")(" & wd & ")");
-    
+
     Process.GetStandardFileHandles(stdinParent, stdoutParent, stderrParent);
     SplitCmd(cmd, prog, pargs);
     TRY
       Pipe.Open(hr := selfRd, hw := childWr);
       Pipe.Open(hr := childRd, hw := selfWr);
-      pid := Process.Create(prog, pargs^, senv, wd, childRd, childWr, 
+      pid := Process.Create(prog, pargs^, senv, wd, childRd, childWr,
                             stderrParent);
     EXCEPT
-      OSError.E(l) => 
+      OSError.E(l) =>
       VAR t := AtomListToText(l);
       BEGIN
         IF Text.Equal(t, "errno=2") THEN
@@ -897,7 +897,7 @@ PROCEDURE Filter(cmd : TEXT; VAR rd : Rd.T; VAR wr : Wr.T; wd : TEXT := NIL;
         RAISE ExecuteError("process/pipe creation error. (" & t & ")");
       END;
     END;
-    
+
     TRY
       childRd.close();
       childWr.close();
@@ -908,12 +908,12 @@ PROCEDURE Filter(cmd : TEXT; VAR rd : Rd.T; VAR wr : Wr.T; wd : TEXT := NIL;
       wr := NEW(FileWr.T).init(selfWr);
       rd := NEW(FileRd.T).init(selfRd);
     EXCEPT
-      OSError.E(l) => 
-      RAISE ExecuteError("pipe write error. (" & AtomListToText(l) & ")"); 
+      OSError.E(l) =>
+      RAISE ExecuteError("pipe write error. (" & AtomListToText(l) & ")");
     END;
     RETURN pid;
   END Filter;
-  
+
 (*---------------------------------------------------------------------------*)
 BEGIN
 END System.

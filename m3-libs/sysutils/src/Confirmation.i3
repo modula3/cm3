@@ -6,7 +6,7 @@ TYPE
   Closure = OBJECT
   METHODS
     okay(t : TEXT) : BOOLEAN;
-    (* intended semantic: display TEXT `t' and ask the user for 
+    (* intended semantic: display TEXT `t' and ask the user for
        confirmation. Return TRUE is she/he confirms, FALSE otherwise.
     *)
   END;
@@ -26,13 +26,13 @@ TYPE
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE OkayStdio(self : StdIOClosure; msg : TEXT) : BOOLEAN;
-  (* Display `msg' on stderr and return TRUE if the user answers 
+  (* Display `msg' on stderr and return TRUE if the user answers
      `y' or `yes'.
   *)
 
 (*---------------------------------------------------------------------------*)
 PROCEDURE OkayExternal(self : ExternalClosure; msg : TEXT) : BOOLEAN;
-  (* Display `msg' using `cmd' and return TRUE if the user answers 
+  (* Display `msg' using `cmd' and return TRUE if the user answers
      `y' or `yes'.
   *)
 

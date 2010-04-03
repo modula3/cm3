@@ -24,7 +24,7 @@ PROCEDURE Hex(fp : Fingerprint.T) : TEXT =
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE Scan(t : TEXT; VAR fp : Fingerprint.T) : BOOLEAN =
-  CONST 
+  CONST
     digits = "0123456789ABCDEF";
   VAR
     tfp := TextUtils.Compress(t);
@@ -44,7 +44,7 @@ PROCEDURE Scan(t : TEXT; VAR fp : Fingerprint.T) : BOOLEAN =
     END;
     RETURN TRUE;
   END Scan;
-     
+
 
 BEGIN
 END FingerprintFmt.

@@ -27,7 +27,7 @@ MODULE MsgIF;
 
 IMPORT FileWr, Wr, Stdio, OSError, Pathname, Text, TextWr;
 
-REVEAL 
+REVEAL
   T = Public BRANDED "MsgIF v. 0.0" OBJECT
   METHODS
   OVERRIDES
@@ -51,7 +51,7 @@ REVEAL
   END;
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE DetailedInit(self : T; wr : Wr.T; 
+PROCEDURE DetailedInit(self : T; wr : Wr.T;
                        dLevel := 0; tLevel := 0; vLevel := 0;
                        beep := FALSE;
                        errorWr   : Wr.T := NIL; (* use wr if not specified *)
@@ -119,8 +119,8 @@ PROCEDURE Close(self : T) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Error(self : T; msg : TEXT) =
   BEGIN
-    TRY 
-      IF self.beepFlag THEN 
+    TRY
+      IF self.beepFlag THEN
         Wr.PutChar(self.errorWr, '\007');
       END;
       Wr.PutText(self.errorWr, " *** error: " & msg & "\n");
@@ -131,8 +131,8 @@ PROCEDURE Error(self : T; msg : TEXT) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Fatal(self : T; msg : TEXT) =
   BEGIN
-    TRY 
-      IF self.beepFlag THEN 
+    TRY
+      IF self.beepFlag THEN
         Wr.PutChar(self.fatalWr, '\007');
       END;
       Wr.PutText(self.fatalWr, " ### fatal: " & msg & "\n");
@@ -143,8 +143,8 @@ PROCEDURE Fatal(self : T; msg : TEXT) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Warning(self : T; msg : TEXT) =
   BEGIN
-    TRY 
-      IF self.beepFlag THEN 
+    TRY
+      IF self.beepFlag THEN
         Wr.PutChar(self.warningWr, '\007');
       END;
       Wr.PutText(self.warningWr, " !!! warning: " & msg & "\n");
@@ -156,7 +156,7 @@ PROCEDURE Warning(self : T; msg : TEXT) =
 PROCEDURE Debug(self : T; msg : TEXT; level := 1) =
   BEGIN
     IF self.debugLevel < level THEN RETURN END;
-    TRY 
+    TRY
       Wr.PutText(self.debugWr, " === debug: " & msg & "\n");
       Wr.Flush(self.debugWr);
     EXCEPT ELSE END;
@@ -165,8 +165,8 @@ PROCEDURE Debug(self : T; msg : TEXT; level := 1) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Error2(self : T; proc, msg : TEXT) =
   BEGIN
-    TRY 
-      IF self.beepFlag THEN 
+    TRY
+      IF self.beepFlag THEN
         Wr.PutChar(self.errorWr, '\007');
       END;
       Wr.PutText(self.errorWr, " *** error in " & proc & ": " & msg & "\n");
@@ -177,8 +177,8 @@ PROCEDURE Error2(self : T; proc, msg : TEXT) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Fatal2(self : T; proc, msg : TEXT) =
   BEGIN
-    TRY 
-      IF self.beepFlag THEN 
+    TRY
+      IF self.beepFlag THEN
         Wr.PutChar(self.fatalWr, '\007');
       END;
       Wr.PutText(self.fatalWr, " ### fatal in " & proc & ": " & msg & "\n");
@@ -189,11 +189,11 @@ PROCEDURE Fatal2(self : T; proc, msg : TEXT) =
 (*--------------------------------------------------------------------------*)
 PROCEDURE Warning2(self : T; proc, msg : TEXT) =
   BEGIN
-    TRY 
-      IF self.beepFlag THEN 
+    TRY
+      IF self.beepFlag THEN
         Wr.PutChar(self.warningWr, '\007');
       END;
-      Wr.PutText(self.warningWr, " !!! warning in " & proc & ": " & 
+      Wr.PutText(self.warningWr, " !!! warning in " & proc & ": " &
         msg & "\n");
       Wr.Flush(self.warningWr);
     EXCEPT ELSE END;
@@ -228,7 +228,7 @@ PROCEDURE V2(self : T; proc, msg : TEXT; unconditionalNewLine := TRUE;
              level := 1) =
   BEGIN
     IF self.verboseLevel >= level THEN
-      TRY 
+      TRY
         IF unconditionalNewLine OR NOT Text.Empty(msg) THEN
           Wr.PutText(self.vWr, proc & ": " & msg & "\n");
           Wr.Flush(self.vWr);
@@ -251,7 +251,7 @@ PROCEDURE T1(self : T; msg : TEXT; unconditionalNewLine := TRUE; level := 1) =
   END T1;
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE T2(self : T; proc, msg : TEXT; unconditionalNewLine := TRUE; 
+PROCEDURE T2(self : T; proc, msg : TEXT; unconditionalNewLine := TRUE;
              level := 1) =
   BEGIN
     IF self.traceLevel >= level THEN
@@ -278,11 +278,11 @@ PROCEDURE D(self : T; msg : TEXT; unconditionalNewLine := TRUE; level := 1) =
   END D;
 
 (*--------------------------------------------------------------------------*)
-PROCEDURE D2(self : T; proc, msg : TEXT; unconditionalNewLine := TRUE; 
+PROCEDURE D2(self : T; proc, msg : TEXT; unconditionalNewLine := TRUE;
              level := 1) =
   BEGIN
     IF self.debugLevel >= level THEN
-      TRY 
+      TRY
         IF unconditionalNewLine OR NOT Text.Empty(msg) THEN
           Wr.PutText(self.dWr, proc & ": " & msg & "\n");
           Wr.Flush(self.dWr);
@@ -307,9 +307,9 @@ PROCEDURE NewTextWr(dLevel := 0; tLevel := 0; vLevel := 0; beep := FALSE) : T =
 
 (*--------------------------------------------------------------------------*)
 PROCEDURE NewFileWr(fn : Pathname.T; dLevel := 0; tLevel := 0; vLevel := 0;
-                    beep := FALSE) : T 
+                    beep := FALSE) : T
   RAISES {OSError.E} =
-  VAR 
+  VAR
     wr := FileWr.OpenAppend(fn);
   BEGIN
     RETURN NEW(T).init(wr, dLevel, tLevel, vLevel, beep);

@@ -44,13 +44,13 @@ PROCEDURE ToText(env : T; sepChar := '\t') : TEXT RAISES {Error} =
       Wr.PutText(twr, "env-end@)" & sep);
     EXCEPT
       Thread.Alerted => RAISE Error("interrupted converting environment");
-    | Wr.Failure => RAISE Error("writer failure converting environment"); 
+    | Wr.Failure => RAISE Error("writer failure converting environment");
     END;
     RETURN TextWr.ToText(twr);
   END ToText;
 
 (*---------------------------------------------------------------------------*)
-PROCEDURE FromRd(rd : Rd.T; sepChars := Separators; skipStart := FALSE) : T 
+PROCEDURE FromRd(rd : Rd.T; sepChars := Separators; skipStart := FALSE) : T
   RAISES {Error} =
   VAR
     sep  := sepChars;
