@@ -20,8 +20,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: TextReadingUtils.m3,v 1.2 2008-02-21 00:06:59 wagner Exp $ *)
+ *)
 
 (*--------------------------------------------------------------------*)
 MODULE TextReadingUtils EXPORTS TextReadingUtils;
