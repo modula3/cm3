@@ -51,8 +51,24 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
 
 end
 
-if not defined("SYSTEM_LD")
-  SYSTEM_LD = SYSTEM_CC
+if not defined("configure_assembler")
+  proc configure_assembler() is
+  end
+end
+
+if not defined("configure_c_compiler")
+  proc configure_c_compiler() is
+  end
+end
+
+if not defined("configure_linker")
+  proc configure_linker() is
+    if defined("SYSTEM_LD")
+      return
+    end
+    configure_c_compiler()
+    SYSTEM_LD = SYSTEM_CC
+  end
 end
 
 %--------------------------------------------------------- Modula-3 backend ---
@@ -74,7 +90,8 @@ end
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files.  Note that this function
 % is only called if your program or library explicitly includes C source
-% code, the system distributed by Critical Mass does not.
+% code, the system distributed by Critical Mass did not, but
+% the current system does a fair amount for much easier porting.
 
 if not defined ("compile_c")
 
@@ -85,6 +102,8 @@ proc compile_c(source, object, options, optimize, debug) is
     if equal(source, "../src/runtime/SOLgnu/RTMachineASM.s")
         return assemble(source, object)
     end
+
+    configure_c_compiler()
 
     local args = options
     if M3_PROFILING args += "-pg" end
@@ -99,9 +118,7 @@ end
 % code, the system distributed by Critical Mass does not.
 
 proc assemble(source, object) is
-    if defined("configure_assembler")
-        configure_assembler()
-    end
+    configure_assembler()
     return try_exec("@" & SYSTEM_ASM, source, "-o", object)
 end
 
@@ -242,7 +259,6 @@ proc skip_lib(lib, shared) is
         install_symbolic_link(lib_sox, LIB_INSTALL & "/" & lib_so)
         install_derived_link("../../../lib/" & lib_sox, lib_so)
         install_derived_link("../../../lib/" & lib_sox, lib_sox)
-
     else
         delete_file(lib_so)
         delete_file(lib_sox)
