@@ -1,3 +1,20 @@
+#ifdef _MSC_VER
+#undef _DLL
+#ifndef _MT
+#define _MT
+#endif
+#pragma warning(disable:4514) /* unused inline function removed */
+#pragma warning(disable:4242) /* possible loss of data */
+#pragma warning(disable:4244) /* possible loss of data */
+#pragma warning(disable:4018) /* signed/unsigned mismatch */
+#pragma warning(disable:4365) /* signed/unsigned mismatch */
+#pragma warning(disable:4245) /* signed/unsigned mismatch */
+#pragma warning(disable:4127) /* conditional expression is constant */
+#pragma warning(disable:4706) /* assignment within conditional */
+#pragma warning(disable:4701) /* possibly uninitialized local used */
+#pragma warning(disable:4255) /* () changed to (void) */
+#endif
+
 /****************************************************************
  *
  * The author of this software is David M. Gay.
@@ -275,6 +292,7 @@ extern "C" {
 #endif
 
 #if defined(IEEE_8087) + defined(IEEE_MC68k) + defined(VAX) + defined(IBM) != 1
+#error Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
 Exactly one of IEEE_8087, IEEE_MC68k, VAX, or IBM should be defined.
 #endif
 
@@ -800,7 +818,7 @@ mult
 	xc0 = c->x;
 #ifdef ULLong
 	for(; xb < xbe; xc0++) {
-		if (y = *xb++) {
+		if ((y = *xb++)) {
 			x = xa;
 			xc = xc0;
 			carry = 0;
@@ -882,7 +900,7 @@ pow5mult
 	int i;
 	static int p05[3] = { 5, 25, 125 };
 
-	if (i = k & 3)
+	if ((i = k & 3))
 		b = multadd(b, p05[i-1], 0);
 
 	if (!(k >>= 2))
@@ -963,7 +981,7 @@ lshift
 			z = *x++ >> k1;
 			}
 			while(x < xe);
-		if (*x1 = z)
+		if ((*x1 = z))
 			++n1;
 		}
 #else
@@ -1185,16 +1203,16 @@ b2d
 	*e = 32 - k;
 #ifdef Pack_32
 	if (k < Ebits) {
-		d0 = Exp_1 | y >> Ebits - k;
+		d0 = Exp_1 | y >> (Ebits - k);
 		w = xa > xa0 ? *--xa : 0;
-		d1 = y << (32-Ebits) + k | w >> Ebits - k;
+		d1 = y << ((32-Ebits) + k) | w >> (Ebits - k);
 		goto ret_d;
 		}
 	z = xa > xa0 ? *--xa : 0;
 	if (k -= Ebits) {
-		d0 = Exp_1 | y << k | z >> 32 - k;
+		d0 = Exp_1 | y << k | z >> (32 - k);
 		y = xa > xa0 ? *--xa : 0;
-		d1 = z << k | y >> 32 - k;
+		d1 = z << k | y >> (32 - k);
 		}
 	else {
 		d0 = Exp_1 | y;
@@ -1265,13 +1283,13 @@ d2b
 	z |= Exp_msk11;
 #endif
 #else
-	if (de = (int)(d0 >> Exp_shift))
+	if ((de = (int)(d0 >> Exp_shift)))
 		z |= Exp_msk1;
 #endif
 #ifdef Pack_32
-	if (y = d1) {
-		if (k = lo0bits(&y)) {
-			x[0] = y | z << 32 - k;
+	if ((y = d1)) {
+		if ((k = lo0bits(&y))) {
+			x[0] = y | z << (32 - k);
 			z >>= k;
 			}
 		else
@@ -1464,7 +1482,7 @@ match
 	int c, d;
 	CONST char *s = *sp;
 
-	while(d = *t++) {
+	while((d = *t++)) {
 		if ((c = *++s) >= 'A' && c <= 'Z')
 			c += 'a' - 'A';
 		if (c != d)
@@ -1496,7 +1514,7 @@ hexnan
 		++s;
 	if (s[1] == '0' && (s[2] == 'x' || s[2] == 'X'))
 		s += 2;
-	while(c = *(CONST unsigned char*)++s) {
+	while((c = *(CONST unsigned char*)++s)) {
 		if (c >= '0' && c <= '9')
 			c -= '0';
 		else if (c >= 'a' && c <= 'f')
@@ -1524,7 +1542,7 @@ hexnan
 					*sp = s + 1;
 					break;
 					}
-				} while(c = *++s);
+				} while((c = *++s));
 			break;
 			}
 #endif
@@ -1848,7 +1866,7 @@ m3_strtod
 	/* Get starting approximation = rv * 10**e1 */
 
 	if (e1 > 0) {
-		if (i = e1 & 15)
+		if ((i = e1 & 15))
 			dval(rv) *= tens[i];
 		if (e1 &= ~15) {
 			if (e1 > DBL_MAX_10_EXP) {
@@ -1908,7 +1926,7 @@ m3_strtod
 		}
 	else if (e1 < 0) {
 		e1 = -e1;
-		if (i = e1 & 15)
+		if ((i = e1 & 15))
 			dval(rv) /= tens[i];
 		if (e1 >>= 4) {
 			if (e1 >= 1 << n_bigtens)
@@ -1927,7 +1945,7 @@ m3_strtod
 					if (j >= 53)
 					 word0(rv) = (P+2)*Exp_msk1;
 					else
-					 word0(rv) &= 0xffffffff << j-32;
+					 word0(rv) &= 0xffffffff << (j-32);
 					}
 				else
 					word1(rv) &= 0xffffffff << j;
@@ -2591,7 +2609,7 @@ nrv_alloc(char *s, char **rve, int n)
 	char *rv, *t;
 
 	t = rv = rv_alloc(n);
-	while(*t = *s++) t++;
+	while((*t = *s++)) t++;
 	if (rve)
 		*rve = t;
 	return rv;
@@ -2771,7 +2789,7 @@ m3_dtoa
 #ifdef Sudden_Underflow
 	i = (int)(word0(d) >> Exp_shift1 & (Exp_mask>>Exp_shift1));
 #else
-	if (i = (int)(word0(d) >> Exp_shift1 & (Exp_mask>>Exp_shift1))) {
+	if ((i = (int)(word0(d) >> Exp_shift1 & (Exp_mask>>Exp_shift1)))) {
 #endif
 		dval(d2) = dval(d);
 		word0(d2) &= Frac_mask1;
@@ -2815,8 +2833,8 @@ m3_dtoa
 		/* d is denormalized */
 
 		i = bbits + be + (Bias + (P-1) - 1);
-		x = i > 32  ? word0(d) << 64 - i | word1(d) >> i - 32
-			    : word1(d) << 32 - i;
+		x = i > 32  ? word0(d) << (64 - i) | word1(d) >> (i - 32)
+			    : word1(d) << (32 - i);
 		dval(d2) = x;
 		word0(d2) -= 31*Exp_msk1; /* adjust exponent */
 		i -= (Bias + (P-1) - 1) + 1;
@@ -2925,7 +2943,7 @@ m3_dtoa
 					}
 			dval(d) /= ds;
 			}
-		else if (j1 = -k) {
+		else if ((j1 = -k)) {
 			dval(d) *= tens[j1 & 0xf];
 			for(j = j1 >> 4; j; j >>= 1, i++)
 				if (j & 1) {
@@ -3039,7 +3057,7 @@ m3_dtoa
 				  }
 #endif
 				dval(d) += dval(d);
-				if (dval(d) > ds || dval(d) == ds && L & 1) {
+				if (dval(d) > ds || (dval(d) == ds && L & 1)) {
  bump_up:
 					while(*--s == '9')
 						if (s == s0) {
@@ -3086,7 +3104,7 @@ m3_dtoa
 				Bfree(b);
 				b = b1;
 				}
-			if (j = b5 - m5)
+			if ((j = b5 - m5))
 				b = pow5mult(b, j);
 			}
 		else
@@ -3124,7 +3142,7 @@ m3_dtoa
 	 * can do shifts and ors to compute the numerator for q.
 	 */
 #ifdef Pack_32
-	if (i = ((s5 ? 32 - hi0bits(S->x[S->wds-1]) : 1) + s2) & 0x1f)
+	if ((i = ((s5 ? 32 - hi0bits(S->x[S->wds-1]) : 1) + s2) & 0x1f))
 		i = 32 - i;
 #else
 	if (i = ((s5 ? 32 - hi0bits(S->x[S->wds-1]) : 1) + s2) & 0xf)
@@ -3209,11 +3227,11 @@ m3_dtoa
 				goto ret;
 				}
 #endif
-			if (j < 0 || j == 0 && mode != 1
+			if (j < 0 || (j == 0 && mode != 1
 #ifndef ROUND_BIASED
 							&& !(word1(d) & 1)
 #endif
-					) {
+					)) {
 				if (!b->x[0] && b->wds <= 1) {
 #ifdef SET_INEXACT
 					inexact = 0;
@@ -3230,7 +3248,7 @@ m3_dtoa
 				if (j1 > 0) {
 					b = lshift(b, 1);
 					j1 = cmp(b, S);
-					if ((j1 > 0 || j1 == 0 && dig & 1)
+					if ((j1 > 0 || (j1 == 0 && dig & 1))
 					&& dig++ == '9')
 						goto round_9_up;
 					}
@@ -3290,7 +3308,7 @@ m3_dtoa
 #endif
 	b = lshift(b, 1);
 	j = cmp(b, S);
-	if (j > 0 || j == 0 && dig & 1) {
+	if (j > 0 || (j == 0 && dig & 1)) {
  roundoff:
 		while(*--s == '9')
 			if (s == s0) {
@@ -3301,7 +3319,9 @@ m3_dtoa
 		++*s++;
 		}
 	else {
+#ifdef Honor_FLT_ROUNDS
  trimzeros:
+#endif
 		while(*--s == '0');
 		s++;
 		}
