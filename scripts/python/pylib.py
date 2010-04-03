@@ -2435,14 +2435,15 @@ def MakeMSIWithWix(input):
 
     # This is similar to the toplevel README in the source tree.
     licenseText = \
-"""The Critical Mass Modula-3 Software Distribution may be freely distributed as
-open source according to the various copyrights under which different parts of
-the sources are placed. Please read the files found in the license directory."""
+"""The Critical Mass Modula-3 Software Distribution may
+be freely distributed as open source according to the
+various copyrights under which different parts of the sources
+are placed. Please read the files found in the license directory."""
 
     license = input + "-license.rtf"
     open(license, "w").write(
 """{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0\\fnil\\fcharset0 Courier New;}}
-{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", "\\par\n")
+{\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", " ")
 + "}")
 
     msiPath = ConvertPathForWin32(input) + ".msi"
