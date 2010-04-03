@@ -784,10 +784,7 @@ proc skip_lib(lib, shared) is
         PdbExport(pdb_file)
         install_derived(lib0_file)
     else
-        DeleteFile(lib0_file)
-        DeleteFile(dll_file)
-        DeleteFile(manifest_file)
-        DeleteFile(pdb_file)
+        DeleteFiles([lib0_file, dll_file, manifest_file, pdb_file])
     end
 
     if ShipHand
