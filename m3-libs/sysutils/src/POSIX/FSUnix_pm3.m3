@@ -24,15 +24,5 @@ PROCEDURE IsExecutable(fn : Pathname.T) : BOOLEAN =
 
 (*--------------------------------------------------------------------------*)
 
-PROCEDURE GetFileSize32(path:TEXT):INTEGER =
-  BEGIN
-      RETURN FSUtilsUnsafe.GetFileSize32(M3toC.TtoS(path));
-  END GetFileSize32;
-
-PROCEDURE GetFileSize(path:TEXT):INTEGER =
-  BEGIN
-      RETURN FSUtilsUnsafe.GetFileSize(M3toC.TtoS(path));
-  END GetFileSize;
-
 BEGIN
 END FSUnix_pm3.
