@@ -153,7 +153,7 @@ InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
 def FormArchiveName(PackageSetName, Suffix):
     ArchiveConfig = Config
     if Config == "NT386" and Suffix == ".zip":
-      ArchiveConfig = "x86"
+        ArchiveConfig = "x86"
     a = os.path.join(STAGE, "cm3-" + PackageSetName + "-" + ArchiveConfig + "-" + CM3VERSION)
     if Config == "NT386":
         a = a + "-VC" + GetVisualCPlusPlusVersion()
