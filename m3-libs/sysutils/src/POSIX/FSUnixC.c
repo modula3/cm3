@@ -24,21 +24,38 @@
 #endif
 #endif
 
+#ifdef _WIN32
+#include <io.h>
+#else
 #include <unistd.h>
+#endif
 
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+/* There are no #defines in the headers but the documention gives the values. */
+#ifdef _WIN32
+#define X_OK 0
+#define W_OK 2
+#define R_OK 4
+#undef access
+#endif 
+
+
 #define M3WRAPNAMEx(a, b)           a##__##b
 #define M3WRAPNAME(a, b)            M3WRAPNAMEx(a, b)
-#define M3WRAP(ret, name, in, out)  ret M3WRAPNAME(M3MODULE, name) in { return name out; }
-#define M3WRAP2(ret, name, a, b)    M3WRAP(ret, name, (a i, b j), (i, j))
+#ifdef _WIN32
+#define M3WRAP_(ret, name, in, out)  ret M3WRAPNAME(M3MODULE, name) in { return _##name out; }
+#else
+#define M3WRAP_(ret, name, in, out)  ret M3WRAPNAME(M3MODULE, name) in { return name out; }
+#endif
+#define M3WRAP2_(ret, name, a, b)    M3WRAP_(ret, name, (a i, b j), (i, j))
 
 #define M3MODULE FSUtils
 
-M3WRAP2(int, access, const char*, int)
+M3WRAP2_(int, access, const char*, int)
 
 #define X(x) const int FSUtils__##x = x;
 
