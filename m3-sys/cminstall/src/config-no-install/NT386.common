@@ -544,12 +544,14 @@ proc make_dll_ms(options, objects, imported_libs, lib_file, def_file, dll_file, 
     % portable C, in order to get good codegen, on more platforms, without gcc.
     %
 
-    if not defined("LINK_NO_ENTRY")
+    if USE_MSVCRT
+      if not defined("LINK_NO_ENTRY")
         LINK_NO_ENTRY = equal($CM3_LINK_NO_ENTRY, "1")
-    end
+      end
 
-    if LINK_NO_ENTRY
+      if LINK_NO_ENTRY
         options += "-noentry"
+      end
     end
 
     return try_exec(
