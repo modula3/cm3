@@ -1,5 +1,5 @@
 #
-# remove $Id$, at least in cvsup/*3 files
+# remove $Id..$, at least in cvsup/*3 files
 #
 
 import os
@@ -14,7 +14,7 @@ for root, dirs, files in os.walk("."):
             a = open(p, "r").read()
             if a.find("$Id") != -1:
                 print(p)
-                b = re.sub("\n \\*\n \\* \\$Id$]+\\$ \\*\\)", "\n *)", a)
+                b = re.sub("\n \\*\n \\* \\$" + "Id[^$]+\\$ \\*\\)", "\n *)", a)
                 if a != b:
                     open(p, "w").write(b)
                     print(p)
