@@ -180,7 +180,7 @@ supportsMSI = nativeNT or contains(target, "interix") or contains(target, "cygwi
 
 PackageSets = ["min", "all"]
 if oldNT:
-    PackageSets = ["min"]:
+    PackageSets = ["min"]
 
 # ------------------------------------------------------------------------------------------------------------------------
 Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previous)s to %(InstallRoot_CompilerWithPrevious)s)" % vars())
