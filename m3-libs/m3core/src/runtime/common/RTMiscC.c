@@ -3,7 +3,6 @@
 /* See the file COPYRIGHT for a full description.              */
 
 #ifdef _MSC_VER
-#pragma optimize("gty", on)
 #undef _DLL
 #endif
 
