@@ -13,8 +13,6 @@
 # software outside of the United States of America may require an
 # export license
 #
-# $Id: Makefile,v 1.2 2001-09-19 15:39:38 wagner Exp $
-#
 
 # there's a nasty hack here:
 # cit_util is entirely in Modula-3, but since it is req'd by prsparse,
