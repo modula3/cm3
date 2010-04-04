@@ -7,6 +7,21 @@ import shutil
 import pylib
 from pylib import *
 
+def contains(s, t):
+    return s.find(t) != -1
+
+target      = Target.lower()
+currentVC   = ["80", "90"]
+nativeNT    = contains(target, "nt386") or target.endswith("_nt")
+currentNT   = nativeNT and currentVC.contains(GetVisualCPlusPlusVersion())
+oldNT       = nativeNT and not currentNT
+preferZip   = contains(target, "nt386") or target.endswith("_nt")
+supportsMSI = nativeNT or contains(target, "interix") or contains(target, "cygwin") or contains(target, "mingw") or contains(target, "uwin")
+
+PackageSets = ["min", "all"]
+if oldNT:
+    PackageSets = ["min"]
+
 def Echo(a):
     print("")
     print("=============================================================================")
@@ -167,21 +182,6 @@ if OriginalPATH:
 #MakeArchives()
 #sys.exit(0)
 
-def contains(s, t):
-    return s.find(t) != -1
-
-target = Target.lower()
-currentVC = {"80":1, "90":1}
-nativeNT = contains(target, "nt386") or target.endswith("_nt")
-currentNT = nativeNT and currentVC.contains(GetVisualCPlusPlusVersion())
-oldNT =     nativeNT and not currentNT
-preferZip = contains(target, "nt386") or target.endswith("_nt")
-supportsMSI = nativeNT or contains(target, "interix") or contains(target, "cygwin") or contains(target, "mingw") or contains(target, "uwin")
-
-PackageSets = ["min", "all"]
-if oldNT:
-    PackageSets = ["min"]:
-
 # ------------------------------------------------------------------------------------------------------------------------
 Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previous)s to %(InstallRoot_CompilerWithPrevious)s)" % vars())
 # ------------------------------------------------------------------------------------------------------------------------
@@ -290,16 +290,12 @@ BuildShip(Packages) or FatalError()
 ShipCompiler() or FatalError()
 
 AllPackages = pylib.GetPackageSets()["all"]
-for a in ["m3cc", "cm3"]:
-    if a in AllPackages:
-        AllPackages.remove(a)
+if "m3cc" in AllPackages:
+    AllPackages.remove("m3cc")
 RealClean(AllPackages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 Echo("build minimal packages with new compiler")
-# ----------------------------------------------------------------------------------------------------------------------------------
-
-#:min
 
 if False:
     print("skipping..")
@@ -308,14 +304,10 @@ else:
     Packages = pylib.GetPackageSets()["min"]
     if "m3cc" in Packages:
         Packages.remove("m3cc")
-    RealClean(Packages) or FatalError()
     BuildShip(Packages) or FatalError()
-    ShipCompiler() or FatalError()
-    RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 Echo("build standard packages with new compiler")
-# ----------------------------------------------------------------------------------------------------------------------------------
 
 if False:
     print("skipping..")
@@ -324,10 +316,7 @@ else:
     Packages = pylib.FilterPackages(pylib.GetPackageSets()["all"])
     if "m3cc" in Packages:
         Packages.remove("m3cc")
-    RealClean(Packages) or FatalError()
     BuildShip(Packages) or FatalError()
-    ShipCompiler() or FatalError()
-    RealClean(Packages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
 
