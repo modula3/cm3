@@ -72,11 +72,11 @@ def MakeArchive(PackageSetName, Command, Extension):
     if not os.listdir(SymbolsRoot):
         os.rmdir(SymbolsRoot)
     else:
-        Symbols = FormArchiveName(PackageSetName, "-symbols." + Extension)
+        Symbols = FormInstallRoot(PackageSetName) + "-symbols." + Extension
         DeleteFile(Symbols)
         Run(Command + " " + os.path.basename(Symbols) + " " + os.path.basename(SymbolsRoot))
 
-    Archive = FormArchiveName(PackageSetName, "." + Extension)
+    Archive = FormInstallRoot(PackageSetName) + "." + Extension
     DeleteFile(Archive)
     Run(Command + " " + os.path.basename(Archive) + " " + os.path.basename(InstallRoot))
 
@@ -138,27 +138,14 @@ def FatalError():
     sys.exit(1)
 
 # doesn't work yet
-#Logs = os.path.join(STAGE, "logs")
+#Logs = os.path.join(GetStage(), "logs")
 #os.makedirs(Logs)
 
 #LogCounter = 1
 
 InstallRoot_Previous = InstallRoot
-
-STAGE = GetStage()
-
-InstallRoot_CompilerWithPrevious = os.path.join(STAGE, "compiler_with_previous")
-InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
-
-def FormArchiveName(PackageSetName, Suffix):
-    ArchiveConfig = Config
-    if Config == "NT386" and Suffix == ".zip":
-        ArchiveConfig = "x86"
-    a = os.path.join(STAGE, "cm3-" + PackageSetName + "-" + ArchiveConfig + "-" + CM3VERSION.replace("pre-", "pre"))
-    if Config == "NT386":
-        a = a + "-VC" + GetVisualCPlusPlusVersion()
-    return a + Suffix
-
+InstallRoot_CompilerWithPrevious = os.path.join(GetStage(), "compiler_with_previous")
+InstallRoot_CompilerWithSelf = os.path.join(GetStage(), "compiler_with_self")
 InstallRoot_Min = FormInstallRoot("min")
 InstallRoot_All = FormInstallRoot("all")
 InstallRoots = [InstallRoot_Min, InstallRoot_All]
@@ -262,7 +249,9 @@ def Setup(ExistingCompilerRoot, NewRoot):
 
 Setup(InstallRoot, InstallRoot_CompilerWithPrevious)
 RealClean(Packages) or FatalError()
+os.environ["CM3_NO_SYMBOLS"] = "1"
 BuildShip(Packages) or FatalError()
+del(os.environ["CM3_NO_SYMBOLS"])
 ShipCompiler() or FatalError()
 if "m3cc" in Packages:
     Packages.remove("m3cc")
@@ -348,9 +337,9 @@ if contains(t, "nt386") or contains(t, "interix") or contains(t, "cygwin") or co
     for name in ["min", "all"]:
         MakeMSIWithWix(FormInstallRoot(name))
 
-for a in glob.glob(os.path.join(STAGE, "*")):
+for a in glob.glob(os.path.join(GetStage(), "*")):
     if (a and os.path.isfile(a)):
         print("Output is " + a)
-print("Much intermediate state remains in " + STAGE)
+print("Much intermediate state remains in " + GetStage())
 print("%s: Success." % os.path.basename(sys.argv[0]))
 sys.exit(0)
