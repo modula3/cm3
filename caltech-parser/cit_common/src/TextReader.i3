@@ -18,7 +18,6 @@
 (*  software outside of the United States of America may require an          *)
 (*  export license.                                                          *)
 (*                                                                           *)
-(* $Id: TextReader.i3,v 1.2 2001-09-19 13:27:07 wagner Exp $ *)
 INTERFACE TextReader;
 IMPORT TextList, Rd;
 IMPORT Thread;

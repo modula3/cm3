@@ -18,7 +18,6 @@
 (*  provided "as is" without express or implied warranty. Export of this     *)
 (*  software outside of the United States of America may require an          *)
 (*  export license.                                                          *)
-(* $Id: Equivalence.ig,v 1.2 2001-09-19 14:07:43 wagner Exp $ *)
 
 GENERIC INTERFACE Equivalence(Elem);
 
