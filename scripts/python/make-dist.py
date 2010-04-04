@@ -96,7 +96,7 @@ def TarBzip2(PackageSetName):
     MakeArchive(PackageSetName, "tar cfvj", "tar.bz2")
 
 def MakeArchives():
-    for PackageSetName in ["min", "std"]:
+    for PackageSetName in ["min", "all"]:
         if Config == "NT386":
             Zip(PackageSetName)
         else:
@@ -151,15 +151,17 @@ InstallRoot_CompilerWithPrevious = os.path.join(STAGE, "compiler_with_previous")
 InstallRoot_CompilerWithSelf = os.path.join(STAGE, "compiler_with_self")
 
 def FormArchiveName(PackageSetName, Suffix):
-    return os.path.join(STAGE, "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION + Suffix)
+    ArchiveConfig = Config
+    if Config == "NT386" and Suffix == ".zip":
+        ArchiveConfig = "x86"
+    a = os.path.join(STAGE, "cm3-" + PackageSetName + "-" + ArchiveConfig + "-" + CM3VERSION.replace("pre-", "pre"))
+    if Config == "NT386":
+        a = a + "-VC" + GetVisualCPlusPlusVersion()
+    return a + Suffix
 
 InstallRoot_Min = FormInstallRoot("min")
-InstallRoot_Standard = FormInstallRoot("std")
-
-InstallRoots = [
-    InstallRoot_Min,
-    InstallRoot_Standard,
-   ]
+InstallRoot_All = FormInstallRoot("all")
+InstallRoots = [InstallRoot_Min, InstallRoot_All]
 
 OriginalLIB = os.getenv("LIB")
 if OriginalLIB:
@@ -185,19 +187,17 @@ Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previo
 # build just compiler this pass, not the runtime
 # That is, assuming we have m3core and libm3, build the rest of the compiler.
 
-Packages = [
-    "import-libs",
-    "sysutils",
-    "m3middle",
-    "m3linker",
-    "m3front",
-    "m3quake",
-    "m3objfile",
-    "m3back",
-    "m3cc",
-    "cm3",
-    "mklib",
-    ]
+Packages = [ "import-libs",
+             "sysutils",
+             "m3middle",
+             "m3linker",
+             "m3front",
+             "m3quake",
+             "m3objfile",
+             "m3back",
+             "m3cc",
+             "cm3",
+             "mklib" ]
 
 def CopyRecursive(From, To):
     CopyCommand = "xcopy /fiverdh "
@@ -322,8 +322,8 @@ if False:
 
 else:
 
-    Setup(InstallRoot_CompilerWithSelf, InstallRoot_Standard)
-    Packages = pylib.FilterPackages(pylib.GetPackageSets()["std"])
+    Setup(InstallRoot_CompilerWithSelf, InstallRoot_All)
+    Packages = pylib.FilterPackages(pylib.GetPackageSets()["all"])
     if "m3cc" in Packages:
         Packages.remove("m3cc")
     RealClean(Packages) or FatalError()
@@ -341,11 +341,11 @@ def contains(s, t):
     return s.find(t) != -1
 
 if contains(t, "linux"):
-    for name in ["min", "std"]:
+    for name in ["min", "all"]:
         MakeDebianPackage(name, FormInstallRoot(name), GetStage() + "/cm3-" + name + ".deb", "/usr/local/cm3")
 
 if contains(t, "nt386") or contains(t, "interix") or contains(t, "cygwin") or contains(t, "mingw")  or contains(t, "uwin") or t.endswith("_nt"):
-    for name in ["min", "std"]:
+    for name in ["min", "all"]:
         MakeMSIWithWix(FormInstallRoot(name))
 
 for a in glob.glob(os.path.join(STAGE, "*")):
