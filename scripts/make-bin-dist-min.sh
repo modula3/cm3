@@ -28,8 +28,6 @@ DIST="${DIST:-std}" # may be min, core, std, all
 header "building CM3 installation in ${INSTALLROOT}"
 NOCLEAN=${NOCLEAN:-""}
 
-NEWCFG=${NEWCFG:-y}
-
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 
 # keep short runpaths
@@ -127,16 +125,6 @@ echo "${ROOT}/scripts/do-cm3-${DIST}.sh" buildlocal
 header "stage 4: installing libraries using new cm3 compiler"
 echo "${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal
 "${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal || exit 1
-
-if [ "${NEWCFG}" != "y" ]; then
-  header "stage 5: re-adjusting cm3.cfg"
-  echo "${CFG2} -->" "${INSTALLROOT}/bin/cm3.cfg"
-  cp "${CFG2}" "${INSTALLROOT}/bin/cm3.cfg"
-  echo "${CFG1} -->" "${INSTALLROOT}/bin/cm3.cfg--default"
-  cp "${CFG1}" "${INSTALLROOT}/bin/cm3.cfg--default"
-else
-  echo "no new config"
-fi
 
 #-----------------------------------------------------------------------------
 # build binary distribution archives
