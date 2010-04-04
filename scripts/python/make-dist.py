@@ -96,8 +96,8 @@ def TarBzip2(PackageSetName):
     MakeArchive(PackageSetName, "tar cfvj", "tar.bz2")
 
 def MakeArchives():
-    for PackageSetName in ["min", "all"]:
-        if Config == "NT386":
+    for PackageSetName in PackageSets:
+        if preferZip:
             Zip(PackageSetName)
         else:
             TarGzip(PackageSetName)
@@ -166,6 +166,21 @@ if OriginalPATH:
 
 #MakeArchives()
 #sys.exit(0)
+
+def contains(s, t):
+    return s.find(t) != -1
+
+target = Target.lower()
+currentVC = {"80":1, "90":1}
+nativeNT = contains(target, "nt386") or target.endswith("_nt")
+currentNT = nativeNT and currentVC.contains(GetVisualCPlusPlusVersion())
+oldNT =     nativeNT and not currentNT
+preferZip = contains(target, "nt386") or target.endswith("_nt")
+supportsMSI = nativeNT or contains(target, "interix") or contains(target, "cygwin") or contains(target, "mingw") or contains(target, "uwin")
+
+PackageSets = ["min", "all"]
+if oldNT:
+    PackageSets = ["min"]:
 
 # ------------------------------------------------------------------------------------------------------------------------
 Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previous)s to %(InstallRoot_CompilerWithPrevious)s)" % vars())
@@ -287,11 +302,8 @@ Echo("build minimal packages with new compiler")
 #:min
 
 if False:
-
     print("skipping..")
-
 else:
-
     Setup(InstallRoot_CompilerWithSelf, InstallRoot_Min)
     Packages = pylib.GetPackageSets()["min"]
     if "m3cc" in Packages:
@@ -306,11 +318,8 @@ Echo("build standard packages with new compiler")
 # ----------------------------------------------------------------------------------------------------------------------------------
 
 if False:
-
     print("skipping..")
-
 else:
-
     Setup(InstallRoot_CompilerWithSelf, InstallRoot_All)
     Packages = pylib.FilterPackages(pylib.GetPackageSets()["all"])
     if "m3cc" in Packages:
@@ -324,17 +333,12 @@ else:
 
 MakeArchives()
 
-t = Target.lower()
-
-def contains(s, t):
-    return s.find(t) != -1
-
-if contains(t, "linux"):
-    for name in ["min", "all"]:
+if contains(target, "linux"):
+    for name in PackageSets:
         MakeDebianPackage(name, FormInstallRoot(name), GetStage() + "/cm3-" + name + ".deb", "/usr/local/cm3")
 
-if contains(t, "nt386") or contains(t, "interix") or contains(t, "cygwin") or contains(t, "mingw")  or contains(t, "uwin") or t.endswith("_nt"):
-    for name in ["min", "all"]:
+if supportsMSI and not oldNT:
+    for name in PackageSets:
         MakeMSIWithWix(FormInstallRoot(name))
 
 for a in glob.glob(os.path.join(GetStage(), "*")):

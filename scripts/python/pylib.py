@@ -477,11 +477,9 @@ Variables = [
 
 #-----------------------------------------------------------------------------
 
-Versions = {
-    "CM3VERSION" : None,
-    "CM3VERSIONNUM" : None,
-    "CM3LASTCHANGED" : None,
-    }
+Versions = { "CM3VERSION" : None,
+             "CM3VERSIONNUM" : None,
+             "CM3LASTCHANGED" : None }
 
 Variables += Versions.keys()
 
@@ -554,7 +552,7 @@ def GetVersion(Key):
 
     return Versions.get(Key)
 
-CM3VERSION = getenv("CM3VERSION") or GetVersion("CM3VERSION")
+CM3VERSION = getenv("CM3VERSION") or GetVersion("CM3VERSION").replace("pre-", "pre")
 CM3VERSIONNUM = getenv("CM3VERSIONNUM") or GetVersion("CM3VERSIONNUM")
 CM3LASTCHANGED = getenv("CM3LASTCHANGED") or GetVersion("CM3LASTCHANGED")
 
@@ -1165,35 +1163,32 @@ def Boot():
     else:
         Compile = GnuCompile
 
-    Compile = Compile + ({
-        "AMD64_LINUX"     : " -m64 -mno-align-double ",
-        "AMD64_DARWIN"    : " -arch x86_64 ",
-        "PPC64_DARWIN"    : " -arch ppc64 ",
-        "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
-        "LINUXLIBC6"      : " -m32 -mno-align-double ",
-        "MIPS64_OPENBSD"  : " -mabi=64 ",
-        "SOLgnu"          : " -m32 ",
-        "SOLsun"          : " -xarch=v8plus ",
-        "SPARC32_LINUX"   : " -m32 -munaligned-doubles ",
-        "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
-        "SPARC64_SOLARIS" : " -xarch=v9 ",
-        }.get(Target) or " ")
+    Compile = Compile + ({ "AMD64_LINUX"     : " -m64 -mno-align-double ",
+                            "AMD64_DARWIN"    : " -arch x86_64 ",
+                            "PPC64_DARWIN"    : " -arch ppc64 ",
+                            "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
+                            "LINUXLIBC6"      : " -m32 -mno-align-double ",
+                            "MIPS64_OPENBSD"  : " -mabi=64 ",
+                            "SOLgnu"          : " -m32 ",
+                            "SOLsun"          : " -xarch=v8plus ",
+                            "SPARC32_LINUX"   : " -m32 -munaligned-doubles ",
+                            "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
+                            "SPARC64_SOLARIS" : " -xarch=v9 ",
+                          }.get(Target) or " ")
 
     SunLink = " -lrt -lm -lnsl -lsocket -lpthread "
 
-    Link = Compile + ({
-        "ARM_DARWIN"      : " ",
-        "AMD64_DARWIN"    : " ",
-        "I386_DARWIN"     : " ",
-        "I386_INTERIX"    : " -lm ",
-        "PPC_DARWIN"      : " ",
-        "PPC64_DARWIN"    : " ",
-        "SOLgnu"          : SunLink,
-        "SOLsun"          : SunLink,
-        "SPARC64_SOLARIS" : SunLink,
-        "PA32_HPUX"       : " -lrt -lm ",
-        }.get(Target) or " -lm -lpthread ")
-
+    Link = Compile + ({ "ARM_DARWIN"      : " ",
+                        "AMD64_DARWIN"    : " ",
+                        "I386_DARWIN"     : " ",
+                        "I386_INTERIX"    : " -lm ",
+                        "PPC_DARWIN"      : " ",
+                        "PPC64_DARWIN"    : " ",
+                        "SOLgnu"          : SunLink,
+                        "SOLsun"          : SunLink,
+                        "SPARC64_SOLARIS" : SunLink,
+                        "PA32_HPUX"       : " -lrt -lm ",
+                      }.get(Target) or " -lm -lpthread ")
     # not in Link
     Compile += " -c "
     
@@ -1403,26 +1398,11 @@ if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
 # workaround some of it
     ActionInfo = {
-        "build":
-        {
-            "Commands": [_BuildLocalFunction],
-        },
-        "buildlocal":
-        {
-            "Commands": [_BuildLocalFunction],
-        },
-        "buildglobal":
-        {
-            "Commands": [_BuildGlobalFunction, _ShipFunction],
-        },
-        "buildship":
-        {
-            "Commands": [_BuildGlobalFunction, _ShipFunction],
-        },
-        "ship":
-        {
-            "Commands": [_ShipFunction],
-        },
+        "build":        { "Commands": [_BuildLocalFunction], },
+        "buildlocal":   { "Commands": [_BuildLocalFunction], },
+        "buildglobal":  { "Commands": [_BuildGlobalFunction, _ShipFunction], },
+        "buildship":    { "Commands": [_BuildGlobalFunction, _ShipFunction], },
+        "ship":         { "Commands": [_ShipFunction], },
         "clean":
         {
             "Commands": [_CleanLocalFunction],
@@ -1454,15 +1434,13 @@ if _Program != "make-msi.py":
 
 def _FilterPackage(Package):
     PackageConditions = {
-        "m3gdb":
-            (M3GDB or CM3_GDB) and
-            {"FreeBSD4": True,
-            "LINUXLIBC6" : True,
-            "SOLgnu" : True,
-            "NetBSD2_i386" : True,
-            "NT386GNU" : True,
-            }.get(Target, False),
-
+        "m3gdb": (M3GDB or CM3_GDB) and
+                    {"FreeBSD4": True,
+                    "LINUXLIBC6" : True,
+                    "SOLgnu" : True,
+                    "NetBSD2_i386" : True,
+                    "NT386GNU" : True,
+                    }.get(Target, False),
         "tcl": BuildAll or HAVE_TCL,
         "tapi": BuildAll or OSType == "WIN32",
         "serial": BuildAll or HAVE_SERIAL,
@@ -2343,7 +2321,8 @@ def GetStage():
 # For now though, we only build min.
 
 def FormInstallRoot(PackageSetName):
-    a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + Config + "-" + CM3VERSION.replace("pre-", "pre"))
+    AltConfig = {"NT386":"x86"}.get(Config, Config)
+    a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + AltConfig + "-" + CM3VERSION)
     if Config == "NT386":
         a = a + "-VC" + GetVisualCPlusPlusVersion()
     return a
@@ -2447,10 +2426,7 @@ placed. Please read the files found in the license directory."""
 {\\*\\generator Msftedit 5.41.15.1515;}\\viewkind4\\uc1\\pard\\lang1033\\f0\\fs20""" + licenseText.replace("\n", " ")
 + "}")
 
-    msiPath = ConvertPathForWin32(input) + ".msi"
-    msiPath = os.path.join(RemoveLastPathElement(msiPath), GetLastPathElement(msiPath).replace("NT386", "x86").replace("-pre-", "-pre"))
-
-    command = "light -out " + msiPath + " " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license) + " 2>&1"
+    command = "light -out " + ConvertPathForWin32(input) + ".msi " + ConvertPathForWin32(input) + ".wixobj -ext WixUIExtension -cultures:en-us -dWixUILicenseRtf=" + ConvertPathForWin32(license) + " 2>&1"
     if os.name == "posix":
         command = command.replace("\\", "\\\\")
     print(command)
