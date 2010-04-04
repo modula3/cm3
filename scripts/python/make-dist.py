@@ -18,10 +18,6 @@ oldNT       = nativeNT and not currentNT
 preferZip   = contains(target, "nt386") or target.endswith("_nt")
 supportsMSI = nativeNT or contains(target, "interix") or contains(target, "cygwin") or contains(target, "mingw") or contains(target, "uwin")
 
-PackageSets = ["min", "all"]
-if oldNT:
-    PackageSets = ["min"]
-
 def Echo(a):
     print("")
     print("=============================================================================")
@@ -121,21 +117,10 @@ def BuildShip(Packages):
     # This is more indirect than necessary.
     CreateSkel()
     return Do("buildship", Packages)
-    #return True
 
 def RealClean(Packages):
     # This is more indirect than necessary.
-    #
-    CreateSkel()
-    #
-    # RealClean is mostly unnecessary and a nuisance for make-dist.
-    # Either STAGE is unique and there's nothing to clean,
-    # or STAGE is explicit and not unique and incrementality
-    # is desired. Er, then again, this doesn't touch STAGE,
-    # it touches the output directories in the source tree.
-    #
-    return True
-    #return Do("realclean", Packages)
+    return Do("realclean", Packages)
 
 def CreateSkel():
     for a in ("bin", "pkg"):
@@ -158,12 +143,11 @@ def FatalError():
 
 #LogCounter = 1
 
-InstallRoot_Previous = InstallRoot
-InstallRoot_CompilerWithPrevious = os.path.join(GetStage(), "compiler_with_previous")
-InstallRoot_CompilerWithSelf = os.path.join(GetStage(), "compiler_with_self")
-InstallRoot_Min = FormInstallRoot("min")
-InstallRoot_All = FormInstallRoot("all")
-InstallRoots = [InstallRoot_Min, InstallRoot_All]
+InstallRoot_CompilerWithPrevious = os.path.join(GetStage(), "prev")
+InstallRoot_CompilerWithSelf = os.path.join(GetStage(), "self")
+PackageSets = {"min" : FormInstallRoot("min"), "all" : FormInstallRoot("all")}
+if oldNT:
+    del(PackageSets["all"])
 
 OriginalLIB = os.getenv("LIB")
 if OriginalLIB:
@@ -173,17 +157,8 @@ OriginalPATH = os.getenv("PATH")
 if OriginalPATH:
     OriginalPATH = (os.path.pathsep + OriginalPATH)
 
-# for incremental runs to recover at this step..
-# if /i "%1" == "goto_tar" shift & goto :TarGzip
-# if /i "%1" == "goto_min" shift & goto :min
-# if /i "%1" == "goto_zip" shift & goto :Zip
-# if /i "%1" == "goto_tarbzip2" shift & goto :TarBzip2
-
-#MakeArchives()
-#sys.exit(0)
-
 # ------------------------------------------------------------------------------------------------------------------------
-Echo("build new compiler with old compiler and old runtime (%(InstallRoot_Previous)s to %(InstallRoot_CompilerWithPrevious)s)" % vars())
+Echo("build new compiler with old compiler and old runtime (%(InstallRoot)s to %(InstallRoot_CompilerWithPrevious)s)" % vars())
 # ------------------------------------------------------------------------------------------------------------------------
 
 # build just compiler this pass, not the runtime
@@ -244,7 +219,7 @@ def Setup(ExistingCompilerRoot, NewRoot):
     global InstallRoot
     InstallRoot = NewRoot
     os.environ["CM3_INSTALL"] = NewRoot
-    if (OriginalLIB): # This is Windows-only thing.
+    if OriginalLIB: # This is Windows-only thing.
         os.environ["LIB"] = os.path.join(NewRoot, "lib") + OriginalLIB
     os.environ["PATH"] = (os.path.join(NewRoot, "bin") + OriginalPATH)
 
@@ -295,25 +270,11 @@ if "m3cc" in AllPackages:
 RealClean(AllPackages) or FatalError()
 
 # ----------------------------------------------------------------------------------------------------------------------------------
-Echo("build minimal packages with new compiler")
 
-if False:
-    print("skipping..")
-else:
-    Setup(InstallRoot_CompilerWithSelf, InstallRoot_Min)
-    Packages = pylib.GetPackageSets()["min"]
-    if "m3cc" in Packages:
-        Packages.remove("m3cc")
-    BuildShip(Packages) or FatalError()
-
-# ----------------------------------------------------------------------------------------------------------------------------------
-Echo("build standard packages with new compiler")
-
-if False:
-    print("skipping..")
-else:
-    Setup(InstallRoot_CompilerWithSelf, InstallRoot_All)
-    Packages = pylib.FilterPackages(pylib.GetPackageSets()["all"])
+for p in PackageSets.keys():
+    Echo("build " + p + " packages with new compiler")
+    Setup(InstallRoot_CompilerWithSelf, PackageSets[p])
+    Packages = pylib.GetPackageSets()[p]
     if "m3cc" in Packages:
         Packages.remove("m3cc")
     BuildShip(Packages) or FatalError()
