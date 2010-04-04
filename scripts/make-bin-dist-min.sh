@@ -91,10 +91,7 @@ fi
 echo configuring temporary config file "${INSTALLROOT}/bin/cm3.cfg"
 # delete old config files
 for f in ${ROOT}/m3-sys/cminstall/src/config-no-install/*; do
-  b=`basename ${f}`
-  if [ -f "${INSTALLROOT}/bin/${b}" ] ; then
-    rm "${INSTALLROOT}/bin/${b}" > /dev/null
-  fi
+  rm -f "${INSTALLROOT}/bin/`basename ${f}`"
 done
 # new config files
 cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
