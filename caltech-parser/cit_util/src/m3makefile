@@ -9,7 +9,6 @@ Module("Debug")
 Module("TextUtils")
 implementation("TextUtilsFmt")
 
-Generic_module("OpenArrayTable")
 template("dbltable")
 Generic_module("DblTable")
 
