@@ -4,8 +4,6 @@
 (*                                                             *)
 (* Last modified on Wed Oct 12 16:12:57 PDT 1994 by kalsow     *)
 
-(* $Id$ *)
-
 MODULE M3Backend;
 
 IMPORT Wr, Thread;

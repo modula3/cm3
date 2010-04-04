@@ -1,4 +1,3 @@
-# $Id$ 
 PRE_MAKE?=echo
 PRE_MAKE_CLEAN?=echo
 all: 
