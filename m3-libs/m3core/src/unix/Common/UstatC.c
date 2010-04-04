@@ -99,7 +99,7 @@ int Ustat__fstat(int fd, m3_stat_t* m3st)
 #ifndef _WIN32
     return m3stat_from_stat(fstat(fd, (struct stat*)&st), m3st, &st); /* cast is for Darwin/arm */
 #else
-    return m3stat_from_stat(_fstat(fd, (struct stat*)&st), m3st, &st);
+    return m3stat_from_stat(_fstat(fd, &st), m3st, &st);
 #endif
 }
 
