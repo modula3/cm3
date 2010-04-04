@@ -6,8 +6,17 @@
 
 #undef _GNU_SOURCE
 #define _GNU_SOURCE
+
 #if defined(__INTERIX) && !defined(_ALL_SOURCE)
 #define _ALL_SOURCE
+#endif
+
+/* __DARWIN_UNIX03 defaults to 1 on older and newer headers,
+ * but older headers still have context "ss" instead of "__ss"
+ * and such, so we have to force 0.
+ */
+#if defined(__APPLE__) && !defined(__DARWIN_UNIX03)
+#define __DARWIN_UNIX03 0
 #endif
 
 #include <unistd.h>
@@ -15,6 +24,7 @@
 #include <assert.h>
 typedef struct sigaction sigaction_t;
 #if defined(__APPLE__)
+
 /*
 http://tinderbox.elegosoft.com/tinderbox/cgi-bin/gunzip.cgi\
   ?tree=cm3&brief-log=1258879870.10595#err9
@@ -24,6 +34,7 @@ http://duriansoftware.com/joe/PSA:-avoiding-the-%22ucontext-\
   routines-are-deprecated%22-error-on-Mac-OS-X-Snow-Leopard.html
 */
 #include <sys/ucontext.h>
+
 #elif !(defined(__OpenBSD__) || defined(__CYGWIN__))
 /* OpenBSD 4.3: ucontext.h doesn't exist, ucontext_t is in signal.h
         Cygwin: no state provided to signal handler? */
