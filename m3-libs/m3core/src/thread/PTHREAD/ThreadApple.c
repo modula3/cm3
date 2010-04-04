@@ -12,6 +12,14 @@ void ThreadApple__Dummy(void)
 
 #else
 
+/* Older and newer headers default __DARWIN_UNIX03 to 1,
+ * but only newer headers rename the symbols we use
+ * under it, so we have to change to to 0.
+ */
+#ifndef __DARWIN_UNIX03
+#define __DARWIN_UNIX03 0
+#endif
+
 #include "m3core.h"
 #include <stdlib.h>
 #include <pthread.h>
