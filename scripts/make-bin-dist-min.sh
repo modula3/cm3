@@ -28,8 +28,6 @@ DIST="${DIST:-std}" # may be min, core, std, all
 header "building CM3 installation in ${INSTALLROOT}"
 NOCLEAN=${NOCLEAN:-""}
 
-NEWCFG=${NEWCFG:-y}
-
 DS=${DS:-`date -u +'%Y-%m-%d-%H-%M-%S' | tr -d '\\n'`}
 
 # keep short runpaths
@@ -89,35 +87,16 @@ strip_exe "${INSTALLROOT}/bin/mklib${EXE}"
 #-----------------------------------------------------------------------------
 # configure a temporary config file
 echo configuring temporary config file "${INSTALLROOT}/bin/cm3.cfg"
-if [ "${NEWCFG}" != "y" ]; then
-  # old style installation
-  if [ "${TARGET}" = "NT386" -o "${TARGET}" = "NT386GNU" ]; then
-    CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}.main"
-    CFG2="${ROOT}/m3-sys/cminstall/src/config/${TARGET}.main"
-    CFG3="${ROOT}/m3-sys/cminstall/src/config/${TARGET}.common"
-    cp "${CFG3}" "${INSTALLROOT}/bin"
-  else
-    CFG1="${ROOT}/m3-sys/cm3/src/config/${TARGET}"
-  fi
-  echo "adjusting INSTALL_ROOT in old config file"
-  sed -e '
-    /^INSTALL_ROOT[ \t]*=/s;^.*$;INSTALL_ROOT = "'${INSTALLROOT}${SL}'";
-  ' "${CFG1}" > "${INSTALLROOT}/bin/cm3.cfg"
-else
-  # delete old config files
-  for f in ${ROOT}/m3-sys/cminstall/src/config-no-install/*; do
-    b=`basename ${f}`
-    if [ -f "${INSTALLROOT}/bin/${b}" ] ; then
-      rm "${INSTALLROOT}/bin/${b}" > /dev/null
-    fi
-  done
-  # new config files
-  cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
-  (
-    echo "INSTALL_ROOT = path() & \"/..\""
-    echo "include(path() & \"/config/${TARGET}\")"
-  ) > "${INSTALLROOT}/bin/cm3.cfg"
-fi
+# delete old config files
+for f in ${ROOT}/m3-sys/cminstall/src/config-no-install/*; do
+  rm -f "${INSTALLROOT}/bin/`basename ${f}`" > /dev/null
+done
+# new config files
+cp "${ROOT}/m3-sys/cminstall/src/config-no-install/"* "${INSTALLROOT}/bin/config"
+(
+  echo "INSTALL_ROOT = path() & \"/..\""
+  echo "include(path() & \"/config/${TARGET}\")"
+) > "${INSTALLROOT}/bin/cm3.cfg"
 
 #-----------------------------------------------------------------------------
 # clean everything
@@ -141,16 +120,6 @@ echo "${ROOT}/scripts/do-cm3-${DIST}.sh" buildlocal
 header "stage 4: installing libraries using new cm3 compiler"
 echo "${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal
 "${ROOT}/scripts/do-cm3-${DIST}.sh" buildglobal || exit 1
-
-if [ "${NEWCFG}" != "y" ]; then
-  header "stage 5: re-adjusting cm3.cfg"
-  echo "${CFG2} -->" "${INSTALLROOT}/bin/cm3.cfg"
-  cp "${CFG2}" "${INSTALLROOT}/bin/cm3.cfg"
-  echo "${CFG1} -->" "${INSTALLROOT}/bin/cm3.cfg--default"
-  cp "${CFG1}" "${INSTALLROOT}/bin/cm3.cfg--default"
-else
-  echo "no new config"
-fi
 
 #-----------------------------------------------------------------------------
 # build binary distribution archives
