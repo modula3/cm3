@@ -1,5 +1,4 @@
 #!/bin/sh
-# $Id$
 #
 # dirsexist.sh -- take $* and print it, but only for those words that are
 # existing directories

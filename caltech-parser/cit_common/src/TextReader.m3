@@ -18,7 +18,6 @@
 (*  software outside of the United States of America may require an          *)
 (*  export license.                                                          *)
 (*                                                                           *)
-(* $Id$ *)
 MODULE TextReader;
 IMPORT Text, TextList;
 (*IMPORT Debug,Fmt;*)

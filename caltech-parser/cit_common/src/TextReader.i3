@@ -18,7 +18,6 @@
 (*  software outside of the United States of America may require an          *)
 (*  export license.                                                          *)
 (*                                                                           *)
-(* $Id$ *)
 INTERFACE TextReader;
 IMPORT TextList, Rd;
 IMPORT Thread;

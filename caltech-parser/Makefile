@@ -13,8 +13,6 @@
 # software outside of the United States of America may require an
 # export license
 #
-# $Id$
-#
 
 # there's a nasty hack here:
 # cit_util is entirely in Modula-3, but since it is req'd by prsparse,

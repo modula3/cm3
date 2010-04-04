@@ -1,4 +1,3 @@
-(* $Id$ *)
 GENERIC INTERFACE BrandedSet(Elem, Set);
 IMPORT Word;
 
