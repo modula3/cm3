@@ -1,5 +1,3 @@
-(* $Id: OpenArrayTable.mg,v 1.2 2001-09-19 14:07:43 wagner Exp $ *)
-
 (* Copyright (C) 1992, Digital Equipment Corporation                     *)
 (* All rights reserved.                                                  *)
 (* See the file COPYRIGHT for a full description.                        *)
@@ -29,7 +27,7 @@ TYPE
 REVEAL
   Default = Public BRANDED DefaultBrand OBJECT
     minLogBuckets: CARDINAL; (* minimum value for Log_2(initial size) *)
-    buckets: REF ARRAY OF EntryList;
+    buckets: Buckets;
     logBuckets: CARDINAL; (* CEILING(Log2(NUMBER(buckets^))) *)
     maxEntries: CARDINAL; (* maximum number of entries *)
     minEntries: CARDINAL; (* minimum number of entries *)
@@ -45,15 +43,20 @@ REVEAL
     keyHash := KeyHash
   END;
 
+TYPE
+  Buckets = REF ARRAY OF EntryList;
+
 TYPE EntryList = REF RECORD
     key: REF Key.T := NIL;
     value: Value.T;
     tail: EntryList
   END;
 
-VAR (*CONST*)
-  Multiplier: INTEGER;
-
+(* The multiplier == 2^BITSIZE(Word.T) / phi *)
+CONST Multiplier32: INTEGER = 16_9e3779b9;
+CONST Multiplier64: INTEGER = (Word.Plus (Word.Shift (Multiplier32, 32), 16_7f4a7c15));
+CONST Multiplier: INTEGER = (ORD(BITSIZE (Word.T) = 32) * Multiplier32)
+                          + (ORD(BITSIZE (Word.T) = 64) * Multiplier64);
 CONST
   MaxLogBuckets = BITSIZE(Word.T) - 2;
   MaxBuckets = Word.Shift(1, MaxLogBuckets);
@@ -71,10 +74,10 @@ CONST
 TYPE DefaultIterator = OBJECT METHODS
     next(VAR (*OUT*) k: Key.T; VAR (*OUT*) v: Value.T) : BOOLEAN
   END BRANDED OBJECT
-    tbl: Default;
-    this: EntryList; (* next entry to visit if non-NIL *)
-    bucket: CARDINAL; (* next bucket if < NUMBER(tbl.buckets^) *)
-    done: BOOLEAN; (* TRUE if next() has returned FALSE *)
+    tbl    : Default   := NIL;
+    this   : EntryList := NIL;   (* next entry to visit if non-NIL *)
+    bucket : CARDINAL  := 0;     (* next bucket if < NUMBER(tbl.buckets^) *)
+    done   : BOOLEAN   := FALSE; (* TRUE if next() has returned FALSE *)
   OVERRIDES
     next := Next
   END;
@@ -122,17 +125,15 @@ PROCEDURE Put(tbl: Default; READONLY key: Key.T; READONLY val: Value.T)
       IF this # NIL THEN
         this.value := val;
         RETURN TRUE
-      ELSE
-        first :=
-          NEW(EntryList, key := Key.Clone(key), value := val, tail := first);
-        first.key^ := key;
-        INC(tbl.numEntries);
-        IF tbl.logBuckets < MaxLogBuckets
-             AND tbl.numEntries > tbl.maxEntries THEN
-          Rehash(tbl, tbl.logBuckets + 1) (* too crowded *)
-        END;
-        RETURN FALSE
-      END
+      END;
+      first := NEW(EntryList, key := Key.Clone(key), value := val, tail := first);
+      first.key^ := key;
+      INC(tbl.numEntries);
+      IF tbl.logBuckets < MaxLogBuckets
+           AND tbl.numEntries > tbl.maxEntries THEN
+        Rehash(tbl, tbl.logBuckets + 1) (* too crowded *)
+      END;
+      RETURN FALSE
     END
   END Put;
 
@@ -175,8 +176,7 @@ PROCEDURE Size(tbl: Default): CARDINAL =
 
 PROCEDURE Iterate(tbl: Default): Iterator =
   BEGIN
-    RETURN NEW(DefaultIterator,
-      tbl := tbl, this := NIL, bucket := 0, done := FALSE)
+    RETURN NEW(DefaultIterator, tbl := tbl);
   END Iterate;
 
 PROCEDURE KeyHash(<*UNUSED*> tbl: Default; READONLY k: Key.T): Word.T =
@@ -209,7 +209,7 @@ PROCEDURE NewBuckets(tbl: Default; logBuckets: CARDINAL) =
   (* Allocate "2^logBuckets" buckets. *)
   BEGIN
     WITH numBuckets = Word.LeftShift(1, logBuckets) DO
-      tbl.buckets := NEW(REF ARRAY OF EntryList, numBuckets);
+      tbl.buckets := NEW(Buckets, numBuckets);
       WITH b = tbl.buckets^ DO
         FOR i := FIRST(b) TO LAST(b) DO b[i] := NIL END
       END;
@@ -279,12 +279,5 @@ PROCEDURE Next(i: DefaultIterator; VAR key: Key.T; VAR val: Value.T): BOOLEAN =
   END Next;
 
 BEGIN
-  (* The multiplier == 2^BITSIZE(Word.T) / phi *)
-  IF BITSIZE (Word.T) = 32 THEN
-    Multiplier := 16_9e3779b9;
-  ELSIF BITSIZE (Word.T) = 64 THEN
-    Multiplier := Word.Plus (Word.Shift (16_9e3779b9, 32), 16_7f4a7c15);
-  ELSE
-    <*ASSERT FALSE*>
-  END;
+  <* ASSERT BITSIZE (Word.T) = 32 OR BITSIZE (Word.T) = 64 *>
 END OpenArrayTable.
