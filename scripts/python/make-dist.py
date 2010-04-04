@@ -13,7 +13,7 @@ def contains(s, t):
 target      = Target.lower()
 currentVC   = ["80", "90"]
 nativeNT    = contains(target, "nt386") or target.endswith("_nt")
-currentNT   = nativeNT and currentVC.contains(GetVisualCPlusPlusVersion())
+currentNT   = nativeNT and (GetVisualCPlusPlusVersion() in currentVC)
 oldNT       = nativeNT and not currentNT
 preferZip   = contains(target, "nt386") or target.endswith("_nt")
 supportsMSI = nativeNT or contains(target, "interix") or contains(target, "cygwin") or contains(target, "mingw") or contains(target, "uwin")
