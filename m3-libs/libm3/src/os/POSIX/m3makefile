@@ -7,9 +7,12 @@
 %      modified on Thu Jun 17 19:14:47 PDT 1993 by harrison
 %      modified on Thu May  6 21:38:22 PDT 1993 by mjordan
 
+Module("OSErrorPosix")
+
+if equal (OS_TYPE, "POSIX")
+
 Interface("OSConfig")
 
-Module("OSErrorPosix")
 Module("FilePosix")
 
 implementation("FSPosix")
@@ -88,4 +91,6 @@ if equal(TARGET, "ALPHA_OSF") or equal(TARGET, "DS3100")
     MakeInterfaceForConstant("SocketPosix_IsUltrixOrOSF", "TRUE")
 else
     MakeInterfaceForConstant("SocketPosix_IsUltrixOrOSF", "FALSE")
+end
+
 end
