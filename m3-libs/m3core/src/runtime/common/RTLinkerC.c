@@ -2,10 +2,6 @@
 #define __cdecl /* nothing */
 #endif
 
-#ifdef _MSC_VER
-#pragma optimize("gty", on)
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
