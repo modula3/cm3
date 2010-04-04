@@ -19,6 +19,10 @@
 /* which includes message inode numbers.                       */
 /***************************************************************/
 
+#if defined(__INTERIX) && !defined(_REENTRANT)
+#define _REENTRANT
+#endif
+
 #include <stdio.h>
 #include <ctype.h>
 #include <stdarg.h>
@@ -38,8 +42,6 @@
 
 #include <varrayptr.h>
 #include <inttable.h>
-
-extern int errno;
 
 /***************************************************************/
 /* Package constants                                           */
