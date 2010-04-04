@@ -1,6 +1,6 @@
 % Copyright 1996-2000 Critical Mass, Inc. All rights reserved.
 % See file COPYRIGHT-CMASS for details.
-% 
+%
 % Standard configuration file for IBMR2
 %
 
@@ -9,13 +9,13 @@
 %*		IMPORTANT				       *
 %***************************************************************
 %***************************************************************
-%  
+%
 %  This configuration assumes that you have installed bsdcc as
 %  described in "Porting 4.3 BSD Programs to AIX Version 3.1.
 %  The following is a simple form of these instructions.
-%  
+%
 %     (1) Add the following stanza to /etc/xlc.cfg:
-%  
+%
 %  * standard c compiler aliased as bsdcc
 %  bsdcc:  use        = DEFLT
 %          crt        = /lib/crt0.o
@@ -26,20 +26,20 @@
 %          options    = -H512,-T512, -qlanglvl=extended, -qnoro, -D_BSD,
 %  -D_NONSTD_TYPES, -D_NO_PROTO, -D_BSD_INCLUDES, -bnodelcsect, -U__STR__,
 %  -U__MATH__
-%  
+%
 %      Note that the options are a single line.
-%  
+%
 %     (2) As root, execute the following statements:
-%  
+%
 %     	cd /bin
 %  	ln -s xlc bsdcc
-%  
+%
 %     The result is to make bsdcc a C compiler that is as closely
 %     compatible with 4.3 BSD as possible.  The porting guide
 %     discusses the remaining incompatibilities.  The troff source
 %     for a version of the porting document is in file
 %     /usr/lpp/bos/bsdport.tr.
-%  
+%
 %   ALSO NOTE:  There is a bug in earlier versions of the 3.2 xlc compiler
 %   that will give you compilation errors.  The earliest version known to
 %   compile m3 2.10(and above) is 1.2.0.7.  1.2.0.0 does not work.  To see
@@ -117,9 +117,9 @@ END_CONFIG
 % at <line>.
 
 %------------------------------------------------------------- export paths ---
-% During the installation, destination directories that do not exists 
+% During the installation, destination directories that do not exists
 % will be created. You need the necessary permissions to do so; otherwise,
-% the installation will fail, but can be restarted after you have 
+% the installation will fail, but can be restarted after you have
 % fixed the permissions.
 
 INSTALL_ROOT = BEGIN_CONFIG
@@ -149,7 +149,7 @@ readonly INSTALL_IMPLS = TRUE
 %    => save all source files during the install
 %    => makes debugging easier and browsing more fruitful
 % FALSE
-%    => save only the exported interfaces and templates 
+%    => save only the exported interfaces and templates
 %    => makes the installed system slightly smaller.
 
 %------------------------------------------------ external system libraries ---
