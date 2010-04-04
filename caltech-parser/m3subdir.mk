@@ -1,4 +1,3 @@
-# $Id: m3subdir.mk,v 1.2 2001-09-19 15:39:38 wagner Exp $ 
 PRE_MAKE?=echo
 PRE_MAKE_CLEAN?=echo
 all: 
