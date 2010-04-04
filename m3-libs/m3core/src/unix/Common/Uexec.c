@@ -2,6 +2,13 @@
 /* All rights reserved.                                        */
 /* See the file COPYRIGHT for a full description.              */
 
+#ifdef _MSC_VER
+#undef _DLL
+#ifndef _MT
+#define _MT
+#endif
+#endif
+
 #include "m3core.h"
 #define M3MODULE Uexec
 
@@ -35,11 +42,15 @@ typedef intptr_t m3_exec_t; /* correct for Win32 but requires newer headers */
 typedef int m3_exec_t;
 #endif
 
-M3WRAP2_(m3_exec_t, execv, const char*, char**)
-M3WRAP2_(m3_exec_t, execvp, const char*, char**)
-M3WRAP3_(m3_exec_t, execve, const char*, char**, char**)
-#ifndef _WIN32
+#ifdef _WIN32
+M3WRAP2_(m3_exec_t, execv, const char*, char const*const*)
+M3WRAP2_(m3_exec_t, execvp, const char*, char const*const*)
+M3WRAP3_(m3_exec_t, execve, const char*, char const*const*, char const*const*)
+#else
 M3WRAP3(m3_pid_t, waitpid, m3_pid_t, int*, int)
+M3WRAP2(m3_exec_t, execv, const char*, char**)
+M3WRAP2(m3_exec_t, execvp, const char*, char**)
+M3WRAP3(m3_exec_t, execve, const char*, char**, char**)
 #endif
 
 #ifdef __cplusplus

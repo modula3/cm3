@@ -42,6 +42,8 @@ void Usocket__Assertions(void)
 #endif
 }
 
+#ifndef _WIN32
+
 /* wrap everything */
 
 #define M3MODULE Usocket
@@ -176,6 +178,8 @@ int Usocket__recvfrom(int s, void* buf, size_t length, int flags, sockaddr_t* ad
         return r;
     }
 }
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
