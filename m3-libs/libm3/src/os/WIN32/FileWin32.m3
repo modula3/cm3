@@ -230,10 +230,6 @@ PROCEDURE RegularFileFlush(h: RegularFile.T) RAISES {OSError.E}=
     IF WinBase.FlushFileBuffers(h.handle) = 0 THEN OSErrorWin32.Raise() END
   END RegularFileFlush;
 
-CONST           (* should be ........... on a true 64-bit filesystem *)
-  LockLo = 16_7fffffff;  (*  16_ffffffff;  *)
-  LockHi = 0;            (*  16_7fffffff;  *)
-
 PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E}=
   VAR err: INTEGER;
   BEGIN
@@ -241,8 +237,8 @@ PROCEDURE RegularFileLock(h: RegularFile.T): BOOLEAN RAISES {OSError.E}=
            hFile := h.handle,
            dwFileOffsetLow := 0,
            dwFileOffsetHigh := 0,
-           nNumberOfBytesToLockLow := LockLo,
-           nNumberOfBytesToLockHigh := LockHi) = 0 THEN
+           nNumberOfBytesToLockLow := -1,
+           nNumberOfBytesToLockHigh := -1) = 0 THEN
       err := WinBase.GetLastError();
       IF err = WinError.ERROR_LOCK_VIOLATION THEN RETURN FALSE END;
       OSErrorWin32.Raise0(err)
@@ -256,8 +252,8 @@ PROCEDURE RegularFileUnlock(h: RegularFile.T) RAISES {OSError.E}=
            hFile := h.handle,
            dwFileOffsetLow := 0,
            dwFileOffsetHigh := 0,
-           nNumberOfBytesToUnlockLow := LockLo,
-           nNumberOfBytesToUnlockHigh := LockHi) = 0 THEN
+           nNumberOfBytesToUnlockLow := -1,
+           nNumberOfBytesToUnlockHigh := -1) = 0 THEN
       OSErrorWin32.Raise()
     END;
   END RegularFileUnlock;
