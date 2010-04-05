@@ -138,7 +138,7 @@ PROCEDURE RegisterExitor(p: PROCEDURE());
    called at module initialization time (not when the first object is
    created) to guarantee the correct registration order. *)
 
-TYPE ID = [0 .. 16_7FFFFFFF];
+TYPE ID = INTEGER;
 CONST NullID: ID = 0;
 
 (* An "ID" or process identifier is assigned to each process when it
