@@ -19,7 +19,7 @@ proc FileExists(a) is
     return not stale (a, a)
 end
 
-if (equal(TARGET, "NT386") and equal(OS_TYPE, "POSIX")) or equal (TARGET, "NetBSD2_i386")
+if equal(TARGET, "NT386") and equal(OS_TYPE, "POSIX")
 
   % nothing -- no user thread support
 
