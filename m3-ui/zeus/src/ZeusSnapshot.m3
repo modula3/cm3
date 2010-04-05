@@ -25,7 +25,7 @@ MODULE ZeusSnapshot;
 
 
 IMPORT Algorithm, AlgorithmClass, Atom, Classes, Env, Fmt, File,
-       FileRd, FileWr, FormsVBT, FS, RefList, OSError,
+       FileRd, FileWr, FormsVBT, FS, RefList, OSConfig, OSError,
        Pathname, Point, Rd, Rect, RefListUtils, RegularFile,
        StableVBT, Sx, Text, TextRd, TextWr, Thread, Trestle,
        TrestleComm, VBT, View, ViewClass, Wr, Zeus, ZeusClass,
@@ -756,11 +756,14 @@ PROCEDURE StateDirFile (file: TEXT): Pathname.T =
   VAR home := Env.Get (HomeDir);
   BEGIN
     IF home = NIL THEN
-      Wr.PutText (Stdio.stderr,
-        "Error: the HOME environment variable is undefined.\n");
-      Wr.PutText (Stdio.stderr,
-        "Please set it to the path of your home directory and try again.\n");
-      Process.Exit (0);
+      home := OSConfig.UserHome();
+      IF home = NIL THEN
+        Wr.PutText (Stdio.stderr,
+          "Error: the HOME environment variable is undefined.\n");
+        Wr.PutText (Stdio.stderr,
+          "Please set it to the path of your home directory and try again.\n");
+        Process.Exit (0);
+      END;
     END;
     WITH path = Pathname.Decompose (home) DO
       path.addhi(StateDir);
