@@ -9,7 +9,7 @@
 
 INTERFACE Process;
 
-IMPORT File, OSError, Pathname;
+IMPORT File, OSError, Pathname, Word;
 
 TYPE T <: REFANY;
 (* A "Process.T", or process handle, provides access to a child process. *)
@@ -138,7 +138,7 @@ PROCEDURE RegisterExitor(p: PROCEDURE());
    called at module initialization time (not when the first object is
    created) to guarantee the correct registration order. *)
 
-TYPE ID = INTEGER;
+TYPE ID = Word.T;
 CONST NullID: ID = 0;
 
 (* An "ID" or process identifier is assigned to each process when it
