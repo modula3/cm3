@@ -218,10 +218,14 @@ PROCEDURE RegisterExitor(p: PROCEDURE()) =
   END RegisterExitor;
 
 PROCEDURE GetID(p: T): ID =
-  BEGIN RETURN LOOPHOLE(p.info.dwProcessId, ID) END GetID;
+  BEGIN
+    RETURN p.info.dwProcessId;
+  END GetID;
 
 PROCEDURE GetMyID(): ID =
-  BEGIN RETURN LOOPHOLE(WinBase.GetCurrentProcessId(), ID) END GetMyID;
+  BEGIN
+    RETURN WinBase.GetCurrentProcessId();
+  END GetMyID;
 
 VAR
   stdin_g  := GetFileHandle(WinBase.STD_INPUT_HANDLE,  FileWin32.Read);
