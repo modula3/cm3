@@ -218,7 +218,7 @@ PROCEDURE RegisterExitor(p: PROCEDURE()) =
   END RegisterExitor;
 
 PROCEDURE GetID(p: T): ID =
-  BEGIN RETURN LOOPHOLE(p.info.hProcess, ID) END GetID;
+  BEGIN RETURN LOOPHOLE(p.info.dwProcessId, ID) END GetID;
 
 PROCEDURE GetMyID(): ID =
   BEGIN RETURN LOOPHOLE(WinBase.GetCurrentProcessId(), ID) END GetMyID;
