@@ -48,12 +48,3 @@ else
     %
     c_source ("RTOSmmap")
 end
-
-if not equal (TARGET, "FreeBSD4")
-
-interface      ("RTSignalPrivate")
-c_source       ("RTSignalC")
-interface      ("RTSignalC")
-implementation ("RTSignal")
-
-end
