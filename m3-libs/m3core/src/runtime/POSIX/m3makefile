@@ -48,3 +48,8 @@ else
     %
     c_source ("RTOSmmap")
 end
+
+interface      ("RTSignalPrivate")
+c_source       ("RTSignalC")
+interface      ("RTSignalC")
+implementation ("RTSignal")
