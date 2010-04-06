@@ -1811,7 +1811,12 @@ def CopyConfigForDistribution(To):
             if isfile(File):
                 #print(File + " => " + dir + "\n")
                 CopyFile(File, dir)
-    open(os.path.join(Bin, "cm3.cfg"), "w").write("INSTALL_ROOT = (path() & \"/..\")\ninclude(path() & \"/config/" + Config + "\")\n")
+    open(os.path.join(Bin, "cm3.cfg"), "w").write("\
+if not defined(\"SL\") SL = \"/\" end\n\
+if not defined(\"HOST\") HOST = \"" + Config + "\" end\n\
+if not defined(\"TARGET\") TARGET = HOST end\n\
+INSTALL_ROOT = (path() & SL & \"..\")\n\
+include(path() & SL & \"config\" & SL & TARGET" + ")")
     return True
 
 #-----------------------------------------------------------------------------
