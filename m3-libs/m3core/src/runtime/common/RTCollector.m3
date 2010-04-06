@@ -14,7 +14,7 @@
 UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
                                   RTHeapRep, RTWeakRef, RTHooks;
 
-IMPORT RT0, RTHeapEvent, RTHeapMap, RTIO, RTMachine;
+IMPORT RT0, RTHeapEvent, RTHeapMap, RTIO, RTPointerAlignment;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
 IMPORT Word, Thread, RTThread;
 IMPORT TextLiteral AS TextLit, RTLinker, Time;
@@ -530,7 +530,7 @@ PROCEDURE NoteStackLocations (start, stop: ADDRESS) =
           END;
         END;
       END;
-      INC(fp, RTMachine.PointerAlignment);
+      INC(fp, RTPointerAlignment.Value);
     END;
   END NoteStackLocations;
 
