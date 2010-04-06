@@ -47,13 +47,13 @@ TYPE
  * DATA
 {*===========================================================================*)
 
-VAR
+CONST
 
 (*---------------------------------------------------------------------------*}
  * Spaces
 {*---------------------------------------------------------------------------*)
 
-  space2 := ARRAY [0..13] OF Ord {
+  space2 = ARRAY [0..13] OF Ord {
     16_0009, 16_000D, (* tab, form feed, newline and carriage return *)
     16_0020, 16_0020, (* space *)
     16_00a0, 16_00A0, (* non-break space *)
@@ -67,7 +67,7 @@ VAR
  * Letter ranges (covers only those ranges that are not in lower or upper)
 {*---------------------------------------------------------------------------*)
 
-  alpha2 := ARRAY [0..303] OF Ord {
+  alpha2 = ARRAY [0..303] OF Ord {
     16_00D8,	16_00F6,	(* Ø - ö *)
     16_00F8,	16_01F5,	(* ø - ǵ *)
     16_0250,	16_02A8,	(* ɐ - ʨ *)
@@ -226,7 +226,7 @@ VAR
  * Letter singletons (only covers those letters that are not in upper/lower)
 {*---------------------------------------------------------------------------*)
 
-  alpha1 := ARRAY [0..31] OF Ord {
+  alpha1 = ARRAY [0..31] OF Ord {
     16_00AA,	(* ª *)
     16_00B5,	(* µ *)
     16_00BA,	(* º *)
@@ -265,7 +265,7 @@ VAR
  * Decimal digit ranges
 {*---------------------------------------------------------------------------*)
 
-  digit2 := ARRAY [0..41] OF Ord {
+  digit2 = ARRAY [0..41] OF Ord {
     16_0030, 16_0039, (* Digit *)
     16_0660, 16_0669, (* Arabic Indic *)
     16_06F0, 16_06F9, (* Extended Arabic Indic *)
@@ -293,7 +293,7 @@ VAR
  * Upper-case ranges  (3rd column is conversion excess 500)
 {*---------------------------------------------------------------------------*)
 
-  tolower3 := ARRAY [0..107] OF Ord {
+  tolower3 = ARRAY [0..107] OF Ord {
     16_0041, 16_005A, 532, (* A-Z a-z *)
     16_00C0, 16_00D6, 532, (* À-Ö à-ö *)
     16_00D8, 16_00DE, 532, (* Ø-Þ ø-þ *)
@@ -336,7 +336,7 @@ VAR
  * Upper-case Singletons  (2nd column is conversion excess 500
 {*---------------------------------------------------------------------------*)
   
-  tolower2 := ARRAY [0..665] OF Ord {
+  tolower2 = ARRAY [0..665] OF Ord {
     16_0100, 501,	(* Ā ā *)
     16_0102, 501,	(* Ă ă *)
     16_0104, 501,	(* Ą ą *)
@@ -676,7 +676,7 @@ VAR
  * Lower-case ranges  (3rd column is conversion excess 500)
 {*---------------------------------------------------------------------------*)
 
-  toupper3 := ARRAY [0..104] OF Ord {
+  toupper3 = ARRAY [0..104] OF Ord {
     16_0061, 16_007A, 468, (* a-z A-Z *)
     16_00E0, 16_00F6, 468, (* à-ö À-Ö *)
     16_00F8, 16_00FE, 468, (* ø-þ Ø-Þ *)
@@ -718,7 +718,7 @@ VAR
  * Lower-case singletons  (2nd column is conversion excess 500)
 {*---------------------------------------------------------------------------*)
 
-  toupper2 := ARRAY [0..679] OF Ord {
+  toupper2 = ARRAY [0..679] OF Ord {
     16_00FF, 621, (* ÿ Ÿ *)
     16_0101, 499, (* ā Ā *)
     16_0103, 499, (* ă Ă *)
@@ -1066,7 +1066,7 @@ VAR
  *   (2nd col. conversion excess 500)
 {*---------------------------------------------------------------------------*)
 
-  totitle2 := ARRAY [0..15] OF Ord {
+  totitle2 = ARRAY [0..15] OF Ord {
     16_01C4, 501,	(* Ǆ ǅ *)
     16_01C6, 499,	(* ǆ ǅ *)
     16_01C7, 501,	(* Ǉ ǈ *)
@@ -1094,7 +1094,7 @@ PROCEDURE IsASCII (t: T): BOOLEAN =
   END IsASCII;
 
 PROCEDURE IsSpace (t: T): BOOLEAN =
-  VAR p := BSearch (t, ADR (space2), NUMBER (space2) DIV 2, 2);
+  VAR p := BSearch (t, space2, 2);
   BEGIN
     IF p # NIL AND  p^ <= ORD (t) AND 
       ORD (t) <= LOOPHOLE(p + ADRSIZE (Ord), Ptr)^ THEN
@@ -1107,18 +1107,18 @@ PROCEDURE IsLetter (t: T): BOOLEAN =
   VAR p: Ptr;
   BEGIN
     IF IsUpperCase (t) OR IsLowerCase (t) THEN RETURN TRUE END;
-    p := BSearch (t, ADR (alpha2), NUMBER (alpha2) DIV 2, 2);
+    p := BSearch (t, alpha2, 2);
     IF p # NIL AND p^ <= ORD (t) AND 
       ORD (t) <= LOOPHOLE(p + ADRSIZE (Ord), Ptr)^ THEN
       RETURN TRUE;
     END;
-    p := BSearch (t, ADR (alpha1), NUMBER (alpha1), 1);
+    p := BSearch (t, alpha1, 1);
     IF p # NIL AND ORD (t) = p^ THEN RETURN TRUE END;
     RETURN FALSE;
   END IsLetter;
 
 PROCEDURE IsDigit (t: T): BOOLEAN =
-  VAR p := BSearch (t, ADR (digit2), NUMBER (digit2) DIV 2, 2);
+  VAR p := BSearch (t, digit2, 2);
   BEGIN
     IF p # NIL AND p^ <= ORD (t) AND 
       ORD (t) <= LOOPHOLE(p + ADRSIZE (Ord), Ptr)^ THEN
@@ -1135,12 +1135,12 @@ PROCEDURE IsLetterOrDigit (t: T): BOOLEAN =
 PROCEDURE IsUpperCase (t: T): BOOLEAN =
   VAR p: Ptr;
   BEGIN
-    p := BSearch (t, ADR (tolower3), NUMBER (tolower3) DIV 3, 3);
+    p := BSearch (t, tolower3, 3);
     IF p # NIL AND p^ <= ORD (t) AND 
       ORD (t) <= LOOPHOLE(p + ADRSIZE (Ord), Ptr)^ THEN 
       RETURN TRUE;
     END;
-    p := BSearch (t, ADR (tolower2), NUMBER (tolower2) DIV 2, 2);
+    p := BSearch (t, tolower2, 2);
     IF p # NIL AND p^ = ORD (t) THEN RETURN TRUE END;
     RETURN FALSE;
   END IsUpperCase;
@@ -1148,12 +1148,12 @@ PROCEDURE IsUpperCase (t: T): BOOLEAN =
 PROCEDURE IsLowerCase (t: T): BOOLEAN =
   VAR p: Ptr;
   BEGIN
-    p := BSearch (t, ADR (toupper3), NUMBER (toupper3) DIV 3, 3);
+    p := BSearch (t, toupper3, 3);
     IF p # NIL AND p^ <= ORD (t) AND 
       ORD (t) <= LOOPHOLE(p + ADRSIZE (Ord), Ptr)^ THEN 
       RETURN TRUE;
     END;
-    p := BSearch (t, ADR (toupper2), NUMBER (toupper2) DIV 2, 2);
+    p := BSearch (t, toupper2, 2);
     IF p # NIL AND p^ = ORD (t) THEN RETURN TRUE END;
     RETURN FALSE;
   END IsLowerCase;
@@ -1164,13 +1164,13 @@ PROCEDURE IsTitleCase (t: T): BOOLEAN =
   END IsTitleCase;
 
 PROCEDURE ToUpperCase (t: T): T =
-  VAR p := BSearch (t, ADR (toupper3), NUMBER (toupper3) DIV 3, 3);
+  VAR p := BSearch (t, toupper3, 3);
   BEGIN
     IF p # NIL AND p^ <= ORD (t) AND 
       ORD (t) <= LOOPHOLE(p + ADRSIZE (Ord), Ptr)^ THEN
       RETURN VAL (ORD (t) + LOOPHOLE(p + 2 * ADRSIZE (Ord), Ptr)^ - 500, T);
     END;
-    p := BSearch (t, ADR (toupper2), NUMBER (toupper2) DIV 2, 2);
+    p := BSearch (t, toupper2, 2);
     IF p # NIL AND ORD (t) = p^ THEN
       RETURN VAL (ORD (t) + LOOPHOLE(p + ADRSIZE (Ord), Ptr)^ - 500, T);
     END;
@@ -1178,13 +1178,13 @@ PROCEDURE ToUpperCase (t: T): T =
   END ToUpperCase;
 
 PROCEDURE ToLowerCase (t: T): T =
-  VAR p := BSearch (t, ADR (tolower3), NUMBER (tolower3) DIV 3, 3);
+  VAR p := BSearch (t, tolower3, 3);
   BEGIN
     IF p # NIL AND p^ <= ORD (t) AND 
       ORD (t) <= LOOPHOLE(p + ADRSIZE (Ord), Ptr)^ THEN
       RETURN VAL (ORD (t) + LOOPHOLE(p + 2 * ADRSIZE (Ord), Ptr)^ - 500, T);
     END;
-    p := BSearch (t, ADR (tolower2), NUMBER (tolower2) DIV 2, 2);
+    p := BSearch (t, tolower2, 2);
     IF p # NIL AND p^ = ORD (t) THEN
       RETURN VAL (ORD (t) + LOOPHOLE(p + ADRSIZE (Ord), Ptr)^ - 500, T);
     END;
@@ -1192,7 +1192,7 @@ PROCEDURE ToLowerCase (t: T): T =
   END ToLowerCase;
 
 PROCEDURE ToTitleCase (t: T): T =
-  VAR p := BSearch (t, ADR (totitle2), NUMBER (totitle2) DIV 2, 2);
+  VAR p := BSearch (t, totitle2, 2);
   BEGIN
     IF p # NIL AND p^ = ORD (t) THEN
       RETURN VAL (ORD (t) + LOOPHOLE(p + ADRSIZE (Ord), Ptr)^ - 500, T);
@@ -1201,7 +1201,7 @@ PROCEDURE ToTitleCase (t: T): T =
   END ToTitleCase;
 
 PROCEDURE ToDigitValue (t: T): CARDINAL =
-  VAR p := BSearch (t, ADR (digit2), NUMBER (digit2) DIV 2, 2);
+  VAR p := BSearch (t, digit2, 2);
   BEGIN
     IF p # NIL AND p^ <= ORD (t) AND 
       ORD (t) <= LOOPHOLE(p + ADRSIZE (Ord), Ptr)^ THEN    
@@ -1229,8 +1229,10 @@ PROCEDURE ToDigitValue (t: T): CARDINAL =
  *             Returns: ptr -  Pointer to tuple or NIL
 {*---------------------------------------------------------------------------*)
 
-PROCEDURE BSearch (c: T;  r: Ptr;  n, a: INTEGER): Ptr =
-  VAR tsize := a * ADRSIZE (Ord);  p: Ptr;  m: INTEGER;
+PROCEDURE BSearch (c: T;  READONLY xr: ARRAY OF Ord;  a: INTEGER): Ptr =
+  VAR r: Ptr := ADR(xr);
+      n := NUMBER(xr) DIV a;
+      tsize := a * ADRSIZE (Ord);  p: Ptr;  m: INTEGER;
   BEGIN
     WHILE n > 1 DO
       m := n DIV 2;
