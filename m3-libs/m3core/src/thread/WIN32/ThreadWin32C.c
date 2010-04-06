@@ -8,7 +8,9 @@
 #if defined(_WIN32) && !defined(WIN32)
 #define WIN32
 #endif
+
 #ifdef _MSC_VER
+#undef _DLL
 #pragma warning(disable:4616) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
 #pragma warning(disable:4619) /* there is no warning x (unavoidable if targeting multiple compiler versions) */
 #pragma warning(disable:4115) /* named type definition in parentheses */
