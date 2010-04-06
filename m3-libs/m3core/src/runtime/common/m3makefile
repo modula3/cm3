@@ -60,6 +60,7 @@ Interface ("RTSignal")
 Interface ("RTStack")
 Interface ("RTTypeSRC")
 interface ("RTOS")
+interface ("RTPointerAlignment")
 
 proc FileExists(a) is
     return not stale (a, a)

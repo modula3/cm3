@@ -23,17 +23,6 @@ CONST
   BytesPerHeapPage    = 8192;               (* bytes per page *)
   LogBytesPerHeapPage = 13;
 
-(*--------------------------------------------------------- thread stacks ---*)
-
-CONST
-  PointerAlignment = ADRSIZE(ADDRESS);
-  (* The C compiler allocates all pointers on 'PointerAlignment'-byte
-     boundaries.  The garbage collector scans thread stacks, but only
-     looks at these possible pointer locations.  Setting this value
-     smaller than is needed will only make your system run slower.
-     Setting it too large will cause the collector to collect storage
-     that is not free. *)
-
 (*----------------------------------------------- exception stack walking ---*)
 (* The "FrameInfo" type must minimally include fields named "pc" and "sp". *)
 
