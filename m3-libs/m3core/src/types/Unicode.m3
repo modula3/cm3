@@ -11,9 +11,6 @@
  *  NOTE:
  *    The data tables in this module are based on the file 
  *    "UnicodeData-3.2.0.txt".
- *
- *----------------------------------------------------------------------------
- *  $Id$
 \*---------------------------------------------------------------------------*)
 MODULE Unicode;
 
@@ -56,7 +53,7 @@ CONST
  * Spaces
 {*---------------------------------------------------------------------------*)
 
-  space2 = ARRAY[0..6] OF T2 {
+  space2 = ARRAY OF T2 {
     T2{16_0009, 16_000D}, (* tab, form feed, newline and carriage return *)
     T2{16_0020, 16_0020}, (* space *)
     T2{16_00a0, 16_00A0}, (* non-break space *)
@@ -70,7 +67,7 @@ CONST
  * Letter ranges (covers only those ranges that are not in lower or upper)
 {*---------------------------------------------------------------------------*)
 
-  alpha2 = ARRAY[0..151] OF T2 {
+  alpha2 = ARRAY OF T2 {
     T2{16_00D8,  16_00F6},  (* Ø - ö *)
     T2{16_00F8,  16_01F5},  (* ø - ǵ *)
     T2{16_0250,  16_02A8},  (* ɐ - ʨ *)
@@ -229,7 +226,7 @@ CONST
  * Letter singletons (only covers those letters that are not in upper/lower)
 {*---------------------------------------------------------------------------*)
 
-  alpha1 = ARRAY[0..31] OF T1 {
+  alpha1 = ARRAY OF T1 {
     T1{16_00AA}, (* ª *)
     T1{16_00B5}, (* µ *)
     T1{16_00BA}, (* º *)
@@ -268,7 +265,7 @@ CONST
  * Decimal digit ranges
 {*---------------------------------------------------------------------------*)
 
-  digit2 = ARRAY[0..20] OF T2 {
+  digit2 = ARRAY OF T2 {
     T2{16_0030, 16_0039}, (* Digit *)
     T2{16_0660, 16_0669}, (* Arabic Indic *)
     T2{16_06F0, 16_06F9}, (* Extended Arabic Indic *)
@@ -296,7 +293,7 @@ CONST
  * Upper-case ranges  (3rd column is conversion excess 500)
 {*---------------------------------------------------------------------------*)
 
-  tolower3 = ARRAY[0..35] OF T3 {
+  tolower3 = ARRAY OF T3 {
     T3{16_0041, 16_005A, 532}, (* A-Z a-z *)
     T3{16_00C0, 16_00D6, 532}, (* À-Ö à-ö *)
     T3{16_00D8, 16_00DE, 532}, (* Ø-Þ ø-þ *)
@@ -339,7 +336,7 @@ CONST
  * Upper-case Singletons  (2nd column is conversion excess 500
 {*---------------------------------------------------------------------------*)
   
-  tolower2 = ARRAY[0..332] OF T2 {
+  tolower2 = ARRAY OF T2 {
     T2{16_0100, 501}, (* Ā ā *)
     T2{16_0102, 501}, (* Ă ă *)
     T2{16_0104, 501}, (* Ą ą *)
@@ -679,7 +676,7 @@ CONST
  * Lower-case ranges  (3rd column is conversion excess 500)
 {*---------------------------------------------------------------------------*)
 
-  toupper3 = ARRAY[0..34] OF T3 {
+  toupper3 = ARRAY OF T3 {
     T3{16_0061, 16_007A, 468}, (* a-z A-Z *)
     T3{16_00E0, 16_00F6, 468}, (* à-ö À-Ö *)
     T3{16_00F8, 16_00FE, 468}, (* ø-þ Ø-Þ *)
@@ -721,7 +718,7 @@ CONST
  * Lower-case singletons  (2nd column is conversion excess 500)
 {*---------------------------------------------------------------------------*)
 
-  toupper2 = ARRAY[0..339] OF T2 {
+  toupper2 = ARRAY OF T2 {
     T2{16_00FF, 621}, (* ÿ Ÿ *)
     T2{16_0101, 499}, (* ā Ā *)
     T2{16_0103, 499}, (* ă Ă *)
@@ -1069,7 +1066,7 @@ CONST
  *   (2nd col. conversion excess 500)
 {*---------------------------------------------------------------------------*)
 
-  totitle2 = ARRAY[0..7] OF T2 {
+  totitle2 = ARRAY OF T2 {
     T2{16_01C4, 501}, (* Ǆ ǅ *)
     T2{16_01C6, 499}, (* ǆ ǅ *)
     T2{16_01C7, 501}, (* Ǉ ǈ *)
