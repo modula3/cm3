@@ -12,7 +12,7 @@
 UNSAFE MODULE RTHeapStats;
 
 IMPORT RT0, RTCollector, RTModule, RTIO, RTHeapMap, RTHeapRep, RTMisc;
-IMPORT RTOS, RTType, RTTypeSRC, RTProcedure, RTProcedureSRC, RTPointerAlignment; 
+IMPORT RTOS, RTType, RTTypeSRC, RTProcedure, RTProcedureSRC; 
 IMPORT RTStack, RTThread, Word, Text;
 FROM RTIO IMPORT PutInt, PutAddr, PutText;
 
@@ -336,7 +336,7 @@ PROCEDURE ScanPages (start, stop: ADDRESS) =
           VisitPage(page);
         END;
       END;
-      INC(fp, RTPointerAlignment.Value);
+      INC(fp, RTThread.PointerAlignment);
     END;
   END ScanPages;
 
@@ -366,7 +366,7 @@ PROCEDURE ScanThreadRoots (start, stop: ADDRESS;  on_stack: BOOLEAN) =
           AddVisit (stack_roots);
         END;
       END;
-      INC(fp, RTPointerAlignment.Value);
+      INC(fp, RTThread.PointerAlignment);
     END;
   END ScanThreadRoots;
 
@@ -396,7 +396,7 @@ PROCEDURE ScanThreadPageRoots (start, stop: ADDRESS;  on_stack: BOOLEAN) =
           AddVisit (stack_pages);
         END;
       END;
-      INC(fp, RTPointerAlignment.Value);
+      INC(fp, RTThread.PointerAlignment);
     END;
   END ScanThreadPageRoots;
 
@@ -668,7 +668,7 @@ PROCEDURE DumpStack (READONLY ti: ThreadInfo) =
         END;
       END;
 
-      INC (fp, RTPointerAlignment.Value);
+      INC (fp, RTThread.PointerAlignment);
     END;
   END DumpStack;
 
