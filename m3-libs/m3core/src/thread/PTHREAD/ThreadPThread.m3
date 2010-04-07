@@ -2,14 +2,12 @@
 (* All rights reserved.                                            *)
 (* See the file COPYRIGHT-PURDUE for a full description.           *)
 
-UNSAFE MODULE ThreadPThread EXPORTS Thread, ThreadF, RTThread,
-Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPThread;
+UNSAFE MODULE ThreadPThread EXPORTS Thread, ThreadF, RTThread, Scheduler,
+SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
-IMPORT Cerrno, FloatMode, MutexRep,
-       RTCollectorSRC, RTError, RTHeapRep, RTIO, RTParams,
-       RTPerfTool, RTProcess, Thread, ThreadEvent, Time,
-       Unix, Utime, Word, Usched,
-       Uerror, Uexec;
+IMPORT Cerrno, FloatMode, MutexRep, RTCollectorSRC, RTError, RTHeapRep, RTIO,
+       RTParams, RTPerfTool, RTProcess, ThreadEvent, Time, Unix, Utime, Word,
+       Usched, Uerror, Uexec;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 IMPORT RuntimeError AS RTE;
@@ -72,10 +70,10 @@ PROCEDURE SetState (act: Activation;  state: ActState) =
       RTIO.PutText("\n");
       RTIO.Flush();
     END;
-  END SetState;    
+  END SetState;
 
 (*----------------------------------------------------------------- Mutex ---*)
-         
+
 PROCEDURE Acquire (m: Mutex) =
   BEGIN
     m.acquire ();
@@ -1327,29 +1325,31 @@ PROCEDURE InitWithStackBase (stackbase: ADDRESS) =
 PROCEDURE Init ()=
   VAR r: INTEGER;
   BEGIN
-    r := RTProcess.RegisterForkHandlers(AtForkPrepare, AtForkParent, AtForkChild);
+    r := RTProcess.RegisterForkHandlers(AtForkPrepare,
+                                        AtForkParent,
+                                        AtForkChild);
     IF r # 0 THEN DieI(ThisLine(), r) END;
     InitWithStackBase(ADR(r)); (* not quite accurate but hopefully ok *)
   END Init;
 
-VAR locks := ARRAY [0..3] OF pthread_mutex_t{
-			 activeMu, slotsMu, initMu, perfMu};
+VAR
+  locks := ARRAY [0..3] OF pthread_mutex_t{activeMu, slotsMu, initMu, perfMu};
 
 PROCEDURE PThreadLockMutex(mutex: pthread_mutex_t; line: INTEGER) =
-  VAR r: INTEGER;
   BEGIN
-	IF mutex # NIL THEN
-      r := pthread_mutex_lock(mutex);
-      IF r # 0 THEN DieI(line, r) END;
+    IF mutex # NIL THEN
+      WITH r = pthread_mutex_lock(mutex) DO
+        IF r # 0 THEN DieI(line, r) END;
+      END;
     END;
   END PThreadLockMutex;
 
 PROCEDURE PThreadUnlockMutex(mutex: pthread_mutex_t; line: INTEGER) =
-  VAR r: INTEGER;
   BEGIN
-	IF mutex # NIL THEN
-      r := pthread_mutex_unlock(mutex);
-      IF r # 0 THEN DieI(line, r) END;
+    IF mutex # NIL THEN
+      WITH r = pthread_mutex_unlock(mutex) DO
+        IF r # 0 THEN DieI(line, r) END;
+      END;
     END;
   END PThreadUnlockMutex;
 
@@ -1358,7 +1358,7 @@ PROCEDURE AtForkPrepare() =
       act: Activation;
       cond: Condition;
   BEGIN
-    Thread.Acquire(joinMu);
+    Acquire(joinMu);
     LockHeap();
     FOR i := FIRST(locks) TO LAST(locks) DO
       PThreadLockMutex(locks[i], ThisLine());
@@ -1373,9 +1373,7 @@ PROCEDURE AtForkPrepare() =
       PThreadLockMutex(act.mutex, ThisLine());
       (*PThreadLockMutex(act.waitingOn, ThisLine());*)
       cond := slots[act.slot].join;
-      IF cond # NIL THEN
-		PThreadLockMutex(cond.mutex, ThisLine());
-      END;
+      IF cond # NIL THEN PThreadLockMutex(cond.mutex, ThisLine()) END;
       act := act.next;
     UNTIL act = me;
   END AtForkPrepare;
@@ -1389,9 +1387,7 @@ PROCEDURE AtForkParent() =
     act := me;
     REPEAT
       cond := slots[act.slot].join;
-      IF cond # NIL THEN
-		PThreadUnlockMutex(cond.mutex, ThisLine());
-      END;
+      IF cond # NIL THEN PThreadUnlockMutex(cond.mutex, ThisLine()) END;
       (*PThreadUnlockMutex(act.waitingOn, ThisLine());*)
       PThreadUnlockMutex(act.mutex, ThisLine());
       act := act.next;
@@ -1401,7 +1397,7 @@ PROCEDURE AtForkParent() =
       PThreadUnlockMutex(locks[i], ThisLine());
     END;
     UnlockHeap();
-    Thread.Release(joinMu);
+    Release(joinMu);
   END AtForkParent;
 
 PROCEDURE AtForkChild() =
