@@ -1311,9 +1311,11 @@ PROCEDURE Init() =
   VAR xx: INTEGER;
   BEGIN
     inCritical := 1;
-
-      xx := RTProcess.RegisterForkHandlers(AtForkPrepare, AtForkParent, AtForkChild);
-      <* ASSERT xx = 0 *>
+      WITH r = RTProcess.RegisterForkHandlers(AtForkPrepare,
+                                              AtForkParent,
+                                              AtForkChild) DO
+        <* ASSERT r = 0 *>
+      END;
 
       self := NEW (T, state := State.alive, id := nextId,
                    stackbase := ADR(xx),
