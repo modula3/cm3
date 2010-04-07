@@ -14,7 +14,7 @@
 UNSAFE MODULE RTCollector EXPORTS RTCollector, RTCollectorSRC,
                                   RTHeapRep, RTWeakRef, RTHooks;
 
-IMPORT RT0, RTHeapEvent, RTHeapMap, RTIO, RTPointerAlignment;
+IMPORT RT0, RTHeapEvent, RTHeapMap, RTIO;
 IMPORT RTMisc, RTOS, RTParams, RTPerfTool, RTProcess, RTType;
 IMPORT Word, Thread, RTThread;
 IMPORT TextLiteral AS TextLit, RTLinker, Time;
@@ -530,7 +530,7 @@ PROCEDURE NoteStackLocations (start, stop: ADDRESS) =
           END;
         END;
       END;
-      INC(fp, RTPointerAlignment.Value);
+      INC(fp, RTThread.PointerAlignment);
     END;
   END NoteStackLocations;
 
@@ -2786,14 +2786,16 @@ PROCEDURE AtForkChild() =
     startedForeground := FALSE;
     startedBackground := FALSE;
     startedWeakCleaner := FALSE;
-    AtForkParent();
+    RTOS.UnlockHeap();
   END AtForkChild;
 
 PROCEDURE Init () =
-  VAR r: INTEGER;
   BEGIN
-    r := RTProcess.RegisterForkHandlers(AtForkPrepare, AtForkParent, AtForkChild);
-    <* ASSERT r = 0 *>
+    WITH r = RTProcess.RegisterForkHandlers(AtForkPrepare,
+                                            AtForkParent,
+                                            AtForkChild) DO
+      <* ASSERT r = 0 *>
+    END;
     IF RTParams.IsPresent("paranoidgc") THEN InstallSanityCheck(); END;
     IF RTParams.IsPresent("nogc") THEN disableCount := 1; END;
     IF RTParams.IsPresent("noincremental") THEN incremental := FALSE; END;

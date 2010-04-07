@@ -24,12 +24,17 @@ PROCEDURE SuspendOthers ();
 PROCEDURE ResumeOthers ();
 (* Resume the threads suspended by "SuspendOthers" *)
 
+(* We assume that the compiler ensures pointers are stored at aligned
+   locations in the stacks.  The garbage collector scans thread stacks, but
+   only looks at these possible pointer locations. *)
+CONST PointerAlignment = BYTESIZE(ADDRESS);
+
 PROCEDURE ProcessStacks (p: PROCEDURE (start, limit: ADDRESS));
 (* Apply p to each thread stack, with [start..limit) being the limits
    of the stack.  All other threads must be suspended.  ProcessStacks
    exists solely for the garbage collector.  *)
 (* Feature:  Windows threads not created by Thread.Fork are not suspended
-    or resumed, and their stacks are not processed. *)
+   or resumed, and their stacks are not processed. *)
 
 PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS));
 (* Apply p to each thread stack, with [start..limit) being the limits
