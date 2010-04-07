@@ -199,7 +199,7 @@ TYPE
     frame  : ADDRESS; (* its parent's frame pointer *)
   END;
 
-(*------------------------------------------------------- exceptions ---*)
+(*------------------------------------------------------------ exceptions ---*)
 
 TYPE
   ExceptionPtr    = UNTRACED REF ExceptionDesc;
