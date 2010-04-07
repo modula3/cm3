@@ -7,4 +7,4 @@
 
 include_dir ("Common")
 include_dir ("POSIX")
-include_dir ("WIN32")
+include_dir (OS_TYPE)
