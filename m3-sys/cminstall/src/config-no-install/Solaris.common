@@ -17,10 +17,14 @@ else
 end
 
 proc GetM3BackFlags() is
+    local cpu = ""
+    if equal (WORD_SIZE, "32BITS")
+        cpu = " -mcpu=v8" % for atomics
+    end   
     if defined("M3_BOOTSTRAP") or defined("BOOT")
-        return "-m" & GccMBits
+        return "-m" & GccMBits & cpu
     else
-        return "-funwind-tables -gstabs+ -fPIC -m" & GccMBits
+        return "-funwind-tables -gstabs+ -fPIC -m" & GccMBits & cpu
     end
 end
 
