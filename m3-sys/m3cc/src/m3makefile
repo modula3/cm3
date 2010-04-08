@@ -98,14 +98,6 @@ readonly m3cc_config = {
 %  fail and say the GNU assembler is required, if it is not the one found.
 %
 
-  %
-  % The NT386GNU hosted tools work.
-  % The native ones do not.
-  % -disable-tls consistently to reduce noise
-  % when comparing them, since we don't use this feature anyway.
-  %
-  "SPARC64_OPENBSD" : "-disable-tls",
-
   "ARM_LINUX": "-with-float=soft -enable-target-optspace -enable-threads -enable-shared",
 
   %
@@ -151,15 +143,43 @@ readonly m3cc_config = {
   % This is recommended and has been seen to make a difference.
   %
 
-  "I386_SOLARIS" :  "-with-gnu-as -without-gnu-ld",
-  "AMD64_SOLARIS" : "-with-gnu-as -without-gnu-ld",
+  "I386_SOLARIS" :  "-with-gnu-as -without-gnu-ld -with-arch-32=i586", % arch=i586 for atomics
+  "AMD64_SOLARIS" : "-with-gnu-as -without-gnu-ld -with-arch-32=i586", % arch=i586 for atomics (biarch)
   % If buiding native gcc driver, add:
   % -with-as=/usr/sfw/bin/gas -with-ld=/usr/ccs/bin/ld
 
-  "SOLgnu"        : "-without-gnu-ld -without-gnu-as",
-  "SOLsun"        : "-without-gnu-ld -without-gnu-as",
+  "SOLgnu"        : "-without-gnu-ld -without-gnu-as -with-cpu=v9", % cpu=v9 for atomics
+  "SOLsun"        : "-without-gnu-ld -without-gnu-as -with-cpu=v9", % cpu=v9 for atomics
   % If buiding native gcc driver, add:
   % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld
+
+  "SPARC32_LINUX" : "-with-cpu=v9", % cpu=v9 for atomics
+
+  % arch=i586 for atomics (including on AMD64 due to biarch)
+  "AMD64_DARWIN"  : "-with-arch-32=i586",
+  "AMD64_FREEBSD" : "-with-arch-32=i586",
+  "AMD64_CYGWIN"  : "-with-arch-32=i586",
+  "AMD64_INTERIX" : "-with-arch-32=i586",
+  "AMD64_LINUX"   : "-with-arch-32=i586",
+  "AMD64_MINGW"   : "-with-arch-32=i586",
+  "AMD64_NETBSD"  : "-with-arch-32=i586",
+  "AMD64_NT"      : "-with-arch-32=i586",
+  "AMD64_OPENBSD" : "-with-arch-32=i586",  
+  "I386_DARWIN"   : "-with-arch-32=i586",
+  "I386_FREEBSD"  : "-with-arch-32=i586",
+  "I386_CYGWIN"   : "-with-arch-32=i586",
+  "I386_INTERIX"  : "-with-arch-32=i586",
+  "I386_LINUX"    : "-with-arch-32=i586",
+  "I386_MINGW"    : "-with-arch-32=i586",
+  "I386_NETBSD"   : "-with-arch-32=i586",
+  "I386_NT"       : "-with-arch-32=i586",
+  "I386_OPENBSD"  : "-with-arch-32=i586",
+  "NT386"         : "-with-arch-32=i586",
+  "NT386GNU"      : "-with-arch-32=i586",
+  "NT386MINGNU"   : "-with-arch-32=i586",
+  "NetBSD2_i386"  : "-with-arch-32=i586",
+  "LINUXLIBC6"    : "-with-arch-32=i586",
+  "FreeBSD4"      : "-with-arch-32=i586",
 
   %
   % Bootstrap procedure for gcc on HPPA{64}-HPUX:
@@ -453,6 +473,15 @@ if not defined ("no_config") and not NOACTION
     Configure = Configure & " -disable-libgcc"
     Configure = Configure & " -disable-decimal-float"
     Configure = Configure & " -disable-fixed-point"
+
+    %
+    % host=NT386GNU target=SPARC64_OPENBSD works.
+    % Native SPARC64_OPENBSD does not.
+    % -disable-tls reduces noise in comparing
+    % them, and we never use TLS anyway, so just
+    % disable it across the board.
+    %
+    Configure = Configure & " -disable-tls"
 
     m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure, " | tee -a " & Log])
     > done in
