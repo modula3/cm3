@@ -1154,8 +1154,8 @@ def Boot():
     SunCompile = "/usr/ccs/bin/cc -g -mt -xcode=pic32 -xldscope=symbolic "
 
     GnuCompile = {
-        "I386_INTERIX"  : "gcc -g " # gcc -fPIC generates incorrect code on Interix
-        "SOLgnu"        : "/usr/sfw/bin/gcc -g "
+        "I386_INTERIX"  : "gcc -g ", # gcc -fPIC generates incorrect code on Interix
+        "SOLgnu"        : "/usr/sfw/bin/gcc -g ",
         }.get(Target) or "gcc -g -fPIC "
 
     if Target.endswith("_SOLARIS") or Target == "SOLsun":
