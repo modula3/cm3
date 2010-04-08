@@ -1154,8 +1154,8 @@ def Boot():
     SunCompile = "/usr/ccs/bin/cc -g -mt -xcode=pic32 -xldscope=symbolic "
 
     GnuCompile = {
-        # gcc -fPIC generates incorrect code on Interix
-        "I386_INTERIX"    : "gcc -g "
+        "I386_INTERIX"  : "gcc -g " # gcc -fPIC generates incorrect code on Interix
+        "SOLgnu"        : "/usr/sfw/bin/gcc -g "
         }.get(Target) or "gcc -g -fPIC "
 
     if Target.endswith("_SOLARIS") or Target == "SOLsun":
@@ -1163,15 +1163,15 @@ def Boot():
     else:
         Compile = GnuCompile
 
-    Compile = Compile + ({ "AMD64_LINUX"     : " -m64 -mno-align-double ",
+    Compile = Compile + ({  "AMD64_LINUX"     : " -m64 -mno-align-double ",
                             "AMD64_DARWIN"    : " -arch x86_64 ",
                             "PPC64_DARWIN"    : " -arch ppc64 ",
                             "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
                             "LINUXLIBC6"      : " -m32 -mno-align-double ",
                             "MIPS64_OPENBSD"  : " -mabi=64 ",
-                            "SOLgnu"          : " -m32 ",
+                            "SOLgnu"          : " -m32 -mcpu=v9 ",
                             "SOLsun"          : " -xarch=v8plus ",
-                            "SPARC32_LINUX"   : " -m32 -munaligned-doubles ",
+                            "SPARC32_LINUX"   : " -m32 -mcpu=v9 -munaligned-doubles ",
                             "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
                             "SPARC64_SOLARIS" : " -xarch=v9 ",
                           }.get(Target) or " ")
