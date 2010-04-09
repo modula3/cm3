@@ -9,11 +9,9 @@ extern "C"
 {           
 #endif
 
-typedef struct dirent dirent_t;
-
 const char* FSPosixC__readdir_name(DIR* dir)
 {
-    dirent_t* e;
+    struct dirent* e;
 
     if (dir && (e = readdir(dir)))
         return e->d_name;
