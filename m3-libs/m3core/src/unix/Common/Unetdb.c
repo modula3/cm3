@@ -32,7 +32,7 @@ struct _m3_hostent_t
     int length;   /* varies between int16_t and int32_t */
 };
 
-static m3_hostent_t* native_to_m3(const hostent_t* native, m3_hostent_t* m3)
+static m3_hostent_t* native_to_m3(const struct hostent* native, m3_hostent_t* m3)
 {
     if (native == NULL)
         return NULL;

@@ -213,11 +213,11 @@ Handlers[] =
     { SIGBUS,  SegV },
 };
 
-static sigaction_t InitialHandlers[NUMBER_OF(Handlers)];
+static struct sigaction InitialHandlers[NUMBER_OF(Handlers)];
 
 static void InstallOneHandler(size_t i)
 {
-    sigaction_t New;
+    struct sigaction New;
     int r;
     int Signal = Handlers[i].Signal;
 
@@ -258,7 +258,7 @@ void InstallHandlers(void)
 static void RestoreOneHandler(size_t i)
 {
     int Signal = Handlers[i].Signal;
-    sigaction_t Old;
+    struct sigaction Old;
 
     ZeroMemory(&Old, sizeof(Old));
     sigaction(Signal, &InitialHandlers[i], &Old);
@@ -276,8 +276,8 @@ void RestoreHandlers(void)
 
 static void ShutdownCommon(int Signal)
 {
-    sigaction_t New;
-    sigaction_t Old;
+    struct sigaction New;
+    struct sigaction Old;
 
     ZeroMemory(&Old, sizeof(Old));
     ZeroMemory(&New, sizeof(New));
