@@ -2,7 +2,7 @@
 /* All rights reserved. */
 /* See the file COPYRIGHT for a full description. */
 
-#include "m3unix.h"
+#include "m3core.h"
 
 #ifdef __cplusplus
 extern "C"
@@ -24,7 +24,7 @@ int FSPosixC__SetModificationTime(const char* path, INTEGER updated, INTEGER acc
 #ifdef __INTERIX
     utimbuf_t t;
 
-    memset(&t, 0, sizeof(t));
+    ZeroMemory(&t, sizeof(t));
     t.actime = accessed;
     t.modtime = updated;
 
@@ -32,7 +32,7 @@ int FSPosixC__SetModificationTime(const char* path, INTEGER updated, INTEGER acc
 #else
     timeval_t t[2];
 
-    memset(&t, 0, sizeof(t));
+    ZeroMemory(&t, sizeof(t));
     t[0].tv_sec = accessed;
     t[0].tv_usec = 0;
     t[1].tv_sec = updated;
@@ -41,7 +41,6 @@ int FSPosixC__SetModificationTime(const char* path, INTEGER updated, INTEGER acc
     return utimes(path, t);
 #endif
 }
-
 
 #ifdef __cplusplus
 } /* extern "C" */
