@@ -182,7 +182,7 @@ proc skip_lib (lib, shared) is
   local lib_soxx = format ("lib%s.%s.dylib", lib, version)
 
   % Tell clean what to delete.
-  deriveds([lib_a, lib_so, lib_sox, lib_soxx])
+  deriveds("", [lib_a, lib_so, lib_sox, lib_soxx])
 
   if shared
     % create the version aliases
