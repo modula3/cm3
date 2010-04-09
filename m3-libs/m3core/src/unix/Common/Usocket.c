@@ -53,19 +53,19 @@ M3WRAP3(int, socket, int, int, int)
 
 /* wrap everything taking input socklen_t */
 
-int Usocket__bind(int s, sockaddr_t* name, m3_socklen_t len)
+int Usocket__bind(int s, struct sockaddr* name, m3_socklen_t len)
 {
     ASSERT_LEN
     return bind(s, name, len);
 }
 
-int Usocket__connect(int s, sockaddr_t* name, m3_socklen_t len)
+int Usocket__connect(int s, struct sockaddr* name, m3_socklen_t len)
 {
     ASSERT_LEN
     return connect(s, name, len);
 }
 
-int Usocket__sendto(int s, void* msg, size_t length, int flags, sockaddr_t* dest, m3_socklen_t len)
+int Usocket__sendto(int s, void* msg, size_t length, int flags, struct sockaddr* dest, m3_socklen_t len)
 {
     ASSERT_LEN
     return sendto(s, msg, length, flags, dest, len);
@@ -90,7 +90,7 @@ int Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_
 
 /* wrap everything taking input/output socklen_t */
 
-int Usocket__getpeername(int s, sockaddr_t* name, m3_socklen_t* plen)
+int Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* plen)
 {
     ASSERT_PLEN
     {
@@ -101,7 +101,7 @@ int Usocket__getpeername(int s, sockaddr_t* name, m3_socklen_t* plen)
     }
 }
 
-int Usocket__getsockname(int s, sockaddr_t* name, m3_socklen_t* plen)
+int Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* plen)
 {
     ASSERT_PLEN
     {
@@ -112,7 +112,7 @@ int Usocket__getsockname(int s, sockaddr_t* name, m3_socklen_t* plen)
     }
 }
 
-int Usocket__accept(int s, sockaddr_t* addr, m3_socklen_t* plen)
+int Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen)
 {
     ASSERT_PLEN
     {
@@ -168,7 +168,7 @@ the same order. This is checked in Usocket__Assertions.
     }
 }
 
-int Usocket__recvfrom(int s, void* buf, size_t length, int flags, sockaddr_t* address, m3_socklen_t* plen)
+int Usocket__recvfrom(int s, void* buf, size_t length, int flags, struct sockaddr* address, m3_socklen_t* plen)
 {
     ASSERT_PLEN
     {

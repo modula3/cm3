@@ -269,15 +269,15 @@ typedef struct {
 int __cdecl Usocket__listen(int s, int backlog);
 int __cdecl Usocket__shutdown(int s, int how);
 int __cdecl Usocket__socket(int af, int type, int protocol);
-int __cdecl Usocket__bind(int s, sockaddr_t* name, m3_socklen_t len);
-int __cdecl Usocket__connect(int s, sockaddr_t* name, m3_socklen_t len);
-int __cdecl Usocket__sendto(int s, void* msg, size_t length, int flags, sockaddr_t* dest, m3_socklen_t len);
+int __cdecl Usocket__bind(int s, struct sockaddr* name, m3_socklen_t len);
+int __cdecl Usocket__connect(int s, struct sockaddr* name, m3_socklen_t len);
+int __cdecl Usocket__sendto(int s, void* msg, size_t length, int flags, struct sockaddr* dest, m3_socklen_t len);
 int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len);
-int __cdecl Usocket__getpeername(int s, sockaddr_t* name, m3_socklen_t* plen);
-int __cdecl Usocket__getsockname(int s, sockaddr_t* name, m3_socklen_t* plen);
-int __cdecl Usocket__accept(int s, sockaddr_t* addr, m3_socklen_t* plen);
+int __cdecl Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* plen);
+int __cdecl Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* plen);
+int __cdecl Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen);
 int __cdecl Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen);
-int __cdecl Usocket__recvfrom(int s, void* buf, size_t len, int flags, sockaddr_t* from, m3_socklen_t* plen);
+int __cdecl Usocket__recvfrom(int s, void* buf, size_t len, int flags, struct sockaddr* from, m3_socklen_t* plen);
 
 
 #ifndef _WIN32
@@ -333,12 +333,12 @@ int __cdecl Utime__gettimeofday(m3_timeval_t* m3t);
 int __cdecl Utime__getitimer(int which, m3_itimerval_t* m3t);
 #ifndef _WIN32
 m3_time_t __cdecl Utime__time(m3_time_t* tloc);
-m3_time_t __cdecl Utime__mktime(tm_t* tm);
+m3_time_t __cdecl Utime__mktime(struct tm* tm);
 char* __cdecl Utime__ctime(const m3_time_t* m);
-tm_t* __cdecl Utime__localtime(const m3_time_t* m);
-tm_t* __cdecl Utime__gmtime(const m3_time_t* m);
-tm_t* __cdecl Utime__localtime_r(const m3_time_t* clock, tm_t* result);
-tm_t* __cdecl Utime__gmtime_r(const m3_time_t* clock, tm_t* result);
+struct tm* __cdecl Utime__localtime(const m3_time_t* m);
+struct tm* __cdecl Utime__gmtime(const m3_time_t* m);
+struct tm* __cdecl Utime__localtime_r(const m3_time_t* clock, struct tm* result);
+struct tm* __cdecl Utime__gmtime_r(const m3_time_t* clock, struct tm* result);
 #endif
 int __cdecl Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old);
 int __cdecl Utime__nanosleep(const m3_timespec_t* m3req, m3_timespec_t* m3rem);
