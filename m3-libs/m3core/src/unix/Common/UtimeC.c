@@ -18,7 +18,7 @@ void Utime__Assertions(void)
     M3_STATIC_ASSERT(sizeof(time_t) <= sizeof(void*));
 
     /* verify itimerval contains just the two fields we know about, in either order */
-    { typedef itimerval_t T;
+    { typedef struct itimerval T;
       M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, it_value) + M3_FIELD_SIZE(T, it_interval)); }
 
     /* verify timespec (nanotime) contains just the two fields we know about, in either order */
@@ -31,7 +31,7 @@ struct timespec
 }
 */
 #if defined(__OpenBSD__) && defined(__sparc64__)
-    { typedef timespec_T T1;
+    { typedef struct timespec T1;
       typedef struct { time_t tv_sec; long tv_nsec; } T2;
       M3_STATIC_ASSERT(M3_FIELD_SIZE(T1, tv_sec ) == 4);
       M3_STATIC_ASSERT(M3_FIELD_SIZE(T1, tv_nsec) == 8);
@@ -45,7 +45,7 @@ struct timespec
       M3_STATIC_ASSERT(sizeof(T2) == 16);
     }
 #else
-    { typedef timespec_T T;
+    { typedef struct timespec T;
       M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, tv_sec) + M3_FIELD_SIZE(T, tv_nsec)); }
 #endif
     /* verify timeval (microtime) contains just the two fields we know about, in either order */
@@ -59,7 +59,7 @@ struct timeval
 }; I do not see much we can do about this. We use copying wrappers and we
    want to be sure they are copying the entire struct.
 */
-    { typedef timeval_t T1;
+    { typedef struct timeval T1;
       typedef struct { time_t tv_sec; suseconds_t tv_usec; } T2;
       M3_STATIC_ASSERT(M3_FIELD_SIZE(T1, tv_sec) == 8);
       M3_STATIC_ASSERT(M3_FIELD_SIZE(T1, tv_usec) == 4);
@@ -69,13 +69,13 @@ struct timeval
       M3_STATIC_ASSERT(sizeof(T2) == 16);
     }
 #else
-    { typedef timeval_t T;
+    { typedef struct timeval T;
       M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, tv_sec) + M3_FIELD_SIZE(T, tv_usec)); }
 #endif
 
     /* verify timezone is exactly as we expect */
     { typedef m3_timezone_t M;
-      typedef timezone_t T;
+      typedef struct timezone T;
       M3_STATIC_ASSERT(sizeof(T) == sizeof(M));
       M3_STATIC_ASSERT(sizeof(T) == 8);
       M3_STATIC_ASSERT(offsetof(T, tz_minuteswest) == 0);
@@ -138,7 +138,7 @@ const char* Utime__get_tzname(unsigned a)
 
 #ifndef _WIN32
 
-static void timespec_to_m3(const timespec_T* t, m3_timespec_t* m)
+static void timespec_to_m3(const struct timespec* t, m3_timespec_t* m)
 {
     if (!m) return;
     assert(t);
@@ -146,7 +146,7 @@ static void timespec_to_m3(const timespec_T* t, m3_timespec_t* m)
     m->nsec = t->tv_nsec;
 }
 
-static const timespec_T* timespec_from_m3(timespec_T* t, const m3_timespec_t* m)
+static const struct timespec* timespec_from_m3(struct timespec* t, const m3_timespec_t* m)
 {
     if (!m) return 0;
     assert(t);
@@ -155,7 +155,7 @@ static const timespec_T* timespec_from_m3(timespec_T* t, const m3_timespec_t* m)
     return t;
 }
 
-static void timeval_to_m3(const timeval_t* t, m3_timeval_t* m)
+static void timeval_to_m3(const struct timeval* t, m3_timeval_t* m)
 {
     if (!m) return;
     assert(t);
@@ -163,7 +163,7 @@ static void timeval_to_m3(const timeval_t* t, m3_timeval_t* m)
     m->usec = t->tv_usec;
 }
 
-static timeval_t* timeval_from_m3(timeval_t* t, const m3_timeval_t* m)
+static struct timeval* timeval_from_m3(struct timeval* t, const m3_timeval_t* m)
 {
     if (!m) return 0;
     assert(t);
@@ -172,7 +172,7 @@ static timeval_t* timeval_from_m3(timeval_t* t, const m3_timeval_t* m)
     return t;
 }
 
-static void itimerval_to_m3(const itimerval_t* t, m3_itimerval_t* m)
+static void itimerval_to_m3(const struct itimerval* t, m3_itimerval_t* m)
 {
     if (!m) return;
     assert(t);
@@ -180,7 +180,7 @@ static void itimerval_to_m3(const itimerval_t* t, m3_itimerval_t* m)
     timeval_to_m3(&t->it_value, &m->value);
 }
 
-static itimerval_t* itimerval_from_m3(itimerval_t* t, const m3_itimerval_t* m)
+static struct itimerval* itimerval_from_m3(struct itimerval* t, const m3_itimerval_t* m)
 {
     if (!m) return 0;
     assert(t);
@@ -191,7 +191,7 @@ static itimerval_t* itimerval_from_m3(itimerval_t* t, const m3_itimerval_t* m)
 
 int Utime__gettimeofday(m3_timeval_t* m3t)
 {
-    timeval_t t;
+    struct timeval t;
     /* null is not valid here; gcc warns */
     int r = gettimeofday(&t, 0);
     timeval_to_m3(&t, m3t);
@@ -200,7 +200,7 @@ int Utime__gettimeofday(m3_timeval_t* m3t)
 
 int Utime__getitimer(int which, m3_itimerval_t* m3t)
 {
-    itimerval_t t;
+    struct itimerval t;
     int r = getitimer(which, m3t ? &t : 0);
     itimerval_to_m3(&t, m3t);
     return r;
@@ -214,7 +214,7 @@ m3_time_t Utime__time(m3_time_t* tloc)
     return a;
 }
 
-m3_time_t Utime__mktime(tm_t* tm)
+m3_time_t Utime__mktime(struct tm* tm)
 {
     return mktime(tm);
 }
@@ -226,25 +226,25 @@ char* Utime__ctime(const m3_time_t* m)
     return ctime(m ? &t : 0);
 }
 
-tm_t* Utime__localtime(const m3_time_t* m)
+struct tm* Utime__localtime(const m3_time_t* m)
 {
     time_t t = m ? (time_t)*m : 0;
     return localtime(m ? &t : 0);
 }
 
-tm_t* Utime__gmtime(const m3_time_t* m)
+struct tm* Utime__gmtime(const m3_time_t* m)
 {
     time_t t = m ? (time_t)*m : 0;
     return gmtime(m ? &t : 0);
 }
 
-tm_t* Utime__localtime_r(const m3_time_t* m3t, tm_t* result)
+struct tm* Utime__localtime_r(const m3_time_t* m3t, struct tm* result)
 {
     time_t t = m3t ? *m3t : 0;
     return localtime_r(m3t ? &t : 0, result);
 }
 
-tm_t* Utime__gmtime_r(const m3_time_t* m3t, tm_t* result)
+struct tm* Utime__gmtime_r(const m3_time_t* m3t, struct tm* result)
 {
     time_t t = m3t ? *m3t : 0;
     return gmtime_r(m3t ? &t : 0, result);
@@ -252,8 +252,8 @@ tm_t* Utime__gmtime_r(const m3_time_t* m3t, tm_t* result)
 
 int Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old)
 {
-    itimerval_t ne;
-    itimerval_t old;
+    struct itimerval ne;
+    struct itimerval old;
     int r = setitimer(which, itimerval_from_m3(&ne, m3new), m3old ? &old : 0);
     itimerval_to_m3(&old, m3old);
     return r;
@@ -263,8 +263,8 @@ int Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3o
 
 int Utime__nanosleep(const m3_timespec_t* m3req, m3_timespec_t* m3rem)
 {
-    timespec_T req;
-    timespec_T rem;
+    struct timespec req;
+    struct timespec rem;
     int r = nanosleep(timespec_from_m3(&req, m3rem), m3rem ? &rem : 0);
     timespec_to_m3(&rem, m3rem);
     return r;
@@ -272,7 +272,7 @@ int Utime__nanosleep(const m3_timespec_t* m3req, m3_timespec_t* m3rem)
 
 int Unix__utimes(const char* file, const m3_timeval_t* m3t)
 {
-    timeval_t t;
+    struct timeval t;
     return utimes(file, timeval_from_m3(&t, m3t));
 }
 
@@ -281,7 +281,7 @@ int Unix__utimes(const char* file, const m3_timeval_t* m3t)
 int Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, m3_timeval_t* m3t)
 {
     /* timeout sometimes is in-only, sometimes in-out */
-    timeval_t t;
+    struct timeval t;
     int r = select(nfds, readfds, writefds, exceptfds, timeval_from_m3(&t, m3t));
     timeval_to_m3(&t, m3t);
     return r;

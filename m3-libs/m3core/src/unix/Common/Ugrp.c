@@ -24,7 +24,7 @@ struct _m3_group_t
     m3_gid_t gid;
 };
 
-static m3_group_t* native_to_m3(const group_t* native, m3_group_t* m3)
+static m3_group_t* native_to_m3(const struct group* native, m3_group_t* m3)
 {
     if (native == NULL)
         return NULL;

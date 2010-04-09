@@ -123,7 +123,7 @@ void switch_thread(int signo)
 
 void StartSwitching(void)
 {
-    itimerval_t interval = { 0 };
+    struct itimerval interval = { 0 };
     int a = { 0 };
     
     init_ThreadSwitchSignal();

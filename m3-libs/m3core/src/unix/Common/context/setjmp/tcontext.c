@@ -48,8 +48,7 @@ typedef void (*SignalHandler1)(int signo);
 
 sigset_t ThreadSwitchSignal;
 
-typedef timeval_t UTime;
-UTime selected_interval = {0, 100 * 1000};
+struct timeval selected_interval = {0, 100 * 1000};
 
 #ifdef __CYGWIN__
 #define SIG_TIMESLICE SIGALRM
@@ -182,8 +181,8 @@ void switch_thread(int signo)
 
 void StartSwitching(void)
 {
-    itimerval_t interval;
-    itimerval_t old_interval;
+    struct itimerval interval;
+    struct itimerval old_interval;
 
     init_ThreadSwitchSignal();
     setup_sigvtalrm(switch_thread);

@@ -33,12 +33,12 @@ typedef double T;
 #endif
 
 T Now(ANSI(void));
-timeval_t ToUtime(ANSI(T));
-T FromUtime(ANSI(const timeval_t*));
+struct timeval ToUtime(ANSI(T));
+T FromUtime(ANSI(const struct timeval*));
 
 T Now(ANSI(void))
 {
-    timeval_t tv;
+    struct timeval tv;
     int i;
 
     i = gettimeofday(&tv, NULL);
@@ -47,10 +47,10 @@ T Now(ANSI(void))
     return FromUtime(&tv);
 }
 
-timeval_t ToUtime(ANSI(T) n)
+struct timeval ToUtime(ANSI(T) n)
     KR(T n;)
 {
-    timeval_t tv;
+    struct timeval tv;
  
     tv.tv_sec = (time_t)n;
     tv.tv_usec = ((((INT64)n) * M) % M);
@@ -58,8 +58,8 @@ timeval_t ToUtime(ANSI(T) n)
     return tv;
 }
 
-T FromUtime(ANSI(const timeval_t*) tv)
-    KR(const timeval_t* tv;)
+T FromUtime(ANSI(const struct timeval*) tv)
+    KR(const struct timeval* tv;)
 {
     return ((T)tv->tv_sec) + ((T)tv->tv_usec) / (T)M;
 }

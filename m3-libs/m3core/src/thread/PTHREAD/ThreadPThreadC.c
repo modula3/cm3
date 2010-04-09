@@ -331,7 +331,7 @@ ThreadPThread__pthread_cond_delete(pthread_cond_t *p)
 }
 
 int
-ThreadPThread__Nanosleep(timespec_T *req, timespec_T *rem)
+ThreadPThread__Nanosleep(struct timespec *req, struct timespec *rem)
 {
 #ifdef __INTERIX
   /* This is only an approximation. */
@@ -348,7 +348,7 @@ ThreadPThread__Nanosleep(timespec_T *req, timespec_T *rem)
 }
 
 M3WRAP2(int, pthread_cond_wait, pthread_cond_t*, pthread_mutex_t*)
-M3WRAP3(int, pthread_cond_timedwait, pthread_cond_t*, pthread_mutex_t*, const timespec_T*)
+M3WRAP3(int, pthread_cond_timedwait, pthread_cond_t*, pthread_mutex_t*, const struct timespec*)
 M3WRAP1(int, pthread_cond_signal, pthread_cond_t*)
 M3WRAP1(int, pthread_cond_broadcast, pthread_cond_t*)
 
@@ -383,8 +383,8 @@ void
 InitC(int *bottom)
 {
 #ifndef M3_DIRECT_SUSPEND
-  sigaction_t act;
-  sigaction_t oact;
+  struct sigaction act;
+  struct sigaction oact;
 #endif
   int r;
 

@@ -10,7 +10,6 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
 #ifdef __CYGWIN__
 #include <windows.h>
 #endif
-typedef struct itimerval itimerval_t;
 typedef struct timeval timeval_t;
 typedef struct sigaction sigaction_t;
 typedef struct sigcontext sigcontext_t;
@@ -47,8 +46,7 @@ typedef void (*SignalHandler1)(int signo);
 
 sigset_t ThreadSwitchSignal;
 
-typedef timeval_t UTime;
-UTime selected_interval = {0, 100 * 1000};
+struct timeval selected_interval = {0, 100 * 1000};
 
 #ifdef __CYGWIN__
 #define SIG_TIMESLICE SIGALRM
@@ -181,8 +179,8 @@ void switch_thread(int signo)
 
 void StartSwitching(void)
 {
-    itimerval_t interval;
-    itimerval_t old_interval;
+    struct itimerval interval;
+    struct itimerval old_interval;
 
     init_ThreadSwitchSignal();
     setup_sigvtalrm(switch_thread);
