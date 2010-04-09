@@ -16,14 +16,12 @@ see http://www.opengroup.org/onlinepubs/009695399/functions/fcntl.html
 extern "C" {
 #endif
 
-typedef struct flock flock_t;
 #define FALSE 0
 #define TRUE 1
-#define ZeroMemory(a,b) (memset((a), 0, (b)))
 
 INTEGER FilePosixC__RegularFileLock(int fd)
 {
-    flock_t lock;
+    struct flock lock;
     int err;
 
     ZeroMemory(&lock, sizeof(lock));
@@ -42,7 +40,7 @@ INTEGER FilePosixC__RegularFileLock(int fd)
 
 INTEGER FilePosixC__RegularFileUnlock(int fd)
 {
-    flock_t lock;
+    struct flock lock;
 
     ZeroMemory(&lock, sizeof(lock));
     lock.l_type = F_UNLCK;
