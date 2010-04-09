@@ -188,6 +188,10 @@ typedef ptrdiff_t INTEGER;
 /* LONGINT is always signed and exactly 64 bits. */
 typedef INT64 LONGINT;
 
+/* CARDINAL, LONGCARD are similar but "half range", >= 0 */
+typedef ptrdiff_t CARDINAL;
+typedef INT64 LONGCARD;
+
 typedef void* ADDRESS;
 
 /* see Utypes.i3; we assert that these are large enough, they don't have
