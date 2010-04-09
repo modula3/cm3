@@ -2,7 +2,6 @@
 /* See file COPYRIGHT-CMASS for details. */
 
 #include <sys/utsname.h>
-typedef struct utsname utsname_t;
 
 #ifdef __cplusplus
 extern "C"
@@ -20,7 +19,7 @@ OSConfigPosixC__Init(
     TEXT* os_name,
     TEXT* os_version)
 {
-    utsname_t uts;
+    struct utsname uts;
     int result;
 
     result = uname(&uts);
