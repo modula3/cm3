@@ -22,7 +22,7 @@ const char* FSPosixC__readdir_name(DIR* dir)
 int FSPosixC__SetModificationTime(const char* path, INTEGER updated, INTEGER accessed)
 {
 #ifdef __INTERIX
-    utimbuf_t t;
+    struct utimbuf t;
 
     ZeroMemory(&t, sizeof(t));
     t.actime = accessed;
@@ -30,7 +30,7 @@ int FSPosixC__SetModificationTime(const char* path, INTEGER updated, INTEGER acc
 
     return utime(path, &t);
 #else
-    timeval_t t[2];
+    struct timeval t[2];
 
     ZeroMemory(&t, sizeof(t));
     t[0].tv_sec = accessed;
