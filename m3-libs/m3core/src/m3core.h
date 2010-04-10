@@ -113,17 +113,6 @@ typedef ptrdiff_t ssize_t;
 #undef ucontext_t
 #endif
 
-typedef struct sockaddr sockaddr_t;
-typedef struct itimerval itimerval_t;
-typedef struct hostent hostent_t;
-typedef struct group group_t;
-typedef struct timeval timeval_t;
-/* Newer Sun headers use timespec_t and we get a warning, so use timespec_T. */
-typedef struct timespec timespec_T;
-typedef struct timezone timezone_t;
-typedef struct tm tm_t;
-typedef struct utimbuf utimbuf_t;
-
 typedef   signed char       INT8;
 typedef unsigned char      UINT8;
 typedef   signed short      INT16;
