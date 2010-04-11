@@ -43,11 +43,13 @@ END Field;
 PROCEDURE FieldList(fieldRef : MySQL.FieldT; numFields : CARDINAL) : M3FieldArray =
 VAR
   ret : M3FieldArray;
+  rawField : MySQLRaw.RefMysqlFieldT;
   fields := LOOPHOLE(ADR(fieldRef),M3RawArrField);
 BEGIN
   ret := NEW(M3FieldArray,numFields);
   FOR j := 0 TO numFields - 1 DO
-    ret[j] := NewField(ADR(fields[j]));
+    rawField := ADR(fields[j]);
+    ret[j] := NewField(rawField);
   END;
   RETURN ret;
 END FieldList;
