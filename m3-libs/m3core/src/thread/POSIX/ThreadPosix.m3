@@ -637,10 +637,10 @@ PROCEDURE XIOWait (fd: CARDINAL; read: BOOLEAN; interval: LONGREAL): WaitResult
       END;
       IF interval >= 0.0D0 THEN
         VAR utimeout := UTimeFromTime(interval); BEGIN
-          res := CallSelect(fd+1, ADR(utimeout));
+          res := CallSelect(fd + 1, ADR(utimeout));
         END;
       ELSE
-        res := CallSelect(fd+1, NIL);
+        res := CallSelect(fd + 1, NIL);
       END;
       IF    res > 0 THEN RETURN TestFDS(fdindex, fdset, read);
       ELSIF res = 0 THEN RETURN WaitResult.Timeout;
@@ -893,7 +893,7 @@ BEGIN
                 ELSE
                   gWriteFDS[t.select.index] := t.select.set;
                 END;
-                VAR n := CallSelect(t.select.fd+1, ADR(ZeroTimeout)); BEGIN
+                VAR n := CallSelect(t.select.fd + 1, ADR(ZeroTimeout)); BEGIN
                   IF n > 0 THEN
                     t.select.waitResult :=
                           TestFDS(t.select.index, t.select.set, t.select.read);
@@ -957,7 +957,7 @@ BEGIN
       t := t.next;
       IF t = from THEN
         IF NOT scanned THEN
-          gMaxActiveFDSet := 1 + ((blockingNfds-1) DIV FDSetSize);
+          gMaxActiveFDSet := 1 + ((blockingNfds - 1) DIV FDSetSize);
         END;
         EXIT;
       END;
