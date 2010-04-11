@@ -330,27 +330,58 @@ ThreadPThread__pthread_cond_delete(pthread_cond_t *p)
   free(p);
 }
 
-int
-ThreadPThread__Nanosleep(struct timespec *req, struct timespec *rem)
+INTEGER
+ThreadPThread__select(INTEGER nfds,
+                      ADDRESS read,
+                      ADDRESS write,
+                      ADDRESS except,
+                      LONGREAL timeout)
+{
+    MicrosecondsStruct_t utime = { 0 };
+    ZeroMemory(&utime, sizeof(utime));
+    return select(nfds, read, write, except,
+                  (timeout >= 0)
+                  ? TimePosix__FloatSecondsToMicrosecondsStruct(timeout, &utime)
+                  : NULL);
+}
+
+void
+ThreadPThread__Nanosleep(INTEGER nanoseconds)
 {
 #ifdef __INTERIX
-  /* This is only an approximation. */
-  if (rem != NULL)
-    memset(rem, 0, sizeof(*rem));
-  if (req->tv_sec > 0)
-    sleep(req->tv_sec);
-  else
-    usleep(req->tv_nsec / 1000);
-  return 0;
+  usleep(nanoseconds / 1000); /* This is only an approximation.
+                               * We don't try to complete the sleep
+                               * if interrupted.
+                               */
 #else
-  return nanosleep(req, rem);
+  NanosecondsStruct_t wait = { 0 };
+  NanosecondsStruct_t remaining = { 0 };
+
+  ZeroMemory(&wait, sizeof(wait));
+  ZeroMemory(&remaining, sizeof(remaining));
+
+  wait.tv_sec = 0;
+  wait.tv_nsec = nanoseconds;
+  while (nanosleep(&wait, &remaining) == -1 && errno == EINTR)
+      wait = remaining;
 #endif
 }
 
 M3WRAP2(int, pthread_cond_wait, pthread_cond_t*, pthread_mutex_t*)
-M3WRAP3(int, pthread_cond_timedwait, pthread_cond_t*, pthread_mutex_t*, const struct timespec*)
 M3WRAP1(int, pthread_cond_signal, pthread_cond_t*)
 M3WRAP1(int, pthread_cond_broadcast, pthread_cond_t*)
+
+int
+ThreadPThread__pthread_cond_timedwait(pthread_cond_t* cond,
+                                      pthread_mutex_t* mutex,
+                                      LONGREAL m3abs)
+{
+  NanosecondsStruct_t uabs = { 0 };
+  ZeroMemory(&uabs, sizeof(uabs));
+  return pthread_cond_timedwait(cond,
+                                mutex,
+                                TimePosix__FloatSecondsToNanosecondsStruct(m3abs, &uabs));
+}
 
 int
 ThreadPThread__pthread_detach_self(void)

@@ -6,7 +6,7 @@ UNSAFE MODULE ThreadPThread EXPORTS Thread, ThreadF, RTThread, Scheduler,
 SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep, RTCollectorSRC, RTError, RTHeapRep, RTIO,
-       RTParams, RTPerfTool, RTProcess, ThreadEvent, Time, Unix, Utime, Word,
+       RTParams, RTPerfTool, RTProcess, ThreadEvent, Time, Unix, Word,
        Usched, Uerror, Uexec;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
@@ -15,8 +15,9 @@ IMPORT RuntimeError AS RTE;
 (*----------------------------------------------------- types and globals ---*)
 
 CONST
-  WAIT_UNIT = 1000000; (* one million nanoseconds, one thousandth of a second *)
-  RETRY_INTERVAL = 10000000; (* 10 million nanoseconds, one hundredth of a second *)
+  MILLION = 1000 * 1000;
+  WAIT_UNIT = MILLION; (* one million nanoseconds, one thousandth of a second *)
+  RETRY_INTERVAL = 10 * MILLION; (* 10 million nanoseconds, one hundredth of a second *)
 
 REVEAL
   Mutex = MutexRep.Public BRANDED "Mutex Pthread-1.0" OBJECT
@@ -531,27 +532,10 @@ PROCEDURE AlertJoin (t: T): REFANY RAISES {Alerted} =
 
 (*---------------------------------------------------- Scheduling support ---*)
 
-PROCEDURE CommonSleep() =
-  VAR wait, remaining: Utime.struct_timespec;
-  BEGIN
-    wait.tv_sec := 0;
-    wait.tv_nsec := WAIT_UNIT;
-    WHILE Nanosleep(wait, remaining) # 0 DO
-      wait := remaining;
-    END;
-  END CommonSleep;
-
-PROCEDURE ToNTime (n: LONGREAL; VAR ts: Utime.struct_timespec) =
-  BEGIN
-    ts.tv_sec := TRUNC(n);
-    ts.tv_nsec := ROUND((n - FLOAT(ts.tv_sec, LONGREAL)) * 1.0D9);
-  END ToNTime;
-
 PROCEDURE XPause (self: Activation; n: LONGREAL; alertable: BOOLEAN)
   RAISES {Alerted} =
-  VAR until: Utime.struct_timespec;
+  VAR until := Time.Now() + n;
   BEGIN
-    ToNTime(Time.Now() + n, until);
     IF perfOn THEN PerfChanged(State.pausing) END;
     WITH r = pthread_mutex_lock(self.mutex) DO <*ASSERT r=0*> END;
     <*ASSERT self.waitingOn = NIL*>
@@ -659,18 +643,18 @@ PROCEDURE XIOWait (self: Activation; fd: CARDINAL; read: BOOLEAN; interval: LONG
       RETURN WaitResult.Timeout;
     END TestFDS;
 
-  PROCEDURE CallSelect (nfd: CARDINAL; timeout: UNTRACED REF UTime): INTEGER =
+  PROCEDURE CallSelect (nfd: CARDINAL; timeout: Time.T): INTEGER =
     TYPE FDSPtr = UNTRACED REF Unix.FDSet;
     VAR res: INTEGER;
     BEGIN
       FOR i := 0 TO fdindex DO
         gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
       END;
-      res := Unix.select(nfd,
-                         LOOPHOLE (ADR(gReadFDS[0]), FDSPtr),
-                         LOOPHOLE (ADR(gWriteFDS[0]), FDSPtr),
-                         LOOPHOLE (ADR(gExceptFDS[0]), FDSPtr),
-                         timeout);
+      res := select(nfd,
+                    LOOPHOLE (ADR(gReadFDS[0]), FDSPtr),
+                    LOOPHOLE (ADR(gWriteFDS[0]), FDSPtr),
+                    LOOPHOLE (ADR(gExceptFDS[0]), FDSPtr),
+                    timeout);
       IF res > 0 THEN
         FOR i := 0 TO fdindex DO
           gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
@@ -699,14 +683,7 @@ PROCEDURE XIOWait (self: Activation; fd: CARDINAL; read: BOOLEAN; interval: LONG
         ELSE gWriteFDS[fdindex] := fdset;
       END;
 
-      IF subInterval >= 0.0D0 THEN
-        VAR utimeout := UTimeFromTime(subInterval);
-        BEGIN
-          res := CallSelect(fd+1, ADR(utimeout));
-        END;
-      ELSE
-        res := CallSelect(fd+1, NIL);
-      END;
+      res := CallSelect(fd+1, subInterval);
 
       IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
 
@@ -726,14 +703,6 @@ PROCEDURE XIOWait (self: Activation; fd: CARDINAL; read: BOOLEAN; interval: LONG
       END;
     END;
   END XIOWait;
-
-TYPE UTime = Utime.struct_timeval;
-
-PROCEDURE UTimeFromTime (time: Time.T): UTime =
-  VAR floor := FLOOR(time);
-  BEGIN
-    RETURN UTime{floor, FLOOR(1.0D6 * (time - FLOAT(floor, LONGREAL)))};
-  END UTimeFromTime;
 
 PROCEDURE WaitProcess (pid: int; VAR status: int): int =
   (* ThreadPThread.m3 and ThreadPosix.m3 are very similar. *)
@@ -855,7 +824,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
           INC(nLive);
           EXIT;
         END;
-        CommonSleep();
+        Nanosleep(WAIT_UNIT);
       END;
       WHILE nLive > 0 DO
         <*ASSERT SIG_SUSPEND # 0*>
@@ -876,7 +845,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
           END;
           wait_nsecs := RETRY_INTERVAL;
         ELSE
-          CommonSleep();
+          Nanosleep(WAIT_UNIT);
           DEC(wait_nsecs, WAIT_UNIT);
         END;
       END;
@@ -909,7 +878,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
           INC(nDead);
           EXIT;
         END;
-        CommonSleep();
+        Nanosleep(WAIT_UNIT);
       END;
       WHILE nDead > 0 DO
         <*ASSERT SIG_SUSPEND # 0*>
@@ -930,7 +899,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
           END;
           wait_nsecs := RETRY_INTERVAL;
         ELSE
-          CommonSleep();
+          Nanosleep(WAIT_UNIT);
           DEC(wait_nsecs, WAIT_UNIT);
         END;
       END;
@@ -1042,7 +1011,7 @@ PROCEDURE StopWorld () =
         act := act.next;
       END;
       IF NOT retry THEN EXIT END;
-      CommonSleep();
+      Nanosleep(WAIT_UNIT);
     END;
     WHILE nLive > 0 DO
       <*ASSERT SIG_SUSPEND # 0*>
@@ -1067,7 +1036,7 @@ PROCEDURE StopWorld () =
         END;
         wait_nsecs := RETRY_INTERVAL;
       ELSE
-        CommonSleep();
+        Nanosleep(WAIT_UNIT);
         DEC(wait_nsecs, WAIT_UNIT);
       END;
     END;
@@ -1124,7 +1093,7 @@ PROCEDURE StartWorld () =
         act := act.next;
       END;
       IF NOT retry THEN EXIT END;
-      CommonSleep();
+      Nanosleep(WAIT_UNIT);
     END;
     WHILE nDead > 0 DO
       <*ASSERT SIG_SUSPEND # 0*>
@@ -1149,7 +1118,7 @@ PROCEDURE StartWorld () =
         END;
         wait_nsecs := RETRY_INTERVAL;
       ELSE
-        CommonSleep();
+        Nanosleep(WAIT_UNIT);
         DEC(wait_nsecs, WAIT_UNIT);
       END;
     END;
