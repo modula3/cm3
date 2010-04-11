@@ -10,8 +10,8 @@ INTERFACE CoffTime;
 
 CONST EpochAdjust = 0.0d0; (* to 1/1/1970 *)
 
-PROCEDURE Now (): INTEGER;
+<*EXTERNAL CoffTime__Now*>PROCEDURE Now (): INTEGER;
 
-PROCEDURE OfFile (file: TEXT): INTEGER;
+<*EXTERNAL CoffTime__OfFile*>PROCEDURE OfFile (file: TEXT): INTEGER;
 
 END CoffTime.
