@@ -155,12 +155,12 @@ xMakeContext(
     void *stack,
     size_t stack_size) 
 {
-    struct sigaction sa = { 0 };
-    struct sigaction osa = { 0 };
-    stack_t ss = { 0 };
-    stack_t oss = { 0 };
-    sigset_t osigs = { 0 };
-    sigset_t sigs = { 0 };
+    struct sigaction sa;
+    struct sigaction osa;
+    stack_t ss;
+    stack_t oss;
+    sigset_t osigs;
+    sigset_t sigs;
 
     ZERO_MEMORY(sa);
     ZERO_MEMORY(osa);
