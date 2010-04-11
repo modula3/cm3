@@ -677,13 +677,6 @@ X(IPPROTO_TCP)
 
 
 #undef X
-#define X(x) const int Utime__##x = x;
-#ifndef _WIN32
-X(ITIMER_REAL)
-X(ITIMER_VIRTUAL)
-#endif
-
-#undef X
 #define X(x) const int Umman__##x = x;
 
 #ifndef _WIN32

@@ -5,6 +5,7 @@
 INTERFACE ThreadPosix;
 
 FROM Thread IMPORT Alerted;
+FROM Ctypes IMPORT int;
 
 TYPE SignalHandler1 = PROCEDURE(signo: int) RAISES {Alerted};
 
@@ -29,5 +30,28 @@ PROCEDURE DisposeContext(VAR c: ADDRESS);
 <*EXTERNAL ThreadPosix__ProcessContext*>
 PROCEDURE ProcessContext(c, bottom, top: ADDRESS;
                          p: PROCEDURE(start, limit: ADDRESS));
+
+(*---------------------------------------------------------------------------*)
+
+<*EXTERNAL ThreadPosix__SetVirtualTimer*>
+PROCEDURE SetVirtualTimer(): int;
+(* Thin wrapper around setitimer. *)
+
+(*---------------------------------------------------------------------------*)
+
+(* Model a set of integers of arbitrary size? *)
+
+CONST FDSetSize = BITSIZE(INTEGER);
+
+TYPE FDSet = SET OF [0 .. FDSetSize-1];
+     FDS = REF ARRAY OF FDSet;
+
+<*EXTERNAL ThreadPosix__Select*>
+PROCEDURE Select(nfds: int; VAR read, write, except: FDSet; 
+                 timeout: LONGREAL(*Time.T*)): int;
+(* Thin wrapper around select. *)
+
+(*---------------------------------------------------------------------------*)
+
 
 END ThreadPosix.
