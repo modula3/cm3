@@ -200,11 +200,11 @@ m3_off_t __cdecl Unix__tell(int fd)
 
 #else
 
-int Unix__fcntl(int fd, int request, int arg)
+int __cdecl Unix__fcntl(int fd, int request, int arg)
 /* fcntl is actually fcntl(fd, request, ...).
-Wrapper is needed on some systems to handle varargs.
-See http://edoofus.blogspot.com/2008/08/interesting-bug-unbreaking-cvsupamd64.html.
-*/
+ * Wrapper is needed on some systems to handle varargs.
+ * See http://edoofus.blogspot.com/2008/08/interesting-bug-unbreaking-cvsupamd64.html.
+ */
 {
 #ifdef __sun
 /*
@@ -223,7 +223,7 @@ See http://edoofus.blogspot.com/2008/08/interesting-bug-unbreaking-cvsupamd64.ht
 #endif
 }
 
-int Unix__ioctl(int fd, int request, void* argp)
+int __cdecl Unix__ioctl(int fd, int request, void* argp)
 /* ioctl is varargs. See fcntl. */
 {
 #ifdef __sun
