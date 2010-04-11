@@ -9,4 +9,3 @@
 
 module ("ThreadPosix")
 c_source ("ThreadPosixC")
-h_source ("ThreadPosix")
