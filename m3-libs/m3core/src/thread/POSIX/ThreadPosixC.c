@@ -55,7 +55,7 @@ typedef void (*SignalHandler1)(int signo);
 #define ProcessContext      ThreadPosix__ProcessContext
 #define InitC               ThreadPosix__InitC
 
-static sigset_t *ThreadSwitchSignal = NULL;
+static sigset_t ThreadSwitchSignal;
 
 #ifdef __CYGWIN__
 #define SIG_TIMESLICE SIGALRM
@@ -67,15 +67,13 @@ void
 __cdecl
 setup_sigvtalrm(SignalHandler1 handler)
 {
-  static sigset_t tick;
   struct sigaction act, oact;
 
   ZeroMemory(&act, sizeof(act));
   ZeroMemory(&oact, sizeof(oact));
 
-  sigemptyset(&tick);
-  sigaddset(&tick, SIG_TIMESLICE);
-  ThreadSwitchSignal = &tick;
+  sigemptyset(&ThreadSwitchSignal);
+  sigaddset(&ThreadSwitchSignal, SIG_TIMESLICE);
 
   act.sa_handler = handler;
   act.sa_flags = SA_RESTART;
@@ -87,7 +85,7 @@ void
 __cdecl
 allow_sigvtalrm(void)
 {
-    int i = sigprocmask(SIG_UNBLOCK, ThreadSwitchSignal, NULL);
+    int i = sigprocmask(SIG_UNBLOCK, &ThreadSwitchSignal, NULL);
     assert(i == 0);
 }
 
@@ -95,7 +93,7 @@ void
 __cdecl
 disallow_sigvtalrm(void)
 {
-    int i = sigprocmask(SIG_BLOCK, ThreadSwitchSignal, NULL);
+    int i = sigprocmask(SIG_BLOCK, &ThreadSwitchSignal, NULL);
     assert(i == 0);
 }
 
