@@ -11,7 +11,7 @@ UNSAFE MODULE ProcessPosixCommon EXPORTS ProcessPosixCommon, Process;
 
 IMPORT Atom, AtomList, Cerrno, Ctypes, Env, File, FilePosix, M3toC, OSError,
   OSErrorPosix, Pathname, RTLinker, RTProcess, RTSignal,
-  Scheduler, Text, SchedulerPosix, Unix, Uerror, Uexec, Uprocess, Ustat,
+  Text, SchedulerPosix, Unix, Uerror, Uexec, Uprocess, Ustat,
   Uugid, Word, Process;
 
 CONST
@@ -70,9 +70,6 @@ PROCEDURE Create_ForkExec(
     stderr_fd := NoFileDescriptor;
     IF (stderr # NIL) THEN stderr_fd := stderr.fd; END;
 
-    (* Disable the scheduler. *)
-    Scheduler.DisableSwitching ();
-
     execResult := 0;
     LOOP (* based on bash *)
       forkResult := Unix.fork();
@@ -97,9 +94,6 @@ PROCEDURE Create_ForkExec(
     (* Back in parent. *)
 
     forkErrno := Cerrno.GetErrno();
-
-    (* Enable scheduler. *)
-    Scheduler.EnableSwitching ();
 
     FreeArgs(argx);
     IF envx # NIL THEN FreeEnv(envx) END;
