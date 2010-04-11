@@ -58,8 +58,8 @@ CONST
 
 VAR (* CONST *)
   EnoentAtom := OSErrorPosix.ErrnoAtom(Uerror.ENOENT);
-  NoGroup: Utypes.gid_t;
-  NoOwner: Utypes.uid_t;
+CONST NoGroup: Utypes.gid_t := -1;
+CONST NoOwner: Utypes.uid_t := -1;
 
 PROCEDURE Init(self: T;
                fileType: FileType;
@@ -1067,18 +1067,6 @@ BEGIN
   Historical := SupportInfo{ AttrTypes{}, .. };
   Historical[FileType.File] := AttrTypes{
     AttrType.FileType, AttrType.ModTime, AttrType.Mode };
-
-  (* There must be a better way to do this ... *)
-  IF FIRST(Utypes.uid_t) < 0 THEN  (* Signed type. *)
-    NoOwner := -1;  <*NOWARN*>
-  ELSE                             (* Unsigned type. *)
-    NoOwner := LAST(Utypes.uid_t);
-  END;
-  IF FIRST(Utypes.gid_t) < 0 THEN  (* Signed type. *)
-    NoGroup := -1;  <*NOWARN*>
-  ELSE                             (* Unsigned type. *)
-    NoGroup := LAST(Utypes.gid_t);
-  END;
 
   Bogus := NEW(T).init(FileType.Unknown,
     mode := 0,
