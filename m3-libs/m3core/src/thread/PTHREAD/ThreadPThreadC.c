@@ -349,17 +349,20 @@ void
 ThreadPThread__Nanosleep(INTEGER nanoseconds)
 {
 #ifdef __INTERIX
-  usleep(nanoseconds / 1000); /* This is only an approximation.
-                               * We don't try to complete the sleep
-                               * if interrupted.
-                               */
+  assert(nanoseconds >= 0);
+  assert(nanoseconds < (1000 * 1000 * 1000));
+  /* This is only an approximation. We don't try to complete the sleep
+   * if interrupted, because we don't cheaply know how much time has elapsed.
+   */
+  usleep(nanoseconds / 1000);
 #else
   NanosecondsStruct_t wait = { 0 };
   NanosecondsStruct_t remaining = { 0 };
 
+  assert(nanoseconds >= 0);
+  assert(nanoseconds < (1000 * 1000 * 1000));
   ZeroMemory(&wait, sizeof(wait));
   ZeroMemory(&remaining, sizeof(remaining));
-
   wait.tv_sec = 0;
   wait.tv_nsec = nanoseconds;
   while (nanosleep(&wait, &remaining) == -1 && errno == EINTR)
