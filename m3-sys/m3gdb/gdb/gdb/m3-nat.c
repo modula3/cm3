@@ -4215,7 +4215,7 @@ m3_prepare_to_store (void)
 static void
 m3_files_info (struct target_ops *ignore)
 {
-  /* FIXME: should print MID and all that crap.  */
+  /* FIXME: should print MID and all that stuff.  */
   printf_unfiltered ("\tUsing the running image of %s %s.\n",
       attach_flag ? "attached" : "child", target_pid_to_str (inferior_ptid));
 }
