@@ -779,7 +779,7 @@ PROCEDURE StartSwitching () =
     END;
   END StartSwitching;
 
-PROCEDURE switch_thread (<*UNUSED*> sig: INTEGER) RAISES {Alerted} =
+PROCEDURE switch_thread (<*UNUSED*> sig: int) RAISES {Alerted} =
   BEGIN
     allow_sigvtalrm ();
     IF inCritical = 0 AND heapState.inCritical = 0 THEN InternalYield () END;
