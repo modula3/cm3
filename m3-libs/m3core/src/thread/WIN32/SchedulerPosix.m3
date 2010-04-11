@@ -120,10 +120,10 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
       IF subInterval >= 0.0D0 THEN
         VAR utimeout := UTimeFromTime(subInterval);
         BEGIN
-          res := CallSelect(fd+1, ADR(utimeout));
+          res := CallSelect(fd + 1, ADR(utimeout));
         END;
       ELSE
-        res := CallSelect(fd+1, NIL);
+        res := CallSelect(fd + 1, NIL);
       END;
 
       IF alertable AND TestAlert() THEN RAISE Alerted END;
