@@ -27,7 +27,6 @@ Some use BSD sigvec which is similar to sigaction.
 #endif
 
 #include "m3core.h"
-#include "ThreadPosix.h"
 #include <string.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -45,7 +44,8 @@ Some use BSD sigvec which is similar to sigaction.
 extern "C" {
 #endif
 
-#define SignalHandler1      ThreadPosix__SignalHandler1
+typedef void (*SignalHandler1)(int signo);
+
 #define setup_sigvtalrm     ThreadPosix__setup_sigvtalrm
 #define allow_sigvtalrm     ThreadPosix__allow_sigvtalrm
 #define disallow_sigvtalrm  ThreadPosix__disallow_sigvtalrm
