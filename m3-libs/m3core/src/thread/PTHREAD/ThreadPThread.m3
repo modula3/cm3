@@ -6,7 +6,7 @@ UNSAFE MODULE ThreadPThread EXPORTS Thread, ThreadF, RTThread, Scheduler,
 SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep, RTCollectorSRC, RTError, RTHeapRep, RTIO,
-       RTParams, RTPerfTool, RTProcess, ThreadEvent, Time, Unix, Word,
+       RTParams, RTPerfTool, RTProcess, ThreadEvent, Time, Word,
        Usched, Uerror, Uexec;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
@@ -579,12 +579,6 @@ PROCEDURE Yield () =
     END;
   END Yield;
 
-CONST FDSetSize = BITSIZE(INTEGER);
-
-TYPE
-  FDSet = SET OF [0 .. FDSetSize-1];
-  FDS = REF ARRAY OF FDSet;
-
 PROCEDURE IOWait (fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult =
   <*FATAL Alerted*>
@@ -611,8 +605,8 @@ PROCEDURE IOAlertWait (fd: CARDINAL; read: BOOLEAN;
     END;
   END IOAlertWait;
 
-PROCEDURE XIOWait (self: Activation; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
-                   alertable: BOOLEAN): WaitResult
+PROCEDURE XIOWait (self: Activation; fd: CARDINAL; read: BOOLEAN;
+                   interval: LONGREAL; alertable: BOOLEAN): WaitResult
   RAISES {Alerted} =
   VAR
     res: INTEGER;
@@ -644,17 +638,12 @@ PROCEDURE XIOWait (self: Activation; fd: CARDINAL; read: BOOLEAN; interval: LONG
     END TestFDS;
 
   PROCEDURE CallSelect (nfd: CARDINAL; timeout: Time.T): INTEGER =
-    TYPE FDSPtr = UNTRACED REF Unix.FDSet;
     VAR res: INTEGER;
     BEGIN
       FOR i := 0 TO fdindex DO
         gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
       END;
-      res := Select(nfd,
-                    LOOPHOLE (ADR(gReadFDS[0]), FDSPtr),
-                    LOOPHOLE (ADR(gWriteFDS[0]), FDSPtr),
-                    LOOPHOLE (ADR(gExceptFDS[0]), FDSPtr),
-                    timeout);
+      res := Select(nfd, gReadFDS[0], gWriteFDS[0], gExceptFDS[0], timeout);
       IF res > 0 THEN
         FOR i := 0 TO fdindex DO
           gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
