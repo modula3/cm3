@@ -1,13 +1,13 @@
 (* Copyright (C) 1996-2000, Critical Mass, Inc.  All Rights Reserved. *)
 (* See file COPYRIGHT-CMASS for details. *)
 
-(*	Modified by Darko Volaric September 2002
-		Added functionality to support use of multiple database client interfaces concurrently.
-		Supported interfaces are: PostgreSQL, MySQL and ODBC. This interface should be source
-		compatible with the previous version. Please email darko@peter.com.au with any problems.
-*)
+(* Modified by Darko Volaric September 2002 Added functionality to support
+   use of multiple database client interfaces concurrently.  Supported
+   interfaces are: PostgreSQL, MySQL and ODBC.  This interface should be
+   source compatible with the previous version.  Please email
+   darko@peter.com.au with any problems. *)
 
-(* 
+(*
    DB is the safe Modula-3 interface for relational databases.  It
    defines two primary abstractions: database connections and
    statements.
@@ -18,49 +18,57 @@ INTERFACE DB;
 (*------------------------------------------------------- connections ---*)
 
 TYPE
-	InterfaceList = REF ARRAY OF Interface;
-	(* A database interface, usualy one for each type of database server *)
-	Interface <: InterfacePublic;
-	InterfacePublic = OBJECT 
-		name: TEXT;
-	METHODS
-		set_default();
-		connect(
-			database, user_id, password: TEXT;
-			server: TEXT := NIL;
-		): T  RAISES {Error};
-		get_data_sources(): DescList  RAISES {Error};
-		get_drivers(): DescList  RAISES {Error};
-	END;
+  InterfaceList = REF ARRAY OF Interface;
+  (* A database interface, usualy one for each type of database server *)
+  Interface <: InterfacePublic;
+  InterfacePublic =
+    OBJECT
+      name: TEXT;
+    METHODS
+      set_default ();
+      connect (database, user_id, password: TEXT; server: TEXT := NIL; ): T
+               RAISES {Error};
+      get_data_sources (): DescList RAISES {Error};
+      get_drivers      (): DescList RAISES {Error};
+    END;
 
-PROCEDURE GetInterfaces(): InterfaceList;
-(*	Returns a list of Interface objects that describe the available interfaces
-		in this implementation *)
+PROCEDURE GetInterfaces (): InterfaceList;
+(* Returns a list of Interface objects that describe the available
+   interfaces in this implementation *)
 
-PROCEDURE GetDefaultInterface(): Interface;
+PROCEDURE GetDefaultInterface (): Interface;
 
-PROCEDURE FindInterface(name: TEXT): Interface  RAISES {Error};
-(*	Returns the interface with the given name, or NIL if not found *)
+PROCEDURE FindInterface (name: TEXT): Interface RAISES {Error};
+(* Returns the interface with the given name, or NIL if not found *)
 
-(*  The following functions are provided for compatibily with the previous version of the interface. 
-		The methods of the Interface object should be used instead. *)
+(* The following functions are provided for compatibily with the previous
+   version of the interface.  The methods of the Interface object should be
+   used instead. *)
 
-PROCEDURE Connect (
-	database, user_id, password: TEXT; (* Establish a connection to the named "database" using "user_id" and
-																				"password" as authentication credentials. *)
-	server: TEXT := NIL;	(* Connect to the server running on this host. May be a host name or IP number *)
-	interface: Interface := NIL; (* Use this interface to connect. If not specified the default interface is used *)
-): T  RAISES {Error};
+PROCEDURE Connect
+  (database, user_id, password: TEXT;
+   server: TEXT := NIL;
+   interface: Interface := NIL;
+  ): T RAISES {Error};
+(* Establish a connection to the named "database" using "user_id"
+   and "password" as authentication credentials. Use the "server" as the
+   connection point, either hostname, or IP address. And connect using the
+   "interface", which if not specified the default is used.
+*)
 
-PROCEDURE GetDataSources (): DescList  RAISES {Error};
+PROCEDURE GetDataSources (): DescList RAISES {Error};
 (* Returns the names and descriptions of the data sources that are
    available from the local server. *)
 
-PROCEDURE GetDrivers (): DescList  RAISES {Error};
-(* Returns the names and descriptions of the drivers that are
-   available from the local server. *)
+PROCEDURE GetDrivers (): DescList RAISES {Error};
+(* Returns the names and descriptions of the drivers that are available
+   from the local server. *)
 
-TYPE DescList = REF RECORD  name, description: TEXT;  next: DescList;  END;
+TYPE
+  DescList = REF RECORD
+                   name, description: TEXT;
+                   next             : DescList;
+                 END;
 
 
 
@@ -72,13 +80,14 @@ TYPE DescList = REF RECORD  name, description: TEXT;  next: DescList;  END;
 
 TYPE
   (* a database connection *)
-  T = OBJECT METHODS
-    disconnect ()              RAISES {Error};
-    new_stmt (): Stmt          RAISES {Error};
-    auto_commit (on: BOOLEAN)  RAISES {Error};
-    commit ()                  RAISES {Error};
-    abort ()                   RAISES {Error};
-  END;
+  T = OBJECT
+      METHODS
+        disconnect  () RAISES {Error};
+        new_stmt    (): Stmt RAISES {Error};
+        auto_commit (on: BOOLEAN) RAISES {Error};
+        commit      () RAISES {Error};
+        abort       () RAISES {Error};
+      END;
 
 (*
   Given a database connection "db",
@@ -116,31 +125,33 @@ TYPE
 
 TYPE
   (* a SQL database statement (query or update) *)
-  Stmt = MUTEX OBJECT METHODS
-    prepare (operation: TEXT)       RAISES {Error};
-    execute (operation: TEXT)       RAISES {Error};
-    fetch ():  Results              RAISES {Error};
-    done ()                         RAISES {Error};
-    close ()                        RAISES {Error};
-    get_cursor_name (): TEXT        RAISES {Error};
-    set_cursor_name (nm: TEXT)      RAISES {Error};
-    num_rows (): INTEGER            RAISES {Error};
-    describe_result (): ResultDesc  RAISES {Error};
-    connection (): T;
-  END;
+  Stmt = MUTEX OBJECT
+         METHODS
+           prepare         (operation: TEXT) RAISES {Error};
+           execute         (operation: TEXT) RAISES {Error};
+           fetch           (): Results RAISES {Error};
+           done            () RAISES {Error};
+           close           () RAISES {Error};
+           get_cursor_name (): TEXT RAISES {Error};
+           set_cursor_name (nm: TEXT) RAISES {Error};
+           num_rows        (): INTEGER RAISES {Error};
+           describe_result (): ResultDesc RAISES {Error};
+           connection      (): T;
+         END;
 
   Results = REF ARRAY OF REFANY;
 
   ResultDesc = REF ARRAY OF ColumnDesc;
   ColumnDesc = RECORD
-    name      : TEXT;
-    type      : DataType;
-    precision : INTEGER;  (* total number of digits *)
-    scale     : INTEGER;  (* number of digits right of the decimal place *)
-    nullable  : Nullable;
-  END;
+                 name     : TEXT;
+                 type     : DataType;
+                 precision: INTEGER;   (* total number of digits *)
+                 scale: INTEGER;  (* number of digits right of the decimal
+                                     place *)
+                 nullable: Nullable;
+               END;
 
-  Nullable = { Yes, No, Unknown };
+  Nullable = {Yes, No, Unknown};
 
 (*
   ANSI SQL and its extensions define a set of primitive data types.
@@ -151,37 +162,37 @@ TYPE
 *)
 
 TYPE
-  (* ANSI and extended SQL datatypes  *)
-  DataType = {     (* Modula-3 type in the result vector *)
-    Null,          (* NULL *)
-    Char,          (* RefString *)
-    VarChar,       (* RefString *)
-    LongVarChar,   (* RefString *)
-    Numeric,       (* REF LONGREAL -- ?? *)
-    Decimal,       (* REF LONGREAL -- ?? *)
-    BigInt,        (* RefBigInt    (64-bit signed integer) *)
-    Integer,       (* REF INTEGER  (32-bit signed integer) *)
-    SmallInt,      (* REF INTEGER  (16-bit signed integer) *)
-    TinyInt,       (* REF INTEGER  (8-bit signed integer) *)
-    Real,          (* REF REAL *)
-    Float,         (* REF LONGREAL *)
-    Double,        (* REF LONGREAL *)
-    Bit,           (* REF BOOLEAN *)
-    LongVarBinary, (* RefString *)
-    VarBinary,     (* RefString *)
-    Binary,        (* RefString *)
-    Date,          (* RefDate *)
-    Time,          (* RefTime *)
-    Timestamp      (* RefTimestamp *)
-  };
+  (* ANSI and extended SQL datatypes *)
+  DataType = {                   (* Modula-3 type in the result vector *)
+             Null,               (* NULL *)
+             Char,               (* RefString *)
+             VarChar,            (* RefString *)
+             LongVarChar,        (* RefString *)
+             Numeric,            (* REF LONGREAL -- ?? *)
+             Decimal,            (* REF LONGREAL -- ?? *)
+             BigInt,             (* RefBigInt (64-bit signed integer) *)
+             Integer,            (* REF INTEGER (32-bit signed integer) *)
+             SmallInt,           (* REF INTEGER (16-bit signed integer) *)
+             TinyInt,            (* REF INTEGER (8-bit signed integer) *)
+             Real,               (* REF REAL *)
+             Float,              (* REF LONGREAL *)
+             Double,             (* REF LONGREAL *)
+             Bit,                (* REF BOOLEAN *)
+             LongVarBinary,      (* RefString *)
+             VarBinary,          (* RefString *)
+             Binary,             (* RefString *)
+             Date,               (* RefDate *)
+             Time,               (* RefTime *)
+             Timestamp           (* RefTimestamp *)
+             };
   RefString = REF UNTRACED REF ARRAY OF CHAR;
   RefBigInt = REF RECORD lo, hi: INTEGER END; (* == 2^32*hi + lo *)
-  RefDate   = REF RECORD year, month, day: INTEGER END;
-  RefTime   = REF RECORD hour, minute, second: INTEGER END;
+  RefDate = REF RECORD year, month, day: INTEGER END;
+  RefTime = REF RECORD hour, minute, second: INTEGER END;
   RefTimestamp = REF RECORD
-                  year, month, day: INTEGER;
-                  hour, minute, second, fraction: INTEGER;
-                 END;
+                       year, month, day              : INTEGER;
+                       hour, minute, second, fraction: INTEGER;
+                     END;
 
 (*
   Given a statement "st",
@@ -226,22 +237,24 @@ TYPE
 
 (*--------------------------------------------- errors and exceptions ---*)
 
-EXCEPTION Error (ErrorDesc);
-(* 
+EXCEPTION Error(ErrorDesc);
+(*
   Routines in this interface raise "DB.Error" whenever an operation
   fails.  The failure may be due to a failure in the underlying
   database or network, or the failure may be due to programming
   errors.  Blatant programming errors detected by this implementation
   will trigger checked runtime errors.  That is, your program will
-  crash.  
+  crash.
 *)
 
 TYPE
   ErrorDesc = REF RECORD
-    state       : ARRAY [0..5] OF CHAR;  (* e.g. "M1001" with zero termination *)
-    description : TEXT;
-    native_err  : INTEGER; (* lower level driver or DBMS error code *)
-  END;
+                    state: ARRAY [0 .. 5] OF CHAR;  (* e.g.  "M1001" with
+                                                       zero termination *)
+                    description: TEXT;
+                    native_err: INTEGER;  (* lower level driver or DBMS
+                                             error code *)
+                  END;
 
 END DB.
 
