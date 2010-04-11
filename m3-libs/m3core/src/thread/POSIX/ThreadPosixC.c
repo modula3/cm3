@@ -67,10 +67,9 @@ void
 __cdecl
 setup_sigvtalrm(SignalHandler1 handler)
 {
-  struct sigaction act, oact;
+  struct sigaction act;
 
   ZeroMemory(&act, sizeof(act));
-  ZeroMemory(&oact, sizeof(oact));
 
   sigemptyset(&ThreadSwitchSignal);
   sigaddset(&ThreadSwitchSignal, SIG_TIMESLICE);
@@ -78,7 +77,7 @@ setup_sigvtalrm(SignalHandler1 handler)
   act.sa_handler = handler;
   act.sa_flags = SA_RESTART;
   sigemptyset(&(act.sa_mask));
-  if (sigaction (SIG_TIMESLICE, &act, &oact)) abort();
+  if (sigaction (SIG_TIMESLICE, &act, NULL)) abort();
 }
 
 void
