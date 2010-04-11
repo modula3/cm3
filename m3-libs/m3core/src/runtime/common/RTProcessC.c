@@ -40,28 +40,6 @@ RTProcess__RegisterForkHandlers(
 #endif
 }
 
-#ifndef _WIN32
-
-ptrdiff_t
-__cdecl
-RTProcess__Fork(void)
-{
-    while (1)
-    {
-      int i =
-#ifdef __sun
-      fork1()
-#else
-      fork()
-#endif
-      ;if (i != EAGAIN)
-        return i;
-      sleep(0);
-    }
-}
-
-#endif
-
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

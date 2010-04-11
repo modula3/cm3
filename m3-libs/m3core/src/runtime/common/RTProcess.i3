@@ -43,7 +43,4 @@ TYPE ForkHandler = PROCEDURE();
 <* EXTERNAL RTProcess__RegisterForkHandlers *>
 PROCEDURE RegisterForkHandlers(prep, parent, child: ForkHandler): INTEGER;
  
-<* EXTERNAL RTProcess__Fork *>
-PROCEDURE Fork(): INTEGER;
-
 END RTProcess.
