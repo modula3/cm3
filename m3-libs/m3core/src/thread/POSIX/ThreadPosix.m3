@@ -686,7 +686,7 @@ PROCEDURE XIOWait (fd: CARDINAL; read: BOOLEAN; interval: LONGREAL): WaitResult
 
 PROCEDURE ZeroFDS() =
   BEGIN
-    FOR i := 0 TO gMaxActiveFDSet-1 DO
+    FOR i := 0 TO gMaxActiveFDSet - 1 DO
       gReadFDS[i] := FDSet{};
       gWriteFDS[i] := FDSet{};
     END;
@@ -730,14 +730,14 @@ PROCEDURE CallSelect(nfd: CARDINAL; timeout: UNTRACED REF UTime): INTEGER =
   TYPE FDSPtr = UNTRACED REF Unix.FDSet;
   VAR res: INTEGER;
   BEGIN
-    FOR i := 0 TO gMaxActiveFDSet-1 DO
+    FOR i := 0 TO gMaxActiveFDSet - 1 DO
       gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
     END;
     res := Unix.select(nfd, LOOPHOLE (ADR(gReadFDS[0]), FDSPtr),
                             LOOPHOLE (ADR(gWriteFDS[0]), FDSPtr),
                             LOOPHOLE (ADR(gExceptFDS[0]), FDSPtr), timeout);
     IF res > 0 THEN
-      FOR i := 0 TO gMaxActiveFDSet-1 DO
+      FOR i := 0 TO gMaxActiveFDSet - 1 DO
         gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
       END;
     END;
