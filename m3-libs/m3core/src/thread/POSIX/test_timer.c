@@ -45,13 +45,13 @@ void setup_sigvtalrm(SignalHandler1 handler)
 
 void allow_sigvtalrm(void)
 {
-    int i = sigprocmask(SIG_UNBLOCK, ThreadSwitchSignal, NULL);
+    int i = sigprocmask(SIG_UNBLOCK, &ThreadSwitchSignal, NULL);
     assert(i == 0);
 }
 
 void disallow_sigvtalrm(void)
 {
-    int i = sigprocmask(SIG_BLOCK, ThreadSwitchSignal, NULL);
+    int i = sigprocmask(SIG_BLOCK, &ThreadSwitchSignal, NULL);
     assert(i == 0);
 }
 
