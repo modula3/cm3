@@ -34,13 +34,13 @@ typedef double T;
 #define const /* nothing */
 #endif
 
-T Now(ANSI(void));
-struct timeval ToUtime(ANSI(T));
-T FromUtime(ANSI(const struct timeval*));
+T __cdecl Now(ANSI(void));
+struct timeval __cdecl ToUtime(ANSI(T));
+T __cdecl FromUtime(ANSI(const struct timeval*));
 
-T Now(ANSI(void))
+T __cdecl Now(ANSI(void))
 {
-    struct timeval tv;
+    struct timeval tv = { 0 };
     int i;
 
     i = gettimeofday(&tv, NULL);
@@ -49,10 +49,10 @@ T Now(ANSI(void))
     return FromUtime(&tv);
 }
 
-struct timeval ToUtime(ANSI(T) n)
+struct timeval __cdecl ToUtime(ANSI(T) n)
     KR(T n;)
 {
-    struct timeval tv;
+    struct timeval tv = { 0 };
  
     tv.tv_sec = (time_t)n;
     tv.tv_usec = ((((INT64)n) * MILLION) % MILLION);
@@ -60,7 +60,7 @@ struct timeval ToUtime(ANSI(T) n)
     return tv;
 }
 
-T FromUtime(ANSI(const struct timeval*) tv)
+T __cdecl FromUtime(ANSI(const struct timeval*) tv)
     KR(const struct timeval* tv;)
 {
     return ((T)tv->tv_sec) + ((T)tv->tv_usec) / (T)MILLION;
@@ -80,7 +80,7 @@ static T ComputeGrainOnce(ANSI(void))
     }
 }
 
-T ComputeGrain(ANSI(void))
+T __cdecl ComputeGrain(ANSI(void))
 {
 /* I have seen the value vary so let's go for a
 few times in a row instead of just one or two.
