@@ -14,6 +14,8 @@ We use gettimeofday() which returns seconds and microseconds.
 extern "C" {
 #endif
 
+#if 0
+
 typedef double T;
 
 #define Now Time__Now
@@ -21,7 +23,7 @@ typedef double T;
 #define ToUtime TimePosix__ToUtime
 #define ComputeGrain Time__ComputeGrain
 
-#define M (1000000)
+#define MILLION (1000 * 1000)
 
 #if defined(__STDC__) || defined(__cplusplus)
 #define ANSI(x) x
@@ -53,7 +55,7 @@ struct timeval ToUtime(ANSI(T) n)
     struct timeval tv;
  
     tv.tv_sec = (time_t)n;
-    tv.tv_usec = ((((INT64)n) * M) % M);
+    tv.tv_usec = ((((INT64)n) * MILLION) % MILLION);
 
     return tv;
 }
@@ -61,7 +63,7 @@ struct timeval ToUtime(ANSI(T) n)
 T FromUtime(ANSI(const struct timeval*) tv)
     KR(const struct timeval* tv;)
 {
-    return ((T)tv->tv_sec) + ((T)tv->tv_usec) / (T)M;
+    return ((T)tv->tv_sec) + ((T)tv->tv_usec) / (T)MILLION;
 }
 
 static T ComputeGrainOnce(ANSI(void))
@@ -93,12 +95,36 @@ Doing four checks always hangs on Cygwin, odd. */
     }
 }
 
+#endif
+
+NanosecondsStruct_t*
+__cdecl
+TimePosix__FloatSecondsToNanosecondsStruct(FloatSeconds m3time,
+                                           NanosecondsStruct_t* nanotime)
+{
+/* fairly direct conversion from the Modula-3 ThreadPThread.ToNTime */
+    nanotime->tv_sec = TRUNC(m3time);
+    nanotime->tv_nsec = ROUND((m3time - FLOAT(nanotime->tv_sec, LONGREAL)) * 1.0E9);
+    return nanotime;
+}
+
+MicrosecondsStruct_t*
+__cdecl
+TimePosix__FloatSecondsToMicrosecondsStruct(FloatSeconds m3time,
+                                            MicrosecondsStruct_t* microtime)
+{
+/* fairly direct conversion from the Modula-3 ThreadPThread.UTimeFromTime */
+    LONGINT sec = FLOOR(m3time);
+    microtime->tv_sec = sec;
+    microtime->tv_usec = FLOOR(1.0E6 * (m3time - FLOAT(sec, LONGREAL)));
+    return microtime;
+}
 
 #ifdef __cplusplus
 } /* extern C */
 #endif
 
-#if 1
+#if 0
 
 int main()
 {

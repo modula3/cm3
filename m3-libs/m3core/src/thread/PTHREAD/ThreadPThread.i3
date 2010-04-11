@@ -8,7 +8,6 @@ UNSAFE INTERFACE ThreadPThread;
 
 FROM Ctypes IMPORT int;
 FROM Cstddef IMPORT size_t;
-FROM Utime IMPORT struct_timespec;
 
 TYPE
   (* These are opaque C references (not necessarily UNTRACED REF ADDRESS) *)
@@ -117,7 +116,7 @@ PROCEDURE pthread_cond_wait(cond: pthread_cond_t; mutex: pthread_mutex_t):int;
 <*EXTERNAL ThreadPThread__pthread_cond_timedwait*>
 PROCEDURE pthread_cond_timedwait(cond: pthread_cond_t;
                                  mutex: pthread_mutex_t;
-                                 READONLY abs: struct_timespec):int;
+                                 abs: LONGREAL(*Time.T*)):int;
 
 <*EXTERNAL ThreadPThread__pthread_cond_signal*>
 PROCEDURE pthread_cond_signal(cond: pthread_cond_t):int;
@@ -128,7 +127,7 @@ PROCEDURE pthread_cond_broadcast(cond: pthread_cond_t):int;
 (*---------------------------------------------------------------------------*)
 
 <*EXTERNAL "ThreadPThread__Nanosleep"*>
-PROCEDURE Nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): int;
+PROCEDURE Nanosleep(nanoseconds: INTEGER);
 
 (*---------------------------------------------------------------------------*)
 
@@ -145,6 +144,11 @@ PROCEDURE ProcessLive
 <*EXTERNAL "ThreadPThread__ProcessStopped"*>
 PROCEDURE ProcessStopped
   (t: pthread_t; bottom, context: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
+(*---------------------------------------------------------------------------*)
+
+<*EXTERNAL ThreadPThread__select*>
+PROCEDURE select(nfds: int; read, write, except: ADDRESS; timeout: LONGREAL): INTEGER;
+
 (*---------------------------------------------------------------------------*)
 
 END ThreadPThread.

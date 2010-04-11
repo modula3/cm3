@@ -80,6 +80,7 @@
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
+#include <math.h>
 
 #ifdef _WIN32
 #ifndef WIN32
@@ -268,7 +269,6 @@ int __cdecl Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen);
 int __cdecl Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen);
 int __cdecl Usocket__recvfrom(int s, void* buf, size_t len, int flags, struct sockaddr* from, m3_socklen_t* plen);
 
-
 #ifndef _WIN32
 DIR* __cdecl Udir__opendir(const char* a);
 #endif
@@ -300,17 +300,10 @@ typedef struct {
 } m3_timeval_t;
 
 typedef struct {
-/* somewhat idealized, but ideally we'd use INT64 here */
-    INTEGER sec;
-    INTEGER nsec; /* nanosec */
-} m3_timespec_t;
-
-typedef struct {
 /* This is what all systems do, but without the "m3_". */
     m3_timeval_t interval;
     m3_timeval_t value;
 } m3_itimerval_t;
-
 
 #ifndef _WIN32
 m3_time_t __cdecl Utime__get_timezone(void);
@@ -330,7 +323,6 @@ struct tm* __cdecl Utime__localtime_r(const m3_time_t* clock, struct tm* result)
 struct tm* __cdecl Utime__gmtime_r(const m3_time_t* clock, struct tm* result);
 #endif
 int __cdecl Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old);
-int __cdecl Utime__nanosleep(const m3_timespec_t* m3req, m3_timespec_t* m3rem);
 void __cdecl Utime__tzset(void);
 int __cdecl Unix__utimes(const char* file, const m3_timeval_t* tvp);
 int __cdecl Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, m3_timeval_t* timeout);
@@ -392,6 +384,33 @@ UINT32 __cdecl Uin__ntohl(UINT32 x);
 UINT16 __cdecl Uin__ntohs(UINT16 x);
 UINT32 __cdecl Uin__htonl(UINT32 x);
 UINT16 __cdecl Uin__htons(UINT16 x);
+
+/* Support for translating Modula-3 to C. */
+
+typedef double LONGREAL;
+
+/* http://www.cs.tut.fi/~jkorpela/round.html */
+#define ROUND(a) (((a) >= 0) ? ((a) + 0.5) : ((a) - 0.5))
+
+#define FLOAT(value, type) ((type)value)
+#define FLOOR floor
+#define TRUNC(n) (n)
+
+/* Support for translating Modula-3 Time.T to Posix microtime or nanotime. */
+ 
+typedef LONGREAL FloatSeconds, TimeT;
+typedef struct timespec NanosecondsStruct_t;
+typedef struct timeval MicrosecondsStruct_t;
+
+NanosecondsStruct_t*
+__cdecl
+TimePosix__FloatSecondsToNanosecondsStruct(FloatSeconds m3time,
+                                           NanosecondsStruct_t* nanotime);
+
+MicrosecondsStruct_t*
+__cdecl
+TimePosix__FloatSecondsToMicrosecondsStruct(FloatSeconds m3time,
+                                            MicrosecondsStruct_t* microtime);
 
 #ifdef __cplusplus
 } /* extern "C" */

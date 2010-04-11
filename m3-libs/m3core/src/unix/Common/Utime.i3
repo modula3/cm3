@@ -28,13 +28,6 @@ TYPE
     tz_dsttime:     int32_t; (* type of dst correction *)
   END;
 
-  struct_timespec = RECORD
-  (* somewhat idealized; this does not necessarily match
-  the underlying system; ideally we'd use LONGINT here. *)
-    tv_sec: INTEGER; (* seconds *)
-    tv_nsec: INTEGER; (* nanoseconds *)
-  END;
-
   struct_itimerval = RECORD
   (* Every system defines this the same, and we assert it in UnixC.c *)
     it_interval: struct_timeval;	 (* timer interval *)
@@ -60,7 +53,6 @@ TYPE
 <*EXTERNAL "Utime__gmtime_r"*>PROCEDURE gmtime_r (READONLY clock: time_t; result: struct_tm_star): struct_tm_star;
 
 <*EXTERNAL "Utime__setitimer"*>PROCEDURE setitimer (which: int32_t; VAR (*const*) new_value, old_value: struct_itimerval): int32_t;
-<*EXTERNAL "Utime__nanosleep"*>PROCEDURE nanosleep (READONLY req: struct_timespec; VAR rem: struct_timespec): int32_t;
 
 <*EXTERNAL "Utime__get_timezone"*>PROCEDURE get_timezone(): time_t;
 <*EXTERNAL "Utime__get_altzone"*>PROCEDURE get_altzone(): time_t;
