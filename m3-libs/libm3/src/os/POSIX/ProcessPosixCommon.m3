@@ -12,7 +12,7 @@ UNSAFE MODULE ProcessPosixCommon EXPORTS ProcessPosixCommon, Process;
 IMPORT Atom, AtomList, Cerrno, Ctypes, Env, File, FilePosix, M3toC, OSError,
   OSErrorPosix, Pathname, RTLinker, RTProcess, RTSignal,
   Scheduler, Text, SchedulerPosix, Unix, Uerror, Uexec, Uprocess, Ustat,
-  Utime, Uugid, Word, Process;
+  Uugid, Word, Process;
 
 CONST
   NoFileDescriptor: INTEGER = -1;
@@ -34,7 +34,6 @@ PROCEDURE Create_ForkExec(
     envx: ArrCStr;
     envp: Ctypes.char_star_star;
     wdstr: Ctypes.char_star;
-    oit, nit: Utime.struct_itimerval;
     forkResult, execResult: INTEGER;
     forkErrno, execErrno: Ctypes.int;
     waitStatus: Ctypes.int;
@@ -71,14 +70,6 @@ PROCEDURE Create_ForkExec(
     stderr_fd := NoFileDescriptor;
     IF (stderr # NIL) THEN stderr_fd := stderr.fd; END;
 
-    (* Turn off the interval timer (so it won't be running in child). *)
-    nit := Utime.struct_itimerval {
-             it_interval := Utime.struct_timeval {0, 0},
-             it_value    := Utime.struct_timeval {0, 0}}; 
-    IF Utime.setitimer(Utime.ITIMER_VIRTUAL, nit, oit) < 0 THEN
-      <* ASSERT FALSE *>
-    END;
-
     (* Disable the scheduler. *)
     Scheduler.DisableSwitching ();
 
@@ -109,11 +100,6 @@ PROCEDURE Create_ForkExec(
 
     (* Enable scheduler. *)
     Scheduler.EnableSwitching ();
-
-    (* Restore previous virtual timer. *)
-    IF Utime.setitimer(Utime.ITIMER_VIRTUAL, oit, nit) < 0 THEN
-      <* ASSERT FALSE *>
-    END;
 
     FreeArgs(argx);
     IF envx # NIL THEN FreeEnv(envx) END;
