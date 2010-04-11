@@ -6,7 +6,7 @@ INTERFACE ThreadPosix;
 
 FROM Thread IMPORT Alerted;
 
-TYPE SignalHandler1 = PROCEDURE(signo: INTEGER) RAISES {Alerted};
+TYPE SignalHandler1 = PROCEDURE(signo: int) RAISES {Alerted};
 
 <*EXTERNAL ThreadPosix__setup_sigvtalrm*>
 PROCEDURE setup_sigvtalrm(handler: SignalHandler1);
