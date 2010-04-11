@@ -17,10 +17,6 @@ void Utime__Assertions(void)
     /* Basically no 32bit system has a 64bit time_t, unfortunate. */
     M3_STATIC_ASSERT(sizeof(time_t) <= sizeof(void*));
 
-    /* verify itimerval contains just the two fields we know about, in either order */
-    { typedef struct itimerval T;
-      M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, it_value) + M3_FIELD_SIZE(T, it_interval)); }
-
     /* verify timeval (microtime) contains just the two fields we know about, in either order */
 #if defined(__APPLE__) && defined(__LP64__)
 /* AMD64_DARWIN has:
@@ -128,37 +124,12 @@ static struct timeval* timeval_from_m3(struct timeval* t, const m3_timeval_t* m)
     return t;
 }
 
-static void itimerval_to_m3(const struct itimerval* t, m3_itimerval_t* m)
-{
-    if (!m) return;
-    assert(t);
-    timeval_to_m3(&t->it_interval, &m->interval);
-    timeval_to_m3(&t->it_value, &m->value);
-}
-
-static struct itimerval* itimerval_from_m3(struct itimerval* t, const m3_itimerval_t* m)
-{
-    if (!m) return 0;
-    assert(t);
-    timeval_from_m3(&t->it_interval, &m->interval);
-    timeval_from_m3(&t->it_value, &m->value);
-    return t;
-}
-
 int Utime__gettimeofday(m3_timeval_t* m3t)
 {
     struct timeval t;
     /* null is not valid here; gcc warns */
     int r = gettimeofday(&t, 0);
     timeval_to_m3(&t, m3t);
-    return r;
-}
-
-int Utime__getitimer(int which, m3_itimerval_t* m3t)
-{
-    struct itimerval t;
-    int r = getitimer(which, m3t ? &t : 0);
-    itimerval_to_m3(&t, m3t);
     return r;
 }
 
@@ -203,15 +174,6 @@ struct tm* Utime__gmtime_r(const m3_time_t* m3t, struct tm* result)
 {
     time_t t = m3t ? *m3t : 0;
     return gmtime_r(m3t ? &t : 0, result);
-}
-
-int Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old)
-{
-    struct itimerval ne;
-    struct itimerval old;
-    int r = setitimer(which, itimerval_from_m3(&ne, m3new), m3old ? &old : 0);
-    itimerval_to_m3(&old, m3old);
-    return r;
 }
 
 #ifndef __INTERIX
