@@ -53,24 +53,24 @@ extern "C" {
 #endif
 
 /* EXPORTS RTSignalC */
-void RTSignalC_InstallHandlers(void);
-void RTSignalC_RestoreHandlers(void);
-#define InstallHandlers RTSignalC_InstallHandlers
-#define RestoreHandlers RTSignalC_RestoreHandlers
+#define InstallHandlers RTSignalC__InstallHandlers
+#define RestoreHandlers RTSignalC__RestoreHandlers
+void InstallHandlers(void);
+void RestoreHandlers(void);
 
 /* FROM RTSignalPrivate IMPORT MsgSegV, MsgAbort */
-void RTSignalPrivate__MsgPCSegV (size_t);
-void RTSignalPrivate__MsgPCAbort (size_t);
 #define MsgPCSegV RTSignalPrivate__MsgPCSegV
 #define MsgPCAbort RTSignalPrivate__MsgPCAbort
+void MsgPCSegV (size_t);
+void MsgPCAbort (size_t);
 
 /* FROM RTProcess IMPORT OnInterrupt, InterruptHandler, InvokeExitors */
-typedef void (*RTProcess__InterruptHandler)(void);
-void RTProcess__InvokeExitors(void);
-RTProcess__InterruptHandler RTProcess__OnInterrupt(RTProcess__InterruptHandler);
 #define OnInterrupt RTProcess__OnInterrupt
 #define InterruptHandler RTProcess__InterruptHandler
 #define InvokeExitors RTProcess__InvokeExitors
+typedef void (*InterruptHandler)(void);
+void InvokeExitors(void);
+InterruptHandler OnInterrupt(InterruptHandler);
 
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
