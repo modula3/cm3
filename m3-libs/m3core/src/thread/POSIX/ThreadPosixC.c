@@ -40,6 +40,8 @@ Some use BSD sigvec which is similar to sigaction.
 #endif
 #include <sys/mman.h>
 
+#define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -69,7 +71,7 @@ setup_sigvtalrm(SignalHandler1 handler)
 {
   struct sigaction act;
 
-  ZeroMemory(&act, sizeof(act));
+  ZERO_MEMORY(act);
 
   sigemptyset(&ThreadSwitchSignal);
   sigaddset(&ThreadSwitchSignal, SIG_TIMESLICE);
@@ -160,11 +162,17 @@ xMakeContext(
     sigset_t osigs = { 0 };
     sigset_t sigs = { 0 };
 
+    ZERO_MEMORY(sa);
+    ZERO_MEMORY(osa);
+    ZERO_MEMORY(ss);
+    ZERO_MEMORY(oss);
+    ZERO_MEMORY(osigs);
+    ZERO_MEMORY(sigs);
+
     sigemptyset(&sigs);
     sigaddset(&sigs, SIGUSR1);
     sigprocmask(SIG_BLOCK, &sigs, &osigs);
     
-    ZeroMemory(&sa, sizeof(sa));
     sa.sa_handler = mctx_create_trampoline;
     sa.sa_flags = SA_ONSTACK;
     sigemptyset(&sa.sa_mask);
