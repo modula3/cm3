@@ -58,7 +58,7 @@ REVEAL
   TYPE ActState = { Starting, Started, Stopping, Stopped };
   TYPE Activation = UNTRACED BRANDED REF RECORD
       frame: ADDRESS := NIL;            (* exception handling support; this field is accessed MANY times
-                                        so perhaps therefore should be first *)
+                                         * so perhaps therefore should be first *)
       next, prev: Activation := NIL;    (* LL = activeLock; global doubly-linked, circular list of all active threads *)
       handle: HANDLE := NIL;            (* thread handle in Windows *)
       stackStart: ADDRESS := NIL;       (* stack bounds for use by GC; the lowest address in a growing-down stack *)
