@@ -51,7 +51,6 @@ PROCEDURE StartTool (name: TEXT; VAR r, w: Handle): BOOLEAN =
     toTool   : Pipe;
     fromTool : Pipe;
     args     : ARRAY [0..1] OF Ctypes.char_star;
-    status   : Ctypes.int;
     execResult : INTEGER := 0;
   BEGIN
     (* open a pipe to send bytes to the performance tool *)
