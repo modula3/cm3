@@ -19,7 +19,8 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
-ALL=`awk "{print \\$1}" ${ROOT}/scripts/pkginfo.txt | tr '\\n' ' '`
+ALL=`awk "{print \\$1}" ${ROOT}/scripts/pkginfo.txt | 
+     egrep -v 'm3cc|m3gdb|pkl-fonts|kate' | tr '\\n' ' '`
 ALLDEPS=${ROOT}/scripts/all-deps
 #echo "ALLDEPS=${ALLDEPS}"
 #echo "ALL=${ALL}"
@@ -27,8 +28,8 @@ PKG_COLLECTIONS="core devlib gui webdev m3gdb m3devtool anim database cvsup obli
 
 [ ! -f ${ALLDEPS} ] && {
   CM3_ALL=yes \
-  ${ROOT}/scripts/pkgmap.sh -c m3dep $ALL 2>/dev/null | 
-  egrep -v '^ |^$' | 
+  ${ROOT}/scripts/pkgmap.sh -c "cm3 -depend || m3dep" $ALL 2>/dev/null | tee dlog |
+  egrep -v '^ |^$|Fatal Error|^-' | 
   sed -e "s;${ROOT}/;;" \
       -e 's;=== package ;|;' \
       -e 's; ===; ;' | 

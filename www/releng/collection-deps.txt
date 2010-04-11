@@ -1,30 +1,30 @@
 collection core
-  PKGS= import-libs m3cc m3core libm3 patternmatching sysutils unittest m3middle m3objfile m3linker m3back m3front m3quake cm3 m3scanner m3tools m3bundle mklib bitvector digraph parseparams realgeometry set slisp sortedtableextras table-list tempfiles tcp cm3ide mtex
-  EXTDEPS=
-  EXTDEPS-CORE=
+  PKGS= import-libs m3cc m3core libm3 windowsResources parseparams patternmatching sysutils unittest m3middle m3objfile m3linker m3back m3front m3quake cm3 m3scanner m3tools m3bundle mklib tempfiles bitvector digraph realgeometry set slisp sortedtableextras table-list tcp cm3ide mtex
+  EXTDEPS= m3-win/import-libs m3-tools/mtex
+  EXTDEPS-CORE= m3-win/import-libs m3-tools/mtex
   COLLDEPS=
   CAUSES: 
 
 collection devlib
-  PKGS= windowsResources udp libsio libbuf debug listfuncs m3tk-misc binIO commandrw tapi serial m3tk m3scan m3markup netobj events rdwr deepcopy sgml
-  EXTDEPS= libm3 tcp m3core parseparams m3quake
+  PKGS= udp libsio libbuf debug listfuncs m3tk-misc binIO commandrw tapi serial m3tk m3scan m3markup netobj events rdwr deepcopy sgml
+  EXTDEPS= m3core libm3 tcp parseparams sysutils m3middle m3quake
   EXTDEPS-CORE=
   COLLDEPS= core
-  CAUSES:  core(libm3)
+  CAUSES:  core(m3core)
 
 collection gui
   PKGS= import-libs X11R4 ui vbtkit cmvbt jvideo videovbt formsvbtpixmaps formsvbt formsview formsedit opengl kate m3-ui/bicycle
-  EXTDEPS= libm3 tcp web
-  EXTDEPS-CORE= web
+  EXTDEPS= m3-win/import-libs m3core libm3 tcp web
+  EXTDEPS-CORE= m3-win/import-libs web
   COLLDEPS= core
-  CAUSES:  core(libm3)
+  CAUSES:  core(m3core)
 
 collection webdev
   PKGS= http m3-www/web m3-www/proxy webvbt deckscape webscape webcat
-  EXTDEPS= sysutils tcp libm3 vbtkit web formsvbt parseparams
-  EXTDEPS-CORE= vbtkit web formsvbt
-  COLLDEPS= core gui
-  CAUSES:  core(sysutils) gui(vbtkit)
+  EXTDEPS= m3core libm3 tcp sysutils X11R4 ui vbtkit jvideo videovbt formsvbtpixmaps web formsvbt parseparams listfuncs events m3middle m3quake embutils synloc netobj rdwr debug sharedobj obliqrt obliqlibm3 obliqlibui mg mgkit obliqlibanim synex metasyn obliqparse obliqprint obliq
+  EXTDEPS-CORE= X11R4 ui vbtkit jvideo videovbt formsvbtpixmaps web formsvbt listfuncs events embutils synloc netobj rdwr debug sharedobj obliqrt obliqlibm3 obliqlibui mg mgkit obliqlibanim synex metasyn obliqparse obliqprint obliq
+  COLLDEPS= core gui devlib obliq anim
+  CAUSES:  core(m3core) gui(X11R4) devlib(listfuncs) obliq(embutils) anim(mg)
 
 collection m3gdb
   PKGS= m3gdb
@@ -35,78 +35,78 @@ collection m3gdb
 
 collection m3devtool
   PKGS= m3totex m3tohtml m3browser netobjd stubgen stablegen stable formsview formsedit recordheap replayheap showheap shownew showthread pp
-  EXTDEPS= libm3 mtex parseparams sysutils m3tools m3quake m3markup m3scan http tcp windowsResources netobj m3tk formsvbt ui vbtkit
-  EXTDEPS-CORE= m3markup m3scan http windowsResources netobj m3tk formsvbt ui vbtkit
-  COLLDEPS= core devlib webdev gui
-  CAUSES:  core(libm3) devlib(m3markup) webdev(http) gui(formsvbt)
+  EXTDEPS= m3core libm3 sysutils m3middle m3quake m3scanner m3tools parseparams tcp http m3scan libbuf m3markup netobj m3tk-misc m3tk X11R4 jvideo ui videovbt formsvbtpixmaps vbtkit web formsvbt m3-tools/recordheap
+  EXTDEPS-CORE= http m3scan libbuf m3markup netobj m3tk-misc m3tk X11R4 jvideo ui videovbt formsvbtpixmaps vbtkit web formsvbt m3-tools/recordheap
+  COLLDEPS= core webdev devlib gui
+  CAUSES:  core(m3core) webdev(http) devlib(m3scan) gui(X11R4)
 
 collection anim
   PKGS= codeview mg mgkit anim3D zeus m3zume rehearsecode mentor
-  EXTDEPS= formsvbt vbtkit parseparams netobj libm3
-  EXTDEPS-CORE= formsvbt vbtkit netobj
-  COLLDEPS= gui core devlib
-  CAUSES:  gui(formsvbt) core(parseparams) devlib(netobj)
+  EXTDEPS= m3core libm3 X11R4 tcp jvideo ui videovbt formsvbtpixmaps vbtkit web formsvbt parseparams opengl netobj listfuncs synloc sysutils events embutils rdwr debug sharedobj m3middle m3quake obliqrt synex metasyn obliqparse obliqlibm3 obliqlibui obliqlibanim
+  EXTDEPS-CORE= X11R4 jvideo ui videovbt formsvbtpixmaps vbtkit web formsvbt opengl netobj listfuncs synloc events embutils rdwr debug sharedobj obliqrt synex metasyn obliqparse obliqlibm3 obliqlibui obliqlibanim
+  COLLDEPS= core gui devlib obliq
+  CAUSES:  core(m3core) gui(X11R4) devlib(netobj) obliq(synloc)
 
 collection database
   PKGS= odbc postgres95 db smalldb
-  EXTDEPS= libm3
+  EXTDEPS= m3core libm3
   EXTDEPS-CORE=
   COLLDEPS= core
-  CAUSES:  core(libm3)
+  CAUSES:  core(m3core)
 
 collection cvsup
   PKGS= cvsup/suplib cvsup/client cvsup/server cvsup/cvpasswd
-  EXTDEPS= tempfiles tcp set libm3 formsvbt suplib
+  EXTDEPS= m3core libm3 set tcp tempfiles formsvbt suplib
   EXTDEPS-CORE= formsvbt suplib
   COLLDEPS= core gui
-  CAUSES:  core(tempfiles) gui(formsvbt)
+  CAUSES:  core(m3core) gui(formsvbt)
 
 collection obliq
   PKGS= embutils sharedobj sharedobjgen synloc synex metasyn obliqrt obliqparse obliqprint obliq obliqlibemb obliqlibm3 obliqlibui obliqlibanim obliqsrvstd obliqsrvui obliqbinmin obliqbinstd obliqbinui obliqbinanim obliqlib3D visualobliq vocgi voquery vorun
-  EXTDEPS= m3core debug events rdwr netobj libm3 listfuncs m3tk m3quake formsvbt mgkit anim3D
-  EXTDEPS-CORE= debug events rdwr netobj listfuncs m3tk formsvbt mgkit anim3D
+  EXTDEPS= m3core libm3 tcp netobj rdwr parseparams listfuncs events debug m3tk-misc m3tk sysutils m3middle m3quake X11R4 jvideo ui videovbt formsvbtpixmaps vbtkit web formsvbt mg mgkit opengl anim3D
+  EXTDEPS-CORE= netobj rdwr listfuncs events debug m3tk-misc m3tk X11R4 jvideo ui videovbt formsvbtpixmaps vbtkit web formsvbt mg mgkit opengl anim3D
   COLLDEPS= core devlib gui anim
-  CAUSES:  core(m3core) devlib(debug) gui(formsvbt) anim(mgkit)
+  CAUSES:  core(m3core) devlib(netobj) gui(X11R4) anim(mg)
 
 collection juno
   PKGS= juno-2/juno-app/pkl-fonts juno-2/juno-machine juno-2/juno-compiler juno-2/juno-app
-  EXTDEPS= vbtkit libm3 juno-machine mtex juno-compiler formsvbt ui netobj
-  EXTDEPS-CORE= vbtkit juno-machine juno-compiler formsvbt ui netobj
-  COLLDEPS= gui core devlib
-  CAUSES:  gui(vbtkit) core(libm3) devlib(netobj)
+  EXTDEPS= m3core libm3 juno-machine tcp netobj X11R4 ui vbtkit jvideo videovbt formsvbtpixmaps web formsvbt juno-compiler
+  EXTDEPS-CORE= juno-machine netobj X11R4 ui vbtkit jvideo videovbt formsvbtpixmaps web formsvbt juno-compiler
+  COLLDEPS= core devlib gui
+  CAUSES:  core(m3core) devlib(netobj) gui(X11R4)
 
 collection caltech-parser
   PKGS= import-libs cit_common m3tmplhack cit_util term paneman paneman/kemacs drawcontext drawcontext/dcpane drawcontext/kgv hack m3browserhack parserlib/ktoklib parserlib/klexlib parserlib/kyacclib parserlib/ktok parserlib/klex parserlib/kyacc parserlib/kext parserlib/parserlib parserlib/parserlib/test
-  EXTDEPS= libm3 m3tk ui vbtkit dcpane parseparams ktoklib klexlib kyacclib parserlib
-  EXTDEPS-CORE= m3tk ui vbtkit dcpane ktoklib klexlib kyacclib parserlib
+  EXTDEPS= m3-win/import-libs m3core libm3 m3tk-misc m3tk ui vbtkit set X11R4 tcp dcpane parseparams ktoklib klexlib kyacclib parserlib
+  EXTDEPS-CORE= m3-win/import-libs m3tk-misc m3tk ui vbtkit X11R4 dcpane ktoklib klexlib kyacclib parserlib
   COLLDEPS= core devlib gui
-  CAUSES:  core(libm3) devlib(m3tk) gui(ui)
+  CAUSES:  core(m3core) devlib(m3tk-misc) gui(ui)
 
 collection demo
   PKGS= cube calculator fisheye
-  EXTDEPS= formsvbt
-  EXTDEPS-CORE= formsvbt
-  COLLDEPS= gui
-  CAUSES:  gui(formsvbt)
+  EXTDEPS= m3core libm3 X11R4 tcp jvideo ui videovbt formsvbtpixmaps vbtkit web formsvbt
+  EXTDEPS-CORE= X11R4 jvideo ui videovbt formsvbtpixmaps vbtkit web formsvbt
+  COLLDEPS= core gui
+  CAUSES:  core(m3core) gui(X11R4)
 
 collection tool
   PKGS= m3staloneback m3cgcat m3cggen fix_nl libdump cmpdir cmpfp dirfp uniq
-  EXTDEPS= m3back m3quake m3middle libm3
-  EXTDEPS-CORE=
+  EXTDEPS= m3core libm3 sysutils m3middle m3objfile m3back m3quake m3-tools/uniq
+  EXTDEPS-CORE= m3-tools/uniq
   COLLDEPS= core
-  CAUSES:  core(m3back)
+  CAUSES:  core(m3core)
 
 collection math
   PKGS= arithmetic unittest-numeric
-  EXTDEPS= libm3 unittest
+  EXTDEPS= libm3 m3core unittest
   EXTDEPS-CORE=
   COLLDEPS= core
   CAUSES:  core(libm3)
 
 collection game
   PKGS= m3-games/badbricks m3-games/columns m3-games/fours m3-games/maze m3-games/solitaire m3-games/tetris
-  EXTDEPS= ui vbtkit libbuf libm3 bicycle X11R4
-  EXTDEPS-CORE= ui vbtkit libbuf bicycle X11R4
-  COLLDEPS= gui devlib core
-  CAUSES:  gui(ui) devlib(libbuf) core(libm3)
+  EXTDEPS= m3core libm3 X11R4 tcp ui libbuf vbtkit bicycle
+  EXTDEPS-CORE= X11R4 ui libbuf vbtkit bicycle
+  COLLDEPS= core gui devlib
+  CAUSES:  core(m3core) gui(X11R4) devlib(libbuf)
 
