@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <signal.h>
 #include <sys/ucontext.h>
+#include <assert.h>
 
 #if defined(__INTERIX) || defined(__APPLE__) || defined(__FreeBSD__)
 /* See ThreadApple.c and ThreadFreeBSD.c. */
@@ -101,6 +102,7 @@ int ThreadPThread__sem_post(void)           { return sem_post(&ackSem); }
 int ThreadPThread__sem_getvalue(int *value) { return sem_getvalue(&ackSem, value); }
 
 void
+__cdecl
 ThreadPThread__sigsuspend(void)
 {
   sigjmp_buf jb;
@@ -114,18 +116,21 @@ ThreadPThread__sigsuspend(void)
 }
 
 int
+__cdecl
 ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
   abort();
 }
 
 int
+__cdecl
 ThreadPThread__RestartThread (m3_pthread_t mt)
 {
   abort();
 }
 
 void
+__cdecl
 ThreadPThread__ProcessStopped (m3_pthread_t mt, char *bottom, char *context,
                                void (*p)(void *start, void *limit))
 {
@@ -152,6 +157,7 @@ void ThreadPThread__sigsuspend(void)    { M3_DIRECT_SUSPEND_ASSERT_FALSE }
 #endif /* M3_DIRECT_SUSPEND */
 
 void
+__cdecl
 ThreadPThread__ProcessLive(char *bottom, void (*p)(void *start, void *limit))
 {
   sigjmp_buf jb;
@@ -194,6 +200,7 @@ typedef void *(*start_routine_t)(void *);
   }
 
 int
+__cdecl
 ThreadPThread__thread_create(size_t stackSize,
                              start_routine_t start_routine,
                              void *arg)
@@ -247,6 +254,7 @@ CONDITION_VARIABLE(heap)        /* CV for heap state changes */
 static pthread_key_t activations;
 
 void
+__cdecl
 ThreadPThread__SetActivation(void *value)
 {
   int r;
@@ -255,6 +263,7 @@ ThreadPThread__SetActivation(void *value)
 }
 
 void *
+__cdecl
 ThreadPThread__GetActivation(void)
 {
   return pthread_getspecific(activations);
@@ -263,6 +272,7 @@ ThreadPThread__GetActivation(void)
 typedef int (*generic_init_t)(void *, const void *);
 
 void *
+__cdecl
 ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
 {
   int r;
@@ -292,18 +302,21 @@ ThreadPThread_pthread_generic_new(size_t size, generic_init_t init)
   }
 
 void *
+__cdecl
 ThreadPThread__pthread_mutex_new(void)
 {
   THREADPTHREAD__PTHREAD_GENERIC_NEW(mutex);
 }
 
 void *
+__cdecl
 ThreadPThread__pthread_cond_new(void)
 {
   THREADPTHREAD__PTHREAD_GENERIC_NEW(cond);
 }
 
 void
+__cdecl
 ThreadPThread__pthread_mutex_delete(pthread_mutex_t* p)
 {
   int e;
@@ -321,6 +334,7 @@ ThreadPThread__pthread_mutex_delete(pthread_mutex_t* p)
 }
 
 void
+__cdecl
 ThreadPThread__pthread_cond_delete(pthread_cond_t *p)
 {
   int r;
@@ -330,14 +344,15 @@ ThreadPThread__pthread_cond_delete(pthread_cond_t *p)
   free(p);
 }
 
-INTEGER
-ThreadPThread__select(INTEGER nfds,
+int
+__cdecl
+ThreadPThread__Select(int nfds,
                       ADDRESS read,
                       ADDRESS write,
                       ADDRESS except,
-                      LONGREAL timeout)
+                      LONGREAL/*Time.T*/ timeout)
 {
-    MicrosecondsStruct_t utime = { 0 };
+    MicrosecondsStruct_t utime;
     ZeroMemory(&utime, sizeof(utime));
     return select(nfds, read, write, except,
                   (timeout >= 0)
@@ -346,6 +361,7 @@ ThreadPThread__select(INTEGER nfds,
 }
 
 void
+__cdecl
 ThreadPThread__Nanosleep(INTEGER nanoseconds)
 {
 #ifdef __INTERIX
@@ -375,6 +391,7 @@ M3WRAP1(int, pthread_cond_signal, pthread_cond_t*)
 M3WRAP1(int, pthread_cond_broadcast, pthread_cond_t*)
 
 int
+__cdecl
 ThreadPThread__pthread_cond_timedwait(pthread_cond_t* cond,
                                       pthread_mutex_t* mutex,
                                       LONGREAL m3abs)
@@ -387,24 +404,29 @@ ThreadPThread__pthread_cond_timedwait(pthread_cond_t* cond,
 }
 
 int
+__cdecl
 ThreadPThread__pthread_detach_self(void)
 {
   return pthread_detach(pthread_self());
 }
 
-m3_pthread_t ThreadPThread__pthread_self(void)
+m3_pthread_t
+__cdecl
+ThreadPThread__pthread_self(void)
 {
   pthread_t a = pthread_self();
   return PTHREAD_TO_M3(a);
 }
 
 int
+__cdecl
 ThreadPThread__pthread_equal(m3_pthread_t t1, m3_pthread_t t2)
 {
   return pthread_equal(PTHREAD_FROM_M3(t1), PTHREAD_FROM_M3(t2));
 }
 
 int
+__cdecl
 ThreadPThread__pthread_kill(m3_pthread_t thread, int sig)
 {
   return pthread_kill(PTHREAD_FROM_M3(thread), sig);
@@ -414,6 +436,7 @@ M3WRAP1(int, pthread_mutex_lock, pthread_mutex_t*)
 M3WRAP1(int, pthread_mutex_unlock, pthread_mutex_t*)
 
 void
+__cdecl
 InitC(int *bottom)
 {
 #ifndef M3_DIRECT_SUSPEND
