@@ -305,6 +305,38 @@ ProcessContext(Context *c, char *bottom, char *top,
 #endif
 }
 
+int
+__cdecl
+ThreadPosix__SetVirtualTimer(void)
+{
+    struct timeval selected_interval;
+    struct itimerval it;
+
+    ZERO_MEMORY(selected_interval);
+    ZERO_MEMORY(it);
+    selected_interval.tv_sec = 0;
+    selected_interval.tv_usec = 100 * 1000;
+    it.it_interval = selected_interval;
+    it.it_value    = selected_interval;
+    return setitimer(ITIMER_VIRTUAL, &it, NULL);
+}
+
+int
+__cdecl
+ThreadPosix__Select(int nfds,
+                    ADDRESS read,
+                    ADDRESS write,
+                    ADDRESS except,
+                    LONGREAL/*Time.T*/ timeout)
+{
+    MicrosecondsStruct_t utime;
+    ZERO_MEMORY(utime);
+    return select(nfds, read, write, except,
+                  (timeout >= 0)
+                  ? TimePosix__FloatSecondsToMicrosecondsStruct(timeout, &utime)
+                  : NULL);
+}
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

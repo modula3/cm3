@@ -15,8 +15,7 @@ Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPosix;
 
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTParams, RTPerfTool, RTProcedureSRC,
-       RTProcess, RTIO, ThreadEvent, Time, TimePosix,
-       Unix, Utime, Uexec, RuntimeError;
+       RTProcess, RTIO, ThreadEvent, Time, Uexec, RuntimeError;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 
@@ -49,7 +48,7 @@ TYPE SelectRec = RECORD
         read: BOOLEAN := FALSE;
         waitResult: WaitResult := WaitResult.Ready;
         (* fields relevant for new and old implementation *)
-        timeout := UTime{0, 0};
+        timeout: Time.T := 0.0D0;
         hasTimeout: BOOLEAN := FALSE;
         errno: INTEGER := 0;
         index: CARDINAL := 0;
@@ -95,7 +94,7 @@ REVEAL
     waitingForMutex:     Mutex;
 
     (* if state = pausing, the time at which we can restart *)
-    waitingForTime : UTime;
+    waitingForTime: Time.T;
 
     (* true if we are waiting during an AlertWait or AlertJoin 
        or AlertPause *)
@@ -132,66 +131,18 @@ VAR inCritical: INTEGER;
    is disabled.  We *ASSUME* that "INC(inCritical)" and "DEC(inCritical)"
    generate code that is atomic with respect to Unix signal delivery. *)
 
-(*------------------------------------------------------- Unix time hack! ---*)
-
-TYPE
-  UTime = Utime.struct_timeval;
-
-PROCEDURE UTimeNow (): UTime =
-  VAR tv: UTime;
-  BEGIN
-    EVAL Utime.gettimeofday (tv);
-    RETURN tv;
-  END UTimeNow;
-
-PROCEDURE Time_Add (READONLY t1, t2: UTime): UTime =
-  VAR res: UTime;
-  BEGIN
-    res.tv_sec  := t1.tv_sec + t2.tv_sec;
-    res.tv_usec := t1.tv_usec + t2.tv_usec;
-    IF res.tv_usec > 1000000 THEN
-      DEC (res.tv_usec, 1000000);
-      INC (res.tv_sec, 1);
-    END;
-    RETURN res;
-  END Time_Add;
-
-PROCEDURE Time_Subtract (READONLY t1, t2: UTime): UTime =
-  VAR res: UTime;
-  BEGIN
-    res.tv_sec := t1.tv_sec - t2.tv_sec;
-    res.tv_usec := t1.tv_usec - t2.tv_usec;
-    IF res.tv_usec < 0 THEN
-      INC (res.tv_usec, 1000000);
-      DEC (res.tv_sec, 1);
-    END;
-    RETURN res;
-  END Time_Subtract;
-
-PROCEDURE Time_Compare (READONLY t1, t2: UTime): [-1 .. 1] =
-  BEGIN
-    IF    t1.tv_sec > t2.tv_sec   THEN RETURN 1;
-    ELSIF t1.tv_sec < t2.tv_sec   THEN RETURN -1;
-    ELSIF t1.tv_usec = t2.tv_usec THEN RETURN 0;
-    ELSIF t1.tv_usec > t2.tv_usec THEN RETURN 1;
-    ELSE                               RETURN -1;
-    END;
-  END Time_Compare;
-
 (*--------------------------------------------------------------- globals ---*)
 
 VAR
   preemption: BOOLEAN;
 
-  (* this is really a constant, but we need to take its address *)
-  ZeroTimeout := UTime{0, 0};
+CONST ZeroTimeout = 0.0D0;
 
 VAR
   (* we start the heavy machinery only when we have more than one thread *)
   multipleThreads: BOOLEAN := FALSE;
 
   pausedThreads : T;
-  selected_interval:= UTime{0, 100 * 1000};
 
   defaultStackSize := 3000;
 
@@ -556,18 +507,18 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
 
 PROCEDURE Pause(n: LONGREAL)=
   <*FATAL Alerted*>
-  VAR until := TimePosix.ToUtime (n + Time.Now ());
+  VAR until := n + Time.Now ();
   BEGIN
     XPause(until, FALSE);
   END Pause;
 
 PROCEDURE AlertPause(n: LONGREAL) RAISES {Alerted}=
-  VAR until := TimePosix.ToUtime (n + Time.Now ());
+  VAR until := n + Time.Now ();
   BEGIN
     XPause(until, TRUE);
   END AlertPause;
 
-PROCEDURE XPause (READONLY until: UTime; alertable := FALSE) RAISES {Alerted} =
+PROCEDURE XPause (READONLY until: Time.T; alertable := FALSE) RAISES {Alerted} =
   BEGIN
     INC (inCritical);
       self.waitingForTime := until;
@@ -576,12 +527,6 @@ PROCEDURE XPause (READONLY until: UTime; alertable := FALSE) RAISES {Alerted} =
     DEC (inCritical);
     InternalYield ();
   END XPause;
-
-CONST FDSetSize = BITSIZE(INTEGER);
-
-TYPE
-  FDSet = SET OF [0 .. FDSetSize-1];
-  FDS = REF ARRAY OF FDSet;
 
 VAR
   gMaxActiveFDSet, gMaxFDSet: CARDINAL;
@@ -635,13 +580,7 @@ PROCEDURE XIOWait (fd: CARDINAL; read: BOOLEAN; interval: LONGREAL): WaitResult
         THEN gReadFDS[fdindex] := fdset;
         ELSE gWriteFDS[fdindex] := fdset;
       END;
-      IF interval >= 0.0D0 THEN
-        VAR utimeout := UTimeFromTime(interval); BEGIN
-          res := CallSelect(fd + 1, ADR(utimeout));
-        END;
-      ELSE
-        res := CallSelect(fd + 1, NIL);
-      END;
+      res := CallSelect(fd + 1, interval);
       IF    res > 0 THEN RETURN TestFDS(fdindex, fdset, read);
       ELSIF res = 0 THEN RETURN WaitResult.Timeout;
       ELSE               RETURN WaitResult.Error;
@@ -672,8 +611,7 @@ PROCEDURE XIOWait (fd: CARDINAL; read: BOOLEAN; interval: LONGREAL): WaitResult
           self.select.set := fdset;
           self.select.hasTimeout := (interval >= 0.0D0);
           IF interval >= 0.0D0 THEN
-            self.select.timeout :=
-                Time_Add(UTimeNow(), UTimeFromTime(interval));
+            self.select.timeout := Time.Now() + interval;
           END;
           ICannotRun (State.blocking);
         DEC (inCritical);
@@ -726,16 +664,13 @@ PROCEDURE TestFDS(index: CARDINAL; set: FDSet; read: BOOLEAN): WaitResult =
     RETURN WaitResult.Timeout;
   END TestFDS;
 
-PROCEDURE CallSelect(nfd: CARDINAL; timeout: UNTRACED REF UTime): INTEGER =
-  TYPE FDSPtr = UNTRACED REF Unix.FDSet;
-  VAR res: INTEGER;
+PROCEDURE CallSelect(nfd: CARDINAL; timeout: Time.T): int =
+  VAR res: int;
   BEGIN
     FOR i := 0 TO gMaxActiveFDSet - 1 DO
       gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
     END;
-    res := Unix.select(nfd, LOOPHOLE (ADR(gReadFDS[0]), FDSPtr),
-                            LOOPHOLE (ADR(gWriteFDS[0]), FDSPtr),
-                            LOOPHOLE (ADR(gExceptFDS[0]), FDSPtr), timeout);
+    res := Select(nfd, gReadFDS[0], gWriteFDS[0], gExceptFDS[0], timeout);
     IF res > 0 THEN
       FOR i := 0 TO gMaxActiveFDSet - 1 DO
         gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
@@ -743,13 +678,6 @@ PROCEDURE CallSelect(nfd: CARDINAL; timeout: UNTRACED REF UTime): INTEGER =
     END;
     RETURN res;
   END CallSelect;
-
-PROCEDURE UTimeFromTime(time: Time.T): UTime =
-  VAR floor := FLOOR(time);
-  BEGIN
-    RETURN UTime{floor, FLOOR(1.0D6 * (time - FLOAT(floor, LONGREAL)))};
-  END UTimeFromTime;
-
 
 (*------------------------------------------------ timer-based preemption ---*)
 
@@ -766,13 +694,10 @@ PROCEDURE EnableSwitching () =
 PROCEDURE StartSwitching () =
 (* set the SIGVTALRM timer and handler; can be called to change the 
    switching interval *)
-  VAR it, oit: Utime.struct_itimerval;
   BEGIN
     IF preemption THEN
       setup_sigvtalrm (switch_thread);
-      it.it_interval := selected_interval;
-      it.it_value    := selected_interval;
-      IF Utime.setitimer (Utime.ITIMER_VIRTUAL, it, oit) # 0 THEN
+      IF SetVirtualTimer() # 0 THEN
         RAISE InternalError;
       END;
       allow_sigvtalrm ();
@@ -815,8 +740,8 @@ VAR t, from: T;
        INVARIANT: scanned OR (selectResult = 0) *)
 
     somePausing, someBlocking: BOOLEAN;
-    now          : UTime;
-    earliest     : UTime;
+    now          : Time.T;
+    earliest     : Time.T;
     selectResult := 0;
     do_alert     : BOOLEAN;
     did_delete   : BOOLEAN;
@@ -827,7 +752,7 @@ BEGIN
   <*ASSERT heapState.inCritical = 0 *>
 
   from := self.next; (* remember where we started *)
-  now            := UTimeNow ();
+  now            := Time.Now ();
 
   LOOP
     t              := from;
@@ -859,7 +784,7 @@ BEGIN
               CanRun (t);
               EXIT;
 
-            ELSIF Time_Compare (t.waitingForTime, now) <= 0 THEN
+            ELSIF t.waitingForTime <= now THEN
               CanRun (t);
               EXIT;
   
@@ -867,7 +792,7 @@ BEGIN
               earliest := t.waitingForTime;
               somePausing := TRUE;
 
-            ELSIF Time_Compare (t.waitingForTime, earliest) < 0 THEN
+            ELSIF t.waitingForTime < earliest THEN
               earliest := t.waitingForTime; END; 
   
         | State.blocking =>
@@ -893,7 +818,7 @@ BEGIN
                 ELSE
                   gWriteFDS[t.select.index] := t.select.set;
                 END;
-                VAR n := CallSelect(t.select.fd + 1, ADR(ZeroTimeout)); BEGIN
+                VAR n := CallSelect(t.select.fd + 1, ZeroTimeout); BEGIN
                   IF n > 0 THEN
                     t.select.waitResult :=
                           TestFDS(t.select.index, t.select.set, t.select.read);
@@ -919,8 +844,7 @@ BEGIN
               END;
 
               (* Not runnable, but its timer may have expired *)
-              IF t.select.hasTimeout 
-                  AND Time_Compare (t.select.timeout, now) <= 0 THEN
+              IF t.select.hasTimeout AND t.select.timeout <= now THEN
                 t.select.errno  := 0;
                 t.select.waitResult := WaitResult.Timeout;
                 CanRun (t);
@@ -932,7 +856,7 @@ BEGIN
               IF NOT somePausing THEN
                 earliest := t.select.timeout;
                 somePausing := TRUE;
-              ELSIF Time_Compare (t.select.timeout, earliest) < 0 THEN
+              ELSIF t.select.timeout < earliest THEN
                 earliest := t.select.timeout; 
               END
             END
@@ -989,17 +913,17 @@ BEGIN
 
     ELSIF somePausing OR someBlocking THEN
       IF perfOn THEN PerfRunning (-1); END;
-      IF t.state = State.alive OR 
-               somePausing AND Time_Compare(earliest, now) <= 0 THEN
-        selectResult := CallSelect(blockingNfds, ADR(ZeroTimeout));
+      (* Some parens please to disambiguate. *)
+      IF t.state = State.alive OR somePausing AND earliest <= now THEN
+        selectResult := CallSelect(blockingNfds, ZeroTimeout);
       ELSIF somePausing THEN
-        VAR timeout := Time_Subtract (earliest, now); BEGIN
-          selectResult := CallSelect(blockingNfds, ADR(timeout));
+        VAR timeout := earliest - now; BEGIN
+          selectResult := CallSelect(blockingNfds, timeout);
         END;
       ELSE
-        selectResult := CallSelect(blockingNfds, NIL);
+        selectResult := CallSelect(blockingNfds, -1.0D0 (* NIL *));
       END;
-      IF selectResult <= 0 THEN now := UTimeNow(); END;
+      IF selectResult <= 0 THEN now := Time.Now(); END;
       scanned := TRUE
     ELSE
       IF perfOn THEN PerfRunning (-1); END;

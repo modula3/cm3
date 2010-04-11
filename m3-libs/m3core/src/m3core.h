@@ -299,12 +299,6 @@ typedef struct {
     INTEGER usec; /* microsec */
 } m3_timeval_t;
 
-typedef struct {
-/* This is what all systems do, but without the "m3_". */
-    m3_timeval_t interval;
-    m3_timeval_t value;
-} m3_itimerval_t;
-
 #ifndef _WIN32
 m3_time_t __cdecl Utime__get_timezone(void);
 m3_time_t __cdecl Utime__get_altzone(void);
@@ -312,7 +306,6 @@ m3_time_t __cdecl Utime__get_altzone(void);
 int __cdecl Utime__get_daylight(void);
 const char* __cdecl Utime__get_tzname(unsigned a);
 int __cdecl Utime__gettimeofday(m3_timeval_t* m3t);
-int __cdecl Utime__getitimer(int which, m3_itimerval_t* m3t);
 #ifndef _WIN32
 m3_time_t __cdecl Utime__time(m3_time_t* tloc);
 m3_time_t __cdecl Utime__mktime(struct tm* tm);
@@ -322,7 +315,6 @@ struct tm* __cdecl Utime__gmtime(const m3_time_t* m);
 struct tm* __cdecl Utime__localtime_r(const m3_time_t* clock, struct tm* result);
 struct tm* __cdecl Utime__gmtime_r(const m3_time_t* clock, struct tm* result);
 #endif
-int __cdecl Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3old);
 void __cdecl Utime__tzset(void);
 int __cdecl Unix__utimes(const char* file, const m3_timeval_t* tvp);
 int __cdecl Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, m3_timeval_t* timeout);
