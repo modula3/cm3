@@ -175,7 +175,6 @@ m3_time_t Utime__mktime(struct tm* tm)
     return mktime(tm);
 }
 
-
 char* Utime__ctime(const m3_time_t* m)
 {
     time_t t = m ? (time_t)*m : 0;
