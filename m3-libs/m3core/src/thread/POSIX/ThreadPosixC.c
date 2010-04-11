@@ -327,13 +327,13 @@ ThreadPosix__Select(int nfds,
                     ADDRESS read,
                     ADDRESS write,
                     ADDRESS except,
-                    LONGREAL/*Time.T*/ timeout)
+                    LONGREAL/*Time.T*/ m3timeout)
 {
-    MicrosecondsStruct_t utime;
-    ZERO_MEMORY(utime);
+    MicrosecondsStruct_t timeout;
+    ZERO_MEMORY(timeout);
     return select(nfds, read, write, except,
-                  (timeout >= 0)
-                  ? TimePosix__FloatSecondsToMicrosecondsStruct(timeout, &utime)
+                  (m3timeout >= 0)
+                  ? TimePosix__FloatSecondsToMicrosecondsStruct(m3timeout, &timeout)
                   : NULL);
 }
 
