@@ -268,7 +268,7 @@ DisposeContext (Context **c)
 void
 __cdecl
 ProcessContext(Context *c, char *bottom, char *top,
-	       void (*p) (void *start, void *limit))
+               void (*p) (void *start, void *limit))
 {
   size_t xx;
   if (top == NULL) {
