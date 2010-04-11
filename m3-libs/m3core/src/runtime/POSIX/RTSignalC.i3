@@ -6,7 +6,7 @@
 
 <*EXTERNAL*> UNSAFE INTERFACE RTSignalC;
 
-<*EXTERNAL "RTSignalC_InstallHandlers"*> PROCEDURE InstallHandlers();
-<*EXTERNAL "RTSignalC_RestoreHandlers"*> PROCEDURE RestoreHandlers();
+<*EXTERNAL "RTSignalC__InstallHandlers"*> PROCEDURE InstallHandlers();
+<*EXTERNAL "RTSignalC__RestoreHandlers"*> PROCEDURE RestoreHandlers();
 
 END RTSignalC.
