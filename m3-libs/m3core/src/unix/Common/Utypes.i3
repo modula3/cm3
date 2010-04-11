@@ -4,8 +4,7 @@
 
 INTERFACE Utypes;
 
-IMPORT Cstddef;
-IMPORT Cstdint;
+IMPORT Cstddef, Cstdint;
 
 TYPE
 
@@ -36,8 +35,9 @@ TYPE
   ssize_t = Cstddef.ptrdiff_t;
 
   (* This might not be right for all systems, but let's hope. We
-  can make it so with wrapper functions, if function parameters are the
-  only occurence. If it occurs in structs, then no. *)
+   * can make it so with wrapper functions, if function parameters are the
+   * only occurence. If it occurs in structs, then no.
+   *)
   off_t = int64_t;
 
   (* Ideally this is always 64 bits, else time runs out in 2038 on 32bit systems. *)
@@ -49,9 +49,9 @@ TYPE
 
   socklen_t = uint32_t; (* int32_t on Cygwin, size_t on HP-UX, but ok via wrappers (see Usocket.i3) *)
 
-  mode_t = INTEGER; (* often only 16 bits but ok *)
-  dev_t = LONGINT; (* sometimes 32 bits, sometimes 64 bits *)
-  ino_t = LONGINT;(* sometimes 32 bits, sometimes 64 bits *)
+  mode_t  = INTEGER; (* often only 16 bits but ok *)
+  dev_t   = LONGINT; (* sometimes 32 bits, sometimes 64 bits *)
+  ino_t   = LONGINT; (* sometimes 32 bits, sometimes 64 bits *)
   nlink_t = LONGINT; (* sometimes 16 bits, sometimes 32, unknown if ever 64, ok *)
 
 END Utypes.
