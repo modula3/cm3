@@ -43,6 +43,9 @@ TYPE
   (* Ideally this is always 64 bits, else time runs out in 2038 on 32bit systems. *)
   time_t = INTEGER;
 
+  (* NOTE: Signedness of gid_t and uid_t can be important.
+   * see how cvsup sets NoOwner and NoGroup.
+   *)
   gid_t = INTEGER; (* signed on some systems, unsigned on some systems, portable code cannot depend on either *)
   pid_t = INTEGER; (* generally only 32 bits but ok *)
   uid_t = INTEGER; (* signed on some systems, unsigned on some systems, portable code cannot depend on either *)
