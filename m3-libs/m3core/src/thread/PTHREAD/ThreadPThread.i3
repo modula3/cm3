@@ -146,8 +146,8 @@ PROCEDURE ProcessStopped
   (t: pthread_t; bottom, context: ADDRESS; p: PROCEDURE(start, limit: ADDRESS));
 (*---------------------------------------------------------------------------*)
 
-<*EXTERNAL ThreadPThread__select*>
-PROCEDURE select(nfds: int; read, write, except: ADDRESS; timeout: LONGREAL): INTEGER;
+<*EXTERNAL ThreadPThread__Select*>
+PROCEDURE Select(nfds: int; read, write, except: ADDRESS; timeout: LONGREAL(*Time.T*)): int;
 
 (*---------------------------------------------------------------------------*)
 
