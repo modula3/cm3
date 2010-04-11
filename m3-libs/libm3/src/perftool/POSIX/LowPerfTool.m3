@@ -8,7 +8,7 @@
 
 UNSAFE MODULE LowPerfTool;
 
-IMPORT Ctypes, File, Unix, Text, M3toC, Uexec, Uuio, RTParams, Utime;
+IMPORT Ctypes, File, Unix, Text, M3toC, Uexec, Uuio, RTParams;
 IMPORT FilePosix, OSError;
 
 CONST 
@@ -25,7 +25,7 @@ PROCEDURE ClosePipe (READONLY p: Pipe) =
   END ClosePipe;
 
 PROCEDURE Start (name: Text.T; VAR r, w: File.T): BOOLEAN =
-  VAR toTool, fromTool: Pipe;  oit: Utime.struct_itimerval;
+  VAR toTool, fromTool: Pipe;
   BEGIN
     (* open a pipe to send bytes to the performance tool *)
     IF Unix.pipe (toTool) = -1 THEN RETURN FALSE; END;
@@ -33,19 +33,6 @@ PROCEDURE Start (name: Text.T; VAR r, w: File.T): BOOLEAN =
     (* open a pipe to get bytes from the performance tool *)
     IF Unix.pipe (fromTool) = -1 THEN  ClosePipe (toTool); RETURN FALSE; END;
   
-    (* disable the virtual timer used for thread preemption *)
-    VAR nit: Utime.struct_itimerval; BEGIN
-      nit.it_interval.tv_sec := 0;
-      nit.it_interval.tv_usec := 0;
-      nit.it_value.tv_sec := 0;
-      nit.it_value.tv_usec := 0;
-      IF Utime.setitimer (Utime.ITIMER_VIRTUAL, nit, oit) = -1 THEN
-        ClosePipe (toTool);
-        ClosePipe (fromTool);
-        RETURN FALSE;
-      END;
-    END;
-
     (* Create the tool process *)
     CASE Unix.fork () OF
       
@@ -80,12 +67,6 @@ PROCEDURE Start (name: Text.T; VAR r, w: File.T): BOOLEAN =
       RETURN FALSE;
   
     ELSE (* in the parent, after the child has been forked *)
-  
-      (* disable the virtual timer used for thread preemption *)
-      VAR nit: Utime.struct_itimerval;
-          status := Utime.setitimer (Utime.ITIMER_VIRTUAL, oit, nit); BEGIN
-        <* ASSERT status # -1 *>
-      END;
 
       (* close the unused ends of the pipes *)
       EVAL Unix.close (toTool [readPort]);
