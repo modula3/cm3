@@ -650,7 +650,7 @@ PROCEDURE XIOWait (self: Activation; fd: CARDINAL; read: BOOLEAN; interval: LONG
       FOR i := 0 TO fdindex DO
         gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
       END;
-      res := select(nfd,
+      res := Select(nfd,
                     LOOPHOLE (ADR(gReadFDS[0]), FDSPtr),
                     LOOPHOLE (ADR(gWriteFDS[0]), FDSPtr),
                     LOOPHOLE (ADR(gExceptFDS[0]), FDSPtr),
