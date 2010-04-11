@@ -1,5 +1,6 @@
 import("libm3")
 
+
 % compile in a stub if no lib to link against
 
 if SYSTEM_LIBS contains "ODBC"
@@ -9,7 +10,7 @@ else
 end
 
 if SYSTEM_LIBS contains "MYSQL"
-  include_dir ("mysql")
+  include_dir ("mysqldb")
 else
   implementation("MySQLDBStub")
 end
