@@ -3,12 +3,12 @@
 /* See the file COPYRIGHT for a full description.              */
 
 /* This is based on RTThread.m3, which is platform specific
-and varied a lot. Some versions cached the mask to use
-in allow/disallow, some recomputed it each time.
-Some used sigaction(), some used signal().
-The users of sigaction() vary as to which flags they use.
-Some use BSD sigvec which is similar to sigaction.
-*/
+ * and varied a lot. Some versions cached the mask to use
+ * in allow/disallow, some recomputed it each time.
+ * Some used sigaction(), some used signal().
+ * The users of sigaction() vary as to which flags they use.
+ * Some use BSD sigvec which is similar to sigaction.
+ */
 
 /* _XOPEN_SOURCE is required to get the correct MacOSX/x86
  * ucontext_t declaration. Otherwise getcontext overruns
@@ -20,8 +20,10 @@ Some use BSD sigvec which is similar to sigaction.
 #define _DARWIN_C_SOURCE
 
 #if (defined(__APPLE__) && defined(__x86_64__)) || defined(__OpenBSD__)
-/* see http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
- * see http://www.engelschall.com/pw/usenix/2000/pmt-html/
+/* http://www.opengroup.org/onlinepubs/009695399/functions/swapcontext.html
+ * http://www.engelschall.com/pw/usenix/2000/pmt-html/
+ * Sigaltstack is more portable -- OpenBSD and Darwin/AMD64 do not
+ * implement get/set/make/swapcontext.
  */
 #define M3_USE_SIGALTSTACK
 #endif
@@ -221,6 +223,12 @@ MakeContext (void (*p)(void), int words)
     goto Error;
   if (size <= 0) return c;
   if (size < MINSIGSTKSZ) size = MINSIGSTKSZ;
+
+  /* Round up to a whole number of pages, and
+   * allocate two extra pages, one at the start
+   * and one at the end, and don't allow accessing
+   * either one (catch stack overflow and underflow).
+   */
   pages = (size + pagesize - 1) / pagesize + 2;
   size = pages * pagesize;
   sp = mmap(NULL, size, PROT_READ | PROT_WRITE, MAP_ANON | MAP_PRIVATE, -1, 0);
