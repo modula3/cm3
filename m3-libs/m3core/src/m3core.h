@@ -106,6 +106,8 @@ typedef ptrdiff_t ssize_t;
 #define ZeroMemory(a,b) (memset((a), 0, (b)))
 #endif
 
+#define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
+
 #ifdef __INTERIX
 #include <utime.h>
 #endif
@@ -403,6 +405,16 @@ MicrosecondsStruct_t*
 __cdecl
 TimePosix__FloatSecondsToMicrosecondsStruct(FloatSeconds m3time,
                                             MicrosecondsStruct_t* microtime);
+
+typedef void* TEXT;
+
+const char*
+__cdecl
+M3toC__SharedTtoS(TEXT);
+
+void
+__cdecl
+M3toC__FreeSharedS(TEXT, const char*);
 
 #ifdef __cplusplus
 } /* extern "C" */

@@ -42,8 +42,6 @@
 #endif
 #include <sys/mman.h>
 
-#define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
-
 #ifdef __cplusplus
 extern "C" {
 #endif

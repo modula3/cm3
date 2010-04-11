@@ -11,8 +11,6 @@
 #include <sys/ucontext.h>
 #include <assert.h>
 
-#define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
-
 #if defined(__INTERIX) || defined(__APPLE__) || defined(__FreeBSD__)
 /* See ThreadApple.c and ThreadFreeBSD.c. */
 #define M3_DIRECT_SUSPEND
