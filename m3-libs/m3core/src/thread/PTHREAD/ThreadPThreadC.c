@@ -11,6 +11,8 @@
 #include <sys/ucontext.h>
 #include <assert.h>
 
+#define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
+
 #if defined(__INTERIX) || defined(__APPLE__) || defined(__FreeBSD__)
 /* See ThreadApple.c and ThreadFreeBSD.c. */
 #define M3_DIRECT_SUSPEND
@@ -353,7 +355,7 @@ ThreadPThread__Select(int nfds,
                       LONGREAL/*Time.T*/ m3timeout)
 {
     MicrosecondsStruct_t timeout;
-    ZeroMemory(&timeout, sizeof(timeout));
+    ZERO_MEMORY(timeout);
     return select(nfds, read, write, except,
                   (m3timeout >= 0)
                   ? TimePosix__FloatSecondsToMicrosecondsStruct(m3timeout, &timeout)
@@ -372,13 +374,13 @@ ThreadPThread__Nanosleep(INTEGER nanoseconds)
    */
   usleep(nanoseconds / 1000);
 #else
-  NanosecondsStruct_t wait = { 0 };
-  NanosecondsStruct_t remaining = { 0 };
+  NanosecondsStruct_t wait;
+  NanosecondsStruct_t remaining;
 
   assert(nanoseconds >= 0);
   assert(nanoseconds < (1000 * 1000 * 1000));
-  ZeroMemory(&wait, sizeof(wait));
-  ZeroMemory(&remaining, sizeof(remaining));
+  ZERO_MEMORY(wait);
+  ZERO_MEMORY(remaining);
   wait.tv_sec = 0;
   wait.tv_nsec = nanoseconds;
   while (nanosleep(&wait, &remaining) == -1 && errno == EINTR)
@@ -396,8 +398,8 @@ ThreadPThread__pthread_cond_timedwait(pthread_cond_t* cond,
                                       pthread_mutex_t* mutex,
                                       LONGREAL m3abs)
 {
-  NanosecondsStruct_t uabs = { 0 };
-  ZeroMemory(&uabs, sizeof(uabs));
+  NanosecondsStruct_t uabs;
+  ZERO_MEMORY(uabs);
   return pthread_cond_timedwait(cond,
                                 mutex,
                                 TimePosix__FloatSecondsToNanosecondsStruct(m3abs, &uabs));
@@ -452,8 +454,8 @@ InitC(int *bottom)
   M3_RETRY(pthread_key_create(&activations, NULL)); assert(r == 0);
 
 #ifndef M3_DIRECT_SUSPEND
-  ZeroMemory(&act, sizeof(act));
-  ZeroMemory(&oact, sizeof(oact));
+  ZERO_MEMORY(act);
+  ZERO_MEMORY(oact);
 
   M3_RETRY(sem_init(&ackSem, 0, 0)); assert(r == 0);
 
