@@ -21,33 +21,6 @@ void Utime__Assertions(void)
     { typedef struct itimerval T;
       M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, it_value) + M3_FIELD_SIZE(T, it_interval)); }
 
-    /* verify timespec (nanotime) contains just the two fields we know about, in either order */
-/* OpenBSD/sparc64 has the unfortunate:
-struct timespec
-{
-  int32 tv_sec;  year 2038 bug
-  4 bytes of padding
-  int64 tv_nsec;
-}
-*/
-#if defined(__OpenBSD__) && defined(__sparc64__)
-    { typedef struct timespec T1;
-      typedef struct { time_t tv_sec; long tv_nsec; } T2;
-      M3_STATIC_ASSERT(M3_FIELD_SIZE(T1, tv_sec ) == 4);
-      M3_STATIC_ASSERT(M3_FIELD_SIZE(T1, tv_nsec) == 8);
-      M3_STATIC_ASSERT(M3_FIELD_SIZE(T2, tv_sec ) == 4);
-      M3_STATIC_ASSERT(M3_FIELD_SIZE(T2, tv_nsec) == 8);
-      M3_STATIC_ASSERT(offsetof(T1, tv_sec ) == 0);
-      M3_STATIC_ASSERT(offsetof(T1, tv_nsec) == 8);
-      M3_STATIC_ASSERT(offsetof(T2, tv_sec ) == 0);
-      M3_STATIC_ASSERT(offsetof(T2, tv_nsec) == 8);
-      M3_STATIC_ASSERT(sizeof(T1) == 16);
-      M3_STATIC_ASSERT(sizeof(T2) == 16);
-    }
-#else
-    { typedef struct timespec T;
-      M3_STATIC_ASSERT(sizeof(T) == M3_FIELD_SIZE(T, tv_sec) + M3_FIELD_SIZE(T, tv_nsec)); }
-#endif
     /* verify timeval (microtime) contains just the two fields we know about, in either order */
 #if defined(__APPLE__) && defined(__LP64__)
 /* AMD64_DARWIN has:
@@ -137,23 +110,6 @@ const char* Utime__get_tzname(unsigned a)
 #endif /* M3BSD, WIN32 */
 
 #ifndef _WIN32
-
-static void timespec_to_m3(const struct timespec* t, m3_timespec_t* m)
-{
-    if (!m) return;
-    assert(t);
-    m->sec = t->tv_sec;
-    m->nsec = t->tv_nsec;
-}
-
-static const struct timespec* timespec_from_m3(struct timespec* t, const m3_timespec_t* m)
-{
-    if (!m) return 0;
-    assert(t);
-    t->tv_sec = m->sec;
-    t->tv_nsec = m->nsec;
-    return t;
-}
 
 static void timeval_to_m3(const struct timeval* t, m3_timeval_t* m)
 {
@@ -260,15 +216,6 @@ int Utime__setitimer(int which, const m3_itimerval_t* m3new, m3_itimerval_t* m3o
 }
 
 #ifndef __INTERIX
-
-int Utime__nanosleep(const m3_timespec_t* m3req, m3_timespec_t* m3rem)
-{
-    struct timespec req;
-    struct timespec rem;
-    int r = nanosleep(timespec_from_m3(&req, m3rem), m3rem ? &rem : 0);
-    timespec_to_m3(&rem, m3rem);
-    return r;
-}
 
 int Unix__utimes(const char* file, const m3_timeval_t* m3t)
 {
