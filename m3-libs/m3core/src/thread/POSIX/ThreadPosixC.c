@@ -63,7 +63,9 @@ static sigset_t *ThreadSwitchSignal = NULL;
 #define SIG_TIMESLICE SIGVTALRM
 #endif
 
-void setup_sigvtalrm(SignalHandler1 handler)
+void
+__cdecl
+setup_sigvtalrm(SignalHandler1 handler)
 {
   static sigset_t tick;
   struct sigaction act, oact;
@@ -81,13 +83,17 @@ void setup_sigvtalrm(SignalHandler1 handler)
   if (sigaction (SIG_TIMESLICE, &act, &oact)) abort();
 }
 
-void allow_sigvtalrm(void)
+void
+__cdecl
+allow_sigvtalrm(void)
 {
     int i = sigprocmask(SIG_UNBLOCK, ThreadSwitchSignal, NULL);
     assert(i == 0);
 }
 
-void disallow_sigvtalrm(void)
+void
+__cdecl
+disallow_sigvtalrm(void)
 {
     int i = sigprocmask(SIG_BLOCK, ThreadSwitchSignal, NULL);
     assert(i == 0);
@@ -143,6 +149,7 @@ static void mctx_create_trampoline(int sig)
 }
 
 void
+__cdecl
 xMakeContext( 
     Context *context, 
     void (*function)(void),
@@ -195,6 +202,7 @@ xMakeContext(
 #endif /* M3_USE_SIGALTSTACK */
 
 void *
+__cdecl
 MakeContext (void (*p)(void), int words)
 {
   Context *c = (Context *)calloc (1, sizeof(*c));
@@ -237,7 +245,9 @@ Error:
   return NULL;
 }
 
-void SwapContext (Context *from, Context *to)
+void
+__cdecl
+SwapContext (Context *from, Context *to)
 {
 #ifdef M3_USE_SIGALTSTACK
   SWAP_CONTEXT(from, to);
@@ -246,7 +256,9 @@ void SwapContext (Context *from, Context *to)
 #endif
 }
 
-void DisposeContext (Context **c)
+void
+__cdecl
+DisposeContext (Context **c)
 {
   if (munmap((*c)->stackaddr, (*c)->stacksize)) abort();
   free(*c);
@@ -254,6 +266,7 @@ void DisposeContext (Context **c)
 }
 
 void
+__cdecl
 ProcessContext(Context *c, char *bottom, char *top,
 	       void (*p) (void *start, void *limit))
 {
