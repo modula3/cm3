@@ -181,8 +181,8 @@ struct tm* Utime__gmtime_r(const m3_time_t* m3t, struct tm* result)
 int Unix__utimes(const char* file, const m3_timeval_t m3t[2])
 {
     struct timeval t[2];
-    timeval_from_m3(&t[0], m3t[0]);
-    timeval_from_m3(&t[1], m3t[1]);
+    timeval_from_m3(&t[0], &m3t[0]);
+    timeval_from_m3(&t[1], &m3t[1]);
     return utimes(file, t);
 }
 
