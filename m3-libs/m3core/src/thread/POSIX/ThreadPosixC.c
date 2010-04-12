@@ -46,6 +46,8 @@
 extern "C" {
 #endif
 
+#define MILLION (1000 * 1000)
+
 typedef void (*SignalHandler1)(int signo);
 
 #define setup_sigvtalrm     ThreadPosix__setup_sigvtalrm
