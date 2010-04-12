@@ -158,10 +158,10 @@ PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int; from: UNTRAC
 PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: UNTRACED REF struct_sockaddr_in; tolen: socklen_t) : int RAISES {};
 
 <*EXTERNAL "Usocket__send"*>
-PROCEDURE send(s: int; buf: const_void_star; len: size_t; flags: int);
+PROCEDURE send(s: int; buf: const_void_star; len: size_t; flags: int): INTEGER;
 
 <*EXTERNAL "Usocket__recv"*>
-PROCEDURE recv(s: int; buf: void_star; len: size_t; flags: int);
+PROCEDURE recv(s: int; buf: void_star; len: size_t; flags: int): INTEGER;
 
 <*EXTERNAL "Usocket__setsockopt"*>
 PROCEDURE setsockopt(s, level, optname: int; optval: const_void_star; optlen: socklen_t) : int RAISES {};
