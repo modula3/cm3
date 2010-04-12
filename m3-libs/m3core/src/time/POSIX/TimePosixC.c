@@ -25,20 +25,6 @@ typedef double T;
 
 #define MILLION (1000 * 1000)
 
-T
-__cdecl
-Now(void)
-{
-    struct timeval tv;
-    int i = { 0 };
-
-    ZERO_MEMORY(tv);
-    i = gettimeofday(&tv, NULL);
-    assert(i == 0);
-
-    return FromUtime(&tv);
-}
-
 struct timeval
 __cdecl
 ToUtime(T t)
@@ -57,6 +43,20 @@ __cdecl
 FromUtime(const struct timeval* tv)
 {
     return ((T)tv->tv_sec) + ((T)tv->tv_usec) / (T)MILLION;
+}
+
+T
+__cdecl
+Now(void)
+{
+    struct timeval tv;
+    int i = { 0 };
+
+    ZERO_MEMORY(tv);
+    i = gettimeofday(&tv, NULL);
+    assert(i == 0);
+
+    return FromUtime(&tv);
 }
 
 static
