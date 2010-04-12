@@ -6,7 +6,7 @@
 UNSAFE MODULE Midic;
 
 IMPORT M3toC, Midi, MidiPrivate, Word;
-IMPORT Cerrno, Cstring, Ctypes, Uerror, Unix, Uuio;
+IMPORT Cerrno, Cstring, Ctypes, Unix, Uuio;
 FROM Midi IMPORT Failure;
 
 REVEAL
