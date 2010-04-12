@@ -379,33 +379,7 @@ UINT16 __cdecl Uin__ntohs(UINT16 x);
 UINT32 __cdecl Uin__htonl(UINT32 x);
 UINT16 __cdecl Uin__htons(UINT16 x);
 
-/* Support for translating Modula-3 to C. */
-
 typedef double LONGREAL;
-
-/* http://www.cs.tut.fi/~jkorpela/round.html */
-#define ROUND(a) (((a) >= 0) ? ((a) + 0.5) : ((a) - 0.5))
-
-#define FLOAT(value, type) ((type)value)
-#define FLOOR floor
-#define TRUNC(n) (n)
-
-/* Support for translating Modula-3 Time.T to Posix microtime or nanotime. */
- 
-typedef LONGREAL FloatSeconds, TimeT;
-typedef struct timespec NanosecondsStruct_t;
-typedef struct timeval MicrosecondsStruct_t;
-
-NanosecondsStruct_t*
-__cdecl
-TimePosix__FloatSecondsToNanosecondsStruct(FloatSeconds m3time,
-                                           NanosecondsStruct_t* nanotime);
-
-MicrosecondsStruct_t*
-__cdecl
-TimePosix__FloatSecondsToMicrosecondsStruct(FloatSeconds m3time,
-                                            MicrosecondsStruct_t* microtime);
-
 typedef void* TEXT;
 
 const char*

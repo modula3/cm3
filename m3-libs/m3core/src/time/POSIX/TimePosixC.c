@@ -25,48 +25,43 @@ typedef double T;
 
 #define MILLION (1000 * 1000)
 
-#if defined(__STDC__) || defined(__cplusplus)
-#define ANSI(x) x
-#define KR(x) /* nothing */
-#else
-#define ANSI(x) /* nothing */
-#define KR(x) x
-#define const /* nothing */
-#endif
-
-T __cdecl Now(ANSI(void));
-struct timeval __cdecl ToUtime(ANSI(T));
-T __cdecl FromUtime(ANSI(const struct timeval*));
-
-T __cdecl Now(ANSI(void))
+T
+__cdecl
+Now(void)
 {
-    struct timeval tv = { 0 };
-    int i;
+    struct timeval tv;
+    int i = { 0 };
 
+    ZERO_MEMORY(tv);
     i = gettimeofday(&tv, NULL);
     assert(i == 0);
 
     return FromUtime(&tv);
 }
 
-struct timeval __cdecl ToUtime(ANSI(T) n)
-    KR(T n;)
+struct timeval
+__cdecl
+ToUtime(T t)
 {
-    struct timeval tv = { 0 };
- 
-    tv.tv_sec = (time_t)n;
-    tv.tv_usec = ((((INT64)n) * MILLION) % MILLION);
+    struct timeval tv;
+    double n = { 0 };
 
+    ZERO_MEMORY(tv); 
+    timeout.tv_usec = modf(t, &n) * MILLION;
+    timeout.tv_sec = n;
     return tv;
 }
 
-T __cdecl FromUtime(ANSI(const struct timeval*) tv)
-    KR(const struct timeval* tv;)
+T
+__cdecl
+FromUtime(const struct timeval* tv)
 {
     return ((T)tv->tv_sec) + ((T)tv->tv_usec) / (T)MILLION;
 }
 
-static T ComputeGrainOnce(ANSI(void))
+static
+T
+ComputeGrainOnce(void)
 {
   /* Determine value of "Grain" experimentally.  Note that
      this will fail if this thread is descheduled for a tick during the
@@ -80,7 +75,9 @@ static T ComputeGrainOnce(ANSI(void))
     }
 }
 
-T __cdecl ComputeGrain(ANSI(void))
+T
+__cdecl
+ComputeGrain(void)
 {
 /* I have seen the value vary so let's go for a
 few times in a row instead of just one or two.
@@ -96,29 +93,6 @@ Doing four checks always hangs on Cygwin, odd. */
 }
 
 #endif
-
-NanosecondsStruct_t*
-__cdecl
-TimePosix__FloatSecondsToNanosecondsStruct(FloatSeconds m3time,
-                                           NanosecondsStruct_t* nanotime)
-{
-/* fairly direct conversion from the Modula-3 ThreadPThread.ToNTime */
-    nanotime->tv_sec = TRUNC(m3time);
-    nanotime->tv_nsec = ROUND((m3time - FLOAT(nanotime->tv_sec, LONGREAL)) * 1.0E9);
-    return nanotime;
-}
-
-MicrosecondsStruct_t*
-__cdecl
-TimePosix__FloatSecondsToMicrosecondsStruct(FloatSeconds m3time,
-                                            MicrosecondsStruct_t* microtime)
-{
-/* fairly direct conversion from the Modula-3 ThreadPThread.UTimeFromTime */
-    LONGINT sec = FLOOR(m3time);
-    microtime->tv_sec = sec;
-    microtime->tv_usec = FLOOR(1.0E6 * (m3time - FLOAT(sec, LONGREAL)));
-    return microtime;
-}
 
 #ifdef __cplusplus
 } /* extern C */
