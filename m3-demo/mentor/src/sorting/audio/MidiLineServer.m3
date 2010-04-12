@@ -65,16 +65,12 @@ PROCEDURE Open (t: T; name: TEXT): Midi.T RAISES {Failure} =
     <* ASSERT hp.h_length = BYTESIZE (t.addr.sin_addr) *>
     t.addr.sin_addr.s_addr := 
         LOOPHOLE (hp.h_addr_list^, Ctypes.unsigned_int_star)^;
-    Unetdb.endhostent();
 
     t.addr.sin_port := Uin.htons(MIDIPortNumber);
     t.socket :=
       Usocket.socket(Usocket.AF_INET, Usocket.SOCK_DGRAM, 0);
     IF t.socket < 0 THEN UnixFail("socket"); END;
-    IF Usocket.connect(t.socket,
-                       LOOPHOLE(ADR(t.addr), UNTRACED REF
-                                Usocket.struct_sockaddr),
-                       BYTESIZE(t.addr)) < 0 THEN
+    IF Usocket.connect(t.socket, ADR(t.addr), BYTESIZE(t.addr)) < 0 THEN
       UnixFail("connect");
     END;
     t.callLock := NEW(MUTEX);
