@@ -271,7 +271,7 @@ proc skip_lib(lib, shared) is
     local expfile = "lib" & lib & ".exp" % libfoo.exp
 
     % Tell clean what to delete.
-    deriveds([lib_a, lib0_file, lib_so, lib_sox, expfile])
+    deriveds("", [lib_a, lib0_file, lib_so, lib_sox, expfile])
 
     if shared
         % create the version aliases
