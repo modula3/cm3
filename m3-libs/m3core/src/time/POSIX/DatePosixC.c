@@ -17,7 +17,7 @@ typedef struct
   int align;
 } Date_t;
 
-#if defined(__CYGWIN__) || defined(__hpux) || defined(__sun) || defined(__INTERIX__)
+#if defined(__CYGWIN__) || defined(__hpux) || defined(__sun) || defined(__INTERIX)
 #define DATE_POSIX
 #else
 #define DATE_BSD
