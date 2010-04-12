@@ -32,7 +32,7 @@ UNSAFE MODULE FileAttr EXPORTS FileAttr, FileAttrRep;
 IMPORT
   CText, Ctypes, DevT, File, FilePosix, Fmt, IntTextTbl, M3toC,
   OSError, OSErrorPosix, Pathname, SupMisc, Text, TextIntTbl, Time,
-  TokScan, Uerror, Ugrp, Unix, UnixMisc, Upwd, Ustat, Utime, Utypes,
+  TokScan, Uerror, Ugrp, Unix, UnixMisc, Upwd, Ustat, Utypes,
   Word, Long;
 FROM Utypes IMPORT nlink_t, off_t;
 
@@ -787,14 +787,7 @@ PROCEDURE Install(fa: T; to: Pathname.T; from: Pathname.T := NIL): BOOLEAN
       (* Change those attributes that we can before moving the file into
 	 place.  That makes the installation atomic in most cases. *)
       IF AttrType.ModTime IN mask THEN
-	VAR
-	  times: ARRAY [0..1] OF Utime.struct_timeval;
-	BEGIN
-	  EVAL Utime.gettimeofday(times[0]);  (* Access time. *)
-	  times[1].tv_sec := VAL(fa.stat.st_mtime, INTEGER);
-	  times[1].tv_usec := 0;
-	  EVAL Unix.utimes(fromStr, ADR(times));
-	END;
+        SetModTime(fromStr, fa.stat.st_mtime);
       END;
       IF AttrType.Owner IN mask OR AttrType.Group IN mask THEN
 	VAR

@@ -30,6 +30,7 @@
 INTERFACE FileAttr;
 
 IMPORT File, OSError, Pathname, Time, TokScan, Ustat, Word;
+FROM Ctypes IMPORT const_char_star;
 
 CONST
   Brand = "FileAttr";
@@ -236,6 +237,10 @@ PROCEDURE GetMask(fa: T): AttrTypes;
 PROCEDURE GetModTime(fa: T): Time.T;
 (* Returns the modification time from "fa".  It is a checked runtime
    error if the modification time is not valid. *)
+
+<*EXTERNAL FileAttr__SetModTime*>
+PROCEDURE SetModTime(path: const_char_star; seconds: LONGINT);
+(* Thin wrapper around gettimeofday (for accessed time), utimes. *)
 
 PROCEDURE GetSize(fa: T): CARDINAL;
 (* Returns the size from "fa".  It is a checked runtime error if the
