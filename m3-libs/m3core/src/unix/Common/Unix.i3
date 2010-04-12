@@ -112,8 +112,6 @@ PROCEDURE  truncate (file: const_char_star; length: off_t): int;
 PROCEDURE ftruncate (file: int;             length: off_t): int;
 <*EXTERNAL "Unix__unlink"*>
 PROCEDURE unlink (path: const_char_star): int;
-<*EXTERNAL "Unix__utimes"*>
-PROCEDURE utimes (file: const_char_star; tvp: UNTRACED REF ARRAY [0..1] OF struct_timeval): int;
 <*EXTERNAL "Unix__fork"*>
 PROCEDURE fork (): pid_t;
 
