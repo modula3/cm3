@@ -28,7 +28,7 @@ readonly Platform_info = {
   "I386_INTERIX" : "i686-pc-interix3",
   "I386_LINUX" : "i686-pc-linux-gnu",
   "I386_MINGW"	: "i686-pc-mingw32",
-  "I386_MSDOS" : "i586-pc-msdosdjgpp",
+  "I386_MSDOS" : "i686-pc-msdosdjgpp",
   "I386_NETBSD" : "i686-unknown-netbsdelf",
   "I386_NT"     : "i686-pc-mingw32",
   "I386_OPENBSD" : "i686-openbsd",
