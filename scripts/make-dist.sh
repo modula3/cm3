@@ -357,9 +357,11 @@ if type python; then
   if [ "x$TARGET" = "xNT386" ]; then
     python "$ROOT/scripts/python/make-msi.py" "$INSTALLROOT"
     mv "$INSTALLROOT.msi" "$STAGE/cm3-$TARGET-$DS.msi"
+    chmod 664 "$STAGE/cm3-$TARGET-$DS.msi"
   else
     python "$ROOT/scripts/python/make-deb.py" "$INSTALLROOT"
     mv "$INSTALLROOT.deb" "$STAGE/cm3-$TARGET-$DS.deb"
+    chmod 664 "$STAGE/cm3-$TARGET-$DS.deb"
   fi
 else
   echo "python not available, skipping .msi and .deb creation"
