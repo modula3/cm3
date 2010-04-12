@@ -178,9 +178,12 @@ struct tm* Utime__gmtime_r(const m3_time_t* m3t, struct tm* result)
 
 #ifndef __INTERIX
 
-int Unix__utimes(const char* file, const m3_timeval_t m3t[2])
+int Unix__utimes(const char* file, const m3_timeval_t* m3t)
 {
     struct timeval t[2];
+    if (m3t == NULL)
+        return utimes(file, NULL);
+    ZERO_MEMORY(t);
     timeval_from_m3(&t[0], &m3t[0]);
     timeval_from_m3(&t[1], &m3t[1]);
     return utimes(file, t);
@@ -192,7 +195,9 @@ int Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds,
 {
     /* timeout sometimes is in-only, sometimes in-out */
     struct timeval t;
-    int r = select(nfds, readfds, writefds, exceptfds, timeval_from_m3(&t, m3t));
+    int r;
+    ZERO_MEMORY(t);
+    r = select(nfds, readfds, writefds, exceptfds, timeval_from_m3(&t, m3t));
     timeval_to_m3(&t, m3t);
     return r;
 }
