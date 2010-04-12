@@ -344,6 +344,9 @@ ThreadPThread__pthread_cond_delete(pthread_cond_t *p)
   free(p);
 }
 
+#define MILLION (1000 * 1000)
+#define BILLION (1000 * 1000 * 1000)
+
 int
 __cdecl
 ThreadPThread__Select(int nfds,
@@ -352,12 +355,16 @@ ThreadPThread__Select(int nfds,
                       ADDRESS except,
                       LONGREAL/*Time.T*/ m3timeout)
 {
-    MicrosecondsStruct_t timeout;
+    struct timeval timeout;
+    double n = { 0 };
+
+    if (m3timeout < 0)
+        return select(nfds, read, write, except, NULL);
+
     ZERO_MEMORY(timeout);
-    return select(nfds, read, write, except,
-                  (m3timeout >= 0)
-                  ? TimePosix__FloatSecondsToMicrosecondsStruct(m3timeout, &timeout)
-                  : NULL);
+    timeout.tv_usec = modf(m3timeout, &n) * MILLION;
+    timeout.tv_sec = n;
+    return select(nfds, read, write, except, &timeout);
 }
 
 void
@@ -366,17 +373,17 @@ ThreadPThread__Nanosleep(INTEGER nanoseconds)
 {
 #ifdef __INTERIX
   assert(nanoseconds >= 0);
-  assert(nanoseconds < (1000 * 1000 * 1000));
+  assert(nanoseconds < BILLION);
   /* This is only an approximation. We don't try to complete the sleep
    * if interrupted, because we don't cheaply know how much time has elapsed.
    */
   usleep(nanoseconds / 1000);
 #else
-  NanosecondsStruct_t wait;
-  NanosecondsStruct_t remaining;
+  struct timespec wait;
+  struct timespec remaining;
 
   assert(nanoseconds >= 0);
-  assert(nanoseconds < (1000 * 1000 * 1000));
+  assert(nanoseconds < BILLION);
   ZERO_MEMORY(wait);
   ZERO_MEMORY(remaining);
   wait.tv_sec = 0;
@@ -394,13 +401,15 @@ int
 __cdecl
 ThreadPThread__pthread_cond_timedwait(pthread_cond_t* cond,
                                       pthread_mutex_t* mutex,
-                                      LONGREAL m3abs)
+                                      LONGREAL m3timeout)
 {
-  NanosecondsStruct_t uabs;
-  ZERO_MEMORY(uabs);
-  return pthread_cond_timedwait(cond,
-                                mutex,
-                                TimePosix__FloatSecondsToNanosecondsStruct(m3abs, &uabs));
+  struct timespec timeout;
+  double n = { 0 };
+  
+  ZERO_MEMORY(timeout);
+  timeout.tv_nsec = modf(m3timeout, &n) * BILLION;
+  timeout.tv_sec = n;
+  return pthread_cond_timedwait(cond, mutex, &timeout);
 }
 
 int
