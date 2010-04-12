@@ -18,6 +18,10 @@
 #if !defined(__INTERIX) && !defined(_WIN32)
 #include <net/if.h>
 #endif
+#ifdef __APPLE__
+#include <term.h>
+#include <sys/ioctl_compat.h>
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -1050,6 +1054,382 @@ X(TIOCUCNTL)
 
 #ifdef TIOCWONLINE
 X(TIOCWONLINE)
+#endif
+
+#ifdef TERMIODISC
+X(TERMIODISC)
+#endif
+
+#ifdef TIOCCONS
+X(TIOCCONS)
+#endif
+
+#ifdef TIOCDCDTIMESTAMP
+X(TIOCDCDTIMESTAMP)
+#endif
+
+#ifdef TIOCDRAIN
+X(TIOCDRAIN)
+#endif
+
+#ifdef TIOCDSIMICROCODE
+X(TIOCDSIMICROCODE)
+#endif
+
+#ifdef TIOCEXT
+X(TIOCEXT)
+#endif
+
+#ifdef TIOCGDRAINWAIT
+X(TIOCGDRAINWAIT)
+#endif
+
+#if defined(TIOCGETA) && defined(__APPLE__)
+X(TIOCGETA)
+#endif
+
+#ifdef TIOCIXOFF
+X(TIOCIXOFF)
+#endif
+
+#ifdef TIOCIXON
+X(TIOCIXON)
+#endif
+
+#ifdef TIOCMGDTRWAIT
+X(TIOCMGDTRWAIT)
+#endif
+
+#ifdef TIOCMSDTRWAIT
+X(TIOCMSDTRWAIT)
+#endif
+
+#ifdef TIOCPTYGNAME
+X(TIOCPTYGNAME)
+#endif
+
+#ifdef TIOCPTYGRANT
+X(TIOCPTYGRANT)
+#endif
+
+#ifdef TIOCPTYUNLK
+X(TIOCPTYUNLK)
+#endif
+
+#ifdef TIOCSCONS
+X(TIOCSCONS)
+#endif
+
+#ifdef TIOCSCTTY
+X(TIOCSCTTY)
+#endif
+
+#ifdef TIOCSDRAINWAIT
+X(TIOCSDRAINWAIT)
+#endif
+
+#if defined(TIOCSETA) && defined(__APPLE__)
+X(TIOCSETA)
+#endif
+
+#if defined(TIOCSETAF) && defined(__APPLE__)
+X(TIOCSETAF)
+#endif
+
+#if defined(TIOCSETAW) && defined(__APPLE__)
+X(TIOCSETAW)
+#endif
+
+#ifdef TIOCSIG
+X(TIOCSIG)
+#endif
+
+#ifdef TIOCSTAT
+X(TIOCSTAT)
+#endif
+
+#ifdef TIOCTIMESTAMP
+X(TIOCTIMESTAMP)
+#endif
+
+#ifdef TTYDISC
+X(TTYDISC)
+#endif
+
+#ifdef ALLDELAY
+X(ALLDELAY)
+#endif
+
+#ifdef ANYP
+X(ANYP)
+#endif
+
+#ifdef BS0
+X(BS0)
+#endif
+
+#ifdef BS1
+X(BS1)
+#endif
+
+#ifdef BSDELAY
+X(BSDELAY)
+#endif
+
+#ifdef CBREAK
+X(CBREAK)
+#endif
+
+#ifdef CR0
+X(CR0)
+#endif
+
+#ifdef CR1
+X(CR1)
+#endif
+
+#ifdef CR2
+X(CR2)
+#endif
+
+#ifdef CR3
+X(CR3)
+#endif
+
+#ifdef CRDELAY
+X(CRDELAY)
+#endif
+
+#ifdef CRMOD
+X(CRMOD)
+#endif
+
+#ifdef CRTBS
+X(CRTBS)
+#endif
+
+#ifdef CRTERA
+X(CRTERA)
+#endif
+
+#ifdef CRTKIL
+X(CRTKIL)
+#endif
+
+#ifdef CTLECH
+X(CTLECH)
+#endif
+
+#ifdef DECCTQ
+X(DECCTQ)
+#endif
+
+#ifdef ECHO
+X(ECHO)
+#endif
+
+#ifdef EVENP
+X(EVENP)
+#endif
+
+#ifdef FF0
+X(FF0)
+#endif
+
+#ifdef FF1
+X(FF1)
+#endif
+
+#ifdef FLUSHO
+X(FLUSHO)
+#endif
+
+#ifdef L001000
+X(L001000)
+#endif
+
+#ifdef LCASE
+X(LCASE)
+#endif
+
+#ifdef LCRTBS
+X(LCRTBS)
+#endif
+
+#ifdef LCRTERA
+X(LCRTERA)
+#endif
+
+#ifdef LCRTKIL
+X(LCRTKIL)
+#endif
+
+#ifdef LCTLECH
+X(LCTLECH)
+#endif
+
+#ifdef LDECCTQ
+X(LDECCTQ)
+#endif
+
+#ifdef LFLUSHO
+X(LFLUSHO)
+#endif
+
+#ifdef LITOUT
+X(LITOUT)
+#endif
+
+#ifdef LLITOUT
+X(LLITOUT)
+#endif
+
+#ifdef LMDMBUF
+X(LMDMBUF)
+#endif
+
+#ifdef LNOFLSH
+X(LNOFLSH)
+#endif
+
+#ifdef LNOHANG
+X(LNOHANG)
+#endif
+
+#ifdef LPASS8
+X(LPASS8)
+#endif
+
+#ifdef LPENDIN
+X(LPENDIN)
+#endif
+
+#ifdef LPRTERA
+X(LPRTERA)
+#endif
+
+#ifdef LTILDE
+X(LTILDE)
+#endif
+
+#ifdef LTOSTOP
+X(LTOSTOP)
+#endif
+
+#ifdef MDMBUF
+X(MDMBUF)
+#endif
+
+#ifdef NETLDISC
+X(NETLDISC)
+#endif
+
+#ifdef NL0
+X(NL0)
+#endif
+
+#ifdef NL1
+X(NL1)
+#endif
+
+#ifdef NL2
+X(NL2)
+#endif
+
+#ifdef NL3
+X(NL3)
+#endif
+
+#ifdef NLDELAY
+X(NLDELAY)
+#endif
+
+#ifdef NOFLSH
+X(NOFLSH)
+#endif
+
+#ifdef NOHANG
+X(NOHANG)
+#endif
+
+#ifdef NTTYDISC
+X(NTTYDISC)
+#endif
+
+#ifdef ODDP
+X(ODDP)
+#endif
+
+#ifdef OTIOCCONS
+X(OTIOCCONS)
+#endif
+
+#ifdef OTIOCGETD
+X(OTIOCGETD)
+#endif
+
+#ifdef OTIOCSETD
+X(OTIOCSETD)
+#endif
+
+#ifdef OTTYDISC
+X(OTTYDISC)
+#endif
+
+#ifdef PASS8
+X(PASS8)
+#endif
+
+#ifdef PENDIN
+X(PENDIN)
+#endif
+
+#ifdef PRTERA
+X(PRTERA)
+#endif
+
+#ifdef RAW
+X(RAW)
+#endif
+
+#ifdef TAB0
+X(TAB0)
+#endif
+
+#ifdef TAB1
+X(TAB1)
+#endif
+
+#ifdef TAB2
+X(TAB2)
+#endif
+
+#ifdef TANDEM
+X(TANDEM)
+#endif
+
+#ifdef TBDELAY
+X(TBDELAY)
+#endif
+
+#ifdef TILDE
+X(TILDE)
+#endif
+
+#ifdef TIOCGSID
+X(TIOCGSID)
+#endif
+
+#ifdef TOSTOP
+X(TOSTOP)
+#endif
+
+#ifdef VTDELAY
+X(VTDELAY)
+#endif
+
+#ifdef XTABS
+X(XTABS)
 #endif
 
 #ifdef __cplusplus
