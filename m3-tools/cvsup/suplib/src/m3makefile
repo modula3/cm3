@@ -82,7 +82,7 @@ proc doPieces(tbl, key) is
 end
 
 local IS_FREEBSD = IsFreeBSD()
-local HAS_STAT_FLAGS = IsFreeBSD or IsOpenBSD() or IsNetBSD() or IsDarwin()
+local HAS_STAT_FLAGS = IsFreeBSD() or IsOpenBSD() or IsNetBSD() or IsDarwin()
 
 if HAS_STAT_FLAGS
   include_dir("FreeBSD")
