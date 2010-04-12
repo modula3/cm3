@@ -56,6 +56,7 @@ TYPE
 
 
   Copy32to64 = T OBJECT signed: BOOLEAN END;
+  Copy64to32 = T OBJECT signed: BOOLEAN END;
 
   SwapPacked = T OBJECT 
     size  : CARDINAL;
