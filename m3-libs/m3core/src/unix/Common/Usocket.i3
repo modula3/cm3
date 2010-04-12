@@ -152,10 +152,10 @@ PROCEDURE getsockopt(s, level, optname: int; optval: void_star; optlen: socklen_
 PROCEDURE listen(s, backlog: int): int RAISES {};
 
 <*EXTERNAL "Usocket__recvfrom"*>
-PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int; from: UNTRACED REF struct_sockaddr_in; fromlen: socklen_t_star) : int RAISES {};
+PROCEDURE recvfrom(s: int; buf: void_star; len: size_t; flags: int; from: UNTRACED REF struct_sockaddr_in; fromlen: socklen_t_star) : INTEGER RAISES {};
 
 <*EXTERNAL "Usocket__sendto"*>
-PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: UNTRACED REF struct_sockaddr_in; tolen: socklen_t) : int RAISES {};
+PROCEDURE sendto(s: int; msg: const_void_star; len: size_t; flags: int; to: UNTRACED REF struct_sockaddr_in; tolen: socklen_t) : INTEGER RAISES {};
 
 <*EXTERNAL "Usocket__send"*>
 PROCEDURE send(s: int; buf: const_void_star; len: size_t; flags: int): INTEGER;
