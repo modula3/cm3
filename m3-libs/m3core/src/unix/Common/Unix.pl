@@ -3,14 +3,7 @@ open(my $c, ">>", "Uconstants.c");
 open(my $i3, ">>", "Unix.i3");
 while (my $b = <$a>)
 {
-  chomp($b);
-  print $i3 <<End;
-(* CONST *) <*EXTERNAL Unix__$b*> VAR $b: int;
-End
-  print $c <<End;
-\#ifdef $b
-X($b)
-\#endif
-
-End
+  $b =~ s/[\r\n]+$//;
+  print $i3 "(* CONST *) <*EXTERNAL Unix__$b*> VAR $b: int;\r\n";
+  print $c "#ifdef $b\r\nX($b)\r\n#endif\r\n\r\n";
 }
