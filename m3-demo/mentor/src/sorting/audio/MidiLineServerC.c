@@ -5,24 +5,30 @@
 /*      modified on Tue Dec 22 13:56:41 PST 1992 by mhb      */
 /*      modified on Fri Nov 20 15:49:27 PST 1992 by sclafani */
 
-  DelayMicroseconds = 250000;
+#include "m3core.h"
 
-PROCEDURE Rpc (t: T; op: Operation; VAR request: Command; reqSize: INTEGER)
-  RAISES {Failure} =
-  VAR
-    readfds: Unix.FDSet;
-    timeout: Utime.struct_timeval;
-    result : INTEGER;
-    reply  : Command;
-  BEGIN
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-    timeout.tv_sec := 0;
-    timeout.tv_usec := DelayMicroseconds;
+#define DelayMicroseconds 250000
 
-    FOR i := 1 TO MaxTries DO
-      result := Usocket.send (t.socket, ADR (request), reqSize, 0);
-      IF result < 0 THEN UnixFail ("send"); END;
-      IF result # reqSize THEN RAISE Failure ("partial send!?!"); END;
-      readfds := Unix.FDSet {t.socket};
-      result := Unix.select (t.socket + 1, ADR (readfds), NIL, NIL,
-                             ADR (timeout));
+int
+__cdecl
+MidiLineServer__Select(int socket)
+{
+    fd_set fds;
+    struct timeval timeout;
+
+    ZERO_MEMORY(timeout);
+    ZERO_MEMORY(fds);
+    FD_ZERO(&fds);
+    FD_SET(socket, &fds);
+    timeout.tv_sec = 0;
+    timeout.tv_usec = DelayMicroseconds;
+    return select(socket + 1, &fds, NULL, NULL, &timeout);
+}
+
+#ifdef __cplusplus
+}
+#endif
