@@ -24,7 +24,7 @@ OS__UTimes(TEXT tpath, LONGREAL/*Time.T*/ m3time)
 
     path = M3toC__SharedTtoS(tpath);
     {
-#ifndef _INTERIX
+#ifndef __INTERIX
         struct timeval tv[2];
 
         ZERO_MEMORY(tv);
