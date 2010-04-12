@@ -9,10 +9,10 @@
 
 /*** this package is imported in source-form by the mentor-sorting package ***/
 
-module    (Midi)
-interface (MidiPrivate)
-module    (MidiLineServer)
-module    (Midic)
-module    (SortSoundsView)
+module    ("Midi")
+interface ("MidiPrivate")
+module    ("MidiLineServer")
+module    ("Midic")
+module    ("SortSoundsView")
 
-resource  (noise.fv)
+resource  ("noise.fv")
