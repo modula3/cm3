@@ -31,8 +31,8 @@ OS__UTimes(TEXT tpath, LONGREAL/*Time.T*/ m3time)
         double n = { 0 };
 
         ZERO_MEMORY(tv);
-        tv[0].tv_usec = modf(m3timeout, &n) * MILLION; /* last access time */
-        tv[0].tv_sec = n;                              /* last access time */
+        tv[0].tv_usec = modf(m3time, &n) * MILLION; /* last access time */
+        tv[0].tv_sec = n;                           /* last access time */
         tv[1] = tv[0]; /* last modified time */
         result = utimes(path, tv);
 #else
