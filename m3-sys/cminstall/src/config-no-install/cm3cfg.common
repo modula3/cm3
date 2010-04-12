@@ -7,9 +7,6 @@
 
 %M3_PROFILING = TRUE  % set by cm3 since 5.1.2 (option -profile)
 %M3_PROFILING = FALSE
-if not defined("M3_PROFILING")
-  M3_PROFILING = FALSE
-end
 
 %-------------------------------------------------------------------
 % defined by cm3, but not the other MxConfig users
@@ -119,6 +116,24 @@ end
 proc IsInterix() is
   if defined("TARGET_OS")
     if equal(TARGET_OS, "INTERIX")
+      return TRUE
+    end
+  end
+  return FALSE
+end
+
+proc IsSolaris() is
+  if defined("TARGET_OS")
+    if equal(TARGET_OS, "SOLARIS")
+      return TRUE
+    end
+  end
+  return FALSE
+end
+
+proc IsDarwin() is
+  if defined("TARGET_OS")
+    if equal(TARGET_OS, "DARWIN")
       return TRUE
     end
   end
