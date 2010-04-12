@@ -263,13 +263,13 @@ int __cdecl Usocket__shutdown(int s, int how);
 int __cdecl Usocket__socket(int af, int type, int protocol);
 int __cdecl Usocket__bind(int s, struct sockaddr* name, m3_socklen_t len);
 int __cdecl Usocket__connect(int s, struct sockaddr* name, m3_socklen_t len);
-int __cdecl Usocket__sendto(int s, void* msg, size_t length, int flags, struct sockaddr* dest, m3_socklen_t len);
+INTEGER __cdecl Usocket__sendto(int s, void* msg, size_t length, int flags, struct sockaddr* dest, m3_socklen_t len);
 int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len);
 int __cdecl Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* plen);
 int __cdecl Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* plen);
 int __cdecl Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen);
 int __cdecl Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen);
-int __cdecl Usocket__recvfrom(int s, void* buf, size_t len, int flags, struct sockaddr* from, m3_socklen_t* plen);
+INTEGER __cdecl Usocket__recvfrom(int s, void* buf, size_t len, int flags, struct sockaddr* from, m3_socklen_t* plen);
 
 #ifndef _WIN32
 DIR* __cdecl Udir__opendir(const char* a);
