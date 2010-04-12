@@ -441,7 +441,6 @@ InitC(int *bottom)
 {
 #ifndef M3_DIRECT_SUSPEND
   struct sigaction act;
-  struct sigaction oact;
 #endif
   int r;
 
@@ -453,7 +452,6 @@ InitC(int *bottom)
 
 #ifndef M3_DIRECT_SUSPEND
   ZERO_MEMORY(act);
-  ZERO_MEMORY(oact);
 
   M3_RETRY(sem_init(&ackSem, 0, 0)); assert(r == 0);
 
@@ -467,7 +465,7 @@ InitC(int *bottom)
   act.sa_flags = SA_RESTART | SA_SIGINFO;
   act.sa_sigaction = SignalHandler;
   r = sigfillset(&act.sa_mask); assert(r == 0);
-  r = sigaction(SIG_SUSPEND, &act, &oact); assert(r == 0);
+  r = sigaction(SIG_SUSPEND, &act, NULL); assert(r == 0);
 #endif
 }
 
