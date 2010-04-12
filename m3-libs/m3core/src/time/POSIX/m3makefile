@@ -28,4 +28,3 @@ else
   implementation (_DateImpls {TARGET_OS})
 end
 Module("TimePosix")
-c_source("TimePosixC")
