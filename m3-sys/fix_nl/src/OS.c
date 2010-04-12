@@ -1,38 +1,51 @@
-(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
-(* See file COPYRIGHT-CMASS for details. *)
+/* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. */
+/* See file COPYRIGHT-CMASS for details. */
 
-UNSAFE MODULE OSPOSIX EXPORTS OS;
+#include "m3core.h"
 
-IMPORT FS, File, FilePosix, M3toC, OSError, OSErrorPosix, TimePosix;
-IMPORT Unix, Utime;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-PROCEDURE IsDirectory (path: TEXT): BOOLEAN =
-  VAR s: File.Status;
-  BEGIN
-    TRY
-      s := FS.Status (path);
-      RETURN (s.type = FS.DirectoryFileType);
-    EXCEPT OSError.E =>
-      RETURN FALSE;
-    END;
-  END IsDirectory;
+#ifndef _WIN32
 
-PROCEDURE Close (f: File.T;  modTime: LONGREAL;  path: TEXT)
-  RAISES {OSError.E} =
-  BEGIN
-    f.close ();
-    SetModifiedTime (path, modTime);
-  END Close;
+int
+__cdecl
+OS__UTimes(TEXT tpath, LONGREAL/*Time.T*/ m3time)
+{
+    int result;
+    const char* path;
 
-PROCEDURE SetModifiedTime (path: TEXT;  time: LONGREAL) RAISES {OSError.E} =
-  VAR tv: ARRAY [0..1] OF Utime.struct_timeval;
-  BEGIN
-    tv[0] := TimePosix.ToUtime (time);  (* last accessed time *)
-    tv[1] := tv[0];                     (* last modified time *)
-    IF Unix.utimes (M3toC.SharedTtoS (path), ADR (tv[0])) < 0 THEN
-      OSErrorPosix.Raise ();
-    END;
-  END SetModifiedTime;
+    if (tpath == NULL)
+    {
+        errno = EINVAL;
+        return -1;
+    }
 
-BEGIN
-END OSPOSIX.
+    path = M3toC__SharedTtoS(tpath);
+    {
+#ifndef _INTERIX
+        struct timeval tv[2];
+
+        ZERO_MEMORY(tv);
+        TimePosix__FloatSecondsToMicrosecondsStruct(m3time, &tv[0]); /* last accessed time */
+        tv[1] = tv[0]; /* last modified time */
+        result = utimes(path, tv);
+#else
+        struct utimebuf times;
+
+        ZERO_MEMORY(times);
+        times.actime = m3time;
+        times.modtime = times.actime;
+        result = utime(path, &times);
+#endif
+    }
+    M3toC__FreeSharedS(tpath, path);
+    return result;
+}
+
+#endif /* WIN32 */
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
