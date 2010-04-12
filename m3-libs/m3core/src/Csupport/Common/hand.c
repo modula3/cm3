@@ -21,11 +21,7 @@ typedef long long int64;
 typedef unsigned long long uint64;
 #endif
 
-#include <limits.h>
-#include <string.h>
 #include <stddef.h>
-
-typedef int BOOL;
 
 #ifdef __cplusplus
 extern "C"
@@ -36,57 +32,14 @@ extern "C"
 #define __stdcall /* nothing */
 #endif
 
-#if !defined(_MSC_VER) && !defined(__cdecl)
-#define __cdecl /* nothing */
-#endif
-
-#if (UINT_MAX <= 0xFFFF) || (UINT_MAX != 0xFFFFFFFF) || (UINT_MAX != 0xFFFFFFFFUL)
-#error uint is not 32bits
-#endif
-
-/* There are problems passing int64 in K&R form! */
-#if 1 /* defined(__STDC__) || defined(__cplusplus) || defined(_MSC_VER) */
-#define ANSI(x) x
-#define KR(x)
-#else
-#define ANSI(x)
-#define KR(x) x
-#endif
-
 /* return positive form of a negative value, avoiding overflow */
 /* T should be an unsigned type */
 #define M3_POS(T, a) (((T)-((a) + 1)) + 1)
 
-/* compat: not referenced by any backend */
-
-#ifndef _WIN32
-long
-m3_div(long b, long a)
-{
-  typedef          long ST; /* signed type */
-  typedef unsigned long UT; /* unsigned type */
-  int aneg = (a < 0);
-  int bneg = (b < 0);
-  if (aneg == bneg || a == 0 || b == 0)
-    return (a / b);
-  else
-  {
-    /* round negative result down by rounding positive result up
-       unsigned math is much better defined, see gcc -Wstrict-overflow=4 */
-    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
-    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
-    return -(ST)((ua + ub - 1) / ub);
-  }
-}
-#endif
-
-/* compat: not referenced by gcc backend */
-
 #ifdef _WIN32
-int64 __stdcall m3_div64(int64 b, int64 a)
-#else
-int64 __stdcall m3_divL(int64 b, int64 a)
-#endif
+int64
+__stdcall
+m3_div64(int64 b, int64 a)
 {
   typedef  int64 ST; /* signed type */
   typedef uint64 UT; /* unsigned type */
@@ -103,35 +56,12 @@ int64 __stdcall m3_divL(int64 b, int64 a)
     return -(ST)((ua + ub - 1) / ub);
   }
 }
-
-/* compat: not referenced by any backend */
-
-#ifndef _WIN32
-long __stdcall m3_mod(long b, long a)
-{
-  typedef          long ST; /* signed type */
-  typedef unsigned long UT; /* unsigned type */
-  int aneg = (a < 0);
-  int bneg = (b < 0);
-  if (aneg == bneg || a == 0 || b == 0)
-    return (a % b);
-  else
-  {
-    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
-    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
-    a = (ST)(ub - 1 - (ua + ub - 1) % ub);
-    return (bneg ? -a : a);
-  }
-}
 #endif
-
-/* compat: not referenced by gcc backend */
 
 #ifdef _WIN32
-int64 __stdcall m3_mod64(int64 b, int64 a)
-#else
-int64 __stdcall m3_modL(int64 b, int64 a)
-#endif
+int64
+__stdcall
+m3_mod64(int64 b, int64 a)
 {
   typedef  int64 ST; /* signed type */
   typedef uint64 UT; /* unsigned type */
@@ -147,65 +77,53 @@ int64 __stdcall m3_modL(int64 b, int64 a)
     return (bneg ? -a : a);
   }
 }
+#endif
 
 #define SET_GRAIN (sizeof (size_t) * 8)
 
-/* compat: not referenced by any backend */
-
-size_t __cdecl set_member(size_t bit_index, size_t* set)
-{
-  size_t word = bit_index / SET_GRAIN;
-  size_t bit  = bit_index % SET_GRAIN;
-  return (set[word] & (((size_t)1) << bit)) != 0;
-}
-
-void __stdcall set_union
-    ANSI((                 size_t n_bits, size_t* c, size_t* b, size_t* a))
-      KR((n_bits, c, b, a) size_t n_bits; size_t* c; size_t* b; size_t* a;)
+void
+__stdcall
+set_union(size_t n_bits, size_t* c, size_t* b, size_t* a)
 {
   register size_t n_words = n_bits / SET_GRAIN;
   register size_t i;
-  for (i = 0; i < n_words; i++) {
+  for (i = 0; i < n_words; i++)
     a[i] = b[i] | c[i];
-  }
 }
 
-void __stdcall set_intersection
-    ANSI((                 size_t n_bits, size_t* c, size_t* b, size_t* a))
-      KR((n_bits, c, b, a) size_t n_bits; size_t* c; size_t* b; size_t* a;)
+void
+__stdcall
+set_intersection(size_t n_bits, size_t* c, size_t* b, size_t* a)
 {
   register size_t n_words = n_bits / SET_GRAIN;
   register size_t i;
-  for (i = 0; i < n_words; i++) {
+  for (i = 0; i < n_words; i++)
     a[i] = b[i] & c[i];
-  }
 }
 
-void __stdcall set_difference
-    ANSI((                 size_t n_bits, size_t* c, size_t* b, size_t* a))
-      KR((n_bits, c, b, a) size_t n_bits; size_t* c; size_t* b; size_t* a;)
+void
+__stdcall
+set_difference(size_t n_bits, size_t* c, size_t* b, size_t* a)
 {
   register size_t n_words = n_bits / SET_GRAIN;
   register size_t i;
-  for (i = 0; i < n_words; i++) {
+  for (i = 0; i < n_words; i++)
     a[i] = b[i] & (~ c[i]);
-  }
 }
 
-void __stdcall set_sym_difference
-    ANSI((                 size_t n_bits, size_t* c, size_t* b, size_t* a))
-      KR((n_bits, c, b, a) size_t n_bits; size_t* c; size_t* b; size_t* a;)
+void
+__stdcall
+set_sym_difference(size_t n_bits, size_t* c, size_t* b, size_t* a)
 {
   register size_t n_words = n_bits / SET_GRAIN;
   register size_t i;
-  for (i = 0; i < n_words; i++) {
+  for (i = 0; i < n_words; i++)
     a[i] = b[i] ^ c[i];
-  }
 }
 
-size_t __stdcall set_le
-    ANSI((              size_t n_bits, size_t* b, size_t* a))
-      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
+size_t
+__stdcall
+set_le(size_t n_bits, size_t* b, size_t* a)
 {
   register size_t n_words = n_bits / SET_GRAIN;
   register size_t i;
@@ -215,9 +133,9 @@ size_t __stdcall set_le
   return 1;
 }
 
-size_t __stdcall set_lt
-    ANSI((              size_t n_bits, size_t* b, size_t* a))
-      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
+size_t
+__stdcall
+set_lt(size_t n_bits, size_t* b, size_t* a)
 {
   register size_t n_words = n_bits / SET_GRAIN;
   register size_t i;
@@ -229,16 +147,16 @@ size_t __stdcall set_lt
   return (eq != 0);
 }
 
-size_t __stdcall set_ge
-    ANSI((              size_t n_bits, size_t* b, size_t* a))
-      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
+size_t
+__stdcall
+set_ge(size_t n_bits, size_t* b, size_t* a)
 {
   return set_le(n_bits, a, b);
 }
 
-size_t __stdcall set_gt
-    ANSI((              size_t n_bits, size_t* b, size_t* a))
-      KR((n_bits, b, a) size_t n_bits; size_t* b; size_t* a;)
+size_t
+__stdcall
+set_gt(size_t n_bits, size_t* b, size_t* a)
 {
   return set_lt(n_bits, a, b);
 }
@@ -246,9 +164,9 @@ size_t __stdcall set_gt
 #define HIGH_BITS(a) ((~(size_t)0) << (a))
 #define LOW_BITS(a)  ((~(size_t)0) >> (SET_GRAIN - (a) - 1))
 
-void __stdcall set_range
-    ANSI((       size_t b, size_t a, size_t* s))
-    KR((b, a, s) size_t b; size_t a; size_t* s;)
+void
+__stdcall
+set_range(size_t b, size_t a, size_t* s)
 {
   if (b < a) {
       /* no bits to set */
@@ -270,25 +188,24 @@ void __stdcall set_range
   }
 }
 
-/* compat: not referenced by any backend */
-
-void __cdecl set_singleton(size_t bit_index, size_t* set)
-{
-  size_t word = bit_index / SET_GRAIN;
-  size_t bit  = bit_index % SET_GRAIN;
-  set[word] |= (((size_t)1) << bit);
-}
-
 #ifdef _WIN32
 
 uint64 _rotl64(uint64 value, int shift);
 uint64 _rotr64(uint64 value, int shift);
 #pragma intrinsic(_rotl64)
 #pragma intrinsic(_rotr64)
-uint64 __stdcall  m3_rotate_left64(uint64 a, int b)  { return _rotl64(a, b); }
-uint64 __stdcall m3_rotate_right64(uint64 a, int b)  { return _rotr64(a, b); }
 
-uint64 __stdcall m3_rotate64(uint64 a, int b)
+uint64
+__stdcall
+m3_rotate_left64(uint64 a, int b) { return _rotl64(a, b); }
+
+uint64
+__stdcall
+m3_rotate_right64(uint64 a, int b) { return _rotr64(a, b); }
+
+uint64
+__stdcall
+m3_rotate64(uint64 a, int b)
 {
     b &= 63;
     if (b > 0)
