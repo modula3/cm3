@@ -50,6 +50,8 @@ void Usocket__Assertions(void)
 M3WRAP2(int, listen, int, int)
 M3WRAP2(int, shutdown, int, int)
 M3WRAP3(int, socket, int, int, int)
+M3WRAP4(int, send, int, const void*, size_t, int)
+M3WRAP4(int, recv, int, void*, size_t, int)
 
 /* wrap everything taking input socklen_t */
 
