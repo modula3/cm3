@@ -313,7 +313,7 @@ PROCEDURE Convert(self: T; dest: ADDRESS; v: ReadVisitor;
               END;
             END;
           | PklAction.Kind.Copy64to32, PklAction.Kind.Swap64to32 =>
-            WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
+            WITH nelem = NARROW(elem, PklAction.Copy64to32) DO
               FOR i := 1 TO length DO
                 v.readData(t);
                 WITH int64 = LOOPHOLE(ADR(t[0]), UNTRACED REF Swap.Int64On32)^,
@@ -491,7 +491,7 @@ PROCEDURE AppendProg(self: T; other: T) RAISES {Error} =
           INC(self.toOffset, elem.length*64);
         | PklAction.Kind.Copy64to32, PklAction.Kind.Swap64to32 =>
           WITH t = NARROW(elem, PklAction.Copy32to64) DO
-            nelem := NEW(PklAction.Copy32to64, kind := t.kind, 
+            nelem := NEW(PklAction.Copy64to32, kind := t.kind, 
                          length := t.length, signed := t.signed);
           END;
           INC(self.fromOffset, elem.length*64);
@@ -679,15 +679,15 @@ PROCEDURE AddCopy64to32(self: T; length: INTEGER; signed: BOOLEAN) =
     <* ASSERT length MOD 2 = 0 *>
     INC(self.toOffset, length DIV 2);
     IF GetHiKind(self.prog, PklAction.Kind.Copy64to32, elem) THEN
-      WITH nelem = NARROW(elem, PklAction.Copy32to64) DO
+      WITH nelem = NARROW(elem, PklAction.Copy64to32) DO
         IF nelem.signed = signed THEN
           INC(elem.length, length DIV 64);
           RETURN;
         END;
       END;
     END;
-    self.prog.addhi(NEW(PklAction.T, kind := PklAction.Kind.Copy64to32,
-                        length := length DIV 64));
+    self.prog.addhi(NEW(PklAction.Copy64to32, kind := PklAction.Kind.Copy64to32,
+                        length := length DIV 64, signed := signed));
   END AddCopy64to32;
 
 PROCEDURE AddSkipFrom(self: T; length: INTEGER) =
