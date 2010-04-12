@@ -67,7 +67,7 @@ int Usocket__connect(int s, struct sockaddr* name, m3_socklen_t len)
     return connect(s, name, len);
 }
 
-int Usocket__sendto(int s, void* msg, size_t length, int flags, struct sockaddr* dest, m3_socklen_t len)
+INTEGER Usocket__sendto(int s, void* msg, size_t length, int flags, struct sockaddr* dest, m3_socklen_t len)
 {
     ASSERT_LEN
     return sendto(s, msg, length, flags, dest, len);
@@ -170,12 +170,12 @@ the same order. This is checked in Usocket__Assertions.
     }
 }
 
-int Usocket__recvfrom(int s, void* buf, size_t length, int flags, struct sockaddr* address, m3_socklen_t* plen)
+INTEGER Usocket__recvfrom(int s, void* buf, size_t length, int flags, struct sockaddr* address, m3_socklen_t* plen)
 {
     ASSERT_PLEN
     {
         socklen_t len = plen ? *plen : 0;
-        int r = recvfrom(s, buf, length, flags, address, plen ? &len : 0);
+        INTEGER r = recvfrom(s, buf, length, flags, address, plen ? &len : 0);
         if (plen) *plen = len;
         return r;
     }
