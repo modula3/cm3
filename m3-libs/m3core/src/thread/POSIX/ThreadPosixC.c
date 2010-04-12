@@ -327,12 +327,16 @@ ThreadPosix__Select(int nfds,
                     ADDRESS except,
                     LONGREAL/*Time.T*/ m3timeout)
 {
-    MicrosecondsStruct_t timeout;
+    struct timeval timeout;
+    double n = { 0 };
+
+    if (m3timeout < 0)
+        return select(nfds, read, write, except, NULL);
+
     ZERO_MEMORY(timeout);
-    return select(nfds, read, write, except,
-                  (m3timeout >= 0)
-                  ? TimePosix__FloatSecondsToMicrosecondsStruct(m3timeout, &timeout)
-                  : NULL);
+    timeout.tv_usec = modf(m3timeout, &n) * MILLION;
+    timeout.tv_sec = n;
+    return select(nfds, read, write, except, &timeout);
 }
 
 #ifdef __cplusplus
