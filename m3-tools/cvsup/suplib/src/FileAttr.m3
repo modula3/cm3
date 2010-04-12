@@ -58,8 +58,8 @@ CONST
 
 VAR (* CONST *)
   EnoentAtom := OSErrorPosix.ErrnoAtom(Uerror.ENOENT);
-CONST NoGroup: Utypes.gid_t := -1;
-CONST NoOwner: Utypes.uid_t := -1;
+CONST NoGroup: Utypes.gid_t = -1;
+CONST NoOwner: Utypes.uid_t = -1;
 
 PROCEDURE Init(self: T;
                fileType: FileType;
