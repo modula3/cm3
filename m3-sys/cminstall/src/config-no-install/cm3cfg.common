@@ -113,31 +113,37 @@ end
 
 %------------------------------------------------------------------------------
 
-proc IsInterix() is
+proc InternalCheckTargetOS(x) is
   if defined("TARGET_OS")
-    if equal(TARGET_OS, "INTERIX")
+    if equal(TARGET_OS, x)
       return TRUE
     end
   end
   return FALSE
+end
+
+proc IsInterix() is
+  return InternalCheckTargetOS("INTERIX")
 end
 
 proc IsSolaris() is
-  if defined("TARGET_OS")
-    if equal(TARGET_OS, "SOLARIS")
-      return TRUE
-    end
-  end
-  return FALSE
+  return InternalCheckTargetOS("SOLARIS")
 end
 
 proc IsDarwin() is
-  if defined("TARGET_OS")
-    if equal(TARGET_OS, "DARWIN")
-      return TRUE
-    end
-  end
-  return FALSE
+  return InternalCheckTargetOS("DARWIN")
+end
+
+proc IsFreeBSD() is
+  return InternalCheckTargetOS("FREEBSD")
+end
+
+proc IsOpenBSD() is
+  return InternalCheckTargetOS("OPENBSD")
+end
+
+proc IsNetBSD() is
+  return InternalCheckTargetOS("NETBSD")
 end
 
 if not defined("HasTrestle")
