@@ -42,13 +42,13 @@ import("tempfiles")
 if SYSTEM_LIBS contains "Z"
   import_sys_lib("Z")
 else
-  if equal(TARGET, "PPC_DARWIN") or equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN")
+  if IsDarwin()
     LibZPath = findlib("libz.dylib")
     %import_lib("z", LibZPath) % cannot be linked statically on Darwin
     % must be added to cm3.cfg SYSTEM_LIBS[LIBC] as a work around
     % (cvsup.quake does that unconditionally)
   else 
-    if equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun")
+    if IsSolaris()
       LibZPath = findlib("libz.so")
     else
       LibZPath = findlib("libz.a")
@@ -81,29 +81,8 @@ proc doPieces(tbl, key) is
   end
 end
 
-local AllArch = ["I386","AMD64","PPC","IA64","SPARC","ALPHA","MIPS","ARM"]
-local IS_FREEBSD = equal(TARGET, "FreeBSD2") or equal(TARGET, "FreeBSD2p")
-                    or equal(TARGET, "FreeBSD3") or equal(TARGET, "FreeBSD4")
-                    or equal(TARGET, "FBSD_ALPHA") or equal(TARGET, "FBSD_SPARC64")
-local HAS_STAT_FLAGS = IS_FREEBSD
-foreach arch in AllArch
-  foreach bits in ["","32","64"]
-    foreach os in ["FREEBSD","OPENBSD","NETBSD","DARWIN"]
-      if equal (TARGET, arch & bits & "_" & os)
-        HAS_STAT_FLAGS = TRUE
-      end
-    end
-  end
-end
-foreach arch in AllArch
-  foreach bits in ["","32","64"]
-    foreach os in ["FREEBSD"]
-      if equal (TARGET, arch & bits & "_" & os)
-        IS_FREEBSD = TRUE
-      end
-    end
-  end
-end
+local IS_FREEBSD = IsFreeBSD()
+local HAS_STAT_FLAGS = IsFreeBSD or IsOpenBSD() or IsNetBSD() or IsDarwin()
 
 if HAS_STAT_FLAGS
   include_dir("FreeBSD")
