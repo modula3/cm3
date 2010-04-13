@@ -9,7 +9,7 @@ call %~dp0sysinfo || exit /b 1
 @rem define build and ship programs for Critical Mass Modula-3
 @rem
 
-set DEFS=-DROOT=%CM3ROOT% -DCM3_VERSION_TEXT=%CM3VERSION% -DCM3_VERSION_NUMBER=%CM3VERSIONNUM% -DCM3_LAST_CHANGED=%CM3LASTCHANGED%
+set DEFS=-DROOT=%CM3ROOT%
 
 set BUILDLOCAL=%CM3% -build -override %DEFS% %BUILDARGS%
 set CLEANLOCAL=%CM3% -clean -override %DEFS% %CLEANARGS%

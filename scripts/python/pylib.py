@@ -838,9 +838,6 @@ if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
 # workaround some of it
     DEFS = "-DROOT=%(Q)s%(Root)s%(Q)s"
-    DEFS += " -DCM3_VERSION_TEXT=%(Q)s%(CM3VERSION)s%(Q)s"
-    DEFS += " -DCM3_VERSION_NUMBER=%(Q)s%(CM3VERSIONNUM)s%(Q)s"
-    DEFS += " -DCM3_LAST_CHANGED=%(Q)s%(CM3LASTCHANGED)s%(Q)s"
     
     NativeRoot = Root
     #Root = ConvertPathForCM3(Root).replace("\\", "\\\\")
