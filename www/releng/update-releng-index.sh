@@ -56,9 +56,9 @@ tablerow() {
         echo "<a href=\"collection-${coll}.html\">optional</a>"
       ;;
       *.deb)
-        echo 'Debian package';;
+        echo 'Debian package; all binaries; experimental';;
       *.msi*)
-        echo 'Microsoft installer package';;
+        echo 'Microsoft installer package; all binaries; experimental';;
       *) echo "-";;
     esac
   fi
@@ -74,7 +74,7 @@ for rc in RC5 RC6 RC7 RC8 RC9; do
   echo "  <h2><a name=\"doc-${rc}\">Sources, Documentation and Support Scripts ${rc}</a></h2>" >> ${INDEX}
   echo "" >> ${INDEX}
   echo "<table border=\"3\" cellspacing=\"2\" cellpadding=\"4\" width=\"95%\"><tbody>" >> ${INDEX}
-  for f in cm3-src-*${rc}.tgz cm3-doc-*${rc}.tgz cm3-scripts-*${rc}.tgz cm3-*${rc}.deb cm3-*${rc}.msi; do
+  for f in cm3-src-*${rc}.tgz cm3-doc-*${rc}.tgz cm3-scripts-*${rc}.tgz; do
     case $f in
       *-pre-*);;
       *) [ -s "$f" ] && tablerow $f;;
@@ -87,7 +87,7 @@ for rc in RC5 RC6 RC7 RC8 RC9; do
 
 
   for t in ${TARGETS}; do
-    all=`ls -1 cm3-bin-*-${t}-*-${rc}.tgz cm3-bin-*-${t}-*-${rc}.tar.gz cm3-bin-*-${t}-*-${rc}.tar.lzma cm3-bin-*-${t}-*-${rc}.tar.xz`
+    all=`ls -1 cm3-bin-*-${t}-*-${rc}.tgz cm3-bin-*-${t}-*-${rc}.tar.gz cm3-bin-*-${t}-*-${rc}.tar.lzma cm3-bin-*-${t}-*-${rc}.tar.xz cm3-${t}-*${rc}.deb cm3-${t}-*${rc}.msi`
     #ln -sf "${last}" "${FNPAT1}${t}${FNPATSUF}"
     case $t in
       p5*);;
