@@ -18,7 +18,7 @@ fi
 . "$sysinfo"
 
 # define build and ship programs for Critical Mass Modula-3
-DEFS="-DROOT='${CM3ROOT}' -DCM3_VERSION_TEXT='${CM3VERSION}' -DCM3_VERSION_NUMBER='${CM3VERSIONNUM}' -DCM3_LAST_CHANGED='${CM3LASTCHANGED}'"
+DEFS="-DROOT='${CM3ROOT}'"
 BUILDLOCAL="${BUILDLOCAL:-${CM3} -build -override \$RARGS ${DEFS} ${BUILDARGS}}"
 CLEANLOCAL="${CLEANLOCAL:-${CM3} -clean -override \$RARGS ${DEFS} ${CLEANARGS}}"
 BUILDGLOBAL="${BUILDGLOBAL:-${CM3} -build ${DEFS} \$RARGS ${BUILDARGS}}"

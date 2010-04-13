@@ -249,8 +249,6 @@ call :set_if_empty INSTALLROOT c:\cm3
 set CM3ROOT=%ROOT:\=\\%
 echo CM3ROOT=%CM3ROOT%
 
-call :GetVersions %~dp0..\version || exit /b 1
-
 set SYSINFO_DONE=yes
 
 goto :eof
@@ -325,92 +323,3 @@ goto :eof
     @echo %a%
     @endlocal
     @goto :eof
-
-:GetVersions
-
-@rem
-@rem
-@rem Look in ../sysinfo.sh for particularly formed lines, something like
-@rem
-@rem CM3VERSION d5.7.1
-@rem CM3VERSIONNUM 050701
-@rem CM3LASTCHANGED 2009-01-21
-@rem
-@rem
-@rem Search for lines that start Name= (/b for beginging),
-@rem for our particuliar names. Break up those lines at
-@rem the colon and equals, taking the first and last token,
-@rem removing the first and last two characters from the last token.
-@rem
-@rem Finding the quoted part was a bit difficult, but not impossible.
-@rem
-@rem Like the Python code, this is carefully written to only
-@rem read the file once, if any one of the variables is not set,
-@rem and to only overwrite what isn't already set.
-@rem
-@rem
-
-set CM3Versions=^
-    CM3VERSION ^
-    CM3VERSIONNUM ^
-    CM3LASTCHANGED
-
-for %%a in (%CM3Versions%) do (
-    if not defined %%a (
-        @rem
-        @rem We are forced to make a function call here
-        @rem because cmd has problems with parentheses.
-        @rem
-        call :GetVersions_ReadFile %1 || (
-            set CM3Versions=
-            exit /b 1
-        )
-    )
-)
-
-set CM3Versions=
-
-goto :eof
-
-:GetVersions_ReadFile
-
-@rem echo in %0 (should only happen once)
-
-SetLocal EnableExtensions EnableDelayedExpansion
-
-@rem
-@rem Build up ONE findstr command line.
-@rem
-set SearchStrings=
-for %%a in (%CM3Versions%) do (
-    set SearchStrings=!SearchStrings! /c:%%a
-)
-
-set Result=
-for /f "tokens=1,2" %%a in ('findstr /b !SearchStrings! %1') do (
-    @rem echo 1: %%a
-    @rem echo 2: %%b
-    if not defined %%a (
-        @rem
-        @rem remove first and last two characters
-        @rem
-        set b=%%b
-        @rem echo set %%a=%%b
-        @rem
-        @rem if you merely set %%a=!b:~2,-2! here, getting
-        @rem the results past the EndLocal takes more work.
-        @rem
-        set Result=!Result! "%%a=%%b"
-    )
-)
-
-EndLocal & for %%a in (%Result%) do set %%a
-
-for %%a in (%CM3Versions%) do (
-    if not defined %%a (
-        @echo ERROR: %%a not found in %1
-        exit /b 1
-    )
-)
-
-goto :eof
