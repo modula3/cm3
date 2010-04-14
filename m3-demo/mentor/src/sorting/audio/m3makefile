@@ -12,6 +12,7 @@
 module    ("Midi")
 interface ("MidiPrivate")
 module    ("MidiLineServer")
+c_source  ("MidiLineServerC")
 module    ("Midic")
 module    ("SortSoundsView")
 

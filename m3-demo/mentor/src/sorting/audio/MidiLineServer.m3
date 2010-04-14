@@ -9,13 +9,12 @@ UNSAFE MODULE MidiLineServer;
 
 IMPORT M3toC, Midi, MidiPrivate;
 IMPORT Cerrno, Cstring, Ctypes;
-IMPORT Uerror, Uin, Unetdb, Unix, Usocket, Utime;
+IMPORT Uerror, Uin, Unetdb, Usocket;
 FROM Midi IMPORT Failure;
 
 CONST
   MIDIPortNumber    = 4103;     (* UDP port used (AUDIO + 1) *)
   MaxTries          = 5;
-  DelayMicroseconds = 250000;
   MaxDataSize       = 1024;
 
 REVEAL
@@ -122,8 +121,6 @@ PROCEDURE Play (         t     : T;
 PROCEDURE Rpc (t: T; op: Operation; VAR request: Command; reqSize: INTEGER)
   RAISES {Failure} =
   VAR
-    readfds: Unix.FDSet;
-    timeout: Utime.struct_timeval;
     result : INTEGER;
     reply  : Command;
   BEGIN
@@ -132,16 +129,11 @@ PROCEDURE Rpc (t: T; op: Operation; VAR request: Command; reqSize: INTEGER)
     request.hdr.opcode := Uin.htonl (ORD (op));
     request.hdr.param := 0;
 
-    timeout.tv_sec := 0;
-    timeout.tv_usec := DelayMicroseconds;
-
     FOR i := 1 TO MaxTries DO
       result := Usocket.send (t.socket, ADR (request), reqSize, 0);
       IF result < 0 THEN UnixFail ("send"); END;
       IF result # reqSize THEN RAISE Failure ("partial send!?!"); END;
-      readfds := Unix.FDSet {t.socket};
-      result := Unix.select (t.socket + 1, ADR (readfds), NIL, NIL,
-                             ADR (timeout));
+      result := Select (t.socket);
       IF (result < 0) AND (Cerrno.GetErrno() # Uerror.EINTR) THEN
         UnixFail ("select");
       END;
