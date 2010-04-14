@@ -11,7 +11,9 @@
 extern "C" {
 #endif
 
-void Utime__Assertions(void)
+void
+__cdecl
+Utime__Assertions(void)
 {
 #ifndef _WIN32
     /* Basically no 32bit system has a 64bit time_t, unfortunate. */
@@ -65,7 +67,9 @@ wrap up global variables in functions until something else is done
 
 #if !defined(M3BSD) && !defined(_WIN32)
 
-m3_time_t Utime__get_timezone(void)
+m3_time_t
+__cdecl
+Utime__get_timezone(void)
 {
 #ifdef __CYGWIN__
     return _timezone;
@@ -76,7 +80,9 @@ m3_time_t Utime__get_timezone(void)
 
 #if defined(__CYGWIN__) || defined(__sun) || defined(__hpux) || defined(__INTERIX)
 
-m3_time_t Utime__get_altzone(void)
+m3_time_t
+__cdecl
+Utime__get_altzone(void)
 {
 #ifdef __sun
     return altzone;
@@ -88,7 +94,9 @@ m3_time_t Utime__get_altzone(void)
 
 #endif /* cygwin | sun */
 
-int Utime__get_daylight(void)
+int
+__cdecl
+Utime__get_daylight(void)
 {
 #ifdef __CYGWIN__
     return _daylight;
@@ -97,7 +105,9 @@ int Utime__get_daylight(void)
 #endif
 }
 
-const char* Utime__get_tzname(unsigned a)
+const char*
+__cdecl
+Utime__get_tzname(unsigned a)
 {
     assert((a == 0) || (a == 1));
     return tzname[a & 1];
@@ -115,7 +125,9 @@ static void timeval_to_m3(const struct timeval* t, m3_timeval_t* m)
     m->usec = t->tv_usec;
 }
 
-int Utime__gettimeofday(m3_timeval_t* m3t)
+int
+__cdecl
+Utime__gettimeofday(m3_timeval_t* m3t)
 {
     struct timeval t;
     /* null is not valid here; gcc warns */
@@ -124,7 +136,9 @@ int Utime__gettimeofday(m3_timeval_t* m3t)
     return r;
 }
 
-m3_time_t Utime__time(m3_time_t* tloc)
+m3_time_t
+__cdecl
+Utime__time(m3_time_t* tloc)
 {
     time_t b = tloc ? (time_t)*tloc : 0;
     time_t a = time(tloc ? &b : 0);
@@ -132,36 +146,48 @@ m3_time_t Utime__time(m3_time_t* tloc)
     return a;
 }
 
-m3_time_t Utime__mktime(struct tm* tm)
+m3_time_t
+__cdecl
+Utime__mktime(struct tm* tm)
 {
     return mktime(tm);
 }
 
-char* Utime__ctime(const m3_time_t* m)
+char*
+__cdecl
+Utime__ctime(const m3_time_t* m)
 {
     time_t t = m ? (time_t)*m : 0;
     return ctime(m ? &t : 0);
 }
 
-struct tm* Utime__localtime(const m3_time_t* m)
+struct tm*
+__cdecl
+Utime__localtime(const m3_time_t* m)
 {
     time_t t = m ? (time_t)*m : 0;
     return localtime(m ? &t : 0);
 }
 
-struct tm* Utime__gmtime(const m3_time_t* m)
+struct tm*
+__cdecl
+Utime__gmtime(const m3_time_t* m)
 {
     time_t t = m ? (time_t)*m : 0;
     return gmtime(m ? &t : 0);
 }
 
-struct tm* Utime__localtime_r(const m3_time_t* m3t, struct tm* result)
+struct tm*
+__cdecl
+Utime__localtime_r(const m3_time_t* m3t, struct tm* result)
 {
     time_t t = m3t ? *m3t : 0;
     return localtime_r(m3t ? &t : 0, result);
 }
 
-struct tm* Utime__gmtime_r(const m3_time_t* m3t, struct tm* result)
+struct tm*
+__cdecl
+Utime__gmtime_r(const m3_time_t* m3t, struct tm* result)
 {
     time_t t = m3t ? *m3t : 0;
     return gmtime_r(m3t ? &t : 0, result);
@@ -169,7 +195,9 @@ struct tm* Utime__gmtime_r(const m3_time_t* m3t, struct tm* result)
 
 #endif /* _WIN32 */
 
-void Utime__tzset(void)
+void
+__cdecl
+Utime__tzset(void)
 {
 #ifdef _WIN32
     _tzset();
