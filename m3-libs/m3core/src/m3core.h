@@ -394,6 +394,8 @@ TEXT
 __cdecl
 M3toC__CopyStoT(const char*);
 
+#ifndef _WIN32
+
 struct timeval
 __cdecl
 TimePosix__ToUtime(double t);
@@ -401,6 +403,8 @@ TimePosix__ToUtime(double t);
 double
 __cdecl
 TimePosix__FromUtime(const struct timeval* tv);
+
+#endif
 
 double
 __cdecl
