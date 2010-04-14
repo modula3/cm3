@@ -2571,9 +2571,14 @@ def MakeDebianPackage(input, prefix):
     print("control:" + control)
     open("./control", "w").write(control)
 
-    command = "tar cfz ../control.tar.gz ."
+    command = "tar cf ../control.tar ."
     print(command)
     os.system(command)
+
+    command = "gzip ../control.tar"
+    print(command)
+    os.system(command)
+
     os.chdir(input)
     command = "tar cf data.tar ." + prefix
     if isfile("data.tar." + compressed_extension) or isfile("data.tar"):
