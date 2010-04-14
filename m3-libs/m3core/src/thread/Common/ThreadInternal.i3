@@ -1,33 +1,26 @@
-/* Copyright (C) 1989, Digital Equipment Corporation           */
-/* All rights reserved.                                        */
-/* See the file COPYRIGHT for a full description.              */
+(* Copyright (C) 1989, Digital Equipment Corporation           *)
+(* All rights reserved.                                        *)
+(* See the file COPYRIGHT for a full description.              *)
 
-#include "m3core.h"
+INTERFACE ThreadInternal;
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+FROM Ctypes IMPORT int;
 
-int
-__cdecl
-ThreadInternal__Select(int nfds,
-                       ADDRESS read,
-                       ADDRESS write,
-                       ADDRESS except,
-                       LONGREAL/*Time.T*/ m3timeout)
-{
-    struct timeval timeout;
-    double n = { 0 };
+(*---------------------------------------------------------------------------*)
 
-    if (m3timeout < 0)
-        return select(nfds, read, write, except, NULL);
+(* Model a set of integers of arbitrary size? *)
 
-    ZERO_MEMORY(timeout);
-    timeout.tv_usec = modf(m3timeout, &n) * MILLION;
-    timeout.tv_sec = n;
-    return select(nfds, read, write, except, &timeout);
-}
+CONST FDSetSize = BITSIZE(INTEGER);
 
-#ifdef __cplusplus
-} /* extern "C" */
-#endif
+TYPE FDSet = SET OF [0 .. FDSetSize-1];
+     FDS = REF ARRAY OF FDSet;
+
+<*EXTERNAL ThreadInternal__Select*>
+PROCEDURE Select(nfds: int; VAR read, write, except: FDSet; 
+                 timeout: LONGREAL(*Time.T*)): int;
+(* Thin wrapper around select. *)
+
+(*---------------------------------------------------------------------------*)
+
+
+END ThreadInternal.
