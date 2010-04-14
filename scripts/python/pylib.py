@@ -2022,12 +2022,12 @@ def SetupEnvironment():
         # after running the shortcut
         #VCINSTALLDIR=D:\msdev\90\VC
         #VSINSTALLDIR=D:\msdev\90
-        
+
         VSCommonTools = os.environ.get("VS90COMNTOOLS")
-        
+
         if VSCommonTools and not VSInstallDir:
             VSInstallDir = RemoveLastPathElement(RemoveLastPathElement(VSCommonTools))
-        
+
         # The Windows SDK is carried with the express edition and tricky to find.
         # Best if folks just run the installed shortcut probably.
         # We do a pretty good job now of finding it, be need to encode
@@ -2095,8 +2095,8 @@ def SetupEnvironment():
         # Look for SDKs.
         # expand this as they are released/discovered
         # ordering is from newest to oldest
-        
-        PossibleSDKs = [os.path.join("Microsoft SDKs", "Windows", "v6.0A"), "Microsoft Platform SDK for Windows Server 2003 R2"]        
+
+        PossibleSDKs = [os.path.join("Microsoft SDKs", "Windows", "v6.0A"), "Microsoft Platform SDK for Windows Server 2003 R2"]
         SDKs = []
 
         for a in GetProgramFiles():
@@ -2134,7 +2134,7 @@ def SetupEnvironment():
         # (Why do we care?)
 
         _SetupEnvironmentVariableAll("PATH", ["cl", "link"], VCBin)
-        
+
         # If none of mspdb*.dll are in PATH, add MpsdbDir to PATH, and check that one of them is in it.
 
         _SetupEnvironmentVariableAny(
@@ -2273,7 +2273,7 @@ THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 """)
 
     open(os.path.join(license, "COPYRIGHT-OLIVETTI"), "w").write(
-"""                      Copyright (C) Olivetti 1989 
+"""                      Copyright (C) Olivetti 1989
                           All Rights reserved
 
 Use and copy of this software and preparation of derivative works based
@@ -2332,7 +2332,7 @@ def MakeMSIWithWix(input):
 # The output goes to input + ".msi" and other temporary files go similarly (.wix, .wixobj)
 # (We edit the filename slightly for friendlyness.)
     import uuid
-    
+
     InstallLicense(Root, input)
 
     wix = open(input + ".wxs", "w")
@@ -2569,7 +2569,7 @@ def MakeDebianPackage(input, prefix):
     print("control:" + control)
     open("./control", "w").write(control)
 
-    command = "tar cfz ../control.tar.gz ."    
+    command = "tar cfz ../control.tar.gz ."
     print(command)
     os.system(command)
     os.chdir(input)
