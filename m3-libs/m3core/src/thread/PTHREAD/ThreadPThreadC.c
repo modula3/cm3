@@ -344,28 +344,7 @@ ThreadPThread__pthread_cond_delete(pthread_cond_t *p)
   free(p);
 }
 
-#define MILLION (1000 * 1000)
 #define BILLION (1000 * 1000 * 1000)
-
-int
-__cdecl
-ThreadPThread__Select(int nfds,
-                      ADDRESS read,
-                      ADDRESS write,
-                      ADDRESS except,
-                      LONGREAL/*Time.T*/ m3timeout)
-{
-    struct timeval timeout;
-    double n = { 0 };
-
-    if (m3timeout < 0)
-        return select(nfds, read, write, except, NULL);
-
-    ZERO_MEMORY(timeout);
-    timeout.tv_usec = modf(m3timeout, &n) * MILLION;
-    timeout.tv_sec = n;
-    return select(nfds, read, write, except, &timeout);
-}
 
 void
 __cdecl

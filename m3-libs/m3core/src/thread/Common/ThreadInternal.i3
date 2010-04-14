@@ -2,7 +2,7 @@
 (* All rights reserved.                                        *)
 (* See the file COPYRIGHT for a full description.              *)
 
-INTERFACE ThreadInternal;
+UNSAFE INTERFACE ThreadInternal;
 
 FROM Ctypes IMPORT int;
 

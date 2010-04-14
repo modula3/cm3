@@ -14,8 +14,8 @@ UNSAFE MODULE ThreadPosix EXPORTS Thread, ThreadF, RTThread,
 Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPosix;
 
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
-       RTError, RTParams, RTPerfTool, RTProcedureSRC,
-       RTProcess, RTIO, ThreadEvent, Time, Uexec, RuntimeError;
+       RTError, RTParams, RTPerfTool, RTProcedureSRC, RTProcess,
+       RTIO, ThreadEvent, ThreadInternal, Time, Uexec, RuntimeError;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 
@@ -670,7 +670,8 @@ PROCEDURE CallSelect(nfd: CARDINAL; timeout: Time.T): int =
     FOR i := 0 TO gMaxActiveFDSet - 1 DO
       gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
     END;
-    res := Select(nfd, gReadFDS[0], gWriteFDS[0], gExceptFDS[0], timeout);
+    res := ThreadInternal.Select(nfd, gReadFDS[0], gWriteFDS[0],
+                                 gExceptFDS[0], timeout);
     IF res > 0 THEN
       FOR i := 0 TO gMaxActiveFDSet - 1 DO
         gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
