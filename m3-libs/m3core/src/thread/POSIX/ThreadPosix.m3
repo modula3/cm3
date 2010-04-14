@@ -15,9 +15,10 @@ Scheduler, SchedulerPosix, RTOS, RTHooks, ThreadPosix;
 
 IMPORT Cerrno, Cstring, FloatMode, MutexRep, RTHeapRep, RTCollectorSRC,
        RTError, RTParams, RTPerfTool, RTProcedureSRC, RTProcess,
-       RTIO, ThreadEvent, ThreadInternal, Time, Uexec, RuntimeError;
+       RTIO, ThreadEvent, Time, Uexec, RuntimeError;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
+FROM ThreadInternal IMPORT FDSet, FDSetSize, FDS, Select;
 
 REVEAL
   (* Remember, the report (p 43-44) says that MUTEX is predeclared and <: ROOT;
@@ -670,8 +671,7 @@ PROCEDURE CallSelect(nfd: CARDINAL; timeout: Time.T): int =
     FOR i := 0 TO gMaxActiveFDSet - 1 DO
       gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
     END;
-    res := ThreadInternal.Select(nfd, gReadFDS[0], gWriteFDS[0],
-                                 gExceptFDS[0], timeout);
+    res := Select(nfd, gReadFDS[0], gWriteFDS[0], gExceptFDS[0], timeout);
     IF res > 0 THEN
       FOR i := 0 TO gMaxActiveFDSet - 1 DO
         gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
