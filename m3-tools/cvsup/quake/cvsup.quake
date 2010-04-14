@@ -25,8 +25,6 @@
 % THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-%
-% $Id$
 
 % This chunk of quake code is included into the m3makefiles for the
 % various components.
@@ -51,38 +49,18 @@ M3_VARIANT = "CM3"
 proc version_impl(name) is
   local filename = name & ".m3"
   local tempname = "." & filename
-  local cmd = ""
-  local ret = 0
   if defined("_all")
-
     > tempname in
-      write("MODULE Version;", CR, CR, "BEGIN", CR, "  Name := ")
-    end
-
-    if defined("datetime")
-        >> tempname in
-          write("\"" & datetime() & "\";")
-        end
-    else
-
-    if equal("$Name$", "$" & "Name:  $")
-      cmd = "date -u +'\"U_%Y_%m_%d_%H_%M_%S\";'"
-    else
-      cmd = "echo '$Name$' | awk '{print \"\\\"\" $2 \"\\\";\";}'"
-    end
-    cmd = cmd & " >> " & tempname
-    if equal(M3_VARIANT, "PM3")
-      ret = exec(["/bin/sh", "-c", cmd])
-    else
-      exec("@" & cmd)
-    end
-
-    end
-
-    >> tempname in
+      write("MODULE Version;", CR, CR, "BEGIN", CR, "  Name := \"")
+      local up = ".." & SL
+      include(up & up & up & up & "scripts" & SL & "branch.quake")
+      if equal(Branch, "")
+        write(datetime())
+      else
+        write(Branch)
+      end
+      write("\";", CR)
       write("  Target := \"", TARGET, "\";", CR)
-    end
-    >> tempname in
       write("END Version.", CR)
     end
     cp_if(tempname, filename)
@@ -95,7 +73,7 @@ proc no_shared_lib() is
   if equal(M3_VARIANT, "PM3")
     option("shared_lib", "")
   else
-    % XXX is this right for CM3?
+    % XXX is this right for CM3? Highly unlikely.
     proc after_library_hooks(x) is
     end
   end
@@ -139,5 +117,3 @@ end
 if equal(TARGET, "PPC_DARWIN") or equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN") or equal(TARGET, "SOLgnu") or equal(TARGET, "SOLsun")
   SYSTEM_LIBS{"LIBC"} += "-lz"
 end
-
-
