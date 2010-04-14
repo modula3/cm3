@@ -8,7 +8,7 @@
 
 #include <windows.h>
 
-/* Modula-3 Time.T is seconds since Unix Epoch (Jan 1 1970) in floating point.
+/* Modula-3 Time.T is seconds since a platform specific epoch in floating point.
  */
 
 #ifdef __cplusplus
