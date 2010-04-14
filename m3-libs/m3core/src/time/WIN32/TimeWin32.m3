@@ -6,8 +6,6 @@
 (*      modified on Wed Sep 22 14:53:33 PDT 1993 by steveg     *)
 (*      modified on Thu Mar 11 13:01:04 PST 1993 by mjordan    *)
 
-(* $Id$ *)
-
 UNSAFE MODULE TimeWin32;
 
 IMPORT WinBase, Word;
