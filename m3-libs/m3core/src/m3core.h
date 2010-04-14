@@ -390,6 +390,26 @@ void
 __cdecl
 M3toC__FreeSharedS(TEXT, const char*);
 
+TEXT
+__cdecl
+M3toC__CopyStoT(const char*);
+
+struct timeval
+__cdecl
+TimePosix__ToUtime(double t);
+
+double
+__cdecl
+TimePosix__FromUtime(const struct timeval* tv);
+
+double
+__cdecl
+Time__Now(void);
+
+double
+__cdecl
+Time__ComputeGrain(void);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
