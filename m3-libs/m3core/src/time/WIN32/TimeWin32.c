@@ -22,8 +22,7 @@ TimeWin32__ToFileTime(double t)
     FILETIME ft;
     LARGE_INTEGER li;
 
-    t *= 1.0e7;
-    li.QuadPart = (__int64)t;
+    li.QuadPart = (__int64)(t * 1.0e7);
     ft.dwLowDateTime = li.LowPart;
     ft.dwHighDateTime = li.HighPart;
     return ft;
