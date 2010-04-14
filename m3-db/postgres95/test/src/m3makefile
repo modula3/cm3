@@ -1,3 +1,4 @@
+if SYSTEM_LIBS contains "POSTGRES95"
 
 import ("libm3")
 import ("postgres95")
@@ -8,4 +9,6 @@ program ("Demo")
 if defined("RUN")
   r = q_exec( "." & SL & "Demo" )
   write( CR, "program returned ", r, CR )
+end
+
 end
