@@ -77,8 +77,7 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
       FOR i := 0 TO fdindex DO
         gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
       END;
-      res := ThreadInternal.Select(nfd, gReadFDS[0], gWriteFDS[0],
-                                   gExceptFDS[0], timeout);
+      res := Select(nfd, gReadFDS[0], gWriteFDS[0], gExceptFDS[0], timeout);
       IF res > 0 THEN
         FOR i := 0 TO fdindex DO
           gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
