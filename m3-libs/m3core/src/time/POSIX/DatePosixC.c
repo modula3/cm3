@@ -33,14 +33,14 @@ typedef struct
 #define DATE_BSD
 #endif
 
-struct timeval TimePosix__ToUtime(double t);
-
 static const int Local = 0;
 static const int UTC = 1;
 EXTERN_CONST int const * const Date__Local = &Local;
 EXTERN_CONST int const * const Date__UTC = &UTC;
 
-void Date__FromTime(double t, int* z, Date_t* date)
+void
+__cdecl
+Date__FromTime(double t, int* z, Date_t* date)
 {
     struct tm* tm;
     struct timeval tv;
