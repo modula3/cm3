@@ -115,15 +115,6 @@ static void timeval_to_m3(const struct timeval* t, m3_timeval_t* m)
     m->usec = t->tv_usec;
 }
 
-static struct timeval* timeval_from_m3(struct timeval* t, const m3_timeval_t* m)
-{
-    if (!m) return 0;
-    assert(t);
-    t->tv_sec = m->sec;
-    t->tv_usec = m->usec;
-    return t;
-}
-
 int Utime__gettimeofday(m3_timeval_t* m3t)
 {
     struct timeval t;
@@ -174,17 +165,6 @@ struct tm* Utime__gmtime_r(const m3_time_t* m3t, struct tm* result)
 {
     time_t t = m3t ? *m3t : 0;
     return gmtime_r(m3t ? &t : 0, result);
-}
-
-int Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, m3_timeval_t* m3t)
-{
-    /* timeout sometimes is in-only, sometimes in-out */
-    struct timeval t;
-    int r;
-    ZERO_MEMORY(t);
-    r = select(nfds, readfds, writefds, exceptfds, timeval_from_m3(&t, m3t));
-    timeval_to_m3(&t, m3t);
-    return r;
 }
 
 #endif /* _WIN32 */
