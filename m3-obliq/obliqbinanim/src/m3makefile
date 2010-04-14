@@ -5,8 +5,6 @@
 % Last modified on Wed Mar 23 14:09:14 1994 by luca      
 %      modified on Wed Dec 22 15:43:58 PST 1993 by kalsow
 
-if HasTrestle()
-
 import("obliqlibm3")
 import("obliqlibui")
 import("obliqlibanim")
@@ -15,5 +13,3 @@ implementation("Main")
 
 Program("obliq-anim")
 ManPage("obliq-anim","1")
-
-end
