@@ -48,7 +48,7 @@ M3_VARIANT = "CM3"
 % name, if any, else the compilation date and time.
 proc version_impl(name) is
   local filename = name & ".m3"
-  local tempname = "." & filename
+  local tempname = filename & ".temp"
   if defined("_all")
     > tempname in
       write("MODULE Version;", CR, CR, "BEGIN", CR, "  Name := \"")
