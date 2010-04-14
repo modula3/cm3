@@ -8,6 +8,10 @@
 extern "C" {
 #endif
 
+#ifndef _WIN32
+
+#define MILLION (1000 * 1000)
+
 int
 __cdecl
 ThreadInternal__Select(int nfds,
@@ -27,6 +31,8 @@ ThreadInternal__Select(int nfds,
     timeout.tv_sec = n;
     return select(nfds, read, write, except, &timeout);
 }
+
+#endif
 
 #ifdef __cplusplus
 } /* extern "C" */

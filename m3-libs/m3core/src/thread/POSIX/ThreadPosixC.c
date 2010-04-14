@@ -46,8 +46,6 @@
 extern "C" {
 #endif
 
-#define MILLION (1000 * 1000)
-
 typedef void (*SignalHandler1)(int signo);
 
 #define setup_sigvtalrm     ThreadPosix__setup_sigvtalrm
@@ -319,26 +317,6 @@ ThreadPosix__SetVirtualTimer(void)
     it.it_interval = selected_interval;
     it.it_value    = selected_interval;
     return setitimer(ITIMER_VIRTUAL, &it, NULL);
-}
-
-int
-__cdecl
-ThreadPosix__Select(int nfds,
-                    ADDRESS read,
-                    ADDRESS write,
-                    ADDRESS except,
-                    LONGREAL/*Time.T*/ m3timeout)
-{
-    struct timeval timeout;
-    double n = { 0 };
-
-    if (m3timeout < 0)
-        return select(nfds, read, write, except, NULL);
-
-    ZERO_MEMORY(timeout);
-    timeout.tv_usec = modf(m3timeout, &n) * MILLION;
-    timeout.tv_sec = n;
-    return select(nfds, read, write, except, &timeout);
 }
 
 #ifdef __cplusplus
