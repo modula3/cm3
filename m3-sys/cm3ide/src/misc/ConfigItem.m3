@@ -23,6 +23,21 @@ CONST
   BROWSER = "web browser";
   EDITOR  = "text editor";
 
+  (* begin quick-fix patch by R.Coleburn * * * * * * * * * * * * * * * * * * *
+   *   On recent Windows, if another browser instance is open already, 
+   *   "start /wait" returns immediately, so to prevent immediate 
+   *   termination of CM3IDE we need to change to "return FALSE".
+   *   At some point, we may have a better work-around for this,
+   *   so this patch may need to go away, hence my careful commenting. *)
+   CONST
+      unix_proc_tail : TEXT = "\", initial_url)\n"
+         & "  return TRUE %==> server terminates when browser terminates\n"
+         & "end\n";
+	  win32_proc_tail: TEXT = "\", initial_url)\n"
+         & "  return FALSE %==> server keeps running when browser terminates\n"
+         & "end\n";
+  (* end quick-fix patch by R.Coleburn * * * * * * * * * * * * * * * * * * * *)
+  
 CONST
   Defaults = ARRAY T OF ItemDefault {
     ItemDefault { T.Verbose_log,           0,      1,    0 },
@@ -161,6 +176,7 @@ PROCEDURE SetProc (READONLY desc: ItemDesc;  txt: TEXT): TEXT =
 
 PROCEDURE BuildProc (READONLY desc: ItemDesc;  prog: TEXT): TEXT =
   VAR mid: TEXT;
+      proc_tail: TEXT; (* this line added by R.Coleburn for quick-fix patch *)
   BEGIN
     WITH z = Defaults[desc.id] DO
       IF (z.prog_name # NIL) THEN  prog := GetProg (z.prog_name, prog);  END;
@@ -169,7 +185,15 @@ PROCEDURE BuildProc (READONLY desc: ItemDesc;  prog: TEXT): TEXT =
         THEN mid := z.unix_middle;
         ELSE mid := z.win32_middle;
       END;
-      RETURN z.proc_head & mid & FindCm3 (z.cm3) & prog & z.proc_tail;
+	  IF z.id = T.Start_browser THEN         (* this line added by R.Coleburn for quick-fix patch *)
+	    IF Default.on_unix                   (* this line added by R.Coleburn for quick-fix patch *)
+		  THEN proc_tail := unix_proc_tail;  (* this line added by R.Coleburn for quick-fix patch *)
+		  ELSE proc_tail := win32_proc_tail; (* this line added by R.Coleburn for quick-fix patch *)
+		END;                                 (* this line added by R.Coleburn for quick-fix patch *)
+	  ELSE proc_tail := z.proc_tail;         (* this line added by R.Coleburn for quick-fix patch *)
+	  END;                                   (* this line added by R.Coleburn for quick-fix patch *)
+(* for quick-fix patch by R.Coleburn, replace this line with the next one:      RETURN z.proc_head & mid & FindCm3 (z.cm3) & prog & z.proc_tail; *)
+      RETURN z.proc_head & mid & FindCm3 (z.cm3) & prog & proc_tail; (* this line replaces prior line for quick-fix patch by R.Coleburn *)
     END;
   END BuildProc;
 
