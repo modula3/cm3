@@ -1,3 +1,0 @@
-Branch = "$Name: not supported by cvs2svn $"
-Branch = subst(Name, "$Name: ", "", 1)
-Branch = subst(Name, " $", "", 1)
