@@ -15,9 +15,6 @@ IMPORT Atom, AtomList, Cerrno, Ctypes, ConnFD, IP, JVBuffer,
 
 (**IMPORT Stdio;**)
 
-FROM Ctypes IMPORT int;
-FROM Utypes IMPORT u_int;
-
 CONST RetrySeconds = 30.0d0;
 
 REVEAL
@@ -51,16 +48,6 @@ REVEAL
       END;
 
 (* {{{ -- methods -- *)
-
-PROCEDURE signed_ntohl(x: int): int =
-  BEGIN
-    RETURN LOOPHOLE(Uin.ntohl(LOOPHOLE(x, u_int)), int)
-  END signed_ntohl;
-
-PROCEDURE signed_htonl(x: int): int =
-  BEGIN
-    RETURN LOOPHOLE(Uin.htonl(LOOPHOLE(x, u_int)), int)
-  END signed_htonl;
 
 PROCEDURE Init (t         : T;
                 hostname  : TEXT;
@@ -214,7 +201,7 @@ PROCEDURE ReadApply (cl: Closure): REFANY =
   (* control data from the server currently is thrown away *)
   PROCEDURE GetControl (netlength: Ctypes.int)
     RAISES {Rd.Failure, Thread.Alerted} =
-    VAR length := signed_ntohl(netlength);
+    VAR length := Uin.ntohl(netlength);
     BEGIN
       IF length > jvprotocol.MaxControlMsgSize THEN
         RAISE Rd.Failure(NIL);
@@ -253,7 +240,7 @@ PROCEDURE ReadApply (cl: Closure): REFANY =
         LOCK t DO GetHeader(t, t.tcp, buffer); END;
 
         IF any.type = jvprotocol.JVP_VIDEO THEN
-          VAR subtype := JvsBuffer.Subtype2(signed_ntohl(hdr.length));
+          VAR subtype := JvsBuffer.Subtype2(Uin.ntohl(hdr.length));
           BEGIN
             IF jvbuff # NIL AND jvbuff.subtype # subtype THEN
               jvbuff.free();
@@ -308,25 +295,25 @@ PROCEDURE ReadApply (cl: Closure): REFANY =
               WITH type = LOOPHOLE(any, jvprotocol.VideoTypePtr),
                    si   = t.info                                  DO
                 INC(si.serial);
-                si.qfactor := signed_ntohl(type.qfactor);
-                si.width := signed_ntohl(type.width);
-                si.height := signed_ntohl(type.height);
+                si.qfactor := Uin.ntohl(type.qfactor);
+                si.width := Uin.ntohl(type.width);
+                si.height := Uin.ntohl(type.height);
               END;
           | jvprotocol.JVP_SYNC =>
               WITH sync = LOOPHOLE(any, jvprotocol.SyncFramePtr) DO
                 (* if this is the reply we're waiting for, send credits to
                    restart stream *)
-                IF t.sync = signed_ntohl(sync.code) THEN t.sync := 0; END;
+                IF t.sync = Uin.ntohl(sync.code) THEN t.sync := 0; END;
               END;
           | jvprotocol.JVP_QUALITIES =>
               length := LOOPHOLE(any, jvprotocol.QualitiesFramePtr).length;
-              GetControl(signed_ntohl(length));
+              GetControl(Uin.ntohl(length));
           | jvprotocol.JVP_ERROR =>
               length := LOOPHOLE(any, jvprotocol.ErrorFramePtr).length;
-              GetControl(signed_ntohl(length));
+              GetControl(Uin.ntohl(length));
           | jvprotocol.JVP_INFO =>
               length := LOOPHOLE(any, jvprotocol.InfoFramePtr).length;
-              GetControl(signed_ntohl(length));
+              GetControl(Uin.ntohl(length));
           | jvprotocol.JVP_VIDEO_UDP_REQUEST,
               jvprotocol.JVP_VIDEO_UDP_RESPONSE =>
           | jvprotocol.JVP_AUDIO, jvprotocol.JVP_STATUS,
@@ -396,7 +383,7 @@ PROCEDURE GetHeader (o: T; t: TCP.T; VAR buffer: jvprotocol.Header)
     bytesLeft: CARDINAL;
   BEGIN
     GetMinBytes(o, t, SUBARRAY(buffer, 0, AnySize));
-    any.type := signed_ntohl(any.type);
+    any.type := Uin.ntohl(any.type);
     CASE any.type OF
     | jvprotocol.JVP_FirstEvent .. jvprotocol.JVP_LastEvent =>
         bytesLeft := jvprotocol.HdrSizes[any.type] - AnySize;
@@ -437,9 +424,9 @@ PROCEDURE GetFrame (         t     : T;
     <* ASSERT jvb # NIL *>
     jvb.serial := t.readSerial;
     INC(t.readSerial);
-    jvb.timestamp.tv_sec := signed_ntohl(hdr.timestamp.tv_sec);
-    jvb.timestamp.tv_usec := signed_ntohl(hdr.timestamp.tv_usec);
-    jvb.frameLength := signed_ntohl(hdr.length);
+    jvb.timestamp.tv_sec := Uin.ntohl(hdr.timestamp.tv_sec);
+    jvb.timestamp.tv_usec := Uin.ntohl(hdr.timestamp.tv_usec);
+    jvb.frameLength := Uin.ntohl(hdr.length);
     jvb.localTime := Tick.Now();
 
     <* ASSERT jvb.frameLength <= jvb.length *>
@@ -596,8 +583,8 @@ PROCEDURE SendFrameRateToSource (         t  : TCP.T;
     nmsg := msg;
     data := LOOPHOLE(ADR(nmsg), UNTRACED REF ARRAY [0 .. 7] OF CHAR);
   BEGIN
-    nmsg.type := signed_htonl(nmsg.type);
-    nmsg.period := signed_htonl(nmsg.period);
+    nmsg.type := Uin.htonl(nmsg.type);
+    nmsg.period := Uin.htonl(nmsg.period);
     t.put(data^);
   END SendFrameRateToSource;
 

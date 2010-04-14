@@ -6,7 +6,6 @@
 (*      modified on Thu Aug 19 10:29:32 PDT 1993 by sfreeman *)
 INTERFACE jvprotocol;
 
-IMPORT Utime;
 FROM Ctypes IMPORT int, unsigned_int, unsigned_short_int;
 
 (* The ports were once upon a time htons'ed.  INET ports are in local
@@ -93,11 +92,19 @@ CONST MaxControlMsgBytes =  128; (* storage for non-video data *)
       MaxControlMsgSize = 128 DIV BYTESIZE(CHAR);
 TYPE ControlBuffer = ARRAY [0 .. MaxControlMsgSize - 1] OF CHAR;
 
+(* This does not appear to really be used for anything.
+ * Formerly from Utime.
+ *)
+TYPE struct_timeval = RECORD
+    tv_sec: unsigned_int;  (* Really should be LONGINT for year 2038. *)
+    tv_usec: unsigned_int; (* Really should be LONGINT for alignment. *)
+  END;
+
 TYPE
   VideoFrame = RECORD
                  type     : int                    := JVP_VIDEO;
                  length   : int;
-                 timestamp: Utime.struct_timeval;
+                 timestamp: struct_timeval;
                  (* data goes here for 'length' bytes *)
                END;
   VideoFramePtr = UNTRACED REF VideoFrame;
@@ -128,7 +135,7 @@ TYPE
                  seqNum: unsigned_int;  (* not consecutive; cumulative
                                            count of samples *)
                  length   : int;
-                 timestamp: Utime.struct_timeval;
+                 timestamp: struct_timeval;
                  (* data goes here for 'length' bytes *)
                END;
   AudioFramePtr = UNTRACED REF AudioFrame;
@@ -161,7 +168,7 @@ TYPE
 TYPE
   EndMark = RECORD
               type     : int                    := JVP_ENDMARK;
-              timestamp: Utime.struct_timeval;
+              timestamp: struct_timeval;
             END;
   EndMarkPtr = UNTRACED REF EndMark;
 
@@ -178,7 +185,7 @@ TYPE
                 type  : int   := JVP_INFO;
                 length: int;     (* of data following *)
                 code  : int;     (* whatever *)
-                timestamp: Utime.struct_timeval;
+                timestamp: struct_timeval;
                 (* Additional data here *)
               END;
   InfoFramePtr = UNTRACED REF InfoFrame;
@@ -190,7 +197,7 @@ TYPE
       seqNum: unsigned_int;      (* not consecutive; cumulative count of
                                     samples *)
       length: int;               (* number of silent samples *)
-      timestamp: Utime.struct_timeval;
+      timestamp: struct_timeval;
     END;
   AudioSilenceFramePtr = UNTRACED REF AudioSilenceFrame;
 
@@ -215,7 +222,7 @@ TYPE
   VideoUdpData = RECORD
                    type       : int   := JVP_VIDEO_UDP_DATA;
                    jvpu_length: int;  (* total data *)
-                   jvpu_timestamp: ARRAY [0 .. 1] OF Utime.struct_timeval;
+                   jvpu_timestamp: ARRAY [0 .. 1] OF struct_timeval;
                    (* lance wanted two *)
                    jvpu_sequence: int;  (* for reassembly *)
                  END;
