@@ -9,9 +9,8 @@ UNSAFE MODULE SchedulerPosix;
 FROM ThreadWin32 IMPORT PerfChanged, PerfRunning, XTestAlert, perfOn;
 FROM ThreadF IMPORT State, MyId;
 FROM Thread IMPORT Alerted, Self, T;
-IMPORT Unix, Cerrno, Uerror, Utime, Time;
+IMPORT Cerrno, ThreadInternal, Time, Uerror, Unix, Utime, Uexec;
 FROM Ctypes IMPORT int;
-IMPORT Uexec;
 
 CONST FDSetSize = BITSIZE(INTEGER);
 

@@ -12,6 +12,8 @@ Interface ("ThreadF")
 Interface ("Scheduler")
 if equal (OS_TYPE, "POSIX")
     Interface ("SchedulerPosix")
+    interface("ThreadInternal")
+    c_source("ThreadInternal")
 else
     interface ("ThreadDebug")
     c_source("ThreadDebug")

@@ -6,8 +6,8 @@ UNSAFE MODULE ThreadPThread EXPORTS Thread, ThreadF, RTThread, Scheduler,
 SchedulerPosix, RTOS, RTHooks, ThreadPThread;
 
 IMPORT Cerrno, FloatMode, MutexRep, RTCollectorSRC, RTError, RTHeapRep, RTIO,
-       RTParams, RTPerfTool, RTProcess, ThreadEvent, Time, Word,
-       Usched, Uerror, Uexec;
+       RTParams, RTPerfTool, RTProcess, ThreadEvent, ThreadInternal, Time,
+       Word, Usched, Uerror, Uexec;
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 IMPORT RuntimeError AS RTE;
@@ -643,7 +643,8 @@ PROCEDURE XIOWait (self: Activation; fd: CARDINAL; read: BOOLEAN;
       FOR i := 0 TO fdindex DO
         gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
       END;
-      res := Select(nfd, gReadFDS[0], gWriteFDS[0], gExceptFDS[0], timeout);
+      res := ThreadInternal.Select(nfd, gReadFDS[0], gWriteFDS[0],
+                                   gExceptFDS[0], timeout);
       IF res > 0 THEN
         FOR i := 0 TO fdindex DO
           gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
