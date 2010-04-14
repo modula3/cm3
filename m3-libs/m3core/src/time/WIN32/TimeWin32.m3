@@ -6,8 +6,6 @@
 (*      modified on Wed Sep 22 14:53:33 PDT 1993 by steveg     *)
 (*      modified on Thu Mar 11 13:01:04 PST 1993 by mjordan    *)
 
-(* $Id: TimeWin32.m3,v 1.2 2008-02-11 08:56:15 jkrell Exp $ *)
-
 UNSAFE MODULE TimeWin32;
 
 IMPORT WinBase, Word;
