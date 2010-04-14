@@ -9,14 +9,9 @@ UNSAFE MODULE SchedulerPosix;
 FROM ThreadWin32 IMPORT PerfChanged, PerfRunning, XTestAlert, perfOn;
 FROM ThreadF IMPORT State, MyId;
 FROM Thread IMPORT Alerted, Self, T;
-IMPORT Cerrno, ThreadInternal, Time, Uerror, Unix, Utime, Uexec;
+IMPORT Cerrno, Time, Uerror, Uexec;
 FROM Ctypes IMPORT int;
-
-CONST FDSetSize = BITSIZE(INTEGER);
-
-TYPE
-  FDSet = SET OF [0 .. FDSetSize-1];
-  FDS = REF ARRAY OF FDSet;
+FROM ThreadInternal IMPORT FDSet, FDSetSize, FDS, Select;
 
 PROCEDURE IOWait (fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult =
@@ -76,18 +71,14 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
       RETURN WaitResult.Timeout;
     END TestFDS;
 
-  PROCEDURE CallSelect (nfd: CARDINAL; timeout: UNTRACED REF UTime): INTEGER =
-    TYPE FDSPtr = UNTRACED REF Unix.FDSet;
+  PROCEDURE CallSelect (nfd: CARDINAL; timeout: Time.T): INTEGER =
     VAR res: INTEGER;
     BEGIN
       FOR i := 0 TO fdindex DO
         gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
       END;
-      res := Unix.select(nfd,
-                         LOOPHOLE (ADR(gReadFDS[0]), FDSPtr),
-                         LOOPHOLE (ADR(gWriteFDS[0]), FDSPtr),
-                         LOOPHOLE (ADR(gExceptFDS[0]), FDSPtr),
-                         timeout);
+      res := ThreadInternal.Select(nfd, gReadFDS[0], gWriteFDS[0],
+                                   gExceptFDS[0], timeout);
       IF res > 0 THEN
         FOR i := 0 TO fdindex DO
           gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
@@ -116,14 +107,7 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
         ELSE gWriteFDS[fdindex] := fdset;
       END;
 
-      IF subInterval >= 0.0D0 THEN
-        VAR utimeout := UTimeFromTime(subInterval);
-        BEGIN
-          res := CallSelect(fd + 1, ADR(utimeout));
-        END;
-      ELSE
-        res := CallSelect(fd + 1, NIL);
-      END;
+      res := CallSelect(fd + 1, subInterval);
 
       IF alertable AND TestAlert() THEN RAISE Alerted END;
 
@@ -143,14 +127,6 @@ PROCEDURE XIOWait (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
       END;
     END;
   END XIOWait;
-
-TYPE UTime = Utime.struct_timeval;
-
-PROCEDURE UTimeFromTime (time: Time.T): UTime =
-  VAR floor := FLOOR(time);
-  BEGIN
-    RETURN UTime{floor, FLOOR(1.0D6 * (time - FLOAT(floor, LONGREAL)))};
-  END UTimeFromTime;
 
 PROCEDURE WaitProcess (pid: int; VAR status: int): int =
   (* ThreadPThread.m3 and ThreadPosix.m3 are very similar. *)
