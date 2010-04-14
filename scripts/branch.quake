@@ -1,0 +1,3 @@
+Branch = "$Name$"
+Branch = subst(Name, "$Name: ", "", 1)
+Branch = subst(Name, " $", "", 1)
