@@ -9,7 +9,8 @@
 
 INTERFACE JVBuffer;
 
-IMPORT Ctypes, OSError, Thread, Tick, Utime;
+IMPORT Ctypes, OSError, Thread, Tick;
+FROM jvprotocol IMPORT struct_timeval;
 
 TYPE Serial = CARDINAL;
 
@@ -20,7 +21,7 @@ TYPE
   Public =
     MUTEX OBJECT
       serial   : Serial                 := 0; (* id of frame *)
-      timestamp: Utime.struct_timeval;
+      timestamp: struct_timeval;
       localTime: Tick.T;
       (* time the previous stage in the pipeline finished processing *)
       length, frameLength: CARDINAL     := 0;
