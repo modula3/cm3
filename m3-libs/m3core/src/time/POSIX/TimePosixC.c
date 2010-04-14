@@ -55,10 +55,10 @@ static
 T
 ComputeGrainOnce(void)
 {
-  /* Determine value of "Grain" experimentally.  Note that
-   * this will fail if this thread is descheduled for a tick during the
-   * loop below. Omitting volatile leads to the result is 0 on Cygwin if optimized.
-   */
+    /* Determine value of "Grain" experimentally.  Note that
+     * this will fail if this thread is descheduled for a tick during the
+     * loop below. Omitting volatile leads to the result is 0 on Cygwin if optimized.
+     */
     volatile T t0 = Time__Now();
     while (1)
     {
