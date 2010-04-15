@@ -40,8 +40,7 @@ TYPE
    *)
   off_t = int64_t;
 
-  (* Ideally this is always 64 bits, else time runs out in 2038 on 32bit systems. *)
-  time_t = INTEGER;
+  time_t = LONGINT;
 
   (* NOTE: Signedness of gid_t and uid_t can be important.
    * see how cvsup sets NoOwner and NoGroup.

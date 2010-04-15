@@ -6,25 +6,7 @@
 %      modified on Tue Jun 15 21:53:44 PDT 1993 by harrison
 %      modified on Tue May  4 10:16:00 PDT 1993 by mjordan
 
-
-readonly _DateImpls = {
-  "CYGWIN"  : "DatePosix",
-  "DARWIN"  : "DateBsd",
-  "FREEBSD" : "DateBsd",
-  "HPUX"    : "DatePosix",
-  "INTERIX" : "DatePosix",
-  "LINUX"   : "DateBsd",
-  "NETBSD"  : "DateBsd",
-  "NT"      : "DatePosix",
-  "OPENBSD" : "DateBsd",
-  "SOLARIS" : "DatePosix",
-}
-
-if equal(_DateImpls {TARGET_OS}, "DateBsd") and KernelThreads
-  exec("@grep -v \" mu \" ../src/time/POSIX/DateBsd.m3 > DateBsd.m3.tmp")
-  cp_if("DateBsd.m3.tmp", "DateBsd.m3")
-  derived_implementation ("DateBsd")
-else
-  implementation (_DateImpls {TARGET_OS})
-end
-Module("TimePosix")
+module("TimePosix")
+module("DatePosix")
+c_source("DatePosixC")
+c_source("TimePosixC")

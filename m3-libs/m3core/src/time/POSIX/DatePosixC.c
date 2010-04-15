@@ -25,7 +25,7 @@ extern "C" {
 
 void
 __cdecl
-DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown)
+DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown, TEXT gmt)
 {
     struct tm* tm;
     struct timeval tv;
@@ -34,15 +34,13 @@ DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown)
     tzset();
     ZeroMemory(date, sizeof(*date));
     ZeroMemory(&tv, sizeof(tv));
-    ZeroMemory(&tm_storage, sizeof(tm_storage));
- 
-    tv = TimePosix__ToUtime(t);
+    ZeroMemory(&tm_storage, sizeof(tm_storage)); 
+    tv = TimePosix__ToUtime(t);    
+    assert(zone == NULL || *zone == Local || *zone == UTC);
     if (zone == NULL || *zone == Local)
         tm = localtime_r(&tv.tv_sec, &tm_storage);
     else if (*zone == UTC)
         tm = gmtime_r(&tv.tv_sec, &tm_storage);
-    else
-        assert(0);
     date->year = tm->tm_year + 1900;
     date->month = tm->tm_mon;
     date->day = tm->tm_mday;
@@ -59,24 +57,32 @@ DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown)
     date->offset = -tm->tm_gmtoff;
     date->zone = M3toC__CopyStoT(tm->tm_zone);
 #else
-    if (tm->tm_isdst == 0)
+    if (zone == NULL || *zone == Local)
     {
-        date->offset = Utime__get_timezone();
-        date->zone = M3toC__CopyStoT(Utime__get_tzname(0));
-    }
-    else if (tm->tm_isdst > 0 && Utime__get_daylight())
-    {
+        if (tm->tm_isdst == 0)
+        {
+            date->offset = Utime__get_timezone();
+            date->zone = M3toC__CopyStoT(Utime__get_tzname(0));
+        }
+        else if (tm->tm_isdst > 0 && Utime__get_daylight())
+        {
 #ifdef __sun
-        date->offset = Utime__get_altzone();
+            date->offset = Utime__get_altzone();
 #else
-        date->offset = Utime__get_timezone() - 3600;
+            date->offset = Utime__get_timezone() - 3600;
 #endif
-        date->zone = M3toC__CopyStoT(Utime__get_tzname(1));
+            date->zone = M3toC__CopyStoT(Utime__get_tzname(1));
+        }
+        else
+        {
+            date->offset = 0;
+            date->zone   = unknown;
+        }
     }
     else
     {
-      date->offset = 0;
-      date->zone   = unknown;
+        date->offset = 0;
+        date->zone  = gmt;
     }
 #endif
 }
@@ -124,6 +130,22 @@ DatePosix__ToTime(const Date_t* date)
 #endif
     /* convert to a "Time.T" */
     return t;
+}
+
+void
+__cdecl
+DatePosix__TypeCheck(const Date_t* d, size_t sizeof_DateT)
+{
+    assert(sizeof(Date_t) == sizeof_DateT);
+    assert(d->year == 1);
+    assert(d->month == 2);
+    assert(d->day == 3);
+    assert(d->hour == 4);
+    assert(d->minute == 5);
+    assert(d->second == 6);
+    assert(d->offset == 7);
+    assert(d->zone == (TEXT)8);
+    assert(d->weekDay == 6);
 }
 
 #ifdef __cplusplus
