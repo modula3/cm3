@@ -27,44 +27,43 @@ void
 __cdecl
 DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown, TEXT gmt)
 {
-    struct tm* tm;
+    struct tm tm;
     struct timeval tv;
-    struct tm tm_storage;
     
     tzset();
     ZeroMemory(date, sizeof(*date));
-    ZeroMemory(&tv, sizeof(tv));
-    ZeroMemory(&tm_storage, sizeof(tm_storage)); 
+    ZERO_MEMORY(tv);
+    ZERO_MEMORY(tm);
     tv = TimePosix__ToUtime(t);    
     assert(zone == NULL || *zone == Local || *zone == UTC);
     if (zone == NULL || *zone == Local)
-        tm = localtime_r(&tv.tv_sec, &tm_storage);
+        localtime_r(&tv.tv_sec, &tm);
     else if (*zone == UTC)
-        tm = gmtime_r(&tv.tv_sec, &tm_storage);
-    date->year = tm->tm_year + 1900;
-    date->month = tm->tm_mon;
-    date->day = tm->tm_mday;
-    date->hour = tm->tm_hour;
-    date->minute = tm->tm_min;
-    date->second = tm->tm_sec;
-    date->weekDay = tm->tm_wday;
+        gmtime_r(&tv.tv_sec, &tm);
+    date->year = tm.tm_year + 1900;
+    date->month = tm.tm_mon;
+    date->day = tm.tm_mday;
+    date->hour = tm.tm_hour;
+    date->minute = tm.tm_min;
+    date->second = tm.tm_sec;
+    date->weekDay = tm.tm_wday;
 
 #ifdef DATE_BSD
     /* The "tm.tm_gmtoff" field is seconds *east* of GMT, whereas
      * the "date.offset" field is seconds *west* of GMT, so a
      * negation is necessary.
      */
-    date->offset = -tm->tm_gmtoff;
-    date->zone = M3toC__CopyStoT(tm->tm_zone);
+    date->offset = -tm.tm_gmtoff;
+    date->zone = M3toC__CopyStoT(tm.tm_zone);
 #else
     if (zone == NULL || *zone == Local)
     {
-        if (tm->tm_isdst == 0)
+        if (tm.tm_isdst == 0)
         {
             date->offset = Utime__get_timezone();
             date->zone = M3toC__CopyStoT(Utime__get_tzname(0));
         }
-        else if (tm->tm_isdst > 0 && Utime__get_daylight())
+        else if (tm.tm_isdst > 0 && Utime__get_daylight())
         {
 #ifdef __sun
             date->offset = Utime__get_altzone();
