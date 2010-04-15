@@ -283,37 +283,11 @@ int __cdecl Umman__munmap(ADDRESS addr, size_t len);
 typedef INT64 m3_time_t;
 #endif
 
-typedef struct {
-/* verified to exactly match struct timezone in UnixC.c */
-    int minuteswest;
-    int dsttime;
-} m3_timezone_t;
-
-typedef struct {
-/* somewhat idealized, but ideally we'd use INT64 here */
-    INTEGER sec;
-    INTEGER usec; /* microsec */
-} m3_timeval_t;
-
-#ifndef _WIN32
-m3_time_t __cdecl Utime__get_timezone(void);
-m3_time_t __cdecl Utime__get_altzone(void);
-#endif
-int __cdecl Utime__get_daylight(void);
-const char* __cdecl Utime__get_tzname(unsigned a);
-int __cdecl Utime__gettimeofday(m3_timeval_t* m3t);
 #ifndef _WIN32
 m3_time_t __cdecl Utime__time(m3_time_t* tloc);
-m3_time_t __cdecl Utime__mktime(struct tm* tm);
 char* __cdecl Utime__ctime(const m3_time_t* m);
-struct tm* __cdecl Utime__localtime(const m3_time_t* m);
-struct tm* __cdecl Utime__gmtime(const m3_time_t* m);
-struct tm* __cdecl Utime__localtime_r(const m3_time_t* clock, struct tm* result);
-struct tm* __cdecl Utime__gmtime_r(const m3_time_t* clock, struct tm* result);
 #endif
 void __cdecl Utime__tzset(void);
-int __cdecl Unix__utimes(const char* file, const m3_timeval_t* tvp);
-int __cdecl Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* exceptfds, m3_timeval_t* timeout);
 
 
 /* Some compilers don't like this, will adjust as needed. */
@@ -330,7 +304,6 @@ int __cdecl Unix__select(int nfds, fd_set* readfds, fd_set* writefds, fd_set* ex
 
 void __cdecl Unix__Assertions(void);
 void __cdecl Usocket__Assertions(void);
-void __cdecl Utime__Assertions(void);
 
 
 int __cdecl Unix__open(const char* path, int flags, m3_mode_t mode);

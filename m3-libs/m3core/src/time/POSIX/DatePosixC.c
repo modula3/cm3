@@ -14,6 +14,14 @@
 extern "C" {
 #endif
 
+#ifdef __CYGWIN__
+#define M3_TIMEZONE _timezone
+#define M3_DAYLIGHT _daylight
+#else
+#define M3_TIMEZONE timezone
+#define M3_DAYLIGHT daylight
+#endif
+
 #if defined(__CYGWIN__) || defined(__hpux) || defined(__sun) || defined(__INTERIX)
 #define DATE_POSIX
 #else
@@ -57,17 +65,17 @@ DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown
     {
         if (tm->tm_isdst == 0)
         {
-            date->offset = Utime__get_timezone();
-            date->zone = M3toC__CopyStoT(Utime__get_tzname(0));
+            date->offset = M3_TIMEZONE;
+            date->zone = M3toC__CopyStoT(tzname[0]);
         }
-        else if (tm->tm_isdst > 0 && Utime__get_daylight())
+        else if (tm->tm_isdst > 0 && M3_DAYLIGHT)
         {
 #ifdef __sun
-            date->offset = Utime__get_altzone();
+            date->offset = altzone;
 #else
-            date->offset = Utime__get_timezone() - 3600;
+            date->offset = M3_TIMEZONE - 3600;
 #endif
-            date->zone = M3toC__CopyStoT(Utime__get_tzname(1));
+            date->zone = M3toC__CopyStoT(tzname[1]);
         }
         else
         {
