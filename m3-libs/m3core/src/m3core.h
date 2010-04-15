@@ -414,7 +414,6 @@ double
 __cdecl
 TimePosix__ComputeGrain(void);
 
-
 typedef struct
 {
   size_t year;
@@ -430,7 +429,7 @@ typedef struct
 
 void
 __cdecl
-DatePosix__FromTime(double t, ptrdiff_t* zone, Date_t* date);
+DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown);
 
 double
 __cdecl
