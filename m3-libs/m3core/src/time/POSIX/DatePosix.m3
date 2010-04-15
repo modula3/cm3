@@ -7,7 +7,7 @@
 (*      modified on Fri Dec  4 17:35:53 PST 1992 by mcjones *)
 
 UNSAFE MODULE DatePosix EXPORTS Date;
-IMPORT Time, Date, DatePosix, Utime;
+IMPORT Scheduler, Time, Date, DatePosix, Utime;
 
 REVEAL TimeZone = BRANDED "Date.TimeZone" REF INTEGER;
 
@@ -17,7 +17,9 @@ CONST GMT = "GMT";
 PROCEDURE FromTime(t: Time.T; z: TimeZone := NIL): Date.T =
   VAR d: DatePosix.T;
   BEGIN
+    Scheduler.DisableSwitching();
     DatePosix.FromTime(t, z, d, Unknown, GMT);
+    Scheduler.EnableSwitching();
     RETURN Date.T{day     := d.day,
                   hour    := d.hour,
                   minute  := d.minute,
@@ -32,6 +34,7 @@ PROCEDURE FromTime(t: Time.T; z: TimeZone := NIL): Date.T =
 PROCEDURE ToTime(READONLY d: T): Time.T RAISES {Error} =
   VAR t: Time.T;
   BEGIN
+    Scheduler.DisableSwitching();
     t := DatePosix.ToTime(DatePosix.T{day     := d.day,
                                       hour    := d.hour,
                                       minute  := d.minute,
@@ -41,12 +44,15 @@ PROCEDURE ToTime(READONLY d: T): Time.T RAISES {Error} =
                                       weekDay := ORD(d.weekDay),
                                       year    := d.year,
                                       zone    := d.zone});
+    Scheduler.EnableSwitching();
     IF t = -1.0d0 THEN RAISE Error END;
     RETURN t;
   END ToTime;
 
 BEGIN
+  Scheduler.DisableSwitching();
   Utime.tzset (); (* initialize Utime's global variables *)
+  Scheduler.EnableSwitching();
   Local := NEW(TimeZone);  Local^ := 0;
   UTC   := NEW(TimeZone);  UTC^   := 1;
   DatePosix.TypeCheck(DatePosix.T{year := 1, month := 2, day := 3, hour := 4,

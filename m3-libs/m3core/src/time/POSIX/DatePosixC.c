@@ -27,44 +27,40 @@ void
 __cdecl
 DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown, TEXT gmt)
 {
-    struct tm tm;
+    struct tm* tm = { 0 };
     struct timeval tv;
     ptrdiff_t zone = (pzone ? *pzone : Local);
-    
-    tzset();
+
     ZeroMemory(date, sizeof(*date));
     ZERO_MEMORY(tv);
-    ZERO_MEMORY(tm);
     tv = TimePosix__ToUtime(t);    
     assert(zone == Local || zone == UTC);
-    if (zone == Local)
-        localtime_r(&tv.tv_sec, &tm);
-    else
-        gmtime_r(&tv.tv_sec, &tm);
-    date->year = tm.tm_year + 1900;
-    date->month = tm.tm_mon;
-    date->day = tm.tm_mday;
-    date->hour = tm.tm_hour;
-    date->minute = tm.tm_min;
-    date->second = tm.tm_sec;
-    date->weekDay = tm.tm_wday;
+    tm = ((zone == Local) ? localtime(&tv.tv_sec) : gmtime(&tv.tv_sec));
+    assert(tm != NULL);
+    date->year = tm->tm_year + 1900;
+    date->month = tm->tm_mon;
+    date->day = tm->tm_mday;
+    date->hour = tm->tm_hour;
+    date->minute = tm->tm_min;
+    date->second = tm->tm_sec;
+    date->weekDay = tm->tm_wday;
 
 #ifdef DATE_BSD
-    /* The "tm.tm_gmtoff" field is seconds *east* of GMT, whereas
+    /* The "tm->tm_gmtoff" field is seconds *east* of GMT, whereas
      * the "date.offset" field is seconds *west* of GMT, so a
      * negation is necessary.
      */
-    date->offset = -tm.tm_gmtoff;
-    date->zone = M3toC__CopyStoT(tm.tm_zone);
+    date->offset = -tm->tm_gmtoff;
+    date->zone = M3toC__CopyStoT(tm->tm_zone);
 #else
     if (zone == Local)
     {
-        if (tm.tm_isdst == 0)
+        if (tm->tm_isdst == 0)
         {
             date->offset = Utime__get_timezone();
             date->zone = M3toC__CopyStoT(Utime__get_tzname(0));
         }
-        else if (tm.tm_isdst > 0 && Utime__get_daylight())
+        else if (tm->tm_isdst > 0 && Utime__get_daylight())
         {
 #ifdef __sun
             date->offset = Utime__get_altzone();
@@ -96,9 +92,7 @@ DatePosix__ToTime(const Date_t* date)
 #ifdef DATE_BSD
     const unsigned SecsPerHour = 60 * 60;
     time_t now = { 0 };
-    struct tm local_now;
-
-    ZERO_MEMORY(local_now);
+    struct tm* local_now = { 0 };
 #endif
 
     /* prepare call to mktime(3) */
@@ -115,20 +109,21 @@ DatePosix__ToTime(const Date_t* date)
     t = mktime(&tm);
 #ifdef DATE_BSD
     if (t == -1)
-        return t;
+        goto Exit;
 
     /* adjust result to reflect "date->offset" */
     time(&now);
-    localtime_r(&now, &local_now);
-    if (local_now.tm_isdst > 0)
+    local_now = localtime(&now);
+    assert(local_now != NULL);
+    if (local_now->tm_isdst > 0)
       /* decrement the local time zone by one hour if DST is in effect */
-      local_now.tm_gmtoff -= SecsPerHour;
+      local_now->tm_gmtoff -= SecsPerHour;
 
     /* As above, we must negate "date->offset" to account for the
        opposite sense of that field compared to Unix. */
-    t -= ((-date->offset) - local_now.tm_gmtoff);
+    t -= ((-date->offset) - local_now->tm_gmtoff);
+Exit:
 #endif
-    /* convert to a "Time.T" */
     return t;
 }
 
