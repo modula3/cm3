@@ -39,7 +39,7 @@ TimePosix__FromUtime(const struct timeval* tv)
 
 T
 __cdecl
-Time__Now(void)
+TimePosix__Now(void)
 {
     struct timeval tv;
     int i = { 0 };
@@ -59,10 +59,10 @@ ComputeGrainOnce(void)
      * this will fail if this thread is descheduled for a tick during the
      * loop below. Omitting volatile leads to the result is 0 on Cygwin if optimized.
      */
-    volatile T t0 = Time__Now();
+    volatile T t0 = TimePosix__Now();
     while (1)
     {
-        volatile T t1 = Time__Now();
+        volatile T t1 = TimePosix__Now();
         if (t1 != t0)
             return (t1 - t0);
     }
@@ -70,7 +70,7 @@ ComputeGrainOnce(void)
 
 T
 __cdecl
-Time__ComputeGrain(void)
+TimePosix__ComputeGrain(void)
 {
 /* I have seen the value vary so let's go for a
  * few times in a row instead of just one or two.
