@@ -20,6 +20,7 @@ typedef double T;
 struct timeval
 __cdecl
 TimePosix__ToUtime(T t)
+/* NOT exposed to Modula-3. */
 {
     struct timeval tv;
     double n = { 0 };
@@ -33,6 +34,7 @@ TimePosix__ToUtime(T t)
 T
 __cdecl
 TimePosix__FromUtime(const struct timeval* tv)
+/* NOT exposed to Modula-3. */
 {
     return ((T)tv->tv_sec) + ((T)tv->tv_usec) / (T)MILLION;
 }

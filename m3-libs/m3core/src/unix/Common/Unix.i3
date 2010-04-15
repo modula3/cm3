@@ -7,7 +7,6 @@ INTERFACE Unix;
 FROM Cstddef IMPORT size_t;
 FROM Ctypes IMPORT int, const_char_star, char_star, char_star_star, unsigned;
 FROM Utypes IMPORT off_t, mode_t, dev_t, uid_t, gid_t, pid_t;
-IMPORT Usysdep;
 
 CONST
   MaxPathLen = 1024; (* 4096 on Irix? *)
@@ -117,13 +116,6 @@ PROCEDURE fork (): pid_t;
  callers of vfork cannot return without calling exec or _exit. *)
 <*EXTERNAL*>
 PROCEDURE vfork (): pid_t;
-
-
-CONST
-  MAX_FDSET = Usysdep.MAX_FDSET;
-
-TYPE
-  FDSet = SET OF [0 .. MAX_FDSET - 1];
 
 <*EXTERNAL "Unix__mknod"*>
 PROCEDURE mknod (path: const_char_star; mode: mode_t; dev: dev_t): int;
