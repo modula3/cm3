@@ -23,9 +23,9 @@ FROM <A HREF="Quake.i3.html">Quake</A> IMPORT Error, ID, IDMap, NoID;
 IMPORT <A HREF="../../m3core/src/time/Common/Date.i3.html">Date</A>, <A HREF="../../m3core/src/time/Common/Time.i3.html">Time</A>;
 IMPORT <A HREF="#x2">TextUtils</A>, <A HREF="../../sysutils/src/FSUtils.i3.html">FSUtils</A>, <A HREF="../../sysutils/src/System.i3.html">System</A>, <A HREF="../../sysutils/src/DirStack.i3.html">DirStack</A>; (* sysutils *)
 IMPORT <A HREF="../../m3core/derived/Compiler.i3.html">Compiler</A>;
-</PRE> IMPORT IO; 
+IMPORT <A HREF="#x3">M3Path</A>;
 
-<P><PRE>CONST
+CONST
   OnUnix = (Compiler.ThisOS = Compiler.OS.POSIX);
 
 TYPE
@@ -73,6 +73,7 @@ REVEAL
     cur_wr    := CurWr;
     set_wr    := SetWr;
     exec_echo := ExecEcho;
+    trace     := Trace;
   END;
 
 TYPE
@@ -1430,6 +1431,11 @@ PROCEDURE <A NAME="ExecEcho"><procedure>ExecEcho</procedure></A> (t: T;  b: BOOL
     RETURN old;
   END ExecEcho;
 
+PROCEDURE <A NAME="Trace"><procedure>Trace</procedure></A> (t: T; b: BOOLEAN) =
+  BEGIN
+    t.tracing := b;
+  END Trace;
+
 PROCEDURE <A NAME="DoExec"><procedure>DoExec</procedure></A> (t: T;  n_args: INTEGER)
   RAISES {Error, Thread.Alerted} =
   BEGIN
@@ -1694,7 +1700,7 @@ PROCEDURE <A NAME="DoMakeDir"><procedure>DoMakeDir</procedure></A> (t: T;  n_arg
     IF prefix # NIL THEN
       dir := prefix &amp; dir;
     END;
-    MakeDir (t, dir);
+    MakeDir (t, M3Path.New (dir));
   END DoMakeDir;
 
 PROCEDURE <A NAME="MakeDir"><procedure>MakeDir</procedure></A> (t: T;  dir: TEXT)  RAISES {Error} =
@@ -3081,6 +3087,13 @@ END QMachine.
 </A><UL>
 <LI><A HREF="../../cit_util/src/TextUtils.i3.html#0TOP0">cit_util/src/TextUtils.i3</A>
 <LI><A HREF="../../sysutils/src/TextUtils.i3.html#0TOP0">sysutils/src/TextUtils.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface M3Path is in:
+</A><UL>
+<LI><A HREF="../../cm3/src/M3Path.i3.html#0TOP0">cm3/src/M3Path.i3</A>
+<LI><A HREF="M3Path.i3.html#0TOP0">m3quake/src/M3Path.i3</A>
 </UL>
 <P>
 <PRE>

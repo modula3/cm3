@@ -10,7 +10,7 @@
  All rights reserved.                                       
  See the file COPYRIGHT for a full description.             
 
-<P><PRE>&lt;*EXTERNAL*&gt; INTERFACE <interface>Upthread</interface>;
+<P><PRE>INTERFACE <interface>Upthread</interface>;
 
 FROM <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int;
 
@@ -19,11 +19,10 @@ TYPE
   destructor_t = PROCEDURE(arg: ADDRESS);
   start_routine_t = PROCEDURE(arg: ADDRESS): ADDRESS;
 
-&lt;*EXTERNAL pthread_detach*&gt; PROCEDURE detach (thread: pthread_t): int;
-&lt;*EXTERNAL pthread_self*&gt; PROCEDURE self (): pthread_t;
-&lt;*EXTERNAL pthread_equal*&gt; PROCEDURE equal (t1, t2: pthread_t): int;
-&lt;*EXTERNAL pthread_yield*&gt; PROCEDURE yield (): int;
-&lt;*EXTERNAL pthread_kill*&gt; PROCEDURE kill (thread: pthread_t; sig: int): int;
+&lt;*EXTERNAL Upthread__detach*&gt; PROCEDURE detach (thread: pthread_t): int;
+&lt;*EXTERNAL Upthread__self*&gt; PROCEDURE self (): pthread_t;
+&lt;*EXTERNAL Upthread__equal*&gt; PROCEDURE equal (t1, t2: pthread_t): int;
+&lt;*EXTERNAL Upthread__kill*&gt; PROCEDURE kill (thread: pthread_t; sig: int): int;
 
 END Upthread.
 </PRE>

@@ -285,7 +285,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> (t: T;  name: M3ID.T;  
     t.class      := c;
     t.checked    := FALSE;
     t.readonly   := FALSE;
-    t.lhs        := FALSE;
+    t.traced     := FALSE;
     t.external   := FALSE;
     t.unused     := FALSE;
     t.obsolete   := FALSE;
@@ -387,9 +387,9 @@ PROCEDURE <A NAME="IsImported"><procedure>IsImported</procedure></A> (t: T): BOO
     RETURN (t # NIL) AND (t.imported);
   END IsImported;
 
-PROCEDURE <A NAME="IsWritable"><procedure>IsWritable</procedure></A> (t: T;  lhs: BOOLEAN): BOOLEAN =
+PROCEDURE <A NAME="IsWritable"><procedure>IsWritable</procedure></A> (t: T;  traced: BOOLEAN): BOOLEAN =
   BEGIN
-    IF lhs THEN t.lhs := TRUE END;
+    IF traced THEN t.traced := TRUE END;
     RETURN NOT t.readonly;
   END IsWritable;
 

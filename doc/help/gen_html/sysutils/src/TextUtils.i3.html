@@ -28,8 +28,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id: TextUtils.i3.html,v 1.2 2009-06-26 16:35:59 wagner Exp $ 
+ 
 
 <P>---------------------------------------------------------------------------
 <PRE>INTERFACE <interface><A HREF="#x1">TextUtils</A></interface>;
@@ -123,6 +122,15 @@ IMPORT <A HREF="../../libm3/src/types/ASCII.i3.html">ASCII</A>, <A HREF="../../l
 </PRE>---------------------------------------------------------------------------
 <PRE>PROCEDURE <A HREF="cm3/TextUtils.m3.html#Contains">Contains</A>(READONLY s, t : TEXT; caseSensitive := TRUE) : BOOLEAN;
   (* &lt;=&gt; Text `s' contains text `t'. *)
+</PRE>---------------------------------------------------------------------------
+<PRE>PROCEDURE <A HREF="cm3/TextUtils.m3.html#CountChar">CountChar</A>(s: TEXT; ch: CHAR; caseSensitive := TRUE) : INTEGER;
+  (* the number of occurences of ch in s *)
+</PRE>---------------------------------------------------------------------------
+<PRE>PROCEDURE <A HREF="cm3/TextUtils.m3.html#StartsWith">StartsWith</A>(s, t: TEXT; caseSensitive := TRUE) : BOOLEAN;
+  (* does s start with t *)
+</PRE>---------------------------------------------------------------------------
+<PRE>PROCEDURE <A HREF="cm3/TextUtils.m3.html#EndsWith">EndsWith</A>(s, t: TEXT; caseSensitive := TRUE) : BOOLEAN;
+  (* does s end with t *)
 </PRE>---------------------------------------------------------------------------
 <PRE>PROCEDURE <A HREF="cm3/TextUtils.m3.html#BoolVal">BoolVal</A>(READONLY t : TEXT; default := FALSE) : BOOLEAN;
   (* Evaluate the text t to a boolean value. For &quot;yes&quot;, &quot;true&quot;, &quot;1&quot;, and

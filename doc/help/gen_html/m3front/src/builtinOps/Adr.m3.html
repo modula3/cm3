@@ -44,12 +44,12 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (ce: CallExpr.T;  &lt
 
 PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (ce: CallExpr.T) =
   BEGIN
-    Expr.PrepLValue (ce.args[0], lhs := FALSE);
+    Expr.PrepLValue (ce.args[0], traced := FALSE);
   END Prep;
 
 PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (ce: CallExpr.T) =
   BEGIN
-    Expr.CompileLValue (ce.args[0], lhs := FALSE);
+    Expr.CompileLValue (ce.args[0], traced := FALSE);
     CG.Check_byte_aligned ();
   END Compile;
 

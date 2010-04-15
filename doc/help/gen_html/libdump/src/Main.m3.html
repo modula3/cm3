@@ -1,0 +1,438 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: libdump/src/Main.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#ffffff">
+<A NAME="0TOP0">
+<H2>libdump/src/Main.m3</H2></A><HR>
+<inModule>
+<PRE>UNSAFE MODULE <module><implements><A HREF="../../m3core/src/main/Main.i3.html">Main</A></implements></module>;
+
+IMPORT <A HREF="../../libm3/src/rw/IO.i3.html">IO</A>, <A HREF="../../libm3/src/params/Params.i3.html">Params</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../libm3/src/rw/FileRd.i3.html">FileRd</A>, <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>;
+IMPORT <A HREF="../../m3middle/src/POSIX/CoffTime.i3.html">CoffTime</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../m3core/src/C/Common/Cstring.i3.html">Cstring</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>;
+IMPORT <A HREF="../../m3core/src/time/Common/Date.i3.html">Date</A>, <A HREF="../../m3core/src/convert/Convert.i3.html">Convert</A>, <A HREF="../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>;
+
+TYPE
+  UINT8 = BITS 8 FOR Ctypes.unsigned_char;
+
+CONST IMAGE_ARCHIVE_START_SIZE = 8;
+VAR (* CONST *) IMAGE_ARCHIVE_START := M3toC.FlatTtoS(&quot;!&lt;arch&gt;\n&quot;);
+
+TYPE
+  IMAGE_ARCHIVE_MEMBER_HEADER = RECORD
+    Name     : ARRAY [0 .. 15] OF UINT8;  (* member name - `/' terminated. *)
+    Date     : ARRAY [0 .. 11] OF UINT8;  (* member date - decimal secs since 1970 *)
+    UserID   : ARRAY [0 .. 5]  OF UINT8;  (* member user id - decimal. *)
+    GroupID  : ARRAY [0 .. 5]  OF UINT8;  (* member group id - decimal. *)
+    Mode     : ARRAY [0 .. 7]  OF UINT8;  (* member mode - octal. *)
+    Size     : ARRAY [0 .. 9]  OF UINT8;  (* member size - decimal. *)
+    EndHeader: ARRAY [0 .. 1]  OF UINT8;  (* String to end header. *)
+  END;
+
+CONST IMAGE_SIZEOF_ARCHIVE_MEMBER_HDR = 60;
+
+TYPE
+  Header = IMAGE_ARCHIVE_MEMBER_HEADER;
+  Buffer = REF ARRAY OF CHAR;
+
+VAR
+  exports1  : Buffer := NIL;
+  exports2  : Buffer := NIL;
+  longnames : Buffer := NIL;
+
+PROCEDURE <A NAME="DumpLib"><procedure>DumpLib</procedure></A> (lib: TEXT) =
+  VAR rd: Rd.T;
+  BEGIN
+    TRY
+      rd := FileRd.Open (lib);
+    EXCEPT OSError.E =&gt;
+      Die (&quot;unable to open \&quot;&quot; &amp; lib &amp; &quot;\&quot;.&quot;);
+    END;
+
+    TRY
+      CheckMagic (rd, lib);
+      FOR i := 0 TO LAST(INTEGER) DO
+        IF Rd.EOF (rd) THEN EXIT; END;
+        DumpMember (rd, i);
+      END;
+      DumpExports1 ();
+      DumpExports2 ();
+      Wr.Flush (Stdio.stdout);
+      Rd.Close (rd);
+    EXCEPT
+    | Rd.Failure =&gt; Die (&quot;I/O read failure.&quot;);
+    | Wr.Failure =&gt; Die (&quot;I/O write failure.&quot;);
+    | Thread.Alerted =&gt; Die (&quot;interrupted.&quot;);
+    END;
+  END DumpLib;
+
+PROCEDURE <A NAME="CheckMagic"><procedure>CheckMagic</procedure></A> (rd: Rd.T;  lib: TEXT)
+  RAISES {Rd.Failure, Thread.Alerted} =
+  VAR buf: ARRAY [0..IMAGE_ARCHIVE_START_SIZE-1] OF CHAR;
+  BEGIN
+    Read (rd, buf);
+    IF Cstring.strncmp (ADR (buf), IMAGE_ARCHIVE_START,
+                        IMAGE_ARCHIVE_START_SIZE) = 0 THEN
+      IO.Put (Wr.EOL &amp; lib &amp; &quot;: magic ok.&quot; &amp; Wr.EOL &amp; Wr.EOL);
+      IO.Put (&quot; offset  UserID  GrpID   Mode           Date            Size    Name&quot; &amp; Wr.EOL);
+      IO.Put (&quot;-------- ------ ------ -------- -------------------- ---------- ----------------&quot; &amp; Wr.EOL);
+    ELSE
+      Die (&quot;\&quot;&quot; &amp; lib &amp; &quot;\&quot; is not an archive (wrong magic number).&quot;);
+    END;
+  END CheckMagic;
+
+PROCEDURE <A NAME="DumpMember"><procedure>DumpMember</procedure></A> (rd: Rd.T;  index: INTEGER)
+  RAISES {Rd.Failure, Thread.Alerted, Wr.Failure} =
+  VAR
+    hdr: Header;
+    here := Rd.Index (rd);
+    nm_offs : INTEGER;
+    size    : INTEGER;
+  BEGIN
+    Read (rd, LOOPHOLE (hdr, ARRAY [0..BYTESIZE(hdr)-1] OF CHAR));
+
+    OutX (here, 8);      OutC (' ');
+    OutS (hdr.UserID);   OutC (' ');
+    OutS (hdr.GroupID);  OutC (' ');
+    OutS (hdr.Mode);     OutC (' ');
+    OutD (hdr.Date);     OutC (' ');
+    OutS (hdr.Size);     OutC (' ');
+    IF (hdr.Name[0] = ORD ('/'))
+      AND (ORD ('0') &lt;= hdr.Name[1]) AND (hdr.Name[1] &lt;= ORD ('9'))
+      AND (longnames # NIL) THEN
+      nm_offs := ToInt (SUBARRAY (hdr.Name, 1, NUMBER(hdr.Name)-1));
+      IF (0 &lt;= nm_offs) AND (nm_offs &lt; NUMBER (longnames^))
+        THEN OutSP (ADR (longnames[nm_offs]));
+        ELSE OutSL (hdr.Name);
+      END;
+    ELSE
+      OutSL (hdr.Name);
+    END;
+    OutT (Wr.EOL);
+
+    (* check for special members and skip to the next header *)
+    INC (here, BYTESIZE (hdr));
+    size := ToInt (hdr.Size);
+    size := Word.And (size + 1, Word.Not (1)); (* round up to an even size *)
+    IF (index &gt; 2) THEN
+      (* skip this file *)
+      Rd.Seek (rd, here + size);
+    ELSIF (index = 0) AND NameMatch (hdr.Name, &quot;/&quot;) THEN
+      exports1 := NEW (Buffer, size);
+      Read (rd, exports1^);
+    ELSIF (index = 1) AND NameMatch (hdr.Name, &quot;/&quot;) THEN
+      exports2 := NEW (Buffer, size);
+      Read (rd, exports2^);
+    ELSIF (index &lt;= 2) AND NameMatch (hdr.Name, &quot;//&quot;) THEN
+      longnames := NEW (Buffer, size);
+      Read (rd, longnames^);
+    ELSE
+      (* skip this file *)
+      Rd.Seek (rd, here + size);
+    END;
+  END DumpMember;
+
+PROCEDURE <A NAME="DumpExports1"><procedure>DumpExports1</procedure></A> ()
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR
+    n_syms : INTEGER;
+    offs   : REF ARRAY OF INTEGER;
+    next_c : INTEGER := 0;
+    ch     : CHAR;
+  BEGIN
+    IF (exports1 = NIL) THEN RETURN; END;
+
+    OutT (Wr.EOL);
+    OutT (&quot;Export table #1&quot;);  OutT (Wr.EOL);
+
+    n_syms := get_be_int (exports1, next_c);
+    OutT (&quot;# symbols = &quot;);  OutI (n_syms, 0);  OutT (Wr.EOL);
+    OutT (&quot;---------------------------&quot;);  OutT (Wr.EOL);
+
+    (* read the file offsets *)
+    offs := NEW (REF ARRAY OF INTEGER, n_syms);
+    FOR i := 0 TO n_syms-1 DO
+      offs[i] := get_be_int (exports1, next_c);
+    END;
+
+    (* finally, dump the exports *)
+    FOR i := 0 TO n_syms-1 DO
+      OutI (i, 4);        OutC (' ');
+      OutX (offs[i], 8);  OutC (' ');
+      WHILE (next_c &lt; NUMBER (exports1^)) DO
+        ch := exports1[next_c];  INC (next_c);
+        IF (ch = '\000') THEN EXIT; END;
+        OutC (ch);
+      END;
+      OutT (Wr.EOL);
+    END;
+  END DumpExports1;
+
+PROCEDURE <A NAME="get_be_int"><procedure>get_be_int</procedure></A> (buf: Buffer;  VAR cur: INTEGER): INTEGER =
+  VAR n := 0;  x := NUMBER (buf^);
+  BEGIN
+    IF (cur &lt; x) THEN
+      n := ORD (buf[cur]);  INC (cur);
+    END;
+    IF (cur &lt; x) THEN
+      n := Word.Or (Word.LeftShift (n, 8), ORD (buf[cur]));
+      INC (cur);
+    END;
+    IF (cur &lt; x) THEN
+      n := Word.Or (Word.LeftShift (n, 8), ORD (buf[cur]));
+      INC (cur);
+    END;
+    IF (cur &lt; x) THEN
+      n := Word.Or (Word.LeftShift (n, 8), ORD (buf[cur]));
+      INC (cur);
+    END;
+    RETURN n;
+  END get_be_int;
+
+PROCEDURE <A NAME="DumpExports2"><procedure>DumpExports2</procedure></A> ()
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR
+    n_files : INTEGER;
+    offs    : REF ARRAY OF INTEGER;
+    n_syms  : INTEGER;
+    symfile : REF ARRAY OF INTEGER;
+    next_c  : INTEGER := 0;
+    ch      : CHAR;
+  BEGIN
+    IF (exports2 = NIL) THEN RETURN; END;
+
+    OutT (Wr.EOL);
+    OutT (&quot;Export table #2&quot;);  OutT (Wr.EOL);
+
+    n_files := get_le_int (exports2, next_c);
+    OutT (&quot;# files = &quot;);  OutI (n_files, 0);  OutT (Wr.EOL);
+
+    (* read the file offsets *)
+    offs := NEW (REF ARRAY OF INTEGER, n_files);
+    FOR i := 0 TO n_files-1 DO
+      offs[i] := get_le_int (exports2, next_c);
+    END;
+
+    n_syms := get_le_int (exports2, next_c);
+    OutT (&quot;# symbols = &quot;);  OutI (n_syms, 0);  OutT (Wr.EOL);
+    OutT (&quot;---------------------------&quot;);  OutT (Wr.EOL);
+
+    (* read the symbol indicies *)
+    symfile := NEW (REF ARRAY OF INTEGER, n_syms);
+    FOR i := 0 TO n_syms-1 DO
+      symfile[i] := get_le_short (exports2, next_c);
+    END;
+
+    (* finally, dump the exports *)
+    FOR i := 0 TO n_syms-1 DO
+      OutI (i, 4);           OutC (' ');
+      OutI (symfile[i], 4);  OutC (' ');
+      IF (1 &lt;= symfile[i]) AND (symfile[i] &lt;= NUMBER (offs^))
+        THEN OutX (offs[symfile[i] - 1], 8);  OutC (' ');
+        ELSE OutT (&quot;   ***** &quot;);
+      END;
+      WHILE (next_c &lt; NUMBER (exports2^)) DO
+        ch := exports2[next_c];  INC (next_c);
+        IF (ch = '\000') THEN EXIT; END;
+        OutC (ch);
+      END;
+      OutT (Wr.EOL);
+    END;
+  END DumpExports2;
+
+PROCEDURE <A NAME="get_le_int"><procedure>get_le_int</procedure></A> (buf: Buffer;  VAR cur: INTEGER): INTEGER =
+  VAR n := 0;  x := NUMBER (buf^);
+  BEGIN
+    IF (cur &lt; x) THEN
+      n := ORD (buf[cur]);  INC (cur);
+    END;
+    IF (cur &lt; x) THEN
+      n := Word.Or (n, Word.LeftShift (ORD (buf[cur]), 8));
+      INC (cur);
+    END;
+    IF (cur &lt; x) THEN
+      n := Word.Or (n, Word.LeftShift (ORD (buf[cur]), 16));
+      INC (cur);
+    END;
+    IF (cur &lt; x) THEN
+      n := Word.Or (n, Word.LeftShift (ORD (buf[cur]), 24));
+      INC (cur);
+    END;
+    RETURN n;
+  END get_le_int;
+
+PROCEDURE <A NAME="get_le_short"><procedure>get_le_short</procedure></A> (buf: Buffer;  VAR cur: INTEGER): INTEGER =
+  VAR n := 0;  x := NUMBER (buf^);
+  BEGIN
+    IF (cur &lt; x) THEN
+      n := ORD (buf[cur]);  INC (cur);
+    END;
+    IF (cur &lt; x) THEN
+      n := Word.Or (n, Word.LeftShift (ORD (buf[cur]), 8));
+      INC (cur);
+    END;
+    RETURN n;
+  END get_le_short;
+
+PROCEDURE <A NAME="Read"><procedure>Read</procedure></A> (rd: Rd.T;  VAR buf: ARRAY OF CHAR)
+  RAISES {Rd.Failure, Thread.Alerted} =
+  VAR len: INTEGER;
+  BEGIN
+    len := Rd.GetSub (rd, buf);
+    IF (len # BYTESIZE (buf)) THEN Die (&quot;incomplete read.&quot;); END;
+  END Read;
+
+PROCEDURE <A NAME="OutS"><procedure>OutS</procedure></A> (READONLY s: ARRAY OF UINT8)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR n := NUMBER (s);
+  BEGIN
+    WHILE (n &gt; 0) AND (s[n-1] = ORD (' ')) DO OutC (' ');  DEC (n); END;
+    FOR i := 0 TO n-1 DO OutC (VAL (s[i], CHAR)); END;
+  END OutS;
+
+PROCEDURE <A NAME="OutSL"><procedure>OutSL</procedure></A> (READONLY s: ARRAY OF UINT8)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  BEGIN
+    FOR i := 0 TO LAST (s) DO
+      IF (s[i] = ORD ('/')) THEN EXIT; END;
+      OutC (VAL (s[i], CHAR));
+    END;
+  END OutSL;
+
+PROCEDURE <A NAME="OutX"><procedure>OutX</procedure></A> (n: INTEGER;  width: INTEGER)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  BEGIN
+    Wr.PutText (Stdio.stdout, Fmt.Pad (Fmt.Unsigned (n), width, '0'));
+  END OutX;
+
+PROCEDURE <A NAME="OutI"><procedure>OutI</procedure></A> (n: INTEGER;  width: INTEGER)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  BEGIN
+    Wr.PutText (Stdio.stdout, Fmt.Pad (Fmt.Int (n), width));
+  END OutI;
+
+PROCEDURE <A NAME="OutD"><procedure>OutD</procedure></A> (READONLY s: ARRAY OF UINT8)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  (* Archive dates are represented as seconds since Jan 1, 1970. *)
+  TYPE Buffer = RECORD len: INTEGER;  buf: ARRAY [0..31] OF CHAR END;
+  VAR
+    secs := ToInt (s);
+    time := CoffTime.EpochAdjust + FLOAT (secs, LONGREAL);
+    date := Date.FromTime (time);
+    b    : Buffer;
+
+  PROCEDURE AddInt (VAR b: Buffer;  value, width: INTEGER;  pre, post: CHAR) =
+    &lt;*FATAL Convert.Failed*&gt;
+    VAR
+      buf : ARRAY [0..BITSIZE(INTEGER)] OF CHAR;
+      len := Convert.FromInt (buf, value);
+    BEGIN
+      WHILE (width &gt; len) DO
+        b.buf[b.len] := pre;  INC (b.len);
+        DEC (width);
+      END;
+      FOR i := 0 TO len-1 DO
+        b.buf[b.len] := buf[i];  INC (b.len);
+      END;
+      b.buf[b.len] := post;  INC (b.len);
+    END AddInt;
+
+  BEGIN (* OutD *)
+    b.len := 0;
+    AddInt  (b, date.hour,   2, '0', ':');
+    AddInt  (b, date.minute, 2, '0', ':');
+    AddInt  (b, date.second, 2, '0', ' ');
+    AddInt  (b, ORD (date.month) + 1, 2, '0', '/');
+    AddInt  (b, date.day,    2, '0', '/');
+    AddInt  (b, date.year,   4, ' ', ' ');
+    Wr.PutString (Stdio.stdout, SUBARRAY (b.buf, 0, b.len-1));
+  END OutD;
+
+PROCEDURE <A NAME="OutSP"><procedure>OutSP</procedure></A> (cp: UNTRACED REF CHAR)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  BEGIN
+    IF (cp # NIL) THEN
+      WHILE (cp^ # '\000') DO
+        OutC (cp^);
+        INC (cp, ADRSIZE (cp^));
+      END;
+    END;
+  END OutSP;
+
+PROCEDURE <A NAME="OutT"><procedure>OutT</procedure></A> (txt: TEXT)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  BEGIN
+    Wr.PutText (Stdio.stdout, txt);
+  END OutT;
+
+PROCEDURE <A NAME="OutC"><procedure>OutC</procedure></A> (ch: CHAR)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  BEGIN
+    Wr.PutChar (Stdio.stdout, ch);
+  END OutC;
+
+PROCEDURE <A NAME="NameMatch"><procedure>NameMatch</procedure></A> (READONLY nm: ARRAY OF UINT8;  txt: TEXT): BOOLEAN =
+  VAR len := Text.Length (txt);
+  BEGIN
+    IF len &gt; NUMBER (nm) THEN RETURN FALSE; END;
+    FOR i := 0 TO len-1 DO
+      IF nm[i] # ORD (Text.GetChar (txt, i)) THEN RETURN FALSE; END;
+    END;
+    FOR i := len TO LAST (nm) DO
+      IF nm[i] # ORD (' ') THEN RETURN FALSE; END;
+    END;
+    RETURN TRUE;
+  END NameMatch;
+
+PROCEDURE <A NAME="ToInt"><procedure>ToInt</procedure></A> (READONLY s: ARRAY OF UINT8): INTEGER =
+  VAR n := 0;
+  BEGIN
+    FOR i := FIRST (s) TO LAST (s) DO
+      IF (ORD ('0') &lt;= s[i]) AND (s[i] &lt;= ORD ('9')) THEN
+        n := n * 10 + (s[i] - ORD ('0'));
+      END;
+    END;
+    RETURN n;
+  END ToInt;
+
+PROCEDURE <A NAME="Die"><procedure>Die</procedure></A> (msg: TEXT) =
+  BEGIN
+    IO.Put (msg);
+    IO.Put (Wr.EOL);
+    Process.Exit (1);
+  END Die;
+
+BEGIN
+  &lt;*ASSERT BYTESIZE (Header) = IMAGE_SIZEOF_ARCHIVE_MEMBER_HDR *&gt;
+  IF Params.Count # 2 THEN Die (&quot;usage:  libdump &lt;foo.lib&gt;&quot;); END;
+  DumpLib (Params.Get (1));
+END Main.
+</PRE>
+</inModule>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

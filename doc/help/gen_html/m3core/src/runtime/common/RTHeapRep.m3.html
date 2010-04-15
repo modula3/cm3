@@ -17,7 +17,7 @@
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="RTHeapRep.i3.html">RTHeapRep</A></implements></module>;
 
-IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTType.i3.html">RTType</A>;
+IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTType.i3.html">RTType</A>, <A HREF="RTOS.i3.html">RTOS</A>;
 </PRE>----------------------------------------------------------- open arrays ---
 
 <P><PRE>PROCEDURE <A NAME="UnsafeGetShape"><procedure>UnsafeGetShape</procedure></A> (r: REFANY;  VAR nDims: INTEGER;
@@ -68,33 +68,43 @@ PROCEDURE <A NAME="InvokeMonitors"><procedure>InvokeMonitors</procedure></A> (be
 
 PROCEDURE <A NAME="RegisterMonitor"><procedure>RegisterMonitor</procedure></A> (cl: MonitorClosure) =
   BEGIN
-    cl.next := monitorsHead;
-    IF monitorsHead = NIL THEN
-      monitorsTail := cl;
-    ELSE
-      monitorsHead.prev := cl;
+    RTOS.LockHeap();
+    TRY
+      cl.next := monitorsHead;
+      IF monitorsHead = NIL THEN
+        monitorsTail := cl;
+      ELSE
+        monitorsHead.prev := cl;
+      END;
+      monitorsHead := cl;
+    FINALLY
+      RTOS.UnlockHeap();
     END;
-    monitorsHead := cl;
   END RegisterMonitor;
 
 PROCEDURE <A NAME="UnregisterMonitor"><procedure>UnregisterMonitor</procedure></A> (cl: MonitorClosure) =
   BEGIN
-    IF cl = monitorsHead THEN
-      IF cl = monitorsTail THEN
-        monitorsHead := NIL;
-        monitorsTail := NIL;
+    RTOS.LockHeap();
+    TRY
+      IF cl = monitorsHead THEN
+        IF cl = monitorsTail THEN
+          monitorsHead := NIL;
+          monitorsTail := NIL;
+        ELSE
+          monitorsHead := monitorsHead.next;
+          monitorsHead.prev := NIL;
+        END;
       ELSE
-        monitorsHead := monitorsHead.next;
-        monitorsHead.prev := NIL;
+        IF cl = monitorsTail THEN
+          monitorsTail := monitorsTail.prev;
+          monitorsTail.next := NIL;
+        ELSE
+          cl.prev.next := cl.next;
+          cl.next.prev := cl.prev;
+        END;
       END;
-    ELSE
-      IF cl = monitorsTail THEN
-        monitorsTail := monitorsTail.prev;
-        monitorsTail.next := NIL;
-      ELSE
-        cl.prev.next := cl.next;
-        cl.next.prev := cl.prev;
-      END;
+    FINALLY
+      RTOS.UnlockHeap();
     END;
   END UnregisterMonitor;
 

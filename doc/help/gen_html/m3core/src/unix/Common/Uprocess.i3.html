@@ -10,11 +10,11 @@
  All rights reserved.                                       
  See the file COPYRIGHT for a full description.             
 
-<P><PRE>&lt;*EXTERNAL*&gt; INTERFACE <interface>Uprocess</interface>;
+<P><PRE>INTERFACE <interface>Uprocess</interface>;
 
 FROM <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int;
 
-PROCEDURE getpid (): int;
+&lt;*EXTERNAL &quot;Uprocess__getpid&quot;*&gt;PROCEDURE getpid (): int;
 
 END Uprocess.
 </PRE>

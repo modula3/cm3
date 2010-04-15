@@ -82,10 +82,10 @@ PROCEDURE <A NAME="FindCharR"><procedure>FindCharR</procedure></A> (a: ADDRESS; 
 </PRE><BLOCKQUOTE><EM> If <CODE>c = a[i]</CODE> for some <CODE>i</CODE> in <CODE>[0~..~len-1]</CODE>, return the
    largest such <CODE>i</CODE>; otherwise, return <CODE>-1</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> PRE: a MOD ADRSIZE(WIDECHAR) = 0  
-  <PRE>VAR p: Ptr;
+  <PRE>VAR p := LOOPHOLE (a, Ptr);
   BEGIN
-    IF (a = NIL) THEN RETURN -1; END;
-    p := LOOPHOLE (a + len * ADRSIZE (WIDECHAR), Ptr);
+    IF (p = NIL) THEN RETURN -1; END;
+    INC (p, len * ADRSIZE (p^));
     WHILE (len &gt; 0) DO
       DEC (p, ADRSIZE (p^));  DEC (len);
       IF (p^ = c) THEN RETURN len; END;
@@ -106,32 +106,31 @@ CONST CharsInWordMask = Word.And ( Word.And (CharMask, CharMask1)
 TYPE WordPtr = UNTRACED REF Word.T;
 
 PROCEDURE <A NAME="HasWideChars"><procedure>HasWideChars</procedure></A> (a: ADDRESS; len: CARDINAL): BOOLEAN =
-</PRE><BLOCKQUOTE><EM> Return ORD(a[i] &gt; LAST (CHAR), for some <CODE>i</CODE> in <CODE>[0~..~len-1]</CODE>. </EM></BLOCKQUOTE><PRE>
+</PRE><BLOCKQUOTE><EM> Return ORD(a[i]) &gt; LAST (CHAR), for some <CODE>i</CODE> in <CODE>[0~..~len-1]</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> PRE: a MOD ADRSIZE(WIDECHAR) = 0 
  This algorithm assumes ADRSIZE(Word.T) MOD ADRSIZE(WIDECHAR) = 0.   
  This algorithm assumes FIRST(CHAR) = 0 AND LAST(CHAR) = 16_FF.   
-  <PRE>BEGIN
+  <PRE>VAR p := LOOPHOLE (a, Ptr);
+  BEGIN
+    IF (p = NIL) THEN RETURN FALSE; END;
     (* Do non-word-aligned WIDECHARs at the left. *)
-    WHILE Word.Mod (LOOPHOLE(a, Word.T), ADRSIZE (Word.T)) # 0 AND len &gt; 0 DO
-      IF Word.And (ORD (LOOPHOLE (a, Ptr)^), CharMask) # 0
-      THEN RETURN TRUE; END;
-      INC (a, ADRSIZE (WIDECHAR));
+    WHILE Word.Mod (LOOPHOLE(p, Word.T), ADRSIZE (Word.T)) # 0 AND len &gt; 0 DO
+      IF Word.And (ORD (p^), CharMask) # 0 THEN RETURN TRUE; END;
+      INC (p, ADRSIZE (p^));
       DEC (len);
     END;
     (* Do word-aligned WIDECHARs in the middle. *)
     WHILE len &gt;= WideCharsPerWord DO
-      IF Word.And (ORD (LOOPHOLE (a, WordPtr)^), CharsInWordMask) # 0
-      THEN
+      IF Word.And (ORD (LOOPHOLE (p, WordPtr)^), CharsInWordMask) # 0 THEN
         RETURN TRUE;
       END;
-      INC (a, ADRSIZE (Word.T));
+      INC (p, ADRSIZE (Word.T));
       DEC (len, WideCharsPerWord);
     END;
     (* Do remaining non-word-aligned WIDECHARs at the right. *)
     WHILE len &gt; 0 DO
-      IF Word.And (ORD (LOOPHOLE (a, Ptr)^), CharMask) # 0
-      THEN RETURN TRUE; END;
-      INC (a, ADRSIZE (WIDECHAR));
+      IF Word.And (ORD (p^), CharMask) # 0 THEN RETURN TRUE; END;
+      INC (p, ADRSIZE (p^));
       DEC (len);
     END;
     RETURN FALSE;

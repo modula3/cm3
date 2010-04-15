@@ -40,7 +40,7 @@ PROCEDURE <A HREF="RTCollector.m3.html#FinishCollection">FinishCollection</A>();
    will copy <CODE>gcRatio</CODE> pages.  Increase the ratio to keep the heap smaller;
    decrease it to spend less time in the collector. </EM></BLOCKQUOTE><PRE>
 
-VAR incremental := FALSE;         (* incremental collection *)
+VAR incremental := TRUE;         (* incremental collection *)
 </PRE><BLOCKQUOTE><EM> The collector can be incremental or stop-and-copy.  Incremental
    collection has much smaller interruptions of service, but takes more
    total time and more space.
@@ -57,7 +57,7 @@ VAR incremental := FALSE;         (* incremental collection *)
    Use incremental collection when the program is interactive.
    Stop-and-copy collection gives better total throughput. </EM></BLOCKQUOTE><PRE>
 
-VAR generational := FALSE;        (* generational collection *)
+VAR generational := TRUE;        (* generational collection *)
 </PRE><BLOCKQUOTE><EM> Generational collection causes most collections to take much less time
    than specified above, while using only a little more memory.
    Generational collection has the greatest benefit when the program has a
@@ -89,8 +89,9 @@ VAR generational := FALSE;        (* generational collection *)
 <P><PRE>PROCEDURE <A HREF="RTCollector.m3.html#StartForegroundCollection">StartForegroundCollection</A>();
 </PRE><BLOCKQUOTE><EM> Starts the foreground thread, if not already started </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="RTCollector.m3.html#StartBench">StartBench</A>();
-PROCEDURE <A HREF="RTCollector.m3.html#FinishBench">FinishBench</A>();
+PROCEDURE <A HREF="RTCollector.m3.html#DisableVM">DisableVM</A>();
+</PRE><BLOCKQUOTE><EM> This function does nothing and is only present for source
+ * compatibility with older cm3. </EM></BLOCKQUOTE><PRE>
 
 END RTCollectorSRC.
 </PRE>

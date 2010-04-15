@@ -34,7 +34,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: TokScan.m3.html,v 1.2 2009-06-26 16:35:47 wagner Exp $ 
+ * $Id: TokScan.m3.html,v 1.2.2.1 2010-04-15 21:00:34 wagner Exp $ 
 
 <P><PRE>MODULE <module><implements><A HREF="TokScan.i3.html">TokScan</A></implements></module>;
 
@@ -316,7 +316,35 @@ PROCEDURE <A NAME="NewDec"><procedure>NewDec</procedure></A>(t: TEXT): T =
  Handy utility procedures. 
 ***************************************************************************
 
-<P><PRE>PROCEDURE <A NAME="AtoL"><procedure>AtoL</procedure></A>(t: TEXT; what: TEXT := &quot;integer&quot;; radix: [2..16] := 10): Long.T
+<P><PRE>PROCEDURE <A NAME="AtoI"><procedure>AtoI</procedure></A>(t: TEXT; what: TEXT := &quot;integer&quot;; radix: [2..16] := 10): Word.T
+  RAISES {Error} =
+  VAR
+    len := Text.Length(t);
+    val: Word.T := 0;
+    digit: INTEGER;
+  BEGIN
+    IF len = 0 THEN RAISE
+      Error(&quot;Invalid &quot; &amp; what);
+    END;
+    FOR i := 0 TO len-1 DO
+      WITH ch = Text.GetChar(t, i) DO
+	CASE ch OF
+	| '0'..'9' =&gt; digit := ORD(ch) - ORD('0');
+	| 'a'..'f' =&gt; digit := ORD(ch) - ORD('a') + 10;
+	| 'A'..'F' =&gt; digit := ORD(ch) - ORD('A') + 10;
+	ELSE
+	  digit := radix;
+	END;
+	IF digit &gt;= radix THEN
+	  RAISE Error(&quot;Invalid &quot; &amp; what);
+	END;
+	val := Word.Plus(Word.Times(val, radix), digit);
+      END;
+    END;
+    RETURN val;
+  END AtoI;
+
+PROCEDURE <A NAME="AtoL"><procedure>AtoL</procedure></A>(t: TEXT; what: TEXT := &quot;integer&quot;; radix: [2..16] := 10): Long.T
   RAISES {Error} =
   VAR
     len := Text.Length(t);
@@ -343,12 +371,6 @@ PROCEDURE <A NAME="NewDec"><procedure>NewDec</procedure></A>(t: TEXT): T =
     END;
     RETURN val;
   END AtoL;
-
-PROCEDURE <A NAME="AtoI"><procedure>AtoI</procedure></A>(t: TEXT; what: TEXT := &quot;integer&quot;; radix: [2..16] := 10): Word.T
-  RAISES {Error} =
-  BEGIN
-    RETURN ORD(AtoL(t, what, radix));
-  END AtoI;
 
 PROCEDURE <A NAME="DecodeTime"><procedure>DecodeTime</procedure></A>(text: TEXT): Time.T
   RAISES {Error} =

@@ -512,6 +512,8 @@ PROCEDURE <A NAME="SurrErrors"><procedure>SurrErrors</procedure></A> (f: Formatt
             StableLogCall(fmtWr, &quot;Longint&quot;, varName, d);
           ELSIF t = Type.cardinal THEN
             StableLogCall(fmtWr, &quot;Cardinal&quot;, varName, d);
+          ELSIF t = Type.longcard THEN
+            StableLogCall(fmtWr, &quot;Longcard&quot;, varName, d);
           ELSIF d = Direction.Log THEN       (* no value range check
                                                 when writing *)
             IF sub.base = Type.longint THEN

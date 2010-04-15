@@ -24,6 +24,7 @@
 IMPORT <A HREF="Wr.i3.html">Wr</A>, <A HREF="WrClass.i3.html">WrClass</A>, <A HREF="../../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../os/Common/Process.i3.html">Process</A>;
 FROM <A HREF="Wr.i3.html">Wr</A> IMPORT Failure;
 FROM <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A> IMPORT Alerted;
+FROM <A HREF="UnsafeWr.i3.html">UnsafeWr</A> IMPORT FastClose, FastFlush, FastLength;
 </PRE> A writer wr is *inactive* if wr.cur=wr.hi=wr.lo, and *active* otherwise.  
    Notice that if wr is inactive, c(wr) = target(wr) (by WrClass.V2) 
    and therefore can be ignored by the worker thread that does the
@@ -69,6 +70,21 @@ VAR
         close     := Close;
         init      := Init;
       END;
+
+PROCEDURE <A NAME="Copy"><procedure>Copy</procedure></A>(from, to: Wr.T) =
+</PRE><BLOCKQUOTE><EM> Copy the public fields from <CODE>from</CODE> to <CODE>to</CODE>.
+   We don't necessarily need to copy all of them, but we do anyway.
+   Caller handles locking. </EM></BLOCKQUOTE><PRE>
+BEGIN
+    to.buff := from.buff;
+    to.st := from.st;
+    to.cur := from.cur;
+    to.lo := from.lo;
+    to.hi := from.hi;
+    to.closed := from.closed;
+    to.seekable := from.seekable;
+    to.buffered := from.buffered;
+END Copy;
 </PRE> For wr of type T, wr.child is the writer to which wr's writing 
    is forwarded.  wr.delay is the inverse of the frequency with which 
    wr will be flushed.  If wr is active, wr.alarm is the next time 
@@ -83,13 +99,7 @@ VAR
     WrClass.Lock(wr);
     WrClass.Lock(ch);
     TRY
-      wr.buff := ch.buff;
-      wr.st := ch.st;
-      wr.cur := ch.cur;
-      wr.lo := ch.lo;
-      wr.hi := ch.hi;
-      wr.closed := ch.closed;
-      wr.seekable := ch.seekable;
+      Copy(ch, wr);
       wr.buffered := TRUE;
       wr.child := ch;
       wr.onQ := FALSE;
@@ -107,16 +117,14 @@ PROCEDURE <A NAME="Seek"><procedure>Seek</procedure></A> (wr: T; n: CARDINAL) RA
   BEGIN
     WrClass.Lock(wr.child);
     TRY
-      wr.child.cur := wr.cur;
+      Copy(wr, wr.child);
+      (* We don't call FastSeek here because it fails if wr.child is not seekable, even if n = wr.cur. *)
       wr.child.seek(n);
+      Copy(wr.child, wr);
     FINALLY
       WrClass.Unlock(wr.child);
     END;
-    wr.buff := wr.child.buff;
-    wr.st := wr.child.st;
-    wr.cur := wr.child.cur;
-    wr.lo := wr.child.lo;
-    wr.hi := wr.child.hi;
+
     LOCK mu DO
       IF NOT wr.onQ THEN
         wr.onQ := TRUE;
@@ -142,44 +150,35 @@ PROCEDURE <A NAME="Flush"><procedure>Flush</procedure></A> (wr: T) RAISES {Failu
   BEGIN
     WrClass.Lock(wr.child);
     TRY
-      wr.child.cur := wr.cur;
-      wr.child.flush();
-
-      wr.buff := wr.child.buff;
-      (* Set everything empty. *)
-      wr.st := wr.child.st + wr.child.cur - wr.child.lo;
-      wr.cur := wr.child.cur;
-      wr.lo := wr.child.cur;
-      wr.hi := wr.child.cur;
+      Copy(wr, wr.child);
+      FastFlush(wr.child);
+      Copy(wr.child, wr);
     FINALLY
       WrClass.Unlock(wr.child);
     END;
   END Flush;
 
 PROCEDURE <A NAME="Length"><procedure>Length</procedure></A> (wr: T): CARDINAL RAISES {Failure, Alerted} =
+  VAR res: CARDINAL;
   BEGIN
     WrClass.Lock(wr.child);
     TRY
-      wr.child.cur := wr.cur;
-      WITH res = wr.child.length() DO
-        wr.buff := wr.child.buff;
-        wr.st := wr.child.st;
-        wr.cur := wr.child.cur;
-        wr.lo := wr.child.lo;
-        wr.hi := wr.child.hi;
-        RETURN res;
-      END;
+      Copy(wr, wr.child);
+      res := FastLength(wr.child);
+      Copy(wr.child, wr);
     FINALLY
       WrClass.Unlock(wr.child);
     END;
+    RETURN res;
   END Length;
 
 PROCEDURE <A NAME="Close"><procedure>Close</procedure></A>(wr: T) RAISES {Failure, Alerted} =
   BEGIN
     WrClass.Lock(wr.child);
     TRY
-      wr.child.cur := wr.cur;
-      wr.child.close();
+      Copy(wr, wr.child);
+      FastClose(wr.child);
+      Copy(wr.child, wr);
     FINALLY
       WrClass.Unlock(wr.child);
     END;
@@ -281,7 +280,9 @@ PROCEDURE <A NAME="Close"><procedure>Close</procedure></A>(wr: T) RAISES {Failur
     END
   END Shutdown;
 
-BEGIN Process.RegisterExitor(Shutdown); END AutoFlushWr.
+BEGIN
+    Process.RegisterExitor(Shutdown);
+END AutoFlushWr.
 </PRE>
 </inModule>
 <PRE>

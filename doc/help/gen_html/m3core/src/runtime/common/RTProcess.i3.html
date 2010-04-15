@@ -44,6 +44,14 @@ PROCEDURE <A HREF="RTProcess.m3.html#RegisterInterruptSetup">RegisterInterruptSe
 </PRE><BLOCKQUOTE><EM> Registers <CODE>enable</CODE> and <CODE>disable</CODE> as the machine-specific setup procedures
    to enable and disable respectively control-C handling. </EM></BLOCKQUOTE><PRE>
 
+TYPE ForkHandler = PROCEDURE();
+</PRE> RegisterForkHandlers = pthread_atfork or just 0 on Win32. 
+<PRE>&lt;* EXTERNAL RTProcess__RegisterForkHandlers *&gt;
+PROCEDURE RegisterForkHandlers(prep, parent, child: ForkHandler): INTEGER;
+
+&lt;* EXTERNAL RTProcess__Fork *&gt;
+PROCEDURE Fork(): INTEGER;
+
 END RTProcess.
 </PRE>
 </inInterface>

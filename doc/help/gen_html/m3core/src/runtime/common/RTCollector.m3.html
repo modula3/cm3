@@ -24,7 +24,7 @@
 
 IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTHeapEvent.i3.html">RTHeapEvent</A>, <A HREF="RTHeapMap.i3.html">RTHeapMap</A>, <A HREF="RTIO.i3.html">RTIO</A>, <A HREF="#x1">RTMachine</A>;
 IMPORT <A HREF="RTMisc.i3.html">RTMisc</A>, <A HREF="RTOS.i3.html">RTOS</A>, <A HREF="RTParams.i3.html">RTParams</A>, <A HREF="../POSIX/RTPerfTool.i3.html">RTPerfTool</A>, <A HREF="RTProcess.i3.html">RTProcess</A>, <A HREF="RTType.i3.html">RTType</A>;
-IMPORT <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../thread/PTHREAD/ThreadF.i3.html">ThreadF</A>, <A HREF="RuntimeError.i3.html">RuntimeError</A>;
+IMPORT <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="../../thread/Common/Thread.i3.html">Thread</A>, <A HREF="#x2">RTThread</A>;
 IMPORT <A HREF="../../text/TextLiteral.i3.html">TextLiteral</A> AS TextLit, <A HREF="RTLinker.i3.html">RTLinker</A>, <A HREF="../../time/Common/Time.i3.html">Time</A>;
 
 FROM <A HREF="RT0.i3.html">RT0</A> IMPORT Typecode, TypeDefn;
@@ -46,67 +46,62 @@ TYPE TK = RT0.TypeKind;
 <P>** RTCollector **
 
 <P><PRE>PROCEDURE <A NAME="Disable"><procedure>Disable</procedure></A> () =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       FinishGC();
       INC(disableCount);
       partialCollectionNext := FALSE;
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
     IF perfOn THEN PerfAllow(); END;
   END Disable;
 
 PROCEDURE <A NAME="Enable"><procedure>Enable</procedure></A> () =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       DEC(disableCount);
       CollectEnough();
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
       IF perfOn THEN PerfAllow(); END;
     END;
   END Enable;
 
 PROCEDURE <A NAME="DisableMotion"><procedure>DisableMotion</procedure></A> () =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       INC(disableMotionCount);
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
     IF perfOn THEN PerfAllow(); END;
   END DisableMotion;
 
 PROCEDURE <A NAME="EnableMotion"><procedure>EnableMotion</procedure></A> () =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       DEC(disableMotionCount);
       CollectEnough();
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
       IF perfOn THEN PerfAllow(); END;
     END;
   END EnableMotion;
 
 PROCEDURE <A NAME="Collect"><procedure>Collect</procedure></A> () =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       FinishGC();
       StartGC();
       FinishGC();
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
   END Collect;
 </PRE>** RTCollectorSRC **
@@ -115,26 +110,24 @@ PROCEDURE <A NAME="Collect"><procedure>Collect</procedure></A> () =
    collection and motion are enabled. 
 
 <P><PRE>PROCEDURE <A NAME="StartCollection"><procedure>StartCollection</procedure></A> () =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       StartGC();
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
   END StartCollection;
 </PRE> FinishCollection finishes the current collection, if one is on
    progress. 
 
 <P><PRE>PROCEDURE <A NAME="FinishCollection"><procedure>FinishCollection</procedure></A> () =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       FinishGC();
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
   END FinishCollection;
 </PRE> StartBackgroundCollection starts the background thread, if not already
@@ -143,18 +136,16 @@ PROCEDURE <A NAME="Collect"><procedure>Collect</procedure></A> () =
 <P><PRE>VAR startedBackground := FALSE;
 
 PROCEDURE <A NAME="StartBackgroundCollection"><procedure>StartBackgroundCollection</procedure></A> () =
-  VAR
-    start := FALSE;
-    thread := ThreadF.MyHeapState();
+  VAR start := FALSE;
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       IF NOT startedBackground THEN
         start := TRUE;
         startedBackground := TRUE;
       END;
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
     IF start THEN
       EVAL Thread.Fork(NEW(Thread.Closure, apply := BackgroundThread));
@@ -166,23 +157,27 @@ PROCEDURE <A NAME="StartBackgroundCollection"><procedure>StartBackgroundCollecti
 <P><PRE>VAR startedForeground := FALSE;
 
 PROCEDURE <A NAME="StartForegroundCollection"><procedure>StartForegroundCollection</procedure></A> () =
-  VAR
-    start := FALSE;
-    thread := ThreadF.MyHeapState();
+  VAR start := FALSE;
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       IF NOT startedForeground THEN
         start := TRUE;
         startedForeground := TRUE;
       END;
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
     IF start THEN
       EVAL Thread.Fork(NEW(Thread.Closure, apply := ForegroundThread));
     END;
   END StartForegroundCollection;
+
+PROCEDURE <A NAME="DisableVM"><procedure>DisableVM</procedure></A>() =
+BEGIN
+  (* This function does nothing and exists solely for source compatibility
+   * with older cm3. *)
+END DisableVM;
 </PRE> ------------------------------- low-level allocation and collection 
 
 <P> We assume that references (values of the types ADDRESS and REFANY) are
@@ -449,9 +444,11 @@ PROCEDURE <A NAME="Move"><procedure>Move</procedure></A> (&lt;*UNUSED*&gt; self:
       np       : RefReferent;
     BEGIN
       IF (def.gc_map = NIL) AND (def.kind # ORD(TK.Obj)) THEN
-        np := AllocTraced(dataSize, def.dataAlignment, pureCopy);
+        np := AllocCopy(dataSize, def.dataAlignment, pureCopy);
         IF (np = NIL) THEN
-          RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
+          (* promote as if large so we can bail out gracefully *)
+          PromotePage(page, PromoteReason.LargePure);
+          RETURN;
         END;
         WITH nh = HeaderOf(np) DO
           RTMisc.Copy(hdr, nh, BYTESIZE(Header) + dataSize);
@@ -459,9 +456,11 @@ PROCEDURE <A NAME="Move"><procedure>Move</procedure></A> (&lt;*UNUSED*&gt; self:
           nh.dirty := TRUE;
         END;
       ELSE
-        np := AllocTraced(dataSize, def.dataAlignment, impureCopy);
+        np := AllocCopy(dataSize, def.dataAlignment, impureCopy);
         IF (np = NIL) THEN
-          RAISE RuntimeError.E (RuntimeError.T.OutOfMemory);
+          (* promote as if large so we can bail out gracefully *)
+          PromotePage(page, PromoteReason.LargeImpure);
+          RETURN;
         END;
         WITH nh = HeaderOf(np) DO
           RTMisc.Copy(hdr, nh, BYTESIZE(Header) + dataSize);
@@ -522,6 +521,7 @@ PROCEDURE <A NAME="Move"><procedure>Move</procedure></A> (&lt;*UNUSED*&gt; self:
 <P><PRE>PROCEDURE <A NAME="NoteStackLocations"><procedure>NoteStackLocations</procedure></A> (start, stop: ADDRESS) =
   VAR fp : UNTRACED REF ADDRESS := start;
   BEGIN
+    IF NOT (start &lt; stop) THEN RETURN END;
     stop := stop - ADRSIZE (ADDRESS); (* so we don't overrun the valid addresses *)
     WHILE fp &lt;= stop DO               (* with the memory read on the next line.  *)
       WITH page = AddressToPage(fp^) DO
@@ -600,7 +600,6 @@ PROCEDURE <A NAME="GrayBetween"><procedure>GrayBetween</procedure></A> (h, he: R
 
 PROCEDURE <A NAME="FlushThreadState"><procedure>FlushThreadState</procedure></A> (VAR thread: ThreadState) =
   BEGIN
-    &lt;*ASSERT thread.inCritical = 0*&gt;
     WITH pool = thread.pool DO
       pool.next := NIL;
       pool.limit := NIL;
@@ -645,13 +644,14 @@ VAR
                                     thread *)
   signalWeak := FALSE;           (* should signal weak cleaner thread *)
 
-PROCEDURE <A NAME="CollectEnough"><procedure>CollectEnough</procedure></A> (allocator := FALSE) =
-  VAR t0: Time.T;
+PROCEDURE <A NAME="CollectEnough"><procedure>CollectEnough</procedure></A> () =
+  VAR t0, t1: Time.T;
   BEGIN
     IF collectorOn THEN RETURN END;
     IF NOT Behind() THEN RETURN END;
     TRY
-      CollectorOn(t0);
+      CollectorOn();
+      t0 := Time.Now();
       IF incremental AND RTLinker.incremental THEN
         REPEAT CollectSome();
         UNTIL NOT Behind() OR collectorState = CollectorState.Zero;
@@ -660,7 +660,13 @@ PROCEDURE <A NAME="CollectEnough"><procedure>CollectEnough</procedure></A> (allo
         REPEAT CollectSome(); UNTIL collectorState = CollectorState.Zero;
       END;
     FINALLY
-      CollectorOff(t0, allocator);
+      t1 := Time.Now();
+      cycleCost := cycleCost + (t1 - t0);
+      CollectorOff();
+      IF tsIndex &gt;= 0 THEN
+        tStamps[tsIndex] := t0; INC(tsIndex);
+        tStamps[tsIndex] := t1; INC(tsIndex);
+      END;
     END;
   END CollectEnough;
 
@@ -681,7 +687,7 @@ PROCEDURE <A NAME="Behind"><procedure>Behind</procedure></A> (): BOOLEAN =
     END;
   END Behind;
 
-PROCEDURE <A NAME="CollectorOn"><procedure>CollectorOn</procedure></A> (VAR timeOnEntry: Time.T) =
+PROCEDURE <A NAME="CollectorOn"><procedure>CollectorOn</procedure></A> () =
   (* LL &gt;= RTOS.LockHeap *)
   BEGIN
     &lt;* ASSERT NOT collectorOn *&gt;
@@ -689,12 +695,10 @@ PROCEDURE <A NAME="CollectorOn"><procedure>CollectorOn</procedure></A> (VAR time
     IF impureCopy.page # NIL THEN
       &lt;*ASSERT impureCopy.page.desc.gray*&gt;
     END;
-    timeOnEntry := Time.Now();
   END CollectorOn;
 
-PROCEDURE <A NAME="CollectorOff"><procedure>CollectorOff</procedure></A> (VAR timeOnEntry: Time.T; allocator := FALSE) =
+PROCEDURE <A NAME="CollectorOff"><procedure>CollectorOff</procedure></A> () =
   (* LL &gt;= RTOS.LockHeap *)
-  VAR timeOnExit := Time.Now();
   BEGIN
     &lt;* ASSERT collectorOn *&gt;
 
@@ -708,12 +712,6 @@ PROCEDURE <A NAME="CollectorOff"><procedure>CollectorOff</procedure></A> (VAR ti
       signalBackground := FALSE;
       signalWeak := FALSE;
       RTOS.BroadcastHeap();
-    END;
-
-    cycleCost := cycleCost + (timeOnExit - timeOnEntry);
-    IF allocator AND tsIndex &gt;= 0 THEN
-      tStamps[tsIndex] := timeOnEntry; INC(tsIndex);
-      tStamps[tsIndex] := timeOnExit;  INC(tsIndex);
     END;
   END CollectorOff;
 
@@ -746,7 +744,7 @@ PROCEDURE <A NAME="CollectSome"><procedure>CollectSome</procedure></A> () =
 
 PROCEDURE <A NAME="CollectSomeInStateZero"><procedure>CollectSomeInStateZero</procedure></A> () =
   BEGIN
-    ThreadF.SuspendOthers ();
+    RTThread.SuspendOthers ();
 
     &lt;* ASSERT disableCount + disableMotionCount = 0 *&gt;
     (* compute some costs relative to previous collection *)
@@ -820,7 +818,7 @@ PROCEDURE <A NAME="CollectSomeInStateZero"><procedure>CollectSomeInStateZero</pr
        pages, because we want to make sure that old, impure, dirty
        pages referenced by threads are marked as ambiguous roots.
        Otherwise, these pages won't get cleaned before we return. *)
-    ThreadF.ProcessStacks(NoteStackLocations);
+    RTThread.ProcessStacks(NoteStackLocations);
     (* Now, nothing in previous space is referenced by a thread. *)
 
     (* Promote any remaining &quot;old&quot; pages and unprotect everything else *)
@@ -900,7 +898,7 @@ PROCEDURE <A NAME="CollectSomeInStateZero"><procedure>CollectSomeInStateZero</pr
     collectorState := CollectorState.One;
     IF backgroundWaiting THEN signalBackground := TRUE; END;
 
-    ThreadF.ResumeOthers ();
+    RTThread.ResumeOthers ();
   END CollectSomeInStateZero;
 </PRE> Clean gray nodes 
 
@@ -1371,11 +1369,11 @@ PROCEDURE <A NAME="ExpandStack"><procedure>ExpandStack</procedure></A> (s: Stack
   BEGIN
     RETURN s.xA = s.x0;
   END StackEmpty;
-</PRE> Allocate space in the traced heap for NEW 
 
-<P><PRE>PROCEDURE <A NAME="AllocTraced"><procedure>AllocTraced</procedure></A> (dataSize, dataAlignment: CARDINAL;
-                       VAR pool: AllocPool): RefReferent =
-  (* Allocates space in the traced heap. *)
+PROCEDURE <A NAME="AllocCopy"><procedure>AllocCopy</procedure></A> (dataSize, dataAlignment: CARDINAL;
+                     VAR pool: AllocPool): RefReferent =
+  (* Allocates space from &quot;pool&quot; in the traced heap. *)
+  (* LL &gt;= RTOS.LockHeap *)
   VAR
     res       := pool.next + ADRSIZE(Header);
     cur_align := Word.And(LOOPHOLE(res, INTEGER), MaxAlignMask);
@@ -1397,7 +1395,7 @@ PROCEDURE <A NAME="ExpandStack"><procedure>ExpandStack</procedure></A> (s: Stack
 
     pool.next := nextPtr;
     RETURN res;
-  END AllocTraced;
+  END AllocCopy;
 
 PROCEDURE <A NAME="LongAlloc"><procedure>LongAlloc</procedure></A> (dataSize, dataAlignment: CARDINAL;
                      VAR pool: AllocPool): RefReferent =
@@ -1408,30 +1406,14 @@ PROCEDURE <A NAME="LongAlloc"><procedure>LongAlloc</procedure></A> (dataSize, da
         dataSize;
     n_pages := (n_bytes + BytesPerPage - 1) DIV BytesPerPage;
     res      : RefReferent;
-    notAfter : SET OF Note;
+    filePage : RefPage;
     newPage  : RefPage;
     newPtr   : ADDRESS;
     newLimit : ADDRESS;
-    filePage : RefPage;
-    thread := ThreadF.MyHeapState();
+    notAfter : SET OF Note;
   BEGIN
-    &lt;*ASSERT thread.inCritical &gt; 0*&gt;
-    DEC(thread.inCritical);
-    RTOS.LockHeap(thread^);
-
     CASE pool.note OF
     | Note.Allocated =&gt;
-      (* make sure the collector gets a chance to keep up with NEW... *)
-      TRY
-        CollectEnough(allocator := TRUE);
-      EXCEPT
-      | RuntimeError.E(t) =&gt;
-        IF t = RuntimeError.T.OutOfMemory THEN
-          RTOS.UnlockHeap(thread^);
-          INC(thread.inCritical);
-          RETURN NIL;
-        END;
-      END;
       notAfter := SET OF Note{Note.Copied};
     | Note.Copied =&gt;
       notAfter := SET OF Note{Note.Allocated};
@@ -1439,15 +1421,9 @@ PROCEDURE <A NAME="LongAlloc"><procedure>LongAlloc</procedure></A> (dataSize, da
 
     (* get a block of &quot;n_pages&quot; contiguous, free pages; just what we need! *)
     newPage  := FindFreePages (n_pages, notAfter);
-    newPtr   := newPage;
-    newLimit := newPage + BytesPerPage;
-    IF (newPage = NIL) THEN
-      RTOS.UnlockHeap(thread^);
-      INC(thread.inCritical);
-      RETURN NIL;
-    END;
-
-    &lt;*ASSERT initialized*&gt;
+    newPtr   := newPage + ADRSIZE(PageHdr);
+    newLimit := newPage + AdrPerPage;
+    IF (newPage = NIL) THEN RETURN NIL; END;
 
     &lt;*ASSERT newPage.nb = n_pages*&gt;
     RTMisc.Zero(newPage, n_pages * BytesPerPage);
@@ -1473,10 +1449,8 @@ PROCEDURE <A NAME="LongAlloc"><procedure>LongAlloc</procedure></A> (dataSize, da
                            locked := FALSE};
       INC(n_copied, n_pages);
     END;
-
     newPage.nb := n_pages;
     IF perfOn THEN PerfChange (newPage); END;
-    INC(newPtr, ADRSIZE(PageHdr));
 
     (* maybe we have to insert a filler to align this thing *)
     res := RTMisc.Align(newPtr + ADRSIZE(Header), dataAlignment);
@@ -1505,8 +1479,6 @@ PROCEDURE <A NAME="LongAlloc"><procedure>LongAlloc</procedure></A> (dataSize, da
       PushPage(filePage);
     END;
 
-    RTOS.UnlockHeap(thread^);
-    INC(thread.inCritical);
     RETURN res;
   END LongAlloc;
 </PRE>--------------------------------------------------
@@ -1519,23 +1491,24 @@ PROCEDURE <A NAME="LongAlloc"><procedure>LongAlloc</procedure></A> (dataSize, da
    quickly complete a collection if the collector pauses. 
 
 <P><PRE>PROCEDURE <A NAME="BackgroundThread"><procedure>BackgroundThread</procedure></A> (&lt;* UNUSED *&gt; closure: Thread.Closure): REFANY =
-  VAR
-    t0: Time.T;
-    thread := ThreadF.MyHeapState();
+  VAR t0, t1: Time.T;
   BEGIN
     LOOP
       TRY
-        RTOS.LockHeap(thread^);
+        RTOS.LockHeap();
         WHILE collectorState = CollectorState.Zero DO
           backgroundWaiting := TRUE;
-          RTOS.WaitHeap(thread^);
+          RTOS.WaitHeap();
           backgroundWaiting := FALSE;
         END;
-        CollectorOn(t0);
+        CollectorOn();
+        t0 := Time.Now();
         CollectSome();
       FINALLY
-        CollectorOff(t0);
-        RTOS.UnlockHeap(thread^);
+        t1 := Time.Now();
+        cycleCost := cycleCost + (t1 - t0);
+        CollectorOff();
+        RTOS.UnlockHeap();
       END;
       Thread.Pause(1.0d0);
     END;
@@ -1546,27 +1519,27 @@ VAR foregroundWaiting := FALSE;
    collects asynchronously. 
 
 <P><PRE>PROCEDURE <A NAME="ForegroundThread"><procedure>ForegroundThread</procedure></A> (&lt;* UNUSED *&gt; closure: Thread.Closure): REFANY =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       LOOP
         foregroundWaiting := TRUE;
-        RTOS.WaitHeap(thread^);
+        RTOS.WaitHeap();
         foregroundWaiting := FALSE;
         CollectEnough();
       END;
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
   END ForegroundThread;
 </PRE> --------------------------------------------------------- collector 
 
 <P><PRE>PROCEDURE <A NAME="StartGC"><procedure>StartGC</procedure></A> () =
-  VAR t0: Time.T;
+  VAR t0, t1: Time.T;
   BEGIN
     TRY
-      CollectorOn(t0);
+      CollectorOn();
+      t0 := Time.Now();
       IF collectorState = CollectorState.Zero
         AND disableCount + disableMotionCount = 0 THEN
         partialCollectionNext := FALSE;
@@ -1576,25 +1549,29 @@ VAR foregroundWaiting := FALSE;
         END;
       END;
     FINALLY
-      CollectorOff(t0);
+      t1 := Time.Now();
+      cycleCost := cycleCost + (t1 - t0);
+      CollectorOff();
     END;
   END StartGC;
 
 PROCEDURE <A NAME="FinishGC"><procedure>FinishGC</procedure></A> () =
-  VAR t0: Time.T;
+  VAR t0, t1: Time.T;
   BEGIN
     TRY
-      CollectorOn(t0);
+      CollectorOn();
+      t0 := Time.Now();
       WHILE collectorState # CollectorState.Zero DO CollectSome(); END;
     FINALLY
-      CollectorOff(t0);
+      t1 := Time.Now();
+      cycleCost := cycleCost + (t1 - t0);
+      CollectorOff();
     END;
   END FinishGC;
 
 PROCEDURE <A NAME="Crash"><procedure>Crash</procedure></A> (): BOOLEAN =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
-    RTOS.LockHeap(thread^);        (* left incremented *)
+    RTOS.LockHeap();        (* left incremented *)
 
     IF collectorState = CollectorState.Zero THEN
       (* no collection in progress *)
@@ -1631,9 +1608,9 @@ PROCEDURE <A NAME="InstallSanityCheck"><procedure>InstallSanityCheck</procedure>
 
 PROCEDURE <A NAME="After"><procedure>After</procedure></A> (self: MonitorClosure) =
   BEGIN
-    ThreadF.SuspendOthers();
+    RTThread.SuspendOthers();
     SanityCheck (self);
-    ThreadF.ResumeOthers();
+    RTThread.ResumeOthers();
   END After;
 
 PROCEDURE <A NAME="SanityCheck"><procedure>SanityCheck</procedure></A> (&lt;*UNUSED*&gt; self: MonitorClosure) =
@@ -1805,7 +1782,7 @@ PROCEDURE <A NAME="PrintDesc"><procedure>PrintDesc</procedure></A>(p: Page) =
   BEGIN
     TRY
       Disable();
-      ThreadF.SuspendOthers();
+      RTThread.SuspendOthers();
       FOR p := p0 TO p1 - 1 DO
         IF desc[p - p0] = 0 THEN
           WITH page = PageToRef(p), d = page.desc DO
@@ -1828,7 +1805,7 @@ PROCEDURE <A NAME="PrintDesc"><procedure>PrintDesc</procedure></A>(p: Page) =
         END;
       END;
     FINALLY
-      ThreadF.ResumeOthers();
+      RTThread.ResumeOthers();
       Enable();
     END;
   END VisitAllRefs;
@@ -2038,11 +2015,10 @@ PROCEDURE <A NAME="WeakRefFromRef"><procedure>WeakRefFromRef</procedure></A> (r:
   VAR
     start := FALSE;
     result: WeakRef;
-    thread := ThreadF.MyHeapState();
   BEGIN
     &lt;* ASSERT r # NIL *&gt;
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       (* create a WeakCleaner thread the first time through *)
       IF p # NIL AND NOT startedWeakCleaner THEN
         start := TRUE;
@@ -2075,7 +2051,7 @@ PROCEDURE <A NAME="WeakRefFromRef"><procedure>WeakRefFromRef</procedure></A> (r:
         END;
       END;
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
     IF start THEN
       EVAL Thread.Fork(NEW(Thread.Closure, apply := WeakCleaner));
@@ -2102,13 +2078,11 @@ PROCEDURE <A NAME="ExpandWeakTable"><procedure>ExpandWeakTable</procedure></A> (
 </PRE> This is WeakRef.ToRef, which inverts FromRef 
 
 <P><PRE>PROCEDURE <A NAME="WeakRefToRef"><procedure>WeakRefToRef</procedure></A> (READONLY t: WeakRef): REFANY =
-  VAR
-    ab: WeakRefAB;  r: REFANY := NIL;  t0: Time.T;
-    thread := ThreadF.MyHeapState();
+  VAR ab: WeakRefAB;  r: REFANY := NIL;  t0, t1: Time.T;
   BEGIN
     LOOPHOLE (ab, WeakRef) := t;
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       (* if the weak ref is not dead, we know the index *)
       WITH entry = weakTable[ab.a] DO
         (* check the weak ref there *)
@@ -2120,10 +2094,13 @@ PROCEDURE <A NAME="ExpandWeakTable"><procedure>ExpandWeakTable</procedure></A> (
               &lt;* ASSERT p # Nil *&gt;
               IF PageToRef(p).desc.space = Space.Previous THEN
                 TRY
-                  CollectorOn(t0);
+                  CollectorOn();
+                  t0 := Time.Now();
                   Move(NIL, ADR(entry.r));
                 FINALLY
-                  CollectorOff(t0);
+                  t1 := Time.Now();
+                  cycleCost := cycleCost + (t1 - t0);
+                  CollectorOff();
                 END;
               END;
             END;
@@ -2132,7 +2109,7 @@ PROCEDURE <A NAME="ExpandWeakTable"><procedure>ExpandWeakTable</procedure></A> (
         END;
       END;
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
     RETURN r;
   END WeakRefToRef;
@@ -2140,12 +2117,11 @@ PROCEDURE <A NAME="ExpandWeakTable"><procedure>ExpandWeakTable</procedure></A> (
    for a heap object. 
 
 <P><PRE>PROCEDURE <A NAME="RegisterFinalCleanup"><procedure>RegisterFinalCleanup</procedure></A> (r: REFANY; p: PROCEDURE (r: REFANY)) =
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     &lt;* ASSERT r # NIL *&gt;
     &lt;* ASSERT p # NIL *&gt;
     TRY
-      RTOS.LockHeap(thread^);
+      RTOS.LockHeap();
       (* if necessary, expand weakTable *)
       IF weakFree0 = -1 THEN ExpandWeakTable(); END;
       (* allocate a new entry *)
@@ -2159,7 +2135,7 @@ PROCEDURE <A NAME="ExpandWeakTable"><procedure>ExpandWeakTable</procedure></A> (
         weakFinal0 := i;
       END;
     FINALLY
-      RTOS.UnlockHeap(thread^);
+      RTOS.UnlockHeap();
     END;
   END RegisterFinalCleanup;
 </PRE> WeakCleaner waits for entries to be placed on the dead list, then cleans
@@ -2169,23 +2145,25 @@ PROCEDURE <A NAME="ExpandWeakTable"><procedure>ExpandWeakTable</procedure></A> (
   VAR
     i   : INTEGER;
     copy: WeakEntry;
-    t0: Time.T;
-    thread := ThreadF.MyHeapState();
+    t0, t1: Time.T;
   BEGIN
     LOOP
       TRY
-        RTOS.LockHeap(thread^);
+        RTOS.LockHeap();
         (* get an entry to handle.  copy its contents, then put it on the
            free list. *)
-        WHILE weakDead0 = -1 DO RTOS.WaitHeap(thread^) END;
+        WHILE weakDead0 = -1 DO RTOS.WaitHeap() END;
         i := weakDead0;
         WITH entry = weakTable[i] DO
           &lt;* ASSERT entry.t.a = -1 *&gt;
           TRY
-            CollectorOn(t0);
+            CollectorOn();
+            t0 := Time.Now();
             Move(NIL, ADR(entry.r));
           FINALLY
-            CollectorOff(t0);
+            t1 := Time.Now();
+            cycleCost := cycleCost + (t1 - t0);
+            CollectorOff();
           END;
           copy := entry;
           weakDead0 := entry.next;
@@ -2193,7 +2171,7 @@ PROCEDURE <A NAME="ExpandWeakTable"><procedure>ExpandWeakTable</procedure></A> (
           weakFree0 := i;
         END;
       FINALLY
-        RTOS.UnlockHeap(thread^);
+        RTOS.UnlockHeap();
       END;
       (* call the registered procedure.  note that collections are
          allowed; the copy is kept on the stack so the object won't be
@@ -2206,37 +2184,29 @@ PROCEDURE <A NAME="ExpandWeakTable"><procedure>ExpandWeakTable</procedure></A> (
       copy.r := NIL;           (* to help conservative collector *)
     END;
   END WeakCleaner;
-</PRE> ----------------------------------------------------------------------- 
+</PRE>------------------------------------------------------ barrier support --
 
 <P><PRE>PROCEDURE <A NAME="CheckLoadTracedRef"><procedure>CheckLoadTracedRef</procedure></A> (ref: REFANY) =
   (* Load a heap reference 'ref' from a global or heap variable.
      The fast-path inline guard for this operation has already noticed that the
      target of the reference was gray.  We now scan the target object to make it
      black, so that it is guaranteed to contain no white references.
-     This preserves the black mutator invariant that permits unbarriered access
-     to heap state. *)
-  VAR
-    p := Word.RightShift (LOOPHOLE(ref, Word.T), LogBytesPerPage);
-    thread := ThreadF.MyHeapState();
+     This preserves the strong tricolor invariant (no pointers from black to
+     white) where the mutator and the objects directly referred to from the
+     mutator are black. *)
+  VAR p := Word.RightShift (LOOPHOLE(ref, Word.T), LogBytesPerPage);
   BEGIN
     INC(checkLoadTracedRef);		 (* race, so only approximate *)
     WITH h = HeaderOf (LOOPHOLE(ref, RefReferent)), page = PageToRef(p) DO
       &lt;*ASSERT h.typecode # RT0.TextLitTypecode*&gt;
       TRY
-        RTOS.LockHeap(thread^);
-        &lt;*ASSERT NOT collectorOn*&gt;
-        collectorOn := TRUE;
+        RTOS.LockHeap();
+        CollectorOn();
         (* just clean this object *)
         CleanBetween (h, h + ADRSIZE(Header), page.desc.clean);
       FINALLY
-        &lt;*ASSERT collectorOn*&gt;
-        collectorOn := FALSE;
-        IF signalBackground OR signalWeak THEN
-          signalBackground := FALSE;
-          signalWeak := FALSE;
-          RTOS.BroadcastHeap();
-        END;
-        RTOS.UnlockHeap(thread^);
+        CollectorOff();
+        RTOS.UnlockHeap();
       END;
     END;
   END CheckLoadTracedRef;
@@ -2246,14 +2216,12 @@ PROCEDURE <A NAME="CheckStoreTraced"><procedure>CheckStoreTraced</procedure></A>
      The fast-path inline guard for this operation has already noticed that the
      target object was not dirty.  We now record that the target object and the
      page in which it resides is dirty. *)
-  VAR
-    p := Word.RightShift (LOOPHOLE(dst, Word.T), LogBytesPerPage);
-    thread := ThreadF.MyHeapState();
+  VAR p := Word.RightShift (LOOPHOLE(dst, Word.T), LogBytesPerPage);
   BEGIN
     INC(checkStoreTraced);		 (* race, so only approximate *)
     WITH h = HeaderOf (LOOPHOLE(dst, RefReferent)), page = PageToRef(p) DO
       TRY
-        RTOS.LockHeap(thread^);
+        RTOS.LockHeap();
         &lt;*ASSERT h.typecode # RT0.TextLitTypecode*&gt;
         &lt;*ASSERT NOT h.gray*&gt;
         WITH d = page.desc DO
@@ -2268,7 +2236,7 @@ PROCEDURE <A NAME="CheckStoreTraced"><procedure>CheckStoreTraced</procedure></A>
           END;
         END;
       FINALLY
-        RTOS.UnlockHeap(thread^);
+        RTOS.UnlockHeap();
       END;
     END;
     RETURN;
@@ -2706,39 +2674,6 @@ PROCEDURE <A NAME="GrowHeap"><procedure>GrowHeap</procedure></A> (pp: INTEGER): 
     RebuildFreelist();
     RETURN TRUE;
   END GrowHeap;
-</PRE>** INITIALIZATION **
-
-<P><PRE>CONST MaxAlignment  = 8;
-CONST MaxAlignMask  = 2_0111;     (* bit mask to capture MaxAlignment *)
-TYPE  MaxAlignRange = [0 .. MaxAlignment - 1];
-
-VAR align: ARRAY MaxAlignRange, [1 .. MaxAlignment] OF CARDINAL;
-</PRE><BLOCKQUOTE><EM> align[i,j] == RTMisc.Align (i, j) - i </EM></BLOCKQUOTE><PRE>
-
-VAR initialized := FALSE;
-PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
-  BEGIN
-    &lt;*ASSERT LOOPHOLE(0, ADDRESS) = NIL*&gt;
-
-    weakTable := NEW(UNTRACED REF ARRAY OF WeakEntry, 0);
-
-    (* initialize the alignment array *)
-    FOR i := FIRST(align) TO LAST(align) DO
-      FOR j := FIRST(align[0]) TO LAST(align[0]) DO
-        align[i, j] := RTMisc.Upper(i, j) - i;
-      END;
-    END;
-    initialized := TRUE;
-
-    incremental  := RTLinker.incremental;
-    generational := RTLinker.generational;
-    IF RTParams.IsPresent(&quot;nogc&quot;) THEN disableCount := 1; END;
-    IF RTParams.IsPresent(&quot;noincremental&quot;) THEN incremental := FALSE; END;
-    IF RTParams.IsPresent(&quot;nogenerational&quot;) THEN generational := FALSE; END;
-    IF RTParams.IsPresent(&quot;paranoidgc&quot;) THEN InstallSanityCheck(); END;
-    IF RTParams.IsPresent(&quot;heapstats&quot;) THEN heap_stats := TRUE; END;
-    PerfStart();
-  END Init;
 
 VAR
   minorCollections := 0;                 (* the number of minor GCs begun *)
@@ -2803,8 +2738,50 @@ PROCEDURE <A NAME="FinishBench"><procedure>FinishBench</procedure></A>() =
     RTIO.PutText (&quot;%\n&quot;);
     RTIO.Flush ();
   END FinishBench;
+</PRE>** INITIALIZATION **
+
+<P><PRE>PROCEDURE <A NAME="AtForkPrepare"><procedure>AtForkPrepare</procedure></A>() =
+  BEGIN
+    RTOS.LockHeap();
+  END AtForkPrepare;
+
+PROCEDURE <A NAME="AtForkParent"><procedure>AtForkParent</procedure></A>() =
+  BEGIN
+    RTOS.UnlockHeap();
+  END AtForkParent;
+
+PROCEDURE <A NAME="AtForkChild"><procedure>AtForkChild</procedure></A>() =
+  BEGIN
+    startedForeground := FALSE;
+    startedBackground := FALSE;
+    startedWeakCleaner := FALSE;
+    AtForkParent();
+  END AtForkChild;
+
+PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
+  VAR r: INTEGER;
+  BEGIN
+    r := RTProcess.RegisterForkHandlers(AtForkPrepare, AtForkParent, AtForkChild);
+    &lt;* ASSERT r = 0 *&gt;
+    IF RTParams.IsPresent(&quot;paranoidgc&quot;) THEN InstallSanityCheck(); END;
+    IF RTParams.IsPresent(&quot;nogc&quot;) THEN disableCount := 1; END;
+    IF RTParams.IsPresent(&quot;noincremental&quot;) THEN incremental := FALSE; END;
+    IF RTParams.IsPresent(&quot;nogenerational&quot;) THEN generational := FALSE; END;
+    IF RTParams.IsPresent(&quot;heapstats&quot;) THEN heap_stats := TRUE; END;
+    PerfStart();
+  END Init;
 
 BEGIN
+  &lt;*ASSERT LOOPHOLE(0, ADDRESS) = NIL*&gt;
+
+  weakTable := NEW(UNTRACED REF ARRAY OF WeakEntry, 0);
+
+  (* initialize the alignment array *)
+  FOR i := FIRST(align) TO LAST(align) DO
+    FOR j := FIRST(align[0]) TO LAST(align[0]) DO
+      align[i, j] := RTMisc.Upper(i, j) - i;
+    END;
+  END;
 END RTCollector.
 </PRE>
 </inModule>
@@ -2813,6 +2790,13 @@ END RTCollector.
 </A><UL>
 <LI><A HREF="../AMD64_LINUX/RTMachine.i3.html#0TOP0">m3core/src/runtime/AMD64_LINUX/RTMachine.i3</A>
 <LI><A HREF="RTMachine.i3.html#0TOP0">m3core/src/runtime/common/RTMachine.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface RTThread is in:
+</A><UL>
+<LI><A HREF="../POSIX/RTThread.i3.html#0TOP0">m3core/src/runtime/POSIX/RTThread.i3</A>
+<LI><A HREF="RTThread.i3.html#0TOP0">m3core/src/runtime/common/RTThread.i3</A>
 </UL>
 <P>
 <PRE>

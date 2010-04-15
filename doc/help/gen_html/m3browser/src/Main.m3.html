@@ -21,13 +21,13 @@
 
 IMPORT <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../libm3/src/rw/TextRd.i3.html">TextRd</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../libm3/derived/IntRefTbl.i3.html">IntRefTbl</A>, <A HREF="../../libm3/derived/IntList.i3.html">IntList</A>;
 IMPORT <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../libm3/src/params/Params.i3.html">Params</A>, <A HREF="../../libm3/src/fmtlex/Lex.i3.html">Lex</A>, <A HREF="#x1">OS</A>, <A HREF="../../m3core/src/float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../libm3/derived/IntIntTbl.i3.html">IntIntTbl</A>, <A HREF="../../libm3/derived/TextIntTbl.i3.html">TextIntTbl</A>;
-IMPORT <A HREF="../../libm3/src/rw/FileWr.i3.html">FileWr</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../m3core/src/time/Common/FmtTime.i3.html">FmtTime</A>, <A HREF="../../libm3/derived/M3Config.i3.html">M3Config</A>, <A HREF="../../m3core/src/runtime/common/RTParams.i3.html">RTParams</A>, <A HREF="../../m3core/src/runtime/common/RTCollector.i3.html">RTCollector</A>;
+IMPORT <A HREF="../../libm3/src/rw/FileWr.i3.html">FileWr</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../m3core/src/time/Common/FmtTime.i3.html">FmtTime</A>, <A HREF="../../m3quake/src/MxConfig.i3.html">MxConfig</A>, <A HREF="../../m3core/src/runtime/common/RTParams.i3.html">RTParams</A>, <A HREF="../../m3core/src/runtime/common/RTCollector.i3.html">RTCollector</A>;
 IMPORT <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../libm3/derived/RefList.i3.html">RefList</A>, <A HREF="../../libm3/derived/IntSeq.i3.html">IntSeq</A>, <A HREF="#x2">XFormat</A>, <A HREF="../../libm3/derived/RefSeq.i3.html">RefSeq</A>, <A HREF="../../libm3/derived/TextRefTbl.i3.html">TextRefTbl</A>, <A HREF="../../m3markup/src/CharMap.i3.html">CharMap</A>, <A HREF="../../tcp/src/common/IP.i3.html">IP</A>;
 IMPORT <A HREF="#x3">Buf</A>, <A HREF="#x4">ID</A>, <A HREF="#x5">Wx</A>, <A HREF="#x6">MarkUp</A>, <A HREF="#x7">CMarkUp</A>, <A HREF="#x8">TCPServer</A>, <A HREF="#x9">ErrLog</A>, <A HREF="../../m3core/src/runtime/common/RTutils.i3.html">RTutils</A>, <A HREF="../../m3core/src/runtime/common/RTHeapStats.i3.html">RTHeapStats</A>;
 
 CONST
   Title_page = &quot;m3browser.html&quot;;
-  SLASH      = M3Config.PATH_SEP;
+  SLASH      = MxConfig.HOST_PATH_SEP;
   StartPage  = &quot;&lt;HTML&gt;\n&lt;HEAD&gt;\n&quot;;
   StartTitle = &quot;&lt;TITLE&gt;&quot;;
   Body       = &quot;&lt;BODY BGCOLOR=\&quot;#ffffff\&quot; VLINK=\&quot;#006633\&quot;&gt;\n&quot;;
@@ -36,13 +36,13 @@ CONST
   EndPage    = &quot;&lt;/BODY&gt;\n&lt;/HTML&gt;\n&quot;;
 
 VAR (* configuration *)
-  package_root     := M3Config.PKG_USE;
+  package_root     := MxConfig.Get(&quot;PKG_USE&quot;);
   server_machine   :  TEXT; (* initialized in &quot;ParseOptions&quot; *)
   server_socket    := 3829;
   server_address   := IP.GetHostAddr();
   accept_address   := server_address;
   accept_maskBits: [0 .. 32] := 0;
-  derived_dirs     := IntList.List1 (ID.Add (M3Config.BUILD_DIR));
+  derived_dirs     := IntList.List1 (ID.Add (MxConfig.Get(&quot;BUILD_DIR&quot;)));
   n_workers        := 3;
   refresh_interval := 30.0d0; (* minutes *)
   start_time       := Time.Now ();
@@ -853,6 +853,7 @@ CONST
     &amp; &quot;?195c2a74 INTEGER\n&quot;
     &amp; &quot;?05562176 LONGINT\n&quot;
     &amp; &quot;?97e237e2 CARDINAL\n&quot;
+    &amp; &quot;?9ced36e7 LONGCARD\n&quot;
     &amp; &quot;?1e59237d BOOLEAN\n&quot;
     &amp; &quot;?08402063 ADDRESS\n&quot;
     &amp; &quot;?56e16863 CHAR\n&quot;
@@ -3281,7 +3282,7 @@ END Main.
 <A NAME="x1">interface OS is in:
 </A><UL>
 <LI><A HREF="../../cm3ide/src/utils/OS.i3.html#0TOP0">cm3ide/src/utils/OS.i3</A>
-<LI><A HREF="../../cminstall/src/OS.i3.html#0TOP0">cminstall/src/OS.i3</A>
+<LI><A HREF="../../fix_nl/src/OS.i3.html#0TOP0">fix_nl/src/OS.i3</A>
 <LI><A HREF="OS.i3.html#0TOP0">m3browser/src/OS.i3</A>
 </UL>
 <P>

@@ -15,28 +15,32 @@
 FROM <A HREF="Ctypes.i3.html">Ctypes</A> IMPORT char_star, const_char_star, const_void_star, int, void_star;
 FROM <A HREF="Cstddef.i3.html">Cstddef</A> IMPORT size_t;
 
-&lt;*EXTERNAL*&gt; PROCEDURE memchr   (s: const_void_star; c: int; n: size_t): void_star;
-&lt;*EXTERNAL*&gt; PROCEDURE memcpy   (s1: void_star; s2: const_void_star; n: size_t): void_star;
-&lt;*EXTERNAL*&gt; PROCEDURE memset   (s: void_star; c: int; n: size_t): void_star;
-&lt;*EXTERNAL*&gt; PROCEDURE memcmp   (s1: const_void_star; s2: const_void_star; n: size_t): int;
-&lt;*EXTERNAL*&gt; PROCEDURE strcpy   (s1: char_star; s2: const_char_star): char_star;
-&lt;*EXTERNAL*&gt; PROCEDURE strncpy  (s1: char_star; s2: const_char_star; n: size_t): char_star;
-&lt;*EXTERNAL*&gt; PROCEDURE strcat   (s1: char_star; s2: const_char_star): char_star;
-&lt;*EXTERNAL*&gt; PROCEDURE strncat  (s1: char_star; s2: const_char_star; n: size_t): char_star;
-&lt;*EXTERNAL*&gt; PROCEDURE strchr   (s: const_char_star; c: int): char_star;
-&lt;*EXTERNAL*&gt; PROCEDURE strrchr  (s: const_char_star; c: int): char_star;
-&lt;*EXTERNAL*&gt; PROCEDURE strpbrk  (s1: const_char_star; s2: const_char_star): char_star;
-&lt;*EXTERNAL*&gt; PROCEDURE strtok   (s1: char_star; s2: const_char_star): char_star;
-&lt;*EXTERNAL*&gt; PROCEDURE strcmp   (s1: const_char_star; s2: const_char_star): int;
-&lt;*EXTERNAL*&gt; PROCEDURE strncmp  (s1: const_char_star; s2: const_char_star; n: size_t): int;
-&lt;*EXTERNAL*&gt; PROCEDURE strlen   (s: const_char_star): size_t;
-&lt;*EXTERNAL*&gt; PROCEDURE strspn   (s1: const_char_star; s2: const_char_star): size_t;
-&lt;*EXTERNAL*&gt; PROCEDURE strcspn  (s1: const_char_star; s2: const_char_star): size_t;
-&lt;*EXTERNAL*&gt; PROCEDURE memmove  (s1: void_star; s2: const_void_star; n: size_t): void_star;
-&lt;*EXTERNAL*&gt; PROCEDURE strcoll  (s1: const_char_star; s2: const_char_star): int;
-&lt;*EXTERNAL*&gt; PROCEDURE strxfrm  (s1: char_star; s2: const_char_star; n: size_t): size_t;
-&lt;*EXTERNAL*&gt; PROCEDURE strstr   (s1: const_char_star; s2: const_char_star): char_star;
-&lt;*EXTERNAL*&gt; PROCEDURE strerror (errnum: int): char_star;
+&lt;*EXTERNAL Cstring__memchr *&gt; PROCEDURE memchr   (s: const_void_star; c: int; n: size_t): void_star;
+&lt;*EXTERNAL Cstring__memcpy *&gt; PROCEDURE memcpy   (s1: void_star; s2: const_void_star; n: size_t): void_star;
+&lt;*EXTERNAL Cstring__memset *&gt; PROCEDURE memset   (s: void_star; c: int; n: size_t): void_star;
+&lt;*EXTERNAL Cstring__memcmp *&gt; PROCEDURE memcmp   (s1: const_void_star; s2: const_void_star; n: size_t): int;
+&lt;*EXTERNAL Cstring__strncpy*&gt; PROCEDURE strncpy  (s1: char_star; s2: const_char_star; n: size_t): char_star;
+&lt;*EXTERNAL Cstring__strncat*&gt; PROCEDURE strncat  (s1: char_star; s2: const_char_star; n: size_t): char_star;
+&lt;*EXTERNAL Cstring__strchr *&gt; PROCEDURE strchr   (s: const_char_star; c: int): char_star;
+&lt;*EXTERNAL Cstring__strrchr*&gt; PROCEDURE strrchr  (s: const_char_star; c: int): char_star;
+&lt;*EXTERNAL Cstring__strpbrk*&gt; PROCEDURE strpbrk  (s1: const_char_star; s2: const_char_star): char_star;
+&lt;*EXTERNAL Cstring__strtok *&gt; PROCEDURE strtok   (s1: char_star; s2: const_char_star): char_star;
+&lt;*EXTERNAL Cstring__strcmp *&gt; PROCEDURE strcmp   (s1: const_char_star; s2: const_char_star): int;
+&lt;*EXTERNAL Cstring__strncmp*&gt; PROCEDURE strncmp  (s1: const_char_star; s2: const_char_star; n: size_t): int;
+&lt;*EXTERNAL Cstring__strlen *&gt; PROCEDURE strlen   (s: const_char_star): size_t;
+&lt;*EXTERNAL Cstring__strspn *&gt; PROCEDURE strspn   (s1: const_char_star; s2: const_char_star): size_t;
+&lt;*EXTERNAL Cstring__strcspn*&gt; PROCEDURE strcspn  (s1: const_char_star; s2: const_char_star): size_t;
+&lt;*EXTERNAL Cstring__memmove*&gt; PROCEDURE memmove  (s1: void_star; s2: const_void_star; n: size_t): void_star;
+&lt;*EXTERNAL Cstring__strcoll*&gt; PROCEDURE strcoll  (s1: const_char_star; s2: const_char_star): int;
+&lt;*EXTERNAL Cstring__strxfrm*&gt; PROCEDURE strxfrm  (s1: char_star; s2: const_char_star; n: size_t): size_t;
+&lt;*EXTERNAL Cstring__strstr *&gt; PROCEDURE strstr   (s1: const_char_star; s2: const_char_star): char_star;
+&lt;*EXTERNAL Cstring__strerror*&gt; PROCEDURE strerror (errnum: int): char_star;
+</PRE> These are bad functions, that OpenBSD linker rightfully warns about, so
+ * just provide the older style and then only folks using them will get warnings,
+ * instead of everyone.
+ 
+<PRE>&lt;*EXTERNAL *&gt; PROCEDURE strcpy   (s1: char_star; s2: const_char_star): char_star;
+&lt;*EXTERNAL *&gt; PROCEDURE strcat   (s1: char_star; s2: const_char_star): char_star;
 
 END Cstring.
 </PRE>

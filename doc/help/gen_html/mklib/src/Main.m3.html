@@ -1,0 +1,915 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: mklib/src/Main.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#ffffff">
+<A NAME="0TOP0">
+<H2>mklib/src/Main.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> Some parts copied from WinNT.i3:                     
+ Copyright (C) 1994, Digital Equipment Corporation         
+ All rights reserved.                                      
+ See the file COPYRIGHT for a full description.            
+
+<P><PRE>UNSAFE MODULE <module><implements><A HREF="../../m3core/src/main/Main.i3.html">Main</A></implements></module>;
+
+IMPORT <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../libm3/src/rw/IO.i3.html">IO</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../libm3/src/rw/FileRd.i3.html">FileRd</A>, <A HREF="../../libm3/src/rw/FileWr.i3.html">FileWr</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/derived/TextRefTbl.i3.html">TextRefTbl</A>;
+IMPORT <A HREF="../../m3core/src/convert/Convert.i3.html">Convert</A>, <A HREF="../../m3middle/src/POSIX/CoffTime.i3.html">CoffTime</A>, <A HREF="../../libm3/src/os/Common/File.i3.html">File</A>, <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../libm3/src/rw/TextWr.i3.html">TextWr</A>, <A HREF="../../libm3/derived/TextSeq.i3.html">TextSeq</A>;
+IMPORT <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../libm3/derived/IntArraySort.i3.html">IntArraySort</A>, <A HREF="../../libm3/src/os/Common/RegularFile.i3.html">RegularFile</A>, <A HREF="../../libm3/src/params/Params.i3.html">Params</A>, <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>;
+IMPORT <A HREF="../../libm3/src/types/ASCII.i3.html">ASCII</A>, <A HREF="../../m3core/src/C/64BITS/BasicCtypes.i3.html">BasicCtypes</A>;
+
+TYPE
+  UINT8 = BasicCtypes.unsigned_char;
+  UINT16 = BasicCtypes.unsigned_short_int;
+  UINT32 = BasicCtypes.unsigned_int;
+  INT16 = BasicCtypes.short_int;
+
+CONST
+  MaxKeeper    = 10000;            (* max file size we'll hold in memory *)
+  MaxTotalKeep = 100 * MaxKeeper;  (* max total file space we'll hold in memory *)
+  ArchiveMagic = &quot;!&lt;arch&gt;\n&quot;;
+  EndHeader    = &quot;`\n&quot;;
+  PadChar      = '\n';
+
+TYPE
+  PIMAGE_SYMBOL = (* UNALIGNED *) UNTRACED REF IMAGE_SYMBOL;
+  IMAGE_SYMBOL = RECORD
+    N: ARRAY [0 .. 7] OF UINT8;
+    Value              : UINT32;
+    SectionNumber      : INT16;
+    Type               : UINT16;
+    StorageClass       : UINT8;
+    NumberOfAuxSymbols : UINT8;
+  END;
+
+CONST
+    IMAGE_SIZEOF_SYMBOL = 18;
+</PRE> Section values. 
+ Symbols have a section number of the section in which they are 
+ defined. Otherwise, section numbers have the following meanings: 
+
+<P>  <PRE>IMAGE_SYM_UNDEFINED = 0; (* Symbol is undefined or is common. *)
+</PRE> Storage classes. 
+
+<P>  <PRE>IMAGE_SYM_CLASS_EXTERNAL = 2;
+</PRE> File header format. 
+
+<P><PRE>TYPE
+  PIMAGE_FILE_HEADER = UNTRACED REF IMAGE_FILE_HEADER;
+  IMAGE_FILE_HEADER = RECORD
+    Machine             : UINT16;
+    NumberOfSections    : UINT16;
+    TimeDateStamp       : UINT32;
+    PointerToSymbolTable: UINT32;
+    NumberOfSymbols     : UINT32;
+    SizeOfOptionalHeader: UINT16;
+    Characteristics     : UINT16;
+  END;
+
+CONST
+  IMAGE_FILE_DLL           = 16_2000;
+  IMAGE_FILE_RELOCS_STRIPPED = 16_0001;
+  IMAGE_FILE_EXECUTABLE_IMAGE = 16_0002;
+  IMAGE_FILE_16BIT_MACHINE  = 16_0040;
+  IMAGE_FILE_BYTES_REVERSED_LO = 16_0080;
+  IMAGE_FILE_BYTES_REVERSED_HI = 16_8000;
+  IMAGE_FILE_MACHINE_I386    = 16_14c;
+
+TYPE
+  IMAGE_ARCHIVE_MEMBER_HEADER = RECORD
+    Name     : ARRAY [0 .. 15] OF UINT8;
+    Date     : ARRAY [0 .. 11] OF UINT8;
+    UserID   : ARRAY [0 .. 5]  OF UINT8;
+    GroupID  : ARRAY [0 .. 5]  OF UINT8;
+    Mode     : ARRAY [0 .. 7]  OF UINT8;
+    Size     : ARRAY [0 .. 9]  OF UINT8;
+    EndHeader: ARRAY [0 .. 1]  OF UINT8;
+  END;
+
+  Header = IMAGE_ARCHIVE_MEMBER_HEADER;
+
+  FileDesc = REF RECORD
+    next     : FileDesc := NIL;
+    name     : TEXT     := NIL;   (* full file name *)
+    tag      : TEXT     := NIL;   (* short name that fits in a header *)
+    size     : INTEGER  := 0;
+    time     : Time.T   := 0.0d0;
+    contents : FileBuf  := NIL;
+    index    : INTEGER  := 0;     (* ordinal index of file in the global list *)
+    offset   : INTEGER  := 0;     (* final offset of the file in the lib *)
+  END;
+
+  FileBuf = REF ARRAY OF File.Byte;
+
+TYPE
+  ExportDesc = REF RECORD
+    next   : ExportDesc;
+    symbol : TEXT;
+    file   : FileDesc;
+  END;
+
+VAR
+  lib_wr      : Wr.T       := NIL;
+  lib_name    : TEXT       := NIL;
+  lib_time    : Time.T     := 0.0d0;
+  def_name    : TEXT       := NIL;
+  keep_size   : CARDINAL   := 0;
+  n_files     : CARDINAL   := 0;
+  files       : FileDesc   := NIL;
+  n_exports   : CARDINAL   := 0;
+  exports     : ExportDesc := NIL;
+  export_vec  : REF ARRAY OF ExportDesc := NIL;
+  export_map  : REF ARRAY OF INTEGER := NIL;
+  export_len  : CARDINAL    := 0;
+  export_tbl  : TextRefTbl.T := NIL;
+  long_nms    : TextWr.T   := NIL;
+  verbose := FALSE;
+  cleanSymbols := TRUE;
+  ignoreTexts : TextSeq.T := NIL;
+
+PROCEDURE <A NAME="DoIt"><procedure>DoIt</procedure></A> () =
+  BEGIN
+    ParseCommandLine ();
+    CheckLibName ();
+    ScanFiles ();
+    WriteLib ();
+    WriteDef ();
+  END DoIt;
+</PRE>------------------------------------------------------- command line ---
+
+<P><PRE>PROCEDURE <A NAME="ParseCommandLine"><procedure>ParseCommandLine</procedure></A> () =
+  BEGIN
+    FOR i := 1 TO Params.Count-1 DO
+      ProcessArg (Params.Get (i));
+    END;
+  END ParseCommandLine;
+
+PROCEDURE <A NAME="ProcessArg"><procedure>ProcessArg</procedure></A> (arg: TEXT) =
+  VAR ch: CHAR;
+  BEGIN
+    ch := Text.GetChar (arg, 0);
+    IF (ch = '@') THEN
+      arg := Text.Sub (arg, 1);
+      IF Text.Length (arg) &lt;= 0 THEN
+        Die (&quot;missing command file name: @&quot;);
+      END;
+      ReadCommandFile (arg);
+    ELSIF (ch = '-') THEN
+      IF TextExtras_CIEqual (Text.Sub (arg, 0, 5), &quot;-out:&quot;) THEN
+        IF (lib_name # NIL) THEN
+          Die (&quot;multiple library names specified: \&quot;&quot;, lib_name, &quot;\&quot; and \&quot;&quot;,
+                Text.Sub (arg, 5), &quot;\&quot;.&quot;);
+        END;
+        lib_name := Text.Sub (arg, 5);
+        IF Text.Length (lib_name) &lt;= 0 THEN
+          Die (&quot;missing library name: -out:&lt;lib&gt;&quot;);
+        END;
+      ELSIF TextExtras_CIEqual (Text.Sub (arg, 0, 5), &quot;-ign:&quot;) THEN
+        WITH ignText = Text.Sub (arg, 5) DO
+          IF ignoreTexts = NIL THEN
+            ignoreTexts := NEW(TextSeq.T).init();
+          END;
+          ignoreTexts.addhi(ignText);
+        END;
+      ELSIF TextExtras_CIEqual (arg, &quot;-v&quot;) THEN
+        verbose := TRUE;
+      ELSIF TextExtras_CIEqual (arg, &quot;-h&quot;) OR TextExtras_CIEqual (arg, &quot;-help&quot;) THEN
+        Usage();
+        Process.Exit(0);
+      ELSIF TextExtras_CIEqual (arg, &quot;-noclean&quot;) THEN
+        cleanSymbols := FALSE;
+      ELSE
+        Die (&quot;unrecognized option: \&quot;&quot;, arg, &quot;\&quot;&quot;);
+      END;
+    ELSE
+      (* add a file to the list! *)
+      files := NEW (FileDesc, next := files, name := arg);
+      INC (n_files);
+    END;
+  END ProcessArg;
+
+PROCEDURE <A NAME="Usage"><procedure>Usage</procedure></A>() =
+  BEGIN
+    M(&quot;usage: mklib [-v] [-noclean] [-ign:&lt;text&gt;]* -out:&lt;libname&gt;&quot;,
+      &quot; &lt;files...&gt;&quot;);
+    M(&quot;  or&quot;);
+    M(&quot;       mklib @&lt;cmdfile&gt;&quot;);
+    M(&quot;&quot;);
+    M(&quot;  produces a static library containing the specified object files.&quot;);
+    M(&quot;  &quot;);
+    M(&quot;options:&quot;);
+    M(&quot;  &quot;);
+    M(&quot;  -v         run verbosely (produce lots of trace output)&quot;);
+    M(&quot;  -noclean   do not `clean' symbols which contain @ characters&quot;);
+    M(&quot;  -ign:TEXT  ignore (don't export) symbols starting with TEXT&quot;);
+    M(&quot;             This option may occur multiple times.&quot;);
+    M(&quot;  -out:LIBFN Create library in file LIBFN.&quot;);
+    M(&quot;&quot;);
+  END Usage;
+
+PROCEDURE <A NAME="ReadCommandFile"><procedure>ReadCommandFile</procedure></A> (nm: TEXT) =
+  (* Process each non-blank line in file &quot;nm&quot; as if it were
+     a command line argument *)
+  VAR rd := OpenRd (nm);  arg: TEXT;
+  BEGIN
+    TRY
+      WHILE NOT Rd.EOF (rd) DO
+        arg := Trim (Rd.GetLine (rd));
+        IF Text.Length (arg) &gt; 0 THEN ProcessArg (arg); END;
+      END;
+    EXCEPT
+    | Rd.Failure, Rd.EndOfFile =&gt;
+        Die (&quot;I/O failure while reading \&quot;&quot;, nm, &quot;\&quot;.&quot;);
+    | Thread.Alerted =&gt;
+        Die (&quot;interrupted while reading \&quot;&quot;, nm, &quot;\&quot;.&quot;);
+    END;
+  END ReadCommandFile;
+
+PROCEDURE <A NAME="Trim"><procedure>Trim</procedure></A> (txt: TEXT): TEXT =
+  (* Remove leading and trailing blanks from &quot;txt&quot; and return the result. *)
+  VAR
+    start := 0;
+    len := Text.Length (txt);
+  BEGIN
+    WHILE (len &gt; 0) AND (Text.GetChar (txt, start) = ' ') DO
+      INC (start);
+      DEC (len);
+    END;
+    WHILE (len &gt; 0) AND (Text.GetChar (txt, start + len - 1) = ' ') DO
+      DEC (len);
+    END;
+    RETURN Text.Sub (txt, start, len);
+  END Trim;
+</PRE>---------------------------------------------------- output LIB name ---
+
+<P><PRE>PROCEDURE <A NAME="CheckLibName"><procedure>CheckLibName</procedure></A> () =
+  VAR ext: TEXT;
+  BEGIN
+    IF (lib_name = NIL) THEN
+      Die (&quot;usage: mklib -out:&lt;libname&gt;  &lt;files...&gt;&quot;);
+    END;
+    ext := Pathname.Last (lib_name);
+    IF (ext = NIL) OR Text.Length (ext) = 0 THEN
+      Die (&quot;didn't specify an output file: \&quot;&quot;, lib_name, &quot;\&quot;.&quot;);
+    END;
+    ext := Pathname.LastExt (ext);
+    IF (ext = NIL) OR Text.Length (ext) = 0 THEN
+      (* add on a &quot;.LIB&quot; extension *)
+      def_name := Pathname.Join (NIL, lib_name, &quot;def&quot;);
+      lib_name := Pathname.Join (NIL, lib_name, &quot;lib&quot;);
+    ELSIF TextExtras_CIEqual (ext, &quot;lib&quot;) OR TextExtras_CIEqual (ext, &quot;a&quot;) THEN
+      def_name := Pathname.ReplaceExt (lib_name, &quot;def&quot;);
+    ELSIF TextExtras_CIEqual (ext, &quot;def&quot;) THEN
+      def_name := lib_name;
+      lib_name := Pathname.ReplaceExt (lib_name, &quot;lib&quot;);
+    ELSE
+      Die (&quot;unrecognized output file extension: \&quot;.&quot;, ext, &quot;\&quot;&quot;);
+    END;
+  END CheckLibName;
+</PRE>------------------------------------------------------ file scanning ---
+
+<P><PRE>PROCEDURE <A NAME="ScanFiles"><procedure>ScanFiles</procedure></A> () =
+  VAR f := files;
+  BEGIN
+    WHILE (f # NIL) DO
+      ScanFile (f);
+      f := f.next;
+    END;
+  END ScanFiles;
+
+PROCEDURE <A NAME="ScanFile"><procedure>ScanFile</procedure></A> (f: FileDesc) =
+  VAR file: File.T;  stat: File.Status;  len: INTEGER;  hdr: Header;
+  BEGIN
+    TRY
+      file   := FS.OpenFileReadonly (f.name);
+      stat   := file.status ();
+      f.time := stat.modificationTime;
+      f.size := VAL(stat.size, INTEGER);
+      IF (stat.type # RegularFile.FileType) THEN
+        Die (&quot;\&quot;&quot;, f.name, &quot;\&quot; is not a regular file.&quot;);
+      END;
+      f.contents := NEW (FileBuf, f.size);
+      len := file.read (f.contents^);
+      IF (len # NUMBER (f.contents^)) THEN
+        Die (&quot;unexpected EOF while reading \&quot;&quot;, f.name, &quot;\&quot;.&quot;);
+      END;
+      file.close ();
+    EXCEPT
+    | OSError.E =&gt; Die (&quot;unable to read file \&quot;&quot;, f.name, &quot;\&quot;.&quot;);
+    END;
+
+    (* make sure the name fits... *)
+    IF Text.Length (f.name) + 1 &lt;= NUMBER (hdr.Name) THEN
+      f.tag := f.name &amp; &quot;/&quot;;
+    ELSE
+      IF (long_nms = NIL) THEN long_nms := TextWr.New (); END;
+      VAR offs := Wr.Index (long_nms); &lt;*FATAL Wr.Failure, Thread.Alerted*&gt; BEGIN
+        Wr.PutText (long_nms, f.name);
+        Wr.PutChar (long_nms, '\000');
+        f.tag := &quot;/&quot; &amp; Fmt.Int (offs);
+      END;
+    END;
+
+    ScanExports (f);
+
+    (* should we keep the in-memory copy of the file? *)
+    IF (f.size &gt; MaxKeeper) OR (keep_size &gt; MaxTotalKeep) THEN
+      f.contents := NIL;
+    ELSE
+      INC (keep_size, f.size);
+    END;
+  END ScanFile;
+</PRE>----------------------------------------------- Windows Object Files ---
+
+<P><PRE>CONST (* we don't handle this stuff! *)
+  BadObjFlags = IMAGE_FILE_RELOCS_STRIPPED
+              + IMAGE_FILE_EXECUTABLE_IMAGE
+              + IMAGE_FILE_16BIT_MACHINE
+              + IMAGE_FILE_BYTES_REVERSED_LO
+              + IMAGE_FILE_DLL
+              + IMAGE_FILE_BYTES_REVERSED_HI;
+
+TYPE
+  ObjFile = RECORD
+    file      : FileDesc;
+    base      : ADDRESS;
+    limit     : ADDRESS;
+    hdr       : PIMAGE_FILE_HEADER;
+    symtab    : PIMAGE_SYMBOL;
+    stringtab : ADDRESS;
+  END;
+
+PROCEDURE <A NAME="ScanExports"><procedure>ScanExports</procedure></A> (f: FileDesc) =
+  VAR o: ObjFile;  sym: PIMAGE_SYMBOL;
+  BEGIN
+    o.file  := f;
+    o.base  := ADR (f.contents[0]);           (* pin the contents so the collector*)
+    o.limit := o.base + ADRSIZE (f.contents^);(* doesn't start moving them around *)
+    o.hdr   := o.base;
+
+    IF (o.hdr.Machine # IMAGE_FILE_MACHINE_I386) THEN
+      (* this isn't an x86 object file *)
+      RETURN;
+    END;
+
+    IF Word.And (o.hdr.Characteristics, BadObjFlags) # 0 THEN
+      (* this object contains stuff we don't understand *)
+      Warn (&quot;object file \&quot;&quot;, f.name, &quot;\&quot; contains unhandled features.&quot;,
+            Wr.EOL, &quot;  Its exported symbols will be ignored.&quot;);
+      RETURN;
+    END;
+
+    (* locate the symbol table *)
+    o.symtab := o.base + o.hdr.PointerToSymbolTable;
+    IF (o.symtab &lt; o.base) OR (o.limit &lt;= o.symtab) THEN
+      Die (&quot;cannot find symbol table in object file \&quot;&quot;, f.name, &quot;\&quot;.&quot;);
+    END;
+
+    (* locate the string table *)
+    o.stringtab := o.symtab + o.hdr.NumberOfSymbols * IMAGE_SIZEOF_SYMBOL;
+    IF (o.symtab &lt; o.base) OR (o.limit &lt;= o.symtab) THEN
+      Die (&quot;cannot find string table in object file \&quot;&quot;, f.name, &quot;\&quot;.&quot;);
+    END;
+
+    sym := o.symtab;
+    WHILE (sym &lt; o.stringtab) DO
+      IF sym.StorageClass = IMAGE_SYM_CLASS_EXTERNAL THEN
+        IF sym.SectionNumber # IMAGE_SYM_UNDEFINED THEN
+          V (&quot;symbol section number: &quot;, Fmt.Int(sym.SectionNumber));
+          AddExport (GetSymbolName (o, sym), f);
+        ELSIF sym.Value &gt; 0 THEN
+          (* this is a BSS or COMMON symbol *)
+          V (&quot;symbol value: &quot;, Fmt.Int(sym.Value));
+          AddExport (GetSymbolName (o, sym), f);
+        END;
+      END;
+      sym := sym + IMAGE_SIZEOF_SYMBOL * (1 + sym.NumberOfAuxSymbols);
+    END;
+  END ScanExports;
+
+PROCEDURE <A NAME="AddExport"><procedure>AddExport</procedure></A> (sym: TEXT;  f: FileDesc) =
+  VAR ref: REFANY; f2: FileDesc;
+  BEGIN
+    IF (export_tbl = NIL) THEN
+      export_tbl := NEW (TextRefTbl.Default).init ();
+    END;
+    IF export_tbl.get (sym, ref) THEN
+      f2 := ref;
+      Warn (&quot;symbol \&quot;&quot;, sym, &quot;\&quot; is exported twice:&quot; &amp; Wr.EOL,
+              &quot;  &quot; &amp; f2.name &amp; &quot;  (using this instance)&quot; &amp; Wr.EOL,
+              &quot;  &quot; &amp; f.name  &amp; &quot;  (ignoring this instance)&quot;);
+    ELSE
+      IF ignoreTexts # NIL THEN
+        FOR i := 0 TO ignoreTexts.size() - 1 DO
+          WITH t = ignoreTexts.get(i) DO
+            (* ignore the symbol if it starts with one of the ignore texts *)
+            IF Text.Equal(t, Text.Sub(sym, 0, Text.Length(t))) THEN
+              RETURN;
+            END;
+          END;
+        END;
+      END;
+      (* a new symbol *)
+      EVAL export_tbl.put (sym, f);
+      exports := NEW (ExportDesc, next := exports, symbol := sym, file := f);
+      INC (n_exports);
+      INC (export_len, Text.Length (sym) + 1);
+    END;
+  END AddExport;
+
+PROCEDURE <A NAME="GetSymbolName"><procedure>GetSymbolName</procedure></A> (READONLY o: ObjFile;  sym: PIMAGE_SYMBOL): TEXT =
+  TYPE IntBytes = ARRAY [0..3] OF UINT8;
+  VAR
+    max_len, len: INTEGER;
+    offset: UINT32;
+    ptr: UNTRACED REF CHAR;
+    buf: ARRAY [0..255] OF CHAR;
+    res: TEXT;
+  BEGIN
+    IF (sym.N[0] = 0) AND (sym.N[1] = 0) AND (sym.N[2] = 0) AND (sym.N[3] = 0) THEN
+      (* the name is long and stored in the string table *)
+      WITH xx = LOOPHOLE (offset, IntBytes) DO
+        xx[0] := sym.N[4];  xx[1] := sym.N[5];
+        xx[2] := sym.N[6];  xx[3] := sym.N[7];
+      END;
+      ptr := o.stringtab + offset;
+      IF (ptr &lt; o.stringtab) OR (o.limit &lt;= ptr) THEN
+        Die (&quot;symbol name is outside string table in \&quot;&quot;, o.file.name, &quot;\&quot;.&quot;);
+      END;
+      max_len := o.limit - ptr;
+    ELSE
+      (* the name is short and stored in sym.N *)
+      ptr := ADR (sym.N[0]);
+      max_len := NUMBER (sym.N);
+    END;
+
+    (* extract the string *)
+    len := 0;
+    FOR i := 0 TO MIN (max_len, NUMBER (buf)) - 1 DO
+      IF ptr^ = '\000' THEN EXIT; END;
+      buf[i] := ptr^;
+      INC (ptr, ADRSIZE (ptr^));
+      INC (len);
+    END;
+
+    res := Text.FromChars (SUBARRAY (buf, 0, len));
+    V(res);
+    RETURN res;
+  END GetSymbolName;
+</PRE>--------------------------------------------------------- LIB writer ---
+
+<P><PRE>PROCEDURE <A NAME="WriteLib"><procedure>WriteLib</procedure></A> () =
+  BEGIN
+    AssignFileOffsets ();
+    SortExports ();
+
+    (* open the output file *)
+    TRY
+      lib_wr := FileWr.Open (lib_name);
+    EXCEPT OSError.E =&gt;
+      Die (&quot;unable to open \&quot;&quot;, lib_name, &quot;\&quot; for writing.&quot;);
+    END;
+    lib_time := Time.Now ();
+
+    (* write the archive... *)
+    TRY
+      Wr.PutText (lib_wr, ArchiveMagic);
+      DumpExports1 ();
+      DumpExports2 ();
+      DumpLongNames ();
+      DumpFiles ();
+    EXCEPT
+    | Wr.Failure =&gt;
+        Die (&quot;I/O failure while writing \&quot;&quot;, lib_name, &quot;\&quot;.&quot;);
+    | Thread.Alerted =&gt;
+        Die (&quot;interrupted while writing \&quot;&quot;, lib_name, &quot;\&quot;.&quot;);
+    END;
+
+    TRY
+      Wr.Close (lib_wr);
+    EXCEPT Wr.Failure, Thread.Alerted =&gt;
+      Die (&quot;unable to close \&quot;&quot;, lib_name, &quot;\&quot;.&quot;);
+    END;
+  END WriteLib;
+
+PROCEDURE <A NAME="AssignFileOffsets"><procedure>AssignFileOffsets</procedure></A> () =
+  CONST Hdr = BYTESIZE (Header);
+  VAR f := files;  offs := 0;  index := 1;
+  BEGIN
+    INC (offs, Text.Length (ArchiveMagic));
+
+    IF (n_exports &gt; 0) THEN
+      (* export table 1 *)
+      INC (offs, Hdr + 4 * (n_exports + 1) + export_len);
+      IF (offs MOD 2 # 0) THEN INC (offs); END;
+    END;
+
+    IF (n_exports &gt; 0) THEN
+      (* export table 2 *)
+      INC (offs, Hdr + 4 * (n_files + 2) + 2 * n_exports + export_len);
+      IF (offs MOD 2 # 0) THEN INC (offs); END;
+    END;
+
+    IF (long_nms # NIL) THEN
+      (* long filename table *)
+      INC (offs, Hdr + Wr.Index (long_nms));
+      IF (offs MOD 2 # 0) THEN INC (offs); END;
+    END;
+
+    (* record the final offset for each &quot;real&quot; file *)
+    WHILE (f # NIL) DO
+      f.index  := index;  INC (index);
+      f.offset := offs;   INC (offs, Hdr + f.size);
+      IF (offs MOD 2 # 0) THEN INC (offs); END;
+      f := f.next;
+    END;
+  END AssignFileOffsets;
+
+PROCEDURE <A NAME="SortExports"><procedure>SortExports</procedure></A> () =
+  VAR e := exports;
+  BEGIN
+    IF (e = NIL) THEN RETURN; END;
+    export_vec := NEW (REF ARRAY OF ExportDesc, n_exports);
+    export_map := NEW (REF ARRAY OF INTEGER, n_exports);
+    FOR i := 0 TO n_exports-1 DO
+      export_vec[i] := e;  e := e.next;
+      export_map[i] := i;
+    END;
+    IntArraySort.Sort (export_map^, CmpExport);
+  END SortExports;
+
+PROCEDURE <A NAME="CmpExport"><procedure>CmpExport</procedure></A> (a, b: INTEGER): [-1..+1] =
+  BEGIN
+    RETURN Text.Compare (export_vec [a].symbol, export_vec[b].symbol);
+  END CmpExport;
+
+PROCEDURE <A NAME="DumpExports1"><procedure>DumpExports1</procedure></A> ()
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR len, odd: INTEGER;  e: ExportDesc;
+  BEGIN
+    IF (n_exports &lt;= 0) THEN RETURN; END;
+    len := 4 * (n_exports + 1) + export_len;
+    odd := export_len MOD 2;
+    WriteHeader (&quot;/&quot;, &quot;0&quot;, lib_time, len);
+    WriteBE4 (n_exports);
+    FOR i := 0 TO n_exports-1 DO
+      e := export_vec [export_map [i]];
+      WriteBE4 (e.file.offset);
+    END;
+    FOR i := 0 TO n_exports-1 DO
+      e := export_vec [export_map [i]];
+      Wr.PutText (lib_wr, e.symbol);
+      Wr.PutChar (lib_wr, '\000');
+    END;
+    IF (odd # 0) THEN Wr.PutChar (lib_wr, PadChar); END;
+  END DumpExports1;
+
+PROCEDURE <A NAME="WriteBE4"><procedure>WriteBE4</procedure></A> (n: INTEGER)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  (* write the little-endian 4-byte value 'n' *)
+  BEGIN
+    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 24), 16_ff), CHAR));
+    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 16), 16_ff), CHAR));
+    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 8), 16_ff), CHAR));
+    Wr.PutChar (lib_wr, VAL (Word.And (n, 16_ff), CHAR));
+  END WriteBE4;
+
+PROCEDURE <A NAME="DumpExports2"><procedure>DumpExports2</procedure></A> ()
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR len, odd: INTEGER;  e: ExportDesc;  f := files;
+  BEGIN
+    IF (n_exports &lt;= 0) THEN RETURN; END;
+    len := 4 * (n_files + 2) + 2 * (n_exports) + export_len;
+    odd := export_len MOD 2;
+    WriteHeader (&quot;/&quot;, &quot;0&quot;, lib_time, len);
+    WriteLE4 (n_files);
+    FOR i := 0 TO n_files-1 DO
+      WriteLE4 (f.offset);
+      f := f.next;
+    END;
+    WriteLE4 (n_exports);
+    FOR i := 0 TO n_exports-1 DO
+      e := export_vec [export_map [i]];
+      WriteLE2 (e.file.index);
+    END;
+    FOR i := 0 TO n_exports-1 DO
+      e := export_vec [export_map [i]];
+      Wr.PutText (lib_wr, e.symbol);
+      Wr.PutChar (lib_wr, '\000');
+    END;
+    IF (odd # 0) THEN Wr.PutChar (lib_wr, PadChar); END;
+  END DumpExports2;
+
+PROCEDURE <A NAME="WriteLE4"><procedure>WriteLE4</procedure></A> (n: INTEGER)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  (* write the little-endian 4-byte value 'n' *)
+  BEGIN
+    Wr.PutChar (lib_wr, VAL (Word.And (n, 16_ff), CHAR));
+    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 8), 16_ff), CHAR));
+    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 16), 16_ff), CHAR));
+    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 24), 16_ff), CHAR));
+  END WriteLE4;
+
+PROCEDURE <A NAME="WriteLE2"><procedure>WriteLE2</procedure></A> (n: INTEGER)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  (* write the little-endian 2-byte value 'n' *)
+  BEGIN
+    Wr.PutChar (lib_wr, VAL (Word.And (n, 16_ff), CHAR));
+    Wr.PutChar (lib_wr, VAL (Word.And (Word.RightShift (n, 8), 16_ff), CHAR));
+  END WriteLE2;
+
+PROCEDURE <A NAME="DumpLongNames"><procedure>DumpLongNames</procedure></A> ()
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR len, odd: INTEGER;
+  BEGIN
+    IF (long_nms = NIL) THEN RETURN; END;
+    len := Wr.Index (long_nms);
+    odd := len MOD 2;
+    WriteHeader (&quot;//&quot;, &quot;0&quot;, lib_time, len);
+    Wr.PutText (lib_wr, TextWr.ToText (long_nms));
+    IF (odd # 0) THEN Wr.PutChar (lib_wr, PadChar); END;
+  END DumpLongNames;
+
+PROCEDURE <A NAME="DumpFiles"><procedure>DumpFiles</procedure></A> ()
+  RAISES {Wr.Failure, Thread.Alerted} =
+  (* dump the &quot;real&quot; files *)
+  VAR f := files;
+  BEGIN
+    WHILE (f # NIL) DO
+      DumpFile (f);
+      f := f.next;
+    END;
+  END DumpFiles;
+
+PROCEDURE <A NAME="DumpFile"><procedure>DumpFile</procedure></A> (f: FileDesc)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR ptr: UNTRACED REF ARRAY [0..MaxKeeper+1] OF CHAR;
+  BEGIN
+    &lt;*ASSERT BYTESIZE (File.Byte) = BYTESIZE (CHAR) *&gt;
+    WriteHeader (f.tag, &quot;100666&quot;, f.time, f.size);
+    IF (f.contents # NIL) THEN
+      ptr := ADR (f.contents [0]);
+      Wr.PutString (lib_wr, SUBARRAY (ptr^, 0, f.size));
+    ELSE
+      CopyFile (f);
+    END;
+    IF (f.size MOD 2 # 0) THEN
+      Wr.PutChar (lib_wr, PadChar);
+    END;
+  END DumpFile;
+
+PROCEDURE <A NAME="CopyFile"><procedure>CopyFile</procedure></A> (f: FileDesc)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  VAR
+    rd  := OpenRd (f.name);
+    sz  : CARDINAL := 0;
+    len : CARDINAL;
+    buf : ARRAY [0..2047] OF CHAR;
+  BEGIN
+    TRY
+      LOOP
+        len := Rd.GetSub (rd, buf);  INC (sz, len);
+        IF (len &lt;= 0) THEN EXIT; END;
+        Wr.PutString (lib_wr, SUBARRAY (buf, 0, len));
+      END;
+    EXCEPT Rd.Failure =&gt;
+      Die (&quot;I/O failure while reading \&quot;&quot;, f.name, &quot;\&quot;.&quot;);
+    END;
+    IF (sz # f.size) THEN
+      Die (&quot;file \&quot;&quot;, f.name, &quot;\&quot; changed size while building!&quot;);
+    END;
+  END CopyFile;
+
+PROCEDURE <A NAME="WriteHeader"><procedure>WriteHeader</procedure></A> (nm: TEXT;  mode: TEXT;  time: Time.T;  size: INTEGER)
+  RAISES {Wr.Failure, Thread.Alerted} =
+  TYPE HdrChars = ARRAY [0..BYTESIZE(Header)-1] OF CHAR;
+  VAR hdr: Header;
+  BEGIN
+    StuffT (hdr.Name,      nm);
+    StuffI (hdr.Date,      ROUND (time - CoffTime.EpochAdjust));
+    StuffT (hdr.UserID,    &quot;&quot;);
+    StuffT (hdr.GroupID,   &quot;&quot;);
+    StuffT (hdr.Mode,      mode);
+    StuffI (hdr.Size,      size);
+    StuffT (hdr.EndHeader, EndHeader);
+
+    Wr.PutString (lib_wr, LOOPHOLE (hdr, HdrChars));
+  END WriteHeader;
+
+PROCEDURE <A NAME="StuffI"><procedure>StuffI</procedure></A> (VAR b: ARRAY OF UINT8;  n: INTEGER) =
+  &lt;*FATAL Convert.Failed*&gt;
+  VAR
+    buf : ARRAY [0..BITSIZE(INTEGER)] OF CHAR;
+    len := Convert.FromInt (buf, n);
+  BEGIN
+    FOR i := 0 TO MIN (len - 1, LAST (b)) DO
+      b[i] := ORD (buf[i]);
+    END;
+    FOR i := len TO LAST (b) DO
+      b[i] := ORD (' ');
+    END;
+  END StuffI;
+
+PROCEDURE <A NAME="StuffT"><procedure>StuffT</procedure></A> (VAR b: ARRAY OF UINT8;  txt: TEXT) =
+  VAR len := Text.Length (txt);
+  BEGIN
+    FOR i := 0 TO MIN (len - 1, LAST (b)) DO
+      b[i] := ORD (Text.GetChar (txt, i));
+    END;
+    FOR i := len TO LAST (b) DO
+      b[i] := ORD (' ');
+    END;
+  END StuffT;
+</PRE>--------------------------------------------------------- DEF writer ---
+
+<P><PRE>PROCEDURE <A NAME="WriteDef"><procedure>WriteDef</procedure></A> () =
+  VAR def_wr: Wr.T;  e: ExportDesc;  sym: TEXT;
+  BEGIN
+    (* open the output file *)
+    TRY
+      def_wr := FileWr.Open (def_name);
+    EXCEPT OSError.E =&gt;
+      Die (&quot;unable to open \&quot;&quot;, def_name, &quot;\&quot; for writing.&quot;);
+    END;
+
+    (* write the file... *)
+    TRY
+      Wr.PutText (def_wr, &quot;LIBRARY &quot;);
+      Wr.PutText (def_wr, Pathname.LastBase (def_name));
+      Wr.PutText (def_wr, Wr.EOL);
+      Wr.PutText (def_wr, &quot;EXPORTS&quot;);
+      Wr.PutText (def_wr, Wr.EOL);
+      FOR i := 0 TO n_exports-1 DO
+        e := export_vec [export_map [i]];
+        sym := CleanName (e.symbol);
+        IF IsKeeper (sym) THEN
+          Wr.PutText (def_wr, &quot;  &quot;);
+          Wr.PutText (def_wr, sym);
+          Wr.PutText (def_wr, Wr.EOL);
+        END;
+      END;
+    EXCEPT
+    | Wr.Failure =&gt;
+        Die (&quot;I/O failure while writing \&quot;&quot;, def_name, &quot;\&quot;.&quot;);
+    | Thread.Alerted =&gt;
+        Die (&quot;interrupted while writing \&quot;&quot;, def_name, &quot;\&quot;.&quot;);
+    END;
+
+    TRY
+      Wr.Close (def_wr);
+    EXCEPT Wr.Failure, Thread.Alerted =&gt;
+      Die (&quot;unable to close \&quot;&quot;, def_name, &quot;\&quot;.&quot;);
+    END;
+  END WriteDef;
+
+PROCEDURE <A NAME="CleanName"><procedure>CleanName</procedure></A> (sym: TEXT): TEXT =
+  VAR
+    start  := 0;
+    stop   := Text.Length (sym) + 1;
+    at     := Text.FindChar (sym, '@');
+  BEGIN
+    IF Text.GetChar (sym, 0) = '_' THEN   start := 1;   END;
+    IF (at &gt; 0) AND cleanSymbols THEN stop := at; END;
+    RETURN Text.Sub (sym, start, stop - start);
+  END CleanName;
+
+PROCEDURE <A NAME="IsKeeper"><procedure>IsKeeper</procedure></A> (sym: TEXT): BOOLEAN =
+  VAR len := Text.Length (sym);
+  BEGIN
+    IF (len &gt; 7)
+      AND Match (sym, 0, &quot;_INITM_&quot;) THEN
+      (* module main body *)
+      RETURN FALSE;
+    ELSIF (len &gt; 9)
+      AND Match (sym, 0, &quot;MM_&quot;)
+      AND Match (sym, len-6, &quot;_CRASH&quot;) THEN
+      (* module crash routine *)
+      RETURN FALSE;
+    END;
+    IF (len &gt; 17)
+      AND (Match (sym, 0, &quot;M_&quot;) OR Match (sym, 0, &quot;I_&quot;))
+      AND (Match (sym, len-5, &quot;_INIT&quot;) OR Match (sym, len-5, &quot;_LINK&quot;))
+      AND Match (sym, len-15, &quot;_t&quot;) THEN
+      (* a type initialization or setup routine *)
+      RETURN FALSE;
+    END;
+    RETURN TRUE;
+  END IsKeeper;
+
+PROCEDURE <A NAME="Match"><procedure>Match</procedure></A> (txt: TEXT;  start: INTEGER;  key: TEXT): BOOLEAN =
+  BEGIN
+    FOR i := 0 TO Text.Length (key) - 1 DO
+      IF Text.GetChar (txt, start + i) # Text.GetChar (key, i) THEN
+        RETURN FALSE;
+      END;
+    END;
+    RETURN TRUE;
+  END Match;
+</PRE>--------------------------------------------------------------- misc ---
+
+<P><PRE>PROCEDURE <A NAME="OpenRd"><procedure>OpenRd</procedure></A> (nm: TEXT): Rd.T =
+  VAR rd: Rd.T;
+  BEGIN
+    TRY
+      rd := FileRd.Open (nm);
+    EXCEPT OSError.E =&gt;
+      Die (&quot;unable to open file \&quot;&quot;, nm, &quot;\&quot; for reading.&quot;);
+    END;
+    RETURN rd;
+  END OpenRd;
+
+PROCEDURE <A NAME="Warn"><procedure>Warn</procedure></A> (a, b, c, d, e: TEXT := NIL) =
+  BEGIN
+    IO.Put (&quot;warning: &quot;);
+    M(a, b, c, d, e);
+  END Warn;
+
+PROCEDURE <A NAME="V"><procedure>V</procedure></A> (a, b, c, d, e: TEXT := NIL) =
+  BEGIN
+    IF verbose THEN
+      M (a, b, c, d, e);
+    END;
+  END V;
+
+PROCEDURE <A NAME="M"><procedure>M</procedure></A> (a, b, c, d, e: TEXT := NIL) =
+  BEGIN
+    IF (a # NIL) THEN IO.Put (a); END;
+    IF (b # NIL) THEN IO.Put (b); END;
+    IF (c # NIL) THEN IO.Put (c); END;
+    IF (d # NIL) THEN IO.Put (d); END;
+    IF (e # NIL) THEN IO.Put (e); END;
+    IO.Put (Wr.EOL);
+  END M;
+
+PROCEDURE <A NAME="Die"><procedure>Die</procedure></A> (a, b, c, d, e: TEXT := NIL) =
+  BEGIN
+    IF (a # NIL) THEN IO.Put (a); END;
+    IF (b # NIL) THEN IO.Put (b); END;
+    IF (c # NIL) THEN IO.Put (c); END;
+    IF (d # NIL) THEN IO.Put (d); END;
+    IF (e # NIL) THEN IO.Put (e); END;
+    IO.Put (Wr.EOL);
+    IF (lib_wr # NIL) THEN
+      (* try to clean up by blowing away the bad output *)
+      TRY Wr.Close (lib_wr); EXCEPT Wr.Failure, Thread.Alerted =&gt; END;
+      TRY FS.DeleteFile (lib_name); EXCEPT OSError.E =&gt; END;
+      lib_wr := NIL;
+    END;
+    Process.Exit (1);
+  END Die;
+</PRE>--------------------------------------------------------------------------
+
+<P><PRE>PROCEDURE <A NAME="TextExtras_CIEqual"><procedure>TextExtras_CIEqual</procedure></A>(t, u: Text.T): BOOLEAN RAISES {} =
+  VAR
+    lt: CARDINAL := Text.Length(t);
+    lu: CARDINAL := Text.Length(u);
+    i: CARDINAL := 0;
+  BEGIN
+    IF lt = lu THEN
+      IF Text.Equal(t, u) THEN
+        RETURN TRUE;
+      END;
+      WHILE i&lt;lt DO
+        IF ASCII.Upper[Text.GetChar (t, i)] # ASCII.Upper[Text.GetChar (u, i)] THEN
+          RETURN FALSE
+        ELSE INC(i)
+        END;
+      END;
+      RETURN TRUE;
+    ELSE RETURN FALSE
+    END;
+  END TextExtras_CIEqual;
+</PRE>--------------------------------------------------------------------------
+
+<P><PRE>BEGIN
+  DoIt ();
+END Main.
+</PRE>
+</inModule>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

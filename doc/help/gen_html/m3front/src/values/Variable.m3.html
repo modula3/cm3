@@ -218,13 +218,13 @@ PROCEDURE <A NAME="NewFormal"><procedure>NewFormal</procedure></A> (formal: Valu
   END NewFormal;
 
 PROCEDURE <A NAME="Split"><procedure>Split</procedure></A> (t: T;  VAR type: Type.T;
-                 VAR global, indirect, lhs: BOOLEAN) =
+                 VAR global, indirect, traced: BOOLEAN) =
   BEGIN
     &lt;* ASSERT t.checked *&gt;
     type     := t.tipe;
     global   := t.global;
     indirect := t.indirect;
-    lhs      := t.lhs;
+    traced   := t.traced;
   END Split;
 
 PROCEDURE <A NAME="BindType"><procedure>BindType</procedure></A> (t: T; type: Type.T;

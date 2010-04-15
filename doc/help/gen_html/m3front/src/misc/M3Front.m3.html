@@ -19,9 +19,9 @@
 IMPORT <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>(** , RTCollector, RTCollectorSRC **);
 IMPORT <A HREF="#x1">Token</A>, <A HREF="Error.i3.html">Error</A>, <A HREF="Scanner.i3.html">Scanner</A>, <A HREF="#x2">Value</A>, <A HREF="Scope.i3.html">Scope</A>, <A HREF="M3String.i3.html">M3String</A>, <A HREF="M3WString.i3.html">M3WString</A>, <A HREF="../types/Brand.i3.html">Brand</A>;
 IMPORT <A HREF="../values/Module.i3.html">Module</A>, <A HREF="#x3">Type</A>, <A HREF="../builtinTypes/BuiltinTypes.i3.html">BuiltinTypes</A>, <A HREF="Host.i3.html">Host</A>, <A HREF="Tracer.i3.html">Tracer</A>, <A HREF="M3Header.i3.html">M3Header</A>, <A HREF="../builtinInfo/InfoModule.i3.html">InfoModule</A>;
-IMPORT <A HREF="../builtinOps/BuiltinOps.i3.html">BuiltinOps</A>, <A HREF="../builtinWord/WordModule.i3.html">WordModule</A>, <A HREF="../builtinLong/LongModule.i3.html">LongModule</A>, <A HREF="M3.i3.html">M3</A>, <A HREF="../../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="Coverage.i3.html">Coverage</A>, <A HREF="#x4">Marker</A>, <A HREF="../types/TypeFP.i3.html">TypeFP</A>;
+IMPORT <A HREF="../builtinOps/BuiltinOps.i3.html">BuiltinOps</A>, <A HREF="#x4">WordModule</A>, <A HREF="#x5">LongModule</A>, <A HREF="M3.i3.html">M3</A>, <A HREF="../../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="Coverage.i3.html">Coverage</A>, <A HREF="#x6">Marker</A>, <A HREF="../types/TypeFP.i3.html">TypeFP</A>;
 IMPORT <A HREF="../values/Ident.i3.html">Ident</A>, <A HREF="../exprs/TextExpr.i3.html">TextExpr</A>, <A HREF="../values/Procedure.i3.html">Procedure</A>, <A HREF="../exprs/SetExpr.i3.html">SetExpr</A>, <A HREF="TipeDesc.i3.html">TipeDesc</A>, <A HREF="../../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>;
-IMPORT <A HREF="ESet.i3.html">ESet</A>, <A HREF="CG.i3.html">CG</A>, <A HREF="../../../libm3/src/rw/TextWr.i3.html">TextWr</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="ProcBody.i3.html">ProcBody</A>, <A HREF="RunTyme.i3.html">RunTyme</A>, <A HREF="#x5">M3ID</A>, <A HREF="../values/Variable.i3.html">Variable</A>;
+IMPORT <A HREF="ESet.i3.html">ESet</A>, <A HREF="CG.i3.html">CG</A>, <A HREF="../../../libm3/src/rw/TextWr.i3.html">TextWr</A>, <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="ProcBody.i3.html">ProcBody</A>, <A HREF="RunTyme.i3.html">RunTyme</A>, <A HREF="#x7">M3ID</A>, <A HREF="../values/Variable.i3.html">Variable</A>;
 IMPORT <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>;
 
 VAR mu         : MUTEX    := NEW (MUTEX);
@@ -90,14 +90,71 @@ PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> () =
     Scanner.Pop ();
 
     Scanner.Push (&quot;Word.i3&quot;, NIL, is_main := Host.emitBuiltins);
-      WordModule.Initialize ();
+      WordModule.Initialize (&quot;Word&quot;);
     Scanner.Pop ();
 
     Scanner.Push (&quot;Long.i3&quot;, NIL, is_main := Host.emitBuiltins);
-      LongModule.Initialize ();
+      LongModule.Initialize (&quot;Long&quot;);
+    Scanner.Pop ();
+</PRE><P>
+    Scanner.Push (<CODE>AtomicAddressRep.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicAddressRep.Initialize (<CODE>AtomicAddressRep</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicAddress.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicAddressModule.Initialize (<CODE>AtomicAddress</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicBooleanRep.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicBooleanRep.Initialize (<CODE>AtomicBooleanRep</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicBoolean.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicBooleanModule.Initialize (<CODE>AtomicBoolean</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicCharRep.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicCharRep.Initialize (<CODE>AtomicCharRep</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicChar.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicCharModule.Initialize (<CODE>AtomicChar</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicIntegerRep.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicIntegerRep.Initialize (<CODE>AtomicIntegerRep</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicInteger.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicIntegerModule.Initialize (<CODE>AtomicInteger</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicLongintRep.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicLongintRep.Initialize (<CODE>AtomicLongintRep</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicLongint.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicLongintModule.Initialize (<CODE>AtomicLongint</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicRefanyRep.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicRefanyRep.Initialize (<CODE>AtomicRefanyRep</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicRefany.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicRefanyModule.Initialize (<CODE>AtomicRefany</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicWideCharRep.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicWideCharRep.Initialize (<CODE>AtomicWideCharRep</CODE>);
+    Scanner.Pop ();
+<P>
+    Scanner.Push (<CODE>AtomicWideChar.i3</CODE>, NIL, is_main := Host.emitBuiltins);
+      AtomicWideCharModule.Initialize (<CODE>AtomicWideChar</CODE>);
     Scanner.Pop ();
 
-    Scanner.Push (&quot;Compiler.i3&quot;, NIL, is_main := Host.emitBuiltins);
+
+<P>    <PRE>Scanner.Push (&quot;Compiler.i3&quot;, NIL, is_main := Host.emitBuiltins);
       InfoModule.Initialize ();
     Scanner.Pop ();
   END Initialize;
@@ -310,14 +367,28 @@ END M3Front.
 </UL>
 <P>
 <HR>
-<A NAME="x4">interface Marker is in:
+<A NAME="x4">interface WordModule is in:
+</A><UL>
+<LI><A HREF="../../derived/WordModule.i3.html#0TOP0">m3front/derived/WordModule.i3</A>
+<LI><A HREF="../builtinWord/WordModule.i3.html#0TOP0">m3front/src/builtinWord/WordModule.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x5">interface LongModule is in:
+</A><UL>
+<LI><A HREF="../../derived/LongModule.i3.html#0TOP0">m3front/derived/LongModule.i3</A>
+<LI><A HREF="../builtinLong/LongModule.i3.html#0TOP0">m3front/src/builtinLong/LongModule.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x6">interface Marker is in:
 </A><UL>
 <LI><A HREF="../../../cm3ide/src/markup/Marker.i3.html#0TOP0">cm3ide/src/markup/Marker.i3</A>
 <LI><A HREF="Marker.i3.html#0TOP0">m3front/src/misc/Marker.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x5">interface M3ID is in:
+<A NAME="x7">interface M3ID is in:
 </A><UL>
 <LI><A HREF="../../../m3middle/src/M3ID.i3.html#0TOP0">m3middle/src/M3ID.i3</A>
 <LI><A HREF="../../../m3scan/src/M3ID.i3.html#0TOP0">m3scan/src/M3ID.i3</A>

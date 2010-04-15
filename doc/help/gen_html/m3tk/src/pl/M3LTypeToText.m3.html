@@ -45,7 +45,7 @@ IMPORT <A HREF="../sem/M3CTypesMisc.i3.html">M3CTypesMisc</A>, <A HREF="../sem/M
 IMPORT <A HREF="../target/M3CBackEnd_C.i3.html">M3CBackEnd_C</A>; (* for representation of brands *)
 
 VAR
-  char_g, widechar_g, boolean_g, cardinal_g, text_g: INTEGER;
+  char_g, widechar_g, boolean_g, cardinal_g, longcard_g, text_g: INTEGER;
 
 PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A>() RAISES {}=
   BEGIN
@@ -57,6 +57,7 @@ PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A>() RAISES {}
     widechar_g := M3CStdTypes.WideChar().tmp_type_code;
     boolean_g := M3CStdTypes.Boolean().tmp_type_code;
     cardinal_g := M3CStdTypes.Cardinal().tmp_type_code;
+    longcard_g := M3CStdTypes.Longcard().tmp_type_code;
     text_g := M3CStdTypes.Text().tmp_type_code;
   END Initialize;
 
@@ -224,6 +225,8 @@ PROCEDURE <A NAME="Subrange"><procedure>Subrange</procedure></A>(
   BEGIN
     IF sub.tmp_type_code = cardinal_g THEN
       Wr.PutChar(s, CardinalCh);
+    ELSIF sub.tmp_type_code = longcard_g THEN
+      Wr.PutChar(s, LongcardCh);
     ELSE
       Wr.PutChar(s, SubrangeCh);
       ComponentType(s, sub.sm_base_type_spec);
@@ -455,6 +458,8 @@ PROCEDURE <A NAME="ComponentType"><procedure>ComponentType</procedure></A>(s: Wr
         Wr.PutChar(s, WideCharCh);
       ELSIF tc = cardinal_g THEN
         Wr.PutChar(s, CardinalCh);
+      ELSIF tc = longcard_g THEN
+        Wr.PutChar(s, LongcardCh);
       ELSE
         TypeIndex(s, tc);
       END;

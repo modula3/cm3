@@ -18,7 +18,7 @@
 
 IMPORT <A HREF="../misc/M3.i3.html">M3</A>, <A HREF="../misc/CG.i3.html">CG</A>, <A HREF="#x1">Type</A>, <A HREF="TypeRep.i3.html">TypeRep</A>, <A HREF="../builtinTypes/Int.i3.html">Int</A>, <A HREF="../builtinTypes/LInt.i3.html">LInt</A>, <A HREF="../exprs/Expr.i3.html">Expr</A>, <A HREF="#x2">Token</A>, <A HREF="#x3">Card</A>, <A HREF="../../../m3middle/src/M3Buf.i3.html">M3Buf</A>;
 IMPORT <A HREF="../misc/Error.i3.html">Error</A>, <A HREF="../exprs/IntegerExpr.i3.html">IntegerExpr</A>, <A HREF="../exprs/EnumExpr.i3.html">EnumExpr</A>, <A HREF="../../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../misc/TipeMap.i3.html">TipeMap</A>, <A HREF="../misc/TipeDesc.i3.html">TipeDesc</A>;
-IMPORT <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../../../m3middle/src/TWord.i3.html">TWord</A>, <A HREF="../../../m3middle/src/TargetMap.i3.html">TargetMap</A>;
+IMPORT <A HREF="../../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../../m3middle/src/TInt.i3.html">TInt</A>, <A HREF="../../../m3middle/src/TWord.i3.html">TWord</A>, <A HREF="../../../m3middle/src/TargetMap.i3.html">TargetMap</A>, <A HREF="../builtinTypes/LCard.i3.html">LCard</A>;
 FROM <A HREF="../misc/Scanner.i3.html">Scanner</A> IMPORT Match;
 
 TYPE
@@ -390,6 +390,8 @@ PROCEDURE <A NAME="GenDesc"><procedure>GenDesc</procedure></A> (p: P) =
   BEGIN
     IF Type.IsEqual (p, Card.T, NIL) THEN
       EVAL TipeDesc.AddO (TipeDesc.Op.Cardinal, p);
+    ELSIF Type.IsEqual (p, LCard.T, NIL) THEN
+      EVAL TipeDesc.AddO (TipeDesc.Op.Longcard, p);
     ELSIF TipeDesc.AddO (TipeDesc.Op.Subrange, p) THEN
       TipeDesc.AddX (p.min);
       TipeDesc.AddX (p.max);
@@ -400,6 +402,9 @@ PROCEDURE <A NAME="FPrinter"><procedure>FPrinter</procedure></A> (p: P;  VAR x: 
   BEGIN
     IF Type.IsEqual (p, Card.T, NIL) THEN
       x.tag := &quot;$cardinal&quot;;
+      x.n_nodes := 0;
+    ELSIF Type.IsEqual (p, LCard.T, NIL) THEN
+      x.tag := &quot;$longcard&quot;;
       x.n_nodes := 0;
     ELSE
       M3Buf.PutText (x.buf, &quot;SUBRANGE &quot;);

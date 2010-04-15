@@ -13,7 +13,7 @@
  Last modified on Fri May  5 08:22:31 PDT 1995 by kalsow     
 
 <P> The code below makes the following NASTY assumption:
-      ThreadF.ProcessStacks calls its argument twice for
+      RTThread.ProcessStacks calls its argument twice for
       each thread -- the first time for the stack, the
       second time for its registers. 
 
@@ -21,7 +21,7 @@
 
 IMPORT <A HREF="RT0.i3.html">RT0</A>, <A HREF="RTCollector.i3.html">RTCollector</A>, <A HREF="RTModule.i3.html">RTModule</A>, <A HREF="RTIO.i3.html">RTIO</A>, <A HREF="RTHeapMap.i3.html">RTHeapMap</A>, <A HREF="RTHeapRep.i3.html">RTHeapRep</A>, <A HREF="RTMisc.i3.html">RTMisc</A>;
 IMPORT <A HREF="RTOS.i3.html">RTOS</A>, <A HREF="RTType.i3.html">RTType</A>, <A HREF="RTTypeSRC.i3.html">RTTypeSRC</A>, <A HREF="RTProcedure.i3.html">RTProcedure</A>, <A HREF="RTProcedureSRC.i3.html">RTProcedureSRC</A>, <A HREF="#x1">RTMachine</A>;
-IMPORT <A HREF="RTStack.i3.html">RTStack</A>, <A HREF="../../thread/PTHREAD/ThreadF.i3.html">ThreadF</A>, <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="../../text/Text.i3.html">Text</A>;
+IMPORT <A HREF="RTStack.i3.html">RTStack</A>, <A HREF="#x2">RTThread</A>, <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="../../text/Text.i3.html">Text</A>;
 FROM <A HREF="RTIO.i3.html">RTIO</A> IMPORT PutInt, PutAddr, PutText;
 
 TYPE
@@ -82,7 +82,6 @@ VAR
 
 PROCEDURE <A NAME="ReportReachable"><procedure>ReportReachable</procedure></A> () =
   CONST MByte = 1024 * 1024;
-  VAR thread := ThreadF.MyHeapState();
   BEGIN
     (* allocate space for the stats *)
     outerVisitor := NEW (RTHeapMap.Visitor, apply := Visit);
@@ -104,8 +103,8 @@ PROCEDURE <A NAME="ReportReachable"><procedure>ReportReachable</procedure></A> (
 
     (* freeze the world *)
     RTCollector.Disable ();
-    RTOS.LockHeap (thread^); (* freeze the heap *)
-    ThreadF.SuspendOthers ();
+    RTOS.LockHeap (); (* freeze the heap *)
+    RTThread.SuspendOthers ();
 
     (* capture the heap limits *)
     heap_min  := LOOPHOLE (RTHeapRep.p0 * RTHeapRep.BytesPerPage, ADDRESS);
@@ -155,8 +154,8 @@ PROCEDURE <A NAME="ReportReachable"><procedure>ReportReachable</procedure></A> (
     (* thaw the world *)
     DISPOSE (visit_stack);
     DISPOSE (map);
-    ThreadF.ResumeOthers ();
-    RTOS.UnlockHeap (thread^); (* unfreeze the heap *)
+    RTThread.ResumeOthers ();
+    RTOS.UnlockHeap (); (* unfreeze the heap *)
     RTCollector.Enable ();
   END ReportReachable;
 </PRE>------------------------------------------------------------ REF visits ---
@@ -288,7 +287,7 @@ PROCEDURE <A NAME="GetThreads"><procedure>GetThreads</procedure></A> () =
   BEGIN
     self_id := -1;
     mark_addr := ADR (i);
-    ThreadF.ProcessStacks (GetThread);
+    RTThread.ProcessStacks (GetThread);
     RTIO.PutText (&quot;Threads: &quot;);
     RTIO.PutInt (n_threads);
     IF (n_threads &gt; NUMBER (threads)) THEN
@@ -336,7 +335,7 @@ PROCEDURE <A NAME="ScanPages"><procedure>ScanPages</procedure></A> (start, stop:
   VAR fp: UNTRACED REF ADDRESS := start;
   BEGIN
     (* scan the stack or registers *)
-    WHILE fp &lt;= stop DO
+    WHILE fp &lt; stop DO
       WITH page = RTHeapRep.AddressToPage(fp^), d = page.desc DO
         IF page # NIL AND d.space = RTHeapRep.Space.Current THEN
           VisitPage(page);
@@ -713,6 +712,13 @@ END RTHeapStats.
 </A><UL>
 <LI><A HREF="../AMD64_LINUX/RTMachine.i3.html#0TOP0">m3core/src/runtime/AMD64_LINUX/RTMachine.i3</A>
 <LI><A HREF="RTMachine.i3.html#0TOP0">m3core/src/runtime/common/RTMachine.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface RTThread is in:
+</A><UL>
+<LI><A HREF="../POSIX/RTThread.i3.html#0TOP0">m3core/src/runtime/POSIX/RTThread.i3</A>
+<LI><A HREF="RTThread.i3.html#0TOP0">m3core/src/runtime/common/RTThread.i3</A>
 </UL>
 <P>
 <PRE>

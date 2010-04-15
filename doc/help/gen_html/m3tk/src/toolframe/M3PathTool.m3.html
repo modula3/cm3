@@ -62,7 +62,7 @@ PROCEDURE <A NAME="Check"><procedure>Check</procedure></A>(exts := M3Extension.A
       END;
 </PRE><P>
       IF NOT M3Args.GetFlag(tool_g, NOSTD_Arg) THEN
-        VAR pub := M3Config.Pub();
+        VAR pub := MxConfig.Pub();
         BEGIN
           WHILE pub # NIL DO
             dirs := M3PathDefaults.Add(dirs,

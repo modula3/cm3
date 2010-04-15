@@ -43,7 +43,7 @@ PROCEDURE <A HREF="String16.m3.html#Equal">Equal</A> (a, b: ADDRESS;  len: CARDI
 </PRE> PRE: a MOD ADRSIZE(WIDECHAR) = 0  
 
 <P><PRE>PROCEDURE <A HREF="String16.m3.html#HasWideChars">HasWideChars</A> (a: ADDRESS; len: CARDINAL): BOOLEAN;
-</PRE><BLOCKQUOTE><EM> Return ORD(a[i] &gt; LAST (CHAR), for some <CODE>i</CODE> in <CODE>[0~..~len-1]</CODE>. </EM></BLOCKQUOTE><PRE>
+</PRE><BLOCKQUOTE><EM> Return ORD(a[i]) &gt; LAST (CHAR), for some <CODE>i</CODE> in <CODE>[0~..~len-1]</CODE>. </EM></BLOCKQUOTE><PRE>
 </PRE> PRE: a MOD ADRSIZE(WIDECHAR) = 0  
 
 <P><PRE>PROCEDURE <A HREF="String16.m3.html#ArrayStart">ArrayStart</A> (READONLY a: ARRAY OF WIDECHAR): ADDRESS;

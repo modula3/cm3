@@ -28,7 +28,7 @@ PROCEDURE <A NAME="FromFile"><procedure>FromFile</procedure></A> (path: TEXT;  p
   BEGIN
     TRY
       f := FS.OpenFileReadonly (path);
-      len := f.status().size;
+      len := VAL(f.status().size, INTEGER);
       t := NEW (T, len + pad);
 
       next := 0;
