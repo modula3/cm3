@@ -25,7 +25,7 @@ extern "C" {
 
 void
 __cdecl
-Date__FromTime(double t, ptrdiff_t* zone, Date_t* date)
+DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown)
 {
     struct tm* tm;
     struct timeval tv;
@@ -57,7 +57,7 @@ Date__FromTime(double t, ptrdiff_t* zone, Date_t* date)
      * negation is necessary.
      */
     date->offset = -tm->tm_gmtoff;
-    *zone = M3toC__CopyStoT(tm->tm_zone);
+    date->zone = M3toC__CopyStoT(tm->tm_zone);
 #else
     if (tm->tm_isdst == 0)
     {
@@ -76,7 +76,7 @@ Date__FromTime(double t, ptrdiff_t* zone, Date_t* date)
     else
     {
       date->offset = 0;
-      date->zone   = M3toC__CopyStoT("Unknown");
+      date->zone   = unknown;
     }
 #endif
 }
