@@ -1175,7 +1175,7 @@ def Boot():
 
     SunLink = " -lrt -lm -lnsl -lsocket -lpthread "
 
-    Link = Compile + ({ "ARM_DARWIN"      : " ",
+    Link = Compile + " *.o " + ({ "ARM_DARWIN"      : " ",
                         "AMD64_DARWIN"    : " ",
                         "I386_DARWIN"     : " ",
                         "I386_INTERIX"    : " -lm ",
@@ -1285,11 +1285,7 @@ def Boot():
     Makefile.write("cm3: $(Objects)\n\t")
 
     for a in [Make, Makefile]:
-        if Target.find("INTERIX") == -1:
-            a.write("$(Link) -o cm3 *.o\n")
-        else: # Do we still need this variation?
-            a.write("rm -f ntdll.def ntdll.lib ntdll.dll ntdll.o ntdll.c.o a.out a.exe cm3 cm3.exe libntdll.a _m3main.c.o _m3main.o\n")
-            a.write("gcc -g -o cm3 _m3main.c *.o -lm -L . -lntdll\n")
+        a.write("$(Link) -o cm3\n")
 
     Common = "Common"
 
