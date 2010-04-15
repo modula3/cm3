@@ -22,7 +22,7 @@ TYPE T = RECORD
   weekDay:  INTEGER;
   year:     INTEGER;
   zone:     TEXT;
-  zzalign:  INTEGER;
+  zzalign:  INTEGER := 10;
 END;
 
 <*EXTERNAL DatePosix__FromTime*>
