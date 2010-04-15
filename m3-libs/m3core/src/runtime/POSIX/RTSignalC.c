@@ -258,10 +258,8 @@ void InstallHandlers(void)
 static void RestoreOneHandler(size_t i)
 {
     int Signal = Handlers[i].Signal;
-    struct sigaction Old;
 
-    ZeroMemory(&Old, sizeof(Old));
-    sigaction(Signal, &InitialHandlers[i], &Old);
+    sigaction(Signal, &InitialHandlers[i], NULL);
 }
 
 void RestoreHandlers(void)
@@ -277,15 +275,13 @@ void RestoreHandlers(void)
 static void ShutdownCommon(int Signal)
 {
     struct sigaction New;
-    struct sigaction Old;
 
-    ZeroMemory(&Old, sizeof(Old));
     ZeroMemory(&New, sizeof(New));
     New.sa_handler = SIG_DFL;
     New.sa_flags = 0;
     sigemptyset(&New.sa_mask);
     InvokeExitors();     /* flush stdio */
-    sigaction(Signal, &New, &Old);  /* restore default handler */
+    sigaction(Signal, &New, NULL);  /* restore default handler */
     kill(getpid(), Signal);         /* and resend the signal */
 }
 
