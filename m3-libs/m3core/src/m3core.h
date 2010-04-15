@@ -437,6 +437,14 @@ void
 __cdecl
 DatePosix__TypeCheck(const Date_t* d, size_t sizeof_DateT);
 
+void
+__cdecl
+Scheduler__DisableScheduling(void);
+
+void
+__cdecl
+Scheduler__EnableScheduling(void);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
