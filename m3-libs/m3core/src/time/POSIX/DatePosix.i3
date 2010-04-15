@@ -8,13 +8,30 @@
 INTERFACE DatePosix;
 IMPORT Date, Time;
 
+(* This MUST match m3core.h
+ * The fields are ordered by size and alphabetically.
+ * (They are all the same size.)
+ *)
+TYPE T = RECORD
+  day:      INTEGER;
+  hour:     INTEGER;
+  minute:   INTEGER;
+  month:    INTEGER;
+  offset:   INTEGER;
+  second:   INTEGER;
+  weekDay:  INTEGER;
+  year:     INTEGER;
+  zone:     TEXT;
+  zzalign:  INTEGER;
+END;
+
 <*EXTERNAL DatePosix__FromTime*>
-PROCEDURE FromTime(time: LONGREAL; zone: Date.TimeZone; VAR date: Date.T; unknown, gmt: TEXT);
+PROCEDURE FromTime(time: LONGREAL; zone: Date.TimeZone; VAR date: T; unknown, gmt: TEXT);
 
 <*EXTERNAL DatePosix__ToTime*>
-PROCEDURE ToTime(READONLY d: Date.T): Time.T;
+PROCEDURE ToTime(READONLY d: T): Time.T;
 
 <*EXTERNAL DatePosix__TypeCheck*>
-PROCEDURE TypeCheck(READONLY d: Date.T; sizeof_DateT: INTEGER);
+PROCEDURE TypeCheck(READONLY d: T; sizeofT: INTEGER);
 
 END DatePosix.

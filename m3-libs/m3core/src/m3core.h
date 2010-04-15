@@ -408,38 +408,22 @@ double
 __cdecl
 TimePosix__ComputeGrain(void);
 
-typedef struct
-{
-  INTEGER year;
-  UINT8 month;
-  UINT8 day;
-  UINT8 hour;
-  UINT8 minute;
-  UINT8 second;
-  UINT8 align1[3];
-  ptrdiff_t offset;
-  TEXT zone;
-  UINT8 weekDay;
-  UINT8 align2[sizeof(size_t) - 1];
+/* This MUST match DatePosix.i3.T.
+ * The fields are ordered by size and alphabetically.
+ * (They are all the same size.)
+ */
+typedef struct {
+    INTEGER day;
+    INTEGER hour;
+    INTEGER minute;
+    INTEGER month;
+    INTEGER offset;
+    INTEGER second;
+    INTEGER weekDay;
+    INTEGER year;
+    TEXT    zone;
+    INTEGER zzalign;
 } Date_t;
-
-M3_STATIC_ASSERT(sizeof(Date_t) == (24 * (sizeof(char*) == 4)) + (40 * (sizeof(char*) == 8)));
-M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, month) == (sizeof(char*) + 1));
-M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, day) == (sizeof(char*) + 2));
-M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, hour) == (sizeof(char*) + 3));
-M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, minute) == (sizeof(char*) + 4));
-M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, second) == (sizeof(char*) + 5));
-M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, offset) == (sizeof(char*) + 8 + sizeof(char*)));
-M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, zone) == (sizeof(char*) + 8 + 2 * sizeof(char*)));
-M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, weekDay) == (sizeof(char*) + 8 + 2 * sizeof(char*) + 1));
-M3_STATIC_ASSERT(offsetof(Date_t, month) == (sizeof(char*)));
-M3_STATIC_ASSERT(offsetof(Date_t, day) == (sizeof(char*) + 1));
-M3_STATIC_ASSERT(offsetof(Date_t, hour) == (sizeof(char*) + 2));
-M3_STATIC_ASSERT(offsetof(Date_t, minute) == (sizeof(char*) + 3));
-M3_STATIC_ASSERT(offsetof(Date_t, second) == (sizeof(char*) + 4));
-M3_STATIC_ASSERT(offsetof(Date_t, offset) == (sizeof(char*) + 8));
-M3_STATIC_ASSERT(offsetof(Date_t, zone) == (sizeof(char*) + 8 + sizeof(char*)));
-M3_STATIC_ASSERT(offsetof(Date_t, weekDay) == (sizeof(char*) + 8 + 2 * sizeof(char*)));
 
 void
 __cdecl

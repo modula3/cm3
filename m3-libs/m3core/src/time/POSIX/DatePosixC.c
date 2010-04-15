@@ -25,20 +25,21 @@ extern "C" {
 
 void
 __cdecl
-DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown, TEXT gmt)
+DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown, TEXT gmt)
 {
     struct tm tm;
     struct timeval tv;
+    ptrdiff_t zone = (pzone ? *pzone : Local);
     
     tzset();
     ZeroMemory(date, sizeof(*date));
     ZERO_MEMORY(tv);
     ZERO_MEMORY(tm);
     tv = TimePosix__ToUtime(t);    
-    assert(zone == NULL || *zone == Local || *zone == UTC);
-    if (zone == NULL || *zone == Local)
+    assert(zone == Local || zone == UTC);
+    if (zone == Local)
         localtime_r(&tv.tv_sec, &tm);
-    else if (*zone == UTC)
+    else
         gmtime_r(&tv.tv_sec, &tm);
     date->year = tm.tm_year + 1900;
     date->month = tm.tm_mon;
@@ -56,7 +57,7 @@ DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown,
     date->offset = -tm.tm_gmtoff;
     date->zone = M3toC__CopyStoT(tm.tm_zone);
 #else
-    if (zone == NULL || *zone == Local)
+    if (zone == Local)
     {
         if (tm.tm_isdst == 0)
         {
@@ -144,7 +145,7 @@ DatePosix__TypeCheck(const Date_t* d, size_t sizeof_DateT)
     assert(d->second == 6);
     assert(d->offset == 7);
     assert(d->zone == (TEXT)8);
-    assert(d->weekDay == 6);
+    assert(d->weekDay == 9);
 }
 
 #ifdef __cplusplus
