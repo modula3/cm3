@@ -89,7 +89,6 @@ void __cdecl Unix__Assertions(void)
 
     M3_STATIC_ASSERT(IS_TYPE_SIGNED(pid_t));
 #endif
-    Utime__Assertions();
     Usocket__Assertions();
 }
 
