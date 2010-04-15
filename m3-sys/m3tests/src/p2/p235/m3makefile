@@ -1,0 +1,4 @@
+build_standalone()
+import("m3core")
+implementation("Main")
+program("a")
