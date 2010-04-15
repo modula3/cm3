@@ -56,6 +56,3 @@ PROCEDURE CopyStoT(s: Ctypes.char_star): TEXT;
    later freed. *)
 
 END M3toC.
-
-
-
