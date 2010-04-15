@@ -280,13 +280,7 @@ ADDRESS __cdecl Umman__mmap(ADDRESS addr, size_t len, int prot, int flags, int f
 int __cdecl Umman__munmap(ADDRESS addr, size_t len);
 
 #ifndef _WIN32
-/* somewhat idealized, but ideally we'd use INT64 here
- * Win32 varies, sometimes time_t is 32bits, sometimes
- * 64bits; since this code isn't actually used,
- * and we don't want to use 32bit time_t if we can
- * help it, disable
- */
-typedef INTEGER m3_time_t;
+typedef INT64 m3_time_t;
 #endif
 
 typedef struct {
@@ -416,24 +410,48 @@ TimePosix__ComputeGrain(void);
 
 typedef struct
 {
-  size_t year;
-  size_t month;
-  size_t day;
-  size_t hour;
-  size_t minute;
-  size_t second;
+  INTEGER year;
+  UINT8 month;
+  UINT8 day;
+  UINT8 hour;
+  UINT8 minute;
+  UINT8 second;
+  UINT8 align1[3];
   ptrdiff_t offset;
   TEXT zone;
-  size_t weekDay;
+  UINT8 weekDay;
+  UINT8 align2[sizeof(size_t) - 1];
 } Date_t;
+
+M3_STATIC_ASSERT(sizeof(Date_t) == (24 * (sizeof(char*) == 4)) + (40 * (sizeof(char*) == 8)));
+M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, month) == (sizeof(char*) + 1));
+M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, day) == (sizeof(char*) + 2));
+M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, hour) == (sizeof(char*) + 3));
+M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, minute) == (sizeof(char*) + 4));
+M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, second) == (sizeof(char*) + 5));
+M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, offset) == (sizeof(char*) + 8 + sizeof(char*)));
+M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, zone) == (sizeof(char*) + 8 + 2 * sizeof(char*)));
+M3_STATIC_ASSERT(M3_SIZE_THROUGH_FIELD(Date_t, weekDay) == (sizeof(char*) + 8 + 2 * sizeof(char*) + 1));
+M3_STATIC_ASSERT(offsetof(Date_t, month) == (sizeof(char*)));
+M3_STATIC_ASSERT(offsetof(Date_t, day) == (sizeof(char*) + 1));
+M3_STATIC_ASSERT(offsetof(Date_t, hour) == (sizeof(char*) + 2));
+M3_STATIC_ASSERT(offsetof(Date_t, minute) == (sizeof(char*) + 3));
+M3_STATIC_ASSERT(offsetof(Date_t, second) == (sizeof(char*) + 4));
+M3_STATIC_ASSERT(offsetof(Date_t, offset) == (sizeof(char*) + 8));
+M3_STATIC_ASSERT(offsetof(Date_t, zone) == (sizeof(char*) + 8 + sizeof(char*)));
+M3_STATIC_ASSERT(offsetof(Date_t, weekDay) == (sizeof(char*) + 8 + 2 * sizeof(char*)));
 
 void
 __cdecl
-DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown);
+DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown, TEXT gmt);
 
 double
 __cdecl
 DatePosix__ToTime(const Date_t* date);
+
+void
+__cdecl
+DatePosix__TypeCheck(const Date_t* d, size_t sizeof_DateT);
 
 #ifdef __cplusplus
 } /* extern "C" */
