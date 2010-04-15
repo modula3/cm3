@@ -424,7 +424,7 @@ PROCEDURE UpdateHighScores () =
 VAR
   pos: INTEGER;
   strdate: Ctypes.char_star;
-  tloc: Ctypes.long;
+  tloc: Utime.time_t;
 BEGIN
   IF NOT scorefilep THEN  RETURN END;
   (* re-read high-score table in case someone else on the network is
