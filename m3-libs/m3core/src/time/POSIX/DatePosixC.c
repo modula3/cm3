@@ -72,7 +72,7 @@ Date__FromTime(double t, int* z, Date_t* date)
      * negation is necessary.
      */
     date->offset = -tm->tm_gmtoff;
-    *zone = M3toC__CopyStoT(tm->tm_zone);
+    date->zone = M3toC__CopyStoT(tm->tm_zone);
 #else
     if (tm->tm_isdst == 0)
     {
