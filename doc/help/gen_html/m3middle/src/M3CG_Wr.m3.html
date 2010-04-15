@@ -23,6 +23,7 @@ FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT BitSize, ByteSize, Alignment, Freque
 FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT Var, Proc, Label, Sign, BitOffset, No_label;
 FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT Type, ZType, AType, RType, IType, MType;
 FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT CompareOp, ConvertOp, AtomicOp, RuntimeError;
+FROM <A HREF="M3CG.i3.html">M3CG</A> IMPORT MemoryOrder;
 
 TYPE WrVar    = Var    OBJECT tag: INTEGER END;
 TYPE WrProc   = Proc   OBJECT tag: INTEGER END;
@@ -182,13 +183,12 @@ TYPE
         load_procedure := load_procedure;
         load_static_link := load_static_link;
         comment := comment;
+        store_ordered := store_ordered;
+        load_ordered := load_ordered;
+        exchange := exchange;
+        compare_exchange := compare_exchange;
+        fence := fence;
         fetch_and_op := fetch_and_op;
-        op_and_fetch := op_and_fetch;
-        bool_compare_and_swap := bool_compare_and_swap;
-        val_compare_and_swap := val_compare_and_swap;
-        synchronize := synchronize;
-        lock_test_and_set := lock_test_and_set;
-        lock_release := lock_release;
       END;
 </PRE>------------------------------------------------------------------- I/O ---
 
@@ -1729,60 +1729,64 @@ PROCEDURE <A NAME="Cmt"><procedure>Cmt</procedure></A> (u: U;  t: TEXT;  VAR wid
   END Cmt;
 </PRE>--------------------------------------------------------------- atomics ---
 
-<P><PRE>PROCEDURE <A NAME="fetch_and_op"><procedure>fetch_and_op</procedure></A> (u: U;  op: AtomicOp;  t: MType) =
-  CONST OpName = ARRAY AtomicOp OF TEXT { &quot;fetch_and_add&quot;, &quot;fetch_and_sub&quot;,
-                                          &quot;fetch_and_or&quot;,  &quot;fetch_and_and&quot;,
-                                          &quot;fetch_and_xor&quot;, &quot;fetch_and_nand&quot; };
+<P><PRE>PROCEDURE <A NAME="store_ordered"><procedure>store_ordered</procedure></A> (u: U;  t: ZType;  z: MType;  order: MemoryOrder) =
   BEGIN
-    Cmd   (u, OpName [op]);
-    TName (u, t);
-    NL    (u);
-  END fetch_and_op;
-
-PROCEDURE <A NAME="op_and_fetch"><procedure>op_and_fetch</procedure></A> (u: U;  op: AtomicOp;  t: MType) =
-  CONST OpName = ARRAY AtomicOp OF TEXT { &quot;add_and_fetch&quot;, &quot;sub_and_fetch&quot;,
-                                          &quot;or_and_fetch&quot;,  &quot;and_and_fetch&quot;,
-                                          &quot;xor_and_fetch&quot;, &quot;nand_and_fetch&quot; };
-  BEGIN
-    Cmd   (u, OpName [op]);
-    TName (u, t);
-    NL    (u);
-  END op_and_fetch;
-
-PROCEDURE <A NAME="bool_compare_and_swap"><procedure>bool_compare_and_swap</procedure></A> (u: U;  t: MType;  z: IType) =
-  BEGIN
-    Cmd   (u, &quot;compare_and_swap&quot;);
+    Cmd   (u, &quot;store_ordered&quot;);
     TName (u, t);
     TName (u, z);
+    Int   (u, ORD(order));
     NL    (u);
-  END bool_compare_and_swap;
+  END store_ordered;
 
-PROCEDURE <A NAME="val_compare_and_swap"><procedure>val_compare_and_swap</procedure></A> (u: U;  t: MType) =
+PROCEDURE <A NAME="load_ordered"><procedure>load_ordered</procedure></A> (u: U;  t: MType;  z: ZType;  order: MemoryOrder) =
   BEGIN
-    Cmd   (u, &quot;val_compare_and_swap&quot;);
+    Cmd   (u, &quot;load_ordered&quot;);
     TName (u, t);
+    TName (u, z);
+    Int   (u, ORD(order));
     NL    (u);
-  END val_compare_and_swap;
+  END load_ordered;
 
-PROCEDURE <A NAME="synchronize"><procedure>synchronize</procedure></A> (u: U) =
+PROCEDURE <A NAME="exchange"><procedure>exchange</procedure></A> (u: U;  t: MType;  z: ZType;  order: MemoryOrder) =
   BEGIN
-    Cmd (u, &quot;synchronize&quot;);
-    NL  (u);
-  END synchronize;
-
-PROCEDURE <A NAME="lock_test_and_set"><procedure>lock_test_and_set</procedure></A> (u: U;  t: MType) =
-  BEGIN
-    Cmd   (u, &quot;lock_test_and_set&quot;);
+    Cmd   (u, &quot;exchange&quot;);
     TName (u, t);
+    TName (u, z);
+    Int   (u, ORD(order));
     NL    (u);
-  END lock_test_and_set;
+  END exchange;
 
-PROCEDURE <A NAME="lock_release"><procedure>lock_release</procedure></A> (u: U;  t: MType) =
+PROCEDURE <A NAME="compare_exchange"><procedure>compare_exchange</procedure></A> (u: U;  t: MType;  z: ZType;  r: IType;
+                            success, failure: MemoryOrder) =
   BEGIN
-    Cmd   (u, &quot;lock_release&quot;);
+    Cmd   (u, &quot;exchange&quot;);
     TName (u, t);
+    TName (u, z);
+    TName (u, r);
+    Int   (u, ORD(success));
+    Int   (u, ORD(failure));
     NL    (u);
-  END lock_release;
+  END compare_exchange;
+
+PROCEDURE <A NAME="fence"><procedure>fence</procedure></A> (u: U;  order: MemoryOrder) =
+  BEGIN
+    Cmd   (u, &quot;fence&quot;);
+    Int   (u, ORD(order));
+    NL    (u);
+  END fence;
+
+PROCEDURE <A NAME="fetch_and_op"><procedure>fetch_and_op</procedure></A> (u: U;  op: AtomicOp;  t: MType;  z: ZType;
+                        order: MemoryOrder) =
+  CONST OpName = ARRAY AtomicOp OF TEXT { &quot;fetch_and_add&quot;, &quot;fetch_and_sub&quot;,
+                                          &quot;fetch_and_or&quot;,  &quot;fetch_and_and&quot;,
+                                          &quot;fetch_and_xor&quot; };
+  BEGIN
+    Cmd   (u, OpName [op]);
+    TName (u, t);
+    TName (u, z);
+    Int   (u, ORD(order));
+    NL    (u);
+  END fetch_and_op;
 
 BEGIN
 END M3CG_Wr.

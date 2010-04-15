@@ -588,12 +588,11 @@ PROCEDURE <A NAME="CompileBig"><procedure>CompileBig</procedure></A> (p: P;  VAR
     n            : Node;
     b            : BOOLEAN;
     tmp          : Target.Int;
-
   BEGIN
     b := SetType.Split (p.tipe, range); &lt;* ASSERT b *&gt;
     EVAL Type.GetBounds (range, min_T, max_T);
     IF NOT TInt.ToInt (min_T, minT)
-      OR NOT TInt.ToInt (max_T, maxT) THEN
+        OR NOT TInt.ToInt (max_T, maxT) THEN
       Error.Msg (&quot;set domain too large&quot;);
       minT := FIRST (INTEGER);
       maxT := LAST (INTEGER);
@@ -695,7 +694,7 @@ PROCEDURE <A NAME="CompileSmall"><procedure>CompileSmall</procedure></A> (p: P; 
     b := SetType.Split (p.tipe, range); &lt;* ASSERT b *&gt;
     EVAL Type.GetBounds (range, min_T, max_T);
     IF NOT TInt.ToInt (min_T, minT)
-      OR NOT TInt.ToInt (max_T, maxT) THEN
+        OR NOT TInt.ToInt (max_T, maxT) THEN
       Error.Msg (&quot;set domain too large&quot;);
       minT := FIRST (INTEGER);
       maxT := LAST (INTEGER);

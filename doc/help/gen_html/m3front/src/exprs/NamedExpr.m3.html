@@ -212,12 +212,12 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
     END
   END Compile;
 
-PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; &lt;*UNUSED*&gt; lhs: BOOLEAN) =
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; &lt;*UNUSED*&gt; traced: BOOLEAN) =
   BEGIN
     IF (p.value = NIL) THEN Resolve (p) END;
   END PrepLV;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; &lt;*UNUSED*&gt; lhs: BOOLEAN) =
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; &lt;*UNUSED*&gt; traced: BOOLEAN) =
   BEGIN
     IF p.tmp = NIL THEN
       CASE Value.ClassOf (p.value) OF

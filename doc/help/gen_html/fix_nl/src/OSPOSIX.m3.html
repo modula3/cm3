@@ -1,0 +1,97 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: fix_nl/src/OSPOSIX.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#ffffff">
+<A NAME="0TOP0">
+<H2>fix_nl/src/OSPOSIX.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. 
+ See file COPYRIGHT-CMASS for details. 
+
+<P><PRE>UNSAFE MODULE <module>OSPOSIX</module> EXPORTS <A HREF="#x1"><implements>OS</A></implements>;
+
+IMPORT <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../libm3/src/os/Common/File.i3.html">File</A>, <A HREF="../../libm3/src/os/POSIX/FilePosix.i3.html">FilePosix</A>, <A HREF="../../m3core/src/C/Common/M3toC.i3.html">M3toC</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/src/os/POSIX/OSErrorPosix.i3.html">OSErrorPosix</A>, <A HREF="../../m3core/src/time/POSIX/TimePosix.i3.html">TimePosix</A>;
+IMPORT <A HREF="#x2">Unix</A>, <A HREF="#x3">Utime</A>;
+
+PROCEDURE <A NAME="IsDirectory"><procedure>IsDirectory</procedure></A> (path: TEXT): BOOLEAN =
+  VAR s: File.Status;
+  BEGIN
+    TRY
+      s := FS.Status (path);
+      RETURN (s.type = FS.DirectoryFileType);
+    EXCEPT OSError.E =&gt;
+      RETURN FALSE;
+    END;
+  END IsDirectory;
+
+PROCEDURE <A NAME="Close"><procedure>Close</procedure></A> (f: File.T;  modTime: LONGREAL;  path: TEXT)
+  RAISES {OSError.E} =
+  BEGIN
+    f.close ();
+    SetModifiedTime (path, modTime);
+  END Close;
+
+PROCEDURE <A NAME="SetModifiedTime"><procedure>SetModifiedTime</procedure></A> (path: TEXT;  time: LONGREAL) RAISES {OSError.E} =
+  VAR tv: ARRAY [0..1] OF Utime.struct_timeval;
+  BEGIN
+    tv[0] := TimePosix.ToUtime (time);  (* last accessed time *)
+    tv[1] := tv[0];                     (* last modified time *)
+    IF Unix.utimes (M3toC.SharedTtoS (path), ADR (tv[0])) &lt; 0 THEN
+      OSErrorPosix.Raise ();
+    END;
+  END SetModifiedTime;
+
+BEGIN
+END OSPOSIX.
+</PRE>
+</inModule>
+<HR>
+<A NAME="x1">interface OS is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/utils/OS.i3.html#0TOP0">cm3ide/src/utils/OS.i3</A>
+<LI><A HREF="OS.i3.html#0TOP0">fix_nl/src/OS.i3</A>
+<LI><A HREF="../../m3browser/src/OS.i3.html#0TOP0">m3browser/src/OS.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x2">interface Unix is in:
+</A><UL>
+<LI><A HREF="../../m3core/src/unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
+<LI><A HREF="../../m3core/src/unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface Utime is in:
+</A><UL>
+<LI><A HREF="../../m3core/src/unix/Common/Utime.i3.html#0TOP0">m3core/src/unix/Common/Utime.i3</A>
+<LI><A HREF="../../m3core/src/unix/linux-common/Utime.i3.html#0TOP0">m3core/src/unix/linux-common/Utime.i3</A>
+</UL>
+<P>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

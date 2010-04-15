@@ -1,0 +1,272 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: fix_nl/src/Main.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#ffffff">
+<A NAME="0TOP0">
+<H2>fix_nl/src/Main.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. 
+ See file COPYRIGHT-CMASS for details. 
+
+<P><PRE>MODULE <module><implements><A HREF="../../m3core/src/main/Main.i3.html">Main</A></implements></module>;
+
+IMPORT <A HREF="../../libm3/src/atom/Atom.i3.html">Atom</A>, <A HREF="../../libm3/derived/AtomList.i3.html">AtomList</A>, <A HREF="../../libm3/src/os/Common/File.i3.html">File</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="#x1">OS</A>, <A HREF="../../libm3/src/params/Params.i3.html">Params</A>, <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>;
+IMPORT <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>;
+
+CONST
+  KnownSourceSuffixes = ARRAY OF TEXT {
+    &quot;.i3&quot;, &quot;.m3&quot;, &quot;.ig&quot;, &quot;.mg&quot;, &quot;m3makefile&quot;, &quot;m3overrides&quot;, &quot;COPYRIGHT&quot;,
+    &quot;.c&quot;, &quot;.h&quot;, &quot;.bat&quot;, &quot;.html&quot;, &quot;.htm&quot;, &quot;.el&quot;, &quot;.s&quot;, &quot;.asm&quot;, &quot;.txt&quot;,
+    &quot;.tmpl&quot;, &quot;README&quot;, &quot;.mx&quot;, &quot;.m3x&quot;, &quot;.M3WEB&quot;, &quot;.M3EXPORTS&quot;, &quot;.M3SHIP&quot;,
+    &quot;.tex&quot;, &quot;.lsl&quot;, &quot;.lm3&quot;
+  };
+
+CONST
+  KnownBinarySuffixes = ARRAY OF TEXT {
+    &quot;.mo&quot;, &quot;.io&quot;, &quot;_i.o&quot;, &quot;_m.o&quot;, &quot;.o&quot;, &quot;.obj&quot;, &quot;.exe&quot;,
+    &quot;.a&quot;, &quot;.sa&quot;, &quot;.lib&quot;, &quot;.so&quot;, &quot;.dll&quot;, &quot;.&quot;, &quot;..&quot;, &quot;.ps&quot;,
+    &quot;.gif&quot;, &quot;.dvi&quot;, &quot;.lect&quot;, &quot;.pdf&quot;
+  };
+
+VAR
+  on_unix : BOOLEAN;
+  Map     : ARRAY CHAR OF CHAR; (* for filename comparisons *)
+  verbose : BOOLEAN := FALSE;
+
+PROCEDURE <A NAME="Fix"><procedure>Fix</procedure></A> (path: TEXT;  top_level: BOOLEAN) =
+  BEGIN
+    IF top_level AND Text.Equal (path, &quot;-verbose&quot;) THEN
+      verbose := TRUE;
+    ELSIF OS.IsDirectory (path) THEN
+      FixDir (path);
+    ELSIF (top_level) OR AnyMatch (path, KnownSourceSuffixes) THEN
+      IF verbose THEN Err (&quot;fixing: &quot;, path); END;
+      FixFile (path);
+    ELSIF AnyMatch (path, KnownBinarySuffixes) THEN
+      (* silently skip over known binary files *)
+      IF verbose THEN Err (&quot;skipping: &quot;, path); END;
+    ELSE
+      Err (&quot;unrecognized file: &quot;, path, &quot;, ignored.&quot;);
+    END;
+  END Fix;
+
+PROCEDURE <A NAME="FixDir"><procedure>FixDir</procedure></A> (dir: TEXT) =
+  VAR iter: FS.Iterator;  nm: TEXT;
+  BEGIN
+    TRY
+      iter := FS.Iterate (dir);
+      WHILE iter.next (nm) DO
+        Fix (Pathname.Join (dir, nm, NIL), top_level := FALSE);
+      END;
+    EXCEPT OSError.E (ec) =&gt;
+      Err (&quot;trouble scanning: &quot;, dir, OSErr (ec));
+    END;
+  END FixDir;
+
+CONST
+  CR = ORD ('\r');
+  LF = ORD ('\n');
+  NL = ORD ('\n');
+
+TYPE
+  Buffer = REF ARRAY OF File.Byte;
+
+VAR
+  inbuf  := NEW (Buffer, 40000);
+  outbuf := NEW (Buffer, 60000);
+
+PROCEDURE <A NAME="FixFile"><procedure>FixFile</procedure></A> (path: TEXT) =
+  VAR
+    f: File.T;
+    size: INTEGER;
+    stat: File.Status;
+    in_len: INTEGER;
+    out_len: INTEGER;
+    saw_return: BOOLEAN;
+  BEGIN
+    (* inhale the file *)
+    TRY
+      f := FS.OpenFileReadonly (path);
+      TRY
+        stat := f.status ();
+        size := VAL(stat.size, INTEGER);
+        IF (size &lt;= 0) THEN RETURN; END;
+        MakeRoom (size);
+        in_len := f.read (SUBARRAY (inbuf^, 0, size), mayBlock := TRUE);
+        IF (in_len # size) THEN
+          Err (&quot;unable to read: &quot;, path, &quot;: expected &quot; &amp; Fmt.Int (size)
+               &amp; &quot; bytes, but got &quot; &amp; Fmt.Int (in_len));
+          RETURN;
+        END;
+      FINALLY
+        f.close ();
+      END;
+    EXCEPT OSError.E (ec) =&gt;
+      Err (&quot;trouble reading: &quot;, path, OSErr (ec));
+      RETURN;
+    END;
+
+    (* process the bytes *)
+    IF on_unix THEN (* =&gt; convert cr-lf pairs to newlines *)
+      out_len := 0;
+      FOR i := 0 TO in_len-1 DO
+        IF (inbuf[i] = CR) AND (i &lt; in_len-1) AND (inbuf[i+1] = LF) THEN
+          (* skip this carriage return *)
+        ELSE
+          outbuf[out_len] := inbuf[i];  INC (out_len);
+        END;
+      END;
+    ELSE (* windows =&gt; convert singleton newlines to cr-lf pairs *)
+      out_len := 0;  saw_return := FALSE;
+      FOR i := 0 TO in_len-1 DO
+        IF (inbuf[i] = CR) THEN
+          outbuf[out_len] := inbuf[i];  INC (out_len);
+          saw_return := TRUE;
+        ELSIF (inbuf[i] = NL) THEN
+          IF NOT saw_return THEN  outbuf[out_len] := CR;  INC (out_len);  END;
+          outbuf[out_len] := inbuf[i];  INC (out_len);
+          saw_return := FALSE;
+        ELSE
+          outbuf[out_len] := inbuf[i];  INC (out_len);
+          saw_return := FALSE;
+        END;
+      END;
+    END;
+
+    IF (in_len = out_len) THEN
+      (* no changes! *)
+      IF verbose THEN Err (&quot; =&gt; no changes&quot;); END;
+      RETURN;
+    ELSE
+      IF verbose THEN
+        Err (&quot; =&gt; mapping from &quot;, Fmt.Int (in_len),
+             &quot; to &quot; &amp; Fmt.Int (out_len) &amp; &quot; bytes&quot;);
+      END;
+    END;
+
+    (* write the file and fix-up the time stamps *)
+    TRY
+      f := FS.OpenFile (path);
+      TRY
+        IF (out_len &gt; 0) THEN
+          f.write (SUBARRAY (outbuf^, 0, out_len));
+        END;
+      FINALLY
+        OS.Close (f, stat.modificationTime, path);
+      END;
+    EXCEPT OSError.E (ec) =&gt;
+      Err (&quot;trouble writing: &quot;, path, OSErr (ec));
+    END;
+  END FixFile;
+
+PROCEDURE <A NAME="MakeRoom"><procedure>MakeRoom</procedure></A> (file_size: INTEGER) =
+  VAR len := NUMBER (inbuf^);
+  BEGIN
+    WHILE (file_size &gt; len) DO INC (len, len); END;
+    IF len # NUMBER (inbuf^) THEN
+      inbuf  := NEW (Buffer, len);
+      outbuf := NEW (Buffer, (3 * len) DIV 2);
+    END;
+  END MakeRoom;
+
+PROCEDURE <A NAME="AnyMatch"><procedure>AnyMatch</procedure></A> (path: TEXT;  READONLY suffixes: ARRAY OF TEXT): BOOLEAN =
+  BEGIN
+    FOR i := FIRST (suffixes) TO LAST (suffixes) DO
+      IF SuffixMatch (path, suffixes[i]) THEN RETURN TRUE; END;
+    END;
+    RETURN FALSE;
+  END AnyMatch;
+
+PROCEDURE <A NAME="SuffixMatch"><procedure>SuffixMatch</procedure></A> (path, suffix: TEXT): BOOLEAN =
+  VAR
+    len    := Text.Length (path);
+    slen   := Text.Length (suffix);
+    offset : INTEGER;
+  BEGIN
+    IF len &gt;= slen THEN
+      offset := len - slen;
+      FOR i := 0 TO slen-1 DO
+        IF Map [Text.GetChar(path, i+offset)] #
+	   Map [Text.GetChar(suffix, i)] THEN
+          RETURN FALSE;
+        END;
+      END;
+    END;
+    RETURN TRUE;
+  END SuffixMatch;
+
+PROCEDURE <A NAME="OSErr"><procedure>OSErr</procedure></A> (args: AtomList.T): TEXT =
+  VAR msg : TEXT := NIL;
+  BEGIN
+    WHILE (args # NIL) DO
+      IF (msg = NIL) THEN  msg := &quot;: &quot;;  ELSE  msg := msg &amp; &quot;  ***  &quot;;  END;
+      msg  := msg &amp; Atom.ToText (args.head);
+      args := args.tail;
+    END;
+    IF (msg = NIL) THEN msg := &quot;: ** NO INFO **&quot;; END;
+    RETURN msg;
+  END OSErr;
+
+PROCEDURE <A NAME="Err"><procedure>Err</procedure></A> (a, b, c: TEXT := NIL) =
+  &lt;*FATAL Wr.Failure, Thread.Alerted *&gt;
+  VAR wr := Stdio.stdout;
+  BEGIN
+    IF (a # NIL) THEN Wr.PutText (wr, a); END;
+    IF (b # NIL) THEN Wr.PutText (wr, b); END;
+    IF (c # NIL) THEN Wr.PutText (wr, c); END;
+    Wr.PutText (wr, Wr.EOL);
+    Wr.Flush (wr);
+  END Err;
+
+BEGIN
+  on_unix  := Text.Equal (&quot;a/b&quot;, Pathname.Join (&quot;a&quot;, &quot;b&quot;, NIL));
+
+  FOR c := FIRST (Map) TO LAST (Map) DO  Map [c] := c;  END;
+  IF NOT on_unix THEN (* windows has case insensitive file names *)
+    FOR c := 'a' TO 'z' DO
+      Map [c] := VAL (ORD (c) - ORD ('a') + ORD ('A'), CHAR);
+    END;
+  END;
+
+  FOR i := 1 TO Params.Count-1 DO
+    Fix (Params.Get (i), top_level := TRUE);
+  END;
+END Main.
+</PRE>
+</inModule>
+<HR>
+<A NAME="x1">interface OS is in:
+</A><UL>
+<LI><A HREF="../../cm3ide/src/utils/OS.i3.html#0TOP0">cm3ide/src/utils/OS.i3</A>
+<LI><A HREF="OS.i3.html#0TOP0">fix_nl/src/OS.i3</A>
+<LI><A HREF="../../m3browser/src/OS.i3.html#0TOP0">m3browser/src/OS.i3</A>
+</UL>
+<P>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

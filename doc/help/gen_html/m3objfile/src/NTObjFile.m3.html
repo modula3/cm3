@@ -12,7 +12,7 @@
                                                            
  Last modified on Mon Jan 30 08:33:00 PST 1995 by kalsow   
 
-<P><PRE>MODULE <module><implements><A HREF="NTObjFile.i3.html">NTObjFile</A></implements></module>;
+<P><PRE>UNSAFE MODULE <module><implements><A HREF="NTObjFile.i3.html">NTObjFile</A></implements></module>;
 
 IMPORT <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="../../libm3/derived/IntIntTbl.i3.html">IntIntTbl</A>, <A HREF="../../libm3/derived/TextIntTbl.i3.html">TextIntTbl</A>;
 IMPORT <A HREF="M3ObjFile.i3.html">M3ObjFile</A>, <A HREF="#x1">M3ID</A>, <A HREF="../../m3middle/src/POSIX/CoffTime.i3.html">CoffTime</A>, <A HREF="../../m3middle/src/Target.i3.html">Target</A>;
@@ -123,7 +123,6 @@ TYPE
 REVEAL
   <A NAME="T">T</A> = M3ObjFile.T BRANDED &quot;NTObjFile.T&quot; OBJECT
     n_sections       : INTEGER;
-    drectve          : Section;
     debug_S          : Section;
     text             : Section;
     data             : Section;
@@ -143,6 +142,7 @@ REVEAL
   OVERRIDES
     cursor            := Cursor;
     append            := Append;
+    appendBytes       := AppendBytes;
     patch             := Patch;
     relocate          := Relocate;
     import_symbol     := ImportSymbol;
@@ -202,9 +202,9 @@ CONST (* section flags *)
   S_CODE    = 16_00000020;
   S_DATA    = 16_00000040;
   S_BSS     = 16_00000080;
-  S_INFO    = 16_00000200;
-  S_REMOVE  = 16_00000800;
-  S_ALIGN1  = 16_00100000;
+</PRE><BLOCKQUOTE><EM>S_INFO    = 16_00000200; </EM></BLOCKQUOTE><PRE>
+</PRE>S_REMOVE  = 16_00000800; 
+  <PRE>S_ALIGN1  = 16_00100000;
 </PRE><BLOCKQUOTE><EM>S_ALIGN2  = 16_00200000; </EM></BLOCKQUOTE><PRE>
 </PRE>S_ALIGN4  = 16_00300000; 
   <PRE>S_ALIGN8  = 16_00400000;
@@ -242,7 +242,6 @@ CONST
     t.n_sections    := 0;
 
     IF (t.gen_debugging) THEN
-      InitSection (t, t.drectve, &quot;.drectve&quot;, S_ALIGN1 + S_REMOVE + S_INFO);
       InitSection (t, t.debug_S, &quot;.debug$S&quot;, DebugFlags);
     END;
     InitSection (t, t.text, &quot;.text&quot;, S_READ + S_EXEC + S_ALIGN16 + S_CODE);
@@ -278,7 +277,6 @@ CONST
     t.last_proc        := 0;
     t.last_source_line := 0;
 
-    AddSectSym (t, t.drectve);
     AddSectSym (t, t.debug_S);
     AddSectSym (t, t.text);
     AddSectSym (t, t.data);
@@ -288,12 +286,6 @@ CONST
     IF t.gen_debugging THEN
       AddRaw (t.debug_T, 1, 4); (* CV4 version stamp *)
       AddRaw (t.debug_S, 1, 4); (* CV4 version stamp *)
-
-      AddRaw (t.drectve, 16_6665642d, 4); (* &quot;-defaultlib:LIBC&quot; *)
-      AddRaw (t.drectve, 16_746c7561, 4);
-      AddRaw (t.drectve, 16_3a62696c, 4);
-      AddRaw (t.drectve, 16_4342494c, 4);
-      AddRaw (t.drectve, 16_20,       1);
     END;
 
     RETURN t;
@@ -340,21 +332,42 @@ PROCEDURE <A NAME="AddSectSym"><procedure>AddSectSym</procedure></A> (t: T;  REA
   END AddSectSym;
 </PRE>---------------------------------------------------------- construction ---
 
-<P><PRE>PROCEDURE <A NAME="Cursor"><procedure>Cursor</procedure></A> (t: T;  s: Seg): INTEGER =
+<P><PRE>PROCEDURE <A NAME="SegToSection"><procedure>SegToSection</procedure></A>(t: T; s: Seg): UNTRACED REF Section =
   BEGIN
-    IF (s = Seg.Text)
-      THEN RETURN t.text.raw_data.n_bytes;
-      ELSE RETURN t.data.raw_data.n_bytes;
+    IF s = Seg.Text THEN
+      RETURN ADR(t.text);
+    ELSE
+      RETURN ADR(t.data);
     END;
+  END SegToSection;
+
+PROCEDURE <A NAME="Cursor"><procedure>Cursor</procedure></A> (t: T;  s: Seg): INTEGER =
+  BEGIN
+    RETURN SegToSection(t, s).raw_data.n_bytes;
   END Cursor;
 
 PROCEDURE <A NAME="Append"><procedure>Append</procedure></A> (t: T;  s: Seg;  value, length: INTEGER) =
   BEGIN
-    IF (s = Seg.Text)
-      THEN AddRaw (t.text, value, length);
-      ELSE AddRaw (t.data, value, length);
-    END;
+    AddRaw (SegToSection(t, s)^, value, length);
   END Append;
+
+PROCEDURE <A NAME="AppendBytes"><procedure>AppendBytes</procedure></A> (t: T;  s: Seg;  READONLY bytes: ARRAY OF [0..255]) =
+  BEGIN
+    AddRawBytes (SegToSection(t, s)^, ADR(bytes[0]), NUMBER(bytes));
+  END AppendBytes;
+
+PROCEDURE <A NAME="AddRawBytes"><procedure>AddRawBytes</procedure></A> (VAR s: Section;  value: UNTRACED REF [0..255]; length: CARDINAL) =
+  VAR offs := s.raw_data.n_bytes;
+      seg  := EnsureLength (s.data, offs + length);
+  BEGIN
+    FOR i := 0 TO length - 1 DO
+      seg[offs] := VAL(value^, CHAR);
+      INC (offs);
+      INC (value);
+    END;
+    s.raw_data.n_bytes := offs;
+    s.raw_data.cnt     := offs;
+  END AddRawBytes;
 
 PROCEDURE <A NAME="AddRaw"><procedure>AddRaw</procedure></A> (VAR s: Section;  value, length: INTEGER) =
   VAR
@@ -409,10 +422,7 @@ PROCEDURE <A NAME="EnsureLength"><procedure>EnsureLength</procedure></A> (VAR b:
 
 PROCEDURE <A NAME="Patch"><procedure>Patch</procedure></A> (t: T;  s: Seg;  offset, value, length: INTEGER) =
   BEGIN
-    IF (s = Seg.Text)
-      THEN PatchRaw (t.text, offset, value, length);
-      ELSE PatchRaw (t.data, offset, value, length);
-    END;
+    PatchRaw (SegToSection(t, s)^, offset, value, length);
   END Patch;
 
 PROCEDURE <A NAME="PatchRaw"><procedure>PatchRaw</procedure></A> (VAR s: Section;  offset, value, length: INTEGER) =
@@ -985,7 +995,6 @@ PROCEDURE <A NAME="NoteProcedureOrigin"><procedure>NoteProcedureOrigin</procedur
     (* compute the file and address space layouts *)
     file_offset := HeaderSize + t.n_sections * SectionSize;
     cur_virtual := 0;
-    LayoutSection (t.drectve, file_offset, cur_virtual);
     LayoutSection (t.debug_S, file_offset, cur_virtual);
     LayoutSection (t.text,    file_offset, cur_virtual);
     LayoutSection (t.data,    file_offset, cur_virtual);
@@ -1002,14 +1011,12 @@ PROCEDURE <A NAME="NoteProcedureOrigin"><procedure>NoteProcedureOrigin</procedur
     OutS (t, 0);       (* size of optional header *)
     OutS (t, 0);       (* flags =&gt; +reloc, -exec, +lineno, +locals *)
 
-    WriteSectionHeader (t, t.drectve);
     WriteSectionHeader (t, t.debug_S);
     WriteSectionHeader (t, t.text);
     WriteSectionHeader (t, t.data);
     WriteSectionHeader (t, t.bss);
     WriteSectionHeader (t, t.debug_T);
 
-    WriteSection (t, t.drectve);
     WriteSection (t, t.debug_S);
     WriteSection (t, t.text);
     WriteSection (t, t.data);
@@ -1309,8 +1316,7 @@ PROCEDURE <A NAME="WriteSym"><procedure>WriteSym</procedure></A> (t: T;  READONL
         OutC (t, '\003');      (* storage class = static *)
         OutC (t, '\001');      (* #aux = 1*)
 
-        IF    (sym.offset = t.drectve.id) THEN WriteSectAux (t, t.drectve);
-        ELSIF (sym.offset = t.debug_S.id) THEN WriteSectAux (t, t.debug_S);
+        IF    (sym.offset = t.debug_S.id) THEN WriteSectAux (t, t.debug_S);
         ELSIF (sym.offset = t.text.id)    THEN WriteSectAux (t, t.text);
         ELSIF (sym.offset = t.data.id)    THEN WriteSectAux (t, t.data);
         ELSIF (sym.offset = t.bss.id)     THEN WriteSectAux (t, t.bss);

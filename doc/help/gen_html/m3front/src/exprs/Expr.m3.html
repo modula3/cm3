@@ -147,26 +147,26 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (t: T) =
     t.compile ();
   END Compile;
 
-PROCEDURE <A NAME="PrepLValue"><procedure>PrepLValue</procedure></A> (t: T; lhs: BOOLEAN) =
+PROCEDURE <A NAME="PrepLValue"><procedure>PrepLValue</procedure></A> (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     Type.Compile (t.type);
     &lt;* ASSERT t.checked *&gt;
-    t.prepLV (lhs);
+    t.prepLV (traced);
   END PrepLValue;
 
-PROCEDURE <A NAME="CompileLValue"><procedure>CompileLValue</procedure></A> (t: T; lhs: BOOLEAN) =
+PROCEDURE <A NAME="CompileLValue"><procedure>CompileLValue</procedure></A> (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     &lt;* ASSERT t.checked *&gt;
-    t.compileLV (lhs);
+    t.compileLV (traced);
   END CompileLValue;
 
-PROCEDURE <A NAME="CompileAddress"><procedure>CompileAddress</procedure></A> (t: T; lhs: BOOLEAN) =
+PROCEDURE <A NAME="CompileAddress"><procedure>CompileAddress</procedure></A> (t: T; traced: BOOLEAN) =
   BEGIN
     IF (t = NIL) THEN RETURN END;
     &lt;* ASSERT t.checked *&gt;
-    t.compileLV (lhs);
+    t.compileLV (traced);
     CG.Check_byte_aligned ();
   END CompileAddress;
 
@@ -303,7 +303,7 @@ PROCEDURE <A NAME="NoCompile"><procedure>NoCompile</procedure></A> (&lt;*UNUSED*
     &lt;*ASSERT FALSE*&gt;
   END NoCompile;
 
-PROCEDURE <A NAME="NotLValue"><procedure>NotLValue</procedure></A> (&lt;*UNUSED*&gt; t: T; &lt;*UNUSED*&gt; lhs: BOOLEAN) =
+PROCEDURE <A NAME="NotLValue"><procedure>NotLValue</procedure></A> (&lt;*UNUSED*&gt; t: T; &lt;*UNUSED*&gt; traced: BOOLEAN) =
   BEGIN
     &lt;* ASSERT FALSE *&gt;
   END NotLValue;

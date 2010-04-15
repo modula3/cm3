@@ -160,7 +160,7 @@ PROCEDURE <A NAME="Decode"><procedure>Decode</procedure></A>(t: TEXT): T
       SetFlags(fa, ScanInt(t, pos, FlagsRadix, &quot;flags&quot;));
     END;
     IF AttrType.LinkCount IN fa.mask THEN
-      fa.stat.st_nlink := VAL(ScanInt(t, pos, LinkCountRadix, &quot;linkCount&quot;), nlink_t);
+      fa.stat.st_nlink := ScanLong(t, pos, LinkCountRadix, &quot;linkCount&quot;);
     ELSE
       (* If the link count is missing but supported, fake it as 1. *)
       IF AttrType.LinkCount IN Supported[fa.fileType] THEN
@@ -242,7 +242,7 @@ PROCEDURE <A NAME="Encode"><procedure>Encode</procedure></A>(fa: T;
       IF fa.stat.st_nlink = VAL(1, nlink_t) THEN
 	mask := mask - AttrTypes{AttrType.LinkCount};
       ELSE
-	EncodeCounted(Fmt.Unsigned(ORD(fa.stat.st_nlink), LinkCountRadix),
+	EncodeCounted(Fmt.LongUnsigned(fa.stat.st_nlink, LinkCountRadix),
 	  pieces, nextPiece);
       END;
     END;
@@ -313,6 +313,47 @@ PROCEDURE <A NAME="ScanText"><procedure>ScanText</procedure></A>(t: TEXT; VAR po
     RETURN at;
   END ScanText;
 
+PROCEDURE <A NAME="ScanInt"><procedure>ScanInt</procedure></A>(t: TEXT;
+                  VAR pos: CARDINAL;
+                  radix: [2..16] := 10;
+                  what: TEXT := &quot;counted integer&quot;): Word.T
+  RAISES {TokScan.Error} =
+  VAR
+    tLen := Text.Length(t);
+    count, val: Word.T := 0;
+    ch: CHAR;
+    digit: INTEGER;
+  BEGIN
+    WHILE pos &lt; tLen DO
+      ch := Text.GetChar(t, pos);
+      INC(pos);
+      IF ch &lt; '0' OR ch &gt; '9' THEN EXIT END;
+      count := Word.Plus(Word.Times(count, 10), ORD(ch) - ORD('0'));
+    END;
+    IF pos &gt;= tLen OR ch # '#' THEN
+      RAISE TokScan.Error(&quot;Missing \&quot;#\&quot; in &quot; &amp; what);
+    END;
+    IF pos + count &gt; tLen THEN
+      RAISE TokScan.Error(&quot;Short counted file attribute&quot;);
+    END;
+    FOR i := 1 TO count DO
+      ch := Text.GetChar(t, pos);
+      INC(pos);
+      CASE ch OF
+      | '0'..'9' =&gt; digit := ORD(ch) - ORD('0');
+      | 'a'..'f' =&gt; digit := ORD(ch) - ORD('a') + 10;
+      | 'A'..'F' =&gt; digit := ORD(ch) - ORD('A') + 10;
+      ELSE
+	digit := radix;
+      END;
+      IF digit &gt;= radix THEN
+	RAISE TokScan.Error(&quot;Invalid &quot; &amp; what);
+      END;
+      val := Word.Plus(Word.Times(val, radix), digit);
+    END;
+    RETURN val;
+  END ScanInt;
+
 PROCEDURE <A NAME="ScanLong"><procedure>ScanLong</procedure></A>(t: TEXT;
                   VAR pos: CARDINAL;
                   radix: [2..16] := 10;
@@ -354,15 +395,6 @@ PROCEDURE <A NAME="ScanLong"><procedure>ScanLong</procedure></A>(t: TEXT;
     END;
     RETURN val;
   END ScanLong;
-
-PROCEDURE <A NAME="ScanInt"><procedure>ScanInt</procedure></A>(t: TEXT;
-                  VAR pos: CARDINAL;
-                  radix: [2..16] := 10;
-                  what: TEXT := &quot;counted integer&quot;): Word.T
-  RAISES {TokScan.Error} =
-  BEGIN
-    RETURN ORD(ScanLong(t, pos, radix, what));
-  END ScanInt;
 
 PROCEDURE <A NAME="IsSupported"><procedure>IsSupported</procedure></A>(fa: T; READONLY support: SupportInfo): BOOLEAN =
   BEGIN
@@ -767,8 +799,8 @@ PROCEDURE <A NAME="Install"><procedure>Install</procedure></A>(fa: T; to: Pathna
 	VAR
 	  times: ARRAY [0..1] OF Utime.struct_timeval;
 	BEGIN
-	  EVAL Utime.gettimeofday(times[0], NIL);  (* Access time. *)
-	  times[1].tv_sec := ORD(fa.stat.st_mtime);
+	  EVAL Utime.gettimeofday(times[0]);  (* Access time. *)
+	  times[1].tv_sec := VAL(fa.stat.st_mtime, INTEGER);
 	  times[1].tv_usec := 0;
 	  EVAL Unix.utimes(fromStr, ADR(times));
 	END;
@@ -873,7 +905,7 @@ PROCEDURE <A NAME="GetModTime"><procedure>GetModTime</procedure></A>(fa: T): Tim
 PROCEDURE <A NAME="GetSize"><procedure>GetSize</procedure></A>(fa: T): CARDINAL =
   BEGIN
     &lt;* ASSERT AttrType.Size IN fa.mask *&gt;
-    RETURN ORD(fa.stat.st_size);
+    RETURN VAL(fa.stat.st_size, CARDINAL);
   END GetSize;
 
 PROCEDURE <A NAME="SetSize"><procedure>SetSize</procedure></A>(fa: T; size: CARDINAL) =
@@ -904,7 +936,7 @@ PROCEDURE <A NAME="GetLinkTarget"><procedure>GetLinkTarget</procedure></A>(fa: T
 PROCEDURE <A NAME="GetLinkCount"><procedure>GetLinkCount</procedure></A>(fa: T): CARDINAL =
   BEGIN
     &lt;* ASSERT AttrType.LinkCount IN fa.mask *&gt;
-    RETURN ORD(fa.stat.st_nlink);
+    RETURN VAL(fa.stat.st_nlink, CARDINAL);
   END GetLinkCount;
 </PRE>***************************************************************************
  Encoding/decoding of owners and groups. 
@@ -1004,8 +1036,7 @@ PROCEDURE <A NAME="DecodeGroup"><procedure>DecodeGroup</procedure></A>(name: TEX
   END DecodeGroup;
 
 PROCEDURE <A NAME="EncodeGroup"><procedure>EncodeGroup</procedure></A>(gid: Utypes.gid_t; VAR name: TEXT): BOOLEAN =
-  VAR group: Ugrp.struct_group;
-	  tName: TEXT;
+  VAR group: Ugrp.struct_group;  tName: TEXT;
   BEGIN
     LOCK gidLock DO
       BEGIN

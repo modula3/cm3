@@ -9,22 +9,15 @@
 <PRE></PRE> $Id$ 
 <PRE>UNSAFE INTERFACE <interface>Termios</interface>;
 
-CONST
-  Stdin = 0;
-  Stdout = 1;
-  Stderr = 2;
-
-  Tcsanow = 0;
-  Tcsadrain = 1;
-  Tcsaflush = 2;
-  Tcsasoft = 16;
+FROM <A HREF="../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int;
+</PRE>CONST
+<PRE>&lt;*EXTERNAL Termios__Stdin*&gt;     VAR Stdin: int;
+&lt;*EXTERNAL Termios__Tcsanow*&gt;   VAR Tcsanow: int;
 
 TYPE
-  T = REF ARRAY [0..511] OF CHAR;
+  T = ADDRESS;
 
-&lt;*EXTERNAL tcgetattr*&gt; PROCEDURE tcgetattr(fd: INTEGER; t: T);
-&lt;*EXTERNAL cfmakeraw*&gt; PROCEDURE cfmakeraw(t: T);
-&lt;*EXTERNAL tcsetattr*&gt; PROCEDURE tcsetattr(fd, action: INTEGER; t: T);
+&lt;*EXTERNAL Termios__tcsetattr*&gt; PROCEDURE tcsetattr(fd, action: int; t: T);
 
 END Termios.
 </PRE>

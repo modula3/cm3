@@ -1,0 +1,125 @@
+<HTML>
+<HEAD>
+<TITLE>Critical Mass Modula-3: m3staloneback/src/Main.m3</TITLE>
+</HEAD>
+<BODY bgcolor="#ffffff">
+<A NAME="0TOP0">
+<H2>m3staloneback/src/Main.m3</H2></A><HR>
+<inModule>
+<PRE></PRE> Copyright (C) 1994, Digital Equipment Corporation           
+ All rights reserved.                                        
+ See the file COPYRIGHT for a full description.              
+                                                             
+ Last modified on Wed Dec 14 14:43:35 PST 1994 by kalsow     
+      modified on Mon Sep 26 14:47:43 PDT 1994 by isard      
+
+<P><PRE>MODULE <module><implements><A HREF="../../m3core/src/main/Main.i3.html">Main</A></implements></module>;
+
+IMPORT <A HREF="../../libm3/src/rw/FileRd.i3.html">FileRd</A>, <A HREF="../../libm3/src/rw/FileWr.i3.html">FileWr</A>, <A HREF="../../libm3/src/rw/IO.i3.html">IO</A>, <A HREF="../../m3middle/src/M3CG_Rd.i3.html">M3CG_Rd</A>, <A HREF="../../m3middle/src/M3CG_Ops.i3.html">M3CG_Ops</A>, <A HREF="../../m3back/src/M3x86.i3.html">M3x86</A>, <A HREF="../../m3middle/src/M3CG.i3.html">M3CG</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/src/params/Params.i3.html">Params</A>;
+IMPORT <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../m3middle/src/Target.i3.html">Target</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../m3objfile/src/MasmObjFile.i3.html">MasmObjFile</A>, <A HREF="../../m3objfile/src/NTObjFile.i3.html">NTObjFile</A>, <A HREF="../../m3objfile/src/M3ObjFile.i3.html">M3ObjFile</A>;
+&lt;*FATAL ANY*&gt;
+
+PROCEDURE <A NAME="PrintErr"><procedure>PrintErr</procedure></A>(txt: TEXT) =
+  BEGIN
+    IO.Put (txt, Stdio.stderr);
+    Wr.Close (out); Rd.Close (in);
+    IF debug THEN Wr.Close (log) END;
+    &lt;* ASSERT FALSE *&gt;
+  END PrintErr;
+
+VAR
+  cg: M3CG.T;
+  obj: M3ObjFile.T;
+  gFlag := FALSE;
+  debug := FALSE;
+  objformat := FALSE;
+  input, output, logfile: TEXT;
+  i := 0;
+  in: FileRd.T;
+  out, log: FileWr.T;
+  target_init := Target.Init (&quot;NT386&quot;);
+
+BEGIN
+  &lt;*ASSERT target_init*&gt;
+
+  WHILE i &lt; Params.Count DO
+    WITH opt = Params.Get (i) DO
+      IF    Text.Equal (Text.Sub (opt, 0, 2), &quot;-g&quot;) THEN
+         gFlag := TRUE
+      ELSIF Text.Equal (opt, &quot;-o&quot;) AND i &lt; Params.Count - 1 THEN
+        INC (i); output := Params.Get (i)
+      ELSIF Text.Equal (opt, &quot;-v&quot;) THEN
+        debug := TRUE
+      ELSIF Text.Equal (opt, &quot;-NTObj&quot;) THEN
+        objformat := TRUE
+      ELSIF Text.GetChar (opt, 0) # '-' THEN
+        input := opt
+      END
+    END;
+    INC (i)
+  END;
+
+  logfile := input &amp; &quot;log&quot;;
+
+  TRY
+    EVAL Target.Init (&quot;-NT386&quot;);
+    in  := FileRd.Open (input);
+    out := FileWr.Open (output);
+
+    IF objformat THEN
+      obj := NTObjFile.New();
+    ELSE
+      obj := MasmObjFile.New();
+    END;
+
+    IF debug THEN
+      log := FileWr.Open (logfile);
+      cg := M3x86.New (log, obj);
+    ELSE
+      cg := M3x86.New (NIL, obj);
+    END;
+
+    cg.set_error_handler (PrintErr);
+    M3CG_Rd.Inhale (in, cg);
+
+    IF objformat THEN
+      NTObjFile.Dump(obj, out);
+    ELSE
+      MasmObjFile.Dump(obj, out);
+    END;
+
+    IF debug THEN Wr.Close (log) END;
+    Wr.Close (out); Rd.Close (in)
+  EXCEPT
+    OSError.E =&gt; IO.Put (&quot;m3cg: IO error\n&quot;, Stdio.stderr)
+  END;
+END Main.
+</PRE>
+</inModule>
+<PRE>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</PRE>
+</BODY>
+</HTML>

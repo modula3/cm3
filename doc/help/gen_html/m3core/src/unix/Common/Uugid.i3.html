@@ -10,12 +10,15 @@
  All rights reserved.                                       
  See the file COPYRIGHT for a full description.             
 
-<P><PRE>&lt;*EXTERNAL*&gt; INTERFACE <interface>Uugid</interface>;
+<P><PRE>INTERFACE <interface>Uugid</interface>;
 
 FROM <A HREF="#x1">Utypes</A> IMPORT gid_t, uid_t;
+FROM <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int;
 
-PROCEDURE geteuid (): uid_t;
-PROCEDURE getegid (): gid_t;
+&lt;*EXTERNAL &quot;Uugid__geteuid&quot;*&gt;PROCEDURE geteuid (): uid_t;
+&lt;*EXTERNAL &quot;Uugid__getegid&quot;*&gt;PROCEDURE getegid (): gid_t;
+&lt;*EXTERNAL &quot;Uugid__getuid&quot;*&gt;PROCEDURE getuid(): uid_t;
+&lt;*EXTERNAL &quot;Uugid__setreuid&quot;*&gt;PROCEDURE setreuid(ruid: uid_t; euid: uid_t): int;
 
 END Uugid.
 </PRE>

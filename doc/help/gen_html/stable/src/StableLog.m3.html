@@ -140,10 +140,26 @@ PROCEDURE <A NAME="OutInteger"><procedure>OutInteger</procedure></A> (log: Wr.T;
     END
   END OutInteger;
 
+PROCEDURE <A NAME="OutLongint"><procedure>OutLongint</procedure></A> (log: Wr.T; i: LONGINT) =
+  BEGIN
+    TRY
+      Wr.PutString(log, LOOPHOLE(i, ARRAY [0..BYTESIZE(LONGINT)-1] OF CHAR));
+    EXCEPT
+      Wr.Failure (err) =&gt;
+        StableError.Halt(
+          &quot;Cannot write to logfile: &quot; &amp; RdUtils.FailureText(err))
+    END
+  END OutLongint;
+
 PROCEDURE <A NAME="OutCardinal"><procedure>OutCardinal</procedure></A> (log: Wr.T; card: CARDINAL) =
   BEGIN
     OutInteger(log, card)
   END OutCardinal;
+
+PROCEDURE <A NAME="OutLongcard"><procedure>OutLongcard</procedure></A> (log: Wr.T; card: LONGCARD) =
+  BEGIN
+    OutLongint(log, card)
+  END OutLongcard;
 
 PROCEDURE <A NAME="OutBoolean"><procedure>OutBoolean</procedure></A> (log: Wr.T; bool: BOOLEAN) =
   BEGIN
@@ -270,12 +286,44 @@ PROCEDURE <A NAME="InInteger"><procedure>InInteger</procedure></A> (log: Rd.T;
     END (*IF*)
   END InInteger;
 
+PROCEDURE <A NAME="InLongint"><procedure>InLongint</procedure></A> (log: Rd.T;
+                     min         := FIRST(LONGINT);
+                     max         := LAST(LONGINT)   ):
+    LONGINT RAISES {Error} =
+  VAR
+    i: LONGINT;
+  BEGIN
+    TRY
+      IF Rd.GetSub(log, LOOPHOLE(i, ARRAY [0..BYTESIZE(LONGINT)-1] OF CHAR))
+          # BYTESIZE(LONGINT) THEN
+        RAISE Error
+      END;
+    EXCEPT
+    | Rd.Failure (err) =&gt;
+        StableError.Halt(&quot;InLongint: Can not read log file: &quot;
+                           &amp; RdUtils.FailureText(err))
+    END;
+
+    IF min &lt;= i AND i &lt;= max THEN
+      RETURN i
+    ELSE
+      RAISE Error
+    END (*IF*)
+  END InLongint;
+
 PROCEDURE <A NAME="InCardinal"><procedure>InCardinal</procedure></A> (log: Rd.T;
                       lim: CARDINAL := LAST(CARDINAL)):
   CARDINAL RAISES {Error} =
   BEGIN
     RETURN InInteger(log, 0, lim)
   END InCardinal;
+
+PROCEDURE <A NAME="InLongcard"><procedure>InLongcard</procedure></A> (log: Rd.T;
+                      lim: LONGCARD := LAST(LONGCARD)):
+  LONGCARD RAISES {Error} =
+  BEGIN
+    RETURN InLongint(log, 0L, lim)
+  END InLongcard;
 
 PROCEDURE <A NAME="InBoolean"><procedure>InBoolean</procedure></A> (log: Rd.T): BOOLEAN RAISES {Error} =
   BEGIN

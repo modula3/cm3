@@ -13,7 +13,7 @@ IMPORT <A HREF="../../../libm3/src/params/Params.i3.html">Params</A>, <A HREF=".
 IMPORT <A HREF="../../../libm3/src/params/Env.i3.html">Env</A>, <A HREF="../../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../../tcp/src/common/IP.i3.html">IP</A>, <A HREF="../../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../../libm3/src/os/Common/FS.i3.html">FS</A>;
 IMPORT <A HREF="../../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../../libm3/src/rw/IO.i3.html">IO</A>, <A HREF="../../../libm3/derived/TextList.i3.html">TextList</A>, <A HREF="../../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../../libm3/src/rw/Wr.i3.html">Wr</A>;
 IMPORT <A HREF="../../../m3quake/src/Quake.i3.html">Quake</A>, <A HREF="../../../m3quake/src/QCompiler.i3.html">QCompiler</A>, <A HREF="../../../m3quake/src/QIdent.i3.html">QIdent</A>, <A HREF="../../../m3quake/src/QMachine.i3.html">QMachine</A>, <A HREF="../../../m3quake/src/QValue.i3.html">QValue</A>;
-IMPORT <A HREF="ConfigItem.i3.html">ConfigItem</A>, <A HREF="#x2">ID</A>, <A HREF="../../../m3quake/src/MxConfig.i3.html">MxConfig</A> AS M3Config, <A HREF="../../../m3middle/src/M3File.i3.html">M3File</A>, <A HREF="../nodes/PkgRoot.i3.html">PkgRoot</A>, <A HREF="UserState.i3.html">UserState</A>;
+IMPORT <A HREF="ConfigItem.i3.html">ConfigItem</A>, <A HREF="#x2">ID</A>, <A HREF="../../../m3quake/src/MxConfig.i3.html">MxConfig</A>, <A HREF="../../../m3middle/src/M3File.i3.html">M3File</A>, <A HREF="../nodes/PkgRoot.i3.html">PkgRoot</A>, <A HREF="UserState.i3.html">UserState</A>;
 
 TYPE CI = ConfigItem.T;
 </PRE>-------------------------------------------------- initialization ---
@@ -34,16 +34,16 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
     path_sep := PathSep [on_unix];
 
     (* cm3 configuration *)
-    IF M3Config.FindFile () = NIL THEN
+    IF MxConfig.FindFile () = NIL THEN
       Die (&quot;Unable to locate a cm3 configuration file.&quot;, Wr.EOL,
            &quot;Apparently \&quot;cm3\&quot; is not on your search path.&quot;);
     END;
 
-    build_dir       := M3Config.Get (&quot;BUILD_DIR&quot;);
-    system_root     := M3Config.Get (&quot;PKG_USE&quot;); (* note: system_root is the public package root *)
-    doc_root        := M3Config.Get (&quot;DOC_INSTALL&quot;);
-    initial_browser := M3Config.Get (&quot;INITIAL_CM3_IDE_BROWSER&quot;);
-    initial_editor  := M3Config.Get (&quot;INITIAL_CM3_IDE_EDITOR&quot;);
+    build_dir       := MxConfig.Get (&quot;BUILD_DIR&quot;);
+    system_root     := MxConfig.Get (&quot;PKG_USE&quot;); (* note: system_root is the public package root *)
+    doc_root        := MxConfig.Get (&quot;DOC_INSTALL&quot;);
+    initial_browser := MxConfig.Get (&quot;INITIAL_CM3_IDE_BROWSER&quot;);
+    initial_editor  := MxConfig.Get (&quot;INITIAL_CM3_IDE_EDITOR&quot;);
 </PRE> Following code added by RCC to attempt to find/construct certain critical roots if they weren't found above 
  Note that the typical installation's pathname hierarchy (using POSIX-style path syntax) is:
 <PRE>
@@ -55,7 +55,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
 
    <PRE>IF (build_dir = NIL)
    THEN (* attempt to substitute 'TARGET' for 'BUILD_DIR' *)
-      WITH p = M3Config.Get (&quot;TARGET&quot;) DO
+      WITH p = MxConfig.Get (&quot;TARGET&quot;) DO
          IF (p # NIL) THEN
             build_dir :=  p;
             ErrLog.Msg (&quot;CAUTION:  BUILD_DIR not defined in cm3.cfg, setting it to TARGET:  &quot;, build_dir);
@@ -64,7 +64,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
    END;
    IF (system_root = NIL)
    THEN (* attempt to construct pkg root from 'INSTALL_ROOT' *)
-      WITH p = M3Config.Get (&quot;INSTALL_ROOT&quot;) DO
+      WITH p = MxConfig.Get (&quot;INSTALL_ROOT&quot;) DO
          IF (p # NIL) THEN
             system_root := Pathname.Join (p, &quot;pkg&quot;, NIL);
             IF M3File.IsDirectory(system_root) THEN
@@ -78,7 +78,7 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
    IF (system_root = NIL)
    THEN (* attempt to construct pkg root using the path to the cm3.cfg *)
       TRY
-         WITH p = M3Config.FindFile (), (* earlier code checked that result is not NIL *)
+         WITH p = MxConfig.FindFile (), (* earlier code checked that result is not NIL *)
               folder = Pathname.Prefix (FS.GetAbsolutePathname(p)),
               parent = Pathname.Prefix (folder),
               tryPkgRoot = Pathname.Join (parent, &quot;pkg&quot;, NIL)
@@ -127,13 +127,13 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> () =
 
     IF (build_dir = NIL) THEN
       Die (&quot;The build directory was not defined.  Either the configuration&quot;
-         &amp; Wr.EOL &amp; &quot;file, &quot;, M3Config.FindFile (), &quot;, contains a syntax error or&quot;
+         &amp; Wr.EOL &amp; &quot;file, &quot;, MxConfig.FindFile (), &quot;, contains a syntax error or&quot;
          &amp; Wr.EOL &amp; &quot;it doesn't define BUILD_DIR.&quot;);
     END;
 
     IF (system_root = NIL) THEN
       Die (&quot;The system package root was not defined.  Either the configuration&quot;
-         &amp; Wr.EOL &amp; &quot;file, &quot;, M3Config.FindFile (), &quot;, contains a syntax error or&quot;
+         &amp; Wr.EOL &amp; &quot;file, &quot;, MxConfig.FindFile (), &quot;, contains a syntax error or&quot;
          &amp; Wr.EOL &amp; &quot;it doesn't define PKG_USE.&quot;);
     END;
 

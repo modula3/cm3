@@ -10,9 +10,9 @@
 
 <P><PRE>MODULE <module><implements><A HREF="M3Sym.i3.html">M3Sym</A></implements></module>;
 
-IMPORT <A HREF="#x1">Buf</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="#x2">Text2</A>, <A HREF="#x3">M3Scanner</A>;
+IMPORT <A HREF="#x1">Buf</A>, <A HREF="../../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../utils/Text2.i3.html">Text2</A>, <A HREF="#x2">M3Scanner</A>;
 
-FROM <A HREF="#x3">M3Scanner</A> IMPORT
+FROM <A HREF="#x2">M3Scanner</A> IMPORT
   TK_Module, TK_Interface, TK_Generic, TK_Procedure, TK_Ident,
   TK_Exports, TK_Semi, TK_Equal, TK_From, TK_Import, TK_As, TK_Comma,
   TK_Type, TK_Reveal, TK_Const, TK_Exception, TK_Var, TK_Subtype,
@@ -688,14 +688,7 @@ END M3Sym.
 </UL>
 <P>
 <HR>
-<A NAME="x2">interface Text2 is in:
-</A><UL>
-<LI><A HREF="../utils/Text2.i3.html#0TOP0">cm3ide/src/utils/Text2.i3</A>
-<LI><A HREF="../../../cminstall/src/Text2.i3.html#0TOP0">cminstall/src/Text2.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">interface M3Scanner is in:
+<A NAME="x2">interface M3Scanner is in:
 </A><UL>
 <LI><A HREF="../../../m3scan/src/M3Scanner.i3.html#0TOP0">m3scan/src/M3Scanner.i3</A>
 <LI><A HREF="../../../m3scanner/src/M3Scanner.i3.html#0TOP0">m3scanner/src/M3Scanner.i3</A>

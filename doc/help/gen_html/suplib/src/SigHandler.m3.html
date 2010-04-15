@@ -33,8 +33,7 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id$ 
+ 
 
 <P> This module works as follows.  A Unix pipe is created, but unlike
    typical pipes, it is used entirely within a single process.  When
@@ -53,40 +52,28 @@
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="SigHandler.i3.html">SigHandler</A></implements></module>;
 
 IMPORT
-  <A HREF="../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../m3core/src/thread/Common/SchedulerPosix.i3.html">SchedulerPosix</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="#x1">Uerror</A>, <A HREF="#x2">Unix</A>, <A HREF="UnixMisc.i3.html">UnixMisc</A>, <A HREF="#x3">Uuio</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>;
+  <A HREF="../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A>, <A HREF="../../m3core/src/thread/Common/SchedulerPosix.i3.html">SchedulerPosix</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="#x1">Uerror</A>, <A HREF="#x2">Unix</A>, <A HREF="UnixMisc.i3.html">UnixMisc</A>, <A HREF="#x3">Uuio</A>, <A HREF="../../m3core/src/word/Word.i3.html">Word</A>,
+  <A HREF="../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../m3core/src/runtime/common/RTProcess.i3.html">RTProcess</A>;
 
-IMPORT <A HREF="../../m3core/src/C/Common/Cerrno.i3.html">Cerrno</A>;
-
-TYPE
-  Dispatcher = Thread.Closure OBJECT
-    handlers := ARRAY SigNum OF T { NIL, .. };
-    rfd: INTEGER;
-    mu: MUTEX;
-    state, desiredState: State;
-    changeState: Thread.Condition;
-    stateChanged: Thread.Condition;
-    thread: Thread.T;
-  OVERRIDES
-    apply := DispatcherRun;
-  END;
-
-  State = { Running, Blocked, ShutDown };
+TYPE State = { Running, Blocked, ShutDown };
 
 VAR
-  wfd: INTEGER;
-  dispatcher := NEW(Dispatcher,
-    mu := NEW(MUTEX),
-    changeState := NEW(Thread.Condition),
-    stateChanged := NEW(Thread.Condition),
-    desiredState := State.ShutDown,
-    state := State.ShutDown);
+  handlers := ARRAY SigNum OF T { NIL, .. };
+  rfd: INTEGER := -1;
+  wfd: INTEGER := -1;
+  mu: MUTEX := NEW(MUTEX);
+  state: State := State.ShutDown;
+  desiredState: State := State.ShutDown;
+  changeState: Thread.Condition := NEW(Thread.Condition);
+  stateChanged: Thread.Condition := NEW(Thread.Condition);
+  thread: Thread.T := NIL;
 
 EXCEPTION Fatal(TEXT);
 &lt;* FATAL Fatal *&gt;
 
 PROCEDURE <A NAME="Block"><procedure>Block</procedure></A>() =
   BEGIN
-    ChangeState(dispatcher, State.Blocked);
+    ChangeState(State.Blocked);
   END Block;
 
 PROCEDURE <A NAME="Catch"><procedure>Catch</procedure></A>(sig: Ctypes.int) =
@@ -96,59 +83,59 @@ PROCEDURE <A NAME="Catch"><procedure>Catch</procedure></A>(sig: Ctypes.int) =
     EVAL Uuio.write(wfd, ADR(ch), 1);
   END Catch;
 
-PROCEDURE <A NAME="ChangeState"><procedure>ChangeState</procedure></A>(d: Dispatcher; state: State) =
+PROCEDURE <A NAME="ChangeState"><procedure>ChangeState</procedure></A>(state: State) =
   (* Ask the dispatcher thread to change to a new state, and wait until
      it has made the change. *)
   BEGIN
-    LOCK d.mu DO
-      d.desiredState := state;
-      IF d.state # d.desiredState THEN
-	IF d.state = State.Running THEN
+    LOCK mu DO
+      desiredState := state;
+      IF state # desiredState THEN
+	IF state = State.Running THEN
 	  (* Send dummy signal 0 to wake up the dispatcher. *)
 	  Catch(0);
 	ELSE
-	  Thread.Signal(d.changeState);
+	  Thread.Signal(changeState);
 	END;
-	WHILE d.state # d.desiredState DO
-	  Thread.Wait(d.mu, d.stateChanged);
+	WHILE state # desiredState DO
+	  Thread.Wait(mu, stateChanged);
 	END;
       END;
     END;
   END ChangeState;
 
-PROCEDURE <A NAME="DispatcherRun"><procedure>DispatcherRun</procedure></A>(self: Dispatcher): REFANY =
+PROCEDURE <A NAME="DispatcherRun"><procedure>DispatcherRun</procedure></A>(&lt;* UNUSED *&gt; closure: Thread.Closure): REFANY =
   VAR
     oldState, newState: State;
   BEGIN
     LOOP
-      LOCK self.mu DO
-	oldState := self.state;
-	newState := self.desiredState;
-	self.state := newState;
+      LOCK mu DO
+	oldState := state;
+	newState := desiredState;
+	state := newState;
       END;
       IF oldState # newState THEN
-	Thread.Signal(self.stateChanged);
+	Thread.Signal(stateChanged);
       END;
       CASE newState OF
-      | State.Running  =&gt; DoDispatch(self);
-      | State.Blocked  =&gt; DoBlock(self);
-      | State.ShutDown =&gt; DoShutDown(self);  EXIT;
+      | State.Running  =&gt; DoDispatch();
+      | State.Blocked  =&gt; DoBlock();
+      | State.ShutDown =&gt; ShutDown();  EXIT;
       END;
     END;
     RETURN NIL;
   END DispatcherRun;
 
-PROCEDURE <A NAME="DoBlock"><procedure>DoBlock</procedure></A>(self: Dispatcher) =
+PROCEDURE <A NAME="DoBlock"><procedure>DoBlock</procedure></A>() =
   (* Pause doing nothing until a different state is requested. *)
   BEGIN
-    LOCK self.mu DO
-      WHILE self.desiredState = State.Blocked DO
-	Thread.Wait(self.mu, self.changeState);
+    LOCK mu DO
+      WHILE desiredState = State.Blocked DO
+	Thread.Wait(mu, changeState);
       END;
     END;
   END DoBlock;
 
-PROCEDURE <A NAME="DoDispatch"><procedure>DoDispatch</procedure></A>(self: Dispatcher) =
+PROCEDURE <A NAME="DoDispatch"><procedure>DoDispatch</procedure></A>() =
   (* Wait for a signal and handle it.  Signal 0 is a no-op which is
      used to break us out of the read when we need to change states. *)
   VAR
@@ -156,10 +143,10 @@ PROCEDURE <A NAME="DoDispatch"><procedure>DoDispatch</procedure></A>(self: Dispa
     handler: T;
   BEGIN
     TRY
-      sig := ORD(ReadPipe(self.rfd));
+      sig := ORD(ReadPipe(rfd));
       IF sig # 0 THEN
-	LOCK self.mu DO
-	  handler := self.handlers[sig];
+	LOCK mu DO
+	  handler := handlers[sig];
 	END;
 	IF handler # NIL THEN
 	  handler.apply(sig);
@@ -168,19 +155,32 @@ PROCEDURE <A NAME="DoDispatch"><procedure>DoDispatch</procedure></A>(self: Dispa
     EXCEPT Thread.Alerted =&gt; END;
   END DoDispatch;
 
-PROCEDURE <A NAME="DoShutDown"><procedure>DoShutDown</procedure></A>(self: Dispatcher) =
+PROCEDURE <A NAME="FileClose"><procedure>FileClose</procedure></A>(VAR file: INTEGER) =
   BEGIN
-    EVAL Unix.close(wfd);
-    EVAL Unix.close(self.rfd);
-    LOCK self.mu DO
-      FOR sig := FIRST(self.handlers) TO LAST(self.handlers) DO
-	IF self.handlers[sig] # NIL THEN
-	  EVAL UnixMisc.Signal(sig, NIL);
-	  self.handlers[sig] := NIL;
-	END;
+    IF file &gt;= 0 THEN
+      EVAL Unix.close(file);
+      file := -1;
+    END;
+  END FileClose;
+
+PROCEDURE <A NAME="SignalHandlerRemove"><procedure>SignalHandlerRemove</procedure></A>(sig: Ctypes.int; VAR handler: T) =
+  BEGIN
+    IF handler # NIL THEN
+      EVAL UnixMisc.Signal(sig, NIL);
+      handler := NIL;
+    END;
+  END SignalHandlerRemove;
+
+PROCEDURE <A NAME="ShutDown"><procedure>ShutDown</procedure></A>() =
+  BEGIN
+    LOCK mu DO
+      FileClose(rfd);
+      FileClose(wfd);
+      FOR sig := FIRST(handlers) TO LAST(handlers) DO
+        SignalHandlerRemove(sig, handlers[sig]);
       END;
     END;
-  END DoShutDown;
+  END ShutDown;
 
 PROCEDURE <A NAME="Init"><procedure>Init</procedure></A>() =
   VAR
@@ -191,11 +191,11 @@ PROCEDURE <A NAME="Init"><procedure>Init</procedure></A>() =
     END;
     MakeNonBlocking(fds[0]);
     MakeNonBlocking(fds[1]);
+    rfd := fds[0];
     wfd := fds[1];
-    dispatcher.rfd := fds[0];
-    dispatcher.desiredState := State.Running;
-    dispatcher.state := State.Running;
-    dispatcher.thread := Thread.Fork(dispatcher);
+    desiredState := State.Running;
+    state := State.Running;
+    thread := Thread.Fork(NEW(Thread.Closure, apply := DispatcherRun));
   END Init;
 
 PROCEDURE <A NAME="MakeNonBlocking"><procedure>MakeNonBlocking</procedure></A>(fd: INTEGER) =
@@ -233,11 +233,11 @@ PROCEDURE <A NAME="ReadPipe"><procedure>ReadPipe</procedure></A>(fd: INTEGER): C
 PROCEDURE <A NAME="Register"><procedure>Register</procedure></A>(sig: SigNum;
                    handler: T) =
   BEGIN
-    LOCK dispatcher.mu DO
-      IF dispatcher.state = State.ShutDown THEN
+    LOCK mu DO
+      IF state = State.ShutDown THEN
 	Init();
       END;
-      dispatcher.handlers[sig] := handler;
+      handlers[sig] := handler;
       IF handler # NIL THEN
 	EVAL UnixMisc.Signal(sig, Catch);
       ELSE
@@ -246,17 +246,37 @@ PROCEDURE <A NAME="Register"><procedure>Register</procedure></A>(sig: SigNum;
     END;
   END Register;
 
-PROCEDURE <A NAME="ShutDown"><procedure>ShutDown</procedure></A>() =
-  BEGIN
-    ChangeState(dispatcher, State.ShutDown);
-  END ShutDown;
-
 PROCEDURE <A NAME="Unblock"><procedure>Unblock</procedure></A>() =
   BEGIN
-    ChangeState(dispatcher, State.Running);
+    ChangeState(State.Running);
   END Unblock;
 
+PROCEDURE <A NAME="AtForkPrepare"><procedure>AtForkPrepare</procedure></A>() =
+  BEGIN
+    Thread.Acquire(mu);
+  END AtForkPrepare;
+
+PROCEDURE <A NAME="AtForkParent"><procedure>AtForkParent</procedure></A>() =
+  BEGIN
+    Thread.Release(mu);
+  END AtForkParent;
+
+PROCEDURE <A NAME="AtForkChild"><procedure>AtForkChild</procedure></A>() =
+  (* Child is not intended to inherit the handlers or the threads, so just
+   * shutdown rather than reinitializing.
+   *)
+  BEGIN
+    AtForkParent();
+    ShutDown();
+  END AtForkChild;
+
 BEGIN
+  VAR r: INTEGER;
+  BEGIN
+    r := RTProcess.RegisterForkHandlers(
+            AtForkPrepare, AtForkParent, AtForkChild);
+    &lt;* ASSERT r = 0 *&gt;
+  END;
 END SigHandler.
 </PRE>
 </inModule>

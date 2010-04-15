@@ -43,6 +43,12 @@ PROCEDURE <A NAME="PutInt"><procedure>PutInt</procedure></A>(n: INTEGER; wr: Wr.
     Wr.PutText(wr, Fmt.Int(n)); Wr.Flush(wr);
   END PutInt;
 
+PROCEDURE <A NAME="PutLongInt"><procedure>PutLongInt</procedure></A>(n: LONGINT; wr: Wr.T := NIL)=
+  BEGIN
+    IF wr = NIL THEN wr := Stdio.stdout END;
+    Wr.PutText(wr, Fmt.LongInt(n)); Wr.Flush(wr);
+  END PutLongInt;
+
 PROCEDURE <A NAME="PutReal"><procedure>PutReal</procedure></A>(r: REAL; wr: Wr.T := NIL)=
   BEGIN
     IF wr = NIL THEN wr := Stdio.stdout END;
@@ -90,6 +96,15 @@ PROCEDURE <A NAME="GetInt"><procedure>GetInt</procedure></A>(rd: Rd.T := NIL): I
     | Lex.Error, FloatMode.Trap =&gt; RAISE Error;
     END;
   END GetInt;
+
+PROCEDURE <A NAME="GetLongInt"><procedure>GetLongInt</procedure></A>(rd: Rd.T := NIL): LONGINT RAISES {Error}=
+  BEGIN
+    IF rd = NIL THEN rd := Stdio.stdin END;
+    TRY RETURN Lex.LongInt(rd);
+    EXCEPT
+    | Lex.Error, FloatMode.Trap =&gt; RAISE Error;
+    END;
+  END GetLongInt;
 
 PROCEDURE <A NAME="GetReal"><procedure>GetReal</procedure></A>(rd: Rd.T := NIL): REAL RAISES {Error}=
   BEGIN

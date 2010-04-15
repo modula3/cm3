@@ -21,6 +21,8 @@ IMPORT <A HREF="#x1">M3ID</A>, <A HREF="#x2">Type</A>, <A HREF="../misc/Scope.i3
 PROCEDURE <A HREF="RecordType.m3.html#Parse">Parse</A> (): Type.T;
 PROCEDURE <A HREF="RecordType.m3.html#ParseFieldList">ParseFieldList</A> ();
 
+PROCEDURE <A HREF="RecordType.m3.html#New">New</A> (fields: Scope.T): Type.T;
+
 PROCEDURE <A HREF="RecordType.m3.html#Split">Split</A> (t: Type.T;  VAR fields: Value.T): BOOLEAN;
 
 PROCEDURE <A HREF="RecordType.m3.html#LookUp">LookUp</A> (t: Type.T;  name: M3ID.T;  VAR field: Value.T): BOOLEAN;

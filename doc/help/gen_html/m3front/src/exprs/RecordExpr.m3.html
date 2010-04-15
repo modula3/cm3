@@ -231,10 +231,10 @@ PROCEDURE <A NAME="NeedsAddress"><procedure>NeedsAddress</procedure></A> (&lt;*U
 
 PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (p: P) =
   BEGIN
-    PrepLV (p, lhs := FALSE);
+    PrepLV (p, traced := FALSE);
   END Prep;
 
-PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN) =
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P;  traced: BOOLEAN) =
   VAR
     info: Type.Info;
     field: Field.Info;
@@ -250,7 +250,7 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN
      * been prepped and compiled -- save it.
      *)
     IF p.do_direct THEN
-      &lt;* ASSERT NOT lhs *&gt;               (* CHECK ME? *)
+      &lt;* ASSERT NOT traced *&gt;             (* CHECK ME? *)
       p.tmp := CG.Pop ();
     ELSE
       t1 := CG.Declare_temp (info.size, info.alignment,
@@ -281,10 +281,10 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN
 
 PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
   BEGIN
-    CompileLV (p, lhs := FALSE);
+    CompileLV (p, traced := FALSE);
   END Compile;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; &lt;*UNUSED*&gt; lhs: BOOLEAN) =
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; &lt;*UNUSED*&gt; traced: BOOLEAN) =
   VAR info: Type.Info;  offset: INTEGER;
   BEGIN
     IF (p.is_const) THEN

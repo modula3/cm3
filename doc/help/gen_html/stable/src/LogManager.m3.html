@@ -249,7 +249,7 @@ PROCEDURE <A NAME="EmptyLog"><procedure>EmptyLog</procedure></A> (lm: Default; n
                   &quot;no checkpointfile for log in &quot; &amp; nm)));
     END;
     log := lm.logfn(nm);
-    RETURN (NOT TestFile(log)) OR (FS.Status(log).size = 0);
+    RETURN (NOT TestFile(log)) OR (FS.Status(log).size = 0L);
   END EmptyLog;
 
 PROCEDURE <A NAME="Dispose"><procedure>Dispose</procedure></A> (lm: Default; nm: Pathname.T) RAISES {OSError.E} =
