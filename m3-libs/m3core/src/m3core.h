@@ -408,11 +408,33 @@ TimePosix__FromUtime(const struct timeval* tv);
 
 double
 __cdecl
-Time__Now(void);
+TimePosix__Now(void);
 
 double
 __cdecl
-Time__ComputeGrain(void);
+TimePosix__ComputeGrain(void);
+
+
+typedef struct
+{
+  size_t year;
+  size_t month;
+  size_t day;
+  size_t hour;
+  size_t minute;
+  size_t second;
+  ptrdiff_t offset;
+  TEXT zone;
+  size_t weekDay;
+} Date_t;
+
+void
+__cdecl
+DatePosix__FromTime(double t, ptrdiff_t* zone, Date_t* date);
+
+double
+__cdecl
+DatePosix__ToTime(const Date_t* date);
 
 #ifdef __cplusplus
 } /* extern "C" */

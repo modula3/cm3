@@ -14,33 +14,18 @@
 extern "C" {
 #endif
 
-typedef struct
-{
-  size_t year;
-  size_t month;
-  size_t day;
-  size_t hour;
-  size_t minute;
-  size_t second;
-  ptrdiff_t offset;
-  TEXT zone;
-  size_t weekDay;
-} Date_t;
-
 #if defined(__CYGWIN__) || defined(__hpux) || defined(__sun) || defined(__INTERIX)
 #define DATE_POSIX
 #else
 #define DATE_BSD
 #endif
 
-static const int Local = 0;
-static const int UTC = 1;
-EXTERN_CONST int const * const Date__Local = &Local;
-EXTERN_CONST int const * const Date__UTC = &UTC;
+#define Local 0
+#define UTC 1
 
 void
 __cdecl
-Date__FromTime(double t, int* z, Date_t* date)
+Date__FromTime(double t, ptrdiff_t* zone, Date_t* date)
 {
     struct tm* tm;
     struct timeval tv;
@@ -52,9 +37,9 @@ Date__FromTime(double t, int* z, Date_t* date)
     ZeroMemory(&tm_storage, sizeof(tm_storage));
  
     tv = TimePosix__ToUtime(t);
-    if (z == NULL || *z == Local)
+    if (zone == NULL || *zone == Local)
         tm = localtime_r(&tv.tv_sec, &tm_storage);
-    else if (*z == UTC)
+    else if (*zone == UTC)
         tm = gmtime_r(&tv.tv_sec, &tm_storage);
     else
         assert(0);
@@ -72,7 +57,7 @@ Date__FromTime(double t, int* z, Date_t* date)
      * negation is necessary.
      */
     date->offset = -tm->tm_gmtoff;
-    date->zone = M3toC__CopyStoT(tm->tm_zone);
+    *zone = M3toC__CopyStoT(tm->tm_zone);
 #else
     if (tm->tm_isdst == 0)
     {
@@ -94,6 +79,51 @@ Date__FromTime(double t, int* z, Date_t* date)
       date->zone   = M3toC__CopyStoT("Unknown");
     }
 #endif
+}
+
+double
+__cdecl
+DatePosix__ToTime(const Date_t* date)
+{
+    struct tm tm;
+    double t = { 0 };
+#ifdef DATE_BSD
+    const unsigned SecsPerHour = 60 * 60;
+    time_t now = { 0 };
+    struct tm local_now;
+
+    ZERO_MEMORY(local_now);
+#endif
+
+    /* prepare call to mktime(3) */
+    ZERO_MEMORY(tm);
+    tm.tm_sec    = date->second;
+    tm.tm_min    = date->minute;
+    tm.tm_hour   = date->hour;
+    tm.tm_mday   = date->day;
+    tm.tm_mon    = date->month;
+    tm.tm_year   = date->year - 1900;
+    /* tm.tm_wday ignored */
+    tm.tm_isdst  = 0; /* tell mktime that DST is not in effect */
+    /* tm_zone, tm_gmtoff ignored */
+    t = mktime(&tm);
+#ifdef DATE_BSD
+    if (t == -1)
+        return t;
+
+    /* adjust result to reflect "date->offset" */
+    time(&now);
+    localtime_r(&now, &local_now);
+    if (local_now.tm_isdst > 0)
+      /* decrement the local time zone by one hour if DST is in effect */
+      local_now.tm_gmtoff -= SecsPerHour;
+
+    /* As above, we must negate "date->offset" to account for the
+       opposite sense of that field compared to Unix. */
+    t -= ((-date->offset) - local_now.tm_gmtoff);
+#endif
+    /* convert to a "Time.T" */
+    return t;
 }
 
 #ifdef __cplusplus
