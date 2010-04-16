@@ -101,6 +101,7 @@ readonly proc RunTest () is
     if not stale (f, f)
       if defined("MERGE_STDOUT_STDERR")
         exec (M3TestsNoEcho () & "-." & SL & f & runopts & " >stdout.pgm.raw 2>&1")
+        > "stderr.pgm" in write("") end
       else
         exec (M3TestsNoEcho () & "-." & SL & f & runopts & " >stdout.pgm.raw 2>stderr.pgm.raw")
         NormalizeFile ("stderr.pgm")
