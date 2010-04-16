@@ -1090,7 +1090,7 @@ PROCEDURE insert_n  (self: U;  t: IType;  n: CARDINAL) =
 PROCEDURE insert_mn  (self: U;  t: IType;  m, n: CARDINAL) =
   (* s1.t := Word.Insert (s1.t, s0.t, m, n) ; pop(2) *)
   BEGIN
-    self.s_pop (T_to_ST[Target.Integer.cg_type], T_to_ST[t]);
+    self.s_pop (T_to_ST[t], T_to_ST[t]);
     self.s_push (t);
     self.child.insert_mn (t, m, n);
   END insert_mn;
