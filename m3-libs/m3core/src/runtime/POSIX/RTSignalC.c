@@ -121,7 +121,7 @@ static size_t GetPC(void* xcontext)
 #if __DARWIN_UNIX03
     context->uc_mcontext->__ss.__eip
 #else
-    context->uc_mcontext->sc.sc_eip
+    context->uc_mcontext->ss.eip
 #endif
 #elif defined(__x86_64__)
 #if __DARWIN_UNIX03
