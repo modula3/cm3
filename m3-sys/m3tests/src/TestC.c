@@ -52,18 +52,10 @@ typedef struct T T;
 extern "C" {
 #endif
 
-typedef struct tm tm_t;
-
 struct T
 {
     double d[10];
     float f[10];
-#ifndef _WIN32
-    struct {
-        /* keep these sorted by name for easier human comprehension */
-        size_t tm;
-    } sizes;
-#endif
     double align;
 };
 
@@ -71,11 +63,6 @@ static const T t1 =
 {
     { 0.0, 0.5, 1.0, 2.0, -1.0, -3.0, 12.34, -124.456, 1000.0, -10000.0 },
     { 0.0, 0.5, 1.0, 2.0, -1.0, -3.5, 12.34, -124.456, 1000.0, -10000.0 },
-#ifndef _WIN32
-    {
-    SIZE(tm_t),
-    },
-#endif
     0
 };
 
@@ -95,7 +82,6 @@ void __cdecl Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
         printf("d[0], d[1]: %x, %x\n", OFFSET(T, d[0]), OFFSET(T, d[1]));
         printf("f[0], f[1]: %x, %x\n", OFFSET(T, f[0]), OFFSET(T, f[1]));
         printf("d[8], d[9]: %x, %x\n", OFFSET(T, d[8]), OFFSET(T, d[9]));
-        printf("tm: %x\n", OFFSET(T, sizes.tm));
         for (i = 0; i < SIZE(t1); ++i)
         {
             if (c[i] != m3[i])
@@ -246,7 +232,6 @@ UINT64 __cdecl PositiveUInt64(void)
 {
     return 8;
 }
-
 
 #ifdef __cplusplus
 } /* extern "C" */
