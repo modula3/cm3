@@ -105,7 +105,7 @@ proc compare_file (dir, OutputPath, probeForTargetSpecificFile) is
 
   %write ("compare OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
   if stale (OutputPath, OutputPath)
-    write (OutputPath, " is missing", CR)
+    write (OutputPath & " is missing (1)" & CR)
     html ([OutputPath, "missing"])
     jux ([OutputPath, "missing", CR])
     return
@@ -116,11 +116,11 @@ proc compare_file (dir, OutputPath, probeForTargetSpecificFile) is
     % missing file compares equal to zero length file, ok
 
     if equal(GetFileSize(OutputPath), 0)
-      %write (ExpectedPath, " is missing, compares equal to zero size ", OutputPath, CR)
+      %write (ExpectedPath, " is missing (2), compares equal to zero size ", OutputPath, CR)
       return
     end
 
-    write (ExpectedPath, " is missing", CR)
+    write (ExpectedPath, " is missing (3)", CR)
     html ([ExpectedPath, "missing"])
     jux ([ExpectedPath, "missing", CR])
     return
@@ -318,9 +318,15 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
     fs_mkdir (dir & "/" & BUILD_DIR)
     fs_putfile (dir & "/" & BUILD_DIR & "/runopts", runopts)
 
-    local silent = "-silent"
+    local silent = ""
     if defined("debug")
-      silent = "-debug"
+      silent = silent & " -debug "
+    end
+    if defined("commands")
+      silent = silent & " -commands "
+    end
+    if equal(silent, "")
+        silent = "-silent"
     end
 
     exec ("-cd", dir, "&& cm3", silent, "-DM3TESTS", cm3opts, ">" & BUILD_DIR & "/stdout.build.raw 2>" & BUILD_DIR & "/stderr.build.raw")
