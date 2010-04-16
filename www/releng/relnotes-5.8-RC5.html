@@ -14,7 +14,6 @@
 
     <p>
       Hopes often cheat, so we're now at the fifth release candiate.
-      The NT386 backend does support 64 bit LONGINTs now.
       The <a href="http://hudson.modula3.com:8080/view/makedist/job/cm3-makedist-AMD64_LINUX/14/changes">detailed list of changes</a>
       can be seen at one of the Hudson release build jobs.
     </p>
@@ -84,13 +83,13 @@
       implementation.</li>
       <li> There is a new type LONGINT. It is a 64bit signed integer
       on all platforms except the native NT "NT386" platform. On NT386
-      is a 32bits, for now, but we would like to fix that.</li>
+      it is 32bits. This is fixed in "head", for the next release, 5.9.</li>
       <li>Much improved and restructured CM3 config files.</li>
       <li>Added lots of new quake functions and fixed several quake
       bugs.</li>
       <li>Import of gcc 4.3.0 as code generating backend.</li>
       <li>Support for new 64 bit target platforms
-      (AMD64_LINUX and others).</li>
+      (AMD64_LINUX, AMD64_DARWIN, AMD64_FREEBSD, and others).</li>
       <li>Added CM3-IDE, the open source version of Reactor (tm). This
       is a browser-based IDE for Modula-3 developement.</li>
       <li>Extensive refactoring of platform specific interfaces and
