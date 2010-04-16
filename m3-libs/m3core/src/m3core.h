@@ -279,9 +279,7 @@ int __cdecl Umman__mprotect(ADDRESS addr, size_t len, int prot);
 ADDRESS __cdecl Umman__mmap(ADDRESS addr, size_t len, int prot, int flags, int fd, m3_off_t off);
 int __cdecl Umman__munmap(ADDRESS addr, size_t len);
 
-#ifndef _WIN32
 typedef INT64 m3_time_t;
-#endif
 
 #ifndef _WIN32
 m3_time_t __cdecl Utime__time(m3_time_t* tloc);
