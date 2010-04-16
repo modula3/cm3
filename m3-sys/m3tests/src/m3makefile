@@ -65,9 +65,6 @@ BC = PickExe("bc")
 % build the test library
 %
 import ("libm3")
-if equal(OS_TYPE, "WIN32")
-    interface ("Usysdep")
-end
 Module ("Test")
 c_source("TestC")
 build_standalone ()
@@ -445,7 +442,7 @@ p_test ("p2", "p229", "minimal 64bit divide test")
 
 p_test ("p0", "p001", "Hello world")
 p_test ("p2", "p211", "float and double constants work")
-p_test ("p2", "p212", "float and double constants, jmpbuf, Usysdep")
+p_test ("p2", "p212", "float and double constants, jmpbuf")
 p_test ("p0", "p002", "Text")
 p_test ("p0", "p003", "Fmt")
 p_test ("p0", "p004", "exception mechanism")
