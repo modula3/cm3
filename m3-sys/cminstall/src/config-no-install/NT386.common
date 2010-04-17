@@ -116,6 +116,7 @@ SYSTEM_LIBS_MS =
 {
     "LIBC" :
     [
+        LibIn("rpcrt4"),
         LibIn("winspool"),
         LibIn("comctl32"),
         LibIn("wsock32"),
@@ -853,6 +854,7 @@ if USE_DELAYLOAD
         "-delayload:netapi32.dll",
         "-delayload:user32.dll",
         "-delayload:comctl32.dll",
+        "-delayload:rpcrt4.dll",
         "delayimp.lib",
     ]
 end
