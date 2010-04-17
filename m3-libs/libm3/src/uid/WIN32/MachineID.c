@@ -60,7 +60,9 @@ int MachineID__CanGetWithNetbios(unsigned char *id)
     return FALSE;
 }
 
-int MachineID__CanGet(unsigned char *id)
+int
+__cdecl
+MachineID__CanGet(unsigned char *id)
 {
     union {
         UUID uuid;
@@ -80,7 +82,7 @@ int MachineID__CanGet(unsigned char *id)
     {
         module = LoadLibrary("rpcrt4.dll");
         if (module == NULL)
-            return 0;
+            return FALSE;
         pfn = (PFN)GetProcAddress(module, "UuidCreateSequential");
         if (pfn == NULL)
         {
@@ -94,13 +96,7 @@ int MachineID__CanGet(unsigned char *id)
     }
 
     status = (*pfn)(&u.uuid);
-    id[0] = u.bytes[10];
-    id[1] = u.bytes[11];
-    id[2] = u.bytes[12];
-    id[3] = u.bytes[13];
-    id[4] = u.bytes[14];
-    id[5] = u.bytes[15];
-    
+    memcpy(id, &u.bytes[10], 6);    
     return (status == RPC_S_OK);
 }
 
