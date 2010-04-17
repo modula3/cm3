@@ -115,7 +115,7 @@ MachineIDC__CanGet(unsigned char *id)
 } /* extern "C" */
 #endif
 
-#if 1 /* test code */
+#if 0 /* test code */
 
 #include <stdio.h>
 
