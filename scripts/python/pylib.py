@@ -293,14 +293,14 @@ def _MapTarget(a):
     # command line into the legacy names other code knows about.
 
     return {
-        "I386_LINUX" : "LINUXLIBC6",
-        "I386_NT" : "NT386",
-        "I386_CYGWIN" : "NT386GNU",
-        "I386_MINGW" : "NT386MINGNU",
-        "PPC32_DARWIN" : "PPC_DARWIN",
-        "PPC32_LINUX" : "PPC_LINUX",
-        "I386_FREEBSD" : "FreeBSD4",
-        "I386_NETBSD" : "NetBSD2_i386",
+        "LINUXLIBC6"    : "I386_LINUX",
+        "NT386"         : "I386_NT",
+        "NT386GNU"      : "I386_CYGWIN",
+        "NT386MINGNU"   : "I386_MINGW",
+        "PPC32_DARWIN"  : "PPC_DARWIN",
+        "PPC32_LINUX"   : "PPC_LINUX",
+        "FreeBSD4"      : "I386_FREEBSD",
+        "NetBSD2_i386"  : "I386_NETBSD",
 
         # both options sensible, double HP a bit redundant in the HPUX names
 
@@ -704,10 +704,10 @@ Target = Target or getenv("CM3_TARGET") or Host
 
 #-----------------------------------------------------------------------------
 #
-# OSType is almost always POSIX, the user cannot set it, it is changed to WIN32 sometimes later
+# TargetOS is almost always POSIX, the user cannot set it, it is changed to WIN32 sometimes later
 #
 
-OSType = "POSIX"
+TargetOS = "POSIX"
 
 #-----------------------------------------------------------------------------
 #
@@ -728,30 +728,36 @@ HAVE_SERIAL = False
 
 if Target.startswith("NT386"):
 
-    # q for quote: This is probably about the host, not the target.
-    Q = ""
-
-    HAVE_SERIAL = True
-
     #
     # TBD:
     # If cl is not in the path, or link not in the path (Cygwin link doesn't count)
     # then error toward GNU, and probe uname and gcc -v.
     #
     if Target == "NT386GNU":
-        Config = "NT386GNU"
-        OSType = "POSIX"
+        Config = "I386_CYGWIN"
+        TargetOS = "POSIX"
 
     elif Target == "NT386MINGNU":
-        Config = "NT386MINGNU"
-        OSType = "WIN32"
+        Config = "I386_MINGW"
+        TargetOS = "WIN32"
 
     else:
-        Config = "NT386"
-        OSType = "WIN32"
-        GCC_BACKEND = False
+        Config = "I386_NT"
+        TargetOS = "WIN32"
 
-    Target = "NT386"
+    Target = Config
+
+if Target.endswith("_NT"):
+    HAVE_SERIAL = True
+    GCC_BACKEND = False
+    TargetOS = "WIN32"
+
+if Target.endswith("_MINGW"):
+    HAVE_SERIAL = True
+    TargetOS = "WIN32"
+
+if Host.endswith("_NT") or Host == "NT386":
+    Q = "" # q for quote: This is probably about the host, not the target.
 
 #-----------------------------------------------------------------------------
 
@@ -1434,11 +1440,15 @@ def _FilterPackage(Package):
                     "SOLgnu" : True,
                     "NetBSD2_i386" : True,
                     "NT386GNU" : True,
+                    "I386_CYGWIN" : True,
+                    "I386_FREEBSD" : True,
+                    "I386_NETBSD" : True,
+                    "I386_LINUX" : True,
                     }.get(Target, False),
         "tcl": BuildAll or HAVE_TCL,
-        "tapi": BuildAll or OSType == "WIN32",
+        "tapi": BuildAll or TargetOS == "WIN32",
         "serial": BuildAll or HAVE_SERIAL,
-        "X11R4": BuildAll or OSType != "WIN32",
+        "X11R4": BuildAll or TargetOS != "WIN32",
         "m3cc": (GCC_BACKEND and (not OMIT_GCC) and (not "skipgcc" in sys.argv) and (not "omitgcc" in sys.argv) and (not "nogcc" in sys.argv)),
     }
     return PackageConditions.get(Package, True)
@@ -1990,7 +2000,7 @@ def SetupEnvironment():
 
     # some host/target confusion here..
 
-    if Target == "NT386" and HostIsNT and Config == "NT386" and (not GCC_BACKEND) and OSType == "WIN32":
+    if Target == "NT386" and HostIsNT and Config == "NT386" and (not GCC_BACKEND) and TargetOS == "WIN32":
 
         VCBin = ""
         VCInc = ""
@@ -2168,7 +2178,7 @@ def SetupEnvironment():
 
     # some host/target confusion here..
 
-    if Target == "NT386MINGNU" or (Target == "NT386" and GCC_BACKEND and OSType == "WIN32"):
+    if Target == "NT386MINGNU" or (Target == "NT386" and GCC_BACKEND and TargetOS == "WIN32"):
 
         _ClearEnvironmentVariable("LIB")
         _ClearEnvironmentVariable("INCLUDE")
@@ -2201,7 +2211,7 @@ def SetupEnvironment():
 
     # some host/target confusion here..
 
-    if Target == "NT386GNU" or (Target == "NT386" and GCC_BACKEND and OSType == "POSIX"):
+    if Host == "NT386GNU" or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX"):
 
         #_ClearEnvironmentVariable("LIB")
         #_ClearEnvironmentVariable("INCLUDE")
@@ -2322,7 +2332,7 @@ def GetStage():
 def FormInstallRoot(PackageSetName):
     AltConfig = {"NT386":"x86"}.get(Config, Config)
     a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + AltConfig + "-" + CM3VERSION)
-    if Config == "NT386":
+    if Config == "NT386" or Config == "I386_NT":
         a = a + "-VC" + GetVisualCPlusPlusVersion()
     return a
 
