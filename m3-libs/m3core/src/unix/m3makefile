@@ -40,15 +40,9 @@ readonly _UnixPieces = {
 
 include_dir ("Common")
 
-if equal (OS_TYPE, "WIN32")
-  include_dir ("WIN32")
-  include_dir ("uin-common")
-else
-
 if _UnixPieces contains TARGET
   local pieces = _UnixPieces {TARGET}
   foreach f in pieces  include_dir (f)  end
 else
   error (format ("unix: unsupported platform: \"%s\"%s", TARGET, CR))
-end
 end
