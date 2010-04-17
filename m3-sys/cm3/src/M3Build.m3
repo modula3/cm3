@@ -188,13 +188,13 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
      *)
 
     t.pkg_use_alt       := TextUtils.Substitute(t.pkg_use, "\\", "/");
-    t.pkg_install_alt   := TextUtils.Substitute(t.install_root, "\\", "/");
-    t.install_root_alt  := TextUtils.Substitute(t.pkg_use, "\\", "/");
+    t.pkg_install_alt   := TextUtils.Substitute(t.pkg_install, "\\", "/");
+    t.install_root_alt  := TextUtils.Substitute(t.install_root, "\\", "/");
     t.bin_install_alt   := TextUtils.Substitute(t.bin_install, "\\", "/");
     t.lib_install_alt   := TextUtils.Substitute(t.lib_install, "\\", "/");
     t.emacs_install_alt := TextUtils.Substitute(t.emacs_install, "\\", "/");
     t.doc_install_alt   := TextUtils.Substitute(t.doc_install, "\\", "/");
-    t.man_install_alt   := TextUtils.Substitute(t.doc_install, "\\", "/");
+    t.man_install_alt   := TextUtils.Substitute(t.man_install, "\\", "/");
     t.html_install_alt  := TextUtils.Substitute(t.html_install, "\\", "/");
 
     t.cur_pkg         := t.build_pkg;
