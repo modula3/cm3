@@ -102,6 +102,9 @@ def GetPathExtension(a):
         return ""
     return a[b + 1:]
 
+def RemovePathExtension(a):
+    return a[:a.rfind(".")]
+
 def GetPathBaseName(a):
     a = GetLastPathElement(a)
     b = a.rfind(".")
@@ -592,8 +595,8 @@ if (UName.startswith("windows")
         or UNameCommand.startswith("mingw")
         or UNameCommand.startswith("cygwin")):
 
-    Host = "NT386"
-    # Host = "I386_NT"
+    # Host = "NT386"
+    Host = "I386_NT"
 
 elif IsInterix():
 
@@ -602,20 +605,11 @@ elif IsInterix():
 elif UName.startswith("freebsd"):
 
     if UNameArchM == "i386":
-        if UNameRevision.startswith("1"):
-            Host = "FreeBSD"
-        elif UNameRevision.startswith("2"):
-            Host = "FreeBSD2"
-        elif UNameRevision.startswith("3"):
-            Host = "FreeBSD3"
-        else:
-            Host = "FreeBSD4"
-        # Host = "I386_FREEBSD"
+        Host = "I386_FREEBSD"
     elif UNameArchM == "amd64":
         Host = "AMD64_FREEBSD"
     else:
-        Host = "FBSD_ALPHA"
-        # Host = "ALPHA64_FREEBSD"
+        Host = "ALPHA_FREEBSD"
 
 elif UName.startswith("openbsd"):
 
@@ -661,13 +655,11 @@ elif UName.startswith("linux"):
     elif UNameArchM == "sparc64":
         Host = "SPARC32_LINUX"
     else:
-        # Host = "I386_LINUX"
-        Host = "LINUXLIBC6"
+        Host = "I386_LINUX"
 
 elif UName.startswith("netbsd"):
 
-    # Host = "I386_NETBSD"
-    Host = "NetBSD2_i386" # only arch/version combination supported yet
+    Host = "I386_NETBSD" # only arch/version combination supported yet
 
 elif UName.startswith("irix"):
 
@@ -1146,7 +1138,7 @@ def _MakeArchive(a):
 def Boot():
 
     global BuildLocal
-    BuildLocal += " -boot -keep -DM3CC_TARGET=" + Target
+    BuildLocal += " -boot -keep -DM3CC_TARGET=" + Config
 
     Version = "1"
 
@@ -1159,9 +1151,11 @@ def Boot():
     GnuCompile = {
         "I386_INTERIX"  : "gcc -g ", # gcc -fPIC generates incorrect code on Interix
         "SOLgnu"        : "/usr/sfw/bin/gcc -g ",
-        }.get(Target) or "gcc -g -fPIC "
+        }.get(Config) or "gcc -g -fPIC "
 
-    if Target.endswith("_SOLARIS") or Target == "SOLsun":
+    Objects = " *.o "
+
+    if Config.endswith("_SOLARIS") or Config == "SOLsun":
         Compile = SunCompile
     else:
         Compile = GnuCompile
@@ -1177,7 +1171,7 @@ def Boot():
                             "SPARC32_LINUX"   : " -m32 -mcpu=v9 -munaligned-doubles ",
                             "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
                             "SPARC64_SOLARIS" : " -xarch=v9 ",
-                          }.get(Target) or " ")
+                          }.get(Config) or " ")
 
     SunLink = " -lrt -lm -lnsl -lsocket -lpthread "
 
@@ -1276,10 +1270,11 @@ def Boot():
     for q in P:
         dir = GetPackagePath(q)
         for a in os.listdir(os.path.join(Root, dir, Config)):
-            if not (a.endswith(".ms") or a.endswith(".is") or a.endswith(".s") or a.endswith(".c") or a.endswith(".h")):
+            if not (a.endswith(".ms") or a.endswith(".is") or a.endswith(".s")
+                or a.endswith(".mo") or a.endswith(".io") or a.endswith(".c") or a.endswith(".h")):
                 continue
             CopyFile(os.path.join(Root, dir, Config, a), BootDir)
-            if a.endswith(".h"):
+            if a.endswith(".h") or a.endswith(".mo") or a.endswith(".io"):
                 continue
             Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
             if a.endswith(".c"):
@@ -1336,12 +1331,6 @@ def Boot():
             "m3-libs/m3core/src/thread/PTHREAD/ThreadPThreadC.c",
             "m3-libs/m3core/src/time/POSIX/m3makefile",
             "m3-libs/m3core/src/unix/m3makefile",
-            "m3-libs/m3core/src/unix/linux-32/m3makefile",
-            "m3-libs/m3core/src/unix/linux-64/m3makefile",
-            "m3-libs/m3core/src/unix/freebsd-common/m3makefile",
-            "m3-libs/m3core/src/unix/freebsd-common/Uerror.i3",
-            "m3-libs/m3core/src/unix/freebsd-common/Usysdep.i3",
-            "m3-libs/m3core/src/unix/freebsd-common/Uucontext.i3",
             "m3-libs/m3core/src/unix/Common/m3makefile",
             "m3-libs/m3core/src/unix/Common/m3unix.h",
             "m3-libs/m3core/src/unix/Common/Udir.i3",
@@ -1388,6 +1377,16 @@ def Boot():
 
     for a in [UpdateSource, Make, Makefile]:
         a.close()
+
+    if Config.endswith("_NT") or Config == "NT386":
+        DeleteFile("updatesource.sh")
+        DeleteFile("make.sh")
+        Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
+        Makefile.write("""
+cm3.exe: *.io *.mo *.c
+    cl -Zi -MD *.c -link *.mo *.io -out:cm3.exe user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib
+""")
+        Makefile.close()
 
     _MakeArchive(BootDir[2:])
 
