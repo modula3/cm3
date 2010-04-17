@@ -122,29 +122,19 @@ proc InternalCheckTargetOS(x) is
   return FALSE
 end
 
-proc IsInterix() is
-  return InternalCheckTargetOS("INTERIX")
-end
+proc IsTargetDarwin()  is return InternalCheckTargetOS("DARWIN") end
+proc IsTargetFreeBSD() is return InternalCheckTargetOS("FREEBSD") end
+proc IsTargetInterix() is return InternalCheckTargetOS("INTERIX") end
+proc IsTargetNetBSD()  is return InternalCheckTargetOS("NETBSD") end
+proc IsTargetOpenBSD() is return InternalCheckTargetOS("OPENBSD") end
+proc IsTargetSolaris() is return InternalCheckTargetOS("SOLARIS") end
 
-proc IsSolaris() is
-  return InternalCheckTargetOS("SOLARIS")
-end
-
-proc IsDarwin() is
-  return InternalCheckTargetOS("DARWIN")
-end
-
-proc IsFreeBSD() is
-  return InternalCheckTargetOS("FREEBSD")
-end
-
-proc IsOpenBSD() is
-  return InternalCheckTargetOS("OPENBSD")
-end
-
-proc IsNetBSD() is
-  return InternalCheckTargetOS("NETBSD")
-end
+proc IsDarwin()  is return IsTargetDarwin() end
+proc IsFreeBSD() is return IsTargetFreeBSD() end
+proc IsInterix() is return IsTargetInterix() end
+proc IsNetBSD()  is return IsTargetNetBSD() end
+proc IsOpenBSD() is return IsTargetOpenBSD() end
+proc IsSolaris() is return IsTargetSolaris() end
 
 if not defined("HasTrestle")
 
