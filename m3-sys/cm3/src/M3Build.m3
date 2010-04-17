@@ -145,7 +145,7 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     (* some more config dependent backward compatibility hacks... *)
     Quake.Define (t, "M3SEARCH_TABLES", "-T" & M3TFile);
     Quake.Define (t, "DEFAULT_BUILD_DIR", GetConfig (t, "BUILD_DIR"));
-    Quake.Define (t, "M3", M3Path.New (GetConfig (t, "BIN_USE"), "cm3"));
+    Quake.Define (t, "M3", M3Path.New (GetConfigPath (t, "BIN_USE"), "cm3"));
     Quake.Define (t, "PACKAGE_DIR", pkg);
 
     t.build_pkg       := M3ID.Add (Pathname.Last (pkg));
@@ -153,17 +153,15 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     t.build_dir       := M3ID.Add (build_dir);
     t.text_build_dir  := build_dir;
 
-    (* M3Path.New is used to canonicalize the paths -- to remove dots *)
-
-    t.pkg_use         := M3Path.New (GetConfig (t, "PKG_USE"));
-    t.pkg_install     := M3Path.New (GetConfig (t, "PKG_INSTALL"));
-    t.install_root    := M3Path.New (GetConfig (t, "INSTALL_ROOT"));
-    t.bin_install     := M3Path.New (GetConfig (t, "BIN_INSTALL"));
-    t.lib_install     := M3Path.New (GetConfig (t, "LIB_INSTALL"));
-    t.emacs_install   := M3Path.New (GetConfig (t, "EMACS_INSTALL"));
-    t.doc_install     := M3Path.New (GetConfig (t, "DOC_INSTALL"));
-    t.man_install     := M3Path.New (GetConfig (t, "MAN_INSTALL"));
-    t.html_install    := M3Path.New (GetConfig (t, "HTML_INSTALL"));
+    t.pkg_use         := GetConfigPath (t, "PKG_USE");
+    t.pkg_install     := GetConfigPath (t, "PKG_INSTALL");
+    t.install_root    := GetConfigPath (t, "INSTALL_ROOT");
+    t.bin_install     := GetConfigPath (t, "BIN_INSTALL");
+    t.lib_install     := GetConfigPath (t, "LIB_INSTALL");
+    t.emacs_install   := GetConfigPath (t, "EMACS_INSTALL");
+    t.doc_install     := GetConfigPath (t, "DOC_INSTALL");
+    t.man_install     := GetConfigPath (t, "MAN_INSTALL");
+    t.html_install    := GetConfigPath (t, "HTML_INSTALL");
     t.have_pkgtools   := GetConfigBool (t, "HAVE_PKGTOOLS");
     t.at_SRC          := GetConfigBool (t, "AT_SRC");
     t.system_liborder := QVal.ToArray (t, ConfigDefn (t, "SYSTEM_LIBORDER").value);
@@ -2491,6 +2489,24 @@ PROCEDURE ConfigDefn (t: T;  sym: TEXT): QValue.Binding
     IF (bind = NIL) THEN ConfigErr (t, sym, "not defined"); END;
     RETURN bind;
   END ConfigDefn;
+
+PROCEDURE GetConfigPath (t: T;  symbol: TEXT): TEXT
+  RAISES {Quake.Error} =
+  VAR bind := ConfigDefn (t, symbol);
+      text: TEXT;
+  BEGIN
+    TRY
+      (* M3Path.New is used to canonicalize the paths -- to remove dots.
+       * Breaking through layers as we do here lets us alter "readonly" values.
+       *)
+      text := M3Path.New(QVal.ToText (t, bind.value));
+      bind.value.int := M3ID.Add (text);
+      RETURN text;
+    EXCEPT Quake.Error (msg) =>
+      ConfigErr (t, symbol, msg);
+      RETURN "";
+    END;
+  END GetConfigPath;
 
 PROCEDURE GetConfig (t: T;  symbol: TEXT): TEXT
   RAISES {Quake.Error} =
