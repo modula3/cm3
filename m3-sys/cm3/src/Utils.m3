@@ -8,7 +8,7 @@ UNSAFE MODULE Utils;
 
 IMPORT File, FileWr, Wr, Thread, Fmt, Process, TextIntTbl, M3toC;
 IMPORT Stdio, OSError, ETimer, FS, RegularFile, Time, Text;
-IMPORT Msg, Arg, M3Timers, Target, CoffTime, M3File, Pathname;
+IMPORT Msg, Arg, M3Timers, CoffTime, M3File, Pathname;
 FROM Ctypes IMPORT const_char_star, char_star, int;
 
 (*--------------------------------------------------------------- writers ---*)
@@ -186,21 +186,6 @@ PROCEDURE Copy (old, new: TEXT) =
       Msg.FatalError (ec, "unable to copy: ", old, " -> ", new);
     END;
   END Copy;
-
-PROCEDURE CopyText (old, new: TEXT) =
-  VAR eol := Target.EOL;
-  BEGIN
-    Msg.Commands ("copy ", old, " -> ", new);
-    IF (eol = NIL) THEN
-      (* no target specified yet, use the host line termination *)
-      eol := Wr.EOL;
-    END;
-    TRY
-      M3File.CopyText (old, new, eol);
-    EXCEPT OSError.E (ec) =>
-      Msg.FatalError (ec, "unable to copy: ", old, " -> ", new);
-    END;
-  END CopyText;
 
 PROCEDURE IsEqual (a, b: TEXT): BOOLEAN =
   BEGIN

@@ -28,6 +28,8 @@
 % THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
 % (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
 % THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+%
+% $Id: version.quake,v 1.26.2.3 2010-04-17 03:25:50 jkrell Exp $
 
 
 %------------------------------------------------------------------------------
@@ -46,11 +48,12 @@ end
 proc version_impl(name) is
     local filename = name & ".i3"
     local tempname = "_m3temp_" & filename
-    local datefn = ".." & SL & BUILD_DIR & SL & "_m3datenow.quake"
     local ret = 0
+
     if not defined("_all")
         return
     end
+
     > tempname in
         write("INTERFACE ", name, ";", CR)
     end

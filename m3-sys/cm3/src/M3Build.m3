@@ -32,6 +32,18 @@ REVEAL
     doc_install       : TEXT;     (* Directory to install documents *)
     man_install       : TEXT;     (* Directory to install man pages *)
     html_install      : TEXT;     (* Directory to install HTML files *)
+
+    (* with "forward slash" alternatives for noM3ShipResolution *)
+    install_root_alt  : TEXT;    (* Root directory *)
+    pkg_use_alt       : TEXT;    (* Root directory for public packages *)
+    pkg_install_alt   : TEXT;    (* Root directory for public packages *)
+    bin_install_alt   : TEXT;    (* Directory to install binaries *)
+    lib_install_alt   : TEXT;    (* Directory to install libraries *)
+    emacs_install_alt : TEXT;    (* Directory to install emacs e-lisp code *)
+    doc_install_alt   : TEXT;    (* Directory to install documents *)
+    man_install_alt   : TEXT;    (* Directory to install man pages *)
+    html_install_alt  : TEXT;    (* Directory to install HTML files *)
+
     have_pkgtools     : BOOLEAN;  (* Using the SRC package tools ? *)
     at_SRC            : BOOLEAN;  (* include SRC-only packages ? *)
     system_libs       : QVTbl.T;  (* Available system libraries *)
@@ -133,7 +145,7 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     (* some more config dependent backward compatibility hacks... *)
     Quake.Define (t, "M3SEARCH_TABLES", "-T" & M3TFile);
     Quake.Define (t, "DEFAULT_BUILD_DIR", GetConfig (t, "BUILD_DIR"));
-    Quake.Define (t, "M3", M3Path.New (GetConfig (t, "BIN_USE"), "cm3"));
+    Quake.Define (t, "M3", M3Path.New (GetConfigPath (t, "BIN_USE"), "cm3"));
     Quake.Define (t, "PACKAGE_DIR", pkg);
 
     t.build_pkg       := M3ID.Add (Pathname.Last (pkg));
@@ -141,25 +153,49 @@ PROCEDURE SetUp (t: T;  pkg, to_pkg, build_dir: TEXT)
     t.build_dir       := M3ID.Add (build_dir);
     t.text_build_dir  := build_dir;
 
-    (* M3Path.New is used to canonicalize the paths -- to remove dots *)
-
-    t.pkg_use         := M3Path.New (GetConfig (t, "PKG_USE"));
-(* not in Quake.Machine
-    t.bin_use         := M3Path.New (GetConfig (t, "BIN_USE"));
-    t.lib_use         := M3Path.New (GetConfig (t, "LIB_USE"));
-*)
-    t.pkg_install     := M3Path.New (GetConfig (t, "PKG_INSTALL"));
-    t.install_root    := M3Path.New (GetConfig (t, "INSTALL_ROOT"));
-    t.bin_install     := M3Path.New (GetConfig (t, "BIN_INSTALL"));
-    t.lib_install     := M3Path.New (GetConfig (t, "LIB_INSTALL"));
-    t.emacs_install   := M3Path.New (GetConfig (t, "EMACS_INSTALL"));
-    t.doc_install     := M3Path.New (GetConfig (t, "DOC_INSTALL"));
-    t.man_install     := M3Path.New (GetConfig (t, "MAN_INSTALL"));
-    t.html_install    := M3Path.New (GetConfig (t, "HTML_INSTALL"));
+    t.pkg_use         := GetConfigPath (t, "PKG_USE");
+    t.pkg_install     := GetConfigPath (t, "PKG_INSTALL");
+    t.install_root    := GetConfigPath (t, "INSTALL_ROOT");
+    t.bin_install     := GetConfigPath (t, "BIN_INSTALL");
+    t.lib_install     := GetConfigPath (t, "LIB_INSTALL");
+    t.emacs_install   := GetConfigPath (t, "EMACS_INSTALL");
+    t.doc_install     := GetConfigPath (t, "DOC_INSTALL");
+    t.man_install     := GetConfigPath (t, "MAN_INSTALL");
+    t.html_install    := GetConfigPath (t, "HTML_INSTALL");
     t.have_pkgtools   := GetConfigBool (t, "HAVE_PKGTOOLS");
     t.at_SRC          := GetConfigBool (t, "AT_SRC");
     t.system_liborder := QVal.ToArray (t, ConfigDefn (t, "SYSTEM_LIBORDER").value);
     t.system_libs     := QVal.ToTable (t, ConfigDefn (t, "SYSTEM_LIBS").value);
+
+    (* alternate path form for noM3ShipResolution
+     * Multiple options here:
+     * We could replace \ with /.
+     * We could replace M3Path.SlashText with /.
+     * We could replace M3Path.SlashText with \.
+     * We could replace \ with M3Path.SlashText.
+     * We could replace / with M3Path.SlashText.
+     * We could even replace / with \.
+     * Or use some other strange value for the replacement (>255?).
+     * M3Path.SlashText is \ or /, depending on the host (not the target).
+     * We just have to be consistent with DoUnresolve, and we should be aware
+     * that certain options disallow certain usages, for example if we
+     * unconditionally replace \ with /, then Posix users can't use \ as a
+     * "normal" character in their paths. Of course that is problematic anyway,
+     * since it will be easily confused as an escape character and the usage
+     * won't be portable, so ok. The limitation also only holds if you use
+     * noM3ShipResolution, though it is also reasonable to make that the default
+     * and only option.
+     *)
+
+    t.pkg_use_alt       := TextUtils.Substitute(t.pkg_use, "\\", "/");
+    t.pkg_install_alt   := TextUtils.Substitute(t.install_root, "\\", "/");
+    t.install_root_alt  := TextUtils.Substitute(t.pkg_use, "\\", "/");
+    t.bin_install_alt   := TextUtils.Substitute(t.bin_install, "\\", "/");
+    t.lib_install_alt   := TextUtils.Substitute(t.lib_install, "\\", "/");
+    t.emacs_install_alt := TextUtils.Substitute(t.emacs_install, "\\", "/");
+    t.doc_install_alt   := TextUtils.Substitute(t.doc_install, "\\", "/");
+    t.man_install_alt   := TextUtils.Substitute(t.doc_install, "\\", "/");
+    t.html_install_alt  := TextUtils.Substitute(t.html_install, "\\", "/");
 
     t.cur_pkg         := t.build_pkg;
     t.cur_pkg_dir     := t.build_pkg_dir;
@@ -579,23 +615,14 @@ PROCEDURE DoOverride (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
    It would also be reasonable to be case insensitive if the path contains any
    backward slashes, or if they both contain colon as the second character. *)
 PROCEDURE OverrideEqual(a: TEXT; b: TEXT): BOOLEAN =
-  VAR
-    a_Length: CARDINAL;
-    b_Length: CARDINAL;
-    a_BackwardSlash: INTEGER;
-    b_BackwardSlash: INTEGER;
   BEGIN
+    IF Text.Length(a) # Text.Length(b) THEN
+      RETURN FALSE;
+    END;
     IF Text.Equal(a, b) THEN
       RETURN TRUE;
     END;
-    a_Length := Text.Length(a);
-    b_Length := Text.Length(b);
-    IF a_Length # b_Length THEN
-      RETURN FALSE;
-    END;
-    a_BackwardSlash := Text.FindChar(a, '\\');
-    b_BackwardSlash := Text.FindChar(b, '\\');
-    IF (a_BackwardSlash = -1) AND (b_BackwardSlash = -1) THEN
+    IF (Text.FindChar(a, '\\') = -1) AND (Text.FindChar(b, '\\') = -1) THEN
       RETURN FALSE;
     END;
     a := TextUtils.SubstChar(a, '\\', '/');
@@ -1557,7 +1584,7 @@ PROCEDURE BuildManPage (t: T;  nm, sec: TEXT)
   BEGIN
     IF (t.mode = MM.Build) THEN
       IF IsStale (dest, src) THEN
-        Utils.CopyText (src, dest);
+        Utils.Copy (src, dest);
       END;
     END;
     DeleteDeriveds (t, dest, NoExtension);
@@ -1863,19 +1890,17 @@ PROCEDURE MakeRoom (t: T;  space: INTEGER) =
 
 PROCEDURE DoUnresolve (t: T;  res: TEXT): TEXT =
   BEGIN
-    res := TextUtils.Substitute(res, "/", M3Path.SlashText);
-    res := TextUtils.Substitute(res, t.bin_install, "\" & BIN_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.lib_install, "\" & LIB_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.doc_install, "\" & DOC_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.man_install, "\" & MAN_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.html_install, "\" & HTML_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.emacs_install, "\" & EMACS_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.pkg_install, "\" & PKG_INSTALL & \"");
-    res := TextUtils.Substitute(res, t.pkg_use, "\" & PKG_USE & \"");
+    res := TextUtils.Substitute(res, "\\", "/");
+    res := TextUtils.Substitute(res, t.bin_install_alt, "\" & BIN_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.lib_install_alt, "\" & LIB_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.doc_install_alt, "\" & DOC_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.man_install_alt, "\" & MAN_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.html_install_alt, "\" & HTML_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.emacs_install_alt, "\" & EMACS_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.pkg_install_alt, "\" & PKG_INSTALL & \"");
+    res := TextUtils.Substitute(res, t.pkg_use_alt, "\" & PKG_USE & \"");
     res := TextUtils.Substitute(res, t.text_build_dir, "\" & TARGET & \"");
-    res := TextUtils.Substitute(res, t.install_root, "\" & INSTALL_ROOT & \"");
-    (* res := TextUtils.Substitute(res, M3Path.SlashText, "\" & SL & \""); *)
-    res := TextUtils.Substitute(res, M3Path.SlashText, "/");
+    res := TextUtils.Substitute(res, t.install_root_alt, "\" & INSTALL_ROOT & \"");
     res := TextUtils.Substitute(res, "\"\" & ", "");
     res := TextUtils.Substitute(res, " & \"\"", "");
     RETURN res;
@@ -1967,7 +1992,7 @@ PROCEDURE InstallDir (t: T;  dir: TEXT;  wr: Wr.T)
   BEGIN
     IF NOT Text.Equal (dir, t.last_ship_dir) THEN
       IF t.have_pkgtools THEN
-        Out (wr, "-l ", dir, "\n");
+        Out (wr, "-l ", dir, Wr.EOL);
       ELSIF NOT t.all_ship_dirs.put (M3ID.Add (dir), NIL) THEN
         Out (wr, "make_dir(", Unresolve (t, M3Path.Convert (dir)), RPCR);
       END;
@@ -1986,7 +2011,7 @@ PROCEDURE InstallFile (t: T;  src, dest, mode: TEXT;  derived: BOOLEAN)
   
       (* generate the code to install the file *)
       IF t.have_pkgtools THEN
-        Out (wr, M3ID.ToText (t.build_dir), "/", src, "\n");
+        Out (wr, M3ID.ToText (t.build_dir), "/", src, Wr.EOL);
       ELSE
         Out (wr, "install_file(", Unresolve (t, M3Path.Convert (src)), C); (* Unresolve needed here? *)
         Out (wr, Unresolve(t, M3Path.Convert (dest)), CQ, mode, QRPCR);
@@ -2040,7 +2065,7 @@ PROCEDURE InstallSource (t: T;  src, dest, mode: TEXT) =
       (* make sure the install directory is built *)
       InstallDir (t, dest, wr);
       IF t.have_pkgtools THEN
-        Out (wr, src, "\n");
+        Out (wr, src, Wr.EOL);
       ELSE
         Out (wr, "install_file(", Unresolve (t, M3Path.Convert (src)), C); (* Unresolve needed here? *)
         Out (wr, Unresolve (t, M3Path.Convert (dest)), CQ, mode, QRPCR);
@@ -2348,10 +2373,10 @@ PROCEDURE DoGenTFile (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
       FOR i := 0 TO LAST (map^) DO
         uu := srcs [map[i]];
         IF (uu.loc # last_loc) THEN
-          Out (wr, "@", uu.loc.path, "\n");
+          Out (wr, "@", uu.loc.path, Wr.EOL);
           last_loc := uu.loc;
         END;
-        Out (wr, M3Unit.FileName (uu), "\n");
+        Out (wr, M3Unit.FileName (uu), Wr.EOL);
       END;
     END Emit;
 
@@ -2455,6 +2480,24 @@ PROCEDURE ConfigDefn (t: T;  sym: TEXT): QValue.Binding
     IF (bind = NIL) THEN ConfigErr (t, sym, "not defined"); END;
     RETURN bind;
   END ConfigDefn;
+
+PROCEDURE GetConfigPath (t: T;  symbol: TEXT): TEXT
+  RAISES {Quake.Error} =
+  VAR bind := ConfigDefn (t, symbol);
+      text: TEXT;
+  BEGIN
+    TRY
+      (* M3Path.New is used to canonicalize the paths -- to remove dots.
+       * Breaking through layers as we do here lets us alter "readonly" values.
+       *)
+      text := M3Path.New(QVal.ToText (t, bind.value));
+      bind.value.int := M3ID.Add (text);
+      RETURN text;
+    EXCEPT Quake.Error (msg) =>
+      ConfigErr (t, symbol, msg);
+      RETURN "";
+    END;
+  END GetConfigPath;
 
 PROCEDURE GetConfig (t: T;  symbol: TEXT): TEXT
   RAISES {Quake.Error} =
