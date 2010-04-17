@@ -7,7 +7,7 @@
 MODULE WebFile;
 
 IMPORT IntIntTbl, ETimer, File, Text, OSError;
-IMPORT M3Buf, M3ID, M3File, Target;
+IMPORT M3Buf, M3ID, M3File, Wr;
 IMPORT M3Path, Utils, Msg;
 
 CONST
@@ -184,7 +184,7 @@ PROCEDURE DumpFile (a, b: InfoEntry) =
     DumpHeaders (buf, a);
     DumpHeaders (buf, b);
     M3Buf.PutText (buf, "$ 0");
-    M3Buf.PutText (buf, Target.EOL);
+    M3Buf.PutText (buf, Wr.EOL);
     DumpBodies (buf, a);
     DumpBodies (buf, b);
     M3Buf.Flush (buf, wr);
@@ -197,7 +197,7 @@ PROCEDURE DumpHeaders (buf: M3Buf.T;  e: InfoEntry) =
       M3ID.Put      (buf, e.file);
       M3Buf.PutChar (buf, ' ');
       M3Buf.PutInt  (buf, e.len);
-      M3Buf.PutText (buf, Target.EOL);
+      M3Buf.PutText (buf, Wr.EOL);
       e := e.next;
     END;
   END DumpHeaders;
