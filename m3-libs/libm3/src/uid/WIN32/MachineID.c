@@ -5,84 +5,104 @@
 /* Last modified on Mon Sep 20 11:46:17 PDT 1993 by kalsow     */
 /*      modified on Thu Jul 15 16:23:08 PDT 1993 by swart      */
 
-#include <unistd.h>
-#include <netdb.h>
+#include <windows.h>
+#include <rpc.h>
 #include <string.h>
-
-#if defined(__linux__) || defined(__osf__) || defined(__CYGWIN__)
-
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/ioctl.h>
-#include <net/if.h>
-
-#endif
+#include <memory.h>
+#include <nb30.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-int MachineIDPosixC__CanGet(char *id)
+static
+int MachineID__CanGetWithNetbios(unsigned char *id)
 {
-    int i;
-    char hostname[128];
-    struct hostent *hostent;
+    NCB ncb = { 0 };
+    LANA_ENUM lanaEnum = { 0 };
+    ADAPTER_STATUS adaptorStatus = { 0 };
 
-#if defined(__linux__) || defined(__osf__) || defined(__CYGWIN__)
-
-    struct ifreq req;
-    struct ifconf list;
-    int s;
-    struct ifreq buf[10];
-
-    /* try to find an ethernet hardware address */
-    s = socket(PF_UNIX, SOCK_STREAM, AF_UNSPEC);
-    if (s >= 0)
+    ZeroMemory(id, 6);
+    ZeroMemory(&ncb, sizeof(ncb));
+    ZeroMemory(&adaptorStatus, sizeof(adaptorStatus));
+    ZeroMemory(&lanaEnum, sizeof(lanaEnum));
+    ncb.ncb_command = NCBENUM;
+    ncb.ncb_buffer = (PUCHAR)&lanaEnum;
+    ncb.ncb_length = sizeof(lanaEnum);
+    Netbios(&ncb);
+    if ((ncb.ncb_retcode == 0) && (lanaEnum.length >= 1))
     {
-        list.ifc_len = sizeof buf;
-        list.ifc_req = buf;
-
-        if (ioctl(s, SIOCGIFCONF, &list) >= 0)
+        ZeroMemory(&ncb, sizeof(ncb));
+        ncb.ncb_command = NCBRESET;
+        ncb.ncb_lana_num = lanaEnum.lana[0];
+        ncb.ncb_lsn = 0;
+        ncb.ncb_num = 0;
+        ncb.ncb_buffer = NULL;
+        ncb.ncb_length = 0;
+        Netbios(&ncb);
+        if (ncb.ncb_retcode == 0)
         {
-            for (i = 0; i < list.ifc_len / sizeof(struct ifreq); i++)
+            ncb.ncb_command = NCBASTAT;
+            ncb.ncb_callname[0] = '*';
+            ncb.ncb_callname[1] = 0;
+            ncb.ncb_buffer = (PUCHAR)&adaptorStatus;
+            ncb.ncb_length = sizeof(adaptorStatus);
+            Netbios(&ncb);
+            if (ncb.ncb_retcode == 0)
             {
-                strncpy(req.ifr_name, buf[i].ifr_name, IFNAMSIZ);
-#if defined(__linux__) || defined(__CYGWIN__)
-                if (ioctl(s, SIOCGIFHWADDR, &req) < 0)
-                    continue;
-                memcpy(id, req.ifr_hwaddr.sa_data, 6);
-#elif defined(__osf__)
-                if (ioctl(s, SIOCRPHYSADDR, &req) < 0)
-                    continue;
-                memcpy(id, req.default_pa, 6);
-#endif
-                close(s);
-                return 1;
+                memcpy(id, &adaptorStatus.adapter_address, 6);
+                return TRUE;
             }
         }
-        close(s);
     }
-#endif
 
-    memset(id, 0, 6);
+    /* failed */
+    return FALSE;
+}
 
-    /* try using the machine's internet address */
-    if (gethostname(hostname, 128) == 0)
+int MachineID__CanGet(unsigned char *id)
+{
+    union {
+        UUID uuid;
+        unsigned char bytes[16];
+    } u = { 0 };
+    RPC_STATUS status = { 0 };
+    typedef RPC_STATUS (RPC_ENTRY * PFN)(UUID*);
+    static PFN pfn;
+    HMODULE module;
+
+    ZeroMemory(id, 6);
+
+    if (MachineID__CanGetWithNetbios(id))
+        return TRUE;
+
+    if (pfn == NULL)
     {
-        hostent = gethostbyname(hostname);
-        if (hostent && hostent->h_length == 4)
+        module = LoadLibrary("rpcrt4.dll");
+        if (module == NULL)
+            return 0;
+        pfn = (PFN)GetProcAddress(module, "UuidCreateSequential");
+        if (pfn == NULL)
         {
-            id[2] = hostent->h_addr[0];
-            id[3] = hostent->h_addr[1];
-            id[4] = hostent->h_addr[2];
-            id[5] = hostent->h_addr[3];
-            return 1;
+            /* Do not fall back if UuidCreateSequential is supposed be there.
+             */
+            if ((GetVersion() & 0xFF) >= 5)
+                return FALSE;
+
+            pfn = UuidCreate;
         }
     }
 
-    return 0;
+    status = (*pfn)(&u.uuid);
+    id[0] = u.bytes[10];
+    id[1] = u.bytes[11];
+    id[2] = u.bytes[12];
+    id[3] = u.bytes[13];
+    id[4] = u.bytes[14];
+    id[5] = u.bytes[15];
+    
+    return (status == RPC_S_OK);
 }
-
 
 #ifdef __cplusplus
 } /* extern "C" */
@@ -94,10 +114,13 @@ int MachineIDPosixC__CanGet(char *id)
 
 int main()
 {
-    unsigned char id[6];
-    int i;
+    unsigned char id[6] = { 0 };
+    int i = { 0 };
     
-    i = MachineIDPosixC__CanGet((char*)id);
+    i = MachineID__CanGet((char*)id);
+    printf("%d %02x%02x%02x%02x%02x%02x\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
+
+    i = MachineID__CanGetWithNetbios((char*)id);
     printf("%d %02x%02x%02x%02x%02x%02x\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
 
     return 0;
