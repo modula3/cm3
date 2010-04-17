@@ -26,7 +26,6 @@ PROCEDURE Get(): T;
 
   *)
 
-<*EXTERNAL MachineID__CanGet*>
 PROCEDURE CanGet (VAR(*OUT*) t: T): BOOLEAN;
 (* Returns "TRUE" and sets "t" if the machine ID can be determined.
    Otherwise sets "t" to zeroes and returns "FALSE".   Machines that

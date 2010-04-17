@@ -5,7 +5,8 @@
 (*      modified on Thu Jul 15 16:41:23 PDT 1993 by swart      *)
 (*      modified on Thu May  6 13:27:58 PDT 1993 by mjordan    *)
 
-UNSAFE MODULE MachineIDWin32 EXPORTS MachineID;
+UNSAFE MODULE MachineID;
+IMPORT MachineIDC;
 
 EXCEPTION Failure;
 
@@ -19,5 +20,10 @@ PROCEDURE Get (): T =
     END;
   END Get;
 
+PROCEDURE CanGet (VAR(*OUT*) id: T): BOOLEAN =
+  BEGIN
+    RETURN (MachineIDC.CanGet(ADR(id.r[0])) # 0);
+  END CanGet;
+
 BEGIN
-END MachineIDWin32.
+END MachineID.
