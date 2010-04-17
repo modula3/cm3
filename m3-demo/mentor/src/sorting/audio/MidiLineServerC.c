@@ -6,6 +6,7 @@
 /*      modified on Fri Nov 20 15:49:27 PST 1992 by sclafani */
 
 #include "m3core.h"
+#include <poll.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -15,18 +16,15 @@ extern "C" {
 
 int
 __cdecl
-MidiLineServer__Select(int socket)
+MidiLineServer__Poll(int fd)
 {
-    fd_set fds;
-    struct timeval timeout;
+    struct pollfd p;
 
-    ZERO_MEMORY(timeout);
-    ZERO_MEMORY(fds);
-    FD_ZERO(&fds);
-    FD_SET(socket, &fds);
-    timeout.tv_sec = 0;
-    timeout.tv_usec = DelayMicroseconds;
-    return select(socket + 1, &fds, NULL, NULL, &timeout);
+    ZERO_MEMORY(p);
+    p.fd = fd;
+    p.events = POLLIN;
+    p.revents = 0;
+    return poll(&p, 1, DelayMicroseconds);
 }
 
 #ifdef __cplusplus

@@ -10,8 +10,8 @@ FROM Ctypes IMPORT int;
 TYPE
     T <: Midi.T;
 
-<*EXTERNAL MidiLineServer__Select*>
-PROCEDURE Select(socket: int): int;
-(* Wrapper around Posix select(). *)
+<*EXTERNAL MidiLineServer__Poll*>
+PROCEDURE Poll(socket: int): int;
+(* Wrapper around Posix poll(). *)
 
 END MidiLineServer.
