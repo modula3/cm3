@@ -615,10 +615,8 @@ PROCEDURE DoOverride (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
    It would also be reasonable to be case insensitive if the path contains any
    backward slashes, or if they both contain colon as the second character. *)
 PROCEDURE OverrideEqual(a: TEXT; b: TEXT): BOOLEAN =
-  VAR a_Length := Text.Length(a);
-      b_Length := Text.Length(b);
   BEGIN
-    IF a_Length # b_Length THEN
+    IF Text.Length(a) # Text.Length(b) THEN
       RETURN FALSE;
     END;
     IF Text.Equal(a, b) THEN
