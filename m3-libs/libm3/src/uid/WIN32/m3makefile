@@ -5,5 +5,5 @@
 % Last modified on Mon Sep 20 11:47:30 PDT 1993 by kalsow
 %      modified on Thu Jul 15 16:14:28 PDT 1993 by swart
 
-% interface("WinRPC")
+c_source("MachineID")
 implementation("MachineIDWin32")
