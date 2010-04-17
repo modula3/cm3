@@ -122,13 +122,17 @@ proc InternalCheckTargetOS(x) is
   return FALSE
 end
 
+proc IsTargetCygwin()  is return InternalCheckTargetOS("CYGWIN") end
 proc IsTargetDarwin()  is return InternalCheckTargetOS("DARWIN") end
 proc IsTargetFreeBSD() is return InternalCheckTargetOS("FREEBSD") end
 proc IsTargetInterix() is return InternalCheckTargetOS("INTERIX") end
+proc IsTargetLinux()   is return InternalCheckTargetOS("LINUX") end
 proc IsTargetNetBSD()  is return InternalCheckTargetOS("NETBSD") end
+proc IsTargetNT()      is return InternalCheckTargetOS("NT") end
 proc IsTargetOpenBSD() is return InternalCheckTargetOS("OPENBSD") end
 proc IsTargetSolaris() is return InternalCheckTargetOS("SOLARIS") end
 
+% temporary compat
 proc IsDarwin()  is return IsTargetDarwin() end
 proc IsFreeBSD() is return IsTargetFreeBSD() end
 proc IsInterix() is return IsTargetInterix() end
