@@ -10,7 +10,7 @@
 
 %-------------------------------------------------------------------
 
-readonly TARGET = "NT386"   % code generation target
+readonly TARGET = "I386_MINGW"  % code generation target
 readonly TARGET_OS = "NT"
 readonly GNU_PLATFORM = "i686-mingw" % "cpu-os" string for GNU
 readonly OS_TYPE = "WIN32"
@@ -29,7 +29,7 @@ else
     readonly PROFILING_P = ""
 end
 
-readonly BUILD_DIR = "NT386MINGNU" & PROFILING_P
+readonly BUILD_DIR = TARGET & PROFILING_P
 
 % see the NT386 file for information
 readonly M3_BACKEND_MODE = "3" % other values are 0, 1, 2

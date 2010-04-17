@@ -14,7 +14,7 @@
 
 %-------------------------------------------------------------------
 
-readonly TARGET = "NT386"   % code generation target
+readonly TARGET = "I386_CYGWIN" % code generation target
 readonly TARGET_OS = "CYGWIN"
 readonly GNU_PLATFORM = "i686-cygwin" % "cpu-os" string for GNU
 readonly OS_TYPE   = "POSIX"           % { "WIN32" or "POSIX" }
@@ -33,7 +33,7 @@ else
     readonly PROFILING_P = ""
 end
 
-readonly BUILD_DIR    = "NT386GNU" & PROFILING_P
+readonly BUILD_DIR = TARGET & PROFILING_P
 
 readonly M3_BACKEND_MODE = "3"
 % -- defines how the frontend, backend, and assembler interact
