@@ -5,7 +5,6 @@
 (*      modified on Thu Jul 15 16:23:08 PDT 1993 by swart      *)
 
 UNSAFE MODULE MachineIDPosix EXPORTS MachineID;
-IMPORT MachineIDPosixC;
 
 EXCEPTION Failure;
 PROCEDURE Get (): T =
