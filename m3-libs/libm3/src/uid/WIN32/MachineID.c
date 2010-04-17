@@ -21,11 +21,14 @@ GetMacAddressFromNetbios(unsigned char *id)
 {
     NCB ncb = { 0 };
     LANA_ENUM lanaEnum = { 0 };
-    ADAPTER_STATUS adaptorStatus = { 0 };
+    struct {
+        ADAPTER_STATUS adaptorStatus;
+        NAME_BUFFER names[30];
+    } adaptorStatusBuffer;
 
     ZeroMemory(id, 6);
     ZeroMemory(&ncb, sizeof(ncb));
-    ZeroMemory(&adaptorStatus, sizeof(adaptorStatus));
+    ZeroMemory(&adaptorStatusBuffer, sizeof(adaptorStatusBuffer));
     ZeroMemory(&lanaEnum, sizeof(lanaEnum));
     ncb.ncb_command = NCBENUM;
     ncb.ncb_buffer = (PUCHAR)&lanaEnum;
@@ -46,12 +49,12 @@ GetMacAddressFromNetbios(unsigned char *id)
             ncb.ncb_command = NCBASTAT;
             ncb.ncb_callname[0] = '*';
             ncb.ncb_callname[1] = 0;
-            ncb.ncb_buffer = (PUCHAR)&adaptorStatus;
-            ncb.ncb_length = sizeof(adaptorStatus);
+            ncb.ncb_buffer = (PUCHAR)&adaptorStatusBuffer;
+            ncb.ncb_length = sizeof(adaptorStatusBuffer);
             Netbios(&ncb);
             if (ncb.ncb_retcode == 0)
             {
-                memcpy(id, &adaptorStatus.adapter_address, 6);
+                memcpy(id, &adaptorStatusBuffer.adaptorStatus.adapter_address, 6);
                 return TRUE;
             }
         }
@@ -112,7 +115,7 @@ MachineIDC__CanGet(unsigned char *id)
 } /* extern "C" */
 #endif
 
-#if 0 /* test code */
+#if 1 /* test code */
 
 #include <stdio.h>
 
