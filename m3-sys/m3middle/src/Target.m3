@@ -295,8 +295,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                 Jumpbuf_size := 18 * Address.size;
 
     | Systems.NT386, Systems.NT386GNU,
-      Systems.I386_NT, Systems.I386_CYGWIN,
-      Systems.I386_MINGW =>
+      Systems.I386_NT, Systems.I386_CYGWIN, Systems.I386_MINGW =>
 
                  (* Cygwin is 13, Visual C++ is 16. Interix is 18.
                     Use 18 for interop.
@@ -376,7 +375,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_size              := 100 * Address.size;
                  Jumpbuf_align             := Word64.align;
 
-    | Systems.NetBSD2_i386 =>
+    | Systems.I386_NETBSD, Systems.NetBSD2_i386 =>
                  Jumpbuf_size              := 14 * Address.size; (* 13? *)
 
 (*  | Systems.I386_MSDOS =>
