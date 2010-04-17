@@ -1382,10 +1382,8 @@ def Boot():
         DeleteFile("updatesource.sh")
         DeleteFile("make.sh")
         Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
-        Makefile.write("""
-cm3.exe: *.io *.mo *.c
-    cl -Zi -MD *.c -link *.mo *.io -out:cm3.exe user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib
-""")
+        Makefile.write("cm3.exe: *.io *.mo *.c\r\n"
+        + " cl -Zi -MD *.c -link *.mo *.io -out:cm3.exe user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n")
         Makefile.close()
 
     _MakeArchive(BootDir[2:])
