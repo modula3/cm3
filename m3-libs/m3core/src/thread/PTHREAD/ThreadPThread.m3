@@ -11,7 +11,7 @@ IMPORT Cerrno, FloatMode, MutexRep, RTCollectorSRC, RTError, RTHeapRep, RTIO,
 FROM Compiler IMPORT ThisFile, ThisLine;
 FROM Ctypes IMPORT int;
 IMPORT RuntimeError AS RTE;
-FROM ThreadInternal IMPORT FDSet, FDSetSize, FDS, Select;
+FROM ThreadInternal IMPORT Poll;
 
 (*----------------------------------------------------- types and globals ---*)
 
@@ -609,50 +609,10 @@ PROCEDURE IOAlertWait (fd: CARDINAL; read: BOOLEAN;
 PROCEDURE XIOWait (self: Activation; fd: CARDINAL; read: BOOLEAN;
                    interval: LONGREAL; alertable: BOOLEAN): WaitResult
   RAISES {Alerted} =
-  VAR
-    res: INTEGER;
-    fdindex := fd DIV FDSetSize;
-    fdset := FDSet{fd MOD FDSetSize};
-    gReadFDS, gWriteFDS, gExceptFDS: FDS := NEW(FDS, fdindex+1);
-    subInterval: LONGREAL := 1.0d0;
-
-  PROCEDURE TestFDS (index: CARDINAL; set: FDSet; read: BOOLEAN): WaitResult =
-    BEGIN
-      IF (set * gExceptFDS[index]) # FDSet{} THEN
-        IF read THEN
-          IF (set * gReadFDS[index]) # FDSet{} THEN
-            RETURN WaitResult.Ready;
-          END;
-          IF (set * gWriteFDS[index]) = FDSet{} THEN
-            RETURN WaitResult.FDError;
-          END;
-        ELSE
-          IF (set * gWriteFDS[index]) # FDSet{} THEN
-            RETURN WaitResult.Ready;
-          END;
-          IF (set * gReadFDS[index]) = FDSet{} THEN
-            RETURN WaitResult.FDError;
-          END;
-        END;
-      END;
-      RETURN WaitResult.Timeout;
-    END TestFDS;
-
-  PROCEDURE CallSelect (nfd: CARDINAL; timeout: Time.T): INTEGER =
-    VAR res: INTEGER;
-    BEGIN
-      FOR i := 0 TO fdindex DO
-        gExceptFDS[i] := gReadFDS[i] + gWriteFDS[i];
-      END;
-      res := Select(nfd, gReadFDS[0], gWriteFDS[0], gExceptFDS[0], timeout);
-      IF res > 0 THEN
-        FOR i := 0 TO fdindex DO
-          gExceptFDS[i] := gExceptFDS[i] + gReadFDS[i] + gWriteFDS[i];
-        END;
-      END;
-      RETURN res;
-    END CallSelect;
-
+  VAR res: WaitResult;
+      subInterval: LONGREAL := 1.0d0;
+      err: int := 0;
+      again := FALSE;
   BEGIN
     IF NOT alertable THEN
       subInterval := interval;
@@ -664,32 +624,28 @@ PROCEDURE XIOWait (self: Activation; fd: CARDINAL; read: BOOLEAN;
 
     IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
     LOOP
-      FOR i := 0 TO fdindex-1 DO
-        gReadFDS[i] := FDSet{};
-        gWriteFDS[i] := FDSet{};
-      END;
-      IF read
-        THEN gReadFDS[fdindex] := fdset;
-        ELSE gWriteFDS[fdindex] := fdset;
-      END;
-
-      res := CallSelect(fd+1, subInterval);
+      res := VAL(Poll(fd, ORD(read), subInterval), WaitResult);
 
       IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
 
-      IF    res > 0 THEN RETURN TestFDS(fdindex, fdset, read);
-      ELSIF res = 0 THEN
-        interval := interval - subInterval;
-        IF interval <= 0.0d0 THEN RETURN WaitResult.Timeout END;
-        IF interval < subInterval THEN
-          subInterval := interval;
-        END;
-      ELSE
-        IF Cerrno.GetErrno() = Uerror.EINTR THEN
-          (* spurious wakeups are OK *)
-        ELSE
-          RETURN WaitResult.Error;
-        END;
+      CASE res OF
+        | WaitResult.FDError, WaitResult.Ready =>
+          RETURN res;
+        | WaitResult.Error =>
+          err := Cerrno.GetErrno();
+          IF err = Uerror.EINTR THEN
+            (* spurious wakeups are OK *)
+          ELSIF err = Uerror.EAGAIN AND NOT again THEN
+            again := TRUE; (* try just once more *)
+          ELSE
+            RETURN WaitResult.Error;
+          END;
+        | WaitResult.Timeout =>
+          interval := interval - subInterval;
+          IF interval <= 0.0d0 THEN RETURN WaitResult.Timeout END;
+          IF interval < subInterval THEN
+            subInterval := interval;
+          END;
       END;
     END;
   END XIOWait;

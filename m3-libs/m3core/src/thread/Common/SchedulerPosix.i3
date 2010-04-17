@@ -25,7 +25,7 @@ PROCEDURE IOAlertWait(fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult
                   RAISES {Thread.Alerted};
 
-(* These procedures are functionally equivalent to calling "select(2)"
+(* These procedures are functionally equivalent to calling "select(2)" or "poll(2)"
    with a single file descriptor.  The major difference is that calls
    on "IOWait" and "IOAlertWait" do not prevent other threads from
    running.  If "read" is "TRUE", then the "readfds" and "exceptfds"
