@@ -382,7 +382,7 @@ if [ `hostname` = 'birch' ]; then
   ls -l "${ARCHIVE}"
 fi
 
-if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
+if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" -o "$SHIPRC" = "1" ]; then
   RSYNC=${RSYNC:-"rsync -vu"}
   type rsync || RSYNC=scp
   false; while [ $? != 0 ]; do
