@@ -17,7 +17,7 @@ extern "C" {
 
 static
 BOOL
-MachineIDC__CanGetWithNetbios(unsigned char *id)
+GetMacAddressFromNetbios(unsigned char *id)
 {
     NCB ncb = { 0 };
     LANA_ENUM lanaEnum = { 0 };
@@ -61,23 +61,21 @@ MachineIDC__CanGetWithNetbios(unsigned char *id)
     return FALSE;
 }
 
+static
 BOOL
-__cdecl
-MachineIDC__CanGet(unsigned char *id)
+GetMacAddressFromUuidCreateSequential(unsigned char *id)
 {
     union {
-        UUID uuid;
         unsigned char bytes[16];
+        UUID uuid;
     } u = { 0 };
     RPC_STATUS status = { 0 };
     typedef RPC_STATUS (RPC_ENTRY * PFN)(UUID*);
     static PFN pfn;
-    HMODULE module;
+    HMODULE module = { 0 };
 
     ZeroMemory(id, 6);
-
-    if (MachineIDC__CanGetWithNetbios(id))
-        return TRUE;
+    ZeroMemory(&u, sizeof(u));
 
     if (pfn == NULL)
     {
@@ -92,13 +90,22 @@ MachineIDC__CanGet(unsigned char *id)
             if ((GetVersion() & 0xFF) >= 5)
                 return FALSE;
 
-            pfn = UuidCreate;
+            pfn = &UuidCreate;
         }
     }
 
     status = (*pfn)(&u.uuid);
     memcpy(id, &u.bytes[10], 6);    
     return (status == RPC_S_OK);
+}
+
+BOOL
+__cdecl
+MachineIDC__CanGet(unsigned char *id)
+{
+    ZeroMemory(id, 6);
+
+    return (GetMacAddressFromNetbios(id) || GetMacAddressFromUuidCreateSequential(id));
 }
 
 #ifdef __cplusplus
@@ -114,10 +121,10 @@ int main()
     unsigned char id[6] = { 0 };
     int i = { 0 };
     
-    i = MachineIDC__CanGet((char*)id);
+    i = GetMacAddressFromNetbios(id);
     printf("%d %02x%02x%02x%02x%02x%02x\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
 
-    i = MachineIDC__CanGetWithNetbios((char*)id);
+    i = GetMacAddressFromUuidCreateSequential(id);
     printf("%d %02x%02x%02x%02x%02x%02x\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
 
     return 0;
