@@ -19,13 +19,6 @@ proc FileExists(a) is
     return not stale (a, a)
 end
 
-if equal(TARGET, "I386_NT")
-  include_dir("NT386")
-end
-if equal(TARGET, "SOLgnu")
-  include_dir("SOLsun")
-end
-
 if equal(TARGET, "NT386") and equal(OS_TYPE, "POSIX")
 
   % nothing -- no user thread support
