@@ -286,6 +286,12 @@ PROCEDURE ImportFromType(t: Type.T; importTbl: AtomRefTbl.T;
     END;
     TYPECASE t OF
     | Type.Reference (ref) => ImportRevelations(ref, importTbl);
+    | Type.Record (rec) =>
+      (* Records are marshalled "manually" by the stub code rather than being
+         passed as a Pickle.  Therefore, imports are needed for record
+         fields, even if the record is named. *)
+      ImportFromFields(rec.fields, importTbl);
+      RETURN;
     ELSE
     END;
     IF byName AND t.name # NIL THEN
@@ -309,7 +315,6 @@ PROCEDURE ImportFromType(t: Type.T; importTbl: AtomRefTbl.T;
     | Type.Array (a) => ImportFromType(a.index, importTbl);
                    ImportFromType(a.element, importTbl);
     | Type.Packed (p) => ImportFromType(p.base, importTbl);
-    | Type.Record (rec) => ImportFromFields(rec.fields, importTbl);
     | Type.Set (s) => ImportFromType(s.range, importTbl);
     | Type.Procedure (p) => ImportFromSig(p.sig, importTbl);
     ELSE StubUtils.Die("CodeForType.ImportFromType: unsupported type");
