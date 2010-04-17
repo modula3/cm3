@@ -8,7 +8,7 @@ Interface  ("WinBaseTypes")
 Module     ("WinDef")
 Module     ("WinNT")
 
-if equal (TARGET, "NT386")
+if equal (OS_TYPE, "WIN32")
 c_source   ("WinNTc")
 
 Interface  ("WinError")
