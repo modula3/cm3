@@ -16,7 +16,8 @@ extern "C" {
 #endif
 
 static
-int MachineID__CanGetWithNetbios(unsigned char *id)
+BOOL
+MachineIDC__CanGetWithNetbios(unsigned char *id)
 {
     NCB ncb = { 0 };
     LANA_ENUM lanaEnum = { 0 };
@@ -60,9 +61,9 @@ int MachineID__CanGetWithNetbios(unsigned char *id)
     return FALSE;
 }
 
-int
+BOOL
 __cdecl
-MachineID__CanGet(unsigned char *id)
+MachineIDC__CanGet(unsigned char *id)
 {
     union {
         UUID uuid;
@@ -75,7 +76,7 @@ MachineID__CanGet(unsigned char *id)
 
     ZeroMemory(id, 6);
 
-    if (MachineID__CanGetWithNetbios(id))
+    if (MachineIDC__CanGetWithNetbios(id))
         return TRUE;
 
     if (pfn == NULL)
@@ -113,10 +114,10 @@ int main()
     unsigned char id[6] = { 0 };
     int i = { 0 };
     
-    i = MachineID__CanGet((char*)id);
+    i = MachineIDC__CanGet((char*)id);
     printf("%d %02x%02x%02x%02x%02x%02x\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
 
-    i = MachineID__CanGetWithNetbios((char*)id);
+    i = MachineIDC__CanGetWithNetbios((char*)id);
     printf("%d %02x%02x%02x%02x%02x%02x\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
 
     return 0;
