@@ -133,7 +133,7 @@ PROCEDURE Rpc (t: T; op: Operation; VAR request: Command; reqSize: INTEGER)
       result := Usocket.send (t.socket, ADR (request), reqSize, 0);
       IF result < 0 THEN UnixFail ("send"); END;
       IF result # reqSize THEN RAISE Failure ("partial send!?!"); END;
-      result := Select (t.socket);
+      result := Poll (t.socket);
       IF (result < 0) AND (Cerrno.GetErrno() # Uerror.EINTR) THEN
         UnixFail ("select");
       END;
