@@ -615,23 +615,16 @@ PROCEDURE DoOverride (m: QMachine.T;  <*UNUSED*> n_args: INTEGER)
    It would also be reasonable to be case insensitive if the path contains any
    backward slashes, or if they both contain colon as the second character. *)
 PROCEDURE OverrideEqual(a: TEXT; b: TEXT): BOOLEAN =
-  VAR
-    a_Length: CARDINAL;
-    b_Length: CARDINAL;
-    a_BackwardSlash: INTEGER;
-    b_BackwardSlash: INTEGER;
+  VAR a_Length := Text.Length(a);
+      b_Length := Text.Length(b);
   BEGIN
-    IF Text.Equal(a, b) THEN
-      RETURN TRUE;
-    END;
-    a_Length := Text.Length(a);
-    b_Length := Text.Length(b);
     IF a_Length # b_Length THEN
       RETURN FALSE;
     END;
-    a_BackwardSlash := Text.FindChar(a, '\\');
-    b_BackwardSlash := Text.FindChar(b, '\\');
-    IF (a_BackwardSlash = -1) AND (b_BackwardSlash = -1) THEN
+    IF Text.Equal(a, b) THEN
+      RETURN TRUE;
+    END;
+    IF (Text.FindChar(a, '\\') = -1) AND (Text.FindChar(b, '\\') = -1) THEN
       RETURN FALSE;
     END;
     a := TextUtils.SubstChar(a, '\\', '/');
