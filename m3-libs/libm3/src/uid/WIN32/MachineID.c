@@ -17,14 +17,14 @@ extern "C" {
 
 static
 BOOL
-GetMacAddressFromNetbios(unsigned char *id)
+GetMacAddressFromNetbios(unsigned char* id)
 {
     NCB ncb = { 0 };
     LANA_ENUM lanaEnum = { 0 };
     struct {
         ADAPTER_STATUS adaptorStatus;
         NAME_BUFFER names[30];
-    } adaptorStatusBuffer;
+    } adaptorStatusBuffer = { 0 };
 
     ZeroMemory(id, 6);
     ZeroMemory(&ncb, sizeof(ncb));
@@ -66,7 +66,7 @@ GetMacAddressFromNetbios(unsigned char *id)
 
 static
 BOOL
-GetMacAddressFromUuidCreateSequential(unsigned char *id)
+GetMacAddressFromUuidCreateSequential(unsigned char* id)
 {
     union {
         unsigned char bytes[16];
@@ -104,7 +104,7 @@ GetMacAddressFromUuidCreateSequential(unsigned char *id)
 
 BOOL
 __cdecl
-MachineIDC__CanGet(unsigned char *id)
+MachineIDC__CanGet(unsigned char* id)
 {
     ZeroMemory(id, 6);
 
