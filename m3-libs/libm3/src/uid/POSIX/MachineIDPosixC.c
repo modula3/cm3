@@ -22,7 +22,7 @@
 extern "C" {
 #endif
 
-int MachineIDPosixC__CanGet(char *id)
+int MachineID__CanGet(char *id)
 {
     int i;
     char hostname[128];

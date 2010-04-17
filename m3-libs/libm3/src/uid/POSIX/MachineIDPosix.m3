@@ -18,10 +18,5 @@ PROCEDURE Get (): T =
     END;
   END Get;
 
-PROCEDURE CanGet (VAR(*OUT*) id: T): BOOLEAN =
-  BEGIN
-    RETURN MachineIDPosixC.CanGet(ADR(id.r[0]));
-  END CanGet;
-
 BEGIN
 END MachineIDPosix.
