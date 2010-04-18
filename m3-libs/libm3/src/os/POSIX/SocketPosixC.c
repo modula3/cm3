@@ -117,6 +117,26 @@ SocketPosixC__Listen(int fd,
     return listen(fd, max_queue);
 }
 
+static
+int/*boolean*/
+CommonError(int err)
+{
+    switch (err)
+    {
+    case ETIMEDOUT:
+        IOError(Timeout);
+        return TRUE;
+
+    case ENETUNREACH:
+    case EHOSTUNREACH:
+    case EHOSTDOWN:
+    case ENETDOWN:
+        IOError(Unreachable);
+        return TRUE;
+    }
+    return FALSE;
+}
+
 void
 __cdecl
 SocketPosixC__Connect(int fd, EndPoint* ep)
@@ -136,6 +156,8 @@ SocketPosixC__Connect(int fd, EndPoint* ep)
         case EBADF:  /* we'll try the same for EBADF, which we've seen on Alpha */
             RefetchError(fd);
         }
+        if (CommonError(errno))
+            return;
         switch (errno)
         {
         case EISCONN:
@@ -147,17 +169,6 @@ SocketPosixC__Connect(int fd, EndPoint* ep)
         case ECONNRESET:
         case EBADF:
             IOError(Refused);
-            return;
-
-        case ETIMEDOUT:
-            IOError(Timeout);
-            return;
-
-        case ENETUNREACH:
-        case EHOSTUNREACH:
-        case EHOSTDOWN:
-        case ENETDOWN:
-            IOError(Unreachable);
             return;
 
         case EWOULDBLOCK:
@@ -216,26 +227,6 @@ SocketPosixC__Accept(int server, EndPoint* ep)
         }
         SchedulerPosix__IOAlertWait(server, TRUE);
     }
-}
-
-static
-int/*boolean*/
-CommonError(int err)
-{
-    switch (err)
-    {
-    case ETIMEDOUT:
-        IOError(Timeout);
-        return TRUE;
-
-    case ENETUNREACH:
-    case EHOSTUNREACH:
-    case EHOSTDOWN:
-    case ENETDOWN:
-        IOError(Unreachable);
-        return TRUE;
-    }
-    return FALSE;
 }
 
 static
@@ -331,11 +322,11 @@ SocketPosixC__ReceiveFrom(int fd,
                           int/*boolean*/ mayBlock)
 {
     SockAddrIn name;
-    INTEGER nameLen = sizeof(name);
 
     ZERO_MEMORY(name);
     while (1)
     {
+        INTEGER nameLen = sizeof(name);
         INTEGER len = recvfrom(fd, b, nb, 0, (struct sockaddr *)&name, &nameLen);
         if (len >= 0)
         {
