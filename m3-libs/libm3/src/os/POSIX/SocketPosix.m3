@@ -211,7 +211,6 @@ PROCEDURE CommonRead(fd: int; errno: int; mayBlock: BOOLEAN; VAR len: INTEGER): 
       len := 0;
       RETURN TRUE;
     ELSIF (errno = EPIPE)
-       OR (errno = ECONNRESET)
        OR (errno = ENETRESET) THEN
       IOError (ConnLost);
     ELSIF (errno = ETIMEDOUT) THEN
