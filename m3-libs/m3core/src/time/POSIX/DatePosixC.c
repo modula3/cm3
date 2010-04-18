@@ -31,17 +31,32 @@ extern "C" {
 #define Local 0
 #define UTC 1
 
+#define MILLION (1000 * 1000)
+
+static
+struct timeval
+__cdecl
+TimePosix__ToUtime(LONGREAL/*Time.T*/ t)
+/* see also TimePosix__FromUtime */
+{
+    struct timeval tv;
+    double n = { 0 };
+
+    ZERO_MEMORY(tv); 
+    tv.tv_usec = modf(t, &n) * MILLION;
+    tv.tv_sec = n;
+    return tv;
+}
+
 void
 __cdecl
 DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown, TEXT gmt)
 {
     struct tm* tm = { 0 };
-    struct timeval tv;
+    struct timeval tv = TimePosix__ToUtime(t);    
     ptrdiff_t zone = (pzone ? *pzone : Local);
 
     ZeroMemory(date, sizeof(*date));
-    ZERO_MEMORY(tv);
-    tv = TimePosix__ToUtime(t);    
     assert(zone == Local || zone == UTC);
     tm = ((zone == Local) ? localtime(&tv.tv_sec) : gmtime(&tv.tv_sec));
     assert(tm != NULL);
