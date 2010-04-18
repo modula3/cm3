@@ -13,33 +13,18 @@ We use gettimeofday() which returns seconds and microseconds.
 extern "C" {
 #endif
 
-typedef double T;
-
 #define MILLION (1000 * 1000)
 
-struct timeval
-__cdecl
-TimePosix__ToUtime(T t)
-/* NOT exposed to Modula-3. */
-{
-    struct timeval tv;
-    double n = { 0 };
-
-    ZERO_MEMORY(tv); 
-    tv.tv_usec = modf(t, &n) * MILLION;
-    tv.tv_sec = n;
-    return tv;
-}
-
-T
+static
+LONGREAL/*Time.T*/
 __cdecl
 TimePosix__FromUtime(const struct timeval* tv)
-/* NOT exposed to Modula-3. */
+/* see also TimePosix__ToUtime */
 {
-    return ((T)tv->tv_sec) + ((T)tv->tv_usec) / (T)MILLION;
+    return ((LONGREAL)tv->tv_sec) + ((LONGREAL)tv->tv_usec) / (LONGREAL)MILLION;
 }
 
-T
+LONGREAL/*Time.T*/
 __cdecl
 TimePosix__Now(void)
 {
@@ -54,23 +39,23 @@ TimePosix__Now(void)
 }
 
 static
-T
+LONGREAL/*Time.T*/
 ComputeGrainOnce(void)
 {
     /* Determine value of "Grain" experimentally.  Note that
      * this will fail if this thread is descheduled for a tick during the
      * loop below. Omitting volatile leads to the result is 0 on Cygwin if optimized.
      */
-    volatile T t0 = TimePosix__Now();
+    volatile LONGREAL t0 = TimePosix__Now();
     while (1)
     {
-        volatile T t1 = TimePosix__Now();
+        volatile LONGREAL t1 = TimePosix__Now();
         if (t1 != t0)
             return (t1 - t0);
     }
 }
 
-T
+LONGREAL/*Time.T*/
 __cdecl
 TimePosix__ComputeGrain(void)
 {
@@ -80,9 +65,9 @@ TimePosix__ComputeGrain(void)
  */
     while (1)
     {
-        T a = ComputeGrainOnce();
-        T b = ComputeGrainOnce();
-        T c = ComputeGrainOnce();
+        LONGREAL a = ComputeGrainOnce();
+        LONGREAL b = ComputeGrainOnce();
+        LONGREAL c = ComputeGrainOnce();
         if (a == b && a == c)
             return a;
     }
@@ -98,7 +83,7 @@ TimePosix__ComputeGrain(void)
 
 int main()
 {
-    T grain = ComputeGrain();
+    LONGREAL grain = ComputeGrain();
 
     printf("%f\n", grain);
 
