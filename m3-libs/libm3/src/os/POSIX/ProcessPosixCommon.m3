@@ -235,6 +235,7 @@ PROCEDURE ExecChild(
     IF NOT (SetFd(0, stdin) AND SetFd(1, stdout) AND SetFd(2, stderr)) THEN
       RETURN -1;
     END;
+    (* NOTE: Should use getdtablehi here on Irix. It is more efficient. *)
     FOR fd := 3 TO Unix.getdtablesize() - 1 DO
       EVAL Unix.close(fd) (* ignore errors *)
     END;
