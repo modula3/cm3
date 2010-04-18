@@ -55,8 +55,14 @@ BEGIN
   Scheduler.EnableSwitching();
   Local := NEW(TimeZone);  Local^ := 0;
   UTC   := NEW(TimeZone);  UTC^   := 1;
-  DatePosix.TypeCheck(DatePosix.T{year := 1, month := 2, day := 3, hour := 4,
-                      minute := 5, second := 6, offset := 7,
-                      zone := LOOPHOLE(8, TEXT),
-                      weekDay := 9}, BYTESIZE(DatePosix.T));
+  DatePosix.TypeCheck(DatePosix.T{year    := 1,
+                                  month   := 2,
+                                  day     := 3,
+                                  hour    := 4,
+                                  minute  := 5,
+                                  second  := 6,
+                                  offset  := 7,
+                                  zone    := LOOPHOLE(8, TEXT),
+                                  weekDay := 9},
+                      BYTESIZE(DatePosix.T));
 END DatePosix.
