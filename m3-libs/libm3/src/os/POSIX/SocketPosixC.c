@@ -11,7 +11,7 @@
 extern "C" {
 #endif
 
-enum {SchedulerPosix__WaitResult_Ready};
+enum {WaitResult_Ready, WaitResult_Error, WaitResult_FDError, WaitResult_Timeout};
 int
 __cdecl
 SchedulerPosix__IOWait(int fd, int/*boolean*/read, LONGREAL timeout);
@@ -49,7 +49,7 @@ typedef void* Exception;
 extern Exception Unreachable, PortBusy, NoResources;
 extern Exception Refused, Timeout, ConnLost, Unexpected;
 
-#define IOErrorSocketPosix__IOError
+#define IOError SocketPosix__IOError
 void
 __cdecl
 IOError(Exception);
@@ -326,7 +326,7 @@ SocketPosixC__ReceiveFrom(int fd,
     ZERO_MEMORY(name);
     while (1)
     {
-        INTEGER nameLen = sizeof(name);
+        socklen_t nameLen = sizeof(name);
         INTEGER len = recvfrom(fd, b, nb, 0, (struct sockaddr *)&name, &nameLen);
         if (len >= 0)
         {
@@ -340,7 +340,7 @@ SocketPosixC__ReceiveFrom(int fd,
 
 INTEGER
 __cdecl
-Read(int fd, void* pb, INTEGER nb, int/*boolean*/ mayBlock)
+SocketPosixC__Read(int fd, void* pb, INTEGER nb, int/*boolean*/ mayBlock)
 {
     while (1)
     {
@@ -351,7 +351,7 @@ Read(int fd, void* pb, INTEGER nb, int/*boolean*/ mayBlock)
 }
 void
 __cdecl
-SendTo(int fd, const EndPoint* ep, const void* pb, INTEGER n)
+SocketPosixC__SendTo(int fd, const EndPoint* ep, const void* pb, INTEGER n)
 {
     INTEGER len = { 0 };
     SockAddrIn name = { 0 };
@@ -367,7 +367,7 @@ SendTo(int fd, const EndPoint* ep, const void* pb, INTEGER n)
 
 void
 __cdecl
-Write(int fd, const void* p, INTEGER n)
+SocketPosixC__Write(int fd, const void* p, INTEGER n)
 {
     while (n > 0)
     {
@@ -378,9 +378,9 @@ Write(int fd, const void* p, INTEGER n)
 
 INTEGER
 __cdecl
-BytesAvailable(int fd)
+SocketPosixC__BytesAvailable(int fd)
 {
-    if (SchedulerPosix__IOWait(fd, TRUE, 0) == SchedulerPosix__WaitResult_Ready)
+    if (SchedulerPosix__IOWait(fd, TRUE, 0) == WaitResult_Ready)
     {
         int charsToRead = { 0 };
         if (ioctl(fd, FIONREAD, &charsToRead))
@@ -396,7 +396,7 @@ BytesAvailable(int fd)
 
 void
 __cdecl
-Peek(int fd, EndPoint* ep)
+SocketPosixC__Peek(int fd, EndPoint* ep)
 {
     SockAddrIn name;
     socklen_t len = sizeof(name);
@@ -413,7 +413,7 @@ Peek(int fd, EndPoint* ep)
 
 void
 __cdecl
-ThisEnd(int fd, EndPoint* ep)
+SocketPosixC__ThisEnd(int fd, EndPoint* ep)
 {
     if (memcmp(ep, &nullAddress, sizeof(nullAddress)) == 0)
     {
@@ -434,9 +434,7 @@ ThisEnd(int fd, EndPoint* ep)
     }
 }
 
-void
-__cdecl
-GetHostAddr(Address* a)
+static void GetHostAddr(Address* a)
 {
     char host[256];
     struct hostent* hostent;
@@ -460,7 +458,7 @@ GetHostAddr(Address* a)
 
 void
 __cdecl
-OtherEnd(int fd, EndPoint* ep)
+SocketPosixC__OtherEnd(int fd, EndPoint* ep)
 {
     SockAddrIn addr;
     socklen_t len = sizeof(addr);
