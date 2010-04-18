@@ -1,521 +1,553 @@
-(* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. *)
-(* See file COPYRIGHT-CMASS for details. *)
+/* Copyright 1996-2000, Critical Mass, Inc.  All rights reserved. */
+/* See file COPYRIGHT-CMASS for details. */
 
-UNSAFE MODULE SocketPosix EXPORTS Socket;
+#include "m3core.h"
 
-IMPORT Atom, AtomList, SocketPosix_IsUltrixOrOSF, Cerrno, Ctypes, File, FilePosix;
-IMPORT OSError, OSErrorPosix, SchedulerPosix, Thread, Unix;
-IMPORT Uin, Uuio, Uerror, Usocket, Ustat, Unetdb, Utypes, Word;
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-CONST
-  TCP_NODELAY = 1;
+typedef struct sockaddr_in SockAddrIn;
+typedef void* Exception;
+#define Unreachable Socket__Unreachable
+#define PortBusy Socket__PortBusy
+#define NoResources Socket__NoResources
+#define Refused Socket__Refused
+#define Timeout Socket__Timeout
+#define ConnLost Socket__ConnLost
+#define Unexpected Socket__Unexpected
+extern Exception Unreachable, PortBusy, NoResources,
+extern Exception Refused, Timeout, ConnLost, Unexpected;
 
-REVEAL
-  T = Public BRANDED "Socket.T" OBJECT
-    ep: EndPoint   := NullEndPoint;
-  OVERRIDES
-    (* File.T methods *)
-    read            := Read;
-    write           := Write;
-    status          := Status;
-    close           := Close;
-    (* Socket.T methods *)
-    bind            := Bind;
-    connect         := Connect;
-    accept          := Accept;
-    listen          := Listen;
-    bytes_available := BytesAvailable;
-    peek            := Peek;
-    this_end        := ThisEnd;
-    other_end       := OtherEnd;
-    recv_from       := ReceiveFrom;
-    send_to         := SendTo;
-  END;
+#define IOError SocketPosix__IOError
+void
+__cdecl
+IOError(Exception);
 
-TYPE SockAddrIn = Uin.struct_sockaddr_in;
+int
+__cdecl
+SocketPosixC__Create(int/*boolean*/ reliable)
+{
+    int one = 1;
+    int fd = socket(AF_INET, reliable ? SOCK_STREAM : SOCK_DGRAM, 0);
+    if (fd == -1)
+    {
+        Exception e = Unexpected;
+        switch (errno)
+        {
+        case EMFILE:
+        case ENFILE:
+            e = NoResources;
+            break;
+        }
+        IOError(e);
+    }
 
-PROCEDURE Create (reliable: BOOLEAN): T
-  RAISES {OSError.E} =
-  VAR
-    (*CONST*) Map := ARRAY BOOLEAN OF INTEGER { Usocket.SOCK_DGRAM, Usocket.SOCK_STREAM };
-    t    := NEW (T, ds := FilePosix.ReadWrite);
-    True := 1;
-  BEGIN
-    t.fd := Usocket.socket (Usocket.AF_INET, Map[reliable], 0);
-    IF t.fd = -1 THEN
-      VAR err := Unexpected; BEGIN
-        WITH errno = Cerrno.GetErrno() DO
-          IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
-            err := NoResources;
-          END;
-        END;
-        IOError (err);
-      END;
-    END;
-    MakeNonBlocking (t.fd);
-    EVAL Usocket.setsockopt (t.fd, Usocket.SOL_SOCKET, Usocket.SO_REUSEADDR,
-                             ADR (True), BYTESIZE (True));
-    RETURN t;
-  END Create;
+    MakeNonBlocking(fd);
+    setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
+    return fd;
+}
 
-PROCEDURE Close (t: T)
-  RAISES {OSError.E} =
-  BEGIN
-    IF Unix.close (t.fd) < 0 THEN
-      IOError (Unexpected);
-    END;
-  END Close;
+int
+__cdecl
+SocketPosixC__Status(int fd,
+                     LONGREAL* modificationTime,
+                     LONGINT* size)
+{
+    stat_t st = { 0 };
 
-PROCEDURE Status (t: T): File.Status
-  RAISES {OSError.E} =
-  VAR
-    statBuf : Ustat.struct_stat;
-    status  : File.Status;
-  BEGIN
-    IF Ustat.fstat (t.fd, ADR (statBuf)) < 0 THEN IOError (Unexpected); END;
-    status.type             := FileType;
-    status.modificationTime := FLOAT (statBuf.st_mtime, LONGREAL);
-    status.size             := statBuf.st_size;
-    IF status.size < 0L THEN IOError (Unexpected); END;
-    RETURN status
-  END Status;  
+    int r = fstat(fd, (struct stat*)&st);
+    *modificationTime = st.st_mtime;
+    *size = st.st_size;
+    return r;
+}
 
-PROCEDURE Bind (t: T;  READONLY ep: EndPoint)
-  RAISES {OSError.E} =
-  VAR
-    name  : SockAddrIn;
-    status: INTEGER;
-  BEGIN
-    SetAddress (t, ep, name);
-    status := Usocket.bind (t.fd, ADR (name), BYTESIZE (name));
-    IF status # 0 THEN
-      VAR err := Unexpected; BEGIN
-        IF Cerrno.GetErrno() = Uerror.EADDRINUSE THEN err := PortBusy; END;
-        IOError (err);
-      END;
-    END;
-  END Bind;
+void
+__cdecl
+SocketPosixC__Bind(int fd, EndPoint* ep)
+{
+    SockAddrIn name;
 
-PROCEDURE Listen (t: T;  max_queue: CARDINAL)
-  RAISES {OSError.E} =
-  BEGIN
-    IF Usocket.listen (t.fd, max_queue) # 0 THEN
-      IOError (Unexpected);
-    END;
-  END Listen;
+    ZERO_MEMORY(name);
+    SetAddress(ep, &name);
+    if (bind(fd, &name, sizeof(name)))
+    {
+        Exception e = Unexpected;
+        if (errno == EADDRINUSE)
+            e = PortBusy;
+        IOError(e);
+    }
+}
 
-PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
-  RAISES {OSError.E, Thread.Alerted} =
-  VAR
-    name: SockAddrIn;
-    status: INTEGER;
-  BEGIN
-    SetAddress (t, ep, name);
-    InitStream (t.fd);
+int
+__cdecl
+SocketPosixC__Listen(int fd,
+                     size_t max_queue)
+{
+    return listen(fd, max_queue);
+}
 
-    LOOP
-      status := Usocket.connect (t.fd, ADR(name), BYTESIZE(name));
-      IF status = 0 THEN EXIT; END;
+void
+__cdecl
+SocketPosixC__Connect(int fd, EndPoint* ep)
+{
+    SockAddrIn name;
 
-      WITH errno = Cerrno.GetErrno() DO
-        IF errno = Uerror.EINVAL THEN
-          (* hack to try to get real errno, hidden due to NBIO bug in connect *)
-          RefetchError (t.fd);
-        ELSIF errno = Uerror.EBADF THEN
-          (* we'll try the same for EBADF, which we've seen on Alpha *)
-          RefetchError (t.fd);
-        END;
-      END;
+    ZERO_MEMORY(name);
+    EndPointToAddress(ep, &name);
+    InitStream(fd);
+    while (1)
+    {
+        if (connect(fd, &name, sizeof(name)) == 0)
+            break;
+        switch (errno)
+        {
+        case EINVAL: /* hack to try to get real errno, hidden due to NBIO bug in connect */
+        case EBADF:  /* we'll try the same for EBADF, which we've seen on Alpha */
+            RefetchError(fd);
+        }
+        switch (errno)
+        {
+        case EISCONN:
+            return;
 
-      WITH errno = Cerrno.GetErrno() DO
-        IF errno = Uerror.EISCONN THEN
-          EXIT;
-        ELSIF  (errno = Uerror.EADDRNOTAVAIL)
-            OR (errno = Uerror.ECONNREFUSED)
-            OR (errno = Uerror.EINVAL)
-            OR (errno = Uerror.ECONNRESET)
-            OR (errno = Uerror.EBADF) THEN
-          IOError (Refused);
-        ELSIF (errno = Uerror.ETIMEDOUT) THEN
-          IOError (Timeout);
-        ELSIF  (errno = Uerror.ENETUNREACH)
-            OR (errno = Uerror.EHOSTUNREACH)
-            OR (errno = Uerror.EHOSTDOWN)
-            OR (errno = Uerror.ENETDOWN) THEN
-          IOError (Unreachable);
-        ELSIF (errno = Uerror.EWOULDBLOCK)
-           OR (errno = Uerror.EAGAIN)
-           OR (errno = Uerror.EINPROGRESS)
-           OR (errno = Uerror.EALREADY) THEN
-          (* nope, not yet *)
-        ELSE
-          IOError (Unexpected);
-        END;
-      END;
+        case EADDRNOTAVAIL:
+        case ECONNREFUSED:
+        case EINVAL:
+        case ECONNRESET:
+        case EBADF:
+            IOError(Refused);
+            return;
 
-      EVAL SchedulerPosix.IOAlertWait (t.fd, FALSE);
-    END;
-  END Connect;
+        case ETIMEDOUT:
+            IOError(Timeout);
+            return;
 
-PROCEDURE Accept (t: T): T
-  RAISES {OSError.E, Thread.Alerted} =
-  VAR
-    name : SockAddrIn;
-    len  : INTEGER   := BYTESIZE(name);
-    fd   : INTEGER;
-    res  : T;
-  BEGIN
-    LOOP
-      fd := Usocket.accept (t.fd, ADR (name), ADR (len));
-      IF fd >= 0 THEN EXIT; END;
+        case ENETUNREACH:
+        case EHOSTUNREACH:
+        case EHOSTDOWN:
+        case ENETDOWN:
+            IOError(Unreachable);
+            return;
 
-      WITH errno = Cerrno.GetErrno() DO
-        IF  (errno = Uerror.EMFILE)
-            OR (errno = Uerror.ENFILE) THEN
-          IOError (NoResources);
-        ELSIF  (errno = Uerror.EWOULDBLOCK)
-            OR (errno = Uerror.EAGAIN) THEN
-          (* nope, not yet *)
-        ELSE
-          IOError (Unexpected);
-        END;
-      END;
+        case EWOULDBLOCK:
+        case EAGAIN:
+        case EINPROGRESS:
+        case EALREADY:
+            /* nope, not yet */
+            break;
 
-      EVAL SchedulerPosix.IOAlertWait (t.fd, TRUE);
-    END;
+        default:
+            IOError(Unexpected);
+            return;
+        }
+        SchedulerPosix__IOAlertWait(fd, FALSE);
+    }
+}
 
-    res := NEW (T, fd := fd, ds := FilePosix.ReadWrite);
-    AddressToEndPoint (name, res.ep);
-    InitStream (fd);
-    RETURN res;
-  END Accept;
+void
+__cdecl
+SocketPosixC__Accept(int fd1, EndPoint* ep)
+{
+    SockAddrIn name;
+    int err = { 0 };
+    int len = sizeof(name);
+    int fd2;
 
-PROCEDURE ReceiveFrom (t: T;  VAR(*OUT*) ep: EndPoint;
-                              VAR(*OUT*) b: ARRAY OF File.Byte;
-                                         mayBlock := TRUE): INTEGER
-  RAISES {OSError.E} =
-  VAR
-    name  : SockAddrIn;
-    nmLen : INTEGER;
-    len   : INTEGER;
-    p_b   : ADDRESS := ADR (b[0]);
-  BEGIN
-    LOOP
-      nmLen := BYTESIZE (name);
-      len := Usocket.recvfrom (t.fd, p_b, NUMBER (b), 0,
-                               ADR (name), ADR (nmLen));
-      IF len >= 0 THEN
-        AddressToEndPoint (name, ep);
-        RETURN len;
-      END;
+    ZERO_MEMORY(name);
+    while (1)
+    {
+        fd2 = accept(fd, &name, &len);
+        if (fd2 >= 0)
+            break;
 
-      WITH errno = Cerrno.GetErrno() DO
-        IF (errno = Uerror.ECONNRESET) THEN
-          RETURN 0;
-        ELSIF (errno = Uerror.EPIPE)
-           OR (errno = Uerror.ENETRESET) THEN
-          IOError (ConnLost);
-        ELSIF (errno = Uerror.ETIMEDOUT) THEN
-          IOError (Timeout);
-        ELSIF (errno = Uerror.ENETUNREACH)
-           OR (errno = Uerror.EHOSTUNREACH)
-           OR (errno = Uerror.EHOSTDOWN)
-           OR (errno = Uerror.ENETDOWN) THEN
-          IOError (Unreachable);
-        ELSIF (errno = Uerror.EWOULDBLOCK)
-           OR (errno = Uerror.EAGAIN) THEN
-          IF NOT mayBlock THEN RETURN -1; END;
-        ELSE
-          IOError (Unexpected);
-        END;
-      END;
+        switch (errno)
+        {
+        case EMFILE:
+        case ENFILE:
+            IOError(NoResources);
+            return;
 
-      EVAL SchedulerPosix.IOWait (t.fd, TRUE);
-    END;
-  END ReceiveFrom;
+        case EWOULDBLOCK:
+        case EAGAIN:
+            /* nope, not yet */
+            break;
 
-PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte;  mayBlock := TRUE): INTEGER
-  RAISES {OSError.E} =
-  VAR len: INTEGER;  p_b: ADDRESS := ADR (b[0]);
-  BEGIN
-    LOOP
-      len := Uuio.read (t.fd, p_b, NUMBER (b));
-      IF len >= 0 THEN RETURN len; END;
+        default:
+            IOError(Unexpected);
+            return;
+        }
+        SchedulerPosix__IOAlertWait(fd1, TRUE);
+    }
+    InitStream(fd2);
+    AddressToEndPoint(&name, ep);
+}
 
-      WITH errno = Cerrno.GetErrno() DO
-        IF (errno = Uerror.ECONNRESET) THEN
-          RETURN 0;
-        ELSIF (errno = Uerror.EPIPE)
-           OR (errno = Uerror.ENETRESET) THEN
-          IOError (ConnLost);
-        ELSIF (errno = Uerror.ETIMEDOUT) THEN
-          IOError (Timeout);
-        ELSIF (errno = Uerror.ENETUNREACH)
-           OR (errno = Uerror.EHOSTUNREACH)
-           OR (errno = Uerror.EHOSTDOWN)
-           OR (errno = Uerror.ENETDOWN) THEN
-          IOError (Unreachable);
-        ELSIF (errno = Uerror.EWOULDBLOCK)
-           OR (errno = Uerror.EAGAIN) THEN
-          IF NOT mayBlock THEN RETURN -1; END;
-        ELSE
-          IOError (Unexpected);
-        END;
-      END;
+INTEGER
+__cdecl
+SocketPosixC__ReceiveFrom(int fd,
+                          EndPoint* ep,
+                          ADDRESS b,
+                          INTEGER nb,
+                          int mayBlock)
+{
+    SockAddrIn name;
+    INTEGER nameLen = sizeof(name);
 
-      EVAL SchedulerPosix.IOWait (t.fd, TRUE);
-    END;
-  END Read;
+    ZERO_MEMORY(name);
+    while (1)
+    {
+        int len = recvfrom(fd, b, nb, 0, &name, &nameLen);
+        if (len >= 0)
+        {
+            AddressToEndPoint(name, ep);
+            return len;
+        }
+        switch (errno)
+        {
+        case ECONNRESET:
+            return 0;
 
-PROCEDURE SendTo (t: T;  READONLY ep: EndPoint;
-                         READONLY b: ARRAY OF File.Byte)
-  RAISES {OSError.E} =
-  VAR
-    len : INTEGER;
-    p   : ADDRESS    := ADR(b[0]);
-    n   : Ctypes.int := NUMBER(b);
-    name: SockAddrIn;
-  BEGIN
-    WHILE n > 0 DO
-      EndPointToAddress (ep, name);
-      len := Usocket.sendto (t.fd, p, n, 0, ADR (name), BYTESIZE (name));
+        case EPIPE:
+        case ENETRESET:
+            IOError(ConnLost);
+            return -1;
 
-      IF len >= 0 THEN
-        INC (p, len);  DEC (n, len);
-      ELSE
-        WITH errno = Cerrno.GetErrno() DO
-          IF     (errno = Uerror.EPIPE)
-              OR (errno = Uerror.ECONNRESET)
-              OR (errno = Uerror.ENETRESET) THEN
-            IOError (ConnLost);
-          ELSIF (errno = Uerror.ETIMEDOUT) THEN
-            IOError (Timeout);
-          ELSIF  (errno = Uerror.ENETUNREACH)
-              OR (errno = Uerror.EHOSTUNREACH)
-              OR (errno = Uerror.EHOSTDOWN)
-              OR (errno = Uerror.ENETDOWN) THEN
-            IOError (Unreachable);
-          ELSIF  (errno = Uerror.EWOULDBLOCK)
-              OR (errno = Uerror.EAGAIN) THEN
-              (* OK, wait to write out a bit more... *)
-          ELSE
-            IOError (Unexpected);
-          END;
-        END;
-      END;
+        case ETIMEDOUT:
+            IOError(Timeout);
+            return -1;
 
-      IF (n > 0) THEN
-        EVAL SchedulerPosix.IOWait (t.fd, FALSE);
-        (* IF Thread.TestAlert() THEN RAISE Thread.Alerted END *)
-      END;
-    END;
-  END SendTo;
+        case ENETUNREACH:
+        case EHOSTUNREACH:
+        case EHOSTDOWN:
+        case ENETDOWN:
+            IOError(Unreachable);
+            return -1;
 
-PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
-  RAISES {OSError.E} =
-  VAR
-    len : INTEGER;
-    p   : ADDRESS    := ADR(b[0]);
-    n   : Ctypes.int := NUMBER(b);
-  BEGIN
-    WHILE n > 0 DO
-      len := Uuio.write (t.fd, p, n);
+        case EWOULDBLOCK:
+        case EAGAIN:
+            if (mayBlock)
+                IOError(Unexpected);
+            return -1;
+        }
+        SchedulerPosix__IOWait(fd, TRUE);
+    }
+}
 
-      IF len >= 0 THEN
-        INC (p, len);  DEC (n, len);
-      ELSE
-        WITH errno = Cerrno.GetErrno() DO
-          IF     (errno = Uerror.EPIPE)
-              OR (errno = Uerror.ECONNRESET)
-              OR (errno = Uerror.ENETRESET) THEN
-            IOError (ConnLost);
-          ELSIF (errno = Uerror.ETIMEDOUT) THEN
-            IOError (Timeout);
-          ELSIF  (errno = Uerror.ENETUNREACH)
-              OR (errno = Uerror.EHOSTUNREACH)
-              OR (errno = Uerror.EHOSTDOWN)
-              OR (errno = Uerror.ENETDOWN) THEN
-            IOError (Unreachable);
-          ELSIF  (errno = Uerror.EWOULDBLOCK)
-              OR (errno = Uerror.EAGAIN) THEN
-            (* OK, wait to write out a bit more... *)
-          ELSE
-            IOError (Unexpected);
-          END;
-        END;
-      END;
+INTEGER
+__cdecl
+Read(int fd, void* pb, INTEGER nb, int/*boolean*/ mayBlock)
+{
+    while (1)
+    {
+        INTEGER len = read(fd, pb, nb);
+        if (len >= 0)
+            return len;
 
-      IF (n > 0) THEN
-        EVAL SchedulerPosix.IOWait (t.fd, FALSE);
-        (* IF Thread.TestAlert() THEN RAISE Thread.Alerted END *)
-      END;
-    END;
-  END Write;
+        switch (errno)
+        {
+        case ECONNRESET:
+            return 0;
 
-PROCEDURE BytesAvailable (t: T): CARDINAL
-  RAISES {OSError.E} =
-  VAR status: INTEGER;  charsToRead: Ctypes.int;
-  BEGIN
-    IF SchedulerPosix.IOWait (t.fd, TRUE, 0.0D0) =
-                            SchedulerPosix.WaitResult.Ready THEN
-      status := Unix.ioctl (t.fd, Unix.FIONREAD, ADR(charsToRead));
-      IF status # 0 THEN IOError (Unexpected); END;
-      RETURN MAX (0, charsToRead);
-    END;
-    RETURN 0;
-  END BytesAvailable;
+        case EPIPE:
+        case ENETRESET:
+            IOError(ConnLost);
+            return -1;
 
-PROCEDURE Peek (t: T): EndPoint
-  RAISES {OSError.E} =
-  VAR
-    name : SockAddrIn;
-    len  : INTEGER     := BYTESIZE (name);
-    ep   : EndPoint;
-  BEGIN
-    IF Usocket.recvfrom (t.fd, NIL, 0, Usocket.MSG_PEEK,
-                         ADR (name), ADR (len)) < 0 THEN
-      IOError (Unexpected);
-    END;
-    AddressToEndPoint (name, ep);
-    RETURN ep;
-  END Peek;
+        case ETIMEDOUT:
+            IOError(Timeout);
 
-PROCEDURE ThisEnd (t: T): EndPoint
-  RAISES {OSError.E} =
-  VAR
-    name : SockAddrIn;
-    len  : INTEGER     := BYTESIZE (name);
-  BEGIN
-    IF t.ep.addr = NullAddress THEN
-      t.ep.addr := GetHostAddr ();
-    END;
-    IF t.ep.port = NullPort THEN
-      IF Usocket.getsockname (t.fd, ADR (name), ADR (len)) # 0 THEN
-        IOError (Unexpected);
-      END;
-      t.ep.port := Uin.ntohs (name.sin_port);
-    END;
-    RETURN t.ep
-  END ThisEnd;
+        case ENETUNREACH:
+        case EHOSTUNREACH:
+        case EHOSTDOWN:
+        case ENETDOWN:
+            IOError(Unreachable);
+            return -1;
 
-PROCEDURE GetHostAddr (): Address
-  RAISES {OSError.E} =
-  VAR
-    host : ARRAY [0..255] OF CHAR;
-    hostent: Unetdb.struct_hostent;
-    info : Unetdb.struct_hostent_star;
-    ua   : Uin.struct_in_addr;
-  BEGIN
-    IF Unix.gethostname (ADR (host[0]), BYTESIZE (host)) # 0 THEN
-      IOError (Unexpected);
-    END;
+        case EWOULDBLOCK:
+        case EAGAIN:
+            if (!mayBlock)
+                return -1;
+            break;
 
-    info := Unetdb.gethostbyname (ADR (host[0]), ADR (hostent));
-    IF info = NIL THEN IOError (Unexpected); END;
-    <* ASSERT info.h_length <= BYTESIZE (Address) *>
+        default:
+            IOError(Unexpected);
+            return -1;
+        }
+        SchedulerPosix__IOWait(fd, TRUE);
+    }
+}
+void
+INTEGER
+__cdecl
+SendTo(int fd, const EndPoint* ep, const void* pb, INTEGER n)
+{
+    INTEGER len = { 0 };
+    SockAddrIn name = { 0 };
 
-    ua := LOOPHOLE(info.h_addr_list,
-                   UNTRACED REF UNTRACED REF Uin.struct_in_addr)^^;
-    RETURN LOOPHOLE (ua.s_addr, Address);
-  END GetHostAddr;
+    ZERO_MEMORY(name);
+    while (n > 0)
+    {
+        EndPointToAddress(ep, &name);
+        len = sendto(fd, pb, n, 0, &name, sizeof(name));
+        if (len >= 0)
+        {
+            p += len;
+            n -= len;
+        }
+        else
+        {
+            switch (errno)
+            {
+            case EPIPE:
+            case ECONNRESET:
+            case ENETRESET:
+                IOError(ConnLost);
+                return;
 
-PROCEDURE OtherEnd (t: T): EndPoint
-  RAISES {OSError.E} =
-  VAR
-    addr : SockAddrIn;
-    len  : Ctypes.int := BYTESIZE (addr);
-    ep   : EndPoint;
-  BEGIN
-    IF Usocket.getpeername (t.fd, ADR (addr), ADR (len)) < 0 THEN
-      IOError (Unexpected);
-    END;
-    AddressToEndPoint (addr, ep);
-    RETURN ep;
-  END OtherEnd;
+            case ETIMEDOUT:
+                IOError(Timeout);
+                return;
 
-(*------------------------------------------------ internal utilities ---*)
+            case ENETUNREACH:
+            case EHOSTUNREACH:
+            case EHOSTDOWN:
+            case ENETDOWN:
+                IOError(Unreachable);
+                return;
 
-PROCEDURE SetAddress (t: T;  READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn) =
-  (* LL = mu *)
-  BEGIN
-    t.ep := ep;
-    EndPointToAddress (ep, name);
-  END SetAddress;
+            case EWOULDBLOCK:
+            case EAGAIN:
+                /* OK, wait to write out a bit more... */
+                break;
 
-PROCEDURE EndPointToAddress (READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn) =
-  (* LL = mu *)
-  CONST Sin_Zero = ARRAY [0 .. 7] OF Ctypes.char{VAL(0, Ctypes.char), ..};
-  BEGIN
-    name.sin_family      := Usocket.AF_INET;
-    name.sin_port        := Uin.htons (ep.port);
-    name.sin_addr.s_addr := LOOPHOLE (ep.addr, Utypes.u_int);
-    name.sin_zero        := Sin_Zero;
-  END EndPointToAddress;
+            default:
+                IOError(Unexpected);
+                return;
+            }
+        }
+        if (n > 0)
+        {
+            SchedulerPosix__IOWait(fd, FALSE);
+            /* if Thread.TestAlert() THEN RAISE Thread.Alerted END */
+        }
+    }
+}
 
-PROCEDURE AddressToEndPoint (READONLY name: SockAddrIn;  VAR(*OUT*) ep: EndPoint) =
-  (* LL = mu *)
-  BEGIN
-    ep.addr := LOOPHOLE (name.sin_addr.s_addr, Address);
-    ep.port := Uin.ntohs (name.sin_port);
-  END AddressToEndPoint;
+void
+__cdecl
+Write(int fd, const const void* b, INTEGER n)
+{
+    while (n > 0)
+    {
+        INTEGER len = write(fd, p, n);
+        if (len >= 0)
+        {
+            p += len;
+            n -= len;
+        }
+        else
+        {
+            switch (errno)
+            {
+            case EPIPE:
+            case ECONNRESET:
+            case ENETRESET:
+                IOError(ConnLost);
+                return;
 
-(*
-VAR SysSendBufSize: INTEGER := 128000;
-VAR SysRcvBufSize: INTEGER := 128000;
-*)
+            case ETIMEDOUT:
+                IOError(Timeout);
+                return;
 
-PROCEDURE InitStream (fd: CARDINAL)
-  RAISES {OSError.E} =
-  (* We assume that the runtime ignores SIGPIPE signals *)
-  VAR
-    one : Ctypes.int := 1;
-    linger := Usocket.struct_linger{1, 1};
-  BEGIN
-    (*****
-    EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_SNDBUF,
-                            ADR(SysSendBufSize), BYTESIZE(SysSendBufSize));
-    EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_RCVBUF,
-                            ADR(SysRcvBufSize), BYTESIZE(SysRcvBufSize));
-    ******)
-    EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_LINGER,
-                            ADR(linger), BYTESIZE(linger));
-    EVAL Usocket.setsockopt(fd, Uin.IPPROTO_TCP, TCP_NODELAY,
-                            ADR(one), BYTESIZE(one));
+            case ENETUNREACH:
+            case EHOSTUNREACH:
+            case EHOSTDOWN:
+            case ENETDOWN:
+                IOError(Unreachable);
+                return;
 
-    MakeNonBlocking (fd);
-  END InitStream;
+            case EWOULDBLOCK:
+            case EAGAIN:
+                /* OK, wait to write out a bit more... */
+                break;
 
-PROCEDURE MakeNonBlocking (fd: INTEGER)
-  RAISES {OSError.E} =
-  VAR
-    old_mode := Unix.fcntl (fd, Unix.F_GETFL, 0);
-    new_mode := Word.Or (old_mode, Unix.M3_NONBLOCK);  
-  BEGIN
-    IF Unix.fcntl (fd, Unix.F_SETFL, new_mode) # 0 THEN
-      IOError (Unexpected);
-    END;
-  END MakeNonBlocking;
+            default:
+                IOEror(Unexpected);
+                return;
+            }
+        }
+        if (n > 0)
+        {
+            SchedulerPosix__IOWait(fd, FALSE);
+            /* if Thread.TestAlert() THEN RAISE Thread.Alerted END */
+        }
+    }
+}
 
-PROCEDURE RefetchError(fd: INTEGER) =
-(* Awful hack to retrieve a meaningful error from a TCP accept
+INTEGER
+__cdecl
+BytesAvailable(int fd)
+{
+    if (SchedulerPosix__IOWait(fd, TRUE, 0) == SchedulerPosix.WaitResult.Ready)
+    {
+        int charsToRead = { 0 };
+        if (ioctl(fd, FIONREAD, &charsToRead))
+        {
+            IOError(Unexpected);
+            return 0;
+        }
+        if (charsToRead > 0)
+            return charsToRead;
+    }
+    return 0;
+}
+
+void
+__cdecl
+Peek(int fd, EndPoint* ep)
+{
+    SockAddrIn name;
+    socklen_t len = sizeof(name);
+
+    ZERO_MEMORY(name);
+    if (recvfrom(fd, NULL, 0, MSG_PEEK, &name, &len) == -1)
+    {
+        IOError(Unexpected);
+        return;
+    }
+
+    AddressToEndPoint(name, ep);
+}
+
+void
+__cdecl
+ThisEnd(int fd, EndPoint* ep)
+{
+    if (memcmp(ep, nullAddress, sizeof(nullAddress)) == 0)
+        ep->addr = GetHostAddr();
+    if (ep->port == NullPort)
+    {
+        SockAddrIn name;
+        socklen_t len = sizeof(name);
+
+        ZERO_MEMORY(name);
+        if (getsockname(fd, &name, &len) == -1)
+        {
+            IOError(Unexpected);
+            return;
+        }
+        ep->port = ntohs(name.sin_port);
+    }
+}
+
+void
+__cdecl
+GetHostAddr(Address* a)
+{
+    char host[256];
+    struct hostent* hostent;
+
+    if (gethostname(host, sizeof(host)))
+    {
+        IOError(Unexpected);
+        return;
+    }
+
+    if (!(hostent = gethostbyname(host)))
+    {
+        IOError(Unexpected);
+        return;
+    }
+
+    assert(hostent->h_length <= sizeof(Address));
+
+    *a = ((struct in_addr*)hostent->h_addr_list)->s_addr;
+}
+
+void
+__cdecl
+OtherEnd(int fd, EndPoint* ep)
+{
+    SockAddrIn addr;
+    socklen_t len = sizeof(addr);
+
+    ZERO_MEMORY(addr);
+    if (getpeername(fd, &addr, &len) == -1)
+    {
+        IOError(Unexpected);
+        return;
+    }
+    AddressToEndPoint(&addr, ep);
+}
+
+/*------------------------------------------------ internal utilities ---*/
+
+void
+__cdecl
+SetAddress(const EndPoint* ep, /*out*/SockAddrIn* name)
+{
+    /*t.ep = ep;*/
+    EndPointToAddress(ep, name);
+}
+
+void
+__cdecl
+EndPointToAddress(const EndPoint* ep, /*out*/SockAddrIn* name)
+{
+    ZeroMemory(name, sizeof(*name));
+    name->sin_family = AF_INET;
+    name->sin_port = htons(ep->port);
+    name->sin_addr.s_addr = ep->addr;
+}
+
+void
+__cdecl
+AddressToEndPoint(const SockAddrIn* name, /*out*/EndPoint* ep)
+{
+    ep->addr = name->sin_addr.s_addr;
+    ep->port = ntohs(name->sin_port;
+}
+
+void
+__cdecl
+InitStream(int fd)
+{
+    /* We assume that the runtime ignores SIGPIPE signals. */
+    int one = 1;
+    struct linger linger = {1, 1};
+
+    /*****
+    setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &SysSendBufSize, sizeof(SysSendBufSize));
+    setsockopt(fd, SOL_SOCKET, SO_RCVBUF, &SysRcvBufSize, sizeof(SysRcvBufSize));
+    ******/
+    setsockopt(fd, SOL_SOCKET, SO_LINGER, &linger, sizeof(linger));
+    setsockopt(fd, IPPROTO_TCP, TCP_NODELAY, &one, sizeof(one));
+    MakeNonBlocking(fd);
+}
+
+void
+__cdecl
+MakeNonBlocking(int fd)
+{
+    if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK))
+        IOError(Unexpected);
+}
+
+void
+__cdecl
+RefetchError(int fd)
+{
+/* Awful hack to retrieve a meaningful error from a TCP accept
    socket.  Only works on Ultrix and OSF.  Leaves result
-   in Cerrno.GetErrno().  *)
-  VAR optbuf: Ctypes.int := 0;   optlen := BYTESIZE(optbuf);
-  BEGIN
-    IF SocketPosix_IsUltrixOrOSF.Value THEN
-      EVAL Usocket.getsockopt (fd, Uin.IPPROTO_TCP, TCP_NODELAY,
-                                 ADR(optbuf), ADR(optlen));
-    END;
-  END RefetchError;
+   in Cerrno.GetErrno().  */
+#if defined(ULTRIX) || defined(ultrix) || defined(__osf__)
+    int optbuf = 0;
+    socklen_t optlen = sizeof(optbuf);
+    getsockopt(fd, IPPROTO_TCP, TCP_NODELAY, optbuf, &optlen);
+#endif
+}
 
-PROCEDURE IOError (a: Atom.T) RAISES {OSError.E} =
-  VAR ec: AtomList.T := NIL;
-  BEGIN
-    IF (Cerrno.GetErrno() # 0) THEN
-      ec := AtomList.List1 (OSErrorPosix.ErrnoAtom (Cerrno.GetErrno()));
-    END;
-    RAISE OSError.E (AtomList.Cons (a, ec));
-  END IOError;
-
-BEGIN
-END SocketPosix.
+#ifdef __cplusplus
+} /* extern C */
+#endif
