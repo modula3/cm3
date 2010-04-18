@@ -19,7 +19,7 @@ typedef void* Exception;
 extern Exception Unreachable, PortBusy, NoResources,
 extern Exception Refused, Timeout, ConnLost, Unexpected;
 
-#define IOError SocketPosix__IOError
+#define IOErrorSocketPosix__IOError
 void
 __cdecl
 IOError(Exception);
@@ -70,7 +70,7 @@ SocketPosixC__Bind(int fd, EndPoint* ep)
 
     ZERO_MEMORY(name);
     SetAddress(ep, &name);
-    if (bind(fd, &name, sizeof(name)))
+    if (bind(fd, &name, sizeof(name)) == -1)
     {
         Exception e = Unexpected;
         if (errno == EADDRINUSE)
@@ -147,19 +147,22 @@ SocketPosixC__Connect(int fd, EndPoint* ep)
 
 void
 __cdecl
-SocketPosixC__Accept(int fd1, EndPoint* ep)
+SocketPosixC__Accept(int server, EndPoint* ep)
 {
     SockAddrIn name;
-    int err = { 0 };
-    int len = sizeof(name);
-    int fd2;
+    int client = { 0 };
 
-    ZERO_MEMORY(name);
     while (1)
     {
-        fd2 = accept(fd, &name, &len);
-        if (fd2 >= 0)
-            break;
+        socklen_t len = sizeof(name);
+        ZERO_MEMORY(name);
+        client = accept(server, &name, &len);
+        if (client >= 0)
+        {
+            InitStream(client);
+            AddressToEndPoint(&name, ep);
+            return;
+        }
 
         switch (errno)
         {
@@ -177,10 +180,108 @@ SocketPosixC__Accept(int fd1, EndPoint* ep)
             IOError(Unexpected);
             return;
         }
-        SchedulerPosix__IOAlertWait(fd1, TRUE);
+        SchedulerPosix__IOAlertWait(server, TRUE);
     }
-    InitStream(fd2);
-    AddressToEndPoint(&name, ep);
+}
+
+static
+int/*boolean*/
+CommonError(int err)
+{
+    switch (err)
+    {
+    case ETIMEDOUT:
+        IOError(Timeout);
+        return TRUE;
+
+    case ENETUNREACH:
+    case EHOSTUNREACH:
+    case EHOSTDOWN:
+    case ENETDOWN:
+        IOError(Unreachable);
+        return TRUE;
+    }
+    return FALSE;
+}
+
+static
+int/*boolean*/
+CommonRead(int fd,
+           int err,
+           int/*boolean*/ mayBlock,
+           INTEGER* len)
+{
+    if (CommonError(err))
+        return FALSE;
+
+    switch (err)
+    {
+    case ECONNRESET:
+        *len = 0;
+        return TRUE;
+
+    case EPIPE:
+    case ENETRESET:
+        IOError(ConnLost);
+        return FALSE;
+
+    case EWOULDBLOCK:
+    case EAGAIN:
+        if (!mayBlock)
+        {
+            *len = -1;
+            return TRUE;
+        }
+        break;
+
+    default:
+        IOError(Unexpected);
+    }
+    SchedulerPosix__IOWait(fd, TRUE);
+    return FALSE;
+}
+
+static
+void
+CommonWrite(int fd,
+            INTEGER len,
+            char** p,
+            INTEGER* n)
+{
+    if (len >= 0)
+    {
+        *p += len;
+        *n -= len;
+    }
+    else
+    {
+        if (CommonError(errno))
+            return;
+
+        switch (errno)
+        {
+        case EPIPE:
+        case ECONNRESET:
+        case ENETRESET:
+            IOError(ConnLost);
+            return;
+
+        case EWOULDBLOCK:
+        case EAGAIN:
+            /* OK, wait to write out a bit more... */
+            break;
+
+        default:
+          IOError(Unexpected);
+          return;
+        }
+    }
+
+    if (*n > 0)
+    {
+      SchedulerPosix__IOWait(fd, FALSE);
+      /* IF Thread.TestAlert() THEN RAISE Thread.Alerted END */
+    }
 }
 
 INTEGER
@@ -189,7 +290,7 @@ SocketPosixC__ReceiveFrom(int fd,
                           EndPoint* ep,
                           ADDRESS b,
                           INTEGER nb,
-                          int mayBlock)
+                          int/*boolean*/ mayBlock)
 {
     SockAddrIn name;
     INTEGER nameLen = sizeof(name);
@@ -197,40 +298,14 @@ SocketPosixC__ReceiveFrom(int fd,
     ZERO_MEMORY(name);
     while (1)
     {
-        int len = recvfrom(fd, b, nb, 0, &name, &nameLen);
+        INTEGER len = recvfrom(fd, b, nb, 0, &name, &nameLen);
         if (len >= 0)
         {
             AddressToEndPoint(name, ep);
             return len;
         }
-        switch (errno)
-        {
-        case ECONNRESET:
-            return 0;
-
-        case EPIPE:
-        case ENETRESET:
-            IOError(ConnLost);
-            return -1;
-
-        case ETIMEDOUT:
-            IOError(Timeout);
-            return -1;
-
-        case ENETUNREACH:
-        case EHOSTUNREACH:
-        case EHOSTDOWN:
-        case ENETDOWN:
-            IOError(Unreachable);
-            return -1;
-
-        case EWOULDBLOCK:
-        case EAGAIN:
-            if (mayBlock)
-                IOError(Unexpected);
-            return -1;
-        }
-        SchedulerPosix__IOWait(fd, TRUE);
+        if (CommonRead(fd, errno, mayBlock, &len))
+            return len;
     }
 }
 
@@ -241,40 +316,8 @@ Read(int fd, void* pb, INTEGER nb, int/*boolean*/ mayBlock)
     while (1)
     {
         INTEGER len = read(fd, pb, nb);
-        if (len >= 0)
+        if ((len >= 0) || CommonRead(fd, errno, mayBlock, &len))
             return len;
-
-        switch (errno)
-        {
-        case ECONNRESET:
-            return 0;
-
-        case EPIPE:
-        case ENETRESET:
-            IOError(ConnLost);
-            return -1;
-
-        case ETIMEDOUT:
-            IOError(Timeout);
-
-        case ENETUNREACH:
-        case EHOSTUNREACH:
-        case EHOSTDOWN:
-        case ENETDOWN:
-            IOError(Unreachable);
-            return -1;
-
-        case EWOULDBLOCK:
-        case EAGAIN:
-            if (!mayBlock)
-                return -1;
-            break;
-
-        default:
-            IOError(Unexpected);
-            return -1;
-        }
-        SchedulerPosix__IOWait(fd, TRUE);
     }
 }
 void
@@ -290,47 +333,7 @@ SendTo(int fd, const EndPoint* ep, const void* pb, INTEGER n)
     {
         EndPointToAddress(ep, &name);
         len = sendto(fd, pb, n, 0, &name, sizeof(name));
-        if (len >= 0)
-        {
-            p += len;
-            n -= len;
-        }
-        else
-        {
-            switch (errno)
-            {
-            case EPIPE:
-            case ECONNRESET:
-            case ENETRESET:
-                IOError(ConnLost);
-                return;
-
-            case ETIMEDOUT:
-                IOError(Timeout);
-                return;
-
-            case ENETUNREACH:
-            case EHOSTUNREACH:
-            case EHOSTDOWN:
-            case ENETDOWN:
-                IOError(Unreachable);
-                return;
-
-            case EWOULDBLOCK:
-            case EAGAIN:
-                /* OK, wait to write out a bit more... */
-                break;
-
-            default:
-                IOError(Unexpected);
-                return;
-            }
-        }
-        if (n > 0)
-        {
-            SchedulerPosix__IOWait(fd, FALSE);
-            /* if Thread.TestAlert() THEN RAISE Thread.Alerted END */
-        }
+        CommonWrite(fd, len, (char**)&pb, &n);
     }
 }
 
@@ -341,47 +344,7 @@ Write(int fd, const const void* b, INTEGER n)
     while (n > 0)
     {
         INTEGER len = write(fd, p, n);
-        if (len >= 0)
-        {
-            p += len;
-            n -= len;
-        }
-        else
-        {
-            switch (errno)
-            {
-            case EPIPE:
-            case ECONNRESET:
-            case ENETRESET:
-                IOError(ConnLost);
-                return;
-
-            case ETIMEDOUT:
-                IOError(Timeout);
-                return;
-
-            case ENETUNREACH:
-            case EHOSTUNREACH:
-            case EHOSTDOWN:
-            case ENETDOWN:
-                IOError(Unreachable);
-                return;
-
-            case EWOULDBLOCK:
-            case EAGAIN:
-                /* OK, wait to write out a bit more... */
-                break;
-
-            default:
-                IOEror(Unexpected);
-                return;
-            }
-        }
-        if (n > 0)
-        {
-            SchedulerPosix__IOWait(fd, FALSE);
-            /* if Thread.TestAlert() THEN RAISE Thread.Alerted END */
-        }
+        CommonWrite(fd, len, (char**)&pb, &n);
     }
 }
 
