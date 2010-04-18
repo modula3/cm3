@@ -2,12 +2,42 @@
 /* See file COPYRIGHT-CMASS for details. */
 
 #include "m3core.h"
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+#include <arpa/inet.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
+enum {SchedulerPosix__WaitResult_Ready};
+int
+__cdecl
+SchedulerPosix__IOWait(int fd, int/*boolean*/read, LONGREAL timeout);
+
 typedef struct sockaddr_in SockAddrIn;
+
+typedef struct {
+    unsigned addr;
+} Address;
+
+typedef struct {
+    Address addr;
+    unsigned short port;
+} EndPoint;
+
+#define NullPort 0
+const static EndPoint nullAddress = { 0 };
+
+static void InitStream(int fd);
+static void RefetchError(int fd);
+static void GetHostAddr(Address* a);
+static void MakeNonBlocking(int fd);
+static void SetAddress(const EndPoint* ep, /*out*/SockAddrIn* name);
+static void EndPointToAddress(const EndPoint* ep, /*out*/SockAddrIn* name);
+static void AddressToEndPoint(const SockAddrIn* name, /*out*/EndPoint* ep);
+
 typedef void* Exception;
 #define Unreachable Socket__Unreachable
 #define PortBusy Socket__PortBusy
@@ -16,7 +46,7 @@ typedef void* Exception;
 #define Timeout Socket__Timeout
 #define ConnLost Socket__ConnLost
 #define Unexpected Socket__Unexpected
-extern Exception Unreachable, PortBusy, NoResources,
+extern Exception Unreachable, PortBusy, NoResources;
 extern Exception Refused, Timeout, ConnLost, Unexpected;
 
 #define IOErrorSocketPosix__IOError
@@ -70,7 +100,7 @@ SocketPosixC__Bind(int fd, EndPoint* ep)
 
     ZERO_MEMORY(name);
     SetAddress(ep, &name);
-    if (bind(fd, &name, sizeof(name)) == -1)
+    if (bind(fd, (struct sockaddr *)&name, sizeof(name)) == -1)
     {
         Exception e = Unexpected;
         if (errno == EADDRINUSE)
@@ -98,7 +128,7 @@ SocketPosixC__Connect(int fd, EndPoint* ep)
     InitStream(fd);
     while (1)
     {
-        if (connect(fd, &name, sizeof(name)) == 0)
+        if (connect(fd, (struct sockaddr *)&name, sizeof(name)) == 0)
             break;
         switch (errno)
         {
@@ -131,7 +161,9 @@ SocketPosixC__Connect(int fd, EndPoint* ep)
             return;
 
         case EWOULDBLOCK:
+#if EWOULDBLOCK != EAGAIN
         case EAGAIN:
+#endif
         case EINPROGRESS:
         case EALREADY:
             /* nope, not yet */
@@ -156,7 +188,7 @@ SocketPosixC__Accept(int server, EndPoint* ep)
     {
         socklen_t len = sizeof(name);
         ZERO_MEMORY(name);
-        client = accept(server, &name, &len);
+        client = accept(server, (struct sockaddr *)&name, &len);
         if (client >= 0)
         {
             InitStream(client);
@@ -172,7 +204,9 @@ SocketPosixC__Accept(int server, EndPoint* ep)
             return;
 
         case EWOULDBLOCK:
+#if EAGAIN != EWOULDBLOCK
         case EAGAIN:
+#endif
             /* nope, not yet */
             break;
 
@@ -226,7 +260,9 @@ CommonRead(int fd,
         return FALSE;
 
     case EWOULDBLOCK:
+#if EAGAIN != EWOULDBLOCK
     case EAGAIN:
+#endif
         if (!mayBlock)
         {
             *len = -1;
@@ -237,7 +273,7 @@ CommonRead(int fd,
     default:
         IOError(Unexpected);
     }
-    SchedulerPosix__IOWait(fd, TRUE);
+    SchedulerPosix__IOWait(fd, TRUE, 0);
     return FALSE;
 }
 
@@ -267,19 +303,21 @@ CommonWrite(int fd,
             return;
 
         case EWOULDBLOCK:
+#if EWOULDBLOCK != EAGAIN
         case EAGAIN:
+#endif
             /* OK, wait to write out a bit more... */
             break;
 
         default:
-          IOError(Unexpected);
-          return;
+            IOError(Unexpected);
+            return;
         }
     }
 
     if (*n > 0)
     {
-      SchedulerPosix__IOWait(fd, FALSE);
+      SchedulerPosix__IOWait(fd, FALSE, 0);
       /* IF Thread.TestAlert() THEN RAISE Thread.Alerted END */
     }
 }
@@ -298,10 +336,10 @@ SocketPosixC__ReceiveFrom(int fd,
     ZERO_MEMORY(name);
     while (1)
     {
-        INTEGER len = recvfrom(fd, b, nb, 0, &name, &nameLen);
+        INTEGER len = recvfrom(fd, b, nb, 0, (struct sockaddr *)&name, &nameLen);
         if (len >= 0)
         {
-            AddressToEndPoint(name, ep);
+            AddressToEndPoint(&name, ep);
             return len;
         }
         if (CommonRead(fd, errno, mayBlock, &len))
@@ -321,7 +359,6 @@ Read(int fd, void* pb, INTEGER nb, int/*boolean*/ mayBlock)
     }
 }
 void
-INTEGER
 __cdecl
 SendTo(int fd, const EndPoint* ep, const void* pb, INTEGER n)
 {
@@ -332,19 +369,19 @@ SendTo(int fd, const EndPoint* ep, const void* pb, INTEGER n)
     while (n > 0)
     {
         EndPointToAddress(ep, &name);
-        len = sendto(fd, pb, n, 0, &name, sizeof(name));
+        len = sendto(fd, pb, n, 0, (struct sockaddr *)&name, sizeof(name));
         CommonWrite(fd, len, (char**)&pb, &n);
     }
 }
 
 void
 __cdecl
-Write(int fd, const const void* b, INTEGER n)
+Write(int fd, const void* p, INTEGER n)
 {
     while (n > 0)
     {
         INTEGER len = write(fd, p, n);
-        CommonWrite(fd, len, (char**)&pb, &n);
+        CommonWrite(fd, len, (char**)&p, &n);
     }
 }
 
@@ -352,7 +389,7 @@ INTEGER
 __cdecl
 BytesAvailable(int fd)
 {
-    if (SchedulerPosix__IOWait(fd, TRUE, 0) == SchedulerPosix.WaitResult.Ready)
+    if (SchedulerPosix__IOWait(fd, TRUE, 0) == SchedulerPosix__WaitResult_Ready)
     {
         int charsToRead = { 0 };
         if (ioctl(fd, FIONREAD, &charsToRead))
@@ -374,28 +411,30 @@ Peek(int fd, EndPoint* ep)
     socklen_t len = sizeof(name);
 
     ZERO_MEMORY(name);
-    if (recvfrom(fd, NULL, 0, MSG_PEEK, &name, &len) == -1)
+    if (recvfrom(fd, NULL, 0, MSG_PEEK, (struct sockaddr *)&name, &len) == -1)
     {
         IOError(Unexpected);
         return;
     }
 
-    AddressToEndPoint(name, ep);
+    AddressToEndPoint(&name, ep);
 }
 
 void
 __cdecl
 ThisEnd(int fd, EndPoint* ep)
 {
-    if (memcmp(ep, nullAddress, sizeof(nullAddress)) == 0)
-        ep->addr = GetHostAddr();
+    if (memcmp(ep, &nullAddress, sizeof(nullAddress)) == 0)
+    {
+        GetHostAddr(&ep->addr);
+    }
     if (ep->port == NullPort)
     {
         SockAddrIn name;
         socklen_t len = sizeof(name);
 
         ZERO_MEMORY(name);
-        if (getsockname(fd, &name, &len) == -1)
+        if (getsockname(fd, (struct sockaddr *)&name, &len) == -1)
         {
             IOError(Unexpected);
             return;
@@ -425,7 +464,7 @@ GetHostAddr(Address* a)
 
     assert(hostent->h_length <= sizeof(Address));
 
-    *a = ((struct in_addr*)hostent->h_addr_list)->s_addr;
+    a->addr = ((struct in_addr*)hostent->h_addr_list)->s_addr;
 }
 
 void
@@ -436,7 +475,7 @@ OtherEnd(int fd, EndPoint* ep)
     socklen_t len = sizeof(addr);
 
     ZERO_MEMORY(addr);
-    if (getpeername(fd, &addr, &len) == -1)
+    if (getpeername(fd, (struct sockaddr *)&addr, &len) == -1)
     {
         IOError(Unexpected);
         return;
@@ -446,35 +485,27 @@ OtherEnd(int fd, EndPoint* ep)
 
 /*------------------------------------------------ internal utilities ---*/
 
-void
-__cdecl
-SetAddress(const EndPoint* ep, /*out*/SockAddrIn* name)
+static void SetAddress(const EndPoint* ep, /*out*/SockAddrIn* name)
 {
     /*t.ep = ep;*/
     EndPointToAddress(ep, name);
 }
 
-void
-__cdecl
-EndPointToAddress(const EndPoint* ep, /*out*/SockAddrIn* name)
+static void EndPointToAddress(const EndPoint* ep, /*out*/SockAddrIn* name)
 {
     ZeroMemory(name, sizeof(*name));
     name->sin_family = AF_INET;
     name->sin_port = htons(ep->port);
-    name->sin_addr.s_addr = ep->addr;
+    name->sin_addr.s_addr = ep->addr.addr;
 }
 
-void
-__cdecl
-AddressToEndPoint(const SockAddrIn* name, /*out*/EndPoint* ep)
+static void AddressToEndPoint(const SockAddrIn* name, /*out*/EndPoint* ep)
 {
-    ep->addr = name->sin_addr.s_addr;
-    ep->port = ntohs(name->sin_port;
+    ep->addr.addr = name->sin_addr.s_addr;
+    ep->port = ntohs(name->sin_port);
 }
 
-void
-__cdecl
-InitStream(int fd)
+static void InitStream(int fd)
 {
     /* We assume that the runtime ignores SIGPIPE signals. */
     int one = 1;
@@ -489,17 +520,13 @@ InitStream(int fd)
     MakeNonBlocking(fd);
 }
 
-void
-__cdecl
-MakeNonBlocking(int fd)
+static void MakeNonBlocking(int fd)
 {
     if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK))
         IOError(Unexpected);
 }
 
-void
-__cdecl
-RefetchError(int fd)
+static void RefetchError(int fd)
 {
 /* Awful hack to retrieve a meaningful error from a TCP accept
    socket.  Only works on Ultrix and OSF.  Leaves result
