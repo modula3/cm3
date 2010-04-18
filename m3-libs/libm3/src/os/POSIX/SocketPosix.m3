@@ -205,80 +205,102 @@ PROCEDURE Accept (t: T): T
     RETURN res;
   END Accept;
 
+PROCEDURE CommonRead(fd: int; errno: int; mayBlock: BOOLEAN; VAR len: INTEGER): BOOLEAN RAISES {OSError.E} =
+  BEGIN
+    IF (errno = ECONNRESET) THEN
+      len := 0;
+      RETURN TRUE;
+    ELSIF (errno = EPIPE)
+       OR (errno = ECONNRESET)
+       OR (errno = ENETRESET) THEN
+      IOError (ConnLost);
+    ELSIF (errno = ETIMEDOUT) THEN
+      IOError (Timeout);
+    ELSIF (errno = ENETUNREACH)
+       OR (errno = EHOSTUNREACH)
+       OR (errno = EHOSTDOWN)
+       OR (errno = ENETDOWN) THEN
+      IOError (Unreachable);
+    ELSIF (errno = EWOULDBLOCK)
+       OR (errno = EAGAIN) THEN
+      IF NOT mayBlock THEN
+        len := -1;
+        RETURN TRUE;
+      END;
+    ELSE
+      IOError (Unexpected);
+    END;
+    EVAL SchedulerPosix.IOWait (fd, TRUE);
+    RETURN FALSE;
+  END CommonRead;
+
+PROCEDURE CommonWrite (fd: int; len: INTEGER; VAR p: ADDRESS; VAR n: INTEGER) RAISES {OSError.E} =
+  BEGIN
+    IF len >= 0 THEN
+      INC (p, len);  DEC (n, len);
+    ELSE
+      WITH errno = GetErrno() DO
+        IF     (errno = EPIPE)
+            OR (errno = ECONNRESET)
+            OR (errno = ENETRESET) THEN
+          IOError (ConnLost);
+        ELSIF (errno = ETIMEDOUT) THEN
+          IOError (Timeout);
+        ELSIF  (errno = ENETUNREACH)
+            OR (errno = EHOSTUNREACH)
+            OR (errno = EHOSTDOWN)
+            OR (errno = ENETDOWN) THEN
+          IOError (Unreachable);
+        ELSIF  (errno = EWOULDBLOCK)
+            OR (errno = EAGAIN) THEN
+            (* OK, wait to write out a bit more... *)
+        ELSE
+          IOError (Unexpected);
+        END;
+      END;
+    END;
+
+    IF n > 0 THEN
+      EVAL SchedulerPosix.IOWait (fd, FALSE);
+      (* IF Thread.TestAlert() THEN RAISE Thread.Alerted END *)
+    END;
+  END CommonWrite;
+
 PROCEDURE ReceiveFrom (t: T;  VAR(*OUT*) ep: EndPoint;
                               VAR(*OUT*) b: ARRAY OF File.Byte;
                                          mayBlock := TRUE): INTEGER
   RAISES {OSError.E} =
   VAR
     name  : SockAddrIn;
-    nmLen : INTEGER;
+    nameLen : INTEGER;
     len   : INTEGER;
     p_b   : ADDRESS := ADR (b[0]);
+    fd    := t.fd;
   BEGIN
     LOOP
-      nmLen := BYTESIZE (name);
-      len := recvfrom (t.fd, p_b, NUMBER (b), 0,
-                       ADR (name), ADR (nmLen));
+      nameLen := BYTESIZE (name);
+      len := recvfrom (fd, p_b, NUMBER (b), 0, ADR (name), ADR (nameLen));
       IF len >= 0 THEN
         AddressToEndPoint (name, ep);
         RETURN len;
       END;
-
-      WITH errno = GetErrno() DO
-        IF (errno = ECONNRESET) THEN
-          RETURN 0;
-        ELSIF (errno = EPIPE)
-           OR (errno = ENETRESET) THEN
-          IOError (ConnLost);
-        ELSIF (errno = ETIMEDOUT) THEN
-          IOError (Timeout);
-        ELSIF (errno = ENETUNREACH)
-           OR (errno = EHOSTUNREACH)
-           OR (errno = EHOSTDOWN)
-           OR (errno = ENETDOWN) THEN
-          IOError (Unreachable);
-        ELSIF (errno = EWOULDBLOCK)
-           OR (errno = EAGAIN) THEN
-          IF NOT mayBlock THEN RETURN -1; END;
-        ELSE
-          IOError (Unexpected);
-        END;
+      IF CommonRead(fd, GetErrno(), mayBlock, len) THEN
+        RETURN len;
       END;
-
-      EVAL SchedulerPosix.IOWait (t.fd, TRUE);
     END;
   END ReceiveFrom;
 
 PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte;  mayBlock := TRUE): INTEGER
   RAISES {OSError.E} =
   VAR len: INTEGER;  p_b: ADDRESS := ADR (b[0]);
+      fd := t.fd;
   BEGIN
     LOOP
-      len := Uuio.read (t.fd, p_b, NUMBER (b));
+      len := Uuio.read (fd, p_b, NUMBER (b));
       IF len >= 0 THEN RETURN len; END;
-
-      WITH errno = GetErrno() DO
-        IF (errno = ECONNRESET) THEN
-          RETURN 0;
-        ELSIF (errno = EPIPE)
-           OR (errno = ENETRESET) THEN
-          IOError (ConnLost);
-        ELSIF (errno = ETIMEDOUT) THEN
-          IOError (Timeout);
-        ELSIF (errno = ENETUNREACH)
-           OR (errno = EHOSTUNREACH)
-           OR (errno = EHOSTDOWN)
-           OR (errno = ENETDOWN) THEN
-          IOError (Unreachable);
-        ELSIF (errno = EWOULDBLOCK)
-           OR (errno = EAGAIN) THEN
-          IF NOT mayBlock THEN RETURN -1; END;
-        ELSE
-          IOError (Unexpected);
-        END;
+      IF CommonRead(fd, GetErrno(), mayBlock, len) THEN
+        RETURN len;
       END;
-
-      EVAL SchedulerPosix.IOWait (t.fd, TRUE);
     END;
   END Read;
 
@@ -287,42 +309,16 @@ PROCEDURE SendTo (t: T;  READONLY ep: EndPoint;
   RAISES {OSError.E} =
   VAR
     len : INTEGER;
-    p   : ADDRESS    := ADR(b[0]);
-    n   : int := NUMBER(b);
+    p   : ADDRESS := ADR(b[0]);
+    n   : INTEGER := NUMBER(b);
     name: SockAddrIn;
+    fd  := t.fd;
   BEGIN
     WHILE n > 0 DO
       EndPointToAddress (ep, name);
-      len := sendto (t.fd, p, n, 0, ADR (name), BYTESIZE (name));
-
-      IF len >= 0 THEN
-        INC (p, len);  DEC (n, len);
-      ELSE
-        WITH errno = GetErrno() DO
-          IF     (errno = EPIPE)
-              OR (errno = ECONNRESET)
-              OR (errno = ENETRESET) THEN
-            IOError (ConnLost);
-          ELSIF (errno = ETIMEDOUT) THEN
-            IOError (Timeout);
-          ELSIF  (errno = ENETUNREACH)
-              OR (errno = EHOSTUNREACH)
-              OR (errno = EHOSTDOWN)
-              OR (errno = ENETDOWN) THEN
-            IOError (Unreachable);
-          ELSIF  (errno = EWOULDBLOCK)
-              OR (errno = EAGAIN) THEN
-              (* OK, wait to write out a bit more... *)
-          ELSE
-            IOError (Unexpected);
-          END;
-        END;
-      END;
-
-      IF (n > 0) THEN
-        EVAL SchedulerPosix.IOWait (t.fd, FALSE);
-        (* IF Thread.TestAlert() THEN RAISE Thread.Alerted END *)
-      END;
+      len := sendto (fd, p, n, 0, ADR (name), BYTESIZE (name));
+      IF n = len THEN RETURN END;
+      CommonWrite(fd, len, p, n);
     END;
   END SendTo;
 
@@ -330,40 +326,14 @@ PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
   RAISES {OSError.E} =
   VAR
     len : INTEGER;
-    p   : ADDRESS    := ADR(b[0]);
-    n   : int := NUMBER(b);
+    p   : ADDRESS := ADR(b[0]);
+    n   : INTEGER := NUMBER(b);
+    fd  := t.fd;
   BEGIN
     WHILE n > 0 DO
-      len := Uuio.write (t.fd, p, n);
-
-      IF len >= 0 THEN
-        INC (p, len);  DEC (n, len);
-      ELSE
-        WITH errno = GetErrno() DO
-          IF     (errno = EPIPE)
-              OR (errno = ECONNRESET)
-              OR (errno = ENETRESET) THEN
-            IOError (ConnLost);
-          ELSIF (errno = ETIMEDOUT) THEN
-            IOError (Timeout);
-          ELSIF  (errno = ENETUNREACH)
-              OR (errno = EHOSTUNREACH)
-              OR (errno = EHOSTDOWN)
-              OR (errno = ENETDOWN) THEN
-            IOError (Unreachable);
-          ELSIF  (errno = EWOULDBLOCK)
-              OR (errno = EAGAIN) THEN
-            (* OK, wait to write out a bit more... *)
-          ELSE
-            IOError (Unexpected);
-          END;
-        END;
-      END;
-
-      IF (n > 0) THEN
-        EVAL SchedulerPosix.IOWait (t.fd, FALSE);
-        (* IF Thread.TestAlert() THEN RAISE Thread.Alerted END *)
-      END;
+      len := Uuio.write (fd, p, n);
+      IF n = len THEN RETURN END;
+      CommonWrite(fd, len, p, n);
     END;
   END Write;
 
