@@ -4,14 +4,25 @@
 UNSAFE MODULE SocketWin32 EXPORTS Socket;
 
 IMPORT Atom, AtomList, Ctypes, File, FileWin32;
-IMPORT OSError, OSErrorWin32, Process, Thread, WinSock;
+IMPORT OSError, OSErrorWin32, Process, Thread;
+FROM WinSock IMPORT accept, AF_INET, bind, closesocket, connect, FIONREAD,
+  gethostbyname, gethostname, getpeername, getsockname, htons,
+  INVALID_SOCKET, ioctlsocket, IPPROTO_TCP, listen, MSG_PEEK, ntohs,
+  recv, recvfrom, send, sendto, setsockopt, SO_LINGER, SO_REUSEADDR,
+  SOCK_DGRAM, SOCK_STREAM, SOCKET, socket, SOCKET_ERROR, SOL_SOCKET,
+  struct_hostent_star, struct_in_addr, struct_linger, struct_sockaddr_in,
+  TCP_NODELAY, u_long, WSAEADDRINUSE, WSAEADDRNOTAVAIL, WSAECONNREFUSED,
+  WSAECONNRESET, WSAEHOSTDOWN, WSAEHOSTUNREACH, WSAEISCONN, WSAEMFILE,
+  WSAENETDOWN, WSAENETRESET, WSAENETUNREACH, WSAETIMEDOUT, WSACleanup,
+  WSAData, WSAGetLastError, WSAStartup;
+FROM Ctypes IMPORT int, char;
 
 CONST
-  SockErr = WinSock.SOCKET_ERROR;
+  SockErr = SOCKET_ERROR;
 
 REVEAL
   T = Public BRANDED "Socket.T" OBJECT
-    sock : WinSock.SOCKET := 0;
+    sock : SOCKET := 0;
     ep   : EndPoint       := NullEndPoint;
   OVERRIDES
     (* File.T methods *)
@@ -32,7 +43,7 @@ REVEAL
     send_to         := SendTo;
   END;
 
-TYPE SockAddrIn = WinSock.struct_sockaddr_in;
+TYPE SockAddrIn = struct_sockaddr_in;
 
 VAR
   init_done := FALSE;
@@ -41,30 +52,30 @@ VAR
 PROCEDURE Create (reliable: BOOLEAN): T
   RAISES {OSError.E} =
   CONST
-    Map = ARRAY BOOLEAN OF INTEGER { WinSock.SOCK_DGRAM, WinSock.SOCK_STREAM };
+    Map = ARRAY BOOLEAN OF INTEGER { SOCK_DGRAM, SOCK_STREAM };
   VAR
     t    := NEW (T, handle := NIL, ds := FileWin32.ReadWrite);
     True := 1;
   BEGIN
     IF NOT init_done THEN Init (); END;
     LOCK mu DO
-      t.sock := WinSock.socket (WinSock.AF_INET, Map[reliable], 0);
-      IF t.sock = WinSock.INVALID_SOCKET THEN
-        VAR err := Unexpected;  x := WinSock.WSAGetLastError ();  BEGIN
-          IF x = WinSock.WSAEMFILE THEN err := NoResources; END;
+      t.sock := socket (AF_INET, Map[reliable], 0);
+      IF t.sock = INVALID_SOCKET THEN
+        VAR err := Unexpected;  x := WSAGetLastError ();  BEGIN
+          IF x = WSAEMFILE THEN err := NoResources; END;
           IOError (err, x);
         END;
       END;
       InitSock (t.sock);
-      EVAL WinSock.setsockopt (t.sock, WinSock.SOL_SOCKET, WinSock.SO_REUSEADDR,
-                               ADR(True), BYTESIZE(True));
+      EVAL setsockopt (t.sock, SOL_SOCKET, SO_REUSEADDR,
+                       ADR(True), BYTESIZE(True));
     END;
     RETURN t;
   END Create;
 
 PROCEDURE Close (t: T) =
   BEGIN
-    EVAL WinSock.closesocket (t.sock);
+    EVAL closesocket (t.sock);
   END Close;
 
 PROCEDURE Status (<*UNUSED*> t: T): File.Status =
@@ -80,9 +91,9 @@ PROCEDURE Bind (t: T;  READONLY ep: EndPoint)
   BEGIN
     LOCK mu DO
       SetAddress (t, ep, name);
-      IF WinSock.bind (t.sock, ADR (name), BYTESIZE (name)) = SockErr THEN
-        VAR err := Unexpected; x := WinSock.WSAGetLastError ();  BEGIN
-          IF x = WinSock.WSAEADDRINUSE THEN err := PortBusy; END;
+      IF bind (t.sock, ADR (name), BYTESIZE (name)) = SockErr THEN
+        VAR err := Unexpected; x := WSAGetLastError ();  BEGIN
+          IF x = WSAEADDRINUSE THEN err := PortBusy; END;
           IOError (err, x);
         END
       END;
@@ -93,7 +104,7 @@ PROCEDURE Listen (t: T;  max_queue: CARDINAL)
   RAISES {OSError.E} =
   BEGIN
     LOCK mu DO
-      IF WinSock.listen (t.sock, max_queue) = SockErr THEN
+      IF listen (t.sock, max_queue) = SockErr THEN
         IOFailed ();
       END;
     END;
@@ -107,7 +118,7 @@ PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
     LOCK mu DO
       SetAddress (t, ep, name);
       InitSock (t.sock);
-      IF WinSock.connect (t.sock, ADR(name), BYTESIZE(SockAddrIn)) # 0 THEN
+      IF connect (t.sock, ADR(name), BYTESIZE(SockAddrIn)) # 0 THEN
         ConnectError ();
       END;
     END;
@@ -116,22 +127,22 @@ PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
 PROCEDURE ConnectError ()
   RAISES {OSError.E} =
   (* LL = mu *)
-  VAR err := WinSock.WSAGetLastError();
+  VAR err := WSAGetLastError();
   BEGIN
     CASE err OF
-    | WinSock.WSAEISCONN =>
+    | WSAEISCONN =>
         (* ok, connected *)
         RETURN;
-    | WinSock.WSAEADDRNOTAVAIL,
-      WinSock.WSAECONNREFUSED,
-      WinSock.WSAECONNRESET =>
+    | WSAEADDRNOTAVAIL,
+      WSAECONNREFUSED,
+      WSAECONNRESET =>
         IOError (Refused, err);
-    | WinSock.WSAETIMEDOUT =>
+    | WSAETIMEDOUT =>
         IOError (Timeout, err);
-    | WinSock.WSAENETUNREACH,
-      WinSock.WSAEHOSTUNREACH,
-      WinSock.WSAEHOSTDOWN,
-      WinSock.WSAENETDOWN =>
+    | WSAENETUNREACH,
+      WSAEHOSTUNREACH,
+      WSAEHOSTDOWN,
+      WSAENETDOWN =>
         IOError (Unreachable, err);
     ELSE
         IOError (Unexpected, err);
@@ -143,16 +154,16 @@ PROCEDURE Accept (t: T): T
   VAR
     name : SockAddrIn;
     len  : INTEGER   := BYTESIZE(name);
-    sock : WinSock.SOCKET;
+    sock : SOCKET;
     err  : INTEGER;
     res  : T;
   BEGIN
     IF Thread.TestAlert() THEN RAISE Thread.Alerted; END;
     LOCK mu DO
-      sock := WinSock.accept (t.sock, ADR (name), ADR (len));
-      IF sock = WinSock.INVALID_SOCKET THEN
-        err := WinSock.WSAGetLastError ();
-        IF err = WinSock.WSAEMFILE
+      sock := accept (t.sock, ADR (name), ADR (len));
+      IF sock = INVALID_SOCKET THEN
+        err := WSAGetLastError ();
+        IF err = WSAEMFILE
           THEN IOError (NoResources, err);
           ELSE IOError (Unexpected, err);
         END;
@@ -178,7 +189,7 @@ PROCEDURE ReceiveFrom (t: T;  VAR(*OUT*) ep: EndPoint;
     LOCK mu DO
       IF (NOT mayBlock) AND (BytesAvail (t) <= 0) THEN RETURN -1; END;
       nmLen := BYTESIZE (name);
-      len := WinSock.recvfrom (t.sock, p_b, NUMBER (b), 0, ADR (name), ADR (nmLen));
+      len := recvfrom (t.sock, p_b, NUMBER (b), 0, ADR (name), ADR (nmLen));
       IF len = SockErr THEN RETURN ReceiveError (); END;
     END;
     AddressToEndPoint (name, ep);
@@ -191,7 +202,7 @@ PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte;  mayBlock := TRUE): INT
   BEGIN
     LOCK mu DO
       IF (NOT mayBlock) AND (BytesAvail (t) <= 0) THEN RETURN -1; END;
-      len := WinSock.recv (t.sock, p_b, NUMBER (b), 0);
+      len := recv (t.sock, p_b, NUMBER (b), 0);
       IF len = SockErr THEN RETURN ReceiveError (); END;
     END;
     RETURN len;
@@ -200,19 +211,19 @@ PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte;  mayBlock := TRUE): INT
 PROCEDURE ReceiveError (): INTEGER
   RAISES {OSError.E} =
   (* LL = mu *)
-  VAR err := WinSock.WSAGetLastError ();
+  VAR err := WSAGetLastError ();
   BEGIN
     CASE err OF
-    | WinSock.WSAECONNRESET =>
+    | WSAECONNRESET =>
         RETURN 0;
-    | WinSock.WSAENETRESET =>
+    | WSAENETRESET =>
         IOError (ConnLost, err);
-    | WinSock.WSAETIMEDOUT =>
+    | WSAETIMEDOUT =>
         IOError (Timeout, err);
-    | WinSock.WSAENETUNREACH,
-      WinSock.WSAEHOSTUNREACH,
-      WinSock.WSAEHOSTDOWN,
-      WinSock.WSAENETDOWN =>
+    | WSAENETUNREACH,
+      WSAEHOSTUNREACH,
+      WSAEHOSTDOWN,
+      WSAENETDOWN =>
         IOError (Unreachable, err);
     ELSE
         IOError (Unexpected, err);
@@ -226,13 +237,13 @@ PROCEDURE SendTo (t: T;  READONLY ep: EndPoint;
   VAR
     len : INTEGER;
     p   : ADDRESS    := ADR(b[0]);
-    n   : Ctypes.int := NUMBER(b);
+    n   : int := NUMBER(b);
     name: SockAddrIn;
   BEGIN
     WHILE n > 0 DO
       LOCK mu DO
         EndPointToAddress (ep, name);
-        len := WinSock.sendto (t.sock, p, n, 0, ADR (name), BYTESIZE (name));
+        len := sendto (t.sock, p, n, 0, ADR (name), BYTESIZE (name));
         IF len = SockErr THEN SendError (); END;
         INC (p, len);  DEC (n, len);
       END;
@@ -244,11 +255,11 @@ PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
   VAR
     len : INTEGER;
     p   : ADDRESS    := ADR(b[0]);
-    n   : Ctypes.int := NUMBER(b);
+    n   : int := NUMBER(b);
   BEGIN
     WHILE n > 0 DO
       LOCK mu DO
-        len := WinSock.send (t.sock, p, n, 0);
+        len := send (t.sock, p, n, 0);
         IF len = SockErr THEN SendError (); END;
         INC (p, len);  DEC (n, len);
       END;
@@ -258,18 +269,18 @@ PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
 PROCEDURE SendError ()
   RAISES {OSError.E} =
   (* LL = mu *)
-  VAR err := WinSock.WSAGetLastError();
+  VAR err := WSAGetLastError();
   BEGIN
     CASE err OF
-    | WinSock.WSAECONNRESET,
-      WinSock.WSAENETRESET =>
+    | WSAECONNRESET,
+      WSAENETRESET =>
         IOError (ConnLost, err);
-    | WinSock.WSAETIMEDOUT =>
+    | WSAETIMEDOUT =>
         IOError (Timeout, err);
-    | WinSock.WSAENETUNREACH,
-      WinSock.WSAEHOSTUNREACH,
-      WinSock.WSAEHOSTDOWN,
-      WinSock.WSAENETDOWN =>
+    | WSAENETUNREACH,
+      WSAEHOSTUNREACH,
+      WSAEHOSTDOWN,
+      WSAENETDOWN =>
         IOError (Unreachable, err);
     ELSE
         IOError (Unexpected, err);
@@ -287,9 +298,9 @@ PROCEDURE BytesAvailable (t: T): CARDINAL
 PROCEDURE BytesAvail (t: T): CARDINAL
   RAISES {OSError.E} =
   (* LL = mu *)
-  VAR ec: Ctypes.int;  charsToRead: WinSock.u_long;
+  VAR ec: int;  charsToRead: u_long;
   BEGIN
-    ec := WinSock.ioctlsocket (t.sock, WinSock.FIONREAD, ADR(charsToRead));
+    ec := ioctlsocket (t.sock, FIONREAD, ADR(charsToRead));
     IF ec # 0 THEN IOError (Unexpected, ec); END;
     RETURN MAX (0, charsToRead);
   END BytesAvail;
@@ -302,7 +313,7 @@ PROCEDURE Peek (t: T): EndPoint
     ep   : EndPoint;
   BEGIN
     LOCK mu DO
-      IF WinSock.recvfrom (t.sock, NIL, 0, WinSock.MSG_PEEK,
+      IF recvfrom (t.sock, NIL, 0, MSG_PEEK,
                            ADR (name), ADR (len)) # 0 THEN
         IOFailed ();
       END;
@@ -322,10 +333,10 @@ PROCEDURE ThisEnd (t: T): EndPoint
         t.ep.addr := GetHostAddr ();
       END;
       IF t.ep.port = NullPort THEN
-        IF WinSock.getsockname (t.sock, ADR (name), ADR (len)) = SockErr THEN
+        IF getsockname (t.sock, ADR (name), ADR (len)) = SockErr THEN
           IOFailed ();
         END;
-        t.ep.port := WinSock.ntohs (name.sin_port);
+        t.ep.port := ntohs (name.sin_port);
       END;
     END;
     RETURN t.ep
@@ -336,19 +347,19 @@ PROCEDURE GetHostAddr (): Address
   (* LL = mu *)
   VAR
     host : ARRAY [0..255] OF CHAR;
-    info : WinSock.struct_hostent_star;
-    ua   : WinSock.struct_in_addr;
+    info : struct_hostent_star;
+    ua   : struct_in_addr;
   BEGIN
-    IF WinSock.gethostname (ADR (host[0]), BYTESIZE (host)) # 0 THEN
+    IF gethostname (ADR (host[0]), BYTESIZE (host)) # 0 THEN
       IOFailed ();
     END;
 
-    info := WinSock.gethostbyname (ADR (host[0]));
+    info := gethostbyname (ADR (host[0]));
     IF info = NIL THEN IOFailed (); END;
     <* ASSERT info.h_length <= BYTESIZE (Address) *>
 
     ua := LOOPHOLE(info.h_addr_list,
-                   UNTRACED REF UNTRACED REF WinSock.struct_in_addr)^^;
+                   UNTRACED REF UNTRACED REF struct_in_addr)^^;
     RETURN LOOPHOLE (ua.s_addr, Address);
   END GetHostAddr;
 
@@ -356,11 +367,11 @@ PROCEDURE OtherEnd (t: T): EndPoint
   RAISES {OSError.E} =
   VAR
     addr : SockAddrIn;
-    len  : Ctypes.int := BYTESIZE (addr);
+    len  : int := BYTESIZE (addr);
     ep   : EndPoint;
   BEGIN
     LOCK mu DO
-      IF WinSock.getpeername (t.sock, ADR (addr), ADR (len)) < 0 THEN
+      IF getpeername (t.sock, ADR (addr), ADR (len)) < 0 THEN
         IOFailed ();
       END;
     END;
@@ -373,13 +384,13 @@ PROCEDURE OtherEnd (t: T): EndPoint
 PROCEDURE Init() =
   (* LL = 0 *)
   CONST WinSockVersion = 16_0101;  (* App version 1.1 *)
-  VAR data: WinSock.WSAData;
+  VAR data: WSAData;
   BEGIN
     IF init_done THEN RETURN; END;
     IF mu = NIL THEN mu := NEW (MUTEX); END;
     LOCK mu DO
       IF init_done THEN RETURN; END;
-      IF WinSock.WSAStartup (WinSockVersion, ADR (data)) # 0 THEN
+      IF WSAStartup (WinSockVersion, ADR (data)) # 0 THEN
         <*ASSERT FALSE*>
       END;
       Process.RegisterExitor (Exitor);
@@ -389,7 +400,7 @@ PROCEDURE Init() =
 
 PROCEDURE Exitor () =
   BEGIN
-    EVAL WinSock.WSACleanup ();
+    EVAL WSACleanup ();
   END Exitor;
 
 PROCEDURE SetAddress (t: T;  READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn) =
@@ -401,11 +412,11 @@ PROCEDURE SetAddress (t: T;  READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn
 
 PROCEDURE EndPointToAddress (READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn) =
   (* LL = mu *)
-  CONST Sin_Zero = ARRAY [0 .. 7] OF Ctypes.char{VAL(0, Ctypes.char), ..};
+  CONST Sin_Zero = ARRAY [0 .. 7] OF char{VAL(0, char), ..};
   BEGIN
-    name.sin_family      := WinSock.AF_INET;
-    name.sin_port        := WinSock.htons (ep.port);
-    name.sin_addr.s_addr := LOOPHOLE (ep.addr, WinSock.u_long);
+    name.sin_family      := AF_INET;
+    name.sin_port        := htons (ep.port);
+    name.sin_addr.s_addr := LOOPHOLE (ep.addr, u_long);
     name.sin_zero        := Sin_Zero;
   END EndPointToAddress;
 
@@ -413,7 +424,7 @@ PROCEDURE AddressToEndPoint (READONLY name: SockAddrIn;  VAR(*OUT*) ep: EndPoint
   (* LL = mu *)
   BEGIN
     ep.addr := LOOPHOLE (name.sin_addr.s_addr, Address);
-    ep.port := WinSock.ntohs (name.sin_port);
+    ep.port := ntohs (name.sin_port);
   END AddressToEndPoint;
 
 (*
@@ -421,34 +432,34 @@ VAR SysSendBufSize: INTEGER := 65535;
 VAR SysRcvBufSize: INTEGER := 65535;
 *)
 
-PROCEDURE InitSock (sock: WinSock.SOCKET) =
+PROCEDURE InitSock (sock: SOCKET) =
   (* We assume that the runtime ignores SIGPIPE signals *)
   (* LL = mu *)
   VAR
     one := 1;
-    linger := WinSock.struct_linger{0, 0};
+    linger := struct_linger{0, 0};
   BEGIN
     (*****
-    EVAL WinSock.setsockopt (sock, WinSock.SOL_SOCKET, WinSock.SO_SNDBUF,
-                             ADR(SysSendBufSize), BYTESIZE(SysSendBufSize));
-    EVAL WinSock.setsockopt (sock, WinSock.SOL_SOCKET, WinSock.SO_RCVBUF,
-                             ADR(SysRcvBufSize), BYTESIZE(SysRcvBufSize));
+    EVAL setsockopt (sock, SOL_SOCKET, SO_SNDBUF,
+                     ADR(SysSendBufSize), BYTESIZE(SysSendBufSize));
+    EVAL setsockopt (sock, SOL_SOCKET, SO_RCVBUF,
+                     ADR(SysRcvBufSize), BYTESIZE(SysRcvBufSize));
     ******)
 
-    EVAL WinSock.setsockopt (sock, WinSock.SOL_SOCKET, WinSock.SO_LINGER,
-                             ADR(linger), BYTESIZE(linger));
+    EVAL setsockopt (sock, SOL_SOCKET, SO_LINGER,
+                     ADR(linger), BYTESIZE(linger));
 
     (**** WinSock documentation warns that this may cause problems
     ****)
-    EVAL WinSock.setsockopt (sock, WinSock.IPPROTO_TCP, WinSock.TCP_NODELAY,
-                             ADR(one), BYTESIZE(one));
+    EVAL setsockopt (sock, IPPROTO_TCP, TCP_NODELAY,
+                     ADR(one), BYTESIZE(one));
   END InitSock;
 
 PROCEDURE IOFailed ()
   RAISES {OSError.E} =
   (* LL = mu *)
   BEGIN
-    IOError (Unexpected, WinSock.WSAGetLastError ());
+    IOError (Unexpected, WSAGetLastError ());
   END IOFailed;
 
 PROCEDURE IOError (a: Atom.T; err: INTEGER)
@@ -463,5 +474,3 @@ PROCEDURE IOError (a: Atom.T; err: INTEGER)
 
 BEGIN
 END SocketWin32.
-
-
