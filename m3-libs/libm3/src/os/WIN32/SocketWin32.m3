@@ -47,7 +47,7 @@ TYPE SockAddrIn = struct_sockaddr_in;
 
 VAR
   init_done := FALSE;
-  mu: MUTEX := NIL;
+  mu := NEW (MUTEX);
 
 PROCEDURE Create (reliable: BOOLEAN): T
   RAISES {OSError.E} =
@@ -58,18 +58,16 @@ PROCEDURE Create (reliable: BOOLEAN): T
     True := 1;
   BEGIN
     IF NOT init_done THEN Init (); END;
-    LOCK mu DO
-      t.sock := socket (AF_INET, Map[reliable], 0);
-      IF t.sock = INVALID_SOCKET THEN
-        VAR err := Unexpected;  x := WSAGetLastError ();  BEGIN
-          IF x = WSAEMFILE THEN err := NoResources; END;
-          IOError (err, x);
-        END;
+    t.sock := socket (AF_INET, Map[reliable], 0);
+    IF t.sock = INVALID_SOCKET THEN
+      VAR err := Unexpected;  x := WSAGetLastError ();  BEGIN
+        IF x = WSAEMFILE THEN err := NoResources; END;
+        IOError (err, x);
       END;
-      InitSock (t.sock);
-      EVAL setsockopt (t.sock, SOL_SOCKET, SO_REUSEADDR,
-                       ADR(True), BYTESIZE(True));
     END;
+    InitSock (t.sock);
+    EVAL setsockopt (t.sock, SOL_SOCKET, SO_REUSEADDR,
+                     ADR(True), BYTESIZE(True));
     RETURN t;
   END Create;
 
@@ -89,24 +87,20 @@ PROCEDURE Bind (t: T;  READONLY ep: EndPoint)
   RAISES {OSError.E} =
   VAR name: SockAddrIn;
   BEGIN
-    LOCK mu DO
-      SetAddress (t, ep, name);
-      IF bind (t.sock, ADR (name), BYTESIZE (name)) = SockErr THEN
-        VAR err := Unexpected; x := WSAGetLastError ();  BEGIN
-          IF x = WSAEADDRINUSE THEN err := PortBusy; END;
-          IOError (err, x);
-        END
-      END;
+    SetAddress (t, ep, name);
+    IF bind (t.sock, ADR (name), BYTESIZE (name)) = SockErr THEN
+      VAR err := Unexpected; x := WSAGetLastError ();  BEGIN
+        IF x = WSAEADDRINUSE THEN err := PortBusy; END;
+        IOError (err, x);
+      END
     END;
   END Bind;
 
 PROCEDURE Listen (t: T;  max_queue: CARDINAL)
   RAISES {OSError.E} =
   BEGIN
-    LOCK mu DO
-      IF listen (t.sock, max_queue) = SockErr THEN
-        IOFailed ();
-      END;
+    IF listen (t.sock, max_queue) = SockErr THEN
+      IOFailed ();
     END;
   END Listen;
 
@@ -115,18 +109,15 @@ PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
   VAR name: SockAddrIn;
   BEGIN
     IF Thread.TestAlert() THEN RAISE Thread.Alerted; END;
-    LOCK mu DO
-      SetAddress (t, ep, name);
-      InitSock (t.sock);
-      IF connect (t.sock, ADR(name), BYTESIZE(SockAddrIn)) # 0 THEN
-        ConnectError ();
-      END;
+    SetAddress (t, ep, name);
+    InitSock (t.sock);
+    IF connect (t.sock, ADR(name), BYTESIZE(SockAddrIn)) # 0 THEN
+      ConnectError ();
     END;
   END Connect;
 
 PROCEDURE ConnectError ()
   RAISES {OSError.E} =
-  (* LL = mu *)
   VAR err := WSAGetLastError();
   BEGIN
     CASE err OF
@@ -159,20 +150,18 @@ PROCEDURE Accept (t: T): T
     res  : T;
   BEGIN
     IF Thread.TestAlert() THEN RAISE Thread.Alerted; END;
-    LOCK mu DO
-      sock := accept (t.sock, ADR (name), ADR (len));
-      IF sock = INVALID_SOCKET THEN
-        err := WSAGetLastError ();
-        IF err = WSAEMFILE
-          THEN IOError (NoResources, err);
-          ELSE IOError (Unexpected, err);
-        END;
+    sock := accept (t.sock, ADR (name), ADR (len));
+    IF sock = INVALID_SOCKET THEN
+      err := WSAGetLastError ();
+      IF err = WSAEMFILE
+        THEN IOError (NoResources, err);
+        ELSE IOError (Unexpected, err);
       END;
-
-      res := NEW (T, sock := sock, ds := FileWin32.ReadWrite, handle := NIL);
-      AddressToEndPoint (name, res.ep);
-      InitSock (res.sock);
     END;
+
+    res := NEW (T, sock := sock, ds := FileWin32.ReadWrite, handle := NIL);
+    AddressToEndPoint (name, res.ep);
+    InitSock (res.sock);
     RETURN res;
   END Accept;
 
@@ -186,12 +175,10 @@ PROCEDURE ReceiveFrom (t: T;  VAR(*OUT*) ep: EndPoint;
     len   : INTEGER;
     p_b   : ADDRESS := ADR (b[0]);
   BEGIN
-    LOCK mu DO
-      IF (NOT mayBlock) AND (BytesAvail (t) <= 0) THEN RETURN -1; END;
-      nmLen := BYTESIZE (name);
-      len := recvfrom (t.sock, p_b, NUMBER (b), 0, ADR (name), ADR (nmLen));
-      IF len = SockErr THEN RETURN ReceiveError (); END;
-    END;
+    IF (NOT mayBlock) AND (BytesAvailable (t) <= 0) THEN RETURN -1; END;
+    nmLen := BYTESIZE (name);
+    len := recvfrom (t.sock, p_b, NUMBER (b), 0, ADR (name), ADR (nmLen));
+    IF len = SockErr THEN RETURN ReceiveError (); END;
     AddressToEndPoint (name, ep);
     RETURN len;
   END ReceiveFrom;
@@ -200,17 +187,14 @@ PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte;  mayBlock := TRUE): INT
   RAISES {OSError.E} =
   VAR len: INTEGER;  p_b: ADDRESS := ADR (b[0]);
   BEGIN
-    LOCK mu DO
-      IF (NOT mayBlock) AND (BytesAvail (t) <= 0) THEN RETURN -1; END;
-      len := recv (t.sock, p_b, NUMBER (b), 0);
-      IF len = SockErr THEN RETURN ReceiveError (); END;
-    END;
+    IF (NOT mayBlock) AND (BytesAvailable (t) <= 0) THEN RETURN -1; END;
+    len := recv (t.sock, p_b, NUMBER (b), 0);
+    IF len = SockErr THEN RETURN ReceiveError (); END;
     RETURN len;
   END Read;
 
 PROCEDURE ReceiveError (): INTEGER
   RAISES {OSError.E} =
-  (* LL = mu *)
   VAR err := WSAGetLastError ();
   BEGIN
     CASE err OF
@@ -241,12 +225,10 @@ PROCEDURE SendTo (t: T;  READONLY ep: EndPoint;
     name: SockAddrIn;
   BEGIN
     WHILE n > 0 DO
-      LOCK mu DO
-        EndPointToAddress (ep, name);
-        len := sendto (t.sock, p, n, 0, ADR (name), BYTESIZE (name));
-        IF len = SockErr THEN SendError (); END;
-        INC (p, len);  DEC (n, len);
-      END;
+      EndPointToAddress (ep, name);
+      len := sendto (t.sock, p, n, 0, ADR (name), BYTESIZE (name));
+      IF len = SockErr THEN SendError (); END;
+      INC (p, len);  DEC (n, len);
     END;
   END SendTo;
 
@@ -258,17 +240,14 @@ PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
     n   : int := NUMBER(b);
   BEGIN
     WHILE n > 0 DO
-      LOCK mu DO
-        len := send (t.sock, p, n, 0);
-        IF len = SockErr THEN SendError (); END;
-        INC (p, len);  DEC (n, len);
-      END;
+      len := send (t.sock, p, n, 0);
+      IF len = SockErr THEN SendError (); END;
+      INC (p, len);  DEC (n, len);
     END;
   END Write;
 
 PROCEDURE SendError ()
   RAISES {OSError.E} =
-  (* LL = mu *)
   VAR err := WSAGetLastError();
   BEGIN
     CASE err OF
@@ -289,21 +268,12 @@ PROCEDURE SendError ()
 
 PROCEDURE BytesAvailable (t: T): CARDINAL
   RAISES {OSError.E} =
-  BEGIN
-    LOCK mu DO
-      RETURN BytesAvail (t);
-    END;
-  END BytesAvailable;
-
-PROCEDURE BytesAvail (t: T): CARDINAL
-  RAISES {OSError.E} =
-  (* LL = mu *)
   VAR ec: int;  charsToRead: u_long;
   BEGIN
     ec := ioctlsocket (t.sock, FIONREAD, ADR(charsToRead));
     IF ec # 0 THEN IOError (Unexpected, ec); END;
     RETURN MAX (0, charsToRead);
-  END BytesAvail;
+  END BytesAvailable;
 
 PROCEDURE Peek (t: T): EndPoint
   RAISES {OSError.E} =
@@ -312,11 +282,9 @@ PROCEDURE Peek (t: T): EndPoint
     len  : INTEGER     := BYTESIZE (name);
     ep   : EndPoint;
   BEGIN
-    LOCK mu DO
-      IF recvfrom (t.sock, NIL, 0, MSG_PEEK,
-                           ADR (name), ADR (len)) # 0 THEN
-        IOFailed ();
-      END;
+    IF recvfrom (t.sock, NIL, 0, MSG_PEEK,
+                 ADR (name), ADR (len)) # 0 THEN
+      IOFailed ();
     END;
     AddressToEndPoint (name, ep);
     RETURN ep;
@@ -328,23 +296,20 @@ PROCEDURE ThisEnd (t: T): EndPoint
     name : SockAddrIn;
     len  : INTEGER     := BYTESIZE (name);
   BEGIN
-    LOCK mu DO
-      IF t.ep.addr = NullAddress THEN
-        t.ep.addr := GetHostAddr ();
+    IF t.ep.addr = NullAddress THEN
+      t.ep.addr := GetHostAddr ();
+    END;
+    IF t.ep.port = NullPort THEN
+      IF getsockname (t.sock, ADR (name), ADR (len)) = SockErr THEN
+        IOFailed ();
       END;
-      IF t.ep.port = NullPort THEN
-        IF getsockname (t.sock, ADR (name), ADR (len)) = SockErr THEN
-          IOFailed ();
-        END;
-        t.ep.port := ntohs (name.sin_port);
-      END;
+      t.ep.port := ntohs (name.sin_port);
     END;
     RETURN t.ep
   END ThisEnd;
 
 PROCEDURE GetHostAddr (): Address
   RAISES {OSError.E} =
-  (* LL = mu *)
   VAR
     host : ARRAY [0..255] OF CHAR;
     info : struct_hostent_star;
@@ -370,10 +335,8 @@ PROCEDURE OtherEnd (t: T): EndPoint
     len  : int := BYTESIZE (addr);
     ep   : EndPoint;
   BEGIN
-    LOCK mu DO
-      IF getpeername (t.sock, ADR (addr), ADR (len)) < 0 THEN
-        IOFailed ();
-      END;
+    IF getpeername (t.sock, ADR (addr), ADR (len)) < 0 THEN
+      IOFailed ();
     END;
     AddressToEndPoint (addr, ep);
     RETURN ep;
@@ -387,7 +350,6 @@ PROCEDURE Init() =
   VAR data: WSAData;
   BEGIN
     IF init_done THEN RETURN; END;
-    IF mu = NIL THEN mu := NEW (MUTEX); END;
     LOCK mu DO
       IF init_done THEN RETURN; END;
       IF WSAStartup (WinSockVersion, ADR (data)) # 0 THEN
@@ -400,18 +362,19 @@ PROCEDURE Init() =
 
 PROCEDURE Exitor () =
   BEGIN
-    EVAL WSACleanup ();
+    LOCK mu DO
+      EVAL WSACleanup ();
+      init_done := FALSE;
+    END;
   END Exitor;
 
 PROCEDURE SetAddress (t: T;  READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn) =
-  (* LL = mu *)
   BEGIN
     t.ep := ep;
     EndPointToAddress (ep, name);
   END SetAddress;
 
 PROCEDURE EndPointToAddress (READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn) =
-  (* LL = mu *)
   CONST Sin_Zero = ARRAY [0 .. 7] OF char{VAL(0, char), ..};
   BEGIN
     name.sin_family      := AF_INET;
@@ -421,7 +384,6 @@ PROCEDURE EndPointToAddress (READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn
   END EndPointToAddress;
 
 PROCEDURE AddressToEndPoint (READONLY name: SockAddrIn;  VAR(*OUT*) ep: EndPoint) =
-  (* LL = mu *)
   BEGIN
     ep.addr := LOOPHOLE (name.sin_addr.s_addr, Address);
     ep.port := ntohs (name.sin_port);
@@ -434,7 +396,6 @@ VAR SysRcvBufSize: INTEGER := 65535;
 
 PROCEDURE InitSock (sock: SOCKET) =
   (* We assume that the runtime ignores SIGPIPE signals *)
-  (* LL = mu *)
   VAR
     one := 1;
     linger := struct_linger{0, 0};
@@ -457,7 +418,6 @@ PROCEDURE InitSock (sock: SOCKET) =
 
 PROCEDURE IOFailed ()
   RAISES {OSError.E} =
-  (* LL = mu *)
   BEGIN
     IOError (Unexpected, WSAGetLastError ());
   END IOFailed;
