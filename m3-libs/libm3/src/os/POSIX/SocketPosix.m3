@@ -3,9 +3,24 @@
 
 UNSAFE MODULE SocketPosix EXPORTS Socket;
 
-IMPORT Atom, AtomList, SocketPosix_IsUltrixOrOSF, Cerrno, Ctypes, File, FilePosix;
-IMPORT OSError, OSErrorPosix, SchedulerPosix, Thread, Unix;
-IMPORT Uin, Uuio, Uerror, Usocket, Ustat, Unetdb, Utypes, Word;
+IMPORT Atom, AtomList, SocketPosix_IsUltrixOrOSF, File, FilePosix;
+IMPORT OSError, OSErrorPosix, SchedulerPosix, Thread;
+IMPORT Uuio, Ustat, Word;
+FROM Cerrno IMPORT GetErrno;
+FROM Unetdb IMPORT struct_hostent, struct_hostent_star, gethostbyname;
+FROM Utypes IMPORT u_int;
+FROM Ctypes IMPORT int, char;
+FROM Usocket IMPORT accept, AF_INET, bind, connect, getpeername, getsockname,
+                    getsockopt, listen, MSG_PEEK, recvfrom, sendto, setsockopt,
+                    SO_LINGER, SO_REUSEADDR, SOCK_DGRAM, SOCK_STREAM, socket,
+                    SOL_SOCKET, struct_linger;
+FROM Uin IMPORT IPPROTO_TCP, ntohs, htons, struct_in_addr, struct_sockaddr_in;
+FROM Unix IMPORT close, F_GETFL, F_SETFL, fcntl, FIONREAD, gethostname, ioctl,
+                 M3_NONBLOCK;
+FROM Uerror IMPORT EADDRINUSE, EADDRNOTAVAIL, EAGAIN, EALREADY, EBADF,
+                   ECONNREFUSED, ECONNRESET, EHOSTDOWN, EHOSTUNREACH,
+                   EINPROGRESS, EINVAL, EISCONN, EMFILE, ENETDOWN, ENETRESET,
+                   ENETUNREACH, ENFILE, EPIPE, ETIMEDOUT, EWOULDBLOCK;
 
 CONST
   TCP_NODELAY = 1;
@@ -32,20 +47,20 @@ REVEAL
     send_to         := SendTo;
   END;
 
-TYPE SockAddrIn = Uin.struct_sockaddr_in;
+TYPE SockAddrIn = struct_sockaddr_in;
 
 PROCEDURE Create (reliable: BOOLEAN): T
   RAISES {OSError.E} =
   VAR
-    (*CONST*) Map := ARRAY BOOLEAN OF INTEGER { Usocket.SOCK_DGRAM, Usocket.SOCK_STREAM };
+    (*CONST*) Map := ARRAY BOOLEAN OF INTEGER { SOCK_DGRAM, SOCK_STREAM };
     t    := NEW (T, ds := FilePosix.ReadWrite);
     True := 1;
   BEGIN
-    t.fd := Usocket.socket (Usocket.AF_INET, Map[reliable], 0);
+    t.fd := socket (AF_INET, Map[reliable], 0);
     IF t.fd = -1 THEN
       VAR err := Unexpected; BEGIN
-        WITH errno = Cerrno.GetErrno() DO
-          IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
+        WITH errno = GetErrno() DO
+          IF errno = EMFILE OR errno = ENFILE THEN
             err := NoResources;
           END;
         END;
@@ -53,15 +68,15 @@ PROCEDURE Create (reliable: BOOLEAN): T
       END;
     END;
     MakeNonBlocking (t.fd);
-    EVAL Usocket.setsockopt (t.fd, Usocket.SOL_SOCKET, Usocket.SO_REUSEADDR,
-                             ADR (True), BYTESIZE (True));
+    EVAL setsockopt (t.fd, SOL_SOCKET, SO_REUSEADDR,
+                     ADR (True), BYTESIZE (True));
     RETURN t;
   END Create;
 
 PROCEDURE Close (t: T)
   RAISES {OSError.E} =
   BEGIN
-    IF Unix.close (t.fd) < 0 THEN
+    IF close (t.fd) < 0 THEN
       IOError (Unexpected);
     END;
   END Close;
@@ -87,10 +102,10 @@ PROCEDURE Bind (t: T;  READONLY ep: EndPoint)
     status: INTEGER;
   BEGIN
     SetAddress (t, ep, name);
-    status := Usocket.bind (t.fd, ADR (name), BYTESIZE (name));
+    status := bind (t.fd, ADR (name), BYTESIZE (name));
     IF status # 0 THEN
       VAR err := Unexpected; BEGIN
-        IF Cerrno.GetErrno() = Uerror.EADDRINUSE THEN err := PortBusy; END;
+        IF GetErrno() = EADDRINUSE THEN err := PortBusy; END;
         IOError (err);
       END;
     END;
@@ -99,7 +114,7 @@ PROCEDURE Bind (t: T;  READONLY ep: EndPoint)
 PROCEDURE Listen (t: T;  max_queue: CARDINAL)
   RAISES {OSError.E} =
   BEGIN
-    IF Usocket.listen (t.fd, max_queue) # 0 THEN
+    IF listen (t.fd, max_queue) # 0 THEN
       IOError (Unexpected);
     END;
   END Listen;
@@ -114,39 +129,39 @@ PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
     InitStream (t.fd);
 
     LOOP
-      status := Usocket.connect (t.fd, ADR(name), BYTESIZE(name));
+      status := connect (t.fd, ADR(name), BYTESIZE(name));
       IF status = 0 THEN EXIT; END;
 
-      WITH errno = Cerrno.GetErrno() DO
-        IF errno = Uerror.EINVAL THEN
+      WITH errno = GetErrno() DO
+        IF errno = EINVAL THEN
           (* hack to try to get real errno, hidden due to NBIO bug in connect *)
           RefetchError (t.fd);
-        ELSIF errno = Uerror.EBADF THEN
+        ELSIF errno = EBADF THEN
           (* we'll try the same for EBADF, which we've seen on Alpha *)
           RefetchError (t.fd);
         END;
       END;
 
-      WITH errno = Cerrno.GetErrno() DO
-        IF errno = Uerror.EISCONN THEN
+      WITH errno = GetErrno() DO
+        IF errno = EISCONN THEN
           EXIT;
-        ELSIF  (errno = Uerror.EADDRNOTAVAIL)
-            OR (errno = Uerror.ECONNREFUSED)
-            OR (errno = Uerror.EINVAL)
-            OR (errno = Uerror.ECONNRESET)
-            OR (errno = Uerror.EBADF) THEN
+        ELSIF  (errno = EADDRNOTAVAIL)
+            OR (errno = ECONNREFUSED)
+            OR (errno = EINVAL)
+            OR (errno = ECONNRESET)
+            OR (errno = EBADF) THEN
           IOError (Refused);
-        ELSIF (errno = Uerror.ETIMEDOUT) THEN
+        ELSIF (errno = ETIMEDOUT) THEN
           IOError (Timeout);
-        ELSIF  (errno = Uerror.ENETUNREACH)
-            OR (errno = Uerror.EHOSTUNREACH)
-            OR (errno = Uerror.EHOSTDOWN)
-            OR (errno = Uerror.ENETDOWN) THEN
+        ELSIF  (errno = ENETUNREACH)
+            OR (errno = EHOSTUNREACH)
+            OR (errno = EHOSTDOWN)
+            OR (errno = ENETDOWN) THEN
           IOError (Unreachable);
-        ELSIF (errno = Uerror.EWOULDBLOCK)
-           OR (errno = Uerror.EAGAIN)
-           OR (errno = Uerror.EINPROGRESS)
-           OR (errno = Uerror.EALREADY) THEN
+        ELSIF (errno = EWOULDBLOCK)
+           OR (errno = EAGAIN)
+           OR (errno = EINPROGRESS)
+           OR (errno = EALREADY) THEN
           (* nope, not yet *)
         ELSE
           IOError (Unexpected);
@@ -166,15 +181,15 @@ PROCEDURE Accept (t: T): T
     res  : T;
   BEGIN
     LOOP
-      fd := Usocket.accept (t.fd, ADR (name), ADR (len));
+      fd := accept (t.fd, ADR (name), ADR (len));
       IF fd >= 0 THEN EXIT; END;
 
-      WITH errno = Cerrno.GetErrno() DO
-        IF  (errno = Uerror.EMFILE)
-            OR (errno = Uerror.ENFILE) THEN
+      WITH errno = GetErrno() DO
+        IF  (errno = EMFILE)
+            OR (errno = ENFILE) THEN
           IOError (NoResources);
-        ELSIF  (errno = Uerror.EWOULDBLOCK)
-            OR (errno = Uerror.EAGAIN) THEN
+        ELSIF  (errno = EWOULDBLOCK)
+            OR (errno = EAGAIN) THEN
           (* nope, not yet *)
         ELSE
           IOError (Unexpected);
@@ -202,28 +217,28 @@ PROCEDURE ReceiveFrom (t: T;  VAR(*OUT*) ep: EndPoint;
   BEGIN
     LOOP
       nmLen := BYTESIZE (name);
-      len := Usocket.recvfrom (t.fd, p_b, NUMBER (b), 0,
-                               ADR (name), ADR (nmLen));
+      len := recvfrom (t.fd, p_b, NUMBER (b), 0,
+                       ADR (name), ADR (nmLen));
       IF len >= 0 THEN
         AddressToEndPoint (name, ep);
         RETURN len;
       END;
 
-      WITH errno = Cerrno.GetErrno() DO
-        IF (errno = Uerror.ECONNRESET) THEN
+      WITH errno = GetErrno() DO
+        IF (errno = ECONNRESET) THEN
           RETURN 0;
-        ELSIF (errno = Uerror.EPIPE)
-           OR (errno = Uerror.ENETRESET) THEN
+        ELSIF (errno = EPIPE)
+           OR (errno = ENETRESET) THEN
           IOError (ConnLost);
-        ELSIF (errno = Uerror.ETIMEDOUT) THEN
+        ELSIF (errno = ETIMEDOUT) THEN
           IOError (Timeout);
-        ELSIF (errno = Uerror.ENETUNREACH)
-           OR (errno = Uerror.EHOSTUNREACH)
-           OR (errno = Uerror.EHOSTDOWN)
-           OR (errno = Uerror.ENETDOWN) THEN
+        ELSIF (errno = ENETUNREACH)
+           OR (errno = EHOSTUNREACH)
+           OR (errno = EHOSTDOWN)
+           OR (errno = ENETDOWN) THEN
           IOError (Unreachable);
-        ELSIF (errno = Uerror.EWOULDBLOCK)
-           OR (errno = Uerror.EAGAIN) THEN
+        ELSIF (errno = EWOULDBLOCK)
+           OR (errno = EAGAIN) THEN
           IF NOT mayBlock THEN RETURN -1; END;
         ELSE
           IOError (Unexpected);
@@ -242,21 +257,21 @@ PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte;  mayBlock := TRUE): INT
       len := Uuio.read (t.fd, p_b, NUMBER (b));
       IF len >= 0 THEN RETURN len; END;
 
-      WITH errno = Cerrno.GetErrno() DO
-        IF (errno = Uerror.ECONNRESET) THEN
+      WITH errno = GetErrno() DO
+        IF (errno = ECONNRESET) THEN
           RETURN 0;
-        ELSIF (errno = Uerror.EPIPE)
-           OR (errno = Uerror.ENETRESET) THEN
+        ELSIF (errno = EPIPE)
+           OR (errno = ENETRESET) THEN
           IOError (ConnLost);
-        ELSIF (errno = Uerror.ETIMEDOUT) THEN
+        ELSIF (errno = ETIMEDOUT) THEN
           IOError (Timeout);
-        ELSIF (errno = Uerror.ENETUNREACH)
-           OR (errno = Uerror.EHOSTUNREACH)
-           OR (errno = Uerror.EHOSTDOWN)
-           OR (errno = Uerror.ENETDOWN) THEN
+        ELSIF (errno = ENETUNREACH)
+           OR (errno = EHOSTUNREACH)
+           OR (errno = EHOSTDOWN)
+           OR (errno = ENETDOWN) THEN
           IOError (Unreachable);
-        ELSIF (errno = Uerror.EWOULDBLOCK)
-           OR (errno = Uerror.EAGAIN) THEN
+        ELSIF (errno = EWOULDBLOCK)
+           OR (errno = EAGAIN) THEN
           IF NOT mayBlock THEN RETURN -1; END;
         ELSE
           IOError (Unexpected);
@@ -273,30 +288,30 @@ PROCEDURE SendTo (t: T;  READONLY ep: EndPoint;
   VAR
     len : INTEGER;
     p   : ADDRESS    := ADR(b[0]);
-    n   : Ctypes.int := NUMBER(b);
+    n   : int := NUMBER(b);
     name: SockAddrIn;
   BEGIN
     WHILE n > 0 DO
       EndPointToAddress (ep, name);
-      len := Usocket.sendto (t.fd, p, n, 0, ADR (name), BYTESIZE (name));
+      len := sendto (t.fd, p, n, 0, ADR (name), BYTESIZE (name));
 
       IF len >= 0 THEN
         INC (p, len);  DEC (n, len);
       ELSE
-        WITH errno = Cerrno.GetErrno() DO
-          IF     (errno = Uerror.EPIPE)
-              OR (errno = Uerror.ECONNRESET)
-              OR (errno = Uerror.ENETRESET) THEN
+        WITH errno = GetErrno() DO
+          IF     (errno = EPIPE)
+              OR (errno = ECONNRESET)
+              OR (errno = ENETRESET) THEN
             IOError (ConnLost);
-          ELSIF (errno = Uerror.ETIMEDOUT) THEN
+          ELSIF (errno = ETIMEDOUT) THEN
             IOError (Timeout);
-          ELSIF  (errno = Uerror.ENETUNREACH)
-              OR (errno = Uerror.EHOSTUNREACH)
-              OR (errno = Uerror.EHOSTDOWN)
-              OR (errno = Uerror.ENETDOWN) THEN
+          ELSIF  (errno = ENETUNREACH)
+              OR (errno = EHOSTUNREACH)
+              OR (errno = EHOSTDOWN)
+              OR (errno = ENETDOWN) THEN
             IOError (Unreachable);
-          ELSIF  (errno = Uerror.EWOULDBLOCK)
-              OR (errno = Uerror.EAGAIN) THEN
+          ELSIF  (errno = EWOULDBLOCK)
+              OR (errno = EAGAIN) THEN
               (* OK, wait to write out a bit more... *)
           ELSE
             IOError (Unexpected);
@@ -316,7 +331,7 @@ PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
   VAR
     len : INTEGER;
     p   : ADDRESS    := ADR(b[0]);
-    n   : Ctypes.int := NUMBER(b);
+    n   : int := NUMBER(b);
   BEGIN
     WHILE n > 0 DO
       len := Uuio.write (t.fd, p, n);
@@ -324,20 +339,20 @@ PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
       IF len >= 0 THEN
         INC (p, len);  DEC (n, len);
       ELSE
-        WITH errno = Cerrno.GetErrno() DO
-          IF     (errno = Uerror.EPIPE)
-              OR (errno = Uerror.ECONNRESET)
-              OR (errno = Uerror.ENETRESET) THEN
+        WITH errno = GetErrno() DO
+          IF     (errno = EPIPE)
+              OR (errno = ECONNRESET)
+              OR (errno = ENETRESET) THEN
             IOError (ConnLost);
-          ELSIF (errno = Uerror.ETIMEDOUT) THEN
+          ELSIF (errno = ETIMEDOUT) THEN
             IOError (Timeout);
-          ELSIF  (errno = Uerror.ENETUNREACH)
-              OR (errno = Uerror.EHOSTUNREACH)
-              OR (errno = Uerror.EHOSTDOWN)
-              OR (errno = Uerror.ENETDOWN) THEN
+          ELSIF  (errno = ENETUNREACH)
+              OR (errno = EHOSTUNREACH)
+              OR (errno = EHOSTDOWN)
+              OR (errno = ENETDOWN) THEN
             IOError (Unreachable);
-          ELSIF  (errno = Uerror.EWOULDBLOCK)
-              OR (errno = Uerror.EAGAIN) THEN
+          ELSIF  (errno = EWOULDBLOCK)
+              OR (errno = EAGAIN) THEN
             (* OK, wait to write out a bit more... *)
           ELSE
             IOError (Unexpected);
@@ -354,11 +369,11 @@ PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
 
 PROCEDURE BytesAvailable (t: T): CARDINAL
   RAISES {OSError.E} =
-  VAR status: INTEGER;  charsToRead: Ctypes.int;
+  VAR status: INTEGER;  charsToRead: int;
   BEGIN
     IF SchedulerPosix.IOWait (t.fd, TRUE, 0.0D0) =
                             SchedulerPosix.WaitResult.Ready THEN
-      status := Unix.ioctl (t.fd, Unix.FIONREAD, ADR(charsToRead));
+      status := ioctl (t.fd, FIONREAD, ADR(charsToRead));
       IF status # 0 THEN IOError (Unexpected); END;
       RETURN MAX (0, charsToRead);
     END;
@@ -372,8 +387,8 @@ PROCEDURE Peek (t: T): EndPoint
     len  : INTEGER     := BYTESIZE (name);
     ep   : EndPoint;
   BEGIN
-    IF Usocket.recvfrom (t.fd, NIL, 0, Usocket.MSG_PEEK,
-                         ADR (name), ADR (len)) < 0 THEN
+    IF recvfrom (t.fd, NIL, 0, MSG_PEEK,
+                 ADR (name), ADR (len)) < 0 THEN
       IOError (Unexpected);
     END;
     AddressToEndPoint (name, ep);
@@ -390,10 +405,10 @@ PROCEDURE ThisEnd (t: T): EndPoint
       t.ep.addr := GetHostAddr ();
     END;
     IF t.ep.port = NullPort THEN
-      IF Usocket.getsockname (t.fd, ADR (name), ADR (len)) # 0 THEN
+      IF getsockname (t.fd, ADR (name), ADR (len)) # 0 THEN
         IOError (Unexpected);
       END;
-      t.ep.port := Uin.ntohs (name.sin_port);
+      t.ep.port := ntohs (name.sin_port);
     END;
     RETURN t.ep
   END ThisEnd;
@@ -402,20 +417,20 @@ PROCEDURE GetHostAddr (): Address
   RAISES {OSError.E} =
   VAR
     host : ARRAY [0..255] OF CHAR;
-    hostent: Unetdb.struct_hostent;
-    info : Unetdb.struct_hostent_star;
-    ua   : Uin.struct_in_addr;
+    hostent: struct_hostent;
+    info : struct_hostent_star;
+    ua   : struct_in_addr;
   BEGIN
-    IF Unix.gethostname (ADR (host[0]), BYTESIZE (host)) # 0 THEN
+    IF gethostname (ADR (host[0]), BYTESIZE (host)) # 0 THEN
       IOError (Unexpected);
     END;
 
-    info := Unetdb.gethostbyname (ADR (host[0]), ADR (hostent));
+    info := gethostbyname (ADR (host[0]), ADR (hostent));
     IF info = NIL THEN IOError (Unexpected); END;
     <* ASSERT info.h_length <= BYTESIZE (Address) *>
 
     ua := LOOPHOLE(info.h_addr_list,
-                   UNTRACED REF UNTRACED REF Uin.struct_in_addr)^^;
+                   UNTRACED REF UNTRACED REF struct_in_addr)^^;
     RETURN LOOPHOLE (ua.s_addr, Address);
   END GetHostAddr;
 
@@ -423,10 +438,10 @@ PROCEDURE OtherEnd (t: T): EndPoint
   RAISES {OSError.E} =
   VAR
     addr : SockAddrIn;
-    len  : Ctypes.int := BYTESIZE (addr);
+    len  : int := BYTESIZE (addr);
     ep   : EndPoint;
   BEGIN
-    IF Usocket.getpeername (t.fd, ADR (addr), ADR (len)) < 0 THEN
+    IF getpeername (t.fd, ADR (addr), ADR (len)) < 0 THEN
       IOError (Unexpected);
     END;
     AddressToEndPoint (addr, ep);
@@ -436,27 +451,24 @@ PROCEDURE OtherEnd (t: T): EndPoint
 (*------------------------------------------------ internal utilities ---*)
 
 PROCEDURE SetAddress (t: T;  READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn) =
-  (* LL = mu *)
   BEGIN
     t.ep := ep;
     EndPointToAddress (ep, name);
   END SetAddress;
 
 PROCEDURE EndPointToAddress (READONLY ep: EndPoint;  VAR(*OUT*) name: SockAddrIn) =
-  (* LL = mu *)
-  CONST Sin_Zero = ARRAY [0 .. 7] OF Ctypes.char{VAL(0, Ctypes.char), ..};
+  CONST Sin_Zero = ARRAY [0 .. 7] OF char{VAL(0, char), ..};
   BEGIN
-    name.sin_family      := Usocket.AF_INET;
-    name.sin_port        := Uin.htons (ep.port);
-    name.sin_addr.s_addr := LOOPHOLE (ep.addr, Utypes.u_int);
+    name.sin_family      := AF_INET;
+    name.sin_port        := htons (ep.port);
+    name.sin_addr.s_addr := LOOPHOLE (ep.addr, u_int);
     name.sin_zero        := Sin_Zero;
   END EndPointToAddress;
 
 PROCEDURE AddressToEndPoint (READONLY name: SockAddrIn;  VAR(*OUT*) ep: EndPoint) =
-  (* LL = mu *)
   BEGIN
     ep.addr := LOOPHOLE (name.sin_addr.s_addr, Address);
-    ep.port := Uin.ntohs (name.sin_port);
+    ep.port := ntohs (name.sin_port);
   END AddressToEndPoint;
 
 (*
@@ -468,19 +480,19 @@ PROCEDURE InitStream (fd: CARDINAL)
   RAISES {OSError.E} =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
-    one : Ctypes.int := 1;
-    linger := Usocket.struct_linger{1, 1};
+    one : int := 1;
+    linger := struct_linger{1, 1};
   BEGIN
     (*****
-    EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_SNDBUF,
-                            ADR(SysSendBufSize), BYTESIZE(SysSendBufSize));
-    EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_RCVBUF,
-                            ADR(SysRcvBufSize), BYTESIZE(SysRcvBufSize));
+    EVAL setsockopt(fd, SOL_SOCKET, SO_SNDBUF,
+                    ADR(SysSendBufSize), BYTESIZE(SysSendBufSize));
+    EVAL setsockopt(fd, SOL_SOCKET, SO_RCVBUF,
+                    ADR(SysRcvBufSize), BYTESIZE(SysRcvBufSize));
     ******)
-    EVAL Usocket.setsockopt(fd, Usocket.SOL_SOCKET, Usocket.SO_LINGER,
-                            ADR(linger), BYTESIZE(linger));
-    EVAL Usocket.setsockopt(fd, Uin.IPPROTO_TCP, TCP_NODELAY,
-                            ADR(one), BYTESIZE(one));
+    EVAL setsockopt(fd, SOL_SOCKET, SO_LINGER,
+                    ADR(linger), BYTESIZE(linger));
+    EVAL setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
+                    ADR(one), BYTESIZE(one));
 
     MakeNonBlocking (fd);
   END InitStream;
@@ -488,10 +500,10 @@ PROCEDURE InitStream (fd: CARDINAL)
 PROCEDURE MakeNonBlocking (fd: INTEGER)
   RAISES {OSError.E} =
   VAR
-    old_mode := Unix.fcntl (fd, Unix.F_GETFL, 0);
-    new_mode := Word.Or (old_mode, Unix.M3_NONBLOCK);  
+    old_mode := fcntl (fd, F_GETFL, 0);
+    new_mode := Word.Or (old_mode, M3_NONBLOCK);  
   BEGIN
-    IF Unix.fcntl (fd, Unix.F_SETFL, new_mode) # 0 THEN
+    IF fcntl (fd, F_SETFL, new_mode) # 0 THEN
       IOError (Unexpected);
     END;
   END MakeNonBlocking;
@@ -499,20 +511,20 @@ PROCEDURE MakeNonBlocking (fd: INTEGER)
 PROCEDURE RefetchError(fd: INTEGER) =
 (* Awful hack to retrieve a meaningful error from a TCP accept
    socket.  Only works on Ultrix and OSF.  Leaves result
-   in Cerrno.GetErrno().  *)
-  VAR optbuf: Ctypes.int := 0;   optlen := BYTESIZE(optbuf);
+   in GetErrno().  *)
+  VAR optbuf: int := 0;   optlen := BYTESIZE(optbuf);
   BEGIN
     IF SocketPosix_IsUltrixOrOSF.Value THEN
-      EVAL Usocket.getsockopt (fd, Uin.IPPROTO_TCP, TCP_NODELAY,
-                                 ADR(optbuf), ADR(optlen));
+      EVAL getsockopt (fd, IPPROTO_TCP, TCP_NODELAY,
+                       ADR(optbuf), ADR(optlen));
     END;
   END RefetchError;
 
 PROCEDURE IOError (a: Atom.T) RAISES {OSError.E} =
   VAR ec: AtomList.T := NIL;
   BEGIN
-    IF (Cerrno.GetErrno() # 0) THEN
-      ec := AtomList.List1 (OSErrorPosix.ErrnoAtom (Cerrno.GetErrno()));
+    IF (GetErrno() # 0) THEN
+      ec := AtomList.List1 (OSErrorPosix.ErrnoAtom (GetErrno()));
     END;
     RAISE OSError.E (AtomList.Cons (a, ec));
   END IOError;
