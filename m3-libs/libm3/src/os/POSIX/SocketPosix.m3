@@ -24,6 +24,7 @@ FROM Uerror IMPORT EADDRINUSE, EADDRNOTAVAIL, EAGAIN, EALREADY, EBADF,
 
 CONST
   TCP_NODELAY = 1;
+  GetError = GetErrno;
 
 REVEAL
   T = Public BRANDED "Socket.T" OBJECT
@@ -59,7 +60,7 @@ PROCEDURE Create (reliable: BOOLEAN): T
     t.fd := socket (AF_INET, Map[reliable], 0);
     IF t.fd = -1 THEN
       VAR err := Unexpected; BEGIN
-        WITH errno = GetErrno() DO
+        WITH errno = GetError() DO
           IF errno = EMFILE OR errno = ENFILE THEN
             err := NoResources;
           END;
@@ -105,7 +106,7 @@ PROCEDURE Bind (t: T;  READONLY ep: EndPoint)
     status := bind (t.fd, ADR (name), BYTESIZE (name));
     IF status # 0 THEN
       VAR err := Unexpected; BEGIN
-        IF GetErrno() = EADDRINUSE THEN err := PortBusy; END;
+        IF GetError() = EADDRINUSE THEN err := PortBusy; END;
         IOError (err);
       END;
     END;
@@ -132,7 +133,7 @@ PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
       status := connect (t.fd, ADR(name), BYTESIZE(name));
       IF status = 0 THEN EXIT; END;
 
-      WITH errno = GetErrno() DO
+      WITH errno = GetError() DO
         IF errno = EINVAL THEN
           (* hack to try to get real errno, hidden due to NBIO bug in connect *)
           RefetchError (t.fd);
@@ -142,7 +143,7 @@ PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
         END;
       END;
 
-      WITH errno = GetErrno() DO
+      WITH errno = GetError() DO
         IF errno = EISCONN THEN
           EXIT;
         ELSIF  (errno = EADDRNOTAVAIL)
@@ -184,7 +185,7 @@ PROCEDURE Accept (t: T): T
       fd := accept (t.fd, ADR (name), ADR (len));
       IF fd >= 0 THEN EXIT; END;
 
-      WITH errno = GetErrno() DO
+      WITH errno = GetError() DO
         IF  (errno = EMFILE)
             OR (errno = ENFILE) THEN
           IOError (NoResources);
@@ -238,7 +239,7 @@ PROCEDURE CommonWrite (fd: int; len: INTEGER; VAR p: ADDRESS; VAR n: INTEGER) RA
     IF len >= 0 THEN
       INC (p, len);  DEC (n, len);
     ELSE
-      WITH errno = GetErrno() DO
+      WITH errno = GetError() DO
         IF     (errno = EPIPE)
             OR (errno = ECONNRESET)
             OR (errno = ENETRESET) THEN
@@ -283,7 +284,7 @@ PROCEDURE ReceiveFrom (t: T;  VAR(*OUT*) ep: EndPoint;
         AddressToEndPoint (name, ep);
         RETURN len;
       END;
-      IF CommonRead(fd, GetErrno(), mayBlock, len) THEN
+      IF CommonRead(fd, GetError(), mayBlock, len) THEN
         RETURN len;
       END;
     END;
@@ -297,7 +298,7 @@ PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte;  mayBlock := TRUE): INT
     LOOP
       len := Uuio.read (fd, p_b, NUMBER (b));
       IF len >= 0 THEN RETURN len; END;
-      IF CommonRead(fd, GetErrno(), mayBlock, len) THEN
+      IF CommonRead(fd, GetError(), mayBlock, len) THEN
         RETURN len;
       END;
     END;
@@ -480,7 +481,7 @@ PROCEDURE MakeNonBlocking (fd: INTEGER)
 PROCEDURE RefetchError(fd: INTEGER) =
 (* Awful hack to retrieve a meaningful error from a TCP accept
    socket.  Only works on Ultrix and OSF.  Leaves result
-   in GetErrno().  *)
+   in GetError().  *)
   VAR optbuf: int := 0;   optlen := BYTESIZE(optbuf);
   BEGIN
     IF SocketPosix_IsUltrixOrOSF.Value THEN
@@ -492,8 +493,8 @@ PROCEDURE RefetchError(fd: INTEGER) =
 PROCEDURE IOError (a: Atom.T) RAISES {OSError.E} =
   VAR ec: AtomList.T := NIL;
   BEGIN
-    IF (GetErrno() # 0) THEN
-      ec := AtomList.List1 (OSErrorPosix.ErrnoAtom (GetErrno()));
+    IF (GetError() # 0) THEN
+      ec := AtomList.List1 (OSErrorPosix.ErrnoAtom (GetError()));
     END;
     RAISE OSError.E (AtomList.Cons (a, ec));
   END IOError;
