@@ -17,7 +17,6 @@
 extern "C" {
 #endif
 
-static
 int/*BOOL*/
 __cdecl
 MachineIDC__CanGet(unsigned char* id)
