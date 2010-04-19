@@ -21,12 +21,12 @@ int/*BOOL*/
 __cdecl
 MachineIDC__CanGet(unsigned char* id)
 {
-    BOOL Success = FALSE;
-    DWORD Error;
-    DWORD Size;
+    BOOL Success = { 0 };
+    DWORD Error = { 0 };
+    DWORD Size = { 0 };
     MIB_IFTABLE* Table = { 0 };
-    DWORD i;
-    DWORD NumEntries;
+    DWORD i = { 0 };
+    DWORD NumEntries = { 0 };
 
     ZeroMemory(id, 6);
 
