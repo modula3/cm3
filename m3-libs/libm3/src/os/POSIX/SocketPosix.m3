@@ -473,7 +473,7 @@ PROCEDURE MakeNonBlocking (fd: INTEGER)
     old_mode := fcntl (fd, F_GETFL, 0);
     new_mode := Word.Or (old_mode, M3_NONBLOCK);  
   BEGIN
-    IF fcntl (fd, F_SETFL, new_mode) # 0 THEN
+    IF fcntl (fd, F_SETFL, new_mode) = -1 THEN
       IOError (Unexpected);
     END;
   END MakeNonBlocking;
