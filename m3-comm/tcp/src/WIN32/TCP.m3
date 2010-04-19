@@ -295,23 +295,12 @@ PROCEDURE EOF(t: T) : BOOLEAN =
 
 (* methods of TCP.T *)
 
-(*
-VAR SysSendBufSize: INTEGER := 65535;
-VAR SysRcvBufSize: INTEGER := 65535;
-*)
-
 PROCEDURE InitSock(sock: WinSock.SOCKET) =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
     one : BOOL := 1;
     linger := WinSock.struct_linger{0, 0};
   BEGIN
-(*
-    EVAL WinSock.setsockopt(sock, WinSock.SOL_SOCKET, WinSock.SO_SNDBUF,
-                            ADR(SysSendBufSize), BYTESIZE(SysSendBufSize));
-    EVAL WinSock.setsockopt(sock, WinSock.SOL_SOCKET, WinSock.SO_RCVBUF,
-                            ADR(SysRcvBufSize), BYTESIZE(SysRcvBufSize));
-*)
     EVAL WinSock.setsockopt(
            sock, WinSock.SOL_SOCKET, WinSock.SO_LINGER,
            ADR(linger), BYTESIZE(linger));
@@ -689,4 +678,3 @@ It seems to work, timing out in a nice short time.
 
   - Blair
 ****************)
-
