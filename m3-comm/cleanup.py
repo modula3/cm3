@@ -10,20 +10,17 @@ for root, dirs, files in os.walk("."):
             continue
         print(p)
         orig = open(p, "r").read()
-        last_mod = orig.find("\n * Last Modified By: ")
-        if last_mod == -1:
-            continue
-        orig = orig.replace("\n * \n * HISTORY", "\n *\n * HISTORY");
-        hist = orig.find("\n *\n * HISTORY")
-        if hist == -1:
-            continue
-        no_hist = orig.find("\n *\n * HISTORY\n *)\n")
-        comment = orig.find("\n *)\n")
         new = orig
-        if no_hist != -1:
-            new = orig[0:last_mod] + orig[comment:]
-        else:
-            new = orig[0:last_mod] + orig[hist:]
-            
+        new = re.sub("\n \\*\n \\*\n \\* \\$Log", "$Log", new);
+        new = re.sub("\n \\* \\$Source$]+\\$\n", "\n", new);
+        new = re.sub("\n \\* \\$Date$]+\\$\n", "\n", new);
+        new = re.sub("\n \\* \\$Author$]+\\$\n", "\n", new);
+        new = re.sub("\n \\* \\$Revision$]+\\$\n", "\n", new);
+        new = re.sub("\n \\* \\$Log$]+\\$\n", "\n", new);
+        new = re.sub("(\n \\* added: [^\n]+)+\n", "\n", new);
+        new = re.sub("(\n \\* modified: [^\n]+)+\n", "\n", new);
+        new = re.sub("compile\n \\*\n \\*\n", "compile\n *\n", new);
+        if new == orig:
+            continue            
         open(p + ".bak", "w").write(orig)
         open(p, "w").write(new)
