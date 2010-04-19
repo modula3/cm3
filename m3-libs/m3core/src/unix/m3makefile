@@ -26,7 +26,7 @@ readonly _UnixPieces = {
   "SPARC64_LINUX"   : [ "uin-common" ],
   "SPARC64_SOLARIS" : [ "uin-common" ],
 
-  "NetBSD2_i386"    : [ "uin-common" ],
+  % BSD/Darwin have an 8 bit family and an 8 bit length field added
 
   "AMD64_DARWIN"    : [ "uin-len" ],
   "ARM_DARWIN"      : [ "uin-len" ],
@@ -34,8 +34,9 @@ readonly _UnixPieces = {
   "PPC_DARWIN"      : [ "uin-len" ],
   "PPC64_DARWIN"    : [ "uin-len" ],
 
-  "AMD64_FREEBSD"   : [ "uin-len" ],
+  "NetBSD2_i386"    : [ "uin-len" ],
   "FreeBSD4"        : [ "uin-len" ],
+  "AMD64_FREEBSD"   : [ "uin-len" ],
   "I386_FREEBSD"    : [ "uin-len" ],
   "I386_NETBSD"     : [ "uin-len" ],
   "AMD64_NETBSD"    : [ "uin-len" ],
