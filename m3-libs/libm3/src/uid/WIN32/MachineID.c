@@ -68,8 +68,6 @@ Exit:
 
 #if 0 /* test code */
 
-#include <stdio.h>
-
 int main()
 {
     unsigned char id[6] = { 0 };
