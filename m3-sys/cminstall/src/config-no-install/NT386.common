@@ -834,10 +834,10 @@ if not equal($USE_DELAYLOAD, "0")
 end
 
 if not defined("USE_DELAYLOAD")
-    if equal($USE_DELAYLOAD, "1")
-        USE_DELAYLOAD = TRUE
-    else
+    if equal($USE_DELAYLOAD, "0")
         USE_DELAYLOAD = FALSE
+    else
+        USE_DELAYLOAD = TRUE
     end
 end
 
