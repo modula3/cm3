@@ -9,7 +9,6 @@
 #include <memory.h>
 #include <winsock2.h>
 #include <iphlpapi.h>
-#include <stdio.h>
 #include <stdlib.h>
 #pragma comment(lib, "iphlpapi.lib")
 
@@ -38,7 +37,6 @@ MachineIDC__CanGet(unsigned char* id)
         Table = (MIB_IFTABLE*)malloc(Size);
         if (Table == NULL)
         {
-            printf("Error allocating memory needed to call GetIfTable\n");
             Error = ERROR_NOT_ENOUGH_MEMORY;
             goto Exit;
         }
@@ -56,8 +54,6 @@ MachineIDC__CanGet(unsigned char* id)
         Success = TRUE;
     }
 Exit:
-    if (Error)
-        printf("error %u\n", Error);
     free(Table);
     return Success;
 }
@@ -67,6 +63,8 @@ Exit:
 #endif
 
 #if 0 /* test code */
+
+#include <stdio.h>
 
 int main()
 {
