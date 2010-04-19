@@ -8,13 +8,19 @@
 #include "m3core.h"
 #include <unistd.h>
 #include <netdb.h>
-#include <string.h>
-#include <net/if.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
+#ifdef __sun
+#include <sys/sockio.h>
+#endif
+#ifndef __CYGWIN__
+#include <net/if.h>
+#include <net/if_arp.h>
+#endif
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #if defined(__aix) \
  || defined(__hpux) \
@@ -65,31 +71,97 @@
 extern "C" {
 #endif
 
+static
+char
+ToPrintable(unsigned char a)
+{
+    if (a >= 32 && a < 127)
+        return a;
+    return '.';
+}
+
+static
+void
+dump(void* a, size_t n)
+{
+    char buffer[256];
+    unsigned char* b = (unsigned char*)a;
+    size_t i;
+    size_t j;
+    size_t k = 0;
+    const static char hex[] = "0123456789ABCDEF";
+
+    for (i = 0; i < n; ++i)
+    {
+        buffer[k++] = hex[b[i] >> 4];
+        buffer[k++] = hex[b[i] & 0xF];
+        buffer[k++] = ' ';
+        if (((i + 1) % 8) == 0)
+            buffer[k++] = ' ';
+        if (((i + 1) % 16) == 0)
+        {
+            for (j = i - 15; j <= i; ++j)
+            {
+                buffer[k++] = ToPrintable(b[j]);
+                if (((j + 1) % 8) == 0)
+                    buffer[k++] = ' ';
+            }
+            buffer[k++] = '\n';
+            buffer[k++] = 0;
+            printf("%s", buffer);
+            k = 0;
+        }
+    }
+}
+
+static
+UINT32
+get_ipv4_address(void)
+{
+    char hostname[256];
+
+    if (gethostname(hostname, sizeof(hostname)) == 0)
+    {
+        struct hostent* hostent = gethostbyname(hostname);
+        if (hostent && hostent->h_length == 4)
+        {
+            return *(UINT32*)hostent->h_addr;
+        }
+    }
+    return 0;
+}
+
 int/*boolean*/
 __cdecl
 MachineIDPosixC__CanGet(unsigned char *id)
 {
     int result = { 0 };
-    int s = { 0 };
+    int sock = { 0 };
 #ifdef HAS_GETIFADDRS
     struct ifaddrs* if1 = { 0 };
     struct ifaddrs* if2 = { 0 };
 #elif defined(__linux__) || defined(__osf__) || defined(__CYGWIN__)
     union {
         struct ifreq req[64];
-        char b[4096];
+        unsigned char b[4096];
     } buf;
-    struct ifconf list = { 0 };
+    struct ifconf list;
     struct ifreq* req1 = { 0 };
-    struct ifreq req2 = { 0 };
     size_t i = { 0 };
+    struct ifreq req2;
+    ZeroMemory(&list, sizeof(list));
+    ZeroMemory(&req2, sizeof(req2));
 #endif
 
-    memset(id, 0, 6);
+    ZeroMemory(id, 6);
 
     /* try to find an ethernet hardware address */
-    s = socket(PF_UNIX, SOCK_STREAM, AF_UNSPEC);
-    if (s >= 0)
+#ifdef __sun
+    sock = socket(AF_INET, SOCK_DGRAM, 0);
+#else
+    sock = socket(PF_UNIX, SOCK_STREAM, AF_UNSPEC);
+#endif
+    if (sock >= 0)
     {
 #ifdef HAS_GETIFADDRS
         if (getifaddrs(&if1) == 0)
@@ -109,27 +181,40 @@ MachineIDPosixC__CanGet(unsigned char *id)
             }
             freeifaddrs(if1);
         }
+        else
+        {
+            perror("getifaddrs");
+        }
 #elif defined(__linux__) || defined(__CYGWIN__) || defined(__osf__)
         list.ifc_len = sizeof(buf);
         list.ifc_req = (struct ifreq*)&buf;
-
-        if (ioctl(s, SIOCGIFCONF, &list) >= 0)
+        if (ioctl(sock, SIOCGIFCONF, &list) >= 0)
         {
             for (i = 0; (!result) && (i < list.ifc_len); i += _SIZEOF_ADDR_IFREQ(*req1))
             {
                 req1 = (struct ifreq*)&buf.b[i];
                 memcpy(req2.ifr_name, req1->ifr_name, IFNAMSIZ);
-#if defined(__linux__) || defined(__CYGWIN__)
-                if (ioctl(s, SIOCGIFFLAGS, &req2) < 0)
+                if (ioctl(sock, SIOCGIFFLAGS, &req2) < 0)
+                {
+                    perror("ioctl SIOCGIFFLAGS");
                     continue;
+                }
                 if ((req2.ifr_flags & IFF_LOOPBACK) != 0)
                     continue;
-                if (ioctl(s, SIOCGIFHWADDR, &req2) < 0)
+                memcpy(req2.ifr_name, req1->ifr_name, IFNAMSIZ);
+#if defined(__linux__) || defined(__CYGWIN__)
+                if (ioctl(sock, SIOCGIFHWADDR, &req2) < 0)
+                {
+                    perror("ioctl SIOCGIFHWADDR");
                     continue;
+                }
                 memcpy(id, req2.ifr_hwaddr.sa_data, 6);
 #elif defined(__osf__)
-                if (ioctl(s, SIOCRPHYSADDR, &req2) < 0)
+                if (ioctl(sock, SIOCRPHYSADDR, &req2) < 0)
+                {
+                    perror("ioctl SIOCRPHYSADDR");
                     continue;
+                }
                 memcpy(id, req2.default_pa, 6);
 #else
 #error unknown system
@@ -139,31 +224,49 @@ MachineIDPosixC__CanGet(unsigned char *id)
         }
         else
         {
-            printf("ioctl SIOCGIFCONF failed %d\n", errno);
+            perror("ioctl SIOCGIFCONF");
         }
-#endif
-        close(s);
-    }
-
-    /* lame fallback esp. for Solaris */
-    if (result == 0)
-    {
-        char hostname[256];
-        struct hostent *hostent;
-
-        /* try using the machine's internet address */
-        if (gethostname(hostname, sizeof(hostname)) == 0)
+#elif defined(__sun)
+        /* Use ARP on Solaris. */
+        if (result == 0)
         {
-            struct hostent* hostent = gethostbyname(hostname);
-            if (hostent && hostent->h_length == 4)
+            struct arpreq arp;
+            struct sockaddr_in* in = (struct sockaddr_in*)&arp.arp_pa; /* protocol address */
+            ZeroMemory(&arp, sizeof(arp));
+            arp.arp_pa.sa_family = AF_INET;
+            arp.arp_ha.sa_family = AF_UNSPEC;
+            in->sin_addr.s_addr = get_ipv4_address();
+            if (ioctl(sock, SIOCGARP, &arp) == -1)
             {
-                id[2] = hostent->h_addr[0];
-                id[3] = hostent->h_addr[1];
-                id[4] = hostent->h_addr[2];
-                id[5] = hostent->h_addr[3];
+                perror("ioctl SIOCGARP");
+            }
+            else
+            {
+                memcpy(id, arp.arp_ha.sa_data, 6); /* hardware address */
                 result = 1;
             }
         }
+#else
+#error unknown system
+#endif
+        close(sock);
+    }
+    else
+    {
+        perror("socket");
+    }
+
+    /* really lame fallback */
+    if (result == 0)
+    {
+        union
+        {
+            UINT32 a;
+            unsigned char b[4];
+        } u;
+        u.a = get_ipv4_address();
+        memcpy(&id[2], u.b, 4);
+        result = (u.a != 0);
     }
 
     return result;
@@ -184,9 +287,14 @@ int main()
     i = MachineIDPosixC__CanGet(id);
     printf("%d %02X-%02X-%02X-%02X-%02X-%02X\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
     printf("   %u.%u.%u.%u.%u.%u\n", id[0], id[1], id[2], id[3], id[4], id[5]);
-    system("/sbin/ifconfig -a | grep ether");
+#if defined(__sun)
+    system("/usr/sbin/arp -a | grep L"); /* L for local */
+#elif defined(__CYGWIN__)
+    system("getmac");
+#else
     system("/sbin/ifconfig -a | grep addr");
-
+    system("/sbin/ifconfig -a | grep ether");
+#endif
     return 0;
 }
 
