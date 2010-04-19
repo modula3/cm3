@@ -19,6 +19,7 @@ FROM Ctypes IMPORT int, char;
 
 CONST
   SockErr = SOCKET_ERROR;
+  GetError = WSAGetLastError;
 
 REVEAL
   T = Public BRANDED "Socket.T" OBJECT
@@ -60,7 +61,7 @@ PROCEDURE Create (reliable: BOOLEAN): T
     IF NOT init_done THEN Init (); END;
     t.sock := socket (AF_INET, Map[reliable], 0);
     IF t.sock = INVALID_SOCKET THEN
-      VAR err := Unexpected;  x := WSAGetLastError ();  BEGIN
+      VAR err := Unexpected;  x := GetError ();  BEGIN
         IF x = WSAEMFILE THEN err := NoResources; END;
         IOError (err, x);
       END;
@@ -89,7 +90,7 @@ PROCEDURE Bind (t: T;  READONLY ep: EndPoint)
   BEGIN
     SetAddress (t, ep, name);
     IF bind (t.sock, ADR (name), BYTESIZE (name)) = SockErr THEN
-      VAR err := Unexpected; x := WSAGetLastError ();  BEGIN
+      VAR err := Unexpected; x := GetError ();  BEGIN
         IF x = WSAEADDRINUSE THEN err := PortBusy; END;
         IOError (err, x);
       END
@@ -118,7 +119,7 @@ PROCEDURE Connect (t: T;  READONLY ep: EndPoint)
 
 PROCEDURE ConnectError ()
   RAISES {OSError.E} =
-  VAR err := WSAGetLastError();
+  VAR err := GetError();
   BEGIN
     CASE err OF
     | WSAEISCONN =>
@@ -152,7 +153,7 @@ PROCEDURE Accept (t: T): T
     IF Thread.TestAlert() THEN RAISE Thread.Alerted; END;
     sock := accept (t.sock, ADR (name), ADR (len));
     IF sock = INVALID_SOCKET THEN
-      err := WSAGetLastError ();
+      err := GetError ();
       IF err = WSAEMFILE
         THEN IOError (NoResources, err);
         ELSE IOError (Unexpected, err);
@@ -195,7 +196,7 @@ PROCEDURE Read (t: T;  VAR(*OUT*) b: ARRAY OF File.Byte;  mayBlock := TRUE): INT
 
 PROCEDURE ReceiveError (): INTEGER
   RAISES {OSError.E} =
-  VAR err := WSAGetLastError ();
+  VAR err := GetError ();
   BEGIN
     CASE err OF
     | WSAECONNRESET =>
@@ -248,7 +249,7 @@ PROCEDURE Write (t: T;  READONLY b: ARRAY OF File.Byte)
 
 PROCEDURE SendError ()
   RAISES {OSError.E} =
-  VAR err := WSAGetLastError();
+  VAR err := GetError();
   BEGIN
     CASE err OF
     | WSAECONNRESET,
@@ -419,7 +420,7 @@ PROCEDURE InitSock (sock: SOCKET) =
 PROCEDURE IOFailed ()
   RAISES {OSError.E} =
   BEGIN
-    IOError (Unexpected, WSAGetLastError ());
+    IOError (Unexpected, GetError ());
   END IOFailed;
 
 PROCEDURE IOError (a: Atom.T; err: INTEGER)
