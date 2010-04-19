@@ -137,18 +137,18 @@ PROCEDURE StartConnect(to: IP.Endpoint;
 
     IF from # IP.NullEndPoint THEN  (* Bind to the "from" address. *)
       EVAL WinSock.setsockopt(sock, WinSock.SOL_SOCKET, WinSock.SO_REUSEADDR,
-	ADR(True), BYTESIZE(True));
+        ADR(True), BYTESIZE(True));
       fromName.sin_family := WinSock.AF_INET;
       fromName.sin_port := WinSock.htons(from.port);
       fromName.sin_addr.s_addr := LOOPHOLE(from.addr, WinSock.u_long);
       fromName.sin_zero := Sin_Zero;
       status := WinSock.bind(sock, ADR(fromName), BYTESIZE(SockAddrIn));
       IF status # 0 THEN
-	IF WinSock.WSAGetLastError() = WinSock.WSAEADDRINUSE THEN
-	  RaiseWSA(IP.PortBusy);
-	ELSE
-	  RaiseUnexpected();
-	END
+        IF WinSock.WSAGetLastError() = WinSock.WSAEADDRINUSE THEN
+          RaiseWSA(IP.PortBusy);
+        ELSE
+          RaiseUnexpected();
+        END
       END;
     END;
 
@@ -548,10 +548,10 @@ PROCEDURE GetPeerName(tcp: T): IP.Endpoint
   BEGIN
     LOCK tcp DO
       IF tcp.closed THEN
-	RAISE IP.Error(AtomList.List1(Closed));
+        RAISE IP.Error(AtomList.List1(Closed));
       END;
       IF WinSock.getpeername(tcp.sock, ADR(addr), ADR(len)) = -1 THEN
-	RaiseUnexpected();
+        RaiseUnexpected();
       END;
     END;
 
@@ -569,10 +569,10 @@ PROCEDURE GetSockName(tcp: T): IP.Endpoint
   BEGIN
     LOCK tcp DO
       IF tcp.closed THEN
-	RAISE IP.Error(AtomList.List1(Closed));
+        RAISE IP.Error(AtomList.List1(Closed));
       END;
       IF WinSock.getsockname(tcp.sock, ADR(addr), ADR(len)) = -1 THEN
-	RaiseUnexpected();
+        RaiseUnexpected();
       END;
     END;
 
@@ -590,11 +590,11 @@ PROCEDURE KeepAlive(tcp: T; allow: BOOLEAN)
 
     LOCK tcp DO
       IF tcp.closed THEN
-	RAISE IP.Error(AtomList.List1(Closed));
+        RAISE IP.Error(AtomList.List1(Closed));
       END;
       IF WinSock.setsockopt(tcp.sock, WinSock.SOL_SOCKET, WinSock.SO_KEEPALIVE,
-	ADR(keepAlive), BYTESIZE(keepAlive)) = -1 THEN
-	RaiseUnexpected();
+        ADR(keepAlive), BYTESIZE(keepAlive)) = -1 THEN
+        RaiseUnexpected();
       END;
     END;
   END KeepAlive;
@@ -614,11 +614,11 @@ PROCEDURE LingerOnClose(tcp: T; allow: BOOLEAN)
 
     LOCK tcp DO
       IF tcp.closed THEN
-	RAISE IP.Error(AtomList.List1(Closed));
+        RAISE IP.Error(AtomList.List1(Closed));
       END;
       IF WinSock.setsockopt(tcp.sock, WinSock.SOL_SOCKET, WinSock.SO_LINGER,
-	ADR(linger), BYTESIZE(linger)) = -1 THEN
-	RaiseUnexpected();
+        ADR(linger), BYTESIZE(linger)) = -1 THEN
+        RaiseUnexpected();
       END;
     END;
   END LingerOnClose;
