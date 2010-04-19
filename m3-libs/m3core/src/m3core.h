@@ -11,9 +11,10 @@
 #ifndef _ALL_SOURCE
 #define _ALL_SOURCE
 #endif
+#endif
+
 #ifndef _REENTRANT
 #define _REENTRANT
-#endif
 #endif
 
 #ifdef _MSC_VER
