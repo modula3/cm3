@@ -32,8 +32,6 @@ if not equal (OS_TYPE, "POSIX")
 
 implementation("PathnameWin32")
 
-import_sys_lib ("TCP")
-
 Interface("OSConfig")
 
 Module("FileWin32")
@@ -43,7 +41,6 @@ Module("LazyConsole")
 implementation("FSWin32")
 implementation("PipeWin32")
 implementation("ProcessWin32")
-implementation("SocketWin32")
 implementation("OSConfigWin32")
 
 end
