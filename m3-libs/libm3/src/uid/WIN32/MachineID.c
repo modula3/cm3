@@ -5,130 +5,80 @@
 /* Last modified on Mon Sep 20 11:46:17 PDT 1993 by kalsow     */
 /*      modified on Thu Jul 15 16:23:08 PDT 1993 by swart      */
 
-#include <windows.h>
-#include <rpc.h>
 #include <string.h>
 #include <memory.h>
-#include <nb30.h>
+#include <winsock2.h>
+#include <iphlpapi.h>
+#include <stdio.h>
+#include <stdlib.h>
+#pragma comment(lib, "iphlpapi.lib")
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
 static
-BOOL
-GetMacAddressFromNetbios(unsigned char* id)
-{
-    NCB ncb = { 0 };
-    LANA_ENUM lanaEnum = { 0 };
-    struct {
-        ADAPTER_STATUS adaptorStatus;
-        NAME_BUFFER names[30];
-    } adaptorStatusBuffer = { 0 };
-
-    ZeroMemory(id, 6);
-    ZeroMemory(&ncb, sizeof(ncb));
-    ZeroMemory(&adaptorStatusBuffer, sizeof(adaptorStatusBuffer));
-    ZeroMemory(&lanaEnum, sizeof(lanaEnum));
-    ncb.ncb_command = NCBENUM;
-    ncb.ncb_buffer = (PUCHAR)&lanaEnum;
-    ncb.ncb_length = sizeof(lanaEnum);
-    Netbios(&ncb);
-    if ((ncb.ncb_retcode == 0) && (lanaEnum.length >= 1))
-    {
-        ZeroMemory(&ncb, sizeof(ncb));
-        ncb.ncb_command = NCBRESET;
-        ncb.ncb_lana_num = lanaEnum.lana[0];
-        ncb.ncb_lsn = 0;
-        ncb.ncb_num = 0;
-        ncb.ncb_buffer = NULL;
-        ncb.ncb_length = 0;
-        Netbios(&ncb);
-        if (ncb.ncb_retcode == 0)
-        {
-            ncb.ncb_command = NCBASTAT;
-            ncb.ncb_callname[0] = '*';
-            ncb.ncb_callname[1] = 0;
-            ncb.ncb_buffer = (PUCHAR)&adaptorStatusBuffer;
-            ncb.ncb_length = sizeof(adaptorStatusBuffer);
-            Netbios(&ncb);
-            if (ncb.ncb_retcode == 0)
-            {
-                memcpy(id, &adaptorStatusBuffer.adaptorStatus.adapter_address, 6);
-                return TRUE;
-            }
-        }
-    }
-
-    /* failed */
-    return FALSE;
-}
-
-static
-BOOL
-GetMacAddressFromUuidCreateSequential(unsigned char* id)
-{
-    union {
-        unsigned char bytes[16];
-        UUID uuid;
-    } u = { 0 };
-    RPC_STATUS status = { 0 };
-    typedef RPC_STATUS (RPC_ENTRY * PFN)(UUID*);
-    static PFN pfn;
-    HMODULE module = { 0 };
-
-    ZeroMemory(id, 6);
-    ZeroMemory(&u, sizeof(u));
-
-    if (pfn == NULL)
-    {
-        module = LoadLibrary("rpcrt4.dll");
-        if (module == NULL)
-            return FALSE;
-        pfn = (PFN)GetProcAddress(module, "UuidCreateSequential");
-        if (pfn == NULL)
-        {
-            /* Do not fall back if UuidCreateSequential is supposed be there.
-             */
-            if ((GetVersion() & 0xFF) >= 5)
-                return FALSE;
-
-            pfn = &UuidCreate;
-        }
-    }
-
-    status = (*pfn)(&u.uuid);
-    memcpy(id, &u.bytes[10], 6);    
-    return (status == RPC_S_OK);
-}
-
-BOOL
+int/*BOOL*/
 __cdecl
 MachineIDC__CanGet(unsigned char* id)
 {
+    BOOL Success = FALSE;
+    DWORD Error;
+    DWORD Size;
+    MIB_IFTABLE* Table = { 0 };
+    DWORD i;
+    DWORD NumEntries;
+
     ZeroMemory(id, 6);
 
-    return (GetMacAddressFromNetbios(id) || GetMacAddressFromUuidCreateSequential(id));
+    /* Call until it fits, typically twice. */
+    Size = 0;
+    while ((Error = GetIfTable(Table, &Size, FALSE)) == ERROR_INSUFFICIENT_BUFFER)
+    {
+        free(Table);
+        Table = (MIB_IFTABLE*)malloc(Size);
+        if (Table == NULL)
+        {
+            printf("Error allocating memory needed to call GetIfTable\n");
+            Error = ERROR_NOT_ENOUGH_MEMORY;
+            goto Exit;
+        }
+    }
+    if (Error)
+        goto Exit;
+
+    NumEntries = Table->dwNumEntries;
+    for (i = 0; (!Success) && (i < NumEntries); ++i)
+    {
+        MIB_IFROW* Row = &Table->table[i];
+        if (Row->dwType != IF_TYPE_ETHERNET_CSMACD || Row->dwPhysAddrLen != 6)
+            continue;
+        memcpy(id, Row->bPhysAddr, 6);
+        Success = TRUE;
+    }
+Exit:
+    if (Error)
+        printf("error %u\n", Error);
+    free(Table);
+    return Success;
 }
 
 #ifdef __cplusplus
 } /* extern "C" */
 #endif
 
-#if 0 /* test code */
+#if 1 /* test code */
 
 #include <stdio.h>
 
 int main()
 {
     unsigned char id[6] = { 0 };
-    int i = { 0 };
+    BOOL i = { 0 };
     
-    i = GetMacAddressFromNetbios(id);
-    printf("%d %02x%02x%02x%02x%02x%02x\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
-
-    i = GetMacAddressFromUuidCreateSequential(id);
-    printf("%d %02x%02x%02x%02x%02x%02x\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
+    i = MachineIDC__CanGet(id);
+    printf("%d %02X-%02X-%02X-%02X-%02X-%02X\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
+    system("getmac");
 
     return 0;
 }
