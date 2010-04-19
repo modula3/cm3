@@ -11,6 +11,13 @@ for root, dirs, files in os.walk("."):
         print(p)
         orig = open(p, "r").read()
         new = orig
+
+
+        new = new.replace("\n *\n *\n * Revision", "\n *\n * Revision");
+        new = new.replace("\n * \n *\n * Revision", "\n *\n * Revision");
+        new = new.replace("\n * \n * \n * Revision", "\n * \n * Revision");
+        new = new.replace("\n *\n * \n * HISTORY\n *)", "\n *)");
+
         new = re.sub("\n \\*\n \\*\n \\* \\$" + "Log", "$" + "$Log", new);
         new = re.sub("\n \\* \\$" + "Source: [^$]+\\$\n", "\n", new);
         new = re.sub("\n \\* \\$" + "Date: [^$]+\\$\n", "\n", new);
