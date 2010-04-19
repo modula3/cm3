@@ -22,17 +22,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-#if defined(__aix) \
- || defined(__hpux) \
- || defined(__INTERIX) \
- || defined(__irix) \
- || defined(__osf__) \
- || defined(__sgi) \
- || defined(__vms)
-/* osf might already work */
-#error Please test/port this.
-#endif
-
 #if !(defined(__APPLE__)    \
    || defined(__CYGWIN__)   \
    || defined(__FreeBSD__)  \
@@ -43,10 +32,6 @@
 #error Please test/port this.
 #endif
 
-#ifdef __sun
-/* need works but keep the old version */
-#endif
-
 #if defined(__OpenBSD__) || defined(__NetBSD__) || defined(__FreeBSD__) || defined(__APPLE__)
 #define HAS_GETIFADDRS
 #endif
@@ -54,17 +39,6 @@
 #ifdef HAS_GETIFADDRS
 #include <net/if_dl.h>
 #include <ifaddrs.h>
-#endif
-
-#ifdef __APPLE__
-#ifndef _SIZEOF_ADDR_IFREQ
-#error Apple => _SIZEOF_ADDR_IFREQ
-#endif
-#else
-#ifdef _SIZEOF_ADDR_IFREQ
-#error !Apple => !_SIZEOF_ADDR_IFREQ
-#endif
-#define _SIZEOF_ADDR_IFREQ(a) (sizeof(a))
 #endif
 
 #ifdef __cplusplus
@@ -82,7 +56,7 @@ ToPrintable(unsigned char a)
 
 static
 void
-dump(void* a, size_t n)
+HexDump(void* a, size_t n)
 {
     char buffer[256];
     unsigned char* b = (unsigned char*)a;
