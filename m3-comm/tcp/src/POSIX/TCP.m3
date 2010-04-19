@@ -6,7 +6,6 @@
 (*      modified on Fri Jan  7 13:31:11 PST 1994 by msm    *)
 (*      modified on Sun Jan 12 16:16:54 PST 1992 by meehan *)
 (*      modified on Sat Jan 11 16:55:00 PST 1992 by gnelson *)
-(* $Id: TCP.m3,v 1.7 2009-03-17 12:07:40 jkrell Exp $ *)
 
 UNSAFE MODULE TCP EXPORTS TCP, TCPMisc, TCPSpecial;
 
