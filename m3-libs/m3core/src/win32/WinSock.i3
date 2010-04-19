@@ -693,12 +693,10 @@ PROCEDURE WSACleanup(): INT32;
 <* EXTERNAL WSAGetLastError:PASCAL *>
 PROCEDURE WSAGetLastError(): INT32;
 
+<* EXTERNAL WSASendDisconnect:PASCAL *>
+PROCEDURE WSASendDisconnect(s: SOCKET; disconnectData: ADDRESS := NIL): INT32;
 
 (* Rest of Microsoft extensions omitted ... assume multithreaded env. *)
 
 
 END WinSock.
-
-
-
-
