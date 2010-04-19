@@ -25,7 +25,7 @@
 #ifdef _SIZEOF_ADDR_IFREQ
 #error !Apple => !_SIZEOF_ADDR_IFREQ
 #endif
-#define _SIZEOF_ADDR_IFREQ(a) (sizeof(*(a)))
+#define _SIZEOF_ADDR_IFREQ(a) (sizeof(a))
 #endif
 
 #ifdef HAS_GETIFADDRS
