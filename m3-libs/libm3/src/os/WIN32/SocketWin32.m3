@@ -346,7 +346,7 @@ PROCEDURE OtherEnd (t: T): EndPoint
 
 PROCEDURE Init() =
   (* LL = 0 *)
-  CONST WinSockVersion = 16_0101;  (* App version 1.1 *)
+  CONST WinSockVersion = 16_0202;  (* App version 2.2 *)
   VAR data: WSAData;
   BEGIN
     IF init_done THEN RETURN; END;
