@@ -116,6 +116,7 @@ SYSTEM_LIBS_MS =
 {
     "LIBC" :
     [
+        LibIn("iphlpapi"),
         LibIn("rpcrt4"),
         LibIn("winspool"),
         LibIn("comctl32"),
@@ -845,7 +846,7 @@ if USE_DELAYLOAD
     [
     %
     % The default static dependencies of Modula-3 binaries
-    % are larger than they should be. Reduce them sleazily via delayload.
+    % are larger than they should be. Reduce them via delayload.
     % This requires a Visual C++ 6.0 or newer linker.
     %
         "-delayload:wsock32.dll",
@@ -855,6 +856,7 @@ if USE_DELAYLOAD
         "-delayload:user32.dll",
         "-delayload:comctl32.dll",
         "-delayload:rpcrt4.dll",
+        "-delayload:iphlpapid.dll",
         "delayimp.lib",
     ]
 end
