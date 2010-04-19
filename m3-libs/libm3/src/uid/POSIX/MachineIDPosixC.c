@@ -96,7 +96,7 @@ MachineIDPosixC__CanGet(unsigned char *id)
         {
             for (if2 = if1; (!result) && if2; if2 = if2->ifa_next)
             {
-                if (if2->ifa_addr->sa_family == AF_LINK)
+                if (((if2->ifa_flags & IFF_LOOPBACK) == 0) && (if2->ifa_addr->sa_family == AF_LINK))
                 {
                     struct sockaddr_dl* dl = (struct sockaddr_dl*)if2->ifa_addr;
                     unsigned char* mac = (unsigned char*)LLADDR(dl);
