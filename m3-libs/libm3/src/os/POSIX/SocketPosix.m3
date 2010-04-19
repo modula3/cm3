@@ -441,11 +441,6 @@ PROCEDURE AddressToEndPoint (READONLY name: SockAddrIn;  VAR(*OUT*) ep: EndPoint
     ep.port := ntohs (name.sin_port);
   END AddressToEndPoint;
 
-(*
-VAR SysSendBufSize: INTEGER := 128000;
-VAR SysRcvBufSize: INTEGER := 128000;
-*)
-
 PROCEDURE InitStream (fd: CARDINAL)
   RAISES {OSError.E} =
   (* We assume that the runtime ignores SIGPIPE signals *)
@@ -453,12 +448,6 @@ PROCEDURE InitStream (fd: CARDINAL)
     one : int := 1;
     linger := struct_linger{1, 1};
   BEGIN
-    (*****
-    EVAL setsockopt(fd, SOL_SOCKET, SO_SNDBUF,
-                    ADR(SysSendBufSize), BYTESIZE(SysSendBufSize));
-    EVAL setsockopt(fd, SOL_SOCKET, SO_RCVBUF,
-                    ADR(SysRcvBufSize), BYTESIZE(SysRcvBufSize));
-    ******)
     EVAL setsockopt(fd, SOL_SOCKET, SO_LINGER,
                     ADR(linger), BYTESIZE(linger));
     EVAL setsockopt(fd, IPPROTO_TCP, TCP_NODELAY,
