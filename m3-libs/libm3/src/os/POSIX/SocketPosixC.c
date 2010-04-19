@@ -2,10 +2,19 @@
 /* See file COPYRIGHT-CMASS for details. */
 
 #include "m3core.h"
+#ifndef _WIN32
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netdb.h>
 #include <arpa/inet.h>
+#else
+#include <winsock2.h>
+#include <stdlib.h>
+#endif
+
+#define TRUE 1
+#define FALSE 0
+typedef double LONGREAL;
 
 #ifdef __cplusplus
 extern "C" {
@@ -18,20 +27,27 @@ SchedulerPosix__IOWait(int fd, int/*boolean*/read, LONGREAL timeout);
 
 typedef struct sockaddr_in SockAddrIn;
 
+#if defined(ULTRIX) || defined(ultrix) || defined(__osf__)
+#define REFETCH_ERROR 1
+static int RefetchError(int fd);
+#else
+#define REFETCH_ERROR 0
+#endif
+
 typedef struct {
-    unsigned addr;
+    INTEGER addr4;
+    UINT8 addr6[16];
 } Address;
 
 typedef struct {
-    Address addr;
-    unsigned short port;
+    INTEGER port;
+    Address address;
 } EndPoint;
 
 #define NullPort 0
-const static EndPoint nullAddress = { 0 };
+const EndPoint NullAddress = {0,{0,{0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0}}};
 
 static void InitStream(int fd);
-static void RefetchError(int fd);
 static void GetHostAddr(Address* a);
 static void MakeNonBlocking(int fd);
 static void SetAddress(const EndPoint* ep, /*out*/SockAddrIn* name);
@@ -54,6 +70,18 @@ void
 __cdecl
 IOError(Exception);
 
+#ifdef _WIN32
+const SocketC__SockErr = SockErr;
+#else
+const SocketC__SockErr = -1;
+#endif
+
+#ifdef _WIN32
+#define GetSocketError() WSAGetLastError()
+#else
+#define GetSocketError() errno
+#endif
+
 int
 __cdecl
 SocketPosixC__Create(int/*boolean*/ reliable)
@@ -63,20 +91,28 @@ SocketPosixC__Create(int/*boolean*/ reliable)
     if (fd == -1)
     {
         Exception e = Unexpected;
-        switch (errno)
+        switch (GetSocketError())
         {
+#ifdef _WIN32
+        case WSAEMFILE:
+#else
         case EMFILE:
         case ENFILE:
+#endif
             e = NoResources;
             break;
         }
         IOError(e);
     }
 
+#ifndef _WIN32
     MakeNonBlocking(fd);
+#endif
     setsockopt(fd, SOL_SOCKET, SO_REUSEADDR, &one, sizeof(one));
     return fd;
 }
+
+#ifndef _WIN32
 
 int
 __cdecl
@@ -92,6 +128,8 @@ SocketPosixC__Status(int fd,
     return r;
 }
 
+#endif
+
 void
 __cdecl
 SocketPosixC__Bind(int fd, EndPoint* ep)
@@ -103,8 +141,16 @@ SocketPosixC__Bind(int fd, EndPoint* ep)
     if (bind(fd, (struct sockaddr *)&name, sizeof(name)) == -1)
     {
         Exception e = Unexpected;
-        if (errno == EADDRINUSE)
+        switch (GetSocketError())
+        {
+#ifdef _WIN32
+        case WSAEADDRINUSE:
+#else
+        case EADDRINUSE:
+#endif
             e = PortBusy;
+            break;
+        }
         IOError(e);
     }
 }
@@ -123,14 +169,25 @@ CommonError(int err)
 {
     switch (err)
     {
+#ifdef _WIN32
+    case WSAETIMEDOUT:
+#else
     case ETIMEDOUT:
+#endif
         IOError(Timeout);
         return TRUE;
 
+#ifdef _WIN32
+    case WSAENETUNREACH:
+    case WSAEHOSTUNREACH:
+    case WSAEHOSTDOWN:
+    case WSAENETDOWN:
+#else
     case ENETUNREACH:
     case EHOSTUNREACH:
     case EHOSTDOWN:
     case ENETDOWN:
+#endif
         IOError(Unreachable);
         return TRUE;
     }
@@ -142,6 +199,7 @@ __cdecl
 SocketPosixC__Connect(int fd, EndPoint* ep)
 {
     SockAddrIn name;
+    int error;
 
     ZERO_MEMORY(name);
     EndPointToAddress(ep, &name);
@@ -150,33 +208,55 @@ SocketPosixC__Connect(int fd, EndPoint* ep)
     {
         if (connect(fd, (struct sockaddr *)&name, sizeof(name)) == 0)
             break;
-        switch (errno)
+        error = GetSocketError();
+#if REFETCH_ERROR
+        switch (error)
         {
-        case EINVAL: /* hack to try to get real errno, hidden due to NBIO bug in connect */
+        case EINVAL: /* hack to try to get real GetSocketError(), hidden due to NBIO bug in connect */
         case EBADF:  /* we'll try the same for EBADF, which we've seen on Alpha */
-            RefetchError(fd);
+            error = RefetchError(fd);
         }
-        if (CommonError(errno))
+#endif
+        if (CommonError(error))
             return;
-        switch (errno)
+        switch (error)
         {
+#ifdef _WIN32
+        case WSAEISCONN:
+#else
         case EISCONN:
+#endif
             return;
 
+#ifdef _WIN32
+        case WSAEADDRNOTAVAIL:
+        case WSAECONNREFUSED:
+        case WSAEINVAL:
+        case WSAECONNRESET:
+        case WSAEBADF:
+#else
         case EADDRNOTAVAIL:
         case ECONNREFUSED:
         case EINVAL:
         case ECONNRESET:
         case EBADF:
+#endif
             IOError(Refused);
             return;
 
+#ifdef _WIN32
+        case WSAEWOULDBLOCK:
+        case WSAEAGAIN:
+        case WSAEINPROGRESS:
+        case WSAEALREADY:
+#else
         case EWOULDBLOCK:
 #if EWOULDBLOCK != EAGAIN
         case EAGAIN:
 #endif
         case EINPROGRESS:
         case EALREADY:
+#endif
             /* nope, not yet */
             break;
 
@@ -184,7 +264,9 @@ SocketPosixC__Connect(int fd, EndPoint* ep)
             IOError(Unexpected);
             return;
         }
+#ifndef _WIN32
         SchedulerPosix__IOAlertWait(fd, FALSE);
+#endif
     }
 }
 
@@ -207,7 +289,7 @@ SocketPosixC__Accept(int server, EndPoint* ep)
             return;
         }
 
-        switch (errno)
+        switch (GetSocketError())
         {
         case EMFILE:
         case ENFILE:
@@ -231,10 +313,7 @@ SocketPosixC__Accept(int server, EndPoint* ep)
 
 static
 int/*boolean*/
-CommonRead(int fd,
-           int err,
-           int/*boolean*/ mayBlock,
-           INTEGER* len)
+CommonRead(int fd, int err, int/*boolean*/ mayBlock, INTEGER* len)
 {
     if (CommonError(err))
         return FALSE;
@@ -270,10 +349,7 @@ CommonRead(int fd,
 
 static
 void
-CommonWrite(int fd,
-            INTEGER len,
-            char** p,
-            INTEGER* n)
+CommonWrite(int fd, INTEGER len, char** p, INTEGER* n)
 {
     if (len >= 0)
     {
@@ -282,10 +358,10 @@ CommonWrite(int fd,
     }
     else
     {
-        if (CommonError(errno))
+        if (CommonError(GetSocketError()))
             return;
 
-        switch (errno)
+        switch (GetSocketError())
         {
         case EPIPE:
         case ECONNRESET:
@@ -333,7 +409,7 @@ SocketPosixC__ReceiveFrom(int fd,
             AddressToEndPoint(&name, ep);
             return len;
         }
-        if (CommonRead(fd, errno, mayBlock, &len))
+        if (CommonRead(fd, GetSocketError(), mayBlock, &len))
             return len;
     }
 }
@@ -345,7 +421,7 @@ SocketPosixC__Read(int fd, void* pb, INTEGER nb, int/*boolean*/ mayBlock)
     while (1)
     {
         INTEGER len = read(fd, pb, nb);
-        if ((len >= 0) || CommonRead(fd, errno, mayBlock, &len))
+        if ((len >= 0) || CommonRead(fd, GetSocketError(), mayBlock, &len))
             return len;
     }
 }
@@ -415,9 +491,9 @@ void
 __cdecl
 SocketPosixC__ThisEnd(int fd, EndPoint* ep)
 {
-    if (memcmp(ep, &nullAddress, sizeof(nullAddress)) == 0)
+    if (memcmp(ep, &NullAddress, sizeof(NullAddress)) == 0)
     {
-        GetHostAddr(&ep->addr);
+        GetHostAddr(&ep->address);
     }
     if (ep->port == NullPort)
     {
@@ -453,7 +529,7 @@ static void GetHostAddr(Address* a)
 
     assert(hostent->h_length <= sizeof(Address));
 
-    a->addr = ((struct in_addr*)hostent->h_addr_list)->s_addr;
+    a->addr4 = ((struct in_addr*)hostent->h_addr_list)->s_addr;
 }
 
 void
@@ -485,12 +561,12 @@ static void EndPointToAddress(const EndPoint* ep, /*out*/SockAddrIn* name)
     ZeroMemory(name, sizeof(*name));
     name->sin_family = AF_INET;
     name->sin_port = htons(ep->port);
-    name->sin_addr.s_addr = ep->addr.addr;
+    name->sin_addr.s_addr = ep->address.addr4;
 }
 
 static void AddressToEndPoint(const SockAddrIn* name, /*out*/EndPoint* ep)
 {
-    ep->addr.addr = name->sin_addr.s_addr;
+    ep->address.addr4 = name->sin_addr.s_addr;
     ep->port = ntohs(name->sin_port);
 }
 
@@ -498,7 +574,11 @@ static void InitStream(int fd)
 {
     /* We assume that the runtime ignores SIGPIPE signals. */
     int one = 1;
+#ifdef _WIN32
+    struct linger linger = {0, 0};
+#else
     struct linger linger = {1, 1};
+#endif
 
     /*****
     setsockopt(fd, SOL_SOCKET, SO_SNDBUF, &SysSendBufSize, sizeof(SysSendBufSize));
@@ -511,21 +591,24 @@ static void InitStream(int fd)
 
 static void MakeNonBlocking(int fd)
 {
-    if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK))
+    if (fcntl(fd, F_SETFL, fcntl(fd, F_GETFL) | O_NONBLOCK) == -1)
         IOError(Unexpected);
 }
+
+#if REFETCH_ERROR
 
 static void RefetchError(int fd)
 {
 /* Awful hack to retrieve a meaningful error from a TCP accept
    socket.  Only works on Ultrix and OSF.  Leaves result
-   in Cerrno.GetErrno().  */
-#if defined(ULTRIX) || defined(ultrix) || defined(__osf__)
+   in errno.  */
     int optbuf = 0;
     socklen_t optlen = sizeof(optbuf);
     getsockopt(fd, IPPROTO_TCP, TCP_NODELAY, optbuf, &optlen);
-#endif
+    return errno;
 }
+
+#endif
 
 #ifdef __cplusplus
 } /* extern C */
