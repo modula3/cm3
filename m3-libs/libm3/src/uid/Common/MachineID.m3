@@ -6,7 +6,7 @@
 (*      modified on Thu May  6 13:27:58 PDT 1993 by mjordan    *)
 
 UNSAFE MODULE MachineID;
-IMPORT MachineIDC;
+IMPORT MachineIDC, Scheduler;
 
 EXCEPTION Failure;
 
@@ -21,8 +21,12 @@ PROCEDURE Get (): T =
   END Get;
 
 PROCEDURE CanGet (VAR(*OUT*) id: T): BOOLEAN =
+  VAR result: BOOLEAN;
   BEGIN
-    RETURN (MachineIDC.CanGet(ADR(id.r[0])) # 0);
+    Scheduler.DisableSwitching();
+    result := (MachineIDC.CanGet(ADR(id.r[0])) # 0);
+    Scheduler.EnableSwitching();
+    RETURN result;
   END CanGet;
 
 BEGIN
