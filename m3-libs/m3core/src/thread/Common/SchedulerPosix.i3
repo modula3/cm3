@@ -71,9 +71,9 @@ PROCEDURE IOAlertWait(fd: CARDINAL; read: BOOLEAN;
    use a loop of the form:
 
       LOOP
-	status := read (fd, buf, n);
+        status := read (fd, buf, n);
         IF status = -1 AND errno # EWOULDBLOCK THEN
-	  (* error to be handled *)
+          (* error to be handled *)
         ELSIF status = 0 THEN
           (* eof reached *)
         ELSIF status > 0 THEN
