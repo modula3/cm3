@@ -17,6 +17,17 @@
 #define HAS_GETIFADDRS
 #endif
 
+#ifdef __APPLE__
+#ifndef _SIZEOF_ADDR_IFREQ
+#error Apple => _SIZEOF_ADDR_IFREQ
+#endif
+#else
+#ifdef _SIZEOF_ADDR_IFREQ
+#error !Apple => !_SIZEOF_ADDR_IFREQ
+#endif
+#define _SIZEOF_ADDR_IFREQ(a) (sizeof(*(a)))
+#endif
+
 #ifdef HAS_GETIFADDRS
 #include <ifaddrs.h>
 #include <net/if_dl.h>
@@ -52,7 +63,7 @@ main() {
        exit(1);
     }
     
- #ifdef HAS_GETIFADDRS
+#ifdef HAS_GETIFADDRS
     getifaddrs(&if1);
     for (if2 = if1; if2; if2 = if2->ifa_next)
     {
