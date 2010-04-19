@@ -390,24 +390,12 @@ PROCEDURE AddressToEndPoint (READONLY name: SockAddrIn;  VAR(*OUT*) ep: EndPoint
     ep.port := ntohs (name.sin_port);
   END AddressToEndPoint;
 
-(*
-VAR SysSendBufSize: INTEGER := 65535;
-VAR SysRcvBufSize: INTEGER := 65535;
-*)
-
 PROCEDURE InitSock (sock: SOCKET) =
   (* We assume that the runtime ignores SIGPIPE signals *)
   VAR
     one := 1;
     linger := struct_linger{0, 0};
   BEGIN
-    (*****
-    EVAL setsockopt (sock, SOL_SOCKET, SO_SNDBUF,
-                     ADR(SysSendBufSize), BYTESIZE(SysSendBufSize));
-    EVAL setsockopt (sock, SOL_SOCKET, SO_RCVBUF,
-                     ADR(SysRcvBufSize), BYTESIZE(SysRcvBufSize));
-    ******)
-
     EVAL setsockopt (sock, SOL_SOCKET, SO_LINGER,
                      ADR(linger), BYTESIZE(linger));
 
