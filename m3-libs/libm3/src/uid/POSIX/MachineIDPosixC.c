@@ -92,21 +92,23 @@ MachineIDPosixC__CanGet(unsigned char *id)
     if (s >= 0)
     {
 #ifdef HAS_GETIFADDRS
-        getifaddrs(&if1);
-        for (if2 = if1; (!result) && if2; if2 = if2->ifa_next)
+        if (getifaddrs(&if1) == 0)
         {
-            if (if2->ifa_addr->sa_family == AF_LINK)
+            for (if2 = if1; (!result) && if2; if2 = if2->ifa_next)
             {
-                struct sockaddr_dl* dl = (struct sockaddr_dl*)if2->ifa_addr;
-                unsigned char* mac = (unsigned char*)LLADDR(dl);
-                if (dl->sdl_alen == 6) /* 48 bits */
+                if (if2->ifa_addr->sa_family == AF_LINK)
                 {
-                    memcpy(id, mac, 6);
-                    result = 1;
+                    struct sockaddr_dl* dl = (struct sockaddr_dl*)if2->ifa_addr;
+                    unsigned char* mac = (unsigned char*)LLADDR(dl);
+                    if (dl->sdl_alen == 6) /* 48 bits */
+                    {
+                        memcpy(id, mac, 6);
+                        result = 1;
+                    }
                 }
             }
+            freeifaddrs(if1);
         }
-        freeifaddrs(if1);
 #elif defined(__linux__) || defined(__CYGWIN__) || defined(__osf__)
         list.ifc_len = sizeof(buf);
         list.ifc_req = (struct ifreq*)&buf;
