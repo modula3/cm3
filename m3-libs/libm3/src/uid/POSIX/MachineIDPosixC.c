@@ -133,7 +133,7 @@ get_ipv4_address(void)
 
 int/*boolean*/
 __cdecl
-MachineIDPosixC__CanGet(unsigned char *id)
+MachineIDC__CanGet(unsigned char *id)
 {
     int result = { 0 };
     int sock = { 0 };
@@ -284,7 +284,7 @@ int main()
     unsigned char id[6] = { 0 };
     int i = { 0 };
     
-    i = MachineIDPosixC__CanGet(id);
+    i = MachineIDC__CanGet(id);
     printf("%d %02X-%02X-%02X-%02X-%02X-%02X\n", i, id[0], id[1], id[2], id[3], id[4], id[5]);
     printf("   %u.%u.%u.%u.%u.%u\n", id[0], id[1], id[2], id[3], id[4], id[5]);
 #if defined(__sun)
