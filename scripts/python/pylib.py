@@ -292,6 +292,10 @@ def _ClearEnvironmentVariable(Name):
 
 def _MapTarget(a):
 
+    # don't map -- can't then cleanup the old
+
+    return a
+
     # Convert sensible names that the user might provide on the
     # command line into the legacy names other code knows about.
 
