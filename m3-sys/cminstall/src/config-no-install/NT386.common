@@ -120,7 +120,7 @@ SYSTEM_LIBS_MS =
         LibIn("rpcrt4"),
         LibIn("winspool"),
         LibIn("comctl32"),
-        LibIn("wsock32"),
+        LibIn("ws2_32"),
         LibIn("comdlg32"),
         LibIn("netapi32"),
         LibIn("gdi32"),
@@ -142,7 +142,7 @@ SYSTEM_LIBS_GNU =
     [
 %       LibIn("winspool"),
         LibIn("comctl32"),
-        LibIn("wsock32"),
+        LibIn("ws2_32"),
 %       LibIn("comdlg32"),
         LibIn("netapi32"),
         LibIn("gdi32"),
@@ -849,7 +849,7 @@ if USE_DELAYLOAD
     % are larger than they should be. Reduce them via delayload.
     % This requires a Visual C++ 6.0 or newer linker.
     %
-        "-delayload:wsock32.dll",
+        "-delayload:ws2_32.dll",
         "-delayload:advapi32.dll",
         "-delayload:gdi32.dll",
         "-delayload:netapi32.dll",
