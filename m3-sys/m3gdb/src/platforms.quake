@@ -13,7 +13,7 @@ readonly Platform_info = {
   "ALPHA_OSF" : "alpha-dec-osf1",
   "ALPHA_VMS" : "alpha-vms",
   "AMD64_DARWIN" : "amd64-apple-darwin8.7.1",
-  "AMD64_FREEBSD" : "amd64-freebsd7",
+  "AMD64_FREEBSD" : "amd64-freebsd",
   "AMD64_LINUX" : "amd64-pc-linux-gnu",
   "AMD64_NETBSD" : "amd64-netbsd",
   "AMD64_NT"  : "amd64-pc-mingw32",
