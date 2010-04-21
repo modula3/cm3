@@ -237,7 +237,7 @@ end
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
-m3back_flags = [ ]
+m3back_flags = ["-march=i586"]
 
 %
 % always generate information for debugging
