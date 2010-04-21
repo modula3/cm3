@@ -47,7 +47,7 @@ end
 %
 if not defined("m3back_flags")
     if equal(WORD_SIZE, "32BITS")
-        m3back_flags = "32"
+        m3back_flags = "32 -march=i586"
     else
         m3back_flags = "64"
     end
