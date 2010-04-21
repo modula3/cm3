@@ -1,0 +1,7 @@
+readonly TARGET = "ALPHA32_VMS"
+readonly GNU_PLATFORM = "alpha-dec-vms"
+m3back_flags = "-gstabs+ -fPIC -funwind-tables"
+SYSTEM_CC = "cc /pointer_size=32"
+SYSTEM_LD = "link"
+include("Alpha32.common")
+include("VMS.common")
