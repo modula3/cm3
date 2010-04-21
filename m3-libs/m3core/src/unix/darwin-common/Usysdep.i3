@@ -24,7 +24,8 @@ TYPE
 
   struct_timeval = RECORD
     tv_sec: INTEGER;
-    tv_usec: INTEGER;
+    tv_usec: int;
+    (* 4 bytes of padding here on 64bit *)
   END;
 
   struct_tm = RECORD
