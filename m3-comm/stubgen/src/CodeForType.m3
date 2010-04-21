@@ -288,7 +288,7 @@ PROCEDURE ImportFromType(t: Type.T; importTbl: AtomRefTbl.T;
     | Type.Reference (ref) => ImportRevelations(ref, importTbl);
     ELSE
     END;
-    IF byName AND t.name # NIL THEN
+    IF NOT ISTYPE(t,Type.Record) AND byName AND t.name # NIL THEN
       RETURN;
     END;
     TYPECASE t OF
