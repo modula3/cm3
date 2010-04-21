@@ -1899,8 +1899,17 @@ PROCEDURE DoUnresolve (t: T;  res: TEXT): TEXT =
     res := TextUtils.Substitute(res, t.emacs_install_alt, "\" & EMACS_INSTALL & \"");
     res := TextUtils.Substitute(res, t.pkg_install_alt, "\" & PKG_INSTALL & \"");
     res := TextUtils.Substitute(res, t.pkg_use_alt, "\" & PKG_USE & \"");
-    res := TextUtils.Substitute(res, t.text_build_dir, "\" & TARGET & \"");
+    
+    (* INSTALL_ROOT needs to be relatively late since it is a prefix of others.
+     * TARGET needs to be even later since it can occur arbitrarily, as in:
+     * e.g. /Users/hudson/workspace/makedist-AMD64_DARWIN/bin
+     *                                       ^--TARGET--^
+     *      ^--------------------------- INSTALL_ROOT --^
+     *      ^--------------------------- BIN_INSTALL  ------^
+     *)
     res := TextUtils.Substitute(res, t.install_root_alt, "\" & INSTALL_ROOT & \"");
+    res := TextUtils.Substitute(res, t.text_build_dir, "\" & TARGET & \"");
+
     res := TextUtils.Substitute(res, "\"\" & ", "");
     res := TextUtils.Substitute(res, " & \"\"", "");
     RETURN res;
