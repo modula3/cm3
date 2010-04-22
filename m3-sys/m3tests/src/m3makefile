@@ -104,6 +104,10 @@ proc FileExists(x) is
 end
 
 proc cmp_file (dir, file) is
+  return cmp_file_ign (dir, file, [], [])
+end
+
+proc cmp_file_ign (dir, file, ignoreLinesWith, ignoreTexts) is
   local ExpectedPath = dir & SL & file
   local OutputPath = dir & SL & BUILD_DIR & SL & file
 
@@ -125,6 +129,51 @@ proc cmp_file (dir, file) is
 
   local OutputContents = fs_contents (OutputPath)
   local ExpectedContents = fs_contents (ExpectedPath)
+
+  if not empty (ignoreLinesWith)
+    local ocLines = split (OutputContents, "\n")
+    %write ("OutputContents(1):\n" & OutputContents)
+    OutputContents = ""
+    foreach line in ocLines
+      local found = ""
+      foreach ign in ignoreLinesWith
+        if tcontains (line, ign)
+          found = "T"
+        end
+      end
+      if not found
+        OutputContents = OutputContents & line & "\n"
+      end
+    end
+    %write ("OutputContents(2):\n" & OutputContents)
+    local ecLines = split (ExpectedContents, "\n")
+    %write ("ExpectedContents(1):\n" & ExpectedContents)
+    ExpectedContents = ""
+    foreach line in ecLines
+      local found = ""
+      foreach ign in ignoreLinesWith
+        if tcontains (line, ign)
+          found = "T"
+        end
+      end
+      if not found
+	ExpectedContents = ExpectedContents & line & "\n"
+      end
+    end
+    %write ("ExpectedContents(2):\n" & ExpectedContents)
+  end
+  if not empty (ignoreTexts)
+    res = OutputContents
+    foreach ign in ignoreTexts
+      res = subst (res, ign, "", 9999)
+    end
+    OutputContents = res
+    res = ExpectedContents
+    foreach ign in ignoreTexts
+      res = subst (res, ign, "", 9999)
+    end
+    ExpectedContents = res
+  end
 
   if defined ("LOG_CMPS")
     ComparisonLogData += OutputPath & ":\n" & OutputContents & "\n"
@@ -273,13 +322,31 @@ readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopt
       end
     end
 
-    local ok1 = cmp_file (dir, "stdout.build") and
-                cmp_file (dir, "stderr.build")
+    local ignoreLinesStdout = []
+    local ignoreLinesStderr = []
+    if should_run
+      if equal (sub (uid, 0, 1), "r")
+        ignoreLinesStdout = ["Abort trap", "Bus error"]
+        ignoreLinesStderr = ["Abort trap", "Bus error"]
+      end
+    end
+    local ignoreTextsStdout = []
+    local ignoreTextsStderr = []
+    if equal (uid, "r003")
+      ignoreTextsStdout = ["40 bytes", "80 bytes"]
+      ignoreTextsStderr = []
+    end
+    local ok1 = cmp_file_ign (dir, "stdout.build",
+                                    ignoreLinesStdout, ignoreTextsStdout) and
+                cmp_file_ign (dir, "stderr.build",
+                                    ignoreLinesStderr, ignoreTextsStderr)
     local ok2 = "T"
 
     if should_run
-      ok2 = cmp_file (dir, "stdout.pgm") and
-            cmp_file (dir, "stderr.pgm")
+      ok2 = cmp_file_ign (dir, "stdout.pgm",
+                          ignoreLinesStdout, ignoreTextsStdout) and
+            cmp_file_ign (dir, "stderr.pgm",
+                          ignoreLinesStderr, ignoreTextsStderr)
     end
     tstop = compress (q_exec_get ("date '+%s'")[1])
     %write (tstop, CR)
