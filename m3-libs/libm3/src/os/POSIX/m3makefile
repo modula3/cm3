@@ -51,12 +51,15 @@ local readonly DefaultOSName = {
     "OS2" : "OS/2",
     "SOLARIS" : "Solaris",
     "TRU64" : "Digital Unix",
+    "VMS" : "VMS",
 }
 
 % a lowercase primitive here would be good
 
 local readonly DefaultArch = {
     "ALPHA" : "alpha",
+    "ALPHA32" : "alpha",
+    "ALPHA64" : "alpha",
     "AMD64" : "AMD64",
     "ARM" : "arm",
     "HPPA" : "hppa",
