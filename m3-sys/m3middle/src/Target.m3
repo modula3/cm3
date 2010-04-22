@@ -380,8 +380,9 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  
     | Systems.ALPHA32_VMS,
       Systems.ALPHA64_VMS =>
-                 Jumpbuf_size              := 68 * Word.size;
+                 Jumpbuf_size              := 68 * Word64.size;
                  Jumpbuf_align             := Word64.align;
+                 Setjmp                    := "decc$setjmp";
 
 (*  | Systems.I386_MSDOS =>
                  Jumpbuf_size              := 172 * Char.size; TBD *)
