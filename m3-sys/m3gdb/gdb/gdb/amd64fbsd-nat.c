@@ -125,10 +125,12 @@ amd64fbsd_supply_pcb (struct regcache *regcache, struct pcb *pcb)
   regcache_raw_supply (regcache, 13, &pcb->pcb_r13);
   regcache_raw_supply (regcache, 14, &pcb->pcb_r14);
   regcache_raw_supply (regcache, 15, &pcb->pcb_r15);
+#if defined(__FreeBSD_version) && __FreeBSD_version < 800000
   regcache_raw_supply (regcache, AMD64_DS_REGNUM, &pcb->pcb_ds);
   regcache_raw_supply (regcache, AMD64_ES_REGNUM, &pcb->pcb_es);
   regcache_raw_supply (regcache, AMD64_FS_REGNUM, &pcb->pcb_fs);
   regcache_raw_supply (regcache, AMD64_GS_REGNUM, &pcb->pcb_gs);
+#endif
 
   return 1;
 }
