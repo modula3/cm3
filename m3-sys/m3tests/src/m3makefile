@@ -104,7 +104,7 @@ proc FileExists(x) is
 end
 
 proc cmp_file (dir, file) is
-  return cmp_file_ign (dir, file, [], [])
+  return cmp_file_ign (dir, file, [ ], [ ])
 end
 
 proc cmp_file_ign (dir, file, ignoreLinesWith, ignoreTexts) is
@@ -122,7 +122,7 @@ proc cmp_file_ign (dir, file, ignoreLinesWith, ignoreTexts) is
     return ""
   end
 
-  local ComparisonLogData = []
+  local ComparisonLogData = [ ]
   if defined ("LOG_CMPS")
     ComparisonLogData += "cmp_file(" & ExpectedPath & ", " & OutputPath & ")\n"
   end
@@ -157,7 +157,7 @@ proc cmp_file_ign (dir, file, ignoreLinesWith, ignoreTexts) is
         end
       end
       if not found
-	ExpectedContents = ExpectedContents & line & "\n"
+        ExpectedContents = ExpectedContents & line & "\n"
       end
     end
     %write ("ExpectedContents(2):\n" & ExpectedContents)
@@ -322,33 +322,29 @@ readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopt
       end
     end
 
-    local ignoreLinesStdout = []
-    local ignoreLinesStderr = []
+    local ignoreTexts = [ ]
+    local ignoreLines = [ ]
     if should_run
       if equal (sub (uid, 0, 1), "r")
-        ignoreLinesStdout = ["Abort trap", "Bus error", "Aborted",
-                             "Segmentation fault"]
-        ignoreLinesStderr = ["Abort trap", "Bus error" "Aborted",
-                             "Segmentation fault"]
+        ignoreLines = ["Abort trap", "Bus error", "Aborted",
+                       "Segmentation fault"]
       end
     end
-    local ignoreTextsStdout = []
-    local ignoreTextsStderr = []
     if equal (uid, "r003")
-      ignoreTextsStdout = ["40 bytes", "80 bytes"]
-      ignoreTextsStderr = []
+      ignoreTexts = ["40 bytes", "80 bytes"]
     end
+
     local ok1 = cmp_file_ign (dir, "stdout.build",
-                                    ignoreLinesStdout, ignoreTextsStdout) and
+                                    ignoreLines, ignoreTexts) and
                 cmp_file_ign (dir, "stderr.build",
-                                    ignoreLinesStderr, ignoreTextsStderr)
+                                    ignoreLines, ignoreTexts)
     local ok2 = "T"
 
     if should_run
       ok2 = cmp_file_ign (dir, "stdout.pgm",
-                          ignoreLinesStdout, ignoreTextsStdout) and
+                          ignoreLines, ignoreTexts) and
             cmp_file_ign (dir, "stderr.pgm",
-                          ignoreLinesStderr, ignoreTextsStderr)
+                          ignoreLines, ignoreTexts)
     end
     tstop = compress (q_exec_get ("date '+%s'")[1])
     %write (tstop, CR)
