@@ -153,7 +153,7 @@ proc FileExists(x) is
     return not stale(x, x)
 end
 
-proc cmp_file (dir, file, probeForTargetSpecificFile) is
+proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts,  probeForTargetSpecificFile) is
   local ExpectedPath = dir & "/" & file
   local OutputPath = dir & "/" & BUILD_DIR & "/" & file
 
@@ -170,7 +170,7 @@ proc cmp_file (dir, file, probeForTargetSpecificFile) is
     return ""
   end
 
-  local ComparisonLogData = []
+  local ComparisonLogData = [ ]
   if defined ("LOG_CMPS")
     %
     % not sure about this -- how is it used?
@@ -179,12 +179,57 @@ proc cmp_file (dir, file, probeForTargetSpecificFile) is
     if probeForTargetSpecificFile
       str_probeForTargetSpecificFile = "\"" & probeForTargetSpecificFile & "\""
     end
-    ComparisonLogData += "cmp_file(" & ExpectedPath & ", " & OutputPath & ", " & str_probeForTargetSpecificFile & ")\n"
+    ComparisonLogData += "cmp_file(" & ExpectedPath & ", " & OutputPath & ", [ ], [ ], " & str_probeForTargetSpecificFile & ")\n"
     write(ComparisonLogData)
   end
 
   local OutputContents = fs_contents (OutputPath)
   local ExpectedContents = fs_contents (ExpectedPath)
+
+  if not empty (ignoreLinesWith)
+    local ocLines = split (OutputContents, "\n")
+    %write ("OutputContents(1):\n" & OutputContents)
+    OutputContents = ""
+    foreach line in ocLines
+      local found = ""
+      foreach ign in ignoreLinesWith
+        if tcontains (line, ign)
+          found = "T"
+        end
+      end
+      if not found
+        OutputContents = OutputContents & line & "\n"
+      end
+    end
+    %write ("OutputContents(2):\n" & OutputContents)
+    local ecLines = split (ExpectedContents, "\n")
+    %write ("ExpectedContents(1):\n" & ExpectedContents)
+    ExpectedContents = ""
+    foreach line in ecLines
+      local found = ""
+      foreach ign in ignoreLinesWith
+        if tcontains (line, ign)
+          found = "T"
+        end
+      end
+      if not found
+        ExpectedContents = ExpectedContents & line & "\n"
+      end
+    end
+    %write ("ExpectedContents(2):\n" & ExpectedContents)
+  end
+  if not empty (ignoreTexts)
+    res = OutputContents
+    foreach ign in ignoreTexts
+      res = subst (res, ign, "", 9999)
+    end
+    OutputContents = res
+    res = ExpectedContents
+    foreach ign in ignoreTexts
+      res = subst (res, ign, "", 9999)
+    end
+    ExpectedContents = res
+  end
 
   if defined ("LOG_CMPS")
     ComparisonLogData += OutputPath & ":\n" & OutputContents & "\n"
@@ -335,21 +380,33 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
     NormalizeFile (dir & "/" & BUILD_DIR & "/stderr.build")
 
     if defined ("CAPTURE_BUILD")
-      if not cmp_file (dir, "stdout.build", probeForTargetSpecificFiles)
+      if not cmp_file (dir, "stdout.build", [ ], [ ], probeForTargetSpecificFiles)
         cp_if (dir & "/" & BUILD_DIR & "/stdout.build", dir & "/stdout.build")
       end
-      if not cmp_file (dir, "stderr.build", probeForTargetSpecificFiles)
+      if not cmp_file (dir, "stderr.build", [ ], [ ], probeForTargetSpecificFiles)
         cp_if (dir & "/" & BUILD_DIR & "/stderr.build", dir & "/stderr.build")
       end
     end
 
-    local ok1 = cmp_file (dir, "stdout.build", probeForTargetSpecificFiles) and
-                cmp_file (dir, "stderr.build", probeForTargetSpecificFiles)
+    local ignoreTexts = [ ]
+    local ignoreLines = [ ]
+    if should_run
+      if equal (sub (uid, 0, 1), "r")
+        ignoreLines = ["Abort trap", "Bus error", "Aborted",
+                       "Segmentation fault"]
+      end
+    end
+    if equal (uid, "r003")
+      ignoreTexts = ["40 bytes", "80 bytes"]
+    end
+
+    local ok1 = cmp_file (dir, "stdout.build", ignoreLines, ignoreTexts, probeForTargetSpecificFiles) and
+                cmp_file (dir, "stderr.build", ignoreLines, ignoreTexts, probeForTargetSpecificFiles)
     local ok2 = "T"
 
     if should_run
-      ok2 = cmp_file (dir, "stdout.pgm", probeForTargetSpecificFiles) and
-            cmp_file (dir, "stderr.pgm", probeForTargetSpecificFiles)
+      ok2 = cmp_file (dir, "stdout.pgm", ignoreLines, ignoreTexts, probeForTargetSpecificFiles) and
+            cmp_file (dir, "stderr.pgm", ignoreLines, ignoreTexts, probeForTargetSpecificFiles)
     end
     if DATE and BC
       tstop = compress (q_exec_get ("date '+%s'")[1])
