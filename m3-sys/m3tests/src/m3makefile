@@ -326,8 +326,10 @@ readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopt
     local ignoreLinesStderr = []
     if should_run
       if equal (sub (uid, 0, 1), "r")
-        ignoreLinesStdout = ["Abort trap", "Bus error"]
-        ignoreLinesStderr = ["Abort trap", "Bus error"]
+        ignoreLinesStdout = ["Abort trap", "Bus error", "Aborted",
+                             "Segmentation fault"]
+        ignoreLinesStderr = ["Abort trap", "Bus error" "Aborted",
+                             "Segmentation fault"]
       end
     end
     local ignoreTextsStdout = []
