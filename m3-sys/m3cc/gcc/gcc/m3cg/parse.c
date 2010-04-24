@@ -5062,7 +5062,7 @@ m3cg_lock_release (void)
   MTYPE2     (t, T);
 
   int size;
-  enum built_in_function fncode = BUILT_IN_LOCK_TEST_AND_SET_N;
+  enum built_in_function fncode = BUILT_IN_LOCK_RELEASE_N;
 
   if (!INTEGRAL_TYPE_P (t) && !POINTER_TYPE_P (t))
     goto incompatible;
