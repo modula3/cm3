@@ -79,6 +79,12 @@ def RemoveTrailingSlash(a):
         a = a[:-1]
     return a
 
+def StringContains(a, b):
+    return a.find(b) != -1
+
+def StringTagged(a, b):
+    return a.startswith(b + "_") or a.endswith("_" + b) or StringContains(a, "_" + b + "_")
+
 #print("RemoveTrailingSlash(a\\/):" + RemoveTrailingSlash("a\\/"))
 #print("RemoveTrailingSlash(a/\\):" + RemoveTrailingSlash("a/\\"))
 #print("RemoveTrailingSlash(a):" + RemoveTrailingSlash("a"))
@@ -104,6 +110,9 @@ def GetPathExtension(a):
 
 def RemovePathExtension(a):
     return a[:a.rfind(".")]
+
+def GetObjectName(a):
+    return GetPathBaseName(a) + "." + {"c" : "o", "s" : "o", "ms" : "mo", "is" : "io"}[GetPathExtension(a)]
 
 def GetPathBaseName(a):
     a = GetLastPathElement(a)
@@ -325,46 +334,13 @@ def _GetAllTargets():
 
     Targets = [ "NT386", "NT386GNU", "NT386MINGNU", "LINUXLIBC6", "SOLsun", "SOLgnu", "FreeBSD4", "NetBSD2_i386" ]
 
-    for proc in [ "PPC", ]:
-        for os in [ "OPENBSD", "NETBSD", "FREEBSD", "DARWIN", "LINUX" ]:
-            Targets += [proc + "_" + os]
-
     # systematic naming
 
-    for proc in [ "I386", "AMD64", "PPC32", "PPC64", "ARM" ]:
-        for os in [ "DARWIN" ]:
-            Targets += [proc + "_" + os]
-
-    for proc in [ "MIPS64", "I386", "AMD64", "PPC32", "PPC64", "SPARC32", "SPARC64" ]:
-        for os in [ "OPENBSD", "NETBSD", "FREEBSD" ]:
-            Targets += [proc + "_" + os]
-
-    for proc in [ "MIPS64", "I386", "AMD64", "PPC32", "PPC64", "SPARC32", "SPARC64", "ARM", "PA32", "PA64"]:
-        for os in [ "LINUX" ]:
-            Targets += [proc + "_" + os]
-
-    for proc in [ "MIPS32", "MIPS64" ]:
-        for os in [ "IRIX" ]:
-            Targets += [proc + "_" + os]
-
-    for proc in [ "PPC32", "PPC64" ]:
-        for os in [ "AIX" ]:
-            Targets += [proc + "_" + os]
-
-    for proc in [ "I386", "PPC32", "MIPS32", "ARM", "SH" ]:
-        for os in [ "CE" ]:
-            Targets += [proc + "_" + os]
-
-    for proc in [ "I386", "AMD64", "IA64" ]:
-        for os in [ "CYGWIN", "INTERIX", "NT" ]:
-            Targets += [proc + "_" + os]
-
-    for proc in [ "I386", "AMD64", "SPARC32", "SPARC64" ]:
-        for os in [ "SOLARIS" ]:
-            Targets += [proc + "_" + os]
-
-    for proc in [ "PA32", "PA64", "IA64" ]:
-        for os in [ "HPUX" ]:
+    for proc in ["ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "IA64", "I386", "PPC", "PPC32",
+                 "PPC64", "SPARC", "SPARC32", "SPARC64", "MIPS32", "MIPS64", "PA32", "PA64", "SH"]:
+        for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HPUX" "INTERIX", "IRIX",
+                   "LINUX", "MINGW", "NETBSD", "NT", "OPENBSD", "SOLARIS", "VMS"]:
+                   # "BEOS", "MSDOS" (DJGPP), "OS2" (EMX), "PLAN9"
             Targets += [proc + "_" + os]
 
     return Targets
@@ -1150,19 +1126,19 @@ def Boot():
     # TBD: put it only in one place.
     # The older bootstraping method does get that right.
 
-    SunCompile = "/usr/ccs/bin/cc -g -mt -xcode=pic32 -xldscope=symbolic "
-
-    GnuCompile = {
-        "I386_INTERIX"  : "gcc -g ", # gcc -fPIC generates incorrect code on Interix
-        "SOLgnu"        : "/usr/sfw/bin/gcc -g ",
-        }.get(Config) or "gcc -g -fPIC "
-
-    Objects = " *.o "
-
-    if Config.endswith("_SOLARIS") or Config == "SOLsun":
-        Compile = SunCompile
+    vms = StringTagged(Config, "VMS")
+    
+    if Config == "ALPHA32_VMS":
+        Compile = "cc "
+    elif Config == "ALPHA64_VMS":
+        Compile = "cc /pointer_size=64 "
+    elif StringTagged(Config, "SOLARIS") or Config == "SOLsun":
+        Compile = "/usr/ccs/bin/cc -g -mt -xcode=pic32 -xldscope=symbolic "
     else:
-        Compile = GnuCompile
+        Compile = {
+            "I386_INTERIX"  : "gcc -g ", # gcc -fPIC generates incorrect code on Interix
+            "SOLgnu"        : "/usr/sfw/bin/gcc -g ", # -fPIC?
+            }.get(Config) or "gcc -g -fPIC "
 
     Compile = Compile + ({  "AMD64_LINUX"     : " -m64 -mno-align-double ",
                             "AMD64_DARWIN"    : " -arch x86_64 ",
@@ -1174,34 +1150,33 @@ def Boot():
                             "SOLsun"          : " -xarch=v8plus ",
                             "SPARC32_LINUX"   : " -m32 -mcpu=v9 -munaligned-doubles ",
                             "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
-                            "SPARC64_SOLARIS" : " -xarch=v9 ",
                           }.get(Config) or " ")
 
-    SunLink = " -lrt -lm -lnsl -lsocket -lpthread "
-
-    Link = Compile + " *.o " + ({
-                        "ARM_DARWIN"      : " ",
-                        "AMD64_DARWIN"    : " ",
-                        "I386_DARWIN"     : " ",
-                        "PPC_DARWIN"      : " ",
-                        "PPC64_DARWIN"    : " ",
-                        "I386_INTERIX"    : " -lm ",
-                        "SOLgnu"          : SunLink,
-                        "SOLsun"          : SunLink,
-                        "SPARC64_SOLARIS" : SunLink,
-                        "PA32_HPUX"       : " -lrt -lm ",
-                      }.get(Target) or " -lm -lpthread ")
+    Link = Compile + " *.mo *.io *.o "
+    
+    if StringTagged(Target, "DARWIN"):
+        pass
+    elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
+        Link = Link  +  " -lrt -lm -lnsl -lsocket -lpthread "
+    elif StringTagged(Target, "HPUX"):
+        Link = Link + " -lrt -lm "
+    elif StringTagged(Target, "INTERIX"):
+        Link = Link + " -lm "
+    else:
+        Link = Link + " -lm -lpthread "
+    
     # not in Link
-    Compile += " -c "
+    if not StringTagged(Config, "VMS"):
+        Compile += " -c "
 
-    if Target.endswith("_SOLARIS") or Target.startswith("SOL"):
+    if StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
         Assemble = "/usr/ccs/bin/as "
     else:
         Assemble = "as "
-
+ 
     if Target != "PPC32_OPENBSD" and Target != "PPC_LINUX":
         if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
-            if Target.find("64") != -1 or Target.find("ALPHA") != -1:
+            if Target.find("64") != -1 or (StringTagged(Target, "ALPHA") and not StringTagged(Target, "ALPHA32_")):
                 Assemble = Assemble + " --64"
             else:
                 Assemble = Assemble + " --32"
@@ -1212,15 +1187,19 @@ def Boot():
         "ARM_DARWIN"        : " -arch armv6 ",
         "SOLgnu"            : " -s -xarch=v8plus ",
         "SOLsun"            : " -s -xarch=v8plus ",
+        "SPARC32_SOLARIS"   : " -s -xarch=v8plus ",
         "SPARC64_SOLARIS"   : " -s -xarch=v9 ",
         }.get(Target) or ""))
 
     GnuPlatformPrefix = {
-        "ARM_DARWIN"      : "arm-apple-darwin8-",
+        "ARM_DARWIN"    : "arm-apple-darwin8-",
+        "ALPHA32_VMS"   : "alpha-dec-vms-",
+        "ALPHA64_VMS"   : "alpha64-dec-vms-",
         }.get(Target) or ""
 
-    Compile = GnuPlatformPrefix + Compile
-    Link = GnuPlatformPrefix + Link
+    if not vms:
+        Compile = GnuPlatformPrefix + Compile
+        Link = GnuPlatformPrefix + Link
     Assemble = GnuPlatformPrefix + Assemble
 
     #
@@ -1255,8 +1234,10 @@ def Boot():
     # This would probably be a good use of XSL (xml style sheets)
     #
     Make = open(os.path.join(BootDir, "make.sh"), "wb")
+    VmsMake  = open(os.path.join(BootDir, "vmsmake.com"), "wb")
     Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
+    Objects = [ ]
 
     Makefile.write(".SUFFIXES:\nall: cm3\n\n")
 
@@ -1266,7 +1247,7 @@ def Boot():
     for a in [Makefile]:
         a.write("# edit up here\n\n")
         a.write("Assemble=" + Assemble + "\nCompile=" + Compile + "\nLink=" + Link + "\n")
-        a.write("\n\n# no more editing should be needed (except on Interix, look at the bottom)\n\n")
+        a.write("\n\n# no more editing should be needed\n\n")
 
     for a in [Make]:
         a.write("Assemble=\"" + Assemble + "\"\nCompile=\"" + Compile + "\"\nLink=\"" + Link + "\"\n")
@@ -1274,21 +1255,43 @@ def Boot():
     for q in P:
         dir = GetPackagePath(q)
         for a in os.listdir(os.path.join(Root, dir, Config)):
-            if not (a.endswith(".ms") or a.endswith(".is") or a.endswith(".s")
-                or a.endswith(".mo") or a.endswith(".io") or a.endswith(".c") or a.endswith(".h")):
+            ext_c = a.endswith(".c")
+            ext_h = a.endswith(".h")
+            ext_s = a.endswith(".s")
+            ext_ms = a.endswith(".ms")
+            ext_is = a.endswith(".mi")
+            if not (ext_c or ext_h or ext_s or ext_ms or ext_is):
                 continue
-            CopyFile(os.path.join(Root, dir, Config, a), BootDir)
-            if a.endswith(".h") or a.endswith(".mo") or a.endswith(".io"):
+            fullpath = os.path.join(Root, dir, Config, a)
+            if ext_h or ext_c or not vms:
+                CopyFile(fullpath, BootDir)
+            if ext_h:
                 continue
-            Makefile.write("Objects += " + a + ".o\n" + a + ".o: " + a + "\n\t")
-            if a.endswith(".c"):
+            Object = GetObjectName(a)
+            Objects += [Object]
+            if vms:
+                if ext_c:
+                    VmsMake.write(Compile + " " + a + "\n")
+                else:
+                    # must have cross assembler
+                    a = Assemble + " " + fullpath + " -o " + BootDir + "/" + Object
+                    print(a)
+                    os.system(a)
+                continue;
+            Makefile.write("Objects=$(Objects) " + Object + "\n" + Object + ": " + a + "\n\t")
+            if ext_c:
                 Command = "Compile"
             else:
                 Command = "Assemble"
             for b in [Make, Makefile]:
-                b.write("${" + Command + "} " + a + " -o " + a + ".o\n")
+                b.write("$(" + Command + ") " + a + " -o " + Object + "\n")
 
     Makefile.write("cm3: $(Objects)\n\t")
+ 
+    VmsMake.write("link  /executable=cm3.exe ")
+    for a in Objects:
+        VmsMake.write(a + " ")
+    VmsMake.write("\n")
 
     for a in [Make, Makefile]:
         a.write("$(Link) -o cm3\n")
@@ -1379,10 +1382,13 @@ def Boot():
                 b.write("mkdir -p /dev2/cm3/" + reldir + "\n")
                 b.write("cp " + a + " /dev2/cm3/" + a + "\n")
 
-    for a in [UpdateSource, Make, Makefile]:
+    for a in [UpdateSource, Make, Makefile, VmsMake]:
         a.close()
+        
+    # write entirely new custom makefile for NT
+    # We always have object files so just compile and link in one fell swoop.
 
-    if Config.endswith("_NT") or Config == "NT386":
+    if StringTagged(Config, "NT") or Config == "NT386":
         DeleteFile("updatesource.sh")
         DeleteFile("make.sh")
         Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
