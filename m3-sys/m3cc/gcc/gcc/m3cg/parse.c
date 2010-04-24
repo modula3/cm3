@@ -161,6 +161,16 @@ enum m3_tree_index
 
 static GTY (()) tree m3_global_trees[M3TI_MAX];
 
+/* In gcc, "word" means roughly "register".
+ * To us, "word" means unsigned "INTEGER",
+ * and "INTEGER" is the same size as a pointer.
+ * Generally these are the same, except on 32bit Alpha
+ * targets, where word is 64bits and INTEGER is 32.
+ * So in place of BITS_PER_WORD, we use POINTER_SIZE
+ * and call it BITS_PER_INTEGER.
+ */
+#define BITS_PER_INTEGER POINTER_SIZE
+
 #define t_addr		m3_global_trees[M3TI_ADDR]
 #define t_word		m3_global_trees[M3TI_WORD]
 #define t_int		m3_global_trees[M3TI_INT]
@@ -404,7 +414,7 @@ m3_build_type (m3_type t, int s, int a)
 	case 64:
 	  return t_word_64;
 	default:
-	  if (s == BITS_PER_WORD) return t_word;
+	  if (s == BITS_PER_INTEGER) return t_word;
 	}
       break;
 
@@ -422,7 +432,7 @@ m3_build_type (m3_type t, int s, int a)
 	case 64:
 	  return t_int_64;
 	default:
-	  if (s == BITS_PER_WORD) return t_int;
+	  if (s == BITS_PER_INTEGER) return t_int;
 	}
       break;
 
@@ -440,7 +450,7 @@ m3_build_type (m3_type t, int s, int a)
 	case 64:
 	  return t_word_64;
 	default:
-	  if (s == BITS_PER_WORD) return t_word;
+	  if (s == BITS_PER_INTEGER) return t_word;
 	}
       break;
 
@@ -458,7 +468,7 @@ m3_build_type (m3_type t, int s, int a)
 	case 64:
 	  return t_int_64;
 	default:
-	  if (s == BITS_PER_WORD) return t_int;
+	  if (s == BITS_PER_INTEGER) return t_int;
 	}
       break;
 
@@ -990,21 +1000,21 @@ m3_init_decl_processing (void)
   t_word_64 = unsigned_intDI_type_node;
   m3_push_type_decl (get_identifier ("word_64"), t_word_64);
 
-  if (BITS_PER_WORD == 32)
+  if (BITS_PER_INTEGER == 32)
     {
       t_int = t_int_32;
       t_word = t_word_32;
     }
-  else if (BITS_PER_WORD == 64)
+  else if (BITS_PER_INTEGER == 64)
     {
       t_int = t_int_64;
       t_word = t_word_64;
     }
   else
     {
-      t_int = make_signed_type (BITS_PER_WORD);
+      t_int = make_signed_type (BITS_PER_INTEGER);
       m3_push_type_decl (get_identifier ("int"), t_int);
-      t_word = make_unsigned_type (BITS_PER_WORD);
+      t_word = make_unsigned_type (BITS_PER_INTEGER);
       m3_push_type_decl (get_identifier ("word"), t_word);
     }
 
@@ -4078,17 +4088,17 @@ m3cg_set_sym_difference (void)
 }
 
 static tree
-m3cg_bits_per_word(void)
+m3cg_bits_per_integer(void)
 {
     static tree t;
-    return (t = (t ? t : build_int_cst(t_word, BITS_PER_WORD)));
+    return (t = (t ? t : build_int_cst(t_word, BITS_PER_INTEGER)));
 }
 
 static tree
-m3cg_bytes_per_word(void)
+m3cg_bytes_per_integer(void)
 {
     static tree t;
-    return (t = (t ? t : build_int_cst(t_word, BITS_PER_WORD / BITS_PER_UNIT)));
+    return (t = (t ? t : build_int_cst(t_word, BITS_PER_INTEGER / BITS_PER_UNIT)));
 }
 
 static tree
@@ -4110,11 +4120,11 @@ m3cg_set_member_ref(tree* out_bit_in_word)
 
   /* div and mod work as well as shifting, even when not optimizing. */
 
-  tree bits_per_word = m3cg_bits_per_word();
-  tree bytes_per_word = m3cg_bytes_per_word();
-  tree word        = m3_build2(TRUNC_DIV_EXPR, t_word, bit, bits_per_word);
-  tree bit_in_word = m3_build2(TRUNC_MOD_EXPR, t_word, bit, bits_per_word);
-  tree byte        = m3_build2(MULT_EXPR, t_word, word, bytes_per_word);
+  tree bits_per_integer = m3cg_bits_per_integer();
+  tree bytes_per_integer = m3cg_bytes_per_integer();
+  tree word        = m3_build2(TRUNC_DIV_EXPR, t_word, bit, bits_per_integer);
+  tree bit_in_word = m3_build2(TRUNC_MOD_EXPR, t_word, bit, bits_per_integer);
+  tree byte        = m3_build2(MULT_EXPR, t_word, word, bytes_per_integer);
   tree word_ref    = m3_build2(POINTER_PLUS_EXPR, t_addr, set, byte);
   tree one         = m3_cast(t_word, v_one);
 
