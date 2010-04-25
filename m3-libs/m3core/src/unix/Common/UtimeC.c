@@ -1,3 +1,4 @@
+/* ABI compatibility with both libcmt.lib and msvcr.tlib. */
 #ifdef _MSC_VER
 #undef _DLL
 #ifndef _MT
@@ -11,7 +12,11 @@
 extern "C" {
 #endif
 
-/* We won't ever be truncating. */
+/* We won't ever be truncating on the way out.
+ * We might be truncating on the way in.
+ * time() doesn't really take an input.
+ * ctime() needs to be replaced with a 64bit version or possibly removed.
+ */
 M3_STATIC_ASSERT(sizeof(time_t) <= sizeof(m3_time_t));
 
 m3_time_t
