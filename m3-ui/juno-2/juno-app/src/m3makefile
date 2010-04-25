@@ -27,8 +27,10 @@ HOST_BUILDDIR = BUILD_DIR
 CrossBuild = FALSE
 if defined("HOST")
     if not equal(HOST, TARGET)
-        HOST_BUILDDIR = HOST
-        CrossBuild = TRUE
+        if (not equal(HOST & TARGET, "SOLgnuSOLsun")) and (not equal(HOST & TARGET, "SOLsunSOLgnu"))
+            HOST_BUILDDIR = HOST
+            CrossBuild = TRUE
+        end
     end
 end
 
@@ -112,5 +114,3 @@ Program		("Juno")
 /* man page */
 import		("mtex")
 Mtex		("Juno", 1)
-
-
