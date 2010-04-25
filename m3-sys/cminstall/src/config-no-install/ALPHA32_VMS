@@ -1,6 +1,7 @@
 readonly TARGET = "ALPHA32_VMS"
 readonly GNU_PLATFORM = "alpha-dec-vms"
-m3back_flags = "-gstabs+ -fPIC -funwind-tables"
+%m3back_flags = "-mieee -mcpu=ev6 -mbwx -mfloat-ieee -mlong-double-64 -g -fPIC -funwind-tables"
+m3back_flags = "-g -funwind-tables -malpha-as"
 SYSTEM_CC = "cc /pointer_size=32"
 SYSTEM_LD = "link"
 include("Alpha32.common")
