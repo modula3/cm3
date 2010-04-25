@@ -13,7 +13,7 @@
 #define __cdecl /* nothing */
 #endif
 
-#if defined(__INTERIX) && !defined(_REENTRANT)
+#ifndef _REENTRANT
 #define _REENTRANT
 #endif
 
