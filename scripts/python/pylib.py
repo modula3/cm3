@@ -1105,11 +1105,11 @@ def _RealCleanFunction(NoAction, PackageDirectory):
 #-----------------------------------------------------------------------------
 
 def _MakeArchive(a):
-    #
     # OpenBSD doesn't have bzip2 in base, so use gzip instead.
-    #
+    # bzip2 is also slower
     DeleteFile(a + ".tar.gz")
-    b = "tar cfz " + a + ".tar.gz " + a
+    DeleteFile(a + ".tgz")
+    b = "tar cfz " + a + ".tgz " + a
     print(b + "\n")
     os.system(b)
 
@@ -1168,8 +1168,13 @@ def Boot():
     # not in Link
     if not StringTagged(Config, "VMS"):
         Compile += " -c "
-
-    if StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
+        
+    AssembleOnHost = False
+    CopyAssemblyToTarget = True
+    
+    if StringTagged(Target, "VMS"):
+        Assemble = "macro /alpha "
+    elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
         Assemble = "/usr/ccs/bin/as "
     else:
         Assemble = "as "
@@ -1200,7 +1205,9 @@ def Boot():
     if not vms:
         Compile = GnuPlatformPrefix + Compile
         Link = GnuPlatformPrefix + Link
-    Assemble = GnuPlatformPrefix + Assemble
+        Assemble = GnuPlatformPrefix + Assemble
+    if vms and AssembleOnHost:
+        Assemble = GnuPlatformPrefix + Assemble
 
     #
     # squeeze runs of spaces and spaces at end
@@ -1263,7 +1270,7 @@ def Boot():
             if not (ext_c or ext_h or ext_s or ext_ms or ext_is):
                 continue
             fullpath = os.path.join(Root, dir, Config, a)
-            if ext_h or ext_c or not vms:
+            if ext_h or ext_c or not vms or CopyAssemblyToTarget:
                 CopyFile(fullpath, BootDir)
             if ext_h:
                 continue
@@ -1273,11 +1280,14 @@ def Boot():
                 if ext_c:
                     VmsMake.write(Compile + " " + a + "\n")
                 else:
-                    # must have cross assembler
-                    a = Assemble + " " + fullpath + " -o " + BootDir + "/" + Object
-                    print(a)
-                    os.system(a)
-                continue;
+                    if AssembleOnHost:
+                        # must have cross assembler
+                        a = Assemble + " " + fullpath + " -o " + BootDir + "/" + Object
+                        print(a)
+                        os.system(a)
+                    else:
+                        VmsMake.write(Assemble + " " + a + "\n")                    
+                continue
             Makefile.write("Objects=$(Objects) " + Object + "\n" + Object + ": " + a + "\n\t")
             if ext_c:
                 Command = "Compile"
@@ -1288,15 +1298,13 @@ def Boot():
 
     Makefile.write("cm3: $(Objects)\n\t")
  
-    VmsMake.write("link  /executable=cm3.exe ")
+    VmsMake.write("link /executable=cm3.exe ")
     for a in Objects:
         VmsMake.write(a + " ")
     VmsMake.write("\n")
 
     for a in [Make, Makefile]:
         a.write("$(Link) -o cm3\n")
-
-    Common = "Common"
 
     for a in [
             #
@@ -1311,7 +1319,7 @@ def Boot():
             "m3-libs/m3core/src/thread.quake",
             "m3-libs/m3core/src/C/m3makefile",
             "m3-libs/m3core/src/C/" + Target + "/m3makefile",
-            "m3-libs/m3core/src/C/" + Common + "/m3makefile",
+            "m3-libs/m3core/src/C/Common/m3makefile",
             "m3-libs/m3core/src/Csupport/m3makefile",
             "m3-libs/m3core/src/float/m3makefile",
             "m3-libs/m3core/src/runtime/m3makefile",
@@ -1360,11 +1368,11 @@ def Boot():
             "scripts/python/pylib.py",
             "m3-libs/m3core/src/C/" + Target + "/Csetjmp.i3",
             "m3-libs/m3core/src/C/" + Target + "/m3makefile",
-            "m3-libs/m3core/src/C/" + Common + "/Csetjmp.i3",
-            "m3-libs/m3core/src/C/" + Common + "/Csignal.i3",
-            "m3-libs/m3core/src/C/" + Common + "/Cstdio.i3",
-            "m3-libs/m3core/src/C/" + Common + "/Cstring.i3",
-            "m3-libs/m3core/src/C/" + Common + "/m3makefile",
+            "m3-libs/m3core/src/C/Common/Csetjmp.i3",
+            "m3-libs/m3core/src/C/Common/Csignal.i3",
+            "m3-libs/m3core/src/C/Common/Cstdio.i3",
+            "m3-libs/m3core/src/C/Common/Cstring.i3",
+            "m3-libs/m3core/src/C/Common/m3makefile",
             ]:
         source = os.path.join(Root, a)
         if FileExists(source):
@@ -1502,7 +1510,7 @@ def GetPackageSets():
 if _Program != "make-msi.py":
 # general problem of way too much stuff at global scope
 # workaround some of it
-    PackageSets = GetPackageSets();
+    PackageSets = GetPackageSets()
 
 #-----------------------------------------------------------------------------
 
