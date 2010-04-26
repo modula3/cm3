@@ -13,6 +13,23 @@
 #endif
 #endif
 
+#ifdef __vms
+/* Enable support for files larger than 2GB. */
+#ifdef _LARGEFILE
+#define _LARGEFILE
+#endif
+/* Enable 32bit gids and reveal setreuids. */
+#ifndef __USE_LONG_GID_T
+#define __USE_LONG_GID_T 1
+#endif
+/* st_ino has three forms that all fit in the
+ * same space; pick the one we want.
+ */
+#ifndef __USE_INO64
+#define __USE_INO64 1
+#endif
+#endif
+
 #ifndef _REENTRANT
 #define _REENTRANT
 #endif
