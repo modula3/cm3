@@ -95,9 +95,8 @@ static void Quit SIGNAL_HANDLER_SIGNATURE;
 static void InstallOneHandler(size_t i);
 static void RestoreOneHandler(size_t i);
 
-#if defined(__CYGWIN__) || defined(__INTERIX) \
-|| (defined(__APPLE__) && defined(__arm)) \
-|| defined(__vms)
+#if defined(__CYGWIN__) || defined(__INTERIX) || defined(__vms) \
+|| (defined(__APPLE__) && defined(__arm))
  
 /* Revisit Apple/arm and VMS */
 
