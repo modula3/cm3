@@ -16,6 +16,9 @@ diff = "@-diff -u -b"
 diff_slash = "/"
 head = "| head -30"
 
+Solaris = FALSE
+BcOk = TRUE
+
 if equal ($OS, "Windows_NT")
   if not equal (try_exec("@diff nul nul 2>nul"), 0)
     diff = "@-fc"
@@ -24,6 +27,10 @@ if equal ($OS, "Windows_NT")
   if not equal (try_exec("@head nul 2>nul"), 0)
     head = ""
   end
+  BcOk = FALSE
+else
+  Solaris = equal(q_exec_get("uname")[1], "SunOS\n")
+  BcOk = not Solaris
 end
 
 %------------------------------------------------------------------------------
@@ -348,8 +355,11 @@ readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopt
     end
     tstop = compress (q_exec_get ("date '+%s'")[1])
     %write (tstop, CR)
-    ret = q_exec ("echo " & tstop & "-" & tstart & " | bc > ttime")
-    ttime = compress (q_exec_get ("cat ttime")[1])
+    ttime = ""
+    if BcOk
+      ret = q_exec ("echo " & tstop & "-" & tstart & " | bc > ttime")
+      ttime = compress (q_exec_get ("cat ttime")[1])
+    end
 
     if ok1 and ok2
       html (["<tr class=\"bggreen tl\"><td>", uid,
