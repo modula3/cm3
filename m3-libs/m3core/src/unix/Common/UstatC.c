@@ -1,10 +1,3 @@
-#ifdef _MSC_VER
-#undef _DLL
-#ifndef _MT
-#define _MT
-#endif
-#endif
-
 #include "m3core.h"
 
 #ifdef __cplusplus
@@ -35,27 +28,11 @@ commonality.
     INTEGER uid;
 };
 
-static int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
+static int m3stat_from_stat(int result, m3_stat_t* m3st, struct stat* st)
 {
     assert(result == 0 || result == -1);
     if (result == 0)
     {
-#if defined(__APPLE__) && defined(__arm)
-        m3st->dev = st->dev;
-        m3st->ino = st->ino;
-        m3st->mtime = st->mtime;
-        m3st->nlink = st->nlink;
-        m3st->rdev = st->rdev;
-        m3st->size = st->size;
-        m3st->gid = st->gid;
-        m3st->mode = st->mode;
-        m3st->uid = st->uid;
-#ifdef HAS_STAT_FLAGS
-        m3st->flags = st->flags;
-#else
-        m3st->flags = 0;
-#endif
-#else
         m3st->dev = st->st_dev;
         m3st->ino = st->st_ino;
         m3st->mtime = st->st_mtime;
@@ -70,37 +47,32 @@ static int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
 #else
         m3st->flags = 0;
 #endif
-#endif
     }
     return result;
 }
 
-int Ustat__stat(const char* path, m3_stat_t* m3st)
+int
+__cdecl
+Ustat__stat(const char* path, m3_stat_t* m3st)
 {
-    stat_t st;
-#ifndef _WIN32
-    return m3stat_from_stat(stat(path, (struct stat*)&st), m3st, &st); /* cast is for Darwin/arm */
-#else
-    return m3stat_from_stat(_stat(path, &st), m3st, &st);
-#endif
+    struct stat st;
+    return m3stat_from_stat(stat(path, &st), m3st, &st);
 }
 
-#ifndef _WIN32
-int Ustat__lstat(const char* path, m3_stat_t* m3st)
+int
+__cdecl
+Ustat__lstat(const char* path, m3_stat_t* m3st)
 {
-    stat_t st;
-    return m3stat_from_stat(lstat(path, (struct stat*)&st), m3st, &st); /* cast is for Darwin/arm */
+    struct stat st;
+    return m3stat_from_stat(lstat(path, &st), m3st, &st);
 }
-#endif
 
-int Ustat__fstat(int fd, m3_stat_t* m3st)
+int
+__cdecl
+Ustat__fstat(int fd, m3_stat_t* m3st)
 {
-    stat_t st;
-#ifndef _WIN32
-    return m3stat_from_stat(fstat(fd, (struct stat*)&st), m3st, &st); /* cast is for Darwin/arm */
-#else
-    return m3stat_from_stat(_fstat(fd, &st), m3st, &st);
-#endif
+    struct stat st;
+    return m3stat_from_stat(fstat(fd, &st), m3st, &st);
 }
 
 #ifdef HAS_STAT_FLAGS

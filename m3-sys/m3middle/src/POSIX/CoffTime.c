@@ -24,7 +24,7 @@ __cdecl
 CoffTime__OfFile(TEXT tpath)
 {
     const char* path;
-    stat_t st;
+    struct stat st;
     int i;
 
     if (tpath == NULL)
@@ -33,7 +33,7 @@ CoffTime__OfFile(TEXT tpath)
     ZERO_MEMORY(st);
     path = M3toC__SharedTtoS(tpath);
 
-    i = stat(path, (struct stat*)&st); /* cast is for Darwin/arm */
+    i = stat(path, &st);
     M3toC__FreeSharedS(tpath, path);
     if (i) /* ignore error */
         return 0;
