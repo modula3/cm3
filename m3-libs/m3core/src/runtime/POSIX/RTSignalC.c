@@ -79,12 +79,15 @@ static void ShutdownCommon(int Signal);
 #ifdef SA_SIGINFO
 #define SIGNAL_HANDLER_SIGNATURE (int Signal, siginfo_t* SignalInfo, void* Context)
 #define SIGNAL_HANDLER_FIELD sa_sigaction
-#define SIGNAL_HANDLER_TYPE SignalActionHandler
-typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
+typedef void (*SIGNAL_HANDLER_TYPE)(int, siginfo_t*, void*);
 #else
 #define SIGNAL_HANDLER_SIGNATURE (int Signal)
 #define SIGNAL_HANDLER_FIELD sa_handler
-#define SIGNAL_HANDLER_TYPE sighandler_t
+#ifdef __INTERIX
+typedef sighandler_t SIGNAL_HANDLER_TYPE;
+#else
+typedef void (*SIGNAL_HANDLER_TYPE)(int);
+#endif
 #endif
 
 static void SegV SIGNAL_HANDLER_SIGNATURE;
@@ -193,8 +196,8 @@ static size_t GetPC(void* xcontext)
 
 #endif
 
-#define DefaultHandler ((SIGNAL_HANDLER_TYPE) SIG_DFL)
-#define IgnoreSignal   ((SIGNAL_HANDLER_TYPE) SIG_IGN)
+#define DefaultHandler ((SIGNAL_HANDLER_TYPE)SIG_DFL)
+#define IgnoreSignal   ((SIGNAL_HANDLER_TYPE)SIG_IGN)
 
 static const struct
 {
