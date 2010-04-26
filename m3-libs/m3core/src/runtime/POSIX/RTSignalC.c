@@ -35,13 +35,13 @@ http://duriansoftware.com/joe/PSA:-avoiding-the-%22ucontext-\
 */
 #include <sys/ucontext.h>
 
-#elif !(defined(__OpenBSD__) || defined(__CYGWIN__))
+#elif !(defined(__OpenBSD__) || defined(__CYGWIN__) || defined(__vms))
 /* OpenBSD 4.3: ucontext.h doesn't exist, ucontext_t is in signal.h
         Cygwin: no state provided to signal handler? */
 #include <ucontext.h>
 #endif
 
-#if !defined(__INTERIX) && !defined(SA_SIGINFO)
+#if !defined(__INTERIX) && !defined(__vms) && !defined(SA_SIGINFO)
 #define SA_SIGINFO SA_SIGINFO
 #endif
 
@@ -80,6 +80,7 @@ static void ShutdownCommon(int Signal);
 #define SIGNAL_HANDLER_SIGNATURE (int Signal, siginfo_t* SignalInfo, void* Context)
 #define SIGNAL_HANDLER_FIELD sa_sigaction
 #define SIGNAL_HANDLER_TYPE SignalActionHandler
+typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
 #else
 #define SIGNAL_HANDLER_SIGNATURE (int Signal)
 #define SIGNAL_HANDLER_FIELD sa_handler
@@ -94,12 +95,11 @@ static void Quit SIGNAL_HANDLER_SIGNATURE;
 static void InstallOneHandler(size_t i);
 static void RestoreOneHandler(size_t i);
 
-typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
-
 #if defined(__CYGWIN__) || defined(__INTERIX) \
-|| (defined(__APPLE__) && defined(__arm))
-
-/* Revisit Apple/arm */
+|| (defined(__APPLE__) && defined(__arm)) \
+|| defined(__vms)
+ 
+/* Revisit Apple/arm and VMS */
 
 #define GetPC(x) 0
 
