@@ -2,6 +2,21 @@
 /* All rights reserved.                               */
 /* See the file COPYRIGHT for a full description.     */
 
+
+typedef   signed char       INT8;
+typedef unsigned char      UINT8;
+typedef   signed short      INT16;
+typedef unsigned short     UINT16;
+typedef   signed int        INT32;
+typedef unsigned int       UINT32;
+#ifdef _MSC_VER
+typedef   signed __int64  INT64;
+typedef unsigned __int64 UINT64;
+#else
+typedef   signed long long  INT64;
+typedef unsigned long long UINT64;
+#endif
+
 #include <stddef.h>
 #include <setjmp.h>
 #include <time.h>
@@ -23,26 +38,24 @@ typedef struct T T;
 #include <sys/socket.h>
 #include <netdb.h>
 
-typedef struct linger linger_t;
-typedef struct timeval timeval_t;
-
 #endif
 
-typedef struct tm tm_t;
+#ifdef _MSC_VER
+#pragma warning(disable:4035) /* no return value */
+#endif
+
+#if !defined(_MSC_VER) && !defined(__cdecl)
+#define __cdecl /* nothing */
+#endif
+
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 struct T
 {
     double d[10];
     float f[10];
-#ifndef _WIN32
-    struct {
-        /* keep these sorted by name for easier human comprehension */
-        size_t linger;
-        size_t time;
-        size_t timeval;
-        size_t tm;
-    } sizes;
-#endif
     double align;
 };
 
@@ -50,18 +63,10 @@ static const T t1 =
 {
     { 0.0, 0.5, 1.0, 2.0, -1.0, -3.0, 12.34, -124.456, 1000.0, -10000.0 },
     { 0.0, 0.5, 1.0, 2.0, -1.0, -3.5, 12.34, -124.456, 1000.0, -10000.0 },
-#ifndef _WIN32
-    {
-    SIZE(linger_t),
-    SIZE(time_t),
-    SIZE(timeval_t),
-    SIZE(tm_t),
-    },
-#endif
     0
 };
 
-void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
+void __cdecl Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
 {
 #ifndef _WIN32
     if (size != SIZE(t1))
@@ -77,10 +82,6 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
         printf("d[0], d[1]: %x, %x\n", OFFSET(T, d[0]), OFFSET(T, d[1]));
         printf("f[0], f[1]: %x, %x\n", OFFSET(T, f[0]), OFFSET(T, f[1]));
         printf("d[8], d[9]: %x, %x\n", OFFSET(T, d[8]), OFFSET(T, d[9]));
-        printf("linger: %x\n", OFFSET(T, sizes.linger));
-        printf("time: %x\n", OFFSET(T, sizes.time));
-        printf("timeval: %x\n", OFFSET(T, sizes.timeval));
-        printf("tm: %x\n", OFFSET(T, sizes.tm));
         for (i = 0; i < SIZE(t1); ++i)
         {
             if (c[i] != m3[i])
@@ -112,3 +113,126 @@ void Test__CheckFloatsAndTypes(const T* t2, size_t size, size_t jbsize)
     }
 #endif
 }
+
+/* Test sign/zero extension of
+ * the return value of functions returning types
+ * smaller than 32bits. It is most effective
+ * to test it on NT386, esp. with older versions of
+ * Visual C++, or hand written assembly.
+ */
+
+INT8 __cdecl NegativeInt8(void)
+{
+#ifdef _M_IX86
+    __asm mov al, -1
+#else
+    return -1;
+#endif
+}
+
+UINT8 __cdecl NegativeUInt8(void)
+{
+#ifdef _M_IX86
+    __asm mov al, -2
+#else
+    return -2;
+#endif
+}
+
+INT16 __cdecl NegativeInt16(void)
+{
+#ifdef _M_IX86
+    __asm mov ax, -3
+#else
+    return -3;
+#endif
+}
+
+UINT16 __cdecl NegativeUInt16(void)
+{
+#ifdef _M_IX86
+    __asm mov ax, -4
+#else
+    return -4;
+#endif
+}
+
+INT32 __cdecl NegativeInt32(void)
+{
+    return -5;
+}
+
+UINT32 __cdecl NegativeUInt32(void)
+{
+    return (UINT32)-6;
+}
+
+INT64  __cdecl NegativeInt64(void)
+{
+    return -7;
+}
+
+UINT64 __cdecl NegativeUInt64(void)
+{
+    return (UINT64)-8;
+}
+
+INT8 __cdecl PositiveInt8(void)
+{
+#ifdef _M_IX86
+    __asm mov al, 1
+#else
+    return 1;
+#endif
+}
+
+UINT8 __cdecl PositiveUInt8(void)
+{
+#ifdef _M_IX86
+    __asm mov al, 2
+#else
+    return 2;
+#endif
+}
+
+INT16 __cdecl PositiveInt16(void)
+{
+#ifdef _M_IX86
+    __asm mov ax, 3
+#else
+    return 3;
+#endif
+}
+
+UINT16 __cdecl PositiveUInt16(void)
+{
+#ifdef _M_IX86
+    __asm mov ax, 4
+#else
+    return 4;
+#endif
+}
+
+INT32 __cdecl PositiveInt32(void)
+{
+    return 5;
+}
+
+UINT32 __cdecl PositiveUInt32(void)
+{
+    return 6;
+}
+
+INT64  __cdecl PositiveInt64(void)
+{
+    return 7;
+}
+
+UINT64 __cdecl PositiveUInt64(void)
+{
+    return 8;
+}
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
