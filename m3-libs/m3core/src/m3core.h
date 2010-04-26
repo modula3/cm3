@@ -17,6 +17,13 @@
 #define _REENTRANT
 #endif
 
+#ifdef __arm__
+/* Reveal the correct struct stat? */
+#ifndef _DARWIN_FEATURE_64_ONLY_BIT_INODE
+#define _DARWIN_FEATURE_64_ONLY_BIT_INODE
+#endif
+#endif
+
 #ifdef _MSC_VER
 #define _CRT_SECURE_NO_DEPRECATE
 #define _CRT_NONSTDC_NO_DEPRECATE
@@ -130,46 +137,6 @@ typedef unsigned __int64 UINT64;
 typedef   signed long long  INT64;
 typedef unsigned long long UINT64;
 #endif
-
-/* My headers have this wrong so we fix it here. */
-
-typedef struct _arm_darwin_stat_t {
-/* size must be 108 */
-/* 00 */    UINT32 dev;
-/* 04 */    UINT16 mode;
-/* 06 */    UINT16 nlink;
-/* 08 */    UINT64 ino;
-/* 10 */    UINT32 uid;
-/* 14 */    UINT32 gid;
-/* 18 */    UINT32 rdev;
-/* 1C */    UINT32 atime;
-/* 20 */    UINT32 atimensec;
-/* 24 */    UINT32 mtime;
-/* 28 */    UINT32 mtimensec;
-/* 2C */    UINT32 ctime;
-/* 30 */    UINT32 ctimensec;
-/* 34 */    UINT32 birthtime;
-/* 38 */    UINT32 birthtimensec;
-/* 3C */    UINT64 size;
-/* 44 */    UINT64 blocks;
-/* 4C */    UINT32 blksize;
-/* 50 */    UINT32 flags;
-/* 54 */    UINT32 gen;
-/* 58 */    UINT32 lspare;
-/* 5C */    UINT64 qspare[2];
-/* 6C */
-} arm_darwin_stat_t;
-
-#if defined(__APPLE__) && defined(__arm)
-
-typedef arm_darwin_stat_t stat_t;
-
-#else
-
-typedef struct stat stat_t;
-
-#endif
-
 
 #ifdef __cplusplus
 extern "C" {
