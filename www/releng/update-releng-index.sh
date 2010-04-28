@@ -28,14 +28,23 @@ tablerow() {
   ls -hl "$f" | awk ' {
     printf "<td width=\"15%%\" align=\"right\">\n"
     printf "%s", $6
-    printf "</td><td width=\"6%%\" align=\"left\">\n"
+    printf "</td><td width=\"5%%\" align=\"left\">\n"
     printf "%s", $7
-    printf "</td><td width=\"6%%\" align=\"right\">\n"
+    printf "</td><td width=\"5%%\" align=\"right\">\n"
     printf "%s", $5
   }'
-  echo "</td><td width=\"63%\" align=\"left\">"
+  echo "</td><td width=\"60%\" align=\"left\">"
   echo "<a href=\"$f\">$f</a>"
-  echo "</td><td width=\"10%\" align=\"center\">"
+  bn=$(echo $f | sed -e 's/\.[A-Za-z][A-Za-z2]*//').md5
+  echo "<br>md5="
+  #md5sum $f | awk '{print $1} # avoid too much load on birch
+  if [ -r $bn ] ; then
+    awk '{print $1}' $bn
+  else
+    echo "-"
+    echo "$bn not found" 1>&2
+  fi
+  echo "</td><td width=\"15%\" align=\"center\">"
   if [ -r "$f.README" ]; then
     echo "<a href=\"$f.README\">README</a>"
   elif [ -r "$f.html" ]; then
@@ -62,6 +71,7 @@ tablerow() {
       *) echo "-";;
     esac
   fi
+  #echo "</td><td width=\"5%%\" align=\"left\">"
   echo "</td></tr>"
 }
 
