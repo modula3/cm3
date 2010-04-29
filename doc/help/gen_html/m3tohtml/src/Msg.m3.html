@@ -8,7 +8,7 @@
 <inModule>
 <PRE>MODULE <module><implements><A HREF="#x1">Msg</A></implements></module>;
 
-IMPORT <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../libm3/derived/M3Config.i3.html">M3Config</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>;
+IMPORT <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../m3quake/src/MxConfig.i3.html">MxConfig</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>;
 
 PROCEDURE <A NAME="M"><procedure>M</procedure></A>(a, b, c, d, e, f : TEXT := NIL) =
   BEGIN
@@ -43,7 +43,7 @@ PROCEDURE <A NAME="F"><procedure>F</procedure></A>(a, b, c, d, e, f : TEXT := NI
 VAR
   EOL : TEXT := &quot;\n&quot;;
 BEGIN
-  IF Text.Equal(M3Config.OS_TYPE, &quot;WIN32&quot;) THEN
+  IF Text.Equal(MxConfig.HOST_OS_TYPE, &quot;WIN32&quot;) THEN
     EOL := &quot;\r\n&quot;;
   END;
 END Msg.
@@ -53,7 +53,6 @@ END Msg.
 <A NAME="x1">interface Msg is in:
 </A><UL>
 <LI><A HREF="../../cm3/src/Msg.i3.html#0TOP0">cm3/src/Msg.i3</A>
-<LI><A HREF="../../cminstall/src/Msg.i3.html#0TOP0">cminstall/src/Msg.i3</A>
 <LI><A HREF="Msg.i3.html#0TOP0">m3tohtml/src/Msg.i3</A>
 </UL>
 <P>

@@ -111,6 +111,16 @@ PROCEDURE <A HREF="Wr.m3.html#FastPutLongReal">FastPutLongReal</A>(
 </PRE><BLOCKQUOTE><EM> Like Wr.PutText(wr, Fmt.LongReal(wr, precision, style)). </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="Wr.m3.html#FastClose">FastClose</A> (wr: Wr.T) RAISES {Failure, Alerted};
+</PRE><BLOCKQUOTE><EM> Like Wr.Close </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="Wr.m3.html#FastSeek">FastSeek</A>(wr: Wr.T; n: CARDINAL) RAISES {Failure, Alerted};
+</PRE><BLOCKQUOTE><EM> Like Wr.Seek </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="Wr.m3.html#FastFlush">FastFlush</A>(wr: Wr.T) RAISES {Failure, Alerted};
+</PRE><BLOCKQUOTE><EM> Like Wr.Flush </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="Wr.m3.html#FastLength">FastLength</A>(wr: Wr.T): CARDINAL RAISES {Failure, Alerted};
+</PRE><BLOCKQUOTE><EM> Like Wr.Length </EM></BLOCKQUOTE><PRE>
 
 END UnsafeWr.
 </PRE>

@@ -214,8 +214,8 @@ PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (p: P) =
         Expr.Prep (e);
     | Kind.D_to_A =&gt;
         INC (p.tmp_cnt);
-        Expr.PrepLValue (e, lhs := FALSE);
-        Expr.CompileAddress (e, lhs := FALSE);
+        Expr.PrepLValue (e, traced := FALSE);
+        Expr.CompileAddress (e, traced := FALSE);
         p.tmp := BuildArray (p, sz);
     | Kind.S_to_A =&gt;
         INC (p.tmp_cnt);
@@ -235,7 +235,7 @@ PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (p: P) =
         CG.Load_addr_of (t1, 0, z_align);
         p.tmp := BuildArray (p, sz);
     | Kind.D_to_S =&gt;
-        Expr.PrepLValue (e, lhs := FALSE);
+        Expr.PrepLValue (e, traced := FALSE);
     | Kind.S_to_S =&gt;
         Expr.Prep (e);
     | Kind.V_to_S =&gt;
@@ -280,7 +280,7 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
       Kind.V_to_A =&gt;
         PushTmp (p, t_align);
     | Kind.D_to_S =&gt;
-        Expr.CompileAddress (e, lhs := FALSE);
+        Expr.CompileAddress (e, traced := FALSE);
         CG.Boost_alignment (t_align);
     | Kind.S_to_S =&gt;
         Expr.Compile (e);
@@ -333,7 +333,7 @@ PROCEDURE <A NAME="BuildArray"><procedure>BuildArray</procedure></A> (p: P;  src
     RETURN array;
   END BuildArray;
 
-PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN) =
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; traced: BOOLEAN) =
   VAR
     e  := p.expr;
     u  := Expr.TypeOf (e);
@@ -362,12 +362,12 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN
       Kind.D_to_V,
       Kind.S_to_V,
       Kind.V_to_V =&gt;
-        Expr.PrepLValue (p.expr, lhs);
+        Expr.PrepLValue (p.expr, traced);
 
     | Kind.D_to_A =&gt;
         INC (p.tmp_cnt);
-        Expr.PrepLValue (e, lhs);
-        Expr.CompileLValue (e, lhs);
+        Expr.PrepLValue (e, traced);
+        Expr.CompileLValue (e, traced);
         p.tmp := BuildArray (p, sz);
     | Kind.S_to_A =&gt;
         INC (p.tmp_cnt);
@@ -395,7 +395,7 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN
     END;
   END PrepLV;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; lhs: BOOLEAN) =
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; traced: BOOLEAN) =
   VAR
     e  := p.expr;
     u  := Expr.TypeOf (e);
@@ -421,7 +421,7 @@ PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; lhs: B
       Kind.D_to_V,
       Kind.S_to_V,
       Kind.V_to_V =&gt;
-        Expr.CompileLValue (p.expr, lhs);
+        Expr.CompileLValue (p.expr, traced);
         CG.Boost_alignment (t_align);
 
     | Kind.D_to_A,

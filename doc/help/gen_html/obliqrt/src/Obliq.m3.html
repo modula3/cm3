@@ -13,7 +13,7 @@
 <P><PRE>MODULE <module><implements><A HREF="Obliq.i3.html">Obliq</A></implements></module>;
 IMPORT <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../synloc/src/SynWr.i3.html">SynWr</A>, <A HREF="../../synloc/src/SynLocation.i3.html">SynLocation</A>, <A HREF="ObErr.i3.html">ObErr</A>, <A HREF="ObCommand.i3.html">ObCommand</A>, <A HREF="ObLib.i3.html">ObLib</A>, <A HREF="ObTree.i3.html">ObTree</A>, <A HREF="ObScope.i3.html">ObScope</A>,
        <A HREF="ObCheck.i3.html">ObCheck</A>, <A HREF="ObValue.i3.html">ObValue</A>, <A HREF="ObEval.i3.html">ObEval</A>, <A HREF="ObBuiltIn.i3.html">ObBuiltIn</A>, <A HREF="../../netobj/src/netobjrt/NetObj.i3.html">NetObj</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../sharedobj/src/SharedObj.i3.html">SharedObj</A>,
-       <A HREF="../../libm3/derived/M3Config.i3.html">M3Config</A>, <A HREF="ObPathSep.i3.html">ObPathSep</A>;
+       <A HREF="../../m3quake/src/MxConfig.i3.html">MxConfig</A>, <A HREF="ObPathSep.i3.html">ObPathSep</A>;
 FROM <A HREF="ObValue.i3.html">ObValue</A> IMPORT Error, Exception;
 
   VAR
@@ -62,9 +62,9 @@ FROM <A HREF="ObValue.i3.html">ObValue</A> IMPORT Error, Exception;
           nextFrame := NIL);
     TRY
       env := NewEnv(&quot;hostName&quot;, NewText(ObValue.machineAddress), env);
-      env := NewEnv(&quot;target&quot;, NewText(M3Config.TARGET), env);
-      env := NewEnv(&quot;osType&quot;, NewText(M3Config.OS_TYPE), env);
-      env := NewEnv(&quot;pathSep&quot;, NewText(M3Config.PATH_SEP), env);
+      env := NewEnv(&quot;target&quot;, NewText(MxConfig.HOST), env);
+      env := NewEnv(&quot;osType&quot;, NewText(MxConfig.HOST_OS_TYPE), env);
+      env := NewEnv(&quot;pathSep&quot;, NewText(MxConfig.HOST_PATH_SEP), env);
       env := NewEnv(&quot;searchPathSep&quot;,
                     NewText(Text.FromChar(ObPathSep.SearchPathSeparator)),
                     env);

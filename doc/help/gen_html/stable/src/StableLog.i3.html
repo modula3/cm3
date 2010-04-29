@@ -97,9 +97,15 @@ PROCEDURE <A HREF="StableLog.m3.html#OutChars">OutChars</A>(
 </PRE><BLOCKQUOTE><EM> Marshal a char array in native format. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="StableLog.m3.html#OutInteger">OutInteger</A>(log: Wr.T; i: INTEGER);
-</PRE><BLOCKQUOTE><EM> Marshal an integer. </EM></BLOCKQUOTE><PRE>
+</PRE><BLOCKQUOTE><EM> Marshal an INTEGER. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="StableLog.m3.html#OutLongint">OutLongint</A>(log: Wr.T; i: LONGINT);
+</PRE><BLOCKQUOTE><EM> Marshal a LONGINT. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="StableLog.m3.html#OutCardinal">OutCardinal</A>(log: Wr.T; card: CARDINAL);
+</PRE><BLOCKQUOTE><EM> Marshal a cardinal. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="StableLog.m3.html#OutLongcard">OutLongcard</A>(log: Wr.T; card: LONGCARD);
 </PRE><BLOCKQUOTE><EM> Marshal a cardinal. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="StableLog.m3.html#OutBoolean">OutBoolean</A>(log: Wr.T; bool: BOOLEAN);
@@ -131,10 +137,22 @@ PROCEDURE <A HREF="StableLog.m3.html#InInteger">InInteger</A>(
     min := FIRST(INTEGER);
     max := LAST(INTEGER)): INTEGER
     RAISES {Error};
-</PRE><BLOCKQUOTE><EM> Unmarshal an integer, checking that its value is in  <CODE>[min..max]</CODE>. </EM></BLOCKQUOTE><PRE>
+</PRE><BLOCKQUOTE><EM> Unmarshal an INTEGER, checking that its value is in  <CODE>[min..max]</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="StableLog.m3.html#InLongint">InLongint</A>(
+    log: Rd.T;
+    min := FIRST(LONGINT);
+    max := LAST(LONGINT)): LONGINT
+    RAISES {Error};
+</PRE><BLOCKQUOTE><EM> Unmarshal a LONGINT, checking that its value is in  <CODE>[min..max]</CODE>. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="StableLog.m3.html#InCardinal">InCardinal</A>(
     log: Rd.T; lim: CARDINAL := LAST(CARDINAL)): CARDINAL
+    RAISES {Error};
+</PRE><BLOCKQUOTE><EM> Unmarshal a cardinal, checking that its value is in <CODE>[0..lim]</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="StableLog.m3.html#InLongcard">InLongcard</A>(
+    log: Rd.T; lim: LONGCARD := LAST(LONGCARD)): LONGCARD
     RAISES {Error};
 </PRE><BLOCKQUOTE><EM> Unmarshal a cardinal, checking that its value is in <CODE>[0..lim]</CODE>. </EM></BLOCKQUOTE><PRE>
 

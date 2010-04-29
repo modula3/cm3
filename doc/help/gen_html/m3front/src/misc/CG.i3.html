@@ -41,6 +41,8 @@ M3CG, M3CG_Ops and M3RT.
   Frequency   = M3CG.Frequency;
   Cmp         = M3CG.CompareOp;
   Cvt         = M3CG.ConvertOp;
+  AtomicOp    = M3CG.AtomicOp;
+  MemoryOrder = M3CG.MemoryOrder;
   RuntimeError = M3CG.RuntimeError;
   CallingConvention = M3CG.CallingConvention;
 
@@ -663,15 +665,12 @@ PROCEDURE <A HREF="CG.m3.html#Closure_frame">Closure_frame</A> ();
 </PRE><BLOCKQUOTE><EM> annotate the output with a&amp;b&amp;c&amp;d as a comment </EM></BLOCKQUOTE><PRE>
 </PRE>--------------------------------------------------------------- atomics ---
 
-<P><PRE>PROCEDURE <A HREF="CG.m3.html#Cas">Cas</A> (t: MType);
-</PRE><BLOCKQUOTE><EM> tmp := Mem [s2.A].t;
-   IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END;
-   s2.t := tmp; pop(2) </EM></BLOCKQUOTE><PRE>
-
-PROCEDURE <A HREF="CG.m3.html#CasP">CasP</A> (t: MType;  u: IType);
-</PRE><BLOCKQUOTE><EM> tmp := Mem [s2.A].t;
-   IF tmp = s1.t THEN Mem [s2.A].t := s0.t; END;
-   s2.t := (tmp = s1.t); pop(2) </EM></BLOCKQUOTE><PRE>
+<P><PRE>PROCEDURE <A HREF="CG.m3.html#Store_ordered">Store_ordered</A> (t: MType; order: MemoryOrder);
+PROCEDURE <A HREF="CG.m3.html#Load_ordered">Load_ordered</A> (t: MType; order: MemoryOrder);
+PROCEDURE <A HREF="CG.m3.html#Exchange">Exchange</A> (t: MType;  order: MemoryOrder);
+PROCEDURE <A HREF="CG.m3.html#Compare_exchange">Compare_exchange</A> (t: MType; u: IType; success, failure: MemoryOrder);
+PROCEDURE <A HREF="CG.m3.html#Fence">Fence</A> (order: MemoryOrder);
+PROCEDURE <A HREF="CG.m3.html#Fetch_and_op">Fetch_and_op</A> (op: AtomicOp; t: MType; order: MemoryOrder);
 
 END CG.
 </PRE>

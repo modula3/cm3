@@ -78,7 +78,7 @@ PROCEDURE <A NAME="Seek"><procedure>Seek</procedure></A> (rd: T; pos: CARDINAL; 
     TRY
       IF pos # rd.hi THEN
         IF NOT rd.seekable THEN RAISE Error; END;
-        IF pos &gt; rd.cur THEN pos := MIN(pos, rd.sourceH.status().size) END;
+        IF pos &gt; rd.cur THEN pos := MIN(pos, VAL(rd.sourceH.status().size, INTEGER)) END;
         EVAL NARROW(rd.sourceH, RegularFile.T).seek(
                             RegularFile.Origin.Beginning, pos);
         rd.cur := pos;
@@ -145,7 +145,7 @@ PROCEDURE <A NAME="Length"><procedure>Length</procedure></A>(rd: T): INTEGER RAI
   BEGIN
     TRY
       IF rd.seekable THEN
-        RETURN rd.sourceH.status().size;
+        RETURN VAL(rd.sourceH.status().size, INTEGER);
       ELSE
         RETURN -1;
       END

@@ -3,7 +3,14 @@ m3core/src/unix/Common/UstatC.c</TITLE></HEAD><BODY BGCOLOR="#ffffff">
 <H2>
 m3core/src/unix/Common/UstatC.c</H2><HR>
 <PRE>
-#include &quot;m3unix.h&quot;
+#ifdef _MSC_VER
+#undef _DLL
+#ifndef _MT
+#define _MT
+#endif
+#endif
+
+#include &quot;m3core.h&quot;
 
 #ifdef __cplusplus
 extern &quot;C&quot; {
@@ -76,34 +83,35 @@ static int m3stat_from_stat(int result, m3_stat_t* m3st, stat_t* st)
 int Ustat__stat(const char* path, m3_stat_t* m3st)
 {
     stat_t st;
-    return m3stat_from_stat(stat(path, (struct stat*)&amp;st), m3st, &amp;st);
+#ifndef _WIN32
+    return m3stat_from_stat(stat(path, (struct stat*)&amp;st), m3st, &amp;st); /* cast is for Darwin/arm */
+#else
+    return m3stat_from_stat(_stat(path, &amp;st), m3st, &amp;st);
+#endif
 }
 
 #ifndef _WIN32
 int Ustat__lstat(const char* path, m3_stat_t* m3st)
 {
     stat_t st;
-    return m3stat_from_stat(lstat(path, (struct stat*)&amp;st), m3st, &amp;st);
+    return m3stat_from_stat(lstat(path, (struct stat*)&amp;st), m3st, &amp;st); /* cast is for Darwin/arm */
 }
 #endif
 
 int Ustat__fstat(int fd, m3_stat_t* m3st)
 {
     stat_t st;
-    return m3stat_from_stat(fstat(fd, (struct stat*)&amp;st), m3st, &amp;st);
+#ifndef _WIN32
+    return m3stat_from_stat(fstat(fd, (struct stat*)&amp;st), m3st, &amp;st); /* cast is for Darwin/arm */
+#else
+    return m3stat_from_stat(_fstat(fd, &amp;st), m3st, &amp;st);
+#endif
 }
 
 #ifdef HAS_STAT_FLAGS
 
-int Ustat__chflags(const char* path, unsigned long flags)
-{
-    return chflags(path, flags);
-}
-
-int Ustat__fchflags(int fd, unsigned long flags)
-{
-    return fchflags(fd, flags);
-}
+M3WRAP2(int, chflags, const char*, unsigned long)
+M3WRAP2(int, fchflags, int, unsigned long)
 
 #endif
 

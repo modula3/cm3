@@ -597,6 +597,7 @@ PROCEDURE <A NAME="FillinTypeSpec"><procedure>FillinTypeSpec</procedure></A>(t: 
     | M3LTypeToText.CharCh =&gt;
     | M3LTypeToText.CardinalCh =&gt;
     | M3LTypeToText.IntegerCh =&gt;
+    | M3LTypeToText.LongcardCh =&gt;
     | M3LTypeToText.LongintCh =&gt;
     | M3LTypeToText.RealCh =&gt;
     | M3LTypeToText.LongRealCh =&gt;
@@ -643,6 +644,8 @@ PROCEDURE <A NAME="FillinTypeSpec"><procedure>FillinTypeSpec</procedure></A>(t: 
         RETURN M3CStdTypes.Cardinal();
     | M3LTypeToText.IntegerCh =&gt;
         RETURN M3CStdTypes.Integer();
+    | M3LTypeToText.LongcardCh =&gt;
+        RETURN M3CStdTypes.Longcard();
     | M3LTypeToText.LongintCh =&gt;
         RETURN M3CStdTypes.Longint();
     | M3LTypeToText.RealCh =&gt;

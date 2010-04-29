@@ -55,9 +55,9 @@ PROCEDURE <A NAME="Start"><procedure>Start</procedure></A> (name: Text.T; VAR r,
     END;
 
     (* Create the tool process *)
-    CASE Unix.vfork () OF
+    CASE Unix.fork () OF
 
-    | -1 =&gt; (* vfork failed *)
+    | -1 =&gt; (* fork failed *)
       ClosePipe (fromTool);
       ClosePipe (toTool);
       RETURN FALSE;

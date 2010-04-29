@@ -33,7 +33,7 @@ PROCEDURE <A HREF="RTIO.m3.html#PutString">PutString</A> (s: ADDRESS);
 </PRE><BLOCKQUOTE><EM> Write the null terminated string beginning at <CODE>s</CODE>. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="RTIO.m3.html#PutText">PutText</A> (t: TEXT);
-</PRE><BLOCKQUOTE><EM> Write text <CODE>t</CODE> on file <CODE>f</CODE>. </EM></BLOCKQUOTE><PRE>
+</PRE><BLOCKQUOTE><EM> Write text <CODE>t</CODE>. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="RTIO.m3.html#PutInt">PutInt</A> (i: INTEGER;  width := 0);
 </PRE><BLOCKQUOTE><EM> Convert integer <CODE>i</CODE> to decimal digits and write it right-justified
@@ -45,6 +45,31 @@ PROCEDURE <A HREF="RTIO.m3.html#PutHex">PutHex</A> (i: INTEGER;  width := 0);
 
 PROCEDURE <A HREF="RTIO.m3.html#PutAddr">PutAddr</A> (a: ADDRESS;  width := 0);
 </PRE><BLOCKQUOTE><EM> == PutHex (LOOPHOLE (a, INTEGER), width) </EM></BLOCKQUOTE><PRE>
+</PRE> Normally RTIO goes to stderr; however these go to stdout
+   in order to be agnostic between static and dynamic Windows C runtime 
+<PRE>&lt;* EXTERNAL RTIO__PutE *&gt;
+PROCEDURE PutE (a: LONGREAL);
+</PRE><BLOCKQUOTE><EM> == printf(<CODE>%e</CODE>, a) </EM></BLOCKQUOTE><PRE>
+
+&lt;* EXTERNAL RTIO__PutF *&gt;
+PROCEDURE PutF (a: LONGREAL);
+</PRE><BLOCKQUOTE><EM> == printf(%f<CODE>, a) </EM></BLOCKQUOTE><PRE>
+
+&lt;* EXTERNAL RTIO__PutG *&gt;
+PROCEDURE PutG (a: LONGREAL);
+</PRE><BLOCKQUOTE><EM> == printf(<CODE>%g</CODE>, a) </EM></BLOCKQUOTE><PRE>
+
+&lt;* EXTERNAL RTIO__PutBytes *&gt;
+PROCEDURE PutBytes(a: ADDRESS; count: INTEGER);
+</PRE><BLOCKQUOTE><EM> hex </EM></BLOCKQUOTE><PRE>
+
+&lt;* EXTERNAL RTIO__PutLong *&gt;
+PROCEDURE PutLong (i: LONGINT);
+</PRE><BLOCKQUOTE><EM> == printf(<CODE>%I64d</CODE> or <CODE>%lld</CODE>, i) </EM></BLOCKQUOTE><PRE>
+
+&lt;* EXTERNAL RTIO__PutLongHex *&gt;
+PROCEDURE PutLongHex (i: LONGINT);
+</PRE><BLOCKQUOTE><EM> == printf(<CODE>0x%I64x</CODE> or <CODE>%llx</CODE>, i) </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="RTIO.m3.html#Flush">Flush</A> ();
 </PRE><BLOCKQUOTE><EM> Flush any buffered characters to the operating system. </EM></BLOCKQUOTE><PRE>

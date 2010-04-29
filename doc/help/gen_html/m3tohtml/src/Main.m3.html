@@ -15,7 +15,7 @@
 <P><PRE>MODULE <module><implements><A HREF="../../m3core/src/main/Main.i3.html">Main</A></implements></module>;
 
 IMPORT <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>, <A HREF="../../libm3/src/rw/Stdio.i3.html">Stdio</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../m3core/src/time/Common/Time.i3.html">Time</A>, <A HREF="../../m3core/src/time/Common/FmtTime.i3.html">FmtTime</A>, <A HREF="../../libm3/derived/TextSeq.i3.html">TextSeq</A>, <A HREF="#x1">TextUtils</A>;
-IMPORT <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/src/rw/FileRd.i3.html">FileRd</A>, <A HREF="../../libm3/src/rw/FileWr.i3.html">FileWr</A>, <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../libm3/derived/M3Config.i3.html">M3Config</A>, <A HREF="../../parseparams/src/ParseParams.i3.html">ParseParams</A>;
+IMPORT <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>, <A HREF="../../libm3/src/rw/FileRd.i3.html">FileRd</A>, <A HREF="../../libm3/src/rw/FileWr.i3.html">FileWr</A>, <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../m3quake/src/MxConfig.i3.html">MxConfig</A>, <A HREF="../../parseparams/src/ParseParams.i3.html">ParseParams</A>;
 IMPORT <A HREF="#x2">MarkUp</A>, <A HREF="M3DB.i3.html">M3DB</A>, <A HREF="HTMLDir.i3.html">HTMLDir</A>, <A HREF="FilePath.i3.html">FilePath</A>, <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../sysutils/src/FSUtils.i3.html">FSUtils</A>, <A HREF="#x3">Msg</A>, <A HREF="../../sysutils/src/System.i3.html">System</A>;
 FROM <A HREF="#x3">Msg</A> IMPORT M, V, F;
 &lt;*FATAL Thread.Alerted*&gt;
@@ -141,7 +141,7 @@ TYPE
 VAR
   sources: Source := NIL;
   n_sources: INTEGER := 0;
-  pkgRoot := M3Config.PKG_USE;
+  pkgRoot := MxConfig.Get(&quot;PKG_USE&quot;);
   targets : TextSeq.T;
   nTargets : INTEGER;
   force := FALSE;
@@ -247,7 +247,7 @@ PROCEDURE <A NAME="ReadFileList"><procedure>ReadFileList</procedure></A> () =
               proj_pkg := Text.Sub(pkg, i + 1);
               pkg := Text.Sub(pkg, 0, i);
             ELSE
-              proj_pkg := pkgRoot &amp; M3Config.PATH_SEP &amp; pkg;
+              proj_pkg := pkgRoot &amp; MxConfig.HOST_PATH_SEP &amp; pkg;
             END;
           END;
           V(pkg, &quot; ==&gt; &quot;, proj_pkg);
@@ -274,7 +274,7 @@ PROCEDURE <A NAME="ReadFileList"><procedure>ReadFileList</procedure></A> () =
     sources := b;
   END ReadFileList;
 
-VAR(*CONST*) Build_dir_len := Text.Length (M3Config.BUILD_DIR);
+VAR(*CONST*) Build_dir_len := Text.Length (MxConfig.Get(&quot;BUILD_DIR&quot;));
 
 PROCEDURE <A NAME="FixDerived"><procedure>FixDerived</procedure></A> (filename: TEXT): TEXT =
   VAR i: INTEGER;
@@ -285,13 +285,13 @@ PROCEDURE <A NAME="FixDerived"><procedure>FixDerived</procedure></A> (filename: 
 
     i := 0;
     WHILE (i &lt; Build_dir_len) DO
-      IF Text.GetChar (filename, i) # Text.GetChar (M3Config.BUILD_DIR, i) THEN
+      IF Text.GetChar (filename, i) # Text.GetChar (MxConfig.Get(&quot;BUILD_DIR&quot;), i) THEN
         RETURN filename;
       END;
       INC (i);
     END;
 
-    IF Text.GetChar (filename, i) = Text.GetChar (M3Config.PATH_SEP, 0) THEN
+    IF Text.GetChar (filename, i) = Text.GetChar (MxConfig.HOST_PATH_SEP, 0) THEN
       filename := &quot;derived&quot; &amp; Text.Sub (filename, i);
     END;
     RETURN filename;
@@ -694,7 +694,6 @@ END Main.
 <A NAME="x3">interface Msg is in:
 </A><UL>
 <LI><A HREF="../../cm3/src/Msg.i3.html#0TOP0">cm3/src/Msg.i3</A>
-<LI><A HREF="../../cminstall/src/Msg.i3.html#0TOP0">cminstall/src/Msg.i3</A>
 <LI><A HREF="Msg.i3.html#0TOP0">m3tohtml/src/Msg.i3</A>
 </UL>
 <P>

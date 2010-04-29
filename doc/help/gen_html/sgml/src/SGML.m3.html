@@ -31,7 +31,7 @@
 
 IMPORT <A HREF="SGML.i3.html">SGML</A>, <A HREF="SGMLC.i3.html">SGMLC</A>, <A HREF="SGMLCScanner.i3.html">SGMLCScanner</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../libm3/derived/RefSeq.i3.html">RefSeq</A>, <A HREF="../../libm3/derived/TextRefTbl.i3.html">TextRefTbl</A>, <A HREF="../../libm3/derived/TextTextTbl.i3.html">TextTextTbl</A>, <A HREF="../../libm3/src/atom/Atom.i3.html">Atom</A>,
     <A HREF="../../libm3/src/types/ASCII.i3.html">ASCII</A>, <A HREF="../../libm3/src/rw/FileRd.i3.html">FileRd</A>, <A HREF="../../libm3/src/rw/TextRd.i3.html">TextRd</A>, <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../libm3/src/os/Common/FS.i3.html">FS</A>, <A HREF="../../libm3/src/os/Common/Process.i3.html">Process</A>, <A HREF="../../libm3/src/os/Common/OSError.i3.html">OSError</A>,
-    <A HREF="../../libm3/src/rw/IO.i3.html">IO</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="FSM.i3.html">FSM</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../libm3/derived/M3Config.i3.html">M3Config</A>;
+    <A HREF="../../libm3/src/rw/IO.i3.html">IO</A>, <A HREF="../../libm3/src/rw/Rd.i3.html">Rd</A>, <A HREF="FSM.i3.html">FSM</A>, <A HREF="../../libm3/src/fmtlex/Fmt.i3.html">Fmt</A>, <A HREF="../../m3quake/src/MxConfig.i3.html">MxConfig</A>;
 
 REVEAL
 
@@ -177,9 +177,9 @@ VAR
     CopyTextArray(self.options.includeParam);
     CopyTextArray(self.options.enableWarning);
     InitWarnings(self);
-    CopyTextArray(self.options.addSearchDir,M3Config.PKG_USE &amp;
-        M3Config.PATH_SEP &amp; &quot;sgml&quot; &amp; M3Config.PATH_SEP &amp; &quot;src&quot; &amp;
-        M3Config.PATH_SEP &amp; &quot;dtd&quot;);
+    CopyTextArray(self.options.addSearchDir,MxConfig.Get(&quot;PKG_USE&quot;) &amp;
+        MxConfig.HOST_PATH_SEP &amp; &quot;sgml&quot; &amp; MxConfig.HOST_PATH_SEP &amp; &quot;src&quot; &amp;
+        MxConfig.HOST_PATH_SEP &amp; &quot;dtd&quot;);
     CopyTextArray(self.options.activateLink);
     CopyTextArray(self.options.architecture);
     self.programName := programName;

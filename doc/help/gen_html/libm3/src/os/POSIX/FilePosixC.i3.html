@@ -13,9 +13,9 @@
 
 FROM <A HREF="../../../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int;
 </PRE> 1 for TRUE, 0 for FALSE, -1 for error (in errno) 
-<PRE>&lt;*EXTERNAL*&gt; PROCEDURE RegularFileLockC(fd: int): INTEGER;
+<PRE>&lt;*EXTERNAL &quot;FilePosixC__RegularFileLock&quot;*&gt; PROCEDURE RegularFileLock(fd: int): INTEGER;
 </PRE> return value from fcntl; &lt;0 for failure, error in errno 
-<PRE>&lt;*EXTERNAL*&gt; PROCEDURE RegularFileUnlockC(fd: int): INTEGER;
+<PRE>&lt;*EXTERNAL &quot;FilePosixC__RegularFileUnlock&quot;*&gt; PROCEDURE RegularFileUnlock(fd: int): INTEGER;
 
 END FilePosixC.
 </PRE>

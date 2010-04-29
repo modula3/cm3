@@ -75,9 +75,9 @@ PROCEDURE <A NAME="Apply"><procedure>Apply</procedure></A>(self : T) : REFANY =
 </PRE><BLOCKQUOTE><EM><P>
       IF self.killpid # 0 THEN
         Thread.Pause(1.0d0);
-        EVAL Usignal.kill(self.killpid, Usignal.SIGTERM); 
+        EVAL Usignal.kill(self.killpid, Usignal.SIGTERM);
         Thread.Pause(1.0d0);
-        EVAL Usignal.kill(self.killpid, Usignal.SIGKILL); 
+        EVAL Usignal.kill(self.killpid, Usignal.SIGKILL);
       END;
 </EM></BLOCKQUOTE><PRE>
       TRY Wr.Close(self.wr);

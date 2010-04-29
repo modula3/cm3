@@ -40,9 +40,9 @@ TYPE
   TypeChecker = PROCEDURE (t: T;  VAR cs: Expr.CheckState);
   Evaluator   = PROCEDURE (t: T): Expr.T;
   Bounder     = PROCEDURE (t: T;  VAR min, max: Target.Int);
-  Predicate   = PROCEDURE (t: T; lhs := FALSE): BOOLEAN;
+  Predicate   = PROCEDURE (t: T;  traced := FALSE): BOOLEAN;
   Compiler    = PROCEDURE (t: T);
-  CompilerLV  = PROCEDURE (t: T; lhs: BOOLEAN);
+  CompilerLV  = PROCEDURE (t: T;  traced: BOOLEAN);
   CompilerBR  = PROCEDURE (t: T;  true, false: CG.Label;  freq: CG.Frequency);
   NoteWriter  = PROCEDURE (t: T);
 
@@ -77,7 +77,7 @@ PROCEDURE <A HREF="CallExpr.m3.html#NoValue">NoValue</A>        (t: T): Expr.T;
 PROCEDURE <A HREF="CallExpr.m3.html#NoBounds">NoBounds</A>       (t: T;  VAR min, max: Target.Int);
 PROCEDURE <A HREF="CallExpr.m3.html#NotAddressable">NotAddressable</A> (t: T);
 PROCEDURE <A HREF="CallExpr.m3.html#PrepArgs">PrepArgs</A>       (t: T);
-PROCEDURE <A HREF="CallExpr.m3.html#NoLValue">NoLValue</A>       (t: T; lhs: BOOLEAN);
+PROCEDURE <A HREF="CallExpr.m3.html#NoLValue">NoLValue</A>       (t: T;  traced: BOOLEAN);
 PROCEDURE <A HREF="CallExpr.m3.html#NotBoolean">NotBoolean</A>     (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE <A HREF="CallExpr.m3.html#PrepNoBranch">PrepNoBranch</A>   (t: T;  true, false: CG.Label;  freq: CG.Frequency);
 PROCEDURE <A HREF="CallExpr.m3.html#NoBranch">NoBranch</A>       (t: T;  true, false: CG.Label;  freq: CG.Frequency);

@@ -173,7 +173,7 @@ PROCEDURE <A NAME="NeedsAddress"><procedure>NeedsAddress</procedure></A> (p: P) 
 PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (p: P) =
   VAR info: Type.Info;
   BEGIN
-    PrepLV (p, lhs := FALSE);
+    PrepLV (p, traced := FALSE);
     EVAL Type.CheckInfo (p.type, info);
     IF Host.doIncGC AND info.isTraced THEN
       CASE info.class OF
@@ -187,12 +187,12 @@ PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (p: P) =
     END
   END Prep;
 
-PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN) =
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; traced: BOOLEAN) =
   VAR e := Expr.ConstValue (p.biased_b);
   BEGIN
     IF (e # NIL) THEN p.biased_b := e; END;
     IF Expr.IsDesignator (p.a)
-      THEN Expr.PrepLValue (p.a, lhs);
+      THEN Expr.PrepLValue (p.a, traced);
       ELSE Expr.Prep (p.a);
     END;
     Expr.Prep (p.biased_b);
@@ -210,7 +210,7 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
     END
   END Compile;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; lhs := FALSE) =
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; traced := FALSE) =
   VAR
     ti, te    : Type.T;
     subscript : INTEGER;
@@ -228,7 +228,7 @@ PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; lhs :=
     &lt;* ASSERT b *&gt;
 
     IF Expr.IsDesignator (p.a)
-      THEN Expr.CompileLValue (p.a, lhs);
+      THEN Expr.CompileLValue (p.a, traced);
       ELSE Expr.Compile (p.a);
     END;
 

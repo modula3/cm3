@@ -50,11 +50,12 @@ PROCEDURE <A HREF="TWord.m3.html#Mod">Mod</A> (READONLY a, b: Int;  VAR i: Int):
 PROCEDURE <A HREF="TWord.m3.html#DivMod">DivMod</A> (READONLY x, y: Int;  VAR q, r: Int);
 </PRE><BLOCKQUOTE><EM> returns 'q = x DIV y', and 'r = x MOD y', but assumes that 'y # 0' </EM></BLOCKQUOTE><PRE>
 
-PROCEDURE <A HREF="TWord.m3.html#LT">LT</A> (READONLY a, b: Int): BOOLEAN;
-</PRE><BLOCKQUOTE><EM> returns 'Word.LT (a, b)' </EM></BLOCKQUOTE><PRE>
-
-PROCEDURE <A HREF="TWord.m3.html#LE">LE</A> (READONLY a, b: Int): BOOLEAN;
-</PRE><BLOCKQUOTE><EM> returns 'Word.LE (a, b)' </EM></BLOCKQUOTE><PRE>
+PROCEDURE <A HREF="TWord.m3.html#LT">LT</A> (READONLY a, b: Int): BOOLEAN; (* a &lt; b *)
+PROCEDURE <A HREF="TWord.m3.html#LE">LE</A> (READONLY a, b: Int): BOOLEAN; (* a &lt;= b *)
+PROCEDURE <A HREF="TWord.m3.html#EQ">EQ</A> (READONLY a, b: Int): BOOLEAN; (* a = b *)
+PROCEDURE <A HREF="TWord.m3.html#NE">NE</A> (READONLY a, b: Int): BOOLEAN; (* a # b *)
+PROCEDURE <A HREF="TWord.m3.html#GE">GE</A> (READONLY a, b: Int): BOOLEAN; (* a &gt;= b *)
+PROCEDURE <A HREF="TWord.m3.html#GT">GT</A> (READONLY a, b: Int): BOOLEAN; (* a &gt; b *)
 
 PROCEDURE <A HREF="TWord.m3.html#And">And</A> (READONLY a, b: Int;  VAR i: Int);
 </PRE><BLOCKQUOTE><EM> returns 'Word.And (a, b)' </EM></BLOCKQUOTE><PRE>
@@ -70,6 +71,12 @@ PROCEDURE <A HREF="TWord.m3.html#Not">Not</A> (READONLY a: Int;  VAR i: Int);
 
 PROCEDURE <A HREF="TWord.m3.html#Shift">Shift</A> (READONLY x: Int;  n: INTEGER;  VAR r: Int);
 </PRE><BLOCKQUOTE><EM> returns 'Word.Shift (x, n)' </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TWord.m3.html#LeftShift">LeftShift</A> (READONLY x: Int;  n: CARDINAL;  VAR r: Int);
+</PRE><BLOCKQUOTE><EM> returns 'Word.LeftShift (x, n)' </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="TWord.m3.html#RightShift">RightShift</A> (READONLY x: Int;  n: CARDINAL;  VAR r: Int);
+</PRE><BLOCKQUOTE><EM> returns 'Word.RightShift (x, n)' </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="TWord.m3.html#Rotate">Rotate</A> (READONLY x: Int;  n: INTEGER;  VAR r: Int);
 </PRE><BLOCKQUOTE><EM> returns 'Word.Rotate (x, n)' </EM></BLOCKQUOTE><PRE>

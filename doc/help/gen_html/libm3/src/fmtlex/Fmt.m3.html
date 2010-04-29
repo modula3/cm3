@@ -87,7 +87,7 @@ PROCEDURE <A NAME="AnyUnsigned"><procedure>AnyUnsigned</procedure></A> (n: Word.
 PROCEDURE <A NAME="LongInt"><procedure>LongInt</procedure></A>(n: LONGINT; base: Base := 10): TEXT =
   BEGIN
     IF VAL(FIRST(SmallInts), LONGINT) &lt;= n AND n &lt;= VAL(LAST(SmallInts), LONGINT) AND base = 10
-      THEN RETURN SmallInts[ORD(n)]
+      THEN RETURN SmallInts[VAL(n, INTEGER)]
       ELSE RETURN AnyLongInt(n, base)
     END
   END LongInt;
@@ -102,7 +102,7 @@ PROCEDURE <A NAME="AnyLongInt"><procedure>AnyLongInt</procedure></A> (n: LONGINT
 PROCEDURE <A NAME="LongUnsigned"><procedure>LongUnsigned</procedure></A> (n: Long.T; base: Base := 10): TEXT =
   BEGIN
     IF 0L &lt;= n AND n &lt;= VAL(LAST(SmallInts), LONGINT) AND base = 10
-      THEN RETURN SmallInts[ORD(n)]
+      THEN RETURN SmallInts[VAL(n, INTEGER)]
       ELSE RETURN AnyLongUnsigned (n, base)
     END
   END LongUnsigned;

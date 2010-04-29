@@ -10,7 +10,7 @@
  All rights reserved.                                       
  See the file COPYRIGHT for a full description.             
 
-<P><PRE>&lt;*EXTERNAL*&gt; INTERFACE <interface>Upwd</interface>;
+<P><PRE>INTERFACE <interface>Upwd</interface>;
 
 FROM <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A> IMPORT char_star, int;
 FROM <A HREF="#x1">Utypes</A> IMPORT uid_t;
@@ -25,8 +25,8 @@ TYPE
     provide the pointer type and not the value type. *)
   END;
 
-PROCEDURE getpwuid (uid: int): struct_passwd_star;
-PROCEDURE getpwnam (name: char_star): struct_passwd_star;
+&lt;*EXTERNAL &quot;Upwd__getpwuid&quot;*&gt;PROCEDURE getpwuid (uid: int): struct_passwd_star;
+&lt;*EXTERNAL &quot;Upwd__getpwnam&quot;*&gt;PROCEDURE getpwnam (name: char_star): struct_passwd_star;
 
 END Upwd.
 </PRE>

@@ -11,7 +11,7 @@
 
 <P><PRE>MODULE <module><implements><A HREF="MxConfig.i3.html">MxConfig</A></implements></module>;
 
-IMPORT <A HREF="../../libm3/src/params/Env.i3.html">Env</A>, <A HREF="../../libm3/src/params/Params.i3.html">Params</A>, <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../m3middle/src/M3File.i3.html">M3File</A>, <A HREF="#x1">M3ID</A>, <A HREF="Quake.i3.html">Quake</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
+IMPORT <A HREF="../../libm3/src/params/Env.i3.html">Env</A>, <A HREF="../../libm3/src/params/Params.i3.html">Params</A>, <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../m3middle/src/M3File.i3.html">M3File</A>, <A HREF="#x1">M3ID</A>, <A HREF="Quake.i3.html">Quake</A>, <A HREF="../../m3core/src/runtime/common/RTIO.i3.html">RTIO</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>;
 IMPORT <A HREF="QMachine.i3.html">QMachine</A>;
 
 VAR
@@ -19,6 +19,7 @@ VAR
   found  : BOOLEAN       := FALSE;
   config : TEXT          := NIL;
   mach   : Quake.Machine := NIL;
+  trace  : BOOLEAN       := FALSE;
 
 PROCEDURE <A NAME="FindFile"><procedure>FindFile</procedure></A> (): TEXT =
   BEGIN
@@ -39,6 +40,11 @@ PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (param: TEXT): TEXT =
       END;
     END;
   END Get;
+
+PROCEDURE <A NAME="EnableQuakeTrace"><procedure>EnableQuakeTrace</procedure></A>() =
+  BEGIN
+    trace := TRUE;
+  END EnableQuakeTrace;
 </PRE>----------------------------------------------------------- internal ---
 
 <P><PRE>PROCEDURE <A NAME="FindConfig"><procedure>FindConfig</procedure></A> () =
@@ -48,7 +54,7 @@ PROCEDURE <A NAME="Get"><procedure>Get</procedure></A> (param: TEXT): TEXT =
     IF (found) THEN RETURN END;
 
     (* try the current directory *)
-    IF TryConfig (Filename) THEN RETURN END;
+    IF TryConfig (&quot;.&quot;, Filename) THEN RETURN END;
 
     (* try the immediate source directory *)
     IF TryConfig (&quot;src&quot;, Filename) THEN RETURN END;
@@ -129,10 +135,14 @@ PROCEDURE <A NAME="EvalConfig"><procedure>EvalConfig</procedure></A> () =
     IF (mach # NIL) THEN RETURN END;
     FindConfig ();
     mach := Quake.NewMachine (Quake.NewIDMap (Str2ID, Txt2ID, ID2Txt));
+    mach.trace (trace);
     TRY
       IF (config # NIL) THEN Quake.Run (mach, config); END;
-    EXCEPT Quake.Error, Thread.Alerted =&gt;
-      (* ouch *)
+    EXCEPT
+      Quake.Error(e) =&gt; RTIO.PutText (&quot;quake runtime error: &quot; &amp; e);
+                        RTIO.Flush ();
+    | Thread.Alerted =&gt; RTIO.PutText (&quot;interrupted&quot;);
+                        RTIO.Flush ();
     END;
   END EvalConfig;
 

@@ -17,7 +17,7 @@ FROM <A HREF="Ctypes.i3.html">Ctypes</A> IMPORT int;
 TYPE
   Handler = PROCEDURE (s: int);
 
-&lt;*EXTERNAL*&gt;
+&lt;*EXTERNAL Csignal__signal*&gt;
 PROCEDURE signal (sig: int; func: Handler): Handler;
 
 END Csignal.

@@ -68,6 +68,10 @@ PROCEDURE <A HREF="PickleStubs.m3.html#OutInteger">OutInteger</A> (writer: Pickl
   RAISES {Wr.Failure, Thread.Alerted};
 </PRE><BLOCKQUOTE><EM> Marshal an integer in native format. </EM></BLOCKQUOTE><PRE>
 
+PROCEDURE <A HREF="PickleStubs.m3.html#OutLongint">OutLongint</A> (writer: Pickle.Writer; i: LONGINT)
+  RAISES {Wr.Failure, Thread.Alerted};
+</PRE><BLOCKQUOTE><EM> Marshal an integer in native format. </EM></BLOCKQUOTE><PRE>
+
 PROCEDURE <A HREF="PickleStubs.m3.html#OutInt32">OutInt32</A> (writer: Pickle.Writer; i: Int32)
   RAISES {Wr.Failure, Thread.Alerted};
 </PRE><BLOCKQUOTE><EM> Marshal a 32-bit integer in native format. </EM></BLOCKQUOTE><PRE>
@@ -96,6 +100,10 @@ PROCEDURE <A HREF="PickleStubs.m3.html#OutCardinal">OutCardinal</A> (writer: Pic
   RAISES {Wr.Failure, Thread.Alerted};
 </PRE><BLOCKQUOTE><EM> Marshal a cardinal in native format. </EM></BLOCKQUOTE><PRE>
 
+PROCEDURE <A HREF="PickleStubs.m3.html#OutLongcard">OutLongcard</A> (writer: Pickle.Writer; card: LONGCARD)
+  RAISES {Wr.Failure, Thread.Alerted};
+</PRE><BLOCKQUOTE><EM> Marshal a cardinal in native format. </EM></BLOCKQUOTE><PRE>
+
 PROCEDURE <A HREF="PickleStubs.m3.html#InChars">InChars</A> (reader: Pickle.Reader; VAR chars: ARRAY OF CHAR)
   RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
 </PRE><BLOCKQUOTE><EM> Unmarshal a char array of length <CODE>NUMBER(chars)</CODE>. </EM></BLOCKQUOTE><PRE>
@@ -115,6 +123,12 @@ PROCEDURE <A HREF="PickleStubs.m3.html#InBytes">InBytes</A> (reader: Pickle.Read
 PROCEDURE <A HREF="PickleStubs.m3.html#InInteger">InInteger</A> (reader: Pickle.Reader;
                      min            := FIRST(INTEGER);
                      max            := LAST(INTEGER)   ): INTEGER
+  RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
+</PRE><BLOCKQUOTE><EM> Unmarshal an integer, checking that its value is in <CODE>[min..max]</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="PickleStubs.m3.html#InLongint">InLongint</A> (reader: Pickle.Reader;
+                     min            := FIRST(LONGINT);
+                     max            := LAST(LONGINT)   ): LONGINT
   RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
 </PRE><BLOCKQUOTE><EM> Unmarshal an integer, checking that its value is in <CODE>[min..max]</CODE>. </EM></BLOCKQUOTE><PRE>
 
@@ -145,6 +159,10 @@ PROCEDURE <A HREF="PickleStubs.m3.html#InExtended">InExtended</A> (reader: Pickl
 
 PROCEDURE <A HREF="PickleStubs.m3.html#InCardinal">InCardinal</A> (reader: Pickle.Reader; lim: CARDINAL := LAST(CARDINAL)):
   CARDINAL RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
+</PRE><BLOCKQUOTE><EM> Unmarshal a cardinal, checking that its value is in <CODE>[0..lim]</CODE>. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="PickleStubs.m3.html#InLongcard">InLongcard</A> (reader: Pickle.Reader; lim: LONGCARD := LAST(LONGCARD)):
+  LONGCARD RAISES {Pickle.Error, Rd.Failure, Thread.Alerted};
 </PRE><BLOCKQUOTE><EM> Unmarshal a cardinal, checking that its value is in <CODE>[0..lim]</CODE>. </EM></BLOCKQUOTE><PRE>
 
 END PickleStubs.

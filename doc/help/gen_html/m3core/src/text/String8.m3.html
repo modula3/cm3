@@ -58,10 +58,10 @@ PROCEDURE <A NAME="FindChar"><procedure>FindChar</procedure></A> (a: ADDRESS;  l
   END FindChar;
 
 PROCEDURE <A NAME="FindCharR"><procedure>FindCharR</procedure></A> (a: ADDRESS;  len: CARDINAL;  c: CHAR): INTEGER =
-  VAR p: Ptr;
+  VAR p := LOOPHOLE (a, Ptr);
   BEGIN
-    IF (a = NIL) THEN RETURN -1; END;
-    p := LOOPHOLE (a + len * ADRSIZE (CHAR), Ptr);
+    IF (p = NIL) THEN RETURN -1; END;
+    INC (p, len * ADRSIZE (p^));
     WHILE (len &gt; 0) DO
       DEC (p, ADRSIZE (p^));  DEC (len);
       IF (p^ = c) THEN RETURN len; END;
