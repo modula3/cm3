@@ -107,14 +107,14 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
     Expr.Compile (p.expr);
   END Compile;
 
-PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN) =
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P;  traced: BOOLEAN) =
   BEGIN
-    Expr.PrepLValue (p.expr, lhs);
+    Expr.PrepLValue (p.expr, traced);
   END PrepLV;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P;  lhs: BOOLEAN) =
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P;  traced: BOOLEAN) =
   BEGIN
-    Expr.CompileLValue (p.expr, lhs);
+    Expr.CompileLValue (p.expr, traced);
   END CompileLV;
 
 PROCEDURE <A NAME="Bounder"><procedure>Bounder</procedure></A> (p: P;  VAR min, max: Target.Int) =

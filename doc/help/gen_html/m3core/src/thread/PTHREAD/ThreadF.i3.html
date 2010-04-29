@@ -40,8 +40,8 @@ PROCEDURE <A HREF="ThreadPThread.m3.html#MyHeapState">MyHeapState</A> (): UNTRAC
 </PRE>------------------------------------------------ floating point support ---
 
 <P> access to the saved floating point state for the current thread. 
-<PRE>PROCEDURE <A HREF="ThreadPThread.m3.html#GetMyFPState">GetMyFPState</A> (reader: PROCEDURE(READONLY s: FloatMode.ThreadState));
-PROCEDURE <A HREF="ThreadPThread.m3.html#SetMyFPState">SetMyFPState</A> (writer: PROCEDURE(VAR s: FloatMode.ThreadState));
+<PRE>PROCEDURE GetMyFPState (reader: PROCEDURE(READONLY s: FloatMode.ThreadState));
+PROCEDURE SetMyFPState (writer: PROCEDURE(VAR s: FloatMode.ThreadState));
 </PRE>-------------------------------------------------- showthreads support ---
 
 <P><PRE>TYPE

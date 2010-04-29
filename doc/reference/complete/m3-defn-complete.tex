@@ -6,10 +6,10 @@
 
 \setlength{\parskip}{1ex}
 \setlength{\parindent}{0ex}
-\title{Modula-3: Language definition (single page)}
+\title{Modula-3: Language definition}
 
 \begin{document}
-\section*{Modula-3: Language definition (single page)}
+\section*{Modula-3: Language definition}
 
 \textbf{Designed and written by Luca Cardelli, James Donahue, Lucille
   Glassman, Mick Jordan, Bill Kalsow, and Greg Nelson.}
@@ -2983,12 +2983,12 @@ bounded integers or for floating-point values.
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-    prefix \> \verb|+|       \> \verb|(x: Integer)    : Integer| \\
-           \>                \> \verb|(x: Float)      : Float| \\
-    infix  \> \verb|+|       \> \verb|(x,y: Integer)  : Integer| \\
-           \>                \> \verb|(x,y: Float)    : Float| \\
-           \>                \> \verb|(x,y: Set)      : Set|
+    \=prefix  \= \verb|BYTESIZE|\= \kill
+    \>prefix  \> \verb|+|       \> \verb|(x: Integer)    : Integer| \\
+    \>        \>                \> \verb|(x: Float)      : Float| \\
+    \>infix   \> \verb|+|       \> \verb|(x,y: Integer)  : Integer| \\
+    \>        \>                \> \verb|(x,y: Float)    : Float| \\
+    \>        \>                \> \verb|(x,y: Set)      : Set|
   \end{tabbing}
 \end{quote}
 As a prefix operator, \verb|+x| returns \verb|x|.  As an infix operator on
@@ -3000,12 +3000,12 @@ extended to \verb|ADDRESS|.
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-    prefix \> \verb|-|       \> \verb|(x: Integer)    : Integer| \\
-           \>                \> \verb|(x: Float)      : Float| \\
-    infix  \> \verb|-|       \> \verb|(x,y: Integer)  : Integer| \\
-           \>                \> \verb|(x,y: Float)    : Float| \\
-           \>                \> \verb|(x,y: Set)      : Set|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>prefix \> \verb|-|       \> \verb|(x: Integer)    : Integer| \\
+    \>       \>                \> \verb|(x: Float)      : Float| \\
+    \>infix  \> \verb|-|       \> \verb|(x,y: Integer)  : Integer| \\
+    \>       \>                \> \verb|(x,y: Float)    : Float| \\
+    \>       \>                \> \verb|(x,y: Set)      : Set|
   \end{tabbing}
 \end{quote}
 As a prefix operator, \verb|-x| is the negative of \verb|x|.  As an infix
@@ -3017,10 +3017,10 @@ the same, and the result is the same type as both.  In unsafe modules,
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-    infix  \> \verb|*|       \> \verb|(x,y: Integer)  : Integer| \\
-           \>                \> \verb|(x,y: Float)    : Float| \\
-           \>                \> \verb|(x,y: Set)      : Set|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>infix  \> \verb|*|       \> \verb|(x,y: Integer)  : Integer| \\
+    \>       \>                \> \verb|(x,y: Float)    : Float| \\
+    \>       \>                \> \verb|(x,y: Set)      : Set|
   \end{tabbing}
 \end{quote}
 On numeric arguments, \verb|*| denotes multiplication.  On sets, \verb|*|
@@ -3030,9 +3030,9 @@ same, and the result is the same type as both.
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-    infix  \> \verb|/|       \> \verb|(x,y: Float)    : Float| \\
-           \>                \> \verb|(x,y: Set)      : Set|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>infix  \> \verb|/|       \> \verb|(x,y: Float)    : Float| \\
+    \>       \>                \> \verb|(x,y: Set)      : Set|
   \end{tabbing}
 \end{quote}
 On reals, \verb|/| denotes division.  On sets, \verb|/| denotes symmetric
@@ -3042,10 +3042,10 @@ same, and the result is the same type as both.
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-    infix  \> \verb|DIV|     \> \verb|(x,y: Integer) : Integer| \\
-    infix  \> \verb|MOD|     \> \verb|(x,y: Integer) : Integer| \\
-           \>                \> \verb|(x,y: Float)   : Float|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>infix  \> \verb|DIV|     \> \verb|(x,y: Integer) : Integer| \\
+    \>infix  \> \verb|MOD|     \> \verb|(x,y: Integer) : Integer| \\
+    \>       \>                \> \verb|(x,y: Float)   : Float|
   \end{tabbing}
 \end{quote}
 The value \verb|x DIV y| is the floor of the quotient of \verb|x| and
@@ -3128,8 +3128,8 @@ same type as both.
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-    infix  \> \verb|=|, \verb|#|     \> \verb|(x, y: Any): BOOLEAN|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>infix  \> \verb|=|, \verb|#|     \> \verb|(x, y: Any): BOOLEAN|
   \end{tabbing}
 \end{quote}
 The operator \verb|=| returns \verb|TRUE| if \verb|x| and \verb|y| are equal.
@@ -3149,11 +3149,11 @@ corresponding fields are equal.
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-    infix  \> \verb|<=|, \verb|>=| \> \verb|(x,y: Ordinal) : BOOLEAN| \\
-           \>                      \> \verb|(x,y: Float)   : BOOLEAN| \\
-           \>                      \> \verb|(x,y: ADDRESS) : BOOLEAN| \\
-           \>                      \> \verb|(x,y: Set)     : BOOLEAN|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>infix  \> \verb|<=|, \verb|>=| \> \verb|(x,y: Ordinal) : BOOLEAN| \\
+    \>       \>                      \> \verb|(x,y: Float)   : BOOLEAN| \\
+    \>       \>                      \> \verb|(x,y: ADDRESS) : BOOLEAN| \\
+    \>       \>                      \> \verb|(x,y: Set)     : BOOLEAN|
   \end{tabbing}
 \end{quote}
 In the first three cases, \verb|<=| returns \verb|TRUE| if \verb|x| is at most
@@ -3165,11 +3165,11 @@ static error if the type of \verb|x| is not assignable to the type of
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-    infix  \> \verb|>|, \verb|<| \> \verb|(x,y: Ordinal) : BOOLEAN| \\
-           \>                    \> \verb|(x,y: Float)   : BOOLEAN| \\
-           \>                    \> \verb|(x,y: ADDRESS) : BOOLEAN| \\
-           \>                    \> \verb|(x,y: Set)     : BOOLEAN|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>infix  \> \verb|>|, \verb|<| \> \verb|(x,y: Ordinal) : BOOLEAN| \\
+    \>       \>                    \> \verb|(x,y: Float)   : BOOLEAN| \\
+    \>       \>                    \> \verb|(x,y: ADDRESS) : BOOLEAN| \\
+    \>       \>                    \> \verb|(x,y: Set)     : BOOLEAN|
   \end{tabbing}
 \end{quote}
 In all cases, \verb|x < y| means \verb|(x $<$= y) AND (x \# y)|, and
@@ -3181,8 +3181,8 @@ Warning: with IEEE floating-point, \verb|x <= y| is not the same as
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-    infix  \> \verb|IN| \> \verb|(e: Ordinal; s: Set): BOOLEAN|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>infix  \> \verb|IN| \> \verb|(e: Ordinal; s: Set): BOOLEAN|
   \end{tabbing}
 \end{quote}
 Returns \verb|TRUE| if \verb|e| is an element of the set \verb|s|.  It is a
@@ -3194,10 +3194,10 @@ error occurs, but \verb|IN| returns \verb|FALSE|.
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-    prefix \> \verb|NOT| \> \verb|(p: BOOLEAN)   : BOOLEAN| \\
-     infix \> \verb|AND| \> \verb|(p,q: BOOLEAN) : BOOLEAN| \\
-     infix \> \verb|OR|  \> \verb|(p,q: BOOLEAN) : BOOLEAN|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>prefix \> \verb|NOT| \> \verb|(p: BOOLEAN)   : BOOLEAN| \\
+    \>infix  \> \verb|AND| \> \verb|(p,q: BOOLEAN) : BOOLEAN| \\
+    \>infix  \> \verb|OR|  \> \verb|(p,q: BOOLEAN) : BOOLEAN|
   \end{tabbing}
 \end{quote}
 \verb|NOT p| is the complement of \verb|p|.
@@ -3212,8 +3212,8 @@ If \verb|p| is \verb|FALSE|, \verb|q| is not evaluated.
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-           \> \verb|ISTYPE| \> \verb|(x: Reference; T: RefType) : BOOLEAN|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>       \> \verb|ISTYPE| \> \verb|(x: Reference; T: RefType) : BOOLEAN|
   \end{tabbing}
 \end{quote}
 \verb|ISTYPE(x, T)| is \verb|TRUE| if and only if \verb|x| is a member of
@@ -3221,8 +3221,8 @@ If \verb|p| is \verb|FALSE|, \verb|q| is not evaluated.
 \verb|x| must be assignable to \verb|T|.
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-           \> \verb|NARROW| \> \verb|(x: Reference; T: RefType): T|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>       \> \verb|NARROW| \> \verb|(x: Reference; T: RefType): T|
   \end{tabbing}
 \end{quote}
 \verb|NARROW(x, T)| returns \verb|x| after checking that \verb|x| is a member
@@ -3232,10 +3232,10 @@ object type or traced reference type, and \verb|x| must be assignable to
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-           \> \verb|TYPECODE| \> \verb|(T: RefType)       : CARDINAL| \\
-           \>                 \> \verb|(r: REFANY)        : CARDINAL| \\
-           \>                 \> \verb|(r: UNTRACED ROOT) : CARDINAL|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>       \> \verb|TYPECODE| \> \verb|(T: RefType)       : CARDINAL| \\
+    \>       \>                 \> \verb|(r: REFANY)        : CARDINAL| \\
+    \>       \>                 \> \verb|(r: UNTRACED ROOT) : CARDINAL|
   \end{tabbing}
 \end{quote}
 Every object type or traced reference type (including NULL) has an associated
@@ -3247,9 +3247,9 @@ REFANY or is not an object type or traced reference type.
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-           \> \verb|ORD| \> \verb|(element: Ordinal): INTEGER| \\
-           \> \verb|VAL| \> \verb|(i: INTEGER; T: OrdinalType): T|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>       \> \verb|ORD| \> \verb|(element: Ordinal): INTEGER| \\
+    \>       \> \verb|VAL| \> \verb|(i: INTEGER; T: OrdinalType): T|
   \end{tabbing}
 \end{quote}
 \verb|ORD| converts an element of an enumeration to the integer that
@@ -3336,8 +3336,8 @@ open array type.
 
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-    infix  \> \verb|&| \> \verb|(a,b: TEXT): TEXT|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>infix  \> \verb|&| \> \verb|(a,b: TEXT): TEXT|
   \end{tabbing}
 \end{quote}
 The concatenation of \verb|a| and \verb|b|, as defined by \verb|Text.Cat|.
@@ -3390,11 +3390,11 @@ type of \verb|T)|.  The division must come out even.
 The following operations are primarily used for address arithmetic:
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-           \> \verb|ADR| \> \verb|(VAR x: Any)            : ADDRESS| \\
-    infix  \> \verb|+|   \> \verb|(x: ADDRESS, y:INTEGER) : ADDRESS| \\
-    infix  \> \verb|-|   \> \verb|(x: ADDRESS, y:INTEGER) : ADDRESS| \\
-    infix  \> \verb|-|   \> \verb|(x,y: ADDRESS)          : INTEGER|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>       \> \verb|ADR| \> \verb|(VAR x: Any)            : ADDRESS| \\
+    \>infix  \> \verb|+|   \> \verb|(x: ADDRESS, y:INTEGER) : ADDRESS| \\
+    \>infix  \> \verb|-|   \> \verb|(x: ADDRESS, y:INTEGER) : ADDRESS| \\
+    \>infix  \> \verb|-|   \> \verb|(x,y: ADDRESS)          : INTEGER|
   \end{tabbing}
 \end{quote}
 \verb|ADR(x)| is the address of the variable \verb|x|.  The actual argument
@@ -3410,7 +3410,7 @@ In unsafe modules the \verb|INC| and \verb|DEC| statements apply to addresses
 as well as ordinals:
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
+    \=prefix \= \verb|BYTESIZE| \= \kill
     \> \verb|INC| \> \verb|(VAR x: ADDRESS; n: INTEGER := 1)| \\
     \> \verb|DEC| \> \verb|(VAR x: ADDRESS; n: INTEGER := 1)|
   \end{tabbing}
@@ -3421,8 +3421,8 @@ These are short for \verb|x := x + n| and \verb|x := x - n|, except that
 A \verb|DISPOSE| statement has the form:
 \begin{quote}
   \begin{tabbing}
-    prefix \= \verb|BYTESIZE| \= \kill
-           \> \verb|DISPOSE|  \> \verb|(v)|
+    \=prefix \= \verb|BYTESIZE| \= \kill
+    \>       \> \verb|DISPOSE|  \> \verb|(v)|
   \end{tabbing}
 \end{quote}
 where \verb|v| is a writable designator whose type is not \verb|REFANY|,

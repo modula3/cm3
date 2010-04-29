@@ -11,16 +11,43 @@ m3core/src/runtime/POSIX/RTSignalC.c</H2><HR>
 
 #undef _GNU_SOURCE
 #define _GNU_SOURCE
+
+#if defined(__INTERIX) &amp;&amp; !defined(_ALL_SOURCE)
+#define _ALL_SOURCE
+#endif
+
+/* __DARWIN_UNIX03 defaults to 1 on older and newer headers,
+ * but older headers still have context &quot;ss&quot; instead of &quot;__ss&quot;
+ * and such, so we have to force 0.
+ */
+#if defined(__APPLE__) &amp;&amp; !defined(__DARWIN_UNIX03)
+#define __DARWIN_UNIX03 0
+#endif
+
 #include &lt;unistd.h&gt;
 #include &lt;signal.h&gt;
-typedef struct sigaction sigaction_t;
 #include &lt;assert.h&gt;
-#if defined(__APPLE__) &amp;&amp; defined(__arm)
-/* nothing -- ucontext_t is from signal.h and #including ucontext.h gives #error */
-#elif defined(__CYGWIN__)
-typedef void ucontext_t;
-#else
+typedef struct sigaction sigaction_t;
+#if defined(__APPLE__)
+
+/*
+http://tinderbox.elegosoft.com/tinderbox/cgi-bin/gunzip.cgi\
+  ?tree=cm3&amp;brief-log=1258879870.10595#err9
+/usr/include/ucontext.h:42:2: error: #error ucontext routines are
+    deprecated, and require _XOPEN_SOURCE to be defined
+http://duriansoftware.com/joe/PSA:-avoiding-the-%22ucontext-\
+  routines-are-deprecated%22-error-on-Mac-OS-X-Snow-Leopard.html
+*/
+#include &lt;sys/ucontext.h&gt;
+
+#elif !(defined(__OpenBSD__) || defined(__CYGWIN__))
+/* OpenBSD 4.3: ucontext.h doesn't exist, ucontext_t is in signal.h
+        Cygwin: no state provided to signal handler? */
 #include &lt;ucontext.h&gt;
+#endif
+
+#if !defined(__INTERIX) &amp;&amp; !defined(SA_SIGINFO)
+#define SA_SIGINFO SA_SIGINFO
 #endif
 
 #include &lt;string.h&gt;
@@ -50,96 +77,135 @@ RTProcess__InterruptHandler RTProcess__OnInterrupt(RTProcess__InterruptHandler);
 #define InterruptHandler RTProcess__InterruptHandler
 #define InvokeExitors RTProcess__InvokeExitors
 
-typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
-
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
-static void SegV(int Signal, siginfo_t* SignalInfo, void* Context);
-static void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context);
-static void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context);
-static void Quit(int Signal, siginfo_t* SignalInfo, void* Context);
+static void ShutdownCommon(int Signal);
 
-static void InstallOneHandler(size_t Index);
-static void RestoreOneHandler(size_t Index);
-static size_t GetPC(void* Context);
+#ifdef SA_SIGINFO
+#define SIGNAL_HANDLER_SIGNATURE (int Signal, siginfo_t* SignalInfo, void* Context)
+#define SIGNAL_HANDLER_FIELD sa_sigaction
+#define SIGNAL_HANDLER_TYPE SignalActionHandler
+#else
+#define SIGNAL_HANDLER_SIGNATURE (int Signal)
+#define SIGNAL_HANDLER_FIELD sa_handler
+#define SIGNAL_HANDLER_TYPE sighandler_t
+#endif
 
-static size_t GetPC(void* VoidContext)
+static void SegV SIGNAL_HANDLER_SIGNATURE;
+static void Shutdown SIGNAL_HANDLER_SIGNATURE;
+static void Interrupt SIGNAL_HANDLER_SIGNATURE;
+static void Quit SIGNAL_HANDLER_SIGNATURE;
+
+static void InstallOneHandler(size_t i);
+static void RestoreOneHandler(size_t i);
+
+typedef void (*SignalActionHandler)(int, siginfo_t*, void*);
+
+#if defined(__CYGWIN__) || defined(__INTERIX) \
+|| (defined(__APPLE__) &amp;&amp; defined(__arm))
+
+/* Revisit Apple/arm */
+
+#define GetPC(x) 0
+
+#else
+
+static size_t GetPC(void* xcontext)
 /* PC: program counter aka instruction pointer, etc. */
 {
-    size_t pc = 0;
-    ucontext_t *Context = (ucontext_t *)VoidContext;
+    ucontext_t* context = (ucontext_t*)xcontext;
 
-    if (Context != NULL) {
+    if (context == NULL)
+        return 0;
+
+    return
+
 #if defined(__APPLE__)
+
 #if defined(__i386__)
 #if __DARWIN_UNIX03
-      pc = Context-&gt;uc_mcontext-&gt;__ss.__eip;
+    context-&gt;uc_mcontext-&gt;__ss.__eip
 #else
-      pc = Context-&gt;uc_mcontext-&gt;sc.sc_eip;
+    context-&gt;uc_mcontext-&gt;sc.sc_eip
 #endif
 #elif defined(__x86_64__)
 #if __DARWIN_UNIX03
-      pc = Context-&gt;uc_mcontext-&gt;__ss.__rip;
+    context-&gt;uc_mcontext-&gt;__ss.__rip
 #else
-      pc = Context-&gt;uc_mcontext-&gt;ss.rip;
+    context-&gt;uc_mcontext-&gt;ss.rip
 #endif
 #elif defined(__ppc__) || defined(__ppc64__)
 #if __DARWIN_UNIX03
-      pc = Context-&gt;uc_mcontext-&gt;__ss.__srr0;
+    context-&gt;uc_mcontext-&gt;__ss.__srr0
 #else
-      pc = Context-&gt;uc_mcontext-&gt;ss.srr0;
+    context-&gt;uc_mcontext-&gt;ss.srr0
 #endif
-#elif defined(__arm)
-      /* Apparently missing support? Revisit when I get an official toolset. */
 #else
+/* arm is dealt with earlier */
 #error Unknown __APPLE__ target
 #endif
-#elif defined(__sparc)
-      pc = Context-&gt;uc_mcontext.gregs[REG_PC];
-#elif defined(__linux)
-#if defined(__i386)
-      pc = Context-&gt;uc_mcontext.gregs[REG_EIP];
-#elif defined(__amd64)
-      pc = Context-&gt;uc_mcontext.gregs[REG_RIP];
-#else
-#error Unknown __linux target
-#endif
-#endif
-    }
 
-#if 0 /* FUTURE, each or at least some of these need investigation and testing */
-    ucontext_t* Context = (ucontext_t*) VoidContext;
-    if (Context != NULL)
-    {
-#if defined(__CYGWIN__)
-#error update GetPC
-#elif defined(__amd64)
-        pc = Context-&gt;uc_mcontext-&gt;ss.rip;
-#elif defined(__i386) &amp;&amp; defined(__linux)
-        pc = Context-&gt;uc_mcontext.gregs[REG_EIP];
-#elif defined(__i386) &amp;&amp; defined(__FreeBSD__)
-        pc = Context-&gt;uc_mcontext-&gt;scp_eip;
+#elif defined(__OpenBSD__)
+#if defined(__amd64)
+    context-&gt;sc_rip
 #elif defined(__powerpc)
-        pc = Context-&gt;uc_mcontext-&gt;ss.srr0;
-#elif defined(__mips)
-        pc = Context-&gt;uc_mcontext-&gt;scp_pc.lo;
-#elif defined(__hpux) &amp;&amp; defined(__hppa)
-        pc = Context-&gt;uc_mcontext-&gt;scp_pc;
+    context-&gt;sc_frame.srr0
 #else
-#error update GetPC
+    context-&gt;sc_pc
 #endif
-    }
+
+#elif defined(__sun) || defined(__sparc)
+      context-&gt;uc_mcontext.gregs[REG_PC]
+
+#elif defined(__linux)
+
+#if defined(__i386)
+      context-&gt;uc_mcontext.gregs[REG_EIP]
+#elif defined(__amd64)
+      context-&gt;uc_mcontext.gregs[REG_RIP]
+#elif defined(__powerpc)
+      context-&gt;uc_mcontext.uc_regs-&gt;gregs[PT_NIP]
+#else
+#error unknown __linux target
 #endif
-    return pc;
+
+#elif defined(__NetBSD__)
+    _UC_MACHINE_PC(context)
+
+#elif defined(__FreeBSD__)
+#if defined(__amd64)
+    context-&gt;uc_mcontext.mc_rip
+#elif defined(__i386)
+    context-&gt;uc_mcontext.mc_eip
+#else
+    context-&gt;uc_mcontext.mc_pc
+#endif
+
+#elif defined(__mips)
+    context-&gt;uc_mcontext.scp_pc.lo
+#elif defined(__hppa)
+    context-&gt;uc_mcontext.scp_pc
+#elif defined(__i386)
+    context-&gt;uc_mcontext.ss.eip
+#elif defined(__amd64)
+    context-&gt;uc_mcontext.ss.rip
+#elif defined(__powerpc)
+    context-&gt;uc_mcontext.ss.srr0
+#else
+#error unknown target
+#endif
+    ;
 }
 
-#define DefaultHandler ((SignalActionHandler) SIG_DFL)
-#define IgnoreSignal   ((SignalActionHandler) SIG_IGN)
+#endif
+
+#define DefaultHandler ((SIGNAL_HANDLER_TYPE) SIG_DFL)
+#define IgnoreSignal   ((SIGNAL_HANDLER_TYPE) SIG_IGN)
 
 static const struct
 {
     int Signal;
-    SignalActionHandler Handler;
+    SIGNAL_HANDLER_TYPE Handler;
 }
 Handlers[] =
 {
@@ -154,30 +220,33 @@ Handlers[] =
 
 static sigaction_t InitialHandlers[NUMBER_OF(Handlers)];
 
-static void InstallOneHandler(size_t Index)
+static void InstallOneHandler(size_t i)
 {
     sigaction_t New;
-    int i = { 0 };
+    int r;
     int Signal = Handlers[i].Signal;
-    SignalActionHandler Handler = Handlers[i].Handler;
 
     ZeroMemory(&amp;New, sizeof(New));
-    i = sigemptyset(&amp;New.sa_mask);
-    assert(i == 0);
+    r = sigemptyset(&amp;New.sa_mask);
+    assert(r == 0);
 
     /* What if Handler == SIG_IGN? */
-    New.sa_sigaction = Handler;
+    New.SIGNAL_HANDLER_FIELD = Handlers[i].Handler;
+#ifdef SA_SIGINFO
     New.sa_flags = SA_SIGINFO;
+#else
+    New.sa_flags = 0;
+#endif
 
-    i = sigaction(Signal, &amp;New, &amp;InitialHandlers[Index]);
-    assert(i == 0);
+    r = sigaction(Signal, &amp;New, &amp;InitialHandlers[i]);
+    assert(r == 0);
 
     /* Don't override inherited, non-default handlers.
        That is, if the old handler is not the default handler, put it back. */
-    if (InitialHandlers[Index].sa_sigaction != DefaultHandler)
+    if (InitialHandlers[i].SIGNAL_HANDLER_FIELD != DefaultHandler)
     {
-        i = sigaction(Signal, &amp;InitialHandlers[Index], &amp;New);
-        assert(i == 0);
+        r = sigaction(Signal, &amp;InitialHandlers[i], &amp;New);
+        assert(r == 0);
     }
 }
 
@@ -185,39 +254,39 @@ void InstallHandlers(void)
 {
     size_t i = { 0 };
 
-    for (i = 0 ; i != NUMBER_OF(Handlers) ; ++i)
+    for (; i &lt; NUMBER_OF(Handlers); ++i)
     {
         InstallOneHandler(i);
     }
 }
 
-static void RestoreOneHandler(size_t Index)
+static void RestoreOneHandler(size_t i)
 {
-    int Signal = Handlers[Index].Signal;
+    int Signal = Handlers[i].Signal;
     sigaction_t Old;
 
     ZeroMemory(&amp;Old, sizeof(Old));
-    sigaction(Signal, &amp;InitialHandlers[Index], &amp;Old);
+    sigaction(Signal, &amp;InitialHandlers[i], &amp;Old);
 }
 
 void RestoreHandlers(void)
 {
     size_t i = { 0 };
 
-    for (i = 0 ; i != NUMBER_OF(Handlers) ; ++i)
+    for (; i &lt; NUMBER_OF(Handlers); ++i)
     {
         RestoreOneHandler(i);
     }
 }
 
-static void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context)
+static void ShutdownCommon(int Signal)
 {
     sigaction_t New;
     sigaction_t Old;
 
     ZeroMemory(&amp;Old, sizeof(Old));
     ZeroMemory(&amp;New, sizeof(New));
-    New.sa_sigaction = DefaultHandler;
+    New.sa_handler = SIG_DFL;
     New.sa_flags = 0;
     sigemptyset(&amp;New.sa_mask);
     InvokeExitors();     /* flush stdio */
@@ -225,13 +294,18 @@ static void Shutdown(int Signal, siginfo_t* SignalInfo, void* Context)
     kill(getpid(), Signal);         /* and resend the signal */
 }
 
-static void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context)
+static void Shutdown SIGNAL_HANDLER_SIGNATURE
+{
+    ShutdownCommon(Signal);
+}
+
+static void Interrupt SIGNAL_HANDLER_SIGNATURE
 {
     InterruptHandler Handler = OnInterrupt(NULL);
 
     if (Handler == NULL)
     {
-        Shutdown(Signal, SignalInfo, Context);
+        ShutdownCommon(Signal);
     }
     else
     {
@@ -240,12 +314,12 @@ static void Interrupt(int Signal, siginfo_t* SignalInfo, void* Context)
     }
 }
 
-static void Quit(int Signal, siginfo_t* SignalInfo, void* Context)
+static void Quit SIGNAL_HANDLER_SIGNATURE
 {
     MsgPCAbort (GetPC(Context));
 }
 
-static void SegV(int Signal, siginfo_t* SignalInfo, void* Context)
+static void SegV SIGNAL_HANDLER_SIGNATURE
 {
     MsgPCSegV (GetPC(Context));
 }

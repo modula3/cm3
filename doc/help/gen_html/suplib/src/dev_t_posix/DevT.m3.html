@@ -34,7 +34,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
- * $Id: DevT.m3.html,v 1.2 2009-06-26 16:35:51 wagner Exp $ 
+ * $Id: DevT.m3.html,v 1.3 2010-04-29 17:20:06 wagner Exp $ 
 
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="../DevT.i3.html">DevT</A></implements></module>;
 
@@ -59,7 +59,8 @@ PROCEDURE <A NAME="Equal"><procedure>Equal</procedure></A>(READONLY a, b: T): BO
 
 PROCEDURE <A NAME="Hash"><procedure>Hash</procedure></A>(READONLY dev: T): Word.T =
   BEGIN
-    RETURN Word.Xor(ORD(Long.RightShift(dev, 32)), ORD(Long.And(dev, 16_FFFFFFFFL)));
+    RETURN Word.Xor(VAL(Long.RightShift(dev, 32), Word.T),
+                    VAL(Long.And(dev, 16_FFFFFFFFL), Word.T));
   END Hash;
 
 PROCEDURE <A NAME="Mknod"><procedure>Mknod</procedure></A>(path: TEXT;

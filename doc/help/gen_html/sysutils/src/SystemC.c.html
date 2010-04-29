@@ -9,13 +9,37 @@ sysutils/src/SystemC.c</H2><HR>
 copied from m3core/src/C/Common/Cerrno.i3 for bootstrapping against older releases 
  */
 
+#ifdef _MSC_VER
+#undef _DLL
+#ifndef _MT
+#define _MT
+#endif
+#endif
+
+#if !defined(_MSC_VER) &amp;&amp; !defined(__cdecl)
+#define __cdecl /* nothing */
+#endif
+
+#if defined(__INTERIX) &amp;&amp; !defined(_REENTRANT)
+#define _REENTRANT
+#endif
+
 #include &lt;errno.h&gt;
 
+#ifdef __cplusplus
+extern &quot;C&quot; {
+#endif
+
 int
+__cdecl
 System__GetErrno(void)
 {
     return errno;
 }
+
+#ifdef __cplusplus
+}
+#endif
 </PRE>
 </BODY>
 </HTML>

@@ -1350,11 +1350,11 @@ Out (<CODE>***??? Didn't find a type for </CODE>, M3ID.ToText (id), <CODE> =&gt;
 </PRE>------------------------------------------- built-in types and procedures ---
 
 <P><PRE>CONST
-  BuiltinNames = ARRAY [0..41] OF TEXT {
+  BuiltinNames = ARRAY [0..42] OF TEXT {
     &quot;ABS&quot;, &quot;ADDRESS&quot;, &quot;ADR&quot;, &quot;ADRSIZE&quot;, &quot;BITSIZE&quot;, &quot;BOOLEAN&quot;,
     &quot;BYTESIZE&quot;, &quot;CARDINAL&quot;, &quot;CEILING&quot;, &quot;CHAR&quot;, &quot;DEC&quot;, &quot;DISPOSE&quot;,
     &quot;EXTENDED&quot;, &quot;FALSE&quot;, &quot;FIRST&quot;, &quot;FLOAT&quot;, &quot;FLOOR&quot;, &quot;INC&quot;,
-    &quot;INTEGER&quot;, &quot;ISTYPE&quot;, &quot;LAST&quot;, &quot;LONGINT&quot;, &quot;LONGREAL&quot;, &quot;LOOPHOLE&quot;,
+    &quot;INTEGER&quot;, &quot;ISTYPE&quot;, &quot;LAST&quot;, &quot;LONGCARD&quot;, &quot;LONGINT&quot;, &quot;LONGREAL&quot;, &quot;LOOPHOLE&quot;,
     &quot;MAX&quot;, &quot;MIN&quot;, &quot;MUTEX&quot;, &quot;NARROW&quot;, &quot;NEW&quot;, &quot;NIL&quot;, &quot;NULL&quot;,
     &quot;NUMBER&quot;, &quot;ORD&quot;, &quot;REAL&quot;, &quot;REFANY&quot;, &quot;ROUND&quot;, &quot;SUBARRAY&quot;,
     &quot;TEXT&quot;, &quot;TRUE&quot;, &quot;TRUNC&quot;, &quot;TYPECODE&quot;, &quot;VAL&quot;
@@ -1484,108 +1484,112 @@ PROCEDURE <A NAME="FindBuiltin"><procedure>FindBuiltin</procedure></A> (id: M3ID
                 val.info  := ORD (M3Builtin.Proc.Last);
                 RETURN TRUE;
 
-        | 21 =&gt; (* LONGINT *)
+        | 21 =&gt; (* LONGCARD *)
+                val.class := Class.Type;
+                val.type := M3Type.Longcard;
+
+        | 22 =&gt; (* LONGINT *)
                 val.class := Class.Type;
                 val.type := M3Type.Longint;
 
-        | 22 =&gt; (* LONGREAL *)
+        | 23 =&gt; (* LONGREAL *)
                 val.class := Class.Type;
                 val.type := M3Type.LongReal;
                 RETURN TRUE;
 
-        | 23 =&gt; (* LOOPHOLE *)
+        | 24 =&gt; (* LOOPHOLE *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Loophole);
                 RETURN TRUE;
 
-        | 24 =&gt; (* MAX *)
+        | 25 =&gt; (* MAX *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Max);
                 RETURN TRUE;
 
-        | 25 =&gt; (* MIN *)
+        | 26 =&gt; (* MIN *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Min);
                 RETURN TRUE;
 
-        | 26 =&gt; (* MUTEX *)
+        | 27 =&gt; (* MUTEX *)
                 val.class := Class.Type;
                 val.type := M3Type.Mutex;
                 RETURN TRUE;
 
-        | 27 =&gt; (* NARROW *)
+        | 28 =&gt; (* NARROW *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Narrow);
                 RETURN TRUE;
 
-        | 28 =&gt; (* NEW *)
+        | 29 =&gt; (* NEW *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.New);
                 RETURN TRUE;
 
-        | 29 =&gt; (* NIL *)
+        | 30 =&gt; (* NIL *)
                 val.class := Class.Addr;
                 val.info  := 0;
                 val.type  := M3Type.Null;
                 RETURN TRUE;
 
-        | 30 =&gt; (* NULL *)
+        | 31 =&gt; (* NULL *)
                 val.class := Class.Type;
                 val.type := M3Type.Null;
                 RETURN TRUE;
 
-        | 31 =&gt; (* NUMBER *)
+        | 32 =&gt; (* NUMBER *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Number);
                 RETURN TRUE;
 
-        | 32 =&gt; (* ORD *)
+        | 33 =&gt; (* ORD *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Ord);
                 RETURN TRUE;
 
-        | 33 =&gt; (* REAL *)
+        | 34 =&gt; (* REAL *)
                 val.class := Class.Type;
                 val.type := M3Type.Real;
                 RETURN TRUE;
 
-        | 34 =&gt; (* REFANY *)
+        | 35 =&gt; (* REFANY *)
                 val.class := Class.Type;
                 val.type := M3Type.Refany;
                 RETURN TRUE;
 
-        | 35 =&gt; (* ROUND *)
+        | 36 =&gt; (* ROUND *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Round);
                 RETURN TRUE;
 
-        | 36 =&gt; (* SUBARRAY *)
+        | 37 =&gt; (* SUBARRAY *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Subarray);
                 RETURN TRUE;
 
-        | 37 =&gt; (* TEXT *)
+        | 38 =&gt; (* TEXT *)
                 val.class := Class.Type;
                 val.type := M3Type.Txt;
                 RETURN TRUE;
 
-        | 38 =&gt; (* TRUE *)
+        | 39 =&gt; (* TRUE *)
                 val.class := Class.Enum;
                 val.info  := ORD (TRUE);
                 val.type  := M3Type.Boolean;
                 RETURN TRUE;
 
-        | 39 =&gt; (* TRUNC *)
+        | 40 =&gt; (* TRUNC *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Trunc);
                 RETURN TRUE;
 
-        | 40 =&gt; (* TYPECODE *)
+        | 41 =&gt; (* TYPECODE *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Typecode);
                 RETURN TRUE;
 
-        | 41 =&gt; (* VAL *)
+        | 42 =&gt; (* VAL *)
                 val.class := Class.Builtin;
                 val.info  := ORD (M3Builtin.Proc.Val);
                 RETURN TRUE;

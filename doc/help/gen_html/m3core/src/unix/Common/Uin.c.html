@@ -3,35 +3,23 @@ m3core/src/unix/Common/Uin.c</TITLE></HEAD><BODY BGCOLOR="#ffffff">
 <H2>
 m3core/src/unix/Common/Uin.c</H2><HR>
 <PRE>
-#include &quot;m3unix.h&quot;
-
-#ifdef __cplusplus
-extern &quot;C&quot; {
+#ifdef _MSC_VER
+#undef _DLL
+#ifndef _MT
+#define _MT
+#endif
 #endif
 
-UINT32 Uin__ntohl(UINT32 x)
-{
-    return ntohl(x);
-}
-
-UINT16 Uin__ntohs(UINT16 x)
-{
-    return ntohs(x);
-}
-
-UINT32 Uin__htonl(UINT32 x)
-{
-    return htonl(x);
-}
-
-UINT16 Uin__htons(UINT16 x)
-{
-    return htons(x);
-}
-
-#ifdef __cplusplus
-}
+#include &quot;m3core.h&quot;
+#ifndef _WIN32
+#include &lt;arpa/inet.h&gt;
 #endif
+
+#define M3MODULE Uin
+M3WRAP1(UINT32, ntohl, UINT32)
+M3WRAP1(UINT16, ntohs, UINT16)
+M3WRAP1(UINT32, htonl, UINT32)
+M3WRAP1(UINT16, htons, UINT16)
 </PRE>
 </BODY>
 </HTML>

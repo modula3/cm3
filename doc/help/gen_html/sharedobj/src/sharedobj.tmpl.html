@@ -42,6 +42,12 @@ readonly proc _v_sharedobjv1(intf, types, v, useintfs, proxy) is
   derived_implementation (intf &amp; &quot;CB&quot;)
   derived_implementation (intf &amp; &quot;SO&quot;)
 
+  if defined(&quot;M3_MODE&quot;)
+    if equal(M3_MODE, &quot;clean&quot;)
+      return
+    end
+  end
+
   local stalei = stale(intf &amp; &quot;SO.m3&quot;, intf_pn)
   foreach i in useintfs
     stalei = stalei and stale(intf &amp; &quot;SO.m3&quot;, i &amp; &quot;.i3&quot;)

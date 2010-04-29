@@ -204,6 +204,79 @@ PROCEDURE <A NAME="OutBytes"><procedure>OutBytes</procedure></A>(writer: Pickle.
     RETURN i;
   END InInteger;
 
+PROCEDURE <A NAME="InLongint"><procedure>InLongint</procedure></A>(reader: Pickle.Reader;
+                    min := FIRST(LONGINT);
+                    max := LAST(LONGINT)): LONGINT
+    RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
+  VAR i: LONGINT;
+  BEGIN
+    CASE reader.longConvKind OF
+    | Kind.Copy, Kind.Swap =&gt;
+      VAR c := LOOPHOLE(ADR(i),
+                        UNTRACED REF ARRAY [1..BYTESIZE(LONGINT)] OF CHAR);
+      BEGIN
+        IF reader.rd.getSub(c^) # NUMBER(c^) THEN
+          RaiseUnmarshalFailure();
+        END;
+        IF reader.longConvKind = Kind.Swap THEN
+          CASE myPacking.long_size OF
+          | 32 =&gt; i := VAL(Swap.Swap4(VAL(i, INTEGER)), LONGINT);
+          | 64 =&gt;
+            VAR ii: Int64On64;
+            BEGIN
+              ii.v := VAL(i, INTEGER);
+              ii := LOOPHOLE(Swap.Swap8(LOOPHOLE(ii, Int64On32)), Int64On64);
+              i := VAL(ii.v, LONGINT);
+            END;
+          ELSE
+            RaiseUnsupportedDataRep();
+          END;
+        END;
+      END;
+
+    | Kind.Copy32to64, Kind.Swap32to64 =&gt;
+      VAR i32: Int32;
+          c32 := LOOPHOLE(ADR(i32), UNTRACED REF ARRAY [1..4] OF CHAR);
+      BEGIN
+	IF reader.rd.getSub(c32^) # NUMBER(c32^) THEN
+	  RaiseUnmarshalFailure();
+	END;
+	IF reader.longConvKind = Kind.Swap32to64 THEN
+	  i32 := Swap.Swap4(i32);
+	END;
+	i := VAL(i32, LONGINT);
+      END;
+
+    | Kind.Copy64to32, Kind.Swap64to32 =&gt;
+      VAR i64: Int64On32;
+          c64 := LOOPHOLE(ADR(i64), UNTRACED REF ARRAY [1..8] OF CHAR);
+      BEGIN
+	IF reader.rd.getSub(c64^) # NUMBER(c64^) THEN
+	  RaiseUnmarshalFailure();
+	END;
+	IF reader.packing.little_endian THEN
+	  i := VAL(i64.a, LONGINT);
+	  IF i64.b # 0 AND i64.b # -1 THEN
+	    RAISE Pickle.Error(&quot;Data value too big.&quot;);
+	  END;
+	ELSE
+	  i := VAL(i64.b, LONGINT);
+	  IF i64.a # 0 AND i64.a # -1 THEN
+	    RAISE Pickle.Error(&quot;Data value too big.&quot;);
+	  END;
+	END;
+
+	(* Now, swap it if need be. *)
+	IF reader.longConvKind = Kind.Swap64to32 THEN
+	  i := VAL(Swap.Swap4(VAL(i, INTEGER)), LONGINT);
+	END;
+      END;
+    END;
+
+    IF i &lt; min OR i &gt; max THEN RaiseUnmarshalFailure(); END;
+    RETURN i;
+  END InLongint;
+
 PROCEDURE <A NAME="InInt32"><procedure>InInt32</procedure></A>(reader: Pickle.Reader;
                     min := FIRST(Int32);
                     max := LAST(Int32)): Int32
@@ -230,6 +303,14 @@ PROCEDURE <A NAME="OutInteger"><procedure>OutInteger</procedure></A>(writer: Pic
   BEGIN
     writer.wr.putString(ip^);
   END OutInteger;
+
+PROCEDURE <A NAME="OutLongint"><procedure>OutLongint</procedure></A>(writer: Pickle.Writer; i: LONGINT)
+    RAISES {Wr.Failure, Thread.Alerted} =
+  VAR ip := LOOPHOLE(ADR(i),
+                     UNTRACED REF ARRAY [1..BYTESIZE(LONGINT)] OF CHAR);
+  BEGIN
+    writer.wr.putString(ip^);
+  END OutLongint;
 
 PROCEDURE <A NAME="OutInt32"><procedure>OutInt32</procedure></A>(writer: Pickle.Writer; i: Int32)
     RAISES {Wr.Failure, Thread.Alerted} =
@@ -272,6 +353,19 @@ PROCEDURE <A NAME="OutCardinal"><procedure>OutCardinal</procedure></A>(writer: P
   BEGIN
     OutInteger(writer, card);
   END OutCardinal;
+
+PROCEDURE <A NAME="InLongcard"><procedure>InLongcard</procedure></A>(reader: Pickle.Reader;
+     lim: LONGCARD := LAST(LONGCARD)): LONGCARD
+     RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =
+  BEGIN
+    RETURN InLongint(reader, 0L, lim);
+  END InLongcard;
+
+PROCEDURE <A NAME="OutLongcard"><procedure>OutLongcard</procedure></A>(writer: Pickle.Writer; card: LONGCARD)
+   RAISES {Wr.Failure, Thread.Alerted} =
+  BEGIN
+    OutLongint(writer, card);
+  END OutLongcard;
 
 PROCEDURE <A NAME="InReal"><procedure>InReal</procedure></A>(reader: Pickle.Reader): REAL
     RAISES {Pickle.Error, Rd.Failure, Thread.Alerted} =

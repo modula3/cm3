@@ -16,7 +16,7 @@
 
 <P><PRE>MODULE <module><implements><A HREF="TInt.i3.html">TInt</A></implements></module>;
 
-IMPORT <A HREF="../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="TWord.i3.html">TWord</A>;
+IMPORT <A HREF="../../m3core/src/word/Word.i3.html">Word</A>, <A HREF="TWord.i3.html">TWord</A>, <A HREF="../../m3core/src/text/Text.i3.html">Text</A>;
 FROM <A HREF="Target.i3.html">Target</A> IMPORT Int, IByte, IBytes;
 
 CONST (* IMPORTS *)
@@ -29,7 +29,6 @@ CONST
   SignMask = LShift (1, BITSIZE (IByte) - 1);
   Base     = Mask + 1;
   Digits   = ARRAY [0..9] OF CHAR { '0','1','2','3','4','5','6','7','8','9'};
-  Ten      = Int{NUMBER(IBytes), IBytes{10,0,..}};
 
 PROCEDURE <A NAME="FromInt"><procedure>FromInt</procedure></A> (x: INTEGER;  n: CARDINAL;  VAR r: Int): BOOLEAN =
   BEGIN
@@ -48,40 +47,45 @@ PROCEDURE <A NAME="CheckSign"><procedure>CheckSign</procedure></A> (READONLY r: 
   BEGIN
     &lt;*ASSERT n # 0*&gt;
     IF And (r.x[r.n-1], SignMask) = 0 THEN
-      IF And (r.x[n-1], SignMask) # 0 THEN RETURN Sign.Bad END;
-      FOR i := n TO r.n-1 DO
-        IF r.x[i] # 0 THEN RETURN Sign.Bad END;
+      IF n &lt; r.n THEN
+        IF And (r.x[n-1], SignMask) # 0 THEN RETURN Sign.Bad END;
+        FOR i := n TO r.n-1 DO
+          IF r.x[i] # 0 THEN RETURN Sign.Bad END;
+        END;
       END;
       RETURN Sign.Pos;
     ELSE
-      IF And (r.x[n-1], SignMask) = 0 THEN RETURN Sign.Bad END;
-      FOR i := n TO r.n-1 DO
-        IF r.x[i] # Mask THEN RETURN Sign.Bad END;
+      IF n &lt; r.n THEN
+        IF And (r.x[n-1], SignMask) = 0 THEN RETURN Sign.Bad END;
+        FOR i := n TO r.n-1 DO
+          IF r.x[i] # Mask THEN RETURN Sign.Bad END;
+        END;
       END;
       RETURN Sign.Neg;
     END;
   END CheckSign;
 
 PROCEDURE <A NAME="IntI"><procedure>IntI</procedure></A> (READONLY r: Int;  n: CARDINAL;  VAR x: Int): BOOLEAN =
-  VAR sign := CheckSign (r, n);  j := 0;
+  VAR sign := CheckSign (r, n);  j := 0;  result := TRUE;
   BEGIN
     CASE sign OF
-    | Sign.Bad =&gt; RETURN FALSE;
+    | Sign.Bad =&gt; result := FALSE;
     | Sign.Pos =&gt; j := 0;
     | Sign.Neg =&gt; j := Mask;
     END;
     x.n := n;
     FOR i := 0 TO r.n-1 DO x.x[i] := r.x[i] END;
     FOR i := r.n TO n-1 DO x.x[i] := j END;
-    RETURN TRUE;
+    RETURN result;
   END IntI;
 
 PROCEDURE <A NAME="ToInt"><procedure>ToInt</procedure></A> (READONLY r: Int;  VAR x: INTEGER): BOOLEAN =
   VAR sign := CheckSign (r, BITSIZE (INTEGER) DIV BITSIZE (IByte));
+      result := TRUE;
   BEGIN
     (* ensure the result has the right sign extension *)
     CASE sign OF
-    | Sign.Bad =&gt; RETURN FALSE;
+    | Sign.Bad =&gt; result := FALSE;
     | Sign.Pos =&gt; x := 0;
     | Sign.Neg =&gt; x := Word.Not (0);
     END;
@@ -91,7 +95,7 @@ PROCEDURE <A NAME="ToInt"><procedure>ToInt</procedure></A> (READONLY r: Int;  VA
       x := Word.Or (LShift (x, BITSIZE (IByte)), r.x[i]);
     END;
 
-    RETURN TRUE;
+    RETURN result;
   END ToInt;
 
 PROCEDURE <A NAME="New"><procedure>New</procedure></A> (READONLY x: ARRAY OF CHAR;  n: CARDINAL;  VAR r: Int): BOOLEAN =
@@ -148,6 +152,22 @@ PROCEDURE <A NAME="Subtract"><procedure>Subtract</procedure></A> (READONLY a, b:
     r_sign := CheckSign (r, n);  &lt;*ASSERT r_sign # Sign.Bad*&gt;
     RETURN (a_sign = b_sign) OR (a_sign = r_sign);
   END Subtract;
+
+PROCEDURE <A NAME="Negate"><procedure>Negate</procedure></A> (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  (* It is safe for r to alias a *)
+  BEGIN
+    RETURN Subtract(Zero, a, r);
+  END Negate;
+
+PROCEDURE <A NAME="Abs"><procedure>Abs</procedure></A> (READONLY a: Int;  VAR r: Int): BOOLEAN =
+  (* It is safe for r to alias a *)
+  BEGIN
+    IF GE(a, Zero) THEN
+      r := a;
+      RETURN TRUE;
+    END;
+    RETURN Negate(a, r);
+  END Abs;
 
 PROCEDURE <A NAME="Multiply"><procedure>Multiply</procedure></A> (READONLY a, b: Int;  VAR r: Int): BOOLEAN =
   VAR
@@ -315,6 +335,27 @@ PROCEDURE <A NAME="LE"><procedure>LE</procedure></A> (READONLY a, b: Int): BOOLE
   BEGIN
     RETURN EQ (a, b) OR LT (a, b);
   END LE;
+
+PROCEDURE <A NAME="NE"><procedure>NE</procedure></A> (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN NOT EQ (a, b);
+  END NE;
+
+PROCEDURE <A NAME="GT"><procedure>GT</procedure></A> (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN LT (b, a);
+  END GT;
+
+PROCEDURE <A NAME="GE"><procedure>GE</procedure></A> (READONLY a, b: Int): BOOLEAN =
+  BEGIN
+    RETURN LE(b, a);
+  END GE;
+
+PROCEDURE <A NAME="ToText"><procedure>ToText</procedure></A> (READONLY r: Int): TEXT =
+  VAR result  : ARRAY [0..BITSIZE (IByte) * NUMBER (IBytes)] OF CHAR;
+  BEGIN
+    RETURN Text.FromChars(SUBARRAY(result, 0, ToChars(r, result)));
+  END ToText;
 
 PROCEDURE <A NAME="ToChars"><procedure>ToChars</procedure></A> (READONLY r: Int;  VAR buf: ARRAY OF CHAR): INTEGER =
   VAR

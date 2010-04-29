@@ -10,24 +10,22 @@
  All rights reserved.                                            
  See the file COPYRIGHT-PURDUE for a full description.           
 
-<P><PRE>UNSAFE MODULE <module>ThreadPThread</module>
-EXPORTS
-<A HREF="../Common/Thread.i3.html"><implements>Thread</A></implements>, <A HREF="ThreadF.i3.html"><implements>ThreadF</A></implements>, <A HREF="../Common/Scheduler.i3.html"><implements>Scheduler</A></implements>, <A HREF="../Common/SchedulerPosix.i3.html"><implements>SchedulerPosix</A></implements>, <A HREF="../../runtime/common/RTOS.i3.html"><implements>RTOS</A></implements>, <A HREF="../../runtime/common/RTHooks.i3.html"><implements>RTHooks</A></implements>, <A HREF="ThreadPThread.i3.html"><implements>ThreadPThread</A></implements>;
+<P><PRE>UNSAFE MODULE <module>ThreadPThread</module> EXPORTS <A HREF="../Common/Thread.i3.html"><implements>Thread</A></implements>, <A HREF="#x1"><implements>ThreadF</A></implements>, <A HREF="#x2"><implements>RTThread</A></implements>,
+<A HREF="../Common/Scheduler.i3.html"><implements>Scheduler</A></implements>, <A HREF="../Common/SchedulerPosix.i3.html"><implements>SchedulerPosix</A></implements>, <A HREF="../../runtime/common/RTOS.i3.html"><implements>RTOS</A></implements>, <A HREF="../../runtime/common/RTHooks.i3.html"><implements>RTHooks</A></implements>, <A HREF="ThreadPThread.i3.html"><implements>ThreadPThread</A></implements>;
 
 IMPORT <A HREF="../../C/Common/Cerrno.i3.html">Cerrno</A>, <A HREF="../../float/IEEE-default/FloatMode.i3.html">FloatMode</A>, <A HREF="../Common/MutexRep.i3.html">MutexRep</A>,
-       <A HREF="../../runtime/common/RTCollectorSRC.i3.html">RTCollectorSRC</A>, <A HREF="../../runtime/common/RTError.i3.html">RTError</A>, <A HREF="../../runtime/common/RTHeapRep.i3.html">RTHeapRep</A>, <A HREF="../../runtime/common/RTIO.i3.html">RTIO</A>, <A HREF="#x1">RTMachine</A>, <A HREF="../../runtime/common/RTParams.i3.html">RTParams</A>,
-       <A HREF="../../runtime/POSIX/RTPerfTool.i3.html">RTPerfTool</A>, <A HREF="../../runtime/common/RTProcess.i3.html">RTProcess</A>, <A HREF="../Common/ThreadEvent.i3.html">ThreadEvent</A>, <A HREF="../../time/Common/Time.i3.html">Time</A>,
-       <A HREF="#x2">Unix</A>, <A HREF="#x3">Utime</A>, <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="#x4">Upthread</A>, <A HREF="#x5">Usched</A>,
+       <A HREF="../../runtime/common/RTCollectorSRC.i3.html">RTCollectorSRC</A>, <A HREF="../../runtime/common/RTError.i3.html">RTError</A>, <A HREF="../../runtime/common/RTHeapRep.i3.html">RTHeapRep</A>, <A HREF="../../runtime/common/RTIO.i3.html">RTIO</A>, <A HREF="../../runtime/common/RTParams.i3.html">RTParams</A>,
+       <A HREF="../../runtime/POSIX/RTPerfTool.i3.html">RTPerfTool</A>, <A HREF="../../runtime/common/RTProcess.i3.html">RTProcess</A>, <A HREF="../Common/Thread.i3.html">Thread</A>, <A HREF="../Common/ThreadEvent.i3.html">ThreadEvent</A>, <A HREF="../../time/Common/Time.i3.html">Time</A>,
+       <A HREF="#x3">Unix</A>, <A HREF="#x4">Utime</A>, <A HREF="../../word/Word.i3.html">Word</A>, <A HREF="#x5">Usched</A>,
        <A HREF="#x6">Uerror</A>, <A HREF="#x7">Uexec</A>;
-FROM <A HREF="#x4">Upthread</A> IMPORT pthread_t;
 FROM <A HREF="../../../derived/Compiler.i3.html">Compiler</A> IMPORT ThisFile, ThisLine;
 FROM <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int;
 IMPORT <A HREF="../../runtime/common/RuntimeError.i3.html">RuntimeError</A> AS RTE;
 </PRE>----------------------------------------------------- types and globals ---
 
-<P><PRE>VAR
-  stack_grows_down: BOOLEAN;
-  nextId: CARDINAL := 1;
+<P><PRE>CONST
+  WAIT_UNIT = 1000000; (* one million nanoseconds, one thousandth of a second *)
+  RETRY_INTERVAL = 10000000; (* 10 million nanoseconds, one hundredth of a second *)
 
 REVEAL
   <A NAME="Mutex">Mutex</A> = MutexRep.Public BRANDED &quot;Mutex Pthread-1.0&quot; OBJECT
@@ -39,62 +37,34 @@ REVEAL
 
   <A NAME="Condition">Condition</A> = BRANDED &quot;Thread.Condition Pthread-1.0&quot; OBJECT
     mutex: pthread_mutex_t := NIL;
-    waiters: T := NIL;                  (* LL = mutex *)
+    waiters: Activation := NIL;     (* LL = mutex *)
   END;
 
-  <A NAME="T">T</A> = MUTEX BRANDED &quot;Thread.T Pthread-1.6&quot; OBJECT
-    (* live thread data *)
-    act: Activation := NIL;		 (* LL = mutex *)
-
-    (* our work and its result *)
-    closure: Closure := NIL;		 (* LL = mutex *)
-    result: REFANY := NIL;		 (* LL = mutex *)
-
-    (* wait here to join *)
-    cond: Condition := NIL;		 (* LL = mutex *)
-
-    (* CV that we're blocked on *)
-    waitingOn: Condition := NIL;	 (* LL = waitingOn.mutex *)
-    (* queue of threads waiting on the same CV *)
-    nextWaiter: T := NIL;		 (* LL = waitingOn.mutex *)
-
-    (* condition for blocking during &quot;Wait&quot; *)
-    waitCond: pthread_cond_t := NIL;
-
-    (* the alert flag *)
-    alerted : BOOLEAN := FALSE;		 (* LL = mutex *)
-
-    (* indicates that &quot;result&quot; is set *)
-    completed: BOOLEAN := FALSE;	 (* LL = mutex *)
-
-    (* unique Id of this thread *)
-    id: Id := 0;			 (* LL = mutex *)
+  <A NAME="T">T</A> = BRANDED &quot;Thread.T Pthread-1.6&quot; OBJECT
+    act: Activation := NIL;         (* live untraced thread data *)
+    closure: Closure := NIL;        (* our work and its result *)
+    result: REFANY := NIL;          (* our work and its result *)
+    join: Condition;                (* wait here to join; NIL when done *)
+    joined: BOOLEAN := FALSE;       (* Is anyone waiting yet? *)
   END;
 
 TYPE
   ActState = { Starting, Started, Stopping, Stopped };
-  Activation = UNTRACED REF RECORD
-    (* exception handling support *)
-    frame: ADDRESS := NIL;
-    (* global doubly-linked, circular list of all active threads *)
-    next, prev: Activation := NIL;	 (* LL = activeMu *)
-    (* thread handle *)
-    handle: pthread_t;			 (* LL = activeMu *)
-    (* base of thread stack for use by GC *)
-    stackbase: ADDRESS := NIL;		 (* LL = activeMu *)
-    sp: ADDRESS := NIL;			 (* LL = activeMu *)
-    size: INTEGER;			 (* LL = activeMu *)
-
-    state := ActState.Started;		 (* LL = activeMu *)
-
-    (* index into global array of active, slotted threads *)
-    slot: INTEGER;			 (* LL = slotMu *)
-
-    (* state that is available to the floating point routines *)
-    floatState : FloatMode.ThreadState;
-
-    (* state that is available to the heap routines *)
-    heapState : RTHeapRep.ThreadState;
+  REVEAL <A NAME="Activation">Activation</A> = UNTRACED BRANDED REF RECORD
+    frame: ADDRESS := NIL;              (* exception handling support *)
+    mutex: pthread_mutex_t := NIL;      (* write-once in CreateT *)
+    cond: pthread_cond_t := NIL;        (* write-once in CreateT; a place to park while waiting *)
+    alerted : BOOLEAN := FALSE;         (* LL = mutex; the alert flag *)
+    waitingOn: pthread_mutex_t := NIL;  (* LL = mutex; The CV's mutex *)
+    nextWaiter: Activation := NIL;      (* LL = mutex; waiting thread queue *)
+    next, prev: Activation := NIL;      (* LL = activeMu; global doubly-linked, circular list of all active threads *)
+    handle: pthread_t := NIL;           (* LL = activeMu; thread handle *)
+    stackbase: ADDRESS := NIL;          (* LL = activeMu; stack base for GC *)
+    context: ADDRESS := NIL;            (* LL = activeMu *)
+    state := ActState.Started;          (* LL = activeMu *)
+    slot: INTEGER;                      (* LL = slotMu; index in slots *)
+    floatState : FloatMode.ThreadState; (* per-thread floating point state *)
+    heapState : RTHeapRep.ThreadState;  (* per-thread heap state *)
   END;
 
 PROCEDURE <A NAME="SetState"><procedure>SetState</procedure></A> (act: Activation;  state: ActState) =
@@ -129,60 +99,42 @@ PROCEDURE <A NAME="CleanMutex"><procedure>CleanMutex</procedure></A> (r: REFANY)
     m.mutex := NIL;
   END CleanMutex;
 
-PROCEDURE <A NAME="InitMutexHelper"><procedure>InitMutexHelper</procedure></A> (root: REFANY; VAR result: pthread_mutex_t;
-                           Clean: PROCEDURE(r: REFANY)) =
+PROCEDURE <A NAME="InitMutex"><procedure>InitMutex</procedure></A> (VAR m: pthread_mutex_t; root: REFANY;
+                     Clean: PROCEDURE(root: REFANY)) =
   VAR mutex := pthread_mutex_new();
   BEGIN
-    WITH r = pthread_mutex_lock_init() DO &lt;*ASSERT r=0*&gt; END;
-    IF result = NIL THEN (* We won the race. *)
+    WITH r = pthread_mutex_lock(initMu) DO &lt;*ASSERT r=0*&gt; END;
+    IF m = NIL THEN (* We won the race. *)
       IF mutex = NIL THEN (* But we failed. *)
-        WITH r = pthread_mutex_unlock_init() DO &lt;*ASSERT r=0*&gt; END;
+        WITH r = pthread_mutex_unlock(initMu) DO &lt;*ASSERT r=0*&gt; END;
         RTE.Raise (RTE.T.OutOfMemory);
       ELSE (* We won the race and succeeded. *)
-        result := mutex;
-        WITH r = pthread_mutex_unlock_init() DO &lt;*ASSERT r=0*&gt; END;
+        m := mutex;
+        WITH r = pthread_mutex_unlock(initMu) DO &lt;*ASSERT r=0*&gt; END;
         RTHeapRep.RegisterFinalCleanup (root, Clean);
       END;
     ELSE (* another thread beat us in the race, ok *)
-      WITH r = pthread_mutex_unlock_init() DO &lt;*ASSERT r=0*&gt; END;
+      WITH r = pthread_mutex_unlock(initMu) DO &lt;*ASSERT r=0*&gt; END;
       pthread_mutex_delete(mutex);
     END;
-  END InitMutexHelper;
-
-PROCEDURE <A NAME="InitMutex"><procedure>InitMutex</procedure></A> (m: Mutex) =
-  BEGIN
-    InitMutexHelper(m, m.mutex, CleanMutex);
   END InitMutex;
 
 PROCEDURE <A NAME="LockMutex"><procedure>LockMutex</procedure></A> (m: Mutex) =
-  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), &quot;LockMutex called from a non-Modula-3 thread&quot;);
-    END;
-    IF m.mutex = NIL THEN InitMutex(m) END;
-    IF perfOn THEN PerfChanged(self.id, State.locking) END;
+    IF m.mutex = NIL THEN InitMutex(m.mutex, m, CleanMutex) END;
+    IF perfOn THEN PerfChanged(State.locking) END;
     WITH r = pthread_mutex_lock(m.mutex) DO
-      IF r # 0 THEN
-        RTError.MsgI(ThisFile(), ThisLine(),
-                     &quot;Thread client error: pthread_mutex_lock error: &quot;, r);
-      END;
+      IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
-    IF perfOn THEN PerfRunning(self.id) END;
+    IF perfOn THEN PerfRunning() END;
   END LockMutex;
 
 PROCEDURE <A NAME="UnlockMutex"><procedure>UnlockMutex</procedure></A> (m: Mutex) =
   (* LL = m *)
-  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), &quot;UnlockMutex called from a non-Modula-3 thread&quot;);
-    END;
+    IF m.mutex = NIL THEN InitMutex(m.mutex, m, CleanMutex) END;
     WITH r = pthread_mutex_unlock(m.mutex) DO
-      IF r # 0 THEN
-        RTError.MsgI(ThisFile(), ThisLine(),
-                     &quot;Thread client error: pthread_mutex_unlock error: &quot;, r);
-      END;
+      IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
   END UnlockMutex;
 </PRE>---------------------------------------- Condition variables and Alerts ---
@@ -194,51 +146,29 @@ PROCEDURE <A NAME="UnlockMutex"><procedure>UnlockMutex</procedure></A> (m: Mutex
     c.mutex := NIL;
   END CleanCondition;
 
-PROCEDURE <A NAME="InitCondition"><procedure>InitCondition</procedure></A> (c: Condition) =
-  BEGIN
-    InitMutexHelper(c, c.mutex, CleanCondition);
-  END InitCondition;
-
-PROCEDURE <A NAME="XWait"><procedure>XWait</procedure></A> (self: T; m: Mutex; c: Condition; alertable: BOOLEAN)
+PROCEDURE <A NAME="XWait"><procedure>XWait</procedure></A> (self: Activation; m: Mutex; c: Condition; alertable: BOOLEAN)
   RAISES {Alerted} =
   (* LL = m *)
-  VAR next, prev: T;
+  VAR next, prev: Activation;
   BEGIN
-    IF c.mutex = NIL THEN InitCondition(c) END;
-    TRY
-      &lt;*ASSERT self.waitingOn = NIL*&gt;
-      &lt;*ASSERT self.nextWaiter = NIL*&gt;
-      IF perfOn THEN PerfChanged(self.id, State.waiting) END;
-      WITH r = pthread_mutex_lock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
-      BEGIN
-        self.waitingOn := c;
-        next := c.waiters;
-        IF next = NIL THEN
-          c.waiters := self;
-        ELSE
-          (* put me on the list of waiters *)
-          prev := NIL;
-          WHILE next # NIL DO prev := next; next := next.nextWaiter; END;
-          prev.nextWaiter := self;
-        END;
-      END;
-      WITH r = pthread_mutex_unlock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
-      IF alertable AND XTestAlert(self) THEN RAISE Alerted; END;
-      LOOP
-        WITH r = pthread_cond_wait(self.waitCond, m.mutex) DO
-          IF r # 0 THEN
-            RTError.MsgI(ThisFile(), ThisLine(),
-                         &quot;Thread client error: pthread_cond_wait error &quot;, r);
-          END;
-        END;
-        IF alertable AND XTestAlert(self) THEN RAISE Alerted; END;
-        IF self.waitingOn = NIL THEN RETURN END;
-      END;
-    FINALLY
-      WITH r = pthread_mutex_lock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
-      IF self.waitingOn # NIL THEN
-        &lt;*ASSERT self.waitingOn = c*&gt;
-        (* alerted: dequeue from condition *)
+    IF c.mutex = NIL THEN InitMutex(c.mutex, c, CleanCondition) END;
+    WITH r = pthread_mutex_lock(self.mutex) DO &lt;*ASSERT r=0*&gt; END;
+    &lt;*ASSERT self.waitingOn = NIL*&gt;
+    &lt;*ASSERT self.nextWaiter = NIL*&gt;
+
+    WITH r = pthread_mutex_lock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
+    self.waitingOn := c.mutex;
+    self.nextWaiter := c.waiters;
+    c.waiters := self;
+    WITH r = pthread_mutex_unlock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
+
+    m.release();
+    IF perfOn THEN PerfChanged(State.waiting) END;
+    LOOP
+      IF alertable AND self.alerted THEN
+        self.alerted := FALSE;
+        &lt;*ASSERT self.waitingOn = c.mutex*&gt;
+        WITH r = pthread_mutex_lock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
         next := c.waiters; prev := NIL;
         WHILE next # self DO
           &lt;*ASSERT next # NIL*&gt;
@@ -248,50 +178,52 @@ PROCEDURE <A NAME="XWait"><procedure>XWait</procedure></A> (self: T; m: Mutex; c
           THEN c.waiters := self.nextWaiter;
           ELSE prev.nextWaiter := self.nextWaiter;
         END;
+        WITH r = pthread_mutex_unlock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
         self.nextWaiter := NIL;
         self.waitingOn := NIL;
+        WITH r = pthread_mutex_unlock(self.mutex) DO &lt;*ASSERT r=0*&gt; END;
+        m.acquire();
+        RAISE Alerted;
       END;
-      WITH r = pthread_mutex_unlock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
-      IF perfOn THEN PerfRunning(self.id) END;
-      &lt;*ASSERT self.waitingOn = NIL*&gt;
-      &lt;*ASSERT self.nextWaiter = NIL*&gt;
+      WITH r = pthread_cond_wait(self.cond, self.mutex) DO &lt;*ASSERT r=0*&gt; END;
+      IF self.waitingOn = NIL THEN
+        &lt;*ASSERT self.nextWaiter = NIL*&gt;
+        WITH r = pthread_mutex_unlock(self.mutex) DO &lt;*ASSERT r=0*&gt; END;
+        m.acquire();
+        RETURN;
+      END;
     END;
   END XWait;
 
 PROCEDURE <A NAME="AlertWait"><procedure>AlertWait</procedure></A> (m: Mutex; c: Condition) RAISES {Alerted} =
   (* LL = m *)
-  VAR self := Self();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), &quot;AlertWait called from non-Modula-3 thread&quot;);
-    END;
-    XWait(self, m, c, alertable := TRUE);
+    XWait(GetActivation(), m, c, alertable := TRUE);
   END AlertWait;
 
 PROCEDURE <A NAME="Wait"><procedure>Wait</procedure></A> (m: Mutex; c: Condition) =
   &lt;*FATAL Alerted*&gt;
   (* LL = m *)
-  VAR self := Self();
+  VAR self := GetActivation();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), &quot;Wait called from non-Modula-3 thread&quot;);
-    END;
     XWait(self, m, c, alertable := FALSE);
   END Wait;
 
 PROCEDURE <A NAME="DequeueHead"><procedure>DequeueHead</procedure></A>(c: Condition) =
-  (* LL = c.mutex *)
-  VAR t: T;
+  (* LL = c *)
+  VAR t := c.waiters;
   BEGIN
-    t := c.waiters; c.waiters := t.nextWaiter;
+    WITH r = pthread_mutex_lock(t.mutex) DO &lt;*ASSERT r=0*&gt; END;
+    c.waiters := t.nextWaiter;
     t.nextWaiter := NIL;
     t.waitingOn := NIL;
-    WITH r = pthread_cond_signal(t.waitCond) DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_cond_signal(t.cond) DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(t.mutex) DO &lt;*ASSERT r=0*&gt; END;
   END DequeueHead;
 
 PROCEDURE <A NAME="Signal"><procedure>Signal</procedure></A> (c: Condition) =
   BEGIN
-    IF c.mutex = NIL THEN InitCondition(c) END;
+    IF c.mutex = NIL THEN InitMutex(c.mutex, c, CleanCondition) END;
     WITH r = pthread_mutex_lock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
     IF c.waiters # NIL THEN DequeueHead(c) END;
     WITH r = pthread_mutex_unlock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
@@ -299,40 +231,34 @@ PROCEDURE <A NAME="Signal"><procedure>Signal</procedure></A> (c: Condition) =
 
 PROCEDURE <A NAME="Broadcast"><procedure>Broadcast</procedure></A> (c: Condition) =
   BEGIN
-    IF c.mutex = NIL THEN InitCondition(c) END;
+    IF c.mutex = NIL THEN InitMutex(c.mutex, c, CleanCondition) END;
     WITH r = pthread_mutex_lock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
     WHILE c.waiters # NIL DO DequeueHead(c) END;
     WITH r = pthread_mutex_unlock(c.mutex) DO &lt;*ASSERT r=0*&gt; END;
   END Broadcast;
 
-PROCEDURE <A NAME="Alert"><procedure>Alert</procedure></A> (t: T) =
+PROCEDURE <A NAME="Alert"><procedure>Alert</procedure></A> (thread: T) =
+  VAR t := thread.act;
   BEGIN
-    LOCK t DO
-      t.alerted := TRUE;
-      IF t.waitCond # NIL THEN
-        WITH r = pthread_cond_signal(t.waitCond) DO &lt;*ASSERT r=0*&gt; END;
-      END;
-    END;
+    WITH r = pthread_mutex_lock(t.mutex) DO &lt;*ASSERT r=0*&gt; END;
+    t.alerted := TRUE;
+    WITH r = pthread_cond_signal(t.cond) DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(t.mutex) DO &lt;*ASSERT r=0*&gt; END;
   END Alert;
 
-PROCEDURE <A NAME="XTestAlert"><procedure>XTestAlert</procedure></A> (self: T): BOOLEAN =
+PROCEDURE <A NAME="XTestAlert"><procedure>XTestAlert</procedure></A> (self: Activation): BOOLEAN =
+  VAR result: BOOLEAN;
   BEGIN
-    LOCK self DO
-      IF self.alerted THEN
-        self.alerted := FALSE;
-        RETURN TRUE;
-      ELSE
-        RETURN FALSE;
-      END;
-    END;
+    WITH r = pthread_mutex_lock(self.mutex) DO &lt;*ASSERT r=0*&gt; END;
+    result := self.alerted;
+    self.alerted := FALSE;
+    WITH r = pthread_mutex_unlock(self.mutex) DO &lt;*ASSERT r=0*&gt; END;
+    RETURN result;
   END XTestAlert;
 
 PROCEDURE <A NAME="TestAlert"><procedure>TestAlert</procedure></A> (): BOOLEAN =
-  VAR self := Self();
+  VAR self := GetActivation();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), &quot;TestAlert called from non-Modula-3 thread&quot;);
-    END;
     RETURN XTestAlert(self);
   END TestAlert;
 </PRE>------------------------------------------------------------------ Self ---
@@ -340,59 +266,34 @@ PROCEDURE <A NAME="TestAlert"><procedure>TestAlert</procedure></A> (): BOOLEAN =
 <P><PRE>VAR (* LL = slotMu *)
   n_slotted := 0;
   next_slot := 1;
-  slots: REF ARRAY OF T;		 (* NOTE: we don't use slots[0] *)
+  slots: REF ARRAY OF T;    (* NOTE: we don't use slots[0] *)
 
 PROCEDURE <A NAME="InitActivations"><procedure>InitActivations</procedure></A> (): Activation =
   VAR me := NEW(Activation);
   BEGIN
-    &lt;* ASSERT me.frame = NIL *&gt;
-    &lt;* ASSERT me.next = NIL *&gt;
-    &lt;* ASSERT me.prev = NIL *&gt;
-    &lt;* ASSERT me.stackbase = NIL *&gt;
-    &lt;* ASSERT me.sp = NIL *&gt;
-    &lt;* ASSERT me.state = ActState.Started *&gt;
-    me.handle := Upthread.self();
+    me.handle := pthread_self();
     me.next := me;
     me.prev := me;
-    WITH r = pthread_key_create_activations() DO &lt;*ASSERT r=0*&gt; END;
-    WITH r = pthread_setspecific_activations(me) DO &lt;*ASSERT r=0*&gt; END;
-    WITH r = pthread_mutex_lock_active() DO &lt;*ASSERT r=0*&gt; END;
-      &lt;* ASSERT next_slot = 1 *&gt; (* no threads created yet *)
-      &lt;* ASSERT slots = NIL *&gt; (* no threads created yet *)
-      &lt;* ASSERT n_slotted = 0 *&gt; (* no threads created yet *)
-      &lt;* ASSERT allThreads = NIL *&gt; (* no threads created yet *)
-      allThreads := me;
-    WITH r = pthread_mutex_unlock_active() DO &lt;*ASSERT r=0*&gt; END;
+    SetActivation(me);
+    (* Explicitly (re)initialize to handle fork(). *)
+    next_slot := 1;     (* no threads created yet *)
+    slots := NIL;       (* no threads created yet *)
+    n_slotted := 0;     (* no threads created yet *)
+    allThreads := me;
+    FloatMode.InitThread(me.floatState);
     RETURN me;
   END InitActivations;
 
-PROCEDURE <A NAME="SetActivation"><procedure>SetActivation</procedure></A> (act: Activation) =
-  (* LL = 0 *)
-  VAR v: ADDRESS := act;
-  BEGIN
-    WITH r = pthread_setspecific_activations(v) DO &lt;*ASSERT r=0*&gt; END;
-  END SetActivation;
-
-PROCEDURE <A NAME="GetActivation"><procedure>GetActivation</procedure></A> (): Activation =
-  (* If not the initial thread and not created by Fork, returns NIL *)
-  (* LL = 0 *)
-  BEGIN
-    RETURN pthread_getspecific_activations();
-  END GetActivation;
-
 PROCEDURE <A NAME="Self"><procedure>Self</procedure></A> (): T =
   (* If not the initial thread and not created by Fork, returns NIL *)
-  (* LL = 0 *)
   VAR
-    me: Activation;
+    me := GetActivation();
     t: T;
   BEGIN
-    IF allThreads = NIL THEN RETURN NIL END;
-    me := pthread_getspecific_activations();
-    IF me = NIL THEN RETURN NIL END;
-    WITH r = pthread_mutex_lock_slot() DO &lt;*ASSERT r=0*&gt; END;
+    IF me = NIL THEN Die(ThisLine(), &quot;Thread primitive called from non-Modula-3 thread&quot;) END;
+    WITH r = pthread_mutex_lock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
       t := slots[me.slot];
-    WITH r = pthread_mutex_unlock_slot() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
     IF (t.act # me) THEN Die(ThisLine(), &quot;thread with bad slot!&quot;) END;
     RETURN t;
   END Self;
@@ -401,19 +302,19 @@ PROCEDURE <A NAME="AssignSlot"><procedure>AssignSlot</procedure></A> (t: T) =
   (* LL = 0, cause we allocate stuff with NEW! *)
   VAR n: CARDINAL;  new_slots: REF ARRAY OF T;
   BEGIN
-    WITH r = pthread_mutex_lock_slot() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_lock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
 
       (* make sure we have room to register this guy *)
       IF (slots = NIL) THEN
-        WITH r = pthread_mutex_unlock_slot() DO &lt;*ASSERT r=0*&gt; END;
+        WITH r = pthread_mutex_unlock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
           slots := NEW (REF ARRAY OF T, 20);
-        WITH r = pthread_mutex_lock_slot() DO &lt;*ASSERT r=0*&gt; END;
+        WITH r = pthread_mutex_lock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
       END;
       IF (n_slotted &gt;= LAST (slots^)) THEN
         n := NUMBER (slots^);
-        WITH r = pthread_mutex_unlock_slot() DO &lt;*ASSERT r=0*&gt; END;
+        WITH r = pthread_mutex_unlock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
           new_slots := NEW (REF ARRAY OF T, n+n);
-        WITH r = pthread_mutex_lock_slot() DO &lt;*ASSERT r=0*&gt; END;
+        WITH r = pthread_mutex_lock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
         IF (n = NUMBER (slots^)) THEN
           (* we won any races that may have occurred. *)
           SUBARRAY (new_slots^, 0, n) := slots^;
@@ -423,8 +324,9 @@ PROCEDURE <A NAME="AssignSlot"><procedure>AssignSlot</procedure></A> (t: T) =
              and the new table has room for us. *)
         ELSE
           (* ouch, the new table is full too!   Bail out and retry *)
-          WITH r = pthread_mutex_unlock_slot() DO &lt;*ASSERT r=0*&gt; END;
+          WITH r = pthread_mutex_unlock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
           AssignSlot (t);
+          RETURN;
         END;
       END;
 
@@ -438,55 +340,70 @@ PROCEDURE <A NAME="AssignSlot"><procedure>AssignSlot</procedure></A> (t: T) =
       t.act.slot := next_slot;
       slots [next_slot] := t;
 
-    WITH r = pthread_mutex_unlock_slot() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
   END AssignSlot;
 
-PROCEDURE <A NAME="FreeSlot"><procedure>FreeSlot</procedure></A> (t: T) =
+PROCEDURE <A NAME="FreeSlot"><procedure>FreeSlot</procedure></A> (t: T; act: Activation) =
   (* LL = 0 *)
   BEGIN
-    WITH r = pthread_mutex_lock_slot() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_lock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
 
       DEC (n_slotted);
-      WITH z = slots [t.act.slot] DO
-        IF (z # t) THEN Die (ThisLine(), &quot;unslotted thread!&quot;); END;
+      WITH z = slots [act.slot] DO
+        IF z # t THEN Die (ThisLine(), &quot;unslotted thread!&quot;); END;
         z := NIL;
       END;
-      t.act.slot := 0;
+      t := NIL; (* drop traced reference *)
+      act.slot := 0;
 
-    WITH r = pthread_mutex_unlock_slot() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
   END FreeSlot;
 
-PROCEDURE <A NAME="DumpThread"><procedure>DumpThread</procedure></A> (t: T) =
+PROCEDURE <A NAME="DumpThread"><procedure>DumpThread</procedure></A> (t: Activation) =
   BEGIN
-    RTIO.PutText(&quot;Thread: &quot;); RTIO.PutAddr(LOOPHOLE(t, ADDRESS)); RTIO.PutChar('\n');
-    RTIO.PutText(&quot;  act:        &quot;); RTIO.PutAddr(LOOPHOLE(t.act, ADDRESS));           RTIO.PutChar('\n');
-    RTIO.PutText(&quot;  closure:    &quot;); RTIO.PutAddr(LOOPHOLE(t.closure, ADDRESS));       RTIO.PutChar('\n');
-    RTIO.PutText(&quot;  result:     &quot;); RTIO.PutAddr(LOOPHOLE(t.result, ADDRESS));        RTIO.PutChar('\n');
-    RTIO.PutText(&quot;  cond:       &quot;); RTIO.PutAddr(LOOPHOLE(t.cond, ADDRESS));          RTIO.PutChar('\n');
-    RTIO.PutText(&quot;  waitingOn:  &quot;); RTIO.PutAddr(LOOPHOLE(t.waitingOn, ADDRESS));     RTIO.PutChar('\n');
-    RTIO.PutText(&quot;  nextWaiter: &quot;); RTIO.PutAddr(LOOPHOLE(t.nextWaiter, ADDRESS));    RTIO.PutChar('\n');
-    RTIO.PutText(&quot;  waitCond:   &quot;); RTIO.PutAddr(t.waitCond);      RTIO.PutChar('\n');
-    RTIO.PutText(&quot;  alerted:    &quot;); RTIO.PutInt(ORD(t.alerted));   RTIO.PutChar('\n');
-    RTIO.PutText(&quot;  completed:  &quot;); RTIO.PutInt(ORD(t.completed)); RTIO.PutChar('\n');
-    RTIO.PutText(&quot;  id:         &quot;); RTIO.PutInt(t.id);             RTIO.PutChar('\n');
+    RTIO.PutText(&quot;Activation:   &quot;); RTIO.PutAddr(t);             RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  slot:       &quot;); RTIO.PutInt(t.slot);         RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  mutex:      &quot;); RTIO.PutAddr(t.mutex);       RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  cond:       &quot;); RTIO.PutAddr(t.cond);        RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  alerted:    &quot;); RTIO.PutInt(ORD(t.alerted)); RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  waitingOn:  &quot;); RTIO.PutAddr(t.waitingOn);   RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  nextWaiter: &quot;); RTIO.PutAddr(t.nextWaiter);  RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  frame:      &quot;); RTIO.PutAddr(t.frame);       RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  next:       &quot;); RTIO.PutAddr(t.next);        RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  prev:       &quot;); RTIO.PutAddr(t.prev);        RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  handle:     &quot;); RTIO.PutAddr(t.handle);      RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  stackbase:  &quot;); RTIO.PutAddr(t.stackbase);   RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  context:    &quot;); RTIO.PutAddr(t.context);     RTIO.PutChar('\n');
+    RTIO.PutText(&quot;  state:      &quot;);
+    CASE t.state OF
+    | ActState.Started =&gt; RTIO.PutText(&quot;Started\n&quot;);
+    | ActState.Stopped =&gt; RTIO.PutText(&quot;Stopped\n&quot;);
+    | ActState.Starting =&gt; RTIO.PutText(&quot;Starting\n&quot;);
+    | ActState.Stopping =&gt; RTIO.PutText(&quot;Stopping\n&quot;);
+    END;
     RTIO.Flush();
   END DumpThread;
 
-&lt;*UNUSED*&gt;
 PROCEDURE <A NAME="DumpThreads"><procedure>DumpThreads</procedure></A> () =
-  VAR t: T;
+  VAR t := allThreads;
   BEGIN
-    FOR i := 1 TO LAST(slots^) DO
-      t := slots[i];
-      IF t # NIL THEN
-        DumpThread(t);
-      END;
-    END;
+    REPEAT
+      DumpThread(t);
+      t := t.next
+    UNTIL t = allThreads;
   END DumpThreads;
 </PRE>------------------------------------------------------------ Fork, Join ---
 
 <P><PRE>VAR (* LL=activeMu *)
-  allThreads: Activation := NIL;	 (* global list of active threads *)
+  allThreads: Activation := NIL;            (* global list of active threads *)
+
+PROCEDURE <A NAME="CleanThread"><procedure>CleanThread</procedure></A> (r: REFANY) =
+  VAR t := NARROW(r, T);
+  BEGIN
+    pthread_mutex_delete(t.act.mutex);
+    pthread_cond_delete(t.act.cond);
+    DISPOSE(t.act);
+  END CleanThread;
 
 PROCEDURE <A NAME="CreateT"><procedure>CreateT</procedure></A> (act: Activation): T =
   (* LL = 0, because allocating a traced reference may cause
@@ -494,12 +411,18 @@ PROCEDURE <A NAME="CreateT"><procedure>CreateT</procedure></A> (act: Activation)
      which will try to acquire &quot;activeMu&quot;. *)
   VAR
     t := NEW(T, act := act);
+    mutex := pthread_mutex_new();
     cond := pthread_cond_new();
   BEGIN
-    IF cond = NIL THEN RTE.Raise(RTE.T.OutOfMemory); END;
-    t.waitCond := cond;
-    t.cond     := NEW(Condition);
-    FloatMode.InitThread (act.floatState);
+    IF (mutex = NIL) OR (cond = NIL) THEN
+      pthread_mutex_delete(mutex);
+      pthread_cond_delete(cond);
+      RTE.Raise(RTE.T.OutOfMemory);
+    END;
+    act.mutex := mutex;
+    act.cond := cond;
+    RTHeapRep.RegisterFinalCleanup (t, CleanThread);
+    t.join := NEW(Condition);
     AssignSlot (t);
     RETURN t;
   END CreateT;
@@ -508,69 +431,71 @@ PROCEDURE <A NAME="CreateT"><procedure>CreateT</procedure></A> (act: Activation)
    traced references are within the stack scanned by the collector. 
 
 <P><PRE>PROCEDURE <A NAME="ThreadBase"><procedure>ThreadBase</procedure></A> (param: ADDRESS): ADDRESS =
-  VAR
-    xx: INTEGER;
-    me: Activation := param;
+  VAR me: Activation := param;
   BEGIN
-    SetActivation (me);
-    (* We need to establish this binding before this thread touches any
-       traced references.  Otherwise, it may trigger a heap page fault,
-       which would call SuspendOthers, which requires an Activation. *)
+    SetActivation(me);
+    me.stackbase := ADR(me); (* enable GC scanning of this stack *)
+    me.handle := pthread_self();
 
-    me.stackbase := ADR(xx);          (* enable GC scanning of this stack *)
+    (* add to the list of active threads *)
+    WITH r = pthread_mutex_lock(activeMu) DO &lt;*ASSERT r=0*&gt; END;
+      me.next := allThreads;
+      me.prev := allThreads.prev;
+      allThreads.prev.next := me;
+      allThreads.prev := me;
+    WITH r = pthread_mutex_unlock(activeMu) DO &lt;*ASSERT r=0*&gt; END;
+    FloatMode.InitThread (me.floatState);
+
     RunThread(me);
-    me.stackbase := NIL;              (* disable GC scanning of my stack *)
 
-    &lt;*ASSERT allThreads # me*&gt;
-    DISPOSE (me);
+    me.stackbase := NIL; (* disable GC scanning of my stack *)
+
+    (* remove from the list of active threads *)
+    WITH r = pthread_mutex_lock(activeMu) DO &lt;*ASSERT r=0*&gt; END;
+      &lt;*ASSERT allThreads # me*&gt;
+      me.next.prev := me.prev;
+      me.prev.next := me.next;
+      WITH r = pthread_detach_self() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(activeMu) DO &lt;*ASSERT r=0*&gt; END;
+    me.next := NIL;
+    me.prev := NIL;
     RETURN NIL;
   END ThreadBase;
 
 PROCEDURE <A NAME="RunThread"><procedure>RunThread</procedure></A> (me: Activation) =
-  VAR self: T;  cl: Closure;
+  VAR self: T;
   BEGIN
-    WITH r = pthread_mutex_lock_slot() DO &lt;*ASSERT r=0*&gt; END;
+    IF perfOn THEN PerfChanged(State.alive) END;
+
+    WITH r = pthread_mutex_lock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
       self := slots [me.slot];
-    WITH r = pthread_mutex_unlock_slot() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(slotsMu) DO &lt;*ASSERT r=0*&gt; END;
 
-    (* Let parent know we are running *)
-    LOCK self DO
-      cl := self.closure;
-      self.closure := NIL;
-      Signal(self.cond);
+    IF perfOn THEN PerfRunning() END;
+
+    (*** Run the user-level code. ***)
+    self.result := self.closure.apply();
+
+    IF perfOn THEN PerfChanged(State.dying) END;
+
+    (* Join *)
+    LOCK joinMu DO
+      Broadcast(self.join);
+      self.join := NIL;     (* mark me done *)
     END;
 
-    (* Run the user-level code. *)
-    IF perfOn THEN PerfRunning(self.id) END;
-    self.result := cl.apply();
-    IF perfOn THEN PerfChanged(self.id, State.dying) END;
-
-    LOCK self DO
-      (* mark &quot;self&quot; done and clean it up a bit *)
-      self.completed := TRUE;
-      Broadcast(self.cond); (* let everybody know that &quot;self&quot; is done *)
-      pthread_cond_delete(self.waitCond);
-      self.waitCond := NIL;
-    END;
-
-    IF perfOn THEN PerfDeleted(self.id) END;
+    IF perfOn THEN PerfChanged(State.dead) END;
 
     (* we're dying *)
     RTHeapRep.FlushThreadState(me.heapState);
 
-    FreeSlot(self);  (* note: needs self.act ! *)
+    IF perfOn THEN PerfDeleted() END;
+    FreeSlot(self, me);
     (* Since we're no longer slotted, we cannot touch traced refs. *)
-
-    (* remove ourself from the list of active threads *)
-    WITH r = pthread_mutex_lock_active() DO &lt;*ASSERT r=0*&gt; END;
-      &lt;*ASSERT allThreads # me*&gt;
-      me.next.prev := me.prev;
-      me.prev.next := me.next;
-      me.next := NIL;
-      me.prev := NIL;
-      WITH r = Upthread.detach(me.handle) DO &lt;*ASSERT r=0*&gt; END;
-    WITH r = pthread_mutex_unlock_active() DO &lt;*ASSERT r=0*&gt; END;
+    self := NIL; (* drop traced reference *)
   END RunThread;
+
+VAR joinMu: MUTEX;
 
 PROCEDURE <A NAME="Fork"><procedure>Fork</procedure></A> (closure: Closure): T =
   VAR
@@ -578,126 +503,109 @@ PROCEDURE <A NAME="Fork"><procedure>Fork</procedure></A> (closure: Closure): T =
     t := CreateT(act);
     size := defaultStackSize;
   BEGIN
+    t.closure := closure;
     (* determine the initial size of the stack for this thread *)
     TYPECASE closure OF
     | SizedClosure (scl) =&gt; size := scl.stackSize;
     ELSE (*skip*)
     END;
-
-    WITH r = pthread_mutex_lock_active() DO &lt;*ASSERT r=0*&gt; END;
-      t.closure := closure;
-      t.id := nextId;  INC(nextId);
-      IF perfOn THEN PerfChanged(t.id, State.alive) END;
-
-      act.next := allThreads;
-      act.prev := allThreads.prev;
-      act.size := size;
-      allThreads.prev.next := act;
-      allThreads.prev := act;
-      WITH r = thread_create(act.handle, size * ADRSIZE(Word.T), ThreadBase, act) DO
-        IF r # 0 THEN
-          RTError.MsgI(ThisFile(), ThisLine(),
-                       &quot;Thread client error: Fork failed with error: &quot;, r);
-        END;
-      END;
-    WITH r = pthread_mutex_unlock_active() DO &lt;*ASSERT r=0*&gt; END;
-    LOCK t DO
-      WHILE t.closure # NIL DO Wait(t, t.cond) END;
+    WITH r = thread_create(size * ADRSIZE(Word.T), ThreadBase, act) DO
+      IF r # 0 THEN DieI(ThisLine(), r) END;
     END;
     RETURN t;
   END Fork;
 
-PROCEDURE <A NAME="Join"><procedure>Join</procedure></A> (t: T): REFANY =
-  VAR res: REFANY;
+PROCEDURE <A NAME="XJoin"><procedure>XJoin</procedure></A> (self: Activation; t: T; alertable: BOOLEAN):
+  REFANY RAISES {Alerted} =
   BEGIN
-    LOCK t DO
-      IF t.cond = NIL THEN
-        Die(ThisLine(), &quot;attempt to join with thread twice&quot;);
+    LOCK joinMu DO
+      IF t.joined THEN Die(ThisLine(), &quot;attempt to join with thread twice&quot;) END;
+      TRY
+        t.joined := TRUE;
+        WHILE t.join # NIL DO XWait(self, joinMu, t.join, alertable) END;
+      FINALLY
+        IF t.join # NIL THEN t.joined := FALSE END;
       END;
-      WHILE NOT t.completed DO Wait(t, t.cond) END;
-      res := t.result;
-      t.result := NIL;
-      t.cond := NIL;
-      IF perfOn THEN PerfChanged(t.id, State.dead) END;
     END;
-    RETURN res;
+    RETURN t.result;
+  END XJoin;
+
+PROCEDURE <A NAME="Join"><procedure>Join</procedure></A> (t: T): REFANY =
+  &lt;*FATAL Alerted*&gt;
+  VAR self := GetActivation();
+  BEGIN
+    RETURN XJoin(self, t, alertable := FALSE);
   END Join;
 
 PROCEDURE <A NAME="AlertJoin"><procedure>AlertJoin</procedure></A> (t: T): REFANY RAISES {Alerted} =
-  VAR res: REFANY;
+  VAR self := GetActivation();
   BEGIN
-    LOCK t DO
-      IF t.cond = NIL THEN
-        Die(ThisLine(), &quot;attempt to join with thread twice&quot;);
-      END;
-      WHILE NOT t.completed DO AlertWait(t, t.cond) END;
-      res := t.result;
-      t.result := NIL;
-      t.cond := NIL;
-      IF perfOn THEN PerfChanged(t.id, State.dead) END;
-    END;
-    RETURN res;
+    RETURN XJoin(self, t, alertable := TRUE);
   END AlertJoin;
 </PRE>---------------------------------------------------- Scheduling support ---
 
-<P><PRE>PROCEDURE <A NAME="ToNTime"><procedure>ToNTime</procedure></A> (n: LONGREAL; VAR ts: Utime.struct_timespec) =
+<P><PRE>PROCEDURE <A NAME="CommonSleep"><procedure>CommonSleep</procedure></A>() =
+  VAR wait, remaining: Utime.struct_timespec;
+  BEGIN
+    wait.tv_sec := 0;
+    wait.tv_nsec := WAIT_UNIT;
+    WHILE Nanosleep(wait, remaining) # 0 DO
+      wait := remaining;
+    END;
+  END CommonSleep;
+
+PROCEDURE <A NAME="ToNTime"><procedure>ToNTime</procedure></A> (n: LONGREAL; VAR ts: Utime.struct_timespec) =
   BEGIN
     ts.tv_sec := TRUNC(n);
     ts.tv_nsec := ROUND((n - FLOAT(ts.tv_sec, LONGREAL)) * 1.0D9);
   END ToNTime;
 
-PROCEDURE <A NAME="XPause"><procedure>XPause</procedure></A> (self: T; n: LONGREAL; alertable: BOOLEAN) RAISES {Alerted} =
-  VAR amount, remaining: Utime.struct_timespec;
+PROCEDURE <A NAME="XPause"><procedure>XPause</procedure></A> (self: Activation; n: LONGREAL; alertable: BOOLEAN)
+  RAISES {Alerted} =
+  VAR until: Utime.struct_timespec;
   BEGIN
     IF n &lt;= 0.0d0 THEN RETURN END;
-    ToNTime(n, amount);
-    IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
+    ToNTime(Time.Now() + n, until);
+    IF perfOn THEN PerfChanged(State.pausing) END;
+    WITH r = pthread_mutex_lock(self.mutex) DO &lt;*ASSERT r=0*&gt; END;
+    &lt;*ASSERT self.waitingOn = NIL*&gt;
+    &lt;*ASSERT self.nextWaiter = NIL*&gt;
+
     LOOP
-      WITH r = Utime.nanosleep(amount, remaining) DO
-        IF alertable AND XTestAlert(self) THEN RAISE Alerted END;
-        IF r = 0 THEN EXIT END;
-        amount := remaining;
+      IF alertable AND self.alerted THEN
+        self.alerted := FALSE;
+        WITH r = pthread_mutex_unlock(self.mutex) DO &lt;*ASSERT r=0*&gt; END;
+        IF perfOn THEN PerfRunning() END;
+        RAISE Alerted;
+      END;
+      WITH r = pthread_cond_timedwait(self.cond, self.mutex, until) DO
+        IF r = Uerror.ETIMEDOUT THEN
+          WITH r = pthread_mutex_unlock(self.mutex) DO &lt;*ASSERT r=0*&gt; END;
+          IF perfOn THEN PerfRunning() END;
+          RETURN;
+        END;
+        &lt;*ASSERT r=0*&gt;
       END;
     END;
   END XPause;
 
 PROCEDURE <A NAME="Pause"><procedure>Pause</procedure></A> (n: LONGREAL) =
   &lt;*FATAL Alerted*&gt;
-  VAR self := Self();
+  VAR self := GetActivation();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), &quot;Pause called from a non-Modula-3 thread&quot;);
-    END;
-    TRY
-      IF perfOn THEN PerfChanged(self.id, State.pausing) END;
-      XPause(self, n, alertable := FALSE);
-    FINALLY
-      IF perfOn THEN PerfRunning(self.id) END;
-    END;
+    XPause(self, n, alertable := FALSE);
   END Pause;
 
 PROCEDURE <A NAME="AlertPause"><procedure>AlertPause</procedure></A> (n: LONGREAL) RAISES {Alerted} =
-  VAR self := Self();
+  VAR self := GetActivation();
   BEGIN
-    IF self = NIL THEN
-      Die(ThisLine(), &quot;AlertPause called from a non-Modula-3 thread&quot;);
-    END;
-    TRY
-      IF perfOn THEN PerfChanged(self.id, State.pausing) END;
-      XPause(self, n, alertable := TRUE);
-    FINALLY
-      IF perfOn THEN PerfRunning(self.id) END;
-    END;
+    XPause(self, n, alertable := TRUE);
   END AlertPause;
 
 PROCEDURE <A NAME="Yield"><procedure>Yield</procedure></A> () =
   BEGIN
     WITH r = Usched.yield() DO
-      IF r # 0 THEN
-        RTError.MsgI(ThisFile(), ThisLine(),
-                     &quot;Thread client error: Yield failed with error: &quot;,
-                     Cerrno.GetErrno());
-      END;
+      IF r # 0 THEN DieI(ThisLine(), Cerrno.GetErrno()) END;
     END;
   END Yield;
 
@@ -710,30 +618,30 @@ TYPE
 PROCEDURE <A NAME="IOWait"><procedure>IOWait</procedure></A> (fd: CARDINAL; read: BOOLEAN;
                   timeoutInterval: LONGREAL := -1.0D0): WaitResult =
   &lt;*FATAL Alerted*&gt;
-  VAR self := Self();
+  VAR self := GetActivation();
   BEGIN
     TRY
-      IF perfOn THEN PerfChanged(self.id, State.blocking) END;
+      IF perfOn THEN PerfChanged(State.blocking) END;
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := FALSE);
     FINALLY
-      IF perfOn THEN PerfRunning(self.id) END;
+      IF perfOn THEN PerfRunning() END;
     END;
   END IOWait;
 
 PROCEDURE <A NAME="IOAlertWait"><procedure>IOAlertWait</procedure></A> (fd: CARDINAL; read: BOOLEAN;
                        timeoutInterval: LONGREAL := -1.0D0): WaitResult
   RAISES {Alerted} =
-  VAR self := Self();
+  VAR self := GetActivation();
   BEGIN
     TRY
-      IF perfOn THEN PerfChanged(self.id, State.blocking) END;
+      IF perfOn THEN PerfChanged(State.blocking) END;
       RETURN XIOWait(self, fd, read, timeoutInterval, alertable := TRUE);
     FINALLY
-      IF perfOn THEN PerfRunning(self.id) END;
+      IF perfOn THEN PerfRunning() END;
     END;
   END IOAlertWait;
 
-PROCEDURE <A NAME="XIOWait"><procedure>XIOWait</procedure></A> (self: T; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
+PROCEDURE <A NAME="XIOWait"><procedure>XIOWait</procedure></A> (self: Activation; fd: CARDINAL; read: BOOLEAN; interval: LONGREAL;
                    alertable: BOOLEAN): WaitResult
   RAISES {Alerted} =
   VAR
@@ -894,12 +802,12 @@ PROCEDURE <A NAME="IncDefaultStackSize"><procedure>IncDefaultStackSize</procedur
    that acquire <CODE>cm</CODE>, it'll be deadlocked.
 
 
-<P><PRE>VAR suspended: BOOLEAN := FALSE;	 (* LL=activeMu *)
+<P><PRE>VAR suspended: BOOLEAN := FALSE;        (* LL=activeMu *)
 
 PROCEDURE <A NAME="SuspendOthers"><procedure>SuspendOthers</procedure></A> () =
   (* LL=0. Always bracketed with ResumeOthers which releases &quot;activeMu&quot; *)
   BEGIN
-    WITH r = pthread_mutex_lock_active() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_lock(activeMu) DO &lt;*ASSERT r=0*&gt; END;
     StopWorld();
     &lt;*ASSERT NOT suspended*&gt;
     suspended := TRUE;
@@ -911,10 +819,10 @@ PROCEDURE <A NAME="ResumeOthers"><procedure>ResumeOthers</procedure></A> () =
     &lt;*ASSERT suspended*&gt;
     suspended := FALSE;
     StartWorld();
-    WITH r = pthread_mutex_unlock_active() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(activeMu) DO &lt;*ASSERT r=0*&gt; END;
   END ResumeOthers;
 
-PROCEDURE <A NAME="ProcessStacks"><procedure>ProcessStacks</procedure></A> (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE <A NAME="ProcessStacks"><procedure>ProcessStacks</procedure></A> (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu.  Only called within {SuspendOthers, ResumeOthers} *)
   VAR
     me := GetActivation();
@@ -928,17 +836,17 @@ PROCEDURE <A NAME="ProcessStacks"><procedure>ProcessStacks</procedure></A> (p: P
     END;
   END ProcessStacks;
 
-PROCEDURE <A NAME="ProcessEachStack"><procedure>ProcessEachStack</procedure></A> (p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE <A NAME="ProcessEachStack"><procedure>ProcessEachStack</procedure></A> (p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=0 *)
-  CONST
-    WAIT_UNIT = 1000000;
   VAR
     me := GetActivation();
     act: Activation;
+    state: ActState;
     acks: int;
-    wait, remaining: Utime.struct_timespec;
+    nLive, nDead, newlySent: INTEGER;
+    wait_nsecs := RETRY_INTERVAL;
   BEGIN
-    WITH r = pthread_mutex_lock_active() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_lock(activeMu) DO &lt;*ASSERT r=0*&gt; END;
 
     ProcessMe(me, p);
 
@@ -946,104 +854,145 @@ PROCEDURE <A NAME="ProcessEachStack"><procedure>ProcessEachStack</procedure></A>
     WHILE act # me DO
       (* stop *)
       LOOP
-        IF StopThread(act) THEN EXIT END;
-        IF SignalThread(act, ActState.Stopping) THEN
-          WITH r = sem_getvalue(acks) DO &lt;*ASSERT r=0*&gt; END;
-          IF acks &gt; 0 THEN
-            WHILE sem_wait() # 0 DO
-              &lt;*ASSERT Cerrno.GetErrno() = Uerror.EINTR*&gt;
-            END;
+        &lt;*ASSERT act.state = ActState.Started*&gt;
+        SetState(act, ActState.Stopping);
+        IF SIG_SUSPEND = 0 THEN
+          IF StopThread(act) THEN
+            SetState(act, ActState.Stopped);
             EXIT;
+          ELSE
+            SetState(act, ActState.Started);
           END;
+        ELSE
+          SignalThread(act);
+          INC(nLive);
+          EXIT;
         END;
-        wait.tv_sec := 0;
-        wait.tv_nsec := WAIT_UNIT;
-        WHILE Utime.nanosleep(wait, remaining) # 0 DO wait := remaining END;
+        CommonSleep();
       END;
+      WHILE nLive &gt; 0 DO
+        &lt;*ASSERT SIG_SUSPEND # 0*&gt;
+        WITH r = sem_getvalue(acks) DO &lt;*ASSERT r=0*&gt; END;
+        IF acks = nLive THEN EXIT END;
+        &lt;*ASSERT acks &lt; nLive*&gt;
+        IF wait_nsecs &lt;= 0 THEN
+          newlySent := 0;
+          state := act.state;
+          &lt;*ASSERT state # ActState.Starting*&gt;
+          IF state # ActState.Stopped THEN
+            SignalThread(act);
+            INC(newlySent);
+          END;
+          WITH r = sem_getvalue(acks) DO &lt;*ASSERT r=0*&gt; END;
+          IF newlySent &lt; nLive - acks THEN
+            (* how did we manage to lose some? *)
+            nLive := acks + newlySent;
+          END;
+          wait_nsecs := RETRY_INTERVAL;
+        ELSE
+          CommonSleep();
+          DEC(wait_nsecs, WAIT_UNIT);
+        END;
+      END;
+      FOR i := 0 TO nLive - 1 DO
+        WHILE sem_wait() # 0 DO
+          WITH r = Cerrno.GetErrno() DO
+            IF r # Uerror.EINTR THEN DieI(ThisLine(), r) END;
+          END;
+          (*retry*)
+        END;
+      END;
+
       (* process *)
       ProcessOther(act, p);
+
       (* start *)
+      nDead := 0;
       LOOP
-        IF StartThread(act) THEN EXIT END;
-        IF SignalThread(act, ActState.Starting) THEN
-          WITH r = sem_getvalue(acks) DO &lt;*ASSERT r=0*&gt; END;
-          IF acks &gt; 0 THEN
-            WHILE sem_wait() # 0 DO
-              &lt;*ASSERT Cerrno.GetErrno() = Uerror.EINTR*&gt;
-            END;
+        &lt;*ASSERT act.state = ActState.Stopped*&gt;
+        SetState(act, ActState.Starting);
+        IF SIG_SUSPEND = 0 THEN
+          IF StartThread(act) THEN
+            SetState(act, ActState.Started);
             EXIT;
+          ELSE
+            SetState(act, ActState.Stopped);
           END;
+        ELSE
+          SignalThread(act);
+          INC(nDead);
+          EXIT;
         END;
-        wait.tv_sec := 0;
-        wait.tv_nsec := WAIT_UNIT;
-        WHILE Utime.nanosleep(wait, remaining) # 0 DO wait := remaining END;
+        CommonSleep();
       END;
-      act := act.next;
+      WHILE nDead &gt; 0 DO
+        &lt;*ASSERT SIG_SUSPEND # 0*&gt;
+        WITH r = sem_getvalue(acks) DO &lt;*ASSERT r=0*&gt; END;
+        IF acks = nDead THEN EXIT END;
+        &lt;*ASSERT acks &lt; nDead*&gt;
+        IF wait_nsecs &lt;= 0 THEN
+          newlySent := 0;
+          state := act.state;
+          &lt;*ASSERT state # ActState.Stopping*&gt;
+          IF state # ActState.Started THEN
+            SignalThread(act);
+            INC(newlySent);
+          END;
+          WITH r = sem_getvalue(acks) DO &lt;*ASSERT r=0*&gt; END;
+          IF newlySent &lt; nDead - acks THEN
+            (* how did we manage to lose some? *)
+            nDead := acks + newlySent;
+          END;
+          wait_nsecs := RETRY_INTERVAL;
+        ELSE
+          CommonSleep();
+          DEC(wait_nsecs, WAIT_UNIT);
+        END;
+      END;
+      FOR i := 0 TO nDead - 1 DO
+        WHILE sem_wait() # 0 DO
+          WITH r = Cerrno.GetErrno() DO
+            IF r # Uerror.EINTR THEN DieI(ThisLine(), r) END;
+          END;
+          (*retry*)
+        END;
+      END;
     END;
 
-    WITH r = pthread_mutex_unlock_active() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(activeMu) DO &lt;*ASSERT r=0*&gt; END;
   END ProcessEachStack;
 
-PROCEDURE <A NAME="ProcessMe"><procedure>ProcessMe</procedure></A> (me: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
+PROCEDURE <A NAME="ProcessMe"><procedure>ProcessMe</procedure></A> (me: Activation;  p: PROCEDURE (start, limit: ADDRESS)) =
   (* LL=activeMu *)
-  VAR
-    sp: ADDRESS;
-    state: RTMachine.State;
-    xx: INTEGER;
   BEGIN
     &lt;*ASSERT me.state # ActState.Stopped*&gt;
     IF DEBUG THEN
       RTIO.PutText(&quot;Processing act=&quot;); RTIO.PutAddr(me); RTIO.PutText(&quot;\n&quot;); RTIO.Flush();
     END;
-    (* process my registers *)
-    IF RTMachine.SaveRegsInStack # NIL
-      THEN sp := RTMachine.SaveRegsInStack();
-      ELSE sp := ADR(xx);
-    END;
     RTHeapRep.FlushThreadState(me.heapState);
-    IF stack_grows_down
-      THEN p(sp, me.stackbase);
-      ELSE p(me.stackbase, sp);
-    END;
-    EVAL RTMachine.SaveState(state);
-    WITH z = state DO p(ADR(z), ADR(z) + ADRSIZE(z)) END;
+    ProcessLive(me.stackbase, p);
   END ProcessMe;
 
 PROCEDURE <A NAME="ProcessOther"><procedure>ProcessOther</procedure></A> (act: Activation;  p: PROCEDURE (start, stop: ADDRESS)) =
   (* LL=activeMu *)
-  VAR
-    sp: ADDRESS;
-    state: RTMachine.ThreadState;
   BEGIN
     &lt;*ASSERT act.state = ActState.Stopped*&gt;
     IF DEBUG THEN
       RTIO.PutText(&quot;Processing act=&quot;); RTIO.PutAddr(act); RTIO.PutText(&quot;\n&quot;); RTIO.Flush();
     END;
     IF act.stackbase = NIL THEN RETURN END;
-    IF RTMachine.GetState # NIL THEN
-      (* process explicit state *)
-      sp := RTMachine.GetState(act.handle, state);
-    ELSE
-      (* assume registers are saved in suspended thread's stack *)
-      sp := act.sp;
-    END;
     RTHeapRep.FlushThreadState(act.heapState);
-    IF stack_grows_down
-      THEN p(sp, act.stackbase);
-      ELSE p(act.stackbase, sp);
-    END;
-    WITH z = state DO p(ADR(z), ADR(z) + ADRSIZE(z)) END;
+    ProcessStopped(act.handle, act.stackbase, act.context, p);
   END ProcessOther;
 </PRE> Signal based suspend/resume 
 
-<P><PRE>PROCEDURE <A NAME="SignalThread"><procedure>SignalThread</procedure></A>(act: Activation; state: ActState): BOOLEAN =
+<P><PRE>PROCEDURE <A NAME="SignalThread"><procedure>SignalThread</procedure></A>(act: Activation) =
   BEGIN
-    IF SIG_SUSPEND = 0 THEN RETURN FALSE END;
-    SetState(act, state);
+    &lt;*ASSERT SIG_SUSPEND # 0*&gt;
     LOOP
-      WITH z = Upthread.kill(act.handle, SIG_SUSPEND) DO
-        IF z = 0 THEN RETURN TRUE END;
-        &lt;*ASSERT z = Uerror.EAGAIN*&gt;
+      WITH z = pthread_kill(act.handle, SIG_SUSPEND) DO
+        IF z = 0 THEN EXIT END;
+        IF z # Uerror.EAGAIN THEN DieI(ThisLine(), z) END;
         (* try it again... *)
       END;
     END;
@@ -1051,41 +1000,33 @@ PROCEDURE <A NAME="ProcessOther"><procedure>ProcessOther</procedure></A> (act: A
 
 PROCEDURE <A NAME="StopThread"><procedure>StopThread</procedure></A> (act: Activation): BOOLEAN =
   BEGIN
-    &lt;*ASSERT act.state # ActState.Stopped*&gt;
-    IF RTMachine.SuspendThread = NIL THEN RETURN FALSE END;
-    SetState(act, ActState.Stopping);
-    IF NOT RTMachine.SuspendThread(act.handle) THEN RETURN FALSE END;
+    &lt;*ASSERT act.state = ActState.Stopping*&gt;
+    &lt;*ASSERT SIG_SUSPEND = 0*&gt;
+    IF NOT SuspendThread(act.handle) THEN RETURN FALSE END;
     IF act.heapState.inCritical # 0 THEN
-      RTMachine.RestartThread(act.handle);
+      IF NOT RestartThread(act.handle) THEN &lt;*ASSERT FALSE*&gt; END;
       RETURN FALSE;
     END;
-    act.state := ActState.Stopped;
     RETURN TRUE;
   END StopThread;
 
 PROCEDURE <A NAME="StartThread"><procedure>StartThread</procedure></A> (act: Activation): BOOLEAN =
   BEGIN
-    &lt;*ASSERT act.state = ActState.Stopped*&gt;
-    IF RTMachine.RestartThread = NIL THEN RETURN FALSE END;
-    SetState(act, ActState.Starting);
-    RTMachine.RestartThread(act.handle);
-    act.state := ActState.Started;
-    RETURN TRUE;
+    &lt;*ASSERT act.state = ActState.Starting*&gt;
+    &lt;*ASSERT SIG_SUSPEND = 0*&gt;
+    RETURN RestartThread(act.handle);
   END StartThread;
 
 PROCEDURE <A NAME="StopWorld"><procedure>StopWorld</procedure></A> () =
   (* LL=activeMu *)
-  CONST
-    WAIT_UNIT = 1000000;
-    RETRY_INTERVAL = 10000000;
   VAR
     me := GetActivation();
     act: Activation;
+    state: ActState;
     acks: int;
     nLive, newlySent: INTEGER;
     retry: BOOLEAN;
     wait_nsecs := RETRY_INTERVAL;
-    wait, remaining: Utime.struct_timespec;
   BEGIN
     IF DEBUG THEN
       RTIO.PutText(&quot;Stopping from act=&quot;); RTIO.PutAddr(me); RTIO.PutText(&quot;\n&quot;); RTIO.Flush();
@@ -1096,26 +1037,28 @@ PROCEDURE <A NAME="StopWorld"><procedure>StopWorld</procedure></A> () =
       retry := FALSE;
       act := me.next;
       WHILE act # me DO
-        IF act.state # ActState.Stopped THEN
-          IF StopThread(act) THEN
-            (* good *)
-          ELSIF SignalThread(act, ActState.Stopping) THEN
-            INC(nLive);
+        &lt;*ASSERT act.state # ActState.Starting*&gt;
+        IF act.state = ActState.Started THEN
+          SetState(act, ActState.Stopping);
+          IF SIG_SUSPEND = 0 THEN
+            IF StopThread(act) THEN
+              SetState(act, ActState.Stopped);
+            ELSE
+              SetState(act, ActState.Started);
+              retry := TRUE;
+            END;
           ELSE
-            (* try again *)
-            retry := TRUE;
+            SignalThread(act);
+            INC(nLive);
           END;
         END;
         act := act.next;
       END;
       IF NOT retry THEN EXIT END;
-      wait.tv_sec := 0;
-      wait.tv_nsec := WAIT_UNIT;
-      WHILE Utime.nanosleep(wait, remaining) # 0 DO
-        wait := remaining;
-      END;
+      CommonSleep();
     END;
     WHILE nLive &gt; 0 DO
+      &lt;*ASSERT SIG_SUSPEND # 0*&gt;
       WITH r = sem_getvalue(acks) DO &lt;*ASSERT r=0*&gt; END;
       IF acks = nLive THEN EXIT END;
       &lt;*ASSERT acks &lt; nLive*&gt;
@@ -1123,61 +1066,51 @@ PROCEDURE <A NAME="StopWorld"><procedure>StopWorld</procedure></A> () =
         newlySent := 0;
         act := me.next;
         WHILE act # me DO
-          IF act.state = ActState.Stopped THEN
-            (* good *)
-          ELSIF SignalThread(act, ActState.Stopping) THEN
+          state := act.state;
+          &lt;*ASSERT state # ActState.Starting*&gt;
+          IF state # ActState.Stopped THEN
+            SignalThread(act);
             INC(newlySent);
-          ELSE
-            &lt;*ASSERT FALSE*&gt;
           END;
           act := act.next;
         END;
+        WITH r = sem_getvalue(acks) DO &lt;*ASSERT r=0*&gt; END;
         IF newlySent &lt; nLive - acks THEN
           (* how did we manage to lose some? *)
           nLive := acks + newlySent;
         END;
         wait_nsecs := RETRY_INTERVAL;
       ELSE
-        wait.tv_sec := 0;
-        wait.tv_nsec := WAIT_UNIT;
-        WHILE Utime.nanosleep(wait, remaining) # 0 DO
-          wait := remaining;
-        END;
+        CommonSleep();
         DEC(wait_nsecs, WAIT_UNIT);
       END;
     END;
     (* drain semaphore *)
     FOR i := 0 TO nLive-1 DO
-      LOOP
-        WITH r = sem_wait() DO
-          IF r = 0 THEN EXIT END;
-          IF Cerrno.GetErrno() = Uerror.EINTR THEN
-            (*retry*)
-          ELSE
-            &lt;*ASSERT FALSE*&gt;
-          END;
+      WHILE sem_wait() # 0 DO
+        WITH r = Cerrno.GetErrno() DO
+          IF r # Uerror.EINTR THEN DieI(ThisLine(), r) END;
         END;
+        (*retry*)
       END;
     END;
 
     IF DEBUG THEN
       RTIO.PutText(&quot;Stopped from act=&quot;); RTIO.PutAddr(me); RTIO.PutText(&quot;\n&quot;); RTIO.Flush();
+      DumpThreads();
     END;
   END StopWorld;
 
 PROCEDURE <A NAME="StartWorld"><procedure>StartWorld</procedure></A> () =
   (* LL=activeMu *)
-  CONST
-    WAIT_UNIT = 1000000;
-    RETRY_INTERVAL = 10000000;
   VAR
     me := GetActivation();
     act: Activation;
+    state: ActState;
     acks: int;
     nDead, newlySent: INTEGER;
     retry: BOOLEAN;
     wait_nsecs := RETRY_INTERVAL;
-    wait, remaining: Utime.struct_timespec;
   BEGIN
     IF DEBUG THEN
       RTIO.PutText(&quot;Starting from act=&quot;); RTIO.PutAddr(me); RTIO.PutText(&quot;\n&quot;); RTIO.Flush();
@@ -1188,26 +1121,28 @@ PROCEDURE <A NAME="StartWorld"><procedure>StartWorld</procedure></A> () =
       retry := FALSE;
       act := me.next;
       WHILE act # me DO
+        &lt;*ASSERT act.state # ActState.Stopping*&gt;
         IF act.state # ActState.Started THEN
-          IF StartThread(act) THEN
-            (* good *)
-          ELSIF SignalThread(act, ActState.Starting) THEN
-            INC(nDead);
+          SetState(act, ActState.Starting);
+          IF SIG_SUSPEND = 0 THEN
+            IF StartThread(act) THEN
+              SetState(act, ActState.Started);
+            ELSE
+              SetState(act, ActState.Stopped);
+              retry := TRUE;
+            END;
           ELSE
-            (* try again *)
-            retry := TRUE;
+            SignalThread(act);
+            INC(nDead);
           END;
         END;
         act := act.next;
       END;
       IF NOT retry THEN EXIT END;
-      wait.tv_sec := 0;
-      wait.tv_nsec := WAIT_UNIT;
-      WHILE Utime.nanosleep(wait, remaining) # 0 DO
-        wait := remaining;
-      END;
+      CommonSleep();
     END;
     WHILE nDead &gt; 0 DO
+      &lt;*ASSERT SIG_SUSPEND # 0*&gt;
       WITH r = sem_getvalue(acks) DO &lt;*ASSERT r=0*&gt; END;
       IF acks = nDead THEN EXIT END;
       &lt;*ASSERT acks &lt; nDead*&gt;
@@ -1215,66 +1150,58 @@ PROCEDURE <A NAME="StartWorld"><procedure>StartWorld</procedure></A> () =
         newlySent := 0;
         act := me.next;
         WHILE act # me DO
-          IF act.state = ActState.Started THEN
-            (* good *)
-          ELSIF SignalThread(act, ActState.Starting) THEN
+          state := act.state;
+          &lt;*ASSERT state # ActState.Stopping*&gt;
+          IF state # ActState.Started THEN
+            SignalThread(act);
             INC(newlySent);
-          ELSE
-            &lt;*ASSERT FALSE*&gt;
           END;
           act := act.next;
         END;
+        WITH r = sem_getvalue(acks) DO &lt;*ASSERT r=0*&gt; END;
         IF newlySent &lt; nDead - acks THEN
           (* how did we manage to lose some? *)
           nDead := acks + newlySent;
         END;
         wait_nsecs := RETRY_INTERVAL;
       ELSE
-        wait.tv_sec := 0;
-        wait.tv_nsec := WAIT_UNIT;
-        WHILE Utime.nanosleep(wait, remaining) # 0 DO
-          wait := remaining;
-        END;
+        CommonSleep();
         DEC(wait_nsecs, WAIT_UNIT);
       END;
     END;
     (* drain semaphore *)
     FOR i := 0 TO nDead-1 DO
-      LOOP
-        WITH r = sem_wait() DO
-          IF r = 0 THEN EXIT END;
-          IF Cerrno.GetErrno() = Uerror.EINTR THEN
-            (*retry*)
-          ELSE
-            &lt;*ASSERT FALSE*&gt;
-          END;
+      WHILE sem_wait() # 0 DO
+        WITH r = Cerrno.GetErrno() DO
+          IF r # Uerror.EINTR THEN DieI(ThisLine(), r) END;
         END;
+        (*retry*)
       END;
     END;
 
     IF DEBUG THEN
       RTIO.PutText(&quot;Started from act=&quot;); RTIO.PutAddr(me); RTIO.PutText(&quot;\n&quot;); RTIO.Flush();
+      DumpThreads();
     END;
   END StartWorld;
 
-PROCEDURE <A NAME="SignalHandler"><procedure>SignalHandler</procedure></A> (sig: int; &lt;*UNUSED*&gt; sip, uap: ADDRESS) =
+PROCEDURE <A NAME="SignalHandler"><procedure>SignalHandler</procedure></A> (sig: int; &lt;*UNUSED*&gt;info: ADDRESS; context: ADDRESS) =
   VAR
     errno := Cerrno.GetErrno();
-    xx: INTEGER;
     me := GetActivation();
   BEGIN
     &lt;*ASSERT sig = SIG_SUSPEND*&gt;
-    IF me # NIL
-      AND me.state = ActState.Stopping
-      AND me.heapState.inCritical = 0 THEN
-      IF RTMachine.SaveRegsInStack # NIL
-        THEN me.sp := RTMachine.SaveRegsInStack();
-        ELSE me.sp := ADR(xx);
+    IF me.state = ActState.Stopping THEN
+      IF me.heapState.inCritical # 0 THEN
+        me.state := ActState.Started;
+        RETURN;
       END;
       me.state := ActState.Stopped;
+      &lt;*ASSERT me.context = NIL*&gt;
+      me.context := context;
       WITH r = sem_post() DO &lt;*ASSERT r=0*&gt; END;
-      REPEAT EVAL sigsuspend() UNTIL me.state = ActState.Starting;
-      me.sp := NIL;
+      REPEAT sigsuspend() UNTIL me.state = ActState.Starting;
+      me.context := NIL;
       me.state := ActState.Started;
       WITH r = sem_post() DO &lt;*ASSERT r=0*&gt; END;
     END;
@@ -1283,22 +1210,19 @@ PROCEDURE <A NAME="SignalHandler"><procedure>SignalHandler</procedure></A> (sig:
 </PRE>----------------------------------------------------------- misc. stuff ---
 
 <P><PRE>PROCEDURE <A NAME="MyId"><procedure>MyId</procedure></A> (): Id RAISES {} =
-  VAR self := Self();
+  VAR me := GetActivation();
   BEGIN
-    RETURN self.id;
+    IF me = NIL
+      THEN RETURN 0
+      ELSE RETURN me.slot;
+    END;
   END MyId;
 
-PROCEDURE <A NAME="GetMyFPState"><procedure>GetMyFPState</procedure></A> (reader: PROCEDURE(READONLY s: FloatMode.ThreadState)) =
+PROCEDURE <A NAME="MyFPState"><procedure>MyFPState</procedure></A> (): UNTRACED REF FloatMode.ThreadState =
   VAR me := GetActivation();
   BEGIN
-    reader(me.floatState);
-  END GetMyFPState;
-
-PROCEDURE <A NAME="SetMyFPState"><procedure>SetMyFPState</procedure></A> (writer: PROCEDURE(VAR s: FloatMode.ThreadState)) =
-  VAR me := GetActivation();
-  BEGIN
-    writer(me.floatState);
-  END SetMyFPState;
+    RETURN ADR(me.floatState);
+  END MyFPState;
 
 PROCEDURE <A NAME="MyHeapState"><procedure>MyHeapState</procedure></A> (): UNTRACED REF RTHeapRep.ThreadState =
   VAR me := GetActivation();
@@ -1321,11 +1245,16 @@ PROCEDURE <A NAME="EnableSwitching"><procedure>EnableSwitching</procedure></A> (
   BEGIN
     RTError.Msg (ThisFile(), lineno, &quot;Thread client error: &quot;, msg);
   END Die;
+
+PROCEDURE <A NAME="DieI"><procedure>DieI</procedure></A> (lineno: INTEGER; i: INTEGER) =
+  BEGIN
+    RTError.MsgI (ThisFile(), lineno, &quot;Thread client error: &quot;, i);
+  END DieI;
 </PRE>------------------------------------------------------ ShowThread hooks ---
 
 <P><PRE>VAR
   perfW : RTPerfTool.Handle;
-  perfOn: BOOLEAN := FALSE;		 (* LL = perfMu *)
+  perfOn: BOOLEAN := FALSE;     (* LL = perfMu *)
 
 PROCEDURE <A NAME="PerfStart"><procedure>PerfStart</procedure></A> () =
   BEGIN
@@ -1347,144 +1276,214 @@ CONST
 TYPE
   TE = ThreadEvent.Kind;
 
-PROCEDURE <A NAME="PerfChanged"><procedure>PerfChanged</procedure></A> (id: Id; s: State) =
-  VAR e := ThreadEvent.T {kind := TE.Changed, id := id, state := s};
+PROCEDURE <A NAME="PerfChanged"><procedure>PerfChanged</procedure></A> (s: State) =
+  VAR
+    e := ThreadEvent.T {kind := TE.Changed, id := MyId(), state := s};
   BEGIN
-    WITH r = pthread_mutex_lock_perf() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_lock(perfMu) DO &lt;*ASSERT r=0*&gt; END;
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    WITH r = pthread_mutex_unlock_perf() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(perfMu) DO &lt;*ASSERT r=0*&gt; END;
   END PerfChanged;
 
-PROCEDURE <A NAME="PerfDeleted"><procedure>PerfDeleted</procedure></A> (id: Id) =
-  VAR e := ThreadEvent.T {kind := TE.Deleted, id := id};
+PROCEDURE <A NAME="PerfDeleted"><procedure>PerfDeleted</procedure></A> () =
+  VAR
+    e := ThreadEvent.T {kind := TE.Deleted, id := MyId()};
   BEGIN
-    WITH r = pthread_mutex_lock_perf() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_lock(perfMu) DO &lt;*ASSERT r=0*&gt; END;
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    WITH r = pthread_mutex_unlock_perf() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(perfMu) DO &lt;*ASSERT r=0*&gt; END;
   END PerfDeleted;
 
-PROCEDURE <A NAME="PerfRunning"><procedure>PerfRunning</procedure></A> (id: Id) =
-  VAR e := ThreadEvent.T {kind := TE.Running, id := id};
+PROCEDURE <A NAME="PerfRunning"><procedure>PerfRunning</procedure></A> () =
+  VAR
+    e := ThreadEvent.T {kind := TE.Running, id := MyId()};
   BEGIN
-    WITH r = pthread_mutex_lock_perf() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_lock(perfMu) DO &lt;*ASSERT r=0*&gt; END;
       perfOn := RTPerfTool.Send (perfW, ADR (e), EventSize);
-    WITH r = pthread_mutex_unlock_perf() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_mutex_unlock(perfMu) DO &lt;*ASSERT r=0*&gt; END;
   END PerfRunning;
 </PRE>-------------------------------------------------------- Initialization ---
 
-<P><PRE>PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> ()=
+<P><PRE>PROCEDURE <A NAME="InitWithStackBase"><procedure>InitWithStackBase</procedure></A> (stackbase: ADDRESS) =
   VAR
-    xx: INTEGER;
     self: T;
-    me := InitActivations();
+    me: Activation;
   BEGIN
-    IF RTMachine.SuspendThread = NIL OR RTMachine.RestartThread = NIL THEN
-      &lt;*ASSERT RTMachine.SuspendThread = NIL*&gt;
-      &lt;*ASSERT RTMachine.RestartThread = NIL*&gt;
-      SetupHandlers();
-    END;
+    InitC(stackbase);
 
-    (* cm, activeMu, slotMu: initialized statically *)
+    me := InitActivations();
+    me.stackbase := stackbase;
+
     self := CreateT(me);
-    self.id := nextId;  INC(nextId);
+    joinMu := NEW(MUTEX);
 
-    stack_grows_down := ADR(xx) &gt; XX();
-
-    WITH r = pthread_mutex_lock_active() DO &lt;*ASSERT r=0*&gt; END;
-      me.stackbase := ADR(xx);
-    WITH r = pthread_mutex_unlock_active() DO &lt;*ASSERT r=0*&gt; END;
     PerfStart();
-    IF perfOn THEN PerfRunning(self.id) END;
+    IF perfOn THEN PerfRunning() END;
     IF RTParams.IsPresent(&quot;backgroundgc&quot;) THEN
       RTCollectorSRC.StartBackgroundCollection();
     END;
     IF RTParams.IsPresent(&quot;foregroundgc&quot;) THEN
       RTCollectorSRC.StartForegroundCollection();
     END;
+  END InitWithStackBase;
+
+PROCEDURE <A NAME="Init"><procedure>Init</procedure></A> ()=
+  VAR r: INTEGER;
+  BEGIN
+    r := RTProcess.RegisterForkHandlers(AtForkPrepare, AtForkParent, AtForkChild);
+    IF r # 0 THEN DieI(ThisLine(), r) END;
+    InitWithStackBase(ADR(r)); (* not quite accurate but hopefully ok *)
   END Init;
 
-PROCEDURE <A NAME="XX"><procedure>XX</procedure></A> (): ADDRESS =
-  VAR xx: INTEGER;
+VAR locks := ARRAY [0..3] OF pthread_mutex_t{
+			 activeMu, slotsMu, initMu, perfMu};
+
+PROCEDURE <A NAME="PThreadLockMutex"><procedure>PThreadLockMutex</procedure></A>(mutex: pthread_mutex_t; line: INTEGER) =
+  VAR r: INTEGER;
   BEGIN
-    RETURN ADR(xx);
-  END XX;
+	IF mutex # NIL THEN
+      r := pthread_mutex_lock(mutex);
+      IF r # 0 THEN DieI(line, r) END;
+    END;
+  END PThreadLockMutex;
+
+PROCEDURE <A NAME="PThreadUnlockMutex"><procedure>PThreadUnlockMutex</procedure></A>(mutex: pthread_mutex_t; line: INTEGER) =
+  VAR r: INTEGER;
+  BEGIN
+	IF mutex # NIL THEN
+      r := pthread_mutex_unlock(mutex);
+      IF r # 0 THEN DieI(line, r) END;
+    END;
+  END PThreadUnlockMutex;
+
+PROCEDURE <A NAME="AtForkPrepare"><procedure>AtForkPrepare</procedure></A>() =
+  VAR me := GetActivation();
+      act: Activation;
+      cond: Condition;
+  BEGIN
+    Thread.Acquire(joinMu);
+    LockHeap();
+    FOR i := FIRST(locks) TO LAST(locks) DO
+      PThreadLockMutex(locks[i], ThisLine());
+    END;
+    (* Walk activations and lock all threads, conditions.
+     * NOTE: We have initMu, activeMu, so slots
+     * won't change, conditions and mutexes
+     * won't be initialized on-demand.
+     *)
+    act := me;
+    REPEAT
+      PThreadLockMutex(act.mutex, ThisLine());
+      (*PThreadLockMutex(act.waitingOn, ThisLine());*)
+      cond := slots[act.slot].join;
+      IF cond # NIL THEN
+		PThreadLockMutex(cond.mutex, ThisLine());
+      END;
+      act := act.next;
+    UNTIL act = me;
+  END AtForkPrepare;
+
+PROCEDURE <A NAME="AtForkParent"><procedure>AtForkParent</procedure></A>() =
+  VAR me := GetActivation();
+      act: Activation;
+      cond: Condition;
+  BEGIN
+    (* Walk activations and unlock all threads, conditions. *)
+    act := me;
+    REPEAT
+      cond := slots[act.slot].join;
+      IF cond # NIL THEN
+		PThreadUnlockMutex(cond.mutex, ThisLine());
+      END;
+      (*PThreadUnlockMutex(act.waitingOn, ThisLine());*)
+      PThreadUnlockMutex(act.mutex, ThisLine());
+      act := act.next;
+    UNTIL act = me;
+
+    FOR i := LAST(locks) TO FIRST(locks) BY -1 DO
+      PThreadUnlockMutex(locks[i], ThisLine());
+    END;
+    UnlockHeap();
+    Thread.Release(joinMu);
+  END AtForkParent;
+
+PROCEDURE <A NAME="AtForkChild"><procedure>AtForkChild</procedure></A>() =
+  BEGIN
+    AtForkParent();
+    InitWithStackBase(GetActivation().stackbase);
+  END AtForkChild;
 </PRE>------------------------------------------------------------- collector ---
  These procedures provide synchronization primitives for the allocator
    and collector. 
 
 <P><PRE>VAR
-  holder: ADDRESS;
+  holder: pthread_t;
   inCritical := 0;
 
-PROCEDURE <A NAME="LockHeap"><procedure>LockHeap</procedure></A> (VAR me: RTHeapRep.ThreadState) =
+PROCEDURE <A NAME="LockHeap"><procedure>LockHeap</procedure></A> () =
+  VAR self := pthread_self();
   BEGIN
-    IF holder # ADR(me) THEN
-      WITH r = pthread_mutex_lock_heap() DO &lt;*ASSERT r=0*&gt; END;
-      holder := ADR(me);
+    IF pthread_equal(holder, self) = 0 THEN
+      WITH r = pthread_mutex_lock(heapMu) DO &lt;*ASSERT r=0*&gt; END;
+      holder := self;
     END;
     INC(inCritical);
-    INC(me.inCritical);
   END LockHeap;
 
-PROCEDURE <A NAME="UnlockHeap"><procedure>UnlockHeap</procedure></A> (VAR me: RTHeapRep.ThreadState) =
+PROCEDURE <A NAME="UnlockHeap"><procedure>UnlockHeap</procedure></A> () =
   BEGIN
-    &lt;*ASSERT holder = ADR(me)*&gt;
-    DEC(me.inCritical);
+    &lt;*ASSERT pthread_equal(holder, pthread_self()) # 0*&gt;
     DEC(inCritical);
     IF inCritical = 0 THEN
       holder := NIL;
-      WITH r = pthread_mutex_unlock_heap() DO &lt;*ASSERT r=0*&gt; END;
+      WITH r = pthread_mutex_unlock(heapMu) DO &lt;*ASSERT r=0*&gt; END;
     END;
   END UnlockHeap;
 
-PROCEDURE <A NAME="WaitHeap"><procedure>WaitHeap</procedure></A> (VAR me: RTHeapRep.ThreadState) =
+PROCEDURE <A NAME="WaitHeap"><procedure>WaitHeap</procedure></A> () =
+  VAR self := pthread_self();
   BEGIN
-    &lt;*ASSERT holder = ADR(me)*&gt;
-    DEC(me.inCritical);
+    &lt;*ASSERT pthread_equal(holder, self) # 0*&gt;
     DEC(inCritical);
     &lt;*ASSERT inCritical = 0*&gt;
-    WITH r = pthread_cond_wait_heap() DO &lt;*ASSERT r=0*&gt; END;
-    holder := ADR(me);
+    WITH r = pthread_cond_wait(heapCond, heapMu) DO &lt;*ASSERT r=0*&gt; END;
+    holder := self;
     &lt;*ASSERT inCritical = 0*&gt;
     INC(inCritical);
-    INC(me.inCritical);
   END WaitHeap;
 
 PROCEDURE <A NAME="BroadcastHeap"><procedure>BroadcastHeap</procedure></A> () =
   BEGIN
-    WITH r = pthread_cond_broadcast_heap() DO &lt;*ASSERT r=0*&gt; END;
+    WITH r = pthread_cond_broadcast(heapCond) DO &lt;*ASSERT r=0*&gt; END;
   END BroadcastHeap;
 </PRE>--------------------------------------------- exception handling support --
 
 <P><PRE>PROCEDURE <A NAME="GetCurrentHandlers"><procedure>GetCurrentHandlers</procedure></A> (): ADDRESS =
+  VAR me := GetActivation();
   BEGIN
-    WITH me = GetActivation() DO
-      RETURN me.frame;
-    END;
+    RETURN me.frame;
   END GetCurrentHandlers;
 
 PROCEDURE <A NAME="SetCurrentHandlers"><procedure>SetCurrentHandlers</procedure></A> (h: ADDRESS) =
+  VAR me := GetActivation();
   BEGIN
-    WITH me = GetActivation() DO
-      me.frame := h;
-    END;
+    me.frame := h;
   END SetCurrentHandlers;
 </PRE>RTHooks.PushEFrame
 <PRE>PROCEDURE <A NAME="PushEFrame"><procedure>PushEFrame</procedure></A> (frame: ADDRESS) =
   TYPE Frame = UNTRACED REF RECORD next: ADDRESS END;
-  VAR f: Frame := frame;
+  VAR
+    me := GetActivation();
+    f: Frame := frame;
   BEGIN
-    WITH me = GetActivation() DO
-      f.next := me.frame;
-      me.frame := f;
-    END;
+    f.next := me.frame;
+    me.frame := f;
   END PushEFrame;
 </PRE>RTHooks.PopEFrame
 <PRE>PROCEDURE <A NAME="PopEFrame"><procedure>PopEFrame</procedure></A> (frame: ADDRESS) =
+  VAR me := GetActivation();
   BEGIN
-    WITH me = GetActivation() DO
-      me.frame := frame;
-    END;
+    me.frame := frame;
   END PopEFrame;
 
 VAR DEBUG := RTParams.IsPresent(&quot;debugthreads&quot;);
@@ -1494,31 +1493,31 @@ END ThreadPThread.
 </PRE>
 </inModule>
 <HR>
-<A NAME="x1">interface RTMachine is in:
+<A NAME="x1">interface ThreadF is in:
 </A><UL>
-<LI><A HREF="../../runtime/AMD64_LINUX/RTMachine.i3.html#0TOP0">m3core/src/runtime/AMD64_LINUX/RTMachine.i3</A>
-<LI><A HREF="../../runtime/common/RTMachine.i3.html#0TOP0">m3core/src/runtime/common/RTMachine.i3</A>
+<LI><A HREF="../Common/ThreadF.i3.html#0TOP0">m3core/src/thread/Common/ThreadF.i3</A>
+<LI><A HREF="ThreadF.i3.html#0TOP0">m3core/src/thread/PTHREAD/ThreadF.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x2">interface Unix is in:
+<A NAME="x2">interface RTThread is in:
+</A><UL>
+<LI><A HREF="../../runtime/POSIX/RTThread.i3.html#0TOP0">m3core/src/runtime/POSIX/RTThread.i3</A>
+<LI><A HREF="../../runtime/common/RTThread.i3.html#0TOP0">m3core/src/runtime/common/RTThread.i3</A>
+</UL>
+<P>
+<HR>
+<A NAME="x3">interface Unix is in:
 </A><UL>
 <LI><A HREF="../../unix/Common/Unix.i3.html#0TOP0">m3core/src/unix/Common/Unix.i3</A>
 <LI><A HREF="../../unix/linux-common/Unix.i3.html#0TOP0">m3core/src/unix/linux-common/Unix.i3</A>
 </UL>
 <P>
 <HR>
-<A NAME="x3">interface Utime is in:
+<A NAME="x4">interface Utime is in:
 </A><UL>
 <LI><A HREF="../../unix/Common/Utime.i3.html#0TOP0">m3core/src/unix/Common/Utime.i3</A>
 <LI><A HREF="../../unix/linux-common/Utime.i3.html#0TOP0">m3core/src/unix/linux-common/Utime.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x4">interface Upthread is in:
-</A><UL>
-<LI><A HREF="../../unix/Common/Upthread.i3.html#0TOP0">m3core/src/unix/Common/Upthread.i3</A>
-<LI><A HREF="../../unix/linux-common/Upthread.i3.html#0TOP0">m3core/src/unix/linux-common/Upthread.i3</A>
 </UL>
 <P>
 <HR>

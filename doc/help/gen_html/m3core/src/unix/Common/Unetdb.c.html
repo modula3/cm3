@@ -7,7 +7,14 @@ m3core/src/unix/Common/Unetdb.c</H2><HR>
 /* All rights reserved.                                       */
 /* See the file COPYRIGHT for a full description.             */
 
-#include &quot;m3unix.h&quot;
+#ifdef _MSC_VER
+#undef _DLL
+#ifndef _MT
+#define _MT
+#endif
+#endif
+
+#include &quot;m3core.h&quot;
 
 #ifdef __cplusplus
 extern &quot;C&quot; {

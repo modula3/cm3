@@ -39,7 +39,8 @@
     PPC_DARWIN, BSDI4, NT386GNU, PPC_LINUX, NetBSD2_i386,
     AMD64_DARWIN, AMD64_LINUX, SPARC32_LINUX, SPARC64_LINUX,
     SPARC64_OPENBSD, PPC32_OPENBSD, MIPS64_OPENBSD, SPARC64_SOLARIS,
-    I386_OPENBSD, AMD64_FREEBSD, PA32_HPUX, PA64_HPUX, ARM_DARWIN, Undefined
+    I386_OPENBSD, AMD64_FREEBSD, PA32_HPUX, PA64_HPUX, ARM_DARWIN,
+    I386_INTERIX, AMD64_NETBSD, AMD64_OPENBSD, Undefined
   };
 
 CONST
@@ -92,7 +93,10 @@ CONST
     (* 45 *) &quot;AMD64_FREEBSD&quot;,
     (* 46 *) &quot;PA32_HPUX&quot;,
     (* 47 *) &quot;PA64_HPUX&quot;,
-    (* 48 *) &quot;ARM_DARWIN&quot;
+    (* 48 *) &quot;ARM_DARWIN&quot;,
+    (* 49 *) &quot;I386_INTERIX&quot;,
+    (* 50 *) &quot;AMD64_NETBSD&quot;,
+    (* 51 *) &quot;AMD64_OPENBSD&quot;
   };
 
 CONST
@@ -196,6 +200,8 @@ CONST
   END;
   IBytes = ARRAY [0..7] OF IByte;
   IByte = BITS 8 FOR [0..16_ff];
+
+PROCEDURE <A HREF="Target.m3.html#TargetIntToDiagnosticText">TargetIntToDiagnosticText</A>(a: Int): TEXT;
 
 TYPE
   Int_type = RECORD

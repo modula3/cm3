@@ -201,7 +201,7 @@ PROCEDURE <A NAME="BuildNoEof"><procedure>BuildNoEof</procedure></A>(&lt;*UNUSED
       max:=0;
       tree:=Read1(g, gram, base, (*in-out*)max, (*out*)failed);
       IF failed#NIL THEN
-	Reset(g, base+max);
+        Reset(g, base+max);
         Error(g, failed);
         SynScan.SyntaxMsg(g.sc);
         RAISE Fail;
@@ -225,8 +225,8 @@ PROCEDURE <A NAME="BuildNoEof"><procedure>BuildNoEof</procedure></A>(&lt;*UNUSED
       swr := SynScan.GetWriter(g.sc);
       SynScan.CurrentLocationInfo(g.sc, (*out*)info);
       SynWr.Text(swr, &quot;Parsing &quot; &amp; g.failedName &amp; &quot; &quot;, loud:=TRUE);
-	SynLocation.PrintLocation(swr, failed.location);
-	SynWr.Char(swr, '\n', loud:=TRUE);
+      SynLocation.PrintLocation(swr, failed.location);
+      SynWr.Char(swr, '\n', loud:=TRUE);
       SynWr.Flush(swr, loud:=TRUE);
     END Error;
 
@@ -319,7 +319,7 @@ PROCEDURE <A NAME="Lookup"><procedure>Lookup</procedure></A>(g: T; name: TEXT; V
   BEGIN
     IF args = NIL THEN args := noArgs END;
     IF g.env.table.get(name, (*VAR OUT*) value) THEN
-	SynScan.SyntaxMsg(g.sc, &quot;Duplicated non-terminal: &quot;&amp;name);
+        SynScan.SyntaxMsg(g.sc, &quot;Duplicated non-terminal: &quot;&amp;name);
         RAISE Fail;
     END;
     newParGram := NEW(ParGram,
@@ -375,7 +375,7 @@ PROCEDURE <A NAME="Lookup"><procedure>Lookup</procedure></A>(g: T; name: TEXT; V
           &amp; Fmt.Int(iterPos));
         RAISE Fail;
       END;
-	node.iter :=
+        node.iter :=
            NEW(Choice, choice:=
              NEW(GrammarList, first:=node.iter, rest:=
                                        NEW(GrammarList, first:=grammar, rest:=
@@ -392,9 +392,9 @@ PROCEDURE <A NAME="Lookup"><procedure>Lookup</procedure></A>(g: T; name: TEXT; V
      should be called, followed by either &quot;SynScan.Reset()&quot; or
      &quot;Error(failed); SynScan.SyntaxMsg(); RAISE Fail&quot; *)
   PROCEDURE <A NAME="Read1"><procedure>Read1</procedure></A>(g: T; gram: Grammar;
-	base: INTEGER; VAR (*in-out*) max: INTEGER;
-    	VAR (*out*) failed: Grammar; name: TEXT:=NIL): Tree
-    	RAISES {Fail, SynScan.NoReader} =
+        base: INTEGER; VAR (*in-out*) max: INTEGER;
+        VAR (*out*) failed: Grammar; name: TEXT:=NIL): Tree
+        RAISES {Fail, SynScan.NoReader} =
     VAR tree: Tree;
     BEGIN
       IF name = NIL THEN
@@ -405,31 +405,32 @@ PROCEDURE <A NAME="Lookup"><procedure>Lookup</procedure></A>(g: T; name: TEXT; V
         END;
       END;
       TRY
-	(* base is in-out so the stack can be cleaned up properly
-	   even on Fail exceptions occurring during parsing. *)
-	tree:=Read0(g, gram, (*in-out*)base, 0, (*in-out*)max,
-	  (*out*)failed, name);
+        (* base is in-out so the stack can be cleaned up properly
+           even on Fail exceptions occurring during parsing. *)
+        tree:=Read0(g, gram, (*in-out*)base, 0, (*in-out*)max,
+          (*out*)failed, name);
       EXCEPT SynScan.Fail, Fail =&gt;
-	Reset(g, base+max);
+        Reset(g, base+max);
         RAISE Fail;
       END;
       RETURN tree;
     END Read1;
 
   PROCEDURE <A NAME="Read0"><procedure>Read0</procedure></A>(g: T; gram: Grammar;
-	VAR (*in-out*) base: INTEGER;
-	  (* Base of the current stack frame *)
-	minWrite: INTEGER;
-	  (* Min writable index in the stack frame, for Choose and Iter *)
-	VAR (*in-out*) max: INTEGER;
+        VAR (*in-out*) base: INTEGER;
+          (* Base of the current stack frame *)
+        minWrite: INTEGER;
+          (* Min writable index in the stack frame, for Choose and Iter *)
+        VAR (*in-out*) max: INTEGER;
           (* Max index used so far in the stack frame *)
-    	VAR (*out*) failed: Grammar; name: TEXT:=NIL): Tree
-    	RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
+        VAR (*out*) failed: Grammar; name: TEXT:=NIL): Tree
+            RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
   (*  A NIL result means that a client Build did not care about
       generating a parse grammar. *)
   BEGIN
     TYPECASE gram OF
     | NonTerminal(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           grammar: Grammar;
           args: Args;
@@ -460,104 +461,140 @@ PROCEDURE <A NAME="Lookup"><procedure>Lookup</procedure></A>(g: T; name: TEXT; V
           base := saveBase; max := saveMax;
           IF failed#NIL THEN RETURN NIL; END;
           RETURN tree;
+        END F;
+        BEGIN
+          RETURN F();
         END;
     | Storage(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           tree: Tree;
         BEGIN
-	  tree :=
-	    Read0(g, node.item, (*in-out*)base, 0, (*in-out*)max,
-	      (*out*)failed, name);
-	  IF failed#NIL THEN RETURN NIL END;
-	  IF node.position&lt;0 THEN
-	    Fault(g, &quot;Invalid index: _&quot; &amp; Fmt.Int(node.position));
-	  END;
-	  IF node.position&lt;minWrite THEN
-	    Fault(g, &quot;Invalid index: _&quot; &amp; Fmt.Int(node.position) &amp;
-	      &quot; is too small to be storeable within this&quot; &amp;
-	      &quot; choice or iteration branch&quot;);
-	  END;
-	  IF g.stack[base+node.position] # NIL THEN
-	    Fault(g, &quot;Redefinition of: _&quot; &amp; Fmt.Int(node.position));
-	  END;
-	  g.stack[base+node.position] := tree;
-	  max := MAX(max, node.position+1);
-	  RETURN NIL;
-	END;
+          tree :=
+            Read0(g, node.item, (*in-out*)base, 0, (*in-out*)max,
+              (*out*)failed, name);
+          IF failed#NIL THEN RETURN NIL END;
+          IF node.position&lt;0 THEN
+            Fault(g, &quot;Invalid index: _&quot; &amp; Fmt.Int(node.position));
+          END;
+          IF node.position&lt;minWrite THEN
+            Fault(g, &quot;Invalid index: _&quot; &amp; Fmt.Int(node.position) &amp;
+              &quot; is too small to be storeable within this&quot; &amp;
+              &quot; choice or iteration branch&quot;);
+          END;
+          IF g.stack[base+node.position] # NIL THEN
+            Fault(g, &quot;Redefinition of: _&quot; &amp; Fmt.Int(node.position));
+          END;
+          g.stack[base+node.position] := tree;
+          max := MAX(max, node.position+1);
+          RETURN NIL;
+        END F;
+        BEGIN
+          RETURN F();
+        END;
      | Action(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
-	  SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
-	  EVAL
-	    Read0(g, node.grammar, (*in-out*)base, 0, (*in-out*)max,
-	      (*out*)failed, name);
-	  IF failed#NIL THEN RETURN NIL END;
-	  RETURN node.Build(node, g, base, (*in*)locInfo);
-	END;
+          SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
+          EVAL
+            Read0(g, node.grammar, (*in-out*)base, 0, (*in-out*)max,
+              (*out*)failed, name);
+          IF failed#NIL THEN RETURN NIL END;
+          RETURN node.Build(node, g, base, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
+        END;
      | GivenKeyword(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
-	  SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
-	  IF SynScan.HaveTokenKey(g.sc, node.key) THEN failed:=NIL
-	  ELSE failed:=gram; g.failedName:=name; RETURN NIL;
-	  END;
-	  RETURN node.Build(node, g, (*in*)locInfo);
-	END;
+          SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
+          IF SynScan.HaveTokenKey(g.sc, node.key) THEN failed:=NIL
+          ELSE failed:=gram; g.failedName:=name; RETURN NIL;
+          END;
+          RETURN node.Build(node, g, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
+        END;
      | GivenIdentifier(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
-	  SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
-	  IF SynScan.HaveTokenIde(g.sc, node.ide) THEN failed:=NIL
-	  ELSE failed:=gram; g.failedName:=name; RETURN NIL;
-	  END;
-	  RETURN node.Build(node, g, (*in*)locInfo);
-	END;
+          SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
+          IF SynScan.HaveTokenIde(g.sc, node.ide) THEN failed:=NIL
+          ELSE failed:=gram; g.failedName:=name; RETURN NIL;
+          END;
+          RETURN node.Build(node, g, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
+        END;
      | GivenName(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
-	  SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
-	  IF SynScan.HaveTokenName(g.sc, node.text) THEN failed:=NIL
-	  ELSE failed:=gram; g.failedName:=name; RETURN NIL;
-	  END;
-	  RETURN node.Build(node, g, (*in*)locInfo);
-	END;
+          SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
+          IF SynScan.HaveTokenName(g.sc, node.text) THEN failed:=NIL
+          ELSE failed:=gram; g.failedName:=name; RETURN NIL;
+          END;
+          RETURN node.Build(node, g, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
+        END;
      | GivenDelimiter(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
-	  SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
-	  IF SynScan.HaveTokenDelim(g.sc, node.delim) THEN failed:=NIL
-	  ELSE failed:=gram; g.failedName:=name; RETURN NIL;
-	  END;
-	  RETURN node.Build(node, g, (*in*)locInfo);
-	END;
+          SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
+          IF SynScan.HaveTokenDelim(g.sc, node.delim) THEN failed:=NIL
+          ELSE failed:=gram; g.failedName:=name; RETURN NIL;
+          END;
+          RETURN node.Build(node, g, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
+        END;
     | Identifier(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           ide: TEXT;
           locInfo: SynLocation.Info;
         BEGIN
-	  SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
-	  IF SynScan.GetTokenIde(g.sc, (*out*)ide) THEN failed:=NIL
-	  ELSE failed:=gram; g.failedName:=name; RETURN NIL;
-	  END;
-	  RETURN node.Build(node, g, ide, (*in*)locInfo);
-	END;
+          SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
+          IF SynScan.GetTokenIde(g.sc, (*out*)ide) THEN failed:=NIL
+          ELSE failed:=gram; g.failedName:=name; RETURN NIL;
+          END;
+          RETURN node.Build(node, g, ide, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
+        END;
     | Name(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           text: TEXT;
           locInfo: SynLocation.Info;
         BEGIN
-	  SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
-	  IF SynScan.GetTokenName(g.sc, (*out*)text) THEN failed:=NIL
-	  ELSE failed:=gram; g.failedName:=name; RETURN NIL;
-	  END;
-	  RETURN node.Build(node, g, text, (*in*)locInfo);
-	END;
+          SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
+          IF SynScan.GetTokenName(g.sc, (*out*)text) THEN failed:=NIL
+          ELSE failed:=gram; g.failedName:=name; RETURN NIL;
+          END;
+          RETURN node.Build(node, g, text, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
+        END;
      | Eof(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           locInfo: SynLocation.Info;
         BEGIN
@@ -566,52 +603,72 @@ PROCEDURE <A NAME="Lookup"><procedure>Lookup</procedure></A>(g: T; name: TEXT; V
           ELSE failed:=gram; g.failedName:=name; RETURN NIL;
           END;
           RETURN node.Build(node, g, (*in*) locInfo);
+        END F;
+        BEGIN
+          RETURN F();
         END;
      | QuotedChar(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           char: CHAR;
           locInfo: SynLocation.Info;
         BEGIN
-	  SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
-	  IF SynScan.GetTokenChar(g.sc, (*out*)char) THEN failed:=NIL
-	  ELSE failed:=gram; g.failedName:=name; RETURN NIL;
-	  END;
-	  RETURN node.Build(node, g, char, (*in*)locInfo);
-	END;
+          SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
+          IF SynScan.GetTokenChar(g.sc, (*out*)char) THEN failed:=NIL
+          ELSE failed:=gram; g.failedName:=name; RETURN NIL;
+          END;
+          RETURN node.Build(node, g, char, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
+        END;
      | Integer(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           int: INTEGER;
           locInfo: SynLocation.Info;
         BEGIN
-	  SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
-	  IF SynScan.GetTokenInt(g.sc, (*out*)int) THEN failed:=NIL
-	  ELSE failed:=gram; g.failedName:=name; RETURN NIL;
-	  END;
-	  RETURN node.Build(node, g, int, (*in*)locInfo);
-	END;
+          SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
+          IF SynScan.GetTokenInt(g.sc, (*out*)int) THEN failed:=NIL
+          ELSE failed:=gram; g.failedName:=name; RETURN NIL;
+          END;
+          RETURN node.Build(node, g, int, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
+        END;
      | Real(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           real: LONGREAL;
           locInfo: SynLocation.Info;
         BEGIN
-	  SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
-	  IF SynScan.GetTokenReal(g.sc, (*out*)real) THEN failed:=NIL
-	  ELSE failed:=gram; g.failedName:=name; RETURN NIL;
-	  END;
-	  RETURN node.Build(node, g, real, (*in*)locInfo);
-	END;
+          SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
+          IF SynScan.GetTokenReal(g.sc, (*out*)real) THEN failed:=NIL
+          ELSE failed:=gram; g.failedName:=name; RETURN NIL;
+          END;
+          RETURN node.Build(node, g, real, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
+        END;
      | QuotedString(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           string: TEXT;
           locInfo: SynLocation.Info;
         BEGIN
-	  SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
-	  IF SynScan.GetTokenString(g.sc, (*out*)string) THEN failed:=NIL
-	  ELSE failed:=gram; g.failedName:=name; RETURN NIL;
-	  END;
-	  RETURN node.Build(node, g, string, (*in*)locInfo);
-	END;
+          SynScan.CurrentLocationInfo(g.sc, (*out*)locInfo);
+          IF SynScan.GetTokenString(g.sc, (*out*)string) THEN failed:=NIL
+          ELSE failed:=gram; g.failedName:=name; RETURN NIL;
+          END;
+          RETURN node.Build(node, g, string, (*in*)locInfo);
+        END F;
+        BEGIN
+          RETURN F();
+        END;
      | Sequence(node) =&gt;
+        PROCEDURE F() RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           gramList: GrammarList;
         BEGIN
@@ -620,84 +677,95 @@ PROCEDURE <A NAME="Lookup"><procedure>Lookup</procedure></A>(g: T; name: TEXT; V
           LOOP
             IF gramList=NIL THEN EXIT END;
             EVAL
-	      Read0(g, gramList.first, (*in-out*)base, 0, (*in-out*)max,
-	        (*out*)failed, name);
-	    IF failed#NIL THEN EXIT END;
-	    gramList := gramList.rest;
+              Read0(g, gramList.first, (*in-out*)base, 0, (*in-out*)max,
+                (*out*)failed, name);
+            IF failed#NIL THEN EXIT END;
+            gramList := gramList.rest;
           END;
+        END F;
+        BEGIN
+          F();
+          RETURN NIL;
         END;
-	RETURN NIL;
     | Choice(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           tree: Tree;
           list: GrammarList;
           scanPoint: INTEGER;
           saveMax: INTEGER;
         BEGIN
-	  list := node.choice;
-	  saveMax := max;
-	  LOOP
-	    IF list=NIL THEN
-	      failed := gram; g.failedName:=name; RETURN NIL;
-	    END;
-	    scanPoint := SynScan.ScanPoint(g.sc);
-	    tree :=
-	      Read0(g, list.first, (*in-out*) base, saveMax, (*in-out*) max,
-	        (*out*) failed, name);
-	    FOR i:=saveMax TO max-1 DO g.stack[base+i]:=NIL END;
-	    max := saveMax;
-	    IF failed=NIL THEN RETURN tree END;
-	    IF failed#NIL AND scanPoint#SynScan.ScanPoint(g.sc)
-	    THEN RETURN NIL
-	    END;
-	    list := list.rest;
-	  END;
-	END;
+          list := node.choice;
+          saveMax := max;
+          LOOP
+            IF list=NIL THEN
+              failed := gram; g.failedName:=name; RETURN NIL;
+            END;
+            scanPoint := SynScan.ScanPoint(g.sc);
+            tree :=
+              Read0(g, list.first, (*in-out*) base, saveMax, (*in-out*) max,
+                (*out*) failed, name);
+            FOR i:=saveMax TO max-1 DO g.stack[base+i]:=NIL END;
+            max := saveMax;
+            IF failed=NIL THEN RETURN tree END;
+            IF failed#NIL AND scanPoint#SynScan.ScanPoint(g.sc)
+            THEN RETURN NIL
+            END;
+            list := list.rest;
+          END;
+        END F;
+        BEGIN
+          RETURN F();
+        END;
     | Iter(node) =&gt;
+        PROCEDURE F(): Tree RAISES {Fail, SynScan.Fail, SynScan.NoReader} =
         VAR
           tree: Tree;
           scanPoint: INTEGER;
           saveMax: INTEGER;
         BEGIN
           tree :=
-	    Read0(g, node.base, (*in-out*)base, 0, (*in-out*)max,
-	      (*out*) failed, name);
-	  IF failed#NIL THEN RETURN NIL END;
-	  IF node.accum THEN
-	    IF node.accumPosition&lt;0 THEN
-	      Fault(g, &quot;Invalid index: _&quot; &amp; Fmt.Int(node.accumPosition));
-	    END;
-	    IF node.accumPosition&lt;minWrite THEN
-	      Fault(g, &quot;Invalid index: _&quot; &amp; Fmt.Int(node.accumPosition) &amp;
-	        &quot; is too small to be storeable within this&quot; &amp;
-	        &quot; choice or iteration branch&quot;);
-	    END;
-	    g.stack[base+node.accumPosition] := tree;
-	    max := MAX(max, node.accumPosition+1);
-	  END;
-	  saveMax := max;
-	  LOOP
-	    scanPoint := SynScan.ScanPoint(g.sc);
-	    tree :=
-	      Read0(g, node.iter, (*in-out*)base, saveMax, (*in-out*)max,
-	        (*out*)failed, name);
-	    FOR i:=saveMax TO max-1 DO g.stack[base+i]:=NIL END;
-	    max := saveMax;
-	    IF failed#NIL AND scanPoint#SynScan.ScanPoint(g.sc)
-	    THEN RETURN NIL
-	    END;
-	    IF failed#NIL THEN
-	      failed:=NIL;
-	      IF node.accum THEN
-	        RETURN g.stack[base+node.accumPosition];
-	      ELSE RETURN NIL;
-	      END;
-	    END;
-	    IF node.accum THEN
-	      g.stack[base+node.accumPosition] := tree;
-	    END;
-	  END;
-	END;
+            Read0(g, node.base, (*in-out*)base, 0, (*in-out*)max,
+              (*out*) failed, name);
+          IF failed#NIL THEN RETURN NIL END;
+          IF node.accum THEN
+            IF node.accumPosition&lt;0 THEN
+              Fault(g, &quot;Invalid index: _&quot; &amp; Fmt.Int(node.accumPosition));
+            END;
+            IF node.accumPosition&lt;minWrite THEN
+              Fault(g, &quot;Invalid index: _&quot; &amp; Fmt.Int(node.accumPosition) &amp;
+                &quot; is too small to be storeable within this&quot; &amp;
+                &quot; choice or iteration branch&quot;);
+            END;
+            g.stack[base+node.accumPosition] := tree;
+            max := MAX(max, node.accumPosition+1);
+          END;
+          saveMax := max;
+          LOOP
+            scanPoint := SynScan.ScanPoint(g.sc);
+            tree :=
+              Read0(g, node.iter, (*in-out*)base, saveMax, (*in-out*)max,
+                (*out*)failed, name);
+            FOR i:=saveMax TO max-1 DO g.stack[base+i]:=NIL END;
+            max := saveMax;
+            IF failed#NIL AND scanPoint#SynScan.ScanPoint(g.sc)
+            THEN RETURN NIL
+            END;
+            IF failed#NIL THEN
+              failed:=NIL;
+              IF node.accum THEN
+                RETURN g.stack[base+node.accumPosition];
+              ELSE RETURN NIL;
+              END;
+            END;
+            IF node.accum THEN
+              g.stack[base+node.accumPosition] := tree;
+            END;
+          END;
+        END F;
+        BEGIN
+          RETURN F();
+        END;
     ELSE
       Fault(g, &quot;SynParse.Read0&quot;);
       &lt;*ASSERT FALSE*&gt;
@@ -735,10 +803,10 @@ END SynParse.
     END;
     TYPECASE g.Lookup(name,args) OF
     | Choice(node) =&gt;
-	IF grammar # node.choice.rest.first THEN
+        IF grammar # node.choice.rest.first THEN
           SynScan.ErrorMsg(g.sc, &quot;GrammarEnv.UndoExtend: bad undo: &quot;&amp;name);
           RAISE Fail;
-	END;
+        END;
         EVAL
           g.env.table.put(name,
                         NEW(ParGram,
@@ -760,18 +828,18 @@ END SynParse.
   BEGIN
     TYPECASE g.Lookup(name,args) OF
     | Iter(iterNode) =&gt;
-	TYPECASE iterNode.iter OF
-	| Choice(choiceNode) =&gt;
-	    IF grammar # choiceNode.choice.rest.first THEN
+        TYPECASE iterNode.iter OF
+        | Choice(choiceNode) =&gt;
+            IF grammar # choiceNode.choice.rest.first THEN
               SynScan.ErrorMsg(g.sc,
                                &quot;GrammarEnv.UndoExtendIter: bad undo: &quot;&amp;name);
               RAISE Fail;
-	    END;
+            END;
             iterNode.iter:=choiceNode.choice.first;
-	ELSE
+        ELSE
           SynScan.ErrorMsg(g.sc, &quot;GrammarEnv.UndoExtendIter failed: &quot;&amp;name);
           RAISE Fail;
-	END;
+        END;
     ELSE
       SynScan.ErrorMsg(g.sc, &quot;GrammarEnv.UndoExtendIter failed: &quot;&amp;name);
       RAISE Fail;

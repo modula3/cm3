@@ -179,7 +179,7 @@ PROCEDURE <A NAME="PrepArgs"><procedure>PrepArgs</procedure></A> (t: T) =
     END;
   END PrepArgs;
 
-PROCEDURE <A NAME="NoLValue"><procedure>NoLValue</procedure></A> (&lt;*UNUSED*&gt; t: T; &lt;*UNUSED*&gt; lhs: BOOLEAN) =
+PROCEDURE <A NAME="NoLValue"><procedure>NoLValue</procedure></A> (&lt;*UNUSED*&gt; t: T; &lt;*UNUSED*&gt; traced: BOOLEAN) =
   BEGIN
     &lt;*ASSERT FALSE*&gt;
   END NoLValue;
@@ -326,14 +326,14 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: T) =
     p.methods.compiler (p);
   END Compile;
 
-PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: T; lhs: BOOLEAN) =
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: T; traced: BOOLEAN) =
   BEGIN
-    p.methods.prepLV (p, lhs);
+    p.methods.prepLV (p, traced);
   END PrepLV;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: T; &lt;*UNUSED*&gt; lhs: BOOLEAN) =
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: T; traced: BOOLEAN) =
   BEGIN
-    p.methods.compilerLV (p, lhs := FALSE);
+    p.methods.compilerLV (p, traced);
   END CompileLV;
 
 PROCEDURE <A NAME="PrepBR"><procedure>PrepBR</procedure></A> (p: T;  true, false: CG.Label;  freq: CG.Frequency) =

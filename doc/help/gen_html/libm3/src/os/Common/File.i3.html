@@ -27,7 +27,7 @@
 IMPORT <A HREF="../../atom/Atom.i3.html">Atom</A>, <A HREF="OSError.i3.html">OSError</A>, <A HREF="../../../../m3core/src/time/Common/Time.i3.html">Time</A>;
 
 TYPE
-  T &lt;: Public;
+  <A HREF="../POSIX/FilePosix.m3.html#T">T</A> &lt;: Public;
   Public = OBJECT METHODS
     read(VAR (*OUT*) b: ARRAY OF Byte;
       mayBlock: BOOLEAN := TRUE): INTEGER RAISES {OSError.E};
@@ -39,7 +39,7 @@ TYPE
   Status = RECORD
     type: Type;
     modificationTime: Time.T;
-    size: CARDINAL
+    size: [0L..LAST(LONGINT)];
   END;
   Type = Atom.T;
 

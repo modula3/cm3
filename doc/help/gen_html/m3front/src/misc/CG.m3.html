@@ -925,7 +925,8 @@ PROCEDURE <A NAME="AdvanceInit"><procedure>AdvanceInit</procedure></A> (o: Offse
   VAR
     n_bytes := (o - init_pc) DIV Target.Byte;
     tmp, new_bits: Target.Int;
-    size, n_bits: CARDINAL;
+    size: CARDINAL;
+    n_bits: INTEGER;
     t: Type;
     ZeroI := Target.Int{Target.Integer.bytes, Target.IBytes{0,..}};
   BEGIN
@@ -941,7 +942,7 @@ PROCEDURE <A NAME="AdvanceInit"><procedure>AdvanceInit</procedure></A> (o: Offse
         EVAL FindInitType (n_bytes, init_pc, t);
         size := TargetMap.CG_Size[t];
         n_bits := Target.Integer.size - size;
-        IF (n_bits = 0) THEN
+        IF (n_bits &lt;= 0) THEN
           cg.init_int (init_pc DIV Target.Byte, init_bits, t);
           init_bits := ZeroI;
         ELSIF Target.Little_endian
@@ -970,7 +971,7 @@ PROCEDURE <A NAME="FindInitType"><procedure>FindInitType</procedure></A> (n_byte
     FOR i := LAST (TargetMap.Integer_types)
           TO FIRST (TargetMap.Integer_types) BY -1 DO
       WITH z = TargetMap.Integer_types[i] DO
-        IF (z.bytes &lt;= n_bytes) AND (z.size &lt;= Target.Integer.size)
+        IF (z.bytes &lt;= n_bytes)
           AND (offset MOD z.align = 0) THEN
           t := z.cg_type;
           RETURN TRUE;
@@ -2656,19 +2657,44 @@ PROCEDURE <A NAME="DumpComment"><procedure>DumpComment</procedure></A> (x: Comme
   END DumpComment;
 </PRE>--------------------------------------------------------------- atomics ---
 
-<P><PRE>PROCEDURE <A NAME="Cas"><procedure>Cas</procedure></A> (t: MType) =
+<P><PRE>PROCEDURE <A NAME="Store_ordered"><procedure>Store_ordered</procedure></A> (t: MType;  order: MemoryOrder) =
   BEGIN
-    cg.val_compare_and_swap (t);
-    SPop (3, &quot;CAS&quot;);
-    SPush (t);
-  END Cas;
+    cg.store_ordered (StackType[t], t, order);
+    SPop (2, &quot;Store_ordered&quot;);
+  END Store_ordered;
 
-PROCEDURE <A NAME="CasP"><procedure>CasP</procedure></A> (t: MType;  u: IType) =
+PROCEDURE <A NAME="Load_ordered"><procedure>Load_ordered</procedure></A> (t: MType;  order: MemoryOrder) =
   BEGIN
-    cg.bool_compare_and_swap (t, u);
-    SPop (3, &quot;CASP&quot;);
+    cg.load_ordered (t, StackType[t], order);
+    SPop (1, &quot;Load_ordered&quot;);
+    SPush (StackType[t]);
+  END Load_ordered;
+
+PROCEDURE <A NAME="Exchange"><procedure>Exchange</procedure></A> (t: MType;  order: MemoryOrder) =
+  BEGIN
+    cg.exchange (t, StackType[t], order);
+    SPop (2, &quot;Exchange&quot;);
+    SPush (StackType[t]);
+  END Exchange;
+
+PROCEDURE <A NAME="Compare_exchange"><procedure>Compare_exchange</procedure></A> (t: MType;  u: IType;  success, failure: MemoryOrder) =
+  BEGIN
+    cg.compare_exchange (t, StackType[t], u, success, failure);
+    SPop (3, &quot;Compare_exchange&quot;);
     SPush (u);
-  END CasP;
+  END Compare_exchange;
+
+PROCEDURE <A NAME="Fence"><procedure>Fence</procedure></A> (order: MemoryOrder) =
+  BEGIN
+    cg.fence (order);
+  END Fence;
+
+PROCEDURE <A NAME="Fetch_and_op"><procedure>Fetch_and_op</procedure></A> (op: AtomicOp;  t: MType;  order: MemoryOrder) =
+  BEGIN
+    cg.fetch_and_op (op, t, StackType[t], order);
+    SPop (2, &quot;Fetch_and_op&quot;);
+    SPush (StackType[t]);
+  END Fetch_and_op;
 </PRE>-------------------------------------------------------------- internal ---
 
 <P><PRE>PROCEDURE <A NAME="FixAlign"><procedure>FixAlign</procedure></A> (a: Alignment): Alignment =
