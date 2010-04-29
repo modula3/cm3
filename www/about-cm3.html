@@ -27,10 +27,61 @@
       <a href="changelog-index.html" target="Main">CM3 ChangeLog</a>
     </quote>
     <p>
-      Please find below some older notes from the time of the first
+      The latest release is CM3 5.8.
+      Below that you will find some older notes from the time of the first
       open source releases.
     </p>
 
+    <h2><a name="about_5_8">About CM3 5.8</a></h2>
+
+    <h3>Language Extensions</h3>
+    <p>
+      The updated language definition can be found
+      <a href="doc/reference/complete/html/Modula_3_Language_definitio.html"> 
+        here.
+      </a>
+    <ul>
+      <li>
+        LONGINT has been added as an integer type larger than
+        INTEGER, on 32 bit and 64 bit machines usually 64 bit.
+      </li>
+      <li>
+        Compiler support for the minimal tagged REFANY values.
+      </li>
+      <li>
+        Added lots of new quake functions and fixed several quake
+        bugs.
+        Please refer to the current <a href="doc/help/cm3/quake.html">
+          quake language definition</a> including all pre-defined functions.
+      </li>
+    </ul>
+    Further language extensions wrt. the original definition can be
+    found below in <a href="#about_5_1">About CM3 5.1</a>.
+    <h3>Tools and Infrastructure</h3>
+    <ul>
+      <li>
+        System pthread threading is now the default on all platforms.
+      </li>
+      <li>
+        Many fixes and improvements of the garbage collector.
+      </li>
+      <li>
+        Many improvements to m3gdb, the Modula-3-aware extension of the GNU debugger.
+      </li>
+      <li>
+        Import of gcc 4.3.0 as code generating backend.
+      </li>
+      <li>
+        Added CM3-IDE, the open source version of Reactor (tm).
+      </li>
+      <li>
+        Import of gcc 4.3.0 as code generating backend.
+      </li>
+      <li>
+        Support for new 64 bit target platforms (AMD64_LINUX,
+        AMD64_DARWIN, AMD64_FREEBSD).
+      </li>
+    </ul>
     <h2><a name="about_5_1">About CM3 5.1</a></h2>
 
     <p>
