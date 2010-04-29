@@ -334,7 +334,7 @@ readonly proc run_test2 (class, group, uid, comment, should_run, cm3opts, runopt
     if should_run
       if equal (sub (uid, 0, 1), "r")
         ignoreLines = ["Abort trap", "Bus error", "Aborted",
-                       "Segmentation fault"]
+                       "Segmentation fault", "Illegal instruction"]
       end
     end
     if equal (uid, "r003")
