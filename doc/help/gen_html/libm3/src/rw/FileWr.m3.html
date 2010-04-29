@@ -20,6 +20,7 @@
 <P><PRE>UNSAFE MODULE <module><implements><A HREF="FileWr.i3.html">FileWr</A></implements></module>;
 
 IMPORT <A HREF="../os/Common/File.i3.html">File</A>, <A HREF="../os/Common/FS.i3.html">FS</A>, <A HREF="../os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../os/Common/OSError.i3.html">OSError</A>, <A HREF="../os/Common/RegularFile.i3.html">RegularFile</A>, <A HREF="Wr.i3.html">Wr</A>, <A HREF="WrClass.i3.html">WrClass</A>;
+IMPORT <A HREF="../../../m3core/src/runtime/common/RTIO.i3.html">RTIO</A>, <A HREF="../fmtlex/Fmt.i3.html">Fmt</A>;
 
 PROCEDURE <A NAME="Open"><procedure>Open</procedure></A>(p: Pathname.T): T RAISES {OSError.E} =
   BEGIN
@@ -85,13 +86,17 @@ EXCEPTION Error; &lt;*FATAL Error*&gt;
 
 PROCEDURE <A NAME="Seek"><procedure>Seek</procedure></A>(wr: T; n: CARDINAL) RAISES {Wr.Failure} =
   BEGIN
-    IF NOT wr.seekable AND n # wr.hi THEN RAISE Error END;
+    IF NOT wr.seekable AND n # wr.hi THEN
+        RTIO.PutText(&quot;FileWr.Seek:wr.seekable=&quot; &amp; Fmt.Bool(wr.seekable) &amp; &quot;;n=&quot; &amp; Fmt.Int(n) &amp; &quot;;wr.hi=&quot; &amp; Fmt.Int(wr.hi) &amp; &quot;\n&quot;);
+        RTIO.Flush();
+        RAISE Error
+    END;
     TRY
       EmptyBuffer (wr);
       (* Maintains V4 -- we hope that on a seek failure the file
                          position is unchanged, ensuring Q1 *)
       IF n # wr.cur THEN
-        IF n &gt; wr.cur THEN n := MIN(n, wr.targetH.status().size); END;
+        IF n &gt; wr.cur THEN n := MIN(n, VAL(wr.targetH.status().size, INTEGER)); END;
         EVAL NARROW(wr.targetH, RegularFile.T).seek(
                      RegularFile.Origin.Beginning, n);
         wr.cur := n;
@@ -107,7 +112,7 @@ PROCEDURE <A NAME="Length"><procedure>Length</procedure></A>(wr: T): CARDINAL RA
   BEGIN
     TRY
       IF wr.seekable THEN
-        RETURN MAX (wr.cur, wr.targetH.status().size);
+        RETURN MAX (wr.cur, VAL(wr.targetH.status().size, INTEGER));
       ELSE
         RETURN wr.cur;
       END

@@ -18,7 +18,7 @@
 
 IMPORT <A HREF="Int.i3.html">Int</A>, <A HREF="LInt.i3.html">LInt</A>, <A HREF="#x1">Card</A>, <A HREF="Bool.i3.html">Bool</A>, <A HREF="Reel.i3.html">Reel</A>, <A HREF="LReel.i3.html">LReel</A>, <A HREF="EReel.i3.html">EReel</A>, <A HREF="Charr.i3.html">Charr</A>, <A HREF="Addr.i3.html">Addr</A>;
 IMPORT <A HREF="Null.i3.html">Null</A>, <A HREF="Reff.i3.html">Reff</A>, <A HREF="Textt.i3.html">Textt</A>, <A HREF="Mutex.i3.html">Mutex</A>, <A HREF="ErrType.i3.html">ErrType</A>, <A HREF="ObjectRef.i3.html">ObjectRef</A>, <A HREF="ObjectAdr.i3.html">ObjectAdr</A>;
-IMPORT <A HREF="WCharr.i3.html">WCharr</A>;
+IMPORT <A HREF="WCharr.i3.html">WCharr</A>, <A HREF="LCard.i3.html">LCard</A>;
 
 PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> () =
   BEGIN
@@ -28,6 +28,7 @@ PROCEDURE <A NAME="Initialize"><procedure>Initialize</procedure></A> () =
     Int.Initialize ();
     LInt.Initialize ();
     Card.Initialize ();
+    LCard.Initialize ();
     Bool.Initialize ();
     Reel.Initialize ();
     LReel.Initialize ();

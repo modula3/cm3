@@ -23,7 +23,7 @@ All rights reserved.
 <P> <CODE>RTHeapRep</CODE> is a private, implementation-dependent extension to
    <CODE>RTAllocator</CODE>, <CODE>RTCollector</CODE>, and <CODE>RTHeap</CODE>. 
 
-<P><PRE>INTERFACE <interface><A HREF="#x1">RTHeapRep</A></interface>;
+<P><PRE>UNSAFE INTERFACE <interface><A HREF="#x1">RTHeapRep</A></interface>;
 </PRE> This interface provides low-level access to the storage allocator and
    garbage collector.  Some items here should be made private or moved
    elsewhere. 
@@ -151,6 +151,8 @@ CONST
      in bytes *)
   Fill_N_type: Typecode = LAST(Typecode);
   FillHeaderN = Header{typecode := Fill_N_type, dirty := FALSE};
+
+PROCEDURE <A HREF="RTCollector.m3.html#InsertFiller">InsertFiller</A>(start: RefHeader; n: INTEGER);
 </PRE>***** OPEN ARRAYS *****
 
 <P> An open array object with N open dimensions contains a header, then a
@@ -170,11 +172,20 @@ PROCEDURE <A HREF="RTHeapRep.m3.html#UnsafeGetShape">UnsafeGetShape</A> (    r  
    garbage collected. </EM></BLOCKQUOTE><PRE>
 </PRE>***** LOW-LEVEL ALLOCATOR/COLLECTOR ****
 
-<P><PRE>PROCEDURE <A HREF="RTCollector.m3.html#AllocTraced">AllocTraced</A> (size, alignment: CARDINAL;
-                       VAR pool: AllocPool): ADDRESS;
-</PRE><BLOCKQUOTE><EM> Allocate 'size' zeroed bytes of traced storage of type 'def' on an
-   'alignment' byte boundary from the thread's allocation pool, initializing
-   the result using 'initializer' (if not <CODE>NIL</CODE>). </EM></BLOCKQUOTE><PRE>
+<P><PRE>CONST MaxAlignment  = 8;
+CONST MaxAlignMask  = 2_0111;     (* bit mask to capture MaxAlignment *)
+TYPE  MaxAlignRange = [0 .. MaxAlignment - 1];
+
+VAR align: ARRAY MaxAlignRange, [1 .. MaxAlignment] OF CARDINAL;
+</PRE><BLOCKQUOTE><EM> align[i,j] == RTMisc.Align (i, j) - i </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RTCollector.m3.html#CollectEnough">CollectEnough</A>();
+PROCEDURE <A HREF="RTCollector.m3.html#LongAlloc">LongAlloc</A> (size, alignment: CARDINAL;
+                     VAR pool: AllocPool): ADDRESS;
+</PRE><BLOCKQUOTE><EM> Return the address of <CODE>size</CODE> bytes of traced storage on an
+   <CODE>alignment</CODE> byte boundary from the allocation pool <CODE>pool</CODE>.
+   If the request cannot be satisfied, <CODE>NIL</CODE> is returned.
+   LL &gt;= RTOS.LockHeap. </EM></BLOCKQUOTE><PRE>
 </PRE> Objects in the traced heap are allocated from <CODE>pools</CODE>. 
 <PRE>TYPE
   AllocPool = RECORD
@@ -216,10 +227,9 @@ TYPE
 <P> There are various status variables. 
 
 <P><PRE>VAR
-  (* how many more Disables than Enables *)
-  disableCount: CARDINAL := 1;		 (* initially disabled *)
-  (* how many more DisableMotions than EnableMotions *)
-  disableMotionCount: CARDINAL := 0;
+  disableCount: CARDINAL := 0;   (* how many more Disables than Enables *)
+  disableMotionCount: CARDINAL := 0; (* how many more DisableMotions than
+                                        EnableMotions *)
 
 PROCEDURE <A HREF="RTCollector.m3.html#Crash">Crash</A> (): BOOLEAN;
 </PRE><BLOCKQUOTE><EM> Crash is called by the runtime when the program is about to crash.  When
@@ -267,6 +277,9 @@ PROCEDURE <A HREF="RTCollector.m3.html#VisitAllRefs">VisitAllRefs</A> (proc: Ref
 
 <P><PRE>PROCEDURE <A HREF="RTCollector.m3.html#Init">Init</A>();
 </PRE><BLOCKQUOTE><EM> MUST be called to initialize allocator/collector state </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="RTCollector.m3.html#StartBench">StartBench</A>();
+PROCEDURE <A HREF="RTCollector.m3.html#FinishBench">FinishBench</A>();
 
 END RTHeapRep.
 </PRE>

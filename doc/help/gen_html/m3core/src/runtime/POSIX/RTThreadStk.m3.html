@@ -14,7 +14,7 @@
 
 <P> This module maintains a pool of free thread stacks 
 
-<P><PRE>UNSAFE MODULE <module>RTThreadStk</module> EXPORTS <A HREF="RTThread.i3.html"><implements>RTThread</A></implements>;
+<P><PRE>UNSAFE MODULE <module>RTThreadStk</module> EXPORTS <A HREF="#x1"><implements>RTThread</A></implements>;
 
 VAR pool       : ARRAY [0..49] OF Stack;
 VAR tos        : CARDINAL := 0;  (* next free pool slot *)
@@ -78,6 +78,13 @@ BEGIN
 END RTThreadStk.
 </PRE>
 </inModule>
+<HR>
+<A NAME="x1">interface RTThread is in:
+</A><UL>
+<LI><A HREF="RTThread.i3.html#0TOP0">m3core/src/runtime/POSIX/RTThread.i3</A>
+<LI><A HREF="../common/RTThread.i3.html#0TOP0">m3core/src/runtime/common/RTThread.i3</A>
+</UL>
+<P>
 <PRE>
 
 

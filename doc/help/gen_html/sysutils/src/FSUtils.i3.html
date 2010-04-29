@@ -28,13 +28,13 @@
  * THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
- *
- * $Id$ 
+ 
 
 <P>--------------------------------------------------------------------------
 <PRE>INTERFACE <interface><A HREF="#x1">FSUtils</A></interface>;
 
 IMPORT <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HREF="../../libm3/derived/TextSeq.i3.html">TextSeq</A>;
+FROM <A HREF="../../m3core/src/C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int, const_char_star;
 </PRE>--------------------------------------------------------------------------
 <PRE>EXCEPTION E(TEXT);
 </PRE>--------------------------------------------------------------------------
@@ -102,6 +102,12 @@ IMPORT <A HREF="../../libm3/src/os/Common/Pathname.i3.html">Pathname</A>, <A HRE
 </PRE>---------------------------------------------------------------------------
 <PRE>PROCEDURE <A HREF="FSUtils.m3.html#PutFile">PutFile</A>(fn : Pathname.T; data : TEXT) RAISES {E};
   (* Write `data' into file `fn'. Create or overwrite `fn' as needed. *)
+</PRE>---------------------------------------------------------------------------
+
+<P><PRE>&lt;*EXTERNAL FSUtils__X_OK*&gt; VAR X_OK: int; (* executable *)
+&lt;*EXTERNAL FSUtils__W_OK*&gt; VAR W_OK: int; (* writable *)
+&lt;*EXTERNAL FSUtils__R_OK*&gt; VAR R_OK: int; (* readable *)
+&lt;*EXTERNAL FSUtils__access*&gt;PROCEDURE access (path: const_char_star; mode: int): int;
 
 END FSUtils.
 </PRE>

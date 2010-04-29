@@ -15,7 +15,7 @@ IMPORT <A HREF="#x1">TextUtils</A>;
 <PRE>PROCEDURE <A NAME="Posix"><procedure>Posix</procedure></A>(pn : TEXT) : TEXT =
   BEGIN
     RETURN TextUtils.SubstChar(pn, '\\', '/');
-    (* Unconditinal substitution actually performs better than this:
+    (* Unconditional substitution actually performs better than this:
     IF Text.FindChar(pn, '\\') &gt; -1  THEN
       RETURN TextUtils.SubstChar(pn, '\\', '/');
     ELSE
@@ -27,7 +27,7 @@ IMPORT <A HREF="#x1">TextUtils</A>;
 <PRE>PROCEDURE <A NAME="Win32"><procedure>Win32</procedure></A>(pn : TEXT) : TEXT =
   BEGIN
     RETURN TextUtils.SubstChar(pn, '/', '\\');
-    (* Unconditinal substitution actually performs better than this:
+    (* Unconditional substitution actually performs better than this:
     IF Text.FindChar(pn, '/') &gt; -1  THEN
       RETURN TextUtils.SubstChar(pn, '/', '\\');
     ELSE

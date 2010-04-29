@@ -9,6 +9,11 @@ libm3/src/os/POSIX/OSConfigPosixC.c</H2><HR>
 #include &lt;sys/utsname.h&gt;
 typedef struct utsname utsname_t;
 
+#ifdef __cplusplus
+extern &quot;C&quot;
+{           
+#endif
+
 typedef void* TEXT;
 
 TEXT M3toC__CopyStoT(const char*);
@@ -35,6 +40,10 @@ OSConfigPosixC__Init(
 Exit:
     return result;
 }
+
+#ifdef __cplusplus
+} /* extern &quot;C&quot; */
+#endif
 </PRE>
 </BODY>
 </HTML>

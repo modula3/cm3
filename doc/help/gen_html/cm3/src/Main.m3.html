@@ -15,11 +15,11 @@ IMPORT <A HREF="../../m3middle/src/M3Timers.i3.html">M3Timers</A>, <A HREF="../.
 IMPORT <A HREF="../../m3core/src/runtime/common/RTCollector.i3.html">RTCollector</A>, <A HREF="../../m3core/src/runtime/common/RTParams.i3.html">RTParams</A>, <A HREF="../../m3core/src/runtime/common/RTutils.i3.html">RTutils</A>, <A HREF="../../m3core/src/thread/Common/Thread.i3.html">Thread</A>, <A HREF="../../libm3/src/rw/Wr.i3.html">Wr</A>;
 
 IMPORT <A HREF="#x1">Builder</A>, <A HREF="Dirs.i3.html">Dirs</A>, <A HREF="M3Build.i3.html">M3Build</A>, <A HREF="M3Options.i3.html">M3Options</A>, <A HREF="Makefile.i3.html">Makefile</A>, <A HREF="#x2">Msg</A>, <A HREF="Utils.i3.html">Utils</A>, <A HREF="WebFile.i3.html">WebFile</A>;
-IMPORT <A HREF="../../m3quake/src/MxConfig.i3.html">MxConfig</A>, <A HREF="../../libm3/derived/M3Config.i3.html">M3Config</A>(*, CMKey, CMCurrent *);
+IMPORT <A HREF="../../m3quake/src/MxConfig.i3.html">MxConfig</A>(*, M3Config, CMKey, CMCurrent *);
 </PRE><BLOCKQUOTE><EM> IMPORT Fmt, Time; only needed for key and expiration check </EM></BLOCKQUOTE><PRE>
-IMPORT <A HREF="#x3">Version</A>;
+</PRE> IMPORT Version; 
 
-VAR
+<P><PRE>VAR
   config    : TEXT          := NIL;
   makefile  : TEXT          := NIL;
   build_dir : TEXT          := NIL;
@@ -59,21 +59,21 @@ PROCEDURE <A NAME="DoIt"><procedure>DoIt</procedure></A> () =
 
         (* Default to a native build, so the config file can say less. *)
 
-        Quake.Define(mach, &quot;TARGET&quot;, M3Config.TARGET);
-        Quake.Define(mach, &quot;OS_TYPE&quot;, M3Config.OS_TYPE);
-        Quake.Define(mach, &quot;BACKEND_MODE&quot;, Version.BackendMode);
-        Quake.Define(mach, &quot;C_COMPILER&quot;, Version.CCompiler);
-        Quake.Define(mach, &quot;LINKER&quot;, Version.Linker);
-        Quake.Define(mach, &quot;THREAD_LIBRARY&quot;, Version.ThreadLibrary);
-        Quake.Define(mach, &quot;WINDOW_LIBRARY&quot;, Version.WindowLibrary);
-        Quake.Define(mach, &quot;WORD_SIZE&quot;, M3Config.WORD_SIZE);
+        Quake.Define(mach, &quot;TARGET&quot;, MxConfig.HOST);
+        Quake.Define(mach, &quot;OS_TYPE&quot;, MxConfig.HOST_OS_TYPE);
+        (* Quake.Define(mach, &quot;BACKEND_MODE&quot;, Version.BackendMode); *)
+        (* Quake.Define(mach, &quot;C_COMPILER&quot;, Version.CCompiler); *)
+        (* Quake.Define(mach, &quot;LINKER&quot;, Version.Linker); *)
+        (* Quake.Define(mach, &quot;THREAD_LIBRARY&quot;, Version.ThreadLibrary); *)
+        (* Quake.Define(mach, &quot;WINDOW_LIBRARY&quot;, Version.WindowLibrary); *)
+        Quake.Define(mach, &quot;WORD_SIZE&quot;, MxConfig.HOST_WORD_SIZE);
 
         (* Even if the config file overrides the defaults, such as to do
            a cross build, the host characteristics are still available. *)
 
-        Quake.Define(mach, &quot;HOST&quot;, M3Config.TARGET);
-        Quake.Define(mach, &quot;HOST_OS_TYPE&quot;, M3Config.OS_TYPE);
-        Quake.Define(mach, &quot;HOST_GNU_MAKE&quot;, Version.GNUMake);
+        Quake.Define(mach, &quot;HOST&quot;, MxConfig.HOST);
+        Quake.Define(mach, &quot;HOST_OS_TYPE&quot;, MxConfig.HOST_OS_TYPE);
+        (* Quake.Define(mach, &quot;HOST_GNU_MAKE&quot;, Version.GNUMake); *)
 
         (* define the site configuration *)
         Msg.Verbose (&quot;EVAL (\&quot;&quot;, config, &quot;\&quot;)&quot;);
@@ -233,16 +233,7 @@ END Main.
 <A NAME="x2">interface Msg is in:
 </A><UL>
 <LI><A HREF="Msg.i3.html#0TOP0">cm3/src/Msg.i3</A>
-<LI><A HREF="../../cminstall/src/Msg.i3.html#0TOP0">cminstall/src/Msg.i3</A>
 <LI><A HREF="../../m3tohtml/src/Msg.i3.html#0TOP0">m3tohtml/src/Msg.i3</A>
-</UL>
-<P>
-<HR>
-<A NAME="x3">interface Version is in:
-</A><UL>
-<LI><A HREF="../../client/src/Version.i3.html#0TOP0">client/src/Version.i3</A>
-<LI><A HREF="../derived/Version.i3.html#0TOP0">cm3/derived/Version.i3</A>
-<LI><A HREF="../../server/src/Version.i3.html#0TOP0">server/src/Version.i3</A>
 </UL>
 <P>
 <PRE>

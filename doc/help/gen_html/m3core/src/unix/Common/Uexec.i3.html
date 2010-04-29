@@ -10,20 +10,20 @@
  All rights reserved.                                        
  See the file COPYRIGHT for a full description.              
 
-<P><PRE>&lt;*EXTERNAL*&gt; INTERFACE <interface>Uexec</interface>;
+<P><PRE>INTERFACE <interface>Uexec</interface>;
 
 FROM <A HREF="../../C/Common/Ctypes.i3.html">Ctypes</A> IMPORT int, const_char_star, char_star_star;
 FROM <A HREF="#x1">Utypes</A> IMPORT pid_t;
 
-PROCEDURE execv (name: const_char_star; argv: char_star_star): int RAISES {};
-PROCEDURE execvp(name: const_char_star; argv: char_star_star): int RAISES {};
-PROCEDURE execve(name: const_char_star; argv: char_star_star; envp: char_star_star): int;
+&lt;*EXTERNAL &quot;Uexec__execv&quot;*&gt;PROCEDURE execv (name: const_char_star; argv: char_star_star): int RAISES {};
+&lt;*EXTERNAL &quot;Uexec__execvp&quot;*&gt;PROCEDURE execvp(name: const_char_star; argv: char_star_star): int RAISES {};
+&lt;*EXTERNAL &quot;Uexec__execve&quot;*&gt;PROCEDURE execve(name: const_char_star; argv: char_star_star; envp: char_star_star): int;
 </PRE> compat with Usem usage 
 <PRE>TYPE wait_queue_star = ADDRESS;
 
 &lt;*EXTERNAL &quot;Uexec__WNOHANG&quot;*&gt; VAR WNOHANG: int; (* do not hang in wait *)
 
-PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF int; options: int): pid_t;
+&lt;*EXTERNAL &quot;Uexec__waitpid&quot;*&gt;PROCEDURE waitpid (pid: pid_t; status: UNTRACED REF int; options: int): pid_t;
 
 &lt;*EXTERNAL &quot;Uexec__RepackStatus&quot;*&gt;
 PROCEDURE RepackStatus(VAR status: int);

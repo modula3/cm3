@@ -168,12 +168,13 @@ PROCEDURE <A NAME="ReadData"><procedure>ReadData</procedure></A>(v: ReadVisitor;
     END;
   END ReadData;
 
-TYPE Int32Rec = RECORD v : Swap.Int32 END;
+TYPE Int32Rec = BITS 32 FOR RECORD v : Swap.Int32 END;
 </PRE><BLOCKQUOTE><EM> We need v to be inside a record.  Otherwise, the language would allow
    a compiler to actually allocate more than the BITS 32 for a value of
    type Swap.Int32.
 </EM></BLOCKQUOTE><PRE>
 VAR Int32RecVar : Int32Rec;
+&lt;*UNUSED*&gt;
 VAR CheckInt32 : [ 0 .. 0 ] := ADR(Int32RecVar) - ADR(Int32RecVar.v);
 
 PROCEDURE <A NAME="Convert"><procedure>Convert</procedure></A>(self: T; dest: ADDRESS; v: ReadVisitor;
@@ -1062,7 +1063,7 @@ PROCEDURE <A NAME="GetWordKind"><procedure>GetWordKind</procedure></A>(from: RTP
 PROCEDURE <A NAME="GetLongintKind"><procedure>GetLongintKind</procedure></A>(from: RTPacking.T; to: RTPacking.T): Kind =
 </PRE><BLOCKQUOTE><EM> The result is good only for LONGINT. </EM></BLOCKQUOTE><PRE>
   BEGIN
-    IF from.longint_size = to.longint_size THEN
+    IF from.long_size = to.long_size THEN
       IF from.little_endian = to.little_endian THEN
         RETURN Kind.Copy;
       ELSE
@@ -1070,13 +1071,13 @@ PROCEDURE <A NAME="GetLongintKind"><procedure>GetLongintKind</procedure></A>(fro
       END;
     ELSE
       IF from.little_endian = to.little_endian THEN
-        IF from.longint_size = 32 THEN
+        IF from.long_size = 32 THEN
           RETURN Kind.Copy32to64;
         ELSE
           RETURN Kind.Copy64to32;
         END;
       ELSE
-        IF from.longint_size = 32 THEN
+        IF from.long_size = 32 THEN
           RETURN Kind.Swap32to64;
         ELSE
           RETURN Kind.Swap64to32;
@@ -1224,6 +1225,8 @@ PROCEDURE <A NAME="BuildOne"><procedure>BuildOne</procedure></A>(self: T; fromTi
         BuildOrdinal(self, fromTipe, toTipe, self.wordKind, signed:=FALSE);
       | RTTipe.Kind.Integer =&gt;
         BuildOrdinal(self, fromTipe, toTipe, self.wordKind, signed:=TRUE);
+      | RTTipe.Kind.Longcard =&gt;
+        BuildOrdinal(self, fromTipe, toTipe, self.longKind, signed:=FALSE);
       | RTTipe.Kind.Longint =&gt;
         BuildOrdinal(self, fromTipe, toTipe, self.longKind, signed:=TRUE);
       | RTTipe.Kind.Extended, RTTipe.Kind.Longreal =&gt;
@@ -1476,6 +1479,7 @@ PROCEDURE <A NAME="KindToText"><procedure>KindToText</procedure></A>(kind: RTTip
     | RTTipe.Kind.Enum =&gt; IO.Put( &quot;Enum&quot;);
     | RTTipe.Kind.Extended =&gt; IO.Put( &quot;Extended&quot;);
     | RTTipe.Kind.Integer =&gt; IO.Put( &quot;Integer&quot;);
+    | RTTipe.Kind.Longcard =&gt; IO.Put( &quot;Longcard&quot;);
     | RTTipe.Kind.Longint =&gt; IO.Put( &quot;Longint&quot;);
     | RTTipe.Kind.Longreal =&gt; IO.Put( &quot;Longreal&quot;);
     | RTTipe.Kind.Null =&gt; IO.Put( &quot;Null&quot;);

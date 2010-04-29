@@ -313,7 +313,7 @@ PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (p: P) =
         (* skip *)
     | Class.cFIELD =&gt;
         IF Expr.IsDesignator (p.expr)
-          THEN Expr.PrepLValue (p.expr, lhs := FALSE);
+          THEN Expr.PrepLValue (p.expr, traced := FALSE);
           ELSE Expr.Prep (p.expr);
         END;
         Field.Split (p.obj, field);
@@ -392,7 +392,7 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
         END;
         Field.Split (p.obj, field);
         IF Expr.IsDesignator (p.expr)
-          THEN Expr.CompileLValue (p.expr, lhs := FALSE);
+          THEN Expr.CompileLValue (p.expr, traced := FALSE);
           ELSE Expr.Compile (p.expr);
         END;
         CG.Add_offset (field.offset);
@@ -439,7 +439,7 @@ PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (p: P) =
     END;
  END Compile;
 
-PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN) =
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; traced: BOOLEAN) =
   VAR info: Type.Info;
   BEGIN
     CASE p.class OF
@@ -449,12 +449,12 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN
         (* skip *)
     | Class.cFIELD =&gt;
         IF Expr.IsDesignator (p.expr)
-          THEN Expr.PrepLValue (p.expr, lhs);
+          THEN Expr.PrepLValue (p.expr, traced);
           ELSE Expr.Prep (p.expr);
         END;
     | Class.cOBJFIELD =&gt;
         Expr.Prep (p.expr);
-        IF lhs AND Host.doGenGC THEN
+        IF traced AND Host.doGenGC THEN
           EVAL Type.CheckInfo (p.type, info);
           IF NOT info.isTraced THEN RETURN END;
           EVAL Type.CheckInfo (Expr.TypeOf (p.expr), info);
@@ -472,7 +472,7 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (p: P; lhs: BOOLEAN
     END;
   END PrepLV;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; lhs: BOOLEAN) =
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P;  traced: BOOLEAN) =
   VAR obj_offset, obj_align: INTEGER;  field: Field.Info;
   BEGIN
     CASE p.class OF
@@ -484,12 +484,12 @@ PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (p: P; lhs: B
         END;
     | Class.cFIELD =&gt;
         Field.Split (p.obj, field);
-        Expr.CompileLValue (p.expr, lhs);
+        Expr.CompileLValue (p.expr, traced);
         CG.Add_offset (field.offset);
     | Class.cOBJFIELD =&gt;
         Field.Split (p.obj, field);
         IF p.temp # NIL THEN
-          &lt;*ASSERT lhs*&gt;
+          &lt;*ASSERT traced*&gt;
           CG.Push (p.temp);
           CG.Free (p.temp);
           p.temp := NIL;

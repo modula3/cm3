@@ -39,6 +39,9 @@ PROCEDURE <A HREF="IO.m3.html#PutWideChar">PutWideChar</A>(ch: WIDECHAR; wr: Wr.
 PROCEDURE <A HREF="IO.m3.html#PutInt">PutInt</A>(n: INTEGER; wr: Wr.T := NIL);
 </PRE><BLOCKQUOTE><EM> Output <CODE>Fmt.Int(n)</CODE> to <CODE>wr</CODE> and flush <CODE>wr</CODE>. </EM></BLOCKQUOTE><PRE>
 
+PROCEDURE <A HREF="IO.m3.html#PutLongInt">PutLongInt</A>(n: LONGINT; wr: Wr.T := NIL);
+</PRE><BLOCKQUOTE><EM> Output <CODE>Fmt.LongInt(n)</CODE> to <CODE>wr</CODE> and flush <CODE>wr</CODE>. </EM></BLOCKQUOTE><PRE>
+
 PROCEDURE <A HREF="IO.m3.html#PutReal">PutReal</A>(r: REAL; wr: Wr.T := NIL);
 </PRE><BLOCKQUOTE><EM> Output <CODE>Fmt.Real(r)</CODE> to <CODE>wr</CODE> and flush <CODE>wr</CODE>. </EM></BLOCKQUOTE><PRE>
 
@@ -67,6 +70,10 @@ PROCEDURE <A HREF="IO.m3.html#GetWideChar">GetWideChar</A>(rd: Rd.T := NIL): WID
 
 PROCEDURE <A HREF="IO.m3.html#GetInt">GetInt</A>(rd: Rd.T := NIL): INTEGER RAISES {Error};
 </PRE><BLOCKQUOTE><EM> Read a decimal numeral from <CODE>rd</CODE> using <CODE>Lex.Int</CODE> and return its
+   value. </EM></BLOCKQUOTE><PRE>
+
+PROCEDURE <A HREF="IO.m3.html#GetLongInt">GetLongInt</A>(rd: Rd.T := NIL): LONGINT RAISES {Error};
+</PRE><BLOCKQUOTE><EM> Read a decimal numeral from <CODE>rd</CODE> using <CODE>Lex.LongInt</CODE> and return its
    value. </EM></BLOCKQUOTE><PRE>
 
 PROCEDURE <A HREF="IO.m3.html#GetReal">GetReal</A>(rd: Rd.T := NIL): REAL RAISES {Error};

@@ -71,10 +71,10 @@ PROCEDURE <A NAME="NeedsAddress"><procedure>NeedsAddress</procedure></A> (&lt;*U
 
 PROCEDURE <A NAME="Prep"><procedure>Prep</procedure></A> (ce: CallExpr.T) =
   BEGIN
-    PrepLV (ce, lhs := FALSE);
+    PrepLV (ce, traced := FALSE);
   END Prep;
 
-PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lhs: BOOLEAN) =
+PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; traced: BOOLEAN) =
   VAR
     base      := ce.args[0];
     start     := ce.args[1];
@@ -95,7 +95,7 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lh
     Type.Compile (open);
     EVAL ArrayType.Split (array, index, element);
 
-    Expr.PrepLValue (base, lhs);
+    Expr.PrepLValue (base, traced);
 
     (* determine which case to use *)
     case := 0;
@@ -123,7 +123,7 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lh
           CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
 
           IF NOT Host.doRangeChk THEN
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             Expr.Compile (start);
           ELSE
             Expr.Compile (start);         t_start := CG.Pop ();
@@ -133,7 +133,7 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lh
             CG.Check_hi (Target.Integer.cg_type, n_elts,
                          CG.RuntimeError.ValueOutOfRange);
             CG.Discard (Target.Integer.cg_type);
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             CG.Push (t_start);
             CG.Free (t_start);
           END;
@@ -149,7 +149,7 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lh
           CG.Store_int (Target.Integer.cg_type, t_result, M3RT.OA_size_0);
 
           IF NOT Host.doRangeChk THEN
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             Expr.Compile (start);
           ELSIF NOT TInt.Subtract (n_elts, x_len, max) THEN
             (* cannot compute n-len at compile time *)
@@ -160,17 +160,17 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lh
             CG.Check_hi (Target.Integer.cg_type,
                          n_elts, CG.RuntimeError.ValueOutOfRange);
            CG.Discard (Target.Integer.cg_type);
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             CG.Push (t_start);
             CG.Free (t_start);
           ELSIF TInt.LT (max, TInt.Zero) THEN
             Error.Warn (2, &quot;SUBARRAY length out of range&quot;);
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             Expr.Compile (start);
             CG.Check_hi (Target.Integer.cg_type,
                          max, CG.RuntimeError.ValueOutOfRange);
           ELSE
-            Expr.CompileAddress (base, lhs);
+            Expr.CompileAddress (base, traced);
             Expr.Compile (start);
             CG.Check_hi (Target.Integer.cg_type, max,
                          CG.RuntimeError.ValueOutOfRange);
@@ -213,7 +213,7 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lh
           END;
 
           (* initialize the new data pointer *)
-          Expr.CompileAddress (base, lhs);
+          Expr.CompileAddress (base, traced);
           CG.Add_offset (i_start * elt_pack);
           CG.Store_addr (t_result, M3RT.OA_elt_ptr);
 
@@ -245,14 +245,14 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lh
           END;
 
           (* initialize the new data pointer *)
-          Expr.CompileAddress (base, lhs);
+          Expr.CompileAddress (base, traced);
           CG.Add_offset (i_start * elt_pack);
           CG.Store_addr (t_result, M3RT.OA_elt_ptr);
 
     | 4 =&gt;  (* open array, var start, var len -------------------------------*)
 
-          Expr.CompileAddress (base, lhs);   t_base  := CG.Pop ();
-          Expr.Compile (start);              t_start := CG.Pop ();
+          Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
+          Expr.Compile (start);                 t_start := CG.Pop ();
 
           (* initialize the new counts *)
           Expr.Compile (len);
@@ -282,8 +282,8 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lh
 
     | 5 =&gt;  (* open array, var start, const len -----------------------------*)
 
-          Expr.CompileAddress (base, lhs);   t_base  := CG.Pop ();
-          Expr.Compile (start);              t_start := CG.Pop ();
+          Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
+          Expr.Compile (start);                 t_start := CG.Pop ();
 
           (* initialize the new counts *)
           CG.Load_integer (Target.Integer.cg_type, x_len);
@@ -313,7 +313,7 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lh
 
     | 6 =&gt;  (* open array, const start, var len -----------------------------*)
 
-          Expr.CompileAddress (base, lhs);   t_base  := CG.Pop ();
+          Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
 
           (* initialize the new counts *)
           Expr.Compile (len);
@@ -347,7 +347,7 @@ PROCEDURE <A NAME="PrepLV"><procedure>PrepLV</procedure></A> (ce: CallExpr.T; lh
 
     | 7 =&gt;  (* open array, const start, const len ---------------------------*)
 
-          Expr.CompileAddress (base, lhs);   t_base  := CG.Pop ();
+          Expr.CompileAddress (base, traced);   t_base  := CG.Pop ();
 
           (* initialize the new counts *)
           CG.Load_integer (Target.Integer.cg_type, x_len);
@@ -430,10 +430,10 @@ PROCEDURE <A NAME="ComputeOffset"><procedure>ComputeOffset</procedure></A> (arra
 
 PROCEDURE <A NAME="Compile"><procedure>Compile</procedure></A> (ce: CallExpr.T) =
   BEGIN
-    CompileLV (ce, lhs := FALSE);
+    CompileLV (ce, traced := FALSE);
   END Compile;
 
-PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (ce: CallExpr.T; &lt;*UNUSED*&gt; lhs: BOOLEAN) =
+PROCEDURE <A NAME="CompileLV"><procedure>CompileLV</procedure></A> (ce: CallExpr.T; &lt;*UNUSED*&gt; traced: BOOLEAN) =
   BEGIN
     (* all the real work was done by PrepLV *)
     CG.Push (ce.tmp);

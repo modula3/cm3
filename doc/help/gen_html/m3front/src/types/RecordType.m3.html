@@ -41,11 +41,8 @@ TYPE
       END;
 
 PROCEDURE <A NAME="Parse"><procedure>Parse</procedure></A> (): Type.T =
-  VAR p := NEW (P);
+  VAR p := Create (Scope.PushNew (FALSE, M3ID.NoID));
   BEGIN
-    TypeRep.Init (p, Type.Class.Record);
-
-    p.fields := Scope.PushNew (FALSE, M3ID.NoID);
     Match (Token.T.tRECORD);
     ParseFieldList ();
     Match (Token.T.tEND);
@@ -93,6 +90,12 @@ PROCEDURE <A NAME="ParseFieldList"><procedure>ParseFieldList</procedure></A> () 
     END;
   END ParseFieldList;
 
+PROCEDURE <A NAME="New"><procedure>New</procedure></A> (fields: Scope.T): Type.T =
+  VAR p := Create (fields);
+  BEGIN
+    RETURN p;
+  END New;
+
 PROCEDURE <A NAME="Reduce"><procedure>Reduce</procedure></A> (t: Type.T): P =
   BEGIN
     IF (t = NIL) THEN RETURN NIL END;
@@ -118,7 +121,15 @@ PROCEDURE <A NAME="LookUp"><procedure>LookUp</procedure></A> (t: Type.T;  field:
   END LookUp;
 </PRE>*********************************************************************
 
-<P><PRE>PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (p: P) =
+<P><PRE>PROCEDURE <A NAME="Create"><procedure>Create</procedure></A> (fields: Scope.T): P =
+  VAR p := NEW (P);
+  BEGIN
+    TypeRep.Init (p, Type.Class.Record);
+    p.fields := fields;
+    RETURN p;
+  END Create;
+
+PROCEDURE <A NAME="Check"><procedure>Check</procedure></A> (p: P) =
   VAR
     o        : Value.T;
     field    : Field.Info;

@@ -16,10 +16,10 @@ if not defined(&quot;_PARSER_TOP&quot;)
 end
 
 if not defined(&quot;_PARSER_CMDS&quot;)
-	local _TOK = _PARSER_TOP &amp; SL &amp; &quot;ktok&quot; &amp; SL &amp; BUILD_DIR &amp; SL &amp; &quot;tok&quot;
-	local _LEX = _PARSER_TOP &amp; SL &amp; &quot;klex&quot; &amp; SL &amp; BUILD_DIR &amp; SL &amp; &quot;lex&quot;
-	local _YACC= _PARSER_TOP &amp; SL &amp; &quot;kyacc&quot; &amp; SL&amp; BUILD_DIR &amp; SL &amp; &quot;yacc&quot;
-	local _EXT = _PARSER_TOP &amp; SL &amp; &quot;kext&quot; &amp; SL &amp; BUILD_DIR &amp; SL &amp; &quot;ext&quot;
+	local _TOK = _PARSER_TOP &amp; SL &amp; &quot;ktok&quot; &amp; SL &amp; BUILD_DIR &amp; SL &amp; &quot;ktok&quot;
+	local _LEX = _PARSER_TOP &amp; SL &amp; &quot;klex&quot; &amp; SL &amp; BUILD_DIR &amp; SL &amp; &quot;klex&quot;
+	local _YACC= _PARSER_TOP &amp; SL &amp; &quot;kyacc&quot; &amp; SL&amp; BUILD_DIR &amp; SL &amp; &quot;kyacc&quot;
+	local _EXT = _PARSER_TOP &amp; SL &amp; &quot;kext&quot; &amp; SL &amp; BUILD_DIR &amp; SL &amp; &quot;kext&quot;
 	_PARSER_CMDS = {&quot;t&quot;: _TOK, &quot;l&quot;: _LEX, &quot;y&quot;: _YACC, &quot;e&quot;: _EXT}
 	_PARSER_SOURCES = []
 end
