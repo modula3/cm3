@@ -129,8 +129,8 @@ M3WRAP3(int, mknod, const char*, m3_mode_t, m3_dev_t)
 M3WRAP3(m3_off_t, lseek, int, m3_off_t, int)
 M3WRAP2(int, mkdir, const char*, m3_mode_t)
 M3WRAP1(int, pipe, int*)
-M3WRAP2(int, gethostname, char*, size_t)
-M3WRAP2(char*, getcwd, char*, size_t)
+M3WRAP2(int, gethostname, char*, WORD_T)
+M3WRAP2(char*, getcwd, char*, WORD_T)
 
 m3_pid_t __cdecl Unix__fork(void)
 {
@@ -160,13 +160,13 @@ void __cdecl Unix__exit(int i)
 #ifdef _WIN32
 
 #if 0
-char* __cdecl Unix__getcwd(char* name, size_t len)
+char* __cdecl Unix__getcwd(char* name, WORD_T len)
 {
     assert(len < INT_MAX);
     return _getcwd(name, (int)len);
 }
 
-int __cdecl Unix__gethostname(char* name, size_t len)
+int __cdecl Unix__gethostname(char* name, WORD_T len)
 {
     assert(len < INT_MAX);
     return gethostname(name, (int)len);
