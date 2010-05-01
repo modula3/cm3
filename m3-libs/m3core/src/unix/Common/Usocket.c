@@ -8,14 +8,35 @@
 extern "C" {
 #endif
 
-/* assert that *plen fits in a 32 bit signed integer, no matter
-if it is unsigned or signed, or 32 bits or 64 bits */
+#define TYPE_IS_SIGNED(t) (((t)~(t)0) < (t)0)
+#define TYPE_IS_UNSIGNED(t) (!TYPE_IS_SIGNED(t))
 
-#define ASSERT_PLEN \
-    assert((plen == NULL) || (((*plen) >= 0) && ((*plen) < (m3_socklen_t)(1UL << 30))));
+#define SOCKLEN_SIGNED TYPE_IS_SIGNED(socklen_t)
+
+/* m3_socklen_t is Word.T
+ * socklen_t is any of uint32, int32, size_t.
+ * Make sure we don't lose values in converting.
+ */
+
+#define LOSSLESS_SOCKLEN (TYPE_IS_UNSIGNED(socklen_t) && sizeof(socklen_t) == sizeof(m3_socklen_t))
+
+static void Usocket__assert_plen_in(m3_socklen_t* plen)
+{
+    assert(LOSSLESS_SOCKLEN || plen == NULL || (*plen <= (1UL << 30)));
+}
+
+static void Usocket__plen_out(m3_socklen_t* plen, socklen_t len)
+{
+    assert(LOSSLESS_SOCKLEN || plen == NULL || len <= (1UL << 30));
+    if (plen)
+        *plen = len;
+}
+
+#define ASSERT_PLEN_IN Usocket__assert_plen_in(plen);
+#define PLEN_OUT Usocket__plen_out(plen, len);
 
 #define ASSERT_LEN \
-    assert((len >= 0) && (len < (m3_socklen_t)(1UL << 30)));
+    assert(len <= (1UL << 30));
 
 void Usocket__Assertions(void)
 {
@@ -94,33 +115,33 @@ int Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_
 
 int Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* plen)
 {
-    ASSERT_PLEN
+    ASSERT_PLEN_IN
     {
         socklen_t len = plen ? *plen : 0;
         int r = getpeername(s, name, plen ? &len : 0);
-        if (plen) *plen = len;
+        PLEN_OUT
         return r;
     }
 }
 
 int Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* plen)
 {
-    ASSERT_PLEN
+    ASSERT_PLEN_IN
     {
         socklen_t len = plen ? *plen : 0;
         int r = getsockname(s, name, plen ? &len : 0);
-        if (plen) *plen = len;
+        PLEN_OUT
         return r;
     }
 }
 
 int Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen)
 {
-    ASSERT_PLEN
+    ASSERT_PLEN_IN
     {
         socklen_t len = plen ? *plen : 0;
         int r = accept(s, addr, plen ? &len : 0);
-        if (plen) *plen = len;
+        PLEN_OUT
         return r;
     }
 }
@@ -133,7 +154,7 @@ all fields, but all known implementations have no additional fields and use
 the same order. This is checked in Usocket__Assertions.
 */
 {
-    ASSERT_PLEN
+    ASSERT_PLEN_IN
     {
         int r;
         socklen_t len = plen ? *plen : 0;
@@ -155,7 +176,7 @@ the same order. This is checked in Usocket__Assertions.
 #endif
 
         r = getsockopt(s, level, optname, optval, plen ? &len : 0);
-        if (plen) *plen = len;
+        PLEN_OUT
 
 #ifdef __CYGWIN__
         if (a)
@@ -172,11 +193,11 @@ the same order. This is checked in Usocket__Assertions.
 
 INTEGER Usocket__recvfrom(int s, void* buf, size_t length, int flags, struct sockaddr* address, m3_socklen_t* plen)
 {
-    ASSERT_PLEN
+    ASSERT_PLEN_IN
     {
         socklen_t len = plen ? *plen : 0;
         INTEGER r = recvfrom(s, buf, length, flags, address, plen ? &len : 0);
-        if (plen) *plen = len;
+        PLEN_OUT
         return r;
     }
 }
