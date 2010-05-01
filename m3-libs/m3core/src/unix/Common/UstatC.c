@@ -33,11 +33,21 @@ static int m3stat_from_stat(int result, m3_stat_t* m3st, struct stat* st)
     assert(result == 0 || result == -1);
     if (result == 0)
     {
+#ifdef __vms
+        /* These are strings on VMS, though they
+         * appear to be good enough for our use.
+         * Calling stat(/dev/null) multiple times gives
+         * back the same pointers.
+         */
+        m3st->dev = (LONGINT)(INTEGER)st->st_dev;
+        m3st->rdev = (LONGINT)(INTEGER)st->st_rdev;
+#else
         m3st->dev = st->st_dev;
+        m3st->rdev = st->st_rdev;
+#endif
         m3st->ino = st->st_ino;
         m3st->mtime = st->st_mtime;
         m3st->nlink = st->st_nlink;
-        m3st->rdev = st->st_rdev;
         m3st->size = st->st_size;
         m3st->gid = st->st_gid;
         m3st->mode = st->st_mode;
