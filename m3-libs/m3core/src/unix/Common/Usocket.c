@@ -9,16 +9,14 @@ extern "C" {
 #endif
 
 #define TYPE_IS_SIGNED(t) (((t)~(t)0) < (t)0)
-#define TYPE_IS_UNSIGNED(t) (!TYPE_IS_SIGNED(t))
-
-#define SOCKLEN_SIGNED TYPE_IS_SIGNED(socklen_t)
+#define TYPES_MATCH(t, u) (TYPE_IS_SIGNED(t) == TYPE_IS_SIGNED(u) && sizeof(t) == sizeof(u))
 
 /* m3_socklen_t is Word.T
  * socklen_t is any of uint32, int32, size_t.
  * Make sure we don't lose values in converting.
  */
 
-#define LOSSLESS_SOCKLEN (TYPE_IS_UNSIGNED(socklen_t) && sizeof(socklen_t) == sizeof(m3_socklen_t))
+#define LOSSLESS_SOCKLEN (TYPES_MATCH(socklen_t, m3_socklen_t))
 
 static void Usocket__assert_plen_in(m3_socklen_t* plen)
 {
