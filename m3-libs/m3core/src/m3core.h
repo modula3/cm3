@@ -13,6 +13,10 @@
 #endif
 #endif
 
+#ifndef _REENTRANT
+#define _REENTRANT
+#endif
+
 #ifdef __vms
 /* Enable support for files larger than 2GB. */
 #ifdef _LARGEFILE
@@ -30,11 +34,7 @@
 #endif
 #endif
 
-#ifndef _REENTRANT
-#define _REENTRANT
-#endif
-
-#ifdef __arm__
+#if defined(__arm__) && defined(__APPLE__)
 /* Reveal the correct struct stat? */
 #ifndef _DARWIN_FEATURE_64_ONLY_BIT_INODE
 #define _DARWIN_FEATURE_64_ONLY_BIT_INODE
@@ -147,7 +147,7 @@ typedef   signed short      INT16;
 typedef unsigned short     UINT16;
 typedef   signed int        INT32;
 typedef unsigned int       UINT32;
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__DECC)
 typedef   signed __int64  INT64;
 typedef unsigned __int64 UINT64;
 #else
