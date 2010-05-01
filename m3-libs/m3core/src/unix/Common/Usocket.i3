@@ -118,7 +118,7 @@ IMPORT Utypes, Uin;
 
 TYPE
   struct_sockaddr_un = Uin.struct_sockaddr_un;
-  socklen_t = Utypes.socklen_t;
+  socklen_t = Utypes.socklen_t; (* size_t *)
   socklen_t_star = UNTRACED REF socklen_t;
 
   struct_linger = RECORD
