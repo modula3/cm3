@@ -112,7 +112,6 @@ M3WRAP1(m3_off_t, tell, int)
 #endif
 
 #ifndef _WIN32
-M3WRAP2(int, fchmod, int, m3_mode_t)
 M3WRAP3(int, chown, const char*, m3_uid_t, m3_gid_t)
 M3WRAP3(int, fchown, int, m3_uid_t, m3_gid_t)
 M3WRAP2(int, truncate, const char*, m3_off_t)
@@ -125,12 +124,16 @@ M3WRAP0(int, getpagesize)
 M3WRAP1(void*, sbrk, INTEGER)
 M3WRAP3(int, execve, const char*, char**, char**)
 M3WRAP1(unsigned, sleep, unsigned)
-M3WRAP3(int, mknod, const char*, m3_mode_t, m3_dev_t)
 M3WRAP3(m3_off_t, lseek, int, m3_off_t, int)
 M3WRAP2(int, mkdir, const char*, m3_mode_t)
 M3WRAP1(int, pipe, int*)
 M3WRAP2(int, gethostname, char*, WORD_T)
 M3WRAP2(char*, getcwd, char*, WORD_T)
+
+#ifndef __vms
+
+M3WRAP2(int, fchmod, int, m3_mode_t)
+M3WRAP3(int, mknod, const char*, m3_mode_t, m3_dev_t)
 
 m3_pid_t __cdecl Unix__fork(void)
 {
@@ -145,7 +148,8 @@ m3_pid_t __cdecl Unix__fork(void)
     return fork();
 #endif
 }
-#endif
+#endif /* vms */
+#endif /* win32 */
 
 void __cdecl Unix__underscore_exit(int exit_code)
 {
