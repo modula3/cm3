@@ -59,12 +59,12 @@ void __cdecl Unix__Assertions(void)
     M3_STATIC_ASSERT((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
     M3_STATIC_ASSERT(sizeof(ptrdiff_t) == sizeof(size_t));
     M3_STATIC_ASSERT(sizeof(void*) == sizeof(size_t));
-#ifndef _WIN64
+#if !defined(_WIN64) && !defined(__vms)
     M3_STATIC_ASSERT(sizeof(void*) == sizeof(long));
     M3_STATIC_ASSERT(sizeof(size_t) == sizeof(long));
 #endif
 
-#ifdef _MSC_VER
+#if defined(_MSC_VER) || defined(__DECC)
     M3_STATIC_ASSERT(sizeof(__int64) == 8);
 #else
     M3_STATIC_ASSERT(sizeof(long long) == 8);
