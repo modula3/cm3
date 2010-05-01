@@ -235,8 +235,10 @@ m3_socklen_t is equivalent to socklen_t, when socklen_t is 32 bits.
 It is a reasonable facsimile to the type the Modula-3 code uses -- the
 same size and usually the same signedness.
 */
-#ifdef __INTERIX
+#if defined(__INTERIX) || (defined(__vms) && defined(_DECC_V4_SOURCE))
 typedef int socklen_t;
+#elif defined(__vms)
+typedef size_t socklen_t;
 #endif
 #if defined(__CYGWIN__) || defined(_WIN32)
 typedef int m3_socklen_t;
