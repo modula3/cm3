@@ -49,7 +49,7 @@ TYPE
   pid_t = INTEGER; (* generally only 32 bits but ok *)
   uid_t = INTEGER; (* signed on some systems, unsigned on some systems, portable code cannot depend on either *)
 
-  socklen_t = uint32_t; (* int32_t on Cygwin, size_t on HP-UX, but ok via wrappers (see Usocket.i3) *)
+  socklen_t = size_t; (* underlying platform varies *)
 
   mode_t  = INTEGER; (* often only 16 bits but ok *)
   dev_t   = LONGINT; (* sometimes 32 bits, sometimes 64 bits *)
