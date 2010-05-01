@@ -12,5 +12,5 @@
 #include "m3core.h"
 
 #define M3MODULE Uuio
-M3WRAP3_(ssize_t, read, int, void*, size_t)
-M3WRAP3_(ssize_t, write, int, const void*, size_t)
+M3WRAP3_(ssize_t, read, int, void*, WORD_T)
+M3WRAP3_(ssize_t, write, int, const void*, WORD_T)
