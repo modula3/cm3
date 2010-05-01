@@ -160,7 +160,14 @@ extern "C" {
 #endif
 
 /* INTEGER is always signed and exactly the same size as a pointer */
+#if __INITIAL_POINTER_SIZE == 64
+/* VMS with 64 bit pointers but 32bit size_t/ptrdiff_t. */
+typedef __int64 INTEGER;
+typedef unsigned __int64 WORD_T;
+#else
 typedef ptrdiff_t INTEGER;
+typedef size_t WORD_T;
+#endif
 
 /* LONGINT is always signed and exactly 64 bits. */
 typedef INT64 LONGINT;
@@ -186,8 +193,8 @@ typedef INTEGER m3_uid_t;
  Only convert integers to/from integers, and pointer-sized integers to/from pointers.
  That is, for example, do NOT convert int <=> pointer.
  */
-#define PTHREAD_TO_M3(x)   ((m3_pthread_t)(size_t)(x))
-#define PTHREAD_FROM_M3(x) ((pthread_t)(size_t)(x))
+#define PTHREAD_TO_M3(x)   ((m3_pthread_t)(WORD_T)(x))
+#define PTHREAD_FROM_M3(x) ((pthread_t)(WORD_T)(x))
 
 #if defined(__APPLE__) || defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__)
 #define HAS_STAT_FLAGS
@@ -248,21 +255,21 @@ int __cdecl Usocket__shutdown(int s, int how);
 int __cdecl Usocket__socket(int af, int type, int protocol);
 int __cdecl Usocket__bind(int s, struct sockaddr* name, m3_socklen_t len);
 int __cdecl Usocket__connect(int s, struct sockaddr* name, m3_socklen_t len);
-INTEGER __cdecl Usocket__sendto(int s, void* msg, size_t length, int flags, struct sockaddr* dest, m3_socklen_t len);
+INTEGER __cdecl Usocket__sendto(int s, void* msg, WORD_T length, int flags, struct sockaddr* dest, m3_socklen_t len);
 int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len);
 int __cdecl Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* plen);
 int __cdecl Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* plen);
 int __cdecl Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen);
 int __cdecl Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen);
-INTEGER __cdecl Usocket__recvfrom(int s, void* buf, size_t len, int flags, struct sockaddr* from, m3_socklen_t* plen);
+INTEGER __cdecl Usocket__recvfrom(int s, void* buf, WORD_T len, int flags, struct sockaddr* from, m3_socklen_t* plen);
 
 #ifndef _WIN32
 DIR* __cdecl Udir__opendir(const char* a);
 #endif
 
-int __cdecl Umman__mprotect(ADDRESS addr, size_t len, int prot);
-ADDRESS __cdecl Umman__mmap(ADDRESS addr, size_t len, int prot, int flags, int fd, m3_off_t off);
-int __cdecl Umman__munmap(ADDRESS addr, size_t len);
+int __cdecl Umman__mprotect(ADDRESS addr, WORD_T len, int prot);
+ADDRESS __cdecl Umman__mmap(ADDRESS addr, WORD_T len, int prot, int flags, int fd, m3_off_t off);
+int __cdecl Umman__munmap(ADDRESS addr, WORD_T len);
 
 typedef INT64 m3_time_t;
 
@@ -363,7 +370,7 @@ typedef struct {
 
 void
 __cdecl
-DatePosix__FromTime(double t, const ptrdiff_t* zone, Date_t* date, TEXT unknown, TEXT gmt);
+DatePosix__FromTime(double t, const INTEGER* zone, Date_t* date, TEXT unknown, TEXT gmt);
 
 double
 __cdecl
@@ -371,7 +378,7 @@ DatePosix__ToTime(const Date_t* date);
 
 void
 __cdecl
-DatePosix__TypeCheck(const Date_t* d, size_t sizeof_DateT);
+DatePosix__TypeCheck(const Date_t* d, WORD_T sizeof_DateT);
 
 void
 __cdecl
