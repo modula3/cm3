@@ -244,8 +244,8 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* big endian *)
 
     IF TextUtils.StartsWith(system, "PA")
-      OR TextUtils.StartsWith(system, "MIPS") (* MIPS is definitely ambiguous! *)
-      OR TextUtils.StartsWith(system, "PPC")  (* PPC is a little ambiguous? *)
+      OR TextUtils.StartsWith(system, "MIPS") (* ambiguous *)
+      OR TextUtils.StartsWith(system, "PPC")  (* ambiguous *)
       OR TextUtils.StartsWith(system, "SPARC")
       OR TextUtils.StartsWith(system, "SOL") THEN
       Little_endian := FALSE;
@@ -261,7 +261,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     IF IsX86() OR IsAMD64() THEN
       Allow_packed_byte_aligned := TRUE;
-      Aligned_procedures := TRUE; (* This means assume they are aligned: unaligned is ok. *)
+      Aligned_procedures := TRUE; (* Assume aligned => unaligned is ok. *)
     END;
 
     CASE System OF
@@ -290,21 +290,21 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
 
     | Systems.I386_INTERIX =>
 
-                (* Visual C++'s 16, plus two ints, one to say if sigmask saved, and one to possibly save it. *)
+                (* Visual C++'s 16 plus 2 ints: is sigmask saved, its value. *)
 
                 Jumpbuf_size := 18 * Address.size;
 
     | Systems.NT386, Systems.NT386GNU,
       Systems.I386_NT, Systems.I386_CYGWIN, Systems.I386_MINGW =>
 
-                 (* Cygwin is 13, Visual C++ is 16. Interix is 18.
+                 (* Cygwin: 13, Visual C++: 16, Interix: 18.
                     Use 18 for interop.
-                    Note that Cygwin's setjmp.h header is wrong, off by a factor of 4.
+                    Cygwin's setjmp.h is wrong by a factor of 4.
                     Cygwin provides setjmp and _setjmp that resolve the same.
                     Visual C++ provides only _setjmp.
                     Visual C++ also has _setjmp3 that the compiler generates
                     a call to. In fact _setjmp appears to only use 8 ints
-                    and _setjmp3 appears to use more. Consider switching to _setjmp3.
+                    and _setjmp3 appears to use more. Consider using _setjmp3.
                  *)
                  Jumpbuf_size := (18 * Address.size);
 
@@ -443,17 +443,18 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     RETURN TRUE;
   END Init;
 
-PROCEDURE NTCall (x: INTEGER;  nm: TEXT;  id: INTEGER; backend_mode: M3BackendMode_t) =
+PROCEDURE NTCall (i: INTEGER;  nm: TEXT;  id: INTEGER;
+                  backend_mode: M3BackendMode_t) =
   BEGIN
     (* The external backend handles more calling convention details than the
        integrated backend -- reversing parameter order and knowing how to
        return structs. *)
-    CCs[x] := NEW (CallingConvention,
-                     name := nm,
-                     m3cg_id := id,
-                     args_left_to_right := NOT BackendIntegrated[backend_mode],
-                     results_on_left := TRUE,
-                     standard_structs := NOT BackendIntegrated[backend_mode]);
+    CCs[i] := NEW (CallingConvention,
+                   name := nm,
+                   m3cg_id := id,
+                   args_left_to_right := NOT BackendIntegrated[backend_mode],
+                   results_on_left := TRUE,
+                   standard_structs := NOT BackendIntegrated[backend_mode]);
   END NTCall;
 
 PROCEDURE FixI (VAR i: Int_type;  max_align: INTEGER) =
