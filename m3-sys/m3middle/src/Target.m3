@@ -11,7 +11,7 @@ MODULE Target;
 IMPORT Text, TargetMap, M3RT, TextUtils;
 
 VAR (*CONST*)
-  CCs : REF ARRAY OF CallingConvention;
+  CCs : ARRAY [0..8] OF CallingConvention;
 
 PROCEDURE Init64 () =
   BEGIN
@@ -146,7 +146,6 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     Extended.min     := Float{Precision.Extended, 0,-1.79769313486231570x+308};
     Extended.max     := Float{Precision.Extended, 0, 1.79769313486231570x+308};
 
-    CCs := NIL;
     OS_name := in_OS_name;
 
     (* common values *)
@@ -308,23 +307,11 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  *)
                  Jumpbuf_size := (18 * Address.size);
 
-                 (* 0 as third argument is __cdecl, while 1 is __stdcall *)
-
-                 CCs := NEW (REF ARRAY OF CallingConvention, 9);
-                 NTCall (0, "C",          0, backend_mode); (* __cdecl *)
-                 NTCall (1, "WINAPI",     1, backend_mode); (* __stdcall *)
-                 NTCall (2, "CALLBACK",   1, backend_mode); (* __stdcall *)
-                 NTCall (3, "WINAPIV",    0, backend_mode); (* __cdecl *)
-                 NTCall (4, "APIENTRY",   1, backend_mode); (* __stdcall *)
-                 NTCall (5, "APIPRIVATE", 1, backend_mode); (* __stdcall *)
-                 NTCall (6, "PASCAL",     1, backend_mode); (* __stdcall *)
-                 NTCall (7, "__cdecl",    0, backend_mode); (* __cdecl *)
-                 NTCall (8, "__stdcall",  1, backend_mode); (* __stdcall *)
-
-    (* SPARC32_SOLARIS *)
-    | Systems.SOLgnu, Systems.SOLsun =>
-                 Jumpbuf_size              := 19 * Address.size;
-                 Has_stack_walker          := TRUE;
+    | Systems.SPARC32_SOLARIS, Systems.SOLgnu, Systems.SOLsun =>
+                 (* 48 bytes with 4 byte alignment *)
+                 Jumpbuf_size     := 12 * Address.size;
+                 Jumpbuf_align    := Address.size;
+                 Has_stack_walker := TRUE;
 
     | Systems.SPARC32_LINUX =>
                  Jumpbuf_size              := 16_90 * Char.size;
@@ -337,10 +324,19 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                  Jumpbuf_align := 16 * Char.size;
 
     | Systems.SPARC64_SOLARIS =>
-                 Jumpbuf_size := 16_90 * Char.size;
+                 (* 96 bytes with 8 byte alignment *)
+                 Jumpbuf_size     := 12 * Address.size;
+                 Jumpbuf_align    := Address.size;
 
     |  Systems.I386_SOLARIS =>
-                 Jumpbuf_size := 16_280 * Char.size; (* TBD *)
+                 (* 40 bytes with 4 byte alignment *)
+                 Jumpbuf_size := 10 * Address.size;
+                 Jumpbuf_size := Address.size;
+
+    |  Systems.AMD64_SOLARIS =>
+                 (* 64 bytes with 8 byte alignment *)
+                 Jumpbuf_size := 8 * Address.size;
+                 Jumpbuf_size := Address.size;
 
     |  Systems.I386_LINUX, Systems.LINUXLIBC6 =>
                  Jumpbuf_size              := 39 * Address.size;
@@ -393,18 +389,18 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     ELSE RETURN FALSE;
     END;
 
-
-    IF (CCs = NIL) THEN
-      CCs := NEW (REF ARRAY OF CallingConvention, 1);
-      VAR cc := NEW (CallingConvention);  BEGIN
-        CCs[0] := cc;
-        cc.name               := "C";
-        cc.m3cg_id            := 0;
-        cc.args_left_to_right := TRUE;
-        cc.results_on_left    := FALSE;
-        cc.standard_structs   := TRUE;
-      END;
-    END;
+    (* 0 as third argument is __cdecl, while 1 is __stdcall
+     * There is really no point to so many synonyms.
+     *)
+    NTCall (0, "C",          0, backend_mode); (* __cdecl *)
+    NTCall (1, "WINAPIV",    0, backend_mode); (* __cdecl *)
+    NTCall (2, "__cdecl",    0, backend_mode); (* __cdecl *)
+    NTCall (3, "WINAPI",     1, backend_mode); (* __stdcall *)
+    NTCall (4, "CALLBACK",   1, backend_mode); (* __stdcall *)
+    NTCall (5, "APIENTRY",   1, backend_mode); (* __stdcall *)
+    NTCall (6, "APIPRIVATE", 1, backend_mode); (* __stdcall *)
+    NTCall (7, "PASCAL",     1, backend_mode); (* __stdcall *)
+    NTCall (8, "__stdcall",  1, backend_mode); (* __stdcall *)
     DefaultCall := CCs[0];
 
     (* fill in the "bytes" and "pack" fields *)
@@ -474,7 +470,7 @@ PROCEDURE FixF (VAR f: Float_type;  max_align: INTEGER) =
 PROCEDURE FindConvention (nm: TEXT): CallingConvention =
   VAR cc: CallingConvention;
   BEGIN
-    FOR i := 0 TO LAST (CCs^) DO
+    FOR i := 0 TO LAST (CCs) DO
       cc := CCs[i];
       IF (cc # NIL) AND Text.Equal (nm, cc.name) THEN RETURN cc; END;
     END;
@@ -484,7 +480,7 @@ PROCEDURE FindConvention (nm: TEXT): CallingConvention =
 PROCEDURE ConventionFromID (id: INTEGER): CallingConvention =
   VAR cc: CallingConvention;
   BEGIN
-    FOR i := 0 TO LAST (CCs^) DO
+    FOR i := 0 TO LAST (CCs) DO
       cc := CCs[i];
       IF (cc # NIL) AND (cc.m3cg_id = id) THEN RETURN cc; END;
     END;
