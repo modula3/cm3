@@ -2,10 +2,17 @@
 #pragma once
 #endif
 
-#define _FILE_OFFSET_BITS 64
-
 #ifndef INCLUDED_M3CORE_H
 #define INCLUDED_M3CORE_H
+
+#define _FILE_OFFSET_BITS 64
+
+#if defined(__sun) && defined(__sparc) && !defined(__MAKECONTEXT_V2_SOURCE)
+/* Support for userthreads on Solaris 9 4/03 and later.
+ * Support for older is easy but absent.
+ */
+#define __MAKECONTEXT_V2_SOURCE
+#endif
 
 #ifdef __INTERIX
 #ifndef _ALL_SOURCE
