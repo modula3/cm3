@@ -1104,12 +1104,17 @@ def _RealCleanFunction(NoAction, PackageDirectory):
 
 #-----------------------------------------------------------------------------
 
-def _MakeArchive(a):
-    # OpenBSD doesn't have bzip2 in base, so use gzip instead.
-    # bzip2 is also slower
-    DeleteFile(a + ".tar.gz")
-    DeleteFile(a + ".tgz")
-    b = "tar cfz " + a + ".tgz " + a
+def _MakeTGZ(a):
+    out = a + ".tgz"
+    DeleteFile(out)
+    b = "tar cfz " + out + " " + a
+    print(b + "\n")
+    os.system(b)
+    
+def _MakeZip(a):
+    out = a + ".zip"
+    DeleteFile(out)
+    b = "zip -r " + out + "  " + a
     print(b + "\n")
     os.system(b)
 
@@ -1169,10 +1174,10 @@ def Boot():
     if not StringTagged(Config, "VMS"):
         Compile += " -c "
         
-    AssembleOnHost = False
-    CopyAssemblyToTarget = True
-    
-    if StringTagged(Target, "VMS"):
+    AssembleOnTarget = not vms
+    AssembleOnHost = not AssembleOnTarget
+
+    if StringTagged(Target, "VMS") and AssembleOnTarget:
         Assemble = "macro /alpha "
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
         Assemble = "/usr/ccs/bin/as "
@@ -1180,8 +1185,10 @@ def Boot():
         Assemble = "as "
  
     if Target != "PPC32_OPENBSD" and Target != "PPC_LINUX":
+        # "Tag" not right for LINUX due to LINUXLIBC6
+        # "Tag" not right for BSD or 64 either.
         if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
-            if Target.find("64") != -1 or (StringTagged(Target, "ALPHA") and not StringTagged(Target, "ALPHA32_")):
+            if Target.find("64") != -1 or (StringTagged(Target, "ALPHA") and not StringTagged(Target, "ALPHA32")):
                 Assemble = Assemble + " --64"
             else:
                 Assemble = Assemble + " --32"
@@ -1205,8 +1212,7 @@ def Boot():
     if not vms:
         Compile = GnuPlatformPrefix + Compile
         Link = GnuPlatformPrefix + Link
-        Assemble = GnuPlatformPrefix + Assemble
-    if vms and AssembleOnHost:
+    if (not vms) or AssembleOnHost:
         Assemble = GnuPlatformPrefix + Assemble
 
     #
@@ -1242,6 +1248,7 @@ def Boot():
     #
     Make = open(os.path.join(BootDir, "make.sh"), "wb")
     VmsMake  = open(os.path.join(BootDir, "vmsmake.com"), "wb")
+    VmsLink  = open(os.path.join(BootDir, "vmslink.opt"), "wb")
     Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
     Objects = [ ]
@@ -1266,11 +1273,11 @@ def Boot():
             ext_h = a.endswith(".h")
             ext_s = a.endswith(".s")
             ext_ms = a.endswith(".ms")
-            ext_is = a.endswith(".mi")
+            ext_is = a.endswith(".is")
             if not (ext_c or ext_h or ext_s or ext_ms or ext_is):
                 continue
             fullpath = os.path.join(Root, dir, Config, a)
-            if ext_h or ext_c or not vms or CopyAssemblyToTarget:
+            if ext_h or ext_c or not vms or AssembleOnTarget:
                 CopyFile(fullpath, BootDir)
             if ext_h:
                 continue
@@ -1278,7 +1285,7 @@ def Boot():
             Objects += [Object]
             if vms:
                 if ext_c:
-                    VmsMake.write(Compile + " " + a + "\n")
+                    VmsMake.write("$ " + Compile + " " + a + "\n")
                 else:
                     if AssembleOnHost:
                         # must have cross assembler
@@ -1286,7 +1293,8 @@ def Boot():
                         print(a)
                         os.system(a)
                     else:
-                        VmsMake.write(Assemble + " " + a + "\n")                    
+                        VmsMake.write("$ " + Assemble + " " + a + "\n")                    
+                VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
                 continue
             Makefile.write("Objects=$(Objects) " + Object + "\n" + Object + ": " + a + "\n\t")
             if ext_c:
@@ -1298,10 +1306,9 @@ def Boot():
 
     Makefile.write("cm3: $(Objects)\n\t")
  
-    VmsMake.write("link /executable=cm3.exe ")
-    for a in Objects:
-        VmsMake.write(a + " ")
-    VmsMake.write("\n")
+    VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.mo\n")
+    VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.io\n")
+    VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
 
     for a in [Make, Makefile]:
         a.write("$(Link) -o cm3\n")
@@ -1390,7 +1397,7 @@ def Boot():
                 b.write("mkdir -p /dev2/cm3/" + reldir + "\n")
                 b.write("cp " + a + " /dev2/cm3/" + a + "\n")
 
-    for a in [UpdateSource, Make, Makefile, VmsMake]:
+    for a in [UpdateSource, Make, Makefile, VmsMake, VmsLink]:
         a.close()
         
     # write entirely new custom makefile for NT
@@ -1404,7 +1411,10 @@ def Boot():
         + " cl -Zi -MD *.c -link *.mo *.io -out:cm3.exe user32.lib kernel32.lib wsock32.lib comctl32.lib gdi32.lib advapi32.lib netapi32.lib\r\n")
         Makefile.close()
 
-    _MakeArchive(BootDir[2:])
+    if vms or StringTagged(Config, "NT") or Config == "NT386":
+        _MakeZip(BootDir[2:])
+    else:
+        _MakeTGZ(BootDir[2:])
 
 #-----------------------------------------------------------------------------
 # map action names to code and possibly other data
