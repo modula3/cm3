@@ -9,7 +9,11 @@ if not defined("SL") SL = "/" end
 readonly TARGET_OS = "SOLARIS"
 readonly SYSTEM_AR = "/usr/ccs/bin/ar"
 readonly GccMBits = {"32BITS" : "32", "64BITS" : "64"}{WORD_SIZE}
-readonly SYSTEM_ASM = "/usr/ccs/bin/as -s -K PIC -xarch=" & SunXArch
+if equal(TARGET, "I386_SOLARIS")
+  readonly SYSTEM_ASM = "/usr/ccs/bin/as -s -K PIC"
+else
+  readonly SYSTEM_ASM = "/usr/ccs/bin/as -s -K PIC -xarch=" & SunXArch
+end
 
 proc configure_c_compiler() is
 end
@@ -24,21 +28,22 @@ if equal (C_COMPILER, "SUN")
     % cc: Warning: -xarch=v8plus is deprecated, use -m32 -xarch=sparc instead
     % cc: Warning: -xarch=generic64 is deprecated, use -m64 to create 64-bit programs
 
-    local cc = "/usr/bin/cc"
-    if equal(WORD_SIZE, "32BITS")
-      local old = "-xarch=" & SunXArch
-      local new = "-m" & GccMBits
-      if equal(WORD_SIZE, "32BITS")
-        new = new & " -xarch=sparc"
-      end
-      if equal(try_exec("@" & cc & " " & old & " 2>&1 | grep \" " & new
-            & " \" > /dev/null"), 0)
-        cc = cc & " " & new
-      else
-        cc = cc & " " & old
-      end
+    local cc = "/usr/bin/cc -g -mt -xldscope=symbolic "
+    local old = "-xarch=" & SunXArch
+    local new = "-m" & GccMBits
+    if equal(WORD_SIZE, "32BITS") and not equal(TARGET, "I386_SOLARIS")
+      new = new & " -xarch=sparc"
     end
-    SYSTEM_CC = cc & " -g -mt -xcode=pic32 -xldscope=symbolic"
+    if equal(try_exec("@" & cc & old & " 2>&1 | grep \" " & new & " \" > /dev/null"), 0)
+      cc = cc & new
+    else
+      cc = cc & old
+    end
+    if equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS")
+      SYSTEM_CC = cc & " -Kpic"
+    else
+      SYSTEM_CC = cc & " -xcode=pic32"
+    end
   end
 
   % SYSTEM_LD = "/usr/ccs/bin/ld"
