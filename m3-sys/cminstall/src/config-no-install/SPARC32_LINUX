@@ -1,10 +1,7 @@
 readonly TARGET = "SPARC32_LINUX" % code generation target
 readonly GNU_PLATFORM = "sparc-linux" % "cpu-os" string for GNU
 
-% -mcpu=v9 for atomics
-% -funwind-tables in anticipation of using libunwind
-m3back_flags = "-mcpu=v9 -gstabs+ -m32 -munaligned-doubles -funwind-tables"
-SYSTEM_CC = "gcc -gstabs+ -m32 -munaligned-doubles" % C compiler
+SYSTEM_CC = "gcc -m32 -fPIC -munaligned-doubles" % C compiler
 readonly SYSTEM_ASM = "as -32" % Assembler
 
 include("SPARC.common")

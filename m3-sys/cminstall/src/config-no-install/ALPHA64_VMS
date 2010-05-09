@@ -1,6 +1,8 @@
 readonly TARGET = "ALPHA64_VMS"
 readonly GNU_PLATFORM = "alpha64-dec-vms"
-m3back_flags = "-g -funwind-tables"
+m3back_flags = "-g -fPIC -funwind-tables -mgas"
+m3back_debug = "" % we hardcoded -g
+m3back_optimize = "" % don't optimize
 SYSTEM_CC = "cc /pointer_size=64"
 SYSTEM_LD = "link"
 include("Alpha64.common")
