@@ -38,7 +38,6 @@ static void Usocket__plen_out(m3_socklen_t* plen, socklen_t len)
 
 void Usocket__Assertions(void)
 {
-#ifndef _WIN32
     /* assert that struct linger is literally { int l_onoff, l_linger },
     those types (or at least sizes), that order, no padding, except on Cygwin */
     
@@ -58,10 +57,7 @@ void Usocket__Assertions(void)
     M3_STATIC_ASSERT(offsetof(T, l_linger) == 4);
     M3_STATIC_ASSERT(M3_FIELD_SIZE(T, l_linger) == 4);
 #endif
-#endif
 }
-
-#ifndef _WIN32
 
 /* wrap everything */
 
@@ -199,8 +195,6 @@ INTEGER Usocket__recvfrom(int s, void* buf, size_t length, int flags, struct soc
         return r;
     }
 }
-
-#endif
 
 #ifdef __cplusplus
 } /* extern "C" */
