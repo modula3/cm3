@@ -163,14 +163,14 @@ PROCEDURE SetupNamingConventionsInternal (VAR s : State; mach : Quake.Machine) =
     
     value := GetDefn (s, "NAMING_CONVENTIONS");
     IF value # NIL THEN
-      M3Path.SetOS (ConvertNamingConventionStringToEnum (s, value), host := FALSE);
+      M3Path.SetTargetOS (ConvertNamingConventionStringToEnum (s, value));
     END;
 
     value := GetDefn (s, "TARGET_NAMING");
     IF value # NIL THEN
       WITH target_os = ConvertNamingConventionStringToEnum (s, value) DO
         s.target_os := target_os;
-        M3Path.SetOS (target_os, host := FALSE);
+        M3Path.SetTargetOS (target_os);
       END;
     END;
 
@@ -276,7 +276,7 @@ PROCEDURE CompileUnits (main     : TEXT;
     IF value # NIL THEN
       WITH target_os = ConvertNamingConventionStringToEnum (s, value) DO
         s.target_os := target_os;
-        M3Path.SetOS (target_os, host := FALSE);
+        M3Path.SetTargetOS (target_os);
       END;
     END;
 

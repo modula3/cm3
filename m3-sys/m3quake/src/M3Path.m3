@@ -56,18 +56,13 @@ CONST
 
   Default_pgm = ARRAY OSKind OF TEXT { "a.out", "a.out", "NONAME.EXE" };
 
-VAR
-  host_os := OSKind.Unix;
-  target_os := OSKind.Unix;
+CONST host_os = ARRAY Compiler.OS OF OSKind{OSKind.Unix, OSKind.Win32}[Compiler.ThisOS];
+VAR target_os := host_os;
 
-PROCEDURE SetOS (kind: OSKind;  host: BOOLEAN) =
+PROCEDURE SetTargetOS (kind: OSKind) =
   BEGIN
-    IF host THEN
-      host_os := kind;
-    ELSE
-      target_os := kind;
-    END;
-  END SetOS;
+    target_os := kind;
+  END SetTargetOS;
 
 PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
   VAR len: CARDINAL;  buf: ARRAY [0..255] OF CHAR;  ref: REF ARRAY OF CHAR;
@@ -606,9 +601,4 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
   END FixPath;
 
 BEGIN
-  IF (Compiler.ThisOS = Compiler.OS.WIN32) THEN
-    SlashText := "\\";
-    SetOS (OSKind.Win32, TRUE);
-    SetOS (OSKind.Win32, FALSE);
-  END;
 END M3Path.
