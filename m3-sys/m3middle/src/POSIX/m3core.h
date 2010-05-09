@@ -28,7 +28,7 @@
 #include <string.h>
 #include <stddef.h>
 
-#define ZeroMemory(a,b) (memset((a), 0, (b)))
+#define ZeroMemory(a, b) (memset((a), 0, (b)))
 #define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
 
 #ifdef __cplusplus
