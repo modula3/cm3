@@ -6,6 +6,8 @@
 
 INTERFACE M3Path;
 
+IMPORT Compiler;
+
 TYPE
   T = RECORD
     dir  : TEXT;
@@ -13,8 +15,7 @@ TYPE
     kind : Kind;
   END;
 
-VAR (* possibly changed at initialization and then CONST *)
-  SlashText := "/";
+CONST SlashText = ARRAY Compiler.OS OF TEXT{"/", "\\"}[Compiler.ThisOS];
 
 TYPE
   Kind = { Unknown, I3, IC, IS, IO, M3, MC, MS, MO,
@@ -28,8 +29,8 @@ CONST
     "GrumpyUnix",
     "Win32" };
 
-PROCEDURE SetOS (os: OSKind;  host: BOOLEAN);
-(* Set the conventions for the specifed platform *)
+PROCEDURE SetTargetOS (os: OSKind);
+(* Set the conventions for the target platform *)
 
 PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT;
 (* Return "a/b/c/d" using the host naming conventions *)

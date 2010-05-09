@@ -6,12 +6,9 @@ VAR length := Text.Length(text);
     buf := NEW (REF ARRAY OF CHAR, length);
     t2 := "";
 BEGIN
-  FOR i := 0 TO 1 DO
-     M3Path.SetOS(ARRAY OF M3Path.OSKind {M3Path.OSKind.Unix, M3Path.OSKind.Win32}[i], host := TRUE);
-     Text.SetChars(buf^, text);
-     t2 := M3Path.FixPath(buf^);
-     IO.Put(ARRAY OF TEXT {"Unix", "Win32"}[i] & " " &  text & " => " & t2 & Wr.EOL);
-  END;
+  Text.SetChars(buf^, text);
+  t2 := M3Path.FixPath(buf^);
+  IO.Put(text & " => " & t2 & Wr.EOL);
 END T;
 
 CONST Letters1 = SET OF CHAR {'a' .. 'z', 'A' .. 'Z'};
