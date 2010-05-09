@@ -16,9 +16,6 @@ CONST
   Colon     = ':';
   Slash     = '/';
   BackSlash = '\\';
-  DirSep = ARRAY OSKind OF CHAR { Slash,  Slash,  BackSlash };
-  VolSep = ARRAY OSKind OF CHAR { Null,   Null,   Colon  };
-  DirSepText = ARRAY OSKind OF TEXT { "/",  "/",  "\\" };
 
 TYPE
   SMap = ARRAY Kind OF TEXT;
@@ -56,8 +53,10 @@ CONST
 
   Default_pgm = ARRAY OSKind OF TEXT { "a.out", "a.out", "NONAME.EXE" };
 
-CONST host_os = ARRAY Compiler.OS OF OSKind{OSKind.Unix, OSKind.Win32}[Compiler.ThisOS];
-VAR target_os := host_os;
+VAR target_os := ARRAY Compiler.OS OF OSKind{OSKind.Unix, OSKind.Win32}[Compiler.ThisOS];
+CONST d_sep = ARRAY Compiler.OS OF CHAR{Slash, BackSlash}[Compiler.ThisOS];
+CONST v_sep = ARRAY Compiler.OS OF CHAR{Null, Colon}[Compiler.ThisOS];
+CONST DirSepText = ARRAY Compiler.OS OF TEXT{"/", "\\"}[Compiler.ThisOS];
 
 PROCEDURE SetTargetOS (kind: OSKind) =
   BEGIN
@@ -100,8 +99,6 @@ PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
   END New;
 
 PROCEDURE Join (dir, base: TEXT;  k: Kind): TEXT =
-  CONST d_sep = DirSep [host_os];
-        v_sep = VolSep [host_os];
   VAR
     pre      := Prefix [target_os][k];
     ext      := Suffix [target_os][k];
@@ -146,7 +143,7 @@ PROCEDURE Join (dir, base: TEXT;  k: Kind): TEXT =
       IF dir_len # 0 THEN
         ch := Text.GetChar (dir, dir_len-1);
         (* ensure there is a slash after dir *)
-        IF (NOT IsDirSep(ch, d_sep)) AND (ch # v_sep) THEN
+        IF (NOT IsDirSep(ch)) AND (ch # v_sep) THEN
           add_sep := TRUE;
           INC (len);
         END;
@@ -171,7 +168,6 @@ PROCEDURE Parse (nm: TEXT): T =
   END Parse;
 
 PROCEDURE DoParse (nm_txt: TEXT; len: CARDINAL; VAR nm: ARRAY OF CHAR): T =
-  CONST d_sep = DirSep [host_os];
   VAR
     t       : T;
     base_len: CARDINAL;
@@ -195,7 +191,7 @@ PROCEDURE DoParse (nm_txt: TEXT; len: CARDINAL; VAR nm: ARRAY OF CHAR): T =
       t.dir := NIL;
       start := 0;
     ELSIF (d_index = 0) THEN
-      t.dir := DirSepText [host_os];
+      t.dir := DirSepText;
       start := 1;
     ELSE
       t.dir := Text.FromChars (SUBARRAY (nm, 0, d_index));
@@ -244,7 +240,7 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: CARDINAL;
                        b: TEXT;  start_b: CARDINAL;
                        len: CARDINAL): BOOLEAN =
   CONST N = 128;
-        ignore_case = (host_os = OSKind.Win32);
+        ignore_case = (Compiler.ThisOS = Compiler.OS.WIN32);
   VAR
     len_a : CARDINAL;
     len_b : CARDINAL;
@@ -291,10 +287,10 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: CARDINAL;
     RETURN TRUE;
   END RegionMatch;
 
-PROCEDURE EndOfArc (path: TEXT;  xx: CARDINAL;  d_sep: CHAR): BOOLEAN =
+PROCEDURE EndOfArc (path: TEXT;  xx: CARDINAL): BOOLEAN =
   VAR len := Text.Length (path);
   BEGIN
-    RETURN (len = xx) OR ((len > xx) AND IsDirSep (Text.GetChar (path, xx), d_sep));
+    RETURN (len = xx) OR ((len > xx) AND IsDirSep (Text.GetChar (path, xx)));
   END EndOfArc;
 
 PROCEDURE DefaultProgram (): TEXT =
@@ -347,21 +343,20 @@ PROCEDURE DoConvert (nm: TEXT;  len: CARDINAL;  VAR buf: ARRAY OF CHAR): TEXT =
     END;
   END DoConvert;
 
-PROCEDURE IsDirSep (ch: CHAR; d_sep: CHAR): BOOLEAN =
+PROCEDURE IsDirSep (ch: CHAR): BOOLEAN =
   BEGIN
     RETURN (ch = Slash) OR (ch = d_sep);
   END IsDirSep;
 
 PROCEDURE MakeRelative (VAR path: TEXT;  full, rel: TEXT): BOOLEAN =
-  CONST d_sep = DirSep[host_os];
   BEGIN
     IF PrefixMatch (path, full)
-      AND EndOfArc (path, Text.Length (full), d_sep) THEN
+      AND EndOfArc (path, Text.Length (full)) THEN
       VAR
         p := Text.Length(full);
         n := Text.Length(path);
       BEGIN
-        WHILE (p < n) AND IsDirSep (Text.GetChar (path, p), d_sep) DO
+        WHILE (p < n) AND IsDirSep (Text.GetChar (path, p)) DO
           INC(p)
         END;
         path := New (rel, Text.Sub (path, p));
@@ -429,8 +424,6 @@ PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: CARDINAL; VAR le
   to the number of slashes -- longer strings required more memory. Every time it removed an element,
   it would copy the whole rest of the string down and rescan for all the slashes.
   *)
-  CONST d_sep = DirSep [host_os];
-        v_sep = VolSep [host_os];
   VAR
     level : CARDINAL := 0;
     end   := (start + len);
@@ -453,14 +446,14 @@ PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: CARDINAL; VAR le
     WHILE from # end DO
       ch := p[from];
       IF (ch = '.')
-          AND (((from + 1) = end) OR (p[from + 1] = v_sep) OR IsDirSep (p[from + 1], d_sep))
-          AND ((from = start) OR IsDirSep (p[from - 1], d_sep)) THEN
+          AND (((from + 1) = end) OR (p[from + 1] = v_sep) OR IsDirSep (p[from + 1]))
+          AND ((from = start) OR IsDirSep (p[from - 1])) THEN
 
         (* change \.: to : probably v_sep should be allowed in fewer places *)
         IF (v_sep # Null)
             AND ((from + 1) # end) AND (p[from + 1] = v_sep)
-            AND (from # start) AND IsDirSep (p[from - 1], d_sep)
-            AND (to # start) AND IsDirSep (p[to - 1], d_sep) THEN
+            AND (from # start) AND IsDirSep (p[from - 1])
+            AND (to # start) AND IsDirSep (p[to - 1]) THEN
           p[to - 1] := v_sep;
         END;
 
@@ -472,13 +465,13 @@ PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: CARDINAL; VAR le
         IF (ch = '.')
             AND ((from + 1) # end)
             AND (p[from + 1] = '.')
-            AND (((from + 2) = end) OR (p[from + 2] = v_sep) OR IsDirSep (p[from + 2], d_sep))
+            AND (((from + 2) = end) OR (p[from + 2] = v_sep) OR IsDirSep (p[from + 2]))
             (* probably v_sep should be allowed in fewer places *)
-            AND ((from = start) OR IsDirSep (p[from - 1], d_sep)) THEN
+            AND ((from = start) OR IsDirSep (p[from - 1])) THEN
           INC (level);
           INC (from, 2);
           (* remove the slash we already wrote; we will write the one at the end, if there is one *)
-          IF (to # start) AND IsDirSep (p[to - 1], d_sep) THEN
+          IF (to # start) AND IsDirSep (p[to - 1]) THEN
             DEC (to);
           END;
           (* counteract the implicit slash at end *)
@@ -498,11 +491,11 @@ PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: CARDINAL; VAR le
     END;
 
     (* implicit slash at end *)
-    DEC (level, ORD ((level # 0) AND NOT IsDirSep (p[end - 1], d_sep)));
+    DEC (level, ORD ((level # 0) AND NOT IsDirSep (p[end - 1])));
 
     (* if there were more ".."s than preceding elements, add back some ".."s *)
     WHILE level # 0 DO
-      IF (to # start) AND (NOT IsDirSep (p[to - 1], d_sep)) THEN
+      IF (to # start) AND (NOT IsDirSep (p[to - 1])) THEN
         p[to] := d_sep;
         INC (to);
       END;
@@ -517,12 +510,12 @@ PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: CARDINAL; VAR le
     len := (end - start);
 
     (* if input started with a separator or two, then so must output *)
-    IF IsDirSep (p[from - 1], d_sep) AND (len = 0 OR NOT IsDirSep (p[to - 1], d_sep)) THEN
+    IF IsDirSep (p[from - 1]) AND (len = 0 OR NOT IsDirSep (p[to - 1])) THEN
       p[to] := d_sep;
       INC (to);
       INC (end);
       INC (len);
-      IF IsDirSep (p[from - 2], d_sep) AND (len = 1 OR NOT IsDirSep (p[to - 2], d_sep)) THEN
+      IF IsDirSep (p[from - 2]) AND (len = 1 OR NOT IsDirSep (p[to - 2])) THEN
         p[to] := d_sep;
         INC (to);
         INC (end);
@@ -536,7 +529,6 @@ PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: CARDINAL; VAR le
 
 PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
   (* remove redundant "/arc/../" and "/./" segments *)
-  CONST d_sep = DirSep [host_os];
   VAR
     start : CARDINAL := 0;
     len := NUMBER (p);
@@ -547,7 +539,7 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
     (* remove trailing slashes, leaving at most one *)
     (* check for length 3 here so we don't encroach on the leading slashes *)
     (* Trailing slashes break some code so for now don't do this.
-    WHILE (len >= 3) AND IsDirSep (p[start + len - 1], d_sep) AND IsDirSep (p[start + len - 2], d_sep) DO
+    WHILE (len >= 3) AND IsDirSep (p[start + len - 1]) AND IsDirSep (p[start + len - 2]) DO
       DEC (len);
     END;
     *)
@@ -555,20 +547,20 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
     (* remove all trailing slashes *)
     (* check for length 3 here so we do not encroach on any leading slashes *)
 
-    WHILE (len >= 3) AND IsDirSep (p[start + len - 1], d_sep) DO
+    WHILE (len >= 3) AND IsDirSep (p[start + len - 1]) DO
       DEC (len);
     END;
 
     (* remove trailing slash in 2 char string if first char is not slash,
     otherwise ab/ => ab, but a/ => a/ which does not make sense *)
 
-    IF (len = 2) AND (NOT IsDirSep(p[start], d_sep)) AND (IsDirSep(p[start + 1], d_sep)) THEN
+    IF (len = 2) AND (NOT IsDirSep(p[start])) AND (IsDirSep(p[start + 1])) THEN
       len := 1;
     END;
 
     (* remove leading slashes, leaving at most two *)
 
-    WHILE (len > 2) AND IsDirSep (p[start], d_sep) AND IsDirSep (p[start + 1], d_sep) AND IsDirSep (p[start + 2], d_sep) DO
+    WHILE (len > 2) AND IsDirSep (p[start]) AND IsDirSep (p[start + 1]) AND IsDirSep (p[start + 2]) DO
       INC (start);
       DEC (len);
     END;
@@ -578,7 +570,7 @@ PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
     IF len > 2 THEN
         j := start + 1;
         FOR i := start + 1 TO start + len - 2 DO
-            IF NOT (IsDirSep(p[i], d_sep) AND IsDirSep(p[i + 1], d_sep)) THEN
+            IF NOT (IsDirSep(p[i]) AND IsDirSep(p[i + 1])) THEN
                 p[j] := p[i];
                 INC(j);
             END;
