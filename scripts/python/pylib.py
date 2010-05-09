@@ -1144,7 +1144,7 @@ def Boot():
         cc = "cc"
         cflags = "/pointer_size=64 "
     elif StringTagged(Config, "SOLARIS") or Config == "SOLsun":
-        cc = "/usr/ccs/bin/cc"
+        cc = "/usr/bin/cc"
         cflags = "-g -mt -xldscope=symbolic "
     else:
         cc = {
