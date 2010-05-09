@@ -5,7 +5,7 @@
 (* Last modified on Tue Oct  3 13:30:25 PDT 1995 by najork                   *)
 (*       Created on Fri Aug 19 15:27:42 PDT 1994 by najork                   *)
 
-(* Modula-3 version of "gl.h" for Win32. *)
+(* Modula-3 version of "gl.h". *)
 
 INTERFACE GL;
 
