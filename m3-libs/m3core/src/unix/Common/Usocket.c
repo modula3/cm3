@@ -50,7 +50,7 @@ void __cdecl Usocket__Assertions(void)
     M3_STATIC_ASSERT(offsetof(M, linger) == 4);
     M3_STATIC_ASSERT(M3_FIELD_SIZE(M, linger) == 4);
     M3_STATIC_ASSERT(sizeof(T) == (M3_FIELD_SIZE(T, l_onoff) + M3_FIELD_SIZE(T, l_linger)));
-#if !defined(__CYGWIN__) && !defined(_WIN32)
+#if !(defined(__CYGWIN__) || defined(_WIN32))
     M3_STATIC_ASSERT(sizeof(T) == 8);
     M3_STATIC_ASSERT(offsetof(T, l_onoff) == 0);
     M3_STATIC_ASSERT(M3_FIELD_SIZE(T, l_onoff) == 4);
@@ -91,7 +91,7 @@ INTEGER __cdecl Usocket__sendto(int s, void* msg, size_t length, int flags, stru
 int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len)
 {
     ASSERT_LEN
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || defined(_WIN32)
     if (optname == SO_LINGER && optval != NULL)
     {
         struct linger b;
@@ -99,7 +99,7 @@ int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_
         assert(len == sizeof(*a));
         b.l_onoff = a->onoff;
         b.l_linger = a->linger;
-        return setsockopt(s, level, optname, &b, sizeof(b));
+        return setsockopt(s, level, optname, (void*)&b, sizeof(b));
     }
 #endif
     return setsockopt(s, level, optname, optval, len);
@@ -153,7 +153,7 @@ the same order. This is checked in Usocket__Assertions.
         int r;
         socklen_t len = plen ? *plen : 0;
 
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || defined(_WIN32)
         m3_linger_t* a = { 0 };
         struct linger b;
 
@@ -172,7 +172,7 @@ the same order. This is checked in Usocket__Assertions.
         r = getsockopt(s, level, optname, optval, plen ? &len : 0);
         PLEN_OUT
 
-#ifdef __CYGWIN__
+#if defined(__CYGWIN__) || defined(_WIN32)
         if (a)
         {
             assert(len == sizeof(b));
