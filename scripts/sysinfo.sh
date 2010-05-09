@@ -97,10 +97,7 @@ find_in_list() {
         for a in $2; do
             for b in $a ${a}.exe; do
                 if type $b >/dev/null 2>/dev/null; then
-                    # These echos break m3-sys/cm3/version.quake
-                    # echo $1=$b
                     eval $1=$b
-                    # echo export $1
                     export $1
                     return
                 fi
@@ -132,10 +129,12 @@ CM3LASTCHANGED=${CM3LASTCHANGED:-${default_CM3LASTCHANGED}}
 # /usr/pkg is NetBSD default
 # /usr/sfw is Solaris default (Sun FreeWare)
 # /usr/local is FreeBSD and OpenBSD default and popular otherwise
+# /opt/csw/gnu/make on some Solaris machines, the ones Hudon uses
+# /opt/csw/bin/gnutar ditto, though it a wrapper for star
 #
 
-find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake make" || exit 1
-find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar tar" || exit 1
+find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake /opt/csw/gnu/make make" || exit 1
+find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar /opt/csw/bin/gnutar tar" || exit 1
 
 CM3_GCC_BACKEND=yes
 CM3_GDB=${CM3_GDB:-yes}
