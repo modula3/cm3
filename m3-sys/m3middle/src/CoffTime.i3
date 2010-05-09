@@ -8,7 +8,7 @@
 
 INTERFACE CoffTime;
 
-CONST EpochAdjust = 0.0d0; (* to 1/1/1970 *)
+(* CONST *) <*EXTERNAL CoffTime__EpochAdjust*> VAR EpochAdjust: LONGREAL;
 
 <*EXTERNAL CoffTime__Now*>PROCEDURE Now (): INTEGER;
 

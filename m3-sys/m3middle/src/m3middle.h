@@ -8,8 +8,22 @@
 
 #define _FILE_OFFSET_BITS 64
 
+#ifdef _WIN32
+#ifndef WIN32
+#define WIN32
+#endif
+#endif
+
 #ifndef _REENTRANT
 #define _REENTRANT
+#endif
+
+/* const is extern const in C, but static const in C++,
+ * but gcc gives a warning for the correct portable form "extern const" */
+#if defined(__cplusplus) || !defined(__GNUC__)
+#define EXTERN_CONST extern const
+#else
+#define EXTERN_CONST const
 #endif
 
 #ifdef __arm__
@@ -23,13 +37,11 @@
 #define __cdecl /* nothing */
 #endif
 
+#ifndef _WIN32
 #include <sys/stat.h>
 #include <sys/time.h>
-#include <string.h>
+#endif
 #include <stddef.h>
-
-#define ZeroMemory(a, b) (memset((a), 0, (b)))
-#define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
 
 #ifdef __cplusplus
 extern "C" {
@@ -52,10 +64,6 @@ M3toC__SharedTtoS(TEXT);
 void
 __cdecl
 M3toC__FreeSharedS(TEXT, const char*);
-
-TEXT
-__cdecl
-M3toC__CopyStoT(const char*);
 
 #ifdef __cplusplus
 } /* extern "C" */
