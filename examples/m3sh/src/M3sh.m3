@@ -8,7 +8,7 @@ MODULE M3sh EXPORTS Main;
 IMPORT Pathname, FS, IO, OSError;
 IMPORT Stdio, RegularFile, Pipe, Process, Thread, Env, Params;
 IMPORT FileWr, FileRd, Rd, Lex, Wr, Text, Atom, AtomList;
-IMPORT TextRd, TextSeq;
+IMPORT TextRd, TextSeq, Compiler;
 
 (*------------------------------------------------- shell commands ------*)
 
@@ -260,11 +260,12 @@ PROCEDURE FindExecutable (file: TEXT): TEXT =
 
   CONST UnixExts = ARRAY OF TEXT { NIL };
   CONST WinExts = ARRAY OF TEXT { NIL, "exe", "com", "cmd", "bat" };
- 
-(* To look up the separator for "PATH", we need to find out 
-   what sort of system we are running. To do so, we check
-   to see if "Pathname" uses "/" or "\". *)
-  VAR on_unix: BOOLEAN := Text.Equal(Pathname.Join("","",NIL),"/");
+
+  (* To look up the separator for "PATH", we need to know
+   * what sort of system we are running.
+   *)
+  CONST on_unix = (Compiler.ThisOS = Compiler.OS.POSIX);
+
   BEGIN
     IF on_unix
       THEN RETURN SearchPath (file, path, ':', UnixExts);
