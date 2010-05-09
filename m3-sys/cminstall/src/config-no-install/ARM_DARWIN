@@ -13,8 +13,6 @@ readonly SYSTEM_ASM = GNU_PLATFORM & "-as -arch armv6"
 SYSTEM_CC = GNU_PLATFORM & "-gcc -fPIC -march=armv6 -mcpu=arm1176jzf-s"
 readonly SYSTEM_LIBTOOL = GNU_PLATFORM & "-libtool"
 
-m3back_flags = "-fPIC -march=armv6 -mcpu=arm1176jzf-s -fverbose-asm"
-% -funwind-tables?
-% -m32?
+m3back_flags = "-march=armv6 -mcpu=arm1176jzf-s -fverbose-asm"
 
 include("Darwin.common")
