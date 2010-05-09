@@ -19,7 +19,8 @@
 #endif
 
 /* const is extern const in C, but static const in C++,
- * but gcc gives a warning for the correct portable form "extern const" */
+ * but gcc gives a warning for the correct portable form "extern const"
+ */
 #if defined(__cplusplus) || !defined(__GNUC__)
 #define EXTERN_CONST extern const
 #else
