@@ -334,12 +334,12 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     |  Systems.I386_SOLARIS =>
                  (* 40 bytes with 4 byte alignment *)
                  Jumpbuf_size := 10 * Address.size;
-                 Jumpbuf_size := Address.size;
+                 Jumpbuf_align := Address.size;
 
     |  Systems.AMD64_SOLARIS =>
                  (* 64 bytes with 8 byte alignment *)
                  Jumpbuf_size := 8 * Address.size;
-                 Jumpbuf_size := Address.size;
+                 Jumpbuf_align := Address.size;
 
     |  Systems.I386_LINUX, Systems.LINUXLIBC6 =>
                  Jumpbuf_size              := 39 * Address.size;
