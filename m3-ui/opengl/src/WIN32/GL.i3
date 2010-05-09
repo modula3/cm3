@@ -16,16 +16,16 @@ IMPORT Ctypes;
 (*****************************************************************************)
 
 TYPE
-  GLenum     = Ctypes.unsigned_long;
+  GLenum     = Ctypes.unsigned_int;
   GLboolean  = Ctypes.unsigned_char;
-  GLbitfield = Ctypes.unsigned_long;
+  GLbitfield = Ctypes.unsigned_int;
   GLbyte     = Ctypes.signed_char;
   GLshort    = Ctypes.short;
-  GLint      = Ctypes.long;
-  GLsizei    = Ctypes.long;
+  GLint      = Ctypes.int;
+  GLsizei    = Ctypes.int;
   GLubyte    = Ctypes.unsigned_char;
   GLushort   = Ctypes.unsigned_short;
-  GLuint     = Ctypes.unsigned_long;
+  GLuint     = Ctypes.unsigned_int;
   GLfloat    = Ctypes.float;
   GLclampf   = Ctypes.float;
   GLdouble   = Ctypes.double;
@@ -1126,7 +1126,7 @@ PROCEDURE glMapGrid2d (un: GLint; u1, u2: GLdouble;
 
 <*EXTERNAL glMapGrid2f:WINAPI*>
 PROCEDURE glMapGrid2f (un: GLint; u1, u2 : GLfloat;
-                                    vn: GLint; v1, v2 : GLfloat);
+                       vn: GLint; v1, v2 : GLfloat);
 
 <*EXTERNAL glMaterialf:WINAPI*>
 PROCEDURE glMaterialf (face, pname: GLenum; param: GLfloat);

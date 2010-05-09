@@ -7,6 +7,9 @@
 
 if SYSTEM_LIBS contains "OPENGL"
   import_sys_lib ("OPENGL")
-  include_dir (OS_TYPE)
+  include_dir ("WIN32")
+  if equal(OS_TYPE, "POSIX")
+    include_dir ("POSIX")
+  end
   Library ("opengl")
 end
