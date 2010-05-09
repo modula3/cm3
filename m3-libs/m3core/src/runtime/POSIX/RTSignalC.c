@@ -154,8 +154,12 @@ static size_t GetPC(void* xcontext)
 #elif defined(__sun) || defined(__sparc)
 #if defined(REG_PC)
       context->uc_mcontext.gregs[REG_PC]
-#elif defined(__sun) && defined(PC)
+#elif defined(__sun) && defined(__i386) && (PC == 14)
       context->uc_mcontext.gregs[PC]
+#elif defined(__sun) && defined(__sparc) && (PC == 1)
+      context->uc_mcontext.gregs[PC]
+#else
+#error unknown __sun/__sparc target
 #endif
 #elif defined(__linux)
 
