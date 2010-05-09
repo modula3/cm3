@@ -578,12 +578,10 @@ if (UName.startswith("windows")
     # Host = "NT386"
     Host = "I386_NT"
 
-elif IsInterix():
-
+elif UName == "interix":
     Host = "I386_INTERIX"
 
-elif UName.startswith("freebsd"):
-
+elif UName == "freebsd":
     if UNameArchM == "i386":
         Host = "I386_FREEBSD"
     elif UNameArchM == "amd64":
@@ -591,26 +589,24 @@ elif UName.startswith("freebsd"):
     else:
         Host = "ALPHA_FREEBSD"
 
-elif UName.startswith("openbsd"):
-
-    if UNameArchM == "sparc64":
+elif UName == "openbsd":
+    arch = os.popen("arch -s").read().lower() # or machine -a
+    if arch == "sparc64":
         Host = "SPARC64_OPENBSD"
-    elif UNameArchM == "macppc":
+    elif arch == "powerpc":
         Host = "PPC32_OPENBSD"
-    elif UNameArchM == "i386":
+    elif arch == "i386":
         Host = "I386_OPENBSD"
     else:
         FatalError("unknown OpenBSD platform")
 
-elif UName.startswith("darwin"):
-
-    # detect the m3 platform (Darwin runs on ppc32, ppc64, x86, amd64, arm)
+elif UName == "darwin":
     if UNameArchP == "powerpc":
         if "ppc970\n" == os.popen("machine").read().lower():
           Host = "PPC64_DARWIN"
         else:
           Host = "PPC_DARWIN"
-    elif re.match("i[3456]86", UNameArchP):
+    elif UNameArchP == "i386":
         if os.popen("sysctl hw.cpu64bit_capable").read() == "hw.cpu64bit_capable: 1\n":
             Host = "AMD64_DARWIN"
         else:
@@ -620,20 +616,22 @@ elif UName.startswith("darwin"):
     elif UNameArchP == "powerpc64":
         Host = "PPC64_DARWIN"
 
-elif UName.startswith("sunos"):
-
+elif UName == "sunos":
+    isainfo = os.popen("isainfo").read().lower()
     if UNameArchP == "i386":
-        if StringContains(os.popen("isainfo").read().lower(), "amd64"):
+        if StringContains(isainfo, "amd64"):
             Host = "AMD64_SOLARIS"
         else:
             Host = "I386_SOLARIS"
     else:
-        Host = "SOLgnu"
-        #Host = "SOLsun"
-        #Host = "SPARC32_SOLARIS"
+        if false: # StringContains(isainfo, "sparcv9"):
+            Host = "SPARC64_SOLARIS"
+        else:
+            Host = "SOLgnu"
+            #Host = "SOLsun"
+            #Host = "SPARC32_SOLARIS"
 
-elif UName.startswith("linux"):
-
+elif UName == "linux":
     if UNameArchM == "ppc":
         Host = "PPC_LINUX"
     elif UNameArchM == "x86_64":
@@ -643,18 +641,18 @@ elif UName.startswith("linux"):
     else:
         Host = "I386_LINUX"
 
-elif UName.startswith("netbsd"):
+elif UName == "netbsd":
 
     Host = "I386_NETBSD" # only arch/version combination supported yet
 
-elif UName.startswith("irix"):
+elif UName == "irix":
 
     Host = "MIPS32_IRIX"
     # later
     # if UName.startswith("irix64"):
     #   Host = "MIPS64_IRIX"
 
-elif UName.startswith("hp-ux"):
+elif UName == "hp-ux":
 
     Host = "PA32_HPUX"
     #
@@ -1159,6 +1157,8 @@ def Boot():
                             "MIPS64_OPENBSD"  : " -mabi=64 ",
                             "SOLgnu"          : " -m32 -mcpu=v9 ",
                             "SOLsun"          : " -xarch=v8plus ",
+                            "SPARC32_LINUX"   : " -xarch=v8plus ",
+                            "SPARC64_LINUX"   : " -xarch=v9 ",
                             "SPARC32_LINUX"   : " -m32 -mcpu=v9 -munaligned-doubles ",
                             "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
                           }.get(Config) or " ")
@@ -1203,6 +1203,8 @@ def Boot():
         "AMD64_DARWIN"      : " -arch x86_64 ",
         "PPC64_DARWIN"      : " -arch ppc64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
+        "I386_SOLARIS"      : " -s ",
+        "AMD64_SOLARIS"     : " -s -xarch=amd64 ",
         "SOLgnu"            : " -s -xarch=v8plus ",
         "SOLsun"            : " -s -xarch=v8plus ",
         "SPARC32_SOLARIS"   : " -s -xarch=v8plus ",
