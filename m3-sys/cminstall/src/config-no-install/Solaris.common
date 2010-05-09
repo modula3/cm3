@@ -7,27 +7,8 @@ if not defined("SL") SL = "/" end
 %-------------------------------------------------------------------
 
 readonly TARGET_OS = "SOLARIS"
-
 readonly SYSTEM_AR = "/usr/ccs/bin/ar"
-
-if equal (WORD_SIZE, "32BITS")
-    GccMBits = "32"
-else
-    GccMBits = "64"
-end
-
-proc GetM3BackFlags() is
-    local cpu = ""
-    if equal (WORD_SIZE, "32BITS")
-        cpu = " -mcpu=v9" % for atomics
-    end   
-    if defined("M3_BOOTSTRAP") or defined("BOOT")
-        return "-m" & GccMBits & cpu
-    else
-        return "-funwind-tables -gstabs+ -fPIC -m" & GccMBits & cpu
-    end
-end
-
+readonly GccMBits = {"32BITS" : "32", "64BITS" : "64"}{WORD_SIZE}
 readonly SYSTEM_ASM = "/usr/ccs/bin/as -s -K PIC -xarch=" & SunXArch
 
 proc configure_c_compiler() is

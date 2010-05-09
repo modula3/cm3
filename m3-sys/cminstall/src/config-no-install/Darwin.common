@@ -40,20 +40,6 @@ if not defined("SYSTEM_LIBTOOL")
     readonly SYSTEM_LIBTOOL = "libtool"
 end
 
-%
-% fPIC really is needed here, despite man gcc saying it is the default.
-% This is because man gcc is about Apple's gcc but m3cg is
-% built from FSF source.
-%
-if not defined("m3back_flags")
-    if equal(WORD_SIZE, "32BITS")
-        m3back_flags = "32 -march=i586"
-    else
-        m3back_flags = "64"
-    end
-    m3back_flags = "-funwind-tables -fPIC -gstabs+ -m" & m3back_flags
-end
-
 %------------------------------------------------ external system libraries ---
 % SYSTEM_LIBS provides a mapping from Modula-3 names for the common
 % external libraries to site-dependent information about how they
