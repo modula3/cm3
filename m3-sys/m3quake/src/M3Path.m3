@@ -100,11 +100,11 @@ PROCEDURE New (a, b, c, d: TEXT := NIL): TEXT =
   END New;
 
 PROCEDURE Join (dir, base: TEXT;  k: Kind): TEXT =
+  CONST d_sep = DirSep [host_os];
+        v_sep = VolSep [host_os];
   VAR
     pre      := Prefix [target_os][k];
     ext      := Suffix [target_os][k];
-    d_sep    := DirSep [host_os];
-    v_sep    := VolSep [host_os];
     ch       : CHAR;
     buf      : ARRAY [0..255] OF CHAR;
     dir_len  : CARDINAL := 0;
@@ -171,12 +171,12 @@ PROCEDURE Parse (nm: TEXT): T =
   END Parse;
 
 PROCEDURE DoParse (nm_txt: TEXT; len: CARDINAL; VAR nm: ARRAY OF CHAR): T =
+  CONST d_sep = DirSep [host_os];
   VAR
     t       : T;
     base_len: CARDINAL;
     d_index : INTEGER;
     start   : CARDINAL;
-    d_sep   := DirSep [host_os];
     ext     : TEXT;
     ext_len : CARDINAL;
     pre     : TEXT;
@@ -244,8 +244,8 @@ PROCEDURE RegionMatch (a: TEXT;  start_a: CARDINAL;
                        b: TEXT;  start_b: CARDINAL;
                        len: CARDINAL): BOOLEAN =
   CONST N = 128;
+        ignore_case = (host_os = OSKind.Win32);
   VAR
-    ignore_case := (host_os = OSKind.Win32);
     len_a : CARDINAL;
     len_b : CARDINAL;
     buf_a, buf_b : ARRAY [0..N-1] OF CHAR;
@@ -353,8 +353,7 @@ PROCEDURE IsDirSep (ch: CHAR; d_sep: CHAR): BOOLEAN =
   END IsDirSep;
 
 PROCEDURE MakeRelative (VAR path: TEXT;  full, rel: TEXT): BOOLEAN =
-  VAR
-    d_sep := DirSep[host_os];
+  CONST d_sep = DirSep[host_os];
   BEGIN
     IF PrefixMatch (path, full)
       AND EndOfArc (path, Text.Length (full), d_sep) THEN
@@ -430,10 +429,9 @@ PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: CARDINAL; VAR le
   to the number of slashes -- longer strings required more memory. Every time it removed an element,
   it would copy the whole rest of the string down and rescan for all the slashes.
   *)
+  CONST d_sep = DirSep [host_os];
+        v_sep = VolSep [host_os];
   VAR
-    os    := host_os;
-    d_sep := DirSep [os];
-    v_sep := VolSep [os];
     level : CARDINAL := 0;
     end   := (start + len);
     from  := start;
@@ -538,8 +536,8 @@ PROCEDURE PathRemoveDots (VAR p: ARRAY OF CHAR; READONLY start: CARDINAL; VAR le
 
 PROCEDURE FixPath (VAR p: ARRAY OF CHAR): TEXT =
   (* remove redundant "/arc/../" and "/./" segments *)
+  CONST d_sep = DirSep [host_os];
   VAR
-    d_sep := DirSep [host_os];
     start : CARDINAL := 0;
     len := NUMBER (p);
     j: CARDINAL := 0;
