@@ -135,7 +135,7 @@ typedef ptrdiff_t ssize_t;
 #include <pthread.h>
 #include <unistd.h>
 #include <pwd.h>
-#define ZeroMemory(a,b) (memset((a), 0, (b)))
+#define ZeroMemory(a, b) (memset((a), 0, (b)))
 #endif
 
 #define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
