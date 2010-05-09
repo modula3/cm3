@@ -1,21 +1,15 @@
+#include "TermC.h"
+
 #ifdef __cplusplus
-extern "C"
+extern "C" {
 #endif
 
 #ifndef _WIN32
 
-#include <termios.h>
-#include <unistd.h> 
-typedef struct termios termios_t;
+static struct termios TermCooked;
+static struct termios TermRaw;
 
-static termios_t TermCooked;
-static termios_t TermRaw;
-
-#ifndef STDIN_FILENO
-#define STDIN_FILENO 0
-#endif
-
-static void TermC__cfmakeraw(termios_t* t)
+static void TermC__cfmakeraw(struct termios* t)
 {
 #if defined(__CYGWIN__) || defined(__sun)
 /* http://linux.about.com/library/cmd/blcmdl3_cfmakeraw.htm */
@@ -31,12 +25,12 @@ static void TermC__cfmakeraw(termios_t* t)
 
 static volatile int inited;
 
-int TermC__Inited(void)
+int __cdecl TermC__Inited(void)
 {
     return inited;
 }
 
-void TermC__Init(void)
+void __cdecl TermC__Init(void)
 {
     tcgetattr(STDIN_FILENO, &TermCooked);
     TermRaw = TermCooked;
@@ -45,28 +39,28 @@ void TermC__Init(void)
     inited = 1;
 }
 
-void* TermC__GetTermRaw(void)
+void* __cdecl TermC__GetTermRaw(void)
 {
     return &TermRaw;
 }
 
-void* TermC__GetTermCooked(void)
+void* __cdecl TermC__GetTermCooked(void)
 {
     return &TermCooked;
 }
 
 #else
 
-void TermC__Init(void)
+void __cdecl TermC__Init(void)
 {
 }
 
-void* TermC__GetTermRaw(void)
+void* __cdecl TermC__GetTermRaw(void)
 {
     return 0;
 }
 
-void* TermC__GetTermCooked(void)
+void* __cdecl TermC__GetTermCooked(void)
 {
     return 0;
 }
