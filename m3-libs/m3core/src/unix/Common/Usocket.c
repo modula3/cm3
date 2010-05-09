@@ -36,21 +36,21 @@ static void Usocket__plen_out(m3_socklen_t* plen, socklen_t len)
 #define ASSERT_LEN \
     assert(len <= (1UL << 30));
 
-void Usocket__Assertions(void)
+void __cdecl Usocket__Assertions(void)
 {
     /* assert that struct linger is literally { int l_onoff, l_linger },
-    those types (or at least sizes), that order, no padding, except on Cygwin */
-    
+     * those types (or at least sizes), that order, no padding, except on Cygwin and Win32
+     */
     typedef struct linger T;
     typedef m3_linger_t M;
-    
+
     M3_STATIC_ASSERT(sizeof(M) == 8);
     M3_STATIC_ASSERT(offsetof(M, onoff) == 0);
     M3_STATIC_ASSERT(M3_FIELD_SIZE(M, onoff) == 4);
     M3_STATIC_ASSERT(offsetof(M, linger) == 4);
     M3_STATIC_ASSERT(M3_FIELD_SIZE(M, linger) == 4);
     M3_STATIC_ASSERT(sizeof(T) == (M3_FIELD_SIZE(T, l_onoff) + M3_FIELD_SIZE(T, l_linger)));
-#ifndef __CYGWIN__
+#if !defined(__CYGWIN__) && !defined(_WIN32)
     M3_STATIC_ASSERT(sizeof(T) == 8);
     M3_STATIC_ASSERT(offsetof(T, l_onoff) == 0);
     M3_STATIC_ASSERT(M3_FIELD_SIZE(T, l_onoff) == 4);
@@ -70,25 +70,25 @@ M3WRAP4(INTEGER, recv, int, void*, size_t, int)
 
 /* wrap everything taking input socklen_t */
 
-int Usocket__bind(int s, struct sockaddr* name, m3_socklen_t len)
+int __cdecl Usocket__bind(int s, struct sockaddr* name, m3_socklen_t len)
 {
     ASSERT_LEN
     return bind(s, name, len);
 }
 
-int Usocket__connect(int s, struct sockaddr* name, m3_socklen_t len)
+int __cdecl Usocket__connect(int s, struct sockaddr* name, m3_socklen_t len)
 {
     ASSERT_LEN
     return connect(s, name, len);
 }
 
-INTEGER Usocket__sendto(int s, void* msg, size_t length, int flags, struct sockaddr* dest, m3_socklen_t len)
+INTEGER __cdecl Usocket__sendto(int s, void* msg, size_t length, int flags, struct sockaddr* dest, m3_socklen_t len)
 {
     ASSERT_LEN
     return sendto(s, msg, length, flags, dest, len);
 }
 
-int Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len)
+int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_t len)
 {
     ASSERT_LEN
 #ifdef __CYGWIN__
@@ -107,7 +107,7 @@ int Usocket__setsockopt(int s, int level, int optname, void* optval, m3_socklen_
 
 /* wrap everything taking input/output socklen_t */
 
-int Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* plen)
+int __cdecl Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* plen)
 {
     ASSERT_PLEN_IN
     {
@@ -118,7 +118,7 @@ int Usocket__getpeername(int s, struct sockaddr* name, m3_socklen_t* plen)
     }
 }
 
-int Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* plen)
+int __cdecl Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* plen)
 {
     ASSERT_PLEN_IN
     {
@@ -129,7 +129,7 @@ int Usocket__getsockname(int s, struct sockaddr* name, m3_socklen_t* plen)
     }
 }
 
-int Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen)
+int __cdecl Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen)
 {
     ASSERT_PLEN_IN
     {
@@ -140,7 +140,7 @@ int Usocket__accept(int s, struct sockaddr* addr, m3_socklen_t* plen)
     }
 }
 
-int Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen)
+int __cdecl Usocket__getsockopt(int s, int level, int optname, void* optval, m3_socklen_t* plen)
 /*
 Posix says l_onoff and l_linger are int, but they aren't on Cygwin.
 As usual Posix does not mandate the order of the fields or that there aren't
@@ -185,7 +185,7 @@ the same order. This is checked in Usocket__Assertions.
     }
 }
 
-INTEGER Usocket__recvfrom(int s, void* buf, size_t length, int flags, struct sockaddr* address, m3_socklen_t* plen)
+INTEGER __cdecl Usocket__recvfrom(int s, void* buf, size_t length, int flags, struct sockaddr* address, m3_socklen_t* plen)
 {
     ASSERT_PLEN_IN
     {
