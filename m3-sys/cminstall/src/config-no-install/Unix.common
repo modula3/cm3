@@ -83,8 +83,30 @@ if not defined("m3back_optimize")
   m3back_optimize = "-O2 -Wuninitialized"
 end
 
+if not defined("m3back_pic")
+  m3back_pic = "-fPIC"
+end
+
+% -funwind-tables in anticipation of using libunwind
+if not defined("m3back_unwind_table")
+  m3back_unwind_table = "-funwind-tables"
+end
+
+if not defined("m3back_m32")
+  m3back_m32 = {"32BITS" : "-m32", "64BITS" : ""}{WORD_SIZE}
+end
+
+if not defined("m3back_m64")
+  m3back_m64 = {"32BITS" : "", "64BITS" : "-m64"}{WORD_SIZE}
+end
+
 proc m3_backend(source, object, optimize, debug) is
-    local args = [ "-quiet", "-fno-reorder-blocks" ]
+    local args = [ "-quiet",
+                   "-fno-reorder-blocks",
+                   m3back_unwind_table,
+                   m3back_pic,
+                   m3back_m32,
+                   m3back_m64 ]
     if optimize
         args += m3back_optimize
     end
