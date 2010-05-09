@@ -1136,6 +1136,8 @@ def Boot():
     # The older bootstraping method does get that right.
 
     vms = StringTagged(Config, "VMS")
+    
+    # pick the compiler
 
     if Config == "ALPHA32_VMS":
         cc = "cc"
@@ -1147,6 +1149,7 @@ def Boot():
         cc = "/usr/bin/cc"
         cflags = "-g -mt -xldscope=symbolic "
     else:
+        # gcc platforms
         cc = {
             "SOLgnu" : "/usr/sfw/bin/gcc",
             }.get(Config) or "gcc"
@@ -1161,10 +1164,11 @@ def Boot():
                           "PPC64_DARWIN"    : " -arch ppc64 ",
                           "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
                           "LINUXLIBC6"      : " -m32 -mno-align-double ",
+                          "I386_LINUX"      : " -m32 -mno-align-double ",
                           "MIPS64_OPENBSD"  : " -mabi=64 ",
                           "SOLgnu"          : " -m32 -mcpu=v9 ",
                           "I386_SOLARIS"    : " -xarch=pentium_pro -Kpic ",
-                          "AMD64_SOLARIS"   : " -xarch=amd64   -Kpic ",
+                          "AMD64_SOLARIS"   : " -xarch=amd64  -Kpic ",
                           "SOLsun"          : " -xarch=v8plus -xcode=pic32 ",
                           "SPARC32_SOLARIS" : " -xarch=v8plus -xcode=pic32 ",
                           "SPARC64_SOLARIS" : " -xarch=v9     -xcode=pic32 ",
@@ -1173,7 +1177,9 @@ def Boot():
                           }.get(Config) or " ")
 
     Link = "$(CC) $(CFLAGS) *.mo *.io *.o "
-    
+
+    # link flags
+
     if StringTagged(Target, "DARWIN"):
         pass
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
@@ -1185,7 +1191,8 @@ def Boot():
     else:
         Link = Link + " -lm -lpthread "
     
-    # not in Link
+    # add -c to compiler but not link (i.e. not cflags)
+
     Compile = "$(CC) $(CFLAGS) "
     if not StringTagged(Config, "VMS"):
         Compile = Compile + " -c "
@@ -1193,13 +1200,17 @@ def Boot():
     AssembleOnTarget = not vms
     AssembleOnHost = not AssembleOnTarget
 
+    # pick assembler
+
     if StringTagged(Target, "VMS") and AssembleOnTarget:
         Assemble = "macro /alpha " # not right, come back to it later
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
         Assemble = "/usr/ccs/bin/as "
     else:
         Assemble = "as "
- 
+
+    # set assembler flags
+
     if Target != "PPC32_OPENBSD" and Target != "PPC_LINUX":
         # "Tag" not right for LINUX due to LINUXLIBC6
         # "Tag" not right for BSD or 64 either.
@@ -1274,30 +1285,36 @@ def Boot():
     VmsLink  = open(os.path.join(BootDir, "vmslink.opt"), "wb")
     Makefile = open(os.path.join(BootDir, "Makefile"), "wb")
     UpdateSource = open(os.path.join(BootDir, "updatesource.sh"), "wb")
-    Objects = [ ]
+    Objects = { }
 
-    Makefile.write(".SUFFIXES:\nall: cm3\n\n")
+    Makefile.write(".SUFFIXES:\n"
+                   + ".SUFFIXES: .c .is .ms .s .o .obj .io .mo\n\n"
+                   + "all: cm3\n\n"
+                   + "clean:\n"
+                   + "\trm -rf *.io *.mo *.o *.obj\n\n")
 
     for a in [UpdateSource, Make]:
-        a.write("#!/bin/sh\n\nset -e\nset -x\n\n")
+        a.write("#!/bin/sh\n\n"
+                + "set -e\n"
+                + "set -x\n\n")
 
     for a in [Makefile]:
-        a.write("# edit up here\n\n")
-        a.write("CC ?= " + cc + "\n")
-        a.write("CFLAGS ?= " + cflags + "\n")
-        a.write("Compile=" + Compile + "\n")
-        a.write("Assemble=" + Assemble + "\n")
-        a.write("Link=" + Link + "\n")
-        a.write("\n\n# no more editing should be needed\n\n")
+        a.write("# edit up here\n\n"
+                + "CC ?= " + cc + "\n"
+                + "CFLAGS ?= " + cflags + "\n"
+                + "Compile=" + Compile + "\n"
+                + "Assemble=" + Assemble + "\n"
+                + "Link=" + Link + "\n"
+                + "\n# no more editing should be needed\n\n")
 
     for a in [Make]:
-        a.write("# edit up here\n\n")
-        a.write("CC=${CC:-" + cc + "}\n")
-        a.write("CFLAGS=${CFLAGS:-" + cflags + "}\n")
-        a.write("Compile=" + Compile + "\n")
-        a.write("Assemble=" + Assemble + "\n")
-        a.write("Link=" + Link + "\n")
-        a.write("\n\n# no more editing should be needed\n\n")
+        a.write("# edit up here\n\n"
+                + "CC=${CC:-" + cc + "}\n"
+                + "CFLAGS=${CFLAGS:-" + cflags + "}\n"
+                + "Compile=" + Compile + "\n"
+                + "Assemble=" + Assemble + "\n"
+                + "Link=" + Link + "\n"
+                + "\n# no more editing should be needed\n\n")
 
     for q in P:
         dir = GetPackagePath(q)
@@ -1315,30 +1332,46 @@ def Boot():
             if ext_h:
                 continue
             Object = GetObjectName(a)
-            Objects += [Object]
-            if vms:
-                if ext_c:
-                    VmsMake.write("$ " + Compile + " " + a + "\n")
-                else:
-                    if AssembleOnHost:
-                        # must have cross assembler
-                        a = Assemble + " " + fullpath + " -o " + BootDir + "/" + Object
-                        print(a)
-                        os.system(a)
-                    else:
-                        VmsMake.write("$ " + Assemble + " " + a + "\n")                    
-                VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
+            if Objects.get(Object):
                 continue
-            Makefile.write("Objects += " + Object + "\n" + Object + ": " + a + "\n\t")
+            Objects[Object] = 1
             if ext_c:
-                Command = "Compile"
+                VmsMake.write("$ " + Compile + " " + a + "\n")
             else:
-                Command = "Assemble"
-            for b in [Make, Makefile]:
-                b.write("$(" + Command + ") " + a + " -o " + Object + "\n")
+                if AssembleOnHost:
+                    # must have cross assembler
+                    a = Assemble + " " + fullpath + " -o " + BootDir + "/" + Object
+                    print(a)
+                    os.system(a)
+                else:
+                    VmsMake.write("$ " + Assemble + " " + a + "\n")                    
+            VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
 
-    Makefile.write("cm3: $(Objects)\n\t")
+    Makefile.write(".c.o:\n"
+                   + "\t$(Compile) -o $@ $<\n\n"
+                   + ".c.obj:\n"
+                   + "\t$(Compile) -o $@ $<\n\n"
+                   + ".is.io:\n"
+                   + "\t$(Assemble) -o $@ $<\n\n"
+                   + ".s.o:\n"
+                   + "\t$(Assemble) -o $@ $<\n\n"
+                   + ".ms.mo:\n"
+                   + "\t$(Assemble) -o $@ $<\n\n")
+
+    Makefile.write("cm3:")
+    Objects = Objects.keys()
+    Objects.sort()
+    k = 4
+    for a in Objects:
+        k = k + 1 + len(a)
+        if k > 76: # line wrap
+            Makefile.write(" \\\n")
+            k = 1 + len(a)
+        Makefile.write(" " + a)
+    Makefile.write("\n\t")
  
+    VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.o\n")
+    VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.obj\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.mo\n")
     VmsMake.write("$ set file/attr=(rfm=var,rat=none) *.io\n")
     VmsMake.write("$ link /executable=cm3.exe vmslink/options\n")
