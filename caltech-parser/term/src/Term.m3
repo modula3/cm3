@@ -1,4 +1,4 @@
-(* $Id: Term.m3,v 1.3 2009-07-21 10:58:57 jkrell Exp $ *)
+(* $Id: Term.m3,v 1.4 2010-05-09 09:12:35 jkrell Exp $ *)
 
 UNSAFE MODULE Term;
 IMPORT Stdio;
@@ -73,7 +73,6 @@ PROCEDURE GetChar(): CHAR =
   END GetChar;
 
 PROCEDURE Wr(s: TEXT) =
-
   BEGIN
     IF Raw THEN
       VAR
@@ -106,5 +105,5 @@ PROCEDURE WrLn(s: TEXT; flush := FALSE) =
   END WrLn;
 
 BEGIN
-    TermC.Init();
+  TermC.Init();
 END Term.
