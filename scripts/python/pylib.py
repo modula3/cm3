@@ -622,9 +622,15 @@ elif UName.startswith("darwin"):
 
 elif UName.startswith("sunos"):
 
-    Host = "SOLgnu"
-    #Host = "SOLsun"
-    #Host = "SPARC32_SOLARIS"
+    if UNameArchP == "i386":
+        if StringContains(os.popen("isainfo").read().lower(), "amd64"):
+            Host = "AMD64_SOLARIS"
+        else:
+            Host = "I386_SOLARIS"
+    else:
+        Host = "SOLgnu"
+        #Host = "SOLsun"
+        #Host = "SPARC32_SOLARIS"
 
 elif UName.startswith("linux"):
 
