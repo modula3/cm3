@@ -8,7 +8,7 @@
 (*      modified on Tue Nov  8 16:20:58 PST 1994 by kalsow   *)
 (*      modified on Thu Mar 18 17:53:33 PST 1993 by harrison *)
 
-(* $Id: WinDef.i3,v 1.6 2008-08-08 13:29:48 jkrell Exp $ *)
+(* $Id: WinDef.i3,v 1.7 2010-05-09 09:41:19 jkrell Exp $ *)
 
 INTERFACE WinDef;
 
@@ -124,13 +124,9 @@ TYPE
   GLOBALHANDLE = HANDLE;
   LOCALHANDLE  = HANDLE;
 
-  (* PROC     = <*WINAPI*> PROCEDURE (); never used *)
-  (* NEARPROC = <*WINAPI*> PROCEDURE (); never used *)
-  (* WINAPI but if there are any parameters, needs a cast (LOOPHOLE), and if
-     there are no parameters, the calling convention doesn't make a
-     difference, and declaring it WINAPI causes warnings when non-NT386
-     consume this interface just for its types. *)
-  FARPROC  = PROCEDURE ();
+  PROC     = <*WINAPI*> PROCEDURE ();
+  NEARPROC = <*WINAPI*> PROCEDURE ();
+  FARPROC  = <*WINAPI*> PROCEDURE ();
 
 TYPE
   HWND         <: HANDLE;
