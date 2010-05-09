@@ -14,6 +14,7 @@ IMPORT Axis, BorderedVBT, Filter, FlexVBT, Font, HVSplit,
        Split, StableVBT, SwitchVBT, TextVBT, TextureVBT, VBT,
        VBTClass, ZChildVBT, ZGrowVBT, ZMoveVBT, ZSplit,
        ZSplitUtils;
+IMPORT Compiler, PixmapVBT, PaintOp, VBTKitResources;
 
 REVEAL
   T = Public BRANDED OBJECT
@@ -80,11 +81,11 @@ PROCEDURE CommonInit (v       : T;
     drag := NEW (ZMoveVBT.T).init (
               NEW (ShadowedFeedbackVBT.T).init (title, shadow));
     stretchyDrag := NEW (FlexVBT.T).init (drag, FlexVBT.Stretchy);
-    grow := NEW (ZGrowVBT.T).init (NewBtn ("G", shadow));
+    grow := NEW (ZGrowVBT.T).init (NewBtn ("G", "grow.ppm", shadow));
     banner := HVSplit.New (Axis.T.Hor);
     IF closable THEN
       close :=
-        NEW (SwitchVBT.T, callback := Close).init (NewBtn ("C", shadow));
+        NEW (SwitchVBT.T, callback := Close).init (NewBtn ("C", "close.ppm", shadow));
       Split.AddChild (banner, close, VBar (shadow))
     END;
     Split.AddChild (banner, stretchyDrag, VBar (shadow), grow);
@@ -98,15 +99,32 @@ PROCEDURE CommonInit (v       : T;
     RETURN StableVBT.New (NEW (BorderedVBT.T).init (box, BARWIDTH, shadow.fg))
   END CommonInit;
 
-PROCEDURE NewBtn (t: TEXT; shadow: Shadow.T): VBT.T =
+PROCEDURE NewBtn (uglyPosixText, win32ppm: TEXT; shadow: Shadow.T): VBT.T =
+
+PROCEDURE Posix (t: TEXT; shadow: Shadow.T): VBT.T =
   BEGIN
     WITH textVBT = TextVBT.New (t) DO
       TextVBT.SetFont (textVBT, Font.BuiltIn, shadow);
       RETURN NEW (ShadowedFeedbackVBT.T).init (textVBT, shadow)
     END
+  END Posix;
+
+PROCEDURE Win32 (name: TEXT; shadow: Shadow.T): VBT.T =
+  VAR
+    pm := VBTKitResources.GetPixmap (name);
+    pixvbt := NEW(PixmapVBT.T).init(pm, halign := 0.0, valign := 0.0,
+                                op := PaintOp.Copy);
+  BEGIN
+    RETURN NEW (ShadowedFeedbackVBT.T).init (pixvbt, shadow)
+  END Win32;
+
+  BEGIN
+    CASE Compiler.ThisOS OF
+      | Compiler.OS.POSIX => RETURN Posix(uglyPosixText, shadow);
+      | Compiler.OS.WIN32 => RETURN Win32(win32ppm, shadow);
+    END;
   END NewBtn;
-
-
+      
 PROCEDURE VBar (shadow: Shadow.T): VBT.T =
   BEGIN
     IF shadow.size # 0.0 THEN
