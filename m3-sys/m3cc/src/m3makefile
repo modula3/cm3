@@ -138,15 +138,15 @@ readonly m3cc_config = {
   "SPARC64_SOLARIS" : "-without-gnu-as -without-gnu-ld",
   % If buiding native gcc driver, add:
   % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld 
+  
+  % Sun assembler doesn't like .stabd.
+  % GNU assembler is ok with .stabd.
+  % However GNU assembler moves around: /usr/sfw/bin/gas vs. /opt/csw/gnu/as
 
-  %
-  % This is recommended and has been seen to make a difference.
-  %
-
-  "I386_SOLARIS" :  "-with-gnu-as -without-gnu-ld -with-arch-32=i686", % arch=i686 for atomics
-  "AMD64_SOLARIS" : "-with-gnu-as -without-gnu-ld -with-arch-32=i686", % arch=i686 for atomics (biarch)
+  "I386_SOLARIS" :  "-without-gnu-as -without-gnu-ld -with-arch-32=i586", % arch=i586 for atomics
+  "AMD64_SOLARIS" : "-without-gnu-as -without-gnu-ld -with-arch-32=i586", % arch=i586 for atomics (biarch)
   % If buiding native gcc driver, add:
-  % -with-as=/usr/sfw/bin/gas -with-ld=/usr/ccs/bin/ld
+  % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld 
 
   "SOLgnu"        : "-without-gnu-ld -without-gnu-as -with-cpu=v9", % cpu=v9 for atomics
   "SOLsun"        : "-without-gnu-ld -without-gnu-as -with-cpu=v9", % cpu=v9 for atomics
@@ -155,31 +155,31 @@ readonly m3cc_config = {
 
   "SPARC32_LINUX" : "-with-cpu=v9", % cpu=v9 for atomics
 
-  % arch=i686 for atomics (including on AMD64 due to biarch)
-  "AMD64_DARWIN"  : "-with-arch-32=i686",
-  "AMD64_FREEBSD" : "-with-arch-32=i686",
-  "AMD64_CYGWIN"  : "-with-arch-32=i686",
-  "AMD64_INTERIX" : "-with-arch-32=i686",
-  "AMD64_LINUX"   : "-with-arch-32=i686",
-  "AMD64_MINGW"   : "-with-arch-32=i686",
-  "AMD64_NETBSD"  : "-with-arch-32=i686",
-  "AMD64_NT"      : "-with-arch-32=i686",
-  "AMD64_OPENBSD" : "-with-arch-32=i686",  
-  "I386_CYGWIN"   : "-with-arch-32=i686",
-  "I386_DARWIN"   : "-with-arch-32=i686",
-  "I386_FREEBSD"  : "-with-arch-32=i686",
-  "I386_INTERIX"  : "-with-arch-32=i686",
-  "I386_LINUX"    : "-with-arch-32=i686",
-  "I386_MINGW"    : "-with-arch-32=i686",
-  "I386_NETBSD"   : "-with-arch-32=i686",
-  "I386_NT"       : "-with-arch-32=i686",
-  "I386_OPENBSD"  : "-with-arch-32=i686",
-  "NT386"         : "-with-arch-32=i686",
-  "NT386GNU"      : "-with-arch-32=i686",
-  "NT386MINGNU"   : "-with-arch-32=i686",
-  "NetBSD2_i386"  : "-with-arch-32=i686",
-  "LINUXLIBC6"    : "-with-arch-32=i686",
-  "FreeBSD4"      : "-with-arch-32=i686",
+  % arch=i586 for atomics (including on AMD64 due to biarch)
+  "AMD64_DARWIN"  : "-with-arch-32=i586",
+  "AMD64_FREEBSD" : "-with-arch-32=i586",
+  "AMD64_CYGWIN"  : "-with-arch-32=i586",
+  "AMD64_INTERIX" : "-with-arch-32=i586",
+  "AMD64_LINUX"   : "-with-arch-32=i586",
+  "AMD64_MINGW"   : "-with-arch-32=i586",
+  "AMD64_NETBSD"  : "-with-arch-32=i586",
+  "AMD64_NT"      : "-with-arch-32=i586",
+  "AMD64_OPENBSD" : "-with-arch-32=i586",  
+  "I386_CYGWIN"   : "-with-arch-32=i586",
+  "I386_DARWIN"   : "-with-arch-32=i586",
+  "I386_FREEBSD"  : "-with-arch-32=i586",
+  "I386_INTERIX"  : "-with-arch-32=i586",
+  "I386_LINUX"    : "-with-arch-32=i586",
+  "I386_MINGW"    : "-with-arch-32=i586",
+  "I386_NETBSD"   : "-with-arch-32=i586",
+  "I386_NT"       : "-with-arch-32=i586",
+  "I386_OPENBSD"  : "-with-arch-32=i586",
+  "NT386"         : "-with-arch-32=i586",
+  "NT386GNU"      : "-with-arch-32=i586",
+  "NT386MINGNU"   : "-with-arch-32=i586",
+  "NetBSD2_i386"  : "-with-arch-32=i586",
+  "LINUXLIBC6"    : "-with-arch-32=i586",
+  "FreeBSD4"      : "-with-arch-32=i586",
 
   %
   % Bootstrap procedure for gcc on HPPA{64}-HPUX:
