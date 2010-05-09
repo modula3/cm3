@@ -136,7 +136,6 @@ CM3LASTCHANGED=${CM3LASTCHANGED:-${default_CM3LASTCHANGED}}
 find_in_list GMAKE "gmake gnumake /usr/pkg/bin/gmake /usr/sfw/bin/gmake /usr/local/gmake /usr/local/gnumake /opt/csw/gnu/make make" || exit 1
 find_in_list TAR "gtar gnutar /usr/pkg/bin/gtar /usr/sfw/bin/gtar /usr/local/gtar /usr/local/gnutar /opt/csw/bin/gnutar tar" || exit 1
 
-CM3_GCC_BACKEND=yes
 CM3_GDB=${CM3_GDB:-yes}
 
 #
@@ -146,9 +145,14 @@ CM3_GDB=${CM3_GDB:-yes}
 # has a trailing directory to strip.)
 #
 CM3_INSTALL=${CM3_INSTALL:-`dirname \`find_exe cm3 /usr/local/cm3/\ \``}
-CM3=${CM3:-cm3}
+
+# The vast majority of platforms, overridden later:
+CM3_GCC_BACKEND=yes
+CM3_OSTYPE=POSIX
 EXE=""
 SL="/"
+
+CM3=${CM3:-cm3}
 
 # NT has \windows\system32\find.exe, completely different
 FIND=find
@@ -188,95 +192,104 @@ fi
 #-----------------------------------------------------------------------------
 # evaluate uname information
 
-CM3_OSTYPE=POSIX
+# default TARGET and CM3_TARGET to each other
+TARGET=${TARGET:-$CM3_TARGET}
+CM3_TARGET=${CM3_TARGET:-$TARGET}
 
-case "`uname`" in
+if [ "x$CM3_TARGET" = "x$TARGET" ] ; then :; else
+  echo "if TARGET and CM3_TARGET are both set, they must be equal ($TARGET, $CM3_TARGET)"
+  exit 1
+fi
 
-  Windows*|WinNT*|Cygwin*|CYGWIN*)
-    if [ x$TARGET = xNT386GNU ] ; then
-      CM3_TARGET=NT386GNU
-    else
-      CM3_OSTYPE=WIN32
-      CM3_TARGET=NT386
-      CM3_INSTALL="c:/cm3"
-      CM3_GCC_BACKEND=no
-      HAVE_SERIAL=yes
-      EXE=".exe"
-      SL='\\\\'
+if [ "x$CM3_TARGET" = "x" ] ; then
+  case "`uname`" in
+    Windows*|WinNT*|Cygwin*|CYGWIN*) CM3_TARGET=NT386;;
+                                     #CM3_TARGET=I386_NT;;
 
-      cygpath() {
+    FreeBSD*)
+      case "`uname -p`" in
+        amd64)  CM3_TARGET=AMD64_FREEBSD;;
+        i*86)   CM3_TARGET=FreeBSD4;;
+                #CM3_TARGET=I386_FREEBSD;;
+      esac;;
+
+    Darwin)
+      case "`uname -p`" in
+        powerpc*) CM3_TARGET=PPC_DARWIN;;
+        i386)
+          if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
+            CM3_TARGET=AMD64_DARWIN
+          else
+            CM3_TARGET=I386_DARWIN
+          fi;;
+      esac;;
+
+    SunOS)
+      case "`uname -p`" in
+          i86pc)
+            case "`isainfo`" in
+              *amd64*) CM3_TARGET=AMD64_SOLARIS;;
+              *) CM3_TARGET=I386_SOLARIS;;
+            esac;;
+          sparc)
+            case "`isainfo`" in
+              #*sparcv9*) CM3_TARGET=SPARC64_SOLARIS;;
+              *) CM3_TARGET=SOLgnu;;
+                 #CM3_TARGET=SOLsun;;
+                 #CM3_TARGET=SPARC32_SOLARIS;;
+            esac;;
+      esac;;
+
+    Interix*) CM3_TARGET=I386_INTERIX;;
+
+    Linux)
+      case "`uname -m`" in
+        ppc*)    CM3_TARGET=PPC_LINUX;;
+        x86_64)  CM3_TARGET=AMD64_LINUX;;
+        sparc64) CM3_TARGET=SPARC32_LINUX;;
+        i*86)    CM3_TARGET=LINUXLIBC6;;
+                 #CM3_TARGET=I386_LINUX;;
+      esac;;
+  
+    NetBSD*)
+        case "`uname -m`" in
+            x86_64) CM3_TARGET=AMD64_NETBSD;;
+            i386) CM3_TARGET=NetBSD2_i386;;
+                 #CM3_TARGET=I386_NETBSD;;
+        esac;;
+
+    OpenBSD)
+      case "`uname -m`" in
+        macppc)   CM3_TARGET=PPC32_OPENBSD;;
+        sparc64)  CM3_TARGET=SPARC64_OPENBSD;;
+        mips64)   CM3_TARGET=MIPS64_OPENBSD;;
+        i386)     CM3_TARGET=I386_OPENBSD;;
+      esac;;
+  esac
+fi
+
+if [ "x$CM3_TARGET" = "x" ] ; then
+    echo "$0 does not know about `uname -a`"
+    exit 1
+fi
+
+case "x$CM3_TARGET" in
+  *DARWIN) CM3_GDB=no;;
+    
+  NT386 | I386_NT)
+    CM3_OSTYPE=WIN32
+    CM3_INSTALL="c:/cm3"
+    CM3_GCC_BACKEND=no
+    HAVE_SERIAL=yes
+    EXE=".exe"
+    SL='\\\\'
+    cygpath() {
         /usr/bin/cygpath $@
-      }
-      strip_exe() {
+    }
+    strip_exe() {
         return 0;
-      }
-    fi
-  ;;
-
-  NT386GNU*)
-    CM3_TARGET=NT386GNU
-  ;;
-
-  FreeBSD*)
-    case "`uname -p`" in
-      amd64)    CM3_TARGET=${CM3_TARGET:-AMD64_FREEBSD};;
-      i*86)     CM3_TARGET=${CM3_TARGET:-FreeBSD4};;
-      *)        echo "$0 does not know about `uname -a`"
-                exit 1;;
-    esac
-  ;;
-
-  Darwin*)
-    case "`uname -p`" in
-      powerpc*)
-        CM3_TARGET=${CM3_TARGET:-PPC_DARWIN};;
-      i[3456]86*)
-        if [ "x`sysctl hw.cpu64bit_capable`" = "xhw.cpu64bit_capable: 1" ]; then
-          CM3_TARGET=${CM3_TARGET:-AMD64_DARWIN}
-        else
-          CM3_TARGET=${CM3_TARGET:-I386_DARWIN}
-        fi
-        ;;
-      *) echo "$0 does not know about `uname -a`"
-         exit 1;;
-    esac
-  ;;
-
-  SunOS*)
-    CM3_TARGET=${CM3_TARGET:-SOLgnu}
-    #CM3_TARGET=${CM3_TARGET:-SOLsun}
-  ;;
-
-  Interix*)
-    CM3_TARGET=${CM3_TARGET:-I386_INTERIX}
-  ;;
-
-  Linux*)
-    case "`uname -m`" in
-      ppc*)    CM3_TARGET=${CM3_TARGET:-PPC_LINUX};;
-      x86_64)  CM3_TARGET=${CM3_TARGET:-AMD64_LINUX};;
-      sparc64) CM3_TARGET=${CM3_TARGET:-SPARC32_LINUX};;
-      i*86)    CM3_TARGET=${CM3_TARGET:-LINUXLIBC6};;
-      *)       echo "$0 does not know about `uname -a`"
-               exit 1;;
-    esac
-  ;;
-
-  NetBSD*)
-    CM3_TARGET=NetBSD2_i386 # only arch/version combination supported yet
-  ;;
-
-  OpenBSD*)
-    case "`uname -m`" in
-      macppc)   CM3_TARGET=${CM3_TARGET:-PPC32_OPENBSD};;
-      sparc64)  CM3_TARGET=${CM3_TARGET:-SPARC64_OPENBSD};;
-      mips64)   CM3_TARGET=${CM3_TARGET:-MIPS64_OPENBSD};;
-      i386)     CM3_TARGET=${CM3_TARGET:-I386_OPENBSD};;
-      *)        echo "$0 does not know about `uname -a`"
-                exit 1;;
-    esac
-  ;;
-
+    }
+    ;;
 esac
 
 #-----------------------------------------------------------------------------
@@ -289,7 +302,7 @@ fi
 CM3_ROOT=${CM3_ROOT:-${ROOT}}
 M3GDB=${M3GDB:-${CM3_GDB}}
 M3OSTYPE=${M3OSTYPE:-${CM3_OSTYPE}}
-TARGET=${TARGET:-${CM3_TARGET}}
+TARGET=$CM3_TARGET
 GCC_BACKEND=${GCC_BACKEND:-${CM3_GCC_BACKEND}}
 INSTALLROOT=${INSTALLROOT:-${CM3_INSTALL}}
 PKGSDB=${PKGSDB:-$ROOT/scripts/PKGS}
