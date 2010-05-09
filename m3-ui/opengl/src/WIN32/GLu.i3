@@ -5,7 +5,7 @@
 (* Last modified on Wed Oct  4 18:10:09 PDT 1995 by najork                   *)
 (*       Created on Fri Feb  3 23:25:51 PST 1995 by najork                   *)
 
-(* Modula-3 version of "glu.h" for Win32. *)
+(* Modula-3 version of "glu.h". *)
 
 INTERFACE GLu;
 
