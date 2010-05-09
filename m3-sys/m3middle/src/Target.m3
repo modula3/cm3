@@ -53,6 +53,7 @@ PROCEDURE IsSPARC(): BOOLEAN =
 PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): BOOLEAN =
   CONST FF = 16_FF;
   VAR sys := 0;  max_align := 64;
+      calling_conventions := FALSE;
   BEGIN
     (* lookup the system *)
     IF (system = NIL) THEN RETURN FALSE END;
@@ -292,6 +293,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                 (* Visual C++'s 16 plus 2 ints: is sigmask saved, its value. *)
 
                 Jumpbuf_size := 18 * Address.size;
+                calling_conventions := TRUE;
 
     | Systems.NT386, Systems.NT386GNU,
       Systems.I386_NT, Systems.I386_CYGWIN, Systems.I386_MINGW =>
@@ -306,6 +308,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
                     and _setjmp3 appears to use more. Consider using _setjmp3.
                  *)
                  Jumpbuf_size := (18 * Address.size);
+                 calling_conventions := TRUE;
 
     | Systems.SPARC32_SOLARIS, Systems.SOLgnu, Systems.SOLsun =>
                  (* 48 bytes with 4 byte alignment *)
@@ -389,19 +392,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     ELSE RETURN FALSE;
     END;
 
-    (* 0 as third argument is __cdecl, while 1 is __stdcall
-     * There is really no point to so many synonyms.
-     *)
-    NTCall (0, "C",          0, backend_mode); (* __cdecl *)
-    NTCall (1, "WINAPIV",    0, backend_mode); (* __cdecl *)
-    NTCall (2, "__cdecl",    0, backend_mode); (* __cdecl *)
-    NTCall (3, "WINAPI",     1, backend_mode); (* __stdcall *)
-    NTCall (4, "CALLBACK",   1, backend_mode); (* __stdcall *)
-    NTCall (5, "APIENTRY",   1, backend_mode); (* __stdcall *)
-    NTCall (6, "APIPRIVATE", 1, backend_mode); (* __stdcall *)
-    NTCall (7, "PASCAL",     1, backend_mode); (* __stdcall *)
-    NTCall (8, "__stdcall",  1, backend_mode); (* __stdcall *)
-    DefaultCall := CCs[0];
+    InitCallingConventions (backend_mode, calling_conventions);
 
     (* fill in the "bytes" and "pack" fields *)
     FixI (Address, max_align);
@@ -439,19 +430,41 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     RETURN TRUE;
   END Init;
 
-PROCEDURE NTCall (i: INTEGER;  nm: TEXT;  id: INTEGER;
-                  backend_mode: M3BackendMode_t) =
+PROCEDURE InitCallingConventions(backend_mode: M3BackendMode_t;
+                                 calling_conventions: BOOLEAN) =
+  PROCEDURE New(name: TEXT; id: [0..1]): CallingConvention =
+    VAR cc := NEW(CallingConvention, name := name);
+    BEGIN
+      (* The external backend handles more calling convention details than the
+         integrated backend -- reversing parameter order and knowing how to
+         return structs. *)
+      IF calling_conventions THEN
+        cc.m3cg_id            := id;
+        cc.args_left_to_right := NOT integrated;
+        cc.results_on_left    := TRUE;
+        cc.standard_structs   := NOT integrated;
+      ELSE
+        cc.m3cg_id            := 0;
+        cc.args_left_to_right := TRUE;
+        cc.results_on_left    := FALSE;
+        cc.standard_structs   := TRUE;
+      END;
+      RETURN cc;
+    END New;
+  VAR integrated := BackendIntegrated[backend_mode];    
   BEGIN
-    (* The external backend handles more calling convention details than the
-       integrated backend -- reversing parameter order and knowing how to
-       return structs. *)
-    CCs[i] := NEW (CallingConvention,
-                   name := nm,
-                   m3cg_id := id,
-                   args_left_to_right := NOT BackendIntegrated[backend_mode],
-                   results_on_left := TRUE,
-                   standard_structs := NOT BackendIntegrated[backend_mode]);
-  END NTCall;
+    (* 0 is __cdecl, 1 is __stdcall. *)
+    CCs := ARRAY OF CallingConvention{ New("C",          0),
+                                       New("WINAPIV",    0),
+                                       New("__cdecl",    0),
+                                       New("WINAPI",     1),
+                                       New("CALLBACK",   1),
+                                       New("APIENTRY",   1),
+                                       New("APIPRIVATE", 1),
+                                       New("PASCAL",     1),
+                                       New("__stdcall",  1) };
+    DefaultCall := CCs[0];
+  END InitCallingConventions;
 
 PROCEDURE FixI (VAR i: Int_type;  max_align: INTEGER) =
   BEGIN
