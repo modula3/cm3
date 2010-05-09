@@ -11,6 +11,4 @@
 
 import ("X11R4")
 
-Interface ("GL")
 Interface ("GLX")
-Interface ("GLu")
