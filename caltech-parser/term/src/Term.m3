@@ -73,7 +73,6 @@ PROCEDURE GetChar(): CHAR =
   END GetChar;
 
 PROCEDURE Wr(s: TEXT) =
-
   BEGIN
     IF Raw THEN
       VAR
@@ -106,5 +105,5 @@ PROCEDURE WrLn(s: TEXT; flush := FALSE) =
   END WrLn;
 
 BEGIN
-    TermC.Init();
+  TermC.Init();
 END Term.
