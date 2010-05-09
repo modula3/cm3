@@ -124,13 +124,9 @@ TYPE
   GLOBALHANDLE = HANDLE;
   LOCALHANDLE  = HANDLE;
 
-  (* PROC     = <*WINAPI*> PROCEDURE (); never used *)
-  (* NEARPROC = <*WINAPI*> PROCEDURE (); never used *)
-  (* WINAPI but if there are any parameters, needs a cast (LOOPHOLE), and if
-     there are no parameters, the calling convention doesn't make a
-     difference, and declaring it WINAPI causes warnings when non-NT386
-     consume this interface just for its types. *)
-  FARPROC  = PROCEDURE ();
+  PROC     = <*WINAPI*> PROCEDURE ();
+  NEARPROC = <*WINAPI*> PROCEDURE ();
+  FARPROC  = <*WINAPI*> PROCEDURE ();
 
 TYPE
   HWND         <: HANDLE;
