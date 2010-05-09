@@ -1136,34 +1136,43 @@ def Boot():
     # The older bootstraping method does get that right.
 
     vms = StringTagged(Config, "VMS")
-    
-    if Config == "ALPHA32_VMS":
-        Compile = "cc "
-    elif Config == "ALPHA64_VMS":
-        Compile = "cc /pointer_size=64 "
-    elif StringTagged(Config, "SOLARIS") or Config == "SOLsun":
-        Compile = "/usr/ccs/bin/cc -g -mt -xcode=pic32 -xldscope=symbolic "
-    else:
-        Compile = {
-            "I386_INTERIX"  : "gcc -g ", # gcc -fPIC generates incorrect code on Interix
-            "SOLgnu"        : "/usr/sfw/bin/gcc -g ", # -fPIC?
-            }.get(Config) or "gcc -g -fPIC "
 
-    Compile = Compile + ({  "AMD64_LINUX"     : " -m64 -mno-align-double ",
-                            "AMD64_DARWIN"    : " -arch x86_64 ",
-                            "PPC64_DARWIN"    : " -arch ppc64 ",
-                            "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
-                            "LINUXLIBC6"      : " -m32 -mno-align-double ",
-                            "MIPS64_OPENBSD"  : " -mabi=64 ",
-                            "SOLgnu"          : " -m32 -mcpu=v9 ",
-                            "SOLsun"          : " -xarch=v8plus ",
-                            "SPARC32_LINUX"   : " -xarch=v8plus ",
-                            "SPARC64_LINUX"   : " -xarch=v9 ",
-                            "SPARC32_LINUX"   : " -m32 -mcpu=v9 -munaligned-doubles ",
-                            "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
+    if Config == "ALPHA32_VMS":
+        cc = "cc"
+        cflags = " "
+    elif Config == "ALPHA64_VMS":
+        cc = "cc"
+        cflags = "/pointer_size=64 "
+    elif StringTagged(Config, "SOLARIS") or Config == "SOLsun":
+        cc = "/usr/ccs/bin/cc"
+        cflags = "-g -mt -xldscope=symbolic "
+    else:
+        cc = {
+            "SOLgnu" : "/usr/sfw/bin/gcc",
+            }.get(Config) or "gcc"
+
+        cflags = {
+            "I386_INTERIX"  : "-g ", # gcc -fPIC generates incorrect code on Interix
+            "SOLgnu"        : "-g ", # -fPIC?
+            }.get(Config) or "-g -fPIC "
+
+    cflags = cflags + ({  "AMD64_LINUX"     : " -m64 -mno-align-double ",
+                          "AMD64_DARWIN"    : " -arch x86_64 ",
+                          "PPC64_DARWIN"    : " -arch ppc64 ",
+                          "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
+                          "LINUXLIBC6"      : " -m32 -mno-align-double ",
+                          "MIPS64_OPENBSD"  : " -mabi=64 ",
+                          "SOLgnu"          : " -m32 -mcpu=v9 ",
+                          "I386_SOLARIS"    : " -xarch=pentium -Kpic ",
+                          "AMD64_SOLARIS"   : " -xarch=amd64   -Kpic ",
+                          "SOLsun"          : " -xarch=v8plus -xcode=pic32 ",
+                          "SPARC32_SOLARIS" : " -xarch=v8plus -xcode=pic32 ",
+                          "SPARC64_SOLARIS" : " -xarch=v9     -xcode=pic32 ",
+                          "SPARC32_LINUX"   : " -m32 -mcpu=v9 -munaligned-doubles ",
+                          "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
                           }.get(Config) or " ")
 
-    Link = Compile + " *.mo *.io *.o "
+    Link = "$(CC) $(CFLAGS) *.mo *.io *.o "
     
     if StringTagged(Target, "DARWIN"):
         pass
@@ -1177,14 +1186,15 @@ def Boot():
         Link = Link + " -lm -lpthread "
     
     # not in Link
+    Compile = "$(CC) $(CFLAGS) "
     if not StringTagged(Config, "VMS"):
-        Compile += " -c "
-        
+        Compile = Compile + " -c "
+
     AssembleOnTarget = not vms
     AssembleOnHost = not AssembleOnTarget
 
     if StringTagged(Target, "VMS") and AssembleOnTarget:
-        Assemble = "macro /alpha "
+        Assemble = "macro /alpha " # not right, come back to it later
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
         Assemble = "/usr/ccs/bin/as "
     else:
@@ -1203,6 +1213,7 @@ def Boot():
         "AMD64_DARWIN"      : " -arch x86_64 ",
         "PPC64_DARWIN"      : " -arch ppc64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
+        # -s puts symbols where linker won't automatically strip them
         "I386_SOLARIS"      : " -s ",
         "AMD64_SOLARIS"     : " -s -xarch=amd64 ",
         "SOLgnu"            : " -s -xarch=v8plus ",
@@ -1218,16 +1229,20 @@ def Boot():
         }.get(Target) or ""
 
     if not vms:
-        Compile = GnuPlatformPrefix + Compile
+        cc = GnuPlatformPrefix + cc
         Link = GnuPlatformPrefix + Link
     if (not vms) or AssembleOnHost:
         Assemble = GnuPlatformPrefix + Assemble
 
     #
-    # squeeze runs of spaces and spaces at end
+    # squeeze runs of spaces and spaces at ends
     #
+    cflags = re.sub("  +", " ", cflags)
+    cflags = re.sub(" +$", "", cflags)
+    cflags = re.sub("^ +", "", cflags)
     Compile = re.sub("  +", " ", Compile)
     Compile = re.sub(" +$", "", Compile)
+    Compile = re.sub("^ +", "", Compile)
     Link = re.sub("  +", " ", Link)
     Link = re.sub(" +$", "", Link)
     Assemble = re.sub("  +", " ", Assemble)
@@ -1268,11 +1283,21 @@ def Boot():
 
     for a in [Makefile]:
         a.write("# edit up here\n\n")
-        a.write("Assemble=" + Assemble + "\nCompile=" + Compile + "\nLink=" + Link + "\n")
+        a.write("CC ?= " + cc + "\n")
+        a.write("CFLAGS ?= " + cflags + "\n")
+        a.write("Compile=" + Compile + "\n")
+        a.write("Assemble=" + Assemble + "\n")
+        a.write("Link=" + Link + "\n")
         a.write("\n\n# no more editing should be needed\n\n")
 
     for a in [Make]:
-        a.write("Assemble=\"" + Assemble + "\"\nCompile=\"" + Compile + "\"\nLink=\"" + Link + "\"\n")
+        a.write("# edit up here\n\n")
+        a.write("CC=${CC:-" + cc + "}\n")
+        a.write("CFLAGS=${CFLAGS:-" + cflags + "}\n")
+        a.write("Compile=" + Compile + "\n")
+        a.write("Assemble=" + Assemble + "\n")
+        a.write("Link=" + Link + "\n")
+        a.write("\n\n# no more editing should be needed\n\n")
 
     for q in P:
         dir = GetPackagePath(q)
@@ -1304,7 +1329,7 @@ def Boot():
                         VmsMake.write("$ " + Assemble + " " + a + "\n")                    
                 VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
                 continue
-            Makefile.write("Objects=$(Objects) " + Object + "\n" + Object + ": " + a + "\n\t")
+            Makefile.write("Objects += " + Object + "\n" + Object + ": " + a + "\n\t")
             if ext_c:
                 Command = "Compile"
             else:
