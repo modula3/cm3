@@ -12,6 +12,13 @@
 #define _REENTRANT
 #endif
 
+#ifdef __arm__
+/* Reveal the correct struct stat? */
+#ifndef _DARWIN_FEATURE_64_ONLY_BIT_INODE
+#define _DARWIN_FEATURE_64_ONLY_BIT_INODE
+#endif
+#endif
+
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */
 #endif
@@ -21,15 +28,8 @@
 #include <string.h>
 #include <stddef.h>
 
-#define ZeroMemory(a,b) (memset((a), 0, (b)))
+#define ZeroMemory(a, b) (memset((a), 0, (b)))
 #define ZERO_MEMORY(a) (ZeroMemory(&(a), sizeof(a)))
-
-#ifdef __arm__
-/* Reveal the correct struct stat? */
-#ifndef _DARWIN_FEATURE_64_ONLY_BIT_INODE
-#define _DARWIN_FEATURE_64_ONLY_BIT_INODE
-#endif
-#endif
 
 #ifdef __cplusplus
 extern "C" {
