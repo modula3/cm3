@@ -6,7 +6,8 @@ readonly WORD_SIZE = "64BITS"   % { "32BITS" or "64BITS" }
 
 % -funwind-tables causes internal compiler errors
 % -mabi=64 presumably substitutes for -m64
-m3back_flags = "-mabi=64 -fPIC"
+m3back_m64 = "-mabi=64"
+m3back_unwind_tables = ""
 SYSTEM_CC = "gcc -g -mabi=64 -fPIC"
 readonly SYSTEM_ASM = "as"
 
