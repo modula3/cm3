@@ -7,6 +7,15 @@
 
 #define _FILE_OFFSET_BITS 64
 
+/* const is extern const in C, but static const in C++,
+ * but gcc gives a warning for the correct portable form "extern const"
+ */
+#if defined(__cplusplus) || !defined(__GNUC__)
+#define EXTERN_CONST extern const
+#else
+#define EXTERN_CONST const
+#endif
+
 #if defined(__sun) && defined(__sparc) && !defined(__MAKECONTEXT_V2_SOURCE)
 /* Support for userthreads on Solaris 9 4/03 and later.
  * Support for older is easy but absent.
@@ -220,20 +229,11 @@ int __cdecl Ustat__chflags(const char* path, unsigned long flags);
 
 /*
 socklen_t
-cygwin:
-    signed 32 bit
-hpux:
-    size_t
-    therefore:
-    hpux32:
-        unsigned 32 bit
-    hpux64:
-        unsigned 64 bit, but again, size_t
-everyone else:
-    unsigned 32 bit
+cygwin: signed 32 bit
+hpux: size_t (unsigned 32bit or 64bit)
+everyone else: unsigned 32 bit
 
-The values involved are all small positive values, and
-we convert carefully.
+The values involved are all small and positive, and we convert carefully.
 */
 #if defined(__INTERIX) || (defined(__vms) && defined(_DECC_V4_SOURCE))
 typedef int socklen_t;
