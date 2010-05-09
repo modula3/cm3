@@ -88,8 +88,8 @@ void __cdecl Unix__Assertions(void)
     CHECK_M3_TYPE_SIZE(uid_t);
 
     M3_STATIC_ASSERT(IS_TYPE_SIGNED(pid_t));
-#endif
     Usocket__Assertions();
+#endif
 }
 
 M3WRAP3_(int, open, const char*, int, m3_mode_t)
