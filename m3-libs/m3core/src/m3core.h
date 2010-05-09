@@ -26,7 +26,7 @@
 
 #ifdef __vms
 /* Enable support for files larger than 2GB. */
-#ifdef _LARGEFILE
+#ifndef _LARGEFILE
 #define _LARGEFILE
 #endif
 /* Enable 32bit gids and reveal setreuids. */
