@@ -229,13 +229,15 @@ int __cdecl Ustat__chflags(const char* path, unsigned long flags);
 
 /*
 socklen_t
+win32: signed 32 bit
 cygwin: signed 32 bit
 hpux: size_t (unsigned 32bit or 64bit)
 everyone else: unsigned 32 bit
 
 The values involved are all small and positive, and we convert carefully.
+Note that socklen_t should be declared by system headers, but isn't always.
 */
-#if defined(__INTERIX) || (defined(__vms) && defined(_DECC_V4_SOURCE))
+#if defined(__INTERIX) || (defined(__vms) && defined(_DECC_V4_SOURCE)) || defined(_WIN32)
 typedef int socklen_t;
 #elif defined(__vms)
 typedef size_t socklen_t;
