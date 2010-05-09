@@ -1163,7 +1163,7 @@ def Boot():
                           "LINUXLIBC6"      : " -m32 -mno-align-double ",
                           "MIPS64_OPENBSD"  : " -mabi=64 ",
                           "SOLgnu"          : " -m32 -mcpu=v9 ",
-                          "I386_SOLARIS"    : " -xarch=pentium -Kpic ",
+                          "I386_SOLARIS"    : " -xarch=pentium_pro -Kpic ",
                           "AMD64_SOLARIS"   : " -xarch=amd64   -Kpic ",
                           "SOLsun"          : " -xarch=v8plus -xcode=pic32 ",
                           "SPARC32_SOLARIS" : " -xarch=v8plus -xcode=pic32 ",
