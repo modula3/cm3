@@ -20,4 +20,3 @@ PROCEDURE Abort (t: Process.T)  RAISES {OSError.E} =
 
 BEGIN
 END M3Process.
-
