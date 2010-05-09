@@ -1,5 +1,26 @@
 #bash
 
+#-----------------------------------------------------------------------------
+
+find_in_list() {
+    a="x`eval echo \\$$1`"
+    if [ "$a" = "x" ]; then
+        for a in $2; do
+            for b in $a ${a}.exe; do
+                if type $b >/dev/null 2>/dev/null; then
+                    eval $1=$b
+                    export $1
+                    return
+                fi
+            done
+        done
+        echo "none of $2 found"
+        exit 1
+    fi
+}
+
+#-----------------------------------------------------------------------------
+
 if test "x${CM3CVSUSER}" != "x"; then
   CM3CVSUSER_AT="${CM3CVSUSER}@"
 else
@@ -383,8 +404,12 @@ if [ `hostname` = 'birch' ]; then
 fi
 
 if [ "$SHIPRC" = "y" -o "$SHIPRC" = "yes" ]; then
-  RSYNC=${RSYNC:-"rsync -vu"}
-  type rsync || RSYNC=scp
+  if [ "x$RSYNC" = "x" ]; then
+    find_in_list RSYNC "/opt/csw/bin/rsync rsync scp" || exit 1
+    if [ "x$RSYNC" = "xscp" ]; then :; else
+      RSYNC="${RSYNC} -vu"
+    fi
+  fi
   false; while [ $? != 0 ]; do
     $RSYNC ${STAGE}/cm3-*-${DS}.tgz $DESTHOST:/var/www/modula3.elegosoft.com/cm3/releng
   done
