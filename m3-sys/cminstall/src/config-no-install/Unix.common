@@ -75,10 +75,21 @@ end
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.
 
+if not defined("m3back_debug")
+  m3back_debug = "-gstabs+"
+end
+
+if not defined("m3back_optimize")
+  m3back_optimize = "-O2 -Wuninitialized"
+end
+
 proc m3_backend(source, object, optimize, debug) is
     local args = [ "-quiet", "-fno-reorder-blocks" ]
-    if optimize and not equal(TARGET, "I386_INTERIX")
-        args += "-O3"
+    if optimize
+        args += m3back_optimize
+    end
+    if debug
+        args += m3back_debug
     end
     if M3_PROFILING
         args += "-p"

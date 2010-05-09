@@ -1,7 +1,6 @@
 readonly TARGET = "I386_NETBSD"
 readonly GNU_PLATFORM = "i686-netbsd" % "cpu-os" string for GNU
 
-m3back_flags = "-march=i586 -gstabs+ -m32 -fPIC -funwind-tables"
 SYSTEM_CC = "gcc -gstabs+ -m32 -fPIC"
 SYSTEM_LD = SYSTEM_CC & " -Wl,-z,now"
 readonly SYSTEM_ASM = "as -32"
