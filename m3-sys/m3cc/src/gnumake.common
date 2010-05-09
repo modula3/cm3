@@ -57,6 +57,7 @@ proc ConfigureGNUMake() is
     a += "/usr/pkg/bin/gmake"   % NetBSD
     a += "/usr/sfw/bin/gmake"   % Solaris
     a += "/usr/local/gmake"     % FreeBSD, OpenBSD, otherwise popular
+    a += "/opt/csw/gnu/make"    % opencsw.org
     a += "/usr/local/gnumake"   % reasonable
     a += "make"                 % GNU/Linux, often otherwise wrong
 
