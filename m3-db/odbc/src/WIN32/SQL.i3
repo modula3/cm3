@@ -1,9 +1,9 @@
 
 (* SQL defines the C-level interface to the ODBC system.  The contents
    of this interface were derived from the Microsoft version of "sql.h"
-   dated 4/10/95.
+   dated 4/10/95 and the sql.h interfaces for Linux provided by Positron.
 
-   See RDB.i3 for a safe Modula-3 interface to the same functionality.  *)
+   See DB.i3 for a safe Modula-3 interface to the same functionality.  *)
 
 UNSAFE INTERFACE SQL;
 
@@ -11,6 +11,7 @@ FROM SQLtypes IMPORT SQLRETURN, SQLHENV, SQLHENV_star, SQLHDBC, SQLHDBC_star,
    SQLHSTMT, SQLHSTMT_star, SQLUSMALLINT, SQLUSMALLINT_star, SQLSMALLINT,
    SQLSMALLINT_star, SQLPOINTER, SQLPOINTER_star, SQLINTEGER, SQLINTEGER_star,
    SQLUINTEGER, SQLUINTEGER_star, SQLCHAR_star;
+IMPORT Compiler;
 
 CONST
   ODBCVER         = 16_0250;    (* ODBC version number *)
@@ -957,7 +958,7 @@ CONST
    SQL_OPT_TRACE_OFF             = 0;
    SQL_OPT_TRACE_ON              = 1;
    SQL_OPT_TRACE_DEFAULT         = SQL_OPT_TRACE_OFF;
-   SQL_OPT_TRACE_FILE_DEFAULT    = "\\SQL.LOG";
+   SQL_OPT_TRACE_FILE_DEFAULT = ARRAY Compiler.OS OF TEXT{"odbc.log", "\\SQL.LOG"}[Compiler.ThisOS];
 
 (* SQL_ODBC_CURSORS options *)
    SQL_CUR_USE_IF_NEEDED         = 0;
