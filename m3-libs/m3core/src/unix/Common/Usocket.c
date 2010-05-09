@@ -94,7 +94,7 @@ int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_
 #if defined(__CYGWIN__) || defined(_WIN32)
     if (optname == SO_LINGER && optval != NULL)
     {
-        struct linger b;
+        struct linger b = { 0 };
         m3_linger_t* a = (m3_linger_t*)optval;
         assert(len == sizeof(*a));
         b.l_onoff = a->onoff;
@@ -155,7 +155,7 @@ the same order. This is checked in Usocket__Assertions.
 
 #if defined(__CYGWIN__) || defined(_WIN32)
         m3_linger_t* a = { 0 };
-        struct linger b;
+        struct linger b = { 0 };
 
         if (optname == SO_LINGER && optval != NULL)
         {
