@@ -704,33 +704,22 @@ HAVE_SERIAL = False
 
 if Target.startswith("NT386"):
 
-    #
-    # TBD:
-    # If cl is not in the path, or link not in the path (Cygwin link doesn't count)
-    # then error toward GNU, and probe uname and gcc -v.
-    #
-    if Target == "NT386GNU":
-        Config = "I386_CYGWIN"
-        TargetOS = "POSIX"
-
-    elif Target == "NT386MINGNU":
-        Config = "I386_MINGW"
+    if Target == "NT386MINGNU" or Target == "NT386":
         TargetOS = "WIN32"
+        HAVE_SERIAL = True
 
-    else:
-        Config = "I386_NT"
-        TargetOS = "WIN32"
+    if Target == "NT386":
+        GCC_BACKEND = False
 
-    Target = Config
+    Config = Target
+    Target = "NT386"
 
 if Target.endswith("_NT"):
-    HAVE_SERIAL = True
     GCC_BACKEND = False
-    TargetOS = "WIN32"
 
-if Target.endswith("_MINGW"):
-    HAVE_SERIAL = True
+if Target.endswith("_MINGW") or Target.endswith("_NT"):
     TargetOS = "WIN32"
+    HAVE_SERIAL = True
 
 if Host.endswith("_NT") or Host == "NT386":
     Q = "" # q for quote: This is probably about the host, not the target.
@@ -1140,26 +1129,26 @@ def Boot():
     # pick the compiler
 
     if Config == "ALPHA32_VMS":
-        cc = "cc"
-        cflags = " "
+        CCompiler = "CCompiler"
+        CCompilerFlags = " "
     elif Config == "ALPHA64_VMS":
-        cc = "cc"
-        cflags = "/pointer_size=64 "
+        CCompiler = "CCompiler"
+        CCompilerFlags = "/pointer_size=64 "
     elif StringTagged(Config, "SOLARIS") or Config == "SOLsun":
-        cc = "/usr/bin/cc"
-        cflags = "-g -mt -xldscope=symbolic "
+        CCompiler = "/usr/bin/CCompiler"
+        CCompilerFlags = "-g -mt -xldscope=symbolic "
     else:
         # gcc platforms
-        cc = {
+        CCompiler = {
             "SOLgnu" : "/usr/sfw/bin/gcc",
             }.get(Config) or "gcc"
 
-        cflags = {
+        CCompilerFlags = {
             "I386_INTERIX"  : "-g ", # gcc -fPIC generates incorrect code on Interix
             "SOLgnu"        : "-g ", # -fPIC?
             }.get(Config) or "-g -fPIC "
 
-    cflags = cflags + ({  "AMD64_LINUX"     : " -m64 -mno-align-double ",
+    CCompilerFlags = CCompilerFlags + ({  "AMD64_LINUX"     : " -m64 -mno-align-double ",
                           "AMD64_DARWIN"    : " -arch x86_64 ",
                           "PPC64_DARWIN"    : " -arch ppc64 ",
                           "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
@@ -1191,7 +1180,7 @@ def Boot():
     else:
         Link = Link + " -lm -lpthread "
     
-    # add -c to compiler but not link (i.e. not cflags)
+    # add -c to compiler but not link (i.e. not CCompilerFlags)
 
     Compile = "$(CC) $(CFLAGS) "
     if not StringTagged(Config, "VMS"):
@@ -1202,12 +1191,28 @@ def Boot():
 
     # pick assembler
 
+    AssemblerFlags = " "
+
     if StringTagged(Target, "VMS") and AssembleOnTarget:
-        Assemble = "macro /alpha " # not right, come back to it later
+        AssemblerMk = "macro" # not right, come back to it later
+        AssemblerSh = "macro" # not right, come back to it later
+        AssemblerFlags = "/alpha " # not right, come back to it later
+    elif Target == "I386_SOLARIS" or Target == "AMD64_SOLARIS":
+        #
+        # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
+        # see http://gcc.gnu.org/install/specific.html#ix86-x-solaris210
+        #
+        a = ("       if test -x /usr/sfw/bin/gas ; then echo /usr/sfw/bin/gas ; \\\n"
+            + "    elif test -x /opt/csw/gnu/as  ; then echo /opt/csw/gnu/as  ; \\\n"
+            + "    else echo \"unable to find GNU assembler\" ; fi")
+        AssemblerMk = "$(shell " + a + ")"
+        AssemblerSh = "`" + a + "`"        
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
-        Assemble = "/usr/ccs/bin/as "
+        AssemblerMk = "/usr/ccs/bin/as"
+        AssemblerSh = "/usr/ccs/bin/as"
     else:
-        Assemble = "as "
+        AssemblerMk = "as"
+        AssemblerSh = "as"
 
     # set assembler flags
 
@@ -1216,11 +1221,11 @@ def Boot():
         # "Tag" not right for BSD or 64 either.
         if Target.find("LINUX") != -1 or Target.find("BSD") != -1:
             if Target.find("64") != -1 or (StringTagged(Target, "ALPHA") and not StringTagged(Target, "ALPHA32")):
-                Assemble = Assemble + " --64"
+                AssemblerFlags = AssemblerFlags + " --64"
             else:
-                Assemble = Assemble + " --32"
+                AssemblerFlags = AssemblerFlags + " --32"
 
-    Assemble = (Assemble + ({
+    AssemblerFlags = (AssemblerFlags + ({
         "AMD64_DARWIN"      : " -arch x86_64 ",
         "PPC64_DARWIN"      : " -arch ppc64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
@@ -1240,24 +1245,25 @@ def Boot():
         }.get(Target) or ""
 
     if not vms:
-        cc = GnuPlatformPrefix + cc
+        CCompiler = GnuPlatformPrefix + CCompiler
         Link = GnuPlatformPrefix + Link
     if (not vms) or AssembleOnHost:
-        Assemble = GnuPlatformPrefix + Assemble
+        AssemblerMk = GnuPlatformPrefix + AssemblerMk
+        AssemblerSh = GnuPlatformPrefix + AssemblerSh
 
     #
     # squeeze runs of spaces and spaces at ends
     #
-    cflags = re.sub("  +", " ", cflags)
-    cflags = re.sub(" +$", "", cflags)
-    cflags = re.sub("^ +", "", cflags)
+    CCompilerFlags = re.sub("  +", " ", CCompilerFlags)
+    CCompilerFlags = re.sub(" +$", "", CCompilerFlags)
+    CCompilerFlags = re.sub("^ +", "", CCompilerFlags)
     Compile = re.sub("  +", " ", Compile)
     Compile = re.sub(" +$", "", Compile)
     Compile = re.sub("^ +", "", Compile)
     Link = re.sub("  +", " ", Link)
     Link = re.sub(" +$", "", Link)
-    Assemble = re.sub("  +", " ", Assemble)
-    Assemble = re.sub(" +$", "", Assemble)
+    AssemblerFlags = re.sub("  +", " ", AssemblerFlags)
+    AssemblerFlags = re.sub(" +$", "", AssemblerFlags)
 
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
@@ -1300,19 +1306,19 @@ def Boot():
 
     for a in [Makefile]:
         a.write("# edit up here\n\n"
-                + "CC ?= " + cc + "\n"
-                + "CFLAGS ?= " + cflags + "\n"
+                + "CC ?= " + CCompiler + "\n"
+                + "CFLAGS ?= " + CCompilerFlags + "\n"
                 + "Compile=" + Compile + "\n"
-                + "Assemble=" + Assemble + "\n"
+                + "Assemble=" + AssemblerMk + " " + AssemblerFlags + "\n"
                 + "Link=" + Link + "\n"
                 + "\n# no more editing should be needed\n\n")
 
     for a in [Make]:
         a.write("# edit up here\n\n"
-                + "CC=${CC:-" + cc + "}\n"
-                + "CFLAGS=${CFLAGS:-" + cflags + "}\n"
+                + "CC=${CC:-" + CCompiler + "}\n"
+                + "CFLAGS=${CFLAGS:-" + CCompilerFlags + "}\n"
                 + "Compile=" + Compile + "\n"
-                + "Assemble=" + Assemble + "\n"
+                + "Assemble=" + AssemblerSh + " " + AssemblerFlags + "\n"
                 + "Link=" + Link + "\n"
                 + "\n# no more editing should be needed\n\n")
 
@@ -1340,11 +1346,11 @@ def Boot():
             else:
                 if AssembleOnHost:
                     # must have cross assembler
-                    a = Assemble + " " + fullpath + " -o " + BootDir + "/" + Object
+                    a = AssemblerMk + " " + fullpath + " -o " + BootDir + "/" + Object
                     print(a)
                     os.system(a)
                 else:
-                    VmsMake.write("$ " + Assemble + " " + a + "\n")                    
+                    VmsMake.write("$ " + AssemblerMk + " " + a + "\n")                    
             VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
 
     Makefile.write(".c.o:\n"
@@ -1925,8 +1931,7 @@ def _CopyCompiler(From, To):
     from_cm3cg = os.path.join(From, "cm3cg")
     from_cm3cgexe = os.path.join(From, "cm3cg.exe")
 
-    if (Config != "NT386"
-            and not FileExists(from_cm3)
+    if (        not FileExists(from_cm3)
             and not FileExists(from_cm3exe)
             and not FileExists(from_cm3cg)
             and not FileExists(from_cm3cgexe)):
@@ -1952,7 +1957,7 @@ def _CopyCompiler(From, To):
         CopyFile(from_cm3, To) or FatalError("3")
         CopyFileIfExist(os.path.join(From, "cm3.pdb"), To) or FatalError("5")
 
-    if Config != "NT386":
+    if Config != "NT386" and not Target.endswith("_NT"):
         if FileExists(from_cm3cgexe):
             from_cm3cg = from_cm3cgexe
         elif FileExists(from_cm3cg):
@@ -2068,13 +2073,21 @@ def GetVisualCPlusPlusVersion():
     FatalError("unable to detect Visual C++ version, maybe cl is not in %PATH%?")
 
 
-def SetupEnvironment():
-    SystemDrive = os.environ.get("SystemDrive", "")
-    if os.environ.get("OS") == "Windows_NT":
-        HostIsNT = True
-    else:
-        HostIsNT = False
+def IsCygwinHostTarget(): # confused
+    return Host == "NT386GNU" or Host.endswith("_CYGWIN") or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX")
 
+def IsMinGWHostTarget():
+    return Target == "NT386MINGNU" or (Target == "NT386" and GCC_BACKEND and TargetOS == "WIN32") or Target.endswith("_MINGW")
+
+_HostIsNT = (os.environ.get("OS") == "Windows_NT")
+
+def IsNativeNTHostTarget(): # confused
+    return ((Target == "NT386" or Target.endswith("_NT"))
+            and _HostIsNT
+            and (Config == "NT386" or Config.endswith("_NT"))
+            and (not GCC_BACKEND) and TargetOS == "WIN32")
+
+def SetupEnvironment():
     SystemDrive = os.environ.get("SYSTEMDRIVE")
     if SystemDrive:
         SystemDrive += os.path.sep
@@ -2091,7 +2104,7 @@ def SetupEnvironment():
 
     # some host/target confusion here..
 
-    if Target == "NT386" and HostIsNT and Config == "NT386" and (not GCC_BACKEND) and TargetOS == "WIN32":
+    if IsNativeNTHostTarget():
 
         VCBin = ""
         VCInc = ""
@@ -2269,7 +2282,7 @@ def SetupEnvironment():
 
     # some host/target confusion here..
 
-    if Target == "NT386MINGNU" or (Target == "NT386" and GCC_BACKEND and TargetOS == "WIN32"):
+    if IsMinGWHostTarget():
 
         _ClearEnvironmentVariable("LIB")
         _ClearEnvironmentVariable("INCLUDE")
@@ -2302,12 +2315,12 @@ def SetupEnvironment():
 
     # some host/target confusion here..
 
-    if Host == "NT386GNU" or (Host == "NT386" and GCC_BACKEND and TargetOS == "POSIX"):
+    if IsCygwinHostTarget():
 
         #_ClearEnvironmentVariable("LIB")
         #_ClearEnvironmentVariable("INCLUDE")
 
-        #if HostIsNT:
+        #if _HostIsNT:
         #    _SetupEnvironmentVariableAll(
         #        "PATH",
         #        ["cygX11-6.dll"],
