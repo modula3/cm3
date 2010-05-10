@@ -1129,13 +1129,13 @@ def Boot():
     # pick the compiler
 
     if Config == "ALPHA32_VMS":
-        CCompiler = "CCompiler"
+        CCompiler = "cc"
         CCompilerFlags = " "
     elif Config == "ALPHA64_VMS":
-        CCompiler = "CCompiler"
+        CCompiler = "cc"
         CCompilerFlags = "/pointer_size=64 "
     elif StringTagged(Config, "SOLARIS") or Config == "SOLsun":
-        CCompiler = "/usr/bin/CCompiler"
+        CCompiler = "/usr/bin/cc"
         CCompilerFlags = "-g -mt -xldscope=symbolic "
     else:
         # gcc platforms
@@ -1148,22 +1148,23 @@ def Boot():
             "SOLgnu"        : "-g ", # -fPIC?
             }.get(Config) or "-g -fPIC "
 
-    CCompilerFlags = CCompilerFlags + ({  "AMD64_LINUX"     : " -m64 -mno-align-double ",
-                          "AMD64_DARWIN"    : " -arch x86_64 ",
-                          "PPC64_DARWIN"    : " -arch ppc64 ",
-                          "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
-                          "LINUXLIBC6"      : " -m32 -mno-align-double ",
-                          "I386_LINUX"      : " -m32 -mno-align-double ",
-                          "MIPS64_OPENBSD"  : " -mabi=64 ",
-                          "SOLgnu"          : " -m32 -mcpu=v9 ",
-                          "I386_SOLARIS"    : " -xarch=pentium_pro -Kpic ",
-                          "AMD64_SOLARIS"   : " -xarch=amd64  -Kpic ",
-                          "SOLsun"          : " -xarch=v8plus -xcode=pic32 ",
-                          "SPARC32_SOLARIS" : " -xarch=v8plus -xcode=pic32 ",
-                          "SPARC64_SOLARIS" : " -xarch=v9     -xcode=pic32 ",
-                          "SPARC32_LINUX"   : " -m32 -mcpu=v9 -munaligned-doubles ",
-                          "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
-                          }.get(Config) or " ")
+    CCompilerFlags = CCompilerFlags + ({
+        "AMD64_LINUX"     : " -m64 -mno-align-double ",
+        "AMD64_DARWIN"    : " -arch x86_64 ",
+        "PPC64_DARWIN"    : " -arch ppc64 ",
+        "ARM_DARWIN"      : " -march=armv6 -mcpu=arm1176jzf-s ",
+        "LINUXLIBC6"      : " -m32 -mno-align-double ",
+        "I386_LINUX"      : " -m32 -mno-align-double ",
+        "MIPS64_OPENBSD"  : " -mabi=64 ",
+        "SOLgnu"          : " -m32 -mcpu=v9 ",
+        "I386_SOLARIS"    : " -xarch=pentium_pro -Kpic ",
+        "AMD64_SOLARIS"   : " -xarch=amd64       -Kpic ",
+        "SOLsun"          : " -xarch=v8plus -xcode=pic13 ",
+        "SPARC32_SOLARIS" : " -xarch=v8plus -xcode=pic13 ",
+        "SPARC64_SOLARIS" : " -xarch=v9     -xcode=pic13 ",
+        "SPARC32_LINUX"   : " -m32 -mcpu=v9 -munaligned-doubles ",
+        "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
+        }.get(Config) or " ")
 
     Link = "$(CC) $(CFLAGS) *.mo *.io *.o "
 
@@ -1191,30 +1192,18 @@ def Boot():
 
     # pick assembler
 
-    AssemblerFlags = " "
-
     if StringTagged(Target, "VMS") and AssembleOnTarget:
-        AssemblerMk = "macro" # not right, come back to it later
-        AssemblerSh = "macro" # not right, come back to it later
+        Assembler = "macro" # not right, come back to it later
         AssemblerFlags = "/alpha " # not right, come back to it later
-    elif Target == "I386_SOLARIS" or Target == "AMD64_SOLARIS":
-        #
-        # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
-        # see http://gcc.gnu.org/install/specific.html#ix86-x-solaris210
-        #
-        a = ("       if test -x /usr/sfw/bin/gas ; then echo /usr/sfw/bin/gas ; \\\n"
-            + "    elif test -x /opt/csw/gnu/as  ; then echo /opt/csw/gnu/as  ; \\\n"
-            + "    else echo \"unable to find GNU assembler\" ; fi")
-        AssemblerMk = "$(shell " + a + ")"
-        AssemblerSh = "`" + a + "`"        
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
-        AssemblerMk = "/usr/ccs/bin/as"
-        AssemblerSh = "/usr/ccs/bin/as"
+        # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
+        Assembler = "/usr/ccs/bin/as"
     else:
-        AssemblerMk = "as"
-        AssemblerSh = "as"
+        Assembler = "as"
 
     # set assembler flags
+
+    AssemblerFlags = " "
 
     if Target != "PPC32_OPENBSD" and Target != "PPC_LINUX":
         # "Tag" not right for LINUX due to LINUXLIBC6
@@ -1229,13 +1218,12 @@ def Boot():
         "AMD64_DARWIN"      : " -arch x86_64 ",
         "PPC64_DARWIN"      : " -arch ppc64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
-        # -s puts symbols where linker won't automatically strip them
-        "I386_SOLARIS"      : " -s ",
-        "AMD64_SOLARIS"     : " -s -xarch=amd64 ",
-        "SOLgnu"            : " -s -xarch=v8plus ",
-        "SOLsun"            : " -s -xarch=v8plus ",
-        "SPARC32_SOLARIS"   : " -s -xarch=v8plus ",
-        "SPARC64_SOLARIS"   : " -s -xarch=v9 ",
+        "I386_SOLARIS"      : " -Qy -s",
+        "AMD64_SOLARIS"     : " -Qy -s        -xarch=generic64 ",
+        "SOLgnu"            : " -Qy -s -K PIC -xarch=v8plus ",
+        "SOLsun"            : " -Qy -s -K PIC -xarch=v8plus ",
+        "SPARC32_SOLARIS"   : " -Qy -s -K PIC -xarch=v8plus ",
+        "SPARC64_SOLARIS"   : " -Qy -s -K PIC -xarch=v9 ",
         }.get(Target) or ""))
 
     GnuPlatformPrefix = {
@@ -1248,8 +1236,7 @@ def Boot():
         CCompiler = GnuPlatformPrefix + CCompiler
         Link = GnuPlatformPrefix + Link
     if (not vms) or AssembleOnHost:
-        AssemblerMk = GnuPlatformPrefix + AssemblerMk
-        AssemblerSh = GnuPlatformPrefix + AssemblerSh
+        Assembler = GnuPlatformPrefix + Assembler
 
     #
     # squeeze runs of spaces and spaces at ends
@@ -1262,6 +1249,7 @@ def Boot():
     Compile = re.sub("^ +", "", Compile)
     Link = re.sub("  +", " ", Link)
     Link = re.sub(" +$", "", Link)
+    AssemblerFlags = re.sub("^ +", "", AssemblerFlags)
     AssemblerFlags = re.sub("  +", " ", AssemblerFlags)
     AssemblerFlags = re.sub(" +$", "", AssemblerFlags)
 
@@ -1309,7 +1297,7 @@ def Boot():
                 + "CC ?= " + CCompiler + "\n"
                 + "CFLAGS ?= " + CCompilerFlags + "\n"
                 + "Compile=" + Compile + "\n"
-                + "Assemble=" + AssemblerMk + " " + AssemblerFlags + "\n"
+                + "Assemble=" + Assembler + " " + AssemblerFlags + "\n"
                 + "Link=" + Link + "\n"
                 + "\n# no more editing should be needed\n\n")
 
@@ -1318,7 +1306,7 @@ def Boot():
                 + "CC=${CC:-" + CCompiler + "}\n"
                 + "CFLAGS=${CFLAGS:-" + CCompilerFlags + "}\n"
                 + "Compile=" + Compile + "\n"
-                + "Assemble=" + AssemblerSh + " " + AssemblerFlags + "\n"
+                + "Assemble=" + Assembler + " " + AssemblerFlags + "\n"
                 + "Link=" + Link + "\n"
                 + "\n# no more editing should be needed\n\n")
 
@@ -1346,11 +1334,11 @@ def Boot():
             else:
                 if AssembleOnHost:
                     # must have cross assembler
-                    a = AssemblerMk + " " + fullpath + " -o " + BootDir + "/" + Object
+                    a = Assembler + " " + fullpath + " -o " + BootDir + "/" + Object
                     print(a)
                     os.system(a)
                 else:
-                    VmsMake.write("$ " + AssemblerMk + " " + a + "\n")                    
+                    VmsMake.write("$ " + Assembler + " " + a + "\n")                    
             VmsLink.write(Object + "/SELECTIVE_SEARCH\n")
 
     Makefile.write(".c.o:\n"
