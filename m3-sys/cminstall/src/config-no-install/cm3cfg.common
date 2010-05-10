@@ -203,7 +203,10 @@ end
 if not defined("GetM3BackFlags")
 
 proc GetM3BackFlags() is
-    return m3back_flags
+    if defined("m3back_flags")
+      return m3back_flags
+    end
+    return ""
 end
 
 end
