@@ -15,7 +15,7 @@ currentVC   = ["80", "90"]
 nativeNT    = contains(target, "nt386") or target.endswith("_nt")
 currentNT   = nativeNT and (GetVisualCPlusPlusVersion() in currentVC)
 oldNT       = nativeNT and not currentNT
-preferZip   = contains(target, "nt386") or target.endswith("_nt")
+preferZip   = contains(target, "vms") or contains(target, "nt386") or target.endswith("_nt")
 supportsMSI = nativeNT or contains(target, "interix") or contains(target, "cygwin") or contains(target, "mingw") or contains(target, "uwin")
 
 PackageSets = ["min", "all"]
@@ -93,7 +93,16 @@ def MakeArchive(PackageSetName, Command, Extension):
 
     Archive = FormInstallRoot(PackageSetName) + "." + Extension
     DeleteFile(Archive)
-    Run(Command + " " + os.path.basename(Archive) + " " + os.path.basename(InstallRoot))
+    if Extension.startswith("tar."):
+        Compression = GetPathExtension(Extension)
+        TarFile = RemovePathExtension(Archive)
+        DeleteFile(TarFile)
+        TarCommand = re.sub("[jz]", "", Command)
+        Run(TarCommand + " " + TarFile + " " + os.path.basename(InstallRoot))
+        Compresser = {"gz" : "gzip", "bz2" : "bzip2"}.get(Compression) or Compression
+        Run(Compresser + " " + TarFile)
+    else:
+        Run(Command + " " + os.path.basename(Archive) + " " + os.path.basename(InstallRoot))
 
     #
     # Building a self extracting .exe is very easy but not present for now.
