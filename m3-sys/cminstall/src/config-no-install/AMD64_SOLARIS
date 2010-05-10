@@ -4,15 +4,14 @@
 
 readonly TARGET = "AMD64_SOLARIS"
 readonly GNU_PLATFORM = "i686-solaris2.10" % "cpu-os" string for GNU
-                                           % deliberately i686 but willing to change
+                                           % deliberately i686
 readonly C_COMPILER = "SUN" % or GNU
 
 SunXArch = "amd64"
 
-% Sun assembler doesn't like .stabd.
-% I use Sun assembler because it is installed at a more constant
-% location than GNU assemble
-m3back_debug = "-gstabs"
+% If you use Sun assembler, you might need:
+% m3back_debug = "-gstabs"
+% to avoid the .stabd that -gstabs+ produces.
 
 include("AMD64.common")
 include("Solaris.common")
