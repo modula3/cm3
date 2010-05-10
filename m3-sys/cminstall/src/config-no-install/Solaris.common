@@ -27,13 +27,18 @@ if equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS")
                    "/opt/csw/gnu/as",
                    "/usr/ccs/bin/as" ]
       if FileExists(a)
-        readonly SYSTEM_ASM = a + " -s -K PIC"
+        if equal(TARGET, "I386_SOLARIS")
+          readonly SYSTEM_ASM = a + " -s"
+        else
+          readonly SYSTEM_ASM = a + " -s -xarch=" & SunXArch
+        end
         return
       end
     end
     error("unable to find assembler")
   end
 else
+  % -s means to put symbols where linker will not automatically strip them
   readonly SYSTEM_ASM = "/usr/ccs/bin/as -s -K PIC -xarch=" & SunXArch
 end
 
