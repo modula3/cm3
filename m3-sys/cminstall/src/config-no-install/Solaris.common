@@ -9,8 +9,30 @@ if not defined("SL") SL = "/" end
 readonly TARGET_OS = "SOLARIS"
 readonly SYSTEM_AR = "/usr/ccs/bin/ar"
 readonly GccMBits = {"32BITS" : "32", "64BITS" : "64"}{WORD_SIZE}
-if equal(TARGET, "I386_SOLARIS")
-  readonly SYSTEM_ASM = "/usr/ccs/bin/as -s -K PIC"
+if equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS")
+  proc configure_assembler() is
+    %
+    % Favor GNU as, see:
+    %   http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
+    %   http://gcc.gnu.org/install/specific.html#ix86-x-solaris210
+    %
+    if defined("SYSTEM_ASM")
+      return
+    end
+    proc FileExists (a) is
+      return not stale (a, a)
+    end
+    foreach a in [ "/usr/sfw/bin/gas",
+                   "/opt/csw/bin/gas",
+                   "/opt/csw/gnu/as",
+                   "/usr/ccs/bin/as" ]
+      if FileExists(a)
+        readonly SYSTEM_ASM = a + " -s -K PIC"
+        return
+      end
+    end
+    error("unable to find assembler")
+  end
 else
   readonly SYSTEM_ASM = "/usr/ccs/bin/as -s -K PIC -xarch=" & SunXArch
 end
@@ -24,6 +46,7 @@ if equal (C_COMPILER, "SUN")
     if defined("SYSTEM_CC")
       return
     end
+
     % newer compiler says:
     % cc: Warning: -xarch=v8plus is deprecated, use -m32 -xarch=sparc instead
     % cc: Warning: -xarch=generic64 is deprecated, use -m64 to create 64-bit programs
