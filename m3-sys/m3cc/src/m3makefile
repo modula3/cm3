@@ -139,17 +139,18 @@ readonly m3cc_config = {
   % If buiding native gcc driver, add:
   % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld 
   
-  % Sun assembler doesn't like .stabd.
+  "I386_SOLARIS" :  "-without-gnu-as -without-gnu-ld -with-arch-32=i586", % arch=i586 for atomics
+  "AMD64_SOLARIS" : "-without-gnu-as -without-gnu-ld -with-arch-32=i586", % arch=i586 for atomics (biarch)
+  % see: http://gcc.gnu.org/install/specific.html#ix86-x-solaris210
+  %      http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
   % GNU assembler is ok with .stabd.
+  % Sun assembler doesn't like .stabd.
+  % Sun assembler doesn't like cross section subtraction, as occurs
+  % with -fPIC -funwind-table -m64, but gcc 4.4.0 fixes that and I ported the fix.
   % However GNU assembler moves around: /usr/sfw/bin/gas vs. /opt/csw/gnu/as
-
-  "I386_SOLARIS" :  "-with-gnu-as -without-gnu-ld -with-arch-32=i586", % arch=i586 for atomics
-  "AMD64_SOLARIS" : "-with-gnu-as -without-gnu-ld -with-arch-32=i586", % arch=i586 for atomics (biarch)
-  % Why GNU as, see:
-  %     http://gcc.gnu.org/install/specific.html#ix86-x-solaris210
-  %     http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
   % If buiding native gcc driver, add:
-  % -with-as=/usr/sfw/bin/gas -with-ld=/usr/ccs/bin/ld
+  % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld 
+  % or -with-as=/usr/sfw/bin/gas -with-ld=/usr/ccs/bin/ld
   % or /opt/csw/gnu/as, or /opt/csw/bin/gas, or gas
 
   "SOLgnu"        : "-without-gnu-ld -without-gnu-as -with-cpu=v9", % cpu=v9 for atomics
