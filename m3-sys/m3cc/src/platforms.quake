@@ -18,7 +18,7 @@ readonly Platform_info = {
   "AMD64_NETBSD" : "amd64-netbsd",
   "AMD64_NT"  : "amd64-pc-mingw32",
   "AMD64_OPENBSD" : "amd64-openbsd",
-  "AMD64_SOLARIS" : "i586-solaris2.10", % deliberately i586
+  "AMD64_SOLARIS" : "i586-sun-solaris2.10", % deliberately i586
   "ARM_DARWIN" : "arm-apple-darwin8",
   "ARM_LINUX" : "arm-linux-uclibc",
   "FBSD_ALPHA": "alpha-unknown-freebsd6",
@@ -33,7 +33,7 @@ readonly Platform_info = {
   "I386_NETBSD" : "i586-unknown-netbsdelf",
   "I386_NT"     : "i586-pc-mingw32",
   "I386_OPENBSD" : "i586-openbsd",
-  "I386_SOLARIS" : "i586-solaris2.10",
+  "I386_SOLARIS" : "i586-sun-solaris2.10",
   "IA64_FREEBSD" : "ia64-freebsd7",
   "IA64_HPUX" : "ia64-hpux",
   "IA64_LINUX" : "ia64-linux",
