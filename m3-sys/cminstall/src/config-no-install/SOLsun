@@ -4,12 +4,4 @@
 % Standard configuration file for SOLsun (Solaris 2.x w/Sun C)
 
 readonly TARGET = "SOLsun"
-readonly GNU_PLATFORM = "sparc-sun-solaris2.10" % "cpu-os" string for GNU
-readonly SYSTEM_ASM = "/usr/ccs/bin/as -Qy -s -K PIC -xarch=v8plus"
-SunXArch = "v8plus"
-M3_USE_STACK_WALKER = TRUE
-
-readonly C_COMPILER = "SUN" % or GNU (SOLgnu configuration)
-
-include("SPARC.common")
-include("Solaris.common")
+include("SPARC32_SOLARIS")
