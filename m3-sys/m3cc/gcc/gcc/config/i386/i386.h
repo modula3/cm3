@@ -443,6 +443,9 @@ extern tree x86_mfence;
    redefines this to 1.  */
 #define TARGET_MACHO 0
 
+/* Like TARGET_MACHO but for Solaris, sol2.h. */
+#define TARGET_SOLARIS 0
+
 /* Likewise, for the Windows 64-bit ABI.  */
 #define TARGET_64BIT_MS_ABI 0
 
