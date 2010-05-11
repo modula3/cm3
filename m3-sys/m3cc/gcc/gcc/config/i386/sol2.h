@@ -109,3 +109,6 @@ along with GCC; see the file COPYING3.  If not see
 /* We do not need NT_VERSION notes.  */
 #undef X86_FILE_START_VERSION_DIRECTIVE
 #define X86_FILE_START_VERSION_DIRECTIVE false
+
+#undef TARGET_SOLARIS
+#define TARGET_SOLARIS 1

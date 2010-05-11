@@ -9084,11 +9084,10 @@ print_operand (FILE *file, rtx x, int code)
 	  return;
 
 	case ';':
-#if TARGET_MACHO
-	  fputs (" ; ", file);
-#else
-	  fputc (' ', file);
-#endif
+	  if ((TARGET_MACHO || TARGET_SOLARIS) && ASSEMBLER_DIALECT == ASM_ATT)
+	    fputs (" ; ", file);
+	  else
+	    fputc (' ', file);
 	  return;
 
 	default:
