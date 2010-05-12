@@ -91,7 +91,7 @@ proc internal_configure_system_lib(name, args) is
   if SYSTEM_LIBS contains name
     return
   end
-  if equal(TARGET, "I386_SOLARIS")
+  if not equal(TARGET, "I386_SOLARIS")
         or equal(try_exec("@/usr/ccs/bin/ld", args, "-o", "/dev/null", "2>/dev/null"), 0)
     SYSTEM_LIBS{name} = args
   end
