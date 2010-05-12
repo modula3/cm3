@@ -85,22 +85,25 @@ SYSTEM_LIBS = {
 }
 
 proc internal_configure_system_lib(name, args) is
-  if equal(WORD_SIZE, "64BITS")
-    args += ["-64"]
-  end
   % Is this right for cross builds?
   % We don't really have cross builds in the normal
   % sense, and even then, only for cm3. Currently.
-  if not equal(TARGET, "I386_SOLARIS")
+  if SYSTEM_LIBS contains name
+    return
+  end
+  if equal(TARGET, "I386_SOLARIS")
         or equal(try_exec("@/usr/ccs/bin/ld", args, "-o", "/dev/null", "2>/dev/null"), 0)
     SYSTEM_LIBS{name} = args
-    SYSTEM_LIBORDER += name
   end
 end
 
 proc configure_system_libs() is
   internal_configure_system_lib("OPENGL", ["-lGLU", "-lGL", "-lXext"])
 end
+
+if not equal(TARGET, "I386_SOLARIS")
+  configure_system_libs()
+else
 
 SYSTEM_LIBORDER = [
     "OPENGL",
