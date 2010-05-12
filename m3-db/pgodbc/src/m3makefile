@@ -12,6 +12,8 @@ h_source ("addenv")
 h_source ("sql1")
 h_source ("sqlext1")
 
+configure_system_libs()
+
 if not SYSTEM_LIBS contains "POSTGRES95"
   write ("WARNING: Your system configuration does not define the", CR,
          "Location of the Postgres 95 library.", CR)
