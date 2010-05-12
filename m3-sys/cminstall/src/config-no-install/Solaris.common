@@ -8,7 +8,7 @@ if not defined("SL") SL = "/" end
 
 readonly TARGET_OS = "SOLARIS"
 readonly SYSTEM_AR = "/usr/ccs/bin/ar"
-readonly GccMBits = {"32BITS" : "32", "64BITS" : "64"}{WORD_SIZE}
+readonly WordSize = {"32BITS" : "32", "64BITS" : "64"}{WORD_SIZE}
 
 proc configure_c_compiler() is
 end
@@ -32,7 +32,7 @@ if equal (C_COMPILER, "SUN")
 
     local cc = "/usr/bin/cc -g -mt -xldscope=symbolic "
     local old = "-xarch=" & SunXArch
-    local new = "-m" & GccMBits
+    local new = "-m" & WordSize
     if equal(WORD_SIZE, "32BITS") and not equal(TARGET, "I386_SOLARIS")
       new = new & " -xarch=sparc"
     end
@@ -53,7 +53,7 @@ end
 
 if equal (C_COMPILER, "GNU")
     if not defined("SYSTEM_CC")
-        SYSTEM_CC = "/usr/sfw/bin/gcc -gstabs+ -fPIC -pthreads -m" & GccMBits
+        SYSTEM_CC = "/usr/sfw/bin/gcc -gstabs+ -fPIC -pthreads -m" & WordSize
     end
 end
 
