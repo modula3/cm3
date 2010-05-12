@@ -8,6 +8,8 @@
 import ("parseparams")
 import ("vbtkit")
 
+configure_system_libs()
+
 Interface ("X_PEX_Base")
 Interface ("X_PEX_BaseProxy")
 if SYSTEM_LIBS contains "X11" and SYSTEM_LIBS contains "DECPEX"

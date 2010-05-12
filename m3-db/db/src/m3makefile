@@ -3,6 +3,8 @@ import("libm3")
 
 % compile in a stub if no lib to link against
 
+configure_system_libs()
+
 if SYSTEM_LIBS contains "ODBC"
   include_dir ("odbc")
 else
