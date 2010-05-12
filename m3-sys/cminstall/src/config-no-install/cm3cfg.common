@@ -488,3 +488,30 @@ proc ConvertLibsToStandalone(imported_libs, shared) is
 end
 
 %------------------------------------------------------------------------------
+
+if not defined("configure_assembler")
+  proc configure_assembler() is
+  end
+end
+
+if not defined("configure_c_compiler")
+  proc configure_c_compiler() is
+  end
+end
+
+if not defined("configure_system_libs")
+  proc configure_system_libs() is
+  end
+end
+
+if not defined("configure_linker")
+  proc configure_linker() is
+    if defined("SYSTEM_LD")
+      return
+    end
+    configure_c_compiler()
+    SYSTEM_LD = SYSTEM_CC
+  end
+end
+
+%------------------------------------------------------------------------------

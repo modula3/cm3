@@ -1,3 +1,5 @@
+configure_system_libs()
+
 if SYSTEM_LIBS contains "ODBC"
 
 import("libm3")

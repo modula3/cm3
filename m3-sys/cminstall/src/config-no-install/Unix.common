@@ -51,26 +51,6 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP",
 
 end
 
-if not defined("configure_assembler")
-  proc configure_assembler() is
-  end
-end
-
-if not defined("configure_c_compiler")
-  proc configure_c_compiler() is
-  end
-end
-
-if not defined("configure_linker")
-  proc configure_linker() is
-    if defined("SYSTEM_LD")
-      return
-    end
-    configure_c_compiler()
-    SYSTEM_LD = SYSTEM_CC
-  end
-end
-
 %--------------------------------------------------------- Modula-3 backend ---
 % For platforms without an integrated backend, "m3_backend" is called to
 % translate Modula-3 intermediate code to object code.

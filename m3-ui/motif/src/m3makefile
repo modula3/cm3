@@ -7,6 +7,8 @@
 %
 % Contributed by Harry George (hgeorge@eskimo.com), 5/16/95
 
+configure_system_libs()
+
 if SYSTEM_LIBS contains "MOTIF"
   import_sys_lib ("MOTIF")
   import ("X11R4")
