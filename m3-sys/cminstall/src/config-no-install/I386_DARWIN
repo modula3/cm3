@@ -3,15 +3,7 @@
 
 readonly TARGET = "I386_DARWIN"
 readonly GNU_PLATFORM = "i686-darwin8" % "cpu-os" string for GNU
-
-proc FileExists(x) is
-    return not stale(x, x)
-end
-
-SYSTEM_ASM = "/usr/libexec/gcc/darwin/i386/as"
-if not FileExists(SYSTEM_ASM)
-    SYSTEM_ASM = "as"
-end
+DarwinArch = "i386"
 
 include("I386.common")
 include("Darwin.common")
