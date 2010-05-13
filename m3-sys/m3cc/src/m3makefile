@@ -234,7 +234,7 @@ readonly m3cc_config = {
 
 
 readonly m3cc_env = {
-% This is required for cross builds, probably automatic for native builds.
+  "SPARC64_OPENBSD" : "gcc_cv_as_sparc_register_op=yes",
   "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes",
 } % m3cc_env
 
