@@ -222,7 +222,9 @@ if ssh ${CM3CVSSERVER} true; then
   true
 else
   echo "no ssh connection to ${CM3CVSSERVER}" 1>&2
-  exit 1
+  if [ -z "${IGNORE_SSH}" ]; then
+    exit 1
+  fi
 fi
 
 if [ ! -d "${HTMP}" ]; then
