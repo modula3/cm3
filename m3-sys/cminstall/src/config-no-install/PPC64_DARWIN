@@ -4,15 +4,7 @@
 
 readonly TARGET = "PPC64_DARWIN"
 readonly GNU_PLATFORM = "powerpc64-darwin6" % "cpu-os" string for GNU
-
-proc FileExists(x) is
-    return not stale(x, x)
-end
-
-SYSTEM_ASM = "/usr/libexec/gcc/darwin/ppc64/as"
-if not FileExists(SYSTEM_ASM)
-    SYSTEM_ASM = "as"
-end
+DarwinArch = "ppc64"
 
 include("PPC64.common")
 include("Darwin.common")

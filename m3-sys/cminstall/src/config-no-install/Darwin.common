@@ -12,8 +12,19 @@ if not defined("SL") SL = "/" end
 
 readonly TARGET_OS = "DARWIN"
 
-GccArch = {"PPC_DARWIN":"ppc", "PPC64_DARWIN":"ppc64", "I386_DARWIN":"i386",
-    "AMD64_DARWIN":"x86_64"}{TARGET}
+proc FileExists(x) is
+    return not stale(x, x)
+end
+
+proc configure_assembler() is
+  if defined("SYSTEM_ASM")
+    return
+  end
+  SYSTEM_ASM = "/usr/libexec/gcc/darwin/" & DarwinArch & "/as"
+  if not FileExists(SYSTEM_ASM)
+      SYSTEM_ASM = "as"
+  end
+end
 
 IsX86 = equal(TARGET, "I386_DARWIN") or equal(TARGET, "AMD64_DARWIN")
 
@@ -29,7 +40,7 @@ if not defined("SYSTEM_CC")
 % here in case user is using a self-built FSF gcc.
 %
     SYSTEM_CC = "gcc -fPIC -m" & SYSTEM_CC
-    local a = SYSTEM_CC & " -arch " & GccArch
+    local a = SYSTEM_CC & " -arch " & DarwinArch
     local b = try_exec("@" & a & " -v 2>/dev/null")
     if equal(b, 0)
         SYSTEM_CC = a
@@ -52,22 +63,40 @@ SYSTEM_LIBS = {
   "LIBC"       : [ ],
   "LEX-YACC"   : [ "-ll" ],
   "FLEX-BISON" : [ "-lfl" ],
-% not present by default, but this is the default install location
-% "POSTGRES95" : [ "-L/usr/local/pgsql/lib", "-lpq" ],
   "OPENGL"     : [ "-Wl,-dylib_file,/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib:/System/Library/Frameworks/OpenGL.framework/Versions/A/Libraries/libGL.dylib", "-L/usr/X11R6/lib", "-lGLU", "-lGL", "-lXext" ],
-% "MOTIF"      : [ "-lXm" ],
   "TCP"        : [ ]
+% below: X11, ODBC, POSTGRES95, MOTIF
 }
 
-% MacOSX 10.4 lacks a lot of PPC64 support, that 10.5 has. We need a better answer here.
-
-if equal(TARGET, "PPC64_DARWIN")
-  proc HasTrestle() is
-    return FALSE
+proc internal_configure_system_lib(name, known, args) is
+  if SYSTEM_LIBS contains name
+    return
   end
-else
-  SYSTEM_LIBS{"ODBC"} = [ "-liodbc", "-liodbcinst" ]
-  SYSTEM_LIBS{"X11"} = [ "-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11" ]
+  if known
+    SYSTEM_LIBS{name} = args
+    return
+  end
+  if equal(try_exec("echo 'main(){}' | " & SYSTEM_CC & " -x c - -o /dev/null 2>/dev/null", args), 0)
+    SYSTEM_LIBS{name} = args
+  end
+end
+
+proc configure_system_libs() is
+  internal_configure_system_lib("ODBC", not equal(TARGET, "PPC64_DARWIN"), ["-liodbc", "-liodbcinst"])
+  internal_configure_system_lib("X11", not equal(TARGET, "PPC64_DARWIN"), ["-L/usr/X11R6/lib", "-lXaw", "-lXmu", "-lXext", "-lXt", "-lSM", "-lICE", "-lX11"])
+
+  % not present by default, but this is the default install location
+  internal_configure_system_lib("POSTGRES95", FALSE, ["-L/usr/local/pgsql/lib", "-lpq"])
+
+  % not present by default
+  internal_configure_system_lib("MOTIF", FALSE, ["-lXm"])
+end
+
+% MacOSX 10.4 lacks a lot of PPC64 support, that 10.5 has.
+
+proc HasTrestle() is
+  configure_system_libs()
+  return SYSTEM_LIBS contains "X11"
 end
 
 % SYSTEM_LIBORDER defines the order in which SYSTEM_LIBS should be
@@ -106,7 +135,7 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
   % first, build the non-shared library
   local arch = ""
   if IsX86
-      arch = " -arch_only " & GccArch & " "
+      arch = " -arch_only " & DarwinArch & " "
   end
   ret_code = try_exec ("@" & SYSTEM_LIBTOOL, arch, "-static", "-o", lib_a, objects)
   if not equal (ret_code, 0) return ret_code end
