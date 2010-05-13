@@ -624,7 +624,7 @@ elif UName == "sunos":
         else:
             Host = "I386_SOLARIS"
     else:
-        if false: # StringContains(isainfo, "sparcv9"):
+        if False: # StringContains(isainfo, "sparcv9"):
             Host = "SPARC64_SOLARIS"
         else:
             Host = "SOLgnu"
