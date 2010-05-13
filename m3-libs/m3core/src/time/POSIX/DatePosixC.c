@@ -22,8 +22,6 @@ extern "C" {
 #define Local 0
 #define UTC 1
 
-#define MILLION (1000 * 1000)
-
 static
 time_t
 TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
