@@ -26,7 +26,6 @@ extern "C" {
 
 static
 time_t
-__cdecl
 TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
 {
     double n = { 0 };
