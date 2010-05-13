@@ -25,18 +25,13 @@ extern "C" {
 #define MILLION (1000 * 1000)
 
 static
-struct timeval
+time_t
 __cdecl
-TimePosix__ToUtime(LONGREAL/*Time.T*/ t)
-/* see also TimePosix__FromUtime */
+TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
 {
-    struct timeval tv;
     double n = { 0 };
-
-    ZERO_MEMORY(tv); 
-    tv.tv_usec = modf(t, &n) * MILLION;
-    tv.tv_sec = n;
-    return tv;
+    modf(t, &n);
+    return n;
 }
 
 void
@@ -44,12 +39,11 @@ __cdecl
 DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown, TEXT gmt)
 {
     struct tm* tm = { 0 };
-    struct timeval tv = TimePosix__ToUtime(t);    
+    time_t sec = TimePosix__ToSeconds(t);
     ptrdiff_t zone = (pzone ? *pzone : Local);
-
     ZeroMemory(date, sizeof(*date));
     assert(zone == Local || zone == UTC);
-    tm = ((zone == Local) ? localtime(&tv.tv_sec) : gmtime(&tv.tv_sec));
+    tm = ((zone == Local) ? localtime(&sec) : gmtime(&sec));
     assert(tm != NULL);
     date->year = tm->tm_year + 1900;
     date->month = tm->tm_mon;
