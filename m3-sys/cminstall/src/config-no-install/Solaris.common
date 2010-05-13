@@ -84,22 +84,27 @@ SYSTEM_LIBS = {
     "TCP"        : [ ]
 }
 
-proc internal_configure_system_lib(name, args) is
+proc internal_configure_system_lib(name, known, args) is
   % Is this right for cross builds?
   % We don't really have cross builds in the normal
   % sense, and even then, only for cm3. Currently.
   if SYSTEM_LIBS contains name
     return
   end
-  if not equal(TARGET, "I386_SOLARIS")
-        or equal(try_exec("@/usr/ccs/bin/ld", args, "-o", "/dev/null", "2>/dev/null"), 0)
+  if known
+    SYSTEM_LIBS{name} = args
+    return
+  end
+  if equal(try_exec("@/usr/ccs/bin/ld", args, "-o", "/dev/null", "2>/dev/null"), 0)
     SYSTEM_LIBS{name} = args
   end
 end
 
 proc configure_system_libs() is
-  internal_configure_system_lib("OPENGL", ["-lGLU", "-lGL", "-lXext"])
+  internal_configure_system_lib("OPENGL", not equal(TARGET, "I386_SOLARIS"), ["-lGLU", "-lGL", "-lXext"])
 end
+
+configure_system_libs()
 
 SYSTEM_LIBORDER = [
     "OPENGL",
