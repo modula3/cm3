@@ -4,15 +4,7 @@
 
 readonly TARGET = "AMD64_DARWIN"
 readonly GNU_PLATFORM = "i686-darwin8" % "cpu-os" string for GNU
-
-proc FileExists(x) is
-    return not stale(x, x)
-end
-
-SYSTEM_ASM = "/usr/libexec/gcc/darwin/x86_64/as"
-if not FileExists(SYSTEM_ASM)
-    SYSTEM_ASM = "as"
-end
+DarwinArch = "x86_64"
 
 include("AMD64.common")
 include("Darwin.common")
