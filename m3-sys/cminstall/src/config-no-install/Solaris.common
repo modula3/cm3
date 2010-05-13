@@ -101,10 +101,6 @@ proc configure_system_libs() is
   internal_configure_system_lib("OPENGL", ["-lGLU", "-lGL", "-lXext"])
 end
 
-if not equal(TARGET, "I386_SOLARIS")
-  configure_system_libs()
-else
-
 SYSTEM_LIBORDER = [
     "OPENGL",
     % "DECPEX",
