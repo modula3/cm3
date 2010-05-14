@@ -4,5 +4,9 @@ readonly GNU_PLATFORM = "powerpc-openbsd" % "cpu-os" string for GNU
 SYSTEM_CC = "gcc -gstabs+ -fPIC"
 readonly SYSTEM_ASM = "as"
 
+m3back_pic = ""          % experimental
+m3back_debug = ""        % experimental
+m3back_unwind_table = "" % experimental
+
 include("PPC.common")
 include("OpenBSD.common")
