@@ -2428,7 +2428,7 @@ emit_fault_proc (void)
   current_function_decl = NULL_TREE;
 }
 
-// FIXME: jdp says 0x0f and 4; cm3 may need more
+/* FIXME: jdp says 0x0f and 4; cm3 may need more */
 #define FAULT_MASK 0x1f
 #define LINE_SHIFT 5
 
