@@ -81,7 +81,7 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
        or equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS"))
 
     local ccs = ""
-    local sfw = ""
+    local gcc = ""
 
     if (   (not equal(try_exec("type ar   > /dev/null"), 0) and FileExists("/usr/ccs/bin/ar"))
         or (not equal(try_exec("type make > /dev/null"), 0) and FileExists("/usr/ccs/bin/make")))
@@ -98,16 +98,17 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
             and not defined("M3GDB_CC")
             and not defined("M3CC_CFLAGS")
             and not defined("M3GDB_CFLAGS")
-            and (not equal(try_exec("type gcc > /dev/null"), 0) and FileExists("/usr/sfw/bin/gcc"))
-
-        sfw = "/usr/sfw/bin:"
-
+            and not equal(try_exec("type gcc > /dev/null"), 0)
+        if FileExists("/usr/sfw/bin/gcc")
+            gcc = "/usr/sfw/bin:"
+        else if FileExists("/opt/csw/gcc4/bin/gcc")
+            gcc = "/opt/csw/gcc4/bin:"
+        end end
     end
 
-    if ccs or sfw
-        env = "PATH=\"" & sfw & ccs & "$PATH\""
+    if ccs or gcc
+        env = "PATH=\"" & gcc & ccs & "$PATH\""
     end
-
 end
 
 %------------------------------------------------------------------------------
