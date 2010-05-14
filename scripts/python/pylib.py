@@ -590,12 +590,12 @@ elif UName == "freebsd":
         Host = "ALPHA_FREEBSD"
 
 elif UName == "openbsd":
-    arch = os.popen("arch -s").read().lower() # or machine -a
-    if arch == "sparc64":
+    arch = os.popen("arch -s").read() # or machine -a
+    if arch == "sparc64\n":
         Host = "SPARC64_OPENBSD"
-    elif arch == "powerpc":
+    elif arch == "powerpc\n":
         Host = "PPC32_OPENBSD"
-    elif arch == "i386":
+    elif arch == "i386\n":
         Host = "I386_OPENBSD"
     else:
         FatalError("unknown OpenBSD platform")
