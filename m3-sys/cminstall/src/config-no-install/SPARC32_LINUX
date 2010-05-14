@@ -2,7 +2,7 @@ readonly TARGET = "SPARC32_LINUX" % code generation target
 readonly GNU_PLATFORM = "sparc-linux" % "cpu-os" string for GNU
 
 SYSTEM_CC = "gcc -m32 -fPIC -munaligned-doubles" % C compiler
-readonly SYSTEM_ASM = "as -32" % Assembler
+SYSTEM_ASM = "as -Qy -s -Av9a -32 -relax" % Assembler
 
 include("SPARC.common")
 include("Linux.common")
