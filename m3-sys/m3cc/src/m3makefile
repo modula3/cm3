@@ -35,7 +35,7 @@ end
 
 include("platforms.quake")
 
-readonly proc xIsOpenBSD (Platform) is
+readonly proc Platform_IsOpenBSD (Platform) is
   return {"I386_OPENBSD":1,"PPC32_OPENBSD":1,"SPARC64_OPENBSD":1,
     "MIPS64_OPENBSD":1,"AMD64_OPENBSD":1} contains Platform
 end
@@ -49,7 +49,7 @@ proc FileExists (a) is
 end
 
 readonly proc ApplyPatches (Platform) is
-  if not xIsOpenBSD (Platform)
+  if not Platform_IsOpenBSD (Platform)
     return
   end
   pushd ("../gcc")
@@ -139,8 +139,8 @@ readonly m3cc_config = {
   % If buiding native gcc driver, add:
   % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld 
   
-  "I386_SOLARIS" :  "-without-gnu-as -without-gnu-ld -with-arch-32=i586", % arch=i586 for atomics
-  "AMD64_SOLARIS" : "-without-gnu-as -without-gnu-ld -with-arch-32=i586", % arch=i586 for atomics (biarch)
+  "I386_SOLARIS" :  "-without-gnu-as -without-gnu-ld",
+  "AMD64_SOLARIS" : "-without-gnu-as -without-gnu-ld",
   % see: http://gcc.gnu.org/install/specific.html#ix86-x-solaris210
   %      http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
   % GNU assembler is ok with .stabd.
@@ -159,32 +159,6 @@ readonly m3cc_config = {
   % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld
 
   "SPARC32_LINUX" : "-with-cpu=v9", % cpu=v9 for atomics
-
-  % arch=i586 for atomics (including on AMD64 due to biarch)
-  "AMD64_DARWIN"  : "-with-arch-32=i586",
-  "AMD64_FREEBSD" : "-with-arch-32=i586",
-  "AMD64_CYGWIN"  : "-with-arch-32=i586",
-  "AMD64_INTERIX" : "-with-arch-32=i586",
-  "AMD64_LINUX"   : "-with-arch-32=i586",
-  "AMD64_MINGW"   : "-with-arch-32=i586",
-  "AMD64_NETBSD"  : "-with-arch-32=i586",
-  "AMD64_NT"      : "-with-arch-32=i586",
-  "AMD64_OPENBSD" : "-with-arch-32=i586",  
-  "I386_CYGWIN"   : "-with-arch-32=i586",
-  "I386_DARWIN"   : "-with-arch-32=i586",
-  "I386_FREEBSD"  : "-with-arch-32=i586",
-  "I386_INTERIX"  : "-with-arch-32=i586",
-  "I386_LINUX"    : "-with-arch-32=i586",
-  "I386_MINGW"    : "-with-arch-32=i586",
-  "I386_NETBSD"   : "-with-arch-32=i586",
-  "I386_NT"       : "-with-arch-32=i586",
-  "I386_OPENBSD"  : "-with-arch-32=i586",
-  "NT386"         : "-with-arch-32=i586",
-  "NT386GNU"      : "-with-arch-32=i586",
-  "NT386MINGNU"   : "-with-arch-32=i586",
-  "NetBSD2_i386"  : "-with-arch-32=i586",
-  "LINUXLIBC6"    : "-with-arch-32=i586",
-  "FreeBSD4"      : "-with-arch-32=i586",
 
   %
   % Bootstrap procedure for gcc on HPPA{64}-HPUX:
@@ -231,7 +205,6 @@ readonly m3cc_config = {
   % symbol names. -- Bill Kalsow 1/13/94]
 
 } % m3cc_config
-
 
 readonly m3cc_env = {
   "SPARC64_OPENBSD" : "gcc_cv_as_sparc_register_op=yes",
@@ -381,7 +354,7 @@ end
 % OpenBSD provides no forward or backward compatibility for
 % executabes that use shared libraries, as libc.so changes name.
 
-if xIsOpenBSD(M3CC_HOST)
+if Platform_IsOpenBSD(M3CC_HOST)
   M3CC_CFLAGS = M3CC_CFLAGS & " -static"
 end
 
