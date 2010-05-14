@@ -99,7 +99,6 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
             and not defined("M3CC_CFLAGS")
             and not defined("M3GDB_CFLAGS")
             and not equal(try_exec("type gcc > /dev/null"), 0)
-            
         if FileExists("/usr/sfw/bin/gcc")
             gcc = "/usr/sfw/bin:"
         else if FileExists("/opt/csw/gcc4/bin/gcc")
@@ -110,7 +109,6 @@ if Native and (equal(nTARGET, "SPARC32_SOLARIS") or equal(TARGET, "SPARC64_SOLAR
     if ccs or gcc
         env = "PATH=\"" & gcc & ccs & "$PATH\""
     end
-
 end
 
 %------------------------------------------------------------------------------
