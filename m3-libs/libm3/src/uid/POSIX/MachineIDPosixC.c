@@ -36,6 +36,10 @@
 #define HAS_GETIFADDRS
 #endif
 
+#if defined(__linux__) || defined(__CYGWIN__) || defined(__osf__)
+#define HAS_SIOCGIFCONF
+#endif
+
 #ifdef HAS_GETIFADDRS
 #include <net/if_dl.h>
 #include <ifaddrs.h>
@@ -44,6 +48,8 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+#if 0
 
 static
 char
@@ -88,6 +94,8 @@ HexDump(void* a, size_t n)
     }
 }
 
+#endif
+
 static
 UINT32
 get_ipv4_address(void)
@@ -111,10 +119,10 @@ MachineIDC__CanGet(unsigned char *id)
 {
     int result = { 0 };
     int sock = { 0 };
-#ifdef HAS_GETIFADDRS
+#if defined(HAS_GETIFADDRS)
     struct ifaddrs* if1 = { 0 };
     struct ifaddrs* if2 = { 0 };
-#elif defined(__linux__) || defined(__osf__) || defined(__CYGWIN__)
+#elif defined(HAS_SIOCGIFCONF)
     union {
         struct ifreq req[64];
         unsigned char b[4096];
@@ -159,12 +167,12 @@ MachineIDC__CanGet(unsigned char *id)
         {
             perror("getifaddrs");
         }
-#elif defined(__linux__) || defined(__CYGWIN__) || defined(__osf__)
+#elif defined(HAS_SIOCGIFCONF)
         list.ifc_len = sizeof(buf);
         list.ifc_req = (struct ifreq*)&buf;
         if (ioctl(sock, SIOCGIFCONF, &list) >= 0)
         {
-            for (i = 0; (!result) && (i < list.ifc_len); i += _SIZEOF_ADDR_IFREQ(*req1))
+            for (i = 0; (!result) && (i < list.ifc_len); i += sizeof(*req1))
             {
                 req1 = (struct ifreq*)&buf.b[i];
                 memcpy(req2.ifr_name, req1->ifr_name, IFNAMSIZ);
@@ -245,7 +253,6 @@ MachineIDC__CanGet(unsigned char *id)
 
     return result;
 }
-
 
 #ifdef __cplusplus
 } /* extern "C" */
