@@ -113,16 +113,20 @@ readonly m3cc_config = {
   % Not all of this is relevant to m3cg?, but user can build gcc/cc1 here.
   %
 
-  "PPC32_AIX" : "-with-as=/usr/bin/as -without-gnu-as -with-ld=/us/bin/ld -without-gnu-ld",
-  "PPC64_AIX" : "-with-as=/usr/bin/as -without-gnu-as -with-ld=/us/bin/ld -without-gnu-ld",
+  "PPC32_AIX" : "-without-gnu-as -without-gnu-ld",
+  "PPC64_AIX" : "-without-gnu-as -without-gnu-ld",
+  % If buiding native gcc driver, add:
+  % -with-as=/usr/bin/as -with-ld=/us/bin/ld
 
   %
   % Irix requires GNU as and GNU ld should work but presently does not.
   % Irix native ld works.
   %
 
-  "MIPS32_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
-  "MIPS64_IRIX" : "-with-ld=/us/bin/ld -with-gnu-as",
+  "MIPS32_IRIX" : "-with-gnu-as",
+  "MIPS64_IRIX" : "-with-gnu-as",
+  % If buiding native gcc driver, add:
+  % -with-ld=/usr/bin/ld 
 
   %
   % Hm -- I thought this was just about what assembler/linker the gcc driver runs,
@@ -139,17 +143,32 @@ readonly m3cc_config = {
   % If m3cg omits the .register psuedo ops, assembly completely fails, with lots of errors.
   %
 
-  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes -with-as=/usr/ccs/bin/as -without-gnu-as -with-ld=/usr/ccs/bin/ld -without-gnu-ld",
+  "SPARC64_SOLARIS" : "-without-gnu-as -without-gnu-ld",
+  % If buiding native gcc driver, add:
+  % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld 
 
   %
   % This is recommended and has been seen to make a difference.
   %
 
-  "I386_SOLARIS" :  "-with-gnu-as -with-as=/usr/sfw/bin/gas -without-gnu-ld -with-ld=/usr/ccs/bin/ld",
-  "AMD64_SOLARIS" : "-with-gnu-as -with-as=/usr/sfw/bin/gas -without-gnu-ld -with-ld=/usr/ccs/bin/ld",
+  "I386_SOLARIS" :  "-without-gnu-as -without-gnu-ld",
+  "AMD64_SOLARIS" : "-without-gnu-as -without-gnu-ld",
+  % see: http://gcc.gnu.org/install/specific.html#ix86-x-solaris210
+  %      http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
+  % GNU assembler is ok with .stabd.
+  % Sun assembler doesn't like .stabd.
+  % Sun assembler doesn't like cross section subtraction, as occurs
+  % with -fPIC -funwind-table -m64, but gcc 4.4.0 fixes that and I ported the fix.
+  % However GNU assembler moves around: /usr/sfw/bin/gas vs. /opt/csw/gnu/as
+  % If buiding native gcc driver, add:
+  % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld 
+  % or -with-as=/usr/sfw/bin/gas -with-ld=/usr/ccs/bin/ld
+  % or /opt/csw/gnu/as, or /opt/csw/bin/gas, or gas
 
-  "SOLgnu"        : "-with-ld=/usr/ccs/bin/ld -without-gnu-ld -with-as=/usr/ccs/bin/as -without-gnu-as",
-  "SOLsun"        : "-with-ld=/usr/ccs/bin/ld -without-gnu-ld -with-as=/usr/ccs/bin/as -without-gnu-as",
+  "SOLgnu"        : "-without-gnu-ld -without-gnu-as",
+  "SOLsun"        : "-without-gnu-ld -without-gnu-as",
+  % If buiding native gcc driver, add:
+  % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld
 
   %
   % Bootstrap procedure for gcc on HPPA{64}-HPUX:
@@ -177,11 +196,11 @@ readonly m3cc_config = {
   % of gcc will support -g on HP-UX, and I think whether or not
   % configure will even succeed on HP-UX (with newer gcc).
   %
-  "PA32_HPUX"  : "-with-gnu-as -with-as=/usr/local/32/bin/gas",
-  "PA64_HPUX"  : "-with-gnu-as -with-as=/usr/local/64/bin/gas",
-  % If this suffices, good, otherwise specify the full path to the GNU assembler.
-  %"PA32_HPUX"  : "-with-gnu-as",
-  %"PA64_HPUX"  : "-with-gnu-as",
+  "PA32_HPUX"  : "-with-gnu-as",
+  "PA64_HPUX"  : "-with-gnu-as",
+  % If buiding native gcc driver, add:
+  %    -with-as=/usr/local/32/bin/gas
+  % or -with-as=/usr/local/64/bin/gas
 
   "HPPA"  : "-with-gnu-as",
   % The HP assembler doesn't understand inline debugger info.
@@ -197,9 +216,22 @@ readonly m3cc_config = {
 
 } % m3cc_config
 
+readonly m3cc_env = {
+  "SPARC64_OPENBSD" : "gcc_cv_as_sparc_register_op=yes",
+  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes",
+} % m3cc_env
+
 readonly proc get_config (target) is
   if m3cc_config contains target
     return m3cc_config {target}
+  else
+    return ""
+  end
+end
+
+readonly proc get_env (target) is
+  if m3cc_env contains target
+    return m3cc_env {target}
   else
     return ""
   end
@@ -334,6 +366,7 @@ end
 % so these must be specified on both the configure command and the make command.
 %
 env = env & " " & get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
+env = env & " " & get_env(M3CC_TARGET)
 
 ConfigureGNUMake()
 write("GNU_MAKE is " & GNU_MAKE & CR)
