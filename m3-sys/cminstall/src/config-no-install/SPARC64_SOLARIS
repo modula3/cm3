@@ -7,11 +7,5 @@ readonly C_COMPILER = "SUN"
 readonly SYSTEM_ASM = "/usr/ccs/bin/as -Qy -s -K PIC -xarch=v9"
 SunXArch = "generic64" % or v9, equivalent?
 
-% - gcc doesn't always generate the required .register operands
-% - http://gcc.gnu.org/onlinedocs/gcc/SPARC-Options.html
-%   says to use this for libraries anyway
-% - we can remove gcc_cv_as_sparc_register_op in m3cc/src/m3makefile
-m3back_flags = "-mno-app-regs"
-
 include("SPARC64.common")
 include("Solaris.common")
