@@ -661,30 +661,6 @@ m3_do_extract (tree x, tree i, tree n, tree t)
 }
 
 static tree
-m3_do_fixed_extract (tree x, int i, int n, tree t)
-{
-  /* ??? Use BIT_FIELD_REF ???  */
-  int a = TYPE_PRECISION (t) - n;
-  int b = TYPE_PRECISION (t) - n - i;
-  tree c, d, e;
-
-  if ((a < 0) || (a >= TYPE_PRECISION (t)) ||
-      (b < 0) || (b >= TYPE_PRECISION (t)))
-    {
-      return m3_do_extract (x,
-			    build_int_cst (t_int, i),
-			    build_int_cst (t_int, n),
-			    t);
-    }
-
-  c = m3_build1 (CONVERT_EXPR, m3_unsigned_type (t), x);
-  d = (b == 0) ? c : m3_build2 (LSHIFT_EXPR, t, c, build_int_cst (t_int, b));
-  e = (a == 0) ? d :
-    m3_build2 (RSHIFT_EXPR, t, d, build_int_cst (t_int, a));
-  return e;
-}
-
-static tree
 m3_do_rotate (enum tree_code code, tree t, tree val, tree cnt)
 {
   /* ??? Use LROTATE_EXPR/RROTATE_EXPR.  */
@@ -4420,6 +4396,30 @@ m3cg_extract_n (void)
   EXPR_REF (-2) = m3_do_extract (EXPR_REF (-2), EXPR_REF (-1),
 				 build_int_cst (t_int, n), t);
   EXPR_POP ();
+}
+
+static tree
+m3_do_fixed_extract (tree x, int i, int n, tree t)
+{
+  /* ??? Use BIT_FIELD_REF ???  */
+  int a = TYPE_PRECISION (t) - n;
+  int b = TYPE_PRECISION (t) - n - i;
+  tree c, d, e;
+
+  if ((a < 0) || (a >= TYPE_PRECISION (t)) ||
+      (b < 0) || (b >= TYPE_PRECISION (t)))
+    {
+      return m3_do_extract (x,
+			    build_int_cst (t_int, i),
+			    build_int_cst (t_int, n),
+			    t);
+    }
+
+  c = m3_build1 (CONVERT_EXPR, m3_unsigned_type (t), x);
+  d = (b == 0) ? c : m3_build2 (LSHIFT_EXPR, t, c, build_int_cst (t_int, b));
+  e = (a == 0) ? d :
+    m3_build2 (RSHIFT_EXPR, t, d, build_int_cst (t_int, a));
+  return e;
 }
 
 static void
