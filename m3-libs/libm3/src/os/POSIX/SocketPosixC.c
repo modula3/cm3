@@ -120,9 +120,9 @@ SocketPosixC__Status(int fd,
                      LONGREAL* modificationTime,
                      LONGINT* size)
 {
-    stat_t st = { 0 };
+    struct stat st = { 0 };
 
-    int r = fstat(fd, (struct stat*)&st);
+    int r = fstat(fd, &st);
     *modificationTime = st.st_mtime;
     *size = st.st_size;
     return r;
