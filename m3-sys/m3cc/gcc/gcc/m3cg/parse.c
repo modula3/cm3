@@ -559,6 +559,9 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
 {
   /* ??? Use BIT_FIELD_REF ??? */
 
+  gcc_assert (i >= 0);
+  gcc_assert (n >= 0);
+
   if ((i < 0) || (i >= TYPE_PRECISION (t)) ||
       (n < 0) || (n >= TYPE_PRECISION (t)))
     {
@@ -4477,7 +4480,7 @@ m3cg_insert_mn (void)
 
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (m >= 0);
-  /*gcc_assert (n > 0);*/
+  gcc_assert (n >= 0);
 
   EXPR_REF (-2) = m3_do_fixed_insert (EXPR_REF (-2), EXPR_REF (-1), m, n, t);
   EXPR_POP ();
