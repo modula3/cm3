@@ -273,7 +273,7 @@ SocketPosixC__Connect(int fd, EndPoint* ep)
     }
 }
 
-void
+int
 __cdecl
 SocketPosixC__Accept(int server, EndPoint* ep)
 {
@@ -289,7 +289,7 @@ SocketPosixC__Accept(int server, EndPoint* ep)
         {
             InitStream(client);
             AddressToEndPoint(&name, ep);
-            return;
+            return client;
         }
 
         switch (GetSocketError())
@@ -297,7 +297,7 @@ SocketPosixC__Accept(int server, EndPoint* ep)
         case EMFILE:
         case ENFILE:
             IOError(NoResources);
-            return;
+            return -1;
 
         case EWOULDBLOCK:
 #if EAGAIN != EWOULDBLOCK
@@ -308,7 +308,7 @@ SocketPosixC__Accept(int server, EndPoint* ep)
 
         default:
             IOError(Unexpected);
-            return;
+            return -1;
         }
         SchedulerPosix__IOAlertWait(server, TRUE);
     }
@@ -428,6 +428,7 @@ SocketPosixC__Read(int fd, void* pb, INTEGER nb, int/*boolean*/ mayBlock)
             return len;
     }
 }
+
 void
 __cdecl
 SocketPosixC__SendTo(int fd, const EndPoint* ep, const void* pb, INTEGER n)
@@ -481,7 +482,7 @@ SocketPosixC__Peek(int fd, EndPoint* ep)
     socklen_t len = sizeof(name);
 
     ZERO_MEMORY(name);
-    if (recvfrom(fd, NULL, 0, MSG_PEEK, (struct sockaddr *)&name, &len) == -1)
+    if (recvfrom(fd, NULL, 0, MSG_PEEK, (struct sockaddr *)&name, &len) < 0)
     {
         IOError(Unexpected);
         return;
@@ -504,7 +505,7 @@ SocketPosixC__ThisEnd(int fd, EndPoint* ep)
         socklen_t len = sizeof(name);
 
         ZERO_MEMORY(name);
-        if (getsockname(fd, (struct sockaddr *)&name, &len) == -1)
+        if (getsockname(fd, (struct sockaddr *)&name, &len) != 0)
         {
             IOError(Unexpected);
             return;
@@ -543,7 +544,7 @@ SocketPosixC__OtherEnd(int fd, EndPoint* ep)
     socklen_t len = sizeof(addr);
 
     ZERO_MEMORY(addr);
-    if (getpeername(fd, (struct sockaddr *)&addr, &len) == -1)
+    if (getpeername(fd, (struct sockaddr *)&addr, &len) < 0)
     {
         IOError(Unexpected);
         return;
@@ -600,7 +601,7 @@ static void MakeNonBlocking(int fd)
 
 #if REFETCH_ERROR
 
-static void RefetchError(int fd)
+static int RefetchError(int fd)
 {
 /* Awful hack to retrieve a meaningful error from a TCP accept
    socket.  Only works on Ultrix and OSF.  Leaves result
