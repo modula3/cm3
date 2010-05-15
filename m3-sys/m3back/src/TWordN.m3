@@ -17,7 +17,7 @@ TYPE T = TIntN.T;
 PROCEDURE ToInt(READONLY a: T): Int =
   VAR b: Int;
   BEGIN
-   b:= a.x;
+   b := a.x;
    TIntN.ZeroExtend(b, a.n);
    RETURN b;
   END ToInt;
