@@ -1,24 +1,23 @@
 
 INTERFACE SQLtypes;
 
-FROM Ctypes IMPORT unsigned_char, signed_char, long_int,
-  unsigned_long_int, signed_long_int, short_int, signed_short_int,
-  unsigned_short_int, void_star, double, float;
+FROM Ctypes IMPORT unsigned_char, signed_char, long,
+  unsigned_long, short, unsigned_short, void_star, double, float;
 
 FROM WinDef IMPORT HWND;
 
 TYPE
   UCHAR    = unsigned_char;
   SCHAR    = signed_char;
-  SDWORD   = long_int;
-  SWORD    = short_int;
-  UDWORD   = unsigned_long_int;
-  UWORD    = unsigned_short_int;
+  SDWORD   = long;
+  SWORD    = short;
+  UDWORD   = unsigned_long;
+  UWORD    = unsigned_short;
 
-  SLONG    = signed_long_int;
-  SSHORT   = signed_short_int;
-  ULONG    = unsigned_long_int;
-  USHORT   = unsigned_short_int;
+  SLONG    = long;
+  SSHORT   = short;
+  ULONG    = unsigned_long;
+  USHORT   = unsigned_short;
 
   LDOUBLE  = double;
   SDOUBLE  = double;
@@ -29,7 +28,7 @@ TYPE
   HDBC     = void_star;
   HSTMT    = void_star;
 
-  RETCODE  = signed_short_int;
+  RETCODE  = short;
 
   SQLCHAR      = UCHAR;     SQLCHAR_star      = UNTRACED REF SQLCHAR;
   SQLSCHAR     = SCHAR;     SQLSCHAR_star     = UNTRACED REF SQLSCHAR;
@@ -67,6 +66,6 @@ TYPE
     fraction : SQLUINTEGER;
   END;
 
-  BOOKMARK = unsigned_long_int;
+  BOOKMARK = unsigned_long;
 
 END SQLtypes.
