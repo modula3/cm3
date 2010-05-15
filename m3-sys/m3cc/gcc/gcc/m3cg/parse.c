@@ -4399,18 +4399,18 @@ m3cg_extract_n (void)
 }
 
 static tree
-m3_do_fixed_extract (tree x, int i, int n, tree t)
+m3_do_fixed_extract (tree x, int m, int n, tree t)
 {
   /* ??? Use BIT_FIELD_REF ???  */
   int a = TYPE_PRECISION (t) - n;
-  int b = TYPE_PRECISION (t) - n - i;
+  int b = TYPE_PRECISION (t) - n - m;
   tree c, d, e;
 
   if ((a < 0) || (a >= TYPE_PRECISION (t)) ||
       (b < 0) || (b >= TYPE_PRECISION (t)))
     {
       return m3_do_extract (x,
-			    build_int_cst (t_int, i),
+			    build_int_cst (t_int, m),
 			    build_int_cst (t_int, n),
 			    t);
     }
