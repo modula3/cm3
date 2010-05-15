@@ -4391,6 +4391,7 @@ m3cg_extract_n (void)
   INTEGER (n);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
+  gcc_assert (n > 0);
 
   t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
   EXPR_REF (-2) = m3_do_extract (EXPR_REF (-2), EXPR_REF (-1),
@@ -4431,6 +4432,8 @@ m3cg_extract_mn (void)
   INTEGER (n);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
+  gcc_assert (m >= 0);
+  gcc_assert (n > 0);
 
   t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
   EXPR_REF (-1) = m3_do_fixed_extract (EXPR_REF (-1), m, n, t);
@@ -4457,6 +4460,7 @@ m3cg_insert_n (void)
   INTEGER (n);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
+  gcc_assert (n > 0);
 
   EXPR_REF (-3) = m3_do_insert (EXPR_REF (-3), EXPR_REF (-2),
                                 EXPR_REF (-1), build_int_cst (t_int, n), t);
@@ -4472,6 +4476,8 @@ m3cg_insert_mn (void)
   INTEGER (n);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
+  gcc_assert (m >= 0);
+  /*gcc_assert (n > 0);*/
 
   EXPR_REF (-2) = m3_do_fixed_insert (EXPR_REF (-2), EXPR_REF (-1), m, n, t);
   EXPR_POP ();
