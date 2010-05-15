@@ -9,4 +9,8 @@
 
 include_dir ("Common")
 include_dir (TARGET)
-include_dir (WORD_SIZE)
+if equal(OS_TYPE, "WIN32")
+  include("32BITS")
+else
+  include_dir (WORD_SIZE)
+end
