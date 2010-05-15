@@ -27,7 +27,6 @@ PROCEDURE SignExtend(VAR a: Int; n: CARDINAL) =
 *)
   VAR extend := 0;
   BEGIN
-
     IF Word.And(a[n - 1], SignMask) # 0 THEN
       extend := Mask;
     END;
