@@ -1,5 +1,9 @@
 #! /usr/bin/env python
 
+# The backend has a fixed sized array of 100
+# to hold the interfaces exported by a unit.
+# This test exercise that.
+
 makefile = open("m3makefile", "w")
 main = open("Main.m3", "w")
 
