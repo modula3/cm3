@@ -2436,10 +2436,10 @@ static void
 m3cg_export_unit (void)
 {
   NAME (n);
-  /* remember the set of exported interfaces */
-  exported_interfaces_names [exported_interfaces++] = n;
   if (exported_interfaces == COUNT_OF(exported_interfaces_names))
     fatal_error(" ** internal limit exporting more than 100 interfaces");
+  /* remember the set of exported interfaces */
+  exported_interfaces_names [exported_interfaces++] = n;
 }
 
 static void
