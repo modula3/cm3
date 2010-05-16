@@ -72,6 +72,8 @@ It also matches what convert_call_expr does. */
 int arm_float_words_big_endian (void);
 #endif
 
+#define M3_NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
+
 /*================================================================= TREES ===*/
 
 typedef enum
@@ -2436,6 +2438,8 @@ m3cg_export_unit (void)
   NAME (n);
   /* remember the set of exported interfaces */
   exported_interfaces_names [exported_interfaces++] = n;
+  if (exported_interfaces == M3_NUMBER_OF(exported_interfaces_names))
+    fatal_error(" ** internal limit exporting more than 100 interfaces");
 }
 
 static void
