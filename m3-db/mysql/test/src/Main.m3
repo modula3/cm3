@@ -53,7 +53,7 @@ BEGIN
     IO.Put("0" & m3field.name);
 
     field := MySQL.FetchFields(res);
-    m3fields := MySQLMaps.FieldList(field,numFields);
+    m3fields := MySQLMaps.FieldList(res);
 
     IO.Put("1" & m3fields[0].name);
     IO.Put("2" & m3fields[1].name);
