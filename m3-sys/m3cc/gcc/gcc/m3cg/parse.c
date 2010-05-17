@@ -3416,17 +3416,24 @@ m3cg_declare_procedure (void)
   MTYPE2  (return_type, ret_type);
   LEVEL   (lev);
   CC      (cc);
-  UNUSED_BOOLEAN (exported);
+  BOOLEAN (exported);
   PROC    (parent);
   PROC    (p);
 
   tree resultdecl;
   tree parm_block = make_node (BLOCK);
   tree top_block  = make_node (BLOCK);
+  
+  /* Level must be positive and nested functions
+   * are never exported.
+   */
+  gcc_assert(lev >= 0);
+  gcc_assert(lev == 0 || !exported);
 
   if (option_procs_trace)
-    fprintf(stderr, "  procedure %s nparams 0x%lx rettype 0x%x\n", n, n_params,
-            ret_type);
+    fprintf(stderr,
+            "  procedure %s nparams 0x%lx rettype 0x%x lev %u exported %u\n",
+            n, n_params, ret_type, (unsigned)lev, (unsigned)exported);
 
 #if M3CG_ADAPT_RETURN_TYPE
   /** 4/30/96 -- WKK -- It seems gcc can't hack small return values... */
@@ -3443,7 +3450,28 @@ m3cg_declare_procedure (void)
 
   DECL_NAME (p) = get_identifier (n);
   TREE_STATIC (p) = 1;
-  TREE_PUBLIC (p) = (lev == 0); /* exported */
+
+  /* TREE_PUBLIC (p) should be 'exported', but that fails to keep any
+   * implementation of nonexported functions, even with TREE_ADDRESSABLE(p) = 1
+   */
+  TREE_PUBLIC (p) = (lev == 0);
+  if (exported)
+  {
+   /* We really want to use VISIBILITY_PROTECTED here but we can't for
+    * multiple reasons. It doesn't work on Darwin.
+    * Even on Linux, we still reference symbols indirectly via GOT and get
+    * an error. I don't know why.
+    *
+    * More general problem is we don't know in import_procedure
+    * what we are importing from other modules within the same shared
+    * object, vs. from other shared objects.
+    */
+    DECL_VISIBILITY (p) = VISIBILITY_DEFAULT;
+  }
+  else
+  {
+    DECL_VISIBILITY (p) = VISIBILITY_HIDDEN;
+  }
   DECL_CONTEXT (p) = parent;
   TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   DECL_MODE (p) = FUNCTION_MODE;
@@ -5095,6 +5123,7 @@ m3cg_fetch_and_and (void) { m3cg_fetch_and_op (BUILT_IN_FETCH_AND_AND_N); }
 static void
 m3cg_fetch_and_xor (void) { m3cg_fetch_and_op (BUILT_IN_FETCH_AND_XOR_N); }
 
+#if 0
 static void
 m3cg_lock_test_and_set (void)
 {
@@ -5143,6 +5172,7 @@ m3cg_lock_release (void)
  incompatible:
   fatal_error ("incompatible type for argument to atomic op");
 }
+#endif
 
 /*----------------------------------------------------------- M3CG parser ---*/
 
