@@ -1827,8 +1827,14 @@ debug_tag (char kind, unsigned long id, ...)
   fmt_uid (id, current_dbg_type_tag + 3);
 
   fmt = va_arg (args, char *);
+  current_dbg_type_tag[sizeof(current_dbg_type_tag) - 2] = 0;
   vsnprintf (current_dbg_type_tag + UID_SIZE + 3,
 	     sizeof(current_dbg_type_tag) - (UID_SIZE + 3), fmt, args);
+  if (current_dbg_type_tag[sizeof(current_dbg_type_tag) - 2])
+  {
+    current_dbg_type_tag[sizeof(current_dbg_type_tag) - 1] = 0;
+    fatal_error("identifier too long (in debug_tag, %s)", current_dbg_type_tag);
+  }
   va_end (args);
 }
 
@@ -1865,9 +1871,14 @@ debug_field_fmt (unsigned long id, ...)
 
   fmt_uid (id, name);
   fmt = va_arg (args, char *);
+  name[sizeof(name) - 2] = 0;
   vsnprintf (name + UID_SIZE, sizeof(name) - UID_SIZE, fmt, args);
   va_end (args);
-
+  if (name[sizeof(name) - 2])
+  {
+    name[sizeof(name) - 1] = 0;
+    fatal_error("identifier too long (in debug_field_fmt, %s)", name);
+  }
   debug_field (name);
 }
 
@@ -1973,6 +1984,7 @@ static tree
 fix_name (const char *name, unsigned long id)
 {
   char buf[100];
+  size_t len;
 
   if (name == 0 || name[0] == '*') {
     static int anonymous_counter = 1;
@@ -1980,12 +1992,19 @@ fix_name (const char *name, unsigned long id)
   } else if (id == 0) {
     return get_identifier (name);
   } else if (id == NO_UID) {
-    snprintf (buf, sizeof(buf), "M%s", name);
+    len = strlen(name);
+    if (len >= (sizeof(buf) - 1))
+      fatal_error("identifier too long (in fix_name, 1st case, %s)", name);
+    buf[0] = 'M';
+    memcpy(&buf[1], name, len + 1);
   } else {
     buf[0] = 'M';  buf[1] = '3';  buf[2] = '_';
     fmt_uid (id, buf + 3);
     buf[3 + UID_SIZE] = '_';
-    strcpy (buf + 4 + UID_SIZE, name);
+    len = strlen(name);
+    if (len >= (sizeof(buf) - 4 - UID_SIZE))
+      fatal_error("identifier too long (in fix_name, 2nd case, %s)", name);
+    memcpy(&buf[4 + UID_SIZE], name, len + 1);
   }
   return get_identifier (buf);
 }
@@ -2437,7 +2456,7 @@ m3cg_export_unit (void)
 {
   NAME (n);
   if (exported_interfaces == COUNT_OF(exported_interfaces_names))
-    fatal_error(" ** internal limit exporting more than 100 interfaces");
+    fatal_error("internal limit exporting more than 100 interfaces");
   /* remember the set of exported interfaces */
   exported_interfaces_names [exported_interfaces++] = n;
 }
@@ -2468,6 +2487,14 @@ m3cg_set_source_line (void)
 #endif
 }
 
+static size_t m3_add(size_t a, size_t b)
+{
+  size_t c = a + b;
+  if (c < a)
+    fatal_error("integer overflow");
+  return c;
+}
+
 static void
 m3cg_declare_typename (void)
 {
@@ -2475,11 +2502,22 @@ m3cg_declare_typename (void)
   NAME   (name);
 
   char fullname [100];
+  size_t unit_len = strlen(current_unit_name);
+  size_t name_len = strlen(name);
+  size_t full_len;
 
   if (option_types_trace)
     fprintf(stderr, "  typename %s, id 0x%lx\n", name, my_id);
 
-  snprintf (fullname, sizeof(fullname), "%s.%s", current_unit_name, name);
+  full_len = m3_add(unit_len, m3_add(name_len, 1));
+    
+  if (full_len >= sizeof(fullname))
+    fatal_error("identifier too long (in m3cg_declare_typename, %s.%s)", current_unit_name, name);
+    
+  memcpy(&fullname[0], current_unit_name, unit_len);
+  fullname[unit_len] = '.';
+  memcpy(&fullname[unit_len + 1], name, name_len + 1);
+
   debug_tag ('N', my_id, "");
   debug_field (fullname);
   debug_struct ();
