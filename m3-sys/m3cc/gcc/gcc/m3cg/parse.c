@@ -3424,9 +3424,7 @@ m3cg_declare_procedure (void)
   tree parm_block = make_node (BLOCK);
   tree top_block  = make_node (BLOCK);
   
-  /* Level must be positive and nested functions
-   * are never exported.
-   */
+  /* Level must be positive and nested functions are never exported. */
   gcc_assert(lev >= 0);
   gcc_assert(lev == 0 || !exported);
 
