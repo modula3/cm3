@@ -3459,6 +3459,7 @@ m3cg_declare_procedure (void)
     * multiple reasons. It doesn't work on Darwin.
     * Even on Linux, we still reference symbols indirectly via GOT and get
     * an error. I don't know why.
+    * see: http://gcc.gnu.org/bugzilla/show_bug.cgi?id=44166
     *
     * More general problem is we don't know in import_procedure
     * what we are importing from other modules within the same shared
