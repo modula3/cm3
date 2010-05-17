@@ -9,26 +9,26 @@ IMPORT MySQL;
 TYPE
 
   M3Field = RECORD
-             name : TEXT;
-             org_name      : TEXT;
-             table         : TEXT;
-             org_table     : TEXT;
-             db            : TEXT;
-             catalog       : TEXT;
-             def           : TEXT;
-             length        : LONGINT;
-             max_length    : LONGINT;
-             name_length   : CARDINAL;
-             org_name_length : CARDINAL;
-             table_length  : CARDINAL;
+             name             : TEXT;
+             org_name         : TEXT;
+             table            : TEXT;
+             org_table        : TEXT;
+             db               : TEXT;
+             catalog          : TEXT;
+             def              : TEXT;
+             length           : CARDINAL;
+             max_length       : CARDINAL;
+             name_length      : CARDINAL;
+             org_name_length  : CARDINAL;
+             table_length     : CARDINAL;
              org_table_length : CARDINAL;
-             db_length     : CARDINAL;
-             catalog_length : CARDINAL;
-             def_length    : CARDINAL;
-             flags         : CARDINAL;
-             decimals      : CARDINAL;
-             charsetnr     : CARDINAL;
-             type          : CARDINAL;
+             db_length        : CARDINAL;
+             catalog_length   : CARDINAL;
+             def_length       : CARDINAL;
+             flags            : CARDINAL;
+             decimals         : CARDINAL;
+             charsetnr        : CARDINAL;
+             type             : CARDINAL;
             END;
 
   M3FieldRef   = REF M3Field;
@@ -37,6 +37,8 @@ TYPE
 
 PROCEDURE Field(fieldRef : MySQL.FieldT) : M3FieldRef;
 
-PROCEDURE FieldList(fieldRef : MySQL.FieldT; numFields : CARDINAL) : M3FieldArray;
+PROCEDURE FieldList(res : MySQL.ResT) : M3FieldArray;
+
+PROCEDURE DumpField(m3field : M3FieldRef);
 
 END MySQLMaps.
