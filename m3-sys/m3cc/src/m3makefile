@@ -211,12 +211,12 @@ readonly m3cc_env = {
   "SPARC64_LINUX"   : "gcc_cv_as_sparc_register_op=yes",
   "SPARC64_NETBSD"  : "gcc_cv_as_sparc_register_op=yes",
   "SPARC64_OPENBSD" : "gcc_cv_as_sparc_register_op=yes",
-  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes gcc_cv_as_hidden=yes",
-  "SOLsun"          : "gcc_cv_as_hidden=yes",
-  "SOLgnu"          : "gcc_cv_as_hidden=yes",
-  "SPARC32_SOLARIS" : "gcc_cv_as_hidden=yes",
-  "I386_SOLARIS"    : "gcc_cv_as_hidden=yes",
-  "AMD64_SOLARIS"   : "gcc_cv_as_hidden=yes",
+  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
+  "SOLsun"          : "gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
+  "SOLgnu"          : "gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
+  "SPARC32_SOLARIS" : "gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
+  "I386_SOLARIS"    : "gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
+  "AMD64_SOLARIS"   : "gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
 } % m3cc_env
 
 readonly proc get_config (target) is
