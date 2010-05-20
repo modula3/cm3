@@ -2,9 +2,6 @@
 #define __cdecl /* nothing */
 #endif
 
-#ifdef _MSC_VER
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
