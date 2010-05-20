@@ -19,15 +19,23 @@
 #ifndef _ALL_SOURCE
 #define _ALL_SOURCE
 #endif
+#endif
 #ifndef _REENTRANT
 #define _REENTRANT
-#endif
 #endif
 
 #ifdef _WIN32
 #include <io.h>
 #else
 #include <unistd.h>
+#endif
+
+#if __GNUC__ >= 4
+#ifdef __APPLE__
+#pragma GCC visibility push(default)
+#else
+#pragma GCC visibility push(protected)
+#endif
 #endif
 
 #ifdef __cplusplus

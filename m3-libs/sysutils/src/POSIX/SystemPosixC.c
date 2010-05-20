@@ -8,9 +8,9 @@
 #ifndef _ALL_SOURCE
 #define _ALL_SOURCE
 #endif
+#endif
 #ifndef _REENTRANT
 #define _REENTRANT
-#endif
 #endif
 
 #include <sys/wait.h>
@@ -28,6 +28,16 @@
 /cm3/pkg/sysutils/LINUXLIBC6/libsysutils.so: undefined reference to `Unix__access'
 /cm3/pkg/sysutils/LINUXLIBC6/libsysutils.so: undefined reference to `Unix__gethostname'
 */
+
+/* http://gcc.gnu.org/wiki/Visibility */
+/* Generic helper definitions for shared library support */
+#if __GNUC__ >= 4
+#ifdef __APPLE__
+#pragma GCC visibility push(default)
+#else
+#pragma GCC visibility push(protected)
+#endif
+#endif
 
 #ifdef __cplusplus
 extern "C"
