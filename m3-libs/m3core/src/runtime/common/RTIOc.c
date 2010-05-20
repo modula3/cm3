@@ -2,6 +2,7 @@
 #undef _DLL
 #endif
 
+#include "m3core.h"
 #include <stdio.h>
 #include <stddef.h>
 
@@ -58,11 +59,11 @@ void __cdecl PutG(double a)
     fflush(NULL);
 }
 
-void __cdecl PutBytes(const unsigned char* p, size_t count)
+void __cdecl PutBytes(const unsigned char* p, WORD_T count)
 {
     char buffer[33]; /* size must be odd */
     const static char hex[] = "0123456789ABCDEF";
-    size_t i = { 0 };
+    WORD_T i = { 0 };
     size_t j = { 0 };
     
     Flush();

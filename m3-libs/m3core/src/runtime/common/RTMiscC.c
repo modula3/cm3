@@ -6,6 +6,7 @@
 #undef _DLL
 #endif
 
+#include "m3core.h"
 #include <string.h>
 
 #ifdef __cplusplus
@@ -18,12 +19,12 @@ extern "C" {
 
 /*------------------------------- byte copying ------------------------------*/
 
-void __cdecl RTMisc__Copy(const void* src, void* dest, size_t len)
+void __cdecl RTMisc__Copy(const void* src, void* dest, WORD_T len)
 {
     memmove(dest, src, len);
 }
 
-void __cdecl RTMisc__Zero(void* dest, size_t len)
+void __cdecl RTMisc__Zero(void* dest, WORD_T len)
 {
     memset(dest, 0, len);
 }
@@ -32,11 +33,11 @@ void __cdecl RTMisc__Zero(void* dest, size_t len)
 
 /* Align is equated to Upper via <*EXTERNAL*>; this is here for compatiblity. */
 
-size_t __cdecl RTMisc__Upper(size_t a, size_t y);
+WORD_T __cdecl RTMisc__Upper(WORD_T a, WORD_T y);
 
-void* __cdecl RTMisc__Align(void* a, size_t y)
+void* __cdecl RTMisc__Align(void* a, WORD_T y)
 {
-    return (void*)RTMisc__Upper((size_t)a, y);
+    return (void*)RTMisc__Upper((WORD_T)a, y);
 }
 
 #ifdef __cplusplus
