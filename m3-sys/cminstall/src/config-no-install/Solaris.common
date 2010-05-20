@@ -157,7 +157,7 @@ end
 proc m3_link (prog, options, objects, imported_libs, shared) is
     configure_linker()
     local linker = [ "@" & SYSTEM_LD ]
-    local args = []
+    local args = [ ]
     if M3_PROFILING
         args += "-pg"
     end
