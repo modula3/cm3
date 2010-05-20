@@ -9,6 +9,7 @@ reducing C runtime dependency.
 #undef _DLL
 #endif
 
+#include "m3core.h"
 #include <stddef.h>
 
 #ifdef _MSC_VER
@@ -48,17 +49,17 @@ reducing C runtime dependency.
 extern "C" {
 #endif
 
-void* __cdecl RTUntracedMemory__AllocZ PROTO1(size_t, count)
+void* __cdecl RTUntracedMemory__AllocZ PROTO1(WORD_T, count)
 /* Z = zeroed = calloc */
 {
     return WIN(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, count))
            POSIX(calloc(count, 1));
 }
 
-void* __cdecl RTUntracedMemory__AllocZV PROTO2(size_t, count, size_t, size)
+void* __cdecl RTUntracedMemory__AllocZV PROTO2(WORD_T, count, WORD_T, size)
 /* ZV = zeroed vector = calloc */
 {
-    size_t max = ~(size_t)0;
+    WORD_T max = ~(WORD_T)0;
     if (count > 1 && size > 1 && count > (max / size)) /* implies count * size > max */
         return 0;
     return WIN(HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, count * size))
