@@ -24,6 +24,10 @@
 #include <semaphore.h>
 #endif
 
+#if __GNUC__ >= 4
+#pragma GCC visibility push(hidden)
+#endif
+
 #define M3MODULE ThreadPThread
 
 #if defined(__sparc) || defined(__ia64__)
