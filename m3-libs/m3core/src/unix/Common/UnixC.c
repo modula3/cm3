@@ -48,7 +48,7 @@ extern "C"
 {
 #endif
 
-void __cdecl Unix__Assertions(void)
+M3_DLL_LOCAL void __cdecl Unix__Assertions(void)
 {
     /* make sure things are normal */
     M3_STATIC_ASSERT(CHAR_BIT == 8);

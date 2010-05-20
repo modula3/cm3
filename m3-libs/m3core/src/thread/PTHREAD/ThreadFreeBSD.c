@@ -4,6 +4,10 @@
 
 #ifndef __FreeBSD__
 
+#if __GNUC__ >= 4
+#pragma GCC visibility push(hidden)
+#endif
+
 /* avoid empty file */
 
 void ThreadFreeBSD__Dummy(void)
@@ -16,6 +20,10 @@ void ThreadFreeBSD__Dummy(void)
 #include <pthread.h>
 #include <assert.h>
 #include <stdlib.h>
+
+#if __GNUC__ >= 4
+#pragma GCC visibility push(hidden)
+#endif
 
 #ifdef __cplusplus
 extern "C" {

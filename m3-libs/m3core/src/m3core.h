@@ -2,6 +2,28 @@
 #pragma once
 #endif
 
+/* http://gcc.gnu.org/wiki/Visibility */
+/* Generic helper definitions for shared library support */
+#if defined _WIN32 || defined __CYGWIN__
+  #define M3_DLL_IMPORT __declspec(dllimport)
+  #define M3_DLL_EXPORT __declspec(dllexport)
+  #define M3_DLL_LOCAL
+#else
+  #if __GNUC__ >= 4
+    #define M3_DLL_IMPORT __attribute__ ((visibility("default")))
+    #ifdef __APPLE__
+      #define M3_DLL_EXPORT __attribute__ ((visibility("default")))
+    #else
+      #define M3_DLL_EXPORT __attribute__ ((visibility("protected")))
+    #endif
+    #define M3_DLL_LOCAL  __attribute__ ((visibility("hidden")))
+  #else
+    #define M3_DLL_IMPORT
+    #define M3_DLL_EXPORT
+    #define M3_DLL_LOCAL
+  #endif
+#endif
+
 #ifndef INCLUDED_M3CORE_H
 #define INCLUDED_M3CORE_H
 
@@ -101,9 +123,9 @@
 
 #define M3WRAPNAMEx(a, b) a##__##b
 #define M3WRAPNAME(a, b) M3WRAPNAMEx(a, b)
-#define M3WRAP(ret, name, in, out)     M3EXTERNC_BEGIN ret __cdecl M3WRAPNAME(M3MODULE, name) in { return name out; } M3EXTERNC_END
+#define M3WRAP(ret, name, in, out)     M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3WRAPNAME(M3MODULE, name) in { return name out; } M3EXTERNC_END
 #ifdef _WIN32
-#define M3WRAP_(ret, name, in, out)    M3EXTERNC_BEGIN ret __cdecl M3WRAPNAME(M3MODULE, name) in { return _##name out; } M3EXTERNC_END
+#define M3WRAP_(ret, name, in, out)    M3EXTERNC_BEGIN M3_DLL_EXPORT ret __cdecl M3WRAPNAME(M3MODULE, name) in { return _##name out; } M3EXTERNC_END
 #else
 #define M3WRAP_(ret, name, in, out)    M3WRAP(ret, name, in, out)
 #endif
