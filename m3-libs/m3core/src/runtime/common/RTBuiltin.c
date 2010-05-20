@@ -7,12 +7,20 @@
 
 /*----------- types from RT0, for now ... -----------------*/
 
+/* _INTEGER is always signed and exactly the same size as a pointer */
+#if __INITIAL_POINTER_SIZE == 64 || defined(_WIN64)
+/* VMS with 64 bit pointers but 32bit size_t/ptrdiff_t, or Win64. */
+typedef __int64 _INTEGER;
+#else
+typedef long _INTEGER;
+#endif
+
 #define _INTEGER long
-#define _INT32   int
 #define _ADDRESS char*
 typedef void (*_PROC)();
 
-#define WSZ  sizeof(_ADDRESS)
+/* word size */
+#define WSZ sizeof(_ADDRESS)
 
 typedef struct _typecell {
     _INTEGER          typecode;
