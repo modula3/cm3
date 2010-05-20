@@ -1224,6 +1224,8 @@ def Boot():
         "SOLsun"            : " -Qy -s -K PIC -xarch=v8plus ",
         "SPARC32_SOLARIS"   : " -Qy -s -K PIC -xarch=v8plus ",
         "SPARC64_SOLARIS"   : " -Qy -s -K PIC -xarch=v9 ",
+        "SPARC32_LINUX"     : " -Qy -s -Av9a -32 -relax ",
+        "SPARC64_LINUX"     : " -Qy -s -Av9a -64 -no-undeclared-regs -relax ",
         }.get(Target) or ""))
 
     GnuPlatformPrefix = {
