@@ -4,6 +4,10 @@
 
 #ifndef __APPLE__
 
+#if __GNUC__ >= 4
+#pragma GCC visibility push(hidden)
+#endif
+
 /* avoid empty file */
 
 void ThreadApple__Dummy(void)
@@ -30,6 +34,10 @@ void ThreadApple__Dummy(void)
 #include <mach/thread_act.h>
 #if defined(__ppc__) || defined(__ppc64__)
 #include <architecture/ppc/cframe.h>
+#endif
+
+#if __GNUC__ >= 4
+#pragma GCC visibility push(hidden)
 #endif
 
 #ifdef __cplusplus

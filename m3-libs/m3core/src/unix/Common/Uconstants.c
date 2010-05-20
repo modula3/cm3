@@ -34,6 +34,14 @@ typedef union {
 /* check that Uerror.Max=248 is enough; if you get an error here, raise it in Uerror.i3 and here */
 typedef int CheckMax[248 - sizeof(CheckMax_t)];
 
+#if __GNUC__ >= 4
+#ifdef __APPLE__
+#pragma GCC visibility push(default)
+#else
+#pragma GCC visibility push(protected)
+#endif
+#endif
+
 #undef X
 #define X(x) const int Uerror__##x = x;
 #include "UerrorX.h"

@@ -14,6 +14,14 @@
 #include <windows.h>
 #endif
 
+#if __GNUC__ >= 4
+#ifdef __APPLE__
+#pragma GCC visibility push(default)
+#else
+#pragma GCC visibility push(protected)
+#endif
+#endif
+
 #ifdef __cplusplus
 extern "C"
 {
