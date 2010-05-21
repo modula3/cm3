@@ -10,8 +10,7 @@
 include_dir ("Common")
 include_dir (TARGET)
 if equal(OS_TYPE, "WIN32")
-  % long is 32bits even on 64bit Windows
-  include("32BITS")
+  include_dir("32BITS") % long is 32bits even on 64bit Windows
 else
-  include_dir (WORD_SIZE)
+  include_dir(WORD_SIZE)
 end
