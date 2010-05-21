@@ -7,10 +7,6 @@
 #undef _GNU_SOURCE
 #define _GNU_SOURCE
 
-#if defined(__INTERIX) && !defined(_ALL_SOURCE)
-#define _ALL_SOURCE
-#endif
-
 /* __DARWIN_UNIX03 defaults to 1 on older and newer headers,
  * but older headers still have context "ss" instead of "__ss"
  * and such, so we have to force 0.
@@ -19,19 +15,7 @@
 #define __DARWIN_UNIX03 0
 #endif
 
-#include <unistd.h>
-#include <signal.h>
-#include <assert.h>
-#include <stddef.h>
-
-/* WORD_T/INTEGER are always exactly the same size as a pointer.
- * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
- */
-#if __INITIAL_POINTER_SIZE == 64
-typedef unsigned __int64 WORD_T;
-#else
-typedef size_t WORD_T;
-#endif
+#include "m3core.h"
 
 #if defined(__APPLE__)
 
@@ -54,9 +38,6 @@ http://duriansoftware.com/joe/PSA:-avoiding-the-%22ucontext-\
 #if !defined(__INTERIX) && !defined(__vms) && !defined(SA_SIGINFO)
 #define SA_SIGINFO SA_SIGINFO
 #endif
-
-#include <string.h>
-#define ZeroMemory(a,b) (memset((a), 0, (b)))
 
 #ifdef __cplusplus
 extern "C" {

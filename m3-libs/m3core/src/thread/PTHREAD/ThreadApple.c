@@ -25,9 +25,6 @@ void ThreadApple__Dummy(void)
 #endif
 
 #include "m3core.h"
-#include <stdlib.h>
-#include <pthread.h>
-#include <signal.h>
 #include <sys/ucontext.h>
 
 #include <mach/mach.h>

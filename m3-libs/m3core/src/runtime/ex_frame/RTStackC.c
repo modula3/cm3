@@ -17,11 +17,7 @@
 #pragma warning(disable:4255) /* () converted to (void) */
 #endif
 
-#if !defined(_MSC_VER) && !defined(__cdecl)
-#define __cdecl /* nothing */
-#endif
-
-#include <stdlib.h>
+#include "m3core.h"
 
 #ifdef __cplusplus
 extern "C" {

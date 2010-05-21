@@ -3,8 +3,6 @@
 #endif
 
 #include "m3core.h"
-#include <stdio.h>
-#include <stddef.h>
 
 #if !defined(_MSC_VER) && !defined(__cdecl)
 #define __cdecl /* nothing */

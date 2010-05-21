@@ -21,16 +21,7 @@ typedef long long int64;
 typedef unsigned long long uint64;
 #endif
 
-#include <stddef.h>
-
-/* WORD_T/INTEGER are always exactly the same size as a pointer.
- * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
- */
-#if __INITIAL_POINTER_SIZE == 64
-typedef unsigned __int64 WORD_T;
-#else
-typedef size_t WORD_T;
-#endif
+#include "m3core.h"
 
 #if __GNUC__ >= 4
 #ifdef __APPLE__

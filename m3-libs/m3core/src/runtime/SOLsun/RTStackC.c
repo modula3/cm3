@@ -4,12 +4,9 @@
 
 /* Last modified on Wed Jul 30 13:55:56 EST 1997 by hosking    */
 
-#include <stdlib.h>
-#include <stdio.h>
-#include <signal.h>
+#include "m3core.h"
 #include <ucontext.h>
 #include <sys/frame.h>
-#include <setjmp.h>
 
 #ifdef __cplusplus
 extern "C" {

@@ -9,15 +9,7 @@
 #endif
 #endif
 
-#if !defined(_MSC_VER) && !defined(__cdecl)
-#define __cdecl /* nothing */
-#endif
-
-#ifndef _REENTRANT
-#define _REENTRANT
-#endif
-
-#include <errno.h>
+#include "m3core.h"
 
 #ifdef __cplusplus
 extern "C" {

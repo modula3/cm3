@@ -1,15 +1,6 @@
 typedef void (*ForkHandler)(void);
  
-#include <stddef.h>
-#ifndef _WIN32
-#include <pthread.h>
-#include <errno.h>
-#include <unistd.h>
-#endif
-
-#if !defined(_MSC_VER) && !defined(__cdecl)
-#define __cdecl /* nothing */
-#endif
+#include "m3core.h"
 
 #ifdef __cplusplus
 extern "C" {

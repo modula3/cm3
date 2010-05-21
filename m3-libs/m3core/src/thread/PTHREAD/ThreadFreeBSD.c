@@ -17,9 +17,6 @@ void ThreadFreeBSD__Dummy(void)
 #else
 
 #include "m3core.h"
-#include <pthread.h>
-#include <assert.h>
-#include <stdlib.h>
 
 #if __GNUC__ >= 4
 #pragma GCC visibility push(hidden)

@@ -7,7 +7,6 @@
 #endif
 
 #include "m3core.h"
-#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {

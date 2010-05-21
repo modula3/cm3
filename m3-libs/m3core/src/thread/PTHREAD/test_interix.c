@@ -1,12 +1,6 @@
 
-#if defined(__INTERIX) && !defined(_ALL_SOURCE)
-#define _ALL_SOURCE
-#endif
-#include <stdio.h>
+#include "m3core.h"
 #include <sys/procfs.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <errno.h>
 
 void* thread1(void*a)
 {

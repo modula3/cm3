@@ -182,8 +182,6 @@
  *	the result overflows to +-Infinity or underflows to 0.
  */
 
-#include <limits.h>
-
 #if (UINT_MAX == 0xffffffff) && (ULONG_MAX > 0xffffffff)
 #define Long int
 #else
@@ -193,15 +191,7 @@
 typedef unsigned Long ULong;
 
 #ifdef DEBUG
-#include <stdio.h>
 #define Bug(x) {fprintf(stderr, "%s\n", x); exit(1);}
-#endif
-
-#include <stdlib.h>
-#include <string.h>
-
-#ifdef USE_LOCALE
-#include <locale.h>
 #endif
 
 #ifdef MALLOC
@@ -240,8 +230,6 @@ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 #undef INFNAN_CHECK
 #endif
 
-#include <errno.h>
-
 #ifdef Bad_float_h
 
 #ifdef IEEE_Arith
@@ -274,10 +262,6 @@ static double private_mem[PRIVATE_mem], *pmem_next = private_mem;
 #else /* ifndef Bad_float_h */
 #include <float.h>
 #endif /* Bad_float_h */
-
-#ifndef __MATH_H__
-#include <math.h>
-#endif
 
 #if __GNUC__ >= 4
 #ifdef __APPLE__

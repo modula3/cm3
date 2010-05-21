@@ -7,15 +7,13 @@
 /* This file implements the stack walking functions of
    the RTStack interface. */
 
+#include "m3core.h"
 #ifdef DEBUG
-#include <stdio.h>
 #define dprintf(x)  fprintf x
 #else
 #define dprintf(x)
 #endif
 
-#include <string.h>
-#include <setjmp.h>
 #include <exception.h>
 #include <sym.h>
 
