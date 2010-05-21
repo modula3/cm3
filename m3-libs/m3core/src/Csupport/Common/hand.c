@@ -23,6 +23,15 @@ typedef unsigned long long uint64;
 
 #include <stddef.h>
 
+/* WORD_T/INTEGER are always exactly the same size as a pointer.
+ * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
+ */
+#if __INITIAL_POINTER_SIZE == 64
+typedef unsigned __int64 WORD_T;
+#else
+typedef size_t WORD_T;
+#endif
+
 #if __GNUC__ >= 4
 #ifdef __APPLE__
 #pragma GCC visibility push(default)
@@ -87,67 +96,67 @@ m3_mod64(int64 b, int64 a)
 }
 #endif
 
-#define SET_GRAIN (sizeof (size_t) * 8)
+#define SET_GRAIN (sizeof (WORD_T) * 8)
 
 void
 __stdcall
-set_union(size_t n_bits, size_t* c, size_t* b, size_t* a)
+set_union(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  register size_t n_words = n_bits / SET_GRAIN;
-  register size_t i;
+  register WORD_T n_words = n_bits / SET_GRAIN;
+  register WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] | c[i];
 }
 
 void
 __stdcall
-set_intersection(size_t n_bits, size_t* c, size_t* b, size_t* a)
+set_intersection(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  register size_t n_words = n_bits / SET_GRAIN;
-  register size_t i;
+  register WORD_T n_words = n_bits / SET_GRAIN;
+  register WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] & c[i];
 }
 
 void
 __stdcall
-set_difference(size_t n_bits, size_t* c, size_t* b, size_t* a)
+set_difference(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  register size_t n_words = n_bits / SET_GRAIN;
-  register size_t i;
+  register WORD_T n_words = n_bits / SET_GRAIN;
+  register WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] & (~ c[i]);
 }
 
 void
 __stdcall
-set_sym_difference(size_t n_bits, size_t* c, size_t* b, size_t* a)
+set_sym_difference(WORD_T n_bits, WORD_T* c, WORD_T* b, WORD_T* a)
 {
-  register size_t n_words = n_bits / SET_GRAIN;
-  register size_t i;
+  register WORD_T n_words = n_bits / SET_GRAIN;
+  register WORD_T i;
   for (i = 0; i < n_words; i++)
     a[i] = b[i] ^ c[i];
 }
 
-size_t
+WORD_T
 __stdcall
-set_le(size_t n_bits, size_t* b, size_t* a)
+set_le(WORD_T n_bits, WORD_T* b, WORD_T* a)
 {
-  register size_t n_words = n_bits / SET_GRAIN;
-  register size_t i;
+  register WORD_T n_words = n_bits / SET_GRAIN;
+  register WORD_T i;
   for (i = 0; i < n_words; i++) {
     if (a[i] & (~ b[i])) return 0;
   }
   return 1;
 }
 
-size_t
+WORD_T
 __stdcall
-set_lt(size_t n_bits, size_t* b, size_t* a)
+set_lt(WORD_T n_bits, WORD_T* b, WORD_T* a)
 {
-  register size_t n_words = n_bits / SET_GRAIN;
-  register size_t i;
-  register size_t eq = 0;
+  register WORD_T n_words = n_bits / SET_GRAIN;
+  register WORD_T i;
+  register WORD_T eq = 0;
   for (i = 0; i < n_words; i++) {
     if (a[i] & (~ b[i])) return 0;
     eq |= (a[i] ^ b[i]);
@@ -155,42 +164,42 @@ set_lt(size_t n_bits, size_t* b, size_t* a)
   return (eq != 0);
 }
 
-size_t
+WORD_T
 __stdcall
-set_ge(size_t n_bits, size_t* b, size_t* a)
+set_ge(WORD_T n_bits, WORD_T* b, WORD_T* a)
 {
   return set_le(n_bits, a, b);
 }
 
-size_t
+WORD_T
 __stdcall
-set_gt(size_t n_bits, size_t* b, size_t* a)
+set_gt(WORD_T n_bits, WORD_T* b, WORD_T* a)
 {
   return set_lt(n_bits, a, b);
 }
 
-#define HIGH_BITS(a) ((~(size_t)0) << (a))
-#define LOW_BITS(a)  ((~(size_t)0) >> (SET_GRAIN - (a) - 1))
+#define HIGH_BITS(a) ((~(WORD_T)0) << (a))
+#define LOW_BITS(a)  ((~(WORD_T)0) >> (SET_GRAIN - (a) - 1))
 
 void
 __stdcall
-set_range(size_t b, size_t a, size_t* s)
+set_range(WORD_T b, WORD_T a, WORD_T* s)
 {
   if (b < a) {
       /* no bits to set */
   } else {
-    size_t a_word = a / SET_GRAIN;
-    size_t b_word = b / SET_GRAIN;
-    size_t i;
-    size_t high_bits = HIGH_BITS(a % SET_GRAIN);
-    size_t low_bits = LOW_BITS(b % SET_GRAIN);
+    WORD_T a_word = a / SET_GRAIN;
+    WORD_T b_word = b / SET_GRAIN;
+    WORD_T i;
+    WORD_T high_bits = HIGH_BITS(a % SET_GRAIN);
+    WORD_T low_bits = LOW_BITS(b % SET_GRAIN);
 
     if (a_word == b_word) {
       s [a_word] |= (high_bits & low_bits);
     } else {
       s [a_word] |= high_bits;
       for (i = a_word + 1; i < b_word; ++i)
-        s[i] = ~(size_t)0;
+        s[i] = ~(WORD_T)0;
       s [b_word] |= low_bits;
     }
   }

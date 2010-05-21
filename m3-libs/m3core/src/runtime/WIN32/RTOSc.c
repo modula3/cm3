@@ -2,8 +2,18 @@
 #undef _DLL
 #endif
 
+#include <stddef.h>
 #include <stdlib.h>
 #include <windows.h>
+
+/* WORD_T/INTEGER are always exactly the same size as a pointer.
+ * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
+ */
+#if __INITIAL_POINTER_SIZE == 64
+typedef unsigned __int64 WORD_T;
+#else
+typedef size_t WORD_T;
+#endif
 
 #ifdef __cplusplus
 extern "C" {
@@ -11,21 +21,21 @@ extern "C" {
 
 #if 0
 
-void* __cdecl RTOS__GetMemory(size_t Size)
+void* __cdecl RTOS__GetMemory(WORD_T Size)
 {
     return calloc(Size, 1);
 }
 
 #elif 0
 
-void* __cdecl RTOS__GetMemory(size_t Size)
+void* __cdecl RTOS__GetMemory(WORD_T Size)
 {
     return HeapAlloc(GetProcessHeap(), HEAP_ZERO_MEMORY, Size);
 }
 
 #elif 1
 
-void* __cdecl RTOS__GetMemory(size_t Size)
+void* __cdecl RTOS__GetMemory(WORD_T Size)
 {
     return VirtualAlloc(NULL, Size, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 }
@@ -37,15 +47,15 @@ reveals the lossage that results from using VirtualAlloc with RTMachine.PageSize
 */
 typedef struct _RTOSMemoryLogEntry_t
 {
-    size_t Size;
+    WORD_T Size;
     void* Result;
 } RTOSMemoryLogEntry_t;
 
 RTOSMemoryLogEntry_t RTOSMemoryLog[128];
-size_t RTOSMemoryLogIndex;
+WORD_T RTOSMemoryLogIndex;
 #define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
 
-void* __cdecl RTOS__GetMemory(size_t Size)
+void* __cdecl RTOS__GetMemory(WORD_T Size)
 {
     RTOSMemoryLogEntry_t LogEntry;
     

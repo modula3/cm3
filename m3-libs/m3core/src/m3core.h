@@ -199,9 +199,10 @@ typedef unsigned long long UINT64;
 extern "C" {
 #endif
 
-/* INTEGER is always signed and exactly the same size as a pointer */
+/* WORD_T/INTEGER are always exactly the same size as a pointer.
+ * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
+ */
 #if __INITIAL_POINTER_SIZE == 64
-/* VMS with 64 bit pointers but 32bit size_t/ptrdiff_t. */
 typedef __int64 INTEGER;
 typedef unsigned __int64 WORD_T;
 #else

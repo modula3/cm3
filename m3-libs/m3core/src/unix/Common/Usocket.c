@@ -65,8 +65,8 @@ void __cdecl Usocket__Assertions(void)
 M3WRAP2(int, listen, int, int)
 M3WRAP2(int, shutdown, int, int)
 M3WRAP3(int, socket, int, int, int)
-M3WRAP4(INTEGER, send, int, const void*, size_t, int)
-M3WRAP4(INTEGER, recv, int, void*, size_t, int)
+M3WRAP4(INTEGER, send, int, const void*, WORD_T, int)
+M3WRAP4(INTEGER, recv, int, void*, WORD_T, int)
 
 /* wrap everything taking input socklen_t */
 
@@ -82,7 +82,7 @@ int __cdecl Usocket__connect(int s, struct sockaddr* name, m3_socklen_t len)
     return connect(s, name, len);
 }
 
-INTEGER __cdecl Usocket__sendto(int s, void* msg, size_t length, int flags, struct sockaddr* dest, m3_socklen_t len)
+INTEGER __cdecl Usocket__sendto(int s, void* msg, WORD_T length, int flags, struct sockaddr* dest, m3_socklen_t len)
 {
     ASSERT_LEN
     return sendto(s, msg, length, flags, dest, len);
@@ -185,7 +185,7 @@ the same order. This is checked in Usocket__Assertions.
     }
 }
 
-INTEGER __cdecl Usocket__recvfrom(int s, void* buf, size_t length, int flags, struct sockaddr* address, m3_socklen_t* plen)
+INTEGER __cdecl Usocket__recvfrom(int s, void* buf, WORD_T length, int flags, struct sockaddr* address, m3_socklen_t* plen)
 {
     ASSERT_PLEN_IN
     {

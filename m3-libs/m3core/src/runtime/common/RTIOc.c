@@ -64,7 +64,7 @@ void __cdecl PutBytes(const unsigned char* p, WORD_T count)
     char buffer[33]; /* size must be odd */
     const static char hex[] = "0123456789ABCDEF";
     WORD_T i = { 0 };
-    size_t j = { 0 };
+    WORD_T j = { 0 };
     
     Flush();
     for (i = 0; i < count; ++i)
