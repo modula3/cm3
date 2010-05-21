@@ -3,7 +3,6 @@
 #endif
 
 #include "m3core.h"
-#include <stdio.h>
 
 #ifdef __cplusplus
 extern "C" {

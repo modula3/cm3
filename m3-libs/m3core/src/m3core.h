@@ -2,8 +2,11 @@
 #pragma once
 #endif
 
+#ifndef INCLUDED_M3CORE_H
+#define INCLUDED_M3CORE_H
+
 /* http://gcc.gnu.org/wiki/Visibility */
-/* Generic helper definitions for shared library support */
+/* Helpers for shared library support */
 #if __GNUC__ >= 4
   #define M3_DLL_IMPORT __attribute__ ((visibility("default")))
   #ifdef __APPLE__
@@ -17,9 +20,6 @@
   #define M3_DLL_EXPORT
   #define M3_DLL_LOCAL
 #endif
-
-#ifndef INCLUDED_M3CORE_H
-#define INCLUDED_M3CORE_H
 
 #define _FILE_OFFSET_BITS 64
 
@@ -140,12 +140,16 @@
 #include <sys/stat.h>
 #include <assert.h>
 #include <stddef.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <time.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>
 #include <signal.h>
 #include <math.h>
+#include <limits.h>
+#include <setjmp.h>
 
 #ifdef _WIN32
 #ifndef WIN32

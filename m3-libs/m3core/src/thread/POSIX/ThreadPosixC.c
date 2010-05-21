@@ -29,18 +29,9 @@
 #endif
 
 #include "m3core.h"
-#include <string.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <signal.h>
-#include <assert.h>
-#include <setjmp.h>
-#include <stddef.h>
-#include <errno.h>
 #ifndef __OpenBSD__
 #include <ucontext.h>
 #endif
-#include <sys/mman.h>
 
 #ifdef __cplusplus
 extern "C" {

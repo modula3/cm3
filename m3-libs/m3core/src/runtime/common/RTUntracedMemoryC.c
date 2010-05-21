@@ -10,7 +10,6 @@ reducing C runtime dependency.
 #endif
 
 #include "m3core.h"
-#include <stddef.h>
 
 #ifdef _MSC_VER
 #pragma warning(disable:4115) /* named type definition in paren (windows.h) */
@@ -20,16 +19,10 @@ reducing C runtime dependency.
 #pragma warning(disable:4514) /* unreferenced inline function */
 #endif
 
-#if !defined(_MSC_VER) && !defined(__cdecl)
-#define __cdecl /* nothing */
-#endif
-
 #ifdef _WIN32
-#include <windows.h>
 #define WIN(x) x
 #define POSIX(x) /* nothing */
 #else
-#include <stdlib.h>
 #define WIN(x) /* nothing */
 #define POSIX(x) x
 #endif

@@ -22,8 +22,7 @@
  * until convinced
  */
 
-#include <stdio.h>
-#include <signal.h>
+#include "m3core.h"
 
 typedef unsigned long DWORD;
 typedef unsigned char BYTE;

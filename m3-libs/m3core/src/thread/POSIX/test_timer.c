@@ -4,14 +4,7 @@ By they don't define "reset".
 Let's see.
 */
 
-#include <unistd.h>
-#include <time.h>
-#include <signal.h>
-#include <stdio.h>
-#include <sys/time.h>
-#include <string.h>
-#include <stdlib.h>
-#include <assert.h>
+#include "m3core.h"
 
 void alarm_handler(int sig)
 {
