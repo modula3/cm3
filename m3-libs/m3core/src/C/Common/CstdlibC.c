@@ -20,8 +20,8 @@ typedef void (__cdecl*AtExitFunction)(void);
 M3WRAP1(int, atexit, AtExitFunction)
 M3WRAP1(char*, getenv, const char*)
 M3WRAP1(int, system, const char*)
-M3WRAP1(void*, malloc, size_t)
-M3WRAP2(void*, calloc, size_t, size_t)
+M3WRAP1(void*, malloc, WORD_T)
+M3WRAP2(void*, calloc, WORD_T, WORD_T)
 M3WRAP2(double, strtod, const char*, char**)
 M3WRAP1(double, atof, const char*)
 

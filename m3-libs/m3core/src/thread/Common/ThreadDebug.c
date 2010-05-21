@@ -20,11 +20,20 @@ The code is also portable and could be used for ThreadPThread.m3 if desired.
 #endif
 #endif
 
+#include <stddef.h>
 #ifdef _WIN32
 #include <windows.h>
 #else
-#include <stddef.h>
 #include <pthread.h>
+#endif
+
+/* WORD_T/INTEGER are always exactly the same size as a pointer.
+ * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
+ */
+#if __INITIAL_POINTER_SIZE == 64
+typedef unsigned __int64 WORD_T;
+#else
+typedef size_t WORD_T;
 #endif
 
 #ifdef __cplusplus
@@ -36,7 +45,7 @@ extern "C" {
 /* enabled */
 
 #ifndef _WIN32
-static unsigned long GetCurrentThreadId(void) { return (unsigned long)(size_t)pthread_self(); }
+static unsigned long GetCurrentThreadId(void) { return (unsigned long)(WORD_T)pthread_self(); }
 static long InterlockedIncrement(volatile long* a) { return ++*a; }
 #endif
 

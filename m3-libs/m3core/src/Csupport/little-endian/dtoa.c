@@ -16,12 +16,21 @@
 
 #include <stddef.h>
 
+/* WORD_T/INTEGER are always exactly the same size as a pointer.
+ * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
+ */
+#if __INITIAL_POINTER_SIZE == 64
+typedef unsigned __int64 WORD_T;
+#else
+typedef size_t WORD_T;
+#endif
+
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-void CConvert__Acquire(size_t);
-void CConvert__Release(size_t);
+void CConvert__Acquire(WORD_T);
+void CConvert__Release(WORD_T);
 
 #ifdef __cplusplus
 } /* extern C */

@@ -7,8 +7,8 @@
 
 #ifndef _WIN32
 
-M3WRAP3(int, mprotect, ADDRESS, size_t, int)
-M3WRAP6(ADDRESS, mmap, ADDRESS, size_t, int, int, int, m3_off_t)
-M3WRAP2(int, munmap, ADDRESS, size_t)
+M3WRAP3(int, mprotect, ADDRESS, WORD_T, int)
+M3WRAP6(ADDRESS, mmap, ADDRESS, WORD_T, int, int, int, m3_off_t)
+M3WRAP2(int, munmap, ADDRESS, WORD_T)
 
 #endif

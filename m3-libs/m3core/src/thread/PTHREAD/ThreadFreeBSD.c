@@ -53,7 +53,7 @@ ThreadPThread__ProcessStopped (m3_pthread_t mt, void *bottom, void *context,
 {
   pthread_attr_t attr;
   char *stackaddr;
-  size_t stacksize;
+  WORD_T stacksize;
 
   /* process the stacks */
   if (pthread_attr_init(&attr) != 0) abort();
