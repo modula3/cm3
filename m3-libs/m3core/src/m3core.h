@@ -4,24 +4,18 @@
 
 /* http://gcc.gnu.org/wiki/Visibility */
 /* Generic helper definitions for shared library support */
-#if defined _WIN32 || defined __CYGWIN__
-  #define M3_DLL_IMPORT __declspec(dllimport)
-  #define M3_DLL_EXPORT __declspec(dllexport)
-  #define M3_DLL_LOCAL
-#else
-  #if __GNUC__ >= 4
-    #define M3_DLL_IMPORT __attribute__ ((visibility("default")))
-    #ifdef __APPLE__
-      #define M3_DLL_EXPORT __attribute__ ((visibility("default")))
-    #else
-      #define M3_DLL_EXPORT __attribute__ ((visibility("protected")))
-    #endif
-    #define M3_DLL_LOCAL  __attribute__ ((visibility("hidden")))
+#if __GNUC__ >= 4
+  #define M3_DLL_IMPORT __attribute__ ((visibility("default")))
+  #ifdef __APPLE__
+    #define M3_DLL_EXPORT __attribute__ ((visibility("default")))
   #else
-    #define M3_DLL_IMPORT
-    #define M3_DLL_EXPORT
-    #define M3_DLL_LOCAL
+    #define M3_DLL_EXPORT __attribute__ ((visibility("protected")))
   #endif
+  #define M3_DLL_LOCAL  __attribute__ ((visibility("hidden")))
+#else
+  #define M3_DLL_IMPORT
+  #define M3_DLL_EXPORT
+  #define M3_DLL_LOCAL
 #endif
 
 #ifndef INCLUDED_M3CORE_H
