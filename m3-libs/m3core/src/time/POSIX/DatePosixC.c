@@ -134,7 +134,7 @@ Exit:
 
 void
 __cdecl
-DatePosix__TypeCheck(const Date_t* d, size_t sizeof_DateT)
+DatePosix__TypeCheck(const Date_t* d, WORD_T sizeof_DateT)
 {
     assert(sizeof(Date_t) == sizeof_DateT);
     assert(d->year == 1);

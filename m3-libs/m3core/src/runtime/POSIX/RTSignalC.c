@@ -22,7 +22,17 @@
 #include <unistd.h>
 #include <signal.h>
 #include <assert.h>
-typedef struct sigaction sigaction_t;
+#include <stddef.h>
+
+/* WORD_T/INTEGER are always exactly the same size as a pointer.
+ * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
+ */
+#if __INITIAL_POINTER_SIZE == 64
+typedef unsigned __int64 WORD_T;
+#else
+typedef size_t WORD_T;
+#endif
+
 #if defined(__APPLE__)
 
 /*
@@ -61,8 +71,8 @@ void RestoreHandlers(void);
 /* FROM RTSignalPrivate IMPORT MsgSegV, MsgAbort */
 #define MsgPCSegV RTSignalPrivate__MsgPCSegV
 #define MsgPCAbort RTSignalPrivate__MsgPCAbort
-void MsgPCSegV (size_t);
-void MsgPCAbort (size_t);
+void MsgPCSegV (WORD_T);
+void MsgPCAbort (WORD_T);
 
 /* FROM RTProcess IMPORT OnInterrupt, InterruptHandler, InvokeExitors */
 #define OnInterrupt RTProcess__OnInterrupt
@@ -95,8 +105,8 @@ static void Shutdown SIGNAL_HANDLER_SIGNATURE;
 static void Interrupt SIGNAL_HANDLER_SIGNATURE;
 static void Quit SIGNAL_HANDLER_SIGNATURE;
 
-static void InstallOneHandler(size_t i);
-static void RestoreOneHandler(size_t i);
+static void InstallOneHandler(WORD_T i);
+static void RestoreOneHandler(WORD_T i);
 
 #if defined(__CYGWIN__) || defined(__INTERIX) || defined(__vms) \
 || (defined(__APPLE__) && defined(__arm))
@@ -107,7 +117,7 @@ static void RestoreOneHandler(size_t i);
 
 #else
 
-static size_t GetPC(void* xcontext)
+static WORD_T GetPC(void* xcontext)
 /* PC: program counter aka instruction pointer, etc. */
 {
     ucontext_t* context = (ucontext_t*)xcontext;
@@ -227,7 +237,7 @@ Handlers[] =
 
 static struct sigaction InitialHandlers[NUMBER_OF(Handlers)];
 
-static void InstallOneHandler(size_t i)
+static void InstallOneHandler(WORD_T i)
 {
     struct sigaction New;
     int r;
@@ -259,7 +269,7 @@ static void InstallOneHandler(size_t i)
 
 void InstallHandlers(void)
 {
-    size_t i = { 0 };
+    WORD_T i = { 0 };
 
     for (; i < NUMBER_OF(Handlers); ++i)
     {
@@ -267,7 +277,7 @@ void InstallHandlers(void)
     }
 }
 
-static void RestoreOneHandler(size_t i)
+static void RestoreOneHandler(WORD_T i)
 {
     int Signal = Handlers[i].Signal;
 
@@ -276,7 +286,7 @@ static void RestoreOneHandler(size_t i)
 
 void RestoreHandlers(void)
 {
-    size_t i = { 0 };
+    WORD_T i = { 0 };
 
     for (; i < NUMBER_OF(Handlers); ++i)
     {

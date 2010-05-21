@@ -100,7 +100,7 @@ disallow_sigvtalrm(void)
 
 typedef struct {
   void *stackaddr;
-  size_t stacksize;
+  WORD_T stacksize;
   void *sp;
 #ifdef M3_USE_SIGALTSTACK
   sigjmp_buf jb;
@@ -153,7 +153,7 @@ xMakeContext(
     Context *context, 
     void (*function)(void),
     void *stack,
-    size_t stack_size) 
+    WORD_T stack_size) 
 {
     struct sigaction sa;
     struct sigaction osa;
@@ -211,7 +211,7 @@ __cdecl
 MakeContext (void (*p)(void), int words)
 {
   Context *c = (Context *)calloc (1, sizeof(*c));
-  size_t size = words * sizeof(void *);
+  WORD_T size = words * sizeof(void *);
   int pagesize = getpagesize();
   char *sp = NULL;
   int pages;
@@ -281,7 +281,7 @@ __cdecl
 ProcessContext(Context *c, char *bottom, char *top,
                void (*p) (void *start, void *limit))
 {
-  size_t xx;
+  WORD_T xx;
   if (top == NULL) {
     /* live thread */
     /* do we need to flush register windows too? */

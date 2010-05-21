@@ -58,7 +58,7 @@ M3_DLL_LOCAL void __cdecl Unix__Assertions(void)
     M3_STATIC_ASSERT((sizeof(void*) == 4) || (sizeof(void*) == 8));
     M3_STATIC_ASSERT((sizeof(size_t) == 4) || (sizeof(size_t) == 8));
     M3_STATIC_ASSERT(sizeof(ptrdiff_t) == sizeof(size_t));
-    M3_STATIC_ASSERT(sizeof(void*) == sizeof(size_t));
+    M3_STATIC_ASSERT(sizeof(void*) == sizeof(WORD_T));
 #if !defined(_WIN64) && !defined(__vms)
     M3_STATIC_ASSERT(sizeof(void*) == sizeof(long));
     M3_STATIC_ASSERT(sizeof(size_t) == sizeof(long));
