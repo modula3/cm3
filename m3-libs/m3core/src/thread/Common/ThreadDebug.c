@@ -14,26 +14,11 @@ The code is also portable and could be used for ThreadPThread.m3 if desired.
 #pragma warning(disable:4514) /* unreferenced inline function */
 #pragma warning(disable:4127) /* expression is constant */
 #pragma warning(disable:4100) /* unused parameter */
-#else
-#ifndef __cdecl
-#define __cdecl /* nothing */
-#endif
 #endif
 
-#include <stddef.h>
+#include "m3core.h"
 #ifdef _WIN32
 #include <windows.h>
-#else
-#include <pthread.h>
-#endif
-
-/* WORD_T/INTEGER are always exactly the same size as a pointer.
- * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
- */
-#if __INITIAL_POINTER_SIZE == 64
-typedef unsigned __int64 WORD_T;
-#else
-typedef size_t WORD_T;
 #endif
 
 #ifdef __cplusplus

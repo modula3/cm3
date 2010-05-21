@@ -3,7 +3,6 @@
 /* See the file COPYRIGHT for a full description.             */
 
 #include "m3core.h"
-#include <signal.h>
 #ifndef _WIN32
 #include <netinet/tcp.h>
 #include <netinet/in.h>

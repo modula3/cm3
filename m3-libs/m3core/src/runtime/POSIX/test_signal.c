@@ -1,6 +1,5 @@
+#include "m3core.h"
 #include "RTSignalC.c"
-#include <stdio.h>
-#include <stdlib.h>
 
 void RTSignalPrivate__MsgPCSegV (size_t a)
 {

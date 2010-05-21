@@ -79,8 +79,6 @@ TimePosix__ComputeGrain(void)
 
 #if 0
 
-#include <stdio.h>
-
 int main()
 {
     LONGREAL grain = ComputeGrain();

@@ -3,13 +3,7 @@
 /* See the file COPYRIGHT-PURDUE for a full description.           */
 
 #include "m3core.h"
-#include <stdlib.h>
-#include <pthread.h>
-#include <setjmp.h>
-#include <stdio.h>
-#include <signal.h>
 #include <sys/ucontext.h>
-#include <assert.h>
 
 #if defined(__INTERIX) || defined(__APPLE__) || defined(__FreeBSD__)
 /* See ThreadApple.c and ThreadFreeBSD.c. */

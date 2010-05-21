@@ -35,9 +35,6 @@ So use these wrappers instead.
 #endif
 
 #include "m3core.h"
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
 #ifdef _WIN32
 #include <windows.h>
 #endif

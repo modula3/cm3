@@ -7,16 +7,9 @@
 
 /*----------- types from RT0, for now ... -----------------*/
 
-/* WORD_T/INTEGER are always exactly the same size as a pointer.
- * VMS sometimes has 32bit size_t/ptrdiff_t but 64bit pointers.
- */
-#if __INITIAL_POINTER_SIZE == 64 || defined(_WIN64)
-typedef __int64 _INTEGER;
-#else
-typedef long _INTEGER;
-#endif
+#include "m3core.h"
+typedef INTEGER _INTEGER;
 
-#define _INTEGER long
 #define _ADDRESS char*
 typedef void (*_PROC)();
 
