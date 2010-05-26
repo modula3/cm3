@@ -1,6 +1,6 @@
 /* mpfr_sin_cos -- sine and cosine of a floating-point number
 
-Copyright 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -33,7 +33,11 @@ mpfr_sin_cos (mpfr_ptr y, mpfr_ptr z, mpfr_srcptr x, mp_rnd_t rnd_mode)
   mpfr_t c, xr;
   mpfr_srcptr xx;
   mp_exp_t err, expx;
+  int inexy, inexz;
   MPFR_ZIV_DECL (loop);
+  MPFR_SAVE_EXPO_DECL (expo);
+
+  MPFR_ASSERTN (y != z);
 
   if (MPFR_UNLIKELY (MPFR_IS_SINGULAR (x)))
     {
@@ -57,9 +61,62 @@ mpfr_sin_cos (mpfr_ptr y, mpfr_ptr z, mpfr_srcptr x, mp_rnd_t rnd_mode)
   MPFR_LOG_FUNC (("x[%#R]=%R rnd=%d", x, x, rnd_mode),
                   ("sin[%#R]=%R cos[%#R]=%R", y, y, z, z));
 
+  MPFR_SAVE_EXPO_MARK (expo);
+
   prec = MAX (MPFR_PREC (y), MPFR_PREC (z));
   m = prec + MPFR_INT_CEIL_LOG2 (prec) + 13;
   expx = MPFR_GET_EXP (x);
+
+  /* When x is close to 0, say 2^(-k), then there is a cancellation of about
+     2k bits in 1-cos(x)^2. FIXME: in that case, it would be more efficient
+     to compute sin(x) directly. VL: This is partly done by using
+     MPFR_FAST_COMPUTE_IF_SMALL_INPUT from the mpfr_sin and mpfr_cos
+     functions. Moreover, any overflow on m is avoided. */
+  if (expx < 0)
+    {
+      /* Warning: in case y = x, and the first call to
+         MPFR_FAST_COMPUTE_IF_SMALL_INPUT succeeds but the second fails,
+         we will have clobbered the original value of x.
+         The workaround is to first compute z = cos(x) in that case, since
+         y and z are different. */
+      if (y != x)
+        /* y and x differ, thus we can safely try to compute y first */
+        {
+          MPFR_FAST_COMPUTE_IF_SMALL_INPUT (y, x, -2 * expx, 2, 0, rnd_mode,
+                                            { inexy = _inexact;
+                                              goto small_input; });
+          if (0)
+            {
+            small_input:
+              /* we can go here only if we can round sin(x) */
+              MPFR_FAST_COMPUTE_IF_SMALL_INPUT (z, __gmpfr_one, -2 * expx,
+                                                1, 0, rnd_mode,
+                                                { inexz = _inexact;
+                                                  goto end; });
+            }
+
+          /* if we go here, one of the two MPFR_FAST_COMPUTE_IF_SMALL_INPUT
+             calls failed */
+        }
+      else /* y and x are the same variable: try to compute z first, which
+              necessarily differs */
+        {
+          MPFR_FAST_COMPUTE_IF_SMALL_INPUT (z, __gmpfr_one, -2 * expx,
+                                            1, 0, rnd_mode,
+                                            { inexz = _inexact;
+                                              goto small_input2; });
+          if (0)
+            {
+            small_input2:
+              /* we can go here only if we can round cos(x) */
+              MPFR_FAST_COMPUTE_IF_SMALL_INPUT (y, x, -2 * expx, 2, 0,
+                                                rnd_mode,
+                                                { inexy = _inexact;
+                                                  goto end; });
+            }
+        }
+      m += 2 * (-expx);
+    }
 
   mpfr_init (c);
   mpfr_init (xr);
@@ -107,8 +164,11 @@ mpfr_sin_cos (mpfr_ptr y, mpfr_ptr z, mpfr_srcptr x, mp_rnd_t rnd_mode)
                            MPFR_PREC (z) + (rnd_mode == GMP_RNDN)))
         goto next_step;
 
-      mpfr_set (z, c, rnd_mode);
-      mpfr_sqr (c, c, GMP_RNDU);
+      /* we can't set z now, because in case z = x, and the mpfr_can_round()
+         call below fails, we will have clobbered the input */
+      mpfr_set_prec (xr, MPFR_PREC(c));
+      mpfr_swap (xr, c); /* save the approximation of the cosine in xr */
+      mpfr_sqr (c, xr, GMP_RNDU);
       mpfr_ui_sub (c, 1, c, GMP_RNDN);
       err = 2 + (- MPFR_GET_EXP (c)) / 2;
       mpfr_sqrt (c, c, GMP_RNDN);
@@ -137,10 +197,16 @@ mpfr_sin_cos (mpfr_ptr y, mpfr_ptr z, mpfr_srcptr x, mp_rnd_t rnd_mode)
     }
   MPFR_ZIV_FREE (loop);
 
-  mpfr_set (y, c, rnd_mode);
+  inexy = mpfr_set (y, c, rnd_mode);
+  inexz = mpfr_set (z, xr, rnd_mode);
 
   mpfr_clear (c);
   mpfr_clear (xr);
 
+ end:
+  /* FIXME: update the underflow flag if need be. */
+  MPFR_SAVE_EXPO_FREE (expo);
+  mpfr_check_range (y, inexy, rnd_mode);
+  mpfr_check_range (z, inexz, rnd_mode);
   MPFR_RET (1); /* Always inexact */
 }

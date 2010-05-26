@@ -1,6 +1,6 @@
 /* Interface to replace gmp-impl.h
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -172,12 +172,6 @@ __MPFR_DECLSPEC void mpfr_assert_fail _MPFR_PROTO((const char *, int,
 #undef  XDEBUG
 #define XDEBUG
 
-/* Temp memory allocate */
-#define TMP_DECL(m)
-#define TMP_ALLOC(x) alloca(x)
-#define TMP_MARK(m)
-#define TMP_FREE(m)
-
 /* For longlong.h */
 #ifdef HAVE_ATTRIBUTE_MODE
 typedef unsigned int UQItype    __attribute__ ((mode (QI)));
@@ -264,12 +258,6 @@ typedef __gmp_randstate_struct *gmp_randstate_ptr;
 __MPFR_DECLSPEC void mpfr_rand_raw _MPFR_PROTO((mp_ptr, gmp_randstate_t,
                                                 unsigned long));
 
-/* To be called BEFORE tests_start_mpfr () if the tests used
-   mpfr_random, mpfr_random2 or any functions which uses the macro RANDS */
-__MPFR_DECLSPEC void mpfr_init_gmp_rand _MPFR_PROTO((void));
-#define MPFR_TEST_USE_RANDS() mpfr_init_gmp_rand ();
-
-
 /* Allocate func are defined in gmp-impl.h */
 
 /* In newer GMP, there aren't anymore __gmp_allocate_func,
@@ -302,6 +290,26 @@ __MPFR_DECLSPEC void *__gmp_default_allocate _MPFR_PROTO ((size_t));
 __MPFR_DECLSPEC void *__gmp_default_reallocate _MPFR_PROTO ((void *, size_t,
                                                              size_t));
 __MPFR_DECLSPEC void __gmp_default_free _MPFR_PROTO ((void *, size_t));
+
+/* Temp memory allocate */
+
+struct tmp_marker
+{
+  void *ptr;
+  size_t size;
+  struct tmp_marker *next;
+};
+
+__MPFR_DECLSPEC void *mpfr_tmp_allocate _MPFR_PROTO ((struct tmp_marker **,
+                                                      size_t));
+__MPFR_DECLSPEC void mpfr_tmp_free _MPFR_PROTO ((struct tmp_marker *));
+
+/* Do not define TMP_SALLOC (see the test in mpfr-impl.h)! */
+#define TMP_ALLOC(n) (MPFR_LIKELY ((n) < 16384) ?       \
+                      alloca (n) : mpfr_tmp_allocate (&tmp_marker, (n)))
+#define TMP_DECL(m) struct tmp_marker *tmp_marker
+#define TMP_MARK(m) (tmp_marker = 0)
+#define TMP_FREE(m) mpfr_tmp_free (tmp_marker)
 
 #if defined (__cplusplus)
 }

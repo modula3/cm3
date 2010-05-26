@@ -1,6 +1,6 @@
 /* Test file for mpfr_log.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -53,7 +53,7 @@ check2 (const char *as, mp_rnd_t rnd_mode, const char *res1s)
 {
   mpfr_t ta, tres;
 
-  mpfr_inits2 (53, ta, tres, (void *) 0);
+  mpfr_inits2 (53, ta, tres, (mpfr_ptr) 0);
   mpfr_set_str1 (ta, as);
   test_log (tres, ta, rnd_mode);
 
@@ -66,7 +66,7 @@ check2 (const char *as, mp_rnd_t rnd_mode, const char *res1s)
       mpfr_out_str(stdout, 10, 0, tres, GMP_RNDN);
       exit (1);
     }
-  mpfr_clears (ta, tres, (void *) 0);
+  mpfr_clears (ta, tres, (mpfr_ptr) 0);
 }
 
 static void
@@ -265,7 +265,7 @@ x_near_one (void)
       mpfr_dump (y);
     }
 
-  mpfr_clears (x, y, (void *) 0);
+  mpfr_clears (x, y, (mpfr_ptr) 0);
 }
 
 #define TEST_FUNCTION test_log

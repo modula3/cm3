@@ -1,6 +1,6 @@
 /* Test file for mpfr_add and mpfr_sub.
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -99,7 +99,7 @@ pcheck (const char *xs, const char *ys, const char *zs, mp_rnd_t rnd_mode,
               xs, ys, mpfr_print_rnd_mode (rnd_mode));
       exit (1);
     }
-  mpfr_clears (xx, yy, zz, (void *) 0);
+  mpfr_clears (xx, yy, zz, (mpfr_ptr) 0);
 }
 
 static void
@@ -1076,9 +1076,7 @@ tests (void)
 int
 main (int argc, char *argv[])
 {
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
-  /* mpfr_test_init (); */
 
   usesp = 0;
   tests ();

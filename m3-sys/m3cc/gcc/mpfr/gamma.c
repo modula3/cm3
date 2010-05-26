@@ -1,6 +1,6 @@
 /* mpfr_gamma -- gamma function
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -212,15 +212,17 @@ mpfr_gamma (mpfr_ptr gamma, mpfr_srcptr x, mp_rnd_t rnd_mode)
   */
   if (is_integer && mpfr_fits_ulong_p (x, GMP_RNDN))
     {
-      unsigned long int u, b;
+      unsigned long int u;
       mp_prec_t p = MPFR_PREC(gamma);
       u = mpfr_get_ui (x, GMP_RNDN);
-      b = bits_fac (u - 1); /* lower bound on the number of bits of m,
-                               where gamma(x) = (u-1)! = m*2^e with m odd. */
-      if (b <= p + (rnd_mode == GMP_RNDN))
+      if (u < 44787929UL && bits_fac (u - 1) <= p + (rnd_mode == GMP_RNDN))
+        /* bits_fac: lower bound on the number of bits of m,
+           where gamma(x) = (u-1)! = m*2^e with m odd. */
         return mpfr_fac_ui (gamma, u - 1, rnd_mode);
-      /* if b > p (resp. p+1 for rounding to nearest), then gamma(x) cannot be
-         exact in precision p (resp. p+1) */
+      /* if bits_fac(...) > p (resp. p+1 for rounding to nearest),
+         then gamma(x) cannot be exact in precision p (resp. p+1).
+         FIXME: remove the test u < 44787929UL after changing bits_fac
+         to return a mpz_t or mpfr_t. */
     }
 
   /* check for overflow: according to (6.1.37) in Abramowitz & Stegun,
@@ -228,12 +230,11 @@ mpfr_gamma (mpfr_ptr gamma, mpfr_srcptr x, mp_rnd_t rnd_mode)
               >= 2 * (x/e)^x / x for x >= 1 */
   if (compared > 0)
     {
-      int overflow;
       mpfr_t yp;
+      MPFR_BLOCK_DECL (flags);
 
       /* 1/e rounded down to 53 bits */
 #define EXPM1_STR "0.010111100010110101011000110110001011001110111100111"
-      mpfr_clear_overflow ();
       mpfr_init2 (xp, 53);
       mpfr_init2 (yp, 53);
       mpfr_set_str_binary (xp, EXPM1_STR);
@@ -243,12 +244,11 @@ mpfr_gamma (mpfr_ptr gamma, mpfr_srcptr x, mp_rnd_t rnd_mode)
       mpfr_set_str_binary (yp, EXPM1_STR);
       mpfr_mul (xp, xp, yp, GMP_RNDZ); /* x^(x-2) / e^(x-1) */
       mpfr_mul (xp, xp, yp, GMP_RNDZ); /* x^(x-2) / e^x */
-      mpfr_mul (xp, xp, x, GMP_RNDZ); /* x^(x-1) / e^x */
-      mpfr_mul_2ui (xp, xp, 1, GMP_RNDZ);
-      overflow = mpfr_overflow_p ();
+      mpfr_mul (xp, xp, x, GMP_RNDZ); /* lower bound on x^(x-1) / e^x */
+      MPFR_BLOCK (flags, mpfr_mul_2ui (xp, xp, 1, GMP_RNDZ));
       mpfr_clear (xp);
       mpfr_clear (yp);
-      return (overflow) ? mpfr_overflow (gamma, rnd_mode, 1)
+      return MPFR_OVERFLOW (flags) ? mpfr_overflow (gamma, rnd_mode, 1)
         : mpfr_gamma_aux (gamma, x, rnd_mode);
     }
 
@@ -293,12 +293,12 @@ mpfr_gamma (mpfr_ptr gamma, mpfr_srcptr x, mp_rnd_t rnd_mode)
       mpfr_const_pi (tmp2, GMP_RNDN);
       mpfr_mul (tmp2, tmp2, tmp, GMP_RNDN); /* Pi*(2-x) */
       mpfr_sin (tmp, tmp2, GMP_RNDN); /* sin(Pi*(2-x)) */
+      sgn = mpfr_sgn (tmp);
       mpfr_abs (tmp, tmp, GMP_RNDN);
       mpfr_mul_ui (tmp2, tmp2, 3, GMP_RNDU); /* 3Pi(2-x) */
       mpfr_add_ui (tmp2, tmp2, 1, GMP_RNDU); /* 3Pi(2-x)+1 */
       mpfr_div_2ui (tmp2, tmp2, mpfr_get_prec (tmp), GMP_RNDU);
       /* if tmp2<|tmp|, we get a lower bound */
-      sgn = mpfr_sgn (tmp);
       if (mpfr_cmp (tmp2, tmp) < 0)
         {
           mpfr_sub (tmp, tmp, tmp2, GMP_RNDZ); /* low bnd on |sin(Pi*(2-x))| */

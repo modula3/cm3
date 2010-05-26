@@ -1,6 +1,6 @@
 /* mpfr_fits_sshort_p -- test whether an mpfr fits a short.
 
-Copyright 2003, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2003, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.

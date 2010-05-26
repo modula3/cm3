@@ -1,6 +1,6 @@
 /* mpfr_jn_asympt, mpfr_yn_asympt -- shared code for mpfr_jn and mpfr_yn
 
-Copyright 2007 Free Software Foundation, Inc.
+Copyright 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -32,7 +32,8 @@ MA 02110-1301, USA. */
 
 /* Implements asymptotic expansion for jn or yn (formulae 9.2.5 and 9.2.6
    from Abramowitz & Stegun).
-   Assumes z > p log(2)/2, where p is the target precision.
+   Assumes |z| > p log(2)/2, where p is the target precision
+   (z can be negative only for jn).
    Return 0 if the expansion does not converge enough (the value 0 as inexact
    flag should not happen for normal input).
 */
@@ -260,7 +261,8 @@ FUNCTION (mpfr_ptr res, long n, mpfr_srcptr z, mp_rnd_t r)
     }
   MPFR_ZIV_FREE (loop);
 
-  inex = MPFR_IS_POS(z) ? mpfr_set (res, c, r) : mpfr_neg (res, c, r);
+  inex = (MPFR_IS_POS(z) || ((n & 1) == 0)) ? mpfr_set (res, c, r)
+    : mpfr_neg (res, c, r);
   mpfr_clear (c);
 
   return inex;

@@ -1,6 +1,6 @@
 /* mpfr_tgamma -- test file for gamma function
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library, and was contributed by Mathieu Dutour.
@@ -392,10 +392,16 @@ special_overflow (void)
       exit (1);
     }
 
-  mpfr_clear (y);
-  mpfr_clear (x);
   set_emin (emin);
   set_emax (emax);
+
+  /* bug found by Kevin Rauch, 26 Oct 2007 */
+  mpfr_set_str (x, "1e19", 10, GMP_RNDN);
+  inex = mpfr_gamma (x, x, GMP_RNDN);
+  MPFR_ASSERTN(mpfr_inf_p (x) && inex > 0);
+
+  mpfr_clear (y);
+  mpfr_clear (x);
 }
 
 /* test gamma on some integral values (from Christopher Creutzig). */
@@ -429,16 +435,42 @@ gamma_integer (void)
   mpz_clear (n);
 }
 
+/* bug found by Kevin Rauch */
+static void
+test20071231 (void)
+{
+  mpfr_t x;
+  int inex;
+  mp_exp_t emin;
+
+  emin = mpfr_get_emin ();
+  mpfr_set_emin (-1000000);
+
+  mpfr_init2 (x, 21);
+  mpfr_set_str (x, "-1000001.5", 10, GMP_RNDN);
+  inex = mpfr_gamma (x, x, GMP_RNDN);
+  MPFR_ASSERTN(MPFR_IS_ZERO(x) && MPFR_IS_POS(x) && inex < 0);
+  mpfr_clear (x);
+
+  mpfr_set_emin (emin);
+
+  mpfr_init2 (x, 53);
+  mpfr_set_str (x, "-1000000001.5", 10, GMP_RNDN);
+  inex = mpfr_gamma (x, x, GMP_RNDN);
+  MPFR_ASSERTN(MPFR_IS_ZERO(x) && MPFR_IS_POS(x) && inex < 0);
+  mpfr_clear (x);
+}
+
 int
 main (int argc, char *argv[])
 {
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   special ();
   special_overflow ();
   test_generic (2, 100, 2);
   gamma_integer ();
+  test20071231 ();
 
   data_check ("data/gamma", mpfr_gamma, "mpfr_gamma");
 

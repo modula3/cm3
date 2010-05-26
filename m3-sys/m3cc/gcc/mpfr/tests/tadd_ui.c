@@ -1,6 +1,6 @@
 /* Test file for mpfr_add_ui
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -32,7 +32,7 @@ check3 (const char *xs, unsigned long y, mp_rnd_t rnd_mode, const char *zs)
 {
   mpfr_t xx, zz;
 
-  mpfr_inits2 (53, xx, zz, (void *) 0);
+  mpfr_inits2 (53, xx, zz, (mpfr_ptr) 0);
   mpfr_set_str1 (xx, xs);
   mpfr_add_ui (zz, xx, y, rnd_mode);
   if (mpfr_cmp_str1(zz, zs) )
@@ -43,7 +43,7 @@ check3 (const char *xs, unsigned long y, mp_rnd_t rnd_mode, const char *zs)
               xs, y, mpfr_print_rnd_mode(rnd_mode));
       exit (1);
   }
-  mpfr_clears (xx, zz, (void *) 0);
+  mpfr_clears (xx, zz, (mpfr_ptr) 0);
 }
 
 static void
@@ -96,7 +96,6 @@ check_nans (void)
 int
 main (int argc, char *argv[])
 {
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   check_nans ();

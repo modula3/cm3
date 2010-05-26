@@ -1,6 +1,6 @@
 /* mpfr_erfc -- The Complementary Error Function of a floating-point number
 
-Copyright 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -156,11 +156,20 @@ mpfr_erfc (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd)
 
   if (MPFR_SIGN (x) < 0)
     {
-      /* for x < 0 going to -infinity, erfc(x) tends to 2 by below */
-      if ((MPFR_PREC(y) <= 7 && mpfr_cmp_si (x, -2) <= 0) ||
-          (MPFR_PREC(y) <= 25 && mpfr_cmp_si (x, -4) <= 0) ||
-          (MPFR_PREC(y) <= 120 && mpfr_cmp_si (x, -9) <= 0))
+      mp_exp_t e = MPFR_EXP(x);
+      /* For x < 0 going to -infinity, erfc(x) tends to 2 by below.
+         More precisely, we have 2 + 1/sqrt(Pi)/x/exp(x^2) < erfc(x) < 2.
+         Thus log2 |2 - erfc(x)| <= -log2|x| - x^2 / log(2).
+         If |2 - erfc(x)| < 2^(-PREC(y)) then the result is either 2 or
+         nextbelow(2).
+         For x <= -27282, -log2|x| - x^2 / log(2) <= -2^30.
+      */
+      if ((MPFR_PREC(y) <= 7 && e >= 2) ||  /* x <= -2 */
+          (MPFR_PREC(y) <= 25 && e >= 3) || /* x <= -4 */
+          (MPFR_PREC(y) <= 120 && mpfr_cmp_si (x, -9) <= 0) ||
+          mpfr_cmp_si (x, -27282) <= 0)
         {
+        near_two:
           mpfr_set_ui (y, 2, GMP_RNDN);
           mpfr_set_inexflag ();
           if (rnd == GMP_RNDZ || rnd == GMP_RNDD)
@@ -170,6 +179,25 @@ mpfr_erfc (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd)
             }
           else
             return 1;
+        }
+      else if (e >= 3) /* more accurate test */
+        {
+          mpfr_t t, u;
+          int near_2;
+          mpfr_init2 (t, 32);
+          mpfr_init2 (u, 32);
+          /* the following is 1/log(2) rounded to zero on 32 bits */
+          mpfr_set_str_binary (t, "1.0111000101010100011101100101001");
+          mpfr_sqr (u, x, GMP_RNDZ);
+          mpfr_mul (t, t, u, GMP_RNDZ); /* t <= x^2/log(2) */
+          mpfr_neg (u, x, GMP_RNDZ); /* 0 <= u <= |x| */
+          mpfr_log2 (u, u, GMP_RNDZ); /* u <= log2(|x|) */
+          mpfr_add (t, t, u, GMP_RNDZ); /* t <= log2|x| + x^2 / log(2) */
+          near_2 = mpfr_cmp_ui (t, MPFR_PREC(y)) >= 0;
+          mpfr_clear (t);
+          mpfr_clear (u);
+          if (near_2)
+            goto near_two;
         }
     }
 

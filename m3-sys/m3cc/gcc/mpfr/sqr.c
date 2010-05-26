@@ -1,6 +1,6 @@
 /* mpfr_sqr -- Floating square
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -104,5 +104,5 @@ mpfr_sqr (mpfr_ptr a, mpfr_srcptr b, mp_rnd_t rnd_mode)
     MPFR_SET_EXP (a, ax2);
     MPFR_SET_POS (a);
   }
-  return inexact;
+  MPFR_RET (inexact);
 }

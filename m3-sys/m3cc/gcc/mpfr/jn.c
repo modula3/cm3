@@ -1,7 +1,7 @@
 /* mpfr_j0, mpfr_j1, mpfr_jn -- Bessel functions of 1st kind, integer order.
    http://www.opengroup.org/onlinepubs/009695399/functions/j0.html
 
-Copyright 2007 Free Software Foundation, Inc.
+Copyright 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -24,7 +24,9 @@ MA 02110-1301, USA. */
 #define MPFR_NEED_LONGLONG_H
 #include "mpfr-impl.h"
 
-/* Relations: j(-n,z) = (-1)^n j(n,z) */
+/* Relations: j(-n,z) = (-1)^n j(n,z)
+              j(n,-z) = (-1)^n j(n,z)
+*/
 
 static int mpfr_jn_asympt (mpfr_ptr, long, mpfr_srcptr, mp_rnd_t);
 
@@ -45,9 +47,9 @@ mpfr_jn (mpfr_ptr res, long n, mpfr_srcptr z, mp_rnd_t r)
 {
   int inex;
   unsigned long absn;
-  mp_prec_t prec, err;
+  mp_prec_t prec, pbound, err;
   mp_exp_t exps, expT;
-  mpfr_t y, s, t;
+  mpfr_t y, s, t, absz;
   unsigned long k, zz;
   MPFR_ZIV_DECL (loop);
 
@@ -98,8 +100,10 @@ mpfr_jn (mpfr_ptr res, long n, mpfr_srcptr z, mp_rnd_t r)
 
   /* we can use the asymptotic expansion as soon as |z| > p log(2)/2,
      but to get some margin we use it for |z| > p/2 */
-  if (mpfr_cmp_ui (z, MPFR_PREC(res) / 2 + 3) > 0 ||
-      mpfr_cmp_si (z, - ((long) MPFR_PREC(res) / 2 + 3)) < 0)
+  pbound = MPFR_PREC (res) / 2 + 3;
+  MPFR_ASSERTN (pbound <= ULONG_MAX);
+  MPFR_ALIAS (absz, z, 1, MPFR_EXP (z));
+  if (mpfr_cmp_ui (absz, pbound) > 0)
     {
       inex = mpfr_jn_asympt (res, n, z, r);
       if (inex != 0)

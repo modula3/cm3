@@ -1,6 +1,6 @@
 /* Test file for mpfr_can_round.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -31,14 +31,16 @@ static void
 check_round_p (void)
 {
   mp_limb_t buf[MAX_LIMB_SIZE];
-  mp_size_t n;
+  mp_size_t n, i;
   mp_prec_t p;
   mp_exp_t err;
   int r1, r2;
 
   for (n = 2 ; n <= MAX_LIMB_SIZE ; n++)
     {
-      mpn_random (buf, n);
+      /* avoid mpn_random which leaks memory */
+      for (i = 0; i < n; i++)
+        buf[i] = randlimb ();
       p = (mp_prec_t) randlimb() % ((n-1) * BITS_PER_MP_LIMB) + MPFR_PREC_MIN;
       err = p + randlimb () % BITS_PER_MP_LIMB;
       r1 = mpfr_round_p (buf, n, err, p);
@@ -61,7 +63,6 @@ main (void)
   mpfr_t x;
   mp_prec_t i, j;
 
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   /* checks that rounds to nearest sets the last

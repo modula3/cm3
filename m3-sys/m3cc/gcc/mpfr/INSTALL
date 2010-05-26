@@ -6,17 +6,17 @@ reporting a bug, in particular Section "In case of problem" below. Some
 problems are due to bad configuration on the user side (not specific to
 MPFR).
 
-0. You first need to install GMP. See <http://www.swox.com/gmp/>.
+0. You first need to install GMP. See <http://www.gnu.org/software/gmp/>.
    MPFR requires GMP version 4.1 or later.
 
 1. Extract the files from the archive.
 
 2. It is strongly advised to apply the latest patches (if this has
    not been done yet), e.g.
-     wget http://www.mpfr.org/mpfr-2.3.0/patches
+     wget http://www.mpfr.org/mpfr-2.3.2/patches
      patch -N -Z -p1 < patches
    or
-     curl http://www.mpfr.org/mpfr-2.3.0/patches | patch -N -Z -p1
+     curl http://www.mpfr.org/mpfr-2.3.2/patches | patch -N -Z -p1
 
 3. In the MPFR directory, to detect your system, type:
      ./configure
@@ -70,9 +70,15 @@ install recent versions of some utilities such as texinfo.
 
 * Type "make info" to produce the documentation in the info format.
 
+* Type "make pdf" to produce the documentation in the PDF format.
+
 * Type "make dvi" to produce the documentation in the DVI format.
 
-* Type "make mpfr.ps" to produce the documentation in the Postscript format.
+* Type "make ps" to produce the documentation in the Postscript format.
+
+* Type "make html" to produce the documentation in the HTML format
+  (in several pages); if you want only one output HTML file, then
+  type "makeinfo --html --no-split mpfr.texi" instead.
 
 
 Building MPFR with internal GMP header files
@@ -128,7 +134,7 @@ Several documents may help you to solve the problem:
   * the FAQ (either the FAQ.html file distributed with MPFR, or the
     on-line version <http://www.mpfr.org/faq.html>, which may be more
     up-to-date);
-  * the MPFR web page for this version <http://www.mpfr.org/mpfr-2.3.0/>,
+  * the MPFR web page for this version <http://www.mpfr.org/mpfr-2.3.2/>,
     which lists bugs found in this version and provides some patches.
 
 If the "configure" fails, please check that the C compiler and its
@@ -144,6 +150,12 @@ if the GMP build directory is available. Then type:
 and continue the install. On some platforms, you should provide further
 options to match those used by GMP, or set some environment variables.
 For instance, see the "Notes on AIX/PowerPC" section below.
+
+Warning! Do NOT use optimization options that can change the semantics
+of math operations, such as GCC's -ffast-math or Sun CC's -fast.
+Otherwise conversions from/to double's may be incorrect on infinities
+and NaN's. Since native FP arithmetic is used in a few places only,
+such options would not make MPFR faster anyway.
 
 On some platforms, try with "gmake" (GNU make) instead of "make".
 Problems have been reported with the Tru64 make.

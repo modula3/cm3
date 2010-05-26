@@ -1,7 +1,7 @@
 /* mpfr_gmp -- Limited gmp-impl emulator
    Modified version of the GMP files.
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -21,7 +21,7 @@ along with the MPFR Library; see the file COPYING.LIB.  If not, write to
 the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
 MA 02110-1301, USA. */
 
-#include <stdlib.h> /* For malloc, free, realloc and abort*/
+#include <stdlib.h> /* For malloc, free, realloc and abort */
 
 #include "mpfr-impl.h"
 
@@ -316,19 +316,6 @@ mpfr_rand_raw (mp_ptr mp, gmp_randstate_t rstate, unsigned long int nbits)
   mpz_urandomb(z, rstate, nbits);
 }
 
-void
-mpfr_init_gmp_rand ()
-{
-  /* Since we don't use __gmp_rands, but mpfr_rands, we need to init
-     __gmp_rands before setting the memory functions so that the tests
-     don't report an error.
-     Only the tests which call mpn_random2 can do that:
-     trandom, tset_f and reuse.
-     So we just have to call mpn_random before. */
-  mp_limb_t dummy;
-  mpn_random (&dummy, 1);
-}
-
 #ifdef mp_get_memory_functions
 
 void * (*mpfr_allocate_func) (size_t);
@@ -370,6 +357,33 @@ void
 mpfr_default_free (void *blk_ptr, size_t blk_size)
 {
   free (blk_ptr);
+}
+
+void *
+mpfr_tmp_allocate (struct tmp_marker **tmp_marker, size_t size)
+{
+  struct tmp_marker *head;
+
+  head = mpfr_default_allocate (sizeof (struct tmp_marker));
+  head->ptr = mpfr_default_allocate (size);
+  head->size = size;
+  head->next = *tmp_marker;
+  *tmp_marker = head;
+  return head->ptr;
+}
+
+void
+mpfr_tmp_free (struct tmp_marker *tmp_marker)
+{
+  struct tmp_marker *t;
+
+  while (tmp_marker != NULL)
+    {
+      t = tmp_marker;
+      mpfr_default_free (t->ptr, t->size);
+      tmp_marker = t->next;
+      mpfr_default_free (t, sizeof (struct tmp_marker));
+    }
 }
 
 #endif /* Have gmp-impl.h */

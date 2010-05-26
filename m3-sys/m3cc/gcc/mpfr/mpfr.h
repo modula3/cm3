@@ -1,6 +1,6 @@
 /* mpfr.h -- Include file for mpfr.
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -26,8 +26,8 @@ MA 02110-1301, USA. */
 /* Define MPFR version number */
 #define MPFR_VERSION_MAJOR 2
 #define MPFR_VERSION_MINOR 3
-#define MPFR_VERSION_PATCHLEVEL 0
-#define MPFR_VERSION_STRING "2.3.0"
+#define MPFR_VERSION_PATCHLEVEL 2
+#define MPFR_VERSION_STRING "2.3.2"
 
 /* Macros dealing with MPFR VERSION */
 #define MPFR_VERSION_NUM(a,b,c) (((a) << 16L) | ((b) << 8) | (c))
@@ -722,7 +722,7 @@ __MPFR_DECLSPEC int    mpfr_custom_get_kind   _MPFR_PROTO ((mpfr_srcptr));
   : (int) MPFR_ZERO_KIND * MPFR_SIGN (x) )
 
 
-#endif /* MPFR_NO_MACRO */
+#endif /* MPFR_USE_NO_MACRO */
 
 /* Theses are defined to be macros */
 #define mpfr_init_set_si(x, i, rnd) \

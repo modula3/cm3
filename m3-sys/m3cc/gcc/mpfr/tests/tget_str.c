@@ -1,6 +1,6 @@
 /* Test file for mpfr_get_str.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -1051,7 +1051,7 @@ check_bug_base2k (void)
       exit (1);
     }
   mpfr_free_str (s);
-  mpfr_clears (xx, yy, zz, (void *) 0);
+  mpfr_clears (xx, yy, zz, (mpfr_ptr) 0);
 }
 
 static void

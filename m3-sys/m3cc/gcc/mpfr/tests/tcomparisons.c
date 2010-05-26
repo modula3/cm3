@@ -2,7 +2,7 @@
    mpfr_lessequal_p, mpfr_lessgreater_p, mpfr_equal_p, mpfr_unordered_p
    functions.
 
-Copyright 2003, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2003, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -33,7 +33,7 @@ cmp_tests (void)
   mpfr_t x, y;
   long i;
 
-  mpfr_inits (x, y, (void *) 0);
+  mpfr_inits (x, y, (mpfr_ptr) 0);
   for (i = 0; i < 80000; i++)
     {
       mp_prec_t precx, precy;
@@ -85,7 +85,7 @@ cmp_tests (void)
           exit (1);
         }
     }
-  mpfr_clears (x, y, (void *) 0);
+  mpfr_clears (x, y, (mpfr_ptr) 0);
 }
 
 static void
@@ -94,7 +94,7 @@ eq_tests (void)
   mpfr_t x, y;
   long i;
 
-  mpfr_inits (x, y, (void *) 0);
+  mpfr_inits (x, y, (mpfr_ptr) 0);
   for (i = 0; i < 20000; i++)
     {
       mp_prec_t precx;
@@ -117,7 +117,7 @@ eq_tests (void)
           exit (1);
         }
     }
-  mpfr_clears (x, y, (void *) 0);
+  mpfr_clears (x, y, (mpfr_ptr) 0);
 }
 
 int

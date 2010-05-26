@@ -2,7 +2,7 @@
    mpfr_sub_si -- sub  a floating-point number with a machine integer
    mpfr_si_sub -- sub  a machine number with a floating-point number
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.

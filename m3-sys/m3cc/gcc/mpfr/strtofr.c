@@ -1,6 +1,6 @@
 /* mpfr_strtofr -- set a floating-point number from a string
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -235,6 +235,11 @@ parse_string (mpfr_t x, struct parsed_string *pstr,
   /* Optional leading whitespace */
   while (isspace((unsigned char) *str)) str++;
 
+  /* An optional sign `+' or `-' */
+  pstr->negative = (*str == '-');
+  if (*str == '-' || *str == '+')
+    str++;
+
   /* Can be case-insensitive NAN */
   if (fast_casecmp (str, "@nan@") == 0)
     {
@@ -264,11 +269,6 @@ parse_string (mpfr_t x, struct parsed_string *pstr,
       __gmpfr_flags |= MPFR_FLAGS_NAN;
       return 0;
     }
-
-  /* An optional `+' or `-' */
-  pstr->negative = (*str == '-');
-  if ((*str == '-') || (*str == '+'))
-    str++;
 
   /* Can be case-insensitive INF */
   if (fast_casecmp (str, "@inf@") == 0)
@@ -717,37 +717,42 @@ int
 mpfr_strtofr (mpfr_t x, const char *string, char **end, int base,
               mp_rnd_t rnd)
 {
-  int res = -1;
+  int res;
   struct parsed_string pstr;
+
+  MPFR_ASSERTN (base == 0 || (base >= 2 && base <= 36));
 
   /* If an error occured, it must return 0 */
   MPFR_SET_ZERO (x);
   MPFR_SET_POS (x);
 
-  if (base == 0 || (base >= 2 && base <= /*MPFR_MAX_BASE*/36))
+  /* Though bases up to MPFR_MAX_BASE are supported, we require a lower
+     limit: 36. For such values <= 36, parsing is case-insensitive. */
+  MPFR_ASSERTN (MPFR_MAX_BASE >= 36);
+  res = parse_string (x, &pstr, &string, base);
+  /* If res == 0, then it was exact (NAN or INF),
+     so it is also the ternary value */
+  if (MPFR_UNLIKELY (res == -1))  /* invalid data */
+    res = 0;  /* x is set to 0, which is exact, thus ternary value is 0 */
+  else if (res == 1)
     {
-      res = parse_string (x, &pstr, &string, base);
-      /* If res == 0, then it was exact (NAN or INF),
-         so it is also the ternary value */
-      if (res == 1)
-        {
-          res = parsed_string_to_mpfr (x, &pstr, rnd);
-          free_parsed_string (&pstr);
-        }
-      else if (res == 2)
-        res = mpfr_overflow (x, rnd, (pstr.negative) ? -1 : 1);
-      MPFR_ASSERTD (res != 3);
-#if 0
-      else if (res == 3)
-        {
-          /* This is called when there is a huge overflow
-             (Real expo < MPFR_EXP_MIN << __gmpfr_emin */
-          if (rnd == GMP_RNDN)
-            rnd = GMP_RNDZ;
-          res = mpfr_underflow (x, rnd, (pstr.negative) ? -1 : 1);
-        }
-#endif
+      res = parsed_string_to_mpfr (x, &pstr, rnd);
+      free_parsed_string (&pstr);
     }
+  else if (res == 2)
+    res = mpfr_overflow (x, rnd, (pstr.negative) ? -1 : 1);
+  MPFR_ASSERTD (res != 3);
+#if 0
+  else if (res == 3)
+    {
+      /* This is called when there is a huge overflow
+         (Real expo < MPFR_EXP_MIN << __gmpfr_emin */
+      if (rnd == GMP_RNDN)
+        rnd = GMP_RNDZ;
+      res = mpfr_underflow (x, rnd, (pstr.negative) ? -1 : 1);
+    }
+#endif
+
   if (end != NULL)
     *end = (char *) string;
   return res;
