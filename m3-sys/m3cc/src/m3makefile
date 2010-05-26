@@ -367,6 +367,16 @@ if Platform_IsOpenBSD(M3CC_HOST)
 end
 
 %
+% Create a native Darwin/AMD64 compiler.
+%
+if equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD) and equal (M3CC_BUILD, "AMD64_DARWIN")
+    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
+    M3CC_CFLAGS = M3CC_CFLAGS & " -arch x86_64"
+end
+
+%
 % Configure does not seem to ferry environment variables from itself to make,
 % so these must be specified on both the configure command and the make command.
 %
@@ -440,6 +450,7 @@ if not defined ("no_config") and not NOACTION
           %Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
           %Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
     end
+
     Configure = Configure & " -srcdir=" & SourceDir
     Configure = Configure & " -disable-bootstrap"
     Configure = Configure & " -disable-intl"

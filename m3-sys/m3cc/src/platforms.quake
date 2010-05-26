@@ -12,7 +12,7 @@ readonly Platform_info = {
   "ALPHA_OSF" : "alpha-dec-osf1",
   "ALPHA32_VMS" : "alpha-dec-vms",
   "ALPHA64_VMS" : "alpha64-dec-vms",
-  "AMD64_DARWIN" : "i586-apple-darwin8",
+  "AMD64_DARWIN" : "amd64-apple-darwin8",
   "AMD64_FREEBSD" : "amd64-freebsd7",
   "AMD64_LINUX" : "amd64-pc-linux-gnu",
   "AMD64_NETBSD" : "amd64-netbsd",
