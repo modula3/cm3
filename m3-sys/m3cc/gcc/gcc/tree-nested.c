@@ -1835,7 +1835,7 @@ debug_static_links (void)
 
 static void
 convert_all_function_calls (struct nesting_info *root)
-{ 
+{
   do
     {
       if (root->inner)
