@@ -3621,8 +3621,9 @@ m3cg_set_label (void)
       FORCED_LABEL (l) = 1;
       DECL_UNINLINABLE (current_function_decl) = 1;
       DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = 1;
-      list = nonlocal_goto_handler_labels;
-      nonlocal_goto_handler_labels = gen_rtx_EXPR_LIST (VOIDmode, r, list);
+      list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
+      DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels
+	= gen_rtx_EXPR_LIST (VOIDmode, r, list);
 
       bar = make_node(ASM_EXPR);
       TREE_TYPE(bar) = t_void;
