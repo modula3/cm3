@@ -1820,15 +1820,6 @@ convert_call_expr (tree *tp, int *walk_subtrees, void *data)
   return NULL_TREE;
 }
 
-static bool
-debug_static_links (void) 
-{ return
-    write_symbols != NO_DEBUG
-    && debug_info_level != DINFO_LEVEL_NONE
-    && debug_info_level != DINFO_LEVEL_TERSE;
-
-} /* debug_static_links */ 
-
 /* Walk the nesting tree starting with ROOT, depth first.  Convert all
    trampolines and call expressions.  On the way back up, determine if
    a nested function actually uses its static chain; if not, remember that.  */
@@ -1845,10 +1836,7 @@ convert_all_function_calls (struct nesting_info *root)
       walk_function (convert_call_expr, root);
 
       /* If the function does not use a static chain, then remember that.  */
-      if (root->outer && !root->chain_decl && !root->chain_field
-/* REMOVE ME: */ 
-          /* && !debug_static_links () */ 
-         )
+      if (root->outer && !root->chain_decl && !root->chain_field)
 	DECL_NO_STATIC_CHAIN (root->context) = 1;
       else
 	gcc_assert (!DECL_NO_STATIC_CHAIN (root->context));
@@ -1869,21 +1857,6 @@ finalize_nesting_tree_1 (struct nesting_info *root)
   tree stmt_list = NULL;
   tree context = root->context;
   struct function *sf;
-
-/* REMOVEME: */ 
-  /* If this is a nested function and we are supporting debugging via
-     m3gdb, we always need a chain_decl, so m3gdb can find the static 
-     chain, even if the programmer's code doesn't use it. */ 
-  if (false && root->outer && debug_static_links () )
-    { tree static_chain_decl, temp, stmt;
-      /* This is a desperate attempt to get later code generation to 
-         store the static link.  If it works, it'll be a miracle. */ 
-      static_chain_decl = get_chain_decl (root); 
-      stmt = build_addr (static_chain_decl, root->context); 
-      temp = create_tmp_var_for (root, TREE_TYPE (static_chain_decl), NULL);
-      stmt = build_gimple_modify_stmt (temp, static_chain_decl);
-      append_to_statement_list (stmt, &stmt_list);
-    } 
 
   /* If we created a non-local frame type or decl, we need to lay them
      out at this time.  */
