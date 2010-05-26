@@ -1,6 +1,6 @@
 /* Test file for mpfr_asin.
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -194,6 +194,30 @@ special_overflow (void)
   set_emax (emax);
 }
 
+/* bug reported by Kevin Rauch on 15 December 2007 */
+static void
+test20071215 (void)
+{
+  mpfr_t x, y;
+
+  mpfr_init (x);
+  mpfr_init (y);
+
+  mpfr_set_ui (x, 0, GMP_RNDN);
+  mpfr_neg (x, x, GMP_RNDN);
+  mpfr_set_ui (y, 1, GMP_RNDN);
+  mpfr_asin (y, x, GMP_RNDN);
+  MPFR_ASSERTN(mpfr_zero_p (y) && MPFR_IS_NEG(y));
+
+  mpfr_set_ui (x, 0, GMP_RNDN);
+  mpfr_set_si (y, -1, GMP_RNDN);
+  mpfr_asin (y, x, GMP_RNDN);
+  MPFR_ASSERTN(mpfr_zero_p (y) && MPFR_IS_POS(y));
+
+  mpfr_clear (x);
+  mpfr_clear (y);
+}
+
 int
 main (void)
 {
@@ -208,5 +232,8 @@ main (void)
 
   data_check ("data/asin", mpfr_asin, "mpfr_asin");
 
+  test20071215 ();
+
+  tests_end_mpfr ();
   return 0;
 }

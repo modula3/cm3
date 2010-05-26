@@ -1,6 +1,6 @@
 /* mpfr_round_p -- check if an approximation is roundable.
 
-Copyright 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -51,7 +51,8 @@ mpfr_round_p (mp_limb_t *bp, mp_size_t bn, mp_exp_t err0, mp_prec_t prec)
 /*
  * Assuming {bp, bn} is an approximation of a non-singular number
  * with error at most equal to 2^(EXP(b)-err) (`err' bits of b are known)
- * of direction unknown, check if we can round b to zero with precision prec.
+ * of direction unknown, check if we can round b toward zero with
+ * precision prec.
  */
 int
 mpfr_round_p (mp_limb_t *bp, mp_size_t bn, mp_exp_t err0, mp_prec_t prec)

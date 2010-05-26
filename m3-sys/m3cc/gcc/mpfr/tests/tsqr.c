@@ -1,6 +1,6 @@
 /* Test file for mpfr_sqr.
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -25,22 +25,8 @@ MA 02110-1301, USA. */
 
 #include "mpfr-test.h"
 
-void check_special (void);
-void check_random (mpfr_prec_t p);
-
-int main(void)
-{
-  mpfr_prec_t p;
-
-  tests_start_mpfr ();
-
-  check_special ();
-  for(p = 2 ; p < 200 ; p++)
-    check_random (p);
-
-  tests_end_mpfr ();
-  return 0;
-}
+#define TEST_FUNCTION mpfr_sqr
+#include "tgeneric.c"
 
 static int
 inexact_sign (int x)
@@ -70,13 +56,14 @@ error2 (mp_rnd_t rnd, mpfr_prec_t prec, mpfr_t in, mpfr_t out,
   exit(1);
 }
 
-void check_random(mpfr_prec_t p)
+static void
+check_random (mpfr_prec_t p)
 {
   mpfr_t x,y,z;
   int r;
   int i, inexact1, inexact2;
 
-  mpfr_inits2 (p, x, y, z, (void *) 0);
+  mpfr_inits2 (p, x, y, z, (mpfr_ptr) 0);
   for(i = 0 ; i < 500 ; i++)
     {
       mpfr_random (x);
@@ -91,10 +78,11 @@ void check_random(mpfr_prec_t p)
               error2 ((mp_rnd_t) r,p,x,y,inexact1,inexact2);
           }
     }
-  mpfr_clears (x, y, z, (void *) 0);
+  mpfr_clears (x, y, z, (mpfr_ptr) 0);
 }
 
-void check_special(void)
+static void
+check_special (void)
 {
   mpfr_t x, y;
   mp_exp_t emin;
@@ -129,4 +117,21 @@ void check_special(void)
 
   mpfr_clear (y);
   mpfr_clear (x);
+}
+
+int
+main (void)
+{
+  mpfr_prec_t p;
+
+  tests_start_mpfr ();
+
+  check_special ();
+  for (p = 2; p < 200; p++)
+    check_random (p);
+
+  test_generic (2, 200, 15);
+
+  tests_end_mpfr ();
+  return 0;
 }

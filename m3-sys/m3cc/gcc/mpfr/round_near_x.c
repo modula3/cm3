@@ -1,6 +1,6 @@
 /* mpfr_round_near_x -- Round a floating point number nears another one.
 
-Copyright 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library, and was contributed by Mathieu Dutour.
@@ -171,7 +171,7 @@ mpfr_round_near_x (mpfr_ptr y, mpfr_srcptr v, mpfr_uexp_t err, int dir,
             || mpfr_round_p (MPFR_MANT (v), MPFR_LIMB_SIZE (v),
                              (mp_exp_t) err,
                              MPFR_PREC (y) + (rnd == GMP_RNDN)))))
-    /* If we assume we can not round, return 0 */
+    /* If we assume we can not round, return 0, and y is not modified */
     return 0;
 
   /* First round v in y */
@@ -201,7 +201,7 @@ mpfr_round_near_x (mpfr_ptr y, mpfr_srcptr v, mpfr_uexp_t err, int dir,
           inexact = sign;
           if (MPFR_IS_LIKE_RNDZ (rnd, MPFR_IS_NEG_SIGN (sign)))
             {
-            nexttozero:
+              /* case nexttozero */
               /* The underflow flag should be set if the result is zero */
               __gmpfr_flags = old_flags;
               inexact = -sign;
@@ -217,7 +217,7 @@ mpfr_round_near_x (mpfr_ptr y, mpfr_srcptr v, mpfr_uexp_t err, int dir,
           if (rnd != GMP_RNDN && rnd != GMP_RNDZ
               && MPFR_IS_RNDUTEST_OR_RNDDNOTTEST (rnd, MPFR_IS_POS_SIGN(sign)))
             {
-            nexttoinf:
+              /* case nexttoinf */
               /* The overflow flag should be set if the result is infinity */
               inexact = sign;
               mpfr_nexttoinf (y);
@@ -227,5 +227,8 @@ mpfr_round_near_x (mpfr_ptr y, mpfr_srcptr v, mpfr_uexp_t err, int dir,
         }
     }
 
+  /* the inexact flag cannot be 0, since this would mean an exact value,
+     and in this case we cannot round correctly */
+  MPFR_ASSERTD(inexact != 0);
   MPFR_RET (inexact);
 }

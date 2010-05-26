@@ -1,6 +1,6 @@
 /* mpfr_exp -- exponential of a floating-point number
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -163,7 +163,13 @@ mpfr_exp_3 (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
   mp_prec_t realprec, Prec;
   int iter;
   int inexact = 0;
+  MPFR_SAVE_EXPO_DECL (expo);
   MPFR_ZIV_DECL (ziv_loop);
+
+  MPFR_LOG_FUNC (("x[%#R]=%R rnd=%d", x, x, rnd_mode),
+                 ("y[%#R]=%R inexact=%d", y, y, inexact));
+
+  MPFR_SAVE_EXPO_MARK (expo);
 
   /* decompose x */
   /* we first write x = 1.xxxxxxxxxxxxx
@@ -198,6 +204,9 @@ mpfr_exp_3 (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
   MPFR_ZIV_INIT (ziv_loop, realprec);
   for (;;)
     {
+      int scaled = 0;
+      MPFR_BLOCK_DECL (flags);
+
       k = MPFR_INT_CEIL_LOG2 (Prec) - MPFR_LOG2_BITS_PER_MP_LIMB;
 
       /* now we have to extract */
@@ -237,36 +246,77 @@ mpfr_exp_3 (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
       (*__gmp_free_func) (P, 3*(k+2)*sizeof(mpz_t));
       (*__gmp_free_func) (mult, 2*(k+2)*sizeof(mp_prec_t));
 
-      mpfr_clear_flags ();
-      for (loop = 0; loop < shift_x; loop++)
-        mpfr_mul (tmp, tmp, tmp, GMP_RNDD);
+      if (shift_x > 0)
+        {
+          MPFR_BLOCK (flags, {
+              for (loop = 0; loop < shift_x - 1; loop++)
+                mpfr_sqr (tmp, tmp, GMP_RNDD);
+              mpfr_sqr (t, tmp, GMP_RNDD);
+            } );
 
-      if (MPFR_UNLIKELY (mpfr_overflow_p ()))
+          if (MPFR_UNLIKELY (MPFR_OVERFLOW (flags)))
+            {
+              /* tmp <= exact result, so that it is a real overflow. */
+              inexact = mpfr_overflow (y, rnd_mode, 1);
+              MPFR_SAVE_EXPO_UPDATE_FLAGS (expo, MPFR_FLAGS_OVERFLOW);
+              break;
+            }
+
+          if (MPFR_UNLIKELY (MPFR_UNDERFLOW (flags)))
+            {
+              /* This may be a spurious underflow. So, let's scale
+                 the result. */
+              mpfr_mul_2ui (tmp, tmp, 1, GMP_RNDD);  /* no overflow, exact */
+              mpfr_sqr (t, tmp, GMP_RNDD);
+              if (MPFR_IS_ZERO (t))
+                {
+                  /* approximate result < 2^(emin - 3), thus
+                     exact result < 2^(emin - 2). */
+                  inexact = mpfr_underflow (y, (rnd_mode == GMP_RNDN) ?
+                                            GMP_RNDZ : rnd_mode, 1);
+                  MPFR_SAVE_EXPO_UPDATE_FLAGS (expo, MPFR_FLAGS_UNDERFLOW);
+                  break;
+                }
+              scaled = 1;
+            }
+        }
+
+      if (mpfr_can_round (shift_x > 0 ? t : tmp, realprec, GMP_RNDD, GMP_RNDZ,
+                          MPFR_PREC(y) + (rnd_mode == GMP_RNDN)))
         {
-          /* We hack to set a FP number outside the valid range so that
-             mpfr_check_range properly generates an overflow */
-          mpfr_setmax (y, __gmpfr_emax);
-          MPFR_EXP (y) ++;
-          inexact = 1;
+          inexact = mpfr_set (y, shift_x > 0 ? t : tmp, rnd_mode);
+          if (MPFR_UNLIKELY (scaled && MPFR_IS_PURE_FP (y)))
+            {
+              int inex2;
+              mp_exp_t ey;
+
+              /* The result has been scaled and needs to be corrected. */
+              ey = MPFR_GET_EXP (y);
+              inex2 = mpfr_mul_2si (y, y, -2, rnd_mode);
+              if (inex2)  /* underflow */
+                {
+                  if (rnd_mode == GMP_RNDN && inexact < 0 &&
+                      MPFR_IS_ZERO (y) && ey == __gmpfr_emin + 1)
+                    {
+                      /* Double rounding case: in GMP_RNDN, the scaled
+                         result has been rounded downward to 2^emin.
+                         As the exact result is > 2^(emin - 2), correct
+                         rounding must be done upward. */
+                      /* TODO: make sure in coverage tests that this line
+                         is reached. */
+                      inexact = mpfr_underflow (y, GMP_RNDU, 1);
+                    }
+                  else
+                    {
+                      /* No double rounding. */
+                      inexact = inex2;
+                    }
+                  MPFR_SAVE_EXPO_UPDATE_FLAGS (expo, MPFR_FLAGS_UNDERFLOW);
+                }
+            }
           break;
         }
-      else if (MPFR_UNLIKELY (mpfr_underflow_p ()))
-        {
-          /* We hack to set a FP number outside the valid range so that
-             mpfr_check_range properly generates an underflow.
-             Note that the range has been increased to allow a safe
-             detection of underflow (MPFR_EMIN_MIN-3 in exp.c) even for
-             RNDN */
-          mpfr_setmax (y, MPFR_EMIN_MIN-2);
-          inexact = -1;
-          break;
-        }
-      else if (mpfr_can_round (tmp, realprec, GMP_RNDD, GMP_RNDZ,
-                               MPFR_PREC(y) + (rnd_mode == GMP_RNDN)))
-        {
-          inexact = mpfr_set (y, tmp, rnd_mode);
-          break;
-        }
+
       MPFR_ZIV_NEXT (ziv_loop, realprec);
       Prec = realprec + shift + 2 + shift_x;
       mpfr_set_prec (t, Prec);
@@ -278,5 +328,6 @@ mpfr_exp_3 (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
   mpfr_clear (tmp);
   mpfr_clear (t);
   mpfr_clear (x_copy);
+  MPFR_SAVE_EXPO_FREE (expo);
   return inexact;
 }

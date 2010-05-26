@@ -1,28 +1,26 @@
 /* Memory allocation used during tests.
 
-Copyright 2001, 2002, 2003, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
 
-ChangeLog:
- tests_memory_valid has been commented out since it is not used
- tests_memory_list is declared as static
-
-The GNU MP Library is free software; you can redistribute it and/or modify
+The MPFR Library is free software; you can redistribute it and/or modify
 it under the terms of the GNU Lesser General Public License as published by
 the Free Software Foundation; either version 2.1 of the License, or (at your
 option) any later version.
 
-The GNU MP Library is distributed in the hope that it will be useful, but
+The MPFR Library is distributed in the hope that it will be useful, but
 WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
 or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU Lesser General Public
 License for more details.
 
 You should have received a copy of the GNU Lesser General Public License
-along with the GNU MP Library; see the file COPYING.LIB.  If not, write to
+along with the MPFR Library; see the file COPYING.LIB.  If not, write to
 the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor, Boston,
 MA 02110-1301, USA. */
+
+/* Note: this file comes from GMP's tests/memory.c */
 
 #include <stdio.h>
 #include <stdlib.h>  /* for abort */

@@ -1,6 +1,6 @@
 /* Test file for mpfr_acosh.
 
-Copyright 2001, 2002, 2003, 2004, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -26,7 +26,15 @@ MA 02110-1301, USA. */
 #include "mpfr-test.h"
 
 #define TEST_FUNCTION mpfr_acosh
-#define RAND_FUNCTION(x) (mpfr_random (x), mpfr_ui_div (x, 1, x, GMP_RNDN))
+#define TEST_RANDOM_POS 4
+#define TEST_RANDOM_EMIN 1
+#include "tgeneric.c"
+
+#define TEST_FUNCTION mpfr_acosh
+#define TEST_RANDOM_POS 1
+#define TEST_RANDOM_EMIN 1073741822
+#define TEST_RANDOM_EMAX 1073741822
+#define test_generic test_generic_huge
 #include "tgeneric.c"
 
 static void
@@ -123,14 +131,84 @@ special (void)
   mpfr_clear (y);
 }
 
+/* With MPFR 2.3.0, this yields an assertion failure in mpfr_acosh. */
+static void
+bug20070831 (void)
+{
+  mpfr_t x, y, z;
+  int inex;
+
+  mpfr_init2 (x, 256);
+  mpfr_init2 (y, 32);
+  mpfr_init2 (z, 32);
+
+  mpfr_set_ui (x, 1, GMP_RNDN);
+  mpfr_nextabove (x);
+  inex = mpfr_acosh (y, x, GMP_RNDZ);
+  mpfr_set_ui_2exp (z, 1, -127, GMP_RNDN);
+  mpfr_nextbelow (z);
+  if (!mpfr_equal_p (y, z))
+    {
+      printf ("Error in bug20070831 (1):\nexpected ");
+      mpfr_dump (z);
+      printf ("got      ");
+      mpfr_dump (y);
+      exit (1);
+    }
+  MPFR_ASSERTN (inex < 0);
+
+  mpfr_nextabove (x);
+  mpfr_set_prec (y, 29);
+  inex = mpfr_acosh (y, x, GMP_RNDN);
+  mpfr_set_str_binary (z, "1.011010100000100111100110011E-127");
+  if (!mpfr_equal_p (y, z))
+    {
+      printf ("Error in bug20070831 (2):\nexpected ");
+      mpfr_dump (z);
+      printf ("got      ");
+      mpfr_dump (y);
+      exit (1);
+    }
+  MPFR_ASSERTN (inex < 0);
+
+  mpfr_clears (x, y, z, (mpfr_ptr) 0);
+}
+
+static void
+huge (void)
+{
+  mpfr_t x, y, z;
+  int inex;
+
+  /* TODO: extend the exponent range and use mpfr_get_emax (). */
+  mpfr_inits2 (32, x, y, z, (mpfr_ptr) 0);
+  mpfr_set_ui_2exp (x, 1, 1073741822, GMP_RNDN);
+  inex = mpfr_acosh (y, x, GMP_RNDN);
+  mpfr_set_str_binary (z, "0.10110001011100100001011111110101E30");
+  if (!mpfr_equal_p (y, z))
+    {
+      printf ("Error in huge:\nexpected ");
+      mpfr_dump (z);
+      printf ("got      ");
+      mpfr_dump (y);
+      exit (1);
+    }
+  MPFR_ASSERTN (inex < 0);
+
+  mpfr_clears (x, y, z, (mpfr_ptr) 0);
+}
+
 int
 main (int argc, char *argv[])
 {
   tests_start_mpfr ();
 
   special ();
+  bug20070831 ();
+  huge ();
 
   test_generic (2, 100, 25);
+  test_generic_huge (2, 100, 5);
 
   data_check ("data/acosh", mpfr_acosh, "mpfr_acosh");
 

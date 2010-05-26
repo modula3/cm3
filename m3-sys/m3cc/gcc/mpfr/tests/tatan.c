@@ -1,6 +1,6 @@
 /* Test file for mpfr_atan.
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -248,7 +248,7 @@ special_atan2 (void)
 {
   mpfr_t x, y, z;
 
-  mpfr_inits2 (4, x, y, z, (void *) 0);
+  mpfr_inits2 (4, x, y, z, (mpfr_ptr) 0);
 
   /* Anything with NAN should be set to NAN */
   mpfr_set_ui (y, 0, GMP_RNDN);
@@ -349,7 +349,7 @@ special_atan2 (void)
   mpfr_atan2 (z, y, x, GMP_RNDN);
   MPFR_ASSERTN (mpfr_cmp_str (z, "-2.356194490192344928", 10, GMP_RNDN) == 0);
 
-  mpfr_clears (x, y, z, (void *) 0);
+  mpfr_clears (x, y, z, (mpfr_ptr) 0);
 }
 
 /* from Christopher Creutzig, 18 Jul 2007 */
@@ -359,7 +359,7 @@ smallvals_atan2 (void)
   mpfr_t a, x, y;
   mp_exp_t old_emin;
 
-  mpfr_inits (a, x, y, (void *) 0);
+  mpfr_inits (a, x, y, (mpfr_ptr) 0);
   mpfr_set_ui (y, 0, GMP_RNDN);
   mpfr_nextbelow (y);
   mpfr_set_ui (x, 1, GMP_RNDN);
@@ -402,7 +402,41 @@ smallvals_atan2 (void)
 
   mpfr_set_emin (old_emin);
 
-  mpfr_clears (a, x, y, (void *) 0);
+  mpfr_clears (a, x, y, (mpfr_ptr) 0);
+}
+
+/* Bug found by Robert Bajema (regression in MPFR 2.3.0).
+   The cause is the underflow flag set before the mpfr_atan2 call. */
+static void
+atan2_bug_20071003 (void)
+{
+  mpfr_t a, x, y, z;
+
+  mpfr_inits (a, x, y, z, (mpfr_ptr) 0);
+
+  mpfr_set_underflow ();
+  mpfr_set_str_binary (y,
+    "-0.10100110110100110111010110111111100110100010001110110E2");
+  mpfr_set_str_binary (x,
+    "0.10100101010110010100010010111000110110011110001011110E3");
+  mpfr_set_str_binary (z,
+    "-0.11101111001101101100111011001101000010010111101110110E-1");
+  mpfr_atan2 (a, y, x, GMP_RNDN);
+  if (! mpfr_equal_p (a, z))
+    {
+      printf ("mpfr_atan2 fails on:\n");
+      printf ("  y = ");
+      mpfr_dump (y);
+      printf ("  x = ");
+      mpfr_dump (x);
+      printf ("Expected ");
+      mpfr_dump (z);
+      printf ("Got      ");
+      mpfr_dump (a);
+      exit (1);
+    }
+
+  mpfr_clears (a, x, y, z, (mpfr_ptr) 0);
 }
 
 int
@@ -414,6 +448,7 @@ main (int argc, char *argv[])
   special ();
   special_atan2 ();
   smallvals_atan2 ();
+  atan2_bug_20071003 ();
 
   test_generic_atan  (2, 200, 17);
   test_generic_atan2 (2, 200, 17);

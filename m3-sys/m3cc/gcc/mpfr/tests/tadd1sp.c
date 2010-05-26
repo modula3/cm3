@@ -1,6 +1,6 @@
 /* Test file for mpfr_add1sp.
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -32,11 +32,15 @@ static void
 check_overflow (void)
 {
   mpfr_t x, y, z1, z2;
+  mp_exp_t emin, emax;
+
+  emin = mpfr_get_emin ();
+  emax = mpfr_get_emax ();
 
   set_emin (-1021);
   set_emax (1024);
 
-  mpfr_inits (x, y, z1, z2, (void *) 0);
+  mpfr_inits (x, y, z1, z2, (mpfr_ptr) 0);
 
   mpfr_set_str1 (x, "8.00468257869324898448e+307");
   mpfr_set_str1 (y, "7.44784712422708645156e+307");
@@ -47,7 +51,10 @@ check_overflow (void)
       printf ("Overflow bug in add1sp.\n");
       exit (1);
     }
-  mpfr_clears (x, y, z1, z2, (void *) 0);
+  mpfr_clears (x, y, z1, z2, (mpfr_ptr) 0);
+
+  set_emin (emin);
+  set_emax (emax);
 }
 
 int main(void)
@@ -103,7 +110,7 @@ void check_random(mp_prec_t p)
   int r;
   int i, inexact1, inexact2;
 
-  mpfr_inits2 (p, a1, b, c, a2, (void *) 0);
+  mpfr_inits2 (p, a1, b, c, a2, (mpfr_ptr) 0);
 
   for (i = 0 ; i < 500 ; i++)
     {
@@ -126,7 +133,7 @@ void check_random(mp_prec_t p)
         }
     }
 
-  mpfr_clears (a1, a2, b, c, (void *) 0);
+  mpfr_clears (a1, a2, b, c, (mpfr_ptr) 0);
 }
 
 void check_special(void)
@@ -136,7 +143,7 @@ void check_special(void)
   mpfr_prec_t p;
   int i = -1, inexact1, inexact2;
 
-  mpfr_inits (a1, a2, b, c, (void *) 0);
+  mpfr_inits (a1, a2, b, c, (mpfr_ptr) 0);
 
   for (r = 0 ; r < GMP_RND_MAX ; r++)
     {
@@ -172,5 +179,5 @@ void check_special(void)
       exit (1);
     }
 
-  mpfr_clears (a1, a2, b, c, (void *) 0);
+  mpfr_clears (a1, a2, b, c, (mpfr_ptr) 0);
 }

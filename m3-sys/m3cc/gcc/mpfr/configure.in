@@ -1,7 +1,8 @@
 dnl Process this file with autoconf to produce a configure script.
 
 AC_COPYRIGHT([
-Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright (C) 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
 
@@ -23,9 +24,9 @@ MA 02110-1301, USA.
 
 dnl If MPFR becomes GNU MPFR, change to GNU MPFR in update-version
 dnl Add check-news when it checks for more than 15 lines
-AC_INIT([MPFR],[2.3.0])
-AM_INIT_AUTOMAKE([1.6 no-define dist-zip dist-bzip2])
-dnl AM_MAINTAINER_MODE
+AC_INIT([MPFR],[2.3.2])
+AM_INIT_AUTOMAKE([1.10.1 no-define dist-bzip2 dist-lzma dist-zip])
+dnl AM_MAINTAINER_MODE(enable)
 
 dnl FIXME: The AC_ARG_ENABLE(decimal-float...) part does things too
 dnl early, even when this option is not used. In particular, it must
@@ -383,7 +384,8 @@ else
 
 dnl Check if we can link with GMP
 AC_CHECK_LIB(gmp, __gmpz_init, [LIBS="-lgmp $LIBS"],
- [AC_MSG_ERROR(libgmp not found)])
+ [AC_MSG_ERROR(libgmp not found or uses a different ABI.
+Please read the INSTALL file -- see "In case of problem".)])
 
 dnl Check for corresponding 'gmp.h' and libgmp.a
 AC_MSG_CHECKING(if gmp.h version and libgmp version are the same)

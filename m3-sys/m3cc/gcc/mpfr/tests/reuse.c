@@ -1,6 +1,6 @@
 /* Test file for in-place operations.
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -451,11 +451,10 @@ test2a (int (*testfunc)(mpfr_ptr, mpfr_srcptr),
   mpfr_clear (res1);
 }
 
-#if 0
-
 /* one operand, two results */
 static void
-test3a (char *foo, mp_prec_t prec, mp_rnd_t rnd)
+test3a (int (*testfunc)(mpfr_ptr, mpfr_ptr, mpfr_srcptr, mp_rnd_t),
+        char *foo, mp_prec_t prec, mp_rnd_t rnd)
 {
   mpfr_t ref1, ref2, ref3;
   mpfr_t res1, res2;
@@ -509,8 +508,6 @@ test3a (char *foo, mp_prec_t prec, mp_rnd_t rnd)
   mpfr_clear (res2);
 }
 
-#endif
-
 static int
 reldiff_wrapper (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
 {
@@ -523,7 +520,6 @@ main (void)
 {
   mp_rnd_t rnd;
   mp_prec_t p;
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   p = (randlimb () % 200)+ MPFR_PREC_MIN;
@@ -604,6 +600,8 @@ main (void)
       test3 (mpfr_atan2, "mpfr_atan2", p, rnd);
 
       test4 (mpfr_fma, "mpfr_fma", p, rnd);
+
+      test3a (mpfr_sin_cos, "mpfr_sin_cos", p, rnd);
     }
 
   tests_end_mpfr ();

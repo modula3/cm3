@@ -1,6 +1,6 @@
 /* Test file for exceptions.
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -65,6 +65,11 @@ check_default_rnd (void)
 static void
 check_emin_emax (void)
 {
+  mp_exp_t old_emin, old_emax;
+
+  old_emin = mpfr_get_emin ();
+  old_emax = mpfr_get_emax ();
+
   /* Check the functions not the macros ! */
   if ((mpfr_set_emin)(MPFR_EMIN_MIN) != 0)
     ERROR("set_emin failed!");
@@ -88,6 +93,9 @@ check_emin_emax (void)
     ERROR ("get_emax_min");
   if ((mpfr_get_emax_max) () != MPFR_EMAX_MAX)
     ERROR ("get_emax_max");
+
+  set_emin (old_emin);
+  set_emax (old_emax);
 }
 
 static void
@@ -131,7 +139,11 @@ static void
 check_flags (void)
 {
   mpfr_t x;
-  mpfr_init(x);
+  mp_exp_t old_emin, old_emax;
+
+  old_emin = mpfr_get_emin ();
+  old_emax = mpfr_get_emax ();
+  mpfr_init (x);
 
   /* Check the functions not the macros ! */
   (mpfr_clear_flags)();
@@ -168,7 +180,9 @@ check_flags (void)
   if (!(mpfr_erangeflag_p)())
     ERROR ("ERROR: No erange flag!\n");
 
-  mpfr_clear(x);
+  mpfr_clear (x);
+  set_emin (old_emin);
+  set_emax (old_emax);
 }
 
 static void
@@ -258,7 +272,8 @@ test_set_overflow (void)
 }
 
 static void
-check_set () {
+check_set (void)
+{
   mpfr_clear_flags ();
 
   mpfr_set_overflow ();
@@ -367,6 +382,9 @@ main (int argc, char *argv[])
 
   mpfr_clear (x);
   mpfr_clear (y);
+
+  set_emin (emin);
+  set_emax (emax);
 
   check_emin_emax();
   check_flags();

@@ -1,7 +1,7 @@
 /* mpfr_sub1sp -- internal function to perform a "real" substraction
    All the op must have the same precision
 
-Copyright 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -64,7 +64,7 @@ int mpfr_sub1sp (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
                inexact, inexact2);
       MPFR_ASSERTN (0);
     }
-  mpfr_clears (tmpa, tmpb, tmpc, (void *) 0);
+  mpfr_clears (tmpa, tmpb, tmpc, (mpfr_ptr) 0);
   return inexact;
 }
 #  define mpfr_sub1sp mpfr_sub1sp2

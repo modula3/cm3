@@ -1,6 +1,6 @@
 /* tj0 -- test file for the Bessel function of first kind (order 0)
 
-Copyright 2007 Free Software Foundation, Inc.
+Copyright 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -90,6 +90,13 @@ main (int argc, char *argv[])
   /* Bug reported on 2007-07-03 by Sisyphus (assertion failed in r4619) */
   mpfr_set_si (x, 70000, GMP_RNDN);
   mpfr_j0 (y, x, GMP_RNDN);
+
+  /* Bug reported by Kevin Rauch on 27 Oct 2007 */
+  mpfr_set_prec (x, 7);
+  mpfr_set_prec (y, 7);
+  mpfr_set_si (x, -100, GMP_RNDN);
+  mpfr_j0 (y, x, GMP_RNDN);
+  MPFR_ASSERTN (! mpfr_nan_p (y) && mpfr_cmp_ui_2exp (y, 41, -11) == 0);
 
   mpfr_clear (x);
   mpfr_clear (y);

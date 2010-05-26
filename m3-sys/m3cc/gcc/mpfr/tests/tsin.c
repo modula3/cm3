@@ -1,6 +1,6 @@
 /* Test file for mpfr_sin.
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -211,7 +211,7 @@ check_regression ()
   int i;
 
   p = strlen (xs) - 2 - 3;
-  mpfr_inits2 (p, x, y, (void *) 0);
+  mpfr_inits2 (p, x, y, (mpfr_ptr) 0);
 
   mpfr_set_str (x, xs, 2, GMP_RNDN);
   i = mpfr_sin (y, x, GMP_RNDN);
@@ -223,7 +223,7 @@ check_regression ()
       mpfr_dump (y);
       exit (1);
     }
-  mpfr_clears (x, y, (void *) 0);
+  mpfr_clears (x, y, (mpfr_ptr) 0);
 }
 
 /* Test provided by Christopher Creutzig, 2007-05-21. */

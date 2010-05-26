@@ -1,6 +1,6 @@
 /* Test file for mpfr_root.
 
-Copyright 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -268,7 +268,6 @@ main (void)
   mp_prec_t p;
   unsigned long k;
 
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   special ();

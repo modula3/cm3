@@ -1,6 +1,6 @@
 /* tsum -- test file for the list summation function
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -151,7 +151,7 @@ test_sum (mp_prec_t f, unsigned long n)
   tab = (mpfr_t *) malloc (n * sizeof(mpfr_t));
   for (i = 0; i < n; i++)
     mpfr_init2 (tab[i], f);
-  mpfr_inits2 (f, sum, real_sum, real_non_rounded, (void *) 0);
+  mpfr_inits2 (f, sum, real_sum, real_non_rounded, (mpfr_ptr) 0);
 
   /* First Uniform */
   for (i = 0; i < n; i++)
@@ -193,7 +193,7 @@ test_sum (mp_prec_t f, unsigned long n)
   /* Clear stuff */
   for (i = 0; i < n; i++)
     mpfr_clear (tab[i]);
-  mpfr_clears (sum, real_sum, real_non_rounded, (void *) 0);
+  mpfr_clears (sum, real_sum, real_non_rounded, (mpfr_ptr) 0);
   free (tab);
 }
 
@@ -204,7 +204,7 @@ void check_special (void)
   mpfr_ptr tabp[3];
   int i;
 
-  mpfr_inits (tab[0], tab[1], tab[2], r, (void *) 0);
+  mpfr_inits (tab[0], tab[1], tab[2], r, (mpfr_ptr) 0);
   tabp[0] = tab[0];
   tabp[1] = tab[1];
   tabp[2] = tab[2];
@@ -277,7 +277,7 @@ void check_special (void)
       exit (1);
     }
 
-  mpfr_clears (tab[0], tab[1], tab[2], r, (void *) 0);
+  mpfr_clears (tab[0], tab[1], tab[2], r, (mpfr_ptr) 0);
 }
 
 

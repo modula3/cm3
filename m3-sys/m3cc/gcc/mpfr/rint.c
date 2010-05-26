@@ -1,6 +1,6 @@
 /* mpfr_rint -- Round to an integer.
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -341,13 +341,13 @@ mpfr_rint_round (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
       mpfr_t tmp;
       int inex;
       MPFR_SAVE_EXPO_DECL (expo);
+      MPFR_BLOCK_DECL (flags);
 
       MPFR_SAVE_EXPO_MARK (expo);
       mpfr_init2 (tmp, MPFR_PREC (u));
       /* round(u) is representable in tmp unless an overflow occurs */
-      mpfr_clear_overflow ();
-      mpfr_round (tmp, u);
-      inex = (mpfr_overflow_p ()
+      MPFR_BLOCK (flags, mpfr_round (tmp, u));
+      inex = (MPFR_OVERFLOW (flags)
               ? mpfr_overflow (r, rnd_mode, MPFR_SIGN (u))
               : mpfr_set (r, tmp, rnd_mode));
       mpfr_clear (tmp);
@@ -392,13 +392,13 @@ mpfr_rint_ceil (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
       mpfr_t tmp;
       int inex;
       MPFR_SAVE_EXPO_DECL (expo);
+      MPFR_BLOCK_DECL (flags);
 
       MPFR_SAVE_EXPO_MARK (expo);
       mpfr_init2 (tmp, MPFR_PREC (u));
       /* ceil(u) is representable in tmp unless an overflow occurs */
-      mpfr_clear_overflow ();
-      mpfr_ceil (tmp, u);
-      inex = (mpfr_overflow_p ()
+      MPFR_BLOCK (flags, mpfr_ceil (tmp, u));
+      inex = (MPFR_OVERFLOW (flags)
               ? mpfr_overflow (r, rnd_mode, MPFR_SIGN_POS)
               : mpfr_set (r, tmp, rnd_mode));
       mpfr_clear (tmp);
@@ -419,13 +419,13 @@ mpfr_rint_floor (mpfr_ptr r, mpfr_srcptr u, mpfr_rnd_t rnd_mode)
       mpfr_t tmp;
       int inex;
       MPFR_SAVE_EXPO_DECL (expo);
+      MPFR_BLOCK_DECL (flags);
 
       MPFR_SAVE_EXPO_MARK (expo);
       mpfr_init2 (tmp, MPFR_PREC (u));
       /* floor(u) is representable in tmp unless an overflow occurs */
-      mpfr_clear_overflow ();
-      mpfr_floor (tmp, u);
-      inex = (mpfr_overflow_p ()
+      MPFR_BLOCK (flags, mpfr_floor (tmp, u));
+      inex = (MPFR_OVERFLOW (flags)
               ? mpfr_overflow (r, rnd_mode, MPFR_SIGN_NEG)
               : mpfr_set (r, tmp, rnd_mode));
       mpfr_clear (tmp);

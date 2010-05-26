@@ -1,6 +1,6 @@
 /* Miscellaneous support for test programs.
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -85,6 +85,8 @@ set_fpu_prec (void)
 
 #endif
 
+static mp_exp_t default_emin, default_emax;
+
 static void tests_rand_start (void);
 static void tests_rand_end   (void);
 static void tests_limit_start (void);
@@ -98,8 +100,36 @@ void (*dummy_func)(mpfr_srcptr) = mpfr_dump;
 #endif
 
 void
+test_version (void)
+{
+  const char *version;
+
+  /* VL: I get the following error on an OpenSUSE machine, and changing
+     the value of shlibpath_overrides_runpath in the libtool file from
+     'no' to 'yes' fixes the problem. */
+
+  version = mpfr_get_version ();
+  if (strcmp (MPFR_VERSION_STRING, version) == 0)
+    return;
+
+  printf ("Incorrect MPFR version! (%s header vs %s library)\n"
+          "Nothing else has been tested since for this reason,\n"
+          "any other test may fail. Please fix this one first.\n\n"
+          "You can try to avoid this problem by changing the value of\n"
+          "shlibpath_overrides_runpath in the libtool file and rebuild\n"
+          "MPFR (make clean && make && make check).\n"
+          "Otherwise this error may be due to a corrupted mpfr.h, an\n"
+          "incomplete build (try to rebuild MPFR from scratch and/or\n"
+          "use 'make clean'), or something wrong in the system.\n",
+          MPFR_VERSION_STRING, version);
+  exit (1);
+}
+
+void
 tests_start_mpfr (void)
 {
+  test_version ();
+
   /* don't buffer, so output is not lost if a test causes a segv etc */
   setbuf (stdout, NULL);
 
@@ -117,14 +147,34 @@ tests_start_mpfr (void)
   tests_memory_start ();
   tests_rand_start ();
   tests_limit_start ();
+
+  default_emin = mpfr_get_emin ();
+  default_emax = mpfr_get_emax ();
 }
 
 void
 tests_end_mpfr (void)
 {
+  int err = 0;
+
+  if (mpfr_get_emin () != default_emin)
+    {
+      printf ("Default emin value has not been restored!\n");
+      err = 1;
+    }
+
+  if (mpfr_get_emax () != default_emax)
+    {
+      printf ("Default emax value has not been restored!\n");
+      err = 1;
+    }
+
   mpfr_free_cache ();
   tests_rand_end ();
   tests_memory_end ();
+
+  if (err)
+    exit (err);
 }
 
 static void
@@ -203,6 +253,8 @@ tests_rand_start (void)
                   "(include this in bug reports)\n", seed);
         }
     }
+  else
+      gmp_randseed_ui (rands, 0x2143FEDC);
 }
 
 static void

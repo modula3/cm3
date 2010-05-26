@@ -1,5 +1,5 @@
-Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
-Contributed by the Spaces project, INRIA Lorraine.
+Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
 
@@ -27,7 +27,7 @@ Known bugs:
 * The overflow/underflow exceptions may be badly handled in some functions;
   specially when the intermediary internal results have exponent which
   exceeds the hardware limit (2^30 for a 32 bits CPU, and 2^62 for a 64 bits
-  CPU).
+  CPU) or the exact result is close to an overflow/underflow threshold.
 
 * Under Linux/x86 with the traditional FPU, some functions do not work
   if the FPU rounding precision has been changed to single (this is a
@@ -37,7 +37,18 @@ Known bugs:
 * Some functions do not use MPFR_SAVE_EXPO_* macros, thus do not behave
   correctly in a reduced exponent range.
 
+* Function hypot gives incorrect result when on the one hand the difference
+  between parameters' exponents is near 2*MPFR_EMAX_MAX and on the other hand
+  the output precision or the precision of the parameter with greatest
+  absolute value is greater than 2*MPFR_EMAX_MAX-4.
+
 Potential bugs:
+
+* Possible incorrect results due to internal underflow, which can lead to
+  a huge loss of accuracy while the error analysis doesn't take that into
+  account. If the underflow occurs at the last function call (just before
+  the MPFR_CAN_ROUND), the result should be correct (or MPFR gets into an
+  infinite loop). TODO: check the code and the error analysis.
 
 * Possible integer overflows on some machines.
 

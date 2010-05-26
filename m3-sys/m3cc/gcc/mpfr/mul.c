@@ -1,6 +1,6 @@
 /* mpfr_mul -- multiply two floating-point numbers
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -191,7 +191,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
       MPFR_ASSERTN(0);
     }
 
-  mpfr_clears (ta, tb, tc, (void *) 0);
+  mpfr_clears (ta, tb, tc, (mpfr_ptr) 0);
   return inexact1;
 }
 
@@ -347,7 +347,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
         mpn_lshift (tmp, tmp, tn, 1); /* tn <= k, so no stack corruption */
     }
   else
-    /* Mulder mulhigh. Disable if squaring, since it is not tuned for
+    /* Mulders' mulhigh. Disable if squaring, since it is not tuned for
        such a case */
     if (MPFR_UNLIKELY (bn > MPFR_MUL_THRESHOLD && b != c))
       {
@@ -450,7 +450,7 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
           }
         MPFR_LOG_MSG (("Use mpfr_mulhigh (%lu VS %lu)\n", MPFR_PREC (a), p));
         /* Compute an approximation of the product of b and c */
-        mpfr_mulhigh_n (tmp+k-2*n, bp, cp, n);
+        mpfr_mulhigh_n (tmp + k - 2 * n, bp, cp, n);
         /* now tmp[0]..tmp[k-1] contains the product of both mantissa,
            with tmp[k-1]>=2^(BITS_PER_MP_LIMB-2) */
         b1 = tmp[k-1] >> (BITS_PER_MP_LIMB - 1); /* msb from the product */
@@ -458,9 +458,11 @@ mpfr_mul (mpfr_ptr a, mpfr_srcptr b, mpfr_srcptr c, mp_rnd_t rnd_mode)
         /* If the mantissas of b and c are uniformly distributed in (1/2, 1],
            then their product is in (1/4, 1/2] with probability 2*ln(2)-1
            ~ 0.386 and in [1/2, 1] with probability 2-2*ln(2) ~ 0.614 */
-        tmp += k - tn;
         if (MPFR_UNLIKELY (b1 == 0))
-          mpn_lshift (tmp, tmp, tn, 1);
+          /* Warning: the mpfr_mulhigh_n call above only surely affects
+             tmp[k-n-1..k-1], thus we shift only those limbs */
+          mpn_lshift (tmp + k - n - 1, tmp + k - n - 1, n + 1, 1);
+        tmp += k - tn;
         MPFR_ASSERTD (MPFR_LIMB_MSB (tmp[tn-1]) != 0);
 
         if (MPFR_UNLIKELY (!mpfr_round_p (tmp, tn, p+b1-1, MPFR_PREC(a)

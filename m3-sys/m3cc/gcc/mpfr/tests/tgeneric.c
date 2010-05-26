@@ -1,6 +1,6 @@
-/* Generic test file for functions with one mpfr_t argument.
+/* Generic test file for functions with one or two mpfr_t arguments.
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -22,13 +22,16 @@ MA 02110-1301, USA. */
 
 /* define TWO_ARGS for two-argument functions like mpfr_pow */
 
+/* The (void *) below is needed to avoid a warning with gcc 4.2+ and functions
+ * with 2 arguments. See <http://gcc.gnu.org/bugzilla/show_bug.cgi?id=36299>.
+ */
 #define TGENERIC_FAIL(S, X, U)                                          \
   do                                                                    \
     {                                                                   \
       printf ("%s\nx = ", (S));                                         \
       mpfr_out_str (stdout, 2, 0, (X), GMP_RNDN);                       \
       printf ("\n");                                                    \
-      if (U)                                                            \
+      if ((void *) U != 0)                                              \
         {                                                               \
           printf ("u = ");                                              \
           mpfr_out_str (stdout, 2, 0, (U), GMP_RNDN);                   \
@@ -204,6 +207,13 @@ test_generic (mp_prec_t p0, mp_prec_t p1, unsigned int N)
           else if (mpfr_can_round (y, yprec, rnd, rnd, prec))
             {
               mpfr_set (t, y, rnd);
+              /* Risk of failures are known when some flags are already set
+                 before the function call. Do not set the erange flag, as
+                 it will remain set after the function call and no checks
+                 are performed in such a case (see the mpfr_erangeflag_p
+                 test below). */
+              if (randlimb () & 1)
+                __gmpfr_flags = MPFR_FLAGS_ALL ^ MPFR_FLAGS_ERANGE;
 #ifdef DEBUG_TGENERIC
               TGENERIC_INFO (TEST_FUNCTION, MPFR_PREC (z));
 #endif
@@ -269,6 +279,10 @@ test_generic (mp_prec_t p0, mp_prec_t p1, unsigned int N)
 #endif
 }
 
+#undef TEST_RANDOM_POS
+#undef TEST_RANDOM_POS2
+#undef TEST_RANDOM_EMIN
+#undef TEST_RANDOM_EMAX
 #undef RAND_FUNCTION
 #undef TWO_ARGS
 #undef TWO_ARGS_UI

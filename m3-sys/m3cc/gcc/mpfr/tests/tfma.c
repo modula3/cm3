@@ -1,6 +1,6 @@
 /* Test file for mpfr_fma.
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -36,7 +36,7 @@ test_exact (void)
   int rnd;
   mpfr_t a, b, c, r1, r2;
 
-  mpfr_inits2 (8, a, b, c, r1, r2, (void *) 0);
+  mpfr_inits2 (8, a, b, c, r1, r2, (mpfr_ptr) 0);
 
   for (i = 0; i < sv; i++)
     for (j = 0; j < sv; j++)
@@ -78,7 +78,7 @@ test_exact (void)
               }
           }
 
-  mpfr_clears (a, b, c, r1, r2, (void *) 0);
+  mpfr_clears (a, b, c, r1, r2, (mpfr_ptr) 0);
 }
 
 static void
@@ -87,7 +87,7 @@ test_overflow1 (void)
   mpfr_t x, y, z, r;
   int inex;
 
-  mpfr_inits2 (8, x, y, z, r, (void *) 0);
+  mpfr_inits2 (8, x, y, z, r, (mpfr_ptr) 0);
   MPFR_SET_POS (x);
   mpfr_setmax (x, mpfr_get_emax ());  /* x = 2^emax - ulp */
   mpfr_set_ui (y, 2, GMP_RNDN);       /* y = 2 */
@@ -110,7 +110,7 @@ test_overflow1 (void)
       printf ("Error in test_overflow1: overflow flag set\n");
       exit (1);
     }
-  mpfr_clears (x, y, z, r, (void *) 0);
+  mpfr_clears (x, y, z, r, (mpfr_ptr) 0);
 }
 
 static void
@@ -119,7 +119,7 @@ test_overflow2 (void)
   mpfr_t x, y, z, r;
   int i, inex, rnd, err = 0;
 
-  mpfr_inits2 (8, x, y, z, r, (void *) 0);
+  mpfr_inits2 (8, x, y, z, r, (mpfr_ptr) 0);
 
   MPFR_SET_POS (x);
   mpfr_setmin (x, mpfr_get_emax ());  /* x = 0.1@emax */
@@ -191,7 +191,7 @@ test_overflow2 (void)
 
   if (err)
     exit (1);
-  mpfr_clears (x, y, z, r, (void *) 0);
+  mpfr_clears (x, y, z, r, (mpfr_ptr) 0);
 }
 
 static void
@@ -200,7 +200,7 @@ test_underflow1 (void)
   mpfr_t x, y, z, r;
   int inex, signy, signz, rnd, err = 0;
 
-  mpfr_inits2 (8, x, y, z, r, (void *) 0);
+  mpfr_inits2 (8, x, y, z, r, (mpfr_ptr) 0);
 
   MPFR_SET_POS (x);
   mpfr_setmin (x, mpfr_get_emin ());  /* x = 0.1@emin */
@@ -275,7 +275,7 @@ test_underflow1 (void)
 
   if (err)
     exit (1);
-  mpfr_clears (x, y, z, r, (void *) 0);
+  mpfr_clears (x, y, z, r, (mpfr_ptr) 0);
 }
 
 static void
@@ -284,7 +284,7 @@ test_underflow2 (void)
   mpfr_t x, y, z, r;
   int b, i, inex, same, err = 0;
 
-  mpfr_inits2 (32, x, y, z, r, (void *) 0);
+  mpfr_inits2 (32, x, y, z, r, (mpfr_ptr) 0);
 
   mpfr_set_si_2exp (z, 1, mpfr_get_emin (), GMP_RNDN);   /* z = 2^emin */
   mpfr_set_si_2exp (x, 1, mpfr_get_emin (), GMP_RNDN);   /* x = 2^emin */
@@ -332,7 +332,7 @@ test_underflow2 (void)
 
   if (err)
     exit (1);
-  mpfr_clears (x, y, z, r, (void *) 0);
+  mpfr_clears (x, y, z, r, (mpfr_ptr) 0);
 }
 
 int

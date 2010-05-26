@@ -1,6 +1,6 @@
 /* Utilities for MPFR developers, not exported.
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -85,6 +85,13 @@ MA 02110-1301, USA. */
 
 #endif
 #undef MPFR_NEED_LONGLONG_H
+
+/* For the definition of MPFR_THREAD_ATTR. GCC/ICC detection macros are
+   no longer used, as they sometimes gave incorrect information about
+   the support of thread-local variables. A configure check is now done.
+   If the use of detection macros is needed in the future, this could be
+   moved below (after the detection macros are defined). */
+#include "mpfr-thread.h"
 
 
 /******************************************************
@@ -171,29 +178,6 @@ MA 02110-1301, USA. */
  ************* Global Internal Variables **************
  ******************************************************/
 
-/* Note: Let's define MPFR_THREAD_ATTR even after a #error to make the
-   error message more visible (e.g. gcc doesn't immediately stop after
-   the #error line and outputs many error messages if MPFR_THREAD_ATTR
-   is not defined). But some compilers will just output a message and
-   may build MPFR "successfully" (without thread support). */
-#ifdef MPFR_USE_THREAD_SAFE
-# if __MPFR_GNUC(3,3) || __MPFR_ICC(8,1,0)
-#  define MPFR_THREAD_ATTR __thread
-# elif defined(_MSC_VER)
-#  if defined(_WINDLL)
-#   error "Can't build MPFR DLL as thread safe."
-#   define MPFR_THREAD_ATTR
-#  else
-#   define MPFR_THREAD_ATTR __declspec( thread )
-#  endif
-# else
-#  error "Can't build MPFR as thread safe (you need gcc >= 3.3 or icc >= 8.1)."
-#  define MPFR_THREAD_ATTR
-# endif
-#else
-# define MPFR_THREAD_ATTR
-#endif
-
 /* Cache struct */
 struct __gmpfr_cache_s {
   mpfr_t x;
@@ -264,6 +248,40 @@ __MPFR_DECLSPEC extern const mpfr_t __gmpfr_four;
   ((int) (__gmpfr_flags & MPFR_FLAGS_INEXACT))
 #define mpfr_erangeflag_p() \
   ((int) (__gmpfr_flags & MPFR_FLAGS_ERANGE))
+
+/* Testing an exception flag correctly is tricky. There are mainly two
+   pitfalls: First, one needs to remember to clear the corresponding
+   flag, in case it was set before the function call or during some
+   intermediate computations (in practice, one can clear all the flags).
+   Secondly, one needs to test the flag early enough, i.e. before it
+   can be modified by another function. Moreover, it is quite difficult
+   (if not impossible) to reliably check problems with "make check". To
+   avoid these pitfalls, it is recommended to use the following macros.
+   Other use of the exception-flag predicate functions/macros will be
+   detected by mpfrlint.
+   Note: _op can be either a statement or an expression.
+   MPFR_BLOCK_EXCEP should be used only inside a block; it is useful to
+   detect some exception in order to exit the block as soon as possible. */
+#define MPFR_BLOCK_DECL(_flags) unsigned int _flags
+#define MPFR_BLOCK(_flags,_op)          \
+  do                                    \
+    {                                   \
+      mpfr_clear_flags ();              \
+      _op;                              \
+      (_flags) = __gmpfr_flags;         \
+    }                                   \
+  while (0)
+#define MPFR_BLOCK_TEST(_flags,_f) MPFR_UNLIKELY ((_flags) & (_f))
+#define MPFR_BLOCK_EXCEP (__gmpfr_flags & (MPFR_FLAGS_UNDERFLOW | \
+                                           MPFR_FLAGS_OVERFLOW | \
+                                           MPFR_FLAGS_NAN))
+/* Let's use a MPFR_ prefix, because e.g. OVERFLOW is defined by glibc's
+   math.h, though this is not a reserved identifier! */
+#define MPFR_UNDERFLOW(_flags)  MPFR_BLOCK_TEST (_flags, MPFR_FLAGS_UNDERFLOW)
+#define MPFR_OVERFLOW(_flags)   MPFR_BLOCK_TEST (_flags, MPFR_FLAGS_OVERFLOW)
+#define MPFR_NANFLAG(_flags)    MPFR_BLOCK_TEST (_flags, MPFR_FLAGS_NAN)
+#define MPFR_INEXFLAG(_flags)   MPFR_BLOCK_TEST (_flags, MPFR_FLAGS_INEXACT)
+#define MPFR_ERANGEFLAG(_flags) MPFR_BLOCK_TEST (_flags, MPFR_FLAGS_ERANGE)
 
 
 /******************************************************
@@ -549,8 +567,18 @@ typedef unsigned long int  mpfr_uexp_t;
 #ifndef mp_exp_unsigned_t
 # define mp_exp_unsigned_t mpfr_uexp_t
 #endif
-#define mpfr_get_exp_t(x,r) mpfr_get_si((x),(r))
-#define mpfr_set_exp_t(x,e,r) mpfr_set_si((x),(e),(r))
+
+#if MPFR_EXP_MIN >= LONG_MIN && MPFR_EXP_MAX <= LONG_MAX
+typedef long int mpfr_eexp_t;
+# define mpfr_get_exp_t(x,r) mpfr_get_si((x),(r))
+# define mpfr_set_exp_t(x,e,r) mpfr_set_si((x),(e),(r))
+#elif defined (_MPFR_H_HAVE_INTMAX_T)
+typedef intmax_t mpfr_eexp_t;
+# define mpfr_get_exp_t(x,r) mpfr_get_sj((x),(r))
+# define mpfr_set_exp_t(x,e,r) mpfr_set_sj((x),(e),(r))
+#else
+# error "Cannot define mpfr_get_exp_t and mpfr_set_exp_t"
+#endif
 
 /* Invalid exponent value (to track bugs...) */
 #define MPFR_EXP_INVALID \
@@ -767,7 +795,7 @@ typedef union { mp_size_t s; mp_limb_t l; } mpfr_size_limb_t;
 #else
 #define MPFR_TMP_DECL(x) TMP_DECL
 #define MPFR_TMP_MARK(x) TMP_MARK
-#define MPFR_TMP_ALLOC(s) TMP_SALLOC(s)
+#define MPFR_TMP_ALLOC(s) TMP_ALLOC(s)
 #define MPFR_TMP_FREE(x) TMP_FREE
 #endif
 
@@ -949,6 +977,23 @@ do {                                                                  \
 
 /* Needs <locale.h> */
 #define MPFR_DECIMAL_POINT ((unsigned char) localeconv()->decimal_point[0])
+
+/* Set y to s*significand(x)*2^e, for example MPFR_ALIAS(y,x,1,MPFR_EXP(x))
+   sets y to |x|, and MPFR_ALIAS(y,x,MPFR_SIGN(x),0) sets y to x*2^f such
+   that 1/2 <= |y| < 1. Does not check y is in the valid exponent range.
+   WARNING! x and y share the same mantissa. So, some operations are
+   not valid if x has been provided via an argument, e.g., trying to
+   modify the mantissa of y, even temporarily, or calling mpfr_clear on y.
+*/
+#define MPFR_ALIAS(y,x,s,e)                     \
+  do                                            \
+    {                                           \
+      MPFR_PREC(y) = MPFR_PREC(x);              \
+      MPFR_SIGN(y) = (s);                       \
+      MPFR_EXP(y) = (e);                        \
+      MPFR_MANT(y) = MPFR_MANT(x);              \
+    } while (0)
+
 
 /******************************************************
  **************  Save exponent macros  ****************
@@ -1147,14 +1192,15 @@ typedef struct {
      , OVERFLOW_HANDLER)
 
 /* Return TRUE if b is non singular and we can round it to precision 'prec'
-   with rounding mode 'rnd', and with error at most 'error' */
+   and determine the ternary value, with rounding mode 'rnd', and with
+   error at most 'error' */
 #define MPFR_CAN_ROUND(b,err,prec,rnd)                                       \
  (!MPFR_IS_SINGULAR (b) && mpfr_round_p (MPFR_MANT (b), MPFR_LIMB_SIZE (b),  \
                                          (err), (prec) + ((rnd)==GMP_RNDN)))
 
 /* TODO: fix this description (see round_near_x.c). */
 /* Assuming that the function has a Taylor expansion which looks like:
-    y=o(f(x)) = o(x + g(x)) with |g(x)| <= 2^(EXP(v)-err)
+    y=o(f(x)) = o(v + g(x)) with |g(x)| <= 2^(EXP(v)-err)
    we can quickly set y to v if x is small (ie err > prec(y)+1) in most
    cases. It assumes that f(x) is not representable exactly as a FP number.
    v must not be a singular value (NAN, INF or ZERO); usual values are
@@ -1239,8 +1285,8 @@ typedef struct {
    obtain a better error message. The real test should have been a test
    concerning nested functions in gcc, which are disabled by default on
    Darwin; but it is not possible to do that without a configure test. */
-# if !(__MPFR_GNUC(3,0) && __MPFR_GLIBC(2,0))
-#  error "Logging not supported (needs GCC >= 3.0 and GNU C Library >= 2.0)."
+# if defined (__cplusplus) || !(__MPFR_GNUC(3,0) && __MPFR_GLIBC(2,0))
+#  error "Logging not supported (needs gcc >= 3.0 and GNU C Library >= 2.0)."
 # endif
 
 /* Use LOGGING */
@@ -1510,6 +1556,9 @@ __MPFR_DECLSPEC int       __gmpfr_int_ceil_log2 _MPFR_PROTO ((unsigned long));
 __MPFR_DECLSPEC int mpfr_exp_2 _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,mp_rnd_t));
 __MPFR_DECLSPEC int mpfr_exp_3 _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,mp_rnd_t));
 __MPFR_DECLSPEC int mpfr_powerof2_raw _MPFR_PROTO ((mpfr_srcptr));
+
+__MPFR_DECLSPEC int mpfr_pow_general _MPFR_PROTO ((mpfr_ptr, mpfr_srcptr,
+                           mpfr_srcptr, mp_rnd_t, int, mpfr_save_expo_t *));
 
 __MPFR_DECLSPEC void mpfr_setmax _MPFR_PROTO ((mpfr_ptr, mp_exp_t));
 __MPFR_DECLSPEC void mpfr_setmin _MPFR_PROTO ((mpfr_ptr, mp_exp_t));

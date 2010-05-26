@@ -1,6 +1,6 @@
 /* mpfr_set_inf -- set a number to plus or minus infinity.
 
-Copyright 2002, 2004, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2002, 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.

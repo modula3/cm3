@@ -1,6 +1,6 @@
 /* Test file for mpfr_version.
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -26,22 +26,13 @@ MA 02110-1301, USA. */
 
 #include "mpfr-test.h"
 
-static void
-err (int d, const char *shdr, const char *slib)
-{
-  printf ("Incorrect MPFR version [%d] (%s header vs %s library).\n"
-          "This error should have never occurred and may be due to a\n"
-          "corrupted mpfr.h, an incomplete build (try to rebuild MPFR\n"
-          "from scratch and/or use 'make clean'), or something wrong\n"
-          "in the system.\n", d, shdr, slib);
-  exit (1);
-}
-
 int
 main (void)
 {
   char buffer[256];
   const char *version;
+
+  test_version ();
 
   version = mpfr_get_version ();
 
@@ -50,11 +41,14 @@ main (void)
   sprintf (buffer, "%d.%d.%d", MPFR_VERSION_MAJOR, MPFR_VERSION_MINOR,
            MPFR_VERSION_PATCHLEVEL);
   if (strcmp (buffer, version) != 0)
-    err (1, buffer, version);
+    {
+      /* All the other problems should have been detected by test_version. */
+      printf ("Incorrect MPFR version! (%s header vs %s library)\n"
+              "This error should have never occurred and may be due "
+              "to a corrupted 'mpfr.h'.\n", buffer, version);
+      exit (1);
+    }
 #endif
-
-  if (strcmp (MPFR_VERSION_STRING, version) != 0)
-    err (2, MPFR_VERSION_STRING, version);
 
   if (__GNU_MP_VERSION_PATCHLEVEL != 0)
     sprintf (buffer, "%d.%d.%d", __GNU_MP_VERSION, __GNU_MP_VERSION_MINOR,

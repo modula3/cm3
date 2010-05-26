@@ -1,6 +1,6 @@
 /* Test file for mpfr_sin_cos.
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -50,7 +50,7 @@ check53 (const char *xs, const char *sin_xs, const char *cos_xs,
 {
   mpfr_t xx, s, c;
 
-  mpfr_inits2 (53, xx, s, c, (void *) 0);
+  mpfr_inits2 (53, xx, s, c, (mpfr_ptr) 0);
   mpfr_set_str1 (xx, xs); /* should be exact */
   mpfr_sin_cos (s, c, xx, rnd_mode);
   if (mpfr_cmp_str1 (s, sin_xs))
@@ -71,7 +71,7 @@ check53 (const char *xs, const char *sin_xs, const char *cos_xs,
       printf(", expected %s\n", cos_xs);
       exit (1);
     }
-  mpfr_clears (xx, s, c, (void *) 0);
+  mpfr_clears (xx, s, c, (mpfr_ptr) 0);
 }
 
 static void
@@ -79,7 +79,7 @@ check53sin (const char *xs, const char *sin_xs, mp_rnd_t rnd_mode)
 {
   mpfr_t xx, s, c;
 
-  mpfr_inits2 (53, xx, s, c, (void *) 0);
+  mpfr_inits2 (53, xx, s, c, (mpfr_ptr) 0);
   mpfr_set_str1 (xx, xs); /* should be exact */
   mpfr_sin_cos (s, c, xx, rnd_mode);
   if (mpfr_cmp_str1 (s, sin_xs))
@@ -91,7 +91,7 @@ check53sin (const char *xs, const char *sin_xs, mp_rnd_t rnd_mode)
       printf(", expected %s\n", sin_xs);
       exit (1);
     }
-  mpfr_clears (xx, s, c, (void *) 0);
+  mpfr_clears (xx, s, c, (mpfr_ptr) 0);
 }
 
 static void
@@ -99,7 +99,7 @@ check53cos (const char *xs, const char *cos_xs, mp_rnd_t rnd_mode)
 {
   mpfr_t xx, c, s;
 
-  mpfr_inits2 (53, xx, s, c, (void *) 0);
+  mpfr_inits2 (53, xx, s, c, (mpfr_ptr) 0);
   mpfr_set_str1 (xx, xs); /* should be exact */
   mpfr_sin_cos (s, c, xx, rnd_mode);
   if (mpfr_cmp_str1 (c, cos_xs))
@@ -111,7 +111,7 @@ check53cos (const char *xs, const char *cos_xs, mp_rnd_t rnd_mode)
       printf(", expected %s\n", cos_xs);
       exit (1);
     }
-  mpfr_clears (xx, s, c, (void *) 0);
+  mpfr_clears (xx, s, c, (mpfr_ptr) 0);
 }
 
 static void
@@ -252,18 +252,57 @@ overflowed_sin_cos0 (void)
   mpfr_clear (z);
 }
 
+static void
+tiny (void)
+{
+  mpfr_t x, s, c;
+  int i, inex;
+
+  mpfr_inits2 (64, x, s, c, (mpfr_ptr) 0);
+
+  for (i = -1; i <= 1; i += 2)
+    {
+      mpfr_set_si (x, i, GMP_RNDN);
+      mpfr_set_exp (x, mpfr_get_emin ());
+      inex = mpfr_sin_cos (s, c, x, GMP_RNDN);
+      MPFR_ASSERTN (inex != 0);
+      MPFR_ASSERTN (mpfr_equal_p (s, x));
+      MPFR_ASSERTN (!mpfr_nan_p (c) && mpfr_cmp_ui (c, 1) == 0);
+    }
+
+  mpfr_clears (x, s, c, (mpfr_ptr) 0);
+}
+
+/* bug found in nightly tests */
+static void
+test20071214 (void)
+{
+  mpfr_t a, b;
+
+  mpfr_init2 (a, 4);
+  mpfr_init2 (b, 4);
+
+  mpfr_set_ui_2exp (a, 3, -4, GMP_RNDN);
+  mpfr_sin_cos (a, b, a, GMP_RNDD);
+  MPFR_ASSERTN(mpfr_cmp_ui_2exp (a, 11, -6) == 0);
+  MPFR_ASSERTN(mpfr_cmp_ui_2exp (b, 15, -4) == 0);
+
+  mpfr_clear (a);
+  mpfr_clear (b);
+}
+
 /* tsin_cos prec [N] performs N tests with prec bits */
 int
 main(int argc, char *argv[])
 {
   tests_start_mpfr ();
 
-  check_nans ();
-
   if (argc > 1)
     {
       large_test (atoi (argv[1]), (argc > 2) ? atoi (argv[2]) : 1);
     }
+
+  check_nans ();
 
   /* worst case from PhD thesis of Vincent Lefe`vre: x=8980155785351021/2^54 */
   check53 ("4.984987858808754279e-1", "4.781075595393330379e-1",
@@ -288,6 +327,8 @@ main(int argc, char *argv[])
   check53cos ("1.00591265847407274059", "0.53531755997839769456",  GMP_RNDN);
 
   overflowed_sin_cos0 ();
+  tiny ();
+  test20071214 ();
 
   tests_end_mpfr ();
   return 0;

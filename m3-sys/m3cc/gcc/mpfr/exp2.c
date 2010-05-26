@@ -1,6 +1,6 @@
 /* mpfr_exp2 -- power of 2 function 2^y
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -139,7 +139,7 @@ mpfr_exp2 (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
   mpfr_clear_flags ();
   mpfr_mul_2si (y, y, xint, GMP_RNDN); /* exact or overflow */
   /* Note: We can have an overflow only when t was rounded up to 2. */
-  MPFR_ASSERTD (!mpfr_overflow_p () || inexact > 0);
+  MPFR_ASSERTD (MPFR_IS_PURE_FP (y) || inexact > 0);
   MPFR_SAVE_EXPO_UPDATE_FLAGS (expo, __gmpfr_flags);
   MPFR_SAVE_EXPO_FREE (expo);
   return mpfr_check_range (y, inexact, rnd_mode);

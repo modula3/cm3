@@ -1,6 +1,6 @@
 /* Test file for mpfr_hypot.
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -26,7 +26,8 @@ MA 02110-1301, USA. */
 
 #include "mpfr-test.h"
 
-#define TEST_FUNCTION mpfr_hypot
+/* Non-zero when extended exponent range */
+static int ext = 0;
 
 static void
 special (void)
@@ -94,19 +95,34 @@ test_large (void)
   mpfr_set_prec (t, 53);
   mpfr_set_prec (y, 53);
   mpfr_set_str_binary (x, "0.11101100011110000011101000010101010011001101000001100E-1021");
-  mpfr_set_str_binary (t, "0.11111001010011000001110110001101011100001000010010100E-1021");
-  mpfr_hypot (y, x, t, GMP_RNDN);
+  mpfr_set_str_binary (y, "0.11111001010011000001110110001101011100001000010010100E-1021");
+  mpfr_hypot (t, x, y, GMP_RNDN);
+  mpfr_set_str_binary (z, "0.101010111100110111101110111110100110010011001010111E-1020");
+  if (mpfr_cmp (z, t))
+    {
+      printf ("Error in test_large: got\n");
+      mpfr_out_str (stdout, 2, 0, t, GMP_RNDN);
+      printf ("\ninstead of\n");
+      mpfr_out_str (stdout, 2, 0, z, GMP_RNDN);
+      printf ("\n");
+      exit (1);
+    }
 
   mpfr_set_prec (x, 240);
   mpfr_set_prec (y, 22);
+  mpfr_set_prec (z, 2);
   mpfr_set_prec (t, 2);
   mpfr_set_str_binary (x, "0.100111011010010010110100000100000001100010011100110101101111111101011110111011011101010110100101111000111100010100110000100101011110111011100110100110100101110101101100011000001100000001111101110100100100011011011010110111100110010101000111e-7");
-  mpfr_set_str_binary (y, "0.1111000010000011000111e-10");
+  mpfr_set_str_binary (y, "0.1111000010000011000111E-10");
   mpfr_hypot (t, x, y, GMP_RNDN);
-  mpfr_set_str_binary (y, "0.11E-7");
-  if (mpfr_cmp (t, y))
+  mpfr_set_str_binary (z, "0.11E-7");
+  if (mpfr_cmp (z, t))
     {
-      printf ("Error in mpfr_hypot (1)\n");
+      printf ("Error in test_large: got\n");
+      mpfr_out_str (stdout, 2, 0, t, GMP_RNDN);
+      printf ("\ninstead of\n");
+      mpfr_out_str (stdout, 2, 0, z, GMP_RNDN);
+      printf ("\n");
       exit (1);
     }
 
@@ -114,6 +130,50 @@ test_large (void)
   mpfr_clear (y);
   mpfr_clear (z);
   mpfr_clear (t);
+}
+
+static void
+test_small (void)
+{
+  mpfr_t x, y, z1, z2;
+  int inex1, inex2;
+  unsigned int flags;
+
+  /* Test hypot(x,x) with x = 2^(emin-1). Result is x * sqrt(2). */
+  mpfr_inits2 (8, x, y, z1, z2, (mpfr_ptr) 0);
+  mpfr_set_si_2exp (x, 1, mpfr_get_emin () - 1, GMP_RNDN);
+  mpfr_set_si_2exp (y, 1, mpfr_get_emin () - 1, GMP_RNDN);
+  mpfr_set_ui (z1, 2, GMP_RNDN);
+  inex1 = mpfr_sqrt (z1, z1, GMP_RNDN);
+  inex2 = mpfr_mul (z1, z1, x, GMP_RNDN);
+  MPFR_ASSERTN (inex2 == 0);
+  mpfr_clear_flags ();
+  inex2 = mpfr_hypot (z2, x, y, GMP_RNDN);
+  flags = __gmpfr_flags;
+  if (mpfr_cmp (z1, z2) != 0)
+    {
+      printf ("Error in test_small%s\nExpected ",
+              ext ? ", extended exponent range" : "");
+      mpfr_out_str (stdout, 2, 0, z1, GMP_RNDN);
+      printf ("\nGot      ");
+      mpfr_out_str (stdout, 2, 0, z2, GMP_RNDN);
+      printf ("\n");
+      exit (1);
+    }
+  if (! SAME_SIGN (inex1, inex2))
+    {
+      printf ("Bad ternary value in test_small%s\nExpected %d, got %d\n",
+              ext ? ", extended exponent range" : "", inex1, inex2);
+      exit (1);
+    }
+  if (flags != MPFR_FLAGS_INEXACT)
+    {
+      printf ("Bad flags in test_small%s\nExpected %u, got %u\n",
+              ext ? ", extended exponent range" : "",
+              (unsigned int) MPFR_FLAGS_INEXACT, flags);
+      exit (1);
+    }
+  mpfr_clears (x, y, z1, z2, (mpfr_ptr) 0);
 }
 
 static void
@@ -131,7 +191,8 @@ test_large_small (void)
   inexact = mpfr_hypot (z, x, y, GMP_RNDN);
   if (inexact >= 0 || mpfr_cmp (x, z))
     {
-      printf ("Error 1 in test_large_small\n");
+      printf ("Error 1 in test_large_small%s\n",
+              ext ? ", extended exponent range" : "");
       exit (1);
     }
 
@@ -139,7 +200,8 @@ test_large_small (void)
   inexact = mpfr_hypot (z, x, y, GMP_RNDN);
   if (mpfr_cmp (x, z) >= 0)
     {
-      printf ("Error 2 in test_large_small\n");
+      printf ("Error 2 in test_large_small%s\n",
+              ext ? ", extended exponent range" : "");
       printf ("x = ");
       mpfr_out_str (stdout, 2, 0, x, GMP_RNDN);
       printf ("\n");
@@ -159,105 +221,84 @@ test_large_small (void)
   mpfr_clear (z);
 }
 
+static void
+check_overflow (void)
+{
+  mpfr_t x, y;
+  int inex, r;
+
+  mpfr_inits2 (8, x, y, (mpfr_ptr) 0);
+  mpfr_set_ui (x, 1, GMP_RNDN);
+  mpfr_setmax (x, mpfr_get_emax ());
+
+  RND_LOOP(r)
+    {
+      mpfr_clear_overflow ();
+      inex = mpfr_hypot (y, x, x, r);
+      if (!mpfr_overflow_p ())
+        {
+          printf ("No overflow in check_overflow for %s%s\n",
+                  mpfr_print_rnd_mode ((mp_rnd_t) r),
+                  ext ? ", extended exponent range" : "");
+          exit (1);
+        }
+      MPFR_ASSERTN (MPFR_IS_POS (y));
+      if (r == GMP_RNDZ || r == GMP_RNDD)
+        {
+          MPFR_ASSERTN (inex < 0);
+          MPFR_ASSERTN (!mpfr_inf_p (y));
+          mpfr_nexttoinf (y);
+        }
+      else
+        {
+          MPFR_ASSERTN (inex > 0);
+        }
+      MPFR_ASSERTN (mpfr_inf_p (y));
+    }
+
+  mpfr_clears (x, y, (mpfr_ptr) 0);
+}
+
+#define TWO_ARGS
+#define TEST_FUNCTION mpfr_hypot
+#include "tgeneric.c"
+
+static void
+alltst (void)
+{
+  mp_exp_t emin, emax;
+
+  ext = 0;
+  test_small ();
+  test_large_small ();
+  check_overflow ();
+
+  emin = mpfr_get_emin ();
+  emax = mpfr_get_emax ();
+  set_emin (MPFR_EMIN_MIN);
+  set_emax (MPFR_EMAX_MAX);
+  if (mpfr_get_emin () != emin || mpfr_get_emax () != emax)
+    {
+      ext = 1;
+      test_small ();
+      test_large_small ();
+      check_overflow ();
+      set_emin (emin);
+      set_emax (emax);
+    }
+}
+
 int
 main (int argc, char *argv[])
 {
-  unsigned int prec, err, yprec, n, p0 = 2, p1 = 100, N = 100;
-  mp_rnd_t rnd;
-  mpfr_t x1, x2, y, z, t;
-  int inexact, compare, compare2;
-
   tests_start_mpfr ();
 
   special ();
 
-  mpfr_init (x1);
-  mpfr_init (x2);
-  mpfr_init (y);
-  mpfr_init (z);
-  mpfr_init (t);
-
-  /* thypot prec - perform one random computation with precision prec */
-  if (argc >= 2)
-    {
-      p0 = p1 = atoi (argv[1]);
-      N = 1;
-    }
-
-  for (prec = p0; prec <= p1; prec++)
-    {
-      mpfr_set_prec (x1, prec);
-      mpfr_set_prec (x2, prec);
-      mpfr_set_prec (z, prec);
-      mpfr_set_prec (t, prec);
-      yprec = prec + 10;
-
-      for (n=0; n<N; n++)
-        {
-          mpfr_random(x1);
-          mpfr_random(x2);
-          if (randlimb () % 2)
-            mpfr_neg (x1, x1, GMP_RNDN);
-          if (randlimb () % 2)
-            mpfr_neg (x2, x2, GMP_RNDN);
-          rnd = (mp_rnd_t) RND_RAND ();
-          mpfr_set_prec (y, yprec);
-
-          compare =TEST_FUNCTION (y, x1,x2, rnd);
-          err = (rnd == GMP_RNDN) ? yprec + 1 : yprec;
-          if (mpfr_can_round (y, err, rnd, rnd, prec))
-            {
-              mpfr_set (t, y, rnd);
-              inexact = TEST_FUNCTION (z, x1,x2, rnd);
-              if (mpfr_cmp (t, z))
-                {
-                  printf ("results differ for x1=");
-                  mpfr_out_str (stdout, 2, prec, x1, GMP_RNDN);
-                  printf ("\n and x2=");
-                  mpfr_out_str (stdout, 2, prec, x2, GMP_RNDN);
-                  printf (" \n prec=%u rnd_mode=%s\n", prec,
-                          mpfr_print_rnd_mode (rnd));
-                  printf ("   got ");
-                  mpfr_out_str (stdout, 2, prec, z, GMP_RNDN);
-                  puts ("");
-                  printf ("   expected ");
-                  mpfr_out_str (stdout, 2, prec, t, GMP_RNDN);
-                  puts ("");
-                  printf ("   approximation was ");
-                  mpfr_print_binary (y);
-                  puts ("");
-                  exit (1);
-                }
-              compare2 = mpfr_cmp (t, y);
-              /* if rounding to nearest, cannot know the sign of t - f(x)
-                 because of composed rounding: y = o(f(x)) and t = o(y) */
-              if ((rnd != GMP_RNDN) && (compare * compare2 >= 0))
-                compare = compare + compare2;
-              else
-                compare = inexact; /* cannot determine sign(t-f(x)) */
-              if (((inexact == 0) && (compare != 0)) ||
-                  ((inexact > 0) && (compare <= 0)) ||
-                  ((inexact < 0) && (compare >= 0)))
-                {
-                  printf ("Wrong inexact flag for rnd=%s: expected %d, got %d"
-                          "\n", mpfr_print_rnd_mode (rnd), compare, inexact);
-                  printf ("x1="); mpfr_print_binary (x1); puts ("");
-                  printf ("x2="); mpfr_print_binary (x2); puts ("");
-                  printf ("t="); mpfr_print_binary (t); puts ("");
-                  exit (1);
-                }
-            }
-        }
-    }
-
-  mpfr_clear (x1);
-  mpfr_clear (x2);
-  mpfr_clear (y);
-  mpfr_clear (z);
-  mpfr_clear (t);
-
   test_large ();
-  test_large_small ();
+  alltst ();
+
+  test_generic (2, 100, 10);
 
   tests_end_mpfr ();
   return 0;
