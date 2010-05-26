@@ -370,9 +370,9 @@ end
 % Create a native Darwin/AMD64 compiler.
 %
 if equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD) and equal (M3CC_BUILD, "AMD64_DARWIN")
-    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
-    Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
     Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
+    Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
     M3CC_CFLAGS = M3CC_CFLAGS & " -arch x86_64"
 end
 
