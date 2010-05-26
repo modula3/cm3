@@ -1,6 +1,6 @@
 /* mpfr_get_version -- MPFR version
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -25,5 +25,5 @@ MA 02110-1301, USA. */
 const char *
 mpfr_get_version (void)
 {
-  return "2.3.0";
+  return "2.3.2";
 }

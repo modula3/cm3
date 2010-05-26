@@ -1,7 +1,7 @@
 /* mpfr_exp_2 -- exponential of a floating-point number
-                using Brent's algorithms in O(n^(1/2)*M(n)) and O(n^(1/3)*M(n))
+                 using algorithms in O(n^(1/2)*M(n)) and O(n^(1/3)*M(n))
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -75,8 +75,9 @@ mpz_normalize2 (mpz_t rop, mpz_t z, mp_exp_t expz, mp_exp_t target)
 
 /* use Brent's formula exp(x) = (1+r+r^2/2!+r^3/3!+...)^(2^K)*2^n
    where x = n*log(2)+(2^K)*r
-   together with Brent-Kung O(t^(1/2)) algorithm for the evaluation of
-   power series. The resulting complexity is O(n^(1/3)*M(n)).
+   together with the Paterson-Stockmeyer O(t^(1/2)) algorithm for the
+   evaluation of power series. The resulting complexity is O(n^(1/3)*M(n)).
+   This function returns with the exact flags due to exp.
 */
 int
 mpfr_exp_2 (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
@@ -92,17 +93,26 @@ mpfr_exp_2 (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
   MPFR_ZIV_DECL (loop);
   MPFR_TMP_DECL(marker);
 
+  MPFR_LOG_FUNC (("x[%#R]=%R rnd=%d", x, x, rnd_mode),
+                 ("y[%#R]=%R inexact=%d", y, y, inexact));
+
   precy = MPFR_PREC(y);
 
   /* Warning: we cannot use the 'double' type here, since on 64-bit machines
      x may be as large as 2^62*log(2) without overflow, and then x/log(2)
      is about 2^62: not every integer of that size can be represented as a
      'double', thus the argument reduction would fail. */
-  mpfr_init2 (r, sizeof (long) * CHAR_BIT);
-  mpfr_const_log2 (r, GMP_RNDZ);
-  mpfr_div (r, x, r, GMP_RNDN);
-  n = mpfr_get_si (r, GMP_RNDN);
-  mpfr_clear (r);
+  if (MPFR_GET_EXP (x) <= -2)
+    /* |x| <= 0.25, thus n = round(x/log(2)) = 0 */
+    n = 0;
+  else
+    {
+      mpfr_init2 (r, sizeof (long) * CHAR_BIT);
+      mpfr_const_log2 (r, GMP_RNDZ);
+      mpfr_div (r, x, r, GMP_RNDN);
+      n = mpfr_get_si (r, GMP_RNDN);
+      mpfr_clear (r);
+    }
   MPFR_LOG_MSG (("d(x)=%1.30e n=%ld\n", mpfr_get_d1(x), n));
 
   /* error bounds the cancelled bits in x - n*log(2) */
@@ -131,7 +141,12 @@ mpfr_exp_2 (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
   MPFR_ZIV_INIT (loop, q);
   for (;;)
     {
-      MPFR_LOG_MSG (("n=%d K=%d l=%d q=%d\n",n,K,l,q) );
+      MPFR_LOG_MSG (("n=%ld K=%lu l=%lu q=%lu error_r=%d\n",
+                     n, K, l, (unsigned long) q, error_r));
+
+      /* First reduce the argument to r = x - n * log(2),
+         so that r is small in absolute value. We want an upper
+         bound on r to get an upper bound on exp(x). */
 
       /* if n<0, we have to get an upper bound of log(2)
          in order to get an upper bound of r = x-n*log(2) */
@@ -139,85 +154,78 @@ mpfr_exp_2 (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
       /* s is within 1 ulp of log(2) */
 
       mpfr_mul_ui (r, s, (n < 0) ? -n : n, (n >= 0) ? GMP_RNDZ : GMP_RNDU);
-      /* r is within 3 ulps of n*log(2) */
+      /* r is within 3 ulps of |n|*log(2) */
       if (n < 0)
         MPFR_CHANGE_SIGN (r);
-      /* r = floor(n*log(2)), within 3 ulps */
+      /* r <= n*log(2), within 3 ulps */
 
       MPFR_LOG_VAR (x);
       MPFR_LOG_VAR (r);
 
       mpfr_sub (r, x, r, GMP_RNDU);
-      /* possible cancellation here: the error on r is at most
-         3*2^(EXP(old_r)-EXP(new_r)) */
-      while (MPFR_IS_NEG (r))
-        { /* initial approximation n was too large */
-          n--;
-          mpfr_add (r, r, s, GMP_RNDU);
-        }
-      mpfr_prec_round (r, q, GMP_RNDU);
-      MPFR_LOG_VAR (r);
-      MPFR_ASSERTD (MPFR_IS_POS (r));
-      mpfr_div_2ui (r, r, K, GMP_RNDU); /* r = (x-n*log(2))/2^K, exact */
+      /* possible cancellation here: if r is zero, increase the working
+         precision (Ziv's loop); otherwise, the error on r is at most
+         3*2^(EXP(old_r)-EXP(new_r)) ulps */
 
-      MPFR_TMP_MARK(marker);
-      MY_INIT_MPZ(ss, 3 + 2*((q-1)/BITS_PER_MP_LIMB));
-      exps = mpfr_get_z_exp (ss, s);
-      /* s <- 1 + r/1! + r^2/2! + ... + r^l/l! */
-      l = (precy < MPFR_EXP_2_THRESHOLD)
-        ? mpfr_exp2_aux (ss, r, q, &exps)      /* naive method */
-        : mpfr_exp2_aux2 (ss, r, q, &exps);    /* Brent/Kung method */
-
-      MPFR_LOG_MSG (("l=%d q=%d (K+l)*q^2=%1.3e\n", l, q, (K+l)*(double)q*q));
-
-      for (k = 0; k < K; k++)
+      if (MPFR_IS_PURE_FP (r))
         {
-          mpz_mul (ss, ss, ss);
-          exps <<= 1;
-          exps += mpz_normalize (ss, ss, q);
+          mp_exp_t cancel;
+
+          /* number of cancelled bits */
+          cancel = MPFR_GET_EXP (x) - MPFR_GET_EXP (r);
+          if (cancel < 0) /* this might happen in the second loop if x is
+                             tiny negative: the initial n is 0, then in the
+                             first loop n becomes -1 and r = x + log(2) */
+            cancel = 0;
+          while (MPFR_IS_NEG (r))
+            { /* initial approximation n was too large */
+              n--;
+              mpfr_add (r, r, s, GMP_RNDU);
+            }
+          mpfr_prec_round (r, q, GMP_RNDU);
+          MPFR_LOG_VAR (r);
+          MPFR_ASSERTD (MPFR_IS_POS (r));
+          mpfr_div_2ui (r, r, K, GMP_RNDU); /* r = (x-n*log(2))/2^K, exact */
+
+          MPFR_TMP_MARK(marker);
+          MY_INIT_MPZ(ss, 3 + 2*((q-1)/BITS_PER_MP_LIMB));
+          exps = mpfr_get_z_exp (ss, s);
+          /* s <- 1 + r/1! + r^2/2! + ... + r^l/l! */
+          MPFR_ASSERTD (MPFR_IS_PURE_FP (r) && MPFR_EXP (r) < 0);
+          l = (precy < MPFR_EXP_2_THRESHOLD)
+            ? mpfr_exp2_aux (ss, r, q, &exps)   /* naive method */
+            : mpfr_exp2_aux2 (ss, r, q, &exps); /* Paterson/Stockmeyer meth */
+
+          MPFR_LOG_MSG (("l=%lu q=%lu (K+l)*q^2=%1.3e\n",
+                         l, (unsigned long) q, (K + l) * (double) q * q));
+
+          for (k = 0; k < K; k++)
+            {
+              mpz_mul (ss, ss, ss);
+              exps <<= 1;
+              exps += mpz_normalize (ss, ss, q);
+            }
+          mpfr_set_z (s, ss, GMP_RNDN);
+
+          MPFR_SET_EXP(s, MPFR_GET_EXP (s) + exps);
+          MPFR_TMP_FREE(marker); /* don't need ss anymore */
+
+          /* error is at most 2^K*l, plus cancel+2 to take into account of
+             the error of 3*2^(EXP(old_r)-EXP(new_r)) on r */
+          K += MPFR_INT_CEIL_LOG2 (l) + cancel + 2;
+
+          MPFR_LOG_MSG (("before mult. by 2^n:\n", 0));
+          MPFR_LOG_VAR (s);
+          MPFR_LOG_MSG (("err=%lu bits\n", K));
+
+          if (MPFR_LIKELY (MPFR_CAN_ROUND (s, q - K, precy, rnd_mode)))
+            {
+              mpfr_clear_flags ();
+              inexact = mpfr_mul_2si (y, s, n, rnd_mode);
+              break;
+            }
         }
-      mpfr_set_z (s, ss, GMP_RNDN);
 
-      MPFR_SET_EXP(s, MPFR_GET_EXP (s) + exps);
-      MPFR_TMP_FREE(marker); /* don't need ss anymore */
-
-      mpfr_clear_underflow ();
-      mpfr_mul_2si (s, s, n, GMP_RNDU);
-      /* Check if an overflow occurs */
-      if (MPFR_UNLIKELY (MPFR_IS_INF (s)))
-        {
-          /* We hack to set a FP number outside the valid range so that
-             mpfr_check_range properly generates an overflow */
-          mpfr_setmax (y, __gmpfr_emax);
-          MPFR_EXP (y) ++;
-          inexact = 1;
-          break;
-        }
-      /* Check if an underflow occurs */
-      else if (MPFR_UNLIKELY (mpfr_underflow_p ()))
-        {
-          /* We hack to set a FP number outside the valid range so that
-             mpfr_check_range properly generates an underflow.
-             Note that the range has been increased to allow a safe
-             detection of underflow (MPFR_EMIN_MIN-3 in exp.c) even for
-             RNDN */
-          mpfr_setmax (y, MPFR_EMIN_MIN-2);
-          inexact = -1;
-          break;
-        }
-
-      /* error is at most 2^K*l */
-      K += MPFR_INT_CEIL_LOG2 (l);
-
-      MPFR_LOG_MSG (("after mult. by 2^n:\n", 0));
-      MPFR_LOG_VAR (s);
-      MPFR_LOG_MSG (("err=%d bits\n", K));
-
-      if (MPFR_LIKELY (MPFR_CAN_ROUND (s, q-K, precy, rnd_mode)))
-        {
-          inexact = mpfr_set (y, s, rnd_mode);
-          break;
-        }
       MPFR_ZIV_NEXT (loop, q);
       mpfr_set_prec (r, q);
       mpfr_set_prec (s, q);
@@ -248,6 +256,8 @@ mpfr_exp2_aux (mpz_t s, mpfr_srcptr r, mp_prec_t q, mp_exp_t *exps)
   mpz_t t, rr;
   mp_size_t sbit, tbit;
   MPFR_TMP_DECL(marker);
+
+  MPFR_ASSERTN (MPFR_IS_PURE_FP (r));
 
   MPFR_TMP_MARK(marker);
   qn = 1 + (q-1)/BITS_PER_MP_LIMB;
@@ -287,7 +297,7 @@ mpfr_exp2_aux (mpz_t s, mpfr_srcptr r, mp_prec_t q, mp_exp_t *exps)
 }
 
 /* s <- 1 + r/1! + r^2/2! + ... + r^l/l! while MPFR_EXP(r^l/l!)+MPFR_EXPR(r)>-q
-   using Brent/Kung method with O(sqrt(l)) multiplications.
+   using Paterson-Stockmeyer algorithm with O(sqrt(l)) multiplications.
    Return l.
    Uses m multiplications of full size and 2l/m of decreasing size,
    i.e. a total equivalent to about m+l/m full multiplications,
@@ -345,52 +355,54 @@ mpfr_exp2_aux2 (mpz_t s, mpfr_srcptr r, mp_prec_t q, mp_exp_t *exps)
 
   l = 0;
   ql = q; /* precision used for current giant step */
-  do {
-    /* all R[i] must have exponent 1-ql */
-    if (l != 0)
-      for (i = 0 ; i < m ; i++)
-        expR[i] = mpz_normalize2 (R[i], R[i], expR[i], 1-ql);
-    /* the absolute error on R[i]*rr is still 2*i-1 ulps */
-    expt = mpz_normalize2 (t, R[m-1], expR[m-1], 1-ql);
-    /* err(t) <= 2*m-1 ulps */
-    /* computes t = 1 + r/(l+1) + ... + r^(m-1)*l!/(l+m-1)!
-       using Horner's scheme */
-    for (i = m-1 ; i-- != 0 ; )
-      {
-        mpz_div_ui(t, t, l+i+1); /* err(t) += 1 ulp */
-        mpz_add(t, t, R[i]);
-      }
-    /* now err(t) <= (3m-2) ulps */
+  do
+    {
+      /* all R[i] must have exponent 1-ql */
+      if (l != 0)
+        for (i = 0 ; i < m ; i++)
+          expR[i] = mpz_normalize2 (R[i], R[i], expR[i], 1-ql);
+      /* the absolute error on R[i]*rr is still 2*i-1 ulps */
+      expt = mpz_normalize2 (t, R[m-1], expR[m-1], 1-ql);
+      /* err(t) <= 2*m-1 ulps */
+      /* computes t = 1 + r/(l+1) + ... + r^(m-1)*l!/(l+m-1)!
+         using Horner's scheme */
+      for (i = m-1 ; i-- != 0 ; )
+        {
+          mpz_div_ui (t, t, l+i+1); /* err(t) += 1 ulp */
+          mpz_add (t, t, R[i]);
+        }
+      /* now err(t) <= (3m-2) ulps */
 
-    /* now multiplies t by r^l/l! and adds to s */
-    mpz_mul(t, t, rr);
-    expt += expr;
-    expt = mpz_normalize2(t, t, expt, *exps);
-    /* err(t) <= (3m-1) + err_rr(l) <= (3m-2) + 2*l */
-    MPFR_ASSERTD (expt == *exps);
-    mpz_add(s, s, t); /* no error here */
+      /* now multiplies t by r^l/l! and adds to s */
+      mpz_mul (t, t, rr);
+      expt += expr;
+      expt = mpz_normalize2 (t, t, expt, *exps);
+      /* err(t) <= (3m-1) + err_rr(l) <= (3m-2) + 2*l */
+      MPFR_ASSERTD (expt == *exps);
+      mpz_add (s, s, t); /* no error here */
 
-    /* updates rr, the multiplication of the factors l+i could be done
-       using binary splitting too, but it is not sure it would save much */
-    mpz_mul(t, rr, R[m]); /* err(t) <= err(rr) + 2m-1 */
-    expr += expR[m];
-    mpz_set_ui (tmp, 1);
-    for (i = 1 ; i <= m ; i++)
-      mpz_mul_ui (tmp, tmp, l + i);
-    mpz_fdiv_q(t, t, tmp); /* err(t) <= err(rr) + 2m */
-    l += m;
-    if (MPFR_UNLIKELY (mpz_sgn (t) == 0))
-      break;
-    expr += mpz_normalize(rr, t, ql); /* err_rr(l+1) <= err_rr(l) + 2m+1 */
-    if (MPFR_UNLIKELY (mpz_sgn (rr) == 0))
-      rrbit = 1;
-    else
-      MPFR_MPZ_SIZEINBASE2 (rrbit, rr);
-    MPFR_MPZ_SIZEINBASE2 (sbit, s);
-    ql = q - *exps - sbit + expr + rrbit;
-    /* TODO: Wrong cast. I don't want what is right, but this is
-       certainly wrong */
-  }  while ((size_t) expr+rrbit > (size_t)((int)-q));
+      /* updates rr, the multiplication of the factors l+i could be done
+         using binary splitting too, but it is not sure it would save much */
+      mpz_mul (t, rr, R[m]); /* err(t) <= err(rr) + 2m-1 */
+      expr += expR[m];
+      mpz_set_ui (tmp, 1);
+      for (i = 1 ; i <= m ; i++)
+        mpz_mul_ui (tmp, tmp, l + i);
+      mpz_fdiv_q (t, t, tmp); /* err(t) <= err(rr) + 2m */
+      l += m;
+      if (MPFR_UNLIKELY (mpz_sgn (t) == 0))
+        break;
+      expr += mpz_normalize (rr, t, ql); /* err_rr(l+1) <= err_rr(l) + 2m+1 */
+      if (MPFR_UNLIKELY (mpz_sgn (rr) == 0))
+        rrbit = 1;
+      else
+        MPFR_MPZ_SIZEINBASE2 (rrbit, rr);
+      MPFR_MPZ_SIZEINBASE2 (sbit, s);
+      ql = q - *exps - sbit + expr + rrbit;
+      /* TODO: Wrong cast. I don't want what is right, but this is
+         certainly wrong */
+    }
+  while ((size_t) expr+rrbit > (size_t) (int) -q);
 
   MPFR_TMP_FREE(marker);
   mpz_clear(tmp);

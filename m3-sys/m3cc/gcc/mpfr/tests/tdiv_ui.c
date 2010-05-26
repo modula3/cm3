@@ -1,6 +1,6 @@
 /* Test file for mpfr_div_ui.
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -130,6 +130,12 @@ special (void)
         }
     }
 
+  /* Bug reported by Mark Dickinson, 6 Nov 2007 */
+  mpfr_set_si (x, 0, GMP_RNDN);
+  mpfr_set_si (y, -1, GMP_RNDN);
+  mpfr_div_ui (y, x, 4, GMP_RNDN);
+  MPFR_ASSERTN(MPFR_IS_ZERO(y) && MPFR_IS_POS(y));
+
   mpfr_clear (x);
   mpfr_clear (y);
 }
@@ -200,7 +206,6 @@ main (int argc, char **argv)
 {
   mpfr_t x;
 
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   special ();

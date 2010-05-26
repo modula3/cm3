@@ -1,6 +1,6 @@
 /* mpfr_sinh -- hyperbolic sine
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -87,43 +87,46 @@ mpfr_sinh (mpfr_ptr y, mpfr_srcptr xt, mp_rnd_t rnd_mode)
 
     /* First computation of sinh */
     MPFR_ZIV_INIT (loop, Nt);
-    for (;;) {
-      /* compute sinh */
-      mpfr_clear_flags ();
-      mpfr_exp (t, x, GMP_RNDD);        /* exp(x) */
-      /* exp(x) can overflow! */
-      /* BUG/TODO/FIXME: exp can overflow but sinh may be representable! */
-      if (MPFR_UNLIKELY (mpfr_overflow_p ())) {
-        inexact = mpfr_overflow (y, rnd_mode, MPFR_SIGN (xt));
-        MPFR_SAVE_EXPO_UPDATE_FLAGS (expo, MPFR_FLAGS_OVERFLOW);
-        break;
-      }
-      d = MPFR_GET_EXP (t);
-      mpfr_ui_div (ti, 1, t, GMP_RNDU); /* 1/exp(x) */
-      mpfr_sub (t, t, ti, GMP_RNDN);    /* exp(x) - 1/exp(x) */
-      mpfr_div_2ui (t, t, 1, GMP_RNDN);  /* 1/2(exp(x) - 1/exp(x)) */
+    for (;;)
+      {
+        MPFR_BLOCK_DECL (flags);
 
-      /* it may be that t is zero (in fact, it can only occur when te=1,
-         and thus ti=1 too) */
-      if (MPFR_IS_ZERO (t))
-        err = Nt; /* double the precision */
-      else
-        {
-          /* calculation of the error */
-          d = d - MPFR_GET_EXP (t) + 2;
-          /* error estimate: err = Nt-(__gmpfr_ceil_log2(1+pow(2,d)));*/
-          err = Nt - (MAX (d, 0) + 1);
-          if (MPFR_LIKELY (MPFR_CAN_ROUND (t, err, MPFR_PREC (y), rnd_mode)))
-            {
-              inexact = mpfr_set4 (y, t, rnd_mode, MPFR_SIGN (xt));
-              break;
-            }
-        }
-      /* actualisation of the precision */
-      Nt += err;
-      MPFR_ZIV_NEXT (loop, Nt);
-      MPFR_GROUP_REPREC_2 (group, Nt, t, ti);
-    }
+        /* compute sinh */
+        MPFR_BLOCK (flags, mpfr_exp (t, x, GMP_RNDD));
+        /* exp(x) can overflow! */
+        /* BUG/TODO/FIXME: exp can overflow but sinh may be representable! */
+        if (MPFR_OVERFLOW (flags))
+          {
+            inexact = mpfr_overflow (y, rnd_mode, MPFR_SIGN (xt));
+            MPFR_SAVE_EXPO_UPDATE_FLAGS (expo, MPFR_FLAGS_OVERFLOW);
+            break;
+          }
+        d = MPFR_GET_EXP (t);
+        mpfr_ui_div (ti, 1, t, GMP_RNDU); /* 1/exp(x) */
+        mpfr_sub (t, t, ti, GMP_RNDN);    /* exp(x) - 1/exp(x) */
+        mpfr_div_2ui (t, t, 1, GMP_RNDN);  /* 1/2(exp(x) - 1/exp(x)) */
+
+        /* it may be that t is zero (in fact, it can only occur when te=1,
+           and thus ti=1 too) */
+        if (MPFR_IS_ZERO (t))
+          err = Nt; /* double the precision */
+        else
+          {
+            /* calculation of the error */
+            d = d - MPFR_GET_EXP (t) + 2;
+            /* error estimate: err = Nt-(__gmpfr_ceil_log2(1+pow(2,d)));*/
+            err = Nt - (MAX (d, 0) + 1);
+            if (MPFR_LIKELY (MPFR_CAN_ROUND (t, err, MPFR_PREC (y), rnd_mode)))
+              {
+                inexact = mpfr_set4 (y, t, rnd_mode, MPFR_SIGN (xt));
+                break;
+              }
+          }
+        /* actualisation of the precision */
+        Nt += err;
+        MPFR_ZIV_NEXT (loop, Nt);
+        MPFR_GROUP_REPREC_2 (group, Nt, t, ti);
+      }
     MPFR_ZIV_FREE (loop);
     MPFR_GROUP_CLEAR (group);
     MPFR_SAVE_EXPO_FREE (expo);

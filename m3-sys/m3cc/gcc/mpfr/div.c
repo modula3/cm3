@@ -1,6 +1,6 @@
 /* mpfr_div -- divide two floating-point numbers
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -657,7 +657,7 @@ mpfr_div (mpfr_ptr q, mpfr_srcptr u, mpfr_srcptr v, mp_rnd_t rnd_mode)
   else if (MPFR_UNLIKELY(qexp < __gmpfr_emin))
     {
       if (rnd_mode == GMP_RNDN && ((qexp < __gmpfr_emin - 1) ||
-                                   (inex == 0 && mpfr_powerof2_raw (q))))
+                                   (inex >= 0 && mpfr_powerof2_raw (q))))
         rnd_mode = GMP_RNDZ;
       return mpfr_underflow (q, rnd_mode, sign_quotient);
     }

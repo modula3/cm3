@@ -1,6 +1,6 @@
 /* Test file for mpfr_abs.
 
-Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -83,7 +83,7 @@ check_cmp(int argc, char *argv[])
   mpfr_t x, y;
   int n, k, rnd;
 
-  mpfr_inits2 (53, x, y, (void *) 0);
+  mpfr_inits2 (53, x, y, (mpfr_ptr) 0);
 
   mpfr_set_ui(x, 1, GMP_RNDN);
   (mpfr_abs) (x, x, GMP_RNDN);
@@ -152,7 +152,7 @@ check_cmp(int argc, char *argv[])
         }
     }
 
-  mpfr_clears (x, y, (void *) 0);
+  mpfr_clears (x, y, (mpfr_ptr) 0);
 }
 
 int

@@ -1,6 +1,6 @@
 /* Test file for mpfr_div.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -22,7 +22,6 @@ MA 02110-1301, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
 #include "mpfr-test.h"
 
@@ -71,7 +70,7 @@ check4 (const char *Ns, const char *Ds, mp_rnd_t rnd_mode, int p,
 {
   mpfr_t q, n, d;
 
-  mpfr_inits2 (p, q, n, d, (void *) 0);
+  mpfr_inits2 (p, q, n, d, (mpfr_ptr) 0);
   mpfr_set_str1 (n, Ns);
   mpfr_set_str1 (d, Ds);
   test_div(q, n, d, rnd_mode);
@@ -85,7 +84,7 @@ check4 (const char *Ns, const char *Ds, mp_rnd_t rnd_mode, int p,
       putchar('\n');
       exit (1);
     }
-  mpfr_clears (q, n, d, (void *) 0);
+  mpfr_clears (q, n, d, (mpfr_ptr) 0);
 }
 
 static void
@@ -93,7 +92,7 @@ check24 (const char *Ns, const char *Ds, mp_rnd_t rnd_mode, const char *Qs)
 {
   mpfr_t q, n, d;
 
-  mpfr_inits2 (24, q, n, d, (void *) 0);
+  mpfr_inits2 (24, q, n, d, (mpfr_ptr) 0);
 
   mpfr_set_str1 (n, Ns);
   mpfr_set_str1 (d, Ds);
@@ -106,7 +105,7 @@ check24 (const char *Ns, const char *Ds, mp_rnd_t rnd_mode, const char *Qs)
       mpfr_out_str(stdout,10,0,q, GMP_RNDN); putchar('\n');
       exit (1);
     }
-  mpfr_clears (q, n, d, (void *) 0);
+  mpfr_clears (q, n, d, (mpfr_ptr) 0);
 }
 
 /* the following examples come from the paper "Number-theoretic Test
@@ -196,7 +195,7 @@ check_64(void)
 {
   mpfr_t x,y,z;
 
-  mpfr_inits2 (64, x, y, z, (void *) 0);
+  mpfr_inits2 (64, x, y, z, (mpfr_ptr) 0);
 
   mpfr_set_str_binary(x, "1.00100100110110101001010010101111000001011100100101010000000000E54");
   mpfr_set_str_binary(y, "1.00000000000000000000000000000000000000000000000000000000000000E584");
@@ -213,7 +212,7 @@ check_64(void)
       exit(1);
     }
 
-  mpfr_clears (x, y, z, (void *) 0);
+  mpfr_clears (x, y, z, (mpfr_ptr) 0);
 }
 
 static void
@@ -627,6 +626,7 @@ check_nan (void)
 {
   mpfr_t  a, d, q;
   mp_exp_t emax, emin;
+  int i;
 
   mpfr_init2 (a, 100L);
   mpfr_init2 (d, 100L);
@@ -719,11 +719,36 @@ check_nan (void)
   set_emin (-1);
   mpfr_set_ui (a, 1, GMP_RNDZ);
   mpfr_div_2exp (a, a, 2, GMP_RNDZ);
-  mpfr_set_ui (d, 2, GMP_RNDZ);
-  test_div (q, a, d, GMP_RNDZ); /* 0.5*2^(-2) -> underflow */
-  MPFR_ASSERTN (mpfr_cmp_ui (q, 0) == 0 && MPFR_IS_POS (q));
-  test_div (q, a, d, GMP_RNDN); /* 0.5*2^(-2) -> underflow */
-  MPFR_ASSERTN (mpfr_cmp_ui (q, 0) == 0 && MPFR_IS_POS (q));
+  mpfr_set_prec (d, mpfr_get_prec (q) + 8);
+  for (i = -1; i <= 1; i++)
+    {
+      int sign;
+
+      /* Test 2^(-2) / (+/- (2 + eps)), with eps < 0, eps = 0, eps > 0.
+         -> underflow.
+         With div.c r5513, this test fails for eps > 0 in GMP_RNDN. */
+      mpfr_set_ui (d, 2, GMP_RNDZ);
+      if (i < 0)
+        mpfr_nextbelow (d);
+      if (i > 0)
+        mpfr_nextabove (d);
+      for (sign = 0; sign <= 1; sign++)
+        {
+          mpfr_clear_flags ();
+          test_div (q, a, d, GMP_RNDZ); /* result = 0 */
+          MPFR_ASSERTN (mpfr_underflow_p ());
+          MPFR_ASSERTN (sign ? MPFR_IS_NEG (q) : MPFR_IS_POS (q));
+          MPFR_ASSERTN (MPFR_IS_ZERO (q));
+          mpfr_clear_flags ();
+          test_div (q, a, d, GMP_RNDN); /* result = 0 iff eps >= 0 */
+          MPFR_ASSERTN (mpfr_underflow_p ());
+          MPFR_ASSERTN (sign ? MPFR_IS_NEG (q) : MPFR_IS_POS (q));
+          if (i < 0)
+            mpfr_nexttozero (q);
+          MPFR_ASSERTN (MPFR_IS_ZERO (q));
+          mpfr_neg (d, d, GMP_RNDN);
+        }
+    }
   set_emin (emin);
 
   mpfr_clear (a);
@@ -737,7 +762,7 @@ consistency (void)
   mpfr_t x, y, z1, z2;
   int i;
 
-  mpfr_inits (x, y, z1, z2, (void *) 0);
+  mpfr_inits (x, y, z1, z2, (mpfr_ptr) 0);
 
   for (i = 0; i < 10000; i++)
     {
@@ -775,7 +800,7 @@ consistency (void)
         }
     }
 
-  mpfr_clears (x, y, z1, z2, (void *) 0);
+  mpfr_clears (x, y, z1, z2, (mpfr_ptr) 0);
 }
 
 /* Reported by Carl Witty on 2007-06-03 */
@@ -841,7 +866,7 @@ test_20070628 (void)
       exit (1);
     }
 
-  mpfr_inits2 (53, x, y, (void *) 0);
+  mpfr_inits2 (53, x, y, (mpfr_ptr) 0);
   mpfr_set_si (x, -1, GMP_RNDN);
   mpfr_set_si_2exp (y, 1, -256, GMP_RNDN);
   mpfr_clear_flags ();
@@ -862,7 +887,7 @@ test_20070628 (void)
       printf ("Error in test_20070628: overflow flag is not set\n");
       err++;
     }
-  mpfr_clears (x, y, (void *) 0);
+  mpfr_clears (x, y, (mpfr_ptr) 0);
   mpfr_set_emax (old_emax);
 }
 
@@ -874,7 +899,6 @@ test_20070628 (void)
 int
 main (int argc, char *argv[])
 {
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   check_inexact ();

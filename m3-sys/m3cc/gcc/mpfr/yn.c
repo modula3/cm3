@@ -1,7 +1,7 @@
 /* mpfr_y0, mpfr_y1, mpfr_yn -- Bessel functions of 2nd kind, integer order.
    http://www.opengroup.org/onlinepubs/009695399/functions/y0.html
 
-Copyright 2007 Free Software Foundation, Inc.
+Copyright 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -272,6 +272,7 @@ mpfr_yn (mpfr_ptr res, long n, mpfr_srcptr z, mp_rnd_t r)
     {
       mpfr_t y;
       int ok;
+      MPFR_BLOCK_DECL (flags);
 
       /* since 2/Pi > 0.5, and |y1(z)| >= |2/Pi/z|, if z <= 2^(-emax-1),
          then |y1(z)| > 2^emax */
@@ -280,13 +281,14 @@ mpfr_yn (mpfr_ptr res, long n, mpfr_srcptr z, mp_rnd_t r)
       mpfr_const_pi (y, GMP_RNDU); /* Pi*(1+u)^2, where here and below u
                                       represents a quantity <= 1/2^prec */
       mpfr_mul (y, y, z, GMP_RNDU); /* Pi*z * (1+u)^4, upper bound */
-      mpfr_ui_div (y, 2, y, GMP_RNDZ); /* 2/Pi/z * (1+u)^6, lower bound */
-      mpfr_neg (y, y, GMP_RNDN);
-      if (mpfr_overflow_p ())
+      MPFR_BLOCK (flags, mpfr_ui_div (y, 2, y, GMP_RNDZ));
+      /* 2/Pi/z * (1+u)^6, lower bound, with possible overflow */
+      if (MPFR_OVERFLOW (flags))
         {
           mpfr_clear (y);
           return mpfr_overflow (res, r, -1);
         }
+      mpfr_neg (y, y, GMP_RNDN);
       /* (1+u)^6 can be written 1+7u [for another value of u], thus the
          error on 2/Pi/z is less than 7ulp(y). The truncation error is less
          than 1/4, thus if ulp(y)>=1/4, the total error is less than 8ulp(y),

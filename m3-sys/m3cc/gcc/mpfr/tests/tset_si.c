@@ -1,6 +1,6 @@
 /* Test file for mpfr_set_si and mpfr_set_ui.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -22,7 +22,6 @@ MA 02110-1301, USA. */
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 #include <limits.h>
 
 #include "mpfr-test.h"
@@ -49,7 +48,7 @@ test_2exp (void)
   if (mpfr_cmp_ui(x, 1024*1024))
     ERROR("(1024U,+10)");
 
-  mpfr_set_si_2exp (x, -1024*1024, -10, GMP_RNDN);
+  mpfr_set_si_2exp (x, -1024L * 1024L, -10, GMP_RNDN);
   if (mpfr_cmp_si(x, -1024))
     ERROR("(1M,-10)");
 
@@ -101,7 +100,7 @@ test_macros (void)
   mpfr_ptr p;
   mpfr_rnd_t r;
 
-  mpfr_inits (x[0], x[1], x[2], (void *) 0);
+  mpfr_inits (x[0], x[1], x[2], (mpfr_ptr) 0);
   p = x[0];
   r = 0;
   mpfr_set_ui (p++, 0, r++);
@@ -120,7 +119,7 @@ test_macros (void)
               "r = %d (expecting 1)\n", (int) (p - x[0]), r);
       exit (1);
     }
-  mpfr_clears (x[0], x[1], x[2], (void *) 0);
+  mpfr_clears (x[0], x[1], x[2], (mpfr_ptr) 0);
 }
 
 /* FIXME: Comparing against mpfr_get_si/ui is not ideal, it'd be better to

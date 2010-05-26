@@ -1,7 +1,7 @@
 /* mpfr_subnormalize -- Subnormalize a floating point number
    emulating sub-normal numbers.
 
-Copyright 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -26,10 +26,10 @@ MA 02110-1301, USA. */
 /* For GMP_RNDN, we can have a problem of double rounding.
    In such a case, this table helps to conclude what to do (y positive):
      Rounding Bit |  Sticky Bit | inexact  | Action    | new inexact
-     0            |   ?         | ?        | Trunc     | sticky
-     1            |   0         | -1       | Trunc     |
+     0            |   ?         |  ?       | Trunc     | sticky
+     1            |   0         |  1       | Trunc     |
      1            |   0         |  0       | Trunc if even |
-     1            |   0         |  1       | AddOneUlp |
+     1            |   0         | -1       | AddOneUlp |
      1            |   1         |  ?       | AddOneUlp |
 
    For other rounding mode, there isn't such a problem.
@@ -40,8 +40,6 @@ int
 mpfr_subnormalize (mpfr_ptr y, int old_inexact, mp_rnd_t rnd)
 {
   int inexact = 0;
-
-  MPFR_ASSERTD ((mpfr_uexp_t) __gmpfr_emax - __gmpfr_emin >= MPFR_PREC (y));
 
   /* The subnormal exponent range are from:
       mpfr_emin to mpfr_emin + MPFR_PREC(y) - 1  */
@@ -69,23 +67,24 @@ mpfr_subnormalize (mpfr_ptr y, int old_inexact, mp_rnd_t rnd)
              and use the previous table to conclude. */
           s = MPFR_LIMB_SIZE (y) - 1;
           mant = MPFR_MANT (y) + s;
-          rb = *mant & (MPFR_LIMB_HIGHBIT>>1);
+          rb = *mant & (MPFR_LIMB_HIGHBIT >> 1);
           if (rb == 0)
             goto set_min;
-          sb = *mant & ((MPFR_LIMB_HIGHBIT>>1)-1);
+          sb = *mant & ((MPFR_LIMB_HIGHBIT >> 1) - 1);
           while (sb == 0 && s-- != 0)
             sb = *--mant;
           if (sb != 0)
             goto set_min_p1;
           /* Rounding bit is 1 and sticky bit is 0.
              We need to examine old inexact flag to conclude. */
-          if (old_inexact * MPFR_SIGN (y) < 0)
+          if ((old_inexact > 0 && MPFR_SIGN (y) > 0) ||
+              (old_inexact < 0 && MPFR_SIGN (y) < 0))
             goto set_min;
-          /* If inexact != 0, return 0.1*2^emin+1.
+          /* If inexact != 0, return 0.1*2^(emin+1).
              Otherwise, rounding bit = 1, sticky bit = 0 and inexact = 0
-             So we have 0.1100000000000000000000000*2^emin exactly!!!
-             we choose to return 0.1*2^emin+1 which minimizes the relative
-             error. */
+             So we have 0.1100000000000000000000000*2^emin exactly.
+             We return 0.1*2^(emin+1) according to the even-rounding
+             rule on subnormals. */
           goto set_min_p1;
         }
       else if (MPFR_IS_LIKE_RNDZ (rnd, MPFR_IS_NEG (y)))
@@ -97,7 +96,8 @@ mpfr_subnormalize (mpfr_ptr y, int old_inexact, mp_rnd_t rnd)
       else
         {
         set_min_p1:
-          mpfr_setmin (y, __gmpfr_emin+1);
+          /* Note: mpfr_setmin will abort if __gmpfr_emax == __gmpfr_emin. */
+          mpfr_setmin (y, __gmpfr_emin + 1);
           inexact = MPFR_SIGN (y);
         }
     }
@@ -120,15 +120,17 @@ mpfr_subnormalize (mpfr_ptr y, int old_inexact, mp_rnd_t rnd)
                         MPFR_SET_EXP (dest, MPFR_GET_EXP (dest)+1));
       if (MPFR_LIKELY (old_inexact != 0))
         {
-          if (MPFR_UNLIKELY(rnd==GMP_RNDN && (inexact == MPFR_EVEN_INEX
-                                              || inexact == -MPFR_EVEN_INEX)))
+          if (MPFR_UNLIKELY(rnd == GMP_RNDN && (inexact == MPFR_EVEN_INEX
+                                               || inexact == -MPFR_EVEN_INEX)))
             {
-              if (old_inexact*inexact*MPFR_INT_SIGN (y) > 0)
+              /* if both roundings are in the same direction, we have to go
+                 back in the other direction */
+              if (SAME_SIGN (inexact, old_inexact))
                 {
-                  if (inexact < 0)
-                    mpfr_nexttoinf (dest);
-                  else
+                  if (SAME_SIGN (inexact, MPFR_INT_SIGN (y)))
                     mpfr_nexttozero (dest);
+                  else
+                    mpfr_nexttoinf (dest);
                   inexact = -inexact;
                 }
             }
@@ -136,7 +138,8 @@ mpfr_subnormalize (mpfr_ptr y, int old_inexact, mp_rnd_t rnd)
             inexact = old_inexact;
         }
       old_inexact = mpfr_set (y, dest, rnd);
-      MPFR_ASSERTD (old_inexact == 0);
+      MPFR_ASSERTN (old_inexact == 0);
+      MPFR_ASSERTN (MPFR_IS_PURE_FP (y));
       mpfr_clear (dest);
     }
   return inexact;

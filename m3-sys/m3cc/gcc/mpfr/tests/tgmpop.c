@@ -1,7 +1,7 @@
 /* Test file for mpfr_add_[q,z], mpfr_sub_[q,z], mpfr_div_[q,z], mpfr_mul_[q,z]
    and mpfr_cmp_[q,z]
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -323,7 +323,7 @@ test_specialz (int (*mpfr_func)(mpfr_ptr, mpfr_srcptr, mpz_srcptr, mp_rnd_t),
   mpz_t  z1, z2;
   int res;
 
-  mpfr_inits2 (128, x1, x2, (void *) 0);
+  mpfr_inits2 (128, x1, x2, (mpfr_ptr) 0);
   mpz_init (z1); mpz_init(z2);
   mpz_fac_ui (z1, 19); /* 19!+1 fits perfectly in a 128 bits mantissa */
   mpz_add_ui (z1, z1, 1);
@@ -386,7 +386,7 @@ test_specialz (int (*mpfr_func)(mpfr_ptr, mpfr_srcptr, mpz_srcptr, mp_rnd_t),
     }
 
   mpz_clear (z1); mpz_clear(z2);
-  mpfr_clears (x1, x2, (void *) 0);
+  mpfr_clears (x1, x2, (mpfr_ptr) 0);
 }
 
 static void
@@ -401,7 +401,7 @@ test_genericz (mp_prec_t p0, mp_prec_t p1, unsigned int N,
   int inexact, compare, compare2;
   unsigned int n;
 
-  mpfr_inits (arg1, dst_big, dst_small, tmp, (void *) 0);
+  mpfr_inits (arg1, dst_big, dst_small, tmp, (mpfr_ptr) 0);
   mpz_init (arg2);
 
   for (prec = p0; prec <= p1; prec++)
@@ -463,7 +463,7 @@ test_genericz (mp_prec_t p0, mp_prec_t p1, unsigned int N,
     }
 
   mpz_clear (arg2);
-  mpfr_clears (arg1, dst_big, dst_small, tmp, (void *) 0);
+  mpfr_clears (arg1, dst_big, dst_small, tmp, (mpfr_ptr) 0);
 }
 
 static void
@@ -478,7 +478,7 @@ test_genericq (mp_prec_t p0, mp_prec_t p1, unsigned int N,
   int inexact, compare, compare2;
   unsigned int n;
 
-  mpfr_inits (arg1, dst_big, dst_small, tmp, (void *) 0);
+  mpfr_inits (arg1, dst_big, dst_small, tmp, (mpfr_ptr) 0);
   mpq_init (arg2);
 
   for (prec = p0; prec <= p1; prec++)
@@ -543,7 +543,7 @@ test_genericq (mp_prec_t p0, mp_prec_t p1, unsigned int N,
     }
 
   mpq_clear (arg2);
-  mpfr_clears (arg1, dst_big, dst_small, tmp, (void *) 0);
+  mpfr_clears (arg1, dst_big, dst_small, tmp, (mpfr_ptr) 0);
 }
 
 static void
@@ -559,7 +559,7 @@ test_specialq (mp_prec_t p0, mp_prec_t p1, unsigned int N,
 
   for (prec = p0 ; prec < p1 ; prec++)
     {
-      mpfr_inits2 (prec, fra, frb, frq, (void *) 0);
+      mpfr_inits2 (prec, fra, frb, frq, (mpfr_ptr) 0);
       mpq_init (q1); mpq_init(q2); mpq_init (qr);
 
       for( n = 0 ; n < N ; n++)
@@ -589,7 +589,7 @@ test_specialq (mp_prec_t p0, mp_prec_t p1, unsigned int N,
         }
 
       mpq_clear (q1); mpq_clear (q2); mpq_clear (qr);
-      mpfr_clears (fra, frb, frq, (void *) 0);
+      mpfr_clears (fra, frb, frq, (mpfr_ptr) 0);
     }
 }
 

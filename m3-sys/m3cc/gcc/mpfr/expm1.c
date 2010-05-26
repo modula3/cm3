@@ -1,6 +1,6 @@
 /* mpfr_expm1 -- Compute exp(x)-1
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -124,16 +124,17 @@ mpfr_expm1 (mpfr_ptr y, mpfr_srcptr x , mp_rnd_t rnd_mode)
     MPFR_ZIV_INIT (loop, Nt);
     for (;;)
       {
-        mpfr_clear_flags ();
+        MPFR_BLOCK_DECL (flags);
+
         /* exp(x) may overflow and underflow */
-        mpfr_exp (t, x, GMP_RNDN);         /* exp(x)*/
-        if (MPFR_UNLIKELY (mpfr_overflow_p ()))
+        MPFR_BLOCK (flags, mpfr_exp (t, x, GMP_RNDN));
+        if (MPFR_OVERFLOW (flags))
           {
             inexact = mpfr_overflow (y, rnd_mode, MPFR_SIGN_POS);
             MPFR_SAVE_EXPO_UPDATE_FLAGS (expo, MPFR_FLAGS_OVERFLOW);
             break;
           }
-        else if (MPFR_UNLIKELY (mpfr_underflow_p ()))
+        else if (MPFR_UNDERFLOW (flags))
           {
             inexact = mpfr_set_si (y, -1, rnd_mode);
             MPFR_ASSERTD (inexact == 0);

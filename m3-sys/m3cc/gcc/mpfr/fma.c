@@ -1,6 +1,6 @@
 /* mpfr_fma -- Floating multiply-add
 
-Copyright 2001, 2002, 2004, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -145,6 +145,7 @@ mpfr_fma (mpfr_ptr s, mpfr_srcptr x, mpfr_srcptr y, mpfr_srcptr z,
           {
             mpfr_t zo4;
             mpfr_srcptr zz;
+            MPFR_BLOCK_DECL (flags);
 
             if (MPFR_GET_EXP (u) > MPFR_GET_EXP (z) &&
                 MPFR_GET_EXP (u) - MPFR_GET_EXP (z) > MPFR_PREC (u))
@@ -163,18 +164,17 @@ mpfr_fma (mpfr_ptr s, mpfr_srcptr x, mpfr_srcptr y, mpfr_srcptr z,
                 zz = zo4;
               }
 
-            mpfr_clear_flags ();
             /* Let's recall that u = x*y/4 and zz = z/4 (or z if the
                following addition would give the same result). */
-            inexact = mpfr_add (s, u, zz, rnd_mode);
+            MPFR_BLOCK (flags, inexact = mpfr_add (s, u, zz, rnd_mode));
             /* u and zz have different signs, so that an overflow
                is not possible. But an underflow is theoretically
                possible! */
-            if (mpfr_underflow_p ())
+            if (MPFR_UNDERFLOW (flags))
               {
                 MPFR_ASSERTN (zz != z);
                 MPFR_ASSERTN (0); /* TODO... */
-                mpfr_clears (zo4, u, (void *) 0);
+                mpfr_clears (zo4, u, (mpfr_ptr) 0);
               }
             else
               {
@@ -183,7 +183,7 @@ mpfr_fma (mpfr_ptr s, mpfr_srcptr x, mpfr_srcptr y, mpfr_srcptr z,
                 if (zz != z)
                   mpfr_clear (zo4);
                 mpfr_clear (u);
-                MPFR_ASSERTN (! mpfr_overflow_p ());
+                MPFR_ASSERTN (! MPFR_OVERFLOW (flags));
                 inex2 = mpfr_mul_2ui (s, s, 2, rnd_mode);
                 if (inex2)  /* overflow */
                   {
@@ -212,6 +212,7 @@ mpfr_fma (mpfr_ptr s, mpfr_srcptr x, mpfr_srcptr y, mpfr_srcptr z,
             {
               mp_exp_unsigned_t uscale;
               mpfr_t scaled_v;
+              MPFR_BLOCK_DECL (flags);
 
               uscale = (mp_exp_unsigned_t) pzs - diffexp + 1;
               MPFR_ASSERTN (uscale > 0);
@@ -222,22 +223,22 @@ mpfr_fma (mpfr_ptr s, mpfr_srcptr x, mpfr_srcptr y, mpfr_srcptr z,
               MPFR_ASSERTN (inexact == 0);  /* TODO: overflow case */
               new_z = scaled_z;
               /* Now we need to recompute u = xy * 2^scale. */
-              mpfr_clear_flags ();
-              if (MPFR_GET_EXP (x) < MPFR_GET_EXP (y))
-                {
-                  mpfr_init2 (scaled_v, MPFR_PREC (x));
-                  mpfr_mul_2ui (scaled_v, x, scale, GMP_RNDN);
-                  mpfr_mul (u, scaled_v, y, GMP_RNDN);
-                }
-              else
-                {
-                  mpfr_init2 (scaled_v, MPFR_PREC (y));
-                  mpfr_mul_2ui (scaled_v, y, scale, GMP_RNDN);
-                  mpfr_mul (u, x, scaled_v, GMP_RNDN);
-                }
+              MPFR_BLOCK (flags,
+                          if (MPFR_GET_EXP (x) < MPFR_GET_EXP (y))
+                            {
+                              mpfr_init2 (scaled_v, MPFR_PREC (x));
+                              mpfr_mul_2ui (scaled_v, x, scale, GMP_RNDN);
+                              mpfr_mul (u, scaled_v, y, GMP_RNDN);
+                            }
+                          else
+                            {
+                              mpfr_init2 (scaled_v, MPFR_PREC (y));
+                              mpfr_mul_2ui (scaled_v, y, scale, GMP_RNDN);
+                              mpfr_mul (u, x, scaled_v, GMP_RNDN);
+                            });
               mpfr_clear (scaled_v);
-              MPFR_ASSERTN (! mpfr_overflow_p ());
-              xy_underflows = mpfr_underflow_p ();
+              MPFR_ASSERTN (! MPFR_OVERFLOW (flags));
+              xy_underflows = MPFR_UNDERFLOW (flags);
             }
           else
             {
@@ -254,25 +255,31 @@ mpfr_fma (mpfr_ptr s, mpfr_srcptr x, mpfr_srcptr y, mpfr_srcptr z,
                                                 MPFR_SIGN (y)));
             }
 
-          mpfr_clear_flags ();
-          inexact = mpfr_add (s, u, new_z, rnd_mode);
-          mpfr_clear (u);
+          {
+            MPFR_BLOCK_DECL (flags);
 
-          if (scale != 0)
-            {
-              int inex2;
+            MPFR_BLOCK (flags, inexact = mpfr_add (s, u, new_z, rnd_mode));
+            mpfr_clear (u);
 
-              mpfr_clear (scaled_z);
-              /* Here an overflow is theoretically possible, in which case
-                 the result may be wrong, hence the assert. An underflow
-                 is not possible, but let's check that anyway. */
-              MPFR_ASSERTN (! mpfr_overflow_p ());  /* TODO... */
-              MPFR_ASSERTN (! mpfr_underflow_p ());  /* not possible */
-              inex2 = mpfr_div_2ui (s, s, scale, GMP_RNDN);
-              if (inex2)  /* underflow */
-                inexact = inex2;
-            }
+            if (scale != 0)
+              {
+                int inex2;
 
+                mpfr_clear (scaled_z);
+                /* Here an overflow is theoretically possible, in which case
+                   the result may be wrong, hence the assert. An underflow
+                   is not possible, but let's check that anyway. */
+                MPFR_ASSERTN (! MPFR_OVERFLOW (flags));  /* TODO... */
+                MPFR_ASSERTN (! MPFR_UNDERFLOW (flags));  /* not possible */
+                inex2 = mpfr_div_2ui (s, s, scale, GMP_RNDN);
+                if (inex2)  /* underflow */
+                  inexact = inex2;
+              }
+          }
+
+          /* FIXME/TODO: I'm not sure that the following is correct.
+             Check for possible spurious exceptions due to intermediate
+             computations. */
           MPFR_SAVE_EXPO_UPDATE_FLAGS (expo, __gmpfr_flags);
           goto end;
         }

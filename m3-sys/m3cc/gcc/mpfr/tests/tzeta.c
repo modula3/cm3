@@ -1,6 +1,6 @@
 /* tzeta -- test file for the Riemann Zeta function
 
-Copyright 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by Jean-Luc Re'my and the Spaces project, INRIA Lorraine.
 
 This file is part of the MPFR Library.
@@ -157,12 +157,12 @@ static const char *const val[] = {
 };
 
 static void
-test2(void)
+test2 (void)
 {
   mpfr_t x, y;
   int i, n = numberof(val);
 
-  mpfr_inits2 (55, x, y, (void *) 0);
+  mpfr_inits2 (55, x, y, (mpfr_ptr) 0);
 
   for(i = 0 ; i < n ; i+=2)
     {
@@ -184,7 +184,7 @@ test2(void)
           exit(1);
         }
     }
-  mpfr_clears (x, y, (void *) 0);
+  mpfr_clears (x, y, (mpfr_ptr) 0);
 }
 
 #define TEST_FUNCTION mpfr_zeta
@@ -199,6 +199,7 @@ main (int argc, char *argv[])
   mpfr_t s, y, z;
   mp_prec_t prec;
   mp_rnd_t rnd_mode;
+  int inex;
 
   tests_start_mpfr ();
 
@@ -379,6 +380,16 @@ main (int argc, char *argv[])
       exit (1);
     }
 
+  /* bug reported by Kevin Rauch on 26 Oct 2007 */
+  mpfr_set_prec (s, 128);
+  mpfr_set_prec (z, 128);
+  mpfr_set_str_binary (s, "-0.1000000000000000000000000000000000000000000000000000000000000001E64");
+  inex = mpfr_zeta (z, s, GMP_RNDN);
+  MPFR_ASSERTN (mpfr_inf_p (z) && MPFR_SIGN (z) < 0 && inex < 0);
+  inex = mpfr_zeta (z, s, GMP_RNDU);
+  mpfr_set_inf (s, -1);
+  mpfr_nextabove (s);
+  MPFR_ASSERTN (mpfr_equal_p (z, s) && inex > 0);
 
   mpfr_clear (s);
   mpfr_clear (y);

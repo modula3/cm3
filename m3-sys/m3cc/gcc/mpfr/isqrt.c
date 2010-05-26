@@ -1,6 +1,6 @@
 /* __gmpfr_isqrt && __gmpfr_cuberoot -- Integer square root and cube root
 
-Copyright 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -26,12 +26,27 @@ MA 02110-1301, USA. */
 unsigned long
 __gmpfr_isqrt (unsigned long n)
 {
-  unsigned long s;
+  unsigned long i, s;
 
+  /* First find an approximation to floor(sqrt(n)) of the form 2^k. */
+  i = n;
   s = 1;
-  do {
-    s = (s + n / s) / 2;
-  } while (!(s*s <= n && n <= s*(s+2)));
+  while (i >= 2)
+    {
+      i >>= 2;
+      s <<= 1;
+    }
+
+  do
+    {
+      s = (s + n / s) / 2;
+    }
+  while (!(s*s <= n && (s*s > s*(s+2) || n <= s*(s+2))));
+  /* Short explanation: As mathematically s*(s+2) < 2*ULONG_MAX,
+     the condition s*s > s*(s+2) is evaluated as true when s*(s+2)
+     "overflows" but not s*s. This implies that mathematically, one
+     has s*s <= n <= s*(s+2). If s*s "overflows", this means that n
+     is "large" and the inequality n <= s*(s+2) cannot be satisfied. */
   return s;
 }
 
@@ -39,13 +54,31 @@ __gmpfr_isqrt (unsigned long n)
 unsigned long
 __gmpfr_cuberoot (unsigned long n)
 {
-  double s, is;
+  unsigned long i, s;
 
-  s = 1.0;
-  do {
-    s = (2*s*s*s + (double) n) / (3*s*s);
-    is = (double) ((int) s);
-  } while (!(is*is*is <= (double) n && (double) n < (is+1)*(is+1)*(is+1)));
-  return (unsigned long) is;
+  /* First find an approximation to floor(cbrt(n)) of the form 2^k. */
+  i = n;
+  s = 1;
+  while (i >= 4)
+    {
+      i >>= 3;
+      s <<= 1;
+    }
+
+  /* Improve the approximation (this is necessary if n is large, so that
+     mathematically (s+1)*(s+1)*(s+1) isn't much larger than ULONG_MAX). */
+  if (n >= 256)
+    {
+      s = (2 * s + n / (s * s)) / 3;
+      s = (2 * s + n / (s * s)) / 3;
+      s = (2 * s + n / (s * s)) / 3;
+    }
+
+  do
+    {
+      s = (2 * s + n / (s * s)) / 3;
+    }
+  while (!(s*s*s <= n && (s*s*s > (s+1)*(s+1)*(s+1) ||
+                          n < (s+1)*(s+1)*(s+1))));
+  return s;
 }
-

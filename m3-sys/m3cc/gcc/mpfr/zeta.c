@@ -1,6 +1,6 @@
 /* mpfr_zeta -- compute the Riemann Zeta function
 
-Copyright 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by Jean-Luc Re'my and the Spaces project, INRIA Lorraine.
 
 This file is part of the MPFR Library.
@@ -386,6 +386,8 @@ mpfr_zeta (mpfr_t z, mpfr_srcptr s, mp_rnd_t rnd_mode)
   else /* use reflection formula
           zeta(s) = 2^s*Pi^(s-1)*sin(Pi*s/2)*gamma(1-s)*zeta(1-s) */
     {
+      int overflow = 0;
+
       precz = MPFR_PREC (z);
       precs = MPFR_PREC (s);
 
@@ -416,13 +418,9 @@ mpfr_zeta (mpfr_t z, mpfr_srcptr s, mp_rnd_t rnd_mode)
           if (MPFR_IS_INF (y)) /* Zeta(s) < 0 for -4k-2 < s < -4k,
                                   Zeta(s) > 0 for -4k < s < -4k+2 */
             {
-              MPFR_SET_INF (z_pre);
               mpfr_div_2ui (s1, s, 2, GMP_RNDN); /* s/4, exact */
               mpfr_frac (s1, s1, GMP_RNDN); /* exact, -1 < s1 < 0 */
-              if (mpfr_cmp_si_2exp (s1, -1, -1) > 0)
-                MPFR_SET_NEG (z_pre);
-              else
-                MPFR_SET_POS (z_pre);
+              overflow = (mpfr_cmp_si_2exp (s1, -1, -1) > 0) ? -1 : 1;
               break;
             }
           mpfr_mul (z_pre, z_pre, y, GMP_RNDN);  /* gamma(1-s)*zeta(1-s) */
@@ -445,7 +443,13 @@ mpfr_zeta (mpfr_t z, mpfr_srcptr s, mp_rnd_t rnd_mode)
           MPFR_GROUP_REPREC_4 (group, prec1, z_pre, s1, y, p);
         }
       MPFR_ZIV_FREE (loop);
-      inex = mpfr_set (z, z_pre, rnd_mode);
+      if (overflow != 0)
+        {
+          inex = mpfr_overflow (z, rnd_mode, overflow);
+          MPFR_SAVE_EXPO_UPDATE_FLAGS (expo, MPFR_FLAGS_OVERFLOW);
+        }
+      else
+        inex = mpfr_set (z, z_pre, rnd_mode);
       MPFR_GROUP_CLEAR (group);
     }
 

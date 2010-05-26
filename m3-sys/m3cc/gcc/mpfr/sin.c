@@ -1,6 +1,6 @@
 /* mpfr_sin -- sine of a floating-point number
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -32,6 +32,7 @@ mpfr_sin (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
   mp_prec_t precy, m;
   int inexact, sign, reduce;
   MPFR_ZIV_DECL (loop);
+  MPFR_SAVE_EXPO_DECL (expo);
 
   MPFR_LOG_FUNC (("x[%#R]=%R rnd=%d", x, x, rnd_mode),
                   ("y[%#R]=%R inexact=%d", y, y, inexact));
@@ -56,6 +57,8 @@ mpfr_sin (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
   /* sin(x) = x - x^3/6 + ... so the error is < 2^(3*EXP(x)-2) */
   MPFR_FAST_COMPUTE_IF_SMALL_INPUT (y, x, -2 * MPFR_GET_EXP (x), 2, 0,
                                     rnd_mode, {});
+
+  MPFR_SAVE_EXPO_MARK (expo);
 
   /* Compute initial precision */
   precy = MPFR_PREC (y);
@@ -158,5 +161,6 @@ mpfr_sin (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
   mpfr_clear (c);
   mpfr_clear (xr);
 
-  return inexact; /* inexact */
+  MPFR_SAVE_EXPO_FREE (expo);
+  return mpfr_check_range (y, inexact, rnd_mode);
 }

@@ -1,7 +1,7 @@
 /* mpfr_exp -- exponential of a floating-point number
 
-Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
-Contributed by the Spaces project.
+Copyright 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
 
@@ -24,17 +24,12 @@ MA 02110-1301, USA. */
 
 /* #define DEBUG */
 
-/* use Brent's formula exp(x) = (1+r+r^2/2!+r^3/3!+...)^(2^K)*2^n
-   where x = n*log(2)+(2^K)*r
-   number of operations = O(K+prec(r)/K)
-*/
 int
 mpfr_exp (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
 {
   mp_exp_t expx;
   mp_prec_t precy;
   int inexact;
-  double d;
   MPFR_SAVE_EXPO_DECL (expo);
 
   MPFR_LOG_FUNC (("x[%#R]=%R rnd=%d", x, x, rnd_mode),
@@ -62,27 +57,54 @@ mpfr_exp (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
           return mpfr_set_ui (y, 1, rnd_mode);
         }
     }
-  MPFR_CLEAR_FLAGS(y);
+
+  /* First, let's detect most overflow and underflow cases. */
+  {
+    mpfr_t e, bound;
+
+    /* We must extended the exponent range and save the flags now. */
+    MPFR_SAVE_EXPO_MARK (expo);
+
+    mpfr_init2 (e, sizeof (mp_exp_t) * CHAR_BIT);
+    mpfr_init2 (bound, 32);
+
+    inexact = mpfr_set_exp_t (e, expo.saved_emax, GMP_RNDN);
+    MPFR_ASSERTD (inexact == 0);
+    mpfr_const_log2 (bound, expo.saved_emax < 0 ? GMP_RNDD : GMP_RNDU);
+    mpfr_mul (bound, bound, e, GMP_RNDU);
+    if (MPFR_UNLIKELY (mpfr_cmp (x, bound) >= 0))
+      {
+        /* x > log(2^emax), thus exp(x) > 2^emax */
+        mpfr_clears (e, bound, (mpfr_ptr) 0);
+        MPFR_SAVE_EXPO_FREE (expo);
+        return mpfr_overflow (y, rnd_mode, 1);
+      }
+
+    inexact = mpfr_set_exp_t (e, expo.saved_emin, GMP_RNDN);
+    MPFR_ASSERTD (inexact == 0);
+    inexact = mpfr_sub_ui (e, e, 2, GMP_RNDN);
+    MPFR_ASSERTD (inexact == 0);
+    mpfr_const_log2 (bound, expo.saved_emin < 0 ? GMP_RNDU : GMP_RNDD);
+    mpfr_mul (bound, bound, e, GMP_RNDD);
+    if (MPFR_UNLIKELY (mpfr_cmp (x, bound) <= 0))
+      {
+        /* x < log(2^(emin - 2)), thus exp(x) < 2^(emin - 2) */
+        mpfr_clears (e, bound, (mpfr_ptr) 0);
+        MPFR_SAVE_EXPO_FREE (expo);
+        return mpfr_underflow (y, rnd_mode == GMP_RNDN ? GMP_RNDZ : rnd_mode,
+                               1);
+      }
+
+    /* Other overflow/underflow cases must be detected
+       by the generic routines. */
+    mpfr_clears (e, bound, (mpfr_ptr) 0);
+    MPFR_SAVE_EXPO_FREE (expo);
+  }
+
+  MPFR_CLEAR_FLAGS (y);
 
   expx  = MPFR_GET_EXP (x);
   precy = MPFR_PREC (y);
-
-  /* result is +Inf when exp(x) >= 2^(__gmpfr_emax), i.e.
-     x >= __gmpfr_emax * log(2) */
-  /* TODO: Don't convert to double! */
-  d = mpfr_get_d1 (x);
-  if (MPFR_UNLIKELY (d >= (double) __gmpfr_emax * LOG2))
-    return mpfr_overflow (y, rnd_mode, 1);
-
-  /* result is 0 when exp(x) < 1/2*2^(__gmpfr_emin), i.e.
-     x < (__gmpfr_emin-1) * LOG2 */
-  if (MPFR_UNLIKELY(d < ((double) __gmpfr_emin - 1.0) * LOG2))
-    {
-      /* warning: mpfr_underflow rounds away for RNDN */
-      if (rnd_mode == GMP_RNDN && d < ((double) __gmpfr_emin - 2.0) * LOG2)
-        rnd_mode = GMP_RNDZ;
-      return mpfr_underflow (y, rnd_mode, 1);
-    }
 
   /* if x < 2^(-precy), then exp(x) i.e. gives 1 +/- 1 ulp(1) */
   if (MPFR_UNLIKELY (expx < 0 && (mpfr_uexp_t) (-expx) > precy))
@@ -124,14 +146,17 @@ mpfr_exp (mpfr_ptr y, mpfr_srcptr x, mp_rnd_t rnd_mode)
     }
   else  /* General case */
     {
-      MPFR_SAVE_EXPO_MARK (expo);
-      __gmpfr_emin -= 3;  /* So that we can check for underflow properly */
-
       if (MPFR_UNLIKELY (precy > MPFR_EXP_THRESHOLD))
+        /* mpfr_exp_3 saves the exponent range and flags itself, otherwise
+           the flag changes in mpfr_exp_3 are lost */
         inexact = mpfr_exp_3 (y, x, rnd_mode); /* O(M(n) log(n)^2) */
       else
-        inexact = mpfr_exp_2 (y, x, rnd_mode); /* O(n^(1/3) M(n)) */
-      MPFR_SAVE_EXPO_FREE (expo);
+        {
+          MPFR_SAVE_EXPO_MARK (expo);
+          inexact = mpfr_exp_2 (y, x, rnd_mode); /* O(n^(1/3) M(n)) */
+          MPFR_SAVE_EXPO_UPDATE_FLAGS (expo, __gmpfr_flags);
+          MPFR_SAVE_EXPO_FREE (expo);
+        }
     }
 
   return mpfr_check_range (y, inexact, rnd_mode);

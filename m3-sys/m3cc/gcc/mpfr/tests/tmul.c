@@ -1,6 +1,6 @@
 /* Test file for mpfr_mul.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -93,7 +93,7 @@ check53 (const char *xs, const char *ys, mp_rnd_t rnd_mode, const char *zs)
 {
   mpfr_t xx, yy, zz;
 
-  mpfr_inits2 (53, xx, yy, zz, (void *) 0);
+  mpfr_inits2 (53, xx, yy, zz, (mpfr_ptr) 0);
   mpfr_set_str1 (xx, xs);
   mpfr_set_str1 (yy, ys);
   test_mul (zz, xx, yy, rnd_mode);
@@ -116,7 +116,7 @@ check53 (const char *xs, const char *ys, mp_rnd_t rnd_mode, const char *zs)
         putchar('\n'); */
       exit (1);
     }
-  mpfr_clears (xx, yy, zz, (void *) 0);
+  mpfr_clears (xx, yy, zz, (mpfr_ptr) 0);
 }
 
 /* checks that x*y gives the right result with 24 bits of precision */
@@ -125,7 +125,7 @@ check24 (const char *xs, const char *ys, mp_rnd_t rnd_mode, const char *zs)
 {
   mpfr_t xx, yy, zz;
 
-  mpfr_inits2 (24, xx, yy, zz, (void *) 0);
+  mpfr_inits2 (24, xx, yy, zz, (mpfr_ptr) 0);
   mpfr_set_str1 (xx, xs);
   mpfr_set_str1 (yy, ys);
   test_mul (zz, xx, yy, rnd_mode);
@@ -138,7 +138,7 @@ check24 (const char *xs, const char *ys, mp_rnd_t rnd_mode, const char *zs)
       putchar('\n');
       exit (1);
     }
-  mpfr_clears (xx, yy, zz, (void *) 0);
+  mpfr_clears (xx, yy, zz, (mpfr_ptr) 0);
 }
 
 /* the following examples come from the paper "Number-theoretic Test
@@ -447,7 +447,7 @@ check_regression (void)
   mpfr_t x, y, z;
   int i;
 
-  mpfr_inits2 (6177, x, y, z, (void *) 0);
+  mpfr_inits2 (6177, x, y, z, (mpfr_ptr) 0);
 
   mpfr_set_str (y,
 "5.17cc1b727220a94fe13abe8fa9a6ee06db14acc9e21c820ff28b1d5ef5de2b0db92371d212"
@@ -633,7 +633,7 @@ check_regression (void)
       exit (1);
     }
 
-  mpfr_clears (x, y, z, (void *) 0);
+  mpfr_clears (x, y, z, (mpfr_ptr) 0);
 }
 
 #define TEST_FUNCTION test_mul
@@ -658,7 +658,6 @@ mpfr_mulpi (mpfr_t y, mpfr_t x, mp_rnd_t r)
 int
 main (int argc, char *argv[])
 {
-  MPFR_TEST_USE_RANDS ();
   tests_start_mpfr ();
 
   check_nans ();

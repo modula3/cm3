@@ -2,8 +2,8 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 
 <!--
-Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
-Contributed by the Spaces project, INRIA Lorraine.
+Copyright 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
+Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
 
@@ -138,6 +138,8 @@ to <code>__gmpXXXX</code>.</a></li>
 are not more accurate.</a></li>
 <li><a href="#detect_mpfr">How can I detect <cite><acronym>MPFR</acronym></cite>
 installation using <cite>autoconf</cite> or <cite>pkg-config</cite>?</a></li>
+<li><a href="#cite">How to cite <cite><acronym>MPFR</acronym></cite> in a
+scientific publication?</a></li>
 </ol>
 
 <dl class="faq">
@@ -219,9 +221,11 @@ environment variable and to add <samp>/usr/local/lib</samp> to your
 <var class="env">LIBRARY_PATH</var> and <var class="env">LD_LIBRARY_PATH</var>
 environment variables (and/or <var class="env">LD_RUN_PATH</var>).
 Alternatively, you can use <samp>--with-gmp*</samp> configure options,
-<abbr>e.g.</abbr> <samp>--with-gmp=/usr/local</samp>, but other software
-that uses <cite><acronym>GMP</acronym></cite> and/or
-<cite><acronym>MPFR</acronym></cite> will need correct paths too, and
+<abbr>e.g.</abbr> <samp>--with-gmp=/usr/local</samp>, but <strong>this is
+not guaranteed to work</strong> (in particular with <samp>gcc</samp> and
+system directories such as <samp>/usr</samp> or <samp>/usr/local</samp>),
+and other software that uses <cite><acronym>GMP</acronym></cite> and/or
+<cite><acronym>MPFR</acronym></cite> will need correct paths too;
 environment variables allow you to set them in a global way.</p>
 <p>Other information can be given in the <samp>INSTALL</samp> file and
 <samp>ld</samp> manual. Please look at them for more details. See also
@@ -290,6 +294,21 @@ recommend any <cite>autoconf</cite> code, but a section will later
 be added to the <cite><acronym>MPFR</acronym></cite> manual. The
 <cite><acronym>MPFR</acronym></cite> team does not wish to support
 <cite>pkg-config</cite> yet.</p></dd>
+
+<dt id="cite">8. How to cite <cite><acronym>MPFR</acronym></cite> in a
+scientific publication?</dt>
+
+<dd><p>To properly cite <cite><acronym>MPFR</acronym></cite> in a scientific
+publication, please cite the
+<a href="http://doi.acm.org/10.1145/1236463.1236468"><acronym title="Association for Computing Machinery">ACM</acronym>
+<acronym title="Transactions on Mathematical Software">TOMS</acronym>
+paper</a>
+(<a href="http://portal.acm.org/popBibTex.cfm?id=1236468&amp;ids=J782.1236463.1236468&amp;types=periodical.issue.article&amp;reqtype=article&amp;coll=GUIDE&amp;dl=GUIDE&amp;CFID=2159989&amp;CFTOKEN=78031020">BibTeX</a>)
+and/or the library web page
+<a href="http://www.mpfr.org/">http://www.mpfr.org</a>. If your publication
+is related to a particular release of <cite><acronym>MPFR</acronym></cite>,
+for example if you report timings, please also indicate the release number
+for future reference.</p></dd>
 
 </dl>
 

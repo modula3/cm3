@@ -1,6 +1,6 @@
-/* Test file for mpfr_erf.
+/* Test file for mpfr_erf and mpfr_erfc.
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by Ludovic Meunier and Paul Zimmermann.
 
 This file is part of the MPFR Library.
@@ -364,7 +364,7 @@ special_erfc (void)
 {
   mpfr_t x, y;
 
-  mpfr_inits (x, y, (void *) 0);
+  mpfr_inits (x, y, (mpfr_ptr) 0);
 
   /* erfc (NaN) = NaN */
   mpfr_set_nan (x);
@@ -405,7 +405,7 @@ special_erfc (void)
       exit (1);
     }
 
-  mpfr_clears (x, y, (void *) 0);
+  mpfr_clears (x, y, (mpfr_ptr) 0);
 }
 
 static void
@@ -518,8 +518,9 @@ static void
 test_erfc (void)
 {
   mpfr_t x, y, z;
+  int inex;
 
-  mpfr_inits2 (40, x, y, z, (void *) 0);
+  mpfr_inits2 (40, x, y, z, (mpfr_ptr) 0);
 
   mpfr_set_si_2exp (x, -1, -10, GMP_RNDN);
   mpfr_set_str_binary (z, "0.1000000000100100000110111010110111100000E1");
@@ -535,7 +536,13 @@ test_erfc (void)
       exit (1);
     }
 
-  mpfr_clears (x, y, z, (void *) 0);
+  /* slowness detected by Kevin Rauch on 26 Oct 2007 */
+  mpfr_set_prec (x, 128);
+  mpfr_set_si (x, -256, GMP_RNDN);
+  inex = mpfr_erfc (x, x, GMP_RNDN);
+  MPFR_ASSERTN(inex > 0 && mpfr_cmp_ui (x, 2) == 0);
+
+  mpfr_clears (x, y, z, (mpfr_ptr) 0);
 }
 
 int

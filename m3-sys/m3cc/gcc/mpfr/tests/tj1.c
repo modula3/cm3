@@ -1,6 +1,6 @@
 /* tj1 -- test file for the Bessel function of first kind (order 1)
 
-Copyright 2007 Free Software Foundation, Inc.
+Copyright 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.

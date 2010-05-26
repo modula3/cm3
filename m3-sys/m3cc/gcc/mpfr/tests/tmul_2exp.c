@@ -1,6 +1,6 @@
 /* Test file for mpfr_{mul,div}_2{ui,si}.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -45,6 +45,92 @@ test_mul (int i, int div, mpfr_ptr y, mpfr_srcptr x,
     (exit (1), 0);
 }
 
+static void
+underflow (mp_exp_t e)
+{
+  mpfr_t x, y, z1, z2;
+  mp_exp_t emin;
+  int i, k;
+  int prec;
+  int rnd;
+  int div;
+  int inex1, inex2;
+  unsigned int flags1, flags2;
+
+  /* Test mul_2si(x, e - k), div_2si(x, k - e) and div_2ui(x, k - e)
+   * with emin = e, x = 1 + i/16, i in { -1, 0, 1 }, and k = 1 to 4,
+   * by comparing the result with the one of a simple division.
+   */
+  emin = mpfr_get_emin ();
+  set_emin (e);
+  mpfr_inits2 (8, x, y, (mpfr_ptr) 0);
+  for (i = 15; i <= 17; i++)
+    {
+      inex1 = mpfr_set_ui_2exp (x, i, -4, GMP_RNDN);
+      MPFR_ASSERTN (inex1 == 0);
+      for (prec = 6; prec >= 3; prec -= 3)
+        {
+          mpfr_inits2 (prec, z1, z2, (mpfr_ptr) 0);
+          RND_LOOP (rnd)
+            for (k = 1; k <= 4; k++)
+              {
+                /* The following one is assumed to be correct. */
+                inex1 = mpfr_mul_2si (y, x, e, GMP_RNDN);
+                MPFR_ASSERTN (inex1 == 0);
+                inex1 = mpfr_set_ui (z1, 1 << k, GMP_RNDN);
+                MPFR_ASSERTN (inex1 == 0);
+                mpfr_clear_flags ();
+                /* Do not use mpfr_div_ui to avoid the optimization
+                   by mpfr_div_2si. */
+                inex1 = mpfr_div (z1, y, z1, rnd);
+                flags1 = __gmpfr_flags;
+
+              for (div = 0; div <= 2; div++)
+                {
+                  mpfr_clear_flags ();
+                  inex2 = div == 0 ?
+                    mpfr_mul_2si (z2, x, e - k, rnd) : div == 1 ?
+                    mpfr_div_2si (z2, x, k - e, rnd) :
+                    mpfr_div_2ui (z2, x, k - e, rnd);
+                  flags2 = __gmpfr_flags;
+                  if (flags1 == flags2 && SAME_SIGN (inex1, inex2) &&
+                      mpfr_equal_p (z1, z2))
+                    continue;
+                  printf ("Error in underflow(");
+                  if (e == MPFR_EMIN_MIN)
+                    printf ("MPFR_EMIN_MIN");
+                  else if (e == emin)
+                    printf ("default emin");
+                  else
+                    printf ("%ld", e);
+                  printf (")\nwith %s, x = %d/16, prec = %d, k = %d, mpfr_%s",
+                          div == 0 ? "mul_2si" : div == 1 ? "div_2si" :
+                          "div_2ui", i, prec, k, mpfr_print_rnd_mode (rnd));
+                  printf ("\nExpected ");
+                  mpfr_out_str (stdout, 16, 0, z1, GMP_RNDN);
+                  printf (", inex = %d, flags = %u\n", SIGN (inex1), flags1);
+                  printf ("Got      ");
+                  mpfr_out_str (stdout, 16, 0, z2, GMP_RNDN);
+                  printf (", inex = %d, flags = %u\n", SIGN (inex2), flags2);
+                  exit (1);
+                }  /* div */
+              }  /* k */
+          mpfr_clears (z1, z2, (mpfr_ptr) 0);
+        }  /* prec */
+    }  /* i */
+  mpfr_clears (x, y, (mpfr_ptr) 0);
+  set_emin (emin);
+}
+
+static void
+underflow0 (void)
+{
+  underflow (-256);
+  if (mpfr_get_emin () != MPFR_EMIN_MIN)
+    underflow (mpfr_get_emin ());
+  underflow (MPFR_EMIN_MIN);
+}
+
 int
 main (int argc, char *argv[])
 {
@@ -54,7 +140,7 @@ main (int argc, char *argv[])
 
   tests_start_mpfr ();
 
-  mpfr_inits2 (53, w, z, (void *) 0);
+  mpfr_inits2 (53, w, z, (mpfr_ptr) 0);
 
   for (i = 0; i < 3; i++)
     {
@@ -132,7 +218,9 @@ main (int argc, char *argv[])
         }
     }
 
-  mpfr_clears (w, z, (void *) 0);
+  mpfr_clears (w, z, (mpfr_ptr) 0);
+
+  underflow0 ();
 
   tests_end_mpfr ();
   return 0;

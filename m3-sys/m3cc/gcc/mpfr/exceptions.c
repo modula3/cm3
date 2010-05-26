@@ -1,6 +1,6 @@
 /* Exception flags and utilities.
 
-Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -214,6 +214,28 @@ mpfr_check_range (mpfr_ptr x, int t, mp_rnd_t rnd_mode)
         }
       if (MPFR_UNLIKELY( exp > __gmpfr_emax) )
         return mpfr_overflow(x, rnd_mode, MPFR_SIGN(x));
+    }
+  else if (MPFR_UNLIKELY (t != 0 && MPFR_IS_INF (x)))
+    {
+      /* We need to do the following because most MPFR functions are
+       * implemented in the following way:
+       *   Ziv's loop:
+       *   | Compute an approximation to the result and an error bound.
+       *   | Possible underflow/overflow detection -> return.
+       *   | If can_round, break (exit the loop).
+       *   | Otherwise, increase the working precision and loop.
+       *   Round the approximation in the target precision.
+       *   Restore the flags (that could have been set due to underflows
+       *   or overflows during the internal computations).
+       *   Execute: return mpfr_check_range (...).
+       * The problem is that an overflow could be generated when rounding the
+       * approximation (in general, such an overflow could not be detected
+       * earlier), and the overflow flag is lost when the flags are restored.
+       * So, the simplest solution is to detect this overflow case here in
+       * mpfr_check_range, which is easy to do since the rounded result is
+       * necessarily an inexact infinity.
+       */
+      __gmpfr_flags |= MPFR_FLAGS_OVERFLOW;
     }
   MPFR_RET (t);  /* propagate inexact ternary value, unlike most functions */
 }

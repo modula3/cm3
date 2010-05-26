@@ -2,8 +2,8 @@
 @c %**start of header
 @setfilename mpfr.info
 @documentencoding ISO-8859-1
-@set VERSION 2.3.0
-@set UPDATED-MONTH August 2007
+@set VERSION 2.3.2
+@set UPDATED-MONTH August 2008
 @settitle MPFR @value{VERSION}
 @synindex tp fn
 @iftex
@@ -15,15 +15,13 @@
 This manual documents how to install and use the Multiple Precision
 Floating-Point Reliable Library, version @value{VERSION}.
 
-Copyright 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1991, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 
 Permission is granted to copy, distribute and/or modify this document under
-the terms of the GNU Free Documentation License, Version 1.1 or any later
+the terms of the GNU Free Documentation License, Version 1.2 or any later
 version published by the Free Software Foundation; with no Invariant Sections,
-with the Front-Cover Texts being ``A GNU Manual'', and with the Back-Cover
-Texts being ``You have freedom to copy and modify this GNU Manual, like GNU
-software''.  A copy of the license is included in @ref{GNU Free Documentation
-License}.
+with no Front-Cover Texts, and with no Back-Cover Texts.  A copy of the
+license is included in @ref{GNU Free Documentation License}.
 @end copying
 
 
@@ -190,6 +188,34 @@ log
 @end macro
 @end ifnottex
 
+@c The following macro have been copied from gmp.texi
+@c
+@c  Usage: @MPFRpxreftop{info,title}
+@c
+@c  Like @pxref{}, but designed for a reference to the top of a document, not
+@c  a particular section.
+@c
+@c  The texinfo manual recommends putting a likely section name in references
+@c  like this, eg. "Introduction", but it seems better to just give the title.
+@c
+@iftex
+@macro MPFRpxreftop{info,title}
+see @cite{\title\}.
+@end macro
+@end iftex
+@ifhtml
+@macro MPFRpxreftop{info,title}
+see @cite{\title\}.
+@end macro
+@end ifhtml
+@ifnottex
+@ifnothtml
+@macro MPFRpxreftop{info,title}
+@pxref{Top,\title\,\title\,\info\,\title\}
+@end macro
+@end ifnothtml
+@end ifnottex
+
 @node Copying, Introduction to MPFR, Top, Top
 @comment  node-name, next, previous,  up
 @unnumbered MPFR Copying Conditions
@@ -237,24 +263,26 @@ GNU MP library by a precise semantics. The main differences
 with the @code{mpf} class from GNU MP are:
 
 @itemize @bullet
-@item the @code{mpfr} code is portable, i.e.@: the result of any operation
+@item the MPFR code is portable, i.e.@: the result of any operation
 does not depend (or should not) on the machine word size
 @code{mp_bits_per_limb} (32 or 64 on most machines);
 @item the precision in bits can be set exactly to any valid value
 for each variable (including very small precision);
-@item @code{mpfr} provides the four rounding modes from the IEEE 754-1985
+@item MPFR provides the four rounding modes from the IEEE 754-1985
 standard.
 @end itemize
 
-In particular, with a precision of 53 bits, @code{mpfr} should be able
-to exactly reproduce all computations with double-precision machine
-floating-point
-numbers (@code{double} type in C), except the default exponent range
-is much wider and subnormal numbers are not implemented but can be emulated.
+In particular, with a precision of 53 bits, MPFR should be able to
+exactly reproduce all computations with double-precision machine
+floating-point numbers (e.g., @code{double} type in C, with a C
+implementation that rigorously follows Annex F of the ISO C99 standard
+and @code{FP_CONTRACT} pragma set to @code{OFF}) on the four arithmetic
+operations and the square root, except the default exponent range is much
+wider and subnormal numbers are not implemented (but can be emulated).
 
 This version of MPFR is released under the GNU Lesser General Public
-License.
-It is permitted to link MPFR to non-free programs, as long as when
+License, Version 2.1 or any later version.
+It is permitted to link MPFR to most non-free programs, as long as when
 distributing them the MPFR source code and a means to re-link with a
 modified MPFR library is provided.
 
@@ -328,18 +356,26 @@ There are some other useful make targets:
 Create an info version of the manual, in @file{mpfr.info}.
 
 @item
+@samp{mpfr.pdf} or @samp{pdf}
+
+Create a PDF version of the manual, in @file{mpfr.pdf}.
+
+@item
 @samp{mpfr.dvi} or @samp{dvi}
 
 Create a DVI version of the manual, in @file{mpfr.dvi}.
 
 @item
-@samp{mpfr.ps}
+@samp{mpfr.ps} or @samp{ps}
 
 Create a Postscript version of the manual, in @file{mpfr.ps}.
 
-@c @item
-@c @samp{html}
-@c Create a HTML version of the manual, in @file{mpfr.html}.
+@item
+@samp{mpfr.html} or @samp{html}
+
+Create a HTML version of the manual, in several pages in the directory
+@file{mpfr.html}; if you want only one output HTML file, then type
+@samp{makeinfo --html --no-split mpfr.texi} instead.
 
 @item
 @samp{clean}
@@ -358,14 +394,20 @@ Delete all files copied by @samp{make install}.
 @end itemize
 
 
-@section Known Build Problems
+@section Build Problems
 
-MPFR suffers from all bugs from the GNU MP library, plus many more.
+In case of problem, please read the @file{INSTALL} file carefully
+before reporting a bug, in particular section ``In case of problem''.
+Some problems are due to bad configuration on the user side (not
+specific to MPFR). Problems are also mentioned in the FAQ
+@url{http://www.mpfr.org/faq.html}.
 
-Please report other problems to @samp{mpfr@@loria.fr}.
+@comment Warning! Do not split "MPFR ... @url{...}" across several lines
+@comment as this needs to be updated with update-version.
+Please report problems to @samp{mpfr@@loria.fr}.
 @xref{Reporting Bugs}.
-Some bug fixes are available on the MPFR web page
-@url{http://www.mpfr.org/}.
+Some bug fixes are available on the
+MPFR 2.3.2 web page @url{http://www.mpfr.org/mpfr-2.3.2/}.
 
 @section Getting the Latest Version of MPFR
 
@@ -376,12 +418,15 @@ The latest version of MPFR is available from @url{http://www.mpfr.org/}.
 @chapter Reporting Bugs
 @cindex Reporting bugs
 
-If you think you have found a bug in the MPFR library, first have a look on the
-MPFR web page @url{http://www.mpfr.org/}: perhaps this bug is already known,
-in which case you may find there a workaround for it.
-Otherwise, please investigate
-and report it. We have made this library available to you, and it is not to ask
-too much from you, to ask you to report the bugs that you find.
+@comment Warning! Do not split "MPFR ... @url{...}" across several lines
+@comment as this needs to be updated with update-version.
+If you think you have found a bug in the MPFR library, first have a look
+on the MPFR 2.3.2 web page @url{http://www.mpfr.org/mpfr-2.3.2/} and the
+FAQ @url{http://www.mpfr.org/faq.html}:
+perhaps this bug is already known, in which case you may find there
+a workaround for it. Otherwise, please investigate and report it.
+We have made this library available to you, and it is not to ask too
+much from you, to ask you to report the bugs that you find.
 
 There are a few things you should think about when you put your bug report
 together.
@@ -410,14 +455,58 @@ the language needs to be improved, please send a note to the same address.
 @comment  node-name,  next,  previous,  up
 @chapter MPFR Basics
 
+@section Headers and Libraries
 
 @cindex @file{mpfr.h}
 All declarations needed to use MPFR are collected in the include file
 @file{mpfr.h}.  It is designed to work with both C and C++ compilers.
 You should include that file in any program using the MPFR library:
-@verbatim
+
+@example
 #include <mpfr.h>
-@end verbatim
+@end example
+
+@cindex @code{stdio.h}
+Note however that prototypes for MPFR functions with @code{FILE *} parameters
+are provided only if @code{<stdio.h>} is included too (before @file{mpfr.h}).
+
+@example
+#include <stdio.h>
+#include <mpfr.h>
+@end example
+
+You can avoid the use of MPFR macros encapsulating functions by defining
+the @samp{MPFR_USE_NO_MACRO} macro before @file{mpfr.h} is included.  In
+general this should not be necessary, but this can be useful when debugging
+user code: with some macros, the compiler may emit spurious warnings with
+some warning options, and macros can prevent some prototype checking.
+
+@cindex Libraries
+@cindex Linking
+@cindex @code{libmpfr}
+All programs using MPFR must link against both @file{libmpfr} and
+@file{libgmp} libraries.  On a typical Unix-like system this can be
+done with @samp{-lmpfr -lgmp} (in that order), for example
+
+@example
+gcc myprogram.c -lmpfr -lgmp
+@end example
+
+@cindex Libtool
+MPFR is built using Libtool and an application can use that to link if
+desired, @MPFRpxreftop{libtool, GNU Libtool}
+@c Note: Do not try the above cross reference without moving mpfr.info
+@c into some "safe" place first. Due to a poor design, "info" will not
+@c find the correct libtool info file because of the "libtool" script
+@c in MPFR's directory!
+
+If MPFR has been installed to a non-standard location, then it may be
+necessary to set up environment variables such as @samp{C_INCLUDE_PATH}
+and @samp{LIBRARY_PATH}, or use @samp{-I} and @samp{-L} compiler options,
+in order to point to the right directories. For a shared library, it may
+also be necessary to set up some sort of run-time library path (e.g.,
+@samp{LD_LIBRARY_PATH}) on some systems. Please read the @file{INSTALL}
+file for additional information.
 
 @section Nomenclature and Types
 
@@ -425,7 +514,8 @@ You should include that file in any program using the MPFR library:
 @tindex @code{mpfr_t}
 @noindent
 A @dfn{floating-point number} or @dfn{float} for short, is an arbitrary
-precision mantissa with a limited precision exponent. The C data type
+precision significand (also called mantissa) with a limited precision
+exponent. The C data type
 for such objects is @code{mpfr_t} (internally defined as a one-element
 array of a structure, and @code{mpfr_ptr} is the C data type representing
 a pointer to this structure). A floating-point number can have
@@ -441,19 +531,27 @@ the other functions supported by MPFR.
 @cindex Precision
 @tindex @code{mp_prec_t}
 @noindent
-The @dfn{precision} is the number of bits used to represent the mantissa
+The @dfn{precision} is the number of bits used to represent the significand
 of a floating-point number;
 the corresponding C data type is @code{mp_prec_t}.
 The precision can be any integer between @code{MPFR_PREC_MIN} and
 @code{MPFR_PREC_MAX}. In the current implementation, @code{MPFR_PREC_MIN}
 is equal to 2.
 
+Warning! MPFR needs to increase the precision internally, in order to
+provide accurate results (and in particular, correct rounding). Do not
+attempt to set the precision to any value near @code{MPFR_PREC_MAX},
+otherwise MPFR will abort due to an assertion failure. Moreover, you
+may reach some memory limit on your platform, in which case the program
+may abort, crash or have undefined behavior (depending on your C
+implementation).
+
 @cindex Rounding Modes
 @tindex @code{mp_rnd_t}
 @noindent
 The @dfn{rounding mode} specifies the way to round the result of a
 floating-point operation, in case the exact result can not be represented
-exactly in the destination mantissa;
+exactly in the destination significand;
 the corresponding C data type is @code{mp_rnd_t}.
 
 @cindex Limb
@@ -501,7 +599,7 @@ Instead, initialize it before entering the loop, and clear it out after the
 loop has exited.
 
 You don't need to be concerned about allocating additional space for MPFR
-variables, since any variable has a mantissa of fixed size.
+variables, since any variable has a significand of fixed size.
 Hence unless you change its precision, or clear and reinitialize it,
 a floating-point variable will have the same allocated space during all its
 life.
@@ -512,9 +610,9 @@ The following four rounding modes are supported:
 
 @itemize @bullet
 @item @code{GMP_RNDN}: round to nearest
-@item @code{GMP_RNDZ}: round towards zero
-@item @code{GMP_RNDU}: round towards plus infinity
-@item @code{GMP_RNDD}: round towards minus infinity
+@item @code{GMP_RNDZ}: round toward zero
+@item @code{GMP_RNDU}: round toward plus infinity
+@item @code{GMP_RNDD}: round toward minus infinity
 @end itemize
 
 The @samp{round to nearest} mode works as in the IEEE 754-1985 standard: in
@@ -635,8 +733,8 @@ to consider the underflow after rounding. The underflow before rounding
 can also be defined. For instance, consider a function that has the
 exact result @m{7 \times 2^{e-4}, 7 multiplied by two to the power
 @var{e}@minus{}4}, where @var{e} is the smallest exponent (for a
-mantissa between 1/2 and 1) in the current
-range, with a 2-bit target precision and rounding towards plus infinity.
+significand between 1/2 and 1) in the current
+range, with a 2-bit target precision and rounding toward plus infinity.
 The exact result has the exponent @var{e}@minus{}1. With the underflow
 before rounding, such a function call would yield an underflow, as
 @var{e}@minus{}1 is outside the current exponent range. However, MPFR
@@ -685,6 +783,23 @@ the NaN flag whenever a NaN is generated, even when a NaN is propagated
 a range error in MPFR.
 
 @end itemize
+
+@section Memory Handling
+
+MPFR functions may create caches, e.g. when computing constants such
+as @m{\pi,Pi}, either because the user has called a function like
+@code{mpfr_const_pi} directly or because such a function was called
+internally by the MPFR library itself to compute some other function.
+
+At any time, the user can free the various caches with
+@code{mpfr_free_cache}. It is strongly advised to do that before
+terminating a thread, or before exiting when using tools like
+@samp{valgrind} (to avoid memory leaks being reported).
+
+MPFR internal data such as flags, the exponent range, the default
+precision and rounding mode, and caches (i.e., data that are not
+accessed via parameters) are either global (if MPFR has not been
+compiled as thread safe) or per-thread (thread local storage).
 
 @node MPFR Interface, Contributors, MPFR Basics, Top
 @comment  node-name,  next,  previous,  up
@@ -782,7 +897,7 @@ by a call to @code{mpfr_set_default_prec}.
 
 @deftypefun void mpfr_set_default_prec (mp_prec_t @var{prec})
 Set the default precision to be @strong{exactly} @var{prec} bits.  The
-precision of a variable means the number of bits used to store its mantissa.
+precision of a variable means the number of bits used to store its significand.
 All
 subsequent calls to @code{mpfr_init} will use this precision, but previously
 initialized variables are unaffected.
@@ -807,6 +922,7 @@ Here is an example on how to initialize floating-point variables:
   /* When the program is about to exit, do ... */
   mpfr_clear (x);
   mpfr_clear (y);
+  mpfr_free_cache ();
 @}
 @end example
 
@@ -821,7 +937,7 @@ and set its value to NaN.
 The previous value stored in @var{x} is lost. It is equivalent to
 a call to @code{mpfr_clear(x)} followed by a call to
 @code{mpfr_init2(x, prec)}, but more efficient as no allocation is done in
-case the current allocated space for the mantissa of @var{x} is enough.
+case the current allocated space for the significand of @var{x} is enough.
 The precision @var{prec} can be any integer between @code{MPFR_PREC_MIN} and
 @code{MPFR_PREC_MAX}.
 
@@ -831,7 +947,7 @@ use @code{mpfr_prec_round} instead.
 
 @deftypefun mp_prec_t mpfr_get_prec (mpfr_t @var{x})
 Return the precision actually used for assignments of @var{x}, i.e.@: the
-number of bits used to store its mantissa.
+number of bits used to store its significand.
 @end deftypefun
 
 @node Assignment Functions, Combined Initialization and Assignment Functions, Initialization Functions, MPFR Interface
@@ -857,7 +973,7 @@ these functions.
 @deftypefunx int mpfr_set_q (mpfr_t @var{rop}, mpq_t @var{op}, mp_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_f (mpfr_t @var{rop}, mpf_t @var{op}, mp_rnd_t @var{rnd})
 Set the value of @var{rop} from @var{op}, rounded
-towards the given direction @var{rnd}.
+toward the given direction @var{rnd}.
 Note that the input 0 is converted to +0 by @code{mpfr_set_ui},
 @code{mpfr_set_si}, @code{mpfr_set_sj}, @code{mpfr_set_uj},
 @code{mpfr_set_z}, @code{mpfr_set_q} and
@@ -888,7 +1004,7 @@ MPFR can work with it.
 @deftypefunx int mpfr_set_uj_2exp (mpfr_t @var{rop}, uintmax_t @var{op}, intmax_t @var{e}, mp_rnd_t @var{rnd})
 @deftypefunx int mpfr_set_sj_2exp (mpfr_t @var{rop}, intmax_t @var{op}, intmax_t @var{e}, mp_rnd_t @var{rnd})
 Set the value of @var{rop} from @m{@var{op} \times 2^e, @var{op} multiplied by
-two to the power @var{e}}, rounded towards the given direction @var{rnd}.
+two to the power @var{e}}, rounded toward the given direction @var{rnd}.
 Note that the input 0 is converted to +0.
 @end deftypefun
 
@@ -909,68 +1025,61 @@ is a valid number in base @var{base}; otherwise it returns @minus{}1, and
 @deftypefun int mpfr_strtofr (mpfr_t @var{rop}, const char *@var{nptr}, char **@var{endptr}, int @var{base}, mp_rnd_t @var{rnd})
 
 Read a floating-point number from a string @var{nptr} in base @var{base},
-rounded in the direction @var{rnd}. If successful, the
+rounded in the direction @var{rnd}; @var{base} must be either 0 (to
+detect the base, as described below) or a number from 2 to 36 (otherwise
+the behavior is undefined). If @var{nptr} starts with valid data, the
 result is stored in @var{rop} and @code{*@var{endptr}} points to the
-character just after those parsed. If @var{str} doesn't start with a
-valid number then @var{rop} is set to zero and the value of @var{nptr}
-is stored in the location referenced by @var{endptr}.
+character just after the valid data (if @var{endptr} is not a null pointer);
+otherwise @var{rop} is set to zero and the value of @var{nptr} is stored
+in the location referenced by @var{endptr} (if @var{endptr} is not a null
+pointer). The usual ternary value is returned.
 
-Parsing follows the standard C @code{strtod} function. This means optional
-leading whitespace, an optional @code{+} or @code{-}, mantissa digits with
-an optional decimal point, and an
-optional exponent consisting of an @code{e} or @code{E} (if
-@math{@var{base} @le{} 10}) or @code{@@}, an optional sign, and digits.
+Parsing follows the standard C @code{strtod} function with some extensions.
+Case is ignored. After optional leading whitespace, one has a subject
+sequence consisting of an optional sign (@code{+} or @code{-}), and either
+numeric data or special data. The subject sequence is defined as the
+longest initial subsequence of the input string, starting with the first
+non-whitespace character, that is of the expected form.
+
+The form of numeric data is a non-empty sequence of significand digits
+with an optional decimal point, and an optional exponent consisting of
+an exponent prefix followed by an optional sign and a non-empty sequence
+of decimal digits. A significand digit is either a decimal digit or a
+Latin letter (62 possible characters), with @code{a} = 10, @code{b} = 11,
+@dots{}, @code{z} = 36; its value must be strictly less than the base.
 The decimal point can be either the one defined by the current locale or
 the period (the first one is accepted for consistency with the C standard
 and the practice, the second one is accepted to allow the programmer to
 provide MPFR numbers from strings in a way that does not depend on the
 current locale).
-A hexadecimal mantissa can be given with a leading @code{0x} or @code{0X}, in
-which case @code{p} or @code{P} may introduce an optional binary exponent,
-indicating the power of 2 by which the mantissa is to be scaled. A binary
-mantissa can be given with a leading @code{0b} or @code{0B}, in which case
-@code{e}, @code{E}, @code{p}, @code{P} or @code{@@} may introduce the
-binary exponent. The exponent is always written in base 10.
+The exponent prefix can be @code{e} or @code{E} for bases up to 10, or
+@code{@@} in any base; it indicates a multiplication by a power of the
+base. In bases 2 and 16, the exponent prefix can also be @code{p} or
+@code{P}, in which case it introduces a binary exponent: it indicates a
+multiplication by a power of 2 (there is a difference only for base 16).
+The value of an exponent is always written in base 10.
+In base 2, the significand can start with @code{0b} or @code{0B}, and
+in base 16, it can start with @code{0x} or @code{0X}.
 
-In addition, @code{infinity}, @code{inf} (if @math{@var{base} @le{} 10})
-or @code{@@inf@@} with an optional sign, or @code{nan},
-@code{nan(n-char-sequence)} (if @math{@var{base} @le{} 10}), @code{@@nan@@}
-or @code{@@nan@@(n-char-sequence)} all case insensitive (as Latin letters),
-can be given. A @code{n-char-sequence} is a non-empty string containing
-only digits, Latin letters and the underscore (0, 1, 2, ..., 9, a, b, ...,
-z, A, B, ..., Z, _).
+If the argument @var{base} is 0, then the base is automatically detected
+as follows. If the significand starts with @code{0b} or @code{0B}, base 2
+is assumed. If the significand starts with @code{0x} or @code{0X}, base 16
+is assumed. Otherwise base 10 is assumed.
 
-There must be at least one digit in the mantissa for the number to
-be valid. If an exponent has no digits it's ignored and parsing
-stops after the mantissa. If an @code{0x}, @code{0X}, @code{0b} or
-@code{0B} is not followed by hexadecimal/binary digits, parsing stops
-after the first @code{0}:
-the subject sequence is defined as the longest initial
-subsequence of the input string, starting with the first
-non-white-space character, that is of the expected form.
-The subject sequence contains no characters if the input
-string is not of the expected form.
+Note: The exponent must contain at least a digit. Otherwise the possible
+exponent prefix and sign are not part of the number (which ends with the
+significand). Similarly, if @code{0b}, @code{0B}, @code{0x} or @code{0X}
+is not followed by a binary/hexadecimal digit, then the subject sequence
+stops at the character @code{0}.
 
-Note that in the hex format the exponent @code{P} represents a power of 2,
-whereas @code{@@} represents a power of the base (i.e.@: 16).
-
-If the argument @var{base} is different from 0, it must be in the range 2
-to 36.
-@c For bases up to 36,
-Case is ignored; uppercase and lowercase letters have the same
-value.
-@c ; for bases 37 to 62, uppercase letters represent the usual
-@c  10..35, while lowercase letters represent 36..61.
-
-If @code{base} is 0, then it tries to identify the used base: if the
-mantissa begins with the @code{0x} prefix, it assumes that @var{base} is 16.
-If it begins with @code{0b}, it assumes that @var{base} is 2. Otherwise, it
-assumes it is 10.
-
-It returns a usual ternary value.
-If @var{endptr} is not a null pointer, a pointer to the character after
-the last character used in the conversion is stored in the location
-referenced by @var{endptr}.
+Special data (for infinities and NaN) can be @code{@@inf@@} or
+@code{@@nan@@(n-char-sequence)}, and if @math{@var{base} @le{} 16},
+it can also be @code{infinity}, @code{inf}, @code{nan} or
+@code{nan(n-char-sequence)}, all case insensitive.
+A @code{n-char-sequence} is a non-empty string containing only digits,
+Latin letters and the underscore (0, 1, 2, @dots{}, 9, a, b, @dots{}, z,
+A, B, @dots{}, Z, _). Note: one has an optional sign for all data, even
+NaN.
 
 @end deftypefun
 
@@ -1063,7 +1172,7 @@ See also @code{mpfr_fits_slong_p}, @code{mpfr_fits_ulong_p},
 @end deftypefun
 
 @deftypefun mp_exp_t mpfr_get_z_exp (mpz_t @var{rop}, mpfr_t @var{op})
-Put the scaled mantissa of @var{op} (regarded as an integer, with the
+Put the scaled significand of @var{op} (regarded as an integer, with the
 precision of @var{op}) into @var{rop}, and return the exponent @var{exp}
 (which may be outside the current exponent range) such that @var{op}
 exactly equals
@@ -1100,9 +1209,9 @@ to the left of the first digit.  For example, the number @minus{}3.1416 would
 be returned as "@minus{}31416" in the string and 1 written at @var{expptr}.
 If @var{rnd} is to nearest, and @var{op} is exactly in the middle of two
 possible outputs, the one with an even last digit is chosen
-(for an odd base, this may not correspond to an even mantissa).
+(for an odd base, this may not correspond to an even significand).
 
-If @var{n} is zero, the number of digits of the mantissa is chosen
+If @var{n} is zero, the number of digits of the significand is chosen
 large enough so that re-reading the printed value with the same precision,
 assuming both output and input use rounding to nearest, will recover
 the original value of @var{op}.
@@ -1117,12 +1226,12 @@ $m = 1 + \lceil n {\log 2 \over \log b} \rceil$,
 @end tex
 but in some very rare cases, it might be @math{m+1}.
 
-If @var{str} is a null pointer, space for the mantissa is allocated using
+If @var{str} is a null pointer, space for the significand is allocated using
 the current allocation function, and a pointer to the string is returned.
 To free the returned string, you must use @code{mpfr_free_str}.
 
 If @var{str} is not a null pointer, it should point to a block of storage
-large enough for the mantissa, i.e., at least @code{max(@var{n} + 2, 7)}.
+large enough for the significand, i.e., at least @code{max(@var{n} + 2, 7)}.
 The extra two bytes are for a possible minus sign, and for the terminating null
 character.
 
@@ -1142,7 +1251,7 @@ For more information about how it is done:
 @pxref{Custom Allocation,,, gmp,GNU MP}.
 @end ifnothtml
 @ifhtml
-see Custom Allocation (GNU MP).
+see section ``Custom Allocation'' in @cite{GNU MP}.
 @end ifhtml
 @end deftypefun
 
@@ -1251,6 +1360,7 @@ for the @code{pow} function (note this may change in future versions):
 @item @code{pow(@pom{}0, @var{y})} returns plus zero for @var{y} positive and not an odd integer.
 @item @code{pow(-1, @pom{}Inf)} returns 1.
 @item @code{pow(+1, @var{y})} returns 1 for any @var{y}, even a NaN.
+@item @code{pow(@var{x}, @pom{}0)} returns 1 for any @var{x}, even a NaN.
 @item @code{pow(@var{x}, @var{y})} returns NaN for finite negative @var{x} and finite non-integer @var{y}.
 @item @code{pow(@var{x}, -Inf)} returns plus infinity for @math{0 < @GMPabs{x} < 1}, and plus zero for @math{@GMPabs{x} > 1}.
 @item @code{pow(@var{x}, +Inf)} returns plus zero for @math{0 < @GMPabs{x} < 1}, and plus infinity for @math{@GMPabs{x} > 1}.
@@ -1394,6 +1504,10 @@ All those functions, except explicitly stated, return zero for an
 exact return value, a positive value for a return value larger than the
 exact result, and a negative value otherwise.
 
+Important note: in some domains, computing special functions (either with
+correct or incorrect rounding) is expensive, even for small precision,
+for example the trigonometric and Bessel functions for large argument.
+
 @deftypefun int mpfr_log (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 @deftypefunx int mpfr_log2 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 @deftypefunx int mpfr_log10 (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
@@ -1432,7 +1546,7 @@ cotangent of @var{op}, rounded in the direction @var{rnd}.
 Set simultaneously @var{sop} to the sine of @var{op} and
                    @var{cop} to the cosine of @var{op},
 rounded in the direction @var{rnd} with the corresponding precisions of
-@var{sop} and @var{cop}.
+@var{sop} and @var{cop}, which must be different variables.
 Return 0 iff both results are exact.
 @end deftypefun
 
@@ -1441,6 +1555,14 @@ Return 0 iff both results are exact.
 @deftypefunx int mpfr_atan (mpfr_t @var{rop}, mpfr_t @var{op}, mp_rnd_t @var{rnd})
 Set @var{rop} to the arc-cosine, arc-sine or arc-tangent of @var{op},
 rounded in the direction @var{rnd}.
+Note that since @code{acos(-1)} returns the floating-point number closest to
+@m{\pi,Pi} according to the given rounding mode, this number might not be
+in the output range @math{0 @le{} @var{rop} < \pi}
+of the arc-cosine function;
+still, the result lies in the image of the output range
+by the rounding function.
+The same holds for @code{asin(-1)}, @code{asin(1)}, @code{atan(-Inf)},
+@code{atan(+Inf)}.
 @end deftypefun
 
 @deftypefun int mpfr_atan2 (mpfr_t @var{rop}, mpfr_t @var{y}, mpfr_t @var{x}, mp_rnd_t @var{rnd})
@@ -1448,6 +1570,8 @@ Set @var{rop} to the arc-tangent2 of @var{y} and @var{x},
 rounded in the direction @var{rnd}:
 if @code{x > 0}, @code{atan2(y, x) = atan (y/x)};
 if @code{x < 0}, @code{atan2(y, x) = sign(y)*(Pi - atan (@GMPabs{y/x}))}.
+As for @code{atan}, in case the exact mathematical result is @m{+\pi,+Pi} or
+@m{-\pi,-Pi}, its rounded result might be outside the function output range.
 
 @code{atan2(y, 0)} does not raise any floating-point exception.
 Special values are currently handled as described in the ISO C99 standard
@@ -1589,12 +1713,12 @@ NaN or negative,
 @end deftypefun
 
 @deftypefun int mpfr_fma (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_t @var{op3}, mp_rnd_t @var{rnd})
-Set @var{rop} to @math{@var{op1} @GMPtimes{} @var{op2} + @var{op3}},
+Set @var{rop} to @math{(@var{op1} @GMPtimes{} @var{op2}) + @var{op3}},
 rounded in the direction @var{rnd}.
 @end deftypefun
 
 @deftypefun int mpfr_fms (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mpfr_t @var{op3}, mp_rnd_t @var{rnd})
-Set @var{rop} to @math{@var{op1} @GMPtimes{} @var{op2} - @var{op3}},
+Set @var{rop} to @math{(@var{op1} @GMPtimes{} @var{op2}) - @var{op3}},
 rounded in the direction @var{rnd}.
 @end deftypefun
 
@@ -1640,7 +1764,8 @@ Free various caches used by MPFR internally, in particular the
 caches used by the functions computing constants (currently
 @code{mpfr_const_log2}, @code{mpfr_const_pi},
 @code{mpfr_const_euler} and @code{mpfr_const_catalan}).
-You should call this function when terminating a thread.
+You should call this function before terminating a thread, even if you did
+not call these functions directly (they could have been called internally).
 @end deftypefun
 
 @deftypefun int mpfr_sum (mpfr_t @var{rop}, mpfr_ptr const @var{tab}[], unsigned long @var{n}, mp_rnd_t @var{rnd})
@@ -1695,10 +1820,10 @@ read float in @var{rop}.
 @c The string is of the form @samp{M@@N} or, if the
 @c base is 10 or less, alternatively @samp{MeN} or @samp{MEN}, or, if the base
 @c is 16, alternatively @samp{MpB} or @samp{MPB}.
-@c @samp{M} is the mantissa in the specified base, @samp{N} is the exponent
+@c @samp{M} is the significand in the specified base, @samp{N} is the exponent
 @c written in decimal for the specified base, and in base 16, @samp{B} is the
 @c binary exponent written in decimal (i.e.@: it indicates the power of 2 by
-@c which the mantissa is to be scaled).
+@c which the significand is to be scaled).
 This function reads a word (defined as a sequence of characters between
 whitespace) and parses it using @code{mpfr_set_str} (it may change).
 See the documentation of @code{mpfr_strtofr} for a detailed description
@@ -1733,7 +1858,7 @@ given rounding mode, @code{mpfr_ceil} rounds
 to the next higher or equal representable integer, @code{mpfr_floor} to
 the next lower or equal representable integer, @code{mpfr_round} to the
 nearest representable integer, rounding halfway cases away from zero,
-and @code{mpfr_trunc} to the next representable integer towards zero.
+and @code{mpfr_trunc} to the next representable integer toward zero.
 
 The returned value is zero when the result is exact, positive when it is
 greater than the original value of @var{op}, and negative when it is smaller.
@@ -1743,8 +1868,8 @@ that is not representable in @var{rop}, 2 or @minus{}2 when @var{op} is
 not an integer.
 
 Note that @code{mpfr_round} is different from @code{mpfr_rint} called with
-the rounding to the nearest mode (where halfway cases are rounded to an even
-integer or mantissa). Note also that no double rounding is performed; for
+the rounding to nearest mode (where halfway cases are rounded to an even
+integer or significand). Note also that no double rounding is performed; for
 instance, 4.5 (100.1 in binary) is rounded by @code{mpfr_round} to 4 (100
 in binary) in 2-bit precision, though @code{round(4.5)} is equal to 5 and
 5 (101 in binary) is rounded to 6 (110 in binary) in 2-bit precision.
@@ -1758,7 +1883,7 @@ Set @var{rop} to @var{op} rounded to an integer.
 @code{mpfr_rint_ceil} rounds to the next higher or equal integer,
 @code{mpfr_rint_floor} to the next lower or equal integer,
 @code{mpfr_rint_round} to the nearest integer, rounding halfway cases away
-from zero, and @code{mpfr_rint_trunc} to the next integer towards zero.
+from zero, and @code{mpfr_rint_trunc} to the next integer toward zero.
 If the result is not representable, it is rounded in the direction @var{rnd}.
 The returned value is the ternary value associated with the considered
 round-to-integer function (regarded in the same way as any other
@@ -1778,7 +1903,7 @@ Set @var{r} to the remainder of the division of @var{x} by @var{y}, with
 quotient rounded to the nearest integer (ties rounded to even), and
 @var{r} rounded according to the direction @var{rnd}.
 If @var{r} is zero, it has the sign of @var{x}.
-The return value is the inexact flag corresponding to @var{r}.
+The return value is the ternary value corresponding to @var{r}.
 Additionally, @code{mpfr_remquo} stores
 the low significant bits from the quotient in @var{*q}
 (more precisely the number of bits in a @code{long} minus one),
@@ -1862,13 +1987,15 @@ same one as GMP if MPFR was built using @samp{--with-gmp-build}).
 
 @deftypefun mp_exp_t mpfr_get_exp (mpfr_t @var{x})
 Get the exponent of @var{x}, assuming that @var{x} is a non-zero ordinary
-number. The behavior for NaN, Infinity or Zero is undefined.
+number and the significand is chosen in [1/2,1). The behavior for NaN,
+infinity or zero is undefined.
 @end deftypefun
 
 @deftypefun int mpfr_set_exp (mpfr_t @var{x}, mp_exp_t @var{e})
 Set the exponent of @var{x} if @var{e} is in the current exponent range,
 and return 0 (even if @var{x} is not a non-zero ordinary number);
 otherwise, return a non-zero value.
+The significand is assumed to be in [1/2,1).
 @end deftypefun
 
 @deftypefun int mpfr_signbit (mpfr_t @var{op})
@@ -1877,13 +2004,13 @@ negative, @minus{}0, or a NaN whose representation has its sign bit set).
 @end deftypefun
 
 @deftypefun int mpfr_setsign (mpfr_t @var{rop}, mpfr_t @var{op}, int @var{s}, mp_rnd_t @var{rnd})
-Set the value of @var{rop} from @var{op}, rounded towards the given
+Set the value of @var{rop} from @var{op}, rounded toward the given
 direction @var{rnd}, then set (resp.@: clear) its sign bit if @var{s}
 is non-zero (resp.@: zero), even when @var{op} is a NaN.
 @end deftypefun
 
 @deftypefun int mpfr_copysign (mpfr_t @var{rop}, mpfr_t @var{op1}, mpfr_t @var{op2}, mp_rnd_t @var{rnd})
-Set the value of @var{rop} from @var{op1}, rounded towards the given
+Set the value of @var{rop} from @var{op1}, rounded toward the given
 direction @var{rnd}, then set its sign bit to that of @var{op2} (even
 when @var{op1} or @var{op2} is a NaN). This function is equivalent to
 @code{mpfr_setsign (@var{rop}, @var{op1}, mpfr_signbit (@var{op2}), @var{rnd})}.
@@ -1958,8 +2085,8 @@ Round @var{x} according to @var{rnd} with precision @var{prec}, which
 must be an integer between @code{MPFR_PREC_MIN} and @code{MPFR_PREC_MAX}
 (otherwise the behavior is undefined).
 If @var{prec} is greater or equal to the precision of @var{x}, then new
-space is allocated for the mantissa, and it is filled with zeros.
-Otherwise, the mantissa is rounded to precision @var{prec} with the given
+space is allocated for the significand, and it is filled with zeros.
+Otherwise, the significand is rounded to precision @var{prec} with the given
 direction. In both cases, the precision of @var{x} is changed to @var{prec}.
 @end deftypefun
 
@@ -2026,6 +2153,12 @@ result is larger than the exact one, a negative value if the rounded
 result is smaller than the exact one. Note that unlike most functions,
 the result is compared to the exact one, not the input value @var{x},
 i.e.@: the ternary value is propagated.
+
+Note: If @var{x} is an infinity and @var{t} is different from zero (i.e.,
+if the rounded result is an inexact infinity), then the overflow flag is
+set. This is useful because @code{mpfr_check_range} is typically called
+(at least in MPFR functions) after restoring the flags that could have
+been set due to internal computations.
 @end deftypefun
 
 @deftypefun int mpfr_subnormalize (mpfr_t @var{x}, int @var{t}, mp_rnd_t @var{rnd})
@@ -2034,11 +2167,19 @@ if @var{x} is outside the subnormal exponent range, it just propagates the
 ternary value @var{t}; otherwise, it rounds @var{x} to precision
 @code{EXP(x)-emin+1} according to rounding mode @var{rnd} and previous
 ternary value @var{t}, avoiding double rounding problems.
+More precisely in the subnormal domain, denoting by @var{e} the value of
+@code{emin}, @var{x} is rounded in fixed-point
+arithmetic to an integer multiple of @m{2^{e-1}, two to the power
+@var{e}@minus{}1}; as a consequence, @m{1.5 \times 2^{e-1},
+1.5 multiplied by two to the power @var{e}@minus{}1} when @var{t} is zero
+is rounded to @m{2^e, two to the power @var{e}} with rounding to nearest.
+
 @code{PREC(x)} is not modified by this function.
 @var{rnd} and @var{t} must be the used rounding mode for computing @var{x}
 and the returned ternary value when computing @var{x}.
 The subnormal exponent range is from @code{emin} to @code{emin+PREC(x)-1}.
-This functions assumes that @code{emax-emin >= PREC(x)}.
+If the result cannot be represented in the current exponent range
+(due to a too small @code{emax}), the behavior is undefined.
 Note that unlike most functions, the result is compared to the exact one,
 not the input value @var{x}, i.e.@: the ternary value is propagated.
 This is a preliminary interface.
@@ -2139,8 +2280,10 @@ with gcc in c89 mode and with @samp{-pedantic}, you may want to define the
 Initialize all the @code{mpfr_t} variables of the given @code{va_list},
 set their precision to be the default precision and their value to NaN.
 See @code{mpfr_init} for more details.
-The @code{va_list} is assumed to be composed only of type @code{mpfr_t}.
-It begins from @var{x}. It ends when it encounters a null pointer.
+The @code{va_list} is assumed to be composed only of type @code{mpfr_t}
+(or equivalently @code{mpfr_ptr}).
+It begins from @var{x}. It ends when it encounters a null pointer (whose
+type must also be @code{mpfr_ptr}).
 @end deftypefun
 
 
@@ -2149,15 +2292,19 @@ Initialize all the @code{mpfr_t} variables of the given @code{va_list},
 set their precision to be @strong{exactly}
 @var{prec} bits and their value to NaN.
 See @code{mpfr_init2} for more details.
-The @code{va_list} is assumed to be composed only of type @code{mpfr_t}.
-It begins from @var{x}. It ends when it encounters a null pointer.
+The @code{va_list} is assumed to be composed only of type @code{mpfr_t}
+(or equivalently @code{mpfr_ptr}).
+It begins from @var{x}. It ends when it encounters a null pointer (whose
+type must also be @code{mpfr_ptr}).
 @end deftypefun
 
 @deftypefun void mpfr_clears (mpfr_t @var{x}, ...)
 Free the space occupied by all the @code{mpfr_t} variables of the given
 @code{va_list}. See @code{mpfr_clear} for more details.
-The @code{va_list} is assumed to be composed only of type @code{mpfr_t}.
-It begins from @var{x}. It ends when it encounters a null pointer.
+The @code{va_list} is assumed to be composed only of type @code{mpfr_t}
+(or equivalently @code{mpfr_ptr}).
+It begins from @var{x}. It ends when it encounters a null pointer (whose
+type must also be @code{mpfr_ptr}).
 @end deftypefun
 
 Here is an example of how to use multiple initialization functions:
@@ -2165,9 +2312,9 @@ Here is an example of how to use multiple initialization functions:
 @example
 @{
   mpfr_t x, y, z, t;
-  mpfr_inits2 (256, x, y, z, t, (void *) 0);
+  mpfr_inits2 (256, x, y, z, t, (mpfr_ptr) 0);
   @dots{}
-  mpfr_clears (x, y, z, t, (void *) 0);
+  mpfr_clears (x, y, z, t, (mpfr_ptr) 0);
 @}
 @end example
 
@@ -2191,14 +2338,14 @@ All operations are then performed with the default MPFR rounding mode,
 which can be reset with @code{mpfr_set_default_rounding_mode}.
 
 Warning: the @code{mpf_init} and @code{mpf_init2} functions initialize
-to zero, whereas the corresponding @code{mpfr} functions initialize to NaN:
+to zero, whereas the corresponding MPFR functions initialize to NaN:
 this is useful to detect uninitialized values, but is slightly incompatible
 with @code{mpf}.
 
 @deftypefun void mpfr_set_prec_raw (mpfr_t @var{x}, mp_prec_t @var{prec})
 Reset the precision of @var{x} to be @strong{exactly} @var{prec} bits.
 The only difference with @code{mpfr_set_prec} is that @var{prec} is assumed to
-be small enough so that the mantissa fits into the current allocated memory
+be small enough so that the significand fits into the current allocated memory
 space for @var{x}. Otherwise the behavior is undefined.
 @end deftypefun
 
@@ -2247,8 +2394,9 @@ Nothing has to be done to destroy the FP numbers except garbaging the used
 memory: all the memory stuff (allocating, destroying, garbaging) is kept to
 the application.
 
-Each function is this interface is also implemented as a macro for
-efficiency reasons.
+Each function in this interface is also implemented as a macro for
+efficiency reasons: for example @code{mpfr_custom_init (s, p)}
+uses the macro, while @code{(mpfr_custom_init) (s, p)} uses the function.
 
 Note 1: MPFR functions may still initialize temporary FP numbers
 using standard mpfr_init. See Custom Allocation (GNU MP).
@@ -2261,17 +2409,17 @@ GMP Custom Allocation, allocates its memory on the application stack.
 Note 3: This interface is preliminary.
 
 @deftypefun size_t mpfr_custom_get_size (mp_prec_t @var{prec})
-Return the needed size in bytes to store the mantissa of a FP number
+Return the needed size in bytes to store the significand of a FP number
 of precision @var{prec}.
 @end deftypefun
 
-@deftypefun void mpfr_custom_init (void *@var{mantissa}, mp_prec_t @var{prec})
-Initialize a mantissa of precision @var{prec}.
-@var{mantissa} must be an area of @code{mpfr_custom_get_size (prec)} bytes
+@deftypefun void mpfr_custom_init (void *@var{significand}, mp_prec_t @var{prec})
+Initialize a significand of precision @var{prec}.
+@var{significand} must be an area of @code{mpfr_custom_get_size (prec)} bytes
 at least and be suitably aligned for an array of @code{mp_limb_t}.
 @end deftypefun
 
-@deftypefun void mpfr_custom_init_set (mpfr_t @var{x}, int @var{kind}, mp_exp_t @var{exp}, mp_prec_t @var{prec}, void *@var{mantissa})
+@deftypefun void mpfr_custom_init_set (mpfr_t @var{x}, int @var{kind}, mp_exp_t @var{exp}, mp_prec_t @var{prec}, void *@var{significand})
 Perform a dummy initialization of a @code{mpfr_t} and set it to:
 @itemize
 @item if @code{ABS(kind) == MPFR_NAN_KIND}, @var{x} is set to NaN;
@@ -2280,13 +2428,13 @@ of sign @code{sign(kind)};
 @item if @code{ABS(kind) == MPFR_ZERO_KIND}, @var{x} is set to the zero of
 sign @code{sign(kind)};
 @item if @code{ABS(kind) == MPFR_REGULAR_KIND}, @var{x} is set to a regular
-number: @code{x = sign(kind)*mantissa*2^exp}
+number: @code{x = sign(kind)*significand*2^exp}
 @end itemize
-In all cases, it uses @var{mantissa} directly for further computing
+In all cases, it uses @var{significand} directly for further computing
 involving @var{x}. It will not allocate anything.
 A FP number initialized with this function cannot be resized using
 @code{mpfr_set_prec}, or cleared using @code{mpfr_clear}!
-@var{mantissa} must have been initialized with @code{mpfr_custom_init}
+@var{significand} must have been initialized with @code{mpfr_custom_init}
 using the same precision @var{prec}.
 @end deftypefun
 
@@ -2298,7 +2446,7 @@ with @code{mpfr_custom_init_set} is undefined.
 @end deftypefun
 
 @deftypefun {void *} mpfr_custom_get_mantissa (mpfr_t @var{x})
-Return a pointer to the mantissa used by a @code{mpfr_t} initialized with
+Return a pointer to the significand used by a @code{mpfr_t} initialized with
 @code{mpfr_custom_init_set}.
 The behavior of this function for any @code{mpfr_t} not initialized
 with @code{mpfr_custom_init_set} is undefined.
@@ -2313,9 +2461,10 @@ with @code{mpfr_custom_init_set} is undefined.
 @end deftypefun
 
 @deftypefun void mpfr_custom_move (mpfr_t @var{x}, void *@var{new_position})
-Inform MPFR that the mantissa has moved due to a garbage collect
+Inform MPFR that the significand has moved due to a garbage collect
 and update its new position to @code{new_position}.
-However the application has to move the mantissa and the @code{mpfr_t} itself.
+However the application has to move the significand and the @code{mpfr_t}
+itself.
 The behavior of this function for any @code{mpfr_t} not initialized
 with @code{mpfr_custom_init_set} is undefined.
 @end deftypefun
@@ -2327,7 +2476,7 @@ See the test suite for examples.
 @section Internals
 
 The following types and
-functions were mainly designed for the implementation of @code{mpfr},
+functions were mainly designed for the implementation of MPFR,
 but may be useful for users too.
 However no upward compatibility is guaranteed.
 You may need to include @file{mpfr-impl.h} to use them.
@@ -2380,6 +2529,19 @@ value if one is able to round correctly @var{x} to precision
 @var{prec} with the direction @var{rnd2},
 and 0 otherwise (including for NaN and Inf).
 This function @strong{does not modify} its arguments.
+
+Note: if one wants to also determine the correct ternary value when rounding
+@var{b} to precision @var{prec}, a useful trick is the following:
+@verbatim
+   if (mpfr_can_round (b, err, rnd1, GMP_RNDZ, prec + (rnd2 == GMP_RNDN)))
+      ...
+@end verbatim
+Indeed, if @var{rnd2} is @code{GMP_RNDN}, this will check if one can
+round to @var{prec}+1 bits with a directed rounding:
+if so, one can surely round to nearest to @var{prec} bits,
+and in addition one can determine the correct ternary value, which would not
+be the case when @var{b} is near from a value exactly representable on
+@var{prec} bits.
 @end deftypefun
 
 @deftypefun double mpfr_get_d1 (mpfr_t @var{op})
@@ -2393,9 +2555,9 @@ obsolete.
 @c Set @var{x} to the value of the binary number in string @var{s}, which has to
 @c be of the
 @c form +/-xxxx.xxxxxxEyy. The exponent is read in decimal, but is interpreted
-@c as the power of two to be multiplied by the mantissa.
-@c The mantissa length of @var{s} has to be less or equal to the precision of
-@c @var{x}, otherwise an error occurs.
+@c as the power of two to be multiplied by the significand.
+@c The significand length of @var{s} has to be less or equal to the precision
+@c of @var{x}, otherwise an error occurs.
 @c If @var{s} starts with @code{N}, it is interpreted as NaN (Not-a-Number);
 @c if it starts with @code{I} after the sign, it is interpreted as infinity,
 @c with the corresponding sign.
@@ -2410,17 +2572,8 @@ obsolete.
 @comment  node-name,  next,  previous,  up
 @unnumbered Contributors
 
-The main developers consist of Guillaume Hanrot, Vincent Lef@`evre,
-Patrick P@'elissier and Paul Zimmermann.
-
-We would like to thank Jean-Michel Muller and Joris van der Hoeven for very
-fruitful discussions at the beginning of that project, Torbj@"orn Granlund
-and Kevin Ryde for their help about design issues,
-and Nathalie Revol for her careful reading of a previous version of
-this documentation.
-Kevin Ryde did a tremendous job for the portability of MPFR,
-and integrating it into GMP 4.x;
-alas the GMP developers decided in January 2004 not to include MPFR any more.
+The main developers of MPFR are Guillaume Hanrot, Vincent Lef@`evre,
+Patrick P@'elissier, Philippe Th@'eveny and Paul Zimmermann.
 
 Sylvie Boldo from ENS-Lyon, France,
 contributed the functions @code{mpfr_agm} and @code{mpfr_log}.
@@ -2435,18 +2588,29 @@ and a previous version of @code{mpfr_gamma};
 David Daney contributed the hyperbolic and inverse hyperbolic functions,
 the base-2 exponential, and the factorial function. Fabrice Rouillier
 contributed the original version of @file{mul_ui.c}, the @file{gmp_op.c}
-file, and helped to the Windows porting.
+file, and helped to the Microsoft Windows porting.
 Jean-Luc R@'emy contributed the @code{mpfr_zeta} code.
 Ludovic Meunier helped in the design of the @code{mpfr_erf} code.
 Damien Stehl@'e contributed the @code{mpfr_get_ld_2exp} function.
 
-The development of the MPFR library would not have been possible without the
-continuous support of INRIA, and of the LORIA and LIP laboratories.
-In particular the main authors were or are members of the
-PolKA, Spaces, Cacao project-teams at LORIA (Nancy, France)
-and of the Arenaire project-team at LIP (Lyon, France).
+We would like to thank Jean-Michel Muller and Joris van der Hoeven for very
+fruitful discussions at the beginning of that project, Torbj@"orn Granlund
+and Kevin Ryde for their help about design issues,
+and Nathalie Revol for her careful reading of a previous version of
+this documentation.
+Kevin Ryde did a tremendous job for the portability of MPFR in 2002-2004.
+
+The development of the MPFR library would not have been possible without
+the continuous support of INRIA, and of the LORIA (Nancy, France) and LIP
+(Lyon, France) laboratories. In particular the main authors were or are
+members of the PolKA, Spaces, Cacao project-teams at LORIA and of the
+Arenaire project-team at LIP.
+This project was started during the Fiable (reliable in French) action
+supported by INRIA, and continued during the AOC action.
 The development of MPFR was also supported by a grant
-(202F0659 00 MPN 121) from the Conseil R@'egional de Lorraine in 2002.
+(202F0659 00 MPN 121) from the Conseil R@'egional de Lorraine in 2002,
+and from INRIA by an "associate engineer" grant (2003-2005)
+and an "op@'eration de d@'eveloppement logiciel" grant (2007-2009).
 
 @node References, GNU Free Documentation License, Contributors, Top
 @comment  node-name,  next,  previous,  up
@@ -2455,8 +2619,16 @@ The development of MPFR was also supported by a grant
 @itemize @bullet
 
 @item
+Laurent Fousse, Guillaume Hanrot, Vincent Lef@`evre,
+Patrick P@'elissier and Paul Zimmermann,
+"MPFR: A Multiple-Precision Binary Floating-Point Library With Correct Rounding",
+ACM Transactions on Mathematical Software,
+volume 33, issue 2, article 13, 15 pages, 2007,
+@url{http://doi.acm.org/10.1145/1236463.1236468}.
+
+@item
 Torbj@"orn Granlund, "GNU MP: The GNU Multiple Precision Arithmetic Library",
-  version 4.1.2, 2002.
+  version 4.2.2, 2007, @url{http://gmplib.org}.
 
 @item
 IEEE standard for binary floating-point arithmetic, Technical Report
@@ -2470,7 +2642,7 @@ Donald E. Knuth, "The Art of Computer Programming", vol 2,
 
 @item
 Jean-Michel Muller, "Elementary Functions, Algorithms and Implementation",
-Birkhauser, Boston, 1997.
+Birkhauser, Boston, 2nd edition, 2006.
 
 @end itemize
 

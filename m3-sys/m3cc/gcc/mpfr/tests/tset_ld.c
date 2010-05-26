@@ -1,6 +1,6 @@
 /* Test file for mpfr_set_ld and mpfr_get_ld.
 
-Copyright 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -23,7 +23,6 @@ MA 02110-1301, USA. */
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
-#include <time.h>
 #include <limits.h>
 #if WITH_FPU_CONTROL
 #include <fpu_control.h>

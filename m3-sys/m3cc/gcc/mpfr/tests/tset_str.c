@@ -1,6 +1,6 @@
 /* Test file for mpfr_set_str.
 
-Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007 Free Software Foundation, Inc.
+Copyright 1999, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008 Free Software Foundation, Inc.
 Contributed by the Arenaire and Cacao projects, INRIA.
 
 This file is part of the MPFR Library.
@@ -24,7 +24,6 @@ MA 02110-1301, USA. */
 #include <stdlib.h>
 #include <string.h>
 #include <limits.h>
-#include <time.h>
 
 #include "mpfr-test.h"
 
@@ -807,9 +806,6 @@ main (int argc, char *argv[])
     }
 
   /* check invalid input */
-  mpfr_set_ui (x, 1, GMP_RNDN);
-  ret = mpfr_set_str (x, "1", 37, GMP_RNDN);
-  MPFR_ASSERTN (ret == -1);
   ret = mpfr_set_str (x, "1E10toto", 10, GMP_RNDN);
   MPFR_ASSERTN (ret == -1);
   ret = mpfr_set_str (x, "1p10toto", 16, GMP_RNDN);
