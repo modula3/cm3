@@ -100,69 +100,6 @@ typedef enum
 }
 m3_type;
 
-enum m3_tree_index
-{
-  /* Types. */
-  /* 00 */ M3TI_ADDR,
-  /* 01 */ M3TI_WORD,
-  /* 02 */ M3TI_INT,
-  /* 03 */ M3TI_LONGWORD,
-  /* 04 */ M3TI_LONGINT,
-  /* 05 */ M3TI_REEL,
-  /* 06 */ M3TI_LREEL,
-  /* 07 */ M3TI_XREEL,
-  /* 08 */ M3TI_INT_8,
-  /* 09 */ M3TI_INT_16,
-  /* 0A */ M3TI_INT_32,
-  /* 0B */ M3TI_INT_64,
-  /* 0C */ M3TI_WORD_8,
-  /* 0D */ M3TI_WORD_16,
-  /* 0E */ M3TI_WORD_32,
-  /* 0F */ M3TI_WORD_64,
-  /* 10 */ M3TI_VOID,
-
-  /* Values. */
-  /* 11 */ M3TI_ZERO,
-  /* 12 */ M3TI_ONE,
-  /* 13 */ M3TI_NULL,
-
-  /* Procedures. */
-  /* 14 */ M3TI_MEMCPY,
-  /* 15 */ M3TI_MEMMOVE,
-  /* 16 */ M3TI_MEMSET,
-  /* 17 */ M3TI_MEMCMP,
-  /* 18 */ M3TI_SET_UNION,
-  /* 19 */ M3TI_SET_DIFF,
-  /* 1A */ M3TI_SET_INTER,
-  /* 1B */ M3TI_SET_SDIFF,
-  /* 1C */ M3TI_SET_EQ,
-  /* 1D */ M3TI_SET_NE,
-  /* 1E */ M3TI_SET_GT,
-  /* 1F */ M3TI_SET_GE,
-  /* 20 */ M3TI_SET_LT,
-  /* 21 */ M3TI_SET_LE,
-  /* 22 */ M3TI_SET_RANGE,
-  /* 23 */ M3TI_FAULT_PROC,
-  /* 24 */ M3TI_FAULT_HANDLER,
-
-  /* Miscellaneous. */
-  /* 25 */ M3TI_GLOBAL_DECLS,
-  /* 26 */ M3TI_DEBUG_FIELDS,
-  /* 27 */ M3TI_CURRENT_BLOCK,
-  /* 28 */ M3TI_CURRENT_RECORD_TYPE,
-  /* 29 */ M3TI_CURRENT_RECORD_VALS,
-  /* 2A */ M3TI_CURRENT_SEGMENT,
-  /* 2B */ M3TI_FAULT_INTF,
-  /* 2C */ M3TI_PENDING_BLOCKS,
-  /* 2D */ M3TI_CURRENT_STMTS,
-  /* 2E */ M3TI_PENDING_STMTS,
-  /* 2F */ M3TI_PENDING_INITS,
-
-  /* 30 */ M3TI_MAX
-};
-
-static GTY (()) tree m3_global_trees[M3TI_MAX];
-
 /* In gcc, "word" means roughly "register".
  * To us, "word" means unsigned "INTEGER",
  * and "INTEGER" is the same size as a pointer.
@@ -173,55 +110,59 @@ static GTY (()) tree m3_global_trees[M3TI_MAX];
  */
 #define BITS_PER_INTEGER POINTER_SIZE
 
-#define t_addr		m3_global_trees[M3TI_ADDR]
-#define t_word		m3_global_trees[M3TI_WORD]
-#define t_int		m3_global_trees[M3TI_INT]
-#define t_longword      m3_global_trees[M3TI_LONGWORD]
-#define t_longint       m3_global_trees[M3TI_LONGINT]
-#define t_reel		m3_global_trees[M3TI_REEL]
-#define t_lreel		m3_global_trees[M3TI_LREEL]
-#define t_xreel		m3_global_trees[M3TI_XREEL]
-#define t_int_8		m3_global_trees[M3TI_INT_8]
-#define t_int_16	m3_global_trees[M3TI_INT_16]
-#define t_int_32	m3_global_trees[M3TI_INT_32]
-#define t_int_64	m3_global_trees[M3TI_INT_64]
-#define t_word_8	m3_global_trees[M3TI_WORD_8]
-#define t_word_16	m3_global_trees[M3TI_WORD_16]
-#define t_word_32	m3_global_trees[M3TI_WORD_32]
-#define t_word_64	m3_global_trees[M3TI_WORD_64]
-#define t_void		m3_global_trees[M3TI_VOID]
+/* Types. */
+static GTY (()) tree t_addr;
+static GTY (()) tree t_word;
+static GTY (()) tree t_int;
+static GTY (()) tree t_longword;
+static GTY (()) tree t_longint;
+static GTY (()) tree t_reel;
+static GTY (()) tree t_lreel;
+static GTY (()) tree t_xreel;
+static GTY (()) tree t_int_8;
+static GTY (()) tree t_int_16;
+static GTY (()) tree t_int_32;
+static GTY (()) tree t_int_64;
+static GTY (()) tree t_word_8;
+static GTY (()) tree t_word_16;
+static GTY (()) tree t_word_32;
+static GTY (()) tree t_word_64;
+static GTY (()) tree t_void;
 
-#define v_zero		m3_global_trees[M3TI_ZERO]
-#define v_one		m3_global_trees[M3TI_ONE]
-#define v_null		m3_global_trees[M3TI_NULL]
+/* Values. */
+static GTY (()) tree v_zero;
+static GTY (()) tree v_one;
+static GTY (()) tree v_null;
 
-#define memcpy_proc	m3_global_trees[M3TI_MEMCPY]
-#define memmove_proc	m3_global_trees[M3TI_MEMMOVE]
-#define memset_proc	m3_global_trees[M3TI_MEMSET]
-#define memcmp_proc     m3_global_trees[M3TI_MEMCMP]
-#define set_union_proc	m3_global_trees[M3TI_SET_UNION]
-#define set_diff_proc	m3_global_trees[M3TI_SET_DIFF]
-#define set_inter_proc	m3_global_trees[M3TI_SET_INTER]
-#define set_sdiff_proc	m3_global_trees[M3TI_SET_SDIFF]
-#define set_gt_proc	m3_global_trees[M3TI_SET_GT]
-#define set_ge_proc	m3_global_trees[M3TI_SET_GE]
-#define set_lt_proc	m3_global_trees[M3TI_SET_LT]
-#define set_le_proc	m3_global_trees[M3TI_SET_LE]
-#define set_range_proc	m3_global_trees[M3TI_SET_RANGE]
-#define fault_proc	m3_global_trees[M3TI_FAULT_PROC]
-#define fault_handler	m3_global_trees[M3TI_FAULT_HANDLER]
+/* Procedures. */
+static GTY (()) tree memcpy_proc;
+static GTY (()) tree memmove_proc;
+static GTY (()) tree memset_proc;
+static GTY (()) tree memcmp_proc;
+static GTY (()) tree set_union_proc;
+static GTY (()) tree set_diff_proc;
+static GTY (()) tree set_inter_proc;
+static GTY (()) tree set_sdiff_proc;
+static GTY (()) tree set_gt_proc;
+static GTY (()) tree set_ge_proc;
+static GTY (()) tree set_lt_proc;
+static GTY (()) tree set_le_proc;
+static GTY (()) tree set_range_proc;
+static GTY (()) tree fault_proc;
+static GTY (()) tree fault_handler;
 
-#define global_decls	m3_global_trees[M3TI_GLOBAL_DECLS]
-#define debug_fields	m3_global_trees[M3TI_DEBUG_FIELDS]
-#define current_block	m3_global_trees[M3TI_CURRENT_BLOCK]
-#define current_record_type	m3_global_trees[M3TI_CURRENT_RECORD_TYPE]
-#define current_record_vals	m3_global_trees[M3TI_CURRENT_RECORD_VALS]
-#define current_segment	m3_global_trees[M3TI_CURRENT_SEGMENT]
-#define fault_intf	m3_global_trees[M3TI_FAULT_INTF]
-#define pending_blocks	m3_global_trees[M3TI_PENDING_BLOCKS]
-#define current_stmts	m3_global_trees[M3TI_CURRENT_STMTS]
-#define pending_stmts	m3_global_trees[M3TI_PENDING_STMTS]
-#define pending_inits   m3_global_trees[M3TI_PENDING_INITS]
+/* Miscellaneous. */
+static GTY (()) tree global_decls;
+static GTY (()) tree debug_fields;
+static GTY (()) tree current_block;
+static GTY (()) tree current_record_type;
+static GTY (()) tree current_record_vals;
+static GTY (()) tree current_segment;
+static GTY (()) tree fault_intf;
+static GTY (()) tree pending_blocks;
+static GTY (()) tree current_stmts;
+static GTY (()) tree pending_stmts;
+static GTY (()) tree pending_inits;
 
 /* Types expected by gcc's garbage collector.
    These types exist to allow language front-ends to
@@ -1256,23 +1197,12 @@ m3_init_decl_processing (void)
 #define STREQ(a,b) (a[0] == b[0] ? strcmp (a, b) == 0 : 0)
 
 /* Variable arrays of trees. */
-enum
-{
-  M3VA_VARS,
-  M3VA_PROCS,
-  M3VA_LABELS,
-  M3VA_EXPR_STACK,
-  M3VA_CALL_STACK,
-  M3VA_MAX
-};
 
-static GTY (()) varray_type m3_global_varrays[M3VA_MAX];
-
-#define all_vars	m3_global_varrays[M3VA_VARS]
-#define all_procs	m3_global_varrays[M3VA_PROCS]
-#define all_labels	m3_global_varrays[M3VA_LABELS]
-#define expr_stack	m3_global_varrays[M3VA_EXPR_STACK]
-#define call_stack	m3_global_varrays[M3VA_CALL_STACK]
+static GTY (()) varray_type all_vars;
+static GTY (()) varray_type all_procs;
+static GTY (()) varray_type all_labels;
+static GTY (()) varray_type expr_stack;
+static GTY (()) varray_type call_stack;
 
 #define STACK_PUSH(stk, x)	VARRAY_PUSH_TREE (stk, x)
 #define STACK_POP(stk)		VARRAY_POP (stk)
@@ -5178,7 +5108,7 @@ m3cg_lock_release (void)
 typedef void (*OP_HANDLER) (void);
 typedef struct { M3CG_opcode op;  OP_HANDLER proc; } OpProc;
 
-OpProc ops[] = {
+static const OpProc ops[] = {
   { M3CG_BEGIN_UNIT,             m3cg_begin_unit             },
   { M3CG_END_UNIT,               m3cg_end_unit               },
   { M3CG_IMPORT_UNIT,            m3cg_import_unit            },
