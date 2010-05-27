@@ -38,11 +38,10 @@ struct GTY(()) lang_identifier
 
 /* Language-specific tree node information.  */
 
-union  GTY((desc ("TREE_CODE (&%h.generic) == IDENTIFIER_NODE"))) lang_tree_node
+union GTY((desc("TREE_CODE(&%h.generic) == IDENTIFIER_NODE"))) lang_tree_node
 {
-  union GTY ((tag ("0"), desc ("tree_node_structure (&%h)"))) tree_node
-    generic;
-  struct GTY ((tag ("1"))) lang_identifier identifier;
+  union GTY((tag("0"), desc("tree_node_structure (&%h)"))) tree_node generic;
+  struct GTY((tag("1"))) lang_identifier identifier;
 };
 
 /* Language-specific type information.  */
