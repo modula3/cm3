@@ -68,7 +68,7 @@
 #ifdef GCC45
 
 /* error: attempt to use poisoned "USE_MAPPED_LOCATION" */
-#define M3_USE_MAPPED_LOCATION 1
+#define M3_USE_MAPPED_LOCATION
 
 /* error: macro "build_decl" requires 4 arguments, but only 3 given */
 #undef build_decl
@@ -76,7 +76,7 @@
     build_decl_stat(UNKNOWN_LOCATION, code, tree, memstat MEM_STAT_INFO)
 
 #elif defined USE_MAPPED_LOCATION
-#define M3_USE_MAPPED_LOCATION 1
+#define M3_USE_MAPPED_LOCATION
 #endif
 
 #ifdef GCC42
