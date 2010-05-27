@@ -5454,21 +5454,21 @@ m3_init (void)
 #endif
 
   /* Open input file.  */
-  if (main_input_filename == 0 || !strcmp (main_input_filename, "-"))
+  if (input_filename == 0 || !strcmp (input_filename, "-"))
     {
       finput = stdin;
 #ifdef M3_USE_MAPPED_LOCATION
       main_input_filename = "<stdin>";
       linemap_add (line_table, LC_RENAME, false, "<stdin>", 1);
 #else
-      main_input_filename = "<stdin>";
+      input_filename = "<stdin>";
 #endif
     }
   else
-    finput = fopen (main_input_filename, "rb");
+    finput = fopen (input_filename, "rb");
   if (finput == 0)
     {
-      fprintf (stderr, "Unable to open input file %s\n", main_input_filename);
+      fprintf (stderr, "Unable to open input file %s\n", input_filename);
       exit(1);
     }
   m3_init_lex ();
