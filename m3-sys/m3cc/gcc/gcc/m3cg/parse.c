@@ -34,7 +34,12 @@
 #include "tree.h"
 #include "tree-dump.h"
 #include "tree-iterator.h"
+#ifndef MTAG_P
+#define GCC45
+#include "gimple.h"
+#else
 #include "tree-gimple.h"
+#endif
 #include "function.h"
 #include "flags.h"
 #include "output.h"
@@ -59,6 +64,20 @@
 #include "options.h"
 
 #include "debug.h"
+
+#ifdef GCC45
+
+/* error: attempt to use poisoned "USE_MAPPED_LOCATION" */
+#define M3_USE_MAPPED_LOCATION 1
+
+/* error: macro "build_decl" requires 4 arguments, but only 3 given */
+#undef build_decl
+#define build_decl(code, tree, memstat) \
+    build_decl_stat(UNKNOWN_LOCATION, code, tree, memstat MEM_STAT_INFO)
+
+#elif defined USE_MAPPED_LOCATION
+#define M3_USE_MAPPED_LOCATION 1
+#endif
 
 #ifdef GCC42
 /*typedef const union tree_node *const_tree;*/
@@ -166,7 +185,9 @@ static GTY (()) tree pending_inits;
 
 #include "m3gty43.h"
 
+#ifndef GCC45
 static bool m3_mark_addressable (tree exp);
+#endif
 static tree m3_type_for_size (unsigned precision, int unsignedp);
 static tree m3_type_for_mode (enum machine_mode, int unsignedp);
 static tree m3_unsigned_type (tree type_node);
@@ -177,7 +198,12 @@ static int m3_handle_option (size_t scode, const char *arg, int value);
 static bool m3_post_options (const char **);
 static bool m3_init (void);
 static void m3_parse_file (int);
-static HOST_WIDE_INT m3_get_alias_set (tree);
+#undef LANG_HOOKS_GET_ALIAS_SET
+#ifdef GCC45
+static alias_set_type LANG_HOOKS_GET_ALIAS_SET (tree ARG_UNUSED (t)) { return -1; }
+#else
+static HOST_WIDE_INT LANG_HOOKS_GET_ALIAS_SET (tree ARG_UNUSED (t)) { return 0; }
+#endif
 static void m3_finish (void);
 
 /* Functions to keep track of the current scope */
@@ -190,7 +216,9 @@ static tree builtin_function (const char *name, tree type, int function_code,
 			      tree attrs);
 static tree getdecls (void);
 static int global_bindings_p (void);
+#ifndef GCC45
 static void insert_block (tree block);
+#endif
 
 static void m3_push_type_decl (tree, tree);
 static void m3_write_globals (void);
@@ -199,8 +227,10 @@ static void m3_write_globals (void);
    end).  These are not really very language-dependent, i.e.
    treelang, C, Mercury, etc. can all use almost the same definitions.  */
 
+#ifndef GCC45
 #undef LANG_HOOKS_MARK_ADDRESSABLE
 #define LANG_HOOKS_MARK_ADDRESSABLE m3_mark_addressable
+#endif
 #undef LANG_HOOKS_SIGNED_TYPE
 #define LANG_HOOKS_SIGNED_TYPE m3_signed_type
 #undef LANG_HOOKS_UNSIGNED_TYPE
@@ -213,8 +243,6 @@ static void m3_write_globals (void);
 #define LANG_HOOKS_TYPE_FOR_SIZE m3_type_for_size
 #undef LANG_HOOKS_PARSE_FILE
 #define LANG_HOOKS_PARSE_FILE m3_parse_file
-#undef LANG_HOOKS_GET_ALIAS_SET
-#define LANG_HOOKS_GET_ALIAS_SET m3_get_alias_set
 
 #undef LANG_HOOKS_WRITE_GLOBALS
 #define LANG_HOOKS_WRITE_GLOBALS m3_write_globals
@@ -244,7 +272,12 @@ m3_expand_function (tree fndecl)
 #define LANG_HOOKS_HANDLE_OPTION m3_handle_option
 #undef LANG_HOOKS_POST_OPTIONS
 #define LANG_HOOKS_POST_OPTIONS m3_post_options
-const struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
+#ifndef GCC45
+const
+#endif
+struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
+
+#ifndef GCC45
 
 /* Tree code type/name/code tables.  */
 
@@ -271,6 +304,8 @@ const char *const tree_code_name[] = {
   "@@dummy"
 };
 #undef DEFTREECODE
+
+#endif
 
 static tree
 m3_cast (tree tipe, tree op0)
@@ -599,11 +634,7 @@ m3_do_shift (enum tree_code code, tree t, tree val, tree cnt)
   return d;
 }
 
-HOST_WIDE_INT
-m3_get_alias_set (tree ARG_UNUSED (t))
-{
-  return 0;
-}
+#ifndef GCC45
 
 /* Mark EXP saying that we need to be able to take the
    address of it; it should not be allocated in a register.
@@ -637,6 +668,8 @@ m3_mark_addressable (tree exp)
 	return true;
       }
 }
+
+#endif
 
 /* Return an integer type with the number of bits of precision given by
    PRECISION.  UNSIGNEDP is nonzero if the type is unsigned; otherwise
@@ -724,6 +757,8 @@ getdecls (void)
 {
   return current_block ? BLOCK_VARS (current_block) : global_decls;
 }
+
+#ifndef GCC45
 
 /* Insert BLOCK at the end of the list of subblocks of the
    current binding level.  This is used when a BIND_EXPR is expanded,
@@ -737,6 +772,8 @@ insert_block (tree block)
     = chainon (BLOCK_SUBBLOCKS (current_block), block);
   BLOCK_SUPERCONTEXT(block) = current_block;
 }
+
+#endif
 
 /* Records a ..._DECL node DECL as belonging to the current lexical scope.
    Returns the ..._DECL node. */
@@ -1233,6 +1270,7 @@ m3_init_parse (void)
 static void
 reload_buffer (void)
 {
+  gcc_assert(finput);
   input_len = fread (input_buffer, 1, BUFFER_SIZE, finput);
   input_cursor = 0;
   input_eof = (input_len <= 0);
@@ -1785,7 +1823,10 @@ debug_struct (void)
 				            TYPE_SIZE (t),
 				            bitsize_int (BITS_PER_UNIT)));
   TYPE_ALIGN (t) = BITS_PER_UNIT;
+#ifndef GCC45
+  /* error: invalid lvalue in assignment */
   TYPE_MODE (t) = QImode;
+#endif
 
   d = build_decl (TYPE_DECL, NULL_TREE, t);
   TREE_CHAIN (d) = global_decls;
@@ -2240,7 +2281,7 @@ emit_fault_proc (void)
   location_t save_loc = input_location;
   tree p = fault_proc;
 
-#ifdef USE_MAPPED_LOCATION
+#ifdef M3_USE_MAPPED_LOCATION
   input_location = UNKNOWN_LOCATION;
 #else
   input_line = 0;
@@ -2306,8 +2347,11 @@ generate_fault (int code)
 
   if (fault_proc == 0) declare_fault_proc ();
   arg = build_int_cst (t_int, (LOCATION_LINE(input_location) << LINE_SHIFT) + (code & FAULT_MASK));
-  return build_function_call_expr (fault_proc,
-				   build_tree_list (NULL_TREE, arg));
+#ifdef GCC45
+  return build_function_call_expr (UNKNOWN_LOCATION, fault_proc, build_tree_list (NULL_TREE, arg));
+#else
+  return build_function_call_expr (fault_proc, build_tree_list (NULL_TREE, arg));
+#endif
 }
 
 /*-------------------------------------------------- M3CG opcode handlers ---*/
@@ -2354,7 +2398,7 @@ m3cg_set_source_file (void)
 {
   NAME (s);
 
-#ifdef USE_MAPPED_LOCATION
+#ifdef M3_USE_MAPPED_LOCATION
   linemap_add (line_table, LC_RENAME, false, s, 1);
   input_location = linemap_line_start (line_table, 1, 80);
 #else
@@ -2368,7 +2412,7 @@ m3cg_set_source_line (void)
   INTEGER (i);
 
   if (option_source_line_trace) fprintf(stderr, "  source line %4ld\n", i);
-#ifdef USE_MAPPED_LOCATION
+#ifdef M3_USE_MAPPED_LOCATION
   input_location = linemap_line_start (line_table, i, 80);
 #else
   input_line = i;
@@ -3194,9 +3238,25 @@ m3cg_init_var (void)
   TREE_USED (var) = 1;
 
   one_field (o, t_addr, &f, &v);
+#ifdef GCC45
+/* tree.c build2_stat
+ * if ((code == MINUS_EXPR || code == PLUS_EXPR || code == MULT_EXPR)
+ *    && arg0 && arg1 && tt && POINTER_TYPE_P (tt)
+ *       When sizetype precision doesn't match that of pointers
+ *       we need to be able to build explicit extensions or truncations
+ *       of the offset argument.
+ *    && TYPE_PRECISION (sizetype) == TYPE_PRECISION (tt))
+ *  gcc_assert (TREE_CODE (arg0) == INTEGER_CST
+ *      && TREE_CODE (arg1) == INTEGER_CST);
+ */
+  TREE_VALUE (v) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
+                              m3_build1 (ADDR_EXPR, t_addr, var),
+                              size_int (b / BITS_PER_UNIT));
+#else
   TREE_VALUE (v) = m3_build2 (PLUS_EXPR, t_addr,
                               m3_build1 (ADDR_EXPR, t_addr, var),
                               size_int (b / BITS_PER_UNIT));
+#endif
 }
 
 static void
@@ -3509,10 +3569,19 @@ m3cg_set_label (void)
       FORCED_LABEL (l) = 1;
       DECL_UNINLINABLE (current_function_decl) = 1;
       DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = 1;
+#ifdef GCC45
+      /* error: ‘struct function’ has no member named ‘x_nonlocal_goto_handler_labels’
+       * I think this is wrong. I think we have to defer the work till later, during
+       * codegen. We could put this list in struct language_function.
+       */
+      list = nonlocal_goto_handler_labels;
+      gcc_assert (list);
+      nonlocal_goto_handler_labels = gen_rtx_EXPR_LIST (VOIDmode, r, list);
+#else
       list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
       DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels
 	= gen_rtx_EXPR_LIST (VOIDmode, r, list);
-
+#endif
       bar = make_node(ASM_EXPR);
       TREE_TYPE(bar) = t_void;
       ASM_STRING(bar) = build_string (0, "");
@@ -3605,7 +3674,11 @@ m3cg_case_jump (void)
   for (i = 0; i < n; i++) {
     LABEL (target_label);
 
+#ifdef GCC45
+    tree case_label = create_artificial_label (UNKNOWN_LOCATION);
+#else
     tree case_label = create_artificial_label ();
+#endif
     add_stmt (build3 (CASE_LABEL_EXPR, t_void, build_int_cst (t_int, i),
 		      NULL_TREE, case_label));
     add_stmt (build1 (GOTO_EXPR, t_void, target_label));
@@ -4508,11 +4581,14 @@ m3cg_copy (void)
                                     size_int(BITS_PER_UNIT));
   TYPE_ALIGN (ts) = TYPE_ALIGN (t);
 
+#ifndef GCC45
+/* error: invalid lvalue in assignment */
   if (FLOAT_TYPE_P (t)) {
     TYPE_MODE (ts) = mode_for_size (s, MODE_FLOAT, 0);
   } else {
     TYPE_MODE (ts) = BLKmode;
   }
+#endif
 
   pts = build_pointer_type (ts);
 
@@ -5359,6 +5435,10 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
 	       "-freorder-blocks-and-partition disabled for Modula-3 ex_stack exception handling");
       flag_reorder_blocks_and_partition = 0;
     }
+#ifdef GCC45
+  /* Excess precision other than "fast" requires front-end support.  */
+  flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
+#endif
   return false;
 }
 
@@ -5367,27 +5447,28 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
 static bool
 m3_init (void)
 {
-#ifdef USE_MAPPED_LOCATION
+#ifdef M3_USE_MAPPED_LOCATION
   linemap_add (line_table, LC_ENTER, false, main_input_filename, 1);
 #else
   input_filename = main_input_filename;
 #endif
 
   /* Open input file.  */
-  if (input_filename == 0 || !strcmp (input_filename, "-"))
+  if (main_input_filename == 0 || !strcmp (main_input_filename, "-"))
     {
       finput = stdin;
-#ifdef USE_MAPPED_LOCATION
+#ifdef M3_USE_MAPPED_LOCATION
+      main_input_filename = "<stdin>";
       linemap_add (line_table, LC_RENAME, false, "<stdin>", 1);
 #else
-      input_filename = "<stdin>";
+      main_input_filename = "<stdin>";
 #endif
     }
   else
-    finput = fopen (input_filename, "rb");
+    finput = fopen (main_input_filename, "rb");
   if (finput == 0)
     {
-      fprintf (stderr, "Unable to open input file %s\n", input_filename);
+      fprintf (stderr, "Unable to open input file %s\n", main_input_filename);
       exit(1);
     }
   m3_init_lex ();
