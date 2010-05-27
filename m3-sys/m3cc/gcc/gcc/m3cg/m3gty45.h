@@ -63,6 +63,3 @@ struct GTY(()) language_function
 {
   char junk; /* dummy field to ensure struct is not empty */
 };
-
-/* New garbage collection regime see gty.texi.  */
-#include "gt-m3cg-parse45.h"
