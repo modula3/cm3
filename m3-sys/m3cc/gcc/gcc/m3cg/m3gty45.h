@@ -22,20 +22,6 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
-#define GCC45
-
-#include <stdlib.h>
-#include <stdio.h>
-#include <errno.h>
-#include <setjmp.h>
-
-#include "config.h"
-#include "system.h"
-#include "coretypes.h"
-#include "tm.h"
-#include "tree.h"
-#include "ggc.h"
-
 /* Types expected by gcc's garbage collector.
    These types exist to allow language front-ends to
    add extra information in gcc's parse tree data structure.
@@ -77,8 +63,6 @@ struct GTY(()) language_function
 {
   char junk; /* dummy field to ensure struct is not empty */
 };
-
-#include "parse.c"
 
 /* New garbage collection regime see gty.texi.  */
 #include "gt-m3cg-parse45.h"
