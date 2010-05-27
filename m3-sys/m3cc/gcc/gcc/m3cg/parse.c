@@ -164,49 +164,7 @@ static GTY (()) tree current_stmts;
 static GTY (()) tree pending_stmts;
 static GTY (()) tree pending_inits;
 
-/* Types expected by gcc's garbage collector.
-   These types exist to allow language front-ends to
-   add extra information in gcc's parse tree data structure.
-   But the treelang front end doesn't use them -- it has
-   its own parse tree data structure.
-   We define them here only to satisfy gcc's garbage collector.  */
-
-/* Language-specific identifier information.  */
-
-struct lang_identifier GTY(())
-{
-  struct tree_identifier common;
-};
-
-/* Language-specific tree node information.  */
-
-union lang_tree_node
-  GTY((desc ("TREE_CODE (&%h.generic) == IDENTIFIER_NODE")))
-{
-  union tree_node GTY ((tag ("0"),
-			desc ("tree_node_structure (&%h)")))
-    generic;
-  struct lang_identifier GTY ((tag ("1"))) identifier;
-};
-
-/* Language-specific type information.  */
-
-struct lang_type GTY(())
-{
-  char junk; /* dummy field to ensure struct is not empty */
-};
-
-/* Language-specific declaration information.  */
-
-typedef struct lang_decl GTY(())
-{
-  char junk; /* dummy field to ensure struct is not empty */
-} lang_decl_t;
-
-struct language_function GTY(())
-{
-  char junk; /* dummy field to ensure struct is not empty */
-};
+#include "m3gty43.h"
 
 static bool m3_mark_addressable (tree exp);
 static tree m3_type_for_size (unsigned precision, int unsignedp);
