@@ -898,7 +898,9 @@ m3_write_globals (void)
     }
   }
 
+#ifndef GCC45
   write_global_declarations ();
+#endif
 }
 
 static void
@@ -5339,8 +5341,12 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
     m3cg_lineno ++;
   }
 
+#ifdef GCC45
+  write_global_declarations();
+#else
   cgraph_finalize_compilation_unit ();
   cgraph_optimize ();
+#endif
 }
 
 /*===================================================== RUNTIME FUNCTIONS ===*/
