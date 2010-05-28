@@ -699,5 +699,7 @@ doloop_optimize_loops (void)
   verify_loop_structure ();
 #endif
 }
+
 #endif /* HAVE_doloop_end */
 
+char quash_apple_ranlib_warning_doloop_optimize_loops;

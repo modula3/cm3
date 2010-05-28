@@ -309,3 +309,5 @@ scop_do_block (scop_p scop)
 }
 
 #endif
+
+char quash_apple_ranlib_warning_scop_do_block;

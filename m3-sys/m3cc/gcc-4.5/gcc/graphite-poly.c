@@ -1294,3 +1294,4 @@ dot_lst (lst_p lst)
 
 #endif
 
+char quash_apple_ranlib_warning_dot_lst;

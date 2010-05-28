@@ -3006,4 +3006,7 @@ check_poly_representation (scop_p scop ATTRIBUTE_UNUSED)
   cloog_program_free (pc.prog);
 #endif
 }
+
 #endif
+
+char quash_apple_ranlib_check_poly_representation;

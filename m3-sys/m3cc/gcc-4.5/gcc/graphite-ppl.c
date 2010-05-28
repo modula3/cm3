@@ -746,3 +746,5 @@ ppl_build_relation (int dim, int pos1, int pos2, int c,
 }
 
 #endif
+
+char quash_apple_ranlib_warning_ppl_build_relation;

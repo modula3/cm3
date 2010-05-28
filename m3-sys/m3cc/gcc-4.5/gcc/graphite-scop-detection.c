@@ -1539,3 +1539,5 @@ dot_scop (scop_p scop)
 }
 
 #endif
+
+char quash_apple_ranlib_warning_dot_scope;
