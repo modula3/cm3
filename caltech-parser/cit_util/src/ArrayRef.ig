@@ -1,7 +1,0 @@
-GENERIC INTERFACE ArrayRef(Elem);
-TYPE
-  T = REF ARRAY OF Elem.T;
-
-PROCEDURE New(READONLY from: ARRAY OF Elem.T): T;
-
-END ArrayRef.

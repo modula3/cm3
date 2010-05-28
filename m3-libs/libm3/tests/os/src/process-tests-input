@@ -1,4 +1,0 @@
-( pr_cr "echo" ( quote ( "a" "b" "c" )))
-( pr_setwd "/" )
-( pr_getwd )
-

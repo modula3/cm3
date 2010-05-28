@@ -1,7 +1,0 @@
-
-override ("libm3", ROOT & "/m3-libs")
-override ("libbuf", ROOT & "/m3-libs")
-override ("ui", ROOT & "/m3-ui")
-override ("vbtkit", ROOT & "/m3-ui")
-
-build_standalone ()

@@ -1,7 +1,0 @@
-make_dir(PKG_INSTALL & "/p219/" & TARGET)
-install_file(".M3EXPORTS", PKG_INSTALL & "/p219/" & TARGET, "0664")
-install_file(".M3WEB", PKG_INSTALL & "/p219/" & TARGET, "0664")
-make_dir(PKG_INSTALL & "/p219")
-install_file("../Main.m3", PKG_INSTALL & "/p219", "0664")
-make_dir(BIN_INSTALL)
-install_file("pgm", BIN_INSTALL, "0775")

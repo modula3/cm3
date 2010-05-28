@@ -1,8 +1,0 @@
-readonly TARGET = "SPARC64_LINUX"
-readonly GNU_PLATFORM = "sparc64-linux" % "cpu-os" string for GNU
-
-SYSTEM_CC = "gcc -gstabs+ -m64"
-SYSTEM_ASM = "as -Qy -s -Av9a -64 -no-undeclared-regs -relax" % Assembler
-
-include("SPARC64.common")
-include("Linux.common")

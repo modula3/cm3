@@ -1,8 +1,0 @@
-PROC Cmd0() IS 
-  IF 
-    VAR x ~ 1 IN 
-      x * x = 2 -> SKIP 
-    END 
-  FI 
-END;
-

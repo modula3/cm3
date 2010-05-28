@@ -1,2 +1,0 @@
-directory src
-directory ../../src

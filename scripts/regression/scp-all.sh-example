@@ -1,1 +1,0 @@
-for a in 103 105 114 119 128 133 134 138 149; do scp defs.sh 192.168.1.$a:/dev2/cm3/scripts/regression; done

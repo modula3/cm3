@@ -1,7 +1,0 @@
-import ("libm3")
-import ("events")
-
-implementation ("Test")
-build_standalone()
-
-Program ("Test")

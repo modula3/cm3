@@ -1,4 +1,0 @@
-
-import("vbtkit")
-implementation ("Script")
-program ("script")

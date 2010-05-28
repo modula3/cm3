@@ -1,6 +1,0 @@
-
-import("plplot")
-import("arithmetic")
-
-implementation("Main")
-program("test")

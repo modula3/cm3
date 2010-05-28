@@ -1,6 +1,0 @@
-
-include_dir("refinable")
-include_dir("basis")
-include_dir("lifting")
-include_dir("transform")
-include_dir("match")

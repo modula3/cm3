@@ -1,9 +1,0 @@
-MODULE Print;
-
-(* Module for printing values to the standard output. *)
-
-PROC Val(v) IS SKIP END; /* external procedure */
-
-(* Pretty-print the value "v" to the standard output using a
-   line width of 75 characters. Numerical values in "v" are
-   printed to full precision. *)

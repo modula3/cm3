@@ -1,4 +1,0 @@
-_SHAREDOBJ_STUBGEN = 
-  format(ROOT & "/m3-comm/sharedobjgen/%s/shobjcodegen", BUILD_DIR)
-_SHAREDOBJ_OVERRIDE="T"
-include(ROOT & "/m3overrides")

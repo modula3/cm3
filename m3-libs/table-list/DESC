@@ -1,4 +1,0 @@
-<p>
-  Generic Data Type: TableList(Key, Value, KeyValueTable),
-  where "Key.T" and "Value.T" are types that are not open array types
-</p>

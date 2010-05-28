@@ -1,7 +1,0 @@
-check set p = {a, c, e}
-check set q = {}
-check set r = {a, b}
-check set x = {a, b, e}
-
-
-0 error(s) and 0 warning(s) detected

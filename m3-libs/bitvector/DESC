@@ -1,8 +1,0 @@
-<p>
-Generic Data Type:
-   A BitVector.T is an unbounded vector of Boolean values. There
-   is no limit to the size of a bit vector, but the default
-   implementation does not represent sparse vectors any more
-   efficiently than dense ones. Bit vectors are useful for
-   representing sets of small, non-negative integers.
-</p>

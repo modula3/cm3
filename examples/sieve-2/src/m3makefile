@@ -1,6 +1,0 @@
-
-import("libm3")
-
-implementation ("Sieve")
-program ("sieve2")
-

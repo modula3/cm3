@@ -1,9 +1,0 @@
-readonly TARGET = "I386_INTERIX" % code generation target
-readonly GNU_PLATFORM = "i586-pc-interix3" % "cpu-os" string for GNU
-
-DLLTOOL = "/opt/gcc.3.3/i586-pc-interix3/bin/dlltool"
-m3back_pic = "" % -fPIC broken?
-m3back_optimize = "" % don't optimize
-
-include("I386.common")
-include("Interix.common")

@@ -1,5 +1,0 @@
-The "cvsupwho" script outputs a list of the clients currently using
-a CVSup server.  It is based on an example submitted by Garrett
-Wollman.  It probably works correctly only on FreeBSD systems, since
-it depends on a flexible version of the "ps" command and a supported
-setproctitle() function.

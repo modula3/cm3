@@ -1,4 +1,0 @@
-ld:
-Undefined:
-_RTHeap__Print
-sh: a.out: cannot execute

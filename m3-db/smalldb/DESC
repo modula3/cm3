@@ -1,7 +1,0 @@
-<p>
-This package will maintain a copy of a data structure on secondary storage,
-   and will update the secondary storage as updates are made to the data
-   structure. A client can use this package to ensure that the current value
-   of the data structure can be recovered after any crash. This package is
-   efficient: the cost of recording an update is about one disk write.
-</p>

@@ -1,5 +1,0 @@
-INTERFACE ExampleCWT;
-
-PROCEDURE Run();
-
-END ExampleCWT.

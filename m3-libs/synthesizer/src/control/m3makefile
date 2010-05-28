@@ -1,4 +1,0 @@
-Interface("SignalControl")
-Module("ProcessControlConstant")
-Module("ProcessControlLinear")
-Module("ProcessControlExponential")

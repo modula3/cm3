@@ -1,2 +1,0 @@
-Tidy up .text locs
-Work out where each object's variables need to be reset

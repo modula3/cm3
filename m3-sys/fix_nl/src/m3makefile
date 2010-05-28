@@ -1,9 +1,0 @@
-
-import ("libm3")
-
-interface ("OS")
-c_source ("OS")
-implementation ("OS" & OS_TYPE)
-implementation ("Main")
-
-Program ("fix_nl")

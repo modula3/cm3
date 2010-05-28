@@ -1,2 +1,0 @@
-readonly TARGET_ARCH = "ALPHA32"
-readonly WORD_SIZE = "32BITS"

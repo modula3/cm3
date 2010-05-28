@@ -1,7 +1,0 @@
-override ("m3core", ROOT & "/m3-libs")
-override ("libm3", ROOT & "/m3-libs")
-override ("m3tk-misc", ROOT & "/m3-libs")
-override ("netobj", ROOT & "/m3-comm")
-override ("ui", ROOT & "/m3-ui")
-override ("formsvbt", ROOT & "/m3-ui")
-override ("board", ROOT & "/m3-demo/sharedboard")

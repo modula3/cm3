@@ -1,7 +1,0 @@
-override ("libm3", ROOT & "/m3-libs")
-override ("ocr", ROOT & "/m3-lectern")
-override ("lecterndoc", ROOT & "/m3-lectern")
-override ("ui", ROOT & "/m3-ui")
-override ("images", ROOT & "/m3-ui")
-override ("tempfiles", ROOT & "/m3-libs")
-override ("mtex", ROOT & "/m3-tools")

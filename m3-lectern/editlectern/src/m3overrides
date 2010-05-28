@@ -1,4 +1,0 @@
-override ("formsvbt", ROOT & "/m3-ui")
-override ("mtex", ROOT & "/m3-tools")
-override ("lecternclient", ROOT & "/m3-lectern")
-override ("lecterndoc", ROOT & "/m3-lectern")

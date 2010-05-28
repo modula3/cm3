@@ -1,7 +1,0 @@
-% m3makefile for enum
-
-import ("libm3")
-
-implementation ("ExtensionLookup")
-program ("extmap")
-

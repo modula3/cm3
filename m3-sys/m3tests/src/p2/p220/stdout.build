@@ -1,7 +1,0 @@
-make_dir(PKG_INSTALL & "/p220/" & TARGET)
-install_file(".M3EXPORTS", PKG_INSTALL & "/p220/" & TARGET, "0644")
-install_file("liblib.a", PKG_INSTALL & "/p220/" & TARGET, "0644")
-install_file("liblib.m3x", PKG_INSTALL & "/p220/" & TARGET, "0644")
-install_file(".M3WEB", PKG_INSTALL & "/p220/" & TARGET, "0644")
-make_dir(PKG_INSTALL & "/p220")
-install_file("../Main.m3", PKG_INSTALL & "/p220", "0644")

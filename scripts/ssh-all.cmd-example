@@ -1,2 +1,0 @@
-@rem use single % if run directly from command line
-for %%a in (103 105 114 119 128 133 134 138 149) do start ssh 192.168.1.%%a

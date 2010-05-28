@@ -1,8 +1,0 @@
-module TrackerPositionWrap for TrackerPosition;
-
-let TProto = SharedObj_TProto.extend({
-	get => meth(self) TrackerPosition_get(self) end,
-	set => meth(self, data) TrackerPosition_set(self, data) end,
-}, ok);
-
-end module;

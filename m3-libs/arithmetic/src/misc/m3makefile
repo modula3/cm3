@@ -1,6 +1,0 @@
-
-include_dir("lowlevel")
-include_dir("approximation")
-include_dir("stochastic")
-%include_dir("ode")
-include_dir("functional")

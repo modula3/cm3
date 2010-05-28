@@ -1,6 +1,0 @@
-import ("libm3")
-
-module ("BinIO")
-module ("FastBinIO")
-
-Library ("binIO")

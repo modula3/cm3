@@ -1,3 +1,0 @@
-INTERFACE WordRep;
-TYPE T = INTEGER;
-END WordRep.

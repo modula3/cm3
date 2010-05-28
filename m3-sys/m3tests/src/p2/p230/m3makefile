@@ -1,4 +1,0 @@
-implementation("Main")
-MERGE_STDOUT_STDERR = TRUE
-build_standalone()
-include ("../../Test.common")

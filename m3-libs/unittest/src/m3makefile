@@ -1,6 +1,0 @@
-import("libm3")
-
-include_dir("class")
-include_dir("terminal")
-
-library("m3unit")

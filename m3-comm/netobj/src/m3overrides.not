@@ -1,3 +1,0 @@
-override(tcp-ip, /udir/wobber/m3)
-override(netobjrt-ip, /udir/wobber/m3)
-override(tcpnetobj-ip, /udir/wobber/m3)

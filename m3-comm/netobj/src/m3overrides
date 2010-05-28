@@ -1,2 +1,0 @@
-_NETOBJ_OVERRIDE = "T"
-include(ROOT & "/m3overrides")

@@ -1,7 +1,0 @@
-
-
-import("libm3")
-interface("Ulib")
-module("Lib")
-implementation ("CallingC")
-program ("m3pwd")

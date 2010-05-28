@@ -1,4 +1,0 @@
-<p>
-Tool to bundle arbitraty resources within M3 programs by embedding them
-into TEXT constants. Resources can be accessed by name.
-</p>
