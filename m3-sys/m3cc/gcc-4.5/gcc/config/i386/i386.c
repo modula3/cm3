@@ -11896,11 +11896,10 @@ print_operand (FILE *file, rtx x, int code)
 	  return;
 
 	case ';':
-#if TARGET_MACHO
-	  fputs (" ; ", file);
-#else
-	  putc (' ', file);
-#endif
+	  if (ASSEMBLER_DIALECT == ASM_ATT)
+	    fputs (" ; ", file);
+	  else
+	    fputc (' ', file);
 	  return;
 
 	default:
