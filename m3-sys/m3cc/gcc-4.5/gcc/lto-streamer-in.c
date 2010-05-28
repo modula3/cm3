@@ -1629,6 +1629,7 @@ unpack_ts_fixed_cst_value_fields (struct bitpack_d *bp, tree expr)
 {
   struct fixed_value fv;
 
+  memset(&fv, 0, sizeof (fv));
   fv.data.low = (HOST_WIDE_INT) bp_unpack_value (bp, HOST_BITS_PER_WIDE_INT);
   fv.data.high = (HOST_WIDE_INT) bp_unpack_value (bp, HOST_BITS_PER_WIDE_INT);
   TREE_FIXED_CST (expr) = fv;
