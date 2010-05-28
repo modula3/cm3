@@ -389,7 +389,7 @@ static HARD_REG_SET temp_hard_regset;
 static void
 setup_reg_mode_hard_regset (void)
 {
-  int i, m, hard_regno;
+  int i = { 0 }, m, hard_regno;
 
   for (m = 0; m < NUM_MACHINE_MODES; m++)
     for (hard_regno = 0; hard_regno < FIRST_PSEUDO_REGISTER; hard_regno++)
@@ -427,7 +427,7 @@ short ira_class_hard_reg_index[N_REG_CLASSES][FIRST_PSEUDO_REGISTER];
 static void
 setup_class_hard_regs (void)
 {
-  int cl, i, hard_regno, n;
+  int cl, i = { 0 }, hard_regno, n;
   HARD_REG_SET processed_hard_reg_set;
 
   ira_assert (SHRT_MAX >= FIRST_PSEUDO_REGISTER);
@@ -471,7 +471,7 @@ int ira_available_class_regs[N_REG_CLASSES];
 static void
 setup_available_class_regs (void)
 {
-  int i, j;
+  int i = { 0 }, j;
 
   memset (ira_available_class_regs, 0, sizeof (ira_available_class_regs));
   for (i = 0; i < N_REG_CLASSES; i++)
@@ -620,8 +620,8 @@ ira_free_bitmap (bitmap b ATTRIBUTE_UNUSED)
 void
 ira_print_disposition (FILE *f)
 {
-  int i, n, max_regno;
-  ira_allocno_t a;
+  int i = { 0 }, n, max_regno;
+  ira_allocno_t a = { 0 };
   basic_block bb;
 
   fprintf (f, "Disposition:");
@@ -666,7 +666,7 @@ static enum reg_class alloc_reg_class_subclasses[N_REG_CLASSES][N_REG_CLASSES];
 static void
 setup_reg_subclasses (void)
 {
-  int i, j;
+  int i = { 0 }, j;
   HARD_REG_SET temp_hard_regset2;
 
   for (i = 0; i < N_REG_CLASSES; i++)
@@ -728,7 +728,7 @@ int ira_important_class_nums[N_REG_CLASSES];
 static void
 setup_cover_and_important_classes (void)
 {
-  int i, j, n, cl;
+  int i = { 0 }, j, n, cl;
   bool set_p;
   const enum reg_class *cover_classes;
   HARD_REG_SET temp_hard_regset2;
@@ -839,7 +839,7 @@ setup_class_translate (void)
 {
   int cl, mode;
   enum reg_class cover_class, best_class, *cl_ptr;
-  int i, cost, min_cost, best_cost;
+  int i = { 0 }, cost, min_cost, best_cost;
 
   for (cl = 0; cl < N_REG_CLASSES; cl++)
     ira_class_translate[cl] = NO_REGS;
@@ -945,7 +945,7 @@ comp_reg_classes_func (const void *v1p, const void *v2p)
 static void
 reorder_important_classes (void)
 {
-  int i;
+  int i = { 0 };
 
   for (i = 0; i < N_REG_CLASSES; i++)
     cover_class_order[i] = -1;
@@ -989,7 +989,7 @@ enum reg_class ira_reg_class_union[N_REG_CLASSES][N_REG_CLASSES];
 static void
 setup_reg_class_relations (void)
 {
-  int i, cl1, cl2, cl3;
+  int i = { 0 }, cl1, cl2, cl3;
   HARD_REG_SET intersection_set, union_set, temp_set2;
   bool important_class_p[N_REG_CLASSES];
 
@@ -1094,7 +1094,7 @@ static void
 print_class_cover (FILE *f)
 {
   static const char *const reg_class_names[] = REG_CLASS_NAMES;
-  int i;
+  int i = { 0 };
 
   fprintf (f, "Class cover:\n");
   for (i = 0; i < ira_reg_class_cover_size; i++)
@@ -1136,7 +1136,7 @@ enum reg_class ira_hard_regno_cover_class[FIRST_PSEUDO_REGISTER];
 static void
 setup_hard_regno_cover_class (void)
 {
-  int i, j;
+  int i = { 0 }, j;
   enum reg_class cl;
 
   for (i = 0; i < FIRST_PSEUDO_REGISTER; i++)
@@ -1193,7 +1193,7 @@ HARD_REG_SET prohibited_class_mode_regs[N_REG_CLASSES][NUM_MACHINE_MODES];
 static void
 setup_prohibited_class_mode_regs (void)
 {
-  int i, j, k, hard_regno;
+  int i = { 0 }, j, k, hard_regno;
   enum reg_class cl;
 
   for (i = 0; i < ira_reg_class_cover_size; i++)
@@ -1327,7 +1327,7 @@ static bool ira_prohibited_mode_move_regs_initialized_p = false;
 static void
 setup_prohibited_mode_move_regs (void)
 {
-  int i, j;
+  int i = { 0 }, j;
   rtx test_reg1, test_reg2, move_pat, move_insn;
 
   if (ira_prohibited_mode_move_regs_initialized_p)
@@ -1407,7 +1407,7 @@ compute_regs_asm_clobbered (char *regs_asm_clobbered)
 		unsigned int dregno = DF_REF_REGNO (def);
 		if (dregno < FIRST_PSEUDO_REGISTER)
 		  {
-		    unsigned int i;
+		    unsigned int i = { 0 };
 		    enum machine_mode mode = GET_MODE (DF_REF_REAL_REG (def));
 		    unsigned int end = dregno
 		      + hard_regno_nregs[dregno][mode] - 1;
@@ -1432,7 +1432,7 @@ ira_setup_eliminable_regset (void)
   char *regs_asm_clobbered
     = (char *) alloca (FIRST_PSEUDO_REGISTER * sizeof (char));
 #ifdef ELIMINABLE_REGS
-  int i;
+  int i = { 0 };
   static const struct {const int from, to; } eliminables[] = ELIMINABLE_REGS;
 #endif
   /* FIXME: If EXIT_IGNORE_STACK is set, we will not save and restore
@@ -1522,7 +1522,7 @@ rtx *ira_reg_equiv_const;
 static void
 find_reg_equiv_invariant_const (void)
 {
-  int i;
+  int i = { 0 };
   bool invariant_p;
   rtx list, insn, note, constant, x;
 
@@ -1585,7 +1585,7 @@ static void
 setup_reg_renumber (void)
 {
   int regno, hard_regno;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
 
   caller_save_needed = 0;
@@ -1620,7 +1620,7 @@ static void
 setup_allocno_assignment_flags (void)
 {
   int hard_regno;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
 
   FOR_EACH_ALLOCNO (a, ai)
@@ -1653,7 +1653,7 @@ static void
 calculate_allocation_cost (void)
 {
   int hard_regno, cost;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
 
   ira_overall_cost = ira_reg_cost = ira_mem_cost = 0;
@@ -1740,7 +1740,7 @@ static void
 fix_reg_equiv_init (void)
 {
   int max_regno = max_reg_num ();
-  int i, new_regno;
+  int i = { 0 }, new_regno;
   rtx x, prev, next, insn, set;
 
   if (reg_equiv_init_size < max_regno)
@@ -1788,8 +1788,8 @@ static void
 print_redundant_copies (void)
 {
   int hard_regno;
-  ira_allocno_t a;
-  ira_copy_t cp, next_cp;
+  ira_allocno_t a = { 0 };
+  ira_copy_t cp = { 0 }, next_cp;
   ira_allocno_iterator ai;
 
   FOR_EACH_ALLOCNO (a, ai)
@@ -1822,7 +1822,7 @@ print_redundant_copies (void)
 static void
 setup_preferred_alternate_classes_for_new_pseudos (int start)
 {
-  int i, old_regno;
+  int i = { 0 }, old_regno;
   int max_regno = max_reg_num ();
 
   for (i = start; i < max_regno; i++)
@@ -1847,7 +1847,7 @@ setup_preferred_alternate_classes_for_new_pseudos (int start)
 static void
 expand_reg_info (int old_size)
 {
-  int i;
+  int i = { 0 };
   int size = max_reg_num ();
 
   resize_reg_info ();
@@ -1860,7 +1860,7 @@ expand_reg_info (int old_size)
 static bool
 too_high_register_pressure_p (void)
 {
-  int i;
+  int i = { 0 };
   enum reg_class cover_class;
 
   for (i = 0; i < ira_reg_class_cover_size; i++)
@@ -1997,7 +1997,7 @@ static int
 equiv_init_varies_p (rtx x)
 {
   RTX_CODE code = GET_CODE (x);
-  int i;
+  int i = { 0 };
   const char *fmt;
 
   switch (code)
@@ -2052,7 +2052,7 @@ equiv_init_varies_p (rtx x)
 static int
 equiv_init_movable_p (rtx x, int regno)
 {
-  int i, j;
+  int i = { 0 }, j;
   const char *fmt;
   enum rtx_code code = GET_CODE (x);
 
@@ -2113,7 +2113,7 @@ equiv_init_movable_p (rtx x, int regno)
 static int
 contains_replace_regs (rtx x)
 {
-  int i, j;
+  int i = { 0 }, j;
   const char *fmt;
   enum rtx_code code = GET_CODE (x);
 
@@ -2161,7 +2161,7 @@ contains_replace_regs (rtx x)
 static int
 memref_referenced_p (rtx memref, rtx x)
 {
-  int i, j;
+  int i = { 0 }, j;
   const char *fmt;
   enum rtx_code code = GET_CODE (x);
 
@@ -2364,7 +2364,7 @@ update_equiv_regs (void)
 	    }
 	  else if (GET_CODE (PATTERN (insn)) == PARALLEL)
 	    {
-	      int i;
+	      int i = { 0 };
 
 	      for (i = XVECLEN (PATTERN (insn), 0) - 1; i >= 0; i--)
 		{
@@ -2835,7 +2835,7 @@ init_live_subregs (bool init_value, sbitmap *live_subregs,
 static void
 build_insn_chain (void)
 {
-  unsigned int i;
+  unsigned int i = { 0 };
   struct insn_chain **p = &reload_insn_chain;
   basic_block bb;
   struct insn_chain *c = NULL;
