@@ -96,7 +96,7 @@ static int last_basic_block_before_change;
 static void
 create_loop_tree_nodes (bool loops_p)
 {
-  unsigned int i, j;
+  unsigned int i = { 0 }, j;
   int max_regno;
   bool skip_p;
   edge_iterator ei;
@@ -168,7 +168,7 @@ create_loop_tree_nodes (bool loops_p)
 static bool
 more_one_region_p (void)
 {
-  unsigned int i;
+  unsigned int i = { 0 };
   loop_p loop;
 
   for (i = 0; VEC_iterate (loop_p, ira_loops.larray, i, loop); i++)
@@ -198,7 +198,7 @@ finish_loop_tree_node (ira_loop_tree_node_t loop)
 static void
 finish_loop_tree_nodes (void)
 {
-  unsigned int i;
+  unsigned int i = { 0 };
   loop_p loop;
 
   for (i = 0; VEC_iterate (loop_p, ira_loops.larray, i, loop); i++)
@@ -295,7 +295,7 @@ setup_loop_tree_level (ira_loop_tree_node_t loop_node, int level)
 static void
 form_loop_tree (void)
 {
-  unsigned int i;
+  unsigned int i = { 0 };
   basic_block bb;
   struct loop *parent;
   ira_loop_tree_node_t bb_node, loop_node;
@@ -344,7 +344,7 @@ rebuild_regno_allocno_maps (void)
 {
   unsigned int l;
   int max_regno, regno;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_loop_tree_node_t loop_tree_node;
   loop_p loop;
   ira_allocno_iterator ai;
@@ -419,7 +419,7 @@ initiate_allocnos (void)
 ira_allocno_t
 ira_create_allocno (int regno, bool cap_p, ira_loop_tree_node_t loop_tree_node)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
 
   a = (ira_allocno_t) pool_alloc (allocno_pool);
   ALLOCNO_REGNO (a) = regno;
@@ -694,7 +694,7 @@ static void
 compress_allocno_conflict_vec (ira_allocno_t a)
 {
   ira_allocno_t *vec, conflict_a;
-  int i, j;
+  int i = { 0 }, j;
 
   ira_assert (ALLOCNO_CONFLICT_VEC_P (a));
   vec = (ira_allocno_t *) ALLOCNO_CONFLICT_ALLOCNO_ARRAY (a);
@@ -717,7 +717,7 @@ compress_allocno_conflict_vec (ira_allocno_t a)
 static void
 compress_conflict_vecs (void)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
 
   allocno_conflict_check
@@ -1005,7 +1005,7 @@ finish_allocno (ira_allocno_t a)
 static void
 finish_allocnos (void)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
 
   FOR_EACH_ALLOCNO (a, ai)
@@ -1043,7 +1043,7 @@ static ira_copy_t
 find_allocno_copy (ira_allocno_t a1, ira_allocno_t a2, rtx insn,
 		   ira_loop_tree_node_t loop_tree_node)
 {
-  ira_copy_t cp, next_cp;
+  ira_copy_t cp = { 0 }, next_cp;
   ira_allocno_t another_a;
 
   for (cp = ALLOCNO_COPIES (a1); cp != NULL; cp = next_cp)
@@ -1074,7 +1074,7 @@ ira_create_copy (ira_allocno_t first, ira_allocno_t second, int freq,
 		 bool constraint_p, rtx insn,
 		 ira_loop_tree_node_t loop_tree_node)
 {
-  ira_copy_t cp;
+  ira_copy_t cp = { 0 };
 
   cp = (ira_copy_t) pool_alloc (copy_pool);
   cp->num = ira_copies_num;
@@ -1193,7 +1193,7 @@ ira_add_allocno_copy (ira_allocno_t first, ira_allocno_t second, int freq,
 		      bool constraint_p, rtx insn,
 		      ira_loop_tree_node_t loop_tree_node)
 {
-  ira_copy_t cp;
+  ira_copy_t cp = { 0 };
 
   if ((cp = find_allocno_copy (first, second, insn, loop_tree_node)) != NULL)
     {
@@ -1230,7 +1230,7 @@ ira_debug_copy (ira_copy_t cp)
 static void
 print_copies (FILE *f)
 {
-  ira_copy_t cp;
+  ira_copy_t cp = { 0 };
   ira_copy_iterator ci;
 
   FOR_EACH_COPY (cp, ci)
@@ -1249,7 +1249,7 @@ static void
 print_allocno_copies (FILE *f, ira_allocno_t a)
 {
   ira_allocno_t another_a;
-  ira_copy_t cp, next_cp;
+  ira_copy_t cp = { 0 }, next_cp;
 
   fprintf (f, " a%d(r%d):", ALLOCNO_NUM (a), ALLOCNO_REGNO (a));
   for (cp = ALLOCNO_COPIES (a); cp != NULL; cp = next_cp)
@@ -1291,7 +1291,7 @@ finish_copy (ira_copy_t cp)
 static void
 finish_copies (void)
 {
-  ira_copy_t cp;
+  ira_copy_t cp = { 0 };
   ira_copy_iterator ci;
 
   FOR_EACH_COPY (cp, ci)
@@ -1310,7 +1310,7 @@ static alloc_pool cost_vector_pool[N_REG_CLASSES];
 static void
 initiate_cost_vectors (void)
 {
-  int i;
+  int i = { 0 };
   enum reg_class cover_class;
 
   for (i = 0; i < ira_reg_class_cover_size; i++)
@@ -1344,7 +1344,7 @@ ira_free_cost_vector (int *vec, enum reg_class cover_class)
 static void
 finish_cost_vectors (void)
 {
-  int i;
+  int i = { 0 };
   enum reg_class cover_class;
 
   for (i = 0; i < ira_reg_class_cover_size; i++)
@@ -1420,7 +1420,7 @@ static basic_block curr_bb;
 static void
 create_insn_allocnos (rtx x, bool output_p)
 {
-  int i, j;
+  int i = { 0 }, j;
   const char *fmt;
   enum rtx_code code = GET_CODE (x);
 
@@ -1430,7 +1430,7 @@ create_insn_allocnos (rtx x, bool output_p)
 
       if ((regno = REGNO (x)) >= FIRST_PSEUDO_REGISTER)
 	{
-	  ira_allocno_t a;
+	  ira_allocno_t a = { 0 };
 
 	  if ((a = ira_curr_regno_allocno_map[regno]) == NULL)
 	    a = ira_create_allocno (regno, false, ira_curr_loop_tree_node);
@@ -1485,7 +1485,7 @@ create_bb_allocnos (ira_loop_tree_node_t bb_node)
 {
   basic_block bb;
   rtx insn;
-  unsigned int i;
+  unsigned int i = { 0 };
   bitmap_iterator bi;
 
   curr_bb = bb = bb_node->bb;
@@ -1506,7 +1506,7 @@ create_bb_allocnos (ira_loop_tree_node_t bb_node)
 static void
 create_loop_allocnos (edge e)
 {
-  unsigned int i;
+  unsigned int i = { 0 };
   bitmap live_in_regs, border_allocnos;
   bitmap_iterator bi;
   ira_loop_tree_node_t parent;
@@ -1541,7 +1541,7 @@ create_loop_tree_node_allocnos (ira_loop_tree_node_t loop_node)
     create_bb_allocnos (loop_node);
   else if (loop_node != ira_loop_tree_root)
     {
-      int i;
+      int i = { 0 };
       edge_iterator ei;
       edge e;
       VEC (edge, heap) *edges;
@@ -1578,8 +1578,8 @@ propagate_modified_regnos (ira_loop_tree_node_t loop_tree_node)
 static void
 propagate_allocno_info (void)
 {
-  int i;
-  ira_allocno_t a, parent_a;
+  int i = { 0 };
+  ira_allocno_t a = { 0 }, parent_a;
   ira_loop_tree_node_t parent;
   enum reg_class cover_class;
 
@@ -1661,7 +1661,7 @@ change_allocno_in_range_list (allocno_live_range_t r, ira_allocno_t a)
 static bool
 low_pressure_loop_node_p (ira_loop_tree_node_t node)
 {
-  int i;
+  int i = { 0 };
   enum reg_class cover_class;
 
   if (node->bb != NULL)
@@ -1711,7 +1711,7 @@ loop_compare_func (const void *v1p, const void *v2p)
 static void
 mark_loops_for_removal (void)
 {
-  int i, n;
+  int i = { 0 }, n;
   ira_loop_tree_node_t *sorted_loops;
   loop_p loop;
 
@@ -1755,7 +1755,7 @@ mark_loops_for_removal (void)
 static void
 mark_all_loops_for_removal (void)
 {
-  int i;
+  int i = { 0 };
   loop_p loop;
 
   for (i = 0; VEC_iterate (loop_p, ira_loops.larray, i, loop); i++)
@@ -1865,8 +1865,8 @@ static ira_allocno_t *regno_allocnos;
 static void
 ira_rebuild_regno_allocno_list (int regno)
 {
-  int i, n;
-  ira_allocno_t a;
+  int i = { 0 }, n;
+  ira_allocno_t a = { 0 };
 
   for (n = 0, a = ira_regno_allocno_map[regno];
        a != NULL;
@@ -1927,7 +1927,7 @@ remove_unnecessary_allocnos (void)
 {
   int regno;
   bool merged_p, rebuild_p;
-  ira_allocno_t a, prev_a, next_a, parent_a;
+  ira_allocno_t a = { 0 }, prev_a, next_a, parent_a;
   ira_loop_tree_node_t a_node, parent;
   allocno_live_range_t r;
 
@@ -2004,7 +2004,7 @@ remove_low_level_allocnos (void)
 {
   int regno;
   bool merged_p, propagate_p;
-  ira_allocno_t a, top_a;
+  ira_allocno_t a = { 0 }, top_a;
   ira_loop_tree_node_t a_node, parent;
   allocno_live_range_t r;
   ira_allocno_iterator ai;
@@ -2115,8 +2115,8 @@ remove_unnecessary_regions (bool all_p)
 static void
 update_bad_spill_attribute (void)
 {
-  int i;
-  ira_allocno_t a;
+  int i = { 0 };
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
   allocno_live_range_t r;
   enum reg_class cover_class;
@@ -2166,8 +2166,8 @@ update_bad_spill_attribute (void)
 static void
 setup_min_max_allocno_live_range_point (void)
 {
-  int i;
-  ira_allocno_t a, parent_a, cap;
+  int i = { 0 };
+  ira_allocno_t a = { 0 }, parent_a, cap;
   ira_allocno_iterator ai;
   allocno_live_range_t r;
   ira_loop_tree_node_t parent;
@@ -2248,8 +2248,8 @@ allocno_range_compare_func (const void *v1p, const void *v2p)
 static void
 sort_conflict_id_allocno_map (void)
 {
-  int i, num;
-  ira_allocno_t a;
+  int i = { 0 }, num;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
 
   num = 0;
@@ -2270,9 +2270,9 @@ static void
 setup_min_max_conflict_allocno_ids (void)
 {
   int cover_class;
-  int i, j, min, max, start, finish, first_not_finished, filled_area_start;
+  int i = { 0 }, j, min, max, start, finish, first_not_finished, filled_area_start;
   int *live_range_min, *last_lived;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
 
   live_range_min = (int *) ira_allocate (sizeof (int) * ira_allocnos_num);
   cover_class = -1;
@@ -2355,7 +2355,7 @@ setup_min_max_conflict_allocno_ids (void)
 static void
 create_caps (void)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
   ira_loop_tree_node_t loop_tree_node;
 
@@ -2394,7 +2394,7 @@ static ira_allocno_t *regno_top_level_allocno_map;
 static bool
 copy_info_to_removed_store_destinations (int regno)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_t parent_a = NULL;
   ira_loop_tree_node_t parent;
   allocno_live_range_t r;
@@ -2459,14 +2459,14 @@ copy_info_to_removed_store_destinations (int regno)
 void
 ira_flattening (int max_regno_before_emit, int ira_max_point_before_emit)
 {
-  int i, j, num;
+  int i = { 0 }, j, num;
   bool keep_p;
   int hard_regs_num;
   bool new_pseudos_p, merged_p, mem_dest_p;
   unsigned int n;
   enum reg_class cover_class;
-  ira_allocno_t a, parent_a, first, second, node_first, node_second;
-  ira_copy_t cp;
+  ira_allocno_t a = { 0 }, parent_a, first, second, node_first, node_second;
+  ira_copy_t cp = { 0 };
   ira_loop_tree_node_t parent, node;
   allocno_live_range_t r;
   ira_allocno_iterator ai;
@@ -2731,7 +2731,7 @@ ira_flattening (int max_regno_before_emit, int ira_max_point_before_emit)
 static void
 check_allocno_creation (void)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
   ira_loop_tree_node_t loop_tree_node;
 
@@ -2794,7 +2794,7 @@ ira_build (bool loops_p)
   ira_build_conflicts ();
   if (! ira_conflicts_p)
     {
-      ira_allocno_t a;
+      ira_allocno_t a = { 0 };
       ira_allocno_iterator ai;
 
       /* Remove all regions but root one.  */
@@ -2820,7 +2820,7 @@ ira_build (bool loops_p)
   if (internal_flag_ira_verbose > 0 && ira_dump_file != NULL)
     {
       int n, nr;
-      ira_allocno_t a;
+      ira_allocno_t a = { 0 };
       allocno_live_range_t r;
       ira_allocno_iterator ai;
 

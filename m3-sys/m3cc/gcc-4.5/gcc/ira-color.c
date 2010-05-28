@@ -243,11 +243,11 @@ get_next_update_cost (ira_allocno_t *allocno, int *divisor)
 static void
 update_copy_costs (ira_allocno_t allocno, bool decr_p)
 {
-  int i, cost, update_cost, hard_regno, divisor;
+  int i = { 0 }, cost, update_cost, hard_regno, divisor = { 0 };
   enum machine_mode mode;
   enum reg_class rclass, cover_class;
-  ira_allocno_t another_allocno;
-  ira_copy_t cp, next_cp;
+  ira_allocno_t another_allocno = { 0 };
+  ira_copy_t cp = { 0 }, next_cp;
 
   hard_regno = ALLOCNO_HARD_REGNO (allocno);
   ira_assert (hard_regno >= 0);
@@ -322,13 +322,13 @@ static void
 update_conflict_hard_regno_costs (int *costs, enum reg_class cover_class,
 				  bool decr_p)
 {
-  int i, cost, class_size, freq, mult, div, divisor;
+  int i = { 0 }, cost, class_size, freq, mult, div, divisor = { 0 };
   int index, hard_regno;
   int *conflict_costs;
   bool cont_p;
   enum reg_class another_cover_class;
-  ira_allocno_t allocno, another_allocno;
-  ira_copy_t cp, next_cp;
+  ira_allocno_t allocno = { 0 }, another_allocno = { 0 };
+  ira_copy_t cp = { 0 }, next_cp;
 
   while (get_next_update_cost (&allocno, &divisor))
     for (cp = ALLOCNO_COPIES (allocno); cp != NULL; cp = next_cp)
@@ -417,7 +417,7 @@ allocno_cost_compare_func (const void *v1p, const void *v2p)
 static void
 print_coalesced_allocno (ira_allocno_t allocno)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
 
   for (a = ALLOCNO_NEXT_COALESCED_ALLOCNO (allocno);;
        a = ALLOCNO_NEXT_COALESCED_ALLOCNO (a))
@@ -440,13 +440,13 @@ static bool
 assign_hard_reg (ira_allocno_t allocno, bool retry_p)
 {
   HARD_REG_SET conflicting_regs;
-  int i, j, k, hard_regno, best_hard_regno, class_size;
+  int i = { 0 }, j, k, hard_regno, best_hard_regno, class_size;
   int cost, mem_cost, min_cost, full_cost, min_full_cost, add_cost;
   int *a_costs;
   int *conflict_costs;
   enum reg_class cover_class, rclass, conflict_cover_class;
   enum machine_mode mode;
-  ira_allocno_t a, conflict_allocno;
+  ira_allocno_t a = { 0 }, conflict_allocno = { 0 };
   ira_allocno_conflict_iterator aci;
   static int costs[FIRST_PSEUDO_REGISTER], full_costs[FIRST_PSEUDO_REGISTER];
 #ifdef STACK_REGS
@@ -715,7 +715,7 @@ add_allocno_to_bucket (ira_allocno_t allocno, ira_allocno_t *bucket_ptr)
 static void
 get_coalesced_allocnos_attributes (ira_allocno_t allocno, int *freq, int *num)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
 
   *freq = 0;
   *num = 0;
@@ -759,7 +759,7 @@ bucket_allocno_compare_func (const void *v1p, const void *v2p)
 static void
 sort_bucket (ira_allocno_t *bucket_ptr)
 {
-  ira_allocno_t a, head;
+  ira_allocno_t a = { 0 }, head;
   int n;
 
   for (n = 0, a = *bucket_ptr; a != NULL; a = ALLOCNO_NEXT_BUCKET_ALLOCNO (a))
@@ -862,7 +862,7 @@ static void
 push_allocno_to_stack (ira_allocno_t allocno)
 {
   int left_conflicts_size, conflict_size, size;
-  ira_allocno_t a, conflict_allocno;
+  ira_allocno_t a = { 0 }, conflict_allocno = { 0 };
   enum reg_class cover_class;
   ira_allocno_conflict_iterator aci;
 
@@ -1009,7 +1009,7 @@ push_allocno_to_spill (ira_allocno_t allocno)
 int
 ira_loop_edge_freq (ira_loop_tree_node_t loop_node, int regno, bool exit_p)
 {
-  int freq, i;
+  int freq, i = { 0 };
   edge_iterator ei;
   edge e;
   VEC (edge, heap) *edges;
@@ -1117,7 +1117,7 @@ splay_tree_allocate (int size, void *data ATTRIBUTE_UNUSED)
 static void
 splay_tree_free (void *node, void *data ATTRIBUTE_UNUSED)
 {
-  int i;
+  int i = { 0 };
   enum reg_class cover_class;
 
   for (i = 0; i < ira_reg_class_cover_size; i++)
@@ -1137,10 +1137,10 @@ splay_tree_free (void *node, void *data ATTRIBUTE_UNUSED)
 static void
 push_allocnos_to_stack (void)
 {
-  ira_allocno_t allocno, a, i_allocno, *allocno_vec;
+  ira_allocno_t allocno = { 0 }, a = { 0 }, i_allocno, *allocno_vec;
   enum reg_class cover_class, rclass;
   int allocno_pri, i_allocno_pri, allocno_cost, i_allocno_cost;
-  int i, j, num, cover_class_allocnos_num[N_REG_CLASSES];
+  int i = { 0 }, j, num, cover_class_allocnos_num[N_REG_CLASSES];
   ira_allocno_t *cover_class_allocnos[N_REG_CLASSES];
   int cost;
 
@@ -1312,7 +1312,7 @@ push_allocnos_to_stack (void)
 static void
 pop_allocnos_from_stack (void)
 {
-  ira_allocno_t allocno;
+  ira_allocno_t allocno = { 0 };
   enum reg_class cover_class;
 
   for (;VEC_length (ira_allocno_t, allocno_stack_vec) != 0;)
@@ -1354,10 +1354,10 @@ pop_allocnos_from_stack (void)
 static void
 setup_allocno_available_regs_num (ira_allocno_t allocno)
 {
-  int i, n, hard_regs_num, hard_regno;
+  int i = { 0 }, n, hard_regs_num, hard_regno;
   enum machine_mode mode;
   enum reg_class cover_class;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   HARD_REG_SET temp_set;
 
   cover_class = ALLOCNO_COVER_CLASS (allocno);
@@ -1393,8 +1393,8 @@ setup_allocno_available_regs_num (ira_allocno_t allocno)
 static void
 setup_allocno_left_conflicts_size (ira_allocno_t allocno)
 {
-  int i, hard_regs_num, hard_regno, conflict_allocnos_size;
-  ira_allocno_t a, conflict_allocno;
+  int i = { 0 }, hard_regs_num, hard_regno, conflict_allocnos_size;
+  ira_allocno_t a = { 0 }, conflict_allocno = { 0 };
   enum reg_class cover_class;
   HARD_REG_SET temp_set;
   ira_allocno_conflict_iterator aci;
@@ -1523,7 +1523,7 @@ copy_freq_compare_func (const void *v1p, const void *v2p)
 static void
 merge_allocnos (ira_allocno_t a1, ira_allocno_t a2)
 {
-  ira_allocno_t a, first, last, next;
+  ira_allocno_t a = { 0 }, first, last, next;
 
   first = ALLOCNO_FIRST_COALESCED_ALLOCNO (a1);
   if (first == ALLOCNO_FIRST_COALESCED_ALLOCNO (a2))
@@ -1551,7 +1551,7 @@ static bool
 coalesced_allocno_conflict_p (ira_allocno_t a1, ira_allocno_t a2,
 			      bool reload_p)
 {
-  ira_allocno_t a, conflict_allocno;
+  ira_allocno_t a = { 0 }, conflict_allocno = { 0 };
   ira_allocno_conflict_iterator aci;
 
   if (allocno_coalesced_p)
@@ -1603,12 +1603,12 @@ coalesced_allocno_conflict_p (ira_allocno_t a1, ira_allocno_t a2,
 static void
 coalesce_allocnos (bool reload_p)
 {
-  ira_allocno_t a;
-  ira_copy_t cp, next_cp, *sorted_copies;
+  ira_allocno_t a = { 0 };
+  ira_copy_t cp = { 0 }, next_cp, *sorted_copies;
   enum reg_class cover_class;
   enum machine_mode mode;
   unsigned int j;
-  int i, n, cp_num, regno;
+  int i = { 0 }, n, cp_num, regno;
   bitmap_iterator bi;
 
   sorted_copies = (ira_copy_t *) ira_allocate (ira_copies_num
@@ -1700,8 +1700,8 @@ static int *allocno_priorities;
 static void
 setup_allocno_priorities (ira_allocno_t *consideration_allocnos, int n)
 {
-  int i, length, nrefs, priority, max_priority, mult;
-  ira_allocno_t a;
+  int i = { 0 }, length, nrefs, priority, max_priority, mult;
+  ira_allocno_t a = { 0 };
 
   max_priority = 0;
   for (i = 0; i < n; i++)
@@ -1757,9 +1757,9 @@ allocno_priority_compare_func (const void *v1p, const void *v2p)
 static void
 color_allocnos (void)
 {
-  unsigned int i, n;
+  unsigned int i = { 0 }, n;
   bitmap_iterator bi;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
 
   allocno_coalesced_p = false;
   processed_coalesced_allocno_bitmap = ira_allocate_bitmap ();
@@ -1923,7 +1923,7 @@ color_pass (ira_loop_tree_node_t loop_tree_node)
   bitmap_iterator bi;
   enum machine_mode mode;
   enum reg_class rclass, cover_class;
-  ira_allocno_t a, subloop_allocno;
+  ira_allocno_t a = { 0 }, subloop_allocno;
   ira_loop_tree_node_t subloop_node;
 
   ira_assert (loop_tree_node->bb == NULL);
@@ -2109,7 +2109,7 @@ move_spill_restore (void)
   int enter_freq, exit_freq;
   enum machine_mode mode;
   enum reg_class rclass;
-  ira_allocno_t a, parent_allocno, subloop_allocno;
+  ira_allocno_t a = { 0 }, parent_allocno, subloop_allocno;
   ira_loop_tree_node_t parent, loop_node, subloop_node;
   ira_allocno_iterator ai;
 
@@ -2219,11 +2219,11 @@ move_spill_restore (void)
 static void
 update_curr_costs (ira_allocno_t a)
 {
-  int i, hard_regno, cost;
+  int i = { 0 }, hard_regno, cost;
   enum machine_mode mode;
   enum reg_class cover_class, rclass;
   ira_allocno_t another_a;
-  ira_copy_t cp, next_cp;
+  ira_copy_t cp = { 0 }, next_cp;
 
   ira_assert (! ALLOCNO_ASSIGNED_P (a));
   cover_class = ALLOCNO_COVER_CLASS (a);
@@ -2277,8 +2277,8 @@ update_curr_costs (ira_allocno_t a)
 void
 ira_reassign_conflict_allocnos (int start_regno)
 {
-  int i, allocnos_to_color_num;
-  ira_allocno_t a, conflict_a;
+  int i = { 0 }, allocnos_to_color_num;
+  ira_allocno_t a = { 0 }, conflict_a;
   ira_allocno_conflict_iterator aci;
   enum reg_class cover_class;
   bitmap allocnos_to_color;
@@ -2428,8 +2428,8 @@ coalesced_pseudo_reg_slot_compare (const void *v1p, const void *v2p)
 static void
 setup_coalesced_allocno_costs_and_nums (int *pseudo_regnos, int n)
 {
-  int i, num, regno, cost;
-  ira_allocno_t allocno, a;
+  int i = { 0 }, num, regno, cost;
+  ira_allocno_t allocno = { 0 }, a = { 0 };
 
   for (num = i = 0; i < n; i++)
     {
@@ -2471,8 +2471,8 @@ static int
 collect_spilled_coalesced_allocnos (int *pseudo_regnos, int n,
 				    ira_allocno_t *spilled_coalesced_allocnos)
 {
-  int i, num, regno;
-  ira_allocno_t allocno;
+  int i = { 0 }, num, regno;
+  ira_allocno_t allocno = { 0 };
 
   for (num = i = 0; i < n; i++)
     {
@@ -2497,7 +2497,7 @@ static allocno_live_range_t *slot_coalesced_allocnos_live_ranges;
 static bool
 slot_coalesced_allocno_live_ranges_intersect_p (ira_allocno_t allocno, int n)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
 
   for (a = ALLOCNO_NEXT_COALESCED_ALLOCNO (allocno);;
        a = ALLOCNO_NEXT_COALESCED_ALLOCNO (a))
@@ -2517,7 +2517,7 @@ static void
 setup_slot_coalesced_allocno_live_ranges (ira_allocno_t allocno)
 {
   int n;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   allocno_live_range_t r;
 
   n = ALLOCNO_TEMP (allocno);
@@ -2541,8 +2541,8 @@ setup_slot_coalesced_allocno_live_ranges (ira_allocno_t allocno)
 static bool
 coalesce_spill_slots (ira_allocno_t *spilled_coalesced_allocnos, int num)
 {
-  int i, j, n, last_coalesced_allocno_num;
-  ira_allocno_t allocno, a;
+  int i = { 0 }, j, n, last_coalesced_allocno_num;
+  ira_allocno_t allocno = { 0 }, a = { 0 };
   bool merged_p = false;
   bitmap set_jump_crosses = regstat_get_setjmp_crosses ();
 
@@ -2614,8 +2614,8 @@ ira_sort_regnos_for_alter_reg (int *pseudo_regnos, int n,
 			       unsigned int *reg_max_ref_width)
 {
   int max_regno = max_reg_num ();
-  int i, regno, num, slot_num;
-  ira_allocno_t allocno, a;
+  int i = { 0 }, regno, num, slot_num;
+  ira_allocno_t allocno = { 0 }, a = { 0 };
   ira_allocno_iterator ai;
   ira_allocno_t *spilled_coalesced_allocnos;
 
@@ -2862,9 +2862,9 @@ ira_reassign_pseudos (int *spilled_pseudo_regs, int num,
 		      HARD_REG_SET *pseudo_forbidden_regs,
 		      HARD_REG_SET *pseudo_previous_regs,  bitmap spilled)
 {
-  int i, m, n, regno;
+  int i = { 0 }, m, n, regno;
   bool changed_p;
-  ira_allocno_t a, conflict_a;
+  ira_allocno_t a = { 0 }, conflict_a = { 0 };
   HARD_REG_SET forbidden_regs;
   ira_allocno_conflict_iterator aci;
 
@@ -2959,10 +2959,10 @@ rtx
 ira_reuse_stack_slot (int regno, unsigned int inherent_size,
 		      unsigned int total_size)
 {
-  unsigned int i;
+  unsigned int i = { 0 };
   int slot_num, best_slot_num;
   int cost, best_cost;
-  ira_copy_t cp, next_cp;
+  ira_copy_t cp = { 0 }, next_cp;
   ira_allocno_t another_allocno, allocno = ira_regno_allocno_map[regno];
   rtx x;
   bitmap_iterator bi;
@@ -3078,7 +3078,7 @@ ira_mark_new_stack_slot (rtx x, int regno, unsigned int total_size)
 {
   struct ira_spilled_reg_stack_slot *slot;
   int slot_num;
-  ira_allocno_t allocno;
+  ira_allocno_t allocno = { 0 };
 
   ira_assert (PSEUDO_REGNO_BYTES (regno) <= total_size);
   allocno = ira_regno_allocno_map[regno];
@@ -3113,10 +3113,10 @@ calculate_spill_cost (int *regnos, rtx in, rtx out, rtx insn,
 		      int *excess_pressure_live_length,
 		      int *nrefs, int *call_used_count, int *first_hard_regno)
 {
-  int i, cost, regno, hard_regno, j, count, saved_cost, nregs;
+  int i = { 0 }, cost, regno, hard_regno, j, count, saved_cost, nregs;
   bool in_p, out_p;
   int length;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
 
   *nrefs = 0;
   for (length = count = cost = i = 0;; i++)
@@ -3256,13 +3256,13 @@ color (void)
 static void
 fast_allocation (void)
 {
-  int i, j, k, num, class_size, hard_regno;
+  int i = { 0 }, j, k, num, class_size, hard_regno;
 #ifdef STACK_REGS
   bool no_stack_reg_p;
 #endif
   enum reg_class cover_class;
   enum machine_mode mode;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
   allocno_live_range_t r;
   HARD_REG_SET conflict_hard_regs, *used_hard_regs;
@@ -3331,7 +3331,7 @@ fast_allocation (void)
 void
 ira_color (void)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
 
   /* Setup updated costs.  */

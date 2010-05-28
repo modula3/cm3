@@ -154,7 +154,7 @@ ira_debug_move_list (move_t list)
 static bool
 change_regs (rtx *loc)
 {
-  int i, regno, result = false;
+  int i = { 0 }, regno, result = false;
   const char *fmt;
   enum rtx_code code;
   rtx reg;
@@ -251,7 +251,7 @@ static void
 set_allocno_reg (ira_allocno_t allocno, rtx reg)
 {
   int regno;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_loop_tree_node_t node;
 
   node = ALLOCNO_LOOP_TREE_NODE (allocno);
@@ -321,7 +321,7 @@ entered_from_non_parent_p (ira_loop_tree_node_t loop_node)
 static void
 setup_entered_from_non_parent_p (void)
 {
-  unsigned int i;
+  unsigned int i = { 0 };
   loop_p loop;
 
   for (i = 0; VEC_iterate (loop_p, ira_loops.larray, i, loop); i++)
@@ -339,7 +339,7 @@ static bool
 store_can_be_removed_p (ira_allocno_t src_allocno, ira_allocno_t dest_allocno)
 {
   int regno, orig_regno;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_loop_tree_node_t node;
 
   ira_assert (ALLOCNO_CAP_MEMBER (src_allocno) == NULL
@@ -440,10 +440,10 @@ static void
 change_loop (ira_loop_tree_node_t node)
 {
   bitmap_iterator bi;
-  unsigned int i;
+  unsigned int i = { 0 };
   int regno;
   bool used_p;
-  ira_allocno_t allocno, parent_allocno, *map;
+  ira_allocno_t allocno = { 0 }, parent_allocno, *map;
   rtx insn, original_reg;
   enum reg_class cover_class;
   ira_loop_tree_node_t parent;
@@ -537,7 +537,7 @@ static void
 set_allocno_somewhere_renamed_p (void)
 {
   unsigned int regno;
-  ira_allocno_t allocno;
+  ira_allocno_t allocno = { 0 };
   ira_allocno_iterator ai;
 
   FOR_EACH_ALLOCNO (allocno, ai)
@@ -555,7 +555,7 @@ static bool
 eq_edge_move_lists_p (VEC(edge,gc) *vec)
 {
   move_t list;
-  int i;
+  int i = { 0 };
 
   list = (move_t) EDGE_I (vec, 0)->aux;
   for (i = EDGE_COUNT (vec) - 1; i > 0; i--)
@@ -570,7 +570,7 @@ eq_edge_move_lists_p (VEC(edge,gc) *vec)
 static void
 unify_moves (basic_block bb, bool start_p)
 {
-  int i;
+  int i = { 0 };
   edge e;
   move_t list;
   VEC(edge,gc) *vec;
@@ -629,7 +629,7 @@ static int curr_tick;
 static void
 traverse_moves (move_t move)
 {
-  int i;
+  int i = { 0 };
 
   if (move->visited_p)
     return;
@@ -646,7 +646,7 @@ traverse_moves (move_t move)
 static move_t
 modify_move_list (move_t list)
 {
-  int i, n, nregs, hard_regno;
+  int i = { 0 }, n, nregs, hard_regno;
   ira_allocno_t to, from, new_allocno;
   move_t move, new_move, set_move, first, last;
 
@@ -912,8 +912,8 @@ add_range_and_copies_from_move_list (move_t list, ira_loop_tree_node_t node,
   int start, n;
   unsigned int regno;
   move_t move;
-  ira_allocno_t to, from, a;
-  ira_copy_t cp;
+  ira_allocno_t to, from, a = { 0 };
+  ira_copy_t cp = { 0 };
   allocno_live_range_t r;
   bitmap_iterator bi;
   HARD_REG_SET hard_regs_live;
@@ -1056,7 +1056,7 @@ ira_emit (bool loops_p)
   rtx insn;
   edge_iterator ei;
   edge e;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
 
   FOR_EACH_ALLOCNO (a, ai)

@@ -295,7 +295,7 @@ ebitmap_set_bit (ebitmap map, unsigned int bit)
   if (!TEST_BIT (map->wordmask, wordindex))
     {
       unsigned long count;
-      unsigned int i;
+      unsigned int i = { 0 };
 
       SET_BIT (map->wordmask, wordindex);
       count = sbitmap_popcount (map->wordmask, wordindex);
@@ -381,7 +381,7 @@ void
 dump_ebitmap (FILE *file, ebitmap bmap)
 {
   unsigned int pos;
-  unsigned int i;
+  unsigned int i = { 0 };
   int res;
   unsigned int size;
 
@@ -422,7 +422,7 @@ void
 ebitmap_and_into (ebitmap dst, ebitmap src)
 {
   sbitmap_iterator sbi;
-  unsigned int i;
+  unsigned int i = { 0 };
   unsigned int neweltindex = 0;
   unsigned int dsteltindex = 0;
   unsigned int srceltindex = 0;
@@ -457,7 +457,7 @@ ebitmap_and_into (ebitmap dst, ebitmap src)
     }
 #ifdef EBITMAP_DEBUGGING
   {
-    unsigned int i;
+    unsigned int i = { 0 };
 
     for (i = 0; i <  dst->numwords; i++)
       gcc_assert (dst->elts[i] != 0);
@@ -476,7 +476,7 @@ void
 ebitmap_and (ebitmap dst, ebitmap src1, ebitmap src2)
 {
   sbitmap_iterator sbi;
-  unsigned int i;
+  unsigned int i = { 0 };
   unsigned int neweltindex = 0;
   unsigned int src1eltindex = 0;
   unsigned int src2eltindex = 0;
@@ -522,7 +522,7 @@ ebitmap_and (ebitmap dst, ebitmap src1, ebitmap src2)
 #ifdef EBITMAP_DEBUGGING
   {
     ebitmap_iterator ebi;
-    unsigned int i;
+    unsigned int i = { 0 };
 
     for (i = 0; i <  dst->numwords; i++)
       gcc_assert (dst->elts[i] != 0);
@@ -551,7 +551,7 @@ ebitmap_ior_into (ebitmap dst, ebitmap src)
   unsigned int dstsize = dst->wordmask->n_bits;
   unsigned int srcsize = src->wordmask->n_bits;
   sbitmap_iterator sbi;
-  unsigned int i;
+  unsigned int i = { 0 };
   sbitmap tempmask;
   unsigned int neweltindex = 0;
   unsigned int dsteltindex = 0;
@@ -647,7 +647,7 @@ ebitmap_ior_into (ebitmap dst, ebitmap src)
 #ifdef EBITMAP_DEBUGGING
   {
     ebitmap_iterator ebi;
-    unsigned int i;
+    unsigned int i = { 0 };
 
     for (i = 0; i <  dst->numwords; i++)
       gcc_assert (dst->elts[i] != 0);
@@ -675,7 +675,7 @@ ebitmap_ior (ebitmap dst, ebitmap src1, ebitmap src2)
   unsigned int src1size = src1->wordmask->n_bits;
   unsigned int src2size = src2->wordmask->n_bits;
   sbitmap_iterator sbi;
-  unsigned int i;
+  unsigned int i = { 0 };
   sbitmap tempmask;
   unsigned int neweltindex = 0;
   unsigned int src1eltindex = 0;
@@ -766,7 +766,7 @@ ebitmap_ior (ebitmap dst, ebitmap src1, ebitmap src2)
 #ifdef EBITMAP_DEBUGGING
   {
     ebitmap_iterator ebi;
-    unsigned int i;
+    unsigned int i = { 0 };
 
     for (i = 0; i <  dst->numwords; i++)
       gcc_assert (dst->elts[i] != 0);
@@ -793,7 +793,7 @@ bool
 ebitmap_and_compl_into (ebitmap dst, ebitmap src)
 {
   bool changed = false;
-  unsigned int i;
+  unsigned int i = { 0 };
   unsigned int neweltindex = 0;
   unsigned int dsteltindex = 0;
   sbitmap_iterator sbi;
@@ -839,7 +839,7 @@ ebitmap_and_compl_into (ebitmap dst, ebitmap src)
     }
 #ifdef EBITMAP_DEBUGGING
   {
-    unsigned int i;
+    unsigned int i = { 0 };
     ebitmap_iterator ebi;
 
     EXECUTE_IF_SET_IN_EBITMAP (dstcopy, 0, i, ebi)
@@ -873,7 +873,7 @@ ebitmap_and_compl (ebitmap dst, ebitmap src1, ebitmap src2)
 {
   unsigned int src1size = src1->wordmask->n_bits;
   sbitmap_iterator sbi;
-  unsigned int i;
+  unsigned int i = { 0 };
   sbitmap tempmask;
   unsigned int neweltindex = 0;
   unsigned int src1eltindex = 0;
@@ -944,7 +944,7 @@ ebitmap_and_compl (ebitmap dst, ebitmap src1, ebitmap src2)
     }
 #ifdef EBITMAP_DEBUGGING
   {
-    unsigned int i;
+    unsigned int i = { 0 };
     ebitmap_iterator ebi;
 
     EXECUTE_IF_SET_IN_EBITMAP (src1, 0, i, ebi)
@@ -981,7 +981,7 @@ ebitmap_ior_and_compl (ebitmap dst, ebitmap a, ebitmap b, ebitmap c)
 #ifdef EBITMAP_DEBUGGING
   {
     ebitmap_iterator ebi;
-    unsigned int i;
+    unsigned int i = { 0 };
 
     EXECUTE_IF_SET_IN_EBITMAP (a, 0, i, ebi)
       gcc_assert (ebitmap_bit_p (dst, i));
