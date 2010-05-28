@@ -422,6 +422,7 @@ extern void *realloc (void *, size_t);
 #include <inttypes.h>
 #endif
 
+#ifndef __INTERIX
 /* If the system doesn't provide strsignal, we get it defined in
    libiberty but no declaration is supplied.  */
 #if !defined (HAVE_STRSIGNAL) \
@@ -429,6 +430,7 @@ extern void *realloc (void *, size_t);
 # ifndef strsignal
 extern const char *strsignal (int);
 # endif
+#endif
 #endif
 
 #ifdef HAVE_GETRLIMIT
