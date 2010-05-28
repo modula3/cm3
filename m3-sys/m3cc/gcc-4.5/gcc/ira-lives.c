@@ -88,8 +88,8 @@ static int *allocno_saved_at_call;
 static void
 make_regno_born (int regno)
 {
-  unsigned int i;
-  ira_allocno_t a;
+  unsigned int i = { 0 };
+  ira_allocno_t a = { 0 };
   allocno_live_range_t p;
 
   if (regno < FIRST_PSEUDO_REGISTER)
@@ -118,7 +118,7 @@ make_regno_born (int regno)
 static void
 update_allocno_pressure_excess_length (ira_allocno_t a)
 {
-  int start, i;
+  int start, i = { 0 };
   enum reg_class cover_class, cl;
   allocno_live_range_t p;
 
@@ -143,7 +143,7 @@ update_allocno_pressure_excess_length (ira_allocno_t a)
 static void
 make_regno_dead (int regno)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   allocno_live_range_t p;
 
   if (regno < FIRST_PSEUDO_REGISTER)
@@ -171,7 +171,7 @@ static int curr_reg_pressure[N_REG_CLASSES];
 static void
 set_allocno_live (ira_allocno_t a)
 {
-  int i;
+  int i = { 0 };
   enum reg_class cover_class, cl;
 
   /* Invalidate because it is referenced.  */
@@ -201,7 +201,7 @@ set_allocno_live (ira_allocno_t a)
 static void
 clear_allocno_live (ira_allocno_t a)
 {
-  int i;
+  int i = { 0 };
   unsigned int j;
   enum reg_class cover_class, cl;
   bool set_p;
@@ -247,7 +247,7 @@ clear_allocno_live (ira_allocno_t a)
 static void
 mark_reg_live (rtx reg)
 {
-  int i, regno;
+  int i = { 0 }, regno;
 
   gcc_assert (REG_P (reg));
   regno = REGNO (reg);
@@ -345,7 +345,7 @@ mark_reg_dead (rtx reg)
     }
   else if (! TEST_HARD_REG_BIT (ira_no_alloc_regs, regno))
     {
-      int i;
+      int i = { 0 };
       unsigned int j;
       int last = regno + hard_regno_nregs[regno][GET_MODE (reg)];
       enum reg_class cover_class, cl;
@@ -412,7 +412,7 @@ mark_ref_dead (df_ref def)
 static bool
 make_pseudo_conflict (rtx reg, enum reg_class cl, rtx dreg, bool advance_p)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
 
   if (GET_CODE (reg) == SUBREG)
     reg = SUBREG_REG (reg);
@@ -476,7 +476,7 @@ static void
 check_and_make_def_conflict (int alt, int def, enum reg_class def_cl)
 {
   int use, use_match;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   enum reg_class use_cl, acl;
   bool advance_p;
   rtx dreg = recog_data.operand[def];
@@ -763,7 +763,7 @@ single_reg_operand_class (int op_num)
 void
 ira_implicitly_set_insn_hard_regs (HARD_REG_SET *set)
 {
-  int i, c, regno = 0;
+  int i = { 0 }, c, regno = 0;
   bool ignore_p;
   enum reg_class cl;
   rtx op;
@@ -820,11 +820,11 @@ ira_implicitly_set_insn_hard_regs (HARD_REG_SET *set)
 static void
 process_single_reg_class_operands (bool in_p, int freq)
 {
-  int i, regno, cost;
+  int i = { 0 }, regno, cost;
   unsigned int px;
   enum reg_class cl;
   rtx operand;
-  ira_allocno_t operand_a, a;
+  ira_allocno_t operand_a, a = { 0 };
 
   for (i = 0; i < recog_data.n_operands; i++)
     {
@@ -859,7 +859,7 @@ process_single_reg_class_operands (bool in_p, int freq)
 		  [ira_class_hard_regs[cl][0]]) >= 0
 	      && reg_class_size[cl] <= (unsigned) CLASS_MAX_NREGS (cl, mode))
 	    {
-	      int i, size;
+	      int i = { 0 }, size;
 	      cost
 		= (freq
 		   * (in_p
@@ -916,7 +916,7 @@ bb_has_abnormal_call_pred (basic_block bb)
 static void
 process_bb_node_lives (ira_loop_tree_node_t loop_tree_node)
 {
-  int i, freq;
+  int i = { 0 }, freq;
   unsigned int j;
   basic_block bb;
   rtx insn;
@@ -1025,7 +1025,7 @@ process_bb_node_lives (ira_loop_tree_node_t loop_tree_node)
 	  if (GET_CODE (PATTERN (insn)) == PARALLEL && multiple_sets (insn))
 	    for (use_rec = DF_INSN_USES (insn); *use_rec; use_rec++)
 	      {
-		int i;
+		int i = { 0 };
 		rtx reg;
 
 		reg = DF_REF_REG (*use_rec);
@@ -1190,7 +1190,7 @@ process_bb_node_lives (ira_loop_tree_node_t loop_tree_node)
 static void
 create_start_finish_chains (void)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
   allocno_live_range_t r;
 
@@ -1232,10 +1232,10 @@ ira_rebuild_start_finish_chains (void)
 static void
 remove_some_program_points_and_update_live_ranges (void)
 {
-  unsigned i;
+  unsigned i = { 0 };
   int n;
   int *map;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
   allocno_live_range_t r;
   bitmap born_or_died;
@@ -1308,7 +1308,7 @@ ira_debug_allocno_live_ranges (ira_allocno_t a)
 static void
 print_live_ranges (FILE *f)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
 
   FOR_EACH_ALLOCNO (a, ai)

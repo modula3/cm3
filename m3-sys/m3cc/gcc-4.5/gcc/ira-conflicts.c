@@ -67,10 +67,10 @@ static IRA_INT_TYPE **conflicts;
 static bool
 build_conflict_bit_table (void)
 {
-  int i, num, id, allocated_words_num, conflict_bit_vec_words_num;
+  int i = { 0 }, num, id, allocated_words_num, conflict_bit_vec_words_num;
   unsigned int j;
   enum reg_class cover_class;
-  ira_allocno_t allocno, live_a;
+  ira_allocno_t allocno = { 0 }, live_a;
   allocno_live_range_t r;
   ira_allocno_iterator ai;
   sparseset allocnos_live;
@@ -342,10 +342,10 @@ process_regs_for_copy (rtx reg1, rtx reg2, bool constraint_p,
 {
   int allocno_preferenced_hard_regno, cost, index, offset1, offset2;
   bool only_regs_p;
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   enum reg_class rclass, cover_class;
   enum machine_mode mode;
-  ira_copy_t cp;
+  ira_copy_t cp = { 0 };
   ira_loop_tree_node_t parent;
 
   gcc_assert (REG_SUBREG_P (reg1) && REG_SUBREG_P (reg2));
@@ -424,7 +424,7 @@ process_regs_for_copy (rtx reg1, rtx reg2, bool constraint_p,
 static void
 process_reg_shuffles (rtx reg, int op_num, int freq, bool *bound_p)
 {
-  int i;
+  int i = { 0 };
   rtx another_reg;
 
   gcc_assert (REG_SUBREG_P (reg));
@@ -450,7 +450,7 @@ add_insn_allocno_copies (rtx insn)
   rtx set, operand, dup;
   const char *str;
   bool commut_p, bound_p[MAX_RECOG_OPERANDS];
-  int i, j, n, freq;
+  int i = { 0 }, j, n, freq;
   
   freq = REG_FREQ_FROM_BB (BLOCK_FOR_INSN (insn));
   if (freq == 0)
@@ -530,7 +530,7 @@ add_copies (ira_loop_tree_node_t loop_tree_node)
 static void
 propagate_copies (void)
 {
-  ira_copy_t cp;
+  ira_copy_t cp = { 0 };
   ira_copy_iterator ci;
   ira_allocno_t a1, a2, parent_a1, parent_a2;
   ira_loop_tree_node_t parent;
@@ -563,7 +563,7 @@ static ira_allocno_t *collected_conflict_allocnos;
 static void
 build_allocno_conflicts (ira_allocno_t a)
 {
-  int i, px, parent_num;
+  int i = { 0 }, px, parent_num;
   int conflict_bit_vec_words_num;
   ira_loop_tree_node_t parent;
   ira_allocno_t parent_a, another_a, another_parent_a;
@@ -635,8 +635,8 @@ build_allocno_conflicts (ira_allocno_t a)
 static void
 build_conflicts (void)
 {
-  int i;
-  ira_allocno_t a, cap;
+  int i = { 0 };
+  ira_allocno_t a = { 0 }, cap;
 
   collected_conflict_allocnos
     = (ira_allocno_t *) ira_allocate (sizeof (ira_allocno_t)
@@ -659,7 +659,7 @@ build_conflicts (void)
 static void
 print_hard_reg_set (FILE *file, const char *title, HARD_REG_SET set)
 {
-  int i, start;
+  int i = { 0 }, start;
 
   fputs (title, file);
   for (start = -1, i = 0; i < FIRST_PSEUDO_REGISTER; i++)
@@ -689,7 +689,7 @@ print_hard_reg_set (FILE *file, const char *title, HARD_REG_SET set)
 static void
 print_conflicts (FILE *file, bool reg_p)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
   HARD_REG_SET conflicting_hard_regs;
 
@@ -760,7 +760,7 @@ ira_debug_conflicts (bool reg_p)
 void
 ira_build_conflicts (void)
 {
-  ira_allocno_t a;
+  ira_allocno_t a = { 0 };
   ira_allocno_iterator ai;
   HARD_REG_SET temp_hard_reg_set;
 
