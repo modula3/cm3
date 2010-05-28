@@ -5443,6 +5443,34 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
 }
 
 /* Language dependent parser setup.  */
+#ifdef GCC45
+
+static bool
+m3_init (void)
+{
+  linemap_add (line_table, LC_ENTER, false, main_input_filename, 1);
+
+  /* Open input file.  */
+  if (main_input_filename == 0 || !strcmp (main_input_filename, "-"))
+    {
+      finput = stdin;
+      main_input_filename = "<stdin>";
+      linemap_add (line_table, LC_RENAME, false, "<stdin>", 1);
+    }
+  else
+    finput = fopen (main_input_filename, "rb");
+  if (finput == 0)
+    {
+      fprintf (stderr, "Unable to open input file %s\n", main_input_filename);
+      exit(1);
+    }
+  m3_init_lex ();
+  m3_init_parse ();
+  m3_init_decl_processing ();
+  return true;
+}
+
+#else
 
 static bool
 m3_init (void)
@@ -5476,6 +5504,8 @@ m3_init (void)
   m3_init_decl_processing ();
   return true;
 }
+
+#endif
 
 /* Language dependent wrapup.  */
 
