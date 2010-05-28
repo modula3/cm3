@@ -1573,3 +1573,5 @@ gloog (scop_p scop, VEC (scop_p, heap) *scops, htab_t bb_pbb_mapping)
 }
 
 #endif
+
+char quash_apple_ranlib_warning_gloog;

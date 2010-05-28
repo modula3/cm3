@@ -723,6 +723,6 @@ scop_do_interchange (scop_p scop)
   return res;
 }
 
-
 #endif
 
+char quash_apple_ranlib_warning_scop_do_interchange;
