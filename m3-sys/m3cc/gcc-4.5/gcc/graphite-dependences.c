@@ -992,3 +992,5 @@ dot_deps_stmt (scop_p scop)
 }
 
 #endif
+
+char quash_apple_ranlib_warning_dot_deps_stmt;
