@@ -1,0 +1,23 @@
+Bench:
+- from Andreas Enge 9 June 2009:
+  Scripts and web page comparing timings with different systems,
+  as done for mpfr at http://www.mpfr.org/mpfr-2.4.0/timings.html
+
+Efficiency:
+- from Andreas Enge 16 September 2008:
+  Once mpc_sin_cos exists, improve mpc_tan to use it
+
+New functions to implement:
+- from Andreas Enge 16 September 2008:
+  mpc_sin_cos (needs mpfr_sinh_cosh)
+- from Mickael Gastineau <gastineau@imcce.fr> 14 Apr 2008:
+  mpc_fma: d=a*b+c
+- from Andreas Enge and Philippe Théveny 17 July 2008
+  agm (and complex logarithm with agm ?)
+- from Andreas Enge 25 June 2009:
+  correctly rounded roots of unity zeta_n^i
+
+New tests to add:
+- from Andreas Enge and Philippe Théveny 9 April 2008
+  correct handling of Nan and infinities in the case of
+  intermediate overflows while the result may fit (we need special code)
