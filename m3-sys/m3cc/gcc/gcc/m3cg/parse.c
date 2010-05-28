@@ -5448,8 +5448,8 @@ static bool
 m3_init (void)
 {
 #ifdef M3_USE_MAPPED_LOCATION
-  #undef input_filename
-  const char* input_filename = { 0 }; /* global input_filename is not an lvalue. */  
+  #undef input_filename /* global input_filename is not an lvalue. */
+  const char* input_filename = { 0 };
   linemap_add (line_table, LC_ENTER, false, main_input_filename, 1);
 #endif
   input_filename = main_input_filename;
