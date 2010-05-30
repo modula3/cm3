@@ -4830,7 +4830,9 @@ m3cg_index_address (void)
 #ifdef GCC45
   gcc_assert(IS_INTEGER_TYPE_TREE(t) || IS_WORD_TYPE_TREE(t));
   a = m3_build2 (MULT_EXPR, t, EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
-  a = m3_cast(IS_WORD_TYPE_TREE(t) ? sizetype : ssizetype, a);
+  if (IS_INTEGER_TYPE_TREE(t))
+    a = m3_cast(ssizetype, a);
+  a = m3_cast(sizetype, a);
   EXPR_REF (-2) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
                                 m3_cast (t_addr, EXPR_REF (-2)), a);
 #else
