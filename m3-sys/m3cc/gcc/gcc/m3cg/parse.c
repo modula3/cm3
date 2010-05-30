@@ -77,6 +77,7 @@
 
 #elif defined USE_MAPPED_LOCATION
 #define M3_USE_MAPPED_LOCATION
+#define SET_TYPE_MODE(node, mode) (TYPE_MODE(node) = (mode))
 #endif
 
 #ifdef GCC42
@@ -1832,9 +1833,7 @@ debug_struct (void)
                                             TYPE_SIZE (t),
                                             bitsize_int (BITS_PER_UNIT)));
   TYPE_ALIGN (t) = BITS_PER_UNIT;
-#ifndef GCC45 /* error: invalid lvalue in assignment */
-  TYPE_MODE (t) = QImode;
-#endif
+  SET_TYPE_MODE (t, QImode);
 
   d = build_decl (TYPE_DECL, NULL_TREE, t);
   TREE_CHAIN (d) = global_decls;
@@ -4594,13 +4593,11 @@ m3cg_copy (void)
                                     size_int(BITS_PER_UNIT));
   TYPE_ALIGN (ts) = TYPE_ALIGN (t);
 
-#ifndef GCC45 /* error: invalid lvalue in assignment */
   if (FLOAT_TYPE_P (t)) {
-    TYPE_MODE (ts) = mode_for_size (s, MODE_FLOAT, 0);
+    SET_TYPE_MODE (ts, mode_for_size (s, MODE_FLOAT, 0));
   } else {
-    TYPE_MODE (ts) = BLKmode;
+    SET_TYPE_MODE (ts, BLKmode);
   }
-#endif
 
   pts = build_pointer_type (ts);
 
