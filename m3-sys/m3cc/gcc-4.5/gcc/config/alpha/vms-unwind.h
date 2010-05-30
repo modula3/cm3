@@ -23,12 +23,16 @@
    see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
    <http://www.gnu.org/licenses/>.  */
 
+#ifndef __NEW_STARLET
+#define __NEW_STARLET
+#endif
 #include <stdlib.h>
 #include <stdio.h>
 #include <vms/pdscdef.h>
 #include <vms/libicb.h>
 #include <vms/chfctxdef.h>
 #include <vms/chfdef.h>
+#include <vms/lib$routines.h>
 
 #define MD_FALLBACK_FRAME_STATE_FOR alpha_vms_fallback_frame_state
 
@@ -286,6 +290,3 @@ alpha_vms_fallback_frame_state (struct _Unwind_Context *context,
 
   return _URC_NO_REASON;
 }
-
-
-
