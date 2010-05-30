@@ -402,15 +402,15 @@ extern char *strstr (const char *, const char *);
 #include <malloc.h>
 #endif
 
-#if defined (HAVE_DECL_MALLOC) && !HAVE_DECL_MALLOC
+#if defined (HAVE_DECL_MALLOC) && !HAVE_DECL_MALLOC && !defined(__vms)
 extern void *malloc (size_t);
 #endif
 
-#if defined (HAVE_DECL_CALLOC) && !HAVE_DECL_CALLOC
+#if defined (HAVE_DECL_CALLOC) && !HAVE_DECL_CALLOC && !defined(__vms)
 extern void *calloc (size_t, size_t);
 #endif
 
-#if defined (HAVE_DECL_REALLOC) && !HAVE_DECL_REALLOC
+#if defined (HAVE_DECL_REALLOC) && !HAVE_DECL_REALLOC && !defined(__vms)
 extern void *realloc (void *, size_t);
 #endif
 
