@@ -526,7 +526,7 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
             }
         }
       else
-        {			/* non-constant, 1-bit value */
+        {                       /* non-constant, 1-bit value */
           tree a, b;
           a = m3_build2 (BIT_AND_EXPR, t, y, v_one);
           b = m3_build2 (BIT_AND_EXPR, t, x,
@@ -536,7 +536,7 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
         }
     }
   else
-    {				/* multi-bit value */
+    {                           /* multi-bit value */
       tree saved_bits, new_bits;
       if (i + n < HOST_BITS_PER_WIDE_INT)
         {
@@ -570,7 +570,7 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
           saved_bits = m3_build1 (BIT_NOT_EXPR, t, left_shift (a, i));
         }
       else
-        {			/* n >= sizeof(int)*8 */
+        {                       /* n >= sizeof(int)*8 */
           tree mask;
           mask = m3_build2 (LSHIFT_EXPR, t, build_int_cst (t, ~0),
                             build_int_cst (t_int, n));
@@ -884,12 +884,12 @@ m3_write_globals (void)
            for offset 0. */
         {
           int j;
-          rtx r = DECL_RTL (var);	/* (mem ...) */
-          r = XEXP (r, 0);	/* (plus ...) or (reg ...) */
+          rtx r = DECL_RTL (var);       /* (mem ...) */
+          r = XEXP (r, 0);              /* (plus ...) or (reg ...) */
           if (REG_P (r)) {
             j = 0;
           } else {
-            r = XEXP (r, 1);	/* (const_int ...) */
+            r = XEXP (r, 1);    /* (const_int ...) */
             j = XWINT (r, 0);  /* offset */
           }
           VEC_index (constructor_elt, elts, idx)->value = size_int (j);
@@ -1201,37 +1201,37 @@ static GTY (()) varray_type all_labels;
 static GTY (()) varray_type expr_stack;
 static GTY (()) varray_type call_stack;
 
-#define STACK_PUSH(stk, x)	VARRAY_PUSH_TREE (stk, x)
-#define STACK_POP(stk)		VARRAY_POP (stk)
-#define STACK_REF(stk, n)	((&VARRAY_TOP_TREE (stk) + 1)[n])
+#define STACK_PUSH(stk, x)      VARRAY_PUSH_TREE (stk, x)
+#define STACK_POP(stk)          VARRAY_POP (stk)
+#define STACK_REF(stk, n)       ((&VARRAY_TOP_TREE (stk) + 1)[n])
 
-#define EXPR_PUSH(x)	STACK_PUSH (expr_stack, x)
-#define EXPR_POP()	STACK_POP (expr_stack)
-#define EXPR_REF(n)	STACK_REF (expr_stack, n)
+#define EXPR_PUSH(x)    STACK_PUSH (expr_stack, x)
+#define EXPR_POP()      STACK_POP (expr_stack)
+#define EXPR_REF(n)     STACK_REF (expr_stack, n)
 
 /* The call stack has triples on it: first the argument chain, then
    the type chain, then the static chain expression. */
-#define CALL_PUSH(a, t, s)		\
-    do					\
-      {					\
-        STACK_PUSH (call_stack, a);	\
-        STACK_PUSH (call_stack, t);	\
-        STACK_PUSH (call_stack, s);	\
-      }					\
+#define CALL_PUSH(a, t, s)              \
+    do                                  \
+      {                                 \
+        STACK_PUSH (call_stack, a);     \
+        STACK_PUSH (call_stack, t);     \
+        STACK_PUSH (call_stack, s);     \
+      }                                 \
     while (0)
 
-#define CALL_POP()			\
-    do					\
-      {					\
-        STACK_POP (call_stack);		\
-        STACK_POP (call_stack);		\
-        STACK_POP (call_stack);		\
-      }					\
+#define CALL_POP()                      \
+    do                                  \
+      {                                 \
+        STACK_POP (call_stack);         \
+        STACK_POP (call_stack);         \
+        STACK_POP (call_stack);         \
+      }                                 \
     while (0)
 
-#define CALL_TOP_ARG()		STACK_REF (call_stack, -3)
-#define CALL_TOP_TYPE()		STACK_REF (call_stack, -2)
-#define CALL_TOP_STATIC_CHAIN()	STACK_REF (call_stack, -1)
+#define CALL_TOP_ARG()          STACK_REF (call_stack, -3)
+#define CALL_TOP_TYPE()         STACK_REF (call_stack, -2)
+#define CALL_TOP_STATIC_CHAIN() STACK_REF (call_stack, -1)
 
 /*======================================================= OPTION HANDLING ===*/
 
@@ -3062,7 +3062,7 @@ m3cg_declare_local (void)
     }
 }
 
-static int current_param_count;	/* <0 => import_procedure, >0 => declare_procedure */
+static int current_param_count; /* <0 => import_procedure, >0 => declare_procedure */
 
 static void
 m3cg_declare_param (void)
