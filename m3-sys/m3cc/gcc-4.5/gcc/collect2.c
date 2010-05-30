@@ -1213,8 +1213,6 @@ main (int argc, char **argv)
   /* Unlock the stdio streams.  */
   unlock_std_streams ();
 
-  gcc_init_libintl ();
-
   /* Do not invoke xcalloc before this point, since locale needs to be
      set first, in case a diagnostic is issued.  */
 

@@ -238,25 +238,9 @@ extern int errno;
 # endif
 #endif
 
-#ifdef HAVE_LOCALE_H
-# include <locale.h>
-#endif
-
-#ifdef HAVE_LANGINFO_CODESET
-# include <langinfo.h>
-#endif
-
-#ifndef HAVE_SETLOCALE
-# define setlocale(category, locale) (locale)
-#endif
-
-#ifdef ENABLE_NLS
-#include <libintl.h>
-#else
 /* Stubs.  */
 # undef dgettext
 # define dgettext(package, msgid) (msgid)
-#endif
 
 #ifndef _
 # define _(msgid) dgettext (PACKAGE, msgid)
