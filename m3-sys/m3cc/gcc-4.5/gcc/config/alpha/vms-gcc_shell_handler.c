@@ -30,6 +30,9 @@
    [ABI] in comments refers to the "HP OpenVMS calling standard" document
    dated January 2005.  */
 
+#ifndef __NEW_STARLET
+#define __NEW_STARLET
+#endif
 #include <vms/chfdef.h>
 #include <vms/pdscdef.h>
 #include <vms/ssdef.h>
@@ -121,4 +124,3 @@ __gcc_shell_handler (struct chf$signal_array *sig_arr,
 
   return ret;
 }
-   
