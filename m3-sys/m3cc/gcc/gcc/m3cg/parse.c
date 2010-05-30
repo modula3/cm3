@@ -211,9 +211,9 @@ static tree pushdecl (tree decl);
 
 /* Langhooks.  */
 static tree builtin_function (const char *name, tree type, int function_code,
-			      enum built_in_class class,
-			      const char *library_name,
-			      tree attrs);
+                              enum built_in_class class,
+                              const char *library_name,
+                              tree attrs);
 static tree getdecls (void);
 static int global_bindings_p (void);
 #ifndef GCC45
@@ -338,74 +338,74 @@ m3_build_type (m3_type t, int s, int a)
     {
     case T_word:
       switch (s)
-	{
-	case 0:
-	  return t_word;
-	case 8:
-	  return t_word_8;
-	case 16:
-	  return t_word_16;
-	case 32:
-	  return t_word_32;
-	case 64:
-	  return t_word_64;
-	default:
-	  if (s == BITS_PER_INTEGER) return t_word;
-	}
+        {
+        case 0:
+          return t_word;
+        case 8:
+          return t_word_8;
+        case 16:
+          return t_word_16;
+        case 32:
+          return t_word_32;
+        case 64:
+          return t_word_64;
+        default:
+          if (s == BITS_PER_INTEGER) return t_word;
+        }
       break;
 
     case T_int:
       switch (s)
-	{
-	case 0:
-	  return t_int;
-	case 8:
-	  return t_int_8;
-	case 16:
-	  return t_int_16;
-	case 32:
-	  return t_int_32;
-	case 64:
-	  return t_int_64;
-	default:
-	  if (s == BITS_PER_INTEGER) return t_int;
-	}
+        {
+        case 0:
+          return t_int;
+        case 8:
+          return t_int_8;
+        case 16:
+          return t_int_16;
+        case 32:
+          return t_int_32;
+        case 64:
+          return t_int_64;
+        default:
+          if (s == BITS_PER_INTEGER) return t_int;
+        }
       break;
 
     case T_longword:
       switch (s)
-	{
-	case 0:
-	  return t_longword;
-	case 8:
-	  return t_word_8;
-	case 16:
-	  return t_word_16;
-	case 32:
-	  return t_word_32;
-	case 64:
-	  return t_word_64;
-	default:
-	  if (s == BITS_PER_INTEGER) return t_word;
-	}
+        {
+        case 0:
+          return t_longword;
+        case 8:
+          return t_word_8;
+        case 16:
+          return t_word_16;
+        case 32:
+          return t_word_32;
+        case 64:
+          return t_word_64;
+        default:
+          if (s == BITS_PER_INTEGER) return t_word;
+        }
       break;
 
     case T_longint:
       switch (s)
-	{
-	case 0:
-	  return t_longint;
-	case 8:
-	  return t_int_8;
-	case 16:
-	  return t_int_16;
-	case 32:
-	  return t_int_32;
-	case 64:
-	  return t_int_64;
-	default:
-	  if (s == BITS_PER_INTEGER) return t_int;
-	}
+        {
+        case 0:
+          return t_longint;
+        case 8:
+          return t_int_8;
+        case 16:
+          return t_int_16;
+        case 32:
+          return t_int_32;
+        case 64:
+          return t_int_64;
+        default:
+          if (s == BITS_PER_INTEGER) return t_int;
+        }
       break;
 
     case T_addr:
@@ -437,15 +437,15 @@ m3_build_type (m3_type t, int s, int a)
 
     case T_struct:
       {
-	tree ts = make_node (RECORD_TYPE);
-	TYPE_NAME (ts) = NULL_TREE;
-	TYPE_FIELDS (ts) = NULL_TREE;
-	TYPE_SIZE (ts) = bitsize_int (s);
-	TYPE_SIZE_UNIT (ts) = size_int (s / BITS_PER_UNIT);
-	TYPE_ALIGN (ts) = a;
+        tree ts = make_node (RECORD_TYPE);
+        TYPE_NAME (ts) = NULL_TREE;
+        TYPE_FIELDS (ts) = NULL_TREE;
+        TYPE_SIZE (ts) = bitsize_int (s);
+        TYPE_SIZE_UNIT (ts) = size_int (s / BITS_PER_UNIT);
+        TYPE_ALIGN (ts) = a;
 
-	compute_record_mode (ts);
-	return ts;
+        compute_record_mode (ts);
+        return ts;
       }
     default:
       break;
@@ -485,8 +485,8 @@ left_shift (tree t, int i)
 {
   if (i)
     t = m3_build2 (LSHIFT_EXPR,
-		   m3_unsigned_type (TREE_TYPE (t)), t,
-		   build_int_cst (t_int, i));
+                   m3_unsigned_type (TREE_TYPE (t)), t,
+                   build_int_cst (t_int, i));
   return t;
 }
 
@@ -502,8 +502,8 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
       (n < 0) || (n >= TYPE_PRECISION (t)))
     {
       return m3_do_insert (x, y,
-			   build_int_cst (t_int, i),
-			   build_int_cst (t_int, n), t);
+                           build_int_cst (t_int, i),
+                           build_int_cst (t_int, n), t);
     }
 
   if (n == 0)
@@ -512,72 +512,72 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
   if ((n == 1) && (i < HOST_BITS_PER_WIDE_INT))
     {
       if (host_integerp (y, 0))
-	{
-	  if (TREE_INT_CST_LOW (y) & 1)
-	    {
-	      return m3_build2 (BIT_IOR_EXPR, t, x,
-				build_int_cstu (t, (HOST_WIDE_INT)1 << i));
-	    }
-	  else
-	    {
-	      return m3_build2 (BIT_AND_EXPR, t, x,
-				m3_build1 (BIT_NOT_EXPR, t,
-					   build_int_cstu (t, (HOST_WIDE_INT)1 << i)));
-	    }
-	}
+        {
+          if (TREE_INT_CST_LOW (y) & 1)
+            {
+              return m3_build2 (BIT_IOR_EXPR, t, x,
+                                build_int_cstu (t, (HOST_WIDE_INT)1 << i));
+            }
+          else
+            {
+              return m3_build2 (BIT_AND_EXPR, t, x,
+                                m3_build1 (BIT_NOT_EXPR, t,
+                                           build_int_cstu (t, (HOST_WIDE_INT)1 << i)));
+            }
+        }
       else
-	{			/* non-constant, 1-bit value */
-	  tree a, b;
-	  a = m3_build2 (BIT_AND_EXPR, t, y, v_one);
-	  b = m3_build2 (BIT_AND_EXPR, t, x,
-			 m3_build1 (BIT_NOT_EXPR, t,
-				    build_int_cstu (t, (HOST_WIDE_INT)1 << i)));
-	  return m3_build2 (BIT_IOR_EXPR, t, b, left_shift (a, i));
-	}
+        {			/* non-constant, 1-bit value */
+          tree a, b;
+          a = m3_build2 (BIT_AND_EXPR, t, y, v_one);
+          b = m3_build2 (BIT_AND_EXPR, t, x,
+                         m3_build1 (BIT_NOT_EXPR, t,
+                                    build_int_cstu (t, (HOST_WIDE_INT)1 << i)));
+          return m3_build2 (BIT_IOR_EXPR, t, b, left_shift (a, i));
+        }
     }
   else
     {				/* multi-bit value */
       tree saved_bits, new_bits;
       if (i + n < HOST_BITS_PER_WIDE_INT)
-	{
-	  HOST_WIDE_INT mask = ((HOST_WIDE_INT)1 << n) - 1;
-	  saved_bits = m3_build1 (BIT_NOT_EXPR, t,
-				  build_int_cstu (t, mask << i));
-	  if (host_integerp (y, 0))
-	    {
-	      new_bits = build_int_cstu (t, (TREE_INT_CST_LOW (y) & mask) << i);
-	    }
-	  else
-	    {
-	      new_bits = m3_build2 (BIT_AND_EXPR, t, y,
-				    build_int_cstu (t, mask));
-	      new_bits = left_shift (new_bits, i);
-	    }
-	}
+        {
+          HOST_WIDE_INT mask = ((HOST_WIDE_INT)1 << n) - 1;
+          saved_bits = m3_build1 (BIT_NOT_EXPR, t,
+                                  build_int_cstu (t, mask << i));
+          if (host_integerp (y, 0))
+            {
+              new_bits = build_int_cstu (t, (TREE_INT_CST_LOW (y) & mask) << i);
+            }
+          else
+            {
+              new_bits = m3_build2 (BIT_AND_EXPR, t, y,
+                                    build_int_cstu (t, mask));
+              new_bits = left_shift (new_bits, i);
+            }
+        }
       else if (n < HOST_BITS_PER_WIDE_INT)
-	{
-	  HOST_WIDE_INT mask = ((HOST_WIDE_INT)1 << n) - 1;
-	  tree a = build_int_cstu (t, mask);
-	  if (host_integerp (y, 0))
-	    {
-	      new_bits = build_int_cstu (t, TREE_INT_CST_LOW (y) & mask);
-	    }
-	  else
-	    {
-	      new_bits = m3_build2 (BIT_AND_EXPR, t, y, a);
-	    }
-	  new_bits = left_shift (new_bits, i);
-	  saved_bits = m3_build1 (BIT_NOT_EXPR, t, left_shift (a, i));
-	}
+        {
+          HOST_WIDE_INT mask = ((HOST_WIDE_INT)1 << n) - 1;
+          tree a = build_int_cstu (t, mask);
+          if (host_integerp (y, 0))
+            {
+              new_bits = build_int_cstu (t, TREE_INT_CST_LOW (y) & mask);
+            }
+          else
+            {
+              new_bits = m3_build2 (BIT_AND_EXPR, t, y, a);
+            }
+          new_bits = left_shift (new_bits, i);
+          saved_bits = m3_build1 (BIT_NOT_EXPR, t, left_shift (a, i));
+        }
       else
-	{			/* n >= sizeof(int)*8 */
-	  tree mask;
-	  mask = m3_build2 (LSHIFT_EXPR, t, build_int_cst (t, ~0),
-			    build_int_cst (t_int, n));
-	  mask = m3_build1 (BIT_NOT_EXPR, t, mask);
-	  new_bits = left_shift (m3_build2 (BIT_AND_EXPR, t, y, mask), i);
-	  saved_bits = m3_build1 (BIT_NOT_EXPR, t, left_shift (mask, i));
-	}
+        {			/* n >= sizeof(int)*8 */
+          tree mask;
+          mask = m3_build2 (LSHIFT_EXPR, t, build_int_cst (t, ~0),
+                            build_int_cst (t_int, n));
+          mask = m3_build1 (BIT_NOT_EXPR, t, mask);
+          new_bits = left_shift (m3_build2 (BIT_AND_EXPR, t, y, mask), i);
+          saved_bits = m3_build1 (BIT_NOT_EXPR, t, left_shift (mask, i));
+        }
       x = m3_build2 (BIT_AND_EXPR, t, x, saved_bits);
       return m3_build2 (BIT_IOR_EXPR, t, x, new_bits);
     }
@@ -594,8 +594,8 @@ m3_do_extract (tree x, tree i, tree n, tree t)
   d = m3_build2 (LSHIFT_EXPR, m3_unsigned_type (t), c, b);
   e = m3_build2 (RSHIFT_EXPR, t, d, a);
   f = m3_build3 (COND_EXPR, t,
-		 m3_build2 (EQ_EXPR, boolean_type_node, n, v_zero),
-		 v_zero, e);
+                 m3_build2 (EQ_EXPR, boolean_type_node, n, v_zero),
+                 v_zero, e);
   return f;
 }
 
@@ -652,8 +652,8 @@ m3_mark_addressable (tree exp)
       case COMPONENT_REF:
       case ADDR_EXPR:
       case ARRAY_REF:
-	x = TREE_OPERAND (x, 0);
-	break;
+        x = TREE_OPERAND (x, 0);
+        break;
 
       case CONSTRUCTOR:
       case VAR_DECL:
@@ -661,11 +661,11 @@ m3_mark_addressable (tree exp)
       case PARM_DECL:
       case RESULT_DECL:
       case FUNCTION_DECL:
-	TREE_ADDRESSABLE (x) = 1;
-	return true;
+        TREE_ADDRESSABLE (x) = 1;
+        return true;
 
       default:
-	return true;
+        return true;
       }
 }
 
@@ -832,8 +832,8 @@ htab_eq_builtin (const PTR p1, const PTR p2)
 
 static tree
 builtin_function (const char *name, tree type, int function_code,
-		  enum built_in_class class, const char *library_name,
-		  tree attrs ATTRIBUTE_UNUSED)
+                  enum built_in_class class, const char *library_name,
+                  tree attrs ATTRIBUTE_UNUSED)
 {
   tree id = get_identifier (name);
   tree decl = build_decl (FUNCTION_DECL, id, type);
@@ -848,7 +848,7 @@ builtin_function (const char *name, tree type, int function_code,
     tree *slot;
     if (!builtins)
       builtins = htab_create_ggc (1021, htab_hash_builtin,
-				  htab_eq_builtin, NULL);
+                                  htab_eq_builtin, NULL);
     slot = (tree *)htab_find_slot (builtins, decl, INSERT);
     gcc_assert (*slot == NULL);
     *slot = decl;
@@ -874,26 +874,26 @@ m3_write_globals (void)
     FOR_EACH_CONSTRUCTOR_ELT (elts, idx, index, value) {
       tree var = (tree)DECL_LANG_SPECIFIC(index);
       if (var) {
-	gcc_assert(TREE_CODE(var) == VAR_DECL);
-	gcc_assert (TREE_ADDRESSABLE (var)); /* ensure optimizers play fair */
-	/* take apart the rtx, which is of the form
-	   (insn n m p (use (mem: (plus: (reg: r $fp)
-	   (const_int offset))) ...)
-	   or
-	   (insn n m p (use (mem: (reg: r $fp))) ...)
-	   for offset 0. */
-	{
-	  int j;
-	  rtx r = DECL_RTL (var);	/* (mem ...) */
-	  r = XEXP (r, 0);	/* (plus ...) or (reg ...) */
-	  if (REG_P (r)) {
-	    j = 0;
-	  } else {
-	    r = XEXP (r, 1);	/* (const_int ...) */
-	    j = XWINT (r, 0);  /* offset */
-	  }
-	  VEC_index (constructor_elt, elts, idx)->value = size_int (j);
-	}
+        gcc_assert(TREE_CODE(var) == VAR_DECL);
+        gcc_assert (TREE_ADDRESSABLE (var)); /* ensure optimizers play fair */
+        /* take apart the rtx, which is of the form
+           (insn n m p (use (mem: (plus: (reg: r $fp)
+           (const_int offset))) ...)
+           or
+           (insn n m p (use (mem: (reg: r $fp))) ...)
+           for offset 0. */
+        {
+          int j;
+          rtx r = DECL_RTL (var);	/* (mem ...) */
+          r = XEXP (r, 0);	/* (plus ...) or (reg ...) */
+          if (REG_P (r)) {
+            j = 0;
+          } else {
+            r = XEXP (r, 1);	/* (const_int ...) */
+            j = XWINT (r, 0);  /* offset */
+          }
+          VEC_index (constructor_elt, elts, idx)->value = size_int (j);
+        }
       }
     }
   }
@@ -907,7 +907,7 @@ static void
 sync_builtin (enum built_in_function fncode, tree type, const char *name)
 {
   tree decl = builtin_function (name, type, fncode, BUILT_IN_NORMAL, NULL,
-				NULL_TREE);
+                                NULL_TREE);
   TREE_NOTHROW (decl) = 1;
   built_in_decls[fncode] = implicit_built_in_decls[fncode] = decl;
 }
@@ -1059,86 +1059,86 @@ m3_init_decl_processing (void)
 
   t = t_int_8;
   sync_builtin (BUILT_IN_BOOL_COMPARE_AND_SWAP_1,
-		build_function_type_list (boolean_type_node, t_addr, t, t,
-					  NULL_TREE),
-		"__sync_bool_compare_and_swap_1");
+                build_function_type_list (boolean_type_node, t_addr, t, t,
+                                          NULL_TREE),
+                "__sync_bool_compare_and_swap_1");
   sync_builtin (BUILT_IN_VAL_COMPARE_AND_SWAP_1,
-		build_function_type_list (t, t_addr, t, t, NULL_TREE),
-		"__sync_val_compare_and_swap_1");
+                build_function_type_list (t, t_addr, t, t, NULL_TREE),
+                "__sync_val_compare_and_swap_1");
 
   t = t_int_16;
   sync_builtin (BUILT_IN_BOOL_COMPARE_AND_SWAP_2,
-		build_function_type_list (boolean_type_node, t_addr, t, t,
-					  NULL_TREE),
-		"__sync_bool_compare_and_swap_2");
+                build_function_type_list (boolean_type_node, t_addr, t, t,
+                                          NULL_TREE),
+                "__sync_bool_compare_and_swap_2");
   sync_builtin (BUILT_IN_VAL_COMPARE_AND_SWAP_2,
-		build_function_type_list (t, t_addr, t, t, NULL_TREE),
-		"__sync_val_compare_and_swap_2");
+                build_function_type_list (t, t_addr, t, t, NULL_TREE),
+                "__sync_val_compare_and_swap_2");
 
   t = t_int_32;
   sync_builtin (BUILT_IN_BOOL_COMPARE_AND_SWAP_4,
-		build_function_type_list (boolean_type_node, t_addr, t, t,
-					  NULL_TREE),
-		"__sync_bool_compare_and_swap_4");
+                build_function_type_list (boolean_type_node, t_addr, t, t,
+                                          NULL_TREE),
+                "__sync_bool_compare_and_swap_4");
   sync_builtin (BUILT_IN_VAL_COMPARE_AND_SWAP_4,
-		build_function_type_list (t, t_addr, t, t, NULL_TREE),
-		"__sync_val_compare_and_swap_4");
+                build_function_type_list (t, t_addr, t, t, NULL_TREE),
+                "__sync_val_compare_and_swap_4");
 
   t = t_int_64;
   sync_builtin (BUILT_IN_BOOL_COMPARE_AND_SWAP_8,
-		build_function_type_list (boolean_type_node, t_addr, t, t,
-					  NULL_TREE),
-		"__sync_bool_compare_and_swap_8");
+                build_function_type_list (boolean_type_node, t_addr, t, t,
+                                          NULL_TREE),
+                "__sync_bool_compare_and_swap_8");
   sync_builtin (BUILT_IN_VAL_COMPARE_AND_SWAP_8,
-		build_function_type_list (t, t_addr, t, t, NULL_TREE),
-		"__sync_val_compare_and_swap_8");
+                build_function_type_list (t, t_addr, t, t, NULL_TREE),
+                "__sync_val_compare_and_swap_8");
 
   sync_builtin (BUILT_IN_SYNCHRONIZE,
-		build_function_type_list (t_void, NULL_TREE),
-		"__sync_synchronize");
+                build_function_type_list (t_void, NULL_TREE),
+                "__sync_synchronize");
 
   t = t_int_8;
   sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_1,
-		build_function_type_list (t, t_addr, t, NULL_TREE),
-		"__sync_lock_test_and_set_1");
+                build_function_type_list (t, t_addr, t, NULL_TREE),
+                "__sync_lock_test_and_set_1");
   sync_builtin (BUILT_IN_LOCK_RELEASE_1,
-		build_function_type_list (t, t_addr, NULL_TREE),
-		"__sync_lock_release_1");
+                build_function_type_list (t, t_addr, NULL_TREE),
+                "__sync_lock_release_1");
 
   t = t_int_16;
   sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_2,
-		build_function_type_list (t, t_addr, t, NULL_TREE),
-		"__sync_lock_test_and_set_2");
+                build_function_type_list (t, t_addr, t, NULL_TREE),
+                "__sync_lock_test_and_set_2");
   sync_builtin (BUILT_IN_LOCK_RELEASE_2,
-		build_function_type_list (t, t_addr, NULL_TREE),
-		"__sync_lock_release_2");
+                build_function_type_list (t, t_addr, NULL_TREE),
+                "__sync_lock_release_2");
 
   t = t_int_32;
   sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_4,
-		build_function_type_list (t, t_addr, t, NULL_TREE),
-		"__sync_lock_test_and_set_4");
+                build_function_type_list (t, t_addr, t, NULL_TREE),
+                "__sync_lock_test_and_set_4");
   sync_builtin (BUILT_IN_LOCK_RELEASE_4,
-		 build_function_type_list (t, t_addr, NULL_TREE),
-		 "__sync_lock_release_4");
+                 build_function_type_list (t, t_addr, NULL_TREE),
+                 "__sync_lock_release_4");
 
   t = t_int_64;
   sync_builtin (BUILT_IN_LOCK_TEST_AND_SET_8,
-		build_function_type_list (t, t_addr, t, NULL_TREE),
-		"__sync_lock_test_and_set_8");
+                build_function_type_list (t, t_addr, t, NULL_TREE),
+                "__sync_lock_test_and_set_8");
   sync_builtin (BUILT_IN_LOCK_RELEASE_8,
-		build_function_type_list (t, t_addr, NULL_TREE),
-		"__sync_lock_release_8");
+                build_function_type_list (t, t_addr, NULL_TREE),
+                "__sync_lock_release_8");
 
 #if 0
   t = build_function_type_list (t_addr, t_addr, t_addr, t_int, NULL_TREE);
   memcpy_proc = builtin_function ("memcpy", t, BUILT_IN_MEMCPY,
-				  BUILT_IN_NORMAL, NULL, NULL_TREE);
+                                  BUILT_IN_NORMAL, NULL, NULL_TREE);
   memmove_proc = builtin_function ("memmove", t, BUILT_IN_MEMMOVE,
-				   BUILT_IN_NORMAL, NULL, NULL_TREE);
+                                   BUILT_IN_NORMAL, NULL, NULL_TREE);
 
   t = build_function_type_list (t_addr, t_addr, t_int, t_int, NULL_TREE);
   memset_proc = builtin_function ("memset", t, BUILT_IN_MEMSET,
-				  BUILT_IN_NORMAL, NULL, NULL_TREE);
+                                  BUILT_IN_NORMAL, NULL, NULL_TREE);
 #else
   memcpy_proc = built_in_decls[BUILT_IN_MEMCPY];
   memmove_proc = built_in_decls[BUILT_IN_MEMMOVE];
@@ -1148,15 +1148,15 @@ m3_init_decl_processing (void)
 
   t = build_function_type_list (t_void, NULL_TREE);
   set_union_proc  = builtin_function ("set_union",
-				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+                                      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_diff_proc   = builtin_function ("set_difference",
-				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+                                      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_inter_proc  = builtin_function ("set_intersection",
-				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+                                      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_sdiff_proc  = builtin_function ("set_sym_difference",
-				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+                                      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
   set_range_proc  = builtin_function ("set_range",
-				      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+                                      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
 
   t = build_function_type_list (t_int, NULL_TREE);
   set_gt_proc
@@ -1214,18 +1214,18 @@ static GTY (()) varray_type call_stack;
 #define CALL_PUSH(a, t, s)		\
     do					\
       {					\
-	STACK_PUSH (call_stack, a);	\
-	STACK_PUSH (call_stack, t);	\
-	STACK_PUSH (call_stack, s);	\
+        STACK_PUSH (call_stack, a);	\
+        STACK_PUSH (call_stack, t);	\
+        STACK_PUSH (call_stack, s);	\
       }					\
     while (0)
 
 #define CALL_POP()			\
     do					\
       {					\
-	STACK_POP (call_stack);		\
-	STACK_POP (call_stack);		\
-	STACK_POP (call_stack);		\
+        STACK_POP (call_stack);		\
+        STACK_POP (call_stack);		\
+        STACK_POP (call_stack);		\
       }					\
     while (0)
 
@@ -1358,7 +1358,7 @@ scan_cc (void)
   case 1: return build_tree_list (get_identifier ("stdcall"), NULL);
   default:
     fatal_error(" *** invalid calling convention: 0x%x, at m3cg_lineno %d",
-		id, m3cg_lineno);
+                id, m3cg_lineno);
   }
 }
 
@@ -1376,10 +1376,10 @@ scan_string (void)
 /*----------------------------------------------------------------- types ---*/
 
 #define IS_WORD_TYPE(t) (t == T_word_32 || t == T_word_8 || t == T_word_16 || \
-			 t == T_word_64 || t == T_word)
+                         t == T_word_64 || t == T_word)
 
 #define IS_INTEGER_TYPE(t) (t == T_int_32 || t == T_int_8 || t == T_int_16 || \
-			    t == T_int_64 || t == T_int)
+                            t == T_int_64 || t == T_int)
 #ifdef GCC45
 #define IS_INTEGER_TYPE_TREE(t) (t == t_int_32 || t == t_int_8 \
                 || t == t_int_16 || t == t_int_64 || t == t_int)
@@ -1564,8 +1564,8 @@ scan_float (unsigned *out_Kind)
     unsigned Size;
     const struct real_format* format;
   } Map[] = { { &t_reel ,  (FLOAT_TYPE_SIZE / 8), &ieee_single_format },
-	      { &t_lreel, (DOUBLE_TYPE_SIZE / 8), &ieee_double_format },
-	      { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8), &ieee_double_format }};
+              { &t_lreel, (DOUBLE_TYPE_SIZE / 8), &ieee_double_format },
+              { &t_xreel, (LONG_DOUBLE_TYPE_SIZE / 8), &ieee_double_format }};
   unsigned Size;
   REAL_VALUE_TYPE val;
 
@@ -1580,7 +1580,7 @@ scan_float (unsigned *out_Kind)
   if (Kind >= (sizeof(Map) / sizeof(Map[0])))
     {
       fatal_error(" *** invalid floating point value, precision = 0x%x, at m3cg_lineno %d",
-		  Kind, m3cg_lineno);
+                  Kind, m3cg_lineno);
     }
   *out_Kind = Kind;
   Size = Map[Kind].Size;
@@ -1608,28 +1608,28 @@ scan_float (unsigned *out_Kind)
     {
       union
       {
-	unsigned char Bytes[sizeof(long double)]; /* currently double suffices */
-	float Float;
-	double Double;
-	long double LongDouble; /* not currently used */
+        unsigned char Bytes[sizeof(long double)]; /* currently double suffices */
+        float Float;
+        double Double;
+        long double LongDouble; /* not currently used */
       } u = { { 0 } };
 
       /* repack the bytes adjacent to each other */
 
       for (i = 0;  i < Size;  i++)
         {
-	  u.Bytes[i] = Bytes[i / 4 * sizeof(long) + i % 4];
+          u.Bytes[i] = Bytes[i / 4 * sizeof(long) + i % 4];
         }
       if (Size == 4)
         {
-	  fprintf(stderr," float %f bytes 0x%02x%02x%02x%02x\n", u.Float, u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3]);
+          fprintf(stderr," float %f bytes 0x%02x%02x%02x%02x\n", u.Float, u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3]);
         }
       else
         {
-	  fprintf(stderr," double %f bytes 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
-		  u.Double,
-		  u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3],
-		  u.Bytes[4], u.Bytes[5], u.Bytes[6], u.Bytes[7]);
+          fprintf(stderr," double %f bytes 0x%02x%02x%02x%02x%02x%02x%02x%02x\n",
+                  u.Double,
+                  u.Bytes[0], u.Bytes[1], u.Bytes[2], u.Bytes[3],
+                  u.Bytes[4], u.Bytes[5], u.Bytes[6], u.Bytes[7]);
         }
     }
 
@@ -1667,7 +1667,7 @@ varray_extend (varray_type va, size_t n)
   if (n > num_elements)
     {
       do
-	num_elements *= 2;
+        num_elements *= 2;
       while (n > num_elements);
       VARRAY_GROW (va, num_elements);
     }
@@ -1684,18 +1684,18 @@ scan_var (int code)
   if (code == ERROR_MARK)
     {
       if (VARRAY_TREE (all_vars, i) == NULL)
-	{
-	  fatal_error ("*** variable should already exist, v.0x%x, line %d",
-		       i, m3cg_lineno);
-	}
+        {
+          fatal_error ("*** variable should already exist, v.0x%x, line %d",
+                       i, m3cg_lineno);
+        }
     }
   else
     {
       if (VARRAY_TREE (all_vars, i) != NULL)
-	{
-	  fatal_error ("*** variable should not already exist, v.0x%x, line %d",
-		       i, m3cg_lineno);
-	}
+        {
+          fatal_error ("*** variable should not already exist, v.0x%x, line %d",
+                       i, m3cg_lineno);
+        }
       VARRAY_TREE (all_vars, i) = make_node (code);
       DECL_NAME (VARRAY_TREE (all_vars, i)) = NULL_TREE;
     }
@@ -1764,7 +1764,7 @@ debug_tag (char kind, unsigned long id, ...)
   fmt = va_arg (args, char *);
   current_dbg_type_tag[sizeof(current_dbg_type_tag) - 2] = 0;
   vsnprintf (current_dbg_type_tag + UID_SIZE + 3,
-	     sizeof(current_dbg_type_tag) - (UID_SIZE + 3), fmt, args);
+             sizeof(current_dbg_type_tag) - (UID_SIZE + 3), fmt, args);
   if (current_dbg_type_tag[sizeof(current_dbg_type_tag) - 2])
   {
     current_dbg_type_tag[sizeof(current_dbg_type_tag) - 1] = 0;
@@ -1829,8 +1829,8 @@ debug_struct (void)
   TYPE_SIZE (t) = bitsize_one_node;
   TYPE_SIZE_UNIT (t) = convert (sizetype,
                                 size_binop (FLOOR_DIV_EXPR,
-				            TYPE_SIZE (t),
-				            bitsize_int (BITS_PER_UNIT)));
+                                            TYPE_SIZE (t),
+                                            bitsize_int (BITS_PER_UNIT)));
   TYPE_ALIGN (t) = BITS_PER_UNIT;
 #ifndef GCC45 /* error: invalid lvalue in assignment */
   TYPE_MODE (t) = QImode;
@@ -1909,7 +1909,7 @@ static void add_stmt (tree t)
   if (EXPR_P (t) && code != LABEL_EXPR)
     {
       if (!EXPR_HAS_LOCATION (t))
-	SET_EXPR_LOCATION (t, input_location);
+        SET_EXPR_LOCATION (t, input_location);
     }
 
   TREE_USED (t) = 1;
@@ -1972,7 +1972,7 @@ proc_addr (tree p)
   TREE_NO_TRAMPOLINE (expr) = 1;
 #else
   TREE_STATIC (expr) = 1; /* see check for TREE_STATIC on ADDR_EXPR
-			     in tree-nested.c */
+                             in tree-nested.c */
 #endif
   return expr;
 }
@@ -1988,10 +1988,10 @@ m3_pop_param (tree t)
 {
   CALL_TOP_ARG ()
     = chainon (CALL_TOP_ARG (),
-	       build_tree_list (NULL_TREE, EXPR_REF (-1)));
+               build_tree_list (NULL_TREE, EXPR_REF (-1)));
   CALL_TOP_TYPE ()
     = chainon (CALL_TOP_TYPE (),
-	       build_tree_list (NULL_TREE, t));
+               build_tree_list (NULL_TREE, t));
   EXPR_POP ();
 }
 
@@ -2004,7 +2004,7 @@ m3_call_direct (tree p, tree t)
 
   TREE_USED (p) = 1;
   call = fold_build3 (CALL_EXPR, t, proc_addr (p), CALL_TOP_ARG (),
-		      CALL_TOP_STATIC_CHAIN ());
+                      CALL_TOP_STATIC_CHAIN ());
   if (t == t_void) {
     add_stmt (call);
   } else {
@@ -2018,14 +2018,14 @@ static void
 m3_call_indirect (tree t, tree cc ATTRIBUTE_UNUSED)
 {
   tree argtypes = chainon (CALL_TOP_TYPE (),
-			   tree_cons (NULL_TREE, t_void, NULL_TREE));
+                           tree_cons (NULL_TREE, t_void, NULL_TREE));
   tree fntype = build_pointer_type (build_function_type (t, argtypes));
   tree call;
   tree fnaddr = EXPR_REF (-1);
   EXPR_POP ();
 
   call = build3 (CALL_EXPR, t, m3_cast (fntype, fnaddr), CALL_TOP_ARG (),
-		 CALL_TOP_STATIC_CHAIN ());
+                 CALL_TOP_STATIC_CHAIN ());
   if (t == t_void) {
     add_stmt (call);
   } else {
@@ -2042,7 +2042,7 @@ m3_volatilize_decl (tree decl)
 {
   if (!TYPE_VOLATILE(TREE_TYPE(decl)) && !TREE_STATIC(decl)
       && (TREE_CODE(decl) == VAR_DECL
-	  || TREE_CODE(decl) == PARM_DECL)) {
+          || TREE_CODE(decl) == PARM_DECL)) {
     TREE_TYPE(decl) = build_qualified_type(TREE_TYPE(decl), TYPE_QUAL_VOLATILE);
     TREE_THIS_VOLATILE(decl) = 1;
     TREE_SIDE_EFFECTS(decl) = 1;
@@ -2076,15 +2076,15 @@ m3_call_direct (tree p, tree t)
     tree block, decl;
     /* call to setjmp: make locals volatile */
     for (block = current_block;
-	 block != current_function_decl;
-	 block = BLOCK_SUPERCONTEXT(block)) {
+         block != current_function_decl;
+         block = BLOCK_SUPERCONTEXT(block)) {
       for (decl = BLOCK_VARS(block); decl; decl = TREE_CHAIN(decl)) {
-	m3_volatilize_decl(decl);
+        m3_volatilize_decl(decl);
       }
     }
     /* and arguments */
     for (decl = DECL_ARGUMENTS(current_function_decl);
-	 decl; decl = TREE_CHAIN(decl)) {
+         decl; decl = TREE_CHAIN(decl)) {
       m3_volatilize_decl(decl);
     }
   }
@@ -2129,13 +2129,13 @@ m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
   {
 #ifndef GCC42
     v = m3_build3 (BIT_FIELD_REF, src_t, v, TYPE_SIZE (src_t),
-		   bitsize_int (o));
+                   bitsize_int (o));
 #else
   /* failsafe, but inefficient */
     v = m3_build1 (ADDR_EXPR, t_addr, v);
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
     v = m3_build1 (INDIRECT_REF, src_t,
-		   m3_cast (build_pointer_type (src_t), v));
+                   m3_cast (build_pointer_type (src_t), v));
 #endif
   }
   TREE_THIS_VOLATILE(v) = TREE_SIDE_EFFECTS(v) = 1; /* force this to avoid aliasing problems */
@@ -2153,13 +2153,13 @@ m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
   {
 #ifndef GCC42
     v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
-		   bitsize_int (o));
+                   bitsize_int (o));
 #else
   /* failsafe, but inefficient */
     v = m3_build1 (ADDR_EXPR, t_addr, v);
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
     v = m3_build1 (INDIRECT_REF, dst_t,
-		   m3_cast (build_pointer_type (dst_t), v));
+                   m3_cast (build_pointer_type (dst_t), v));
 #endif
   }
   TREE_THIS_VOLATILE(v) = TREE_SIDE_EFFECTS(v) = 1; /* force this to avoid aliasing problems */
@@ -2231,7 +2231,7 @@ declare_fault_proc (void)
   tree top_block  = make_node (BLOCK);
 
   proc = build_decl (FUNCTION_DECL, get_identifier ("_m3_fault"),
-		     build_function_type_list (t_void, t_word, NULL_TREE));
+                     build_function_type_list (t_void, t_word, NULL_TREE));
 
   resultdecl = build_decl (RESULT_DECL, NULL_TREE, t_void);
   DECL_CONTEXT (resultdecl) = proc;
@@ -2330,8 +2330,8 @@ emit_fault_proc (void)
   /* Attach block to the function */
   gcc_assert (current_block == BLOCK_SUBBLOCKS (DECL_INITIAL (p)));
   DECL_SAVED_TREE (p) = build3 (BIND_EXPR, t_void,
-				BLOCK_VARS (current_block),
-				current_stmts, current_block);
+                                BLOCK_VARS (current_block),
+                                current_stmts, current_block);
   current_block = TREE_VALUE (pending_blocks);
   pending_blocks = TREE_CHAIN (pending_blocks);
   current_stmts = TREE_VALUE (pending_stmts);
@@ -2675,13 +2675,13 @@ m3cg_declare_subrange (void)
 
   if (option_types_trace)
     fprintf(stderr,
-	    "  subrange id 0x%lx"
-	    ", a0 " HOST_WIDE_INT_PRINT_DEC
-	    ", a1 " HOST_WIDE_INT_PRINT_DEC
-	    ", b0 " HOST_WIDE_INT_PRINT_DEC
-	    ", b1 " HOST_WIDE_INT_PRINT_DEC
-	    ", size 0x%lx\n",
-	    my_id, a0, a1, b0, b1, size);
+            "  subrange id 0x%lx"
+            ", a0 " HOST_WIDE_INT_PRINT_DEC
+            ", a1 " HOST_WIDE_INT_PRINT_DEC
+            ", b0 " HOST_WIDE_INT_PRINT_DEC
+            ", b1 " HOST_WIDE_INT_PRINT_DEC
+            ", size 0x%lx\n",
+            my_id, a0, a1, b0, b1, size);
 
   p = buff; 
   p_limit = p + sizeof(buff); 
@@ -2716,7 +2716,7 @@ m3cg_declare_pointer (void)
   }
 
   debug_tag ('Y', my_id, "_%d_%d_%d_%s", GET_MODE_BITSIZE (Pmode),
-	     traced, (brand ? 1 : 0), (brand ? brand : "" ));
+             traced, (brand ? 1 : 0), (brand ? brand : "" ));
   debug_field_id (target_id);
   debug_struct ();
 }
@@ -2748,7 +2748,7 @@ m3cg_declare_proctype (void)
             "  proctype id 0x%lx, result id 0x%lx, formals 0x%lx, raises 0x%lx\n",
             my_id, result_id, n_formals, n_raises);
   debug_tag ('P', my_id, "_%d_%c%ld", GET_MODE_BITSIZE (Pmode),
-	     n_raises < 0 ? 'A' : 'L', MAX (n_raises, 0));
+             n_raises < 0 ? 'A' : 'L', MAX (n_raises, 0));
   current_dbg_type_count1 = n_formals;
   current_dbg_type_count2 = MAX (0, n_raises);
   debug_field_id (result_id);
@@ -2806,7 +2806,7 @@ m3cg_declare_object (void)
   }
 
   debug_tag ('O', my_id, "_%d_%ld_%d_%d_%s", POINTER_SIZE, n_fields, traced,
-	     (brand ? 1:0), (brand ? brand : ""));
+             (brand ? 1:0), (brand ? brand : ""));
   debug_field_id (super_id);
   current_dbg_type_count1 = n_fields;
   current_dbg_type_count2 = n_methods;
@@ -2826,8 +2826,8 @@ m3cg_declare_method (void)
     fprintf(stderr, "  method %s typeid 0x%lx\n", name, my_id);
 
   debug_field_fmt (my_id, "_%d_%d_%s",
-		   current_dbg_type_count3++  * GET_MODE_BITSIZE (Pmode),
-		   GET_MODE_BITSIZE (Pmode), name);
+                   current_dbg_type_count3++  * GET_MODE_BITSIZE (Pmode),
+                   GET_MODE_BITSIZE (Pmode), name);
   current_dbg_type_count2--;
   if (current_dbg_type_count1 == 0 && current_dbg_type_count2 == 0) {
     debug_struct ();
@@ -2906,7 +2906,7 @@ m3cg_import_global (void)
   DECL_NAME(v) = fix_name (n, id);
   if (option_vars_trace)
     fprintf(stderr, "  import var %s type 0x%x size 0x%lx alignment 0x%lx\n",
-	    IDENTIFIER_POINTER(DECL_NAME(v)), t, s, a);
+            IDENTIFIER_POINTER(DECL_NAME(v)), t, s, a);
   DECL_EXTERNAL (v) = 1;
   TREE_PUBLIC   (v) = 1;
   TREE_TYPE (v) = m3_build_type (t, s, a);
@@ -2927,7 +2927,7 @@ m3cg_declare_segment (void)
   DECL_NAME (v) = fix_name (n, id);
   if (option_vars_trace)
     fprintf(stderr, "  segment %s typeid 0x%lx\n",
-	    IDENTIFIER_POINTER(DECL_NAME(v)), id);
+            IDENTIFIER_POINTER(DECL_NAME(v)), id);
   /* we really don't have an idea of what the type of this var is; let's try
      to put something that will be good enough for all the uses of this var we
      are going to see before we have a bind_segment. Use a large size so that
@@ -2948,7 +2948,7 @@ m3cg_declare_segment (void)
   global_decls = v;
 
   /* do not use "n", it is going to go away at the next instruction;
-	 skip the 'MI_' or 'MM_' prefix. */
+     skip the 'MI_' or 'MM_' prefix. */
   current_unit_name = IDENTIFIER_POINTER (DECL_NAME (v)) + 3;
 }
 
@@ -3098,7 +3098,7 @@ m3cg_declare_param (void)
   DECL_NAME (v) = fix_name (n, id);
   if (option_procs_trace)
     fprintf(stderr, "  param %s type 0x%x typeid 0x%lx bytesize 0x%lx alignment 0x%lx in_memory 0x%x up_level 0x%x\n",
-	    IDENTIFIER_POINTER(DECL_NAME(v)), t, id, s, a, in_memory, up_level);
+            IDENTIFIER_POINTER(DECL_NAME(v)), t, id, s, a, in_memory, up_level);
   TREE_TYPE (v) = m3_build_type (t, s, a);
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
@@ -3194,9 +3194,9 @@ m3cg_end_init (void)
   /* remember this init so we can fix any init_offset later */
   pending_inits
     = tree_cons (NULL_TREE,
-		 build_constructor_from_list (current_record_type,
-					      nreverse (current_record_vals)),
-		 pending_inits);
+                 build_constructor_from_list (current_record_type,
+                                              nreverse (current_record_vals)),
+                 pending_inits);
   DECL_INITIAL (v) = TREE_VALUE (pending_inits);
 }
 
@@ -3330,10 +3330,10 @@ m3cg_import_procedure (void)
   if (INTEGRAL_TYPE_P (return_type)) {
     if (TYPE_UNSIGNED (return_type)) {
       if (TYPE_SIZE (return_type) <= TYPE_SIZE (t_word))
-	return_type = t_word;
+        return_type = t_word;
     } else {
       if (TYPE_SIZE (return_type) <= TYPE_SIZE (t_int))
-	return_type = t_int;
+        return_type = t_int;
     }
   }
 #endif
@@ -3388,10 +3388,10 @@ m3cg_declare_procedure (void)
   if (INTEGRAL_TYPE_P (return_type)) {
     if (TYPE_UNSIGNED (return_type)) {
       if (TYPE_SIZE (return_type) <= TYPE_SIZE (t_word))
-	return_type = t_word;
+        return_type = t_word;
     } else {
       if (TYPE_SIZE (return_type) <= TYPE_SIZE (t_int))
-	return_type = t_int;
+        return_type = t_int;
     }
   }
 #endif
@@ -3491,8 +3491,8 @@ m3cg_end_procedure (void)
   /* Attach block to the function */
   gcc_assert (current_block == BLOCK_SUBBLOCKS (DECL_INITIAL (p)));
   DECL_SAVED_TREE (p) = build3 (BIND_EXPR, t_void,
-				BLOCK_VARS (current_block),
-				current_stmts, current_block);
+                                BLOCK_VARS (current_block),
+                                current_stmts, current_block);
   current_block = TREE_VALUE (pending_blocks);
   pending_blocks = TREE_CHAIN (pending_blocks);
   current_stmts = TREE_VALUE (pending_stmts);
@@ -3506,7 +3506,7 @@ m3cg_end_procedure (void)
   if (current_block)
     {
       /* Register this function with cgraph just far enough to get it
-	 added to our parent's nested function list.  */
+         added to our parent's nested function list.  */
       (void) cgraph_node (p);
     }
   else
@@ -3535,8 +3535,8 @@ static void
 m3cg_end_block (void)
 {
   tree bind = build3 (BIND_EXPR, t_void,
-		      BLOCK_VARS (current_block),
-		      current_stmts, current_block);
+                      BLOCK_VARS (current_block),
+                      current_stmts, current_block);
   current_block = TREE_VALUE (pending_blocks);
   pending_blocks = TREE_CHAIN (pending_blocks);
   current_stmts = TREE_VALUE (pending_stmts);
@@ -3581,7 +3581,7 @@ m3cg_set_label (void)
 #else
       list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
       DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels
-	= gen_rtx_EXPR_LIST (VOIDmode, r, list);
+        = gen_rtx_EXPR_LIST (VOIDmode, r, list);
 #endif
       bar = make_node(ASM_EXPR);
       TREE_TYPE(bar) = t_void;
@@ -3619,8 +3619,8 @@ m3cg_if_true (void)
   EXPR_POP ();
 
   add_stmt (build3 (COND_EXPR, t_void, cond,
-		    build1 (GOTO_EXPR, t_void, l),
-		    NULL_TREE));
+                    build1 (GOTO_EXPR, t_void, l),
+                    NULL_TREE));
 }
 
 static void
@@ -3633,8 +3633,8 @@ m3cg_if_false (void)
   tree cond = m3_cast (boolean_type_node, EXPR_REF (-1));
   EXPR_POP ();
   add_stmt (build3 (COND_EXPR, t_void, cond,
-		    NULL_TREE,
-		    build1 (GOTO_EXPR, t_void, l)));
+                    NULL_TREE,
+                    build1 (GOTO_EXPR, t_void, l)));
 }
 
 static void
@@ -3647,8 +3647,8 @@ m3cg_if_compare (enum tree_code o)
   tree t1 = m3_cast (t, EXPR_REF (-1));
   tree t2 = m3_cast (t, EXPR_REF (-2));
   add_stmt (build3 (COND_EXPR, t_void, build2 (o, boolean_type_node, t2, t1),
-		    build1 (GOTO_EXPR, t_void, l),
-		    NULL_TREE));
+                    build1 (GOTO_EXPR, t_void, l),
+                    NULL_TREE));
   EXPR_POP ();
   EXPR_POP ();
 }
@@ -3681,7 +3681,7 @@ m3cg_case_jump (void)
     tree case_label = create_artificial_label ();
 #endif
     add_stmt (build3 (CASE_LABEL_EXPR, t_void, build_int_cst (t_int, i),
-		      NULL_TREE, case_label));
+                      NULL_TREE, case_label));
     add_stmt (build1 (GOTO_EXPR, t_void, target_label));
   }
   body = current_stmts;
@@ -3719,7 +3719,7 @@ m3cg_load (void)
       name = IDENTIFIER_POINTER(DECL_NAME(v));
     }
     fprintf(stderr, "  m3cg_load (%s): offset 0x%lx, convert 0x%x -> 0x%x\n", name,
-	    o, src_T, dst_T);
+            o, src_T, dst_T);
   }
   m3_load (v, o, src_t, src_T, dst_t, dst_T);
 }
@@ -3823,8 +3823,8 @@ m3cg_store_indirect (void)
   v = m3_cast (build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
-		    m3_build1 (CONVERT_EXPR, dst_t,
-			       m3_cast (src_t, EXPR_REF (-1)))));
+                    m3_build1 (CONVERT_EXPR, dst_t,
+                               m3_cast (src_t, EXPR_REF (-1)))));
   EXPR_POP ();
   EXPR_POP ();
 }
@@ -3881,8 +3881,8 @@ m3cg_add (void)
   MTYPE (t);
 
   EXPR_REF (-2) = m3_build2 (PLUS_EXPR, t,
-			     m3_cast (t, EXPR_REF (-2)),
-			     m3_cast (t, EXPR_REF (-1)));
+                             m3_cast (t, EXPR_REF (-2)),
+                             m3_cast (t, EXPR_REF (-1)));
   EXPR_POP ();
 }
 
@@ -3892,8 +3892,8 @@ m3cg_subtract (void)
   MTYPE (t);
 
   EXPR_REF (-2) = m3_build2 (MINUS_EXPR, t,
-			     m3_cast (t, EXPR_REF (-2)),
-			     m3_cast (t, EXPR_REF (-1)));
+                             m3_cast (t, EXPR_REF (-2)),
+                             m3_cast (t, EXPR_REF (-1)));
   EXPR_POP ();
 }
 
@@ -3903,8 +3903,8 @@ m3cg_multiply (void)
   MTYPE (t);
 
   EXPR_REF (-2) = m3_build2 (MULT_EXPR, t,
-			     m3_cast (t, EXPR_REF (-2)),
-			     m3_cast (t, EXPR_REF (-1)));
+                             m3_cast (t, EXPR_REF (-2)),
+                             m3_cast (t, EXPR_REF (-1)));
   EXPR_POP ();
 }
 
@@ -3914,8 +3914,8 @@ m3cg_divide (void)
   MTYPE (t);
 
   EXPR_REF (-2) = m3_build2 (RDIV_EXPR, t,
-			     m3_cast (t, EXPR_REF (-2)),
-			     m3_cast (t, EXPR_REF (-1)));
+                             m3_cast (t, EXPR_REF (-2)),
+                             m3_cast (t, EXPR_REF (-1)));
   EXPR_POP ();
 }
 
@@ -3947,8 +3947,8 @@ m3cg_max (void)
   add_stmt (m3_build2 (MODIFY_EXPR, t, t2, EXPR_REF (-2)));
 
   EXPR_REF (-2) = m3_build3 (COND_EXPR, t,
-			     m3_build2 (LE_EXPR, boolean_type_node, t2, t1),
-			     t1, t2);
+                             m3_build2 (LE_EXPR, boolean_type_node, t2, t1),
+                             t1, t2);
   EXPR_POP ();
 }
 
@@ -3964,8 +3964,8 @@ m3cg_min (void)
   add_stmt (m3_build2 (MODIFY_EXPR, t, t2, EXPR_REF (-2)));
 
   EXPR_REF (-2) = m3_build3 (COND_EXPR, t,
-			     m3_build2 (LE_EXPR, boolean_type_node, t1, t2),
-			     t1, t2);
+                             m3_build2 (LE_EXPR, boolean_type_node, t1, t2),
+                             t1, t2);
   EXPR_POP ();
 }
 
@@ -3983,7 +3983,7 @@ m3cg_round (void)
 
   arg = declare_temp (src_t);
   add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
-		       m3_cast (src_t, EXPR_REF(-1))));
+                       m3_cast (src_t, EXPR_REF(-1))));
 
   real_from_string (&r, "0.5");
   pos = build_real (src_t, r);
@@ -3992,12 +3992,12 @@ m3cg_round (void)
   neg = build_real (src_t, r);
 
   cond = fold_build2 (GT_EXPR, boolean_type_node, arg,
-		      build_real_from_int_cst (src_t, v_zero));
+                      build_real_from_int_cst (src_t, v_zero));
 
   EXPR_REF(-1) = m3_build1 (FIX_TRUNC_EXPR, dst_t,
-			    m3_build2 (PLUS_EXPR, src_t, arg,
-				       m3_build3 (COND_EXPR, src_t,
-						  cond, pos, neg)));
+                            m3_build2 (PLUS_EXPR, src_t, arg,
+                                       m3_build3 (COND_EXPR, src_t,
+                                                  cond, pos, neg)));
 }
 
 static void
@@ -4022,18 +4022,18 @@ m3cg_floor (void)
 
   arg = declare_temp (src_t);
   add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
-		       m3_cast (src_t, EXPR_REF(-1))));
+                       m3_cast (src_t, EXPR_REF(-1))));
 
   intval = declare_temp (dst_t);
   add_stmt (m3_build2 (MODIFY_EXPR, dst_t, intval,
-		       m3_build1 (FIX_TRUNC_EXPR, dst_t, arg)));
+                       m3_build1 (FIX_TRUNC_EXPR, dst_t, arg)));
 
   cond = m3_build2 (LE_EXPR, boolean_type_node,
-		    m3_build1 (FLOAT_EXPR, src_t, intval), arg);
+                    m3_build1 (FLOAT_EXPR, src_t, intval), arg);
 
   EXPR_REF(-1) = m3_build3 (COND_EXPR, dst_t, cond, intval,
-			    m3_build2 (MINUS_EXPR, dst_t, intval,
-				       build_int_cst (dst_t, 1)));
+                            m3_build2 (MINUS_EXPR, dst_t, intval,
+                                       build_int_cst (dst_t, 1)));
 }
 
 static void
@@ -4048,18 +4048,18 @@ m3cg_ceiling (void)
 
   arg = declare_temp (src_t);
   add_stmt (m3_build2 (MODIFY_EXPR, src_t, arg,
-		       m3_cast (src_t, EXPR_REF(-1))));
+                       m3_cast (src_t, EXPR_REF(-1))));
 
   intval = declare_temp (dst_t);
   add_stmt (m3_build2 (MODIFY_EXPR, dst_t, intval,
-		       m3_build1 (FIX_TRUNC_EXPR, dst_t, arg)));
+                       m3_build1 (FIX_TRUNC_EXPR, dst_t, arg)));
 
   cond = m3_build2 (GE_EXPR, boolean_type_node,
-		    m3_build1 (FLOAT_EXPR, src_t, intval), arg);
+                    m3_build1 (FLOAT_EXPR, src_t, intval), arg);
 
   EXPR_REF(-1) = m3_build3 (COND_EXPR, dst_t, cond, intval,
-			    m3_build2 (PLUS_EXPR, dst_t, intval,
-				       build_int_cst (dst_t, 1)));
+                            m3_build2 (PLUS_EXPR, dst_t, intval,
+                                       build_int_cst (dst_t, 1)));
 }
 
 static void
@@ -4276,7 +4276,7 @@ m3cg_not (void)
   MTYPE (t);
 
   EXPR_REF (-1) = m3_build1 (BIT_NOT_EXPR, m3_unsigned_type (t),
-			     EXPR_REF (-1));
+                             EXPR_REF (-1));
 }
 
 static void
@@ -4285,7 +4285,7 @@ m3cg_and (void)
   MTYPE (t);
 
   EXPR_REF (-2) = m3_build2 (BIT_AND_EXPR, m3_unsigned_type (t),
-			     EXPR_REF (-2), EXPR_REF (-1));
+                             EXPR_REF (-2), EXPR_REF (-1));
   EXPR_POP ();
 }
 
@@ -4295,7 +4295,7 @@ m3cg_or (void)
   MTYPE (t);
 
   EXPR_REF (-2) = m3_build2 (BIT_IOR_EXPR, m3_unsigned_type (t),
-			     EXPR_REF (-2), EXPR_REF (-1));
+                             EXPR_REF (-2), EXPR_REF (-1));
   EXPR_POP ();
 }
 
@@ -4305,7 +4305,7 @@ m3cg_xor (void)
   MTYPE (t);
 
   EXPR_REF (-2) = m3_build2 (BIT_XOR_EXPR, m3_unsigned_type (t),
-			     EXPR_REF (-2), EXPR_REF (-1));
+                             EXPR_REF (-2), EXPR_REF (-1));
   EXPR_POP ();
 }
 
@@ -4323,10 +4323,10 @@ m3cg_shift (void)
   add_stmt (m3_build2 (MODIFY_EXPR, t, x, EXPR_REF(-2)));
 
   EXPR_REF(-2) = m3_build3 (COND_EXPR, m3_unsigned_type (t),
-			    m3_build2 (GE_EXPR, boolean_type_node, n, v_zero),
-			    m3_do_shift (LSHIFT_EXPR, t, x, n),
-			    m3_do_shift (RSHIFT_EXPR, t, x,
-					 m3_build1 (NEGATE_EXPR, t_int, n)));
+                            m3_build2 (GE_EXPR, boolean_type_node, n, v_zero),
+                            m3_do_shift (LSHIFT_EXPR, t, x, n),
+                            m3_do_shift (RSHIFT_EXPR, t, x,
+                                         m3_build1 (NEGATE_EXPR, t_int, n)));
   EXPR_POP();
 }
 
@@ -4366,10 +4366,10 @@ m3cg_rotate (void)
   add_stmt (m3_build2 (MODIFY_EXPR, t, x, EXPR_REF(-2)));
 
   EXPR_REF(-2) = m3_build3 (COND_EXPR, t,
-			    m3_build2 (GE_EXPR, boolean_type_node, n, v_zero),
-			    m3_do_rotate (LROTATE_EXPR, t, x, n),
-			    m3_do_rotate (RROTATE_EXPR, t, x,
-					  m3_build1 (NEGATE_EXPR, t_int, n)));
+                            m3_build2 (GE_EXPR, boolean_type_node, n, v_zero),
+                            m3_do_rotate (LROTATE_EXPR, t, x, n),
+                            m3_do_rotate (RROTATE_EXPR, t, x,
+                                          m3_build1 (NEGATE_EXPR, t_int, n)));
   EXPR_POP();
 }
 
@@ -4411,8 +4411,8 @@ static void
 m3cg_chop (void)
 {
   EXPR_REF(-1) = m3_build1 (CONVERT_EXPR, t_int_32,
-			    m3_build2 (BIT_AND_EXPR, t_int_64, EXPR_REF(-1),
-				       build_int_cst (t_int, 0xffffffff)));
+                            m3_build2 (BIT_AND_EXPR, t_int_64, EXPR_REF(-1),
+                                       build_int_cst (t_int, 0xffffffff)));
 }
 
 static void
@@ -4441,7 +4441,7 @@ m3cg_extract_n (void)
 
   t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
   EXPR_REF (-2) = m3_do_extract (EXPR_REF (-2), EXPR_REF (-1),
-				 build_int_cst (t_int, n), t);
+                                 build_int_cst (t_int, n), t);
   EXPR_POP ();
 }
 
@@ -4457,9 +4457,9 @@ m3_do_fixed_extract (tree x, int m, int n, tree t)
       (b < 0) || (b >= TYPE_PRECISION (t)))
     {
       return m3_do_extract (x,
-			    build_int_cst (t_int, m),
-			    build_int_cst (t_int, n),
-			    t);
+                            build_int_cst (t_int, m),
+                            build_int_cst (t_int, n),
+                            t);
     }
 
   c = m3_build1 (CONVERT_EXPR, m3_unsigned_type (t), x);
@@ -4573,7 +4573,7 @@ m3cg_copy_n (void)
   EXPR_REF (-1) =
     m3_build2 (MULT_EXPR, t_int,
                EXPR_REF (-1),
-	       TYPE_SIZE_UNIT (mem_t));
+               TYPE_SIZE_UNIT (mem_t));
   m3_pop_param (cnt_t);
   m3_call_direct (overlap ? memmove_proc : memcpy_proc, t_void);
 }
@@ -4605,10 +4605,10 @@ m3cg_copy (void)
   pts = build_pointer_type (ts);
 
   add_stmt (build2 (MODIFY_EXPR, t,
-		    m3_build1 (INDIRECT_REF, ts,
-			       m3_cast (pts, EXPR_REF (-2))),
-		    m3_build1 (INDIRECT_REF, ts,
-			       m3_cast (pts, EXPR_REF (-1)))));
+                    m3_build1 (INDIRECT_REF, ts,
+                               m3_cast (pts, EXPR_REF (-2))),
+                    m3_build1 (INDIRECT_REF, ts,
+                               m3_cast (pts, EXPR_REF (-1)))));
   EXPR_POP ();
   EXPR_POP ();
 }
@@ -4621,7 +4621,7 @@ m3cg_zero_n (void)
 
   gcc_assert (cnt_t == t_int);
   EXPR_REF(-1) = m3_build2(MULT_EXPR, t_int, EXPR_REF(-1),
-			   TYPE_SIZE_UNIT(mem_t));
+                           TYPE_SIZE_UNIT(mem_t));
 
   m3_start_call ();
   m3_swap ();
@@ -4680,9 +4680,9 @@ m3cg_check_nil (void)
   m3_store (temp1, 0, t_addr, T_addr, t_addr, T_addr);
   EXPR_PUSH (temp1);
   add_stmt (build3 (COND_EXPR, t_void,
-		    m3_build2 (EQ_EXPR, boolean_type_node, temp1, v_null),
-		    generate_fault (code),
-		    NULL_TREE));
+                    m3_build2 (EQ_EXPR, boolean_type_node, temp1, v_null),
+                    generate_fault (code),
+                    NULL_TREE));
 }
 
 static void
@@ -4704,9 +4704,9 @@ m3cg_check_lo (void)
   m3_store (temp1, 0, t, T, t, T);
   EXPR_PUSH (temp1);
   add_stmt (build3 (COND_EXPR, t_void,
-		    m3_build2 (LT_EXPR, boolean_type_node, temp1, a),
-		    generate_fault (code),
-		    NULL_TREE));
+                    m3_build2 (LT_EXPR, boolean_type_node, temp1, a),
+                    generate_fault (code),
+                    NULL_TREE));
 }
 
 static void
@@ -4728,9 +4728,9 @@ m3cg_check_hi (void)
   m3_store (temp1, 0, t, T, t, T);
   EXPR_PUSH (temp1);
   add_stmt (build3 (COND_EXPR, t_void,
-		    m3_build2 (GT_EXPR, boolean_type_node, temp1, a),
-		    generate_fault (code),
-		    NULL_TREE));
+                    m3_build2 (GT_EXPR, boolean_type_node, temp1, a),
+                    generate_fault (code),
+                    NULL_TREE));
 }
 
 static void
@@ -4754,13 +4754,13 @@ m3cg_check_range (void)
   m3_store (temp1, 0, t, T, t, T);
   EXPR_PUSH (temp1);
   add_stmt (build3 (COND_EXPR, t_void,
-		    m3_build2 (TRUTH_ORIF_EXPR, boolean_type_node,
-			       m3_build2 (LT_EXPR,
-					  boolean_type_node, temp1, a),
-			       m3_build2 (GT_EXPR,
-					  boolean_type_node, temp1, b)),
-		    generate_fault (code),
-		    NULL_TREE));
+                    m3_build2 (TRUTH_ORIF_EXPR, boolean_type_node,
+                               m3_build2 (LT_EXPR,
+                                          boolean_type_node, temp1, a),
+                               m3_build2 (GT_EXPR,
+                                          boolean_type_node, temp1, b)),
+                    generate_fault (code),
+                    NULL_TREE));
 }
 
 static void
@@ -4771,11 +4771,11 @@ m3cg_check_index (void)
 
   t = m3_unsigned_type (t);
   add_stmt (build3 (COND_EXPR, t_void,
-		    m3_build2 (GE_EXPR, boolean_type_node,
-			       convert (t, EXPR_REF (-2)),
-			       convert (t, EXPR_REF (-1))),
-		    generate_fault (code),
-		    NULL_TREE));
+                    m3_build2 (GE_EXPR, boolean_type_node,
+                               convert (t, EXPR_REF (-2)),
+                               convert (t, EXPR_REF (-1))),
+                    generate_fault (code),
+                    NULL_TREE));
   EXPR_POP();
 }
 
@@ -4791,9 +4791,9 @@ m3cg_check_eq (void)
   m3_store (temp1, 0, t, T, t, T);
   m3_store (temp2, 0, t, T, t, T);
   add_stmt (build3 (COND_EXPR, t_void,
-		    m3_build2 (NE_EXPR, boolean_type_node, temp1, temp2),
-		    generate_fault (code),
-		    NULL_TREE));
+                    m3_build2 (NE_EXPR, boolean_type_node, temp1, temp2),
+                    generate_fault (code),
+                    NULL_TREE));
 }
 
 static void
@@ -4832,12 +4832,12 @@ m3cg_index_address (void)
   a = m3_build2 (MULT_EXPR, t, EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
   a = m3_cast(IS_WORD_TYPE_TREE(t) ? sizetype : ssizetype, a);
   EXPR_REF (-2) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
-			        m3_cast (t_addr, EXPR_REF (-2)), a);
+                                m3_cast (t_addr, EXPR_REF (-2)), a);
 #else
   EXPR_REF (-2) = m3_build2 (PLUS_EXPR, t_addr,
-			     m3_cast (t_addr, EXPR_REF (-2)),
-			     m3_build2 (MULT_EXPR, t, EXPR_REF (-1),
-					size_int (n / BITS_PER_UNIT)));
+                             m3_cast (t_addr, EXPR_REF (-2)),
+                             m3_build2 (MULT_EXPR, t, EXPR_REF (-1),
+                                        size_int (n / BITS_PER_UNIT)));
 #endif
   EXPR_POP ();
 }
@@ -4967,8 +4967,8 @@ m3cg_store_ordered (void)
   v = m3_cast (build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
-		    m3_build1 (CONVERT_EXPR, dst_t,
-			       m3_cast (src_t, EXPR_REF (-1)))));
+                    m3_build1 (CONVERT_EXPR, dst_t,
+                               m3_cast (src_t, EXPR_REF (-1)))));
   EXPR_POP ();
   EXPR_POP ();
 }
@@ -5381,7 +5381,7 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
 /* Prepare to handle switches.  */
 static unsigned int
 m3_init_options (unsigned int argc ATTRIBUTE_UNUSED,
-		 const char **argv ATTRIBUTE_UNUSED)
+                 const char **argv ATTRIBUTE_UNUSED)
 {
   return CL_m3cg;
 }
@@ -5459,13 +5459,13 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   if (flag_reorder_blocks)
     {
       warning (OPT_freorder_blocks,
-	       "-freorder-blocks disabled for Modula-3 ex_stack exception handling");
+               "-freorder-blocks disabled for Modula-3 ex_stack exception handling");
       flag_reorder_blocks = 0;
     }
   if (flag_reorder_blocks_and_partition)
     {
       warning (OPT_freorder_blocks_and_partition,
-	       "-freorder-blocks-and-partition disabled for Modula-3 ex_stack exception handling");
+               "-freorder-blocks-and-partition disabled for Modula-3 ex_stack exception handling");
       flag_reorder_blocks_and_partition = 0;
     }
 #ifdef GCC45
