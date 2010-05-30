@@ -359,8 +359,6 @@ main (int argc, char **argv)
   /* Unlock the stdio streams.  */
   unlock_std_streams ();
 
-  gcc_init_libintl ();
-
   /* Handle response files.  */
   expandargv (&argc, &argv);
 

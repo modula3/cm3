@@ -26,13 +26,6 @@ along with this program; see the file COPYING3.  If not see
 #include "symtab.h"
 #include "cpp-id-data.h"
 
-#if HAVE_ICONV
-#include <iconv.h>
-#else
-#define HAVE_ICONV 0
-typedef int iconv_t;  /* dummy */
-#endif
-
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -42,12 +35,12 @@ struct pending_option;
 struct op;
 struct _cpp_strbuf;
 
-typedef bool (*convert_f) (iconv_t, const unsigned char *, size_t,
+typedef bool (*convert_f) (int, const unsigned char *, size_t,
 			   struct _cpp_strbuf *);
 struct cset_converter
 {
   convert_f func;
-  iconv_t cd;
+  int cd;
   int width;
 };
 
@@ -658,7 +651,6 @@ struct normalize_state
 extern cppchar_t _cpp_valid_ucn (cpp_reader *, const unsigned char **,
 				 const unsigned char *, int,
 				 struct normalize_state *state);
-extern void _cpp_destroy_iconv (cpp_reader *);
 extern unsigned char *_cpp_convert_input (cpp_reader *, const char *,
 					  unsigned char *, size_t, size_t,
 					  const unsigned char **, off_t *);

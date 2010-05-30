@@ -414,8 +414,6 @@ main (int argc, char *argv[])
   char **gcc_argv;
   int gcc_argc;
 
-  gcc_init_libintl ();
-
   /* We may be called with all the arguments stored in some file and
      passed with @file.  Expand them into argv before processing.  */
   expandargv (&argc, &argv);

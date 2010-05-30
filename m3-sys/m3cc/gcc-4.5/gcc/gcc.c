@@ -6840,8 +6840,6 @@ main (int argc, char **argv)
   /* Unlock the stdio streams.  */
   unlock_std_streams ();
 
-  gcc_init_libintl ();
-
   if (signal (SIGINT, SIG_IGN) != SIG_IGN)
     signal (SIGINT, fatal_error);
 #ifdef SIGHUP
