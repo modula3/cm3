@@ -1380,6 +1380,13 @@ scan_string (void)
 
 #define IS_INTEGER_TYPE(t) (t == T_int_32 || t == T_int_8 || t == T_int_16 || \
 			    t == T_int_64 || t == T_int)
+#ifdef GCC45
+#define IS_INTEGER_TYPE_TREE(t) (t == t_int_32 || t == t_int_8 \
+                || t == t_int_16 || t == t_int_64 || t == t_int)
+
+#define IS_WORD_TYPE_TREE(t) (t == t_word_32 || t == t_word_8 \
+                || t == t_word_16 || t == t_word_64 || t == t_word)
+#endif
 
 #define IS_REAL_TYPE(t) (t == T_reel || t == T_lreel || t == T_xreel)
 
@@ -1825,8 +1832,7 @@ debug_struct (void)
 				            TYPE_SIZE (t),
 				            bitsize_int (BITS_PER_UNIT)));
   TYPE_ALIGN (t) = BITS_PER_UNIT;
-#ifndef GCC45
-  /* error: invalid lvalue in assignment */
+#ifndef GCC45 /* error: invalid lvalue in assignment */
   TYPE_MODE (t) = QImode;
 #endif
 
@@ -1962,8 +1968,12 @@ static tree
 proc_addr (tree p)
 {
   tree expr = build1 (ADDR_EXPR, build_pointer_type (TREE_TYPE (p)), p);
+#ifdef GCC45
+  TREE_NO_TRAMPOLINE (expr) = 1;
+#else
   TREE_STATIC (expr) = 1; /* see check for TREE_STATIC on ADDR_EXPR
 			     in tree-nested.c */
+#endif
   return expr;
 }
 
@@ -3241,16 +3251,6 @@ m3cg_init_var (void)
 
   one_field (o, t_addr, &f, &v);
 #ifdef GCC45
-/* tree.c build2_stat
- * if ((code == MINUS_EXPR || code == PLUS_EXPR || code == MULT_EXPR)
- *    && arg0 && arg1 && tt && POINTER_TYPE_P (tt)
- *       When sizetype precision doesn't match that of pointers
- *       we need to be able to build explicit extensions or truncations
- *       of the offset argument.
- *    && TYPE_PRECISION (sizetype) == TYPE_PRECISION (tt))
- *  gcc_assert (TREE_CODE (arg0) == INTEGER_CST
- *      && TREE_CODE (arg1) == INTEGER_CST);
- */
   TREE_VALUE (v) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
                               m3_build1 (ADDR_EXPR, t_addr, var),
                               size_int (b / BITS_PER_UNIT));
@@ -3577,7 +3577,6 @@ m3cg_set_label (void)
        * codegen. We could put this list in struct language_function.
        */
       list = nonlocal_goto_handler_labels;
-      gcc_assert (list);
       nonlocal_goto_handler_labels = gen_rtx_EXPR_LIST (VOIDmode, r, list);
 #else
       list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
@@ -3741,7 +3740,11 @@ m3cg_load_address (void)
   TREE_USED (v) = 1;
   v = m3_build1 (ADDR_EXPR, t_addr, v);
   if (o != 0) {
+#ifdef GCC45
+    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+#else
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+#endif
   }
   EXPR_PUSH (v);
 }
@@ -3762,7 +3765,11 @@ m3cg_load_indirect (void)
 
   v = EXPR_REF (-1);
   if (o != 0) {
+#ifdef GCC45
+    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+#else
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+#endif
   }
   v = m3_cast (build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
@@ -3807,7 +3814,11 @@ m3cg_store_indirect (void)
 
   v = EXPR_REF (-2);
   if (o != 0) {
+#ifdef GCC45
+    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+#else
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+#endif
   }
   v = m3_cast (build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
@@ -4583,8 +4594,7 @@ m3cg_copy (void)
                                     size_int(BITS_PER_UNIT));
   TYPE_ALIGN (ts) = TYPE_ALIGN (t);
 
-#ifndef GCC45
-/* error: invalid lvalue in assignment */
+#ifndef GCC45 /* error: invalid lvalue in assignment */
   if (FLOAT_TYPE_P (t)) {
     TYPE_MODE (ts) = mode_for_size (s, MODE_FLOAT, 0);
   } else {
@@ -4794,13 +4804,21 @@ m3cg_add_offset (void)
   if (option_vars_trace) {
     fprintf(stderr, "  add offset 0x%lx\n", n);
   }
+#ifdef GCC45
+  EXPR_REF (-1) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
+                             EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
+#else
   EXPR_REF (-1) = m3_build2 (PLUS_EXPR, t_addr,
                              EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
+#endif
 }
 
 static void
 m3cg_index_address (void)
 {
+#ifdef GCC45
+  tree a = { 0 };
+#endif
   MTYPE2   (t, T);
   BYTESIZE (n);
 
@@ -4808,10 +4826,19 @@ m3cg_index_address (void)
     fprintf(stderr, "  index address n 0x%lx n_bytes 0x%lx type 0x%x\n",
             n, n / BITS_PER_UNIT, T);
   }
+
+#ifdef GCC45
+  gcc_assert(IS_INTEGER_TYPE_TREE(t) || IS_WORD_TYPE_TREE(t));
+  a = m3_build2 (MULT_EXPR, t, EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
+  a = m3_cast(IS_WORD_TYPE_TREE(t) ? sizetype : ssizetype, a);
+  EXPR_REF (-2) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
+			        m3_cast (t_addr, EXPR_REF (-2)), a);
+#else
   EXPR_REF (-2) = m3_build2 (PLUS_EXPR, t_addr,
 			     m3_cast (t_addr, EXPR_REF (-2)),
 			     m3_build2 (MULT_EXPR, t, EXPR_REF (-1),
 					size_int (n / BITS_PER_UNIT)));
+#endif
   EXPR_POP ();
 }
 
