@@ -131,10 +131,6 @@ init_library (void)
 	 we were compiled with a compiler that supports C99 designated
 	 initializers.  */
       init_trigraph_map ();
-
-#ifdef ENABLE_NLS
-       (void) bindtextdomain (PACKAGE, LOCALEDIR);
-#endif
     }
 }
 
@@ -273,7 +269,6 @@ cpp_destroy (cpp_reader *pfile)
 
   _cpp_destroy_hashtable (pfile);
   _cpp_cleanup_files (pfile);
-  _cpp_destroy_iconv (pfile);
 
   _cpp_free_buff (pfile->a_buff);
   _cpp_free_buff (pfile->u_buff);
