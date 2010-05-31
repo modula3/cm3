@@ -424,6 +424,7 @@ from the machine description file `md'.  */\n\n");
 
   printf ("rtx peep_operand[%d];\n", max_opno + 1);
   printf ("#endif\n");
+  printf ("\nchar quash_apple_randlib_warning_peephole;\n");
 
   fflush (stdout);
   return (ferror (stdout) != 0 ? FATAL_EXIT_CODE : SUCCESS_EXIT_CODE);
