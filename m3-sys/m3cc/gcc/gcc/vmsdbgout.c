@@ -1733,3 +1733,5 @@ vmsdbgout_finish (const char *main_input_filename ATTRIBUTE_UNUSED)
   write_modend (0);
 }
 #endif /* VMS_DEBUGGING_INFO */
+
+char quash_apple_ranlib_warning_vmsdbg_debug_hooks;
