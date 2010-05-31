@@ -3420,6 +3420,10 @@ m3cg_declare_procedure (void)
   {
     DECL_VISIBILITY (p) = VISIBILITY_HIDDEN;
   }
+#ifdef GCC45
+  gcc_assert((parent == 0) == (lev == 0));
+  DECL_STATIC_CHAIN (parent) = (lev > 0);
+#endif
   DECL_CONTEXT (p) = parent;
   TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
   DECL_MODE (p) = FUNCTION_MODE;
