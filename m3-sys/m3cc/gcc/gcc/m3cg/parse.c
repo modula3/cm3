@@ -3422,7 +3422,8 @@ m3cg_declare_procedure (void)
   }
 #ifdef GCC45
   gcc_assert((parent == 0) == (lev == 0));
-  DECL_STATIC_CHAIN (parent) = (lev > 0);
+  if (parent)
+    DECL_STATIC_CHAIN (parent) = 1;
 #endif
   DECL_CONTEXT (p) = parent;
   TREE_TYPE (p) = build_function_type (return_type, NULL_TREE);
