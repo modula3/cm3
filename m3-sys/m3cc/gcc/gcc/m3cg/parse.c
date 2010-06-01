@@ -350,9 +350,10 @@ m3_build_type (m3_type t, int s, int a)
   switch (t)
     {
     case T_word:
+    case T_longword:
       switch (s)
         {
-        case 0:  return t_word;
+        case 0:  return ((t == T_word) ? t_word : t_longword);
         case 8:  return t_word_8;
         case 16: return t_word_16;
         case 32: return t_word_32;
@@ -362,33 +363,10 @@ m3_build_type (m3_type t, int s, int a)
       break;
 
     case T_int:
-      switch (s)
-        {
-        case 0:  return t_int;
-        case 8:  return t_int_8;
-        case 16: return t_int_16;
-        case 32: return t_int_32;
-        case 64: return t_int_64;
-        default: if (s == BITS_PER_INTEGER) return t_int;
-        }
-      break;
-
-    case T_longword:
-      switch (s)
-        {
-        case 0:  return t_longword;
-        case 8:  return t_word_8;
-        case 16: return t_word_16;
-        case 32: return t_word_32;
-        case 64: return t_word_64;
-        default: if (s == BITS_PER_INTEGER) return t_word;
-        }
-      break;
-
     case T_longint:
       switch (s)
         {
-        case 0:  return t_longint;
+        case 0:  return ((t == T_int) ? t_int : t_longint);
         case 8:  return t_int_8;
         case 16: return t_int_16;
         case 32: return t_int_32;
