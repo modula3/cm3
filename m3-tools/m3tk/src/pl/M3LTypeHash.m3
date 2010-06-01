@@ -269,7 +269,7 @@ PROCEDURE Value(
           WHILE M3ASTNext.Formal(iter, f, id) DO
             HashId(id, hash);
             VAR
-              code: FingerPrint.Byte;
+              code: FingerPrint.Byte := 0;
             BEGIN
               TYPECASE id OF <*NOWARN*>
               | M3AST_AS.F_Value_id => code := 0;
