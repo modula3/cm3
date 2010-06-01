@@ -35,7 +35,7 @@ PROCEDURE Create_ForkExec(
     envp: Ctypes.char_star_star;
     wdstr: Ctypes.char_star;
     forkResult, execResult: INTEGER;
-    forkErrno, execErrno: Ctypes.int;
+    forkErrno, execErrno: Ctypes.int := 0;
     waitStatus: Ctypes.int;
     stdin_fd, stdout_fd, stderr_fd: INTEGER := NoFileDescriptor;
     forksleep := 0; (* based on bash *)
