@@ -1695,21 +1695,20 @@ PROCEDURE SanityCheck (<*UNUSED*> self: MonitorClosure) =
 
 PROCEDURE RefSanityCheck (<*UNUSED*>v: RTHeapMap.Visitor;  cp  : ADDRESS) =
   VAR ref := LOOPHOLE(cp, UNTRACED REF RefReferent)^;
+      h: RefHeader;
+      tc: Typecode;
   BEGIN
     IF ref # NIL THEN
-      VAR
-        h  := HeaderOf(ref);
-        tc := h.typecode;
-      BEGIN
-        (* the compiler generates Text.T that are not in the traced heap *)
-        IF tc # RT0.TextLitTypecode THEN
-          WITH p = ReferentToPage(ref), d = PageToRef(p).desc DO
-            <*ASSERT d.space = Space.Current*>
-          END;
-          <* ASSERT (0 <= tc AND tc <= RTType.MaxTypecode())
-                      OR tc = Fill_1_type
-                      OR tc = Fill_N_type *>
+      h  := HeaderOf(ref);
+      tc := h.typecode;
+      (* the compiler generates Text.T that are not in the traced heap *)
+      IF tc # RT0.TextLitTypecode THEN
+        WITH p = ReferentToPage(ref), d = PageToRef(p).desc DO
+          <*ASSERT d.space = Space.Current*>
         END;
+        <* ASSERT (0 <= tc AND tc <= RTType.MaxTypecode())
+                    OR tc = Fill_1_type
+                    OR tc = Fill_N_type *>
       END;
     END;
   END RefSanityCheck;
@@ -1717,22 +1716,21 @@ PROCEDURE RefSanityCheck (<*UNUSED*>v: RTHeapMap.Visitor;  cp  : ADDRESS) =
 PROCEDURE CleanOlderRefSanityCheck (<*UNUSED*> v: RTHeapMap.Visitor;
                                     cp: ADDRESS) =
   VAR ref := LOOPHOLE(cp, UNTRACED REF RefReferent)^;
+      h: RefHeader;
+      tc: Typecode;
   BEGIN
     IF ref # NIL THEN
-      VAR
-        h  := HeaderOf(ref);
-        tc := h.typecode;
-      BEGIN
-        (* the compiler generates Text.T that are not in the traced heap *)
-        IF tc # RT0.TextLitTypecode THEN
-          WITH p = ReferentToPage(ref), d = PageToRef(p).desc DO
-            <* ASSERT d.space = Space.Current *>
-            <* ASSERT d.generation = Generation.Older *>
-          END;
-          <* ASSERT (0 <= tc AND tc <= RTType.MaxTypecode())
-                      OR tc = Fill_1_type
-                      OR tc = Fill_N_type *>
+      h  := HeaderOf(ref);
+      tc := h.typecode;
+      (* the compiler generates Text.T that are not in the traced heap *)
+      IF tc # RT0.TextLitTypecode THEN
+        WITH p = ReferentToPage(ref), d = PageToRef(p).desc DO
+          <* ASSERT d.space = Space.Current *>
+          <* ASSERT d.generation = Generation.Older *>
         END;
+        <* ASSERT (0 <= tc AND tc <= RTType.MaxTypecode())
+                    OR tc = Fill_1_type
+                    OR tc = Fill_N_type *>
       END;
     END;
   END CleanOlderRefSanityCheck;
