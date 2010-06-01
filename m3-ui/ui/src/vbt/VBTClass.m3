@@ -188,7 +188,7 @@ PROCEDURE Rescreen(v: VBT.T; st: VBT.ScreenType) RAISES {} =
   END Rescreen;
 
 PROCEDURE Repaint(v: VBT.T; READONLY badR: Region.T) RAISES {} =
-  VAR br: Region.T; seqno: Word.T; seqnoValid: BOOLEAN;
+  VAR br: Region.T; seqno: Word.T := 0; seqnoValid: BOOLEAN;
   BEGIN
     LOCK v DO
       IF v.parent = NIL THEN RETURN END;
