@@ -1194,14 +1194,14 @@ static GTY (()) varray_type call_stack;
 
 /*======================================================= OPTION HANDLING ===*/
 
-static int option_trace_all         = 0;
-static int option_opcodes_trace     = 0;
-static int option_source_line_trace = 0;
-static int option_vars_trace        = 0;
-static int option_procs_trace       = 0;
-static int option_exprs_trace       = 0;
-static int option_misc_trace        = 0;
-static int option_types_trace       = 0;
+static int option_trace_all;
+static int option_opcodes_trace;
+static int option_source_line_trace;
+static int option_vars_trace;
+static int option_procs_trace;
+static int option_exprs_trace;
+static int option_misc_trace;
+static int option_types_trace;
 
 /*=============================================================== PARSING ===*/
 
