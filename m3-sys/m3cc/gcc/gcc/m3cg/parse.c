@@ -4402,11 +4402,16 @@ m3cg_extract_n (void)
   INTEGER (n);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
-  gcc_assert (n > 0);
-
-  t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
-  EXPR_REF (-2) = m3_do_extract (EXPR_REF (-2), EXPR_REF (-1),
-                                 build_int_cst (t_int, n), t);
+  gcc_assert (n >= 0);
+  
+  if (n == 0)
+    EXPR_REF (-2) = m3_cast(t, v_zero);
+  else
+  {
+    t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
+    EXPR_REF (-2) = m3_do_extract (EXPR_REF (-2), EXPR_REF (-1),
+                                   build_int_cst (t_int, n), t);
+  }
   EXPR_POP ();
 }
 
@@ -4417,6 +4422,9 @@ m3_do_fixed_extract (tree x, int m, int n, tree t)
   int a = TYPE_PRECISION (t) - n;
   int b = TYPE_PRECISION (t) - n - m;
   tree c, d, e;
+
+  gcc_assert (m >= 0);
+  gcc_assert (n > 0);
 
   if ((a < 0) || (a >= TYPE_PRECISION (t)) ||
       (b < 0) || (b >= TYPE_PRECISION (t)))
@@ -4444,10 +4452,15 @@ m3cg_extract_mn (void)
 
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (m >= 0);
-  gcc_assert (n > 0);
+  gcc_assert (n >= 0);
 
-  t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
-  EXPR_REF (-1) = m3_do_fixed_extract (EXPR_REF (-1), m, n, t);
+  if (n == 0)
+    EXPR_REF (-1) = m3_cast(t, v_zero);
+  else
+  {
+    t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
+    EXPR_REF (-1) = m3_do_fixed_extract (EXPR_REF (-1), m, n, t);
+  }
 }
 
 static void
