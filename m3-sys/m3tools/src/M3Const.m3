@@ -590,7 +590,7 @@ PROCEDURE EvalGE (VAR s: State;  VAR val: T)
 
 PROCEDURE EvalCompare (VAR s: State;  VAR val: T;  s1, s2: INTEGER)
   RAISES {Error} =
-  VAR a, b: T;  sign: INTEGER;
+  VAR a, b: T;  sign: INTEGER := 0;
   BEGIN
     EvalPair (s, a, b);
 
@@ -1071,7 +1071,7 @@ PROCEDURE EvalRecordCons (VAR s: State;  tipe: M3Type.Record;
     rec        := M3RecVal.NewEmpty ();
     next_field := 0;
     by_name    := FALSE;
-    field_name : M3ID.T;
+    field_name : M3ID.T := 0;
     v1         : T;
     ch         : NodeIndex;
   BEGIN
