@@ -298,10 +298,9 @@ VAR
   decpt  : Ctypes.int;
 
   ds, df, d: REF ARRAY OF CHAR;
-  Af, Bf, Cf, Df, Ef, Xf: INTEGER;   Pf := TRUE;
-  As, Bs, Cs, Ds, Es, Xs: INTEGER;   Ps := TRUE;
-  A,  B,  C,  D,  E,  X : INTEGER;   P  := TRUE;
-
+  Af, Bf, Cf, Df, Ef, Xf: INTEGER := 0;   Pf := TRUE;
+  As, Bs, Cs, Ds, Es, Xs: INTEGER := 0;   Ps := TRUE;
+  A,  B,  C,  D,  E,  X : INTEGER := 0;   P  := TRUE;
 
 BEGIN
   (* The string will consist of:
