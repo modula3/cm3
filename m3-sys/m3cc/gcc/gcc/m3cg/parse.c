@@ -347,8 +347,6 @@ m3_build3 (enum tree_code code, tree tipe, tree op0, tree op1, tree op2)
 static tree
 m3_build_type (m3_type t, int s, int a)
 {
-  tree ts = { 0 };
-
   switch (t)
     {
     case T_word:
