@@ -4560,10 +4560,18 @@ m3cg_swap (void)
 static void
 m3cg_pop (void)
 {
-  UNUSED_MTYPE (t);
+  MTYPE (t);
   tree a = EXPR_REF (-1);
+  
+  /* TREE_SIDE_EFFECTS(t) triggers error */
+  bool old_buggy_behavior = t->base.side_effects_flag;
+  bool correct_behavior = TREE_SIDE_EFFECTS (a);
 
-  if (TREE_SIDE_EFFECTS (a))
+  /* Check that we don't throw out stuff that we previously kept. */
+
+  gcc_assert(correct_behavior || !old_buggy_behavior);
+
+  if (correct_behavior)
     add_stmt (a);
   EXPR_POP ();
 }
