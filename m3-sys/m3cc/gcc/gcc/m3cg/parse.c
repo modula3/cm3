@@ -1147,10 +1147,10 @@ m3_init_decl_processing (void)
 #endif
 
 #ifndef MAX
-#define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
+#define MAX(X, Y) ((X) > (Y) ? (X) : (Y))
 #endif
 
-#define STREQ(a,b) (((a)[0] == (b)[0]) ? (strcmp ((a), (b)) == 0) : 0)
+#define STREQ(a, b) (((a)[0] == (b)[0]) ? (strcmp ((a), (b)) == 0) : 0)
 
 /* Variable arrays of trees. */
 
