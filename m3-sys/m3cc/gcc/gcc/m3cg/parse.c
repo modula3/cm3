@@ -65,8 +65,6 @@
 
 #include "debug.h"
 
-#define NUMBER_OF(a) (sizeof(a)/sizeof((a)[0]))
-
 #ifdef GCC45
 
 /* error: attempt to use poisoned "USE_MAPPED_LOCATION" */
@@ -131,7 +129,7 @@ static const char* m3cg_typename(unsigned a)
       "struct",     "void",     "word",     "int",
       "longword",   "longint"
     };
-    return (a < NUMBER_OF(m3cg_typenames) ? m3cg_typenames[a] : "invalid");
+    return (a < COUNT_OF(m3cg_typenames) ? m3cg_typenames[a] : "invalid");
 }
 
 /* In gcc, "word" means roughly "register".
@@ -2921,8 +2919,8 @@ m3cg_import_global (void)
 
   DECL_NAME(v) = fix_name (n, id);
   if (option_vars_trace)
-    fprintf(stderr, "  import var %s type 0x%x size 0x%lx alignment 0x%lx\n",
-            IDENTIFIER_POINTER(DECL_NAME(v)), t, s, a);
+    fprintf(stderr, "  import var %s type:%s size:0x%lx alignment:0x%lx\n",
+            IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), s, a);
   DECL_EXTERNAL (v) = 1;
   TREE_PUBLIC   (v) = 1;
   TREE_TYPE (v) = m3_build_type (t, s, a);
@@ -2979,8 +2977,8 @@ m3cg_bind_segment (void)
   BOOLEAN   (initialized);
 
   if (option_vars_trace)
-    fprintf(stderr, "  bind segment %s type 0x%x size 0x%lx alignment 0x%lx\n",
-            IDENTIFIER_POINTER(DECL_NAME(v)), t, s, a);
+    fprintf(stderr, "  bind segment %s type:%s size:0x%lx alignment:0x%lx\n",
+            IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), s, a);
   current_segment = v;
   TREE_TYPE (v) = m3_build_type (t, s, a);
   relayout_decl (v);
@@ -3005,8 +3003,8 @@ m3cg_declare_global (void)
 
   DECL_NAME (v) = fix_name (n, id);
   if (option_vars_trace)
-    fprintf(stderr, "  global var %s type 0x%x size 0x%lx alignment 0x%lx\n",
-            IDENTIFIER_POINTER(DECL_NAME(v)), t, s, a);
+    fprintf(stderr, "  global var %s type:%s size:0x%lx alignment:0x%lx\n",
+            IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), s, a);
   TREE_TYPE (v) = m3_build_type (t, s, a);
   DECL_COMMON (v) = (initialized == 0);
   TREE_PUBLIC (v) = exported;
@@ -3056,8 +3054,8 @@ m3cg_declare_local (void)
 
   DECL_NAME (v) = fix_name (n, id);
   if (option_vars_trace)
-    fprintf(stderr, "  local var %s type 0x%x size 0x%lx alignment 0x%lx\n",
-            IDENTIFIER_POINTER(DECL_NAME(v)), t, s, a);
+    fprintf(stderr, "  local var %s type:0x%s size:0x%lx alignment:0x%lx\n",
+            IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), s, a);
   TREE_TYPE (v) = m3_build_type (t, s, a);
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
@@ -3113,8 +3111,8 @@ m3cg_declare_param (void)
 
   DECL_NAME (v) = fix_name (n, id);
   if (option_procs_trace)
-    fprintf(stderr, "  param %s type 0x%x typeid 0x%lx bytesize 0x%lx alignment 0x%lx in_memory 0x%x up_level 0x%x\n",
-            IDENTIFIER_POINTER(DECL_NAME(v)), t, id, s, a, in_memory, up_level);
+    fprintf(stderr, "  param %s type:%s typeid:0x%lx bytesize:0x%lx alignment:0x%lx in_memory:0x%x up_level:0x%x\n",
+            IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), id, s, a, in_memory, up_level);
   TREE_TYPE (v) = m3_build_type (t, s, a);
   DECL_NONLOCAL (v) = up_level || in_memory;
   TREE_ADDRESSABLE (v) = in_memory;
@@ -3160,7 +3158,7 @@ m3cg_declare_temp (void)
   RETURN_VAR (v, VAR_DECL);
 
   if (option_vars_trace)
-    fprintf(stderr, "  temp var type 0x%x size 0x%lx alignment 0x%lx\n", t, s, a);
+    fprintf(stderr, "  temp var type:%s size:0x%lx alignment:0x%lx\n", m3cg_typename(t), s, a);
   if (t == T_void) t = T_struct;
   TREE_TYPE (v) = m3_build_type (t, s, a);
   layout_decl (v, 0);
@@ -3780,7 +3778,7 @@ m3cg_load_indirect (void)
   tree v;
 
   if (option_vars_trace) {
-    fprintf(stderr, "  load address offset 0x%lx src_t %s dst_t %s\n",
+    fprintf(stderr, "  load address offset:0x%lx src_t:%s dst_t:%s\n",
             o, m3cg_typename(src_T), m3cg_typename(dst_T));
   }
 
@@ -3813,7 +3811,7 @@ m3cg_store (void)
     if (v != 0 && DECL_NAME(v) != 0) {
       name = IDENTIFIER_POINTER(DECL_NAME(v));
     }
-    fprintf(stderr, "  store (%s) offset 0x%lx src_t %s dst_t %s\n",
+    fprintf(stderr, "  store (%s) offset:0x%lx src_t:%s dst_t:%s\n",
             name, o, m3cg_typename(src_T), m3cg_typename(dst_T));
   }
   m3_store (v, o, src_t, src_T, dst_t, dst_T);
@@ -3829,7 +3827,7 @@ m3cg_store_indirect (void)
   tree v;
 
   if (option_vars_trace) {
-    fprintf(stderr, "  store indirect offset 0x%lx src_t %s dst_t %s\n",
+    fprintf(stderr, "  store indirect offset:0x%lx src_t:%s dst_t:%s\n",
             o, m3cg_typename(src_T), m3cg_typename(dst_T));
   }
 
@@ -4563,9 +4561,10 @@ static void
 m3cg_pop (void)
 {
   UNUSED_MTYPE (t);
+  tree a = EXPR_REF (-1);
 
-  if (TREE_SIDE_EFFECTS (EXPR_REF (-1)))
-    add_stmt (EXPR_REF (-1));
+  if (TREE_SIDE_EFFECTS (a))
+    add_stmt (a);
   EXPR_POP ();
 }
 
@@ -4715,7 +4714,7 @@ m3cg_check_lo (void)
 
   a = convert (t, a);
   if (option_exprs_trace) {
-    fprintf (stderr, "  check low type 0x%x code 0x%lx\n", T, code);
+    fprintf (stderr, "  check low type:%s code:0x%lx\n", m3cg_typename(T), code);
   }
   if (TREE_TYPE (EXPR_REF (-1)) != t) {
     EXPR_REF (-1) = m3_build1 (CONVERT_EXPR, t, EXPR_REF (-1));
@@ -4739,7 +4738,7 @@ m3cg_check_hi (void)
 
   a = convert (t, a);
   if (option_exprs_trace) {
-    fprintf (stderr, "  check high type 0x%x code 0x%lx\n", T, code);
+    fprintf (stderr, "  check high type:%s code:0x%lx\n", m3cg_typename(T), code);
   }
   if (TREE_TYPE (EXPR_REF (-1)) != t) {
     EXPR_REF (-1) = m3_build1 (CONVERT_EXPR, t, EXPR_REF (-1));
@@ -4765,7 +4764,7 @@ m3cg_check_range (void)
   a = convert (t, a);
   b = convert (t, b);
   if (option_exprs_trace) {
-    fprintf (stderr, "  check range type 0x%x code 0x%lx\n", T, code);
+    fprintf (stderr, "  check range type:%s code:0x%lx\n", m3cg_typename(T), code);
   }
   if (TREE_TYPE (EXPR_REF (-1)) != t) {
     EXPR_REF (-1) = m3_build1 (CONVERT_EXPR, t, EXPR_REF (-1));
