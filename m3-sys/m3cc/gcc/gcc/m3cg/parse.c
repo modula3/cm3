@@ -1150,7 +1150,7 @@ m3_init_decl_processing (void)
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 #endif
 
-#define STREQ(a,b) (a[0] == b[0] ? strcmp (a, b) == 0 : 0)
+#define STREQ(a,b) (((a)[0] == (b)[0]) ? (strcmp ((a), (b)) == 0) : 0)
 
 /* Variable arrays of trees. */
 
@@ -1160,22 +1160,22 @@ static GTY (()) varray_type all_labels;
 static GTY (()) varray_type expr_stack;
 static GTY (()) varray_type call_stack;
 
-#define STACK_PUSH(stk, x)      VARRAY_PUSH_TREE (stk, x)
+#define STACK_PUSH(stk, x)      VARRAY_PUSH_TREE (stk, (x))
 #define STACK_POP(stk)          VARRAY_POP (stk)
-#define STACK_REF(stk, n)       ((&VARRAY_TOP_TREE (stk) + 1)[n])
+#define STACK_REF(stk, n)       ((&VARRAY_TOP_TREE (stk) + 1)[(n)])
 
-#define EXPR_PUSH(x)    STACK_PUSH (expr_stack, x)
+#define EXPR_PUSH(x)    STACK_PUSH (expr_stack, (x))
 #define EXPR_POP()      STACK_POP (expr_stack)
-#define EXPR_REF(n)     STACK_REF (expr_stack, n)
+#define EXPR_REF(n)     STACK_REF (expr_stack, (n))
 
 /* The call stack has triples on it: first the argument chain, then
    the type chain, then the static chain expression. */
 #define CALL_PUSH(a, t, s)              \
     do                                  \
       {                                 \
-        STACK_PUSH (call_stack, a);     \
-        STACK_PUSH (call_stack, t);     \
-        STACK_PUSH (call_stack, s);     \
+        STACK_PUSH (call_stack, (a));   \
+        STACK_PUSH (call_stack, (t));   \
+        STACK_PUSH (call_stack, (s));   \
       }                                 \
     while (0)
 
