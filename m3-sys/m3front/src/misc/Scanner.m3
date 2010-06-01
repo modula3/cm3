@@ -839,10 +839,11 @@ PROCEDURE GetHexDigit (wide: BOOLEAN;  VAR value: INTEGER): BOOLEAN =
   CONST Bad = ARRAY BOOLEAN OF TEXT {
      "hex character constant must have 2 digits",
      "wide hex character constant must have 4 digits" };
-  VAR x: INTEGER;
+  VAR x: INTEGER := 0;
   BEGIN
     IF  NOT (HexDigits[ch]) THEN
-      Error.Msg (Bad[wide]);  RETURN FALSE;
+      Error.Msg (Bad[wide]);
+      RETURN FALSE;
     ELSIF ('0' <= ch) AND (ch <= '9') THEN
       x := ORD (ch) - ORD ('0');
     ELSIF ('a' <= ch) AND (ch <= 'f') THEN
