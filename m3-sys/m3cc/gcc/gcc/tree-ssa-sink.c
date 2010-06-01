@@ -449,7 +449,7 @@ sink_code_in_bb (basic_block bb)
     {
       tree stmt = bsi_stmt (bsi);	
       block_stmt_iterator tobsi;
-      basic_block tobb;
+      basic_block tobb = { 0 };
 
       if (!statement_sink_location (stmt, bb, &tobb, &tobsi))
 	{
