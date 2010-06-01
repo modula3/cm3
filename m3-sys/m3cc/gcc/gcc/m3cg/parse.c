@@ -1208,10 +1208,10 @@ static int option_types_trace;
 #define BUFFER_SIZE 0x10000
 
 static unsigned char input_buffer[BUFFER_SIZE];
-static int  input_len    = 0;
-static int  input_cursor = 0;
-static int  input_eof    = 0;
-static int  m3cg_lineno  = 0;
+static int  input_len;
+static int  input_cursor;
+static int  input_eof;
+static int  m3cg_lineno;
 
 /* Stream for reading from the input file.  */
 FILE *finput;
@@ -5373,7 +5373,7 @@ m3_init_options (unsigned int argc ATTRIBUTE_UNUSED,
   return CL_m3cg;
 }
 
-static int version_done = 0;
+static int version_done;
 const char *const language_string = "M3CG - Modula-3 Compiler back end";
 
 /* Process a switch - called by opts.c.  */
