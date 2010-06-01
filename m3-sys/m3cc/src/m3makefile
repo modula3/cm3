@@ -343,7 +343,7 @@ readonly proc m3cc_Run (x) is
     end
 end
 
-done = build_dir & "/Makefile"
+done = build_dir & "/.configure-done"
 
 if defined ("FORCE")
   %
@@ -356,14 +356,13 @@ if defined ("FORCE")
   if FileExists (build_dir & "/Makefile")
     exec("-cd " & build_dir & " && " & M3CC_MAKE & " distclean")
   end
-  foreach a in ["cm3cg", "cm3cg.exe", "confdefs.h", "config.log", "cm3cg", ".M3SHIP", Log, "_m3sh0.sh"]
+  foreach a in ["cm3cg", "cm3cg.exe", "confdefs.h", "config.log", "cm3cg", ".M3SHIP", done, Log, "_m3sh0.sh"]
     delete_file(build_dir & "/" & a)
   end
   %
   % Now delete directories.
   %
-  foreach a in ["gcc", "gmp", "libcpp", "libdecnumber", "mpfr", "libiberty",
-                "mpc", "zlib"]
+  foreach a in ["gcc", "gmp", "libcpp", "libdecnumber", "mpfr", "libiberty"]
     fs_rmrec(build_dir & "/" & a)
   end
 end
@@ -501,6 +500,9 @@ if not defined ("no_config") and not NOACTION
     Configure = Configure & " -disable-tls"
 
     m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure, " | tee -a " & Log])
+    > done in
+      write("done")
+    end
   end
 end
 
