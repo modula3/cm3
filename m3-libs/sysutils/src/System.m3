@@ -519,7 +519,7 @@ PROCEDURE ExecuteList(cmd : TEXT; env : ProcessEnv.T := NIL;
     readOp: BOOLEAN := FALSE;
 
   PROCEDURE WaitForAll() : INTEGER =
-    VAR p: Process.T; ret: INTEGER;
+    VAR p: Process.T; ret: INTEGER := 0;
     BEGIN
       WHILE processes.size() > 0 DO
         p := NARROW(processes.remlo(), Process.T);
