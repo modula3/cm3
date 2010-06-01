@@ -133,7 +133,7 @@ PROCEDURE Factor(READONLY t: Region.T; READONLY r: Rect.T;
   READONLY delta: Point.T; VAR rl: REF ARRAY OF Rect.T): CARDINAL RAISES {} =
   VAR 
     res, prevrow, currow: CARDINAL := 0;
-    lo, hi, i, j, k, prevedge: INTEGER;  
+    lo, hi, i, j, k, prevedge: INTEGER := 0;
     h: RegionRep.HList; tp: RegionRep.VList;
     rvext, rhext, vext, hext: Interval.T;
     dh := (delta.h <= 0); dv := (delta.v <= 0);

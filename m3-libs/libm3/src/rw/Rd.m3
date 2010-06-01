@@ -95,7 +95,7 @@ PROCEDURE GetWC(rd: T;  VAR(*OUT*) ch: WIDECHAR): BOOLEAN
       c2 := rd.buff[rd.st + (rd.cur - rd.lo)];
       INC(rd.cur);
     ELSIF rd.seek(rd.cur, FALSE) = SeekResult.Eof THEN
-      c2 := '\000';
+      c2 := '\x00';
     ELSE
       c2 := rd.buff[rd.st + (rd.cur - rd.lo)];
       INC(rd.cur);
@@ -464,7 +464,7 @@ PROCEDURE GetWideLine (rd: T): TEXT
   VAR
     txt, tmp : TEXT := NIL;
     len : CARDINAL := 0;
-    last_ch, ch: WIDECHAR;
+    last_ch, ch: WIDECHAR := W'\x0000';
     buf : ARRAY [0..127] OF WIDECHAR;
   BEGIN
     LOCK rd DO
