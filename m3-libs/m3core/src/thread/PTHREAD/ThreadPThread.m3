@@ -745,7 +745,7 @@ PROCEDURE ProcessEachStack (p: PROCEDURE (start, limit: ADDRESS)) =
     me := GetActivation();
     act: Activation;
     acks: int;
-    nLive, nDead, newlySent: INTEGER;
+    nLive, nDead, newlySent: INTEGER := 0;
     wait_nsecs := RETRY_INTERVAL;
   BEGIN
     WITH r = pthread_mutex_lock(activeMu) DO <*ASSERT r=0*> END;
