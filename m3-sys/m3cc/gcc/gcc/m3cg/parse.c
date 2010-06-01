@@ -211,12 +211,7 @@ static int m3_handle_option (size_t scode, const char *arg, int value);
 static bool m3_post_options (const char **);
 static bool m3_init (void);
 static void m3_parse_file (int);
-#undef LANG_HOOKS_GET_ALIAS_SET
-#ifdef GCC45
-static alias_set_type LANG_HOOKS_GET_ALIAS_SET (tree ARG_UNUSED (t)) { return -1; }
-#else
-static HOST_WIDE_INT LANG_HOOKS_GET_ALIAS_SET (tree ARG_UNUSED (t)) { return 0; }
-#endif
+static alias_set_type m3_get_alias_set (tree);
 static void m3_finish (void);
 
 /* Functions to keep track of the current scope */
@@ -256,6 +251,10 @@ static void m3_write_globals (void);
 #define LANG_HOOKS_TYPE_FOR_SIZE m3_type_for_size
 #undef LANG_HOOKS_PARSE_FILE
 #define LANG_HOOKS_PARSE_FILE m3_parse_file
+#ifndef GCC45
+#undef LANG_HOOKS_GET_ALIAS_SET
+#define LANG_HOOKS_GET_ALIAS_SET m3_get_alias_set
+#endif
 
 #undef LANG_HOOKS_WRITE_GLOBALS
 #define LANG_HOOKS_WRITE_GLOBALS m3_write_globals
@@ -586,6 +585,12 @@ m3_do_shift (enum tree_code code, tree t, tree val, tree cnt)
   c = m3_build2 (GE_EXPR, boolean_type_node, cnt, TYPE_SIZE(t));
   d = m3_build3 (COND_EXPR, t, c, v_zero, b);
   return d;
+}
+
+alias_set_type
+m3_get_alias_set (tree ARG_UNUSED (t))
+{
+  return 0;
 }
 
 #ifndef GCC45
