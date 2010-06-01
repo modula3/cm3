@@ -51,9 +51,9 @@ PROCEDURE Prep (ce: CallExpr.T) =
       CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, nil, CG.Never);
 
       CG.Push (ce.tmp);
-      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
-      CG.Load_integer (Target.Integer.cg_type, TInt.One);
-      CG.And (Target.Integer.cg_type);
+      CG.Loophole (CG.Type.Addr, Target.Word.cg_type);
+      CG.Load_integer (Target.Word.cg_type, TInt.One);
+      CG.And (Target.Word.cg_type);
       CG.If_true (tagged, CG.Maybe);
 
       CG.Push (ce.tmp);

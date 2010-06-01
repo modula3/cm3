@@ -78,9 +78,9 @@ PROCEDURE Prep (ce: CallExpr.T) =
       CG.If_compare (CG.Type.Addr, CG.Cmp.EQ, true, CG.Maybe);
 
       CG.Push (ptr);
-      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
-      CG.Load_integer (Target.Integer.cg_type, TInt.One);
-      CG.And (Target.Integer.cg_type);
+      CG.Loophole (CG.Type.Addr, Target.Word.cg_type);
+      CG.Load_integer (Target.Word.cg_type, TInt.One);
+      CG.And (Target.Word.cg_type);
       CG.If_true (tagged, CG.Maybe);
 
       CG.Push (ptr);
@@ -170,9 +170,9 @@ PROCEDURE PrepBR (ce: CallExpr.T;  true, false: CG.Label;  freq: CG.Frequency)=
       END;
 
       CG.Push (ptr);
-      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
-      CG.Load_integer (Target.Integer.cg_type, TInt.One);
-      CG.And (Target.Integer.cg_type);
+      CG.Loophole (CG.Type.Addr, Target.Word.cg_type);
+      CG.Load_integer (Target.Word.cg_type, TInt.One);
+      CG.And (Target.Word.cg_type);
       CG.If_true (tagged, CG.Maybe);
 
       CG.Push (ptr);

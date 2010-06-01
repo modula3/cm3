@@ -111,9 +111,9 @@ PROCEDURE EmitCore (tlhs, trhs: Type.T): CG.Val =
       tagged := CG.Next_label ();
 
       CG.Push (ref);
-      CG.Loophole (CG.Type.Addr, Target.Integer.cg_type);
-      CG.Load_integer (Target.Integer.cg_type, TInt.One);
-      CG.And (Target.Integer.cg_type);
+      CG.Loophole (CG.Type.Addr, Target.Word.cg_type);
+      CG.Load_integer (Target.Word.cg_type, TInt.One);
+      CG.And (Target.Word.cg_type);
       CG.If_true (tagged, CG.Maybe);
 
       (* check for TYPECODE(ref) = TYPECODE(type) *)
