@@ -16,7 +16,7 @@ FROM TargetMap IMPORT CG_Bytes;
 
 FROM M3CG IMPORT Name, ByteOffset, TypeUID, CallingConvention;
 FROM M3CG IMPORT BitSize, ByteSize, Alignment, Frequency;
-FROM M3CG IMPORT Var, Proc, Label, Sign, BitOffset;
+FROM M3CG IMPORT Var, Proc, Label, No_label, Sign, BitOffset;
 FROM M3CG IMPORT Type, ZType, AType, RType, IType, MType;
 FROM M3CG IMPORT CompareOp, ConvertOp, RuntimeError, MemoryOrder, AtomicOp;
 
@@ -3036,7 +3036,7 @@ PROCEDURE string_copy (u: U; n, size: INTEGER; forward: BOOLEAN) =
 PROCEDURE copy (u: U;  n: INTEGER;  type: MType;  overlap: BOOLEAN) =
   (* Mem[s1.A:sz] := Mem[s0.A:sz]; pop(2)*)
   VAR size := CG_Bytes[type];
-      forward, end: Label;
+      forward, end: Label := No_label;
   BEGIN
     IF u.debug THEN
       u.wr.Cmd   ("copy");
