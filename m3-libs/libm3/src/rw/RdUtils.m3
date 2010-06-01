@@ -76,7 +76,7 @@ PROCEDURE FindChar (rd           : Rd.T;
                     pattern      : CHAR;
                     canonicalize: Canonicalize := NIL):
   [-1 .. LAST(CARDINAL)] RAISES {Rd.Failure, Thread.Alerted} =
-  VAR uc: CHAR;
+  VAR uc: CHAR := '\x00';
    <*FATAL Rd.EndOfFile*>
   BEGIN
     IF canonicalize # NIL THEN uc := canonicalize(pattern); END;
