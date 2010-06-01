@@ -5374,7 +5374,7 @@ m3_init_options (unsigned int argc ATTRIBUTE_UNUSED,
 }
 
 static int version_done;
-const char *const language_string = "M3CG - Modula-3 Compiler back end";
+static const char const language_string[] = "M3CG - Modula-3 Compiler back end";
 
 /* Process a switch - called by opts.c.  */
 static int
@@ -5391,7 +5391,7 @@ m3_handle_option (size_t scode, const char *arg ATTRIBUTE_UNUSED, int value)
         {
           char const * const lang = language_string; /* type check */
           char const * const ver = version_string; /* type check */
-          printf ("%s%s\n", lang, ver);
+          printf ("%s %s\n", lang, ver);
           version_done = 1;
         }
       break;
