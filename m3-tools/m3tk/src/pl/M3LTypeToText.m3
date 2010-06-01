@@ -57,7 +57,7 @@ PROCEDURE SmallNumberDigits(s: Wr.T; n: CARDINAL)
     RAISES {Wr.Failure, Thread.Alerted}=
   VAR  
     base: CARDINAL;
-    baseCh: CHAR;
+    baseCh: CHAR := '\x00';
   BEGIN
     IF n >= FirstBigNumber THEN
       SmallNumberDigits(s, n DIV FirstBigNumber);
@@ -297,6 +297,7 @@ PROCEDURE Set(s: Wr.T; set: M3AST_AS.Set_type) RAISES {Wr.Failure, Thread.Alerte
     Wr.PutChar(s, SetCh);
     ComponentType(s, set.as_type);
   END Set;
+
 
 
 PROCEDURE Brand(s: Wr.T; b: M3AST_AS.Brand_NULL) RAISES {Wr.Failure, Thread.Alerted}=
