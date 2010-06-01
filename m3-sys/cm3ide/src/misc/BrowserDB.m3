@@ -844,7 +844,7 @@ PROCEDURE ParseWebInfo (VAR s: Scan;  rd: Rd.T;  file: TEXT)
     len       : INTEGER;
     eol       : INTEGER;
     cur_file  : ID.T;
-    cur_unit  : ID.T;
+    cur_unit  : ID.T := 0;
     unit      : ID.T;
     uid       : INTEGER;
     type_name : ID.T;
