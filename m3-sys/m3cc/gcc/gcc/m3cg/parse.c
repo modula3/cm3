@@ -347,106 +347,71 @@ m3_build3 (enum tree_code code, tree tipe, tree op0, tree op1, tree op2)
 static tree
 m3_build_type (m3_type t, int s, int a)
 {
+  tree ts = { 0 };
+
   switch (t)
     {
     case T_word:
       switch (s)
         {
-        case 0:
-          return t_word;
-        case 8:
-          return t_word_8;
-        case 16:
-          return t_word_16;
-        case 32:
-          return t_word_32;
-        case 64:
-          return t_word_64;
-        default:
-          if (s == BITS_PER_INTEGER) return t_word;
+        case 0:  return t_word;
+        case 8:  return t_word_8;
+        case 16: return t_word_16;
+        case 32: return t_word_32;
+        case 64: return t_word_64;
+        default: if (s == BITS_PER_INTEGER) return t_word;
         }
       break;
 
     case T_int:
       switch (s)
         {
-        case 0:
-          return t_int;
-        case 8:
-          return t_int_8;
-        case 16:
-          return t_int_16;
-        case 32:
-          return t_int_32;
-        case 64:
-          return t_int_64;
-        default:
-          if (s == BITS_PER_INTEGER) return t_int;
+        case 0:  return t_int;
+        case 8:  return t_int_8;
+        case 16: return t_int_16;
+        case 32: return t_int_32;
+        case 64: return t_int_64;
+        default: if (s == BITS_PER_INTEGER) return t_int;
         }
       break;
 
     case T_longword:
       switch (s)
         {
-        case 0:
-          return t_longword;
-        case 8:
-          return t_word_8;
-        case 16:
-          return t_word_16;
-        case 32:
-          return t_word_32;
-        case 64:
-          return t_word_64;
-        default:
-          if (s == BITS_PER_INTEGER) return t_word;
+        case 0:  return t_longword;
+        case 8:  return t_word_8;
+        case 16: return t_word_16;
+        case 32: return t_word_32;
+        case 64: return t_word_64;
+        default: if (s == BITS_PER_INTEGER) return t_word;
         }
       break;
 
     case T_longint:
       switch (s)
         {
-        case 0:
-          return t_longint;
-        case 8:
-          return t_int_8;
-        case 16:
-          return t_int_16;
-        case 32:
-          return t_int_32;
-        case 64:
-          return t_int_64;
-        default:
-          if (s == BITS_PER_INTEGER) return t_int;
+        case 0:  return t_longint;
+        case 8:  return t_int_8;
+        case 16: return t_int_16;
+        case 32: return t_int_32;
+        case 64: return t_int_64;
+        default: if (s == BITS_PER_INTEGER) return t_int;
         }
       break;
 
-    case T_addr:
-      return t_addr;
-    case T_reel:
-      return t_reel;
-    case T_lreel:
-      return t_lreel;
-    case T_xreel:
-      return t_xreel;
-    case T_int_8:
-      return t_int_8;
-    case T_int_16:
-      return t_int_16;
-    case T_int_32:
-      return t_int_32;
-    case T_int_64:
-      return t_int_64;
-    case T_word_8:
-      return t_word_8;
-    case T_word_16:
-      return t_word_16;
-    case T_word_32:
-      return t_word_32;
-    case T_word_64:
-      return t_word_64;
-    case T_void:
-      return t_void;
+    case T_addr:    return t_addr;
+    case T_reel:    return t_reel;
+    case T_lreel:   return t_lreel;
+    case T_xreel:   return t_xreel;
+    case T_int_8:   return t_int_8;
+    case T_int_16:  return t_int_16;
+    case T_int_32:  return t_int_32;
+    case T_int_64:  return t_int_64;
+    case T_word_8:  return t_word_8;
+    case T_word_16: return t_word_16;
+    case T_word_32: return t_word_32;
+    case T_word_64: return t_word_64;
+    case T_void:    return t_void;
 
     case T_struct:
       {
