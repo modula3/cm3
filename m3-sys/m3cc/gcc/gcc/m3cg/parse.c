@@ -65,6 +65,19 @@
 
 #include "debug.h"
 
+#ifndef TARGET_SOLARIS
+#define TARGET_SOLARIS 0
+#endif
+#ifndef TARGET_SPARC
+#define TARGET_SPARC 0
+#endif
+#ifndef TARGET_ARCH32
+#define TARGET_ARCH32 0
+#endif
+
+/* in particular, Solaris/sparc32 has a stack walker */
+#define M3_ALL_VOLATILE (TARGET_SPARC && TARGET_SOLARIS && TARGET_ARCH32)
+
 #ifdef GCC45
 
 /* error: attempt to use poisoned "USE_MAPPED_LOCATION" */
@@ -213,6 +226,10 @@ static bool m3_init (void);
 static void m3_parse_file (int);
 static alias_set_type m3_get_alias_set (tree);
 static void m3_finish (void);
+static bool m3_volatize_p (void);
+static void m3_volatilize_decl (tree decl);
+
+static bool m3_next_store_volatile;
 
 /* Functions to keep track of the current scope */
 static tree pushdecl (tree decl);
@@ -251,10 +268,8 @@ static void m3_write_globals (void);
 #define LANG_HOOKS_TYPE_FOR_SIZE m3_type_for_size
 #undef LANG_HOOKS_PARSE_FILE
 #define LANG_HOOKS_PARSE_FILE m3_parse_file
-#ifndef GCC45
 #undef LANG_HOOKS_GET_ALIAS_SET
 #define LANG_HOOKS_GET_ALIAS_SET m3_get_alias_set
-#endif
 
 #undef LANG_HOOKS_WRITE_GLOBALS
 #define LANG_HOOKS_WRITE_GLOBALS m3_write_globals
@@ -341,6 +356,14 @@ static tree
 m3_build3 (enum tree_code code, tree tipe, tree op0, tree op1, tree op2)
 {
   return fold_build3 (code, tipe, op0, op1, op2);
+}
+
+static tree
+m3_build_pointer_type (tree a)
+{
+  a = build_pointer_type(a);
+  /*DECL_NO_TBAA_P (a) = true;*/
+  return a;
 }
 
 static tree
@@ -834,7 +857,7 @@ m3_write_globals (void)
       tree var = (tree)DECL_LANG_SPECIFIC(index);
       if (var) {
         gcc_assert(TREE_CODE(var) == VAR_DECL);
-        gcc_assert (TREE_ADDRESSABLE (var)); /* ensure optimizers play fair */
+        if (TREE_ADDRESSABLE (var))
         /* take apart the rtx, which is of the form
            (insn n m p (use (mem: (plus: (reg: r $fp)
            (const_int offset))) ...)
@@ -852,6 +875,11 @@ m3_write_globals (void)
             j = XWINT (r, 0);  /* offset */
           }
           VEC_index (constructor_elt, elts, idx)->value = size_int (j);
+        }
+        else
+        {
+          /*fprintf(stderr, "%s %s not addressable, should be?\n",
+                  input_filename, IDENTIFIER_POINTER(DECL_NAME(var)));*/
         }
       }
     }
@@ -1910,6 +1938,9 @@ declare_temp (tree t)
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (t);
   DECL_CONTEXT (v) = current_function_decl;
 
+  if (m3_volatize_p ())
+    m3_volatilize_decl (v);
+
   add_stmt (build1 (DECL_EXPR, t_void, v));
   TREE_CHAIN (v) = BLOCK_VARS (current_block);
   BLOCK_VARS (current_block) = v;
@@ -1923,7 +1954,7 @@ declare_temp (tree t)
 static tree
 proc_addr (tree p)
 {
-  tree expr = build1 (ADDR_EXPR, build_pointer_type (TREE_TYPE (p)), p);
+  tree expr = build1 (ADDR_EXPR, m3_build_pointer_type (TREE_TYPE (p)), p);
 #ifdef GCC45
   TREE_NO_TRAMPOLINE (expr) = 1;
 #else
@@ -1958,7 +1989,6 @@ m3_call_direct (tree p, tree t)
 {
   tree call;
 
-  TREE_USED (p) = 1;
   call = fold_build3 (CALL_EXPR, t, proc_addr (p), CALL_TOP_ARG (),
                       CALL_TOP_STATIC_CHAIN ());
   if (t == t_void) {
@@ -1975,7 +2005,7 @@ m3_call_indirect (tree t, tree cc ATTRIBUTE_UNUSED)
 {
   tree argtypes = chainon (CALL_TOP_TYPE (),
                            tree_cons (NULL_TREE, t_void, NULL_TREE));
-  tree fntype = build_pointer_type (build_function_type (t, argtypes));
+  tree fntype = m3_build_pointer_type (build_function_type (t, argtypes));
   tree call;
   tree fnaddr = EXPR_REF (-1);
   EXPR_POP ();
@@ -1992,6 +2022,45 @@ m3_call_indirect (tree t, tree cc ATTRIBUTE_UNUSED)
 }
 
 #else
+
+static struct language_function*
+m3_get_language_function (void)
+{
+    if (M3_ALL_VOLATILE)
+        return 0;
+    return DECL_STRUCT_FUNCTION(current_function_decl)->language;
+}
+
+static struct language_function*
+m3_set_language_function (void)
+{
+    struct language_function* f;
+    if (M3_ALL_VOLATILE)
+        return 0;
+    f = DECL_STRUCT_FUNCTION(current_function_decl)->language;
+    if (!f)
+    {
+        f = GGC_NEW (struct language_function);
+        DECL_STRUCT_FUNCTION(current_function_decl)->language = f;
+    }
+    return f;
+}
+
+static bool
+m3_volatize_p (void)
+{
+    struct language_function* f;
+    if (M3_ALL_VOLATILE)
+        return true;
+    f = m3_get_language_function();
+    return (f && f->volatil);
+}
+
+static void
+m3_set_volatize (void)
+{
+    m3_set_language_function()->volatil = true;
+}
 
 static void
 m3_volatilize_decl (tree decl)
@@ -2031,6 +2100,7 @@ m3_call_direct (tree p, tree t)
   if (flags & ECF_RETURNS_TWICE) {
     tree block, decl;
     /* call to setjmp: make locals volatile */
+    m3_set_volatize (); /* for later temporaries, locals */
     for (block = current_block;
          block != current_function_decl;
          block = BLOCK_SUPERCONTEXT(block)) {
@@ -2050,7 +2120,7 @@ static void
 m3_call_indirect (tree t, tree cc)
 {
   tree argtypes = chainon (CALL_TOP_TYPE (), void_list_node);
-  tree fntype = build_pointer_type (build_function_type (t, argtypes));
+  tree fntype = m3_build_pointer_type (build_function_type (t, argtypes));
   tree call;
   tree fnaddr = EXPR_REF (-1);
   EXPR_POP ();
@@ -2091,10 +2161,14 @@ m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
     v = m3_build1 (ADDR_EXPR, t_addr, v);
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
     v = m3_build1 (INDIRECT_REF, src_t,
-                   m3_cast (build_pointer_type (src_t), v));
+                   m3_cast (m3_build_pointer_type (src_t), v));
 #endif
   }
-  TREE_THIS_VOLATILE(v) = TREE_SIDE_EFFECTS(v) = 1; /* force this to avoid aliasing problems */
+  /* not good! */
+  if (FLOAT_TYPE_P(src_t) || FLOAT_TYPE_P(dst_t))
+    TREE_THIS_VOLATILE(v) = 1; /* force this to avoid aliasing problems */
+  if (M3_ALL_VOLATILE)
+    TREE_THIS_VOLATILE(v) = TREE_SIDE_EFFECTS(v) = 1; /* force this to avoid aliasing problems */
   if (src_T != dst_T) {
     v = m3_build1 (CONVERT_EXPR, dst_t, v);
   }
@@ -2102,7 +2176,8 @@ m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 }
 
 static void
-m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_store_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
+            bool volatil)
 {
   tree val;
   if (o != 0 || TREE_TYPE (v) != dst_t)
@@ -2111,20 +2186,39 @@ m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
     v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
                    bitsize_int (o));
 #else
-  /* failsafe, but inefficient */
+    /* failsafe, but inefficient */
     v = m3_build1 (ADDR_EXPR, t_addr, v);
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
     v = m3_build1 (INDIRECT_REF, dst_t,
-                   m3_cast (build_pointer_type (dst_t), v));
+                   m3_cast (m3_build_pointer_type (dst_t), v));
 #endif
   }
-  TREE_THIS_VOLATILE(v) = TREE_SIDE_EFFECTS(v) = 1; /* force this to avoid aliasing problems */
+  if (volatil || m3_next_store_volatile)
+    TREE_THIS_VOLATILE(v) = 1; /* force this to avoid aliasing problems */
+  if (M3_ALL_VOLATILE)
+    TREE_THIS_VOLATILE(v) = TREE_SIDE_EFFECTS(v) = 1; /* force this to avoid aliasing problems */
+  m3_next_store_volatile = false;
   val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T) {
     val = m3_build1 (CONVERT_EXPR, dst_t, val);
   }
   add_stmt (build2 (MODIFY_EXPR, dst_t, v, val));
   EXPR_POP ();
+}
+
+static void
+m3_store (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+{
+  bool volatil = false;
+  m3_store_1(v, o, src_t, src_T, dst_t, dst_T, volatil);
+}
+
+static void
+m3_store_volatile (tree v, int o, tree src_t, m3_type src_T, tree dst_t,
+                   m3_type dst_T)
+{
+  bool volatil = true;
+  m3_store_1(v, o, src_t, src_T, dst_t, dst_T, volatil);
 }
 
 static void
@@ -2195,6 +2289,7 @@ declare_fault_proc (void)
   DECL_IGNORED_P (resultdecl) = 1;
   DECL_RESULT (proc) = resultdecl;
 
+  /* TREE_THIS_VOLATILE (proc) = 1; / * noreturn */
   TREE_STATIC (proc) = 1;
   TREE_PUBLIC (proc) = 0;
   DECL_CONTEXT (proc) = 0;
@@ -3023,6 +3118,8 @@ m3cg_declare_local (void)
 
   if (current_block)
     {
+      if (m3_volatize_p ())
+        m3_volatilize_decl(v);
       add_stmt (build1 (DECL_EXPR, t_void, v));
       TREE_CHAIN (v) = BLOCK_VARS (current_block);
       BLOCK_VARS (current_block) = v;
@@ -3120,13 +3217,17 @@ m3cg_declare_temp (void)
 
   if (option_vars_trace)
     fprintf(stderr, "  temp var type:%s size:0x%lx alignment:0x%lx\n", m3cg_typename(t), s, a);
+ 
+  if (t == T_void)
+    t = T_struct;
 
-  if (t == T_void) t = T_struct;
   TREE_TYPE (v) = m3_build_type (t, s, a);
   layout_decl (v, 0);
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (TREE_TYPE (v));
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_CONTEXT (v) = current_function_decl;
+  if (m3_volatize_p ())
+    m3_volatilize_decl(v);
 
   TREE_CHAIN (v) = BLOCK_VARS (BLOCK_SUBBLOCKS
                                (DECL_INITIAL (current_function_decl)));
@@ -3397,9 +3498,9 @@ m3cg_declare_procedure (void)
   {
     DECL_VISIBILITY (p) = VISIBILITY_HIDDEN;
   }
-#ifdef GCC45
   gcc_assert((parent == 0) == (lev == 0));
   if (parent)
+#ifdef GCC45
     DECL_STATIC_CHAIN (parent) = 1;
 #endif
   DECL_CONTEXT (p) = parent;
@@ -3751,7 +3852,7 @@ m3cg_load_indirect (void)
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
 #endif
   }
-  v = m3_cast (build_pointer_type (src_t), v);
+  v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
   if (src_T != dst_T) {
     v = m3_build1 (CONVERT_EXPR, dst_t, v);
@@ -3799,7 +3900,7 @@ m3cg_store_indirect (void)
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
 #endif
   }
-  v = m3_cast (build_pointer_type (dst_t), v);
+  v = m3_cast (m3_build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
                     m3_build1 (CONVERT_EXPR, dst_t,
@@ -4526,6 +4627,11 @@ m3cg_insert_mn (void)
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (m >= 0);
   gcc_assert (n >= 0);
+  
+  /* workaround the fact that we use
+   * insert_mn on uninitialized variables.
+   */
+  m3_next_store_volatile = true;
 
   if (option_trace_all)
     fprintf(stderr, " insert_mn offset:%u count:%u\n", (unsigned)m,
@@ -4604,7 +4710,7 @@ m3cg_copy (void)
     SET_TYPE_MODE (ts, BLKmode);
   }
 
-  pts = build_pointer_type (ts);
+  pts = m3_build_pointer_type (ts);
 
   add_stmt (build2 (MODIFY_EXPR, t,
                     m3_build1 (INDIRECT_REF, ts,
@@ -4922,7 +5028,7 @@ m3cg_pop_struct (void)
     fprintf(stderr, "  pop struct size:0x%lx alignment:0x%lx\n", s, a);
 
   EXPR_REF (-1) = m3_build1 (INDIRECT_REF, t,
-                             m3_cast (build_pointer_type (t), EXPR_REF (-1)));
+                             m3_cast (m3_build_pointer_type (t), EXPR_REF (-1)));
   m3_pop_param (t);
 }
 
@@ -4930,7 +5036,8 @@ static void
 m3cg_pop_static_link (void)
 {
   tree v = declare_temp (t_addr);
-  m3_store (v, 0, t_addr, T_addr, t_addr, T_addr);
+  /* volatile otherwise gcc complains it is not intialized */
+  m3_store_volatile (v, 0, t_addr, T_addr, t_addr, T_addr);
   CALL_TOP_STATIC_CHAIN () = v;
 }
 
@@ -4980,7 +5087,7 @@ m3cg_store_ordered (void)
     warning (0, "only Relaxed memory order for stores is supported");
 
   v = EXPR_REF (-2);
-  v = m3_cast (build_pointer_type (dst_t), v);
+  v = m3_cast (m3_build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
                     m3_build1 (CONVERT_EXPR, dst_t,
@@ -5002,7 +5109,7 @@ m3cg_load_ordered (void)
     warning (0, "only Relaxed memory order for loads is supported");
 
   v = EXPR_REF (-1);
-  v = m3_cast (build_pointer_type (src_t), v);
+  v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
   if (src_T != dst_T) {
     v = m3_build1 (CONVERT_EXPR, dst_t, v);
@@ -5064,7 +5171,7 @@ m3cg_compare_exchange (void)
     goto incompatible;
 
   v = EXPR_REF (-2);
-  v = m3_cast (build_pointer_type (t), v);
+  v = m3_cast (m3_build_pointer_type (t), v);
   v = m3_build1 (INDIRECT_REF, t, v);
   if (t != u) {
     v = m3_build1 (CONVERT_EXPR, u, v);
@@ -5472,18 +5579,40 @@ m3_handle_option (size_t scode, const char *arg ATTRIBUTE_UNUSED, int value)
 bool
 m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
 {
-  if (flag_reorder_blocks)
-    {
-      warning (OPT_freorder_blocks,
-               "-freorder-blocks disabled for Modula-3 ex_stack exception handling");
-      flag_reorder_blocks = 0;
-    }
-  if (flag_reorder_blocks_and_partition)
-    {
-      warning (OPT_freorder_blocks_and_partition,
-               "-freorder-blocks-and-partition disabled for Modula-3 ex_stack exception handling");
-      flag_reorder_blocks_and_partition = 0;
-    }
+  /* These optimizations break our exception handling? */
+  flag_reorder_blocks = 0;
+  flag_reorder_blocks_and_partition = 0;
+  
+  if (M3_ALL_VOLATILE)
+  {
+    /* Make all loads/stores volatile like we used to,
+     * which greatly hampers optimization, but
+     * we don't then have to disable any particular
+     * optimizations below.
+     */
+  }
+  else
+  {
+    /* Turn off some optimizations that cause problems,
+     * unless we make all loads/stores volatile.
+     */
+    flag_tree_vrp = 0; /* value range propagation, causes problems? */
+    flag_tree_pre = 0; /* partial redundancy elmination, crashes? */
+    flag_tree_fre = 0; /* full redundancy elimination, causes problems? */
+
+    flag_tree_loop_im = 0; /* loop Invariant Motion, breaks compiling Trestle */
+#ifdef INSN_SCHEDULING
+    flag_schedule_insns = 0; /* fails to compile, surprising */
+#endif
+}
+
+ /* otherwise:
+  -> archiving libm3vbtkit.a
+  Undefined symbols:
+      "_ZChassisVBT__NewBtn__Win32.675", referenced from:
+      _L_1 in ZChassisVBT.mo
+  */
+  flag_unit_at_a_time = 0;
 
 #ifdef GCC45
   /* Excess precision other than "fast" requires front-end support.  */

@@ -60,5 +60,5 @@ typedef struct GTY(()) lang_decl
 
 struct GTY(()) language_function
 {
-  char junk; /* dummy field to ensure struct is not empty */
+    bool volatil; /* does function call setjmp/fork/vfork */
 };

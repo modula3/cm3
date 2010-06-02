@@ -2483,3 +2483,5 @@ extern int sparc_indent_opcode;
 
 /* The number of Pmode words for the setjmp buffer.  */
 #define JMP_BUF_SIZE 12
+
+#define TARGET_SPARC 1
