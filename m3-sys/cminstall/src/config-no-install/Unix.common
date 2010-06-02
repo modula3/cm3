@@ -64,7 +64,7 @@ if not defined("m3back_optimize")
 end
 
 if not defined("m3back_pic")
-  m3back_pic = "-fpic"
+  m3back_pic = "-fPIC"
 end
 
 % -funwind-tables in anticipation of using libunwind
