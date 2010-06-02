@@ -4403,7 +4403,10 @@ m3cg_extract_n (void)
 
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (n >= 0);
-  
+
+  if (option_trace_all)
+    fprintf(stderr, " extract_n count:%u\n", (unsigned)n);
+
   if (n == 0)
     EXPR_REF (-2) = m3_cast(t, v_zero);
   else
@@ -4454,6 +4457,10 @@ m3cg_extract_mn (void)
   gcc_assert (m >= 0);
   gcc_assert (n >= 0);
 
+  if (option_trace_all)
+    fprintf(stderr, " extract_mn offset:%u count:%u\n", (unsigned)m,
+            (unsigned)n);
+
   if (n == 0)
     EXPR_REF (-1) = m3_cast(t, v_zero);
   else
@@ -4484,7 +4491,10 @@ m3cg_insert_n (void)
   INTEGER (n);
 
   gcc_assert (INTEGRAL_TYPE_P (t));
-  gcc_assert (n > 0);
+  gcc_assert (n >= 0);
+
+  if (option_trace_all)
+    fprintf(stderr, " insert_n count:%u\n", (unsigned)n);
 
   EXPR_REF (-3) = m3_do_insert (EXPR_REF (-3), EXPR_REF (-2),
                                 EXPR_REF (-1), build_int_cst (t_int, n), t);
@@ -4502,6 +4512,10 @@ m3cg_insert_mn (void)
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (m >= 0);
   gcc_assert (n >= 0);
+
+  if (option_trace_all)
+    fprintf(stderr, " insert_mn offset:%u count:%u\n", (unsigned)m,
+           (unsigned)n);
 
   EXPR_REF (-2) = m3_do_fixed_insert (EXPR_REF (-2), EXPR_REF (-1), m, n, t);
   EXPR_POP ();
