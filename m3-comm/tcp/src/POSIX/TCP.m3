@@ -16,6 +16,7 @@ IMPORT ConnFD;
 IMPORT Cerrno;
 IMPORT TCPHack;
 IMPORT TCPPosix;
+FROM Usocket IMPORT socklen_t;
 FROM Ctypes IMPORT char, int;
 
 REVEAL
@@ -77,13 +78,13 @@ PROCEDURE NewConnector (ep: IP.Endpoint): Connector RAISES {IP.Error} =
         RaiseUnexpected();
       END
     END;
-    IF Usocket.listen(res.fd, 8) # 0 THEN RaiseUnexpected(); END;
+    IF Usocket.listen(res.fd, 8(*backlog*)) # 0 THEN RaiseUnexpected(); END;
     RETURN res
   END NewConnector;
 
 PROCEDURE GetEndPoint(c: Connector): IP.Endpoint =
   VAR
-    namelen  : INTEGER;
+    namelen  : socklen_t;
     name  : SockAddrIn;
   BEGIN
     IF c.ep.addr = IP.NullAddress THEN
@@ -124,7 +125,7 @@ PROCEDURE StartConnect(to: IP.Endpoint;
     fromName: SockAddrIn;
     ok := FALSE;
   BEGIN
-    fd := Usocket.socket(Usocket.AF_INET, Usocket.SOCK_STREAM, 0 (* TCP*));
+    fd := Usocket.socket(Usocket.AF_INET, Usocket.SOCK_STREAM, 0 (*TCP*));
     IF fd < 0 THEN
       WITH errno = Cerrno.GetErrno() DO
         IF errno = Uerror.EMFILE OR errno = Uerror.ENFILE THEN
@@ -438,7 +439,7 @@ PROCEDURE AcceptFrom(c: Connector; VAR (*OUT*) peer: IP.Endpoint): T
     RAISES {IP.Error, Thread.Alerted} =
   VAR
     addr                 : SockAddrIn;
-    addrSize             : int      := BYTESIZE(addr);
+    addrSize             : socklen_t := BYTESIZE(addr);
     fd                   : INTEGER;
   BEGIN
     LOOP
@@ -503,7 +504,7 @@ PROCEDURE GetPeerName(tcp: T): IP.Endpoint
   RAISES {IP.Error} =
   VAR
     addr: SockAddrIn;
-    len: int := BYTESIZE(addr);
+    len: socklen_t := BYTESIZE(addr);
     ep: IP.Endpoint;
   BEGIN
     LOCK tcp DO
@@ -524,7 +525,7 @@ PROCEDURE GetSockName(tcp: T): IP.Endpoint
   RAISES {IP.Error} =
   VAR
     addr: SockAddrIn;
-    len: int := BYTESIZE(addr);
+    len: socklen_t := BYTESIZE(addr);
     ep: IP.Endpoint;
   BEGIN
     LOCK tcp DO
