@@ -295,7 +295,10 @@ def _SetupEnvironmentVariableAny(Name, RequiredFiles, Attempt, pathsep = os.path
 def _ClearEnvironmentVariable(Name):
     if Name in os.environ:
         del(os.environ[Name])
-        print("set " + Name + "=")
+        if os.name == "posix":
+            print("export " + Name + "=")
+        else:
+            print("set " + Name + "=")
 
 #-----------------------------------------------------------------------------
 
@@ -755,7 +758,10 @@ def GetConfigForDistribution(Target):
 def SetEnvironmentVariable(Name, Value):
     if not os.environ.get(Name) or (os.environ[Name] != Value):
         os.environ[Name] = Value
-        print("set " + Name + "=" + Value)
+        if os.name == "posix":
+            print("export " + Name + "=" + Value)
+        else:
+            print("set " + Name + "=" + Value)
 
 #-----------------------------------------------------------------------------
 
