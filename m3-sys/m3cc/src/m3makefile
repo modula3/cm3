@@ -93,10 +93,11 @@ readonly m3cc_config = {
 % Note about configuring which assembler to use:
 %  When building m3cg and not gcc driver, the configured assembler is never going
 %  to be run (by m3cg) but it does matter.
-%  Cconfiguration in the "gcc/gcc" directory, which is done as part of
+%  Configuration in the "gcc/gcc" directory, which is done as part of
 %  building m3cg, does locate and test an assembler. Building on HP-UX will
 %  fail and say the GNU assembler is required, if it is not the one found.
 %
+
   "I386_LINUX"   : "-with-gnu-as -with-gnu-ld",
   "AMD64_LINUX"  : "-with-gnu-as -with-gnu-ld",
   "PPC_LINUX"    : "-with-gnu-as -with-gnu-ld",
@@ -212,17 +213,20 @@ readonly m3cc_config = {
 
 } % m3cc_config
 
+sparc64_assembler_config = "gcc_cv_as_sparc_register_op=yes"
+solaris_assembler_config = "gcc_cv_as_sparc_register_op=yes gcc_cv_as_weak=yes gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes"
+
 readonly m3cc_env = {
-  "SPARC64_FREEBSD" : "gcc_cv_as_sparc_register_op=yes",
-  "SPARC64_LINUX"   : "gcc_cv_as_sparc_register_op=yes",
-  "SPARC64_NETBSD"  : "gcc_cv_as_sparc_register_op=yes",
-  "SPARC64_OPENBSD" : "gcc_cv_as_sparc_register_op=yes",
-  "SPARC64_SOLARIS" : "gcc_cv_as_sparc_register_op=yes gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
-  "SOLsun"          : "gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
-  "SOLgnu"          : "gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
-  "SPARC32_SOLARIS" : "gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
-  "I386_SOLARIS"    : "gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
-  "AMD64_SOLARIS"   : "gcc_cv_as_hidden=yes gcc_cv_ld_hidden=yes",
+  "SPARC64_FREEBSD" : sparc64_assembler_config,
+  "SPARC64_LINUX"   : sparc64_assembler_config,
+  "SPARC64_NETBSD"  : sparc64_assembler_config,
+  "SPARC64_OPENBSD" : sparc64_assembler_config,
+  "SPARC64_SOLARIS" : solaris_assembler_config,
+  "SOLsun"          : solaris_assembler_config,
+  "SOLgnu"          : solaris_assembler_config,
+  "SPARC32_SOLARIS" : solaris_assembler_config,
+  "I386_SOLARIS"    : solaris_assembler_config,
+  "AMD64_SOLARIS"   : solaris_assembler_config,
 } % m3cc_env
 
 readonly proc get_config (target) is
