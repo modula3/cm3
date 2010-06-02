@@ -97,8 +97,16 @@ readonly m3cc_config = {
 %  building m3cg, does locate and test an assembler. Building on HP-UX will
 %  fail and say the GNU assembler is required, if it is not the one found.
 %
-
-  "ARM_LINUX": "-with-float=soft -enable-target-optspace -enable-threads -enable-shared",
+  "I386_LINUX"   : "-with-gnu-as -with-gnu-ld",
+  "AMD64_LINUX"  : "-with-gnu-as -with-gnu-ld",
+  "PPC_LINUX"    : "-with-gnu-as -with-gnu-ld",
+  "PPC32_LINUX"  : "-with-gnu-as -with-gnu-ld",
+  "PPC64_LINUX"  : "-with-gnu-as -with-gnu-ld",
+  "SPARC32_LINUX": "-with-gnu-as -with-gnu-ld -with-cpu=v9", % cpu=v9 for atomics
+  "SPARC64_LINUX": "-with-gnu-as -with-gnu-ld",
+  "LINUXLIBC6"   : "-with-gnu-as -with-gnu-ld",
+  "ARM_LINUX"    : "-with-gnu-as -with-gnu-ld -with-float=soft "
+                 & "-enable-target-optspace -enable-threads -enable-shared",
 
   %
   % AIX almost always requires native as and ld -- cross builds are not possible.
@@ -157,8 +165,6 @@ readonly m3cc_config = {
   "SOLsun"        : "-without-gnu-ld -without-gnu-as -with-cpu=v9", % cpu=v9 for atomics
   % If buiding native gcc driver, add:
   % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld
-
-  "SPARC32_LINUX" : "-with-cpu=v9", % cpu=v9 for atomics
 
   %
   % Bootstrap procedure for gcc on HPPA{64}-HPUX:
@@ -343,7 +349,8 @@ readonly proc m3cc_Run (x) is
     end
 end
 
-done = build_dir & "/.configure-done"
+done0 = build_dir & "/.configure-done" % old version
+done = build_dir & "/Makefile"
 
 if defined ("FORCE")
   %
@@ -356,7 +363,8 @@ if defined ("FORCE")
   if FileExists (build_dir & "/Makefile")
     exec("-cd " & build_dir & " && " & M3CC_MAKE & " distclean")
   end
-  foreach a in ["cm3cg", "cm3cg.exe", "confdefs.h", "config.log", "cm3cg", ".M3SHIP", done, Log, "_m3sh0.sh"]
+  foreach a in ["cm3cg", "cm3cg.exe", "confdefs.h", "config.log", "cm3cg",
+                ".M3SHIP", done0, done, Log, "_m3sh0.sh"]
     delete_file(build_dir & "/" & a)
   end
   %
@@ -500,9 +508,6 @@ if not defined ("no_config") and not NOACTION
     Configure = Configure & " -disable-tls"
 
     m3cc_Run (["cd", build_dir, "&&", env, SourceDir & "/configure", M3CC_CONFIG, Configure, " | tee -a " & Log])
-    > done in
-      write("done")
-    end
   end
 end
 
