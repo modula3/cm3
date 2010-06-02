@@ -4722,6 +4722,7 @@ m3cg_check_hi (void)
   tree temp1 = declare_temp (t);
 
   a = convert (t, a);
+
   if (option_exprs_trace)
     fprintf (stderr, "  check high type:%s code:0x%lx\n", m3cg_typename(T), code);
 
@@ -4751,7 +4752,7 @@ m3cg_check_range (void)
 
   if (option_exprs_trace)
     fprintf (stderr, "  check range type:%s code:0x%lx\n", m3cg_typename(T), code);
- 
+
   if (TREE_TYPE (EXPR_REF (-1)) != t)
     EXPR_REF (-1) = m3_build1 (CONVERT_EXPR, t, EXPR_REF (-1));
 
@@ -4950,8 +4951,7 @@ m3cg_load_static_link (void)
   PROC (p);
 
   if (option_procs_trace)
-    fprintf(stderr, "  load link %s\n",
-            IDENTIFIER_POINTER(DECL_NAME(p)));
+    fprintf(stderr, "  load link %s\n", IDENTIFIER_POINTER(DECL_NAME(p)));
 
   EXPR_PUSH (build1 (STATIC_CHAIN_EXPR, t_addr, p));
 }
@@ -5484,10 +5484,12 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
                "-freorder-blocks-and-partition disabled for Modula-3 ex_stack exception handling");
       flag_reorder_blocks_and_partition = 0;
     }
+
 #ifdef GCC45
   /* Excess precision other than "fast" requires front-end support.  */
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
 #endif
+
   return false;
 }
 
