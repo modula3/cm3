@@ -44,7 +44,7 @@ if equal (C_COMPILER, "SUN")
     if equal(TARGET, "I386_SOLARIS") or equal(TARGET, "AMD64_SOLARIS")
       SYSTEM_CC = cc & " -xF -Kpic"
     else
-      SYSTEM_CC = cc & " -xF -xcode=pic13" % pic32 if many external references
+      SYSTEM_CC = cc & " -xF -xcode=pic32" % pic13 if not many external references
     end
   end
 
