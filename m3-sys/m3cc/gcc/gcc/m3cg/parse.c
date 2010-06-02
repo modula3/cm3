@@ -3499,8 +3499,8 @@ m3cg_declare_procedure (void)
     DECL_VISIBILITY (p) = VISIBILITY_HIDDEN;
   }
   gcc_assert((parent == 0) == (lev == 0));
-  if (parent)
 #ifdef GCC45
+  if (parent)
     DECL_STATIC_CHAIN (parent) = 1;
 #endif
   DECL_CONTEXT (p) = parent;
