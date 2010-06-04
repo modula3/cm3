@@ -5338,7 +5338,9 @@ Undefined symbols:
   */
   flag_unit_at_a_time = 0;
 
-  flag_tree_pre = 0; /* crashes compiling m3-tools/cvsup/server/FSServer.m3 */
+  /* partial redundancy elmination;
+     crashes compiling m3-tools/cvsup/server/FSServer.m3 */
+  flag_tree_pre = 0;
 
   return false;
 }
