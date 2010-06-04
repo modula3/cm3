@@ -5613,7 +5613,6 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
      * unless we make all loads/stores volatile.
      */
     flag_tree_vrp = 0; /* value range propagation, causes problems? */
-    flag_tree_pre = 0; /* partial redundancy elmination, crashes? */
     flag_tree_fre = 0; /* full redundancy elimination, causes problems? */
 
     flag_tree_loop_im = 0; /* loop Invariant Motion, breaks compiling Trestle */
@@ -5645,6 +5644,10 @@ Undefined symbols:
       _L_1 in Main.mo
   */
   flag_unit_at_a_time = 0;
+
+  /* partial redundancy elmination;
+     crashes compiling m3-tools/cvsup/server/FSServer.m3 */
+  flag_tree_pre = 0;
 
 #ifdef GCC45
   /* Excess precision other than "fast" requires front-end support.  */
