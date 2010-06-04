@@ -5622,11 +5622,27 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
 #endif
 }
 
- /* otherwise:
-  -> archiving libm3vbtkit.a
-  Undefined symbols:
-      "_ZChassisVBT__NewBtn__Win32.675", referenced from:
-      _L_1 in ZChassisVBT.mo
+  /* otherwise:
+MODULE Main;
+
+PROCEDURE F1() =
+
+    PROCEDURE NestedUnused1() =
+    BEGIN
+    END NestedUnused1;
+
+BEGIN
+  IF FALSE THEN
+    NestedUnused1();
+  END;
+END F1;
+
+BEGIN
+  F1();
+END Main.
+Undefined symbols:
+  "_Main__F1__NestedUnused1.496", referenced from:
+      _L_1 in Main.mo
   */
   flag_unit_at_a_time = 0;
 
