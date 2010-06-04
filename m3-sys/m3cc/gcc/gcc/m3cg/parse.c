@@ -2149,7 +2149,8 @@ m3_swap (void)
 }
 
 static void
-m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+m3_load_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
+           bool volatil)
 {
   if (o != 0 || TREE_TYPE (v) != src_t)
   {
@@ -2165,7 +2166,7 @@ m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
 #endif
   }
   /* not good! */
-  if (FLOAT_TYPE_P(src_t) || FLOAT_TYPE_P(dst_t))
+  if (volatil || FLOAT_TYPE_P(src_t) || FLOAT_TYPE_P(dst_t))
     TREE_THIS_VOLATILE(v) = 1; /* force this to avoid aliasing problems */
   if (M3_ALL_VOLATILE)
     TREE_THIS_VOLATILE(v) = TREE_SIDE_EFFECTS(v) = 1; /* force this to avoid aliasing problems */
@@ -2173,6 +2174,21 @@ m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
     v = m3_build1 (CONVERT_EXPR, dst_t, v);
   }
   EXPR_PUSH (v);
+}
+
+static void
+m3_load (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T)
+{
+  bool volatil = false;
+  m3_load_1 (v, o, src_t, src_T, dst_t, dst_T, volatil);
+}
+
+static void ATTRIBUTE_UNUSED
+m3_load_volatile (tree v, int o, tree src_t, m3_type src_T,
+                  tree dst_t, m3_type dst_T)
+{
+  bool volatil = true;
+  m3_load_1 (v, o, src_t, src_T, dst_t, dst_T, volatil);
 }
 
 static void
