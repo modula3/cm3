@@ -5337,7 +5337,9 @@ Undefined symbols:
       _L_1 in Main.mo
   */
   flag_unit_at_a_time = 0;
-   
+
+  flag_tree_pre = 0; /* crashes compiling m3-tools/cvsup/server/FSServer.m3 */
+
   return false;
 }
 
