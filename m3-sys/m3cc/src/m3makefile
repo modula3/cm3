@@ -341,7 +341,7 @@ readonly proc m3cc_Run (x) is
         write(x & "\n")
     end
     local a = try_exec("@chmod +x " & Sh)
-    exec("@sh -ec " & Sh)
+    exec("@sh -exc " & Sh)
     local Inc = { "0":"1","1":"2","2":"3","3":"4","4":"5",
                   "5":"6","6":"7","7":"8","8":"9","9":"0" }
     m3cc_ResponseFileCounter2 = Inc{m3cc_ResponseFileCounter2}
