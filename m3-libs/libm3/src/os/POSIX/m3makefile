@@ -51,6 +51,7 @@ local readonly DefaultOSName = {
     "OPENBSD" : "OpenBSD",
     "OS2" : "OS/2",
     "SOLARIS" : "Solaris",
+    "OSF" : "Digital Unix",
     "TRU64" : "Digital Unix",
     "VMS" : "VMS",
 }
