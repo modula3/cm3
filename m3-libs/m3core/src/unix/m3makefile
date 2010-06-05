@@ -5,6 +5,7 @@
 readonly _UnixPieces = {
   "ALPHA32_VMS"     : [ "uin-common" ], % both are actually available
   "ALPHA64_VMS"     : [ "uin-common" ], % both are actually available
+  "ALPHA_OSF"       : [ "uin-common" ], % both are actually available?
   "AMD64_CYGWIN"    : [ "uin-common" ],
   "AMD64_LINUX"     : [ "uin-common" ],
   "AMD64_MINGW"     : [ "uin-common" ],
