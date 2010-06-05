@@ -20,7 +20,15 @@ extern "C" {
 
 static void Usocket__assert_plen_in(m3_socklen_t* plen)
 {
-    assert(LOSSLESS_SOCKLEN || plen == NULL || (*plen <= (1UL << 30)));
+    if (!(LOSSLESS_SOCKLEN || plen == NULL || (*plen <= (1UL << 30))))
+    {
+        printf("%u %u %x%08x\n",
+               !!LOSSLESS_SOCKLEN,
+               !!plen,
+               (plen ? (unsigned)((*plen >> 31) >> 1) : 0),
+               (plen ? (unsigned)*plen : 0));
+        assert(LOSSLESS_SOCKLEN || plen == NULL || (*plen <= (1UL << 30)));
+    }
 }
 
 static void Usocket__plen_out(m3_socklen_t* plen, socklen_t len)
