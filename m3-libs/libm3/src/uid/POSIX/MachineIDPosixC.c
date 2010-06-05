@@ -28,6 +28,7 @@
    || defined(__linux__)    \
    || defined(__NetBSD__)   \
    || defined(__OpenBSD__)  \
+   || defined(__osf__)      \
    || defined(__sun))
 #error Please test/port this.
 #endif
@@ -131,6 +132,11 @@ MachineIDC__CanGet(unsigned char *id)
     struct ifreq* req1 = { 0 };
     size_t i = { 0 };
     struct ifreq req2;
+#ifdef __osf__
+    struct ifdevea ifdev;
+    ZeroMemory(&ifdev, sizeof(ifdev));
+#endif
+    ZeroMemory(&buf, sizeof(buf));
     ZeroMemory(&list, sizeof(list));
     ZeroMemory(&req2, sizeof(req2));
 #endif
@@ -183,8 +189,9 @@ MachineIDC__CanGet(unsigned char *id)
                 }
                 if ((req2.ifr_flags & IFF_LOOPBACK) != 0)
                     continue;
-                memcpy(req2.ifr_name, req1->ifr_name, IFNAMSIZ);
 #if defined(__linux__) || defined(__CYGWIN__)
+                /* This memcpy probably not needed. */
+                memcpy(req2.ifr_name, req1->ifr_name, IFNAMSIZ);
                 if (ioctl(sock, SIOCGIFHWADDR, &req2) < 0)
                 {
                     perror("ioctl SIOCGIFHWADDR");
@@ -192,12 +199,15 @@ MachineIDC__CanGet(unsigned char *id)
                 }
                 memcpy(id, req2.ifr_hwaddr.sa_data, 6);
 #elif defined(__osf__)
-                if (ioctl(sock, SIOCRPHYSADDR, &req2) < 0)
+                memcpy(ifdev.ifr_name, req1->ifr_name, IFNAMSIZ);
+                if (ioctl(sock, SIOCRPHYSADDR, &ifdev) < 0)
                 {
-                    perror("ioctl SIOCRPHYSADDR");
+                    /* This does happen, but then we try
+                     * additional addresses and it works.
+                     */
                     continue;
                 }
-                memcpy(id, req2.default_pa, 6);
+                memcpy(id, ifdev.default_pa, 6);
 #else
 #error unknown system
 #endif
@@ -272,6 +282,8 @@ int main()
     system("/usr/sbin/arp -a | grep L"); /* L for local */
 #elif defined(__CYGWIN__)
     system("getmac");
+#elif defined(__osf__)
+    /*system("/usr/sbin/netstat -ia | grep :");*/
 #else
     system("/sbin/ifconfig -a | grep addr");
     system("/sbin/ifconfig -a | grep ether");
