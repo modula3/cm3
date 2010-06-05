@@ -265,6 +265,11 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     END;
 
     CASE System OF
+    
+    |  Systems.ALPHA_OSF =>
+                 Jumpbuf_size              := 84 * Address.size;
+                 Aligned_procedures        := FALSE;
+
     |  Systems.I386_FREEBSD, Systems.FreeBSD4 =>
                  Jumpbuf_size              := 11 * Address.size;
 

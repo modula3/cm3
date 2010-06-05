@@ -23,6 +23,9 @@ INTERFACE Target;
 
 TYPE
   Systems = {
+    ALPHA32_VMS,
+    ALPHA64_VMS,
+    ALPHA_OSF,
     AMD64_DARWIN,
     AMD64_FREEBSD,
     AMD64_LINUX,
@@ -49,6 +52,7 @@ TYPE
     PA32_HPUX,
     PA64_HPUX,
     PPC32_OPENBSD,
+    PPC64_DARWIN,
     PPC_DARWIN,
     PPC_LINUX,
     SOLgnu,
@@ -58,14 +62,14 @@ TYPE
     SPARC64_LINUX,
     SPARC64_OPENBSD,
     SPARC64_SOLARIS,
-    PPC64_DARWIN,
-    ALPHA32_VMS,
-    ALPHA64_VMS,
     Undefined
   };
 
 CONST
   SystemNames = ARRAY OF TEXT {
+    "ALPHA32_VMS",
+    "ALPHA64_VMS",
+    "ALPHA_OSF",
     "AMD64_DARWIN",
     "AMD64_FREEBSD",
     "AMD64_LINUX",
@@ -92,6 +96,7 @@ CONST
     "PA32_HPUX",
     "PA64_HPUX",
     "PPC32_OPENBSD",
+    "PPC64_DARWIN",
     "PPC_DARWIN",
     "PPC_LINUX",
     "SOLgnu",
@@ -100,10 +105,7 @@ CONST
     "SPARC32_SOLARIS",
     "SPARC64_LINUX",
     "SPARC64_OPENBSD",
-    "SPARC64_SOLARIS",
-    "PPC64_DARWIN",
-    "ALPHA32_VMS",
-    "ALPHA64_VMS"
+    "SPARC64_SOLARIS"
   };
 
 CONST
