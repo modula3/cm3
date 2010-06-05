@@ -1,6 +1,7 @@
 _TARGET_OS = {
   "ALPHA32_VMS"   : "VMS",
   "ALPHA64_VMS"   : "VMS",
+  "ALPHA_OSF"     : "OSF",
   "AMD64_CYGWIN"  : "CYGWIN",
   "AMD64_DARWIN"  : "DARWIN",
   "AMD64_FREEBSD" : "FREEBSD",
@@ -49,6 +50,7 @@ _TARGET_ENDIAN = {
 % because some architectures vary, e.g. PPC_NT is little endian, PPC_DARWIN is big.
   "ALPHA32_VMS"     : "LITTLE",
   "ALPHA64_VMS"     : "LITTLE",
+  "ALPHA_OSF"       : "LITTLE",
   "AMD64_CYGWIN"    : "LITTLE",
   "AMD64_DARWIN"    : "LITTLE",
   "AMD64_FREEBSD"   : "LITTLE",
