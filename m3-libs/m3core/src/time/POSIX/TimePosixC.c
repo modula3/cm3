@@ -67,9 +67,14 @@ TimePosix__ComputeGrain(void)
     {
         LONGREAL a = ComputeGrainOnce();
         LONGREAL b = ComputeGrainOnce();
+#ifdef __osf__ /* Three calls take a long time to coincide. */
+        if (a == b)
+            return a;
+#else
         LONGREAL c = ComputeGrainOnce();
         if (a == b && a == c)
             return a;
+#endif
     }
 }
 
