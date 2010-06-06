@@ -3522,7 +3522,12 @@ m3cg_declare_procedure (void)
   }
   else
   {
+#ifdef HAVE_GAS_HIDDEN
+    /* otherwise varasm.c warns:
+        "visibility attribute not supported in this configuration; ignored"
+    */
     DECL_VISIBILITY (p) = VISIBILITY_HIDDEN;
+#endif
   }
   gcc_assert((parent == 0) == (lev == 0));
 #ifdef GCC45
