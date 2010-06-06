@@ -15,10 +15,11 @@ extern "C" {
 
 #define MILLION (1000 * 1000)
 
-static
-LONGREAL/*Time.T*/
-__cdecl
-TimePosix__FromUtime(const struct timeval* tv)
+#ifdef _TIME64_T
+static LONGREAL/*Time.T*/ __cdecl TimePosix__FromUtime(const struct timeval64* tv)
+#else
+static LONGREAL/*Time.T*/ __cdecl TimePosix__FromUtime(const struct timeval* tv)
+#endif
 /* see also TimePosix__ToUtime */
 {
     return ((LONGREAL)tv->tv_sec) + ((LONGREAL)tv->tv_usec) / (LONGREAL)MILLION;
@@ -28,11 +29,19 @@ LONGREAL/*Time.T*/
 __cdecl
 TimePosix__Now(void)
 {
+#ifdef _TIME64_T
+    struct timeval64 tv;
+#else
     struct timeval tv;
+#endif
     int i = { 0 };
 
     ZERO_MEMORY(tv);
+#ifdef _TIME64_T
+    i = gettimeofday64(&tv, NULL);
+#else
     i = gettimeofday(&tv, NULL);
+#endif
     assert(i == 0);
 
     return TimePosix__FromUtime(&tv);
