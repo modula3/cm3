@@ -13,6 +13,7 @@ extern "C" {
 #define M3_DAYLIGHT daylight
 #endif
 
+/* OSF/1 is BSD at least if you define _OSF_SOURCE, else POSIX. */
 #if defined(__CYGWIN__) || defined(__hpux) || defined(__sun) || defined(__INTERIX)
 #define DATE_POSIX
 #else
