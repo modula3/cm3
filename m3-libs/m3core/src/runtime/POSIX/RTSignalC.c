@@ -133,6 +133,9 @@ static WORD_T GetPC(void* xcontext)
 #error Unknown __APPLE__ target
 #endif
 
+#elif defined(__osf__)
+    context->uc_mcontext.sc_pc
+
 #elif defined(__OpenBSD__)
 #if defined(__amd64)
     context->sc_rip
