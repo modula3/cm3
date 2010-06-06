@@ -45,19 +45,19 @@ __cdecl
 ThreadInternal__Select(int nfds,
                        ADDRESS read,
                        ADDRESS write,
-                       ADDRESS except,
+                       ADDRESS xcept, /* except is keyword on OSF/1 */
                        LONGREAL/*Time.T*/ m3timeout)
 {
     struct timeval timeout;
     double n = { 0 };
 
     if (m3timeout < 0)
-        return select(nfds, read, write, except, NULL);
+        return select(nfds, read, write, xcept, NULL);
 
     ZERO_MEMORY(timeout);
     timeout.tv_usec = modf(m3timeout, &n) * MILLION;
     timeout.tv_sec = n;
-    return select(nfds, read, write, except, &timeout);
+    return select(nfds, read, write, xcept, &timeout);
 }
 
 #endif
