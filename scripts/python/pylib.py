@@ -1143,6 +1143,9 @@ def Boot():
     elif StringTagged(Config, "SOLARIS") or Config == "SOLsun":
         CCompiler = "/usr/bin/cc"
         CCompilerFlags = "-g -mt -xldscope=symbolic "
+    elif Config == "ALPHA_OSF":
+        CCompiler = "/usr/bin/cc"
+        CCompilerFlags = "-g "
     else:
         # gcc platforms
         CCompiler = {
@@ -1165,9 +1168,9 @@ def Boot():
         "SOLgnu"          : " -m32 -mcpu=v9 ",
         "I386_SOLARIS"    : " -xarch=pentium_pro -Kpic ",
         "AMD64_SOLARIS"   : " -xarch=amd64       -Kpic ",
-        "SOLsun"          : " -xarch=v8plus -xcode=pic13 ",
-        "SPARC32_SOLARIS" : " -xarch=v8plus -xcode=pic13 ",
-        "SPARC64_SOLARIS" : " -xarch=v9     -xcode=pic13 ",
+        "SOLsun"          : " -xarch=v8plus -xcode=pic32 ",
+        "SPARC32_SOLARIS" : " -xarch=v8plus -xcode=pic32 ",
+        "SPARC64_SOLARIS" : " -xarch=v9     -xcode=pic32 ",
         "SPARC32_LINUX"   : " -m32 -mcpu=v9 -munaligned-doubles ",
         "SPARC64_LINUX"   : " -m64 -munaligned-doubles ",
         }.get(Config) or " ")
