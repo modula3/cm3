@@ -93,7 +93,11 @@
 #define SET_TYPE_MODE(node, mode) (TYPE_MODE(node) = (mode))
 #endif
 
-#ifdef GCC42
+#ifndef GCC42
+#define GCC42 0
+#endif
+
+#if GCC42
 /*typedef const union tree_node *const_tree;*/
 #define const_tree tree
 #define allocate_struct_function(a, b) allocate_struct_function(a)
@@ -274,7 +278,7 @@ static void m3_write_globals (void);
 #undef LANG_HOOKS_WRITE_GLOBALS
 #define LANG_HOOKS_WRITE_GLOBALS m3_write_globals
 
-#ifdef GCC42
+#if GCC42
 static void
 m3_expand_function (tree fndecl)
 {
@@ -1982,7 +1986,7 @@ m3_pop_param (tree t)
   EXPR_POP ();
 }
 
-#ifdef GCC42
+#if GCC42
 
 static void
 m3_call_direct (tree p, tree t)
@@ -2154,16 +2158,19 @@ m3_load_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
 {
   if (o != 0 || TREE_TYPE (v) != src_t)
   {
-#ifndef GCC42
-    v = m3_build3 (BIT_FIELD_REF, src_t, v, TYPE_SIZE (src_t),
-                   bitsize_int (o));
-#else
-  /* failsafe, but inefficient */
-    v = m3_build1 (ADDR_EXPR, t_addr, v);
-    v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-    v = m3_build1 (INDIRECT_REF, src_t,
-                   m3_cast (m3_build_pointer_type (src_t), v));
-#endif
+    if (GCC42)
+    {
+      /* failsafe, but inefficient */
+      v = m3_build1 (ADDR_EXPR, t_addr, v);
+      v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+      v = m3_build1 (INDIRECT_REF, src_t,
+                     m3_cast (m3_build_pointer_type (src_t), v));
+    }
+    else
+    {
+      v = m3_build3 (BIT_FIELD_REF, src_t, v, TYPE_SIZE (src_t),
+                     bitsize_int (o));
+    }
   }
   /* not good! */
   if (volatil || FLOAT_TYPE_P(src_t) || FLOAT_TYPE_P(dst_t))
@@ -2198,16 +2205,19 @@ m3_store_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
   tree val;
   if (o != 0 || TREE_TYPE (v) != dst_t)
   {
-#ifndef GCC42
-    v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
-                   bitsize_int (o));
-#else
-    /* failsafe, but inefficient */
-    v = m3_build1 (ADDR_EXPR, t_addr, v);
-    v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-    v = m3_build1 (INDIRECT_REF, dst_t,
-                   m3_cast (m3_build_pointer_type (dst_t), v));
-#endif
+    if (GCC42)
+    {
+      /* failsafe, but inefficient */
+      v = m3_build1 (ADDR_EXPR, t_addr, v);
+      v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+      v = m3_build1 (INDIRECT_REF, dst_t,
+                     m3_cast (m3_build_pointer_type (dst_t), v));
+    }
+    else
+    {
+      v = m3_build3 (BIT_FIELD_REF, dst_t, v, TYPE_SIZE (dst_t),
+                     bitsize_int (o));
+    }
   }
   if (volatil || m3_next_store_volatile)
     TREE_THIS_VOLATILE(v) = 1; /* force this to avoid aliasing problems */
