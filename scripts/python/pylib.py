@@ -10,6 +10,7 @@ import platform
 import re
 import tempfile
 import shutil
+import time
 
 #-----------------------------------------------------------------------------
 # Several important variables are gotten from the environment or probed.
@@ -520,7 +521,6 @@ def GetVersion(Key):
                 Value = Match.group(2)
                 Versions[MatchKey] = Value
                 exec("%s = \"%s\"" % (MatchKey, Value), locals(), globals())
-
     #
     # Make sure we found every key in the file (at least those
     # not defined in the environment)
@@ -1131,7 +1131,7 @@ def Boot():
     global BuildLocal
     BuildLocal += " -boot -keep -DM3CC_TARGET=" + Config
 
-    Version = "1"
+    Version = CM3VERSION + "-" + time.strftime("%Y%m%d")
 
     # This information is duplicated from the config files.
     # TBD: put it only in one place.
@@ -2437,6 +2437,7 @@ def FormInstallRoot(PackageSetName):
     a = os.path.join(GetStage(), "cm3-" + PackageSetName + "-" + AltConfig + "-" + CM3VERSION)
     if Config == "NT386" or Config == "I386_NT":
         a = a + "-VC" + GetVisualCPlusPlusVersion()
+    a = a + "-" + time.strftime("%Y%m%d")
     return a
 
 def MakeMSIWithWix(input):
