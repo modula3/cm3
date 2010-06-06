@@ -6,7 +6,7 @@
 %      modified on Fri Apr 30 11:31:44 PDT 1993 by mjordan
 
 readonly HAS_STACK_WALKER = {
-  "ALPHA_OSF"  : TRUE,
+% "ALPHA_OSF"  : TRUE,
   "DS3100"     : TRUE,
   "SOLgnu"     : TRUE,
   "SOLsun"     : TRUE,
