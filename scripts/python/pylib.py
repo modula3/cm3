@@ -1123,6 +1123,7 @@ def _SqueezeSpaces(a):
     a = re.sub("  +", " ", a)
     a = re.sub(" +$", "", a)
     a = re.sub("^ +", "", a)
+    return a
 
 def Boot():
 
