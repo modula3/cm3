@@ -25,12 +25,17 @@ RTProcess__OnInterrupt(RTProcess__InterruptHandler x)
   return 0;
 }
 
+void F1(void)
+{
+  /*(volatile int*)0;*/
+ ((void(*)())0x123)();
+}
 
 int main()
 {
   InstallHandlers();
-  *(volatile int*)0;
-
+  printf("%p\n", &F1);
+  F1();
   return 0;
 }
 
