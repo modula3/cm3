@@ -1120,6 +1120,7 @@ def _MakeZip(a):
 #-----------------------------------------------------------------------------
 
 def _SqueezeSpaces(a):
+    # squeeze runs of spaces and spaces at ends
     a = re.sub("  +", " ", a)
     a = re.sub(" +$", "", a)
     a = re.sub("^ +", "", a)
@@ -1255,9 +1256,8 @@ def Boot():
     if (not vms) or AssembleOnHost:
         Assembler = GnuPlatformPrefix + Assembler
 
-    #
     # squeeze runs of spaces and spaces at ends
-    #
+
     Compile = _SqueezeSpaces(Compile)
     CCompilerFlags = _SqueezeSpaces(CCompilerFlags)
     Link = _SqueezeSpaces(Link)
