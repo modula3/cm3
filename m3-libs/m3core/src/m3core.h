@@ -12,6 +12,9 @@
 #ifndef _XOPEN_SOURCE
 #define _XOPEN_SOURCE 500
 #endif
+#ifndef _TIME64_T
+#define _TIME64_T
+#endif
 #endif
 
 /* http://gcc.gnu.org/wiki/Visibility */

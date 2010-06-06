@@ -23,9 +23,11 @@ extern "C" {
 #define Local 0
 #define UTC 1
 
-static
-time_t
-TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
+#ifdef _TIME64_T
+static time64_t TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
+#else
+static time_t TimePosix__ToSeconds(LONGREAL/*Time.T*/ t)
+#endif
 {
     double n = { 0 };
     modf(t, &n);
@@ -37,11 +39,19 @@ __cdecl
 DatePosix__FromTime(double t, const ptrdiff_t* pzone, Date_t* date, TEXT unknown, TEXT gmt)
 {
     struct tm* tm = { 0 };
+#ifdef _TIME64_T
+    time64_t sec = TimePosix__ToSeconds(t);
+#else
     time_t sec = TimePosix__ToSeconds(t);
+#endif
     ptrdiff_t zone = (pzone ? *pzone : Local);
     ZeroMemory(date, sizeof(*date));
     assert(zone == Local || zone == UTC);
+#ifdef _TIME64_T
+    tm = ((zone == Local) ? localtime64(&sec) : gmtime64(&sec));
+#else
     tm = ((zone == Local) ? localtime(&sec) : gmtime(&sec));
+#endif
     assert(tm != NULL);
     date->year = tm->tm_year + 1900;
     date->month = tm->tm_mon;
@@ -97,7 +107,11 @@ DatePosix__ToTime(const Date_t* date)
     double t = { 0 };
 #ifdef DATE_BSD
     const unsigned SecsPerHour = 60 * 60;
+#ifdef _TIME64_T
+    time64_t now = { 0 };
+#else
     time_t now = { 0 };
+#endif
     struct tm* local_now = { 0 };
 #endif
 
@@ -112,14 +126,23 @@ DatePosix__ToTime(const Date_t* date)
     /* tm.tm_wday ignored */
     tm.tm_isdst  = 0; /* tell mktime that DST is not in effect */
     /* tm_zone, tm_gmtoff ignored */
+#ifdef _TIME64_T
+    t = mktime64(&tm);
+#else
     t = mktime(&tm);
+#endif
 #ifdef DATE_BSD
     if (t == -1)
         goto Exit;
 
     /* adjust result to reflect "date->offset" */
+#ifdef _TIME64_T
+    time64(&now);
+    local_now = localtime64(&now);
+#else
     time(&now);
     local_now = localtime(&now);
+#endif
     assert(local_now != NULL);
     if (local_now->tm_isdst > 0)
       /* decrement the local time zone by one hour if DST is in effect */
