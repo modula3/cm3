@@ -5,6 +5,15 @@
 #ifndef INCLUDED_M3CORE_H
 #define INCLUDED_M3CORE_H
 
+#ifdef __osf__
+#ifndef _OSF_SOURCE
+#define _OSF_SOURCE
+#endif
+#ifndef _XOPEN_SOURCE
+#define _XOPEN_SOURCE 500
+#endif
+#endif
+
 /* http://gcc.gnu.org/wiki/Visibility */
 /* Helpers for shared library support */
 #if __GNUC__ >= 4 && !defined(__osf__)
@@ -268,7 +277,7 @@ Note that socklen_t should be declared by system headers, but isn't always.
 */
 #if defined(__INTERIX) || (defined(__vms) && defined(_DECC_V4_SOURCE)) || defined(_WIN32)
 typedef int socklen_t;
-#elif defined(__vms) || defined(__osf__)
+#elif defined(__vms)
 typedef size_t socklen_t;
 #endif
 typedef WORD_T m3_socklen_t;
