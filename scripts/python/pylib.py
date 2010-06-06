@@ -1119,6 +1119,11 @@ def _MakeZip(a):
 
 #-----------------------------------------------------------------------------
 
+def _SqueezeSpaces(a):
+    a = re.sub("  +", " ", a)
+    a = re.sub(" +$", "", a)
+    a = re.sub("^ +", "", a)
+
 def Boot():
 
     global BuildLocal
@@ -1252,17 +1257,11 @@ def Boot():
     #
     # squeeze runs of spaces and spaces at ends
     #
-    CCompilerFlags = re.sub("  +", " ", CCompilerFlags)
-    CCompilerFlags = re.sub(" +$", "", CCompilerFlags)
-    CCompilerFlags = re.sub("^ +", "", CCompilerFlags)
-    Compile = re.sub("  +", " ", Compile)
-    Compile = re.sub(" +$", "", Compile)
-    Compile = re.sub("^ +", "", Compile)
-    Link = re.sub("  +", " ", Link)
-    Link = re.sub(" +$", "", Link)
-    AssemblerFlags = re.sub("^ +", "", AssemblerFlags)
-    AssemblerFlags = re.sub("  +", " ", AssemblerFlags)
-    AssemblerFlags = re.sub(" +$", "", AssemblerFlags)
+    Compile = _SqueezeSpaces(Compile)
+    CCompilerFlags = _SqueezeSpaces(CCompilerFlags)
+    Link = _SqueezeSpaces(Link)
+    Assembler = _SqueezeSpaces(Assembler)
+    AssemblerFlags = _SqueezeSpaces(AssemblerFlags)
 
     BootDir = "./cm3-boot-" + Target + "-" + Version
 
