@@ -581,6 +581,9 @@ if (UName.startswith("windows")
     # Host = "NT386"
     Host = "I386_NT"
 
+elif UName == "osf1":
+    Host = "ALPHA_OSF"
+
 elif UName == "interix":
     Host = "I386_INTERIX"
 
