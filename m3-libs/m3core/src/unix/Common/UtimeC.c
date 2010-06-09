@@ -27,10 +27,11 @@ m3_time_t
 __cdecl
 Utime__time(m3_time_t* tloc)
 {
-    time_t b = tloc ? (time_t)*tloc : 0;
 #ifdef _TIME64_T
+    time64_t b = tloc ? (time64_t)*tloc : 0;
     time64_t a = time64(tloc ? &b : 0);
 #else
+    time_t b = tloc ? (time_t)*tloc : 0;
     time_t a = time(tloc ? &b : 0);
 #endif
     if (tloc) *tloc = b;
