@@ -21,7 +21,7 @@ readonly GNU_PLATFORM = "alpha-dec-osf5.1"
 
 SYSTEM_LIBS = {
   %"LIBC"        : [ "-ldnet_stub", "-lm" ],
-  "LIBC"        : [ "-lpthread" ],
+  "LIBC"        : [ "-pthread", "-lm" ],
   "LEX-YACC"    : [  "-ll" ],
   %"FLEX-BISON" : [ "L/usr/local/lib", "-lfl" ],
   %"POSTGRES95" : [  "L/usr/local/postgres95/lib", "-lpq" ],
@@ -41,8 +41,8 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 
 %---------------------------------------------------------- system programs ---
 
-readonly SYSTEM_CC  = "/usr/bin/cc"
-readonly SYSTEM_LD  = "/usr/bin/cc" % "/usr/bin/ld"
+readonly SYSTEM_CC  = "/usr/bin/cc -lm -pthread"
+readonly SYSTEM_LD  = SYSTEM_CC % "/usr/bin/ld"
 readonly SYSTEM_AR  = "/usr/bin/ar"
 readonly SYSTEM_ASM = "/usr/bin/as"
 
