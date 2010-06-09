@@ -20,12 +20,35 @@ extern "C" {
 
 void Uexec__RepackStatus(int* var_status)
 {
-    int status;
+    int status = { 0 };
 
     assert(var_status != NULL);
 
-    /* Posix says you must pass "the original" to the macros. */
-    status = ((WTERMSIG(*var_status) << 8) | WEXITSTATUS(*var_status));
+    /* Posix says you must pass "the original" to the macros.
+     * That is why we don't read *var_status just once.
+     *
+     * On OSF, using WEXITSTATUS if WIFEXITED is false or
+     * WTERMSIG if WIFSIGNALED is false, return -1, which
+     * later violates a subrange: ProcessPosixCommon.Wait:
+     * MIN(LAST(Process.ExitCode), status) ends up -1
+     * which doesn't fit in ExitCode.
+     *
+     * A close reading of POSIX says what WEXITSTATUS
+     * does if WIFEXITED is true and what WTERMSIG does
+     * if WIFSIGNALED is true, but not what they do
+     * if the conditions are false.
+     */
+
+    assert(!(WIFEXITED(*var_status) && WIFSIGNALED(*var_status)));
+
+    if (WIFEXITED(*var_status))
+      status |= WEXITSTATUS(*var_status);
+
+    if (WIFSIGNALED(*var_status))
+      status |= (WTERMSIG(*var_status) << 8);
+
+    /* What about WSTOPSIG, WIFSTOPPED, WIFCONTINUED? */
+
 #ifdef WCOREDUMP
     status |= (WCOREDUMP(*var_status) ? 0x8000 : 0);
 #endif
