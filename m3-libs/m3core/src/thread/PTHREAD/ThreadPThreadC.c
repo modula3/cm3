@@ -64,7 +64,6 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 EXTERN_CONST int SIG_SUSPEND = NSIG - 1;
 #elif defined(__hpux)
 EXTERN_CONST int SIG_SUSPEND = _SIGRTMAX;
-#elif defined(__osf__)
 #elif defined(SIGRTMAX) && !defined(__osf__)
 /* This might be a function call, in which case try _SIGRTMAX or initializing
    it somewhere. SIGRTMAX is sysconf(132) on OSF. We may be
