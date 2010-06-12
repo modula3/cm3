@@ -105,14 +105,14 @@ ThreadPThread__sigsuspend(void)
     sigsuspend(&mask);
 }
 
-int
+void
 __cdecl
 ThreadPThread__SuspendThread (m3_pthread_t mt)
 {
   abort();
 }
 
-int
+void
 __cdecl
 ThreadPThread__RestartThread (m3_pthread_t mt)
 {
