@@ -1218,7 +1218,7 @@ def Boot():
         # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
         Assembler = "/usr/ccs/bin/as"
     elif StringTagged(Target, "OSF"):
-        Assembler = "/usr/lib/cmplrs/cc/as0"
+        Assembler = "/usr/bin/as"
     else:
         Assembler = "as"
 
@@ -1236,6 +1236,7 @@ def Boot():
                 AssemblerFlags = AssemblerFlags + " --32"
 
     AssemblerFlags = (AssemblerFlags + ({
+        "ALPHA_OSF"         : " -nocpp ",
         "AMD64_DARWIN"      : " -arch x86_64 ",
         "PPC64_DARWIN"      : " -arch ppc64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
