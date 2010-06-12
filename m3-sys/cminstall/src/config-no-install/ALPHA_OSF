@@ -21,7 +21,7 @@ readonly GNU_PLATFORM = "alpha-dec-osf5.1"
 
 SYSTEM_LIBS = {
   %"LIBC"        : [ "-ldnet_stub", "-lm" ],
-  "LIBC"        : [ "-pthread", "-lm" ],
+  "LIBC"        : [ "-pthread", "-lm", "-lrt" ],
   "LEX-YACC"    : [  "-ll" ],
   %"FLEX-BISON" : [ "L/usr/local/lib", "-lfl" ],
   %"POSTGRES95" : [  "L/usr/local/postgres95/lib", "-lpq" ],
@@ -44,9 +44,7 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 readonly SYSTEM_CC  = "/usr/bin/cc -lm -pthread"
 readonly SYSTEM_LD  = SYSTEM_CC % "/usr/bin/ld"
 readonly SYSTEM_AR  = "/usr/bin/ar"
-readonly SYSTEM_ASM = "/usr/lib/cmplrs/cc/as0"
-    % or /usr/bin/as
-    % or /usr/bin/as -nocpp
+readonly SYSTEM_ASM = "/usr/bin/as -nocpp"
 
 %--------------------------------------------------------- shared libraries ---
 % Note: the last time I tried using shared libraries on OSF 3.0, it
