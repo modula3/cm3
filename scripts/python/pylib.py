@@ -1217,6 +1217,8 @@ def Boot():
     elif StringTagged(Target, "SOLARIS") or Target.startswith("SOL"):
         # see http://gcc.gnu.org/ml/gcc/2010-05/msg00155.html
         Assembler = "/usr/ccs/bin/as"
+    elif StringTagged(Target, "OSF"):
+        Assembler = "/usr/lib/cmplrs/cc/as0"
     else:
         Assembler = "as"
 
@@ -1235,7 +1237,6 @@ def Boot():
 
     AssemblerFlags = (AssemblerFlags + ({
         "AMD64_DARWIN"      : " -arch x86_64 ",
-        "ALPHA_OSF"         : " -nocpp ",
         "PPC64_DARWIN"      : " -arch ppc64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
         "I386_SOLARIS"      : " -Qy -s",
