@@ -27,7 +27,7 @@ readonly NO_USER_THREADS =
 %------------------------------------------------------------------------------
 
 readonly USE_PTHREADS = {
-  "ALPHA_OSF"  : FALSE,
+  "ALPHA_OSF"  : TRUE,
   "AIX386"     : FALSE,
   "AP3000"     : FALSE,
   "ARM"        : FALSE,
