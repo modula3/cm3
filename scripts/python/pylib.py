@@ -1235,6 +1235,7 @@ def Boot():
 
     AssemblerFlags = (AssemblerFlags + ({
         "AMD64_DARWIN"      : " -arch x86_64 ",
+        "ALPHA_OSF"         : " -nocpp ",
         "PPC64_DARWIN"      : " -arch ppc64 ",
         "ARM_DARWIN"        : " -arch armv6 ",
         "I386_SOLARIS"      : " -Qy -s",
