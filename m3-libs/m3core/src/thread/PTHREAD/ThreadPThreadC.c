@@ -55,7 +55,7 @@ extern "C" {
     HPUX: 44
   Look at the history of Usignal and RTMachine to find more values.  There was
   RTMachine.SIG_SUSPEND and SIG was aliased to it.  Both SIG and SIG_SUSPEND
-  were only defined for systems using pthreads.  SIG was shorthand. */
+  were only defined for systems using pthreads. SIG was shorthand. */
 #ifdef M3_DIRECT_SUSPEND
 EXTERN_CONST int SIG_SUSPEND = 0;
 #elif defined(__sun) || defined(__CYGWIN__)
@@ -64,9 +64,11 @@ EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
 EXTERN_CONST int SIG_SUSPEND = NSIG - 1;
 #elif defined(__hpux)
 EXTERN_CONST int SIG_SUSPEND = _SIGRTMAX;
-#elif defined(SIGRTMAX)
+#elif defined(__osf__)
+#elif defined(SIGRTMAX) && !defined(__osf__)
 /* This might be a function call, in which case try _SIGRTMAX or initializing
-   it somewhere. */
+   it somewhere. SIGRTMAX is sysconf(132) on OSF. We may be
+   able to use direct suspend/resume on OSF. */
 EXTERN_CONST int SIG_SUSPEND = SIGRTMAX;
 #elif defined(SIGUSR2)
 EXTERN_CONST int SIG_SUSPEND = SIGUSR2;
