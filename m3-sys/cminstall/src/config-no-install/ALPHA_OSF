@@ -44,7 +44,9 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 readonly SYSTEM_CC  = "/usr/bin/cc -lm -pthread"
 readonly SYSTEM_LD  = SYSTEM_CC % "/usr/bin/ld"
 readonly SYSTEM_AR  = "/usr/bin/ar"
-readonly SYSTEM_ASM = "/usr/bin/as"
+readonly SYSTEM_ASM = "/usr/lib/cmplrs/cc/as0"
+    % or /usr/bin/as
+    % or /usr/bin/as -nocpp
 
 %--------------------------------------------------------- shared libraries ---
 % Note: the last time I tried using shared libraries on OSF 3.0, it
@@ -57,7 +59,7 @@ readonly SYSTEM_ASM = "/usr/bin/as"
 
 %--------------------------------------------------------- Modula-3 backend ---
 
-M3_USE_STACK_WALKER = TRUE
+%M3_USE_STACK_WALKER = TRUE
 
 m3back_pic = "" % It seems that -fPIC isn't needed!  cool.
 m3back_m64 = "" % -m64 not allowed
