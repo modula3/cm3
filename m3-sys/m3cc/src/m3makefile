@@ -91,8 +91,8 @@ end
 readonly m3cc_config = {
 %
 % Note about configuring which assembler to use:
-%  When building m3cg and not gcc driver, the configured assembler is never going
-%  to be run (by m3cg) but it does matter.
+%  When building m3cg and not gcc driver, the configured assembler is never
+%  going to be run (by m3cg) but it does matter.
 %  Configuration in the "gcc/gcc" directory, which is done as part of
 %  building m3cg, does locate and test an assembler. Building on HP-UX will
 %  fail and say the GNU assembler is required, if it is not the one found.
@@ -103,14 +103,14 @@ readonly m3cc_config = {
   "PPC_LINUX"    : "-with-gnu-as -with-gnu-ld",
   "PPC32_LINUX"  : "-with-gnu-as -with-gnu-ld",
   "PPC64_LINUX"  : "-with-gnu-as -with-gnu-ld",
-  "SPARC32_LINUX": "-with-gnu-as -with-gnu-ld -with-cpu=v9", % cpu=v9 for atomics
+  "SPARC32_LINUX": "-with-gnu-as -with-gnu-ld -with-cpu=v9", % v9 for atomics
   "SPARC64_LINUX": "-with-gnu-as -with-gnu-ld",
   "LINUXLIBC6"   : "-with-gnu-as -with-gnu-ld",
   "ARM_LINUX"    : "-with-gnu-as -with-gnu-ld -with-float=soft "
                  & "-enable-target-optspace -enable-threads -enable-shared",
 
   %
-  % AIX almost always requires native as and ld -- cross builds are not possible.
+  % AIX usually requires native as and ld -- cross builds are not possible.
   % Not all of this is relevant to m3cg?, but user can build gcc/cc1 here.
   %
 
@@ -130,18 +130,20 @@ readonly m3cc_config = {
   % -with-ld=/usr/bin/ld 
 
   %
-  % Hm -- I thought this was just about what assembler/linker the gcc driver runs,
+  % I thought this was just about what assembler/linker the gcc driver runs,
   % but it also affect the contents of the assembly.
-  % For example, SPARC64_SOLARIS output isn't being accepted by SUN as, let's see..
+  % For example, SPARC64_SOLARIS output isn't being accepted by SUN as..
   % #ifdef HAVE_AS_REGISTER_PSEUDO_OP
-  % D:\dev2\cm3.2\m3-sys\m3cc\gcc\gcc\config\sparc\sparc.c(3842):	  fprintf (file, "\t.register\t%%g%d, #%s\n", i,
+  % D:\dev2\cm3.2\m3-sys\m3cc\gcc\gcc\config\sparc\sparc.c(3842):
+  %   fprintf (file, "\t.register\t%%g%d, #%s\n", i,
   %
   % "SPARC64_SOLARIS" : "-without-gnu-ld -without-gnu-as",
   %
-  % Note for my initial build I patched config.h manually, but this should the same thing.
-  % Also, native builds will probably just figure it out. This is needed for cross builds,
+  % I patched config.h manually, but this should be equivalent.
+  % Native builds robably just figure it out. This is needed for cross builds,
   % unless perhaps building binutils along with m3cg.
-  % If m3cg omits the .register psuedo ops, assembly completely fails, with lots of errors.
+  % If m3cg omits the .register psuedo ops, assembly completely fails,
+  % with many errors.
   %
 
   "SPARC64_SOLARIS" : "-without-gnu-as -without-gnu-ld",
@@ -155,15 +157,15 @@ readonly m3cc_config = {
   % GNU assembler is ok with .stabd.
   % Sun assembler doesn't like .stabd.
   % Sun assembler doesn't like cross section subtraction, as occurs
-  % with -fPIC -funwind-table -m64, but gcc 4.4.0 fixes that and I ported the fix.
-  % However GNU assembler moves around: /usr/sfw/bin/gas vs. /opt/csw/gnu/as
+  % with -fPIC -funwind-table -m64, but gcc 4.4.0 fix backported.
+  % GNU assembler moves around: /usr/sfw/bin/gas vs. /opt/csw/gnu/as
   % If buiding native gcc driver, add:
   % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld 
   % or -with-as=/usr/sfw/bin/gas -with-ld=/usr/ccs/bin/ld
   % or /opt/csw/gnu/as, or /opt/csw/bin/gas, or gas
 
-  "SOLgnu"        : "-without-gnu-ld -without-gnu-as -with-cpu=v9", % cpu=v9 for atomics
-  "SOLsun"        : "-without-gnu-ld -without-gnu-as -with-cpu=v9", % cpu=v9 for atomics
+  "SOLgnu" : "-without-gnu-ld -without-gnu-as -with-cpu=v9", % v9 for atomics
+  "SOLsun" : "-without-gnu-ld -without-gnu-as -with-cpu=v9", % v9 for atomics
   % If buiding native gcc driver, add:
   % -with-as=/usr/ccs/bin/as -with-ld=/usr/ccs/bin/ld
 
@@ -408,7 +410,7 @@ if equal (M3CC_HOST, M3CC_TARGET) and equal (M3CC_HOST, M3CC_BUILD) and equal (M
 end
 
 %
-% Configure does not seem to ferry environment variables from itself to make,
+% Configure does not ferry environment variables from itself to make,
 % so these must be specified on both the configure command and the make command.
 %
 env = env & " " & get_overrides ("CC", M3CC_CC) & get_overrides ("CFLAGS", M3CC_CFLAGS)
@@ -422,7 +424,7 @@ env = env & " MAKE=" & GNU_MAKE & " "
 %
 % Problems building gmp/mpfr:
 %   Documentation is built into the source tree, leading cvs diff
-%   to output a LOT of extra content, not good, avoid that.
+%   to slowly output a LOT of extra content, not good, avoid that.
 %   Automake and autoconf are causing problems building on NT, even when they are installed.
 %   We don't need their results usually. Libtool is also a problem, possibly a cascade.
 %
@@ -608,10 +610,10 @@ foreach dir in ["gcc", "libcpp", "mpfr", "mpfr/tests"]
             end
 
             %
-            % gcc 4.2 seems to have some optional dependency on gmp/mpfr, and doesn't
-            % have the support in the makefile to build the source if it is there.
-            % When Apple moves to 4.3 or newer, we'll symlink the gmp/mpfr directories
-            % from mainline to Apple.
+            % gcc 4.2 seems to have some optional dependency on gmp/mpfr, and
+            % doesn't have the support in the makefile to build the source if
+            % it is there. When Apple moves to 4.3 or newer, we'll symlink the
+            % gmp/mpfr directories from mainline to Apple.
             %
             if GCC42 and equal(leaf, "Makefile")
                 Sed(file, "^GMPLIBS =.*$", "GMPLIBS =")
