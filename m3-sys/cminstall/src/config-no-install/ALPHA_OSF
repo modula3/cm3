@@ -61,6 +61,7 @@ readonly SYSTEM_ASM = "/usr/bin/as -nocpp"
 
 m3back_pic = "" % It seems that -fPIC isn't needed!  cool.
 m3back_m64 = "" % -m64 not allowed
+m3back_mieee = "-mieee"
 
 %--------------------------------------------------------------- C compiler ---
 % "compile_c" is called to compile C source files.  Note that this function
