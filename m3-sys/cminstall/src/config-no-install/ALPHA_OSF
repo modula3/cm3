@@ -40,7 +40,7 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 
 %---------------------------------------------------------- system programs ---
 
-readonly SYSTEM_CC  = "/usr/bin/cc -lm -pthread"
+readonly SYSTEM_CC  = "/usr/bin/cc -g -pthread -readonly_strings"
 readonly SYSTEM_LD  = SYSTEM_CC % "/usr/bin/ld"
 readonly SYSTEM_AR  = "/usr/bin/ar"
 readonly SYSTEM_ASM = "/usr/bin/as -nocpp"
