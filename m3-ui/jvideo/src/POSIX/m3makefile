@@ -8,7 +8,7 @@ import("libm3")
 import("tcp")
 
 readonly _JVPieces = {
-  "ALPHA_OSF"  : "osf1",
+% "ALPHA_OSF"  : "osf1",
   "DS3100"     : "ultrix",
   "DS3100_OSF" : "osf1"
 }
