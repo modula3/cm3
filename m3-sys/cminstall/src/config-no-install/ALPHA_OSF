@@ -20,8 +20,7 @@ readonly GNU_PLATFORM = "alpha-dec-osf5.1"
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  %"LIBC"        : [ "-ldnet_stub", "-lm" ],
-  "LIBC"        : [ "-pthread", "-lm", "-lrt" ],
+  "LIBC"        : [ "-pthread", "-ldnet_stub", "-lm", "-lrt" ],
   "LEX-YACC"    : [  "-ll" ],
   %"FLEX-BISON" : [ "L/usr/local/lib", "-lfl" ],
   %"POSTGRES95" : [  "L/usr/local/postgres95/lib", "-lpq" ],
