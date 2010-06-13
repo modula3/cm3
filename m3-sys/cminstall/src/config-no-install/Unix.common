@@ -80,11 +80,16 @@ if not defined("m3back_m64")
   m3back_m64 = {"32BITS" : "", "64BITS" : "-m64"}{WORD_SIZE}
 end
 
+if not defined("m3back_mieee")
+  m3back_mieee = ""
+end
+
 proc m3_backend(source, object, optimize, debug) is
     local args = [ "-quiet",
                    "-fno-reorder-blocks",
                    m3back_unwind_table,
                    m3back_pic,
+                   m3back_mieee,
                    m3back_m32,
                    m3back_m64 ]
     if optimize
