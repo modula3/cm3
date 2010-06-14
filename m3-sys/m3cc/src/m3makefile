@@ -528,7 +528,7 @@ readonly proc AppendExeExtension (a) is
   return a
 end
 
-DoMipsTfile = FALSE % (equal (M3CC_HOST, "DS3100") or equal (M3CC_HOST, "ALPHA_OSF"))
+DoMipsTfile = (equal (M3CC_TARGET, "DS3100") or equal (M3CC_TARGET, "ALPHA_OSF"))
 
 readonly proc postcp() is
   pSrc  = build_dir & "/gcc/m3cgc1"
@@ -634,20 +634,32 @@ end
 % User can still cd into build directory and run make to get gcc/cc1/libgcc.
 %
 if GCC45
-    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty all-libdecnumber all-mpc all-zlib | tee -a " & Log])
+    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
+              & " all-libiberty all-libdecnumber all-mpc all-zlib | tee -a "
+              & Log])
 else
 if GCC42
-    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty all-libiberty all-libdecnumber | tee -a " & Log])
+    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-build-libiberty"
+              & " all-libiberty all-libdecnumber | tee -a " & Log])
 else
-    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr all-build-libiberty all-libiberty all-libdecnumber | tee -a " & Log])
+    m3cc_Run (["cd " & build_dir & " && " & M3CC_MAKE & " all-gmp all-mpfr"
+              & " all-build-libiberty all-libiberty all-libdecnumber | tee -a "
+              & Log])
 end
 end
 
 %
 % make just libcpp.a, don't bother with makedepend.exe
 %
-m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a | tee -a " & Log])
-m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes insn-config.h m3cg | tee -a " & Log])
+m3cc_Run (["cd " & build_dir & " && cd libcpp && " & M3CC_MAKE & " libcpp.a |"
+          & "  tee -a " & Log])
+m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " s-modes "
+          & "insn-config.h m3cg | tee -a " & Log])
+
+if DoMipsTfile
+  m3cc_Run (["cd " & build_dir & " && cd gcc && " & M3CC_MAKE & " mips-tfile"
+          & " | tee -a " & Log])
+end
 
 postcp ()
 
