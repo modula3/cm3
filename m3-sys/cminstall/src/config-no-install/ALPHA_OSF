@@ -20,7 +20,7 @@ readonly GNU_PLATFORM = "alpha-dec-osf5.1"
 % that the library is not available.
 
 SYSTEM_LIBS = {
-  "LIBC"        : [ "-pthread", "-ldnet_stub", "-lm", "-lrt" ],
+  "LIBC"        : [ "-ldnet_stub", "-lm", "-lrt" ],
   "LEX-YACC"    : [  "-ll" ],
   %"FLEX-BISON" : [ "L/usr/local/lib", "-lfl" ],
   %"POSTGRES95" : [  "L/usr/local/postgres95/lib", "-lpq" ],
@@ -40,10 +40,11 @@ SYSTEM_LIBORDER = [ "OPENGL", "DECPEX", "MOTIF", "X11", "TCP", "ODBC",
 
 %---------------------------------------------------------- system programs ---
 
-readonly SYSTEM_CC  = "/usr/bin/cc -g -pthread -readonly_strings"
-readonly SYSTEM_LD  = SYSTEM_CC % "/usr/bin/ld"
+readonly SYSTEM_CC  = "/usr/bin/cc -g3 -pthread -readonly_strings"
+                    & " -ieee_with_no_inexact -error_unresolved"
+readonly SYSTEM_LD  = SYSTEM_CC
 readonly SYSTEM_AR  = "/usr/bin/ar"
-readonly SYSTEM_ASM = "/usr/bin/as -nocpp"
+readonly SYSTEM_ASM = "/usr/bin/as -nocpp -g -oldas -c -O0"
 
 %--------------------------------------------------------- shared libraries ---
 % Note: the last time I tried using shared libraries on OSF 3.0, it
@@ -63,30 +64,23 @@ m3back_m64 = "" % -m64 not allowed
 m3back_mieee = "-mieee"
 
 %--------------------------------------------------------------- C compiler ---
-% "compile_c" is called to compile C source files.  Note that this function
-% is only called if your program or library explicitly includes C source
-% code, the system distributed by Critical Mass does not.
+% "compile_c" is called to compile C source files.
 
 proc compile_c (source, object, options, optimize, debug) is
-  local args = [ "-ieee_with_no_inexact", options ]
-  if optimize  args += "-O"  end
-  if debug     args += "-gstabs"  end
+  local args = [ options ]
+  if optimize	args += "-O"  end
+  if debug	args += "-g"  end
   return try_exec ("@" & SYSTEM_CC, args, "-c", source)
 end
 
 %---------------------------------------------------------------- assembler ---
 % "assemble" is called to assemble .s or .asm files.
 
-%readonly m3fixup = "@" & BIN_USE & "/mips-tfile"
-% The default assembler isn't smart enough to include debugging
-% information from the assembler source file, so we run mips-tfile
-% after assembly to reinsert the debugging info in the object file.
-
 proc assemble (source, object) is
   local ret_code = 0
   ret_code = try_exec ("@" & SYSTEM_ASM, source, "-o", object)
   if not equal (ret_code, 0) return ret_code end
-  %ret_code = try_exec (m3fixup, "-o", object, source)
+  ret_code = try_exec (m3fixup, "-o", object, source)
   return ret_code
 end
 
@@ -105,18 +99,11 @@ proc make_lib (lib, options, objects, imported_libs, shared) is
 
   if shared
     % then, build the shared library
-    ret_code = try_exec ("@" & SYSTEM_LD, "-shared -expect_unresolved end -o",
-                         lib_so, "-all", lib_a, "-none", imported_libs, "-lc")
+    ret_code = try_exec ("@" & SYSTEM_LD, "-shared -o",
+                         lib_so, "-all", lib_a, "-none", imported_libs)
     if not equal (ret_code, 0) return ret_code end
-
-    % finally, make sure the shared library stuff gets installed properly
-    install_derived (lib_so)
-    install_link_to_derived (lib_so, LIB_INSTALL)
-  else
-    delete_file (lib_so)
   end
-
-  return 0
+  return skip_lib(lib, shared)
 end
 
 %-------------------------------------------------------------------
@@ -125,24 +112,29 @@ end
 % files that should be deleted or shipped.
 
 proc skip_lib (lib, shared) is
-  local lib_so = format ("lib%s.so", lib)
+    local lib_a	  = "lib" & lib & ".a"
+    local lib_so  = "lib" & lib & ".so"
 
-  if shared
-    % make sure the shared library stuff gets installed properly
-    install_derived (lib_so)
-    install_link_to_derived (lib_so, LIB_INSTALL)
-  else
-    delete_file (lib_so)
-  end
+    % Tell clean what to delete.
+    deriveds("", [lib_a, lib_so])
 
-  return 0
+    if shared
+	% make sure the shared library stuff gets installed properly
+	LibdExport(lib_so)
+	install_link_to_derived(lib_a, LIB_INSTALL)
+	install_derived_link("../../../lib/" & lib_so, lib_so)
+    else
+        DeleteFiles([lib_so])
+    end
+
+    return 0
 end
 
 %------------------------------------------------------------------- linker ---
 % "m3_link" is called to produce a final executable.
 
 proc m3_link (prog, options, objects, imported_libs, shared) is
-  local linker = [ "@" & SYSTEM_CC, "-ieee_with_no_inexact" ]
+  local linker = [ "@" & SYSTEM_CC ]
   local args = [ "-o", prog, options, objects, imported_libs ]
   if shared
     return try_exec (linker, "-call_shared", "-Wl,-rpath," & LIB_USE, args) %ZZZ
@@ -169,3 +161,11 @@ end
 M3_SHARED_LIB_ARG = ""
 
 include("Unix.common")
+
+%------------------------------------------------------------------------------
+
+readonly m3fixup = "@" & BIN_USE & "/mips-tfile"
+% The default assembler isn't smart enough to include debugging
+% information from the assembler source file, so we run mips-tfile
+% after assembly to reinsert the debugging info in the object file.
+
