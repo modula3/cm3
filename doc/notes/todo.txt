@@ -101,3 +101,10 @@ Implement stack walking on OSF/1 as it was.
 Move code from quake/config to Modula-3/cm3.
 Including TARGET_OS, TARGET_ARCHITECTURE!
 -----------------------------------------------------------------------------
+Eliminate more of m3core/src/unix/*.i3, the platform-specific parts,
+if any are left. In particular uin-common, uin-len.
+Maybe Solaris can be reduced via C.
+-----------------------------------------------------------------------------
+Reduce/eliminate other header cloning or dependency on it?
+X.i3? WinBase.i3?
+-----------------------------------------------------------------------------
