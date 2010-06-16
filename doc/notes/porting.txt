@@ -11,8 +11,20 @@ Files might move.
 Our portability rests on some large pillars:
   Posix-compliance of target, including pthreads.
     Plus NT/Win32 targets are supported (so far just NT/x86)
-    If pthreads aren't supported (djgpp), there is a good chance for an alternative, with a little more work.
-  gcc support for the target
+    If pthreads aren't supported (djgpp), or don't work particularly well (OpenBSD),
+      we have now have two very portable user thread implementations, and
+      others are possible.
+    In particular:
+       getcontext/setcontext based
+         But these are missing on OpenBSD and Darwin/amd64.
+       sigaltstack based
+         Very similar to getcontext/setcontext, but more expensive to
+         create a thread. This is in use on OpenBSD by default, and
+         is the user thread implementation on AMD64_DARWIN.
+         See ThreadPosixC.c, it contains both get/setcontext and sigaltstack variants.
+       sigstack might be the way to go on e.g. VMS, where pthreads don't get context.
+       Lastly the old way of digging around in jmpbuf remains viable, but not portable,
+       if desparate.
 
 
 In the past, a large tedious error-prone part of porting was "rewriting /usr/include in Modula-3".
