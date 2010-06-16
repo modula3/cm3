@@ -102,9 +102,10 @@ int __cdecl Usocket__setsockopt(int s, int level, int optname, void* optval, m3_
 #if defined(__CYGWIN__) || defined(_WIN32)
     if (optname == SO_LINGER && optval != NULL)
     {
-        struct linger b = { 0 };
+        struct linger b;
         m3_linger_t* a = (m3_linger_t*)optval;
         assert(len == sizeof(*a));
+        ZeroMemory(&b, sizeof(b));
         b.l_onoff = a->onoff;
         b.l_linger = a->linger;
         return setsockopt(s, level, optname, (void*)&b, sizeof(b));
@@ -163,7 +164,7 @@ the same order. This is checked in Usocket__Assertions.
 
 #if defined(__CYGWIN__) || defined(_WIN32)
         m3_linger_t* a = { 0 };
-        struct linger b = { 0 };
+        struct linger b;
 
         if (optname == SO_LINGER && optval != NULL)
         {
@@ -176,7 +177,6 @@ the same order. This is checked in Usocket__Assertions.
             len = sizeof(b);
         }
 #endif
-
         r = getsockopt(s, level, optname, optval, plen ? &len : 0);
         PLEN_OUT
 
