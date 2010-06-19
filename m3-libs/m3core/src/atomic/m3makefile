@@ -1,5 +1,8 @@
+if not equal(TARGET, "ARMEL_LINUX")
+
 Generic_module("Atomic")
 template("atomic")
+
 Atomic("Address")
 Atomic("Boolean")
 Atomic("Char")
@@ -10,3 +13,5 @@ if not (equal(TARGET, "PPC_LINUX") or equal(TARGET, "PPC_DARWIN")
 end
 Atomic("Refany")
 Atomic("WideChar")
+
+end
