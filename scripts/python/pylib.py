@@ -340,7 +340,7 @@ def _GetAllTargets():
 
     # systematic naming
 
-    for proc in ["ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "IA64", "I386", "PPC", "PPC32",
+    for proc in ["ALPHA", "ALPHA32", "ALPHA64", "AMD64", "ARM", "ARMEL", "IA64", "I386", "PPC", "PPC32",
                  "PPC64", "SPARC", "SPARC32", "SPARC64", "MIPS32", "MIPS64", "PA32", "PA64", "SH"]:
         for os in ["AIX",  "CE", "CYGWIN", "DARWIN",  "FREEBSD", "HPUX" "INTERIX", "IRIX",
                    "LINUX", "MINGW", "NETBSD", "NT", "OPENBSD", "OSF", "SOLARIS", "VMS"]:
@@ -1311,8 +1311,8 @@ def Boot():
 
     for a in [Makefile]:
         a.write("# edit up here\n\n"
-                + "CC ?= " + CCompiler + "\n"
-                + "CFLAGS ?= " + CCompilerFlags + "\n"
+                + "CC=" + CCompiler + "\n"
+                + "CFLAGS=" + CCompilerFlags + "\n"
                 + "Compile=" + Compile + "\n"
                 + "Assemble=" + Assembler + " " + AssemblerFlags + "\n"
                 + "Link=" + Link + "\n"
