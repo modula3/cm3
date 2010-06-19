@@ -1259,7 +1259,6 @@ def Boot():
 
     if not vms:
         CCompiler = GnuPlatformPrefix + CCompiler
-        Link = GnuPlatformPrefix + Link
     if (not vms) or AssembleOnHost:
         Assembler = GnuPlatformPrefix + Assembler
 
