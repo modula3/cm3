@@ -74,6 +74,9 @@
 #ifndef TARGET_ARCH32
 #define TARGET_ARCH32 0
 #endif
+#ifndef M3_MOD64_CALL
+#define M3_MOD64_CALL 0
+#endif
 
 /* in particular, Solaris/sparc32 has a stack walker */
 #define M3_ALL_VOLATILE (TARGET_SPARC && TARGET_SOLARIS && TARGET_ARCH32)
@@ -188,6 +191,7 @@ static GTY (()) tree memcpy_proc;
 static GTY (()) tree memmove_proc;
 static GTY (()) tree memset_proc;
 static GTY (()) tree memcmp_proc;
+static GTY (()) tree mod64_proc;
 static GTY (()) tree set_union_proc;
 static GTY (()) tree set_diff_proc;
 static GTY (()) tree set_inter_proc;
@@ -1136,6 +1140,12 @@ m3_init_decl_processing (void)
   memset_proc = built_in_decls[BUILT_IN_MEMSET];
   memcmp_proc = built_in_decls[BUILT_IN_MEMCMP];
 #endif
+
+  if (M3_MOD64_CALL)
+  {
+    t = build_function_type_list (t_int_64, t_int_64, t_int_64, NULL_TREE);
+    mod64_proc = builtin_function ("m3_mod64", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  }
 
   t = build_function_type_list (t_void, NULL_TREE);
   set_union_proc  = builtin_function ("set_union",
@@ -4186,6 +4196,55 @@ m3cg_cvt_float (void)
   }
 }
 
+#if 0 /* possibly more optimal */
+
+static void
+m3cg_div (void)
+{
+  MTYPE2 (t, T);
+  SIGN   (a);
+  SIGN   (b);
+  enum tree_code code = FLOOR_DIV_EXPR;
+
+  if ((a == b) || IS_WORD_TYPE(T))
+    code = TRUNC_DIV_EXPR;
+
+  EXPR_REF (-2) = m3_build2 (code, t,
+                             m3_cast (t, EXPR_REF (-2)),
+                             m3_cast (t, EXPR_REF (-1)));
+  EXPR_POP ();
+}
+
+static void
+m3cg_mod (void)
+{
+  MTYPE2 (t, T);
+  SIGN   (a);
+  SIGN   (b);
+  enum tree_code code = FLOOR_MOD_EXPR;
+
+  if ((a == b) || IS_WORD_TYPE(T))
+    code = TRUNC_MOD_EXPR;
+
+  if ((!M3_MOD64_CALL) || (code == TRUNC_MOD_EXPR)
+    || (TYPE_SIZE (t) != TYPE_SIZE (long_long_integer_type_node)))
+  {
+    EXPR_REF (-2) = m3_build2 (code, t,
+			       m3_cast (t, EXPR_REF (-2)),
+			       m3_cast (t, EXPR_REF (-1)));
+    EXPR_POP ();
+  }
+  else
+  {
+    m3_start_call ();
+    m3_pop_param (t);
+    m3_pop_param (t);
+    m3_call_direct (mod64_proc, TREE_TYPE (TREE_TYPE (mod64_proc)));
+  }
+}
+
+#else /* safer */
+
 static void
 m3cg_div (void)
 {
@@ -4203,14 +4262,27 @@ static void
 m3cg_mod (void)
 {
   MTYPE2 (t, T);
-  UNUSED_SIGN   (a);
-  UNUSED_SIGN   (b);
+  UNUSED_SIGN (a);
+  UNUSED_SIGN (b);
 
-  EXPR_REF (-2) = m3_build2 (FLOOR_MOD_EXPR, t,
-                             m3_cast (t, EXPR_REF (-2)),
-                             m3_cast (t, EXPR_REF (-1)));
-  EXPR_POP ();
+  if ((!M3_MOD64_CALL) ||
+    || (TYPE_SIZE (t) != TYPE_SIZE (long_long_integer_type_node)))
+  {
+    EXPR_REF (-2) = m3_build2 (FLOOR_MOD_EXPR, t,
+			       m3_cast (t, EXPR_REF (-2)),
+			       m3_cast (t, EXPR_REF (-1)));
+    EXPR_POP ();
+  }
+  else
+  {
+    m3_start_call ();
+    m3_pop_param (t);
+    m3_pop_param (t);
+    m3_call_direct (mod64_proc, TREE_TYPE (TREE_TYPE (mod64_proc)));
+  }
 }
+
+#endif
 
 static void
 m3cg_set_union (void)
