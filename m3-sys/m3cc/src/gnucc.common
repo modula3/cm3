@@ -58,7 +58,9 @@ else
     M3CC_TARGET = TARGET
 end end
 
-if not defined ("M3CC_BUILD") M3CC_BUILD  = TARGET end
+if not defined ("M3CC_BUILD")
+  M3CC_BUILD = HOST
+end
 
 proc NormalizePlatform(a) is
   if equal(a, "SOLgnu") or equal(a, "SOLsun")

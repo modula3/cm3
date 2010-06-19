@@ -404,19 +404,14 @@ if Native
   if equal (M3CC_BUILD, "AMD64_DARWIN")
     M3CC_CFLAGS = M3CC_CFLAGS & " -arch x86_64"
   end
-  
-  %
-  % Always specify host and build for native builds.
-  % This provides more consistency.
-  %
-  Configure = Configure & " -host=" & GNU_platform (M3CC_TARGET)
-  Configure = Configure & " -build=" & GNU_platform (M3CC_TARGET)
 end
 
 %
-% Always specify target.
-% This provides more consistency.
+% Always specify build/host/target.
+% This should provide more consistency.
 %
+Configure = Configure & " -build=" & GNU_platform (M3CC_BUILD)
+Configure = Configure & " -host=" & GNU_platform (M3CC_HOST)
 Configure = Configure & " -target=" & GNU_platform (M3CC_TARGET)
 
 %
@@ -469,7 +464,6 @@ if not defined ("no_config") and not NOACTION
         local Prefix = "/usr/local"
         local DefaultSysroot = Prefix & "/" & GNU_platform (M3CC_TARGET) & "/sys-root"
         Configure = Configure & " -with-build-sysroot=" & DefaultSysroot
-        Configure = Configure & " -host=" & GNU_platform (M3CC_HOST)
     else
         if not equal (M3CC_HOST, M3CC_TARGET)
           Configure = Configure & " -with-sysroot"
