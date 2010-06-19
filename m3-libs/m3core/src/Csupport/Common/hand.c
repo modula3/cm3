@@ -66,7 +66,10 @@ m3_div64(int64 b, int64 a)
 }
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) || defined(__arm__)
+#ifndef _WIN32
+#define m3_mod64 m3_modL
+#endif
 int64
 __stdcall
 m3_mod64(int64 b, int64 a)
