@@ -11,6 +11,7 @@ readonly _UnixPieces = {
   "AMD64_MINGW"     : [ "uin-common" ],
   "AMD64_NT"        : [ "uin-common" ],
   "AMD64_SOLARIS"   : [ "uin-common" ],
+  "ARMEL_LINUX"     : [ "uin-common" ],
   "I386_CYGWIN"     : [ "uin-common" ],
   "I386_INTERIX"    : [ "uin-common" ],
   "I386_MINGW"      : [ "uin-common" ],
