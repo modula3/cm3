@@ -236,6 +236,7 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
     (* SPARC64, HPPA, MIPS64: aligned_procedures *)
 
     IF TextUtils.StartsWith(system, "SPARC64_")
+      OR TextUtils.StartsWith(system, "ARMEL")
       OR TextUtils.StartsWith(system, "PA")
       OR TextUtils.StartsWith(system, "MIPS64_") THEN
       Aligned_procedures := FALSE;
@@ -277,6 +278,10 @@ PROCEDURE Init (system: TEXT; in_OS_name: TEXT; backend_mode: M3BackendMode_t): 
        Systems.AMD64_OPENBSD,
        Systems.AMD64_FREEBSD =>
                  Jumpbuf_size              := 12 * Address.size;
+
+    | Systems.ARMEL_LINUX =>
+                 Jumpbuf_size := 32 * Int64.size;
+                 Jumpbuf_align := 64;
 
     |  Systems.PA32_HPUX =>
                  Structure_size_boundary   := 16;
