@@ -166,6 +166,8 @@ static WORD_T GetPC(void* xcontext)
       context->uc_mcontext.gregs[REG_RIP]
 #elif defined(__powerpc)
       context->uc_mcontext.uc_regs->gregs[PT_NIP]
+#elif defined(__arm__)
+      context->uc_mcontext.arm_pc
 #else
 #error unknown __linux target
 #endif
