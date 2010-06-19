@@ -20,7 +20,7 @@ readonly Platform_info = {
   "AMD64_OPENBSD" : "amd64-openbsd",
   "AMD64_SOLARIS" : "i586-sun-solaris2.10", % deliberately i586
   "ARM_DARWIN" : "arm-apple-darwin8",
-  "ARM_LINUX" : "arm-linux-uclibc",
+  "ARMEL_LINUX" : "arm-linux-gnueabi",
   "FBSD_ALPHA": "alpha-unknown-freebsd6",
   "FreeBSD4"  : "i586-unknown-freebsd4",
   "I386_CYGWIN" : "i586-pc-cygwin",
