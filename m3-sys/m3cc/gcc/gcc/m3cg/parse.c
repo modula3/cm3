@@ -4265,7 +4265,7 @@ m3cg_mod (void)
   UNUSED_SIGN (a);
   UNUSED_SIGN (b);
 
-  if ((!M3_MOD64_CALL) ||
+  if ((!M3_MOD64_CALL)
     || (TYPE_SIZE (t) != TYPE_SIZE (long_long_integer_type_node)))
   {
     EXPR_REF (-2) = m3_build2 (FLOOR_MOD_EXPR, t,
