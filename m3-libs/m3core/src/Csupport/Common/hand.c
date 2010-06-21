@@ -14,11 +14,6 @@
 #ifndef _MT
 #define _MT
 #endif
-typedef __int64 int64;
-typedef unsigned __int64 uint64;
-#else
-typedef long long int64;
-typedef unsigned long long uint64;
 #endif
 
 #include "m3core.h"
@@ -44,13 +39,19 @@ extern "C"
 /* T should be an unsigned type */
 #define M3_POS(T, a) (((T)-((a) + 1)) + 1)
 
-#ifdef _WIN32
-int64
+#ifndef _WIN32
+#define m3_div64 m3_divL
+#define m3_mod64 m3_modL
+#endif
+
+#ifndef _WIN32
+
+INT32
 __stdcall
-m3_div64(int64 b, int64 a)
+m3_div(INT32 b, INT32 a)
 {
-  typedef  int64 ST; /* signed type */
-  typedef uint64 UT; /* unsigned type */
+  typedef  INT32 ST; /* signed type */
+  typedef UINT32 UT; /* unsigned type */
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
@@ -64,15 +65,13 @@ m3_div64(int64 b, int64 a)
     return -(ST)((ua + ub - 1) / ub);
   }
 }
-#endif
 
-#if defined(_WIN32) || defined(__arm__)
-int64
+INT32
 __stdcall
-m3_mod64(int64 b, int64 a)
+m3_mod(INT32 b, INT32 a)
 {
-  typedef  int64 ST; /* signed type */
-  typedef uint64 UT; /* unsigned type */
+  typedef  INT32 ST; /* signed type */
+  typedef UINT32 UT; /* unsigned type */
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
@@ -85,7 +84,47 @@ m3_mod64(int64 b, int64 a)
     return (bneg ? -a : a);
   }
 }
+
 #endif
+
+INT64
+__stdcall
+m3_div64(INT64 b, INT64 a)
+{
+  typedef  INT64 ST; /* signed type */
+  typedef UINT64 UT; /* unsigned type */
+  int aneg = (a < 0);
+  int bneg = (b < 0);
+  if (aneg == bneg || a == 0 || b == 0)
+    return (a / b);
+  else
+  {
+    /* round negative result down by rounding positive result up
+       unsigned math is much better defined, see gcc -Wstrict-overflow=4 */
+    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
+    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
+    return -(ST)((ua + ub - 1) / ub);
+  }
+}
+
+INT64
+__stdcall
+m3_mod64(INT64 b, INT64 a)
+{
+  typedef  INT64 ST; /* signed type */
+  typedef UINT64 UT; /* unsigned type */
+  int aneg = (a < 0);
+  int bneg = (b < 0);
+  if (aneg == bneg || a == 0 || b == 0)
+    return (a % b);
+  else
+  {
+    UT ua = (aneg ? M3_POS(UT, a) : (UT)a);
+    UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
+    a = (ST)(ub - 1 - (ua + ub - 1) % ub);
+    return (bneg ? -a : a);
+  }
+}
 
 #define SET_GRAIN (sizeof (WORD_T) * 8)
 
