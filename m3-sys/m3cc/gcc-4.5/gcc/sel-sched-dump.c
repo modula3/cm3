@@ -367,7 +367,7 @@ void
 dump_av_set (av_set_t av)
 {
   av_set_iterator i;
-  expr_t expr;
+  expr_t expr = { 0 };
 
   if (!sched_dump_to_dot_p)
     sel_print ("{");

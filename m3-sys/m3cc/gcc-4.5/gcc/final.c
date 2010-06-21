@@ -2101,7 +2101,7 @@ final_scan_insn (rtx insn, FILE *file, int optimize ATTRIBUTE_UNUSED,
 	rtx body = PATTERN (insn);
 	int insn_code_number;
 	const char *templ;
-	bool is_stmt;
+	bool is_stmt = { 0 };
 
 	/* Reset this early so it is correct for ASM statements.  */
 	current_insn_predicate = NULL_RTX;

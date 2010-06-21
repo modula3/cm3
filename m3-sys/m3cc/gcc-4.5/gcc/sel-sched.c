@@ -1386,7 +1386,7 @@ choose_best_reg_1 (HARD_REG_SET hard_regs_used,
   unsigned regno, i, n;
   hard_reg_set_iterator hrsi;
   def_list_iterator di;
-  def_t def;
+  def_t def = { 0 };
 
   /* If original register is available, return it.  */
   *is_orig_reg_p_ptr = true;
@@ -1492,7 +1492,7 @@ choose_best_pseudo_reg (regset used_regs,
                         def_list_t original_insns, bool *is_orig_reg_p_ptr)
 {
   def_list_iterator i;
-  def_t def;
+  def_t def = { 0 };
   enum machine_mode mode = VOIDmode;
   bool bad_hard_regs = false;
 
@@ -3234,7 +3234,7 @@ find_used_regs (insn_t insn, av_set_t orig_ops, regset used_regs,
 		struct reg_rename  *reg_rename_p, def_list_t *original_insns)
 {
   def_list_iterator i;
-  def_t def;
+  def_t def = { 0 };
   int res;
   bool needs_spec_check_p = false;
   expr_t expr;
@@ -7340,7 +7340,7 @@ update_seqnos_and_stage (int min_seqno, int max_seqno,
 {
   int new_hs;
   ilist_iterator ii;
-  insn_t insn;
+  insn_t insn = { 0 };
 
   /* Actually, new_hs is the seqno of the instruction, that was
      scheduled first (i.e. it is the first one in SCHEDULED_INSNS).  */

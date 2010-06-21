@@ -1931,7 +1931,8 @@ simplify_using_initial_values (struct loop *loop, enum rtx_code op, rtx *expr)
 
       FOR_BB_INSNS_REVERSE (e->src, insn)
 	{
-	  rtx src, dest;
+	  rtx src = { 0 };
+	  rtx dest = { 0 };
 	  rtx old = *expr;
 
 	  if (!INSN_P (insn))
