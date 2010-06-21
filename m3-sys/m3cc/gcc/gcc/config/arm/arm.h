@@ -2799,6 +2799,4 @@ enum arm_builtins
 #define NEED_INDICATE_EXEC_STACK	0
 #endif
 
-#define M3_MOD64_CALL 1
-
 #endif /* ! GCC_ARM_H */
