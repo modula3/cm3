@@ -734,6 +734,8 @@ build_flags_test ("p2", "p222", ".M3SHIP Library", "-no-m3ship-resolution -group
 p_test ("p2", "p224", "mutex checker (approx. 4 to 5 minutes)")
 p_test ("p2", "p225", "__try/__finally")
 
+p_test ("p2", "p238", "'man vs. boy' aka nested procedures+recursion aka static chain test")
+
 %------------------------------------------------------------------- rtests ---
 %  RUNTIME tests: modules containing runtime error where the generated
 %    error messages are of interest.
