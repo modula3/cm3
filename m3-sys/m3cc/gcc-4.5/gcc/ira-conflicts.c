@@ -695,7 +695,7 @@ print_conflicts (FILE *file, bool reg_p)
 
   FOR_EACH_ALLOCNO (a, ai)
     {
-      ira_allocno_t conflict_a;
+      ira_allocno_t conflict_a = { 0 };
       ira_allocno_conflict_iterator aci;
       basic_block bb;
 
