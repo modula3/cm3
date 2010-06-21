@@ -17,6 +17,8 @@ You should have received a copy of the GNU General Public License
 along with GCC; see the file COPYING3.  If not see
 <http://www.gnu.org/licenses/>.  */
 
+enum machine_mode;
+
 extern void darwin_init_sections (void);
 extern int name_needs_quotes (const char *);
 
