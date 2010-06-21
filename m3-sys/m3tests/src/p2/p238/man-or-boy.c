@@ -16,8 +16,8 @@ int f1  (ARG* _) { return  1; }
  
 // --- helper
 int eval(ARG* a) { return a->fn(a); }
-#define ARG(...) (&(ARG){ __VA_ARGS__ })
-#define FUN(...) ARG(B,&k,__VA_ARGS__)
+#define MAKE_ARG(...) (&(ARG){ __VA_ARGS__ })
+#define FUN(...) MAKE_ARG(B,&k,__VA_ARGS__)
  
 // --- functions
 int B(ARG* a) {
@@ -32,5 +32,9 @@ int A(ARG* a) {
  
 int main(int argc, char **argv) {
   int k = argc == 2 ? strtol(argv[1],0,0) : 10;
-  printf("%d\n", A( FUN(ARG(f1),ARG(f_1),ARG(f_1),ARG(f1),ARG(f0)) ));
+  printf("%d\n", A(FUN(MAKE_ARG(f1),
+                       MAKE_ARG(f_1),
+                       MAKE_ARG(f_1),
+                       MAKE_ARG(f1),
+                       MAKE_ARG(f0))));
 }
