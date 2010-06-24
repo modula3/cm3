@@ -87,12 +87,18 @@ BEGIN
   x1 := 12; x2 := -5;  
     checkI (x1 DIV x2, -3); checkI (x2 DIV x1, -1);
     checkI (x1 MOD x2, -3); checkI (x2 MOD x1, +7);
-    
+
   FOR i := -10 TO 10 DO
     FOR j := -10 TO 10 DO
       IF j # 0 THEN
         d := i DIV j;
         m := i MOD j;
+        IF i <  0 AND j < 0 THEN check(d >= 0); END;
+        IF i <  0 AND j > 0 THEN check(d <= 0); END;
+        IF i >= 0 AND j < 0 THEN check(d <= 0); END;
+        IF i >= 0 AND j > 0 THEN check(d >= 0); END;
+        check((i # j) OR (d = 1 AND m = 0));
+        check((i # 0) OR (d = 0 AND m = 0));
         check((m = 0) OR ((j < 0) = (m < 0)));
         check((m = 0) OR ((j > 0) = (m > 0)));
         check(i = (j * d + m));
