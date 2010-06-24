@@ -1239,7 +1239,7 @@ decompose_multiword_subregs (void)
   if (!bitmap_empty_p (decomposable_context))
     {
       sbitmap sub_blocks;
-      unsigned int i;
+      unsigned i = { 0 };
       sbitmap_iterator sbi;
       bitmap_iterator iter;
       unsigned int regno;
