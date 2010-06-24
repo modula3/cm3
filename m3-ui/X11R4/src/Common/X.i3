@@ -928,10 +928,11 @@ TYPE
   GC = UNTRACED REF RECORD
     ext_data: XExtDataStar;      (* hook for extension to hang data *)
     gid: GContext;               (* protocol ID for graphics context *)
-    rects: Bool;          (* boolean: TRUE if clipmask is list of rectangles *)
-    dashes: Bool;             (* boolean: TRUE if dash-list is really a list *)
-    dirty: unsigned_long;         (* cache dirty bits *)
-    values: XGCValues;           (* shadow structure of values *)
+    (* The rest is private. *)
+    private_rects: Bool;          (* boolean: TRUE if clipmask is list of rectangles *)
+    private_dashes: Bool;             (* boolean: TRUE if dash-list is really a list *)
+    private_dirty: unsigned_long;         (* cache dirty bits *)
+    private_values: XGCValues;           (* shadow structure of values *)
   END;
 
 (*
@@ -1229,21 +1230,23 @@ TYPE
 
 (*
  * Display datatype maintaining display specific data.
+ * The contents of this structure are implementation dependent.
+ * A Display should be treated as opaque by application code.
  *)
 
 TYPE
   Display = RECORD
         ext_data: XExtDataStar;  (* hook for extension to hang data *)
-        next: DisplayStar;       (* next open Display on list *)
+        private1: DisplayStar;
         fd: Int;                 (* Network socket. *)
-        lock: Int;               (* is someone in critical section? *)
+        private2: Int;
         proto_major_version: Int;(* maj. version of server's X protocol *)
         proto_minor_version: Int;(* minor version of servers X protocol *)
         vendor: char_star;        (* vendor of the server hardware *)
-        resource_base: Long;     (* resource ID base *)
-        resource_mask: Long;     (* resource ID mask bits *)
-        resource_id: Long;       (* allocator current ID *)
-        resource_shift: Int;     (* allocator shift to correct bits *)
+        private3: Long;
+        private4: Long;
+        private5: Long;
+        private6: Int;
         resource_alloc: PROCEDURE(): XID; (* allocator function *)
         byte_order: Int;         (* screen byte order, LSBFirst, MSBFirst *)
         bitmap_unit: Int;        (* padding and data requirements *)
@@ -1251,35 +1254,38 @@ TYPE
         bitmap_bit_order: Int;   (* LeastSignificant or MostSignificant *)
         nformats: Int;           (* number of pixmap formats in list *)
         pixmap_format: ScreenFormatStar;    (* pixmap format list *)
-        vnumber: Int;            (* Xlib's X protocol version number. *)
+        private8: Int;
         release: Int;            (* release of the server *)
-        head, tail: XQEventStar; (* Input event queue. *)
+        private9, private10: XQEventStar;
         qlen: Int;               (* Length of input event queue *)
         last_request_read: unsigned_long; (* seq number of last event read *)
         request: unsigned_long;   (* sequence number of last request. *)
-        last_req: char_star;      (* beginning of last request, or dummy *)
-        buffer: char_star;        (* Output buffer starting address. *)
-        bufptr: char_star;        (* Output buffer index pointer. *)
-        bufmax: char_star;        (* Output buffer maximum+1 address. *)
+        private11: char_star;
+        private12: char_star;
+        private13: char_star;
+        private14: char_star;
         max_request_size: unsigned_int; (* max number 32 bit words in request*)
         db: ADDRESS;             (*?!? wrong ?!?*)
-        synchandler: XSynchronize;(* Synchronization handler *)
+        private15: XSynchronize;
         display_name: char_star; (* "host:display" string used on this connect*)
         default_screen: Int;     (* default screen for operations *)
         nscreens: Int;           (* number of screens on this server*)
         screens: ScreenStar;     (* pointer to list of screens *)
         motion_buffer: unsigned_long;    (* size of motion buffer *)
-        current: Window;         (* for use internally for Keymap notify *)
+        private16: Window;
         min_keycode: Int;        (* minimum defined keycode *)
         max_keycode: Int;        (* maximum defined keycode *)
-        keysyms: KeySymStar;     (* This server's keysyms *)
-        modifiermap: XModifierKeymapStar;   (* This server's modifier keymap *)
-        keysyms_per_keycode: Int;(* number of rows *)
+        private17: KeySymStar;
+        private18: XModifierKeymapStar;
+        private19: Int;
         xdefaults: char_star;     (* contents of defaults from server *)
-        scratch_buffer: char_star;(* place to hang scratch buffer *)
-        scratch_length: unsigned_long;   (* length of scratch buffer *)
-        ext_number: Int;         (* extension number on this display *)
-        ext_procs: XExtensionStar; (* extensions initialized on this display *)
+
+        (* the rest is all private *)
+
+        private_scratch_buffer: char_star;(* place to hang scratch buffer *)
+        private_scratch_length: unsigned_long;   (* length of scratch buffer *)
+        private_ext_number: Int;         (* extension number on this display *)
+        private_ext_procs: XExtensionStar; (* extensions initialized on this display *)
         (*
          * the following can be fixed size, as the protocol defines how
          * much address space is available.
@@ -1288,27 +1294,27 @@ TYPE
          * list to find the right procedure for each event might be
          * expensive if many extensions are being used.
          *)
-        event_vec: ARRAY [0 .. 127] OF PROCEDURE(): Bool;
-        wire_vec: ARRAY [0 .. 127] OF PROCEDURE(): Status;
-        lock_meaning: KeySym;       (* for XLookupString *)
-        key_bindings: ADDRESS;      (* for XLookupString *) (*?!? wrong ?!?*)
-        cursor_font: Font;          (* for XCreateFontCursor *)
+        private_event_vec: ARRAY [0 .. 127] OF PROCEDURE(): Bool;
+        private_wire_vec: ARRAY [0 .. 127] OF PROCEDURE(): Status;
+        private_lock_meaning: KeySym;       (* for XLookupString *)
+        private_key_bindings: ADDRESS;      (* for XLookupString *) (*?!? wrong ?!?*)
+        private_cursor_font: Font;          (* for XCreateFontCursor *)
         (*
          * ICCCM information, version 1
          *)
-        atoms: DisplayAtomsStar;
-        reconfigure_wm_window: RECORD (* for XReconfigureWMWindow *)
-            sequence_number: Long;
-            old_handler: PROCEDURE(): Int;
-            succeeded: Bool;
+        private_atoms: DisplayAtomsStar;
+        private_reconfigure_wm_window: RECORD (* for XReconfigureWMWindow *)
+            private_sequence_number: Long;
+            private_old_handler: PROCEDURE(): Int;
+            private_succeeded: Bool;
         END;
         (*
          * additional connection info
          *)
-        flags: unsigned_long;       (* internal connection flags *)
-        mode_switch: unsigned_int;  (* keyboard group modifiers *)
+        private_flags: unsigned_long;       (* internal connection flags *)
+        private_mode_switch: unsigned_int;  (* keyboard group modifiers *)
   END;
-  DisplayStar   =   UNTRACED REF Display;
+  DisplayStar = UNTRACED BRANDED REF ADDRESS;
 
 
 (*
