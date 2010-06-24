@@ -922,18 +922,23 @@ TYPE
  * in raw protocol GContext ID's.  This is so that the library can keep
  * a "shadow" set of values, and thus avoid passing values over the
  * wire which are not in fact changing.
+ *
+ * Graphics context.  The contents of this structure are implementation
+ * dependent.  A GC should be treated as opaque by application code.
  *)
-
 TYPE
-  GC = UNTRACED REF RECORD
+  XPrivateGC = RECORD
     ext_data: XExtDataStar;      (* hook for extension to hang data *)
     gid: GContext;               (* protocol ID for graphics context *)
-    (* The rest is private. *)
+
+    (* The rest is private and not in current headers. *)
+
     private_rects: Bool;          (* boolean: TRUE if clipmask is list of rectangles *)
     private_dashes: Bool;             (* boolean: TRUE if dash-list is really a list *)
     private_dirty: unsigned_long;         (* cache dirty bits *)
     private_values: XGCValues;           (* shadow structure of values *)
   END;
+  GC = UNTRACED BRANDED REF ADDRESS;
 
 (*
  * Visual structure; contains information about colormapping possible.
@@ -1230,12 +1235,13 @@ TYPE
 
 (*
  * Display datatype maintaining display specific data.
+ *
  * The contents of this structure are implementation dependent.
  * A Display should be treated as opaque by application code.
  *)
 
 TYPE
-  Display = RECORD
+  XPrivateDisplay = RECORD
         ext_data: XExtDataStar;  (* hook for extension to hang data *)
         private1: DisplayStar;
         fd: Int;                 (* Network socket. *)
