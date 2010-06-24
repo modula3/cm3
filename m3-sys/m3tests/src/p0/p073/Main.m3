@@ -4,11 +4,16 @@
  
 MODULE Main;
 
-FROM Test IMPORT msg, checkI, done;
+FROM Test IMPORT msg, check, checkI, done;
+IMPORT RTIO;
+
+CONST I = RTIO.PutInt;
+CONST T = RTIO.PutText;
 
 VAR p1, p2 : [1 .. 20];
     n1, n2 : [-20 .. -1];
     x1, x2 : INTEGER;
+    d, m: INTEGER;
 
 BEGIN
   msg ("  p1 := 12; p2 := 3");
@@ -82,6 +87,35 @@ BEGIN
   x1 := 12; x2 := -5;  
     checkI (x1 DIV x2, -3); checkI (x2 DIV x1, -1);
     checkI (x1 MOD x2, -3); checkI (x2 MOD x1, +7);
+    
+  FOR i := -10 TO 10 DO
+    FOR j := -10 TO 10 DO
+      IF j # 0 THEN
+        d := i DIV j;
+        m := i MOD j;
+        check((m = 0) OR ((j < 0) = (m < 0)));
+        check((m = 0) OR ((j > 0) = (m > 0)));
+        check(i = (j * d + m));
+        IF i > 0 AND i < 10 THEN T(" "); END;
+        I(i);
+        T(" div ");
+        IF j > 0 AND j < 10 THEN T(" "); END;
+        I(j);
+        T(" = ");
+        I(d);
+        T("\n");
+        IF i > 0 AND i < 10 THEN T(" "); END;
+        I(i);
+        T(" mod ");
+        IF j > 0 AND j < 10 THEN T(" "); END;
+        I(j);
+        T(" = ");
+        I(m);
+        T("\n");
+      END;
+    END;
+  END;
+
+  RTIO.Flush();
   done ();
   END Main.
-
