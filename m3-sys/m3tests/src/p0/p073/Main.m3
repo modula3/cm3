@@ -93,14 +93,22 @@ BEGIN
       IF j # 0 THEN
         d := i DIV j;
         m := i MOD j;
-        IF i <  0 AND j < 0 THEN check(d >= 0); END;
-        IF i <  0 AND j > 0 THEN check(d <= 0); END;
-        IF i >= 0 AND j < 0 THEN check(d <= 0); END;
-        IF i >= 0 AND j > 0 THEN check(d >= 0); END;
-        check((i # j) OR (d = 1 AND m = 0));
-        check((i # 0) OR (d = 0 AND m = 0));
-        check((m = 0) OR ((j < 0) = (m < 0)));
-        check((m = 0) OR ((j > 0) = (m > 0)));
+        IF i = 0 THEN
+          check(d = 0);
+          check(m = 0);
+        ELSIF i = j THEN
+          check(d = 1);
+          check(m = 0);
+        ELSE
+          IF i < 0 AND j < 0 THEN check(d >= 0); END;
+          IF i < 0 AND j > 0 THEN check(d <= 0); END;
+          IF i > 0 AND j < 0 THEN check(d <= 0); END;
+          IF i > 0 AND j > 0 THEN check(d >= 0); END;
+        END;
+        IF m # 0 THEN
+          check((j < 0) = (m < 0));
+          check((j > 0) = (m > 0));
+        END;
         check(i = (j * d + m));
         IF i > 0 AND i < 10 THEN T(" "); END;
         I(i);
