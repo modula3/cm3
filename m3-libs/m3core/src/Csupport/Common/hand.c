@@ -52,6 +52,7 @@ m3_div(INTEGER b, INTEGER a)
 {
   typedef  INTEGER ST; /* signed type */
   typedef   WORD_T UT; /* unsigned type */
+#if 0
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
@@ -64,6 +65,14 @@ m3_div(INTEGER b, INTEGER a)
     UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
     return -(ST)((ua + ub - 1) / ub);
   }
+#else
+  register ST c;
+  if ((a == 0) && (b != 0))  {  c = 0;
+  } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
+  } else /* a < 0 */ {  c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
+  }
+  return c;
+#endif
 }
 
 INTEGER
@@ -72,6 +81,7 @@ m3_mod(INTEGER b, INTEGER a)
 {
   typedef  INTEGER ST; /* signed type */
   typedef   WORD_T UT; /* unsigned type */
+#if 0
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
@@ -83,6 +93,14 @@ m3_mod(INTEGER b, INTEGER a)
     a = (ST)(ub - 1 - (ua + ub - 1) % ub);
     return (bneg ? -a : a);
   }
+#else
+  register ST c;
+  if ((a == 0) && (b != 0)) {  c = 0;
+  } else if (a > 0)  {  c = (b >= 0) ? a % b : b + 1 + (a-1) % (-b);
+  } else /* a < 0 */ {  c = (b >= 0) ? b - 1 - (-1-a) % (b) : - ((-a) % (-b));
+  }
+  return c;
+#endif
 }
 
 #endif
@@ -93,6 +111,7 @@ m3_div64(INT64 b, INT64 a)
 {
   typedef  INT64 ST; /* signed type */
   typedef UINT64 UT; /* unsigned type */
+#if 0
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
@@ -105,6 +124,14 @@ m3_div64(INT64 b, INT64 a)
     UT ub = (bneg ? M3_POS(UT, b) : (UT)b);
     return -(ST)((ua + ub - 1) / ub);
   }
+#else
+  register ST c;
+  if ((a == 0) && (b != 0))  {  c = 0;
+  } else if (a > 0)  {  c = (b >= 0) ? (a) / (b) : -1 - (a-1) / (-b);
+  } else /* a < 0 */ {  c = (b >= 0) ? -1 - (-1-a) / (b) : (-a) / (-b);
+  }
+  return c;
+#endif
 }
 
 INT64
@@ -113,6 +140,7 @@ m3_mod64(INT64 b, INT64 a)
 {
   typedef  INT64 ST; /* signed type */
   typedef UINT64 UT; /* unsigned type */
+#if 0
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
@@ -124,6 +152,14 @@ m3_mod64(INT64 b, INT64 a)
     a = (ST)(ub - 1 - (ua + ub - 1) % ub);
     return (bneg ? -a : a);
   }
+#else
+  register ST c;
+  if ((a == 0) && (b != 0)) {  c = 0;
+  } else if (a > 0)  {  c = (b >= 0) ? a % b : b + 1 + (a-1) % (-b);
+  } else /* a < 0 */ {  c = (b >= 0) ? b - 1 - (-1-a) % (b) : - ((-a) % (-b));
+  }
+  return c;
+#endif
 }
 
 #define SET_GRAIN (sizeof (WORD_T) * 8)
