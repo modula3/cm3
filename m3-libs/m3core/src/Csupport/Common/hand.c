@@ -46,12 +46,12 @@ extern "C"
 
 #ifndef _WIN32
 
-INT32
+INTEGER
 __stdcall
-m3_div(INT32 b, INT32 a)
+m3_div(INTEGER b, INTEGER a)
 {
-  typedef  INT32 ST; /* signed type */
-  typedef UINT32 UT; /* unsigned type */
+  typedef  INTEGER ST; /* signed type */
+  typedef   WORD_T UT; /* unsigned type */
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
@@ -66,12 +66,12 @@ m3_div(INT32 b, INT32 a)
   }
 }
 
-INT32
+INTEGER
 __stdcall
-m3_mod(INT32 b, INT32 a)
+m3_mod(INTEGER b, INTEGER a)
 {
-  typedef  INT32 ST; /* signed type */
-  typedef UINT32 UT; /* unsigned type */
+  typedef  INTEGER ST; /* signed type */
+  typedef   WORD_T UT; /* unsigned type */
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
