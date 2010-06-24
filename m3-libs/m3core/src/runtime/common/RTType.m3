@@ -455,8 +455,8 @@ PROCEDURE AssignBuiltinTypes () =
     GenBuiltin (ADR (NULL_typecell),     "NULL");
     GenBuiltin (ADR (REFANY_typecell),   "REFANY");
     GenBuiltin (ADR (ADDRESS_typecell),  "ADDRESS");
-    GenBuiltin (ADR (ROOT_typecell),     "ROOT");
-    GenBuiltin (ADR (UNROOT_typecell),   "UNTRACED ROOT");
+    GenBuiltin (ADR (ROOT_typecell.common), "ROOT");
+    GenBuiltin (ADR (UNROOT_typecell.common), "UNTRACED ROOT");
     types.cnt := MAX (types.cnt, RT0.FirstUserTypecode);
   END AssignBuiltinTypes;
 
