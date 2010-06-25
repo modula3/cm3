@@ -52,7 +52,7 @@ m3_div(INTEGER b, INTEGER a)
 {
   typedef  INTEGER ST; /* signed type */
   typedef   WORD_T UT; /* unsigned type */
-#if 0
+#if 1
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
@@ -81,7 +81,7 @@ m3_mod(INTEGER b, INTEGER a)
 {
   typedef  INTEGER ST; /* signed type */
   typedef   WORD_T UT; /* unsigned type */
-#if 0
+#if 1
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
@@ -111,7 +111,7 @@ m3_div64(INT64 b, INT64 a)
 {
   typedef  INT64 ST; /* signed type */
   typedef UINT64 UT; /* unsigned type */
-#if 0
+#if 1
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
@@ -140,7 +140,7 @@ m3_mod64(INT64 b, INT64 a)
 {
   typedef  INT64 ST; /* signed type */
   typedef UINT64 UT; /* unsigned type */
-#if 0
+#if 1
   int aneg = (a < 0);
   int bneg = (b < 0);
   if (aneg == bneg || a == 0 || b == 0)
