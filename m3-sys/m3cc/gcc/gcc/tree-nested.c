@@ -1753,6 +1753,7 @@ convert_call_expr (tree *tp, int *walk_subtrees, void *data)
     case STATIC_CHAIN_EXPR:
       decl = TREE_OPERAND (t, 0);
       target_context = decl_function_context (decl);
+      gcc_assert (target_context);
       if (target_context)
 	{
 	  if (info->context == target_context)
