@@ -122,7 +122,7 @@ PROCEDURE Receive(self: T; VAR (*INOUT*) d: Datagram; timeout: LONGREAL)
     waitRes: SchedulerPosix.WaitResult;
     numRead: INTEGER;
     sockaddr: Uin.struct_sockaddr_in;
-    saSize: Ctypes.int;
+    saSize: Usocket.socklen_t;
   BEGIN
     <* ASSERT self.open *>
     waitRes := SchedulerPosix.IOAlertWait(self.fileno, TRUE, timeout);
