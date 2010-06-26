@@ -200,15 +200,15 @@ PROCEDURE FromBytes (READONLY buf: ARRAY OF Byte;  p: Precision;
 
     CASE p OF
     | Precision.Short =>
-        ptr := ADR (x1);
+        ptr := LOOPHOLE(ADR (x1), Ptr);
         SUBARRAY (ptr^, 0, len) := SUBARRAY (buf, 0, len);
         f.fraction := FLOAT (x1, EXTENDED);
     | Precision.Long =>
-        ptr := ADR (x2);
+        ptr := LOOPHOLE(ADR (x2), Ptr);
         SUBARRAY (ptr^, 0, len) := SUBARRAY (buf, 0, len);
         f.fraction := FLOAT (x2, EXTENDED);
     | Precision.Extended =>
-        ptr := ADR (x3);
+        ptr := LOOPHOLE(ADR (x3), Ptr);
         SUBARRAY (ptr^, 0, len) := SUBARRAY (buf, 0, len);
         f.fraction := x3;
     END;
