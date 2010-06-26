@@ -34,7 +34,7 @@ PROCEDURE Hostname() : TEXT =
     buf : ARRAY [0..1024] OF CHAR;
     len := 1024;
   BEGIN
-    IF gethostname(ADR(buf), len) = 0 THEN
+    IF gethostname(LOOPHOLE(ADR(buf), Ctypes.char_star), len) = 0 THEN
       buf[1024] := '\000';
       len := 0;
       WHILE len < 1024 AND buf[len] # '\000' DO
