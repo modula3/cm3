@@ -9,11 +9,11 @@ IMPORT Uuio, Ustat, Word;
 FROM Cerrno IMPORT GetErrno;
 FROM Unetdb IMPORT struct_hostent, struct_hostent_star, gethostbyname;
 FROM Utypes IMPORT u_int;
-FROM Ctypes IMPORT int, char;
+FROM Ctypes IMPORT int, char, char_star;
 FROM Usocket IMPORT accept, AF_INET, bind, connect, getpeername, getsockname,
                     getsockopt, listen, MSG_PEEK, recvfrom, sendto, setsockopt,
                     SO_LINGER, SO_REUSEADDR, SOCK_DGRAM, SOCK_STREAM, socket,
-                    SOL_SOCKET, struct_linger;
+                    SOL_SOCKET, struct_linger, socklen_t;
 FROM Uin IMPORT IPPROTO_TCP, ntohs, htons, struct_in_addr, struct_sockaddr_in;
 FROM Unix IMPORT close, F_GETFL, F_SETFL, fcntl, FIONREAD, gethostname, ioctl,
                  M3_NONBLOCK;
@@ -395,7 +395,7 @@ PROCEDURE GetHostAddr (): Address
       IOError (Unexpected);
     END;
 
-    info := gethostbyname (ADR (host[0]), ADR (hostent));
+    info := gethostbyname (LOOPHOLE (ADR (host[0]), char_star), ADR (hostent));
     IF info = NIL THEN IOError (Unexpected); END;
     <* ASSERT info.h_length <= BYTESIZE (Address) *>
 
@@ -408,7 +408,7 @@ PROCEDURE OtherEnd (t: T): EndPoint
   RAISES {OSError.E} =
   VAR
     addr : SockAddrIn;
-    len  : int := BYTESIZE (addr);
+    len  : socklen_t := BYTESIZE (addr);
     ep   : EndPoint;
   BEGIN
     IF getpeername (t.fd, ADR (addr), ADR (len)) < 0 THEN
@@ -471,7 +471,7 @@ PROCEDURE RefetchError(fd: INTEGER) =
 (* Awful hack to retrieve a meaningful error from a TCP accept
    socket.  Only works on Ultrix and OSF.  Leaves result
    in GetError().  *)
-  VAR optbuf: int := 0;   optlen := BYTESIZE(optbuf);
+  VAR optbuf: int := 0;   optlen: socklen_t := BYTESIZE(optbuf);
   BEGIN
     IF SocketPosix_IsUltrixOrOSF.Value THEN
       EVAL getsockopt (fd, IPPROTO_TCP, TCP_NODELAY,
