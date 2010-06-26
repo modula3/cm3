@@ -3146,7 +3146,7 @@ m3cg_declare_local (void)
   DECL_NAME (v) = fix_name (n, id);
 
   if (option_vars_trace)
-    fprintf(stderr, "  local var %s type:0x%s size:0x%lx alignment:0x%lx\n",
+    fprintf(stderr, "  local var %s type:%s size:0x%lx alignment:0x%lx\n",
             IDENTIFIER_POINTER(DECL_NAME(v)), m3cg_typename(t), s, a);
 
   TREE_TYPE (v) = m3_build_type (t, s, a);
