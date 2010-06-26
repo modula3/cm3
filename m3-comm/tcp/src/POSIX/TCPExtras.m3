@@ -9,7 +9,7 @@ IMPORT Ctypes, IP, IPError, TCP, TCPPosix, Uin, Usocket;
 PROCEDURE LocalEndpoint (conn: TCP.T): IP.Endpoint RAISES {IP.Error} =
   VAR
     addr : Uin.struct_sockaddr_in;
-    len  : Ctypes.int := BYTESIZE (addr);
+    len  : Usocket.socklen_t := BYTESIZE (addr);
     ep   : IP.Endpoint;
   BEGIN
     LOCK conn DO
