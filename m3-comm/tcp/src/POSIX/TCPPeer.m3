@@ -45,7 +45,7 @@ PROCEDURE Match (channel: TCP.T; address: IP.Address; maskBits: [0 .. 32]):
 
 PROCEDURE GetSockAddr (channel: TCP.T;  VAR(*OUT*) addr: Addr)
   RAISES {IP.Error} =
-  VAR len: Ctypes.int := BYTESIZE (addr);
+  VAR len: Usocket.socklen_t := BYTESIZE (addr);
   BEGIN
     LOCK channel DO
       IF (channel.closed) THEN IPError.Raise (TCP.Closed); END;
