@@ -381,6 +381,8 @@ from the machine description file `md'.  */\n\n");
   printf ("#include \"flags.h\"\n");
   printf ("#include \"tm-constrs.h\"\n\n");
 
+  printf("\nchar quash_apple_ranlib_warning_peep_operand;\n");
+  
   printf ("#ifdef HAVE_peephole\n");
   printf ("extern rtx peep_operand[];\n\n");
   printf ("#define operands peep_operand\n\n");
