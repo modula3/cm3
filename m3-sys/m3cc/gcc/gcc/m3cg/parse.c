@@ -22,6 +22,7 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
+enum machine_mode;
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -1388,13 +1389,12 @@ scan_string (void)
 
 #define IS_INTEGER_TYPE(t) (t == T_int_32 || t == T_int_8 || t == T_int_16 || \
                             t == T_int_64 || t == T_int)
-#if GCC45
+
 #define IS_INTEGER_TYPE_TREE(t) (t == t_int_32 || t == t_int_8 \
                 || t == t_int_16 || t == t_int_64 || t == t_int)
 
 #define IS_WORD_TYPE_TREE(t) (t == t_word_32 || t == t_word_8 \
                 || t == t_word_16 || t == t_word_64 || t == t_word)
-#endif
 
 #define IS_REAL_TYPE(t) (t == T_reel || t == T_lreel || t == T_xreel)
 
