@@ -22,6 +22,7 @@
    You are forbidden to forbid anyone else to use, share and improve
    what you give them.   Help stamp out software-hoarding! */
 
+#define GCC45 0
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
@@ -36,9 +37,10 @@
 #include "tree-dump.h"
 #include "tree-iterator.h"
 #ifndef MTAG_P
-#define GCC45
+#define GCC45 1
 #include "gimple.h"
 #else
+#define GCC45 0
 #include "tree-gimple.h"
 #endif
 #include "function.h"
@@ -79,7 +81,7 @@
 /* in particular, Solaris/sparc32 has a stack walker */
 #define M3_ALL_VOLATILE (TARGET_SPARC && TARGET_SOLARIS && TARGET_ARCH32)
 
-#ifdef GCC45
+#if GCC45
 
 /* error: attempt to use poisoned "USE_MAPPED_LOCATION" */
 #define M3_USE_MAPPED_LOCATION
@@ -220,7 +222,7 @@ static GTY (()) tree pending_inits;
 
 #include "m3gty43.h"
 
-#ifndef GCC45
+#if !GCC45
 static bool m3_mark_addressable (tree exp);
 #endif
 static tree m3_type_for_size (unsigned precision, int unsignedp);
@@ -250,7 +252,7 @@ static tree builtin_function (const char *name, tree type, int function_code,
                               tree attrs);
 static tree getdecls (void);
 static int global_bindings_p (void);
-#ifndef GCC45
+#if !GCC45
 static void insert_block (tree block);
 #endif
 
@@ -261,7 +263,7 @@ static void m3_write_globals (void);
    end).  These are not really very language-dependent, i.e.
    treelang, C, Mercury, etc. can all use almost the same definitions.  */
 
-#ifndef GCC45
+#if !GCC45
 #undef LANG_HOOKS_MARK_ADDRESSABLE
 #define LANG_HOOKS_MARK_ADDRESSABLE m3_mark_addressable
 #endif
@@ -308,12 +310,12 @@ m3_expand_function (tree fndecl)
 #define LANG_HOOKS_HANDLE_OPTION m3_handle_option
 #undef LANG_HOOKS_POST_OPTIONS
 #define LANG_HOOKS_POST_OPTIONS m3_post_options
-#ifndef GCC45
+#if !GCC45
 const
 #endif
 struct lang_hooks lang_hooks = LANG_HOOKS_INITIALIZER;
 
-#ifndef GCC45
+#if !GCC45
 
 /* Tree code type/name/code tables.  */
 
@@ -625,7 +627,7 @@ m3_get_alias_set (tree ARG_UNUSED (t))
   return 0;
 }
 
-#ifndef GCC45
+#if !GCC45
 
 /* Mark EXP saying that we need to be able to take the
    address of it; it should not be allocated in a register.
@@ -749,7 +751,7 @@ getdecls (void)
   return current_block ? BLOCK_VARS (current_block) : global_decls;
 }
 
-#ifndef GCC45
+#if !GCC45
 
 /* Insert BLOCK at the end of the list of subblocks of the
    current binding level.  This is used when a BIND_EXPR is expanded,
@@ -894,7 +896,7 @@ m3_write_globals (void)
     }
   }
 
-#ifndef GCC45
+#if !GCC45
   write_global_declarations ();
 #endif
 }
@@ -1384,7 +1386,7 @@ scan_string (void)
 
 #define IS_INTEGER_TYPE(t) (t == T_int_32 || t == T_int_8 || t == T_int_16 || \
                             t == T_int_64 || t == T_int)
-#ifdef GCC45
+#if GCC45
 #define IS_INTEGER_TYPE_TREE(t) (t == t_int_32 || t == t_int_8 \
                 || t == t_int_16 || t == t_int_64 || t == t_int)
 
@@ -1972,7 +1974,7 @@ static tree
 proc_addr (tree p)
 {
   tree expr = build1 (ADDR_EXPR, m3_build_pointer_type (TREE_TYPE (p)), p);
-#ifdef GCC45
+#if GCC45
   TREE_NO_TRAMPOLINE (expr) = 1;
 #else
   TREE_STATIC (expr) = 1; /* see check for TREE_STATIC on ADDR_EXPR
@@ -2449,7 +2451,7 @@ generate_fault (int code)
 
   if (fault_proc == 0) declare_fault_proc ();
   arg = build_int_cst (t_int, (LOCATION_LINE(input_location) << LINE_SHIFT) + (code & FAULT_MASK));
-#ifdef GCC45
+#if GCC45
   return build_function_call_expr (UNKNOWN_LOCATION, fault_proc, build_tree_list (NULL_TREE, arg));
 #else
   return build_function_call_expr (fault_proc, build_tree_list (NULL_TREE, arg));
@@ -3366,7 +3368,7 @@ m3cg_init_var (void)
   TREE_USED (var) = 1;
 
   one_field (o, t_addr, &f, &v);
-#ifdef GCC45
+#if GCC45
   TREE_VALUE (v) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
                               m3_build1 (ADDR_EXPR, t_addr, var),
                               size_int (b / BITS_PER_UNIT));
@@ -3543,7 +3545,7 @@ m3cg_declare_procedure (void)
 #endif
   }
   gcc_assert((parent == 0) == (lev == 0));
-#ifdef GCC45
+#if GCC45
   if (parent)
     DECL_STATIC_CHAIN (parent) = 1;
 #endif
@@ -3697,7 +3699,7 @@ m3cg_set_label (void)
       FORCED_LABEL (l) = 1;
       DECL_UNINLINABLE (current_function_decl) = 1;
       DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = 1;
-#ifdef GCC45
+#if GCC45
       /* error: ‘struct function’ has no member named ‘x_nonlocal_goto_handler_labels’
        * I think this is wrong. I think we have to defer the work till later, during
        * codegen. We could put this list in struct language_function.
@@ -3801,7 +3803,7 @@ m3cg_case_jump (void)
   for (i = 0; i < n; i++) {
     LABEL (target_label);
 
-#ifdef GCC45
+#if GCC45
     tree case_label = create_artificial_label (UNKNOWN_LOCATION);
 #else
     tree case_label = create_artificial_label ();
@@ -3866,7 +3868,7 @@ m3cg_load_address (void)
   TREE_USED (v) = 1;
   v = m3_build1 (ADDR_EXPR, t_addr, v);
   if (o != 0) {
-#ifdef GCC45
+#if GCC45
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
 #else
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
@@ -3890,7 +3892,7 @@ m3cg_load_indirect (void)
 
   v = EXPR_REF (-1);
   if (o != 0) {
-#ifdef GCC45
+#if GCC45
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
 #else
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
@@ -3938,7 +3940,7 @@ m3cg_store_indirect (void)
 
   v = EXPR_REF (-2);
   if (o != 0) {
-#ifdef GCC45
+#if GCC45
     v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
 #else
     v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
@@ -4979,7 +4981,7 @@ m3cg_add_offset (void)
   if (option_vars_trace)
     fprintf(stderr, "  add offset 0x%lx\n", n);
 
-#ifdef GCC45
+#if GCC45
   EXPR_REF (-1) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
                              EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
 #else
@@ -4991,7 +4993,7 @@ m3cg_add_offset (void)
 static void
 m3cg_index_address (void)
 {
-#ifdef GCC45
+#if GCC45
   tree a = { 0 };
 #endif
   MTYPE2   (t, T);
@@ -5001,7 +5003,7 @@ m3cg_index_address (void)
     fprintf(stderr, "  index address n:0x%lx n_bytes:0x%lx type:%s\n",
             n, n / BITS_PER_UNIT, m3cg_typename(T));
 
-#ifdef GCC45
+#if GCC45
   gcc_assert(IS_INTEGER_TYPE_TREE(t) || IS_WORD_TYPE_TREE(t));
   a = m3_build2 (MULT_EXPR, t, EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
   if (IS_INTEGER_TYPE_TREE(t))
@@ -5555,7 +5557,7 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
     m3cg_lineno ++;
   }
 
-#ifdef GCC45
+#if GCC45
   write_global_declarations();
 #else
   cgraph_finalize_compilation_unit ();
@@ -5697,7 +5699,7 @@ Undefined symbols:
      crashes compiling m3-tools/cvsup/server/FSServer.m3 */
   flag_tree_pre = 0;
 
-#ifdef GCC45
+#if GCC45
   /* Excess precision other than "fast" requires front-end support.  */
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
 #endif
