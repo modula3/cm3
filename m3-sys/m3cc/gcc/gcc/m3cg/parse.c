@@ -3718,8 +3718,10 @@ m3cg_set_label (void)
 
         if (i == 0)
           add_stmt (build1 (LABEL_EXPR, t_void, l));
+      }
     }
-  else add_stmt (build1 (LABEL_EXPR, t_void, l));
+  else
+    add_stmt (build1 (LABEL_EXPR, t_void, l));
 }
 
 static void
