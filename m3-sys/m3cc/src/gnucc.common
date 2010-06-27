@@ -120,9 +120,17 @@ end
 % These historically came from the config file.
 %
 
-if not defined("GNU_CC")     GNU_CC     = "*"    end
+if not defined("GNU_CC")
+  GNU_CC = "*"
+end
 % consider changing this to "*"
 % esp. once gcc/gdb in tree updated -- if they build ok with Sun cc
-if not defined("GNU_CFLAGS") GNU_CFLAGS = "-g -O2"    end
+if not defined("GNU_CFLAGS")
+  if defined("O0")
+    GNU_CFLAGS = "-g"
+  else
+    GNU_CFLAGS = "-g -O2"
+  end
+end
 
 %------------------------------------------------------------------------------
