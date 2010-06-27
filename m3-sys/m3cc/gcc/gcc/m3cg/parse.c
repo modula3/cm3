@@ -3703,7 +3703,7 @@ m3cg_set_label (void)
       }
       else
       {
-        tree list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
+        rtx list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
         DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels
 	  = gen_rtx_EXPR_LIST (VOIDmode, r, list);
       }
