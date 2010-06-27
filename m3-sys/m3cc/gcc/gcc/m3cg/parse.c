@@ -896,9 +896,8 @@ m3_write_globals (void)
     }
   }
 
-#if !GCC45
-  write_global_declarations ();
-#endif
+  if (!GCC45)
+    write_global_declarations ();
 }
 
 static void
@@ -3368,15 +3367,14 @@ m3cg_init_var (void)
   TREE_USED (var) = 1;
 
   one_field (o, t_addr, &f, &v);
-#if GCC45
-  TREE_VALUE (v) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
-                              m3_build1 (ADDR_EXPR, t_addr, var),
-                              size_int (b / BITS_PER_UNIT));
-#else
-  TREE_VALUE (v) = m3_build2 (PLUS_EXPR, t_addr,
-                              m3_build1 (ADDR_EXPR, t_addr, var),
-                              size_int (b / BITS_PER_UNIT));
-#endif
+  if (GCC45)
+    TREE_VALUE (v) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
+                                m3_build1 (ADDR_EXPR, t_addr, var),
+                                size_int (b / BITS_PER_UNIT));
+  else
+    TREE_VALUE (v) = m3_build2 (PLUS_EXPR, t_addr,
+                                m3_build1 (ADDR_EXPR, t_addr, var),
+                                size_int (b / BITS_PER_UNIT));
 }
 
 static void
@@ -3868,11 +3866,10 @@ m3cg_load_address (void)
   TREE_USED (v) = 1;
   v = m3_build1 (ADDR_EXPR, t_addr, v);
   if (o != 0) {
-#if GCC45
-    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-#else
-    v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-#endif
+    if (GCC45)
+      v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+    else
+      v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
   }
   EXPR_PUSH (v);
 }
@@ -3892,11 +3889,10 @@ m3cg_load_indirect (void)
 
   v = EXPR_REF (-1);
   if (o != 0) {
-#if GCC45
-    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-#else
-    v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-#endif
+    if (GCC45)
+      v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+    else
+      v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
   }
   v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
@@ -3940,11 +3936,10 @@ m3cg_store_indirect (void)
 
   v = EXPR_REF (-2);
   if (o != 0) {
-#if GCC45
-    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-#else
-    v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
-#endif
+    if (GCC45)
+      v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+    else
+      v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
   }
   v = m3_cast (m3_build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
@@ -4981,21 +4976,17 @@ m3cg_add_offset (void)
   if (option_vars_trace)
     fprintf(stderr, "  add offset 0x%lx\n", n);
 
-#if GCC45
-  EXPR_REF (-1) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
-                             EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
-#else
-  EXPR_REF (-1) = m3_build2 (PLUS_EXPR, t_addr,
-                             EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
-#endif
+  if (GCC45)
+    EXPR_REF (-1) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
+                               EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
+  else
+    EXPR_REF (-1) = m3_build2 (PLUS_EXPR, t_addr,
+                               EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
 }
 
 static void
 m3cg_index_address (void)
 {
-#if GCC45
-  tree a = { 0 };
-#endif
   MTYPE2   (t, T);
   BYTESIZE (n);
 
@@ -5003,20 +4994,24 @@ m3cg_index_address (void)
     fprintf(stderr, "  index address n:0x%lx n_bytes:0x%lx type:%s\n",
             n, n / BITS_PER_UNIT, m3cg_typename(T));
 
-#if GCC45
-  gcc_assert(IS_INTEGER_TYPE_TREE(t) || IS_WORD_TYPE_TREE(t));
-  a = m3_build2 (MULT_EXPR, t, EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
-  if (IS_INTEGER_TYPE_TREE(t))
-    a = m3_cast(ssizetype, a);
-  a = m3_cast(sizetype, a);
-  EXPR_REF (-2) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
-                                m3_cast (t_addr, EXPR_REF (-2)), a);
-#else
-  EXPR_REF (-2) = m3_build2 (PLUS_EXPR, t_addr,
-                             m3_cast (t_addr, EXPR_REF (-2)),
-                             m3_build2 (MULT_EXPR, t, EXPR_REF (-1),
-                                        size_int (n / BITS_PER_UNIT)));
-#endif
+  if (GCC45)
+  {
+    tree a = { 0 };
+    gcc_assert(IS_INTEGER_TYPE_TREE(t) || IS_WORD_TYPE_TREE(t));
+    a = m3_build2 (MULT_EXPR, t, EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
+    if (IS_INTEGER_TYPE_TREE(t))
+      a = m3_cast(ssizetype, a);
+    a = m3_cast(sizetype, a);
+    EXPR_REF (-2) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
+                               m3_cast (t_addr, EXPR_REF (-2)), a);
+  }
+  else
+  {
+    EXPR_REF (-2) = m3_build2 (PLUS_EXPR, t_addr,
+                               m3_cast (t_addr, EXPR_REF (-2)),
+                               m3_build2 (MULT_EXPR, t, EXPR_REF (-1),
+                                          size_int (n / BITS_PER_UNIT)));
+  }
   EXPR_POP ();
 }
 
@@ -5557,12 +5552,15 @@ m3_parse_file (int xx ATTRIBUTE_UNUSED)
     m3cg_lineno ++;
   }
 
-#if GCC45
-  write_global_declarations();
-#else
-  cgraph_finalize_compilation_unit ();
-  cgraph_optimize ();
-#endif
+  if (GCC45)
+  {
+    write_global_declarations();
+  }
+  else
+  {
+    cgraph_finalize_compilation_unit ();
+    cgraph_optimize ();
+  }
 }
 
 /*===================================================== RUNTIME FUNCTIONS ===*/
