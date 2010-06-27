@@ -3695,19 +3695,16 @@ m3cg_set_label (void)
       FORCED_LABEL (l) = 1;
       DECL_UNINLINABLE (current_function_decl) = 1;
       DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = 1;
-
-      if (GCC45)
-      {
-        /* ? */
-        DECL_NONLOCAL(l) = true;
-      }
-      else
+#if GCC45
+      /* ? */
+      DECL_NONLOCAL(l) = true;
+#else
       {
         rtx list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
         DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels
 	  = gen_rtx_EXPR_LIST (VOIDmode, r, list);
       }
-
+#endif
       /* put asm("") before and after the label */
       for (i = 0; i < 2; ++i)
       {
