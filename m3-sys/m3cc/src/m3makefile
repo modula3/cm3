@@ -276,12 +276,12 @@ if (not NOACTION) and (GCC42 or GCC45)
   local m3gty = "m3gty43.h"
   if GCC42
     SourceDir = "../gcc-apple"
-    Defines = "#define GCC_APPLE\n#define GCC42\n"
+    Defines = "#define GCC_APPLE 1\n#define GCC42 1\n"
     m3gty = "m3gty43.h"
   end
   if GCC45
     build_dir_tail = "-4.5"
-    Defines = "#define GCC45\n"
+    Defines = "#define GCC45 1\n"
     SourceDir = "../gcc-4.5"
     m3gty = "m3gty45.h"
     foreach a in ["gmp", "mpfr", "mpc"]

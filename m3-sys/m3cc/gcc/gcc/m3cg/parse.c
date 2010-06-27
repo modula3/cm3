@@ -99,6 +99,10 @@
 #define GCC42 0
 #endif
 
+#ifndef GCC_APPLE
+#define GCC_APPLE 0
+#endif
+
 #if GCC42
 /*typedef const union tree_node *const_tree;*/
 #define const_tree tree
@@ -5750,7 +5754,7 @@ m3_finish (void)
     }
 }
 
-#ifdef GCC_APPLE
+#if GCC_APPLE
 int flag_iasm_blocks;
 enum iasm_states iasm_state;
 bool iasm_in_operands;
