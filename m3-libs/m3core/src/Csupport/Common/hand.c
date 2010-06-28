@@ -273,22 +273,22 @@ set_range(WORD_T b, WORD_T a, WORD_T* s)
 
 #ifdef _WIN32
 
-uint64 _rotl64(uint64 value, int shift);
-uint64 _rotr64(uint64 value, int shift);
+UINT64 _rotl64(UINT64 value, int shift);
+UINT64 _rotr64(UINT64 value, int shift);
 #pragma intrinsic(_rotl64)
 #pragma intrinsic(_rotr64)
 
-uint64
+UINT64
 __stdcall
-m3_rotate_left64(uint64 a, int b) { return _rotl64(a, b); }
+m3_rotate_left64(UINT64 a, int b) { return _rotl64(a, b); }
 
-uint64
+UINT64
 __stdcall
-m3_rotate_right64(uint64 a, int b) { return _rotr64(a, b); }
+m3_rotate_right64(UINT64 a, int b) { return _rotr64(a, b); }
 
-uint64
+UINT64
 __stdcall
-m3_rotate64(uint64 a, int b)
+m3_rotate64(UINT64 a, int b)
 {
     b &= 63;
     if (b > 0)
