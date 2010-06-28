@@ -2016,8 +2016,6 @@ PROCEDURE Set_member (s: Size) =
 PROCEDURE Set_compare (s: Size;  op: Cmp) =
   VAR a: Val := NIL;
       b: Val := NIL;
-      tword := Target.Word.cg_type;
-      tint := Target.Integer.cg_type;
   BEGIN
 
     (* a op b => BOOLEAN *)
@@ -2036,7 +2034,7 @@ PROCEDURE Set_compare (s: Size;  op: Cmp) =
 
       IF (op = Cmp.EQ) OR (op = Cmp.NE) THEN
 
-        Compare (tword, op);
+        Compare (Target.Word.cg_type, op);
 
       ELSE
 
@@ -2056,10 +2054,10 @@ PROCEDURE Set_compare (s: Size;  op: Cmp) =
 
         Push (a);
         Push (b);
-        And (tword);
+        And (Target.Word.cg_type);
 
         Push (a);
-        Compare (tword, Cmp.EQ);
+        Compare (Target.Word.cg_type, Cmp.EQ);
 
         (* NOTE that short circuiting for < and > is probably desirable, if one
         knows how to set up the labels and branches. *)
@@ -2067,15 +2065,15 @@ PROCEDURE Set_compare (s: Size;  op: Cmp) =
         IF (op = Cmp.LT) OR (op = Cmp.GT) THEN
           Push (b);
           Push (a);
-          Compare (tword, Cmp.EQ);
-          And (tint);
+          Compare (Target.Word.cg_type, Cmp.EQ);
+          And (Target.Integer.cg_type);
         END;
 
         Free (a);
         Free (b);
       END;
     ELSE
-      cg.set_compare (AsBytes (s), op, tint);
+      cg.set_compare (AsBytes (s), op, Target.Integer.cg_type);
       SPop (2, "Set_compare");
       SPush (Type.Int32);
     END;
