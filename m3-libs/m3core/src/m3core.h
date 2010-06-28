@@ -19,6 +19,7 @@
 
 /* http://gcc.gnu.org/wiki/Visibility */
 /* Helpers for shared library support */
+#ifdef __GNUC__
 #if __GNUC__ >= 4 && !defined(__osf__)
   #define M3_DLL_IMPORT __attribute__ ((visibility("default")))
   #ifdef __APPLE__
@@ -31,6 +32,7 @@
   #define M3_DLL_IMPORT
   #define M3_DLL_EXPORT
   #define M3_DLL_LOCAL
+#endif
 #endif
 
 #define _FILE_OFFSET_BITS 64
