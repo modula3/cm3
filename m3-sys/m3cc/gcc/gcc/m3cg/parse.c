@@ -4443,8 +4443,8 @@ m3cg_xor (void)
   MTYPE (t);
 
   EXPR_REF (-2) = m3_build2 (BIT_XOR_EXPR, t,
-                             m3_convert (t, EXPR_REF (-2)),
-                             m3_convert (t, EXPR_REF (-1)));
+                             m3_cast (t, EXPR_REF (-2)),
+                             m3_cast (t, EXPR_REF (-1)));
   EXPR_POP ();
 }
 
