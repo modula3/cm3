@@ -4598,7 +4598,6 @@ m3_do_fixed_extract (tree x, int m, int n, tree t)
   /* ??? Use BIT_FIELD_REF ???  */
   int a = TYPE_PRECISION (t) - n;
   int b = TYPE_PRECISION (t) - n - m;
-  tree c, d, e;
 
   gcc_assert (m >= 0);
   gcc_assert (n > 0);
@@ -4612,11 +4611,10 @@ m3_do_fixed_extract (tree x, int m, int n, tree t)
                             t);
     }
 
-  c = m3_convert (m3_unsigned_type (t), x);
-  d = (b == 0) ? c : m3_build2 (LSHIFT_EXPR, t, c, build_int_cst (t_int, b));
-  e = (a == 0) ? d :
-    m3_build2 (RSHIFT_EXPR, t, d, build_int_cst (t_int, a));
-  return e;
+  x = m3_convert (m3_unsigned_type (t), x);
+  x = (b ? m3_build2 (LSHIFT_EXPR, t, x, build_int_cst (t_int, b)) : x);
+  x = (a ? m3_build2 (RSHIFT_EXPR, t, x, build_int_cst (t_int, a)) : x);
+  return x;
 }
 
 static void
