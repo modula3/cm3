@@ -4412,8 +4412,7 @@ m3cg_not (void)
 {
   MTYPE (t);
 
-  EXPR_REF (-1) = m3_build1 (BIT_NOT_EXPR, m3_unsigned_type (t),
-                             EXPR_REF (-1));
+  EXPR_REF (-1) = m3_build1 (BIT_NOT_EXPR, t, m3_cast (t, EXPR_REF (-1)));
 }
 
 static void
@@ -4421,8 +4420,9 @@ m3cg_and (void)
 {
   MTYPE (t);
 
-  EXPR_REF (-2) = m3_build2 (BIT_AND_EXPR, m3_unsigned_type (t),
-                             EXPR_REF (-2), EXPR_REF (-1));
+  EXPR_REF (-2) = m3_build2 (BIT_AND_EXPR, t,
+                             m3_cast (t, EXPR_REF (-2)),
+                             m3_cast (t, EXPR_REF (-1)));
   EXPR_POP ();
 }
 
@@ -4431,8 +4431,9 @@ m3cg_or (void)
 {
   MTYPE (t);
 
-  EXPR_REF (-2) = m3_build2 (BIT_IOR_EXPR, m3_unsigned_type (t),
-                             EXPR_REF (-2), EXPR_REF (-1));
+  EXPR_REF (-2) = m3_build2 (BIT_IOR_EXPR, t,
+                             m3_cast (t, EXPR_REF (-2)),
+                             m3_cast (t, EXPR_REF (-1)));
   EXPR_POP ();
 }
 
@@ -4441,8 +4442,9 @@ m3cg_xor (void)
 {
   MTYPE (t);
 
-  EXPR_REF (-2) = m3_build2 (BIT_XOR_EXPR, m3_unsigned_type (t),
-                             EXPR_REF (-2), EXPR_REF (-1));
+  EXPR_REF (-2) = m3_build2 (BIT_XOR_EXPR, t,
+                             m3_convert (t, EXPR_REF (-2)),
+                             m3_convert (t, EXPR_REF (-1)));
   EXPR_POP ();
 }
 
