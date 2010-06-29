@@ -3,7 +3,7 @@
  *)
  
 MODULE Main;
-IMPORT Cstdint;
+IMPORT Cstdint, Word, Long;
 
 TYPE INT = INTEGER;
 TYPE INT8 =  Cstdint.int8_t;
@@ -99,6 +99,31 @@ TYPE UINT64 = Cstdint.uint64_t;
 <*NOWARN*>PROCEDURE add_vi32_vi32():INT=BEGIN RETURN vi32 + vi32; END add_vi32_vi32;
 <*NOWARN*>PROCEDURE add_vi32_vi64():INT64=BEGIN RETURN VAL(vi32, INT64) + vi64; END add_vi32_vi64;
 
+<*NOWARN*>PROCEDURE add_vi64_vi8():INT64=BEGIN RETURN vi64 + VAL(vi8, INT64); END add_vi64_vi8;
+<*NOWARN*>PROCEDURE add_vi64_vi16():INT64=BEGIN RETURN vi64 + VAL(vi16, INT64); END add_vi64_vi16;
+<*NOWARN*>PROCEDURE add_vi64_vi32():INT64=BEGIN RETURN vi64 + VAL(vi32, INT64); END add_vi64_vi32;
+<*NOWARN*>PROCEDURE add_vi64_vi64():INT64=BEGIN RETURN vi64 + vi64; END add_vi64_vi64;
+
+
+<*NOWARN*>PROCEDURE and_vi8_vi8():INT=BEGIN RETURN Word.And(vi8, vi8); END and_vi8_vi8;
+<*NOWARN*>PROCEDURE and_vi8_vi16():INT=BEGIN RETURN Word.And(vi8, vi16); END and_vi8_vi16;
+<*NOWARN*>PROCEDURE and_vi8_vi32():INT=BEGIN RETURN Word.And(vi8, vi32); END and_vi8_vi32;
+<*NOWARN*>PROCEDURE and_vi8_vi64():INT64=BEGIN RETURN Long.And(VAL(vi8, INT64), vi64); END and_vi8_vi64;
+
+<*NOWARN*>PROCEDURE and_vi16_vi8():INT=BEGIN RETURN Word.And(vi16, vi8); END and_vi16_vi8;
+<*NOWARN*>PROCEDURE and_vi16_vi16():INT=BEGIN RETURN Word.And(vi16, vi16); END and_vi16_vi16;
+<*NOWARN*>PROCEDURE and_vi16_vi32():INT=BEGIN RETURN Word.And(vi16, vi32); END and_vi16_vi32;
+<*NOWARN*>PROCEDURE and_vi16_vi64():INT64=BEGIN RETURN Long.And(VAL(vi16, INT64), vi64); END and_vi16_vi64;
+
+<*NOWARN*>PROCEDURE and_vi32_vi8():INT=BEGIN RETURN Word.And(vi32, vi8); END and_vi32_vi8;
+<*NOWARN*>PROCEDURE and_vi32_vi16():INT=BEGIN RETURN Word.And(vi32, vi16); END and_vi32_vi16;
+<*NOWARN*>PROCEDURE and_vi32_vi32():INT=BEGIN RETURN Word.And(vi32, vi32); END and_vi32_vi32;
+<*NOWARN*>PROCEDURE and_vi32_vi64():INT64=BEGIN RETURN Long.And(VAL(vi32, INT64), vi64); END and_vi32_vi64;
+
+<*NOWARN*>PROCEDURE and_vi64_vi8():INT64=BEGIN RETURN Long.And(vi64, VAL(vi8, INT64)); END and_vi64_vi8;
+<*NOWARN*>PROCEDURE and_vi64_vi16():INT64=BEGIN RETURN Long.And(vi64, VAL(vi16, INT64)); END and_vi64_vi16;
+<*NOWARN*>PROCEDURE and_vi64_vi32():INT64=BEGIN RETURN Long.And(vi64, VAL(vi32, INT64)); END and_vi64_vi32;
+<*NOWARN*>PROCEDURE and_vi64_vi64():INT64=BEGIN RETURN Long.And(vi64, vi64); END and_vi64_vi64;
 
 BEGIN
 END Main.
