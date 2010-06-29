@@ -195,7 +195,7 @@ goto :got_INSTALLROOT
 @rem
 @rem Walk up twice from \cm3\bin\cm3.exe to \cm3.
 @rem
-call :set_INSTALLROOT_2 %~$PATH:1\..\..
+call :set_INSTALLROOT_2 "%~$PATH:1\..\.."
 goto :eof
 :set_INSTALLROOT_2
 @set INSTALLROOT=%~f1
@@ -203,7 +203,7 @@ goto :eof
 
 :got_INSTALLROOT
 @rem @echo 3: INSTALLROOT=%INSTALLROOT%
-@echo INSTALLROOT=%INSTALLROOT%
+echo INSTALLROOT=%INSTALLROOT%
 
 @rem
 @rem The %INSTALLROOT% environment variable must be set.
@@ -222,7 +222,8 @@ call :environment_variables_must_be_set INSTALLROOT || exit /b 1
 @rem
 
 if "%TARGET%" == "NT386" (
-    @set LIB=%INSTALLROOT%\lib;%LIB%
+    @rem my_set allows LIB to contain spaces
+    call :my_set LIB "%INSTALLROOT%\lib;%LIB%"
     @echo LIB=%%INSTALLROOT%%\LIB;%%LIB%%
 )
 
@@ -251,6 +252,10 @@ echo CM3ROOT=%CM3ROOT%
 
 set SYSINFO_DONE=yes
 
+goto :eof
+
+:my_set
+set %1=%~2
 goto :eof
 
 :set_full_path
