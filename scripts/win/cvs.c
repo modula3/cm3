@@ -31,7 +31,7 @@ void Entry(void)
 	GetEnvironmentVariableW(L"CVS_RSH", ssh, RTL_NUMBER_OF(ssh));
 	if (ssh[0] == 0 || wcscmp(ssh, L"ssh") == 0)
 	{
-		SetEnvironmentVariableW(L"CVS_RSH", L"/bin/ssh");
+        SetEnvironmentVariableW(L"CVS_RSH", L"/bin/ssh");
 	}
 
     GetEnvironmentVariableW(L"SystemDrive", SystemDrive, 3);
