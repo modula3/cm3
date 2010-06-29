@@ -4611,7 +4611,7 @@ m3_do_fixed_extract (tree x, int m, int n, tree t)
                             t);
     }
 
-  x = m3_convert (m3_unsigned_type (t), x);
+  x = m3_convert (t, x);
   x = (b ? m3_build2 (LSHIFT_EXPR, t, x, build_int_cst (t_int, b)) : x);
   x = (a ? m3_build2 (RSHIFT_EXPR, t, x, build_int_cst (t_int, a)) : x);
   return x;
