@@ -86,7 +86,8 @@ proc ProbeForTargetSpecificFile(Path) is
 %
   local wordSize = {"32BITS" : "32", "64BITS" : "64"}{WORD_SIZE}
   local endian =   {"BIG":"-big","LITTLE":"-little"}{TARGET_ENDIAN} & "_endian"
-  foreach a in [wordSize, endian, endian & wordSize]
+  foreach a in [wordSize, endian, endian & wordSize, "-" & TARGET]
+    %write("checking " & Path & a, CR)
     if FileExists (Path & a)
       return Path & a
     end
@@ -104,26 +105,34 @@ proc compare_file (dir, OutputPath, probeForTargetSpecificFile) is
   OutputPath = dir & "/" & BUILD_DIR & "/" & OutputPath
 
   %write ("compare OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
-  if stale (OutputPath, OutputPath)
+  if not FileExists (OutputPath)
     write (OutputPath & " is missing (1)" & CR)
     html ([OutputPath, "missing"])
     jux ([OutputPath, "missing", CR])
     return
   end
 
-  if stale (ExpectedPath, ExpectedPath)
+  if not FileExists (ExpectedPath)
 
     % missing file compares equal to zero length file, ok
 
     if equal(GetFileSize(OutputPath), 0)
       %write (ExpectedPath, " is missing (2), compares equal to zero size ", OutputPath, CR)
       return
+    else
+      %write (ExpectedPath, " is missing (4), compares unequal to nonzero size ", OutputPath, CR)
     end
 
-    write (ExpectedPath, " is missing (3)", CR)
-    html ([ExpectedPath, "missing"])
-    jux ([ExpectedPath, "missing", CR])
-    return
+    if probeForTargetSpecificFile
+      ExpectedPath = ProbeForTargetSpecificFile(ExpectedPath)
+      write("comparing to ", ExpectedPath, CR)
+    end
+    if not FileExists (ExpectedPath)
+      write (ExpectedPath, " is missing (3)", CR)
+      html ([ExpectedPath, "missing"])
+      jux ([ExpectedPath, "missing", CR])
+      return
+    end
   end
 
   ExpectedPath = subst_chars (ExpectedPath, "/", diff_slash)
@@ -162,11 +171,11 @@ proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts,  probeForTargetSpecificF
   end
 
   %write ("cmp OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
-  if stale (OutputPath, OutputPath)
+  if not FileExists (OutputPath)
     return ""
   end
 
-  if stale (ExpectedPath, ExpectedPath)
+  if not FileExists (ExpectedPath)
     return ""
   end
 
@@ -363,6 +372,8 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
     fs_mkdir (dir & "/" & BUILD_DIR)
     fs_putfile (dir & "/" & BUILD_DIR & "/runopts", runopts)
 
+    local MainMSExpected = dir & "/Main.ms-" & TARGET
+
     local silent = ""
     if defined("debug")
       silent = silent & " -debug "
@@ -372,6 +383,9 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
     end
     if equal(silent, "")
         silent = "-silent"
+    end
+    if FileExists (MainMSExpected)
+        silent = silent & " -keep"
     end
 
     exec ("-cd", dir, "&& cm3", silent, "-DM3TESTS", cm3opts, ">" & BUILD_DIR & "/stdout.build.raw 2>" & BUILD_DIR & "/stderr.build.raw")
@@ -445,6 +459,9 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
       compare_file (dir, "stdout.pgm", probeForTargetSpecificFiles)
       compare_file (dir, "stderr.pgm", probeForTargetSpecificFiles)
     end
+    if FileExists (MainMSExpected)
+      compare_file (dir, "Main.ms", TRUE)
+    end
     if not ok1 or not ok2
        jux (["</error>", CR])
     end
@@ -497,6 +514,8 @@ end
 %p_test ("p2", "p207", "subrange declarations")
 %p_test ("p2", "p209", "open array initializers compile failure")
 %p_test ("p2", "p210", "open array initializers runtime failure")
+
+p_test ("p2", "p239", "exact codegen")
 
 mixed_portability_test ("p2", "p227", "longint, word, add, insert, extract, etc. (slow)")
 p_test ("p2", "p226", "atomics")
