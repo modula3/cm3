@@ -16,6 +16,8 @@ VAR
 
 PROCEDURE Put1(READONLY a: S1) =
   BEGIN
+    RTIO.PutInt(BYTESIZE(a));
+    RTIO.PutText("\n");
     RTIO.Flush();
     RTIO.PutBytes(ADR(a), BYTESIZE(a));
     RTIO.Flush();
