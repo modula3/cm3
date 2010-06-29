@@ -20,12 +20,19 @@ WCHAR Executable[] = L"C:\\cygwin\\bin\\cvs.exe";
 WCHAR SystemDrive[3];
 STARTUPINFOW StartInfo;
 PROCESS_INFORMATION ProcessInfo;
+WCHAR ssh[MAX_PATH];
 
 void Entry(void)
 {
     DWORD ExitCode;
 
     StartInfo.cb = sizeof(StartInfo);
+	
+	GetEnvironmentVariableW(L"CVS_RSH", ssh, RTL_NUMBER_OF(ssh));
+	if (ssh[0] == 0 || wcscmp(ssh, L"ssh") == 0)
+	{
+		SetEnvironmentVariableW(L"CVS_RSH", L"/bin/ssh");
+	}
 
     GetEnvironmentVariableW(L"SystemDrive", SystemDrive, 3);
     if (SystemDrive[0])
