@@ -350,6 +350,12 @@ const char *const tree_code_name[] = {
 #endif
 
 static tree
+m3_convert (tree tipe, tree op0)
+{
+  return fold_build1 (CONVERT_EXPR, tipe, op0);
+}
+
+static tree
 m3_cast (tree tipe, tree op0)
 {
   return fold_build1 (NOP_EXPR, tipe, op0);
@@ -581,7 +587,7 @@ m3_do_extract (tree x, tree i, tree n, tree t)
 
   a = m3_build2 (MINUS_EXPR, t_int, TYPE_SIZE (t), n);
   b = m3_build2 (MINUS_EXPR, t_int, a, i);
-  c = m3_build1 (CONVERT_EXPR, m3_unsigned_type (t), x);
+  c = m3_convert (m3_unsigned_type (t), x);
   d = m3_build2 (LSHIFT_EXPR, m3_unsigned_type (t), c, b);
   e = m3_build2 (RSHIFT_EXPR, t, d, a);
   f = m3_build3 (COND_EXPR, t,
@@ -600,7 +606,7 @@ m3_do_rotate (enum tree_code code, tree t, tree val, tree cnt)
   a = build_int_cst (t_int, TYPE_PRECISION (t) - 1);
   b = m3_build2 (BIT_AND_EXPR, t_int, cnt, a);
   c = m3_build2 (MINUS_EXPR, t_int, TYPE_SIZE(t), b);
-  d = m3_build1 (CONVERT_EXPR, t, val);
+  d = m3_convert (t, val);
   e = m3_build2 (LSHIFT_EXPR, t, d, (code == LROTATE_EXPR) ? b : c);
   f = m3_build2 (RSHIFT_EXPR, t, d, (code == RROTATE_EXPR) ? b : c);
   g = m3_build2 (BIT_IOR_EXPR, t, e, f);
@@ -613,7 +619,7 @@ m3_do_shift (enum tree_code code, tree t, tree val, tree cnt)
   tree a, b, c, d;
 
   t = m3_unsigned_type (t);
-  a = m3_build1 (CONVERT_EXPR, t, val);
+  a = m3_convert (t, val);
   b = m3_build2 (code, t, a, cnt);
   if (host_integerp (cnt, 1)
       && (TREE_INT_CST_LOW (cnt) < TYPE_PRECISION (t)))
@@ -2195,7 +2201,7 @@ m3_load_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
   if (M3_ALL_VOLATILE)
     TREE_THIS_VOLATILE(v) = TREE_SIDE_EFFECTS(v) = 1; /* force this to avoid aliasing problems */
   if (src_T != dst_T) {
-    v = m3_build1 (CONVERT_EXPR, dst_t, v);
+    v = m3_convert (dst_t, v);
   }
   EXPR_PUSH (v);
 }
@@ -2243,7 +2249,7 @@ m3_store_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
   m3_next_store_volatile = false;
   val = m3_cast (src_t, EXPR_REF (-1));
   if (src_T != dst_T) {
-    val = m3_build1 (CONVERT_EXPR, dst_t, val);
+    val = m3_convert (dst_t, val);
   }
   add_stmt (build2 (MODIFY_EXPR, dst_t, v, val));
   EXPR_POP ();
@@ -3889,7 +3895,7 @@ m3cg_load_indirect (void)
   v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
   if (src_T != dst_T) {
-    v = m3_build1 (CONVERT_EXPR, dst_t, v);
+    v = m3_convert (dst_t, v);
   }
   EXPR_REF (-1) = v;
 }
@@ -3934,8 +3940,8 @@ m3cg_store_indirect (void)
   v = m3_cast (m3_build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
-                    m3_build1 (CONVERT_EXPR, dst_t,
-                               m3_cast (src_t, EXPR_REF (-1)))));
+                    m3_convert (dst_t,
+                                m3_cast (src_t, EXPR_REF (-1)))));
   EXPR_POP ();
   EXPR_POP ();
 }
@@ -3962,7 +3968,7 @@ m3cg_load_float (void)
   UNUSED_MTYPE (t);
   FLOAT (f, fkind);
 
-  if (TREE_TYPE (f) != t) { f = m3_build1 (CONVERT_EXPR, t, f); }
+  if (TREE_TYPE (f) != t) { f = m3_convert (t, f); }
   EXPR_PUSH (f);
 }
 
@@ -4180,7 +4186,7 @@ m3cg_cvt_float (void)
   MTYPE (dst_t);
 
   if (FLOAT_TYPE_P (src_t)) {
-    EXPR_REF (-1) = m3_build1 (CONVERT_EXPR, dst_t, EXPR_REF (-1));
+    EXPR_REF (-1) = m3_convert (dst_t, EXPR_REF (-1));
   } else {
     EXPR_REF (-1) = m3_build1 (FLOAT_EXPR, dst_t, EXPR_REF (-1));
   }
@@ -4534,16 +4540,16 @@ m3cg_widen (void)
   tree dst_t = (sign ? t_int_64 : t_word_64);
   tree src_t  = (sign ? t_int_32 : t_word_32);
 
-  EXPR_REF(-1) = m3_build1 (CONVERT_EXPR, dst_t,
-                            m3_cast (src_t, EXPR_REF(-1)));
+  EXPR_REF(-1) = m3_convert (dst_t,
+                             m3_cast (src_t, EXPR_REF(-1)));
 }
 
 static void
 m3cg_chop (void)
 {
-  EXPR_REF(-1) = m3_build1 (CONVERT_EXPR, t_int_32,
-                            m3_build2 (BIT_AND_EXPR, t_int_64, EXPR_REF(-1),
-                                       build_int_cst (t_int, 0xffffffff)));
+  EXPR_REF(-1) = m3_convert (t_int_32,
+                             m3_build2 (BIT_AND_EXPR, t_int_64, EXPR_REF(-1),
+                                        build_int_cst (t_int, 0xffffffff)));
 }
 
 static void
@@ -4604,7 +4610,7 @@ m3_do_fixed_extract (tree x, int m, int n, tree t)
                             t);
     }
 
-  c = m3_build1 (CONVERT_EXPR, m3_unsigned_type (t), x);
+  c = m3_convert (m3_unsigned_type (t), x);
   d = (b == 0) ? c : m3_build2 (LSHIFT_EXPR, t, c, build_int_cst (t_int, b));
   e = (a == 0) ? d :
     m3_build2 (RSHIFT_EXPR, t, d, build_int_cst (t_int, a));
@@ -4859,7 +4865,7 @@ m3cg_check_lo (void)
     fprintf (stderr, "  check low type:%s code:0x%lx\n", m3cg_typename(T), code);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
-    EXPR_REF (-1) = m3_build1 (CONVERT_EXPR, t, EXPR_REF (-1));
+    EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
 
   m3_store (temp1, 0, t, T, t, T);
   EXPR_PUSH (temp1);
@@ -4884,7 +4890,7 @@ m3cg_check_hi (void)
     fprintf (stderr, "  check high type:%s code:0x%lx\n", m3cg_typename(T), code);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
-    EXPR_REF (-1) = m3_build1 (CONVERT_EXPR, t, EXPR_REF (-1));
+    EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
 
   m3_store (temp1, 0, t, T, t, T);
   EXPR_PUSH (temp1);
@@ -4911,7 +4917,7 @@ m3cg_check_range (void)
     fprintf (stderr, "  check range type:%s code:0x%lx\n", m3cg_typename(T), code);
 
   if (TREE_TYPE (EXPR_REF (-1)) != t)
-    EXPR_REF (-1) = m3_build1 (CONVERT_EXPR, t, EXPR_REF (-1));
+    EXPR_REF (-1) = m3_convert (t, EXPR_REF (-1));
 
   m3_store (temp1, 0, t, T, t, T);
   EXPR_PUSH (temp1);
@@ -5131,8 +5137,8 @@ m3cg_store_ordered (void)
   v = m3_cast (m3_build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
   add_stmt (build2 (MODIFY_EXPR, dst_t, v,
-                    m3_build1 (CONVERT_EXPR, dst_t,
-                               m3_cast (src_t, EXPR_REF (-1)))));
+                    m3_convert (dst_t,
+                                m3_cast (src_t, EXPR_REF (-1)))));
   EXPR_POP ();
   EXPR_POP ();
 }
@@ -5153,7 +5159,7 @@ m3cg_load_ordered (void)
   v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
   if (src_T != dst_T) {
-    v = m3_build1 (CONVERT_EXPR, dst_t, v);
+    v = m3_convert (dst_t, v);
   }
   EXPR_REF (-1) = v;
 }
@@ -5215,7 +5221,7 @@ m3cg_compare_exchange (void)
   v = m3_cast (m3_build_pointer_type (t), v);
   v = m3_build1 (INDIRECT_REF, t, v);
   if (t != u) {
-    v = m3_build1 (CONVERT_EXPR, u, v);
+    v = m3_convert (u, v);
   }
   EXPR_REF (-2) = v;
 
