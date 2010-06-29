@@ -20138,7 +20138,7 @@ ix86_static_chain (const_tree fndecl, bool incoming_p)
 {
   unsigned regno;
 
-  if (!DECL_STATIC_CHAIN (fndecl))
+  if (fndecl && !DECL_STATIC_CHAIN (fndecl))
     return NULL;
 
   if (TARGET_64BIT)
@@ -20148,18 +20148,18 @@ ix86_static_chain (const_tree fndecl, bool incoming_p)
     }
   else
     {
-      tree fntype;
       /* By default in 32-bit mode we use ECX to pass the static chain.  */
       regno = CX_REG;
-
-      fntype = TREE_TYPE (fndecl);
-      if (lookup_attribute ("fastcall", TYPE_ATTRIBUTES (fntype)))
+      if (fndecl) /* Modula-3 can pass NULL */
+      {
+        tree fntype = TREE_TYPE (fndecl);
+        if (lookup_attribute ("fastcall", TYPE_ATTRIBUTES (fntype)))
 	{
 	  /* Fastcall functions use ecx/edx for arguments, which leaves
 	     us with EAX for the static chain.  */
 	  regno = AX_REG;
 	}
-      else if (ix86_function_regparm (fntype, fndecl) == 3)
+        else if (ix86_function_regparm (fntype, fndecl) == 3)
 	{
 	  /* For regparm 3, we have no free call-clobbered registers in
 	     which to store the static chain.  In order to implement this,
@@ -20178,6 +20178,7 @@ ix86_static_chain (const_tree fndecl, bool incoming_p)
 	    }
 	  regno = SI_REG;
 	}
+      }
     }
 
   return gen_rtx_REG (Pmode, regno);
