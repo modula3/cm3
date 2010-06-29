@@ -2063,6 +2063,35 @@ convert_gimple_call (gimple_stmt_iterator *gsi, bool *handled_ops_p,
   return NULL_TREE;
 }
 
+static tree
+convert_gimple_call_op (tree *tp, int *walk_subtrees, void *data)
+{
+  struct walk_stmt_info *wi = (struct walk_stmt_info *) data;
+  struct nesting_info *const info = (struct nesting_info *) wi->info;
+  tree t = *tp, decl, target_context;
+
+  *walk_subtrees = 0;
+  switch (TREE_CODE (t))
+    {
+    case STATIC_CHAIN_EXPR:
+      decl = TREE_OPERAND (t, 0);
+      target_context = decl_function_context (decl);
+      gcc_assert (target_context);
+	  if (info->context == target_context)
+	    {
+	      /* Make sure frame_decl gets created.  */
+	      (void) get_frame_type (info);
+	    }
+	  *tp = get_static_chain (info, target_context, &wi->gsi);
+      break;
+
+    default:
+      break;
+    }
+
+  return NULL_TREE;
+}
+
 /* Walk the nesting tree starting with ROOT.  Convert all trampolines and
    call expressions.  At the same time, determine if a nested function
    actually uses its static chain; if not, remember that.  */
@@ -2113,7 +2142,7 @@ convert_all_function_calls (struct nesting_info *root)
 
 	  walk_function (convert_tramp_reference_stmt,
 			 convert_tramp_reference_op, n);
-	  walk_function (convert_gimple_call, NULL, n);
+	  walk_function (convert_gimple_call, convert_gimple_call_op, n);
 
 	  /* If a call to another function created the use of a chain
 	     within this function, we'll have to continue iteration.  */
