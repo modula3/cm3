@@ -4982,24 +4982,27 @@ m3cg_add_offset (void)
 static void
 m3cg_index_address (void)
 {
-  enum tree_code plus = (GCC45 ? POINTER_PLUS_EXPR : PLUS_EXPR);
   tree a = { 0 };
+  bool signd = { 0 };
+  long bytes = { 0 };
+
   MTYPE2   (t, T);
-  BYTESIZE (n);
+  BYTESIZE (bits);
+  
+  bytes = (bits / BITS_PER_UNIT);
 
   if (option_vars_trace)
-    fprintf(stderr, "  index address n:0x%lx n_bytes:0x%lx type:%s\n",
-            n, n / BITS_PER_UNIT, m3cg_typename(T));
+    fprintf(stderr, "  index address n_bytes:0x%lx type:%s\n",
+            bytes, m3cg_typename(T));
 
-  a = m3_build2 (MULT_EXPR, t, EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
-  if (GCC45)
-  {
-    gcc_assert(IS_INTEGER_TYPE_TREE(t) || IS_WORD_TYPE_TREE(t));
-    if (IS_INTEGER_TYPE_TREE(t))
-      a = m3_cast(ssizetype, a);
-    a = m3_cast(sizetype, a);
-  }
-  EXPR_REF (-2) = m3_build2 (plus, t_addr, m3_cast (t_addr, EXPR_REF (-2)), a);
+  signd = IS_INTEGER_TYPE_TREE(t);
+  gcc_assert(signd || IS_WORD_TYPE_TREE(t));
+  a = (signd ? ssize_int (bytes) : size_int (bytes));
+  a = m3_build2 (MULT_EXPR, t, EXPR_REF (-1), a);
+  if (IS_INTEGER_TYPE_TREE(t))
+    a = m3_cast (ssizetype, a);
+  a = m3_cast (sizetype, a);
+  EXPR_REF (-2) = m3_build2 (POINTER_PLUS_EXPR, t_addr, m3_cast (t_addr, EXPR_REF (-2)), a);
   EXPR_POP ();
 }
 
