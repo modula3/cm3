@@ -1,6 +1,6 @@
 %
 % This program endeavors to exercise the backend a lot,
-% though not the optimizer.
+% though not necessarily the optimizer.
 %
 % quash various parts of the output
 % in order to get "just the instructions"
@@ -50,30 +50,82 @@ proc EndModule(a) is
   EndX(a, ".m3")
 end
 
-proc To64(name, fromSize, to64) is
-  if not to64 or Is64{fromSize}
+proc To64(name, fromType, to64) is
+  if not to64 or Is64{fromType}
     return name
   end
   return "VAL(" & name & ", INT64)"
 end
 
-local sizes = ["8","16","32","64"]
 local signed = [FALSE, TRUE]
 local constant = [FALSE, TRUE] % or variable
 local params = [FALSE, TRUE] % or (global) variable (future: nested)
 % u for unsigned, i for integer
-local u = {FALSE:"",TRUE:"u"}
-local ui = {FALSE:"i",TRUE:"u"}
-local U = {FALSE:"",TRUE:"U"}
+local u = {FALSE:"",TRUE:"u","":"","u":"u"}
+local ui = {FALSE:"i",TRUE:"u","U":"u","U":"i"}
+local U = {FALSE:"",TRUE:"U","":"","U":"U"}
 % k for constant, v for variable, p for parameter
 local K = {FALSE:"v",TRUE:"k"}
 local P = {FALSE:"v",TRUE:"p"}
 local CONST = {FALSE:"VAR ",TRUE:"CONST "}
 local assign = {FALSE:":=",TRUE:"="}
-local  INTS = {"8": "INT8","16": "INT16","32": "INT32","64": "INT64"}
-local UINTS = {"8":"UINT8","16":"UINT16","32":"UINT32","64":"UINT64"}
-local L = {"8":"","16":"","32":"","64":"L"}
-local Is64 = {"8":FALSE,"16":FALSE,"32":FALSE,"64":TRUE}
+local L = {8:"",16:"",32:"",64:"L"}
+local Is64 = {8:FALSE,16:FALSE,32:FALSE,64:TRUE}
+
+local IsInt = { }
+local IsFloat = { }
+local TypeArray = [ ]
+local TypeHash = { }
+local sizes = [8,16,32,64]
+local IsUnsignedInt = { }
+local IsSignedInt = { }
+local IntSize = { }
+local Types = { }
+%local ConstName = { } % or prefix
+%local VarName =   { } % or prefix
+%local ParamName = { } % or prefix
+local ShortName = { }
+foreach size in sizes
+  foreach unsigned in [TRUE, FALSE]
+    local t = U{unsigned} & "INT" & size
+    Types{t} = 1
+    IntSize{t} = size
+    IsInt{t} = TRUE
+    IsFloat{t} = FALSE
+    TypeArray += t
+    TypeHash{t} = 1
+    IsUnsignedInt{t} = unsigned
+    IsSignedInt{t} = not unsigned
+    Is64{t} = Is64{size}
+    L{t} = L{size}
+    U{t} = U{unsigned}
+    u{t} = u{unsigned}
+    ui{t} = ui{unsigned}
+    ShortName{t} = ui{t} & size
+    %ParamName{t} = "p" & ui{t} & size
+    %VarName{t} = "v" & ui{t} & size
+    %ConstName{t} = "k" & ui{t} & size
+  end
+end
+local FloatArray = ["REAL", "LONGREAL", "EXTENDED"]
+local FloatHash = {  }
+foreach t in FloatArray
+  Types{t} = 1
+  IsInt{t} = FALSE
+  IsFloat{t} = TRUE
+  TypeArray += t
+  TypeHash{t} = 1
+  FloatHash{t} = 1
+  IsUnsignedInt{t} = FALSE
+  IsSignedInt{t} = FALSE
+  IntSize{t} = 0
+  ShortName{t} = {"REAL":"f32", "LONGREAL":"f64", "EXTENDED":"fx"}{t}
+  %ParamName{t} = "p" & ShortName{t}
+  %VarName{t} = "v" & ShortName{t}
+  %ConstName{t} = "k" & ShortName{t}
+  Is64{t} = FALSE % needs work
+end
+
 local counter0 = "0"
 local counter1 = "0"
 local counter2 = "0"
@@ -98,24 +150,28 @@ end
 >> BeginModule("A") in
   write("IMPORT Cstdint, <*NOWARN*>Word, <*NOWARN*>Long;", CR)
   write("TYPE <*NOWARN*>INT = INTEGER;",CR)
-  foreach size in sizes
-    foreach s in signed
-      local t = U{s} & "INT" & size
-
-      write(CR, "(* make a type *)", CR)
+  write("TYPE <*NOWARN*>FLOAT32 = REAL;",CR)
+  write("TYPE <*NOWARN*>FLOAT64 = LONGREAL;",CR)
+  foreach t in Types        
+    local size = IntSize{t}
+    local s = IsSignedInt{t}
+      
+    if IsInt{t}
+      % make a type
       write("TYPE ", t, " = Cstdint.", u{s}, "int", size, "_t;", CR)
- 
+
       foreach k in constant
-        write(CR, "(* make a constant or variable *)", CR)
-        
+            
+        % make a constant or variable
+      
         local v = K{k} & ui{s} & size
 
         write("<*NOWARN*>", CONST{k}, v, ":", U{s}, "INT",
               size, assign{k}, Counter(), L{size}, ";", CR)
               
-        write(CR, "(* return a constant or variable *)", CR)
+        % return a constant or variable
 
-        local f = "ret_" & K{k} & ui{s} & size
+        local f = "ret_" & {TRUE:"const",FALSE:"var"}{k} & "_" & ui{s} & size
         write("<*NOWARN*>PROCEDURE ", f, "():", t,
               "=BEGIN RETURN ")
         if k
@@ -125,64 +181,80 @@ end
         end
         write(";END ", f, ";", CR)
       end
-
-      write(CR, "(* return a parameter with a type change *)", CR)
-      foreach size2 in sizes
-        foreach s2 in signed
-          local t2 = U{s2} & "INT" & size2
-          local f = "ret_p" & ui{s} & size & "_" & ui{s2} & size2
-          write("<*NOWARN*>PROCEDURE ", f, "(a:", t2, "):", t2, "=BEGIN RETURN ")
-          if not equal(Is64{size}, Is64{size2})
-            write("VAL(a,", t2, ")")
-          else
-            write("a")
-          end
-          write(";END ", f, ";", CR)            
-        end
-      end
-
-      local ops = ["add", "sub", "and", "or", "xor", "mult", "div", "mod"]
-      local infix_ops = {"add":"+","sub":"-","mult":"*","div":"DIV","mod":"MOD"}
-      local word_ops = {"and":"And","or":"Or","xor":"Xor"}
+    else
+      % make a variable
       
-      foreach op in ops
-  
-        foreach size2 in sizes
-          foreach s2 in signed
-            local t2 = U{s2} & "INT" & size2
-            foreach p in params
-              write(CR, "(* ", t, " ", op, " ", t2, " ")
-              write({TRUE:"parameters",FALSE:"variables"}{p}, " *)", CR)
-              local f = op & "_" & P{p} & ui{s} & size & "_" & P{p} & ui{s2} & size2
-              write("<*NOWARN*>PROCEDURE ", f, "(")
-              if p
-                write("a:", t, ";b:", t2)
-              end
-              write("):INT")
-              local is64 = (Is64{size} or Is64{size2})
-              if is64
-                write("64")
-              end
-              write("=BEGIN RETURN ")
-              local a = "a"
-              local b = "b"
-              if not p
-                a = "v" & ui{s} & size
-                b = "v" & ui{s2} & size2
-              end
-              a = To64(a, size, is64)
-              b = To64(b, size2, is64)
-              if infix_ops contains op
-                write(a, " ", infix_ops{op}, " ", b)
-              else
-                local word = "Word"
-                if is64
-                  word = "Long"
-                end
-                write(word, ".", word_ops{op}, "(", a, ",", b, ")")
-              end
-              write(";END ", f, ";", CR)            
+      local v = "v" & ShortName{t}
+
+      write("<*NOWARN*> VAR " , v, ":", t, ";", CR)
+              
+      % return a variable
+
+      local f = "ret_" & ShortName{t}
+      write("<*NOWARN*>PROCEDURE ", f, "():", t,
+            "=BEGIN RETURN ")
+      write(v)
+      write(";END ", f, ";", CR)
+    end
+
+    % return a parameter with a type change
+    foreach t2 in Types
+      if IsInt{t} and IsInt{t2}
+        local f = "ret_param_" & ShortName{t} & "_" & ShortName{t2}
+        write("<*NOWARN*>PROCEDURE ", f, "(a:", t2, "):", t2, "=BEGIN RETURN ")
+        if not equal(Is64{t}, Is64{t2})
+          write("VAL(a,", t2, ")")
+        else
+          write("a")
+        end
+        write(";END ", f, ";", CR)            
+      end
+    end
+
+    local ops = ["add", "sub", "and", "or", "xor", "mult", "div", "mod"]
+    local float_ops = {"add":"+","sub":"-","mult":"*"}
+    %local int_ops = {"add":"+","sub":"-","mult":"*","div":"DIV","mod":"MOD"}
+    local infix_ops = {"add":"+","sub":"-","mult":"*","div":"DIV","mod":"MOD"}
+    local word_ops = {"and":"And","or":"Or","xor":"Xor"}
+      
+    foreach op in ops
+      foreach t2 in Types
+        if (IsInt{t} and IsInt{t2}) or (equal(t, t2) and float_ops contains op)
+          foreach p in params
+            local f = op & "_" & {TRUE:"param",FALSE:"var"}{p} & "_" & ShortName{t} & "_" & ShortName{t2}
+            write("<*NOWARN*>PROCEDURE ", f, "(")
+            if p
+              write("a:", t, ";b:", t2)
             end
+            write("):")
+            if IsInt{t}
+              write("INT")
+            else
+              write(t)
+            end
+            local is64 = (Is64{t} or Is64{t2})
+            if is64
+              write("64")
+            end
+            write("=BEGIN RETURN ")
+            local a = "a"
+            local b = "b"
+            if not p
+              a = "v" & ShortName{t}
+              b = "v" & ShortName{t2}
+            end
+            a = To64(a, t, is64)
+            b = To64(b, t2, is64)
+            if infix_ops contains op
+              write(a, " ", infix_ops{op}, " ", b)
+            else
+              local word = "Word"
+              if is64
+                word = "Long"
+              end
+              write(word, ".", word_ops{op}, "(", a, ",", b, ")")
+            end
+            write(";END ", f, ";", CR)            
           end
         end
       end
