@@ -1,4 +1,7 @@
 %
+% This program endeavors to exercise the backend a lot,
+% though not the optimizer.
+%
 % quash various parts of the output
 % in order to get "just the instructions"
 % and also avoid host file system paths (in the debug information)
@@ -14,6 +17,188 @@ m3back_unwind_table = "-fno-asynchronous-unwind-tables"
 M3_BOOTSTRAP = TRUE
 M3_KEEP_FILES = TRUE
 
+
+proc BeginInterface(a) is
+  local b = a & ".i3.temp"
+  > b in
+    write("INTERFACE ", a, ";", CR)
+  end
+  return b
+end
+
+proc BeginModule(a) is
+  local b = a & ".m3.temp"
+  > b in
+    write("MODULE ", a, ";", CR)
+  end
+  return b
+end
+
+proc EndX(a, ext) is
+  local b = a & ext & ".temp"
+  >> b in
+    write("END ", a, ".", CR)
+  end
+  cp_if(b, a & ext)
+end
+
+proc EndInterface(a) is
+  EndX(a, ".i3")
+end
+
+proc EndModule(a) is
+  EndX(a, ".m3")
+end
+
+proc To64(name, fromSize, to64) is
+  if not to64 or Is64{fromSize}
+    return name
+  end
+  return "VAL(" & name & ", INT64)"
+end
+
+local sizes = ["8","16","32","64"]
+local signed = [FALSE, TRUE]
+local constant = [FALSE, TRUE] % or variable
+local params = [FALSE, TRUE] % or (global) variable (future: nested)
+% u for unsigned, i for integer
+local u = {FALSE:"",TRUE:"u"}
+local ui = {FALSE:"i",TRUE:"u"}
+local U = {FALSE:"",TRUE:"U"}
+% k for constant, v for variable, p for parameter
+local K = {FALSE:"v",TRUE:"k"}
+local P = {FALSE:"v",TRUE:"p"}
+local CONST = {FALSE:"VAR ",TRUE:"CONST "}
+local assign = {FALSE:":=",TRUE:"="}
+local  INTS = {"8": "INT8","16": "INT16","32": "INT32","64": "INT64"}
+local UINTS = {"8":"UINT8","16":"UINT16","32":"UINT32","64":"UINT64"}
+local L = {"8":"","16":"","32":"","64":"L"}
+local Is64 = {"8":FALSE,"16":FALSE,"32":FALSE,"64":TRUE}
+local counter0 = "0"
+local counter1 = "0"
+local counter2 = "0"
+local counter3 = "0"
+
+proc Counter() is
+  local x = { "0":"1","1":"2","2":"3","3":"4","4":"5",
+              "5":"6","6":"7","7":"8","8":"9","9":"0" }
+  counter0 = x{counter0}
+  if equal(counter0, "0")
+    counter1 = x{counter1}
+    if equal(counter1, "0")
+      counter2 = x{counter2}
+      if equal(counter2, "0")
+        counter3 = x{counter3}
+      end
+    end
+  end
+  return counter3 & counter2 & counter1 & counter0
+end
+
+>> BeginModule("A") in
+  write("IMPORT Cstdint, <*NOWARN*>Word, <*NOWARN*>Long;", CR)
+  write("TYPE <*NOWARN*>INT = INTEGER;",CR)
+  foreach size in sizes
+    foreach s in signed
+      local t = U{s} & "INT" & size
+
+      write(CR, "(* make a type *)", CR)
+      write("TYPE ", t, " = Cstdint.", u{s}, "int", size, "_t;", CR)
+ 
+      foreach k in constant
+        write(CR, "(* make a constant or variable *)", CR)
+        
+        local v = K{k} & ui{s} & size
+
+        write("<*NOWARN*>", CONST{k}, v, ":", U{s}, "INT",
+              size, assign{k}, Counter(), L{size}, ";", CR)
+              
+        write(CR, "(* return a constant or variable *)", CR)
+
+        local f = "ret_" & K{k} & ui{s} & size
+        write("<*NOWARN*>PROCEDURE ", f, "():", t,
+              "=BEGIN RETURN ")
+        if k
+          write(Counter(), L{size})
+        else
+          write(v)
+        end
+        write(";END ", f, ";", CR)
+      end
+
+      write(CR, "(* return a parameter with a type change *)", CR)
+      foreach size2 in sizes
+        foreach s2 in signed
+          local t2 = U{s2} & "INT" & size2
+          local f = "ret_p" & ui{s} & size & "_" & ui{s2} & size2
+          write("<*NOWARN*>PROCEDURE ", f, "(a:", t2, "):", t2, "=BEGIN RETURN ")
+          if not equal(Is64{size}, Is64{size2})
+            write("VAL(a,", t2, ")")
+          else
+            write("a")
+          end
+          write(";END ", f, ";", CR)            
+        end
+      end
+
+      local ops = ["add", "sub", "and", "or", "xor", "mult", "div", "mod"]
+      local infix_ops = {"add":"+","sub":"-","mult":"*","div":"DIV","mod":"MOD"}
+      local word_ops = {"and":"And","or":"Or","xor":"Xor"}
+      
+      foreach op in ops
+  
+        foreach size2 in sizes
+          foreach s2 in signed
+            local t2 = U{s2} & "INT" & size2
+            foreach p in params
+              write(CR, "(* ", t, " ", op, " ", t2, " ")
+              write({TRUE:"parameters",FALSE:"variables"}{p}, " *)", CR)
+              local f = op & "_" & P{p} & ui{s} & size & "_" & P{p} & ui{s2} & size2
+              write("<*NOWARN*>PROCEDURE ", f, "(")
+              if p
+                write("a:", t, ";b:", t2)
+              end
+              write("):INT")
+              local is64 = (Is64{size} or Is64{size2})
+              if is64
+                write("64")
+              end
+              write("=BEGIN RETURN ")
+              local a = "a"
+              local b = "b"
+              if not p
+                a = "v" & ui{s} & size
+                b = "v" & ui{s2} & size2
+              end
+              a = To64(a, size, is64)
+              b = To64(b, size2, is64)
+              if infix_ops contains op
+                write(a, " ", infix_ops{op}, " ", b)
+              else
+                local word = "Word"
+                if is64
+                  word = "Long"
+                end
+                write(word, ".", word_ops{op}, "(", a, ",", b, ")")
+              end
+              write(";END ", f, ";", CR)            
+            end
+          end
+        end
+      end
+    end
+  end
+  write("BEGIN", CR)
+end
+EndModule("A")
+
+>> BeginInterface("A") in
+  write("(* bar *)", CR)
+end
+EndInterface("A")
+
+derived_interface("A", HIDDEN)
+derived_implementation("A")
 implementation("Main")
 build_standalone()
 include ("../../Test.common")
