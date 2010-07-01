@@ -77,7 +77,7 @@ library ("test")
 %  include (PKG_INSTALL & "/m3core/src/float/m3makefile")
 %end
 
-proc ProbeForTargetSpecificFile(Path) is
+proc ProbeForTargetSpecificFile(Dir, Leaf, Default) is
 %
 % For file "foo", this looks for, e.g.:
 % foo-big_endian32, foo32, foo-big_endian
@@ -87,12 +87,20 @@ proc ProbeForTargetSpecificFile(Path) is
   local wordSize = {"32BITS" : "32", "64BITS" : "64"}{WORD_SIZE}
   local endian =   {"BIG":"-big","LITTLE":"-little"}{TARGET_ENDIAN} & "_endian"
   foreach a in [wordSize, endian, endian & wordSize, "-" & TARGET]
-    %write("checking " & Path & a, CR)
-    if FileExists (Path & a)
-      return Path & a
+    local b = Dir & "/" & Leaf & a
+    %write("checking " & b, CR)
+    if FileExists (b)
+      return b
     end
   end
-  return Path
+  foreach a in ["/expected/" & TARGET & "/"]
+    local b = Dir & a & Leaf
+    %write("checking " & b, CR)
+    if FileExists (b)
+      return b
+    end
+  end
+  return Default
 end
 
 if not defined ("LIB_ONLY")
@@ -100,13 +108,14 @@ if not defined ("LIB_ONLY")
 % misc. utilities
 %
 
-proc compare_file (dir, OutputPath, probeForTargetSpecificFile) is
-  local ExpectedPath = dir & "/" & OutputPath
-  OutputPath = dir & "/" & BUILD_DIR & "/" & OutputPath
+proc compare_file (dir, Leaf, probeForTargetSpecificFile) is
+  %write("compare_file" & dir & Leaf, CR)
+  local ExpectedPath = dir & "/" & Leaf
+  local OutputPath = dir & "/" & BUILD_DIR & "/" & Leaf
 
   %write ("compare OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
   if not FileExists (OutputPath)
-    write (OutputPath & " is missing (1)" & CR)
+    %write (OutputPath & " is missing (1)" & CR)
     html ([OutputPath, "missing"])
     jux ([OutputPath, "missing", CR])
     return
@@ -124,8 +133,8 @@ proc compare_file (dir, OutputPath, probeForTargetSpecificFile) is
     end
 
     if probeForTargetSpecificFile
-      ExpectedPath = ProbeForTargetSpecificFile(ExpectedPath)
-      write("comparing to ", ExpectedPath, CR)
+      ExpectedPath = ProbeForTargetSpecificFile(dir, Leaf, ExpectedPath)
+      %write("comparing to ", ExpectedPath, CR)
     end
     if not FileExists (ExpectedPath)
       write (ExpectedPath, " is missing (3)", CR)
@@ -139,7 +148,7 @@ proc compare_file (dir, OutputPath, probeForTargetSpecificFile) is
   OutputPath = subst_chars (OutputPath, "/", diff_slash)
 
   if probeForTargetSpecificFile
-    ExpectedPath = ProbeForTargetSpecificFile(ExpectedPath)
+    ExpectedPath = ProbeForTargetSpecificFile(dir, Leaf, ExpectedPath)
     %write("comparing to ", ExpectedPath, CR)
   end
 
@@ -162,12 +171,13 @@ proc FileExists(x) is
     return not stale(x, x)
 end
 
-proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts,  probeForTargetSpecificFile) is
+proc cmp_file (dir, file, ignoreLinesWith, ignoreTexts, probeForTargetSpecificFile) is
+  %write("cmp_file" & dir & file, CR)
   local ExpectedPath = dir & "/" & file
   local OutputPath = dir & "/" & BUILD_DIR & "/" & file
 
   if probeForTargetSpecificFile
-    ExpectedPath = ProbeForTargetSpecificFile(ExpectedPath)
+    ExpectedPath = ProbeForTargetSpecificFile(dir, file, ExpectedPath)
   end
 
   %write ("cmp OutputPath=" & OutputPath, ", ExpectedPath=" & ExpectedPath, CR)
@@ -359,8 +369,7 @@ html(["      <tbody>", CR])
 cm3opts = ""
 runopts = ""
 
-readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts, probeForTargetSpecificFiles) is
-  local dir = "../src/" & group & "/" & uid
+readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts, probeForTargetSpecificFiles) is  local dir = "../src/" & group & "/" & uid
   fs_rmrec (dir & "/" & BUILD_DIR)
   if DATE
     tstart = compress (q_exec_get (DATE & " '+%s'")[1]) % second resolution only
@@ -372,7 +381,8 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
     fs_mkdir (dir & "/" & BUILD_DIR)
     fs_putfile (dir & "/" & BUILD_DIR & "/runopts", runopts)
 
-    local MainMSExpected = dir & "/Main.ms-" & TARGET
+    local ExpectedDir = dir & "/expected/" & TARGET
+    local keep = defined("keep") or FileExists(ExpectedDir)
 
     local silent = ""
     if defined("debug")
@@ -384,7 +394,7 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
     if equal(silent, "")
         silent = "-silent"
     end
-    if FileExists (MainMSExpected)
+    if keep
         silent = silent & " -keep"
     end
 
@@ -417,11 +427,19 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
     local ok1 = cmp_file (dir, "stdout.build", ignoreLines, ignoreTexts, probeForTargetSpecificFiles) and
                 cmp_file (dir, "stderr.build", ignoreLines, ignoreTexts, probeForTargetSpecificFiles)
     local ok2 = "T"
+    local ok3 = "T"
 
     if should_run
       ok2 = cmp_file (dir, "stdout.pgm", ignoreLines, ignoreTexts, probeForTargetSpecificFiles) and
             cmp_file (dir, "stderr.pgm", ignoreLines, ignoreTexts, probeForTargetSpecificFiles)
     end
+    
+    if probeForTargetSpecificFiles and FileExists (ExpectedDir)
+      foreach a in fs_lsfiles(ExpectedDir, TRUE)
+        ok3 = cmp_file(dir, a, ignoreLines, ignoreTexts, probeForTargetSpecificFiles) and ok3
+      end
+    end
+    
     if DATE and BC
       tstop = compress (q_exec_get ("date '+%s'")[1])
       %write (tstop, CR)
@@ -431,7 +449,7 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
       ttime = "0"
     end
 
-    if ok1 and ok2
+    if ok1 and ok2 and ok3
       html (["<tr class=\"bggreen tl\"><td>", uid,
              "</td><td class=\"small\" width=\"45%\">", comment])
       jux (["<testcase time=\"" & ttime & "\" name=\"" & uid & ": " &
@@ -446,6 +464,7 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
              quote_xml( comment ) & "\">", CR])
       if not ok1 msg = "build failed" end
       if not ok2 msg = "output of program run differs" end
+      if not ok3 msg = "code differs" end
       jux (["<error message=\"", msg, "\">", CR])
       >> "res.ko" in
         write (uid, CR)
@@ -459,21 +478,34 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
       compare_file (dir, "stdout.pgm", probeForTargetSpecificFiles)
       compare_file (dir, "stderr.pgm", probeForTargetSpecificFiles)
     end
-    if FileExists (MainMSExpected)
-      compare_file (dir, "Main.ms", TRUE)
+    if probeForTargetSpecificFiles and FileExists (ExpectedDir)
+      foreach a in fs_lsfiles(ExpectedDir, TRUE)
+        compare_file(dir, a, probeForTargetSpecificFiles)
+      end
     end
-    if not ok1 or not ok2
+    if not ok1 or not ok2 or not ok3
        jux (["</error>", CR])
     end
     jux (["</testcase>", CR])
 
     html (["</pre></td></tr>", CR])
 
-    if not defined ("keep")
+    if not keep
       fs_rmrec (dir & "/" & BUILD_DIR)
     end
   end
 end
+
+%------------------------------------------------------------------- ctests ---
+%  CODE tests: tiny modules where the code output by the compiler
+%     is what's of interest.
+
+proc c_test (group, uid, comment) is
+  %if defined ("_all") return end
+  run_test ("_ctests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
+end
+
+% below
 
 %------------------------------------------------------------------- ptests ---
 % PROG tests: complete programs where the output of the program
@@ -486,7 +518,7 @@ end
 % programs with extra command line flags
 
 readonly proc p_run_flags_test (group, uid, comment, runopts) is
-  local cm3opts = ""
+  %local cm3opts = ""
   run_test ("_p_run_flags_test", group, uid, comment, "run", cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
@@ -494,7 +526,7 @@ end
 
 readonly proc build_flags_test (group, uid, comment, cm3opts) is
   local run = FALSE
-  local runopts = ""
+  %local runopts = ""
   run_test ("_build_flags_tests", group, uid, comment, run, cm3opts, runopts, "probeForTargetSpecificFiles")
 end
 
@@ -515,7 +547,7 @@ end
 %p_test ("p2", "p209", "open array initializers compile failure")
 %p_test ("p2", "p210", "open array initializers runtime failure")
 
-p_test ("p2", "p239", "exact codegen")
+c_test ("c1", "c135", "exact codegen")
 
 mixed_portability_test ("p2", "p227", "longint, word, add, insert, extract, etc. (slow)")
 p_test ("p2", "p226", "atomics")
@@ -836,11 +868,6 @@ x_test ("x0", "x007", "thread.alerted/shutdown exercise")
 % -- only wizards should bother to run the ctests, to tell if they
 %     work, you must manually examine the code that's produced
 %
-
-readonly proc c_test (group, uid, comment) is
-  if defined ("_all") return end
-  run_test ("_ctests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
-end
 
 c_test ("c0", "c001", "empty program")
 c_test ("c0", "c002", "empty unsafe program")
