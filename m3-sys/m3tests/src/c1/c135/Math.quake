@@ -1,0 +1,144 @@
+local Add1 = { }
+local Sub1 = { }
+local Negate = { }
+local IsNegative = { }
+local IsPositive = { }
+
+local counter0 = "0"
+local counter1 = "0"
+local counter2 = "0"
+local counter3 = "0"
+
+local proc Increment() is
+  local inc = { "0":"1","1":"2","2":"3","3":"4","4":"5",
+                "5":"6","6":"7","7":"8","8":"9","9":"0" }
+  counter0 = inc{counter0}
+  if equal(counter0, "0")
+    counter1 = inc{counter1}
+    if equal(counter1, "0")
+      counter2 = inc{counter2}
+      if equal(counter2, "0")
+        counter3 = inc{counter3}
+      end
+    end
+  end
+  local c = ""
+  foreach d in [counter3, counter2, counter1, counter0]
+    if not equal(d, "0") or not equal(c, "")
+      c = c & d
+    end
+  end
+  return c
+end
+
+proc InitMath() is
+  if Sub1 contains "9999"
+    return
+  end
+  counter0 = "0"
+  counter1 = "0"
+  counter2 = "0"
+  counter3 = "0"
+  proc Helper(f, a, b) is
+    if equal(a, "9999")
+      return
+    end
+    local neg_a = "-" & a
+    local neg_b = "-" & b
+    Add1{a} = b
+    Sub1{b} = a
+    Add1{neg_b} = neg_a
+    Sub1{neg_a} = neg_b
+    Negate{a} = neg_a
+    Negate{neg_a} = a
+    IsNegative{neg_a} = TRUE
+    IsNegative{b} = FALSE
+    IsPositive{neg_a} = FALSE
+    IsPositive{a} = TRUE
+    f(f, b, Increment())
+  end
+  Helper(Helper, "0", Increment())
+  Negate{"0"} = "0"
+  Sub1{"0"} = "-1"
+  IsPositive{"0"} = TRUE
+  IsNegative{"0"} = FALSE
+end
+InitMath()
+
+VerboseMath = FALSE
+
+proc Add(a, b) is
+  local proc Helper(f, a, b) is
+    if equal(a, "0") or equal(a, 0) return b end
+    if equal(b, "0") or equal(b, 0) return a end
+    return Add1{Add1{f(f, Sub1{a}, Sub1{b})}}
+  end
+  if VerboseMath write("Add ", a, " ", b, CR) end
+  if IsNegative{a} and IsNegative{b}
+    return Negate{Helper(Helper, Negate{a}, Negate{b})}
+  end
+  if IsPositive{a} and IsPositive{b}
+    return Helper(Helper, a, b)
+  end
+  if IsPositive{a} and IsNegative{b}
+    return Sub(a, Negate{b})
+  end
+  if IsNegative{a} and IsPositive{b}
+    return Sub(b, Negate{a})
+  end
+  return Helper(Helper, a, b)
+end
+
+proc Sub(a, b) is
+  local proc Helper(f, a, b) is
+    if equal(a, "0") or equal(a, 0) return Negate{b} end
+    if equal(b, "0") or equal(b, 0) return a end
+    return Sub1{f(f, a, Sub1{b})}
+  end
+  if VerboseMath write("Sub ", a, " ", b, CR) end
+  if IsNegative{a} and IsNegative{b}
+    return Add(a, Negate{b})
+  end
+  if IsPositive{a} and IsPositive{b}
+    return Helper(Helper, a, b)
+  end
+  if IsPositive{a} and IsNegative{b}
+    return Add(a, Negate{b})
+  end
+  if IsNegative{a} and IsPositive{b}
+    return Negate{Add(Negate{a}, b)}
+  end
+end
+
+%write("99 - 40 is " & Sub(40, 99), CR)
+%write("99 - 40 is " & Sub(99, 40), CR)
+%write("11 - 42 is " & Sub(11, 42), CR)
+%write("6 - 4 is " & Sub(6, 4), CR)
+%write("2 + 3 is " & Add(2, 3), CR)
+
+foreach op in ["+", "-"]
+  local f = {"+":Add,"-":Sub}{op}
+  write(CR)
+  write(" 33 ", op, " 22 is ", f(  33,    22), CR)
+  write(" 33 ", op, " -22 is ", f(  33,  "-22"), CR)
+  write("-33 ", op, "  22 is ", f("-33",   22), CR)
+  write("-33 ", op, " -22 is ", f("-33", "-22"), CR)
+  write(CR)   write(" 22 ", op, "  33 is ", f(  22,    33), CR)
+  write(" 22 ", op, " -33 is ", f(  22,  "-33"), CR)
+  write("-22 ", op, "  33 is ", f("-22",   33), CR)
+  write("-22 ", op, " -33 is ", f("-22", "-33"), CR)
+  write(CR)
+end
+
+%VerboseMath = TRUE
+
+proc Range(start, endd) is
+  local proc Helper(f, result, start, endd) is
+    if equal(start, endd)
+      return result
+    end
+    result += start
+    return f(f, result, Add(start, "1"), endd)
+  end
+  return Helper(Helper, [ ], start, endd)
+end
