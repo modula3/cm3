@@ -27,7 +27,7 @@ fi
 . "$sysinfo"
 . "$ROOT/scripts/pkginfo.sh"
 
-DS=${DS:-"RC5"}; export DS
+DS=${DS:-"6"}; export DS
 STAGE="${STAGE:-${TMPDIR}}"
 INSTALLROOT="${STAGE}/cm3"
 rm -rf ${INSTALLROOT}
@@ -36,7 +36,7 @@ COLLDEPS="${ROOT}/www/releng/collection-deps.txt"
 cd "${ROOT}" || exit 1
 if [ -z "${OMIT_UPDATE}" ]; then
   case ${DS} in
-    RC*)
+    RC*|6)
         echo cvs -q up -r release_CM3_5_8_${DS} -dP
         cvs -q up -r release_CM3_5_8_${DS} -dP
         N=`echo ${DS} | sed -e 's/RC//'`
