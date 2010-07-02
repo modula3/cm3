@@ -116,18 +116,20 @@ end
 %write("6 - 4 is " & Sub(6, 4), CR)
 %write("2 + 3 is " & Add(2, 3), CR)
 
-foreach op in ["+", "-"]
-  local f = {"+":Add,"-":Sub}{op}
-  write(CR)
-  write(" 33 ", op, " 22 is ", f(  33,    22), CR)
-  write(" 33 ", op, " -22 is ", f(  33,  "-22"), CR)
-  write("-33 ", op, "  22 is ", f("-33",   22), CR)
-  write("-33 ", op, " -22 is ", f("-33", "-22"), CR)
-  write(CR)   write(" 22 ", op, "  33 is ", f(  22,    33), CR)
-  write(" 22 ", op, " -33 is ", f(  22,  "-33"), CR)
-  write("-22 ", op, "  33 is ", f("-22",   33), CR)
-  write("-22 ", op, " -33 is ", f("-22", "-33"), CR)
-  write(CR)
+if FALSE
+  foreach op in ["+", "-"]
+    local f = {"+":Add,"-":Sub}{op}
+    write(CR)
+    write(" 33 ", op, " 22 is ", f(  33,    22), CR)
+    write(" 33 ", op, " -22 is ", f(  33,  "-22"), CR)
+    write("-33 ", op, "  22 is ", f("-33",   22), CR)
+    write("-33 ", op, " -22 is ", f("-33", "-22"), CR)
+    write(CR)   write(" 22 ", op, "  33 is ", f(  22,    33), CR)
+    write(" 22 ", op, " -33 is ", f(  22,  "-33"), CR)
+    write("-22 ", op, "  33 is ", f("-22",   33), CR)
+    write("-22 ", op, " -33 is ", f("-22", "-33"), CR)
+    write(CR)
+  end
 end
 
 %VerboseMath = TRUE
