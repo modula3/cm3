@@ -22,6 +22,8 @@
 #ifndef GCC_RS6000_PROTOS_H
 #define GCC_RS6000_PROTOS_H
 
+#include "alias.h"
+
 /* Declare functions in rs6000.c */
 
 #ifdef RTX_CODE
