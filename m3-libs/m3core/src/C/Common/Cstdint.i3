@@ -10,16 +10,16 @@ INTERFACE Cstdint;
 IMPORT Ctypes, Word;
 
 TYPE
-       int8_t = BITS  8 FOR Ctypes.signed_char;
-      uint8_t = BITS  8 FOR Ctypes.unsigned_char;
-      int16_t = BITS 16 FOR Ctypes.short;
-     uint16_t = BITS 16 FOR Ctypes.unsigned_short;
-      int32_t = BITS 32 FOR Ctypes.int;
-     uint32_t = BITS 32 FOR Ctypes.unsigned;
-      int64_t = BITS 64 FOR Ctypes.long_long;
-     uint64_t = BITS 64 FOR Ctypes.unsigned_long_long;
-     intptr_t = BITS BITSIZE(ADDRESS) FOR INTEGER;
-    uintptr_t = BITS BITSIZE(ADDRESS) FOR Word.T;
+       int8_t = Ctypes.signed_char;
+      uint8_t = Ctypes.unsigned_char;
+      int16_t = Ctypes.short;
+     uint16_t = Ctypes.unsigned_short;
+      int32_t = Ctypes.int;
+     uint32_t = Ctypes.unsigned;
+      int64_t = Ctypes.long_long;
+     uint64_t = Ctypes.unsigned_long_long;
+     intptr_t = INTEGER;
+    uintptr_t = Word.T;
 
 CONST
       INT8_MIN = FIRST( int8_t);
