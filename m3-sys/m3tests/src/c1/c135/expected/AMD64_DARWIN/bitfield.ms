@@ -1,2703 +1,4 @@
 	.text
-.globl _bitfield__read_var_BitField_offset0_count1
-	.private_extern _bitfield__read_var_BitField_offset0_count1
-_bitfield__read_var_BitField_offset0_count1:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	16(%rbp), %eax
-	movzbl	%al, %eax
-	andl	$1, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count1
-	.private_extern _bitfield__write_var_BitField_offset0_count1
-_bitfield__write_var_BitField_offset0_count1:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L4
-	cmpq	$1, -8(%rbp)
-	jle	L5
-L4:
-	movl	$1953, %edi
-	call	__m3_fault
-L5:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzbl	(%rax), %eax
-	movzbl	%al, %eax
-	movq	%rax, %rdx
-	andq	$-2, %rdx
-	movq	-8(%rbp), %rax
-	andl	$1, %eax
-	orq	%rdx, %rax
-	movb	%al, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count2
-	.private_extern _bitfield__read_var_BitField_offset0_count2
-_bitfield__read_var_BitField_offset0_count2:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	16(%rbp), %eax
-	movzbl	%al, %eax
-	andl	$3, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count2
-	.private_extern _bitfield__write_var_BitField_offset0_count2
-_bitfield__write_var_BitField_offset0_count2:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L10
-	cmpq	$3, -8(%rbp)
-	jle	L11
-L10:
-	movl	$2209, %edi
-	call	__m3_fault
-L11:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzbl	(%rax), %eax
-	movzbl	%al, %eax
-	movq	%rax, %rdx
-	andq	$-4, %rdx
-	movq	-8(%rbp), %rax
-	andl	$3, %eax
-	orq	%rdx, %rax
-	movb	%al, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count3
-	.private_extern _bitfield__read_var_BitField_offset0_count3
-_bitfield__read_var_BitField_offset0_count3:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	16(%rbp), %eax
-	movzbl	%al, %eax
-	andl	$7, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count3
-	.private_extern _bitfield__write_var_BitField_offset0_count3
-_bitfield__write_var_BitField_offset0_count3:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L16
-	cmpq	$7, -8(%rbp)
-	jle	L17
-L16:
-	movl	$2465, %edi
-	call	__m3_fault
-L17:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzbl	(%rax), %eax
-	movzbl	%al, %eax
-	movq	%rax, %rdx
-	andq	$-8, %rdx
-	movq	-8(%rbp), %rax
-	andl	$7, %eax
-	orq	%rdx, %rax
-	movb	%al, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count4
-	.private_extern _bitfield__read_var_BitField_offset0_count4
-_bitfield__read_var_BitField_offset0_count4:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	16(%rbp), %eax
-	movzbl	%al, %eax
-	andl	$15, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count4
-	.private_extern _bitfield__write_var_BitField_offset0_count4
-_bitfield__write_var_BitField_offset0_count4:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L22
-	cmpq	$15, -8(%rbp)
-	jle	L23
-L22:
-	movl	$2721, %edi
-	call	__m3_fault
-L23:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzbl	(%rax), %eax
-	movzbl	%al, %eax
-	movq	%rax, %rdx
-	andq	$-16, %rdx
-	movq	-8(%rbp), %rax
-	andl	$15, %eax
-	orq	%rdx, %rax
-	movb	%al, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count5
-	.private_extern _bitfield__read_var_BitField_offset0_count5
-_bitfield__read_var_BitField_offset0_count5:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	16(%rbp), %eax
-	movzbl	%al, %eax
-	andl	$31, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count5
-	.private_extern _bitfield__write_var_BitField_offset0_count5
-_bitfield__write_var_BitField_offset0_count5:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L28
-	cmpq	$31, -8(%rbp)
-	jle	L29
-L28:
-	movl	$2977, %edi
-	call	__m3_fault
-L29:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzbl	(%rax), %eax
-	movzbl	%al, %eax
-	movq	%rax, %rdx
-	andq	$-32, %rdx
-	movq	-8(%rbp), %rax
-	andl	$31, %eax
-	orq	%rdx, %rax
-	movb	%al, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count6
-	.private_extern _bitfield__read_var_BitField_offset0_count6
-_bitfield__read_var_BitField_offset0_count6:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	16(%rbp), %eax
-	movzbl	%al, %eax
-	andl	$63, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count6
-	.private_extern _bitfield__write_var_BitField_offset0_count6
-_bitfield__write_var_BitField_offset0_count6:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L34
-	cmpq	$63, -8(%rbp)
-	jle	L35
-L34:
-	movl	$3233, %edi
-	call	__m3_fault
-L35:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzbl	(%rax), %eax
-	movzbl	%al, %eax
-	movq	%rax, %rdx
-	andq	$-64, %rdx
-	movq	-8(%rbp), %rax
-	andl	$63, %eax
-	orq	%rdx, %rax
-	movb	%al, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count7
-	.private_extern _bitfield__read_var_BitField_offset0_count7
-_bitfield__read_var_BitField_offset0_count7:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	16(%rbp), %eax
-	movzbl	%al, %eax
-	andl	$127, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count7
-	.private_extern _bitfield__write_var_BitField_offset0_count7
-_bitfield__write_var_BitField_offset0_count7:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L40
-	cmpq	$127, -8(%rbp)
-	jle	L41
-L40:
-	movl	$3489, %edi
-	call	__m3_fault
-L41:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzbl	(%rax), %eax
-	movzbl	%al, %eax
-	movq	%rax, %rdx
-	andq	$-128, %rdx
-	movq	-8(%rbp), %rax
-	andl	$127, %eax
-	orq	%rdx, %rax
-	movb	%al, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count8
-	.private_extern _bitfield__read_var_BitField_offset0_count8
-_bitfield__read_var_BitField_offset0_count8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	16(%rbp), %eax
-	movzbl	%al, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count8
-	.private_extern _bitfield__write_var_BitField_offset0_count8
-_bitfield__write_var_BitField_offset0_count8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L46
-	cmpq	$255, -8(%rbp)
-	jle	L47
-L46:
-	movl	$3745, %edi
-	call	__m3_fault
-L47:
-	movq	-24(%rbp), %rax
-	movq	%rax, %rdx
-	movq	-8(%rbp), %rax
-	movb	%al, (%rdx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count9
-	.private_extern _bitfield__read_var_BitField_offset0_count9
-_bitfield__read_var_BitField_offset0_count9:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	16(%rbp), %eax
-	movzwl	%ax, %eax
-	andl	$511, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count9
-	.private_extern _bitfield__write_var_BitField_offset0_count9
-_bitfield__write_var_BitField_offset0_count9:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L52
-	cmpq	$511, -8(%rbp)
-	jle	L53
-L52:
-	movl	$4001, %edi
-	call	__m3_fault
-L53:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzwl	(%rax), %eax
-	movzwl	%ax, %eax
-	movq	%rax, %rdx
-	andq	$-512, %rdx
-	movq	-8(%rbp), %rax
-	andl	$511, %eax
-	orq	%rdx, %rax
-	movw	%ax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count10
-	.private_extern _bitfield__read_var_BitField_offset0_count10
-_bitfield__read_var_BitField_offset0_count10:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	16(%rbp), %eax
-	movzwl	%ax, %eax
-	andl	$1023, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count10
-	.private_extern _bitfield__write_var_BitField_offset0_count10
-_bitfield__write_var_BitField_offset0_count10:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L58
-	cmpq	$1023, -8(%rbp)
-	jle	L59
-L58:
-	movl	$4257, %edi
-	call	__m3_fault
-L59:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzwl	(%rax), %eax
-	movzwl	%ax, %eax
-	movq	%rax, %rdx
-	andq	$-1024, %rdx
-	movq	-8(%rbp), %rax
-	andl	$1023, %eax
-	orq	%rdx, %rax
-	movw	%ax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count11
-	.private_extern _bitfield__read_var_BitField_offset0_count11
-_bitfield__read_var_BitField_offset0_count11:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	16(%rbp), %eax
-	movzwl	%ax, %eax
-	andl	$2047, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count11
-	.private_extern _bitfield__write_var_BitField_offset0_count11
-_bitfield__write_var_BitField_offset0_count11:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L64
-	cmpq	$2047, -8(%rbp)
-	jle	L65
-L64:
-	movl	$4513, %edi
-	call	__m3_fault
-L65:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzwl	(%rax), %eax
-	movzwl	%ax, %eax
-	movq	%rax, %rdx
-	andq	$-2048, %rdx
-	movq	-8(%rbp), %rax
-	andl	$2047, %eax
-	orq	%rdx, %rax
-	movw	%ax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count12
-	.private_extern _bitfield__read_var_BitField_offset0_count12
-_bitfield__read_var_BitField_offset0_count12:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	16(%rbp), %eax
-	movzwl	%ax, %eax
-	andl	$4095, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count12
-	.private_extern _bitfield__write_var_BitField_offset0_count12
-_bitfield__write_var_BitField_offset0_count12:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L70
-	cmpq	$4095, -8(%rbp)
-	jle	L71
-L70:
-	movl	$4769, %edi
-	call	__m3_fault
-L71:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzwl	(%rax), %eax
-	movzwl	%ax, %eax
-	movq	%rax, %rdx
-	andq	$-4096, %rdx
-	movq	-8(%rbp), %rax
-	andl	$4095, %eax
-	orq	%rdx, %rax
-	movw	%ax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count13
-	.private_extern _bitfield__read_var_BitField_offset0_count13
-_bitfield__read_var_BitField_offset0_count13:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	16(%rbp), %eax
-	movzwl	%ax, %eax
-	andl	$8191, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count13
-	.private_extern _bitfield__write_var_BitField_offset0_count13
-_bitfield__write_var_BitField_offset0_count13:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L76
-	cmpq	$8191, -8(%rbp)
-	jle	L77
-L76:
-	movl	$5025, %edi
-	call	__m3_fault
-L77:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzwl	(%rax), %eax
-	movzwl	%ax, %eax
-	movq	%rax, %rdx
-	andq	$-8192, %rdx
-	movq	-8(%rbp), %rax
-	andl	$8191, %eax
-	orq	%rdx, %rax
-	movw	%ax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count14
-	.private_extern _bitfield__read_var_BitField_offset0_count14
-_bitfield__read_var_BitField_offset0_count14:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	16(%rbp), %eax
-	movzwl	%ax, %eax
-	andl	$16383, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count14
-	.private_extern _bitfield__write_var_BitField_offset0_count14
-_bitfield__write_var_BitField_offset0_count14:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L82
-	cmpq	$16383, -8(%rbp)
-	jle	L83
-L82:
-	movl	$5281, %edi
-	call	__m3_fault
-L83:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzwl	(%rax), %eax
-	movzwl	%ax, %eax
-	movq	%rax, %rdx
-	andq	$-16384, %rdx
-	movq	-8(%rbp), %rax
-	andl	$16383, %eax
-	orq	%rdx, %rax
-	movw	%ax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count15
-	.private_extern _bitfield__read_var_BitField_offset0_count15
-_bitfield__read_var_BitField_offset0_count15:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	16(%rbp), %eax
-	movzwl	%ax, %eax
-	andl	$32767, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count15
-	.private_extern _bitfield__write_var_BitField_offset0_count15
-_bitfield__write_var_BitField_offset0_count15:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L88
-	cmpq	$32767, -8(%rbp)
-	jle	L89
-L88:
-	movl	$5537, %edi
-	call	__m3_fault
-L89:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movzwl	(%rax), %eax
-	movzwl	%ax, %eax
-	movq	%rax, %rdx
-	andq	$-32768, %rdx
-	movq	-8(%rbp), %rax
-	andl	$32767, %eax
-	orq	%rdx, %rax
-	movw	%ax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count16
-	.private_extern _bitfield__read_var_BitField_offset0_count16
-_bitfield__read_var_BitField_offset0_count16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	16(%rbp), %eax
-	movzwl	%ax, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count16
-	.private_extern _bitfield__write_var_BitField_offset0_count16
-_bitfield__write_var_BitField_offset0_count16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L94
-	cmpq	$65535, -8(%rbp)
-	jle	L95
-L94:
-	movl	$5793, %edi
-	call	__m3_fault
-L95:
-	movq	-24(%rbp), %rax
-	movq	%rax, %rdx
-	movq	-8(%rbp), %rax
-	movw	%ax, (%rdx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count17
-	.private_extern _bitfield__read_var_BitField_offset0_count17
-_bitfield__read_var_BitField_offset0_count17:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$131071, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count17
-	.private_extern _bitfield__write_var_BitField_offset0_count17
-_bitfield__write_var_BitField_offset0_count17:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L100
-	cmpq	$131071, -8(%rbp)
-	jle	L101
-L100:
-	movl	$6049, %edi
-	call	__m3_fault
-L101:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-131072, %rdx
-	movq	-8(%rbp), %rax
-	andl	$131071, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count18
-	.private_extern _bitfield__read_var_BitField_offset0_count18
-_bitfield__read_var_BitField_offset0_count18:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$262143, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count18
-	.private_extern _bitfield__write_var_BitField_offset0_count18
-_bitfield__write_var_BitField_offset0_count18:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L106
-	cmpq	$262143, -8(%rbp)
-	jle	L107
-L106:
-	movl	$6305, %edi
-	call	__m3_fault
-L107:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-262144, %rdx
-	movq	-8(%rbp), %rax
-	andl	$262143, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count19
-	.private_extern _bitfield__read_var_BitField_offset0_count19
-_bitfield__read_var_BitField_offset0_count19:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$524287, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count19
-	.private_extern _bitfield__write_var_BitField_offset0_count19
-_bitfield__write_var_BitField_offset0_count19:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L112
-	cmpq	$524287, -8(%rbp)
-	jle	L113
-L112:
-	movl	$6561, %edi
-	call	__m3_fault
-L113:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-524288, %rdx
-	movq	-8(%rbp), %rax
-	andl	$524287, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count20
-	.private_extern _bitfield__read_var_BitField_offset0_count20
-_bitfield__read_var_BitField_offset0_count20:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$1048575, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count20
-	.private_extern _bitfield__write_var_BitField_offset0_count20
-_bitfield__write_var_BitField_offset0_count20:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L118
-	cmpq	$1048575, -8(%rbp)
-	jle	L119
-L118:
-	movl	$6817, %edi
-	call	__m3_fault
-L119:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-1048576, %rdx
-	movq	-8(%rbp), %rax
-	andl	$1048575, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count21
-	.private_extern _bitfield__read_var_BitField_offset0_count21
-_bitfield__read_var_BitField_offset0_count21:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$2097151, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count21
-	.private_extern _bitfield__write_var_BitField_offset0_count21
-_bitfield__write_var_BitField_offset0_count21:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L124
-	cmpq	$2097151, -8(%rbp)
-	jle	L125
-L124:
-	movl	$7073, %edi
-	call	__m3_fault
-L125:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-2097152, %rdx
-	movq	-8(%rbp), %rax
-	andl	$2097151, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count22
-	.private_extern _bitfield__read_var_BitField_offset0_count22
-_bitfield__read_var_BitField_offset0_count22:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$4194303, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count22
-	.private_extern _bitfield__write_var_BitField_offset0_count22
-_bitfield__write_var_BitField_offset0_count22:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L130
-	cmpq	$4194303, -8(%rbp)
-	jle	L131
-L130:
-	movl	$7329, %edi
-	call	__m3_fault
-L131:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-4194304, %rdx
-	movq	-8(%rbp), %rax
-	andl	$4194303, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count23
-	.private_extern _bitfield__read_var_BitField_offset0_count23
-_bitfield__read_var_BitField_offset0_count23:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$8388607, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count23
-	.private_extern _bitfield__write_var_BitField_offset0_count23
-_bitfield__write_var_BitField_offset0_count23:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L136
-	cmpq	$8388607, -8(%rbp)
-	jle	L137
-L136:
-	movl	$7585, %edi
-	call	__m3_fault
-L137:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-8388608, %rdx
-	movq	-8(%rbp), %rax
-	andl	$8388607, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count24
-	.private_extern _bitfield__read_var_BitField_offset0_count24
-_bitfield__read_var_BitField_offset0_count24:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$16777215, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count24
-	.private_extern _bitfield__write_var_BitField_offset0_count24
-_bitfield__write_var_BitField_offset0_count24:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L142
-	cmpq	$16777215, -8(%rbp)
-	jle	L143
-L142:
-	movl	$7841, %edi
-	call	__m3_fault
-L143:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-16777216, %rdx
-	movq	-8(%rbp), %rax
-	andl	$16777215, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count25
-	.private_extern _bitfield__read_var_BitField_offset0_count25
-_bitfield__read_var_BitField_offset0_count25:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$33554431, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count25
-	.private_extern _bitfield__write_var_BitField_offset0_count25
-_bitfield__write_var_BitField_offset0_count25:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L148
-	cmpq	$33554431, -8(%rbp)
-	jle	L149
-L148:
-	movl	$8097, %edi
-	call	__m3_fault
-L149:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-33554432, %rdx
-	movq	-8(%rbp), %rax
-	andl	$33554431, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count26
-	.private_extern _bitfield__read_var_BitField_offset0_count26
-_bitfield__read_var_BitField_offset0_count26:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$67108863, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count26
-	.private_extern _bitfield__write_var_BitField_offset0_count26
-_bitfield__write_var_BitField_offset0_count26:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L154
-	cmpq	$67108863, -8(%rbp)
-	jle	L155
-L154:
-	movl	$8353, %edi
-	call	__m3_fault
-L155:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-67108864, %rdx
-	movq	-8(%rbp), %rax
-	andl	$67108863, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count27
-	.private_extern _bitfield__read_var_BitField_offset0_count27
-_bitfield__read_var_BitField_offset0_count27:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$134217727, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count27
-	.private_extern _bitfield__write_var_BitField_offset0_count27
-_bitfield__write_var_BitField_offset0_count27:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L160
-	cmpq	$134217727, -8(%rbp)
-	jle	L161
-L160:
-	movl	$8609, %edi
-	call	__m3_fault
-L161:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-134217728, %rdx
-	movq	-8(%rbp), %rax
-	andl	$134217727, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count28
-	.private_extern _bitfield__read_var_BitField_offset0_count28
-_bitfield__read_var_BitField_offset0_count28:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$268435455, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count28
-	.private_extern _bitfield__write_var_BitField_offset0_count28
-_bitfield__write_var_BitField_offset0_count28:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L166
-	cmpq	$268435455, -8(%rbp)
-	jle	L167
-L166:
-	movl	$8865, %edi
-	call	__m3_fault
-L167:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-268435456, %rdx
-	movq	-8(%rbp), %rax
-	andl	$268435455, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count29
-	.private_extern _bitfield__read_var_BitField_offset0_count29
-_bitfield__read_var_BitField_offset0_count29:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$536870911, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count29
-	.private_extern _bitfield__write_var_BitField_offset0_count29
-_bitfield__write_var_BitField_offset0_count29:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L172
-	cmpq	$536870911, -8(%rbp)
-	jle	L173
-L172:
-	movl	$9121, %edi
-	call	__m3_fault
-L173:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-536870912, %rdx
-	movq	-8(%rbp), %rax
-	andl	$536870911, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count30
-	.private_extern _bitfield__read_var_BitField_offset0_count30
-_bitfield__read_var_BitField_offset0_count30:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$1073741823, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count30
-	.private_extern _bitfield__write_var_BitField_offset0_count30
-_bitfield__write_var_BitField_offset0_count30:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L178
-	cmpq	$1073741823, -8(%rbp)
-	jle	L179
-L178:
-	movl	$9377, %edi
-	call	__m3_fault
-L179:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-1073741824, %rdx
-	movq	-8(%rbp), %rax
-	andl	$1073741823, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count31
-	.private_extern _bitfield__read_var_BitField_offset0_count31
-_bitfield__read_var_BitField_offset0_count31:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	andl	$2147483647, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count31
-	.private_extern _bitfield__write_var_BitField_offset0_count31
-_bitfield__write_var_BitField_offset0_count31:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L184
-	cmpq	$2147483647, -8(%rbp)
-	jle	L185
-L184:
-	movl	$9633, %edi
-	call	__m3_fault
-L185:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movl	(%rax), %eax
-	mov	%eax, %eax
-	movq	%rax, %rdx
-	andq	$-2147483648, %rdx
-	movq	-8(%rbp), %rax
-	andl	$2147483647, %eax
-	orq	%rdx, %rax
-	movl	%eax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count32
-	.private_extern _bitfield__read_var_BitField_offset0_count32
-_bitfield__read_var_BitField_offset0_count32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	16(%rbp), %eax
-	mov	%eax, %eax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count32
-	.private_extern _bitfield__write_var_BitField_offset0_count32
-_bitfield__write_var_BitField_offset0_count32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L190
-	movl	$4294967295, %eax
-	cmpq	%rax, -8(%rbp)
-	jle	L191
-L190:
-	movl	$9889, %edi
-	call	__m3_fault
-L191:
-	movq	-24(%rbp), %rax
-	movq	%rax, %rdx
-	movq	-8(%rbp), %rax
-	movl	%eax, (%rdx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count33
-	.private_extern _bitfield__read_var_BitField_offset0_count33
-_bitfield__read_var_BitField_offset0_count33:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$8589934591, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count33
-	.private_extern _bitfield__write_var_BitField_offset0_count33
-_bitfield__write_var_BitField_offset0_count33:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L196
-	movabsq	$8589934591, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L197
-L196:
-	movl	$10145, %edi
-	call	__m3_fault
-L197:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-8589934592, %rax
-	andq	%rax, %rdx
-	movabsq	$8589934591, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count34
-	.private_extern _bitfield__read_var_BitField_offset0_count34
-_bitfield__read_var_BitField_offset0_count34:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$17179869183, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count34
-	.private_extern _bitfield__write_var_BitField_offset0_count34
-_bitfield__write_var_BitField_offset0_count34:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L202
-	movabsq	$17179869183, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L203
-L202:
-	movl	$10401, %edi
-	call	__m3_fault
-L203:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-17179869184, %rax
-	andq	%rax, %rdx
-	movabsq	$17179869183, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count35
-	.private_extern _bitfield__read_var_BitField_offset0_count35
-_bitfield__read_var_BitField_offset0_count35:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$34359738367, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count35
-	.private_extern _bitfield__write_var_BitField_offset0_count35
-_bitfield__write_var_BitField_offset0_count35:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L208
-	movabsq	$34359738367, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L209
-L208:
-	movl	$10657, %edi
-	call	__m3_fault
-L209:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-34359738368, %rax
-	andq	%rax, %rdx
-	movabsq	$34359738367, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count36
-	.private_extern _bitfield__read_var_BitField_offset0_count36
-_bitfield__read_var_BitField_offset0_count36:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$68719476735, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count36
-	.private_extern _bitfield__write_var_BitField_offset0_count36
-_bitfield__write_var_BitField_offset0_count36:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L214
-	movabsq	$68719476735, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L215
-L214:
-	movl	$10913, %edi
-	call	__m3_fault
-L215:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-68719476736, %rax
-	andq	%rax, %rdx
-	movabsq	$68719476735, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count37
-	.private_extern _bitfield__read_var_BitField_offset0_count37
-_bitfield__read_var_BitField_offset0_count37:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$137438953471, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count37
-	.private_extern _bitfield__write_var_BitField_offset0_count37
-_bitfield__write_var_BitField_offset0_count37:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L220
-	movabsq	$137438953471, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L221
-L220:
-	movl	$11169, %edi
-	call	__m3_fault
-L221:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-137438953472, %rax
-	andq	%rax, %rdx
-	movabsq	$137438953471, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count38
-	.private_extern _bitfield__read_var_BitField_offset0_count38
-_bitfield__read_var_BitField_offset0_count38:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$274877906943, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count38
-	.private_extern _bitfield__write_var_BitField_offset0_count38
-_bitfield__write_var_BitField_offset0_count38:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L226
-	movabsq	$274877906943, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L227
-L226:
-	movl	$11425, %edi
-	call	__m3_fault
-L227:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-274877906944, %rax
-	andq	%rax, %rdx
-	movabsq	$274877906943, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count39
-	.private_extern _bitfield__read_var_BitField_offset0_count39
-_bitfield__read_var_BitField_offset0_count39:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$549755813887, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count39
-	.private_extern _bitfield__write_var_BitField_offset0_count39
-_bitfield__write_var_BitField_offset0_count39:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L232
-	movabsq	$549755813887, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L233
-L232:
-	movl	$11681, %edi
-	call	__m3_fault
-L233:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-549755813888, %rax
-	andq	%rax, %rdx
-	movabsq	$549755813887, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count40
-	.private_extern _bitfield__read_var_BitField_offset0_count40
-_bitfield__read_var_BitField_offset0_count40:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$1099511627775, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count40
-	.private_extern _bitfield__write_var_BitField_offset0_count40
-_bitfield__write_var_BitField_offset0_count40:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L238
-	movabsq	$1099511627775, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L239
-L238:
-	movl	$11937, %edi
-	call	__m3_fault
-L239:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-1099511627776, %rax
-	andq	%rax, %rdx
-	movabsq	$1099511627775, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count41
-	.private_extern _bitfield__read_var_BitField_offset0_count41
-_bitfield__read_var_BitField_offset0_count41:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$2199023255551, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count41
-	.private_extern _bitfield__write_var_BitField_offset0_count41
-_bitfield__write_var_BitField_offset0_count41:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L244
-	movabsq	$2199023255551, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L245
-L244:
-	movl	$12193, %edi
-	call	__m3_fault
-L245:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-2199023255552, %rax
-	andq	%rax, %rdx
-	movabsq	$2199023255551, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count42
-	.private_extern _bitfield__read_var_BitField_offset0_count42
-_bitfield__read_var_BitField_offset0_count42:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$4398046511103, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count42
-	.private_extern _bitfield__write_var_BitField_offset0_count42
-_bitfield__write_var_BitField_offset0_count42:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L250
-	movabsq	$4398046511103, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L251
-L250:
-	movl	$12449, %edi
-	call	__m3_fault
-L251:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-4398046511104, %rax
-	andq	%rax, %rdx
-	movabsq	$4398046511103, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count43
-	.private_extern _bitfield__read_var_BitField_offset0_count43
-_bitfield__read_var_BitField_offset0_count43:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$8796093022207, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count43
-	.private_extern _bitfield__write_var_BitField_offset0_count43
-_bitfield__write_var_BitField_offset0_count43:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L256
-	movabsq	$8796093022207, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L257
-L256:
-	movl	$12705, %edi
-	call	__m3_fault
-L257:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-8796093022208, %rax
-	andq	%rax, %rdx
-	movabsq	$8796093022207, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count44
-	.private_extern _bitfield__read_var_BitField_offset0_count44
-_bitfield__read_var_BitField_offset0_count44:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$17592186044415, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count44
-	.private_extern _bitfield__write_var_BitField_offset0_count44
-_bitfield__write_var_BitField_offset0_count44:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L262
-	movabsq	$17592186044415, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L263
-L262:
-	movl	$12961, %edi
-	call	__m3_fault
-L263:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-17592186044416, %rax
-	andq	%rax, %rdx
-	movabsq	$17592186044415, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count45
-	.private_extern _bitfield__read_var_BitField_offset0_count45
-_bitfield__read_var_BitField_offset0_count45:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$35184372088831, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count45
-	.private_extern _bitfield__write_var_BitField_offset0_count45
-_bitfield__write_var_BitField_offset0_count45:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L268
-	movabsq	$35184372088831, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L269
-L268:
-	movl	$13217, %edi
-	call	__m3_fault
-L269:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-35184372088832, %rax
-	andq	%rax, %rdx
-	movabsq	$35184372088831, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count46
-	.private_extern _bitfield__read_var_BitField_offset0_count46
-_bitfield__read_var_BitField_offset0_count46:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$70368744177663, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count46
-	.private_extern _bitfield__write_var_BitField_offset0_count46
-_bitfield__write_var_BitField_offset0_count46:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L274
-	movabsq	$70368744177663, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L275
-L274:
-	movl	$13473, %edi
-	call	__m3_fault
-L275:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-70368744177664, %rax
-	andq	%rax, %rdx
-	movabsq	$70368744177663, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count47
-	.private_extern _bitfield__read_var_BitField_offset0_count47
-_bitfield__read_var_BitField_offset0_count47:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$140737488355327, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count47
-	.private_extern _bitfield__write_var_BitField_offset0_count47
-_bitfield__write_var_BitField_offset0_count47:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L280
-	movabsq	$140737488355327, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L281
-L280:
-	movl	$13729, %edi
-	call	__m3_fault
-L281:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-140737488355328, %rax
-	andq	%rax, %rdx
-	movabsq	$140737488355327, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count48
-	.private_extern _bitfield__read_var_BitField_offset0_count48
-_bitfield__read_var_BitField_offset0_count48:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$281474976710655, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count48
-	.private_extern _bitfield__write_var_BitField_offset0_count48
-_bitfield__write_var_BitField_offset0_count48:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L286
-	movabsq	$281474976710655, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L287
-L286:
-	movl	$13985, %edi
-	call	__m3_fault
-L287:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-281474976710656, %rax
-	andq	%rax, %rdx
-	movabsq	$281474976710655, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count49
-	.private_extern _bitfield__read_var_BitField_offset0_count49
-_bitfield__read_var_BitField_offset0_count49:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$562949953421311, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count49
-	.private_extern _bitfield__write_var_BitField_offset0_count49
-_bitfield__write_var_BitField_offset0_count49:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L292
-	movabsq	$562949953421311, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L293
-L292:
-	movl	$14241, %edi
-	call	__m3_fault
-L293:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-562949953421312, %rax
-	andq	%rax, %rdx
-	movabsq	$562949953421311, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count50
-	.private_extern _bitfield__read_var_BitField_offset0_count50
-_bitfield__read_var_BitField_offset0_count50:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$1125899906842623, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count50
-	.private_extern _bitfield__write_var_BitField_offset0_count50
-_bitfield__write_var_BitField_offset0_count50:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L298
-	movabsq	$1125899906842623, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L299
-L298:
-	movl	$14497, %edi
-	call	__m3_fault
-L299:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-1125899906842624, %rax
-	andq	%rax, %rdx
-	movabsq	$1125899906842623, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count51
-	.private_extern _bitfield__read_var_BitField_offset0_count51
-_bitfield__read_var_BitField_offset0_count51:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$2251799813685247, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count51
-	.private_extern _bitfield__write_var_BitField_offset0_count51
-_bitfield__write_var_BitField_offset0_count51:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L304
-	movabsq	$2251799813685247, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L305
-L304:
-	movl	$14753, %edi
-	call	__m3_fault
-L305:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-2251799813685248, %rax
-	andq	%rax, %rdx
-	movabsq	$2251799813685247, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count52
-	.private_extern _bitfield__read_var_BitField_offset0_count52
-_bitfield__read_var_BitField_offset0_count52:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$4503599627370495, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count52
-	.private_extern _bitfield__write_var_BitField_offset0_count52
-_bitfield__write_var_BitField_offset0_count52:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L310
-	movabsq	$4503599627370495, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L311
-L310:
-	movl	$15009, %edi
-	call	__m3_fault
-L311:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-4503599627370496, %rax
-	andq	%rax, %rdx
-	movabsq	$4503599627370495, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count53
-	.private_extern _bitfield__read_var_BitField_offset0_count53
-_bitfield__read_var_BitField_offset0_count53:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$9007199254740991, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count53
-	.private_extern _bitfield__write_var_BitField_offset0_count53
-_bitfield__write_var_BitField_offset0_count53:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L316
-	movabsq	$9007199254740991, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L317
-L316:
-	movl	$15265, %edi
-	call	__m3_fault
-L317:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-9007199254740992, %rax
-	andq	%rax, %rdx
-	movabsq	$9007199254740991, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count54
-	.private_extern _bitfield__read_var_BitField_offset0_count54
-_bitfield__read_var_BitField_offset0_count54:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$18014398509481983, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count54
-	.private_extern _bitfield__write_var_BitField_offset0_count54
-_bitfield__write_var_BitField_offset0_count54:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L322
-	movabsq	$18014398509481983, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L323
-L322:
-	movl	$15521, %edi
-	call	__m3_fault
-L323:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-18014398509481984, %rax
-	andq	%rax, %rdx
-	movabsq	$18014398509481983, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count55
-	.private_extern _bitfield__read_var_BitField_offset0_count55
-_bitfield__read_var_BitField_offset0_count55:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$36028797018963967, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count55
-	.private_extern _bitfield__write_var_BitField_offset0_count55
-_bitfield__write_var_BitField_offset0_count55:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L328
-	movabsq	$36028797018963967, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L329
-L328:
-	movl	$15777, %edi
-	call	__m3_fault
-L329:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-36028797018963968, %rax
-	andq	%rax, %rdx
-	movabsq	$36028797018963967, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count56
-	.private_extern _bitfield__read_var_BitField_offset0_count56
-_bitfield__read_var_BitField_offset0_count56:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$72057594037927935, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count56
-	.private_extern _bitfield__write_var_BitField_offset0_count56
-_bitfield__write_var_BitField_offset0_count56:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L334
-	movabsq	$72057594037927935, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L335
-L334:
-	movl	$16033, %edi
-	call	__m3_fault
-L335:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-72057594037927936, %rax
-	andq	%rax, %rdx
-	movabsq	$72057594037927935, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count57
-	.private_extern _bitfield__read_var_BitField_offset0_count57
-_bitfield__read_var_BitField_offset0_count57:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$144115188075855871, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count57
-	.private_extern _bitfield__write_var_BitField_offset0_count57
-_bitfield__write_var_BitField_offset0_count57:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L340
-	movabsq	$144115188075855871, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L341
-L340:
-	movl	$16289, %edi
-	call	__m3_fault
-L341:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-144115188075855872, %rax
-	andq	%rax, %rdx
-	movabsq	$144115188075855871, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count58
-	.private_extern _bitfield__read_var_BitField_offset0_count58
-_bitfield__read_var_BitField_offset0_count58:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$288230376151711743, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count58
-	.private_extern _bitfield__write_var_BitField_offset0_count58
-_bitfield__write_var_BitField_offset0_count58:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L346
-	movabsq	$288230376151711743, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L347
-L346:
-	movl	$16545, %edi
-	call	__m3_fault
-L347:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-288230376151711744, %rax
-	andq	%rax, %rdx
-	movabsq	$288230376151711743, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count59
-	.private_extern _bitfield__read_var_BitField_offset0_count59
-_bitfield__read_var_BitField_offset0_count59:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$576460752303423487, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count59
-	.private_extern _bitfield__write_var_BitField_offset0_count59
-_bitfield__write_var_BitField_offset0_count59:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L352
-	movabsq	$576460752303423487, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L353
-L352:
-	movl	$16801, %edi
-	call	__m3_fault
-L353:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-576460752303423488, %rax
-	andq	%rax, %rdx
-	movabsq	$576460752303423487, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count60
-	.private_extern _bitfield__read_var_BitField_offset0_count60
-_bitfield__read_var_BitField_offset0_count60:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$1152921504606846975, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count60
-	.private_extern _bitfield__write_var_BitField_offset0_count60
-_bitfield__write_var_BitField_offset0_count60:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L358
-	movabsq	$1152921504606846975, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L359
-L358:
-	movl	$17057, %edi
-	call	__m3_fault
-L359:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-1152921504606846976, %rax
-	andq	%rax, %rdx
-	movabsq	$1152921504606846975, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count61
-	.private_extern _bitfield__read_var_BitField_offset0_count61
-_bitfield__read_var_BitField_offset0_count61:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$2305843009213693951, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count61
-	.private_extern _bitfield__write_var_BitField_offset0_count61
-_bitfield__write_var_BitField_offset0_count61:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L364
-	movabsq	$2305843009213693951, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L365
-L364:
-	movl	$17313, %edi
-	call	__m3_fault
-L365:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-2305843009213693952, %rax
-	andq	%rax, %rdx
-	movabsq	$2305843009213693951, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count62
-	.private_extern _bitfield__read_var_BitField_offset0_count62
-_bitfield__read_var_BitField_offset0_count62:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$4611686018427387903, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count62
-	.private_extern _bitfield__write_var_BitField_offset0_count62
-_bitfield__write_var_BitField_offset0_count62:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	js	L370
-	movabsq	$4611686018427387903, %rax
-	cmpq	%rax, -8(%rbp)
-	jle	L371
-L370:
-	movl	$17569, %edi
-	call	__m3_fault
-L371:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-4611686018427387904, %rax
-	andq	%rax, %rdx
-	movabsq	$4611686018427387903, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count63
-	.private_extern _bitfield__read_var_BitField_offset0_count63
-_bitfield__read_var_BitField_offset0_count63:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	movq	%rax, %rdx
-	movabsq	$9223372036854775807, %rax
-	andq	%rdx, %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count63
-	.private_extern _bitfield__write_var_BitField_offset0_count63
-_bitfield__write_var_BitField_offset0_count63:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$32, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -8(%rbp)
-	cmpq	$0, -8(%rbp)
-	jns	L376
-	movl	$17825, %edi
-	call	__m3_fault
-L376:
-	movq	-24(%rbp), %rax
-	movq	%rax, -16(%rbp)
-	movq	-16(%rbp), %rcx
-	movq	-16(%rbp), %rax
-	movq	(%rax), %rax
-	movq	%rax, %rdx
-	movabsq	$-9223372036854775808, %rax
-	andq	%rax, %rdx
-	movabsq	$9223372036854775807, %rax
-	andq	-8(%rbp), %rax
-	orq	%rdx, %rax
-	movq	%rax, (%rcx)
-	leave
-	ret
-.globl _bitfield__read_var_BitField_offset0_count64
-	.private_extern _bitfield__read_var_BitField_offset0_count64
-_bitfield__read_var_BitField_offset0_count64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	16(%rbp), %rax
-	leave
-	ret
-.globl _bitfield__write_var_BitField_offset0_count64
-	.private_extern _bitfield__write_var_BitField_offset0_count64
-_bitfield__write_var_BitField_offset0_count64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -8(%rbp)
-	movq	%rsi, -16(%rbp)
-	movq	-8(%rbp), %rax
-	movq	%rax, %rdx
-	movq	-16(%rbp), %rax
-	movq	%rax, (%rdx)
-	leave
-	ret
 .globl _bitfield__read_var_BitField_offset1_count1
 	.private_extern _bitfield__read_var_BitField_offset1_count1
 _bitfield__read_var_BitField_offset1_count1:
@@ -2720,13 +21,13 @@ _bitfield__write_var_BitField_offset1_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L385
+	js	L4
 	cmpq	$1, -8(%rbp)
-	jle	L386
-L385:
-	movl	$18337, %edi
+	jle	L5
+L4:
+	movl	$1953, %edi
 	call	__m3_fault
-L386:
+L5:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -2764,13 +65,13 @@ _bitfield__write_var_BitField_offset1_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L391
+	js	L10
 	cmpq	$3, -8(%rbp)
-	jle	L392
-L391:
-	movl	$18593, %edi
+	jle	L11
+L10:
+	movl	$2209, %edi
 	call	__m3_fault
-L392:
+L11:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -2808,13 +109,13 @@ _bitfield__write_var_BitField_offset1_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L397
+	js	L16
 	cmpq	$7, -8(%rbp)
-	jle	L398
-L397:
-	movl	$18849, %edi
+	jle	L17
+L16:
+	movl	$2465, %edi
 	call	__m3_fault
-L398:
+L17:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -2852,13 +153,13 @@ _bitfield__write_var_BitField_offset1_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L403
+	js	L22
 	cmpq	$15, -8(%rbp)
-	jle	L404
-L403:
-	movl	$19105, %edi
+	jle	L23
+L22:
+	movl	$2721, %edi
 	call	__m3_fault
-L404:
+L23:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -2896,13 +197,13 @@ _bitfield__write_var_BitField_offset1_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L409
+	js	L28
 	cmpq	$31, -8(%rbp)
-	jle	L410
-L409:
-	movl	$19361, %edi
+	jle	L29
+L28:
+	movl	$2977, %edi
 	call	__m3_fault
-L410:
+L29:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -2940,13 +241,13 @@ _bitfield__write_var_BitField_offset1_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L415
+	js	L34
 	cmpq	$63, -8(%rbp)
-	jle	L416
-L415:
-	movl	$19617, %edi
+	jle	L35
+L34:
+	movl	$3233, %edi
 	call	__m3_fault
-L416:
+L35:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -2984,13 +285,13 @@ _bitfield__write_var_BitField_offset1_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L421
+	js	L40
 	cmpq	$127, -8(%rbp)
-	jle	L422
-L421:
-	movl	$19873, %edi
+	jle	L41
+L40:
+	movl	$3489, %edi
 	call	__m3_fault
-L422:
+L41:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3028,13 +329,13 @@ _bitfield__write_var_BitField_offset1_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L427
+	js	L46
 	cmpq	$255, -8(%rbp)
-	jle	L428
-L427:
-	movl	$20129, %edi
+	jle	L47
+L46:
+	movl	$3745, %edi
 	call	__m3_fault
-L428:
+L47:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3072,13 +373,13 @@ _bitfield__write_var_BitField_offset1_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L433
+	js	L52
 	cmpq	$511, -8(%rbp)
-	jle	L434
-L433:
-	movl	$20385, %edi
+	jle	L53
+L52:
+	movl	$4001, %edi
 	call	__m3_fault
-L434:
+L53:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3116,13 +417,13 @@ _bitfield__write_var_BitField_offset1_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L439
+	js	L58
 	cmpq	$1023, -8(%rbp)
-	jle	L440
-L439:
-	movl	$20641, %edi
+	jle	L59
+L58:
+	movl	$4257, %edi
 	call	__m3_fault
-L440:
+L59:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3160,13 +461,13 @@ _bitfield__write_var_BitField_offset1_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L445
+	js	L64
 	cmpq	$2047, -8(%rbp)
-	jle	L446
-L445:
-	movl	$20897, %edi
+	jle	L65
+L64:
+	movl	$4513, %edi
 	call	__m3_fault
-L446:
+L65:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3204,13 +505,13 @@ _bitfield__write_var_BitField_offset1_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L451
+	js	L70
 	cmpq	$4095, -8(%rbp)
-	jle	L452
-L451:
-	movl	$21153, %edi
+	jle	L71
+L70:
+	movl	$4769, %edi
 	call	__m3_fault
-L452:
+L71:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3248,13 +549,13 @@ _bitfield__write_var_BitField_offset1_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L457
+	js	L76
 	cmpq	$8191, -8(%rbp)
-	jle	L458
-L457:
-	movl	$21409, %edi
+	jle	L77
+L76:
+	movl	$5025, %edi
 	call	__m3_fault
-L458:
+L77:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3292,13 +593,13 @@ _bitfield__write_var_BitField_offset1_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L463
+	js	L82
 	cmpq	$16383, -8(%rbp)
-	jle	L464
-L463:
-	movl	$21665, %edi
+	jle	L83
+L82:
+	movl	$5281, %edi
 	call	__m3_fault
-L464:
+L83:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3336,13 +637,13 @@ _bitfield__write_var_BitField_offset1_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L469
+	js	L88
 	cmpq	$32767, -8(%rbp)
-	jle	L470
-L469:
-	movl	$21921, %edi
+	jle	L89
+L88:
+	movl	$5537, %edi
 	call	__m3_fault
-L470:
+L89:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3380,13 +681,13 @@ _bitfield__write_var_BitField_offset1_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L475
+	js	L94
 	cmpq	$65535, -8(%rbp)
-	jle	L476
-L475:
-	movl	$22177, %edi
+	jle	L95
+L94:
+	movl	$5793, %edi
 	call	__m3_fault
-L476:
+L95:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3424,13 +725,13 @@ _bitfield__write_var_BitField_offset1_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L481
+	js	L100
 	cmpq	$131071, -8(%rbp)
-	jle	L482
-L481:
-	movl	$22433, %edi
+	jle	L101
+L100:
+	movl	$6049, %edi
 	call	__m3_fault
-L482:
+L101:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3468,13 +769,13 @@ _bitfield__write_var_BitField_offset1_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L487
+	js	L106
 	cmpq	$262143, -8(%rbp)
-	jle	L488
-L487:
-	movl	$22689, %edi
+	jle	L107
+L106:
+	movl	$6305, %edi
 	call	__m3_fault
-L488:
+L107:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3512,13 +813,13 @@ _bitfield__write_var_BitField_offset1_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L493
+	js	L112
 	cmpq	$524287, -8(%rbp)
-	jle	L494
-L493:
-	movl	$22945, %edi
+	jle	L113
+L112:
+	movl	$6561, %edi
 	call	__m3_fault
-L494:
+L113:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3556,13 +857,13 @@ _bitfield__write_var_BitField_offset1_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L499
+	js	L118
 	cmpq	$1048575, -8(%rbp)
-	jle	L500
-L499:
-	movl	$23201, %edi
+	jle	L119
+L118:
+	movl	$6817, %edi
 	call	__m3_fault
-L500:
+L119:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3600,13 +901,13 @@ _bitfield__write_var_BitField_offset1_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L505
+	js	L124
 	cmpq	$2097151, -8(%rbp)
-	jle	L506
-L505:
-	movl	$23457, %edi
+	jle	L125
+L124:
+	movl	$7073, %edi
 	call	__m3_fault
-L506:
+L125:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3644,13 +945,13 @@ _bitfield__write_var_BitField_offset1_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L511
+	js	L130
 	cmpq	$4194303, -8(%rbp)
-	jle	L512
-L511:
-	movl	$23713, %edi
+	jle	L131
+L130:
+	movl	$7329, %edi
 	call	__m3_fault
-L512:
+L131:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3688,13 +989,13 @@ _bitfield__write_var_BitField_offset1_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L517
+	js	L136
 	cmpq	$8388607, -8(%rbp)
-	jle	L518
-L517:
-	movl	$23969, %edi
+	jle	L137
+L136:
+	movl	$7585, %edi
 	call	__m3_fault
-L518:
+L137:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3732,13 +1033,13 @@ _bitfield__write_var_BitField_offset1_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L523
+	js	L142
 	cmpq	$16777215, -8(%rbp)
-	jle	L524
-L523:
-	movl	$24225, %edi
+	jle	L143
+L142:
+	movl	$7841, %edi
 	call	__m3_fault
-L524:
+L143:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3776,13 +1077,13 @@ _bitfield__write_var_BitField_offset1_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L529
+	js	L148
 	cmpq	$33554431, -8(%rbp)
-	jle	L530
-L529:
-	movl	$24481, %edi
+	jle	L149
+L148:
+	movl	$8097, %edi
 	call	__m3_fault
-L530:
+L149:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3820,13 +1121,13 @@ _bitfield__write_var_BitField_offset1_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L535
+	js	L154
 	cmpq	$67108863, -8(%rbp)
-	jle	L536
-L535:
-	movl	$24737, %edi
+	jle	L155
+L154:
+	movl	$8353, %edi
 	call	__m3_fault
-L536:
+L155:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3864,13 +1165,13 @@ _bitfield__write_var_BitField_offset1_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L541
+	js	L160
 	cmpq	$134217727, -8(%rbp)
-	jle	L542
-L541:
-	movl	$24993, %edi
+	jle	L161
+L160:
+	movl	$8609, %edi
 	call	__m3_fault
-L542:
+L161:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3908,13 +1209,13 @@ _bitfield__write_var_BitField_offset1_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L547
+	js	L166
 	cmpq	$268435455, -8(%rbp)
-	jle	L548
-L547:
-	movl	$25249, %edi
+	jle	L167
+L166:
+	movl	$8865, %edi
 	call	__m3_fault
-L548:
+L167:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3952,13 +1253,13 @@ _bitfield__write_var_BitField_offset1_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L553
+	js	L172
 	cmpq	$536870911, -8(%rbp)
-	jle	L554
-L553:
-	movl	$25505, %edi
+	jle	L173
+L172:
+	movl	$9121, %edi
 	call	__m3_fault
-L554:
+L173:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -3996,13 +1297,13 @@ _bitfield__write_var_BitField_offset1_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L559
+	js	L178
 	cmpq	$1073741823, -8(%rbp)
-	jle	L560
-L559:
-	movl	$25761, %edi
+	jle	L179
+L178:
+	movl	$9377, %edi
 	call	__m3_fault
-L560:
+L179:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4040,13 +1341,13 @@ _bitfield__write_var_BitField_offset1_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L565
+	js	L184
 	cmpq	$2147483647, -8(%rbp)
-	jle	L566
-L565:
-	movl	$26017, %edi
+	jle	L185
+L184:
+	movl	$9633, %edi
 	call	__m3_fault
-L566:
+L185:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4083,14 +1384,14 @@ _bitfield__write_var_BitField_offset1_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L571
+	js	L190
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L572
-L571:
-	movl	$26273, %edi
+	jle	L191
+L190:
+	movl	$9889, %edi
 	call	__m3_fault
-L572:
+L191:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4127,14 +1428,14 @@ _bitfield__write_var_BitField_offset1_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L577
+	js	L196
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L578
-L577:
-	movl	$26529, %edi
+	jle	L197
+L196:
+	movl	$10145, %edi
 	call	__m3_fault
-L578:
+L197:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4171,14 +1472,14 @@ _bitfield__write_var_BitField_offset1_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L583
+	js	L202
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L584
-L583:
-	movl	$26785, %edi
+	jle	L203
+L202:
+	movl	$10401, %edi
 	call	__m3_fault
-L584:
+L203:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4215,14 +1516,14 @@ _bitfield__write_var_BitField_offset1_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L589
+	js	L208
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L590
-L589:
-	movl	$27041, %edi
+	jle	L209
+L208:
+	movl	$10657, %edi
 	call	__m3_fault
-L590:
+L209:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4259,14 +1560,14 @@ _bitfield__write_var_BitField_offset1_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L595
+	js	L214
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L596
-L595:
-	movl	$27297, %edi
+	jle	L215
+L214:
+	movl	$10913, %edi
 	call	__m3_fault
-L596:
+L215:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4303,14 +1604,14 @@ _bitfield__write_var_BitField_offset1_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L601
+	js	L220
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L602
-L601:
-	movl	$27553, %edi
+	jle	L221
+L220:
+	movl	$11169, %edi
 	call	__m3_fault
-L602:
+L221:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4347,14 +1648,14 @@ _bitfield__write_var_BitField_offset1_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L607
+	js	L226
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L608
-L607:
-	movl	$27809, %edi
+	jle	L227
+L226:
+	movl	$11425, %edi
 	call	__m3_fault
-L608:
+L227:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4391,14 +1692,14 @@ _bitfield__write_var_BitField_offset1_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L613
+	js	L232
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L614
-L613:
-	movl	$28065, %edi
+	jle	L233
+L232:
+	movl	$11681, %edi
 	call	__m3_fault
-L614:
+L233:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4435,14 +1736,14 @@ _bitfield__write_var_BitField_offset1_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L619
+	js	L238
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L620
-L619:
-	movl	$28321, %edi
+	jle	L239
+L238:
+	movl	$11937, %edi
 	call	__m3_fault
-L620:
+L239:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4479,14 +1780,14 @@ _bitfield__write_var_BitField_offset1_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L625
+	js	L244
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L626
-L625:
-	movl	$28577, %edi
+	jle	L245
+L244:
+	movl	$12193, %edi
 	call	__m3_fault
-L626:
+L245:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4523,14 +1824,14 @@ _bitfield__write_var_BitField_offset1_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L631
+	js	L250
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L632
-L631:
-	movl	$28833, %edi
+	jle	L251
+L250:
+	movl	$12449, %edi
 	call	__m3_fault
-L632:
+L251:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4567,14 +1868,14 @@ _bitfield__write_var_BitField_offset1_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L637
+	js	L256
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L638
-L637:
-	movl	$29089, %edi
+	jle	L257
+L256:
+	movl	$12705, %edi
 	call	__m3_fault
-L638:
+L257:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4611,14 +1912,14 @@ _bitfield__write_var_BitField_offset1_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L643
+	js	L262
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L644
-L643:
-	movl	$29345, %edi
+	jle	L263
+L262:
+	movl	$12961, %edi
 	call	__m3_fault
-L644:
+L263:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4655,14 +1956,14 @@ _bitfield__write_var_BitField_offset1_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L649
+	js	L268
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L650
-L649:
-	movl	$29601, %edi
+	jle	L269
+L268:
+	movl	$13217, %edi
 	call	__m3_fault
-L650:
+L269:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4699,14 +2000,14 @@ _bitfield__write_var_BitField_offset1_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L655
+	js	L274
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L656
-L655:
-	movl	$29857, %edi
+	jle	L275
+L274:
+	movl	$13473, %edi
 	call	__m3_fault
-L656:
+L275:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4743,14 +2044,14 @@ _bitfield__write_var_BitField_offset1_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L661
+	js	L280
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L662
-L661:
-	movl	$30113, %edi
+	jle	L281
+L280:
+	movl	$13729, %edi
 	call	__m3_fault
-L662:
+L281:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4787,14 +2088,14 @@ _bitfield__write_var_BitField_offset1_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L667
+	js	L286
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L668
-L667:
-	movl	$30369, %edi
+	jle	L287
+L286:
+	movl	$13985, %edi
 	call	__m3_fault
-L668:
+L287:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4831,14 +2132,14 @@ _bitfield__write_var_BitField_offset1_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L673
+	js	L292
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L674
-L673:
-	movl	$30625, %edi
+	jle	L293
+L292:
+	movl	$14241, %edi
 	call	__m3_fault
-L674:
+L293:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4875,14 +2176,14 @@ _bitfield__write_var_BitField_offset1_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L679
+	js	L298
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L680
-L679:
-	movl	$30881, %edi
+	jle	L299
+L298:
+	movl	$14497, %edi
 	call	__m3_fault
-L680:
+L299:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4919,14 +2220,14 @@ _bitfield__write_var_BitField_offset1_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L685
+	js	L304
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L686
-L685:
-	movl	$31137, %edi
+	jle	L305
+L304:
+	movl	$14753, %edi
 	call	__m3_fault
-L686:
+L305:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -4963,14 +2264,14 @@ _bitfield__write_var_BitField_offset1_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L691
+	js	L310
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L692
-L691:
-	movl	$31393, %edi
+	jle	L311
+L310:
+	movl	$15009, %edi
 	call	__m3_fault
-L692:
+L311:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5007,14 +2308,14 @@ _bitfield__write_var_BitField_offset1_count53:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L697
+	js	L316
 	movabsq	$9007199254740991, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L698
-L697:
-	movl	$31649, %edi
+	jle	L317
+L316:
+	movl	$15265, %edi
 	call	__m3_fault
-L698:
+L317:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5051,14 +2352,14 @@ _bitfield__write_var_BitField_offset1_count54:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L703
+	js	L322
 	movabsq	$18014398509481983, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L704
-L703:
-	movl	$31905, %edi
+	jle	L323
+L322:
+	movl	$15521, %edi
 	call	__m3_fault
-L704:
+L323:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5095,14 +2396,14 @@ _bitfield__write_var_BitField_offset1_count55:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L709
+	js	L328
 	movabsq	$36028797018963967, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L710
-L709:
-	movl	$32161, %edi
+	jle	L329
+L328:
+	movl	$15777, %edi
 	call	__m3_fault
-L710:
+L329:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5139,14 +2440,14 @@ _bitfield__write_var_BitField_offset1_count56:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L715
+	js	L334
 	movabsq	$72057594037927935, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L716
-L715:
-	movl	$32417, %edi
+	jle	L335
+L334:
+	movl	$16033, %edi
 	call	__m3_fault
-L716:
+L335:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5183,14 +2484,14 @@ _bitfield__write_var_BitField_offset1_count57:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L721
+	js	L340
 	movabsq	$144115188075855871, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L722
-L721:
-	movl	$32673, %edi
+	jle	L341
+L340:
+	movl	$16289, %edi
 	call	__m3_fault
-L722:
+L341:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5227,14 +2528,14 @@ _bitfield__write_var_BitField_offset1_count58:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L727
+	js	L346
 	movabsq	$288230376151711743, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L728
-L727:
-	movl	$32929, %edi
+	jle	L347
+L346:
+	movl	$16545, %edi
 	call	__m3_fault
-L728:
+L347:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5271,14 +2572,14 @@ _bitfield__write_var_BitField_offset1_count59:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L733
+	js	L352
 	movabsq	$576460752303423487, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L734
-L733:
-	movl	$33185, %edi
+	jle	L353
+L352:
+	movl	$16801, %edi
 	call	__m3_fault
-L734:
+L353:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5315,14 +2616,14 @@ _bitfield__write_var_BitField_offset1_count60:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L739
+	js	L358
 	movabsq	$1152921504606846975, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L740
-L739:
-	movl	$33441, %edi
+	jle	L359
+L358:
+	movl	$17057, %edi
 	call	__m3_fault
-L740:
+L359:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5359,14 +2660,14 @@ _bitfield__write_var_BitField_offset1_count61:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L745
+	js	L364
 	movabsq	$2305843009213693951, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L746
-L745:
-	movl	$33697, %edi
+	jle	L365
+L364:
+	movl	$17313, %edi
 	call	__m3_fault
-L746:
+L365:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5403,14 +2704,14 @@ _bitfield__write_var_BitField_offset1_count62:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L751
+	js	L370
 	movabsq	$4611686018427387903, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L752
-L751:
-	movl	$33953, %edi
+	jle	L371
+L370:
+	movl	$17569, %edi
 	call	__m3_fault
-L752:
+L371:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5446,10 +2747,10 @@ _bitfield__write_var_BitField_offset1_count63:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	jns	L757
-	movl	$34209, %edi
+	jns	L376
+	movl	$17825, %edi
 	call	__m3_fault
-L757:
+L376:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5485,13 +2786,13 @@ _bitfield__write_var_BitField_offset2_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L762
+	js	L381
 	cmpq	$1, -8(%rbp)
-	jle	L763
-L762:
-	movl	$34465, %edi
+	jle	L382
+L381:
+	movl	$18081, %edi
 	call	__m3_fault
-L763:
+L382:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5529,13 +2830,13 @@ _bitfield__write_var_BitField_offset2_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L768
+	js	L387
 	cmpq	$3, -8(%rbp)
-	jle	L769
-L768:
-	movl	$34721, %edi
+	jle	L388
+L387:
+	movl	$18337, %edi
 	call	__m3_fault
-L769:
+L388:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5573,13 +2874,13 @@ _bitfield__write_var_BitField_offset2_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L774
+	js	L393
 	cmpq	$7, -8(%rbp)
-	jle	L775
-L774:
-	movl	$34977, %edi
+	jle	L394
+L393:
+	movl	$18593, %edi
 	call	__m3_fault
-L775:
+L394:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5617,13 +2918,13 @@ _bitfield__write_var_BitField_offset2_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L780
+	js	L399
 	cmpq	$15, -8(%rbp)
-	jle	L781
-L780:
-	movl	$35233, %edi
+	jle	L400
+L399:
+	movl	$18849, %edi
 	call	__m3_fault
-L781:
+L400:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5661,13 +2962,13 @@ _bitfield__write_var_BitField_offset2_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L786
+	js	L405
 	cmpq	$31, -8(%rbp)
-	jle	L787
-L786:
-	movl	$35489, %edi
+	jle	L406
+L405:
+	movl	$19105, %edi
 	call	__m3_fault
-L787:
+L406:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5705,13 +3006,13 @@ _bitfield__write_var_BitField_offset2_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L792
+	js	L411
 	cmpq	$63, -8(%rbp)
-	jle	L793
-L792:
-	movl	$35745, %edi
+	jle	L412
+L411:
+	movl	$19361, %edi
 	call	__m3_fault
-L793:
+L412:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5749,13 +3050,13 @@ _bitfield__write_var_BitField_offset2_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L798
+	js	L417
 	cmpq	$127, -8(%rbp)
-	jle	L799
-L798:
-	movl	$36001, %edi
+	jle	L418
+L417:
+	movl	$19617, %edi
 	call	__m3_fault
-L799:
+L418:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5793,13 +3094,13 @@ _bitfield__write_var_BitField_offset2_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L804
+	js	L423
 	cmpq	$255, -8(%rbp)
-	jle	L805
-L804:
-	movl	$36257, %edi
+	jle	L424
+L423:
+	movl	$19873, %edi
 	call	__m3_fault
-L805:
+L424:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5837,13 +3138,13 @@ _bitfield__write_var_BitField_offset2_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L810
+	js	L429
 	cmpq	$511, -8(%rbp)
-	jle	L811
-L810:
-	movl	$36513, %edi
+	jle	L430
+L429:
+	movl	$20129, %edi
 	call	__m3_fault
-L811:
+L430:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5881,13 +3182,13 @@ _bitfield__write_var_BitField_offset2_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L816
+	js	L435
 	cmpq	$1023, -8(%rbp)
-	jle	L817
-L816:
-	movl	$36769, %edi
+	jle	L436
+L435:
+	movl	$20385, %edi
 	call	__m3_fault
-L817:
+L436:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5925,13 +3226,13 @@ _bitfield__write_var_BitField_offset2_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L822
+	js	L441
 	cmpq	$2047, -8(%rbp)
-	jle	L823
-L822:
-	movl	$37025, %edi
+	jle	L442
+L441:
+	movl	$20641, %edi
 	call	__m3_fault
-L823:
+L442:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -5969,13 +3270,13 @@ _bitfield__write_var_BitField_offset2_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L828
+	js	L447
 	cmpq	$4095, -8(%rbp)
-	jle	L829
-L828:
-	movl	$37281, %edi
+	jle	L448
+L447:
+	movl	$20897, %edi
 	call	__m3_fault
-L829:
+L448:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6013,13 +3314,13 @@ _bitfield__write_var_BitField_offset2_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L834
+	js	L453
 	cmpq	$8191, -8(%rbp)
-	jle	L835
-L834:
-	movl	$37537, %edi
+	jle	L454
+L453:
+	movl	$21153, %edi
 	call	__m3_fault
-L835:
+L454:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6057,13 +3358,13 @@ _bitfield__write_var_BitField_offset2_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L840
+	js	L459
 	cmpq	$16383, -8(%rbp)
-	jle	L841
-L840:
-	movl	$37793, %edi
+	jle	L460
+L459:
+	movl	$21409, %edi
 	call	__m3_fault
-L841:
+L460:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6101,13 +3402,13 @@ _bitfield__write_var_BitField_offset2_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L846
+	js	L465
 	cmpq	$32767, -8(%rbp)
-	jle	L847
-L846:
-	movl	$38049, %edi
+	jle	L466
+L465:
+	movl	$21665, %edi
 	call	__m3_fault
-L847:
+L466:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6145,13 +3446,13 @@ _bitfield__write_var_BitField_offset2_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L852
+	js	L471
 	cmpq	$65535, -8(%rbp)
-	jle	L853
-L852:
-	movl	$38305, %edi
+	jle	L472
+L471:
+	movl	$21921, %edi
 	call	__m3_fault
-L853:
+L472:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6189,13 +3490,13 @@ _bitfield__write_var_BitField_offset2_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L858
+	js	L477
 	cmpq	$131071, -8(%rbp)
-	jle	L859
-L858:
-	movl	$38561, %edi
+	jle	L478
+L477:
+	movl	$22177, %edi
 	call	__m3_fault
-L859:
+L478:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6233,13 +3534,13 @@ _bitfield__write_var_BitField_offset2_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L864
+	js	L483
 	cmpq	$262143, -8(%rbp)
-	jle	L865
-L864:
-	movl	$38817, %edi
+	jle	L484
+L483:
+	movl	$22433, %edi
 	call	__m3_fault
-L865:
+L484:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6277,13 +3578,13 @@ _bitfield__write_var_BitField_offset2_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L870
+	js	L489
 	cmpq	$524287, -8(%rbp)
-	jle	L871
-L870:
-	movl	$39073, %edi
+	jle	L490
+L489:
+	movl	$22689, %edi
 	call	__m3_fault
-L871:
+L490:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6321,13 +3622,13 @@ _bitfield__write_var_BitField_offset2_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L876
+	js	L495
 	cmpq	$1048575, -8(%rbp)
-	jle	L877
-L876:
-	movl	$39329, %edi
+	jle	L496
+L495:
+	movl	$22945, %edi
 	call	__m3_fault
-L877:
+L496:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6365,13 +3666,13 @@ _bitfield__write_var_BitField_offset2_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L882
+	js	L501
 	cmpq	$2097151, -8(%rbp)
-	jle	L883
-L882:
-	movl	$39585, %edi
+	jle	L502
+L501:
+	movl	$23201, %edi
 	call	__m3_fault
-L883:
+L502:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6409,13 +3710,13 @@ _bitfield__write_var_BitField_offset2_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L888
+	js	L507
 	cmpq	$4194303, -8(%rbp)
-	jle	L889
-L888:
-	movl	$39841, %edi
+	jle	L508
+L507:
+	movl	$23457, %edi
 	call	__m3_fault
-L889:
+L508:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6453,13 +3754,13 @@ _bitfield__write_var_BitField_offset2_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L894
+	js	L513
 	cmpq	$8388607, -8(%rbp)
-	jle	L895
-L894:
-	movl	$40097, %edi
+	jle	L514
+L513:
+	movl	$23713, %edi
 	call	__m3_fault
-L895:
+L514:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6497,13 +3798,13 @@ _bitfield__write_var_BitField_offset2_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L900
+	js	L519
 	cmpq	$16777215, -8(%rbp)
-	jle	L901
-L900:
-	movl	$40353, %edi
+	jle	L520
+L519:
+	movl	$23969, %edi
 	call	__m3_fault
-L901:
+L520:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6541,13 +3842,13 @@ _bitfield__write_var_BitField_offset2_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L906
+	js	L525
 	cmpq	$33554431, -8(%rbp)
-	jle	L907
-L906:
-	movl	$40609, %edi
+	jle	L526
+L525:
+	movl	$24225, %edi
 	call	__m3_fault
-L907:
+L526:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6585,13 +3886,13 @@ _bitfield__write_var_BitField_offset2_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L912
+	js	L531
 	cmpq	$67108863, -8(%rbp)
-	jle	L913
-L912:
-	movl	$40865, %edi
+	jle	L532
+L531:
+	movl	$24481, %edi
 	call	__m3_fault
-L913:
+L532:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6629,13 +3930,13 @@ _bitfield__write_var_BitField_offset2_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L918
+	js	L537
 	cmpq	$134217727, -8(%rbp)
-	jle	L919
-L918:
-	movl	$41121, %edi
+	jle	L538
+L537:
+	movl	$24737, %edi
 	call	__m3_fault
-L919:
+L538:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6673,13 +3974,13 @@ _bitfield__write_var_BitField_offset2_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L924
+	js	L543
 	cmpq	$268435455, -8(%rbp)
-	jle	L925
-L924:
-	movl	$41377, %edi
+	jle	L544
+L543:
+	movl	$24993, %edi
 	call	__m3_fault
-L925:
+L544:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6717,13 +4018,13 @@ _bitfield__write_var_BitField_offset2_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L930
+	js	L549
 	cmpq	$536870911, -8(%rbp)
-	jle	L931
-L930:
-	movl	$41633, %edi
+	jle	L550
+L549:
+	movl	$25249, %edi
 	call	__m3_fault
-L931:
+L550:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6761,13 +4062,13 @@ _bitfield__write_var_BitField_offset2_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L936
+	js	L555
 	cmpq	$1073741823, -8(%rbp)
-	jle	L937
-L936:
-	movl	$41889, %edi
+	jle	L556
+L555:
+	movl	$25505, %edi
 	call	__m3_fault
-L937:
+L556:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6804,13 +4105,13 @@ _bitfield__write_var_BitField_offset2_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L942
+	js	L561
 	cmpq	$2147483647, -8(%rbp)
-	jle	L943
-L942:
-	movl	$42145, %edi
+	jle	L562
+L561:
+	movl	$25761, %edi
 	call	__m3_fault
-L943:
+L562:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6847,14 +4148,14 @@ _bitfield__write_var_BitField_offset2_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L948
+	js	L567
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L949
-L948:
-	movl	$42401, %edi
+	jle	L568
+L567:
+	movl	$26017, %edi
 	call	__m3_fault
-L949:
+L568:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6891,14 +4192,14 @@ _bitfield__write_var_BitField_offset2_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L954
+	js	L573
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L955
-L954:
-	movl	$42657, %edi
+	jle	L574
+L573:
+	movl	$26273, %edi
 	call	__m3_fault
-L955:
+L574:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6935,14 +4236,14 @@ _bitfield__write_var_BitField_offset2_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L960
+	js	L579
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L961
-L960:
-	movl	$42913, %edi
+	jle	L580
+L579:
+	movl	$26529, %edi
 	call	__m3_fault
-L961:
+L580:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -6979,14 +4280,14 @@ _bitfield__write_var_BitField_offset2_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L966
+	js	L585
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L967
-L966:
-	movl	$43169, %edi
+	jle	L586
+L585:
+	movl	$26785, %edi
 	call	__m3_fault
-L967:
+L586:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7023,14 +4324,14 @@ _bitfield__write_var_BitField_offset2_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L972
+	js	L591
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L973
-L972:
-	movl	$43425, %edi
+	jle	L592
+L591:
+	movl	$27041, %edi
 	call	__m3_fault
-L973:
+L592:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7067,14 +4368,14 @@ _bitfield__write_var_BitField_offset2_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L978
+	js	L597
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L979
-L978:
-	movl	$43681, %edi
+	jle	L598
+L597:
+	movl	$27297, %edi
 	call	__m3_fault
-L979:
+L598:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7111,14 +4412,14 @@ _bitfield__write_var_BitField_offset2_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L984
+	js	L603
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L985
-L984:
-	movl	$43937, %edi
+	jle	L604
+L603:
+	movl	$27553, %edi
 	call	__m3_fault
-L985:
+L604:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7155,14 +4456,14 @@ _bitfield__write_var_BitField_offset2_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L990
+	js	L609
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L991
-L990:
-	movl	$44193, %edi
+	jle	L610
+L609:
+	movl	$27809, %edi
 	call	__m3_fault
-L991:
+L610:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7199,14 +4500,14 @@ _bitfield__write_var_BitField_offset2_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L996
+	js	L615
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L997
-L996:
-	movl	$44449, %edi
+	jle	L616
+L615:
+	movl	$28065, %edi
 	call	__m3_fault
-L997:
+L616:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7243,14 +4544,14 @@ _bitfield__write_var_BitField_offset2_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1002
+	js	L621
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1003
-L1002:
-	movl	$44705, %edi
+	jle	L622
+L621:
+	movl	$28321, %edi
 	call	__m3_fault
-L1003:
+L622:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7287,14 +4588,14 @@ _bitfield__write_var_BitField_offset2_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1008
+	js	L627
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1009
-L1008:
-	movl	$44961, %edi
+	jle	L628
+L627:
+	movl	$28577, %edi
 	call	__m3_fault
-L1009:
+L628:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7331,14 +4632,14 @@ _bitfield__write_var_BitField_offset2_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1014
+	js	L633
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1015
-L1014:
-	movl	$45217, %edi
+	jle	L634
+L633:
+	movl	$28833, %edi
 	call	__m3_fault
-L1015:
+L634:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7375,14 +4676,14 @@ _bitfield__write_var_BitField_offset2_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1020
+	js	L639
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1021
-L1020:
-	movl	$45473, %edi
+	jle	L640
+L639:
+	movl	$29089, %edi
 	call	__m3_fault
-L1021:
+L640:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7419,14 +4720,14 @@ _bitfield__write_var_BitField_offset2_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1026
+	js	L645
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1027
-L1026:
-	movl	$45729, %edi
+	jle	L646
+L645:
+	movl	$29345, %edi
 	call	__m3_fault
-L1027:
+L646:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7463,14 +4764,14 @@ _bitfield__write_var_BitField_offset2_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1032
+	js	L651
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1033
-L1032:
-	movl	$45985, %edi
+	jle	L652
+L651:
+	movl	$29601, %edi
 	call	__m3_fault
-L1033:
+L652:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7507,14 +4808,14 @@ _bitfield__write_var_BitField_offset2_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1038
+	js	L657
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1039
-L1038:
-	movl	$46241, %edi
+	jle	L658
+L657:
+	movl	$29857, %edi
 	call	__m3_fault
-L1039:
+L658:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7551,14 +4852,14 @@ _bitfield__write_var_BitField_offset2_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1044
+	js	L663
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1045
-L1044:
-	movl	$46497, %edi
+	jle	L664
+L663:
+	movl	$30113, %edi
 	call	__m3_fault
-L1045:
+L664:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7595,14 +4896,14 @@ _bitfield__write_var_BitField_offset2_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1050
+	js	L669
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1051
-L1050:
-	movl	$46753, %edi
+	jle	L670
+L669:
+	movl	$30369, %edi
 	call	__m3_fault
-L1051:
+L670:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7639,14 +4940,14 @@ _bitfield__write_var_BitField_offset2_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1056
+	js	L675
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1057
-L1056:
-	movl	$47009, %edi
+	jle	L676
+L675:
+	movl	$30625, %edi
 	call	__m3_fault
-L1057:
+L676:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7683,14 +4984,14 @@ _bitfield__write_var_BitField_offset2_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1062
+	js	L681
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1063
-L1062:
-	movl	$47265, %edi
+	jle	L682
+L681:
+	movl	$30881, %edi
 	call	__m3_fault
-L1063:
+L682:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7727,14 +5028,14 @@ _bitfield__write_var_BitField_offset2_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1068
+	js	L687
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1069
-L1068:
-	movl	$47521, %edi
+	jle	L688
+L687:
+	movl	$31137, %edi
 	call	__m3_fault
-L1069:
+L688:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7771,14 +5072,14 @@ _bitfield__write_var_BitField_offset2_count53:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1074
+	js	L693
 	movabsq	$9007199254740991, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1075
-L1074:
-	movl	$47777, %edi
+	jle	L694
+L693:
+	movl	$31393, %edi
 	call	__m3_fault
-L1075:
+L694:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7815,14 +5116,14 @@ _bitfield__write_var_BitField_offset2_count54:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1080
+	js	L699
 	movabsq	$18014398509481983, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1081
-L1080:
-	movl	$48033, %edi
+	jle	L700
+L699:
+	movl	$31649, %edi
 	call	__m3_fault
-L1081:
+L700:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7859,14 +5160,14 @@ _bitfield__write_var_BitField_offset2_count55:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1086
+	js	L705
 	movabsq	$36028797018963967, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1087
-L1086:
-	movl	$48289, %edi
+	jle	L706
+L705:
+	movl	$31905, %edi
 	call	__m3_fault
-L1087:
+L706:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7903,14 +5204,14 @@ _bitfield__write_var_BitField_offset2_count56:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1092
+	js	L711
 	movabsq	$72057594037927935, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1093
-L1092:
-	movl	$48545, %edi
+	jle	L712
+L711:
+	movl	$32161, %edi
 	call	__m3_fault
-L1093:
+L712:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7947,14 +5248,14 @@ _bitfield__write_var_BitField_offset2_count57:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1098
+	js	L717
 	movabsq	$144115188075855871, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1099
-L1098:
-	movl	$48801, %edi
+	jle	L718
+L717:
+	movl	$32417, %edi
 	call	__m3_fault
-L1099:
+L718:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -7991,14 +5292,14 @@ _bitfield__write_var_BitField_offset2_count58:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1104
+	js	L723
 	movabsq	$288230376151711743, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1105
-L1104:
-	movl	$49057, %edi
+	jle	L724
+L723:
+	movl	$32673, %edi
 	call	__m3_fault
-L1105:
+L724:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8035,14 +5336,14 @@ _bitfield__write_var_BitField_offset2_count59:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1110
+	js	L729
 	movabsq	$576460752303423487, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1111
-L1110:
-	movl	$49313, %edi
+	jle	L730
+L729:
+	movl	$32929, %edi
 	call	__m3_fault
-L1111:
+L730:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8079,14 +5380,14 @@ _bitfield__write_var_BitField_offset2_count60:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1116
+	js	L735
 	movabsq	$1152921504606846975, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1117
-L1116:
-	movl	$49569, %edi
+	jle	L736
+L735:
+	movl	$33185, %edi
 	call	__m3_fault
-L1117:
+L736:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8123,14 +5424,14 @@ _bitfield__write_var_BitField_offset2_count61:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1122
+	js	L741
 	movabsq	$2305843009213693951, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1123
-L1122:
-	movl	$49825, %edi
+	jle	L742
+L741:
+	movl	$33441, %edi
 	call	__m3_fault
-L1123:
+L742:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8166,14 +5467,14 @@ _bitfield__write_var_BitField_offset2_count62:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1128
+	js	L747
 	movabsq	$4611686018427387903, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1129
-L1128:
-	movl	$50081, %edi
+	jle	L748
+L747:
+	movl	$33697, %edi
 	call	__m3_fault
-L1129:
+L748:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8209,13 +5510,13 @@ _bitfield__write_var_BitField_offset3_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1134
+	js	L753
 	cmpq	$1, -8(%rbp)
-	jle	L1135
-L1134:
-	movl	$50337, %edi
+	jle	L754
+L753:
+	movl	$33953, %edi
 	call	__m3_fault
-L1135:
+L754:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8253,13 +5554,13 @@ _bitfield__write_var_BitField_offset3_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1140
+	js	L759
 	cmpq	$3, -8(%rbp)
-	jle	L1141
-L1140:
-	movl	$50593, %edi
+	jle	L760
+L759:
+	movl	$34209, %edi
 	call	__m3_fault
-L1141:
+L760:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8297,13 +5598,13 @@ _bitfield__write_var_BitField_offset3_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1146
+	js	L765
 	cmpq	$7, -8(%rbp)
-	jle	L1147
-L1146:
-	movl	$50849, %edi
+	jle	L766
+L765:
+	movl	$34465, %edi
 	call	__m3_fault
-L1147:
+L766:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8341,13 +5642,13 @@ _bitfield__write_var_BitField_offset3_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1152
+	js	L771
 	cmpq	$15, -8(%rbp)
-	jle	L1153
-L1152:
-	movl	$51105, %edi
+	jle	L772
+L771:
+	movl	$34721, %edi
 	call	__m3_fault
-L1153:
+L772:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8385,13 +5686,13 @@ _bitfield__write_var_BitField_offset3_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1158
+	js	L777
 	cmpq	$31, -8(%rbp)
-	jle	L1159
-L1158:
-	movl	$51361, %edi
+	jle	L778
+L777:
+	movl	$34977, %edi
 	call	__m3_fault
-L1159:
+L778:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8429,13 +5730,13 @@ _bitfield__write_var_BitField_offset3_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1164
+	js	L783
 	cmpq	$63, -8(%rbp)
-	jle	L1165
-L1164:
-	movl	$51617, %edi
+	jle	L784
+L783:
+	movl	$35233, %edi
 	call	__m3_fault
-L1165:
+L784:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8473,13 +5774,13 @@ _bitfield__write_var_BitField_offset3_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1170
+	js	L789
 	cmpq	$127, -8(%rbp)
-	jle	L1171
-L1170:
-	movl	$51873, %edi
+	jle	L790
+L789:
+	movl	$35489, %edi
 	call	__m3_fault
-L1171:
+L790:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8517,13 +5818,13 @@ _bitfield__write_var_BitField_offset3_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1176
+	js	L795
 	cmpq	$255, -8(%rbp)
-	jle	L1177
-L1176:
-	movl	$52129, %edi
+	jle	L796
+L795:
+	movl	$35745, %edi
 	call	__m3_fault
-L1177:
+L796:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8561,13 +5862,13 @@ _bitfield__write_var_BitField_offset3_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1182
+	js	L801
 	cmpq	$511, -8(%rbp)
-	jle	L1183
-L1182:
-	movl	$52385, %edi
+	jle	L802
+L801:
+	movl	$36001, %edi
 	call	__m3_fault
-L1183:
+L802:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8605,13 +5906,13 @@ _bitfield__write_var_BitField_offset3_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1188
+	js	L807
 	cmpq	$1023, -8(%rbp)
-	jle	L1189
-L1188:
-	movl	$52641, %edi
+	jle	L808
+L807:
+	movl	$36257, %edi
 	call	__m3_fault
-L1189:
+L808:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8649,13 +5950,13 @@ _bitfield__write_var_BitField_offset3_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1194
+	js	L813
 	cmpq	$2047, -8(%rbp)
-	jle	L1195
-L1194:
-	movl	$52897, %edi
+	jle	L814
+L813:
+	movl	$36513, %edi
 	call	__m3_fault
-L1195:
+L814:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8693,13 +5994,13 @@ _bitfield__write_var_BitField_offset3_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1200
+	js	L819
 	cmpq	$4095, -8(%rbp)
-	jle	L1201
-L1200:
-	movl	$53153, %edi
+	jle	L820
+L819:
+	movl	$36769, %edi
 	call	__m3_fault
-L1201:
+L820:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8737,13 +6038,13 @@ _bitfield__write_var_BitField_offset3_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1206
+	js	L825
 	cmpq	$8191, -8(%rbp)
-	jle	L1207
-L1206:
-	movl	$53409, %edi
+	jle	L826
+L825:
+	movl	$37025, %edi
 	call	__m3_fault
-L1207:
+L826:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8781,13 +6082,13 @@ _bitfield__write_var_BitField_offset3_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1212
+	js	L831
 	cmpq	$16383, -8(%rbp)
-	jle	L1213
-L1212:
-	movl	$53665, %edi
+	jle	L832
+L831:
+	movl	$37281, %edi
 	call	__m3_fault
-L1213:
+L832:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8825,13 +6126,13 @@ _bitfield__write_var_BitField_offset3_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1218
+	js	L837
 	cmpq	$32767, -8(%rbp)
-	jle	L1219
-L1218:
-	movl	$53921, %edi
+	jle	L838
+L837:
+	movl	$37537, %edi
 	call	__m3_fault
-L1219:
+L838:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8869,13 +6170,13 @@ _bitfield__write_var_BitField_offset3_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1224
+	js	L843
 	cmpq	$65535, -8(%rbp)
-	jle	L1225
-L1224:
-	movl	$54177, %edi
+	jle	L844
+L843:
+	movl	$37793, %edi
 	call	__m3_fault
-L1225:
+L844:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8913,13 +6214,13 @@ _bitfield__write_var_BitField_offset3_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1230
+	js	L849
 	cmpq	$131071, -8(%rbp)
-	jle	L1231
-L1230:
-	movl	$54433, %edi
+	jle	L850
+L849:
+	movl	$38049, %edi
 	call	__m3_fault
-L1231:
+L850:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -8957,13 +6258,13 @@ _bitfield__write_var_BitField_offset3_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1236
+	js	L855
 	cmpq	$262143, -8(%rbp)
-	jle	L1237
-L1236:
-	movl	$54689, %edi
+	jle	L856
+L855:
+	movl	$38305, %edi
 	call	__m3_fault
-L1237:
+L856:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9001,13 +6302,13 @@ _bitfield__write_var_BitField_offset3_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1242
+	js	L861
 	cmpq	$524287, -8(%rbp)
-	jle	L1243
-L1242:
-	movl	$54945, %edi
+	jle	L862
+L861:
+	movl	$38561, %edi
 	call	__m3_fault
-L1243:
+L862:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9045,13 +6346,13 @@ _bitfield__write_var_BitField_offset3_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1248
+	js	L867
 	cmpq	$1048575, -8(%rbp)
-	jle	L1249
-L1248:
-	movl	$55201, %edi
+	jle	L868
+L867:
+	movl	$38817, %edi
 	call	__m3_fault
-L1249:
+L868:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9089,13 +6390,13 @@ _bitfield__write_var_BitField_offset3_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1254
+	js	L873
 	cmpq	$2097151, -8(%rbp)
-	jle	L1255
-L1254:
-	movl	$55457, %edi
+	jle	L874
+L873:
+	movl	$39073, %edi
 	call	__m3_fault
-L1255:
+L874:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9133,13 +6434,13 @@ _bitfield__write_var_BitField_offset3_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1260
+	js	L879
 	cmpq	$4194303, -8(%rbp)
-	jle	L1261
-L1260:
-	movl	$55713, %edi
+	jle	L880
+L879:
+	movl	$39329, %edi
 	call	__m3_fault
-L1261:
+L880:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9177,13 +6478,13 @@ _bitfield__write_var_BitField_offset3_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1266
+	js	L885
 	cmpq	$8388607, -8(%rbp)
-	jle	L1267
-L1266:
-	movl	$55969, %edi
+	jle	L886
+L885:
+	movl	$39585, %edi
 	call	__m3_fault
-L1267:
+L886:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9221,13 +6522,13 @@ _bitfield__write_var_BitField_offset3_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1272
+	js	L891
 	cmpq	$16777215, -8(%rbp)
-	jle	L1273
-L1272:
-	movl	$56225, %edi
+	jle	L892
+L891:
+	movl	$39841, %edi
 	call	__m3_fault
-L1273:
+L892:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9265,13 +6566,13 @@ _bitfield__write_var_BitField_offset3_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1278
+	js	L897
 	cmpq	$33554431, -8(%rbp)
-	jle	L1279
-L1278:
-	movl	$56481, %edi
+	jle	L898
+L897:
+	movl	$40097, %edi
 	call	__m3_fault
-L1279:
+L898:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9309,13 +6610,13 @@ _bitfield__write_var_BitField_offset3_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1284
+	js	L903
 	cmpq	$67108863, -8(%rbp)
-	jle	L1285
-L1284:
-	movl	$56737, %edi
+	jle	L904
+L903:
+	movl	$40353, %edi
 	call	__m3_fault
-L1285:
+L904:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9353,13 +6654,13 @@ _bitfield__write_var_BitField_offset3_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1290
+	js	L909
 	cmpq	$134217727, -8(%rbp)
-	jle	L1291
-L1290:
-	movl	$56993, %edi
+	jle	L910
+L909:
+	movl	$40609, %edi
 	call	__m3_fault
-L1291:
+L910:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9397,13 +6698,13 @@ _bitfield__write_var_BitField_offset3_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1296
+	js	L915
 	cmpq	$268435455, -8(%rbp)
-	jle	L1297
-L1296:
-	movl	$57249, %edi
+	jle	L916
+L915:
+	movl	$40865, %edi
 	call	__m3_fault
-L1297:
+L916:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9441,13 +6742,13 @@ _bitfield__write_var_BitField_offset3_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1302
+	js	L921
 	cmpq	$536870911, -8(%rbp)
-	jle	L1303
-L1302:
-	movl	$57505, %edi
+	jle	L922
+L921:
+	movl	$41121, %edi
 	call	__m3_fault
-L1303:
+L922:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9484,13 +6785,13 @@ _bitfield__write_var_BitField_offset3_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1308
+	js	L927
 	cmpq	$1073741823, -8(%rbp)
-	jle	L1309
-L1308:
-	movl	$57761, %edi
+	jle	L928
+L927:
+	movl	$41377, %edi
 	call	__m3_fault
-L1309:
+L928:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9527,13 +6828,13 @@ _bitfield__write_var_BitField_offset3_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1314
+	js	L933
 	cmpq	$2147483647, -8(%rbp)
-	jle	L1315
-L1314:
-	movl	$58017, %edi
+	jle	L934
+L933:
+	movl	$41633, %edi
 	call	__m3_fault
-L1315:
+L934:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9570,14 +6871,14 @@ _bitfield__write_var_BitField_offset3_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1320
+	js	L939
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L1321
-L1320:
-	movl	$58273, %edi
+	jle	L940
+L939:
+	movl	$41889, %edi
 	call	__m3_fault
-L1321:
+L940:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9614,14 +6915,14 @@ _bitfield__write_var_BitField_offset3_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1326
+	js	L945
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1327
-L1326:
-	movl	$58529, %edi
+	jle	L946
+L945:
+	movl	$42145, %edi
 	call	__m3_fault
-L1327:
+L946:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9658,14 +6959,14 @@ _bitfield__write_var_BitField_offset3_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1332
+	js	L951
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1333
-L1332:
-	movl	$58785, %edi
+	jle	L952
+L951:
+	movl	$42401, %edi
 	call	__m3_fault
-L1333:
+L952:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9702,14 +7003,14 @@ _bitfield__write_var_BitField_offset3_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1338
+	js	L957
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1339
-L1338:
-	movl	$59041, %edi
+	jle	L958
+L957:
+	movl	$42657, %edi
 	call	__m3_fault
-L1339:
+L958:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9746,14 +7047,14 @@ _bitfield__write_var_BitField_offset3_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1344
+	js	L963
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1345
-L1344:
-	movl	$59297, %edi
+	jle	L964
+L963:
+	movl	$42913, %edi
 	call	__m3_fault
-L1345:
+L964:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9790,14 +7091,14 @@ _bitfield__write_var_BitField_offset3_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1350
+	js	L969
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1351
-L1350:
-	movl	$59553, %edi
+	jle	L970
+L969:
+	movl	$43169, %edi
 	call	__m3_fault
-L1351:
+L970:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9834,14 +7135,14 @@ _bitfield__write_var_BitField_offset3_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1356
+	js	L975
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1357
-L1356:
-	movl	$59809, %edi
+	jle	L976
+L975:
+	movl	$43425, %edi
 	call	__m3_fault
-L1357:
+L976:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9878,14 +7179,14 @@ _bitfield__write_var_BitField_offset3_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1362
+	js	L981
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1363
-L1362:
-	movl	$60065, %edi
+	jle	L982
+L981:
+	movl	$43681, %edi
 	call	__m3_fault
-L1363:
+L982:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9922,14 +7223,14 @@ _bitfield__write_var_BitField_offset3_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1368
+	js	L987
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1369
-L1368:
-	movl	$60321, %edi
+	jle	L988
+L987:
+	movl	$43937, %edi
 	call	__m3_fault
-L1369:
+L988:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -9966,14 +7267,14 @@ _bitfield__write_var_BitField_offset3_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1374
+	js	L993
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1375
-L1374:
-	movl	$60577, %edi
+	jle	L994
+L993:
+	movl	$44193, %edi
 	call	__m3_fault
-L1375:
+L994:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10010,14 +7311,14 @@ _bitfield__write_var_BitField_offset3_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1380
+	js	L999
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1381
-L1380:
-	movl	$60833, %edi
+	jle	L1000
+L999:
+	movl	$44449, %edi
 	call	__m3_fault
-L1381:
+L1000:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10054,14 +7355,14 @@ _bitfield__write_var_BitField_offset3_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1386
+	js	L1005
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1387
-L1386:
-	movl	$61089, %edi
+	jle	L1006
+L1005:
+	movl	$44705, %edi
 	call	__m3_fault
-L1387:
+L1006:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10098,14 +7399,14 @@ _bitfield__write_var_BitField_offset3_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1392
+	js	L1011
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1393
-L1392:
-	movl	$61345, %edi
+	jle	L1012
+L1011:
+	movl	$44961, %edi
 	call	__m3_fault
-L1393:
+L1012:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10142,14 +7443,14 @@ _bitfield__write_var_BitField_offset3_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1398
+	js	L1017
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1399
-L1398:
-	movl	$61601, %edi
+	jle	L1018
+L1017:
+	movl	$45217, %edi
 	call	__m3_fault
-L1399:
+L1018:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10186,14 +7487,14 @@ _bitfield__write_var_BitField_offset3_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1404
+	js	L1023
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1405
-L1404:
-	movl	$61857, %edi
+	jle	L1024
+L1023:
+	movl	$45473, %edi
 	call	__m3_fault
-L1405:
+L1024:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10230,14 +7531,14 @@ _bitfield__write_var_BitField_offset3_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1410
+	js	L1029
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1411
-L1410:
-	movl	$62113, %edi
+	jle	L1030
+L1029:
+	movl	$45729, %edi
 	call	__m3_fault
-L1411:
+L1030:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10274,14 +7575,14 @@ _bitfield__write_var_BitField_offset3_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1416
+	js	L1035
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1417
-L1416:
-	movl	$62369, %edi
+	jle	L1036
+L1035:
+	movl	$45985, %edi
 	call	__m3_fault
-L1417:
+L1036:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10318,14 +7619,14 @@ _bitfield__write_var_BitField_offset3_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1422
+	js	L1041
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1423
-L1422:
-	movl	$62625, %edi
+	jle	L1042
+L1041:
+	movl	$46241, %edi
 	call	__m3_fault
-L1423:
+L1042:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10362,14 +7663,14 @@ _bitfield__write_var_BitField_offset3_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1428
+	js	L1047
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1429
-L1428:
-	movl	$62881, %edi
+	jle	L1048
+L1047:
+	movl	$46497, %edi
 	call	__m3_fault
-L1429:
+L1048:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10406,14 +7707,14 @@ _bitfield__write_var_BitField_offset3_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1434
+	js	L1053
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1435
-L1434:
-	movl	$63137, %edi
+	jle	L1054
+L1053:
+	movl	$46753, %edi
 	call	__m3_fault
-L1435:
+L1054:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10450,14 +7751,14 @@ _bitfield__write_var_BitField_offset3_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1440
+	js	L1059
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1441
-L1440:
-	movl	$63393, %edi
+	jle	L1060
+L1059:
+	movl	$47009, %edi
 	call	__m3_fault
-L1441:
+L1060:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10494,14 +7795,14 @@ _bitfield__write_var_BitField_offset3_count53:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1446
+	js	L1065
 	movabsq	$9007199254740991, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1447
-L1446:
-	movl	$63649, %edi
+	jle	L1066
+L1065:
+	movl	$47265, %edi
 	call	__m3_fault
-L1447:
+L1066:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10538,14 +7839,14 @@ _bitfield__write_var_BitField_offset3_count54:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1452
+	js	L1071
 	movabsq	$18014398509481983, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1453
-L1452:
-	movl	$63905, %edi
+	jle	L1072
+L1071:
+	movl	$47521, %edi
 	call	__m3_fault
-L1453:
+L1072:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10582,14 +7883,14 @@ _bitfield__write_var_BitField_offset3_count55:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1458
+	js	L1077
 	movabsq	$36028797018963967, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1459
-L1458:
-	movl	$64161, %edi
+	jle	L1078
+L1077:
+	movl	$47777, %edi
 	call	__m3_fault
-L1459:
+L1078:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10626,14 +7927,14 @@ _bitfield__write_var_BitField_offset3_count56:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1464
+	js	L1083
 	movabsq	$72057594037927935, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1465
-L1464:
-	movl	$64417, %edi
+	jle	L1084
+L1083:
+	movl	$48033, %edi
 	call	__m3_fault
-L1465:
+L1084:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10670,14 +7971,14 @@ _bitfield__write_var_BitField_offset3_count57:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1470
+	js	L1089
 	movabsq	$144115188075855871, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1471
-L1470:
-	movl	$64673, %edi
+	jle	L1090
+L1089:
+	movl	$48289, %edi
 	call	__m3_fault
-L1471:
+L1090:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10714,14 +8015,14 @@ _bitfield__write_var_BitField_offset3_count58:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1476
+	js	L1095
 	movabsq	$288230376151711743, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1477
-L1476:
-	movl	$64929, %edi
+	jle	L1096
+L1095:
+	movl	$48545, %edi
 	call	__m3_fault
-L1477:
+L1096:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10758,14 +8059,14 @@ _bitfield__write_var_BitField_offset3_count59:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1482
+	js	L1101
 	movabsq	$576460752303423487, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1483
-L1482:
-	movl	$65185, %edi
+	jle	L1102
+L1101:
+	movl	$48801, %edi
 	call	__m3_fault
-L1483:
+L1102:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10802,14 +8103,14 @@ _bitfield__write_var_BitField_offset3_count60:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1488
+	js	L1107
 	movabsq	$1152921504606846975, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1489
-L1488:
-	movl	$65441, %edi
+	jle	L1108
+L1107:
+	movl	$49057, %edi
 	call	__m3_fault
-L1489:
+L1108:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10845,14 +8146,14 @@ _bitfield__write_var_BitField_offset3_count61:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1494
+	js	L1113
 	movabsq	$2305843009213693951, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1495
-L1494:
-	movl	$65697, %edi
+	jle	L1114
+L1113:
+	movl	$49313, %edi
 	call	__m3_fault
-L1495:
+L1114:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10888,13 +8189,13 @@ _bitfield__write_var_BitField_offset4_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1500
+	js	L1119
 	cmpq	$1, -8(%rbp)
-	jle	L1501
-L1500:
-	movl	$65953, %edi
+	jle	L1120
+L1119:
+	movl	$49569, %edi
 	call	__m3_fault
-L1501:
+L1120:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10932,13 +8233,13 @@ _bitfield__write_var_BitField_offset4_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1506
+	js	L1125
 	cmpq	$3, -8(%rbp)
-	jle	L1507
-L1506:
-	movl	$66209, %edi
+	jle	L1126
+L1125:
+	movl	$49825, %edi
 	call	__m3_fault
-L1507:
+L1126:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -10976,13 +8277,13 @@ _bitfield__write_var_BitField_offset4_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1512
+	js	L1131
 	cmpq	$7, -8(%rbp)
-	jle	L1513
-L1512:
-	movl	$66465, %edi
+	jle	L1132
+L1131:
+	movl	$50081, %edi
 	call	__m3_fault
-L1513:
+L1132:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11020,13 +8321,13 @@ _bitfield__write_var_BitField_offset4_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1518
+	js	L1137
 	cmpq	$15, -8(%rbp)
-	jle	L1519
-L1518:
-	movl	$66721, %edi
+	jle	L1138
+L1137:
+	movl	$50337, %edi
 	call	__m3_fault
-L1519:
+L1138:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11064,13 +8365,13 @@ _bitfield__write_var_BitField_offset4_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1524
+	js	L1143
 	cmpq	$31, -8(%rbp)
-	jle	L1525
-L1524:
-	movl	$66977, %edi
+	jle	L1144
+L1143:
+	movl	$50593, %edi
 	call	__m3_fault
-L1525:
+L1144:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11108,13 +8409,13 @@ _bitfield__write_var_BitField_offset4_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1530
+	js	L1149
 	cmpq	$63, -8(%rbp)
-	jle	L1531
-L1530:
-	movl	$67233, %edi
+	jle	L1150
+L1149:
+	movl	$50849, %edi
 	call	__m3_fault
-L1531:
+L1150:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11152,13 +8453,13 @@ _bitfield__write_var_BitField_offset4_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1536
+	js	L1155
 	cmpq	$127, -8(%rbp)
-	jle	L1537
-L1536:
-	movl	$67489, %edi
+	jle	L1156
+L1155:
+	movl	$51105, %edi
 	call	__m3_fault
-L1537:
+L1156:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11196,13 +8497,13 @@ _bitfield__write_var_BitField_offset4_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1542
+	js	L1161
 	cmpq	$255, -8(%rbp)
-	jle	L1543
-L1542:
-	movl	$67745, %edi
+	jle	L1162
+L1161:
+	movl	$51361, %edi
 	call	__m3_fault
-L1543:
+L1162:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11240,13 +8541,13 @@ _bitfield__write_var_BitField_offset4_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1548
+	js	L1167
 	cmpq	$511, -8(%rbp)
-	jle	L1549
-L1548:
-	movl	$68001, %edi
+	jle	L1168
+L1167:
+	movl	$51617, %edi
 	call	__m3_fault
-L1549:
+L1168:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11284,13 +8585,13 @@ _bitfield__write_var_BitField_offset4_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1554
+	js	L1173
 	cmpq	$1023, -8(%rbp)
-	jle	L1555
-L1554:
-	movl	$68257, %edi
+	jle	L1174
+L1173:
+	movl	$51873, %edi
 	call	__m3_fault
-L1555:
+L1174:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11328,13 +8629,13 @@ _bitfield__write_var_BitField_offset4_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1560
+	js	L1179
 	cmpq	$2047, -8(%rbp)
-	jle	L1561
-L1560:
-	movl	$68513, %edi
+	jle	L1180
+L1179:
+	movl	$52129, %edi
 	call	__m3_fault
-L1561:
+L1180:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11372,13 +8673,13 @@ _bitfield__write_var_BitField_offset4_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1566
+	js	L1185
 	cmpq	$4095, -8(%rbp)
-	jle	L1567
-L1566:
-	movl	$68769, %edi
+	jle	L1186
+L1185:
+	movl	$52385, %edi
 	call	__m3_fault
-L1567:
+L1186:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11416,13 +8717,13 @@ _bitfield__write_var_BitField_offset4_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1572
+	js	L1191
 	cmpq	$8191, -8(%rbp)
-	jle	L1573
-L1572:
-	movl	$69025, %edi
+	jle	L1192
+L1191:
+	movl	$52641, %edi
 	call	__m3_fault
-L1573:
+L1192:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11460,13 +8761,13 @@ _bitfield__write_var_BitField_offset4_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1578
+	js	L1197
 	cmpq	$16383, -8(%rbp)
-	jle	L1579
-L1578:
-	movl	$69281, %edi
+	jle	L1198
+L1197:
+	movl	$52897, %edi
 	call	__m3_fault
-L1579:
+L1198:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11504,13 +8805,13 @@ _bitfield__write_var_BitField_offset4_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1584
+	js	L1203
 	cmpq	$32767, -8(%rbp)
-	jle	L1585
-L1584:
-	movl	$69537, %edi
+	jle	L1204
+L1203:
+	movl	$53153, %edi
 	call	__m3_fault
-L1585:
+L1204:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11548,13 +8849,13 @@ _bitfield__write_var_BitField_offset4_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1590
+	js	L1209
 	cmpq	$65535, -8(%rbp)
-	jle	L1591
-L1590:
-	movl	$69793, %edi
+	jle	L1210
+L1209:
+	movl	$53409, %edi
 	call	__m3_fault
-L1591:
+L1210:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11592,13 +8893,13 @@ _bitfield__write_var_BitField_offset4_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1596
+	js	L1215
 	cmpq	$131071, -8(%rbp)
-	jle	L1597
-L1596:
-	movl	$70049, %edi
+	jle	L1216
+L1215:
+	movl	$53665, %edi
 	call	__m3_fault
-L1597:
+L1216:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11636,13 +8937,13 @@ _bitfield__write_var_BitField_offset4_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1602
+	js	L1221
 	cmpq	$262143, -8(%rbp)
-	jle	L1603
-L1602:
-	movl	$70305, %edi
+	jle	L1222
+L1221:
+	movl	$53921, %edi
 	call	__m3_fault
-L1603:
+L1222:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11680,13 +8981,13 @@ _bitfield__write_var_BitField_offset4_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1608
+	js	L1227
 	cmpq	$524287, -8(%rbp)
-	jle	L1609
-L1608:
-	movl	$70561, %edi
+	jle	L1228
+L1227:
+	movl	$54177, %edi
 	call	__m3_fault
-L1609:
+L1228:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11724,13 +9025,13 @@ _bitfield__write_var_BitField_offset4_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1614
+	js	L1233
 	cmpq	$1048575, -8(%rbp)
-	jle	L1615
-L1614:
-	movl	$70817, %edi
+	jle	L1234
+L1233:
+	movl	$54433, %edi
 	call	__m3_fault
-L1615:
+L1234:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11768,13 +9069,13 @@ _bitfield__write_var_BitField_offset4_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1620
+	js	L1239
 	cmpq	$2097151, -8(%rbp)
-	jle	L1621
-L1620:
-	movl	$71073, %edi
+	jle	L1240
+L1239:
+	movl	$54689, %edi
 	call	__m3_fault
-L1621:
+L1240:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11812,13 +9113,13 @@ _bitfield__write_var_BitField_offset4_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1626
+	js	L1245
 	cmpq	$4194303, -8(%rbp)
-	jle	L1627
-L1626:
-	movl	$71329, %edi
+	jle	L1246
+L1245:
+	movl	$54945, %edi
 	call	__m3_fault
-L1627:
+L1246:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11856,13 +9157,13 @@ _bitfield__write_var_BitField_offset4_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1632
+	js	L1251
 	cmpq	$8388607, -8(%rbp)
-	jle	L1633
-L1632:
-	movl	$71585, %edi
+	jle	L1252
+L1251:
+	movl	$55201, %edi
 	call	__m3_fault
-L1633:
+L1252:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11900,13 +9201,13 @@ _bitfield__write_var_BitField_offset4_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1638
+	js	L1257
 	cmpq	$16777215, -8(%rbp)
-	jle	L1639
-L1638:
-	movl	$71841, %edi
+	jle	L1258
+L1257:
+	movl	$55457, %edi
 	call	__m3_fault
-L1639:
+L1258:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11944,13 +9245,13 @@ _bitfield__write_var_BitField_offset4_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1644
+	js	L1263
 	cmpq	$33554431, -8(%rbp)
-	jle	L1645
-L1644:
-	movl	$72097, %edi
+	jle	L1264
+L1263:
+	movl	$55713, %edi
 	call	__m3_fault
-L1645:
+L1264:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -11988,13 +9289,13 @@ _bitfield__write_var_BitField_offset4_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1650
+	js	L1269
 	cmpq	$67108863, -8(%rbp)
-	jle	L1651
-L1650:
-	movl	$72353, %edi
+	jle	L1270
+L1269:
+	movl	$55969, %edi
 	call	__m3_fault
-L1651:
+L1270:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12032,13 +9333,13 @@ _bitfield__write_var_BitField_offset4_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1656
+	js	L1275
 	cmpq	$134217727, -8(%rbp)
-	jle	L1657
-L1656:
-	movl	$72609, %edi
+	jle	L1276
+L1275:
+	movl	$56225, %edi
 	call	__m3_fault
-L1657:
+L1276:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12076,13 +9377,13 @@ _bitfield__write_var_BitField_offset4_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1662
+	js	L1281
 	cmpq	$268435455, -8(%rbp)
-	jle	L1663
-L1662:
-	movl	$72865, %edi
+	jle	L1282
+L1281:
+	movl	$56481, %edi
 	call	__m3_fault
-L1663:
+L1282:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12119,13 +9420,13 @@ _bitfield__write_var_BitField_offset4_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1668
+	js	L1287
 	cmpq	$536870911, -8(%rbp)
-	jle	L1669
-L1668:
-	movl	$73121, %edi
+	jle	L1288
+L1287:
+	movl	$56737, %edi
 	call	__m3_fault
-L1669:
+L1288:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12162,13 +9463,13 @@ _bitfield__write_var_BitField_offset4_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1674
+	js	L1293
 	cmpq	$1073741823, -8(%rbp)
-	jle	L1675
-L1674:
-	movl	$73377, %edi
+	jle	L1294
+L1293:
+	movl	$56993, %edi
 	call	__m3_fault
-L1675:
+L1294:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12205,13 +9506,13 @@ _bitfield__write_var_BitField_offset4_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1680
+	js	L1299
 	cmpq	$2147483647, -8(%rbp)
-	jle	L1681
-L1680:
-	movl	$73633, %edi
+	jle	L1300
+L1299:
+	movl	$57249, %edi
 	call	__m3_fault
-L1681:
+L1300:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12248,14 +9549,14 @@ _bitfield__write_var_BitField_offset4_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1686
+	js	L1305
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L1687
-L1686:
-	movl	$73889, %edi
+	jle	L1306
+L1305:
+	movl	$57505, %edi
 	call	__m3_fault
-L1687:
+L1306:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12292,14 +9593,14 @@ _bitfield__write_var_BitField_offset4_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1692
+	js	L1311
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1693
-L1692:
-	movl	$74145, %edi
+	jle	L1312
+L1311:
+	movl	$57761, %edi
 	call	__m3_fault
-L1693:
+L1312:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12336,14 +9637,14 @@ _bitfield__write_var_BitField_offset4_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1698
+	js	L1317
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1699
-L1698:
-	movl	$74401, %edi
+	jle	L1318
+L1317:
+	movl	$58017, %edi
 	call	__m3_fault
-L1699:
+L1318:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12380,14 +9681,14 @@ _bitfield__write_var_BitField_offset4_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1704
+	js	L1323
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1705
-L1704:
-	movl	$74657, %edi
+	jle	L1324
+L1323:
+	movl	$58273, %edi
 	call	__m3_fault
-L1705:
+L1324:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12424,14 +9725,14 @@ _bitfield__write_var_BitField_offset4_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1710
+	js	L1329
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1711
-L1710:
-	movl	$74913, %edi
+	jle	L1330
+L1329:
+	movl	$58529, %edi
 	call	__m3_fault
-L1711:
+L1330:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12468,14 +9769,14 @@ _bitfield__write_var_BitField_offset4_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1716
+	js	L1335
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1717
-L1716:
-	movl	$75169, %edi
+	jle	L1336
+L1335:
+	movl	$58785, %edi
 	call	__m3_fault
-L1717:
+L1336:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12512,14 +9813,14 @@ _bitfield__write_var_BitField_offset4_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1722
+	js	L1341
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1723
-L1722:
-	movl	$75425, %edi
+	jle	L1342
+L1341:
+	movl	$59041, %edi
 	call	__m3_fault
-L1723:
+L1342:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12556,14 +9857,14 @@ _bitfield__write_var_BitField_offset4_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1728
+	js	L1347
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1729
-L1728:
-	movl	$75681, %edi
+	jle	L1348
+L1347:
+	movl	$59297, %edi
 	call	__m3_fault
-L1729:
+L1348:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12600,14 +9901,14 @@ _bitfield__write_var_BitField_offset4_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1734
+	js	L1353
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1735
-L1734:
-	movl	$75937, %edi
+	jle	L1354
+L1353:
+	movl	$59553, %edi
 	call	__m3_fault
-L1735:
+L1354:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12644,14 +9945,14 @@ _bitfield__write_var_BitField_offset4_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1740
+	js	L1359
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1741
-L1740:
-	movl	$76193, %edi
+	jle	L1360
+L1359:
+	movl	$59809, %edi
 	call	__m3_fault
-L1741:
+L1360:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12688,14 +9989,14 @@ _bitfield__write_var_BitField_offset4_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1746
+	js	L1365
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1747
-L1746:
-	movl	$76449, %edi
+	jle	L1366
+L1365:
+	movl	$60065, %edi
 	call	__m3_fault
-L1747:
+L1366:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12732,14 +10033,14 @@ _bitfield__write_var_BitField_offset4_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1752
+	js	L1371
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1753
-L1752:
-	movl	$76705, %edi
+	jle	L1372
+L1371:
+	movl	$60321, %edi
 	call	__m3_fault
-L1753:
+L1372:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12776,14 +10077,14 @@ _bitfield__write_var_BitField_offset4_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1758
+	js	L1377
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1759
-L1758:
-	movl	$76961, %edi
+	jle	L1378
+L1377:
+	movl	$60577, %edi
 	call	__m3_fault
-L1759:
+L1378:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12820,14 +10121,14 @@ _bitfield__write_var_BitField_offset4_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1764
+	js	L1383
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1765
-L1764:
-	movl	$77217, %edi
+	jle	L1384
+L1383:
+	movl	$60833, %edi
 	call	__m3_fault
-L1765:
+L1384:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12864,14 +10165,14 @@ _bitfield__write_var_BitField_offset4_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1770
+	js	L1389
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1771
-L1770:
-	movl	$77473, %edi
+	jle	L1390
+L1389:
+	movl	$61089, %edi
 	call	__m3_fault
-L1771:
+L1390:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12908,14 +10209,14 @@ _bitfield__write_var_BitField_offset4_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1776
+	js	L1395
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1777
-L1776:
-	movl	$77729, %edi
+	jle	L1396
+L1395:
+	movl	$61345, %edi
 	call	__m3_fault
-L1777:
+L1396:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12952,14 +10253,14 @@ _bitfield__write_var_BitField_offset4_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1782
+	js	L1401
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1783
-L1782:
-	movl	$77985, %edi
+	jle	L1402
+L1401:
+	movl	$61601, %edi
 	call	__m3_fault
-L1783:
+L1402:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -12996,14 +10297,14 @@ _bitfield__write_var_BitField_offset4_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1788
+	js	L1407
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1789
-L1788:
-	movl	$78241, %edi
+	jle	L1408
+L1407:
+	movl	$61857, %edi
 	call	__m3_fault
-L1789:
+L1408:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13040,14 +10341,14 @@ _bitfield__write_var_BitField_offset4_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1794
+	js	L1413
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1795
-L1794:
-	movl	$78497, %edi
+	jle	L1414
+L1413:
+	movl	$62113, %edi
 	call	__m3_fault
-L1795:
+L1414:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13084,14 +10385,14 @@ _bitfield__write_var_BitField_offset4_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1800
+	js	L1419
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1801
-L1800:
-	movl	$78753, %edi
+	jle	L1420
+L1419:
+	movl	$62369, %edi
 	call	__m3_fault
-L1801:
+L1420:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13128,14 +10429,14 @@ _bitfield__write_var_BitField_offset4_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1806
+	js	L1425
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1807
-L1806:
-	movl	$79009, %edi
+	jle	L1426
+L1425:
+	movl	$62625, %edi
 	call	__m3_fault
-L1807:
+L1426:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13172,14 +10473,14 @@ _bitfield__write_var_BitField_offset4_count53:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1812
+	js	L1431
 	movabsq	$9007199254740991, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1813
-L1812:
-	movl	$79265, %edi
+	jle	L1432
+L1431:
+	movl	$62881, %edi
 	call	__m3_fault
-L1813:
+L1432:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13216,14 +10517,14 @@ _bitfield__write_var_BitField_offset4_count54:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1818
+	js	L1437
 	movabsq	$18014398509481983, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1819
-L1818:
-	movl	$79521, %edi
+	jle	L1438
+L1437:
+	movl	$63137, %edi
 	call	__m3_fault
-L1819:
+L1438:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13260,14 +10561,14 @@ _bitfield__write_var_BitField_offset4_count55:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1824
+	js	L1443
 	movabsq	$36028797018963967, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1825
-L1824:
-	movl	$79777, %edi
+	jle	L1444
+L1443:
+	movl	$63393, %edi
 	call	__m3_fault
-L1825:
+L1444:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13304,14 +10605,14 @@ _bitfield__write_var_BitField_offset4_count56:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1830
+	js	L1449
 	movabsq	$72057594037927935, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1831
-L1830:
-	movl	$80033, %edi
+	jle	L1450
+L1449:
+	movl	$63649, %edi
 	call	__m3_fault
-L1831:
+L1450:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13348,14 +10649,14 @@ _bitfield__write_var_BitField_offset4_count57:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1836
+	js	L1455
 	movabsq	$144115188075855871, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1837
-L1836:
-	movl	$80289, %edi
+	jle	L1456
+L1455:
+	movl	$63905, %edi
 	call	__m3_fault
-L1837:
+L1456:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13392,14 +10693,14 @@ _bitfield__write_var_BitField_offset4_count58:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1842
+	js	L1461
 	movabsq	$288230376151711743, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1843
-L1842:
-	movl	$80545, %edi
+	jle	L1462
+L1461:
+	movl	$64161, %edi
 	call	__m3_fault
-L1843:
+L1462:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13436,14 +10737,14 @@ _bitfield__write_var_BitField_offset4_count59:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1848
+	js	L1467
 	movabsq	$576460752303423487, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1849
-L1848:
-	movl	$80801, %edi
+	jle	L1468
+L1467:
+	movl	$64417, %edi
 	call	__m3_fault
-L1849:
+L1468:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13479,14 +10780,14 @@ _bitfield__write_var_BitField_offset4_count60:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1854
+	js	L1473
 	movabsq	$1152921504606846975, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L1855
-L1854:
-	movl	$81057, %edi
+	jle	L1474
+L1473:
+	movl	$64673, %edi
 	call	__m3_fault
-L1855:
+L1474:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13522,13 +10823,13 @@ _bitfield__write_var_BitField_offset5_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1860
+	js	L1479
 	cmpq	$1, -8(%rbp)
-	jle	L1861
-L1860:
-	movl	$81313, %edi
+	jle	L1480
+L1479:
+	movl	$64929, %edi
 	call	__m3_fault
-L1861:
+L1480:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13566,13 +10867,13 @@ _bitfield__write_var_BitField_offset5_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1866
+	js	L1485
 	cmpq	$3, -8(%rbp)
-	jle	L1867
-L1866:
-	movl	$81569, %edi
+	jle	L1486
+L1485:
+	movl	$65185, %edi
 	call	__m3_fault
-L1867:
+L1486:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13610,13 +10911,13 @@ _bitfield__write_var_BitField_offset5_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1872
+	js	L1491
 	cmpq	$7, -8(%rbp)
-	jle	L1873
-L1872:
-	movl	$81825, %edi
+	jle	L1492
+L1491:
+	movl	$65441, %edi
 	call	__m3_fault
-L1873:
+L1492:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13654,13 +10955,13 @@ _bitfield__write_var_BitField_offset5_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1878
+	js	L1497
 	cmpq	$15, -8(%rbp)
-	jle	L1879
-L1878:
-	movl	$82081, %edi
+	jle	L1498
+L1497:
+	movl	$65697, %edi
 	call	__m3_fault
-L1879:
+L1498:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13698,13 +10999,13 @@ _bitfield__write_var_BitField_offset5_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1884
+	js	L1503
 	cmpq	$31, -8(%rbp)
-	jle	L1885
-L1884:
-	movl	$82337, %edi
+	jle	L1504
+L1503:
+	movl	$65953, %edi
 	call	__m3_fault
-L1885:
+L1504:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13742,13 +11043,13 @@ _bitfield__write_var_BitField_offset5_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1890
+	js	L1509
 	cmpq	$63, -8(%rbp)
-	jle	L1891
-L1890:
-	movl	$82593, %edi
+	jle	L1510
+L1509:
+	movl	$66209, %edi
 	call	__m3_fault
-L1891:
+L1510:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13786,13 +11087,13 @@ _bitfield__write_var_BitField_offset5_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1896
+	js	L1515
 	cmpq	$127, -8(%rbp)
-	jle	L1897
-L1896:
-	movl	$82849, %edi
+	jle	L1516
+L1515:
+	movl	$66465, %edi
 	call	__m3_fault
-L1897:
+L1516:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13830,13 +11131,13 @@ _bitfield__write_var_BitField_offset5_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1902
+	js	L1521
 	cmpq	$255, -8(%rbp)
-	jle	L1903
-L1902:
-	movl	$83105, %edi
+	jle	L1522
+L1521:
+	movl	$66721, %edi
 	call	__m3_fault
-L1903:
+L1522:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13874,13 +11175,13 @@ _bitfield__write_var_BitField_offset5_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1908
+	js	L1527
 	cmpq	$511, -8(%rbp)
-	jle	L1909
-L1908:
-	movl	$83361, %edi
+	jle	L1528
+L1527:
+	movl	$66977, %edi
 	call	__m3_fault
-L1909:
+L1528:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13918,13 +11219,13 @@ _bitfield__write_var_BitField_offset5_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1914
+	js	L1533
 	cmpq	$1023, -8(%rbp)
-	jle	L1915
-L1914:
-	movl	$83617, %edi
+	jle	L1534
+L1533:
+	movl	$67233, %edi
 	call	__m3_fault
-L1915:
+L1534:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -13962,13 +11263,13 @@ _bitfield__write_var_BitField_offset5_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1920
+	js	L1539
 	cmpq	$2047, -8(%rbp)
-	jle	L1921
-L1920:
-	movl	$83873, %edi
+	jle	L1540
+L1539:
+	movl	$67489, %edi
 	call	__m3_fault
-L1921:
+L1540:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14006,13 +11307,13 @@ _bitfield__write_var_BitField_offset5_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1926
+	js	L1545
 	cmpq	$4095, -8(%rbp)
-	jle	L1927
-L1926:
-	movl	$84129, %edi
+	jle	L1546
+L1545:
+	movl	$67745, %edi
 	call	__m3_fault
-L1927:
+L1546:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14050,13 +11351,13 @@ _bitfield__write_var_BitField_offset5_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1932
+	js	L1551
 	cmpq	$8191, -8(%rbp)
-	jle	L1933
-L1932:
-	movl	$84385, %edi
+	jle	L1552
+L1551:
+	movl	$68001, %edi
 	call	__m3_fault
-L1933:
+L1552:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14094,13 +11395,13 @@ _bitfield__write_var_BitField_offset5_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1938
+	js	L1557
 	cmpq	$16383, -8(%rbp)
-	jle	L1939
-L1938:
-	movl	$84641, %edi
+	jle	L1558
+L1557:
+	movl	$68257, %edi
 	call	__m3_fault
-L1939:
+L1558:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14138,13 +11439,13 @@ _bitfield__write_var_BitField_offset5_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1944
+	js	L1563
 	cmpq	$32767, -8(%rbp)
-	jle	L1945
-L1944:
-	movl	$84897, %edi
+	jle	L1564
+L1563:
+	movl	$68513, %edi
 	call	__m3_fault
-L1945:
+L1564:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14182,13 +11483,13 @@ _bitfield__write_var_BitField_offset5_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1950
+	js	L1569
 	cmpq	$65535, -8(%rbp)
-	jle	L1951
-L1950:
-	movl	$85153, %edi
+	jle	L1570
+L1569:
+	movl	$68769, %edi
 	call	__m3_fault
-L1951:
+L1570:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14226,13 +11527,13 @@ _bitfield__write_var_BitField_offset5_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1956
+	js	L1575
 	cmpq	$131071, -8(%rbp)
-	jle	L1957
-L1956:
-	movl	$85409, %edi
+	jle	L1576
+L1575:
+	movl	$69025, %edi
 	call	__m3_fault
-L1957:
+L1576:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14270,13 +11571,13 @@ _bitfield__write_var_BitField_offset5_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1962
+	js	L1581
 	cmpq	$262143, -8(%rbp)
-	jle	L1963
-L1962:
-	movl	$85665, %edi
+	jle	L1582
+L1581:
+	movl	$69281, %edi
 	call	__m3_fault
-L1963:
+L1582:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14314,13 +11615,13 @@ _bitfield__write_var_BitField_offset5_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1968
+	js	L1587
 	cmpq	$524287, -8(%rbp)
-	jle	L1969
-L1968:
-	movl	$85921, %edi
+	jle	L1588
+L1587:
+	movl	$69537, %edi
 	call	__m3_fault
-L1969:
+L1588:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14358,13 +11659,13 @@ _bitfield__write_var_BitField_offset5_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1974
+	js	L1593
 	cmpq	$1048575, -8(%rbp)
-	jle	L1975
-L1974:
-	movl	$86177, %edi
+	jle	L1594
+L1593:
+	movl	$69793, %edi
 	call	__m3_fault
-L1975:
+L1594:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14402,13 +11703,13 @@ _bitfield__write_var_BitField_offset5_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1980
+	js	L1599
 	cmpq	$2097151, -8(%rbp)
-	jle	L1981
-L1980:
-	movl	$86433, %edi
+	jle	L1600
+L1599:
+	movl	$70049, %edi
 	call	__m3_fault
-L1981:
+L1600:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14446,13 +11747,13 @@ _bitfield__write_var_BitField_offset5_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1986
+	js	L1605
 	cmpq	$4194303, -8(%rbp)
-	jle	L1987
-L1986:
-	movl	$86689, %edi
+	jle	L1606
+L1605:
+	movl	$70305, %edi
 	call	__m3_fault
-L1987:
+L1606:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14490,13 +11791,13 @@ _bitfield__write_var_BitField_offset5_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1992
+	js	L1611
 	cmpq	$8388607, -8(%rbp)
-	jle	L1993
-L1992:
-	movl	$86945, %edi
+	jle	L1612
+L1611:
+	movl	$70561, %edi
 	call	__m3_fault
-L1993:
+L1612:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14534,13 +11835,13 @@ _bitfield__write_var_BitField_offset5_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L1998
+	js	L1617
 	cmpq	$16777215, -8(%rbp)
-	jle	L1999
-L1998:
-	movl	$87201, %edi
+	jle	L1618
+L1617:
+	movl	$70817, %edi
 	call	__m3_fault
-L1999:
+L1618:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14578,13 +11879,13 @@ _bitfield__write_var_BitField_offset5_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2004
+	js	L1623
 	cmpq	$33554431, -8(%rbp)
-	jle	L2005
-L2004:
-	movl	$87457, %edi
+	jle	L1624
+L1623:
+	movl	$71073, %edi
 	call	__m3_fault
-L2005:
+L1624:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14622,13 +11923,13 @@ _bitfield__write_var_BitField_offset5_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2010
+	js	L1629
 	cmpq	$67108863, -8(%rbp)
-	jle	L2011
-L2010:
-	movl	$87713, %edi
+	jle	L1630
+L1629:
+	movl	$71329, %edi
 	call	__m3_fault
-L2011:
+L1630:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14666,13 +11967,13 @@ _bitfield__write_var_BitField_offset5_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2016
+	js	L1635
 	cmpq	$134217727, -8(%rbp)
-	jle	L2017
-L2016:
-	movl	$87969, %edi
+	jle	L1636
+L1635:
+	movl	$71585, %edi
 	call	__m3_fault
-L2017:
+L1636:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14709,13 +12010,13 @@ _bitfield__write_var_BitField_offset5_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2022
+	js	L1641
 	cmpq	$268435455, -8(%rbp)
-	jle	L2023
-L2022:
-	movl	$88225, %edi
+	jle	L1642
+L1641:
+	movl	$71841, %edi
 	call	__m3_fault
-L2023:
+L1642:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14752,13 +12053,13 @@ _bitfield__write_var_BitField_offset5_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2028
+	js	L1647
 	cmpq	$536870911, -8(%rbp)
-	jle	L2029
-L2028:
-	movl	$88481, %edi
+	jle	L1648
+L1647:
+	movl	$72097, %edi
 	call	__m3_fault
-L2029:
+L1648:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14795,13 +12096,13 @@ _bitfield__write_var_BitField_offset5_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2034
+	js	L1653
 	cmpq	$1073741823, -8(%rbp)
-	jle	L2035
-L2034:
-	movl	$88737, %edi
+	jle	L1654
+L1653:
+	movl	$72353, %edi
 	call	__m3_fault
-L2035:
+L1654:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14838,13 +12139,13 @@ _bitfield__write_var_BitField_offset5_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2040
+	js	L1659
 	cmpq	$2147483647, -8(%rbp)
-	jle	L2041
-L2040:
-	movl	$88993, %edi
+	jle	L1660
+L1659:
+	movl	$72609, %edi
 	call	__m3_fault
-L2041:
+L1660:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14881,14 +12182,14 @@ _bitfield__write_var_BitField_offset5_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2046
+	js	L1665
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L2047
-L2046:
-	movl	$89249, %edi
+	jle	L1666
+L1665:
+	movl	$72865, %edi
 	call	__m3_fault
-L2047:
+L1666:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14925,14 +12226,14 @@ _bitfield__write_var_BitField_offset5_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2052
+	js	L1671
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2053
-L2052:
-	movl	$89505, %edi
+	jle	L1672
+L1671:
+	movl	$73121, %edi
 	call	__m3_fault
-L2053:
+L1672:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -14969,14 +12270,14 @@ _bitfield__write_var_BitField_offset5_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2058
+	js	L1677
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2059
-L2058:
-	movl	$89761, %edi
+	jle	L1678
+L1677:
+	movl	$73377, %edi
 	call	__m3_fault
-L2059:
+L1678:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15013,14 +12314,14 @@ _bitfield__write_var_BitField_offset5_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2064
+	js	L1683
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2065
-L2064:
-	movl	$90017, %edi
+	jle	L1684
+L1683:
+	movl	$73633, %edi
 	call	__m3_fault
-L2065:
+L1684:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15057,14 +12358,14 @@ _bitfield__write_var_BitField_offset5_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2070
+	js	L1689
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2071
-L2070:
-	movl	$90273, %edi
+	jle	L1690
+L1689:
+	movl	$73889, %edi
 	call	__m3_fault
-L2071:
+L1690:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15101,14 +12402,14 @@ _bitfield__write_var_BitField_offset5_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2076
+	js	L1695
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2077
-L2076:
-	movl	$90529, %edi
+	jle	L1696
+L1695:
+	movl	$74145, %edi
 	call	__m3_fault
-L2077:
+L1696:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15145,14 +12446,14 @@ _bitfield__write_var_BitField_offset5_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2082
+	js	L1701
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2083
-L2082:
-	movl	$90785, %edi
+	jle	L1702
+L1701:
+	movl	$74401, %edi
 	call	__m3_fault
-L2083:
+L1702:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15189,14 +12490,14 @@ _bitfield__write_var_BitField_offset5_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2088
+	js	L1707
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2089
-L2088:
-	movl	$91041, %edi
+	jle	L1708
+L1707:
+	movl	$74657, %edi
 	call	__m3_fault
-L2089:
+L1708:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15233,14 +12534,14 @@ _bitfield__write_var_BitField_offset5_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2094
+	js	L1713
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2095
-L2094:
-	movl	$91297, %edi
+	jle	L1714
+L1713:
+	movl	$74913, %edi
 	call	__m3_fault
-L2095:
+L1714:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15277,14 +12578,14 @@ _bitfield__write_var_BitField_offset5_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2100
+	js	L1719
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2101
-L2100:
-	movl	$91553, %edi
+	jle	L1720
+L1719:
+	movl	$75169, %edi
 	call	__m3_fault
-L2101:
+L1720:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15321,14 +12622,14 @@ _bitfield__write_var_BitField_offset5_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2106
+	js	L1725
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2107
-L2106:
-	movl	$91809, %edi
+	jle	L1726
+L1725:
+	movl	$75425, %edi
 	call	__m3_fault
-L2107:
+L1726:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15365,14 +12666,14 @@ _bitfield__write_var_BitField_offset5_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2112
+	js	L1731
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2113
-L2112:
-	movl	$92065, %edi
+	jle	L1732
+L1731:
+	movl	$75681, %edi
 	call	__m3_fault
-L2113:
+L1732:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15409,14 +12710,14 @@ _bitfield__write_var_BitField_offset5_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2118
+	js	L1737
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2119
-L2118:
-	movl	$92321, %edi
+	jle	L1738
+L1737:
+	movl	$75937, %edi
 	call	__m3_fault
-L2119:
+L1738:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15453,14 +12754,14 @@ _bitfield__write_var_BitField_offset5_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2124
+	js	L1743
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2125
-L2124:
-	movl	$92577, %edi
+	jle	L1744
+L1743:
+	movl	$76193, %edi
 	call	__m3_fault
-L2125:
+L1744:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15497,14 +12798,14 @@ _bitfield__write_var_BitField_offset5_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2130
+	js	L1749
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2131
-L2130:
-	movl	$92833, %edi
+	jle	L1750
+L1749:
+	movl	$76449, %edi
 	call	__m3_fault
-L2131:
+L1750:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15541,14 +12842,14 @@ _bitfield__write_var_BitField_offset5_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2136
+	js	L1755
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2137
-L2136:
-	movl	$93089, %edi
+	jle	L1756
+L1755:
+	movl	$76705, %edi
 	call	__m3_fault
-L2137:
+L1756:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15585,14 +12886,14 @@ _bitfield__write_var_BitField_offset5_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2142
+	js	L1761
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2143
-L2142:
-	movl	$93345, %edi
+	jle	L1762
+L1761:
+	movl	$76961, %edi
 	call	__m3_fault
-L2143:
+L1762:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15629,14 +12930,14 @@ _bitfield__write_var_BitField_offset5_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2148
+	js	L1767
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2149
-L2148:
-	movl	$93601, %edi
+	jle	L1768
+L1767:
+	movl	$77217, %edi
 	call	__m3_fault
-L2149:
+L1768:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15673,14 +12974,14 @@ _bitfield__write_var_BitField_offset5_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2154
+	js	L1773
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2155
-L2154:
-	movl	$93857, %edi
+	jle	L1774
+L1773:
+	movl	$77473, %edi
 	call	__m3_fault
-L2155:
+L1774:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15717,14 +13018,14 @@ _bitfield__write_var_BitField_offset5_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2160
+	js	L1779
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2161
-L2160:
-	movl	$94113, %edi
+	jle	L1780
+L1779:
+	movl	$77729, %edi
 	call	__m3_fault
-L2161:
+L1780:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15761,14 +13062,14 @@ _bitfield__write_var_BitField_offset5_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2166
+	js	L1785
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2167
-L2166:
-	movl	$94369, %edi
+	jle	L1786
+L1785:
+	movl	$77985, %edi
 	call	__m3_fault
-L2167:
+L1786:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15805,14 +13106,14 @@ _bitfield__write_var_BitField_offset5_count53:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2172
+	js	L1791
 	movabsq	$9007199254740991, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2173
-L2172:
-	movl	$94625, %edi
+	jle	L1792
+L1791:
+	movl	$78241, %edi
 	call	__m3_fault
-L2173:
+L1792:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15849,14 +13150,14 @@ _bitfield__write_var_BitField_offset5_count54:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2178
+	js	L1797
 	movabsq	$18014398509481983, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2179
-L2178:
-	movl	$94881, %edi
+	jle	L1798
+L1797:
+	movl	$78497, %edi
 	call	__m3_fault
-L2179:
+L1798:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15893,14 +13194,14 @@ _bitfield__write_var_BitField_offset5_count55:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2184
+	js	L1803
 	movabsq	$36028797018963967, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2185
-L2184:
-	movl	$95137, %edi
+	jle	L1804
+L1803:
+	movl	$78753, %edi
 	call	__m3_fault
-L2185:
+L1804:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15937,14 +13238,14 @@ _bitfield__write_var_BitField_offset5_count56:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2190
+	js	L1809
 	movabsq	$72057594037927935, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2191
-L2190:
-	movl	$95393, %edi
+	jle	L1810
+L1809:
+	movl	$79009, %edi
 	call	__m3_fault
-L2191:
+L1810:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -15981,14 +13282,14 @@ _bitfield__write_var_BitField_offset5_count57:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2196
+	js	L1815
 	movabsq	$144115188075855871, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2197
-L2196:
-	movl	$95649, %edi
+	jle	L1816
+L1815:
+	movl	$79265, %edi
 	call	__m3_fault
-L2197:
+L1816:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16025,14 +13326,14 @@ _bitfield__write_var_BitField_offset5_count58:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2202
+	js	L1821
 	movabsq	$288230376151711743, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2203
-L2202:
-	movl	$95905, %edi
+	jle	L1822
+L1821:
+	movl	$79521, %edi
 	call	__m3_fault
-L2203:
+L1822:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16068,14 +13369,14 @@ _bitfield__write_var_BitField_offset5_count59:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2208
+	js	L1827
 	movabsq	$576460752303423487, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2209
-L2208:
-	movl	$96161, %edi
+	jle	L1828
+L1827:
+	movl	$79777, %edi
 	call	__m3_fault
-L2209:
+L1828:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16111,13 +13412,13 @@ _bitfield__write_var_BitField_offset6_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2214
+	js	L1833
 	cmpq	$1, -8(%rbp)
-	jle	L2215
-L2214:
-	movl	$96417, %edi
+	jle	L1834
+L1833:
+	movl	$80033, %edi
 	call	__m3_fault
-L2215:
+L1834:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16155,13 +13456,13 @@ _bitfield__write_var_BitField_offset6_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2220
+	js	L1839
 	cmpq	$3, -8(%rbp)
-	jle	L2221
-L2220:
-	movl	$96673, %edi
+	jle	L1840
+L1839:
+	movl	$80289, %edi
 	call	__m3_fault
-L2221:
+L1840:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16199,13 +13500,13 @@ _bitfield__write_var_BitField_offset6_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2226
+	js	L1845
 	cmpq	$7, -8(%rbp)
-	jle	L2227
-L2226:
-	movl	$96929, %edi
+	jle	L1846
+L1845:
+	movl	$80545, %edi
 	call	__m3_fault
-L2227:
+L1846:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16243,13 +13544,13 @@ _bitfield__write_var_BitField_offset6_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2232
+	js	L1851
 	cmpq	$15, -8(%rbp)
-	jle	L2233
-L2232:
-	movl	$97185, %edi
+	jle	L1852
+L1851:
+	movl	$80801, %edi
 	call	__m3_fault
-L2233:
+L1852:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16287,13 +13588,13 @@ _bitfield__write_var_BitField_offset6_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2238
+	js	L1857
 	cmpq	$31, -8(%rbp)
-	jle	L2239
-L2238:
-	movl	$97441, %edi
+	jle	L1858
+L1857:
+	movl	$81057, %edi
 	call	__m3_fault
-L2239:
+L1858:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16331,13 +13632,13 @@ _bitfield__write_var_BitField_offset6_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2244
+	js	L1863
 	cmpq	$63, -8(%rbp)
-	jle	L2245
-L2244:
-	movl	$97697, %edi
+	jle	L1864
+L1863:
+	movl	$81313, %edi
 	call	__m3_fault
-L2245:
+L1864:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16375,13 +13676,13 @@ _bitfield__write_var_BitField_offset6_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2250
+	js	L1869
 	cmpq	$127, -8(%rbp)
-	jle	L2251
-L2250:
-	movl	$97953, %edi
+	jle	L1870
+L1869:
+	movl	$81569, %edi
 	call	__m3_fault
-L2251:
+L1870:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16419,13 +13720,13 @@ _bitfield__write_var_BitField_offset6_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2256
+	js	L1875
 	cmpq	$255, -8(%rbp)
-	jle	L2257
-L2256:
-	movl	$98209, %edi
+	jle	L1876
+L1875:
+	movl	$81825, %edi
 	call	__m3_fault
-L2257:
+L1876:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16463,13 +13764,13 @@ _bitfield__write_var_BitField_offset6_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2262
+	js	L1881
 	cmpq	$511, -8(%rbp)
-	jle	L2263
-L2262:
-	movl	$98465, %edi
+	jle	L1882
+L1881:
+	movl	$82081, %edi
 	call	__m3_fault
-L2263:
+L1882:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16507,13 +13808,13 @@ _bitfield__write_var_BitField_offset6_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2268
+	js	L1887
 	cmpq	$1023, -8(%rbp)
-	jle	L2269
-L2268:
-	movl	$98721, %edi
+	jle	L1888
+L1887:
+	movl	$82337, %edi
 	call	__m3_fault
-L2269:
+L1888:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16551,13 +13852,13 @@ _bitfield__write_var_BitField_offset6_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2274
+	js	L1893
 	cmpq	$2047, -8(%rbp)
-	jle	L2275
-L2274:
-	movl	$98977, %edi
+	jle	L1894
+L1893:
+	movl	$82593, %edi
 	call	__m3_fault
-L2275:
+L1894:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16595,13 +13896,13 @@ _bitfield__write_var_BitField_offset6_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2280
+	js	L1899
 	cmpq	$4095, -8(%rbp)
-	jle	L2281
-L2280:
-	movl	$99233, %edi
+	jle	L1900
+L1899:
+	movl	$82849, %edi
 	call	__m3_fault
-L2281:
+L1900:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16639,13 +13940,13 @@ _bitfield__write_var_BitField_offset6_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2286
+	js	L1905
 	cmpq	$8191, -8(%rbp)
-	jle	L2287
-L2286:
-	movl	$99489, %edi
+	jle	L1906
+L1905:
+	movl	$83105, %edi
 	call	__m3_fault
-L2287:
+L1906:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16683,13 +13984,13 @@ _bitfield__write_var_BitField_offset6_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2292
+	js	L1911
 	cmpq	$16383, -8(%rbp)
-	jle	L2293
-L2292:
-	movl	$99745, %edi
+	jle	L1912
+L1911:
+	movl	$83361, %edi
 	call	__m3_fault
-L2293:
+L1912:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16727,13 +14028,13 @@ _bitfield__write_var_BitField_offset6_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2298
+	js	L1917
 	cmpq	$32767, -8(%rbp)
-	jle	L2299
-L2298:
-	movl	$100001, %edi
+	jle	L1918
+L1917:
+	movl	$83617, %edi
 	call	__m3_fault
-L2299:
+L1918:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16771,13 +14072,13 @@ _bitfield__write_var_BitField_offset6_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2304
+	js	L1923
 	cmpq	$65535, -8(%rbp)
-	jle	L2305
-L2304:
-	movl	$100257, %edi
+	jle	L1924
+L1923:
+	movl	$83873, %edi
 	call	__m3_fault
-L2305:
+L1924:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16815,13 +14116,13 @@ _bitfield__write_var_BitField_offset6_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2310
+	js	L1929
 	cmpq	$131071, -8(%rbp)
-	jle	L2311
-L2310:
-	movl	$100513, %edi
+	jle	L1930
+L1929:
+	movl	$84129, %edi
 	call	__m3_fault
-L2311:
+L1930:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16859,13 +14160,13 @@ _bitfield__write_var_BitField_offset6_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2316
+	js	L1935
 	cmpq	$262143, -8(%rbp)
-	jle	L2317
-L2316:
-	movl	$100769, %edi
+	jle	L1936
+L1935:
+	movl	$84385, %edi
 	call	__m3_fault
-L2317:
+L1936:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16903,13 +14204,13 @@ _bitfield__write_var_BitField_offset6_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2322
+	js	L1941
 	cmpq	$524287, -8(%rbp)
-	jle	L2323
-L2322:
-	movl	$101025, %edi
+	jle	L1942
+L1941:
+	movl	$84641, %edi
 	call	__m3_fault
-L2323:
+L1942:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16947,13 +14248,13 @@ _bitfield__write_var_BitField_offset6_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2328
+	js	L1947
 	cmpq	$1048575, -8(%rbp)
-	jle	L2329
-L2328:
-	movl	$101281, %edi
+	jle	L1948
+L1947:
+	movl	$84897, %edi
 	call	__m3_fault
-L2329:
+L1948:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -16991,13 +14292,13 @@ _bitfield__write_var_BitField_offset6_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2334
+	js	L1953
 	cmpq	$2097151, -8(%rbp)
-	jle	L2335
-L2334:
-	movl	$101537, %edi
+	jle	L1954
+L1953:
+	movl	$85153, %edi
 	call	__m3_fault
-L2335:
+L1954:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17035,13 +14336,13 @@ _bitfield__write_var_BitField_offset6_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2340
+	js	L1959
 	cmpq	$4194303, -8(%rbp)
-	jle	L2341
-L2340:
-	movl	$101793, %edi
+	jle	L1960
+L1959:
+	movl	$85409, %edi
 	call	__m3_fault
-L2341:
+L1960:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17079,13 +14380,13 @@ _bitfield__write_var_BitField_offset6_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2346
+	js	L1965
 	cmpq	$8388607, -8(%rbp)
-	jle	L2347
-L2346:
-	movl	$102049, %edi
+	jle	L1966
+L1965:
+	movl	$85665, %edi
 	call	__m3_fault
-L2347:
+L1966:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17123,13 +14424,13 @@ _bitfield__write_var_BitField_offset6_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2352
+	js	L1971
 	cmpq	$16777215, -8(%rbp)
-	jle	L2353
-L2352:
-	movl	$102305, %edi
+	jle	L1972
+L1971:
+	movl	$85921, %edi
 	call	__m3_fault
-L2353:
+L1972:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17167,13 +14468,13 @@ _bitfield__write_var_BitField_offset6_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2358
+	js	L1977
 	cmpq	$33554431, -8(%rbp)
-	jle	L2359
-L2358:
-	movl	$102561, %edi
+	jle	L1978
+L1977:
+	movl	$86177, %edi
 	call	__m3_fault
-L2359:
+L1978:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17211,13 +14512,13 @@ _bitfield__write_var_BitField_offset6_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2364
+	js	L1983
 	cmpq	$67108863, -8(%rbp)
-	jle	L2365
-L2364:
-	movl	$102817, %edi
+	jle	L1984
+L1983:
+	movl	$86433, %edi
 	call	__m3_fault
-L2365:
+L1984:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17254,13 +14555,13 @@ _bitfield__write_var_BitField_offset6_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2370
+	js	L1989
 	cmpq	$134217727, -8(%rbp)
-	jle	L2371
-L2370:
-	movl	$103073, %edi
+	jle	L1990
+L1989:
+	movl	$86689, %edi
 	call	__m3_fault
-L2371:
+L1990:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17297,13 +14598,13 @@ _bitfield__write_var_BitField_offset6_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2376
+	js	L1995
 	cmpq	$268435455, -8(%rbp)
-	jle	L2377
-L2376:
-	movl	$103329, %edi
+	jle	L1996
+L1995:
+	movl	$86945, %edi
 	call	__m3_fault
-L2377:
+L1996:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17340,13 +14641,13 @@ _bitfield__write_var_BitField_offset6_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2382
+	js	L2001
 	cmpq	$536870911, -8(%rbp)
-	jle	L2383
-L2382:
-	movl	$103585, %edi
+	jle	L2002
+L2001:
+	movl	$87201, %edi
 	call	__m3_fault
-L2383:
+L2002:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17383,13 +14684,13 @@ _bitfield__write_var_BitField_offset6_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2388
+	js	L2007
 	cmpq	$1073741823, -8(%rbp)
-	jle	L2389
-L2388:
-	movl	$103841, %edi
+	jle	L2008
+L2007:
+	movl	$87457, %edi
 	call	__m3_fault
-L2389:
+L2008:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17426,13 +14727,13 @@ _bitfield__write_var_BitField_offset6_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2394
+	js	L2013
 	cmpq	$2147483647, -8(%rbp)
-	jle	L2395
-L2394:
-	movl	$104097, %edi
+	jle	L2014
+L2013:
+	movl	$87713, %edi
 	call	__m3_fault
-L2395:
+L2014:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17469,14 +14770,14 @@ _bitfield__write_var_BitField_offset6_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2400
+	js	L2019
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L2401
-L2400:
-	movl	$104353, %edi
+	jle	L2020
+L2019:
+	movl	$87969, %edi
 	call	__m3_fault
-L2401:
+L2020:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17513,14 +14814,14 @@ _bitfield__write_var_BitField_offset6_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2406
+	js	L2025
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2407
-L2406:
-	movl	$104609, %edi
+	jle	L2026
+L2025:
+	movl	$88225, %edi
 	call	__m3_fault
-L2407:
+L2026:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17557,14 +14858,14 @@ _bitfield__write_var_BitField_offset6_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2412
+	js	L2031
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2413
-L2412:
-	movl	$104865, %edi
+	jle	L2032
+L2031:
+	movl	$88481, %edi
 	call	__m3_fault
-L2413:
+L2032:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17601,14 +14902,14 @@ _bitfield__write_var_BitField_offset6_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2418
+	js	L2037
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2419
-L2418:
-	movl	$105121, %edi
+	jle	L2038
+L2037:
+	movl	$88737, %edi
 	call	__m3_fault
-L2419:
+L2038:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17645,14 +14946,14 @@ _bitfield__write_var_BitField_offset6_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2424
+	js	L2043
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2425
-L2424:
-	movl	$105377, %edi
+	jle	L2044
+L2043:
+	movl	$88993, %edi
 	call	__m3_fault
-L2425:
+L2044:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17689,14 +14990,14 @@ _bitfield__write_var_BitField_offset6_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2430
+	js	L2049
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2431
-L2430:
-	movl	$105633, %edi
+	jle	L2050
+L2049:
+	movl	$89249, %edi
 	call	__m3_fault
-L2431:
+L2050:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17733,14 +15034,14 @@ _bitfield__write_var_BitField_offset6_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2436
+	js	L2055
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2437
-L2436:
-	movl	$105889, %edi
+	jle	L2056
+L2055:
+	movl	$89505, %edi
 	call	__m3_fault
-L2437:
+L2056:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17777,14 +15078,14 @@ _bitfield__write_var_BitField_offset6_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2442
+	js	L2061
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2443
-L2442:
-	movl	$106145, %edi
+	jle	L2062
+L2061:
+	movl	$89761, %edi
 	call	__m3_fault
-L2443:
+L2062:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17821,14 +15122,14 @@ _bitfield__write_var_BitField_offset6_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2448
+	js	L2067
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2449
-L2448:
-	movl	$106401, %edi
+	jle	L2068
+L2067:
+	movl	$90017, %edi
 	call	__m3_fault
-L2449:
+L2068:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17865,14 +15166,14 @@ _bitfield__write_var_BitField_offset6_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2454
+	js	L2073
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2455
-L2454:
-	movl	$106657, %edi
+	jle	L2074
+L2073:
+	movl	$90273, %edi
 	call	__m3_fault
-L2455:
+L2074:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17909,14 +15210,14 @@ _bitfield__write_var_BitField_offset6_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2460
+	js	L2079
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2461
-L2460:
-	movl	$106913, %edi
+	jle	L2080
+L2079:
+	movl	$90529, %edi
 	call	__m3_fault
-L2461:
+L2080:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17953,14 +15254,14 @@ _bitfield__write_var_BitField_offset6_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2466
+	js	L2085
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2467
-L2466:
-	movl	$107169, %edi
+	jle	L2086
+L2085:
+	movl	$90785, %edi
 	call	__m3_fault
-L2467:
+L2086:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -17997,14 +15298,14 @@ _bitfield__write_var_BitField_offset6_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2472
+	js	L2091
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2473
-L2472:
-	movl	$107425, %edi
+	jle	L2092
+L2091:
+	movl	$91041, %edi
 	call	__m3_fault
-L2473:
+L2092:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18041,14 +15342,14 @@ _bitfield__write_var_BitField_offset6_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2478
+	js	L2097
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2479
-L2478:
-	movl	$107681, %edi
+	jle	L2098
+L2097:
+	movl	$91297, %edi
 	call	__m3_fault
-L2479:
+L2098:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18085,14 +15386,14 @@ _bitfield__write_var_BitField_offset6_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2484
+	js	L2103
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2485
-L2484:
-	movl	$107937, %edi
+	jle	L2104
+L2103:
+	movl	$91553, %edi
 	call	__m3_fault
-L2485:
+L2104:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18129,14 +15430,14 @@ _bitfield__write_var_BitField_offset6_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2490
+	js	L2109
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2491
-L2490:
-	movl	$108193, %edi
+	jle	L2110
+L2109:
+	movl	$91809, %edi
 	call	__m3_fault
-L2491:
+L2110:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18173,14 +15474,14 @@ _bitfield__write_var_BitField_offset6_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2496
+	js	L2115
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2497
-L2496:
-	movl	$108449, %edi
+	jle	L2116
+L2115:
+	movl	$92065, %edi
 	call	__m3_fault
-L2497:
+L2116:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18217,14 +15518,14 @@ _bitfield__write_var_BitField_offset6_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2502
+	js	L2121
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2503
-L2502:
-	movl	$108705, %edi
+	jle	L2122
+L2121:
+	movl	$92321, %edi
 	call	__m3_fault
-L2503:
+L2122:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18261,14 +15562,14 @@ _bitfield__write_var_BitField_offset6_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2508
+	js	L2127
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2509
-L2508:
-	movl	$108961, %edi
+	jle	L2128
+L2127:
+	movl	$92577, %edi
 	call	__m3_fault
-L2509:
+L2128:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18305,14 +15606,14 @@ _bitfield__write_var_BitField_offset6_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2514
+	js	L2133
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2515
-L2514:
-	movl	$109217, %edi
+	jle	L2134
+L2133:
+	movl	$92833, %edi
 	call	__m3_fault
-L2515:
+L2134:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18349,14 +15650,14 @@ _bitfield__write_var_BitField_offset6_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2520
+	js	L2139
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2521
-L2520:
-	movl	$109473, %edi
+	jle	L2140
+L2139:
+	movl	$93089, %edi
 	call	__m3_fault
-L2521:
+L2140:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18393,14 +15694,14 @@ _bitfield__write_var_BitField_offset6_count53:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2526
+	js	L2145
 	movabsq	$9007199254740991, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2527
-L2526:
-	movl	$109729, %edi
+	jle	L2146
+L2145:
+	movl	$93345, %edi
 	call	__m3_fault
-L2527:
+L2146:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18437,14 +15738,14 @@ _bitfield__write_var_BitField_offset6_count54:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2532
+	js	L2151
 	movabsq	$18014398509481983, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2533
-L2532:
-	movl	$109985, %edi
+	jle	L2152
+L2151:
+	movl	$93601, %edi
 	call	__m3_fault
-L2533:
+L2152:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18481,14 +15782,14 @@ _bitfield__write_var_BitField_offset6_count55:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2538
+	js	L2157
 	movabsq	$36028797018963967, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2539
-L2538:
-	movl	$110241, %edi
+	jle	L2158
+L2157:
+	movl	$93857, %edi
 	call	__m3_fault
-L2539:
+L2158:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18525,14 +15826,14 @@ _bitfield__write_var_BitField_offset6_count56:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2544
+	js	L2163
 	movabsq	$72057594037927935, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2545
-L2544:
-	movl	$110497, %edi
+	jle	L2164
+L2163:
+	movl	$94113, %edi
 	call	__m3_fault
-L2545:
+L2164:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18569,14 +15870,14 @@ _bitfield__write_var_BitField_offset6_count57:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2550
+	js	L2169
 	movabsq	$144115188075855871, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2551
-L2550:
-	movl	$110753, %edi
+	jle	L2170
+L2169:
+	movl	$94369, %edi
 	call	__m3_fault
-L2551:
+L2170:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18612,14 +15913,14 @@ _bitfield__write_var_BitField_offset6_count58:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2556
+	js	L2175
 	movabsq	$288230376151711743, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2557
-L2556:
-	movl	$111009, %edi
+	jle	L2176
+L2175:
+	movl	$94625, %edi
 	call	__m3_fault
-L2557:
+L2176:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18655,13 +15956,13 @@ _bitfield__write_var_BitField_offset7_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2562
+	js	L2181
 	cmpq	$1, -8(%rbp)
-	jle	L2563
-L2562:
-	movl	$111265, %edi
+	jle	L2182
+L2181:
+	movl	$94881, %edi
 	call	__m3_fault
-L2563:
+L2182:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18699,13 +16000,13 @@ _bitfield__write_var_BitField_offset7_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2568
+	js	L2187
 	cmpq	$3, -8(%rbp)
-	jle	L2569
-L2568:
-	movl	$111521, %edi
+	jle	L2188
+L2187:
+	movl	$95137, %edi
 	call	__m3_fault
-L2569:
+L2188:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18743,13 +16044,13 @@ _bitfield__write_var_BitField_offset7_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2574
+	js	L2193
 	cmpq	$7, -8(%rbp)
-	jle	L2575
-L2574:
-	movl	$111777, %edi
+	jle	L2194
+L2193:
+	movl	$95393, %edi
 	call	__m3_fault
-L2575:
+L2194:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18787,13 +16088,13 @@ _bitfield__write_var_BitField_offset7_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2580
+	js	L2199
 	cmpq	$15, -8(%rbp)
-	jle	L2581
-L2580:
-	movl	$112033, %edi
+	jle	L2200
+L2199:
+	movl	$95649, %edi
 	call	__m3_fault
-L2581:
+L2200:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18831,13 +16132,13 @@ _bitfield__write_var_BitField_offset7_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2586
+	js	L2205
 	cmpq	$31, -8(%rbp)
-	jle	L2587
-L2586:
-	movl	$112289, %edi
+	jle	L2206
+L2205:
+	movl	$95905, %edi
 	call	__m3_fault
-L2587:
+L2206:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18875,13 +16176,13 @@ _bitfield__write_var_BitField_offset7_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2592
+	js	L2211
 	cmpq	$63, -8(%rbp)
-	jle	L2593
-L2592:
-	movl	$112545, %edi
+	jle	L2212
+L2211:
+	movl	$96161, %edi
 	call	__m3_fault
-L2593:
+L2212:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18919,13 +16220,13 @@ _bitfield__write_var_BitField_offset7_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2598
+	js	L2217
 	cmpq	$127, -8(%rbp)
-	jle	L2599
-L2598:
-	movl	$112801, %edi
+	jle	L2218
+L2217:
+	movl	$96417, %edi
 	call	__m3_fault
-L2599:
+L2218:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -18963,13 +16264,13 @@ _bitfield__write_var_BitField_offset7_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2604
+	js	L2223
 	cmpq	$255, -8(%rbp)
-	jle	L2605
-L2604:
-	movl	$113057, %edi
+	jle	L2224
+L2223:
+	movl	$96673, %edi
 	call	__m3_fault
-L2605:
+L2224:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19007,13 +16308,13 @@ _bitfield__write_var_BitField_offset7_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2610
+	js	L2229
 	cmpq	$511, -8(%rbp)
-	jle	L2611
-L2610:
-	movl	$113313, %edi
+	jle	L2230
+L2229:
+	movl	$96929, %edi
 	call	__m3_fault
-L2611:
+L2230:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19051,13 +16352,13 @@ _bitfield__write_var_BitField_offset7_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2616
+	js	L2235
 	cmpq	$1023, -8(%rbp)
-	jle	L2617
-L2616:
-	movl	$113569, %edi
+	jle	L2236
+L2235:
+	movl	$97185, %edi
 	call	__m3_fault
-L2617:
+L2236:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19095,13 +16396,13 @@ _bitfield__write_var_BitField_offset7_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2622
+	js	L2241
 	cmpq	$2047, -8(%rbp)
-	jle	L2623
-L2622:
-	movl	$113825, %edi
+	jle	L2242
+L2241:
+	movl	$97441, %edi
 	call	__m3_fault
-L2623:
+L2242:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19139,13 +16440,13 @@ _bitfield__write_var_BitField_offset7_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2628
+	js	L2247
 	cmpq	$4095, -8(%rbp)
-	jle	L2629
-L2628:
-	movl	$114081, %edi
+	jle	L2248
+L2247:
+	movl	$97697, %edi
 	call	__m3_fault
-L2629:
+L2248:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19183,13 +16484,13 @@ _bitfield__write_var_BitField_offset7_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2634
+	js	L2253
 	cmpq	$8191, -8(%rbp)
-	jle	L2635
-L2634:
-	movl	$114337, %edi
+	jle	L2254
+L2253:
+	movl	$97953, %edi
 	call	__m3_fault
-L2635:
+L2254:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19227,13 +16528,13 @@ _bitfield__write_var_BitField_offset7_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2640
+	js	L2259
 	cmpq	$16383, -8(%rbp)
-	jle	L2641
-L2640:
-	movl	$114593, %edi
+	jle	L2260
+L2259:
+	movl	$98209, %edi
 	call	__m3_fault
-L2641:
+L2260:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19271,13 +16572,13 @@ _bitfield__write_var_BitField_offset7_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2646
+	js	L2265
 	cmpq	$32767, -8(%rbp)
-	jle	L2647
-L2646:
-	movl	$114849, %edi
+	jle	L2266
+L2265:
+	movl	$98465, %edi
 	call	__m3_fault
-L2647:
+L2266:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19315,13 +16616,13 @@ _bitfield__write_var_BitField_offset7_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2652
+	js	L2271
 	cmpq	$65535, -8(%rbp)
-	jle	L2653
-L2652:
-	movl	$115105, %edi
+	jle	L2272
+L2271:
+	movl	$98721, %edi
 	call	__m3_fault
-L2653:
+L2272:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19359,13 +16660,13 @@ _bitfield__write_var_BitField_offset7_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2658
+	js	L2277
 	cmpq	$131071, -8(%rbp)
-	jle	L2659
-L2658:
-	movl	$115361, %edi
+	jle	L2278
+L2277:
+	movl	$98977, %edi
 	call	__m3_fault
-L2659:
+L2278:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19403,13 +16704,13 @@ _bitfield__write_var_BitField_offset7_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2664
+	js	L2283
 	cmpq	$262143, -8(%rbp)
-	jle	L2665
-L2664:
-	movl	$115617, %edi
+	jle	L2284
+L2283:
+	movl	$99233, %edi
 	call	__m3_fault
-L2665:
+L2284:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19447,13 +16748,13 @@ _bitfield__write_var_BitField_offset7_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2670
+	js	L2289
 	cmpq	$524287, -8(%rbp)
-	jle	L2671
-L2670:
-	movl	$115873, %edi
+	jle	L2290
+L2289:
+	movl	$99489, %edi
 	call	__m3_fault
-L2671:
+L2290:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19491,13 +16792,13 @@ _bitfield__write_var_BitField_offset7_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2676
+	js	L2295
 	cmpq	$1048575, -8(%rbp)
-	jle	L2677
-L2676:
-	movl	$116129, %edi
+	jle	L2296
+L2295:
+	movl	$99745, %edi
 	call	__m3_fault
-L2677:
+L2296:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19535,13 +16836,13 @@ _bitfield__write_var_BitField_offset7_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2682
+	js	L2301
 	cmpq	$2097151, -8(%rbp)
-	jle	L2683
-L2682:
-	movl	$116385, %edi
+	jle	L2302
+L2301:
+	movl	$100001, %edi
 	call	__m3_fault
-L2683:
+L2302:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19579,13 +16880,13 @@ _bitfield__write_var_BitField_offset7_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2688
+	js	L2307
 	cmpq	$4194303, -8(%rbp)
-	jle	L2689
-L2688:
-	movl	$116641, %edi
+	jle	L2308
+L2307:
+	movl	$100257, %edi
 	call	__m3_fault
-L2689:
+L2308:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19623,13 +16924,13 @@ _bitfield__write_var_BitField_offset7_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2694
+	js	L2313
 	cmpq	$8388607, -8(%rbp)
-	jle	L2695
-L2694:
-	movl	$116897, %edi
+	jle	L2314
+L2313:
+	movl	$100513, %edi
 	call	__m3_fault
-L2695:
+L2314:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19667,13 +16968,13 @@ _bitfield__write_var_BitField_offset7_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2700
+	js	L2319
 	cmpq	$16777215, -8(%rbp)
-	jle	L2701
-L2700:
-	movl	$117153, %edi
+	jle	L2320
+L2319:
+	movl	$100769, %edi
 	call	__m3_fault
-L2701:
+L2320:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19711,13 +17012,13 @@ _bitfield__write_var_BitField_offset7_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2706
+	js	L2325
 	cmpq	$33554431, -8(%rbp)
-	jle	L2707
-L2706:
-	movl	$117409, %edi
+	jle	L2326
+L2325:
+	movl	$101025, %edi
 	call	__m3_fault
-L2707:
+L2326:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19754,13 +17055,13 @@ _bitfield__write_var_BitField_offset7_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2712
+	js	L2331
 	cmpq	$67108863, -8(%rbp)
-	jle	L2713
-L2712:
-	movl	$117665, %edi
+	jle	L2332
+L2331:
+	movl	$101281, %edi
 	call	__m3_fault
-L2713:
+L2332:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19797,13 +17098,13 @@ _bitfield__write_var_BitField_offset7_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2718
+	js	L2337
 	cmpq	$134217727, -8(%rbp)
-	jle	L2719
-L2718:
-	movl	$117921, %edi
+	jle	L2338
+L2337:
+	movl	$101537, %edi
 	call	__m3_fault
-L2719:
+L2338:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19840,13 +17141,13 @@ _bitfield__write_var_BitField_offset7_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2724
+	js	L2343
 	cmpq	$268435455, -8(%rbp)
-	jle	L2725
-L2724:
-	movl	$118177, %edi
+	jle	L2344
+L2343:
+	movl	$101793, %edi
 	call	__m3_fault
-L2725:
+L2344:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19883,13 +17184,13 @@ _bitfield__write_var_BitField_offset7_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2730
+	js	L2349
 	cmpq	$536870911, -8(%rbp)
-	jle	L2731
-L2730:
-	movl	$118433, %edi
+	jle	L2350
+L2349:
+	movl	$102049, %edi
 	call	__m3_fault
-L2731:
+L2350:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19926,13 +17227,13 @@ _bitfield__write_var_BitField_offset7_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2736
+	js	L2355
 	cmpq	$1073741823, -8(%rbp)
-	jle	L2737
-L2736:
-	movl	$118689, %edi
+	jle	L2356
+L2355:
+	movl	$102305, %edi
 	call	__m3_fault
-L2737:
+L2356:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -19969,13 +17270,13 @@ _bitfield__write_var_BitField_offset7_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2742
+	js	L2361
 	cmpq	$2147483647, -8(%rbp)
-	jle	L2743
-L2742:
-	movl	$118945, %edi
+	jle	L2362
+L2361:
+	movl	$102561, %edi
 	call	__m3_fault
-L2743:
+L2362:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20012,14 +17313,14 @@ _bitfield__write_var_BitField_offset7_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2748
+	js	L2367
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L2749
-L2748:
-	movl	$119201, %edi
+	jle	L2368
+L2367:
+	movl	$102817, %edi
 	call	__m3_fault
-L2749:
+L2368:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20056,14 +17357,14 @@ _bitfield__write_var_BitField_offset7_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2754
+	js	L2373
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2755
-L2754:
-	movl	$119457, %edi
+	jle	L2374
+L2373:
+	movl	$103073, %edi
 	call	__m3_fault
-L2755:
+L2374:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20100,14 +17401,14 @@ _bitfield__write_var_BitField_offset7_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2760
+	js	L2379
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2761
-L2760:
-	movl	$119713, %edi
+	jle	L2380
+L2379:
+	movl	$103329, %edi
 	call	__m3_fault
-L2761:
+L2380:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20144,14 +17445,14 @@ _bitfield__write_var_BitField_offset7_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2766
+	js	L2385
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2767
-L2766:
-	movl	$119969, %edi
+	jle	L2386
+L2385:
+	movl	$103585, %edi
 	call	__m3_fault
-L2767:
+L2386:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20188,14 +17489,14 @@ _bitfield__write_var_BitField_offset7_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2772
+	js	L2391
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2773
-L2772:
-	movl	$120225, %edi
+	jle	L2392
+L2391:
+	movl	$103841, %edi
 	call	__m3_fault
-L2773:
+L2392:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20232,14 +17533,14 @@ _bitfield__write_var_BitField_offset7_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2778
+	js	L2397
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2779
-L2778:
-	movl	$120481, %edi
+	jle	L2398
+L2397:
+	movl	$104097, %edi
 	call	__m3_fault
-L2779:
+L2398:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20276,14 +17577,14 @@ _bitfield__write_var_BitField_offset7_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2784
+	js	L2403
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2785
-L2784:
-	movl	$120737, %edi
+	jle	L2404
+L2403:
+	movl	$104353, %edi
 	call	__m3_fault
-L2785:
+L2404:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20320,14 +17621,14 @@ _bitfield__write_var_BitField_offset7_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2790
+	js	L2409
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2791
-L2790:
-	movl	$120993, %edi
+	jle	L2410
+L2409:
+	movl	$104609, %edi
 	call	__m3_fault
-L2791:
+L2410:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20364,14 +17665,14 @@ _bitfield__write_var_BitField_offset7_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2796
+	js	L2415
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2797
-L2796:
-	movl	$121249, %edi
+	jle	L2416
+L2415:
+	movl	$104865, %edi
 	call	__m3_fault
-L2797:
+L2416:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20408,14 +17709,14 @@ _bitfield__write_var_BitField_offset7_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2802
+	js	L2421
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2803
-L2802:
-	movl	$121505, %edi
+	jle	L2422
+L2421:
+	movl	$105121, %edi
 	call	__m3_fault
-L2803:
+L2422:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20452,14 +17753,14 @@ _bitfield__write_var_BitField_offset7_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2808
+	js	L2427
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2809
-L2808:
-	movl	$121761, %edi
+	jle	L2428
+L2427:
+	movl	$105377, %edi
 	call	__m3_fault
-L2809:
+L2428:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20496,14 +17797,14 @@ _bitfield__write_var_BitField_offset7_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2814
+	js	L2433
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2815
-L2814:
-	movl	$122017, %edi
+	jle	L2434
+L2433:
+	movl	$105633, %edi
 	call	__m3_fault
-L2815:
+L2434:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20540,14 +17841,14 @@ _bitfield__write_var_BitField_offset7_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2820
+	js	L2439
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2821
-L2820:
-	movl	$122273, %edi
+	jle	L2440
+L2439:
+	movl	$105889, %edi
 	call	__m3_fault
-L2821:
+L2440:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20584,14 +17885,14 @@ _bitfield__write_var_BitField_offset7_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2826
+	js	L2445
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2827
-L2826:
-	movl	$122529, %edi
+	jle	L2446
+L2445:
+	movl	$106145, %edi
 	call	__m3_fault
-L2827:
+L2446:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20628,14 +17929,14 @@ _bitfield__write_var_BitField_offset7_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2832
+	js	L2451
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2833
-L2832:
-	movl	$122785, %edi
+	jle	L2452
+L2451:
+	movl	$106401, %edi
 	call	__m3_fault
-L2833:
+L2452:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20672,14 +17973,14 @@ _bitfield__write_var_BitField_offset7_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2838
+	js	L2457
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2839
-L2838:
-	movl	$123041, %edi
+	jle	L2458
+L2457:
+	movl	$106657, %edi
 	call	__m3_fault
-L2839:
+L2458:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20716,14 +18017,14 @@ _bitfield__write_var_BitField_offset7_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2844
+	js	L2463
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2845
-L2844:
-	movl	$123297, %edi
+	jle	L2464
+L2463:
+	movl	$106913, %edi
 	call	__m3_fault
-L2845:
+L2464:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20760,14 +18061,14 @@ _bitfield__write_var_BitField_offset7_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2850
+	js	L2469
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2851
-L2850:
-	movl	$123553, %edi
+	jle	L2470
+L2469:
+	movl	$107169, %edi
 	call	__m3_fault
-L2851:
+L2470:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20804,14 +18105,14 @@ _bitfield__write_var_BitField_offset7_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2856
+	js	L2475
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2857
-L2856:
-	movl	$123809, %edi
+	jle	L2476
+L2475:
+	movl	$107425, %edi
 	call	__m3_fault
-L2857:
+L2476:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20848,14 +18149,14 @@ _bitfield__write_var_BitField_offset7_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2862
+	js	L2481
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2863
-L2862:
-	movl	$124065, %edi
+	jle	L2482
+L2481:
+	movl	$107681, %edi
 	call	__m3_fault
-L2863:
+L2482:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20892,14 +18193,14 @@ _bitfield__write_var_BitField_offset7_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2868
+	js	L2487
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2869
-L2868:
-	movl	$124321, %edi
+	jle	L2488
+L2487:
+	movl	$107937, %edi
 	call	__m3_fault
-L2869:
+L2488:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20936,14 +18237,14 @@ _bitfield__write_var_BitField_offset7_count53:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2874
+	js	L2493
 	movabsq	$9007199254740991, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2875
-L2874:
-	movl	$124577, %edi
+	jle	L2494
+L2493:
+	movl	$108193, %edi
 	call	__m3_fault
-L2875:
+L2494:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -20980,14 +18281,14 @@ _bitfield__write_var_BitField_offset7_count54:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2880
+	js	L2499
 	movabsq	$18014398509481983, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2881
-L2880:
-	movl	$124833, %edi
+	jle	L2500
+L2499:
+	movl	$108449, %edi
 	call	__m3_fault
-L2881:
+L2500:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21024,14 +18325,14 @@ _bitfield__write_var_BitField_offset7_count55:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2886
+	js	L2505
 	movabsq	$36028797018963967, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2887
-L2886:
-	movl	$125089, %edi
+	jle	L2506
+L2505:
+	movl	$108705, %edi
 	call	__m3_fault
-L2887:
+L2506:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21068,14 +18369,14 @@ _bitfield__write_var_BitField_offset7_count56:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2892
+	js	L2511
 	movabsq	$72057594037927935, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2893
-L2892:
-	movl	$125345, %edi
+	jle	L2512
+L2511:
+	movl	$108961, %edi
 	call	__m3_fault
-L2893:
+L2512:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21111,14 +18412,14 @@ _bitfield__write_var_BitField_offset7_count57:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2898
+	js	L2517
 	movabsq	$144115188075855871, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L2899
-L2898:
-	movl	$125601, %edi
+	jle	L2518
+L2517:
+	movl	$109217, %edi
 	call	__m3_fault
-L2899:
+L2518:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21153,13 +18454,13 @@ _bitfield__write_var_BitField_offset8_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2904
+	js	L2523
 	cmpq	$1, -8(%rbp)
-	jle	L2905
-L2904:
-	movl	$125857, %edi
+	jle	L2524
+L2523:
+	movl	$109473, %edi
 	call	__m3_fault
-L2905:
+L2524:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -21197,13 +18498,13 @@ _bitfield__write_var_BitField_offset8_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2910
+	js	L2529
 	cmpq	$3, -8(%rbp)
-	jle	L2911
-L2910:
-	movl	$126113, %edi
+	jle	L2530
+L2529:
+	movl	$109729, %edi
 	call	__m3_fault
-L2911:
+L2530:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -21241,13 +18542,13 @@ _bitfield__write_var_BitField_offset8_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2916
+	js	L2535
 	cmpq	$7, -8(%rbp)
-	jle	L2917
-L2916:
-	movl	$126369, %edi
+	jle	L2536
+L2535:
+	movl	$109985, %edi
 	call	__m3_fault
-L2917:
+L2536:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -21285,13 +18586,13 @@ _bitfield__write_var_BitField_offset8_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2922
+	js	L2541
 	cmpq	$15, -8(%rbp)
-	jle	L2923
-L2922:
-	movl	$126625, %edi
+	jle	L2542
+L2541:
+	movl	$110241, %edi
 	call	__m3_fault
-L2923:
+L2542:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -21329,13 +18630,13 @@ _bitfield__write_var_BitField_offset8_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2928
+	js	L2547
 	cmpq	$31, -8(%rbp)
-	jle	L2929
-L2928:
-	movl	$126881, %edi
+	jle	L2548
+L2547:
+	movl	$110497, %edi
 	call	__m3_fault
-L2929:
+L2548:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -21373,13 +18674,13 @@ _bitfield__write_var_BitField_offset8_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2934
+	js	L2553
 	cmpq	$63, -8(%rbp)
-	jle	L2935
-L2934:
-	movl	$127137, %edi
+	jle	L2554
+L2553:
+	movl	$110753, %edi
 	call	__m3_fault
-L2935:
+L2554:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -21417,13 +18718,13 @@ _bitfield__write_var_BitField_offset8_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2940
+	js	L2559
 	cmpq	$127, -8(%rbp)
-	jle	L2941
-L2940:
-	movl	$127393, %edi
+	jle	L2560
+L2559:
+	movl	$111009, %edi
 	call	__m3_fault
-L2941:
+L2560:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -21460,13 +18761,13 @@ _bitfield__write_var_BitField_offset8_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2946
+	js	L2565
 	cmpq	$255, -8(%rbp)
-	jle	L2947
-L2946:
-	movl	$127649, %edi
+	jle	L2566
+L2565:
+	movl	$111265, %edi
 	call	__m3_fault
-L2947:
+L2566:
 	movq	-24(%rbp), %rax
 	leaq	1(%rax), %rdx
 	movq	-8(%rbp), %rax
@@ -21495,13 +18796,13 @@ _bitfield__write_var_BitField_offset8_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2952
+	js	L2571
 	cmpq	$511, -8(%rbp)
-	jle	L2953
-L2952:
-	movl	$127905, %edi
+	jle	L2572
+L2571:
+	movl	$111521, %edi
 	call	__m3_fault
-L2953:
+L2572:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21539,13 +18840,13 @@ _bitfield__write_var_BitField_offset8_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2958
+	js	L2577
 	cmpq	$1023, -8(%rbp)
-	jle	L2959
-L2958:
-	movl	$128161, %edi
+	jle	L2578
+L2577:
+	movl	$111777, %edi
 	call	__m3_fault
-L2959:
+L2578:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21583,13 +18884,13 @@ _bitfield__write_var_BitField_offset8_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2964
+	js	L2583
 	cmpq	$2047, -8(%rbp)
-	jle	L2965
-L2964:
-	movl	$128417, %edi
+	jle	L2584
+L2583:
+	movl	$112033, %edi
 	call	__m3_fault
-L2965:
+L2584:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21627,13 +18928,13 @@ _bitfield__write_var_BitField_offset8_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2970
+	js	L2589
 	cmpq	$4095, -8(%rbp)
-	jle	L2971
-L2970:
-	movl	$128673, %edi
+	jle	L2590
+L2589:
+	movl	$112289, %edi
 	call	__m3_fault
-L2971:
+L2590:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21671,13 +18972,13 @@ _bitfield__write_var_BitField_offset8_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2976
+	js	L2595
 	cmpq	$8191, -8(%rbp)
-	jle	L2977
-L2976:
-	movl	$128929, %edi
+	jle	L2596
+L2595:
+	movl	$112545, %edi
 	call	__m3_fault
-L2977:
+L2596:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21715,13 +19016,13 @@ _bitfield__write_var_BitField_offset8_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2982
+	js	L2601
 	cmpq	$16383, -8(%rbp)
-	jle	L2983
-L2982:
-	movl	$129185, %edi
+	jle	L2602
+L2601:
+	movl	$112801, %edi
 	call	__m3_fault
-L2983:
+L2602:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21759,13 +19060,13 @@ _bitfield__write_var_BitField_offset8_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2988
+	js	L2607
 	cmpq	$32767, -8(%rbp)
-	jle	L2989
-L2988:
-	movl	$129441, %edi
+	jle	L2608
+L2607:
+	movl	$113057, %edi
 	call	__m3_fault
-L2989:
+L2608:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21803,13 +19104,13 @@ _bitfield__write_var_BitField_offset8_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L2994
+	js	L2613
 	cmpq	$65535, -8(%rbp)
-	jle	L2995
-L2994:
-	movl	$129697, %edi
+	jle	L2614
+L2613:
+	movl	$113313, %edi
 	call	__m3_fault
-L2995:
+L2614:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21847,13 +19148,13 @@ _bitfield__write_var_BitField_offset8_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3000
+	js	L2619
 	cmpq	$131071, -8(%rbp)
-	jle	L3001
-L3000:
-	movl	$129953, %edi
+	jle	L2620
+L2619:
+	movl	$113569, %edi
 	call	__m3_fault
-L3001:
+L2620:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21891,13 +19192,13 @@ _bitfield__write_var_BitField_offset8_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3006
+	js	L2625
 	cmpq	$262143, -8(%rbp)
-	jle	L3007
-L3006:
-	movl	$130209, %edi
+	jle	L2626
+L2625:
+	movl	$113825, %edi
 	call	__m3_fault
-L3007:
+L2626:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21935,13 +19236,13 @@ _bitfield__write_var_BitField_offset8_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3012
+	js	L2631
 	cmpq	$524287, -8(%rbp)
-	jle	L3013
-L3012:
-	movl	$130465, %edi
+	jle	L2632
+L2631:
+	movl	$114081, %edi
 	call	__m3_fault
-L3013:
+L2632:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -21979,13 +19280,13 @@ _bitfield__write_var_BitField_offset8_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3018
+	js	L2637
 	cmpq	$1048575, -8(%rbp)
-	jle	L3019
-L3018:
-	movl	$130721, %edi
+	jle	L2638
+L2637:
+	movl	$114337, %edi
 	call	__m3_fault
-L3019:
+L2638:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22023,13 +19324,13 @@ _bitfield__write_var_BitField_offset8_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3024
+	js	L2643
 	cmpq	$2097151, -8(%rbp)
-	jle	L3025
-L3024:
-	movl	$130977, %edi
+	jle	L2644
+L2643:
+	movl	$114593, %edi
 	call	__m3_fault
-L3025:
+L2644:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22067,13 +19368,13 @@ _bitfield__write_var_BitField_offset8_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3030
+	js	L2649
 	cmpq	$4194303, -8(%rbp)
-	jle	L3031
-L3030:
-	movl	$131233, %edi
+	jle	L2650
+L2649:
+	movl	$114849, %edi
 	call	__m3_fault
-L3031:
+L2650:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22111,13 +19412,13 @@ _bitfield__write_var_BitField_offset8_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3036
+	js	L2655
 	cmpq	$8388607, -8(%rbp)
-	jle	L3037
-L3036:
-	movl	$131489, %edi
+	jle	L2656
+L2655:
+	movl	$115105, %edi
 	call	__m3_fault
-L3037:
+L2656:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22155,13 +19456,13 @@ _bitfield__write_var_BitField_offset8_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3042
+	js	L2661
 	cmpq	$16777215, -8(%rbp)
-	jle	L3043
-L3042:
-	movl	$131745, %edi
+	jle	L2662
+L2661:
+	movl	$115361, %edi
 	call	__m3_fault
-L3043:
+L2662:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22198,13 +19499,13 @@ _bitfield__write_var_BitField_offset8_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3048
+	js	L2667
 	cmpq	$33554431, -8(%rbp)
-	jle	L3049
-L3048:
-	movl	$132001, %edi
+	jle	L2668
+L2667:
+	movl	$115617, %edi
 	call	__m3_fault
-L3049:
+L2668:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22241,13 +19542,13 @@ _bitfield__write_var_BitField_offset8_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3054
+	js	L2673
 	cmpq	$67108863, -8(%rbp)
-	jle	L3055
-L3054:
-	movl	$132257, %edi
+	jle	L2674
+L2673:
+	movl	$115873, %edi
 	call	__m3_fault
-L3055:
+L2674:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22284,13 +19585,13 @@ _bitfield__write_var_BitField_offset8_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3060
+	js	L2679
 	cmpq	$134217727, -8(%rbp)
-	jle	L3061
-L3060:
-	movl	$132513, %edi
+	jle	L2680
+L2679:
+	movl	$116129, %edi
 	call	__m3_fault
-L3061:
+L2680:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22327,13 +19628,13 @@ _bitfield__write_var_BitField_offset8_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3066
+	js	L2685
 	cmpq	$268435455, -8(%rbp)
-	jle	L3067
-L3066:
-	movl	$132769, %edi
+	jle	L2686
+L2685:
+	movl	$116385, %edi
 	call	__m3_fault
-L3067:
+L2686:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22370,13 +19671,13 @@ _bitfield__write_var_BitField_offset8_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3072
+	js	L2691
 	cmpq	$536870911, -8(%rbp)
-	jle	L3073
-L3072:
-	movl	$133025, %edi
+	jle	L2692
+L2691:
+	movl	$116641, %edi
 	call	__m3_fault
-L3073:
+L2692:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22413,13 +19714,13 @@ _bitfield__write_var_BitField_offset8_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3078
+	js	L2697
 	cmpq	$1073741823, -8(%rbp)
-	jle	L3079
-L3078:
-	movl	$133281, %edi
+	jle	L2698
+L2697:
+	movl	$116897, %edi
 	call	__m3_fault
-L3079:
+L2698:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22456,13 +19757,13 @@ _bitfield__write_var_BitField_offset8_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3084
+	js	L2703
 	cmpq	$2147483647, -8(%rbp)
-	jle	L3085
-L3084:
-	movl	$133537, %edi
+	jle	L2704
+L2703:
+	movl	$117153, %edi
 	call	__m3_fault
-L3085:
+L2704:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22499,14 +19800,14 @@ _bitfield__write_var_BitField_offset8_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3090
+	js	L2709
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L3091
-L3090:
-	movl	$133793, %edi
+	jle	L2710
+L2709:
+	movl	$117409, %edi
 	call	__m3_fault
-L3091:
+L2710:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22543,14 +19844,14 @@ _bitfield__write_var_BitField_offset8_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3096
+	js	L2715
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3097
-L3096:
-	movl	$134049, %edi
+	jle	L2716
+L2715:
+	movl	$117665, %edi
 	call	__m3_fault
-L3097:
+L2716:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22587,14 +19888,14 @@ _bitfield__write_var_BitField_offset8_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3102
+	js	L2721
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3103
-L3102:
-	movl	$134305, %edi
+	jle	L2722
+L2721:
+	movl	$117921, %edi
 	call	__m3_fault
-L3103:
+L2722:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22631,14 +19932,14 @@ _bitfield__write_var_BitField_offset8_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3108
+	js	L2727
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3109
-L3108:
-	movl	$134561, %edi
+	jle	L2728
+L2727:
+	movl	$118177, %edi
 	call	__m3_fault
-L3109:
+L2728:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22675,14 +19976,14 @@ _bitfield__write_var_BitField_offset8_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3114
+	js	L2733
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3115
-L3114:
-	movl	$134817, %edi
+	jle	L2734
+L2733:
+	movl	$118433, %edi
 	call	__m3_fault
-L3115:
+L2734:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22719,14 +20020,14 @@ _bitfield__write_var_BitField_offset8_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3120
+	js	L2739
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3121
-L3120:
-	movl	$135073, %edi
+	jle	L2740
+L2739:
+	movl	$118689, %edi
 	call	__m3_fault
-L3121:
+L2740:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22763,14 +20064,14 @@ _bitfield__write_var_BitField_offset8_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3126
+	js	L2745
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3127
-L3126:
-	movl	$135329, %edi
+	jle	L2746
+L2745:
+	movl	$118945, %edi
 	call	__m3_fault
-L3127:
+L2746:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22807,14 +20108,14 @@ _bitfield__write_var_BitField_offset8_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3132
+	js	L2751
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3133
-L3132:
-	movl	$135585, %edi
+	jle	L2752
+L2751:
+	movl	$119201, %edi
 	call	__m3_fault
-L3133:
+L2752:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22851,14 +20152,14 @@ _bitfield__write_var_BitField_offset8_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3138
+	js	L2757
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3139
-L3138:
-	movl	$135841, %edi
+	jle	L2758
+L2757:
+	movl	$119457, %edi
 	call	__m3_fault
-L3139:
+L2758:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22895,14 +20196,14 @@ _bitfield__write_var_BitField_offset8_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3144
+	js	L2763
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3145
-L3144:
-	movl	$136097, %edi
+	jle	L2764
+L2763:
+	movl	$119713, %edi
 	call	__m3_fault
-L3145:
+L2764:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22939,14 +20240,14 @@ _bitfield__write_var_BitField_offset8_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3150
+	js	L2769
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3151
-L3150:
-	movl	$136353, %edi
+	jle	L2770
+L2769:
+	movl	$119969, %edi
 	call	__m3_fault
-L3151:
+L2770:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -22983,14 +20284,14 @@ _bitfield__write_var_BitField_offset8_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3156
+	js	L2775
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3157
-L3156:
-	movl	$136609, %edi
+	jle	L2776
+L2775:
+	movl	$120225, %edi
 	call	__m3_fault
-L3157:
+L2776:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23027,14 +20328,14 @@ _bitfield__write_var_BitField_offset8_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3162
+	js	L2781
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3163
-L3162:
-	movl	$136865, %edi
+	jle	L2782
+L2781:
+	movl	$120481, %edi
 	call	__m3_fault
-L3163:
+L2782:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23071,14 +20372,14 @@ _bitfield__write_var_BitField_offset8_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3168
+	js	L2787
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3169
-L3168:
-	movl	$137121, %edi
+	jle	L2788
+L2787:
+	movl	$120737, %edi
 	call	__m3_fault
-L3169:
+L2788:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23115,14 +20416,14 @@ _bitfield__write_var_BitField_offset8_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3174
+	js	L2793
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3175
-L3174:
-	movl	$137377, %edi
+	jle	L2794
+L2793:
+	movl	$120993, %edi
 	call	__m3_fault
-L3175:
+L2794:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23159,14 +20460,14 @@ _bitfield__write_var_BitField_offset8_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3180
+	js	L2799
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3181
-L3180:
-	movl	$137633, %edi
+	jle	L2800
+L2799:
+	movl	$121249, %edi
 	call	__m3_fault
-L3181:
+L2800:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23203,14 +20504,14 @@ _bitfield__write_var_BitField_offset8_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3186
+	js	L2805
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3187
-L3186:
-	movl	$137889, %edi
+	jle	L2806
+L2805:
+	movl	$121505, %edi
 	call	__m3_fault
-L3187:
+L2806:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23247,14 +20548,14 @@ _bitfield__write_var_BitField_offset8_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3192
+	js	L2811
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3193
-L3192:
-	movl	$138145, %edi
+	jle	L2812
+L2811:
+	movl	$121761, %edi
 	call	__m3_fault
-L3193:
+L2812:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23291,14 +20592,14 @@ _bitfield__write_var_BitField_offset8_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3198
+	js	L2817
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3199
-L3198:
-	movl	$138401, %edi
+	jle	L2818
+L2817:
+	movl	$122017, %edi
 	call	__m3_fault
-L3199:
+L2818:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23335,14 +20636,14 @@ _bitfield__write_var_BitField_offset8_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3204
+	js	L2823
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3205
-L3204:
-	movl	$138657, %edi
+	jle	L2824
+L2823:
+	movl	$122273, %edi
 	call	__m3_fault
-L3205:
+L2824:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23379,14 +20680,14 @@ _bitfield__write_var_BitField_offset8_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3210
+	js	L2829
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3211
-L3210:
-	movl	$138913, %edi
+	jle	L2830
+L2829:
+	movl	$122529, %edi
 	call	__m3_fault
-L3211:
+L2830:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23423,14 +20724,14 @@ _bitfield__write_var_BitField_offset8_count53:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3216
+	js	L2835
 	movabsq	$9007199254740991, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3217
-L3216:
-	movl	$139169, %edi
+	jle	L2836
+L2835:
+	movl	$122785, %edi
 	call	__m3_fault
-L3217:
+L2836:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23467,14 +20768,14 @@ _bitfield__write_var_BitField_offset8_count54:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3222
+	js	L2841
 	movabsq	$18014398509481983, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3223
-L3222:
-	movl	$139425, %edi
+	jle	L2842
+L2841:
+	movl	$123041, %edi
 	call	__m3_fault
-L3223:
+L2842:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23511,14 +20812,14 @@ _bitfield__write_var_BitField_offset8_count55:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3228
+	js	L2847
 	movabsq	$36028797018963967, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3229
-L3228:
-	movl	$139681, %edi
+	jle	L2848
+L2847:
+	movl	$123297, %edi
 	call	__m3_fault
-L3229:
+L2848:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23554,14 +20855,14 @@ _bitfield__write_var_BitField_offset8_count56:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3234
+	js	L2853
 	movabsq	$72057594037927935, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3235
-L3234:
-	movl	$139937, %edi
+	jle	L2854
+L2853:
+	movl	$123553, %edi
 	call	__m3_fault
-L3235:
+L2854:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23596,13 +20897,13 @@ _bitfield__write_var_BitField_offset9_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3240
+	js	L2859
 	cmpq	$1, -8(%rbp)
-	jle	L3241
-L3240:
-	movl	$140193, %edi
+	jle	L2860
+L2859:
+	movl	$123809, %edi
 	call	__m3_fault
-L3241:
+L2860:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -23642,13 +20943,13 @@ _bitfield__write_var_BitField_offset9_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3246
+	js	L2865
 	cmpq	$3, -8(%rbp)
-	jle	L3247
-L3246:
-	movl	$140449, %edi
+	jle	L2866
+L2865:
+	movl	$124065, %edi
 	call	__m3_fault
-L3247:
+L2866:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -23688,13 +20989,13 @@ _bitfield__write_var_BitField_offset9_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3252
+	js	L2871
 	cmpq	$7, -8(%rbp)
-	jle	L3253
-L3252:
-	movl	$140705, %edi
+	jle	L2872
+L2871:
+	movl	$124321, %edi
 	call	__m3_fault
-L3253:
+L2872:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -23734,13 +21035,13 @@ _bitfield__write_var_BitField_offset9_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3258
+	js	L2877
 	cmpq	$15, -8(%rbp)
-	jle	L3259
-L3258:
-	movl	$140961, %edi
+	jle	L2878
+L2877:
+	movl	$124577, %edi
 	call	__m3_fault
-L3259:
+L2878:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -23780,13 +21081,13 @@ _bitfield__write_var_BitField_offset9_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3264
+	js	L2883
 	cmpq	$31, -8(%rbp)
-	jle	L3265
-L3264:
-	movl	$141217, %edi
+	jle	L2884
+L2883:
+	movl	$124833, %edi
 	call	__m3_fault
-L3265:
+L2884:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -23826,13 +21127,13 @@ _bitfield__write_var_BitField_offset9_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3270
+	js	L2889
 	cmpq	$63, -8(%rbp)
-	jle	L3271
-L3270:
-	movl	$141473, %edi
+	jle	L2890
+L2889:
+	movl	$125089, %edi
 	call	__m3_fault
-L3271:
+L2890:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -23872,13 +21173,13 @@ _bitfield__write_var_BitField_offset9_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3276
+	js	L2895
 	cmpq	$127, -8(%rbp)
-	jle	L3277
-L3276:
-	movl	$141729, %edi
+	jle	L2896
+L2895:
+	movl	$125345, %edi
 	call	__m3_fault
-L3277:
+L2896:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -23918,13 +21219,13 @@ _bitfield__write_var_BitField_offset9_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3282
+	js	L2901
 	cmpq	$255, -8(%rbp)
-	jle	L3283
-L3282:
-	movl	$141985, %edi
+	jle	L2902
+L2901:
+	movl	$125601, %edi
 	call	__m3_fault
-L3283:
+L2902:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -23962,13 +21263,13 @@ _bitfield__write_var_BitField_offset9_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3288
+	js	L2907
 	cmpq	$511, -8(%rbp)
-	jle	L3289
-L3288:
-	movl	$142241, %edi
+	jle	L2908
+L2907:
+	movl	$125857, %edi
 	call	__m3_fault
-L3289:
+L2908:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24006,13 +21307,13 @@ _bitfield__write_var_BitField_offset9_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3294
+	js	L2913
 	cmpq	$1023, -8(%rbp)
-	jle	L3295
-L3294:
-	movl	$142497, %edi
+	jle	L2914
+L2913:
+	movl	$126113, %edi
 	call	__m3_fault
-L3295:
+L2914:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24050,13 +21351,13 @@ _bitfield__write_var_BitField_offset9_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3300
+	js	L2919
 	cmpq	$2047, -8(%rbp)
-	jle	L3301
-L3300:
-	movl	$142753, %edi
+	jle	L2920
+L2919:
+	movl	$126369, %edi
 	call	__m3_fault
-L3301:
+L2920:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24094,13 +21395,13 @@ _bitfield__write_var_BitField_offset9_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3306
+	js	L2925
 	cmpq	$4095, -8(%rbp)
-	jle	L3307
-L3306:
-	movl	$143009, %edi
+	jle	L2926
+L2925:
+	movl	$126625, %edi
 	call	__m3_fault
-L3307:
+L2926:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24138,13 +21439,13 @@ _bitfield__write_var_BitField_offset9_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3312
+	js	L2931
 	cmpq	$8191, -8(%rbp)
-	jle	L3313
-L3312:
-	movl	$143265, %edi
+	jle	L2932
+L2931:
+	movl	$126881, %edi
 	call	__m3_fault
-L3313:
+L2932:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24182,13 +21483,13 @@ _bitfield__write_var_BitField_offset9_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3318
+	js	L2937
 	cmpq	$16383, -8(%rbp)
-	jle	L3319
-L3318:
-	movl	$143521, %edi
+	jle	L2938
+L2937:
+	movl	$127137, %edi
 	call	__m3_fault
-L3319:
+L2938:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24226,13 +21527,13 @@ _bitfield__write_var_BitField_offset9_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3324
+	js	L2943
 	cmpq	$32767, -8(%rbp)
-	jle	L3325
-L3324:
-	movl	$143777, %edi
+	jle	L2944
+L2943:
+	movl	$127393, %edi
 	call	__m3_fault
-L3325:
+L2944:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24270,13 +21571,13 @@ _bitfield__write_var_BitField_offset9_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3330
+	js	L2949
 	cmpq	$65535, -8(%rbp)
-	jle	L3331
-L3330:
-	movl	$144033, %edi
+	jle	L2950
+L2949:
+	movl	$127649, %edi
 	call	__m3_fault
-L3331:
+L2950:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24314,13 +21615,13 @@ _bitfield__write_var_BitField_offset9_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3336
+	js	L2955
 	cmpq	$131071, -8(%rbp)
-	jle	L3337
-L3336:
-	movl	$144289, %edi
+	jle	L2956
+L2955:
+	movl	$127905, %edi
 	call	__m3_fault
-L3337:
+L2956:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24358,13 +21659,13 @@ _bitfield__write_var_BitField_offset9_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3342
+	js	L2961
 	cmpq	$262143, -8(%rbp)
-	jle	L3343
-L3342:
-	movl	$144545, %edi
+	jle	L2962
+L2961:
+	movl	$128161, %edi
 	call	__m3_fault
-L3343:
+L2962:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24402,13 +21703,13 @@ _bitfield__write_var_BitField_offset9_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3348
+	js	L2967
 	cmpq	$524287, -8(%rbp)
-	jle	L3349
-L3348:
-	movl	$144801, %edi
+	jle	L2968
+L2967:
+	movl	$128417, %edi
 	call	__m3_fault
-L3349:
+L2968:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24446,13 +21747,13 @@ _bitfield__write_var_BitField_offset9_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3354
+	js	L2973
 	cmpq	$1048575, -8(%rbp)
-	jle	L3355
-L3354:
-	movl	$145057, %edi
+	jle	L2974
+L2973:
+	movl	$128673, %edi
 	call	__m3_fault
-L3355:
+L2974:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24490,13 +21791,13 @@ _bitfield__write_var_BitField_offset9_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3360
+	js	L2979
 	cmpq	$2097151, -8(%rbp)
-	jle	L3361
-L3360:
-	movl	$145313, %edi
+	jle	L2980
+L2979:
+	movl	$128929, %edi
 	call	__m3_fault
-L3361:
+L2980:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24534,13 +21835,13 @@ _bitfield__write_var_BitField_offset9_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3366
+	js	L2985
 	cmpq	$4194303, -8(%rbp)
-	jle	L3367
-L3366:
-	movl	$145569, %edi
+	jle	L2986
+L2985:
+	movl	$129185, %edi
 	call	__m3_fault
-L3367:
+L2986:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24578,13 +21879,13 @@ _bitfield__write_var_BitField_offset9_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3372
+	js	L2991
 	cmpq	$8388607, -8(%rbp)
-	jle	L3373
-L3372:
-	movl	$145825, %edi
+	jle	L2992
+L2991:
+	movl	$129441, %edi
 	call	__m3_fault
-L3373:
+L2992:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24621,13 +21922,13 @@ _bitfield__write_var_BitField_offset9_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3378
+	js	L2997
 	cmpq	$16777215, -8(%rbp)
-	jle	L3379
-L3378:
-	movl	$146081, %edi
+	jle	L2998
+L2997:
+	movl	$129697, %edi
 	call	__m3_fault
-L3379:
+L2998:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24664,13 +21965,13 @@ _bitfield__write_var_BitField_offset9_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3384
+	js	L3003
 	cmpq	$33554431, -8(%rbp)
-	jle	L3385
-L3384:
-	movl	$146337, %edi
+	jle	L3004
+L3003:
+	movl	$129953, %edi
 	call	__m3_fault
-L3385:
+L3004:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24707,13 +22008,13 @@ _bitfield__write_var_BitField_offset9_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3390
+	js	L3009
 	cmpq	$67108863, -8(%rbp)
-	jle	L3391
-L3390:
-	movl	$146593, %edi
+	jle	L3010
+L3009:
+	movl	$130209, %edi
 	call	__m3_fault
-L3391:
+L3010:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24750,13 +22051,13 @@ _bitfield__write_var_BitField_offset9_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3396
+	js	L3015
 	cmpq	$134217727, -8(%rbp)
-	jle	L3397
-L3396:
-	movl	$146849, %edi
+	jle	L3016
+L3015:
+	movl	$130465, %edi
 	call	__m3_fault
-L3397:
+L3016:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24793,13 +22094,13 @@ _bitfield__write_var_BitField_offset9_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3402
+	js	L3021
 	cmpq	$268435455, -8(%rbp)
-	jle	L3403
-L3402:
-	movl	$147105, %edi
+	jle	L3022
+L3021:
+	movl	$130721, %edi
 	call	__m3_fault
-L3403:
+L3022:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24836,13 +22137,13 @@ _bitfield__write_var_BitField_offset9_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3408
+	js	L3027
 	cmpq	$536870911, -8(%rbp)
-	jle	L3409
-L3408:
-	movl	$147361, %edi
+	jle	L3028
+L3027:
+	movl	$130977, %edi
 	call	__m3_fault
-L3409:
+L3028:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24879,13 +22180,13 @@ _bitfield__write_var_BitField_offset9_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3414
+	js	L3033
 	cmpq	$1073741823, -8(%rbp)
-	jle	L3415
-L3414:
-	movl	$147617, %edi
+	jle	L3034
+L3033:
+	movl	$131233, %edi
 	call	__m3_fault
-L3415:
+L3034:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24922,13 +22223,13 @@ _bitfield__write_var_BitField_offset9_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3420
+	js	L3039
 	cmpq	$2147483647, -8(%rbp)
-	jle	L3421
-L3420:
-	movl	$147873, %edi
+	jle	L3040
+L3039:
+	movl	$131489, %edi
 	call	__m3_fault
-L3421:
+L3040:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -24965,14 +22266,14 @@ _bitfield__write_var_BitField_offset9_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3426
+	js	L3045
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L3427
-L3426:
-	movl	$148129, %edi
+	jle	L3046
+L3045:
+	movl	$131745, %edi
 	call	__m3_fault
-L3427:
+L3046:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25009,14 +22310,14 @@ _bitfield__write_var_BitField_offset9_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3432
+	js	L3051
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3433
-L3432:
-	movl	$148385, %edi
+	jle	L3052
+L3051:
+	movl	$132001, %edi
 	call	__m3_fault
-L3433:
+L3052:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25053,14 +22354,14 @@ _bitfield__write_var_BitField_offset9_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3438
+	js	L3057
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3439
-L3438:
-	movl	$148641, %edi
+	jle	L3058
+L3057:
+	movl	$132257, %edi
 	call	__m3_fault
-L3439:
+L3058:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25097,14 +22398,14 @@ _bitfield__write_var_BitField_offset9_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3444
+	js	L3063
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3445
-L3444:
-	movl	$148897, %edi
+	jle	L3064
+L3063:
+	movl	$132513, %edi
 	call	__m3_fault
-L3445:
+L3064:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25141,14 +22442,14 @@ _bitfield__write_var_BitField_offset9_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3450
+	js	L3069
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3451
-L3450:
-	movl	$149153, %edi
+	jle	L3070
+L3069:
+	movl	$132769, %edi
 	call	__m3_fault
-L3451:
+L3070:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25185,14 +22486,14 @@ _bitfield__write_var_BitField_offset9_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3456
+	js	L3075
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3457
-L3456:
-	movl	$149409, %edi
+	jle	L3076
+L3075:
+	movl	$133025, %edi
 	call	__m3_fault
-L3457:
+L3076:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25229,14 +22530,14 @@ _bitfield__write_var_BitField_offset9_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3462
+	js	L3081
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3463
-L3462:
-	movl	$149665, %edi
+	jle	L3082
+L3081:
+	movl	$133281, %edi
 	call	__m3_fault
-L3463:
+L3082:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25273,14 +22574,14 @@ _bitfield__write_var_BitField_offset9_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3468
+	js	L3087
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3469
-L3468:
-	movl	$149921, %edi
+	jle	L3088
+L3087:
+	movl	$133537, %edi
 	call	__m3_fault
-L3469:
+L3088:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25317,14 +22618,14 @@ _bitfield__write_var_BitField_offset9_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3474
+	js	L3093
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3475
-L3474:
-	movl	$150177, %edi
+	jle	L3094
+L3093:
+	movl	$133793, %edi
 	call	__m3_fault
-L3475:
+L3094:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25361,14 +22662,14 @@ _bitfield__write_var_BitField_offset9_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3480
+	js	L3099
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3481
-L3480:
-	movl	$150433, %edi
+	jle	L3100
+L3099:
+	movl	$134049, %edi
 	call	__m3_fault
-L3481:
+L3100:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25405,14 +22706,14 @@ _bitfield__write_var_BitField_offset9_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3486
+	js	L3105
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3487
-L3486:
-	movl	$150689, %edi
+	jle	L3106
+L3105:
+	movl	$134305, %edi
 	call	__m3_fault
-L3487:
+L3106:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25449,14 +22750,14 @@ _bitfield__write_var_BitField_offset9_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3492
+	js	L3111
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3493
-L3492:
-	movl	$150945, %edi
+	jle	L3112
+L3111:
+	movl	$134561, %edi
 	call	__m3_fault
-L3493:
+L3112:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25493,14 +22794,14 @@ _bitfield__write_var_BitField_offset9_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3498
+	js	L3117
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3499
-L3498:
-	movl	$151201, %edi
+	jle	L3118
+L3117:
+	movl	$134817, %edi
 	call	__m3_fault
-L3499:
+L3118:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25537,14 +22838,14 @@ _bitfield__write_var_BitField_offset9_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3504
+	js	L3123
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3505
-L3504:
-	movl	$151457, %edi
+	jle	L3124
+L3123:
+	movl	$135073, %edi
 	call	__m3_fault
-L3505:
+L3124:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25581,14 +22882,14 @@ _bitfield__write_var_BitField_offset9_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3510
+	js	L3129
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3511
-L3510:
-	movl	$151713, %edi
+	jle	L3130
+L3129:
+	movl	$135329, %edi
 	call	__m3_fault
-L3511:
+L3130:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25625,14 +22926,14 @@ _bitfield__write_var_BitField_offset9_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3516
+	js	L3135
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3517
-L3516:
-	movl	$151969, %edi
+	jle	L3136
+L3135:
+	movl	$135585, %edi
 	call	__m3_fault
-L3517:
+L3136:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25669,14 +22970,14 @@ _bitfield__write_var_BitField_offset9_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3522
+	js	L3141
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3523
-L3522:
-	movl	$152225, %edi
+	jle	L3142
+L3141:
+	movl	$135841, %edi
 	call	__m3_fault
-L3523:
+L3142:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25713,14 +23014,14 @@ _bitfield__write_var_BitField_offset9_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3528
+	js	L3147
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3529
-L3528:
-	movl	$152481, %edi
+	jle	L3148
+L3147:
+	movl	$136097, %edi
 	call	__m3_fault
-L3529:
+L3148:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25757,14 +23058,14 @@ _bitfield__write_var_BitField_offset9_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3534
+	js	L3153
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3535
-L3534:
-	movl	$152737, %edi
+	jle	L3154
+L3153:
+	movl	$136353, %edi
 	call	__m3_fault
-L3535:
+L3154:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25801,14 +23102,14 @@ _bitfield__write_var_BitField_offset9_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3540
+	js	L3159
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3541
-L3540:
-	movl	$152993, %edi
+	jle	L3160
+L3159:
+	movl	$136609, %edi
 	call	__m3_fault
-L3541:
+L3160:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25845,14 +23146,14 @@ _bitfield__write_var_BitField_offset9_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3546
+	js	L3165
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3547
-L3546:
-	movl	$153249, %edi
+	jle	L3166
+L3165:
+	movl	$136865, %edi
 	call	__m3_fault
-L3547:
+L3166:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25889,14 +23190,14 @@ _bitfield__write_var_BitField_offset9_count53:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3552
+	js	L3171
 	movabsq	$9007199254740991, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3553
-L3552:
-	movl	$153505, %edi
+	jle	L3172
+L3171:
+	movl	$137121, %edi
 	call	__m3_fault
-L3553:
+L3172:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25933,14 +23234,14 @@ _bitfield__write_var_BitField_offset9_count54:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3558
+	js	L3177
 	movabsq	$18014398509481983, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3559
-L3558:
-	movl	$153761, %edi
+	jle	L3178
+L3177:
+	movl	$137377, %edi
 	call	__m3_fault
-L3559:
+L3178:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -25976,14 +23277,14 @@ _bitfield__write_var_BitField_offset9_count55:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3564
+	js	L3183
 	movabsq	$36028797018963967, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3565
-L3564:
-	movl	$154017, %edi
+	jle	L3184
+L3183:
+	movl	$137633, %edi
 	call	__m3_fault
-L3565:
+L3184:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26019,13 +23320,13 @@ _bitfield__write_var_BitField_offset10_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3570
+	js	L3189
 	cmpq	$1, -8(%rbp)
-	jle	L3571
-L3570:
-	movl	$154273, %edi
+	jle	L3190
+L3189:
+	movl	$137889, %edi
 	call	__m3_fault
-L3571:
+L3190:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -26065,13 +23366,13 @@ _bitfield__write_var_BitField_offset10_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3576
+	js	L3195
 	cmpq	$3, -8(%rbp)
-	jle	L3577
-L3576:
-	movl	$154529, %edi
+	jle	L3196
+L3195:
+	movl	$138145, %edi
 	call	__m3_fault
-L3577:
+L3196:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -26111,13 +23412,13 @@ _bitfield__write_var_BitField_offset10_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3582
+	js	L3201
 	cmpq	$7, -8(%rbp)
-	jle	L3583
-L3582:
-	movl	$154785, %edi
+	jle	L3202
+L3201:
+	movl	$138401, %edi
 	call	__m3_fault
-L3583:
+L3202:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -26157,13 +23458,13 @@ _bitfield__write_var_BitField_offset10_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3588
+	js	L3207
 	cmpq	$15, -8(%rbp)
-	jle	L3589
-L3588:
-	movl	$155041, %edi
+	jle	L3208
+L3207:
+	movl	$138657, %edi
 	call	__m3_fault
-L3589:
+L3208:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -26203,13 +23504,13 @@ _bitfield__write_var_BitField_offset10_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3594
+	js	L3213
 	cmpq	$31, -8(%rbp)
-	jle	L3595
-L3594:
-	movl	$155297, %edi
+	jle	L3214
+L3213:
+	movl	$138913, %edi
 	call	__m3_fault
-L3595:
+L3214:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -26249,13 +23550,13 @@ _bitfield__write_var_BitField_offset10_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3600
+	js	L3219
 	cmpq	$63, -8(%rbp)
-	jle	L3601
-L3600:
-	movl	$155553, %edi
+	jle	L3220
+L3219:
+	movl	$139169, %edi
 	call	__m3_fault
-L3601:
+L3220:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -26295,13 +23596,13 @@ _bitfield__write_var_BitField_offset10_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3606
+	js	L3225
 	cmpq	$127, -8(%rbp)
-	jle	L3607
-L3606:
-	movl	$155809, %edi
+	jle	L3226
+L3225:
+	movl	$139425, %edi
 	call	__m3_fault
-L3607:
+L3226:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26339,13 +23640,13 @@ _bitfield__write_var_BitField_offset10_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3612
+	js	L3231
 	cmpq	$255, -8(%rbp)
-	jle	L3613
-L3612:
-	movl	$156065, %edi
+	jle	L3232
+L3231:
+	movl	$139681, %edi
 	call	__m3_fault
-L3613:
+L3232:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26383,13 +23684,13 @@ _bitfield__write_var_BitField_offset10_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3618
+	js	L3237
 	cmpq	$511, -8(%rbp)
-	jle	L3619
-L3618:
-	movl	$156321, %edi
+	jle	L3238
+L3237:
+	movl	$139937, %edi
 	call	__m3_fault
-L3619:
+L3238:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26427,13 +23728,13 @@ _bitfield__write_var_BitField_offset10_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3624
+	js	L3243
 	cmpq	$1023, -8(%rbp)
-	jle	L3625
-L3624:
-	movl	$156577, %edi
+	jle	L3244
+L3243:
+	movl	$140193, %edi
 	call	__m3_fault
-L3625:
+L3244:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26471,13 +23772,13 @@ _bitfield__write_var_BitField_offset10_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3630
+	js	L3249
 	cmpq	$2047, -8(%rbp)
-	jle	L3631
-L3630:
-	movl	$156833, %edi
+	jle	L3250
+L3249:
+	movl	$140449, %edi
 	call	__m3_fault
-L3631:
+L3250:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26515,13 +23816,13 @@ _bitfield__write_var_BitField_offset10_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3636
+	js	L3255
 	cmpq	$4095, -8(%rbp)
-	jle	L3637
-L3636:
-	movl	$157089, %edi
+	jle	L3256
+L3255:
+	movl	$140705, %edi
 	call	__m3_fault
-L3637:
+L3256:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26559,13 +23860,13 @@ _bitfield__write_var_BitField_offset10_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3642
+	js	L3261
 	cmpq	$8191, -8(%rbp)
-	jle	L3643
-L3642:
-	movl	$157345, %edi
+	jle	L3262
+L3261:
+	movl	$140961, %edi
 	call	__m3_fault
-L3643:
+L3262:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26603,13 +23904,13 @@ _bitfield__write_var_BitField_offset10_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3648
+	js	L3267
 	cmpq	$16383, -8(%rbp)
-	jle	L3649
-L3648:
-	movl	$157601, %edi
+	jle	L3268
+L3267:
+	movl	$141217, %edi
 	call	__m3_fault
-L3649:
+L3268:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26647,13 +23948,13 @@ _bitfield__write_var_BitField_offset10_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3654
+	js	L3273
 	cmpq	$32767, -8(%rbp)
-	jle	L3655
-L3654:
-	movl	$157857, %edi
+	jle	L3274
+L3273:
+	movl	$141473, %edi
 	call	__m3_fault
-L3655:
+L3274:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26691,13 +23992,13 @@ _bitfield__write_var_BitField_offset10_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3660
+	js	L3279
 	cmpq	$65535, -8(%rbp)
-	jle	L3661
-L3660:
-	movl	$158113, %edi
+	jle	L3280
+L3279:
+	movl	$141729, %edi
 	call	__m3_fault
-L3661:
+L3280:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26735,13 +24036,13 @@ _bitfield__write_var_BitField_offset10_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3666
+	js	L3285
 	cmpq	$131071, -8(%rbp)
-	jle	L3667
-L3666:
-	movl	$158369, %edi
+	jle	L3286
+L3285:
+	movl	$141985, %edi
 	call	__m3_fault
-L3667:
+L3286:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26779,13 +24080,13 @@ _bitfield__write_var_BitField_offset10_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3672
+	js	L3291
 	cmpq	$262143, -8(%rbp)
-	jle	L3673
-L3672:
-	movl	$158625, %edi
+	jle	L3292
+L3291:
+	movl	$142241, %edi
 	call	__m3_fault
-L3673:
+L3292:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26823,13 +24124,13 @@ _bitfield__write_var_BitField_offset10_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3678
+	js	L3297
 	cmpq	$524287, -8(%rbp)
-	jle	L3679
-L3678:
-	movl	$158881, %edi
+	jle	L3298
+L3297:
+	movl	$142497, %edi
 	call	__m3_fault
-L3679:
+L3298:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26867,13 +24168,13 @@ _bitfield__write_var_BitField_offset10_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3684
+	js	L3303
 	cmpq	$1048575, -8(%rbp)
-	jle	L3685
-L3684:
-	movl	$159137, %edi
+	jle	L3304
+L3303:
+	movl	$142753, %edi
 	call	__m3_fault
-L3685:
+L3304:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26911,13 +24212,13 @@ _bitfield__write_var_BitField_offset10_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3690
+	js	L3309
 	cmpq	$2097151, -8(%rbp)
-	jle	L3691
-L3690:
-	movl	$159393, %edi
+	jle	L3310
+L3309:
+	movl	$143009, %edi
 	call	__m3_fault
-L3691:
+L3310:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26955,13 +24256,13 @@ _bitfield__write_var_BitField_offset10_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3696
+	js	L3315
 	cmpq	$4194303, -8(%rbp)
-	jle	L3697
-L3696:
-	movl	$159649, %edi
+	jle	L3316
+L3315:
+	movl	$143265, %edi
 	call	__m3_fault
-L3697:
+L3316:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -26998,13 +24299,13 @@ _bitfield__write_var_BitField_offset10_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3702
+	js	L3321
 	cmpq	$8388607, -8(%rbp)
-	jle	L3703
-L3702:
-	movl	$159905, %edi
+	jle	L3322
+L3321:
+	movl	$143521, %edi
 	call	__m3_fault
-L3703:
+L3322:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27041,13 +24342,13 @@ _bitfield__write_var_BitField_offset10_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3708
+	js	L3327
 	cmpq	$16777215, -8(%rbp)
-	jle	L3709
-L3708:
-	movl	$160161, %edi
+	jle	L3328
+L3327:
+	movl	$143777, %edi
 	call	__m3_fault
-L3709:
+L3328:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27084,13 +24385,13 @@ _bitfield__write_var_BitField_offset10_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3714
+	js	L3333
 	cmpq	$33554431, -8(%rbp)
-	jle	L3715
-L3714:
-	movl	$160417, %edi
+	jle	L3334
+L3333:
+	movl	$144033, %edi
 	call	__m3_fault
-L3715:
+L3334:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27127,13 +24428,13 @@ _bitfield__write_var_BitField_offset10_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3720
+	js	L3339
 	cmpq	$67108863, -8(%rbp)
-	jle	L3721
-L3720:
-	movl	$160673, %edi
+	jle	L3340
+L3339:
+	movl	$144289, %edi
 	call	__m3_fault
-L3721:
+L3340:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27170,13 +24471,13 @@ _bitfield__write_var_BitField_offset10_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3726
+	js	L3345
 	cmpq	$134217727, -8(%rbp)
-	jle	L3727
-L3726:
-	movl	$160929, %edi
+	jle	L3346
+L3345:
+	movl	$144545, %edi
 	call	__m3_fault
-L3727:
+L3346:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27213,13 +24514,13 @@ _bitfield__write_var_BitField_offset10_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3732
+	js	L3351
 	cmpq	$268435455, -8(%rbp)
-	jle	L3733
-L3732:
-	movl	$161185, %edi
+	jle	L3352
+L3351:
+	movl	$144801, %edi
 	call	__m3_fault
-L3733:
+L3352:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27256,13 +24557,13 @@ _bitfield__write_var_BitField_offset10_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3738
+	js	L3357
 	cmpq	$536870911, -8(%rbp)
-	jle	L3739
-L3738:
-	movl	$161441, %edi
+	jle	L3358
+L3357:
+	movl	$145057, %edi
 	call	__m3_fault
-L3739:
+L3358:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27299,13 +24600,13 @@ _bitfield__write_var_BitField_offset10_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3744
+	js	L3363
 	cmpq	$1073741823, -8(%rbp)
-	jle	L3745
-L3744:
-	movl	$161697, %edi
+	jle	L3364
+L3363:
+	movl	$145313, %edi
 	call	__m3_fault
-L3745:
+L3364:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27342,13 +24643,13 @@ _bitfield__write_var_BitField_offset10_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3750
+	js	L3369
 	cmpq	$2147483647, -8(%rbp)
-	jle	L3751
-L3750:
-	movl	$161953, %edi
+	jle	L3370
+L3369:
+	movl	$145569, %edi
 	call	__m3_fault
-L3751:
+L3370:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27385,14 +24686,14 @@ _bitfield__write_var_BitField_offset10_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3756
+	js	L3375
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L3757
-L3756:
-	movl	$162209, %edi
+	jle	L3376
+L3375:
+	movl	$145825, %edi
 	call	__m3_fault
-L3757:
+L3376:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27429,14 +24730,14 @@ _bitfield__write_var_BitField_offset10_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3762
+	js	L3381
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3763
-L3762:
-	movl	$162465, %edi
+	jle	L3382
+L3381:
+	movl	$146081, %edi
 	call	__m3_fault
-L3763:
+L3382:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27473,14 +24774,14 @@ _bitfield__write_var_BitField_offset10_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3768
+	js	L3387
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3769
-L3768:
-	movl	$162721, %edi
+	jle	L3388
+L3387:
+	movl	$146337, %edi
 	call	__m3_fault
-L3769:
+L3388:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27517,14 +24818,14 @@ _bitfield__write_var_BitField_offset10_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3774
+	js	L3393
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3775
-L3774:
-	movl	$162977, %edi
+	jle	L3394
+L3393:
+	movl	$146593, %edi
 	call	__m3_fault
-L3775:
+L3394:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27561,14 +24862,14 @@ _bitfield__write_var_BitField_offset10_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3780
+	js	L3399
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3781
-L3780:
-	movl	$163233, %edi
+	jle	L3400
+L3399:
+	movl	$146849, %edi
 	call	__m3_fault
-L3781:
+L3400:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27605,14 +24906,14 @@ _bitfield__write_var_BitField_offset10_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3786
+	js	L3405
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3787
-L3786:
-	movl	$163489, %edi
+	jle	L3406
+L3405:
+	movl	$147105, %edi
 	call	__m3_fault
-L3787:
+L3406:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27649,14 +24950,14 @@ _bitfield__write_var_BitField_offset10_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3792
+	js	L3411
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3793
-L3792:
-	movl	$163745, %edi
+	jle	L3412
+L3411:
+	movl	$147361, %edi
 	call	__m3_fault
-L3793:
+L3412:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27693,14 +24994,14 @@ _bitfield__write_var_BitField_offset10_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3798
+	js	L3417
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3799
-L3798:
-	movl	$164001, %edi
+	jle	L3418
+L3417:
+	movl	$147617, %edi
 	call	__m3_fault
-L3799:
+L3418:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27737,14 +25038,14 @@ _bitfield__write_var_BitField_offset10_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3804
+	js	L3423
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3805
-L3804:
-	movl	$164257, %edi
+	jle	L3424
+L3423:
+	movl	$147873, %edi
 	call	__m3_fault
-L3805:
+L3424:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27781,14 +25082,14 @@ _bitfield__write_var_BitField_offset10_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3810
+	js	L3429
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3811
-L3810:
-	movl	$164513, %edi
+	jle	L3430
+L3429:
+	movl	$148129, %edi
 	call	__m3_fault
-L3811:
+L3430:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27825,14 +25126,14 @@ _bitfield__write_var_BitField_offset10_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3816
+	js	L3435
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3817
-L3816:
-	movl	$164769, %edi
+	jle	L3436
+L3435:
+	movl	$148385, %edi
 	call	__m3_fault
-L3817:
+L3436:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27869,14 +25170,14 @@ _bitfield__write_var_BitField_offset10_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3822
+	js	L3441
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3823
-L3822:
-	movl	$165025, %edi
+	jle	L3442
+L3441:
+	movl	$148641, %edi
 	call	__m3_fault
-L3823:
+L3442:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27913,14 +25214,14 @@ _bitfield__write_var_BitField_offset10_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3828
+	js	L3447
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3829
-L3828:
-	movl	$165281, %edi
+	jle	L3448
+L3447:
+	movl	$148897, %edi
 	call	__m3_fault
-L3829:
+L3448:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -27957,14 +25258,14 @@ _bitfield__write_var_BitField_offset10_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3834
+	js	L3453
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3835
-L3834:
-	movl	$165537, %edi
+	jle	L3454
+L3453:
+	movl	$149153, %edi
 	call	__m3_fault
-L3835:
+L3454:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28001,14 +25302,14 @@ _bitfield__write_var_BitField_offset10_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3840
+	js	L3459
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3841
-L3840:
-	movl	$165793, %edi
+	jle	L3460
+L3459:
+	movl	$149409, %edi
 	call	__m3_fault
-L3841:
+L3460:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28045,14 +25346,14 @@ _bitfield__write_var_BitField_offset10_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3846
+	js	L3465
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3847
-L3846:
-	movl	$166049, %edi
+	jle	L3466
+L3465:
+	movl	$149665, %edi
 	call	__m3_fault
-L3847:
+L3466:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28089,14 +25390,14 @@ _bitfield__write_var_BitField_offset10_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3852
+	js	L3471
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3853
-L3852:
-	movl	$166305, %edi
+	jle	L3472
+L3471:
+	movl	$149921, %edi
 	call	__m3_fault
-L3853:
+L3472:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28133,14 +25434,14 @@ _bitfield__write_var_BitField_offset10_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3858
+	js	L3477
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3859
-L3858:
-	movl	$166561, %edi
+	jle	L3478
+L3477:
+	movl	$150177, %edi
 	call	__m3_fault
-L3859:
+L3478:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28177,14 +25478,14 @@ _bitfield__write_var_BitField_offset10_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3864
+	js	L3483
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3865
-L3864:
-	movl	$166817, %edi
+	jle	L3484
+L3483:
+	movl	$150433, %edi
 	call	__m3_fault
-L3865:
+L3484:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28221,14 +25522,14 @@ _bitfield__write_var_BitField_offset10_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3870
+	js	L3489
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3871
-L3870:
-	movl	$167073, %edi
+	jle	L3490
+L3489:
+	movl	$150689, %edi
 	call	__m3_fault
-L3871:
+L3490:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28265,14 +25566,14 @@ _bitfield__write_var_BitField_offset10_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3876
+	js	L3495
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3877
-L3876:
-	movl	$167329, %edi
+	jle	L3496
+L3495:
+	movl	$150945, %edi
 	call	__m3_fault
-L3877:
+L3496:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28309,14 +25610,14 @@ _bitfield__write_var_BitField_offset10_count53:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3882
+	js	L3501
 	movabsq	$9007199254740991, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3883
-L3882:
-	movl	$167585, %edi
+	jle	L3502
+L3501:
+	movl	$151201, %edi
 	call	__m3_fault
-L3883:
+L3502:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28352,14 +25653,14 @@ _bitfield__write_var_BitField_offset10_count54:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3888
+	js	L3507
 	movabsq	$18014398509481983, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L3889
-L3888:
-	movl	$167841, %edi
+	jle	L3508
+L3507:
+	movl	$151457, %edi
 	call	__m3_fault
-L3889:
+L3508:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28395,13 +25696,13 @@ _bitfield__write_var_BitField_offset11_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3894
+	js	L3513
 	cmpq	$1, -8(%rbp)
-	jle	L3895
-L3894:
-	movl	$168097, %edi
+	jle	L3514
+L3513:
+	movl	$151713, %edi
 	call	__m3_fault
-L3895:
+L3514:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -28441,13 +25742,13 @@ _bitfield__write_var_BitField_offset11_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3900
+	js	L3519
 	cmpq	$3, -8(%rbp)
-	jle	L3901
-L3900:
-	movl	$168353, %edi
+	jle	L3520
+L3519:
+	movl	$151969, %edi
 	call	__m3_fault
-L3901:
+L3520:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -28487,13 +25788,13 @@ _bitfield__write_var_BitField_offset11_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3906
+	js	L3525
 	cmpq	$7, -8(%rbp)
-	jle	L3907
-L3906:
-	movl	$168609, %edi
+	jle	L3526
+L3525:
+	movl	$152225, %edi
 	call	__m3_fault
-L3907:
+L3526:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -28533,13 +25834,13 @@ _bitfield__write_var_BitField_offset11_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3912
+	js	L3531
 	cmpq	$15, -8(%rbp)
-	jle	L3913
-L3912:
-	movl	$168865, %edi
+	jle	L3532
+L3531:
+	movl	$152481, %edi
 	call	__m3_fault
-L3913:
+L3532:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -28579,13 +25880,13 @@ _bitfield__write_var_BitField_offset11_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3918
+	js	L3537
 	cmpq	$31, -8(%rbp)
-	jle	L3919
-L3918:
-	movl	$169121, %edi
+	jle	L3538
+L3537:
+	movl	$152737, %edi
 	call	__m3_fault
-L3919:
+L3538:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -28625,13 +25926,13 @@ _bitfield__write_var_BitField_offset11_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3924
+	js	L3543
 	cmpq	$63, -8(%rbp)
-	jle	L3925
-L3924:
-	movl	$169377, %edi
+	jle	L3544
+L3543:
+	movl	$152993, %edi
 	call	__m3_fault
-L3925:
+L3544:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28669,13 +25970,13 @@ _bitfield__write_var_BitField_offset11_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3930
+	js	L3549
 	cmpq	$127, -8(%rbp)
-	jle	L3931
-L3930:
-	movl	$169633, %edi
+	jle	L3550
+L3549:
+	movl	$153249, %edi
 	call	__m3_fault
-L3931:
+L3550:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28713,13 +26014,13 @@ _bitfield__write_var_BitField_offset11_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3936
+	js	L3555
 	cmpq	$255, -8(%rbp)
-	jle	L3937
-L3936:
-	movl	$169889, %edi
+	jle	L3556
+L3555:
+	movl	$153505, %edi
 	call	__m3_fault
-L3937:
+L3556:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28757,13 +26058,13 @@ _bitfield__write_var_BitField_offset11_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3942
+	js	L3561
 	cmpq	$511, -8(%rbp)
-	jle	L3943
-L3942:
-	movl	$170145, %edi
+	jle	L3562
+L3561:
+	movl	$153761, %edi
 	call	__m3_fault
-L3943:
+L3562:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28801,13 +26102,13 @@ _bitfield__write_var_BitField_offset11_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3948
+	js	L3567
 	cmpq	$1023, -8(%rbp)
-	jle	L3949
-L3948:
-	movl	$170401, %edi
+	jle	L3568
+L3567:
+	movl	$154017, %edi
 	call	__m3_fault
-L3949:
+L3568:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28845,13 +26146,13 @@ _bitfield__write_var_BitField_offset11_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3954
+	js	L3573
 	cmpq	$2047, -8(%rbp)
-	jle	L3955
-L3954:
-	movl	$170657, %edi
+	jle	L3574
+L3573:
+	movl	$154273, %edi
 	call	__m3_fault
-L3955:
+L3574:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28889,13 +26190,13 @@ _bitfield__write_var_BitField_offset11_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3960
+	js	L3579
 	cmpq	$4095, -8(%rbp)
-	jle	L3961
-L3960:
-	movl	$170913, %edi
+	jle	L3580
+L3579:
+	movl	$154529, %edi
 	call	__m3_fault
-L3961:
+L3580:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28933,13 +26234,13 @@ _bitfield__write_var_BitField_offset11_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3966
+	js	L3585
 	cmpq	$8191, -8(%rbp)
-	jle	L3967
-L3966:
-	movl	$171169, %edi
+	jle	L3586
+L3585:
+	movl	$154785, %edi
 	call	__m3_fault
-L3967:
+L3586:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -28977,13 +26278,13 @@ _bitfield__write_var_BitField_offset11_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3972
+	js	L3591
 	cmpq	$16383, -8(%rbp)
-	jle	L3973
-L3972:
-	movl	$171425, %edi
+	jle	L3592
+L3591:
+	movl	$155041, %edi
 	call	__m3_fault
-L3973:
+L3592:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29021,13 +26322,13 @@ _bitfield__write_var_BitField_offset11_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3978
+	js	L3597
 	cmpq	$32767, -8(%rbp)
-	jle	L3979
-L3978:
-	movl	$171681, %edi
+	jle	L3598
+L3597:
+	movl	$155297, %edi
 	call	__m3_fault
-L3979:
+L3598:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29065,13 +26366,13 @@ _bitfield__write_var_BitField_offset11_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3984
+	js	L3603
 	cmpq	$65535, -8(%rbp)
-	jle	L3985
-L3984:
-	movl	$171937, %edi
+	jle	L3604
+L3603:
+	movl	$155553, %edi
 	call	__m3_fault
-L3985:
+L3604:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29109,13 +26410,13 @@ _bitfield__write_var_BitField_offset11_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3990
+	js	L3609
 	cmpq	$131071, -8(%rbp)
-	jle	L3991
-L3990:
-	movl	$172193, %edi
+	jle	L3610
+L3609:
+	movl	$155809, %edi
 	call	__m3_fault
-L3991:
+L3610:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29153,13 +26454,13 @@ _bitfield__write_var_BitField_offset11_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L3996
+	js	L3615
 	cmpq	$262143, -8(%rbp)
-	jle	L3997
-L3996:
-	movl	$172449, %edi
+	jle	L3616
+L3615:
+	movl	$156065, %edi
 	call	__m3_fault
-L3997:
+L3616:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29197,13 +26498,13 @@ _bitfield__write_var_BitField_offset11_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4002
+	js	L3621
 	cmpq	$524287, -8(%rbp)
-	jle	L4003
-L4002:
-	movl	$172705, %edi
+	jle	L3622
+L3621:
+	movl	$156321, %edi
 	call	__m3_fault
-L4003:
+L3622:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29241,13 +26542,13 @@ _bitfield__write_var_BitField_offset11_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4008
+	js	L3627
 	cmpq	$1048575, -8(%rbp)
-	jle	L4009
-L4008:
-	movl	$172961, %edi
+	jle	L3628
+L3627:
+	movl	$156577, %edi
 	call	__m3_fault
-L4009:
+L3628:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29285,13 +26586,13 @@ _bitfield__write_var_BitField_offset11_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4014
+	js	L3633
 	cmpq	$2097151, -8(%rbp)
-	jle	L4015
-L4014:
-	movl	$173217, %edi
+	jle	L3634
+L3633:
+	movl	$156833, %edi
 	call	__m3_fault
-L4015:
+L3634:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29328,13 +26629,13 @@ _bitfield__write_var_BitField_offset11_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4020
+	js	L3639
 	cmpq	$4194303, -8(%rbp)
-	jle	L4021
-L4020:
-	movl	$173473, %edi
+	jle	L3640
+L3639:
+	movl	$157089, %edi
 	call	__m3_fault
-L4021:
+L3640:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29371,13 +26672,13 @@ _bitfield__write_var_BitField_offset11_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4026
+	js	L3645
 	cmpq	$8388607, -8(%rbp)
-	jle	L4027
-L4026:
-	movl	$173729, %edi
+	jle	L3646
+L3645:
+	movl	$157345, %edi
 	call	__m3_fault
-L4027:
+L3646:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29414,13 +26715,13 @@ _bitfield__write_var_BitField_offset11_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4032
+	js	L3651
 	cmpq	$16777215, -8(%rbp)
-	jle	L4033
-L4032:
-	movl	$173985, %edi
+	jle	L3652
+L3651:
+	movl	$157601, %edi
 	call	__m3_fault
-L4033:
+L3652:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29457,13 +26758,13 @@ _bitfield__write_var_BitField_offset11_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4038
+	js	L3657
 	cmpq	$33554431, -8(%rbp)
-	jle	L4039
-L4038:
-	movl	$174241, %edi
+	jle	L3658
+L3657:
+	movl	$157857, %edi
 	call	__m3_fault
-L4039:
+L3658:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29500,13 +26801,13 @@ _bitfield__write_var_BitField_offset11_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4044
+	js	L3663
 	cmpq	$67108863, -8(%rbp)
-	jle	L4045
-L4044:
-	movl	$174497, %edi
+	jle	L3664
+L3663:
+	movl	$158113, %edi
 	call	__m3_fault
-L4045:
+L3664:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29543,13 +26844,13 @@ _bitfield__write_var_BitField_offset11_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4050
+	js	L3669
 	cmpq	$134217727, -8(%rbp)
-	jle	L4051
-L4050:
-	movl	$174753, %edi
+	jle	L3670
+L3669:
+	movl	$158369, %edi
 	call	__m3_fault
-L4051:
+L3670:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29586,13 +26887,13 @@ _bitfield__write_var_BitField_offset11_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4056
+	js	L3675
 	cmpq	$268435455, -8(%rbp)
-	jle	L4057
-L4056:
-	movl	$175009, %edi
+	jle	L3676
+L3675:
+	movl	$158625, %edi
 	call	__m3_fault
-L4057:
+L3676:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29629,13 +26930,13 @@ _bitfield__write_var_BitField_offset11_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4062
+	js	L3681
 	cmpq	$536870911, -8(%rbp)
-	jle	L4063
-L4062:
-	movl	$175265, %edi
+	jle	L3682
+L3681:
+	movl	$158881, %edi
 	call	__m3_fault
-L4063:
+L3682:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29672,13 +26973,13 @@ _bitfield__write_var_BitField_offset11_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4068
+	js	L3687
 	cmpq	$1073741823, -8(%rbp)
-	jle	L4069
-L4068:
-	movl	$175521, %edi
+	jle	L3688
+L3687:
+	movl	$159137, %edi
 	call	__m3_fault
-L4069:
+L3688:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29715,13 +27016,13 @@ _bitfield__write_var_BitField_offset11_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4074
+	js	L3693
 	cmpq	$2147483647, -8(%rbp)
-	jle	L4075
-L4074:
-	movl	$175777, %edi
+	jle	L3694
+L3693:
+	movl	$159393, %edi
 	call	__m3_fault
-L4075:
+L3694:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29758,14 +27059,14 @@ _bitfield__write_var_BitField_offset11_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4080
+	js	L3699
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L4081
-L4080:
-	movl	$176033, %edi
+	jle	L3700
+L3699:
+	movl	$159649, %edi
 	call	__m3_fault
-L4081:
+L3700:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29802,14 +27103,14 @@ _bitfield__write_var_BitField_offset11_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4086
+	js	L3705
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4087
-L4086:
-	movl	$176289, %edi
+	jle	L3706
+L3705:
+	movl	$159905, %edi
 	call	__m3_fault
-L4087:
+L3706:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29846,14 +27147,14 @@ _bitfield__write_var_BitField_offset11_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4092
+	js	L3711
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4093
-L4092:
-	movl	$176545, %edi
+	jle	L3712
+L3711:
+	movl	$160161, %edi
 	call	__m3_fault
-L4093:
+L3712:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29890,14 +27191,14 @@ _bitfield__write_var_BitField_offset11_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4098
+	js	L3717
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4099
-L4098:
-	movl	$176801, %edi
+	jle	L3718
+L3717:
+	movl	$160417, %edi
 	call	__m3_fault
-L4099:
+L3718:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29934,14 +27235,14 @@ _bitfield__write_var_BitField_offset11_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4104
+	js	L3723
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4105
-L4104:
-	movl	$177057, %edi
+	jle	L3724
+L3723:
+	movl	$160673, %edi
 	call	__m3_fault
-L4105:
+L3724:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -29978,14 +27279,14 @@ _bitfield__write_var_BitField_offset11_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4110
+	js	L3729
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4111
-L4110:
-	movl	$177313, %edi
+	jle	L3730
+L3729:
+	movl	$160929, %edi
 	call	__m3_fault
-L4111:
+L3730:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30022,14 +27323,14 @@ _bitfield__write_var_BitField_offset11_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4116
+	js	L3735
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4117
-L4116:
-	movl	$177569, %edi
+	jle	L3736
+L3735:
+	movl	$161185, %edi
 	call	__m3_fault
-L4117:
+L3736:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30066,14 +27367,14 @@ _bitfield__write_var_BitField_offset11_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4122
+	js	L3741
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4123
-L4122:
-	movl	$177825, %edi
+	jle	L3742
+L3741:
+	movl	$161441, %edi
 	call	__m3_fault
-L4123:
+L3742:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30110,14 +27411,14 @@ _bitfield__write_var_BitField_offset11_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4128
+	js	L3747
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4129
-L4128:
-	movl	$178081, %edi
+	jle	L3748
+L3747:
+	movl	$161697, %edi
 	call	__m3_fault
-L4129:
+L3748:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30154,14 +27455,14 @@ _bitfield__write_var_BitField_offset11_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4134
+	js	L3753
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4135
-L4134:
-	movl	$178337, %edi
+	jle	L3754
+L3753:
+	movl	$161953, %edi
 	call	__m3_fault
-L4135:
+L3754:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30198,14 +27499,14 @@ _bitfield__write_var_BitField_offset11_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4140
+	js	L3759
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4141
-L4140:
-	movl	$178593, %edi
+	jle	L3760
+L3759:
+	movl	$162209, %edi
 	call	__m3_fault
-L4141:
+L3760:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30242,14 +27543,14 @@ _bitfield__write_var_BitField_offset11_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4146
+	js	L3765
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4147
-L4146:
-	movl	$178849, %edi
+	jle	L3766
+L3765:
+	movl	$162465, %edi
 	call	__m3_fault
-L4147:
+L3766:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30286,14 +27587,14 @@ _bitfield__write_var_BitField_offset11_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4152
+	js	L3771
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4153
-L4152:
-	movl	$179105, %edi
+	jle	L3772
+L3771:
+	movl	$162721, %edi
 	call	__m3_fault
-L4153:
+L3772:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30330,14 +27631,14 @@ _bitfield__write_var_BitField_offset11_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4158
+	js	L3777
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4159
-L4158:
-	movl	$179361, %edi
+	jle	L3778
+L3777:
+	movl	$162977, %edi
 	call	__m3_fault
-L4159:
+L3778:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30374,14 +27675,14 @@ _bitfield__write_var_BitField_offset11_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4164
+	js	L3783
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4165
-L4164:
-	movl	$179617, %edi
+	jle	L3784
+L3783:
+	movl	$163233, %edi
 	call	__m3_fault
-L4165:
+L3784:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30418,14 +27719,14 @@ _bitfield__write_var_BitField_offset11_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4170
+	js	L3789
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4171
-L4170:
-	movl	$179873, %edi
+	jle	L3790
+L3789:
+	movl	$163489, %edi
 	call	__m3_fault
-L4171:
+L3790:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30462,14 +27763,14 @@ _bitfield__write_var_BitField_offset11_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4176
+	js	L3795
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4177
-L4176:
-	movl	$180129, %edi
+	jle	L3796
+L3795:
+	movl	$163745, %edi
 	call	__m3_fault
-L4177:
+L3796:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30506,14 +27807,14 @@ _bitfield__write_var_BitField_offset11_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4182
+	js	L3801
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4183
-L4182:
-	movl	$180385, %edi
+	jle	L3802
+L3801:
+	movl	$164001, %edi
 	call	__m3_fault
-L4183:
+L3802:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30550,14 +27851,14 @@ _bitfield__write_var_BitField_offset11_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4188
+	js	L3807
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4189
-L4188:
-	movl	$180641, %edi
+	jle	L3808
+L3807:
+	movl	$164257, %edi
 	call	__m3_fault
-L4189:
+L3808:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30594,14 +27895,14 @@ _bitfield__write_var_BitField_offset11_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4194
+	js	L3813
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4195
-L4194:
-	movl	$180897, %edi
+	jle	L3814
+L3813:
+	movl	$164513, %edi
 	call	__m3_fault
-L4195:
+L3814:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30638,14 +27939,14 @@ _bitfield__write_var_BitField_offset11_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4200
+	js	L3819
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4201
-L4200:
-	movl	$181153, %edi
+	jle	L3820
+L3819:
+	movl	$164769, %edi
 	call	__m3_fault
-L4201:
+L3820:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30681,14 +27982,14 @@ _bitfield__write_var_BitField_offset11_count53:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4206
+	js	L3825
 	movabsq	$9007199254740991, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4207
-L4206:
-	movl	$181409, %edi
+	jle	L3826
+L3825:
+	movl	$165025, %edi
 	call	__m3_fault
-L4207:
+L3826:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30724,13 +28025,13 @@ _bitfield__write_var_BitField_offset12_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4212
+	js	L3831
 	cmpq	$1, -8(%rbp)
-	jle	L4213
-L4212:
-	movl	$181665, %edi
+	jle	L3832
+L3831:
+	movl	$165281, %edi
 	call	__m3_fault
-L4213:
+L3832:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -30770,13 +28071,13 @@ _bitfield__write_var_BitField_offset12_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4218
+	js	L3837
 	cmpq	$3, -8(%rbp)
-	jle	L4219
-L4218:
-	movl	$181921, %edi
+	jle	L3838
+L3837:
+	movl	$165537, %edi
 	call	__m3_fault
-L4219:
+L3838:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -30816,13 +28117,13 @@ _bitfield__write_var_BitField_offset12_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4224
+	js	L3843
 	cmpq	$7, -8(%rbp)
-	jle	L4225
-L4224:
-	movl	$182177, %edi
+	jle	L3844
+L3843:
+	movl	$165793, %edi
 	call	__m3_fault
-L4225:
+L3844:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -30862,13 +28163,13 @@ _bitfield__write_var_BitField_offset12_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4230
+	js	L3849
 	cmpq	$15, -8(%rbp)
-	jle	L4231
-L4230:
-	movl	$182433, %edi
+	jle	L3850
+L3849:
+	movl	$166049, %edi
 	call	__m3_fault
-L4231:
+L3850:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -30908,13 +28209,13 @@ _bitfield__write_var_BitField_offset12_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4236
+	js	L3855
 	cmpq	$31, -8(%rbp)
-	jle	L4237
-L4236:
-	movl	$182689, %edi
+	jle	L3856
+L3855:
+	movl	$166305, %edi
 	call	__m3_fault
-L4237:
+L3856:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30952,13 +28253,13 @@ _bitfield__write_var_BitField_offset12_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4242
+	js	L3861
 	cmpq	$63, -8(%rbp)
-	jle	L4243
-L4242:
-	movl	$182945, %edi
+	jle	L3862
+L3861:
+	movl	$166561, %edi
 	call	__m3_fault
-L4243:
+L3862:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -30996,13 +28297,13 @@ _bitfield__write_var_BitField_offset12_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4248
+	js	L3867
 	cmpq	$127, -8(%rbp)
-	jle	L4249
-L4248:
-	movl	$183201, %edi
+	jle	L3868
+L3867:
+	movl	$166817, %edi
 	call	__m3_fault
-L4249:
+L3868:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31040,13 +28341,13 @@ _bitfield__write_var_BitField_offset12_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4254
+	js	L3873
 	cmpq	$255, -8(%rbp)
-	jle	L4255
-L4254:
-	movl	$183457, %edi
+	jle	L3874
+L3873:
+	movl	$167073, %edi
 	call	__m3_fault
-L4255:
+L3874:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31084,13 +28385,13 @@ _bitfield__write_var_BitField_offset12_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4260
+	js	L3879
 	cmpq	$511, -8(%rbp)
-	jle	L4261
-L4260:
-	movl	$183713, %edi
+	jle	L3880
+L3879:
+	movl	$167329, %edi
 	call	__m3_fault
-L4261:
+L3880:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31128,13 +28429,13 @@ _bitfield__write_var_BitField_offset12_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4266
+	js	L3885
 	cmpq	$1023, -8(%rbp)
-	jle	L4267
-L4266:
-	movl	$183969, %edi
+	jle	L3886
+L3885:
+	movl	$167585, %edi
 	call	__m3_fault
-L4267:
+L3886:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31172,13 +28473,13 @@ _bitfield__write_var_BitField_offset12_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4272
+	js	L3891
 	cmpq	$2047, -8(%rbp)
-	jle	L4273
-L4272:
-	movl	$184225, %edi
+	jle	L3892
+L3891:
+	movl	$167841, %edi
 	call	__m3_fault
-L4273:
+L3892:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31216,13 +28517,13 @@ _bitfield__write_var_BitField_offset12_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4278
+	js	L3897
 	cmpq	$4095, -8(%rbp)
-	jle	L4279
-L4278:
-	movl	$184481, %edi
+	jle	L3898
+L3897:
+	movl	$168097, %edi
 	call	__m3_fault
-L4279:
+L3898:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31260,13 +28561,13 @@ _bitfield__write_var_BitField_offset12_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4284
+	js	L3903
 	cmpq	$8191, -8(%rbp)
-	jle	L4285
-L4284:
-	movl	$184737, %edi
+	jle	L3904
+L3903:
+	movl	$168353, %edi
 	call	__m3_fault
-L4285:
+L3904:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31304,13 +28605,13 @@ _bitfield__write_var_BitField_offset12_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4290
+	js	L3909
 	cmpq	$16383, -8(%rbp)
-	jle	L4291
-L4290:
-	movl	$184993, %edi
+	jle	L3910
+L3909:
+	movl	$168609, %edi
 	call	__m3_fault
-L4291:
+L3910:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31348,13 +28649,13 @@ _bitfield__write_var_BitField_offset12_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4296
+	js	L3915
 	cmpq	$32767, -8(%rbp)
-	jle	L4297
-L4296:
-	movl	$185249, %edi
+	jle	L3916
+L3915:
+	movl	$168865, %edi
 	call	__m3_fault
-L4297:
+L3916:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31392,13 +28693,13 @@ _bitfield__write_var_BitField_offset12_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4302
+	js	L3921
 	cmpq	$65535, -8(%rbp)
-	jle	L4303
-L4302:
-	movl	$185505, %edi
+	jle	L3922
+L3921:
+	movl	$169121, %edi
 	call	__m3_fault
-L4303:
+L3922:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31436,13 +28737,13 @@ _bitfield__write_var_BitField_offset12_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4308
+	js	L3927
 	cmpq	$131071, -8(%rbp)
-	jle	L4309
-L4308:
-	movl	$185761, %edi
+	jle	L3928
+L3927:
+	movl	$169377, %edi
 	call	__m3_fault
-L4309:
+L3928:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31480,13 +28781,13 @@ _bitfield__write_var_BitField_offset12_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4314
+	js	L3933
 	cmpq	$262143, -8(%rbp)
-	jle	L4315
-L4314:
-	movl	$186017, %edi
+	jle	L3934
+L3933:
+	movl	$169633, %edi
 	call	__m3_fault
-L4315:
+L3934:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31524,13 +28825,13 @@ _bitfield__write_var_BitField_offset12_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4320
+	js	L3939
 	cmpq	$524287, -8(%rbp)
-	jle	L4321
-L4320:
-	movl	$186273, %edi
+	jle	L3940
+L3939:
+	movl	$169889, %edi
 	call	__m3_fault
-L4321:
+L3940:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31568,13 +28869,13 @@ _bitfield__write_var_BitField_offset12_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4326
+	js	L3945
 	cmpq	$1048575, -8(%rbp)
-	jle	L4327
-L4326:
-	movl	$186529, %edi
+	jle	L3946
+L3945:
+	movl	$170145, %edi
 	call	__m3_fault
-L4327:
+L3946:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31611,13 +28912,13 @@ _bitfield__write_var_BitField_offset12_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4332
+	js	L3951
 	cmpq	$2097151, -8(%rbp)
-	jle	L4333
-L4332:
-	movl	$186785, %edi
+	jle	L3952
+L3951:
+	movl	$170401, %edi
 	call	__m3_fault
-L4333:
+L3952:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31654,13 +28955,13 @@ _bitfield__write_var_BitField_offset12_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4338
+	js	L3957
 	cmpq	$4194303, -8(%rbp)
-	jle	L4339
-L4338:
-	movl	$187041, %edi
+	jle	L3958
+L3957:
+	movl	$170657, %edi
 	call	__m3_fault
-L4339:
+L3958:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31697,13 +28998,13 @@ _bitfield__write_var_BitField_offset12_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4344
+	js	L3963
 	cmpq	$8388607, -8(%rbp)
-	jle	L4345
-L4344:
-	movl	$187297, %edi
+	jle	L3964
+L3963:
+	movl	$170913, %edi
 	call	__m3_fault
-L4345:
+L3964:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31740,13 +29041,13 @@ _bitfield__write_var_BitField_offset12_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4350
+	js	L3969
 	cmpq	$16777215, -8(%rbp)
-	jle	L4351
-L4350:
-	movl	$187553, %edi
+	jle	L3970
+L3969:
+	movl	$171169, %edi
 	call	__m3_fault
-L4351:
+L3970:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31783,13 +29084,13 @@ _bitfield__write_var_BitField_offset12_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4356
+	js	L3975
 	cmpq	$33554431, -8(%rbp)
-	jle	L4357
-L4356:
-	movl	$187809, %edi
+	jle	L3976
+L3975:
+	movl	$171425, %edi
 	call	__m3_fault
-L4357:
+L3976:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31826,13 +29127,13 @@ _bitfield__write_var_BitField_offset12_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4362
+	js	L3981
 	cmpq	$67108863, -8(%rbp)
-	jle	L4363
-L4362:
-	movl	$188065, %edi
+	jle	L3982
+L3981:
+	movl	$171681, %edi
 	call	__m3_fault
-L4363:
+L3982:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31869,13 +29170,13 @@ _bitfield__write_var_BitField_offset12_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4368
+	js	L3987
 	cmpq	$134217727, -8(%rbp)
-	jle	L4369
-L4368:
-	movl	$188321, %edi
+	jle	L3988
+L3987:
+	movl	$171937, %edi
 	call	__m3_fault
-L4369:
+L3988:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31912,13 +29213,13 @@ _bitfield__write_var_BitField_offset12_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4374
+	js	L3993
 	cmpq	$268435455, -8(%rbp)
-	jle	L4375
-L4374:
-	movl	$188577, %edi
+	jle	L3994
+L3993:
+	movl	$172193, %edi
 	call	__m3_fault
-L4375:
+L3994:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31955,13 +29256,13 @@ _bitfield__write_var_BitField_offset12_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4380
+	js	L3999
 	cmpq	$536870911, -8(%rbp)
-	jle	L4381
-L4380:
-	movl	$188833, %edi
+	jle	L4000
+L3999:
+	movl	$172449, %edi
 	call	__m3_fault
-L4381:
+L4000:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -31998,13 +29299,13 @@ _bitfield__write_var_BitField_offset12_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4386
+	js	L4005
 	cmpq	$1073741823, -8(%rbp)
-	jle	L4387
-L4386:
-	movl	$189089, %edi
+	jle	L4006
+L4005:
+	movl	$172705, %edi
 	call	__m3_fault
-L4387:
+L4006:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32041,13 +29342,13 @@ _bitfield__write_var_BitField_offset12_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4392
+	js	L4011
 	cmpq	$2147483647, -8(%rbp)
-	jle	L4393
-L4392:
-	movl	$189345, %edi
+	jle	L4012
+L4011:
+	movl	$172961, %edi
 	call	__m3_fault
-L4393:
+L4012:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32084,14 +29385,14 @@ _bitfield__write_var_BitField_offset12_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4398
+	js	L4017
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L4399
-L4398:
-	movl	$189601, %edi
+	jle	L4018
+L4017:
+	movl	$173217, %edi
 	call	__m3_fault
-L4399:
+L4018:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32128,14 +29429,14 @@ _bitfield__write_var_BitField_offset12_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4404
+	js	L4023
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4405
-L4404:
-	movl	$189857, %edi
+	jle	L4024
+L4023:
+	movl	$173473, %edi
 	call	__m3_fault
-L4405:
+L4024:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32172,14 +29473,14 @@ _bitfield__write_var_BitField_offset12_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4410
+	js	L4029
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4411
-L4410:
-	movl	$190113, %edi
+	jle	L4030
+L4029:
+	movl	$173729, %edi
 	call	__m3_fault
-L4411:
+L4030:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32216,14 +29517,14 @@ _bitfield__write_var_BitField_offset12_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4416
+	js	L4035
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4417
-L4416:
-	movl	$190369, %edi
+	jle	L4036
+L4035:
+	movl	$173985, %edi
 	call	__m3_fault
-L4417:
+L4036:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32260,14 +29561,14 @@ _bitfield__write_var_BitField_offset12_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4422
+	js	L4041
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4423
-L4422:
-	movl	$190625, %edi
+	jle	L4042
+L4041:
+	movl	$174241, %edi
 	call	__m3_fault
-L4423:
+L4042:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32304,14 +29605,14 @@ _bitfield__write_var_BitField_offset12_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4428
+	js	L4047
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4429
-L4428:
-	movl	$190881, %edi
+	jle	L4048
+L4047:
+	movl	$174497, %edi
 	call	__m3_fault
-L4429:
+L4048:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32348,14 +29649,14 @@ _bitfield__write_var_BitField_offset12_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4434
+	js	L4053
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4435
-L4434:
-	movl	$191137, %edi
+	jle	L4054
+L4053:
+	movl	$174753, %edi
 	call	__m3_fault
-L4435:
+L4054:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32392,14 +29693,14 @@ _bitfield__write_var_BitField_offset12_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4440
+	js	L4059
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4441
-L4440:
-	movl	$191393, %edi
+	jle	L4060
+L4059:
+	movl	$175009, %edi
 	call	__m3_fault
-L4441:
+L4060:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32436,14 +29737,14 @@ _bitfield__write_var_BitField_offset12_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4446
+	js	L4065
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4447
-L4446:
-	movl	$191649, %edi
+	jle	L4066
+L4065:
+	movl	$175265, %edi
 	call	__m3_fault
-L4447:
+L4066:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32480,14 +29781,14 @@ _bitfield__write_var_BitField_offset12_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4452
+	js	L4071
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4453
-L4452:
-	movl	$191905, %edi
+	jle	L4072
+L4071:
+	movl	$175521, %edi
 	call	__m3_fault
-L4453:
+L4072:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32524,14 +29825,14 @@ _bitfield__write_var_BitField_offset12_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4458
+	js	L4077
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4459
-L4458:
-	movl	$192161, %edi
+	jle	L4078
+L4077:
+	movl	$175777, %edi
 	call	__m3_fault
-L4459:
+L4078:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32568,14 +29869,14 @@ _bitfield__write_var_BitField_offset12_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4464
+	js	L4083
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4465
-L4464:
-	movl	$192417, %edi
+	jle	L4084
+L4083:
+	movl	$176033, %edi
 	call	__m3_fault
-L4465:
+L4084:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32612,14 +29913,14 @@ _bitfield__write_var_BitField_offset12_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4470
+	js	L4089
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4471
-L4470:
-	movl	$192673, %edi
+	jle	L4090
+L4089:
+	movl	$176289, %edi
 	call	__m3_fault
-L4471:
+L4090:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32656,14 +29957,14 @@ _bitfield__write_var_BitField_offset12_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4476
+	js	L4095
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4477
-L4476:
-	movl	$192929, %edi
+	jle	L4096
+L4095:
+	movl	$176545, %edi
 	call	__m3_fault
-L4477:
+L4096:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32700,14 +30001,14 @@ _bitfield__write_var_BitField_offset12_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4482
+	js	L4101
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4483
-L4482:
-	movl	$193185, %edi
+	jle	L4102
+L4101:
+	movl	$176801, %edi
 	call	__m3_fault
-L4483:
+L4102:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32744,14 +30045,14 @@ _bitfield__write_var_BitField_offset12_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4488
+	js	L4107
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4489
-L4488:
-	movl	$193441, %edi
+	jle	L4108
+L4107:
+	movl	$177057, %edi
 	call	__m3_fault
-L4489:
+L4108:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32788,14 +30089,14 @@ _bitfield__write_var_BitField_offset12_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4494
+	js	L4113
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4495
-L4494:
-	movl	$193697, %edi
+	jle	L4114
+L4113:
+	movl	$177313, %edi
 	call	__m3_fault
-L4495:
+L4114:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32832,14 +30133,14 @@ _bitfield__write_var_BitField_offset12_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4500
+	js	L4119
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4501
-L4500:
-	movl	$193953, %edi
+	jle	L4120
+L4119:
+	movl	$177569, %edi
 	call	__m3_fault
-L4501:
+L4120:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32876,14 +30177,14 @@ _bitfield__write_var_BitField_offset12_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4506
+	js	L4125
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4507
-L4506:
-	movl	$194209, %edi
+	jle	L4126
+L4125:
+	movl	$177825, %edi
 	call	__m3_fault
-L4507:
+L4126:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32920,14 +30221,14 @@ _bitfield__write_var_BitField_offset12_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4512
+	js	L4131
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4513
-L4512:
-	movl	$194465, %edi
+	jle	L4132
+L4131:
+	movl	$178081, %edi
 	call	__m3_fault
-L4513:
+L4132:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -32963,14 +30264,14 @@ _bitfield__write_var_BitField_offset12_count52:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4518
+	js	L4137
 	movabsq	$4503599627370495, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4519
-L4518:
-	movl	$194721, %edi
+	jle	L4138
+L4137:
+	movl	$178337, %edi
 	call	__m3_fault
-L4519:
+L4138:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33006,13 +30307,13 @@ _bitfield__write_var_BitField_offset13_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4524
+	js	L4143
 	cmpq	$1, -8(%rbp)
-	jle	L4525
-L4524:
-	movl	$194977, %edi
+	jle	L4144
+L4143:
+	movl	$178593, %edi
 	call	__m3_fault
-L4525:
+L4144:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -33052,13 +30353,13 @@ _bitfield__write_var_BitField_offset13_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4530
+	js	L4149
 	cmpq	$3, -8(%rbp)
-	jle	L4531
-L4530:
-	movl	$195233, %edi
+	jle	L4150
+L4149:
+	movl	$178849, %edi
 	call	__m3_fault
-L4531:
+L4150:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -33098,13 +30399,13 @@ _bitfield__write_var_BitField_offset13_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4536
+	js	L4155
 	cmpq	$7, -8(%rbp)
-	jle	L4537
-L4536:
-	movl	$195489, %edi
+	jle	L4156
+L4155:
+	movl	$179105, %edi
 	call	__m3_fault
-L4537:
+L4156:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -33144,13 +30445,13 @@ _bitfield__write_var_BitField_offset13_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4542
+	js	L4161
 	cmpq	$15, -8(%rbp)
-	jle	L4543
-L4542:
-	movl	$195745, %edi
+	jle	L4162
+L4161:
+	movl	$179361, %edi
 	call	__m3_fault
-L4543:
+L4162:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33188,13 +30489,13 @@ _bitfield__write_var_BitField_offset13_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4548
+	js	L4167
 	cmpq	$31, -8(%rbp)
-	jle	L4549
-L4548:
-	movl	$196001, %edi
+	jle	L4168
+L4167:
+	movl	$179617, %edi
 	call	__m3_fault
-L4549:
+L4168:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33232,13 +30533,13 @@ _bitfield__write_var_BitField_offset13_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4554
+	js	L4173
 	cmpq	$63, -8(%rbp)
-	jle	L4555
-L4554:
-	movl	$196257, %edi
+	jle	L4174
+L4173:
+	movl	$179873, %edi
 	call	__m3_fault
-L4555:
+L4174:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33276,13 +30577,13 @@ _bitfield__write_var_BitField_offset13_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4560
+	js	L4179
 	cmpq	$127, -8(%rbp)
-	jle	L4561
-L4560:
-	movl	$196513, %edi
+	jle	L4180
+L4179:
+	movl	$180129, %edi
 	call	__m3_fault
-L4561:
+L4180:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33320,13 +30621,13 @@ _bitfield__write_var_BitField_offset13_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4566
+	js	L4185
 	cmpq	$255, -8(%rbp)
-	jle	L4567
-L4566:
-	movl	$196769, %edi
+	jle	L4186
+L4185:
+	movl	$180385, %edi
 	call	__m3_fault
-L4567:
+L4186:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33364,13 +30665,13 @@ _bitfield__write_var_BitField_offset13_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4572
+	js	L4191
 	cmpq	$511, -8(%rbp)
-	jle	L4573
-L4572:
-	movl	$197025, %edi
+	jle	L4192
+L4191:
+	movl	$180641, %edi
 	call	__m3_fault
-L4573:
+L4192:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33408,13 +30709,13 @@ _bitfield__write_var_BitField_offset13_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4578
+	js	L4197
 	cmpq	$1023, -8(%rbp)
-	jle	L4579
-L4578:
-	movl	$197281, %edi
+	jle	L4198
+L4197:
+	movl	$180897, %edi
 	call	__m3_fault
-L4579:
+L4198:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33452,13 +30753,13 @@ _bitfield__write_var_BitField_offset13_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4584
+	js	L4203
 	cmpq	$2047, -8(%rbp)
-	jle	L4585
-L4584:
-	movl	$197537, %edi
+	jle	L4204
+L4203:
+	movl	$181153, %edi
 	call	__m3_fault
-L4585:
+L4204:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33496,13 +30797,13 @@ _bitfield__write_var_BitField_offset13_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4590
+	js	L4209
 	cmpq	$4095, -8(%rbp)
-	jle	L4591
-L4590:
-	movl	$197793, %edi
+	jle	L4210
+L4209:
+	movl	$181409, %edi
 	call	__m3_fault
-L4591:
+L4210:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33540,13 +30841,13 @@ _bitfield__write_var_BitField_offset13_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4596
+	js	L4215
 	cmpq	$8191, -8(%rbp)
-	jle	L4597
-L4596:
-	movl	$198049, %edi
+	jle	L4216
+L4215:
+	movl	$181665, %edi
 	call	__m3_fault
-L4597:
+L4216:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33584,13 +30885,13 @@ _bitfield__write_var_BitField_offset13_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4602
+	js	L4221
 	cmpq	$16383, -8(%rbp)
-	jle	L4603
-L4602:
-	movl	$198305, %edi
+	jle	L4222
+L4221:
+	movl	$181921, %edi
 	call	__m3_fault
-L4603:
+L4222:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33628,13 +30929,13 @@ _bitfield__write_var_BitField_offset13_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4608
+	js	L4227
 	cmpq	$32767, -8(%rbp)
-	jle	L4609
-L4608:
-	movl	$198561, %edi
+	jle	L4228
+L4227:
+	movl	$182177, %edi
 	call	__m3_fault
-L4609:
+L4228:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33672,13 +30973,13 @@ _bitfield__write_var_BitField_offset13_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4614
+	js	L4233
 	cmpq	$65535, -8(%rbp)
-	jle	L4615
-L4614:
-	movl	$198817, %edi
+	jle	L4234
+L4233:
+	movl	$182433, %edi
 	call	__m3_fault
-L4615:
+L4234:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33716,13 +31017,13 @@ _bitfield__write_var_BitField_offset13_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4620
+	js	L4239
 	cmpq	$131071, -8(%rbp)
-	jle	L4621
-L4620:
-	movl	$199073, %edi
+	jle	L4240
+L4239:
+	movl	$182689, %edi
 	call	__m3_fault
-L4621:
+L4240:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33760,13 +31061,13 @@ _bitfield__write_var_BitField_offset13_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4626
+	js	L4245
 	cmpq	$262143, -8(%rbp)
-	jle	L4627
-L4626:
-	movl	$199329, %edi
+	jle	L4246
+L4245:
+	movl	$182945, %edi
 	call	__m3_fault
-L4627:
+L4246:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33804,13 +31105,13 @@ _bitfield__write_var_BitField_offset13_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4632
+	js	L4251
 	cmpq	$524287, -8(%rbp)
-	jle	L4633
-L4632:
-	movl	$199585, %edi
+	jle	L4252
+L4251:
+	movl	$183201, %edi
 	call	__m3_fault
-L4633:
+L4252:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33847,13 +31148,13 @@ _bitfield__write_var_BitField_offset13_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4638
+	js	L4257
 	cmpq	$1048575, -8(%rbp)
-	jle	L4639
-L4638:
-	movl	$199841, %edi
+	jle	L4258
+L4257:
+	movl	$183457, %edi
 	call	__m3_fault
-L4639:
+L4258:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33890,13 +31191,13 @@ _bitfield__write_var_BitField_offset13_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4644
+	js	L4263
 	cmpq	$2097151, -8(%rbp)
-	jle	L4645
-L4644:
-	movl	$200097, %edi
+	jle	L4264
+L4263:
+	movl	$183713, %edi
 	call	__m3_fault
-L4645:
+L4264:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33933,13 +31234,13 @@ _bitfield__write_var_BitField_offset13_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4650
+	js	L4269
 	cmpq	$4194303, -8(%rbp)
-	jle	L4651
-L4650:
-	movl	$200353, %edi
+	jle	L4270
+L4269:
+	movl	$183969, %edi
 	call	__m3_fault
-L4651:
+L4270:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -33976,13 +31277,13 @@ _bitfield__write_var_BitField_offset13_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4656
+	js	L4275
 	cmpq	$8388607, -8(%rbp)
-	jle	L4657
-L4656:
-	movl	$200609, %edi
+	jle	L4276
+L4275:
+	movl	$184225, %edi
 	call	__m3_fault
-L4657:
+L4276:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34019,13 +31320,13 @@ _bitfield__write_var_BitField_offset13_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4662
+	js	L4281
 	cmpq	$16777215, -8(%rbp)
-	jle	L4663
-L4662:
-	movl	$200865, %edi
+	jle	L4282
+L4281:
+	movl	$184481, %edi
 	call	__m3_fault
-L4663:
+L4282:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34062,13 +31363,13 @@ _bitfield__write_var_BitField_offset13_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4668
+	js	L4287
 	cmpq	$33554431, -8(%rbp)
-	jle	L4669
-L4668:
-	movl	$201121, %edi
+	jle	L4288
+L4287:
+	movl	$184737, %edi
 	call	__m3_fault
-L4669:
+L4288:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34105,13 +31406,13 @@ _bitfield__write_var_BitField_offset13_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4674
+	js	L4293
 	cmpq	$67108863, -8(%rbp)
-	jle	L4675
-L4674:
-	movl	$201377, %edi
+	jle	L4294
+L4293:
+	movl	$184993, %edi
 	call	__m3_fault
-L4675:
+L4294:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34148,13 +31449,13 @@ _bitfield__write_var_BitField_offset13_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4680
+	js	L4299
 	cmpq	$134217727, -8(%rbp)
-	jle	L4681
-L4680:
-	movl	$201633, %edi
+	jle	L4300
+L4299:
+	movl	$185249, %edi
 	call	__m3_fault
-L4681:
+L4300:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34191,13 +31492,13 @@ _bitfield__write_var_BitField_offset13_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4686
+	js	L4305
 	cmpq	$268435455, -8(%rbp)
-	jle	L4687
-L4686:
-	movl	$201889, %edi
+	jle	L4306
+L4305:
+	movl	$185505, %edi
 	call	__m3_fault
-L4687:
+L4306:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34234,13 +31535,13 @@ _bitfield__write_var_BitField_offset13_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4692
+	js	L4311
 	cmpq	$536870911, -8(%rbp)
-	jle	L4693
-L4692:
-	movl	$202145, %edi
+	jle	L4312
+L4311:
+	movl	$185761, %edi
 	call	__m3_fault
-L4693:
+L4312:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34277,13 +31578,13 @@ _bitfield__write_var_BitField_offset13_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4698
+	js	L4317
 	cmpq	$1073741823, -8(%rbp)
-	jle	L4699
-L4698:
-	movl	$202401, %edi
+	jle	L4318
+L4317:
+	movl	$186017, %edi
 	call	__m3_fault
-L4699:
+L4318:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34320,13 +31621,13 @@ _bitfield__write_var_BitField_offset13_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4704
+	js	L4323
 	cmpq	$2147483647, -8(%rbp)
-	jle	L4705
-L4704:
-	movl	$202657, %edi
+	jle	L4324
+L4323:
+	movl	$186273, %edi
 	call	__m3_fault
-L4705:
+L4324:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34363,14 +31664,14 @@ _bitfield__write_var_BitField_offset13_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4710
+	js	L4329
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L4711
-L4710:
-	movl	$202913, %edi
+	jle	L4330
+L4329:
+	movl	$186529, %edi
 	call	__m3_fault
-L4711:
+L4330:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34407,14 +31708,14 @@ _bitfield__write_var_BitField_offset13_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4716
+	js	L4335
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4717
-L4716:
-	movl	$203169, %edi
+	jle	L4336
+L4335:
+	movl	$186785, %edi
 	call	__m3_fault
-L4717:
+L4336:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34451,14 +31752,14 @@ _bitfield__write_var_BitField_offset13_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4722
+	js	L4341
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4723
-L4722:
-	movl	$203425, %edi
+	jle	L4342
+L4341:
+	movl	$187041, %edi
 	call	__m3_fault
-L4723:
+L4342:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34495,14 +31796,14 @@ _bitfield__write_var_BitField_offset13_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4728
+	js	L4347
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4729
-L4728:
-	movl	$203681, %edi
+	jle	L4348
+L4347:
+	movl	$187297, %edi
 	call	__m3_fault
-L4729:
+L4348:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34539,14 +31840,14 @@ _bitfield__write_var_BitField_offset13_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4734
+	js	L4353
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4735
-L4734:
-	movl	$203937, %edi
+	jle	L4354
+L4353:
+	movl	$187553, %edi
 	call	__m3_fault
-L4735:
+L4354:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34583,14 +31884,14 @@ _bitfield__write_var_BitField_offset13_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4740
+	js	L4359
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4741
-L4740:
-	movl	$204193, %edi
+	jle	L4360
+L4359:
+	movl	$187809, %edi
 	call	__m3_fault
-L4741:
+L4360:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34627,14 +31928,14 @@ _bitfield__write_var_BitField_offset13_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4746
+	js	L4365
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4747
-L4746:
-	movl	$204449, %edi
+	jle	L4366
+L4365:
+	movl	$188065, %edi
 	call	__m3_fault
-L4747:
+L4366:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34671,14 +31972,14 @@ _bitfield__write_var_BitField_offset13_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4752
+	js	L4371
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4753
-L4752:
-	movl	$204705, %edi
+	jle	L4372
+L4371:
+	movl	$188321, %edi
 	call	__m3_fault
-L4753:
+L4372:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34715,14 +32016,14 @@ _bitfield__write_var_BitField_offset13_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4758
+	js	L4377
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4759
-L4758:
-	movl	$204961, %edi
+	jle	L4378
+L4377:
+	movl	$188577, %edi
 	call	__m3_fault
-L4759:
+L4378:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34759,14 +32060,14 @@ _bitfield__write_var_BitField_offset13_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4764
+	js	L4383
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4765
-L4764:
-	movl	$205217, %edi
+	jle	L4384
+L4383:
+	movl	$188833, %edi
 	call	__m3_fault
-L4765:
+L4384:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34803,14 +32104,14 @@ _bitfield__write_var_BitField_offset13_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4770
+	js	L4389
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4771
-L4770:
-	movl	$205473, %edi
+	jle	L4390
+L4389:
+	movl	$189089, %edi
 	call	__m3_fault
-L4771:
+L4390:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34847,14 +32148,14 @@ _bitfield__write_var_BitField_offset13_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4776
+	js	L4395
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4777
-L4776:
-	movl	$205729, %edi
+	jle	L4396
+L4395:
+	movl	$189345, %edi
 	call	__m3_fault
-L4777:
+L4396:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34891,14 +32192,14 @@ _bitfield__write_var_BitField_offset13_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4782
+	js	L4401
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4783
-L4782:
-	movl	$205985, %edi
+	jle	L4402
+L4401:
+	movl	$189601, %edi
 	call	__m3_fault
-L4783:
+L4402:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34935,14 +32236,14 @@ _bitfield__write_var_BitField_offset13_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4788
+	js	L4407
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4789
-L4788:
-	movl	$206241, %edi
+	jle	L4408
+L4407:
+	movl	$189857, %edi
 	call	__m3_fault
-L4789:
+L4408:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -34979,14 +32280,14 @@ _bitfield__write_var_BitField_offset13_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4794
+	js	L4413
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4795
-L4794:
-	movl	$206497, %edi
+	jle	L4414
+L4413:
+	movl	$190113, %edi
 	call	__m3_fault
-L4795:
+L4414:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35023,14 +32324,14 @@ _bitfield__write_var_BitField_offset13_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4800
+	js	L4419
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4801
-L4800:
-	movl	$206753, %edi
+	jle	L4420
+L4419:
+	movl	$190369, %edi
 	call	__m3_fault
-L4801:
+L4420:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35067,14 +32368,14 @@ _bitfield__write_var_BitField_offset13_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4806
+	js	L4425
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4807
-L4806:
-	movl	$207009, %edi
+	jle	L4426
+L4425:
+	movl	$190625, %edi
 	call	__m3_fault
-L4807:
+L4426:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35111,14 +32412,14 @@ _bitfield__write_var_BitField_offset13_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4812
+	js	L4431
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4813
-L4812:
-	movl	$207265, %edi
+	jle	L4432
+L4431:
+	movl	$190881, %edi
 	call	__m3_fault
-L4813:
+L4432:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35155,14 +32456,14 @@ _bitfield__write_var_BitField_offset13_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4818
+	js	L4437
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4819
-L4818:
-	movl	$207521, %edi
+	jle	L4438
+L4437:
+	movl	$191137, %edi
 	call	__m3_fault
-L4819:
+L4438:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35198,14 +32499,14 @@ _bitfield__write_var_BitField_offset13_count51:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4824
+	js	L4443
 	movabsq	$2251799813685247, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L4825
-L4824:
-	movl	$207777, %edi
+	jle	L4444
+L4443:
+	movl	$191393, %edi
 	call	__m3_fault
-L4825:
+L4444:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35241,13 +32542,13 @@ _bitfield__write_var_BitField_offset14_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4830
+	js	L4449
 	cmpq	$1, -8(%rbp)
-	jle	L4831
-L4830:
-	movl	$208033, %edi
+	jle	L4450
+L4449:
+	movl	$191649, %edi
 	call	__m3_fault
-L4831:
+L4450:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -35287,13 +32588,13 @@ _bitfield__write_var_BitField_offset14_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4836
+	js	L4455
 	cmpq	$3, -8(%rbp)
-	jle	L4837
-L4836:
-	movl	$208289, %edi
+	jle	L4456
+L4455:
+	movl	$191905, %edi
 	call	__m3_fault
-L4837:
+L4456:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -35333,13 +32634,13 @@ _bitfield__write_var_BitField_offset14_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4842
+	js	L4461
 	cmpq	$7, -8(%rbp)
-	jle	L4843
-L4842:
-	movl	$208545, %edi
+	jle	L4462
+L4461:
+	movl	$192161, %edi
 	call	__m3_fault
-L4843:
+L4462:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35377,13 +32678,13 @@ _bitfield__write_var_BitField_offset14_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4848
+	js	L4467
 	cmpq	$15, -8(%rbp)
-	jle	L4849
-L4848:
-	movl	$208801, %edi
+	jle	L4468
+L4467:
+	movl	$192417, %edi
 	call	__m3_fault
-L4849:
+L4468:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35421,13 +32722,13 @@ _bitfield__write_var_BitField_offset14_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4854
+	js	L4473
 	cmpq	$31, -8(%rbp)
-	jle	L4855
-L4854:
-	movl	$209057, %edi
+	jle	L4474
+L4473:
+	movl	$192673, %edi
 	call	__m3_fault
-L4855:
+L4474:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35465,13 +32766,13 @@ _bitfield__write_var_BitField_offset14_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4860
+	js	L4479
 	cmpq	$63, -8(%rbp)
-	jle	L4861
-L4860:
-	movl	$209313, %edi
+	jle	L4480
+L4479:
+	movl	$192929, %edi
 	call	__m3_fault
-L4861:
+L4480:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35509,13 +32810,13 @@ _bitfield__write_var_BitField_offset14_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4866
+	js	L4485
 	cmpq	$127, -8(%rbp)
-	jle	L4867
-L4866:
-	movl	$209569, %edi
+	jle	L4486
+L4485:
+	movl	$193185, %edi
 	call	__m3_fault
-L4867:
+L4486:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35553,13 +32854,13 @@ _bitfield__write_var_BitField_offset14_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4872
+	js	L4491
 	cmpq	$255, -8(%rbp)
-	jle	L4873
-L4872:
-	movl	$209825, %edi
+	jle	L4492
+L4491:
+	movl	$193441, %edi
 	call	__m3_fault
-L4873:
+L4492:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35597,13 +32898,13 @@ _bitfield__write_var_BitField_offset14_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4878
+	js	L4497
 	cmpq	$511, -8(%rbp)
-	jle	L4879
-L4878:
-	movl	$210081, %edi
+	jle	L4498
+L4497:
+	movl	$193697, %edi
 	call	__m3_fault
-L4879:
+L4498:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35641,13 +32942,13 @@ _bitfield__write_var_BitField_offset14_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4884
+	js	L4503
 	cmpq	$1023, -8(%rbp)
-	jle	L4885
-L4884:
-	movl	$210337, %edi
+	jle	L4504
+L4503:
+	movl	$193953, %edi
 	call	__m3_fault
-L4885:
+L4504:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35685,13 +32986,13 @@ _bitfield__write_var_BitField_offset14_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4890
+	js	L4509
 	cmpq	$2047, -8(%rbp)
-	jle	L4891
-L4890:
-	movl	$210593, %edi
+	jle	L4510
+L4509:
+	movl	$194209, %edi
 	call	__m3_fault
-L4891:
+L4510:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35729,13 +33030,13 @@ _bitfield__write_var_BitField_offset14_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4896
+	js	L4515
 	cmpq	$4095, -8(%rbp)
-	jle	L4897
-L4896:
-	movl	$210849, %edi
+	jle	L4516
+L4515:
+	movl	$194465, %edi
 	call	__m3_fault
-L4897:
+L4516:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35773,13 +33074,13 @@ _bitfield__write_var_BitField_offset14_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4902
+	js	L4521
 	cmpq	$8191, -8(%rbp)
-	jle	L4903
-L4902:
-	movl	$211105, %edi
+	jle	L4522
+L4521:
+	movl	$194721, %edi
 	call	__m3_fault
-L4903:
+L4522:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35817,13 +33118,13 @@ _bitfield__write_var_BitField_offset14_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4908
+	js	L4527
 	cmpq	$16383, -8(%rbp)
-	jle	L4909
-L4908:
-	movl	$211361, %edi
+	jle	L4528
+L4527:
+	movl	$194977, %edi
 	call	__m3_fault
-L4909:
+L4528:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35861,13 +33162,13 @@ _bitfield__write_var_BitField_offset14_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4914
+	js	L4533
 	cmpq	$32767, -8(%rbp)
-	jle	L4915
-L4914:
-	movl	$211617, %edi
+	jle	L4534
+L4533:
+	movl	$195233, %edi
 	call	__m3_fault
-L4915:
+L4534:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35905,13 +33206,13 @@ _bitfield__write_var_BitField_offset14_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4920
+	js	L4539
 	cmpq	$65535, -8(%rbp)
-	jle	L4921
-L4920:
-	movl	$211873, %edi
+	jle	L4540
+L4539:
+	movl	$195489, %edi
 	call	__m3_fault
-L4921:
+L4540:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35949,13 +33250,13 @@ _bitfield__write_var_BitField_offset14_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4926
+	js	L4545
 	cmpq	$131071, -8(%rbp)
-	jle	L4927
-L4926:
-	movl	$212129, %edi
+	jle	L4546
+L4545:
+	movl	$195745, %edi
 	call	__m3_fault
-L4927:
+L4546:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -35993,13 +33294,13 @@ _bitfield__write_var_BitField_offset14_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4932
+	js	L4551
 	cmpq	$262143, -8(%rbp)
-	jle	L4933
-L4932:
-	movl	$212385, %edi
+	jle	L4552
+L4551:
+	movl	$196001, %edi
 	call	__m3_fault
-L4933:
+L4552:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36036,13 +33337,13 @@ _bitfield__write_var_BitField_offset14_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4938
+	js	L4557
 	cmpq	$524287, -8(%rbp)
-	jle	L4939
-L4938:
-	movl	$212641, %edi
+	jle	L4558
+L4557:
+	movl	$196257, %edi
 	call	__m3_fault
-L4939:
+L4558:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36079,13 +33380,13 @@ _bitfield__write_var_BitField_offset14_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4944
+	js	L4563
 	cmpq	$1048575, -8(%rbp)
-	jle	L4945
-L4944:
-	movl	$212897, %edi
+	jle	L4564
+L4563:
+	movl	$196513, %edi
 	call	__m3_fault
-L4945:
+L4564:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36122,13 +33423,13 @@ _bitfield__write_var_BitField_offset14_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4950
+	js	L4569
 	cmpq	$2097151, -8(%rbp)
-	jle	L4951
-L4950:
-	movl	$213153, %edi
+	jle	L4570
+L4569:
+	movl	$196769, %edi
 	call	__m3_fault
-L4951:
+L4570:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36165,13 +33466,13 @@ _bitfield__write_var_BitField_offset14_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4956
+	js	L4575
 	cmpq	$4194303, -8(%rbp)
-	jle	L4957
-L4956:
-	movl	$213409, %edi
+	jle	L4576
+L4575:
+	movl	$197025, %edi
 	call	__m3_fault
-L4957:
+L4576:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36208,13 +33509,13 @@ _bitfield__write_var_BitField_offset14_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4962
+	js	L4581
 	cmpq	$8388607, -8(%rbp)
-	jle	L4963
-L4962:
-	movl	$213665, %edi
+	jle	L4582
+L4581:
+	movl	$197281, %edi
 	call	__m3_fault
-L4963:
+L4582:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36251,13 +33552,13 @@ _bitfield__write_var_BitField_offset14_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4968
+	js	L4587
 	cmpq	$16777215, -8(%rbp)
-	jle	L4969
-L4968:
-	movl	$213921, %edi
+	jle	L4588
+L4587:
+	movl	$197537, %edi
 	call	__m3_fault
-L4969:
+L4588:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36294,13 +33595,13 @@ _bitfield__write_var_BitField_offset14_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4974
+	js	L4593
 	cmpq	$33554431, -8(%rbp)
-	jle	L4975
-L4974:
-	movl	$214177, %edi
+	jle	L4594
+L4593:
+	movl	$197793, %edi
 	call	__m3_fault
-L4975:
+L4594:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36337,13 +33638,13 @@ _bitfield__write_var_BitField_offset14_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4980
+	js	L4599
 	cmpq	$67108863, -8(%rbp)
-	jle	L4981
-L4980:
-	movl	$214433, %edi
+	jle	L4600
+L4599:
+	movl	$198049, %edi
 	call	__m3_fault
-L4981:
+L4600:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36380,13 +33681,13 @@ _bitfield__write_var_BitField_offset14_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4986
+	js	L4605
 	cmpq	$134217727, -8(%rbp)
-	jle	L4987
-L4986:
-	movl	$214689, %edi
+	jle	L4606
+L4605:
+	movl	$198305, %edi
 	call	__m3_fault
-L4987:
+L4606:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36423,13 +33724,13 @@ _bitfield__write_var_BitField_offset14_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4992
+	js	L4611
 	cmpq	$268435455, -8(%rbp)
-	jle	L4993
-L4992:
-	movl	$214945, %edi
+	jle	L4612
+L4611:
+	movl	$198561, %edi
 	call	__m3_fault
-L4993:
+L4612:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36466,13 +33767,13 @@ _bitfield__write_var_BitField_offset14_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L4998
+	js	L4617
 	cmpq	$536870911, -8(%rbp)
-	jle	L4999
-L4998:
-	movl	$215201, %edi
+	jle	L4618
+L4617:
+	movl	$198817, %edi
 	call	__m3_fault
-L4999:
+L4618:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36509,13 +33810,13 @@ _bitfield__write_var_BitField_offset14_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5004
+	js	L4623
 	cmpq	$1073741823, -8(%rbp)
-	jle	L5005
-L5004:
-	movl	$215457, %edi
+	jle	L4624
+L4623:
+	movl	$199073, %edi
 	call	__m3_fault
-L5005:
+L4624:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36552,13 +33853,13 @@ _bitfield__write_var_BitField_offset14_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5010
+	js	L4629
 	cmpq	$2147483647, -8(%rbp)
-	jle	L5011
-L5010:
-	movl	$215713, %edi
+	jle	L4630
+L4629:
+	movl	$199329, %edi
 	call	__m3_fault
-L5011:
+L4630:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36595,14 +33896,14 @@ _bitfield__write_var_BitField_offset14_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5016
+	js	L4635
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L5017
-L5016:
-	movl	$215969, %edi
+	jle	L4636
+L4635:
+	movl	$199585, %edi
 	call	__m3_fault
-L5017:
+L4636:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36639,14 +33940,14 @@ _bitfield__write_var_BitField_offset14_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5022
+	js	L4641
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5023
-L5022:
-	movl	$216225, %edi
+	jle	L4642
+L4641:
+	movl	$199841, %edi
 	call	__m3_fault
-L5023:
+L4642:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36683,14 +33984,14 @@ _bitfield__write_var_BitField_offset14_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5028
+	js	L4647
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5029
-L5028:
-	movl	$216481, %edi
+	jle	L4648
+L4647:
+	movl	$200097, %edi
 	call	__m3_fault
-L5029:
+L4648:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36727,14 +34028,14 @@ _bitfield__write_var_BitField_offset14_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5034
+	js	L4653
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5035
-L5034:
-	movl	$216737, %edi
+	jle	L4654
+L4653:
+	movl	$200353, %edi
 	call	__m3_fault
-L5035:
+L4654:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36771,14 +34072,14 @@ _bitfield__write_var_BitField_offset14_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5040
+	js	L4659
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5041
-L5040:
-	movl	$216993, %edi
+	jle	L4660
+L4659:
+	movl	$200609, %edi
 	call	__m3_fault
-L5041:
+L4660:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36815,14 +34116,14 @@ _bitfield__write_var_BitField_offset14_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5046
+	js	L4665
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5047
-L5046:
-	movl	$217249, %edi
+	jle	L4666
+L4665:
+	movl	$200865, %edi
 	call	__m3_fault
-L5047:
+L4666:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36859,14 +34160,14 @@ _bitfield__write_var_BitField_offset14_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5052
+	js	L4671
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5053
-L5052:
-	movl	$217505, %edi
+	jle	L4672
+L4671:
+	movl	$201121, %edi
 	call	__m3_fault
-L5053:
+L4672:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36903,14 +34204,14 @@ _bitfield__write_var_BitField_offset14_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5058
+	js	L4677
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5059
-L5058:
-	movl	$217761, %edi
+	jle	L4678
+L4677:
+	movl	$201377, %edi
 	call	__m3_fault
-L5059:
+L4678:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36947,14 +34248,14 @@ _bitfield__write_var_BitField_offset14_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5064
+	js	L4683
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5065
-L5064:
-	movl	$218017, %edi
+	jle	L4684
+L4683:
+	movl	$201633, %edi
 	call	__m3_fault
-L5065:
+L4684:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -36991,14 +34292,14 @@ _bitfield__write_var_BitField_offset14_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5070
+	js	L4689
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5071
-L5070:
-	movl	$218273, %edi
+	jle	L4690
+L4689:
+	movl	$201889, %edi
 	call	__m3_fault
-L5071:
+L4690:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37035,14 +34336,14 @@ _bitfield__write_var_BitField_offset14_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5076
+	js	L4695
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5077
-L5076:
-	movl	$218529, %edi
+	jle	L4696
+L4695:
+	movl	$202145, %edi
 	call	__m3_fault
-L5077:
+L4696:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37079,14 +34380,14 @@ _bitfield__write_var_BitField_offset14_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5082
+	js	L4701
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5083
-L5082:
-	movl	$218785, %edi
+	jle	L4702
+L4701:
+	movl	$202401, %edi
 	call	__m3_fault
-L5083:
+L4702:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37123,14 +34424,14 @@ _bitfield__write_var_BitField_offset14_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5088
+	js	L4707
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5089
-L5088:
-	movl	$219041, %edi
+	jle	L4708
+L4707:
+	movl	$202657, %edi
 	call	__m3_fault
-L5089:
+L4708:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37167,14 +34468,14 @@ _bitfield__write_var_BitField_offset14_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5094
+	js	L4713
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5095
-L5094:
-	movl	$219297, %edi
+	jle	L4714
+L4713:
+	movl	$202913, %edi
 	call	__m3_fault
-L5095:
+L4714:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37211,14 +34512,14 @@ _bitfield__write_var_BitField_offset14_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5100
+	js	L4719
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5101
-L5100:
-	movl	$219553, %edi
+	jle	L4720
+L4719:
+	movl	$203169, %edi
 	call	__m3_fault
-L5101:
+L4720:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37255,14 +34556,14 @@ _bitfield__write_var_BitField_offset14_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5106
+	js	L4725
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5107
-L5106:
-	movl	$219809, %edi
+	jle	L4726
+L4725:
+	movl	$203425, %edi
 	call	__m3_fault
-L5107:
+L4726:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37299,14 +34600,14 @@ _bitfield__write_var_BitField_offset14_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5112
+	js	L4731
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5113
-L5112:
-	movl	$220065, %edi
+	jle	L4732
+L4731:
+	movl	$203681, %edi
 	call	__m3_fault
-L5113:
+L4732:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37343,14 +34644,14 @@ _bitfield__write_var_BitField_offset14_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5118
+	js	L4737
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5119
-L5118:
-	movl	$220321, %edi
+	jle	L4738
+L4737:
+	movl	$203937, %edi
 	call	__m3_fault
-L5119:
+L4738:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37386,14 +34687,14 @@ _bitfield__write_var_BitField_offset14_count50:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5124
+	js	L4743
 	movabsq	$1125899906842623, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5125
-L5124:
-	movl	$220577, %edi
+	jle	L4744
+L4743:
+	movl	$204193, %edi
 	call	__m3_fault
-L5125:
+L4744:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37429,13 +34730,13 @@ _bitfield__write_var_BitField_offset15_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5130
+	js	L4749
 	cmpq	$1, -8(%rbp)
-	jle	L5131
-L5130:
-	movl	$220833, %edi
+	jle	L4750
+L4749:
+	movl	$204449, %edi
 	call	__m3_fault
-L5131:
+L4750:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -37475,13 +34776,13 @@ _bitfield__write_var_BitField_offset15_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5136
+	js	L4755
 	cmpq	$3, -8(%rbp)
-	jle	L5137
-L5136:
-	movl	$221089, %edi
+	jle	L4756
+L4755:
+	movl	$204705, %edi
 	call	__m3_fault
-L5137:
+L4756:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37519,13 +34820,13 @@ _bitfield__write_var_BitField_offset15_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5142
+	js	L4761
 	cmpq	$7, -8(%rbp)
-	jle	L5143
-L5142:
-	movl	$221345, %edi
+	jle	L4762
+L4761:
+	movl	$204961, %edi
 	call	__m3_fault
-L5143:
+L4762:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37563,13 +34864,13 @@ _bitfield__write_var_BitField_offset15_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5148
+	js	L4767
 	cmpq	$15, -8(%rbp)
-	jle	L5149
-L5148:
-	movl	$221601, %edi
+	jle	L4768
+L4767:
+	movl	$205217, %edi
 	call	__m3_fault
-L5149:
+L4768:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37607,13 +34908,13 @@ _bitfield__write_var_BitField_offset15_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5154
+	js	L4773
 	cmpq	$31, -8(%rbp)
-	jle	L5155
-L5154:
-	movl	$221857, %edi
+	jle	L4774
+L4773:
+	movl	$205473, %edi
 	call	__m3_fault
-L5155:
+L4774:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37651,13 +34952,13 @@ _bitfield__write_var_BitField_offset15_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5160
+	js	L4779
 	cmpq	$63, -8(%rbp)
-	jle	L5161
-L5160:
-	movl	$222113, %edi
+	jle	L4780
+L4779:
+	movl	$205729, %edi
 	call	__m3_fault
-L5161:
+L4780:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37695,13 +34996,13 @@ _bitfield__write_var_BitField_offset15_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5166
+	js	L4785
 	cmpq	$127, -8(%rbp)
-	jle	L5167
-L5166:
-	movl	$222369, %edi
+	jle	L4786
+L4785:
+	movl	$205985, %edi
 	call	__m3_fault
-L5167:
+L4786:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37739,13 +35040,13 @@ _bitfield__write_var_BitField_offset15_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5172
+	js	L4791
 	cmpq	$255, -8(%rbp)
-	jle	L5173
-L5172:
-	movl	$222625, %edi
+	jle	L4792
+L4791:
+	movl	$206241, %edi
 	call	__m3_fault
-L5173:
+L4792:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37783,13 +35084,13 @@ _bitfield__write_var_BitField_offset15_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5178
+	js	L4797
 	cmpq	$511, -8(%rbp)
-	jle	L5179
-L5178:
-	movl	$222881, %edi
+	jle	L4798
+L4797:
+	movl	$206497, %edi
 	call	__m3_fault
-L5179:
+L4798:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37827,13 +35128,13 @@ _bitfield__write_var_BitField_offset15_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5184
+	js	L4803
 	cmpq	$1023, -8(%rbp)
-	jle	L5185
-L5184:
-	movl	$223137, %edi
+	jle	L4804
+L4803:
+	movl	$206753, %edi
 	call	__m3_fault
-L5185:
+L4804:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37871,13 +35172,13 @@ _bitfield__write_var_BitField_offset15_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5190
+	js	L4809
 	cmpq	$2047, -8(%rbp)
-	jle	L5191
-L5190:
-	movl	$223393, %edi
+	jle	L4810
+L4809:
+	movl	$207009, %edi
 	call	__m3_fault
-L5191:
+L4810:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37915,13 +35216,13 @@ _bitfield__write_var_BitField_offset15_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5196
+	js	L4815
 	cmpq	$4095, -8(%rbp)
-	jle	L5197
-L5196:
-	movl	$223649, %edi
+	jle	L4816
+L4815:
+	movl	$207265, %edi
 	call	__m3_fault
-L5197:
+L4816:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -37959,13 +35260,13 @@ _bitfield__write_var_BitField_offset15_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5202
+	js	L4821
 	cmpq	$8191, -8(%rbp)
-	jle	L5203
-L5202:
-	movl	$223905, %edi
+	jle	L4822
+L4821:
+	movl	$207521, %edi
 	call	__m3_fault
-L5203:
+L4822:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38003,13 +35304,13 @@ _bitfield__write_var_BitField_offset15_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5208
+	js	L4827
 	cmpq	$16383, -8(%rbp)
-	jle	L5209
-L5208:
-	movl	$224161, %edi
+	jle	L4828
+L4827:
+	movl	$207777, %edi
 	call	__m3_fault
-L5209:
+L4828:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38047,13 +35348,13 @@ _bitfield__write_var_BitField_offset15_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5214
+	js	L4833
 	cmpq	$32767, -8(%rbp)
-	jle	L5215
-L5214:
-	movl	$224417, %edi
+	jle	L4834
+L4833:
+	movl	$208033, %edi
 	call	__m3_fault
-L5215:
+L4834:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38091,13 +35392,13 @@ _bitfield__write_var_BitField_offset15_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5220
+	js	L4839
 	cmpq	$65535, -8(%rbp)
-	jle	L5221
-L5220:
-	movl	$224673, %edi
+	jle	L4840
+L4839:
+	movl	$208289, %edi
 	call	__m3_fault
-L5221:
+L4840:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38135,13 +35436,13 @@ _bitfield__write_var_BitField_offset15_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5226
+	js	L4845
 	cmpq	$131071, -8(%rbp)
-	jle	L5227
-L5226:
-	movl	$224929, %edi
+	jle	L4846
+L4845:
+	movl	$208545, %edi
 	call	__m3_fault
-L5227:
+L4846:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38178,13 +35479,13 @@ _bitfield__write_var_BitField_offset15_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5232
+	js	L4851
 	cmpq	$262143, -8(%rbp)
-	jle	L5233
-L5232:
-	movl	$225185, %edi
+	jle	L4852
+L4851:
+	movl	$208801, %edi
 	call	__m3_fault
-L5233:
+L4852:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38221,13 +35522,13 @@ _bitfield__write_var_BitField_offset15_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5238
+	js	L4857
 	cmpq	$524287, -8(%rbp)
-	jle	L5239
-L5238:
-	movl	$225441, %edi
+	jle	L4858
+L4857:
+	movl	$209057, %edi
 	call	__m3_fault
-L5239:
+L4858:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38264,13 +35565,13 @@ _bitfield__write_var_BitField_offset15_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5244
+	js	L4863
 	cmpq	$1048575, -8(%rbp)
-	jle	L5245
-L5244:
-	movl	$225697, %edi
+	jle	L4864
+L4863:
+	movl	$209313, %edi
 	call	__m3_fault
-L5245:
+L4864:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38307,13 +35608,13 @@ _bitfield__write_var_BitField_offset15_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5250
+	js	L4869
 	cmpq	$2097151, -8(%rbp)
-	jle	L5251
-L5250:
-	movl	$225953, %edi
+	jle	L4870
+L4869:
+	movl	$209569, %edi
 	call	__m3_fault
-L5251:
+L4870:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38350,13 +35651,13 @@ _bitfield__write_var_BitField_offset15_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5256
+	js	L4875
 	cmpq	$4194303, -8(%rbp)
-	jle	L5257
-L5256:
-	movl	$226209, %edi
+	jle	L4876
+L4875:
+	movl	$209825, %edi
 	call	__m3_fault
-L5257:
+L4876:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38393,13 +35694,13 @@ _bitfield__write_var_BitField_offset15_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5262
+	js	L4881
 	cmpq	$8388607, -8(%rbp)
-	jle	L5263
-L5262:
-	movl	$226465, %edi
+	jle	L4882
+L4881:
+	movl	$210081, %edi
 	call	__m3_fault
-L5263:
+L4882:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38436,13 +35737,13 @@ _bitfield__write_var_BitField_offset15_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5268
+	js	L4887
 	cmpq	$16777215, -8(%rbp)
-	jle	L5269
-L5268:
-	movl	$226721, %edi
+	jle	L4888
+L4887:
+	movl	$210337, %edi
 	call	__m3_fault
-L5269:
+L4888:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38479,13 +35780,13 @@ _bitfield__write_var_BitField_offset15_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5274
+	js	L4893
 	cmpq	$33554431, -8(%rbp)
-	jle	L5275
-L5274:
-	movl	$226977, %edi
+	jle	L4894
+L4893:
+	movl	$210593, %edi
 	call	__m3_fault
-L5275:
+L4894:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38522,13 +35823,13 @@ _bitfield__write_var_BitField_offset15_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5280
+	js	L4899
 	cmpq	$67108863, -8(%rbp)
-	jle	L5281
-L5280:
-	movl	$227233, %edi
+	jle	L4900
+L4899:
+	movl	$210849, %edi
 	call	__m3_fault
-L5281:
+L4900:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38565,13 +35866,13 @@ _bitfield__write_var_BitField_offset15_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5286
+	js	L4905
 	cmpq	$134217727, -8(%rbp)
-	jle	L5287
-L5286:
-	movl	$227489, %edi
+	jle	L4906
+L4905:
+	movl	$211105, %edi
 	call	__m3_fault
-L5287:
+L4906:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38608,13 +35909,13 @@ _bitfield__write_var_BitField_offset15_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5292
+	js	L4911
 	cmpq	$268435455, -8(%rbp)
-	jle	L5293
-L5292:
-	movl	$227745, %edi
+	jle	L4912
+L4911:
+	movl	$211361, %edi
 	call	__m3_fault
-L5293:
+L4912:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38651,13 +35952,13 @@ _bitfield__write_var_BitField_offset15_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5298
+	js	L4917
 	cmpq	$536870911, -8(%rbp)
-	jle	L5299
-L5298:
-	movl	$228001, %edi
+	jle	L4918
+L4917:
+	movl	$211617, %edi
 	call	__m3_fault
-L5299:
+L4918:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38694,13 +35995,13 @@ _bitfield__write_var_BitField_offset15_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5304
+	js	L4923
 	cmpq	$1073741823, -8(%rbp)
-	jle	L5305
-L5304:
-	movl	$228257, %edi
+	jle	L4924
+L4923:
+	movl	$211873, %edi
 	call	__m3_fault
-L5305:
+L4924:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38737,13 +36038,13 @@ _bitfield__write_var_BitField_offset15_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5310
+	js	L4929
 	cmpq	$2147483647, -8(%rbp)
-	jle	L5311
-L5310:
-	movl	$228513, %edi
+	jle	L4930
+L4929:
+	movl	$212129, %edi
 	call	__m3_fault
-L5311:
+L4930:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38780,14 +36081,14 @@ _bitfield__write_var_BitField_offset15_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5316
+	js	L4935
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L5317
-L5316:
-	movl	$228769, %edi
+	jle	L4936
+L4935:
+	movl	$212385, %edi
 	call	__m3_fault
-L5317:
+L4936:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38824,14 +36125,14 @@ _bitfield__write_var_BitField_offset15_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5322
+	js	L4941
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5323
-L5322:
-	movl	$229025, %edi
+	jle	L4942
+L4941:
+	movl	$212641, %edi
 	call	__m3_fault
-L5323:
+L4942:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38868,14 +36169,14 @@ _bitfield__write_var_BitField_offset15_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5328
+	js	L4947
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5329
-L5328:
-	movl	$229281, %edi
+	jle	L4948
+L4947:
+	movl	$212897, %edi
 	call	__m3_fault
-L5329:
+L4948:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38912,14 +36213,14 @@ _bitfield__write_var_BitField_offset15_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5334
+	js	L4953
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5335
-L5334:
-	movl	$229537, %edi
+	jle	L4954
+L4953:
+	movl	$213153, %edi
 	call	__m3_fault
-L5335:
+L4954:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -38956,14 +36257,14 @@ _bitfield__write_var_BitField_offset15_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5340
+	js	L4959
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5341
-L5340:
-	movl	$229793, %edi
+	jle	L4960
+L4959:
+	movl	$213409, %edi
 	call	__m3_fault
-L5341:
+L4960:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39000,14 +36301,14 @@ _bitfield__write_var_BitField_offset15_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5346
+	js	L4965
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5347
-L5346:
-	movl	$230049, %edi
+	jle	L4966
+L4965:
+	movl	$213665, %edi
 	call	__m3_fault
-L5347:
+L4966:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39044,14 +36345,14 @@ _bitfield__write_var_BitField_offset15_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5352
+	js	L4971
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5353
-L5352:
-	movl	$230305, %edi
+	jle	L4972
+L4971:
+	movl	$213921, %edi
 	call	__m3_fault
-L5353:
+L4972:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39088,14 +36389,14 @@ _bitfield__write_var_BitField_offset15_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5358
+	js	L4977
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5359
-L5358:
-	movl	$230561, %edi
+	jle	L4978
+L4977:
+	movl	$214177, %edi
 	call	__m3_fault
-L5359:
+L4978:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39132,14 +36433,14 @@ _bitfield__write_var_BitField_offset15_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5364
+	js	L4983
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5365
-L5364:
-	movl	$230817, %edi
+	jle	L4984
+L4983:
+	movl	$214433, %edi
 	call	__m3_fault
-L5365:
+L4984:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39176,14 +36477,14 @@ _bitfield__write_var_BitField_offset15_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5370
+	js	L4989
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5371
-L5370:
-	movl	$231073, %edi
+	jle	L4990
+L4989:
+	movl	$214689, %edi
 	call	__m3_fault
-L5371:
+L4990:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39220,14 +36521,14 @@ _bitfield__write_var_BitField_offset15_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5376
+	js	L4995
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5377
-L5376:
-	movl	$231329, %edi
+	jle	L4996
+L4995:
+	movl	$214945, %edi
 	call	__m3_fault
-L5377:
+L4996:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39264,14 +36565,14 @@ _bitfield__write_var_BitField_offset15_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5382
+	js	L5001
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5383
-L5382:
-	movl	$231585, %edi
+	jle	L5002
+L5001:
+	movl	$215201, %edi
 	call	__m3_fault
-L5383:
+L5002:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39308,14 +36609,14 @@ _bitfield__write_var_BitField_offset15_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5388
+	js	L5007
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5389
-L5388:
-	movl	$231841, %edi
+	jle	L5008
+L5007:
+	movl	$215457, %edi
 	call	__m3_fault
-L5389:
+L5008:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39352,14 +36653,14 @@ _bitfield__write_var_BitField_offset15_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5394
+	js	L5013
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5395
-L5394:
-	movl	$232097, %edi
+	jle	L5014
+L5013:
+	movl	$215713, %edi
 	call	__m3_fault
-L5395:
+L5014:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39396,14 +36697,14 @@ _bitfield__write_var_BitField_offset15_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5400
+	js	L5019
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5401
-L5400:
-	movl	$232353, %edi
+	jle	L5020
+L5019:
+	movl	$215969, %edi
 	call	__m3_fault
-L5401:
+L5020:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39440,14 +36741,14 @@ _bitfield__write_var_BitField_offset15_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5406
+	js	L5025
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5407
-L5406:
-	movl	$232609, %edi
+	jle	L5026
+L5025:
+	movl	$216225, %edi
 	call	__m3_fault
-L5407:
+L5026:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39484,14 +36785,14 @@ _bitfield__write_var_BitField_offset15_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5412
+	js	L5031
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5413
-L5412:
-	movl	$232865, %edi
+	jle	L5032
+L5031:
+	movl	$216481, %edi
 	call	__m3_fault
-L5413:
+L5032:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39527,14 +36828,14 @@ _bitfield__write_var_BitField_offset15_count49:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5418
+	js	L5037
 	movabsq	$562949953421311, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5419
-L5418:
-	movl	$233121, %edi
+	jle	L5038
+L5037:
+	movl	$216737, %edi
 	call	__m3_fault
-L5419:
+L5038:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -39569,13 +36870,13 @@ _bitfield__write_var_BitField_offset16_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5424
+	js	L5043
 	cmpq	$1, -8(%rbp)
-	jle	L5425
-L5424:
-	movl	$233377, %edi
+	jle	L5044
+L5043:
+	movl	$216993, %edi
 	call	__m3_fault
-L5425:
+L5044:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -39613,13 +36914,13 @@ _bitfield__write_var_BitField_offset16_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5430
+	js	L5049
 	cmpq	$3, -8(%rbp)
-	jle	L5431
-L5430:
-	movl	$233633, %edi
+	jle	L5050
+L5049:
+	movl	$217249, %edi
 	call	__m3_fault
-L5431:
+L5050:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -39657,13 +36958,13 @@ _bitfield__write_var_BitField_offset16_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5436
+	js	L5055
 	cmpq	$7, -8(%rbp)
-	jle	L5437
-L5436:
-	movl	$233889, %edi
+	jle	L5056
+L5055:
+	movl	$217505, %edi
 	call	__m3_fault
-L5437:
+L5056:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -39701,13 +37002,13 @@ _bitfield__write_var_BitField_offset16_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5442
+	js	L5061
 	cmpq	$15, -8(%rbp)
-	jle	L5443
-L5442:
-	movl	$234145, %edi
+	jle	L5062
+L5061:
+	movl	$217761, %edi
 	call	__m3_fault
-L5443:
+L5062:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -39745,13 +37046,13 @@ _bitfield__write_var_BitField_offset16_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5448
+	js	L5067
 	cmpq	$31, -8(%rbp)
-	jle	L5449
-L5448:
-	movl	$234401, %edi
+	jle	L5068
+L5067:
+	movl	$218017, %edi
 	call	__m3_fault
-L5449:
+L5068:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -39789,13 +37090,13 @@ _bitfield__write_var_BitField_offset16_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5454
+	js	L5073
 	cmpq	$63, -8(%rbp)
-	jle	L5455
-L5454:
-	movl	$234657, %edi
+	jle	L5074
+L5073:
+	movl	$218273, %edi
 	call	__m3_fault
-L5455:
+L5074:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -39833,13 +37134,13 @@ _bitfield__write_var_BitField_offset16_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5460
+	js	L5079
 	cmpq	$127, -8(%rbp)
-	jle	L5461
-L5460:
-	movl	$234913, %edi
+	jle	L5080
+L5079:
+	movl	$218529, %edi
 	call	__m3_fault
-L5461:
+L5080:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -39876,13 +37177,13 @@ _bitfield__write_var_BitField_offset16_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5466
+	js	L5085
 	cmpq	$255, -8(%rbp)
-	jle	L5467
-L5466:
-	movl	$235169, %edi
+	jle	L5086
+L5085:
+	movl	$218785, %edi
 	call	__m3_fault
-L5467:
+L5086:
 	movq	-24(%rbp), %rax
 	leaq	2(%rax), %rdx
 	movq	-8(%rbp), %rax
@@ -39910,13 +37211,13 @@ _bitfield__write_var_BitField_offset16_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5472
+	js	L5091
 	cmpq	$511, -8(%rbp)
-	jle	L5473
-L5472:
-	movl	$235425, %edi
+	jle	L5092
+L5091:
+	movl	$219041, %edi
 	call	__m3_fault
-L5473:
+L5092:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -39954,13 +37255,13 @@ _bitfield__write_var_BitField_offset16_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5478
+	js	L5097
 	cmpq	$1023, -8(%rbp)
-	jle	L5479
-L5478:
-	movl	$235681, %edi
+	jle	L5098
+L5097:
+	movl	$219297, %edi
 	call	__m3_fault
-L5479:
+L5098:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -39998,13 +37299,13 @@ _bitfield__write_var_BitField_offset16_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5484
+	js	L5103
 	cmpq	$2047, -8(%rbp)
-	jle	L5485
-L5484:
-	movl	$235937, %edi
+	jle	L5104
+L5103:
+	movl	$219553, %edi
 	call	__m3_fault
-L5485:
+L5104:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -40042,13 +37343,13 @@ _bitfield__write_var_BitField_offset16_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5490
+	js	L5109
 	cmpq	$4095, -8(%rbp)
-	jle	L5491
-L5490:
-	movl	$236193, %edi
+	jle	L5110
+L5109:
+	movl	$219809, %edi
 	call	__m3_fault
-L5491:
+L5110:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -40086,13 +37387,13 @@ _bitfield__write_var_BitField_offset16_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5496
+	js	L5115
 	cmpq	$8191, -8(%rbp)
-	jle	L5497
-L5496:
-	movl	$236449, %edi
+	jle	L5116
+L5115:
+	movl	$220065, %edi
 	call	__m3_fault
-L5497:
+L5116:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -40130,13 +37431,13 @@ _bitfield__write_var_BitField_offset16_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5502
+	js	L5121
 	cmpq	$16383, -8(%rbp)
-	jle	L5503
-L5502:
-	movl	$236705, %edi
+	jle	L5122
+L5121:
+	movl	$220321, %edi
 	call	__m3_fault
-L5503:
+L5122:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -40174,13 +37475,13 @@ _bitfield__write_var_BitField_offset16_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5508
+	js	L5127
 	cmpq	$32767, -8(%rbp)
-	jle	L5509
-L5508:
-	movl	$236961, %edi
+	jle	L5128
+L5127:
+	movl	$220577, %edi
 	call	__m3_fault
-L5509:
+L5128:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -40217,13 +37518,13 @@ _bitfield__write_var_BitField_offset16_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5514
+	js	L5133
 	cmpq	$65535, -8(%rbp)
-	jle	L5515
-L5514:
-	movl	$237217, %edi
+	jle	L5134
+L5133:
+	movl	$220833, %edi
 	call	__m3_fault
-L5515:
+L5134:
 	movq	-24(%rbp), %rax
 	leaq	2(%rax), %rdx
 	movq	-8(%rbp), %rax
@@ -40251,13 +37552,13 @@ _bitfield__write_var_BitField_offset16_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5520
+	js	L5139
 	cmpq	$131071, -8(%rbp)
-	jle	L5521
-L5520:
-	movl	$237473, %edi
+	jle	L5140
+L5139:
+	movl	$221089, %edi
 	call	__m3_fault
-L5521:
+L5140:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40294,13 +37595,13 @@ _bitfield__write_var_BitField_offset16_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5526
+	js	L5145
 	cmpq	$262143, -8(%rbp)
-	jle	L5527
-L5526:
-	movl	$237729, %edi
+	jle	L5146
+L5145:
+	movl	$221345, %edi
 	call	__m3_fault
-L5527:
+L5146:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40337,13 +37638,13 @@ _bitfield__write_var_BitField_offset16_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5532
+	js	L5151
 	cmpq	$524287, -8(%rbp)
-	jle	L5533
-L5532:
-	movl	$237985, %edi
+	jle	L5152
+L5151:
+	movl	$221601, %edi
 	call	__m3_fault
-L5533:
+L5152:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40380,13 +37681,13 @@ _bitfield__write_var_BitField_offset16_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5538
+	js	L5157
 	cmpq	$1048575, -8(%rbp)
-	jle	L5539
-L5538:
-	movl	$238241, %edi
+	jle	L5158
+L5157:
+	movl	$221857, %edi
 	call	__m3_fault
-L5539:
+L5158:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40423,13 +37724,13 @@ _bitfield__write_var_BitField_offset16_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5544
+	js	L5163
 	cmpq	$2097151, -8(%rbp)
-	jle	L5545
-L5544:
-	movl	$238497, %edi
+	jle	L5164
+L5163:
+	movl	$222113, %edi
 	call	__m3_fault
-L5545:
+L5164:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40466,13 +37767,13 @@ _bitfield__write_var_BitField_offset16_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5550
+	js	L5169
 	cmpq	$4194303, -8(%rbp)
-	jle	L5551
-L5550:
-	movl	$238753, %edi
+	jle	L5170
+L5169:
+	movl	$222369, %edi
 	call	__m3_fault
-L5551:
+L5170:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40509,13 +37810,13 @@ _bitfield__write_var_BitField_offset16_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5556
+	js	L5175
 	cmpq	$8388607, -8(%rbp)
-	jle	L5557
-L5556:
-	movl	$239009, %edi
+	jle	L5176
+L5175:
+	movl	$222625, %edi
 	call	__m3_fault
-L5557:
+L5176:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40552,13 +37853,13 @@ _bitfield__write_var_BitField_offset16_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5562
+	js	L5181
 	cmpq	$16777215, -8(%rbp)
-	jle	L5563
-L5562:
-	movl	$239265, %edi
+	jle	L5182
+L5181:
+	movl	$222881, %edi
 	call	__m3_fault
-L5563:
+L5182:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40595,13 +37896,13 @@ _bitfield__write_var_BitField_offset16_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5568
+	js	L5187
 	cmpq	$33554431, -8(%rbp)
-	jle	L5569
-L5568:
-	movl	$239521, %edi
+	jle	L5188
+L5187:
+	movl	$223137, %edi
 	call	__m3_fault
-L5569:
+L5188:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40638,13 +37939,13 @@ _bitfield__write_var_BitField_offset16_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5574
+	js	L5193
 	cmpq	$67108863, -8(%rbp)
-	jle	L5575
-L5574:
-	movl	$239777, %edi
+	jle	L5194
+L5193:
+	movl	$223393, %edi
 	call	__m3_fault
-L5575:
+L5194:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40681,13 +37982,13 @@ _bitfield__write_var_BitField_offset16_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5580
+	js	L5199
 	cmpq	$134217727, -8(%rbp)
-	jle	L5581
-L5580:
-	movl	$240033, %edi
+	jle	L5200
+L5199:
+	movl	$223649, %edi
 	call	__m3_fault
-L5581:
+L5200:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40724,13 +38025,13 @@ _bitfield__write_var_BitField_offset16_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5586
+	js	L5205
 	cmpq	$268435455, -8(%rbp)
-	jle	L5587
-L5586:
-	movl	$240289, %edi
+	jle	L5206
+L5205:
+	movl	$223905, %edi
 	call	__m3_fault
-L5587:
+L5206:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40767,13 +38068,13 @@ _bitfield__write_var_BitField_offset16_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5592
+	js	L5211
 	cmpq	$536870911, -8(%rbp)
-	jle	L5593
-L5592:
-	movl	$240545, %edi
+	jle	L5212
+L5211:
+	movl	$224161, %edi
 	call	__m3_fault
-L5593:
+L5212:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40810,13 +38111,13 @@ _bitfield__write_var_BitField_offset16_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5598
+	js	L5217
 	cmpq	$1073741823, -8(%rbp)
-	jle	L5599
-L5598:
-	movl	$240801, %edi
+	jle	L5218
+L5217:
+	movl	$224417, %edi
 	call	__m3_fault
-L5599:
+L5218:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40853,13 +38154,13 @@ _bitfield__write_var_BitField_offset16_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5604
+	js	L5223
 	cmpq	$2147483647, -8(%rbp)
-	jle	L5605
-L5604:
-	movl	$241057, %edi
+	jle	L5224
+L5223:
+	movl	$224673, %edi
 	call	__m3_fault
-L5605:
+L5224:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40896,14 +38197,14 @@ _bitfield__write_var_BitField_offset16_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5610
+	js	L5229
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L5611
-L5610:
-	movl	$241313, %edi
+	jle	L5230
+L5229:
+	movl	$224929, %edi
 	call	__m3_fault
-L5611:
+L5230:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40940,14 +38241,14 @@ _bitfield__write_var_BitField_offset16_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5616
+	js	L5235
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5617
-L5616:
-	movl	$241569, %edi
+	jle	L5236
+L5235:
+	movl	$225185, %edi
 	call	__m3_fault
-L5617:
+L5236:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -40984,14 +38285,14 @@ _bitfield__write_var_BitField_offset16_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5622
+	js	L5241
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5623
-L5622:
-	movl	$241825, %edi
+	jle	L5242
+L5241:
+	movl	$225441, %edi
 	call	__m3_fault
-L5623:
+L5242:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41028,14 +38329,14 @@ _bitfield__write_var_BitField_offset16_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5628
+	js	L5247
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5629
-L5628:
-	movl	$242081, %edi
+	jle	L5248
+L5247:
+	movl	$225697, %edi
 	call	__m3_fault
-L5629:
+L5248:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41072,14 +38373,14 @@ _bitfield__write_var_BitField_offset16_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5634
+	js	L5253
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5635
-L5634:
-	movl	$242337, %edi
+	jle	L5254
+L5253:
+	movl	$225953, %edi
 	call	__m3_fault
-L5635:
+L5254:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41116,14 +38417,14 @@ _bitfield__write_var_BitField_offset16_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5640
+	js	L5259
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5641
-L5640:
-	movl	$242593, %edi
+	jle	L5260
+L5259:
+	movl	$226209, %edi
 	call	__m3_fault
-L5641:
+L5260:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41160,14 +38461,14 @@ _bitfield__write_var_BitField_offset16_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5646
+	js	L5265
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5647
-L5646:
-	movl	$242849, %edi
+	jle	L5266
+L5265:
+	movl	$226465, %edi
 	call	__m3_fault
-L5647:
+L5266:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41204,14 +38505,14 @@ _bitfield__write_var_BitField_offset16_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5652
+	js	L5271
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5653
-L5652:
-	movl	$243105, %edi
+	jle	L5272
+L5271:
+	movl	$226721, %edi
 	call	__m3_fault
-L5653:
+L5272:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41248,14 +38549,14 @@ _bitfield__write_var_BitField_offset16_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5658
+	js	L5277
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5659
-L5658:
-	movl	$243361, %edi
+	jle	L5278
+L5277:
+	movl	$226977, %edi
 	call	__m3_fault
-L5659:
+L5278:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41292,14 +38593,14 @@ _bitfield__write_var_BitField_offset16_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5664
+	js	L5283
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5665
-L5664:
-	movl	$243617, %edi
+	jle	L5284
+L5283:
+	movl	$227233, %edi
 	call	__m3_fault
-L5665:
+L5284:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41336,14 +38637,14 @@ _bitfield__write_var_BitField_offset16_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5670
+	js	L5289
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5671
-L5670:
-	movl	$243873, %edi
+	jle	L5290
+L5289:
+	movl	$227489, %edi
 	call	__m3_fault
-L5671:
+L5290:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41380,14 +38681,14 @@ _bitfield__write_var_BitField_offset16_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5676
+	js	L5295
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5677
-L5676:
-	movl	$244129, %edi
+	jle	L5296
+L5295:
+	movl	$227745, %edi
 	call	__m3_fault
-L5677:
+L5296:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41424,14 +38725,14 @@ _bitfield__write_var_BitField_offset16_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5682
+	js	L5301
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5683
-L5682:
-	movl	$244385, %edi
+	jle	L5302
+L5301:
+	movl	$228001, %edi
 	call	__m3_fault
-L5683:
+L5302:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41468,14 +38769,14 @@ _bitfield__write_var_BitField_offset16_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5688
+	js	L5307
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5689
-L5688:
-	movl	$244641, %edi
+	jle	L5308
+L5307:
+	movl	$228257, %edi
 	call	__m3_fault
-L5689:
+L5308:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41512,14 +38813,14 @@ _bitfield__write_var_BitField_offset16_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5694
+	js	L5313
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5695
-L5694:
-	movl	$244897, %edi
+	jle	L5314
+L5313:
+	movl	$228513, %edi
 	call	__m3_fault
-L5695:
+L5314:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41556,14 +38857,14 @@ _bitfield__write_var_BitField_offset16_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5700
+	js	L5319
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5701
-L5700:
-	movl	$245153, %edi
+	jle	L5320
+L5319:
+	movl	$228769, %edi
 	call	__m3_fault
-L5701:
+L5320:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41599,14 +38900,14 @@ _bitfield__write_var_BitField_offset16_count48:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5706
+	js	L5325
 	movabsq	$281474976710655, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5707
-L5706:
-	movl	$245409, %edi
+	jle	L5326
+L5325:
+	movl	$229025, %edi
 	call	__m3_fault
-L5707:
+L5326:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -41641,13 +38942,13 @@ _bitfield__write_var_BitField_offset17_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5712
+	js	L5331
 	cmpq	$1, -8(%rbp)
-	jle	L5713
-L5712:
-	movl	$245665, %edi
+	jle	L5332
+L5331:
+	movl	$229281, %edi
 	call	__m3_fault
-L5713:
+L5332:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -41687,13 +38988,13 @@ _bitfield__write_var_BitField_offset17_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5718
+	js	L5337
 	cmpq	$3, -8(%rbp)
-	jle	L5719
-L5718:
-	movl	$245921, %edi
+	jle	L5338
+L5337:
+	movl	$229537, %edi
 	call	__m3_fault
-L5719:
+L5338:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -41733,13 +39034,13 @@ _bitfield__write_var_BitField_offset17_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5724
+	js	L5343
 	cmpq	$7, -8(%rbp)
-	jle	L5725
-L5724:
-	movl	$246177, %edi
+	jle	L5344
+L5343:
+	movl	$229793, %edi
 	call	__m3_fault
-L5725:
+L5344:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -41779,13 +39080,13 @@ _bitfield__write_var_BitField_offset17_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5730
+	js	L5349
 	cmpq	$15, -8(%rbp)
-	jle	L5731
-L5730:
-	movl	$246433, %edi
+	jle	L5350
+L5349:
+	movl	$230049, %edi
 	call	__m3_fault
-L5731:
+L5350:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -41825,13 +39126,13 @@ _bitfield__write_var_BitField_offset17_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5736
+	js	L5355
 	cmpq	$31, -8(%rbp)
-	jle	L5737
-L5736:
-	movl	$246689, %edi
+	jle	L5356
+L5355:
+	movl	$230305, %edi
 	call	__m3_fault
-L5737:
+L5356:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -41871,13 +39172,13 @@ _bitfield__write_var_BitField_offset17_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5742
+	js	L5361
 	cmpq	$63, -8(%rbp)
-	jle	L5743
-L5742:
-	movl	$246945, %edi
+	jle	L5362
+L5361:
+	movl	$230561, %edi
 	call	__m3_fault
-L5743:
+L5362:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -41917,13 +39218,13 @@ _bitfield__write_var_BitField_offset17_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5748
+	js	L5367
 	cmpq	$127, -8(%rbp)
-	jle	L5749
-L5748:
-	movl	$247201, %edi
+	jle	L5368
+L5367:
+	movl	$230817, %edi
 	call	__m3_fault
-L5749:
+L5368:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -41963,13 +39264,13 @@ _bitfield__write_var_BitField_offset17_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5754
+	js	L5373
 	cmpq	$255, -8(%rbp)
-	jle	L5755
-L5754:
-	movl	$247457, %edi
+	jle	L5374
+L5373:
+	movl	$231073, %edi
 	call	__m3_fault
-L5755:
+L5374:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -42009,13 +39310,13 @@ _bitfield__write_var_BitField_offset17_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5760
+	js	L5379
 	cmpq	$511, -8(%rbp)
-	jle	L5761
-L5760:
-	movl	$247713, %edi
+	jle	L5380
+L5379:
+	movl	$231329, %edi
 	call	__m3_fault
-L5761:
+L5380:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -42055,13 +39356,13 @@ _bitfield__write_var_BitField_offset17_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5766
+	js	L5385
 	cmpq	$1023, -8(%rbp)
-	jle	L5767
-L5766:
-	movl	$247969, %edi
+	jle	L5386
+L5385:
+	movl	$231585, %edi
 	call	__m3_fault
-L5767:
+L5386:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -42101,13 +39402,13 @@ _bitfield__write_var_BitField_offset17_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5772
+	js	L5391
 	cmpq	$2047, -8(%rbp)
-	jle	L5773
-L5772:
-	movl	$248225, %edi
+	jle	L5392
+L5391:
+	movl	$231841, %edi
 	call	__m3_fault
-L5773:
+L5392:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -42147,13 +39448,13 @@ _bitfield__write_var_BitField_offset17_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5778
+	js	L5397
 	cmpq	$4095, -8(%rbp)
-	jle	L5779
-L5778:
-	movl	$248481, %edi
+	jle	L5398
+L5397:
+	movl	$232097, %edi
 	call	__m3_fault
-L5779:
+L5398:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -42193,13 +39494,13 @@ _bitfield__write_var_BitField_offset17_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5784
+	js	L5403
 	cmpq	$8191, -8(%rbp)
-	jle	L5785
-L5784:
-	movl	$248737, %edi
+	jle	L5404
+L5403:
+	movl	$232353, %edi
 	call	__m3_fault
-L5785:
+L5404:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -42239,13 +39540,13 @@ _bitfield__write_var_BitField_offset17_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5790
+	js	L5409
 	cmpq	$16383, -8(%rbp)
-	jle	L5791
-L5790:
-	movl	$248993, %edi
+	jle	L5410
+L5409:
+	movl	$232609, %edi
 	call	__m3_fault
-L5791:
+L5410:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -42285,13 +39586,13 @@ _bitfield__write_var_BitField_offset17_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5796
+	js	L5415
 	cmpq	$32767, -8(%rbp)
-	jle	L5797
-L5796:
-	movl	$249249, %edi
+	jle	L5416
+L5415:
+	movl	$232865, %edi
 	call	__m3_fault
-L5797:
+L5416:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -42330,13 +39631,13 @@ _bitfield__write_var_BitField_offset17_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5802
+	js	L5421
 	cmpq	$65535, -8(%rbp)
-	jle	L5803
-L5802:
-	movl	$249505, %edi
+	jle	L5422
+L5421:
+	movl	$233121, %edi
 	call	__m3_fault
-L5803:
+L5422:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42373,13 +39674,13 @@ _bitfield__write_var_BitField_offset17_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5808
+	js	L5427
 	cmpq	$131071, -8(%rbp)
-	jle	L5809
-L5808:
-	movl	$249761, %edi
+	jle	L5428
+L5427:
+	movl	$233377, %edi
 	call	__m3_fault
-L5809:
+L5428:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42416,13 +39717,13 @@ _bitfield__write_var_BitField_offset17_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5814
+	js	L5433
 	cmpq	$262143, -8(%rbp)
-	jle	L5815
-L5814:
-	movl	$250017, %edi
+	jle	L5434
+L5433:
+	movl	$233633, %edi
 	call	__m3_fault
-L5815:
+L5434:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42459,13 +39760,13 @@ _bitfield__write_var_BitField_offset17_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5820
+	js	L5439
 	cmpq	$524287, -8(%rbp)
-	jle	L5821
-L5820:
-	movl	$250273, %edi
+	jle	L5440
+L5439:
+	movl	$233889, %edi
 	call	__m3_fault
-L5821:
+L5440:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42502,13 +39803,13 @@ _bitfield__write_var_BitField_offset17_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5826
+	js	L5445
 	cmpq	$1048575, -8(%rbp)
-	jle	L5827
-L5826:
-	movl	$250529, %edi
+	jle	L5446
+L5445:
+	movl	$234145, %edi
 	call	__m3_fault
-L5827:
+L5446:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42545,13 +39846,13 @@ _bitfield__write_var_BitField_offset17_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5832
+	js	L5451
 	cmpq	$2097151, -8(%rbp)
-	jle	L5833
-L5832:
-	movl	$250785, %edi
+	jle	L5452
+L5451:
+	movl	$234401, %edi
 	call	__m3_fault
-L5833:
+L5452:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42588,13 +39889,13 @@ _bitfield__write_var_BitField_offset17_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5838
+	js	L5457
 	cmpq	$4194303, -8(%rbp)
-	jle	L5839
-L5838:
-	movl	$251041, %edi
+	jle	L5458
+L5457:
+	movl	$234657, %edi
 	call	__m3_fault
-L5839:
+L5458:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42631,13 +39932,13 @@ _bitfield__write_var_BitField_offset17_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5844
+	js	L5463
 	cmpq	$8388607, -8(%rbp)
-	jle	L5845
-L5844:
-	movl	$251297, %edi
+	jle	L5464
+L5463:
+	movl	$234913, %edi
 	call	__m3_fault
-L5845:
+L5464:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42674,13 +39975,13 @@ _bitfield__write_var_BitField_offset17_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5850
+	js	L5469
 	cmpq	$16777215, -8(%rbp)
-	jle	L5851
-L5850:
-	movl	$251553, %edi
+	jle	L5470
+L5469:
+	movl	$235169, %edi
 	call	__m3_fault
-L5851:
+L5470:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42717,13 +40018,13 @@ _bitfield__write_var_BitField_offset17_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5856
+	js	L5475
 	cmpq	$33554431, -8(%rbp)
-	jle	L5857
-L5856:
-	movl	$251809, %edi
+	jle	L5476
+L5475:
+	movl	$235425, %edi
 	call	__m3_fault
-L5857:
+L5476:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42760,13 +40061,13 @@ _bitfield__write_var_BitField_offset17_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5862
+	js	L5481
 	cmpq	$67108863, -8(%rbp)
-	jle	L5863
-L5862:
-	movl	$252065, %edi
+	jle	L5482
+L5481:
+	movl	$235681, %edi
 	call	__m3_fault
-L5863:
+L5482:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42803,13 +40104,13 @@ _bitfield__write_var_BitField_offset17_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5868
+	js	L5487
 	cmpq	$134217727, -8(%rbp)
-	jle	L5869
-L5868:
-	movl	$252321, %edi
+	jle	L5488
+L5487:
+	movl	$235937, %edi
 	call	__m3_fault
-L5869:
+L5488:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42846,13 +40147,13 @@ _bitfield__write_var_BitField_offset17_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5874
+	js	L5493
 	cmpq	$268435455, -8(%rbp)
-	jle	L5875
-L5874:
-	movl	$252577, %edi
+	jle	L5494
+L5493:
+	movl	$236193, %edi
 	call	__m3_fault
-L5875:
+L5494:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42889,13 +40190,13 @@ _bitfield__write_var_BitField_offset17_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5880
+	js	L5499
 	cmpq	$536870911, -8(%rbp)
-	jle	L5881
-L5880:
-	movl	$252833, %edi
+	jle	L5500
+L5499:
+	movl	$236449, %edi
 	call	__m3_fault
-L5881:
+L5500:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42932,13 +40233,13 @@ _bitfield__write_var_BitField_offset17_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5886
+	js	L5505
 	cmpq	$1073741823, -8(%rbp)
-	jle	L5887
-L5886:
-	movl	$253089, %edi
+	jle	L5506
+L5505:
+	movl	$236705, %edi
 	call	__m3_fault
-L5887:
+L5506:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -42975,13 +40276,13 @@ _bitfield__write_var_BitField_offset17_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5892
+	js	L5511
 	cmpq	$2147483647, -8(%rbp)
-	jle	L5893
-L5892:
-	movl	$253345, %edi
+	jle	L5512
+L5511:
+	movl	$236961, %edi
 	call	__m3_fault
-L5893:
+L5512:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43018,14 +40319,14 @@ _bitfield__write_var_BitField_offset17_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5898
+	js	L5517
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L5899
-L5898:
-	movl	$253601, %edi
+	jle	L5518
+L5517:
+	movl	$237217, %edi
 	call	__m3_fault
-L5899:
+L5518:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43062,14 +40363,14 @@ _bitfield__write_var_BitField_offset17_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5904
+	js	L5523
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5905
-L5904:
-	movl	$253857, %edi
+	jle	L5524
+L5523:
+	movl	$237473, %edi
 	call	__m3_fault
-L5905:
+L5524:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43106,14 +40407,14 @@ _bitfield__write_var_BitField_offset17_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5910
+	js	L5529
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5911
-L5910:
-	movl	$254113, %edi
+	jle	L5530
+L5529:
+	movl	$237729, %edi
 	call	__m3_fault
-L5911:
+L5530:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43150,14 +40451,14 @@ _bitfield__write_var_BitField_offset17_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5916
+	js	L5535
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5917
-L5916:
-	movl	$254369, %edi
+	jle	L5536
+L5535:
+	movl	$237985, %edi
 	call	__m3_fault
-L5917:
+L5536:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43194,14 +40495,14 @@ _bitfield__write_var_BitField_offset17_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5922
+	js	L5541
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5923
-L5922:
-	movl	$254625, %edi
+	jle	L5542
+L5541:
+	movl	$238241, %edi
 	call	__m3_fault
-L5923:
+L5542:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43238,14 +40539,14 @@ _bitfield__write_var_BitField_offset17_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5928
+	js	L5547
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5929
-L5928:
-	movl	$254881, %edi
+	jle	L5548
+L5547:
+	movl	$238497, %edi
 	call	__m3_fault
-L5929:
+L5548:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43282,14 +40583,14 @@ _bitfield__write_var_BitField_offset17_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5934
+	js	L5553
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5935
-L5934:
-	movl	$255137, %edi
+	jle	L5554
+L5553:
+	movl	$238753, %edi
 	call	__m3_fault
-L5935:
+L5554:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43326,14 +40627,14 @@ _bitfield__write_var_BitField_offset17_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5940
+	js	L5559
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5941
-L5940:
-	movl	$255393, %edi
+	jle	L5560
+L5559:
+	movl	$239009, %edi
 	call	__m3_fault
-L5941:
+L5560:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43370,14 +40671,14 @@ _bitfield__write_var_BitField_offset17_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5946
+	js	L5565
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5947
-L5946:
-	movl	$255649, %edi
+	jle	L5566
+L5565:
+	movl	$239265, %edi
 	call	__m3_fault
-L5947:
+L5566:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43414,14 +40715,14 @@ _bitfield__write_var_BitField_offset17_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5952
+	js	L5571
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5953
-L5952:
-	movl	$255905, %edi
+	jle	L5572
+L5571:
+	movl	$239521, %edi
 	call	__m3_fault
-L5953:
+L5572:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43458,14 +40759,14 @@ _bitfield__write_var_BitField_offset17_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5958
+	js	L5577
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5959
-L5958:
-	movl	$256161, %edi
+	jle	L5578
+L5577:
+	movl	$239777, %edi
 	call	__m3_fault
-L5959:
+L5578:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43502,14 +40803,14 @@ _bitfield__write_var_BitField_offset17_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5964
+	js	L5583
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5965
-L5964:
-	movl	$256417, %edi
+	jle	L5584
+L5583:
+	movl	$240033, %edi
 	call	__m3_fault
-L5965:
+L5584:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43546,14 +40847,14 @@ _bitfield__write_var_BitField_offset17_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5970
+	js	L5589
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5971
-L5970:
-	movl	$256673, %edi
+	jle	L5590
+L5589:
+	movl	$240289, %edi
 	call	__m3_fault
-L5971:
+L5590:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43590,14 +40891,14 @@ _bitfield__write_var_BitField_offset17_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5976
+	js	L5595
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5977
-L5976:
-	movl	$256929, %edi
+	jle	L5596
+L5595:
+	movl	$240545, %edi
 	call	__m3_fault
-L5977:
+L5596:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43634,14 +40935,14 @@ _bitfield__write_var_BitField_offset17_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5982
+	js	L5601
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5983
-L5982:
-	movl	$257185, %edi
+	jle	L5602
+L5601:
+	movl	$240801, %edi
 	call	__m3_fault
-L5983:
+L5602:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43677,14 +40978,14 @@ _bitfield__write_var_BitField_offset17_count47:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5988
+	js	L5607
 	movabsq	$140737488355327, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L5989
-L5988:
-	movl	$257441, %edi
+	jle	L5608
+L5607:
+	movl	$241057, %edi
 	call	__m3_fault
-L5989:
+L5608:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -43720,13 +41021,13 @@ _bitfield__write_var_BitField_offset18_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L5994
+	js	L5613
 	cmpq	$1, -8(%rbp)
-	jle	L5995
-L5994:
-	movl	$257697, %edi
+	jle	L5614
+L5613:
+	movl	$241313, %edi
 	call	__m3_fault
-L5995:
+L5614:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -43766,13 +41067,13 @@ _bitfield__write_var_BitField_offset18_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6000
+	js	L5619
 	cmpq	$3, -8(%rbp)
-	jle	L6001
-L6000:
-	movl	$257953, %edi
+	jle	L5620
+L5619:
+	movl	$241569, %edi
 	call	__m3_fault
-L6001:
+L5620:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -43812,13 +41113,13 @@ _bitfield__write_var_BitField_offset18_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6006
+	js	L5625
 	cmpq	$7, -8(%rbp)
-	jle	L6007
-L6006:
-	movl	$258209, %edi
+	jle	L5626
+L5625:
+	movl	$241825, %edi
 	call	__m3_fault
-L6007:
+L5626:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -43858,13 +41159,13 @@ _bitfield__write_var_BitField_offset18_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6012
+	js	L5631
 	cmpq	$15, -8(%rbp)
-	jle	L6013
-L6012:
-	movl	$258465, %edi
+	jle	L5632
+L5631:
+	movl	$242081, %edi
 	call	__m3_fault
-L6013:
+L5632:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -43904,13 +41205,13 @@ _bitfield__write_var_BitField_offset18_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6018
+	js	L5637
 	cmpq	$31, -8(%rbp)
-	jle	L6019
-L6018:
-	movl	$258721, %edi
+	jle	L5638
+L5637:
+	movl	$242337, %edi
 	call	__m3_fault
-L6019:
+L5638:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -43950,13 +41251,13 @@ _bitfield__write_var_BitField_offset18_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6024
+	js	L5643
 	cmpq	$63, -8(%rbp)
-	jle	L6025
-L6024:
-	movl	$258977, %edi
+	jle	L5644
+L5643:
+	movl	$242593, %edi
 	call	__m3_fault
-L6025:
+L5644:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -43996,13 +41297,13 @@ _bitfield__write_var_BitField_offset18_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6030
+	js	L5649
 	cmpq	$127, -8(%rbp)
-	jle	L6031
-L6030:
-	movl	$259233, %edi
+	jle	L5650
+L5649:
+	movl	$242849, %edi
 	call	__m3_fault
-L6031:
+L5650:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -44042,13 +41343,13 @@ _bitfield__write_var_BitField_offset18_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6036
+	js	L5655
 	cmpq	$255, -8(%rbp)
-	jle	L6037
-L6036:
-	movl	$259489, %edi
+	jle	L5656
+L5655:
+	movl	$243105, %edi
 	call	__m3_fault
-L6037:
+L5656:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -44088,13 +41389,13 @@ _bitfield__write_var_BitField_offset18_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6042
+	js	L5661
 	cmpq	$511, -8(%rbp)
-	jle	L6043
-L6042:
-	movl	$259745, %edi
+	jle	L5662
+L5661:
+	movl	$243361, %edi
 	call	__m3_fault
-L6043:
+L5662:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -44134,13 +41435,13 @@ _bitfield__write_var_BitField_offset18_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6048
+	js	L5667
 	cmpq	$1023, -8(%rbp)
-	jle	L6049
-L6048:
-	movl	$260001, %edi
+	jle	L5668
+L5667:
+	movl	$243617, %edi
 	call	__m3_fault
-L6049:
+L5668:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -44180,13 +41481,13 @@ _bitfield__write_var_BitField_offset18_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6054
+	js	L5673
 	cmpq	$2047, -8(%rbp)
-	jle	L6055
-L6054:
-	movl	$260257, %edi
+	jle	L5674
+L5673:
+	movl	$243873, %edi
 	call	__m3_fault
-L6055:
+L5674:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -44226,13 +41527,13 @@ _bitfield__write_var_BitField_offset18_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6060
+	js	L5679
 	cmpq	$4095, -8(%rbp)
-	jle	L6061
-L6060:
-	movl	$260513, %edi
+	jle	L5680
+L5679:
+	movl	$244129, %edi
 	call	__m3_fault
-L6061:
+L5680:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -44272,13 +41573,13 @@ _bitfield__write_var_BitField_offset18_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6066
+	js	L5685
 	cmpq	$8191, -8(%rbp)
-	jle	L6067
-L6066:
-	movl	$260769, %edi
+	jle	L5686
+L5685:
+	movl	$244385, %edi
 	call	__m3_fault
-L6067:
+L5686:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -44318,13 +41619,13 @@ _bitfield__write_var_BitField_offset18_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6072
+	js	L5691
 	cmpq	$16383, -8(%rbp)
-	jle	L6073
-L6072:
-	movl	$261025, %edi
+	jle	L5692
+L5691:
+	movl	$244641, %edi
 	call	__m3_fault
-L6073:
+L5692:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -44363,13 +41664,13 @@ _bitfield__write_var_BitField_offset18_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6078
+	js	L5697
 	cmpq	$32767, -8(%rbp)
-	jle	L6079
-L6078:
-	movl	$261281, %edi
+	jle	L5698
+L5697:
+	movl	$244897, %edi
 	call	__m3_fault
-L6079:
+L5698:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44406,13 +41707,13 @@ _bitfield__write_var_BitField_offset18_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6084
+	js	L5703
 	cmpq	$65535, -8(%rbp)
-	jle	L6085
-L6084:
-	movl	$261537, %edi
+	jle	L5704
+L5703:
+	movl	$245153, %edi
 	call	__m3_fault
-L6085:
+L5704:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44449,13 +41750,13 @@ _bitfield__write_var_BitField_offset18_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6090
+	js	L5709
 	cmpq	$131071, -8(%rbp)
-	jle	L6091
-L6090:
-	movl	$261793, %edi
+	jle	L5710
+L5709:
+	movl	$245409, %edi
 	call	__m3_fault
-L6091:
+L5710:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44492,13 +41793,13 @@ _bitfield__write_var_BitField_offset18_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6096
+	js	L5715
 	cmpq	$262143, -8(%rbp)
-	jle	L6097
-L6096:
-	movl	$262049, %edi
+	jle	L5716
+L5715:
+	movl	$245665, %edi
 	call	__m3_fault
-L6097:
+L5716:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44535,13 +41836,13 @@ _bitfield__write_var_BitField_offset18_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6102
+	js	L5721
 	cmpq	$524287, -8(%rbp)
-	jle	L6103
-L6102:
-	movl	$262305, %edi
+	jle	L5722
+L5721:
+	movl	$245921, %edi
 	call	__m3_fault
-L6103:
+L5722:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44578,13 +41879,13 @@ _bitfield__write_var_BitField_offset18_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6108
+	js	L5727
 	cmpq	$1048575, -8(%rbp)
-	jle	L6109
-L6108:
-	movl	$262561, %edi
+	jle	L5728
+L5727:
+	movl	$246177, %edi
 	call	__m3_fault
-L6109:
+L5728:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44621,13 +41922,13 @@ _bitfield__write_var_BitField_offset18_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6114
+	js	L5733
 	cmpq	$2097151, -8(%rbp)
-	jle	L6115
-L6114:
-	movl	$262817, %edi
+	jle	L5734
+L5733:
+	movl	$246433, %edi
 	call	__m3_fault
-L6115:
+L5734:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44664,13 +41965,13 @@ _bitfield__write_var_BitField_offset18_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6120
+	js	L5739
 	cmpq	$4194303, -8(%rbp)
-	jle	L6121
-L6120:
-	movl	$263073, %edi
+	jle	L5740
+L5739:
+	movl	$246689, %edi
 	call	__m3_fault
-L6121:
+L5740:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44707,13 +42008,13 @@ _bitfield__write_var_BitField_offset18_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6126
+	js	L5745
 	cmpq	$8388607, -8(%rbp)
-	jle	L6127
-L6126:
-	movl	$263329, %edi
+	jle	L5746
+L5745:
+	movl	$246945, %edi
 	call	__m3_fault
-L6127:
+L5746:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44750,13 +42051,13 @@ _bitfield__write_var_BitField_offset18_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6132
+	js	L5751
 	cmpq	$16777215, -8(%rbp)
-	jle	L6133
-L6132:
-	movl	$263585, %edi
+	jle	L5752
+L5751:
+	movl	$247201, %edi
 	call	__m3_fault
-L6133:
+L5752:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44793,13 +42094,13 @@ _bitfield__write_var_BitField_offset18_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6138
+	js	L5757
 	cmpq	$33554431, -8(%rbp)
-	jle	L6139
-L6138:
-	movl	$263841, %edi
+	jle	L5758
+L5757:
+	movl	$247457, %edi
 	call	__m3_fault
-L6139:
+L5758:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44836,13 +42137,13 @@ _bitfield__write_var_BitField_offset18_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6144
+	js	L5763
 	cmpq	$67108863, -8(%rbp)
-	jle	L6145
-L6144:
-	movl	$264097, %edi
+	jle	L5764
+L5763:
+	movl	$247713, %edi
 	call	__m3_fault
-L6145:
+L5764:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44879,13 +42180,13 @@ _bitfield__write_var_BitField_offset18_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6150
+	js	L5769
 	cmpq	$134217727, -8(%rbp)
-	jle	L6151
-L6150:
-	movl	$264353, %edi
+	jle	L5770
+L5769:
+	movl	$247969, %edi
 	call	__m3_fault
-L6151:
+L5770:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44922,13 +42223,13 @@ _bitfield__write_var_BitField_offset18_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6156
+	js	L5775
 	cmpq	$268435455, -8(%rbp)
-	jle	L6157
-L6156:
-	movl	$264609, %edi
+	jle	L5776
+L5775:
+	movl	$248225, %edi
 	call	__m3_fault
-L6157:
+L5776:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -44965,13 +42266,13 @@ _bitfield__write_var_BitField_offset18_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6162
+	js	L5781
 	cmpq	$536870911, -8(%rbp)
-	jle	L6163
-L6162:
-	movl	$264865, %edi
+	jle	L5782
+L5781:
+	movl	$248481, %edi
 	call	__m3_fault
-L6163:
+L5782:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45008,13 +42309,13 @@ _bitfield__write_var_BitField_offset18_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6168
+	js	L5787
 	cmpq	$1073741823, -8(%rbp)
-	jle	L6169
-L6168:
-	movl	$265121, %edi
+	jle	L5788
+L5787:
+	movl	$248737, %edi
 	call	__m3_fault
-L6169:
+L5788:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45051,13 +42352,13 @@ _bitfield__write_var_BitField_offset18_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6174
+	js	L5793
 	cmpq	$2147483647, -8(%rbp)
-	jle	L6175
-L6174:
-	movl	$265377, %edi
+	jle	L5794
+L5793:
+	movl	$248993, %edi
 	call	__m3_fault
-L6175:
+L5794:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45094,14 +42395,14 @@ _bitfield__write_var_BitField_offset18_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6180
+	js	L5799
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L6181
-L6180:
-	movl	$265633, %edi
+	jle	L5800
+L5799:
+	movl	$249249, %edi
 	call	__m3_fault
-L6181:
+L5800:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45138,14 +42439,14 @@ _bitfield__write_var_BitField_offset18_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6186
+	js	L5805
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6187
-L6186:
-	movl	$265889, %edi
+	jle	L5806
+L5805:
+	movl	$249505, %edi
 	call	__m3_fault
-L6187:
+L5806:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45182,14 +42483,14 @@ _bitfield__write_var_BitField_offset18_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6192
+	js	L5811
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6193
-L6192:
-	movl	$266145, %edi
+	jle	L5812
+L5811:
+	movl	$249761, %edi
 	call	__m3_fault
-L6193:
+L5812:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45226,14 +42527,14 @@ _bitfield__write_var_BitField_offset18_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6198
+	js	L5817
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6199
-L6198:
-	movl	$266401, %edi
+	jle	L5818
+L5817:
+	movl	$250017, %edi
 	call	__m3_fault
-L6199:
+L5818:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45270,14 +42571,14 @@ _bitfield__write_var_BitField_offset18_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6204
+	js	L5823
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6205
-L6204:
-	movl	$266657, %edi
+	jle	L5824
+L5823:
+	movl	$250273, %edi
 	call	__m3_fault
-L6205:
+L5824:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45314,14 +42615,14 @@ _bitfield__write_var_BitField_offset18_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6210
+	js	L5829
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6211
-L6210:
-	movl	$266913, %edi
+	jle	L5830
+L5829:
+	movl	$250529, %edi
 	call	__m3_fault
-L6211:
+L5830:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45358,14 +42659,14 @@ _bitfield__write_var_BitField_offset18_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6216
+	js	L5835
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6217
-L6216:
-	movl	$267169, %edi
+	jle	L5836
+L5835:
+	movl	$250785, %edi
 	call	__m3_fault
-L6217:
+L5836:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45402,14 +42703,14 @@ _bitfield__write_var_BitField_offset18_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6222
+	js	L5841
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6223
-L6222:
-	movl	$267425, %edi
+	jle	L5842
+L5841:
+	movl	$251041, %edi
 	call	__m3_fault
-L6223:
+L5842:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45446,14 +42747,14 @@ _bitfield__write_var_BitField_offset18_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6228
+	js	L5847
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6229
-L6228:
-	movl	$267681, %edi
+	jle	L5848
+L5847:
+	movl	$251297, %edi
 	call	__m3_fault
-L6229:
+L5848:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45490,14 +42791,14 @@ _bitfield__write_var_BitField_offset18_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6234
+	js	L5853
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6235
-L6234:
-	movl	$267937, %edi
+	jle	L5854
+L5853:
+	movl	$251553, %edi
 	call	__m3_fault
-L6235:
+L5854:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45534,14 +42835,14 @@ _bitfield__write_var_BitField_offset18_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6240
+	js	L5859
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6241
-L6240:
-	movl	$268193, %edi
+	jle	L5860
+L5859:
+	movl	$251809, %edi
 	call	__m3_fault
-L6241:
+L5860:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45578,14 +42879,14 @@ _bitfield__write_var_BitField_offset18_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6246
+	js	L5865
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6247
-L6246:
-	movl	$268449, %edi
+	jle	L5866
+L5865:
+	movl	$252065, %edi
 	call	__m3_fault
-L6247:
+L5866:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45622,14 +42923,14 @@ _bitfield__write_var_BitField_offset18_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6252
+	js	L5871
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6253
-L6252:
-	movl	$268705, %edi
+	jle	L5872
+L5871:
+	movl	$252321, %edi
 	call	__m3_fault
-L6253:
+L5872:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45666,14 +42967,14 @@ _bitfield__write_var_BitField_offset18_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6258
+	js	L5877
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6259
-L6258:
-	movl	$268961, %edi
+	jle	L5878
+L5877:
+	movl	$252577, %edi
 	call	__m3_fault
-L6259:
+L5878:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45709,14 +43010,14 @@ _bitfield__write_var_BitField_offset18_count46:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6264
+	js	L5883
 	movabsq	$70368744177663, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6265
-L6264:
-	movl	$269217, %edi
+	jle	L5884
+L5883:
+	movl	$252833, %edi
 	call	__m3_fault
-L6265:
+L5884:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -45752,13 +43053,13 @@ _bitfield__write_var_BitField_offset19_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6270
+	js	L5889
 	cmpq	$1, -8(%rbp)
-	jle	L6271
-L6270:
-	movl	$269473, %edi
+	jle	L5890
+L5889:
+	movl	$253089, %edi
 	call	__m3_fault
-L6271:
+L5890:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -45798,13 +43099,13 @@ _bitfield__write_var_BitField_offset19_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6276
+	js	L5895
 	cmpq	$3, -8(%rbp)
-	jle	L6277
-L6276:
-	movl	$269729, %edi
+	jle	L5896
+L5895:
+	movl	$253345, %edi
 	call	__m3_fault
-L6277:
+L5896:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -45844,13 +43145,13 @@ _bitfield__write_var_BitField_offset19_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6282
+	js	L5901
 	cmpq	$7, -8(%rbp)
-	jle	L6283
-L6282:
-	movl	$269985, %edi
+	jle	L5902
+L5901:
+	movl	$253601, %edi
 	call	__m3_fault
-L6283:
+L5902:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -45890,13 +43191,13 @@ _bitfield__write_var_BitField_offset19_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6288
+	js	L5907
 	cmpq	$15, -8(%rbp)
-	jle	L6289
-L6288:
-	movl	$270241, %edi
+	jle	L5908
+L5907:
+	movl	$253857, %edi
 	call	__m3_fault
-L6289:
+L5908:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -45936,13 +43237,13 @@ _bitfield__write_var_BitField_offset19_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6294
+	js	L5913
 	cmpq	$31, -8(%rbp)
-	jle	L6295
-L6294:
-	movl	$270497, %edi
+	jle	L5914
+L5913:
+	movl	$254113, %edi
 	call	__m3_fault
-L6295:
+L5914:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -45982,13 +43283,13 @@ _bitfield__write_var_BitField_offset19_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6300
+	js	L5919
 	cmpq	$63, -8(%rbp)
-	jle	L6301
-L6300:
-	movl	$270753, %edi
+	jle	L5920
+L5919:
+	movl	$254369, %edi
 	call	__m3_fault
-L6301:
+L5920:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -46028,13 +43329,13 @@ _bitfield__write_var_BitField_offset19_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6306
+	js	L5925
 	cmpq	$127, -8(%rbp)
-	jle	L6307
-L6306:
-	movl	$271009, %edi
+	jle	L5926
+L5925:
+	movl	$254625, %edi
 	call	__m3_fault
-L6307:
+L5926:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -46074,13 +43375,13 @@ _bitfield__write_var_BitField_offset19_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6312
+	js	L5931
 	cmpq	$255, -8(%rbp)
-	jle	L6313
-L6312:
-	movl	$271265, %edi
+	jle	L5932
+L5931:
+	movl	$254881, %edi
 	call	__m3_fault
-L6313:
+L5932:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -46120,13 +43421,13 @@ _bitfield__write_var_BitField_offset19_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6318
+	js	L5937
 	cmpq	$511, -8(%rbp)
-	jle	L6319
-L6318:
-	movl	$271521, %edi
+	jle	L5938
+L5937:
+	movl	$255137, %edi
 	call	__m3_fault
-L6319:
+L5938:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -46166,13 +43467,13 @@ _bitfield__write_var_BitField_offset19_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6324
+	js	L5943
 	cmpq	$1023, -8(%rbp)
-	jle	L6325
-L6324:
-	movl	$271777, %edi
+	jle	L5944
+L5943:
+	movl	$255393, %edi
 	call	__m3_fault
-L6325:
+L5944:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -46212,13 +43513,13 @@ _bitfield__write_var_BitField_offset19_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6330
+	js	L5949
 	cmpq	$2047, -8(%rbp)
-	jle	L6331
-L6330:
-	movl	$272033, %edi
+	jle	L5950
+L5949:
+	movl	$255649, %edi
 	call	__m3_fault
-L6331:
+L5950:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -46258,13 +43559,13 @@ _bitfield__write_var_BitField_offset19_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6336
+	js	L5955
 	cmpq	$4095, -8(%rbp)
-	jle	L6337
-L6336:
-	movl	$272289, %edi
+	jle	L5956
+L5955:
+	movl	$255905, %edi
 	call	__m3_fault
-L6337:
+L5956:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -46304,13 +43605,13 @@ _bitfield__write_var_BitField_offset19_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6342
+	js	L5961
 	cmpq	$8191, -8(%rbp)
-	jle	L6343
-L6342:
-	movl	$272545, %edi
+	jle	L5962
+L5961:
+	movl	$256161, %edi
 	call	__m3_fault
-L6343:
+L5962:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -46349,13 +43650,13 @@ _bitfield__write_var_BitField_offset19_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6348
+	js	L5967
 	cmpq	$16383, -8(%rbp)
-	jle	L6349
-L6348:
-	movl	$272801, %edi
+	jle	L5968
+L5967:
+	movl	$256417, %edi
 	call	__m3_fault
-L6349:
+L5968:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46392,13 +43693,13 @@ _bitfield__write_var_BitField_offset19_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6354
+	js	L5973
 	cmpq	$32767, -8(%rbp)
-	jle	L6355
-L6354:
-	movl	$273057, %edi
+	jle	L5974
+L5973:
+	movl	$256673, %edi
 	call	__m3_fault
-L6355:
+L5974:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46435,13 +43736,13 @@ _bitfield__write_var_BitField_offset19_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6360
+	js	L5979
 	cmpq	$65535, -8(%rbp)
-	jle	L6361
-L6360:
-	movl	$273313, %edi
+	jle	L5980
+L5979:
+	movl	$256929, %edi
 	call	__m3_fault
-L6361:
+L5980:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46478,13 +43779,13 @@ _bitfield__write_var_BitField_offset19_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6366
+	js	L5985
 	cmpq	$131071, -8(%rbp)
-	jle	L6367
-L6366:
-	movl	$273569, %edi
+	jle	L5986
+L5985:
+	movl	$257185, %edi
 	call	__m3_fault
-L6367:
+L5986:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46521,13 +43822,13 @@ _bitfield__write_var_BitField_offset19_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6372
+	js	L5991
 	cmpq	$262143, -8(%rbp)
-	jle	L6373
-L6372:
-	movl	$273825, %edi
+	jle	L5992
+L5991:
+	movl	$257441, %edi
 	call	__m3_fault
-L6373:
+L5992:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46564,13 +43865,13 @@ _bitfield__write_var_BitField_offset19_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6378
+	js	L5997
 	cmpq	$524287, -8(%rbp)
-	jle	L6379
-L6378:
-	movl	$274081, %edi
+	jle	L5998
+L5997:
+	movl	$257697, %edi
 	call	__m3_fault
-L6379:
+L5998:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46607,13 +43908,13 @@ _bitfield__write_var_BitField_offset19_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6384
+	js	L6003
 	cmpq	$1048575, -8(%rbp)
-	jle	L6385
-L6384:
-	movl	$274337, %edi
+	jle	L6004
+L6003:
+	movl	$257953, %edi
 	call	__m3_fault
-L6385:
+L6004:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46650,13 +43951,13 @@ _bitfield__write_var_BitField_offset19_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6390
+	js	L6009
 	cmpq	$2097151, -8(%rbp)
-	jle	L6391
-L6390:
-	movl	$274593, %edi
+	jle	L6010
+L6009:
+	movl	$258209, %edi
 	call	__m3_fault
-L6391:
+L6010:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46693,13 +43994,13 @@ _bitfield__write_var_BitField_offset19_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6396
+	js	L6015
 	cmpq	$4194303, -8(%rbp)
-	jle	L6397
-L6396:
-	movl	$274849, %edi
+	jle	L6016
+L6015:
+	movl	$258465, %edi
 	call	__m3_fault
-L6397:
+L6016:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46736,13 +44037,13 @@ _bitfield__write_var_BitField_offset19_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6402
+	js	L6021
 	cmpq	$8388607, -8(%rbp)
-	jle	L6403
-L6402:
-	movl	$275105, %edi
+	jle	L6022
+L6021:
+	movl	$258721, %edi
 	call	__m3_fault
-L6403:
+L6022:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46779,13 +44080,13 @@ _bitfield__write_var_BitField_offset19_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6408
+	js	L6027
 	cmpq	$16777215, -8(%rbp)
-	jle	L6409
-L6408:
-	movl	$275361, %edi
+	jle	L6028
+L6027:
+	movl	$258977, %edi
 	call	__m3_fault
-L6409:
+L6028:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46822,13 +44123,13 @@ _bitfield__write_var_BitField_offset19_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6414
+	js	L6033
 	cmpq	$33554431, -8(%rbp)
-	jle	L6415
-L6414:
-	movl	$275617, %edi
+	jle	L6034
+L6033:
+	movl	$259233, %edi
 	call	__m3_fault
-L6415:
+L6034:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46865,13 +44166,13 @@ _bitfield__write_var_BitField_offset19_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6420
+	js	L6039
 	cmpq	$67108863, -8(%rbp)
-	jle	L6421
-L6420:
-	movl	$275873, %edi
+	jle	L6040
+L6039:
+	movl	$259489, %edi
 	call	__m3_fault
-L6421:
+L6040:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46908,13 +44209,13 @@ _bitfield__write_var_BitField_offset19_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6426
+	js	L6045
 	cmpq	$134217727, -8(%rbp)
-	jle	L6427
-L6426:
-	movl	$276129, %edi
+	jle	L6046
+L6045:
+	movl	$259745, %edi
 	call	__m3_fault
-L6427:
+L6046:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46951,13 +44252,13 @@ _bitfield__write_var_BitField_offset19_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6432
+	js	L6051
 	cmpq	$268435455, -8(%rbp)
-	jle	L6433
-L6432:
-	movl	$276385, %edi
+	jle	L6052
+L6051:
+	movl	$260001, %edi
 	call	__m3_fault
-L6433:
+L6052:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -46994,13 +44295,13 @@ _bitfield__write_var_BitField_offset19_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6438
+	js	L6057
 	cmpq	$536870911, -8(%rbp)
-	jle	L6439
-L6438:
-	movl	$276641, %edi
+	jle	L6058
+L6057:
+	movl	$260257, %edi
 	call	__m3_fault
-L6439:
+L6058:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47037,13 +44338,13 @@ _bitfield__write_var_BitField_offset19_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6444
+	js	L6063
 	cmpq	$1073741823, -8(%rbp)
-	jle	L6445
-L6444:
-	movl	$276897, %edi
+	jle	L6064
+L6063:
+	movl	$260513, %edi
 	call	__m3_fault
-L6445:
+L6064:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47080,13 +44381,13 @@ _bitfield__write_var_BitField_offset19_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6450
+	js	L6069
 	cmpq	$2147483647, -8(%rbp)
-	jle	L6451
-L6450:
-	movl	$277153, %edi
+	jle	L6070
+L6069:
+	movl	$260769, %edi
 	call	__m3_fault
-L6451:
+L6070:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47123,14 +44424,14 @@ _bitfield__write_var_BitField_offset19_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6456
+	js	L6075
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L6457
-L6456:
-	movl	$277409, %edi
+	jle	L6076
+L6075:
+	movl	$261025, %edi
 	call	__m3_fault
-L6457:
+L6076:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47167,14 +44468,14 @@ _bitfield__write_var_BitField_offset19_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6462
+	js	L6081
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6463
-L6462:
-	movl	$277665, %edi
+	jle	L6082
+L6081:
+	movl	$261281, %edi
 	call	__m3_fault
-L6463:
+L6082:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47211,14 +44512,14 @@ _bitfield__write_var_BitField_offset19_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6468
+	js	L6087
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6469
-L6468:
-	movl	$277921, %edi
+	jle	L6088
+L6087:
+	movl	$261537, %edi
 	call	__m3_fault
-L6469:
+L6088:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47255,14 +44556,14 @@ _bitfield__write_var_BitField_offset19_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6474
+	js	L6093
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6475
-L6474:
-	movl	$278177, %edi
+	jle	L6094
+L6093:
+	movl	$261793, %edi
 	call	__m3_fault
-L6475:
+L6094:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47299,14 +44600,14 @@ _bitfield__write_var_BitField_offset19_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6480
+	js	L6099
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6481
-L6480:
-	movl	$278433, %edi
+	jle	L6100
+L6099:
+	movl	$262049, %edi
 	call	__m3_fault
-L6481:
+L6100:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47343,14 +44644,14 @@ _bitfield__write_var_BitField_offset19_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6486
+	js	L6105
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6487
-L6486:
-	movl	$278689, %edi
+	jle	L6106
+L6105:
+	movl	$262305, %edi
 	call	__m3_fault
-L6487:
+L6106:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47387,14 +44688,14 @@ _bitfield__write_var_BitField_offset19_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6492
+	js	L6111
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6493
-L6492:
-	movl	$278945, %edi
+	jle	L6112
+L6111:
+	movl	$262561, %edi
 	call	__m3_fault
-L6493:
+L6112:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47431,14 +44732,14 @@ _bitfield__write_var_BitField_offset19_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6498
+	js	L6117
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6499
-L6498:
-	movl	$279201, %edi
+	jle	L6118
+L6117:
+	movl	$262817, %edi
 	call	__m3_fault
-L6499:
+L6118:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47475,14 +44776,14 @@ _bitfield__write_var_BitField_offset19_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6504
+	js	L6123
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6505
-L6504:
-	movl	$279457, %edi
+	jle	L6124
+L6123:
+	movl	$263073, %edi
 	call	__m3_fault
-L6505:
+L6124:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47519,14 +44820,14 @@ _bitfield__write_var_BitField_offset19_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6510
+	js	L6129
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6511
-L6510:
-	movl	$279713, %edi
+	jle	L6130
+L6129:
+	movl	$263329, %edi
 	call	__m3_fault
-L6511:
+L6130:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47563,14 +44864,14 @@ _bitfield__write_var_BitField_offset19_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6516
+	js	L6135
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6517
-L6516:
-	movl	$279969, %edi
+	jle	L6136
+L6135:
+	movl	$263585, %edi
 	call	__m3_fault
-L6517:
+L6136:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47607,14 +44908,14 @@ _bitfield__write_var_BitField_offset19_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6522
+	js	L6141
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6523
-L6522:
-	movl	$280225, %edi
+	jle	L6142
+L6141:
+	movl	$263841, %edi
 	call	__m3_fault
-L6523:
+L6142:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47651,14 +44952,14 @@ _bitfield__write_var_BitField_offset19_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6528
+	js	L6147
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6529
-L6528:
-	movl	$280481, %edi
+	jle	L6148
+L6147:
+	movl	$264097, %edi
 	call	__m3_fault
-L6529:
+L6148:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47694,14 +44995,14 @@ _bitfield__write_var_BitField_offset19_count45:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6534
+	js	L6153
 	movabsq	$35184372088831, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6535
-L6534:
-	movl	$280737, %edi
+	jle	L6154
+L6153:
+	movl	$264353, %edi
 	call	__m3_fault
-L6535:
+L6154:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -47737,13 +45038,13 @@ _bitfield__write_var_BitField_offset20_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6540
+	js	L6159
 	cmpq	$1, -8(%rbp)
-	jle	L6541
-L6540:
-	movl	$280993, %edi
+	jle	L6160
+L6159:
+	movl	$264609, %edi
 	call	__m3_fault
-L6541:
+L6160:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -47783,13 +45084,13 @@ _bitfield__write_var_BitField_offset20_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6546
+	js	L6165
 	cmpq	$3, -8(%rbp)
-	jle	L6547
-L6546:
-	movl	$281249, %edi
+	jle	L6166
+L6165:
+	movl	$264865, %edi
 	call	__m3_fault
-L6547:
+L6166:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -47829,13 +45130,13 @@ _bitfield__write_var_BitField_offset20_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6552
+	js	L6171
 	cmpq	$7, -8(%rbp)
-	jle	L6553
-L6552:
-	movl	$281505, %edi
+	jle	L6172
+L6171:
+	movl	$265121, %edi
 	call	__m3_fault
-L6553:
+L6172:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -47875,13 +45176,13 @@ _bitfield__write_var_BitField_offset20_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6558
+	js	L6177
 	cmpq	$15, -8(%rbp)
-	jle	L6559
-L6558:
-	movl	$281761, %edi
+	jle	L6178
+L6177:
+	movl	$265377, %edi
 	call	__m3_fault
-L6559:
+L6178:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -47921,13 +45222,13 @@ _bitfield__write_var_BitField_offset20_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6564
+	js	L6183
 	cmpq	$31, -8(%rbp)
-	jle	L6565
-L6564:
-	movl	$282017, %edi
+	jle	L6184
+L6183:
+	movl	$265633, %edi
 	call	__m3_fault
-L6565:
+L6184:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -47967,13 +45268,13 @@ _bitfield__write_var_BitField_offset20_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6570
+	js	L6189
 	cmpq	$63, -8(%rbp)
-	jle	L6571
-L6570:
-	movl	$282273, %edi
+	jle	L6190
+L6189:
+	movl	$265889, %edi
 	call	__m3_fault
-L6571:
+L6190:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -48013,13 +45314,13 @@ _bitfield__write_var_BitField_offset20_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6576
+	js	L6195
 	cmpq	$127, -8(%rbp)
-	jle	L6577
-L6576:
-	movl	$282529, %edi
+	jle	L6196
+L6195:
+	movl	$266145, %edi
 	call	__m3_fault
-L6577:
+L6196:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -48059,13 +45360,13 @@ _bitfield__write_var_BitField_offset20_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6582
+	js	L6201
 	cmpq	$255, -8(%rbp)
-	jle	L6583
-L6582:
-	movl	$282785, %edi
+	jle	L6202
+L6201:
+	movl	$266401, %edi
 	call	__m3_fault
-L6583:
+L6202:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -48105,13 +45406,13 @@ _bitfield__write_var_BitField_offset20_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6588
+	js	L6207
 	cmpq	$511, -8(%rbp)
-	jle	L6589
-L6588:
-	movl	$283041, %edi
+	jle	L6208
+L6207:
+	movl	$266657, %edi
 	call	__m3_fault
-L6589:
+L6208:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -48151,13 +45452,13 @@ _bitfield__write_var_BitField_offset20_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6594
+	js	L6213
 	cmpq	$1023, -8(%rbp)
-	jle	L6595
-L6594:
-	movl	$283297, %edi
+	jle	L6214
+L6213:
+	movl	$266913, %edi
 	call	__m3_fault
-L6595:
+L6214:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -48197,13 +45498,13 @@ _bitfield__write_var_BitField_offset20_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6600
+	js	L6219
 	cmpq	$2047, -8(%rbp)
-	jle	L6601
-L6600:
-	movl	$283553, %edi
+	jle	L6220
+L6219:
+	movl	$267169, %edi
 	call	__m3_fault
-L6601:
+L6220:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -48243,13 +45544,13 @@ _bitfield__write_var_BitField_offset20_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6606
+	js	L6225
 	cmpq	$4095, -8(%rbp)
-	jle	L6607
-L6606:
-	movl	$283809, %edi
+	jle	L6226
+L6225:
+	movl	$267425, %edi
 	call	__m3_fault
-L6607:
+L6226:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -48288,13 +45589,13 @@ _bitfield__write_var_BitField_offset20_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6612
+	js	L6231
 	cmpq	$8191, -8(%rbp)
-	jle	L6613
-L6612:
-	movl	$284065, %edi
+	jle	L6232
+L6231:
+	movl	$267681, %edi
 	call	__m3_fault
-L6613:
+L6232:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48331,13 +45632,13 @@ _bitfield__write_var_BitField_offset20_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6618
+	js	L6237
 	cmpq	$16383, -8(%rbp)
-	jle	L6619
-L6618:
-	movl	$284321, %edi
+	jle	L6238
+L6237:
+	movl	$267937, %edi
 	call	__m3_fault
-L6619:
+L6238:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48374,13 +45675,13 @@ _bitfield__write_var_BitField_offset20_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6624
+	js	L6243
 	cmpq	$32767, -8(%rbp)
-	jle	L6625
-L6624:
-	movl	$284577, %edi
+	jle	L6244
+L6243:
+	movl	$268193, %edi
 	call	__m3_fault
-L6625:
+L6244:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48417,13 +45718,13 @@ _bitfield__write_var_BitField_offset20_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6630
+	js	L6249
 	cmpq	$65535, -8(%rbp)
-	jle	L6631
-L6630:
-	movl	$284833, %edi
+	jle	L6250
+L6249:
+	movl	$268449, %edi
 	call	__m3_fault
-L6631:
+L6250:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48460,13 +45761,13 @@ _bitfield__write_var_BitField_offset20_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6636
+	js	L6255
 	cmpq	$131071, -8(%rbp)
-	jle	L6637
-L6636:
-	movl	$285089, %edi
+	jle	L6256
+L6255:
+	movl	$268705, %edi
 	call	__m3_fault
-L6637:
+L6256:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48503,13 +45804,13 @@ _bitfield__write_var_BitField_offset20_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6642
+	js	L6261
 	cmpq	$262143, -8(%rbp)
-	jle	L6643
-L6642:
-	movl	$285345, %edi
+	jle	L6262
+L6261:
+	movl	$268961, %edi
 	call	__m3_fault
-L6643:
+L6262:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48546,13 +45847,13 @@ _bitfield__write_var_BitField_offset20_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6648
+	js	L6267
 	cmpq	$524287, -8(%rbp)
-	jle	L6649
-L6648:
-	movl	$285601, %edi
+	jle	L6268
+L6267:
+	movl	$269217, %edi
 	call	__m3_fault
-L6649:
+L6268:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48589,13 +45890,13 @@ _bitfield__write_var_BitField_offset20_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6654
+	js	L6273
 	cmpq	$1048575, -8(%rbp)
-	jle	L6655
-L6654:
-	movl	$285857, %edi
+	jle	L6274
+L6273:
+	movl	$269473, %edi
 	call	__m3_fault
-L6655:
+L6274:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48632,13 +45933,13 @@ _bitfield__write_var_BitField_offset20_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6660
+	js	L6279
 	cmpq	$2097151, -8(%rbp)
-	jle	L6661
-L6660:
-	movl	$286113, %edi
+	jle	L6280
+L6279:
+	movl	$269729, %edi
 	call	__m3_fault
-L6661:
+L6280:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48675,13 +45976,13 @@ _bitfield__write_var_BitField_offset20_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6666
+	js	L6285
 	cmpq	$4194303, -8(%rbp)
-	jle	L6667
-L6666:
-	movl	$286369, %edi
+	jle	L6286
+L6285:
+	movl	$269985, %edi
 	call	__m3_fault
-L6667:
+L6286:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48718,13 +46019,13 @@ _bitfield__write_var_BitField_offset20_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6672
+	js	L6291
 	cmpq	$8388607, -8(%rbp)
-	jle	L6673
-L6672:
-	movl	$286625, %edi
+	jle	L6292
+L6291:
+	movl	$270241, %edi
 	call	__m3_fault
-L6673:
+L6292:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48761,13 +46062,13 @@ _bitfield__write_var_BitField_offset20_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6678
+	js	L6297
 	cmpq	$16777215, -8(%rbp)
-	jle	L6679
-L6678:
-	movl	$286881, %edi
+	jle	L6298
+L6297:
+	movl	$270497, %edi
 	call	__m3_fault
-L6679:
+L6298:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48804,13 +46105,13 @@ _bitfield__write_var_BitField_offset20_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6684
+	js	L6303
 	cmpq	$33554431, -8(%rbp)
-	jle	L6685
-L6684:
-	movl	$287137, %edi
+	jle	L6304
+L6303:
+	movl	$270753, %edi
 	call	__m3_fault
-L6685:
+L6304:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48847,13 +46148,13 @@ _bitfield__write_var_BitField_offset20_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6690
+	js	L6309
 	cmpq	$67108863, -8(%rbp)
-	jle	L6691
-L6690:
-	movl	$287393, %edi
+	jle	L6310
+L6309:
+	movl	$271009, %edi
 	call	__m3_fault
-L6691:
+L6310:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48890,13 +46191,13 @@ _bitfield__write_var_BitField_offset20_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6696
+	js	L6315
 	cmpq	$134217727, -8(%rbp)
-	jle	L6697
-L6696:
-	movl	$287649, %edi
+	jle	L6316
+L6315:
+	movl	$271265, %edi
 	call	__m3_fault
-L6697:
+L6316:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48933,13 +46234,13 @@ _bitfield__write_var_BitField_offset20_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6702
+	js	L6321
 	cmpq	$268435455, -8(%rbp)
-	jle	L6703
-L6702:
-	movl	$287905, %edi
+	jle	L6322
+L6321:
+	movl	$271521, %edi
 	call	__m3_fault
-L6703:
+L6322:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -48976,13 +46277,13 @@ _bitfield__write_var_BitField_offset20_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6708
+	js	L6327
 	cmpq	$536870911, -8(%rbp)
-	jle	L6709
-L6708:
-	movl	$288161, %edi
+	jle	L6328
+L6327:
+	movl	$271777, %edi
 	call	__m3_fault
-L6709:
+L6328:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49019,13 +46320,13 @@ _bitfield__write_var_BitField_offset20_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6714
+	js	L6333
 	cmpq	$1073741823, -8(%rbp)
-	jle	L6715
-L6714:
-	movl	$288417, %edi
+	jle	L6334
+L6333:
+	movl	$272033, %edi
 	call	__m3_fault
-L6715:
+L6334:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49062,13 +46363,13 @@ _bitfield__write_var_BitField_offset20_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6720
+	js	L6339
 	cmpq	$2147483647, -8(%rbp)
-	jle	L6721
-L6720:
-	movl	$288673, %edi
+	jle	L6340
+L6339:
+	movl	$272289, %edi
 	call	__m3_fault
-L6721:
+L6340:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49105,14 +46406,14 @@ _bitfield__write_var_BitField_offset20_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6726
+	js	L6345
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L6727
-L6726:
-	movl	$288929, %edi
+	jle	L6346
+L6345:
+	movl	$272545, %edi
 	call	__m3_fault
-L6727:
+L6346:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49149,14 +46450,14 @@ _bitfield__write_var_BitField_offset20_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6732
+	js	L6351
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6733
-L6732:
-	movl	$289185, %edi
+	jle	L6352
+L6351:
+	movl	$272801, %edi
 	call	__m3_fault
-L6733:
+L6352:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49193,14 +46494,14 @@ _bitfield__write_var_BitField_offset20_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6738
+	js	L6357
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6739
-L6738:
-	movl	$289441, %edi
+	jle	L6358
+L6357:
+	movl	$273057, %edi
 	call	__m3_fault
-L6739:
+L6358:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49237,14 +46538,14 @@ _bitfield__write_var_BitField_offset20_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6744
+	js	L6363
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6745
-L6744:
-	movl	$289697, %edi
+	jle	L6364
+L6363:
+	movl	$273313, %edi
 	call	__m3_fault
-L6745:
+L6364:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49281,14 +46582,14 @@ _bitfield__write_var_BitField_offset20_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6750
+	js	L6369
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6751
-L6750:
-	movl	$289953, %edi
+	jle	L6370
+L6369:
+	movl	$273569, %edi
 	call	__m3_fault
-L6751:
+L6370:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49325,14 +46626,14 @@ _bitfield__write_var_BitField_offset20_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6756
+	js	L6375
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6757
-L6756:
-	movl	$290209, %edi
+	jle	L6376
+L6375:
+	movl	$273825, %edi
 	call	__m3_fault
-L6757:
+L6376:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49369,14 +46670,14 @@ _bitfield__write_var_BitField_offset20_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6762
+	js	L6381
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6763
-L6762:
-	movl	$290465, %edi
+	jle	L6382
+L6381:
+	movl	$274081, %edi
 	call	__m3_fault
-L6763:
+L6382:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49413,14 +46714,14 @@ _bitfield__write_var_BitField_offset20_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6768
+	js	L6387
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6769
-L6768:
-	movl	$290721, %edi
+	jle	L6388
+L6387:
+	movl	$274337, %edi
 	call	__m3_fault
-L6769:
+L6388:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49457,14 +46758,14 @@ _bitfield__write_var_BitField_offset20_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6774
+	js	L6393
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6775
-L6774:
-	movl	$290977, %edi
+	jle	L6394
+L6393:
+	movl	$274593, %edi
 	call	__m3_fault
-L6775:
+L6394:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49501,14 +46802,14 @@ _bitfield__write_var_BitField_offset20_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6780
+	js	L6399
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6781
-L6780:
-	movl	$291233, %edi
+	jle	L6400
+L6399:
+	movl	$274849, %edi
 	call	__m3_fault
-L6781:
+L6400:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49545,14 +46846,14 @@ _bitfield__write_var_BitField_offset20_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6786
+	js	L6405
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6787
-L6786:
-	movl	$291489, %edi
+	jle	L6406
+L6405:
+	movl	$275105, %edi
 	call	__m3_fault
-L6787:
+L6406:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49589,14 +46890,14 @@ _bitfield__write_var_BitField_offset20_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6792
+	js	L6411
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6793
-L6792:
-	movl	$291745, %edi
+	jle	L6412
+L6411:
+	movl	$275361, %edi
 	call	__m3_fault
-L6793:
+L6412:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49632,14 +46933,14 @@ _bitfield__write_var_BitField_offset20_count44:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6798
+	js	L6417
 	movabsq	$17592186044415, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6799
-L6798:
-	movl	$292001, %edi
+	jle	L6418
+L6417:
+	movl	$275617, %edi
 	call	__m3_fault
-L6799:
+L6418:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -49675,13 +46976,13 @@ _bitfield__write_var_BitField_offset21_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6804
+	js	L6423
 	cmpq	$1, -8(%rbp)
-	jle	L6805
-L6804:
-	movl	$292257, %edi
+	jle	L6424
+L6423:
+	movl	$275873, %edi
 	call	__m3_fault
-L6805:
+L6424:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -49721,13 +47022,13 @@ _bitfield__write_var_BitField_offset21_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6810
+	js	L6429
 	cmpq	$3, -8(%rbp)
-	jle	L6811
-L6810:
-	movl	$292513, %edi
+	jle	L6430
+L6429:
+	movl	$276129, %edi
 	call	__m3_fault
-L6811:
+L6430:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -49767,13 +47068,13 @@ _bitfield__write_var_BitField_offset21_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6816
+	js	L6435
 	cmpq	$7, -8(%rbp)
-	jle	L6817
-L6816:
-	movl	$292769, %edi
+	jle	L6436
+L6435:
+	movl	$276385, %edi
 	call	__m3_fault
-L6817:
+L6436:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -49813,13 +47114,13 @@ _bitfield__write_var_BitField_offset21_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6822
+	js	L6441
 	cmpq	$15, -8(%rbp)
-	jle	L6823
-L6822:
-	movl	$293025, %edi
+	jle	L6442
+L6441:
+	movl	$276641, %edi
 	call	__m3_fault
-L6823:
+L6442:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -49859,13 +47160,13 @@ _bitfield__write_var_BitField_offset21_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6828
+	js	L6447
 	cmpq	$31, -8(%rbp)
-	jle	L6829
-L6828:
-	movl	$293281, %edi
+	jle	L6448
+L6447:
+	movl	$276897, %edi
 	call	__m3_fault
-L6829:
+L6448:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -49905,13 +47206,13 @@ _bitfield__write_var_BitField_offset21_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6834
+	js	L6453
 	cmpq	$63, -8(%rbp)
-	jle	L6835
-L6834:
-	movl	$293537, %edi
+	jle	L6454
+L6453:
+	movl	$277153, %edi
 	call	__m3_fault
-L6835:
+L6454:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -49951,13 +47252,13 @@ _bitfield__write_var_BitField_offset21_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6840
+	js	L6459
 	cmpq	$127, -8(%rbp)
-	jle	L6841
-L6840:
-	movl	$293793, %edi
+	jle	L6460
+L6459:
+	movl	$277409, %edi
 	call	__m3_fault
-L6841:
+L6460:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -49997,13 +47298,13 @@ _bitfield__write_var_BitField_offset21_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6846
+	js	L6465
 	cmpq	$255, -8(%rbp)
-	jle	L6847
-L6846:
-	movl	$294049, %edi
+	jle	L6466
+L6465:
+	movl	$277665, %edi
 	call	__m3_fault
-L6847:
+L6466:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -50043,13 +47344,13 @@ _bitfield__write_var_BitField_offset21_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6852
+	js	L6471
 	cmpq	$511, -8(%rbp)
-	jle	L6853
-L6852:
-	movl	$294305, %edi
+	jle	L6472
+L6471:
+	movl	$277921, %edi
 	call	__m3_fault
-L6853:
+L6472:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -50089,13 +47390,13 @@ _bitfield__write_var_BitField_offset21_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6858
+	js	L6477
 	cmpq	$1023, -8(%rbp)
-	jle	L6859
-L6858:
-	movl	$294561, %edi
+	jle	L6478
+L6477:
+	movl	$278177, %edi
 	call	__m3_fault
-L6859:
+L6478:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -50135,13 +47436,13 @@ _bitfield__write_var_BitField_offset21_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6864
+	js	L6483
 	cmpq	$2047, -8(%rbp)
-	jle	L6865
-L6864:
-	movl	$294817, %edi
+	jle	L6484
+L6483:
+	movl	$278433, %edi
 	call	__m3_fault
-L6865:
+L6484:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -50180,13 +47481,13 @@ _bitfield__write_var_BitField_offset21_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6870
+	js	L6489
 	cmpq	$4095, -8(%rbp)
-	jle	L6871
-L6870:
-	movl	$295073, %edi
+	jle	L6490
+L6489:
+	movl	$278689, %edi
 	call	__m3_fault
-L6871:
+L6490:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50223,13 +47524,13 @@ _bitfield__write_var_BitField_offset21_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6876
+	js	L6495
 	cmpq	$8191, -8(%rbp)
-	jle	L6877
-L6876:
-	movl	$295329, %edi
+	jle	L6496
+L6495:
+	movl	$278945, %edi
 	call	__m3_fault
-L6877:
+L6496:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50266,13 +47567,13 @@ _bitfield__write_var_BitField_offset21_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6882
+	js	L6501
 	cmpq	$16383, -8(%rbp)
-	jle	L6883
-L6882:
-	movl	$295585, %edi
+	jle	L6502
+L6501:
+	movl	$279201, %edi
 	call	__m3_fault
-L6883:
+L6502:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50309,13 +47610,13 @@ _bitfield__write_var_BitField_offset21_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6888
+	js	L6507
 	cmpq	$32767, -8(%rbp)
-	jle	L6889
-L6888:
-	movl	$295841, %edi
+	jle	L6508
+L6507:
+	movl	$279457, %edi
 	call	__m3_fault
-L6889:
+L6508:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50352,13 +47653,13 @@ _bitfield__write_var_BitField_offset21_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6894
+	js	L6513
 	cmpq	$65535, -8(%rbp)
-	jle	L6895
-L6894:
-	movl	$296097, %edi
+	jle	L6514
+L6513:
+	movl	$279713, %edi
 	call	__m3_fault
-L6895:
+L6514:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50395,13 +47696,13 @@ _bitfield__write_var_BitField_offset21_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6900
+	js	L6519
 	cmpq	$131071, -8(%rbp)
-	jle	L6901
-L6900:
-	movl	$296353, %edi
+	jle	L6520
+L6519:
+	movl	$279969, %edi
 	call	__m3_fault
-L6901:
+L6520:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50438,13 +47739,13 @@ _bitfield__write_var_BitField_offset21_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6906
+	js	L6525
 	cmpq	$262143, -8(%rbp)
-	jle	L6907
-L6906:
-	movl	$296609, %edi
+	jle	L6526
+L6525:
+	movl	$280225, %edi
 	call	__m3_fault
-L6907:
+L6526:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50481,13 +47782,13 @@ _bitfield__write_var_BitField_offset21_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6912
+	js	L6531
 	cmpq	$524287, -8(%rbp)
-	jle	L6913
-L6912:
-	movl	$296865, %edi
+	jle	L6532
+L6531:
+	movl	$280481, %edi
 	call	__m3_fault
-L6913:
+L6532:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50524,13 +47825,13 @@ _bitfield__write_var_BitField_offset21_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6918
+	js	L6537
 	cmpq	$1048575, -8(%rbp)
-	jle	L6919
-L6918:
-	movl	$297121, %edi
+	jle	L6538
+L6537:
+	movl	$280737, %edi
 	call	__m3_fault
-L6919:
+L6538:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50567,13 +47868,13 @@ _bitfield__write_var_BitField_offset21_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6924
+	js	L6543
 	cmpq	$2097151, -8(%rbp)
-	jle	L6925
-L6924:
-	movl	$297377, %edi
+	jle	L6544
+L6543:
+	movl	$280993, %edi
 	call	__m3_fault
-L6925:
+L6544:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50610,13 +47911,13 @@ _bitfield__write_var_BitField_offset21_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6930
+	js	L6549
 	cmpq	$4194303, -8(%rbp)
-	jle	L6931
-L6930:
-	movl	$297633, %edi
+	jle	L6550
+L6549:
+	movl	$281249, %edi
 	call	__m3_fault
-L6931:
+L6550:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50653,13 +47954,13 @@ _bitfield__write_var_BitField_offset21_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6936
+	js	L6555
 	cmpq	$8388607, -8(%rbp)
-	jle	L6937
-L6936:
-	movl	$297889, %edi
+	jle	L6556
+L6555:
+	movl	$281505, %edi
 	call	__m3_fault
-L6937:
+L6556:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50696,13 +47997,13 @@ _bitfield__write_var_BitField_offset21_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6942
+	js	L6561
 	cmpq	$16777215, -8(%rbp)
-	jle	L6943
-L6942:
-	movl	$298145, %edi
+	jle	L6562
+L6561:
+	movl	$281761, %edi
 	call	__m3_fault
-L6943:
+L6562:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50739,13 +48040,13 @@ _bitfield__write_var_BitField_offset21_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6948
+	js	L6567
 	cmpq	$33554431, -8(%rbp)
-	jle	L6949
-L6948:
-	movl	$298401, %edi
+	jle	L6568
+L6567:
+	movl	$282017, %edi
 	call	__m3_fault
-L6949:
+L6568:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50782,13 +48083,13 @@ _bitfield__write_var_BitField_offset21_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6954
+	js	L6573
 	cmpq	$67108863, -8(%rbp)
-	jle	L6955
-L6954:
-	movl	$298657, %edi
+	jle	L6574
+L6573:
+	movl	$282273, %edi
 	call	__m3_fault
-L6955:
+L6574:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50825,13 +48126,13 @@ _bitfield__write_var_BitField_offset21_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6960
+	js	L6579
 	cmpq	$134217727, -8(%rbp)
-	jle	L6961
-L6960:
-	movl	$298913, %edi
+	jle	L6580
+L6579:
+	movl	$282529, %edi
 	call	__m3_fault
-L6961:
+L6580:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50868,13 +48169,13 @@ _bitfield__write_var_BitField_offset21_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6966
+	js	L6585
 	cmpq	$268435455, -8(%rbp)
-	jle	L6967
-L6966:
-	movl	$299169, %edi
+	jle	L6586
+L6585:
+	movl	$282785, %edi
 	call	__m3_fault
-L6967:
+L6586:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50911,13 +48212,13 @@ _bitfield__write_var_BitField_offset21_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6972
+	js	L6591
 	cmpq	$536870911, -8(%rbp)
-	jle	L6973
-L6972:
-	movl	$299425, %edi
+	jle	L6592
+L6591:
+	movl	$283041, %edi
 	call	__m3_fault
-L6973:
+L6592:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50954,13 +48255,13 @@ _bitfield__write_var_BitField_offset21_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6978
+	js	L6597
 	cmpq	$1073741823, -8(%rbp)
-	jle	L6979
-L6978:
-	movl	$299681, %edi
+	jle	L6598
+L6597:
+	movl	$283297, %edi
 	call	__m3_fault
-L6979:
+L6598:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -50997,13 +48298,13 @@ _bitfield__write_var_BitField_offset21_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6984
+	js	L6603
 	cmpq	$2147483647, -8(%rbp)
-	jle	L6985
-L6984:
-	movl	$299937, %edi
+	jle	L6604
+L6603:
+	movl	$283553, %edi
 	call	__m3_fault
-L6985:
+L6604:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51040,14 +48341,14 @@ _bitfield__write_var_BitField_offset21_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6990
+	js	L6609
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L6991
-L6990:
-	movl	$300193, %edi
+	jle	L6610
+L6609:
+	movl	$283809, %edi
 	call	__m3_fault
-L6991:
+L6610:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51084,14 +48385,14 @@ _bitfield__write_var_BitField_offset21_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L6996
+	js	L6615
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L6997
-L6996:
-	movl	$300449, %edi
+	jle	L6616
+L6615:
+	movl	$284065, %edi
 	call	__m3_fault
-L6997:
+L6616:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51128,14 +48429,14 @@ _bitfield__write_var_BitField_offset21_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7002
+	js	L6621
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7003
-L7002:
-	movl	$300705, %edi
+	jle	L6622
+L6621:
+	movl	$284321, %edi
 	call	__m3_fault
-L7003:
+L6622:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51172,14 +48473,14 @@ _bitfield__write_var_BitField_offset21_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7008
+	js	L6627
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7009
-L7008:
-	movl	$300961, %edi
+	jle	L6628
+L6627:
+	movl	$284577, %edi
 	call	__m3_fault
-L7009:
+L6628:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51216,14 +48517,14 @@ _bitfield__write_var_BitField_offset21_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7014
+	js	L6633
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7015
-L7014:
-	movl	$301217, %edi
+	jle	L6634
+L6633:
+	movl	$284833, %edi
 	call	__m3_fault
-L7015:
+L6634:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51260,14 +48561,14 @@ _bitfield__write_var_BitField_offset21_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7020
+	js	L6639
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7021
-L7020:
-	movl	$301473, %edi
+	jle	L6640
+L6639:
+	movl	$285089, %edi
 	call	__m3_fault
-L7021:
+L6640:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51304,14 +48605,14 @@ _bitfield__write_var_BitField_offset21_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7026
+	js	L6645
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7027
-L7026:
-	movl	$301729, %edi
+	jle	L6646
+L6645:
+	movl	$285345, %edi
 	call	__m3_fault
-L7027:
+L6646:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51348,14 +48649,14 @@ _bitfield__write_var_BitField_offset21_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7032
+	js	L6651
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7033
-L7032:
-	movl	$301985, %edi
+	jle	L6652
+L6651:
+	movl	$285601, %edi
 	call	__m3_fault
-L7033:
+L6652:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51392,14 +48693,14 @@ _bitfield__write_var_BitField_offset21_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7038
+	js	L6657
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7039
-L7038:
-	movl	$302241, %edi
+	jle	L6658
+L6657:
+	movl	$285857, %edi
 	call	__m3_fault
-L7039:
+L6658:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51436,14 +48737,14 @@ _bitfield__write_var_BitField_offset21_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7044
+	js	L6663
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7045
-L7044:
-	movl	$302497, %edi
+	jle	L6664
+L6663:
+	movl	$286113, %edi
 	call	__m3_fault
-L7045:
+L6664:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51480,14 +48781,14 @@ _bitfield__write_var_BitField_offset21_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7050
+	js	L6669
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7051
-L7050:
-	movl	$302753, %edi
+	jle	L6670
+L6669:
+	movl	$286369, %edi
 	call	__m3_fault
-L7051:
+L6670:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51523,14 +48824,14 @@ _bitfield__write_var_BitField_offset21_count43:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7056
+	js	L6675
 	movabsq	$8796093022207, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7057
-L7056:
-	movl	$303009, %edi
+	jle	L6676
+L6675:
+	movl	$286625, %edi
 	call	__m3_fault
-L7057:
+L6676:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -51566,13 +48867,13 @@ _bitfield__write_var_BitField_offset22_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7062
+	js	L6681
 	cmpq	$1, -8(%rbp)
-	jle	L7063
-L7062:
-	movl	$303265, %edi
+	jle	L6682
+L6681:
+	movl	$286881, %edi
 	call	__m3_fault
-L7063:
+L6682:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -51612,13 +48913,13 @@ _bitfield__write_var_BitField_offset22_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7068
+	js	L6687
 	cmpq	$3, -8(%rbp)
-	jle	L7069
-L7068:
-	movl	$303521, %edi
+	jle	L6688
+L6687:
+	movl	$287137, %edi
 	call	__m3_fault
-L7069:
+L6688:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -51658,13 +48959,13 @@ _bitfield__write_var_BitField_offset22_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7074
+	js	L6693
 	cmpq	$7, -8(%rbp)
-	jle	L7075
-L7074:
-	movl	$303777, %edi
+	jle	L6694
+L6693:
+	movl	$287393, %edi
 	call	__m3_fault
-L7075:
+L6694:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -51704,13 +49005,13 @@ _bitfield__write_var_BitField_offset22_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7080
+	js	L6699
 	cmpq	$15, -8(%rbp)
-	jle	L7081
-L7080:
-	movl	$304033, %edi
+	jle	L6700
+L6699:
+	movl	$287649, %edi
 	call	__m3_fault
-L7081:
+L6700:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -51750,13 +49051,13 @@ _bitfield__write_var_BitField_offset22_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7086
+	js	L6705
 	cmpq	$31, -8(%rbp)
-	jle	L7087
-L7086:
-	movl	$304289, %edi
+	jle	L6706
+L6705:
+	movl	$287905, %edi
 	call	__m3_fault
-L7087:
+L6706:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -51796,13 +49097,13 @@ _bitfield__write_var_BitField_offset22_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7092
+	js	L6711
 	cmpq	$63, -8(%rbp)
-	jle	L7093
-L7092:
-	movl	$304545, %edi
+	jle	L6712
+L6711:
+	movl	$288161, %edi
 	call	__m3_fault
-L7093:
+L6712:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -51842,13 +49143,13 @@ _bitfield__write_var_BitField_offset22_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7098
+	js	L6717
 	cmpq	$127, -8(%rbp)
-	jle	L7099
-L7098:
-	movl	$304801, %edi
+	jle	L6718
+L6717:
+	movl	$288417, %edi
 	call	__m3_fault
-L7099:
+L6718:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -51888,13 +49189,13 @@ _bitfield__write_var_BitField_offset22_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7104
+	js	L6723
 	cmpq	$255, -8(%rbp)
-	jle	L7105
-L7104:
-	movl	$305057, %edi
+	jle	L6724
+L6723:
+	movl	$288673, %edi
 	call	__m3_fault
-L7105:
+L6724:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -51934,13 +49235,13 @@ _bitfield__write_var_BitField_offset22_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7110
+	js	L6729
 	cmpq	$511, -8(%rbp)
-	jle	L7111
-L7110:
-	movl	$305313, %edi
+	jle	L6730
+L6729:
+	movl	$288929, %edi
 	call	__m3_fault
-L7111:
+L6730:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -51980,13 +49281,13 @@ _bitfield__write_var_BitField_offset22_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7116
+	js	L6735
 	cmpq	$1023, -8(%rbp)
-	jle	L7117
-L7116:
-	movl	$305569, %edi
+	jle	L6736
+L6735:
+	movl	$289185, %edi
 	call	__m3_fault
-L7117:
+L6736:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -52025,13 +49326,13 @@ _bitfield__write_var_BitField_offset22_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7122
+	js	L6741
 	cmpq	$2047, -8(%rbp)
-	jle	L7123
-L7122:
-	movl	$305825, %edi
+	jle	L6742
+L6741:
+	movl	$289441, %edi
 	call	__m3_fault
-L7123:
+L6742:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52068,13 +49369,13 @@ _bitfield__write_var_BitField_offset22_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7128
+	js	L6747
 	cmpq	$4095, -8(%rbp)
-	jle	L7129
-L7128:
-	movl	$306081, %edi
+	jle	L6748
+L6747:
+	movl	$289697, %edi
 	call	__m3_fault
-L7129:
+L6748:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52111,13 +49412,13 @@ _bitfield__write_var_BitField_offset22_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7134
+	js	L6753
 	cmpq	$8191, -8(%rbp)
-	jle	L7135
-L7134:
-	movl	$306337, %edi
+	jle	L6754
+L6753:
+	movl	$289953, %edi
 	call	__m3_fault
-L7135:
+L6754:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52154,13 +49455,13 @@ _bitfield__write_var_BitField_offset22_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7140
+	js	L6759
 	cmpq	$16383, -8(%rbp)
-	jle	L7141
-L7140:
-	movl	$306593, %edi
+	jle	L6760
+L6759:
+	movl	$290209, %edi
 	call	__m3_fault
-L7141:
+L6760:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52197,13 +49498,13 @@ _bitfield__write_var_BitField_offset22_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7146
+	js	L6765
 	cmpq	$32767, -8(%rbp)
-	jle	L7147
-L7146:
-	movl	$306849, %edi
+	jle	L6766
+L6765:
+	movl	$290465, %edi
 	call	__m3_fault
-L7147:
+L6766:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52240,13 +49541,13 @@ _bitfield__write_var_BitField_offset22_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7152
+	js	L6771
 	cmpq	$65535, -8(%rbp)
-	jle	L7153
-L7152:
-	movl	$307105, %edi
+	jle	L6772
+L6771:
+	movl	$290721, %edi
 	call	__m3_fault
-L7153:
+L6772:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52283,13 +49584,13 @@ _bitfield__write_var_BitField_offset22_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7158
+	js	L6777
 	cmpq	$131071, -8(%rbp)
-	jle	L7159
-L7158:
-	movl	$307361, %edi
+	jle	L6778
+L6777:
+	movl	$290977, %edi
 	call	__m3_fault
-L7159:
+L6778:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52326,13 +49627,13 @@ _bitfield__write_var_BitField_offset22_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7164
+	js	L6783
 	cmpq	$262143, -8(%rbp)
-	jle	L7165
-L7164:
-	movl	$307617, %edi
+	jle	L6784
+L6783:
+	movl	$291233, %edi
 	call	__m3_fault
-L7165:
+L6784:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52369,13 +49670,13 @@ _bitfield__write_var_BitField_offset22_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7170
+	js	L6789
 	cmpq	$524287, -8(%rbp)
-	jle	L7171
-L7170:
-	movl	$307873, %edi
+	jle	L6790
+L6789:
+	movl	$291489, %edi
 	call	__m3_fault
-L7171:
+L6790:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52412,13 +49713,13 @@ _bitfield__write_var_BitField_offset22_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7176
+	js	L6795
 	cmpq	$1048575, -8(%rbp)
-	jle	L7177
-L7176:
-	movl	$308129, %edi
+	jle	L6796
+L6795:
+	movl	$291745, %edi
 	call	__m3_fault
-L7177:
+L6796:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52455,13 +49756,13 @@ _bitfield__write_var_BitField_offset22_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7182
+	js	L6801
 	cmpq	$2097151, -8(%rbp)
-	jle	L7183
-L7182:
-	movl	$308385, %edi
+	jle	L6802
+L6801:
+	movl	$292001, %edi
 	call	__m3_fault
-L7183:
+L6802:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52498,13 +49799,13 @@ _bitfield__write_var_BitField_offset22_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7188
+	js	L6807
 	cmpq	$4194303, -8(%rbp)
-	jle	L7189
-L7188:
-	movl	$308641, %edi
+	jle	L6808
+L6807:
+	movl	$292257, %edi
 	call	__m3_fault
-L7189:
+L6808:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52541,13 +49842,13 @@ _bitfield__write_var_BitField_offset22_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7194
+	js	L6813
 	cmpq	$8388607, -8(%rbp)
-	jle	L7195
-L7194:
-	movl	$308897, %edi
+	jle	L6814
+L6813:
+	movl	$292513, %edi
 	call	__m3_fault
-L7195:
+L6814:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52584,13 +49885,13 @@ _bitfield__write_var_BitField_offset22_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7200
+	js	L6819
 	cmpq	$16777215, -8(%rbp)
-	jle	L7201
-L7200:
-	movl	$309153, %edi
+	jle	L6820
+L6819:
+	movl	$292769, %edi
 	call	__m3_fault
-L7201:
+L6820:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52627,13 +49928,13 @@ _bitfield__write_var_BitField_offset22_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7206
+	js	L6825
 	cmpq	$33554431, -8(%rbp)
-	jle	L7207
-L7206:
-	movl	$309409, %edi
+	jle	L6826
+L6825:
+	movl	$293025, %edi
 	call	__m3_fault
-L7207:
+L6826:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52670,13 +49971,13 @@ _bitfield__write_var_BitField_offset22_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7212
+	js	L6831
 	cmpq	$67108863, -8(%rbp)
-	jle	L7213
-L7212:
-	movl	$309665, %edi
+	jle	L6832
+L6831:
+	movl	$293281, %edi
 	call	__m3_fault
-L7213:
+L6832:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52713,13 +50014,13 @@ _bitfield__write_var_BitField_offset22_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7218
+	js	L6837
 	cmpq	$134217727, -8(%rbp)
-	jle	L7219
-L7218:
-	movl	$309921, %edi
+	jle	L6838
+L6837:
+	movl	$293537, %edi
 	call	__m3_fault
-L7219:
+L6838:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52756,13 +50057,13 @@ _bitfield__write_var_BitField_offset22_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7224
+	js	L6843
 	cmpq	$268435455, -8(%rbp)
-	jle	L7225
-L7224:
-	movl	$310177, %edi
+	jle	L6844
+L6843:
+	movl	$293793, %edi
 	call	__m3_fault
-L7225:
+L6844:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52799,13 +50100,13 @@ _bitfield__write_var_BitField_offset22_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7230
+	js	L6849
 	cmpq	$536870911, -8(%rbp)
-	jle	L7231
-L7230:
-	movl	$310433, %edi
+	jle	L6850
+L6849:
+	movl	$294049, %edi
 	call	__m3_fault
-L7231:
+L6850:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52842,13 +50143,13 @@ _bitfield__write_var_BitField_offset22_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7236
+	js	L6855
 	cmpq	$1073741823, -8(%rbp)
-	jle	L7237
-L7236:
-	movl	$310689, %edi
+	jle	L6856
+L6855:
+	movl	$294305, %edi
 	call	__m3_fault
-L7237:
+L6856:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52885,13 +50186,13 @@ _bitfield__write_var_BitField_offset22_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7242
+	js	L6861
 	cmpq	$2147483647, -8(%rbp)
-	jle	L7243
-L7242:
-	movl	$310945, %edi
+	jle	L6862
+L6861:
+	movl	$294561, %edi
 	call	__m3_fault
-L7243:
+L6862:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52928,14 +50229,14 @@ _bitfield__write_var_BitField_offset22_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7248
+	js	L6867
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L7249
-L7248:
-	movl	$311201, %edi
+	jle	L6868
+L6867:
+	movl	$294817, %edi
 	call	__m3_fault
-L7249:
+L6868:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -52972,14 +50273,14 @@ _bitfield__write_var_BitField_offset22_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7254
+	js	L6873
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7255
-L7254:
-	movl	$311457, %edi
+	jle	L6874
+L6873:
+	movl	$295073, %edi
 	call	__m3_fault
-L7255:
+L6874:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53016,14 +50317,14 @@ _bitfield__write_var_BitField_offset22_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7260
+	js	L6879
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7261
-L7260:
-	movl	$311713, %edi
+	jle	L6880
+L6879:
+	movl	$295329, %edi
 	call	__m3_fault
-L7261:
+L6880:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53060,14 +50361,14 @@ _bitfield__write_var_BitField_offset22_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7266
+	js	L6885
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7267
-L7266:
-	movl	$311969, %edi
+	jle	L6886
+L6885:
+	movl	$295585, %edi
 	call	__m3_fault
-L7267:
+L6886:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53104,14 +50405,14 @@ _bitfield__write_var_BitField_offset22_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7272
+	js	L6891
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7273
-L7272:
-	movl	$312225, %edi
+	jle	L6892
+L6891:
+	movl	$295841, %edi
 	call	__m3_fault
-L7273:
+L6892:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53148,14 +50449,14 @@ _bitfield__write_var_BitField_offset22_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7278
+	js	L6897
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7279
-L7278:
-	movl	$312481, %edi
+	jle	L6898
+L6897:
+	movl	$296097, %edi
 	call	__m3_fault
-L7279:
+L6898:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53192,14 +50493,14 @@ _bitfield__write_var_BitField_offset22_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7284
+	js	L6903
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7285
-L7284:
-	movl	$312737, %edi
+	jle	L6904
+L6903:
+	movl	$296353, %edi
 	call	__m3_fault
-L7285:
+L6904:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53236,14 +50537,14 @@ _bitfield__write_var_BitField_offset22_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7290
+	js	L6909
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7291
-L7290:
-	movl	$312993, %edi
+	jle	L6910
+L6909:
+	movl	$296609, %edi
 	call	__m3_fault
-L7291:
+L6910:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53280,14 +50581,14 @@ _bitfield__write_var_BitField_offset22_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7296
+	js	L6915
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7297
-L7296:
-	movl	$313249, %edi
+	jle	L6916
+L6915:
+	movl	$296865, %edi
 	call	__m3_fault
-L7297:
+L6916:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53324,14 +50625,14 @@ _bitfield__write_var_BitField_offset22_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7302
+	js	L6921
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7303
-L7302:
-	movl	$313505, %edi
+	jle	L6922
+L6921:
+	movl	$297121, %edi
 	call	__m3_fault
-L7303:
+L6922:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53367,14 +50668,14 @@ _bitfield__write_var_BitField_offset22_count42:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7308
+	js	L6927
 	movabsq	$4398046511103, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7309
-L7308:
-	movl	$313761, %edi
+	jle	L6928
+L6927:
+	movl	$297377, %edi
 	call	__m3_fault
-L7309:
+L6928:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53410,13 +50711,13 @@ _bitfield__write_var_BitField_offset23_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7314
+	js	L6933
 	cmpq	$1, -8(%rbp)
-	jle	L7315
-L7314:
-	movl	$314017, %edi
+	jle	L6934
+L6933:
+	movl	$297633, %edi
 	call	__m3_fault
-L7315:
+L6934:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -53456,13 +50757,13 @@ _bitfield__write_var_BitField_offset23_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7320
+	js	L6939
 	cmpq	$3, -8(%rbp)
-	jle	L7321
-L7320:
-	movl	$314273, %edi
+	jle	L6940
+L6939:
+	movl	$297889, %edi
 	call	__m3_fault
-L7321:
+L6940:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -53502,13 +50803,13 @@ _bitfield__write_var_BitField_offset23_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7326
+	js	L6945
 	cmpq	$7, -8(%rbp)
-	jle	L7327
-L7326:
-	movl	$314529, %edi
+	jle	L6946
+L6945:
+	movl	$298145, %edi
 	call	__m3_fault
-L7327:
+L6946:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -53548,13 +50849,13 @@ _bitfield__write_var_BitField_offset23_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7332
+	js	L6951
 	cmpq	$15, -8(%rbp)
-	jle	L7333
-L7332:
-	movl	$314785, %edi
+	jle	L6952
+L6951:
+	movl	$298401, %edi
 	call	__m3_fault
-L7333:
+L6952:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -53594,13 +50895,13 @@ _bitfield__write_var_BitField_offset23_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7338
+	js	L6957
 	cmpq	$31, -8(%rbp)
-	jle	L7339
-L7338:
-	movl	$315041, %edi
+	jle	L6958
+L6957:
+	movl	$298657, %edi
 	call	__m3_fault
-L7339:
+L6958:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -53640,13 +50941,13 @@ _bitfield__write_var_BitField_offset23_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7344
+	js	L6963
 	cmpq	$63, -8(%rbp)
-	jle	L7345
-L7344:
-	movl	$315297, %edi
+	jle	L6964
+L6963:
+	movl	$298913, %edi
 	call	__m3_fault
-L7345:
+L6964:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -53686,13 +50987,13 @@ _bitfield__write_var_BitField_offset23_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7350
+	js	L6969
 	cmpq	$127, -8(%rbp)
-	jle	L7351
-L7350:
-	movl	$315553, %edi
+	jle	L6970
+L6969:
+	movl	$299169, %edi
 	call	__m3_fault
-L7351:
+L6970:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -53732,13 +51033,13 @@ _bitfield__write_var_BitField_offset23_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7356
+	js	L6975
 	cmpq	$255, -8(%rbp)
-	jle	L7357
-L7356:
-	movl	$315809, %edi
+	jle	L6976
+L6975:
+	movl	$299425, %edi
 	call	__m3_fault
-L7357:
+L6976:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -53778,13 +51079,13 @@ _bitfield__write_var_BitField_offset23_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7362
+	js	L6981
 	cmpq	$511, -8(%rbp)
-	jle	L7363
-L7362:
-	movl	$316065, %edi
+	jle	L6982
+L6981:
+	movl	$299681, %edi
 	call	__m3_fault
-L7363:
+L6982:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -53823,13 +51124,13 @@ _bitfield__write_var_BitField_offset23_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7368
+	js	L6987
 	cmpq	$1023, -8(%rbp)
-	jle	L7369
-L7368:
-	movl	$316321, %edi
+	jle	L6988
+L6987:
+	movl	$299937, %edi
 	call	__m3_fault
-L7369:
+L6988:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53866,13 +51167,13 @@ _bitfield__write_var_BitField_offset23_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7374
+	js	L6993
 	cmpq	$2047, -8(%rbp)
-	jle	L7375
-L7374:
-	movl	$316577, %edi
+	jle	L6994
+L6993:
+	movl	$300193, %edi
 	call	__m3_fault
-L7375:
+L6994:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53909,13 +51210,13 @@ _bitfield__write_var_BitField_offset23_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7380
+	js	L6999
 	cmpq	$4095, -8(%rbp)
-	jle	L7381
-L7380:
-	movl	$316833, %edi
+	jle	L7000
+L6999:
+	movl	$300449, %edi
 	call	__m3_fault
-L7381:
+L7000:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53952,13 +51253,13 @@ _bitfield__write_var_BitField_offset23_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7386
+	js	L7005
 	cmpq	$8191, -8(%rbp)
-	jle	L7387
-L7386:
-	movl	$317089, %edi
+	jle	L7006
+L7005:
+	movl	$300705, %edi
 	call	__m3_fault
-L7387:
+L7006:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -53995,13 +51296,13 @@ _bitfield__write_var_BitField_offset23_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7392
+	js	L7011
 	cmpq	$16383, -8(%rbp)
-	jle	L7393
-L7392:
-	movl	$317345, %edi
+	jle	L7012
+L7011:
+	movl	$300961, %edi
 	call	__m3_fault
-L7393:
+L7012:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54038,13 +51339,13 @@ _bitfield__write_var_BitField_offset23_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7398
+	js	L7017
 	cmpq	$32767, -8(%rbp)
-	jle	L7399
-L7398:
-	movl	$317601, %edi
+	jle	L7018
+L7017:
+	movl	$301217, %edi
 	call	__m3_fault
-L7399:
+L7018:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54081,13 +51382,13 @@ _bitfield__write_var_BitField_offset23_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7404
+	js	L7023
 	cmpq	$65535, -8(%rbp)
-	jle	L7405
-L7404:
-	movl	$317857, %edi
+	jle	L7024
+L7023:
+	movl	$301473, %edi
 	call	__m3_fault
-L7405:
+L7024:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54124,13 +51425,13 @@ _bitfield__write_var_BitField_offset23_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7410
+	js	L7029
 	cmpq	$131071, -8(%rbp)
-	jle	L7411
-L7410:
-	movl	$318113, %edi
+	jle	L7030
+L7029:
+	movl	$301729, %edi
 	call	__m3_fault
-L7411:
+L7030:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54167,13 +51468,13 @@ _bitfield__write_var_BitField_offset23_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7416
+	js	L7035
 	cmpq	$262143, -8(%rbp)
-	jle	L7417
-L7416:
-	movl	$318369, %edi
+	jle	L7036
+L7035:
+	movl	$301985, %edi
 	call	__m3_fault
-L7417:
+L7036:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54210,13 +51511,13 @@ _bitfield__write_var_BitField_offset23_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7422
+	js	L7041
 	cmpq	$524287, -8(%rbp)
-	jle	L7423
-L7422:
-	movl	$318625, %edi
+	jle	L7042
+L7041:
+	movl	$302241, %edi
 	call	__m3_fault
-L7423:
+L7042:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54253,13 +51554,13 @@ _bitfield__write_var_BitField_offset23_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7428
+	js	L7047
 	cmpq	$1048575, -8(%rbp)
-	jle	L7429
-L7428:
-	movl	$318881, %edi
+	jle	L7048
+L7047:
+	movl	$302497, %edi
 	call	__m3_fault
-L7429:
+L7048:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54296,13 +51597,13 @@ _bitfield__write_var_BitField_offset23_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7434
+	js	L7053
 	cmpq	$2097151, -8(%rbp)
-	jle	L7435
-L7434:
-	movl	$319137, %edi
+	jle	L7054
+L7053:
+	movl	$302753, %edi
 	call	__m3_fault
-L7435:
+L7054:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54339,13 +51640,13 @@ _bitfield__write_var_BitField_offset23_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7440
+	js	L7059
 	cmpq	$4194303, -8(%rbp)
-	jle	L7441
-L7440:
-	movl	$319393, %edi
+	jle	L7060
+L7059:
+	movl	$303009, %edi
 	call	__m3_fault
-L7441:
+L7060:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54382,13 +51683,13 @@ _bitfield__write_var_BitField_offset23_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7446
+	js	L7065
 	cmpq	$8388607, -8(%rbp)
-	jle	L7447
-L7446:
-	movl	$319649, %edi
+	jle	L7066
+L7065:
+	movl	$303265, %edi
 	call	__m3_fault
-L7447:
+L7066:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54425,13 +51726,13 @@ _bitfield__write_var_BitField_offset23_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7452
+	js	L7071
 	cmpq	$16777215, -8(%rbp)
-	jle	L7453
-L7452:
-	movl	$319905, %edi
+	jle	L7072
+L7071:
+	movl	$303521, %edi
 	call	__m3_fault
-L7453:
+L7072:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54468,13 +51769,13 @@ _bitfield__write_var_BitField_offset23_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7458
+	js	L7077
 	cmpq	$33554431, -8(%rbp)
-	jle	L7459
-L7458:
-	movl	$320161, %edi
+	jle	L7078
+L7077:
+	movl	$303777, %edi
 	call	__m3_fault
-L7459:
+L7078:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54511,13 +51812,13 @@ _bitfield__write_var_BitField_offset23_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7464
+	js	L7083
 	cmpq	$67108863, -8(%rbp)
-	jle	L7465
-L7464:
-	movl	$320417, %edi
+	jle	L7084
+L7083:
+	movl	$304033, %edi
 	call	__m3_fault
-L7465:
+L7084:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54554,13 +51855,13 @@ _bitfield__write_var_BitField_offset23_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7470
+	js	L7089
 	cmpq	$134217727, -8(%rbp)
-	jle	L7471
-L7470:
-	movl	$320673, %edi
+	jle	L7090
+L7089:
+	movl	$304289, %edi
 	call	__m3_fault
-L7471:
+L7090:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54597,13 +51898,13 @@ _bitfield__write_var_BitField_offset23_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7476
+	js	L7095
 	cmpq	$268435455, -8(%rbp)
-	jle	L7477
-L7476:
-	movl	$320929, %edi
+	jle	L7096
+L7095:
+	movl	$304545, %edi
 	call	__m3_fault
-L7477:
+L7096:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54640,13 +51941,13 @@ _bitfield__write_var_BitField_offset23_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7482
+	js	L7101
 	cmpq	$536870911, -8(%rbp)
-	jle	L7483
-L7482:
-	movl	$321185, %edi
+	jle	L7102
+L7101:
+	movl	$304801, %edi
 	call	__m3_fault
-L7483:
+L7102:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54683,13 +51984,13 @@ _bitfield__write_var_BitField_offset23_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7488
+	js	L7107
 	cmpq	$1073741823, -8(%rbp)
-	jle	L7489
-L7488:
-	movl	$321441, %edi
+	jle	L7108
+L7107:
+	movl	$305057, %edi
 	call	__m3_fault
-L7489:
+L7108:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54726,13 +52027,13 @@ _bitfield__write_var_BitField_offset23_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7494
+	js	L7113
 	cmpq	$2147483647, -8(%rbp)
-	jle	L7495
-L7494:
-	movl	$321697, %edi
+	jle	L7114
+L7113:
+	movl	$305313, %edi
 	call	__m3_fault
-L7495:
+L7114:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54769,14 +52070,14 @@ _bitfield__write_var_BitField_offset23_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7500
+	js	L7119
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L7501
-L7500:
-	movl	$321953, %edi
+	jle	L7120
+L7119:
+	movl	$305569, %edi
 	call	__m3_fault
-L7501:
+L7120:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54813,14 +52114,14 @@ _bitfield__write_var_BitField_offset23_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7506
+	js	L7125
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7507
-L7506:
-	movl	$322209, %edi
+	jle	L7126
+L7125:
+	movl	$305825, %edi
 	call	__m3_fault
-L7507:
+L7126:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54857,14 +52158,14 @@ _bitfield__write_var_BitField_offset23_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7512
+	js	L7131
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7513
-L7512:
-	movl	$322465, %edi
+	jle	L7132
+L7131:
+	movl	$306081, %edi
 	call	__m3_fault
-L7513:
+L7132:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54901,14 +52202,14 @@ _bitfield__write_var_BitField_offset23_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7518
+	js	L7137
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7519
-L7518:
-	movl	$322721, %edi
+	jle	L7138
+L7137:
+	movl	$306337, %edi
 	call	__m3_fault
-L7519:
+L7138:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54945,14 +52246,14 @@ _bitfield__write_var_BitField_offset23_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7524
+	js	L7143
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7525
-L7524:
-	movl	$322977, %edi
+	jle	L7144
+L7143:
+	movl	$306593, %edi
 	call	__m3_fault
-L7525:
+L7144:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -54989,14 +52290,14 @@ _bitfield__write_var_BitField_offset23_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7530
+	js	L7149
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7531
-L7530:
-	movl	$323233, %edi
+	jle	L7150
+L7149:
+	movl	$306849, %edi
 	call	__m3_fault
-L7531:
+L7150:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55033,14 +52334,14 @@ _bitfield__write_var_BitField_offset23_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7536
+	js	L7155
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7537
-L7536:
-	movl	$323489, %edi
+	jle	L7156
+L7155:
+	movl	$307105, %edi
 	call	__m3_fault
-L7537:
+L7156:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55077,14 +52378,14 @@ _bitfield__write_var_BitField_offset23_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7542
+	js	L7161
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7543
-L7542:
-	movl	$323745, %edi
+	jle	L7162
+L7161:
+	movl	$307361, %edi
 	call	__m3_fault
-L7543:
+L7162:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55121,14 +52422,14 @@ _bitfield__write_var_BitField_offset23_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7548
+	js	L7167
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7549
-L7548:
-	movl	$324001, %edi
+	jle	L7168
+L7167:
+	movl	$307617, %edi
 	call	__m3_fault
-L7549:
+L7168:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55164,14 +52465,14 @@ _bitfield__write_var_BitField_offset23_count41:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7554
+	js	L7173
 	movabsq	$2199023255551, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7555
-L7554:
-	movl	$324257, %edi
+	jle	L7174
+L7173:
+	movl	$307873, %edi
 	call	__m3_fault
-L7555:
+L7174:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55206,13 +52507,13 @@ _bitfield__write_var_BitField_offset24_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7560
+	js	L7179
 	cmpq	$1, -8(%rbp)
-	jle	L7561
-L7560:
-	movl	$324513, %edi
+	jle	L7180
+L7179:
+	movl	$308129, %edi
 	call	__m3_fault
-L7561:
+L7180:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -55250,13 +52551,13 @@ _bitfield__write_var_BitField_offset24_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7566
+	js	L7185
 	cmpq	$3, -8(%rbp)
-	jle	L7567
-L7566:
-	movl	$324769, %edi
+	jle	L7186
+L7185:
+	movl	$308385, %edi
 	call	__m3_fault
-L7567:
+L7186:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -55294,13 +52595,13 @@ _bitfield__write_var_BitField_offset24_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7572
+	js	L7191
 	cmpq	$7, -8(%rbp)
-	jle	L7573
-L7572:
-	movl	$325025, %edi
+	jle	L7192
+L7191:
+	movl	$308641, %edi
 	call	__m3_fault
-L7573:
+L7192:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -55338,13 +52639,13 @@ _bitfield__write_var_BitField_offset24_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7578
+	js	L7197
 	cmpq	$15, -8(%rbp)
-	jle	L7579
-L7578:
-	movl	$325281, %edi
+	jle	L7198
+L7197:
+	movl	$308897, %edi
 	call	__m3_fault
-L7579:
+L7198:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -55382,13 +52683,13 @@ _bitfield__write_var_BitField_offset24_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7584
+	js	L7203
 	cmpq	$31, -8(%rbp)
-	jle	L7585
-L7584:
-	movl	$325537, %edi
+	jle	L7204
+L7203:
+	movl	$309153, %edi
 	call	__m3_fault
-L7585:
+L7204:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -55426,13 +52727,13 @@ _bitfield__write_var_BitField_offset24_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7590
+	js	L7209
 	cmpq	$63, -8(%rbp)
-	jle	L7591
-L7590:
-	movl	$325793, %edi
+	jle	L7210
+L7209:
+	movl	$309409, %edi
 	call	__m3_fault
-L7591:
+L7210:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -55470,13 +52771,13 @@ _bitfield__write_var_BitField_offset24_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7596
+	js	L7215
 	cmpq	$127, -8(%rbp)
-	jle	L7597
-L7596:
-	movl	$326049, %edi
+	jle	L7216
+L7215:
+	movl	$309665, %edi
 	call	__m3_fault
-L7597:
+L7216:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -55513,13 +52814,13 @@ _bitfield__write_var_BitField_offset24_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7602
+	js	L7221
 	cmpq	$255, -8(%rbp)
-	jle	L7603
-L7602:
-	movl	$326305, %edi
+	jle	L7222
+L7221:
+	movl	$309921, %edi
 	call	__m3_fault
-L7603:
+L7222:
 	movq	-24(%rbp), %rax
 	leaq	3(%rax), %rdx
 	movq	-8(%rbp), %rax
@@ -55547,13 +52848,13 @@ _bitfield__write_var_BitField_offset24_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7608
+	js	L7227
 	cmpq	$511, -8(%rbp)
-	jle	L7609
-L7608:
-	movl	$326561, %edi
+	jle	L7228
+L7227:
+	movl	$310177, %edi
 	call	__m3_fault
-L7609:
+L7228:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55590,13 +52891,13 @@ _bitfield__write_var_BitField_offset24_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7614
+	js	L7233
 	cmpq	$1023, -8(%rbp)
-	jle	L7615
-L7614:
-	movl	$326817, %edi
+	jle	L7234
+L7233:
+	movl	$310433, %edi
 	call	__m3_fault
-L7615:
+L7234:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55633,13 +52934,13 @@ _bitfield__write_var_BitField_offset24_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7620
+	js	L7239
 	cmpq	$2047, -8(%rbp)
-	jle	L7621
-L7620:
-	movl	$327073, %edi
+	jle	L7240
+L7239:
+	movl	$310689, %edi
 	call	__m3_fault
-L7621:
+L7240:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55676,13 +52977,13 @@ _bitfield__write_var_BitField_offset24_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7626
+	js	L7245
 	cmpq	$4095, -8(%rbp)
-	jle	L7627
-L7626:
-	movl	$327329, %edi
+	jle	L7246
+L7245:
+	movl	$310945, %edi
 	call	__m3_fault
-L7627:
+L7246:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55719,13 +53020,13 @@ _bitfield__write_var_BitField_offset24_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7632
+	js	L7251
 	cmpq	$8191, -8(%rbp)
-	jle	L7633
-L7632:
-	movl	$327585, %edi
+	jle	L7252
+L7251:
+	movl	$311201, %edi
 	call	__m3_fault
-L7633:
+L7252:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55762,13 +53063,13 @@ _bitfield__write_var_BitField_offset24_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7638
+	js	L7257
 	cmpq	$16383, -8(%rbp)
-	jle	L7639
-L7638:
-	movl	$327841, %edi
+	jle	L7258
+L7257:
+	movl	$311457, %edi
 	call	__m3_fault
-L7639:
+L7258:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55805,13 +53106,13 @@ _bitfield__write_var_BitField_offset24_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7644
+	js	L7263
 	cmpq	$32767, -8(%rbp)
-	jle	L7645
-L7644:
-	movl	$328097, %edi
+	jle	L7264
+L7263:
+	movl	$311713, %edi
 	call	__m3_fault
-L7645:
+L7264:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55848,13 +53149,13 @@ _bitfield__write_var_BitField_offset24_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7650
+	js	L7269
 	cmpq	$65535, -8(%rbp)
-	jle	L7651
-L7650:
-	movl	$328353, %edi
+	jle	L7270
+L7269:
+	movl	$311969, %edi
 	call	__m3_fault
-L7651:
+L7270:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55891,13 +53192,13 @@ _bitfield__write_var_BitField_offset24_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7656
+	js	L7275
 	cmpq	$131071, -8(%rbp)
-	jle	L7657
-L7656:
-	movl	$328609, %edi
+	jle	L7276
+L7275:
+	movl	$312225, %edi
 	call	__m3_fault
-L7657:
+L7276:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55934,13 +53235,13 @@ _bitfield__write_var_BitField_offset24_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7662
+	js	L7281
 	cmpq	$262143, -8(%rbp)
-	jle	L7663
-L7662:
-	movl	$328865, %edi
+	jle	L7282
+L7281:
+	movl	$312481, %edi
 	call	__m3_fault
-L7663:
+L7282:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -55977,13 +53278,13 @@ _bitfield__write_var_BitField_offset24_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7668
+	js	L7287
 	cmpq	$524287, -8(%rbp)
-	jle	L7669
-L7668:
-	movl	$329121, %edi
+	jle	L7288
+L7287:
+	movl	$312737, %edi
 	call	__m3_fault
-L7669:
+L7288:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56020,13 +53321,13 @@ _bitfield__write_var_BitField_offset24_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7674
+	js	L7293
 	cmpq	$1048575, -8(%rbp)
-	jle	L7675
-L7674:
-	movl	$329377, %edi
+	jle	L7294
+L7293:
+	movl	$312993, %edi
 	call	__m3_fault
-L7675:
+L7294:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56063,13 +53364,13 @@ _bitfield__write_var_BitField_offset24_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7680
+	js	L7299
 	cmpq	$2097151, -8(%rbp)
-	jle	L7681
-L7680:
-	movl	$329633, %edi
+	jle	L7300
+L7299:
+	movl	$313249, %edi
 	call	__m3_fault
-L7681:
+L7300:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56106,13 +53407,13 @@ _bitfield__write_var_BitField_offset24_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7686
+	js	L7305
 	cmpq	$4194303, -8(%rbp)
-	jle	L7687
-L7686:
-	movl	$329889, %edi
+	jle	L7306
+L7305:
+	movl	$313505, %edi
 	call	__m3_fault
-L7687:
+L7306:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56149,13 +53450,13 @@ _bitfield__write_var_BitField_offset24_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7692
+	js	L7311
 	cmpq	$8388607, -8(%rbp)
-	jle	L7693
-L7692:
-	movl	$330145, %edi
+	jle	L7312
+L7311:
+	movl	$313761, %edi
 	call	__m3_fault
-L7693:
+L7312:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56192,13 +53493,13 @@ _bitfield__write_var_BitField_offset24_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7698
+	js	L7317
 	cmpq	$16777215, -8(%rbp)
-	jle	L7699
-L7698:
-	movl	$330401, %edi
+	jle	L7318
+L7317:
+	movl	$314017, %edi
 	call	__m3_fault
-L7699:
+L7318:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56235,13 +53536,13 @@ _bitfield__write_var_BitField_offset24_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7704
+	js	L7323
 	cmpq	$33554431, -8(%rbp)
-	jle	L7705
-L7704:
-	movl	$330657, %edi
+	jle	L7324
+L7323:
+	movl	$314273, %edi
 	call	__m3_fault
-L7705:
+L7324:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56278,13 +53579,13 @@ _bitfield__write_var_BitField_offset24_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7710
+	js	L7329
 	cmpq	$67108863, -8(%rbp)
-	jle	L7711
-L7710:
-	movl	$330913, %edi
+	jle	L7330
+L7329:
+	movl	$314529, %edi
 	call	__m3_fault
-L7711:
+L7330:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56321,13 +53622,13 @@ _bitfield__write_var_BitField_offset24_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7716
+	js	L7335
 	cmpq	$134217727, -8(%rbp)
-	jle	L7717
-L7716:
-	movl	$331169, %edi
+	jle	L7336
+L7335:
+	movl	$314785, %edi
 	call	__m3_fault
-L7717:
+L7336:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56364,13 +53665,13 @@ _bitfield__write_var_BitField_offset24_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7722
+	js	L7341
 	cmpq	$268435455, -8(%rbp)
-	jle	L7723
-L7722:
-	movl	$331425, %edi
+	jle	L7342
+L7341:
+	movl	$315041, %edi
 	call	__m3_fault
-L7723:
+L7342:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56407,13 +53708,13 @@ _bitfield__write_var_BitField_offset24_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7728
+	js	L7347
 	cmpq	$536870911, -8(%rbp)
-	jle	L7729
-L7728:
-	movl	$331681, %edi
+	jle	L7348
+L7347:
+	movl	$315297, %edi
 	call	__m3_fault
-L7729:
+L7348:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56450,13 +53751,13 @@ _bitfield__write_var_BitField_offset24_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7734
+	js	L7353
 	cmpq	$1073741823, -8(%rbp)
-	jle	L7735
-L7734:
-	movl	$331937, %edi
+	jle	L7354
+L7353:
+	movl	$315553, %edi
 	call	__m3_fault
-L7735:
+L7354:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56493,13 +53794,13 @@ _bitfield__write_var_BitField_offset24_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7740
+	js	L7359
 	cmpq	$2147483647, -8(%rbp)
-	jle	L7741
-L7740:
-	movl	$332193, %edi
+	jle	L7360
+L7359:
+	movl	$315809, %edi
 	call	__m3_fault
-L7741:
+L7360:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56536,14 +53837,14 @@ _bitfield__write_var_BitField_offset24_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7746
+	js	L7365
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L7747
-L7746:
-	movl	$332449, %edi
+	jle	L7366
+L7365:
+	movl	$316065, %edi
 	call	__m3_fault
-L7747:
+L7366:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56580,14 +53881,14 @@ _bitfield__write_var_BitField_offset24_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7752
+	js	L7371
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7753
-L7752:
-	movl	$332705, %edi
+	jle	L7372
+L7371:
+	movl	$316321, %edi
 	call	__m3_fault
-L7753:
+L7372:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56624,14 +53925,14 @@ _bitfield__write_var_BitField_offset24_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7758
+	js	L7377
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7759
-L7758:
-	movl	$332961, %edi
+	jle	L7378
+L7377:
+	movl	$316577, %edi
 	call	__m3_fault
-L7759:
+L7378:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56668,14 +53969,14 @@ _bitfield__write_var_BitField_offset24_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7764
+	js	L7383
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7765
-L7764:
-	movl	$333217, %edi
+	jle	L7384
+L7383:
+	movl	$316833, %edi
 	call	__m3_fault
-L7765:
+L7384:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56712,14 +54013,14 @@ _bitfield__write_var_BitField_offset24_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7770
+	js	L7389
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7771
-L7770:
-	movl	$333473, %edi
+	jle	L7390
+L7389:
+	movl	$317089, %edi
 	call	__m3_fault
-L7771:
+L7390:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56756,14 +54057,14 @@ _bitfield__write_var_BitField_offset24_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7776
+	js	L7395
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7777
-L7776:
-	movl	$333729, %edi
+	jle	L7396
+L7395:
+	movl	$317345, %edi
 	call	__m3_fault
-L7777:
+L7396:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56800,14 +54101,14 @@ _bitfield__write_var_BitField_offset24_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7782
+	js	L7401
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7783
-L7782:
-	movl	$333985, %edi
+	jle	L7402
+L7401:
+	movl	$317601, %edi
 	call	__m3_fault
-L7783:
+L7402:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56844,14 +54145,14 @@ _bitfield__write_var_BitField_offset24_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7788
+	js	L7407
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7789
-L7788:
-	movl	$334241, %edi
+	jle	L7408
+L7407:
+	movl	$317857, %edi
 	call	__m3_fault
-L7789:
+L7408:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56887,14 +54188,14 @@ _bitfield__write_var_BitField_offset24_count40:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7794
+	js	L7413
 	movabsq	$1099511627775, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7795
-L7794:
-	movl	$334497, %edi
+	jle	L7414
+L7413:
+	movl	$318113, %edi
 	call	__m3_fault
-L7795:
+L7414:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -56930,13 +54231,13 @@ _bitfield__write_var_BitField_offset25_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7800
+	js	L7419
 	cmpq	$1, -8(%rbp)
-	jle	L7801
-L7800:
-	movl	$334753, %edi
+	jle	L7420
+L7419:
+	movl	$318369, %edi
 	call	__m3_fault
-L7801:
+L7420:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -56976,13 +54277,13 @@ _bitfield__write_var_BitField_offset25_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7806
+	js	L7425
 	cmpq	$3, -8(%rbp)
-	jle	L7807
-L7806:
-	movl	$335009, %edi
+	jle	L7426
+L7425:
+	movl	$318625, %edi
 	call	__m3_fault
-L7807:
+L7426:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -57022,13 +54323,13 @@ _bitfield__write_var_BitField_offset25_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7812
+	js	L7431
 	cmpq	$7, -8(%rbp)
-	jle	L7813
-L7812:
-	movl	$335265, %edi
+	jle	L7432
+L7431:
+	movl	$318881, %edi
 	call	__m3_fault
-L7813:
+L7432:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -57068,13 +54369,13 @@ _bitfield__write_var_BitField_offset25_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7818
+	js	L7437
 	cmpq	$15, -8(%rbp)
-	jle	L7819
-L7818:
-	movl	$335521, %edi
+	jle	L7438
+L7437:
+	movl	$319137, %edi
 	call	__m3_fault
-L7819:
+L7438:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -57114,13 +54415,13 @@ _bitfield__write_var_BitField_offset25_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7824
+	js	L7443
 	cmpq	$31, -8(%rbp)
-	jle	L7825
-L7824:
-	movl	$335777, %edi
+	jle	L7444
+L7443:
+	movl	$319393, %edi
 	call	__m3_fault
-L7825:
+L7444:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -57160,13 +54461,13 @@ _bitfield__write_var_BitField_offset25_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7830
+	js	L7449
 	cmpq	$63, -8(%rbp)
-	jle	L7831
-L7830:
-	movl	$336033, %edi
+	jle	L7450
+L7449:
+	movl	$319649, %edi
 	call	__m3_fault
-L7831:
+L7450:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -57206,13 +54507,13 @@ _bitfield__write_var_BitField_offset25_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7836
+	js	L7455
 	cmpq	$127, -8(%rbp)
-	jle	L7837
-L7836:
-	movl	$336289, %edi
+	jle	L7456
+L7455:
+	movl	$319905, %edi
 	call	__m3_fault
-L7837:
+L7456:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -57251,13 +54552,13 @@ _bitfield__write_var_BitField_offset25_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7842
+	js	L7461
 	cmpq	$255, -8(%rbp)
-	jle	L7843
-L7842:
-	movl	$336545, %edi
+	jle	L7462
+L7461:
+	movl	$320161, %edi
 	call	__m3_fault
-L7843:
+L7462:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57294,13 +54595,13 @@ _bitfield__write_var_BitField_offset25_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7848
+	js	L7467
 	cmpq	$511, -8(%rbp)
-	jle	L7849
-L7848:
-	movl	$336801, %edi
+	jle	L7468
+L7467:
+	movl	$320417, %edi
 	call	__m3_fault
-L7849:
+L7468:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57337,13 +54638,13 @@ _bitfield__write_var_BitField_offset25_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7854
+	js	L7473
 	cmpq	$1023, -8(%rbp)
-	jle	L7855
-L7854:
-	movl	$337057, %edi
+	jle	L7474
+L7473:
+	movl	$320673, %edi
 	call	__m3_fault
-L7855:
+L7474:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57380,13 +54681,13 @@ _bitfield__write_var_BitField_offset25_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7860
+	js	L7479
 	cmpq	$2047, -8(%rbp)
-	jle	L7861
-L7860:
-	movl	$337313, %edi
+	jle	L7480
+L7479:
+	movl	$320929, %edi
 	call	__m3_fault
-L7861:
+L7480:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57423,13 +54724,13 @@ _bitfield__write_var_BitField_offset25_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7866
+	js	L7485
 	cmpq	$4095, -8(%rbp)
-	jle	L7867
-L7866:
-	movl	$337569, %edi
+	jle	L7486
+L7485:
+	movl	$321185, %edi
 	call	__m3_fault
-L7867:
+L7486:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57466,13 +54767,13 @@ _bitfield__write_var_BitField_offset25_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7872
+	js	L7491
 	cmpq	$8191, -8(%rbp)
-	jle	L7873
-L7872:
-	movl	$337825, %edi
+	jle	L7492
+L7491:
+	movl	$321441, %edi
 	call	__m3_fault
-L7873:
+L7492:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57509,13 +54810,13 @@ _bitfield__write_var_BitField_offset25_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7878
+	js	L7497
 	cmpq	$16383, -8(%rbp)
-	jle	L7879
-L7878:
-	movl	$338081, %edi
+	jle	L7498
+L7497:
+	movl	$321697, %edi
 	call	__m3_fault
-L7879:
+L7498:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57552,13 +54853,13 @@ _bitfield__write_var_BitField_offset25_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7884
+	js	L7503
 	cmpq	$32767, -8(%rbp)
-	jle	L7885
-L7884:
-	movl	$338337, %edi
+	jle	L7504
+L7503:
+	movl	$321953, %edi
 	call	__m3_fault
-L7885:
+L7504:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57595,13 +54896,13 @@ _bitfield__write_var_BitField_offset25_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7890
+	js	L7509
 	cmpq	$65535, -8(%rbp)
-	jle	L7891
-L7890:
-	movl	$338593, %edi
+	jle	L7510
+L7509:
+	movl	$322209, %edi
 	call	__m3_fault
-L7891:
+L7510:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57638,13 +54939,13 @@ _bitfield__write_var_BitField_offset25_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7896
+	js	L7515
 	cmpq	$131071, -8(%rbp)
-	jle	L7897
-L7896:
-	movl	$338849, %edi
+	jle	L7516
+L7515:
+	movl	$322465, %edi
 	call	__m3_fault
-L7897:
+L7516:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57681,13 +54982,13 @@ _bitfield__write_var_BitField_offset25_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7902
+	js	L7521
 	cmpq	$262143, -8(%rbp)
-	jle	L7903
-L7902:
-	movl	$339105, %edi
+	jle	L7522
+L7521:
+	movl	$322721, %edi
 	call	__m3_fault
-L7903:
+L7522:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57724,13 +55025,13 @@ _bitfield__write_var_BitField_offset25_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7908
+	js	L7527
 	cmpq	$524287, -8(%rbp)
-	jle	L7909
-L7908:
-	movl	$339361, %edi
+	jle	L7528
+L7527:
+	movl	$322977, %edi
 	call	__m3_fault
-L7909:
+L7528:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57767,13 +55068,13 @@ _bitfield__write_var_BitField_offset25_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7914
+	js	L7533
 	cmpq	$1048575, -8(%rbp)
-	jle	L7915
-L7914:
-	movl	$339617, %edi
+	jle	L7534
+L7533:
+	movl	$323233, %edi
 	call	__m3_fault
-L7915:
+L7534:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57810,13 +55111,13 @@ _bitfield__write_var_BitField_offset25_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7920
+	js	L7539
 	cmpq	$2097151, -8(%rbp)
-	jle	L7921
-L7920:
-	movl	$339873, %edi
+	jle	L7540
+L7539:
+	movl	$323489, %edi
 	call	__m3_fault
-L7921:
+L7540:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57853,13 +55154,13 @@ _bitfield__write_var_BitField_offset25_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7926
+	js	L7545
 	cmpq	$4194303, -8(%rbp)
-	jle	L7927
-L7926:
-	movl	$340129, %edi
+	jle	L7546
+L7545:
+	movl	$323745, %edi
 	call	__m3_fault
-L7927:
+L7546:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57896,13 +55197,13 @@ _bitfield__write_var_BitField_offset25_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7932
+	js	L7551
 	cmpq	$8388607, -8(%rbp)
-	jle	L7933
-L7932:
-	movl	$340385, %edi
+	jle	L7552
+L7551:
+	movl	$324001, %edi
 	call	__m3_fault
-L7933:
+L7552:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57939,13 +55240,13 @@ _bitfield__write_var_BitField_offset25_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7938
+	js	L7557
 	cmpq	$16777215, -8(%rbp)
-	jle	L7939
-L7938:
-	movl	$340641, %edi
+	jle	L7558
+L7557:
+	movl	$324257, %edi
 	call	__m3_fault
-L7939:
+L7558:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -57982,13 +55283,13 @@ _bitfield__write_var_BitField_offset25_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7944
+	js	L7563
 	cmpq	$33554431, -8(%rbp)
-	jle	L7945
-L7944:
-	movl	$340897, %edi
+	jle	L7564
+L7563:
+	movl	$324513, %edi
 	call	__m3_fault
-L7945:
+L7564:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58025,13 +55326,13 @@ _bitfield__write_var_BitField_offset25_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7950
+	js	L7569
 	cmpq	$67108863, -8(%rbp)
-	jle	L7951
-L7950:
-	movl	$341153, %edi
+	jle	L7570
+L7569:
+	movl	$324769, %edi
 	call	__m3_fault
-L7951:
+L7570:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58068,13 +55369,13 @@ _bitfield__write_var_BitField_offset25_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7956
+	js	L7575
 	cmpq	$134217727, -8(%rbp)
-	jle	L7957
-L7956:
-	movl	$341409, %edi
+	jle	L7576
+L7575:
+	movl	$325025, %edi
 	call	__m3_fault
-L7957:
+L7576:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58111,13 +55412,13 @@ _bitfield__write_var_BitField_offset25_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7962
+	js	L7581
 	cmpq	$268435455, -8(%rbp)
-	jle	L7963
-L7962:
-	movl	$341665, %edi
+	jle	L7582
+L7581:
+	movl	$325281, %edi
 	call	__m3_fault
-L7963:
+L7582:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58154,13 +55455,13 @@ _bitfield__write_var_BitField_offset25_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7968
+	js	L7587
 	cmpq	$536870911, -8(%rbp)
-	jle	L7969
-L7968:
-	movl	$341921, %edi
+	jle	L7588
+L7587:
+	movl	$325537, %edi
 	call	__m3_fault
-L7969:
+L7588:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58197,13 +55498,13 @@ _bitfield__write_var_BitField_offset25_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7974
+	js	L7593
 	cmpq	$1073741823, -8(%rbp)
-	jle	L7975
-L7974:
-	movl	$342177, %edi
+	jle	L7594
+L7593:
+	movl	$325793, %edi
 	call	__m3_fault
-L7975:
+L7594:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58240,13 +55541,13 @@ _bitfield__write_var_BitField_offset25_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7980
+	js	L7599
 	cmpq	$2147483647, -8(%rbp)
-	jle	L7981
-L7980:
-	movl	$342433, %edi
+	jle	L7600
+L7599:
+	movl	$326049, %edi
 	call	__m3_fault
-L7981:
+L7600:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58283,14 +55584,14 @@ _bitfield__write_var_BitField_offset25_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7986
+	js	L7605
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L7987
-L7986:
-	movl	$342689, %edi
+	jle	L7606
+L7605:
+	movl	$326305, %edi
 	call	__m3_fault
-L7987:
+L7606:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58327,14 +55628,14 @@ _bitfield__write_var_BitField_offset25_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7992
+	js	L7611
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7993
-L7992:
-	movl	$342945, %edi
+	jle	L7612
+L7611:
+	movl	$326561, %edi
 	call	__m3_fault
-L7993:
+L7612:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58371,14 +55672,14 @@ _bitfield__write_var_BitField_offset25_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L7998
+	js	L7617
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L7999
-L7998:
-	movl	$343201, %edi
+	jle	L7618
+L7617:
+	movl	$326817, %edi
 	call	__m3_fault
-L7999:
+L7618:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58415,14 +55716,14 @@ _bitfield__write_var_BitField_offset25_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8004
+	js	L7623
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8005
-L8004:
-	movl	$343457, %edi
+	jle	L7624
+L7623:
+	movl	$327073, %edi
 	call	__m3_fault
-L8005:
+L7624:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58459,14 +55760,14 @@ _bitfield__write_var_BitField_offset25_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8010
+	js	L7629
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8011
-L8010:
-	movl	$343713, %edi
+	jle	L7630
+L7629:
+	movl	$327329, %edi
 	call	__m3_fault
-L8011:
+L7630:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58503,14 +55804,14 @@ _bitfield__write_var_BitField_offset25_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8016
+	js	L7635
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8017
-L8016:
-	movl	$343969, %edi
+	jle	L7636
+L7635:
+	movl	$327585, %edi
 	call	__m3_fault
-L8017:
+L7636:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58547,14 +55848,14 @@ _bitfield__write_var_BitField_offset25_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8022
+	js	L7641
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8023
-L8022:
-	movl	$344225, %edi
+	jle	L7642
+L7641:
+	movl	$327841, %edi
 	call	__m3_fault
-L8023:
+L7642:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58590,14 +55891,14 @@ _bitfield__write_var_BitField_offset25_count39:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8028
+	js	L7647
 	movabsq	$549755813887, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8029
-L8028:
-	movl	$344481, %edi
+	jle	L7648
+L7647:
+	movl	$328097, %edi
 	call	__m3_fault
-L8029:
+L7648:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58633,13 +55934,13 @@ _bitfield__write_var_BitField_offset26_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8034
+	js	L7653
 	cmpq	$1, -8(%rbp)
-	jle	L8035
-L8034:
-	movl	$344737, %edi
+	jle	L7654
+L7653:
+	movl	$328353, %edi
 	call	__m3_fault
-L8035:
+L7654:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -58679,13 +55980,13 @@ _bitfield__write_var_BitField_offset26_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8040
+	js	L7659
 	cmpq	$3, -8(%rbp)
-	jle	L8041
-L8040:
-	movl	$344993, %edi
+	jle	L7660
+L7659:
+	movl	$328609, %edi
 	call	__m3_fault
-L8041:
+L7660:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -58725,13 +56026,13 @@ _bitfield__write_var_BitField_offset26_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8046
+	js	L7665
 	cmpq	$7, -8(%rbp)
-	jle	L8047
-L8046:
-	movl	$345249, %edi
+	jle	L7666
+L7665:
+	movl	$328865, %edi
 	call	__m3_fault
-L8047:
+L7666:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -58771,13 +56072,13 @@ _bitfield__write_var_BitField_offset26_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8052
+	js	L7671
 	cmpq	$15, -8(%rbp)
-	jle	L8053
-L8052:
-	movl	$345505, %edi
+	jle	L7672
+L7671:
+	movl	$329121, %edi
 	call	__m3_fault
-L8053:
+L7672:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -58817,13 +56118,13 @@ _bitfield__write_var_BitField_offset26_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8058
+	js	L7677
 	cmpq	$31, -8(%rbp)
-	jle	L8059
-L8058:
-	movl	$345761, %edi
+	jle	L7678
+L7677:
+	movl	$329377, %edi
 	call	__m3_fault
-L8059:
+L7678:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -58863,13 +56164,13 @@ _bitfield__write_var_BitField_offset26_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8064
+	js	L7683
 	cmpq	$63, -8(%rbp)
-	jle	L8065
-L8064:
-	movl	$346017, %edi
+	jle	L7684
+L7683:
+	movl	$329633, %edi
 	call	__m3_fault
-L8065:
+L7684:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -58908,13 +56209,13 @@ _bitfield__write_var_BitField_offset26_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8070
+	js	L7689
 	cmpq	$127, -8(%rbp)
-	jle	L8071
-L8070:
-	movl	$346273, %edi
+	jle	L7690
+L7689:
+	movl	$329889, %edi
 	call	__m3_fault
-L8071:
+L7690:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58951,13 +56252,13 @@ _bitfield__write_var_BitField_offset26_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8076
+	js	L7695
 	cmpq	$255, -8(%rbp)
-	jle	L8077
-L8076:
-	movl	$346529, %edi
+	jle	L7696
+L7695:
+	movl	$330145, %edi
 	call	__m3_fault
-L8077:
+L7696:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -58994,13 +56295,13 @@ _bitfield__write_var_BitField_offset26_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8082
+	js	L7701
 	cmpq	$511, -8(%rbp)
-	jle	L8083
-L8082:
-	movl	$346785, %edi
+	jle	L7702
+L7701:
+	movl	$330401, %edi
 	call	__m3_fault
-L8083:
+L7702:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59037,13 +56338,13 @@ _bitfield__write_var_BitField_offset26_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8088
+	js	L7707
 	cmpq	$1023, -8(%rbp)
-	jle	L8089
-L8088:
-	movl	$347041, %edi
+	jle	L7708
+L7707:
+	movl	$330657, %edi
 	call	__m3_fault
-L8089:
+L7708:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59080,13 +56381,13 @@ _bitfield__write_var_BitField_offset26_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8094
+	js	L7713
 	cmpq	$2047, -8(%rbp)
-	jle	L8095
-L8094:
-	movl	$347297, %edi
+	jle	L7714
+L7713:
+	movl	$330913, %edi
 	call	__m3_fault
-L8095:
+L7714:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59123,13 +56424,13 @@ _bitfield__write_var_BitField_offset26_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8100
+	js	L7719
 	cmpq	$4095, -8(%rbp)
-	jle	L8101
-L8100:
-	movl	$347553, %edi
+	jle	L7720
+L7719:
+	movl	$331169, %edi
 	call	__m3_fault
-L8101:
+L7720:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59166,13 +56467,13 @@ _bitfield__write_var_BitField_offset26_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8106
+	js	L7725
 	cmpq	$8191, -8(%rbp)
-	jle	L8107
-L8106:
-	movl	$347809, %edi
+	jle	L7726
+L7725:
+	movl	$331425, %edi
 	call	__m3_fault
-L8107:
+L7726:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59209,13 +56510,13 @@ _bitfield__write_var_BitField_offset26_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8112
+	js	L7731
 	cmpq	$16383, -8(%rbp)
-	jle	L8113
-L8112:
-	movl	$348065, %edi
+	jle	L7732
+L7731:
+	movl	$331681, %edi
 	call	__m3_fault
-L8113:
+L7732:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59252,13 +56553,13 @@ _bitfield__write_var_BitField_offset26_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8118
+	js	L7737
 	cmpq	$32767, -8(%rbp)
-	jle	L8119
-L8118:
-	movl	$348321, %edi
+	jle	L7738
+L7737:
+	movl	$331937, %edi
 	call	__m3_fault
-L8119:
+L7738:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59295,13 +56596,13 @@ _bitfield__write_var_BitField_offset26_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8124
+	js	L7743
 	cmpq	$65535, -8(%rbp)
-	jle	L8125
-L8124:
-	movl	$348577, %edi
+	jle	L7744
+L7743:
+	movl	$332193, %edi
 	call	__m3_fault
-L8125:
+L7744:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59338,13 +56639,13 @@ _bitfield__write_var_BitField_offset26_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8130
+	js	L7749
 	cmpq	$131071, -8(%rbp)
-	jle	L8131
-L8130:
-	movl	$348833, %edi
+	jle	L7750
+L7749:
+	movl	$332449, %edi
 	call	__m3_fault
-L8131:
+L7750:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59381,13 +56682,13 @@ _bitfield__write_var_BitField_offset26_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8136
+	js	L7755
 	cmpq	$262143, -8(%rbp)
-	jle	L8137
-L8136:
-	movl	$349089, %edi
+	jle	L7756
+L7755:
+	movl	$332705, %edi
 	call	__m3_fault
-L8137:
+L7756:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59424,13 +56725,13 @@ _bitfield__write_var_BitField_offset26_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8142
+	js	L7761
 	cmpq	$524287, -8(%rbp)
-	jle	L8143
-L8142:
-	movl	$349345, %edi
+	jle	L7762
+L7761:
+	movl	$332961, %edi
 	call	__m3_fault
-L8143:
+L7762:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59467,13 +56768,13 @@ _bitfield__write_var_BitField_offset26_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8148
+	js	L7767
 	cmpq	$1048575, -8(%rbp)
-	jle	L8149
-L8148:
-	movl	$349601, %edi
+	jle	L7768
+L7767:
+	movl	$333217, %edi
 	call	__m3_fault
-L8149:
+L7768:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59510,13 +56811,13 @@ _bitfield__write_var_BitField_offset26_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8154
+	js	L7773
 	cmpq	$2097151, -8(%rbp)
-	jle	L8155
-L8154:
-	movl	$349857, %edi
+	jle	L7774
+L7773:
+	movl	$333473, %edi
 	call	__m3_fault
-L8155:
+L7774:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59553,13 +56854,13 @@ _bitfield__write_var_BitField_offset26_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8160
+	js	L7779
 	cmpq	$4194303, -8(%rbp)
-	jle	L8161
-L8160:
-	movl	$350113, %edi
+	jle	L7780
+L7779:
+	movl	$333729, %edi
 	call	__m3_fault
-L8161:
+L7780:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59596,13 +56897,13 @@ _bitfield__write_var_BitField_offset26_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8166
+	js	L7785
 	cmpq	$8388607, -8(%rbp)
-	jle	L8167
-L8166:
-	movl	$350369, %edi
+	jle	L7786
+L7785:
+	movl	$333985, %edi
 	call	__m3_fault
-L8167:
+L7786:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59639,13 +56940,13 @@ _bitfield__write_var_BitField_offset26_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8172
+	js	L7791
 	cmpq	$16777215, -8(%rbp)
-	jle	L8173
-L8172:
-	movl	$350625, %edi
+	jle	L7792
+L7791:
+	movl	$334241, %edi
 	call	__m3_fault
-L8173:
+L7792:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59682,13 +56983,13 @@ _bitfield__write_var_BitField_offset26_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8178
+	js	L7797
 	cmpq	$33554431, -8(%rbp)
-	jle	L8179
-L8178:
-	movl	$350881, %edi
+	jle	L7798
+L7797:
+	movl	$334497, %edi
 	call	__m3_fault
-L8179:
+L7798:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59725,13 +57026,13 @@ _bitfield__write_var_BitField_offset26_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8184
+	js	L7803
 	cmpq	$67108863, -8(%rbp)
-	jle	L8185
-L8184:
-	movl	$351137, %edi
+	jle	L7804
+L7803:
+	movl	$334753, %edi
 	call	__m3_fault
-L8185:
+L7804:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59768,13 +57069,13 @@ _bitfield__write_var_BitField_offset26_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8190
+	js	L7809
 	cmpq	$134217727, -8(%rbp)
-	jle	L8191
-L8190:
-	movl	$351393, %edi
+	jle	L7810
+L7809:
+	movl	$335009, %edi
 	call	__m3_fault
-L8191:
+L7810:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59811,13 +57112,13 @@ _bitfield__write_var_BitField_offset26_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8196
+	js	L7815
 	cmpq	$268435455, -8(%rbp)
-	jle	L8197
-L8196:
-	movl	$351649, %edi
+	jle	L7816
+L7815:
+	movl	$335265, %edi
 	call	__m3_fault
-L8197:
+L7816:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59854,13 +57155,13 @@ _bitfield__write_var_BitField_offset26_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8202
+	js	L7821
 	cmpq	$536870911, -8(%rbp)
-	jle	L8203
-L8202:
-	movl	$351905, %edi
+	jle	L7822
+L7821:
+	movl	$335521, %edi
 	call	__m3_fault
-L8203:
+L7822:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59897,13 +57198,13 @@ _bitfield__write_var_BitField_offset26_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8208
+	js	L7827
 	cmpq	$1073741823, -8(%rbp)
-	jle	L8209
-L8208:
-	movl	$352161, %edi
+	jle	L7828
+L7827:
+	movl	$335777, %edi
 	call	__m3_fault
-L8209:
+L7828:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59940,13 +57241,13 @@ _bitfield__write_var_BitField_offset26_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8214
+	js	L7833
 	cmpq	$2147483647, -8(%rbp)
-	jle	L8215
-L8214:
-	movl	$352417, %edi
+	jle	L7834
+L7833:
+	movl	$336033, %edi
 	call	__m3_fault
-L8215:
+L7834:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -59983,14 +57284,14 @@ _bitfield__write_var_BitField_offset26_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8220
+	js	L7839
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L8221
-L8220:
-	movl	$352673, %edi
+	jle	L7840
+L7839:
+	movl	$336289, %edi
 	call	__m3_fault
-L8221:
+L7840:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60027,14 +57328,14 @@ _bitfield__write_var_BitField_offset26_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8226
+	js	L7845
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8227
-L8226:
-	movl	$352929, %edi
+	jle	L7846
+L7845:
+	movl	$336545, %edi
 	call	__m3_fault
-L8227:
+L7846:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60071,14 +57372,14 @@ _bitfield__write_var_BitField_offset26_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8232
+	js	L7851
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8233
-L8232:
-	movl	$353185, %edi
+	jle	L7852
+L7851:
+	movl	$336801, %edi
 	call	__m3_fault
-L8233:
+L7852:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60115,14 +57416,14 @@ _bitfield__write_var_BitField_offset26_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8238
+	js	L7857
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8239
-L8238:
-	movl	$353441, %edi
+	jle	L7858
+L7857:
+	movl	$337057, %edi
 	call	__m3_fault
-L8239:
+L7858:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60159,14 +57460,14 @@ _bitfield__write_var_BitField_offset26_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8244
+	js	L7863
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8245
-L8244:
-	movl	$353697, %edi
+	jle	L7864
+L7863:
+	movl	$337313, %edi
 	call	__m3_fault
-L8245:
+L7864:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60203,14 +57504,14 @@ _bitfield__write_var_BitField_offset26_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8250
+	js	L7869
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8251
-L8250:
-	movl	$353953, %edi
+	jle	L7870
+L7869:
+	movl	$337569, %edi
 	call	__m3_fault
-L8251:
+L7870:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60246,14 +57547,14 @@ _bitfield__write_var_BitField_offset26_count38:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8256
+	js	L7875
 	movabsq	$274877906943, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8257
-L8256:
-	movl	$354209, %edi
+	jle	L7876
+L7875:
+	movl	$337825, %edi
 	call	__m3_fault
-L8257:
+L7876:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60289,13 +57590,13 @@ _bitfield__write_var_BitField_offset27_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8262
+	js	L7881
 	cmpq	$1, -8(%rbp)
-	jle	L8263
-L8262:
-	movl	$354465, %edi
+	jle	L7882
+L7881:
+	movl	$338081, %edi
 	call	__m3_fault
-L8263:
+L7882:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -60335,13 +57636,13 @@ _bitfield__write_var_BitField_offset27_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8268
+	js	L7887
 	cmpq	$3, -8(%rbp)
-	jle	L8269
-L8268:
-	movl	$354721, %edi
+	jle	L7888
+L7887:
+	movl	$338337, %edi
 	call	__m3_fault
-L8269:
+L7888:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -60381,13 +57682,13 @@ _bitfield__write_var_BitField_offset27_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8274
+	js	L7893
 	cmpq	$7, -8(%rbp)
-	jle	L8275
-L8274:
-	movl	$354977, %edi
+	jle	L7894
+L7893:
+	movl	$338593, %edi
 	call	__m3_fault
-L8275:
+L7894:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -60427,13 +57728,13 @@ _bitfield__write_var_BitField_offset27_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8280
+	js	L7899
 	cmpq	$15, -8(%rbp)
-	jle	L8281
-L8280:
-	movl	$355233, %edi
+	jle	L7900
+L7899:
+	movl	$338849, %edi
 	call	__m3_fault
-L8281:
+L7900:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -60473,13 +57774,13 @@ _bitfield__write_var_BitField_offset27_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8286
+	js	L7905
 	cmpq	$31, -8(%rbp)
-	jle	L8287
-L8286:
-	movl	$355489, %edi
+	jle	L7906
+L7905:
+	movl	$339105, %edi
 	call	__m3_fault
-L8287:
+L7906:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -60518,13 +57819,13 @@ _bitfield__write_var_BitField_offset27_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8292
+	js	L7911
 	cmpq	$63, -8(%rbp)
-	jle	L8293
-L8292:
-	movl	$355745, %edi
+	jle	L7912
+L7911:
+	movl	$339361, %edi
 	call	__m3_fault
-L8293:
+L7912:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60561,13 +57862,13 @@ _bitfield__write_var_BitField_offset27_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8298
+	js	L7917
 	cmpq	$127, -8(%rbp)
-	jle	L8299
-L8298:
-	movl	$356001, %edi
+	jle	L7918
+L7917:
+	movl	$339617, %edi
 	call	__m3_fault
-L8299:
+L7918:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60604,13 +57905,13 @@ _bitfield__write_var_BitField_offset27_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8304
+	js	L7923
 	cmpq	$255, -8(%rbp)
-	jle	L8305
-L8304:
-	movl	$356257, %edi
+	jle	L7924
+L7923:
+	movl	$339873, %edi
 	call	__m3_fault
-L8305:
+L7924:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60647,13 +57948,13 @@ _bitfield__write_var_BitField_offset27_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8310
+	js	L7929
 	cmpq	$511, -8(%rbp)
-	jle	L8311
-L8310:
-	movl	$356513, %edi
+	jle	L7930
+L7929:
+	movl	$340129, %edi
 	call	__m3_fault
-L8311:
+L7930:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60690,13 +57991,13 @@ _bitfield__write_var_BitField_offset27_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8316
+	js	L7935
 	cmpq	$1023, -8(%rbp)
-	jle	L8317
-L8316:
-	movl	$356769, %edi
+	jle	L7936
+L7935:
+	movl	$340385, %edi
 	call	__m3_fault
-L8317:
+L7936:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60733,13 +58034,13 @@ _bitfield__write_var_BitField_offset27_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8322
+	js	L7941
 	cmpq	$2047, -8(%rbp)
-	jle	L8323
-L8322:
-	movl	$357025, %edi
+	jle	L7942
+L7941:
+	movl	$340641, %edi
 	call	__m3_fault
-L8323:
+L7942:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60776,13 +58077,13 @@ _bitfield__write_var_BitField_offset27_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8328
+	js	L7947
 	cmpq	$4095, -8(%rbp)
-	jle	L8329
-L8328:
-	movl	$357281, %edi
+	jle	L7948
+L7947:
+	movl	$340897, %edi
 	call	__m3_fault
-L8329:
+L7948:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60819,13 +58120,13 @@ _bitfield__write_var_BitField_offset27_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8334
+	js	L7953
 	cmpq	$8191, -8(%rbp)
-	jle	L8335
-L8334:
-	movl	$357537, %edi
+	jle	L7954
+L7953:
+	movl	$341153, %edi
 	call	__m3_fault
-L8335:
+L7954:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60862,13 +58163,13 @@ _bitfield__write_var_BitField_offset27_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8340
+	js	L7959
 	cmpq	$16383, -8(%rbp)
-	jle	L8341
-L8340:
-	movl	$357793, %edi
+	jle	L7960
+L7959:
+	movl	$341409, %edi
 	call	__m3_fault
-L8341:
+L7960:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60905,13 +58206,13 @@ _bitfield__write_var_BitField_offset27_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8346
+	js	L7965
 	cmpq	$32767, -8(%rbp)
-	jle	L8347
-L8346:
-	movl	$358049, %edi
+	jle	L7966
+L7965:
+	movl	$341665, %edi
 	call	__m3_fault
-L8347:
+L7966:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60948,13 +58249,13 @@ _bitfield__write_var_BitField_offset27_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8352
+	js	L7971
 	cmpq	$65535, -8(%rbp)
-	jle	L8353
-L8352:
-	movl	$358305, %edi
+	jle	L7972
+L7971:
+	movl	$341921, %edi
 	call	__m3_fault
-L8353:
+L7972:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -60991,13 +58292,13 @@ _bitfield__write_var_BitField_offset27_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8358
+	js	L7977
 	cmpq	$131071, -8(%rbp)
-	jle	L8359
-L8358:
-	movl	$358561, %edi
+	jle	L7978
+L7977:
+	movl	$342177, %edi
 	call	__m3_fault
-L8359:
+L7978:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61034,13 +58335,13 @@ _bitfield__write_var_BitField_offset27_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8364
+	js	L7983
 	cmpq	$262143, -8(%rbp)
-	jle	L8365
-L8364:
-	movl	$358817, %edi
+	jle	L7984
+L7983:
+	movl	$342433, %edi
 	call	__m3_fault
-L8365:
+L7984:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61077,13 +58378,13 @@ _bitfield__write_var_BitField_offset27_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8370
+	js	L7989
 	cmpq	$524287, -8(%rbp)
-	jle	L8371
-L8370:
-	movl	$359073, %edi
+	jle	L7990
+L7989:
+	movl	$342689, %edi
 	call	__m3_fault
-L8371:
+L7990:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61120,13 +58421,13 @@ _bitfield__write_var_BitField_offset27_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8376
+	js	L7995
 	cmpq	$1048575, -8(%rbp)
-	jle	L8377
-L8376:
-	movl	$359329, %edi
+	jle	L7996
+L7995:
+	movl	$342945, %edi
 	call	__m3_fault
-L8377:
+L7996:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61163,13 +58464,13 @@ _bitfield__write_var_BitField_offset27_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8382
+	js	L8001
 	cmpq	$2097151, -8(%rbp)
-	jle	L8383
-L8382:
-	movl	$359585, %edi
+	jle	L8002
+L8001:
+	movl	$343201, %edi
 	call	__m3_fault
-L8383:
+L8002:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61206,13 +58507,13 @@ _bitfield__write_var_BitField_offset27_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8388
+	js	L8007
 	cmpq	$4194303, -8(%rbp)
-	jle	L8389
-L8388:
-	movl	$359841, %edi
+	jle	L8008
+L8007:
+	movl	$343457, %edi
 	call	__m3_fault
-L8389:
+L8008:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61249,13 +58550,13 @@ _bitfield__write_var_BitField_offset27_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8394
+	js	L8013
 	cmpq	$8388607, -8(%rbp)
-	jle	L8395
-L8394:
-	movl	$360097, %edi
+	jle	L8014
+L8013:
+	movl	$343713, %edi
 	call	__m3_fault
-L8395:
+L8014:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61292,13 +58593,13 @@ _bitfield__write_var_BitField_offset27_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8400
+	js	L8019
 	cmpq	$16777215, -8(%rbp)
-	jle	L8401
-L8400:
-	movl	$360353, %edi
+	jle	L8020
+L8019:
+	movl	$343969, %edi
 	call	__m3_fault
-L8401:
+L8020:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61335,13 +58636,13 @@ _bitfield__write_var_BitField_offset27_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8406
+	js	L8025
 	cmpq	$33554431, -8(%rbp)
-	jle	L8407
-L8406:
-	movl	$360609, %edi
+	jle	L8026
+L8025:
+	movl	$344225, %edi
 	call	__m3_fault
-L8407:
+L8026:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61378,13 +58679,13 @@ _bitfield__write_var_BitField_offset27_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8412
+	js	L8031
 	cmpq	$67108863, -8(%rbp)
-	jle	L8413
-L8412:
-	movl	$360865, %edi
+	jle	L8032
+L8031:
+	movl	$344481, %edi
 	call	__m3_fault
-L8413:
+L8032:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61421,13 +58722,13 @@ _bitfield__write_var_BitField_offset27_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8418
+	js	L8037
 	cmpq	$134217727, -8(%rbp)
-	jle	L8419
-L8418:
-	movl	$361121, %edi
+	jle	L8038
+L8037:
+	movl	$344737, %edi
 	call	__m3_fault
-L8419:
+L8038:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61464,13 +58765,13 @@ _bitfield__write_var_BitField_offset27_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8424
+	js	L8043
 	cmpq	$268435455, -8(%rbp)
-	jle	L8425
-L8424:
-	movl	$361377, %edi
+	jle	L8044
+L8043:
+	movl	$344993, %edi
 	call	__m3_fault
-L8425:
+L8044:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61507,13 +58808,13 @@ _bitfield__write_var_BitField_offset27_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8430
+	js	L8049
 	cmpq	$536870911, -8(%rbp)
-	jle	L8431
-L8430:
-	movl	$361633, %edi
+	jle	L8050
+L8049:
+	movl	$345249, %edi
 	call	__m3_fault
-L8431:
+L8050:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61550,13 +58851,13 @@ _bitfield__write_var_BitField_offset27_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8436
+	js	L8055
 	cmpq	$1073741823, -8(%rbp)
-	jle	L8437
-L8436:
-	movl	$361889, %edi
+	jle	L8056
+L8055:
+	movl	$345505, %edi
 	call	__m3_fault
-L8437:
+L8056:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61593,13 +58894,13 @@ _bitfield__write_var_BitField_offset27_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8442
+	js	L8061
 	cmpq	$2147483647, -8(%rbp)
-	jle	L8443
-L8442:
-	movl	$362145, %edi
+	jle	L8062
+L8061:
+	movl	$345761, %edi
 	call	__m3_fault
-L8443:
+L8062:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61636,14 +58937,14 @@ _bitfield__write_var_BitField_offset27_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8448
+	js	L8067
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L8449
-L8448:
-	movl	$362401, %edi
+	jle	L8068
+L8067:
+	movl	$346017, %edi
 	call	__m3_fault
-L8449:
+L8068:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61680,14 +58981,14 @@ _bitfield__write_var_BitField_offset27_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8454
+	js	L8073
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8455
-L8454:
-	movl	$362657, %edi
+	jle	L8074
+L8073:
+	movl	$346273, %edi
 	call	__m3_fault
-L8455:
+L8074:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61724,14 +59025,14 @@ _bitfield__write_var_BitField_offset27_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8460
+	js	L8079
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8461
-L8460:
-	movl	$362913, %edi
+	jle	L8080
+L8079:
+	movl	$346529, %edi
 	call	__m3_fault
-L8461:
+L8080:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61768,14 +59069,14 @@ _bitfield__write_var_BitField_offset27_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8466
+	js	L8085
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8467
-L8466:
-	movl	$363169, %edi
+	jle	L8086
+L8085:
+	movl	$346785, %edi
 	call	__m3_fault
-L8467:
+L8086:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61812,14 +59113,14 @@ _bitfield__write_var_BitField_offset27_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8472
+	js	L8091
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8473
-L8472:
-	movl	$363425, %edi
+	jle	L8092
+L8091:
+	movl	$347041, %edi
 	call	__m3_fault
-L8473:
+L8092:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61855,14 +59156,14 @@ _bitfield__write_var_BitField_offset27_count37:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8478
+	js	L8097
 	movabsq	$137438953471, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8479
-L8478:
-	movl	$363681, %edi
+	jle	L8098
+L8097:
+	movl	$347297, %edi
 	call	__m3_fault
-L8479:
+L8098:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -61898,13 +59199,13 @@ _bitfield__write_var_BitField_offset28_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8484
+	js	L8103
 	cmpq	$1, -8(%rbp)
-	jle	L8485
-L8484:
-	movl	$363937, %edi
+	jle	L8104
+L8103:
+	movl	$347553, %edi
 	call	__m3_fault
-L8485:
+L8104:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -61944,13 +59245,13 @@ _bitfield__write_var_BitField_offset28_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8490
+	js	L8109
 	cmpq	$3, -8(%rbp)
-	jle	L8491
-L8490:
-	movl	$364193, %edi
+	jle	L8110
+L8109:
+	movl	$347809, %edi
 	call	__m3_fault
-L8491:
+L8110:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -61990,13 +59291,13 @@ _bitfield__write_var_BitField_offset28_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8496
+	js	L8115
 	cmpq	$7, -8(%rbp)
-	jle	L8497
-L8496:
-	movl	$364449, %edi
+	jle	L8116
+L8115:
+	movl	$348065, %edi
 	call	__m3_fault
-L8497:
+L8116:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -62036,13 +59337,13 @@ _bitfield__write_var_BitField_offset28_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8502
+	js	L8121
 	cmpq	$15, -8(%rbp)
-	jle	L8503
-L8502:
-	movl	$364705, %edi
+	jle	L8122
+L8121:
+	movl	$348321, %edi
 	call	__m3_fault
-L8503:
+L8122:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -62081,13 +59382,13 @@ _bitfield__write_var_BitField_offset28_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8508
+	js	L8127
 	cmpq	$31, -8(%rbp)
-	jle	L8509
-L8508:
-	movl	$364961, %edi
+	jle	L8128
+L8127:
+	movl	$348577, %edi
 	call	__m3_fault
-L8509:
+L8128:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62124,13 +59425,13 @@ _bitfield__write_var_BitField_offset28_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8514
+	js	L8133
 	cmpq	$63, -8(%rbp)
-	jle	L8515
-L8514:
-	movl	$365217, %edi
+	jle	L8134
+L8133:
+	movl	$348833, %edi
 	call	__m3_fault
-L8515:
+L8134:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62167,13 +59468,13 @@ _bitfield__write_var_BitField_offset28_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8520
+	js	L8139
 	cmpq	$127, -8(%rbp)
-	jle	L8521
-L8520:
-	movl	$365473, %edi
+	jle	L8140
+L8139:
+	movl	$349089, %edi
 	call	__m3_fault
-L8521:
+L8140:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62210,13 +59511,13 @@ _bitfield__write_var_BitField_offset28_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8526
+	js	L8145
 	cmpq	$255, -8(%rbp)
-	jle	L8527
-L8526:
-	movl	$365729, %edi
+	jle	L8146
+L8145:
+	movl	$349345, %edi
 	call	__m3_fault
-L8527:
+L8146:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62253,13 +59554,13 @@ _bitfield__write_var_BitField_offset28_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8532
+	js	L8151
 	cmpq	$511, -8(%rbp)
-	jle	L8533
-L8532:
-	movl	$365985, %edi
+	jle	L8152
+L8151:
+	movl	$349601, %edi
 	call	__m3_fault
-L8533:
+L8152:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62296,13 +59597,13 @@ _bitfield__write_var_BitField_offset28_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8538
+	js	L8157
 	cmpq	$1023, -8(%rbp)
-	jle	L8539
-L8538:
-	movl	$366241, %edi
+	jle	L8158
+L8157:
+	movl	$349857, %edi
 	call	__m3_fault
-L8539:
+L8158:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62339,13 +59640,13 @@ _bitfield__write_var_BitField_offset28_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8544
+	js	L8163
 	cmpq	$2047, -8(%rbp)
-	jle	L8545
-L8544:
-	movl	$366497, %edi
+	jle	L8164
+L8163:
+	movl	$350113, %edi
 	call	__m3_fault
-L8545:
+L8164:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62382,13 +59683,13 @@ _bitfield__write_var_BitField_offset28_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8550
+	js	L8169
 	cmpq	$4095, -8(%rbp)
-	jle	L8551
-L8550:
-	movl	$366753, %edi
+	jle	L8170
+L8169:
+	movl	$350369, %edi
 	call	__m3_fault
-L8551:
+L8170:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62425,13 +59726,13 @@ _bitfield__write_var_BitField_offset28_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8556
+	js	L8175
 	cmpq	$8191, -8(%rbp)
-	jle	L8557
-L8556:
-	movl	$367009, %edi
+	jle	L8176
+L8175:
+	movl	$350625, %edi
 	call	__m3_fault
-L8557:
+L8176:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62468,13 +59769,13 @@ _bitfield__write_var_BitField_offset28_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8562
+	js	L8181
 	cmpq	$16383, -8(%rbp)
-	jle	L8563
-L8562:
-	movl	$367265, %edi
+	jle	L8182
+L8181:
+	movl	$350881, %edi
 	call	__m3_fault
-L8563:
+L8182:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62511,13 +59812,13 @@ _bitfield__write_var_BitField_offset28_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8568
+	js	L8187
 	cmpq	$32767, -8(%rbp)
-	jle	L8569
-L8568:
-	movl	$367521, %edi
+	jle	L8188
+L8187:
+	movl	$351137, %edi
 	call	__m3_fault
-L8569:
+L8188:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62554,13 +59855,13 @@ _bitfield__write_var_BitField_offset28_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8574
+	js	L8193
 	cmpq	$65535, -8(%rbp)
-	jle	L8575
-L8574:
-	movl	$367777, %edi
+	jle	L8194
+L8193:
+	movl	$351393, %edi
 	call	__m3_fault
-L8575:
+L8194:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62597,13 +59898,13 @@ _bitfield__write_var_BitField_offset28_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8580
+	js	L8199
 	cmpq	$131071, -8(%rbp)
-	jle	L8581
-L8580:
-	movl	$368033, %edi
+	jle	L8200
+L8199:
+	movl	$351649, %edi
 	call	__m3_fault
-L8581:
+L8200:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62640,13 +59941,13 @@ _bitfield__write_var_BitField_offset28_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8586
+	js	L8205
 	cmpq	$262143, -8(%rbp)
-	jle	L8587
-L8586:
-	movl	$368289, %edi
+	jle	L8206
+L8205:
+	movl	$351905, %edi
 	call	__m3_fault
-L8587:
+L8206:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62683,13 +59984,13 @@ _bitfield__write_var_BitField_offset28_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8592
+	js	L8211
 	cmpq	$524287, -8(%rbp)
-	jle	L8593
-L8592:
-	movl	$368545, %edi
+	jle	L8212
+L8211:
+	movl	$352161, %edi
 	call	__m3_fault
-L8593:
+L8212:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62726,13 +60027,13 @@ _bitfield__write_var_BitField_offset28_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8598
+	js	L8217
 	cmpq	$1048575, -8(%rbp)
-	jle	L8599
-L8598:
-	movl	$368801, %edi
+	jle	L8218
+L8217:
+	movl	$352417, %edi
 	call	__m3_fault
-L8599:
+L8218:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62769,13 +60070,13 @@ _bitfield__write_var_BitField_offset28_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8604
+	js	L8223
 	cmpq	$2097151, -8(%rbp)
-	jle	L8605
-L8604:
-	movl	$369057, %edi
+	jle	L8224
+L8223:
+	movl	$352673, %edi
 	call	__m3_fault
-L8605:
+L8224:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62812,13 +60113,13 @@ _bitfield__write_var_BitField_offset28_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8610
+	js	L8229
 	cmpq	$4194303, -8(%rbp)
-	jle	L8611
-L8610:
-	movl	$369313, %edi
+	jle	L8230
+L8229:
+	movl	$352929, %edi
 	call	__m3_fault
-L8611:
+L8230:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62855,13 +60156,13 @@ _bitfield__write_var_BitField_offset28_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8616
+	js	L8235
 	cmpq	$8388607, -8(%rbp)
-	jle	L8617
-L8616:
-	movl	$369569, %edi
+	jle	L8236
+L8235:
+	movl	$353185, %edi
 	call	__m3_fault
-L8617:
+L8236:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62898,13 +60199,13 @@ _bitfield__write_var_BitField_offset28_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8622
+	js	L8241
 	cmpq	$16777215, -8(%rbp)
-	jle	L8623
-L8622:
-	movl	$369825, %edi
+	jle	L8242
+L8241:
+	movl	$353441, %edi
 	call	__m3_fault
-L8623:
+L8242:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62941,13 +60242,13 @@ _bitfield__write_var_BitField_offset28_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8628
+	js	L8247
 	cmpq	$33554431, -8(%rbp)
-	jle	L8629
-L8628:
-	movl	$370081, %edi
+	jle	L8248
+L8247:
+	movl	$353697, %edi
 	call	__m3_fault
-L8629:
+L8248:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -62984,13 +60285,13 @@ _bitfield__write_var_BitField_offset28_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8634
+	js	L8253
 	cmpq	$67108863, -8(%rbp)
-	jle	L8635
-L8634:
-	movl	$370337, %edi
+	jle	L8254
+L8253:
+	movl	$353953, %edi
 	call	__m3_fault
-L8635:
+L8254:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63027,13 +60328,13 @@ _bitfield__write_var_BitField_offset28_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8640
+	js	L8259
 	cmpq	$134217727, -8(%rbp)
-	jle	L8641
-L8640:
-	movl	$370593, %edi
+	jle	L8260
+L8259:
+	movl	$354209, %edi
 	call	__m3_fault
-L8641:
+L8260:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63070,13 +60371,13 @@ _bitfield__write_var_BitField_offset28_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8646
+	js	L8265
 	cmpq	$268435455, -8(%rbp)
-	jle	L8647
-L8646:
-	movl	$370849, %edi
+	jle	L8266
+L8265:
+	movl	$354465, %edi
 	call	__m3_fault
-L8647:
+L8266:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63113,13 +60414,13 @@ _bitfield__write_var_BitField_offset28_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8652
+	js	L8271
 	cmpq	$536870911, -8(%rbp)
-	jle	L8653
-L8652:
-	movl	$371105, %edi
+	jle	L8272
+L8271:
+	movl	$354721, %edi
 	call	__m3_fault
-L8653:
+L8272:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63156,13 +60457,13 @@ _bitfield__write_var_BitField_offset28_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8658
+	js	L8277
 	cmpq	$1073741823, -8(%rbp)
-	jle	L8659
-L8658:
-	movl	$371361, %edi
+	jle	L8278
+L8277:
+	movl	$354977, %edi
 	call	__m3_fault
-L8659:
+L8278:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63199,13 +60500,13 @@ _bitfield__write_var_BitField_offset28_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8664
+	js	L8283
 	cmpq	$2147483647, -8(%rbp)
-	jle	L8665
-L8664:
-	movl	$371617, %edi
+	jle	L8284
+L8283:
+	movl	$355233, %edi
 	call	__m3_fault
-L8665:
+L8284:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63242,14 +60543,14 @@ _bitfield__write_var_BitField_offset28_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8670
+	js	L8289
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L8671
-L8670:
-	movl	$371873, %edi
+	jle	L8290
+L8289:
+	movl	$355489, %edi
 	call	__m3_fault
-L8671:
+L8290:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63286,14 +60587,14 @@ _bitfield__write_var_BitField_offset28_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8676
+	js	L8295
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8677
-L8676:
-	movl	$372129, %edi
+	jle	L8296
+L8295:
+	movl	$355745, %edi
 	call	__m3_fault
-L8677:
+L8296:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63330,14 +60631,14 @@ _bitfield__write_var_BitField_offset28_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8682
+	js	L8301
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8683
-L8682:
-	movl	$372385, %edi
+	jle	L8302
+L8301:
+	movl	$356001, %edi
 	call	__m3_fault
-L8683:
+L8302:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63374,14 +60675,14 @@ _bitfield__write_var_BitField_offset28_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8688
+	js	L8307
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8689
-L8688:
-	movl	$372641, %edi
+	jle	L8308
+L8307:
+	movl	$356257, %edi
 	call	__m3_fault
-L8689:
+L8308:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63417,14 +60718,14 @@ _bitfield__write_var_BitField_offset28_count36:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8694
+	js	L8313
 	movabsq	$68719476735, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8695
-L8694:
-	movl	$372897, %edi
+	jle	L8314
+L8313:
+	movl	$356513, %edi
 	call	__m3_fault
-L8695:
+L8314:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63460,13 +60761,13 @@ _bitfield__write_var_BitField_offset29_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8700
+	js	L8319
 	cmpq	$1, -8(%rbp)
-	jle	L8701
-L8700:
-	movl	$373153, %edi
+	jle	L8320
+L8319:
+	movl	$356769, %edi
 	call	__m3_fault
-L8701:
+L8320:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -63506,13 +60807,13 @@ _bitfield__write_var_BitField_offset29_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8706
+	js	L8325
 	cmpq	$3, -8(%rbp)
-	jle	L8707
-L8706:
-	movl	$373409, %edi
+	jle	L8326
+L8325:
+	movl	$357025, %edi
 	call	__m3_fault
-L8707:
+L8326:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -63552,13 +60853,13 @@ _bitfield__write_var_BitField_offset29_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8712
+	js	L8331
 	cmpq	$7, -8(%rbp)
-	jle	L8713
-L8712:
-	movl	$373665, %edi
+	jle	L8332
+L8331:
+	movl	$357281, %edi
 	call	__m3_fault
-L8713:
+L8332:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -63597,13 +60898,13 @@ _bitfield__write_var_BitField_offset29_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8718
+	js	L8337
 	cmpq	$15, -8(%rbp)
-	jle	L8719
-L8718:
-	movl	$373921, %edi
+	jle	L8338
+L8337:
+	movl	$357537, %edi
 	call	__m3_fault
-L8719:
+L8338:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63640,13 +60941,13 @@ _bitfield__write_var_BitField_offset29_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8724
+	js	L8343
 	cmpq	$31, -8(%rbp)
-	jle	L8725
-L8724:
-	movl	$374177, %edi
+	jle	L8344
+L8343:
+	movl	$357793, %edi
 	call	__m3_fault
-L8725:
+L8344:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63683,13 +60984,13 @@ _bitfield__write_var_BitField_offset29_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8730
+	js	L8349
 	cmpq	$63, -8(%rbp)
-	jle	L8731
-L8730:
-	movl	$374433, %edi
+	jle	L8350
+L8349:
+	movl	$358049, %edi
 	call	__m3_fault
-L8731:
+L8350:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63726,13 +61027,13 @@ _bitfield__write_var_BitField_offset29_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8736
+	js	L8355
 	cmpq	$127, -8(%rbp)
-	jle	L8737
-L8736:
-	movl	$374689, %edi
+	jle	L8356
+L8355:
+	movl	$358305, %edi
 	call	__m3_fault
-L8737:
+L8356:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63769,13 +61070,13 @@ _bitfield__write_var_BitField_offset29_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8742
+	js	L8361
 	cmpq	$255, -8(%rbp)
-	jle	L8743
-L8742:
-	movl	$374945, %edi
+	jle	L8362
+L8361:
+	movl	$358561, %edi
 	call	__m3_fault
-L8743:
+L8362:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63812,13 +61113,13 @@ _bitfield__write_var_BitField_offset29_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8748
+	js	L8367
 	cmpq	$511, -8(%rbp)
-	jle	L8749
-L8748:
-	movl	$375201, %edi
+	jle	L8368
+L8367:
+	movl	$358817, %edi
 	call	__m3_fault
-L8749:
+L8368:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63855,13 +61156,13 @@ _bitfield__write_var_BitField_offset29_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8754
+	js	L8373
 	cmpq	$1023, -8(%rbp)
-	jle	L8755
-L8754:
-	movl	$375457, %edi
+	jle	L8374
+L8373:
+	movl	$359073, %edi
 	call	__m3_fault
-L8755:
+L8374:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63898,13 +61199,13 @@ _bitfield__write_var_BitField_offset29_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8760
+	js	L8379
 	cmpq	$2047, -8(%rbp)
-	jle	L8761
-L8760:
-	movl	$375713, %edi
+	jle	L8380
+L8379:
+	movl	$359329, %edi
 	call	__m3_fault
-L8761:
+L8380:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63941,13 +61242,13 @@ _bitfield__write_var_BitField_offset29_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8766
+	js	L8385
 	cmpq	$4095, -8(%rbp)
-	jle	L8767
-L8766:
-	movl	$375969, %edi
+	jle	L8386
+L8385:
+	movl	$359585, %edi
 	call	__m3_fault
-L8767:
+L8386:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -63984,13 +61285,13 @@ _bitfield__write_var_BitField_offset29_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8772
+	js	L8391
 	cmpq	$8191, -8(%rbp)
-	jle	L8773
-L8772:
-	movl	$376225, %edi
+	jle	L8392
+L8391:
+	movl	$359841, %edi
 	call	__m3_fault
-L8773:
+L8392:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64027,13 +61328,13 @@ _bitfield__write_var_BitField_offset29_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8778
+	js	L8397
 	cmpq	$16383, -8(%rbp)
-	jle	L8779
-L8778:
-	movl	$376481, %edi
+	jle	L8398
+L8397:
+	movl	$360097, %edi
 	call	__m3_fault
-L8779:
+L8398:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64070,13 +61371,13 @@ _bitfield__write_var_BitField_offset29_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8784
+	js	L8403
 	cmpq	$32767, -8(%rbp)
-	jle	L8785
-L8784:
-	movl	$376737, %edi
+	jle	L8404
+L8403:
+	movl	$360353, %edi
 	call	__m3_fault
-L8785:
+L8404:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64113,13 +61414,13 @@ _bitfield__write_var_BitField_offset29_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8790
+	js	L8409
 	cmpq	$65535, -8(%rbp)
-	jle	L8791
-L8790:
-	movl	$376993, %edi
+	jle	L8410
+L8409:
+	movl	$360609, %edi
 	call	__m3_fault
-L8791:
+L8410:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64156,13 +61457,13 @@ _bitfield__write_var_BitField_offset29_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8796
+	js	L8415
 	cmpq	$131071, -8(%rbp)
-	jle	L8797
-L8796:
-	movl	$377249, %edi
+	jle	L8416
+L8415:
+	movl	$360865, %edi
 	call	__m3_fault
-L8797:
+L8416:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64199,13 +61500,13 @@ _bitfield__write_var_BitField_offset29_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8802
+	js	L8421
 	cmpq	$262143, -8(%rbp)
-	jle	L8803
-L8802:
-	movl	$377505, %edi
+	jle	L8422
+L8421:
+	movl	$361121, %edi
 	call	__m3_fault
-L8803:
+L8422:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64242,13 +61543,13 @@ _bitfield__write_var_BitField_offset29_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8808
+	js	L8427
 	cmpq	$524287, -8(%rbp)
-	jle	L8809
-L8808:
-	movl	$377761, %edi
+	jle	L8428
+L8427:
+	movl	$361377, %edi
 	call	__m3_fault
-L8809:
+L8428:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64285,13 +61586,13 @@ _bitfield__write_var_BitField_offset29_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8814
+	js	L8433
 	cmpq	$1048575, -8(%rbp)
-	jle	L8815
-L8814:
-	movl	$378017, %edi
+	jle	L8434
+L8433:
+	movl	$361633, %edi
 	call	__m3_fault
-L8815:
+L8434:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64328,13 +61629,13 @@ _bitfield__write_var_BitField_offset29_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8820
+	js	L8439
 	cmpq	$2097151, -8(%rbp)
-	jle	L8821
-L8820:
-	movl	$378273, %edi
+	jle	L8440
+L8439:
+	movl	$361889, %edi
 	call	__m3_fault
-L8821:
+L8440:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64371,13 +61672,13 @@ _bitfield__write_var_BitField_offset29_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8826
+	js	L8445
 	cmpq	$4194303, -8(%rbp)
-	jle	L8827
-L8826:
-	movl	$378529, %edi
+	jle	L8446
+L8445:
+	movl	$362145, %edi
 	call	__m3_fault
-L8827:
+L8446:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64414,13 +61715,13 @@ _bitfield__write_var_BitField_offset29_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8832
+	js	L8451
 	cmpq	$8388607, -8(%rbp)
-	jle	L8833
-L8832:
-	movl	$378785, %edi
+	jle	L8452
+L8451:
+	movl	$362401, %edi
 	call	__m3_fault
-L8833:
+L8452:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64457,13 +61758,13 @@ _bitfield__write_var_BitField_offset29_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8838
+	js	L8457
 	cmpq	$16777215, -8(%rbp)
-	jle	L8839
-L8838:
-	movl	$379041, %edi
+	jle	L8458
+L8457:
+	movl	$362657, %edi
 	call	__m3_fault
-L8839:
+L8458:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64500,13 +61801,13 @@ _bitfield__write_var_BitField_offset29_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8844
+	js	L8463
 	cmpq	$33554431, -8(%rbp)
-	jle	L8845
-L8844:
-	movl	$379297, %edi
+	jle	L8464
+L8463:
+	movl	$362913, %edi
 	call	__m3_fault
-L8845:
+L8464:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64543,13 +61844,13 @@ _bitfield__write_var_BitField_offset29_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8850
+	js	L8469
 	cmpq	$67108863, -8(%rbp)
-	jle	L8851
-L8850:
-	movl	$379553, %edi
+	jle	L8470
+L8469:
+	movl	$363169, %edi
 	call	__m3_fault
-L8851:
+L8470:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64586,13 +61887,13 @@ _bitfield__write_var_BitField_offset29_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8856
+	js	L8475
 	cmpq	$134217727, -8(%rbp)
-	jle	L8857
-L8856:
-	movl	$379809, %edi
+	jle	L8476
+L8475:
+	movl	$363425, %edi
 	call	__m3_fault
-L8857:
+L8476:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64629,13 +61930,13 @@ _bitfield__write_var_BitField_offset29_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8862
+	js	L8481
 	cmpq	$268435455, -8(%rbp)
-	jle	L8863
-L8862:
-	movl	$380065, %edi
+	jle	L8482
+L8481:
+	movl	$363681, %edi
 	call	__m3_fault
-L8863:
+L8482:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64672,13 +61973,13 @@ _bitfield__write_var_BitField_offset29_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8868
+	js	L8487
 	cmpq	$536870911, -8(%rbp)
-	jle	L8869
-L8868:
-	movl	$380321, %edi
+	jle	L8488
+L8487:
+	movl	$363937, %edi
 	call	__m3_fault
-L8869:
+L8488:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64715,13 +62016,13 @@ _bitfield__write_var_BitField_offset29_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8874
+	js	L8493
 	cmpq	$1073741823, -8(%rbp)
-	jle	L8875
-L8874:
-	movl	$380577, %edi
+	jle	L8494
+L8493:
+	movl	$364193, %edi
 	call	__m3_fault
-L8875:
+L8494:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64758,13 +62059,13 @@ _bitfield__write_var_BitField_offset29_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8880
+	js	L8499
 	cmpq	$2147483647, -8(%rbp)
-	jle	L8881
-L8880:
-	movl	$380833, %edi
+	jle	L8500
+L8499:
+	movl	$364449, %edi
 	call	__m3_fault
-L8881:
+L8500:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64801,14 +62102,14 @@ _bitfield__write_var_BitField_offset29_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8886
+	js	L8505
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L8887
-L8886:
-	movl	$381089, %edi
+	jle	L8506
+L8505:
+	movl	$364705, %edi
 	call	__m3_fault
-L8887:
+L8506:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64845,14 +62146,14 @@ _bitfield__write_var_BitField_offset29_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8892
+	js	L8511
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8893
-L8892:
-	movl	$381345, %edi
+	jle	L8512
+L8511:
+	movl	$364961, %edi
 	call	__m3_fault
-L8893:
+L8512:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64889,14 +62190,14 @@ _bitfield__write_var_BitField_offset29_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8898
+	js	L8517
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8899
-L8898:
-	movl	$381601, %edi
+	jle	L8518
+L8517:
+	movl	$365217, %edi
 	call	__m3_fault
-L8899:
+L8518:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64932,14 +62233,14 @@ _bitfield__write_var_BitField_offset29_count35:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8904
+	js	L8523
 	movabsq	$34359738367, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L8905
-L8904:
-	movl	$381857, %edi
+	jle	L8524
+L8523:
+	movl	$365473, %edi
 	call	__m3_fault
-L8905:
+L8524:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -64975,13 +62276,13 @@ _bitfield__write_var_BitField_offset30_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8910
+	js	L8529
 	cmpq	$1, -8(%rbp)
-	jle	L8911
-L8910:
-	movl	$382113, %edi
+	jle	L8530
+L8529:
+	movl	$365729, %edi
 	call	__m3_fault
-L8911:
+L8530:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -65021,13 +62322,13 @@ _bitfield__write_var_BitField_offset30_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8916
+	js	L8535
 	cmpq	$3, -8(%rbp)
-	jle	L8917
-L8916:
-	movl	$382369, %edi
+	jle	L8536
+L8535:
+	movl	$365985, %edi
 	call	__m3_fault
-L8917:
+L8536:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -65066,13 +62367,13 @@ _bitfield__write_var_BitField_offset30_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8922
+	js	L8541
 	cmpq	$7, -8(%rbp)
-	jle	L8923
-L8922:
-	movl	$382625, %edi
+	jle	L8542
+L8541:
+	movl	$366241, %edi
 	call	__m3_fault
-L8923:
+L8542:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65109,13 +62410,13 @@ _bitfield__write_var_BitField_offset30_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8928
+	js	L8547
 	cmpq	$15, -8(%rbp)
-	jle	L8929
-L8928:
-	movl	$382881, %edi
+	jle	L8548
+L8547:
+	movl	$366497, %edi
 	call	__m3_fault
-L8929:
+L8548:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65152,13 +62453,13 @@ _bitfield__write_var_BitField_offset30_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8934
+	js	L8553
 	cmpq	$31, -8(%rbp)
-	jle	L8935
-L8934:
-	movl	$383137, %edi
+	jle	L8554
+L8553:
+	movl	$366753, %edi
 	call	__m3_fault
-L8935:
+L8554:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65195,13 +62496,13 @@ _bitfield__write_var_BitField_offset30_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8940
+	js	L8559
 	cmpq	$63, -8(%rbp)
-	jle	L8941
-L8940:
-	movl	$383393, %edi
+	jle	L8560
+L8559:
+	movl	$367009, %edi
 	call	__m3_fault
-L8941:
+L8560:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65238,13 +62539,13 @@ _bitfield__write_var_BitField_offset30_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8946
+	js	L8565
 	cmpq	$127, -8(%rbp)
-	jle	L8947
-L8946:
-	movl	$383649, %edi
+	jle	L8566
+L8565:
+	movl	$367265, %edi
 	call	__m3_fault
-L8947:
+L8566:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65281,13 +62582,13 @@ _bitfield__write_var_BitField_offset30_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8952
+	js	L8571
 	cmpq	$255, -8(%rbp)
-	jle	L8953
-L8952:
-	movl	$383905, %edi
+	jle	L8572
+L8571:
+	movl	$367521, %edi
 	call	__m3_fault
-L8953:
+L8572:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65324,13 +62625,13 @@ _bitfield__write_var_BitField_offset30_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8958
+	js	L8577
 	cmpq	$511, -8(%rbp)
-	jle	L8959
-L8958:
-	movl	$384161, %edi
+	jle	L8578
+L8577:
+	movl	$367777, %edi
 	call	__m3_fault
-L8959:
+L8578:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65367,13 +62668,13 @@ _bitfield__write_var_BitField_offset30_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8964
+	js	L8583
 	cmpq	$1023, -8(%rbp)
-	jle	L8965
-L8964:
-	movl	$384417, %edi
+	jle	L8584
+L8583:
+	movl	$368033, %edi
 	call	__m3_fault
-L8965:
+L8584:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65410,13 +62711,13 @@ _bitfield__write_var_BitField_offset30_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8970
+	js	L8589
 	cmpq	$2047, -8(%rbp)
-	jle	L8971
-L8970:
-	movl	$384673, %edi
+	jle	L8590
+L8589:
+	movl	$368289, %edi
 	call	__m3_fault
-L8971:
+L8590:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65453,13 +62754,13 @@ _bitfield__write_var_BitField_offset30_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8976
+	js	L8595
 	cmpq	$4095, -8(%rbp)
-	jle	L8977
-L8976:
-	movl	$384929, %edi
+	jle	L8596
+L8595:
+	movl	$368545, %edi
 	call	__m3_fault
-L8977:
+L8596:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65496,13 +62797,13 @@ _bitfield__write_var_BitField_offset30_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8982
+	js	L8601
 	cmpq	$8191, -8(%rbp)
-	jle	L8983
-L8982:
-	movl	$385185, %edi
+	jle	L8602
+L8601:
+	movl	$368801, %edi
 	call	__m3_fault
-L8983:
+L8602:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65539,13 +62840,13 @@ _bitfield__write_var_BitField_offset30_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8988
+	js	L8607
 	cmpq	$16383, -8(%rbp)
-	jle	L8989
-L8988:
-	movl	$385441, %edi
+	jle	L8608
+L8607:
+	movl	$369057, %edi
 	call	__m3_fault
-L8989:
+L8608:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65582,13 +62883,13 @@ _bitfield__write_var_BitField_offset30_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L8994
+	js	L8613
 	cmpq	$32767, -8(%rbp)
-	jle	L8995
-L8994:
-	movl	$385697, %edi
+	jle	L8614
+L8613:
+	movl	$369313, %edi
 	call	__m3_fault
-L8995:
+L8614:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65625,13 +62926,13 @@ _bitfield__write_var_BitField_offset30_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9000
+	js	L8619
 	cmpq	$65535, -8(%rbp)
-	jle	L9001
-L9000:
-	movl	$385953, %edi
+	jle	L8620
+L8619:
+	movl	$369569, %edi
 	call	__m3_fault
-L9001:
+L8620:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65668,13 +62969,13 @@ _bitfield__write_var_BitField_offset30_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9006
+	js	L8625
 	cmpq	$131071, -8(%rbp)
-	jle	L9007
-L9006:
-	movl	$386209, %edi
+	jle	L8626
+L8625:
+	movl	$369825, %edi
 	call	__m3_fault
-L9007:
+L8626:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65711,13 +63012,13 @@ _bitfield__write_var_BitField_offset30_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9012
+	js	L8631
 	cmpq	$262143, -8(%rbp)
-	jle	L9013
-L9012:
-	movl	$386465, %edi
+	jle	L8632
+L8631:
+	movl	$370081, %edi
 	call	__m3_fault
-L9013:
+L8632:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65754,13 +63055,13 @@ _bitfield__write_var_BitField_offset30_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9018
+	js	L8637
 	cmpq	$524287, -8(%rbp)
-	jle	L9019
-L9018:
-	movl	$386721, %edi
+	jle	L8638
+L8637:
+	movl	$370337, %edi
 	call	__m3_fault
-L9019:
+L8638:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65797,13 +63098,13 @@ _bitfield__write_var_BitField_offset30_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9024
+	js	L8643
 	cmpq	$1048575, -8(%rbp)
-	jle	L9025
-L9024:
-	movl	$386977, %edi
+	jle	L8644
+L8643:
+	movl	$370593, %edi
 	call	__m3_fault
-L9025:
+L8644:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65840,13 +63141,13 @@ _bitfield__write_var_BitField_offset30_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9030
+	js	L8649
 	cmpq	$2097151, -8(%rbp)
-	jle	L9031
-L9030:
-	movl	$387233, %edi
+	jle	L8650
+L8649:
+	movl	$370849, %edi
 	call	__m3_fault
-L9031:
+L8650:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65883,13 +63184,13 @@ _bitfield__write_var_BitField_offset30_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9036
+	js	L8655
 	cmpq	$4194303, -8(%rbp)
-	jle	L9037
-L9036:
-	movl	$387489, %edi
+	jle	L8656
+L8655:
+	movl	$371105, %edi
 	call	__m3_fault
-L9037:
+L8656:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65926,13 +63227,13 @@ _bitfield__write_var_BitField_offset30_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9042
+	js	L8661
 	cmpq	$8388607, -8(%rbp)
-	jle	L9043
-L9042:
-	movl	$387745, %edi
+	jle	L8662
+L8661:
+	movl	$371361, %edi
 	call	__m3_fault
-L9043:
+L8662:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -65969,13 +63270,13 @@ _bitfield__write_var_BitField_offset30_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9048
+	js	L8667
 	cmpq	$16777215, -8(%rbp)
-	jle	L9049
-L9048:
-	movl	$388001, %edi
+	jle	L8668
+L8667:
+	movl	$371617, %edi
 	call	__m3_fault
-L9049:
+L8668:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66012,13 +63313,13 @@ _bitfield__write_var_BitField_offset30_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9054
+	js	L8673
 	cmpq	$33554431, -8(%rbp)
-	jle	L9055
-L9054:
-	movl	$388257, %edi
+	jle	L8674
+L8673:
+	movl	$371873, %edi
 	call	__m3_fault
-L9055:
+L8674:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66055,13 +63356,13 @@ _bitfield__write_var_BitField_offset30_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9060
+	js	L8679
 	cmpq	$67108863, -8(%rbp)
-	jle	L9061
-L9060:
-	movl	$388513, %edi
+	jle	L8680
+L8679:
+	movl	$372129, %edi
 	call	__m3_fault
-L9061:
+L8680:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66098,13 +63399,13 @@ _bitfield__write_var_BitField_offset30_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9066
+	js	L8685
 	cmpq	$134217727, -8(%rbp)
-	jle	L9067
-L9066:
-	movl	$388769, %edi
+	jle	L8686
+L8685:
+	movl	$372385, %edi
 	call	__m3_fault
-L9067:
+L8686:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66141,13 +63442,13 @@ _bitfield__write_var_BitField_offset30_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9072
+	js	L8691
 	cmpq	$268435455, -8(%rbp)
-	jle	L9073
-L9072:
-	movl	$389025, %edi
+	jle	L8692
+L8691:
+	movl	$372641, %edi
 	call	__m3_fault
-L9073:
+L8692:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66184,13 +63485,13 @@ _bitfield__write_var_BitField_offset30_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9078
+	js	L8697
 	cmpq	$536870911, -8(%rbp)
-	jle	L9079
-L9078:
-	movl	$389281, %edi
+	jle	L8698
+L8697:
+	movl	$372897, %edi
 	call	__m3_fault
-L9079:
+L8698:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66227,13 +63528,13 @@ _bitfield__write_var_BitField_offset30_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9084
+	js	L8703
 	cmpq	$1073741823, -8(%rbp)
-	jle	L9085
-L9084:
-	movl	$389537, %edi
+	jle	L8704
+L8703:
+	movl	$373153, %edi
 	call	__m3_fault
-L9085:
+L8704:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66270,13 +63571,13 @@ _bitfield__write_var_BitField_offset30_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9090
+	js	L8709
 	cmpq	$2147483647, -8(%rbp)
-	jle	L9091
-L9090:
-	movl	$389793, %edi
+	jle	L8710
+L8709:
+	movl	$373409, %edi
 	call	__m3_fault
-L9091:
+L8710:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66313,14 +63614,14 @@ _bitfield__write_var_BitField_offset30_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9096
+	js	L8715
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L9097
-L9096:
-	movl	$390049, %edi
+	jle	L8716
+L8715:
+	movl	$373665, %edi
 	call	__m3_fault
-L9097:
+L8716:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66357,14 +63658,14 @@ _bitfield__write_var_BitField_offset30_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9102
+	js	L8721
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L9103
-L9102:
-	movl	$390305, %edi
+	jle	L8722
+L8721:
+	movl	$373921, %edi
 	call	__m3_fault
-L9103:
+L8722:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66400,14 +63701,14 @@ _bitfield__write_var_BitField_offset30_count34:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9108
+	js	L8727
 	movabsq	$17179869183, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L9109
-L9108:
-	movl	$390561, %edi
+	jle	L8728
+L8727:
+	movl	$374177, %edi
 	call	__m3_fault
-L9109:
+L8728:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66443,13 +63744,13 @@ _bitfield__write_var_BitField_offset31_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9114
+	js	L8733
 	cmpq	$1, -8(%rbp)
-	jle	L9115
-L9114:
-	movl	$390817, %edi
+	jle	L8734
+L8733:
+	movl	$374433, %edi
 	call	__m3_fault
-L9115:
+L8734:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -66488,13 +63789,13 @@ _bitfield__write_var_BitField_offset31_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9120
+	js	L8739
 	cmpq	$3, -8(%rbp)
-	jle	L9121
-L9120:
-	movl	$391073, %edi
+	jle	L8740
+L8739:
+	movl	$374689, %edi
 	call	__m3_fault
-L9121:
+L8740:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66531,13 +63832,13 @@ _bitfield__write_var_BitField_offset31_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9126
+	js	L8745
 	cmpq	$7, -8(%rbp)
-	jle	L9127
-L9126:
-	movl	$391329, %edi
+	jle	L8746
+L8745:
+	movl	$374945, %edi
 	call	__m3_fault
-L9127:
+L8746:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66574,13 +63875,13 @@ _bitfield__write_var_BitField_offset31_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9132
+	js	L8751
 	cmpq	$15, -8(%rbp)
-	jle	L9133
-L9132:
-	movl	$391585, %edi
+	jle	L8752
+L8751:
+	movl	$375201, %edi
 	call	__m3_fault
-L9133:
+L8752:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66617,13 +63918,13 @@ _bitfield__write_var_BitField_offset31_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9138
+	js	L8757
 	cmpq	$31, -8(%rbp)
-	jle	L9139
-L9138:
-	movl	$391841, %edi
+	jle	L8758
+L8757:
+	movl	$375457, %edi
 	call	__m3_fault
-L9139:
+L8758:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66660,13 +63961,13 @@ _bitfield__write_var_BitField_offset31_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9144
+	js	L8763
 	cmpq	$63, -8(%rbp)
-	jle	L9145
-L9144:
-	movl	$392097, %edi
+	jle	L8764
+L8763:
+	movl	$375713, %edi
 	call	__m3_fault
-L9145:
+L8764:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66703,13 +64004,13 @@ _bitfield__write_var_BitField_offset31_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9150
+	js	L8769
 	cmpq	$127, -8(%rbp)
-	jle	L9151
-L9150:
-	movl	$392353, %edi
+	jle	L8770
+L8769:
+	movl	$375969, %edi
 	call	__m3_fault
-L9151:
+L8770:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66746,13 +64047,13 @@ _bitfield__write_var_BitField_offset31_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9156
+	js	L8775
 	cmpq	$255, -8(%rbp)
-	jle	L9157
-L9156:
-	movl	$392609, %edi
+	jle	L8776
+L8775:
+	movl	$376225, %edi
 	call	__m3_fault
-L9157:
+L8776:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66789,13 +64090,13 @@ _bitfield__write_var_BitField_offset31_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9162
+	js	L8781
 	cmpq	$511, -8(%rbp)
-	jle	L9163
-L9162:
-	movl	$392865, %edi
+	jle	L8782
+L8781:
+	movl	$376481, %edi
 	call	__m3_fault
-L9163:
+L8782:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66832,13 +64133,13 @@ _bitfield__write_var_BitField_offset31_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9168
+	js	L8787
 	cmpq	$1023, -8(%rbp)
-	jle	L9169
-L9168:
-	movl	$393121, %edi
+	jle	L8788
+L8787:
+	movl	$376737, %edi
 	call	__m3_fault
-L9169:
+L8788:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66875,13 +64176,13 @@ _bitfield__write_var_BitField_offset31_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9174
+	js	L8793
 	cmpq	$2047, -8(%rbp)
-	jle	L9175
-L9174:
-	movl	$393377, %edi
+	jle	L8794
+L8793:
+	movl	$376993, %edi
 	call	__m3_fault
-L9175:
+L8794:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66918,13 +64219,13 @@ _bitfield__write_var_BitField_offset31_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9180
+	js	L8799
 	cmpq	$4095, -8(%rbp)
-	jle	L9181
-L9180:
-	movl	$393633, %edi
+	jle	L8800
+L8799:
+	movl	$377249, %edi
 	call	__m3_fault
-L9181:
+L8800:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -66961,13 +64262,13 @@ _bitfield__write_var_BitField_offset31_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9186
+	js	L8805
 	cmpq	$8191, -8(%rbp)
-	jle	L9187
-L9186:
-	movl	$393889, %edi
+	jle	L8806
+L8805:
+	movl	$377505, %edi
 	call	__m3_fault
-L9187:
+L8806:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67004,13 +64305,13 @@ _bitfield__write_var_BitField_offset31_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9192
+	js	L8811
 	cmpq	$16383, -8(%rbp)
-	jle	L9193
-L9192:
-	movl	$394145, %edi
+	jle	L8812
+L8811:
+	movl	$377761, %edi
 	call	__m3_fault
-L9193:
+L8812:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67047,13 +64348,13 @@ _bitfield__write_var_BitField_offset31_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9198
+	js	L8817
 	cmpq	$32767, -8(%rbp)
-	jle	L9199
-L9198:
-	movl	$394401, %edi
+	jle	L8818
+L8817:
+	movl	$378017, %edi
 	call	__m3_fault
-L9199:
+L8818:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67090,13 +64391,13 @@ _bitfield__write_var_BitField_offset31_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9204
+	js	L8823
 	cmpq	$65535, -8(%rbp)
-	jle	L9205
-L9204:
-	movl	$394657, %edi
+	jle	L8824
+L8823:
+	movl	$378273, %edi
 	call	__m3_fault
-L9205:
+L8824:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67133,13 +64434,13 @@ _bitfield__write_var_BitField_offset31_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9210
+	js	L8829
 	cmpq	$131071, -8(%rbp)
-	jle	L9211
-L9210:
-	movl	$394913, %edi
+	jle	L8830
+L8829:
+	movl	$378529, %edi
 	call	__m3_fault
-L9211:
+L8830:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67176,13 +64477,13 @@ _bitfield__write_var_BitField_offset31_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9216
+	js	L8835
 	cmpq	$262143, -8(%rbp)
-	jle	L9217
-L9216:
-	movl	$395169, %edi
+	jle	L8836
+L8835:
+	movl	$378785, %edi
 	call	__m3_fault
-L9217:
+L8836:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67219,13 +64520,13 @@ _bitfield__write_var_BitField_offset31_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9222
+	js	L8841
 	cmpq	$524287, -8(%rbp)
-	jle	L9223
-L9222:
-	movl	$395425, %edi
+	jle	L8842
+L8841:
+	movl	$379041, %edi
 	call	__m3_fault
-L9223:
+L8842:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67262,13 +64563,13 @@ _bitfield__write_var_BitField_offset31_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9228
+	js	L8847
 	cmpq	$1048575, -8(%rbp)
-	jle	L9229
-L9228:
-	movl	$395681, %edi
+	jle	L8848
+L8847:
+	movl	$379297, %edi
 	call	__m3_fault
-L9229:
+L8848:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67305,13 +64606,13 @@ _bitfield__write_var_BitField_offset31_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9234
+	js	L8853
 	cmpq	$2097151, -8(%rbp)
-	jle	L9235
-L9234:
-	movl	$395937, %edi
+	jle	L8854
+L8853:
+	movl	$379553, %edi
 	call	__m3_fault
-L9235:
+L8854:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67348,13 +64649,13 @@ _bitfield__write_var_BitField_offset31_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9240
+	js	L8859
 	cmpq	$4194303, -8(%rbp)
-	jle	L9241
-L9240:
-	movl	$396193, %edi
+	jle	L8860
+L8859:
+	movl	$379809, %edi
 	call	__m3_fault
-L9241:
+L8860:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67391,13 +64692,13 @@ _bitfield__write_var_BitField_offset31_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9246
+	js	L8865
 	cmpq	$8388607, -8(%rbp)
-	jle	L9247
-L9246:
-	movl	$396449, %edi
+	jle	L8866
+L8865:
+	movl	$380065, %edi
 	call	__m3_fault
-L9247:
+L8866:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67434,13 +64735,13 @@ _bitfield__write_var_BitField_offset31_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9252
+	js	L8871
 	cmpq	$16777215, -8(%rbp)
-	jle	L9253
-L9252:
-	movl	$396705, %edi
+	jle	L8872
+L8871:
+	movl	$380321, %edi
 	call	__m3_fault
-L9253:
+L8872:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67477,13 +64778,13 @@ _bitfield__write_var_BitField_offset31_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9258
+	js	L8877
 	cmpq	$33554431, -8(%rbp)
-	jle	L9259
-L9258:
-	movl	$396961, %edi
+	jle	L8878
+L8877:
+	movl	$380577, %edi
 	call	__m3_fault
-L9259:
+L8878:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67520,13 +64821,13 @@ _bitfield__write_var_BitField_offset31_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9264
+	js	L8883
 	cmpq	$67108863, -8(%rbp)
-	jle	L9265
-L9264:
-	movl	$397217, %edi
+	jle	L8884
+L8883:
+	movl	$380833, %edi
 	call	__m3_fault
-L9265:
+L8884:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67563,13 +64864,13 @@ _bitfield__write_var_BitField_offset31_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9270
+	js	L8889
 	cmpq	$134217727, -8(%rbp)
-	jle	L9271
-L9270:
-	movl	$397473, %edi
+	jle	L8890
+L8889:
+	movl	$381089, %edi
 	call	__m3_fault
-L9271:
+L8890:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67606,13 +64907,13 @@ _bitfield__write_var_BitField_offset31_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9276
+	js	L8895
 	cmpq	$268435455, -8(%rbp)
-	jle	L9277
-L9276:
-	movl	$397729, %edi
+	jle	L8896
+L8895:
+	movl	$381345, %edi
 	call	__m3_fault
-L9277:
+L8896:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67649,13 +64950,13 @@ _bitfield__write_var_BitField_offset31_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9282
+	js	L8901
 	cmpq	$536870911, -8(%rbp)
-	jle	L9283
-L9282:
-	movl	$397985, %edi
+	jle	L8902
+L8901:
+	movl	$381601, %edi
 	call	__m3_fault
-L9283:
+L8902:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67692,13 +64993,13 @@ _bitfield__write_var_BitField_offset31_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9288
+	js	L8907
 	cmpq	$1073741823, -8(%rbp)
-	jle	L9289
-L9288:
-	movl	$398241, %edi
+	jle	L8908
+L8907:
+	movl	$381857, %edi
 	call	__m3_fault
-L9289:
+L8908:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67735,13 +65036,13 @@ _bitfield__write_var_BitField_offset31_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9294
+	js	L8913
 	cmpq	$2147483647, -8(%rbp)
-	jle	L9295
-L9294:
-	movl	$398497, %edi
+	jle	L8914
+L8913:
+	movl	$382113, %edi
 	call	__m3_fault
-L9295:
+L8914:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67778,14 +65079,14 @@ _bitfield__write_var_BitField_offset31_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9300
+	js	L8919
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L9301
-L9300:
-	movl	$398753, %edi
+	jle	L8920
+L8919:
+	movl	$382369, %edi
 	call	__m3_fault
-L9301:
+L8920:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67821,14 +65122,14 @@ _bitfield__write_var_BitField_offset31_count33:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9306
+	js	L8925
 	movabsq	$8589934591, %rax
 	cmpq	%rax, -8(%rbp)
-	jle	L9307
-L9306:
-	movl	$399009, %edi
+	jle	L8926
+L8925:
+	movl	$382625, %edi
 	call	__m3_fault
-L9307:
+L8926:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rcx
@@ -67863,13 +65164,13 @@ _bitfield__write_var_BitField_offset32_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9312
+	js	L8931
 	cmpq	$1, -8(%rbp)
-	jle	L9313
-L9312:
-	movl	$399265, %edi
+	jle	L8932
+L8931:
+	movl	$382881, %edi
 	call	__m3_fault
-L9313:
+L8932:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -67907,13 +65208,13 @@ _bitfield__write_var_BitField_offset32_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9318
+	js	L8937
 	cmpq	$3, -8(%rbp)
-	jle	L9319
-L9318:
-	movl	$399521, %edi
+	jle	L8938
+L8937:
+	movl	$383137, %edi
 	call	__m3_fault
-L9319:
+L8938:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -67951,13 +65252,13 @@ _bitfield__write_var_BitField_offset32_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9324
+	js	L8943
 	cmpq	$7, -8(%rbp)
-	jle	L9325
-L9324:
-	movl	$399777, %edi
+	jle	L8944
+L8943:
+	movl	$383393, %edi
 	call	__m3_fault
-L9325:
+L8944:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -67995,13 +65296,13 @@ _bitfield__write_var_BitField_offset32_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9330
+	js	L8949
 	cmpq	$15, -8(%rbp)
-	jle	L9331
-L9330:
-	movl	$400033, %edi
+	jle	L8950
+L8949:
+	movl	$383649, %edi
 	call	__m3_fault
-L9331:
+L8950:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68039,13 +65340,13 @@ _bitfield__write_var_BitField_offset32_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9336
+	js	L8955
 	cmpq	$31, -8(%rbp)
-	jle	L9337
-L9336:
-	movl	$400289, %edi
+	jle	L8956
+L8955:
+	movl	$383905, %edi
 	call	__m3_fault
-L9337:
+L8956:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68083,13 +65384,13 @@ _bitfield__write_var_BitField_offset32_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9342
+	js	L8961
 	cmpq	$63, -8(%rbp)
-	jle	L9343
-L9342:
-	movl	$400545, %edi
+	jle	L8962
+L8961:
+	movl	$384161, %edi
 	call	__m3_fault
-L9343:
+L8962:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68127,13 +65428,13 @@ _bitfield__write_var_BitField_offset32_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9348
+	js	L8967
 	cmpq	$127, -8(%rbp)
-	jle	L9349
-L9348:
-	movl	$400801, %edi
+	jle	L8968
+L8967:
+	movl	$384417, %edi
 	call	__m3_fault
-L9349:
+L8968:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68170,13 +65471,13 @@ _bitfield__write_var_BitField_offset32_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9354
+	js	L8973
 	cmpq	$255, -8(%rbp)
-	jle	L9355
-L9354:
-	movl	$401057, %edi
+	jle	L8974
+L8973:
+	movl	$384673, %edi
 	call	__m3_fault
-L9355:
+L8974:
 	movq	-24(%rbp), %rax
 	leaq	4(%rax), %rdx
 	movq	-8(%rbp), %rax
@@ -68204,13 +65505,13 @@ _bitfield__write_var_BitField_offset32_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9360
+	js	L8979
 	cmpq	$511, -8(%rbp)
-	jle	L9361
-L9360:
-	movl	$401313, %edi
+	jle	L8980
+L8979:
+	movl	$384929, %edi
 	call	__m3_fault
-L9361:
+L8980:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68248,13 +65549,13 @@ _bitfield__write_var_BitField_offset32_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9366
+	js	L8985
 	cmpq	$1023, -8(%rbp)
-	jle	L9367
-L9366:
-	movl	$401569, %edi
+	jle	L8986
+L8985:
+	movl	$385185, %edi
 	call	__m3_fault
-L9367:
+L8986:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68292,13 +65593,13 @@ _bitfield__write_var_BitField_offset32_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9372
+	js	L8991
 	cmpq	$2047, -8(%rbp)
-	jle	L9373
-L9372:
-	movl	$401825, %edi
+	jle	L8992
+L8991:
+	movl	$385441, %edi
 	call	__m3_fault
-L9373:
+L8992:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68336,13 +65637,13 @@ _bitfield__write_var_BitField_offset32_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9378
+	js	L8997
 	cmpq	$4095, -8(%rbp)
-	jle	L9379
-L9378:
-	movl	$402081, %edi
+	jle	L8998
+L8997:
+	movl	$385697, %edi
 	call	__m3_fault
-L9379:
+L8998:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68380,13 +65681,13 @@ _bitfield__write_var_BitField_offset32_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9384
+	js	L9003
 	cmpq	$8191, -8(%rbp)
-	jle	L9385
-L9384:
-	movl	$402337, %edi
+	jle	L9004
+L9003:
+	movl	$385953, %edi
 	call	__m3_fault
-L9385:
+L9004:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68424,13 +65725,13 @@ _bitfield__write_var_BitField_offset32_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9390
+	js	L9009
 	cmpq	$16383, -8(%rbp)
-	jle	L9391
-L9390:
-	movl	$402593, %edi
+	jle	L9010
+L9009:
+	movl	$386209, %edi
 	call	__m3_fault
-L9391:
+L9010:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68468,13 +65769,13 @@ _bitfield__write_var_BitField_offset32_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9396
+	js	L9015
 	cmpq	$32767, -8(%rbp)
-	jle	L9397
-L9396:
-	movl	$402849, %edi
+	jle	L9016
+L9015:
+	movl	$386465, %edi
 	call	__m3_fault
-L9397:
+L9016:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68511,13 +65812,13 @@ _bitfield__write_var_BitField_offset32_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9402
+	js	L9021
 	cmpq	$65535, -8(%rbp)
-	jle	L9403
-L9402:
-	movl	$403105, %edi
+	jle	L9022
+L9021:
+	movl	$386721, %edi
 	call	__m3_fault
-L9403:
+L9022:
 	movq	-24(%rbp), %rax
 	leaq	4(%rax), %rdx
 	movq	-8(%rbp), %rax
@@ -68545,13 +65846,13 @@ _bitfield__write_var_BitField_offset32_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9408
+	js	L9027
 	cmpq	$131071, -8(%rbp)
-	jle	L9409
-L9408:
-	movl	$403361, %edi
+	jle	L9028
+L9027:
+	movl	$386977, %edi
 	call	__m3_fault
-L9409:
+L9028:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68589,13 +65890,13 @@ _bitfield__write_var_BitField_offset32_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9414
+	js	L9033
 	cmpq	$262143, -8(%rbp)
-	jle	L9415
-L9414:
-	movl	$403617, %edi
+	jle	L9034
+L9033:
+	movl	$387233, %edi
 	call	__m3_fault
-L9415:
+L9034:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68633,13 +65934,13 @@ _bitfield__write_var_BitField_offset32_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9420
+	js	L9039
 	cmpq	$524287, -8(%rbp)
-	jle	L9421
-L9420:
-	movl	$403873, %edi
+	jle	L9040
+L9039:
+	movl	$387489, %edi
 	call	__m3_fault
-L9421:
+L9040:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68677,13 +65978,13 @@ _bitfield__write_var_BitField_offset32_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9426
+	js	L9045
 	cmpq	$1048575, -8(%rbp)
-	jle	L9427
-L9426:
-	movl	$404129, %edi
+	jle	L9046
+L9045:
+	movl	$387745, %edi
 	call	__m3_fault
-L9427:
+L9046:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68721,13 +66022,13 @@ _bitfield__write_var_BitField_offset32_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9432
+	js	L9051
 	cmpq	$2097151, -8(%rbp)
-	jle	L9433
-L9432:
-	movl	$404385, %edi
+	jle	L9052
+L9051:
+	movl	$388001, %edi
 	call	__m3_fault
-L9433:
+L9052:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68765,13 +66066,13 @@ _bitfield__write_var_BitField_offset32_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9438
+	js	L9057
 	cmpq	$4194303, -8(%rbp)
-	jle	L9439
-L9438:
-	movl	$404641, %edi
+	jle	L9058
+L9057:
+	movl	$388257, %edi
 	call	__m3_fault
-L9439:
+L9058:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68809,13 +66110,13 @@ _bitfield__write_var_BitField_offset32_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9444
+	js	L9063
 	cmpq	$8388607, -8(%rbp)
-	jle	L9445
-L9444:
-	movl	$404897, %edi
+	jle	L9064
+L9063:
+	movl	$388513, %edi
 	call	__m3_fault
-L9445:
+L9064:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68853,13 +66154,13 @@ _bitfield__write_var_BitField_offset32_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9450
+	js	L9069
 	cmpq	$16777215, -8(%rbp)
-	jle	L9451
-L9450:
-	movl	$405153, %edi
+	jle	L9070
+L9069:
+	movl	$388769, %edi
 	call	__m3_fault
-L9451:
+L9070:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68897,13 +66198,13 @@ _bitfield__write_var_BitField_offset32_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9456
+	js	L9075
 	cmpq	$33554431, -8(%rbp)
-	jle	L9457
-L9456:
-	movl	$405409, %edi
+	jle	L9076
+L9075:
+	movl	$389025, %edi
 	call	__m3_fault
-L9457:
+L9076:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68941,13 +66242,13 @@ _bitfield__write_var_BitField_offset32_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9462
+	js	L9081
 	cmpq	$67108863, -8(%rbp)
-	jle	L9463
-L9462:
-	movl	$405665, %edi
+	jle	L9082
+L9081:
+	movl	$389281, %edi
 	call	__m3_fault
-L9463:
+L9082:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -68985,13 +66286,13 @@ _bitfield__write_var_BitField_offset32_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9468
+	js	L9087
 	cmpq	$134217727, -8(%rbp)
-	jle	L9469
-L9468:
-	movl	$405921, %edi
+	jle	L9088
+L9087:
+	movl	$389537, %edi
 	call	__m3_fault
-L9469:
+L9088:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69029,13 +66330,13 @@ _bitfield__write_var_BitField_offset32_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9474
+	js	L9093
 	cmpq	$268435455, -8(%rbp)
-	jle	L9475
-L9474:
-	movl	$406177, %edi
+	jle	L9094
+L9093:
+	movl	$389793, %edi
 	call	__m3_fault
-L9475:
+L9094:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69073,13 +66374,13 @@ _bitfield__write_var_BitField_offset32_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9480
+	js	L9099
 	cmpq	$536870911, -8(%rbp)
-	jle	L9481
-L9480:
-	movl	$406433, %edi
+	jle	L9100
+L9099:
+	movl	$390049, %edi
 	call	__m3_fault
-L9481:
+L9100:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69117,13 +66418,13 @@ _bitfield__write_var_BitField_offset32_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9486
+	js	L9105
 	cmpq	$1073741823, -8(%rbp)
-	jle	L9487
-L9486:
-	movl	$406689, %edi
+	jle	L9106
+L9105:
+	movl	$390305, %edi
 	call	__m3_fault
-L9487:
+L9106:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69161,13 +66462,13 @@ _bitfield__write_var_BitField_offset32_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9492
+	js	L9111
 	cmpq	$2147483647, -8(%rbp)
-	jle	L9493
-L9492:
-	movl	$406945, %edi
+	jle	L9112
+L9111:
+	movl	$390561, %edi
 	call	__m3_fault
-L9493:
+L9112:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69204,14 +66505,14 @@ _bitfield__write_var_BitField_offset32_count32:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9498
+	js	L9117
 	movl	$4294967295, %eax
 	cmpq	%rax, -8(%rbp)
-	jle	L9499
-L9498:
-	movl	$407201, %edi
+	jle	L9118
+L9117:
+	movl	$390817, %edi
 	call	__m3_fault
-L9499:
+L9118:
 	movq	-24(%rbp), %rax
 	leaq	4(%rax), %rdx
 	movq	-8(%rbp), %rax
@@ -69240,13 +66541,13 @@ _bitfield__write_var_BitField_offset33_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9504
+	js	L9123
 	cmpq	$1, -8(%rbp)
-	jle	L9505
-L9504:
-	movl	$407457, %edi
+	jle	L9124
+L9123:
+	movl	$391073, %edi
 	call	__m3_fault
-L9505:
+L9124:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69286,13 +66587,13 @@ _bitfield__write_var_BitField_offset33_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9510
+	js	L9129
 	cmpq	$3, -8(%rbp)
-	jle	L9511
-L9510:
-	movl	$407713, %edi
+	jle	L9130
+L9129:
+	movl	$391329, %edi
 	call	__m3_fault
-L9511:
+L9130:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69332,13 +66633,13 @@ _bitfield__write_var_BitField_offset33_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9516
+	js	L9135
 	cmpq	$7, -8(%rbp)
-	jle	L9517
-L9516:
-	movl	$407969, %edi
+	jle	L9136
+L9135:
+	movl	$391585, %edi
 	call	__m3_fault
-L9517:
+L9136:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69378,13 +66679,13 @@ _bitfield__write_var_BitField_offset33_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9522
+	js	L9141
 	cmpq	$15, -8(%rbp)
-	jle	L9523
-L9522:
-	movl	$408225, %edi
+	jle	L9142
+L9141:
+	movl	$391841, %edi
 	call	__m3_fault
-L9523:
+L9142:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69424,13 +66725,13 @@ _bitfield__write_var_BitField_offset33_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9528
+	js	L9147
 	cmpq	$31, -8(%rbp)
-	jle	L9529
-L9528:
-	movl	$408481, %edi
+	jle	L9148
+L9147:
+	movl	$392097, %edi
 	call	__m3_fault
-L9529:
+L9148:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69470,13 +66771,13 @@ _bitfield__write_var_BitField_offset33_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9534
+	js	L9153
 	cmpq	$63, -8(%rbp)
-	jle	L9535
-L9534:
-	movl	$408737, %edi
+	jle	L9154
+L9153:
+	movl	$392353, %edi
 	call	__m3_fault
-L9535:
+L9154:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69516,13 +66817,13 @@ _bitfield__write_var_BitField_offset33_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9540
+	js	L9159
 	cmpq	$127, -8(%rbp)
-	jle	L9541
-L9540:
-	movl	$408993, %edi
+	jle	L9160
+L9159:
+	movl	$392609, %edi
 	call	__m3_fault
-L9541:
+L9160:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69562,13 +66863,13 @@ _bitfield__write_var_BitField_offset33_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9546
+	js	L9165
 	cmpq	$255, -8(%rbp)
-	jle	L9547
-L9546:
-	movl	$409249, %edi
+	jle	L9166
+L9165:
+	movl	$392865, %edi
 	call	__m3_fault
-L9547:
+L9166:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69608,13 +66909,13 @@ _bitfield__write_var_BitField_offset33_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9552
+	js	L9171
 	cmpq	$511, -8(%rbp)
-	jle	L9553
-L9552:
-	movl	$409505, %edi
+	jle	L9172
+L9171:
+	movl	$393121, %edi
 	call	__m3_fault
-L9553:
+L9172:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69654,13 +66955,13 @@ _bitfield__write_var_BitField_offset33_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9558
+	js	L9177
 	cmpq	$1023, -8(%rbp)
-	jle	L9559
-L9558:
-	movl	$409761, %edi
+	jle	L9178
+L9177:
+	movl	$393377, %edi
 	call	__m3_fault
-L9559:
+L9178:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69700,13 +67001,13 @@ _bitfield__write_var_BitField_offset33_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9564
+	js	L9183
 	cmpq	$2047, -8(%rbp)
-	jle	L9565
-L9564:
-	movl	$410017, %edi
+	jle	L9184
+L9183:
+	movl	$393633, %edi
 	call	__m3_fault
-L9565:
+L9184:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69746,13 +67047,13 @@ _bitfield__write_var_BitField_offset33_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9570
+	js	L9189
 	cmpq	$4095, -8(%rbp)
-	jle	L9571
-L9570:
-	movl	$410273, %edi
+	jle	L9190
+L9189:
+	movl	$393889, %edi
 	call	__m3_fault
-L9571:
+L9190:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69792,13 +67093,13 @@ _bitfield__write_var_BitField_offset33_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9576
+	js	L9195
 	cmpq	$8191, -8(%rbp)
-	jle	L9577
-L9576:
-	movl	$410529, %edi
+	jle	L9196
+L9195:
+	movl	$394145, %edi
 	call	__m3_fault
-L9577:
+L9196:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69838,13 +67139,13 @@ _bitfield__write_var_BitField_offset33_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9582
+	js	L9201
 	cmpq	$16383, -8(%rbp)
-	jle	L9583
-L9582:
-	movl	$410785, %edi
+	jle	L9202
+L9201:
+	movl	$394401, %edi
 	call	__m3_fault
-L9583:
+L9202:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69884,13 +67185,13 @@ _bitfield__write_var_BitField_offset33_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9588
+	js	L9207
 	cmpq	$32767, -8(%rbp)
-	jle	L9589
-L9588:
-	movl	$411041, %edi
+	jle	L9208
+L9207:
+	movl	$394657, %edi
 	call	__m3_fault
-L9589:
+L9208:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69930,13 +67231,13 @@ _bitfield__write_var_BitField_offset33_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9594
+	js	L9213
 	cmpq	$65535, -8(%rbp)
-	jle	L9595
-L9594:
-	movl	$411297, %edi
+	jle	L9214
+L9213:
+	movl	$394913, %edi
 	call	__m3_fault
-L9595:
+L9214:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -69976,13 +67277,13 @@ _bitfield__write_var_BitField_offset33_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9600
+	js	L9219
 	cmpq	$131071, -8(%rbp)
-	jle	L9601
-L9600:
-	movl	$411553, %edi
+	jle	L9220
+L9219:
+	movl	$395169, %edi
 	call	__m3_fault
-L9601:
+L9220:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70022,13 +67323,13 @@ _bitfield__write_var_BitField_offset33_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9606
+	js	L9225
 	cmpq	$262143, -8(%rbp)
-	jle	L9607
-L9606:
-	movl	$411809, %edi
+	jle	L9226
+L9225:
+	movl	$395425, %edi
 	call	__m3_fault
-L9607:
+L9226:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70068,13 +67369,13 @@ _bitfield__write_var_BitField_offset33_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9612
+	js	L9231
 	cmpq	$524287, -8(%rbp)
-	jle	L9613
-L9612:
-	movl	$412065, %edi
+	jle	L9232
+L9231:
+	movl	$395681, %edi
 	call	__m3_fault
-L9613:
+L9232:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70114,13 +67415,13 @@ _bitfield__write_var_BitField_offset33_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9618
+	js	L9237
 	cmpq	$1048575, -8(%rbp)
-	jle	L9619
-L9618:
-	movl	$412321, %edi
+	jle	L9238
+L9237:
+	movl	$395937, %edi
 	call	__m3_fault
-L9619:
+L9238:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70160,13 +67461,13 @@ _bitfield__write_var_BitField_offset33_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9624
+	js	L9243
 	cmpq	$2097151, -8(%rbp)
-	jle	L9625
-L9624:
-	movl	$412577, %edi
+	jle	L9244
+L9243:
+	movl	$396193, %edi
 	call	__m3_fault
-L9625:
+L9244:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70206,13 +67507,13 @@ _bitfield__write_var_BitField_offset33_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9630
+	js	L9249
 	cmpq	$4194303, -8(%rbp)
-	jle	L9631
-L9630:
-	movl	$412833, %edi
+	jle	L9250
+L9249:
+	movl	$396449, %edi
 	call	__m3_fault
-L9631:
+L9250:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70252,13 +67553,13 @@ _bitfield__write_var_BitField_offset33_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9636
+	js	L9255
 	cmpq	$8388607, -8(%rbp)
-	jle	L9637
-L9636:
-	movl	$413089, %edi
+	jle	L9256
+L9255:
+	movl	$396705, %edi
 	call	__m3_fault
-L9637:
+L9256:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70298,13 +67599,13 @@ _bitfield__write_var_BitField_offset33_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9642
+	js	L9261
 	cmpq	$16777215, -8(%rbp)
-	jle	L9643
-L9642:
-	movl	$413345, %edi
+	jle	L9262
+L9261:
+	movl	$396961, %edi
 	call	__m3_fault
-L9643:
+L9262:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70344,13 +67645,13 @@ _bitfield__write_var_BitField_offset33_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9648
+	js	L9267
 	cmpq	$33554431, -8(%rbp)
-	jle	L9649
-L9648:
-	movl	$413601, %edi
+	jle	L9268
+L9267:
+	movl	$397217, %edi
 	call	__m3_fault
-L9649:
+L9268:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70390,13 +67691,13 @@ _bitfield__write_var_BitField_offset33_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9654
+	js	L9273
 	cmpq	$67108863, -8(%rbp)
-	jle	L9655
-L9654:
-	movl	$413857, %edi
+	jle	L9274
+L9273:
+	movl	$397473, %edi
 	call	__m3_fault
-L9655:
+L9274:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70436,13 +67737,13 @@ _bitfield__write_var_BitField_offset33_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9660
+	js	L9279
 	cmpq	$134217727, -8(%rbp)
-	jle	L9661
-L9660:
-	movl	$414113, %edi
+	jle	L9280
+L9279:
+	movl	$397729, %edi
 	call	__m3_fault
-L9661:
+L9280:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70482,13 +67783,13 @@ _bitfield__write_var_BitField_offset33_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9666
+	js	L9285
 	cmpq	$268435455, -8(%rbp)
-	jle	L9667
-L9666:
-	movl	$414369, %edi
+	jle	L9286
+L9285:
+	movl	$397985, %edi
 	call	__m3_fault
-L9667:
+L9286:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70528,13 +67829,13 @@ _bitfield__write_var_BitField_offset33_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9672
+	js	L9291
 	cmpq	$536870911, -8(%rbp)
-	jle	L9673
-L9672:
-	movl	$414625, %edi
+	jle	L9292
+L9291:
+	movl	$398241, %edi
 	call	__m3_fault
-L9673:
+L9292:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70574,13 +67875,13 @@ _bitfield__write_var_BitField_offset33_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9678
+	js	L9297
 	cmpq	$1073741823, -8(%rbp)
-	jle	L9679
-L9678:
-	movl	$414881, %edi
+	jle	L9298
+L9297:
+	movl	$398497, %edi
 	call	__m3_fault
-L9679:
+L9298:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70620,13 +67921,13 @@ _bitfield__write_var_BitField_offset33_count31:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9684
+	js	L9303
 	cmpq	$2147483647, -8(%rbp)
-	jle	L9685
-L9684:
-	movl	$415137, %edi
+	jle	L9304
+L9303:
+	movl	$398753, %edi
 	call	__m3_fault
-L9685:
+L9304:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70666,13 +67967,13 @@ _bitfield__write_var_BitField_offset34_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9690
+	js	L9309
 	cmpq	$1, -8(%rbp)
-	jle	L9691
-L9690:
-	movl	$415393, %edi
+	jle	L9310
+L9309:
+	movl	$399009, %edi
 	call	__m3_fault
-L9691:
+L9310:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70712,13 +68013,13 @@ _bitfield__write_var_BitField_offset34_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9696
+	js	L9315
 	cmpq	$3, -8(%rbp)
-	jle	L9697
-L9696:
-	movl	$415649, %edi
+	jle	L9316
+L9315:
+	movl	$399265, %edi
 	call	__m3_fault
-L9697:
+L9316:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70758,13 +68059,13 @@ _bitfield__write_var_BitField_offset34_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9702
+	js	L9321
 	cmpq	$7, -8(%rbp)
-	jle	L9703
-L9702:
-	movl	$415905, %edi
+	jle	L9322
+L9321:
+	movl	$399521, %edi
 	call	__m3_fault
-L9703:
+L9322:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70804,13 +68105,13 @@ _bitfield__write_var_BitField_offset34_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9708
+	js	L9327
 	cmpq	$15, -8(%rbp)
-	jle	L9709
-L9708:
-	movl	$416161, %edi
+	jle	L9328
+L9327:
+	movl	$399777, %edi
 	call	__m3_fault
-L9709:
+L9328:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70850,13 +68151,13 @@ _bitfield__write_var_BitField_offset34_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9714
+	js	L9333
 	cmpq	$31, -8(%rbp)
-	jle	L9715
-L9714:
-	movl	$416417, %edi
+	jle	L9334
+L9333:
+	movl	$400033, %edi
 	call	__m3_fault
-L9715:
+L9334:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70896,13 +68197,13 @@ _bitfield__write_var_BitField_offset34_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9720
+	js	L9339
 	cmpq	$63, -8(%rbp)
-	jle	L9721
-L9720:
-	movl	$416673, %edi
+	jle	L9340
+L9339:
+	movl	$400289, %edi
 	call	__m3_fault
-L9721:
+L9340:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70942,13 +68243,13 @@ _bitfield__write_var_BitField_offset34_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9726
+	js	L9345
 	cmpq	$127, -8(%rbp)
-	jle	L9727
-L9726:
-	movl	$416929, %edi
+	jle	L9346
+L9345:
+	movl	$400545, %edi
 	call	__m3_fault
-L9727:
+L9346:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -70988,13 +68289,13 @@ _bitfield__write_var_BitField_offset34_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9732
+	js	L9351
 	cmpq	$255, -8(%rbp)
-	jle	L9733
-L9732:
-	movl	$417185, %edi
+	jle	L9352
+L9351:
+	movl	$400801, %edi
 	call	__m3_fault
-L9733:
+L9352:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71034,13 +68335,13 @@ _bitfield__write_var_BitField_offset34_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9738
+	js	L9357
 	cmpq	$511, -8(%rbp)
-	jle	L9739
-L9738:
-	movl	$417441, %edi
+	jle	L9358
+L9357:
+	movl	$401057, %edi
 	call	__m3_fault
-L9739:
+L9358:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71080,13 +68381,13 @@ _bitfield__write_var_BitField_offset34_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9744
+	js	L9363
 	cmpq	$1023, -8(%rbp)
-	jle	L9745
-L9744:
-	movl	$417697, %edi
+	jle	L9364
+L9363:
+	movl	$401313, %edi
 	call	__m3_fault
-L9745:
+L9364:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71126,13 +68427,13 @@ _bitfield__write_var_BitField_offset34_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9750
+	js	L9369
 	cmpq	$2047, -8(%rbp)
-	jle	L9751
-L9750:
-	movl	$417953, %edi
+	jle	L9370
+L9369:
+	movl	$401569, %edi
 	call	__m3_fault
-L9751:
+L9370:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71172,13 +68473,13 @@ _bitfield__write_var_BitField_offset34_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9756
+	js	L9375
 	cmpq	$4095, -8(%rbp)
-	jle	L9757
-L9756:
-	movl	$418209, %edi
+	jle	L9376
+L9375:
+	movl	$401825, %edi
 	call	__m3_fault
-L9757:
+L9376:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71218,13 +68519,13 @@ _bitfield__write_var_BitField_offset34_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9762
+	js	L9381
 	cmpq	$8191, -8(%rbp)
-	jle	L9763
-L9762:
-	movl	$418465, %edi
+	jle	L9382
+L9381:
+	movl	$402081, %edi
 	call	__m3_fault
-L9763:
+L9382:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71264,13 +68565,13 @@ _bitfield__write_var_BitField_offset34_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9768
+	js	L9387
 	cmpq	$16383, -8(%rbp)
-	jle	L9769
-L9768:
-	movl	$418721, %edi
+	jle	L9388
+L9387:
+	movl	$402337, %edi
 	call	__m3_fault
-L9769:
+L9388:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71310,13 +68611,13 @@ _bitfield__write_var_BitField_offset34_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9774
+	js	L9393
 	cmpq	$32767, -8(%rbp)
-	jle	L9775
-L9774:
-	movl	$418977, %edi
+	jle	L9394
+L9393:
+	movl	$402593, %edi
 	call	__m3_fault
-L9775:
+L9394:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71356,13 +68657,13 @@ _bitfield__write_var_BitField_offset34_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9780
+	js	L9399
 	cmpq	$65535, -8(%rbp)
-	jle	L9781
-L9780:
-	movl	$419233, %edi
+	jle	L9400
+L9399:
+	movl	$402849, %edi
 	call	__m3_fault
-L9781:
+L9400:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71402,13 +68703,13 @@ _bitfield__write_var_BitField_offset34_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9786
+	js	L9405
 	cmpq	$131071, -8(%rbp)
-	jle	L9787
-L9786:
-	movl	$419489, %edi
+	jle	L9406
+L9405:
+	movl	$403105, %edi
 	call	__m3_fault
-L9787:
+L9406:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71448,13 +68749,13 @@ _bitfield__write_var_BitField_offset34_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9792
+	js	L9411
 	cmpq	$262143, -8(%rbp)
-	jle	L9793
-L9792:
-	movl	$419745, %edi
+	jle	L9412
+L9411:
+	movl	$403361, %edi
 	call	__m3_fault
-L9793:
+L9412:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71494,13 +68795,13 @@ _bitfield__write_var_BitField_offset34_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9798
+	js	L9417
 	cmpq	$524287, -8(%rbp)
-	jle	L9799
-L9798:
-	movl	$420001, %edi
+	jle	L9418
+L9417:
+	movl	$403617, %edi
 	call	__m3_fault
-L9799:
+L9418:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71540,13 +68841,13 @@ _bitfield__write_var_BitField_offset34_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9804
+	js	L9423
 	cmpq	$1048575, -8(%rbp)
-	jle	L9805
-L9804:
-	movl	$420257, %edi
+	jle	L9424
+L9423:
+	movl	$403873, %edi
 	call	__m3_fault
-L9805:
+L9424:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71586,13 +68887,13 @@ _bitfield__write_var_BitField_offset34_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9810
+	js	L9429
 	cmpq	$2097151, -8(%rbp)
-	jle	L9811
-L9810:
-	movl	$420513, %edi
+	jle	L9430
+L9429:
+	movl	$404129, %edi
 	call	__m3_fault
-L9811:
+L9430:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71632,13 +68933,13 @@ _bitfield__write_var_BitField_offset34_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9816
+	js	L9435
 	cmpq	$4194303, -8(%rbp)
-	jle	L9817
-L9816:
-	movl	$420769, %edi
+	jle	L9436
+L9435:
+	movl	$404385, %edi
 	call	__m3_fault
-L9817:
+L9436:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71678,13 +68979,13 @@ _bitfield__write_var_BitField_offset34_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9822
+	js	L9441
 	cmpq	$8388607, -8(%rbp)
-	jle	L9823
-L9822:
-	movl	$421025, %edi
+	jle	L9442
+L9441:
+	movl	$404641, %edi
 	call	__m3_fault
-L9823:
+L9442:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71724,13 +69025,13 @@ _bitfield__write_var_BitField_offset34_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9828
+	js	L9447
 	cmpq	$16777215, -8(%rbp)
-	jle	L9829
-L9828:
-	movl	$421281, %edi
+	jle	L9448
+L9447:
+	movl	$404897, %edi
 	call	__m3_fault
-L9829:
+L9448:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71770,13 +69071,13 @@ _bitfield__write_var_BitField_offset34_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9834
+	js	L9453
 	cmpq	$33554431, -8(%rbp)
-	jle	L9835
-L9834:
-	movl	$421537, %edi
+	jle	L9454
+L9453:
+	movl	$405153, %edi
 	call	__m3_fault
-L9835:
+L9454:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71816,13 +69117,13 @@ _bitfield__write_var_BitField_offset34_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9840
+	js	L9459
 	cmpq	$67108863, -8(%rbp)
-	jle	L9841
-L9840:
-	movl	$421793, %edi
+	jle	L9460
+L9459:
+	movl	$405409, %edi
 	call	__m3_fault
-L9841:
+L9460:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71862,13 +69163,13 @@ _bitfield__write_var_BitField_offset34_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9846
+	js	L9465
 	cmpq	$134217727, -8(%rbp)
-	jle	L9847
-L9846:
-	movl	$422049, %edi
+	jle	L9466
+L9465:
+	movl	$405665, %edi
 	call	__m3_fault
-L9847:
+L9466:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71908,13 +69209,13 @@ _bitfield__write_var_BitField_offset34_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9852
+	js	L9471
 	cmpq	$268435455, -8(%rbp)
-	jle	L9853
-L9852:
-	movl	$422305, %edi
+	jle	L9472
+L9471:
+	movl	$405921, %edi
 	call	__m3_fault
-L9853:
+L9472:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -71954,13 +69255,13 @@ _bitfield__write_var_BitField_offset34_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9858
+	js	L9477
 	cmpq	$536870911, -8(%rbp)
-	jle	L9859
-L9858:
-	movl	$422561, %edi
+	jle	L9478
+L9477:
+	movl	$406177, %edi
 	call	__m3_fault
-L9859:
+L9478:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72000,13 +69301,13 @@ _bitfield__write_var_BitField_offset34_count30:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9864
+	js	L9483
 	cmpq	$1073741823, -8(%rbp)
-	jle	L9865
-L9864:
-	movl	$422817, %edi
+	jle	L9484
+L9483:
+	movl	$406433, %edi
 	call	__m3_fault
-L9865:
+L9484:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72046,13 +69347,13 @@ _bitfield__write_var_BitField_offset35_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9870
+	js	L9489
 	cmpq	$1, -8(%rbp)
-	jle	L9871
-L9870:
-	movl	$423073, %edi
+	jle	L9490
+L9489:
+	movl	$406689, %edi
 	call	__m3_fault
-L9871:
+L9490:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72092,13 +69393,13 @@ _bitfield__write_var_BitField_offset35_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9876
+	js	L9495
 	cmpq	$3, -8(%rbp)
-	jle	L9877
-L9876:
-	movl	$423329, %edi
+	jle	L9496
+L9495:
+	movl	$406945, %edi
 	call	__m3_fault
-L9877:
+L9496:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72138,13 +69439,13 @@ _bitfield__write_var_BitField_offset35_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9882
+	js	L9501
 	cmpq	$7, -8(%rbp)
-	jle	L9883
-L9882:
-	movl	$423585, %edi
+	jle	L9502
+L9501:
+	movl	$407201, %edi
 	call	__m3_fault
-L9883:
+L9502:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72184,13 +69485,13 @@ _bitfield__write_var_BitField_offset35_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9888
+	js	L9507
 	cmpq	$15, -8(%rbp)
-	jle	L9889
-L9888:
-	movl	$423841, %edi
+	jle	L9508
+L9507:
+	movl	$407457, %edi
 	call	__m3_fault
-L9889:
+L9508:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72230,13 +69531,13 @@ _bitfield__write_var_BitField_offset35_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9894
+	js	L9513
 	cmpq	$31, -8(%rbp)
-	jle	L9895
-L9894:
-	movl	$424097, %edi
+	jle	L9514
+L9513:
+	movl	$407713, %edi
 	call	__m3_fault
-L9895:
+L9514:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72276,13 +69577,13 @@ _bitfield__write_var_BitField_offset35_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9900
+	js	L9519
 	cmpq	$63, -8(%rbp)
-	jle	L9901
-L9900:
-	movl	$424353, %edi
+	jle	L9520
+L9519:
+	movl	$407969, %edi
 	call	__m3_fault
-L9901:
+L9520:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72322,13 +69623,13 @@ _bitfield__write_var_BitField_offset35_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9906
+	js	L9525
 	cmpq	$127, -8(%rbp)
-	jle	L9907
-L9906:
-	movl	$424609, %edi
+	jle	L9526
+L9525:
+	movl	$408225, %edi
 	call	__m3_fault
-L9907:
+L9526:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72368,13 +69669,13 @@ _bitfield__write_var_BitField_offset35_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9912
+	js	L9531
 	cmpq	$255, -8(%rbp)
-	jle	L9913
-L9912:
-	movl	$424865, %edi
+	jle	L9532
+L9531:
+	movl	$408481, %edi
 	call	__m3_fault
-L9913:
+L9532:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72414,13 +69715,13 @@ _bitfield__write_var_BitField_offset35_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9918
+	js	L9537
 	cmpq	$511, -8(%rbp)
-	jle	L9919
-L9918:
-	movl	$425121, %edi
+	jle	L9538
+L9537:
+	movl	$408737, %edi
 	call	__m3_fault
-L9919:
+L9538:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72460,13 +69761,13 @@ _bitfield__write_var_BitField_offset35_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9924
+	js	L9543
 	cmpq	$1023, -8(%rbp)
-	jle	L9925
-L9924:
-	movl	$425377, %edi
+	jle	L9544
+L9543:
+	movl	$408993, %edi
 	call	__m3_fault
-L9925:
+L9544:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72506,13 +69807,13 @@ _bitfield__write_var_BitField_offset35_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9930
+	js	L9549
 	cmpq	$2047, -8(%rbp)
-	jle	L9931
-L9930:
-	movl	$425633, %edi
+	jle	L9550
+L9549:
+	movl	$409249, %edi
 	call	__m3_fault
-L9931:
+L9550:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72552,13 +69853,13 @@ _bitfield__write_var_BitField_offset35_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9936
+	js	L9555
 	cmpq	$4095, -8(%rbp)
-	jle	L9937
-L9936:
-	movl	$425889, %edi
+	jle	L9556
+L9555:
+	movl	$409505, %edi
 	call	__m3_fault
-L9937:
+L9556:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72598,13 +69899,13 @@ _bitfield__write_var_BitField_offset35_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9942
+	js	L9561
 	cmpq	$8191, -8(%rbp)
-	jle	L9943
-L9942:
-	movl	$426145, %edi
+	jle	L9562
+L9561:
+	movl	$409761, %edi
 	call	__m3_fault
-L9943:
+L9562:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72644,13 +69945,13 @@ _bitfield__write_var_BitField_offset35_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9948
+	js	L9567
 	cmpq	$16383, -8(%rbp)
-	jle	L9949
-L9948:
-	movl	$426401, %edi
+	jle	L9568
+L9567:
+	movl	$410017, %edi
 	call	__m3_fault
-L9949:
+L9568:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72690,13 +69991,13 @@ _bitfield__write_var_BitField_offset35_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9954
+	js	L9573
 	cmpq	$32767, -8(%rbp)
-	jle	L9955
-L9954:
-	movl	$426657, %edi
+	jle	L9574
+L9573:
+	movl	$410273, %edi
 	call	__m3_fault
-L9955:
+L9574:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72736,13 +70037,13 @@ _bitfield__write_var_BitField_offset35_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9960
+	js	L9579
 	cmpq	$65535, -8(%rbp)
-	jle	L9961
-L9960:
-	movl	$426913, %edi
+	jle	L9580
+L9579:
+	movl	$410529, %edi
 	call	__m3_fault
-L9961:
+L9580:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72782,13 +70083,13 @@ _bitfield__write_var_BitField_offset35_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9966
+	js	L9585
 	cmpq	$131071, -8(%rbp)
-	jle	L9967
-L9966:
-	movl	$427169, %edi
+	jle	L9586
+L9585:
+	movl	$410785, %edi
 	call	__m3_fault
-L9967:
+L9586:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72828,13 +70129,13 @@ _bitfield__write_var_BitField_offset35_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9972
+	js	L9591
 	cmpq	$262143, -8(%rbp)
-	jle	L9973
-L9972:
-	movl	$427425, %edi
+	jle	L9592
+L9591:
+	movl	$411041, %edi
 	call	__m3_fault
-L9973:
+L9592:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72874,13 +70175,13 @@ _bitfield__write_var_BitField_offset35_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9978
+	js	L9597
 	cmpq	$524287, -8(%rbp)
-	jle	L9979
-L9978:
-	movl	$427681, %edi
+	jle	L9598
+L9597:
+	movl	$411297, %edi
 	call	__m3_fault
-L9979:
+L9598:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72920,13 +70221,13 @@ _bitfield__write_var_BitField_offset35_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9984
+	js	L9603
 	cmpq	$1048575, -8(%rbp)
-	jle	L9985
-L9984:
-	movl	$427937, %edi
+	jle	L9604
+L9603:
+	movl	$411553, %edi
 	call	__m3_fault
-L9985:
+L9604:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -72966,13 +70267,13 @@ _bitfield__write_var_BitField_offset35_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9990
+	js	L9609
 	cmpq	$2097151, -8(%rbp)
-	jle	L9991
-L9990:
-	movl	$428193, %edi
+	jle	L9610
+L9609:
+	movl	$411809, %edi
 	call	__m3_fault
-L9991:
+L9610:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73012,13 +70313,13 @@ _bitfield__write_var_BitField_offset35_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L9996
+	js	L9615
 	cmpq	$4194303, -8(%rbp)
-	jle	L9997
-L9996:
-	movl	$428449, %edi
+	jle	L9616
+L9615:
+	movl	$412065, %edi
 	call	__m3_fault
-L9997:
+L9616:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73058,13 +70359,13 @@ _bitfield__write_var_BitField_offset35_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10002
+	js	L9621
 	cmpq	$8388607, -8(%rbp)
-	jle	L10003
-L10002:
-	movl	$428705, %edi
+	jle	L9622
+L9621:
+	movl	$412321, %edi
 	call	__m3_fault
-L10003:
+L9622:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73104,13 +70405,13 @@ _bitfield__write_var_BitField_offset35_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10008
+	js	L9627
 	cmpq	$16777215, -8(%rbp)
-	jle	L10009
-L10008:
-	movl	$428961, %edi
+	jle	L9628
+L9627:
+	movl	$412577, %edi
 	call	__m3_fault
-L10009:
+L9628:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73150,13 +70451,13 @@ _bitfield__write_var_BitField_offset35_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10014
+	js	L9633
 	cmpq	$33554431, -8(%rbp)
-	jle	L10015
-L10014:
-	movl	$429217, %edi
+	jle	L9634
+L9633:
+	movl	$412833, %edi
 	call	__m3_fault
-L10015:
+L9634:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73196,13 +70497,13 @@ _bitfield__write_var_BitField_offset35_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10020
+	js	L9639
 	cmpq	$67108863, -8(%rbp)
-	jle	L10021
-L10020:
-	movl	$429473, %edi
+	jle	L9640
+L9639:
+	movl	$413089, %edi
 	call	__m3_fault
-L10021:
+L9640:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73242,13 +70543,13 @@ _bitfield__write_var_BitField_offset35_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10026
+	js	L9645
 	cmpq	$134217727, -8(%rbp)
-	jle	L10027
-L10026:
-	movl	$429729, %edi
+	jle	L9646
+L9645:
+	movl	$413345, %edi
 	call	__m3_fault
-L10027:
+L9646:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73288,13 +70589,13 @@ _bitfield__write_var_BitField_offset35_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10032
+	js	L9651
 	cmpq	$268435455, -8(%rbp)
-	jle	L10033
-L10032:
-	movl	$429985, %edi
+	jle	L9652
+L9651:
+	movl	$413601, %edi
 	call	__m3_fault
-L10033:
+L9652:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73334,13 +70635,13 @@ _bitfield__write_var_BitField_offset35_count29:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10038
+	js	L9657
 	cmpq	$536870911, -8(%rbp)
-	jle	L10039
-L10038:
-	movl	$430241, %edi
+	jle	L9658
+L9657:
+	movl	$413857, %edi
 	call	__m3_fault
-L10039:
+L9658:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73380,13 +70681,13 @@ _bitfield__write_var_BitField_offset36_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10044
+	js	L9663
 	cmpq	$1, -8(%rbp)
-	jle	L10045
-L10044:
-	movl	$430497, %edi
+	jle	L9664
+L9663:
+	movl	$414113, %edi
 	call	__m3_fault
-L10045:
+L9664:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73426,13 +70727,13 @@ _bitfield__write_var_BitField_offset36_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10050
+	js	L9669
 	cmpq	$3, -8(%rbp)
-	jle	L10051
-L10050:
-	movl	$430753, %edi
+	jle	L9670
+L9669:
+	movl	$414369, %edi
 	call	__m3_fault
-L10051:
+L9670:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73472,13 +70773,13 @@ _bitfield__write_var_BitField_offset36_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10056
+	js	L9675
 	cmpq	$7, -8(%rbp)
-	jle	L10057
-L10056:
-	movl	$431009, %edi
+	jle	L9676
+L9675:
+	movl	$414625, %edi
 	call	__m3_fault
-L10057:
+L9676:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73518,13 +70819,13 @@ _bitfield__write_var_BitField_offset36_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10062
+	js	L9681
 	cmpq	$15, -8(%rbp)
-	jle	L10063
-L10062:
-	movl	$431265, %edi
+	jle	L9682
+L9681:
+	movl	$414881, %edi
 	call	__m3_fault
-L10063:
+L9682:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73564,13 +70865,13 @@ _bitfield__write_var_BitField_offset36_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10068
+	js	L9687
 	cmpq	$31, -8(%rbp)
-	jle	L10069
-L10068:
-	movl	$431521, %edi
+	jle	L9688
+L9687:
+	movl	$415137, %edi
 	call	__m3_fault
-L10069:
+L9688:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73610,13 +70911,13 @@ _bitfield__write_var_BitField_offset36_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10074
+	js	L9693
 	cmpq	$63, -8(%rbp)
-	jle	L10075
-L10074:
-	movl	$431777, %edi
+	jle	L9694
+L9693:
+	movl	$415393, %edi
 	call	__m3_fault
-L10075:
+L9694:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73656,13 +70957,13 @@ _bitfield__write_var_BitField_offset36_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10080
+	js	L9699
 	cmpq	$127, -8(%rbp)
-	jle	L10081
-L10080:
-	movl	$432033, %edi
+	jle	L9700
+L9699:
+	movl	$415649, %edi
 	call	__m3_fault
-L10081:
+L9700:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73702,13 +71003,13 @@ _bitfield__write_var_BitField_offset36_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10086
+	js	L9705
 	cmpq	$255, -8(%rbp)
-	jle	L10087
-L10086:
-	movl	$432289, %edi
+	jle	L9706
+L9705:
+	movl	$415905, %edi
 	call	__m3_fault
-L10087:
+L9706:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73748,13 +71049,13 @@ _bitfield__write_var_BitField_offset36_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10092
+	js	L9711
 	cmpq	$511, -8(%rbp)
-	jle	L10093
-L10092:
-	movl	$432545, %edi
+	jle	L9712
+L9711:
+	movl	$416161, %edi
 	call	__m3_fault
-L10093:
+L9712:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73794,13 +71095,13 @@ _bitfield__write_var_BitField_offset36_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10098
+	js	L9717
 	cmpq	$1023, -8(%rbp)
-	jle	L10099
-L10098:
-	movl	$432801, %edi
+	jle	L9718
+L9717:
+	movl	$416417, %edi
 	call	__m3_fault
-L10099:
+L9718:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73840,13 +71141,13 @@ _bitfield__write_var_BitField_offset36_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10104
+	js	L9723
 	cmpq	$2047, -8(%rbp)
-	jle	L10105
-L10104:
-	movl	$433057, %edi
+	jle	L9724
+L9723:
+	movl	$416673, %edi
 	call	__m3_fault
-L10105:
+L9724:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73886,13 +71187,13 @@ _bitfield__write_var_BitField_offset36_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10110
+	js	L9729
 	cmpq	$4095, -8(%rbp)
-	jle	L10111
-L10110:
-	movl	$433313, %edi
+	jle	L9730
+L9729:
+	movl	$416929, %edi
 	call	__m3_fault
-L10111:
+L9730:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73932,13 +71233,13 @@ _bitfield__write_var_BitField_offset36_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10116
+	js	L9735
 	cmpq	$8191, -8(%rbp)
-	jle	L10117
-L10116:
-	movl	$433569, %edi
+	jle	L9736
+L9735:
+	movl	$417185, %edi
 	call	__m3_fault
-L10117:
+L9736:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -73978,13 +71279,13 @@ _bitfield__write_var_BitField_offset36_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10122
+	js	L9741
 	cmpq	$16383, -8(%rbp)
-	jle	L10123
-L10122:
-	movl	$433825, %edi
+	jle	L9742
+L9741:
+	movl	$417441, %edi
 	call	__m3_fault
-L10123:
+L9742:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74024,13 +71325,13 @@ _bitfield__write_var_BitField_offset36_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10128
+	js	L9747
 	cmpq	$32767, -8(%rbp)
-	jle	L10129
-L10128:
-	movl	$434081, %edi
+	jle	L9748
+L9747:
+	movl	$417697, %edi
 	call	__m3_fault
-L10129:
+L9748:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74070,13 +71371,13 @@ _bitfield__write_var_BitField_offset36_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10134
+	js	L9753
 	cmpq	$65535, -8(%rbp)
-	jle	L10135
-L10134:
-	movl	$434337, %edi
+	jle	L9754
+L9753:
+	movl	$417953, %edi
 	call	__m3_fault
-L10135:
+L9754:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74116,13 +71417,13 @@ _bitfield__write_var_BitField_offset36_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10140
+	js	L9759
 	cmpq	$131071, -8(%rbp)
-	jle	L10141
-L10140:
-	movl	$434593, %edi
+	jle	L9760
+L9759:
+	movl	$418209, %edi
 	call	__m3_fault
-L10141:
+L9760:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74162,13 +71463,13 @@ _bitfield__write_var_BitField_offset36_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10146
+	js	L9765
 	cmpq	$262143, -8(%rbp)
-	jle	L10147
-L10146:
-	movl	$434849, %edi
+	jle	L9766
+L9765:
+	movl	$418465, %edi
 	call	__m3_fault
-L10147:
+L9766:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74208,13 +71509,13 @@ _bitfield__write_var_BitField_offset36_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10152
+	js	L9771
 	cmpq	$524287, -8(%rbp)
-	jle	L10153
-L10152:
-	movl	$435105, %edi
+	jle	L9772
+L9771:
+	movl	$418721, %edi
 	call	__m3_fault
-L10153:
+L9772:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74254,13 +71555,13 @@ _bitfield__write_var_BitField_offset36_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10158
+	js	L9777
 	cmpq	$1048575, -8(%rbp)
-	jle	L10159
-L10158:
-	movl	$435361, %edi
+	jle	L9778
+L9777:
+	movl	$418977, %edi
 	call	__m3_fault
-L10159:
+L9778:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74300,13 +71601,13 @@ _bitfield__write_var_BitField_offset36_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10164
+	js	L9783
 	cmpq	$2097151, -8(%rbp)
-	jle	L10165
-L10164:
-	movl	$435617, %edi
+	jle	L9784
+L9783:
+	movl	$419233, %edi
 	call	__m3_fault
-L10165:
+L9784:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74346,13 +71647,13 @@ _bitfield__write_var_BitField_offset36_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10170
+	js	L9789
 	cmpq	$4194303, -8(%rbp)
-	jle	L10171
-L10170:
-	movl	$435873, %edi
+	jle	L9790
+L9789:
+	movl	$419489, %edi
 	call	__m3_fault
-L10171:
+L9790:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74392,13 +71693,13 @@ _bitfield__write_var_BitField_offset36_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10176
+	js	L9795
 	cmpq	$8388607, -8(%rbp)
-	jle	L10177
-L10176:
-	movl	$436129, %edi
+	jle	L9796
+L9795:
+	movl	$419745, %edi
 	call	__m3_fault
-L10177:
+L9796:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74438,13 +71739,13 @@ _bitfield__write_var_BitField_offset36_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10182
+	js	L9801
 	cmpq	$16777215, -8(%rbp)
-	jle	L10183
-L10182:
-	movl	$436385, %edi
+	jle	L9802
+L9801:
+	movl	$420001, %edi
 	call	__m3_fault
-L10183:
+L9802:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74484,13 +71785,13 @@ _bitfield__write_var_BitField_offset36_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10188
+	js	L9807
 	cmpq	$33554431, -8(%rbp)
-	jle	L10189
-L10188:
-	movl	$436641, %edi
+	jle	L9808
+L9807:
+	movl	$420257, %edi
 	call	__m3_fault
-L10189:
+L9808:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74530,13 +71831,13 @@ _bitfield__write_var_BitField_offset36_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10194
+	js	L9813
 	cmpq	$67108863, -8(%rbp)
-	jle	L10195
-L10194:
-	movl	$436897, %edi
+	jle	L9814
+L9813:
+	movl	$420513, %edi
 	call	__m3_fault
-L10195:
+L9814:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74576,13 +71877,13 @@ _bitfield__write_var_BitField_offset36_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10200
+	js	L9819
 	cmpq	$134217727, -8(%rbp)
-	jle	L10201
-L10200:
-	movl	$437153, %edi
+	jle	L9820
+L9819:
+	movl	$420769, %edi
 	call	__m3_fault
-L10201:
+L9820:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74622,13 +71923,13 @@ _bitfield__write_var_BitField_offset36_count28:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10206
+	js	L9825
 	cmpq	$268435455, -8(%rbp)
-	jle	L10207
-L10206:
-	movl	$437409, %edi
+	jle	L9826
+L9825:
+	movl	$421025, %edi
 	call	__m3_fault
-L10207:
+L9826:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74668,13 +71969,13 @@ _bitfield__write_var_BitField_offset37_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10212
+	js	L9831
 	cmpq	$1, -8(%rbp)
-	jle	L10213
-L10212:
-	movl	$437665, %edi
+	jle	L9832
+L9831:
+	movl	$421281, %edi
 	call	__m3_fault
-L10213:
+L9832:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74714,13 +72015,13 @@ _bitfield__write_var_BitField_offset37_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10218
+	js	L9837
 	cmpq	$3, -8(%rbp)
-	jle	L10219
-L10218:
-	movl	$437921, %edi
+	jle	L9838
+L9837:
+	movl	$421537, %edi
 	call	__m3_fault
-L10219:
+L9838:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74760,13 +72061,13 @@ _bitfield__write_var_BitField_offset37_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10224
+	js	L9843
 	cmpq	$7, -8(%rbp)
-	jle	L10225
-L10224:
-	movl	$438177, %edi
+	jle	L9844
+L9843:
+	movl	$421793, %edi
 	call	__m3_fault
-L10225:
+L9844:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74806,13 +72107,13 @@ _bitfield__write_var_BitField_offset37_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10230
+	js	L9849
 	cmpq	$15, -8(%rbp)
-	jle	L10231
-L10230:
-	movl	$438433, %edi
+	jle	L9850
+L9849:
+	movl	$422049, %edi
 	call	__m3_fault
-L10231:
+L9850:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74852,13 +72153,13 @@ _bitfield__write_var_BitField_offset37_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10236
+	js	L9855
 	cmpq	$31, -8(%rbp)
-	jle	L10237
-L10236:
-	movl	$438689, %edi
+	jle	L9856
+L9855:
+	movl	$422305, %edi
 	call	__m3_fault
-L10237:
+L9856:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74898,13 +72199,13 @@ _bitfield__write_var_BitField_offset37_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10242
+	js	L9861
 	cmpq	$63, -8(%rbp)
-	jle	L10243
-L10242:
-	movl	$438945, %edi
+	jle	L9862
+L9861:
+	movl	$422561, %edi
 	call	__m3_fault
-L10243:
+L9862:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74944,13 +72245,13 @@ _bitfield__write_var_BitField_offset37_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10248
+	js	L9867
 	cmpq	$127, -8(%rbp)
-	jle	L10249
-L10248:
-	movl	$439201, %edi
+	jle	L9868
+L9867:
+	movl	$422817, %edi
 	call	__m3_fault
-L10249:
+L9868:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -74990,13 +72291,13 @@ _bitfield__write_var_BitField_offset37_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10254
+	js	L9873
 	cmpq	$255, -8(%rbp)
-	jle	L10255
-L10254:
-	movl	$439457, %edi
+	jle	L9874
+L9873:
+	movl	$423073, %edi
 	call	__m3_fault
-L10255:
+L9874:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75036,13 +72337,13 @@ _bitfield__write_var_BitField_offset37_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10260
+	js	L9879
 	cmpq	$511, -8(%rbp)
-	jle	L10261
-L10260:
-	movl	$439713, %edi
+	jle	L9880
+L9879:
+	movl	$423329, %edi
 	call	__m3_fault
-L10261:
+L9880:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75082,13 +72383,13 @@ _bitfield__write_var_BitField_offset37_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10266
+	js	L9885
 	cmpq	$1023, -8(%rbp)
-	jle	L10267
-L10266:
-	movl	$439969, %edi
+	jle	L9886
+L9885:
+	movl	$423585, %edi
 	call	__m3_fault
-L10267:
+L9886:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75128,13 +72429,13 @@ _bitfield__write_var_BitField_offset37_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10272
+	js	L9891
 	cmpq	$2047, -8(%rbp)
-	jle	L10273
-L10272:
-	movl	$440225, %edi
+	jle	L9892
+L9891:
+	movl	$423841, %edi
 	call	__m3_fault
-L10273:
+L9892:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75174,13 +72475,13 @@ _bitfield__write_var_BitField_offset37_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10278
+	js	L9897
 	cmpq	$4095, -8(%rbp)
-	jle	L10279
-L10278:
-	movl	$440481, %edi
+	jle	L9898
+L9897:
+	movl	$424097, %edi
 	call	__m3_fault
-L10279:
+L9898:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75220,13 +72521,13 @@ _bitfield__write_var_BitField_offset37_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10284
+	js	L9903
 	cmpq	$8191, -8(%rbp)
-	jle	L10285
-L10284:
-	movl	$440737, %edi
+	jle	L9904
+L9903:
+	movl	$424353, %edi
 	call	__m3_fault
-L10285:
+L9904:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75266,13 +72567,13 @@ _bitfield__write_var_BitField_offset37_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10290
+	js	L9909
 	cmpq	$16383, -8(%rbp)
-	jle	L10291
-L10290:
-	movl	$440993, %edi
+	jle	L9910
+L9909:
+	movl	$424609, %edi
 	call	__m3_fault
-L10291:
+L9910:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75312,13 +72613,13 @@ _bitfield__write_var_BitField_offset37_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10296
+	js	L9915
 	cmpq	$32767, -8(%rbp)
-	jle	L10297
-L10296:
-	movl	$441249, %edi
+	jle	L9916
+L9915:
+	movl	$424865, %edi
 	call	__m3_fault
-L10297:
+L9916:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75358,13 +72659,13 @@ _bitfield__write_var_BitField_offset37_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10302
+	js	L9921
 	cmpq	$65535, -8(%rbp)
-	jle	L10303
-L10302:
-	movl	$441505, %edi
+	jle	L9922
+L9921:
+	movl	$425121, %edi
 	call	__m3_fault
-L10303:
+L9922:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75404,13 +72705,13 @@ _bitfield__write_var_BitField_offset37_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10308
+	js	L9927
 	cmpq	$131071, -8(%rbp)
-	jle	L10309
-L10308:
-	movl	$441761, %edi
+	jle	L9928
+L9927:
+	movl	$425377, %edi
 	call	__m3_fault
-L10309:
+L9928:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75450,13 +72751,13 @@ _bitfield__write_var_BitField_offset37_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10314
+	js	L9933
 	cmpq	$262143, -8(%rbp)
-	jle	L10315
-L10314:
-	movl	$442017, %edi
+	jle	L9934
+L9933:
+	movl	$425633, %edi
 	call	__m3_fault
-L10315:
+L9934:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75496,13 +72797,13 @@ _bitfield__write_var_BitField_offset37_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10320
+	js	L9939
 	cmpq	$524287, -8(%rbp)
-	jle	L10321
-L10320:
-	movl	$442273, %edi
+	jle	L9940
+L9939:
+	movl	$425889, %edi
 	call	__m3_fault
-L10321:
+L9940:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75542,13 +72843,13 @@ _bitfield__write_var_BitField_offset37_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10326
+	js	L9945
 	cmpq	$1048575, -8(%rbp)
-	jle	L10327
-L10326:
-	movl	$442529, %edi
+	jle	L9946
+L9945:
+	movl	$426145, %edi
 	call	__m3_fault
-L10327:
+L9946:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75588,13 +72889,13 @@ _bitfield__write_var_BitField_offset37_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10332
+	js	L9951
 	cmpq	$2097151, -8(%rbp)
-	jle	L10333
-L10332:
-	movl	$442785, %edi
+	jle	L9952
+L9951:
+	movl	$426401, %edi
 	call	__m3_fault
-L10333:
+L9952:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75634,13 +72935,13 @@ _bitfield__write_var_BitField_offset37_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10338
+	js	L9957
 	cmpq	$4194303, -8(%rbp)
-	jle	L10339
-L10338:
-	movl	$443041, %edi
+	jle	L9958
+L9957:
+	movl	$426657, %edi
 	call	__m3_fault
-L10339:
+L9958:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75680,13 +72981,13 @@ _bitfield__write_var_BitField_offset37_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10344
+	js	L9963
 	cmpq	$8388607, -8(%rbp)
-	jle	L10345
-L10344:
-	movl	$443297, %edi
+	jle	L9964
+L9963:
+	movl	$426913, %edi
 	call	__m3_fault
-L10345:
+L9964:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75726,13 +73027,13 @@ _bitfield__write_var_BitField_offset37_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10350
+	js	L9969
 	cmpq	$16777215, -8(%rbp)
-	jle	L10351
-L10350:
-	movl	$443553, %edi
+	jle	L9970
+L9969:
+	movl	$427169, %edi
 	call	__m3_fault
-L10351:
+L9970:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75772,13 +73073,13 @@ _bitfield__write_var_BitField_offset37_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10356
+	js	L9975
 	cmpq	$33554431, -8(%rbp)
-	jle	L10357
-L10356:
-	movl	$443809, %edi
+	jle	L9976
+L9975:
+	movl	$427425, %edi
 	call	__m3_fault
-L10357:
+L9976:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75818,13 +73119,13 @@ _bitfield__write_var_BitField_offset37_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10362
+	js	L9981
 	cmpq	$67108863, -8(%rbp)
-	jle	L10363
-L10362:
-	movl	$444065, %edi
+	jle	L9982
+L9981:
+	movl	$427681, %edi
 	call	__m3_fault
-L10363:
+L9982:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75864,13 +73165,13 @@ _bitfield__write_var_BitField_offset37_count27:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10368
+	js	L9987
 	cmpq	$134217727, -8(%rbp)
-	jle	L10369
-L10368:
-	movl	$444321, %edi
+	jle	L9988
+L9987:
+	movl	$427937, %edi
 	call	__m3_fault
-L10369:
+L9988:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75910,13 +73211,13 @@ _bitfield__write_var_BitField_offset38_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10374
+	js	L9993
 	cmpq	$1, -8(%rbp)
-	jle	L10375
-L10374:
-	movl	$444577, %edi
+	jle	L9994
+L9993:
+	movl	$428193, %edi
 	call	__m3_fault
-L10375:
+L9994:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -75956,13 +73257,13 @@ _bitfield__write_var_BitField_offset38_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10380
+	js	L9999
 	cmpq	$3, -8(%rbp)
-	jle	L10381
-L10380:
-	movl	$444833, %edi
+	jle	L10000
+L9999:
+	movl	$428449, %edi
 	call	__m3_fault
-L10381:
+L10000:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76002,13 +73303,13 @@ _bitfield__write_var_BitField_offset38_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10386
+	js	L10005
 	cmpq	$7, -8(%rbp)
-	jle	L10387
-L10386:
-	movl	$445089, %edi
+	jle	L10006
+L10005:
+	movl	$428705, %edi
 	call	__m3_fault
-L10387:
+L10006:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76048,13 +73349,13 @@ _bitfield__write_var_BitField_offset38_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10392
+	js	L10011
 	cmpq	$15, -8(%rbp)
-	jle	L10393
-L10392:
-	movl	$445345, %edi
+	jle	L10012
+L10011:
+	movl	$428961, %edi
 	call	__m3_fault
-L10393:
+L10012:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76094,13 +73395,13 @@ _bitfield__write_var_BitField_offset38_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10398
+	js	L10017
 	cmpq	$31, -8(%rbp)
-	jle	L10399
-L10398:
-	movl	$445601, %edi
+	jle	L10018
+L10017:
+	movl	$429217, %edi
 	call	__m3_fault
-L10399:
+L10018:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76140,13 +73441,13 @@ _bitfield__write_var_BitField_offset38_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10404
+	js	L10023
 	cmpq	$63, -8(%rbp)
-	jle	L10405
-L10404:
-	movl	$445857, %edi
+	jle	L10024
+L10023:
+	movl	$429473, %edi
 	call	__m3_fault
-L10405:
+L10024:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76186,13 +73487,13 @@ _bitfield__write_var_BitField_offset38_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10410
+	js	L10029
 	cmpq	$127, -8(%rbp)
-	jle	L10411
-L10410:
-	movl	$446113, %edi
+	jle	L10030
+L10029:
+	movl	$429729, %edi
 	call	__m3_fault
-L10411:
+L10030:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76232,13 +73533,13 @@ _bitfield__write_var_BitField_offset38_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10416
+	js	L10035
 	cmpq	$255, -8(%rbp)
-	jle	L10417
-L10416:
-	movl	$446369, %edi
+	jle	L10036
+L10035:
+	movl	$429985, %edi
 	call	__m3_fault
-L10417:
+L10036:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76278,13 +73579,13 @@ _bitfield__write_var_BitField_offset38_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10422
+	js	L10041
 	cmpq	$511, -8(%rbp)
-	jle	L10423
-L10422:
-	movl	$446625, %edi
+	jle	L10042
+L10041:
+	movl	$430241, %edi
 	call	__m3_fault
-L10423:
+L10042:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76324,13 +73625,13 @@ _bitfield__write_var_BitField_offset38_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10428
+	js	L10047
 	cmpq	$1023, -8(%rbp)
-	jle	L10429
-L10428:
-	movl	$446881, %edi
+	jle	L10048
+L10047:
+	movl	$430497, %edi
 	call	__m3_fault
-L10429:
+L10048:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76370,13 +73671,13 @@ _bitfield__write_var_BitField_offset38_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10434
+	js	L10053
 	cmpq	$2047, -8(%rbp)
-	jle	L10435
-L10434:
-	movl	$447137, %edi
+	jle	L10054
+L10053:
+	movl	$430753, %edi
 	call	__m3_fault
-L10435:
+L10054:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76416,13 +73717,13 @@ _bitfield__write_var_BitField_offset38_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10440
+	js	L10059
 	cmpq	$4095, -8(%rbp)
-	jle	L10441
-L10440:
-	movl	$447393, %edi
+	jle	L10060
+L10059:
+	movl	$431009, %edi
 	call	__m3_fault
-L10441:
+L10060:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76462,13 +73763,13 @@ _bitfield__write_var_BitField_offset38_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10446
+	js	L10065
 	cmpq	$8191, -8(%rbp)
-	jle	L10447
-L10446:
-	movl	$447649, %edi
+	jle	L10066
+L10065:
+	movl	$431265, %edi
 	call	__m3_fault
-L10447:
+L10066:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76508,13 +73809,13 @@ _bitfield__write_var_BitField_offset38_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10452
+	js	L10071
 	cmpq	$16383, -8(%rbp)
-	jle	L10453
-L10452:
-	movl	$447905, %edi
+	jle	L10072
+L10071:
+	movl	$431521, %edi
 	call	__m3_fault
-L10453:
+L10072:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76554,13 +73855,13 @@ _bitfield__write_var_BitField_offset38_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10458
+	js	L10077
 	cmpq	$32767, -8(%rbp)
-	jle	L10459
-L10458:
-	movl	$448161, %edi
+	jle	L10078
+L10077:
+	movl	$431777, %edi
 	call	__m3_fault
-L10459:
+L10078:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76600,13 +73901,13 @@ _bitfield__write_var_BitField_offset38_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10464
+	js	L10083
 	cmpq	$65535, -8(%rbp)
-	jle	L10465
-L10464:
-	movl	$448417, %edi
+	jle	L10084
+L10083:
+	movl	$432033, %edi
 	call	__m3_fault
-L10465:
+L10084:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76646,13 +73947,13 @@ _bitfield__write_var_BitField_offset38_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10470
+	js	L10089
 	cmpq	$131071, -8(%rbp)
-	jle	L10471
-L10470:
-	movl	$448673, %edi
+	jle	L10090
+L10089:
+	movl	$432289, %edi
 	call	__m3_fault
-L10471:
+L10090:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76692,13 +73993,13 @@ _bitfield__write_var_BitField_offset38_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10476
+	js	L10095
 	cmpq	$262143, -8(%rbp)
-	jle	L10477
-L10476:
-	movl	$448929, %edi
+	jle	L10096
+L10095:
+	movl	$432545, %edi
 	call	__m3_fault
-L10477:
+L10096:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76738,13 +74039,13 @@ _bitfield__write_var_BitField_offset38_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10482
+	js	L10101
 	cmpq	$524287, -8(%rbp)
-	jle	L10483
-L10482:
-	movl	$449185, %edi
+	jle	L10102
+L10101:
+	movl	$432801, %edi
 	call	__m3_fault
-L10483:
+L10102:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76784,13 +74085,13 @@ _bitfield__write_var_BitField_offset38_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10488
+	js	L10107
 	cmpq	$1048575, -8(%rbp)
-	jle	L10489
-L10488:
-	movl	$449441, %edi
+	jle	L10108
+L10107:
+	movl	$433057, %edi
 	call	__m3_fault
-L10489:
+L10108:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76830,13 +74131,13 @@ _bitfield__write_var_BitField_offset38_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10494
+	js	L10113
 	cmpq	$2097151, -8(%rbp)
-	jle	L10495
-L10494:
-	movl	$449697, %edi
+	jle	L10114
+L10113:
+	movl	$433313, %edi
 	call	__m3_fault
-L10495:
+L10114:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76876,13 +74177,13 @@ _bitfield__write_var_BitField_offset38_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10500
+	js	L10119
 	cmpq	$4194303, -8(%rbp)
-	jle	L10501
-L10500:
-	movl	$449953, %edi
+	jle	L10120
+L10119:
+	movl	$433569, %edi
 	call	__m3_fault
-L10501:
+L10120:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76922,13 +74223,13 @@ _bitfield__write_var_BitField_offset38_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10506
+	js	L10125
 	cmpq	$8388607, -8(%rbp)
-	jle	L10507
-L10506:
-	movl	$450209, %edi
+	jle	L10126
+L10125:
+	movl	$433825, %edi
 	call	__m3_fault
-L10507:
+L10126:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -76968,13 +74269,13 @@ _bitfield__write_var_BitField_offset38_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10512
+	js	L10131
 	cmpq	$16777215, -8(%rbp)
-	jle	L10513
-L10512:
-	movl	$450465, %edi
+	jle	L10132
+L10131:
+	movl	$434081, %edi
 	call	__m3_fault
-L10513:
+L10132:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77014,13 +74315,13 @@ _bitfield__write_var_BitField_offset38_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10518
+	js	L10137
 	cmpq	$33554431, -8(%rbp)
-	jle	L10519
-L10518:
-	movl	$450721, %edi
+	jle	L10138
+L10137:
+	movl	$434337, %edi
 	call	__m3_fault
-L10519:
+L10138:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77060,13 +74361,13 @@ _bitfield__write_var_BitField_offset38_count26:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10524
+	js	L10143
 	cmpq	$67108863, -8(%rbp)
-	jle	L10525
-L10524:
-	movl	$450977, %edi
+	jle	L10144
+L10143:
+	movl	$434593, %edi
 	call	__m3_fault
-L10525:
+L10144:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77106,13 +74407,13 @@ _bitfield__write_var_BitField_offset39_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10530
+	js	L10149
 	cmpq	$1, -8(%rbp)
-	jle	L10531
-L10530:
-	movl	$451233, %edi
+	jle	L10150
+L10149:
+	movl	$434849, %edi
 	call	__m3_fault
-L10531:
+L10150:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77152,13 +74453,13 @@ _bitfield__write_var_BitField_offset39_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10536
+	js	L10155
 	cmpq	$3, -8(%rbp)
-	jle	L10537
-L10536:
-	movl	$451489, %edi
+	jle	L10156
+L10155:
+	movl	$435105, %edi
 	call	__m3_fault
-L10537:
+L10156:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77198,13 +74499,13 @@ _bitfield__write_var_BitField_offset39_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10542
+	js	L10161
 	cmpq	$7, -8(%rbp)
-	jle	L10543
-L10542:
-	movl	$451745, %edi
+	jle	L10162
+L10161:
+	movl	$435361, %edi
 	call	__m3_fault
-L10543:
+L10162:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77244,13 +74545,13 @@ _bitfield__write_var_BitField_offset39_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10548
+	js	L10167
 	cmpq	$15, -8(%rbp)
-	jle	L10549
-L10548:
-	movl	$452001, %edi
+	jle	L10168
+L10167:
+	movl	$435617, %edi
 	call	__m3_fault
-L10549:
+L10168:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77290,13 +74591,13 @@ _bitfield__write_var_BitField_offset39_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10554
+	js	L10173
 	cmpq	$31, -8(%rbp)
-	jle	L10555
-L10554:
-	movl	$452257, %edi
+	jle	L10174
+L10173:
+	movl	$435873, %edi
 	call	__m3_fault
-L10555:
+L10174:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77336,13 +74637,13 @@ _bitfield__write_var_BitField_offset39_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10560
+	js	L10179
 	cmpq	$63, -8(%rbp)
-	jle	L10561
-L10560:
-	movl	$452513, %edi
+	jle	L10180
+L10179:
+	movl	$436129, %edi
 	call	__m3_fault
-L10561:
+L10180:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77382,13 +74683,13 @@ _bitfield__write_var_BitField_offset39_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10566
+	js	L10185
 	cmpq	$127, -8(%rbp)
-	jle	L10567
-L10566:
-	movl	$452769, %edi
+	jle	L10186
+L10185:
+	movl	$436385, %edi
 	call	__m3_fault
-L10567:
+L10186:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77428,13 +74729,13 @@ _bitfield__write_var_BitField_offset39_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10572
+	js	L10191
 	cmpq	$255, -8(%rbp)
-	jle	L10573
-L10572:
-	movl	$453025, %edi
+	jle	L10192
+L10191:
+	movl	$436641, %edi
 	call	__m3_fault
-L10573:
+L10192:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77474,13 +74775,13 @@ _bitfield__write_var_BitField_offset39_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10578
+	js	L10197
 	cmpq	$511, -8(%rbp)
-	jle	L10579
-L10578:
-	movl	$453281, %edi
+	jle	L10198
+L10197:
+	movl	$436897, %edi
 	call	__m3_fault
-L10579:
+L10198:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77520,13 +74821,13 @@ _bitfield__write_var_BitField_offset39_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10584
+	js	L10203
 	cmpq	$1023, -8(%rbp)
-	jle	L10585
-L10584:
-	movl	$453537, %edi
+	jle	L10204
+L10203:
+	movl	$437153, %edi
 	call	__m3_fault
-L10585:
+L10204:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77566,13 +74867,13 @@ _bitfield__write_var_BitField_offset39_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10590
+	js	L10209
 	cmpq	$2047, -8(%rbp)
-	jle	L10591
-L10590:
-	movl	$453793, %edi
+	jle	L10210
+L10209:
+	movl	$437409, %edi
 	call	__m3_fault
-L10591:
+L10210:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77612,13 +74913,13 @@ _bitfield__write_var_BitField_offset39_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10596
+	js	L10215
 	cmpq	$4095, -8(%rbp)
-	jle	L10597
-L10596:
-	movl	$454049, %edi
+	jle	L10216
+L10215:
+	movl	$437665, %edi
 	call	__m3_fault
-L10597:
+L10216:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77658,13 +74959,13 @@ _bitfield__write_var_BitField_offset39_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10602
+	js	L10221
 	cmpq	$8191, -8(%rbp)
-	jle	L10603
-L10602:
-	movl	$454305, %edi
+	jle	L10222
+L10221:
+	movl	$437921, %edi
 	call	__m3_fault
-L10603:
+L10222:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77704,13 +75005,13 @@ _bitfield__write_var_BitField_offset39_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10608
+	js	L10227
 	cmpq	$16383, -8(%rbp)
-	jle	L10609
-L10608:
-	movl	$454561, %edi
+	jle	L10228
+L10227:
+	movl	$438177, %edi
 	call	__m3_fault
-L10609:
+L10228:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77750,13 +75051,13 @@ _bitfield__write_var_BitField_offset39_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10614
+	js	L10233
 	cmpq	$32767, -8(%rbp)
-	jle	L10615
-L10614:
-	movl	$454817, %edi
+	jle	L10234
+L10233:
+	movl	$438433, %edi
 	call	__m3_fault
-L10615:
+L10234:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77796,13 +75097,13 @@ _bitfield__write_var_BitField_offset39_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10620
+	js	L10239
 	cmpq	$65535, -8(%rbp)
-	jle	L10621
-L10620:
-	movl	$455073, %edi
+	jle	L10240
+L10239:
+	movl	$438689, %edi
 	call	__m3_fault
-L10621:
+L10240:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77842,13 +75143,13 @@ _bitfield__write_var_BitField_offset39_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10626
+	js	L10245
 	cmpq	$131071, -8(%rbp)
-	jle	L10627
-L10626:
-	movl	$455329, %edi
+	jle	L10246
+L10245:
+	movl	$438945, %edi
 	call	__m3_fault
-L10627:
+L10246:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77888,13 +75189,13 @@ _bitfield__write_var_BitField_offset39_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10632
+	js	L10251
 	cmpq	$262143, -8(%rbp)
-	jle	L10633
-L10632:
-	movl	$455585, %edi
+	jle	L10252
+L10251:
+	movl	$439201, %edi
 	call	__m3_fault
-L10633:
+L10252:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77934,13 +75235,13 @@ _bitfield__write_var_BitField_offset39_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10638
+	js	L10257
 	cmpq	$524287, -8(%rbp)
-	jle	L10639
-L10638:
-	movl	$455841, %edi
+	jle	L10258
+L10257:
+	movl	$439457, %edi
 	call	__m3_fault
-L10639:
+L10258:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -77980,13 +75281,13 @@ _bitfield__write_var_BitField_offset39_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10644
+	js	L10263
 	cmpq	$1048575, -8(%rbp)
-	jle	L10645
-L10644:
-	movl	$456097, %edi
+	jle	L10264
+L10263:
+	movl	$439713, %edi
 	call	__m3_fault
-L10645:
+L10264:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78026,13 +75327,13 @@ _bitfield__write_var_BitField_offset39_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10650
+	js	L10269
 	cmpq	$2097151, -8(%rbp)
-	jle	L10651
-L10650:
-	movl	$456353, %edi
+	jle	L10270
+L10269:
+	movl	$439969, %edi
 	call	__m3_fault
-L10651:
+L10270:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78072,13 +75373,13 @@ _bitfield__write_var_BitField_offset39_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10656
+	js	L10275
 	cmpq	$4194303, -8(%rbp)
-	jle	L10657
-L10656:
-	movl	$456609, %edi
+	jle	L10276
+L10275:
+	movl	$440225, %edi
 	call	__m3_fault
-L10657:
+L10276:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78118,13 +75419,13 @@ _bitfield__write_var_BitField_offset39_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10662
+	js	L10281
 	cmpq	$8388607, -8(%rbp)
-	jle	L10663
-L10662:
-	movl	$456865, %edi
+	jle	L10282
+L10281:
+	movl	$440481, %edi
 	call	__m3_fault
-L10663:
+L10282:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78164,13 +75465,13 @@ _bitfield__write_var_BitField_offset39_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10668
+	js	L10287
 	cmpq	$16777215, -8(%rbp)
-	jle	L10669
-L10668:
-	movl	$457121, %edi
+	jle	L10288
+L10287:
+	movl	$440737, %edi
 	call	__m3_fault
-L10669:
+L10288:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78210,13 +75511,13 @@ _bitfield__write_var_BitField_offset39_count25:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10674
+	js	L10293
 	cmpq	$33554431, -8(%rbp)
-	jle	L10675
-L10674:
-	movl	$457377, %edi
+	jle	L10294
+L10293:
+	movl	$440993, %edi
 	call	__m3_fault
-L10675:
+L10294:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78255,13 +75556,13 @@ _bitfield__write_var_BitField_offset40_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10680
+	js	L10299
 	cmpq	$1, -8(%rbp)
-	jle	L10681
-L10680:
-	movl	$457633, %edi
+	jle	L10300
+L10299:
+	movl	$441249, %edi
 	call	__m3_fault
-L10681:
+L10300:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78299,13 +75600,13 @@ _bitfield__write_var_BitField_offset40_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10686
+	js	L10305
 	cmpq	$3, -8(%rbp)
-	jle	L10687
-L10686:
-	movl	$457889, %edi
+	jle	L10306
+L10305:
+	movl	$441505, %edi
 	call	__m3_fault
-L10687:
+L10306:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78343,13 +75644,13 @@ _bitfield__write_var_BitField_offset40_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10692
+	js	L10311
 	cmpq	$7, -8(%rbp)
-	jle	L10693
-L10692:
-	movl	$458145, %edi
+	jle	L10312
+L10311:
+	movl	$441761, %edi
 	call	__m3_fault
-L10693:
+L10312:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78387,13 +75688,13 @@ _bitfield__write_var_BitField_offset40_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10698
+	js	L10317
 	cmpq	$15, -8(%rbp)
-	jle	L10699
-L10698:
-	movl	$458401, %edi
+	jle	L10318
+L10317:
+	movl	$442017, %edi
 	call	__m3_fault
-L10699:
+L10318:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78431,13 +75732,13 @@ _bitfield__write_var_BitField_offset40_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10704
+	js	L10323
 	cmpq	$31, -8(%rbp)
-	jle	L10705
-L10704:
-	movl	$458657, %edi
+	jle	L10324
+L10323:
+	movl	$442273, %edi
 	call	__m3_fault
-L10705:
+L10324:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78475,13 +75776,13 @@ _bitfield__write_var_BitField_offset40_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10710
+	js	L10329
 	cmpq	$63, -8(%rbp)
-	jle	L10711
-L10710:
-	movl	$458913, %edi
+	jle	L10330
+L10329:
+	movl	$442529, %edi
 	call	__m3_fault
-L10711:
+L10330:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78519,13 +75820,13 @@ _bitfield__write_var_BitField_offset40_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10716
+	js	L10335
 	cmpq	$127, -8(%rbp)
-	jle	L10717
-L10716:
-	movl	$459169, %edi
+	jle	L10336
+L10335:
+	movl	$442785, %edi
 	call	__m3_fault
-L10717:
+L10336:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78562,13 +75863,13 @@ _bitfield__write_var_BitField_offset40_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10722
+	js	L10341
 	cmpq	$255, -8(%rbp)
-	jle	L10723
-L10722:
-	movl	$459425, %edi
+	jle	L10342
+L10341:
+	movl	$443041, %edi
 	call	__m3_fault
-L10723:
+L10342:
 	movq	-24(%rbp), %rax
 	leaq	5(%rax), %rdx
 	movq	-8(%rbp), %rax
@@ -78597,13 +75898,13 @@ _bitfield__write_var_BitField_offset40_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10728
+	js	L10347
 	cmpq	$511, -8(%rbp)
-	jle	L10729
-L10728:
-	movl	$459681, %edi
+	jle	L10348
+L10347:
+	movl	$443297, %edi
 	call	__m3_fault
-L10729:
+L10348:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78643,13 +75944,13 @@ _bitfield__write_var_BitField_offset40_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10734
+	js	L10353
 	cmpq	$1023, -8(%rbp)
-	jle	L10735
-L10734:
-	movl	$459937, %edi
+	jle	L10354
+L10353:
+	movl	$443553, %edi
 	call	__m3_fault
-L10735:
+L10354:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78689,13 +75990,13 @@ _bitfield__write_var_BitField_offset40_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10740
+	js	L10359
 	cmpq	$2047, -8(%rbp)
-	jle	L10741
-L10740:
-	movl	$460193, %edi
+	jle	L10360
+L10359:
+	movl	$443809, %edi
 	call	__m3_fault
-L10741:
+L10360:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78735,13 +76036,13 @@ _bitfield__write_var_BitField_offset40_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10746
+	js	L10365
 	cmpq	$4095, -8(%rbp)
-	jle	L10747
-L10746:
-	movl	$460449, %edi
+	jle	L10366
+L10365:
+	movl	$444065, %edi
 	call	__m3_fault
-L10747:
+L10366:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78781,13 +76082,13 @@ _bitfield__write_var_BitField_offset40_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10752
+	js	L10371
 	cmpq	$8191, -8(%rbp)
-	jle	L10753
-L10752:
-	movl	$460705, %edi
+	jle	L10372
+L10371:
+	movl	$444321, %edi
 	call	__m3_fault
-L10753:
+L10372:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78827,13 +76128,13 @@ _bitfield__write_var_BitField_offset40_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10758
+	js	L10377
 	cmpq	$16383, -8(%rbp)
-	jle	L10759
-L10758:
-	movl	$460961, %edi
+	jle	L10378
+L10377:
+	movl	$444577, %edi
 	call	__m3_fault
-L10759:
+L10378:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78873,13 +76174,13 @@ _bitfield__write_var_BitField_offset40_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10764
+	js	L10383
 	cmpq	$32767, -8(%rbp)
-	jle	L10765
-L10764:
-	movl	$461217, %edi
+	jle	L10384
+L10383:
+	movl	$444833, %edi
 	call	__m3_fault
-L10765:
+L10384:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78919,13 +76220,13 @@ _bitfield__write_var_BitField_offset40_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10770
+	js	L10389
 	cmpq	$65535, -8(%rbp)
-	jle	L10771
-L10770:
-	movl	$461473, %edi
+	jle	L10390
+L10389:
+	movl	$445089, %edi
 	call	__m3_fault
-L10771:
+L10390:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -78965,13 +76266,13 @@ _bitfield__write_var_BitField_offset40_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10776
+	js	L10395
 	cmpq	$131071, -8(%rbp)
-	jle	L10777
-L10776:
-	movl	$461729, %edi
+	jle	L10396
+L10395:
+	movl	$445345, %edi
 	call	__m3_fault
-L10777:
+L10396:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79011,13 +76312,13 @@ _bitfield__write_var_BitField_offset40_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10782
+	js	L10401
 	cmpq	$262143, -8(%rbp)
-	jle	L10783
-L10782:
-	movl	$461985, %edi
+	jle	L10402
+L10401:
+	movl	$445601, %edi
 	call	__m3_fault
-L10783:
+L10402:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79057,13 +76358,13 @@ _bitfield__write_var_BitField_offset40_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10788
+	js	L10407
 	cmpq	$524287, -8(%rbp)
-	jle	L10789
-L10788:
-	movl	$462241, %edi
+	jle	L10408
+L10407:
+	movl	$445857, %edi
 	call	__m3_fault
-L10789:
+L10408:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79103,13 +76404,13 @@ _bitfield__write_var_BitField_offset40_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10794
+	js	L10413
 	cmpq	$1048575, -8(%rbp)
-	jle	L10795
-L10794:
-	movl	$462497, %edi
+	jle	L10414
+L10413:
+	movl	$446113, %edi
 	call	__m3_fault
-L10795:
+L10414:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79149,13 +76450,13 @@ _bitfield__write_var_BitField_offset40_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10800
+	js	L10419
 	cmpq	$2097151, -8(%rbp)
-	jle	L10801
-L10800:
-	movl	$462753, %edi
+	jle	L10420
+L10419:
+	movl	$446369, %edi
 	call	__m3_fault
-L10801:
+L10420:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79195,13 +76496,13 @@ _bitfield__write_var_BitField_offset40_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10806
+	js	L10425
 	cmpq	$4194303, -8(%rbp)
-	jle	L10807
-L10806:
-	movl	$463009, %edi
+	jle	L10426
+L10425:
+	movl	$446625, %edi
 	call	__m3_fault
-L10807:
+L10426:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79241,13 +76542,13 @@ _bitfield__write_var_BitField_offset40_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10812
+	js	L10431
 	cmpq	$8388607, -8(%rbp)
-	jle	L10813
-L10812:
-	movl	$463265, %edi
+	jle	L10432
+L10431:
+	movl	$446881, %edi
 	call	__m3_fault
-L10813:
+L10432:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79287,13 +76588,13 @@ _bitfield__write_var_BitField_offset40_count24:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10818
+	js	L10437
 	cmpq	$16777215, -8(%rbp)
-	jle	L10819
-L10818:
-	movl	$463521, %edi
+	jle	L10438
+L10437:
+	movl	$447137, %edi
 	call	__m3_fault
-L10819:
+L10438:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79333,13 +76634,13 @@ _bitfield__write_var_BitField_offset41_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10824
+	js	L10443
 	cmpq	$1, -8(%rbp)
-	jle	L10825
-L10824:
-	movl	$463777, %edi
+	jle	L10444
+L10443:
+	movl	$447393, %edi
 	call	__m3_fault
-L10825:
+L10444:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79379,13 +76680,13 @@ _bitfield__write_var_BitField_offset41_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10830
+	js	L10449
 	cmpq	$3, -8(%rbp)
-	jle	L10831
-L10830:
-	movl	$464033, %edi
+	jle	L10450
+L10449:
+	movl	$447649, %edi
 	call	__m3_fault
-L10831:
+L10450:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79425,13 +76726,13 @@ _bitfield__write_var_BitField_offset41_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10836
+	js	L10455
 	cmpq	$7, -8(%rbp)
-	jle	L10837
-L10836:
-	movl	$464289, %edi
+	jle	L10456
+L10455:
+	movl	$447905, %edi
 	call	__m3_fault
-L10837:
+L10456:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79471,13 +76772,13 @@ _bitfield__write_var_BitField_offset41_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10842
+	js	L10461
 	cmpq	$15, -8(%rbp)
-	jle	L10843
-L10842:
-	movl	$464545, %edi
+	jle	L10462
+L10461:
+	movl	$448161, %edi
 	call	__m3_fault
-L10843:
+L10462:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79517,13 +76818,13 @@ _bitfield__write_var_BitField_offset41_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10848
+	js	L10467
 	cmpq	$31, -8(%rbp)
-	jle	L10849
-L10848:
-	movl	$464801, %edi
+	jle	L10468
+L10467:
+	movl	$448417, %edi
 	call	__m3_fault
-L10849:
+L10468:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79563,13 +76864,13 @@ _bitfield__write_var_BitField_offset41_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10854
+	js	L10473
 	cmpq	$63, -8(%rbp)
-	jle	L10855
-L10854:
-	movl	$465057, %edi
+	jle	L10474
+L10473:
+	movl	$448673, %edi
 	call	__m3_fault
-L10855:
+L10474:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79609,13 +76910,13 @@ _bitfield__write_var_BitField_offset41_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10860
+	js	L10479
 	cmpq	$127, -8(%rbp)
-	jle	L10861
-L10860:
-	movl	$465313, %edi
+	jle	L10480
+L10479:
+	movl	$448929, %edi
 	call	__m3_fault
-L10861:
+L10480:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79655,13 +76956,13 @@ _bitfield__write_var_BitField_offset41_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10866
+	js	L10485
 	cmpq	$255, -8(%rbp)
-	jle	L10867
-L10866:
-	movl	$465569, %edi
+	jle	L10486
+L10485:
+	movl	$449185, %edi
 	call	__m3_fault
-L10867:
+L10486:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79701,13 +77002,13 @@ _bitfield__write_var_BitField_offset41_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10872
+	js	L10491
 	cmpq	$511, -8(%rbp)
-	jle	L10873
-L10872:
-	movl	$465825, %edi
+	jle	L10492
+L10491:
+	movl	$449441, %edi
 	call	__m3_fault
-L10873:
+L10492:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79747,13 +77048,13 @@ _bitfield__write_var_BitField_offset41_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10878
+	js	L10497
 	cmpq	$1023, -8(%rbp)
-	jle	L10879
-L10878:
-	movl	$466081, %edi
+	jle	L10498
+L10497:
+	movl	$449697, %edi
 	call	__m3_fault
-L10879:
+L10498:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79793,13 +77094,13 @@ _bitfield__write_var_BitField_offset41_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10884
+	js	L10503
 	cmpq	$2047, -8(%rbp)
-	jle	L10885
-L10884:
-	movl	$466337, %edi
+	jle	L10504
+L10503:
+	movl	$449953, %edi
 	call	__m3_fault
-L10885:
+L10504:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79839,13 +77140,13 @@ _bitfield__write_var_BitField_offset41_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10890
+	js	L10509
 	cmpq	$4095, -8(%rbp)
-	jle	L10891
-L10890:
-	movl	$466593, %edi
+	jle	L10510
+L10509:
+	movl	$450209, %edi
 	call	__m3_fault
-L10891:
+L10510:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79885,13 +77186,13 @@ _bitfield__write_var_BitField_offset41_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10896
+	js	L10515
 	cmpq	$8191, -8(%rbp)
-	jle	L10897
-L10896:
-	movl	$466849, %edi
+	jle	L10516
+L10515:
+	movl	$450465, %edi
 	call	__m3_fault
-L10897:
+L10516:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79931,13 +77232,13 @@ _bitfield__write_var_BitField_offset41_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10902
+	js	L10521
 	cmpq	$16383, -8(%rbp)
-	jle	L10903
-L10902:
-	movl	$467105, %edi
+	jle	L10522
+L10521:
+	movl	$450721, %edi
 	call	__m3_fault
-L10903:
+L10522:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -79977,13 +77278,13 @@ _bitfield__write_var_BitField_offset41_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10908
+	js	L10527
 	cmpq	$32767, -8(%rbp)
-	jle	L10909
-L10908:
-	movl	$467361, %edi
+	jle	L10528
+L10527:
+	movl	$450977, %edi
 	call	__m3_fault
-L10909:
+L10528:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80023,13 +77324,13 @@ _bitfield__write_var_BitField_offset41_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10914
+	js	L10533
 	cmpq	$65535, -8(%rbp)
-	jle	L10915
-L10914:
-	movl	$467617, %edi
+	jle	L10534
+L10533:
+	movl	$451233, %edi
 	call	__m3_fault
-L10915:
+L10534:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80069,13 +77370,13 @@ _bitfield__write_var_BitField_offset41_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10920
+	js	L10539
 	cmpq	$131071, -8(%rbp)
-	jle	L10921
-L10920:
-	movl	$467873, %edi
+	jle	L10540
+L10539:
+	movl	$451489, %edi
 	call	__m3_fault
-L10921:
+L10540:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80115,13 +77416,13 @@ _bitfield__write_var_BitField_offset41_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10926
+	js	L10545
 	cmpq	$262143, -8(%rbp)
-	jle	L10927
-L10926:
-	movl	$468129, %edi
+	jle	L10546
+L10545:
+	movl	$451745, %edi
 	call	__m3_fault
-L10927:
+L10546:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80161,13 +77462,13 @@ _bitfield__write_var_BitField_offset41_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10932
+	js	L10551
 	cmpq	$524287, -8(%rbp)
-	jle	L10933
-L10932:
-	movl	$468385, %edi
+	jle	L10552
+L10551:
+	movl	$452001, %edi
 	call	__m3_fault
-L10933:
+L10552:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80207,13 +77508,13 @@ _bitfield__write_var_BitField_offset41_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10938
+	js	L10557
 	cmpq	$1048575, -8(%rbp)
-	jle	L10939
-L10938:
-	movl	$468641, %edi
+	jle	L10558
+L10557:
+	movl	$452257, %edi
 	call	__m3_fault
-L10939:
+L10558:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80253,13 +77554,13 @@ _bitfield__write_var_BitField_offset41_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10944
+	js	L10563
 	cmpq	$2097151, -8(%rbp)
-	jle	L10945
-L10944:
-	movl	$468897, %edi
+	jle	L10564
+L10563:
+	movl	$452513, %edi
 	call	__m3_fault
-L10945:
+L10564:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80299,13 +77600,13 @@ _bitfield__write_var_BitField_offset41_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10950
+	js	L10569
 	cmpq	$4194303, -8(%rbp)
-	jle	L10951
-L10950:
-	movl	$469153, %edi
+	jle	L10570
+L10569:
+	movl	$452769, %edi
 	call	__m3_fault
-L10951:
+L10570:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80345,13 +77646,13 @@ _bitfield__write_var_BitField_offset41_count23:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10956
+	js	L10575
 	cmpq	$8388607, -8(%rbp)
-	jle	L10957
-L10956:
-	movl	$469409, %edi
+	jle	L10576
+L10575:
+	movl	$453025, %edi
 	call	__m3_fault
-L10957:
+L10576:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80391,13 +77692,13 @@ _bitfield__write_var_BitField_offset42_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10962
+	js	L10581
 	cmpq	$1, -8(%rbp)
-	jle	L10963
-L10962:
-	movl	$469665, %edi
+	jle	L10582
+L10581:
+	movl	$453281, %edi
 	call	__m3_fault
-L10963:
+L10582:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80437,13 +77738,13 @@ _bitfield__write_var_BitField_offset42_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10968
+	js	L10587
 	cmpq	$3, -8(%rbp)
-	jle	L10969
-L10968:
-	movl	$469921, %edi
+	jle	L10588
+L10587:
+	movl	$453537, %edi
 	call	__m3_fault
-L10969:
+L10588:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80483,13 +77784,13 @@ _bitfield__write_var_BitField_offset42_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10974
+	js	L10593
 	cmpq	$7, -8(%rbp)
-	jle	L10975
-L10974:
-	movl	$470177, %edi
+	jle	L10594
+L10593:
+	movl	$453793, %edi
 	call	__m3_fault
-L10975:
+L10594:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80529,13 +77830,13 @@ _bitfield__write_var_BitField_offset42_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10980
+	js	L10599
 	cmpq	$15, -8(%rbp)
-	jle	L10981
-L10980:
-	movl	$470433, %edi
+	jle	L10600
+L10599:
+	movl	$454049, %edi
 	call	__m3_fault
-L10981:
+L10600:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80575,13 +77876,13 @@ _bitfield__write_var_BitField_offset42_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10986
+	js	L10605
 	cmpq	$31, -8(%rbp)
-	jle	L10987
-L10986:
-	movl	$470689, %edi
+	jle	L10606
+L10605:
+	movl	$454305, %edi
 	call	__m3_fault
-L10987:
+L10606:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80621,13 +77922,13 @@ _bitfield__write_var_BitField_offset42_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10992
+	js	L10611
 	cmpq	$63, -8(%rbp)
-	jle	L10993
-L10992:
-	movl	$470945, %edi
+	jle	L10612
+L10611:
+	movl	$454561, %edi
 	call	__m3_fault
-L10993:
+L10612:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80667,13 +77968,13 @@ _bitfield__write_var_BitField_offset42_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L10998
+	js	L10617
 	cmpq	$127, -8(%rbp)
-	jle	L10999
-L10998:
-	movl	$471201, %edi
+	jle	L10618
+L10617:
+	movl	$454817, %edi
 	call	__m3_fault
-L10999:
+L10618:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80713,13 +78014,13 @@ _bitfield__write_var_BitField_offset42_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11004
+	js	L10623
 	cmpq	$255, -8(%rbp)
-	jle	L11005
-L11004:
-	movl	$471457, %edi
+	jle	L10624
+L10623:
+	movl	$455073, %edi
 	call	__m3_fault
-L11005:
+L10624:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80759,13 +78060,13 @@ _bitfield__write_var_BitField_offset42_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11010
+	js	L10629
 	cmpq	$511, -8(%rbp)
-	jle	L11011
-L11010:
-	movl	$471713, %edi
+	jle	L10630
+L10629:
+	movl	$455329, %edi
 	call	__m3_fault
-L11011:
+L10630:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80805,13 +78106,13 @@ _bitfield__write_var_BitField_offset42_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11016
+	js	L10635
 	cmpq	$1023, -8(%rbp)
-	jle	L11017
-L11016:
-	movl	$471969, %edi
+	jle	L10636
+L10635:
+	movl	$455585, %edi
 	call	__m3_fault
-L11017:
+L10636:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80851,13 +78152,13 @@ _bitfield__write_var_BitField_offset42_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11022
+	js	L10641
 	cmpq	$2047, -8(%rbp)
-	jle	L11023
-L11022:
-	movl	$472225, %edi
+	jle	L10642
+L10641:
+	movl	$455841, %edi
 	call	__m3_fault
-L11023:
+L10642:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80897,13 +78198,13 @@ _bitfield__write_var_BitField_offset42_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11028
+	js	L10647
 	cmpq	$4095, -8(%rbp)
-	jle	L11029
-L11028:
-	movl	$472481, %edi
+	jle	L10648
+L10647:
+	movl	$456097, %edi
 	call	__m3_fault
-L11029:
+L10648:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80943,13 +78244,13 @@ _bitfield__write_var_BitField_offset42_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11034
+	js	L10653
 	cmpq	$8191, -8(%rbp)
-	jle	L11035
-L11034:
-	movl	$472737, %edi
+	jle	L10654
+L10653:
+	movl	$456353, %edi
 	call	__m3_fault
-L11035:
+L10654:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -80989,13 +78290,13 @@ _bitfield__write_var_BitField_offset42_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11040
+	js	L10659
 	cmpq	$16383, -8(%rbp)
-	jle	L11041
-L11040:
-	movl	$472993, %edi
+	jle	L10660
+L10659:
+	movl	$456609, %edi
 	call	__m3_fault
-L11041:
+L10660:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81035,13 +78336,13 @@ _bitfield__write_var_BitField_offset42_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11046
+	js	L10665
 	cmpq	$32767, -8(%rbp)
-	jle	L11047
-L11046:
-	movl	$473249, %edi
+	jle	L10666
+L10665:
+	movl	$456865, %edi
 	call	__m3_fault
-L11047:
+L10666:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81081,13 +78382,13 @@ _bitfield__write_var_BitField_offset42_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11052
+	js	L10671
 	cmpq	$65535, -8(%rbp)
-	jle	L11053
-L11052:
-	movl	$473505, %edi
+	jle	L10672
+L10671:
+	movl	$457121, %edi
 	call	__m3_fault
-L11053:
+L10672:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81127,13 +78428,13 @@ _bitfield__write_var_BitField_offset42_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11058
+	js	L10677
 	cmpq	$131071, -8(%rbp)
-	jle	L11059
-L11058:
-	movl	$473761, %edi
+	jle	L10678
+L10677:
+	movl	$457377, %edi
 	call	__m3_fault
-L11059:
+L10678:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81173,13 +78474,13 @@ _bitfield__write_var_BitField_offset42_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11064
+	js	L10683
 	cmpq	$262143, -8(%rbp)
-	jle	L11065
-L11064:
-	movl	$474017, %edi
+	jle	L10684
+L10683:
+	movl	$457633, %edi
 	call	__m3_fault
-L11065:
+L10684:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81219,13 +78520,13 @@ _bitfield__write_var_BitField_offset42_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11070
+	js	L10689
 	cmpq	$524287, -8(%rbp)
-	jle	L11071
-L11070:
-	movl	$474273, %edi
+	jle	L10690
+L10689:
+	movl	$457889, %edi
 	call	__m3_fault
-L11071:
+L10690:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81265,13 +78566,13 @@ _bitfield__write_var_BitField_offset42_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11076
+	js	L10695
 	cmpq	$1048575, -8(%rbp)
-	jle	L11077
-L11076:
-	movl	$474529, %edi
+	jle	L10696
+L10695:
+	movl	$458145, %edi
 	call	__m3_fault
-L11077:
+L10696:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81311,13 +78612,13 @@ _bitfield__write_var_BitField_offset42_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11082
+	js	L10701
 	cmpq	$2097151, -8(%rbp)
-	jle	L11083
-L11082:
-	movl	$474785, %edi
+	jle	L10702
+L10701:
+	movl	$458401, %edi
 	call	__m3_fault
-L11083:
+L10702:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81357,13 +78658,13 @@ _bitfield__write_var_BitField_offset42_count22:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11088
+	js	L10707
 	cmpq	$4194303, -8(%rbp)
-	jle	L11089
-L11088:
-	movl	$475041, %edi
+	jle	L10708
+L10707:
+	movl	$458657, %edi
 	call	__m3_fault
-L11089:
+L10708:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81403,13 +78704,13 @@ _bitfield__write_var_BitField_offset43_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11094
+	js	L10713
 	cmpq	$1, -8(%rbp)
-	jle	L11095
-L11094:
-	movl	$475297, %edi
+	jle	L10714
+L10713:
+	movl	$458913, %edi
 	call	__m3_fault
-L11095:
+L10714:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81449,13 +78750,13 @@ _bitfield__write_var_BitField_offset43_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11100
+	js	L10719
 	cmpq	$3, -8(%rbp)
-	jle	L11101
-L11100:
-	movl	$475553, %edi
+	jle	L10720
+L10719:
+	movl	$459169, %edi
 	call	__m3_fault
-L11101:
+L10720:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81495,13 +78796,13 @@ _bitfield__write_var_BitField_offset43_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11106
+	js	L10725
 	cmpq	$7, -8(%rbp)
-	jle	L11107
-L11106:
-	movl	$475809, %edi
+	jle	L10726
+L10725:
+	movl	$459425, %edi
 	call	__m3_fault
-L11107:
+L10726:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81541,13 +78842,13 @@ _bitfield__write_var_BitField_offset43_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11112
+	js	L10731
 	cmpq	$15, -8(%rbp)
-	jle	L11113
-L11112:
-	movl	$476065, %edi
+	jle	L10732
+L10731:
+	movl	$459681, %edi
 	call	__m3_fault
-L11113:
+L10732:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81587,13 +78888,13 @@ _bitfield__write_var_BitField_offset43_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11118
+	js	L10737
 	cmpq	$31, -8(%rbp)
-	jle	L11119
-L11118:
-	movl	$476321, %edi
+	jle	L10738
+L10737:
+	movl	$459937, %edi
 	call	__m3_fault
-L11119:
+L10738:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81633,13 +78934,13 @@ _bitfield__write_var_BitField_offset43_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11124
+	js	L10743
 	cmpq	$63, -8(%rbp)
-	jle	L11125
-L11124:
-	movl	$476577, %edi
+	jle	L10744
+L10743:
+	movl	$460193, %edi
 	call	__m3_fault
-L11125:
+L10744:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81679,13 +78980,13 @@ _bitfield__write_var_BitField_offset43_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11130
+	js	L10749
 	cmpq	$127, -8(%rbp)
-	jle	L11131
-L11130:
-	movl	$476833, %edi
+	jle	L10750
+L10749:
+	movl	$460449, %edi
 	call	__m3_fault
-L11131:
+L10750:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81725,13 +79026,13 @@ _bitfield__write_var_BitField_offset43_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11136
+	js	L10755
 	cmpq	$255, -8(%rbp)
-	jle	L11137
-L11136:
-	movl	$477089, %edi
+	jle	L10756
+L10755:
+	movl	$460705, %edi
 	call	__m3_fault
-L11137:
+L10756:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81771,13 +79072,13 @@ _bitfield__write_var_BitField_offset43_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11142
+	js	L10761
 	cmpq	$511, -8(%rbp)
-	jle	L11143
-L11142:
-	movl	$477345, %edi
+	jle	L10762
+L10761:
+	movl	$460961, %edi
 	call	__m3_fault
-L11143:
+L10762:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81817,13 +79118,13 @@ _bitfield__write_var_BitField_offset43_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11148
+	js	L10767
 	cmpq	$1023, -8(%rbp)
-	jle	L11149
-L11148:
-	movl	$477601, %edi
+	jle	L10768
+L10767:
+	movl	$461217, %edi
 	call	__m3_fault
-L11149:
+L10768:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81863,13 +79164,13 @@ _bitfield__write_var_BitField_offset43_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11154
+	js	L10773
 	cmpq	$2047, -8(%rbp)
-	jle	L11155
-L11154:
-	movl	$477857, %edi
+	jle	L10774
+L10773:
+	movl	$461473, %edi
 	call	__m3_fault
-L11155:
+L10774:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81909,13 +79210,13 @@ _bitfield__write_var_BitField_offset43_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11160
+	js	L10779
 	cmpq	$4095, -8(%rbp)
-	jle	L11161
-L11160:
-	movl	$478113, %edi
+	jle	L10780
+L10779:
+	movl	$461729, %edi
 	call	__m3_fault
-L11161:
+L10780:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -81955,13 +79256,13 @@ _bitfield__write_var_BitField_offset43_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11166
+	js	L10785
 	cmpq	$8191, -8(%rbp)
-	jle	L11167
-L11166:
-	movl	$478369, %edi
+	jle	L10786
+L10785:
+	movl	$461985, %edi
 	call	__m3_fault
-L11167:
+L10786:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82001,13 +79302,13 @@ _bitfield__write_var_BitField_offset43_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11172
+	js	L10791
 	cmpq	$16383, -8(%rbp)
-	jle	L11173
-L11172:
-	movl	$478625, %edi
+	jle	L10792
+L10791:
+	movl	$462241, %edi
 	call	__m3_fault
-L11173:
+L10792:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82047,13 +79348,13 @@ _bitfield__write_var_BitField_offset43_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11178
+	js	L10797
 	cmpq	$32767, -8(%rbp)
-	jle	L11179
-L11178:
-	movl	$478881, %edi
+	jle	L10798
+L10797:
+	movl	$462497, %edi
 	call	__m3_fault
-L11179:
+L10798:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82093,13 +79394,13 @@ _bitfield__write_var_BitField_offset43_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11184
+	js	L10803
 	cmpq	$65535, -8(%rbp)
-	jle	L11185
-L11184:
-	movl	$479137, %edi
+	jle	L10804
+L10803:
+	movl	$462753, %edi
 	call	__m3_fault
-L11185:
+L10804:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82139,13 +79440,13 @@ _bitfield__write_var_BitField_offset43_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11190
+	js	L10809
 	cmpq	$131071, -8(%rbp)
-	jle	L11191
-L11190:
-	movl	$479393, %edi
+	jle	L10810
+L10809:
+	movl	$463009, %edi
 	call	__m3_fault
-L11191:
+L10810:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82185,13 +79486,13 @@ _bitfield__write_var_BitField_offset43_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11196
+	js	L10815
 	cmpq	$262143, -8(%rbp)
-	jle	L11197
-L11196:
-	movl	$479649, %edi
+	jle	L10816
+L10815:
+	movl	$463265, %edi
 	call	__m3_fault
-L11197:
+L10816:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82231,13 +79532,13 @@ _bitfield__write_var_BitField_offset43_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11202
+	js	L10821
 	cmpq	$524287, -8(%rbp)
-	jle	L11203
-L11202:
-	movl	$479905, %edi
+	jle	L10822
+L10821:
+	movl	$463521, %edi
 	call	__m3_fault
-L11203:
+L10822:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82277,13 +79578,13 @@ _bitfield__write_var_BitField_offset43_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11208
+	js	L10827
 	cmpq	$1048575, -8(%rbp)
-	jle	L11209
-L11208:
-	movl	$480161, %edi
+	jle	L10828
+L10827:
+	movl	$463777, %edi
 	call	__m3_fault
-L11209:
+L10828:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82323,13 +79624,13 @@ _bitfield__write_var_BitField_offset43_count21:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11214
+	js	L10833
 	cmpq	$2097151, -8(%rbp)
-	jle	L11215
-L11214:
-	movl	$480417, %edi
+	jle	L10834
+L10833:
+	movl	$464033, %edi
 	call	__m3_fault
-L11215:
+L10834:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82369,13 +79670,13 @@ _bitfield__write_var_BitField_offset44_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11220
+	js	L10839
 	cmpq	$1, -8(%rbp)
-	jle	L11221
-L11220:
-	movl	$480673, %edi
+	jle	L10840
+L10839:
+	movl	$464289, %edi
 	call	__m3_fault
-L11221:
+L10840:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82415,13 +79716,13 @@ _bitfield__write_var_BitField_offset44_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11226
+	js	L10845
 	cmpq	$3, -8(%rbp)
-	jle	L11227
-L11226:
-	movl	$480929, %edi
+	jle	L10846
+L10845:
+	movl	$464545, %edi
 	call	__m3_fault
-L11227:
+L10846:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82461,13 +79762,13 @@ _bitfield__write_var_BitField_offset44_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11232
+	js	L10851
 	cmpq	$7, -8(%rbp)
-	jle	L11233
-L11232:
-	movl	$481185, %edi
+	jle	L10852
+L10851:
+	movl	$464801, %edi
 	call	__m3_fault
-L11233:
+L10852:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82507,13 +79808,13 @@ _bitfield__write_var_BitField_offset44_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11238
+	js	L10857
 	cmpq	$15, -8(%rbp)
-	jle	L11239
-L11238:
-	movl	$481441, %edi
+	jle	L10858
+L10857:
+	movl	$465057, %edi
 	call	__m3_fault
-L11239:
+L10858:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82553,13 +79854,13 @@ _bitfield__write_var_BitField_offset44_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11244
+	js	L10863
 	cmpq	$31, -8(%rbp)
-	jle	L11245
-L11244:
-	movl	$481697, %edi
+	jle	L10864
+L10863:
+	movl	$465313, %edi
 	call	__m3_fault
-L11245:
+L10864:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82599,13 +79900,13 @@ _bitfield__write_var_BitField_offset44_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11250
+	js	L10869
 	cmpq	$63, -8(%rbp)
-	jle	L11251
-L11250:
-	movl	$481953, %edi
+	jle	L10870
+L10869:
+	movl	$465569, %edi
 	call	__m3_fault
-L11251:
+L10870:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82645,13 +79946,13 @@ _bitfield__write_var_BitField_offset44_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11256
+	js	L10875
 	cmpq	$127, -8(%rbp)
-	jle	L11257
-L11256:
-	movl	$482209, %edi
+	jle	L10876
+L10875:
+	movl	$465825, %edi
 	call	__m3_fault
-L11257:
+L10876:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82691,13 +79992,13 @@ _bitfield__write_var_BitField_offset44_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11262
+	js	L10881
 	cmpq	$255, -8(%rbp)
-	jle	L11263
-L11262:
-	movl	$482465, %edi
+	jle	L10882
+L10881:
+	movl	$466081, %edi
 	call	__m3_fault
-L11263:
+L10882:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82737,13 +80038,13 @@ _bitfield__write_var_BitField_offset44_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11268
+	js	L10887
 	cmpq	$511, -8(%rbp)
-	jle	L11269
-L11268:
-	movl	$482721, %edi
+	jle	L10888
+L10887:
+	movl	$466337, %edi
 	call	__m3_fault
-L11269:
+L10888:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82783,13 +80084,13 @@ _bitfield__write_var_BitField_offset44_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11274
+	js	L10893
 	cmpq	$1023, -8(%rbp)
-	jle	L11275
-L11274:
-	movl	$482977, %edi
+	jle	L10894
+L10893:
+	movl	$466593, %edi
 	call	__m3_fault
-L11275:
+L10894:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82829,13 +80130,13 @@ _bitfield__write_var_BitField_offset44_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11280
+	js	L10899
 	cmpq	$2047, -8(%rbp)
-	jle	L11281
-L11280:
-	movl	$483233, %edi
+	jle	L10900
+L10899:
+	movl	$466849, %edi
 	call	__m3_fault
-L11281:
+L10900:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82875,13 +80176,13 @@ _bitfield__write_var_BitField_offset44_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11286
+	js	L10905
 	cmpq	$4095, -8(%rbp)
-	jle	L11287
-L11286:
-	movl	$483489, %edi
+	jle	L10906
+L10905:
+	movl	$467105, %edi
 	call	__m3_fault
-L11287:
+L10906:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82921,13 +80222,13 @@ _bitfield__write_var_BitField_offset44_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11292
+	js	L10911
 	cmpq	$8191, -8(%rbp)
-	jle	L11293
-L11292:
-	movl	$483745, %edi
+	jle	L10912
+L10911:
+	movl	$467361, %edi
 	call	__m3_fault
-L11293:
+L10912:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -82967,13 +80268,13 @@ _bitfield__write_var_BitField_offset44_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11298
+	js	L10917
 	cmpq	$16383, -8(%rbp)
-	jle	L11299
-L11298:
-	movl	$484001, %edi
+	jle	L10918
+L10917:
+	movl	$467617, %edi
 	call	__m3_fault
-L11299:
+L10918:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83013,13 +80314,13 @@ _bitfield__write_var_BitField_offset44_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11304
+	js	L10923
 	cmpq	$32767, -8(%rbp)
-	jle	L11305
-L11304:
-	movl	$484257, %edi
+	jle	L10924
+L10923:
+	movl	$467873, %edi
 	call	__m3_fault
-L11305:
+L10924:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83059,13 +80360,13 @@ _bitfield__write_var_BitField_offset44_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11310
+	js	L10929
 	cmpq	$65535, -8(%rbp)
-	jle	L11311
-L11310:
-	movl	$484513, %edi
+	jle	L10930
+L10929:
+	movl	$468129, %edi
 	call	__m3_fault
-L11311:
+L10930:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83105,13 +80406,13 @@ _bitfield__write_var_BitField_offset44_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11316
+	js	L10935
 	cmpq	$131071, -8(%rbp)
-	jle	L11317
-L11316:
-	movl	$484769, %edi
+	jle	L10936
+L10935:
+	movl	$468385, %edi
 	call	__m3_fault
-L11317:
+L10936:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83151,13 +80452,13 @@ _bitfield__write_var_BitField_offset44_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11322
+	js	L10941
 	cmpq	$262143, -8(%rbp)
-	jle	L11323
-L11322:
-	movl	$485025, %edi
+	jle	L10942
+L10941:
+	movl	$468641, %edi
 	call	__m3_fault
-L11323:
+L10942:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83197,13 +80498,13 @@ _bitfield__write_var_BitField_offset44_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11328
+	js	L10947
 	cmpq	$524287, -8(%rbp)
-	jle	L11329
-L11328:
-	movl	$485281, %edi
+	jle	L10948
+L10947:
+	movl	$468897, %edi
 	call	__m3_fault
-L11329:
+L10948:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83243,13 +80544,13 @@ _bitfield__write_var_BitField_offset44_count20:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11334
+	js	L10953
 	cmpq	$1048575, -8(%rbp)
-	jle	L11335
-L11334:
-	movl	$485537, %edi
+	jle	L10954
+L10953:
+	movl	$469153, %edi
 	call	__m3_fault
-L11335:
+L10954:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83289,13 +80590,13 @@ _bitfield__write_var_BitField_offset45_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11340
+	js	L10959
 	cmpq	$1, -8(%rbp)
-	jle	L11341
-L11340:
-	movl	$485793, %edi
+	jle	L10960
+L10959:
+	movl	$469409, %edi
 	call	__m3_fault
-L11341:
+L10960:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83335,13 +80636,13 @@ _bitfield__write_var_BitField_offset45_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11346
+	js	L10965
 	cmpq	$3, -8(%rbp)
-	jle	L11347
-L11346:
-	movl	$486049, %edi
+	jle	L10966
+L10965:
+	movl	$469665, %edi
 	call	__m3_fault
-L11347:
+L10966:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83381,13 +80682,13 @@ _bitfield__write_var_BitField_offset45_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11352
+	js	L10971
 	cmpq	$7, -8(%rbp)
-	jle	L11353
-L11352:
-	movl	$486305, %edi
+	jle	L10972
+L10971:
+	movl	$469921, %edi
 	call	__m3_fault
-L11353:
+L10972:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83427,13 +80728,13 @@ _bitfield__write_var_BitField_offset45_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11358
+	js	L10977
 	cmpq	$15, -8(%rbp)
-	jle	L11359
-L11358:
-	movl	$486561, %edi
+	jle	L10978
+L10977:
+	movl	$470177, %edi
 	call	__m3_fault
-L11359:
+L10978:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83473,13 +80774,13 @@ _bitfield__write_var_BitField_offset45_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11364
+	js	L10983
 	cmpq	$31, -8(%rbp)
-	jle	L11365
-L11364:
-	movl	$486817, %edi
+	jle	L10984
+L10983:
+	movl	$470433, %edi
 	call	__m3_fault
-L11365:
+L10984:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83519,13 +80820,13 @@ _bitfield__write_var_BitField_offset45_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11370
+	js	L10989
 	cmpq	$63, -8(%rbp)
-	jle	L11371
-L11370:
-	movl	$487073, %edi
+	jle	L10990
+L10989:
+	movl	$470689, %edi
 	call	__m3_fault
-L11371:
+L10990:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83565,13 +80866,13 @@ _bitfield__write_var_BitField_offset45_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11376
+	js	L10995
 	cmpq	$127, -8(%rbp)
-	jle	L11377
-L11376:
-	movl	$487329, %edi
+	jle	L10996
+L10995:
+	movl	$470945, %edi
 	call	__m3_fault
-L11377:
+L10996:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83611,13 +80912,13 @@ _bitfield__write_var_BitField_offset45_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11382
+	js	L11001
 	cmpq	$255, -8(%rbp)
-	jle	L11383
-L11382:
-	movl	$487585, %edi
+	jle	L11002
+L11001:
+	movl	$471201, %edi
 	call	__m3_fault
-L11383:
+L11002:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83657,13 +80958,13 @@ _bitfield__write_var_BitField_offset45_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11388
+	js	L11007
 	cmpq	$511, -8(%rbp)
-	jle	L11389
-L11388:
-	movl	$487841, %edi
+	jle	L11008
+L11007:
+	movl	$471457, %edi
 	call	__m3_fault
-L11389:
+L11008:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83703,13 +81004,13 @@ _bitfield__write_var_BitField_offset45_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11394
+	js	L11013
 	cmpq	$1023, -8(%rbp)
-	jle	L11395
-L11394:
-	movl	$488097, %edi
+	jle	L11014
+L11013:
+	movl	$471713, %edi
 	call	__m3_fault
-L11395:
+L11014:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83749,13 +81050,13 @@ _bitfield__write_var_BitField_offset45_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11400
+	js	L11019
 	cmpq	$2047, -8(%rbp)
-	jle	L11401
-L11400:
-	movl	$488353, %edi
+	jle	L11020
+L11019:
+	movl	$471969, %edi
 	call	__m3_fault
-L11401:
+L11020:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83795,13 +81096,13 @@ _bitfield__write_var_BitField_offset45_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11406
+	js	L11025
 	cmpq	$4095, -8(%rbp)
-	jle	L11407
-L11406:
-	movl	$488609, %edi
+	jle	L11026
+L11025:
+	movl	$472225, %edi
 	call	__m3_fault
-L11407:
+L11026:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83841,13 +81142,13 @@ _bitfield__write_var_BitField_offset45_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11412
+	js	L11031
 	cmpq	$8191, -8(%rbp)
-	jle	L11413
-L11412:
-	movl	$488865, %edi
+	jle	L11032
+L11031:
+	movl	$472481, %edi
 	call	__m3_fault
-L11413:
+L11032:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83887,13 +81188,13 @@ _bitfield__write_var_BitField_offset45_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11418
+	js	L11037
 	cmpq	$16383, -8(%rbp)
-	jle	L11419
-L11418:
-	movl	$489121, %edi
+	jle	L11038
+L11037:
+	movl	$472737, %edi
 	call	__m3_fault
-L11419:
+L11038:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83933,13 +81234,13 @@ _bitfield__write_var_BitField_offset45_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11424
+	js	L11043
 	cmpq	$32767, -8(%rbp)
-	jle	L11425
-L11424:
-	movl	$489377, %edi
+	jle	L11044
+L11043:
+	movl	$472993, %edi
 	call	__m3_fault
-L11425:
+L11044:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -83979,13 +81280,13 @@ _bitfield__write_var_BitField_offset45_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11430
+	js	L11049
 	cmpq	$65535, -8(%rbp)
-	jle	L11431
-L11430:
-	movl	$489633, %edi
+	jle	L11050
+L11049:
+	movl	$473249, %edi
 	call	__m3_fault
-L11431:
+L11050:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84025,13 +81326,13 @@ _bitfield__write_var_BitField_offset45_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11436
+	js	L11055
 	cmpq	$131071, -8(%rbp)
-	jle	L11437
-L11436:
-	movl	$489889, %edi
+	jle	L11056
+L11055:
+	movl	$473505, %edi
 	call	__m3_fault
-L11437:
+L11056:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84071,13 +81372,13 @@ _bitfield__write_var_BitField_offset45_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11442
+	js	L11061
 	cmpq	$262143, -8(%rbp)
-	jle	L11443
-L11442:
-	movl	$490145, %edi
+	jle	L11062
+L11061:
+	movl	$473761, %edi
 	call	__m3_fault
-L11443:
+L11062:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84117,13 +81418,13 @@ _bitfield__write_var_BitField_offset45_count19:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11448
+	js	L11067
 	cmpq	$524287, -8(%rbp)
-	jle	L11449
-L11448:
-	movl	$490401, %edi
+	jle	L11068
+L11067:
+	movl	$474017, %edi
 	call	__m3_fault
-L11449:
+L11068:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84163,13 +81464,13 @@ _bitfield__write_var_BitField_offset46_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11454
+	js	L11073
 	cmpq	$1, -8(%rbp)
-	jle	L11455
-L11454:
-	movl	$490657, %edi
+	jle	L11074
+L11073:
+	movl	$474273, %edi
 	call	__m3_fault
-L11455:
+L11074:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84209,13 +81510,13 @@ _bitfield__write_var_BitField_offset46_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11460
+	js	L11079
 	cmpq	$3, -8(%rbp)
-	jle	L11461
-L11460:
-	movl	$490913, %edi
+	jle	L11080
+L11079:
+	movl	$474529, %edi
 	call	__m3_fault
-L11461:
+L11080:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84255,13 +81556,13 @@ _bitfield__write_var_BitField_offset46_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11466
+	js	L11085
 	cmpq	$7, -8(%rbp)
-	jle	L11467
-L11466:
-	movl	$491169, %edi
+	jle	L11086
+L11085:
+	movl	$474785, %edi
 	call	__m3_fault
-L11467:
+L11086:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84301,13 +81602,13 @@ _bitfield__write_var_BitField_offset46_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11472
+	js	L11091
 	cmpq	$15, -8(%rbp)
-	jle	L11473
-L11472:
-	movl	$491425, %edi
+	jle	L11092
+L11091:
+	movl	$475041, %edi
 	call	__m3_fault
-L11473:
+L11092:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84347,13 +81648,13 @@ _bitfield__write_var_BitField_offset46_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11478
+	js	L11097
 	cmpq	$31, -8(%rbp)
-	jle	L11479
-L11478:
-	movl	$491681, %edi
+	jle	L11098
+L11097:
+	movl	$475297, %edi
 	call	__m3_fault
-L11479:
+L11098:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84393,13 +81694,13 @@ _bitfield__write_var_BitField_offset46_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11484
+	js	L11103
 	cmpq	$63, -8(%rbp)
-	jle	L11485
-L11484:
-	movl	$491937, %edi
+	jle	L11104
+L11103:
+	movl	$475553, %edi
 	call	__m3_fault
-L11485:
+L11104:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84439,13 +81740,13 @@ _bitfield__write_var_BitField_offset46_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11490
+	js	L11109
 	cmpq	$127, -8(%rbp)
-	jle	L11491
-L11490:
-	movl	$492193, %edi
+	jle	L11110
+L11109:
+	movl	$475809, %edi
 	call	__m3_fault
-L11491:
+L11110:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84485,13 +81786,13 @@ _bitfield__write_var_BitField_offset46_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11496
+	js	L11115
 	cmpq	$255, -8(%rbp)
-	jle	L11497
-L11496:
-	movl	$492449, %edi
+	jle	L11116
+L11115:
+	movl	$476065, %edi
 	call	__m3_fault
-L11497:
+L11116:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84531,13 +81832,13 @@ _bitfield__write_var_BitField_offset46_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11502
+	js	L11121
 	cmpq	$511, -8(%rbp)
-	jle	L11503
-L11502:
-	movl	$492705, %edi
+	jle	L11122
+L11121:
+	movl	$476321, %edi
 	call	__m3_fault
-L11503:
+L11122:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84577,13 +81878,13 @@ _bitfield__write_var_BitField_offset46_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11508
+	js	L11127
 	cmpq	$1023, -8(%rbp)
-	jle	L11509
-L11508:
-	movl	$492961, %edi
+	jle	L11128
+L11127:
+	movl	$476577, %edi
 	call	__m3_fault
-L11509:
+L11128:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84623,13 +81924,13 @@ _bitfield__write_var_BitField_offset46_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11514
+	js	L11133
 	cmpq	$2047, -8(%rbp)
-	jle	L11515
-L11514:
-	movl	$493217, %edi
+	jle	L11134
+L11133:
+	movl	$476833, %edi
 	call	__m3_fault
-L11515:
+L11134:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84669,13 +81970,13 @@ _bitfield__write_var_BitField_offset46_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11520
+	js	L11139
 	cmpq	$4095, -8(%rbp)
-	jle	L11521
-L11520:
-	movl	$493473, %edi
+	jle	L11140
+L11139:
+	movl	$477089, %edi
 	call	__m3_fault
-L11521:
+L11140:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84715,13 +82016,13 @@ _bitfield__write_var_BitField_offset46_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11526
+	js	L11145
 	cmpq	$8191, -8(%rbp)
-	jle	L11527
-L11526:
-	movl	$493729, %edi
+	jle	L11146
+L11145:
+	movl	$477345, %edi
 	call	__m3_fault
-L11527:
+L11146:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84761,13 +82062,13 @@ _bitfield__write_var_BitField_offset46_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11532
+	js	L11151
 	cmpq	$16383, -8(%rbp)
-	jle	L11533
-L11532:
-	movl	$493985, %edi
+	jle	L11152
+L11151:
+	movl	$477601, %edi
 	call	__m3_fault
-L11533:
+L11152:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84807,13 +82108,13 @@ _bitfield__write_var_BitField_offset46_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11538
+	js	L11157
 	cmpq	$32767, -8(%rbp)
-	jle	L11539
-L11538:
-	movl	$494241, %edi
+	jle	L11158
+L11157:
+	movl	$477857, %edi
 	call	__m3_fault
-L11539:
+L11158:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84853,13 +82154,13 @@ _bitfield__write_var_BitField_offset46_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11544
+	js	L11163
 	cmpq	$65535, -8(%rbp)
-	jle	L11545
-L11544:
-	movl	$494497, %edi
+	jle	L11164
+L11163:
+	movl	$478113, %edi
 	call	__m3_fault
-L11545:
+L11164:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84899,13 +82200,13 @@ _bitfield__write_var_BitField_offset46_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11550
+	js	L11169
 	cmpq	$131071, -8(%rbp)
-	jle	L11551
-L11550:
-	movl	$494753, %edi
+	jle	L11170
+L11169:
+	movl	$478369, %edi
 	call	__m3_fault
-L11551:
+L11170:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84945,13 +82246,13 @@ _bitfield__write_var_BitField_offset46_count18:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11556
+	js	L11175
 	cmpq	$262143, -8(%rbp)
-	jle	L11557
-L11556:
-	movl	$495009, %edi
+	jle	L11176
+L11175:
+	movl	$478625, %edi
 	call	__m3_fault
-L11557:
+L11176:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -84991,13 +82292,13 @@ _bitfield__write_var_BitField_offset47_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11562
+	js	L11181
 	cmpq	$1, -8(%rbp)
-	jle	L11563
-L11562:
-	movl	$495265, %edi
+	jle	L11182
+L11181:
+	movl	$478881, %edi
 	call	__m3_fault
-L11563:
+L11182:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85037,13 +82338,13 @@ _bitfield__write_var_BitField_offset47_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11568
+	js	L11187
 	cmpq	$3, -8(%rbp)
-	jle	L11569
-L11568:
-	movl	$495521, %edi
+	jle	L11188
+L11187:
+	movl	$479137, %edi
 	call	__m3_fault
-L11569:
+L11188:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85083,13 +82384,13 @@ _bitfield__write_var_BitField_offset47_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11574
+	js	L11193
 	cmpq	$7, -8(%rbp)
-	jle	L11575
-L11574:
-	movl	$495777, %edi
+	jle	L11194
+L11193:
+	movl	$479393, %edi
 	call	__m3_fault
-L11575:
+L11194:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85129,13 +82430,13 @@ _bitfield__write_var_BitField_offset47_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11580
+	js	L11199
 	cmpq	$15, -8(%rbp)
-	jle	L11581
-L11580:
-	movl	$496033, %edi
+	jle	L11200
+L11199:
+	movl	$479649, %edi
 	call	__m3_fault
-L11581:
+L11200:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85175,13 +82476,13 @@ _bitfield__write_var_BitField_offset47_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11586
+	js	L11205
 	cmpq	$31, -8(%rbp)
-	jle	L11587
-L11586:
-	movl	$496289, %edi
+	jle	L11206
+L11205:
+	movl	$479905, %edi
 	call	__m3_fault
-L11587:
+L11206:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85221,13 +82522,13 @@ _bitfield__write_var_BitField_offset47_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11592
+	js	L11211
 	cmpq	$63, -8(%rbp)
-	jle	L11593
-L11592:
-	movl	$496545, %edi
+	jle	L11212
+L11211:
+	movl	$480161, %edi
 	call	__m3_fault
-L11593:
+L11212:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85267,13 +82568,13 @@ _bitfield__write_var_BitField_offset47_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11598
+	js	L11217
 	cmpq	$127, -8(%rbp)
-	jle	L11599
-L11598:
-	movl	$496801, %edi
+	jle	L11218
+L11217:
+	movl	$480417, %edi
 	call	__m3_fault
-L11599:
+L11218:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85313,13 +82614,13 @@ _bitfield__write_var_BitField_offset47_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11604
+	js	L11223
 	cmpq	$255, -8(%rbp)
-	jle	L11605
-L11604:
-	movl	$497057, %edi
+	jle	L11224
+L11223:
+	movl	$480673, %edi
 	call	__m3_fault
-L11605:
+L11224:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85359,13 +82660,13 @@ _bitfield__write_var_BitField_offset47_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11610
+	js	L11229
 	cmpq	$511, -8(%rbp)
-	jle	L11611
-L11610:
-	movl	$497313, %edi
+	jle	L11230
+L11229:
+	movl	$480929, %edi
 	call	__m3_fault
-L11611:
+L11230:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85405,13 +82706,13 @@ _bitfield__write_var_BitField_offset47_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11616
+	js	L11235
 	cmpq	$1023, -8(%rbp)
-	jle	L11617
-L11616:
-	movl	$497569, %edi
+	jle	L11236
+L11235:
+	movl	$481185, %edi
 	call	__m3_fault
-L11617:
+L11236:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85451,13 +82752,13 @@ _bitfield__write_var_BitField_offset47_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11622
+	js	L11241
 	cmpq	$2047, -8(%rbp)
-	jle	L11623
-L11622:
-	movl	$497825, %edi
+	jle	L11242
+L11241:
+	movl	$481441, %edi
 	call	__m3_fault
-L11623:
+L11242:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85497,13 +82798,13 @@ _bitfield__write_var_BitField_offset47_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11628
+	js	L11247
 	cmpq	$4095, -8(%rbp)
-	jle	L11629
-L11628:
-	movl	$498081, %edi
+	jle	L11248
+L11247:
+	movl	$481697, %edi
 	call	__m3_fault
-L11629:
+L11248:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85543,13 +82844,13 @@ _bitfield__write_var_BitField_offset47_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11634
+	js	L11253
 	cmpq	$8191, -8(%rbp)
-	jle	L11635
-L11634:
-	movl	$498337, %edi
+	jle	L11254
+L11253:
+	movl	$481953, %edi
 	call	__m3_fault
-L11635:
+L11254:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85589,13 +82890,13 @@ _bitfield__write_var_BitField_offset47_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11640
+	js	L11259
 	cmpq	$16383, -8(%rbp)
-	jle	L11641
-L11640:
-	movl	$498593, %edi
+	jle	L11260
+L11259:
+	movl	$482209, %edi
 	call	__m3_fault
-L11641:
+L11260:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85635,13 +82936,13 @@ _bitfield__write_var_BitField_offset47_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11646
+	js	L11265
 	cmpq	$32767, -8(%rbp)
-	jle	L11647
-L11646:
-	movl	$498849, %edi
+	jle	L11266
+L11265:
+	movl	$482465, %edi
 	call	__m3_fault
-L11647:
+L11266:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85681,13 +82982,13 @@ _bitfield__write_var_BitField_offset47_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11652
+	js	L11271
 	cmpq	$65535, -8(%rbp)
-	jle	L11653
-L11652:
-	movl	$499105, %edi
+	jle	L11272
+L11271:
+	movl	$482721, %edi
 	call	__m3_fault
-L11653:
+L11272:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85727,13 +83028,13 @@ _bitfield__write_var_BitField_offset47_count17:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11658
+	js	L11277
 	cmpq	$131071, -8(%rbp)
-	jle	L11659
-L11658:
-	movl	$499361, %edi
+	jle	L11278
+L11277:
+	movl	$482977, %edi
 	call	__m3_fault
-L11659:
+L11278:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85772,13 +83073,13 @@ _bitfield__write_var_BitField_offset48_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11664
+	js	L11283
 	cmpq	$1, -8(%rbp)
-	jle	L11665
-L11664:
-	movl	$499617, %edi
+	jle	L11284
+L11283:
+	movl	$483233, %edi
 	call	__m3_fault
-L11665:
+L11284:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85816,13 +83117,13 @@ _bitfield__write_var_BitField_offset48_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11670
+	js	L11289
 	cmpq	$3, -8(%rbp)
-	jle	L11671
-L11670:
-	movl	$499873, %edi
+	jle	L11290
+L11289:
+	movl	$483489, %edi
 	call	__m3_fault
-L11671:
+L11290:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85860,13 +83161,13 @@ _bitfield__write_var_BitField_offset48_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11676
+	js	L11295
 	cmpq	$7, -8(%rbp)
-	jle	L11677
-L11676:
-	movl	$500129, %edi
+	jle	L11296
+L11295:
+	movl	$483745, %edi
 	call	__m3_fault
-L11677:
+L11296:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85904,13 +83205,13 @@ _bitfield__write_var_BitField_offset48_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11682
+	js	L11301
 	cmpq	$15, -8(%rbp)
-	jle	L11683
-L11682:
-	movl	$500385, %edi
+	jle	L11302
+L11301:
+	movl	$484001, %edi
 	call	__m3_fault
-L11683:
+L11302:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85948,13 +83249,13 @@ _bitfield__write_var_BitField_offset48_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11688
+	js	L11307
 	cmpq	$31, -8(%rbp)
-	jle	L11689
-L11688:
-	movl	$500641, %edi
+	jle	L11308
+L11307:
+	movl	$484257, %edi
 	call	__m3_fault
-L11689:
+L11308:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -85992,13 +83293,13 @@ _bitfield__write_var_BitField_offset48_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11694
+	js	L11313
 	cmpq	$63, -8(%rbp)
-	jle	L11695
-L11694:
-	movl	$500897, %edi
+	jle	L11314
+L11313:
+	movl	$484513, %edi
 	call	__m3_fault
-L11695:
+L11314:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86036,13 +83337,13 @@ _bitfield__write_var_BitField_offset48_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11700
+	js	L11319
 	cmpq	$127, -8(%rbp)
-	jle	L11701
-L11700:
-	movl	$501153, %edi
+	jle	L11320
+L11319:
+	movl	$484769, %edi
 	call	__m3_fault
-L11701:
+L11320:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86079,13 +83380,13 @@ _bitfield__write_var_BitField_offset48_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11706
+	js	L11325
 	cmpq	$255, -8(%rbp)
-	jle	L11707
-L11706:
-	movl	$501409, %edi
+	jle	L11326
+L11325:
+	movl	$485025, %edi
 	call	__m3_fault
-L11707:
+L11326:
 	movq	-24(%rbp), %rax
 	leaq	6(%rax), %rdx
 	movq	-8(%rbp), %rax
@@ -86113,13 +83414,13 @@ _bitfield__write_var_BitField_offset48_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11712
+	js	L11331
 	cmpq	$511, -8(%rbp)
-	jle	L11713
-L11712:
-	movl	$501665, %edi
+	jle	L11332
+L11331:
+	movl	$485281, %edi
 	call	__m3_fault
-L11713:
+L11332:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86157,13 +83458,13 @@ _bitfield__write_var_BitField_offset48_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11718
+	js	L11337
 	cmpq	$1023, -8(%rbp)
-	jle	L11719
-L11718:
-	movl	$501921, %edi
+	jle	L11338
+L11337:
+	movl	$485537, %edi
 	call	__m3_fault
-L11719:
+L11338:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86201,13 +83502,13 @@ _bitfield__write_var_BitField_offset48_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11724
+	js	L11343
 	cmpq	$2047, -8(%rbp)
-	jle	L11725
-L11724:
-	movl	$502177, %edi
+	jle	L11344
+L11343:
+	movl	$485793, %edi
 	call	__m3_fault
-L11725:
+L11344:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86245,13 +83546,13 @@ _bitfield__write_var_BitField_offset48_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11730
+	js	L11349
 	cmpq	$4095, -8(%rbp)
-	jle	L11731
-L11730:
-	movl	$502433, %edi
+	jle	L11350
+L11349:
+	movl	$486049, %edi
 	call	__m3_fault
-L11731:
+L11350:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86289,13 +83590,13 @@ _bitfield__write_var_BitField_offset48_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11736
+	js	L11355
 	cmpq	$8191, -8(%rbp)
-	jle	L11737
-L11736:
-	movl	$502689, %edi
+	jle	L11356
+L11355:
+	movl	$486305, %edi
 	call	__m3_fault
-L11737:
+L11356:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86333,13 +83634,13 @@ _bitfield__write_var_BitField_offset48_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11742
+	js	L11361
 	cmpq	$16383, -8(%rbp)
-	jle	L11743
-L11742:
-	movl	$502945, %edi
+	jle	L11362
+L11361:
+	movl	$486561, %edi
 	call	__m3_fault
-L11743:
+L11362:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86377,13 +83678,13 @@ _bitfield__write_var_BitField_offset48_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11748
+	js	L11367
 	cmpq	$32767, -8(%rbp)
-	jle	L11749
-L11748:
-	movl	$503201, %edi
+	jle	L11368
+L11367:
+	movl	$486817, %edi
 	call	__m3_fault
-L11749:
+L11368:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86420,13 +83721,13 @@ _bitfield__write_var_BitField_offset48_count16:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11754
+	js	L11373
 	cmpq	$65535, -8(%rbp)
-	jle	L11755
-L11754:
-	movl	$503457, %edi
+	jle	L11374
+L11373:
+	movl	$487073, %edi
 	call	__m3_fault
-L11755:
+L11374:
 	movq	-24(%rbp), %rax
 	leaq	6(%rax), %rdx
 	movq	-8(%rbp), %rax
@@ -86455,13 +83756,13 @@ _bitfield__write_var_BitField_offset49_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11760
+	js	L11379
 	cmpq	$1, -8(%rbp)
-	jle	L11761
-L11760:
-	movl	$503713, %edi
+	jle	L11380
+L11379:
+	movl	$487329, %edi
 	call	__m3_fault
-L11761:
+L11380:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86501,13 +83802,13 @@ _bitfield__write_var_BitField_offset49_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11766
+	js	L11385
 	cmpq	$3, -8(%rbp)
-	jle	L11767
-L11766:
-	movl	$503969, %edi
+	jle	L11386
+L11385:
+	movl	$487585, %edi
 	call	__m3_fault
-L11767:
+L11386:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86547,13 +83848,13 @@ _bitfield__write_var_BitField_offset49_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11772
+	js	L11391
 	cmpq	$7, -8(%rbp)
-	jle	L11773
-L11772:
-	movl	$504225, %edi
+	jle	L11392
+L11391:
+	movl	$487841, %edi
 	call	__m3_fault
-L11773:
+L11392:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86593,13 +83894,13 @@ _bitfield__write_var_BitField_offset49_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11778
+	js	L11397
 	cmpq	$15, -8(%rbp)
-	jle	L11779
-L11778:
-	movl	$504481, %edi
+	jle	L11398
+L11397:
+	movl	$488097, %edi
 	call	__m3_fault
-L11779:
+L11398:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86639,13 +83940,13 @@ _bitfield__write_var_BitField_offset49_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11784
+	js	L11403
 	cmpq	$31, -8(%rbp)
-	jle	L11785
-L11784:
-	movl	$504737, %edi
+	jle	L11404
+L11403:
+	movl	$488353, %edi
 	call	__m3_fault
-L11785:
+L11404:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86685,13 +83986,13 @@ _bitfield__write_var_BitField_offset49_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11790
+	js	L11409
 	cmpq	$63, -8(%rbp)
-	jle	L11791
-L11790:
-	movl	$504993, %edi
+	jle	L11410
+L11409:
+	movl	$488609, %edi
 	call	__m3_fault
-L11791:
+L11410:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86731,13 +84032,13 @@ _bitfield__write_var_BitField_offset49_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11796
+	js	L11415
 	cmpq	$127, -8(%rbp)
-	jle	L11797
-L11796:
-	movl	$505249, %edi
+	jle	L11416
+L11415:
+	movl	$488865, %edi
 	call	__m3_fault
-L11797:
+L11416:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86777,13 +84078,13 @@ _bitfield__write_var_BitField_offset49_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11802
+	js	L11421
 	cmpq	$255, -8(%rbp)
-	jle	L11803
-L11802:
-	movl	$505505, %edi
+	jle	L11422
+L11421:
+	movl	$489121, %edi
 	call	__m3_fault
-L11803:
+L11422:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86823,13 +84124,13 @@ _bitfield__write_var_BitField_offset49_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11808
+	js	L11427
 	cmpq	$511, -8(%rbp)
-	jle	L11809
-L11808:
-	movl	$505761, %edi
+	jle	L11428
+L11427:
+	movl	$489377, %edi
 	call	__m3_fault
-L11809:
+L11428:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86869,13 +84170,13 @@ _bitfield__write_var_BitField_offset49_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11814
+	js	L11433
 	cmpq	$1023, -8(%rbp)
-	jle	L11815
-L11814:
-	movl	$506017, %edi
+	jle	L11434
+L11433:
+	movl	$489633, %edi
 	call	__m3_fault
-L11815:
+L11434:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86915,13 +84216,13 @@ _bitfield__write_var_BitField_offset49_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11820
+	js	L11439
 	cmpq	$2047, -8(%rbp)
-	jle	L11821
-L11820:
-	movl	$506273, %edi
+	jle	L11440
+L11439:
+	movl	$489889, %edi
 	call	__m3_fault
-L11821:
+L11440:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -86961,13 +84262,13 @@ _bitfield__write_var_BitField_offset49_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11826
+	js	L11445
 	cmpq	$4095, -8(%rbp)
-	jle	L11827
-L11826:
-	movl	$506529, %edi
+	jle	L11446
+L11445:
+	movl	$490145, %edi
 	call	__m3_fault
-L11827:
+L11446:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87007,13 +84308,13 @@ _bitfield__write_var_BitField_offset49_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11832
+	js	L11451
 	cmpq	$8191, -8(%rbp)
-	jle	L11833
-L11832:
-	movl	$506785, %edi
+	jle	L11452
+L11451:
+	movl	$490401, %edi
 	call	__m3_fault
-L11833:
+L11452:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87053,13 +84354,13 @@ _bitfield__write_var_BitField_offset49_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11838
+	js	L11457
 	cmpq	$16383, -8(%rbp)
-	jle	L11839
-L11838:
-	movl	$507041, %edi
+	jle	L11458
+L11457:
+	movl	$490657, %edi
 	call	__m3_fault
-L11839:
+L11458:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87099,13 +84400,13 @@ _bitfield__write_var_BitField_offset49_count15:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11844
+	js	L11463
 	cmpq	$32767, -8(%rbp)
-	jle	L11845
-L11844:
-	movl	$507297, %edi
+	jle	L11464
+L11463:
+	movl	$490913, %edi
 	call	__m3_fault
-L11845:
+L11464:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87145,13 +84446,13 @@ _bitfield__write_var_BitField_offset50_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11850
+	js	L11469
 	cmpq	$1, -8(%rbp)
-	jle	L11851
-L11850:
-	movl	$507553, %edi
+	jle	L11470
+L11469:
+	movl	$491169, %edi
 	call	__m3_fault
-L11851:
+L11470:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87191,13 +84492,13 @@ _bitfield__write_var_BitField_offset50_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11856
+	js	L11475
 	cmpq	$3, -8(%rbp)
-	jle	L11857
-L11856:
-	movl	$507809, %edi
+	jle	L11476
+L11475:
+	movl	$491425, %edi
 	call	__m3_fault
-L11857:
+L11476:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87237,13 +84538,13 @@ _bitfield__write_var_BitField_offset50_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11862
+	js	L11481
 	cmpq	$7, -8(%rbp)
-	jle	L11863
-L11862:
-	movl	$508065, %edi
+	jle	L11482
+L11481:
+	movl	$491681, %edi
 	call	__m3_fault
-L11863:
+L11482:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87283,13 +84584,13 @@ _bitfield__write_var_BitField_offset50_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11868
+	js	L11487
 	cmpq	$15, -8(%rbp)
-	jle	L11869
-L11868:
-	movl	$508321, %edi
+	jle	L11488
+L11487:
+	movl	$491937, %edi
 	call	__m3_fault
-L11869:
+L11488:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87329,13 +84630,13 @@ _bitfield__write_var_BitField_offset50_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11874
+	js	L11493
 	cmpq	$31, -8(%rbp)
-	jle	L11875
-L11874:
-	movl	$508577, %edi
+	jle	L11494
+L11493:
+	movl	$492193, %edi
 	call	__m3_fault
-L11875:
+L11494:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87375,13 +84676,13 @@ _bitfield__write_var_BitField_offset50_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11880
+	js	L11499
 	cmpq	$63, -8(%rbp)
-	jle	L11881
-L11880:
-	movl	$508833, %edi
+	jle	L11500
+L11499:
+	movl	$492449, %edi
 	call	__m3_fault
-L11881:
+L11500:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87421,13 +84722,13 @@ _bitfield__write_var_BitField_offset50_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11886
+	js	L11505
 	cmpq	$127, -8(%rbp)
-	jle	L11887
-L11886:
-	movl	$509089, %edi
+	jle	L11506
+L11505:
+	movl	$492705, %edi
 	call	__m3_fault
-L11887:
+L11506:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87467,13 +84768,13 @@ _bitfield__write_var_BitField_offset50_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11892
+	js	L11511
 	cmpq	$255, -8(%rbp)
-	jle	L11893
-L11892:
-	movl	$509345, %edi
+	jle	L11512
+L11511:
+	movl	$492961, %edi
 	call	__m3_fault
-L11893:
+L11512:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87513,13 +84814,13 @@ _bitfield__write_var_BitField_offset50_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11898
+	js	L11517
 	cmpq	$511, -8(%rbp)
-	jle	L11899
-L11898:
-	movl	$509601, %edi
+	jle	L11518
+L11517:
+	movl	$493217, %edi
 	call	__m3_fault
-L11899:
+L11518:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87559,13 +84860,13 @@ _bitfield__write_var_BitField_offset50_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11904
+	js	L11523
 	cmpq	$1023, -8(%rbp)
-	jle	L11905
-L11904:
-	movl	$509857, %edi
+	jle	L11524
+L11523:
+	movl	$493473, %edi
 	call	__m3_fault
-L11905:
+L11524:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87605,13 +84906,13 @@ _bitfield__write_var_BitField_offset50_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11910
+	js	L11529
 	cmpq	$2047, -8(%rbp)
-	jle	L11911
-L11910:
-	movl	$510113, %edi
+	jle	L11530
+L11529:
+	movl	$493729, %edi
 	call	__m3_fault
-L11911:
+L11530:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87651,13 +84952,13 @@ _bitfield__write_var_BitField_offset50_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11916
+	js	L11535
 	cmpq	$4095, -8(%rbp)
-	jle	L11917
-L11916:
-	movl	$510369, %edi
+	jle	L11536
+L11535:
+	movl	$493985, %edi
 	call	__m3_fault
-L11917:
+L11536:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87697,13 +84998,13 @@ _bitfield__write_var_BitField_offset50_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11922
+	js	L11541
 	cmpq	$8191, -8(%rbp)
-	jle	L11923
-L11922:
-	movl	$510625, %edi
+	jle	L11542
+L11541:
+	movl	$494241, %edi
 	call	__m3_fault
-L11923:
+L11542:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87743,13 +85044,13 @@ _bitfield__write_var_BitField_offset50_count14:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11928
+	js	L11547
 	cmpq	$16383, -8(%rbp)
-	jle	L11929
-L11928:
-	movl	$510881, %edi
+	jle	L11548
+L11547:
+	movl	$494497, %edi
 	call	__m3_fault
-L11929:
+L11548:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87789,13 +85090,13 @@ _bitfield__write_var_BitField_offset51_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11934
+	js	L11553
 	cmpq	$1, -8(%rbp)
-	jle	L11935
-L11934:
-	movl	$511137, %edi
+	jle	L11554
+L11553:
+	movl	$494753, %edi
 	call	__m3_fault
-L11935:
+L11554:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87835,13 +85136,13 @@ _bitfield__write_var_BitField_offset51_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11940
+	js	L11559
 	cmpq	$3, -8(%rbp)
-	jle	L11941
-L11940:
-	movl	$511393, %edi
+	jle	L11560
+L11559:
+	movl	$495009, %edi
 	call	__m3_fault
-L11941:
+L11560:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87881,13 +85182,13 @@ _bitfield__write_var_BitField_offset51_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11946
+	js	L11565
 	cmpq	$7, -8(%rbp)
-	jle	L11947
-L11946:
-	movl	$511649, %edi
+	jle	L11566
+L11565:
+	movl	$495265, %edi
 	call	__m3_fault
-L11947:
+L11566:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87927,13 +85228,13 @@ _bitfield__write_var_BitField_offset51_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11952
+	js	L11571
 	cmpq	$15, -8(%rbp)
-	jle	L11953
-L11952:
-	movl	$511905, %edi
+	jle	L11572
+L11571:
+	movl	$495521, %edi
 	call	__m3_fault
-L11953:
+L11572:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -87973,13 +85274,13 @@ _bitfield__write_var_BitField_offset51_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11958
+	js	L11577
 	cmpq	$31, -8(%rbp)
-	jle	L11959
-L11958:
-	movl	$512161, %edi
+	jle	L11578
+L11577:
+	movl	$495777, %edi
 	call	__m3_fault
-L11959:
+L11578:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88019,13 +85320,13 @@ _bitfield__write_var_BitField_offset51_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11964
+	js	L11583
 	cmpq	$63, -8(%rbp)
-	jle	L11965
-L11964:
-	movl	$512417, %edi
+	jle	L11584
+L11583:
+	movl	$496033, %edi
 	call	__m3_fault
-L11965:
+L11584:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88065,13 +85366,13 @@ _bitfield__write_var_BitField_offset51_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11970
+	js	L11589
 	cmpq	$127, -8(%rbp)
-	jle	L11971
-L11970:
-	movl	$512673, %edi
+	jle	L11590
+L11589:
+	movl	$496289, %edi
 	call	__m3_fault
-L11971:
+L11590:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88111,13 +85412,13 @@ _bitfield__write_var_BitField_offset51_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11976
+	js	L11595
 	cmpq	$255, -8(%rbp)
-	jle	L11977
-L11976:
-	movl	$512929, %edi
+	jle	L11596
+L11595:
+	movl	$496545, %edi
 	call	__m3_fault
-L11977:
+L11596:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88157,13 +85458,13 @@ _bitfield__write_var_BitField_offset51_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11982
+	js	L11601
 	cmpq	$511, -8(%rbp)
-	jle	L11983
-L11982:
-	movl	$513185, %edi
+	jle	L11602
+L11601:
+	movl	$496801, %edi
 	call	__m3_fault
-L11983:
+L11602:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88203,13 +85504,13 @@ _bitfield__write_var_BitField_offset51_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11988
+	js	L11607
 	cmpq	$1023, -8(%rbp)
-	jle	L11989
-L11988:
-	movl	$513441, %edi
+	jle	L11608
+L11607:
+	movl	$497057, %edi
 	call	__m3_fault
-L11989:
+L11608:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88249,13 +85550,13 @@ _bitfield__write_var_BitField_offset51_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L11994
+	js	L11613
 	cmpq	$2047, -8(%rbp)
-	jle	L11995
-L11994:
-	movl	$513697, %edi
+	jle	L11614
+L11613:
+	movl	$497313, %edi
 	call	__m3_fault
-L11995:
+L11614:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88295,13 +85596,13 @@ _bitfield__write_var_BitField_offset51_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12000
+	js	L11619
 	cmpq	$4095, -8(%rbp)
-	jle	L12001
-L12000:
-	movl	$513953, %edi
+	jle	L11620
+L11619:
+	movl	$497569, %edi
 	call	__m3_fault
-L12001:
+L11620:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88341,13 +85642,13 @@ _bitfield__write_var_BitField_offset51_count13:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12006
+	js	L11625
 	cmpq	$8191, -8(%rbp)
-	jle	L12007
-L12006:
-	movl	$514209, %edi
+	jle	L11626
+L11625:
+	movl	$497825, %edi
 	call	__m3_fault
-L12007:
+L11626:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88387,13 +85688,13 @@ _bitfield__write_var_BitField_offset52_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12012
+	js	L11631
 	cmpq	$1, -8(%rbp)
-	jle	L12013
-L12012:
-	movl	$514465, %edi
+	jle	L11632
+L11631:
+	movl	$498081, %edi
 	call	__m3_fault
-L12013:
+L11632:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88433,13 +85734,13 @@ _bitfield__write_var_BitField_offset52_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12018
+	js	L11637
 	cmpq	$3, -8(%rbp)
-	jle	L12019
-L12018:
-	movl	$514721, %edi
+	jle	L11638
+L11637:
+	movl	$498337, %edi
 	call	__m3_fault
-L12019:
+L11638:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88479,13 +85780,13 @@ _bitfield__write_var_BitField_offset52_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12024
+	js	L11643
 	cmpq	$7, -8(%rbp)
-	jle	L12025
-L12024:
-	movl	$514977, %edi
+	jle	L11644
+L11643:
+	movl	$498593, %edi
 	call	__m3_fault
-L12025:
+L11644:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88525,13 +85826,13 @@ _bitfield__write_var_BitField_offset52_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12030
+	js	L11649
 	cmpq	$15, -8(%rbp)
-	jle	L12031
-L12030:
-	movl	$515233, %edi
+	jle	L11650
+L11649:
+	movl	$498849, %edi
 	call	__m3_fault
-L12031:
+L11650:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88571,13 +85872,13 @@ _bitfield__write_var_BitField_offset52_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12036
+	js	L11655
 	cmpq	$31, -8(%rbp)
-	jle	L12037
-L12036:
-	movl	$515489, %edi
+	jle	L11656
+L11655:
+	movl	$499105, %edi
 	call	__m3_fault
-L12037:
+L11656:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88617,13 +85918,13 @@ _bitfield__write_var_BitField_offset52_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12042
+	js	L11661
 	cmpq	$63, -8(%rbp)
-	jle	L12043
-L12042:
-	movl	$515745, %edi
+	jle	L11662
+L11661:
+	movl	$499361, %edi
 	call	__m3_fault
-L12043:
+L11662:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88663,13 +85964,13 @@ _bitfield__write_var_BitField_offset52_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12048
+	js	L11667
 	cmpq	$127, -8(%rbp)
-	jle	L12049
-L12048:
-	movl	$516001, %edi
+	jle	L11668
+L11667:
+	movl	$499617, %edi
 	call	__m3_fault
-L12049:
+L11668:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88709,13 +86010,13 @@ _bitfield__write_var_BitField_offset52_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12054
+	js	L11673
 	cmpq	$255, -8(%rbp)
-	jle	L12055
-L12054:
-	movl	$516257, %edi
+	jle	L11674
+L11673:
+	movl	$499873, %edi
 	call	__m3_fault
-L12055:
+L11674:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88755,13 +86056,13 @@ _bitfield__write_var_BitField_offset52_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12060
+	js	L11679
 	cmpq	$511, -8(%rbp)
-	jle	L12061
-L12060:
-	movl	$516513, %edi
+	jle	L11680
+L11679:
+	movl	$500129, %edi
 	call	__m3_fault
-L12061:
+L11680:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88801,13 +86102,13 @@ _bitfield__write_var_BitField_offset52_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12066
+	js	L11685
 	cmpq	$1023, -8(%rbp)
-	jle	L12067
-L12066:
-	movl	$516769, %edi
+	jle	L11686
+L11685:
+	movl	$500385, %edi
 	call	__m3_fault
-L12067:
+L11686:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88847,13 +86148,13 @@ _bitfield__write_var_BitField_offset52_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12072
+	js	L11691
 	cmpq	$2047, -8(%rbp)
-	jle	L12073
-L12072:
-	movl	$517025, %edi
+	jle	L11692
+L11691:
+	movl	$500641, %edi
 	call	__m3_fault
-L12073:
+L11692:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88893,13 +86194,13 @@ _bitfield__write_var_BitField_offset52_count12:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12078
+	js	L11697
 	cmpq	$4095, -8(%rbp)
-	jle	L12079
-L12078:
-	movl	$517281, %edi
+	jle	L11698
+L11697:
+	movl	$500897, %edi
 	call	__m3_fault
-L12079:
+L11698:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88939,13 +86240,13 @@ _bitfield__write_var_BitField_offset53_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12084
+	js	L11703
 	cmpq	$1, -8(%rbp)
-	jle	L12085
-L12084:
-	movl	$517537, %edi
+	jle	L11704
+L11703:
+	movl	$501153, %edi
 	call	__m3_fault
-L12085:
+L11704:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -88985,13 +86286,13 @@ _bitfield__write_var_BitField_offset53_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12090
+	js	L11709
 	cmpq	$3, -8(%rbp)
-	jle	L12091
-L12090:
-	movl	$517793, %edi
+	jle	L11710
+L11709:
+	movl	$501409, %edi
 	call	__m3_fault
-L12091:
+L11710:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89031,13 +86332,13 @@ _bitfield__write_var_BitField_offset53_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12096
+	js	L11715
 	cmpq	$7, -8(%rbp)
-	jle	L12097
-L12096:
-	movl	$518049, %edi
+	jle	L11716
+L11715:
+	movl	$501665, %edi
 	call	__m3_fault
-L12097:
+L11716:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89077,13 +86378,13 @@ _bitfield__write_var_BitField_offset53_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12102
+	js	L11721
 	cmpq	$15, -8(%rbp)
-	jle	L12103
-L12102:
-	movl	$518305, %edi
+	jle	L11722
+L11721:
+	movl	$501921, %edi
 	call	__m3_fault
-L12103:
+L11722:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89123,13 +86424,13 @@ _bitfield__write_var_BitField_offset53_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12108
+	js	L11727
 	cmpq	$31, -8(%rbp)
-	jle	L12109
-L12108:
-	movl	$518561, %edi
+	jle	L11728
+L11727:
+	movl	$502177, %edi
 	call	__m3_fault
-L12109:
+L11728:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89169,13 +86470,13 @@ _bitfield__write_var_BitField_offset53_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12114
+	js	L11733
 	cmpq	$63, -8(%rbp)
-	jle	L12115
-L12114:
-	movl	$518817, %edi
+	jle	L11734
+L11733:
+	movl	$502433, %edi
 	call	__m3_fault
-L12115:
+L11734:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89215,13 +86516,13 @@ _bitfield__write_var_BitField_offset53_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12120
+	js	L11739
 	cmpq	$127, -8(%rbp)
-	jle	L12121
-L12120:
-	movl	$519073, %edi
+	jle	L11740
+L11739:
+	movl	$502689, %edi
 	call	__m3_fault
-L12121:
+L11740:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89261,13 +86562,13 @@ _bitfield__write_var_BitField_offset53_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12126
+	js	L11745
 	cmpq	$255, -8(%rbp)
-	jle	L12127
-L12126:
-	movl	$519329, %edi
+	jle	L11746
+L11745:
+	movl	$502945, %edi
 	call	__m3_fault
-L12127:
+L11746:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89307,13 +86608,13 @@ _bitfield__write_var_BitField_offset53_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12132
+	js	L11751
 	cmpq	$511, -8(%rbp)
-	jle	L12133
-L12132:
-	movl	$519585, %edi
+	jle	L11752
+L11751:
+	movl	$503201, %edi
 	call	__m3_fault
-L12133:
+L11752:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89353,13 +86654,13 @@ _bitfield__write_var_BitField_offset53_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12138
+	js	L11757
 	cmpq	$1023, -8(%rbp)
-	jle	L12139
-L12138:
-	movl	$519841, %edi
+	jle	L11758
+L11757:
+	movl	$503457, %edi
 	call	__m3_fault
-L12139:
+L11758:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89399,13 +86700,13 @@ _bitfield__write_var_BitField_offset53_count11:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12144
+	js	L11763
 	cmpq	$2047, -8(%rbp)
-	jle	L12145
-L12144:
-	movl	$520097, %edi
+	jle	L11764
+L11763:
+	movl	$503713, %edi
 	call	__m3_fault
-L12145:
+L11764:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89445,13 +86746,13 @@ _bitfield__write_var_BitField_offset54_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12150
+	js	L11769
 	cmpq	$1, -8(%rbp)
-	jle	L12151
-L12150:
-	movl	$520353, %edi
+	jle	L11770
+L11769:
+	movl	$503969, %edi
 	call	__m3_fault
-L12151:
+L11770:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89491,13 +86792,13 @@ _bitfield__write_var_BitField_offset54_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12156
+	js	L11775
 	cmpq	$3, -8(%rbp)
-	jle	L12157
-L12156:
-	movl	$520609, %edi
+	jle	L11776
+L11775:
+	movl	$504225, %edi
 	call	__m3_fault
-L12157:
+L11776:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89537,13 +86838,13 @@ _bitfield__write_var_BitField_offset54_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12162
+	js	L11781
 	cmpq	$7, -8(%rbp)
-	jle	L12163
-L12162:
-	movl	$520865, %edi
+	jle	L11782
+L11781:
+	movl	$504481, %edi
 	call	__m3_fault
-L12163:
+L11782:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89583,13 +86884,13 @@ _bitfield__write_var_BitField_offset54_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12168
+	js	L11787
 	cmpq	$15, -8(%rbp)
-	jle	L12169
-L12168:
-	movl	$521121, %edi
+	jle	L11788
+L11787:
+	movl	$504737, %edi
 	call	__m3_fault
-L12169:
+L11788:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89629,13 +86930,13 @@ _bitfield__write_var_BitField_offset54_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12174
+	js	L11793
 	cmpq	$31, -8(%rbp)
-	jle	L12175
-L12174:
-	movl	$521377, %edi
+	jle	L11794
+L11793:
+	movl	$504993, %edi
 	call	__m3_fault
-L12175:
+L11794:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89675,13 +86976,13 @@ _bitfield__write_var_BitField_offset54_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12180
+	js	L11799
 	cmpq	$63, -8(%rbp)
-	jle	L12181
-L12180:
-	movl	$521633, %edi
+	jle	L11800
+L11799:
+	movl	$505249, %edi
 	call	__m3_fault
-L12181:
+L11800:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89721,13 +87022,13 @@ _bitfield__write_var_BitField_offset54_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12186
+	js	L11805
 	cmpq	$127, -8(%rbp)
-	jle	L12187
-L12186:
-	movl	$521889, %edi
+	jle	L11806
+L11805:
+	movl	$505505, %edi
 	call	__m3_fault
-L12187:
+L11806:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89767,13 +87068,13 @@ _bitfield__write_var_BitField_offset54_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12192
+	js	L11811
 	cmpq	$255, -8(%rbp)
-	jle	L12193
-L12192:
-	movl	$522145, %edi
+	jle	L11812
+L11811:
+	movl	$505761, %edi
 	call	__m3_fault
-L12193:
+L11812:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89813,13 +87114,13 @@ _bitfield__write_var_BitField_offset54_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12198
+	js	L11817
 	cmpq	$511, -8(%rbp)
-	jle	L12199
-L12198:
-	movl	$522401, %edi
+	jle	L11818
+L11817:
+	movl	$506017, %edi
 	call	__m3_fault
-L12199:
+L11818:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89859,13 +87160,13 @@ _bitfield__write_var_BitField_offset54_count10:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12204
+	js	L11823
 	cmpq	$1023, -8(%rbp)
-	jle	L12205
-L12204:
-	movl	$522657, %edi
+	jle	L11824
+L11823:
+	movl	$506273, %edi
 	call	__m3_fault
-L12205:
+L11824:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89905,13 +87206,13 @@ _bitfield__write_var_BitField_offset55_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12210
+	js	L11829
 	cmpq	$1, -8(%rbp)
-	jle	L12211
-L12210:
-	movl	$522913, %edi
+	jle	L11830
+L11829:
+	movl	$506529, %edi
 	call	__m3_fault
-L12211:
+L11830:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89951,13 +87252,13 @@ _bitfield__write_var_BitField_offset55_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12216
+	js	L11835
 	cmpq	$3, -8(%rbp)
-	jle	L12217
-L12216:
-	movl	$523169, %edi
+	jle	L11836
+L11835:
+	movl	$506785, %edi
 	call	__m3_fault
-L12217:
+L11836:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -89997,13 +87298,13 @@ _bitfield__write_var_BitField_offset55_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12222
+	js	L11841
 	cmpq	$7, -8(%rbp)
-	jle	L12223
-L12222:
-	movl	$523425, %edi
+	jle	L11842
+L11841:
+	movl	$507041, %edi
 	call	__m3_fault
-L12223:
+L11842:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90043,13 +87344,13 @@ _bitfield__write_var_BitField_offset55_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12228
+	js	L11847
 	cmpq	$15, -8(%rbp)
-	jle	L12229
-L12228:
-	movl	$523681, %edi
+	jle	L11848
+L11847:
+	movl	$507297, %edi
 	call	__m3_fault
-L12229:
+L11848:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90089,13 +87390,13 @@ _bitfield__write_var_BitField_offset55_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12234
+	js	L11853
 	cmpq	$31, -8(%rbp)
-	jle	L12235
-L12234:
-	movl	$523937, %edi
+	jle	L11854
+L11853:
+	movl	$507553, %edi
 	call	__m3_fault
-L12235:
+L11854:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90135,13 +87436,13 @@ _bitfield__write_var_BitField_offset55_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12240
+	js	L11859
 	cmpq	$63, -8(%rbp)
-	jle	L12241
-L12240:
-	movl	$524193, %edi
+	jle	L11860
+L11859:
+	movl	$507809, %edi
 	call	__m3_fault
-L12241:
+L11860:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90181,13 +87482,13 @@ _bitfield__write_var_BitField_offset55_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12246
+	js	L11865
 	cmpq	$127, -8(%rbp)
-	jle	L12247
-L12246:
-	movl	$524449, %edi
+	jle	L11866
+L11865:
+	movl	$508065, %edi
 	call	__m3_fault
-L12247:
+L11866:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90227,13 +87528,13 @@ _bitfield__write_var_BitField_offset55_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12252
+	js	L11871
 	cmpq	$255, -8(%rbp)
-	jle	L12253
-L12252:
-	movl	$524705, %edi
+	jle	L11872
+L11871:
+	movl	$508321, %edi
 	call	__m3_fault
-L12253:
+L11872:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90273,13 +87574,13 @@ _bitfield__write_var_BitField_offset55_count9:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12258
+	js	L11877
 	cmpq	$511, -8(%rbp)
-	jle	L12259
-L12258:
-	movl	$524961, %edi
+	jle	L11878
+L11877:
+	movl	$508577, %edi
 	call	__m3_fault
-L12259:
+L11878:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90318,13 +87619,13 @@ _bitfield__write_var_BitField_offset56_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12264
+	js	L11883
 	cmpq	$1, -8(%rbp)
-	jle	L12265
-L12264:
-	movl	$525217, %edi
+	jle	L11884
+L11883:
+	movl	$508833, %edi
 	call	__m3_fault
-L12265:
+L11884:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90362,13 +87663,13 @@ _bitfield__write_var_BitField_offset56_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12270
+	js	L11889
 	cmpq	$3, -8(%rbp)
-	jle	L12271
-L12270:
-	movl	$525473, %edi
+	jle	L11890
+L11889:
+	movl	$509089, %edi
 	call	__m3_fault
-L12271:
+L11890:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90406,13 +87707,13 @@ _bitfield__write_var_BitField_offset56_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12276
+	js	L11895
 	cmpq	$7, -8(%rbp)
-	jle	L12277
-L12276:
-	movl	$525729, %edi
+	jle	L11896
+L11895:
+	movl	$509345, %edi
 	call	__m3_fault
-L12277:
+L11896:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90450,13 +87751,13 @@ _bitfield__write_var_BitField_offset56_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12282
+	js	L11901
 	cmpq	$15, -8(%rbp)
-	jle	L12283
-L12282:
-	movl	$525985, %edi
+	jle	L11902
+L11901:
+	movl	$509601, %edi
 	call	__m3_fault
-L12283:
+L11902:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90494,13 +87795,13 @@ _bitfield__write_var_BitField_offset56_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12288
+	js	L11907
 	cmpq	$31, -8(%rbp)
-	jle	L12289
-L12288:
-	movl	$526241, %edi
+	jle	L11908
+L11907:
+	movl	$509857, %edi
 	call	__m3_fault
-L12289:
+L11908:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90538,13 +87839,13 @@ _bitfield__write_var_BitField_offset56_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12294
+	js	L11913
 	cmpq	$63, -8(%rbp)
-	jle	L12295
-L12294:
-	movl	$526497, %edi
+	jle	L11914
+L11913:
+	movl	$510113, %edi
 	call	__m3_fault
-L12295:
+L11914:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90582,13 +87883,13 @@ _bitfield__write_var_BitField_offset56_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12300
+	js	L11919
 	cmpq	$127, -8(%rbp)
-	jle	L12301
-L12300:
-	movl	$526753, %edi
+	jle	L11920
+L11919:
+	movl	$510369, %edi
 	call	__m3_fault
-L12301:
+L11920:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90625,13 +87926,13 @@ _bitfield__write_var_BitField_offset56_count8:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12306
+	js	L11925
 	cmpq	$255, -8(%rbp)
-	jle	L12307
-L12306:
-	movl	$527009, %edi
+	jle	L11926
+L11925:
+	movl	$510625, %edi
 	call	__m3_fault
-L12307:
+L11926:
 	movq	-24(%rbp), %rax
 	leaq	7(%rax), %rdx
 	movq	-8(%rbp), %rax
@@ -90660,13 +87961,13 @@ _bitfield__write_var_BitField_offset57_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12312
+	js	L11931
 	cmpq	$1, -8(%rbp)
-	jle	L12313
-L12312:
-	movl	$527265, %edi
+	jle	L11932
+L11931:
+	movl	$510881, %edi
 	call	__m3_fault
-L12313:
+L11932:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90706,13 +88007,13 @@ _bitfield__write_var_BitField_offset57_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12318
+	js	L11937
 	cmpq	$3, -8(%rbp)
-	jle	L12319
-L12318:
-	movl	$527521, %edi
+	jle	L11938
+L11937:
+	movl	$511137, %edi
 	call	__m3_fault
-L12319:
+L11938:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90752,13 +88053,13 @@ _bitfield__write_var_BitField_offset57_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12324
+	js	L11943
 	cmpq	$7, -8(%rbp)
-	jle	L12325
-L12324:
-	movl	$527777, %edi
+	jle	L11944
+L11943:
+	movl	$511393, %edi
 	call	__m3_fault
-L12325:
+L11944:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90798,13 +88099,13 @@ _bitfield__write_var_BitField_offset57_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12330
+	js	L11949
 	cmpq	$15, -8(%rbp)
-	jle	L12331
-L12330:
-	movl	$528033, %edi
+	jle	L11950
+L11949:
+	movl	$511649, %edi
 	call	__m3_fault
-L12331:
+L11950:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90844,13 +88145,13 @@ _bitfield__write_var_BitField_offset57_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12336
+	js	L11955
 	cmpq	$31, -8(%rbp)
-	jle	L12337
-L12336:
-	movl	$528289, %edi
+	jle	L11956
+L11955:
+	movl	$511905, %edi
 	call	__m3_fault
-L12337:
+L11956:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90890,13 +88191,13 @@ _bitfield__write_var_BitField_offset57_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12342
+	js	L11961
 	cmpq	$63, -8(%rbp)
-	jle	L12343
-L12342:
-	movl	$528545, %edi
+	jle	L11962
+L11961:
+	movl	$512161, %edi
 	call	__m3_fault
-L12343:
+L11962:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90936,13 +88237,13 @@ _bitfield__write_var_BitField_offset57_count7:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12348
+	js	L11967
 	cmpq	$127, -8(%rbp)
-	jle	L12349
-L12348:
-	movl	$528801, %edi
+	jle	L11968
+L11967:
+	movl	$512417, %edi
 	call	__m3_fault
-L12349:
+L11968:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -90982,13 +88283,13 @@ _bitfield__write_var_BitField_offset58_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12354
+	js	L11973
 	cmpq	$1, -8(%rbp)
-	jle	L12355
-L12354:
-	movl	$529057, %edi
+	jle	L11974
+L11973:
+	movl	$512673, %edi
 	call	__m3_fault
-L12355:
+L11974:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91028,13 +88329,13 @@ _bitfield__write_var_BitField_offset58_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12360
+	js	L11979
 	cmpq	$3, -8(%rbp)
-	jle	L12361
-L12360:
-	movl	$529313, %edi
+	jle	L11980
+L11979:
+	movl	$512929, %edi
 	call	__m3_fault
-L12361:
+L11980:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91074,13 +88375,13 @@ _bitfield__write_var_BitField_offset58_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12366
+	js	L11985
 	cmpq	$7, -8(%rbp)
-	jle	L12367
-L12366:
-	movl	$529569, %edi
+	jle	L11986
+L11985:
+	movl	$513185, %edi
 	call	__m3_fault
-L12367:
+L11986:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91120,13 +88421,13 @@ _bitfield__write_var_BitField_offset58_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12372
+	js	L11991
 	cmpq	$15, -8(%rbp)
-	jle	L12373
-L12372:
-	movl	$529825, %edi
+	jle	L11992
+L11991:
+	movl	$513441, %edi
 	call	__m3_fault
-L12373:
+L11992:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91166,13 +88467,13 @@ _bitfield__write_var_BitField_offset58_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12378
+	js	L11997
 	cmpq	$31, -8(%rbp)
-	jle	L12379
-L12378:
-	movl	$530081, %edi
+	jle	L11998
+L11997:
+	movl	$513697, %edi
 	call	__m3_fault
-L12379:
+L11998:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91212,13 +88513,13 @@ _bitfield__write_var_BitField_offset58_count6:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12384
+	js	L12003
 	cmpq	$63, -8(%rbp)
-	jle	L12385
-L12384:
-	movl	$530337, %edi
+	jle	L12004
+L12003:
+	movl	$513953, %edi
 	call	__m3_fault
-L12385:
+L12004:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91258,13 +88559,13 @@ _bitfield__write_var_BitField_offset59_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12390
+	js	L12009
 	cmpq	$1, -8(%rbp)
-	jle	L12391
-L12390:
-	movl	$530593, %edi
+	jle	L12010
+L12009:
+	movl	$514209, %edi
 	call	__m3_fault
-L12391:
+L12010:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91304,13 +88605,13 @@ _bitfield__write_var_BitField_offset59_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12396
+	js	L12015
 	cmpq	$3, -8(%rbp)
-	jle	L12397
-L12396:
-	movl	$530849, %edi
+	jle	L12016
+L12015:
+	movl	$514465, %edi
 	call	__m3_fault
-L12397:
+L12016:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91350,13 +88651,13 @@ _bitfield__write_var_BitField_offset59_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12402
+	js	L12021
 	cmpq	$7, -8(%rbp)
-	jle	L12403
-L12402:
-	movl	$531105, %edi
+	jle	L12022
+L12021:
+	movl	$514721, %edi
 	call	__m3_fault
-L12403:
+L12022:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91396,13 +88697,13 @@ _bitfield__write_var_BitField_offset59_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12408
+	js	L12027
 	cmpq	$15, -8(%rbp)
-	jle	L12409
-L12408:
-	movl	$531361, %edi
+	jle	L12028
+L12027:
+	movl	$514977, %edi
 	call	__m3_fault
-L12409:
+L12028:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91442,13 +88743,13 @@ _bitfield__write_var_BitField_offset59_count5:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12414
+	js	L12033
 	cmpq	$31, -8(%rbp)
-	jle	L12415
-L12414:
-	movl	$531617, %edi
+	jle	L12034
+L12033:
+	movl	$515233, %edi
 	call	__m3_fault
-L12415:
+L12034:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91488,13 +88789,13 @@ _bitfield__write_var_BitField_offset60_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12420
+	js	L12039
 	cmpq	$1, -8(%rbp)
-	jle	L12421
-L12420:
-	movl	$531873, %edi
+	jle	L12040
+L12039:
+	movl	$515489, %edi
 	call	__m3_fault
-L12421:
+L12040:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91534,13 +88835,13 @@ _bitfield__write_var_BitField_offset60_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12426
+	js	L12045
 	cmpq	$3, -8(%rbp)
-	jle	L12427
-L12426:
-	movl	$532129, %edi
+	jle	L12046
+L12045:
+	movl	$515745, %edi
 	call	__m3_fault
-L12427:
+L12046:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91580,13 +88881,13 @@ _bitfield__write_var_BitField_offset60_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12432
+	js	L12051
 	cmpq	$7, -8(%rbp)
-	jle	L12433
-L12432:
-	movl	$532385, %edi
+	jle	L12052
+L12051:
+	movl	$516001, %edi
 	call	__m3_fault
-L12433:
+L12052:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91626,13 +88927,13 @@ _bitfield__write_var_BitField_offset60_count4:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12438
+	js	L12057
 	cmpq	$15, -8(%rbp)
-	jle	L12439
-L12438:
-	movl	$532641, %edi
+	jle	L12058
+L12057:
+	movl	$516257, %edi
 	call	__m3_fault
-L12439:
+L12058:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91672,13 +88973,13 @@ _bitfield__write_var_BitField_offset61_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12444
+	js	L12063
 	cmpq	$1, -8(%rbp)
-	jle	L12445
-L12444:
-	movl	$532897, %edi
+	jle	L12064
+L12063:
+	movl	$516513, %edi
 	call	__m3_fault
-L12445:
+L12064:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91718,13 +89019,13 @@ _bitfield__write_var_BitField_offset61_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12450
+	js	L12069
 	cmpq	$3, -8(%rbp)
-	jle	L12451
-L12450:
-	movl	$533153, %edi
+	jle	L12070
+L12069:
+	movl	$516769, %edi
 	call	__m3_fault
-L12451:
+L12070:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91764,13 +89065,13 @@ _bitfield__write_var_BitField_offset61_count3:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12456
+	js	L12075
 	cmpq	$7, -8(%rbp)
-	jle	L12457
-L12456:
-	movl	$533409, %edi
+	jle	L12076
+L12075:
+	movl	$517025, %edi
 	call	__m3_fault
-L12457:
+L12076:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91810,13 +89111,13 @@ _bitfield__write_var_BitField_offset62_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12462
+	js	L12081
 	cmpq	$1, -8(%rbp)
-	jle	L12463
-L12462:
-	movl	$533665, %edi
+	jle	L12082
+L12081:
+	movl	$517281, %edi
 	call	__m3_fault
-L12463:
+L12082:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91856,13 +89157,13 @@ _bitfield__write_var_BitField_offset62_count2:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12468
+	js	L12087
 	cmpq	$3, -8(%rbp)
-	jle	L12469
-L12468:
-	movl	$533921, %edi
+	jle	L12088
+L12087:
+	movl	$517537, %edi
 	call	__m3_fault
-L12469:
+L12088:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -91902,13 +89203,13 @@ _bitfield__write_var_BitField_offset63_count1:
 	movq	-32(%rbp), %rax
 	movq	%rax, -8(%rbp)
 	cmpq	$0, -8(%rbp)
-	js	L12474
+	js	L12093
 	cmpq	$1, -8(%rbp)
-	jle	L12475
-L12474:
-	movl	$534177, %edi
+	jle	L12094
+L12093:
+	movl	$517793, %edi
 	call	__m3_fault
-L12475:
+L12094:
 	movq	-24(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	movq	-16(%rbp), %rax
@@ -100013,262 +97314,6 @@ _L_1:
 	.space 1
 	.ascii "read_var_BitField_offset1_count1"
 	.space 1
-	.ascii "write_var_BitField_offset0_count64"
-	.space 1
-	.ascii "read_var_BitField_offset0_count64"
-	.space 1
-	.ascii "write_var_BitField_offset0_count63"
-	.space 1
-	.ascii "read_var_BitField_offset0_count63"
-	.space 1
-	.ascii "write_var_BitField_offset0_count62"
-	.space 1
-	.ascii "read_var_BitField_offset0_count62"
-	.space 1
-	.ascii "write_var_BitField_offset0_count61"
-	.space 1
-	.ascii "read_var_BitField_offset0_count61"
-	.space 1
-	.ascii "write_var_BitField_offset0_count60"
-	.space 1
-	.ascii "read_var_BitField_offset0_count60"
-	.space 1
-	.ascii "write_var_BitField_offset0_count59"
-	.space 1
-	.ascii "read_var_BitField_offset0_count59"
-	.space 1
-	.ascii "write_var_BitField_offset0_count58"
-	.space 1
-	.ascii "read_var_BitField_offset0_count58"
-	.space 1
-	.ascii "write_var_BitField_offset0_count57"
-	.space 1
-	.ascii "read_var_BitField_offset0_count57"
-	.space 1
-	.ascii "write_var_BitField_offset0_count56"
-	.space 1
-	.ascii "read_var_BitField_offset0_count56"
-	.space 1
-	.ascii "write_var_BitField_offset0_count55"
-	.space 1
-	.ascii "read_var_BitField_offset0_count55"
-	.space 1
-	.ascii "write_var_BitField_offset0_count54"
-	.space 1
-	.ascii "read_var_BitField_offset0_count54"
-	.space 1
-	.ascii "write_var_BitField_offset0_count53"
-	.space 1
-	.ascii "read_var_BitField_offset0_count53"
-	.space 1
-	.ascii "write_var_BitField_offset0_count52"
-	.space 1
-	.ascii "read_var_BitField_offset0_count52"
-	.space 1
-	.ascii "write_var_BitField_offset0_count51"
-	.space 1
-	.ascii "read_var_BitField_offset0_count51"
-	.space 1
-	.ascii "write_var_BitField_offset0_count50"
-	.space 1
-	.ascii "read_var_BitField_offset0_count50"
-	.space 1
-	.ascii "write_var_BitField_offset0_count49"
-	.space 1
-	.ascii "read_var_BitField_offset0_count49"
-	.space 1
-	.ascii "write_var_BitField_offset0_count48"
-	.space 1
-	.ascii "read_var_BitField_offset0_count48"
-	.space 1
-	.ascii "write_var_BitField_offset0_count47"
-	.space 1
-	.ascii "read_var_BitField_offset0_count47"
-	.space 1
-	.ascii "write_var_BitField_offset0_count46"
-	.space 1
-	.ascii "read_var_BitField_offset0_count46"
-	.space 1
-	.ascii "write_var_BitField_offset0_count45"
-	.space 1
-	.ascii "read_var_BitField_offset0_count45"
-	.space 1
-	.ascii "write_var_BitField_offset0_count44"
-	.space 1
-	.ascii "read_var_BitField_offset0_count44"
-	.space 1
-	.ascii "write_var_BitField_offset0_count43"
-	.space 1
-	.ascii "read_var_BitField_offset0_count43"
-	.space 1
-	.ascii "write_var_BitField_offset0_count42"
-	.space 1
-	.ascii "read_var_BitField_offset0_count42"
-	.space 1
-	.ascii "write_var_BitField_offset0_count41"
-	.space 1
-	.ascii "read_var_BitField_offset0_count41"
-	.space 1
-	.ascii "write_var_BitField_offset0_count40"
-	.space 1
-	.ascii "read_var_BitField_offset0_count40"
-	.space 1
-	.ascii "write_var_BitField_offset0_count39"
-	.space 1
-	.ascii "read_var_BitField_offset0_count39"
-	.space 1
-	.ascii "write_var_BitField_offset0_count38"
-	.space 1
-	.ascii "read_var_BitField_offset0_count38"
-	.space 1
-	.ascii "write_var_BitField_offset0_count37"
-	.space 1
-	.ascii "read_var_BitField_offset0_count37"
-	.space 1
-	.ascii "write_var_BitField_offset0_count36"
-	.space 1
-	.ascii "read_var_BitField_offset0_count36"
-	.space 1
-	.ascii "write_var_BitField_offset0_count35"
-	.space 1
-	.ascii "read_var_BitField_offset0_count35"
-	.space 1
-	.ascii "write_var_BitField_offset0_count34"
-	.space 1
-	.ascii "read_var_BitField_offset0_count34"
-	.space 1
-	.ascii "write_var_BitField_offset0_count33"
-	.space 1
-	.ascii "read_var_BitField_offset0_count33"
-	.space 1
-	.ascii "write_var_BitField_offset0_count32"
-	.space 1
-	.ascii "read_var_BitField_offset0_count32"
-	.space 1
-	.ascii "write_var_BitField_offset0_count31"
-	.space 1
-	.ascii "read_var_BitField_offset0_count31"
-	.space 1
-	.ascii "write_var_BitField_offset0_count30"
-	.space 1
-	.ascii "read_var_BitField_offset0_count30"
-	.space 1
-	.ascii "write_var_BitField_offset0_count29"
-	.space 1
-	.ascii "read_var_BitField_offset0_count29"
-	.space 1
-	.ascii "write_var_BitField_offset0_count28"
-	.space 1
-	.ascii "read_var_BitField_offset0_count28"
-	.space 1
-	.ascii "write_var_BitField_offset0_count27"
-	.space 1
-	.ascii "read_var_BitField_offset0_count27"
-	.space 1
-	.ascii "write_var_BitField_offset0_count26"
-	.space 1
-	.ascii "read_var_BitField_offset0_count26"
-	.space 1
-	.ascii "write_var_BitField_offset0_count25"
-	.space 1
-	.ascii "read_var_BitField_offset0_count25"
-	.space 1
-	.ascii "write_var_BitField_offset0_count24"
-	.space 1
-	.ascii "read_var_BitField_offset0_count24"
-	.space 1
-	.ascii "write_var_BitField_offset0_count23"
-	.space 1
-	.ascii "read_var_BitField_offset0_count23"
-	.space 1
-	.ascii "write_var_BitField_offset0_count22"
-	.space 1
-	.ascii "read_var_BitField_offset0_count22"
-	.space 1
-	.ascii "write_var_BitField_offset0_count21"
-	.space 1
-	.ascii "read_var_BitField_offset0_count21"
-	.space 1
-	.ascii "write_var_BitField_offset0_count20"
-	.space 1
-	.ascii "read_var_BitField_offset0_count20"
-	.space 1
-	.ascii "write_var_BitField_offset0_count19"
-	.space 1
-	.ascii "read_var_BitField_offset0_count19"
-	.space 1
-	.ascii "write_var_BitField_offset0_count18"
-	.space 1
-	.ascii "read_var_BitField_offset0_count18"
-	.space 1
-	.ascii "write_var_BitField_offset0_count17"
-	.space 1
-	.ascii "read_var_BitField_offset0_count17"
-	.space 1
-	.ascii "write_var_BitField_offset0_count16"
-	.space 1
-	.ascii "read_var_BitField_offset0_count16"
-	.space 1
-	.ascii "write_var_BitField_offset0_count15"
-	.space 1
-	.ascii "read_var_BitField_offset0_count15"
-	.space 1
-	.ascii "write_var_BitField_offset0_count14"
-	.space 1
-	.ascii "read_var_BitField_offset0_count14"
-	.space 1
-	.ascii "write_var_BitField_offset0_count13"
-	.space 1
-	.ascii "read_var_BitField_offset0_count13"
-	.space 1
-	.ascii "write_var_BitField_offset0_count12"
-	.space 1
-	.ascii "read_var_BitField_offset0_count12"
-	.space 1
-	.ascii "write_var_BitField_offset0_count11"
-	.space 1
-	.ascii "read_var_BitField_offset0_count11"
-	.space 1
-	.ascii "write_var_BitField_offset0_count10"
-	.space 1
-	.ascii "read_var_BitField_offset0_count10"
-	.space 1
-	.ascii "write_var_BitField_offset0_count9"
-	.space 1
-	.ascii "read_var_BitField_offset0_count9"
-	.space 1
-	.ascii "write_var_BitField_offset0_count8"
-	.space 1
-	.ascii "read_var_BitField_offset0_count8"
-	.space 1
-	.ascii "write_var_BitField_offset0_count7"
-	.space 1
-	.ascii "read_var_BitField_offset0_count7"
-	.space 1
-	.ascii "write_var_BitField_offset0_count6"
-	.space 1
-	.ascii "read_var_BitField_offset0_count6"
-	.space 1
-	.ascii "write_var_BitField_offset0_count5"
-	.space 1
-	.ascii "read_var_BitField_offset0_count5"
-	.space 1
-	.ascii "write_var_BitField_offset0_count4"
-	.space 1
-	.ascii "read_var_BitField_offset0_count4"
-	.space 1
-	.ascii "write_var_BitField_offset0_count3"
-	.space 1
-	.ascii "read_var_BitField_offset0_count3"
-	.space 1
-	.ascii "write_var_BitField_offset0_count2"
-	.space 1
-	.ascii "read_var_BitField_offset0_count2"
-	.space 1
-	.ascii "write_var_BitField_offset0_count1"
-	.space 1
-	.ascii "read_var_BitField_offset0_count1"
-	.space 3
 	.quad	_bitfield_M3
 	.quad	_L_1
 	.quad	_bitfield__write_var_BitField_offset63_count1
@@ -108335,271 +105380,15 @@ _L_1:
 	.quad	_L_1+140957
 	.quad	_bitfield__read_var_BitField_offset1_count1
 	.quad	_L_1+140991
-	.quad	_bitfield__write_var_BitField_offset0_count64
-	.quad	_L_1+141024
-	.quad	_bitfield__read_var_BitField_offset0_count64
-	.quad	_L_1+141059
-	.quad	_bitfield__write_var_BitField_offset0_count63
-	.quad	_L_1+141093
-	.quad	_bitfield__read_var_BitField_offset0_count63
-	.quad	_L_1+141128
-	.quad	_bitfield__write_var_BitField_offset0_count62
-	.quad	_L_1+141162
-	.quad	_bitfield__read_var_BitField_offset0_count62
-	.quad	_L_1+141197
-	.quad	_bitfield__write_var_BitField_offset0_count61
-	.quad	_L_1+141231
-	.quad	_bitfield__read_var_BitField_offset0_count61
-	.quad	_L_1+141266
-	.quad	_bitfield__write_var_BitField_offset0_count60
-	.quad	_L_1+141300
-	.quad	_bitfield__read_var_BitField_offset0_count60
-	.quad	_L_1+141335
-	.quad	_bitfield__write_var_BitField_offset0_count59
-	.quad	_L_1+141369
-	.quad	_bitfield__read_var_BitField_offset0_count59
-	.quad	_L_1+141404
-	.quad	_bitfield__write_var_BitField_offset0_count58
-	.quad	_L_1+141438
-	.quad	_bitfield__read_var_BitField_offset0_count58
-	.quad	_L_1+141473
-	.quad	_bitfield__write_var_BitField_offset0_count57
-	.quad	_L_1+141507
-	.quad	_bitfield__read_var_BitField_offset0_count57
-	.quad	_L_1+141542
-	.quad	_bitfield__write_var_BitField_offset0_count56
-	.quad	_L_1+141576
-	.quad	_bitfield__read_var_BitField_offset0_count56
-	.quad	_L_1+141611
-	.quad	_bitfield__write_var_BitField_offset0_count55
-	.quad	_L_1+141645
-	.quad	_bitfield__read_var_BitField_offset0_count55
-	.quad	_L_1+141680
-	.quad	_bitfield__write_var_BitField_offset0_count54
-	.quad	_L_1+141714
-	.quad	_bitfield__read_var_BitField_offset0_count54
-	.quad	_L_1+141749
-	.quad	_bitfield__write_var_BitField_offset0_count53
-	.quad	_L_1+141783
-	.quad	_bitfield__read_var_BitField_offset0_count53
-	.quad	_L_1+141818
-	.quad	_bitfield__write_var_BitField_offset0_count52
-	.quad	_L_1+141852
-	.quad	_bitfield__read_var_BitField_offset0_count52
-	.quad	_L_1+141887
-	.quad	_bitfield__write_var_BitField_offset0_count51
-	.quad	_L_1+141921
-	.quad	_bitfield__read_var_BitField_offset0_count51
-	.quad	_L_1+141956
-	.quad	_bitfield__write_var_BitField_offset0_count50
-	.quad	_L_1+141990
-	.quad	_bitfield__read_var_BitField_offset0_count50
-	.quad	_L_1+142025
-	.quad	_bitfield__write_var_BitField_offset0_count49
-	.quad	_L_1+142059
-	.quad	_bitfield__read_var_BitField_offset0_count49
-	.quad	_L_1+142094
-	.quad	_bitfield__write_var_BitField_offset0_count48
-	.quad	_L_1+142128
-	.quad	_bitfield__read_var_BitField_offset0_count48
-	.quad	_L_1+142163
-	.quad	_bitfield__write_var_BitField_offset0_count47
-	.quad	_L_1+142197
-	.quad	_bitfield__read_var_BitField_offset0_count47
-	.quad	_L_1+142232
-	.quad	_bitfield__write_var_BitField_offset0_count46
-	.quad	_L_1+142266
-	.quad	_bitfield__read_var_BitField_offset0_count46
-	.quad	_L_1+142301
-	.quad	_bitfield__write_var_BitField_offset0_count45
-	.quad	_L_1+142335
-	.quad	_bitfield__read_var_BitField_offset0_count45
-	.quad	_L_1+142370
-	.quad	_bitfield__write_var_BitField_offset0_count44
-	.quad	_L_1+142404
-	.quad	_bitfield__read_var_BitField_offset0_count44
-	.quad	_L_1+142439
-	.quad	_bitfield__write_var_BitField_offset0_count43
-	.quad	_L_1+142473
-	.quad	_bitfield__read_var_BitField_offset0_count43
-	.quad	_L_1+142508
-	.quad	_bitfield__write_var_BitField_offset0_count42
-	.quad	_L_1+142542
-	.quad	_bitfield__read_var_BitField_offset0_count42
-	.quad	_L_1+142577
-	.quad	_bitfield__write_var_BitField_offset0_count41
-	.quad	_L_1+142611
-	.quad	_bitfield__read_var_BitField_offset0_count41
-	.quad	_L_1+142646
-	.quad	_bitfield__write_var_BitField_offset0_count40
-	.quad	_L_1+142680
-	.quad	_bitfield__read_var_BitField_offset0_count40
-	.quad	_L_1+142715
-	.quad	_bitfield__write_var_BitField_offset0_count39
-	.quad	_L_1+142749
-	.quad	_bitfield__read_var_BitField_offset0_count39
-	.quad	_L_1+142784
-	.quad	_bitfield__write_var_BitField_offset0_count38
-	.quad	_L_1+142818
-	.quad	_bitfield__read_var_BitField_offset0_count38
-	.quad	_L_1+142853
-	.quad	_bitfield__write_var_BitField_offset0_count37
-	.quad	_L_1+142887
-	.quad	_bitfield__read_var_BitField_offset0_count37
-	.quad	_L_1+142922
-	.quad	_bitfield__write_var_BitField_offset0_count36
-	.quad	_L_1+142956
-	.quad	_bitfield__read_var_BitField_offset0_count36
-	.quad	_L_1+142991
-	.quad	_bitfield__write_var_BitField_offset0_count35
-	.quad	_L_1+143025
-	.quad	_bitfield__read_var_BitField_offset0_count35
-	.quad	_L_1+143060
-	.quad	_bitfield__write_var_BitField_offset0_count34
-	.quad	_L_1+143094
-	.quad	_bitfield__read_var_BitField_offset0_count34
-	.quad	_L_1+143129
-	.quad	_bitfield__write_var_BitField_offset0_count33
-	.quad	_L_1+143163
-	.quad	_bitfield__read_var_BitField_offset0_count33
-	.quad	_L_1+143198
-	.quad	_bitfield__write_var_BitField_offset0_count32
-	.quad	_L_1+143232
-	.quad	_bitfield__read_var_BitField_offset0_count32
-	.quad	_L_1+143267
-	.quad	_bitfield__write_var_BitField_offset0_count31
-	.quad	_L_1+143301
-	.quad	_bitfield__read_var_BitField_offset0_count31
-	.quad	_L_1+143336
-	.quad	_bitfield__write_var_BitField_offset0_count30
-	.quad	_L_1+143370
-	.quad	_bitfield__read_var_BitField_offset0_count30
-	.quad	_L_1+143405
-	.quad	_bitfield__write_var_BitField_offset0_count29
-	.quad	_L_1+143439
-	.quad	_bitfield__read_var_BitField_offset0_count29
-	.quad	_L_1+143474
-	.quad	_bitfield__write_var_BitField_offset0_count28
-	.quad	_L_1+143508
-	.quad	_bitfield__read_var_BitField_offset0_count28
-	.quad	_L_1+143543
-	.quad	_bitfield__write_var_BitField_offset0_count27
-	.quad	_L_1+143577
-	.quad	_bitfield__read_var_BitField_offset0_count27
-	.quad	_L_1+143612
-	.quad	_bitfield__write_var_BitField_offset0_count26
-	.quad	_L_1+143646
-	.quad	_bitfield__read_var_BitField_offset0_count26
-	.quad	_L_1+143681
-	.quad	_bitfield__write_var_BitField_offset0_count25
-	.quad	_L_1+143715
-	.quad	_bitfield__read_var_BitField_offset0_count25
-	.quad	_L_1+143750
-	.quad	_bitfield__write_var_BitField_offset0_count24
-	.quad	_L_1+143784
-	.quad	_bitfield__read_var_BitField_offset0_count24
-	.quad	_L_1+143819
-	.quad	_bitfield__write_var_BitField_offset0_count23
-	.quad	_L_1+143853
-	.quad	_bitfield__read_var_BitField_offset0_count23
-	.quad	_L_1+143888
-	.quad	_bitfield__write_var_BitField_offset0_count22
-	.quad	_L_1+143922
-	.quad	_bitfield__read_var_BitField_offset0_count22
-	.quad	_L_1+143957
-	.quad	_bitfield__write_var_BitField_offset0_count21
-	.quad	_L_1+143991
-	.quad	_bitfield__read_var_BitField_offset0_count21
-	.quad	_L_1+144026
-	.quad	_bitfield__write_var_BitField_offset0_count20
-	.quad	_L_1+144060
-	.quad	_bitfield__read_var_BitField_offset0_count20
-	.quad	_L_1+144095
-	.quad	_bitfield__write_var_BitField_offset0_count19
-	.quad	_L_1+144129
-	.quad	_bitfield__read_var_BitField_offset0_count19
-	.quad	_L_1+144164
-	.quad	_bitfield__write_var_BitField_offset0_count18
-	.quad	_L_1+144198
-	.quad	_bitfield__read_var_BitField_offset0_count18
-	.quad	_L_1+144233
-	.quad	_bitfield__write_var_BitField_offset0_count17
-	.quad	_L_1+144267
-	.quad	_bitfield__read_var_BitField_offset0_count17
-	.quad	_L_1+144302
-	.quad	_bitfield__write_var_BitField_offset0_count16
-	.quad	_L_1+144336
-	.quad	_bitfield__read_var_BitField_offset0_count16
-	.quad	_L_1+144371
-	.quad	_bitfield__write_var_BitField_offset0_count15
-	.quad	_L_1+144405
-	.quad	_bitfield__read_var_BitField_offset0_count15
-	.quad	_L_1+144440
-	.quad	_bitfield__write_var_BitField_offset0_count14
-	.quad	_L_1+144474
-	.quad	_bitfield__read_var_BitField_offset0_count14
-	.quad	_L_1+144509
-	.quad	_bitfield__write_var_BitField_offset0_count13
-	.quad	_L_1+144543
-	.quad	_bitfield__read_var_BitField_offset0_count13
-	.quad	_L_1+144578
-	.quad	_bitfield__write_var_BitField_offset0_count12
-	.quad	_L_1+144612
-	.quad	_bitfield__read_var_BitField_offset0_count12
-	.quad	_L_1+144647
-	.quad	_bitfield__write_var_BitField_offset0_count11
-	.quad	_L_1+144681
-	.quad	_bitfield__read_var_BitField_offset0_count11
-	.quad	_L_1+144716
-	.quad	_bitfield__write_var_BitField_offset0_count10
-	.quad	_L_1+144750
-	.quad	_bitfield__read_var_BitField_offset0_count10
-	.quad	_L_1+144785
-	.quad	_bitfield__write_var_BitField_offset0_count9
-	.quad	_L_1+144819
-	.quad	_bitfield__read_var_BitField_offset0_count9
-	.quad	_L_1+144853
-	.quad	_bitfield__write_var_BitField_offset0_count8
-	.quad	_L_1+144886
-	.quad	_bitfield__read_var_BitField_offset0_count8
-	.quad	_L_1+144920
-	.quad	_bitfield__write_var_BitField_offset0_count7
-	.quad	_L_1+144953
-	.quad	_bitfield__read_var_BitField_offset0_count7
-	.quad	_L_1+144987
-	.quad	_bitfield__write_var_BitField_offset0_count6
-	.quad	_L_1+145020
-	.quad	_bitfield__read_var_BitField_offset0_count6
-	.quad	_L_1+145054
-	.quad	_bitfield__write_var_BitField_offset0_count5
-	.quad	_L_1+145087
-	.quad	_bitfield__read_var_BitField_offset0_count5
-	.quad	_L_1+145121
-	.quad	_bitfield__write_var_BitField_offset0_count4
-	.quad	_L_1+145154
-	.quad	_bitfield__read_var_BitField_offset0_count4
-	.quad	_L_1+145188
-	.quad	_bitfield__write_var_BitField_offset0_count3
-	.quad	_L_1+145221
-	.quad	_bitfield__read_var_BitField_offset0_count3
-	.quad	_L_1+145255
-	.quad	_bitfield__write_var_BitField_offset0_count2
-	.quad	_L_1+145288
-	.quad	_bitfield__read_var_BitField_offset0_count2
-	.quad	_L_1+145322
-	.quad	_bitfield__write_var_BitField_offset0_count1
-	.quad	_L_1+145355
-	.quad	_bitfield__read_var_BitField_offset0_count1
-	.quad	_L_1+145389
 	.space 8
 	.ascii "../AMD64_DARWIN/bitfield.m3"
 	.space 5
 	.data
 	.align 5
 _MM_bitfield:
-	.quad	_L_1+212008
+	.quad	_L_1+205560
 	.space 32
-	.quad	_L_1+145424
+	.quad	_L_1+141024
 	.space 24
 	.quad	_MM_bitfield+216
 	.space 8
