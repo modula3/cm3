@@ -4635,7 +4635,7 @@ m3cg_extract_mn (void)
 
   if (option_trace_all)
     fprintf(stderr, " extract_mn offset:%u count:%u sign_extend:%u\n",
-            (unsigned)m, (unsigned)n, (unsigned):sign_extend);
+            (unsigned)m, (unsigned)n, (unsigned)sign_extend);
 
   if (n == 0)
     EXPR_REF (-1) = m3_cast(t, v_zero);
