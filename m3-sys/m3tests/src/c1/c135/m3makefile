@@ -234,20 +234,28 @@ end
   end
 
   local all_ops = ["Plus", "Times", "Minus", "Divide", "Mod", "LT", "LE", "GT",
-                   "GE", "And", "Or", "Xor", "EQ", "NE", "Not"]
+                   "GE", "And", "Or", "Xor", "EQ", "NE", "Not",
+                   "LeftShift", "RightShift", "Shift",
+                   "LeftRotate", "RightRotate", "Rotate"]
   local binary_ops = {"Plus", "Times", "Minus", "Divide", "Mod", "LT", "LE", "GT",
-                      "GE", "And", "Or", "Xor", "EQ", "NE"}
+                      "GE", "And", "Or", "Xor", "EQ", "NE",
+                      "LeftShift", "RightShift", "Shift",
+                      "LeftRotate", "RightRotate", "Rotate"}
+  local shift_ops = {"LeftShift", "RightShift", "Shift",
+                     "LeftRotate", "RightRotate", "Rotate"}
   local unary_ops = {"Not"}
   local word_ops = {"Plus", "Times", "Minus", "Divide",
                     "Mod", "LT", "LE", "GT", "GE",
-                    "And", "Or", "Xor", "Not"}
+                    "And", "Or", "Xor", "Not",
+                    "LeftShift", "RightShift", "Shift",
+                    "LeftRotate", "RightRotate", "Rotate"}
   local float_ops = {"Plus":"+", "Minus":"-", "Times":"*", "Divide":"/",
                      "Mod":"MOD", "LT":"<", "LE":"<=", "GT":">", "GE":">=",
                      "EQ":"=", "NE":"#", "Not":"-"}
   local int_ops = {"Plus":"+", "Minus":"-", "Times":"*", "Divide":"DIV",
                    "Mod":"MOD", "LT":"<", "LE":"<=", "GT":">", "GE":">=",
                    "EQ":"=", "NE":"#", "Not":"-"}
-  local ret_bool = {"LT", "LE", "GT", "GE", "EQ", "NE" }      
+  local ret_bool = {"LT", "LE", "GT", "GE", "EQ", "NE"}      
 
   foreach op in all_ops
     comment(op)
@@ -262,6 +270,7 @@ end
                   or ((not word) and (not float) and int_ops contains op and IsInt{t} and IsInt{t2}))
                   and ((IsInt{t} and IsInt{t2}) or (equal(t, t2) and float_ops contains op))
                   and (binary_ops contains op or equal(t, t2))
+                  and ((IsInt{t} and equal(t2, "INTEGER")) or not shift_ops contains op)
                 local f = op & "_" & {TRUE:"param",FALSE:"var"}{p} & "_" & ShortName{t} & "_" & ShortName{t2}
                 if word
                   f = "u" & f
@@ -271,7 +280,7 @@ end
                   write("a:", t, ";b:", t2)
                 end
                 write("):")
-                local toLong = not equal(IsLong{t}, IsLong{t2})
+                local toLong = not equal(IsLong{t}, IsLong{t2}) and not shift_ops contains op
                 local isLong = IsLong{t} or IsLong{t2}
                 if ret_bool contains op
                   write("BOOLEAN")
