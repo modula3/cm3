@@ -77,9 +77,20 @@ enum machine_mode;
 #ifndef TARGET_ARCH32
 #define TARGET_ARCH32 0
 #endif
+#ifndef TARGET_POWERPC
+#define TARGET_POWERPC 0
+#endif
+#ifndef TARGET_POWERPC64
+#define TARGET_POWERPC64 0
+#endif
 
-/* in particular, Solaris/sparc32 has a stack walker */
-#define M3_ALL_VOLATILE (TARGET_SPARC && TARGET_SOLARIS && TARGET_ARCH32)
+/* in particular, Solaris/sparc32 has a stack walker
+   Why does the stack walker matter?
+   Also, PPC_LINUX hangs if we remove volatile.
+   Needs further debugging.
+ */
+#define M3_ALL_VOLATILE \
+  (TARGET_POWERPC | TARGET_POWERPC | (TARGET_SPARC && TARGET_SOLARIS && TARGET_ARCH32))
 
 #if GCC45
 
@@ -2086,7 +2097,8 @@ m3_volatize_p (void)
 static void
 m3_set_volatize (void)
 {
-    m3_set_language_function()->volatil = true;
+    if (!M3_ALL_VOLATILE)
+      m3_set_language_function()->volatil = true;
 }
 
 static void
