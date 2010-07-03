@@ -111,6 +111,11 @@ foreach t in ["INTEGER", "CARDINAL", "LONGINT", "LONGCARD"]
   Builtin{t} = TRUE
 end
 
+ShortName{"INTEGER"} = "I"
+ShortName{"LONGINT"} = "L"
+ShortName{"CARDINAL"} = "C"
+ShortName{"LONGCARD"} = "LC"
+
 foreach t in ["INTEGER", "CARDINAL"]
   IntSize{t} = {"32BITS":32,"64BITS":64}{WORD_SIZE}
   IsLong{t} = FALSE
@@ -271,22 +276,36 @@ end
     foreach j in InclusiveRange("1", Sub("64", i))
       local t = "BitField_offset" & i & "_count" & j
       write("<*NOWARN*>TYPE ", t, " = RECORD ", CR)
-      write(" offset:BITS ", i, " FOR [0..0];", CR)
-      write(" value:BITS ", j, " FOR [0..1];", CR)
+      local proc WriteBitField(name, bits) is
+        write(" ", name, ":BITS ", bits, " FOR ")
+        if equal(bits, "64")
+          write("LONGINT")
+        else
+          if equal(bits, "0")
+            write(" [0L .. 0L]")
+          else
+            write(" [0L .. Long.RightShift(Long.Not(0L), ", Sub(64, bits), ")]")
+          end
+        end
+        write(";", CR)
+      end
+      WriteBitField("offset", i)
+      WriteBitField("value", j)
       write("END;", CR)
       local p = "read_var_" & t
-      write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):[0..1]=", CR, "  BEGIN RETURN a.value END ", p, ";", CR)
+      write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):LONGINT=", CR,
+            "             BEGIN RETURN a.value END ", p, ";", CR)
       p = "write_var_" & t
-      write("<*NOWARN*> PROCEDURE ", p, "(VAR a:", t, ";b:[0..1])=", CR, "  BEGIN a.value := b END ",
-            p, ";", CR)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+      write("<*NOWARN*> PROCEDURE ", p, "(VAR a:", t, ";b:LONGINT)=", CR,
+           "              BEGIN a.value := b END ", p, ";", CR)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
     end
   end
 
-  foreach t in ["INT32", "UINT32", "INT64", "UINT64"]
-    foreach i in InclusiveRange("0", {"INT32":"31", "UINT32":"31", "INT64":"63", "UINT64":"63"}{t})
-      local p = "div_pow2_" & t & "_" & i
+  foreach t in ["INT32", "UINT32", "INT64", "UINT64", "INTEGER", "CARDINAL", "LONGINT", "LONGCARD"]
+    foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
+      local p = "div_pow2_" & ShortName{t} & "_" & i
       write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):", t, "=", CR, "  BEGIN RETURN a DIV 16_" & HexPowerOf2(i) & L{t} & " END ", p, ";", CR)
-      p = "mod_pow2_" & t & "_" & i
+      p = "mod_pow2_" & ShortName{t} & "_" & i
       write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):", t, "=", CR, "  BEGIN RETURN a MOD 16_" & HexPowerOf2(i) & L{t} & " END ", p, ";", CR)
     end
   end
