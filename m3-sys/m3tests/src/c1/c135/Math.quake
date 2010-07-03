@@ -245,7 +245,7 @@ proc PowerOf2(a) is
  return Helper(Helper, a)
 end
 
-proc DecToHex(a) is
+proc Hex(a) is
  local proc Helper(f, a) is
    local digits = ["0","1","2","3","4","5","6","7","8","9","A","B","C","D","E","F"]
    if equal(a, "0") return "" end
@@ -253,9 +253,24 @@ proc DecToHex(a) is
  end
  a = a & ""
  if Less(a, "0")
-   error("only positive numbers supported in DecToHex but " & a & " given\n")
+   error("only positive numbers supported in Hex but " & a & " given\n")
  end
  if equal(a, "0") return "0" end
+ return Helper(Helper, a)
+end
+
+proc HexPowerOf2(a) is
+ local proc Helper(f, a) is
+   if equal(a, "0") return "1" end
+   if Greater(a, 8)
+     return HexPowerOf2(Sub(a, 8)) & "00"
+   end
+   return Hex(PowerOf2(a))
+ end
+ a = a & ""
+ if Less(a, "0")
+   error("only positive numbers supported in HexPowerOf2 but " & a & " given\n")
+ end
  return Helper(Helper, a)
 end
 
@@ -284,7 +299,7 @@ end
 %write("2 + 3 is " & Add(2, 3), CR)
 %error(Div(32, 16))
 
-if TRUE
+if FALSE
   local proc S(a) is
     if equal(a, FALSE)
       return "FALSE"
@@ -316,9 +331,9 @@ if TRUE
     write(" 32 ", op, "  16 is ", S(f(32, 16)), CR)
     write(CR)
   end
-  write(DecToHex(128), CR)
-  write(DecToHex(255), CR)
-  write(DecToHex(100), CR)
+  write(Hex(128), CR)
+  write(Hex(255), CR)
+  write(Hex(100), CR)
   write(PowerOf2(0), CR)
   write(PowerOf2(1), CR)
   write(PowerOf2(2), CR)
@@ -326,11 +341,11 @@ if TRUE
   write(PowerOf2(4), CR)
   write(PowerOf2(5), CR)
   write(PowerOf2(6), CR)
-  write(DecToHex(PowerOf2(0)), CR)
-  write(DecToHex(PowerOf2(1)), CR)
-  write(DecToHex(PowerOf2(2)), CR)
-  write(DecToHex(PowerOf2(3)), CR)
-  write(DecToHex(PowerOf2(4)), CR)
-  write(DecToHex(PowerOf2(5)), CR)
-  write(DecToHex(PowerOf2(6)), CR)
+  write(Hex(PowerOf2(0)), CR)
+  write(Hex(PowerOf2(1)), CR)
+  write(Hex(PowerOf2(2)), CR)
+  write(Hex(PowerOf2(3)), CR)
+  write(Hex(PowerOf2(4)), CR)
+  write(Hex(PowerOf2(5)), CR)
+  write(Hex(PowerOf2(6)), CR)
 end
