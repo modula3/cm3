@@ -135,7 +135,7 @@ end
 
 %VerboseMath = TRUE
 
-proc Range(start, endd) is
+proc ExclusiveRange(start, endd) is
   local proc Helper(f, result, start, endd) is
     if equal(start, endd)
       return result
@@ -144,4 +144,8 @@ proc Range(start, endd) is
     return f(f, result, Add(start, "1"), endd)
   end
   return Helper(Helper, [ ], start, endd)
+end
+
+proc InclusiveRange(start, endd) is
+  return ExclusiveRange(start, Add(endd, "1"))
 end
