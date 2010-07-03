@@ -270,7 +270,7 @@ end
                   or ((not word) and (not float) and int_ops contains op and IsInt{t} and IsInt{t2}))
                   and ((IsInt{t} and IsInt{t2}) or (equal(t, t2) and float_ops contains op))
                   and (binary_ops contains op or equal(t, t2))
-                  and ((IsInt{t} and equal(t2, "INTEGER")) or not shift_ops contains op)
+                  and ((IsInt{t} and (equal(t2, "INTEGER") or equal(t2, "CARDINAL"))) or not shift_ops contains op)
                 local f = op & "_" & {TRUE:"param",FALSE:"var"}{p} & "_" & ShortName{t} & "_" & ShortName{t2}
                 if word
                   f = "u" & f
