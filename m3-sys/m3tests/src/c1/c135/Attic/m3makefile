@@ -358,31 +358,24 @@ EndModule("A")
 
 >> BeginModule("bitfield") in
   comment("bit field get and set")
-  foreach i in InclusiveRange("0", "64")
-    foreach j in InclusiveRange("1", Sub("64", i))
+  n = IntSize{"INTEGER"} & ""
+  foreach i in InclusiveRange("1", n)
+    foreach j in InclusiveRange("1", Sub(n, i))
       local t = "BitField_offset" & i & "_count" & j
       write("<*NOWARN*>TYPE ", t, " = RECORD ", CR)
       local proc WriteBitField(name, bits) is
         write(" ", name, ":BITS ", bits, " FOR ")
-        if equal(bits, "64")
-          write("LONGINT")
-        else
-          if equal(bits, "0")
-            write(" [0L .. 0L]")
-          else
-            write(" [0L .. Long.RightShift(Long.Not(0L), ", Sub(64, bits), ")]")
-          end
-        end
+        write(" [0 .. Word.RightShift(Word.Not(0), ", Sub(n, bits), ")]")
         write(";", CR)
       end
       WriteBitField("offset", i)
       WriteBitField("value", j)
       write("END;", CR)
       local p = "read_var_" & t
-      write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):LONGINT=", CR,
+      write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):INTEGER=", CR,
             "             BEGIN RETURN a.value END ", p, ";", CR)
       p = "write_var_" & t
-      write("<*NOWARN*> PROCEDURE ", p, "(VAR a:", t, ";b:LONGINT)=", CR,
+      write("<*NOWARN*> PROCEDURE ", p, "(VAR a:", t, ";b:INTEGER)=", CR,
            "              BEGIN a.value := b END ", p, ";", CR)
     end
   end
