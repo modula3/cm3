@@ -27,14 +27,6 @@ proc BeginInterface(a) is
   return b
 end
 
-proc BeginModule(a) is
-  local b = a & ".m3.temp"
-  > b in
-    write("MODULE ", a, ";", CR)
-  end
-  return b
-end
-
 proc EndX(a, ext) is
   local b = a & ext & ".temp"
   >> b in
@@ -155,46 +147,55 @@ foreach t in FloatTypes
   IsLong{t} = FALSE % needs work
 end
 
->> BeginModule("A") in
-  write("IMPORT Cstdint, Word, Long;", CR)
-  write("TYPE FLOAT32 = REAL;",CR)
-  write("TYPE FLOAT64 = LONGREAL;",CR)
-  
-  local proc comment(a) is
-    write(CR, "(* ", a, " *)", CR, CR)
-  end
+local proc comment(a) is
+  write(CR, "(* ", a, " *)", CR, CR)
+end
 
+proc BeginModule(a) is
+  local b = a & ".m3.temp"
+  > b in
+    write("MODULE ", a, ";", CR)
+  write("<*NOWARN*>IMPORT Cstdint, Word, Long;", CR)
+  
   comment("define some types")
-  
-  foreach t in Types
-    if IsInt{t} and not Builtin{t}
-      write("TYPE ", t, " = Cstdint.", {FALSE:"",TRUE:"u","":"","u":"u"}{IsSignedInt{t}}, "int", IntSize{t}, "_t;", CR)
-    end
-  end
-  
-  comment("constants")
 
-  foreach t in Types
-    write("<*NOWARN*> CONST k", ShortName{t}, ":", t, "=", Increment())
-    if IsFloat{t}
-      write(".", Increment())
-    else
+  write("<*NOWARN*>TYPE FLOAT32 = REAL;",CR)
+  write("<*NOWARN*>TYPE FLOAT64 = LONGREAL;",CR)
+    
+    foreach t in Types
+      if IsInt{t} and not Builtin{t}
+        write("<*NOWARN*>TYPE ", t, " = Cstdint.", {FALSE:"",TRUE:"u","":"","u":"u"}{IsSignedInt{t}}, "int", IntSize{t}, "_t;", CR)
+      end
     end
-    write(L{t}, ";", CR)
-  end
-
-  comment("variables")
-
-  foreach t in Types
-    write("<*NOWARN*> VAR v", ShortName{t}, ":", t, ":=", Increment())
-    if IsFloat{t}
-      write(".", Increment())
-    else
-    end
-    write(L{t}, ";", CR)
-  end
-  write("VAR offset, count:CARDINAL;", CR)
   
+    comment("constants")
+
+    foreach t in Types
+      write("<*NOWARN*> CONST k", ShortName{t}, ":", t, "=", Increment())
+      if IsFloat{t}
+        write(".", Increment())
+      else
+      end
+      write(L{t}, ";", CR)
+    end
+
+    comment("variables")
+
+    foreach t in Types
+      write("<*NOWARN*> VAR v", ShortName{t}, ":", t, ":=", Increment())
+      if IsFloat{t}
+        write(".", Increment())
+      else
+      end
+      write(L{t}, ";", CR)
+    end
+    write("<*NOWARN*>VAR offset, count:CARDINAL;", CR)
+  end
+  return b
+end
+
+>> BeginModule("A") in
+
   comment("functions that return constants")
 
   foreach t in Types
@@ -341,7 +342,14 @@ end
       end
     end
   end
+  write("BEGIN", CR)
+end
+EndModule("A")
 
+% split into multiple modules to keep size down
+% when it gets too large, compiler backend fails
+
+>> BeginModule("B") in
   comment("bit field get and set")
 
   foreach i in InclusiveRange("0", "64")
@@ -372,7 +380,13 @@ end
            "              BEGIN a.value := b END ", p, ";", CR)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
     end
   end
-  
+
+  write("BEGIN", CR)
+end
+EndModule("B")
+
+>> BeginModule("C") in
+
   comment("divide and mod by powers of 2")
 
   foreach t in ["INT32", "UINT32", "INT64", "UINT64", "INTEGER", "CARDINAL", "LONGINT", "LONGCARD"]
@@ -385,31 +399,64 @@ end
             "           BEGIN RETURN a MOD 16_" & HexPowerOf2(i) & L{t} & " END ", p, ";", CR)
     end
   end
-  
+
+  comment("insert and extract with one constant")
+
   IntSize{"Word"} = IntSize{"INTEGER"}
   IntSize{"Long"} = IntSize{"LONGINT"}
 
   foreach t in ["Word", "Long"]
     foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
-      local p = t & "_insert_m_n"
-      %write("<*NOWARN*> PROCEDURE ", p, "(a,b:", t, ".T):", t, ".T=", CR, "  BEGIN RETURN ", t, ".Insert( DIV 16_" & HexPowerOf2(i) & L{t} & " END ", p, ";", CR)
-      %p = "mod_pow2_" & ShortName{t} & "_" & i
-      %write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):", t, "=", CR, "  BEGIN RETURN a MOD 16_" & HexPowerOf2(i) & L{t} & " END ", p, ";", CR)
+      local p = t & "_insert_constant_offset_" & i
+      write("<*NOWARN*> PROCEDURE ", p, "(a,b:", t, ".T):", t, ".T=", CR,
+            "           BEGIN RETURN ", t, ".Insert(a,b,", i, ",count); END ", p, ";", CR)
+      p = t & "_insert_constant_count_" & i
+      write("<*NOWARN*> PROCEDURE ", p, "(a,b:", t, ".T):", t, ".T=", CR,
+            "           BEGIN RETURN ", t, ".Insert(a,b,offset,", i, "); END ", p, ";", CR)
+      p = t & "_extract_constant_offset_" & i
+      write("<*NOWARN*> PROCEDURE ", p, "(a:", t, ".T):", t, ".T=", CR,
+            "           BEGIN RETURN ", t, ".Extract(a,", i, ",count); END ", p, ";", CR)
+      p = t & "_extract_constant_count_" & i
+      write("<*NOWARN*> PROCEDURE ", p, "(a:", t, ".T):", t, ".T=", CR,
+            "           BEGIN RETURN ", t, ".Extract(a,offset,", i, "); END ", p, ";", CR)
+    end
+  end
+  write("BEGIN", CR)
+end
+EndModule("C")
+
+>> BeginModule("D") in
+
+  comment("insert and extract with two constants")
+
+  IntSize{"Word"} = IntSize{"INTEGER"}
+  IntSize{"Long"} = IntSize{"LONGINT"}
+
+  foreach t in ["Word", "Long"]
+    foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
+      foreach j in InclusiveRange("0", Sub(IntSize{t}, i))
+        local p = t & "_insert_constants_" & i & "_" & j
+        write("<*NOWARN*> PROCEDURE ", p, "(a,b:", t, ".T):", t, ".T=", CR,
+              "           BEGIN RETURN ", t, ".Insert(a,b,",i,",",j,"); END ", p, ";", CR)
+        p = t & "_extract_constants_" & i & "_" & j
+        write("<*NOWARN*> PROCEDURE ", p, "(a:", t, ".T):", t, ".T=", CR,
+             "            BEGIN RETURN ", t, ".Extract(a,",i,",",j,"); END ", p, ";", CR)
+      end
     end
   end
 
-
   write("BEGIN", CR)
 end
-EndModule("A")
+EndModule("D")
 
->> BeginInterface("A") in
-  write("(* bar *)", CR)
+foreach a in ["A", "B", "C", "D"]
+  >> BeginInterface(a) in
+  end
+  EndInterface(a)
+  derived_interface(a, HIDDEN)
+  derived_implementation(a)
 end
-EndInterface("A")
 
-derived_interface("A", HIDDEN)
-derived_implementation("A")
 implementation("Main")
 build_standalone()
 include ("../../Test.common")
