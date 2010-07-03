@@ -193,6 +193,7 @@ end
     end
     write(L{t}, ";", CR)
   end
+  write("VAR offset, count:CARDINAL;", CR)
   
   comment("functions that return constants")
 
@@ -236,19 +237,23 @@ end
   local all_ops = ["Plus", "Times", "Minus", "Divide", "Mod", "LT", "LE", "GT",
                    "GE", "And", "Or", "Xor", "EQ", "NE", "Not",
                    "LeftShift", "RightShift", "Shift",
-                   "LeftRotate", "RightRotate", "Rotate"]
+                   "LeftRotate", "RightRotate", "Rotate",
+                   "Insert", "Extract"]
   local binary_ops = {"Plus", "Times", "Minus", "Divide", "Mod", "LT", "LE", "GT",
                       "GE", "And", "Or", "Xor", "EQ", "NE",
                       "LeftShift", "RightShift", "Shift",
-                      "LeftRotate", "RightRotate", "Rotate"}
+                      "LeftRotate", "RightRotate", "Rotate",
+                      "Insert"}
   local shift_ops = {"LeftShift", "RightShift", "Shift",
                      "LeftRotate", "RightRotate", "Rotate"}
+  local bitfield_ops = {"Insert", "Extract"}
   local unary_ops = {"Not"}
   local word_ops = {"Plus", "Times", "Minus", "Divide",
                     "Mod", "LT", "LE", "GT", "GE",
                     "And", "Or", "Xor", "Not",
                     "LeftShift", "RightShift", "Shift",
-                    "LeftRotate", "RightRotate", "Rotate"}
+                    "LeftRotate", "RightRotate", "Rotate",
+                    "Insert", "Extract"}
   local float_ops = {"Plus":"+", "Minus":"-", "Times":"*", "Divide":"/",
                      "Mod":"MOD", "LT":"<", "LE":"<=", "GT":">", "GE":">=",
                      "EQ":"=", "NE":"#", "Not":"-"}
@@ -271,6 +276,7 @@ end
                   and ((IsInt{t} and IsInt{t2}) or (equal(t, t2) and float_ops contains op))
                   and (binary_ops contains op or equal(t, t2))
                   and ((IsInt{t} and (equal(t2, "INTEGER") or equal(t2, "CARDINAL"))) or not shift_ops contains op)
+                  and ((IsInt{t} and equal(t, t2)) or not bitfield_ops contains op)
                 local f = op & "_" & {TRUE:"param",FALSE:"var"}{p} & "_" & ShortName{t} & "_" & ShortName{t2}
                 if word
                   f = "u" & f
@@ -278,6 +284,9 @@ end
                 write("<*NOWARN*>PROCEDURE ", f, "(")
                 if p
                   write("a:", t, ";b:", t2)
+                  if bitfield_ops contains op
+                    write(";offset,count:CARDINAL")
+                  end
                 end
                 write("):")
                 local toLong = not equal(IsLong{t}, IsLong{t2}) and not shift_ops contains op
@@ -313,6 +322,9 @@ end
                   write(Word, ".", op, "(", a)
                   if binary_ops contains op
                     write(",", b)
+                  end
+                  if bitfield_ops contains op
+                    write(",offset,count")
                   end
                   write(")")
                 else
