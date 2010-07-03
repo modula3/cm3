@@ -284,13 +284,14 @@ proc ExclusiveRange(start, endd) is
     result += start
     return f(f, result, Add(start, "1"), endd)
   end
+  start = start & ""
+  endd = endd & ""
   return Helper(Helper, [ ], start, endd)
 end
 
 proc InclusiveRange(start, endd) is
   return ExclusiveRange(start, Add(endd, "1"))
 end
-
 
 %write("99 - 40 is " & Sub(40, 99), CR)
 %write("99 - 40 is " & Sub(99, 40), CR)
