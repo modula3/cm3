@@ -234,84 +234,85 @@ end
   end
 
   local all_ops = ["Plus", "Times", "Minus", "Divide", "Mod", "LT", "LE", "GT",
-                    "GE", "And", "Or", "Xor", "EQ", "NE"
-                    %"Not", "Shift", "LeftShift", "RightShift",
-                    %"Rotate", "LeftRotate", "RightRotate",
-                    %"Extract", "Insert"
-                    ]
+                   "GE", "And", "Or", "Xor", "EQ", "NE", "Not"]
+  local binary_ops = {"Plus", "Times", "Minus", "Divide", "Mod", "LT", "LE", "GT",
+                      "GE", "And", "Or", "Xor", "EQ", "NE"}
+  local unary_ops = {"Not"}
   local word_ops = {"Plus", "Times", "Minus", "Divide",
                     "Mod", "LT", "LE", "GT", "GE",
-                    "And", "Or", "Xor",
-                    %"Not", "Shift", "LeftShift", "RightShift",
-                    %"Rotate", "LeftRotate", "RightRotate",
-                    %"Extract", "Insert"
-                    }
+                    "And", "Or", "Xor", "Not"}
   local float_ops = {"Plus":"+", "Minus":"-", "Times":"*", "Divide":"/",
                      "Mod":"MOD", "LT":"<", "LE":"<=", "GT":">", "GE":">=",
-                     "EQ":"=", "NE":"#"}
+                     "EQ":"=", "NE":"#", "Not":"-"}
   local int_ops = {"Plus":"+", "Minus":"-", "Times":"*", "Divide":"DIV",
                    "Mod":"MOD", "LT":"<", "LE":"<=", "GT":">", "GE":">=",
-                   "EQ":"=", "NE":"#"}
-  local ret_bool = {"LT", "LE", "GT", "GE", "EQ", "NE" }
-      
+                   "EQ":"=", "NE":"#", "Not":"-"}
+  local ret_bool = {"LT", "LE", "GT", "GE", "EQ", "NE" }      
 
   foreach op in all_ops
     comment(op)
     foreach t in Types
       foreach t2 in Types
-        if (IsInt{t} and IsInt{t2}) or (equal(t, t2) and float_ops contains op)
-          foreach p in params
-            foreach word in [TRUE, FALSE]
-              foreach float in [TRUE, FALSE]
-                % "continue" would be really nice
-                if (word and (not float) and word_ops contains op and IsInt{t} and IsInt{t2})
-                    or ((not word) and float and float_ops contains op and (not IsInt{t}) and (not IsInt{t2}))
-                    or ((not word) and (not float) and int_ops contains op and IsInt{t} and IsInt{t2})
-                  local f = op & "_" & {TRUE:"param",FALSE:"var"}{p} & "_" & ShortName{t} & "_" & ShortName{t2}
+        foreach p in params
+          foreach word in [TRUE, FALSE]
+            foreach float in [TRUE, FALSE]
+              % "continue" would be really nice
+              if ((word and (not float) and word_ops contains op and IsInt{t} and IsInt{t2})
+                  or ((not word) and float and float_ops contains op and (not IsInt{t}) and (not IsInt{t2}))
+                  or ((not word) and (not float) and int_ops contains op and IsInt{t} and IsInt{t2}))
+                  and ((IsInt{t} and IsInt{t2}) or (equal(t, t2) and float_ops contains op))
+                  and (binary_ops contains op or equal(t, t2))
+                local f = op & "_" & {TRUE:"param",FALSE:"var"}{p} & "_" & ShortName{t} & "_" & ShortName{t2}
+                if word
+                  f = "u" & f
+                end                  
+                write("<*NOWARN*>PROCEDURE ", f, "(")
+                if p
+                  write("a:", t, ";b:", t2)
+                end
+                write("):")
+                local toLong = not equal(IsLong{t}, IsLong{t2})
+                local isLong = IsLong{t} or IsLong{t2}
+                if ret_bool contains op
+                  write("BOOLEAN")
+                else
                   if word
-                    f = "u" & f
-                  end                  
-                  write("<*NOWARN*>PROCEDURE ", f, "(")
-                  if p
-                    write("a:", t, ";b:", t2)
-                  end
-                  write("):")
-                  local toLong = not equal(IsLong{t}, IsLong{t2})
-                  local isLong = IsLong{t} or IsLong{t2}
-                  if ret_bool contains op
-                    write("BOOLEAN")
-                  else
-                    if word
-                      if isLong
-                        write("Long.T")
-                      else
-                        write("Word.T")
-                      end
+                    if isLong
+                      write("Long.T")
                     else
-                      if isLong
-                        write("LONGINT")
-                      else
-                        write(t)
-                      end
+                      write("Word.T")
+                    end
+                  else
+                    if isLong
+                      write("LONGINT")
+                    else
+                      write(t)
                     end
                   end
-                  write("=BEGIN RETURN ")
-                  local a = "a"
-                  local b = "b"
-                  if not p
-                    a = "v" & ShortName{t}
-                    b = "v" & ShortName{t2}
-                  end
-                  a = ToLong(a, t, toLong)
-                  b = ToLong(b, t2, toLong)
-                  if word
-                    local Word = {FALSE:"Word","TRUE":"Long"}{isLong}
-                    write(Word, ".", op, "(", a, ",", b, ")")
-                  else
-                    write(a, " ", {TRUE:float_ops,FALSE:int_ops}{float}{op}, " ", b)
-                  end
-                  write(";END ", f, ";", CR)            
                 end
+                write("=BEGIN RETURN ")
+                local a = "a"
+                local b = "b"
+                if not p
+                  a = "v" & ShortName{t}
+                  b = "v" & ShortName{t2}
+                end
+                a = ToLong(a, t, toLong)
+                b = ToLong(b, t2, toLong)
+                if word
+                  local Word = {FALSE:"Word","TRUE":"Long"}{isLong}
+                  write(Word, ".", op, "(", a)
+                  if binary_ops contains op
+                    write(",", b)
+                  end
+                  write(")")
+                else
+                  if binary_ops contains op
+                    write(a, " ")
+                  end
+                  write({TRUE:float_ops,FALSE:int_ops}{float}{op}, " ", b)
+                end
+                write(";END ", f, ";", CR)            
               end
             end
           end
@@ -319,8 +320,8 @@ end
       end
     end
   end
-  
-  % bit field get and set
+
+  comment("bit field get and set")
 
   foreach i in InclusiveRange("0", "64")
     foreach j in InclusiveRange("1", Sub("64", i))
@@ -351,7 +352,7 @@ end
     end
   end
   
-  % divide and mod by powers of 2
+  comment("divide and mod by powers of 2")
 
   foreach t in ["INT32", "UINT32", "INT64", "UINT64", "INTEGER", "CARDINAL", "LONGINT", "LONGCARD"]
     foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
