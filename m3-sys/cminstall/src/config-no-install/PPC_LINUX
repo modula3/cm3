@@ -4,7 +4,10 @@ readonly GNU_PLATFORM = "powerpc-linuxelf" % "cpu-os" string for GNU
 m3back_flags = "-gstabs+ -fPIC -m32 -funwind-tables"
 SYSTEM_CC = "@gcc -gstabs+ -m32 -fPIC" % C compiler
 readonly SYSTEM_ASM = "@as" % Assembler
-readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
+
+% breaks debugging, at least on Debian 5.0, even for C code
+% gcc 4.3.2, gdb 6.8
+%readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
 
 include("PPC.common")
 include("Linux.common")
