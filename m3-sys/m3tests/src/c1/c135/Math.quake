@@ -67,10 +67,24 @@ InitMath()
 
 VerboseMath = FALSE
 
+proc Abs(a) is
+  if IsNegative{a}
+    return Negate{a}
+  end
+  return a
+end
+
+proc Sign(a) is
+  if IsNegative{a}
+    return "-1"
+  end
+  return a
+end
+
 proc Add(a, b) is
   local proc Helper(f, a, b) is
-    if equal(a, "0") or equal(a, 0) return b end
-    if equal(b, "0") or equal(b, 0) return a end
+    if equal(a, "0") return b end
+    if equal(b, "0") return a end
     return Add1{Add1{f(f, Sub1{a}, Sub1{b})}}
   end
   if VerboseMath write("Add ", a, " ", b, CR) end
@@ -91,8 +105,8 @@ end
 
 proc Sub(a, b) is
   local proc Helper(f, a, b) is
-    if equal(a, "0") or equal(a, 0) return Negate{b} end
-    if equal(b, "0") or equal(b, 0) return a end
+    if equal(a, "0") return Negate{b} end
+    if equal(b, "0") return a end
     return Sub1{f(f, a, Sub1{b})}
   end
   if VerboseMath write("Sub ", a, " ", b, CR) end
@@ -110,27 +124,77 @@ proc Sub(a, b) is
   end
 end
 
-%write("99 - 40 is " & Sub(40, 99), CR)
-%write("99 - 40 is " & Sub(99, 40), CR)
-%write("11 - 42 is " & Sub(11, 42), CR)
-%write("6 - 4 is " & Sub(6, 4), CR)
-%write("2 + 3 is " & Add(2, 3), CR)
-
-if FALSE
-  foreach op in ["+", "-"]
-    local f = {"+":Add,"-":Sub}{op}
-    write(CR)
-    write(" 33 ", op, " 22 is ", f(  33,    22), CR)
-    write(" 33 ", op, " -22 is ", f(  33,  "-22"), CR)
-    write("-33 ", op, "  22 is ", f("-33",   22), CR)
-    write("-33 ", op, " -22 is ", f("-33", "-22"), CR)
-    write(CR)
-    write(" 22 ", op, "  33 is ", f(  22,    33), CR)
-    write(" 22 ", op, " -33 is ", f(  22,  "-33"), CR)
-    write("-22 ", op, "  33 is ", f("-22",   33), CR)
-    write("-22 ", op, " -33 is ", f("-22", "-33"), CR)
-    write(CR)
+proc Less(a, b) is
+  local proc Helper(f, a, b) is
+    if equal(a, "0") return TRUE end
+    if equal(b, "0") return FALSE end
+    return f(f, Sub1{a}, Sub1{b})
   end
+  if VerboseMath write("Less ", a, " ", b, CR) end
+  if equal(a, b)
+    return FALSE
+  end
+  if IsPositive{a} and IsNegative{b}
+    return FALSE
+  end
+  if IsNegative{a} and IsPositive{b}
+    return TRUE
+  end
+  if IsNegative{a} and IsNegative{b}
+    return Helper(Helper, Negate{b}, Negate{a})
+  end
+  return Helper(Helper, a, b)
+end
+
+proc LessOrEqual(a, b) is
+  return equal(a, b) or Less(a, b)
+end
+
+proc Greater(a, b) is
+  return Less(b, a)
+end
+
+proc GreaterOrEqual(a, b) is
+  return LessOrEqual(b, a)
+end
+
+proc Max(a, b) is
+  if Less(a, b)
+    return b
+  end
+  return a
+end
+
+proc Min(a, b) is
+  if Less(a, b)
+    return a
+  end
+  return b
+end
+
+proc Mult(a, b) is
+  local proc Helper(f, a, b) is
+    if equal(a, "1") return b end
+    return Add(b, f(f, Sub1{a}, b))
+  end
+  if VerboseMath write("Mult ", a, " ", b, CR) end
+  if equal(a, "0") return "0" end
+  if equal(b, "0") return "0" end
+  if equal(a, "1") return b end
+  if equal(b, "1") return a end
+  if equal(a, "-1") return Negate{b} end
+  if equal(b, "-1") return Negate{a} end
+  local c = Abs(a)
+  local d = Abs(b)
+  if Less(d, c)
+    c = d
+    d = Abs(a)
+  end
+  c = Helper(Helper, c, d)
+  if not equal(IsNegative{a}, IsNegative{b})
+    return Negate{c}
+  end
+  return c
 end
 
 %VerboseMath = TRUE
@@ -149,3 +213,36 @@ end
 proc InclusiveRange(start, endd) is
   return ExclusiveRange(start, Add(endd, "1"))
 end
+
+
+%write("99 - 40 is " & Sub(40, 99), CR)
+%write("99 - 40 is " & Sub(99, 40), CR)
+%write("11 - 42 is " & Sub(11, 42), CR)
+%write("6 - 4 is " & Sub(6, 4), CR)
+%write("2 + 3 is " & Add(2, 3), CR)
+
+if FALSE
+  local proc S(a) is
+    if equal(a, FALSE)
+      return "FALSE"
+    end
+    return a
+  end
+  foreach op in ["+", "-", "<", "<=", ">", ">=", "min", "max", "*"]
+    local f = {"+":Add,"-":Sub,"<":Less,">":Greater,"<=":LessOrEqual,
+               ">=":GreaterOrEqual,"min":Min,"max":Max,"*":Mult}{op}
+    write(CR)
+    write(" 33 ", op, " 22 is ", S(f(  33,    22)), CR)
+    write(" 33 ", op, " -22 is ", S(f(  33,  "-22")), CR)
+    write("-33 ", op, "  22 is ", S(f("-33",   22)), CR)
+    write("-33 ", op, " -22 is ", S(f("-33", "-22")), CR)
+    write(CR)
+    write(" 22 ", op, "  33 is ", S(f(  22,    33)), CR)
+    write(" 22 ", op, " -33 is ", S(f(  22,  "-33")), CR)
+    write("-22 ", op, "  33 is ", S(f("-22",   33)), CR)
+    write("-22 ", op, " -33 is ", S(f("-22", "-33")), CR)
+    write(CR)
+  end
+end
+
+
