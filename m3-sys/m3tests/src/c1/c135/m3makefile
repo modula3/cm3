@@ -17,6 +17,7 @@ m3back_unwind_table = "-fno-asynchronous-unwind-tables"
 M3_BOOTSTRAP = TRUE
 M3_KEEP_FILES = TRUE
 
+include("Math.quake")
 
 proc BeginInterface(a) is
   local b = a & ".i3.temp"
@@ -50,27 +51,23 @@ proc EndModule(a) is
   EndX(a, ".m3")
 end
 
-proc To64(name, fromType, to64) is
-  if not to64 or Is64{fromType}
+proc ToLong(name, fromType, toLong) is
+  if not toLong or IsLong{fromType}
     return name
   end
-  return "VAL(" & name & ", INT64)"
+  return "VAL(" & name & ", LONGINT)"
 end
 
 local signed = [FALSE, TRUE]
 local constant = [FALSE, TRUE] % or variable
 local params = [FALSE, TRUE] % or (global) variable (future: nested)
-% u for unsigned, i for integer
-local u = {FALSE:"",TRUE:"u","":"","u":"u"}
-local ui = {FALSE:"i",TRUE:"u","U":"u","U":"i"}
-local U = {FALSE:"",TRUE:"U","":"","U":"U"}
 % k for constant, v for variable, p for parameter
 local K = {FALSE:"v",TRUE:"k"}
 local P = {FALSE:"v",TRUE:"p"}
 local CONST = {FALSE:"VAR ",TRUE:"CONST "}
 local assign = {FALSE:":=",TRUE:"="}
 local L = {8:"",16:"",32:"",64:"L"}
-local Is64 = {8:FALSE,16:FALSE,32:FALSE,64:TRUE}
+local IsLong = {8:FALSE,16:FALSE,32:FALSE,64:TRUE}
 
 local IsInt = { }
 local IsFloat = { }
@@ -85,10 +82,12 @@ local Types = { }
 %local VarName =   { } % or prefix
 %local ParamName = { } % or prefix
 local ShortName = { }
+local Builtin = { }
 foreach size in sizes
   foreach unsigned in [TRUE, FALSE]
-    local t = U{unsigned} & "INT" & size
+    local t = {FALSE:"",TRUE:"U","":"","U":"U"}{unsigned} & "INT" & size
     Types{t} = 1
+    Builtin{t} = FALSE
     IntSize{t} = size
     IsInt{t} = TRUE
     IsFloat{t} = FALSE
@@ -96,17 +95,44 @@ foreach size in sizes
     TypeHash{t} = 1
     IsUnsignedInt{t} = unsigned
     IsSignedInt{t} = not unsigned
-    Is64{t} = Is64{size}
+    IsLong{t} = IsLong{size}
     L{t} = L{size}
-    U{t} = U{unsigned}
-    u{t} = u{unsigned}
-    ui{t} = ui{unsigned}
-    ShortName{t} = ui{t} & size
-    %ParamName{t} = "p" & ui{t} & size
-    %VarName{t} = "v" & ui{t} & size
-    %ConstName{t} = "k" & ui{t} & size
+    ShortName{t} = {FALSE:"i",TRUE:"u"}{unsigned} & size
   end
 end
+
+foreach t in ["INTEGER", "CARDINAL", "LONGINT", "LONGCARD"]
+  Types{t} = 1
+  IsInt{t} = TRUE
+  IsFloat{t} = FALSE
+  TypeArray += t
+  TypeHash{t} = 1
+  ShortName{t} = t
+  Builtin{t} = TRUE
+end
+
+foreach t in ["INTEGER", "CARDINAL"]
+  IntSize{t} = {"32BITS":32,"64BITS":64}{WORD_SIZE}
+  IsLong{t} = FALSE
+  L{t} = ""
+end
+
+foreach t in ["LONGINT", "LONGCARD"]
+  IntSize{t} = 64
+  IsLong{t} = TRUE
+  L{t} = "L"
+end
+
+foreach t in ["INTEGER", "LONGINT"]
+  IsUnsignedInt{t} = FALSE
+  IsSignedInt{t} = TRUE
+end
+
+foreach t in ["CARDINAL", "LONGCARD"]
+  IsUnsignedInt{t} = TRUE
+  IsSignedInt{t} = FALSE
+end
+
 local FloatArray = ["REAL", "LONGREAL", "EXTENDED"]
 local FloatHash = {  }
 foreach t in FloatArray
@@ -123,28 +149,7 @@ foreach t in FloatArray
   %ParamName{t} = "p" & ShortName{t}
   %VarName{t} = "v" & ShortName{t}
   %ConstName{t} = "k" & ShortName{t}
-  Is64{t} = FALSE % needs work
-end
-
-local counter0 = "0"
-local counter1 = "0"
-local counter2 = "0"
-local counter3 = "0"
-
-proc Counter() is
-  local x = { "0":"1","1":"2","2":"3","3":"4","4":"5",
-              "5":"6","6":"7","7":"8","8":"9","9":"0" }
-  counter0 = x{counter0}
-  if equal(counter0, "0")
-    counter1 = x{counter1}
-    if equal(counter1, "0")
-      counter2 = x{counter2}
-      if equal(counter2, "0")
-        counter3 = x{counter3}
-      end
-    end
-  end
-  return counter3 & counter2 & counter1 & counter0
+  IsLong{t} = FALSE % needs work
 end
 
 >> BeginModule("A") in
@@ -152,30 +157,32 @@ end
   write("TYPE <*NOWARN*>INT = INTEGER;",CR)
   write("TYPE <*NOWARN*>FLOAT32 = REAL;",CR)
   write("TYPE <*NOWARN*>FLOAT64 = LONGREAL;",CR)
-  foreach t in Types        
-    local size = IntSize{t}
-    local s = IsSignedInt{t}
-      
+  foreach t in Types
     if IsInt{t}
       % make a type
-      write("TYPE ", t, " = Cstdint.", u{s}, "int", size, "_t;", CR)
+      
+      if not Builtin{t}
+        write("TYPE ", t, " = Cstdint.", {FALSE:"",TRUE:"u","":"","u":"u"}{IsSignedInt{t}}, "int", IntSize{t}, "_t;", CR)
+      end
 
       foreach k in constant
             
         % make a constant or variable
       
-        local v = K{k} & ui{s} & size
+        local v = K{k} & ShortName{t}
+        if Builtin{t}
+          v = K{k} & ShortName{t}
+        end
 
-        write("<*NOWARN*>", CONST{k}, v, ":", U{s}, "INT",
-              size, assign{k}, Counter(), L{size}, ";", CR)
+        write("<*NOWARN*>", CONST{k}, v, ":", t, assign{k}, Increment(), L{t}, ";", CR)
               
         % return a constant or variable
 
-        local f = "ret_" & {TRUE:"const",FALSE:"var"}{k} & "_" & ui{s} & size
+        local f = "ret_" & {TRUE:"const",FALSE:"var"}{k} & "_" & ShortName{t}
         write("<*NOWARN*>PROCEDURE ", f, "():", t,
               "=BEGIN RETURN ")
         if k
-          write(Counter(), L{size})
+          write(Increment(), L{t})
         else
           write(v)
         end
@@ -202,7 +209,7 @@ end
       if IsInt{t} and IsInt{t2}
         local f = "ret_param_" & ShortName{t} & "_" & ShortName{t2}
         write("<*NOWARN*>PROCEDURE ", f, "(a:", t2, "):", t2, "=BEGIN RETURN ")
-        if not equal(Is64{t}, Is64{t2})
+        if not equal(IsLong{t}, IsLong{t2})
           write("VAL(a,", t2, ")")
         else
           write("a")
@@ -232,8 +239,8 @@ end
             else
               write(t)
             end
-            local is64 = (Is64{t} or Is64{t2})
-            if is64
+            local isLong = (IsLong{t} or IsLong{t2})
+            if isLong
               write("64")
             end
             write("=BEGIN RETURN ")
@@ -243,13 +250,13 @@ end
               a = "v" & ShortName{t}
               b = "v" & ShortName{t2}
             end
-            a = To64(a, t, is64)
-            b = To64(b, t2, is64)
+            a = ToLong(a, t, isLong)
+            b = ToLong(b, t2, isLong)
             if infix_ops contains op
               write(a, " ", infix_ops{op}, " ", b)
             else
               local word = "Word"
-              if is64
+              if isLong
                 word = "Long"
               end
               write(word, ".", word_ops{op}, "(", a, ",", b, ")")
@@ -260,6 +267,30 @@ end
       end
     end
   end
+  foreach i in InclusiveRange("0", "64")
+    foreach j in InclusiveRange("1", Sub("64", i))
+      local t = "BitField_offset" & i & "_count" & j
+      write("<*NOWARN*>TYPE ", t, " = RECORD ", CR)
+      write(" offset:BITS ", i, " FOR [0..0];", CR)
+      write(" value:BITS ", j, " FOR [0..1];", CR)
+      write("END;", CR)
+      local p = "read_var_" & t
+      write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):[0..1]=", CR, "  BEGIN RETURN a.value END ", p, ";", CR)
+      p = "write_var_" & t
+      write("<*NOWARN*> PROCEDURE ", p, "(VAR a:", t, ";b:[0..1])=", CR, "  BEGIN a.value := b END ",
+            p, ";", CR)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+    end
+  end
+
+  foreach t in ["INT32", "UINT32", "INT64", "UINT64"]
+    foreach i in InclusiveRange("0", {"INT32":"31", "UINT32":"31", "INT64":"63", "UINT64":"63"}{t})
+      local p = "div_pow2_" & t & "_" & i
+      write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):", t, "=", CR, "  BEGIN RETURN a DIV 16_" & HexPowerOf2(i) & L{t} & " END ", p, ";", CR)
+      p = "mod_pow2_" & t & "_" & i
+      write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):", t, "=", CR, "  BEGIN RETURN a MOD 16_" & HexPowerOf2(i) & L{t} & " END ", p, ";", CR)
+    end
+  end
+
   write("BEGIN", CR)
 end
 EndModule("A")
