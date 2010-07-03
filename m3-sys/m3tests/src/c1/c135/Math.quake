@@ -68,6 +68,7 @@ InitMath()
 VerboseMath = FALSE
 
 proc Abs(a) is
+  a = a & ""
   if IsNegative{a}
     return Negate{a}
   end
@@ -75,6 +76,7 @@ proc Abs(a) is
 end
 
 proc Sign(a) is
+  a = a & ""
   if IsNegative{a}
     return "-1"
   end
