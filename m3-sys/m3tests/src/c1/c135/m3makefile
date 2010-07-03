@@ -40,6 +40,9 @@ proc EndInterface(a) is
 end
 
 proc EndModule(a) is
+  >> a & ".m3.temp" in
+    write("BEGIN", CR)
+  end
   EndX(a, ".m3")
 end
 
@@ -147,27 +150,37 @@ foreach t in FloatTypes
   IsLong{t} = FALSE % needs work
 end
 
+IntSize{"Word"} = IntSize{"INTEGER"}
+IntSize{"Long"} = IntSize{"LONGINT"}
+
 local proc comment(a) is
   write(CR, "(* ", a, " *)", CR, CR)
 end
 
 proc BeginModule(a) is
+
+  >> BeginInterface(a) in
+  end
+  EndInterface(a)
+  derived_interface(a, HIDDEN)
+  derived_implementation(a)
+
   local b = a & ".m3.temp"
   > b in
     write("MODULE ", a, ";", CR)
   write("<*NOWARN*>IMPORT Cstdint, Word, Long;", CR)
-  
+
   comment("define some types")
 
   write("<*NOWARN*>TYPE FLOAT32 = REAL;",CR)
   write("<*NOWARN*>TYPE FLOAT64 = LONGREAL;",CR)
-    
+
     foreach t in Types
       if IsInt{t} and not Builtin{t}
         write("<*NOWARN*>TYPE ", t, " = Cstdint.", {FALSE:"",TRUE:"u","":"","u":"u"}{IsSignedInt{t}}, "int", IntSize{t}, "_t;", CR)
       end
     end
-  
+
     comment("constants")
 
     foreach t in Types
@@ -261,7 +274,7 @@ end
   local int_ops = {"Plus":"+", "Minus":"-", "Times":"*", "Divide":"DIV",
                    "Mod":"MOD", "LT":"<", "LE":"<=", "GT":">", "GE":">=",
                    "EQ":"=", "NE":"#", "Not":"-"}
-  local ret_bool = {"LT", "LE", "GT", "GE", "EQ", "NE"}      
+  local ret_bool = {"LT", "LE", "GT", "GE", "EQ", "NE"}
 
   foreach op in all_ops
     comment(op)
@@ -334,7 +347,7 @@ end
                   end
                   write({TRUE:float_ops,FALSE:int_ops}{float}{op}, " ", b)
                 end
-                write(";END ", f, ";", CR)            
+                write(";END ", f, ";", CR)
               end
             end
           end
@@ -342,16 +355,14 @@ end
       end
     end
   end
-  write("BEGIN", CR)
 end
 EndModule("A")
 
 % split into multiple modules to keep size down
 % when it gets too large, compiler backend fails
 
->> BeginModule("B") in
+>> BeginModule("bitfield") in
   comment("bit field get and set")
-
   foreach i in InclusiveRange("0", "64")
     foreach j in InclusiveRange("1", Sub("64", i))
       local t = "BitField_offset" & i & "_count" & j
@@ -377,17 +388,15 @@ EndModule("A")
             "             BEGIN RETURN a.value END ", p, ";", CR)
       p = "write_var_" & t
       write("<*NOWARN*> PROCEDURE ", p, "(VAR a:", t, ";b:LONGINT)=", CR,
-           "              BEGIN a.value := b END ", p, ";", CR)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          
+           "              BEGIN a.value := b END ", p, ";", CR)
     end
   end
-
-  write("BEGIN", CR)
 end
-EndModule("B")
+EndModule("bitfield")
 
->> BeginModule("C") in
+>> BeginModule("divmod_pow2") in
 
-  comment("divide and mod by powers of 2")
+  comment("divide by powers of 2")
 
   foreach t in ["INT32", "UINT32", "INT64", "UINT64", "INTEGER", "CARDINAL", "LONGINT", "LONGCARD"]
     foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
@@ -399,11 +408,12 @@ EndModule("B")
             "           BEGIN RETURN a MOD 16_" & HexPowerOf2(i) & L{t} & " END ", p, ";", CR)
     end
   end
+end
+EndModule("divmod_pow2")
 
-  comment("insert and extract with one constant")
+>> BeginModule("insert") in
 
-  IntSize{"Word"} = IntSize{"INTEGER"}
-  IntSize{"Long"} = IntSize{"LONGINT"}
+  comment("insert with constant offset or count or both")
 
   foreach t in ["Word", "Long"]
     foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
@@ -413,49 +423,37 @@ EndModule("B")
       p = t & "_insert_constant_count_" & i
       write("<*NOWARN*> PROCEDURE ", p, "(a,b:", t, ".T):", t, ".T=", CR,
             "           BEGIN RETURN ", t, ".Insert(a,b,offset,", i, "); END ", p, ";", CR)
-      p = t & "_extract_constant_offset_" & i
+      foreach j in InclusiveRange("0", Sub(IntSize{t}, i))
+        local p = t & "_insert_constants_" & i & "_" & j
+        write("<*NOWARN*> PROCEDURE ", p, "(a,b:", t, ".T):", t, ".T=", CR,
+              "           BEGIN RETURN ", t, ".Insert(a,b,",i,",",j,"); END ", p, ";", CR)
+      end
+    end
+  end
+end
+EndModule("insert")
+
+>> BeginModule("extract") in
+
+  comment("extract with constant offset or count or both")
+
+  foreach t in ["Word", "Long"]
+    foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
+      local p = t & "_extract_constant_offset_" & i
       write("<*NOWARN*> PROCEDURE ", p, "(a:", t, ".T):", t, ".T=", CR,
             "           BEGIN RETURN ", t, ".Extract(a,", i, ",count); END ", p, ";", CR)
       p = t & "_extract_constant_count_" & i
       write("<*NOWARN*> PROCEDURE ", p, "(a:", t, ".T):", t, ".T=", CR,
             "           BEGIN RETURN ", t, ".Extract(a,offset,", i, "); END ", p, ";", CR)
-    end
-  end
-  write("BEGIN", CR)
-end
-EndModule("C")
-
->> BeginModule("D") in
-
-  comment("insert and extract with two constants")
-
-  IntSize{"Word"} = IntSize{"INTEGER"}
-  IntSize{"Long"} = IntSize{"LONGINT"}
-
-  foreach t in ["Word", "Long"]
-    foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
       foreach j in InclusiveRange("0", Sub(IntSize{t}, i))
-        local p = t & "_insert_constants_" & i & "_" & j
-        write("<*NOWARN*> PROCEDURE ", p, "(a,b:", t, ".T):", t, ".T=", CR,
-              "           BEGIN RETURN ", t, ".Insert(a,b,",i,",",j,"); END ", p, ";", CR)
         p = t & "_extract_constants_" & i & "_" & j
         write("<*NOWARN*> PROCEDURE ", p, "(a:", t, ".T):", t, ".T=", CR,
              "            BEGIN RETURN ", t, ".Extract(a,",i,",",j,"); END ", p, ";", CR)
       end
     end
   end
-
-  write("BEGIN", CR)
 end
-EndModule("D")
-
-foreach a in ["A", "B", "C", "D"]
-  >> BeginInterface(a) in
-  end
-  EndInterface(a)
-  derived_interface(a, HIDDEN)
-  derived_implementation(a)
-end
+EndModule("extract")
 
 implementation("Main")
 build_standalone()
