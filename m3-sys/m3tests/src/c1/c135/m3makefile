@@ -10,6 +10,10 @@
 % over various sets of options, optimized and not,
 % position independent and not, debug info more or less or none, etc.
 %
+% split into multiple modules to keep size down
+% when it gets too large, compiler backend fails
+%
+
 m3back_debug = ""
 m3back_optimize = ""
 m3back_pic = ""
@@ -64,9 +68,6 @@ local IsSignedInt = { }
 local IntSize = { }
 local Types = { }
 local IntTypes = { }
-%local ConstName = { } % or prefix
-%local VarName =   { } % or prefix
-%local ParamName = { } % or prefix
 local ShortName = { }
 local Builtin = { }
 foreach size in [8,16,32,64]
@@ -144,9 +145,6 @@ foreach t in FloatTypes
   IsSignedInt{t} = FALSE
   IntSize{t} = 0
   ShortName{t} = {"FLOAT32":"f32", "FLOAT64":"f64"}{t}
-  %ParamName{t} = "p" & ShortName{t}
-  %VarName{t} = "v" & ShortName{t}
-  %ConstName{t} = "k" & ShortName{t}
   IsLong{t} = FALSE % needs work
 end
 
@@ -283,7 +281,7 @@ end
         foreach p in params
           foreach word in [TRUE, FALSE]
             foreach float in [TRUE, FALSE]
-              % "continue" would be really nice
+              % "continue" would be nice
               if ((word and (not float) and word_ops contains op and IsInt{t} and IsInt{t2})
                   or ((not word) and float and float_ops contains op and (not IsInt{t}) and (not IsInt{t2}))
                   or ((not word) and (not float) and int_ops contains op and IsInt{t} and IsInt{t2}))
@@ -357,9 +355,6 @@ end
   end
 end
 EndModule("A")
-
-% split into multiple modules to keep size down
-% when it gets too large, compiler backend fails
 
 >> BeginModule("bitfield") in
   comment("bit field get and set")
