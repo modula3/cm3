@@ -4560,6 +4560,9 @@ m3cg_extract (void)
   MTYPE   (t);
   BOOLEAN (sign_extend);
 
+  if (option_trace_all)
+    fprintf(stderr, " extract sign_extend:%u\n", (unsigned)sign_extend);
+
   gcc_assert (INTEGRAL_TYPE_P (t));
 
   t = sign_extend ? m3_signed_type (t) : m3_unsigned_type (t);
@@ -4579,7 +4582,8 @@ m3cg_extract_n (void)
   gcc_assert (n >= 0);
 
   if (option_trace_all)
-    fprintf(stderr, " extract_n count:%u\n", (unsigned)n);
+    fprintf(stderr, " extract_n count:%u sign_extend:%u\n",
+            (unsigned)n, (unsigned)sign_extend);
 
   if (n == 0)
     EXPR_REF (-2) = m3_cast(t, v_zero);
@@ -4630,8 +4634,8 @@ m3cg_extract_mn (void)
   gcc_assert (n >= 0);
 
   if (option_trace_all)
-    fprintf(stderr, " extract_mn offset:%u count:%u\n", (unsigned)m,
-            (unsigned)n);
+    fprintf(stderr, " extract_mn offset:%u count:%u sign_extend:%u\n",
+            (unsigned)m, (unsigned)n, (unsigned):sign_extend);
 
   if (n == 0)
     EXPR_REF (-1) = m3_cast(t, v_zero);
