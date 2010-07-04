@@ -2210,8 +2210,7 @@ m3_load_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
                      bitsize_int (o));
     }
   }
-  /* not good! */
-  if (volatil || FLOAT_TYPE_P(src_t) || FLOAT_TYPE_P(dst_t))
+  if (volatil)
     TREE_THIS_VOLATILE(v) = 1; /* force this to avoid aliasing problems */
   if (M3_ALL_VOLATILE)
     TREE_THIS_VOLATILE(v) = TREE_SIDE_EFFECTS(v) = 1; /* force this to avoid aliasing problems */
@@ -5691,7 +5690,12 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
 #ifdef INSN_SCHEDULING
     flag_schedule_insns = 0; /* fails to compile, surprising */
 #endif
-}
+    /*flag_strict_aliasing = 0;*/ /* consider? */
+    /*flag_strict_overflow = 0;*/ /* consider? */
+    flag_tree_ter = 0; /* fails to compile m3core CopySign */
+    /*flag_delete_null_pointer_checks = 0;*/ /* consider? */
+    /*flag_reorder_functions = 0;*/ /* consider? */
+  }
 
   /* otherwise:
 MODULE Main;
