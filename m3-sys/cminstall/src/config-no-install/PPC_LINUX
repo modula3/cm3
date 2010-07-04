@@ -4,8 +4,8 @@ readonly GNU_PLATFORM = "powerpc-linuxelf" % "cpu-os" string for GNU
 SYSTEM_CC = "@gcc -gstabs+ -m32 -fPIC" % C compiler
 readonly SYSTEM_ASM = "@as" % Assembler
 
-% breaks debugging, at least on Debian 5.0, even for C code
-% gcc 4.3.2, gdb 6.8
+% PIE debugging requires gdb 7.1 or newer, event for C
+% see http://www.gnu.org/software/gdb/download/ANNOUNCEMENT
 %readonly POSITION_INDEPENDENT_EXECUTABLE = "-pie"
 
 include("PPC.common")
