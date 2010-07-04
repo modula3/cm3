@@ -506,17 +506,6 @@ readonly proc run_test (class, group, uid, comment, should_run, cm3opts, runopts
   end
 end
 
-%------------------------------------------------------------------- ctests ---
-%  CODE tests: tiny modules where the code output by the compiler
-%     is what's of interest.
-
-proc c_test (group, uid, comment) is
-  %if defined ("_all") return end
-  run_test ("_ctests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
-end
-
-% below
-
 %------------------------------------------------------------------- ptests ---
 % PROG tests: complete programs where the output of the program
 %   is what is of interest.
@@ -557,7 +546,7 @@ end
 %p_test ("p2", "p209", "open array initializers compile failure")
 %p_test ("p2", "p210", "open array initializers runtime failure")
 
-c_test ("c1", "c135", "exact codegen")
+p_test ("p2", "p240", "exact codegen")
 
 mixed_portability_test ("p2", "p227", "longint, word, add, insert, extract, etc. (slow)")
 p_test ("p2", "p226", "atomics")
@@ -878,6 +867,11 @@ x_test ("x0", "x007", "thread.alerted/shutdown exercise")
 % -- only wizards should bother to run the ctests, to tell if they
 %     work, you must manually examine the code that's produced
 %
+
+proc c_test (group, uid, comment) is
+  if defined ("_all") return end
+  run_test ("_ctests", group, uid, comment, "", cm3opts, runopts, "probeForTargetSpecificFiles")
+end
 
 c_test ("c0", "c001", "empty program")
 c_test ("c0", "c002", "empty unsafe program")
