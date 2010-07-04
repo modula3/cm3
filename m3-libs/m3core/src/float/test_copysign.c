@@ -13,14 +13,16 @@ typedef struct {
 
 float copy_sign_f(float from, float to)
 {
-        ((float_t*)&to)->sign = ((float_t*)&from)->sign;
-        return to;
+        float res = to;
+        ((float_t*)&res)->sign = ((float_t*)&from)->sign;
+        return res;
 }
 
 double copy_sign_d(double from, double to)
 {
-        ((double_t*)&to)->sign = ((double_t*)&from)->sign;
-        return to;
+        double res = to;
+        ((double_t*)&res)->sign = ((double_t*)&from)->sign;
+        return res;
 }
 
 void print_f(float f)
