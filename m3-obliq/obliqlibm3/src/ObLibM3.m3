@@ -107,7 +107,8 @@ TYPE
                    <*UNUSED*>arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
       temp: BOOLEAN; loc: SynLocation.T)
       : ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
-    VAR rd1: Rd.T; text1: TEXT; int1: INTEGER; fileSys1: ObValue.ValFileSystem;
+    VAR rd1: Rd.T; text1: TEXT; int1: INTEGER := 0;
+        fileSys1: ObValue.ValFileSystem;
     BEGIN
       TRY
         CASE NARROW(opCode, RdOpCode).code OF
@@ -394,7 +395,7 @@ TYPE
                    <*UNUSED*>arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
       temp: BOOLEAN; loc: SynLocation.T)
       : ObValue.Val RAISES {ObValue.Error, ObValue.Exception} =
-    VAR wr1: Wr.T; text1: TEXT; char1: CHAR; int1: INTEGER;
+    VAR wr1: Wr.T; text1: TEXT; char1: CHAR; int1: INTEGER := 0;
       fileSys1: ObValue.ValFileSystem;
     BEGIN
       TRY
@@ -690,7 +691,7 @@ TYPE
                     <*UNUSED*>arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
                     <*UNUSED*>temp: BOOLEAN; loc: SynLocation.T)
       : ObValue.Val RAISES {ObValue.Error} =
-    VAR text1: TEXT; bool1: BOOLEAN; int1: INTEGER; real1: LONGREAL;
+    VAR text1: TEXT; bool1: BOOLEAN; int1: INTEGER := 0; real1: LONGREAL;
     BEGIN
         CASE NARROW(opCode, FmtOpCode).code OF
         | FmtCode.PadLft => 
@@ -768,7 +769,7 @@ TYPE
                      <*UNUSED*>arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
                      <*UNUSED*>temp: BOOLEAN; loc: SynLocation.T)
       : ObValue.Val RAISES {ObValue.Error} =
-    VAR int1, int2: INTEGER;
+    VAR int1, int2: INTEGER := 0;
     BEGIN
         CASE NARROW(opCode, WordOpCode).code OF
         | WordCode.Not => 
@@ -1183,7 +1184,7 @@ TYPE
                        <*UNUSED*>arity: ObLib.OpArity; READONLY args: ObValue.ArgArray; 
                        <*UNUSED*>temp: BOOLEAN; loc: SynLocation.T)
       : ObValue.Val RAISES {ObValue.Error} =
-    VAR real1, real2: LONGREAL; int1, int2: INTEGER;
+    VAR real1, real2: LONGREAL; int1, int2: INTEGER := 0;
     BEGIN
       CASE NARROW(opCode, RandomOpCode).code OF
       | RandomCode.Int => 
