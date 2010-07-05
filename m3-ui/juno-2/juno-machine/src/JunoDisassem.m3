@@ -71,7 +71,7 @@ PROCEDURE P(bs: RT.ByteStream; wr: Wr.T) RAISES {Wr.Failure, Thread.Alerted} =
 
       (* package constraints *)
       WHILE c < nc DO
-        VAR n: BC.ConRange := a^; x, y, z: Marshal.UShort; BEGIN
+        VAR n: BC.ConRange := a^; x, y, z: Marshal.UShort := 0; BEGIN
           INC(a);
           x := Marshal.ReadUShort(a);
           IF n < BC.REAL_C  THEN y := Marshal.ReadUShort(a) END;
