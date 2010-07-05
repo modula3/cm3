@@ -1263,7 +1263,7 @@ PROCEDURE DoSolve(VAR a: BytePtr) =
 
     (* process constraints *)
     WHILE c < nc DO
-      VAR n: BC.ConRange := a^; x, y, z: JunoMarshal.Short; BEGIN
+      VAR n: BC.ConRange := a^; x, y, z: JunoMarshal.Short := 0; BEGIN
         INC(a);
         x := JunoMarshal.ReadUShort(a);
         IF n < BC.REAL_C  THEN y := JunoMarshal.ReadUShort(a) END;
