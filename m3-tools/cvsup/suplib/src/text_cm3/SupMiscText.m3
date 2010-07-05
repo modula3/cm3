@@ -99,7 +99,7 @@ PROCEDURE DecodeWS(t: TEXT): TEXT
     startPos := 0;
     slashPos: INTEGER;
     nt := "";
-    ch: CHAR;
+    ch: CHAR := '\000';
   BEGIN
     WHILE startPos < len DO
       slashPos := Text.FindChar(t, '\\', startPos);
