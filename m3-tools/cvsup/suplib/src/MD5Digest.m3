@@ -58,7 +58,7 @@ PROCEDURE FromText(t: TEXT): T
   RAISES {Malformed} =
   VAR
     digest: T;
-    val: Word.T;
+    val: Word.T := 0;
   BEGIN
     IF Text.Length(t) # 2*NUMBER(digest) THEN RAISE Malformed END;
     FOR i := FIRST(digest) TO LAST(digest) DO
