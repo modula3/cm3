@@ -3722,7 +3722,7 @@ m3cg_set_label (void)
       {
         rtx list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
         DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels
-	  = gen_rtx_EXPR_LIST (VOIDmode, r, list);
+          = gen_rtx_EXPR_LIST (VOIDmode, r, list);
       }
 #endif
       /* put asm("") before and after the label */
