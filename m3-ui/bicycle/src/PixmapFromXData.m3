@@ -49,7 +49,7 @@ PROCEDURE P(t: T; halftone: BOOLEAN): Pixmap.T =
   VAR
     r := ScrnPixmap.NewRaw(1, Rect.FromSize(t.width, t.height));
     rd := TextRd.New(t.t);
-    word, mask: Word.T;
+    word, mask: Word.T := 0;
     res: Pixmap.T;
   BEGIN
     FOR v := 0 TO t.height - 1 DO
@@ -82,7 +82,7 @@ PROCEDURE Flip(t: T; halftone: BOOLEAN): Pixmap.T =
   VAR
     r := ScrnPixmap.NewRaw(1, Rect.FromSize(t.width, t.height));
     rd := TextRd.New(t.t);
-    word, mask: Word.T;
+    word, mask: Word.T := 0;
     res: Pixmap.T;
   BEGIN
     FOR v := 0 TO t.height - 1 DO
