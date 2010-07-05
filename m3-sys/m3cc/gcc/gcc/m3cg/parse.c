@@ -500,6 +500,12 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
 
   gcc_assert (i >= 0);
   gcc_assert (n >= 0);
+  gcc_assert (i <= 64);
+  gcc_assert (n <= 64);
+  gcc_assert ((i + n) <= 64);
+  gcc_assert (i <= TYPE_PRECISION (t));
+  gcc_assert (n <= TYPE_PRECISION (t));
+  gcc_assert ((i + n) <= TYPE_PRECISION (t));
 
   if ((i < 0) || (i >= TYPE_PRECISION (t)) ||
       (n < 0) || (n >= TYPE_PRECISION (t)))
@@ -575,6 +581,9 @@ m3_do_fixed_insert (tree x, tree y, int i, int n, tree t)
       else
         {                       /* n >= sizeof(int)*8 */
           tree mask;
+          
+          gcc_assert (false);
+
           mask = m3_build2 (LSHIFT_EXPR, t, build_int_cst (t, ~0),
                             build_int_cst (t_int, n));
           mask = m3_build1 (BIT_NOT_EXPR, t, mask);
@@ -4610,6 +4619,8 @@ m3cg_extract_n (void)
 
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (n >= 0);
+  gcc_assert (n <= 64);
+  gcc_assert (n <= TYPE_PRECISION (t));
 
   if (option_trace_all)
     fprintf(stderr, " extract_n count:%u sign_extend:%u\n",
@@ -4635,6 +4646,12 @@ m3_do_fixed_extract (tree x, int m, int n, tree t)
 
   gcc_assert (m >= 0);
   gcc_assert (n > 0);
+  gcc_assert (m <= 64);
+  gcc_assert (n <= 64);
+  gcc_assert ((m + n) <= 64);
+  gcc_assert (m <= TYPE_PRECISION (t));
+  gcc_assert (n <= TYPE_PRECISION (t));
+  gcc_assert ((m + n) <= TYPE_PRECISION (t));
 
   if ((a < 0) || (a >= TYPE_PRECISION (t)) ||
       (b < 0) || (b >= TYPE_PRECISION (t)))
@@ -4662,6 +4679,12 @@ m3cg_extract_mn (void)
   gcc_assert (INTEGRAL_TYPE_P (t));
   gcc_assert (m >= 0);
   gcc_assert (n >= 0);
+  gcc_assert (m <= 64);
+  gcc_assert (n <= 64);
+  gcc_assert ((m + n) <= 64);
+  gcc_assert (m <= TYPE_PRECISION (t));
+  gcc_assert (n <= TYPE_PRECISION (t));
+  gcc_assert ((m + n) <= TYPE_PRECISION (t));
 
   if (option_trace_all)
     fprintf(stderr, " extract_mn offset:%u count:%u sign_extend:%u\n",
