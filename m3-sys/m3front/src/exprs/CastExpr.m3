@@ -178,7 +178,7 @@ PROCEDURE NeedsAddress (p: P) =
       Kind.S_to_A,
       Kind.V_to_A,
       Kind.V_to_S =>
-        (* ok, cause we build a temporary *)
+        (* ok, because we build a temporary *)
     END;
   END NeedsAddress;
 
@@ -283,7 +283,7 @@ PROCEDURE Compile (p: P) =
     | Kind.D_to_V =>
         Expr.Compile (e);
         CG.Loophole (u_cg, t_cg);
-        (*** back-ends have problems with this 'cause floating-point
+        (*** back-ends have problems with this because floating-point
            variables may be in floating-point registers...
         Expr.PrepLValue (e);
         Expr.CompileLValue (e);
