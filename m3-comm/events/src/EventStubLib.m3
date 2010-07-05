@@ -16,11 +16,16 @@
  * Update Count    : 137
  * 
  * $Source: /opt/cvs/cm3/m3-comm/events/src/EventStubLib.m3,v $
- * $Date: 2010-01-16 02:33:01 $
- * $Author: hosking $
- * $Revision: 1.3 $
+ * $Date: 2010-07-05 13:27:52 $
+ * $Author: jkrell $
+ * $Revision: 1.4 $
  * 
  * $Log: not supported by cvs2svn $
+ * Revision 1.3  2010-01-16 02:33:01  hosking
+ * Initial support for LONGINT and LONGCARD.
+ * Still needs vetting for proper conversion of 64-bit and 32-bit LONGINT/LONGCARD
+ * (the integrated Win32 backend still treats LONGINT as 32 bits).
+ *
  * Revision 1.2  2001/12/02 00:20:37  wagner
  * add copyright notes, fix overrides for cm3, and make everything compile
  *
@@ -476,7 +481,7 @@ PROCEDURE InInteger(c: Handle;
                     min := FIRST(INTEGER);
                     max := LAST(INTEGER)): INTEGER
     RAISES {Event.Error, Rd.Failure, Thread.Alerted} =
-  VAR i: INTEGER;
+  VAR i: INTEGER := 0;
   BEGIN
     WITH e = c.event, hdr = e.hdr, rd = e.rd, rep = hdr.rep DO
       TRY
@@ -526,7 +531,7 @@ PROCEDURE InInt32(c: Handle;
                     min := FIRST(Int32);
                     max := LAST(Int32)): Int32
     RAISES {Event.Error, Rd.Failure, Thread.Alerted} =
-  VAR i: Int32;
+  VAR i: Int32 := 0;
   BEGIN
     WITH e = c.event, hdr = e.hdr, rd = e.rd, rep = hdr.rep DO
       TRY
