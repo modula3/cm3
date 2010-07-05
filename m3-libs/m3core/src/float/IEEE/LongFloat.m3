@@ -23,7 +23,7 @@ PROCEDURE Scalb (x: T; n: INTEGER): T =
 PROCEDURE Logb (x: T): T =
   CONST Log_of_zero = Rep.T {sign := 1, exponent := 16_7ff,
                         significand0 := 0, significand1 := 0};
-  VAR ans: T := 0.0d0;
+  VAR ans: T;
   BEGIN
     CASE Class (x) OF
     | IEEEClass.SignalingNaN, 
@@ -71,7 +71,7 @@ PROCEDURE ILogb (x: T): INTEGER =
 PROCEDURE NextAfter (x, y: T): T =
   CONST Ones0 = 16_fffff; (* BITSIZE (significand0) 1's *)
         Ones1 = -1; (* all 1's *)
-  VAR xx := LOOPHOLE (x, Rep.T);  yy := LOOPHOLE (y, Rep.T);  z: T := 0.0d0;
+  VAR xx := LOOPHOLE (x, Rep.T);  yy := LOOPHOLE (y, Rep.T);  z: T;
   BEGIN
     IF x = y                       THEN RETURN x; END;
     IF IsNaN (x) OR NOT Finite (x) THEN RETURN x; END;
