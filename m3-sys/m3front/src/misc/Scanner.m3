@@ -374,7 +374,6 @@ PROCEDURE NoteReserved (name: M3ID.T;  value: M3.Value) =
 
 PROCEDURE GetToken () =
   VAR len: StringBufferIndex;
-  VAR SavedChar: CHAR; 
   BEGIN
     INC (accepted);
     LOOP
@@ -393,11 +392,10 @@ PROCEDURE GetToken () =
           len := 0;
           IF (ch = 'w') OR (ch = 'W') THEN
             (* check for a wide-char or wide-text literal *)
-            SavedChar := ch; 
             GetCh ();
             IF    (ch = '\'') THEN  ScanChar (wide := TRUE);  RETURN;
             ELSIF (ch = '\"') THEN  ScanWideText ();          RETURN;
-            ELSE                    buf[0] := SavedChar;  len := 1;
+            ELSE                    buf[0] := 'W';  len := 1;
             END;
           END;
           WHILE (AlphaNumerics[ch]) DO
@@ -667,8 +665,8 @@ PROCEDURE ScanChar (wide: BOOLEAN) =
       ELSIF (ch = '\\') THEN  val := ORD ('\\');   GetCh ();
       ELSIF (ch = '\'') THEN  val := ORD ('\'');   GetCh ();
       ELSIF (ch = '\"') THEN  val := ORD ('\"');   GetCh ();
-      ELSIF (ch = 'x') OR (ch = 'X')
-                        THEN  GetCh ();  val := GetHexChar (wide);
+      ELSIF (ch = 'x')
+         OR (ch = 'X')  THEN  GetCh ();  val := GetHexChar (wide);
       ELSIF (OctalDigits[ch]) THEN  val := GetOctalChar (wide);
       ELSE  Error.Msg ("unknown escape sequence in character literal");
       END;
@@ -724,8 +722,8 @@ PROCEDURE ScanText () =
         ELSIF (ch = '\\') THEN Stuff ('\\');  GetCh ();
         ELSIF (ch = '\'') THEN Stuff ('\'');  GetCh ();
         ELSIF (ch = '\"') THEN Stuff ('\"');  GetCh ();
-        ELSIF (ch = 'x') OR (ch = 'X')
-                          THEN GetCh ();  Stuff (VAL (GetHexChar (FALSE), CHAR));
+        ELSIF (ch = 'x')
+           OR (ch = 'X') THEN GetCh ();  Stuff (VAL (GetHexChar (FALSE), CHAR));
         ELSIF (OctalDigits[ch]) THEN Stuff (VAL (GetOctalChar (FALSE), CHAR));
         ELSE  Error.Msg ("unknown escape sequence in text literal");
         END;
@@ -780,8 +778,8 @@ PROCEDURE ScanWideText () =
         ELSIF (ch = '\\') THEN Stuff (ORD ('\\'));  GetCh ();
         ELSIF (ch = '\'') THEN Stuff (ORD ('\''));  GetCh ();
         ELSIF (ch = '\"') THEN Stuff (ORD ('\"'));  GetCh ();
-        ELSIF (ch = 'x') OR (ch = 'X') 
-                          THEN GetCh ();  Stuff (GetHexChar (wide := TRUE));
+        ELSIF (ch = 'x')
+           OR (ch = 'X') THEN GetCh ();  Stuff (GetHexChar (wide := TRUE));
         ELSIF (OctalDigits[ch]) THEN Stuff (GetOctalChar (wide := TRUE));
         ELSE  Error.Msg ("unknown escape sequence in wide text literal");
         END;
@@ -844,11 +842,10 @@ PROCEDURE GetHexDigit (wide: BOOLEAN;  VAR value: INTEGER): BOOLEAN =
   CONST Bad = ARRAY BOOLEAN OF TEXT {
      "hex character constant must have 2 digits",
      "wide hex character constant must have 4 digits" };
-  VAR x: INTEGER := 0;
+  VAR x := 0;
   BEGIN
     IF  NOT (HexDigits[ch]) THEN
-      Error.Msg (Bad[wide]);
-      RETURN FALSE;
+      Error.Msg (Bad[wide]);  RETURN FALSE;
     ELSIF ('0' <= ch) AND (ch <= '9') THEN
       x := ORD (ch) - ORD ('0');
     ELSIF ('a' <= ch) AND (ch <= 'f') THEN
