@@ -247,8 +247,8 @@ static bool m3_init (void);
 static void m3_parse_file (int);
 static alias_set_type m3_get_alias_set (tree);
 static void m3_finish (void);
-static bool m3_volatize_p (void);
-static void m3_volatilize_decl (tree decl);
+static bool m3_volatile_p (void);
+static void m3_make_volatile_decl (tree decl);
 
 static bool m3_next_store_volatile;
 
@@ -1979,8 +1979,8 @@ declare_temp (tree t)
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (t);
   DECL_CONTEXT (v) = current_function_decl;
 
-  if (m3_volatize_p ())
-    m3_volatilize_decl (v);
+  if (m3_volatile_p ())
+    m3_make_volatile_decl (v);
 
   add_stmt (build1 (DECL_EXPR, t_void, v));
   TREE_CHAIN (v) = BLOCK_VARS (current_block);
@@ -2088,7 +2088,7 @@ m3_set_language_function (void)
 }
 
 static bool
-m3_volatize_p (void)
+m3_volatile_p (void)
 {
     struct language_function* f;
     if (M3_ALL_VOLATILE)
@@ -2098,14 +2098,14 @@ m3_volatize_p (void)
 }
 
 static void
-m3_set_volatize (void)
+m3_set_volatile (void)
 {
     if (!M3_ALL_VOLATILE)
       m3_set_language_function()->volatil = true;
 }
 
 static void
-m3_volatilize_decl (tree decl)
+m3_make_volatile_decl (tree decl)
 {
   if (!TYPE_VOLATILE(TREE_TYPE(decl)) && !TREE_STATIC(decl)
       && (TREE_CODE(decl) == VAR_DECL
@@ -2118,11 +2118,33 @@ m3_volatilize_decl (tree decl)
 }
 
 static void
+m3cg_make_volatile (void)
+{
+  tree block, decl;
+
+  m3_set_volatile (); /* for later temporaries, locals */
+
+  /* make current locals volatile */
+  for (block = current_block;
+       block != current_function_decl;
+       block = BLOCK_SUPERCONTEXT(block)) {
+    for (decl = BLOCK_VARS(block); decl; decl = TREE_CHAIN(decl)) {
+      m3_make_volatile_decl (decl);
+    }
+  }
+
+  /* and arguments */
+  for (decl = DECL_ARGUMENTS(current_function_decl);
+       decl; decl = TREE_CHAIN(decl)) {
+    m3_make_volatile_decl (decl);
+  }
+}
+
+static void
 m3_call_direct (tree p, tree t)
 {
   tree call;
   tree *slot = (tree *)htab_find_slot (builtins, p, NO_INSERT);
-  int flags;
   if (slot) p = *slot;
   if (TREE_USED (p) == 0)
   {
@@ -2138,23 +2160,8 @@ m3_call_direct (tree p, tree t)
     EXPR_PUSH (call);
   }
   CALL_POP ();
-  flags = call_expr_flags (call);
-  if (flags & ECF_RETURNS_TWICE) {
-    tree block, decl;
-    /* call to setjmp: make locals volatile */
-    m3_set_volatize (); /* for later temporaries, locals */
-    for (block = current_block;
-         block != current_function_decl;
-         block = BLOCK_SUPERCONTEXT(block)) {
-      for (decl = BLOCK_VARS(block); decl; decl = TREE_CHAIN(decl)) {
-        m3_volatilize_decl(decl);
-      }
-    }
-    /* and arguments */
-    for (decl = DECL_ARGUMENTS(current_function_decl);
-         decl; decl = TREE_CHAIN(decl)) {
-      m3_volatilize_decl(decl);
-    }
+  if (call_expr_flags (call) & ECF_RETURNS_TWICE) {
+    m3cg_make_volatile (); /* call setjmp: make locals, etc. volatile */
   }
 }
 
@@ -3181,8 +3188,8 @@ m3cg_declare_local (void)
 
   if (current_block)
     {
-      if (m3_volatize_p ())
-        m3_volatilize_decl(v);
+      if (m3_volatile_p ())
+        m3_make_volatile_decl (v);
       add_stmt (build1 (DECL_EXPR, t_void, v));
       TREE_CHAIN (v) = BLOCK_VARS (current_block);
       BLOCK_VARS (current_block) = v;
@@ -3289,8 +3296,8 @@ m3cg_declare_temp (void)
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (TREE_TYPE (v));
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_CONTEXT (v) = current_function_decl;
-  if (m3_volatize_p ())
-    m3_volatilize_decl(v);
+  if (m3_volatile_p ())
+    m3_make_volatile_decl (v);
 
   TREE_CHAIN (v) = BLOCK_VARS (BLOCK_SUBBLOCKS
                                (DECL_INITIAL (current_function_decl)));
