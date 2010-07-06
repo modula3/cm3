@@ -411,11 +411,14 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
 
     CASE p.kind OF
     | Kind.Noop,
-      Kind.D_to_S,
       Kind.S_to_S,
       Kind.D_to_V,
       Kind.S_to_V,
       Kind.V_to_V =>
+        Expr.CompileLValue (p.expr, traced);
+        CG.Boost_alignment (t_align);
+
+    | Kind.D_to_S =>
         Expr.CompileLValue (p.expr, traced);
         CG.Boost_alignment (t_align);
 
@@ -430,7 +433,7 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
          * gcc optimization? ?Given that this is LOOPHOLE and floating point,
          * inhibiting optimization is very ok?
          *)
-        IF p.kind = Kind.D_to_S AND (FloatType[t_cg] # FloatType[u_cg]) THEN
+        IF FloatType[t_cg] # FloatType[u_cg] THEN
           CG.Force ();
         END;
 
