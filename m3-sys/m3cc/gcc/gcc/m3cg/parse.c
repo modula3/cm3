@@ -2471,7 +2471,7 @@ emit_fault_proc (void)
   current_function_decl = NULL_TREE;
 }
 
-/* FIXME: jdp says 0x0f and 4; cm3 may need more */
+/* see M3CG.RuntimeError, RuntimeError.T */
 #define FAULT_MASK 0x1f
 #define LINE_SHIFT 5
 
@@ -2480,6 +2480,12 @@ generate_fault (int code)
 {
   tree arg;
 
+  /* Losing bits of the code seems bad: wrong error reported.
+   * Losing bits of the line number is "ok".
+   * Line numbers up to around 100 million are preserved.
+   */
+  gcc_assert (code <= FAULT_MASK);
+  /* gcc_assert (LOCATION_LINE(input_location) <= (long)((~0UL) >> LINE_SHIFT)); */
   if (fault_proc == 0) declare_fault_proc ();
   arg = build_int_cst (t_int, (LOCATION_LINE(input_location) << LINE_SHIFT) + (code & FAULT_MASK));
 #if GCC45
