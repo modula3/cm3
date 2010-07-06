@@ -10,6 +10,7 @@ MODULE CastExpr;
 
 IMPORT M3Buf, CG, Expr, ExprRep, Type, Error, OpenArrayType;
 IMPORT M3, M3ID, M3RT, Target, TInt;
+FROM Target IMPORT FloatType;
 
 TYPE
   Kind = {
@@ -394,7 +395,7 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
     u  := Expr.TypeOf (e);
     t  := p.tipe;
     sz, t_align, u_align, z_align: INTEGER;
-    u_cg: CG.Type;
+    t_cg, u_cg: CG.Type;
     u_info, t_info: Type.Info;
   BEGIN
     u := Type.CheckInfo (u, u_info);
@@ -402,6 +403,7 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
     t_align := t_info.alignment;
     u_align := u_info.alignment;
     z_align := MAX (t_align, u_align);
+    t_cg := t_info.stk_type;
     u_cg := u_info.stk_type;
     sz := u_info.size;
     Type.Compile (t);
@@ -416,6 +418,21 @@ PROCEDURE CompileLV (p: P; traced: BOOLEAN) =
       Kind.V_to_V =>
         Expr.CompileLValue (p.expr, traced);
         CG.Boost_alignment (t_align);
+
+        (* Inhibit some optimization that causes compilation to fail. e.g.:
+         * m3core/src/float/IEEE/RealFloat.m3:
+         * In function 'RealFloat__CopySign':
+         * internal compiler error: in convert_move, at expr.c:371
+         *
+         * ?Force() inhibits optimizations done by m3front/src/misc/CG.m3?
+         * ?The particular optimizations are removal of address taken and
+         * pointer indirections? ?Leaving the address taken inhibits
+         * gcc optimization? ?Given that this is LOOPHOLE and floating point,
+         * inhibiting optimization is very ok?
+         *)
+        IF p.kind = Kind.D_to_S AND (FloatType[t_cg] # FloatType[u_cg]) THEN
+          CG.Force ();
+        END;
 
     | Kind.D_to_A,
       Kind.S_to_A,
