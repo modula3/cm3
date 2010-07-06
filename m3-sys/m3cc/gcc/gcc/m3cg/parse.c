@@ -5715,7 +5715,7 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
 #endif
     /*flag_strict_aliasing = 0;*/ /* consider? */
     /*flag_strict_overflow = 0;*/ /* consider? */
-    flag_tree_ter = 0; /* fails to compile m3core CopySign */
+    /*flag_tree_ter = 0;*/ /* used to break m3core CopySign, see m3front/CastExpr */
     /*flag_delete_null_pointer_checks = 0;*/ /* consider? */
     /*flag_reorder_functions = 0;*/ /* consider? */
   }
