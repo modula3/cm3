@@ -92,12 +92,13 @@ CONST
 
 PROCEDURE ReportFault (module: ADDRESS(*RT0.ModulePtr*);  info: INTEGER)
   RAISES ANY =
+   (* 1F: see M3CG.RuntimeError, RuntimeError.T *)
   VAR a: RT0.RaiseActivation;  code := Word.And (info, 16_1f);
   BEGIN
     a.exception   := RuntimeError.Self ();
     a.arg         := LOOPHOLE (code, RT0.ExceptionArg);
     a.module      := module;
-    a.line        := Word.RightShift (info, 5);
+    a.line        := Word.RightShift (info, 5); (* 5: due to 1F *)
     a.pc          := NIL;
     a.info0       := NIL;
     a.info1       := NIL;

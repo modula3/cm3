@@ -3592,8 +3592,11 @@ PROCEDURE check_eq (u: U;  type: IType;  code: RuntimeError) =
   END check_eq;
 
 PROCEDURE reportfault (u: U;  code: RuntimeError) =
+  (* 32: see M3CG.RuntimeError, RuntimeError.T *)
   VAR info := ORD (code) + u.lineno * 32;
   BEGIN
+    <* ASSERT ORD (code) < 32 *> (* lose fault code not ok *)
+    (* ASSERT u.lineno <= (LAST(INTEGER) DIV 32) *) (* losing line number ok *)
     u.cg.movImmI(u.cg.reg[EAX], info);
     u.cg.intCall(u.reportlabel);
     u.usedfault := TRUE;
