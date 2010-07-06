@@ -111,7 +111,8 @@ PROCEDURE CheckStoreTraced (ref: REFANY);
 PROCEDURE ReportFault (module: ADDRESS(*RT0.ModulePtr*);  info: INTEGER)
   RAISES ANY;
 (* report the runtime fault in the specified module.  "info" encodes
-   the source line number and fault code [info = line*16 + ORD(RuntimeError.T)].
+   the source line number and fault code [info = line*32 + ORD(RuntimeError.T)].
+   32: see M3CG.RuntimeError, RuntimeError.T
 *)
 
 PROCEDURE AssertFailed (module: ADDRESS(*RT0.ModulePtr*);  line: INTEGER;
