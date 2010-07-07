@@ -5712,12 +5712,12 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
     /* Turn off some optimizations that cause problems,
      * unless we make all loads/stores volatile.
      */
-    flag_tree_vrp = 0; /* value range propagation, causes problems? */
-    flag_tree_fre = 0; /* full redundancy elimination, causes problems? */
+    /*flag_tree_vrp = 0;*/ /* value range propagation, used to cause problems? */
+    /*flag_tree_fre = 0;*/ /* full redundancy elimination, used to cause problems? */
 
-    flag_tree_loop_im = 0; /* loop Invariant Motion, breaks compiling Trestle */
+    /*flag_tree_loop_im = 0;*/ /* loop Invariant Motion, used to break compiling Trestle */
 #ifdef INSN_SCHEDULING
-    flag_schedule_insns = 0; /* fails to compile, surprising */
+    /*flag_schedule_insns = 0;*/ /* used to break compilation, surprising */
 #endif
     /*flag_strict_aliasing = 0;*/ /* consider? */
     /*flag_strict_overflow = 0;*/ /* consider? */
