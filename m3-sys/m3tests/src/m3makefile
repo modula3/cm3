@@ -547,6 +547,7 @@ end
 %p_test ("p2", "p210", "open array initializers runtime failure")
 
 p_test ("p2", "p240", "exact codegen")
+p_test ("p2", "p241", "Formatter crashes gcc backend if 'ter' optimimization enabled")
 
 mixed_portability_test ("p2", "p227", "longint, word, add, insert, extract, etc. (slow)")
 p_test ("p2", "p226", "atomics")
