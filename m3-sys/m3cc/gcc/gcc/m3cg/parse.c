@@ -5698,33 +5698,6 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   /* These optimizations break our exception handling? */
   flag_reorder_blocks = 0;
   flag_reorder_blocks_and_partition = 0;
-  
-  if (M3_ALL_VOLATILE)
-  {
-    /* Make all loads/stores volatile like we used to,
-     * which greatly hampers optimization, but
-     * we don't then have to disable any particular
-     * optimizations below.
-     */
-  }
-  else
-  {
-    /* Turn off some optimizations that cause problems,
-     * unless we make all loads/stores volatile.
-     */
-    /*flag_tree_vrp = 0;*/ /* value range propagation, used to cause problems? */
-    /*flag_tree_fre = 0;*/ /* full redundancy elimination, used to cause problems? */
-
-    /*flag_tree_loop_im = 0;*/ /* loop Invariant Motion, used to break compiling Trestle */
-#ifdef INSN_SCHEDULING
-    /*flag_schedule_insns = 0;*/ /* used to break compilation, surprising */
-#endif
-    /*flag_strict_aliasing = 0;*/ /* consider? */
-    /*flag_strict_overflow = 0;*/ /* consider? */
-    /*flag_tree_ter = 0;*/ /* used to break m3core CopySign, see m3front/CastExpr */
-    /*flag_delete_null_pointer_checks = 0;*/ /* consider? */
-    /*flag_reorder_functions = 0;*/ /* consider? */
-  }
 
   /* otherwise:
 MODULE Main;
@@ -5750,8 +5723,10 @@ Undefined symbols:
   */
   flag_unit_at_a_time = 0;
 
-  /* partial redundancy elmination;
-     crashes compiling m3-tools/cvsup/server/FSServer.m3 */
+  /* partial redundancy elmination
+     crashes compiling libm3/Formatter.m3
+     crashes compiling cvsup/FSServer.m3
+   */
   flag_tree_pre = 0;
 
 #if GCC45
