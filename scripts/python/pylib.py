@@ -2257,7 +2257,9 @@ def SetupEnvironment():
 
         _SetupEnvironmentVariableAny(
             "PATH",
-            ["mspdb80.dll", "mspdb71.dll", "mspdb70.dll", "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll", "dbi.dll"],
+            ["mspdb100.dll", "mspdb80.dll", "mspdb71.dll", "mspdb70.dll",
+             "mspdb60.dll", "mspdb50.dll", "mspdb41.dll", "mspdb40.dll",
+             "dbi.dll"],
             MspdbDir)
 
         # Try to get mt.exe in %PATH% if it isn't already.
