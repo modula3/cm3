@@ -2127,6 +2127,35 @@ m3_volatilize_decl (tree decl)
 }
 
 static void
+m3_volatilize_current_function (void)
+{
+  tree block, decl;
+
+  /* note it for later so that later temporaries and locals ("WITH")
+   * are also made volatile
+   */
+
+  m3_set_volatize ();
+
+  /* make locals volatile */
+
+  for (block = current_block;
+       block != current_function_decl;
+       block = BLOCK_SUPERCONTEXT(block)) {
+    for (decl = BLOCK_VARS(block); decl; decl = TREE_CHAIN(decl)) {
+      m3_volatilize_decl(decl);
+    }
+  }
+
+  /* make arguments volatile  */
+
+  for (decl = DECL_ARGUMENTS(current_function_decl);
+       decl; decl = TREE_CHAIN(decl)) {
+    m3_volatilize_decl(decl);
+  }
+}
+
+static void
 m3_call_direct (tree p, tree t)
 {
   tree call;
@@ -2149,21 +2178,8 @@ m3_call_direct (tree p, tree t)
   CALL_POP ();
   flags = call_expr_flags (call);
   if (flags & ECF_RETURNS_TWICE) {
-    tree block, decl;
-    /* call to setjmp: make locals volatile */
-    m3_set_volatize (); /* for later temporaries, locals */
-    for (block = current_block;
-         block != current_function_decl;
-         block = BLOCK_SUPERCONTEXT(block)) {
-      for (decl = BLOCK_VARS(block); decl; decl = TREE_CHAIN(decl)) {
-        m3_volatilize_decl(decl);
-      }
-    }
-    /* and arguments */
-    for (decl = DECL_ARGUMENTS(current_function_decl);
-         decl; decl = TREE_CHAIN(decl)) {
-      m3_volatilize_decl(decl);
-    }
+    /* call to setjmp: make locals, etc. volatile */
+    m3_volatilize_current_function ();
   }
 }
 
@@ -2209,7 +2225,7 @@ m3_load_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
     {
       /* failsafe, but inefficient */
       v = m3_build1 (ADDR_EXPR, t_addr, v);
-      v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+      v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
       v = m3_build1 (INDIRECT_REF, src_t,
                      m3_cast (m3_build_pointer_type (src_t), v));
     }
@@ -2255,7 +2271,7 @@ m3_store_1 (tree v, int o, tree src_t, m3_type src_T, tree dst_t, m3_type dst_T,
     {
       /* failsafe, but inefficient */
       v = m3_build1 (ADDR_EXPR, t_addr, v);
-      v = m3_build2 (PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
+      v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
       v = m3_build1 (INDIRECT_REF, dst_t,
                      m3_cast (m3_build_pointer_type (dst_t), v));
     }
@@ -3401,12 +3417,11 @@ m3cg_init_var (void)
   BYTEOFFSET (b);
 
   tree f, v;
-  enum tree_code plus = (GCC45 ? POINTER_PLUS_EXPR : PLUS_EXPR);
 
   TREE_USED (var) = 1;
 
   one_field (o, t_addr, &f, &v);
-  TREE_VALUE (v) = m3_build2 (plus, t_addr,
+  TREE_VALUE (v) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
                               m3_build1 (ADDR_EXPR, t_addr, var),
                               size_int (b / BITS_PER_UNIT));
 }
@@ -3901,7 +3916,6 @@ m3cg_load (void)
 static void
 m3cg_load_address (void)
 {
-  enum tree_code plus = (GCC45 ? POINTER_PLUS_EXPR : PLUS_EXPR);
   VAR        (v);
   BYTEOFFSET (o);
 
@@ -3915,7 +3929,7 @@ m3cg_load_address (void)
   TREE_USED (v) = 1;
   v = m3_build1 (ADDR_EXPR, t_addr, v);
   if (o != 0) {
-    v = m3_build2 (plus, t_addr, v, size_int (o / BITS_PER_UNIT));
+    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
   }
   EXPR_PUSH (v);
 }
@@ -3928,7 +3942,6 @@ m3cg_load_indirect (void)
   MTYPE2     (dst_t, dst_T);
 
   tree v;
-  enum tree_code plus = (GCC45 ? POINTER_PLUS_EXPR : PLUS_EXPR);
 
   if (option_vars_trace)
     fprintf(stderr, "  load address offset:0x%lx src_t:%s dst_t:%s\n",
@@ -3936,7 +3949,7 @@ m3cg_load_indirect (void)
 
   v = EXPR_REF (-1);
   if (o != 0) {
-    v = m3_build2 (plus, t_addr, v, size_int (o / BITS_PER_UNIT));
+    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
   }
   v = m3_cast (m3_build_pointer_type (src_t), v);
   v = m3_build1 (INDIRECT_REF, src_t, v);
@@ -3973,7 +3986,6 @@ m3cg_store_indirect (void)
   MTYPE2 (dst_t, dst_T);
 
   tree v;
-  enum tree_code plus = (GCC45 ? POINTER_PLUS_EXPR : PLUS_EXPR);
 
   if (option_vars_trace)
     fprintf(stderr, "  store indirect offset:0x%lx src_t:%s dst_t:%s\n",
@@ -3981,7 +3993,7 @@ m3cg_store_indirect (void)
 
   v = EXPR_REF (-2);
   if (o != 0) {
-    v = m3_build2 (plus, t_addr, v, size_int (o / BITS_PER_UNIT));
+    v = m3_build2 (POINTER_PLUS_EXPR, t_addr, v, size_int (o / BITS_PER_UNIT));
   }
   v = m3_cast (m3_build_pointer_type (dst_t), v);
   v = m3_build1 (INDIRECT_REF, dst_t, v);
@@ -5047,13 +5059,12 @@ m3cg_check_eq (void)
 static void
 m3cg_add_offset (void)
 {
-  enum tree_code plus = (GCC45 ? POINTER_PLUS_EXPR : PLUS_EXPR);
   BYTESIZE (n);
 
   if (option_vars_trace)
     fprintf(stderr, "  add offset 0x%lx\n", n);
 
-  EXPR_REF (-1) = m3_build2 (plus, t_addr,
+  EXPR_REF (-1) = m3_build2 (POINTER_PLUS_EXPR, t_addr,
                              EXPR_REF (-1), size_int (n / BITS_PER_UNIT));
 }
 
@@ -5087,7 +5098,7 @@ m3cg_index_address (void)
 static void
 m3cg_start_call_direct (void)
 {
-  UNUSED_PROC    (p);
+  PROC    (p);
   INTEGER (level);
   UNUSED_MTYPE2  (t, m3t);
 
@@ -5098,15 +5109,42 @@ m3cg_start_call_direct (void)
   m3_start_call ();
 }
 
+/* RTHooks__PushEFrame */
+#define m3_is_pushframe(a) \
+  (   ((a)[ 0] == 'R') \
+   && ((a)[ 1] == 'T') \
+   && ((a)[ 2] == 'H') \
+   && ((a)[ 3] == 'o') \
+   && ((a)[ 4] == 'o') \
+   && ((a)[ 5] == 'k') \
+   && ((a)[ 6] == 's') \
+   && ((a)[ 7] == '_') \
+   && ((a)[ 8] == '_') \
+   && ((a)[ 9] == 'P') \
+   && ((a)[10] == 'u') \
+   && ((a)[11] == 's') \
+   && ((a)[12] == 'h') \
+   && ((a)[13] == 'E') \
+   && ((a)[14] == 'F') \
+   && ((a)[15] == 'r') \
+   && ((a)[16] == 'a') \
+   && ((a)[17] == 'm') \
+   && ((a)[18] == 'e') \
+   && ((a)[19] == 0))
+
 static void
 m3cg_call_direct (void)
 {
   PROC  (p);
   MTYPE2  (t, m3t);
+  const char* name = IDENTIFIER_POINTER(DECL_NAME(p));
 
   if (option_procs_trace)
     fprintf(stderr, "  call procedure:%s type:%s\n",
-            IDENTIFIER_POINTER(DECL_NAME(p)), m3cg_typename(m3t));
+            name, m3cg_typename(m3t));
+
+  if (m3_is_pushframe(name))
+    m3_volatilize_current_function ();
 
   m3_call_direct (p, t);
 }
@@ -5739,12 +5777,6 @@ Undefined symbols:
       _L_1 in Main.mo
   */
   flag_unit_at_a_time = 0;
-
-  /* partial redundancy elmination
-     crashes compiling libm3/Formatter.m3
-     crashes compiling cvsup/FSServer.m3
-   */
-  flag_tree_pre = 0;
 
 #if GCC45
   /* Excess precision other than "fast" requires front-end support.  */
