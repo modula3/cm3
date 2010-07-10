@@ -3731,8 +3731,25 @@ m3cg_set_label (void)
       DECL_UNINLINABLE (current_function_decl) = 1;
       DECL_STRUCT_FUNCTION (current_function_decl)->has_nonlocal_label = 1;
 #if GCC45
-      /* ? */
+      /* ?
+      DECL_NONLOCAL seems very similar, but causes bad codegen:
+
+          DECL_NONLOCAL on label before PushEFrame
+          causes $rbp to be altered incorrectly.
+          e.g. in RTAllocator__AllocTraced,
+          such that PushEFrame overwrites the local "thread"
+          in its caller and the assert thread.something access violates.
+          
+          We need to find another way to achieve this?
+          "this": getting the label onto nonlocal_goto_handler_labels list.
+          
+          cm3 built with gcc-4.5 gets further now.
+          My mistake here, trying to replace a 4.3 construct
+          with a 4.5 construct. Either I haven't found the correct 4.5
+          construct or there is something wrong with 4.5.
+          The instruction that altered rbp was, uh, surprising.
       DECL_NONLOCAL(l) = true;
+      */
 #else
       {
         rtx list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
