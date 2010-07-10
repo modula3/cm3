@@ -247,8 +247,9 @@ static bool m3_init (void);
 static void m3_parse_file (int);
 static alias_set_type m3_get_alias_set (tree);
 static void m3_finish (void);
-static bool m3_volatize_p (void);
 static void m3_volatilize_decl (tree decl);
+static struct language_function* m3_language_function (void);
+#define m3_volatize (m3_language_function()->volatil)
 
 static bool m3_next_store_volatile;
 
@@ -1988,7 +1989,7 @@ declare_temp (tree t)
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (t);
   DECL_CONTEXT (v) = current_function_decl;
 
-  if (m3_volatize_p ())
+  if (m3_volatize)
     m3_volatilize_decl (v);
 
   add_stmt (build1 (DECL_EXPR, t_void, v));
@@ -2074,43 +2075,18 @@ m3_call_indirect (tree t, tree cc ATTRIBUTE_UNUSED)
 #else
 
 static struct language_function*
-m3_get_language_function (void)
-{
-    if (M3_ALL_VOLATILE)
-        return 0;
-    return DECL_STRUCT_FUNCTION(current_function_decl)->language;
-}
-
-static struct language_function*
-m3_set_language_function (void)
+m3_language_function (void)
 {
     struct language_function* f;
-    if (M3_ALL_VOLATILE)
-        return 0;
     f = DECL_STRUCT_FUNCTION(current_function_decl)->language;
     if (!f)
     {
         f = GGC_NEW (struct language_function);
+        f->volatil = 0;
+        f->saved_flag_tree_pre = flag_tree_pre;
         DECL_STRUCT_FUNCTION(current_function_decl)->language = f;
     }
     return f;
-}
-
-static bool
-m3_volatize_p (void)
-{
-    struct language_function* f;
-    if (M3_ALL_VOLATILE)
-        return true;
-    f = m3_get_language_function();
-    return (f && f->volatil);
-}
-
-static void
-m3_set_volatize (void)
-{
-    if (!M3_ALL_VOLATILE)
-      m3_set_language_function()->volatil = true;
 }
 
 static void
@@ -2135,7 +2111,7 @@ m3_volatilize_current_function (void)
    * are also made volatile
    */
 
-  m3_set_volatize ();
+  m3_volatize = true;
 
   /* make locals volatile */
 
@@ -3212,7 +3188,7 @@ m3cg_declare_local (void)
 
   if (current_block)
     {
-      if (m3_volatize_p ())
+      if (m3_volatize)
         m3_volatilize_decl(v);
       add_stmt (build1 (DECL_EXPR, t_void, v));
       TREE_CHAIN (v) = BLOCK_VARS (current_block);
@@ -3320,7 +3296,7 @@ m3cg_declare_temp (void)
   DECL_UNSIGNED (v) = TYPE_UNSIGNED (TREE_TYPE (v));
   TREE_ADDRESSABLE (v) = in_memory;
   DECL_CONTEXT (v) = current_function_decl;
-  if (m3_volatize_p ())
+  if (m3_volatize)
     m3_volatilize_decl(v);
 
   TREE_CHAIN (v) = BLOCK_VARS (BLOCK_SUBBLOCKS
@@ -3636,6 +3612,7 @@ m3cg_begin_procedure (void)
 
   current_function_decl = p;
   allocate_struct_function (p, false);
+  m3_language_function ();
 
   pending_blocks = tree_cons (NULL_TREE, current_block, pending_blocks);
   current_block = DECL_INITIAL (p); /* parm_block */
@@ -3656,6 +3633,7 @@ m3cg_begin_procedure (void)
 static void
 m3cg_end_procedure (void)
 {
+  int saved_flag_tree_pre = { 0 };
   PROC (p);
 
   gcc_assert (current_function_decl == p);
@@ -3676,6 +3654,8 @@ m3cg_end_procedure (void)
   /* good line numbers for epilog */
   DECL_STRUCT_FUNCTION (p)->function_end_locus = input_location;
 
+  saved_flag_tree_pre = m3_language_function()->saved_flag_tree_pre;
+
   current_function_decl = DECL_CONTEXT (p);
 
   if (current_block)
@@ -3690,6 +3670,8 @@ m3cg_end_procedure (void)
       m3_gimplify_function (p);
       cgraph_finalize_function (p, false);
     }
+
+  flag_tree_pre = saved_flag_tree_pre;
 }
 
 static void
@@ -5095,20 +5077,6 @@ m3cg_index_address (void)
   EXPR_POP ();
 }
 
-static void
-m3cg_start_call_direct (void)
-{
-  PROC    (p);
-  INTEGER (level);
-  UNUSED_MTYPE2  (t, m3t);
-
-  if (option_procs_trace)
-    fprintf(stderr, "  start call procedure:%s, level:0x%lx, type:%s\n",
-            IDENTIFIER_POINTER(DECL_NAME(p)), level, m3cg_typename(m3t));
-
-  m3_start_call ();
-}
-
 /* RTHooks__PushEFrame */
 #define m3_is_pushframe(a) \
   (   ((a)[ 0] == 'R') \
@@ -5133,18 +5101,35 @@ m3cg_start_call_direct (void)
    && ((a)[19] == 0))
 
 static void
+m3cg_start_call_direct (void)
+{
+  PROC    (p);
+  INTEGER (level);
+  UNUSED_MTYPE2  (t, m3t);
+  const char* name = IDENTIFIER_POINTER(DECL_NAME(p));
+
+  if (option_procs_trace)
+    fprintf(stderr, "  start call procedure:%s, level:0x%lx, type:%s\n",
+            name, level, m3cg_typename(m3t));
+
+  if (m3_is_pushframe(name))
+  {
+    /* Partial redundancy elimination causes problems: sigsegv during compile. */
+    flag_tree_pre = 0;
+  }
+
+  m3_start_call ();
+}
+
+static void
 m3cg_call_direct (void)
 {
   PROC  (p);
   MTYPE2  (t, m3t);
-  const char* name = IDENTIFIER_POINTER(DECL_NAME(p));
 
   if (option_procs_trace)
     fprintf(stderr, "  call procedure:%s type:%s\n",
-            name, m3cg_typename(m3t));
-
-  if ((!M3_ALL_VOLATILE) && m3_is_pushframe(name))
-    m3_volatilize_current_function ();
+            IDENTIFIER_POINTER(DECL_NAME(p)), m3cg_typename(m3t));
 
   m3_call_direct (p, t);
 }

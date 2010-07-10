@@ -61,4 +61,5 @@ typedef struct GTY(()) lang_decl
 struct GTY(()) language_function
 {
     bool volatil; /* does function call setjmp/fork/vfork */
+    int saved_flag_tree_pre;
 };
