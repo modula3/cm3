@@ -5143,7 +5143,7 @@ m3cg_call_direct (void)
     fprintf(stderr, "  call procedure:%s type:%s\n",
             name, m3cg_typename(m3t));
 
-  if (m3_is_pushframe(name))
+  if ((!M3_ALL_VOLATILE) && m3_is_pushframe(name))
     m3_volatilize_current_function ();
 
   m3_call_direct (p, t);
