@@ -105390,41 +105390,40 @@ _MM_bitfield:
 	.space 32
 	.quad	_L_1+141024
 	.space 24
-	.quad	_MM_bitfield+216
+	.quad	_MM_bitfield+208
 	.space 8
 	.quad	_bitfield_M3
 	.quad	3
-	.word	49
+	.word	881
 	.space 6
-	.quad	50
-	.long	1546188227
-	.long	1078575759
-	.quad	53
-	.quad	54
-	.byte	55
-	.space 7
-	.quad	56
-	.long	1114001900
-	.long	59
-	.byte	60
-	.space 7
-	.quad	61
-	.quad	62
-	.word	63
+	.quad	882
+	.quad	883
+	.long	2061584302
+	.long	1082894100
+	.word	886
 	.space 2
-	.long	64
-	.space 24
+	.long	887
+	.quad	888
+	.quad	889
+	.quad	890
+	.long	1147074839
+	.byte	125
+	.byte	126
+	.space 2
+	.quad	895
+	.long	896
+	.space 28
 	.quad	_bitfield_I3
-	.quad	_MM_bitfield+240
+	.quad	_MM_bitfield+232
 	.space 8
 	.quad	_Long_I3
-	.quad	_MM_bitfield+264
+	.quad	_MM_bitfield+256
 	.space 8
 	.quad	_Word_I3
-	.quad	_MM_bitfield+288
+	.quad	_MM_bitfield+280
 	.space 8
 	.quad	_Cstdint_I3
-	.quad	_MM_bitfield+312
+	.quad	_MM_bitfield+304
 	.space 8
 	.quad	_RTHooks_I3
 	.space 8
