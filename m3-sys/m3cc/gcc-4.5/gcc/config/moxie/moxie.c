@@ -460,8 +460,13 @@ moxie_static_chain (const_tree fndecl, bool incoming_p)
 {
   rtx addr, mem;
 
+#if 0
   if (!DECL_STATIC_CHAIN (fndecl))
     return NULL;
+#else /* for Modula-3 July 2010 */
+  if (fndecl && !DECL_STATIC_CHAIN (fndecl))
+    return NULL;
+#endif
 
   if (incoming_p)
     addr = plus_constant (arg_pointer_rtx, 2 * UNITS_PER_WORD);
