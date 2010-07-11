@@ -1,13 +1,12 @@
 	.text
-.globl _Rotate__uRotate_var_u16_I
-	.private_extern _Rotate__uRotate_var_u16_I
-_Rotate__uRotate_var_u16_I:
+.globl _Rotate__uRotate_var_i64_I
+	.private_extern _Rotate__uRotate_var_i64_I
+_Rotate__uRotate_var_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	104+_MM_Rotate(%rip), %eax
-	movswq	%ax,%rax
+	movq	104+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L2
@@ -30,16 +29,16 @@ L3:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_u16_I
-	.private_extern _Rotate__uRotate_param_u16_I
-_Rotate__uRotate_param_u16_I:
+.globl _Rotate__uRotate_param_i64_I
+	.private_extern _Rotate__uRotate_param_i64_I
+_Rotate__uRotate_param_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movswq	-34(%rbp),%rax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L6
@@ -62,15 +61,14 @@ L7:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_u16_C
-	.private_extern _Rotate__uRotate_var_u16_C
-_Rotate__uRotate_var_u16_C:
+.globl _Rotate__uRotate_var_i64_C
+	.private_extern _Rotate__uRotate_var_i64_C
+_Rotate__uRotate_var_i64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	104+_MM_Rotate(%rip), %eax
-	movswq	%ax,%rax
+	movq	104+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L10
@@ -93,16 +91,16 @@ L11:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_u16_C
-	.private_extern _Rotate__uRotate_param_u16_C
-_Rotate__uRotate_param_u16_C:
+.globl _Rotate__uRotate_param_i64_C
+	.private_extern _Rotate__uRotate_param_i64_C
+_Rotate__uRotate_param_i64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movswq	-34(%rbp),%rax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L14
@@ -125,12 +123,12 @@ L15:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_u64_I
-	.private_extern _Rotate__uRotate_var_u64_I
-_Rotate__uRotate_var_u64_I:
+.globl _Rotate__uRotate_var_LC_I
+	.private_extern _Rotate__uRotate_var_LC_I
+_Rotate__uRotate_var_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
 	movq	112+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
@@ -155,9 +153,9 @@ L19:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_u64_I
-	.private_extern _Rotate__uRotate_param_u64_I
-_Rotate__uRotate_param_u64_I:
+.globl _Rotate__uRotate_param_LC_I
+	.private_extern _Rotate__uRotate_param_LC_I
+_Rotate__uRotate_param_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -40(%rbp)
@@ -187,12 +185,12 @@ L23:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_u64_C
-	.private_extern _Rotate__uRotate_var_u64_C
-_Rotate__uRotate_var_u64_C:
+.globl _Rotate__uRotate_var_LC_C
+	.private_extern _Rotate__uRotate_var_LC_C
+_Rotate__uRotate_var_LC_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
 	movq	112+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
@@ -217,9 +215,9 @@ L27:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_u64_C
-	.private_extern _Rotate__uRotate_param_u64_C
-_Rotate__uRotate_param_u64_C:
+.globl _Rotate__uRotate_param_LC_C
+	.private_extern _Rotate__uRotate_param_LC_C
+_Rotate__uRotate_param_LC_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -40(%rbp)
@@ -249,14 +247,15 @@ L31:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_LC_I
-	.private_extern _Rotate__uRotate_var_LC_I
-_Rotate__uRotate_var_LC_I:
+.globl _Rotate__uRotate_var_u8_I
+	.private_extern _Rotate__uRotate_var_u8_I
+_Rotate__uRotate_var_u8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	120+_MM_Rotate(%rip), %rax
+	movzbl	124+_MM_Rotate(%rip), %eax
+	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L34
@@ -279,16 +278,16 @@ L35:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_LC_I
-	.private_extern _Rotate__uRotate_param_LC_I
-_Rotate__uRotate_param_LC_I:
+.globl _Rotate__uRotate_param_u8_I
+	.private_extern _Rotate__uRotate_param_u8_I
+_Rotate__uRotate_param_u8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movb	%dil, -33(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movsbq	-33(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L38
@@ -311,14 +310,15 @@ L39:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_LC_C
-	.private_extern _Rotate__uRotate_var_LC_C
-_Rotate__uRotate_var_LC_C:
+.globl _Rotate__uRotate_var_u8_C
+	.private_extern _Rotate__uRotate_var_u8_C
+_Rotate__uRotate_var_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	120+_MM_Rotate(%rip), %rax
+	movzbl	124+_MM_Rotate(%rip), %eax
+	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L42
@@ -341,16 +341,16 @@ L43:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_LC_C
-	.private_extern _Rotate__uRotate_param_LC_C
-_Rotate__uRotate_param_LC_C:
+.globl _Rotate__uRotate_param_u8_C
+	.private_extern _Rotate__uRotate_param_u8_C
+_Rotate__uRotate_param_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movb	%dil, -33(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movsbq	-33(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L46
@@ -373,15 +373,14 @@ L47:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_i16_I
-	.private_extern _Rotate__uRotate_var_i16_I
-_Rotate__uRotate_var_i16_I:
+.globl _Rotate__uRotate_var_I_I
+	.private_extern _Rotate__uRotate_var_I_I
+_Rotate__uRotate_var_I_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	136+_MM_Rotate(%rip), %eax
-	movzwl	%ax, %eax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L50
@@ -404,16 +403,16 @@ L51:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_i16_I
-	.private_extern _Rotate__uRotate_param_i16_I
-_Rotate__uRotate_param_i16_I:
+.globl _Rotate__uRotate_param_I_I
+	.private_extern _Rotate__uRotate_param_I_I
+_Rotate__uRotate_param_I_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	-34(%rbp), %eax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L54
@@ -436,15 +435,14 @@ L55:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_i16_C
-	.private_extern _Rotate__uRotate_var_i16_C
-_Rotate__uRotate_var_i16_C:
+.globl _Rotate__uRotate_var_I_C
+	.private_extern _Rotate__uRotate_var_I_C
+_Rotate__uRotate_var_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	136+_MM_Rotate(%rip), %eax
-	movzwl	%ax, %eax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L58
@@ -467,16 +465,16 @@ L59:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_i16_C
-	.private_extern _Rotate__uRotate_param_i16_C
-_Rotate__uRotate_param_i16_C:
+.globl _Rotate__uRotate_param_I_C
+	.private_extern _Rotate__uRotate_param_I_C
+_Rotate__uRotate_param_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	-34(%rbp), %eax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L62
@@ -499,15 +497,15 @@ L63:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_i32_I
-	.private_extern _Rotate__uRotate_var_i32_I
-_Rotate__uRotate_var_i32_I:
+.globl _Rotate__uRotate_var_i8_I
+	.private_extern _Rotate__uRotate_var_i8_I
+_Rotate__uRotate_var_i8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movl	140+_MM_Rotate(%rip), %eax
-	mov	%eax, %eax
+	movzbl	136+_MM_Rotate(%rip), %eax
+	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L66
@@ -530,16 +528,16 @@ L67:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_i32_I
-	.private_extern _Rotate__uRotate_param_i32_I
-_Rotate__uRotate_param_i32_I:
+.globl _Rotate__uRotate_param_i8_I
+	.private_extern _Rotate__uRotate_param_i8_I
+_Rotate__uRotate_param_i8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -36(%rbp)
+	movb	%dil, -33(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	mov	-36(%rbp), %eax
+	movzbl	-33(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L70
@@ -562,15 +560,15 @@ L71:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_i32_C
-	.private_extern _Rotate__uRotate_var_i32_C
-_Rotate__uRotate_var_i32_C:
+.globl _Rotate__uRotate_var_i8_C
+	.private_extern _Rotate__uRotate_var_i8_C
+_Rotate__uRotate_var_i8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movl	140+_MM_Rotate(%rip), %eax
-	mov	%eax, %eax
+	movzbl	136+_MM_Rotate(%rip), %eax
+	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L74
@@ -593,16 +591,16 @@ L75:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_i32_C
-	.private_extern _Rotate__uRotate_param_i32_C
-_Rotate__uRotate_param_i32_C:
+.globl _Rotate__uRotate_param_i8_C
+	.private_extern _Rotate__uRotate_param_i8_C
+_Rotate__uRotate_param_i8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -36(%rbp)
+	movb	%dil, -33(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	mov	-36(%rbp), %eax
+	movzbl	-33(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L78
@@ -625,14 +623,15 @@ L79:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_I_I
-	.private_extern _Rotate__uRotate_var_I_I
-_Rotate__uRotate_var_I_I:
+.globl _Rotate__uRotate_var_u32_I
+	.private_extern _Rotate__uRotate_var_u32_I
+_Rotate__uRotate_var_u32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	144+_MM_Rotate(%rip), %rax
+	movl	140+_MM_Rotate(%rip), %eax
+	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L82
@@ -655,16 +654,17 @@ L83:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_I_I
-	.private_extern _Rotate__uRotate_param_I_I
-_Rotate__uRotate_param_I_I:
+.globl _Rotate__uRotate_param_u32_I
+	.private_extern _Rotate__uRotate_param_u32_I
+_Rotate__uRotate_param_u32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movl	%edi, -36(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movl	-36(%rbp), %eax
+	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L86
@@ -687,14 +687,15 @@ L87:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_I_C
-	.private_extern _Rotate__uRotate_var_I_C
-_Rotate__uRotate_var_I_C:
+.globl _Rotate__uRotate_var_u32_C
+	.private_extern _Rotate__uRotate_var_u32_C
+_Rotate__uRotate_var_u32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
-	movq	%rax, -16(%rbp)
 	movq	144+_MM_Rotate(%rip), %rax
+	movq	%rax, -16(%rbp)
+	movl	140+_MM_Rotate(%rip), %eax
+	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L90
@@ -717,16 +718,17 @@ L91:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_I_C
-	.private_extern _Rotate__uRotate_param_I_C
-_Rotate__uRotate_param_I_C:
+.globl _Rotate__uRotate_param_u32_C
+	.private_extern _Rotate__uRotate_param_u32_C
+_Rotate__uRotate_param_u32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movl	%edi, -36(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movl	-36(%rbp), %eax
+	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L94
@@ -749,14 +751,14 @@ L95:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_i64_I
-	.private_extern _Rotate__uRotate_var_i64_I
-_Rotate__uRotate_var_i64_I:
+.globl _Rotate__uRotate_var_C_I
+	.private_extern _Rotate__uRotate_var_C_I
+_Rotate__uRotate_var_C_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	152+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L98
@@ -779,9 +781,9 @@ L99:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_i64_I
-	.private_extern _Rotate__uRotate_param_i64_I
-_Rotate__uRotate_param_i64_I:
+.globl _Rotate__uRotate_param_C_I
+	.private_extern _Rotate__uRotate_param_C_I
+_Rotate__uRotate_param_C_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -40(%rbp)
@@ -811,14 +813,14 @@ L103:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_i64_C
-	.private_extern _Rotate__uRotate_var_i64_C
-_Rotate__uRotate_var_i64_C:
+.globl _Rotate__uRotate_var_C_C
+	.private_extern _Rotate__uRotate_var_C_C
+_Rotate__uRotate_var_C_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	152+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L106
@@ -841,9 +843,9 @@ L107:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_i64_C
-	.private_extern _Rotate__uRotate_param_i64_C
-_Rotate__uRotate_param_i64_C:
+.globl _Rotate__uRotate_param_C_C
+	.private_extern _Rotate__uRotate_param_C_C
+_Rotate__uRotate_param_C_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -40(%rbp)
@@ -873,14 +875,15 @@ L111:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_C_I
-	.private_extern _Rotate__uRotate_var_C_I
-_Rotate__uRotate_var_C_I:
+.globl _Rotate__uRotate_var_u16_I
+	.private_extern _Rotate__uRotate_var_u16_I
+_Rotate__uRotate_var_u16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	160+_MM_Rotate(%rip), %rax
+	movzwl	152+_MM_Rotate(%rip), %eax
+	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L114
@@ -903,16 +906,16 @@ L115:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_C_I
-	.private_extern _Rotate__uRotate_param_C_I
-_Rotate__uRotate_param_C_I:
+.globl _Rotate__uRotate_param_u16_I
+	.private_extern _Rotate__uRotate_param_u16_I
+_Rotate__uRotate_param_u16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movw	%di, -34(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movswq	-34(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L118
@@ -935,14 +938,15 @@ L119:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_C_C
-	.private_extern _Rotate__uRotate_var_C_C
-_Rotate__uRotate_var_C_C:
+.globl _Rotate__uRotate_var_u16_C
+	.private_extern _Rotate__uRotate_var_u16_C
+_Rotate__uRotate_var_u16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	160+_MM_Rotate(%rip), %rax
+	movzwl	152+_MM_Rotate(%rip), %eax
+	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L122
@@ -965,16 +969,16 @@ L123:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_C_C
-	.private_extern _Rotate__uRotate_param_C_C
-_Rotate__uRotate_param_C_C:
+.globl _Rotate__uRotate_param_u16_C
+	.private_extern _Rotate__uRotate_param_u16_C
+_Rotate__uRotate_param_u16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movw	%di, -34(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movswq	-34(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L126
@@ -997,15 +1001,14 @@ L127:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_u8_I
-	.private_extern _Rotate__uRotate_var_u8_I
-_Rotate__uRotate_var_u8_I:
+.globl _Rotate__uRotate_var_u64_I
+	.private_extern _Rotate__uRotate_var_u64_I
+_Rotate__uRotate_var_u64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	172+_MM_Rotate(%rip), %eax
-	movsbq	%al,%rax
+	movq	160+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L130
@@ -1028,16 +1031,16 @@ L131:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_u8_I
-	.private_extern _Rotate__uRotate_param_u8_I
-_Rotate__uRotate_param_u8_I:
+.globl _Rotate__uRotate_param_u64_I
+	.private_extern _Rotate__uRotate_param_u64_I
+_Rotate__uRotate_param_u64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movsbq	-33(%rbp),%rax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L134
@@ -1060,15 +1063,14 @@ L135:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_u8_C
-	.private_extern _Rotate__uRotate_var_u8_C
-_Rotate__uRotate_var_u8_C:
+.globl _Rotate__uRotate_var_u64_C
+	.private_extern _Rotate__uRotate_var_u64_C
+_Rotate__uRotate_var_u64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	172+_MM_Rotate(%rip), %eax
-	movsbq	%al,%rax
+	movq	160+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L138
@@ -1091,16 +1093,16 @@ L139:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_u8_C
-	.private_extern _Rotate__uRotate_param_u8_C
-_Rotate__uRotate_param_u8_C:
+.globl _Rotate__uRotate_param_u64_C
+	.private_extern _Rotate__uRotate_param_u64_C
+_Rotate__uRotate_param_u64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movsbq	-33(%rbp),%rax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L142
@@ -1123,15 +1125,14 @@ L143:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_i8_I
-	.private_extern _Rotate__uRotate_var_i8_I
-_Rotate__uRotate_var_i8_I:
+.globl _Rotate__uRotate_var_L_I
+	.private_extern _Rotate__uRotate_var_L_I
+_Rotate__uRotate_var_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	173+_MM_Rotate(%rip), %eax
-	movzbl	%al, %eax
+	movq	176+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L146
@@ -1154,16 +1155,16 @@ L147:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_i8_I
-	.private_extern _Rotate__uRotate_param_i8_I
-_Rotate__uRotate_param_i8_I:
+.globl _Rotate__uRotate_param_L_I
+	.private_extern _Rotate__uRotate_param_L_I
+_Rotate__uRotate_param_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	-33(%rbp), %eax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L150
@@ -1186,15 +1187,14 @@ L151:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_i8_C
-	.private_extern _Rotate__uRotate_var_i8_C
-_Rotate__uRotate_var_i8_C:
+.globl _Rotate__uRotate_var_L_C
+	.private_extern _Rotate__uRotate_var_L_C
+_Rotate__uRotate_var_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	173+_MM_Rotate(%rip), %eax
-	movzbl	%al, %eax
+	movq	176+_MM_Rotate(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L154
@@ -1217,16 +1217,16 @@ L155:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_i8_C
-	.private_extern _Rotate__uRotate_param_i8_C
-_Rotate__uRotate_param_i8_C:
+.globl _Rotate__uRotate_param_L_C
+	.private_extern _Rotate__uRotate_param_L_C
+_Rotate__uRotate_param_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	-33(%rbp), %eax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L158
@@ -1249,14 +1249,15 @@ L159:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_L_I
-	.private_extern _Rotate__uRotate_var_L_I
-_Rotate__uRotate_var_L_I:
+.globl _Rotate__uRotate_var_i16_I
+	.private_extern _Rotate__uRotate_var_i16_I
+_Rotate__uRotate_var_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	176+_MM_Rotate(%rip), %rax
+	movzwl	184+_MM_Rotate(%rip), %eax
+	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L162
@@ -1279,16 +1280,16 @@ L163:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_L_I
-	.private_extern _Rotate__uRotate_param_L_I
-_Rotate__uRotate_param_L_I:
+.globl _Rotate__uRotate_param_i16_I
+	.private_extern _Rotate__uRotate_param_i16_I
+_Rotate__uRotate_param_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movw	%di, -34(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movzwl	-34(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L166
@@ -1311,14 +1312,15 @@ L167:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_L_C
-	.private_extern _Rotate__uRotate_var_L_C
-_Rotate__uRotate_var_L_C:
+.globl _Rotate__uRotate_var_i16_C
+	.private_extern _Rotate__uRotate_var_i16_C
+_Rotate__uRotate_var_i16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	176+_MM_Rotate(%rip), %rax
+	movzwl	184+_MM_Rotate(%rip), %eax
+	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L170
@@ -1341,16 +1343,16 @@ L171:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_L_C
-	.private_extern _Rotate__uRotate_param_L_C
-_Rotate__uRotate_param_L_C:
+.globl _Rotate__uRotate_param_i16_C
+	.private_extern _Rotate__uRotate_param_i16_C
+_Rotate__uRotate_param_i16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movw	%di, -34(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movzwl	-34(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L174
@@ -1373,15 +1375,15 @@ L175:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_u32_I
-	.private_extern _Rotate__uRotate_var_u32_I
-_Rotate__uRotate_var_u32_I:
+.globl _Rotate__uRotate_var_i32_I
+	.private_extern _Rotate__uRotate_var_i32_I
+_Rotate__uRotate_var_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Rotate(%rip), %rax
+	movq	128+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movl	184+_MM_Rotate(%rip), %eax
-	cltq
+	movl	188+_MM_Rotate(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L178
@@ -1404,17 +1406,16 @@ L179:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_u32_I
-	.private_extern _Rotate__uRotate_param_u32_I
-_Rotate__uRotate_param_u32_I:
+.globl _Rotate__uRotate_param_i32_I
+	.private_extern _Rotate__uRotate_param_i32_I
+_Rotate__uRotate_param_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -36(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movl	-36(%rbp), %eax
-	cltq
+	mov	-36(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L182
@@ -1437,15 +1438,15 @@ L183:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_var_u32_C
-	.private_extern _Rotate__uRotate_var_u32_C
-_Rotate__uRotate_var_u32_C:
+.globl _Rotate__uRotate_var_i32_C
+	.private_extern _Rotate__uRotate_var_i32_C
+_Rotate__uRotate_var_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Rotate(%rip), %rax
+	movq	144+_MM_Rotate(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movl	184+_MM_Rotate(%rip), %eax
-	cltq
+	movl	188+_MM_Rotate(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L186
@@ -1468,17 +1469,16 @@ L187:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Rotate__uRotate_param_u32_C
-	.private_extern _Rotate__uRotate_param_u32_C
-_Rotate__uRotate_param_u32_C:
+.globl _Rotate__uRotate_param_i32_C
+	.private_extern _Rotate__uRotate_param_i32_C
+_Rotate__uRotate_param_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -36(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movl	-36(%rbp), %eax
-	cltq
+	mov	-36(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L190
@@ -1514,62 +1514,6 @@ _Rotate_M3:
 _L_1:
 	.ascii "Rotate_M3"
 	.space 1
-	.ascii "uRotate_param_u32_C"
-	.space 1
-	.ascii "uRotate_var_u32_C"
-	.space 1
-	.ascii "uRotate_param_u32_I"
-	.space 1
-	.ascii "uRotate_var_u32_I"
-	.space 1
-	.ascii "uRotate_param_L_C"
-	.space 1
-	.ascii "uRotate_var_L_C"
-	.space 1
-	.ascii "uRotate_param_L_I"
-	.space 1
-	.ascii "uRotate_var_L_I"
-	.space 1
-	.ascii "uRotate_param_i8_C"
-	.space 1
-	.ascii "uRotate_var_i8_C"
-	.space 1
-	.ascii "uRotate_param_i8_I"
-	.space 1
-	.ascii "uRotate_var_i8_I"
-	.space 1
-	.ascii "uRotate_param_u8_C"
-	.space 1
-	.ascii "uRotate_var_u8_C"
-	.space 1
-	.ascii "uRotate_param_u8_I"
-	.space 1
-	.ascii "uRotate_var_u8_I"
-	.space 1
-	.ascii "uRotate_param_C_C"
-	.space 1
-	.ascii "uRotate_var_C_C"
-	.space 1
-	.ascii "uRotate_param_C_I"
-	.space 1
-	.ascii "uRotate_var_C_I"
-	.space 1
-	.ascii "uRotate_param_i64_C"
-	.space 1
-	.ascii "uRotate_var_i64_C"
-	.space 1
-	.ascii "uRotate_param_i64_I"
-	.space 1
-	.ascii "uRotate_var_i64_I"
-	.space 1
-	.ascii "uRotate_param_I_C"
-	.space 1
-	.ascii "uRotate_var_I_C"
-	.space 1
-	.ascii "uRotate_param_I_I"
-	.space 1
-	.ascii "uRotate_var_I_I"
-	.space 1
 	.ascii "uRotate_param_i32_C"
 	.space 1
 	.ascii "uRotate_var_i32_C"
@@ -1586,13 +1530,13 @@ _L_1:
 	.space 1
 	.ascii "uRotate_var_i16_I"
 	.space 1
-	.ascii "uRotate_param_LC_C"
+	.ascii "uRotate_param_L_C"
 	.space 1
-	.ascii "uRotate_var_LC_C"
+	.ascii "uRotate_var_L_C"
 	.space 1
-	.ascii "uRotate_param_LC_I"
+	.ascii "uRotate_param_L_I"
 	.space 1
-	.ascii "uRotate_var_LC_I"
+	.ascii "uRotate_var_L_I"
 	.space 1
 	.ascii "uRotate_param_u64_C"
 	.space 1
@@ -1609,104 +1553,160 @@ _L_1:
 	.ascii "uRotate_param_u16_I"
 	.space 1
 	.ascii "uRotate_var_u16_I"
+	.space 1
+	.ascii "uRotate_param_C_C"
+	.space 1
+	.ascii "uRotate_var_C_C"
+	.space 1
+	.ascii "uRotate_param_C_I"
+	.space 1
+	.ascii "uRotate_var_C_I"
+	.space 1
+	.ascii "uRotate_param_u32_C"
+	.space 1
+	.ascii "uRotate_var_u32_C"
+	.space 1
+	.ascii "uRotate_param_u32_I"
+	.space 1
+	.ascii "uRotate_var_u32_I"
+	.space 1
+	.ascii "uRotate_param_i8_C"
+	.space 1
+	.ascii "uRotate_var_i8_C"
+	.space 1
+	.ascii "uRotate_param_i8_I"
+	.space 1
+	.ascii "uRotate_var_i8_I"
+	.space 1
+	.ascii "uRotate_param_I_C"
+	.space 1
+	.ascii "uRotate_var_I_C"
+	.space 1
+	.ascii "uRotate_param_I_I"
+	.space 1
+	.ascii "uRotate_var_I_I"
+	.space 1
+	.ascii "uRotate_param_u8_C"
+	.space 1
+	.ascii "uRotate_var_u8_C"
+	.space 1
+	.ascii "uRotate_param_u8_I"
+	.space 1
+	.ascii "uRotate_var_u8_I"
+	.space 1
+	.ascii "uRotate_param_LC_C"
+	.space 1
+	.ascii "uRotate_var_LC_C"
+	.space 1
+	.ascii "uRotate_param_LC_I"
+	.space 1
+	.ascii "uRotate_var_LC_I"
+	.space 1
+	.ascii "uRotate_param_i64_C"
+	.space 1
+	.ascii "uRotate_var_i64_C"
+	.space 1
+	.ascii "uRotate_param_i64_I"
+	.space 1
+	.ascii "uRotate_var_i64_I"
 	.space 3
 	.quad	_Rotate_M3
 	.quad	_L_1
-	.quad	_Rotate__uRotate_param_u32_C
-	.quad	_L_1+10
-	.quad	_Rotate__uRotate_var_u32_C
-	.quad	_L_1+30
-	.quad	_Rotate__uRotate_param_u32_I
-	.quad	_L_1+48
-	.quad	_Rotate__uRotate_var_u32_I
-	.quad	_L_1+68
-	.quad	_Rotate__uRotate_param_L_C
-	.quad	_L_1+86
-	.quad	_Rotate__uRotate_var_L_C
-	.quad	_L_1+104
-	.quad	_Rotate__uRotate_param_L_I
-	.quad	_L_1+120
-	.quad	_Rotate__uRotate_var_L_I
-	.quad	_L_1+138
-	.quad	_Rotate__uRotate_param_i8_C
-	.quad	_L_1+154
-	.quad	_Rotate__uRotate_var_i8_C
-	.quad	_L_1+173
-	.quad	_Rotate__uRotate_param_i8_I
-	.quad	_L_1+190
-	.quad	_Rotate__uRotate_var_i8_I
-	.quad	_L_1+209
-	.quad	_Rotate__uRotate_param_u8_C
-	.quad	_L_1+226
-	.quad	_Rotate__uRotate_var_u8_C
-	.quad	_L_1+245
-	.quad	_Rotate__uRotate_param_u8_I
-	.quad	_L_1+262
-	.quad	_Rotate__uRotate_var_u8_I
-	.quad	_L_1+281
-	.quad	_Rotate__uRotate_param_C_C
-	.quad	_L_1+298
-	.quad	_Rotate__uRotate_var_C_C
-	.quad	_L_1+316
-	.quad	_Rotate__uRotate_param_C_I
-	.quad	_L_1+332
-	.quad	_Rotate__uRotate_var_C_I
-	.quad	_L_1+350
-	.quad	_Rotate__uRotate_param_i64_C
-	.quad	_L_1+366
-	.quad	_Rotate__uRotate_var_i64_C
-	.quad	_L_1+386
-	.quad	_Rotate__uRotate_param_i64_I
-	.quad	_L_1+404
-	.quad	_Rotate__uRotate_var_i64_I
-	.quad	_L_1+424
-	.quad	_Rotate__uRotate_param_I_C
-	.quad	_L_1+442
-	.quad	_Rotate__uRotate_var_I_C
-	.quad	_L_1+460
-	.quad	_Rotate__uRotate_param_I_I
-	.quad	_L_1+476
-	.quad	_Rotate__uRotate_var_I_I
-	.quad	_L_1+494
 	.quad	_Rotate__uRotate_param_i32_C
-	.quad	_L_1+510
+	.quad	_L_1+10
 	.quad	_Rotate__uRotate_var_i32_C
-	.quad	_L_1+530
+	.quad	_L_1+30
 	.quad	_Rotate__uRotate_param_i32_I
-	.quad	_L_1+548
+	.quad	_L_1+48
 	.quad	_Rotate__uRotate_var_i32_I
-	.quad	_L_1+568
+	.quad	_L_1+68
 	.quad	_Rotate__uRotate_param_i16_C
-	.quad	_L_1+586
+	.quad	_L_1+86
 	.quad	_Rotate__uRotate_var_i16_C
-	.quad	_L_1+606
+	.quad	_L_1+106
 	.quad	_Rotate__uRotate_param_i16_I
-	.quad	_L_1+624
+	.quad	_L_1+124
 	.quad	_Rotate__uRotate_var_i16_I
-	.quad	_L_1+644
-	.quad	_Rotate__uRotate_param_LC_C
-	.quad	_L_1+662
-	.quad	_Rotate__uRotate_var_LC_C
-	.quad	_L_1+681
-	.quad	_Rotate__uRotate_param_LC_I
-	.quad	_L_1+698
-	.quad	_Rotate__uRotate_var_LC_I
-	.quad	_L_1+717
+	.quad	_L_1+144
+	.quad	_Rotate__uRotate_param_L_C
+	.quad	_L_1+162
+	.quad	_Rotate__uRotate_var_L_C
+	.quad	_L_1+180
+	.quad	_Rotate__uRotate_param_L_I
+	.quad	_L_1+196
+	.quad	_Rotate__uRotate_var_L_I
+	.quad	_L_1+214
 	.quad	_Rotate__uRotate_param_u64_C
-	.quad	_L_1+734
+	.quad	_L_1+230
 	.quad	_Rotate__uRotate_var_u64_C
-	.quad	_L_1+754
+	.quad	_L_1+250
 	.quad	_Rotate__uRotate_param_u64_I
-	.quad	_L_1+772
+	.quad	_L_1+268
 	.quad	_Rotate__uRotate_var_u64_I
-	.quad	_L_1+792
+	.quad	_L_1+288
 	.quad	_Rotate__uRotate_param_u16_C
-	.quad	_L_1+810
+	.quad	_L_1+306
 	.quad	_Rotate__uRotate_var_u16_C
-	.quad	_L_1+830
+	.quad	_L_1+326
 	.quad	_Rotate__uRotate_param_u16_I
-	.quad	_L_1+848
+	.quad	_L_1+344
 	.quad	_Rotate__uRotate_var_u16_I
+	.quad	_L_1+364
+	.quad	_Rotate__uRotate_param_C_C
+	.quad	_L_1+382
+	.quad	_Rotate__uRotate_var_C_C
+	.quad	_L_1+400
+	.quad	_Rotate__uRotate_param_C_I
+	.quad	_L_1+416
+	.quad	_Rotate__uRotate_var_C_I
+	.quad	_L_1+434
+	.quad	_Rotate__uRotate_param_u32_C
+	.quad	_L_1+450
+	.quad	_Rotate__uRotate_var_u32_C
+	.quad	_L_1+470
+	.quad	_Rotate__uRotate_param_u32_I
+	.quad	_L_1+488
+	.quad	_Rotate__uRotate_var_u32_I
+	.quad	_L_1+508
+	.quad	_Rotate__uRotate_param_i8_C
+	.quad	_L_1+526
+	.quad	_Rotate__uRotate_var_i8_C
+	.quad	_L_1+545
+	.quad	_Rotate__uRotate_param_i8_I
+	.quad	_L_1+562
+	.quad	_Rotate__uRotate_var_i8_I
+	.quad	_L_1+581
+	.quad	_Rotate__uRotate_param_I_C
+	.quad	_L_1+598
+	.quad	_Rotate__uRotate_var_I_C
+	.quad	_L_1+616
+	.quad	_Rotate__uRotate_param_I_I
+	.quad	_L_1+632
+	.quad	_Rotate__uRotate_var_I_I
+	.quad	_L_1+650
+	.quad	_Rotate__uRotate_param_u8_C
+	.quad	_L_1+666
+	.quad	_Rotate__uRotate_var_u8_C
+	.quad	_L_1+685
+	.quad	_Rotate__uRotate_param_u8_I
+	.quad	_L_1+702
+	.quad	_Rotate__uRotate_var_u8_I
+	.quad	_L_1+721
+	.quad	_Rotate__uRotate_param_LC_C
+	.quad	_L_1+738
+	.quad	_Rotate__uRotate_var_LC_C
+	.quad	_L_1+757
+	.quad	_Rotate__uRotate_param_LC_I
+	.quad	_L_1+774
+	.quad	_Rotate__uRotate_var_LC_I
+	.quad	_L_1+793
+	.quad	_Rotate__uRotate_param_i64_C
+	.quad	_L_1+810
+	.quad	_Rotate__uRotate_var_i64_C
+	.quad	_L_1+830
+	.quad	_Rotate__uRotate_param_i64_I
+	.quad	_L_1+848
+	.quad	_Rotate__uRotate_var_i64_I
 	.quad	_L_1+868
 	.space 8
 	.ascii "../AMD64_DARWIN/Rotate.m3"
@@ -1722,25 +1722,26 @@ _MM_Rotate:
 	.space 8
 	.quad	_Rotate_M3
 	.quad	3
-	.word	785
-	.space 6
+	.quad	785
 	.quad	786
-	.quad	787
-	.long	3745211482
-	.long	1082697295
-	.word	790
-	.space 2
-	.long	791
-	.quad	792
+	.long	1145369199
+	.byte	21
+	.space 3
+	.quad	790
+	.byte	23
+	.space 3
+	.long	792
 	.quad	793
-	.quad	794
-	.long	1145500402
-	.byte	29
-	.byte	30
+	.word	794
+	.space 6
+	.quad	795
+	.long	1099511628
+	.long	1082713696
+	.quad	798
+	.word	799
 	.space 2
-	.quad	799
 	.long	800
-	.space 28
+	.space 24
 	.quad	_Rotate_I3
 	.quad	_MM_Rotate+232
 	.space 8

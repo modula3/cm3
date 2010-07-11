@@ -3482,25 +3482,26 @@ _MM_extract_constant_count:
 	.space 8
 	.quad	_extract_constant_count_M3
 	.quad	3
-	.word	1105
-	.space 6
+	.quad	1105
 	.quad	1106
-	.quad	1107
-	.long	2412053633
-	.long	1083265137
-	.word	1110
-	.space 2
-	.long	1111
-	.quad	1112
+	.long	1149920140
+	.byte	85
+	.space 3
+	.quad	1110
+	.byte	87
+	.space 3
+	.long	1112
 	.quad	1113
-	.quad	1114
-	.long	1149985682
-	.byte	93
-	.byte	94
+	.word	1114
+	.space 6
+	.quad	1115
+	.long	1635523546
+	.long	1083273330
+	.quad	1118
+	.word	1119
 	.space 2
-	.quad	1119
 	.long	1120
-	.space 28
+	.space 24
 	.quad	_extract_constant_count_I3
 	.quad	_MM_extract_constant_count+232
 	.space 8

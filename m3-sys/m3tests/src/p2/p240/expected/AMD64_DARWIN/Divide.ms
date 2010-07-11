@@ -1,7679 +1,12 @@
 	.text
-.globl _Divide__uDivide_var_u16_u16
-	.private_extern _Divide__uDivide_var_u16_u16
-_Divide__uDivide_var_u16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_u16
-	.private_extern _Divide__Divide_var_u16_u16
-_Divide__Divide_var_u16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -40(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	-40(%rbp), %rdx
-	movq	%rax, %rcx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	%rcx
-	movq	%rax, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L4
-	cmpq	$32767, -16(%rbp)
-	jle	L5
-L4:
-	movl	$1761, %edi
-	call	__m3_fault
-L5:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_u16
-	.private_extern _Divide__uDivide_param_u16_u16
-_Divide__uDivide_param_u16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	movswq	-20(%rbp),%rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u16_u16
-	.private_extern _Divide__Divide_param_u16_u16
-_Divide__Divide_param_u16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movswq	-20(%rbp),%rdx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L10
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L10
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L10:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L11
-	cmpq	$32767, -16(%rbp)
-	jle	L12
-L11:
-	movl	$1825, %edi
-	call	__m3_fault
-L12:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u16_u64
-	.private_extern _Divide__uDivide_var_u16_u64
-_Divide__uDivide_var_u16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_u64
-	.private_extern _Divide__Divide_var_u16_u64
-_Divide__Divide_var_u16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -32(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L17
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L17
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L17:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_u64
-	.private_extern _Divide__uDivide_param_u16_u64
-_Divide__uDivide_param_u16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u16_u64
-	.private_extern _Divide__Divide_param_u16_u64
-_Divide__Divide_param_u16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L22
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L22
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L22:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u16_LC
-	.private_extern _Divide__uDivide_var_u16_LC
-_Divide__uDivide_var_u16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_LC
-	.private_extern _Divide__Divide_var_u16_LC
-_Divide__Divide_var_u16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -32(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L27
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L27
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L27:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_LC
-	.private_extern _Divide__uDivide_param_u16_LC
-_Divide__uDivide_param_u16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_u16_LC
-	.private_extern _Divide__Divide_param_u16_LC
-_Divide__Divide_param_u16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L32
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L32
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L32:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u16_i16
-	.private_extern _Divide__uDivide_var_u16_i16
-_Divide__uDivide_var_u16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_i16
-	.private_extern _Divide__Divide_var_u16_i16
-_Divide__Divide_var_u16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -32(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L37
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L37
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L37:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L38
-	cmpq	$32767, -16(%rbp)
-	jle	L39
-L38:
-	movl	$2145, %edi
-	call	__m3_fault
-L39:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_i16
-	.private_extern _Divide__uDivide_param_u16_i16
-_Divide__uDivide_param_u16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	movzwl	-20(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u16_i16
-	.private_extern _Divide__Divide_param_u16_i16
-_Divide__Divide_param_u16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movzwl	-20(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L44
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L44
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L44:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L45
-	cmpq	$32767, -16(%rbp)
-	jle	L46
-L45:
-	movl	$2209, %edi
-	call	__m3_fault
-L46:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u16_i32
-	.private_extern _Divide__uDivide_var_u16_i32
-_Divide__uDivide_var_u16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_i32
-	.private_extern _Divide__Divide_var_u16_i32
-_Divide__Divide_var_u16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -32(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L51
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L51
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L51:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L52
-	cmpq	$32767, -16(%rbp)
-	jle	L53
-L52:
-	movl	$2273, %edi
-	call	__m3_fault
-L53:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_i32
-	.private_extern _Divide__uDivide_param_u16_i32
-_Divide__uDivide_param_u16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	mov	-24(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u16_i32
-	.private_extern _Divide__Divide_param_u16_i32
-_Divide__Divide_param_u16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	mov	-24(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L58
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L58
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L58:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L59
-	cmpq	$32767, -16(%rbp)
-	jle	L60
-L59:
-	movl	$2337, %edi
-	call	__m3_fault
-L60:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u16_I
-	.private_extern _Divide__uDivide_var_u16_I
-_Divide__uDivide_var_u16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_I
-	.private_extern _Divide__Divide_var_u16_I
-_Divide__Divide_var_u16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -32(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L65
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L65
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L65:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L66
-	cmpq	$32767, -16(%rbp)
-	jle	L67
-L66:
-	movl	$2401, %edi
-	call	__m3_fault
-L67:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_I
-	.private_extern _Divide__uDivide_param_u16_I
-_Divide__uDivide_param_u16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u16_I
-	.private_extern _Divide__Divide_param_u16_I
-_Divide__Divide_param_u16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L72
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L72
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L72:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L73
-	cmpq	$32767, -16(%rbp)
-	jle	L74
-L73:
-	movl	$2465, %edi
-	call	__m3_fault
-L74:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u16_i64
-	.private_extern _Divide__uDivide_var_u16_i64
-_Divide__uDivide_var_u16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_i64
-	.private_extern _Divide__Divide_var_u16_i64
-_Divide__Divide_var_u16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -32(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L79
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L79
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L79:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_i64
-	.private_extern _Divide__uDivide_param_u16_i64
-_Divide__uDivide_param_u16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u16_i64
-	.private_extern _Divide__Divide_param_u16_i64
-_Divide__Divide_param_u16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L84
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L84
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L84:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u16_C
-	.private_extern _Divide__uDivide_var_u16_C
-_Divide__uDivide_var_u16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_C
-	.private_extern _Divide__Divide_var_u16_C
-_Divide__Divide_var_u16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -32(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L89
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L89
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L89:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L90
-	cmpq	$32767, -16(%rbp)
-	jle	L91
-L90:
-	movl	$2657, %edi
-	call	__m3_fault
-L91:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_C
-	.private_extern _Divide__uDivide_param_u16_C
-_Divide__uDivide_param_u16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_u16_C
-	.private_extern _Divide__Divide_param_u16_C
-_Divide__Divide_param_u16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L96
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L96
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L96:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L97
-	cmpq	$32767, -16(%rbp)
-	jle	L98
-L97:
-	movl	$2721, %edi
-	call	__m3_fault
-L98:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u16_u8
-	.private_extern _Divide__uDivide_var_u16_u8
-_Divide__uDivide_var_u16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_u8
-	.private_extern _Divide__Divide_var_u16_u8
-_Divide__Divide_var_u16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -32(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L103
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L103
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L103:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L104
-	cmpq	$32767, -16(%rbp)
-	jle	L105
-L104:
-	movl	$2785, %edi
-	call	__m3_fault
-L105:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_u8
-	.private_extern _Divide__uDivide_param_u16_u8
-_Divide__uDivide_param_u16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	movsbq	-19(%rbp),%rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u16_u8
-	.private_extern _Divide__Divide_param_u16_u8
-_Divide__Divide_param_u16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movsbq	-19(%rbp),%rdx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L110
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L110
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L110:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L111
-	cmpq	$32767, -16(%rbp)
-	jle	L112
-L111:
-	movl	$2849, %edi
-	call	__m3_fault
-L112:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u16_i8
-	.private_extern _Divide__uDivide_var_u16_i8
-_Divide__uDivide_var_u16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_i8
-	.private_extern _Divide__Divide_var_u16_i8
-_Divide__Divide_var_u16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -32(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L117
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L117
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L117:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L118
-	cmpq	$32767, -16(%rbp)
-	jle	L119
-L118:
-	movl	$2913, %edi
-	call	__m3_fault
-L119:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_i8
-	.private_extern _Divide__uDivide_param_u16_i8
-_Divide__uDivide_param_u16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	movzbl	-19(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u16_i8
-	.private_extern _Divide__Divide_param_u16_i8
-_Divide__Divide_param_u16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movzbl	-19(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L124
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L124
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L124:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L125
-	cmpq	$32767, -16(%rbp)
-	jle	L126
-L125:
-	movl	$2977, %edi
-	call	__m3_fault
-L126:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u16_L
-	.private_extern _Divide__uDivide_var_u16_L
-_Divide__uDivide_var_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_L
-	.private_extern _Divide__Divide_var_u16_L
-_Divide__Divide_var_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -32(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L131
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L131
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L131:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_L
-	.private_extern _Divide__uDivide_param_u16_L
-_Divide__uDivide_param_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u16_L
-	.private_extern _Divide__Divide_param_u16_L
-_Divide__Divide_param_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L136
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L136
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L136:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u16_u32
-	.private_extern _Divide__uDivide_var_u16_u32
-_Divide__uDivide_var_u16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u16_u32
-	.private_extern _Divide__Divide_var_u16_u32
-_Divide__Divide_var_u16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -32(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L141
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L141
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L141:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L142
-	cmpq	$32767, -16(%rbp)
-	jle	L143
-L142:
-	movl	$3169, %edi
-	call	__m3_fault
-L143:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u16_u32
-	.private_extern _Divide__uDivide_param_u16_u32
-_Divide__uDivide_param_u16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u16_u32
-	.private_extern _Divide__Divide_param_u16_u32
-_Divide__Divide_param_u16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rax, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L148
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L148
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L148:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-32768, -16(%rbp)
-	jl	L149
-	cmpq	$32767, -16(%rbp)
-	jle	L150
-L149:
-	movl	$3233, %edi
-	call	__m3_fault
-L150:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_u16
-	.private_extern _Divide__uDivide_var_u64_u16
-_Divide__uDivide_var_u64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_u16
-	.private_extern _Divide__Divide_var_u64_u16
-_Divide__Divide_var_u64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L155
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L155
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L155:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_u16
-	.private_extern _Divide__uDivide_param_u64_u16
-_Divide__uDivide_param_u64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u64_u16
-	.private_extern _Divide__Divide_param_u64_u16
-_Divide__Divide_param_u64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L160
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L160
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L160:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_u64
-	.private_extern _Divide__uDivide_var_u64_u64
-_Divide__uDivide_var_u64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_u64
-	.private_extern _Divide__Divide_var_u64_u64
-_Divide__Divide_var_u64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	-40(%rbp), %rdx
-	movq	%rax, %rcx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	%rcx
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_u64
-	.private_extern _Divide__uDivide_param_u64_u64
-_Divide__uDivide_param_u64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u64_u64
-	.private_extern _Divide__Divide_param_u64_u64
-_Divide__Divide_param_u64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L169
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L169
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L169:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_LC
-	.private_extern _Divide__uDivide_var_u64_LC
-_Divide__uDivide_var_u64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_LC
-	.private_extern _Divide__Divide_var_u64_LC
-_Divide__Divide_var_u64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L174
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L174
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L174:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_LC
-	.private_extern _Divide__uDivide_param_u64_LC
-_Divide__uDivide_param_u64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_u64_LC
-	.private_extern _Divide__Divide_param_u64_LC
-_Divide__Divide_param_u64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L179
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L179
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L179:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_i16
-	.private_extern _Divide__uDivide_var_u64_i16
-_Divide__uDivide_var_u64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_i16
-	.private_extern _Divide__Divide_var_u64_i16
-_Divide__Divide_var_u64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L184
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L184
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L184:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_i16
-	.private_extern _Divide__uDivide_param_u64_i16
-_Divide__uDivide_param_u64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u64_i16
-	.private_extern _Divide__Divide_param_u64_i16
-_Divide__Divide_param_u64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L189
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L189
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L189:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_i32
-	.private_extern _Divide__uDivide_var_u64_i32
-_Divide__uDivide_var_u64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_i32
-	.private_extern _Divide__Divide_var_u64_i32
-_Divide__Divide_var_u64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L194
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L194
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L194:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_i32
-	.private_extern _Divide__uDivide_param_u64_i32
-_Divide__uDivide_param_u64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	mov	-28(%rbp), %edx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u64_i32
-	.private_extern _Divide__Divide_param_u64_i32
-_Divide__Divide_param_u64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L199
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L199
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L199:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_I
-	.private_extern _Divide__uDivide_var_u64_I
-_Divide__uDivide_var_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_I
-	.private_extern _Divide__Divide_var_u64_I
-_Divide__Divide_var_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	144+_MM_Divide(%rip), %rdx
-	movq	%rdx, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L204
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L204
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L204:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_I
-	.private_extern _Divide__uDivide_param_u64_I
-_Divide__uDivide_param_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u64_I
-	.private_extern _Divide__Divide_param_u64_I
-_Divide__Divide_param_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L209
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L209
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L209:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_i64
-	.private_extern _Divide__uDivide_var_u64_i64
-_Divide__uDivide_var_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_i64
-	.private_extern _Divide__Divide_var_u64_i64
-_Divide__Divide_var_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	152+_MM_Divide(%rip), %rdx
-	movq	%rdx, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L214
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L214
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L214:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_i64
-	.private_extern _Divide__uDivide_param_u64_i64
-_Divide__uDivide_param_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u64_i64
-	.private_extern _Divide__Divide_param_u64_i64
-_Divide__Divide_param_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L219
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L219
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L219:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_C
-	.private_extern _Divide__uDivide_var_u64_C
-_Divide__uDivide_var_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_C
-	.private_extern _Divide__Divide_var_u64_C
-_Divide__Divide_var_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L224
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L224
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L224:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_C
-	.private_extern _Divide__uDivide_param_u64_C
-_Divide__uDivide_param_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_u64_C
-	.private_extern _Divide__Divide_param_u64_C
-_Divide__Divide_param_u64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L229
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L229
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L229:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_u8
-	.private_extern _Divide__uDivide_var_u64_u8
-_Divide__uDivide_var_u64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_u8
-	.private_extern _Divide__Divide_var_u64_u8
-_Divide__Divide_var_u64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L234
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L234
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L234:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_u8
-	.private_extern _Divide__uDivide_param_u64_u8
-_Divide__uDivide_param_u64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u64_u8
-	.private_extern _Divide__Divide_param_u64_u8
-_Divide__Divide_param_u64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L239
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L239
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L239:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_i8
-	.private_extern _Divide__uDivide_var_u64_i8
-_Divide__uDivide_var_u64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_i8
-	.private_extern _Divide__Divide_var_u64_i8
-_Divide__Divide_var_u64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L244
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L244
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L244:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_i8
-	.private_extern _Divide__uDivide_param_u64_i8
-_Divide__uDivide_param_u64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u64_i8
-	.private_extern _Divide__Divide_param_u64_i8
-_Divide__Divide_param_u64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L249
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L249
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L249:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_L
-	.private_extern _Divide__uDivide_var_u64_L
-_Divide__uDivide_var_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_L
-	.private_extern _Divide__Divide_var_u64_L
-_Divide__Divide_var_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	176+_MM_Divide(%rip), %rdx
-	movq	%rdx, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L254
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L254
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L254:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_L
-	.private_extern _Divide__uDivide_param_u64_L
-_Divide__uDivide_param_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u64_L
-	.private_extern _Divide__Divide_param_u64_L
-_Divide__Divide_param_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L259
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L259
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L259:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u64_u32
-	.private_extern _Divide__uDivide_var_u64_u32
-_Divide__uDivide_var_u64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u64_u32
-	.private_extern _Divide__Divide_var_u64_u32
-_Divide__Divide_var_u64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L264
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L264
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L264:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u64_u32
-	.private_extern _Divide__uDivide_param_u64_u32
-_Divide__uDivide_param_u64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
-	movq	%rax, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u64_u32
-	.private_extern _Divide__Divide_param_u64_u32
-_Divide__Divide_param_u64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L269
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L269
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L269:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_u16
-	.private_extern _Divide__uDivide_var_LC_u16
-_Divide__uDivide_var_LC_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_u16
-	.private_extern _Divide__Divide_var_LC_u16
-_Divide__Divide_var_LC_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L274
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L274
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L274:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_u16
-	.private_extern _Divide__uDivide_param_LC_u16
-_Divide__uDivide_param_LC_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_u16
-	.private_extern _Divide__Divide_param_LC_u16
-_Divide__Divide_param_LC_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L279
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L279
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L279:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_u64
-	.private_extern _Divide__uDivide_var_LC_u64
-_Divide__uDivide_var_LC_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_u64
-	.private_extern _Divide__Divide_var_LC_u64
-_Divide__Divide_var_LC_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L284
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L284
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L284:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_u64
-	.private_extern _Divide__uDivide_param_LC_u64
-_Divide__uDivide_param_LC_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_u64
-	.private_extern _Divide__Divide_param_LC_u64
-_Divide__Divide_param_LC_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L289
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L289
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L289:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_LC
-	.private_extern _Divide__uDivide_var_LC_LC
-_Divide__uDivide_var_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_LC
-	.private_extern _Divide__Divide_var_LC_LC
-_Divide__Divide_var_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	-40(%rbp), %rdx
-	movq	%rax, %rcx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	%rcx
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_LC
-	.private_extern _Divide__uDivide_param_LC_LC
-_Divide__uDivide_param_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_LC
-	.private_extern _Divide__Divide_param_LC_LC
-_Divide__Divide_param_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L298
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L298
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L298:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_i16
-	.private_extern _Divide__uDivide_var_LC_i16
-_Divide__uDivide_var_LC_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_i16
-	.private_extern _Divide__Divide_var_LC_i16
-_Divide__Divide_var_LC_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L303
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L303
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L303:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_i16
-	.private_extern _Divide__uDivide_param_LC_i16
-_Divide__uDivide_param_LC_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %eax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_i16
-	.private_extern _Divide__Divide_param_LC_i16
-_Divide__Divide_param_LC_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L308
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L308
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L308:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_i32
-	.private_extern _Divide__uDivide_var_LC_i32
-_Divide__uDivide_var_LC_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_i32
-	.private_extern _Divide__Divide_var_LC_i32
-_Divide__Divide_var_LC_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L313
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L313
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L313:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_i32
-	.private_extern _Divide__uDivide_param_LC_i32
-_Divide__uDivide_param_LC_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %eax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_i32
-	.private_extern _Divide__Divide_param_LC_i32
-_Divide__Divide_param_LC_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	mov	-28(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L318
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L318
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L318:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_I
-	.private_extern _Divide__uDivide_var_LC_I
-_Divide__uDivide_var_LC_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_I
-	.private_extern _Divide__Divide_var_LC_I
-_Divide__Divide_var_LC_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L323
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L323
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L323:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_I
-	.private_extern _Divide__uDivide_param_LC_I
-_Divide__uDivide_param_LC_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_I
-	.private_extern _Divide__Divide_param_LC_I
-_Divide__Divide_param_LC_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L328
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L328
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L328:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_i64
-	.private_extern _Divide__uDivide_var_LC_i64
-_Divide__uDivide_var_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_i64
-	.private_extern _Divide__Divide_var_LC_i64
-_Divide__Divide_var_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L333
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L333
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L333:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_i64
-	.private_extern _Divide__uDivide_param_LC_i64
-_Divide__uDivide_param_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_i64
-	.private_extern _Divide__Divide_param_LC_i64
-_Divide__Divide_param_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L338
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L338
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L338:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_C
-	.private_extern _Divide__uDivide_var_LC_C
-_Divide__uDivide_var_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_C
-	.private_extern _Divide__Divide_var_LC_C
-_Divide__Divide_var_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L343
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L343
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L343:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_C
-	.private_extern _Divide__uDivide_param_LC_C
-_Divide__uDivide_param_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_C
-	.private_extern _Divide__Divide_param_LC_C
-_Divide__Divide_param_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L348
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L348
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L348:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_u8
-	.private_extern _Divide__uDivide_var_LC_u8
-_Divide__uDivide_var_LC_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_u8
-	.private_extern _Divide__Divide_var_LC_u8
-_Divide__Divide_var_LC_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L353
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L353
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L353:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_u8
-	.private_extern _Divide__uDivide_param_LC_u8
-_Divide__uDivide_param_LC_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_u8
-	.private_extern _Divide__Divide_param_LC_u8
-_Divide__Divide_param_LC_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L358
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L358
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L358:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_i8
-	.private_extern _Divide__uDivide_var_LC_i8
-_Divide__uDivide_var_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_i8
-	.private_extern _Divide__Divide_var_LC_i8
-_Divide__Divide_var_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L363
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L363
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L363:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_i8
-	.private_extern _Divide__uDivide_param_LC_i8
-_Divide__uDivide_param_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_i8
-	.private_extern _Divide__Divide_param_LC_i8
-_Divide__Divide_param_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L368
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L368
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L368:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_L
-	.private_extern _Divide__uDivide_var_LC_L
-_Divide__uDivide_var_LC_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_L
-	.private_extern _Divide__Divide_var_LC_L
-_Divide__Divide_var_LC_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L373
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L373
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L373:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_L
-	.private_extern _Divide__uDivide_param_LC_L
-_Divide__uDivide_param_LC_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_L
-	.private_extern _Divide__Divide_param_LC_L
-_Divide__Divide_param_LC_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L378
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L378
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L378:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_LC_u32
-	.private_extern _Divide__uDivide_var_LC_u32
-_Divide__uDivide_var_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_LC_u32
-	.private_extern _Divide__Divide_var_LC_u32
-_Divide__Divide_var_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L383
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L383
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L383:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_LC_u32
-	.private_extern _Divide__uDivide_param_LC_u32
-_Divide__uDivide_param_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_LC_u32
-	.private_extern _Divide__Divide_param_LC_u32
-_Divide__Divide_param_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L388
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L388
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L388:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_f64_f64
-	.private_extern _Divide__Divide_var_f64_f64
-_Divide__Divide_var_f64_f64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movsd	128+_MM_Divide(%rip), %xmm1
-	movsd	128+_MM_Divide(%rip), %xmm0
-	movapd	%xmm1, %xmm2
-	divsd	%xmm0, %xmm2
-	movapd	%xmm2, %xmm0
-	leave
-	ret
-.globl _Divide__Divide_param_f64_f64
-	.private_extern _Divide__Divide_param_f64_f64
-_Divide__Divide_param_f64_f64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movsd	%xmm0, -24(%rbp)
-	movsd	%xmm1, -32(%rbp)
-	movsd	-24(%rbp), %xmm0
-	divsd	-32(%rbp), %xmm0
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_u16
-	.private_extern _Divide__uDivide_var_i16_u16
-_Divide__uDivide_var_i16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_u16
-	.private_extern _Divide__Divide_var_i16_u16
-_Divide__Divide_var_i16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -32(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L397
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L397
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L397:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L398
-	cmpq	$65535, -16(%rbp)
-	jle	L399
-L398:
-	movl	$6433, %edi
-	call	__m3_fault
-L399:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_u16
-	.private_extern _Divide__uDivide_param_i16_u16
-_Divide__uDivide_param_i16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movswq	-20(%rbp),%rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i16_u16
-	.private_extern _Divide__Divide_param_i16_u16
-_Divide__Divide_param_i16_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movswq	-20(%rbp),%rdx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L404
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L404
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L404:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L405
-	cmpq	$65535, -16(%rbp)
-	jle	L406
-L405:
-	movl	$6497, %edi
-	call	__m3_fault
-L406:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_u64
-	.private_extern _Divide__uDivide_var_i16_u64
-_Divide__uDivide_var_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_u64
-	.private_extern _Divide__Divide_var_i16_u64
-_Divide__Divide_var_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -32(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L411
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L411
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L411:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_u64
-	.private_extern _Divide__uDivide_param_i16_u64
-_Divide__uDivide_param_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i16_u64
-	.private_extern _Divide__Divide_param_i16_u64
-_Divide__Divide_param_i16_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L416
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L416
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L416:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_LC
-	.private_extern _Divide__uDivide_var_i16_LC
-_Divide__uDivide_var_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_LC
-	.private_extern _Divide__Divide_var_i16_LC
-_Divide__Divide_var_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -32(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L421
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L421
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L421:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_LC
-	.private_extern _Divide__uDivide_param_i16_LC
-_Divide__uDivide_param_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_i16_LC
-	.private_extern _Divide__Divide_param_i16_LC
-_Divide__Divide_param_i16_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L426
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L426
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L426:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_i16
-	.private_extern _Divide__uDivide_var_i16_i16
-_Divide__uDivide_var_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_i16
-	.private_extern _Divide__Divide_var_i16_i16
-_Divide__Divide_var_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -40(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	-40(%rbp), %rdx
-	movq	%rax, %rcx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	%rcx
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L431
-	cmpq	$65535, -16(%rbp)
-	jle	L432
-L431:
-	movl	$6817, %edi
-	call	__m3_fault
-L432:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_i16
-	.private_extern _Divide__uDivide_param_i16_i16
-_Divide__uDivide_param_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movzwl	-20(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i16_i16
-	.private_extern _Divide__Divide_param_i16_i16
-_Divide__Divide_param_i16_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movzwl	-20(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L437
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L437
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L437:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L438
-	cmpq	$65535, -16(%rbp)
-	jle	L439
-L438:
-	movl	$6881, %edi
-	call	__m3_fault
-L439:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_i32
-	.private_extern _Divide__uDivide_var_i16_i32
-_Divide__uDivide_var_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_i32
-	.private_extern _Divide__Divide_var_i16_i32
-_Divide__Divide_var_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -32(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L444
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L444
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L444:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L445
-	cmpq	$65535, -16(%rbp)
-	jle	L446
-L445:
-	movl	$6945, %edi
-	call	__m3_fault
-L446:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_i32
-	.private_extern _Divide__uDivide_param_i16_i32
-_Divide__uDivide_param_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	mov	-24(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i16_i32
-	.private_extern _Divide__Divide_param_i16_i32
-_Divide__Divide_param_i16_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	mov	-24(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L451
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L451
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L451:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L452
-	cmpq	$65535, -16(%rbp)
-	jle	L453
-L452:
-	movl	$7009, %edi
-	call	__m3_fault
-L453:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_I
-	.private_extern _Divide__uDivide_var_i16_I
-_Divide__uDivide_var_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_I
-	.private_extern _Divide__Divide_var_i16_I
-_Divide__Divide_var_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -32(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L458
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L458
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L458:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L459
-	cmpq	$65535, -16(%rbp)
-	jle	L460
-L459:
-	movl	$7073, %edi
-	call	__m3_fault
-L460:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_I
-	.private_extern _Divide__uDivide_param_i16_I
-_Divide__uDivide_param_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i16_I
-	.private_extern _Divide__Divide_param_i16_I
-_Divide__Divide_param_i16_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L465
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L465
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L465:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L466
-	cmpq	$65535, -16(%rbp)
-	jle	L467
-L466:
-	movl	$7137, %edi
-	call	__m3_fault
-L467:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_i64
-	.private_extern _Divide__uDivide_var_i16_i64
-_Divide__uDivide_var_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_i64
-	.private_extern _Divide__Divide_var_i16_i64
-_Divide__Divide_var_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -32(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L472
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L472
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L472:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_i64
-	.private_extern _Divide__uDivide_param_i16_i64
-_Divide__uDivide_param_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i16_i64
-	.private_extern _Divide__Divide_param_i16_i64
-_Divide__Divide_param_i16_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L477
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L477
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L477:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_C
-	.private_extern _Divide__uDivide_var_i16_C
-_Divide__uDivide_var_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_C
-	.private_extern _Divide__Divide_var_i16_C
-_Divide__Divide_var_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -32(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L482
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L482
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L482:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L483
-	cmpq	$65535, -16(%rbp)
-	jle	L484
-L483:
-	movl	$7329, %edi
-	call	__m3_fault
-L484:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_C
-	.private_extern _Divide__uDivide_param_i16_C
-_Divide__uDivide_param_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_i16_C
-	.private_extern _Divide__Divide_param_i16_C
-_Divide__Divide_param_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L489
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L489
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L489:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L490
-	cmpq	$65535, -16(%rbp)
-	jle	L491
-L490:
-	movl	$7393, %edi
-	call	__m3_fault
-L491:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_u8
-	.private_extern _Divide__uDivide_var_i16_u8
-_Divide__uDivide_var_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_u8
-	.private_extern _Divide__Divide_var_i16_u8
-_Divide__Divide_var_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -32(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L496
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L496
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L496:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L497
-	cmpq	$65535, -16(%rbp)
-	jle	L498
-L497:
-	movl	$7457, %edi
-	call	__m3_fault
-L498:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_u8
-	.private_extern _Divide__uDivide_param_i16_u8
-_Divide__uDivide_param_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movsbq	-19(%rbp),%rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i16_u8
-	.private_extern _Divide__Divide_param_i16_u8
-_Divide__Divide_param_i16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movsbq	-19(%rbp),%rdx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L503
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L503
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L503:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L504
-	cmpq	$65535, -16(%rbp)
-	jle	L505
-L504:
-	movl	$7521, %edi
-	call	__m3_fault
-L505:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_i8
-	.private_extern _Divide__uDivide_var_i16_i8
-_Divide__uDivide_var_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_i8
-	.private_extern _Divide__Divide_var_i16_i8
-_Divide__Divide_var_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -32(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L510
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L510
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L510:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L511
-	cmpq	$65535, -16(%rbp)
-	jle	L512
-L511:
-	movl	$7585, %edi
-	call	__m3_fault
-L512:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_i8
-	.private_extern _Divide__uDivide_param_i16_i8
-_Divide__uDivide_param_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movzbl	-19(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i16_i8
-	.private_extern _Divide__Divide_param_i16_i8
-_Divide__Divide_param_i16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movzbl	-19(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L517
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L517
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L517:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L518
-	cmpq	$65535, -16(%rbp)
-	jle	L519
-L518:
-	movl	$7649, %edi
-	call	__m3_fault
-L519:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_L
-	.private_extern _Divide__uDivide_var_i16_L
-_Divide__uDivide_var_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_L
-	.private_extern _Divide__Divide_var_i16_L
-_Divide__Divide_var_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -32(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L524
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L524
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L524:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_L
-	.private_extern _Divide__uDivide_param_i16_L
-_Divide__uDivide_param_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i16_L
-	.private_extern _Divide__Divide_param_i16_L
-_Divide__Divide_param_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L529
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L529
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L529:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i16_u32
-	.private_extern _Divide__uDivide_var_i16_u32
-_Divide__uDivide_var_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i16_u32
-	.private_extern _Divide__Divide_var_i16_u32
-_Divide__Divide_var_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -32(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L534
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L534
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L534:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L535
-	cmpq	$65535, -16(%rbp)
-	jle	L536
-L535:
-	movl	$7841, %edi
-	call	__m3_fault
-L536:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i16_u32
-	.private_extern _Divide__uDivide_param_i16_u32
-_Divide__uDivide_param_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i16_u32
-	.private_extern _Divide__Divide_param_i16_u32
-_Divide__Divide_param_i16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rax, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L541
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L541
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L541:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L542
-	cmpq	$65535, -16(%rbp)
-	jle	L543
-L542:
-	movl	$7905, %edi
-	call	__m3_fault
-L543:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_u16
-	.private_extern _Divide__uDivide_var_i32_u16
-_Divide__uDivide_var_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_u16
-	.private_extern _Divide__Divide_var_i32_u16
-_Divide__Divide_var_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -32(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L548
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L548
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L548:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L549
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L550
-L549:
-	movl	$7969, %edi
-	call	__m3_fault
-L550:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_u16
-	.private_extern _Divide__uDivide_param_i32_u16
-_Divide__uDivide_param_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movswq	-22(%rbp),%rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i32_u16
-	.private_extern _Divide__Divide_param_i32_u16
-_Divide__Divide_param_i32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movswq	-22(%rbp),%rdx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L555
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L555
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L555:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L556
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L557
-L556:
-	movl	$8033, %edi
-	call	__m3_fault
-L557:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_u64
-	.private_extern _Divide__uDivide_var_i32_u64
-_Divide__uDivide_var_i32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_u64
-	.private_extern _Divide__Divide_var_i32_u64
-_Divide__Divide_var_i32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -32(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L562
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L562
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L562:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_u64
-	.private_extern _Divide__uDivide_param_i32_u64
-_Divide__uDivide_param_i32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i32_u64
-	.private_extern _Divide__Divide_param_i32_u64
-_Divide__Divide_param_i32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L567
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L567
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L567:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_LC
-	.private_extern _Divide__uDivide_var_i32_LC
-_Divide__uDivide_var_i32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_LC
-	.private_extern _Divide__Divide_var_i32_LC
-_Divide__Divide_var_i32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -32(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L572
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L572
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L572:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_LC
-	.private_extern _Divide__uDivide_param_i32_LC
-_Divide__uDivide_param_i32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_i32_LC
-	.private_extern _Divide__Divide_param_i32_LC
-_Divide__Divide_param_i32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L577
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L577
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L577:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_i16
-	.private_extern _Divide__uDivide_var_i32_i16
-_Divide__uDivide_var_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_i16
-	.private_extern _Divide__Divide_var_i32_i16
-_Divide__Divide_var_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -32(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L582
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L582
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L582:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L583
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L584
-L583:
-	movl	$8353, %edi
-	call	__m3_fault
-L584:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_i16
-	.private_extern _Divide__uDivide_param_i32_i16
-_Divide__uDivide_param_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movzwl	-22(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i32_i16
-	.private_extern _Divide__Divide_param_i32_i16
-_Divide__Divide_param_i32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movzwl	-22(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L589
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L589
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L589:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L590
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L591
-L590:
-	movl	$8417, %edi
-	call	__m3_fault
-L591:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_i32
-	.private_extern _Divide__uDivide_var_i32_i32
-_Divide__uDivide_var_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_i32
-	.private_extern _Divide__Divide_var_i32_i32
-_Divide__Divide_var_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -40(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	-40(%rbp), %rdx
-	movq	%rax, %rcx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	%rcx
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L596
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L597
-L596:
-	movl	$8481, %edi
-	call	__m3_fault
-L597:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_i32
-	.private_extern _Divide__uDivide_param_i32_i32
-_Divide__uDivide_param_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	mov	-24(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i32_i32
-	.private_extern _Divide__Divide_param_i32_i32
-_Divide__Divide_param_i32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	mov	-24(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L602
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L602
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L602:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L603
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L604
-L603:
-	movl	$8545, %edi
-	call	__m3_fault
-L604:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_I
-	.private_extern _Divide__uDivide_var_i32_I
-_Divide__uDivide_var_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_I
-	.private_extern _Divide__Divide_var_i32_I
-_Divide__Divide_var_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -32(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L609
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L609
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L609:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L610
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L611
-L610:
-	movl	$8609, %edi
-	call	__m3_fault
-L611:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_I
-	.private_extern _Divide__uDivide_param_i32_I
-_Divide__uDivide_param_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i32_I
-	.private_extern _Divide__Divide_param_i32_I
-_Divide__Divide_param_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L616
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L616
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L616:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L617
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L618
-L617:
-	movl	$8673, %edi
-	call	__m3_fault
-L618:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_i64
-	.private_extern _Divide__uDivide_var_i32_i64
-_Divide__uDivide_var_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_i64
-	.private_extern _Divide__Divide_var_i32_i64
-_Divide__Divide_var_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -32(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L623
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L623
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L623:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_i64
-	.private_extern _Divide__uDivide_param_i32_i64
-_Divide__uDivide_param_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i32_i64
-	.private_extern _Divide__Divide_param_i32_i64
-_Divide__Divide_param_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L628
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L628
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L628:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_C
-	.private_extern _Divide__uDivide_var_i32_C
-_Divide__uDivide_var_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_C
-	.private_extern _Divide__Divide_var_i32_C
-_Divide__Divide_var_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -32(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L633
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L633
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L633:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L634
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L635
-L634:
-	movl	$8865, %edi
-	call	__m3_fault
-L635:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_C
-	.private_extern _Divide__uDivide_param_i32_C
-_Divide__uDivide_param_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_i32_C
-	.private_extern _Divide__Divide_param_i32_C
-_Divide__Divide_param_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L640
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L640
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L640:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L641
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L642
-L641:
-	movl	$8929, %edi
-	call	__m3_fault
-L642:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_u8
-	.private_extern _Divide__uDivide_var_i32_u8
-_Divide__uDivide_var_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_u8
-	.private_extern _Divide__Divide_var_i32_u8
-_Divide__Divide_var_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -32(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L647
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L647
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L647:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L648
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L649
-L648:
-	movl	$8993, %edi
-	call	__m3_fault
-L649:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_u8
-	.private_extern _Divide__uDivide_param_i32_u8
-_Divide__uDivide_param_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movsbq	-21(%rbp),%rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i32_u8
-	.private_extern _Divide__Divide_param_i32_u8
-_Divide__Divide_param_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movsbq	-21(%rbp),%rdx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L654
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L654
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L654:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L655
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L656
-L655:
-	movl	$9057, %edi
-	call	__m3_fault
-L656:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_i8
-	.private_extern _Divide__uDivide_var_i32_i8
-_Divide__uDivide_var_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_i8
-	.private_extern _Divide__Divide_var_i32_i8
-_Divide__Divide_var_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -32(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L661
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L661
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L661:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L662
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L663
-L662:
-	movl	$9121, %edi
-	call	__m3_fault
-L663:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_i8
-	.private_extern _Divide__uDivide_param_i32_i8
-_Divide__uDivide_param_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movzbl	-21(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i32_i8
-	.private_extern _Divide__Divide_param_i32_i8
-_Divide__Divide_param_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movzbl	-21(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L668
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L668
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L668:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L669
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L670
-L669:
-	movl	$9185, %edi
-	call	__m3_fault
-L670:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_L
-	.private_extern _Divide__uDivide_var_i32_L
-_Divide__uDivide_var_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_L
-	.private_extern _Divide__Divide_var_i32_L
-_Divide__Divide_var_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -32(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L675
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L675
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L675:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_L
-	.private_extern _Divide__uDivide_param_i32_L
-_Divide__uDivide_param_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i32_L
-	.private_extern _Divide__Divide_param_i32_L
-_Divide__Divide_param_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L680
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L680
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L680:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i32_u32
-	.private_extern _Divide__uDivide_var_i32_u32
-_Divide__uDivide_var_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i32_u32
-	.private_extern _Divide__Divide_var_i32_u32
-_Divide__Divide_var_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -32(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L685
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L685
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L685:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L686
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L687
-L686:
-	movl	$9377, %edi
-	call	__m3_fault
-L687:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i32_u32
-	.private_extern _Divide__uDivide_param_i32_u32
-_Divide__uDivide_param_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i32_u32
-	.private_extern _Divide__Divide_param_i32_u32
-_Divide__Divide_param_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rax, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L692
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L692
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L692:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L693
-	movl	$4294967295, %eax
-	cmpq	%rax, -16(%rbp)
-	jle	L694
-L693:
-	movl	$9441, %edi
-	call	__m3_fault
-L694:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_u16
-	.private_extern _Divide__uDivide_var_I_u16
-_Divide__uDivide_var_I_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_u16
-	.private_extern _Divide__Divide_var_I_u16
-_Divide__Divide_var_I_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L699
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L699
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L699:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_I_u16
-	.private_extern _Divide__uDivide_param_I_u16
-_Divide__uDivide_param_I_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_I_u16
-	.private_extern _Divide__Divide_param_I_u16
-_Divide__Divide_param_I_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L704
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L704
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L704:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_u64
-	.private_extern _Divide__uDivide_var_I_u64
-_Divide__uDivide_var_I_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_u64
-	.private_extern _Divide__Divide_var_I_u64
-_Divide__Divide_var_I_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	112+_MM_Divide(%rip), %rdx
-	movq	%rdx, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L709
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L709
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L709:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_I_u64
-	.private_extern _Divide__uDivide_param_I_u64
-_Divide__uDivide_param_I_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_I_u64
-	.private_extern _Divide__Divide_param_I_u64
-_Divide__Divide_param_I_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L714
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L714
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L714:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_LC
-	.private_extern _Divide__uDivide_var_I_LC
-_Divide__uDivide_var_I_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_LC
-	.private_extern _Divide__Divide_var_I_LC
-_Divide__Divide_var_I_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L719
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L719
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L719:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_I_LC
-	.private_extern _Divide__uDivide_param_I_LC
-_Divide__uDivide_param_I_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_I_LC
-	.private_extern _Divide__Divide_param_I_LC
-_Divide__Divide_param_I_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L724
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L724
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L724:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_i16
-	.private_extern _Divide__uDivide_var_I_i16
-_Divide__uDivide_var_I_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_i16
-	.private_extern _Divide__Divide_var_I_i16
-_Divide__Divide_var_I_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L729
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L729
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L729:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_I_i16
-	.private_extern _Divide__uDivide_param_I_i16
-_Divide__uDivide_param_I_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_I_i16
-	.private_extern _Divide__Divide_param_I_i16
-_Divide__Divide_param_I_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L734
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L734
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L734:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_i32
-	.private_extern _Divide__uDivide_var_I_i32
-_Divide__uDivide_var_I_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_i32
-	.private_extern _Divide__Divide_var_I_i32
-_Divide__Divide_var_I_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L739
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L739
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L739:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_I_i32
-	.private_extern _Divide__uDivide_param_I_i32
-_Divide__uDivide_param_I_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	mov	-28(%rbp), %edx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_I_i32
-	.private_extern _Divide__Divide_param_I_i32
-_Divide__Divide_param_I_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L744
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L744
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L744:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_I
-	.private_extern _Divide__uDivide_var_I_I
-_Divide__uDivide_var_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_I
-	.private_extern _Divide__Divide_var_I_I
-_Divide__Divide_var_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	-40(%rbp), %rdx
-	movq	%rax, %rcx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	%rcx
-	leave
-	ret
-.globl _Divide__uDivide_param_I_I
-	.private_extern _Divide__uDivide_param_I_I
-_Divide__uDivide_param_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_I_I
-	.private_extern _Divide__Divide_param_I_I
-_Divide__Divide_param_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L753
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L753
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L753:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_i64
-	.private_extern _Divide__uDivide_var_I_i64
-_Divide__uDivide_var_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_i64
-	.private_extern _Divide__Divide_var_I_i64
-_Divide__Divide_var_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	152+_MM_Divide(%rip), %rdx
-	movq	%rdx, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L758
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L758
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L758:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_I_i64
-	.private_extern _Divide__uDivide_param_I_i64
-_Divide__uDivide_param_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_I_i64
-	.private_extern _Divide__Divide_param_I_i64
-_Divide__Divide_param_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L763
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L763
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L763:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_C
-	.private_extern _Divide__uDivide_var_I_C
-_Divide__uDivide_var_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_C
-	.private_extern _Divide__Divide_var_I_C
-_Divide__Divide_var_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L768
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L768
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L768:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_I_C
-	.private_extern _Divide__uDivide_param_I_C
-_Divide__uDivide_param_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_I_C
-	.private_extern _Divide__Divide_param_I_C
-_Divide__Divide_param_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L773
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L773
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L773:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_u8
-	.private_extern _Divide__uDivide_var_I_u8
-_Divide__uDivide_var_I_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_u8
-	.private_extern _Divide__Divide_var_I_u8
-_Divide__Divide_var_I_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L778
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L778
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L778:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_I_u8
-	.private_extern _Divide__uDivide_param_I_u8
-_Divide__uDivide_param_I_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_I_u8
-	.private_extern _Divide__Divide_param_I_u8
-_Divide__Divide_param_I_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L783
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L783
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L783:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_i8
-	.private_extern _Divide__uDivide_var_I_i8
-_Divide__uDivide_var_I_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_i8
-	.private_extern _Divide__Divide_var_I_i8
-_Divide__Divide_var_I_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L788
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L788
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L788:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_I_i8
-	.private_extern _Divide__uDivide_param_I_i8
-_Divide__uDivide_param_I_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_I_i8
-	.private_extern _Divide__Divide_param_I_i8
-_Divide__Divide_param_I_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L793
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L793
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L793:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_L
-	.private_extern _Divide__uDivide_var_I_L
-_Divide__uDivide_var_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_L
-	.private_extern _Divide__Divide_var_I_L
-_Divide__Divide_var_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	176+_MM_Divide(%rip), %rdx
-	movq	%rdx, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L798
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L798
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L798:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_I_L
-	.private_extern _Divide__uDivide_param_I_L
-_Divide__uDivide_param_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_I_L
-	.private_extern _Divide__Divide_param_I_L
-_Divide__Divide_param_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L803
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L803
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L803:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_I_u32
-	.private_extern _Divide__uDivide_var_I_u32
-_Divide__uDivide_var_I_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_I_u32
-	.private_extern _Divide__Divide_var_I_u32
-_Divide__Divide_var_I_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L808
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L808
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L808:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_I_u32
-	.private_extern _Divide__uDivide_param_I_u32
-_Divide__uDivide_param_I_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
-	movq	%rax, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_I_u32
-	.private_extern _Divide__Divide_param_I_u32
-_Divide__Divide_param_I_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L813
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L813
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L813:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i64_u16
-	.private_extern _Divide__uDivide_var_i64_u16
-_Divide__uDivide_var_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i64_u16
-	.private_extern _Divide__Divide_var_i64_u16
-_Divide__Divide_var_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L818
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L818
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L818:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i64_u16
-	.private_extern _Divide__uDivide_param_i64_u16
-_Divide__uDivide_param_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i64_u16
-	.private_extern _Divide__Divide_param_i64_u16
-_Divide__Divide_param_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L823
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L823
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L823:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i64_u64
-	.private_extern _Divide__uDivide_var_i64_u64
-_Divide__uDivide_var_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i64_u64
-	.private_extern _Divide__Divide_var_i64_u64
-_Divide__Divide_var_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	112+_MM_Divide(%rip), %rdx
-	movq	%rdx, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L828
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L828
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L828:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i64_u64
-	.private_extern _Divide__uDivide_param_i64_u64
-_Divide__uDivide_param_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i64_u64
-	.private_extern _Divide__Divide_param_i64_u64
-_Divide__Divide_param_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L833
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L833
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L833:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i64_LC
-	.private_extern _Divide__uDivide_var_i64_LC
-_Divide__uDivide_var_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i64_LC
-	.private_extern _Divide__Divide_var_i64_LC
-_Divide__Divide_var_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L838
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L838
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L838:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i64_LC
-	.private_extern _Divide__uDivide_param_i64_LC
-_Divide__uDivide_param_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_i64_LC
-	.private_extern _Divide__Divide_param_i64_LC
-_Divide__Divide_param_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L843
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L843
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L843:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i64_i16
-	.private_extern _Divide__uDivide_var_i64_i16
-_Divide__uDivide_var_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i64_i16
-	.private_extern _Divide__Divide_var_i64_i16
-_Divide__Divide_var_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L848
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L848
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L848:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i64_i16
-	.private_extern _Divide__uDivide_param_i64_i16
-_Divide__uDivide_param_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i64_i16
-	.private_extern _Divide__Divide_param_i64_i16
-_Divide__Divide_param_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L853
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L853
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L853:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i64_i32
-	.private_extern _Divide__uDivide_var_i64_i32
-_Divide__uDivide_var_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i64_i32
-	.private_extern _Divide__Divide_var_i64_i32
-_Divide__Divide_var_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L858
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L858
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L858:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i64_i32
-	.private_extern _Divide__uDivide_param_i64_i32
-_Divide__uDivide_param_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	mov	-28(%rbp), %edx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i64_i32
-	.private_extern _Divide__Divide_param_i64_i32
-_Divide__Divide_param_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L863
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L863
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L863:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i64_I
-	.private_extern _Divide__uDivide_var_i64_I
-_Divide__uDivide_var_i64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i64_I
-	.private_extern _Divide__Divide_var_i64_I
-_Divide__Divide_var_i64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	144+_MM_Divide(%rip), %rdx
-	movq	%rdx, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L868
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L868
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L868:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i64_I
-	.private_extern _Divide__uDivide_param_i64_I
-_Divide__uDivide_param_i64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i64_I
-	.private_extern _Divide__Divide_param_i64_I
-_Divide__Divide_param_i64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L873
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L873
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L873:
-	movq	-40(%rbp), %rax
-	leave
-	ret
 .globl _Divide__uDivide_var_i64_i64
 	.private_extern _Divide__uDivide_var_i64_i64
 _Divide__uDivide_var_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -7687,9 +20,9 @@ _Divide__uDivide_var_i64_i64:
 _Divide__Divide_var_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	-40(%rbp), %rdx
 	movq	%rax, %rcx
 	movq	%rdx, %rax
@@ -7731,27 +64,27 @@ _Divide__Divide_param_i64_i64:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L882
+	je	L8
 	movq	-32(%rbp), %rax
 	movq	-24(%rbp), %rdx
 	xorq	%rdx, %rax
 	testq	%rax, %rax
-	jns	L882
+	jns	L8
 	subq	$1, -40(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L882:
+L8:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_i64_C
-	.private_extern _Divide__uDivide_var_i64_C
-_Divide__uDivide_var_i64_C:
+.globl _Divide__uDivide_var_i64_LC
+	.private_extern _Divide__uDivide_var_i64_LC
+_Divide__uDivide_var_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -7760,14 +93,14 @@ _Divide__uDivide_var_i64_C:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_i64_C
-	.private_extern _Divide__Divide_var_i64_C
-_Divide__Divide_var_i64_C:
+.globl _Divide__Divide_var_i64_LC
+	.private_extern _Divide__Divide_var_i64_LC
+_Divide__Divide_var_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -7776,21 +109,21 @@ _Divide__Divide_var_i64_C:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L887
+	je	L13
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L887
+	jns	L13
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L887:
+L13:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_i64_C
-	.private_extern _Divide__uDivide_param_i64_C
-_Divide__uDivide_param_i64_C:
+.globl _Divide__uDivide_param_i64_LC
+	.private_extern _Divide__uDivide_param_i64_LC
+_Divide__uDivide_param_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -7800,9 +133,9 @@ _Divide__uDivide_param_i64_C:
 	divq	-32(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_i64_C
-	.private_extern _Divide__Divide_param_i64_C
-_Divide__Divide_param_i64_C:
+.globl _Divide__Divide_param_i64_LC
+	.private_extern _Divide__Divide_param_i64_LC
+_Divide__Divide_param_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -7818,15 +151,15 @@ _Divide__Divide_param_i64_C:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L892
+	je	L18
 	movq	-40(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L892
+	jns	L18
 	subq	$1, -48(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L892:
+L18:
 	movq	-48(%rbp), %rax
 	leave
 	ret
@@ -7835,9 +168,9 @@ L892:
 _Divide__uDivide_var_i64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -7852,9 +185,9 @@ _Divide__uDivide_var_i64_u8:
 _Divide__Divide_var_i64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -7864,15 +197,15 @@ _Divide__Divide_var_i64_u8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L897
+	je	L23
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L897
+	jns	L23
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L897:
+L23:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -7912,16 +245,107 @@ _Divide__Divide_param_i64_u8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L902
+	je	L28
 	movq	-40(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L902
+	jns	L28
 	subq	$1, -48(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L902:
+L28:
 	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i64_I
+	.private_extern _Divide__uDivide_var_i64_I
+_Divide__uDivide_var_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i64_I
+	.private_extern _Divide__Divide_var_i64_I
+_Divide__Divide_var_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_Divide(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L33
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L33
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L33:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i64_I
+	.private_extern _Divide__uDivide_param_i64_I
+_Divide__uDivide_param_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i64_I
+	.private_extern _Divide__Divide_param_i64_I
+_Divide__Divide_param_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L38
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L38
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L38:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _Divide__uDivide_var_i64_i8
@@ -7929,9 +353,9 @@ L902:
 _Divide__uDivide_var_i64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -7946,9 +370,9 @@ _Divide__uDivide_var_i64_i8:
 _Divide__Divide_var_i64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -7958,15 +382,15 @@ _Divide__Divide_var_i64_i8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L907
+	je	L43
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L907
+	jns	L43
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L907:
+L43:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -8006,107 +430,16 @@ _Divide__Divide_param_i64_i8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L912
+	je	L48
 	movq	-40(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L912
+	jns	L48
 	subq	$1, -48(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L912:
+L48:
 	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i64_L
-	.private_extern _Divide__uDivide_var_i64_L
-_Divide__uDivide_var_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i64_L
-	.private_extern _Divide__Divide_var_i64_L
-_Divide__Divide_var_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	176+_MM_Divide(%rip), %rdx
-	movq	%rdx, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L917
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L917
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L917:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i64_L
-	.private_extern _Divide__uDivide_param_i64_L
-_Divide__uDivide_param_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i64_L
-	.private_extern _Divide__Divide_param_i64_L
-_Divide__Divide_param_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L922
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L922
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L922:
-	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _Divide__uDivide_var_i64_u32
@@ -8114,9 +447,9 @@ L922:
 _Divide__uDivide_var_i64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
+	movl	140+_MM_Divide(%rip), %eax
 	cltq
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -8131,9 +464,9 @@ _Divide__uDivide_var_i64_u32:
 _Divide__Divide_var_i64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
+	movl	140+_MM_Divide(%rip), %eax
 	cltq
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -8143,15 +476,15 @@ _Divide__Divide_var_i64_u32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L927
+	je	L53
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L927
+	jns	L53
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L927:
+L53:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -8193,26 +526,112 @@ _Divide__Divide_param_i64_u32:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L932
+	je	L58
 	movq	-40(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L932
+	jns	L58
 	subq	$1, -48(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L932:
+L58:
 	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_C_u16
-	.private_extern _Divide__uDivide_var_C_u16
-_Divide__uDivide_var_C_u16:
+.globl _Divide__uDivide_var_i64_C
+	.private_extern _Divide__uDivide_var_i64_C
+_Divide__uDivide_var_i64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i64_C
+	.private_extern _Divide__Divide_var_i64_C
+_Divide__Divide_var_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L63
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L63
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L63:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i64_C
+	.private_extern _Divide__uDivide_param_i64_C
+_Divide__uDivide_param_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_i64_C
+	.private_extern _Divide__Divide_param_i64_C
+_Divide__Divide_param_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L68
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L68
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L68:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i64_u16
+	.private_extern _Divide__uDivide_var_i64_u16
+_Divide__uDivide_var_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
 	movswq	%ax,%rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -8222,15 +641,14 @@ _Divide__uDivide_var_C_u16:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_C_u16
-	.private_extern _Divide__Divide_var_C_u16
-_Divide__Divide_var_C_u16:
+.globl _Divide__Divide_var_i64_u16
+	.private_extern _Divide__Divide_var_i64_u16
+_Divide__Divide_var_i64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
+	movzwl	152+_MM_Divide(%rip), %eax
 	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -8240,172 +658,75 @@ _Divide__Divide_var_C_u16:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L937
+	je	L73
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L937
+	jns	L73
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L937:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L938
-	movl	$12577, %edi
-	call	__m3_fault
-L938:
-	movq	-16(%rbp), %rax
+L73:
+	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_C_u16
-	.private_extern _Divide__uDivide_param_C_u16
-_Divide__uDivide_param_C_u16:
+.globl _Divide__uDivide_param_i64_u16
+	.private_extern _Divide__uDivide_param_i64_u16
+_Divide__uDivide_param_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i64_u16
+	.private_extern _Divide__Divide_param_i64_u16
+_Divide__Divide_param_i64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
 	movswq	-26(%rbp),%rax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_C_u16
-	.private_extern _Divide__Divide_param_C_u16
-_Divide__Divide_param_C_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
 	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L943
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L943
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L943:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L944
-	movl	$12641, %edi
-	call	__m3_fault
-L944:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_C_u64
-	.private_extern _Divide__uDivide_var_C_u64
-_Divide__uDivide_var_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_C_u64
-	.private_extern _Divide__Divide_var_C_u64
-_Divide__Divide_var_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L949
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L949
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L949:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_C_u64
-	.private_extern _Divide__uDivide_param_C_u64
-_Divide__uDivide_param_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_C_u64
-	.private_extern _Divide__Divide_param_C_u64
-_Divide__Divide_param_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L954
+	je	L78
 	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L954
+	jns	L78
 	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
+	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L954:
+L78:
 	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_C_LC
-	.private_extern _Divide__uDivide_var_C_LC
-_Divide__uDivide_var_C_LC:
+.globl _Divide__uDivide_var_i64_u64
+	.private_extern _Divide__uDivide_var_i64_u64
+_Divide__uDivide_var_i64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rdx
-	movq	%rdx, -40(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
 	divq	-40(%rbp)
@@ -8413,15 +734,15 @@ _Divide__uDivide_var_C_LC:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_C_LC
-	.private_extern _Divide__Divide_var_C_LC
-_Divide__Divide_var_C_LC:
+.globl _Divide__Divide_var_i64_u64
+	.private_extern _Divide__Divide_var_i64_u64
+_Divide__Divide_var_i64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
+	movq	160+_MM_Divide(%rip), %rdx
+	movq	%rdx, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
@@ -8429,68 +750,164 @@ _Divide__Divide_var_C_LC:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L959
+	je	L83
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L959
+	jns	L83
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L959:
+L83:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_C_LC
-	.private_extern _Divide__uDivide_param_C_LC
-_Divide__uDivide_param_C_LC:
+.globl _Divide__uDivide_param_i64_u64
+	.private_extern _Divide__uDivide_param_i64_u64
+_Divide__uDivide_param_i64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
 	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_C_LC
-	.private_extern _Divide__Divide_param_C_LC
-_Divide__Divide_param_C_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
+	movq	%rax, -64(%rbp)
 	movq	-32(%rbp), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
 	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L964
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L964
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L964:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_C_i16
-	.private_extern _Divide__uDivide_var_C_i16
-_Divide__uDivide_var_C_i16:
+.globl _Divide__Divide_param_i64_u64
+	.private_extern _Divide__Divide_param_i64_u64
+_Divide__Divide_param_i64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L88
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L88
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L88:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i64_L
+	.private_extern _Divide__uDivide_var_i64_L
+_Divide__uDivide_var_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i64_L
+	.private_extern _Divide__Divide_var_i64_L
+_Divide__Divide_var_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_Divide(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L93
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L93
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L93:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i64_L
+	.private_extern _Divide__uDivide_param_i64_L
+_Divide__uDivide_param_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i64_L
+	.private_extern _Divide__Divide_param_i64_L
+_Divide__Divide_param_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L98
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L98
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L98:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i64_i16
+	.private_extern _Divide__uDivide_var_i64_i16
+_Divide__uDivide_var_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
 	movzwl	%ax, %eax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -8500,15 +917,14 @@ _Divide__uDivide_var_C_i16:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_C_i16
-	.private_extern _Divide__Divide_var_C_i16
-_Divide__Divide_var_C_i16:
+.globl _Divide__Divide_var_i64_i16
+	.private_extern _Divide__Divide_var_i64_i16
+_Divide__Divide_var_i64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
+	movzwl	184+_MM_Divide(%rip), %eax
 	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -8518,85 +934,74 @@ _Divide__Divide_var_C_i16:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L969
+	je	L103
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L969
+	jns	L103
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L969:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L970
-	movl	$12961, %edi
-	call	__m3_fault
-L970:
-	movq	-16(%rbp), %rax
+L103:
+	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_C_i16
-	.private_extern _Divide__uDivide_param_C_i16
-_Divide__uDivide_param_C_i16:
+.globl _Divide__uDivide_param_i64_i16
+	.private_extern _Divide__uDivide_param_i64_i16
+_Divide__uDivide_param_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i64_i16
+	.private_extern _Divide__Divide_param_i64_i16
+_Divide__Divide_param_i64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
 	movzwl	-26(%rbp), %eax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_C_i16
-	.private_extern _Divide__Divide_param_C_i16
-_Divide__Divide_param_C_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
 	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L975
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L975
-	subq	$1, -56(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L108
 	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L975:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L976
-	movl	$13025, %edi
-	call	__m3_fault
-L976:
-	movq	-16(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L108
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L108:
+	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_C_i32
-	.private_extern _Divide__uDivide_var_C_i32
-_Divide__uDivide_var_C_i32:
+.globl _Divide__uDivide_var_i64_i32
+	.private_extern _Divide__uDivide_var_i64_i32
+_Divide__uDivide_var_i64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
+	movl	188+_MM_Divide(%rip), %eax
 	mov	%eax, %eax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -8606,15 +1011,14 @@ _Divide__uDivide_var_C_i32:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_C_i32
-	.private_extern _Divide__Divide_var_C_i32
-_Divide__Divide_var_C_i32:
+.globl _Divide__Divide_var_i64_i32
+	.private_extern _Divide__Divide_var_i64_i32
+_Divide__Divide_var_i64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
+	movl	188+_MM_Divide(%rip), %eax
 	mov	%eax, %eax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -8624,187 +1028,74 @@ _Divide__Divide_var_C_i32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L981
+	je	L113
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L981
+	jns	L113
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L981:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L982
-	movl	$13089, %edi
-	call	__m3_fault
-L982:
-	movq	-16(%rbp), %rax
+L113:
+	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_C_i32
-	.private_extern _Divide__uDivide_param_C_i32
-_Divide__uDivide_param_C_i32:
+.globl _Divide__uDivide_param_i64_i32
+	.private_extern _Divide__uDivide_param_i64_i32
+_Divide__uDivide_param_i64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	mov	-28(%rbp), %edx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i64_i32
+	.private_extern _Divide__Divide_param_i64_i32
+_Divide__Divide_param_i64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	mov	-28(%rbp), %eax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_C_i32
-	.private_extern _Divide__Divide_param_C_i32
-_Divide__Divide_param_C_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	mov	-28(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
 	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L987
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L987
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L987:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L988
-	movl	$13153, %edi
-	call	__m3_fault
-L988:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_C_I
-	.private_extern _Divide__uDivide_var_C_I
-_Divide__uDivide_var_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_C_I
-	.private_extern _Divide__Divide_var_C_I
-_Divide__Divide_var_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L993
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L993
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L993:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L994
-	movl	$13217, %edi
-	call	__m3_fault
-L994:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_C_I
-	.private_extern _Divide__uDivide_param_C_I
-_Divide__uDivide_param_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_C_I
-	.private_extern _Divide__Divide_param_C_I
-_Divide__Divide_param_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L999
+	je	L118
 	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L999
+	jns	L118
 	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
+	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L999:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1000
-	movl	$13281, %edi
-	call	__m3_fault
-L1000:
-	movq	-16(%rbp), %rax
+L118:
+	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_C_i64
-	.private_extern _Divide__uDivide_var_C_i64
-_Divide__uDivide_var_C_i64:
+.globl _Divide__uDivide_var_LC_i64
+	.private_extern _Divide__uDivide_var_LC_i64
+_Divide__uDivide_var_LC_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -8813,14 +1104,14 @@ _Divide__uDivide_var_C_i64:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_C_i64
-	.private_extern _Divide__Divide_var_C_i64
-_Divide__Divide_var_C_i64:
+.globl _Divide__Divide_var_LC_i64
+	.private_extern _Divide__Divide_var_LC_i64
+_Divide__Divide_var_LC_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -8829,21 +1120,21 @@ _Divide__Divide_var_C_i64:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1005
+	je	L123
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1005
+	jns	L123
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1005:
+L123:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_C_i64
-	.private_extern _Divide__uDivide_param_C_i64
-_Divide__uDivide_param_C_i64:
+.globl _Divide__uDivide_param_LC_i64
+	.private_extern _Divide__uDivide_param_LC_i64
+_Divide__uDivide_param_LC_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -8855,9 +1146,9 @@ _Divide__uDivide_param_C_i64:
 	divq	-56(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_C_i64
-	.private_extern _Divide__Divide_param_C_i64
-_Divide__Divide_param_C_i64:
+.globl _Divide__Divide_param_LC_i64
+	.private_extern _Divide__Divide_param_LC_i64
+_Divide__Divide_param_LC_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -8871,26 +1162,26 @@ _Divide__Divide_param_C_i64:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1010
+	je	L128
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1010
+	jns	L128
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1010:
+L128:
 	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_C_C
-	.private_extern _Divide__uDivide_var_C_C
-_Divide__uDivide_var_C_C:
+.globl _Divide__uDivide_var_LC_LC
+	.private_extern _Divide__uDivide_var_LC_LC
+_Divide__uDivide_var_LC_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rdx
+	movq	112+_MM_Divide(%rip), %rdx
 	movq	%rdx, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -8899,32 +1190,24 @@ _Divide__uDivide_var_C_C:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_C_C
-	.private_extern _Divide__Divide_var_C_C
-_Divide__Divide_var_C_C:
+.globl _Divide__Divide_var_LC_LC
+	.private_extern _Divide__Divide_var_LC_LC
+_Divide__Divide_var_LC_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	-40(%rbp), %rdx
 	movq	%rax, %rcx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
 	idivq	%rcx
-	movq	%rax, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1015
-	movl	$13473, %edi
-	call	__m3_fault
-L1015:
-	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_C_C
-	.private_extern _Divide__uDivide_param_C_C
-_Divide__uDivide_param_C_C:
+.globl _Divide__uDivide_param_LC_LC
+	.private_extern _Divide__uDivide_param_LC_LC
+_Divide__uDivide_param_LC_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -8934,12 +1217,11 @@ _Divide__uDivide_param_C_C:
 	divq	-32(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_C_C
-	.private_extern _Divide__Divide_param_C_C
-_Divide__Divide_param_C_C:
+.globl _Divide__Divide_param_LC_LC
+	.private_extern _Divide__Divide_param_LC_LC
+_Divide__Divide_param_LC_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$64, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
 	movq	-24(%rbp), %rax
@@ -8953,33 +1235,26 @@ _Divide__Divide_param_C_C:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L1020
+	je	L137
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1020
+	jns	L137
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L1020:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1021
-	movl	$13537, %edi
-	call	__m3_fault
-L1021:
-	movq	-16(%rbp), %rax
+L137:
+	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_C_u8
-	.private_extern _Divide__uDivide_var_C_u8
-_Divide__uDivide_var_C_u8:
+.globl _Divide__uDivide_var_LC_u8
+	.private_extern _Divide__uDivide_var_LC_u8
+_Divide__uDivide_var_LC_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -8989,15 +1264,14 @@ _Divide__uDivide_var_C_u8:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_C_u8
-	.private_extern _Divide__Divide_var_C_u8
-_Divide__Divide_var_C_u8:
+.globl _Divide__Divide_var_LC_u8
+	.private_extern _Divide__Divide_var_LC_u8
+_Divide__Divide_var_LC_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -9007,28 +1281,21 @@ _Divide__Divide_var_C_u8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1026
+	je	L142
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1026
+	jns	L142
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1026:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1027
-	movl	$13601, %edi
-	call	__m3_fault
-L1027:
-	movq	-16(%rbp), %rax
+L142:
+	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_C_u8
-	.private_extern _Divide__uDivide_param_C_u8
-_Divide__uDivide_param_C_u8:
+.globl _Divide__uDivide_param_LC_u8
+	.private_extern _Divide__uDivide_param_LC_u8
+_Divide__uDivide_param_LC_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -9040,12 +1307,11 @@ _Divide__uDivide_param_C_u8:
 	divq	-56(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_C_u8
-	.private_extern _Divide__Divide_param_C_u8
-_Divide__Divide_param_C_u8:
+.globl _Divide__Divide_param_LC_u8
+	.private_extern _Divide__Divide_param_LC_u8
+_Divide__Divide_param_LC_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$64, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
 	movq	-24(%rbp), %rax
@@ -9059,34 +1325,26 @@ _Divide__Divide_param_C_u8:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L1032
+	je	L147
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1032
+	jns	L147
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L1032:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1033
-	movl	$13665, %edi
-	call	__m3_fault
-L1033:
-	movq	-16(%rbp), %rax
+L147:
+	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_C_i8
-	.private_extern _Divide__uDivide_var_C_i8
-_Divide__uDivide_var_C_i8:
+.globl _Divide__uDivide_var_LC_I
+	.private_extern _Divide__uDivide_var_LC_I
+_Divide__uDivide_var_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
+	movq	128+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -9095,16 +1353,14 @@ _Divide__uDivide_var_C_i8:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_C_i8
-	.private_extern _Divide__Divide_var_C_i8
-_Divide__Divide_var_C_i8:
+.globl _Divide__Divide_var_LC_I
+	.private_extern _Divide__Divide_var_LC_I
+_Divide__Divide_var_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
+	movq	128+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -9113,124 +1369,21 @@ _Divide__Divide_var_C_i8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1038
+	je	L152
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1038
+	jns	L152
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1038:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1039
-	movl	$13729, %edi
-	call	__m3_fault
-L1039:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_C_i8
-	.private_extern _Divide__uDivide_param_C_i8
-_Divide__uDivide_param_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
-	movq	%rax, -56(%rbp)
-	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_C_i8
-	.private_extern _Divide__Divide_param_C_i8
-_Divide__Divide_param_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -48(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L1044
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1044
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L1044:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1045
-	movl	$13793, %edi
-	call	__m3_fault
-L1045:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_C_L
-	.private_extern _Divide__uDivide_var_C_L
-_Divide__uDivide_var_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
+L152:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_C_L
-	.private_extern _Divide__Divide_var_C_L
-_Divide__Divide_var_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1050
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1050
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1050:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_C_L
-	.private_extern _Divide__uDivide_param_C_L
-_Divide__uDivide_param_C_L:
+.globl _Divide__uDivide_param_LC_I
+	.private_extern _Divide__uDivide_param_LC_I
+_Divide__uDivide_param_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -9242,9 +1395,9 @@ _Divide__uDivide_param_C_L:
 	divq	-56(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_C_L
-	.private_extern _Divide__Divide_param_C_L
-_Divide__Divide_param_C_L:
+.globl _Divide__Divide_param_LC_I
+	.private_extern _Divide__Divide_param_LC_I
+_Divide__Divide_param_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -9258,26 +1411,116 @@ _Divide__Divide_param_C_L:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1055
+	je	L157
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1055
+	jns	L157
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1055:
+L157:
 	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_C_u32
-	.private_extern _Divide__uDivide_var_C_u32
-_Divide__uDivide_var_C_u32:
+.globl _Divide__uDivide_var_LC_i8
+	.private_extern _Divide__uDivide_var_LC_i8
+_Divide__uDivide_var_LC_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_LC_i8
+	.private_extern _Divide__Divide_var_LC_i8
+_Divide__Divide_var_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L162
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L162
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L162:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_LC_i8
+	.private_extern _Divide__uDivide_param_LC_i8
+_Divide__uDivide_param_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_LC_i8
+	.private_extern _Divide__Divide_param_LC_i8
+_Divide__Divide_param_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L167
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L167
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L167:
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_LC_u32
+	.private_extern _Divide__uDivide_var_LC_u32
+_Divide__uDivide_var_LC_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
 	cltq
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -9287,15 +1530,14 @@ _Divide__uDivide_var_C_u32:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_C_u32
-	.private_extern _Divide__Divide_var_C_u32
-_Divide__Divide_var_C_u32:
+.globl _Divide__Divide_var_LC_u32
+	.private_extern _Divide__Divide_var_LC_u32
+_Divide__Divide_var_LC_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
+	movl	140+_MM_Divide(%rip), %eax
 	cltq
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -9305,28 +1547,21 @@ _Divide__Divide_var_C_u32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1060
+	je	L172
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1060
+	jns	L172
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1060:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1061
-	movl	$13985, %edi
-	call	__m3_fault
-L1061:
-	movq	-16(%rbp), %rax
+L172:
+	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_C_u32
-	.private_extern _Divide__uDivide_param_C_u32
-_Divide__uDivide_param_C_u32:
+.globl _Divide__uDivide_param_LC_u32
+	.private_extern _Divide__uDivide_param_LC_u32
+_Divide__uDivide_param_LC_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -9339,12 +1574,11 @@ _Divide__uDivide_param_C_u32:
 	divq	-56(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_C_u32
-	.private_extern _Divide__Divide_param_C_u32
-_Divide__Divide_param_C_u32:
+.globl _Divide__Divide_param_LC_u32
+	.private_extern _Divide__Divide_param_LC_u32
+_Divide__Divide_param_LC_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$64, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	movq	-24(%rbp), %rax
@@ -9359,23 +1593,544 @@ _Divide__Divide_param_C_u32:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L1066
+	je	L177
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1066
+	jns	L177
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L1066:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	jns	L1067
-	movl	$14049, %edi
-	call	__m3_fault
-L1067:
-	movq	-16(%rbp), %rax
+L177:
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_LC_C
+	.private_extern _Divide__uDivide_var_LC_C
+_Divide__uDivide_var_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	144+_MM_Divide(%rip), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_LC_C
+	.private_extern _Divide__Divide_var_LC_C
+_Divide__Divide_var_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L182
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L182
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L182:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_LC_C
+	.private_extern _Divide__uDivide_param_LC_C
+_Divide__uDivide_param_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_LC_C
+	.private_extern _Divide__Divide_param_LC_C
+_Divide__Divide_param_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L187
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L187
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L187:
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_LC_u16
+	.private_extern _Divide__uDivide_var_LC_u16
+_Divide__uDivide_var_LC_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_LC_u16
+	.private_extern _Divide__Divide_var_LC_u16
+_Divide__Divide_var_LC_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L192
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L192
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L192:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_LC_u16
+	.private_extern _Divide__uDivide_param_LC_u16
+_Divide__uDivide_param_LC_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_LC_u16
+	.private_extern _Divide__Divide_param_LC_u16
+_Divide__Divide_param_LC_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L197
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L197
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L197:
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_LC_u64
+	.private_extern _Divide__uDivide_var_LC_u64
+_Divide__uDivide_var_LC_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_LC_u64
+	.private_extern _Divide__Divide_var_LC_u64
+_Divide__Divide_var_LC_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L202
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L202
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L202:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_LC_u64
+	.private_extern _Divide__uDivide_param_LC_u64
+_Divide__uDivide_param_LC_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_LC_u64
+	.private_extern _Divide__Divide_param_LC_u64
+_Divide__Divide_param_LC_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L207
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L207
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L207:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_LC_L
+	.private_extern _Divide__uDivide_var_LC_L
+_Divide__uDivide_var_LC_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_LC_L
+	.private_extern _Divide__Divide_var_LC_L
+_Divide__Divide_var_LC_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L212
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L212
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L212:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_LC_L
+	.private_extern _Divide__uDivide_param_LC_L
+_Divide__uDivide_param_LC_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_LC_L
+	.private_extern _Divide__Divide_param_LC_L
+_Divide__Divide_param_LC_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L217
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L217
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L217:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_LC_i16
+	.private_extern _Divide__uDivide_var_LC_i16
+_Divide__uDivide_var_LC_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_LC_i16
+	.private_extern _Divide__Divide_var_LC_i16
+_Divide__Divide_var_LC_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L222
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L222
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L222:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_LC_i16
+	.private_extern _Divide__uDivide_param_LC_i16
+_Divide__uDivide_param_LC_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_LC_i16
+	.private_extern _Divide__Divide_param_LC_i16
+_Divide__Divide_param_LC_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L227
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L227
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L227:
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_LC_i32
+	.private_extern _Divide__uDivide_var_LC_i32
+_Divide__uDivide_var_LC_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_LC_i32
+	.private_extern _Divide__Divide_var_LC_i32
+_Divide__Divide_var_LC_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L232
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L232
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L232:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_LC_i32
+	.private_extern _Divide__uDivide_param_LC_i32
+_Divide__uDivide_param_LC_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %eax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_LC_i32
+	.private_extern _Divide__Divide_param_LC_i32
+_Divide__Divide_param_LC_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	mov	-28(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L237
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L237
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L237:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _Divide__Divide_var_f32_f32
@@ -9383,8 +2138,8 @@ L1067:
 _Divide__Divide_var_f32_f32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movss	168+_MM_Divide(%rip), %xmm1
-	movss	168+_MM_Divide(%rip), %xmm0
+	movss	120+_MM_Divide(%rip), %xmm1
+	movss	120+_MM_Divide(%rip), %xmm0
 	movaps	%xmm1, %xmm2
 	divss	%xmm0, %xmm2
 	movaps	%xmm2, %xmm0
@@ -9401,663 +2156,15 @@ _Divide__Divide_param_f32_f32:
 	divss	-24(%rbp), %xmm0
 	leave
 	ret
-.globl _Divide__uDivide_var_u8_u16
-	.private_extern _Divide__uDivide_var_u8_u16
-_Divide__uDivide_var_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u8_u16
-	.private_extern _Divide__Divide_var_u8_u16
-_Divide__Divide_var_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -32(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1076
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1076
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1076:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1077
-	cmpq	$127, -16(%rbp)
-	jle	L1078
-L1077:
-	movl	$14177, %edi
-	call	__m3_fault
-L1078:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u8_u16
-	.private_extern _Divide__uDivide_param_u8_u16
-_Divide__uDivide_param_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	movswq	-20(%rbp),%rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u8_u16
-	.private_extern _Divide__Divide_param_u8_u16
-_Divide__Divide_param_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movswq	-20(%rbp),%rdx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1083
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1083
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1083:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1084
-	cmpq	$127, -16(%rbp)
-	jle	L1085
-L1084:
-	movl	$14241, %edi
-	call	__m3_fault
-L1085:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u8_u64
-	.private_extern _Divide__uDivide_var_u8_u64
-_Divide__uDivide_var_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u8_u64
-	.private_extern _Divide__Divide_var_u8_u64
-_Divide__Divide_var_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -32(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1090
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1090
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1090:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u8_u64
-	.private_extern _Divide__uDivide_param_u8_u64
-_Divide__uDivide_param_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u8_u64
-	.private_extern _Divide__Divide_param_u8_u64
-_Divide__Divide_param_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1095
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1095
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1095:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u8_LC
-	.private_extern _Divide__uDivide_var_u8_LC
-_Divide__uDivide_var_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u8_LC
-	.private_extern _Divide__Divide_var_u8_LC
-_Divide__Divide_var_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -32(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1100
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1100
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1100:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u8_LC
-	.private_extern _Divide__uDivide_param_u8_LC
-_Divide__uDivide_param_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_u8_LC
-	.private_extern _Divide__Divide_param_u8_LC
-_Divide__Divide_param_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
-	movq	%rdx, -64(%rbp)
-	movq	%rax, -56(%rbp)
-	cmpq	$0, -64(%rbp)
-	je	L1105
-	movq	-48(%rbp), %rax
-	xorq	-40(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1105
-	subq	$1, -56(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -64(%rbp)
-L1105:
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u8_i16
-	.private_extern _Divide__uDivide_var_u8_i16
-_Divide__uDivide_var_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u8_i16
-	.private_extern _Divide__Divide_var_u8_i16
-_Divide__Divide_var_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -32(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1110
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1110
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1110:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1111
-	cmpq	$127, -16(%rbp)
-	jle	L1112
-L1111:
-	movl	$14561, %edi
-	call	__m3_fault
-L1112:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u8_i16
-	.private_extern _Divide__uDivide_param_u8_i16
-_Divide__uDivide_param_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	movzwl	-20(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u8_i16
-	.private_extern _Divide__Divide_param_u8_i16
-_Divide__Divide_param_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movzwl	-20(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1117
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1117
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1117:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1118
-	cmpq	$127, -16(%rbp)
-	jle	L1119
-L1118:
-	movl	$14625, %edi
-	call	__m3_fault
-L1119:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u8_i32
-	.private_extern _Divide__uDivide_var_u8_i32
-_Divide__uDivide_var_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u8_i32
-	.private_extern _Divide__Divide_var_u8_i32
-_Divide__Divide_var_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -32(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1124
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1124
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1124:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1125
-	cmpq	$127, -16(%rbp)
-	jle	L1126
-L1125:
-	movl	$14689, %edi
-	call	__m3_fault
-L1126:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u8_i32
-	.private_extern _Divide__uDivide_param_u8_i32
-_Divide__uDivide_param_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -48(%rbp)
-	mov	-24(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u8_i32
-	.private_extern _Divide__Divide_param_u8_i32
-_Divide__Divide_param_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	mov	-24(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1131
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1131
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1131:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1132
-	cmpq	$127, -16(%rbp)
-	jle	L1133
-L1132:
-	movl	$14753, %edi
-	call	__m3_fault
-L1133:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u8_I
-	.private_extern _Divide__uDivide_var_u8_I
-_Divide__uDivide_var_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u8_I
-	.private_extern _Divide__Divide_var_u8_I
-_Divide__Divide_var_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -32(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1138
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1138
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1138:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1139
-	cmpq	$127, -16(%rbp)
-	jle	L1140
-L1139:
-	movl	$14817, %edi
-	call	__m3_fault
-L1140:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u8_I
-	.private_extern _Divide__uDivide_param_u8_I
-_Divide__uDivide_param_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u8_I
-	.private_extern _Divide__Divide_param_u8_I
-_Divide__Divide_param_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1145
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1145
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1145:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1146
-	cmpq	$127, -16(%rbp)
-	jle	L1147
-L1146:
-	movl	$14881, %edi
-	call	__m3_fault
-L1147:
-	movq	-16(%rbp), %rax
-	leave
-	ret
 .globl _Divide__uDivide_var_u8_i64
 	.private_extern _Divide__uDivide_var_u8_i64
 _Divide__uDivide_var_u8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -10071,10 +2178,10 @@ _Divide__uDivide_var_u8_i64:
 _Divide__Divide_var_u8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -32(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -10083,15 +2190,15 @@ _Divide__Divide_var_u8_i64:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1152
+	je	L246
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1152
+	jns	L246
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1152:
+L246:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -10129,27 +2236,27 @@ _Divide__Divide_param_u8_i64:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1157
+	je	L251
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1157
+	jns	L251
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1157:
+L251:
 	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_u8_C
-	.private_extern _Divide__uDivide_var_u8_C
-_Divide__uDivide_var_u8_C:
+.globl _Divide__uDivide_var_u8_LC
+	.private_extern _Divide__uDivide_var_u8_LC
+_Divide__uDivide_var_u8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -10158,16 +2265,15 @@ _Divide__uDivide_var_u8_C:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_u8_C
-	.private_extern _Divide__Divide_var_u8_C
-_Divide__Divide_var_u8_C:
+.globl _Divide__Divide_var_u8_LC
+	.private_extern _Divide__Divide_var_u8_LC
+_Divide__Divide_var_u8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -32(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -10176,31 +2282,21 @@ _Divide__Divide_var_u8_C:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1162
+	je	L256
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1162
+	jns	L256
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1162:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1163
-	cmpq	$127, -16(%rbp)
-	jle	L1164
-L1163:
-	movl	$15073, %edi
-	call	__m3_fault
-L1164:
-	movq	-16(%rbp), %rax
+L256:
+	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_u8_C
-	.private_extern _Divide__uDivide_param_u8_C
-_Divide__uDivide_param_u8_C:
+.globl _Divide__uDivide_param_u8_LC
+	.private_extern _Divide__uDivide_param_u8_LC
+_Divide__uDivide_param_u8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movb	%dil, -17(%rbp)
@@ -10210,12 +2306,11 @@ _Divide__uDivide_param_u8_C:
 	divq	-32(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_u8_C
-	.private_extern _Divide__Divide_param_u8_C
-_Divide__Divide_param_u8_C:
+.globl _Divide__Divide_param_u8_LC
+	.private_extern _Divide__Divide_param_u8_LC
+_Divide__Divide_param_u8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
 	movsbq	-17(%rbp),%rax
@@ -10229,26 +2324,16 @@ _Divide__Divide_param_u8_C:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L1169
+	je	L261
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1169
+	jns	L261
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L1169:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-128, -16(%rbp)
-	jl	L1170
-	cmpq	$127, -16(%rbp)
-	jle	L1171
-L1170:
-	movl	$15137, %edi
-	call	__m3_fault
-L1171:
-	movq	-16(%rbp), %rax
+L261:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _Divide__uDivide_var_u8_u8
@@ -10256,10 +2341,10 @@ L1171:
 _Divide__uDivide_var_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -10275,10 +2360,10 @@ _Divide__Divide_var_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -40(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	-40(%rbp), %rdx
 	movq	%rax, %rcx
@@ -10287,13 +2372,13 @@ _Divide__Divide_var_u8_u8:
 	idivq	%rcx
 	movq	%rax, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L1176
+	jl	L266
 	cmpq	$127, -16(%rbp)
-	jle	L1177
-L1176:
-	movl	$15201, %edi
+	jle	L267
+L266:
+	movl	$5153, %edi
 	call	__m3_fault
-L1177:
+L267:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -10334,25 +2419,139 @@ _Divide__Divide_param_u8_u8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1182
+	je	L272
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1182
+	jns	L272
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1182:
+L272:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L1183
+	jl	L273
 	cmpq	$127, -16(%rbp)
-	jle	L1184
-L1183:
-	movl	$15265, %edi
+	jle	L274
+L273:
+	movl	$5217, %edi
 	call	__m3_fault
-L1184:
+L274:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u8_I
+	.private_extern _Divide__uDivide_var_u8_I
+_Divide__uDivide_var_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -48(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u8_I
+	.private_extern _Divide__Divide_var_u8_I
+_Divide__Divide_var_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L279
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L279
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L279:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L280
+	cmpq	$127, -16(%rbp)
+	jle	L281
+L280:
+	movl	$5281, %edi
+	call	__m3_fault
+L281:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u8_I
+	.private_extern _Divide__uDivide_param_u8_I
+_Divide__uDivide_param_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u8_I
+	.private_extern _Divide__Divide_param_u8_I
+_Divide__Divide_param_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L286
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L286
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L286:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L287
+	cmpq	$127, -16(%rbp)
+	jle	L288
+L287:
+	movl	$5345, %edi
+	call	__m3_fault
+L288:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -10361,10 +2560,10 @@ L1184:
 _Divide__uDivide_var_u8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -10380,10 +2579,10 @@ _Divide__Divide_var_u8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -32(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -10393,25 +2592,25 @@ _Divide__Divide_var_u8_i8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1189
+	je	L293
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1189
+	jns	L293
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1189:
+L293:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L1190
+	jl	L294
 	cmpq	$127, -16(%rbp)
-	jle	L1191
-L1190:
-	movl	$15329, %edi
+	jle	L295
+L294:
+	movl	$5409, %edi
 	call	__m3_fault
-L1191:
+L295:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -10452,118 +2651,26 @@ _Divide__Divide_param_u8_i8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1196
+	je	L300
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1196
+	jns	L300
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1196:
+L300:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L1197
+	jl	L301
 	cmpq	$127, -16(%rbp)
-	jle	L1198
-L1197:
-	movl	$15393, %edi
+	jle	L302
+L301:
+	movl	$5473, %edi
 	call	__m3_fault
-L1198:
+L302:
 	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u8_L
-	.private_extern _Divide__uDivide_var_u8_L
-_Divide__uDivide_var_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -48(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u8_L
-	.private_extern _Divide__Divide_var_u8_L
-_Divide__Divide_var_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
-	movq	%rax, -32(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1203
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1203
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1203:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u8_L
-	.private_extern _Divide__uDivide_param_u8_L
-_Divide__uDivide_param_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u8_L
-	.private_extern _Divide__Divide_param_u8_L
-_Divide__Divide_param_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1208
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1208
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1208:
-	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _Divide__uDivide_var_u8_u32
@@ -10571,10 +2678,10 @@ L1208:
 _Divide__uDivide_var_u8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
+	movl	140+_MM_Divide(%rip), %eax
 	cltq
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -10590,10 +2697,10 @@ _Divide__Divide_var_u8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -32(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
+	movl	140+_MM_Divide(%rip), %eax
 	cltq
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -10603,25 +2710,25 @@ _Divide__Divide_var_u8_u32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1213
+	je	L307
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1213
+	jns	L307
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1213:
+L307:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L1214
+	jl	L308
 	cmpq	$127, -16(%rbp)
-	jle	L1215
-L1214:
-	movl	$15585, %edi
+	jle	L309
+L308:
+	movl	$5537, %edi
 	call	__m3_fault
-L1215:
+L309:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -10664,38 +2771,37 @@ _Divide__Divide_param_u8_u32:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1220
+	je	L314
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1220
+	jns	L314
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1220:
+L314:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L1221
+	jl	L315
 	cmpq	$127, -16(%rbp)
-	jle	L1222
-L1221:
-	movl	$15649, %edi
+	jle	L316
+L315:
+	movl	$5601, %edi
 	call	__m3_fault
-L1222:
+L316:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_i8_u16
-	.private_extern _Divide__uDivide_var_i8_u16
-_Divide__uDivide_var_i8_u16:
+.globl _Divide__uDivide_var_u8_C
+	.private_extern _Divide__uDivide_var_u8_C
+_Divide__uDivide_var_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
 	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
+	movq	144+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -10704,17 +2810,16 @@ _Divide__uDivide_var_i8_u16:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_i8_u16
-	.private_extern _Divide__Divide_var_i8_u16
-_Divide__Divide_var_i8_u16:
+.globl _Divide__Divide_var_u8_C
+	.private_extern _Divide__Divide_var_u8_C
+_Divide__Divide_var_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
 	movq	%rax, -32(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
-	movswq	%ax,%rax
+	movq	144+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -10723,245 +2828,49 @@ _Divide__Divide_var_i8_u16:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1227
+	je	L321
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1227
+	jns	L321
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1227:
+L321:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1228
-	cmpq	$255, -16(%rbp)
-	jle	L1229
-L1228:
-	movl	$15713, %edi
+	cmpq	$-128, -16(%rbp)
+	jl	L322
+	cmpq	$127, -16(%rbp)
+	jle	L323
+L322:
+	movl	$5665, %edi
 	call	__m3_fault
-L1229:
+L323:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_i8_u16
-	.private_extern _Divide__uDivide_param_i8_u16
-_Divide__uDivide_param_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	movswq	-20(%rbp),%rdx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i8_u16
-	.private_extern _Divide__Divide_param_i8_u16
-_Divide__Divide_param_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movswq	-20(%rbp),%rdx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1234
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1234
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1234:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1235
-	cmpq	$255, -16(%rbp)
-	jle	L1236
-L1235:
-	movl	$15777, %edi
-	call	__m3_fault
-L1236:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i8_u64
-	.private_extern _Divide__uDivide_var_i8_u64
-_Divide__uDivide_var_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i8_u64
-	.private_extern _Divide__Divide_var_i8_u64
-_Divide__Divide_var_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -32(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1241
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1241
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1241:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i8_u64
-	.private_extern _Divide__uDivide_param_i8_u64
-_Divide__uDivide_param_i8_u64:
+.globl _Divide__uDivide_param_u8_C
+	.private_extern _Divide__uDivide_param_u8_C
+_Divide__uDivide_param_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i8_u64
-	.private_extern _Divide__Divide_param_i8_u64
-_Divide__Divide_param_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1246
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1246
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1246:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i8_LC
-	.private_extern _Divide__uDivide_var_i8_LC
-_Divide__uDivide_var_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i8_LC
-	.private_extern _Divide__Divide_var_i8_LC
-_Divide__Divide_var_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -32(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1251
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1251
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1251:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i8_LC
-	.private_extern _Divide__uDivide_param_i8_LC
-_Divide__uDivide_param_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
+	movsbq	-17(%rbp),%rax
 	movl	$0, %edx
 	divq	-32(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_i8_LC
-	.private_extern _Divide__Divide_param_i8_LC
-_Divide__Divide_param_i8_LC:
+.globl _Divide__Divide_param_u8_C
+	.private_extern _Divide__Divide_param_u8_C
+_Divide__Divide_param_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
+	movsbq	-17(%rbp),%rax
 	movq	%rax, -48(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, -40(%rbp)
@@ -10972,28 +2881,38 @@ _Divide__Divide_param_i8_LC:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L1256
+	je	L328
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1256
+	jns	L328
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L1256:
-	movq	-56(%rbp), %rax
+L328:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L329
+	cmpq	$127, -16(%rbp)
+	jle	L330
+L329:
+	movl	$5729, %edi
+	call	__m3_fault
+L330:
+	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_i8_i16
-	.private_extern _Divide__uDivide_var_i8_i16
-_Divide__uDivide_var_i8_i16:
+.globl _Divide__uDivide_var_u8_u16
+	.private_extern _Divide__uDivide_var_u8_u16
+_Divide__uDivide_var_u8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
 	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -11002,17 +2921,17 @@ _Divide__uDivide_var_i8_i16:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_i8_i16
-	.private_extern _Divide__Divide_var_i8_i16
-_Divide__Divide_var_i8_i16:
+.globl _Divide__Divide_var_u8_u16
+	.private_extern _Divide__Divide_var_u8_u16
+_Divide__Divide_var_u8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
 	movq	%rax, -32(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -11021,38 +2940,38 @@ _Divide__Divide_var_i8_i16:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1261
+	je	L335
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1261
+	jns	L335
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1261:
+L335:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1262
-	cmpq	$255, -16(%rbp)
-	jle	L1263
-L1262:
-	movl	$16097, %edi
+	cmpq	$-128, -16(%rbp)
+	jl	L336
+	cmpq	$127, -16(%rbp)
+	jle	L337
+L336:
+	movl	$5793, %edi
 	call	__m3_fault
-L1263:
+L337:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_i8_i16
-	.private_extern _Divide__uDivide_param_i8_i16
-_Divide__uDivide_param_i8_i16:
+.globl _Divide__uDivide_param_u8_u16
+	.private_extern _Divide__uDivide_param_u8_u16
+_Divide__uDivide_param_u8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %eax
+	movsbq	-17(%rbp),%rax
 	movq	%rax, -48(%rbp)
-	movzwl	-20(%rbp), %edx
+	movswq	-20(%rbp),%rdx
 	movq	%rdx, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -11061,17 +2980,17 @@ _Divide__uDivide_param_i8_i16:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_i8_i16
-	.private_extern _Divide__Divide_param_i8_i16
-_Divide__Divide_param_i8_i16:
+.globl _Divide__Divide_param_u8_u16
+	.private_extern _Divide__Divide_param_u8_u16
+_Divide__Divide_param_u8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %eax
+	movsbq	-17(%rbp),%rax
 	movq	%rax, -40(%rbp)
-	movzwl	-20(%rbp), %edx
+	movswq	-20(%rbp),%rdx
 	movq	%rdx, -32(%rbp)
 	movq	-40(%rbp), %rdx
 	movq	%rdx, %rax
@@ -11080,38 +2999,37 @@ _Divide__Divide_param_i8_i16:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1268
+	je	L342
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1268
+	jns	L342
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1268:
+L342:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1269
-	cmpq	$255, -16(%rbp)
-	jle	L1270
-L1269:
-	movl	$16161, %edi
+	cmpq	$-128, -16(%rbp)
+	jl	L343
+	cmpq	$127, -16(%rbp)
+	jle	L344
+L343:
+	movl	$5857, %edi
 	call	__m3_fault
-L1270:
+L344:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_i8_i32
-	.private_extern _Divide__uDivide_var_i8_i32
-_Divide__uDivide_var_i8_i32:
+.globl _Divide__uDivide_var_u8_u64
+	.private_extern _Divide__uDivide_var_u8_u64
+_Divide__uDivide_var_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
 	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
+	movq	160+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -11120,17 +3038,15 @@ _Divide__uDivide_var_i8_i32:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_i8_i32
-	.private_extern _Divide__Divide_var_i8_i32
-_Divide__Divide_var_i8_i32:
+.globl _Divide__Divide_var_u8_u64
+	.private_extern _Divide__Divide_var_u8_u64
+_Divide__Divide_var_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
 	movq	%rax, -32(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
-	mov	%eax, %eax
+	movq	160+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -11139,152 +3055,26 @@ _Divide__Divide_var_i8_i32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1275
+	je	L349
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1275
+	jns	L349
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1275:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1276
-	cmpq	$255, -16(%rbp)
-	jle	L1277
-L1276:
-	movl	$16225, %edi
-	call	__m3_fault
-L1277:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i8_i32
-	.private_extern _Divide__uDivide_param_i8_i32
-_Divide__uDivide_param_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %eax
-	movq	%rax, -48(%rbp)
-	mov	-24(%rbp), %edx
-	movq	%rdx, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
+L349:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_i8_i32
-	.private_extern _Divide__Divide_param_i8_i32
-_Divide__Divide_param_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	mov	-24(%rbp), %edx
-	movq	%rdx, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1282
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1282
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1282:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1283
-	cmpq	$255, -16(%rbp)
-	jle	L1284
-L1283:
-	movl	$16289, %edi
-	call	__m3_fault
-L1284:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i8_I
-	.private_extern _Divide__uDivide_var_i8_I
-_Divide__uDivide_var_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i8_I
-	.private_extern _Divide__Divide_var_i8_I
-_Divide__Divide_var_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -32(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1289
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1289
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1289:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1290
-	cmpq	$255, -16(%rbp)
-	jle	L1291
-L1290:
-	movl	$16353, %edi
-	call	__m3_fault
-L1291:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i8_I
-	.private_extern _Divide__uDivide_param_i8_I
-_Divide__uDivide_param_i8_I:
+.globl _Divide__uDivide_param_u8_u64
+	.private_extern _Divide__uDivide_param_u8_u64
+_Divide__uDivide_param_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
+	movsbq	-17(%rbp),%rax
 	movq	%rax, -64(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, -56(%rbp)
@@ -11295,15 +3085,14 @@ _Divide__uDivide_param_i8_I:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_i8_I
-	.private_extern _Divide__Divide_param_i8_I
-_Divide__Divide_param_i8_I:
+.globl _Divide__Divide_param_u8_u64
+	.private_extern _Divide__Divide_param_u8_u64
+_Divide__Divide_param_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
+	movsbq	-17(%rbp),%rax
 	movq	%rax, -40(%rbp)
 	movq	-40(%rbp), %rdx
 	movq	%rdx, %rax
@@ -11312,26 +3101,1433 @@ _Divide__Divide_param_i8_I:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1296
+	je	L354
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1296
+	jns	L354
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1296:
+L354:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u8_L
+	.private_extern _Divide__uDivide_var_u8_L
+_Divide__uDivide_var_u8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -48(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u8_L
+	.private_extern _Divide__Divide_var_u8_L
+_Divide__Divide_var_u8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L359
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L359
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L359:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u8_L
+	.private_extern _Divide__uDivide_param_u8_L
+_Divide__uDivide_param_u8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u8_L
+	.private_extern _Divide__Divide_param_u8_L
+_Divide__Divide_param_u8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L364
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L364
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L364:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u8_i16
+	.private_extern _Divide__uDivide_var_u8_i16
+_Divide__uDivide_var_u8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -48(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u8_i16
+	.private_extern _Divide__Divide_var_u8_i16
+_Divide__Divide_var_u8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L369
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L369
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L369:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L370
+	cmpq	$127, -16(%rbp)
+	jle	L371
+L370:
+	movl	$6177, %edi
+	call	__m3_fault
+L371:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u8_i16
+	.private_extern _Divide__uDivide_param_u8_i16
+_Divide__uDivide_param_u8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u8_i16
+	.private_extern _Divide__Divide_param_u8_i16
+_Divide__Divide_param_u8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L376
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L376
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L376:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1297
-	cmpq	$255, -16(%rbp)
-	jle	L1298
-L1297:
-	movl	$16417, %edi
+	cmpq	$-128, -16(%rbp)
+	jl	L377
+	cmpq	$127, -16(%rbp)
+	jle	L378
+L377:
+	movl	$6241, %edi
 	call	__m3_fault
-L1298:
+L378:
 	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u8_i32
+	.private_extern _Divide__uDivide_var_u8_i32
+_Divide__uDivide_var_u8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -48(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u8_i32
+	.private_extern _Divide__Divide_var_u8_i32
+_Divide__Divide_var_u8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L383
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L383
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L383:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L384
+	cmpq	$127, -16(%rbp)
+	jle	L385
+L384:
+	movl	$6305, %edi
+	call	__m3_fault
+L385:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u8_i32
+	.private_extern _Divide__uDivide_param_u8_i32
+_Divide__uDivide_param_u8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u8_i32
+	.private_extern _Divide__Divide_param_u8_i32
+_Divide__Divide_param_u8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L390
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L390
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L390:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-128, -16(%rbp)
+	jl	L391
+	cmpq	$127, -16(%rbp)
+	jle	L392
+L391:
+	movl	$6369, %edi
+	call	__m3_fault
+L392:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_i64
+	.private_extern _Divide__uDivide_var_I_i64
+_Divide__uDivide_var_I_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_i64
+	.private_extern _Divide__Divide_var_I_i64
+_Divide__Divide_var_I_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	104+_MM_Divide(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L397
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L397
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L397:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_I_i64
+	.private_extern _Divide__uDivide_param_I_i64
+_Divide__uDivide_param_I_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_I_i64
+	.private_extern _Divide__Divide_param_I_i64
+_Divide__Divide_param_I_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L402
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L402
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L402:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_LC
+	.private_extern _Divide__uDivide_var_I_LC
+_Divide__uDivide_var_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_LC
+	.private_extern _Divide__Divide_var_I_LC
+_Divide__Divide_var_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L407
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L407
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L407:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_I_LC
+	.private_extern _Divide__uDivide_param_I_LC
+_Divide__uDivide_param_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_I_LC
+	.private_extern _Divide__Divide_param_I_LC
+_Divide__Divide_param_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L412
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L412
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L412:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_u8
+	.private_extern _Divide__uDivide_var_I_u8
+_Divide__uDivide_var_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_u8
+	.private_extern _Divide__Divide_var_I_u8
+_Divide__Divide_var_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L417
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L417
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L417:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_I_u8
+	.private_extern _Divide__uDivide_param_I_u8
+_Divide__uDivide_param_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_I_u8
+	.private_extern _Divide__Divide_param_I_u8
+_Divide__Divide_param_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L422
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L422
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L422:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_I
+	.private_extern _Divide__uDivide_var_I_I
+_Divide__uDivide_var_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_I
+	.private_extern _Divide__Divide_var_I_I
+_Divide__Divide_var_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
+	leave
+	ret
+.globl _Divide__uDivide_param_I_I
+	.private_extern _Divide__uDivide_param_I_I
+_Divide__uDivide_param_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_I_I
+	.private_extern _Divide__Divide_param_I_I
+_Divide__Divide_param_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L431
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L431
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L431:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_i8
+	.private_extern _Divide__uDivide_var_I_i8
+_Divide__uDivide_var_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_i8
+	.private_extern _Divide__Divide_var_I_i8
+_Divide__Divide_var_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L436
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L436
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L436:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_I_i8
+	.private_extern _Divide__uDivide_param_I_i8
+_Divide__uDivide_param_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_I_i8
+	.private_extern _Divide__Divide_param_I_i8
+_Divide__Divide_param_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L441
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L441
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L441:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_u32
+	.private_extern _Divide__uDivide_var_I_u32
+_Divide__uDivide_var_I_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_u32
+	.private_extern _Divide__Divide_var_I_u32
+_Divide__Divide_var_I_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L446
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L446
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L446:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_I_u32
+	.private_extern _Divide__uDivide_param_I_u32
+_Divide__uDivide_param_I_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rax, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_I_u32
+	.private_extern _Divide__Divide_param_I_u32
+_Divide__Divide_param_I_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L451
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L451
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L451:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_C
+	.private_extern _Divide__uDivide_var_I_C
+_Divide__uDivide_var_I_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_C
+	.private_extern _Divide__Divide_var_I_C
+_Divide__Divide_var_I_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L456
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L456
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L456:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_I_C
+	.private_extern _Divide__uDivide_param_I_C
+_Divide__uDivide_param_I_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_I_C
+	.private_extern _Divide__Divide_param_I_C
+_Divide__Divide_param_I_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L461
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L461
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L461:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_u16
+	.private_extern _Divide__uDivide_var_I_u16
+_Divide__uDivide_var_I_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_u16
+	.private_extern _Divide__Divide_var_I_u16
+_Divide__Divide_var_I_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L466
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L466
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L466:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_I_u16
+	.private_extern _Divide__uDivide_param_I_u16
+_Divide__uDivide_param_I_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_I_u16
+	.private_extern _Divide__Divide_param_I_u16
+_Divide__Divide_param_I_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L471
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L471
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L471:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_u64
+	.private_extern _Divide__uDivide_var_I_u64
+_Divide__uDivide_var_I_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_u64
+	.private_extern _Divide__Divide_var_I_u64
+_Divide__Divide_var_I_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	160+_MM_Divide(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L476
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L476
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L476:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_I_u64
+	.private_extern _Divide__uDivide_param_I_u64
+_Divide__uDivide_param_I_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_I_u64
+	.private_extern _Divide__Divide_param_I_u64
+_Divide__Divide_param_I_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L481
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L481
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L481:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_L
+	.private_extern _Divide__uDivide_var_I_L
+_Divide__uDivide_var_I_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_L
+	.private_extern _Divide__Divide_var_I_L
+_Divide__Divide_var_I_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_Divide(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L486
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L486
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L486:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_I_L
+	.private_extern _Divide__uDivide_param_I_L
+_Divide__uDivide_param_I_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_I_L
+	.private_extern _Divide__Divide_param_I_L
+_Divide__Divide_param_I_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L491
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L491
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L491:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_i16
+	.private_extern _Divide__uDivide_var_I_i16
+_Divide__uDivide_var_I_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_i16
+	.private_extern _Divide__Divide_var_I_i16
+_Divide__Divide_var_I_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L496
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L496
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L496:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_I_i16
+	.private_extern _Divide__uDivide_param_I_i16
+_Divide__uDivide_param_I_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_I_i16
+	.private_extern _Divide__Divide_param_I_i16
+_Divide__Divide_param_I_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L501
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L501
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L501:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_I_i32
+	.private_extern _Divide__uDivide_var_I_i32
+_Divide__uDivide_var_I_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_I_i32
+	.private_extern _Divide__Divide_var_I_i32
+_Divide__Divide_var_I_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L506
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L506
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L506:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_I_i32
+	.private_extern _Divide__uDivide_param_I_i32
+_Divide__uDivide_param_I_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	mov	-28(%rbp), %edx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_I_i32
+	.private_extern _Divide__Divide_param_I_i32
+_Divide__Divide_param_I_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L511
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L511
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L511:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _Divide__uDivide_var_i8_i64
@@ -11339,10 +4535,10 @@ L1298:
 _Divide__uDivide_var_i8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -11356,10 +4552,10 @@ _Divide__uDivide_var_i8_i64:
 _Divide__Divide_var_i8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -32(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -11368,15 +4564,15 @@ _Divide__Divide_var_i8_i64:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1303
+	je	L516
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1303
+	jns	L516
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1303:
+L516:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -11414,27 +4610,27 @@ _Divide__Divide_param_i8_i64:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1308
+	je	L521
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1308
+	jns	L521
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1308:
+L521:
 	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_i8_C
-	.private_extern _Divide__uDivide_var_i8_C
-_Divide__uDivide_var_i8_C:
+.globl _Divide__uDivide_var_i8_LC
+	.private_extern _Divide__uDivide_var_i8_LC
+_Divide__uDivide_var_i8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -11443,16 +4639,15 @@ _Divide__uDivide_var_i8_C:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_i8_C
-	.private_extern _Divide__Divide_var_i8_C
-_Divide__Divide_var_i8_C:
+.globl _Divide__Divide_var_i8_LC
+	.private_extern _Divide__Divide_var_i8_LC
+_Divide__Divide_var_i8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -32(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -11461,31 +4656,21 @@ _Divide__Divide_var_i8_C:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1313
+	je	L526
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1313
+	jns	L526
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1313:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1314
-	cmpq	$255, -16(%rbp)
-	jle	L1315
-L1314:
-	movl	$16609, %edi
-	call	__m3_fault
-L1315:
-	movq	-16(%rbp), %rax
+L526:
+	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_i8_C
-	.private_extern _Divide__uDivide_param_i8_C
-_Divide__uDivide_param_i8_C:
+.globl _Divide__uDivide_param_i8_LC
+	.private_extern _Divide__uDivide_param_i8_LC
+_Divide__uDivide_param_i8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movb	%dil, -17(%rbp)
@@ -11495,12 +4680,11 @@ _Divide__uDivide_param_i8_C:
 	divq	-32(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_i8_C
-	.private_extern _Divide__Divide_param_i8_C
-_Divide__Divide_param_i8_C:
+.globl _Divide__Divide_param_i8_LC
+	.private_extern _Divide__Divide_param_i8_LC
+_Divide__Divide_param_i8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
 	movzbl	-17(%rbp), %eax
@@ -11514,26 +4698,16 @@ _Divide__Divide_param_i8_C:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L1320
+	je	L531
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1320
+	jns	L531
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L1320:
-	movq	-56(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$0, -16(%rbp)
-	js	L1321
-	cmpq	$255, -16(%rbp)
-	jle	L1322
-L1321:
-	movl	$16673, %edi
-	call	__m3_fault
-L1322:
-	movq	-16(%rbp), %rax
+L531:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _Divide__uDivide_var_i8_u8
@@ -11541,10 +4715,10 @@ L1322:
 _Divide__uDivide_var_i8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -11560,10 +4734,10 @@ _Divide__Divide_var_i8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -32(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -11573,25 +4747,25 @@ _Divide__Divide_var_i8_u8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1327
+	je	L536
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1327
+	jns	L536
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1327:
+L536:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1328
+	js	L537
 	cmpq	$255, -16(%rbp)
-	jle	L1329
-L1328:
-	movl	$16737, %edi
+	jle	L538
+L537:
+	movl	$8225, %edi
 	call	__m3_fault
-L1329:
+L538:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -11632,25 +4806,139 @@ _Divide__Divide_param_i8_u8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1334
+	je	L543
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1334
+	jns	L543
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1334:
+L543:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1335
+	js	L544
 	cmpq	$255, -16(%rbp)
-	jle	L1336
-L1335:
-	movl	$16801, %edi
+	jle	L545
+L544:
+	movl	$8289, %edi
 	call	__m3_fault
-L1336:
+L545:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i8_I
+	.private_extern _Divide__uDivide_var_i8_I
+_Divide__uDivide_var_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -48(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i8_I
+	.private_extern _Divide__Divide_var_i8_I
+_Divide__Divide_var_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L550
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L550
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L550:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L551
+	cmpq	$255, -16(%rbp)
+	jle	L552
+L551:
+	movl	$8353, %edi
+	call	__m3_fault
+L552:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i8_I
+	.private_extern _Divide__uDivide_param_i8_I
+_Divide__uDivide_param_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i8_I
+	.private_extern _Divide__Divide_param_i8_I
+_Divide__Divide_param_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L557
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L557
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L557:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L558
+	cmpq	$255, -16(%rbp)
+	jle	L559
+L558:
+	movl	$8417, %edi
+	call	__m3_fault
+L559:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -11659,10 +4947,10 @@ L1336:
 _Divide__uDivide_var_i8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -11678,10 +4966,10 @@ _Divide__Divide_var_i8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -40(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	-40(%rbp), %rdx
 	movq	%rax, %rcx
@@ -11690,13 +4978,13 @@ _Divide__Divide_var_i8_i8:
 	idivq	%rcx
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1341
+	js	L564
 	cmpq	$255, -16(%rbp)
-	jle	L1342
-L1341:
-	movl	$16865, %edi
+	jle	L565
+L564:
+	movl	$8481, %edi
 	call	__m3_fault
-L1342:
+L565:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -11737,118 +5025,26 @@ _Divide__Divide_param_i8_i8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1347
+	je	L570
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1347
+	jns	L570
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1347:
+L570:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1348
+	js	L571
 	cmpq	$255, -16(%rbp)
-	jle	L1349
-L1348:
-	movl	$16929, %edi
+	jle	L572
+L571:
+	movl	$8545, %edi
 	call	__m3_fault
-L1349:
+L572:
 	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_i8_L
-	.private_extern _Divide__uDivide_var_i8_L
-_Divide__uDivide_var_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -48(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_i8_L
-	.private_extern _Divide__Divide_var_i8_L
-_Divide__Divide_var_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
-	movq	%rax, -32(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1354
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1354
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1354:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_i8_L
-	.private_extern _Divide__uDivide_param_i8_L
-_Divide__uDivide_param_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_i8_L
-	.private_extern _Divide__Divide_param_i8_L
-_Divide__Divide_param_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1359
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1359
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1359:
-	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _Divide__uDivide_var_i8_u32
@@ -11856,10 +5052,10 @@ L1359:
 _Divide__uDivide_var_i8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
+	movl	140+_MM_Divide(%rip), %eax
 	cltq
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -11875,10 +5071,10 @@ _Divide__Divide_var_i8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -32(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
+	movl	140+_MM_Divide(%rip), %eax
 	cltq
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -11888,25 +5084,25 @@ _Divide__Divide_var_i8_u32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1364
+	je	L577
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1364
+	jns	L577
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1364:
+L577:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1365
+	js	L578
 	cmpq	$255, -16(%rbp)
-	jle	L1366
-L1365:
-	movl	$17121, %edi
+	jle	L579
+L578:
+	movl	$8609, %edi
 	call	__m3_fault
-L1366:
+L579:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -11949,36 +5145,147 @@ _Divide__Divide_param_i8_u32:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1371
+	je	L584
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1371
+	jns	L584
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1371:
+L584:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L1372
+	js	L585
 	cmpq	$255, -16(%rbp)
-	jle	L1373
-L1372:
-	movl	$17185, %edi
+	jle	L586
+L585:
+	movl	$8673, %edi
 	call	__m3_fault
-L1373:
+L586:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_L_u16
-	.private_extern _Divide__uDivide_var_L_u16
-_Divide__uDivide_var_L_u16:
+.globl _Divide__uDivide_var_i8_C
+	.private_extern _Divide__uDivide_var_i8_C
+_Divide__uDivide_var_i8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
 	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i8_C
+	.private_extern _Divide__Divide_var_i8_C
+_Divide__Divide_var_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L591
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L591
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L591:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L592
+	cmpq	$255, -16(%rbp)
+	jle	L593
+L592:
+	movl	$8737, %edi
+	call	__m3_fault
+L593:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i8_C
+	.private_extern _Divide__uDivide_param_i8_C
+_Divide__uDivide_param_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_i8_C
+	.private_extern _Divide__Divide_param_i8_C
+_Divide__Divide_param_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L598
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L598
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L598:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L599
+	cmpq	$255, -16(%rbp)
+	jle	L600
+L599:
+	movl	$8801, %edi
+	call	__m3_fault
+L600:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i8_u16
+	.private_extern _Divide__uDivide_var_i8_u16
+_Divide__uDivide_var_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -48(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
 	movswq	%ax,%rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -11988,14 +5295,16 @@ _Divide__uDivide_var_L_u16:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_L_u16
-	.private_extern _Divide__Divide_var_L_u16
-_Divide__Divide_var_L_u16:
+.globl _Divide__Divide_var_i8_u16
+	.private_extern _Divide__Divide_var_i8_u16
+_Divide__Divide_var_i8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
+	subq	$48, %rsp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
 	movq	%rax, -32(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
+	movzwl	152+_MM_Divide(%rip), %eax
 	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -12005,21 +5314,4961 @@ _Divide__Divide_var_L_u16:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1378
+	je	L605
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1378
+	jns	L605
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1378:
+L605:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L606
+	cmpq	$255, -16(%rbp)
+	jle	L607
+L606:
+	movl	$8865, %edi
+	call	__m3_fault
+L607:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i8_u16
+	.private_extern _Divide__uDivide_param_i8_u16
+_Divide__uDivide_param_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_L_u16
-	.private_extern _Divide__uDivide_param_L_u16
-_Divide__uDivide_param_L_u16:
+.globl _Divide__Divide_param_i8_u16
+	.private_extern _Divide__Divide_param_i8_u16
+_Divide__Divide_param_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L612
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L612
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L612:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L613
+	cmpq	$255, -16(%rbp)
+	jle	L614
+L613:
+	movl	$8929, %edi
+	call	__m3_fault
+L614:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i8_u64
+	.private_extern _Divide__uDivide_var_i8_u64
+_Divide__uDivide_var_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -48(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i8_u64
+	.private_extern _Divide__Divide_var_i8_u64
+_Divide__Divide_var_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L619
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L619
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L619:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i8_u64
+	.private_extern _Divide__uDivide_param_i8_u64
+_Divide__uDivide_param_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i8_u64
+	.private_extern _Divide__Divide_param_i8_u64
+_Divide__Divide_param_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L624
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L624
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L624:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i8_L
+	.private_extern _Divide__uDivide_var_i8_L
+_Divide__uDivide_var_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -48(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i8_L
+	.private_extern _Divide__Divide_var_i8_L
+_Divide__Divide_var_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L629
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L629
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L629:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i8_L
+	.private_extern _Divide__uDivide_param_i8_L
+_Divide__uDivide_param_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i8_L
+	.private_extern _Divide__Divide_param_i8_L
+_Divide__Divide_param_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L634
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L634
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L634:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i8_i16
+	.private_extern _Divide__uDivide_var_i8_i16
+_Divide__uDivide_var_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -48(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i8_i16
+	.private_extern _Divide__Divide_var_i8_i16
+_Divide__Divide_var_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L639
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L639
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L639:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L640
+	cmpq	$255, -16(%rbp)
+	jle	L641
+L640:
+	movl	$9249, %edi
+	call	__m3_fault
+L641:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i8_i16
+	.private_extern _Divide__uDivide_param_i8_i16
+_Divide__uDivide_param_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i8_i16
+	.private_extern _Divide__Divide_param_i8_i16
+_Divide__Divide_param_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L646
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L646
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L646:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L647
+	cmpq	$255, -16(%rbp)
+	jle	L648
+L647:
+	movl	$9313, %edi
+	call	__m3_fault
+L648:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i8_i32
+	.private_extern _Divide__uDivide_var_i8_i32
+_Divide__uDivide_var_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -48(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i8_i32
+	.private_extern _Divide__Divide_var_i8_i32
+_Divide__Divide_var_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L653
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L653
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L653:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L654
+	cmpq	$255, -16(%rbp)
+	jle	L655
+L654:
+	movl	$9377, %edi
+	call	__m3_fault
+L655:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i8_i32
+	.private_extern _Divide__uDivide_param_i8_i32
+_Divide__uDivide_param_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i8_i32
+	.private_extern _Divide__Divide_param_i8_i32
+_Divide__Divide_param_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L660
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L660
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L660:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L661
+	cmpq	$255, -16(%rbp)
+	jle	L662
+L661:
+	movl	$9441, %edi
+	call	__m3_fault
+L662:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_i64
+	.private_extern _Divide__uDivide_var_u32_i64
+_Divide__uDivide_var_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_i64
+	.private_extern _Divide__Divide_var_u32_i64
+_Divide__Divide_var_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L667
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L667
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L667:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_i64
+	.private_extern _Divide__uDivide_param_u32_i64
+_Divide__uDivide_param_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u32_i64
+	.private_extern _Divide__Divide_param_u32_i64
+_Divide__Divide_param_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L672
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L672
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L672:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_LC
+	.private_extern _Divide__uDivide_var_u32_LC
+_Divide__uDivide_var_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_LC
+	.private_extern _Divide__Divide_var_u32_LC
+_Divide__Divide_var_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L677
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L677
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L677:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_LC
+	.private_extern _Divide__uDivide_param_u32_LC
+_Divide__uDivide_param_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_u32_LC
+	.private_extern _Divide__Divide_param_u32_LC
+_Divide__Divide_param_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L682
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L682
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L682:
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_u8
+	.private_extern _Divide__uDivide_var_u32_u8
+_Divide__uDivide_var_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_u8
+	.private_extern _Divide__Divide_var_u32_u8
+_Divide__Divide_var_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L687
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L687
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L687:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L688
+	cmpq	$2147483647, -16(%rbp)
+	jle	L689
+L688:
+	movl	$9761, %edi
+	call	__m3_fault
+L689:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_u8
+	.private_extern _Divide__uDivide_param_u32_u8
+_Divide__uDivide_param_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movsbq	-21(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u32_u8
+	.private_extern _Divide__Divide_param_u32_u8
+_Divide__Divide_param_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movsbq	-21(%rbp),%rax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L694
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L694
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L694:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L695
+	cmpq	$2147483647, -16(%rbp)
+	jle	L696
+L695:
+	movl	$9825, %edi
+	call	__m3_fault
+L696:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_I
+	.private_extern _Divide__uDivide_var_u32_I
+_Divide__uDivide_var_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_I
+	.private_extern _Divide__Divide_var_u32_I
+_Divide__Divide_var_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L701
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L701
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L701:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L702
+	cmpq	$2147483647, -16(%rbp)
+	jle	L703
+L702:
+	movl	$9889, %edi
+	call	__m3_fault
+L703:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_I
+	.private_extern _Divide__uDivide_param_u32_I
+_Divide__uDivide_param_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u32_I
+	.private_extern _Divide__Divide_param_u32_I
+_Divide__Divide_param_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L708
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L708
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L708:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L709
+	cmpq	$2147483647, -16(%rbp)
+	jle	L710
+L709:
+	movl	$9953, %edi
+	call	__m3_fault
+L710:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_i8
+	.private_extern _Divide__uDivide_var_u32_i8
+_Divide__uDivide_var_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_i8
+	.private_extern _Divide__Divide_var_u32_i8
+_Divide__Divide_var_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L715
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L715
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L715:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L716
+	cmpq	$2147483647, -16(%rbp)
+	jle	L717
+L716:
+	movl	$10017, %edi
+	call	__m3_fault
+L717:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_i8
+	.private_extern _Divide__uDivide_param_u32_i8
+_Divide__uDivide_param_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movzbl	-21(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u32_i8
+	.private_extern _Divide__Divide_param_u32_i8
+_Divide__Divide_param_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movzbl	-21(%rbp), %eax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L722
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L722
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L722:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L723
+	cmpq	$2147483647, -16(%rbp)
+	jle	L724
+L723:
+	movl	$10081, %edi
+	call	__m3_fault
+L724:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_u32
+	.private_extern _Divide__uDivide_var_u32_u32
+_Divide__uDivide_var_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_u32
+	.private_extern _Divide__Divide_var_u32_u32
+_Divide__Divide_var_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
+	movq	%rax, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L729
+	cmpq	$2147483647, -16(%rbp)
+	jle	L730
+L729:
+	movl	$10145, %edi
+	call	__m3_fault
+L730:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_u32
+	.private_extern _Divide__uDivide_param_u32_u32
+_Divide__uDivide_param_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u32_u32
+	.private_extern _Divide__Divide_param_u32_u32
+_Divide__Divide_param_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L735
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L735
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L735:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L736
+	cmpq	$2147483647, -16(%rbp)
+	jle	L737
+L736:
+	movl	$10209, %edi
+	call	__m3_fault
+L737:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_C
+	.private_extern _Divide__uDivide_var_u32_C
+_Divide__uDivide_var_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_C
+	.private_extern _Divide__Divide_var_u32_C
+_Divide__Divide_var_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L742
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L742
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L742:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L743
+	cmpq	$2147483647, -16(%rbp)
+	jle	L744
+L743:
+	movl	$10273, %edi
+	call	__m3_fault
+L744:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_C
+	.private_extern _Divide__uDivide_param_u32_C
+_Divide__uDivide_param_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_u32_C
+	.private_extern _Divide__Divide_param_u32_C
+_Divide__Divide_param_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L749
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L749
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L749:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L750
+	cmpq	$2147483647, -16(%rbp)
+	jle	L751
+L750:
+	movl	$10337, %edi
+	call	__m3_fault
+L751:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_u16
+	.private_extern _Divide__uDivide_var_u32_u16
+_Divide__uDivide_var_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_u16
+	.private_extern _Divide__Divide_var_u32_u16
+_Divide__Divide_var_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L756
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L756
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L756:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L757
+	cmpq	$2147483647, -16(%rbp)
+	jle	L758
+L757:
+	movl	$10401, %edi
+	call	__m3_fault
+L758:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_u16
+	.private_extern _Divide__uDivide_param_u32_u16
+_Divide__uDivide_param_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movswq	-22(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u32_u16
+	.private_extern _Divide__Divide_param_u32_u16
+_Divide__Divide_param_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movswq	-22(%rbp),%rax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L763
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L763
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L763:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L764
+	cmpq	$2147483647, -16(%rbp)
+	jle	L765
+L764:
+	movl	$10465, %edi
+	call	__m3_fault
+L765:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_u64
+	.private_extern _Divide__uDivide_var_u32_u64
+_Divide__uDivide_var_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_u64
+	.private_extern _Divide__Divide_var_u32_u64
+_Divide__Divide_var_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L770
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L770
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L770:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_u64
+	.private_extern _Divide__uDivide_param_u32_u64
+_Divide__uDivide_param_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u32_u64
+	.private_extern _Divide__Divide_param_u32_u64
+_Divide__Divide_param_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L775
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L775
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L775:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_L
+	.private_extern _Divide__uDivide_var_u32_L
+_Divide__uDivide_var_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_L
+	.private_extern _Divide__Divide_var_u32_L
+_Divide__Divide_var_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L780
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L780
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L780:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_L
+	.private_extern _Divide__uDivide_param_u32_L
+_Divide__uDivide_param_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u32_L
+	.private_extern _Divide__Divide_param_u32_L
+_Divide__Divide_param_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L785
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L785
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L785:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_i16
+	.private_extern _Divide__uDivide_var_u32_i16
+_Divide__uDivide_var_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_i16
+	.private_extern _Divide__Divide_var_u32_i16
+_Divide__Divide_var_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L790
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L790
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L790:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L791
+	cmpq	$2147483647, -16(%rbp)
+	jle	L792
+L791:
+	movl	$10785, %edi
+	call	__m3_fault
+L792:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_i16
+	.private_extern _Divide__uDivide_param_u32_i16
+_Divide__uDivide_param_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movzwl	-22(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u32_i16
+	.private_extern _Divide__Divide_param_u32_i16
+_Divide__Divide_param_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movzwl	-22(%rbp), %eax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L797
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L797
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L797:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L798
+	cmpq	$2147483647, -16(%rbp)
+	jle	L799
+L798:
+	movl	$10849, %edi
+	call	__m3_fault
+L799:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u32_i32
+	.private_extern _Divide__uDivide_var_u32_i32
+_Divide__uDivide_var_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u32_i32
+	.private_extern _Divide__Divide_var_u32_i32
+_Divide__Divide_var_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L804
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L804
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L804:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L805
+	cmpq	$2147483647, -16(%rbp)
+	jle	L806
+L805:
+	movl	$10913, %edi
+	call	__m3_fault
+L806:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u32_i32
+	.private_extern _Divide__uDivide_param_u32_i32
+_Divide__uDivide_param_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -48(%rbp)
+	mov	-24(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u32_i32
+	.private_extern _Divide__Divide_param_u32_i32
+_Divide__Divide_param_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %eax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L811
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L811
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L811:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-2147483648, -16(%rbp)
+	jl	L812
+	cmpq	$2147483647, -16(%rbp)
+	jle	L813
+L812:
+	movl	$10977, %edi
+	call	__m3_fault
+L813:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_i64
+	.private_extern _Divide__uDivide_var_C_i64
+_Divide__uDivide_var_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_i64
+	.private_extern _Divide__Divide_var_C_i64
+_Divide__Divide_var_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L818
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L818
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L818:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_i64
+	.private_extern _Divide__uDivide_param_C_i64
+_Divide__uDivide_param_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_i64
+	.private_extern _Divide__Divide_param_C_i64
+_Divide__Divide_param_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L823
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L823
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L823:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_LC
+	.private_extern _Divide__uDivide_var_C_LC
+_Divide__uDivide_var_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	112+_MM_Divide(%rip), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_LC
+	.private_extern _Divide__Divide_var_C_LC
+_Divide__Divide_var_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L828
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L828
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L828:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_LC
+	.private_extern _Divide__uDivide_param_C_LC
+_Divide__uDivide_param_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_LC
+	.private_extern _Divide__Divide_param_C_LC
+_Divide__Divide_param_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L833
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L833
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L833:
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_u8
+	.private_extern _Divide__uDivide_var_C_u8
+_Divide__uDivide_var_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_u8
+	.private_extern _Divide__Divide_var_C_u8
+_Divide__Divide_var_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L838
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L838
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L838:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L839
+	movl	$11297, %edi
+	call	__m3_fault
+L839:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_u8
+	.private_extern _Divide__uDivide_param_C_u8
+_Divide__uDivide_param_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_u8
+	.private_extern _Divide__Divide_param_C_u8
+_Divide__Divide_param_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L844
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L844
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L844:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L845
+	movl	$11361, %edi
+	call	__m3_fault
+L845:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_I
+	.private_extern _Divide__uDivide_var_C_I
+_Divide__uDivide_var_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_I
+	.private_extern _Divide__Divide_var_C_I
+_Divide__Divide_var_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L850
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L850
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L850:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L851
+	movl	$11425, %edi
+	call	__m3_fault
+L851:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_I
+	.private_extern _Divide__uDivide_param_C_I
+_Divide__uDivide_param_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_I
+	.private_extern _Divide__Divide_param_C_I
+_Divide__Divide_param_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L856
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L856
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L856:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L857
+	movl	$11489, %edi
+	call	__m3_fault
+L857:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_i8
+	.private_extern _Divide__uDivide_var_C_i8
+_Divide__uDivide_var_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_i8
+	.private_extern _Divide__Divide_var_C_i8
+_Divide__Divide_var_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L862
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L862
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L862:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L863
+	movl	$11553, %edi
+	call	__m3_fault
+L863:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_i8
+	.private_extern _Divide__uDivide_param_C_i8
+_Divide__uDivide_param_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_i8
+	.private_extern _Divide__Divide_param_C_i8
+_Divide__Divide_param_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L868
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L868
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L868:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L869
+	movl	$11617, %edi
+	call	__m3_fault
+L869:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_u32
+	.private_extern _Divide__uDivide_var_C_u32
+_Divide__uDivide_var_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_u32
+	.private_extern _Divide__Divide_var_C_u32
+_Divide__Divide_var_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L874
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L874
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L874:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L875
+	movl	$11681, %edi
+	call	__m3_fault
+L875:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_u32
+	.private_extern _Divide__uDivide_param_C_u32
+_Divide__uDivide_param_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_u32
+	.private_extern _Divide__Divide_param_C_u32
+_Divide__Divide_param_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L880
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L880
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L880:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L881
+	movl	$11745, %edi
+	call	__m3_fault
+L881:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_C
+	.private_extern _Divide__uDivide_var_C_C
+_Divide__uDivide_var_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	144+_MM_Divide(%rip), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_C
+	.private_extern _Divide__Divide_var_C_C
+_Divide__Divide_var_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L886
+	movl	$11809, %edi
+	call	__m3_fault
+L886:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_C
+	.private_extern _Divide__uDivide_param_C_C
+_Divide__uDivide_param_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_C
+	.private_extern _Divide__Divide_param_C_C
+_Divide__Divide_param_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L891
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L891
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L891:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L892
+	movl	$11873, %edi
+	call	__m3_fault
+L892:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_u16
+	.private_extern _Divide__uDivide_var_C_u16
+_Divide__uDivide_var_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_u16
+	.private_extern _Divide__Divide_var_C_u16
+_Divide__Divide_var_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L897
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L897
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L897:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L898
+	movl	$11937, %edi
+	call	__m3_fault
+L898:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_u16
+	.private_extern _Divide__uDivide_param_C_u16
+_Divide__uDivide_param_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_u16
+	.private_extern _Divide__Divide_param_C_u16
+_Divide__Divide_param_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L903
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L903
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L903:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L904
+	movl	$12001, %edi
+	call	__m3_fault
+L904:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_u64
+	.private_extern _Divide__uDivide_var_C_u64
+_Divide__uDivide_var_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_u64
+	.private_extern _Divide__Divide_var_C_u64
+_Divide__Divide_var_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L909
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L909
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L909:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_u64
+	.private_extern _Divide__uDivide_param_C_u64
+_Divide__uDivide_param_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_u64
+	.private_extern _Divide__Divide_param_C_u64
+_Divide__Divide_param_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L914
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L914
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L914:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_L
+	.private_extern _Divide__uDivide_var_C_L
+_Divide__uDivide_var_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_L
+	.private_extern _Divide__Divide_var_C_L
+_Divide__Divide_var_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L919
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L919
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L919:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_L
+	.private_extern _Divide__uDivide_param_C_L
+_Divide__uDivide_param_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_L
+	.private_extern _Divide__Divide_param_C_L
+_Divide__Divide_param_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L924
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L924
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L924:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_i16
+	.private_extern _Divide__uDivide_var_C_i16
+_Divide__uDivide_var_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_i16
+	.private_extern _Divide__Divide_var_C_i16
+_Divide__Divide_var_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L929
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L929
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L929:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L930
+	movl	$12321, %edi
+	call	__m3_fault
+L930:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_i16
+	.private_extern _Divide__uDivide_param_C_i16
+_Divide__uDivide_param_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_i16
+	.private_extern _Divide__Divide_param_C_i16
+_Divide__Divide_param_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L935
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L935
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L935:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L936
+	movl	$12385, %edi
+	call	__m3_fault
+L936:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_C_i32
+	.private_extern _Divide__uDivide_var_C_i32
+_Divide__uDivide_var_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_C_i32
+	.private_extern _Divide__Divide_var_C_i32
+_Divide__Divide_var_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L941
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L941
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L941:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L942
+	movl	$12449, %edi
+	call	__m3_fault
+L942:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_C_i32
+	.private_extern _Divide__uDivide_param_C_i32
+_Divide__uDivide_param_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %eax
+	movq	%rax, -56(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_C_i32
+	.private_extern _Divide__Divide_param_C_i32
+_Divide__Divide_param_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	mov	-28(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L947
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L947
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L947:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	jns	L948
+	movl	$12513, %edi
+	call	__m3_fault
+L948:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_i64
+	.private_extern _Divide__uDivide_var_u16_i64
+_Divide__uDivide_var_u16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_i64
+	.private_extern _Divide__Divide_var_u16_i64
+_Divide__Divide_var_u16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L953
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L953
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L953:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_i64
+	.private_extern _Divide__uDivide_param_u16_i64
+_Divide__uDivide_param_u16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u16_i64
+	.private_extern _Divide__Divide_param_u16_i64
+_Divide__Divide_param_u16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L958
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L958
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L958:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_LC
+	.private_extern _Divide__uDivide_var_u16_LC
+_Divide__uDivide_var_u16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_LC
+	.private_extern _Divide__Divide_var_u16_LC
+_Divide__Divide_var_u16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L963
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L963
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L963:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_LC
+	.private_extern _Divide__uDivide_param_u16_LC
+_Divide__uDivide_param_u16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_u16_LC
+	.private_extern _Divide__Divide_param_u16_LC
+_Divide__Divide_param_u16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L968
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L968
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L968:
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_u8
+	.private_extern _Divide__uDivide_var_u16_u8
+_Divide__uDivide_var_u16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_u8
+	.private_extern _Divide__Divide_var_u16_u8
+_Divide__Divide_var_u16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L973
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L973
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L973:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L974
+	cmpq	$32767, -16(%rbp)
+	jle	L975
+L974:
+	movl	$12833, %edi
+	call	__m3_fault
+L975:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_u8
+	.private_extern _Divide__uDivide_param_u16_u8
+_Divide__uDivide_param_u16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movsbq	-19(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u16_u8
+	.private_extern _Divide__Divide_param_u16_u8
+_Divide__Divide_param_u16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movsbq	-19(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L980
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L980
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L980:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L981
+	cmpq	$32767, -16(%rbp)
+	jle	L982
+L981:
+	movl	$12897, %edi
+	call	__m3_fault
+L982:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_I
+	.private_extern _Divide__uDivide_var_u16_I
+_Divide__uDivide_var_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_I
+	.private_extern _Divide__Divide_var_u16_I
+_Divide__Divide_var_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L987
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L987
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L987:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L988
+	cmpq	$32767, -16(%rbp)
+	jle	L989
+L988:
+	movl	$12961, %edi
+	call	__m3_fault
+L989:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_I
+	.private_extern _Divide__uDivide_param_u16_I
+_Divide__uDivide_param_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u16_I
+	.private_extern _Divide__Divide_param_u16_I
+_Divide__Divide_param_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L994
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L994
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L994:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L995
+	cmpq	$32767, -16(%rbp)
+	jle	L996
+L995:
+	movl	$13025, %edi
+	call	__m3_fault
+L996:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_i8
+	.private_extern _Divide__uDivide_var_u16_i8
+_Divide__uDivide_var_u16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_i8
+	.private_extern _Divide__Divide_var_u16_i8
+_Divide__Divide_var_u16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1001
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1001
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1001:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1002
+	cmpq	$32767, -16(%rbp)
+	jle	L1003
+L1002:
+	movl	$13089, %edi
+	call	__m3_fault
+L1003:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_i8
+	.private_extern _Divide__uDivide_param_u16_i8
+_Divide__uDivide_param_u16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movzbl	-19(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u16_i8
+	.private_extern _Divide__Divide_param_u16_i8
+_Divide__Divide_param_u16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movzbl	-19(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1008
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1008
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1008:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1009
+	cmpq	$32767, -16(%rbp)
+	jle	L1010
+L1009:
+	movl	$13153, %edi
+	call	__m3_fault
+L1010:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_u32
+	.private_extern _Divide__uDivide_var_u16_u32
+_Divide__uDivide_var_u16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_u32
+	.private_extern _Divide__Divide_var_u16_u32
+_Divide__Divide_var_u16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1015
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1015
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1015:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1016
+	cmpq	$32767, -16(%rbp)
+	jle	L1017
+L1016:
+	movl	$13217, %edi
+	call	__m3_fault
+L1017:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_u32
+	.private_extern _Divide__uDivide_param_u16_u32
+_Divide__uDivide_param_u16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u16_u32
+	.private_extern _Divide__Divide_param_u16_u32
+_Divide__Divide_param_u16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1022
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1022
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1022:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1023
+	cmpq	$32767, -16(%rbp)
+	jle	L1024
+L1023:
+	movl	$13281, %edi
+	call	__m3_fault
+L1024:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_C
+	.private_extern _Divide__uDivide_var_u16_C
+_Divide__uDivide_var_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_C
+	.private_extern _Divide__Divide_var_u16_C
+_Divide__Divide_var_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1029
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1029
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1029:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1030
+	cmpq	$32767, -16(%rbp)
+	jle	L1031
+L1030:
+	movl	$13345, %edi
+	call	__m3_fault
+L1031:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_C
+	.private_extern _Divide__uDivide_param_u16_C
+_Divide__uDivide_param_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_u16_C
+	.private_extern _Divide__Divide_param_u16_C
+_Divide__Divide_param_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L1036
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1036
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L1036:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1037
+	cmpq	$32767, -16(%rbp)
+	jle	L1038
+L1037:
+	movl	$13409, %edi
+	call	__m3_fault
+L1038:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_u16
+	.private_extern _Divide__uDivide_var_u16_u16
+_Divide__uDivide_var_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_u16
+	.private_extern _Divide__Divide_var_u16_u16
+_Divide__Divide_var_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -40(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
+	movq	%rax, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1043
+	cmpq	$32767, -16(%rbp)
+	jle	L1044
+L1043:
+	movl	$13473, %edi
+	call	__m3_fault
+L1044:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_u16
+	.private_extern _Divide__uDivide_param_u16_u16
+_Divide__uDivide_param_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u16_u16
+	.private_extern _Divide__Divide_param_u16_u16
+_Divide__Divide_param_u16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1049
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1049
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1049:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1050
+	cmpq	$32767, -16(%rbp)
+	jle	L1051
+L1050:
+	movl	$13537, %edi
+	call	__m3_fault
+L1051:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_u64
+	.private_extern _Divide__uDivide_var_u16_u64
+_Divide__uDivide_var_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_u64
+	.private_extern _Divide__Divide_var_u16_u64
+_Divide__Divide_var_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1056
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1056
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1056:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_u64
+	.private_extern _Divide__uDivide_param_u16_u64
+_Divide__uDivide_param_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u16_u64
+	.private_extern _Divide__Divide_param_u16_u64
+_Divide__Divide_param_u16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1061
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1061
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1061:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_L
+	.private_extern _Divide__uDivide_var_u16_L
+_Divide__uDivide_var_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_L
+	.private_extern _Divide__Divide_var_u16_L
+_Divide__Divide_var_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1066
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1066
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1066:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_L
+	.private_extern _Divide__uDivide_param_u16_L
+_Divide__uDivide_param_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u16_L
+	.private_extern _Divide__Divide_param_u16_L
+_Divide__Divide_param_u16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1071
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1071
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1071:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_i16
+	.private_extern _Divide__uDivide_var_u16_i16
+_Divide__uDivide_var_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_i16
+	.private_extern _Divide__Divide_var_u16_i16
+_Divide__Divide_var_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1076
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1076
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1076:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1077
+	cmpq	$32767, -16(%rbp)
+	jle	L1078
+L1077:
+	movl	$13857, %edi
+	call	__m3_fault
+L1078:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_i16
+	.private_extern _Divide__uDivide_param_u16_i16
+_Divide__uDivide_param_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u16_i16
+	.private_extern _Divide__Divide_param_u16_i16
+_Divide__Divide_param_u16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1083
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1083
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1083:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1084
+	cmpq	$32767, -16(%rbp)
+	jle	L1085
+L1084:
+	movl	$13921, %edi
+	call	__m3_fault
+L1085:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u16_i32
+	.private_extern _Divide__uDivide_var_u16_i32
+_Divide__uDivide_var_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -48(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u16_i32
+	.private_extern _Divide__Divide_var_u16_i32
+_Divide__Divide_var_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1090
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1090
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1090:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1091
+	cmpq	$32767, -16(%rbp)
+	jle	L1092
+L1091:
+	movl	$13985, %edi
+	call	__m3_fault
+L1092:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u16_i32
+	.private_extern _Divide__uDivide_param_u16_i32
+_Divide__uDivide_param_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u16_i32
+	.private_extern _Divide__Divide_param_u16_i32
+_Divide__Divide_param_u16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1097
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1097
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1097:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$-32768, -16(%rbp)
+	jl	L1098
+	cmpq	$32767, -16(%rbp)
+	jle	L1099
+L1098:
+	movl	$14049, %edi
+	call	__m3_fault
+L1099:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u64_i64
+	.private_extern _Divide__uDivide_var_u64_i64
+_Divide__uDivide_var_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u64_i64
+	.private_extern _Divide__Divide_var_u64_i64
+_Divide__Divide_var_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	104+_MM_Divide(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1104
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1104
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1104:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u64_i64
+	.private_extern _Divide__uDivide_param_u64_i64
+_Divide__uDivide_param_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u64_i64
+	.private_extern _Divide__Divide_param_u64_i64
+_Divide__Divide_param_u64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1109
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L1109
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1109:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u64_LC
+	.private_extern _Divide__uDivide_var_u64_LC
+_Divide__uDivide_var_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u64_LC
+	.private_extern _Divide__Divide_var_u64_LC
+_Divide__Divide_var_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1114
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1114
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1114:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u64_LC
+	.private_extern _Divide__uDivide_param_u64_LC
+_Divide__uDivide_param_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_u64_LC
+	.private_extern _Divide__Divide_param_u64_LC
+_Divide__Divide_param_u64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1119
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1119
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1119:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u64_u8
+	.private_extern _Divide__uDivide_var_u64_u8
+_Divide__uDivide_var_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u64_u8
+	.private_extern _Divide__Divide_var_u64_u8
+_Divide__Divide_var_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1124
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1124
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1124:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u64_u8
+	.private_extern _Divide__uDivide_param_u64_u8
+_Divide__uDivide_param_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u64_u8
+	.private_extern _Divide__Divide_param_u64_u8
+_Divide__Divide_param_u64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1129
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1129
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1129:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u64_I
+	.private_extern _Divide__uDivide_var_u64_I
+_Divide__uDivide_var_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u64_I
+	.private_extern _Divide__Divide_var_u64_I
+_Divide__Divide_var_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_Divide(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1134
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1134
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1134:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u64_I
+	.private_extern _Divide__uDivide_param_u64_I
+_Divide__uDivide_param_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u64_I
+	.private_extern _Divide__Divide_param_u64_I
+_Divide__Divide_param_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1139
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L1139
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1139:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u64_i8
+	.private_extern _Divide__uDivide_var_u64_i8
+_Divide__uDivide_var_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u64_i8
+	.private_extern _Divide__Divide_var_u64_i8
+_Divide__Divide_var_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1144
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1144
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1144:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u64_i8
+	.private_extern _Divide__uDivide_param_u64_i8
+_Divide__uDivide_param_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u64_i8
+	.private_extern _Divide__Divide_param_u64_i8
+_Divide__Divide_param_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1149
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1149
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1149:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u64_u32
+	.private_extern _Divide__uDivide_var_u64_u32
+_Divide__uDivide_var_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u64_u32
+	.private_extern _Divide__Divide_var_u64_u32
+_Divide__Divide_var_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1154
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1154
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1154:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u64_u32
+	.private_extern _Divide__uDivide_param_u64_u32
+_Divide__uDivide_param_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rax, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_u64_u32
+	.private_extern _Divide__Divide_param_u64_u32
+_Divide__Divide_param_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1159
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1159
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1159:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u64_C
+	.private_extern _Divide__uDivide_var_u64_C
+_Divide__uDivide_var_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u64_C
+	.private_extern _Divide__Divide_var_u64_C
+_Divide__Divide_var_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1164
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1164
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1164:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u64_C
+	.private_extern _Divide__uDivide_param_u64_C
+_Divide__uDivide_param_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_u64_C
+	.private_extern _Divide__Divide_param_u64_C
+_Divide__Divide_param_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1169
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1169
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1169:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u64_u16
+	.private_extern _Divide__uDivide_var_u64_u16
+_Divide__uDivide_var_u64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_u64_u16
+	.private_extern _Divide__Divide_var_u64_u16
+_Divide__Divide_var_u64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1174
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1174
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1174:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_u64_u16
+	.private_extern _Divide__uDivide_param_u64_u16
+_Divide__uDivide_param_u64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -12035,9 +10284,9 @@ _Divide__uDivide_param_L_u16:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_L_u16
-	.private_extern _Divide__Divide_param_L_u16
-_Divide__Divide_param_L_u16:
+.globl _Divide__Divide_param_u64_u16
+	.private_extern _Divide__Divide_param_u64_u16
+_Divide__Divide_param_u64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -12053,26 +10302,26 @@ _Divide__Divide_param_L_u16:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1383
+	je	L1179
 	movq	-40(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1383
+	jns	L1179
 	subq	$1, -48(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1383:
+L1179:
 	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_L_u64
-	.private_extern _Divide__uDivide_var_L_u64
-_Divide__uDivide_var_L_u64:
+.globl _Divide__uDivide_var_u64_u64
+	.private_extern _Divide__uDivide_var_u64_u64
+_Divide__uDivide_var_u64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
+	movq	160+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
+	movq	160+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -12081,37 +10330,24 @@ _Divide__uDivide_var_L_u64:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_L_u64
-	.private_extern _Divide__Divide_var_L_u64
-_Divide__Divide_var_L_u64:
+.globl _Divide__Divide_var_u64_u64
+	.private_extern _Divide__Divide_var_u64_u64
+_Divide__Divide_var_u64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	112+_MM_Divide(%rip), %rdx
-	movq	%rdx, -24(%rbp)
-	movq	-32(%rbp), %rdx
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1388
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1388
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1388:
-	movq	-40(%rbp), %rax
+	idivq	%rcx
 	leave
 	ret
-.globl _Divide__uDivide_param_L_u64
-	.private_extern _Divide__uDivide_param_L_u64
-_Divide__uDivide_param_L_u64:
+.globl _Divide__uDivide_param_u64_u64
+	.private_extern _Divide__uDivide_param_u64_u64
+_Divide__uDivide_param_u64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -12127,9 +10363,9 @@ _Divide__uDivide_param_L_u64:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_L_u64
-	.private_extern _Divide__Divide_param_L_u64
-_Divide__Divide_param_L_u64:
+.globl _Divide__Divide_param_u64_u64
+	.private_extern _Divide__Divide_param_u64_u64
+_Divide__Divide_param_u64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -12143,27 +10379,27 @@ _Divide__Divide_param_L_u64:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1393
+	je	L1188
 	movq	-32(%rbp), %rax
 	movq	-24(%rbp), %rdx
 	xorq	%rdx, %rax
 	testq	%rax, %rax
-	jns	L1393
+	jns	L1188
 	subq	$1, -40(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1393:
+L1188:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_L_LC
-	.private_extern _Divide__uDivide_var_L_LC
-_Divide__uDivide_var_L_LC:
+.globl _Divide__uDivide_var_u64_L
+	.private_extern _Divide__uDivide_var_u64_L
+_Divide__uDivide_var_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
+	movq	160+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
+	movq	176+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -12172,15 +10408,15 @@ _Divide__uDivide_var_L_LC:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_L_LC
-	.private_extern _Divide__Divide_var_L_LC
-_Divide__Divide_var_L_LC:
+.globl _Divide__Divide_var_u64_L
+	.private_extern _Divide__Divide_var_u64_L
+_Divide__Divide_var_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
+	movq	160+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
+	movq	176+_MM_Divide(%rip), %rdx
+	movq	%rdx, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
@@ -12188,68 +10424,73 @@ _Divide__Divide_var_L_LC:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1398
+	je	L1193
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1398
+	jns	L1193
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1398:
+L1193:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_L_LC
-	.private_extern _Divide__uDivide_param_L_LC
-_Divide__uDivide_param_L_LC:
+.globl _Divide__uDivide_param_u64_L
+	.private_extern _Divide__uDivide_param_u64_L
+_Divide__uDivide_param_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
 	movq	-24(%rbp), %rax
-	movl	$0, %edx
-	divq	-32(%rbp)
-	leave
-	ret
-.globl _Divide__Divide_param_L_LC
-	.private_extern _Divide__Divide_param_L_LC
-_Divide__Divide_param_L_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	%rdx, -72(%rbp)
-	movq	-72(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-40(%rbp)
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
 	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1403
-	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1403
-	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1403:
-	movq	-48(%rbp), %rax
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_L_i16
-	.private_extern _Divide__uDivide_var_L_i16
-_Divide__uDivide_var_L_i16:
+.globl _Divide__Divide_param_u64_L
+	.private_extern _Divide__Divide_param_u64_L
+_Divide__Divide_param_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1198
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L1198
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1198:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_u64_i16
+	.private_extern _Divide__uDivide_var_u64_i16
+_Divide__uDivide_var_u64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	160+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
+	movzwl	184+_MM_Divide(%rip), %eax
 	movzwl	%ax, %eax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -12259,14 +10500,14 @@ _Divide__uDivide_var_L_i16:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_L_i16
-	.private_extern _Divide__Divide_var_L_i16
-_Divide__Divide_var_L_i16:
+.globl _Divide__Divide_var_u64_i16
+	.private_extern _Divide__Divide_var_u64_i16
+_Divide__Divide_var_u64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
+	movq	160+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
+	movzwl	184+_MM_Divide(%rip), %eax
 	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -12276,21 +10517,21 @@ _Divide__Divide_var_L_i16:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1408
+	je	L1203
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1408
+	jns	L1203
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1408:
+L1203:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_L_i16
-	.private_extern _Divide__uDivide_param_L_i16
-_Divide__uDivide_param_L_i16:
+.globl _Divide__uDivide_param_u64_i16
+	.private_extern _Divide__uDivide_param_u64_i16
+_Divide__uDivide_param_u64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -12306,9 +10547,9 @@ _Divide__uDivide_param_L_i16:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_L_i16
-	.private_extern _Divide__Divide_param_L_i16
-_Divide__Divide_param_L_i16:
+.globl _Divide__Divide_param_u64_i16
+	.private_extern _Divide__Divide_param_u64_i16
+_Divide__Divide_param_u64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -12324,26 +10565,26 @@ _Divide__Divide_param_L_i16:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1413
+	je	L1208
 	movq	-40(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1413
+	jns	L1208
 	subq	$1, -48(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1413:
+L1208:
 	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_L_i32
-	.private_extern _Divide__uDivide_var_L_i32
-_Divide__uDivide_var_L_i32:
+.globl _Divide__uDivide_var_u64_i32
+	.private_extern _Divide__uDivide_var_u64_i32
+_Divide__uDivide_var_u64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
+	movq	160+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
+	movl	188+_MM_Divide(%rip), %eax
 	mov	%eax, %eax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -12353,14 +10594,14 @@ _Divide__uDivide_var_L_i32:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_L_i32
-	.private_extern _Divide__Divide_var_L_i32
-_Divide__Divide_var_L_i32:
+.globl _Divide__Divide_var_u64_i32
+	.private_extern _Divide__Divide_var_u64_i32
+_Divide__Divide_var_u64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
+	movq	160+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
+	movl	188+_MM_Divide(%rip), %eax
 	mov	%eax, %eax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -12370,21 +10611,21 @@ _Divide__Divide_var_L_i32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1418
+	je	L1213
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1418
+	jns	L1213
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1418:
+L1213:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_L_i32
-	.private_extern _Divide__uDivide_param_L_i32
-_Divide__uDivide_param_L_i32:
+.globl _Divide__uDivide_param_u64_i32
+	.private_extern _Divide__uDivide_param_u64_i32
+_Divide__uDivide_param_u64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -12400,9 +10641,9 @@ _Divide__uDivide_param_L_i32:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_L_i32
-	.private_extern _Divide__Divide_param_L_i32
-_Divide__Divide_param_L_i32:
+.globl _Divide__Divide_param_u64_i32
+	.private_extern _Divide__Divide_param_u64_i32
+_Divide__Divide_param_u64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -12418,107 +10659,39 @@ _Divide__Divide_param_L_i32:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1423
+	je	L1218
 	movq	-40(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1423
+	jns	L1218
 	subq	$1, -48(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1423:
+L1218:
 	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_L_I
-	.private_extern _Divide__uDivide_var_L_I
-_Divide__uDivide_var_L_I:
+.globl _Divide__Divide_var_f64_f64
+	.private_extern _Divide__Divide_var_f64_f64
+_Divide__Divide_var_f64_f64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
+	movsd	168+_MM_Divide(%rip), %xmm1
+	movsd	168+_MM_Divide(%rip), %xmm0
+	movapd	%xmm1, %xmm2
+	divsd	%xmm0, %xmm2
+	movapd	%xmm2, %xmm0
 	leave
 	ret
-.globl _Divide__Divide_var_L_I
-	.private_extern _Divide__Divide_var_L_I
-_Divide__Divide_var_L_I:
+.globl _Divide__Divide_param_f64_f64
+	.private_extern _Divide__Divide_param_f64_f64
+_Divide__Divide_param_f64_f64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movq	144+_MM_Divide(%rip), %rdx
-	movq	%rdx, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1428
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1428
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1428:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_L_I
-	.private_extern _Divide__uDivide_param_L_I
-_Divide__uDivide_param_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_L_I
-	.private_extern _Divide__Divide_param_L_I
-_Divide__Divide_param_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1433
-	movq	-32(%rbp), %rax
-	movq	-24(%rbp), %rdx
-	xorq	%rdx, %rax
-	testq	%rax, %rax
-	jns	L1433
-	subq	$1, -40(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1433:
-	movq	-40(%rbp), %rax
+	movsd	%xmm0, -24(%rbp)
+	movsd	%xmm1, -32(%rbp)
+	movsd	-24(%rbp), %xmm0
+	divsd	-32(%rbp), %xmm0
 	leave
 	ret
 .globl _Divide__uDivide_var_L_i64
@@ -12528,7 +10701,7 @@ _Divide__uDivide_var_L_i64:
 	movq	%rsp, %rbp
 	movq	176+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -12544,7 +10717,7 @@ _Divide__Divide_var_L_i64:
 	movq	%rsp, %rbp
 	movq	176+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movq	152+_MM_Divide(%rip), %rdx
+	movq	104+_MM_Divide(%rip), %rdx
 	movq	%rdx, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -12553,15 +10726,15 @@ _Divide__Divide_var_L_i64:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1438
+	je	L1227
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1438
+	jns	L1227
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1438:
+L1227:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -12599,27 +10772,27 @@ _Divide__Divide_param_L_i64:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1443
+	je	L1232
 	movq	-32(%rbp), %rax
 	movq	-24(%rbp), %rdx
 	xorq	%rdx, %rax
 	testq	%rax, %rax
-	jns	L1443
+	jns	L1232
 	subq	$1, -40(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1443:
+L1232:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_L_C
-	.private_extern _Divide__uDivide_var_L_C
-_Divide__uDivide_var_L_C:
+.globl _Divide__uDivide_var_L_LC
+	.private_extern _Divide__uDivide_var_L_LC
+_Divide__uDivide_var_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	176+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -12628,14 +10801,14 @@ _Divide__uDivide_var_L_C:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_L_C
-	.private_extern _Divide__Divide_var_L_C
-_Divide__Divide_var_L_C:
+.globl _Divide__Divide_var_L_LC
+	.private_extern _Divide__Divide_var_L_LC
+_Divide__Divide_var_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	176+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -12644,21 +10817,21 @@ _Divide__Divide_var_L_C:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1448
+	je	L1237
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1448
+	jns	L1237
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1448:
+L1237:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_L_C
-	.private_extern _Divide__uDivide_param_L_C
-_Divide__uDivide_param_L_C:
+.globl _Divide__uDivide_param_L_LC
+	.private_extern _Divide__uDivide_param_L_LC
+_Divide__uDivide_param_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -12668,9 +10841,9 @@ _Divide__uDivide_param_L_C:
 	divq	-32(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_L_C
-	.private_extern _Divide__Divide_param_L_C
-_Divide__Divide_param_L_C:
+.globl _Divide__Divide_param_L_LC
+	.private_extern _Divide__Divide_param_L_LC
+_Divide__Divide_param_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -12686,15 +10859,15 @@ _Divide__Divide_param_L_C:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1453
+	je	L1242
 	movq	-40(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1453
+	jns	L1242
 	subq	$1, -48(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1453:
+L1242:
 	movq	-48(%rbp), %rax
 	leave
 	ret
@@ -12705,7 +10878,7 @@ _Divide__uDivide_var_L_u8:
 	movq	%rsp, %rbp
 	movq	176+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -12722,7 +10895,7 @@ _Divide__Divide_var_L_u8:
 	movq	%rsp, %rbp
 	movq	176+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
+	movzbl	124+_MM_Divide(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -12732,15 +10905,15 @@ _Divide__Divide_var_L_u8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1458
+	je	L1247
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1458
+	jns	L1247
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1458:
+L1247:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -12780,16 +10953,107 @@ _Divide__Divide_param_L_u8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1463
+	je	L1252
 	movq	-40(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1463
+	jns	L1252
 	subq	$1, -48(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1463:
+L1252:
 	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_L_I
+	.private_extern _Divide__uDivide_var_L_I
+_Divide__uDivide_var_L_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_L_I
+	.private_extern _Divide__Divide_var_L_I
+_Divide__Divide_var_L_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_Divide(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1257
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1257
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1257:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_L_I
+	.private_extern _Divide__uDivide_param_L_I
+_Divide__uDivide_param_L_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_L_I
+	.private_extern _Divide__Divide_param_L_I
+_Divide__Divide_param_L_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1262
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L1262
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1262:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _Divide__uDivide_var_L_i8
@@ -12799,7 +11063,7 @@ _Divide__uDivide_var_L_i8:
 	movq	%rsp, %rbp
 	movq	176+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -12816,7 +11080,7 @@ _Divide__Divide_var_L_i8:
 	movq	%rsp, %rbp
 	movq	176+_MM_Divide(%rip), %rax
 	movq	%rax, -32(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
+	movzbl	136+_MM_Divide(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -12826,15 +11090,15 @@ _Divide__Divide_var_L_i8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1468
+	je	L1267
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1468
+	jns	L1267
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1468:
+L1267:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -12874,16 +11138,383 @@ _Divide__Divide_param_L_i8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1473
+	je	L1272
 	movq	-40(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1473
+	jns	L1272
 	subq	$1, -48(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1473:
+L1272:
 	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_L_u32
+	.private_extern _Divide__uDivide_var_L_u32
+_Divide__uDivide_var_L_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_L_u32
+	.private_extern _Divide__Divide_var_L_u32
+_Divide__Divide_var_L_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1277
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1277
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1277:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_L_u32
+	.private_extern _Divide__uDivide_param_L_u32
+_Divide__uDivide_param_L_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rax, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_L_u32
+	.private_extern _Divide__Divide_param_L_u32
+_Divide__Divide_param_L_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1282
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1282
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1282:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_L_C
+	.private_extern _Divide__uDivide_var_L_C
+_Divide__uDivide_var_L_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_L_C
+	.private_extern _Divide__Divide_var_L_C
+_Divide__Divide_var_L_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1287
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1287
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1287:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_L_C
+	.private_extern _Divide__uDivide_param_L_C
+_Divide__uDivide_param_L_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_L_C
+	.private_extern _Divide__Divide_param_L_C
+_Divide__Divide_param_L_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1292
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1292
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1292:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_L_u16
+	.private_extern _Divide__uDivide_var_L_u16
+_Divide__uDivide_var_L_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_L_u16
+	.private_extern _Divide__Divide_var_L_u16
+_Divide__Divide_var_L_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1297
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1297
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1297:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_L_u16
+	.private_extern _Divide__uDivide_param_L_u16
+_Divide__uDivide_param_L_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_L_u16
+	.private_extern _Divide__Divide_param_L_u16
+_Divide__Divide_param_L_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1302
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1302
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1302:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_L_u64
+	.private_extern _Divide__uDivide_var_L_u64
+_Divide__uDivide_var_L_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_L_u64
+	.private_extern _Divide__Divide_var_L_u64
+_Divide__Divide_var_L_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	160+_MM_Divide(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1307
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1307
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1307:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_L_u64
+	.private_extern _Divide__uDivide_param_L_u64
+_Divide__uDivide_param_L_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_L_u64
+	.private_extern _Divide__Divide_param_L_u64
+_Divide__Divide_param_L_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1312
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L1312
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1312:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _Divide__uDivide_var_L_L
@@ -12951,27 +11582,746 @@ _Divide__Divide_param_L_L:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1482
+	je	L1321
 	movq	-32(%rbp), %rax
 	movq	-24(%rbp), %rdx
 	xorq	%rdx, %rax
 	testq	%rax, %rax
-	jns	L1482
+	jns	L1321
 	subq	$1, -40(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1482:
+L1321:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_L_u32
-	.private_extern _Divide__uDivide_var_L_u32
-_Divide__uDivide_var_L_u32:
+.globl _Divide__uDivide_var_L_i16
+	.private_extern _Divide__uDivide_var_L_i16
+_Divide__uDivide_var_L_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	176+_MM_Divide(%rip), %rax
 	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_L_i16
+	.private_extern _Divide__Divide_var_L_i16
+_Divide__Divide_var_L_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1326
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1326
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1326:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_L_i16
+	.private_extern _Divide__uDivide_param_L_i16
+_Divide__uDivide_param_L_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_L_i16
+	.private_extern _Divide__Divide_param_L_i16
+_Divide__Divide_param_L_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1331
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1331
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1331:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_L_i32
+	.private_extern _Divide__uDivide_var_L_i32
+_Divide__uDivide_var_L_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -48(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_L_i32
+	.private_extern _Divide__Divide_var_L_i32
+_Divide__Divide_var_L_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1336
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1336
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1336:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_L_i32
+	.private_extern _Divide__uDivide_param_L_i32
+_Divide__uDivide_param_L_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -64(%rbp)
+	mov	-28(%rbp), %edx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_L_i32
+	.private_extern _Divide__Divide_param_L_i32
+_Divide__Divide_param_L_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1341
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1341
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1341:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i16_i64
+	.private_extern _Divide__uDivide_var_i16_i64
+_Divide__uDivide_var_i16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -48(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i16_i64
+	.private_extern _Divide__Divide_var_i16_i64
+_Divide__Divide_var_i16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1346
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1346
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1346:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_i64
+	.private_extern _Divide__uDivide_param_i16_i64
+_Divide__uDivide_param_i16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i16_i64
+	.private_extern _Divide__Divide_param_i16_i64
+_Divide__Divide_param_i16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1351
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1351
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1351:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i16_LC
+	.private_extern _Divide__uDivide_var_i16_LC
+_Divide__uDivide_var_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -48(%rbp)
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i16_LC
+	.private_extern _Divide__Divide_var_i16_LC
+_Divide__Divide_var_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	112+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1356
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1356
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1356:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_LC
+	.private_extern _Divide__uDivide_param_i16_LC
+_Divide__uDivide_param_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_i16_LC
+	.private_extern _Divide__Divide_param_i16_LC
+_Divide__Divide_param_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L1361
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1361
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L1361:
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i16_u8
+	.private_extern _Divide__uDivide_var_i16_u8
+_Divide__uDivide_var_i16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -48(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i16_u8
+	.private_extern _Divide__Divide_var_i16_u8
+_Divide__Divide_var_i16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1366
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1366
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1366:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1367
+	cmpq	$65535, -16(%rbp)
+	jle	L1368
+L1367:
+	movl	$17505, %edi
+	call	__m3_fault
+L1368:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_u8
+	.private_extern _Divide__uDivide_param_i16_u8
+_Divide__uDivide_param_i16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movsbq	-19(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i16_u8
+	.private_extern _Divide__Divide_param_i16_u8
+_Divide__Divide_param_i16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movsbq	-19(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1373
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1373
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1373:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1374
+	cmpq	$65535, -16(%rbp)
+	jle	L1375
+L1374:
+	movl	$17569, %edi
+	call	__m3_fault
+L1375:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i16_I
+	.private_extern _Divide__uDivide_var_i16_I
+_Divide__uDivide_var_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -48(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i16_I
+	.private_extern _Divide__Divide_var_i16_I
+_Divide__Divide_var_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1380
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1380
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1380:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1381
+	cmpq	$65535, -16(%rbp)
+	jle	L1382
+L1381:
+	movl	$17633, %edi
+	call	__m3_fault
+L1382:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_I
+	.private_extern _Divide__uDivide_param_i16_I
+_Divide__uDivide_param_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i16_I
+	.private_extern _Divide__Divide_param_i16_I
+_Divide__Divide_param_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1387
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1387
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1387:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1388
+	cmpq	$65535, -16(%rbp)
+	jle	L1389
+L1388:
+	movl	$17697, %edi
+	call	__m3_fault
+L1389:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i16_i8
+	.private_extern _Divide__uDivide_var_i16_i8
+_Divide__uDivide_var_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -48(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i16_i8
+	.private_extern _Divide__Divide_var_i16_i8
+_Divide__Divide_var_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1394
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1394
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1394:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1395
+	cmpq	$65535, -16(%rbp)
+	jle	L1396
+L1395:
+	movl	$17761, %edi
+	call	__m3_fault
+L1396:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_i8
+	.private_extern _Divide__uDivide_param_i16_i8
+_Divide__uDivide_param_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movzbl	-19(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i16_i8
+	.private_extern _Divide__Divide_param_i16_i8
+_Divide__Divide_param_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movzbl	-19(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1401
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1401
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1401:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1402
+	cmpq	$65535, -16(%rbp)
+	jle	L1403
+L1402:
+	movl	$17825, %edi
+	call	__m3_fault
+L1403:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i16_u32
+	.private_extern _Divide__uDivide_var_i16_u32
+_Divide__uDivide_var_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -48(%rbp)
+	movl	140+_MM_Divide(%rip), %eax
 	cltq
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -12981,14 +12331,16 @@ _Divide__uDivide_var_L_u32:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_L_u32
-	.private_extern _Divide__Divide_var_L_u32
-_Divide__Divide_var_L_u32:
+.globl _Divide__Divide_var_i16_u32
+	.private_extern _Divide__Divide_var_i16_u32
+_Divide__Divide_var_i16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	176+_MM_Divide(%rip), %rax
+	subq	$48, %rsp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
 	movq	%rax, -32(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
+	movl	140+_MM_Divide(%rip), %eax
 	cltq
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
@@ -12998,77 +12350,208 @@ _Divide__Divide_var_L_u32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1487
+	je	L1408
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1487
+	jns	L1408
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1487:
+L1408:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1409
+	cmpq	$65535, -16(%rbp)
+	jle	L1410
+L1409:
+	movl	$17889, %edi
+	call	__m3_fault
+L1410:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_u32
+	.private_extern _Divide__uDivide_param_i16_u32
+_Divide__uDivide_param_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_L_u32
-	.private_extern _Divide__uDivide_param_L_u32
-_Divide__uDivide_param_L_u32:
+.globl _Divide__Divide_param_i16_u32
+	.private_extern _Divide__Divide_param_i16_u32
+_Divide__Divide_param_i16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -64(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
-	movq	%rax, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_L_u32
-	.private_extern _Divide__Divide_param_L_u32
-_Divide__Divide_param_L_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %eax
 	movq	%rax, -40(%rbp)
-	movq	-24(%rbp), %rax
-	movq	%rax, -72(%rbp)
-	movq	-72(%rbp), %rdx
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
-	idivq	-40(%rbp)
+	idivq	-32(%rbp)
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1492
+	je	L1415
 	movq	-40(%rbp), %rax
-	xorq	-24(%rbp), %rax
+	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1492
+	jns	L1415
 	subq	$1, -48(%rbp)
-	movq	-40(%rbp), %rax
+	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1492:
-	movq	-48(%rbp), %rax
+L1415:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1416
+	cmpq	$65535, -16(%rbp)
+	jle	L1417
+L1416:
+	movl	$17953, %edi
+	call	__m3_fault
+L1417:
+	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_u32_u16
-	.private_extern _Divide__uDivide_var_u32_u16
-_Divide__uDivide_var_u32_u16:
+.globl _Divide__uDivide_var_i16_C
+	.private_extern _Divide__uDivide_var_i16_C
+_Divide__uDivide_var_i16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
 	movq	%rax, -48(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i16_C
+	.private_extern _Divide__Divide_var_i16_C
+_Divide__Divide_var_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	144+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1422
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1422
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1422:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1423
+	cmpq	$65535, -16(%rbp)
+	jle	L1424
+L1423:
+	movl	$18017, %edi
+	call	__m3_fault
+L1424:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_C
+	.private_extern _Divide__uDivide_param_i16_C
+_Divide__uDivide_param_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movl	$0, %edx
+	divq	-32(%rbp)
+	leave
+	ret
+.globl _Divide__Divide_param_i16_C
+	.private_extern _Divide__Divide_param_i16_C
+_Divide__Divide_param_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L1429
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1429
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L1429:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1430
+	cmpq	$65535, -16(%rbp)
+	jle	L1431
+L1430:
+	movl	$18081, %edi
+	call	__m3_fault
+L1431:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i16_u16
+	.private_extern _Divide__uDivide_var_i16_u16
+_Divide__uDivide_var_i16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -48(%rbp)
+	movzwl	152+_MM_Divide(%rip), %eax
 	movswq	%ax,%rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
@@ -13078,17 +12561,539 @@ _Divide__uDivide_var_u32_u16:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_u32_u16
-	.private_extern _Divide__Divide_var_u32_u16
-_Divide__Divide_var_u32_u16:
+.globl _Divide__Divide_var_i16_u16
+	.private_extern _Divide__Divide_var_i16_u16
+_Divide__Divide_var_i16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
 	movq	%rax, -32(%rbp)
-	movzwl	104+_MM_Divide(%rip), %eax
+	movzwl	152+_MM_Divide(%rip), %eax
 	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1436
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1436
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1436:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1437
+	cmpq	$65535, -16(%rbp)
+	jle	L1438
+L1437:
+	movl	$18145, %edi
+	call	__m3_fault
+L1438:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_u16
+	.private_extern _Divide__uDivide_param_i16_u16
+_Divide__uDivide_param_i16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i16_u16
+	.private_extern _Divide__Divide_param_i16_u16
+_Divide__Divide_param_i16_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1443
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1443
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1443:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1444
+	cmpq	$65535, -16(%rbp)
+	jle	L1445
+L1444:
+	movl	$18209, %edi
+	call	__m3_fault
+L1445:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i16_u64
+	.private_extern _Divide__uDivide_var_i16_u64
+_Divide__uDivide_var_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -48(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i16_u64
+	.private_extern _Divide__Divide_var_i16_u64
+_Divide__Divide_var_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1450
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1450
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1450:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_u64
+	.private_extern _Divide__uDivide_param_i16_u64
+_Divide__uDivide_param_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i16_u64
+	.private_extern _Divide__Divide_param_i16_u64
+_Divide__Divide_param_i16_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1455
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1455
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1455:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i16_L
+	.private_extern _Divide__uDivide_var_i16_L
+_Divide__uDivide_var_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -48(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i16_L
+	.private_extern _Divide__Divide_var_i16_L
+_Divide__Divide_var_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1460
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1460
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1460:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_L
+	.private_extern _Divide__uDivide_param_i16_L
+_Divide__uDivide_param_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i16_L
+	.private_extern _Divide__Divide_param_i16_L
+_Divide__Divide_param_i16_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1465
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1465
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1465:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i16_i16
+	.private_extern _Divide__uDivide_var_i16_i16
+_Divide__uDivide_var_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -48(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i16_i16
+	.private_extern _Divide__Divide_var_i16_i16
+_Divide__Divide_var_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -40(%rbp)
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
+	movq	%rax, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1470
+	cmpq	$65535, -16(%rbp)
+	jle	L1471
+L1470:
+	movl	$18529, %edi
+	call	__m3_fault
+L1471:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_i16
+	.private_extern _Divide__uDivide_param_i16_i16
+_Divide__uDivide_param_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i16_i16
+	.private_extern _Divide__Divide_param_i16_i16
+_Divide__Divide_param_i16_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movw	%si, -20(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1476
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1476
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1476:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1477
+	cmpq	$65535, -16(%rbp)
+	jle	L1478
+L1477:
+	movl	$18593, %edi
+	call	__m3_fault
+L1478:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i16_i32
+	.private_extern _Divide__uDivide_var_i16_i32
+_Divide__uDivide_var_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -48(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i16_i32
+	.private_extern _Divide__Divide_var_i16_i32
+_Divide__Divide_var_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1483
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1483
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1483:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1484
+	cmpq	$65535, -16(%rbp)
+	jle	L1485
+L1484:
+	movl	$18657, %edi
+	call	__m3_fault
+L1485:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i16_i32
+	.private_extern _Divide__uDivide_param_i16_i32
+_Divide__uDivide_param_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i16_i32
+	.private_extern _Divide__Divide_param_i16_i32
+_Divide__Divide_param_i16_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1490
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1490
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1490:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1491
+	cmpq	$65535, -16(%rbp)
+	jle	L1492
+L1491:
+	movl	$18721, %edi
+	call	__m3_fault
+L1492:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i32_i64
+	.private_extern _Divide__uDivide_var_i32_i64
+_Divide__uDivide_var_i32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -48(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i32_i64
+	.private_extern _Divide__Divide_var_i32_i64
+_Divide__Divide_var_i32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movq	104+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -13106,138 +13111,20 @@ _Divide__Divide_var_u32_u16:
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
 L1497:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1498
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1499
-L1498:
-	movl	$18785, %edi
-	call	__m3_fault
-L1499:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u32_u16
-	.private_extern _Divide__uDivide_param_u32_u16
-_Divide__uDivide_param_u32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	movq	%rax, -48(%rbp)
-	movswq	-22(%rbp),%rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_u32_u16
-	.private_extern _Divide__Divide_param_u32_u16
-_Divide__Divide_param_u32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$64, %rsp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movswq	-22(%rbp),%rax
-	movq	%rax, -32(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1504
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1504
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1504:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1505
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1506
-L1505:
-	movl	$18849, %edi
-	call	__m3_fault
-L1506:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u32_u64
-	.private_extern _Divide__uDivide_var_u32_u64
-_Divide__uDivide_var_u32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -48(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u32_u64
-	.private_extern _Divide__Divide_var_u32_u64
-_Divide__Divide_var_u32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -32(%rbp)
-	movq	112+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1511
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1511
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1511:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u32_u64
-	.private_extern _Divide__uDivide_param_u32_u64
-_Divide__uDivide_param_u32_u64:
+.globl _Divide__uDivide_param_i32_i64
+	.private_extern _Divide__uDivide_param_i32_i64
+_Divide__uDivide_param_i32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -56(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
 	movq	-64(%rbp), %rax
 	movl	$0, %edx
 	divq	-56(%rbp)
@@ -13245,15 +13132,14 @@ _Divide__uDivide_param_u32_u64:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_u32_u64
-	.private_extern _Divide__Divide_param_u32_u64
-_Divide__Divide_param_u32_u64:
+.globl _Divide__Divide_param_i32_i64
+	.private_extern _Divide__Divide_param_i32_i64
+_Divide__Divide_param_i32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	movq	%rax, -40(%rbp)
 	movq	-40(%rbp), %rdx
 	movq	%rdx, %rax
@@ -13262,27 +13148,27 @@ _Divide__Divide_param_u32_u64:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1516
+	je	L1502
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1516
+	jns	L1502
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1516:
+L1502:
 	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_u32_LC
-	.private_extern _Divide__uDivide_var_u32_LC
-_Divide__uDivide_var_u32_LC:
+.globl _Divide__uDivide_var_i32_LC
+	.private_extern _Divide__uDivide_var_i32_LC
+_Divide__uDivide_var_i32_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -48(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -13291,15 +13177,15 @@ _Divide__uDivide_var_u32_LC:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_u32_LC
-	.private_extern _Divide__Divide_var_u32_LC
-_Divide__Divide_var_u32_LC:
+.globl _Divide__Divide_var_i32_LC
+	.private_extern _Divide__Divide_var_i32_LC
+_Divide__Divide_var_i32_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -32(%rbp)
-	movq	120+_MM_Divide(%rip), %rax
+	movq	112+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -13308,43 +13194,41 @@ _Divide__Divide_var_u32_LC:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1521
+	je	L1507
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1521
+	jns	L1507
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1521:
+L1507:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_u32_LC
-	.private_extern _Divide__uDivide_param_u32_LC
-_Divide__uDivide_param_u32_LC:
+.globl _Divide__uDivide_param_i32_LC
+	.private_extern _Divide__uDivide_param_i32_LC
+_Divide__uDivide_param_i32_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	movl	$0, %edx
 	divq	-32(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_u32_LC
-	.private_extern _Divide__Divide_param_u32_LC
-_Divide__Divide_param_u32_LC:
+.globl _Divide__Divide_param_i32_LC
+	.private_extern _Divide__Divide_param_i32_LC
+_Divide__Divide_param_i32_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	movq	%rax, -48(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -40(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
 	movq	-48(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
@@ -13352,28 +13236,28 @@ _Divide__Divide_param_u32_LC:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L1526
+	je	L1512
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1526
+	jns	L1512
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L1526:
+L1512:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_u32_i16
-	.private_extern _Divide__uDivide_var_u32_i16
-_Divide__uDivide_var_u32_i16:
+.globl _Divide__uDivide_var_i32_u8
+	.private_extern _Divide__uDivide_var_i32_u8
+_Divide__uDivide_var_i32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -48(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -13382,17 +13266,135 @@ _Divide__uDivide_var_u32_i16:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_u32_i16
-	.private_extern _Divide__Divide_var_u32_i16
-_Divide__Divide_var_u32_i16:
+.globl _Divide__Divide_var_i32_u8
+	.private_extern _Divide__Divide_var_i32_u8
+_Divide__Divide_var_i32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -32(%rbp)
-	movzwl	136+_MM_Divide(%rip), %eax
-	movzwl	%ax, %eax
+	movzbl	124+_MM_Divide(%rip), %eax
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1517
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1517
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1517:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1518
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1519
+L1518:
+	movl	$19041, %edi
+	call	__m3_fault
+L1519:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i32_u8
+	.private_extern _Divide__uDivide_param_i32_u8
+_Divide__uDivide_param_i32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movsbq	-21(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i32_u8
+	.private_extern _Divide__Divide_param_i32_u8
+_Divide__Divide_param_i32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$64, %rsp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movsbq	-21(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1524
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1524
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1524:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1525
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1526
+L1525:
+	movl	$19105, %edi
+	call	__m3_fault
+L1526:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i32_I
+	.private_extern _Divide__uDivide_var_i32_I
+_Divide__uDivide_var_i32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -48(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i32_I
+	.private_extern _Divide__Divide_var_i32_I
+_Divide__Divide_var_i32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	subq	$48, %rsp
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -13412,9 +13414,10 @@ _Divide__Divide_var_u32_i16:
 L1531:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1532
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1532
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1533
 L1532:
 	movl	$19169, %edi
@@ -13423,38 +13426,34 @@ L1533:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_u32_i16
-	.private_extern _Divide__uDivide_param_u32_i16
-_Divide__uDivide_param_u32_i16:
+.globl _Divide__uDivide_param_i32_I
+	.private_extern _Divide__uDivide_param_i32_I
+_Divide__uDivide_param_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	movq	%rax, -48(%rbp)
-	movzwl	-22(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
 	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_u32_i16
-	.private_extern _Divide__Divide_param_u32_i16
-_Divide__Divide_param_u32_i16:
+.globl _Divide__Divide_param_i32_I
+	.private_extern _Divide__Divide_param_i32_I
+_Divide__Divide_param_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
 	movq	%rax, -40(%rbp)
-	movzwl	-22(%rbp), %eax
-	movq	%rax, -32(%rbp)
 	movq	-40(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
@@ -13473,9 +13472,10 @@ _Divide__Divide_param_u32_i16:
 L1538:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1539
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1539
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1540
 L1539:
 	movl	$19233, %edi
@@ -13484,16 +13484,16 @@ L1540:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_u32_i32
-	.private_extern _Divide__uDivide_var_u32_i32
-_Divide__uDivide_var_u32_i32:
+.globl _Divide__uDivide_var_i32_i8
+	.private_extern _Divide__uDivide_var_i32_i8
+_Divide__uDivide_var_i32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -48(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
+	movl	188+_MM_Divide(%rip), %eax
 	mov	%eax, %eax
+	movq	%rax, -48(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -13502,17 +13502,17 @@ _Divide__uDivide_var_u32_i32:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_u32_i32
-	.private_extern _Divide__Divide_var_u32_i32
-_Divide__Divide_var_u32_i32:
+.globl _Divide__Divide_var_i32_i8
+	.private_extern _Divide__Divide_var_i32_i8
+_Divide__Divide_var_i32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -32(%rbp)
-	movl	140+_MM_Divide(%rip), %eax
+	movl	188+_MM_Divide(%rip), %eax
 	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movzbl	136+_MM_Divide(%rip), %eax
+	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -13532,9 +13532,10 @@ _Divide__Divide_var_u32_i32:
 L1545:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1546
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1546
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1547
 L1546:
 	movl	$19297, %edi
@@ -13543,18 +13544,17 @@ L1547:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_u32_i32
-	.private_extern _Divide__uDivide_param_u32_i32
-_Divide__uDivide_param_u32_i32:
+.globl _Divide__uDivide_param_i32_i8
+	.private_extern _Divide__uDivide_param_i32_i8
+_Divide__uDivide_param_i32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %eax
 	movq	%rax, -48(%rbp)
-	mov	-24(%rbp), %eax
-	movq	%rax, -40(%rbp)
+	movzbl	-21(%rbp), %edx
+	movq	%rdx, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
 	divq	-40(%rbp)
@@ -13562,19 +13562,18 @@ _Divide__uDivide_param_u32_i32:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_u32_i32
-	.private_extern _Divide__Divide_param_u32_i32
-_Divide__Divide_param_u32_i32:
+.globl _Divide__Divide_param_i32_i8
+	.private_extern _Divide__Divide_param_i32_i8
+_Divide__Divide_param_i32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %eax
 	movq	%rax, -40(%rbp)
-	mov	-24(%rbp), %eax
-	movq	%rax, -32(%rbp)
+	movzbl	-21(%rbp), %edx
+	movq	%rdx, -32(%rbp)
 	movq	-40(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
@@ -13593,9 +13592,10 @@ _Divide__Divide_param_u32_i32:
 L1552:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1553
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1553
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1554
 L1553:
 	movl	$19361, %edi
@@ -13604,15 +13604,16 @@ L1554:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_u32_I
-	.private_extern _Divide__uDivide_var_u32_I
-_Divide__uDivide_var_u32_I:
+.globl _Divide__uDivide_var_i32_u32
+	.private_extern _Divide__uDivide_var_i32_u32
+_Divide__uDivide_var_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -48(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -13621,16 +13622,17 @@ _Divide__uDivide_var_u32_I:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_u32_I
-	.private_extern _Divide__Divide_var_u32_I
-_Divide__Divide_var_u32_I:
+.globl _Divide__Divide_var_i32_u32
+	.private_extern _Divide__Divide_var_i32_u32
+_Divide__Divide_var_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -32(%rbp)
-	movq	144+_MM_Divide(%rip), %rax
+	movl	140+_MM_Divide(%rip), %eax
+	cltq
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -13650,9 +13652,10 @@ _Divide__Divide_var_u32_I:
 L1559:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1560
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1560
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1561
 L1560:
 	movl	$19425, %edi
@@ -13661,36 +13664,38 @@ L1561:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_u32_I
-	.private_extern _Divide__uDivide_param_u32_I
-_Divide__uDivide_param_u32_I:
+.globl _Divide__uDivide_param_i32_u32
+	.private_extern _Divide__uDivide_param_i32_u32
+_Divide__uDivide_param_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
+	movl	%esi, -24(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movl	-24(%rbp), %eax
 	cltq
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-64(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
 	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_u32_I
-	.private_extern _Divide__Divide_param_u32_I
-_Divide__Divide_param_u32_I:
+.globl _Divide__Divide_param_i32_u32
+	.private_extern _Divide__Divide_param_i32_u32
+_Divide__Divide_param_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	movl	%esi, -24(%rbp)
+	mov	-20(%rbp), %eax
 	movq	%rax, -40(%rbp)
+	movl	-24(%rbp), %eax
+	cltq
+	movq	%rax, -32(%rbp)
 	movq	-40(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
@@ -13709,9 +13714,10 @@ _Divide__Divide_param_u32_I:
 L1566:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1567
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1567
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1568
 L1567:
 	movl	$19489, %edi
@@ -13720,15 +13726,15 @@ L1568:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_u32_i64
-	.private_extern _Divide__uDivide_var_u32_i64
-_Divide__uDivide_var_u32_i64:
+.globl _Divide__uDivide_var_i32_C
+	.private_extern _Divide__uDivide_var_i32_C
+_Divide__uDivide_var_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -48(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
+	movq	144+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -13737,15 +13743,16 @@ _Divide__uDivide_var_u32_i64:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_u32_i64
-	.private_extern _Divide__Divide_var_u32_i64
-_Divide__Divide_var_u32_i64:
+.globl _Divide__Divide_var_i32_C
+	.private_extern _Divide__Divide_var_i32_C
+_Divide__Divide_var_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	subq	$48, %rsp
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -32(%rbp)
-	movq	152+_MM_Divide(%rip), %rax
+	movq	144+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -13763,140 +13770,44 @@ _Divide__Divide_var_u32_i64:
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
 L1573:
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u32_i64
-	.private_extern _Divide__uDivide_param_u32_i64
-_Divide__uDivide_param_u32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u32_i64
-	.private_extern _Divide__Divide_param_u32_i64
-_Divide__Divide_param_u32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-32(%rbp)
-	movq	%rdx, -56(%rbp)
-	movq	%rax, -48(%rbp)
-	cmpq	$0, -56(%rbp)
-	je	L1578
-	movq	-40(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1578
-	subq	$1, -48(%rbp)
-	movq	-32(%rbp), %rax
-	addq	%rax, -56(%rbp)
-L1578:
-	movq	-48(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_var_u32_C
-	.private_extern _Divide__uDivide_var_u32_C
-_Divide__uDivide_var_u32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -48(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
-	movq	-40(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_var_u32_C
-	.private_extern _Divide__Divide_var_u32_C
-_Divide__Divide_var_u32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
-	movq	%rax, -32(%rbp)
-	movq	160+_MM_Divide(%rip), %rax
-	movq	%rax, -24(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	%rdx, %rax
-	sarq	$63, %rdx
-	idivq	-24(%rbp)
-	movq	%rdx, -48(%rbp)
-	movq	%rax, -40(%rbp)
-	cmpq	$0, -48(%rbp)
-	je	L1583
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	testq	%rax, %rax
-	jns	L1583
-	subq	$1, -40(%rbp)
-	movq	-24(%rbp), %rax
-	addq	%rax, -48(%rbp)
-L1583:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1584
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1585
-L1584:
-	movl	$19681, %edi
+	cmpq	$0, -16(%rbp)
+	js	L1574
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1575
+L1574:
+	movl	$19553, %edi
 	call	__m3_fault
-L1585:
+L1575:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_u32_C
-	.private_extern _Divide__uDivide_param_u32_C
-_Divide__uDivide_param_u32_C:
+.globl _Divide__uDivide_param_i32_C
+	.private_extern _Divide__uDivide_param_i32_C
+_Divide__uDivide_param_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	movl	$0, %edx
 	divq	-32(%rbp)
 	leave
 	ret
-.globl _Divide__Divide_param_u32_C
-	.private_extern _Divide__Divide_param_u32_C
-_Divide__Divide_param_u32_C:
+.globl _Divide__Divide_param_i32_C
+	.private_extern _Divide__Divide_param_i32_C
+_Divide__Divide_param_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	movq	%rax, -48(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -40(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
 	movq	-48(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
@@ -13904,38 +13815,39 @@ _Divide__Divide_param_u32_C:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L1590
+	je	L1580
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1590
+	jns	L1580
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L1590:
+L1580:
 	movq	-56(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1591
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1592
-L1591:
-	movl	$19745, %edi
+	cmpq	$0, -16(%rbp)
+	js	L1581
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1582
+L1581:
+	movl	$19617, %edi
 	call	__m3_fault
-L1592:
+L1582:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_u32_u8
-	.private_extern _Divide__uDivide_var_u32_u8
-_Divide__uDivide_var_u32_u8:
+.globl _Divide__uDivide_var_i32_u16
+	.private_extern _Divide__uDivide_var_i32_u16
+_Divide__uDivide_var_i32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -48(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -13944,17 +13856,17 @@ _Divide__uDivide_var_u32_u8:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_u32_u8
-	.private_extern _Divide__Divide_var_u32_u8
-_Divide__Divide_var_u32_u8:
+.globl _Divide__Divide_var_i32_u16
+	.private_extern _Divide__Divide_var_i32_u16
+_Divide__Divide_var_i32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -32(%rbp)
-	movzbl	172+_MM_Divide(%rip), %eax
-	movsbq	%al,%rax
+	movzwl	152+_MM_Divide(%rip), %eax
+	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -13963,40 +13875,40 @@ _Divide__Divide_var_u32_u8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1597
+	je	L1587
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1597
+	jns	L1587
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1597:
+L1587:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1598
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1599
-L1598:
-	movl	$19809, %edi
+	cmpq	$0, -16(%rbp)
+	js	L1588
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1589
+L1588:
+	movl	$19681, %edi
 	call	__m3_fault
-L1599:
+L1589:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_u32_u8
-	.private_extern _Divide__uDivide_param_u32_u8
-_Divide__uDivide_param_u32_u8:
+.globl _Divide__uDivide_param_i32_u16
+	.private_extern _Divide__uDivide_param_i32_u16
+_Divide__uDivide_param_i32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %eax
 	movq	%rax, -48(%rbp)
-	movsbq	-21(%rbp),%rax
-	movq	%rax, -40(%rbp)
+	movswq	-22(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
 	divq	-40(%rbp)
@@ -14004,19 +13916,18 @@ _Divide__uDivide_param_u32_u8:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_u32_u8
-	.private_extern _Divide__Divide_param_u32_u8
-_Divide__Divide_param_u32_u8:
+.globl _Divide__Divide_param_i32_u16
+	.private_extern _Divide__Divide_param_i32_u16
+_Divide__Divide_param_i32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %eax
 	movq	%rax, -40(%rbp)
-	movsbq	-21(%rbp),%rax
-	movq	%rax, -32(%rbp)
+	movswq	-22(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
 	movq	-40(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
@@ -14024,38 +13935,38 @@ _Divide__Divide_param_u32_u8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1604
+	je	L1594
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1604
+	jns	L1594
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1604:
+L1594:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1605
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1606
-L1605:
-	movl	$19873, %edi
+	cmpq	$0, -16(%rbp)
+	js	L1595
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1596
+L1595:
+	movl	$19745, %edi
 	call	__m3_fault
-L1606:
+L1596:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_u32_i8
-	.private_extern _Divide__uDivide_var_u32_i8
-_Divide__uDivide_var_u32_i8:
+.globl _Divide__uDivide_var_i32_u64
+	.private_extern _Divide__uDivide_var_i32_u64
+_Divide__uDivide_var_i32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -48(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
+	movq	160+_MM_Divide(%rip), %rax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -14064,17 +13975,107 @@ _Divide__uDivide_var_u32_i8:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_u32_i8
-	.private_extern _Divide__Divide_var_u32_i8
-_Divide__Divide_var_u32_i8:
+.globl _Divide__Divide_var_i32_u64
+	.private_extern _Divide__Divide_var_i32_u64
+_Divide__Divide_var_i32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$48, %rsp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -32(%rbp)
-	movzbl	173+_MM_Divide(%rip), %eax
-	movzbl	%al, %eax
+	movq	160+_MM_Divide(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L1601
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1601
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L1601:
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i32_u64
+	.private_extern _Divide__uDivide_param_i32_u64
+_Divide__uDivide_param_i32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i32_u64
+	.private_extern _Divide__Divide_param_i32_u64
+_Divide__Divide_param_i32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L1606
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L1606
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L1606:
+	movq	-48(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_var_i32_L
+	.private_extern _Divide__uDivide_var_i32_L
+_Divide__uDivide_var_i32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -48(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_var_i32_L
+	.private_extern _Divide__Divide_var_i32_L
+_Divide__Divide_var_i32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_Divide(%rip), %rax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -14092,51 +14093,36 @@ _Divide__Divide_var_u32_i8:
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
 L1611:
-	movq	-40(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1612
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1613
-L1612:
-	movl	$19937, %edi
-	call	__m3_fault
-L1613:
-	movq	-16(%rbp), %rax
-	leave
-	ret
-.globl _Divide__uDivide_param_u32_i8
-	.private_extern _Divide__uDivide_param_u32_i8
-_Divide__uDivide_param_u32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	movq	%rax, -48(%rbp)
-	movzbl	-21(%rbp), %eax
-	movq	%rax, -40(%rbp)
-	movq	-48(%rbp), %rax
-	movl	$0, %edx
-	divq	-40(%rbp)
-	movq	%rax, -40(%rbp)
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_u32_i8
-	.private_extern _Divide__Divide_param_u32_i8
-_Divide__Divide_param_u32_i8:
+.globl _Divide__uDivide_param_i32_L
+	.private_extern _Divide__uDivide_param_i32_L
+_Divide__uDivide_param_i32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -64(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -56(%rbp)
+	movq	-64(%rbp), %rax
+	movl	$0, %edx
+	divq	-56(%rbp)
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rax
+	leave
+	ret
+.globl _Divide__Divide_param_i32_L
+	.private_extern _Divide__Divide_param_i32_L
+_Divide__Divide_param_i32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
 	movq	%rax, -40(%rbp)
-	movzbl	-21(%rbp), %eax
-	movq	%rax, -32(%rbp)
 	movq	-40(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
@@ -14144,37 +14130,28 @@ _Divide__Divide_param_u32_i8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1618
+	je	L1616
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1618
+	jns	L1616
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L1618:
-	movq	-48(%rbp), %rdx
-	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1619
-	cmpq	$2147483647, -16(%rbp)
-	jle	L1620
-L1619:
-	movl	$20001, %edi
-	call	__m3_fault
-L1620:
-	movq	-16(%rbp), %rax
+L1616:
+	movq	-48(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_u32_L
-	.private_extern _Divide__uDivide_var_u32_L
-_Divide__uDivide_var_u32_L:
+.globl _Divide__uDivide_var_i32_i16
+	.private_extern _Divide__uDivide_var_i32_i16
+_Divide__uDivide_var_i32_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -48(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -14183,15 +14160,17 @@ _Divide__uDivide_var_u32_L:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_u32_L
-	.private_extern _Divide__Divide_var_u32_L
-_Divide__Divide_var_u32_L:
+.globl _Divide__Divide_var_i32_i16
+	.private_extern _Divide__Divide_var_i32_i16
+_Divide__Divide_var_i32_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	subq	$48, %rsp
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -32(%rbp)
-	movq	176+_MM_Divide(%rip), %rax
+	movzwl	184+_MM_Divide(%rip), %eax
+	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
 	movq	-32(%rbp), %rdx
 	movq	%rdx, %rax
@@ -14200,47 +14179,59 @@ _Divide__Divide_var_u32_L:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L1625
+	je	L1621
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1625
+	jns	L1621
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L1625:
+L1621:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1622
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1623
+L1622:
+	movl	$20065, %edi
+	call	__m3_fault
+L1623:
+	movq	-16(%rbp), %rax
+	leave
+	ret
+.globl _Divide__uDivide_param_i32_i16
+	.private_extern _Divide__uDivide_param_i32_i16
+_Divide__uDivide_param_i32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -48(%rbp)
+	movzwl	-22(%rbp), %edx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rax
+	movl	$0, %edx
+	divq	-40(%rbp)
+	movq	%rax, -40(%rbp)
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_u32_L
-	.private_extern _Divide__uDivide_param_u32_L
-_Divide__uDivide_param_u32_L:
+.globl _Divide__Divide_param_i32_i16
+	.private_extern _Divide__Divide_param_i32_i16
+_Divide__Divide_param_i32_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	movq	%rax, -64(%rbp)
-	movq	-32(%rbp), %rax
-	movq	%rax, -56(%rbp)
-	movq	-64(%rbp), %rax
-	movl	$0, %edx
-	divq	-56(%rbp)
-	movq	%rax, -56(%rbp)
-	movq	-56(%rbp), %rax
-	leave
-	ret
-.globl _Divide__Divide_param_u32_L
-	.private_extern _Divide__Divide_param_u32_L
-_Divide__Divide_param_u32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	movw	%si, -22(%rbp)
+	mov	-20(%rbp), %eax
 	movq	%rax, -40(%rbp)
+	movzwl	-22(%rbp), %edx
+	movq	%rdx, -32(%rbp)
 	movq	-40(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
@@ -14248,28 +14239,39 @@ _Divide__Divide_param_u32_L:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L1630
+	je	L1628
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L1630
+	jns	L1628
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
+L1628:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1629
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
+	jle	L1630
+L1629:
+	movl	$20129, %edi
+	call	__m3_fault
 L1630:
-	movq	-48(%rbp), %rax
+	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_var_u32_u32
-	.private_extern _Divide__uDivide_var_u32_u32
-_Divide__uDivide_var_u32_u32:
+.globl _Divide__uDivide_var_i32_i32
+	.private_extern _Divide__uDivide_var_i32_i32
+_Divide__uDivide_var_i32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -48(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
@@ -14278,26 +14280,27 @@ _Divide__uDivide_var_u32_u32:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_var_u32_u32
-	.private_extern _Divide__Divide_var_u32_u32
-_Divide__Divide_var_u32_u32:
+.globl _Divide__Divide_var_i32_i32
+	.private_extern _Divide__Divide_var_i32_i32
+_Divide__Divide_var_i32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$48, %rsp
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -40(%rbp)
-	movl	184+_MM_Divide(%rip), %eax
-	cltq
+	movl	188+_MM_Divide(%rip), %eax
+	mov	%eax, %eax
 	movq	-40(%rbp), %rdx
 	movq	%rax, %rcx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
 	idivq	%rcx
 	movq	%rax, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1635
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1635
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1636
 L1635:
 	movl	$20193, %edi
@@ -14306,19 +14309,17 @@ L1636:
 	movq	-16(%rbp), %rax
 	leave
 	ret
-.globl _Divide__uDivide_param_u32_u32
-	.private_extern _Divide__uDivide_param_u32_u32
-_Divide__uDivide_param_u32_u32:
+.globl _Divide__uDivide_param_i32_i32
+	.private_extern _Divide__uDivide_param_i32_i32
+_Divide__uDivide_param_i32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	movq	%rax, -48(%rbp)
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -40(%rbp)
 	movq	-48(%rbp), %rax
 	movl	$0, %edx
 	divq	-40(%rbp)
@@ -14326,20 +14327,18 @@ _Divide__uDivide_param_u32_u32:
 	movq	-40(%rbp), %rax
 	leave
 	ret
-.globl _Divide__Divide_param_u32_u32
-	.private_extern _Divide__Divide_param_u32_u32
-_Divide__Divide_param_u32_u32:
+.globl _Divide__Divide_param_i32_i32
+	.private_extern _Divide__Divide_param_i32_i32
+_Divide__Divide_param_i32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
+	mov	-20(%rbp), %eax
 	movq	%rax, -40(%rbp)
-	movl	-24(%rbp), %eax
-	cltq
-	movq	%rax, -32(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -32(%rbp)
 	movq	-40(%rbp), %rdx
 	movq	%rdx, %rax
 	sarq	$63, %rdx
@@ -14358,9 +14357,10 @@ _Divide__Divide_param_u32_u32:
 L1641:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
-	cmpq	$-2147483648, -16(%rbp)
-	jl	L1642
-	cmpq	$2147483647, -16(%rbp)
+	cmpq	$0, -16(%rbp)
+	js	L1642
+	movl	$4294967295, %eax
+	cmpq	%rax, -16(%rbp)
 	jle	L1643
 L1642:
 	movl	$20257, %edi
@@ -14392,738 +14392,6 @@ __m3_fault:
 _L_1:
 	.ascii "Divide_M3"
 	.space 1
-	.ascii "Divide_param_u32_u32"
-	.space 1
-	.ascii "uDivide_param_u32_u32"
-	.space 1
-	.ascii "Divide_var_u32_u32"
-	.space 1
-	.ascii "uDivide_var_u32_u32"
-	.space 1
-	.ascii "Divide_param_u32_L"
-	.space 1
-	.ascii "uDivide_param_u32_L"
-	.space 1
-	.ascii "Divide_var_u32_L"
-	.space 1
-	.ascii "uDivide_var_u32_L"
-	.space 1
-	.ascii "Divide_param_u32_i8"
-	.space 1
-	.ascii "uDivide_param_u32_i8"
-	.space 1
-	.ascii "Divide_var_u32_i8"
-	.space 1
-	.ascii "uDivide_var_u32_i8"
-	.space 1
-	.ascii "Divide_param_u32_u8"
-	.space 1
-	.ascii "uDivide_param_u32_u8"
-	.space 1
-	.ascii "Divide_var_u32_u8"
-	.space 1
-	.ascii "uDivide_var_u32_u8"
-	.space 1
-	.ascii "Divide_param_u32_C"
-	.space 1
-	.ascii "uDivide_param_u32_C"
-	.space 1
-	.ascii "Divide_var_u32_C"
-	.space 1
-	.ascii "uDivide_var_u32_C"
-	.space 1
-	.ascii "Divide_param_u32_i64"
-	.space 1
-	.ascii "uDivide_param_u32_i64"
-	.space 1
-	.ascii "Divide_var_u32_i64"
-	.space 1
-	.ascii "uDivide_var_u32_i64"
-	.space 1
-	.ascii "Divide_param_u32_I"
-	.space 1
-	.ascii "uDivide_param_u32_I"
-	.space 1
-	.ascii "Divide_var_u32_I"
-	.space 1
-	.ascii "uDivide_var_u32_I"
-	.space 1
-	.ascii "Divide_param_u32_i32"
-	.space 1
-	.ascii "uDivide_param_u32_i32"
-	.space 1
-	.ascii "Divide_var_u32_i32"
-	.space 1
-	.ascii "uDivide_var_u32_i32"
-	.space 1
-	.ascii "Divide_param_u32_i16"
-	.space 1
-	.ascii "uDivide_param_u32_i16"
-	.space 1
-	.ascii "Divide_var_u32_i16"
-	.space 1
-	.ascii "uDivide_var_u32_i16"
-	.space 1
-	.ascii "Divide_param_u32_LC"
-	.space 1
-	.ascii "uDivide_param_u32_LC"
-	.space 1
-	.ascii "Divide_var_u32_LC"
-	.space 1
-	.ascii "uDivide_var_u32_LC"
-	.space 1
-	.ascii "Divide_param_u32_u64"
-	.space 1
-	.ascii "uDivide_param_u32_u64"
-	.space 1
-	.ascii "Divide_var_u32_u64"
-	.space 1
-	.ascii "uDivide_var_u32_u64"
-	.space 1
-	.ascii "Divide_param_u32_u16"
-	.space 1
-	.ascii "uDivide_param_u32_u16"
-	.space 1
-	.ascii "Divide_var_u32_u16"
-	.space 1
-	.ascii "uDivide_var_u32_u16"
-	.space 1
-	.ascii "Divide_param_L_u32"
-	.space 1
-	.ascii "uDivide_param_L_u32"
-	.space 1
-	.ascii "Divide_var_L_u32"
-	.space 1
-	.ascii "uDivide_var_L_u32"
-	.space 1
-	.ascii "Divide_param_L_L"
-	.space 1
-	.ascii "uDivide_param_L_L"
-	.space 1
-	.ascii "Divide_var_L_L"
-	.space 1
-	.ascii "uDivide_var_L_L"
-	.space 1
-	.ascii "Divide_param_L_i8"
-	.space 1
-	.ascii "uDivide_param_L_i8"
-	.space 1
-	.ascii "Divide_var_L_i8"
-	.space 1
-	.ascii "uDivide_var_L_i8"
-	.space 1
-	.ascii "Divide_param_L_u8"
-	.space 1
-	.ascii "uDivide_param_L_u8"
-	.space 1
-	.ascii "Divide_var_L_u8"
-	.space 1
-	.ascii "uDivide_var_L_u8"
-	.space 1
-	.ascii "Divide_param_L_C"
-	.space 1
-	.ascii "uDivide_param_L_C"
-	.space 1
-	.ascii "Divide_var_L_C"
-	.space 1
-	.ascii "uDivide_var_L_C"
-	.space 1
-	.ascii "Divide_param_L_i64"
-	.space 1
-	.ascii "uDivide_param_L_i64"
-	.space 1
-	.ascii "Divide_var_L_i64"
-	.space 1
-	.ascii "uDivide_var_L_i64"
-	.space 1
-	.ascii "Divide_param_L_I"
-	.space 1
-	.ascii "uDivide_param_L_I"
-	.space 1
-	.ascii "Divide_var_L_I"
-	.space 1
-	.ascii "uDivide_var_L_I"
-	.space 1
-	.ascii "Divide_param_L_i32"
-	.space 1
-	.ascii "uDivide_param_L_i32"
-	.space 1
-	.ascii "Divide_var_L_i32"
-	.space 1
-	.ascii "uDivide_var_L_i32"
-	.space 1
-	.ascii "Divide_param_L_i16"
-	.space 1
-	.ascii "uDivide_param_L_i16"
-	.space 1
-	.ascii "Divide_var_L_i16"
-	.space 1
-	.ascii "uDivide_var_L_i16"
-	.space 1
-	.ascii "Divide_param_L_LC"
-	.space 1
-	.ascii "uDivide_param_L_LC"
-	.space 1
-	.ascii "Divide_var_L_LC"
-	.space 1
-	.ascii "uDivide_var_L_LC"
-	.space 1
-	.ascii "Divide_param_L_u64"
-	.space 1
-	.ascii "uDivide_param_L_u64"
-	.space 1
-	.ascii "Divide_var_L_u64"
-	.space 1
-	.ascii "uDivide_var_L_u64"
-	.space 1
-	.ascii "Divide_param_L_u16"
-	.space 1
-	.ascii "uDivide_param_L_u16"
-	.space 1
-	.ascii "Divide_var_L_u16"
-	.space 1
-	.ascii "uDivide_var_L_u16"
-	.space 1
-	.ascii "Divide_param_i8_u32"
-	.space 1
-	.ascii "uDivide_param_i8_u32"
-	.space 1
-	.ascii "Divide_var_i8_u32"
-	.space 1
-	.ascii "uDivide_var_i8_u32"
-	.space 1
-	.ascii "Divide_param_i8_L"
-	.space 1
-	.ascii "uDivide_param_i8_L"
-	.space 1
-	.ascii "Divide_var_i8_L"
-	.space 1
-	.ascii "uDivide_var_i8_L"
-	.space 1
-	.ascii "Divide_param_i8_i8"
-	.space 1
-	.ascii "uDivide_param_i8_i8"
-	.space 1
-	.ascii "Divide_var_i8_i8"
-	.space 1
-	.ascii "uDivide_var_i8_i8"
-	.space 1
-	.ascii "Divide_param_i8_u8"
-	.space 1
-	.ascii "uDivide_param_i8_u8"
-	.space 1
-	.ascii "Divide_var_i8_u8"
-	.space 1
-	.ascii "uDivide_var_i8_u8"
-	.space 1
-	.ascii "Divide_param_i8_C"
-	.space 1
-	.ascii "uDivide_param_i8_C"
-	.space 1
-	.ascii "Divide_var_i8_C"
-	.space 1
-	.ascii "uDivide_var_i8_C"
-	.space 1
-	.ascii "Divide_param_i8_i64"
-	.space 1
-	.ascii "uDivide_param_i8_i64"
-	.space 1
-	.ascii "Divide_var_i8_i64"
-	.space 1
-	.ascii "uDivide_var_i8_i64"
-	.space 1
-	.ascii "Divide_param_i8_I"
-	.space 1
-	.ascii "uDivide_param_i8_I"
-	.space 1
-	.ascii "Divide_var_i8_I"
-	.space 1
-	.ascii "uDivide_var_i8_I"
-	.space 1
-	.ascii "Divide_param_i8_i32"
-	.space 1
-	.ascii "uDivide_param_i8_i32"
-	.space 1
-	.ascii "Divide_var_i8_i32"
-	.space 1
-	.ascii "uDivide_var_i8_i32"
-	.space 1
-	.ascii "Divide_param_i8_i16"
-	.space 1
-	.ascii "uDivide_param_i8_i16"
-	.space 1
-	.ascii "Divide_var_i8_i16"
-	.space 1
-	.ascii "uDivide_var_i8_i16"
-	.space 1
-	.ascii "Divide_param_i8_LC"
-	.space 1
-	.ascii "uDivide_param_i8_LC"
-	.space 1
-	.ascii "Divide_var_i8_LC"
-	.space 1
-	.ascii "uDivide_var_i8_LC"
-	.space 1
-	.ascii "Divide_param_i8_u64"
-	.space 1
-	.ascii "uDivide_param_i8_u64"
-	.space 1
-	.ascii "Divide_var_i8_u64"
-	.space 1
-	.ascii "uDivide_var_i8_u64"
-	.space 1
-	.ascii "Divide_param_i8_u16"
-	.space 1
-	.ascii "uDivide_param_i8_u16"
-	.space 1
-	.ascii "Divide_var_i8_u16"
-	.space 1
-	.ascii "uDivide_var_i8_u16"
-	.space 1
-	.ascii "Divide_param_u8_u32"
-	.space 1
-	.ascii "uDivide_param_u8_u32"
-	.space 1
-	.ascii "Divide_var_u8_u32"
-	.space 1
-	.ascii "uDivide_var_u8_u32"
-	.space 1
-	.ascii "Divide_param_u8_L"
-	.space 1
-	.ascii "uDivide_param_u8_L"
-	.space 1
-	.ascii "Divide_var_u8_L"
-	.space 1
-	.ascii "uDivide_var_u8_L"
-	.space 1
-	.ascii "Divide_param_u8_i8"
-	.space 1
-	.ascii "uDivide_param_u8_i8"
-	.space 1
-	.ascii "Divide_var_u8_i8"
-	.space 1
-	.ascii "uDivide_var_u8_i8"
-	.space 1
-	.ascii "Divide_param_u8_u8"
-	.space 1
-	.ascii "uDivide_param_u8_u8"
-	.space 1
-	.ascii "Divide_var_u8_u8"
-	.space 1
-	.ascii "uDivide_var_u8_u8"
-	.space 1
-	.ascii "Divide_param_u8_C"
-	.space 1
-	.ascii "uDivide_param_u8_C"
-	.space 1
-	.ascii "Divide_var_u8_C"
-	.space 1
-	.ascii "uDivide_var_u8_C"
-	.space 1
-	.ascii "Divide_param_u8_i64"
-	.space 1
-	.ascii "uDivide_param_u8_i64"
-	.space 1
-	.ascii "Divide_var_u8_i64"
-	.space 1
-	.ascii "uDivide_var_u8_i64"
-	.space 1
-	.ascii "Divide_param_u8_I"
-	.space 1
-	.ascii "uDivide_param_u8_I"
-	.space 1
-	.ascii "Divide_var_u8_I"
-	.space 1
-	.ascii "uDivide_var_u8_I"
-	.space 1
-	.ascii "Divide_param_u8_i32"
-	.space 1
-	.ascii "uDivide_param_u8_i32"
-	.space 1
-	.ascii "Divide_var_u8_i32"
-	.space 1
-	.ascii "uDivide_var_u8_i32"
-	.space 1
-	.ascii "Divide_param_u8_i16"
-	.space 1
-	.ascii "uDivide_param_u8_i16"
-	.space 1
-	.ascii "Divide_var_u8_i16"
-	.space 1
-	.ascii "uDivide_var_u8_i16"
-	.space 1
-	.ascii "Divide_param_u8_LC"
-	.space 1
-	.ascii "uDivide_param_u8_LC"
-	.space 1
-	.ascii "Divide_var_u8_LC"
-	.space 1
-	.ascii "uDivide_var_u8_LC"
-	.space 1
-	.ascii "Divide_param_u8_u64"
-	.space 1
-	.ascii "uDivide_param_u8_u64"
-	.space 1
-	.ascii "Divide_var_u8_u64"
-	.space 1
-	.ascii "uDivide_var_u8_u64"
-	.space 1
-	.ascii "Divide_param_u8_u16"
-	.space 1
-	.ascii "uDivide_param_u8_u16"
-	.space 1
-	.ascii "Divide_var_u8_u16"
-	.space 1
-	.ascii "uDivide_var_u8_u16"
-	.space 1
-	.ascii "Divide_param_f32_f32"
-	.space 1
-	.ascii "Divide_var_f32_f32"
-	.space 1
-	.ascii "Divide_param_C_u32"
-	.space 1
-	.ascii "uDivide_param_C_u32"
-	.space 1
-	.ascii "Divide_var_C_u32"
-	.space 1
-	.ascii "uDivide_var_C_u32"
-	.space 1
-	.ascii "Divide_param_C_L"
-	.space 1
-	.ascii "uDivide_param_C_L"
-	.space 1
-	.ascii "Divide_var_C_L"
-	.space 1
-	.ascii "uDivide_var_C_L"
-	.space 1
-	.ascii "Divide_param_C_i8"
-	.space 1
-	.ascii "uDivide_param_C_i8"
-	.space 1
-	.ascii "Divide_var_C_i8"
-	.space 1
-	.ascii "uDivide_var_C_i8"
-	.space 1
-	.ascii "Divide_param_C_u8"
-	.space 1
-	.ascii "uDivide_param_C_u8"
-	.space 1
-	.ascii "Divide_var_C_u8"
-	.space 1
-	.ascii "uDivide_var_C_u8"
-	.space 1
-	.ascii "Divide_param_C_C"
-	.space 1
-	.ascii "uDivide_param_C_C"
-	.space 1
-	.ascii "Divide_var_C_C"
-	.space 1
-	.ascii "uDivide_var_C_C"
-	.space 1
-	.ascii "Divide_param_C_i64"
-	.space 1
-	.ascii "uDivide_param_C_i64"
-	.space 1
-	.ascii "Divide_var_C_i64"
-	.space 1
-	.ascii "uDivide_var_C_i64"
-	.space 1
-	.ascii "Divide_param_C_I"
-	.space 1
-	.ascii "uDivide_param_C_I"
-	.space 1
-	.ascii "Divide_var_C_I"
-	.space 1
-	.ascii "uDivide_var_C_I"
-	.space 1
-	.ascii "Divide_param_C_i32"
-	.space 1
-	.ascii "uDivide_param_C_i32"
-	.space 1
-	.ascii "Divide_var_C_i32"
-	.space 1
-	.ascii "uDivide_var_C_i32"
-	.space 1
-	.ascii "Divide_param_C_i16"
-	.space 1
-	.ascii "uDivide_param_C_i16"
-	.space 1
-	.ascii "Divide_var_C_i16"
-	.space 1
-	.ascii "uDivide_var_C_i16"
-	.space 1
-	.ascii "Divide_param_C_LC"
-	.space 1
-	.ascii "uDivide_param_C_LC"
-	.space 1
-	.ascii "Divide_var_C_LC"
-	.space 1
-	.ascii "uDivide_var_C_LC"
-	.space 1
-	.ascii "Divide_param_C_u64"
-	.space 1
-	.ascii "uDivide_param_C_u64"
-	.space 1
-	.ascii "Divide_var_C_u64"
-	.space 1
-	.ascii "uDivide_var_C_u64"
-	.space 1
-	.ascii "Divide_param_C_u16"
-	.space 1
-	.ascii "uDivide_param_C_u16"
-	.space 1
-	.ascii "Divide_var_C_u16"
-	.space 1
-	.ascii "uDivide_var_C_u16"
-	.space 1
-	.ascii "Divide_param_i64_u32"
-	.space 1
-	.ascii "uDivide_param_i64_u32"
-	.space 1
-	.ascii "Divide_var_i64_u32"
-	.space 1
-	.ascii "uDivide_var_i64_u32"
-	.space 1
-	.ascii "Divide_param_i64_L"
-	.space 1
-	.ascii "uDivide_param_i64_L"
-	.space 1
-	.ascii "Divide_var_i64_L"
-	.space 1
-	.ascii "uDivide_var_i64_L"
-	.space 1
-	.ascii "Divide_param_i64_i8"
-	.space 1
-	.ascii "uDivide_param_i64_i8"
-	.space 1
-	.ascii "Divide_var_i64_i8"
-	.space 1
-	.ascii "uDivide_var_i64_i8"
-	.space 1
-	.ascii "Divide_param_i64_u8"
-	.space 1
-	.ascii "uDivide_param_i64_u8"
-	.space 1
-	.ascii "Divide_var_i64_u8"
-	.space 1
-	.ascii "uDivide_var_i64_u8"
-	.space 1
-	.ascii "Divide_param_i64_C"
-	.space 1
-	.ascii "uDivide_param_i64_C"
-	.space 1
-	.ascii "Divide_var_i64_C"
-	.space 1
-	.ascii "uDivide_var_i64_C"
-	.space 1
-	.ascii "Divide_param_i64_i64"
-	.space 1
-	.ascii "uDivide_param_i64_i64"
-	.space 1
-	.ascii "Divide_var_i64_i64"
-	.space 1
-	.ascii "uDivide_var_i64_i64"
-	.space 1
-	.ascii "Divide_param_i64_I"
-	.space 1
-	.ascii "uDivide_param_i64_I"
-	.space 1
-	.ascii "Divide_var_i64_I"
-	.space 1
-	.ascii "uDivide_var_i64_I"
-	.space 1
-	.ascii "Divide_param_i64_i32"
-	.space 1
-	.ascii "uDivide_param_i64_i32"
-	.space 1
-	.ascii "Divide_var_i64_i32"
-	.space 1
-	.ascii "uDivide_var_i64_i32"
-	.space 1
-	.ascii "Divide_param_i64_i16"
-	.space 1
-	.ascii "uDivide_param_i64_i16"
-	.space 1
-	.ascii "Divide_var_i64_i16"
-	.space 1
-	.ascii "uDivide_var_i64_i16"
-	.space 1
-	.ascii "Divide_param_i64_LC"
-	.space 1
-	.ascii "uDivide_param_i64_LC"
-	.space 1
-	.ascii "Divide_var_i64_LC"
-	.space 1
-	.ascii "uDivide_var_i64_LC"
-	.space 1
-	.ascii "Divide_param_i64_u64"
-	.space 1
-	.ascii "uDivide_param_i64_u64"
-	.space 1
-	.ascii "Divide_var_i64_u64"
-	.space 1
-	.ascii "uDivide_var_i64_u64"
-	.space 1
-	.ascii "Divide_param_i64_u16"
-	.space 1
-	.ascii "uDivide_param_i64_u16"
-	.space 1
-	.ascii "Divide_var_i64_u16"
-	.space 1
-	.ascii "uDivide_var_i64_u16"
-	.space 1
-	.ascii "Divide_param_I_u32"
-	.space 1
-	.ascii "uDivide_param_I_u32"
-	.space 1
-	.ascii "Divide_var_I_u32"
-	.space 1
-	.ascii "uDivide_var_I_u32"
-	.space 1
-	.ascii "Divide_param_I_L"
-	.space 1
-	.ascii "uDivide_param_I_L"
-	.space 1
-	.ascii "Divide_var_I_L"
-	.space 1
-	.ascii "uDivide_var_I_L"
-	.space 1
-	.ascii "Divide_param_I_i8"
-	.space 1
-	.ascii "uDivide_param_I_i8"
-	.space 1
-	.ascii "Divide_var_I_i8"
-	.space 1
-	.ascii "uDivide_var_I_i8"
-	.space 1
-	.ascii "Divide_param_I_u8"
-	.space 1
-	.ascii "uDivide_param_I_u8"
-	.space 1
-	.ascii "Divide_var_I_u8"
-	.space 1
-	.ascii "uDivide_var_I_u8"
-	.space 1
-	.ascii "Divide_param_I_C"
-	.space 1
-	.ascii "uDivide_param_I_C"
-	.space 1
-	.ascii "Divide_var_I_C"
-	.space 1
-	.ascii "uDivide_var_I_C"
-	.space 1
-	.ascii "Divide_param_I_i64"
-	.space 1
-	.ascii "uDivide_param_I_i64"
-	.space 1
-	.ascii "Divide_var_I_i64"
-	.space 1
-	.ascii "uDivide_var_I_i64"
-	.space 1
-	.ascii "Divide_param_I_I"
-	.space 1
-	.ascii "uDivide_param_I_I"
-	.space 1
-	.ascii "Divide_var_I_I"
-	.space 1
-	.ascii "uDivide_var_I_I"
-	.space 1
-	.ascii "Divide_param_I_i32"
-	.space 1
-	.ascii "uDivide_param_I_i32"
-	.space 1
-	.ascii "Divide_var_I_i32"
-	.space 1
-	.ascii "uDivide_var_I_i32"
-	.space 1
-	.ascii "Divide_param_I_i16"
-	.space 1
-	.ascii "uDivide_param_I_i16"
-	.space 1
-	.ascii "Divide_var_I_i16"
-	.space 1
-	.ascii "uDivide_var_I_i16"
-	.space 1
-	.ascii "Divide_param_I_LC"
-	.space 1
-	.ascii "uDivide_param_I_LC"
-	.space 1
-	.ascii "Divide_var_I_LC"
-	.space 1
-	.ascii "uDivide_var_I_LC"
-	.space 1
-	.ascii "Divide_param_I_u64"
-	.space 1
-	.ascii "uDivide_param_I_u64"
-	.space 1
-	.ascii "Divide_var_I_u64"
-	.space 1
-	.ascii "uDivide_var_I_u64"
-	.space 1
-	.ascii "Divide_param_I_u16"
-	.space 1
-	.ascii "uDivide_param_I_u16"
-	.space 1
-	.ascii "Divide_var_I_u16"
-	.space 1
-	.ascii "uDivide_var_I_u16"
-	.space 1
-	.ascii "Divide_param_i32_u32"
-	.space 1
-	.ascii "uDivide_param_i32_u32"
-	.space 1
-	.ascii "Divide_var_i32_u32"
-	.space 1
-	.ascii "uDivide_var_i32_u32"
-	.space 1
-	.ascii "Divide_param_i32_L"
-	.space 1
-	.ascii "uDivide_param_i32_L"
-	.space 1
-	.ascii "Divide_var_i32_L"
-	.space 1
-	.ascii "uDivide_var_i32_L"
-	.space 1
-	.ascii "Divide_param_i32_i8"
-	.space 1
-	.ascii "uDivide_param_i32_i8"
-	.space 1
-	.ascii "Divide_var_i32_i8"
-	.space 1
-	.ascii "uDivide_var_i32_i8"
-	.space 1
-	.ascii "Divide_param_i32_u8"
-	.space 1
-	.ascii "uDivide_param_i32_u8"
-	.space 1
-	.ascii "Divide_var_i32_u8"
-	.space 1
-	.ascii "uDivide_var_i32_u8"
-	.space 1
-	.ascii "Divide_param_i32_C"
-	.space 1
-	.ascii "uDivide_param_i32_C"
-	.space 1
-	.ascii "Divide_var_i32_C"
-	.space 1
-	.ascii "uDivide_var_i32_C"
-	.space 1
-	.ascii "Divide_param_i32_i64"
-	.space 1
-	.ascii "uDivide_param_i32_i64"
-	.space 1
-	.ascii "Divide_var_i32_i64"
-	.space 1
-	.ascii "uDivide_var_i32_i64"
-	.space 1
-	.ascii "Divide_param_i32_I"
-	.space 1
-	.ascii "uDivide_param_i32_I"
-	.space 1
-	.ascii "Divide_var_i32_I"
-	.space 1
-	.ascii "uDivide_var_i32_I"
-	.space 1
 	.ascii "Divide_param_i32_i32"
 	.space 1
 	.ascii "uDivide_param_i32_i32"
@@ -15140,13 +14408,13 @@ _L_1:
 	.space 1
 	.ascii "uDivide_var_i32_i16"
 	.space 1
-	.ascii "Divide_param_i32_LC"
+	.ascii "Divide_param_i32_L"
 	.space 1
-	.ascii "uDivide_param_i32_LC"
+	.ascii "uDivide_param_i32_L"
 	.space 1
-	.ascii "Divide_var_i32_LC"
+	.ascii "Divide_var_i32_L"
 	.space 1
-	.ascii "uDivide_var_i32_LC"
+	.ascii "uDivide_var_i32_L"
 	.space 1
 	.ascii "Divide_param_i32_u64"
 	.space 1
@@ -15164,61 +14432,61 @@ _L_1:
 	.space 1
 	.ascii "uDivide_var_i32_u16"
 	.space 1
-	.ascii "Divide_param_i16_u32"
+	.ascii "Divide_param_i32_C"
 	.space 1
-	.ascii "uDivide_param_i16_u32"
+	.ascii "uDivide_param_i32_C"
 	.space 1
-	.ascii "Divide_var_i16_u32"
+	.ascii "Divide_var_i32_C"
 	.space 1
-	.ascii "uDivide_var_i16_u32"
+	.ascii "uDivide_var_i32_C"
 	.space 1
-	.ascii "Divide_param_i16_L"
+	.ascii "Divide_param_i32_u32"
 	.space 1
-	.ascii "uDivide_param_i16_L"
+	.ascii "uDivide_param_i32_u32"
 	.space 1
-	.ascii "Divide_var_i16_L"
+	.ascii "Divide_var_i32_u32"
 	.space 1
-	.ascii "uDivide_var_i16_L"
+	.ascii "uDivide_var_i32_u32"
 	.space 1
-	.ascii "Divide_param_i16_i8"
+	.ascii "Divide_param_i32_i8"
 	.space 1
-	.ascii "uDivide_param_i16_i8"
+	.ascii "uDivide_param_i32_i8"
 	.space 1
-	.ascii "Divide_var_i16_i8"
+	.ascii "Divide_var_i32_i8"
 	.space 1
-	.ascii "uDivide_var_i16_i8"
+	.ascii "uDivide_var_i32_i8"
 	.space 1
-	.ascii "Divide_param_i16_u8"
+	.ascii "Divide_param_i32_I"
 	.space 1
-	.ascii "uDivide_param_i16_u8"
+	.ascii "uDivide_param_i32_I"
 	.space 1
-	.ascii "Divide_var_i16_u8"
+	.ascii "Divide_var_i32_I"
 	.space 1
-	.ascii "uDivide_var_i16_u8"
+	.ascii "uDivide_var_i32_I"
 	.space 1
-	.ascii "Divide_param_i16_C"
+	.ascii "Divide_param_i32_u8"
 	.space 1
-	.ascii "uDivide_param_i16_C"
+	.ascii "uDivide_param_i32_u8"
 	.space 1
-	.ascii "Divide_var_i16_C"
+	.ascii "Divide_var_i32_u8"
 	.space 1
-	.ascii "uDivide_var_i16_C"
+	.ascii "uDivide_var_i32_u8"
 	.space 1
-	.ascii "Divide_param_i16_i64"
+	.ascii "Divide_param_i32_LC"
 	.space 1
-	.ascii "uDivide_param_i16_i64"
+	.ascii "uDivide_param_i32_LC"
 	.space 1
-	.ascii "Divide_var_i16_i64"
+	.ascii "Divide_var_i32_LC"
 	.space 1
-	.ascii "uDivide_var_i16_i64"
+	.ascii "uDivide_var_i32_LC"
 	.space 1
-	.ascii "Divide_param_i16_I"
+	.ascii "Divide_param_i32_i64"
 	.space 1
-	.ascii "uDivide_param_i16_I"
+	.ascii "uDivide_param_i32_i64"
 	.space 1
-	.ascii "Divide_var_i16_I"
+	.ascii "Divide_var_i32_i64"
 	.space 1
-	.ascii "uDivide_var_i16_I"
+	.ascii "uDivide_var_i32_i64"
 	.space 1
 	.ascii "Divide_param_i16_i32"
 	.space 1
@@ -15236,13 +14504,13 @@ _L_1:
 	.space 1
 	.ascii "uDivide_var_i16_i16"
 	.space 1
-	.ascii "Divide_param_i16_LC"
+	.ascii "Divide_param_i16_L"
 	.space 1
-	.ascii "uDivide_param_i16_LC"
+	.ascii "uDivide_param_i16_L"
 	.space 1
-	.ascii "Divide_var_i16_LC"
+	.ascii "Divide_var_i16_L"
 	.space 1
-	.ascii "uDivide_var_i16_LC"
+	.ascii "uDivide_var_i16_L"
 	.space 1
 	.ascii "Divide_param_i16_u64"
 	.space 1
@@ -15260,161 +14528,161 @@ _L_1:
 	.space 1
 	.ascii "uDivide_var_i16_u16"
 	.space 1
+	.ascii "Divide_param_i16_C"
+	.space 1
+	.ascii "uDivide_param_i16_C"
+	.space 1
+	.ascii "Divide_var_i16_C"
+	.space 1
+	.ascii "uDivide_var_i16_C"
+	.space 1
+	.ascii "Divide_param_i16_u32"
+	.space 1
+	.ascii "uDivide_param_i16_u32"
+	.space 1
+	.ascii "Divide_var_i16_u32"
+	.space 1
+	.ascii "uDivide_var_i16_u32"
+	.space 1
+	.ascii "Divide_param_i16_i8"
+	.space 1
+	.ascii "uDivide_param_i16_i8"
+	.space 1
+	.ascii "Divide_var_i16_i8"
+	.space 1
+	.ascii "uDivide_var_i16_i8"
+	.space 1
+	.ascii "Divide_param_i16_I"
+	.space 1
+	.ascii "uDivide_param_i16_I"
+	.space 1
+	.ascii "Divide_var_i16_I"
+	.space 1
+	.ascii "uDivide_var_i16_I"
+	.space 1
+	.ascii "Divide_param_i16_u8"
+	.space 1
+	.ascii "uDivide_param_i16_u8"
+	.space 1
+	.ascii "Divide_var_i16_u8"
+	.space 1
+	.ascii "uDivide_var_i16_u8"
+	.space 1
+	.ascii "Divide_param_i16_LC"
+	.space 1
+	.ascii "uDivide_param_i16_LC"
+	.space 1
+	.ascii "Divide_var_i16_LC"
+	.space 1
+	.ascii "uDivide_var_i16_LC"
+	.space 1
+	.ascii "Divide_param_i16_i64"
+	.space 1
+	.ascii "uDivide_param_i16_i64"
+	.space 1
+	.ascii "Divide_var_i16_i64"
+	.space 1
+	.ascii "uDivide_var_i16_i64"
+	.space 1
+	.ascii "Divide_param_L_i32"
+	.space 1
+	.ascii "uDivide_param_L_i32"
+	.space 1
+	.ascii "Divide_var_L_i32"
+	.space 1
+	.ascii "uDivide_var_L_i32"
+	.space 1
+	.ascii "Divide_param_L_i16"
+	.space 1
+	.ascii "uDivide_param_L_i16"
+	.space 1
+	.ascii "Divide_var_L_i16"
+	.space 1
+	.ascii "uDivide_var_L_i16"
+	.space 1
+	.ascii "Divide_param_L_L"
+	.space 1
+	.ascii "uDivide_param_L_L"
+	.space 1
+	.ascii "Divide_var_L_L"
+	.space 1
+	.ascii "uDivide_var_L_L"
+	.space 1
+	.ascii "Divide_param_L_u64"
+	.space 1
+	.ascii "uDivide_param_L_u64"
+	.space 1
+	.ascii "Divide_var_L_u64"
+	.space 1
+	.ascii "uDivide_var_L_u64"
+	.space 1
+	.ascii "Divide_param_L_u16"
+	.space 1
+	.ascii "uDivide_param_L_u16"
+	.space 1
+	.ascii "Divide_var_L_u16"
+	.space 1
+	.ascii "uDivide_var_L_u16"
+	.space 1
+	.ascii "Divide_param_L_C"
+	.space 1
+	.ascii "uDivide_param_L_C"
+	.space 1
+	.ascii "Divide_var_L_C"
+	.space 1
+	.ascii "uDivide_var_L_C"
+	.space 1
+	.ascii "Divide_param_L_u32"
+	.space 1
+	.ascii "uDivide_param_L_u32"
+	.space 1
+	.ascii "Divide_var_L_u32"
+	.space 1
+	.ascii "uDivide_var_L_u32"
+	.space 1
+	.ascii "Divide_param_L_i8"
+	.space 1
+	.ascii "uDivide_param_L_i8"
+	.space 1
+	.ascii "Divide_var_L_i8"
+	.space 1
+	.ascii "uDivide_var_L_i8"
+	.space 1
+	.ascii "Divide_param_L_I"
+	.space 1
+	.ascii "uDivide_param_L_I"
+	.space 1
+	.ascii "Divide_var_L_I"
+	.space 1
+	.ascii "uDivide_var_L_I"
+	.space 1
+	.ascii "Divide_param_L_u8"
+	.space 1
+	.ascii "uDivide_param_L_u8"
+	.space 1
+	.ascii "Divide_var_L_u8"
+	.space 1
+	.ascii "uDivide_var_L_u8"
+	.space 1
+	.ascii "Divide_param_L_LC"
+	.space 1
+	.ascii "uDivide_param_L_LC"
+	.space 1
+	.ascii "Divide_var_L_LC"
+	.space 1
+	.ascii "uDivide_var_L_LC"
+	.space 1
+	.ascii "Divide_param_L_i64"
+	.space 1
+	.ascii "uDivide_param_L_i64"
+	.space 1
+	.ascii "Divide_var_L_i64"
+	.space 1
+	.ascii "uDivide_var_L_i64"
+	.space 1
 	.ascii "Divide_param_f64_f64"
 	.space 1
 	.ascii "Divide_var_f64_f64"
-	.space 1
-	.ascii "Divide_param_LC_u32"
-	.space 1
-	.ascii "uDivide_param_LC_u32"
-	.space 1
-	.ascii "Divide_var_LC_u32"
-	.space 1
-	.ascii "uDivide_var_LC_u32"
-	.space 1
-	.ascii "Divide_param_LC_L"
-	.space 1
-	.ascii "uDivide_param_LC_L"
-	.space 1
-	.ascii "Divide_var_LC_L"
-	.space 1
-	.ascii "uDivide_var_LC_L"
-	.space 1
-	.ascii "Divide_param_LC_i8"
-	.space 1
-	.ascii "uDivide_param_LC_i8"
-	.space 1
-	.ascii "Divide_var_LC_i8"
-	.space 1
-	.ascii "uDivide_var_LC_i8"
-	.space 1
-	.ascii "Divide_param_LC_u8"
-	.space 1
-	.ascii "uDivide_param_LC_u8"
-	.space 1
-	.ascii "Divide_var_LC_u8"
-	.space 1
-	.ascii "uDivide_var_LC_u8"
-	.space 1
-	.ascii "Divide_param_LC_C"
-	.space 1
-	.ascii "uDivide_param_LC_C"
-	.space 1
-	.ascii "Divide_var_LC_C"
-	.space 1
-	.ascii "uDivide_var_LC_C"
-	.space 1
-	.ascii "Divide_param_LC_i64"
-	.space 1
-	.ascii "uDivide_param_LC_i64"
-	.space 1
-	.ascii "Divide_var_LC_i64"
-	.space 1
-	.ascii "uDivide_var_LC_i64"
-	.space 1
-	.ascii "Divide_param_LC_I"
-	.space 1
-	.ascii "uDivide_param_LC_I"
-	.space 1
-	.ascii "Divide_var_LC_I"
-	.space 1
-	.ascii "uDivide_var_LC_I"
-	.space 1
-	.ascii "Divide_param_LC_i32"
-	.space 1
-	.ascii "uDivide_param_LC_i32"
-	.space 1
-	.ascii "Divide_var_LC_i32"
-	.space 1
-	.ascii "uDivide_var_LC_i32"
-	.space 1
-	.ascii "Divide_param_LC_i16"
-	.space 1
-	.ascii "uDivide_param_LC_i16"
-	.space 1
-	.ascii "Divide_var_LC_i16"
-	.space 1
-	.ascii "uDivide_var_LC_i16"
-	.space 1
-	.ascii "Divide_param_LC_LC"
-	.space 1
-	.ascii "uDivide_param_LC_LC"
-	.space 1
-	.ascii "Divide_var_LC_LC"
-	.space 1
-	.ascii "uDivide_var_LC_LC"
-	.space 1
-	.ascii "Divide_param_LC_u64"
-	.space 1
-	.ascii "uDivide_param_LC_u64"
-	.space 1
-	.ascii "Divide_var_LC_u64"
-	.space 1
-	.ascii "uDivide_var_LC_u64"
-	.space 1
-	.ascii "Divide_param_LC_u16"
-	.space 1
-	.ascii "uDivide_param_LC_u16"
-	.space 1
-	.ascii "Divide_var_LC_u16"
-	.space 1
-	.ascii "uDivide_var_LC_u16"
-	.space 1
-	.ascii "Divide_param_u64_u32"
-	.space 1
-	.ascii "uDivide_param_u64_u32"
-	.space 1
-	.ascii "Divide_var_u64_u32"
-	.space 1
-	.ascii "uDivide_var_u64_u32"
-	.space 1
-	.ascii "Divide_param_u64_L"
-	.space 1
-	.ascii "uDivide_param_u64_L"
-	.space 1
-	.ascii "Divide_var_u64_L"
-	.space 1
-	.ascii "uDivide_var_u64_L"
-	.space 1
-	.ascii "Divide_param_u64_i8"
-	.space 1
-	.ascii "uDivide_param_u64_i8"
-	.space 1
-	.ascii "Divide_var_u64_i8"
-	.space 1
-	.ascii "uDivide_var_u64_i8"
-	.space 1
-	.ascii "Divide_param_u64_u8"
-	.space 1
-	.ascii "uDivide_param_u64_u8"
-	.space 1
-	.ascii "Divide_var_u64_u8"
-	.space 1
-	.ascii "uDivide_var_u64_u8"
-	.space 1
-	.ascii "Divide_param_u64_C"
-	.space 1
-	.ascii "uDivide_param_u64_C"
-	.space 1
-	.ascii "Divide_var_u64_C"
-	.space 1
-	.ascii "uDivide_var_u64_C"
-	.space 1
-	.ascii "Divide_param_u64_i64"
-	.space 1
-	.ascii "uDivide_param_u64_i64"
-	.space 1
-	.ascii "Divide_var_u64_i64"
-	.space 1
-	.ascii "uDivide_var_u64_i64"
-	.space 1
-	.ascii "Divide_param_u64_I"
-	.space 1
-	.ascii "uDivide_param_u64_I"
-	.space 1
-	.ascii "Divide_var_u64_I"
-	.space 1
-	.ascii "uDivide_var_u64_I"
 	.space 1
 	.ascii "Divide_param_u64_i32"
 	.space 1
@@ -15432,13 +14700,13 @@ _L_1:
 	.space 1
 	.ascii "uDivide_var_u64_i16"
 	.space 1
-	.ascii "Divide_param_u64_LC"
+	.ascii "Divide_param_u64_L"
 	.space 1
-	.ascii "uDivide_param_u64_LC"
+	.ascii "uDivide_param_u64_L"
 	.space 1
-	.ascii "Divide_var_u64_LC"
+	.ascii "Divide_var_u64_L"
 	.space 1
-	.ascii "uDivide_var_u64_LC"
+	.ascii "uDivide_var_u64_L"
 	.space 1
 	.ascii "Divide_param_u64_u64"
 	.space 1
@@ -15456,61 +14724,61 @@ _L_1:
 	.space 1
 	.ascii "uDivide_var_u64_u16"
 	.space 1
-	.ascii "Divide_param_u16_u32"
+	.ascii "Divide_param_u64_C"
 	.space 1
-	.ascii "uDivide_param_u16_u32"
+	.ascii "uDivide_param_u64_C"
 	.space 1
-	.ascii "Divide_var_u16_u32"
+	.ascii "Divide_var_u64_C"
 	.space 1
-	.ascii "uDivide_var_u16_u32"
+	.ascii "uDivide_var_u64_C"
 	.space 1
-	.ascii "Divide_param_u16_L"
+	.ascii "Divide_param_u64_u32"
 	.space 1
-	.ascii "uDivide_param_u16_L"
+	.ascii "uDivide_param_u64_u32"
 	.space 1
-	.ascii "Divide_var_u16_L"
+	.ascii "Divide_var_u64_u32"
 	.space 1
-	.ascii "uDivide_var_u16_L"
+	.ascii "uDivide_var_u64_u32"
 	.space 1
-	.ascii "Divide_param_u16_i8"
+	.ascii "Divide_param_u64_i8"
 	.space 1
-	.ascii "uDivide_param_u16_i8"
+	.ascii "uDivide_param_u64_i8"
 	.space 1
-	.ascii "Divide_var_u16_i8"
+	.ascii "Divide_var_u64_i8"
 	.space 1
-	.ascii "uDivide_var_u16_i8"
+	.ascii "uDivide_var_u64_i8"
 	.space 1
-	.ascii "Divide_param_u16_u8"
+	.ascii "Divide_param_u64_I"
 	.space 1
-	.ascii "uDivide_param_u16_u8"
+	.ascii "uDivide_param_u64_I"
 	.space 1
-	.ascii "Divide_var_u16_u8"
+	.ascii "Divide_var_u64_I"
 	.space 1
-	.ascii "uDivide_var_u16_u8"
+	.ascii "uDivide_var_u64_I"
 	.space 1
-	.ascii "Divide_param_u16_C"
+	.ascii "Divide_param_u64_u8"
 	.space 1
-	.ascii "uDivide_param_u16_C"
+	.ascii "uDivide_param_u64_u8"
 	.space 1
-	.ascii "Divide_var_u16_C"
+	.ascii "Divide_var_u64_u8"
 	.space 1
-	.ascii "uDivide_var_u16_C"
+	.ascii "uDivide_var_u64_u8"
 	.space 1
-	.ascii "Divide_param_u16_i64"
+	.ascii "Divide_param_u64_LC"
 	.space 1
-	.ascii "uDivide_param_u16_i64"
+	.ascii "uDivide_param_u64_LC"
 	.space 1
-	.ascii "Divide_var_u16_i64"
+	.ascii "Divide_var_u64_LC"
 	.space 1
-	.ascii "uDivide_var_u16_i64"
+	.ascii "uDivide_var_u64_LC"
 	.space 1
-	.ascii "Divide_param_u16_I"
+	.ascii "Divide_param_u64_i64"
 	.space 1
-	.ascii "uDivide_param_u16_I"
+	.ascii "uDivide_param_u64_i64"
 	.space 1
-	.ascii "Divide_var_u16_I"
+	.ascii "Divide_var_u64_i64"
 	.space 1
-	.ascii "uDivide_var_u16_I"
+	.ascii "uDivide_var_u64_i64"
 	.space 1
 	.ascii "Divide_param_u16_i32"
 	.space 1
@@ -15528,13 +14796,13 @@ _L_1:
 	.space 1
 	.ascii "uDivide_var_u16_i16"
 	.space 1
-	.ascii "Divide_param_u16_LC"
+	.ascii "Divide_param_u16_L"
 	.space 1
-	.ascii "uDivide_param_u16_LC"
+	.ascii "uDivide_param_u16_L"
 	.space 1
-	.ascii "Divide_var_u16_LC"
+	.ascii "Divide_var_u16_L"
 	.space 1
-	.ascii "uDivide_var_u16_LC"
+	.ascii "uDivide_var_u16_L"
 	.space 1
 	.ascii "Divide_param_u16_u64"
 	.space 1
@@ -15551,1168 +14819,1900 @@ _L_1:
 	.ascii "Divide_var_u16_u16"
 	.space 1
 	.ascii "uDivide_var_u16_u16"
+	.space 1
+	.ascii "Divide_param_u16_C"
+	.space 1
+	.ascii "uDivide_param_u16_C"
+	.space 1
+	.ascii "Divide_var_u16_C"
+	.space 1
+	.ascii "uDivide_var_u16_C"
+	.space 1
+	.ascii "Divide_param_u16_u32"
+	.space 1
+	.ascii "uDivide_param_u16_u32"
+	.space 1
+	.ascii "Divide_var_u16_u32"
+	.space 1
+	.ascii "uDivide_var_u16_u32"
+	.space 1
+	.ascii "Divide_param_u16_i8"
+	.space 1
+	.ascii "uDivide_param_u16_i8"
+	.space 1
+	.ascii "Divide_var_u16_i8"
+	.space 1
+	.ascii "uDivide_var_u16_i8"
+	.space 1
+	.ascii "Divide_param_u16_I"
+	.space 1
+	.ascii "uDivide_param_u16_I"
+	.space 1
+	.ascii "Divide_var_u16_I"
+	.space 1
+	.ascii "uDivide_var_u16_I"
+	.space 1
+	.ascii "Divide_param_u16_u8"
+	.space 1
+	.ascii "uDivide_param_u16_u8"
+	.space 1
+	.ascii "Divide_var_u16_u8"
+	.space 1
+	.ascii "uDivide_var_u16_u8"
+	.space 1
+	.ascii "Divide_param_u16_LC"
+	.space 1
+	.ascii "uDivide_param_u16_LC"
+	.space 1
+	.ascii "Divide_var_u16_LC"
+	.space 1
+	.ascii "uDivide_var_u16_LC"
+	.space 1
+	.ascii "Divide_param_u16_i64"
+	.space 1
+	.ascii "uDivide_param_u16_i64"
+	.space 1
+	.ascii "Divide_var_u16_i64"
+	.space 1
+	.ascii "uDivide_var_u16_i64"
+	.space 1
+	.ascii "Divide_param_C_i32"
+	.space 1
+	.ascii "uDivide_param_C_i32"
+	.space 1
+	.ascii "Divide_var_C_i32"
+	.space 1
+	.ascii "uDivide_var_C_i32"
+	.space 1
+	.ascii "Divide_param_C_i16"
+	.space 1
+	.ascii "uDivide_param_C_i16"
+	.space 1
+	.ascii "Divide_var_C_i16"
+	.space 1
+	.ascii "uDivide_var_C_i16"
+	.space 1
+	.ascii "Divide_param_C_L"
+	.space 1
+	.ascii "uDivide_param_C_L"
+	.space 1
+	.ascii "Divide_var_C_L"
+	.space 1
+	.ascii "uDivide_var_C_L"
+	.space 1
+	.ascii "Divide_param_C_u64"
+	.space 1
+	.ascii "uDivide_param_C_u64"
+	.space 1
+	.ascii "Divide_var_C_u64"
+	.space 1
+	.ascii "uDivide_var_C_u64"
+	.space 1
+	.ascii "Divide_param_C_u16"
+	.space 1
+	.ascii "uDivide_param_C_u16"
+	.space 1
+	.ascii "Divide_var_C_u16"
+	.space 1
+	.ascii "uDivide_var_C_u16"
+	.space 1
+	.ascii "Divide_param_C_C"
+	.space 1
+	.ascii "uDivide_param_C_C"
+	.space 1
+	.ascii "Divide_var_C_C"
+	.space 1
+	.ascii "uDivide_var_C_C"
+	.space 1
+	.ascii "Divide_param_C_u32"
+	.space 1
+	.ascii "uDivide_param_C_u32"
+	.space 1
+	.ascii "Divide_var_C_u32"
+	.space 1
+	.ascii "uDivide_var_C_u32"
+	.space 1
+	.ascii "Divide_param_C_i8"
+	.space 1
+	.ascii "uDivide_param_C_i8"
+	.space 1
+	.ascii "Divide_var_C_i8"
+	.space 1
+	.ascii "uDivide_var_C_i8"
+	.space 1
+	.ascii "Divide_param_C_I"
+	.space 1
+	.ascii "uDivide_param_C_I"
+	.space 1
+	.ascii "Divide_var_C_I"
+	.space 1
+	.ascii "uDivide_var_C_I"
+	.space 1
+	.ascii "Divide_param_C_u8"
+	.space 1
+	.ascii "uDivide_param_C_u8"
+	.space 1
+	.ascii "Divide_var_C_u8"
+	.space 1
+	.ascii "uDivide_var_C_u8"
+	.space 1
+	.ascii "Divide_param_C_LC"
+	.space 1
+	.ascii "uDivide_param_C_LC"
+	.space 1
+	.ascii "Divide_var_C_LC"
+	.space 1
+	.ascii "uDivide_var_C_LC"
+	.space 1
+	.ascii "Divide_param_C_i64"
+	.space 1
+	.ascii "uDivide_param_C_i64"
+	.space 1
+	.ascii "Divide_var_C_i64"
+	.space 1
+	.ascii "uDivide_var_C_i64"
+	.space 1
+	.ascii "Divide_param_u32_i32"
+	.space 1
+	.ascii "uDivide_param_u32_i32"
+	.space 1
+	.ascii "Divide_var_u32_i32"
+	.space 1
+	.ascii "uDivide_var_u32_i32"
+	.space 1
+	.ascii "Divide_param_u32_i16"
+	.space 1
+	.ascii "uDivide_param_u32_i16"
+	.space 1
+	.ascii "Divide_var_u32_i16"
+	.space 1
+	.ascii "uDivide_var_u32_i16"
+	.space 1
+	.ascii "Divide_param_u32_L"
+	.space 1
+	.ascii "uDivide_param_u32_L"
+	.space 1
+	.ascii "Divide_var_u32_L"
+	.space 1
+	.ascii "uDivide_var_u32_L"
+	.space 1
+	.ascii "Divide_param_u32_u64"
+	.space 1
+	.ascii "uDivide_param_u32_u64"
+	.space 1
+	.ascii "Divide_var_u32_u64"
+	.space 1
+	.ascii "uDivide_var_u32_u64"
+	.space 1
+	.ascii "Divide_param_u32_u16"
+	.space 1
+	.ascii "uDivide_param_u32_u16"
+	.space 1
+	.ascii "Divide_var_u32_u16"
+	.space 1
+	.ascii "uDivide_var_u32_u16"
+	.space 1
+	.ascii "Divide_param_u32_C"
+	.space 1
+	.ascii "uDivide_param_u32_C"
+	.space 1
+	.ascii "Divide_var_u32_C"
+	.space 1
+	.ascii "uDivide_var_u32_C"
+	.space 1
+	.ascii "Divide_param_u32_u32"
+	.space 1
+	.ascii "uDivide_param_u32_u32"
+	.space 1
+	.ascii "Divide_var_u32_u32"
+	.space 1
+	.ascii "uDivide_var_u32_u32"
+	.space 1
+	.ascii "Divide_param_u32_i8"
+	.space 1
+	.ascii "uDivide_param_u32_i8"
+	.space 1
+	.ascii "Divide_var_u32_i8"
+	.space 1
+	.ascii "uDivide_var_u32_i8"
+	.space 1
+	.ascii "Divide_param_u32_I"
+	.space 1
+	.ascii "uDivide_param_u32_I"
+	.space 1
+	.ascii "Divide_var_u32_I"
+	.space 1
+	.ascii "uDivide_var_u32_I"
+	.space 1
+	.ascii "Divide_param_u32_u8"
+	.space 1
+	.ascii "uDivide_param_u32_u8"
+	.space 1
+	.ascii "Divide_var_u32_u8"
+	.space 1
+	.ascii "uDivide_var_u32_u8"
+	.space 1
+	.ascii "Divide_param_u32_LC"
+	.space 1
+	.ascii "uDivide_param_u32_LC"
+	.space 1
+	.ascii "Divide_var_u32_LC"
+	.space 1
+	.ascii "uDivide_var_u32_LC"
+	.space 1
+	.ascii "Divide_param_u32_i64"
+	.space 1
+	.ascii "uDivide_param_u32_i64"
+	.space 1
+	.ascii "Divide_var_u32_i64"
+	.space 1
+	.ascii "uDivide_var_u32_i64"
+	.space 1
+	.ascii "Divide_param_i8_i32"
+	.space 1
+	.ascii "uDivide_param_i8_i32"
+	.space 1
+	.ascii "Divide_var_i8_i32"
+	.space 1
+	.ascii "uDivide_var_i8_i32"
+	.space 1
+	.ascii "Divide_param_i8_i16"
+	.space 1
+	.ascii "uDivide_param_i8_i16"
+	.space 1
+	.ascii "Divide_var_i8_i16"
+	.space 1
+	.ascii "uDivide_var_i8_i16"
+	.space 1
+	.ascii "Divide_param_i8_L"
+	.space 1
+	.ascii "uDivide_param_i8_L"
+	.space 1
+	.ascii "Divide_var_i8_L"
+	.space 1
+	.ascii "uDivide_var_i8_L"
+	.space 1
+	.ascii "Divide_param_i8_u64"
+	.space 1
+	.ascii "uDivide_param_i8_u64"
+	.space 1
+	.ascii "Divide_var_i8_u64"
+	.space 1
+	.ascii "uDivide_var_i8_u64"
+	.space 1
+	.ascii "Divide_param_i8_u16"
+	.space 1
+	.ascii "uDivide_param_i8_u16"
+	.space 1
+	.ascii "Divide_var_i8_u16"
+	.space 1
+	.ascii "uDivide_var_i8_u16"
+	.space 1
+	.ascii "Divide_param_i8_C"
+	.space 1
+	.ascii "uDivide_param_i8_C"
+	.space 1
+	.ascii "Divide_var_i8_C"
+	.space 1
+	.ascii "uDivide_var_i8_C"
+	.space 1
+	.ascii "Divide_param_i8_u32"
+	.space 1
+	.ascii "uDivide_param_i8_u32"
+	.space 1
+	.ascii "Divide_var_i8_u32"
+	.space 1
+	.ascii "uDivide_var_i8_u32"
+	.space 1
+	.ascii "Divide_param_i8_i8"
+	.space 1
+	.ascii "uDivide_param_i8_i8"
+	.space 1
+	.ascii "Divide_var_i8_i8"
+	.space 1
+	.ascii "uDivide_var_i8_i8"
+	.space 1
+	.ascii "Divide_param_i8_I"
+	.space 1
+	.ascii "uDivide_param_i8_I"
+	.space 1
+	.ascii "Divide_var_i8_I"
+	.space 1
+	.ascii "uDivide_var_i8_I"
+	.space 1
+	.ascii "Divide_param_i8_u8"
+	.space 1
+	.ascii "uDivide_param_i8_u8"
+	.space 1
+	.ascii "Divide_var_i8_u8"
+	.space 1
+	.ascii "uDivide_var_i8_u8"
+	.space 1
+	.ascii "Divide_param_i8_LC"
+	.space 1
+	.ascii "uDivide_param_i8_LC"
+	.space 1
+	.ascii "Divide_var_i8_LC"
+	.space 1
+	.ascii "uDivide_var_i8_LC"
+	.space 1
+	.ascii "Divide_param_i8_i64"
+	.space 1
+	.ascii "uDivide_param_i8_i64"
+	.space 1
+	.ascii "Divide_var_i8_i64"
+	.space 1
+	.ascii "uDivide_var_i8_i64"
+	.space 1
+	.ascii "Divide_param_I_i32"
+	.space 1
+	.ascii "uDivide_param_I_i32"
+	.space 1
+	.ascii "Divide_var_I_i32"
+	.space 1
+	.ascii "uDivide_var_I_i32"
+	.space 1
+	.ascii "Divide_param_I_i16"
+	.space 1
+	.ascii "uDivide_param_I_i16"
+	.space 1
+	.ascii "Divide_var_I_i16"
+	.space 1
+	.ascii "uDivide_var_I_i16"
+	.space 1
+	.ascii "Divide_param_I_L"
+	.space 1
+	.ascii "uDivide_param_I_L"
+	.space 1
+	.ascii "Divide_var_I_L"
+	.space 1
+	.ascii "uDivide_var_I_L"
+	.space 1
+	.ascii "Divide_param_I_u64"
+	.space 1
+	.ascii "uDivide_param_I_u64"
+	.space 1
+	.ascii "Divide_var_I_u64"
+	.space 1
+	.ascii "uDivide_var_I_u64"
+	.space 1
+	.ascii "Divide_param_I_u16"
+	.space 1
+	.ascii "uDivide_param_I_u16"
+	.space 1
+	.ascii "Divide_var_I_u16"
+	.space 1
+	.ascii "uDivide_var_I_u16"
+	.space 1
+	.ascii "Divide_param_I_C"
+	.space 1
+	.ascii "uDivide_param_I_C"
+	.space 1
+	.ascii "Divide_var_I_C"
+	.space 1
+	.ascii "uDivide_var_I_C"
+	.space 1
+	.ascii "Divide_param_I_u32"
+	.space 1
+	.ascii "uDivide_param_I_u32"
+	.space 1
+	.ascii "Divide_var_I_u32"
+	.space 1
+	.ascii "uDivide_var_I_u32"
+	.space 1
+	.ascii "Divide_param_I_i8"
+	.space 1
+	.ascii "uDivide_param_I_i8"
+	.space 1
+	.ascii "Divide_var_I_i8"
+	.space 1
+	.ascii "uDivide_var_I_i8"
+	.space 1
+	.ascii "Divide_param_I_I"
+	.space 1
+	.ascii "uDivide_param_I_I"
+	.space 1
+	.ascii "Divide_var_I_I"
+	.space 1
+	.ascii "uDivide_var_I_I"
+	.space 1
+	.ascii "Divide_param_I_u8"
+	.space 1
+	.ascii "uDivide_param_I_u8"
+	.space 1
+	.ascii "Divide_var_I_u8"
+	.space 1
+	.ascii "uDivide_var_I_u8"
+	.space 1
+	.ascii "Divide_param_I_LC"
+	.space 1
+	.ascii "uDivide_param_I_LC"
+	.space 1
+	.ascii "Divide_var_I_LC"
+	.space 1
+	.ascii "uDivide_var_I_LC"
+	.space 1
+	.ascii "Divide_param_I_i64"
+	.space 1
+	.ascii "uDivide_param_I_i64"
+	.space 1
+	.ascii "Divide_var_I_i64"
+	.space 1
+	.ascii "uDivide_var_I_i64"
+	.space 1
+	.ascii "Divide_param_u8_i32"
+	.space 1
+	.ascii "uDivide_param_u8_i32"
+	.space 1
+	.ascii "Divide_var_u8_i32"
+	.space 1
+	.ascii "uDivide_var_u8_i32"
+	.space 1
+	.ascii "Divide_param_u8_i16"
+	.space 1
+	.ascii "uDivide_param_u8_i16"
+	.space 1
+	.ascii "Divide_var_u8_i16"
+	.space 1
+	.ascii "uDivide_var_u8_i16"
+	.space 1
+	.ascii "Divide_param_u8_L"
+	.space 1
+	.ascii "uDivide_param_u8_L"
+	.space 1
+	.ascii "Divide_var_u8_L"
+	.space 1
+	.ascii "uDivide_var_u8_L"
+	.space 1
+	.ascii "Divide_param_u8_u64"
+	.space 1
+	.ascii "uDivide_param_u8_u64"
+	.space 1
+	.ascii "Divide_var_u8_u64"
+	.space 1
+	.ascii "uDivide_var_u8_u64"
+	.space 1
+	.ascii "Divide_param_u8_u16"
+	.space 1
+	.ascii "uDivide_param_u8_u16"
+	.space 1
+	.ascii "Divide_var_u8_u16"
+	.space 1
+	.ascii "uDivide_var_u8_u16"
+	.space 1
+	.ascii "Divide_param_u8_C"
+	.space 1
+	.ascii "uDivide_param_u8_C"
+	.space 1
+	.ascii "Divide_var_u8_C"
+	.space 1
+	.ascii "uDivide_var_u8_C"
+	.space 1
+	.ascii "Divide_param_u8_u32"
+	.space 1
+	.ascii "uDivide_param_u8_u32"
+	.space 1
+	.ascii "Divide_var_u8_u32"
+	.space 1
+	.ascii "uDivide_var_u8_u32"
+	.space 1
+	.ascii "Divide_param_u8_i8"
+	.space 1
+	.ascii "uDivide_param_u8_i8"
+	.space 1
+	.ascii "Divide_var_u8_i8"
+	.space 1
+	.ascii "uDivide_var_u8_i8"
+	.space 1
+	.ascii "Divide_param_u8_I"
+	.space 1
+	.ascii "uDivide_param_u8_I"
+	.space 1
+	.ascii "Divide_var_u8_I"
+	.space 1
+	.ascii "uDivide_var_u8_I"
+	.space 1
+	.ascii "Divide_param_u8_u8"
+	.space 1
+	.ascii "uDivide_param_u8_u8"
+	.space 1
+	.ascii "Divide_var_u8_u8"
+	.space 1
+	.ascii "uDivide_var_u8_u8"
+	.space 1
+	.ascii "Divide_param_u8_LC"
+	.space 1
+	.ascii "uDivide_param_u8_LC"
+	.space 1
+	.ascii "Divide_var_u8_LC"
+	.space 1
+	.ascii "uDivide_var_u8_LC"
+	.space 1
+	.ascii "Divide_param_u8_i64"
+	.space 1
+	.ascii "uDivide_param_u8_i64"
+	.space 1
+	.ascii "Divide_var_u8_i64"
+	.space 1
+	.ascii "uDivide_var_u8_i64"
+	.space 1
+	.ascii "Divide_param_f32_f32"
+	.space 1
+	.ascii "Divide_var_f32_f32"
+	.space 1
+	.ascii "Divide_param_LC_i32"
+	.space 1
+	.ascii "uDivide_param_LC_i32"
+	.space 1
+	.ascii "Divide_var_LC_i32"
+	.space 1
+	.ascii "uDivide_var_LC_i32"
+	.space 1
+	.ascii "Divide_param_LC_i16"
+	.space 1
+	.ascii "uDivide_param_LC_i16"
+	.space 1
+	.ascii "Divide_var_LC_i16"
+	.space 1
+	.ascii "uDivide_var_LC_i16"
+	.space 1
+	.ascii "Divide_param_LC_L"
+	.space 1
+	.ascii "uDivide_param_LC_L"
+	.space 1
+	.ascii "Divide_var_LC_L"
+	.space 1
+	.ascii "uDivide_var_LC_L"
+	.space 1
+	.ascii "Divide_param_LC_u64"
+	.space 1
+	.ascii "uDivide_param_LC_u64"
+	.space 1
+	.ascii "Divide_var_LC_u64"
+	.space 1
+	.ascii "uDivide_var_LC_u64"
+	.space 1
+	.ascii "Divide_param_LC_u16"
+	.space 1
+	.ascii "uDivide_param_LC_u16"
+	.space 1
+	.ascii "Divide_var_LC_u16"
+	.space 1
+	.ascii "uDivide_var_LC_u16"
+	.space 1
+	.ascii "Divide_param_LC_C"
+	.space 1
+	.ascii "uDivide_param_LC_C"
+	.space 1
+	.ascii "Divide_var_LC_C"
+	.space 1
+	.ascii "uDivide_var_LC_C"
+	.space 1
+	.ascii "Divide_param_LC_u32"
+	.space 1
+	.ascii "uDivide_param_LC_u32"
+	.space 1
+	.ascii "Divide_var_LC_u32"
+	.space 1
+	.ascii "uDivide_var_LC_u32"
+	.space 1
+	.ascii "Divide_param_LC_i8"
+	.space 1
+	.ascii "uDivide_param_LC_i8"
+	.space 1
+	.ascii "Divide_var_LC_i8"
+	.space 1
+	.ascii "uDivide_var_LC_i8"
+	.space 1
+	.ascii "Divide_param_LC_I"
+	.space 1
+	.ascii "uDivide_param_LC_I"
+	.space 1
+	.ascii "Divide_var_LC_I"
+	.space 1
+	.ascii "uDivide_var_LC_I"
+	.space 1
+	.ascii "Divide_param_LC_u8"
+	.space 1
+	.ascii "uDivide_param_LC_u8"
+	.space 1
+	.ascii "Divide_var_LC_u8"
+	.space 1
+	.ascii "uDivide_var_LC_u8"
+	.space 1
+	.ascii "Divide_param_LC_LC"
+	.space 1
+	.ascii "uDivide_param_LC_LC"
+	.space 1
+	.ascii "Divide_var_LC_LC"
+	.space 1
+	.ascii "uDivide_var_LC_LC"
+	.space 1
+	.ascii "Divide_param_LC_i64"
+	.space 1
+	.ascii "uDivide_param_LC_i64"
+	.space 1
+	.ascii "Divide_var_LC_i64"
+	.space 1
+	.ascii "uDivide_var_LC_i64"
+	.space 1
+	.ascii "Divide_param_i64_i32"
+	.space 1
+	.ascii "uDivide_param_i64_i32"
+	.space 1
+	.ascii "Divide_var_i64_i32"
+	.space 1
+	.ascii "uDivide_var_i64_i32"
+	.space 1
+	.ascii "Divide_param_i64_i16"
+	.space 1
+	.ascii "uDivide_param_i64_i16"
+	.space 1
+	.ascii "Divide_var_i64_i16"
+	.space 1
+	.ascii "uDivide_var_i64_i16"
+	.space 1
+	.ascii "Divide_param_i64_L"
+	.space 1
+	.ascii "uDivide_param_i64_L"
+	.space 1
+	.ascii "Divide_var_i64_L"
+	.space 1
+	.ascii "uDivide_var_i64_L"
+	.space 1
+	.ascii "Divide_param_i64_u64"
+	.space 1
+	.ascii "uDivide_param_i64_u64"
+	.space 1
+	.ascii "Divide_var_i64_u64"
+	.space 1
+	.ascii "uDivide_var_i64_u64"
+	.space 1
+	.ascii "Divide_param_i64_u16"
+	.space 1
+	.ascii "uDivide_param_i64_u16"
+	.space 1
+	.ascii "Divide_var_i64_u16"
+	.space 1
+	.ascii "uDivide_var_i64_u16"
+	.space 1
+	.ascii "Divide_param_i64_C"
+	.space 1
+	.ascii "uDivide_param_i64_C"
+	.space 1
+	.ascii "Divide_var_i64_C"
+	.space 1
+	.ascii "uDivide_var_i64_C"
+	.space 1
+	.ascii "Divide_param_i64_u32"
+	.space 1
+	.ascii "uDivide_param_i64_u32"
+	.space 1
+	.ascii "Divide_var_i64_u32"
+	.space 1
+	.ascii "uDivide_var_i64_u32"
+	.space 1
+	.ascii "Divide_param_i64_i8"
+	.space 1
+	.ascii "uDivide_param_i64_i8"
+	.space 1
+	.ascii "Divide_var_i64_i8"
+	.space 1
+	.ascii "uDivide_var_i64_i8"
+	.space 1
+	.ascii "Divide_param_i64_I"
+	.space 1
+	.ascii "uDivide_param_i64_I"
+	.space 1
+	.ascii "Divide_var_i64_I"
+	.space 1
+	.ascii "uDivide_var_i64_I"
+	.space 1
+	.ascii "Divide_param_i64_u8"
+	.space 1
+	.ascii "uDivide_param_i64_u8"
+	.space 1
+	.ascii "Divide_var_i64_u8"
+	.space 1
+	.ascii "uDivide_var_i64_u8"
+	.space 1
+	.ascii "Divide_param_i64_LC"
+	.space 1
+	.ascii "uDivide_param_i64_LC"
+	.space 1
+	.ascii "Divide_var_i64_LC"
+	.space 1
+	.ascii "uDivide_var_i64_LC"
+	.space 1
+	.ascii "Divide_param_i64_i64"
+	.space 1
+	.ascii "uDivide_param_i64_i64"
+	.space 1
+	.ascii "Divide_var_i64_i64"
+	.space 1
+	.ascii "uDivide_var_i64_i64"
 	.space 7
 	.quad	_Divide_M3
 	.quad	_L_1
-	.quad	_Divide__Divide_param_u32_u32
-	.quad	_L_1+10
-	.quad	_Divide__uDivide_param_u32_u32
-	.quad	_L_1+31
-	.quad	_Divide__Divide_var_u32_u32
-	.quad	_L_1+53
-	.quad	_Divide__uDivide_var_u32_u32
-	.quad	_L_1+72
-	.quad	_Divide__Divide_param_u32_L
-	.quad	_L_1+92
-	.quad	_Divide__uDivide_param_u32_L
-	.quad	_L_1+111
-	.quad	_Divide__Divide_var_u32_L
-	.quad	_L_1+131
-	.quad	_Divide__uDivide_var_u32_L
-	.quad	_L_1+148
-	.quad	_Divide__Divide_param_u32_i8
-	.quad	_L_1+166
-	.quad	_Divide__uDivide_param_u32_i8
-	.quad	_L_1+186
-	.quad	_Divide__Divide_var_u32_i8
-	.quad	_L_1+207
-	.quad	_Divide__uDivide_var_u32_i8
-	.quad	_L_1+225
-	.quad	_Divide__Divide_param_u32_u8
-	.quad	_L_1+244
-	.quad	_Divide__uDivide_param_u32_u8
-	.quad	_L_1+264
-	.quad	_Divide__Divide_var_u32_u8
-	.quad	_L_1+285
-	.quad	_Divide__uDivide_var_u32_u8
-	.quad	_L_1+303
-	.quad	_Divide__Divide_param_u32_C
-	.quad	_L_1+322
-	.quad	_Divide__uDivide_param_u32_C
-	.quad	_L_1+341
-	.quad	_Divide__Divide_var_u32_C
-	.quad	_L_1+361
-	.quad	_Divide__uDivide_var_u32_C
-	.quad	_L_1+378
-	.quad	_Divide__Divide_param_u32_i64
-	.quad	_L_1+396
-	.quad	_Divide__uDivide_param_u32_i64
-	.quad	_L_1+417
-	.quad	_Divide__Divide_var_u32_i64
-	.quad	_L_1+439
-	.quad	_Divide__uDivide_var_u32_i64
-	.quad	_L_1+458
-	.quad	_Divide__Divide_param_u32_I
-	.quad	_L_1+478
-	.quad	_Divide__uDivide_param_u32_I
-	.quad	_L_1+497
-	.quad	_Divide__Divide_var_u32_I
-	.quad	_L_1+517
-	.quad	_Divide__uDivide_var_u32_I
-	.quad	_L_1+534
-	.quad	_Divide__Divide_param_u32_i32
-	.quad	_L_1+552
-	.quad	_Divide__uDivide_param_u32_i32
-	.quad	_L_1+573
-	.quad	_Divide__Divide_var_u32_i32
-	.quad	_L_1+595
-	.quad	_Divide__uDivide_var_u32_i32
-	.quad	_L_1+614
-	.quad	_Divide__Divide_param_u32_i16
-	.quad	_L_1+634
-	.quad	_Divide__uDivide_param_u32_i16
-	.quad	_L_1+655
-	.quad	_Divide__Divide_var_u32_i16
-	.quad	_L_1+677
-	.quad	_Divide__uDivide_var_u32_i16
-	.quad	_L_1+696
-	.quad	_Divide__Divide_param_u32_LC
-	.quad	_L_1+716
-	.quad	_Divide__uDivide_param_u32_LC
-	.quad	_L_1+736
-	.quad	_Divide__Divide_var_u32_LC
-	.quad	_L_1+757
-	.quad	_Divide__uDivide_var_u32_LC
-	.quad	_L_1+775
-	.quad	_Divide__Divide_param_u32_u64
-	.quad	_L_1+794
-	.quad	_Divide__uDivide_param_u32_u64
-	.quad	_L_1+815
-	.quad	_Divide__Divide_var_u32_u64
-	.quad	_L_1+837
-	.quad	_Divide__uDivide_var_u32_u64
-	.quad	_L_1+856
-	.quad	_Divide__Divide_param_u32_u16
-	.quad	_L_1+876
-	.quad	_Divide__uDivide_param_u32_u16
-	.quad	_L_1+897
-	.quad	_Divide__Divide_var_u32_u16
-	.quad	_L_1+919
-	.quad	_Divide__uDivide_var_u32_u16
-	.quad	_L_1+938
-	.quad	_Divide__Divide_param_L_u32
-	.quad	_L_1+958
-	.quad	_Divide__uDivide_param_L_u32
-	.quad	_L_1+977
-	.quad	_Divide__Divide_var_L_u32
-	.quad	_L_1+997
-	.quad	_Divide__uDivide_var_L_u32
-	.quad	_L_1+1014
-	.quad	_Divide__Divide_param_L_L
-	.quad	_L_1+1032
-	.quad	_Divide__uDivide_param_L_L
-	.quad	_L_1+1049
-	.quad	_Divide__Divide_var_L_L
-	.quad	_L_1+1067
-	.quad	_Divide__uDivide_var_L_L
-	.quad	_L_1+1082
-	.quad	_Divide__Divide_param_L_i8
-	.quad	_L_1+1098
-	.quad	_Divide__uDivide_param_L_i8
-	.quad	_L_1+1116
-	.quad	_Divide__Divide_var_L_i8
-	.quad	_L_1+1135
-	.quad	_Divide__uDivide_var_L_i8
-	.quad	_L_1+1151
-	.quad	_Divide__Divide_param_L_u8
-	.quad	_L_1+1168
-	.quad	_Divide__uDivide_param_L_u8
-	.quad	_L_1+1186
-	.quad	_Divide__Divide_var_L_u8
-	.quad	_L_1+1205
-	.quad	_Divide__uDivide_var_L_u8
-	.quad	_L_1+1221
-	.quad	_Divide__Divide_param_L_C
-	.quad	_L_1+1238
-	.quad	_Divide__uDivide_param_L_C
-	.quad	_L_1+1255
-	.quad	_Divide__Divide_var_L_C
-	.quad	_L_1+1273
-	.quad	_Divide__uDivide_var_L_C
-	.quad	_L_1+1288
-	.quad	_Divide__Divide_param_L_i64
-	.quad	_L_1+1304
-	.quad	_Divide__uDivide_param_L_i64
-	.quad	_L_1+1323
-	.quad	_Divide__Divide_var_L_i64
-	.quad	_L_1+1343
-	.quad	_Divide__uDivide_var_L_i64
-	.quad	_L_1+1360
-	.quad	_Divide__Divide_param_L_I
-	.quad	_L_1+1378
-	.quad	_Divide__uDivide_param_L_I
-	.quad	_L_1+1395
-	.quad	_Divide__Divide_var_L_I
-	.quad	_L_1+1413
-	.quad	_Divide__uDivide_var_L_I
-	.quad	_L_1+1428
-	.quad	_Divide__Divide_param_L_i32
-	.quad	_L_1+1444
-	.quad	_Divide__uDivide_param_L_i32
-	.quad	_L_1+1463
-	.quad	_Divide__Divide_var_L_i32
-	.quad	_L_1+1483
-	.quad	_Divide__uDivide_var_L_i32
-	.quad	_L_1+1500
-	.quad	_Divide__Divide_param_L_i16
-	.quad	_L_1+1518
-	.quad	_Divide__uDivide_param_L_i16
-	.quad	_L_1+1537
-	.quad	_Divide__Divide_var_L_i16
-	.quad	_L_1+1557
-	.quad	_Divide__uDivide_var_L_i16
-	.quad	_L_1+1574
-	.quad	_Divide__Divide_param_L_LC
-	.quad	_L_1+1592
-	.quad	_Divide__uDivide_param_L_LC
-	.quad	_L_1+1610
-	.quad	_Divide__Divide_var_L_LC
-	.quad	_L_1+1629
-	.quad	_Divide__uDivide_var_L_LC
-	.quad	_L_1+1645
-	.quad	_Divide__Divide_param_L_u64
-	.quad	_L_1+1662
-	.quad	_Divide__uDivide_param_L_u64
-	.quad	_L_1+1681
-	.quad	_Divide__Divide_var_L_u64
-	.quad	_L_1+1701
-	.quad	_Divide__uDivide_var_L_u64
-	.quad	_L_1+1718
-	.quad	_Divide__Divide_param_L_u16
-	.quad	_L_1+1736
-	.quad	_Divide__uDivide_param_L_u16
-	.quad	_L_1+1755
-	.quad	_Divide__Divide_var_L_u16
-	.quad	_L_1+1775
-	.quad	_Divide__uDivide_var_L_u16
-	.quad	_L_1+1792
-	.quad	_Divide__Divide_param_i8_u32
-	.quad	_L_1+1810
-	.quad	_Divide__uDivide_param_i8_u32
-	.quad	_L_1+1830
-	.quad	_Divide__Divide_var_i8_u32
-	.quad	_L_1+1851
-	.quad	_Divide__uDivide_var_i8_u32
-	.quad	_L_1+1869
-	.quad	_Divide__Divide_param_i8_L
-	.quad	_L_1+1888
-	.quad	_Divide__uDivide_param_i8_L
-	.quad	_L_1+1906
-	.quad	_Divide__Divide_var_i8_L
-	.quad	_L_1+1925
-	.quad	_Divide__uDivide_var_i8_L
-	.quad	_L_1+1941
-	.quad	_Divide__Divide_param_i8_i8
-	.quad	_L_1+1958
-	.quad	_Divide__uDivide_param_i8_i8
-	.quad	_L_1+1977
-	.quad	_Divide__Divide_var_i8_i8
-	.quad	_L_1+1997
-	.quad	_Divide__uDivide_var_i8_i8
-	.quad	_L_1+2014
-	.quad	_Divide__Divide_param_i8_u8
-	.quad	_L_1+2032
-	.quad	_Divide__uDivide_param_i8_u8
-	.quad	_L_1+2051
-	.quad	_Divide__Divide_var_i8_u8
-	.quad	_L_1+2071
-	.quad	_Divide__uDivide_var_i8_u8
-	.quad	_L_1+2088
-	.quad	_Divide__Divide_param_i8_C
-	.quad	_L_1+2106
-	.quad	_Divide__uDivide_param_i8_C
-	.quad	_L_1+2124
-	.quad	_Divide__Divide_var_i8_C
-	.quad	_L_1+2143
-	.quad	_Divide__uDivide_var_i8_C
-	.quad	_L_1+2159
-	.quad	_Divide__Divide_param_i8_i64
-	.quad	_L_1+2176
-	.quad	_Divide__uDivide_param_i8_i64
-	.quad	_L_1+2196
-	.quad	_Divide__Divide_var_i8_i64
-	.quad	_L_1+2217
-	.quad	_Divide__uDivide_var_i8_i64
-	.quad	_L_1+2235
-	.quad	_Divide__Divide_param_i8_I
-	.quad	_L_1+2254
-	.quad	_Divide__uDivide_param_i8_I
-	.quad	_L_1+2272
-	.quad	_Divide__Divide_var_i8_I
-	.quad	_L_1+2291
-	.quad	_Divide__uDivide_var_i8_I
-	.quad	_L_1+2307
-	.quad	_Divide__Divide_param_i8_i32
-	.quad	_L_1+2324
-	.quad	_Divide__uDivide_param_i8_i32
-	.quad	_L_1+2344
-	.quad	_Divide__Divide_var_i8_i32
-	.quad	_L_1+2365
-	.quad	_Divide__uDivide_var_i8_i32
-	.quad	_L_1+2383
-	.quad	_Divide__Divide_param_i8_i16
-	.quad	_L_1+2402
-	.quad	_Divide__uDivide_param_i8_i16
-	.quad	_L_1+2422
-	.quad	_Divide__Divide_var_i8_i16
-	.quad	_L_1+2443
-	.quad	_Divide__uDivide_var_i8_i16
-	.quad	_L_1+2461
-	.quad	_Divide__Divide_param_i8_LC
-	.quad	_L_1+2480
-	.quad	_Divide__uDivide_param_i8_LC
-	.quad	_L_1+2499
-	.quad	_Divide__Divide_var_i8_LC
-	.quad	_L_1+2519
-	.quad	_Divide__uDivide_var_i8_LC
-	.quad	_L_1+2536
-	.quad	_Divide__Divide_param_i8_u64
-	.quad	_L_1+2554
-	.quad	_Divide__uDivide_param_i8_u64
-	.quad	_L_1+2574
-	.quad	_Divide__Divide_var_i8_u64
-	.quad	_L_1+2595
-	.quad	_Divide__uDivide_var_i8_u64
-	.quad	_L_1+2613
-	.quad	_Divide__Divide_param_i8_u16
-	.quad	_L_1+2632
-	.quad	_Divide__uDivide_param_i8_u16
-	.quad	_L_1+2652
-	.quad	_Divide__Divide_var_i8_u16
-	.quad	_L_1+2673
-	.quad	_Divide__uDivide_var_i8_u16
-	.quad	_L_1+2691
-	.quad	_Divide__Divide_param_u8_u32
-	.quad	_L_1+2710
-	.quad	_Divide__uDivide_param_u8_u32
-	.quad	_L_1+2730
-	.quad	_Divide__Divide_var_u8_u32
-	.quad	_L_1+2751
-	.quad	_Divide__uDivide_var_u8_u32
-	.quad	_L_1+2769
-	.quad	_Divide__Divide_param_u8_L
-	.quad	_L_1+2788
-	.quad	_Divide__uDivide_param_u8_L
-	.quad	_L_1+2806
-	.quad	_Divide__Divide_var_u8_L
-	.quad	_L_1+2825
-	.quad	_Divide__uDivide_var_u8_L
-	.quad	_L_1+2841
-	.quad	_Divide__Divide_param_u8_i8
-	.quad	_L_1+2858
-	.quad	_Divide__uDivide_param_u8_i8
-	.quad	_L_1+2877
-	.quad	_Divide__Divide_var_u8_i8
-	.quad	_L_1+2897
-	.quad	_Divide__uDivide_var_u8_i8
-	.quad	_L_1+2914
-	.quad	_Divide__Divide_param_u8_u8
-	.quad	_L_1+2932
-	.quad	_Divide__uDivide_param_u8_u8
-	.quad	_L_1+2951
-	.quad	_Divide__Divide_var_u8_u8
-	.quad	_L_1+2971
-	.quad	_Divide__uDivide_var_u8_u8
-	.quad	_L_1+2988
-	.quad	_Divide__Divide_param_u8_C
-	.quad	_L_1+3006
-	.quad	_Divide__uDivide_param_u8_C
-	.quad	_L_1+3024
-	.quad	_Divide__Divide_var_u8_C
-	.quad	_L_1+3043
-	.quad	_Divide__uDivide_var_u8_C
-	.quad	_L_1+3059
-	.quad	_Divide__Divide_param_u8_i64
-	.quad	_L_1+3076
-	.quad	_Divide__uDivide_param_u8_i64
-	.quad	_L_1+3096
-	.quad	_Divide__Divide_var_u8_i64
-	.quad	_L_1+3117
-	.quad	_Divide__uDivide_var_u8_i64
-	.quad	_L_1+3135
-	.quad	_Divide__Divide_param_u8_I
-	.quad	_L_1+3154
-	.quad	_Divide__uDivide_param_u8_I
-	.quad	_L_1+3172
-	.quad	_Divide__Divide_var_u8_I
-	.quad	_L_1+3191
-	.quad	_Divide__uDivide_var_u8_I
-	.quad	_L_1+3207
-	.quad	_Divide__Divide_param_u8_i32
-	.quad	_L_1+3224
-	.quad	_Divide__uDivide_param_u8_i32
-	.quad	_L_1+3244
-	.quad	_Divide__Divide_var_u8_i32
-	.quad	_L_1+3265
-	.quad	_Divide__uDivide_var_u8_i32
-	.quad	_L_1+3283
-	.quad	_Divide__Divide_param_u8_i16
-	.quad	_L_1+3302
-	.quad	_Divide__uDivide_param_u8_i16
-	.quad	_L_1+3322
-	.quad	_Divide__Divide_var_u8_i16
-	.quad	_L_1+3343
-	.quad	_Divide__uDivide_var_u8_i16
-	.quad	_L_1+3361
-	.quad	_Divide__Divide_param_u8_LC
-	.quad	_L_1+3380
-	.quad	_Divide__uDivide_param_u8_LC
-	.quad	_L_1+3399
-	.quad	_Divide__Divide_var_u8_LC
-	.quad	_L_1+3419
-	.quad	_Divide__uDivide_var_u8_LC
-	.quad	_L_1+3436
-	.quad	_Divide__Divide_param_u8_u64
-	.quad	_L_1+3454
-	.quad	_Divide__uDivide_param_u8_u64
-	.quad	_L_1+3474
-	.quad	_Divide__Divide_var_u8_u64
-	.quad	_L_1+3495
-	.quad	_Divide__uDivide_var_u8_u64
-	.quad	_L_1+3513
-	.quad	_Divide__Divide_param_u8_u16
-	.quad	_L_1+3532
-	.quad	_Divide__uDivide_param_u8_u16
-	.quad	_L_1+3552
-	.quad	_Divide__Divide_var_u8_u16
-	.quad	_L_1+3573
-	.quad	_Divide__uDivide_var_u8_u16
-	.quad	_L_1+3591
-	.quad	_Divide__Divide_param_f32_f32
-	.quad	_L_1+3610
-	.quad	_Divide__Divide_var_f32_f32
-	.quad	_L_1+3631
-	.quad	_Divide__Divide_param_C_u32
-	.quad	_L_1+3650
-	.quad	_Divide__uDivide_param_C_u32
-	.quad	_L_1+3669
-	.quad	_Divide__Divide_var_C_u32
-	.quad	_L_1+3689
-	.quad	_Divide__uDivide_var_C_u32
-	.quad	_L_1+3706
-	.quad	_Divide__Divide_param_C_L
-	.quad	_L_1+3724
-	.quad	_Divide__uDivide_param_C_L
-	.quad	_L_1+3741
-	.quad	_Divide__Divide_var_C_L
-	.quad	_L_1+3759
-	.quad	_Divide__uDivide_var_C_L
-	.quad	_L_1+3774
-	.quad	_Divide__Divide_param_C_i8
-	.quad	_L_1+3790
-	.quad	_Divide__uDivide_param_C_i8
-	.quad	_L_1+3808
-	.quad	_Divide__Divide_var_C_i8
-	.quad	_L_1+3827
-	.quad	_Divide__uDivide_var_C_i8
-	.quad	_L_1+3843
-	.quad	_Divide__Divide_param_C_u8
-	.quad	_L_1+3860
-	.quad	_Divide__uDivide_param_C_u8
-	.quad	_L_1+3878
-	.quad	_Divide__Divide_var_C_u8
-	.quad	_L_1+3897
-	.quad	_Divide__uDivide_var_C_u8
-	.quad	_L_1+3913
-	.quad	_Divide__Divide_param_C_C
-	.quad	_L_1+3930
-	.quad	_Divide__uDivide_param_C_C
-	.quad	_L_1+3947
-	.quad	_Divide__Divide_var_C_C
-	.quad	_L_1+3965
-	.quad	_Divide__uDivide_var_C_C
-	.quad	_L_1+3980
-	.quad	_Divide__Divide_param_C_i64
-	.quad	_L_1+3996
-	.quad	_Divide__uDivide_param_C_i64
-	.quad	_L_1+4015
-	.quad	_Divide__Divide_var_C_i64
-	.quad	_L_1+4035
-	.quad	_Divide__uDivide_var_C_i64
-	.quad	_L_1+4052
-	.quad	_Divide__Divide_param_C_I
-	.quad	_L_1+4070
-	.quad	_Divide__uDivide_param_C_I
-	.quad	_L_1+4087
-	.quad	_Divide__Divide_var_C_I
-	.quad	_L_1+4105
-	.quad	_Divide__uDivide_var_C_I
-	.quad	_L_1+4120
-	.quad	_Divide__Divide_param_C_i32
-	.quad	_L_1+4136
-	.quad	_Divide__uDivide_param_C_i32
-	.quad	_L_1+4155
-	.quad	_Divide__Divide_var_C_i32
-	.quad	_L_1+4175
-	.quad	_Divide__uDivide_var_C_i32
-	.quad	_L_1+4192
-	.quad	_Divide__Divide_param_C_i16
-	.quad	_L_1+4210
-	.quad	_Divide__uDivide_param_C_i16
-	.quad	_L_1+4229
-	.quad	_Divide__Divide_var_C_i16
-	.quad	_L_1+4249
-	.quad	_Divide__uDivide_var_C_i16
-	.quad	_L_1+4266
-	.quad	_Divide__Divide_param_C_LC
-	.quad	_L_1+4284
-	.quad	_Divide__uDivide_param_C_LC
-	.quad	_L_1+4302
-	.quad	_Divide__Divide_var_C_LC
-	.quad	_L_1+4321
-	.quad	_Divide__uDivide_var_C_LC
-	.quad	_L_1+4337
-	.quad	_Divide__Divide_param_C_u64
-	.quad	_L_1+4354
-	.quad	_Divide__uDivide_param_C_u64
-	.quad	_L_1+4373
-	.quad	_Divide__Divide_var_C_u64
-	.quad	_L_1+4393
-	.quad	_Divide__uDivide_var_C_u64
-	.quad	_L_1+4410
-	.quad	_Divide__Divide_param_C_u16
-	.quad	_L_1+4428
-	.quad	_Divide__uDivide_param_C_u16
-	.quad	_L_1+4447
-	.quad	_Divide__Divide_var_C_u16
-	.quad	_L_1+4467
-	.quad	_Divide__uDivide_var_C_u16
-	.quad	_L_1+4484
-	.quad	_Divide__Divide_param_i64_u32
-	.quad	_L_1+4502
-	.quad	_Divide__uDivide_param_i64_u32
-	.quad	_L_1+4523
-	.quad	_Divide__Divide_var_i64_u32
-	.quad	_L_1+4545
-	.quad	_Divide__uDivide_var_i64_u32
-	.quad	_L_1+4564
-	.quad	_Divide__Divide_param_i64_L
-	.quad	_L_1+4584
-	.quad	_Divide__uDivide_param_i64_L
-	.quad	_L_1+4603
-	.quad	_Divide__Divide_var_i64_L
-	.quad	_L_1+4623
-	.quad	_Divide__uDivide_var_i64_L
-	.quad	_L_1+4640
-	.quad	_Divide__Divide_param_i64_i8
-	.quad	_L_1+4658
-	.quad	_Divide__uDivide_param_i64_i8
-	.quad	_L_1+4678
-	.quad	_Divide__Divide_var_i64_i8
-	.quad	_L_1+4699
-	.quad	_Divide__uDivide_var_i64_i8
-	.quad	_L_1+4717
-	.quad	_Divide__Divide_param_i64_u8
-	.quad	_L_1+4736
-	.quad	_Divide__uDivide_param_i64_u8
-	.quad	_L_1+4756
-	.quad	_Divide__Divide_var_i64_u8
-	.quad	_L_1+4777
-	.quad	_Divide__uDivide_var_i64_u8
-	.quad	_L_1+4795
-	.quad	_Divide__Divide_param_i64_C
-	.quad	_L_1+4814
-	.quad	_Divide__uDivide_param_i64_C
-	.quad	_L_1+4833
-	.quad	_Divide__Divide_var_i64_C
-	.quad	_L_1+4853
-	.quad	_Divide__uDivide_var_i64_C
-	.quad	_L_1+4870
-	.quad	_Divide__Divide_param_i64_i64
-	.quad	_L_1+4888
-	.quad	_Divide__uDivide_param_i64_i64
-	.quad	_L_1+4909
-	.quad	_Divide__Divide_var_i64_i64
-	.quad	_L_1+4931
-	.quad	_Divide__uDivide_var_i64_i64
-	.quad	_L_1+4950
-	.quad	_Divide__Divide_param_i64_I
-	.quad	_L_1+4970
-	.quad	_Divide__uDivide_param_i64_I
-	.quad	_L_1+4989
-	.quad	_Divide__Divide_var_i64_I
-	.quad	_L_1+5009
-	.quad	_Divide__uDivide_var_i64_I
-	.quad	_L_1+5026
-	.quad	_Divide__Divide_param_i64_i32
-	.quad	_L_1+5044
-	.quad	_Divide__uDivide_param_i64_i32
-	.quad	_L_1+5065
-	.quad	_Divide__Divide_var_i64_i32
-	.quad	_L_1+5087
-	.quad	_Divide__uDivide_var_i64_i32
-	.quad	_L_1+5106
-	.quad	_Divide__Divide_param_i64_i16
-	.quad	_L_1+5126
-	.quad	_Divide__uDivide_param_i64_i16
-	.quad	_L_1+5147
-	.quad	_Divide__Divide_var_i64_i16
-	.quad	_L_1+5169
-	.quad	_Divide__uDivide_var_i64_i16
-	.quad	_L_1+5188
-	.quad	_Divide__Divide_param_i64_LC
-	.quad	_L_1+5208
-	.quad	_Divide__uDivide_param_i64_LC
-	.quad	_L_1+5228
-	.quad	_Divide__Divide_var_i64_LC
-	.quad	_L_1+5249
-	.quad	_Divide__uDivide_var_i64_LC
-	.quad	_L_1+5267
-	.quad	_Divide__Divide_param_i64_u64
-	.quad	_L_1+5286
-	.quad	_Divide__uDivide_param_i64_u64
-	.quad	_L_1+5307
-	.quad	_Divide__Divide_var_i64_u64
-	.quad	_L_1+5329
-	.quad	_Divide__uDivide_var_i64_u64
-	.quad	_L_1+5348
-	.quad	_Divide__Divide_param_i64_u16
-	.quad	_L_1+5368
-	.quad	_Divide__uDivide_param_i64_u16
-	.quad	_L_1+5389
-	.quad	_Divide__Divide_var_i64_u16
-	.quad	_L_1+5411
-	.quad	_Divide__uDivide_var_i64_u16
-	.quad	_L_1+5430
-	.quad	_Divide__Divide_param_I_u32
-	.quad	_L_1+5450
-	.quad	_Divide__uDivide_param_I_u32
-	.quad	_L_1+5469
-	.quad	_Divide__Divide_var_I_u32
-	.quad	_L_1+5489
-	.quad	_Divide__uDivide_var_I_u32
-	.quad	_L_1+5506
-	.quad	_Divide__Divide_param_I_L
-	.quad	_L_1+5524
-	.quad	_Divide__uDivide_param_I_L
-	.quad	_L_1+5541
-	.quad	_Divide__Divide_var_I_L
-	.quad	_L_1+5559
-	.quad	_Divide__uDivide_var_I_L
-	.quad	_L_1+5574
-	.quad	_Divide__Divide_param_I_i8
-	.quad	_L_1+5590
-	.quad	_Divide__uDivide_param_I_i8
-	.quad	_L_1+5608
-	.quad	_Divide__Divide_var_I_i8
-	.quad	_L_1+5627
-	.quad	_Divide__uDivide_var_I_i8
-	.quad	_L_1+5643
-	.quad	_Divide__Divide_param_I_u8
-	.quad	_L_1+5660
-	.quad	_Divide__uDivide_param_I_u8
-	.quad	_L_1+5678
-	.quad	_Divide__Divide_var_I_u8
-	.quad	_L_1+5697
-	.quad	_Divide__uDivide_var_I_u8
-	.quad	_L_1+5713
-	.quad	_Divide__Divide_param_I_C
-	.quad	_L_1+5730
-	.quad	_Divide__uDivide_param_I_C
-	.quad	_L_1+5747
-	.quad	_Divide__Divide_var_I_C
-	.quad	_L_1+5765
-	.quad	_Divide__uDivide_var_I_C
-	.quad	_L_1+5780
-	.quad	_Divide__Divide_param_I_i64
-	.quad	_L_1+5796
-	.quad	_Divide__uDivide_param_I_i64
-	.quad	_L_1+5815
-	.quad	_Divide__Divide_var_I_i64
-	.quad	_L_1+5835
-	.quad	_Divide__uDivide_var_I_i64
-	.quad	_L_1+5852
-	.quad	_Divide__Divide_param_I_I
-	.quad	_L_1+5870
-	.quad	_Divide__uDivide_param_I_I
-	.quad	_L_1+5887
-	.quad	_Divide__Divide_var_I_I
-	.quad	_L_1+5905
-	.quad	_Divide__uDivide_var_I_I
-	.quad	_L_1+5920
-	.quad	_Divide__Divide_param_I_i32
-	.quad	_L_1+5936
-	.quad	_Divide__uDivide_param_I_i32
-	.quad	_L_1+5955
-	.quad	_Divide__Divide_var_I_i32
-	.quad	_L_1+5975
-	.quad	_Divide__uDivide_var_I_i32
-	.quad	_L_1+5992
-	.quad	_Divide__Divide_param_I_i16
-	.quad	_L_1+6010
-	.quad	_Divide__uDivide_param_I_i16
-	.quad	_L_1+6029
-	.quad	_Divide__Divide_var_I_i16
-	.quad	_L_1+6049
-	.quad	_Divide__uDivide_var_I_i16
-	.quad	_L_1+6066
-	.quad	_Divide__Divide_param_I_LC
-	.quad	_L_1+6084
-	.quad	_Divide__uDivide_param_I_LC
-	.quad	_L_1+6102
-	.quad	_Divide__Divide_var_I_LC
-	.quad	_L_1+6121
-	.quad	_Divide__uDivide_var_I_LC
-	.quad	_L_1+6137
-	.quad	_Divide__Divide_param_I_u64
-	.quad	_L_1+6154
-	.quad	_Divide__uDivide_param_I_u64
-	.quad	_L_1+6173
-	.quad	_Divide__Divide_var_I_u64
-	.quad	_L_1+6193
-	.quad	_Divide__uDivide_var_I_u64
-	.quad	_L_1+6210
-	.quad	_Divide__Divide_param_I_u16
-	.quad	_L_1+6228
-	.quad	_Divide__uDivide_param_I_u16
-	.quad	_L_1+6247
-	.quad	_Divide__Divide_var_I_u16
-	.quad	_L_1+6267
-	.quad	_Divide__uDivide_var_I_u16
-	.quad	_L_1+6284
-	.quad	_Divide__Divide_param_i32_u32
-	.quad	_L_1+6302
-	.quad	_Divide__uDivide_param_i32_u32
-	.quad	_L_1+6323
-	.quad	_Divide__Divide_var_i32_u32
-	.quad	_L_1+6345
-	.quad	_Divide__uDivide_var_i32_u32
-	.quad	_L_1+6364
-	.quad	_Divide__Divide_param_i32_L
-	.quad	_L_1+6384
-	.quad	_Divide__uDivide_param_i32_L
-	.quad	_L_1+6403
-	.quad	_Divide__Divide_var_i32_L
-	.quad	_L_1+6423
-	.quad	_Divide__uDivide_var_i32_L
-	.quad	_L_1+6440
-	.quad	_Divide__Divide_param_i32_i8
-	.quad	_L_1+6458
-	.quad	_Divide__uDivide_param_i32_i8
-	.quad	_L_1+6478
-	.quad	_Divide__Divide_var_i32_i8
-	.quad	_L_1+6499
-	.quad	_Divide__uDivide_var_i32_i8
-	.quad	_L_1+6517
-	.quad	_Divide__Divide_param_i32_u8
-	.quad	_L_1+6536
-	.quad	_Divide__uDivide_param_i32_u8
-	.quad	_L_1+6556
-	.quad	_Divide__Divide_var_i32_u8
-	.quad	_L_1+6577
-	.quad	_Divide__uDivide_var_i32_u8
-	.quad	_L_1+6595
-	.quad	_Divide__Divide_param_i32_C
-	.quad	_L_1+6614
-	.quad	_Divide__uDivide_param_i32_C
-	.quad	_L_1+6633
-	.quad	_Divide__Divide_var_i32_C
-	.quad	_L_1+6653
-	.quad	_Divide__uDivide_var_i32_C
-	.quad	_L_1+6670
-	.quad	_Divide__Divide_param_i32_i64
-	.quad	_L_1+6688
-	.quad	_Divide__uDivide_param_i32_i64
-	.quad	_L_1+6709
-	.quad	_Divide__Divide_var_i32_i64
-	.quad	_L_1+6731
-	.quad	_Divide__uDivide_var_i32_i64
-	.quad	_L_1+6750
-	.quad	_Divide__Divide_param_i32_I
-	.quad	_L_1+6770
-	.quad	_Divide__uDivide_param_i32_I
-	.quad	_L_1+6789
-	.quad	_Divide__Divide_var_i32_I
-	.quad	_L_1+6809
-	.quad	_Divide__uDivide_var_i32_I
-	.quad	_L_1+6826
 	.quad	_Divide__Divide_param_i32_i32
-	.quad	_L_1+6844
+	.quad	_L_1+10
 	.quad	_Divide__uDivide_param_i32_i32
-	.quad	_L_1+6865
+	.quad	_L_1+31
 	.quad	_Divide__Divide_var_i32_i32
-	.quad	_L_1+6887
+	.quad	_L_1+53
 	.quad	_Divide__uDivide_var_i32_i32
-	.quad	_L_1+6906
+	.quad	_L_1+72
 	.quad	_Divide__Divide_param_i32_i16
-	.quad	_L_1+6926
+	.quad	_L_1+92
 	.quad	_Divide__uDivide_param_i32_i16
-	.quad	_L_1+6947
+	.quad	_L_1+113
 	.quad	_Divide__Divide_var_i32_i16
-	.quad	_L_1+6969
+	.quad	_L_1+135
 	.quad	_Divide__uDivide_var_i32_i16
-	.quad	_L_1+6988
-	.quad	_Divide__Divide_param_i32_LC
-	.quad	_L_1+7008
-	.quad	_Divide__uDivide_param_i32_LC
-	.quad	_L_1+7028
-	.quad	_Divide__Divide_var_i32_LC
-	.quad	_L_1+7049
-	.quad	_Divide__uDivide_var_i32_LC
-	.quad	_L_1+7067
+	.quad	_L_1+154
+	.quad	_Divide__Divide_param_i32_L
+	.quad	_L_1+174
+	.quad	_Divide__uDivide_param_i32_L
+	.quad	_L_1+193
+	.quad	_Divide__Divide_var_i32_L
+	.quad	_L_1+213
+	.quad	_Divide__uDivide_var_i32_L
+	.quad	_L_1+230
 	.quad	_Divide__Divide_param_i32_u64
-	.quad	_L_1+7086
+	.quad	_L_1+248
 	.quad	_Divide__uDivide_param_i32_u64
-	.quad	_L_1+7107
+	.quad	_L_1+269
 	.quad	_Divide__Divide_var_i32_u64
-	.quad	_L_1+7129
+	.quad	_L_1+291
 	.quad	_Divide__uDivide_var_i32_u64
-	.quad	_L_1+7148
+	.quad	_L_1+310
 	.quad	_Divide__Divide_param_i32_u16
-	.quad	_L_1+7168
+	.quad	_L_1+330
 	.quad	_Divide__uDivide_param_i32_u16
-	.quad	_L_1+7189
+	.quad	_L_1+351
 	.quad	_Divide__Divide_var_i32_u16
-	.quad	_L_1+7211
+	.quad	_L_1+373
 	.quad	_Divide__uDivide_var_i32_u16
-	.quad	_L_1+7230
-	.quad	_Divide__Divide_param_i16_u32
-	.quad	_L_1+7250
-	.quad	_Divide__uDivide_param_i16_u32
-	.quad	_L_1+7271
-	.quad	_Divide__Divide_var_i16_u32
-	.quad	_L_1+7293
-	.quad	_Divide__uDivide_var_i16_u32
-	.quad	_L_1+7312
-	.quad	_Divide__Divide_param_i16_L
-	.quad	_L_1+7332
-	.quad	_Divide__uDivide_param_i16_L
-	.quad	_L_1+7351
-	.quad	_Divide__Divide_var_i16_L
-	.quad	_L_1+7371
-	.quad	_Divide__uDivide_var_i16_L
-	.quad	_L_1+7388
-	.quad	_Divide__Divide_param_i16_i8
-	.quad	_L_1+7406
-	.quad	_Divide__uDivide_param_i16_i8
-	.quad	_L_1+7426
-	.quad	_Divide__Divide_var_i16_i8
-	.quad	_L_1+7447
-	.quad	_Divide__uDivide_var_i16_i8
-	.quad	_L_1+7465
-	.quad	_Divide__Divide_param_i16_u8
-	.quad	_L_1+7484
-	.quad	_Divide__uDivide_param_i16_u8
-	.quad	_L_1+7504
-	.quad	_Divide__Divide_var_i16_u8
-	.quad	_L_1+7525
-	.quad	_Divide__uDivide_var_i16_u8
-	.quad	_L_1+7543
-	.quad	_Divide__Divide_param_i16_C
-	.quad	_L_1+7562
-	.quad	_Divide__uDivide_param_i16_C
-	.quad	_L_1+7581
-	.quad	_Divide__Divide_var_i16_C
-	.quad	_L_1+7601
-	.quad	_Divide__uDivide_var_i16_C
-	.quad	_L_1+7618
-	.quad	_Divide__Divide_param_i16_i64
-	.quad	_L_1+7636
-	.quad	_Divide__uDivide_param_i16_i64
-	.quad	_L_1+7657
-	.quad	_Divide__Divide_var_i16_i64
-	.quad	_L_1+7679
-	.quad	_Divide__uDivide_var_i16_i64
-	.quad	_L_1+7698
-	.quad	_Divide__Divide_param_i16_I
-	.quad	_L_1+7718
-	.quad	_Divide__uDivide_param_i16_I
-	.quad	_L_1+7737
-	.quad	_Divide__Divide_var_i16_I
-	.quad	_L_1+7757
-	.quad	_Divide__uDivide_var_i16_I
-	.quad	_L_1+7774
+	.quad	_L_1+392
+	.quad	_Divide__Divide_param_i32_C
+	.quad	_L_1+412
+	.quad	_Divide__uDivide_param_i32_C
+	.quad	_L_1+431
+	.quad	_Divide__Divide_var_i32_C
+	.quad	_L_1+451
+	.quad	_Divide__uDivide_var_i32_C
+	.quad	_L_1+468
+	.quad	_Divide__Divide_param_i32_u32
+	.quad	_L_1+486
+	.quad	_Divide__uDivide_param_i32_u32
+	.quad	_L_1+507
+	.quad	_Divide__Divide_var_i32_u32
+	.quad	_L_1+529
+	.quad	_Divide__uDivide_var_i32_u32
+	.quad	_L_1+548
+	.quad	_Divide__Divide_param_i32_i8
+	.quad	_L_1+568
+	.quad	_Divide__uDivide_param_i32_i8
+	.quad	_L_1+588
+	.quad	_Divide__Divide_var_i32_i8
+	.quad	_L_1+609
+	.quad	_Divide__uDivide_var_i32_i8
+	.quad	_L_1+627
+	.quad	_Divide__Divide_param_i32_I
+	.quad	_L_1+646
+	.quad	_Divide__uDivide_param_i32_I
+	.quad	_L_1+665
+	.quad	_Divide__Divide_var_i32_I
+	.quad	_L_1+685
+	.quad	_Divide__uDivide_var_i32_I
+	.quad	_L_1+702
+	.quad	_Divide__Divide_param_i32_u8
+	.quad	_L_1+720
+	.quad	_Divide__uDivide_param_i32_u8
+	.quad	_L_1+740
+	.quad	_Divide__Divide_var_i32_u8
+	.quad	_L_1+761
+	.quad	_Divide__uDivide_var_i32_u8
+	.quad	_L_1+779
+	.quad	_Divide__Divide_param_i32_LC
+	.quad	_L_1+798
+	.quad	_Divide__uDivide_param_i32_LC
+	.quad	_L_1+818
+	.quad	_Divide__Divide_var_i32_LC
+	.quad	_L_1+839
+	.quad	_Divide__uDivide_var_i32_LC
+	.quad	_L_1+857
+	.quad	_Divide__Divide_param_i32_i64
+	.quad	_L_1+876
+	.quad	_Divide__uDivide_param_i32_i64
+	.quad	_L_1+897
+	.quad	_Divide__Divide_var_i32_i64
+	.quad	_L_1+919
+	.quad	_Divide__uDivide_var_i32_i64
+	.quad	_L_1+938
 	.quad	_Divide__Divide_param_i16_i32
-	.quad	_L_1+7792
+	.quad	_L_1+958
 	.quad	_Divide__uDivide_param_i16_i32
-	.quad	_L_1+7813
+	.quad	_L_1+979
 	.quad	_Divide__Divide_var_i16_i32
-	.quad	_L_1+7835
+	.quad	_L_1+1001
 	.quad	_Divide__uDivide_var_i16_i32
-	.quad	_L_1+7854
+	.quad	_L_1+1020
 	.quad	_Divide__Divide_param_i16_i16
-	.quad	_L_1+7874
+	.quad	_L_1+1040
 	.quad	_Divide__uDivide_param_i16_i16
-	.quad	_L_1+7895
+	.quad	_L_1+1061
 	.quad	_Divide__Divide_var_i16_i16
-	.quad	_L_1+7917
+	.quad	_L_1+1083
 	.quad	_Divide__uDivide_var_i16_i16
-	.quad	_L_1+7936
-	.quad	_Divide__Divide_param_i16_LC
-	.quad	_L_1+7956
-	.quad	_Divide__uDivide_param_i16_LC
-	.quad	_L_1+7976
-	.quad	_Divide__Divide_var_i16_LC
-	.quad	_L_1+7997
-	.quad	_Divide__uDivide_var_i16_LC
-	.quad	_L_1+8015
+	.quad	_L_1+1102
+	.quad	_Divide__Divide_param_i16_L
+	.quad	_L_1+1122
+	.quad	_Divide__uDivide_param_i16_L
+	.quad	_L_1+1141
+	.quad	_Divide__Divide_var_i16_L
+	.quad	_L_1+1161
+	.quad	_Divide__uDivide_var_i16_L
+	.quad	_L_1+1178
 	.quad	_Divide__Divide_param_i16_u64
-	.quad	_L_1+8034
+	.quad	_L_1+1196
 	.quad	_Divide__uDivide_param_i16_u64
-	.quad	_L_1+8055
+	.quad	_L_1+1217
 	.quad	_Divide__Divide_var_i16_u64
-	.quad	_L_1+8077
+	.quad	_L_1+1239
 	.quad	_Divide__uDivide_var_i16_u64
-	.quad	_L_1+8096
+	.quad	_L_1+1258
 	.quad	_Divide__Divide_param_i16_u16
-	.quad	_L_1+8116
+	.quad	_L_1+1278
 	.quad	_Divide__uDivide_param_i16_u16
-	.quad	_L_1+8137
+	.quad	_L_1+1299
 	.quad	_Divide__Divide_var_i16_u16
-	.quad	_L_1+8159
+	.quad	_L_1+1321
 	.quad	_Divide__uDivide_var_i16_u16
-	.quad	_L_1+8178
+	.quad	_L_1+1340
+	.quad	_Divide__Divide_param_i16_C
+	.quad	_L_1+1360
+	.quad	_Divide__uDivide_param_i16_C
+	.quad	_L_1+1379
+	.quad	_Divide__Divide_var_i16_C
+	.quad	_L_1+1399
+	.quad	_Divide__uDivide_var_i16_C
+	.quad	_L_1+1416
+	.quad	_Divide__Divide_param_i16_u32
+	.quad	_L_1+1434
+	.quad	_Divide__uDivide_param_i16_u32
+	.quad	_L_1+1455
+	.quad	_Divide__Divide_var_i16_u32
+	.quad	_L_1+1477
+	.quad	_Divide__uDivide_var_i16_u32
+	.quad	_L_1+1496
+	.quad	_Divide__Divide_param_i16_i8
+	.quad	_L_1+1516
+	.quad	_Divide__uDivide_param_i16_i8
+	.quad	_L_1+1536
+	.quad	_Divide__Divide_var_i16_i8
+	.quad	_L_1+1557
+	.quad	_Divide__uDivide_var_i16_i8
+	.quad	_L_1+1575
+	.quad	_Divide__Divide_param_i16_I
+	.quad	_L_1+1594
+	.quad	_Divide__uDivide_param_i16_I
+	.quad	_L_1+1613
+	.quad	_Divide__Divide_var_i16_I
+	.quad	_L_1+1633
+	.quad	_Divide__uDivide_var_i16_I
+	.quad	_L_1+1650
+	.quad	_Divide__Divide_param_i16_u8
+	.quad	_L_1+1668
+	.quad	_Divide__uDivide_param_i16_u8
+	.quad	_L_1+1688
+	.quad	_Divide__Divide_var_i16_u8
+	.quad	_L_1+1709
+	.quad	_Divide__uDivide_var_i16_u8
+	.quad	_L_1+1727
+	.quad	_Divide__Divide_param_i16_LC
+	.quad	_L_1+1746
+	.quad	_Divide__uDivide_param_i16_LC
+	.quad	_L_1+1766
+	.quad	_Divide__Divide_var_i16_LC
+	.quad	_L_1+1787
+	.quad	_Divide__uDivide_var_i16_LC
+	.quad	_L_1+1805
+	.quad	_Divide__Divide_param_i16_i64
+	.quad	_L_1+1824
+	.quad	_Divide__uDivide_param_i16_i64
+	.quad	_L_1+1845
+	.quad	_Divide__Divide_var_i16_i64
+	.quad	_L_1+1867
+	.quad	_Divide__uDivide_var_i16_i64
+	.quad	_L_1+1886
+	.quad	_Divide__Divide_param_L_i32
+	.quad	_L_1+1906
+	.quad	_Divide__uDivide_param_L_i32
+	.quad	_L_1+1925
+	.quad	_Divide__Divide_var_L_i32
+	.quad	_L_1+1945
+	.quad	_Divide__uDivide_var_L_i32
+	.quad	_L_1+1962
+	.quad	_Divide__Divide_param_L_i16
+	.quad	_L_1+1980
+	.quad	_Divide__uDivide_param_L_i16
+	.quad	_L_1+1999
+	.quad	_Divide__Divide_var_L_i16
+	.quad	_L_1+2019
+	.quad	_Divide__uDivide_var_L_i16
+	.quad	_L_1+2036
+	.quad	_Divide__Divide_param_L_L
+	.quad	_L_1+2054
+	.quad	_Divide__uDivide_param_L_L
+	.quad	_L_1+2071
+	.quad	_Divide__Divide_var_L_L
+	.quad	_L_1+2089
+	.quad	_Divide__uDivide_var_L_L
+	.quad	_L_1+2104
+	.quad	_Divide__Divide_param_L_u64
+	.quad	_L_1+2120
+	.quad	_Divide__uDivide_param_L_u64
+	.quad	_L_1+2139
+	.quad	_Divide__Divide_var_L_u64
+	.quad	_L_1+2159
+	.quad	_Divide__uDivide_var_L_u64
+	.quad	_L_1+2176
+	.quad	_Divide__Divide_param_L_u16
+	.quad	_L_1+2194
+	.quad	_Divide__uDivide_param_L_u16
+	.quad	_L_1+2213
+	.quad	_Divide__Divide_var_L_u16
+	.quad	_L_1+2233
+	.quad	_Divide__uDivide_var_L_u16
+	.quad	_L_1+2250
+	.quad	_Divide__Divide_param_L_C
+	.quad	_L_1+2268
+	.quad	_Divide__uDivide_param_L_C
+	.quad	_L_1+2285
+	.quad	_Divide__Divide_var_L_C
+	.quad	_L_1+2303
+	.quad	_Divide__uDivide_var_L_C
+	.quad	_L_1+2318
+	.quad	_Divide__Divide_param_L_u32
+	.quad	_L_1+2334
+	.quad	_Divide__uDivide_param_L_u32
+	.quad	_L_1+2353
+	.quad	_Divide__Divide_var_L_u32
+	.quad	_L_1+2373
+	.quad	_Divide__uDivide_var_L_u32
+	.quad	_L_1+2390
+	.quad	_Divide__Divide_param_L_i8
+	.quad	_L_1+2408
+	.quad	_Divide__uDivide_param_L_i8
+	.quad	_L_1+2426
+	.quad	_Divide__Divide_var_L_i8
+	.quad	_L_1+2445
+	.quad	_Divide__uDivide_var_L_i8
+	.quad	_L_1+2461
+	.quad	_Divide__Divide_param_L_I
+	.quad	_L_1+2478
+	.quad	_Divide__uDivide_param_L_I
+	.quad	_L_1+2495
+	.quad	_Divide__Divide_var_L_I
+	.quad	_L_1+2513
+	.quad	_Divide__uDivide_var_L_I
+	.quad	_L_1+2528
+	.quad	_Divide__Divide_param_L_u8
+	.quad	_L_1+2544
+	.quad	_Divide__uDivide_param_L_u8
+	.quad	_L_1+2562
+	.quad	_Divide__Divide_var_L_u8
+	.quad	_L_1+2581
+	.quad	_Divide__uDivide_var_L_u8
+	.quad	_L_1+2597
+	.quad	_Divide__Divide_param_L_LC
+	.quad	_L_1+2614
+	.quad	_Divide__uDivide_param_L_LC
+	.quad	_L_1+2632
+	.quad	_Divide__Divide_var_L_LC
+	.quad	_L_1+2651
+	.quad	_Divide__uDivide_var_L_LC
+	.quad	_L_1+2667
+	.quad	_Divide__Divide_param_L_i64
+	.quad	_L_1+2684
+	.quad	_Divide__uDivide_param_L_i64
+	.quad	_L_1+2703
+	.quad	_Divide__Divide_var_L_i64
+	.quad	_L_1+2723
+	.quad	_Divide__uDivide_var_L_i64
+	.quad	_L_1+2740
 	.quad	_Divide__Divide_param_f64_f64
-	.quad	_L_1+8198
+	.quad	_L_1+2758
 	.quad	_Divide__Divide_var_f64_f64
-	.quad	_L_1+8219
-	.quad	_Divide__Divide_param_LC_u32
-	.quad	_L_1+8238
-	.quad	_Divide__uDivide_param_LC_u32
-	.quad	_L_1+8258
-	.quad	_Divide__Divide_var_LC_u32
-	.quad	_L_1+8279
-	.quad	_Divide__uDivide_var_LC_u32
-	.quad	_L_1+8297
-	.quad	_Divide__Divide_param_LC_L
-	.quad	_L_1+8316
-	.quad	_Divide__uDivide_param_LC_L
-	.quad	_L_1+8334
-	.quad	_Divide__Divide_var_LC_L
-	.quad	_L_1+8353
-	.quad	_Divide__uDivide_var_LC_L
-	.quad	_L_1+8369
-	.quad	_Divide__Divide_param_LC_i8
-	.quad	_L_1+8386
-	.quad	_Divide__uDivide_param_LC_i8
-	.quad	_L_1+8405
-	.quad	_Divide__Divide_var_LC_i8
-	.quad	_L_1+8425
-	.quad	_Divide__uDivide_var_LC_i8
-	.quad	_L_1+8442
-	.quad	_Divide__Divide_param_LC_u8
-	.quad	_L_1+8460
-	.quad	_Divide__uDivide_param_LC_u8
-	.quad	_L_1+8479
-	.quad	_Divide__Divide_var_LC_u8
-	.quad	_L_1+8499
-	.quad	_Divide__uDivide_var_LC_u8
-	.quad	_L_1+8516
-	.quad	_Divide__Divide_param_LC_C
-	.quad	_L_1+8534
-	.quad	_Divide__uDivide_param_LC_C
-	.quad	_L_1+8552
-	.quad	_Divide__Divide_var_LC_C
-	.quad	_L_1+8571
-	.quad	_Divide__uDivide_var_LC_C
-	.quad	_L_1+8587
-	.quad	_Divide__Divide_param_LC_i64
-	.quad	_L_1+8604
-	.quad	_Divide__uDivide_param_LC_i64
-	.quad	_L_1+8624
-	.quad	_Divide__Divide_var_LC_i64
-	.quad	_L_1+8645
-	.quad	_Divide__uDivide_var_LC_i64
-	.quad	_L_1+8663
-	.quad	_Divide__Divide_param_LC_I
-	.quad	_L_1+8682
-	.quad	_Divide__uDivide_param_LC_I
-	.quad	_L_1+8700
-	.quad	_Divide__Divide_var_LC_I
-	.quad	_L_1+8719
-	.quad	_Divide__uDivide_var_LC_I
-	.quad	_L_1+8735
-	.quad	_Divide__Divide_param_LC_i32
-	.quad	_L_1+8752
-	.quad	_Divide__uDivide_param_LC_i32
-	.quad	_L_1+8772
-	.quad	_Divide__Divide_var_LC_i32
-	.quad	_L_1+8793
-	.quad	_Divide__uDivide_var_LC_i32
-	.quad	_L_1+8811
-	.quad	_Divide__Divide_param_LC_i16
-	.quad	_L_1+8830
-	.quad	_Divide__uDivide_param_LC_i16
-	.quad	_L_1+8850
-	.quad	_Divide__Divide_var_LC_i16
-	.quad	_L_1+8871
-	.quad	_Divide__uDivide_var_LC_i16
-	.quad	_L_1+8889
-	.quad	_Divide__Divide_param_LC_LC
-	.quad	_L_1+8908
-	.quad	_Divide__uDivide_param_LC_LC
-	.quad	_L_1+8927
-	.quad	_Divide__Divide_var_LC_LC
-	.quad	_L_1+8947
-	.quad	_Divide__uDivide_var_LC_LC
-	.quad	_L_1+8964
-	.quad	_Divide__Divide_param_LC_u64
-	.quad	_L_1+8982
-	.quad	_Divide__uDivide_param_LC_u64
-	.quad	_L_1+9002
-	.quad	_Divide__Divide_var_LC_u64
-	.quad	_L_1+9023
-	.quad	_Divide__uDivide_var_LC_u64
-	.quad	_L_1+9041
-	.quad	_Divide__Divide_param_LC_u16
-	.quad	_L_1+9060
-	.quad	_Divide__uDivide_param_LC_u16
-	.quad	_L_1+9080
-	.quad	_Divide__Divide_var_LC_u16
-	.quad	_L_1+9101
-	.quad	_Divide__uDivide_var_LC_u16
-	.quad	_L_1+9119
-	.quad	_Divide__Divide_param_u64_u32
-	.quad	_L_1+9138
-	.quad	_Divide__uDivide_param_u64_u32
-	.quad	_L_1+9159
-	.quad	_Divide__Divide_var_u64_u32
-	.quad	_L_1+9181
-	.quad	_Divide__uDivide_var_u64_u32
-	.quad	_L_1+9200
-	.quad	_Divide__Divide_param_u64_L
-	.quad	_L_1+9220
-	.quad	_Divide__uDivide_param_u64_L
-	.quad	_L_1+9239
-	.quad	_Divide__Divide_var_u64_L
-	.quad	_L_1+9259
-	.quad	_Divide__uDivide_var_u64_L
-	.quad	_L_1+9276
-	.quad	_Divide__Divide_param_u64_i8
-	.quad	_L_1+9294
-	.quad	_Divide__uDivide_param_u64_i8
-	.quad	_L_1+9314
-	.quad	_Divide__Divide_var_u64_i8
-	.quad	_L_1+9335
-	.quad	_Divide__uDivide_var_u64_i8
-	.quad	_L_1+9353
-	.quad	_Divide__Divide_param_u64_u8
-	.quad	_L_1+9372
-	.quad	_Divide__uDivide_param_u64_u8
-	.quad	_L_1+9392
-	.quad	_Divide__Divide_var_u64_u8
-	.quad	_L_1+9413
-	.quad	_Divide__uDivide_var_u64_u8
-	.quad	_L_1+9431
-	.quad	_Divide__Divide_param_u64_C
-	.quad	_L_1+9450
-	.quad	_Divide__uDivide_param_u64_C
-	.quad	_L_1+9469
-	.quad	_Divide__Divide_var_u64_C
-	.quad	_L_1+9489
-	.quad	_Divide__uDivide_var_u64_C
-	.quad	_L_1+9506
-	.quad	_Divide__Divide_param_u64_i64
-	.quad	_L_1+9524
-	.quad	_Divide__uDivide_param_u64_i64
-	.quad	_L_1+9545
-	.quad	_Divide__Divide_var_u64_i64
-	.quad	_L_1+9567
-	.quad	_Divide__uDivide_var_u64_i64
-	.quad	_L_1+9586
-	.quad	_Divide__Divide_param_u64_I
-	.quad	_L_1+9606
-	.quad	_Divide__uDivide_param_u64_I
-	.quad	_L_1+9625
-	.quad	_Divide__Divide_var_u64_I
-	.quad	_L_1+9645
-	.quad	_Divide__uDivide_var_u64_I
-	.quad	_L_1+9662
+	.quad	_L_1+2779
 	.quad	_Divide__Divide_param_u64_i32
-	.quad	_L_1+9680
+	.quad	_L_1+2798
 	.quad	_Divide__uDivide_param_u64_i32
-	.quad	_L_1+9701
+	.quad	_L_1+2819
 	.quad	_Divide__Divide_var_u64_i32
-	.quad	_L_1+9723
+	.quad	_L_1+2841
 	.quad	_Divide__uDivide_var_u64_i32
-	.quad	_L_1+9742
+	.quad	_L_1+2860
 	.quad	_Divide__Divide_param_u64_i16
-	.quad	_L_1+9762
+	.quad	_L_1+2880
 	.quad	_Divide__uDivide_param_u64_i16
-	.quad	_L_1+9783
+	.quad	_L_1+2901
 	.quad	_Divide__Divide_var_u64_i16
-	.quad	_L_1+9805
+	.quad	_L_1+2923
 	.quad	_Divide__uDivide_var_u64_i16
-	.quad	_L_1+9824
-	.quad	_Divide__Divide_param_u64_LC
-	.quad	_L_1+9844
-	.quad	_Divide__uDivide_param_u64_LC
-	.quad	_L_1+9864
-	.quad	_Divide__Divide_var_u64_LC
-	.quad	_L_1+9885
-	.quad	_Divide__uDivide_var_u64_LC
-	.quad	_L_1+9903
+	.quad	_L_1+2942
+	.quad	_Divide__Divide_param_u64_L
+	.quad	_L_1+2962
+	.quad	_Divide__uDivide_param_u64_L
+	.quad	_L_1+2981
+	.quad	_Divide__Divide_var_u64_L
+	.quad	_L_1+3001
+	.quad	_Divide__uDivide_var_u64_L
+	.quad	_L_1+3018
 	.quad	_Divide__Divide_param_u64_u64
-	.quad	_L_1+9922
+	.quad	_L_1+3036
 	.quad	_Divide__uDivide_param_u64_u64
-	.quad	_L_1+9943
+	.quad	_L_1+3057
 	.quad	_Divide__Divide_var_u64_u64
-	.quad	_L_1+9965
+	.quad	_L_1+3079
 	.quad	_Divide__uDivide_var_u64_u64
-	.quad	_L_1+9984
+	.quad	_L_1+3098
 	.quad	_Divide__Divide_param_u64_u16
-	.quad	_L_1+10004
+	.quad	_L_1+3118
 	.quad	_Divide__uDivide_param_u64_u16
-	.quad	_L_1+10025
+	.quad	_L_1+3139
 	.quad	_Divide__Divide_var_u64_u16
-	.quad	_L_1+10047
+	.quad	_L_1+3161
 	.quad	_Divide__uDivide_var_u64_u16
-	.quad	_L_1+10066
-	.quad	_Divide__Divide_param_u16_u32
-	.quad	_L_1+10086
-	.quad	_Divide__uDivide_param_u16_u32
-	.quad	_L_1+10107
-	.quad	_Divide__Divide_var_u16_u32
-	.quad	_L_1+10129
-	.quad	_Divide__uDivide_var_u16_u32
-	.quad	_L_1+10148
-	.quad	_Divide__Divide_param_u16_L
-	.quad	_L_1+10168
-	.quad	_Divide__uDivide_param_u16_L
-	.quad	_L_1+10187
-	.quad	_Divide__Divide_var_u16_L
-	.quad	_L_1+10207
-	.quad	_Divide__uDivide_var_u16_L
-	.quad	_L_1+10224
-	.quad	_Divide__Divide_param_u16_i8
-	.quad	_L_1+10242
-	.quad	_Divide__uDivide_param_u16_i8
-	.quad	_L_1+10262
-	.quad	_Divide__Divide_var_u16_i8
-	.quad	_L_1+10283
-	.quad	_Divide__uDivide_var_u16_i8
-	.quad	_L_1+10301
-	.quad	_Divide__Divide_param_u16_u8
-	.quad	_L_1+10320
-	.quad	_Divide__uDivide_param_u16_u8
-	.quad	_L_1+10340
-	.quad	_Divide__Divide_var_u16_u8
-	.quad	_L_1+10361
-	.quad	_Divide__uDivide_var_u16_u8
-	.quad	_L_1+10379
-	.quad	_Divide__Divide_param_u16_C
-	.quad	_L_1+10398
-	.quad	_Divide__uDivide_param_u16_C
-	.quad	_L_1+10417
-	.quad	_Divide__Divide_var_u16_C
-	.quad	_L_1+10437
-	.quad	_Divide__uDivide_var_u16_C
-	.quad	_L_1+10454
-	.quad	_Divide__Divide_param_u16_i64
-	.quad	_L_1+10472
-	.quad	_Divide__uDivide_param_u16_i64
-	.quad	_L_1+10493
-	.quad	_Divide__Divide_var_u16_i64
-	.quad	_L_1+10515
-	.quad	_Divide__uDivide_var_u16_i64
-	.quad	_L_1+10534
-	.quad	_Divide__Divide_param_u16_I
-	.quad	_L_1+10554
-	.quad	_Divide__uDivide_param_u16_I
-	.quad	_L_1+10573
-	.quad	_Divide__Divide_var_u16_I
-	.quad	_L_1+10593
-	.quad	_Divide__uDivide_var_u16_I
-	.quad	_L_1+10610
+	.quad	_L_1+3180
+	.quad	_Divide__Divide_param_u64_C
+	.quad	_L_1+3200
+	.quad	_Divide__uDivide_param_u64_C
+	.quad	_L_1+3219
+	.quad	_Divide__Divide_var_u64_C
+	.quad	_L_1+3239
+	.quad	_Divide__uDivide_var_u64_C
+	.quad	_L_1+3256
+	.quad	_Divide__Divide_param_u64_u32
+	.quad	_L_1+3274
+	.quad	_Divide__uDivide_param_u64_u32
+	.quad	_L_1+3295
+	.quad	_Divide__Divide_var_u64_u32
+	.quad	_L_1+3317
+	.quad	_Divide__uDivide_var_u64_u32
+	.quad	_L_1+3336
+	.quad	_Divide__Divide_param_u64_i8
+	.quad	_L_1+3356
+	.quad	_Divide__uDivide_param_u64_i8
+	.quad	_L_1+3376
+	.quad	_Divide__Divide_var_u64_i8
+	.quad	_L_1+3397
+	.quad	_Divide__uDivide_var_u64_i8
+	.quad	_L_1+3415
+	.quad	_Divide__Divide_param_u64_I
+	.quad	_L_1+3434
+	.quad	_Divide__uDivide_param_u64_I
+	.quad	_L_1+3453
+	.quad	_Divide__Divide_var_u64_I
+	.quad	_L_1+3473
+	.quad	_Divide__uDivide_var_u64_I
+	.quad	_L_1+3490
+	.quad	_Divide__Divide_param_u64_u8
+	.quad	_L_1+3508
+	.quad	_Divide__uDivide_param_u64_u8
+	.quad	_L_1+3528
+	.quad	_Divide__Divide_var_u64_u8
+	.quad	_L_1+3549
+	.quad	_Divide__uDivide_var_u64_u8
+	.quad	_L_1+3567
+	.quad	_Divide__Divide_param_u64_LC
+	.quad	_L_1+3586
+	.quad	_Divide__uDivide_param_u64_LC
+	.quad	_L_1+3606
+	.quad	_Divide__Divide_var_u64_LC
+	.quad	_L_1+3627
+	.quad	_Divide__uDivide_var_u64_LC
+	.quad	_L_1+3645
+	.quad	_Divide__Divide_param_u64_i64
+	.quad	_L_1+3664
+	.quad	_Divide__uDivide_param_u64_i64
+	.quad	_L_1+3685
+	.quad	_Divide__Divide_var_u64_i64
+	.quad	_L_1+3707
+	.quad	_Divide__uDivide_var_u64_i64
+	.quad	_L_1+3726
 	.quad	_Divide__Divide_param_u16_i32
-	.quad	_L_1+10628
+	.quad	_L_1+3746
 	.quad	_Divide__uDivide_param_u16_i32
-	.quad	_L_1+10649
+	.quad	_L_1+3767
 	.quad	_Divide__Divide_var_u16_i32
-	.quad	_L_1+10671
+	.quad	_L_1+3789
 	.quad	_Divide__uDivide_var_u16_i32
-	.quad	_L_1+10690
+	.quad	_L_1+3808
 	.quad	_Divide__Divide_param_u16_i16
-	.quad	_L_1+10710
+	.quad	_L_1+3828
 	.quad	_Divide__uDivide_param_u16_i16
-	.quad	_L_1+10731
+	.quad	_L_1+3849
 	.quad	_Divide__Divide_var_u16_i16
-	.quad	_L_1+10753
+	.quad	_L_1+3871
 	.quad	_Divide__uDivide_var_u16_i16
-	.quad	_L_1+10772
-	.quad	_Divide__Divide_param_u16_LC
-	.quad	_L_1+10792
-	.quad	_Divide__uDivide_param_u16_LC
-	.quad	_L_1+10812
-	.quad	_Divide__Divide_var_u16_LC
-	.quad	_L_1+10833
-	.quad	_Divide__uDivide_var_u16_LC
-	.quad	_L_1+10851
+	.quad	_L_1+3890
+	.quad	_Divide__Divide_param_u16_L
+	.quad	_L_1+3910
+	.quad	_Divide__uDivide_param_u16_L
+	.quad	_L_1+3929
+	.quad	_Divide__Divide_var_u16_L
+	.quad	_L_1+3949
+	.quad	_Divide__uDivide_var_u16_L
+	.quad	_L_1+3966
 	.quad	_Divide__Divide_param_u16_u64
-	.quad	_L_1+10870
+	.quad	_L_1+3984
 	.quad	_Divide__uDivide_param_u16_u64
-	.quad	_L_1+10891
+	.quad	_L_1+4005
 	.quad	_Divide__Divide_var_u16_u64
-	.quad	_L_1+10913
+	.quad	_L_1+4027
 	.quad	_Divide__uDivide_var_u16_u64
-	.quad	_L_1+10932
+	.quad	_L_1+4046
 	.quad	_Divide__Divide_param_u16_u16
-	.quad	_L_1+10952
+	.quad	_L_1+4066
 	.quad	_Divide__uDivide_param_u16_u16
-	.quad	_L_1+10973
+	.quad	_L_1+4087
 	.quad	_Divide__Divide_var_u16_u16
-	.quad	_L_1+10995
+	.quad	_L_1+4109
 	.quad	_Divide__uDivide_var_u16_u16
+	.quad	_L_1+4128
+	.quad	_Divide__Divide_param_u16_C
+	.quad	_L_1+4148
+	.quad	_Divide__uDivide_param_u16_C
+	.quad	_L_1+4167
+	.quad	_Divide__Divide_var_u16_C
+	.quad	_L_1+4187
+	.quad	_Divide__uDivide_var_u16_C
+	.quad	_L_1+4204
+	.quad	_Divide__Divide_param_u16_u32
+	.quad	_L_1+4222
+	.quad	_Divide__uDivide_param_u16_u32
+	.quad	_L_1+4243
+	.quad	_Divide__Divide_var_u16_u32
+	.quad	_L_1+4265
+	.quad	_Divide__uDivide_var_u16_u32
+	.quad	_L_1+4284
+	.quad	_Divide__Divide_param_u16_i8
+	.quad	_L_1+4304
+	.quad	_Divide__uDivide_param_u16_i8
+	.quad	_L_1+4324
+	.quad	_Divide__Divide_var_u16_i8
+	.quad	_L_1+4345
+	.quad	_Divide__uDivide_var_u16_i8
+	.quad	_L_1+4363
+	.quad	_Divide__Divide_param_u16_I
+	.quad	_L_1+4382
+	.quad	_Divide__uDivide_param_u16_I
+	.quad	_L_1+4401
+	.quad	_Divide__Divide_var_u16_I
+	.quad	_L_1+4421
+	.quad	_Divide__uDivide_var_u16_I
+	.quad	_L_1+4438
+	.quad	_Divide__Divide_param_u16_u8
+	.quad	_L_1+4456
+	.quad	_Divide__uDivide_param_u16_u8
+	.quad	_L_1+4476
+	.quad	_Divide__Divide_var_u16_u8
+	.quad	_L_1+4497
+	.quad	_Divide__uDivide_var_u16_u8
+	.quad	_L_1+4515
+	.quad	_Divide__Divide_param_u16_LC
+	.quad	_L_1+4534
+	.quad	_Divide__uDivide_param_u16_LC
+	.quad	_L_1+4554
+	.quad	_Divide__Divide_var_u16_LC
+	.quad	_L_1+4575
+	.quad	_Divide__uDivide_var_u16_LC
+	.quad	_L_1+4593
+	.quad	_Divide__Divide_param_u16_i64
+	.quad	_L_1+4612
+	.quad	_Divide__uDivide_param_u16_i64
+	.quad	_L_1+4633
+	.quad	_Divide__Divide_var_u16_i64
+	.quad	_L_1+4655
+	.quad	_Divide__uDivide_var_u16_i64
+	.quad	_L_1+4674
+	.quad	_Divide__Divide_param_C_i32
+	.quad	_L_1+4694
+	.quad	_Divide__uDivide_param_C_i32
+	.quad	_L_1+4713
+	.quad	_Divide__Divide_var_C_i32
+	.quad	_L_1+4733
+	.quad	_Divide__uDivide_var_C_i32
+	.quad	_L_1+4750
+	.quad	_Divide__Divide_param_C_i16
+	.quad	_L_1+4768
+	.quad	_Divide__uDivide_param_C_i16
+	.quad	_L_1+4787
+	.quad	_Divide__Divide_var_C_i16
+	.quad	_L_1+4807
+	.quad	_Divide__uDivide_var_C_i16
+	.quad	_L_1+4824
+	.quad	_Divide__Divide_param_C_L
+	.quad	_L_1+4842
+	.quad	_Divide__uDivide_param_C_L
+	.quad	_L_1+4859
+	.quad	_Divide__Divide_var_C_L
+	.quad	_L_1+4877
+	.quad	_Divide__uDivide_var_C_L
+	.quad	_L_1+4892
+	.quad	_Divide__Divide_param_C_u64
+	.quad	_L_1+4908
+	.quad	_Divide__uDivide_param_C_u64
+	.quad	_L_1+4927
+	.quad	_Divide__Divide_var_C_u64
+	.quad	_L_1+4947
+	.quad	_Divide__uDivide_var_C_u64
+	.quad	_L_1+4964
+	.quad	_Divide__Divide_param_C_u16
+	.quad	_L_1+4982
+	.quad	_Divide__uDivide_param_C_u16
+	.quad	_L_1+5001
+	.quad	_Divide__Divide_var_C_u16
+	.quad	_L_1+5021
+	.quad	_Divide__uDivide_var_C_u16
+	.quad	_L_1+5038
+	.quad	_Divide__Divide_param_C_C
+	.quad	_L_1+5056
+	.quad	_Divide__uDivide_param_C_C
+	.quad	_L_1+5073
+	.quad	_Divide__Divide_var_C_C
+	.quad	_L_1+5091
+	.quad	_Divide__uDivide_var_C_C
+	.quad	_L_1+5106
+	.quad	_Divide__Divide_param_C_u32
+	.quad	_L_1+5122
+	.quad	_Divide__uDivide_param_C_u32
+	.quad	_L_1+5141
+	.quad	_Divide__Divide_var_C_u32
+	.quad	_L_1+5161
+	.quad	_Divide__uDivide_var_C_u32
+	.quad	_L_1+5178
+	.quad	_Divide__Divide_param_C_i8
+	.quad	_L_1+5196
+	.quad	_Divide__uDivide_param_C_i8
+	.quad	_L_1+5214
+	.quad	_Divide__Divide_var_C_i8
+	.quad	_L_1+5233
+	.quad	_Divide__uDivide_var_C_i8
+	.quad	_L_1+5249
+	.quad	_Divide__Divide_param_C_I
+	.quad	_L_1+5266
+	.quad	_Divide__uDivide_param_C_I
+	.quad	_L_1+5283
+	.quad	_Divide__Divide_var_C_I
+	.quad	_L_1+5301
+	.quad	_Divide__uDivide_var_C_I
+	.quad	_L_1+5316
+	.quad	_Divide__Divide_param_C_u8
+	.quad	_L_1+5332
+	.quad	_Divide__uDivide_param_C_u8
+	.quad	_L_1+5350
+	.quad	_Divide__Divide_var_C_u8
+	.quad	_L_1+5369
+	.quad	_Divide__uDivide_var_C_u8
+	.quad	_L_1+5385
+	.quad	_Divide__Divide_param_C_LC
+	.quad	_L_1+5402
+	.quad	_Divide__uDivide_param_C_LC
+	.quad	_L_1+5420
+	.quad	_Divide__Divide_var_C_LC
+	.quad	_L_1+5439
+	.quad	_Divide__uDivide_var_C_LC
+	.quad	_L_1+5455
+	.quad	_Divide__Divide_param_C_i64
+	.quad	_L_1+5472
+	.quad	_Divide__uDivide_param_C_i64
+	.quad	_L_1+5491
+	.quad	_Divide__Divide_var_C_i64
+	.quad	_L_1+5511
+	.quad	_Divide__uDivide_var_C_i64
+	.quad	_L_1+5528
+	.quad	_Divide__Divide_param_u32_i32
+	.quad	_L_1+5546
+	.quad	_Divide__uDivide_param_u32_i32
+	.quad	_L_1+5567
+	.quad	_Divide__Divide_var_u32_i32
+	.quad	_L_1+5589
+	.quad	_Divide__uDivide_var_u32_i32
+	.quad	_L_1+5608
+	.quad	_Divide__Divide_param_u32_i16
+	.quad	_L_1+5628
+	.quad	_Divide__uDivide_param_u32_i16
+	.quad	_L_1+5649
+	.quad	_Divide__Divide_var_u32_i16
+	.quad	_L_1+5671
+	.quad	_Divide__uDivide_var_u32_i16
+	.quad	_L_1+5690
+	.quad	_Divide__Divide_param_u32_L
+	.quad	_L_1+5710
+	.quad	_Divide__uDivide_param_u32_L
+	.quad	_L_1+5729
+	.quad	_Divide__Divide_var_u32_L
+	.quad	_L_1+5749
+	.quad	_Divide__uDivide_var_u32_L
+	.quad	_L_1+5766
+	.quad	_Divide__Divide_param_u32_u64
+	.quad	_L_1+5784
+	.quad	_Divide__uDivide_param_u32_u64
+	.quad	_L_1+5805
+	.quad	_Divide__Divide_var_u32_u64
+	.quad	_L_1+5827
+	.quad	_Divide__uDivide_var_u32_u64
+	.quad	_L_1+5846
+	.quad	_Divide__Divide_param_u32_u16
+	.quad	_L_1+5866
+	.quad	_Divide__uDivide_param_u32_u16
+	.quad	_L_1+5887
+	.quad	_Divide__Divide_var_u32_u16
+	.quad	_L_1+5909
+	.quad	_Divide__uDivide_var_u32_u16
+	.quad	_L_1+5928
+	.quad	_Divide__Divide_param_u32_C
+	.quad	_L_1+5948
+	.quad	_Divide__uDivide_param_u32_C
+	.quad	_L_1+5967
+	.quad	_Divide__Divide_var_u32_C
+	.quad	_L_1+5987
+	.quad	_Divide__uDivide_var_u32_C
+	.quad	_L_1+6004
+	.quad	_Divide__Divide_param_u32_u32
+	.quad	_L_1+6022
+	.quad	_Divide__uDivide_param_u32_u32
+	.quad	_L_1+6043
+	.quad	_Divide__Divide_var_u32_u32
+	.quad	_L_1+6065
+	.quad	_Divide__uDivide_var_u32_u32
+	.quad	_L_1+6084
+	.quad	_Divide__Divide_param_u32_i8
+	.quad	_L_1+6104
+	.quad	_Divide__uDivide_param_u32_i8
+	.quad	_L_1+6124
+	.quad	_Divide__Divide_var_u32_i8
+	.quad	_L_1+6145
+	.quad	_Divide__uDivide_var_u32_i8
+	.quad	_L_1+6163
+	.quad	_Divide__Divide_param_u32_I
+	.quad	_L_1+6182
+	.quad	_Divide__uDivide_param_u32_I
+	.quad	_L_1+6201
+	.quad	_Divide__Divide_var_u32_I
+	.quad	_L_1+6221
+	.quad	_Divide__uDivide_var_u32_I
+	.quad	_L_1+6238
+	.quad	_Divide__Divide_param_u32_u8
+	.quad	_L_1+6256
+	.quad	_Divide__uDivide_param_u32_u8
+	.quad	_L_1+6276
+	.quad	_Divide__Divide_var_u32_u8
+	.quad	_L_1+6297
+	.quad	_Divide__uDivide_var_u32_u8
+	.quad	_L_1+6315
+	.quad	_Divide__Divide_param_u32_LC
+	.quad	_L_1+6334
+	.quad	_Divide__uDivide_param_u32_LC
+	.quad	_L_1+6354
+	.quad	_Divide__Divide_var_u32_LC
+	.quad	_L_1+6375
+	.quad	_Divide__uDivide_var_u32_LC
+	.quad	_L_1+6393
+	.quad	_Divide__Divide_param_u32_i64
+	.quad	_L_1+6412
+	.quad	_Divide__uDivide_param_u32_i64
+	.quad	_L_1+6433
+	.quad	_Divide__Divide_var_u32_i64
+	.quad	_L_1+6455
+	.quad	_Divide__uDivide_var_u32_i64
+	.quad	_L_1+6474
+	.quad	_Divide__Divide_param_i8_i32
+	.quad	_L_1+6494
+	.quad	_Divide__uDivide_param_i8_i32
+	.quad	_L_1+6514
+	.quad	_Divide__Divide_var_i8_i32
+	.quad	_L_1+6535
+	.quad	_Divide__uDivide_var_i8_i32
+	.quad	_L_1+6553
+	.quad	_Divide__Divide_param_i8_i16
+	.quad	_L_1+6572
+	.quad	_Divide__uDivide_param_i8_i16
+	.quad	_L_1+6592
+	.quad	_Divide__Divide_var_i8_i16
+	.quad	_L_1+6613
+	.quad	_Divide__uDivide_var_i8_i16
+	.quad	_L_1+6631
+	.quad	_Divide__Divide_param_i8_L
+	.quad	_L_1+6650
+	.quad	_Divide__uDivide_param_i8_L
+	.quad	_L_1+6668
+	.quad	_Divide__Divide_var_i8_L
+	.quad	_L_1+6687
+	.quad	_Divide__uDivide_var_i8_L
+	.quad	_L_1+6703
+	.quad	_Divide__Divide_param_i8_u64
+	.quad	_L_1+6720
+	.quad	_Divide__uDivide_param_i8_u64
+	.quad	_L_1+6740
+	.quad	_Divide__Divide_var_i8_u64
+	.quad	_L_1+6761
+	.quad	_Divide__uDivide_var_i8_u64
+	.quad	_L_1+6779
+	.quad	_Divide__Divide_param_i8_u16
+	.quad	_L_1+6798
+	.quad	_Divide__uDivide_param_i8_u16
+	.quad	_L_1+6818
+	.quad	_Divide__Divide_var_i8_u16
+	.quad	_L_1+6839
+	.quad	_Divide__uDivide_var_i8_u16
+	.quad	_L_1+6857
+	.quad	_Divide__Divide_param_i8_C
+	.quad	_L_1+6876
+	.quad	_Divide__uDivide_param_i8_C
+	.quad	_L_1+6894
+	.quad	_Divide__Divide_var_i8_C
+	.quad	_L_1+6913
+	.quad	_Divide__uDivide_var_i8_C
+	.quad	_L_1+6929
+	.quad	_Divide__Divide_param_i8_u32
+	.quad	_L_1+6946
+	.quad	_Divide__uDivide_param_i8_u32
+	.quad	_L_1+6966
+	.quad	_Divide__Divide_var_i8_u32
+	.quad	_L_1+6987
+	.quad	_Divide__uDivide_var_i8_u32
+	.quad	_L_1+7005
+	.quad	_Divide__Divide_param_i8_i8
+	.quad	_L_1+7024
+	.quad	_Divide__uDivide_param_i8_i8
+	.quad	_L_1+7043
+	.quad	_Divide__Divide_var_i8_i8
+	.quad	_L_1+7063
+	.quad	_Divide__uDivide_var_i8_i8
+	.quad	_L_1+7080
+	.quad	_Divide__Divide_param_i8_I
+	.quad	_L_1+7098
+	.quad	_Divide__uDivide_param_i8_I
+	.quad	_L_1+7116
+	.quad	_Divide__Divide_var_i8_I
+	.quad	_L_1+7135
+	.quad	_Divide__uDivide_var_i8_I
+	.quad	_L_1+7151
+	.quad	_Divide__Divide_param_i8_u8
+	.quad	_L_1+7168
+	.quad	_Divide__uDivide_param_i8_u8
+	.quad	_L_1+7187
+	.quad	_Divide__Divide_var_i8_u8
+	.quad	_L_1+7207
+	.quad	_Divide__uDivide_var_i8_u8
+	.quad	_L_1+7224
+	.quad	_Divide__Divide_param_i8_LC
+	.quad	_L_1+7242
+	.quad	_Divide__uDivide_param_i8_LC
+	.quad	_L_1+7261
+	.quad	_Divide__Divide_var_i8_LC
+	.quad	_L_1+7281
+	.quad	_Divide__uDivide_var_i8_LC
+	.quad	_L_1+7298
+	.quad	_Divide__Divide_param_i8_i64
+	.quad	_L_1+7316
+	.quad	_Divide__uDivide_param_i8_i64
+	.quad	_L_1+7336
+	.quad	_Divide__Divide_var_i8_i64
+	.quad	_L_1+7357
+	.quad	_Divide__uDivide_var_i8_i64
+	.quad	_L_1+7375
+	.quad	_Divide__Divide_param_I_i32
+	.quad	_L_1+7394
+	.quad	_Divide__uDivide_param_I_i32
+	.quad	_L_1+7413
+	.quad	_Divide__Divide_var_I_i32
+	.quad	_L_1+7433
+	.quad	_Divide__uDivide_var_I_i32
+	.quad	_L_1+7450
+	.quad	_Divide__Divide_param_I_i16
+	.quad	_L_1+7468
+	.quad	_Divide__uDivide_param_I_i16
+	.quad	_L_1+7487
+	.quad	_Divide__Divide_var_I_i16
+	.quad	_L_1+7507
+	.quad	_Divide__uDivide_var_I_i16
+	.quad	_L_1+7524
+	.quad	_Divide__Divide_param_I_L
+	.quad	_L_1+7542
+	.quad	_Divide__uDivide_param_I_L
+	.quad	_L_1+7559
+	.quad	_Divide__Divide_var_I_L
+	.quad	_L_1+7577
+	.quad	_Divide__uDivide_var_I_L
+	.quad	_L_1+7592
+	.quad	_Divide__Divide_param_I_u64
+	.quad	_L_1+7608
+	.quad	_Divide__uDivide_param_I_u64
+	.quad	_L_1+7627
+	.quad	_Divide__Divide_var_I_u64
+	.quad	_L_1+7647
+	.quad	_Divide__uDivide_var_I_u64
+	.quad	_L_1+7664
+	.quad	_Divide__Divide_param_I_u16
+	.quad	_L_1+7682
+	.quad	_Divide__uDivide_param_I_u16
+	.quad	_L_1+7701
+	.quad	_Divide__Divide_var_I_u16
+	.quad	_L_1+7721
+	.quad	_Divide__uDivide_var_I_u16
+	.quad	_L_1+7738
+	.quad	_Divide__Divide_param_I_C
+	.quad	_L_1+7756
+	.quad	_Divide__uDivide_param_I_C
+	.quad	_L_1+7773
+	.quad	_Divide__Divide_var_I_C
+	.quad	_L_1+7791
+	.quad	_Divide__uDivide_var_I_C
+	.quad	_L_1+7806
+	.quad	_Divide__Divide_param_I_u32
+	.quad	_L_1+7822
+	.quad	_Divide__uDivide_param_I_u32
+	.quad	_L_1+7841
+	.quad	_Divide__Divide_var_I_u32
+	.quad	_L_1+7861
+	.quad	_Divide__uDivide_var_I_u32
+	.quad	_L_1+7878
+	.quad	_Divide__Divide_param_I_i8
+	.quad	_L_1+7896
+	.quad	_Divide__uDivide_param_I_i8
+	.quad	_L_1+7914
+	.quad	_Divide__Divide_var_I_i8
+	.quad	_L_1+7933
+	.quad	_Divide__uDivide_var_I_i8
+	.quad	_L_1+7949
+	.quad	_Divide__Divide_param_I_I
+	.quad	_L_1+7966
+	.quad	_Divide__uDivide_param_I_I
+	.quad	_L_1+7983
+	.quad	_Divide__Divide_var_I_I
+	.quad	_L_1+8001
+	.quad	_Divide__uDivide_var_I_I
+	.quad	_L_1+8016
+	.quad	_Divide__Divide_param_I_u8
+	.quad	_L_1+8032
+	.quad	_Divide__uDivide_param_I_u8
+	.quad	_L_1+8050
+	.quad	_Divide__Divide_var_I_u8
+	.quad	_L_1+8069
+	.quad	_Divide__uDivide_var_I_u8
+	.quad	_L_1+8085
+	.quad	_Divide__Divide_param_I_LC
+	.quad	_L_1+8102
+	.quad	_Divide__uDivide_param_I_LC
+	.quad	_L_1+8120
+	.quad	_Divide__Divide_var_I_LC
+	.quad	_L_1+8139
+	.quad	_Divide__uDivide_var_I_LC
+	.quad	_L_1+8155
+	.quad	_Divide__Divide_param_I_i64
+	.quad	_L_1+8172
+	.quad	_Divide__uDivide_param_I_i64
+	.quad	_L_1+8191
+	.quad	_Divide__Divide_var_I_i64
+	.quad	_L_1+8211
+	.quad	_Divide__uDivide_var_I_i64
+	.quad	_L_1+8228
+	.quad	_Divide__Divide_param_u8_i32
+	.quad	_L_1+8246
+	.quad	_Divide__uDivide_param_u8_i32
+	.quad	_L_1+8266
+	.quad	_Divide__Divide_var_u8_i32
+	.quad	_L_1+8287
+	.quad	_Divide__uDivide_var_u8_i32
+	.quad	_L_1+8305
+	.quad	_Divide__Divide_param_u8_i16
+	.quad	_L_1+8324
+	.quad	_Divide__uDivide_param_u8_i16
+	.quad	_L_1+8344
+	.quad	_Divide__Divide_var_u8_i16
+	.quad	_L_1+8365
+	.quad	_Divide__uDivide_var_u8_i16
+	.quad	_L_1+8383
+	.quad	_Divide__Divide_param_u8_L
+	.quad	_L_1+8402
+	.quad	_Divide__uDivide_param_u8_L
+	.quad	_L_1+8420
+	.quad	_Divide__Divide_var_u8_L
+	.quad	_L_1+8439
+	.quad	_Divide__uDivide_var_u8_L
+	.quad	_L_1+8455
+	.quad	_Divide__Divide_param_u8_u64
+	.quad	_L_1+8472
+	.quad	_Divide__uDivide_param_u8_u64
+	.quad	_L_1+8492
+	.quad	_Divide__Divide_var_u8_u64
+	.quad	_L_1+8513
+	.quad	_Divide__uDivide_var_u8_u64
+	.quad	_L_1+8531
+	.quad	_Divide__Divide_param_u8_u16
+	.quad	_L_1+8550
+	.quad	_Divide__uDivide_param_u8_u16
+	.quad	_L_1+8570
+	.quad	_Divide__Divide_var_u8_u16
+	.quad	_L_1+8591
+	.quad	_Divide__uDivide_var_u8_u16
+	.quad	_L_1+8609
+	.quad	_Divide__Divide_param_u8_C
+	.quad	_L_1+8628
+	.quad	_Divide__uDivide_param_u8_C
+	.quad	_L_1+8646
+	.quad	_Divide__Divide_var_u8_C
+	.quad	_L_1+8665
+	.quad	_Divide__uDivide_var_u8_C
+	.quad	_L_1+8681
+	.quad	_Divide__Divide_param_u8_u32
+	.quad	_L_1+8698
+	.quad	_Divide__uDivide_param_u8_u32
+	.quad	_L_1+8718
+	.quad	_Divide__Divide_var_u8_u32
+	.quad	_L_1+8739
+	.quad	_Divide__uDivide_var_u8_u32
+	.quad	_L_1+8757
+	.quad	_Divide__Divide_param_u8_i8
+	.quad	_L_1+8776
+	.quad	_Divide__uDivide_param_u8_i8
+	.quad	_L_1+8795
+	.quad	_Divide__Divide_var_u8_i8
+	.quad	_L_1+8815
+	.quad	_Divide__uDivide_var_u8_i8
+	.quad	_L_1+8832
+	.quad	_Divide__Divide_param_u8_I
+	.quad	_L_1+8850
+	.quad	_Divide__uDivide_param_u8_I
+	.quad	_L_1+8868
+	.quad	_Divide__Divide_var_u8_I
+	.quad	_L_1+8887
+	.quad	_Divide__uDivide_var_u8_I
+	.quad	_L_1+8903
+	.quad	_Divide__Divide_param_u8_u8
+	.quad	_L_1+8920
+	.quad	_Divide__uDivide_param_u8_u8
+	.quad	_L_1+8939
+	.quad	_Divide__Divide_var_u8_u8
+	.quad	_L_1+8959
+	.quad	_Divide__uDivide_var_u8_u8
+	.quad	_L_1+8976
+	.quad	_Divide__Divide_param_u8_LC
+	.quad	_L_1+8994
+	.quad	_Divide__uDivide_param_u8_LC
+	.quad	_L_1+9013
+	.quad	_Divide__Divide_var_u8_LC
+	.quad	_L_1+9033
+	.quad	_Divide__uDivide_var_u8_LC
+	.quad	_L_1+9050
+	.quad	_Divide__Divide_param_u8_i64
+	.quad	_L_1+9068
+	.quad	_Divide__uDivide_param_u8_i64
+	.quad	_L_1+9088
+	.quad	_Divide__Divide_var_u8_i64
+	.quad	_L_1+9109
+	.quad	_Divide__uDivide_var_u8_i64
+	.quad	_L_1+9127
+	.quad	_Divide__Divide_param_f32_f32
+	.quad	_L_1+9146
+	.quad	_Divide__Divide_var_f32_f32
+	.quad	_L_1+9167
+	.quad	_Divide__Divide_param_LC_i32
+	.quad	_L_1+9186
+	.quad	_Divide__uDivide_param_LC_i32
+	.quad	_L_1+9206
+	.quad	_Divide__Divide_var_LC_i32
+	.quad	_L_1+9227
+	.quad	_Divide__uDivide_var_LC_i32
+	.quad	_L_1+9245
+	.quad	_Divide__Divide_param_LC_i16
+	.quad	_L_1+9264
+	.quad	_Divide__uDivide_param_LC_i16
+	.quad	_L_1+9284
+	.quad	_Divide__Divide_var_LC_i16
+	.quad	_L_1+9305
+	.quad	_Divide__uDivide_var_LC_i16
+	.quad	_L_1+9323
+	.quad	_Divide__Divide_param_LC_L
+	.quad	_L_1+9342
+	.quad	_Divide__uDivide_param_LC_L
+	.quad	_L_1+9360
+	.quad	_Divide__Divide_var_LC_L
+	.quad	_L_1+9379
+	.quad	_Divide__uDivide_var_LC_L
+	.quad	_L_1+9395
+	.quad	_Divide__Divide_param_LC_u64
+	.quad	_L_1+9412
+	.quad	_Divide__uDivide_param_LC_u64
+	.quad	_L_1+9432
+	.quad	_Divide__Divide_var_LC_u64
+	.quad	_L_1+9453
+	.quad	_Divide__uDivide_var_LC_u64
+	.quad	_L_1+9471
+	.quad	_Divide__Divide_param_LC_u16
+	.quad	_L_1+9490
+	.quad	_Divide__uDivide_param_LC_u16
+	.quad	_L_1+9510
+	.quad	_Divide__Divide_var_LC_u16
+	.quad	_L_1+9531
+	.quad	_Divide__uDivide_var_LC_u16
+	.quad	_L_1+9549
+	.quad	_Divide__Divide_param_LC_C
+	.quad	_L_1+9568
+	.quad	_Divide__uDivide_param_LC_C
+	.quad	_L_1+9586
+	.quad	_Divide__Divide_var_LC_C
+	.quad	_L_1+9605
+	.quad	_Divide__uDivide_var_LC_C
+	.quad	_L_1+9621
+	.quad	_Divide__Divide_param_LC_u32
+	.quad	_L_1+9638
+	.quad	_Divide__uDivide_param_LC_u32
+	.quad	_L_1+9658
+	.quad	_Divide__Divide_var_LC_u32
+	.quad	_L_1+9679
+	.quad	_Divide__uDivide_var_LC_u32
+	.quad	_L_1+9697
+	.quad	_Divide__Divide_param_LC_i8
+	.quad	_L_1+9716
+	.quad	_Divide__uDivide_param_LC_i8
+	.quad	_L_1+9735
+	.quad	_Divide__Divide_var_LC_i8
+	.quad	_L_1+9755
+	.quad	_Divide__uDivide_var_LC_i8
+	.quad	_L_1+9772
+	.quad	_Divide__Divide_param_LC_I
+	.quad	_L_1+9790
+	.quad	_Divide__uDivide_param_LC_I
+	.quad	_L_1+9808
+	.quad	_Divide__Divide_var_LC_I
+	.quad	_L_1+9827
+	.quad	_Divide__uDivide_var_LC_I
+	.quad	_L_1+9843
+	.quad	_Divide__Divide_param_LC_u8
+	.quad	_L_1+9860
+	.quad	_Divide__uDivide_param_LC_u8
+	.quad	_L_1+9879
+	.quad	_Divide__Divide_var_LC_u8
+	.quad	_L_1+9899
+	.quad	_Divide__uDivide_var_LC_u8
+	.quad	_L_1+9916
+	.quad	_Divide__Divide_param_LC_LC
+	.quad	_L_1+9934
+	.quad	_Divide__uDivide_param_LC_LC
+	.quad	_L_1+9953
+	.quad	_Divide__Divide_var_LC_LC
+	.quad	_L_1+9973
+	.quad	_Divide__uDivide_var_LC_LC
+	.quad	_L_1+9990
+	.quad	_Divide__Divide_param_LC_i64
+	.quad	_L_1+10008
+	.quad	_Divide__uDivide_param_LC_i64
+	.quad	_L_1+10028
+	.quad	_Divide__Divide_var_LC_i64
+	.quad	_L_1+10049
+	.quad	_Divide__uDivide_var_LC_i64
+	.quad	_L_1+10067
+	.quad	_Divide__Divide_param_i64_i32
+	.quad	_L_1+10086
+	.quad	_Divide__uDivide_param_i64_i32
+	.quad	_L_1+10107
+	.quad	_Divide__Divide_var_i64_i32
+	.quad	_L_1+10129
+	.quad	_Divide__uDivide_var_i64_i32
+	.quad	_L_1+10148
+	.quad	_Divide__Divide_param_i64_i16
+	.quad	_L_1+10168
+	.quad	_Divide__uDivide_param_i64_i16
+	.quad	_L_1+10189
+	.quad	_Divide__Divide_var_i64_i16
+	.quad	_L_1+10211
+	.quad	_Divide__uDivide_var_i64_i16
+	.quad	_L_1+10230
+	.quad	_Divide__Divide_param_i64_L
+	.quad	_L_1+10250
+	.quad	_Divide__uDivide_param_i64_L
+	.quad	_L_1+10269
+	.quad	_Divide__Divide_var_i64_L
+	.quad	_L_1+10289
+	.quad	_Divide__uDivide_var_i64_L
+	.quad	_L_1+10306
+	.quad	_Divide__Divide_param_i64_u64
+	.quad	_L_1+10324
+	.quad	_Divide__uDivide_param_i64_u64
+	.quad	_L_1+10345
+	.quad	_Divide__Divide_var_i64_u64
+	.quad	_L_1+10367
+	.quad	_Divide__uDivide_var_i64_u64
+	.quad	_L_1+10386
+	.quad	_Divide__Divide_param_i64_u16
+	.quad	_L_1+10406
+	.quad	_Divide__uDivide_param_i64_u16
+	.quad	_L_1+10427
+	.quad	_Divide__Divide_var_i64_u16
+	.quad	_L_1+10449
+	.quad	_Divide__uDivide_var_i64_u16
+	.quad	_L_1+10468
+	.quad	_Divide__Divide_param_i64_C
+	.quad	_L_1+10488
+	.quad	_Divide__uDivide_param_i64_C
+	.quad	_L_1+10507
+	.quad	_Divide__Divide_var_i64_C
+	.quad	_L_1+10527
+	.quad	_Divide__uDivide_var_i64_C
+	.quad	_L_1+10544
+	.quad	_Divide__Divide_param_i64_u32
+	.quad	_L_1+10562
+	.quad	_Divide__uDivide_param_i64_u32
+	.quad	_L_1+10583
+	.quad	_Divide__Divide_var_i64_u32
+	.quad	_L_1+10605
+	.quad	_Divide__uDivide_var_i64_u32
+	.quad	_L_1+10624
+	.quad	_Divide__Divide_param_i64_i8
+	.quad	_L_1+10644
+	.quad	_Divide__uDivide_param_i64_i8
+	.quad	_L_1+10664
+	.quad	_Divide__Divide_var_i64_i8
+	.quad	_L_1+10685
+	.quad	_Divide__uDivide_var_i64_i8
+	.quad	_L_1+10703
+	.quad	_Divide__Divide_param_i64_I
+	.quad	_L_1+10722
+	.quad	_Divide__uDivide_param_i64_I
+	.quad	_L_1+10741
+	.quad	_Divide__Divide_var_i64_I
+	.quad	_L_1+10761
+	.quad	_Divide__uDivide_var_i64_I
+	.quad	_L_1+10778
+	.quad	_Divide__Divide_param_i64_u8
+	.quad	_L_1+10796
+	.quad	_Divide__uDivide_param_i64_u8
+	.quad	_L_1+10816
+	.quad	_Divide__Divide_var_i64_u8
+	.quad	_L_1+10837
+	.quad	_Divide__uDivide_var_i64_u8
+	.quad	_L_1+10855
+	.quad	_Divide__Divide_param_i64_LC
+	.quad	_L_1+10874
+	.quad	_Divide__uDivide_param_i64_LC
+	.quad	_L_1+10894
+	.quad	_Divide__Divide_var_i64_LC
+	.quad	_L_1+10915
+	.quad	_Divide__uDivide_var_i64_LC
+	.quad	_L_1+10933
+	.quad	_Divide__Divide_param_i64_i64
+	.quad	_L_1+10952
+	.quad	_Divide__uDivide_param_i64_i64
+	.quad	_L_1+10973
+	.quad	_Divide__Divide_var_i64_i64
+	.quad	_L_1+10995
+	.quad	_Divide__uDivide_var_i64_i64
 	.quad	_L_1+11014
 	.space 8
 	.ascii "../AMD64_DARWIN/Divide.m3"
@@ -16728,25 +16728,26 @@ _MM_Divide:
 	.space 8
 	.quad	_Divide_M3
 	.quad	3
-	.word	241
-	.space 6
+	.quad	241
 	.quad	242
-	.quad	243
-	.long	171798692
-	.long	1080985559
-	.word	246
-	.space 2
-	.long	247
-	.quad	248
+	.long	1131626103
+	.byte	-11
+	.space 3
+	.quad	246
+	.byte	-9
+	.space 3
+	.long	248
 	.quad	249
-	.quad	250
-	.long	1132150915
-	.byte	-3
-	.byte	-2
+	.word	250
+	.space 6
+	.quad	251
+	.long	2473901162
+	.long	1081051160
+	.quad	254
+	.word	255
 	.space 2
-	.quad	255
 	.long	256
-	.space 28
+	.space 24
 	.quad	_Divide_I3
 	.quad	_MM_Divide+232
 	.space 8
