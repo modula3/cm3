@@ -166,12 +166,12 @@ proc BeginModule(a) is
   local b = a & ".m3.temp"
   > b in
     write("MODULE ", a, ";", CR)
-  write("<*NOWARN*>IMPORT Cstdint, Word, Long;", CR)
+    write("<*NOWARN*>IMPORT Cstdint, Word, Long;", CR)
 
-  comment("define some types")
+    comment("define some types")
 
-  write("<*NOWARN*>TYPE FLOAT32 = REAL;",CR)
-  write("<*NOWARN*>TYPE FLOAT64 = LONGREAL;",CR)
+    write("<*NOWARN*>TYPE FLOAT32 = REAL;",CR)
+    write("<*NOWARN*>TYPE FLOAT64 = LONGREAL;",CR)
 
     foreach t in Types
       if IsInt{t} and not Builtin{t}
