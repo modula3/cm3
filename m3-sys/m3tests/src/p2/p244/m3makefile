@@ -1,9 +1,4 @@
-m3back_debug = ""
-%m3back_optimize = ""
-m3back_pic = ""
-m3back_unwind_table = "-fno-asynchronous-unwind-tables"
-M3_KEEP_FILES = TRUE
-
+m3back_optimize = "-O1"
 implementation("Main")
 build_standalone()
 include ("../../Test.common")
