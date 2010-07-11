@@ -4902,25 +4902,26 @@ _MM_extract_constant_offset:
 	.space 8
 	.quad	_extract_constant_offset_M3
 	.quad	3
-	.word	1073
-	.space 6
+	.quad	1073
 	.quad	1074
-	.quad	1075
-	.long	1223206686
-	.long	1083232366
-	.word	1078
-	.space 2
-	.long	1079
-	.quad	1080
+	.long	1149657969
+	.byte	53
+	.space 3
+	.quad	1078
+	.byte	55
+	.space 3
+	.long	1080
 	.quad	1081
-	.quad	1082
-	.long	1149723512
-	.byte	61
-	.byte	62
+	.word	1082
+	.space 6
+	.quad	1083
+	.long	446676599
+	.long	1083240559
+	.quad	1086
+	.word	1087
 	.space 2
-	.quad	1087
 	.long	1088
-	.space 28
+	.space 24
 	.quad	_extract_constant_offset_I3
 	.quad	_MM_extract_constant_offset+232
 	.space 8

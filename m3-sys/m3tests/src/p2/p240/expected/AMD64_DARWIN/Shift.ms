@@ -1,13 +1,12 @@
 	.text
-.globl _Shift__uShift_var_u16_I
-	.private_extern _Shift__uShift_var_u16_I
-_Shift__uShift_var_u16_I:
+.globl _Shift__uShift_var_i64_I
+	.private_extern _Shift__uShift_var_i64_I
+_Shift__uShift_var_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	104+_MM_Shift(%rip), %eax
-	movswq	%ax,%rax
+	movq	104+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L2
@@ -45,16 +44,16 @@ L5:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_u16_I
-	.private_extern _Shift__uShift_param_u16_I
-_Shift__uShift_param_u16_I:
+.globl _Shift__uShift_param_i64_I
+	.private_extern _Shift__uShift_param_i64_I
+_Shift__uShift_param_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movswq	-34(%rbp),%rax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L10
@@ -92,15 +91,14 @@ L13:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_u16_C
-	.private_extern _Shift__uShift_var_u16_C
-_Shift__uShift_var_u16_C:
+.globl _Shift__uShift_var_i64_C
+	.private_extern _Shift__uShift_var_i64_C
+_Shift__uShift_var_i64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	104+_MM_Shift(%rip), %eax
-	movswq	%ax,%rax
+	movq	104+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L18
@@ -138,16 +136,16 @@ L21:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_u16_C
-	.private_extern _Shift__uShift_param_u16_C
-_Shift__uShift_param_u16_C:
+.globl _Shift__uShift_param_i64_C
+	.private_extern _Shift__uShift_param_i64_C
+_Shift__uShift_param_i64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movswq	-34(%rbp),%rax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L26
@@ -185,12 +183,12 @@ L29:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_u64_I
-	.private_extern _Shift__uShift_var_u64_I
-_Shift__uShift_var_u64_I:
+.globl _Shift__uShift_var_LC_I
+	.private_extern _Shift__uShift_var_LC_I
+_Shift__uShift_var_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	movq	112+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
@@ -230,9 +228,9 @@ L37:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_u64_I
-	.private_extern _Shift__uShift_param_u64_I
-_Shift__uShift_param_u64_I:
+.globl _Shift__uShift_param_LC_I
+	.private_extern _Shift__uShift_param_LC_I
+_Shift__uShift_param_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -40(%rbp)
@@ -277,12 +275,12 @@ L45:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_u64_C
-	.private_extern _Shift__uShift_var_u64_C
-_Shift__uShift_var_u64_C:
+.globl _Shift__uShift_var_LC_C
+	.private_extern _Shift__uShift_var_LC_C
+_Shift__uShift_var_LC_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
 	movq	112+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
@@ -322,9 +320,9 @@ L53:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_u64_C
-	.private_extern _Shift__uShift_param_u64_C
-_Shift__uShift_param_u64_C:
+.globl _Shift__uShift_param_LC_C
+	.private_extern _Shift__uShift_param_LC_C
+_Shift__uShift_param_LC_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -40(%rbp)
@@ -369,14 +367,15 @@ L61:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_LC_I
-	.private_extern _Shift__uShift_var_LC_I
-_Shift__uShift_var_LC_I:
+.globl _Shift__uShift_var_u8_I
+	.private_extern _Shift__uShift_var_u8_I
+_Shift__uShift_var_u8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	120+_MM_Shift(%rip), %rax
+	movzbl	124+_MM_Shift(%rip), %eax
+	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L66
@@ -414,16 +413,16 @@ L69:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_LC_I
-	.private_extern _Shift__uShift_param_LC_I
-_Shift__uShift_param_LC_I:
+.globl _Shift__uShift_param_u8_I
+	.private_extern _Shift__uShift_param_u8_I
+_Shift__uShift_param_u8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movb	%dil, -33(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movsbq	-33(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L74
@@ -461,14 +460,15 @@ L77:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_LC_C
-	.private_extern _Shift__uShift_var_LC_C
-_Shift__uShift_var_LC_C:
+.globl _Shift__uShift_var_u8_C
+	.private_extern _Shift__uShift_var_u8_C
+_Shift__uShift_var_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	120+_MM_Shift(%rip), %rax
+	movzbl	124+_MM_Shift(%rip), %eax
+	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L82
@@ -506,16 +506,16 @@ L85:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_LC_C
-	.private_extern _Shift__uShift_param_LC_C
-_Shift__uShift_param_LC_C:
+.globl _Shift__uShift_param_u8_C
+	.private_extern _Shift__uShift_param_u8_C
+_Shift__uShift_param_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movb	%dil, -33(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movsbq	-33(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L90
@@ -553,15 +553,14 @@ L93:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_i16_I
-	.private_extern _Shift__uShift_var_i16_I
-_Shift__uShift_var_i16_I:
+.globl _Shift__uShift_var_I_I
+	.private_extern _Shift__uShift_var_I_I
+_Shift__uShift_var_I_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	136+_MM_Shift(%rip), %eax
-	movzwl	%ax, %eax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L98
@@ -599,16 +598,16 @@ L101:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_i16_I
-	.private_extern _Shift__uShift_param_i16_I
-_Shift__uShift_param_i16_I:
+.globl _Shift__uShift_param_I_I
+	.private_extern _Shift__uShift_param_I_I
+_Shift__uShift_param_I_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	-34(%rbp), %eax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L106
@@ -646,15 +645,14 @@ L109:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_i16_C
-	.private_extern _Shift__uShift_var_i16_C
-_Shift__uShift_var_i16_C:
+.globl _Shift__uShift_var_I_C
+	.private_extern _Shift__uShift_var_I_C
+_Shift__uShift_var_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	136+_MM_Shift(%rip), %eax
-	movzwl	%ax, %eax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L114
@@ -692,16 +690,16 @@ L117:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_i16_C
-	.private_extern _Shift__uShift_param_i16_C
-_Shift__uShift_param_i16_C:
+.globl _Shift__uShift_param_I_C
+	.private_extern _Shift__uShift_param_I_C
+_Shift__uShift_param_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -34(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movzwl	-34(%rbp), %eax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L122
@@ -739,15 +737,15 @@ L125:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_i32_I
-	.private_extern _Shift__uShift_var_i32_I
-_Shift__uShift_var_i32_I:
+.globl _Shift__uShift_var_i8_I
+	.private_extern _Shift__uShift_var_i8_I
+_Shift__uShift_var_i8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movl	140+_MM_Shift(%rip), %eax
-	mov	%eax, %eax
+	movzbl	136+_MM_Shift(%rip), %eax
+	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L130
@@ -785,16 +783,16 @@ L133:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_i32_I
-	.private_extern _Shift__uShift_param_i32_I
-_Shift__uShift_param_i32_I:
+.globl _Shift__uShift_param_i8_I
+	.private_extern _Shift__uShift_param_i8_I
+_Shift__uShift_param_i8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -36(%rbp)
+	movb	%dil, -33(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	mov	-36(%rbp), %eax
+	movzbl	-33(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L138
@@ -832,15 +830,15 @@ L141:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_i32_C
-	.private_extern _Shift__uShift_var_i32_C
-_Shift__uShift_var_i32_C:
+.globl _Shift__uShift_var_i8_C
+	.private_extern _Shift__uShift_var_i8_C
+_Shift__uShift_var_i8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movl	140+_MM_Shift(%rip), %eax
-	mov	%eax, %eax
+	movzbl	136+_MM_Shift(%rip), %eax
+	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L146
@@ -878,16 +876,16 @@ L149:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_i32_C
-	.private_extern _Shift__uShift_param_i32_C
-_Shift__uShift_param_i32_C:
+.globl _Shift__uShift_param_i8_C
+	.private_extern _Shift__uShift_param_i8_C
+_Shift__uShift_param_i8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	%edi, -36(%rbp)
+	movb	%dil, -33(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	mov	-36(%rbp), %eax
+	movzbl	-33(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L154
@@ -925,14 +923,15 @@ L157:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_I_I
-	.private_extern _Shift__uShift_var_I_I
-_Shift__uShift_var_I_I:
+.globl _Shift__uShift_var_u32_I
+	.private_extern _Shift__uShift_var_u32_I
+_Shift__uShift_var_u32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	144+_MM_Shift(%rip), %rax
+	movl	140+_MM_Shift(%rip), %eax
+	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L162
@@ -970,16 +969,17 @@ L165:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_I_I
-	.private_extern _Shift__uShift_param_I_I
-_Shift__uShift_param_I_I:
+.globl _Shift__uShift_param_u32_I
+	.private_extern _Shift__uShift_param_u32_I
+_Shift__uShift_param_u32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movl	%edi, -36(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movl	-36(%rbp), %eax
+	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L170
@@ -1017,14 +1017,15 @@ L173:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_I_C
-	.private_extern _Shift__uShift_var_I_C
-_Shift__uShift_var_I_C:
+.globl _Shift__uShift_var_u32_C
+	.private_extern _Shift__uShift_var_u32_C
+_Shift__uShift_var_u32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
-	movq	%rax, -16(%rbp)
 	movq	144+_MM_Shift(%rip), %rax
+	movq	%rax, -16(%rbp)
+	movl	140+_MM_Shift(%rip), %eax
+	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L178
@@ -1062,16 +1063,17 @@ L181:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_I_C
-	.private_extern _Shift__uShift_param_I_C
-_Shift__uShift_param_I_C:
+.globl _Shift__uShift_param_u32_C
+	.private_extern _Shift__uShift_param_u32_C
+_Shift__uShift_param_u32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movl	%edi, -36(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movl	-36(%rbp), %eax
+	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L186
@@ -1109,14 +1111,14 @@ L189:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_i64_I
-	.private_extern _Shift__uShift_var_i64_I
-_Shift__uShift_var_i64_I:
+.globl _Shift__uShift_var_C_I
+	.private_extern _Shift__uShift_var_C_I
+_Shift__uShift_var_C_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	152+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L194
@@ -1154,9 +1156,9 @@ L197:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_i64_I
-	.private_extern _Shift__uShift_param_i64_I
-_Shift__uShift_param_i64_I:
+.globl _Shift__uShift_param_C_I
+	.private_extern _Shift__uShift_param_C_I
+_Shift__uShift_param_C_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -40(%rbp)
@@ -1201,14 +1203,14 @@ L205:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_i64_C
-	.private_extern _Shift__uShift_var_i64_C
-_Shift__uShift_var_i64_C:
+.globl _Shift__uShift_var_C_C
+	.private_extern _Shift__uShift_var_C_C
+_Shift__uShift_var_C_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	152+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L210
@@ -1246,9 +1248,9 @@ L213:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_i64_C
-	.private_extern _Shift__uShift_param_i64_C
-_Shift__uShift_param_i64_C:
+.globl _Shift__uShift_param_C_C
+	.private_extern _Shift__uShift_param_C_C
+_Shift__uShift_param_C_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -40(%rbp)
@@ -1293,14 +1295,15 @@ L221:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_C_I
-	.private_extern _Shift__uShift_var_C_I
-_Shift__uShift_var_C_I:
+.globl _Shift__uShift_var_u16_I
+	.private_extern _Shift__uShift_var_u16_I
+_Shift__uShift_var_u16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	160+_MM_Shift(%rip), %rax
+	movzwl	152+_MM_Shift(%rip), %eax
+	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L226
@@ -1338,16 +1341,16 @@ L229:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_C_I
-	.private_extern _Shift__uShift_param_C_I
-_Shift__uShift_param_C_I:
+.globl _Shift__uShift_param_u16_I
+	.private_extern _Shift__uShift_param_u16_I
+_Shift__uShift_param_u16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movw	%di, -34(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movswq	-34(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L234
@@ -1385,14 +1388,15 @@ L237:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_C_C
-	.private_extern _Shift__uShift_var_C_C
-_Shift__uShift_var_C_C:
+.globl _Shift__uShift_var_u16_C
+	.private_extern _Shift__uShift_var_u16_C
+_Shift__uShift_var_u16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	160+_MM_Shift(%rip), %rax
+	movzwl	152+_MM_Shift(%rip), %eax
+	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L242
@@ -1430,16 +1434,16 @@ L245:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_C_C
-	.private_extern _Shift__uShift_param_C_C
-_Shift__uShift_param_C_C:
+.globl _Shift__uShift_param_u16_C
+	.private_extern _Shift__uShift_param_u16_C
+_Shift__uShift_param_u16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movw	%di, -34(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movswq	-34(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L250
@@ -1477,15 +1481,14 @@ L253:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_u8_I
-	.private_extern _Shift__uShift_var_u8_I
-_Shift__uShift_var_u8_I:
+.globl _Shift__uShift_var_u64_I
+	.private_extern _Shift__uShift_var_u64_I
+_Shift__uShift_var_u64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	172+_MM_Shift(%rip), %eax
-	movsbq	%al,%rax
+	movq	160+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L258
@@ -1523,16 +1526,16 @@ L261:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_u8_I
-	.private_extern _Shift__uShift_param_u8_I
-_Shift__uShift_param_u8_I:
+.globl _Shift__uShift_param_u64_I
+	.private_extern _Shift__uShift_param_u64_I
+_Shift__uShift_param_u64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movsbq	-33(%rbp),%rax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L266
@@ -1570,15 +1573,14 @@ L269:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_u8_C
-	.private_extern _Shift__uShift_var_u8_C
-_Shift__uShift_var_u8_C:
+.globl _Shift__uShift_var_u64_C
+	.private_extern _Shift__uShift_var_u64_C
+_Shift__uShift_var_u64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	172+_MM_Shift(%rip), %eax
-	movsbq	%al,%rax
+	movq	160+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L274
@@ -1616,16 +1618,16 @@ L277:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_u8_C
-	.private_extern _Shift__uShift_param_u8_C
-_Shift__uShift_param_u8_C:
+.globl _Shift__uShift_param_u64_C
+	.private_extern _Shift__uShift_param_u64_C
+_Shift__uShift_param_u64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movsbq	-33(%rbp),%rax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L282
@@ -1663,15 +1665,14 @@ L285:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_i8_I
-	.private_extern _Shift__uShift_var_i8_I
-_Shift__uShift_var_i8_I:
+.globl _Shift__uShift_var_L_I
+	.private_extern _Shift__uShift_var_L_I
+_Shift__uShift_var_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	173+_MM_Shift(%rip), %eax
-	movzbl	%al, %eax
+	movq	176+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L290
@@ -1709,16 +1710,16 @@ L293:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_i8_I
-	.private_extern _Shift__uShift_param_i8_I
-_Shift__uShift_param_i8_I:
+.globl _Shift__uShift_param_L_I
+	.private_extern _Shift__uShift_param_L_I
+_Shift__uShift_param_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	-33(%rbp), %eax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L298
@@ -1756,15 +1757,14 @@ L301:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_i8_C
-	.private_extern _Shift__uShift_var_i8_C
-_Shift__uShift_var_i8_C:
+.globl _Shift__uShift_var_L_C
+	.private_extern _Shift__uShift_var_L_C
+_Shift__uShift_var_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	173+_MM_Shift(%rip), %eax
-	movzbl	%al, %eax
+	movq	176+_MM_Shift(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L306
@@ -1802,16 +1802,16 @@ L309:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_i8_C
-	.private_extern _Shift__uShift_param_i8_C
-_Shift__uShift_param_i8_C:
+.globl _Shift__uShift_param_L_C
+	.private_extern _Shift__uShift_param_L_C
+_Shift__uShift_param_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movb	%dil, -33(%rbp)
+	movq	%rdi, -40(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movzbl	-33(%rbp), %eax
+	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L314
@@ -1849,14 +1849,15 @@ L317:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_L_I
-	.private_extern _Shift__uShift_var_L_I
-_Shift__uShift_var_L_I:
+.globl _Shift__uShift_var_i16_I
+	.private_extern _Shift__uShift_var_i16_I
+_Shift__uShift_var_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	176+_MM_Shift(%rip), %rax
+	movzwl	184+_MM_Shift(%rip), %eax
+	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L322
@@ -1894,16 +1895,16 @@ L325:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_L_I
-	.private_extern _Shift__uShift_param_L_I
-_Shift__uShift_param_L_I:
+.globl _Shift__uShift_param_i16_I
+	.private_extern _Shift__uShift_param_i16_I
+_Shift__uShift_param_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movw	%di, -34(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movzwl	-34(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L330
@@ -1941,14 +1942,15 @@ L333:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_L_C
-	.private_extern _Shift__uShift_var_L_C
-_Shift__uShift_var_L_C:
+.globl _Shift__uShift_var_i16_C
+	.private_extern _Shift__uShift_var_i16_C
+_Shift__uShift_var_i16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movq	176+_MM_Shift(%rip), %rax
+	movzwl	184+_MM_Shift(%rip), %eax
+	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L338
@@ -1986,16 +1988,16 @@ L341:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_L_C
-	.private_extern _Shift__uShift_param_L_C
-_Shift__uShift_param_L_C:
+.globl _Shift__uShift_param_i16_C
+	.private_extern _Shift__uShift_param_i16_C
+_Shift__uShift_param_i16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	%rdi, -40(%rbp)
+	movw	%di, -34(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movq	-40(%rbp), %rax
+	movzwl	-34(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L346
@@ -2033,15 +2035,15 @@ L349:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_u32_I
-	.private_extern _Shift__uShift_var_u32_I
-_Shift__uShift_var_u32_I:
+.globl _Shift__uShift_var_i32_I
+	.private_extern _Shift__uShift_var_i32_I
+_Shift__uShift_var_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Shift(%rip), %rax
+	movq	128+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movl	184+_MM_Shift(%rip), %eax
-	cltq
+	movl	188+_MM_Shift(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L354
@@ -2079,17 +2081,16 @@ L357:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_u32_I
-	.private_extern _Shift__uShift_param_u32_I
-_Shift__uShift_param_u32_I:
+.globl _Shift__uShift_param_i32_I
+	.private_extern _Shift__uShift_param_i32_I
+_Shift__uShift_param_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -36(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movl	-36(%rbp), %eax
-	cltq
+	mov	-36(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L362
@@ -2127,15 +2128,15 @@ L365:
 	movq	-72(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_var_u32_C
-	.private_extern _Shift__uShift_var_u32_C
-_Shift__uShift_var_u32_C:
+.globl _Shift__uShift_var_i32_C
+	.private_extern _Shift__uShift_var_i32_C
+_Shift__uShift_var_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Shift(%rip), %rax
+	movq	144+_MM_Shift(%rip), %rax
 	movq	%rax, -16(%rbp)
-	movl	184+_MM_Shift(%rip), %eax
-	cltq
+	movl	188+_MM_Shift(%rip), %eax
+	mov	%eax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L370
@@ -2173,17 +2174,16 @@ L373:
 	movq	-56(%rbp), %rax
 	leave
 	ret
-.globl _Shift__uShift_param_u32_C
-	.private_extern _Shift__uShift_param_u32_C
-_Shift__uShift_param_u32_C:
+.globl _Shift__uShift_param_i32_C
+	.private_extern _Shift__uShift_param_i32_C
+_Shift__uShift_param_i32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -36(%rbp)
 	movq	%rsi, -48(%rbp)
 	movq	-48(%rbp), %rax
 	movq	%rax, -16(%rbp)
-	movl	-36(%rbp), %eax
-	cltq
+	mov	-36(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
 	js	L378
@@ -2234,62 +2234,6 @@ _Shift_M3:
 _L_1:
 	.ascii "Shift_M3"
 	.space 1
-	.ascii "uShift_param_u32_C"
-	.space 1
-	.ascii "uShift_var_u32_C"
-	.space 1
-	.ascii "uShift_param_u32_I"
-	.space 1
-	.ascii "uShift_var_u32_I"
-	.space 1
-	.ascii "uShift_param_L_C"
-	.space 1
-	.ascii "uShift_var_L_C"
-	.space 1
-	.ascii "uShift_param_L_I"
-	.space 1
-	.ascii "uShift_var_L_I"
-	.space 1
-	.ascii "uShift_param_i8_C"
-	.space 1
-	.ascii "uShift_var_i8_C"
-	.space 1
-	.ascii "uShift_param_i8_I"
-	.space 1
-	.ascii "uShift_var_i8_I"
-	.space 1
-	.ascii "uShift_param_u8_C"
-	.space 1
-	.ascii "uShift_var_u8_C"
-	.space 1
-	.ascii "uShift_param_u8_I"
-	.space 1
-	.ascii "uShift_var_u8_I"
-	.space 1
-	.ascii "uShift_param_C_C"
-	.space 1
-	.ascii "uShift_var_C_C"
-	.space 1
-	.ascii "uShift_param_C_I"
-	.space 1
-	.ascii "uShift_var_C_I"
-	.space 1
-	.ascii "uShift_param_i64_C"
-	.space 1
-	.ascii "uShift_var_i64_C"
-	.space 1
-	.ascii "uShift_param_i64_I"
-	.space 1
-	.ascii "uShift_var_i64_I"
-	.space 1
-	.ascii "uShift_param_I_C"
-	.space 1
-	.ascii "uShift_var_I_C"
-	.space 1
-	.ascii "uShift_param_I_I"
-	.space 1
-	.ascii "uShift_var_I_I"
-	.space 1
 	.ascii "uShift_param_i32_C"
 	.space 1
 	.ascii "uShift_var_i32_C"
@@ -2306,13 +2250,13 @@ _L_1:
 	.space 1
 	.ascii "uShift_var_i16_I"
 	.space 1
-	.ascii "uShift_param_LC_C"
+	.ascii "uShift_param_L_C"
 	.space 1
-	.ascii "uShift_var_LC_C"
+	.ascii "uShift_var_L_C"
 	.space 1
-	.ascii "uShift_param_LC_I"
+	.ascii "uShift_param_L_I"
 	.space 1
-	.ascii "uShift_var_LC_I"
+	.ascii "uShift_var_L_I"
 	.space 1
 	.ascii "uShift_param_u64_C"
 	.space 1
@@ -2329,104 +2273,160 @@ _L_1:
 	.ascii "uShift_param_u16_I"
 	.space 1
 	.ascii "uShift_var_u16_I"
+	.space 1
+	.ascii "uShift_param_C_C"
+	.space 1
+	.ascii "uShift_var_C_C"
+	.space 1
+	.ascii "uShift_param_C_I"
+	.space 1
+	.ascii "uShift_var_C_I"
+	.space 1
+	.ascii "uShift_param_u32_C"
+	.space 1
+	.ascii "uShift_var_u32_C"
+	.space 1
+	.ascii "uShift_param_u32_I"
+	.space 1
+	.ascii "uShift_var_u32_I"
+	.space 1
+	.ascii "uShift_param_i8_C"
+	.space 1
+	.ascii "uShift_var_i8_C"
+	.space 1
+	.ascii "uShift_param_i8_I"
+	.space 1
+	.ascii "uShift_var_i8_I"
+	.space 1
+	.ascii "uShift_param_I_C"
+	.space 1
+	.ascii "uShift_var_I_C"
+	.space 1
+	.ascii "uShift_param_I_I"
+	.space 1
+	.ascii "uShift_var_I_I"
+	.space 1
+	.ascii "uShift_param_u8_C"
+	.space 1
+	.ascii "uShift_var_u8_C"
+	.space 1
+	.ascii "uShift_param_u8_I"
+	.space 1
+	.ascii "uShift_var_u8_I"
+	.space 1
+	.ascii "uShift_param_LC_C"
+	.space 1
+	.ascii "uShift_var_LC_C"
+	.space 1
+	.ascii "uShift_param_LC_I"
+	.space 1
+	.ascii "uShift_var_LC_I"
+	.space 1
+	.ascii "uShift_param_i64_C"
+	.space 1
+	.ascii "uShift_var_i64_C"
+	.space 1
+	.ascii "uShift_param_i64_I"
+	.space 1
+	.ascii "uShift_var_i64_I"
 	.space 4
 	.quad	_Shift_M3
 	.quad	_L_1
-	.quad	_Shift__uShift_param_u32_C
-	.quad	_L_1+9
-	.quad	_Shift__uShift_var_u32_C
-	.quad	_L_1+28
-	.quad	_Shift__uShift_param_u32_I
-	.quad	_L_1+45
-	.quad	_Shift__uShift_var_u32_I
-	.quad	_L_1+64
-	.quad	_Shift__uShift_param_L_C
-	.quad	_L_1+81
-	.quad	_Shift__uShift_var_L_C
-	.quad	_L_1+98
-	.quad	_Shift__uShift_param_L_I
-	.quad	_L_1+113
-	.quad	_Shift__uShift_var_L_I
-	.quad	_L_1+130
-	.quad	_Shift__uShift_param_i8_C
-	.quad	_L_1+145
-	.quad	_Shift__uShift_var_i8_C
-	.quad	_L_1+163
-	.quad	_Shift__uShift_param_i8_I
-	.quad	_L_1+179
-	.quad	_Shift__uShift_var_i8_I
-	.quad	_L_1+197
-	.quad	_Shift__uShift_param_u8_C
-	.quad	_L_1+213
-	.quad	_Shift__uShift_var_u8_C
-	.quad	_L_1+231
-	.quad	_Shift__uShift_param_u8_I
-	.quad	_L_1+247
-	.quad	_Shift__uShift_var_u8_I
-	.quad	_L_1+265
-	.quad	_Shift__uShift_param_C_C
-	.quad	_L_1+281
-	.quad	_Shift__uShift_var_C_C
-	.quad	_L_1+298
-	.quad	_Shift__uShift_param_C_I
-	.quad	_L_1+313
-	.quad	_Shift__uShift_var_C_I
-	.quad	_L_1+330
-	.quad	_Shift__uShift_param_i64_C
-	.quad	_L_1+345
-	.quad	_Shift__uShift_var_i64_C
-	.quad	_L_1+364
-	.quad	_Shift__uShift_param_i64_I
-	.quad	_L_1+381
-	.quad	_Shift__uShift_var_i64_I
-	.quad	_L_1+400
-	.quad	_Shift__uShift_param_I_C
-	.quad	_L_1+417
-	.quad	_Shift__uShift_var_I_C
-	.quad	_L_1+434
-	.quad	_Shift__uShift_param_I_I
-	.quad	_L_1+449
-	.quad	_Shift__uShift_var_I_I
-	.quad	_L_1+466
 	.quad	_Shift__uShift_param_i32_C
-	.quad	_L_1+481
+	.quad	_L_1+9
 	.quad	_Shift__uShift_var_i32_C
-	.quad	_L_1+500
+	.quad	_L_1+28
 	.quad	_Shift__uShift_param_i32_I
-	.quad	_L_1+517
+	.quad	_L_1+45
 	.quad	_Shift__uShift_var_i32_I
-	.quad	_L_1+536
+	.quad	_L_1+64
 	.quad	_Shift__uShift_param_i16_C
-	.quad	_L_1+553
+	.quad	_L_1+81
 	.quad	_Shift__uShift_var_i16_C
-	.quad	_L_1+572
+	.quad	_L_1+100
 	.quad	_Shift__uShift_param_i16_I
-	.quad	_L_1+589
+	.quad	_L_1+117
 	.quad	_Shift__uShift_var_i16_I
-	.quad	_L_1+608
-	.quad	_Shift__uShift_param_LC_C
-	.quad	_L_1+625
-	.quad	_Shift__uShift_var_LC_C
-	.quad	_L_1+643
-	.quad	_Shift__uShift_param_LC_I
-	.quad	_L_1+659
-	.quad	_Shift__uShift_var_LC_I
-	.quad	_L_1+677
+	.quad	_L_1+136
+	.quad	_Shift__uShift_param_L_C
+	.quad	_L_1+153
+	.quad	_Shift__uShift_var_L_C
+	.quad	_L_1+170
+	.quad	_Shift__uShift_param_L_I
+	.quad	_L_1+185
+	.quad	_Shift__uShift_var_L_I
+	.quad	_L_1+202
 	.quad	_Shift__uShift_param_u64_C
-	.quad	_L_1+693
+	.quad	_L_1+217
 	.quad	_Shift__uShift_var_u64_C
-	.quad	_L_1+712
+	.quad	_L_1+236
 	.quad	_Shift__uShift_param_u64_I
-	.quad	_L_1+729
+	.quad	_L_1+253
 	.quad	_Shift__uShift_var_u64_I
-	.quad	_L_1+748
+	.quad	_L_1+272
 	.quad	_Shift__uShift_param_u16_C
-	.quad	_L_1+765
+	.quad	_L_1+289
 	.quad	_Shift__uShift_var_u16_C
-	.quad	_L_1+784
+	.quad	_L_1+308
 	.quad	_Shift__uShift_param_u16_I
-	.quad	_L_1+801
+	.quad	_L_1+325
 	.quad	_Shift__uShift_var_u16_I
+	.quad	_L_1+344
+	.quad	_Shift__uShift_param_C_C
+	.quad	_L_1+361
+	.quad	_Shift__uShift_var_C_C
+	.quad	_L_1+378
+	.quad	_Shift__uShift_param_C_I
+	.quad	_L_1+393
+	.quad	_Shift__uShift_var_C_I
+	.quad	_L_1+410
+	.quad	_Shift__uShift_param_u32_C
+	.quad	_L_1+425
+	.quad	_Shift__uShift_var_u32_C
+	.quad	_L_1+444
+	.quad	_Shift__uShift_param_u32_I
+	.quad	_L_1+461
+	.quad	_Shift__uShift_var_u32_I
+	.quad	_L_1+480
+	.quad	_Shift__uShift_param_i8_C
+	.quad	_L_1+497
+	.quad	_Shift__uShift_var_i8_C
+	.quad	_L_1+515
+	.quad	_Shift__uShift_param_i8_I
+	.quad	_L_1+531
+	.quad	_Shift__uShift_var_i8_I
+	.quad	_L_1+549
+	.quad	_Shift__uShift_param_I_C
+	.quad	_L_1+565
+	.quad	_Shift__uShift_var_I_C
+	.quad	_L_1+582
+	.quad	_Shift__uShift_param_I_I
+	.quad	_L_1+597
+	.quad	_Shift__uShift_var_I_I
+	.quad	_L_1+614
+	.quad	_Shift__uShift_param_u8_C
+	.quad	_L_1+629
+	.quad	_Shift__uShift_var_u8_C
+	.quad	_L_1+647
+	.quad	_Shift__uShift_param_u8_I
+	.quad	_L_1+663
+	.quad	_Shift__uShift_var_u8_I
+	.quad	_L_1+681
+	.quad	_Shift__uShift_param_LC_C
+	.quad	_L_1+697
+	.quad	_Shift__uShift_var_LC_C
+	.quad	_L_1+715
+	.quad	_Shift__uShift_param_LC_I
+	.quad	_L_1+731
+	.quad	_Shift__uShift_var_LC_I
+	.quad	_L_1+749
+	.quad	_Shift__uShift_param_i64_C
+	.quad	_L_1+765
+	.quad	_Shift__uShift_var_i64_C
+	.quad	_L_1+784
+	.quad	_Shift__uShift_param_i64_I
+	.quad	_L_1+801
+	.quad	_Shift__uShift_var_i64_I
 	.quad	_L_1+820
 	.space 8
 	.ascii "../AMD64_DARWIN/Shift.m3"
@@ -2442,25 +2442,26 @@ _MM_Shift:
 	.space 8
 	.quad	_Shift_M3
 	.quad	3
-	.word	689
-	.space 6
+	.quad	689
 	.quad	690
-	.quad	691
-	.long	1133871366
-	.long	1082500491
-	.word	694
-	.space 2
-	.long	695
-	.quad	696
+	.long	1143794762
+	.byte	-75
+	.space 3
+	.quad	694
+	.byte	-73
+	.space 3
+	.long	696
 	.quad	697
-	.quad	698
-	.long	1143925965
-	.byte	-67
-	.byte	-66
+	.word	698
+	.space 6
+	.quad	699
+	.long	2783138808
+	.long	1082516891
+	.quad	702
+	.word	703
 	.space 2
-	.quad	703
 	.long	704
-	.space 28
+	.space 24
 	.quad	_Shift_I3
 	.quad	_MM_Shift+232
 	.space 8

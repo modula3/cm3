@@ -6449,25 +6449,26 @@ _MM_mod_pow2:
 	.space 8
 	.quad	_mod_pow2_M3
 	.quad	3
-	.word	945
-	.space 6
+	.quad	945
 	.quad	946
-	.quad	947
-	.long	2370821947
-	.long	1083025303
-	.word	950
-	.space 2
-	.long	951
-	.quad	952
+	.long	1147993260
+	.byte	-75
+	.space 3
+	.quad	950
+	.byte	-73
+	.space 3
+	.long	952
 	.quad	953
-	.quad	954
-	.long	1148124463
-	.byte	-67
-	.byte	-66
+	.word	954
+	.space 6
+	.quad	955
+	.long	4020089389
+	.long	1083041703
+	.quad	958
+	.word	959
 	.space 2
-	.quad	959
 	.long	960
-	.space 28
+	.space 24
 	.quad	_mod_pow2_I3
 	.quad	_MM_mod_pow2+232
 	.space 8

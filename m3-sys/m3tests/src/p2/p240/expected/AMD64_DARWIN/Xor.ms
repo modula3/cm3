@@ -1,4 +1,2078 @@
 	.text
+.globl _Xor__uXor_var_i64_i64
+	.private_extern _Xor__uXor_var_i64_i64
+_Xor__uXor_var_i64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_i64
+	.private_extern _Xor__uXor_param_i64_i64
+_Xor__uXor_param_i64_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i64_LC
+	.private_extern _Xor__uXor_var_i64_LC
+_Xor__uXor_var_i64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_LC
+	.private_extern _Xor__uXor_param_i64_LC
+_Xor__uXor_param_i64_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i64_u8
+	.private_extern _Xor__uXor_var_i64_u8
+_Xor__uXor_var_i64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_u8
+	.private_extern _Xor__uXor_param_i64_u8
+_Xor__uXor_param_i64_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i64_I
+	.private_extern _Xor__uXor_var_i64_I
+_Xor__uXor_var_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_I
+	.private_extern _Xor__uXor_param_i64_I
+_Xor__uXor_param_i64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i64_i8
+	.private_extern _Xor__uXor_var_i64_i8
+_Xor__uXor_var_i64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_i8
+	.private_extern _Xor__uXor_param_i64_i8
+_Xor__uXor_param_i64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i64_u32
+	.private_extern _Xor__uXor_var_i64_u32
+_Xor__uXor_var_i64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_u32
+	.private_extern _Xor__uXor_param_i64_u32
+_Xor__uXor_param_i64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i64_C
+	.private_extern _Xor__uXor_var_i64_C
+_Xor__uXor_var_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_C
+	.private_extern _Xor__uXor_param_i64_C
+_Xor__uXor_param_i64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i64_u16
+	.private_extern _Xor__uXor_var_i64_u16
+_Xor__uXor_var_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rdx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_u16
+	.private_extern _Xor__uXor_param_i64_u16
+_Xor__uXor_param_i64_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i64_u64
+	.private_extern _Xor__uXor_var_i64_u64
+_Xor__uXor_var_i64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_u64
+	.private_extern _Xor__uXor_param_i64_u64
+_Xor__uXor_param_i64_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i64_L
+	.private_extern _Xor__uXor_var_i64_L
+_Xor__uXor_var_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	104+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_L
+	.private_extern _Xor__uXor_param_i64_L
+_Xor__uXor_param_i64_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i64_i16
+	.private_extern _Xor__uXor_var_i64_i16
+_Xor__uXor_var_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %edx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_i16
+	.private_extern _Xor__uXor_param_i64_i16
+_Xor__uXor_param_i64_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i64_i32
+	.private_extern _Xor__uXor_var_i64_i32
+_Xor__uXor_var_i64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %edx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i64_i32
+	.private_extern _Xor__uXor_param_i64_i32
+_Xor__uXor_param_i64_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %edx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_i64
+	.private_extern _Xor__uXor_var_LC_i64
+_Xor__uXor_var_LC_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Xor(%rip), %rdx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_i64
+	.private_extern _Xor__uXor_param_LC_i64
+_Xor__uXor_param_LC_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_LC
+	.private_extern _Xor__uXor_var_LC_LC
+_Xor__uXor_var_LC_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_LC
+	.private_extern _Xor__uXor_param_LC_LC
+_Xor__uXor_param_LC_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_u8
+	.private_extern _Xor__uXor_var_LC_u8
+_Xor__uXor_var_LC_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_u8
+	.private_extern _Xor__uXor_param_LC_u8
+_Xor__uXor_param_LC_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_I
+	.private_extern _Xor__uXor_var_LC_I
+_Xor__uXor_var_LC_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_I
+	.private_extern _Xor__uXor_param_LC_I
+_Xor__uXor_param_LC_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_i8
+	.private_extern _Xor__uXor_var_LC_i8
+_Xor__uXor_var_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_i8
+	.private_extern _Xor__uXor_param_LC_i8
+_Xor__uXor_param_LC_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_u32
+	.private_extern _Xor__uXor_var_LC_u32
+_Xor__uXor_var_LC_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_u32
+	.private_extern _Xor__uXor_param_LC_u32
+_Xor__uXor_param_LC_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_C
+	.private_extern _Xor__uXor_var_LC_C
+_Xor__uXor_var_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_C
+	.private_extern _Xor__uXor_param_LC_C
+_Xor__uXor_param_LC_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_u16
+	.private_extern _Xor__uXor_var_LC_u16
+_Xor__uXor_var_LC_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rdx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_u16
+	.private_extern _Xor__uXor_param_LC_u16
+_Xor__uXor_param_LC_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_u64
+	.private_extern _Xor__uXor_var_LC_u64
+_Xor__uXor_var_LC_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Xor(%rip), %rdx
+	movq	160+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_u64
+	.private_extern _Xor__uXor_param_LC_u64
+_Xor__uXor_param_LC_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_L
+	.private_extern _Xor__uXor_var_LC_L
+_Xor__uXor_var_LC_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	112+_MM_Xor(%rip), %rdx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_L
+	.private_extern _Xor__uXor_param_LC_L
+_Xor__uXor_param_LC_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_i16
+	.private_extern _Xor__uXor_var_LC_i16
+_Xor__uXor_var_LC_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %edx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_i16
+	.private_extern _Xor__uXor_param_LC_i16
+_Xor__uXor_param_LC_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %eax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_LC_i32
+	.private_extern _Xor__uXor_var_LC_i32
+_Xor__uXor_var_LC_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %edx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_LC_i32
+	.private_extern _Xor__uXor_param_LC_i32
+_Xor__uXor_param_LC_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %eax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_i64
+	.private_extern _Xor__uXor_var_u8_i64
+_Xor__uXor_var_u8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_i64
+	.private_extern _Xor__uXor_param_u8_i64
+_Xor__uXor_param_u8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_LC
+	.private_extern _Xor__uXor_var_u8_LC
+_Xor__uXor_var_u8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_LC
+	.private_extern _Xor__uXor_param_u8_LC
+_Xor__uXor_param_u8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_u8
+	.private_extern _Xor__uXor_var_u8_u8
+_Xor__uXor_var_u8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_u8
+	.private_extern _Xor__uXor_param_u8_u8
+_Xor__uXor_param_u8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movsbq	-18(%rbp),%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_I
+	.private_extern _Xor__uXor_var_u8_I
+_Xor__uXor_var_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movq	128+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_I
+	.private_extern _Xor__uXor_param_u8_I
+_Xor__uXor_param_u8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_i8
+	.private_extern _Xor__uXor_var_u8_i8
+_Xor__uXor_var_u8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_i8
+	.private_extern _Xor__uXor_param_u8_i8
+_Xor__uXor_param_u8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movzbl	-18(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_u32
+	.private_extern _Xor__uXor_var_u8_u32
+_Xor__uXor_var_u8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movl	140+_MM_Xor(%rip), %eax
+	cltq
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_u32
+	.private_extern _Xor__uXor_param_u8_u32
+_Xor__uXor_param_u8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_C
+	.private_extern _Xor__uXor_var_u8_C
+_Xor__uXor_var_u8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movq	144+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_C
+	.private_extern _Xor__uXor_param_u8_C
+_Xor__uXor_param_u8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_u16
+	.private_extern _Xor__uXor_var_u8_u16
+_Xor__uXor_var_u8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_u16
+	.private_extern _Xor__uXor_param_u8_u16
+_Xor__uXor_param_u8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movswq	-20(%rbp),%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_u64
+	.private_extern _Xor__uXor_var_u8_u64
+_Xor__uXor_var_u8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movq	160+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_u64
+	.private_extern _Xor__uXor_param_u8_u64
+_Xor__uXor_param_u8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_L
+	.private_extern _Xor__uXor_var_u8_L
+_Xor__uXor_var_u8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_L
+	.private_extern _Xor__uXor_param_u8_L
+_Xor__uXor_param_u8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_i16
+	.private_extern _Xor__uXor_var_u8_i16
+_Xor__uXor_var_u8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_i16
+	.private_extern _Xor__uXor_param_u8_i16
+_Xor__uXor_param_u8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movsbq	-17(%rbp),%rdx
+	movzwl	-20(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u8_i32
+	.private_extern _Xor__uXor_var_u8_i32
+_Xor__uXor_var_u8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u8_i32
+	.private_extern _Xor__uXor_param_u8_i32
+_Xor__uXor_param_u8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movsbq	-17(%rbp),%rdx
+	mov	-24(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_i64
+	.private_extern _Xor__uXor_var_I_i64
+_Xor__uXor_var_I_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_I_i64
+	.private_extern _Xor__uXor_param_I_i64
+_Xor__uXor_param_I_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_LC
+	.private_extern _Xor__uXor_var_I_LC
+_Xor__uXor_var_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_I_LC
+	.private_extern _Xor__uXor_param_I_LC
+_Xor__uXor_param_I_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_u8
+	.private_extern _Xor__uXor_var_I_u8
+_Xor__uXor_var_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_I_u8
+	.private_extern _Xor__uXor_param_I_u8
+_Xor__uXor_param_I_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_I
+	.private_extern _Xor__uXor_var_I_I
+_Xor__uXor_var_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Xor__uXor_param_I_I
+	.private_extern _Xor__uXor_param_I_I
+_Xor__uXor_param_I_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_i8
+	.private_extern _Xor__uXor_var_I_i8
+_Xor__uXor_var_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_I_i8
+	.private_extern _Xor__uXor_param_I_i8
+_Xor__uXor_param_I_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_u32
+	.private_extern _Xor__uXor_var_I_u32
+_Xor__uXor_var_I_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movl	140+_MM_Xor(%rip), %eax
+	cltq
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_I_u32
+	.private_extern _Xor__uXor_param_I_u32
+_Xor__uXor_param_I_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_C
+	.private_extern _Xor__uXor_var_I_C
+_Xor__uXor_var_I_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	144+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_I_C
+	.private_extern _Xor__uXor_param_I_C
+_Xor__uXor_param_I_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_u16
+	.private_extern _Xor__uXor_var_I_u16
+_Xor__uXor_var_I_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_I_u16
+	.private_extern _Xor__uXor_param_I_u16
+_Xor__uXor_param_I_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_u64
+	.private_extern _Xor__uXor_var_I_u64
+_Xor__uXor_var_I_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_I_u64
+	.private_extern _Xor__uXor_param_I_u64
+_Xor__uXor_param_I_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_L
+	.private_extern _Xor__uXor_var_I_L
+_Xor__uXor_var_I_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_I_L
+	.private_extern _Xor__uXor_param_I_L
+_Xor__uXor_param_I_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_i16
+	.private_extern _Xor__uXor_var_I_i16
+_Xor__uXor_var_I_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_I_i16
+	.private_extern _Xor__uXor_param_I_i16
+_Xor__uXor_param_I_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_I_i32
+	.private_extern _Xor__uXor_var_I_i32
+_Xor__uXor_var_I_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_I_i32
+	.private_extern _Xor__uXor_param_I_i32
+_Xor__uXor_param_I_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %edx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_i64
+	.private_extern _Xor__uXor_var_i8_i64
+_Xor__uXor_var_i8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_i64
+	.private_extern _Xor__uXor_param_i8_i64
+_Xor__uXor_param_i8_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_LC
+	.private_extern _Xor__uXor_var_i8_LC
+_Xor__uXor_var_i8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_LC
+	.private_extern _Xor__uXor_param_i8_LC
+_Xor__uXor_param_i8_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_u8
+	.private_extern _Xor__uXor_var_i8_u8
+_Xor__uXor_var_i8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_u8
+	.private_extern _Xor__uXor_param_i8_u8
+_Xor__uXor_param_i8_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movzbl	-17(%rbp), %edx
+	movsbq	-18(%rbp),%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_I
+	.private_extern _Xor__uXor_var_i8_I
+_Xor__uXor_var_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movq	128+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_I
+	.private_extern _Xor__uXor_param_i8_I
+_Xor__uXor_param_i8_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_i8
+	.private_extern _Xor__uXor_var_i8_i8
+_Xor__uXor_var_i8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_i8
+	.private_extern _Xor__uXor_param_i8_i8
+_Xor__uXor_param_i8_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movb	%sil, -18(%rbp)
+	movzbl	-17(%rbp), %edx
+	movzbl	-18(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_u32
+	.private_extern _Xor__uXor_var_i8_u32
+_Xor__uXor_var_i8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movl	140+_MM_Xor(%rip), %eax
+	cltq
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_u32
+	.private_extern _Xor__uXor_param_i8_u32
+_Xor__uXor_param_i8_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movzbl	-17(%rbp), %edx
+	movl	-24(%rbp), %eax
+	cltq
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_C
+	.private_extern _Xor__uXor_var_i8_C
+_Xor__uXor_var_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movq	144+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_C
+	.private_extern _Xor__uXor_param_i8_C
+_Xor__uXor_param_i8_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %eax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_u16
+	.private_extern _Xor__uXor_var_i8_u16
+_Xor__uXor_var_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_u16
+	.private_extern _Xor__uXor_param_i8_u16
+_Xor__uXor_param_i8_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %edx
+	movswq	-20(%rbp),%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_u64
+	.private_extern _Xor__uXor_var_i8_u64
+_Xor__uXor_var_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movq	160+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_u64
+	.private_extern _Xor__uXor_param_i8_u64
+_Xor__uXor_param_i8_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_L
+	.private_extern _Xor__uXor_var_i8_L
+_Xor__uXor_var_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_L
+	.private_extern _Xor__uXor_param_i8_L
+_Xor__uXor_param_i8_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzbl	-17(%rbp), %edx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_i16
+	.private_extern _Xor__uXor_var_i8_i16
+_Xor__uXor_var_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_i16
+	.private_extern _Xor__uXor_param_i8_i16
+_Xor__uXor_param_i8_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movw	%si, -20(%rbp)
+	movzbl	-17(%rbp), %edx
+	movzwl	-20(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i8_i32
+	.private_extern _Xor__uXor_var_i8_i32
+_Xor__uXor_var_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i8_i32
+	.private_extern _Xor__uXor_param_i8_i32
+_Xor__uXor_param_i8_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movb	%dil, -17(%rbp)
+	movl	%esi, -24(%rbp)
+	movzbl	-17(%rbp), %edx
+	mov	-24(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_i64
+	.private_extern _Xor__uXor_var_u32_i64
+_Xor__uXor_var_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_i64
+	.private_extern _Xor__uXor_param_u32_i64
+_Xor__uXor_param_u32_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_LC
+	.private_extern _Xor__uXor_var_u32_LC
+_Xor__uXor_var_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_LC
+	.private_extern _Xor__uXor_param_u32_LC
+_Xor__uXor_param_u32_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_u8
+	.private_extern _Xor__uXor_var_u32_u8
+_Xor__uXor_var_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_u8
+	.private_extern _Xor__uXor_param_u32_u8
+_Xor__uXor_param_u32_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movsbq	-21(%rbp),%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_I
+	.private_extern _Xor__uXor_var_u32_I
+_Xor__uXor_var_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movq	128+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_I
+	.private_extern _Xor__uXor_param_u32_I
+_Xor__uXor_param_u32_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_i8
+	.private_extern _Xor__uXor_var_u32_i8
+_Xor__uXor_var_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_i8
+	.private_extern _Xor__uXor_param_u32_i8
+_Xor__uXor_param_u32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movzbl	-21(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_u32
+	.private_extern _Xor__uXor_var_u32_u32
+_Xor__uXor_var_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_u32
+	.private_extern _Xor__uXor_param_u32_u32
+_Xor__uXor_param_u32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_C
+	.private_extern _Xor__uXor_var_u32_C
+_Xor__uXor_var_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movq	144+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_C
+	.private_extern _Xor__uXor_param_u32_C
+_Xor__uXor_param_u32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	cltq
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_u16
+	.private_extern _Xor__uXor_var_u32_u16
+_Xor__uXor_var_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_u16
+	.private_extern _Xor__uXor_param_u32_u16
+_Xor__uXor_param_u32_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movswq	-22(%rbp),%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_u64
+	.private_extern _Xor__uXor_var_u32_u64
+_Xor__uXor_var_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movq	160+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_u64
+	.private_extern _Xor__uXor_param_u32_u64
+_Xor__uXor_param_u32_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_L
+	.private_extern _Xor__uXor_var_u32_L
+_Xor__uXor_var_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_L
+	.private_extern _Xor__uXor_param_u32_L
+_Xor__uXor_param_u32_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_i16
+	.private_extern _Xor__uXor_var_u32_i16
+_Xor__uXor_var_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_i16
+	.private_extern _Xor__uXor_param_u32_i16
+_Xor__uXor_param_u32_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movw	%si, -22(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	movzwl	-22(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u32_i32
+	.private_extern _Xor__uXor_var_u32_i32
+_Xor__uXor_var_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u32_i32
+	.private_extern _Xor__uXor_param_u32_i32
+_Xor__uXor_param_u32_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movl	%esi, -24(%rbp)
+	movl	-20(%rbp), %eax
+	movslq	%eax,%rdx
+	mov	-24(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_i64
+	.private_extern _Xor__uXor_var_C_i64
+_Xor__uXor_var_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_C_i64
+	.private_extern _Xor__uXor_param_C_i64
+_Xor__uXor_param_C_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_LC
+	.private_extern _Xor__uXor_var_C_LC
+_Xor__uXor_var_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_C_LC
+	.private_extern _Xor__uXor_param_C_LC
+_Xor__uXor_param_C_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_u8
+	.private_extern _Xor__uXor_var_C_u8
+_Xor__uXor_var_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_C_u8
+	.private_extern _Xor__uXor_param_C_u8
+_Xor__uXor_param_C_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_I
+	.private_extern _Xor__uXor_var_C_I
+_Xor__uXor_var_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movq	128+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_C_I
+	.private_extern _Xor__uXor_param_C_I
+_Xor__uXor_param_C_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_i8
+	.private_extern _Xor__uXor_var_C_i8
+_Xor__uXor_var_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_C_i8
+	.private_extern _Xor__uXor_param_C_i8
+_Xor__uXor_param_C_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %eax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_u32
+	.private_extern _Xor__uXor_var_C_u32
+_Xor__uXor_var_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movl	140+_MM_Xor(%rip), %eax
+	cltq
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_C_u32
+	.private_extern _Xor__uXor_param_C_u32
+_Xor__uXor_param_C_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	cltq
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_C
+	.private_extern _Xor__uXor_var_C_C
+_Xor__uXor_var_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	$0, %eax
+	leave
+	ret
+.globl _Xor__uXor_param_C_C
+	.private_extern _Xor__uXor_param_C_C
+_Xor__uXor_param_C_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_u16
+	.private_extern _Xor__uXor_var_C_u16
+_Xor__uXor_var_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_C_u16
+	.private_extern _Xor__uXor_param_C_u16
+_Xor__uXor_param_C_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_u64
+	.private_extern _Xor__uXor_var_C_u64
+_Xor__uXor_var_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movq	160+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_C_u64
+	.private_extern _Xor__uXor_param_C_u64
+_Xor__uXor_param_C_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_L
+	.private_extern _Xor__uXor_var_C_L
+_Xor__uXor_var_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_C_L
+	.private_extern _Xor__uXor_param_C_L
+_Xor__uXor_param_C_L:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_i16
+	.private_extern _Xor__uXor_var_C_i16
+_Xor__uXor_var_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_C_i16
+	.private_extern _Xor__uXor_param_C_i16
+_Xor__uXor_param_C_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %eax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_C_i32
+	.private_extern _Xor__uXor_var_C_i32
+_Xor__uXor_var_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_C_i32
+	.private_extern _Xor__uXor_param_C_i32
+_Xor__uXor_param_C_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	mov	-28(%rbp), %eax
+	xorq	-24(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u16_i64
+	.private_extern _Xor__uXor_var_u16_i64
+_Xor__uXor_var_u16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rdx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u16_i64
+	.private_extern _Xor__uXor_param_u16_i64
+_Xor__uXor_param_u16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u16_LC
+	.private_extern _Xor__uXor_var_u16_LC
+_Xor__uXor_var_u16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rdx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u16_LC
+	.private_extern _Xor__uXor_param_u16_LC
+_Xor__uXor_param_u16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u16_u8
+	.private_extern _Xor__uXor_var_u16_u8
+_Xor__uXor_var_u16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rdx
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u16_u8
+	.private_extern _Xor__uXor_param_u16_u8
+_Xor__uXor_param_u16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movswq	-18(%rbp),%rdx
+	movsbq	-19(%rbp),%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u16_I
+	.private_extern _Xor__uXor_var_u16_I
+_Xor__uXor_var_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rdx
+	movq	128+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u16_I
+	.private_extern _Xor__uXor_param_u16_I
+_Xor__uXor_param_u16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u16_i8
+	.private_extern _Xor__uXor_var_u16_i8
+_Xor__uXor_var_u16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rdx
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u16_i8
+	.private_extern _Xor__uXor_param_u16_i8
+_Xor__uXor_param_u16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movswq	-18(%rbp),%rdx
+	movzbl	-19(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u16_u32
+	.private_extern _Xor__uXor_var_u16_u32
+_Xor__uXor_var_u16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rdx
+	movl	140+_MM_Xor(%rip), %eax
+	cltq
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u16_u32
+	.private_extern _Xor__uXor_param_u16_u32
+_Xor__uXor_param_u16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movswq	-18(%rbp),%rdx
+	movl	-24(%rbp), %eax
+	cltq
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u16_C
+	.private_extern _Xor__uXor_var_u16_C
+_Xor__uXor_var_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rdx
+	movq	144+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u16_C
+	.private_extern _Xor__uXor_param_u16_C
+_Xor__uXor_param_u16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movswq	-18(%rbp),%rax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
 .globl _Xor__uXor_var_u16_u16
 	.private_extern _Xor__uXor_var_u16_u16
 _Xor__uXor_var_u16_u16:
@@ -24,9 +2098,9 @@ _Xor__uXor_param_u16_u16:
 _Xor__uXor_var_u16_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
+	movzwl	152+_MM_Xor(%rip), %eax
 	movswq	%ax,%rdx
-	movq	112+_MM_Xor(%rip), %rax
+	movq	160+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
@@ -42,26 +2116,27 @@ _Xor__uXor_param_u16_u64:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_u16_LC
-	.private_extern _Xor__uXor_var_u16_LC
-_Xor__uXor_var_u16_LC:
+.globl _Xor__uXor_var_u16_L
+	.private_extern _Xor__uXor_var_u16_L
+_Xor__uXor_var_u16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
+	movzwl	152+_MM_Xor(%rip), %eax
 	movswq	%ax,%rdx
-	movq	120+_MM_Xor(%rip), %rax
+	movq	176+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_u16_LC
-	.private_extern _Xor__uXor_param_u16_LC
-_Xor__uXor_param_u16_LC:
+.globl _Xor__uXor_param_u16_L
+	.private_extern _Xor__uXor_param_u16_L
+_Xor__uXor_param_u16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
-	xorq	-32(%rbp), %rax
+	movswq	-18(%rbp),%rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
 	leave
 	ret
 .globl _Xor__uXor_var_u16_i16
@@ -69,9 +2144,9 @@ _Xor__uXor_param_u16_LC:
 _Xor__uXor_var_u16_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
+	movzwl	152+_MM_Xor(%rip), %eax
 	movswq	%ax,%rdx
-	movzwl	136+_MM_Xor(%rip), %eax
+	movzwl	184+_MM_Xor(%rip), %eax
 	movzwl	%ax, %eax
 	xorq	%rdx, %rax
 	leave
@@ -93,9 +2168,9 @@ _Xor__uXor_param_u16_i16:
 _Xor__uXor_var_u16_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
+	movzwl	152+_MM_Xor(%rip), %eax
 	movswq	%ax,%rdx
-	movl	140+_MM_Xor(%rip), %eax
+	movl	188+_MM_Xor(%rip), %eax
 	mov	%eax, %eax
 	xorq	%rdx, %rax
 	leave
@@ -112,168 +2187,163 @@ _Xor__uXor_param_u16_i32:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_u16_I
-	.private_extern _Xor__uXor_var_u16_I
-_Xor__uXor_var_u16_I:
+.globl _Xor__uXor_var_u64_i64
+	.private_extern _Xor__uXor_var_u64_i64
+_Xor__uXor_var_u64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rdx
-	movq	144+_MM_Xor(%rip), %rax
+	movq	160+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	104+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_u16_I
-	.private_extern _Xor__uXor_param_u16_I
-_Xor__uXor_param_u16_I:
+.globl _Xor__uXor_param_u64_i64
+	.private_extern _Xor__uXor_param_u64_i64
+_Xor__uXor_param_u64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
+	movq	-24(%rbp), %rdx
 	movq	-32(%rbp), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_u16_i64
-	.private_extern _Xor__uXor_var_u16_i64
-_Xor__uXor_var_u16_i64:
+.globl _Xor__uXor_var_u64_LC
+	.private_extern _Xor__uXor_var_u64_LC
+_Xor__uXor_var_u64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rdx
-	movq	152+_MM_Xor(%rip), %rax
+	movq	160+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	112+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_u16_i64
-	.private_extern _Xor__uXor_param_u16_i64
-_Xor__uXor_param_u16_i64:
+.globl _Xor__uXor_param_u64_LC
+	.private_extern _Xor__uXor_param_u64_LC
+_Xor__uXor_param_u64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
+	movq	-24(%rbp), %rax
+	xorq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Xor__uXor_var_u16_C
-	.private_extern _Xor__uXor_var_u16_C
-_Xor__uXor_var_u16_C:
+.globl _Xor__uXor_var_u64_u8
+	.private_extern _Xor__uXor_var_u64_u8
+_Xor__uXor_var_u64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rdx
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rdx
 	movq	160+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_u16_C
-	.private_extern _Xor__uXor_param_u16_C
-_Xor__uXor_param_u16_C:
+.globl _Xor__uXor_param_u64_u8
+	.private_extern _Xor__uXor_param_u64_u8
+_Xor__uXor_param_u64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u64_I
+	.private_extern _Xor__uXor_var_u64_I
+_Xor__uXor_var_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	128+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
+	movq	160+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u64_I
+	.private_extern _Xor__uXor_param_u64_I
+_Xor__uXor_param_u64_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rax
+	movq	-32(%rbp), %rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u64_i8
+	.private_extern _Xor__uXor_var_u64_i8
+_Xor__uXor_var_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movq	160+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u64_i8
+	.private_extern _Xor__uXor_param_u64_i8
+_Xor__uXor_param_u64_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u64_u32
+	.private_extern _Xor__uXor_var_u64_u32
+_Xor__uXor_var_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movq	160+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u64_u32
+	.private_extern _Xor__uXor_param_u64_u32
+_Xor__uXor_param_u64_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movl	%esi, -28(%rbp)
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_u64_C
+	.private_extern _Xor__uXor_var_u64_C
+_Xor__uXor_var_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	144+_MM_Xor(%rip), %rdx
+	movq	160+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_u64_C
+	.private_extern _Xor__uXor_param_u64_C
+_Xor__uXor_param_u64_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
 	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u16_u8
-	.private_extern _Xor__uXor_var_u16_u8
-_Xor__uXor_var_u16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rdx
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u16_u8
-	.private_extern _Xor__uXor_param_u16_u8
-_Xor__uXor_param_u16_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rdx
-	movsbq	-19(%rbp),%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u16_i8
-	.private_extern _Xor__uXor_var_u16_i8
-_Xor__uXor_var_u16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rdx
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u16_i8
-	.private_extern _Xor__uXor_param_u16_i8
-_Xor__uXor_param_u16_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rdx
-	movzbl	-19(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u16_L
-	.private_extern _Xor__uXor_var_u16_L
-_Xor__uXor_var_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u16_L
-	.private_extern _Xor__uXor_param_u16_L
-_Xor__uXor_param_u16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u16_u32
-	.private_extern _Xor__uXor_var_u16_u32
-_Xor__uXor_var_u16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rdx
-	movl	184+_MM_Xor(%rip), %eax
-	cltq
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u16_u32
-	.private_extern _Xor__uXor_param_u16_u32
-_Xor__uXor_param_u16_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rdx
-	movl	-24(%rbp), %eax
-	cltq
-	xorq	%rdx, %rax
 	leave
 	ret
 .globl _Xor__uXor_var_u64_u16
@@ -281,9 +2351,9 @@ _Xor__uXor_param_u16_u32:
 _Xor__uXor_var_u64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
+	movzwl	152+_MM_Xor(%rip), %eax
 	movswq	%ax,%rdx
-	movq	112+_MM_Xor(%rip), %rax
+	movq	160+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
@@ -319,26 +2389,27 @@ _Xor__uXor_param_u64_u64:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_u64_LC
-	.private_extern _Xor__uXor_var_u64_LC
-_Xor__uXor_var_u64_LC:
+.globl _Xor__uXor_var_u64_L
+	.private_extern _Xor__uXor_var_u64_L
+_Xor__uXor_var_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	112+_MM_Xor(%rip), %rax
+	movq	160+_MM_Xor(%rip), %rax
 	movq	%rax, %rdx
-	movq	120+_MM_Xor(%rip), %rax
+	movq	176+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_u64_LC
-	.private_extern _Xor__uXor_param_u64_LC
-_Xor__uXor_param_u64_LC:
+.globl _Xor__uXor_param_u64_L
+	.private_extern _Xor__uXor_param_u64_L
+_Xor__uXor_param_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	xorq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
 	leave
 	ret
 .globl _Xor__uXor_var_u64_i16
@@ -346,9 +2417,9 @@ _Xor__uXor_param_u64_LC:
 _Xor__uXor_var_u64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
+	movzwl	184+_MM_Xor(%rip), %eax
 	movzwl	%ax, %edx
-	movq	112+_MM_Xor(%rip), %rax
+	movq	160+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
@@ -369,9 +2440,9 @@ _Xor__uXor_param_u64_i16:
 _Xor__uXor_var_u64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
+	movl	188+_MM_Xor(%rip), %eax
 	mov	%eax, %edx
-	movq	112+_MM_Xor(%rip), %rax
+	movq	160+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
@@ -387,43 +2458,20 @@ _Xor__uXor_param_u64_i32:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_u64_I
-	.private_extern _Xor__uXor_var_u64_I
-_Xor__uXor_var_u64_I:
+.globl _Xor__uXor_var_L_i64
+	.private_extern _Xor__uXor_var_L_i64
+_Xor__uXor_var_L_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
+	movq	176+_MM_Xor(%rip), %rax
 	movq	%rax, %rdx
-	movq	112+_MM_Xor(%rip), %rax
+	movq	104+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_u64_I
-	.private_extern _Xor__uXor_param_u64_I
-_Xor__uXor_param_u64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u64_i64
-	.private_extern _Xor__uXor_var_u64_i64
-_Xor__uXor_var_u64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u64_i64
-	.private_extern _Xor__uXor_param_u64_i64
-_Xor__uXor_param_u64_i64:
+.globl _Xor__uXor_param_L_i64
+	.private_extern _Xor__uXor_param_L_i64
+_Xor__uXor_param_L_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -433,19 +2481,20 @@ _Xor__uXor_param_u64_i64:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_u64_C
-	.private_extern _Xor__uXor_var_u64_C
-_Xor__uXor_var_u64_C:
+.globl _Xor__uXor_var_L_LC
+	.private_extern _Xor__uXor_var_L_LC
+_Xor__uXor_var_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
+	movq	176+_MM_Xor(%rip), %rax
+	movq	%rax, %rdx
 	movq	112+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_u64_C
-	.private_extern _Xor__uXor_param_u64_C
-_Xor__uXor_param_u64_C:
+.globl _Xor__uXor_param_L_LC
+	.private_extern _Xor__uXor_param_L_LC
+_Xor__uXor_param_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -454,20 +2503,20 @@ _Xor__uXor_param_u64_C:
 	xorq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Xor__uXor_var_u64_u8
-	.private_extern _Xor__uXor_var_u64_u8
-_Xor__uXor_var_u64_u8:
+.globl _Xor__uXor_var_L_u8
+	.private_extern _Xor__uXor_var_L_u8
+_Xor__uXor_var_L_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
+	movzbl	124+_MM_Xor(%rip), %eax
 	movsbq	%al,%rdx
-	movq	112+_MM_Xor(%rip), %rax
+	movq	176+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_u64_u8
-	.private_extern _Xor__uXor_param_u64_u8
-_Xor__uXor_param_u64_u8:
+.globl _Xor__uXor_param_L_u8
+	.private_extern _Xor__uXor_param_L_u8
+_Xor__uXor_param_L_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -477,130 +2526,20 @@ _Xor__uXor_param_u64_u8:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_u64_i8
-	.private_extern _Xor__uXor_var_u64_i8
-_Xor__uXor_var_u64_i8:
+.globl _Xor__uXor_var_L_I
+	.private_extern _Xor__uXor_var_L_I
+_Xor__uXor_var_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movq	112+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u64_i8
-	.private_extern _Xor__uXor_param_u64_i8
-_Xor__uXor_param_u64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u64_L
-	.private_extern _Xor__uXor_var_u64_L
-_Xor__uXor_var_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	112+_MM_Xor(%rip), %rax
+	movq	128+_MM_Xor(%rip), %rax
 	movq	%rax, %rdx
 	movq	176+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_u64_L
-	.private_extern _Xor__uXor_param_u64_L
-_Xor__uXor_param_u64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u64_u32
-	.private_extern _Xor__uXor_var_u64_u32
-_Xor__uXor_var_u64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movq	112+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u64_u32
-	.private_extern _Xor__uXor_param_u64_u32
-_Xor__uXor_param_u64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_LC_u16
-	.private_extern _Xor__uXor_var_LC_u16
-_Xor__uXor_var_LC_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rdx
-	movq	120+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_LC_u16
-	.private_extern _Xor__uXor_param_LC_u16
-_Xor__uXor_param_LC_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_LC_u64
-	.private_extern _Xor__uXor_var_LC_u64
-_Xor__uXor_var_LC_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Xor(%rip), %rdx
-	movq	112+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_LC_u64
-	.private_extern _Xor__uXor_param_LC_u64
-_Xor__uXor_param_LC_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_LC_LC
-	.private_extern _Xor__uXor_var_LC_LC
-_Xor__uXor_var_LC_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Xor__uXor_param_LC_LC
-	.private_extern _Xor__uXor_param_LC_LC
-_Xor__uXor_param_LC_LC:
+.globl _Xor__uXor_param_L_I
+	.private_extern _Xor__uXor_param_L_I
+_Xor__uXor_param_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -610,106 +2549,111 @@ _Xor__uXor_param_LC_LC:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_LC_i16
-	.private_extern _Xor__uXor_var_LC_i16
-_Xor__uXor_var_LC_i16:
+.globl _Xor__uXor_var_L_i8
+	.private_extern _Xor__uXor_var_L_i8
+_Xor__uXor_var_L_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %edx
-	movq	120+_MM_Xor(%rip), %rax
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %edx
+	movq	176+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_LC_i16
-	.private_extern _Xor__uXor_param_LC_i16
-_Xor__uXor_param_LC_i16:
+.globl _Xor__uXor_param_L_i8
+	.private_extern _Xor__uXor_param_L_i8
+_Xor__uXor_param_L_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %eax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_LC_i32
-	.private_extern _Xor__uXor_var_LC_i32
-_Xor__uXor_var_LC_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %edx
-	movq	120+_MM_Xor(%rip), %rax
+	movb	%sil, -25(%rbp)
+	movzbl	-25(%rbp), %edx
+	movq	-24(%rbp), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_LC_i32
-	.private_extern _Xor__uXor_param_LC_i32
-_Xor__uXor_param_LC_i32:
+.globl _Xor__uXor_var_L_u32
+	.private_extern _Xor__uXor_var_L_u32
+_Xor__uXor_var_L_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	140+_MM_Xor(%rip), %eax
+	movslq	%eax,%rdx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_L_u32
+	.private_extern _Xor__uXor_param_L_u32
+_Xor__uXor_param_L_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %eax
-	xorq	-24(%rbp), %rax
+	movl	-28(%rbp), %eax
+	movslq	%eax,%rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_LC_I
-	.private_extern _Xor__uXor_var_LC_I
-_Xor__uXor_var_LC_I:
+.globl _Xor__uXor_var_L_C
+	.private_extern _Xor__uXor_var_L_C
+_Xor__uXor_var_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
+	movq	144+_MM_Xor(%rip), %rdx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_L_C
+	.private_extern _Xor__uXor_param_L_C
+_Xor__uXor_param_L_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_L_u16
+	.private_extern _Xor__uXor_var_L_u16
+_Xor__uXor_var_L_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	152+_MM_Xor(%rip), %eax
+	movswq	%ax,%rdx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_L_u16
+	.private_extern _Xor__uXor_param_L_u16
+_Xor__uXor_param_L_u16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_L_u64
+	.private_extern _Xor__uXor_var_L_u64
+_Xor__uXor_var_L_u64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	176+_MM_Xor(%rip), %rax
 	movq	%rax, %rdx
-	movq	120+_MM_Xor(%rip), %rax
+	movq	160+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_LC_I
-	.private_extern _Xor__uXor_param_LC_I
-_Xor__uXor_param_LC_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_LC_i64
-	.private_extern _Xor__uXor_var_LC_i64
-_Xor__uXor_var_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Xor(%rip), %rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_LC_i64
-	.private_extern _Xor__uXor_param_LC_i64
-_Xor__uXor_param_LC_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_LC_C
-	.private_extern _Xor__uXor_var_LC_C
-_Xor__uXor_var_LC_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movq	120+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_LC_C
-	.private_extern _Xor__uXor_param_LC_C
-_Xor__uXor_param_LC_C:
+.globl _Xor__uXor_param_L_u64
+	.private_extern _Xor__uXor_param_L_u64
+_Xor__uXor_param_L_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
@@ -719,92 +2663,233 @@ _Xor__uXor_param_LC_C:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_LC_u8
-	.private_extern _Xor__uXor_var_LC_u8
-_Xor__uXor_var_LC_u8:
+.globl _Xor__uXor_var_L_L
+	.private_extern _Xor__uXor_var_L_L
+_Xor__uXor_var_L_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movq	120+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
+	movl	$0, %eax
 	leave
 	ret
-.globl _Xor__uXor_param_LC_u8
-	.private_extern _Xor__uXor_param_LC_u8
-_Xor__uXor_param_LC_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_LC_i8
-	.private_extern _Xor__uXor_var_LC_i8
-_Xor__uXor_var_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movq	120+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_LC_i8
-	.private_extern _Xor__uXor_param_LC_i8
-_Xor__uXor_param_LC_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_LC_L
-	.private_extern _Xor__uXor_var_LC_L
-_Xor__uXor_var_LC_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	120+_MM_Xor(%rip), %rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_LC_L
-	.private_extern _Xor__uXor_param_LC_L
-_Xor__uXor_param_LC_L:
+.globl _Xor__uXor_param_L_L
+	.private_extern _Xor__uXor_param_L_L
+_Xor__uXor_param_L_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
+	movq	-24(%rbp), %rdx
 	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_LC_u32
-	.private_extern _Xor__uXor_var_LC_u32
-_Xor__uXor_var_LC_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movq	120+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_LC_u32
-	.private_extern _Xor__uXor_param_LC_u32
-_Xor__uXor_param_LC_u32:
+.globl _Xor__uXor_var_L_i16
+	.private_extern _Xor__uXor_var_L_i16
+_Xor__uXor_var_L_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %edx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_L_i16
+	.private_extern _Xor__uXor_param_L_i16
+_Xor__uXor_param_L_i16:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movq	%rdi, -24(%rbp)
+	movw	%si, -26(%rbp)
+	movzwl	-26(%rbp), %edx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_L_i32
+	.private_extern _Xor__uXor_var_L_i32
+_Xor__uXor_var_L_i32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %edx
+	movq	176+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_L_i32
+	.private_extern _Xor__uXor_param_L_i32
+_Xor__uXor_param_L_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
+	mov	-28(%rbp), %edx
+	movq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i16_i64
+	.private_extern _Xor__uXor_var_i16_i64
+_Xor__uXor_var_i16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %edx
+	movq	104+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i16_i64
+	.private_extern _Xor__uXor_param_i16_i64
+_Xor__uXor_param_i16_i64:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i16_LC
+	.private_extern _Xor__uXor_var_i16_LC
+_Xor__uXor_var_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %edx
+	movq	112+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i16_LC
+	.private_extern _Xor__uXor_param_i16_LC
+_Xor__uXor_param_i16_LC:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	xorq	-32(%rbp), %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i16_u8
+	.private_extern _Xor__uXor_var_i16_u8
+_Xor__uXor_var_i16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %edx
+	movzbl	124+_MM_Xor(%rip), %eax
+	movsbq	%al,%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i16_u8
+	.private_extern _Xor__uXor_param_i16_u8
+_Xor__uXor_param_i16_u8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %edx
+	movsbq	-19(%rbp),%rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i16_I
+	.private_extern _Xor__uXor_var_i16_I
+_Xor__uXor_var_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %edx
+	movq	128+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i16_I
+	.private_extern _Xor__uXor_param_i16_I
+_Xor__uXor_param_i16_I:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i16_i8
+	.private_extern _Xor__uXor_var_i16_i8
+_Xor__uXor_var_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %edx
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i16_i8
+	.private_extern _Xor__uXor_param_i16_i8
+_Xor__uXor_param_i16_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movb	%sil, -19(%rbp)
+	movzwl	-18(%rbp), %edx
+	movzbl	-19(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i16_u32
+	.private_extern _Xor__uXor_var_i16_u32
+_Xor__uXor_var_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %edx
+	movl	140+_MM_Xor(%rip), %eax
 	cltq
-	xorq	-24(%rbp), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i16_u32
+	.private_extern _Xor__uXor_param_i16_u32
+_Xor__uXor_param_i16_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movl	%esi, -24(%rbp)
+	movzwl	-18(%rbp), %edx
+	movl	-24(%rbp), %eax
+	cltq
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i16_C
+	.private_extern _Xor__uXor_var_i16_C
+_Xor__uXor_var_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movzwl	184+_MM_Xor(%rip), %eax
+	movzwl	%ax, %edx
+	movq	144+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i16_C
+	.private_extern _Xor__uXor_param_i16_C
+_Xor__uXor_param_i16_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movw	%di, -18(%rbp)
+	movq	%rsi, -32(%rbp)
+	movzwl	-18(%rbp), %eax
+	xorq	-32(%rbp), %rax
 	leave
 	ret
 .globl _Xor__uXor_var_i16_u16
@@ -812,9 +2897,9 @@ _Xor__uXor_param_LC_u32:
 _Xor__uXor_var_i16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
+	movzwl	184+_MM_Xor(%rip), %eax
 	movzwl	%ax, %edx
-	movzwl	104+_MM_Xor(%rip), %eax
+	movzwl	152+_MM_Xor(%rip), %eax
 	movswq	%ax,%rax
 	xorq	%rdx, %rax
 	leave
@@ -836,9 +2921,9 @@ _Xor__uXor_param_i16_u16:
 _Xor__uXor_var_i16_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
+	movzwl	184+_MM_Xor(%rip), %eax
 	movzwl	%ax, %edx
-	movq	112+_MM_Xor(%rip), %rax
+	movq	160+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
@@ -854,26 +2939,27 @@ _Xor__uXor_param_i16_u64:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_i16_LC
-	.private_extern _Xor__uXor_var_i16_LC
-_Xor__uXor_var_i16_LC:
+.globl _Xor__uXor_var_i16_L
+	.private_extern _Xor__uXor_var_i16_L
+_Xor__uXor_var_i16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
+	movzwl	184+_MM_Xor(%rip), %eax
 	movzwl	%ax, %edx
-	movq	120+_MM_Xor(%rip), %rax
+	movq	176+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_i16_LC
-	.private_extern _Xor__uXor_param_i16_LC
-_Xor__uXor_param_i16_LC:
+.globl _Xor__uXor_param_i16_L
+	.private_extern _Xor__uXor_param_i16_L
+_Xor__uXor_param_i16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
-	xorq	-32(%rbp), %rax
+	movzwl	-18(%rbp), %edx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
 	leave
 	ret
 .globl _Xor__uXor_var_i16_i16
@@ -901,9 +2987,9 @@ _Xor__uXor_param_i16_i16:
 _Xor__uXor_var_i16_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
+	movzwl	184+_MM_Xor(%rip), %eax
 	movzwl	%ax, %edx
-	movl	140+_MM_Xor(%rip), %eax
+	movl	188+_MM_Xor(%rip), %eax
 	mov	%eax, %eax
 	xorq	%rdx, %rax
 	leave
@@ -920,168 +3006,167 @@ _Xor__uXor_param_i16_i32:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_i16_I
-	.private_extern _Xor__uXor_var_i16_I
-_Xor__uXor_var_i16_I:
+.globl _Xor__uXor_var_i32_i64
+	.private_extern _Xor__uXor_var_i32_i64
+_Xor__uXor_var_i32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %edx
-	movq	144+_MM_Xor(%rip), %rax
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %edx
+	movq	104+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_i16_I
-	.private_extern _Xor__uXor_param_i16_I
-_Xor__uXor_param_i16_I:
+.globl _Xor__uXor_param_i32_i64
+	.private_extern _Xor__uXor_param_i32_i64
+_Xor__uXor_param_i32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
+	mov	-20(%rbp), %edx
 	movq	-32(%rbp), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_i16_i64
-	.private_extern _Xor__uXor_var_i16_i64
-_Xor__uXor_var_i16_i64:
+.globl _Xor__uXor_var_i32_LC
+	.private_extern _Xor__uXor_var_i32_LC
+_Xor__uXor_var_i32_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %edx
-	movq	152+_MM_Xor(%rip), %rax
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %edx
+	movq	112+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_i16_i64
-	.private_extern _Xor__uXor_param_i16_i64
-_Xor__uXor_param_i16_i64:
+.globl _Xor__uXor_param_i32_LC
+	.private_extern _Xor__uXor_param_i32_LC
+_Xor__uXor_param_i32_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i16_C
-	.private_extern _Xor__uXor_var_i16_C
-_Xor__uXor_var_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %edx
-	movq	160+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i16_C
-	.private_extern _Xor__uXor_param_i16_C
-_Xor__uXor_param_i16_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %eax
+	mov	-20(%rbp), %eax
 	xorq	-32(%rbp), %rax
 	leave
 	ret
-.globl _Xor__uXor_var_i16_u8
-	.private_extern _Xor__uXor_var_i16_u8
-_Xor__uXor_var_i16_u8:
+.globl _Xor__uXor_var_i32_u8
+	.private_extern _Xor__uXor_var_i32_u8
+_Xor__uXor_var_i32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %edx
-	movzbl	172+_MM_Xor(%rip), %eax
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %edx
+	movzbl	124+_MM_Xor(%rip), %eax
 	movsbq	%al,%rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_i16_u8
-	.private_extern _Xor__uXor_param_i16_u8
-_Xor__uXor_param_i16_u8:
+.globl _Xor__uXor_param_i32_u8
+	.private_extern _Xor__uXor_param_i32_u8
+_Xor__uXor_param_i32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %edx
-	movsbq	-19(%rbp),%rax
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %edx
+	movsbq	-21(%rbp),%rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_i16_i8
-	.private_extern _Xor__uXor_var_i16_i8
-_Xor__uXor_var_i16_i8:
+.globl _Xor__uXor_var_i32_I
+	.private_extern _Xor__uXor_var_i32_I
+_Xor__uXor_var_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %edx
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %eax
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %edx
+	movq	128+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_i16_i8
-	.private_extern _Xor__uXor_param_i16_i8
-_Xor__uXor_param_i16_i8:
+.globl _Xor__uXor_param_i32_I
+	.private_extern _Xor__uXor_param_i32_I
+_Xor__uXor_param_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
-	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %edx
-	movzbl	-19(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i16_L
-	.private_extern _Xor__uXor_var_i16_L
-_Xor__uXor_var_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %edx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i16_L
-	.private_extern _Xor__uXor_param_i16_L
-_Xor__uXor_param_i16_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %edx
+	mov	-20(%rbp), %edx
 	movq	-32(%rbp), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_i16_u32
-	.private_extern _Xor__uXor_var_i16_u32
-_Xor__uXor_var_i16_u32:
+.globl _Xor__uXor_var_i32_i8
+	.private_extern _Xor__uXor_var_i32_i8
+_Xor__uXor_var_i32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %edx
-	movl	184+_MM_Xor(%rip), %eax
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %edx
+	movzbl	136+_MM_Xor(%rip), %eax
+	movzbl	%al, %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i32_i8
+	.private_extern _Xor__uXor_param_i32_i8
+_Xor__uXor_param_i32_i8:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movb	%sil, -21(%rbp)
+	mov	-20(%rbp), %edx
+	movzbl	-21(%rbp), %eax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i32_u32
+	.private_extern _Xor__uXor_var_i32_u32
+_Xor__uXor_var_i32_u32:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %edx
+	movl	140+_MM_Xor(%rip), %eax
 	cltq
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_i16_u32
-	.private_extern _Xor__uXor_param_i16_u32
-_Xor__uXor_param_i16_u32:
+.globl _Xor__uXor_param_i32_u32
+	.private_extern _Xor__uXor_param_i32_u32
+_Xor__uXor_param_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movw	%di, -18(%rbp)
+	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %edx
+	mov	-20(%rbp), %edx
 	movl	-24(%rbp), %eax
 	cltq
 	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_var_i32_C
+	.private_extern _Xor__uXor_var_i32_C
+_Xor__uXor_var_i32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	188+_MM_Xor(%rip), %eax
+	mov	%eax, %edx
+	movq	144+_MM_Xor(%rip), %rax
+	xorq	%rdx, %rax
+	leave
+	ret
+.globl _Xor__uXor_param_i32_C
+	.private_extern _Xor__uXor_param_i32_C
+_Xor__uXor_param_i32_C:
+	pushq	%rbp
+	movq	%rsp, %rbp
+	movl	%edi, -20(%rbp)
+	movq	%rsi, -32(%rbp)
+	mov	-20(%rbp), %eax
+	xorq	-32(%rbp), %rax
 	leave
 	ret
 .globl _Xor__uXor_var_i32_u16
@@ -1089,9 +3174,9 @@ _Xor__uXor_param_i16_u32:
 _Xor__uXor_var_i32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
+	movl	188+_MM_Xor(%rip), %eax
 	mov	%eax, %edx
-	movzwl	104+_MM_Xor(%rip), %eax
+	movzwl	152+_MM_Xor(%rip), %eax
 	movswq	%ax,%rax
 	xorq	%rdx, %rax
 	leave
@@ -1113,9 +3198,9 @@ _Xor__uXor_param_i32_u16:
 _Xor__uXor_var_i32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
+	movl	188+_MM_Xor(%rip), %eax
 	mov	%eax, %edx
-	movq	112+_MM_Xor(%rip), %rax
+	movq	160+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
@@ -1131,26 +3216,27 @@ _Xor__uXor_param_i32_u64:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_i32_LC
-	.private_extern _Xor__uXor_var_i32_LC
-_Xor__uXor_var_i32_LC:
+.globl _Xor__uXor_var_i32_L
+	.private_extern _Xor__uXor_var_i32_L
+_Xor__uXor_var_i32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
+	movl	188+_MM_Xor(%rip), %eax
 	mov	%eax, %edx
-	movq	120+_MM_Xor(%rip), %rax
+	movq	176+_MM_Xor(%rip), %rax
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_param_i32_LC
-	.private_extern _Xor__uXor_param_i32_LC
-_Xor__uXor_param_i32_LC:
+.globl _Xor__uXor_param_i32_L
+	.private_extern _Xor__uXor_param_i32_L
+_Xor__uXor_param_i32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	xorq	-32(%rbp), %rax
+	mov	-20(%rbp), %edx
+	movq	-32(%rbp), %rax
+	xorq	%rdx, %rax
 	leave
 	ret
 .globl _Xor__uXor_var_i32_i16
@@ -1158,9 +3244,9 @@ _Xor__uXor_param_i32_LC:
 _Xor__uXor_var_i32_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
+	movl	188+_MM_Xor(%rip), %eax
 	mov	%eax, %edx
-	movzwl	136+_MM_Xor(%rip), %eax
+	movzwl	184+_MM_Xor(%rip), %eax
 	movzwl	%ax, %eax
 	xorq	%rdx, %rax
 	leave
@@ -1197,2092 +3283,6 @@ _Xor__uXor_param_i32_i32:
 	xorq	%rdx, %rax
 	leave
 	ret
-.globl _Xor__uXor_var_i32_I
-	.private_extern _Xor__uXor_var_i32_I
-_Xor__uXor_var_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %edx
-	movq	144+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i32_I
-	.private_extern _Xor__uXor_param_i32_I
-_Xor__uXor_param_i32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i32_i64
-	.private_extern _Xor__uXor_var_i32_i64
-_Xor__uXor_var_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %edx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i32_i64
-	.private_extern _Xor__uXor_param_i32_i64
-_Xor__uXor_param_i32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i32_C
-	.private_extern _Xor__uXor_var_i32_C
-_Xor__uXor_var_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %edx
-	movq	160+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i32_C
-	.private_extern _Xor__uXor_param_i32_C
-_Xor__uXor_param_i32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %eax
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i32_u8
-	.private_extern _Xor__uXor_var_i32_u8
-_Xor__uXor_var_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %edx
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i32_u8
-	.private_extern _Xor__uXor_param_i32_u8
-_Xor__uXor_param_i32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %edx
-	movsbq	-21(%rbp),%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i32_i8
-	.private_extern _Xor__uXor_var_i32_i8
-_Xor__uXor_var_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %edx
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i32_i8
-	.private_extern _Xor__uXor_param_i32_i8
-_Xor__uXor_param_i32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %edx
-	movzbl	-21(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i32_L
-	.private_extern _Xor__uXor_var_i32_L
-_Xor__uXor_var_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %edx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i32_L
-	.private_extern _Xor__uXor_param_i32_L
-_Xor__uXor_param_i32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %edx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i32_u32
-	.private_extern _Xor__uXor_var_i32_u32
-_Xor__uXor_var_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %edx
-	movl	184+_MM_Xor(%rip), %eax
-	cltq
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i32_u32
-	.private_extern _Xor__uXor_param_i32_u32
-_Xor__uXor_param_i32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_u16
-	.private_extern _Xor__uXor_var_I_u16
-_Xor__uXor_var_I_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_I_u16
-	.private_extern _Xor__uXor_param_I_u16
-_Xor__uXor_param_I_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_u64
-	.private_extern _Xor__uXor_var_I_u64
-_Xor__uXor_var_I_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	112+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_I_u64
-	.private_extern _Xor__uXor_param_I_u64
-_Xor__uXor_param_I_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_LC
-	.private_extern _Xor__uXor_var_I_LC
-_Xor__uXor_var_I_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_I_LC
-	.private_extern _Xor__uXor_param_I_LC
-_Xor__uXor_param_I_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_i16
-	.private_extern _Xor__uXor_var_I_i16
-_Xor__uXor_var_I_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_I_i16
-	.private_extern _Xor__uXor_param_I_i16
-_Xor__uXor_param_I_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_i32
-	.private_extern _Xor__uXor_var_I_i32
-_Xor__uXor_var_I_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_I_i32
-	.private_extern _Xor__uXor_param_I_i32
-_Xor__uXor_param_I_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_I
-	.private_extern _Xor__uXor_var_I_I
-_Xor__uXor_var_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Xor__uXor_param_I_I
-	.private_extern _Xor__uXor_param_I_I
-_Xor__uXor_param_I_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_i64
-	.private_extern _Xor__uXor_var_I_i64
-_Xor__uXor_var_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_I_i64
-	.private_extern _Xor__uXor_param_I_i64
-_Xor__uXor_param_I_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_C
-	.private_extern _Xor__uXor_var_I_C
-_Xor__uXor_var_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	160+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_I_C
-	.private_extern _Xor__uXor_param_I_C
-_Xor__uXor_param_I_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_u8
-	.private_extern _Xor__uXor_var_I_u8
-_Xor__uXor_var_I_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_I_u8
-	.private_extern _Xor__uXor_param_I_u8
-_Xor__uXor_param_I_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_i8
-	.private_extern _Xor__uXor_var_I_i8
-_Xor__uXor_var_I_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_I_i8
-	.private_extern _Xor__uXor_param_I_i8
-_Xor__uXor_param_I_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_L
-	.private_extern _Xor__uXor_var_I_L
-_Xor__uXor_var_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_I_L
-	.private_extern _Xor__uXor_param_I_L
-_Xor__uXor_param_I_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_I_u32
-	.private_extern _Xor__uXor_var_I_u32
-_Xor__uXor_var_I_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movl	184+_MM_Xor(%rip), %eax
-	cltq
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_I_u32
-	.private_extern _Xor__uXor_param_I_u32
-_Xor__uXor_param_I_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_u16
-	.private_extern _Xor__uXor_var_i64_u16
-_Xor__uXor_var_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_u16
-	.private_extern _Xor__uXor_param_i64_u16
-_Xor__uXor_param_i64_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_u64
-	.private_extern _Xor__uXor_var_i64_u64
-_Xor__uXor_var_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	112+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_u64
-	.private_extern _Xor__uXor_param_i64_u64
-_Xor__uXor_param_i64_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_LC
-	.private_extern _Xor__uXor_var_i64_LC
-_Xor__uXor_var_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_LC
-	.private_extern _Xor__uXor_param_i64_LC
-_Xor__uXor_param_i64_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_i16
-	.private_extern _Xor__uXor_var_i64_i16
-_Xor__uXor_var_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %edx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_i16
-	.private_extern _Xor__uXor_param_i64_i16
-_Xor__uXor_param_i64_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_i32
-	.private_extern _Xor__uXor_var_i64_i32
-_Xor__uXor_var_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %edx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_i32
-	.private_extern _Xor__uXor_param_i64_i32
-_Xor__uXor_param_i64_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_I
-	.private_extern _Xor__uXor_var_i64_I
-_Xor__uXor_var_i64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_I
-	.private_extern _Xor__uXor_param_i64_I
-_Xor__uXor_param_i64_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_i64
-	.private_extern _Xor__uXor_var_i64_i64
-_Xor__uXor_var_i64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_i64
-	.private_extern _Xor__uXor_param_i64_i64
-_Xor__uXor_param_i64_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_C
-	.private_extern _Xor__uXor_var_i64_C
-_Xor__uXor_var_i64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_C
-	.private_extern _Xor__uXor_param_i64_C
-_Xor__uXor_param_i64_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_u8
-	.private_extern _Xor__uXor_var_i64_u8
-_Xor__uXor_var_i64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_u8
-	.private_extern _Xor__uXor_param_i64_u8
-_Xor__uXor_param_i64_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_i8
-	.private_extern _Xor__uXor_var_i64_i8
-_Xor__uXor_var_i64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_i8
-	.private_extern _Xor__uXor_param_i64_i8
-_Xor__uXor_param_i64_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_L
-	.private_extern _Xor__uXor_var_i64_L
-_Xor__uXor_var_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	152+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_L
-	.private_extern _Xor__uXor_param_i64_L
-_Xor__uXor_param_i64_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i64_u32
-	.private_extern _Xor__uXor_var_i64_u32
-_Xor__uXor_var_i64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i64_u32
-	.private_extern _Xor__uXor_param_i64_u32
-_Xor__uXor_param_i64_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_u16
-	.private_extern _Xor__uXor_var_C_u16
-_Xor__uXor_var_C_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_C_u16
-	.private_extern _Xor__uXor_param_C_u16
-_Xor__uXor_param_C_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_u64
-	.private_extern _Xor__uXor_var_C_u64
-_Xor__uXor_var_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movq	112+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_C_u64
-	.private_extern _Xor__uXor_param_C_u64
-_Xor__uXor_param_C_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_LC
-	.private_extern _Xor__uXor_var_C_LC
-_Xor__uXor_var_C_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movq	120+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_C_LC
-	.private_extern _Xor__uXor_param_C_LC
-_Xor__uXor_param_C_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_i16
-	.private_extern _Xor__uXor_var_C_i16
-_Xor__uXor_var_C_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_C_i16
-	.private_extern _Xor__uXor_param_C_i16
-_Xor__uXor_param_C_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %eax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_i32
-	.private_extern _Xor__uXor_var_C_i32
-_Xor__uXor_var_C_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_C_i32
-	.private_extern _Xor__uXor_param_C_i32
-_Xor__uXor_param_C_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %eax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_I
-	.private_extern _Xor__uXor_var_C_I
-_Xor__uXor_var_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movq	144+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_C_I
-	.private_extern _Xor__uXor_param_C_I
-_Xor__uXor_param_C_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_i64
-	.private_extern _Xor__uXor_var_C_i64
-_Xor__uXor_var_C_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_C_i64
-	.private_extern _Xor__uXor_param_C_i64
-_Xor__uXor_param_C_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_C
-	.private_extern _Xor__uXor_var_C_C
-_Xor__uXor_var_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Xor__uXor_param_C_C
-	.private_extern _Xor__uXor_param_C_C
-_Xor__uXor_param_C_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_u8
-	.private_extern _Xor__uXor_var_C_u8
-_Xor__uXor_var_C_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_C_u8
-	.private_extern _Xor__uXor_param_C_u8
-_Xor__uXor_param_C_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_i8
-	.private_extern _Xor__uXor_var_C_i8
-_Xor__uXor_var_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_C_i8
-	.private_extern _Xor__uXor_param_C_i8
-_Xor__uXor_param_C_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %eax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_L
-	.private_extern _Xor__uXor_var_C_L
-_Xor__uXor_var_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_C_L
-	.private_extern _Xor__uXor_param_C_L
-_Xor__uXor_param_C_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rax
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_C_u32
-	.private_extern _Xor__uXor_var_C_u32
-_Xor__uXor_var_C_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movl	184+_MM_Xor(%rip), %eax
-	cltq
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_C_u32
-	.private_extern _Xor__uXor_param_C_u32
-_Xor__uXor_param_C_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	cltq
-	xorq	-24(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_u16
-	.private_extern _Xor__uXor_var_u8_u16
-_Xor__uXor_var_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_u16
-	.private_extern _Xor__uXor_param_u8_u16
-_Xor__uXor_param_u8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movswq	-20(%rbp),%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_u64
-	.private_extern _Xor__uXor_var_u8_u64
-_Xor__uXor_var_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movq	112+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_u64
-	.private_extern _Xor__uXor_param_u8_u64
-_Xor__uXor_param_u8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_LC
-	.private_extern _Xor__uXor_var_u8_LC
-_Xor__uXor_var_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movq	120+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_LC
-	.private_extern _Xor__uXor_param_u8_LC
-_Xor__uXor_param_u8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_i16
-	.private_extern _Xor__uXor_var_u8_i16
-_Xor__uXor_var_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_i16
-	.private_extern _Xor__uXor_param_u8_i16
-_Xor__uXor_param_u8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movzwl	-20(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_i32
-	.private_extern _Xor__uXor_var_u8_i32
-_Xor__uXor_var_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_i32
-	.private_extern _Xor__uXor_param_u8_i32
-_Xor__uXor_param_u8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rdx
-	mov	-24(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_I
-	.private_extern _Xor__uXor_var_u8_I
-_Xor__uXor_var_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movq	144+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_I
-	.private_extern _Xor__uXor_param_u8_I
-_Xor__uXor_param_u8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_i64
-	.private_extern _Xor__uXor_var_u8_i64
-_Xor__uXor_var_u8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_i64
-	.private_extern _Xor__uXor_param_u8_i64
-_Xor__uXor_param_u8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_C
-	.private_extern _Xor__uXor_var_u8_C
-_Xor__uXor_var_u8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movq	160+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_C
-	.private_extern _Xor__uXor_param_u8_C
-_Xor__uXor_param_u8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rax
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_u8
-	.private_extern _Xor__uXor_var_u8_u8
-_Xor__uXor_var_u8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_u8
-	.private_extern _Xor__uXor_param_u8_u8
-_Xor__uXor_param_u8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movsbq	-18(%rbp),%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_i8
-	.private_extern _Xor__uXor_var_u8_i8
-_Xor__uXor_var_u8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_i8
-	.private_extern _Xor__uXor_param_u8_i8
-_Xor__uXor_param_u8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movzbl	-18(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_L
-	.private_extern _Xor__uXor_var_u8_L
-_Xor__uXor_var_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_L
-	.private_extern _Xor__uXor_param_u8_L
-_Xor__uXor_param_u8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u8_u32
-	.private_extern _Xor__uXor_var_u8_u32
-_Xor__uXor_var_u8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movl	184+_MM_Xor(%rip), %eax
-	cltq
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u8_u32
-	.private_extern _Xor__uXor_param_u8_u32
-_Xor__uXor_param_u8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rdx
-	movl	-24(%rbp), %eax
-	cltq
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_u16
-	.private_extern _Xor__uXor_var_i8_u16
-_Xor__uXor_var_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_u16
-	.private_extern _Xor__uXor_param_i8_u16
-_Xor__uXor_param_i8_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %edx
-	movswq	-20(%rbp),%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_u64
-	.private_extern _Xor__uXor_var_i8_u64
-_Xor__uXor_var_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movq	112+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_u64
-	.private_extern _Xor__uXor_param_i8_u64
-_Xor__uXor_param_i8_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_LC
-	.private_extern _Xor__uXor_var_i8_LC
-_Xor__uXor_var_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movq	120+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_LC
-	.private_extern _Xor__uXor_param_i8_LC
-_Xor__uXor_param_i8_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_i16
-	.private_extern _Xor__uXor_var_i8_i16
-_Xor__uXor_var_i8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_i16
-	.private_extern _Xor__uXor_param_i8_i16
-_Xor__uXor_param_i8_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %edx
-	movzwl	-20(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_i32
-	.private_extern _Xor__uXor_var_i8_i32
-_Xor__uXor_var_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_i32
-	.private_extern _Xor__uXor_param_i8_i32
-_Xor__uXor_param_i8_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %edx
-	mov	-24(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_I
-	.private_extern _Xor__uXor_var_i8_I
-_Xor__uXor_var_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movq	144+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_I
-	.private_extern _Xor__uXor_param_i8_I
-_Xor__uXor_param_i8_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_i64
-	.private_extern _Xor__uXor_var_i8_i64
-_Xor__uXor_var_i8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_i64
-	.private_extern _Xor__uXor_param_i8_i64
-_Xor__uXor_param_i8_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_C
-	.private_extern _Xor__uXor_var_i8_C
-_Xor__uXor_var_i8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movq	160+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_C
-	.private_extern _Xor__uXor_param_i8_C
-_Xor__uXor_param_i8_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %eax
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_u8
-	.private_extern _Xor__uXor_var_i8_u8
-_Xor__uXor_var_i8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_u8
-	.private_extern _Xor__uXor_param_i8_u8
-_Xor__uXor_param_i8_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movzbl	-17(%rbp), %edx
-	movsbq	-18(%rbp),%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_i8
-	.private_extern _Xor__uXor_var_i8_i8
-_Xor__uXor_var_i8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_i8
-	.private_extern _Xor__uXor_param_i8_i8
-_Xor__uXor_param_i8_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movb	%sil, -18(%rbp)
-	movzbl	-17(%rbp), %edx
-	movzbl	-18(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_L
-	.private_extern _Xor__uXor_var_i8_L
-_Xor__uXor_var_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_L
-	.private_extern _Xor__uXor_param_i8_L
-_Xor__uXor_param_i8_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %edx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_i8_u32
-	.private_extern _Xor__uXor_var_i8_u32
-_Xor__uXor_var_i8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movl	184+_MM_Xor(%rip), %eax
-	cltq
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_i8_u32
-	.private_extern _Xor__uXor_param_i8_u32
-_Xor__uXor_param_i8_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movb	%dil, -17(%rbp)
-	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %edx
-	movl	-24(%rbp), %eax
-	cltq
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_u16
-	.private_extern _Xor__uXor_var_L_u16
-_Xor__uXor_var_L_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_L_u16
-	.private_extern _Xor__uXor_param_L_u16
-_Xor__uXor_param_L_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_u64
-	.private_extern _Xor__uXor_var_L_u64
-_Xor__uXor_var_L_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	112+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_L_u64
-	.private_extern _Xor__uXor_param_L_u64
-_Xor__uXor_param_L_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_LC
-	.private_extern _Xor__uXor_var_L_LC
-_Xor__uXor_var_L_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	120+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_L_LC
-	.private_extern _Xor__uXor_param_L_LC
-_Xor__uXor_param_L_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_i16
-	.private_extern _Xor__uXor_var_L_i16
-_Xor__uXor_var_L_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %edx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_L_i16
-	.private_extern _Xor__uXor_param_L_i16
-_Xor__uXor_param_L_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_i32
-	.private_extern _Xor__uXor_var_L_i32
-_Xor__uXor_var_L_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %edx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_L_i32
-	.private_extern _Xor__uXor_param_L_i32
-_Xor__uXor_param_L_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_I
-	.private_extern _Xor__uXor_var_L_I
-_Xor__uXor_var_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	144+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_L_I
-	.private_extern _Xor__uXor_param_L_I
-_Xor__uXor_param_L_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_i64
-	.private_extern _Xor__uXor_var_L_i64
-_Xor__uXor_var_L_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	176+_MM_Xor(%rip), %rax
-	movq	%rax, %rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_L_i64
-	.private_extern _Xor__uXor_param_L_i64
-_Xor__uXor_param_L_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_C
-	.private_extern _Xor__uXor_var_L_C
-_Xor__uXor_var_L_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	160+_MM_Xor(%rip), %rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_L_C
-	.private_extern _Xor__uXor_param_L_C
-_Xor__uXor_param_L_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rax
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_u8
-	.private_extern _Xor__uXor_var_L_u8
-_Xor__uXor_var_L_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_L_u8
-	.private_extern _Xor__uXor_param_L_u8
-_Xor__uXor_param_L_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_i8
-	.private_extern _Xor__uXor_var_L_i8
-_Xor__uXor_var_L_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %edx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_L_i8
-	.private_extern _Xor__uXor_param_L_i8
-_Xor__uXor_param_L_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_L
-	.private_extern _Xor__uXor_var_L_L
-_Xor__uXor_var_L_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Xor__uXor_param_L_L
-	.private_extern _Xor__uXor_param_L_L
-_Xor__uXor_param_L_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_L_u32
-	.private_extern _Xor__uXor_var_L_u32
-_Xor__uXor_var_L_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_L_u32
-	.private_extern _Xor__uXor_param_L_u32
-_Xor__uXor_param_L_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movq	%rdi, -24(%rbp)
-	movl	%esi, -28(%rbp)
-	movl	-28(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-24(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_u16
-	.private_extern _Xor__uXor_var_u32_u16
-_Xor__uXor_var_u32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movzwl	104+_MM_Xor(%rip), %eax
-	movswq	%ax,%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_u16
-	.private_extern _Xor__uXor_param_u32_u16
-_Xor__uXor_param_u32_u16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movswq	-22(%rbp),%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_u64
-	.private_extern _Xor__uXor_var_u32_u64
-_Xor__uXor_var_u32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movq	112+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_u64
-	.private_extern _Xor__uXor_param_u32_u64
-_Xor__uXor_param_u32_u64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_LC
-	.private_extern _Xor__uXor_var_u32_LC
-_Xor__uXor_var_u32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movq	120+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_LC
-	.private_extern _Xor__uXor_param_u32_LC
-_Xor__uXor_param_u32_LC:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_i16
-	.private_extern _Xor__uXor_var_u32_i16
-_Xor__uXor_var_u32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movzwl	136+_MM_Xor(%rip), %eax
-	movzwl	%ax, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_i16
-	.private_extern _Xor__uXor_param_u32_i16
-_Xor__uXor_param_u32_i16:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movw	%si, -22(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movzwl	-22(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_i32
-	.private_extern _Xor__uXor_var_u32_i32
-_Xor__uXor_var_u32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movl	140+_MM_Xor(%rip), %eax
-	mov	%eax, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_i32
-	.private_extern _Xor__uXor_param_u32_i32
-_Xor__uXor_param_u32_i32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	mov	-24(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_I
-	.private_extern _Xor__uXor_var_u32_I
-_Xor__uXor_var_u32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movq	144+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_I
-	.private_extern _Xor__uXor_param_u32_I
-_Xor__uXor_param_u32_I:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_i64
-	.private_extern _Xor__uXor_var_u32_i64
-_Xor__uXor_var_u32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movq	152+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_i64
-	.private_extern _Xor__uXor_param_u32_i64
-_Xor__uXor_param_u32_i64:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_C
-	.private_extern _Xor__uXor_var_u32_C
-_Xor__uXor_var_u32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movq	160+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_C
-	.private_extern _Xor__uXor_param_u32_C
-_Xor__uXor_param_u32_C:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	cltq
-	xorq	-32(%rbp), %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_u8
-	.private_extern _Xor__uXor_var_u32_u8
-_Xor__uXor_var_u32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movzbl	172+_MM_Xor(%rip), %eax
-	movsbq	%al,%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_u8
-	.private_extern _Xor__uXor_param_u32_u8
-_Xor__uXor_param_u32_u8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movsbq	-21(%rbp),%rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_i8
-	.private_extern _Xor__uXor_var_u32_i8
-_Xor__uXor_var_u32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movzbl	173+_MM_Xor(%rip), %eax
-	movzbl	%al, %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_i8
-	.private_extern _Xor__uXor_param_u32_i8
-_Xor__uXor_param_u32_i8:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movb	%sil, -21(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movzbl	-21(%rbp), %eax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_L
-	.private_extern _Xor__uXor_var_u32_L
-_Xor__uXor_var_u32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	184+_MM_Xor(%rip), %eax
-	movslq	%eax,%rdx
-	movq	176+_MM_Xor(%rip), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_L
-	.private_extern _Xor__uXor_param_u32_L
-_Xor__uXor_param_u32_L:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movq	%rsi, -32(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movq	-32(%rbp), %rax
-	xorq	%rdx, %rax
-	leave
-	ret
-.globl _Xor__uXor_var_u32_u32
-	.private_extern _Xor__uXor_var_u32_u32
-_Xor__uXor_var_u32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	$0, %eax
-	leave
-	ret
-.globl _Xor__uXor_param_u32_u32
-	.private_extern _Xor__uXor_param_u32_u32
-_Xor__uXor_param_u32_u32:
-	pushq	%rbp
-	movq	%rsp, %rbp
-	movl	%edi, -20(%rbp)
-	movl	%esi, -24(%rbp)
-	movl	-20(%rbp), %eax
-	movslq	%eax,%rdx
-	movl	-24(%rbp), %eax
-	cltq
-	xorq	%rdx, %rax
-	leave
-	ret
 .globl _Xor_M3
 _Xor_M3:
 	pushq	%rbp
@@ -3296,370 +3296,6 @@ _Xor_M3:
 _L_1:
 	.ascii "Xor_M3"
 	.space 1
-	.ascii "uXor_param_u32_u32"
-	.space 1
-	.ascii "uXor_var_u32_u32"
-	.space 1
-	.ascii "uXor_param_u32_L"
-	.space 1
-	.ascii "uXor_var_u32_L"
-	.space 1
-	.ascii "uXor_param_u32_i8"
-	.space 1
-	.ascii "uXor_var_u32_i8"
-	.space 1
-	.ascii "uXor_param_u32_u8"
-	.space 1
-	.ascii "uXor_var_u32_u8"
-	.space 1
-	.ascii "uXor_param_u32_C"
-	.space 1
-	.ascii "uXor_var_u32_C"
-	.space 1
-	.ascii "uXor_param_u32_i64"
-	.space 1
-	.ascii "uXor_var_u32_i64"
-	.space 1
-	.ascii "uXor_param_u32_I"
-	.space 1
-	.ascii "uXor_var_u32_I"
-	.space 1
-	.ascii "uXor_param_u32_i32"
-	.space 1
-	.ascii "uXor_var_u32_i32"
-	.space 1
-	.ascii "uXor_param_u32_i16"
-	.space 1
-	.ascii "uXor_var_u32_i16"
-	.space 1
-	.ascii "uXor_param_u32_LC"
-	.space 1
-	.ascii "uXor_var_u32_LC"
-	.space 1
-	.ascii "uXor_param_u32_u64"
-	.space 1
-	.ascii "uXor_var_u32_u64"
-	.space 1
-	.ascii "uXor_param_u32_u16"
-	.space 1
-	.ascii "uXor_var_u32_u16"
-	.space 1
-	.ascii "uXor_param_L_u32"
-	.space 1
-	.ascii "uXor_var_L_u32"
-	.space 1
-	.ascii "uXor_param_L_L"
-	.space 1
-	.ascii "uXor_var_L_L"
-	.space 1
-	.ascii "uXor_param_L_i8"
-	.space 1
-	.ascii "uXor_var_L_i8"
-	.space 1
-	.ascii "uXor_param_L_u8"
-	.space 1
-	.ascii "uXor_var_L_u8"
-	.space 1
-	.ascii "uXor_param_L_C"
-	.space 1
-	.ascii "uXor_var_L_C"
-	.space 1
-	.ascii "uXor_param_L_i64"
-	.space 1
-	.ascii "uXor_var_L_i64"
-	.space 1
-	.ascii "uXor_param_L_I"
-	.space 1
-	.ascii "uXor_var_L_I"
-	.space 1
-	.ascii "uXor_param_L_i32"
-	.space 1
-	.ascii "uXor_var_L_i32"
-	.space 1
-	.ascii "uXor_param_L_i16"
-	.space 1
-	.ascii "uXor_var_L_i16"
-	.space 1
-	.ascii "uXor_param_L_LC"
-	.space 1
-	.ascii "uXor_var_L_LC"
-	.space 1
-	.ascii "uXor_param_L_u64"
-	.space 1
-	.ascii "uXor_var_L_u64"
-	.space 1
-	.ascii "uXor_param_L_u16"
-	.space 1
-	.ascii "uXor_var_L_u16"
-	.space 1
-	.ascii "uXor_param_i8_u32"
-	.space 1
-	.ascii "uXor_var_i8_u32"
-	.space 1
-	.ascii "uXor_param_i8_L"
-	.space 1
-	.ascii "uXor_var_i8_L"
-	.space 1
-	.ascii "uXor_param_i8_i8"
-	.space 1
-	.ascii "uXor_var_i8_i8"
-	.space 1
-	.ascii "uXor_param_i8_u8"
-	.space 1
-	.ascii "uXor_var_i8_u8"
-	.space 1
-	.ascii "uXor_param_i8_C"
-	.space 1
-	.ascii "uXor_var_i8_C"
-	.space 1
-	.ascii "uXor_param_i8_i64"
-	.space 1
-	.ascii "uXor_var_i8_i64"
-	.space 1
-	.ascii "uXor_param_i8_I"
-	.space 1
-	.ascii "uXor_var_i8_I"
-	.space 1
-	.ascii "uXor_param_i8_i32"
-	.space 1
-	.ascii "uXor_var_i8_i32"
-	.space 1
-	.ascii "uXor_param_i8_i16"
-	.space 1
-	.ascii "uXor_var_i8_i16"
-	.space 1
-	.ascii "uXor_param_i8_LC"
-	.space 1
-	.ascii "uXor_var_i8_LC"
-	.space 1
-	.ascii "uXor_param_i8_u64"
-	.space 1
-	.ascii "uXor_var_i8_u64"
-	.space 1
-	.ascii "uXor_param_i8_u16"
-	.space 1
-	.ascii "uXor_var_i8_u16"
-	.space 1
-	.ascii "uXor_param_u8_u32"
-	.space 1
-	.ascii "uXor_var_u8_u32"
-	.space 1
-	.ascii "uXor_param_u8_L"
-	.space 1
-	.ascii "uXor_var_u8_L"
-	.space 1
-	.ascii "uXor_param_u8_i8"
-	.space 1
-	.ascii "uXor_var_u8_i8"
-	.space 1
-	.ascii "uXor_param_u8_u8"
-	.space 1
-	.ascii "uXor_var_u8_u8"
-	.space 1
-	.ascii "uXor_param_u8_C"
-	.space 1
-	.ascii "uXor_var_u8_C"
-	.space 1
-	.ascii "uXor_param_u8_i64"
-	.space 1
-	.ascii "uXor_var_u8_i64"
-	.space 1
-	.ascii "uXor_param_u8_I"
-	.space 1
-	.ascii "uXor_var_u8_I"
-	.space 1
-	.ascii "uXor_param_u8_i32"
-	.space 1
-	.ascii "uXor_var_u8_i32"
-	.space 1
-	.ascii "uXor_param_u8_i16"
-	.space 1
-	.ascii "uXor_var_u8_i16"
-	.space 1
-	.ascii "uXor_param_u8_LC"
-	.space 1
-	.ascii "uXor_var_u8_LC"
-	.space 1
-	.ascii "uXor_param_u8_u64"
-	.space 1
-	.ascii "uXor_var_u8_u64"
-	.space 1
-	.ascii "uXor_param_u8_u16"
-	.space 1
-	.ascii "uXor_var_u8_u16"
-	.space 1
-	.ascii "uXor_param_C_u32"
-	.space 1
-	.ascii "uXor_var_C_u32"
-	.space 1
-	.ascii "uXor_param_C_L"
-	.space 1
-	.ascii "uXor_var_C_L"
-	.space 1
-	.ascii "uXor_param_C_i8"
-	.space 1
-	.ascii "uXor_var_C_i8"
-	.space 1
-	.ascii "uXor_param_C_u8"
-	.space 1
-	.ascii "uXor_var_C_u8"
-	.space 1
-	.ascii "uXor_param_C_C"
-	.space 1
-	.ascii "uXor_var_C_C"
-	.space 1
-	.ascii "uXor_param_C_i64"
-	.space 1
-	.ascii "uXor_var_C_i64"
-	.space 1
-	.ascii "uXor_param_C_I"
-	.space 1
-	.ascii "uXor_var_C_I"
-	.space 1
-	.ascii "uXor_param_C_i32"
-	.space 1
-	.ascii "uXor_var_C_i32"
-	.space 1
-	.ascii "uXor_param_C_i16"
-	.space 1
-	.ascii "uXor_var_C_i16"
-	.space 1
-	.ascii "uXor_param_C_LC"
-	.space 1
-	.ascii "uXor_var_C_LC"
-	.space 1
-	.ascii "uXor_param_C_u64"
-	.space 1
-	.ascii "uXor_var_C_u64"
-	.space 1
-	.ascii "uXor_param_C_u16"
-	.space 1
-	.ascii "uXor_var_C_u16"
-	.space 1
-	.ascii "uXor_param_i64_u32"
-	.space 1
-	.ascii "uXor_var_i64_u32"
-	.space 1
-	.ascii "uXor_param_i64_L"
-	.space 1
-	.ascii "uXor_var_i64_L"
-	.space 1
-	.ascii "uXor_param_i64_i8"
-	.space 1
-	.ascii "uXor_var_i64_i8"
-	.space 1
-	.ascii "uXor_param_i64_u8"
-	.space 1
-	.ascii "uXor_var_i64_u8"
-	.space 1
-	.ascii "uXor_param_i64_C"
-	.space 1
-	.ascii "uXor_var_i64_C"
-	.space 1
-	.ascii "uXor_param_i64_i64"
-	.space 1
-	.ascii "uXor_var_i64_i64"
-	.space 1
-	.ascii "uXor_param_i64_I"
-	.space 1
-	.ascii "uXor_var_i64_I"
-	.space 1
-	.ascii "uXor_param_i64_i32"
-	.space 1
-	.ascii "uXor_var_i64_i32"
-	.space 1
-	.ascii "uXor_param_i64_i16"
-	.space 1
-	.ascii "uXor_var_i64_i16"
-	.space 1
-	.ascii "uXor_param_i64_LC"
-	.space 1
-	.ascii "uXor_var_i64_LC"
-	.space 1
-	.ascii "uXor_param_i64_u64"
-	.space 1
-	.ascii "uXor_var_i64_u64"
-	.space 1
-	.ascii "uXor_param_i64_u16"
-	.space 1
-	.ascii "uXor_var_i64_u16"
-	.space 1
-	.ascii "uXor_param_I_u32"
-	.space 1
-	.ascii "uXor_var_I_u32"
-	.space 1
-	.ascii "uXor_param_I_L"
-	.space 1
-	.ascii "uXor_var_I_L"
-	.space 1
-	.ascii "uXor_param_I_i8"
-	.space 1
-	.ascii "uXor_var_I_i8"
-	.space 1
-	.ascii "uXor_param_I_u8"
-	.space 1
-	.ascii "uXor_var_I_u8"
-	.space 1
-	.ascii "uXor_param_I_C"
-	.space 1
-	.ascii "uXor_var_I_C"
-	.space 1
-	.ascii "uXor_param_I_i64"
-	.space 1
-	.ascii "uXor_var_I_i64"
-	.space 1
-	.ascii "uXor_param_I_I"
-	.space 1
-	.ascii "uXor_var_I_I"
-	.space 1
-	.ascii "uXor_param_I_i32"
-	.space 1
-	.ascii "uXor_var_I_i32"
-	.space 1
-	.ascii "uXor_param_I_i16"
-	.space 1
-	.ascii "uXor_var_I_i16"
-	.space 1
-	.ascii "uXor_param_I_LC"
-	.space 1
-	.ascii "uXor_var_I_LC"
-	.space 1
-	.ascii "uXor_param_I_u64"
-	.space 1
-	.ascii "uXor_var_I_u64"
-	.space 1
-	.ascii "uXor_param_I_u16"
-	.space 1
-	.ascii "uXor_var_I_u16"
-	.space 1
-	.ascii "uXor_param_i32_u32"
-	.space 1
-	.ascii "uXor_var_i32_u32"
-	.space 1
-	.ascii "uXor_param_i32_L"
-	.space 1
-	.ascii "uXor_var_i32_L"
-	.space 1
-	.ascii "uXor_param_i32_i8"
-	.space 1
-	.ascii "uXor_var_i32_i8"
-	.space 1
-	.ascii "uXor_param_i32_u8"
-	.space 1
-	.ascii "uXor_var_i32_u8"
-	.space 1
-	.ascii "uXor_param_i32_C"
-	.space 1
-	.ascii "uXor_var_i32_C"
-	.space 1
-	.ascii "uXor_param_i32_i64"
-	.space 1
-	.ascii "uXor_var_i32_i64"
-	.space 1
-	.ascii "uXor_param_i32_I"
-	.space 1
-	.ascii "uXor_var_i32_I"
-	.space 1
 	.ascii "uXor_param_i32_i32"
 	.space 1
 	.ascii "uXor_var_i32_i32"
@@ -3668,9 +3304,9 @@ _L_1:
 	.space 1
 	.ascii "uXor_var_i32_i16"
 	.space 1
-	.ascii "uXor_param_i32_LC"
+	.ascii "uXor_param_i32_L"
 	.space 1
-	.ascii "uXor_var_i32_LC"
+	.ascii "uXor_var_i32_L"
 	.space 1
 	.ascii "uXor_param_i32_u64"
 	.space 1
@@ -3680,33 +3316,33 @@ _L_1:
 	.space 1
 	.ascii "uXor_var_i32_u16"
 	.space 1
-	.ascii "uXor_param_i16_u32"
+	.ascii "uXor_param_i32_C"
 	.space 1
-	.ascii "uXor_var_i16_u32"
+	.ascii "uXor_var_i32_C"
 	.space 1
-	.ascii "uXor_param_i16_L"
+	.ascii "uXor_param_i32_u32"
 	.space 1
-	.ascii "uXor_var_i16_L"
+	.ascii "uXor_var_i32_u32"
 	.space 1
-	.ascii "uXor_param_i16_i8"
+	.ascii "uXor_param_i32_i8"
 	.space 1
-	.ascii "uXor_var_i16_i8"
+	.ascii "uXor_var_i32_i8"
 	.space 1
-	.ascii "uXor_param_i16_u8"
+	.ascii "uXor_param_i32_I"
 	.space 1
-	.ascii "uXor_var_i16_u8"
+	.ascii "uXor_var_i32_I"
 	.space 1
-	.ascii "uXor_param_i16_C"
+	.ascii "uXor_param_i32_u8"
 	.space 1
-	.ascii "uXor_var_i16_C"
+	.ascii "uXor_var_i32_u8"
 	.space 1
-	.ascii "uXor_param_i16_i64"
+	.ascii "uXor_param_i32_LC"
 	.space 1
-	.ascii "uXor_var_i16_i64"
+	.ascii "uXor_var_i32_LC"
 	.space 1
-	.ascii "uXor_param_i16_I"
+	.ascii "uXor_param_i32_i64"
 	.space 1
-	.ascii "uXor_var_i16_I"
+	.ascii "uXor_var_i32_i64"
 	.space 1
 	.ascii "uXor_param_i16_i32"
 	.space 1
@@ -3716,9 +3352,9 @@ _L_1:
 	.space 1
 	.ascii "uXor_var_i16_i16"
 	.space 1
-	.ascii "uXor_param_i16_LC"
+	.ascii "uXor_param_i16_L"
 	.space 1
-	.ascii "uXor_var_i16_LC"
+	.ascii "uXor_var_i16_L"
 	.space 1
 	.ascii "uXor_param_i16_u64"
 	.space 1
@@ -3728,81 +3364,81 @@ _L_1:
 	.space 1
 	.ascii "uXor_var_i16_u16"
 	.space 1
-	.ascii "uXor_param_LC_u32"
+	.ascii "uXor_param_i16_C"
 	.space 1
-	.ascii "uXor_var_LC_u32"
+	.ascii "uXor_var_i16_C"
 	.space 1
-	.ascii "uXor_param_LC_L"
+	.ascii "uXor_param_i16_u32"
 	.space 1
-	.ascii "uXor_var_LC_L"
+	.ascii "uXor_var_i16_u32"
 	.space 1
-	.ascii "uXor_param_LC_i8"
+	.ascii "uXor_param_i16_i8"
 	.space 1
-	.ascii "uXor_var_LC_i8"
+	.ascii "uXor_var_i16_i8"
 	.space 1
-	.ascii "uXor_param_LC_u8"
+	.ascii "uXor_param_i16_I"
 	.space 1
-	.ascii "uXor_var_LC_u8"
+	.ascii "uXor_var_i16_I"
 	.space 1
-	.ascii "uXor_param_LC_C"
+	.ascii "uXor_param_i16_u8"
 	.space 1
-	.ascii "uXor_var_LC_C"
+	.ascii "uXor_var_i16_u8"
 	.space 1
-	.ascii "uXor_param_LC_i64"
+	.ascii "uXor_param_i16_LC"
 	.space 1
-	.ascii "uXor_var_LC_i64"
+	.ascii "uXor_var_i16_LC"
 	.space 1
-	.ascii "uXor_param_LC_I"
+	.ascii "uXor_param_i16_i64"
 	.space 1
-	.ascii "uXor_var_LC_I"
+	.ascii "uXor_var_i16_i64"
 	.space 1
-	.ascii "uXor_param_LC_i32"
+	.ascii "uXor_param_L_i32"
 	.space 1
-	.ascii "uXor_var_LC_i32"
+	.ascii "uXor_var_L_i32"
 	.space 1
-	.ascii "uXor_param_LC_i16"
+	.ascii "uXor_param_L_i16"
 	.space 1
-	.ascii "uXor_var_LC_i16"
+	.ascii "uXor_var_L_i16"
 	.space 1
-	.ascii "uXor_param_LC_LC"
+	.ascii "uXor_param_L_L"
 	.space 1
-	.ascii "uXor_var_LC_LC"
+	.ascii "uXor_var_L_L"
 	.space 1
-	.ascii "uXor_param_LC_u64"
+	.ascii "uXor_param_L_u64"
 	.space 1
-	.ascii "uXor_var_LC_u64"
+	.ascii "uXor_var_L_u64"
 	.space 1
-	.ascii "uXor_param_LC_u16"
+	.ascii "uXor_param_L_u16"
 	.space 1
-	.ascii "uXor_var_LC_u16"
+	.ascii "uXor_var_L_u16"
 	.space 1
-	.ascii "uXor_param_u64_u32"
+	.ascii "uXor_param_L_C"
 	.space 1
-	.ascii "uXor_var_u64_u32"
+	.ascii "uXor_var_L_C"
 	.space 1
-	.ascii "uXor_param_u64_L"
+	.ascii "uXor_param_L_u32"
 	.space 1
-	.ascii "uXor_var_u64_L"
+	.ascii "uXor_var_L_u32"
 	.space 1
-	.ascii "uXor_param_u64_i8"
+	.ascii "uXor_param_L_i8"
 	.space 1
-	.ascii "uXor_var_u64_i8"
+	.ascii "uXor_var_L_i8"
 	.space 1
-	.ascii "uXor_param_u64_u8"
+	.ascii "uXor_param_L_I"
 	.space 1
-	.ascii "uXor_var_u64_u8"
+	.ascii "uXor_var_L_I"
 	.space 1
-	.ascii "uXor_param_u64_C"
+	.ascii "uXor_param_L_u8"
 	.space 1
-	.ascii "uXor_var_u64_C"
+	.ascii "uXor_var_L_u8"
 	.space 1
-	.ascii "uXor_param_u64_i64"
+	.ascii "uXor_param_L_LC"
 	.space 1
-	.ascii "uXor_var_u64_i64"
+	.ascii "uXor_var_L_LC"
 	.space 1
-	.ascii "uXor_param_u64_I"
+	.ascii "uXor_param_L_i64"
 	.space 1
-	.ascii "uXor_var_u64_I"
+	.ascii "uXor_var_L_i64"
 	.space 1
 	.ascii "uXor_param_u64_i32"
 	.space 1
@@ -3812,9 +3448,9 @@ _L_1:
 	.space 1
 	.ascii "uXor_var_u64_i16"
 	.space 1
-	.ascii "uXor_param_u64_LC"
+	.ascii "uXor_param_u64_L"
 	.space 1
-	.ascii "uXor_var_u64_LC"
+	.ascii "uXor_var_u64_L"
 	.space 1
 	.ascii "uXor_param_u64_u64"
 	.space 1
@@ -3824,33 +3460,33 @@ _L_1:
 	.space 1
 	.ascii "uXor_var_u64_u16"
 	.space 1
-	.ascii "uXor_param_u16_u32"
+	.ascii "uXor_param_u64_C"
 	.space 1
-	.ascii "uXor_var_u16_u32"
+	.ascii "uXor_var_u64_C"
 	.space 1
-	.ascii "uXor_param_u16_L"
+	.ascii "uXor_param_u64_u32"
 	.space 1
-	.ascii "uXor_var_u16_L"
+	.ascii "uXor_var_u64_u32"
 	.space 1
-	.ascii "uXor_param_u16_i8"
+	.ascii "uXor_param_u64_i8"
 	.space 1
-	.ascii "uXor_var_u16_i8"
+	.ascii "uXor_var_u64_i8"
 	.space 1
-	.ascii "uXor_param_u16_u8"
+	.ascii "uXor_param_u64_I"
 	.space 1
-	.ascii "uXor_var_u16_u8"
+	.ascii "uXor_var_u64_I"
 	.space 1
-	.ascii "uXor_param_u16_C"
+	.ascii "uXor_param_u64_u8"
 	.space 1
-	.ascii "uXor_var_u16_C"
+	.ascii "uXor_var_u64_u8"
 	.space 1
-	.ascii "uXor_param_u16_i64"
+	.ascii "uXor_param_u64_LC"
 	.space 1
-	.ascii "uXor_var_u16_i64"
+	.ascii "uXor_var_u64_LC"
 	.space 1
-	.ascii "uXor_param_u16_I"
+	.ascii "uXor_param_u64_i64"
 	.space 1
-	.ascii "uXor_var_u16_I"
+	.ascii "uXor_var_u64_i64"
 	.space 1
 	.ascii "uXor_param_u16_i32"
 	.space 1
@@ -3860,9 +3496,9 @@ _L_1:
 	.space 1
 	.ascii "uXor_var_u16_i16"
 	.space 1
-	.ascii "uXor_param_u16_LC"
+	.ascii "uXor_param_u16_L"
 	.space 1
-	.ascii "uXor_var_u16_LC"
+	.ascii "uXor_var_u16_L"
 	.space 1
 	.ascii "uXor_param_u16_u64"
 	.space 1
@@ -3871,584 +3507,948 @@ _L_1:
 	.ascii "uXor_param_u16_u16"
 	.space 1
 	.ascii "uXor_var_u16_u16"
+	.space 1
+	.ascii "uXor_param_u16_C"
+	.space 1
+	.ascii "uXor_var_u16_C"
+	.space 1
+	.ascii "uXor_param_u16_u32"
+	.space 1
+	.ascii "uXor_var_u16_u32"
+	.space 1
+	.ascii "uXor_param_u16_i8"
+	.space 1
+	.ascii "uXor_var_u16_i8"
+	.space 1
+	.ascii "uXor_param_u16_I"
+	.space 1
+	.ascii "uXor_var_u16_I"
+	.space 1
+	.ascii "uXor_param_u16_u8"
+	.space 1
+	.ascii "uXor_var_u16_u8"
+	.space 1
+	.ascii "uXor_param_u16_LC"
+	.space 1
+	.ascii "uXor_var_u16_LC"
+	.space 1
+	.ascii "uXor_param_u16_i64"
+	.space 1
+	.ascii "uXor_var_u16_i64"
+	.space 1
+	.ascii "uXor_param_C_i32"
+	.space 1
+	.ascii "uXor_var_C_i32"
+	.space 1
+	.ascii "uXor_param_C_i16"
+	.space 1
+	.ascii "uXor_var_C_i16"
+	.space 1
+	.ascii "uXor_param_C_L"
+	.space 1
+	.ascii "uXor_var_C_L"
+	.space 1
+	.ascii "uXor_param_C_u64"
+	.space 1
+	.ascii "uXor_var_C_u64"
+	.space 1
+	.ascii "uXor_param_C_u16"
+	.space 1
+	.ascii "uXor_var_C_u16"
+	.space 1
+	.ascii "uXor_param_C_C"
+	.space 1
+	.ascii "uXor_var_C_C"
+	.space 1
+	.ascii "uXor_param_C_u32"
+	.space 1
+	.ascii "uXor_var_C_u32"
+	.space 1
+	.ascii "uXor_param_C_i8"
+	.space 1
+	.ascii "uXor_var_C_i8"
+	.space 1
+	.ascii "uXor_param_C_I"
+	.space 1
+	.ascii "uXor_var_C_I"
+	.space 1
+	.ascii "uXor_param_C_u8"
+	.space 1
+	.ascii "uXor_var_C_u8"
+	.space 1
+	.ascii "uXor_param_C_LC"
+	.space 1
+	.ascii "uXor_var_C_LC"
+	.space 1
+	.ascii "uXor_param_C_i64"
+	.space 1
+	.ascii "uXor_var_C_i64"
+	.space 1
+	.ascii "uXor_param_u32_i32"
+	.space 1
+	.ascii "uXor_var_u32_i32"
+	.space 1
+	.ascii "uXor_param_u32_i16"
+	.space 1
+	.ascii "uXor_var_u32_i16"
+	.space 1
+	.ascii "uXor_param_u32_L"
+	.space 1
+	.ascii "uXor_var_u32_L"
+	.space 1
+	.ascii "uXor_param_u32_u64"
+	.space 1
+	.ascii "uXor_var_u32_u64"
+	.space 1
+	.ascii "uXor_param_u32_u16"
+	.space 1
+	.ascii "uXor_var_u32_u16"
+	.space 1
+	.ascii "uXor_param_u32_C"
+	.space 1
+	.ascii "uXor_var_u32_C"
+	.space 1
+	.ascii "uXor_param_u32_u32"
+	.space 1
+	.ascii "uXor_var_u32_u32"
+	.space 1
+	.ascii "uXor_param_u32_i8"
+	.space 1
+	.ascii "uXor_var_u32_i8"
+	.space 1
+	.ascii "uXor_param_u32_I"
+	.space 1
+	.ascii "uXor_var_u32_I"
+	.space 1
+	.ascii "uXor_param_u32_u8"
+	.space 1
+	.ascii "uXor_var_u32_u8"
+	.space 1
+	.ascii "uXor_param_u32_LC"
+	.space 1
+	.ascii "uXor_var_u32_LC"
+	.space 1
+	.ascii "uXor_param_u32_i64"
+	.space 1
+	.ascii "uXor_var_u32_i64"
+	.space 1
+	.ascii "uXor_param_i8_i32"
+	.space 1
+	.ascii "uXor_var_i8_i32"
+	.space 1
+	.ascii "uXor_param_i8_i16"
+	.space 1
+	.ascii "uXor_var_i8_i16"
+	.space 1
+	.ascii "uXor_param_i8_L"
+	.space 1
+	.ascii "uXor_var_i8_L"
+	.space 1
+	.ascii "uXor_param_i8_u64"
+	.space 1
+	.ascii "uXor_var_i8_u64"
+	.space 1
+	.ascii "uXor_param_i8_u16"
+	.space 1
+	.ascii "uXor_var_i8_u16"
+	.space 1
+	.ascii "uXor_param_i8_C"
+	.space 1
+	.ascii "uXor_var_i8_C"
+	.space 1
+	.ascii "uXor_param_i8_u32"
+	.space 1
+	.ascii "uXor_var_i8_u32"
+	.space 1
+	.ascii "uXor_param_i8_i8"
+	.space 1
+	.ascii "uXor_var_i8_i8"
+	.space 1
+	.ascii "uXor_param_i8_I"
+	.space 1
+	.ascii "uXor_var_i8_I"
+	.space 1
+	.ascii "uXor_param_i8_u8"
+	.space 1
+	.ascii "uXor_var_i8_u8"
+	.space 1
+	.ascii "uXor_param_i8_LC"
+	.space 1
+	.ascii "uXor_var_i8_LC"
+	.space 1
+	.ascii "uXor_param_i8_i64"
+	.space 1
+	.ascii "uXor_var_i8_i64"
+	.space 1
+	.ascii "uXor_param_I_i32"
+	.space 1
+	.ascii "uXor_var_I_i32"
+	.space 1
+	.ascii "uXor_param_I_i16"
+	.space 1
+	.ascii "uXor_var_I_i16"
+	.space 1
+	.ascii "uXor_param_I_L"
+	.space 1
+	.ascii "uXor_var_I_L"
+	.space 1
+	.ascii "uXor_param_I_u64"
+	.space 1
+	.ascii "uXor_var_I_u64"
+	.space 1
+	.ascii "uXor_param_I_u16"
+	.space 1
+	.ascii "uXor_var_I_u16"
+	.space 1
+	.ascii "uXor_param_I_C"
+	.space 1
+	.ascii "uXor_var_I_C"
+	.space 1
+	.ascii "uXor_param_I_u32"
+	.space 1
+	.ascii "uXor_var_I_u32"
+	.space 1
+	.ascii "uXor_param_I_i8"
+	.space 1
+	.ascii "uXor_var_I_i8"
+	.space 1
+	.ascii "uXor_param_I_I"
+	.space 1
+	.ascii "uXor_var_I_I"
+	.space 1
+	.ascii "uXor_param_I_u8"
+	.space 1
+	.ascii "uXor_var_I_u8"
+	.space 1
+	.ascii "uXor_param_I_LC"
+	.space 1
+	.ascii "uXor_var_I_LC"
+	.space 1
+	.ascii "uXor_param_I_i64"
+	.space 1
+	.ascii "uXor_var_I_i64"
+	.space 1
+	.ascii "uXor_param_u8_i32"
+	.space 1
+	.ascii "uXor_var_u8_i32"
+	.space 1
+	.ascii "uXor_param_u8_i16"
+	.space 1
+	.ascii "uXor_var_u8_i16"
+	.space 1
+	.ascii "uXor_param_u8_L"
+	.space 1
+	.ascii "uXor_var_u8_L"
+	.space 1
+	.ascii "uXor_param_u8_u64"
+	.space 1
+	.ascii "uXor_var_u8_u64"
+	.space 1
+	.ascii "uXor_param_u8_u16"
+	.space 1
+	.ascii "uXor_var_u8_u16"
+	.space 1
+	.ascii "uXor_param_u8_C"
+	.space 1
+	.ascii "uXor_var_u8_C"
+	.space 1
+	.ascii "uXor_param_u8_u32"
+	.space 1
+	.ascii "uXor_var_u8_u32"
+	.space 1
+	.ascii "uXor_param_u8_i8"
+	.space 1
+	.ascii "uXor_var_u8_i8"
+	.space 1
+	.ascii "uXor_param_u8_I"
+	.space 1
+	.ascii "uXor_var_u8_I"
+	.space 1
+	.ascii "uXor_param_u8_u8"
+	.space 1
+	.ascii "uXor_var_u8_u8"
+	.space 1
+	.ascii "uXor_param_u8_LC"
+	.space 1
+	.ascii "uXor_var_u8_LC"
+	.space 1
+	.ascii "uXor_param_u8_i64"
+	.space 1
+	.ascii "uXor_var_u8_i64"
+	.space 1
+	.ascii "uXor_param_LC_i32"
+	.space 1
+	.ascii "uXor_var_LC_i32"
+	.space 1
+	.ascii "uXor_param_LC_i16"
+	.space 1
+	.ascii "uXor_var_LC_i16"
+	.space 1
+	.ascii "uXor_param_LC_L"
+	.space 1
+	.ascii "uXor_var_LC_L"
+	.space 1
+	.ascii "uXor_param_LC_u64"
+	.space 1
+	.ascii "uXor_var_LC_u64"
+	.space 1
+	.ascii "uXor_param_LC_u16"
+	.space 1
+	.ascii "uXor_var_LC_u16"
+	.space 1
+	.ascii "uXor_param_LC_C"
+	.space 1
+	.ascii "uXor_var_LC_C"
+	.space 1
+	.ascii "uXor_param_LC_u32"
+	.space 1
+	.ascii "uXor_var_LC_u32"
+	.space 1
+	.ascii "uXor_param_LC_i8"
+	.space 1
+	.ascii "uXor_var_LC_i8"
+	.space 1
+	.ascii "uXor_param_LC_I"
+	.space 1
+	.ascii "uXor_var_LC_I"
+	.space 1
+	.ascii "uXor_param_LC_u8"
+	.space 1
+	.ascii "uXor_var_LC_u8"
+	.space 1
+	.ascii "uXor_param_LC_LC"
+	.space 1
+	.ascii "uXor_var_LC_LC"
+	.space 1
+	.ascii "uXor_param_LC_i64"
+	.space 1
+	.ascii "uXor_var_LC_i64"
+	.space 1
+	.ascii "uXor_param_i64_i32"
+	.space 1
+	.ascii "uXor_var_i64_i32"
+	.space 1
+	.ascii "uXor_param_i64_i16"
+	.space 1
+	.ascii "uXor_var_i64_i16"
+	.space 1
+	.ascii "uXor_param_i64_L"
+	.space 1
+	.ascii "uXor_var_i64_L"
+	.space 1
+	.ascii "uXor_param_i64_u64"
+	.space 1
+	.ascii "uXor_var_i64_u64"
+	.space 1
+	.ascii "uXor_param_i64_u16"
+	.space 1
+	.ascii "uXor_var_i64_u16"
+	.space 1
+	.ascii "uXor_param_i64_C"
+	.space 1
+	.ascii "uXor_var_i64_C"
+	.space 1
+	.ascii "uXor_param_i64_u32"
+	.space 1
+	.ascii "uXor_var_i64_u32"
+	.space 1
+	.ascii "uXor_param_i64_i8"
+	.space 1
+	.ascii "uXor_var_i64_i8"
+	.space 1
+	.ascii "uXor_param_i64_I"
+	.space 1
+	.ascii "uXor_var_i64_I"
+	.space 1
+	.ascii "uXor_param_i64_u8"
+	.space 1
+	.ascii "uXor_var_i64_u8"
+	.space 1
+	.ascii "uXor_param_i64_LC"
+	.space 1
+	.ascii "uXor_var_i64_LC"
+	.space 1
+	.ascii "uXor_param_i64_i64"
+	.space 1
+	.ascii "uXor_var_i64_i64"
 	.space 2
 	.quad	_Xor_M3
 	.quad	_L_1
-	.quad	_Xor__uXor_param_u32_u32
-	.quad	_L_1+7
-	.quad	_Xor__uXor_var_u32_u32
-	.quad	_L_1+26
-	.quad	_Xor__uXor_param_u32_L
-	.quad	_L_1+43
-	.quad	_Xor__uXor_var_u32_L
-	.quad	_L_1+60
-	.quad	_Xor__uXor_param_u32_i8
-	.quad	_L_1+75
-	.quad	_Xor__uXor_var_u32_i8
-	.quad	_L_1+93
-	.quad	_Xor__uXor_param_u32_u8
-	.quad	_L_1+109
-	.quad	_Xor__uXor_var_u32_u8
-	.quad	_L_1+127
-	.quad	_Xor__uXor_param_u32_C
-	.quad	_L_1+143
-	.quad	_Xor__uXor_var_u32_C
-	.quad	_L_1+160
-	.quad	_Xor__uXor_param_u32_i64
-	.quad	_L_1+175
-	.quad	_Xor__uXor_var_u32_i64
-	.quad	_L_1+194
-	.quad	_Xor__uXor_param_u32_I
-	.quad	_L_1+211
-	.quad	_Xor__uXor_var_u32_I
-	.quad	_L_1+228
-	.quad	_Xor__uXor_param_u32_i32
-	.quad	_L_1+243
-	.quad	_Xor__uXor_var_u32_i32
-	.quad	_L_1+262
-	.quad	_Xor__uXor_param_u32_i16
-	.quad	_L_1+279
-	.quad	_Xor__uXor_var_u32_i16
-	.quad	_L_1+298
-	.quad	_Xor__uXor_param_u32_LC
-	.quad	_L_1+315
-	.quad	_Xor__uXor_var_u32_LC
-	.quad	_L_1+333
-	.quad	_Xor__uXor_param_u32_u64
-	.quad	_L_1+349
-	.quad	_Xor__uXor_var_u32_u64
-	.quad	_L_1+368
-	.quad	_Xor__uXor_param_u32_u16
-	.quad	_L_1+385
-	.quad	_Xor__uXor_var_u32_u16
-	.quad	_L_1+404
-	.quad	_Xor__uXor_param_L_u32
-	.quad	_L_1+421
-	.quad	_Xor__uXor_var_L_u32
-	.quad	_L_1+438
-	.quad	_Xor__uXor_param_L_L
-	.quad	_L_1+453
-	.quad	_Xor__uXor_var_L_L
-	.quad	_L_1+468
-	.quad	_Xor__uXor_param_L_i8
-	.quad	_L_1+481
-	.quad	_Xor__uXor_var_L_i8
-	.quad	_L_1+497
-	.quad	_Xor__uXor_param_L_u8
-	.quad	_L_1+511
-	.quad	_Xor__uXor_var_L_u8
-	.quad	_L_1+527
-	.quad	_Xor__uXor_param_L_C
-	.quad	_L_1+541
-	.quad	_Xor__uXor_var_L_C
-	.quad	_L_1+556
-	.quad	_Xor__uXor_param_L_i64
-	.quad	_L_1+569
-	.quad	_Xor__uXor_var_L_i64
-	.quad	_L_1+586
-	.quad	_Xor__uXor_param_L_I
-	.quad	_L_1+601
-	.quad	_Xor__uXor_var_L_I
-	.quad	_L_1+616
-	.quad	_Xor__uXor_param_L_i32
-	.quad	_L_1+629
-	.quad	_Xor__uXor_var_L_i32
-	.quad	_L_1+646
-	.quad	_Xor__uXor_param_L_i16
-	.quad	_L_1+661
-	.quad	_Xor__uXor_var_L_i16
-	.quad	_L_1+678
-	.quad	_Xor__uXor_param_L_LC
-	.quad	_L_1+693
-	.quad	_Xor__uXor_var_L_LC
-	.quad	_L_1+709
-	.quad	_Xor__uXor_param_L_u64
-	.quad	_L_1+723
-	.quad	_Xor__uXor_var_L_u64
-	.quad	_L_1+740
-	.quad	_Xor__uXor_param_L_u16
-	.quad	_L_1+755
-	.quad	_Xor__uXor_var_L_u16
-	.quad	_L_1+772
-	.quad	_Xor__uXor_param_i8_u32
-	.quad	_L_1+787
-	.quad	_Xor__uXor_var_i8_u32
-	.quad	_L_1+805
-	.quad	_Xor__uXor_param_i8_L
-	.quad	_L_1+821
-	.quad	_Xor__uXor_var_i8_L
-	.quad	_L_1+837
-	.quad	_Xor__uXor_param_i8_i8
-	.quad	_L_1+851
-	.quad	_Xor__uXor_var_i8_i8
-	.quad	_L_1+868
-	.quad	_Xor__uXor_param_i8_u8
-	.quad	_L_1+883
-	.quad	_Xor__uXor_var_i8_u8
-	.quad	_L_1+900
-	.quad	_Xor__uXor_param_i8_C
-	.quad	_L_1+915
-	.quad	_Xor__uXor_var_i8_C
-	.quad	_L_1+931
-	.quad	_Xor__uXor_param_i8_i64
-	.quad	_L_1+945
-	.quad	_Xor__uXor_var_i8_i64
-	.quad	_L_1+963
-	.quad	_Xor__uXor_param_i8_I
-	.quad	_L_1+979
-	.quad	_Xor__uXor_var_i8_I
-	.quad	_L_1+995
-	.quad	_Xor__uXor_param_i8_i32
-	.quad	_L_1+1009
-	.quad	_Xor__uXor_var_i8_i32
-	.quad	_L_1+1027
-	.quad	_Xor__uXor_param_i8_i16
-	.quad	_L_1+1043
-	.quad	_Xor__uXor_var_i8_i16
-	.quad	_L_1+1061
-	.quad	_Xor__uXor_param_i8_LC
-	.quad	_L_1+1077
-	.quad	_Xor__uXor_var_i8_LC
-	.quad	_L_1+1094
-	.quad	_Xor__uXor_param_i8_u64
-	.quad	_L_1+1109
-	.quad	_Xor__uXor_var_i8_u64
-	.quad	_L_1+1127
-	.quad	_Xor__uXor_param_i8_u16
-	.quad	_L_1+1143
-	.quad	_Xor__uXor_var_i8_u16
-	.quad	_L_1+1161
-	.quad	_Xor__uXor_param_u8_u32
-	.quad	_L_1+1177
-	.quad	_Xor__uXor_var_u8_u32
-	.quad	_L_1+1195
-	.quad	_Xor__uXor_param_u8_L
-	.quad	_L_1+1211
-	.quad	_Xor__uXor_var_u8_L
-	.quad	_L_1+1227
-	.quad	_Xor__uXor_param_u8_i8
-	.quad	_L_1+1241
-	.quad	_Xor__uXor_var_u8_i8
-	.quad	_L_1+1258
-	.quad	_Xor__uXor_param_u8_u8
-	.quad	_L_1+1273
-	.quad	_Xor__uXor_var_u8_u8
-	.quad	_L_1+1290
-	.quad	_Xor__uXor_param_u8_C
-	.quad	_L_1+1305
-	.quad	_Xor__uXor_var_u8_C
-	.quad	_L_1+1321
-	.quad	_Xor__uXor_param_u8_i64
-	.quad	_L_1+1335
-	.quad	_Xor__uXor_var_u8_i64
-	.quad	_L_1+1353
-	.quad	_Xor__uXor_param_u8_I
-	.quad	_L_1+1369
-	.quad	_Xor__uXor_var_u8_I
-	.quad	_L_1+1385
-	.quad	_Xor__uXor_param_u8_i32
-	.quad	_L_1+1399
-	.quad	_Xor__uXor_var_u8_i32
-	.quad	_L_1+1417
-	.quad	_Xor__uXor_param_u8_i16
-	.quad	_L_1+1433
-	.quad	_Xor__uXor_var_u8_i16
-	.quad	_L_1+1451
-	.quad	_Xor__uXor_param_u8_LC
-	.quad	_L_1+1467
-	.quad	_Xor__uXor_var_u8_LC
-	.quad	_L_1+1484
-	.quad	_Xor__uXor_param_u8_u64
-	.quad	_L_1+1499
-	.quad	_Xor__uXor_var_u8_u64
-	.quad	_L_1+1517
-	.quad	_Xor__uXor_param_u8_u16
-	.quad	_L_1+1533
-	.quad	_Xor__uXor_var_u8_u16
-	.quad	_L_1+1551
-	.quad	_Xor__uXor_param_C_u32
-	.quad	_L_1+1567
-	.quad	_Xor__uXor_var_C_u32
-	.quad	_L_1+1584
-	.quad	_Xor__uXor_param_C_L
-	.quad	_L_1+1599
-	.quad	_Xor__uXor_var_C_L
-	.quad	_L_1+1614
-	.quad	_Xor__uXor_param_C_i8
-	.quad	_L_1+1627
-	.quad	_Xor__uXor_var_C_i8
-	.quad	_L_1+1643
-	.quad	_Xor__uXor_param_C_u8
-	.quad	_L_1+1657
-	.quad	_Xor__uXor_var_C_u8
-	.quad	_L_1+1673
-	.quad	_Xor__uXor_param_C_C
-	.quad	_L_1+1687
-	.quad	_Xor__uXor_var_C_C
-	.quad	_L_1+1702
-	.quad	_Xor__uXor_param_C_i64
-	.quad	_L_1+1715
-	.quad	_Xor__uXor_var_C_i64
-	.quad	_L_1+1732
-	.quad	_Xor__uXor_param_C_I
-	.quad	_L_1+1747
-	.quad	_Xor__uXor_var_C_I
-	.quad	_L_1+1762
-	.quad	_Xor__uXor_param_C_i32
-	.quad	_L_1+1775
-	.quad	_Xor__uXor_var_C_i32
-	.quad	_L_1+1792
-	.quad	_Xor__uXor_param_C_i16
-	.quad	_L_1+1807
-	.quad	_Xor__uXor_var_C_i16
-	.quad	_L_1+1824
-	.quad	_Xor__uXor_param_C_LC
-	.quad	_L_1+1839
-	.quad	_Xor__uXor_var_C_LC
-	.quad	_L_1+1855
-	.quad	_Xor__uXor_param_C_u64
-	.quad	_L_1+1869
-	.quad	_Xor__uXor_var_C_u64
-	.quad	_L_1+1886
-	.quad	_Xor__uXor_param_C_u16
-	.quad	_L_1+1901
-	.quad	_Xor__uXor_var_C_u16
-	.quad	_L_1+1918
-	.quad	_Xor__uXor_param_i64_u32
-	.quad	_L_1+1933
-	.quad	_Xor__uXor_var_i64_u32
-	.quad	_L_1+1952
-	.quad	_Xor__uXor_param_i64_L
-	.quad	_L_1+1969
-	.quad	_Xor__uXor_var_i64_L
-	.quad	_L_1+1986
-	.quad	_Xor__uXor_param_i64_i8
-	.quad	_L_1+2001
-	.quad	_Xor__uXor_var_i64_i8
-	.quad	_L_1+2019
-	.quad	_Xor__uXor_param_i64_u8
-	.quad	_L_1+2035
-	.quad	_Xor__uXor_var_i64_u8
-	.quad	_L_1+2053
-	.quad	_Xor__uXor_param_i64_C
-	.quad	_L_1+2069
-	.quad	_Xor__uXor_var_i64_C
-	.quad	_L_1+2086
-	.quad	_Xor__uXor_param_i64_i64
-	.quad	_L_1+2101
-	.quad	_Xor__uXor_var_i64_i64
-	.quad	_L_1+2120
-	.quad	_Xor__uXor_param_i64_I
-	.quad	_L_1+2137
-	.quad	_Xor__uXor_var_i64_I
-	.quad	_L_1+2154
-	.quad	_Xor__uXor_param_i64_i32
-	.quad	_L_1+2169
-	.quad	_Xor__uXor_var_i64_i32
-	.quad	_L_1+2188
-	.quad	_Xor__uXor_param_i64_i16
-	.quad	_L_1+2205
-	.quad	_Xor__uXor_var_i64_i16
-	.quad	_L_1+2224
-	.quad	_Xor__uXor_param_i64_LC
-	.quad	_L_1+2241
-	.quad	_Xor__uXor_var_i64_LC
-	.quad	_L_1+2259
-	.quad	_Xor__uXor_param_i64_u64
-	.quad	_L_1+2275
-	.quad	_Xor__uXor_var_i64_u64
-	.quad	_L_1+2294
-	.quad	_Xor__uXor_param_i64_u16
-	.quad	_L_1+2311
-	.quad	_Xor__uXor_var_i64_u16
-	.quad	_L_1+2330
-	.quad	_Xor__uXor_param_I_u32
-	.quad	_L_1+2347
-	.quad	_Xor__uXor_var_I_u32
-	.quad	_L_1+2364
-	.quad	_Xor__uXor_param_I_L
-	.quad	_L_1+2379
-	.quad	_Xor__uXor_var_I_L
-	.quad	_L_1+2394
-	.quad	_Xor__uXor_param_I_i8
-	.quad	_L_1+2407
-	.quad	_Xor__uXor_var_I_i8
-	.quad	_L_1+2423
-	.quad	_Xor__uXor_param_I_u8
-	.quad	_L_1+2437
-	.quad	_Xor__uXor_var_I_u8
-	.quad	_L_1+2453
-	.quad	_Xor__uXor_param_I_C
-	.quad	_L_1+2467
-	.quad	_Xor__uXor_var_I_C
-	.quad	_L_1+2482
-	.quad	_Xor__uXor_param_I_i64
-	.quad	_L_1+2495
-	.quad	_Xor__uXor_var_I_i64
-	.quad	_L_1+2512
-	.quad	_Xor__uXor_param_I_I
-	.quad	_L_1+2527
-	.quad	_Xor__uXor_var_I_I
-	.quad	_L_1+2542
-	.quad	_Xor__uXor_param_I_i32
-	.quad	_L_1+2555
-	.quad	_Xor__uXor_var_I_i32
-	.quad	_L_1+2572
-	.quad	_Xor__uXor_param_I_i16
-	.quad	_L_1+2587
-	.quad	_Xor__uXor_var_I_i16
-	.quad	_L_1+2604
-	.quad	_Xor__uXor_param_I_LC
-	.quad	_L_1+2619
-	.quad	_Xor__uXor_var_I_LC
-	.quad	_L_1+2635
-	.quad	_Xor__uXor_param_I_u64
-	.quad	_L_1+2649
-	.quad	_Xor__uXor_var_I_u64
-	.quad	_L_1+2666
-	.quad	_Xor__uXor_param_I_u16
-	.quad	_L_1+2681
-	.quad	_Xor__uXor_var_I_u16
-	.quad	_L_1+2698
-	.quad	_Xor__uXor_param_i32_u32
-	.quad	_L_1+2713
-	.quad	_Xor__uXor_var_i32_u32
-	.quad	_L_1+2732
-	.quad	_Xor__uXor_param_i32_L
-	.quad	_L_1+2749
-	.quad	_Xor__uXor_var_i32_L
-	.quad	_L_1+2766
-	.quad	_Xor__uXor_param_i32_i8
-	.quad	_L_1+2781
-	.quad	_Xor__uXor_var_i32_i8
-	.quad	_L_1+2799
-	.quad	_Xor__uXor_param_i32_u8
-	.quad	_L_1+2815
-	.quad	_Xor__uXor_var_i32_u8
-	.quad	_L_1+2833
-	.quad	_Xor__uXor_param_i32_C
-	.quad	_L_1+2849
-	.quad	_Xor__uXor_var_i32_C
-	.quad	_L_1+2866
-	.quad	_Xor__uXor_param_i32_i64
-	.quad	_L_1+2881
-	.quad	_Xor__uXor_var_i32_i64
-	.quad	_L_1+2900
-	.quad	_Xor__uXor_param_i32_I
-	.quad	_L_1+2917
-	.quad	_Xor__uXor_var_i32_I
-	.quad	_L_1+2934
 	.quad	_Xor__uXor_param_i32_i32
-	.quad	_L_1+2949
+	.quad	_L_1+7
 	.quad	_Xor__uXor_var_i32_i32
-	.quad	_L_1+2968
+	.quad	_L_1+26
 	.quad	_Xor__uXor_param_i32_i16
-	.quad	_L_1+2985
+	.quad	_L_1+43
 	.quad	_Xor__uXor_var_i32_i16
-	.quad	_L_1+3004
-	.quad	_Xor__uXor_param_i32_LC
-	.quad	_L_1+3021
-	.quad	_Xor__uXor_var_i32_LC
-	.quad	_L_1+3039
+	.quad	_L_1+62
+	.quad	_Xor__uXor_param_i32_L
+	.quad	_L_1+79
+	.quad	_Xor__uXor_var_i32_L
+	.quad	_L_1+96
 	.quad	_Xor__uXor_param_i32_u64
-	.quad	_L_1+3055
+	.quad	_L_1+111
 	.quad	_Xor__uXor_var_i32_u64
-	.quad	_L_1+3074
+	.quad	_L_1+130
 	.quad	_Xor__uXor_param_i32_u16
-	.quad	_L_1+3091
+	.quad	_L_1+147
 	.quad	_Xor__uXor_var_i32_u16
-	.quad	_L_1+3110
-	.quad	_Xor__uXor_param_i16_u32
-	.quad	_L_1+3127
-	.quad	_Xor__uXor_var_i16_u32
-	.quad	_L_1+3146
-	.quad	_Xor__uXor_param_i16_L
-	.quad	_L_1+3163
-	.quad	_Xor__uXor_var_i16_L
-	.quad	_L_1+3180
-	.quad	_Xor__uXor_param_i16_i8
-	.quad	_L_1+3195
-	.quad	_Xor__uXor_var_i16_i8
-	.quad	_L_1+3213
-	.quad	_Xor__uXor_param_i16_u8
-	.quad	_L_1+3229
-	.quad	_Xor__uXor_var_i16_u8
-	.quad	_L_1+3247
-	.quad	_Xor__uXor_param_i16_C
-	.quad	_L_1+3263
-	.quad	_Xor__uXor_var_i16_C
-	.quad	_L_1+3280
-	.quad	_Xor__uXor_param_i16_i64
-	.quad	_L_1+3295
-	.quad	_Xor__uXor_var_i16_i64
-	.quad	_L_1+3314
-	.quad	_Xor__uXor_param_i16_I
-	.quad	_L_1+3331
-	.quad	_Xor__uXor_var_i16_I
-	.quad	_L_1+3348
+	.quad	_L_1+166
+	.quad	_Xor__uXor_param_i32_C
+	.quad	_L_1+183
+	.quad	_Xor__uXor_var_i32_C
+	.quad	_L_1+200
+	.quad	_Xor__uXor_param_i32_u32
+	.quad	_L_1+215
+	.quad	_Xor__uXor_var_i32_u32
+	.quad	_L_1+234
+	.quad	_Xor__uXor_param_i32_i8
+	.quad	_L_1+251
+	.quad	_Xor__uXor_var_i32_i8
+	.quad	_L_1+269
+	.quad	_Xor__uXor_param_i32_I
+	.quad	_L_1+285
+	.quad	_Xor__uXor_var_i32_I
+	.quad	_L_1+302
+	.quad	_Xor__uXor_param_i32_u8
+	.quad	_L_1+317
+	.quad	_Xor__uXor_var_i32_u8
+	.quad	_L_1+335
+	.quad	_Xor__uXor_param_i32_LC
+	.quad	_L_1+351
+	.quad	_Xor__uXor_var_i32_LC
+	.quad	_L_1+369
+	.quad	_Xor__uXor_param_i32_i64
+	.quad	_L_1+385
+	.quad	_Xor__uXor_var_i32_i64
+	.quad	_L_1+404
 	.quad	_Xor__uXor_param_i16_i32
-	.quad	_L_1+3363
+	.quad	_L_1+421
 	.quad	_Xor__uXor_var_i16_i32
-	.quad	_L_1+3382
+	.quad	_L_1+440
 	.quad	_Xor__uXor_param_i16_i16
-	.quad	_L_1+3399
+	.quad	_L_1+457
 	.quad	_Xor__uXor_var_i16_i16
-	.quad	_L_1+3418
-	.quad	_Xor__uXor_param_i16_LC
-	.quad	_L_1+3435
-	.quad	_Xor__uXor_var_i16_LC
-	.quad	_L_1+3453
+	.quad	_L_1+476
+	.quad	_Xor__uXor_param_i16_L
+	.quad	_L_1+493
+	.quad	_Xor__uXor_var_i16_L
+	.quad	_L_1+510
 	.quad	_Xor__uXor_param_i16_u64
-	.quad	_L_1+3469
+	.quad	_L_1+525
 	.quad	_Xor__uXor_var_i16_u64
-	.quad	_L_1+3488
+	.quad	_L_1+544
 	.quad	_Xor__uXor_param_i16_u16
-	.quad	_L_1+3505
+	.quad	_L_1+561
 	.quad	_Xor__uXor_var_i16_u16
-	.quad	_L_1+3524
-	.quad	_Xor__uXor_param_LC_u32
-	.quad	_L_1+3541
-	.quad	_Xor__uXor_var_LC_u32
-	.quad	_L_1+3559
-	.quad	_Xor__uXor_param_LC_L
-	.quad	_L_1+3575
-	.quad	_Xor__uXor_var_LC_L
-	.quad	_L_1+3591
-	.quad	_Xor__uXor_param_LC_i8
-	.quad	_L_1+3605
-	.quad	_Xor__uXor_var_LC_i8
-	.quad	_L_1+3622
-	.quad	_Xor__uXor_param_LC_u8
-	.quad	_L_1+3637
-	.quad	_Xor__uXor_var_LC_u8
-	.quad	_L_1+3654
-	.quad	_Xor__uXor_param_LC_C
-	.quad	_L_1+3669
-	.quad	_Xor__uXor_var_LC_C
-	.quad	_L_1+3685
-	.quad	_Xor__uXor_param_LC_i64
-	.quad	_L_1+3699
-	.quad	_Xor__uXor_var_LC_i64
-	.quad	_L_1+3717
-	.quad	_Xor__uXor_param_LC_I
-	.quad	_L_1+3733
-	.quad	_Xor__uXor_var_LC_I
-	.quad	_L_1+3749
-	.quad	_Xor__uXor_param_LC_i32
-	.quad	_L_1+3763
-	.quad	_Xor__uXor_var_LC_i32
-	.quad	_L_1+3781
-	.quad	_Xor__uXor_param_LC_i16
-	.quad	_L_1+3797
-	.quad	_Xor__uXor_var_LC_i16
-	.quad	_L_1+3815
-	.quad	_Xor__uXor_param_LC_LC
-	.quad	_L_1+3831
-	.quad	_Xor__uXor_var_LC_LC
-	.quad	_L_1+3848
-	.quad	_Xor__uXor_param_LC_u64
-	.quad	_L_1+3863
-	.quad	_Xor__uXor_var_LC_u64
-	.quad	_L_1+3881
-	.quad	_Xor__uXor_param_LC_u16
-	.quad	_L_1+3897
-	.quad	_Xor__uXor_var_LC_u16
-	.quad	_L_1+3915
-	.quad	_Xor__uXor_param_u64_u32
-	.quad	_L_1+3931
-	.quad	_Xor__uXor_var_u64_u32
-	.quad	_L_1+3950
-	.quad	_Xor__uXor_param_u64_L
-	.quad	_L_1+3967
-	.quad	_Xor__uXor_var_u64_L
-	.quad	_L_1+3984
-	.quad	_Xor__uXor_param_u64_i8
-	.quad	_L_1+3999
-	.quad	_Xor__uXor_var_u64_i8
-	.quad	_L_1+4017
-	.quad	_Xor__uXor_param_u64_u8
-	.quad	_L_1+4033
-	.quad	_Xor__uXor_var_u64_u8
-	.quad	_L_1+4051
-	.quad	_Xor__uXor_param_u64_C
-	.quad	_L_1+4067
-	.quad	_Xor__uXor_var_u64_C
-	.quad	_L_1+4084
-	.quad	_Xor__uXor_param_u64_i64
-	.quad	_L_1+4099
-	.quad	_Xor__uXor_var_u64_i64
-	.quad	_L_1+4118
-	.quad	_Xor__uXor_param_u64_I
-	.quad	_L_1+4135
-	.quad	_Xor__uXor_var_u64_I
-	.quad	_L_1+4152
+	.quad	_L_1+580
+	.quad	_Xor__uXor_param_i16_C
+	.quad	_L_1+597
+	.quad	_Xor__uXor_var_i16_C
+	.quad	_L_1+614
+	.quad	_Xor__uXor_param_i16_u32
+	.quad	_L_1+629
+	.quad	_Xor__uXor_var_i16_u32
+	.quad	_L_1+648
+	.quad	_Xor__uXor_param_i16_i8
+	.quad	_L_1+665
+	.quad	_Xor__uXor_var_i16_i8
+	.quad	_L_1+683
+	.quad	_Xor__uXor_param_i16_I
+	.quad	_L_1+699
+	.quad	_Xor__uXor_var_i16_I
+	.quad	_L_1+716
+	.quad	_Xor__uXor_param_i16_u8
+	.quad	_L_1+731
+	.quad	_Xor__uXor_var_i16_u8
+	.quad	_L_1+749
+	.quad	_Xor__uXor_param_i16_LC
+	.quad	_L_1+765
+	.quad	_Xor__uXor_var_i16_LC
+	.quad	_L_1+783
+	.quad	_Xor__uXor_param_i16_i64
+	.quad	_L_1+799
+	.quad	_Xor__uXor_var_i16_i64
+	.quad	_L_1+818
+	.quad	_Xor__uXor_param_L_i32
+	.quad	_L_1+835
+	.quad	_Xor__uXor_var_L_i32
+	.quad	_L_1+852
+	.quad	_Xor__uXor_param_L_i16
+	.quad	_L_1+867
+	.quad	_Xor__uXor_var_L_i16
+	.quad	_L_1+884
+	.quad	_Xor__uXor_param_L_L
+	.quad	_L_1+899
+	.quad	_Xor__uXor_var_L_L
+	.quad	_L_1+914
+	.quad	_Xor__uXor_param_L_u64
+	.quad	_L_1+927
+	.quad	_Xor__uXor_var_L_u64
+	.quad	_L_1+944
+	.quad	_Xor__uXor_param_L_u16
+	.quad	_L_1+959
+	.quad	_Xor__uXor_var_L_u16
+	.quad	_L_1+976
+	.quad	_Xor__uXor_param_L_C
+	.quad	_L_1+991
+	.quad	_Xor__uXor_var_L_C
+	.quad	_L_1+1006
+	.quad	_Xor__uXor_param_L_u32
+	.quad	_L_1+1019
+	.quad	_Xor__uXor_var_L_u32
+	.quad	_L_1+1036
+	.quad	_Xor__uXor_param_L_i8
+	.quad	_L_1+1051
+	.quad	_Xor__uXor_var_L_i8
+	.quad	_L_1+1067
+	.quad	_Xor__uXor_param_L_I
+	.quad	_L_1+1081
+	.quad	_Xor__uXor_var_L_I
+	.quad	_L_1+1096
+	.quad	_Xor__uXor_param_L_u8
+	.quad	_L_1+1109
+	.quad	_Xor__uXor_var_L_u8
+	.quad	_L_1+1125
+	.quad	_Xor__uXor_param_L_LC
+	.quad	_L_1+1139
+	.quad	_Xor__uXor_var_L_LC
+	.quad	_L_1+1155
+	.quad	_Xor__uXor_param_L_i64
+	.quad	_L_1+1169
+	.quad	_Xor__uXor_var_L_i64
+	.quad	_L_1+1186
 	.quad	_Xor__uXor_param_u64_i32
-	.quad	_L_1+4167
+	.quad	_L_1+1201
 	.quad	_Xor__uXor_var_u64_i32
-	.quad	_L_1+4186
+	.quad	_L_1+1220
 	.quad	_Xor__uXor_param_u64_i16
-	.quad	_L_1+4203
+	.quad	_L_1+1237
 	.quad	_Xor__uXor_var_u64_i16
-	.quad	_L_1+4222
-	.quad	_Xor__uXor_param_u64_LC
-	.quad	_L_1+4239
-	.quad	_Xor__uXor_var_u64_LC
-	.quad	_L_1+4257
+	.quad	_L_1+1256
+	.quad	_Xor__uXor_param_u64_L
+	.quad	_L_1+1273
+	.quad	_Xor__uXor_var_u64_L
+	.quad	_L_1+1290
 	.quad	_Xor__uXor_param_u64_u64
-	.quad	_L_1+4273
+	.quad	_L_1+1305
 	.quad	_Xor__uXor_var_u64_u64
-	.quad	_L_1+4292
+	.quad	_L_1+1324
 	.quad	_Xor__uXor_param_u64_u16
-	.quad	_L_1+4309
+	.quad	_L_1+1341
 	.quad	_Xor__uXor_var_u64_u16
-	.quad	_L_1+4328
-	.quad	_Xor__uXor_param_u16_u32
-	.quad	_L_1+4345
-	.quad	_Xor__uXor_var_u16_u32
-	.quad	_L_1+4364
-	.quad	_Xor__uXor_param_u16_L
-	.quad	_L_1+4381
-	.quad	_Xor__uXor_var_u16_L
-	.quad	_L_1+4398
-	.quad	_Xor__uXor_param_u16_i8
-	.quad	_L_1+4413
-	.quad	_Xor__uXor_var_u16_i8
-	.quad	_L_1+4431
-	.quad	_Xor__uXor_param_u16_u8
-	.quad	_L_1+4447
-	.quad	_Xor__uXor_var_u16_u8
-	.quad	_L_1+4465
-	.quad	_Xor__uXor_param_u16_C
-	.quad	_L_1+4481
-	.quad	_Xor__uXor_var_u16_C
-	.quad	_L_1+4498
-	.quad	_Xor__uXor_param_u16_i64
-	.quad	_L_1+4513
-	.quad	_Xor__uXor_var_u16_i64
-	.quad	_L_1+4532
-	.quad	_Xor__uXor_param_u16_I
-	.quad	_L_1+4549
-	.quad	_Xor__uXor_var_u16_I
-	.quad	_L_1+4566
+	.quad	_L_1+1360
+	.quad	_Xor__uXor_param_u64_C
+	.quad	_L_1+1377
+	.quad	_Xor__uXor_var_u64_C
+	.quad	_L_1+1394
+	.quad	_Xor__uXor_param_u64_u32
+	.quad	_L_1+1409
+	.quad	_Xor__uXor_var_u64_u32
+	.quad	_L_1+1428
+	.quad	_Xor__uXor_param_u64_i8
+	.quad	_L_1+1445
+	.quad	_Xor__uXor_var_u64_i8
+	.quad	_L_1+1463
+	.quad	_Xor__uXor_param_u64_I
+	.quad	_L_1+1479
+	.quad	_Xor__uXor_var_u64_I
+	.quad	_L_1+1496
+	.quad	_Xor__uXor_param_u64_u8
+	.quad	_L_1+1511
+	.quad	_Xor__uXor_var_u64_u8
+	.quad	_L_1+1529
+	.quad	_Xor__uXor_param_u64_LC
+	.quad	_L_1+1545
+	.quad	_Xor__uXor_var_u64_LC
+	.quad	_L_1+1563
+	.quad	_Xor__uXor_param_u64_i64
+	.quad	_L_1+1579
+	.quad	_Xor__uXor_var_u64_i64
+	.quad	_L_1+1598
 	.quad	_Xor__uXor_param_u16_i32
-	.quad	_L_1+4581
+	.quad	_L_1+1615
 	.quad	_Xor__uXor_var_u16_i32
-	.quad	_L_1+4600
+	.quad	_L_1+1634
 	.quad	_Xor__uXor_param_u16_i16
-	.quad	_L_1+4617
+	.quad	_L_1+1651
 	.quad	_Xor__uXor_var_u16_i16
-	.quad	_L_1+4636
-	.quad	_Xor__uXor_param_u16_LC
-	.quad	_L_1+4653
-	.quad	_Xor__uXor_var_u16_LC
-	.quad	_L_1+4671
+	.quad	_L_1+1670
+	.quad	_Xor__uXor_param_u16_L
+	.quad	_L_1+1687
+	.quad	_Xor__uXor_var_u16_L
+	.quad	_L_1+1704
 	.quad	_Xor__uXor_param_u16_u64
-	.quad	_L_1+4687
+	.quad	_L_1+1719
 	.quad	_Xor__uXor_var_u16_u64
-	.quad	_L_1+4706
+	.quad	_L_1+1738
 	.quad	_Xor__uXor_param_u16_u16
-	.quad	_L_1+4723
+	.quad	_L_1+1755
 	.quad	_Xor__uXor_var_u16_u16
+	.quad	_L_1+1774
+	.quad	_Xor__uXor_param_u16_C
+	.quad	_L_1+1791
+	.quad	_Xor__uXor_var_u16_C
+	.quad	_L_1+1808
+	.quad	_Xor__uXor_param_u16_u32
+	.quad	_L_1+1823
+	.quad	_Xor__uXor_var_u16_u32
+	.quad	_L_1+1842
+	.quad	_Xor__uXor_param_u16_i8
+	.quad	_L_1+1859
+	.quad	_Xor__uXor_var_u16_i8
+	.quad	_L_1+1877
+	.quad	_Xor__uXor_param_u16_I
+	.quad	_L_1+1893
+	.quad	_Xor__uXor_var_u16_I
+	.quad	_L_1+1910
+	.quad	_Xor__uXor_param_u16_u8
+	.quad	_L_1+1925
+	.quad	_Xor__uXor_var_u16_u8
+	.quad	_L_1+1943
+	.quad	_Xor__uXor_param_u16_LC
+	.quad	_L_1+1959
+	.quad	_Xor__uXor_var_u16_LC
+	.quad	_L_1+1977
+	.quad	_Xor__uXor_param_u16_i64
+	.quad	_L_1+1993
+	.quad	_Xor__uXor_var_u16_i64
+	.quad	_L_1+2012
+	.quad	_Xor__uXor_param_C_i32
+	.quad	_L_1+2029
+	.quad	_Xor__uXor_var_C_i32
+	.quad	_L_1+2046
+	.quad	_Xor__uXor_param_C_i16
+	.quad	_L_1+2061
+	.quad	_Xor__uXor_var_C_i16
+	.quad	_L_1+2078
+	.quad	_Xor__uXor_param_C_L
+	.quad	_L_1+2093
+	.quad	_Xor__uXor_var_C_L
+	.quad	_L_1+2108
+	.quad	_Xor__uXor_param_C_u64
+	.quad	_L_1+2121
+	.quad	_Xor__uXor_var_C_u64
+	.quad	_L_1+2138
+	.quad	_Xor__uXor_param_C_u16
+	.quad	_L_1+2153
+	.quad	_Xor__uXor_var_C_u16
+	.quad	_L_1+2170
+	.quad	_Xor__uXor_param_C_C
+	.quad	_L_1+2185
+	.quad	_Xor__uXor_var_C_C
+	.quad	_L_1+2200
+	.quad	_Xor__uXor_param_C_u32
+	.quad	_L_1+2213
+	.quad	_Xor__uXor_var_C_u32
+	.quad	_L_1+2230
+	.quad	_Xor__uXor_param_C_i8
+	.quad	_L_1+2245
+	.quad	_Xor__uXor_var_C_i8
+	.quad	_L_1+2261
+	.quad	_Xor__uXor_param_C_I
+	.quad	_L_1+2275
+	.quad	_Xor__uXor_var_C_I
+	.quad	_L_1+2290
+	.quad	_Xor__uXor_param_C_u8
+	.quad	_L_1+2303
+	.quad	_Xor__uXor_var_C_u8
+	.quad	_L_1+2319
+	.quad	_Xor__uXor_param_C_LC
+	.quad	_L_1+2333
+	.quad	_Xor__uXor_var_C_LC
+	.quad	_L_1+2349
+	.quad	_Xor__uXor_param_C_i64
+	.quad	_L_1+2363
+	.quad	_Xor__uXor_var_C_i64
+	.quad	_L_1+2380
+	.quad	_Xor__uXor_param_u32_i32
+	.quad	_L_1+2395
+	.quad	_Xor__uXor_var_u32_i32
+	.quad	_L_1+2414
+	.quad	_Xor__uXor_param_u32_i16
+	.quad	_L_1+2431
+	.quad	_Xor__uXor_var_u32_i16
+	.quad	_L_1+2450
+	.quad	_Xor__uXor_param_u32_L
+	.quad	_L_1+2467
+	.quad	_Xor__uXor_var_u32_L
+	.quad	_L_1+2484
+	.quad	_Xor__uXor_param_u32_u64
+	.quad	_L_1+2499
+	.quad	_Xor__uXor_var_u32_u64
+	.quad	_L_1+2518
+	.quad	_Xor__uXor_param_u32_u16
+	.quad	_L_1+2535
+	.quad	_Xor__uXor_var_u32_u16
+	.quad	_L_1+2554
+	.quad	_Xor__uXor_param_u32_C
+	.quad	_L_1+2571
+	.quad	_Xor__uXor_var_u32_C
+	.quad	_L_1+2588
+	.quad	_Xor__uXor_param_u32_u32
+	.quad	_L_1+2603
+	.quad	_Xor__uXor_var_u32_u32
+	.quad	_L_1+2622
+	.quad	_Xor__uXor_param_u32_i8
+	.quad	_L_1+2639
+	.quad	_Xor__uXor_var_u32_i8
+	.quad	_L_1+2657
+	.quad	_Xor__uXor_param_u32_I
+	.quad	_L_1+2673
+	.quad	_Xor__uXor_var_u32_I
+	.quad	_L_1+2690
+	.quad	_Xor__uXor_param_u32_u8
+	.quad	_L_1+2705
+	.quad	_Xor__uXor_var_u32_u8
+	.quad	_L_1+2723
+	.quad	_Xor__uXor_param_u32_LC
+	.quad	_L_1+2739
+	.quad	_Xor__uXor_var_u32_LC
+	.quad	_L_1+2757
+	.quad	_Xor__uXor_param_u32_i64
+	.quad	_L_1+2773
+	.quad	_Xor__uXor_var_u32_i64
+	.quad	_L_1+2792
+	.quad	_Xor__uXor_param_i8_i32
+	.quad	_L_1+2809
+	.quad	_Xor__uXor_var_i8_i32
+	.quad	_L_1+2827
+	.quad	_Xor__uXor_param_i8_i16
+	.quad	_L_1+2843
+	.quad	_Xor__uXor_var_i8_i16
+	.quad	_L_1+2861
+	.quad	_Xor__uXor_param_i8_L
+	.quad	_L_1+2877
+	.quad	_Xor__uXor_var_i8_L
+	.quad	_L_1+2893
+	.quad	_Xor__uXor_param_i8_u64
+	.quad	_L_1+2907
+	.quad	_Xor__uXor_var_i8_u64
+	.quad	_L_1+2925
+	.quad	_Xor__uXor_param_i8_u16
+	.quad	_L_1+2941
+	.quad	_Xor__uXor_var_i8_u16
+	.quad	_L_1+2959
+	.quad	_Xor__uXor_param_i8_C
+	.quad	_L_1+2975
+	.quad	_Xor__uXor_var_i8_C
+	.quad	_L_1+2991
+	.quad	_Xor__uXor_param_i8_u32
+	.quad	_L_1+3005
+	.quad	_Xor__uXor_var_i8_u32
+	.quad	_L_1+3023
+	.quad	_Xor__uXor_param_i8_i8
+	.quad	_L_1+3039
+	.quad	_Xor__uXor_var_i8_i8
+	.quad	_L_1+3056
+	.quad	_Xor__uXor_param_i8_I
+	.quad	_L_1+3071
+	.quad	_Xor__uXor_var_i8_I
+	.quad	_L_1+3087
+	.quad	_Xor__uXor_param_i8_u8
+	.quad	_L_1+3101
+	.quad	_Xor__uXor_var_i8_u8
+	.quad	_L_1+3118
+	.quad	_Xor__uXor_param_i8_LC
+	.quad	_L_1+3133
+	.quad	_Xor__uXor_var_i8_LC
+	.quad	_L_1+3150
+	.quad	_Xor__uXor_param_i8_i64
+	.quad	_L_1+3165
+	.quad	_Xor__uXor_var_i8_i64
+	.quad	_L_1+3183
+	.quad	_Xor__uXor_param_I_i32
+	.quad	_L_1+3199
+	.quad	_Xor__uXor_var_I_i32
+	.quad	_L_1+3216
+	.quad	_Xor__uXor_param_I_i16
+	.quad	_L_1+3231
+	.quad	_Xor__uXor_var_I_i16
+	.quad	_L_1+3248
+	.quad	_Xor__uXor_param_I_L
+	.quad	_L_1+3263
+	.quad	_Xor__uXor_var_I_L
+	.quad	_L_1+3278
+	.quad	_Xor__uXor_param_I_u64
+	.quad	_L_1+3291
+	.quad	_Xor__uXor_var_I_u64
+	.quad	_L_1+3308
+	.quad	_Xor__uXor_param_I_u16
+	.quad	_L_1+3323
+	.quad	_Xor__uXor_var_I_u16
+	.quad	_L_1+3340
+	.quad	_Xor__uXor_param_I_C
+	.quad	_L_1+3355
+	.quad	_Xor__uXor_var_I_C
+	.quad	_L_1+3370
+	.quad	_Xor__uXor_param_I_u32
+	.quad	_L_1+3383
+	.quad	_Xor__uXor_var_I_u32
+	.quad	_L_1+3400
+	.quad	_Xor__uXor_param_I_i8
+	.quad	_L_1+3415
+	.quad	_Xor__uXor_var_I_i8
+	.quad	_L_1+3431
+	.quad	_Xor__uXor_param_I_I
+	.quad	_L_1+3445
+	.quad	_Xor__uXor_var_I_I
+	.quad	_L_1+3460
+	.quad	_Xor__uXor_param_I_u8
+	.quad	_L_1+3473
+	.quad	_Xor__uXor_var_I_u8
+	.quad	_L_1+3489
+	.quad	_Xor__uXor_param_I_LC
+	.quad	_L_1+3503
+	.quad	_Xor__uXor_var_I_LC
+	.quad	_L_1+3519
+	.quad	_Xor__uXor_param_I_i64
+	.quad	_L_1+3533
+	.quad	_Xor__uXor_var_I_i64
+	.quad	_L_1+3550
+	.quad	_Xor__uXor_param_u8_i32
+	.quad	_L_1+3565
+	.quad	_Xor__uXor_var_u8_i32
+	.quad	_L_1+3583
+	.quad	_Xor__uXor_param_u8_i16
+	.quad	_L_1+3599
+	.quad	_Xor__uXor_var_u8_i16
+	.quad	_L_1+3617
+	.quad	_Xor__uXor_param_u8_L
+	.quad	_L_1+3633
+	.quad	_Xor__uXor_var_u8_L
+	.quad	_L_1+3649
+	.quad	_Xor__uXor_param_u8_u64
+	.quad	_L_1+3663
+	.quad	_Xor__uXor_var_u8_u64
+	.quad	_L_1+3681
+	.quad	_Xor__uXor_param_u8_u16
+	.quad	_L_1+3697
+	.quad	_Xor__uXor_var_u8_u16
+	.quad	_L_1+3715
+	.quad	_Xor__uXor_param_u8_C
+	.quad	_L_1+3731
+	.quad	_Xor__uXor_var_u8_C
+	.quad	_L_1+3747
+	.quad	_Xor__uXor_param_u8_u32
+	.quad	_L_1+3761
+	.quad	_Xor__uXor_var_u8_u32
+	.quad	_L_1+3779
+	.quad	_Xor__uXor_param_u8_i8
+	.quad	_L_1+3795
+	.quad	_Xor__uXor_var_u8_i8
+	.quad	_L_1+3812
+	.quad	_Xor__uXor_param_u8_I
+	.quad	_L_1+3827
+	.quad	_Xor__uXor_var_u8_I
+	.quad	_L_1+3843
+	.quad	_Xor__uXor_param_u8_u8
+	.quad	_L_1+3857
+	.quad	_Xor__uXor_var_u8_u8
+	.quad	_L_1+3874
+	.quad	_Xor__uXor_param_u8_LC
+	.quad	_L_1+3889
+	.quad	_Xor__uXor_var_u8_LC
+	.quad	_L_1+3906
+	.quad	_Xor__uXor_param_u8_i64
+	.quad	_L_1+3921
+	.quad	_Xor__uXor_var_u8_i64
+	.quad	_L_1+3939
+	.quad	_Xor__uXor_param_LC_i32
+	.quad	_L_1+3955
+	.quad	_Xor__uXor_var_LC_i32
+	.quad	_L_1+3973
+	.quad	_Xor__uXor_param_LC_i16
+	.quad	_L_1+3989
+	.quad	_Xor__uXor_var_LC_i16
+	.quad	_L_1+4007
+	.quad	_Xor__uXor_param_LC_L
+	.quad	_L_1+4023
+	.quad	_Xor__uXor_var_LC_L
+	.quad	_L_1+4039
+	.quad	_Xor__uXor_param_LC_u64
+	.quad	_L_1+4053
+	.quad	_Xor__uXor_var_LC_u64
+	.quad	_L_1+4071
+	.quad	_Xor__uXor_param_LC_u16
+	.quad	_L_1+4087
+	.quad	_Xor__uXor_var_LC_u16
+	.quad	_L_1+4105
+	.quad	_Xor__uXor_param_LC_C
+	.quad	_L_1+4121
+	.quad	_Xor__uXor_var_LC_C
+	.quad	_L_1+4137
+	.quad	_Xor__uXor_param_LC_u32
+	.quad	_L_1+4151
+	.quad	_Xor__uXor_var_LC_u32
+	.quad	_L_1+4169
+	.quad	_Xor__uXor_param_LC_i8
+	.quad	_L_1+4185
+	.quad	_Xor__uXor_var_LC_i8
+	.quad	_L_1+4202
+	.quad	_Xor__uXor_param_LC_I
+	.quad	_L_1+4217
+	.quad	_Xor__uXor_var_LC_I
+	.quad	_L_1+4233
+	.quad	_Xor__uXor_param_LC_u8
+	.quad	_L_1+4247
+	.quad	_Xor__uXor_var_LC_u8
+	.quad	_L_1+4264
+	.quad	_Xor__uXor_param_LC_LC
+	.quad	_L_1+4279
+	.quad	_Xor__uXor_var_LC_LC
+	.quad	_L_1+4296
+	.quad	_Xor__uXor_param_LC_i64
+	.quad	_L_1+4311
+	.quad	_Xor__uXor_var_LC_i64
+	.quad	_L_1+4329
+	.quad	_Xor__uXor_param_i64_i32
+	.quad	_L_1+4345
+	.quad	_Xor__uXor_var_i64_i32
+	.quad	_L_1+4364
+	.quad	_Xor__uXor_param_i64_i16
+	.quad	_L_1+4381
+	.quad	_Xor__uXor_var_i64_i16
+	.quad	_L_1+4400
+	.quad	_Xor__uXor_param_i64_L
+	.quad	_L_1+4417
+	.quad	_Xor__uXor_var_i64_L
+	.quad	_L_1+4434
+	.quad	_Xor__uXor_param_i64_u64
+	.quad	_L_1+4449
+	.quad	_Xor__uXor_var_i64_u64
+	.quad	_L_1+4468
+	.quad	_Xor__uXor_param_i64_u16
+	.quad	_L_1+4485
+	.quad	_Xor__uXor_var_i64_u16
+	.quad	_L_1+4504
+	.quad	_Xor__uXor_param_i64_C
+	.quad	_L_1+4521
+	.quad	_Xor__uXor_var_i64_C
+	.quad	_L_1+4538
+	.quad	_Xor__uXor_param_i64_u32
+	.quad	_L_1+4553
+	.quad	_Xor__uXor_var_i64_u32
+	.quad	_L_1+4572
+	.quad	_Xor__uXor_param_i64_i8
+	.quad	_L_1+4589
+	.quad	_Xor__uXor_var_i64_i8
+	.quad	_L_1+4607
+	.quad	_Xor__uXor_param_i64_I
+	.quad	_L_1+4623
+	.quad	_Xor__uXor_var_i64_I
+	.quad	_L_1+4640
+	.quad	_Xor__uXor_param_i64_u8
+	.quad	_L_1+4655
+	.quad	_Xor__uXor_var_i64_u8
+	.quad	_L_1+4673
+	.quad	_Xor__uXor_param_i64_LC
+	.quad	_L_1+4689
+	.quad	_Xor__uXor_var_i64_LC
+	.quad	_L_1+4707
+	.quad	_Xor__uXor_param_i64_i64
+	.quad	_L_1+4723
+	.quad	_Xor__uXor_var_i64_i64
 	.quad	_L_1+4742
 	.space 8
 	.ascii "../AMD64_DARWIN/Xor.m3"
@@ -4464,25 +4464,26 @@ _MM_Xor:
 	.space 8
 	.quad	_Xor_M3
 	.quad	3
-	.word	497
-	.space 6
+	.quad	497
 	.quad	498
-	.quad	499
-	.long	412316860
-	.long	1082083332
-	.word	502
-	.space 2
-	.long	503
-	.quad	504
+	.long	1140441088
+	.byte	-11
+	.space 3
+	.quad	502
+	.byte	-9
+	.space 3
+	.long	504
 	.quad	505
-	.quad	506
-	.long	1140703494
-	.byte	-3
-	.byte	-2
+	.word	506
+	.space 6
+	.quad	507
+	.long	3710851744
+	.long	1082116132
+	.quad	510
+	.word	511
 	.space 2
-	.quad	511
 	.long	512
-	.space 28
+	.space 24
 	.quad	_Xor_I3
 	.quad	_MM_Xor+232
 	.space 8
