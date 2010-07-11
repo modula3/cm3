@@ -93,9 +93,11 @@ enum machine_mode;
 #define build_decl(code, tree, memstat) \
     build_decl_stat(UNKNOWN_LOCATION, code, tree, memstat MEM_STAT_INFO)
 
-#elif defined USE_MAPPED_LOCATION
+#else
+#if defined USE_MAPPED_LOCATION
 #define M3_USE_MAPPED_LOCATION
 #define SET_TYPE_MODE(node, mode) (TYPE_MODE(node) = (mode))
+#endif
 #endif
 
 #ifndef GCC42
@@ -257,8 +259,10 @@ static bool m3_next_store_volatile;
 static tree pushdecl (tree decl);
 
 /* Langhooks.  */
-static tree builtin_function (const char *name, tree type, int function_code,
-                              enum built_in_class class,
+static tree builtin_function (const char *name,
+                              tree type,
+                              enum built_in_function function_code,
+                              enum built_in_class clas,
                               const char *library_name,
                               tree attrs);
 static tree getdecls (void);
@@ -855,15 +859,18 @@ htab_eq_builtin (const PTR p1, const PTR p2)
 }
 
 static tree
-builtin_function (const char *name, tree type, int function_code,
-                  enum built_in_class class, const char *library_name,
+builtin_function (const char *name,
+                  tree type,
+                  enum built_in_function function_code,
+                  enum built_in_class clas,
+                  const char *library_name,
                   tree attrs ATTRIBUTE_UNUSED)
 {
   tree id = get_identifier (name);
   tree decl = build_decl (FUNCTION_DECL, id, type);
   TREE_PUBLIC (decl) = 1;
   DECL_EXTERNAL (decl) = 1;
-  DECL_BUILT_IN_CLASS (decl) = class;
+  DECL_BUILT_IN_CLASS (decl) = clas;
   DECL_FUNCTION_CODE (decl) = function_code;
   if (library_name)
     SET_DECL_ASSEMBLER_NAME (decl, get_identifier (library_name));
@@ -949,6 +956,7 @@ static void
 m3_init_decl_processing (void)
 {
   tree t;
+  enum built_in_function ezero = (enum built_in_function)0;
 
   current_function_decl = NULL;
 
@@ -1176,35 +1184,35 @@ m3_init_decl_processing (void)
 
 #if 0
   t = build_function_type_list (t_int, t_int, t_int, NULL_TREE);
-  div_proc = builtin_function ("m3_div", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
-  mod_proc = builtin_function ("m3_mod", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  div_proc = builtin_function ("m3_div", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
+  mod_proc = builtin_function ("m3_mod", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
 
   t = build_function_type_list (t_int_64, t_int_64, t_int_64, NULL_TREE);
-  divL_proc = builtin_function ("m3_divL", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
-  modL_proc = builtin_function ("m3_modL", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+  divL_proc = builtin_function ("m3_divL", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
+  modL_proc = builtin_function ("m3_modL", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
 #endif
 
   t = build_function_type_list (t_void, NULL_TREE);
   set_union_proc  = builtin_function ("set_union",
-                                      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+                                      t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
   set_diff_proc   = builtin_function ("set_difference",
-                                      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+                                      t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
   set_inter_proc  = builtin_function ("set_intersection",
-                                      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+                                      t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
   set_sdiff_proc  = builtin_function ("set_sym_difference",
-                                      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+                                      t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
   set_range_proc  = builtin_function ("set_range",
-                                      t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+                                      t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
 
   t = build_function_type_list (t_int, NULL_TREE);
   set_gt_proc
-    = builtin_function ("set_gt", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+    = builtin_function ("set_gt", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
   set_ge_proc
-    = builtin_function ("set_ge", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+    = builtin_function ("set_ge", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
   set_lt_proc
-    = builtin_function ("set_lt", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+    = builtin_function ("set_lt", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
   set_le_proc
-    = builtin_function ("set_le", t, 0, NOT_BUILT_IN, NULL, NULL_TREE);
+    = builtin_function ("set_le", t, ezero, NOT_BUILT_IN, NULL, NULL_TREE);
 }
 
 /*========================================================== DECLARATIONS ===*/
@@ -1722,7 +1730,7 @@ varray_extend (varray_type va, size_t n)
 }
 
 static tree
-scan_var (int code)
+scan_var (enum tree_code code)
 {
   int i = get_int();
 
