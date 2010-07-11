@@ -3546,7 +3546,7 @@ m3cg_declare_procedure (void)
   /* TREE_PUBLIC (p) should be 'exported', but that fails to keep any
    * implementation of nonexported functions, even with TREE_ADDRESSABLE(p) = 1
    */
-  TREE_PUBLIC (p) = (lev == 0);
+  TREE_PUBLIC (p) = 1;
   if (exported)
   {
    /* We really want to use VISIBILITY_PROTECTED here but we can't for
@@ -5706,11 +5706,6 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   /* These optimizations break our exception handling? */
   flag_reorder_blocks = 0;
   flag_reorder_blocks_and_partition = 0;
-
-  /* causes unused functions to be removed, even
-     though we reference them from data
-  */
-  flag_unit_at_a_time = 0;
 
   /* causes backend crashes in
      m3totex
