@@ -5718,6 +5718,11 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
      m3tests/p242
   */
   flag_tree_pre = 0;
+  
+  if (GCC45)
+  {
+    flag_tree_fre = 0; /* crashes compiler */
+  }
 
 #if GCC45
   /* Excess precision other than "fast" requires front-end support.  */
