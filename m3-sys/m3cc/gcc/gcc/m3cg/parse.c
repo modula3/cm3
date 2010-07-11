@@ -3756,8 +3756,8 @@ m3cg_set_label (void)
           construct or there is something wrong with 4.5.
           The instruction that altered rbp was, uh, surprising.
       DECL_NONLOCAL(l) = true;
-      */
       LABEL_REF_NONLOCAL_P (r) = 1;
+      */
 #else
       {
         rtx list = DECL_STRUCT_FUNCTION (current_function_decl)->x_nonlocal_goto_handler_labels;
