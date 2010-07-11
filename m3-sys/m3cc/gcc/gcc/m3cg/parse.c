@@ -5716,14 +5716,25 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
      libm3/Formatter.m3
      m3tests/p241
      m3tests/p242
+     m3front gcc 4.5
   */
   flag_tree_pre = 0;
-  
+
   if (GCC45)
   {
-    flag_tree_fre = 0; /* crashes compiler */
-  }
+    /* m3-libs/sysutils/System.m3 is a good test of optimization */
 
+    flag_tree_fre = 0; /* crashes compiler; see test p244 */
+
+    if (optimize >= 3)
+    {
+      flag_predictive_commoning = 0;
+      flag_inline_functions = optimize_size;
+#if GCC45
+      flag_ipa_cp_clone = 0;
+#endif
+    }
+  }
 #if GCC45
   /* Excess precision other than "fast" requires front-end support.  */
   flag_excess_precision_cmdline = EXCESS_PRECISION_FAST;
