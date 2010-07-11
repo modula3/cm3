@@ -205,29 +205,37 @@ proc BeginModule(a) is
   return b
 end
 
->> BeginModule("A") in
-
+>> BeginModule("return_constant") in
   comment("functions that return constants")
 
   foreach t in Types
     local f = "ret_k" & ShortName{t}
     write("<*NOWARN*>PROCEDURE ", f, "():", t, "=BEGIN RETURN k", ShortName{t}, ";END ", f, ";", CR)
   end
+end
+EndModule("return_constant")
 
+>> BeginModule("return_variable") in
   comment("functions that return variables")
 
   foreach t in Types
     local f = "ret_v" & ShortName{t}
     write("<*NOWARN*>PROCEDURE ", f, "():", t, "=BEGIN RETURN v", ShortName{t}, ";END ", f, ";", CR)
   end
+end
+EndModule("return_variable")
 
+>> BeginModule("return_parameter") in
   comment("functions that return parameters")
 
   foreach t in Types
     local f = "ret_p" & ShortName{t}
     write("<*NOWARN*>PROCEDURE ", f, "(p:", t, "):", t, "=BEGIN RETURN p", ";END ", f, ";", CR)
   end
+end
+EndModule("return_parameter")
 
+>> BeginModule("return_parameter_convert") in
   comment("functions that return parameters converted to another type")
   % (needs work, e.g. for float)
 
@@ -245,36 +253,45 @@ end
       write("=BEGIN RETURN ", ToLong("a", t, toLong), ";END ", f, ";", CR)
     end
   end
+end
+EndModule("return_parameter_convert")
 
-  local all_ops = ["Plus", "Times", "Minus", "Divide", "Mod", "LT", "LE", "GT",
-                   "GE", "And", "Or", "Xor", "EQ", "NE", "Not",
-                   "LeftShift", "RightShift", "Shift",
-                   "LeftRotate", "RightRotate", "Rotate",
-                   "Insert", "Extract"]
-  local binary_ops = {"Plus", "Times", "Minus", "Divide", "Mod", "LT", "LE", "GT",
-                      "GE", "And", "Or", "Xor", "EQ", "NE",
-                      "LeftShift", "RightShift", "Shift",
-                      "LeftRotate", "RightRotate", "Rotate",
-                      "Insert"}
-  local shift_ops = {"LeftShift", "RightShift", "Shift",
-                     "LeftRotate", "RightRotate", "Rotate"}
-  local bitfield_ops = {"Insert", "Extract"}
-  local unary_ops = {"Not"}
-  local word_ops = {"Plus", "Times", "Minus", "Divide",
-                    "Mod", "LT", "LE", "GT", "GE",
-                    "And", "Or", "Xor", "Not",
+% compat with existing files
+local filenames = {"Insert":"insert", "Extract":"extract"}
+local all_ops = ["Plus", "Times", "Minus", "Divide", "Mod", "LT", "LE", "GT",
+                 "GE", "And", "Or", "Xor", "EQ", "NE", "Not",
+                 "LeftShift", "RightShift", "Shift",
+                 "LeftRotate", "RightRotate", "Rotate",
+                 "Insert", "Extract"]
+local binary_ops = {"Plus", "Times", "Minus", "Divide", "Mod", "LT", "LE", "GT",
+                    "GE", "And", "Or", "Xor", "EQ", "NE",
                     "LeftShift", "RightShift", "Shift",
                     "LeftRotate", "RightRotate", "Rotate",
-                    "Insert", "Extract"}
-  local float_ops = {"Plus":"+", "Minus":"-", "Times":"*", "Divide":"/",
-                     "Mod":"MOD", "LT":"<", "LE":"<=", "GT":">", "GE":">=",
-                     "EQ":"=", "NE":"#", "Not":"-"}
-  local int_ops = {"Plus":"+", "Minus":"-", "Times":"*", "Divide":"DIV",
+                    "Insert"}
+local shift_ops = {"LeftShift", "RightShift", "Shift",
+                   "LeftRotate", "RightRotate", "Rotate"}
+local bitfield_ops = {"Insert", "Extract"}
+local unary_ops = {"Not"}
+local word_ops = {"Plus", "Times", "Minus", "Divide",
+                  "Mod", "LT", "LE", "GT", "GE",
+                  "And", "Or", "Xor", "Not",
+                  "LeftShift", "RightShift", "Shift",
+                  "LeftRotate", "RightRotate", "Rotate",
+                  "Insert", "Extract"}
+local float_ops = {"Plus":"+", "Minus":"-", "Times":"*", "Divide":"/",
                    "Mod":"MOD", "LT":"<", "LE":"<=", "GT":">", "GE":">=",
                    "EQ":"=", "NE":"#", "Not":"-"}
-  local ret_bool = {"LT", "LE", "GT", "GE", "EQ", "NE"}
+local int_ops = {"Plus":"+", "Minus":"-", "Times":"*", "Divide":"DIV",
+                 "Mod":"MOD", "LT":"<", "LE":"<=", "GT":">", "GE":">=",
+                 "EQ":"=", "NE":"#", "Not":"-"}
+local ret_bool = {"LT", "LE", "GT", "GE", "EQ", "NE"}
 
-  foreach op in all_ops
+foreach op in all_ops
+  local filename = op
+  if filenames contains op
+    filename = filenames{op}
+  end
+  >> BeginModule(filename) in
     comment(op)
     foreach t in Types
       foreach t2 in Types
@@ -353,8 +370,8 @@ end
       end
     end
   end
+  EndModule(filename)
 end
-EndModule("A")
 
 >> BeginModule("bitfield") in
   comment("bit field get and set")
@@ -382,35 +399,58 @@ EndModule("A")
 end
 EndModule("bitfield")
 
->> BeginModule("divmod_pow2") in
-
+>> BeginModule("div_pow2") in
   comment("divide by powers of 2")
-
   foreach t in ["INT32", "UINT32", "INT64", "UINT64", "INTEGER", "CARDINAL", "LONGINT", "LONGCARD"]
     foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
       local p = "div_pow2_" & ShortName{t} & "_" & i
       write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):", t, "=", CR,
             "           BEGIN RETURN a DIV 16_" & HexPowerOf2(i) & L{t} & " END ", p, ";", CR)
-      p = "mod_pow2_" & ShortName{t} & "_" & i
+    end
+  end
+end
+EndModule("div_pow2")
+
+>> BeginModule("mod_pow2") in
+  comment("mod by powers of 2")
+  foreach t in ["INT32", "UINT32", "INT64", "UINT64", "INTEGER", "CARDINAL", "LONGINT", "LONGCARD"]
+    foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
+      local p = "mod_pow2_" & ShortName{t} & "_" & i
       write("<*NOWARN*> PROCEDURE ", p, "(a:", t, "):", t, "=", CR,
             "           BEGIN RETURN a MOD 16_" & HexPowerOf2(i) & L{t} & " END ", p, ";", CR)
     end
   end
 end
-EndModule("divmod_pow2")
+EndModule("mod_pow2")
 
->> BeginModule("insert") in
-
-  comment("insert with constant offset or count or both")
-
+>> BeginModule("insert_constant_offset") in
+  comment("insert with constant offset")
   foreach t in ["Word", "Long"]
     foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
       local p = t & "_insert_constant_offset_" & i
       write("<*NOWARN*> PROCEDURE ", p, "(a,b:", t, ".T):", t, ".T=", CR,
             "           BEGIN RETURN ", t, ".Insert(a,b,", i, ",count); END ", p, ";", CR)
-      p = t & "_insert_constant_count_" & i
+    end
+  end
+end
+EndModule("insert_constant_offset")
+
+>> BeginModule("insert_constant_count") in
+  comment("insert with constant count")
+  foreach t in ["Word", "Long"]
+    foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
+      local p = t & "_insert_constant_count_" & i
       write("<*NOWARN*> PROCEDURE ", p, "(a,b:", t, ".T):", t, ".T=", CR,
             "           BEGIN RETURN ", t, ".Insert(a,b,offset,", i, "); END ", p, ";", CR)
+    end
+  end
+end
+EndModule("insert_constant_count")
+
+>> BeginModule("insert_constant_both") in
+  comment("insert with constant offset and count")
+  foreach t in ["Word", "Long"]
+    foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
       foreach j in InclusiveRange("0", Sub(IntSize{t}, i))
         local p = t & "_insert_constants_" & i & "_" & j
         write("<*NOWARN*> PROCEDURE ", p, "(a,b:", t, ".T):", t, ".T=", CR,
@@ -419,20 +459,36 @@ EndModule("divmod_pow2")
     end
   end
 end
-EndModule("insert")
+EndModule("insert_constant_both")
 
->> BeginModule("extract") in
-
-  comment("extract with constant offset or count or both")
-
+>> BeginModule("extract_constant_offset") in
+  comment("extract with constant offset")
   foreach t in ["Word", "Long"]
     foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
       local p = t & "_extract_constant_offset_" & i
       write("<*NOWARN*> PROCEDURE ", p, "(a:", t, ".T):", t, ".T=", CR,
             "           BEGIN RETURN ", t, ".Extract(a,", i, ",count); END ", p, ";", CR)
-      p = t & "_extract_constant_count_" & i
+    end
+  end
+end
+EndModule("extract_constant_offset")
+
+>> BeginModule("extract_constant_count") in
+  comment("extract with constant count")
+  foreach t in ["Word", "Long"]
+    foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
+      local p = t & "_extract_constant_count_" & i
       write("<*NOWARN*> PROCEDURE ", p, "(a:", t, ".T):", t, ".T=", CR,
             "           BEGIN RETURN ", t, ".Extract(a,offset,", i, "); END ", p, ";", CR)
+    end
+  end
+end
+EndModule("extract_constant_count")
+
+>> BeginModule("extract_constant_both") in
+  comment("extract with constant offset and count")
+  foreach t in ["Word", "Long"]
+    foreach i in InclusiveRange(0, Sub(IntSize{t}, 1))
       foreach j in InclusiveRange("0", Sub(IntSize{t}, i))
         p = t & "_extract_constants_" & i & "_" & j
         write("<*NOWARN*> PROCEDURE ", p, "(a:", t, ".T):", t, ".T=", CR,
@@ -441,7 +497,7 @@ EndModule("insert")
     end
   end
 end
-EndModule("extract")
+EndModule("extract_constant_both")
 
 implementation("Main")
 build_standalone()
