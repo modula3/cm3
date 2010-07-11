@@ -3337,11 +3337,20 @@ _divmod_pow2__mod_pow2_i64_62:
 _divmod_pow2__div_pow2_i64_63:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	orq	%rdx, %rax
+	movq	%rax, %rcx
+	sarq	$63, %rcx
+	subq	%rcx, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rcx, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
 	leave
 	ret
 .globl _divmod_pow2__mod_pow2_i64_63
@@ -3349,11 +3358,25 @@ _divmod_pow2__div_pow2_i64_63:
 _divmod_pow2__mod_pow2_i64_63:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rcx
+	leaq	-1(%rcx), %rdx
+	movq	%rcx, %rax
+	orq	%rdx, %rax
+	movq	%rax, %rsi
+	sarq	$63, %rsi
+	subq	%rsi, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rsi, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
+	salq	$63, %rax
+	movq	%rcx, %rdx
+	subq	%rax, %rdx
+	movq	%rdx, %rax
 	leave
 	ret
 .globl _divmod_pow2__div_pow2_u64_0
@@ -4619,11 +4642,20 @@ _divmod_pow2__mod_pow2_u64_62:
 _divmod_pow2__div_pow2_u64_63:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	orq	%rdx, %rax
+	movq	%rax, %rcx
+	sarq	$63, %rcx
+	subq	%rcx, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rcx, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
 	leave
 	ret
 .globl _divmod_pow2__mod_pow2_u64_63
@@ -4631,11 +4663,25 @@ _divmod_pow2__div_pow2_u64_63:
 _divmod_pow2__mod_pow2_u64_63:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rcx
+	leaq	-1(%rcx), %rdx
+	movq	%rcx, %rax
+	orq	%rdx, %rax
+	movq	%rax, %rsi
+	sarq	$63, %rsi
+	subq	%rsi, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rsi, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
+	salq	$63, %rax
+	movq	%rcx, %rdx
+	subq	%rax, %rdx
+	movq	%rdx, %rax
 	leave
 	ret
 .globl _divmod_pow2__div_pow2_I_0
@@ -5901,11 +5947,20 @@ _divmod_pow2__mod_pow2_I_62:
 _divmod_pow2__div_pow2_I_63:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	orq	%rdx, %rax
+	movq	%rax, %rcx
+	sarq	$63, %rcx
+	subq	%rcx, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rcx, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
 	leave
 	ret
 .globl _divmod_pow2__mod_pow2_I_63
@@ -5913,11 +5968,25 @@ _divmod_pow2__div_pow2_I_63:
 _divmod_pow2__mod_pow2_I_63:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rcx
+	leaq	-1(%rcx), %rdx
+	movq	%rcx, %rax
+	orq	%rdx, %rax
+	movq	%rax, %rsi
+	sarq	$63, %rsi
+	subq	%rsi, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rsi, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
+	salq	$63, %rax
+	movq	%rcx, %rdx
+	subq	%rax, %rdx
+	movq	%rdx, %rax
 	leave
 	ret
 .globl _divmod_pow2__div_pow2_C_0
@@ -7689,9 +7758,19 @@ _divmod_pow2__div_pow2_C_63:
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	orq	%rdx, %rax
+	movq	%rax, %rcx
+	sarq	$63, %rcx
+	subq	%rcx, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rcx, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	jns	L1469
@@ -7708,9 +7787,26 @@ _divmod_pow2__mod_pow2_C_63:
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rcx
+	leaq	-1(%rcx), %rdx
+	movq	%rcx, %rax
+	orq	%rdx, %rax
+	movq	%rax, %rsi
+	sarq	$63, %rsi
+	subq	%rsi, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rsi, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
+	movq	%rax, -16(%rbp)
+	movq	-16(%rbp), %rax
+	salq	$63, %rax
+	movq	%rcx, %rdx
+	subq	%rax, %rdx
+	movq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	jns	L1472
@@ -8983,11 +9079,20 @@ _divmod_pow2__mod_pow2_L_62:
 _divmod_pow2__div_pow2_L_63:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	orq	%rdx, %rax
+	movq	%rax, %rcx
+	sarq	$63, %rcx
+	subq	%rcx, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rcx, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
 	leave
 	ret
 .globl _divmod_pow2__mod_pow2_L_63
@@ -8995,11 +9100,25 @@ _divmod_pow2__div_pow2_L_63:
 _divmod_pow2__mod_pow2_L_63:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rcx
+	leaq	-1(%rcx), %rdx
+	movq	%rcx, %rax
+	orq	%rdx, %rax
+	movq	%rax, %rsi
+	sarq	$63, %rsi
+	subq	%rsi, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rsi, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
+	salq	$63, %rax
+	movq	%rcx, %rdx
+	subq	%rax, %rdx
+	movq	%rdx, %rax
 	leave
 	ret
 .globl _divmod_pow2__div_pow2_LC_0
@@ -10771,9 +10890,19 @@ _divmod_pow2__div_pow2_LC_63:
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	leaq	-1(%rax), %rdx
+	orq	%rdx, %rax
+	movq	%rax, %rcx
+	sarq	$63, %rcx
+	subq	%rcx, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rcx, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	jns	L2046
@@ -10790,9 +10919,26 @@ _divmod_pow2__mod_pow2_LC_63:
 	movq	%rsp, %rbp
 	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
-	movq	-24(%rbp), %rsi
-	movabsq	$-9223372036854775808, %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rcx
+	leaq	-1(%rcx), %rdx
+	movq	%rcx, %rax
+	orq	%rdx, %rax
+	movq	%rax, %rsi
+	sarq	$63, %rsi
+	subq	%rsi, %rdx
+	movabsq	$-9223372036854775808, %rax
+	cmpq	%rax, %rdx
+	sete	%al
+	movzbl	%al, %edx
+	movq	%rsi, %rax
+	notq	%rax
+	leaq	(%rdx,%rax), %rax
+	movq	%rax, -16(%rbp)
+	movq	-16(%rbp), %rax
+	salq	$63, %rax
+	movq	%rcx, %rdx
+	subq	%rax, %rdx
+	movq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
 	jns	L2049

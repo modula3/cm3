@@ -2932,9 +2932,8 @@ _A__Plus_param_f64_f64:
 	movq	%rsp, %rbp
 	movsd	%xmm0, -24(%rbp)
 	movsd	%xmm1, -32(%rbp)
-	movsd	-24(%rbp), %xmm1
-	movsd	-32(%rbp), %xmm0
-	addsd	%xmm1, %xmm0
+	movsd	-24(%rbp), %xmm0
+	addsd	-32(%rbp), %xmm0
 	leave
 	ret
 .globl _A__uPlus_var_i64_i16
@@ -5421,9 +5420,8 @@ _A__Plus_param_f32_f32:
 	movq	%rsp, %rbp
 	movss	%xmm0, -20(%rbp)
 	movss	%xmm1, -24(%rbp)
-	movss	-20(%rbp), %xmm1
-	movss	-24(%rbp), %xmm0
-	addss	%xmm1, %xmm0
+	movss	-20(%rbp), %xmm0
+	addss	-24(%rbp), %xmm0
 	leave
 	ret
 .globl _A__uPlus_var_u32_i16
@@ -10699,9 +10697,8 @@ _A__Times_param_f64_f64:
 	movq	%rsp, %rbp
 	movsd	%xmm0, -24(%rbp)
 	movsd	%xmm1, -32(%rbp)
-	movsd	-24(%rbp), %xmm1
-	movsd	-32(%rbp), %xmm0
-	mulsd	%xmm1, %xmm0
+	movsd	-24(%rbp), %xmm0
+	mulsd	-32(%rbp), %xmm0
 	leave
 	ret
 .globl _A__uTimes_var_i64_i16
@@ -13197,9 +13194,8 @@ _A__Times_param_f32_f32:
 	movq	%rsp, %rbp
 	movss	%xmm0, -20(%rbp)
 	movss	%xmm1, -24(%rbp)
-	movss	-20(%rbp), %xmm1
-	movss	-24(%rbp), %xmm0
-	mulss	%xmm1, %xmm0
+	movss	-20(%rbp), %xmm0
+	mulss	-24(%rbp), %xmm0
 	leave
 	ret
 .globl _A__uTimes_var_u32_i16
@@ -18649,11 +18645,8 @@ _A__Minus_param_f64_f64:
 	movq	%rsp, %rbp
 	movsd	%xmm0, -24(%rbp)
 	movsd	%xmm1, -32(%rbp)
-	movsd	-24(%rbp), %xmm1
-	movsd	-32(%rbp), %xmm0
-	movapd	%xmm1, %xmm2
-	subsd	%xmm0, %xmm2
-	movapd	%xmm2, %xmm0
+	movsd	-24(%rbp), %xmm0
+	subsd	-32(%rbp), %xmm0
 	leave
 	ret
 .globl _A__uMinus_var_i64_i16
@@ -21394,11 +21387,8 @@ _A__Minus_param_f32_f32:
 	movq	%rsp, %rbp
 	movss	%xmm0, -20(%rbp)
 	movss	%xmm1, -24(%rbp)
-	movss	-20(%rbp), %xmm1
-	movss	-24(%rbp), %xmm0
-	movaps	%xmm1, %xmm2
-	subss	%xmm0, %xmm2
-	movaps	%xmm2, %xmm0
+	movss	-20(%rbp), %xmm0
+	subss	-24(%rbp), %xmm0
 	leave
 	ret
 .globl _A__uMinus_var_u32_i16
@@ -25978,11 +25968,28 @@ _A__uDivide_var_i16_i64:
 _A__Divide_var_i16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4425
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4425
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4425:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i16_i64
@@ -26008,12 +26015,27 @@ _A__uDivide_param_i16_i64:
 _A__Divide_param_i16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4430
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4430
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4430:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i16_I
@@ -26038,20 +26060,38 @@ _A__uDivide_var_i16_I:
 _A__Divide_var_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4435
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4435
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4435:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4433
+	js	L4436
 	cmpq	$65535, -16(%rbp)
-	jle	L4434
-L4433:
+	jle	L4437
+L4436:
 	movl	$64449, %edi
 	call	__m3_fault
-L4434:
+L4437:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26078,21 +26118,37 @@ _A__uDivide_param_i16_I:
 _A__Divide_param_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4442
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4442
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4442:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4439
+	js	L4443
 	cmpq	$65535, -16(%rbp)
-	jle	L4440
-L4439:
+	jle	L4444
+L4443:
 	movl	$64513, %edi
 	call	__m3_fault
-L4440:
+L4444:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26119,21 +26175,39 @@ _A__uDivide_var_i16_u8:
 _A__Divide_var_i16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4449
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4449
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4449:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4445
+	js	L4450
 	cmpq	$65535, -16(%rbp)
-	jle	L4446
-L4445:
+	jle	L4451
+L4450:
 	movl	$64577, %edi
 	call	__m3_fault
-L4446:
+L4451:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26160,21 +26234,39 @@ _A__uDivide_param_i16_u8:
 _A__Divide_param_i16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %esi
-	movsbq	-19(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movsbq	-19(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4456
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4456
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4456:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4451
+	js	L4457
 	cmpq	$65535, -16(%rbp)
-	jle	L4452
-L4451:
+	jle	L4458
+L4457:
 	movl	$64641, %edi
 	call	__m3_fault
-L4452:
+L4458:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26213,25 +26305,25 @@ _A__Divide_var_i16_C:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L4457
+	je	L4463
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4457
+	jns	L4463
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L4457:
+L4463:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4458
+	js	L4464
 	cmpq	$65535, -16(%rbp)
-	jle	L4459
-L4458:
+	jle	L4465
+L4464:
 	movl	$64705, %edi
 	call	__m3_fault
-L4459:
+L4465:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26266,25 +26358,25 @@ _A__Divide_param_i16_C:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L4464
+	je	L4470
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4464
+	jns	L4470
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L4464:
+L4470:
 	movq	-56(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4465
+	js	L4471
 	cmpq	$65535, -16(%rbp)
-	jle	L4466
-L4465:
+	jle	L4472
+L4471:
 	movl	$64769, %edi
 	call	__m3_fault
-L4466:
+L4472:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26311,21 +26403,39 @@ _A__uDivide_var_i16_u32:
 _A__Divide_var_i16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4477
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4477
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4477:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4471
+	js	L4478
 	cmpq	$65535, -16(%rbp)
-	jle	L4472
-L4471:
+	jle	L4479
+L4478:
 	movl	$64833, %edi
 	call	__m3_fault
-L4472:
+L4479:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26353,22 +26463,40 @@ _A__uDivide_param_i16_u32:
 _A__Divide_param_i16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %esi
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4484
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4484
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4484:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4477
+	js	L4485
 	cmpq	$65535, -16(%rbp)
-	jle	L4478
-L4477:
+	jle	L4486
+L4485:
 	movl	$64897, %edi
 	call	__m3_fault
-L4478:
+L4486:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26409,25 +26537,25 @@ _A__Divide_var_i16_i8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L4483
+	je	L4491
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4483
+	jns	L4491
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L4483:
+L4491:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4484
+	js	L4492
 	cmpq	$65535, -16(%rbp)
-	jle	L4485
-L4484:
+	jle	L4493
+L4492:
 	movl	$64961, %edi
 	call	__m3_fault
-L4485:
+L4493:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26468,25 +26596,25 @@ _A__Divide_param_i16_i8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L4490
+	je	L4498
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4490
+	jns	L4498
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L4490:
+L4498:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4491
+	js	L4499
 	cmpq	$65535, -16(%rbp)
-	jle	L4492
-L4491:
+	jle	L4500
+L4499:
 	movl	$65025, %edi
 	call	__m3_fault
-L4492:
+L4500:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26512,11 +26640,28 @@ _A__uDivide_var_i16_L:
 _A__Divide_var_i16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4505
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4505
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4505:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i16_L
@@ -26542,12 +26687,27 @@ _A__uDivide_param_i16_L:
 _A__Divide_param_i16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4510
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4510
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4510:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i16_u64
@@ -26572,11 +26732,28 @@ _A__uDivide_var_i16_u64:
 _A__Divide_var_i16_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4515
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4515
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4515:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i16_u64
@@ -26602,12 +26779,27 @@ _A__uDivide_param_i16_u64:
 _A__Divide_param_i16_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4520
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4520
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4520:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i16_u16
@@ -26633,21 +26825,39 @@ _A__uDivide_var_i16_u16:
 _A__Divide_var_i16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4525
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4525
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4525:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4513
+	js	L4526
 	cmpq	$65535, -16(%rbp)
-	jle	L4514
-L4513:
+	jle	L4527
+L4526:
 	movl	$65345, %edi
 	call	__m3_fault
-L4514:
+L4527:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26674,21 +26884,39 @@ _A__uDivide_param_i16_u16:
 _A__Divide_param_i16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %esi
-	movswq	-20(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4532
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4532
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4532:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4519
+	js	L4533
 	cmpq	$65535, -16(%rbp)
-	jle	L4520
-L4519:
+	jle	L4534
+L4533:
 	movl	$65409, %edi
 	call	__m3_fault
-L4520:
+L4534:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26729,25 +26957,25 @@ _A__Divide_var_i16_i32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L4525
+	je	L4539
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4525
+	jns	L4539
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L4525:
+L4539:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4526
+	js	L4540
 	cmpq	$65535, -16(%rbp)
-	jle	L4527
-L4526:
+	jle	L4541
+L4540:
 	movl	$65473, %edi
 	call	__m3_fault
-L4527:
+L4541:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26788,25 +27016,25 @@ _A__Divide_param_i16_i32:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L4532
+	je	L4546
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4532
+	jns	L4546
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L4532:
+L4546:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L4533
+	js	L4547
 	cmpq	$65535, -16(%rbp)
-	jle	L4534
-L4533:
+	jle	L4548
+L4547:
 	movl	$65537, %edi
 	call	__m3_fault
-L4534:
+L4548:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -26844,15 +27072,15 @@ _A__Divide_var_LC_i16:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L4539
+	je	L4553
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4539
+	jns	L4553
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L4539:
+L4553:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -26888,15 +27116,15 @@ _A__Divide_param_LC_i16:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L4544
+	je	L4558
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4544
+	jns	L4558
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L4544:
+L4558:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -26961,15 +27189,15 @@ _A__Divide_param_LC_LC:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L4553
+	je	L4567
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4553
+	jns	L4567
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L4553:
+L4567:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -26994,11 +27222,27 @@ _A__uDivide_var_LC_i64:
 _A__Divide_var_LC_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4572
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4572
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4572:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_LC_i64
@@ -27020,12 +27264,27 @@ _A__uDivide_param_LC_i64:
 _A__Divide_param_LC_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4577
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4577
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4577:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_LC_I
@@ -27049,11 +27308,27 @@ _A__uDivide_var_LC_I:
 _A__Divide_var_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4582
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4582
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4582:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_LC_I
@@ -27075,12 +27350,27 @@ _A__uDivide_param_LC_I:
 _A__Divide_param_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4587
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4587
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4587:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_LC_u8
@@ -27105,12 +27395,28 @@ _A__uDivide_var_LC_u8:
 _A__Divide_var_LC_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4592
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4592
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4592:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_LC_u8
@@ -27132,12 +27438,29 @@ _A__uDivide_param_LC_u8:
 _A__Divide_param_LC_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rsi
-	movsbq	-25(%rbp),%rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L4597
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4597
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L4597:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_LC_C
@@ -27172,15 +27495,15 @@ _A__Divide_var_LC_C:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L4582
+	je	L4602
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4582
+	jns	L4602
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L4582:
+L4602:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -27214,15 +27537,15 @@ _A__Divide_param_LC_C:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L4587
+	je	L4607
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4587
+	jns	L4607
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L4587:
+L4607:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -27248,12 +27571,28 @@ _A__uDivide_var_LC_u32:
 _A__Divide_var_LC_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4612
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4612
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4612:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_LC_u32
@@ -27276,13 +27615,30 @@ _A__uDivide_param_LC_u32:
 _A__Divide_param_LC_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rsi
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L4617
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4617
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L4617:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_LC_i8
@@ -27319,15 +27675,15 @@ _A__Divide_var_LC_i8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L4600
+	je	L4622
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4600
+	jns	L4622
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L4600:
+L4622:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -27363,15 +27719,15 @@ _A__Divide_param_LC_i8:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L4605
+	je	L4627
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4605
+	jns	L4627
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L4605:
+L4627:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -27396,11 +27752,27 @@ _A__uDivide_var_LC_L:
 _A__Divide_var_LC_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4632
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4632
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4632:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_LC_L
@@ -27422,12 +27794,27 @@ _A__uDivide_param_LC_L:
 _A__Divide_param_LC_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4637
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4637
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4637:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_LC_u64
@@ -27451,11 +27838,27 @@ _A__uDivide_var_LC_u64:
 _A__Divide_var_LC_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4642
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4642
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4642:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_LC_u64
@@ -27477,12 +27880,27 @@ _A__uDivide_param_LC_u64:
 _A__Divide_param_LC_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4647
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4647
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4647:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_LC_u16
@@ -27507,12 +27925,28 @@ _A__uDivide_var_LC_u16:
 _A__Divide_var_LC_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4652
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4652
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4652:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_LC_u16
@@ -27534,12 +27968,29 @@ _A__uDivide_param_LC_u16:
 _A__Divide_param_LC_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rsi
-	movswq	-26(%rbp),%rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L4657
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4657
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L4657:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_LC_i32
@@ -27576,15 +28027,15 @@ _A__Divide_var_LC_i32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L4634
+	je	L4662
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4634
+	jns	L4662
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L4634:
+L4662:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -27620,15 +28071,15 @@ _A__Divide_param_LC_i32:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L4639
+	je	L4667
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4639
+	jns	L4667
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L4639:
+L4667:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -27651,11 +28102,8 @@ _A__Divide_param_f64_f64:
 	movq	%rsp, %rbp
 	movsd	%xmm0, -24(%rbp)
 	movsd	%xmm1, -32(%rbp)
-	movsd	-24(%rbp), %xmm1
-	movsd	-32(%rbp), %xmm0
-	movapd	%xmm1, %xmm2
-	divsd	%xmm0, %xmm2
-	movapd	%xmm2, %xmm0
+	movsd	-24(%rbp), %xmm0
+	divsd	-32(%rbp), %xmm0
 	leave
 	ret
 .globl _A__uDivide_var_i64_i16
@@ -27680,11 +28128,28 @@ _A__uDivide_var_i64_i16:
 _A__Divide_var_i64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_divL
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4676
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4676
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4676:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i64_i16
@@ -27710,12 +28175,29 @@ _A__uDivide_param_i64_i16:
 _A__Divide_param_i64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4681
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4681
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4681:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i64_LC
@@ -27739,11 +28221,27 @@ _A__uDivide_var_i64_LC:
 _A__Divide_var_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4686
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4686
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4686:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i64_LC
@@ -27763,12 +28261,29 @@ _A__uDivide_param_i64_LC:
 _A__Divide_param_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4691
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4691
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4691:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i64_i64
@@ -27792,10 +28307,14 @@ _A__uDivide_var_i64_i64:
 _A__Divide_var_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
 	leave
 	ret
 .globl _A__uDivide_param_i64_i64
@@ -27821,12 +28340,28 @@ _A__uDivide_param_i64_i64:
 _A__Divide_param_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4700
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L4700
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4700:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i64_I
@@ -27850,10 +28385,27 @@ _A__uDivide_var_i64_I:
 _A__Divide_var_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4705
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4705
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4705:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i64_I
@@ -27879,12 +28431,28 @@ _A__uDivide_param_i64_I:
 _A__Divide_param_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4710
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L4710
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4710:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i64_u8
@@ -27909,11 +28477,28 @@ _A__uDivide_var_i64_u8:
 _A__Divide_var_i64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4715
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4715
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4715:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i64_u8
@@ -27939,12 +28524,29 @@ _A__uDivide_param_i64_u8:
 _A__Divide_param_i64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movsbq	-25(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4720
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4720
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4720:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i64_C
@@ -27968,11 +28570,27 @@ _A__uDivide_var_i64_C:
 _A__Divide_var_i64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4725
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4725
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4725:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i64_C
@@ -27992,12 +28610,29 @@ _A__uDivide_param_i64_C:
 _A__Divide_param_i64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4730
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4730
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4730:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i64_u32
@@ -28022,11 +28657,28 @@ _A__uDivide_var_i64_u32:
 _A__Divide_var_i64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4735
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4735
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4735:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i64_u32
@@ -28053,13 +28705,30 @@ _A__uDivide_param_i64_u32:
 _A__Divide_param_i64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4740
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4740
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4740:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i64_i8
@@ -28084,11 +28753,28 @@ _A__uDivide_var_i64_i8:
 _A__Divide_var_i64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_divL
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4745
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4745
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4745:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i64_i8
@@ -28114,12 +28800,29 @@ _A__uDivide_param_i64_i8:
 _A__Divide_param_i64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4750
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4750
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4750:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i64_L
@@ -28143,10 +28846,27 @@ _A__uDivide_var_i64_L:
 _A__Divide_var_i64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4755
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4755
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4755:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i64_L
@@ -28172,12 +28892,28 @@ _A__uDivide_param_i64_L:
 _A__Divide_param_i64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4760
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L4760
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4760:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i64_u64
@@ -28201,10 +28937,27 @@ _A__uDivide_var_i64_u64:
 _A__Divide_var_i64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4765
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4765
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4765:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i64_u64
@@ -28230,12 +28983,28 @@ _A__uDivide_param_i64_u64:
 _A__Divide_param_i64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4770
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L4770
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4770:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i64_u16
@@ -28260,11 +29029,28 @@ _A__uDivide_var_i64_u16:
 _A__Divide_var_i64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4775
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4775
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4775:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i64_u16
@@ -28290,12 +29076,29 @@ _A__uDivide_param_i64_u16:
 _A__Divide_param_i64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movswq	-26(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4780
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4780
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4780:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i64_i32
@@ -28320,11 +29123,28 @@ _A__uDivide_var_i64_i32:
 _A__Divide_var_i64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_divL
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4785
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4785
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4785:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i64_i32
@@ -28350,12 +29170,29 @@ _A__uDivide_param_i64_i32:
 _A__Divide_param_i64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	mov	-28(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4790
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4790
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4790:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_i16
@@ -28380,11 +29217,28 @@ _A__uDivide_var_I_i16:
 _A__Divide_var_I_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_divL
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4795
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4795
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4795:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_I_i16
@@ -28410,12 +29264,29 @@ _A__uDivide_param_I_i16:
 _A__Divide_param_I_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4800
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4800
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4800:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_LC
@@ -28439,11 +29310,27 @@ _A__uDivide_var_I_LC:
 _A__Divide_var_I_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4805
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4805
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4805:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_I_LC
@@ -28463,12 +29350,29 @@ _A__uDivide_param_I_LC:
 _A__Divide_param_I_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4810
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4810
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4810:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_i64
@@ -28492,10 +29396,27 @@ _A__uDivide_var_I_i64:
 _A__Divide_var_I_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4815
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4815
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4815:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_I_i64
@@ -28521,12 +29442,28 @@ _A__uDivide_param_I_i64:
 _A__Divide_param_I_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4820
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L4820
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4820:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_I
@@ -28550,10 +29487,14 @@ _A__uDivide_var_I_I:
 _A__Divide_var_I_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
 	leave
 	ret
 .globl _A__uDivide_param_I_I
@@ -28579,12 +29520,28 @@ _A__uDivide_param_I_I:
 _A__Divide_param_I_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4829
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L4829
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4829:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_u8
@@ -28609,11 +29566,28 @@ _A__uDivide_var_I_u8:
 _A__Divide_var_I_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4834
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4834
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4834:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_I_u8
@@ -28639,12 +29613,29 @@ _A__uDivide_param_I_u8:
 _A__Divide_param_I_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movsbq	-25(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4839
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4839
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4839:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_C
@@ -28668,11 +29659,27 @@ _A__uDivide_var_I_C:
 _A__Divide_var_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4844
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4844
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4844:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_I_C
@@ -28692,12 +29699,29 @@ _A__uDivide_param_I_C:
 _A__Divide_param_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4849
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4849
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4849:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_u32
@@ -28722,11 +29746,28 @@ _A__uDivide_var_I_u32:
 _A__Divide_var_I_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4854
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4854
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4854:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_I_u32
@@ -28753,13 +29794,30 @@ _A__uDivide_param_I_u32:
 _A__Divide_param_I_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4859
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4859
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4859:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_i8
@@ -28784,11 +29842,28 @@ _A__uDivide_var_I_i8:
 _A__Divide_var_I_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_divL
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4864
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4864
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4864:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_I_i8
@@ -28814,12 +29889,29 @@ _A__uDivide_param_I_i8:
 _A__Divide_param_I_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4869
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4869
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4869:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_L
@@ -28843,10 +29935,27 @@ _A__uDivide_var_I_L:
 _A__Divide_var_I_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4874
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4874
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4874:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_I_L
@@ -28872,12 +29981,28 @@ _A__uDivide_param_I_L:
 _A__Divide_param_I_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4879
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L4879
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4879:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_u64
@@ -28901,10 +30026,27 @@ _A__uDivide_var_I_u64:
 _A__Divide_var_I_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4884
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4884
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4884:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_I_u64
@@ -28930,12 +30072,28 @@ _A__uDivide_param_I_u64:
 _A__Divide_param_I_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4889
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L4889
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4889:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_u16
@@ -28960,11 +30118,28 @@ _A__uDivide_var_I_u16:
 _A__Divide_var_I_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4894
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4894
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4894:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_I_u16
@@ -28990,12 +30165,29 @@ _A__uDivide_param_I_u16:
 _A__Divide_param_I_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movswq	-26(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4899
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4899
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4899:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_I_i32
@@ -29020,11 +30212,28 @@ _A__uDivide_var_I_i32:
 _A__Divide_var_I_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_divL
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4904
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4904
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4904:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_I_i32
@@ -29050,12 +30259,29 @@ _A__uDivide_param_I_i32:
 _A__Divide_param_I_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	mov	-28(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4909
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4909
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4909:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u8_i16
@@ -29081,21 +30307,39 @@ _A__uDivide_var_u8_i16:
 _A__Divide_var_u8_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4914
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4914
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4914:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4840
+	jl	L4915
 	cmpq	$127, -16(%rbp)
-	jle	L4841
-L4840:
+	jle	L4916
+L4915:
 	movl	$70273, %edi
 	call	__m3_fault
-L4841:
+L4916:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29122,21 +30366,39 @@ _A__uDivide_param_u8_i16:
 _A__Divide_param_u8_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movzwl	-20(%rbp), %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4921
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4921
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4921:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4846
+	jl	L4922
 	cmpq	$127, -16(%rbp)
-	jle	L4847
-L4846:
+	jle	L4923
+L4922:
 	movl	$70337, %edi
 	call	__m3_fault
-L4847:
+L4923:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29162,12 +30424,28 @@ _A__uDivide_var_u8_LC:
 _A__Divide_var_u8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4928
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4928
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4928:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u8_LC
@@ -29187,12 +30465,29 @@ _A__uDivide_param_u8_LC:
 _A__Divide_param_u8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L4933
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4933
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L4933:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u8_i64
@@ -29217,11 +30512,28 @@ _A__uDivide_var_u8_i64:
 _A__Divide_var_u8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4938
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4938
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4938:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u8_i64
@@ -29247,12 +30559,27 @@ _A__uDivide_param_u8_i64:
 _A__Divide_param_u8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4943
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4943
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4943:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u8_I
@@ -29277,20 +30604,38 @@ _A__uDivide_var_u8_I:
 _A__Divide_var_u8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4948
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4948
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4948:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4868
+	jl	L4949
 	cmpq	$127, -16(%rbp)
-	jle	L4869
-L4868:
+	jle	L4950
+L4949:
 	movl	$70657, %edi
 	call	__m3_fault
-L4869:
+L4950:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29317,21 +30662,37 @@ _A__uDivide_param_u8_I:
 _A__Divide_param_u8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4955
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4955
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4955:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4874
+	jl	L4956
 	cmpq	$127, -16(%rbp)
-	jle	L4875
-L4874:
+	jle	L4957
+L4956:
 	movl	$70721, %edi
 	call	__m3_fault
-L4875:
+L4957:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29358,21 +30719,26 @@ _A__uDivide_var_u8_u8:
 _A__Divide_var_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -40(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
+	movsbq	%al,%rax
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
 	movq	%rax, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4880
+	jl	L4962
 	cmpq	$127, -16(%rbp)
-	jle	L4881
-L4880:
+	jle	L4963
+L4962:
 	movl	$70785, %edi
 	call	__m3_fault
-L4881:
+L4963:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29399,21 +30765,39 @@ _A__uDivide_param_u8_u8:
 _A__Divide_param_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movsbq	-18(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movsbq	-18(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4968
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4968
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4968:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4886
+	jl	L4969
 	cmpq	$127, -16(%rbp)
-	jle	L4887
-L4886:
+	jle	L4970
+L4969:
 	movl	$70849, %edi
 	call	__m3_fault
-L4887:
+L4970:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29439,21 +30823,38 @@ _A__uDivide_var_u8_C:
 _A__Divide_var_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4975
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4975
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4975:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4892
+	jl	L4976
 	cmpq	$127, -16(%rbp)
-	jle	L4893
-L4892:
+	jle	L4977
+L4976:
 	movl	$70913, %edi
 	call	__m3_fault
-L4893:
+L4977:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29474,21 +30875,39 @@ _A__uDivide_param_u8_C:
 _A__Divide_param_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L4982
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4982
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L4982:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4898
+	jl	L4983
 	cmpq	$127, -16(%rbp)
-	jle	L4899
-L4898:
+	jle	L4984
+L4983:
 	movl	$70977, %edi
 	call	__m3_fault
-L4899:
+L4984:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29515,21 +30934,39 @@ _A__uDivide_var_u8_u32:
 _A__Divide_var_u8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L4989
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4989
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L4989:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4904
+	jl	L4990
 	cmpq	$127, -16(%rbp)
-	jle	L4905
-L4904:
+	jle	L4991
+L4990:
 	movl	$71041, %edi
 	call	__m3_fault
-L4905:
+L4991:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29557,22 +30994,40 @@ _A__uDivide_param_u8_u32:
 _A__Divide_param_u8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rsi
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L4996
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L4996
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L4996:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4910
+	jl	L4997
 	cmpq	$127, -16(%rbp)
-	jle	L4911
-L4910:
+	jle	L4998
+L4997:
 	movl	$71105, %edi
 	call	__m3_fault
-L4911:
+L4998:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29599,21 +31054,39 @@ _A__uDivide_var_u8_i8:
 _A__Divide_var_u8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5003
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5003
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5003:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4916
+	jl	L5004
 	cmpq	$127, -16(%rbp)
-	jle	L4917
-L4916:
+	jle	L5005
+L5004:
 	movl	$71169, %edi
 	call	__m3_fault
-L4917:
+L5005:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29640,21 +31113,39 @@ _A__uDivide_param_u8_i8:
 _A__Divide_param_u8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movzbl	-18(%rbp), %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movzbl	-18(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5010
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5010
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5010:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4922
+	jl	L5011
 	cmpq	$127, -16(%rbp)
-	jle	L4923
-L4922:
+	jle	L5012
+L5011:
 	movl	$71233, %edi
 	call	__m3_fault
-L4923:
+L5012:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29680,11 +31171,28 @@ _A__uDivide_var_u8_L:
 _A__Divide_var_u8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5017
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5017
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5017:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u8_L
@@ -29710,12 +31218,27 @@ _A__uDivide_param_u8_L:
 _A__Divide_param_u8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5022
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5022
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5022:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u8_u64
@@ -29740,11 +31263,28 @@ _A__uDivide_var_u8_u64:
 _A__Divide_var_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5027
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5027
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5027:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u8_u64
@@ -29770,12 +31310,27 @@ _A__uDivide_param_u8_u64:
 _A__Divide_param_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5032
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5032
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5032:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u8_u16
@@ -29801,21 +31356,39 @@ _A__uDivide_var_u8_u16:
 _A__Divide_var_u8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5037
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5037
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5037:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4944
+	jl	L5038
 	cmpq	$127, -16(%rbp)
-	jle	L4945
-L4944:
+	jle	L5039
+L5038:
 	movl	$71553, %edi
 	call	__m3_fault
-L4945:
+L5039:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29842,21 +31415,39 @@ _A__uDivide_param_u8_u16:
 _A__Divide_param_u8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movswq	-20(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5044
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5044
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5044:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4950
+	jl	L5045
 	cmpq	$127, -16(%rbp)
-	jle	L4951
-L4950:
+	jle	L5046
+L5045:
 	movl	$71617, %edi
 	call	__m3_fault
-L4951:
+L5046:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29883,21 +31474,39 @@ _A__uDivide_var_u8_i32:
 _A__Divide_var_u8_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5051
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5051
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5051:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4956
+	jl	L5052
 	cmpq	$127, -16(%rbp)
-	jle	L4957
-L4956:
+	jle	L5053
+L5052:
 	movl	$71681, %edi
 	call	__m3_fault
-L4957:
+L5053:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29924,21 +31533,39 @@ _A__uDivide_param_u8_i32:
 _A__Divide_param_u8_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rsi
-	mov	-24(%rbp), %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5058
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5058
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5058:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L4962
+	jl	L5059
 	cmpq	$127, -16(%rbp)
-	jle	L4963
-L4962:
+	jle	L5060
+L5059:
 	movl	$71745, %edi
 	call	__m3_fault
-L4963:
+L5060:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -29977,22 +31604,22 @@ _A__Divide_var_C_i16:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L4968
+	je	L5065
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4968
+	jns	L5065
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L4968:
+L5065:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L4969
+	jns	L5066
 	movl	$71809, %edi
 	call	__m3_fault
-L4969:
+L5066:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30029,22 +31656,22 @@ _A__Divide_param_C_i16:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L4974
+	je	L5071
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4974
+	jns	L5071
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L4974:
+L5071:
 	movq	-56(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L4975
+	jns	L5072
 	movl	$71873, %edi
 	call	__m3_fault
-L4975:
+L5072:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30080,15 +31707,15 @@ _A__Divide_var_C_LC:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L4980
+	je	L5077
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4980
+	jns	L5077
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L4980:
+L5077:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -30122,15 +31749,15 @@ _A__Divide_param_C_LC:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L4985
+	je	L5082
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L4985
+	jns	L5082
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L4985:
+L5082:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -30155,11 +31782,27 @@ _A__uDivide_var_C_i64:
 _A__Divide_var_C_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5087
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5087
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5087:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_C_i64
@@ -30181,12 +31824,27 @@ _A__uDivide_param_C_i64:
 _A__Divide_param_C_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5092
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5092
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5092:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_C_I
@@ -30210,17 +31868,34 @@ _A__uDivide_var_C_I:
 _A__Divide_var_C_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5097
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5097
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5097:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L4998
+	jns	L5098
 	movl	$72193, %edi
 	call	__m3_fault
-L4998:
+L5098:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30243,18 +31918,34 @@ _A__uDivide_param_C_I:
 _A__Divide_param_C_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5103
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5103
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5103:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5003
+	jns	L5104
 	movl	$72257, %edi
 	call	__m3_fault
-L5003:
+L5104:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30280,18 +31971,35 @@ _A__uDivide_var_C_u8:
 _A__Divide_var_C_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5109
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5109
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5109:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5008
+	jns	L5110
 	movl	$72321, %edi
 	call	__m3_fault
-L5008:
+L5110:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30314,18 +32022,36 @@ _A__uDivide_param_C_u8:
 _A__Divide_param_C_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rsi
-	movsbq	-25(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L5115
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5115
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L5115:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5013
+	jns	L5116
 	movl	$72385, %edi
 	call	__m3_fault
-L5013:
+L5116:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30361,10 +32087,10 @@ _A__Divide_var_C_C:
 	idivq	%rcx
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5018
+	jns	L5121
 	movl	$72449, %edi
 	call	__m3_fault
-L5018:
+L5121:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30399,22 +32125,22 @@ _A__Divide_param_C_C:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L5023
+	je	L5126
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5023
+	jns	L5126
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L5023:
+L5126:
 	movq	-56(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5024
+	jns	L5127
 	movl	$72513, %edi
 	call	__m3_fault
-L5024:
+L5127:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30440,18 +32166,35 @@ _A__uDivide_var_C_u32:
 _A__Divide_var_C_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5132
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5132
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5132:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5029
+	jns	L5133
 	movl	$72577, %edi
 	call	__m3_fault
-L5029:
+L5133:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30475,19 +32218,37 @@ _A__uDivide_param_C_u32:
 _A__Divide_param_C_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rsi
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L5138
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5138
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L5138:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5034
+	jns	L5139
 	movl	$72641, %edi
 	call	__m3_fault
-L5034:
+L5139:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30526,22 +32287,22 @@ _A__Divide_var_C_i8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L5039
+	je	L5144
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5039
+	jns	L5144
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L5039:
+L5144:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5040
+	jns	L5145
 	movl	$72705, %edi
 	call	__m3_fault
-L5040:
+L5145:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30578,22 +32339,22 @@ _A__Divide_param_C_i8:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L5045
+	je	L5150
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5045
+	jns	L5150
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L5045:
+L5150:
 	movq	-56(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5046
+	jns	L5151
 	movl	$72769, %edi
 	call	__m3_fault
-L5046:
+L5151:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30618,11 +32379,27 @@ _A__uDivide_var_C_L:
 _A__Divide_var_C_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5156
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5156
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5156:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_C_L
@@ -30644,12 +32421,27 @@ _A__uDivide_param_C_L:
 _A__Divide_param_C_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5161
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5161
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5161:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_C_u64
@@ -30673,11 +32465,27 @@ _A__uDivide_var_C_u64:
 _A__Divide_var_C_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5166
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5166
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5166:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_C_u64
@@ -30699,12 +32507,27 @@ _A__uDivide_param_C_u64:
 _A__Divide_param_C_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5171
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5171
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5171:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_C_u16
@@ -30729,18 +32552,35 @@ _A__uDivide_var_C_u16:
 _A__Divide_var_C_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5176
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5176
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5176:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5067
+	jns	L5177
 	movl	$73089, %edi
 	call	__m3_fault
-L5067:
+L5177:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30763,18 +32603,36 @@ _A__uDivide_param_C_u16:
 _A__Divide_param_C_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rsi
-	movswq	-26(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L5182
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5182
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L5182:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5072
+	jns	L5183
 	movl	$73153, %edi
 	call	__m3_fault
-L5072:
+L5183:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30813,22 +32671,22 @@ _A__Divide_var_C_i32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L5077
+	je	L5188
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5077
+	jns	L5188
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L5077:
+L5188:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5078
+	jns	L5189
 	movl	$73217, %edi
 	call	__m3_fault
-L5078:
+L5189:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30865,22 +32723,22 @@ _A__Divide_param_C_i32:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L5083
+	je	L5194
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5083
+	jns	L5194
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L5083:
+L5194:
 	movq	-56(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L5084
+	jns	L5195
 	movl	$73281, %edi
 	call	__m3_fault
-L5084:
+L5195:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30903,11 +32761,8 @@ _A__Divide_param_f32_f32:
 	movq	%rsp, %rbp
 	movss	%xmm0, -20(%rbp)
 	movss	%xmm1, -24(%rbp)
-	movss	-20(%rbp), %xmm1
-	movss	-24(%rbp), %xmm0
-	movaps	%xmm1, %xmm2
-	divss	%xmm0, %xmm2
-	movaps	%xmm2, %xmm0
+	movss	-20(%rbp), %xmm0
+	divss	-24(%rbp), %xmm0
 	leave
 	ret
 .globl _A__uDivide_var_u32_i16
@@ -30933,21 +32788,39 @@ _A__uDivide_var_u32_i16:
 _A__Divide_var_u32_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5204
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5204
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5204:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5093
+	jl	L5205
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5094
-L5093:
+	jle	L5206
+L5205:
 	movl	$73409, %edi
 	call	__m3_fault
-L5094:
+L5206:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -30975,22 +32848,40 @@ _A__uDivide_param_u32_i16:
 _A__Divide_param_u32_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movw	%si, -22(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movzwl	-22(%rbp), %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	movzwl	-22(%rbp), %eax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5211
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5211
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5211:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5099
+	jl	L5212
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5100
-L5099:
+	jle	L5213
+L5212:
 	movl	$73473, %edi
 	call	__m3_fault
-L5100:
+L5213:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31016,12 +32907,28 @@ _A__uDivide_var_u32_LC:
 _A__Divide_var_u32_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5218
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5218
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5218:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u32_LC
@@ -31042,13 +32949,30 @@ _A__uDivide_param_u32_LC:
 _A__Divide_param_u32_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L5223
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5223
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L5223:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u32_i64
@@ -31073,11 +32997,28 @@ _A__uDivide_var_u32_i64:
 _A__Divide_var_u32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5228
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5228
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5228:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u32_i64
@@ -31104,13 +33045,28 @@ _A__uDivide_param_u32_i64:
 _A__Divide_param_u32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5233
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5233
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5233:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u32_I
@@ -31135,20 +33091,38 @@ _A__uDivide_var_u32_I:
 _A__Divide_var_u32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5238
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5238
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5238:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5121
+	jl	L5239
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5122
-L5121:
+	jle	L5240
+L5239:
 	movl	$73793, %edi
 	call	__m3_fault
-L5122:
+L5240:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31176,22 +33150,38 @@ _A__uDivide_param_u32_I:
 _A__Divide_param_u32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5245
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5245
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5245:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5127
+	jl	L5246
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5128
-L5127:
+	jle	L5247
+L5246:
 	movl	$73857, %edi
 	call	__m3_fault
-L5128:
+L5247:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31218,21 +33208,39 @@ _A__uDivide_var_u32_u8:
 _A__Divide_var_u32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5252
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5252
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5252:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5133
+	jl	L5253
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5134
-L5133:
+	jle	L5254
+L5253:
 	movl	$73921, %edi
 	call	__m3_fault
-L5134:
+L5254:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31260,22 +33268,40 @@ _A__uDivide_param_u32_u8:
 _A__Divide_param_u32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movb	%sil, -21(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movsbq	-21(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	movsbq	-21(%rbp),%rax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5259
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5259
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5259:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5139
+	jl	L5260
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5140
-L5139:
+	jle	L5261
+L5260:
 	movl	$73985, %edi
 	call	__m3_fault
-L5140:
+L5261:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31301,21 +33327,38 @@ _A__uDivide_var_u32_C:
 _A__Divide_var_u32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5266
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5266
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5266:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5145
+	jl	L5267
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5146
-L5145:
+	jle	L5268
+L5267:
 	movl	$74049, %edi
 	call	__m3_fault
-L5146:
+L5268:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31337,22 +33380,40 @@ _A__uDivide_param_u32_C:
 _A__Divide_param_u32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L5273
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5273
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L5273:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5151
+	jl	L5274
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5152
-L5151:
+	jle	L5275
+L5274:
 	movl	$74113, %edi
 	call	__m3_fault
-L5152:
+L5275:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31379,21 +33440,26 @@ _A__uDivide_var_u32_u32:
 _A__Divide_var_u32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -40(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
+	cltq
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
 	movq	%rax, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5157
+	jl	L5280
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5158
-L5157:
+	jle	L5281
+L5280:
 	movl	$74177, %edi
 	call	__m3_fault
-L5158:
+L5281:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31422,23 +33488,41 @@ _A__uDivide_param_u32_u32:
 _A__Divide_param_u32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5286
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5286
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5286:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5163
+	jl	L5287
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5164
-L5163:
+	jle	L5288
+L5287:
 	movl	$74241, %edi
 	call	__m3_fault
-L5164:
+L5288:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31465,21 +33549,39 @@ _A__uDivide_var_u32_i8:
 _A__Divide_var_u32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5293
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5293
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5293:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5169
+	jl	L5294
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5170
-L5169:
+	jle	L5295
+L5294:
 	movl	$74305, %edi
 	call	__m3_fault
-L5170:
+L5295:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31507,22 +33609,40 @@ _A__uDivide_param_u32_i8:
 _A__Divide_param_u32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movb	%sil, -21(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movzbl	-21(%rbp), %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	movzbl	-21(%rbp), %eax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5300
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5300
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5300:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5175
+	jl	L5301
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5176
-L5175:
+	jle	L5302
+L5301:
 	movl	$74369, %edi
 	call	__m3_fault
-L5176:
+L5302:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31548,11 +33668,28 @@ _A__uDivide_var_u32_L:
 _A__Divide_var_u32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5307
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5307
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5307:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u32_L
@@ -31579,13 +33716,28 @@ _A__uDivide_param_u32_L:
 _A__Divide_param_u32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5312
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5312
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5312:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u32_u64
@@ -31610,11 +33762,28 @@ _A__uDivide_var_u32_u64:
 _A__Divide_var_u32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5317
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5317
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5317:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u32_u64
@@ -31641,13 +33810,28 @@ _A__uDivide_param_u32_u64:
 _A__Divide_param_u32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5322
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5322
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5322:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u32_u16
@@ -31673,21 +33857,39 @@ _A__uDivide_var_u32_u16:
 _A__Divide_var_u32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5327
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5327
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5327:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5197
+	jl	L5328
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5198
-L5197:
+	jle	L5329
+L5328:
 	movl	$74689, %edi
 	call	__m3_fault
-L5198:
+L5329:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31715,22 +33917,40 @@ _A__uDivide_param_u32_u16:
 _A__Divide_param_u32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movw	%si, -22(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movswq	-22(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	movswq	-22(%rbp),%rax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5334
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5334
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5334:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5203
+	jl	L5335
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5204
-L5203:
+	jle	L5336
+L5335:
 	movl	$74753, %edi
 	call	__m3_fault
-L5204:
+L5336:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31757,21 +33977,39 @@ _A__uDivide_var_u32_i32:
 _A__Divide_var_u32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5341
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5341
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5341:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5209
+	jl	L5342
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5210
-L5209:
+	jle	L5343
+L5342:
 	movl	$74817, %edi
 	call	__m3_fault
-L5210:
+L5343:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31799,22 +34037,40 @@ _A__uDivide_param_u32_i32:
 _A__Divide_param_u32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	mov	-24(%rbp), %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %eax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5348
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5348
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5348:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L5215
+	jl	L5349
 	cmpq	$2147483647, -16(%rbp)
-	jle	L5216
-L5215:
+	jle	L5350
+L5349:
 	movl	$74881, %edi
 	call	__m3_fault
-L5216:
+L5350:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31855,25 +34111,25 @@ _A__Divide_var_i8_i16:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L5221
+	je	L5355
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5221
+	jns	L5355
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L5221:
+L5355:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5222
+	js	L5356
 	cmpq	$255, -16(%rbp)
-	jle	L5223
-L5222:
+	jle	L5357
+L5356:
 	movl	$74945, %edi
 	call	__m3_fault
-L5223:
+L5357:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31914,25 +34170,25 @@ _A__Divide_param_i8_i16:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L5228
+	je	L5362
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5228
+	jns	L5362
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L5228:
+L5362:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5229
+	js	L5363
 	cmpq	$255, -16(%rbp)
-	jle	L5230
-L5229:
+	jle	L5364
+L5363:
 	movl	$75009, %edi
 	call	__m3_fault
-L5230:
+L5364:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -31970,15 +34226,15 @@ _A__Divide_var_i8_LC:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L5235
+	je	L5369
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5235
+	jns	L5369
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L5235:
+L5369:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -32012,15 +34268,15 @@ _A__Divide_param_i8_LC:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L5240
+	je	L5374
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5240
+	jns	L5374
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L5240:
+L5374:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -32046,11 +34302,28 @@ _A__uDivide_var_i8_i64:
 _A__Divide_var_i8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5379
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5379
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5379:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i8_i64
@@ -32076,12 +34349,27 @@ _A__uDivide_param_i8_i64:
 _A__Divide_param_i8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5384
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5384
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5384:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i8_I
@@ -32106,20 +34394,38 @@ _A__uDivide_var_i8_I:
 _A__Divide_var_i8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5389
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5389
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5389:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5253
+	js	L5390
 	cmpq	$255, -16(%rbp)
-	jle	L5254
-L5253:
+	jle	L5391
+L5390:
 	movl	$75329, %edi
 	call	__m3_fault
-L5254:
+L5391:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32146,21 +34452,37 @@ _A__uDivide_param_i8_I:
 _A__Divide_param_i8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5396
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5396
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5396:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5259
+	js	L5397
 	cmpq	$255, -16(%rbp)
-	jle	L5260
-L5259:
+	jle	L5398
+L5397:
 	movl	$75393, %edi
 	call	__m3_fault
-L5260:
+L5398:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32187,21 +34509,39 @@ _A__uDivide_var_i8_u8:
 _A__Divide_var_i8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5403
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5403
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5403:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5265
+	js	L5404
 	cmpq	$255, -16(%rbp)
-	jle	L5266
-L5265:
+	jle	L5405
+L5404:
 	movl	$75457, %edi
 	call	__m3_fault
-L5266:
+L5405:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32228,21 +34568,39 @@ _A__uDivide_param_i8_u8:
 _A__Divide_param_i8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movb	%sil, -18(%rbp)
-	movzbl	-17(%rbp), %esi
-	movsbq	-18(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movsbq	-18(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5410
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5410
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5410:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5271
+	js	L5411
 	cmpq	$255, -16(%rbp)
-	jle	L5272
-L5271:
+	jle	L5412
+L5411:
 	movl	$75521, %edi
 	call	__m3_fault
-L5272:
+L5412:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32281,25 +34639,25 @@ _A__Divide_var_i8_C:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L5277
+	je	L5417
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5277
+	jns	L5417
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L5277:
+L5417:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5278
+	js	L5418
 	cmpq	$255, -16(%rbp)
-	jle	L5279
-L5278:
+	jle	L5419
+L5418:
 	movl	$75585, %edi
 	call	__m3_fault
-L5279:
+L5419:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32334,25 +34692,25 @@ _A__Divide_param_i8_C:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L5284
+	je	L5424
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5284
+	jns	L5424
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L5284:
+L5424:
 	movq	-56(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5285
+	js	L5425
 	cmpq	$255, -16(%rbp)
-	jle	L5286
-L5285:
+	jle	L5426
+L5425:
 	movl	$75649, %edi
 	call	__m3_fault
-L5286:
+L5426:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32379,21 +34737,39 @@ _A__uDivide_var_i8_u32:
 _A__Divide_var_i8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5431
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5431
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5431:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5291
+	js	L5432
 	cmpq	$255, -16(%rbp)
-	jle	L5292
-L5291:
+	jle	L5433
+L5432:
 	movl	$75713, %edi
 	call	__m3_fault
-L5292:
+L5433:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32421,22 +34797,40 @@ _A__uDivide_param_i8_u32:
 _A__Divide_param_i8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %esi
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5438
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5438
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5438:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5297
+	js	L5439
 	cmpq	$255, -16(%rbp)
-	jle	L5298
-L5297:
+	jle	L5440
+L5439:
 	movl	$75777, %edi
 	call	__m3_fault
-L5298:
+L5440:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32476,13 +34870,13 @@ _A__Divide_var_i8_i8:
 	idivq	%rcx
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5303
+	js	L5445
 	cmpq	$255, -16(%rbp)
-	jle	L5304
-L5303:
+	jle	L5446
+L5445:
 	movl	$75841, %edi
 	call	__m3_fault
-L5304:
+L5446:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32523,25 +34917,25 @@ _A__Divide_param_i8_i8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L5309
+	je	L5451
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5309
+	jns	L5451
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L5309:
+L5451:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5310
+	js	L5452
 	cmpq	$255, -16(%rbp)
-	jle	L5311
-L5310:
+	jle	L5453
+L5452:
 	movl	$75905, %edi
 	call	__m3_fault
-L5311:
+L5453:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32567,11 +34961,28 @@ _A__uDivide_var_i8_L:
 _A__Divide_var_i8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5458
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5458
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5458:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i8_L
@@ -32597,12 +35008,27 @@ _A__uDivide_param_i8_L:
 _A__Divide_param_i8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5463
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5463
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5463:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i8_u64
@@ -32627,11 +35053,28 @@ _A__uDivide_var_i8_u64:
 _A__Divide_var_i8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5468
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5468
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5468:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i8_u64
@@ -32657,12 +35100,27 @@ _A__uDivide_param_i8_u64:
 _A__Divide_param_i8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5473
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5473
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5473:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i8_u16
@@ -32688,21 +35146,39 @@ _A__uDivide_var_i8_u16:
 _A__Divide_var_i8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5478
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5478
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5478:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5332
+	js	L5479
 	cmpq	$255, -16(%rbp)
-	jle	L5333
-L5332:
+	jle	L5480
+L5479:
 	movl	$76225, %edi
 	call	__m3_fault
-L5333:
+L5480:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32729,21 +35205,39 @@ _A__uDivide_param_i8_u16:
 _A__Divide_param_i8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %esi
-	movswq	-20(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5485
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5485
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5485:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5338
+	js	L5486
 	cmpq	$255, -16(%rbp)
-	jle	L5339
-L5338:
+	jle	L5487
+L5486:
 	movl	$76289, %edi
 	call	__m3_fault
-L5339:
+L5487:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32784,25 +35278,25 @@ _A__Divide_var_i8_i32:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L5344
+	je	L5492
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5344
+	jns	L5492
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L5344:
+L5492:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5345
+	js	L5493
 	cmpq	$255, -16(%rbp)
-	jle	L5346
-L5345:
+	jle	L5494
+L5493:
 	movl	$76353, %edi
 	call	__m3_fault
-L5346:
+L5494:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32843,25 +35337,25 @@ _A__Divide_param_i8_i32:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L5351
+	je	L5499
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5351
+	jns	L5499
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L5351:
+L5499:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5352
+	js	L5500
 	cmpq	$255, -16(%rbp)
-	jle	L5353
-L5352:
+	jle	L5501
+L5500:
 	movl	$76417, %edi
 	call	__m3_fault
-L5353:
+L5501:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -32887,11 +35381,28 @@ _A__uDivide_var_L_i16:
 _A__Divide_var_L_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_divL
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5506
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5506
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5506:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_L_i16
@@ -32917,12 +35428,29 @@ _A__uDivide_param_L_i16:
 _A__Divide_param_L_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5511
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5511
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5511:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_L_LC
@@ -32946,11 +35474,27 @@ _A__uDivide_var_L_LC:
 _A__Divide_var_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5516
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5516
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5516:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_L_LC
@@ -32970,12 +35514,29 @@ _A__uDivide_param_L_LC:
 _A__Divide_param_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5521
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5521
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5521:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_L_i64
@@ -32999,10 +35560,27 @@ _A__uDivide_var_L_i64:
 _A__Divide_var_L_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5526
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5526
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5526:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_L_i64
@@ -33028,12 +35606,28 @@ _A__uDivide_param_L_i64:
 _A__Divide_param_L_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5531
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L5531
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5531:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_L_I
@@ -33057,10 +35651,27 @@ _A__uDivide_var_L_I:
 _A__Divide_var_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5536
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5536
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5536:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_L_I
@@ -33086,12 +35697,28 @@ _A__uDivide_param_L_I:
 _A__Divide_param_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5541
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L5541
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5541:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_L_u8
@@ -33116,11 +35743,28 @@ _A__uDivide_var_L_u8:
 _A__Divide_var_L_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5546
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5546
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5546:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_L_u8
@@ -33146,12 +35790,29 @@ _A__uDivide_param_L_u8:
 _A__Divide_param_L_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movsbq	-25(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5551
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5551
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5551:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_L_C
@@ -33175,11 +35836,27 @@ _A__uDivide_var_L_C:
 _A__Divide_var_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5556
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5556
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5556:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_L_C
@@ -33199,12 +35876,29 @@ _A__uDivide_param_L_C:
 _A__Divide_param_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5561
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5561
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5561:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_L_u32
@@ -33229,11 +35923,28 @@ _A__uDivide_var_L_u32:
 _A__Divide_var_L_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5566
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5566
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5566:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_L_u32
@@ -33260,13 +35971,30 @@ _A__uDivide_param_L_u32:
 _A__Divide_param_L_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5571
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5571
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5571:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_L_i8
@@ -33291,11 +36019,28 @@ _A__uDivide_var_L_i8:
 _A__Divide_var_L_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_divL
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5576
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5576
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5576:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_L_i8
@@ -33321,12 +36066,29 @@ _A__uDivide_param_L_i8:
 _A__Divide_param_L_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5581
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5581
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5581:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_L_L
@@ -33350,10 +36112,14 @@ _A__uDivide_var_L_L:
 _A__Divide_var_L_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
 	leave
 	ret
 .globl _A__uDivide_param_L_L
@@ -33379,12 +36145,28 @@ _A__uDivide_param_L_L:
 _A__Divide_param_L_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5590
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L5590
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5590:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_L_u64
@@ -33408,10 +36190,27 @@ _A__uDivide_var_L_u64:
 _A__Divide_var_L_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5595
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5595
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5595:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_L_u64
@@ -33437,12 +36236,28 @@ _A__uDivide_param_L_u64:
 _A__Divide_param_L_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5600
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L5600
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5600:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_L_u16
@@ -33467,11 +36282,28 @@ _A__uDivide_var_L_u16:
 _A__Divide_var_L_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5605
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5605
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5605:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_L_u16
@@ -33497,12 +36329,29 @@ _A__uDivide_param_L_u16:
 _A__Divide_param_L_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movswq	-26(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5610
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5610
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5610:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_L_i32
@@ -33527,11 +36376,28 @@ _A__uDivide_var_L_i32:
 _A__Divide_var_L_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_divL
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5615
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5615
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5615:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_L_i32
@@ -33557,12 +36423,29 @@ _A__uDivide_param_L_i32:
 _A__Divide_param_L_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	mov	-28(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5620
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5620
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5620:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_i16
@@ -33587,11 +36470,28 @@ _A__uDivide_var_u64_i16:
 _A__Divide_var_u64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_divL
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5625
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5625
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5625:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u64_i16
@@ -33617,12 +36517,29 @@ _A__uDivide_param_u64_i16:
 _A__Divide_param_u64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5630
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5630
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5630:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_LC
@@ -33646,11 +36563,27 @@ _A__uDivide_var_u64_LC:
 _A__Divide_var_u64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5635
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5635
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5635:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u64_LC
@@ -33670,12 +36603,29 @@ _A__uDivide_param_u64_LC:
 _A__Divide_param_u64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5640
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5640
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5640:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_i64
@@ -33699,10 +36649,27 @@ _A__uDivide_var_u64_i64:
 _A__Divide_var_u64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5645
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5645
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5645:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u64_i64
@@ -33728,12 +36695,28 @@ _A__uDivide_param_u64_i64:
 _A__Divide_param_u64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5650
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L5650
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5650:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_I
@@ -33757,10 +36740,27 @@ _A__uDivide_var_u64_I:
 _A__Divide_var_u64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5655
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5655
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5655:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u64_I
@@ -33786,12 +36786,28 @@ _A__uDivide_param_u64_I:
 _A__Divide_param_u64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5660
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L5660
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5660:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_u8
@@ -33816,11 +36832,28 @@ _A__uDivide_var_u64_u8:
 _A__Divide_var_u64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5665
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5665
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5665:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u64_u8
@@ -33846,12 +36879,29 @@ _A__uDivide_param_u64_u8:
 _A__Divide_param_u64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movsbq	-25(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5670
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5670
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5670:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_C
@@ -33875,11 +36925,27 @@ _A__uDivide_var_u64_C:
 _A__Divide_var_u64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5675
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5675
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5675:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u64_C
@@ -33899,12 +36965,29 @@ _A__uDivide_param_u64_C:
 _A__Divide_param_u64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5680
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5680
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5680:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_u32
@@ -33929,11 +37012,28 @@ _A__uDivide_var_u64_u32:
 _A__Divide_var_u64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5685
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5685
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5685:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u64_u32
@@ -33960,13 +37060,30 @@ _A__uDivide_param_u64_u32:
 _A__Divide_param_u64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5690
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5690
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5690:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_i8
@@ -33991,11 +37108,28 @@ _A__uDivide_var_u64_i8:
 _A__Divide_var_u64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_divL
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5695
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5695
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5695:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u64_i8
@@ -34021,12 +37155,29 @@ _A__uDivide_param_u64_i8:
 _A__Divide_param_u64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5700
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5700
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5700:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_L
@@ -34050,10 +37201,27 @@ _A__uDivide_var_u64_L:
 _A__Divide_var_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5705
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5705
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5705:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u64_L
@@ -34079,12 +37247,28 @@ _A__uDivide_param_u64_L:
 _A__Divide_param_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5710
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L5710
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5710:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_u64
@@ -34108,10 +37292,14 @@ _A__uDivide_var_u64_u64:
 _A__Divide_var_u64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -40(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
 	leave
 	ret
 .globl _A__uDivide_param_u64_u64
@@ -34137,12 +37325,28 @@ _A__uDivide_param_u64_u64:
 _A__Divide_param_u64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movq	-24(%rbp), %rax
+	movq	%rax, -56(%rbp)
+	movq	-56(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5719
+	movq	-32(%rbp), %rax
+	movq	-24(%rbp), %rdx
+	xorq	%rdx, %rax
+	testq	%rax, %rax
+	jns	L5719
+	subq	$1, -40(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5719:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_u16
@@ -34167,11 +37371,28 @@ _A__uDivide_var_u64_u16:
 _A__Divide_var_u64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5724
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5724
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5724:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u64_u16
@@ -34197,12 +37418,29 @@ _A__uDivide_param_u64_u16:
 _A__Divide_param_u64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	movswq	-26(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5729
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5729
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5729:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u64_i32
@@ -34227,11 +37465,28 @@ _A__uDivide_var_u64_i32:
 _A__Divide_var_u64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_divL
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5734
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5734
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5734:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u64_i32
@@ -34257,12 +37512,29 @@ _A__uDivide_param_u64_i32:
 _A__Divide_param_u64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_divL
+	mov	-28(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -72(%rbp)
+	movq	-72(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5739
+	movq	-40(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5739
+	subq	$1, -48(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5739:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u16_i16
@@ -34288,21 +37560,39 @@ _A__uDivide_var_u16_i16:
 _A__Divide_var_u16_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5744
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5744
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5744:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5550
+	jl	L5745
 	cmpq	$32767, -16(%rbp)
-	jle	L5551
-L5550:
+	jle	L5746
+L5745:
 	movl	$79553, %edi
 	call	__m3_fault
-L5551:
+L5746:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34329,21 +37619,39 @@ _A__uDivide_param_u16_i16:
 _A__Divide_param_u16_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rsi
-	movzwl	-20(%rbp), %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5751
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5751
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5751:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5556
+	jl	L5752
 	cmpq	$32767, -16(%rbp)
-	jle	L5557
-L5556:
+	jle	L5753
+L5752:
 	movl	$79617, %edi
 	call	__m3_fault
-L5557:
+L5753:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34369,12 +37677,28 @@ _A__uDivide_var_u16_LC:
 _A__Divide_var_u16_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5758
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5758
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5758:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u16_LC
@@ -34394,12 +37718,29 @@ _A__uDivide_param_u16_LC:
 _A__Divide_param_u16_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L5763
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5763
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L5763:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u16_i64
@@ -34424,11 +37765,28 @@ _A__uDivide_var_u16_i64:
 _A__Divide_var_u16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5768
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5768
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5768:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u16_i64
@@ -34454,12 +37812,27 @@ _A__uDivide_param_u16_i64:
 _A__Divide_param_u16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5773
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5773
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5773:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u16_I
@@ -34484,20 +37857,38 @@ _A__uDivide_var_u16_I:
 _A__Divide_var_u16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5778
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5778
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5778:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5578
+	jl	L5779
 	cmpq	$32767, -16(%rbp)
-	jle	L5579
-L5578:
+	jle	L5780
+L5779:
 	movl	$79937, %edi
 	call	__m3_fault
-L5579:
+L5780:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34524,21 +37915,37 @@ _A__uDivide_param_u16_I:
 _A__Divide_param_u16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5785
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5785
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5785:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5584
+	jl	L5786
 	cmpq	$32767, -16(%rbp)
-	jle	L5585
-L5584:
+	jle	L5787
+L5786:
 	movl	$80001, %edi
 	call	__m3_fault
-L5585:
+L5787:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34565,21 +37972,39 @@ _A__uDivide_var_u16_u8:
 _A__Divide_var_u16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5792
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5792
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5792:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5590
+	jl	L5793
 	cmpq	$32767, -16(%rbp)
-	jle	L5591
-L5590:
+	jle	L5794
+L5793:
 	movl	$80065, %edi
 	call	__m3_fault
-L5591:
+L5794:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34606,21 +38031,39 @@ _A__uDivide_param_u16_u8:
 _A__Divide_param_u16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rsi
-	movsbq	-19(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movsbq	-19(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5799
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5799
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5799:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5596
+	jl	L5800
 	cmpq	$32767, -16(%rbp)
-	jle	L5597
-L5596:
+	jle	L5801
+L5800:
 	movl	$80129, %edi
 	call	__m3_fault
-L5597:
+L5801:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34646,21 +38089,38 @@ _A__uDivide_var_u16_C:
 _A__Divide_var_u16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5806
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5806
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5806:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5602
+	jl	L5807
 	cmpq	$32767, -16(%rbp)
-	jle	L5603
-L5602:
+	jle	L5808
+L5807:
 	movl	$80193, %edi
 	call	__m3_fault
-L5603:
+L5808:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34681,21 +38141,39 @@ _A__uDivide_param_u16_C:
 _A__Divide_param_u16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -64(%rbp)
+	movq	%rax, -56(%rbp)
+	cmpq	$0, -64(%rbp)
+	je	L5813
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5813
+	subq	$1, -56(%rbp)
+	movq	-40(%rbp), %rax
+	addq	%rax, -64(%rbp)
+L5813:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5608
+	jl	L5814
 	cmpq	$32767, -16(%rbp)
-	jle	L5609
-L5608:
+	jle	L5815
+L5814:
 	movl	$80257, %edi
 	call	__m3_fault
-L5609:
+L5815:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34722,21 +38200,39 @@ _A__uDivide_var_u16_u32:
 _A__Divide_var_u16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5820
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5820
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5820:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5614
+	jl	L5821
 	cmpq	$32767, -16(%rbp)
-	jle	L5615
-L5614:
+	jle	L5822
+L5821:
 	movl	$80321, %edi
 	call	__m3_fault
-L5615:
+L5822:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34764,22 +38260,40 @@ _A__uDivide_param_u16_u32:
 _A__Divide_param_u16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rsi
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5827
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5827
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5827:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5620
+	jl	L5828
 	cmpq	$32767, -16(%rbp)
-	jle	L5621
-L5620:
+	jle	L5829
+L5828:
 	movl	$80385, %edi
 	call	__m3_fault
-L5621:
+L5829:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34806,21 +38320,39 @@ _A__uDivide_var_u16_i8:
 _A__Divide_var_u16_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5834
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5834
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5834:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5626
+	jl	L5835
 	cmpq	$32767, -16(%rbp)
-	jle	L5627
-L5626:
+	jle	L5836
+L5835:
 	movl	$80449, %edi
 	call	__m3_fault
-L5627:
+L5836:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34847,21 +38379,39 @@ _A__uDivide_param_u16_i8:
 _A__Divide_param_u16_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rsi
-	movzbl	-19(%rbp), %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movzbl	-19(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5841
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5841
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5841:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5632
+	jl	L5842
 	cmpq	$32767, -16(%rbp)
-	jle	L5633
-L5632:
+	jle	L5843
+L5842:
 	movl	$80513, %edi
 	call	__m3_fault
-L5633:
+L5843:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -34887,11 +38437,28 @@ _A__uDivide_var_u16_L:
 _A__Divide_var_u16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5848
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5848
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5848:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u16_L
@@ -34917,12 +38484,27 @@ _A__uDivide_param_u16_L:
 _A__Divide_param_u16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5853
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5853
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5853:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u16_u64
@@ -34947,11 +38529,28 @@ _A__uDivide_var_u16_u64:
 _A__Divide_var_u16_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5858
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5858
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5858:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_u16_u64
@@ -34977,12 +38576,27 @@ _A__uDivide_param_u16_u64:
 _A__Divide_param_u16_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5863
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5863
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5863:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_u16_u16
@@ -35008,21 +38622,26 @@ _A__uDivide_var_u16_u16:
 _A__Divide_var_u16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -40(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
+	movswq	%ax,%rax
+	movq	-40(%rbp), %rdx
+	movq	%rax, %rcx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	%rcx
 	movq	%rax, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5654
+	jl	L5868
 	cmpq	$32767, -16(%rbp)
-	jle	L5655
-L5654:
+	jle	L5869
+L5868:
 	movl	$80833, %edi
 	call	__m3_fault
-L5655:
+L5869:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35049,21 +38668,39 @@ _A__uDivide_param_u16_u16:
 _A__Divide_param_u16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rsi
-	movswq	-20(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5874
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5874
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5874:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5660
+	jl	L5875
 	cmpq	$32767, -16(%rbp)
-	jle	L5661
-L5660:
+	jle	L5876
+L5875:
 	movl	$80897, %edi
 	call	__m3_fault
-L5661:
+L5876:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35090,21 +38727,39 @@ _A__uDivide_var_u16_i32:
 _A__Divide_var_u16_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5881
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5881
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5881:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5666
+	jl	L5882
 	cmpq	$32767, -16(%rbp)
-	jle	L5667
-L5666:
+	jle	L5883
+L5882:
 	movl	$80961, %edi
 	call	__m3_fault
-L5667:
+L5883:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35131,21 +38786,39 @@ _A__uDivide_param_u16_i32:
 _A__Divide_param_u16_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rsi
-	mov	-24(%rbp), %edi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5888
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5888
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5888:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L5672
+	jl	L5889
 	cmpq	$32767, -16(%rbp)
-	jle	L5673
-L5672:
+	jle	L5890
+L5889:
 	movl	$81025, %edi
 	call	__m3_fault
-L5673:
+L5890:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35186,26 +38859,26 @@ _A__Divide_var_i32_i16:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L5678
+	je	L5895
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5678
+	jns	L5895
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L5678:
+L5895:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5679
+	js	L5896
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5680
-L5679:
+	jle	L5897
+L5896:
 	movl	$81089, %edi
 	call	__m3_fault
-L5680:
+L5897:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35246,26 +38919,26 @@ _A__Divide_param_i32_i16:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L5685
+	je	L5902
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5685
+	jns	L5902
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L5685:
+L5902:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5686
+	js	L5903
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5687
-L5686:
+	jle	L5904
+L5903:
 	movl	$81153, %edi
 	call	__m3_fault
-L5687:
+L5904:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35303,15 +38976,15 @@ _A__Divide_var_i32_LC:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L5692
+	je	L5909
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5692
+	jns	L5909
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L5692:
+L5909:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -35345,15 +39018,15 @@ _A__Divide_param_i32_LC:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L5697
+	je	L5914
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5697
+	jns	L5914
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L5697:
+L5914:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -35379,11 +39052,28 @@ _A__uDivide_var_i32_i64:
 _A__Divide_var_i32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_divL
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5919
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5919
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5919:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i32_i64
@@ -35409,12 +39099,27 @@ _A__uDivide_param_i32_i64:
 _A__Divide_param_i32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5924
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5924
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5924:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i32_I
@@ -35439,21 +39144,39 @@ _A__uDivide_var_i32_I:
 _A__Divide_var_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5929
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5929
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5929:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5710
+	js	L5930
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5711
-L5710:
+	jle	L5931
+L5930:
 	movl	$81473, %edi
 	call	__m3_fault
-L5711:
+L5931:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35480,22 +39203,38 @@ _A__uDivide_param_i32_I:
 _A__Divide_param_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5936
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5936
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5936:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5716
+	js	L5937
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5717
-L5716:
+	jle	L5938
+L5937:
 	movl	$81537, %edi
 	call	__m3_fault
-L5717:
+L5938:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35522,22 +39261,40 @@ _A__uDivide_var_i32_u8:
 _A__Divide_var_i32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5943
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5943
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5943:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5722
+	js	L5944
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5723
-L5722:
+	jle	L5945
+L5944:
 	movl	$81601, %edi
 	call	__m3_fault
-L5723:
+L5945:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35564,22 +39321,40 @@ _A__uDivide_param_i32_u8:
 _A__Divide_param_i32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %esi
-	movsbq	-21(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movsbq	-21(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5950
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5950
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5950:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5728
+	js	L5951
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5729
-L5728:
+	jle	L5952
+L5951:
 	movl	$81665, %edi
 	call	__m3_fault
-L5729:
+L5952:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35618,26 +39393,26 @@ _A__Divide_var_i32_C:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L5734
+	je	L5957
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5734
+	jns	L5957
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L5734:
+L5957:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5735
+	js	L5958
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5736
-L5735:
+	jle	L5959
+L5958:
 	movl	$81729, %edi
 	call	__m3_fault
-L5736:
+L5959:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35672,26 +39447,26 @@ _A__Divide_param_i32_C:
 	movq	%rdx, -64(%rbp)
 	movq	%rax, -56(%rbp)
 	cmpq	$0, -64(%rbp)
-	je	L5741
+	je	L5964
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5741
+	jns	L5964
 	subq	$1, -56(%rbp)
 	movq	-40(%rbp), %rax
 	addq	%rax, -64(%rbp)
-L5741:
+L5964:
 	movq	-56(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5742
+	js	L5965
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5743
-L5742:
+	jle	L5966
+L5965:
 	movl	$81793, %edi
 	call	__m3_fault
-L5743:
+L5966:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35718,22 +39493,40 @@ _A__uDivide_var_i32_u32:
 _A__Divide_var_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5971
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5971
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5971:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5748
+	js	L5972
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5749
-L5748:
+	jle	L5973
+L5972:
 	movl	$81857, %edi
 	call	__m3_fault
-L5749:
+L5973:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35761,23 +39554,41 @@ _A__uDivide_param_i32_u32:
 _A__Divide_param_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %esi
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L5978
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5978
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L5978:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5754
+	js	L5979
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5755
-L5754:
+	jle	L5980
+L5979:
 	movl	$81921, %edi
 	call	__m3_fault
-L5755:
+L5980:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35818,26 +39629,26 @@ _A__Divide_var_i32_i8:
 	movq	%rdx, -48(%rbp)
 	movq	%rax, -40(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L5760
+	je	L5985
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5760
+	jns	L5985
 	subq	$1, -40(%rbp)
 	movq	-24(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L5760:
+L5985:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5761
+	js	L5986
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5762
-L5761:
+	jle	L5987
+L5986:
 	movl	$81985, %edi
 	call	__m3_fault
-L5762:
+L5987:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35878,26 +39689,26 @@ _A__Divide_param_i32_i8:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L5767
+	je	L5992
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5767
+	jns	L5992
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L5767:
+L5992:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5768
+	js	L5993
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5769
-L5768:
+	jle	L5994
+L5993:
 	movl	$82049, %edi
 	call	__m3_fault
-L5769:
+L5994:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -35923,11 +39734,28 @@ _A__uDivide_var_i32_L:
 _A__Divide_var_i32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_divL
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L5999
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L5999
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L5999:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i32_L
@@ -35953,12 +39781,27 @@ _A__uDivide_param_i32_L:
 _A__Divide_param_i32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6004
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6004
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6004:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i32_u64
@@ -35983,11 +39826,28 @@ _A__uDivide_var_i32_u64:
 _A__Divide_var_i32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_divL
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6009
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6009
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6009:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_param_i32_u64
@@ -36013,12 +39873,27 @@ _A__uDivide_param_i32_u64:
 _A__Divide_param_i32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_divL
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6014
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6014
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6014:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uDivide_var_i32_u16
@@ -36044,22 +39919,40 @@ _A__uDivide_var_i32_u16:
 _A__Divide_var_i32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -48(%rbp)
+	movq	%rax, -40(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6019
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6019
+	subq	$1, -40(%rbp)
+	movq	-24(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6019:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5790
+	js	L6020
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5791
-L5790:
+	jle	L6021
+L6020:
 	movl	$82369, %edi
 	call	__m3_fault
-L5791:
+L6021:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36086,22 +39979,40 @@ _A__uDivide_param_i32_u16:
 _A__Divide_param_i32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %esi
-	movswq	-22(%rbp),%rdi
-	call	_m3_divL
-	movq	%rax, -16(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movswq	-22(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -56(%rbp)
+	movq	%rax, -48(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6026
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6026
+	subq	$1, -48(%rbp)
+	movq	-32(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6026:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5796
+	js	L6027
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5797
-L5796:
+	jle	L6028
+L6027:
 	movl	$82433, %edi
 	call	__m3_fault
-L5797:
+L6028:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36141,14 +40052,14 @@ _A__Divide_var_i32_i32:
 	idivq	%rcx
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5802
+	js	L6033
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5803
-L5802:
+	jle	L6034
+L6033:
 	movl	$82497, %edi
 	call	__m3_fault
-L5803:
+L6034:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36189,26 +40100,26 @@ _A__Divide_param_i32_i32:
 	movq	%rdx, -56(%rbp)
 	movq	%rax, -48(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L5808
+	je	L6039
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5808
+	jns	L6039
 	subq	$1, -48(%rbp)
 	movq	-32(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L5808:
+L6039:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5809
+	js	L6040
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L5810
-L5809:
+	jle	L6041
+L6040:
 	movl	$82561, %edi
 	call	__m3_fault
-L5810:
+L6041:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36245,14 +40156,14 @@ _A__Mod_var_i16_i16:
 	idivq	-32(%rbp)
 	movq	%rdx, -24(%rbp)
 	cmpq	$0, -24(%rbp)
-	je	L5815
+	je	L6046
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5815
+	jns	L6046
 	movq	-32(%rbp), %rax
 	addq	%rax, -24(%rbp)
-L5815:
+L6046:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -36289,14 +40200,14 @@ _A__Mod_param_i16_i16:
 	idivq	-40(%rbp)
 	movq	%rdx, -32(%rbp)
 	cmpq	$0, -32(%rbp)
-	je	L5820
+	je	L6051
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5820
+	jns	L6051
 	movq	-40(%rbp), %rax
 	addq	%rax, -32(%rbp)
-L5820:
+L6051:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -36331,14 +40242,14 @@ _A__Mod_var_i16_LC:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L5825
+	je	L6056
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5825
+	jns	L6056
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L5825:
+L6056:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -36374,14 +40285,14 @@ _A__Mod_param_i16_LC:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L5830
+	je	L6061
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5830
+	jns	L6061
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L5830:
+L6061:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -36405,11 +40316,26 @@ _A__uMod_var_i16_i64:
 _A__Mod_var_i16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6066
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6066
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6066:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i16_i64
@@ -36433,12 +40359,25 @@ _A__uMod_param_i16_i64:
 _A__Mod_param_i16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6071
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6071
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6071:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i16_I
@@ -36461,20 +40400,36 @@ _A__uMod_var_i16_I:
 _A__Mod_var_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6076
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6076
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6076:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5843
+	js	L6077
 	cmpq	$65535, -16(%rbp)
-	jle	L5844
-L5843:
+	jle	L6078
+L6077:
 	movl	$83105, %edi
 	call	__m3_fault
-L5844:
+L6078:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36499,21 +40454,35 @@ _A__uMod_param_i16_I:
 _A__Mod_param_i16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6083
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6083
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6083:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5849
+	js	L6084
 	cmpq	$65535, -16(%rbp)
-	jle	L5850
-L5849:
+	jle	L6085
+L6084:
 	movl	$83169, %edi
 	call	__m3_fault
-L5850:
+L6085:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36538,21 +40507,37 @@ _A__uMod_var_i16_u8:
 _A__Mod_var_i16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6090
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6090
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6090:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5855
+	js	L6091
 	cmpq	$65535, -16(%rbp)
-	jle	L5856
-L5855:
+	jle	L6092
+L6091:
 	movl	$83233, %edi
 	call	__m3_fault
-L5856:
+L6092:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36577,21 +40562,37 @@ _A__uMod_param_i16_u8:
 _A__Mod_param_i16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movb	%sil, -19(%rbp)
-	movzwl	-18(%rbp), %esi
-	movsbq	-19(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movsbq	-19(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6097
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6097
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6097:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5861
+	js	L6098
 	cmpq	$65535, -16(%rbp)
-	jle	L5862
-L5861:
+	jle	L6099
+L6098:
 	movl	$83297, %edi
 	call	__m3_fault
-L5862:
+L6099:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36627,21 +40628,21 @@ _A__Mod_var_i16_C:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L5867
+	je	L6104
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5867
+	jns	L6104
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L5867:
+L6104:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$65535, -16(%rbp)
-	jle	L5868
+	jle	L6105
 	movl	$83361, %edi
 	call	__m3_fault
-L5868:
+L6105:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36678,21 +40679,21 @@ _A__Mod_param_i16_C:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L5873
+	je	L6110
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5873
+	jns	L6110
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L5873:
+L6110:
 	movq	-56(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$65535, -16(%rbp)
-	jle	L5874
+	jle	L6111
 	movl	$83425, %edi
 	call	__m3_fault
-L5874:
+L6111:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36717,21 +40718,37 @@ _A__uMod_var_i16_u32:
 _A__Mod_var_i16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6116
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6116
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6116:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5879
+	js	L6117
 	cmpq	$65535, -16(%rbp)
-	jle	L5880
-L5879:
+	jle	L6118
+L6117:
 	movl	$83489, %edi
 	call	__m3_fault
-L5880:
+L6118:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36757,22 +40774,38 @@ _A__uMod_param_i16_u32:
 _A__Mod_param_i16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movl	%esi, -24(%rbp)
-	movzwl	-18(%rbp), %esi
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6123
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6123
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6123:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5885
+	js	L6124
 	cmpq	$65535, -16(%rbp)
-	jle	L5886
-L5885:
+	jle	L6125
+L6124:
 	movl	$83553, %edi
 	call	__m3_fault
-L5886:
+L6125:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -36809,14 +40842,14 @@ _A__Mod_var_i16_i8:
 	idivq	-32(%rbp)
 	movq	%rdx, -24(%rbp)
 	cmpq	$0, -24(%rbp)
-	je	L5891
+	je	L6130
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5891
+	jns	L6130
 	movq	-32(%rbp), %rax
 	addq	%rax, -24(%rbp)
-L5891:
+L6130:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -36853,14 +40886,14 @@ _A__Mod_param_i16_i8:
 	idivq	-40(%rbp)
 	movq	%rdx, -32(%rbp)
 	cmpq	$0, -32(%rbp)
-	je	L5896
+	je	L6135
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5896
+	jns	L6135
 	movq	-40(%rbp), %rax
 	addq	%rax, -32(%rbp)
-L5896:
+L6135:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -36884,11 +40917,26 @@ _A__uMod_var_i16_L:
 _A__Mod_var_i16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6140
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6140
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6140:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i16_L
@@ -36912,12 +40960,25 @@ _A__uMod_param_i16_L:
 _A__Mod_param_i16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6145
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6145
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6145:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i16_u64
@@ -36940,11 +41001,26 @@ _A__uMod_var_i16_u64:
 _A__Mod_var_i16_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6150
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6150
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6150:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i16_u64
@@ -36968,12 +41044,25 @@ _A__uMod_param_i16_u64:
 _A__Mod_param_i16_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzwl	-18(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6155
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6155
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6155:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i16_u16
@@ -36997,21 +41086,37 @@ _A__uMod_var_i16_u16:
 _A__Mod_var_i16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %esi
+	movzwl	%ax, %eax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6160
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6160
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6160:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5917
+	js	L6161
 	cmpq	$65535, -16(%rbp)
-	jle	L5918
-L5917:
+	jle	L6162
+L6161:
 	movl	$84001, %edi
 	call	__m3_fault
-L5918:
+L6162:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -37036,21 +41141,37 @@ _A__uMod_param_i16_u16:
 _A__Mod_param_i16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movw	%si, -20(%rbp)
-	movzwl	-18(%rbp), %esi
-	movswq	-20(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movzwl	-18(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6167
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6167
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6167:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L5923
+	js	L6168
 	cmpq	$65535, -16(%rbp)
-	jle	L5924
-L5923:
+	jle	L6169
+L6168:
 	movl	$84065, %edi
 	call	__m3_fault
-L5924:
+L6169:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -37088,21 +41209,21 @@ _A__Mod_var_i16_i32:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L5929
+	je	L6174
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5929
+	jns	L6174
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L5929:
+L6174:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$65535, -16(%rbp)
-	jle	L5930
+	jle	L6175
 	movl	$84129, %edi
 	call	__m3_fault
-L5930:
+L6175:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -37140,21 +41261,21 @@ _A__Mod_param_i16_i32:
 	idivq	-32(%rbp)
 	movq	%rdx, -48(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L5935
+	je	L6180
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5935
+	jns	L6180
 	movq	-32(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L5935:
+L6180:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$65535, -16(%rbp)
-	jle	L5936
+	jle	L6181
 	movl	$84193, %edi
 	call	__m3_fault
-L5936:
+L6181:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -37189,14 +41310,14 @@ _A__Mod_var_LC_i16:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L5941
+	je	L6186
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5941
+	jns	L6186
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L5941:
+L6186:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -37234,14 +41355,14 @@ _A__Mod_param_LC_i16:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L5946
+	je	L6191
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5946
+	jns	L6191
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L5946:
+L6191:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -37274,14 +41395,14 @@ _A__Mod_var_LC_LC:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L5951
+	je	L6196
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5951
+	jns	L6196
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L5951:
+L6196:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -37317,14 +41438,14 @@ _A__Mod_param_LC_LC:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L5956
+	je	L6201
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5956
+	jns	L6201
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L5956:
+L6201:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -37347,11 +41468,25 @@ _A__uMod_var_LC_i64:
 _A__Mod_var_LC_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6206
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6206
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6206:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_LC_i64
@@ -37376,12 +41511,25 @@ _A__uMod_param_LC_i64:
 _A__Mod_param_LC_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6211
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6211
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6211:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_LC_I
@@ -37403,11 +41551,25 @@ _A__uMod_var_LC_I:
 _A__Mod_var_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6216
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6216
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6216:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_LC_I
@@ -37432,12 +41594,25 @@ _A__uMod_param_LC_I:
 _A__Mod_param_LC_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6221
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6221
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6221:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_LC_u8
@@ -37460,12 +41635,26 @@ _A__uMod_var_LC_u8:
 _A__Mod_var_LC_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6226
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6226
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6226:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_LC_u8
@@ -37490,12 +41679,27 @@ _A__uMod_param_LC_u8:
 _A__Mod_param_LC_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rsi
-	movsbq	-25(%rbp),%rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6231
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6231
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6231:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_LC_C
@@ -37527,14 +41731,14 @@ _A__Mod_var_LC_C:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L5985
+	je	L6236
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5985
+	jns	L6236
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L5985:
+L6236:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -37570,14 +41774,14 @@ _A__Mod_param_LC_C:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L5990
+	je	L6241
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L5990
+	jns	L6241
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L5990:
+L6241:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -37601,12 +41805,26 @@ _A__uMod_var_LC_u32:
 _A__Mod_var_LC_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6246
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6246
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6246:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_LC_u32
@@ -37632,13 +41850,28 @@ _A__uMod_param_LC_u32:
 _A__Mod_param_LC_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rsi
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6251
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6251
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6251:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_LC_i8
@@ -37672,14 +41905,14 @@ _A__Mod_var_LC_i8:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L6003
+	je	L6256
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6003
+	jns	L6256
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L6003:
+L6256:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -37717,14 +41950,14 @@ _A__Mod_param_LC_i8:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L6008
+	je	L6261
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6008
+	jns	L6261
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L6008:
+L6261:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -37747,11 +41980,25 @@ _A__uMod_var_LC_L:
 _A__Mod_var_LC_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6266
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6266
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6266:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_LC_L
@@ -37776,12 +42023,25 @@ _A__uMod_param_LC_L:
 _A__Mod_param_LC_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6271
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6271
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6271:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_LC_u64
@@ -37803,11 +42063,25 @@ _A__uMod_var_LC_u64:
 _A__Mod_var_LC_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6276
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6276
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6276:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_LC_u64
@@ -37832,12 +42106,25 @@ _A__uMod_param_LC_u64:
 _A__Mod_param_LC_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6281
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6281
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6281:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_LC_u16
@@ -37860,12 +42147,26 @@ _A__uMod_var_LC_u16:
 _A__Mod_var_LC_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6286
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6286
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6286:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_LC_u16
@@ -37890,12 +42191,27 @@ _A__uMod_param_LC_u16:
 _A__Mod_param_LC_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rsi
-	movswq	-26(%rbp),%rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6291
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6291
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6291:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_LC_i32
@@ -37929,14 +42245,14 @@ _A__Mod_var_LC_i32:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L6037
+	je	L6296
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6037
+	jns	L6296
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L6037:
+L6296:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -37974,14 +42290,14 @@ _A__Mod_param_LC_i32:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L6042
+	je	L6301
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6042
+	jns	L6301
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L6042:
+L6301:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -37991,39 +42307,33 @@ _A__Mod_var_f64_f64:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movq	120+_MM_A(%rip), %rax
-	movq	%rax, -40(%rbp)
+	movq	%rax, -16(%rbp)
 	movq	120+_MM_A(%rip), %rax
-	movq	%rax, -32(%rbp)
-	movsd	-40(%rbp), %xmm1
-	movsd	-32(%rbp), %xmm0
-	movapd	%xmm1, %xmm2
-	divsd	%xmm0, %xmm2
-	movapd	%xmm2, %xmm0
-	movsd	%xmm0, -16(%rbp)
-	movsd	-16(%rbp), %xmm0
-	cvttsd2siq	%xmm0, %rax
 	movq	%rax, -24(%rbp)
-	movsd	-40(%rbp), %xmm0
-	movsd	%xmm0, -64(%rbp)
-	cvtsi2sdq	-24(%rbp), %xmm1
 	movsd	-16(%rbp), %xmm0
-	ucomisd	%xmm1, %xmm0
-	jb	L6050
-L6049:
-	cvtsi2sdq	-24(%rbp), %xmm1
-	movsd	%xmm1, -56(%rbp)
-	jmp	L6047
-L6050:
-	movq	-24(%rbp), %rax
-	subq	$1, %rax
-	cvtsi2sdq	%rax, %xmm2
-	movsd	%xmm2, -56(%rbp)
-L6047:
+	divsd	-24(%rbp), %xmm0
+	movsd	%xmm0, -32(%rbp)
 	movsd	-32(%rbp), %xmm0
-	mulsd	-56(%rbp), %xmm0
-	movsd	-64(%rbp), %xmm1
-	subsd	%xmm0, %xmm1
-	movapd	%xmm1, %xmm0
+	cvttsd2siq	%xmm0, %rax
+	movq	%rax, -40(%rbp)
+	cvtsi2sdq	-40(%rbp), %xmm1
+	movsd	-32(%rbp), %xmm0
+	ucomisd	%xmm1, %xmm0
+	jb	L6309
+L6308:
+	cvtsi2sdq	-40(%rbp), %xmm0
+	movsd	%xmm0, -56(%rbp)
+	jmp	L6306
+L6309:
+	movq	-40(%rbp), %rax
+	subq	$1, %rax
+	cvtsi2sdq	%rax, %xmm0
+	movsd	%xmm0, -56(%rbp)
+L6306:
+	movsd	-56(%rbp), %xmm1
+	mulsd	-24(%rbp), %xmm1
+	movsd	-16(%rbp), %xmm0
+	subsd	%xmm1, %xmm0
 	leave
 	ret
 .globl _A__Mod_param_f64_f64
@@ -38034,39 +42344,33 @@ _A__Mod_param_f64_f64:
 	movsd	%xmm0, -56(%rbp)
 	movsd	%xmm1, -64(%rbp)
 	movq	-56(%rbp), %rax
-	movq	%rax, -40(%rbp)
+	movq	%rax, -16(%rbp)
 	movq	-64(%rbp), %rax
-	movq	%rax, -32(%rbp)
-	movsd	-40(%rbp), %xmm1
-	movsd	-32(%rbp), %xmm0
-	movapd	%xmm1, %xmm2
-	divsd	%xmm0, %xmm2
-	movapd	%xmm2, %xmm0
-	movsd	%xmm0, -16(%rbp)
-	movsd	-16(%rbp), %xmm0
-	cvttsd2siq	%xmm0, %rax
 	movq	%rax, -24(%rbp)
-	movsd	-40(%rbp), %xmm0
-	movsd	%xmm0, -80(%rbp)
-	cvtsi2sdq	-24(%rbp), %xmm1
 	movsd	-16(%rbp), %xmm0
-	ucomisd	%xmm1, %xmm0
-	jb	L6057
-L6056:
-	cvtsi2sdq	-24(%rbp), %xmm1
-	movsd	%xmm1, -72(%rbp)
-	jmp	L6054
-L6057:
-	movq	-24(%rbp), %rax
-	subq	$1, %rax
-	cvtsi2sdq	%rax, %xmm2
-	movsd	%xmm2, -72(%rbp)
-L6054:
+	divsd	-24(%rbp), %xmm0
+	movsd	%xmm0, -32(%rbp)
 	movsd	-32(%rbp), %xmm0
-	mulsd	-72(%rbp), %xmm0
-	movsd	-80(%rbp), %xmm1
-	subsd	%xmm0, %xmm1
-	movapd	%xmm1, %xmm0
+	cvttsd2siq	%xmm0, %rax
+	movq	%rax, -40(%rbp)
+	cvtsi2sdq	-40(%rbp), %xmm1
+	movsd	-32(%rbp), %xmm0
+	ucomisd	%xmm1, %xmm0
+	jb	L6316
+L6315:
+	cvtsi2sdq	-40(%rbp), %xmm0
+	movsd	%xmm0, -72(%rbp)
+	jmp	L6313
+L6316:
+	movq	-40(%rbp), %rax
+	subq	$1, %rax
+	cvtsi2sdq	%rax, %xmm0
+	movsd	%xmm0, -72(%rbp)
+L6313:
+	movsd	-72(%rbp), %xmm1
+	mulsd	-24(%rbp), %xmm1
+	movsd	-16(%rbp), %xmm0
+	subsd	%xmm1, %xmm0
 	leave
 	ret
 .globl _A__uMod_var_i64_i16
@@ -38090,11 +42394,26 @@ _A__uMod_var_i64_i16:
 _A__Mod_var_i64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_modL
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6320
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6320
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6320:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_i16
@@ -38118,12 +42437,27 @@ _A__uMod_param_i64_i16:
 _A__Mod_param_i64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6325
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6325
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6325:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i64_LC
@@ -38146,11 +42480,25 @@ _A__uMod_var_i64_LC:
 _A__Mod_var_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6330
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6330
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6330:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_LC
@@ -38173,12 +42521,27 @@ _A__uMod_param_i64_LC:
 _A__Mod_param_i64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6335
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6335
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6335:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i64_i64
@@ -38201,10 +42564,25 @@ _A__uMod_var_i64_i64:
 _A__Mod_var_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6340
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6340
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6340:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_i64
@@ -38228,12 +42606,25 @@ _A__uMod_param_i64_i64:
 _A__Mod_param_i64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6345
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6345
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6345:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i64_I
@@ -38256,10 +42647,25 @@ _A__uMod_var_i64_I:
 _A__Mod_var_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6350
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6350
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6350:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_I
@@ -38283,12 +42689,25 @@ _A__uMod_param_i64_I:
 _A__Mod_param_i64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6355
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6355
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6355:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i64_u8
@@ -38312,11 +42731,26 @@ _A__uMod_var_i64_u8:
 _A__Mod_var_i64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6360
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6360
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6360:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_u8
@@ -38340,12 +42774,27 @@ _A__uMod_param_i64_u8:
 _A__Mod_param_i64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movsbq	-25(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6365
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6365
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6365:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i64_C
@@ -38368,11 +42817,25 @@ _A__uMod_var_i64_C:
 _A__Mod_var_i64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6370
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6370
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6370:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_C
@@ -38395,12 +42858,27 @@ _A__uMod_param_i64_C:
 _A__Mod_param_i64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6375
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6375
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6375:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i64_u32
@@ -38424,11 +42902,26 @@ _A__uMod_var_i64_u32:
 _A__Mod_var_i64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6380
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6380
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6380:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_u32
@@ -38453,13 +42946,28 @@ _A__uMod_param_i64_u32:
 _A__Mod_param_i64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6385
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6385
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6385:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i64_i8
@@ -38483,11 +42991,26 @@ _A__uMod_var_i64_i8:
 _A__Mod_var_i64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_modL
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6390
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6390
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6390:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_i8
@@ -38511,12 +43034,27 @@ _A__uMod_param_i64_i8:
 _A__Mod_param_i64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6395
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6395
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6395:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i64_L
@@ -38539,10 +43077,25 @@ _A__uMod_var_i64_L:
 _A__Mod_var_i64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6400
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6400
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6400:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_L
@@ -38566,12 +43119,25 @@ _A__uMod_param_i64_L:
 _A__Mod_param_i64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6405
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6405
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6405:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i64_u64
@@ -38594,10 +43160,25 @@ _A__uMod_var_i64_u64:
 _A__Mod_var_i64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6410
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6410
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6410:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_u64
@@ -38621,12 +43202,25 @@ _A__uMod_param_i64_u64:
 _A__Mod_param_i64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6415
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6415
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6415:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i64_u16
@@ -38650,11 +43244,26 @@ _A__uMod_var_i64_u16:
 _A__Mod_var_i64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6420
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6420
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6420:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_u16
@@ -38678,12 +43287,27 @@ _A__uMod_param_i64_u16:
 _A__Mod_param_i64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movswq	-26(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6425
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6425
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6425:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i64_i32
@@ -38707,11 +43331,26 @@ _A__uMod_var_i64_i32:
 _A__Mod_var_i64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	128+_MM_A(%rip), %rsi
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_modL
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6430
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6430
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6430:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i64_i32
@@ -38735,12 +43374,27 @@ _A__uMod_param_i64_i32:
 _A__Mod_param_i64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	mov	-28(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6435
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6435
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6435:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_i16
@@ -38764,11 +43418,26 @@ _A__uMod_var_I_i16:
 _A__Mod_var_I_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_modL
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6440
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6440
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6440:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_i16
@@ -38792,12 +43461,27 @@ _A__uMod_param_I_i16:
 _A__Mod_param_I_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6445
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6445
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6445:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_LC
@@ -38820,11 +43504,25 @@ _A__uMod_var_I_LC:
 _A__Mod_var_I_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6450
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6450
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6450:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_LC
@@ -38847,12 +43545,27 @@ _A__uMod_param_I_LC:
 _A__Mod_param_I_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6455
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6455
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6455:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_i64
@@ -38875,10 +43588,25 @@ _A__uMod_var_I_i64:
 _A__Mod_var_I_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6460
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6460
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6460:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_i64
@@ -38902,12 +43630,25 @@ _A__uMod_param_I_i64:
 _A__Mod_param_I_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6465
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6465
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6465:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_I
@@ -38930,10 +43671,25 @@ _A__uMod_var_I_I:
 _A__Mod_var_I_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6470
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6470
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6470:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_I
@@ -38957,12 +43713,25 @@ _A__uMod_param_I_I:
 _A__Mod_param_I_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6475
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6475
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6475:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_u8
@@ -38986,11 +43755,26 @@ _A__uMod_var_I_u8:
 _A__Mod_var_I_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6480
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6480
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6480:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_u8
@@ -39014,12 +43798,27 @@ _A__uMod_param_I_u8:
 _A__Mod_param_I_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movsbq	-25(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6485
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6485
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6485:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_C
@@ -39042,11 +43841,25 @@ _A__uMod_var_I_C:
 _A__Mod_var_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6490
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6490
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6490:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_C
@@ -39069,12 +43882,27 @@ _A__uMod_param_I_C:
 _A__Mod_param_I_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6495
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6495
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6495:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_u32
@@ -39098,11 +43926,26 @@ _A__uMod_var_I_u32:
 _A__Mod_var_I_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6500
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6500
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6500:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_u32
@@ -39127,13 +43970,28 @@ _A__uMod_param_I_u32:
 _A__Mod_param_I_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6505
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6505
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6505:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_i8
@@ -39157,11 +44015,26 @@ _A__uMod_var_I_i8:
 _A__Mod_var_I_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_modL
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6510
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6510
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6510:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_i8
@@ -39185,12 +44058,27 @@ _A__uMod_param_I_i8:
 _A__Mod_param_I_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6515
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6515
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6515:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_L
@@ -39213,10 +44101,25 @@ _A__uMod_var_I_L:
 _A__Mod_var_I_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6520
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6520
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6520:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_L
@@ -39240,12 +44143,25 @@ _A__uMod_param_I_L:
 _A__Mod_param_I_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6525
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6525
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6525:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_u64
@@ -39268,10 +44184,25 @@ _A__uMod_var_I_u64:
 _A__Mod_var_I_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6530
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6530
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6530:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_u64
@@ -39295,12 +44226,25 @@ _A__uMod_param_I_u64:
 _A__Mod_param_I_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6535
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6535
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6535:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_u16
@@ -39324,11 +44268,26 @@ _A__uMod_var_I_u16:
 _A__Mod_var_I_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6540
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6540
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6540:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_u16
@@ -39352,12 +44311,27 @@ _A__uMod_param_I_u16:
 _A__Mod_param_I_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movswq	-26(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6545
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6545
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6545:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_I_i32
@@ -39381,11 +44355,26 @@ _A__uMod_var_I_i32:
 _A__Mod_var_I_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	136+_MM_A(%rip), %rsi
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_modL
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6550
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6550
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6550:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_I_i32
@@ -39409,12 +44398,27 @@ _A__uMod_param_I_i32:
 _A__Mod_param_I_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	mov	-28(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6555
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6555
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6555:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u8_i16
@@ -39438,18 +44442,34 @@ _A__uMod_var_u8_i16:
 _A__Mod_var_u8_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6560
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6560
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6560:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$127, -16(%rbp)
-	jle	L6253
+	jle	L6561
 	movl	$88929, %edi
 	call	__m3_fault
-L6253:
+L6561:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39474,18 +44494,34 @@ _A__uMod_param_u8_i16:
 _A__Mod_param_u8_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movzwl	-20(%rbp), %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6566
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6566
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6566:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$127, -16(%rbp)
-	jle	L6258
+	jle	L6567
 	movl	$88993, %edi
 	call	__m3_fault
-L6258:
+L6567:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39509,12 +44545,26 @@ _A__uMod_var_u8_LC:
 _A__Mod_var_u8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6572
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6572
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6572:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u8_LC
@@ -39537,12 +44587,27 @@ _A__uMod_param_u8_LC:
 _A__Mod_param_u8_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6577
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6577
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6577:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u8_i64
@@ -39565,11 +44630,26 @@ _A__uMod_var_u8_i64:
 _A__Mod_var_u8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6582
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6582
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6582:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u8_i64
@@ -39593,12 +44673,25 @@ _A__uMod_param_u8_i64:
 _A__Mod_param_u8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6587
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6587
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6587:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u8_I
@@ -39621,20 +44714,36 @@ _A__uMod_var_u8_I:
 _A__Mod_var_u8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6592
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6592
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6592:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L6279
+	jl	L6593
 	cmpq	$127, -16(%rbp)
-	jle	L6280
-L6279:
+	jle	L6594
+L6593:
 	movl	$89313, %edi
 	call	__m3_fault
-L6280:
+L6594:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39659,21 +44768,35 @@ _A__uMod_param_u8_I:
 _A__Mod_param_u8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6599
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6599
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6599:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L6285
+	jl	L6600
 	cmpq	$127, -16(%rbp)
-	jle	L6286
-L6285:
+	jle	L6601
+L6600:
 	movl	$89377, %edi
 	call	__m3_fault
-L6286:
+L6601:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39698,21 +44821,37 @@ _A__uMod_var_u8_u8:
 _A__Mod_var_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6606
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6606
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6606:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L6291
+	jl	L6607
 	cmpq	$127, -16(%rbp)
-	jle	L6292
-L6291:
+	jle	L6608
+L6607:
 	movl	$89441, %edi
 	call	__m3_fault
-L6292:
+L6608:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39737,21 +44876,37 @@ _A__uMod_param_u8_u8:
 _A__Mod_param_u8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movsbq	-18(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movsbq	-18(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6613
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6613
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6613:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L6297
+	jl	L6614
 	cmpq	$127, -16(%rbp)
-	jle	L6298
-L6297:
+	jle	L6615
+L6614:
 	movl	$89505, %edi
 	call	__m3_fault
-L6298:
+L6615:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39775,18 +44930,33 @@ _A__uMod_var_u8_C:
 _A__Mod_var_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6620
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6620
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6620:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$127, -16(%rbp)
-	jle	L6303
+	jle	L6621
 	movl	$89569, %edi
 	call	__m3_fault
-L6303:
+L6621:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39810,18 +44980,34 @@ _A__uMod_param_u8_C:
 _A__Mod_param_u8_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6626
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6626
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6626:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$127, -16(%rbp)
-	jle	L6308
+	jle	L6627
 	movl	$89633, %edi
 	call	__m3_fault
-L6308:
+L6627:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39846,21 +45032,37 @@ _A__uMod_var_u8_u32:
 _A__Mod_var_u8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6632
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6632
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6632:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L6313
+	jl	L6633
 	cmpq	$127, -16(%rbp)
-	jle	L6314
-L6313:
+	jle	L6634
+L6633:
 	movl	$89697, %edi
 	call	__m3_fault
-L6314:
+L6634:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39886,22 +45088,38 @@ _A__uMod_param_u8_u32:
 _A__Mod_param_u8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rsi
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6639
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6639
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6639:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L6319
+	jl	L6640
 	cmpq	$127, -16(%rbp)
-	jle	L6320
-L6319:
+	jle	L6641
+L6640:
 	movl	$89761, %edi
 	call	__m3_fault
-L6320:
+L6641:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39926,18 +45144,34 @@ _A__uMod_var_u8_i8:
 _A__Mod_var_u8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6646
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6646
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6646:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$127, -16(%rbp)
-	jle	L6325
+	jle	L6647
 	movl	$89825, %edi
 	call	__m3_fault
-L6325:
+L6647:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39962,18 +45196,34 @@ _A__uMod_param_u8_i8:
 _A__Mod_param_u8_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movb	%sil, -18(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movzbl	-18(%rbp), %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movzbl	-18(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6652
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6652
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6652:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$127, -16(%rbp)
-	jle	L6330
+	jle	L6653
 	movl	$89889, %edi
 	call	__m3_fault
-L6330:
+L6653:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -39997,11 +45247,26 @@ _A__uMod_var_u8_L:
 _A__Mod_var_u8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6658
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6658
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6658:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u8_L
@@ -40025,12 +45290,25 @@ _A__uMod_param_u8_L:
 _A__Mod_param_u8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6663
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6663
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6663:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u8_u64
@@ -40053,11 +45331,26 @@ _A__uMod_var_u8_u64:
 _A__Mod_var_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6668
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6668
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6668:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u8_u64
@@ -40081,12 +45374,25 @@ _A__uMod_param_u8_u64:
 _A__Mod_param_u8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6673
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6673
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6673:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u8_u16
@@ -40110,21 +45416,37 @@ _A__uMod_var_u8_u16:
 _A__Mod_var_u8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6678
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6678
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6678:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L6351
+	jl	L6679
 	cmpq	$127, -16(%rbp)
-	jle	L6352
-L6351:
+	jle	L6680
+L6679:
 	movl	$90209, %edi
 	call	__m3_fault
-L6352:
+L6680:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -40149,21 +45471,37 @@ _A__uMod_param_u8_u16:
 _A__Mod_param_u8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movsbq	-17(%rbp),%rsi
-	movswq	-20(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6685
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6685
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6685:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L6357
+	jl	L6686
 	cmpq	$127, -16(%rbp)
-	jle	L6358
-L6357:
+	jle	L6687
+L6686:
 	movl	$90273, %edi
 	call	__m3_fault
-L6358:
+L6687:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -40188,18 +45526,34 @@ _A__uMod_var_u8_i32:
 _A__Mod_var_u8_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rsi
+	movsbq	%al,%rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6692
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6692
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6692:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$127, -16(%rbp)
-	jle	L6363
+	jle	L6693
 	movl	$90337, %edi
 	call	__m3_fault
-L6363:
+L6693:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -40224,18 +45578,34 @@ _A__uMod_param_u8_i32:
 _A__Mod_param_u8_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movl	%esi, -24(%rbp)
-	movsbq	-17(%rbp),%rsi
-	mov	-24(%rbp), %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	-17(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6698
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6698
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6698:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$127, -16(%rbp)
-	jle	L6368
+	jle	L6699
 	movl	$90401, %edi
 	call	__m3_fault
-L6368:
+L6699:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -40270,14 +45640,14 @@ _A__Mod_var_C_i16:
 	idivq	-32(%rbp)
 	movq	%rdx, -24(%rbp)
 	cmpq	$0, -24(%rbp)
-	je	L6373
+	je	L6704
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6373
+	jns	L6704
 	movq	-32(%rbp), %rax
 	addq	%rax, -24(%rbp)
-L6373:
+L6704:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -40315,14 +45685,14 @@ _A__Mod_param_C_i16:
 	idivq	-48(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L6378
+	je	L6709
 	movq	-56(%rbp), %rax
 	xorq	-48(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6378
+	jns	L6709
 	movq	-48(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L6378:
+L6709:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -40355,14 +45725,14 @@ _A__Mod_var_C_LC:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L6383
+	je	L6714
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6383
+	jns	L6714
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L6383:
+L6714:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -40398,14 +45768,14 @@ _A__Mod_param_C_LC:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L6388
+	je	L6719
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6388
+	jns	L6719
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L6388:
+L6719:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -40428,11 +45798,25 @@ _A__uMod_var_C_i64:
 _A__Mod_var_C_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6724
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6724
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6724:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_C_i64
@@ -40457,12 +45841,25 @@ _A__uMod_param_C_i64:
 _A__Mod_param_C_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6729
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6729
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6729:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_C_I
@@ -40484,17 +45881,32 @@ _A__uMod_var_C_I:
 _A__Mod_var_C_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6734
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6734
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6734:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L6401
+	jns	L6735
 	movl	$90849, %edi
 	call	__m3_fault
-L6401:
+L6735:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -40520,18 +45932,32 @@ _A__uMod_param_C_I:
 _A__Mod_param_C_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6740
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6740
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6740:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L6406
+	jns	L6741
 	movl	$90913, %edi
 	call	__m3_fault
-L6406:
+L6741:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -40555,18 +45981,33 @@ _A__uMod_var_C_u8:
 _A__Mod_var_C_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6746
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6746
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6746:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L6411
+	jns	L6747
 	movl	$90977, %edi
 	call	__m3_fault
-L6411:
+L6747:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -40592,18 +46033,34 @@ _A__uMod_param_C_u8:
 _A__Mod_param_C_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movq	-24(%rbp), %rsi
-	movsbq	-25(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movsbq	-25(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6752
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6752
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6752:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L6416
+	jns	L6753
 	movl	$91041, %edi
 	call	__m3_fault
-L6416:
+L6753:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -40636,14 +46093,14 @@ _A__Mod_var_C_C:
 	idivq	-32(%rbp)
 	movq	%rdx, -24(%rbp)
 	cmpq	$0, -24(%rbp)
-	je	L6421
+	je	L6758
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6421
+	jns	L6758
 	movq	-32(%rbp), %rax
 	addq	%rax, -24(%rbp)
-L6421:
+L6758:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -40679,14 +46136,14 @@ _A__Mod_param_C_C:
 	idivq	-48(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L6426
+	je	L6763
 	movq	-56(%rbp), %rax
 	xorq	-48(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6426
+	jns	L6763
 	movq	-48(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L6426:
+L6763:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -40710,18 +46167,33 @@ _A__uMod_var_C_u32:
 _A__Mod_var_C_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6768
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6768
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6768:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L6431
+	jns	L6769
 	movl	$91233, %edi
 	call	__m3_fault
-L6431:
+L6769:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -40748,19 +46220,35 @@ _A__uMod_param_C_u32:
 _A__Mod_param_C_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	movq	-24(%rbp), %rsi
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6774
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6774
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6774:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L6436
+	jns	L6775
 	movl	$91297, %edi
 	call	__m3_fault
-L6436:
+L6775:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -40795,14 +46283,14 @@ _A__Mod_var_C_i8:
 	idivq	-32(%rbp)
 	movq	%rdx, -24(%rbp)
 	cmpq	$0, -24(%rbp)
-	je	L6441
+	je	L6780
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6441
+	jns	L6780
 	movq	-32(%rbp), %rax
 	addq	%rax, -24(%rbp)
-L6441:
+L6780:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -40840,14 +46328,14 @@ _A__Mod_param_C_i8:
 	idivq	-48(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L6446
+	je	L6785
 	movq	-56(%rbp), %rax
 	xorq	-48(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6446
+	jns	L6785
 	movq	-48(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L6446:
+L6785:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -40870,11 +46358,25 @@ _A__uMod_var_C_L:
 _A__Mod_var_C_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6790
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6790
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6790:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_C_L
@@ -40899,12 +46401,25 @@ _A__uMod_param_C_L:
 _A__Mod_param_C_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6795
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6795
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6795:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_C_u64
@@ -40926,11 +46441,25 @@ _A__uMod_var_C_u64:
 _A__Mod_var_C_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6800
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6800
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6800:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_C_u64
@@ -40955,12 +46484,25 @@ _A__uMod_param_C_u64:
 _A__Mod_param_C_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6805
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6805
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6805:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_C_u16
@@ -40983,18 +46525,33 @@ _A__uMod_var_C_u16:
 _A__Mod_var_C_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rsi
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6810
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6810
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6810:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L6467
+	jns	L6811
 	movl	$91745, %edi
 	call	__m3_fault
-L6467:
+L6811:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41020,18 +46577,34 @@ _A__uMod_param_C_u16:
 _A__Mod_param_C_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movq	-24(%rbp), %rsi
-	movswq	-26(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movswq	-26(%rbp),%rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6816
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6816
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6816:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L6472
+	jns	L6817
 	movl	$91809, %edi
 	call	__m3_fault
-L6472:
+L6817:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41066,14 +46639,14 @@ _A__Mod_var_C_i32:
 	idivq	-32(%rbp)
 	movq	%rdx, -24(%rbp)
 	cmpq	$0, -24(%rbp)
-	je	L6477
+	je	L6822
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6477
+	jns	L6822
 	movq	-32(%rbp), %rax
 	addq	%rax, -24(%rbp)
-L6477:
+L6822:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -41111,14 +46684,14 @@ _A__Mod_param_C_i32:
 	idivq	-48(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L6482
+	je	L6827
 	movq	-56(%rbp), %rax
 	xorq	-48(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6482
+	jns	L6827
 	movq	-48(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L6482:
+L6827:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -41128,39 +46701,33 @@ _A__Mod_var_f32_f32:
 	pushq	%rbp
 	movq	%rsp, %rbp
 	movl	160+_MM_A(%rip), %eax
-	movl	%eax, -24(%rbp)
+	movl	%eax, -8(%rbp)
 	movl	160+_MM_A(%rip), %eax
-	movl	%eax, -20(%rbp)
-	movss	-24(%rbp), %xmm1
-	movss	-20(%rbp), %xmm0
-	movaps	%xmm1, %xmm2
-	divss	%xmm0, %xmm2
-	movaps	%xmm2, %xmm0
-	movss	%xmm0, -8(%rbp)
+	movl	%eax, -12(%rbp)
 	movss	-8(%rbp), %xmm0
+	divss	-12(%rbp), %xmm0
+	movss	%xmm0, -16(%rbp)
+	movss	-16(%rbp), %xmm0
 	cvttss2siq	%xmm0, %rax
-	movq	%rax, -16(%rbp)
-	movss	-24(%rbp), %xmm0
-	movss	%xmm0, -40(%rbp)
-	cvtsi2ssq	-16(%rbp), %xmm1
-	movss	-8(%rbp), %xmm0
+	movq	%rax, -24(%rbp)
+	cvtsi2ssq	-24(%rbp), %xmm1
+	movss	-16(%rbp), %xmm0
 	ucomiss	%xmm1, %xmm0
-	jb	L6490
-L6489:
-	cvtsi2ssq	-16(%rbp), %xmm1
-	movss	%xmm1, -36(%rbp)
-	jmp	L6487
-L6490:
-	movq	-16(%rbp), %rax
+	jb	L6835
+L6834:
+	cvtsi2ssq	-24(%rbp), %xmm0
+	movss	%xmm0, -36(%rbp)
+	jmp	L6832
+L6835:
+	movq	-24(%rbp), %rax
 	subq	$1, %rax
-	cvtsi2ssq	%rax, %xmm2
-	movss	%xmm2, -36(%rbp)
-L6487:
-	movss	-20(%rbp), %xmm0
-	mulss	-36(%rbp), %xmm0
-	movss	-40(%rbp), %xmm1
-	subss	%xmm0, %xmm1
-	movaps	%xmm1, %xmm0
+	cvtsi2ssq	%rax, %xmm0
+	movss	%xmm0, -36(%rbp)
+L6832:
+	movss	-36(%rbp), %xmm1
+	mulss	-12(%rbp), %xmm1
+	movss	-8(%rbp), %xmm0
+	subss	%xmm1, %xmm0
 	leave
 	ret
 .globl _A__Mod_param_f32_f32
@@ -41171,39 +46738,33 @@ _A__Mod_param_f32_f32:
 	movss	%xmm0, -36(%rbp)
 	movss	%xmm1, -40(%rbp)
 	movl	-36(%rbp), %eax
-	movl	%eax, -24(%rbp)
+	movl	%eax, -8(%rbp)
 	movl	-40(%rbp), %eax
-	movl	%eax, -20(%rbp)
-	movss	-24(%rbp), %xmm1
-	movss	-20(%rbp), %xmm0
-	movaps	%xmm1, %xmm2
-	divss	%xmm0, %xmm2
-	movaps	%xmm2, %xmm0
-	movss	%xmm0, -8(%rbp)
+	movl	%eax, -12(%rbp)
 	movss	-8(%rbp), %xmm0
+	divss	-12(%rbp), %xmm0
+	movss	%xmm0, -16(%rbp)
+	movss	-16(%rbp), %xmm0
 	cvttss2siq	%xmm0, %rax
-	movq	%rax, -16(%rbp)
-	movss	-24(%rbp), %xmm0
-	movss	%xmm0, -48(%rbp)
-	cvtsi2ssq	-16(%rbp), %xmm1
-	movss	-8(%rbp), %xmm0
+	movq	%rax, -24(%rbp)
+	cvtsi2ssq	-24(%rbp), %xmm1
+	movss	-16(%rbp), %xmm0
 	ucomiss	%xmm1, %xmm0
-	jb	L6497
-L6496:
-	cvtsi2ssq	-16(%rbp), %xmm1
-	movss	%xmm1, -44(%rbp)
-	jmp	L6494
-L6497:
-	movq	-16(%rbp), %rax
+	jb	L6842
+L6841:
+	cvtsi2ssq	-24(%rbp), %xmm0
+	movss	%xmm0, -44(%rbp)
+	jmp	L6839
+L6842:
+	movq	-24(%rbp), %rax
 	subq	$1, %rax
-	cvtsi2ssq	%rax, %xmm2
-	movss	%xmm2, -44(%rbp)
-L6494:
-	movss	-20(%rbp), %xmm0
-	mulss	-44(%rbp), %xmm0
-	movss	-48(%rbp), %xmm1
-	subss	%xmm0, %xmm1
-	movaps	%xmm1, %xmm0
+	cvtsi2ssq	%rax, %xmm0
+	movss	%xmm0, -44(%rbp)
+L6839:
+	movss	-44(%rbp), %xmm1
+	mulss	-12(%rbp), %xmm1
+	movss	-8(%rbp), %xmm0
+	subss	%xmm1, %xmm0
 	leave
 	ret
 .globl _A__uMod_var_u32_i16
@@ -41227,12 +46788,27 @@ _A__uMod_var_u32_i16:
 _A__Mod_var_u32_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_modL
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6846
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6846
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6846:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u32_i16
@@ -41257,13 +46833,28 @@ _A__uMod_param_u32_i16:
 _A__Mod_param_u32_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movw	%si, -22(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movzwl	-22(%rbp), %edi
-	call	_m3_modL
+	cltq
+	movq	%rax, -40(%rbp)
+	movzwl	-22(%rbp), %eax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6851
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6851
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6851:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u32_LC
@@ -41286,12 +46877,26 @@ _A__uMod_var_u32_LC:
 _A__Mod_var_u32_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6856
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6856
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6856:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u32_LC
@@ -41315,13 +46920,28 @@ _A__uMod_param_u32_LC:
 _A__Mod_param_u32_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6861
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6861
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6861:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u32_i64
@@ -41344,11 +46964,26 @@ _A__uMod_var_u32_i64:
 _A__Mod_var_u32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6866
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6866
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6866:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u32_i64
@@ -41373,13 +47008,26 @@ _A__uMod_param_u32_i64:
 _A__Mod_param_u32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6871
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6871
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6871:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u32_I
@@ -41402,20 +47050,36 @@ _A__uMod_var_u32_I:
 _A__Mod_var_u32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6876
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6876
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6876:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L6525
+	jl	L6877
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6526
-L6525:
+	jle	L6878
+L6877:
 	movl	$92449, %edi
 	call	__m3_fault
-L6526:
+L6878:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41441,22 +47105,36 @@ _A__uMod_param_u32_I:
 _A__Mod_param_u32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6883
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6883
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6883:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L6531
+	jl	L6884
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6532
-L6531:
+	jle	L6885
+L6884:
 	movl	$92513, %edi
 	call	__m3_fault
-L6532:
+L6885:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41481,21 +47159,37 @@ _A__uMod_var_u32_u8:
 _A__Mod_var_u32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6890
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6890
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6890:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L6537
+	jl	L6891
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6538
-L6537:
+	jle	L6892
+L6891:
 	movl	$92577, %edi
 	call	__m3_fault
-L6538:
+L6892:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41521,22 +47215,38 @@ _A__uMod_param_u32_u8:
 _A__Mod_param_u32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movb	%sil, -21(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movsbq	-21(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	movsbq	-21(%rbp),%rax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6897
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6897
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6897:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L6543
+	jl	L6898
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6544
-L6543:
+	jle	L6899
+L6898:
 	movl	$92641, %edi
 	call	__m3_fault
-L6544:
+L6899:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41560,18 +47270,33 @@ _A__uMod_var_u32_C:
 _A__Mod_var_u32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6904
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6904
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6904:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6549
+	jle	L6905
 	movl	$92705, %edi
 	call	__m3_fault
-L6549:
+L6905:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41596,19 +47321,35 @@ _A__uMod_param_u32_C:
 _A__Mod_param_u32_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L6910
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6910
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L6910:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6554
+	jle	L6911
 	movl	$92769, %edi
 	call	__m3_fault
-L6554:
+L6911:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41633,21 +47374,37 @@ _A__uMod_var_u32_u32:
 _A__Mod_var_u32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6916
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6916
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6916:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L6559
+	jl	L6917
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6560
-L6559:
+	jle	L6918
+L6917:
 	movl	$92833, %edi
 	call	__m3_fault
-L6560:
+L6918:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41674,23 +47431,39 @@ _A__uMod_param_u32_u32:
 _A__Mod_param_u32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6923
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6923
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6923:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L6565
+	jl	L6924
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6566
-L6565:
+	jle	L6925
+L6924:
 	movl	$92897, %edi
 	call	__m3_fault
-L6566:
+L6925:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41715,12 +47488,27 @@ _A__uMod_var_u32_i8:
 _A__Mod_var_u32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_modL
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6930
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6930
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6930:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u32_i8
@@ -41745,13 +47533,28 @@ _A__uMod_param_u32_i8:
 _A__Mod_param_u32_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movb	%sil, -21(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movzbl	-21(%rbp), %edi
-	call	_m3_modL
+	cltq
+	movq	%rax, -40(%rbp)
+	movzbl	-21(%rbp), %eax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6935
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6935
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6935:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u32_L
@@ -41774,11 +47577,26 @@ _A__uMod_var_u32_L:
 _A__Mod_var_u32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6940
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6940
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6940:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u32_L
@@ -41803,13 +47621,26 @@ _A__uMod_param_u32_L:
 _A__Mod_param_u32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6945
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6945
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6945:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u32_u64
@@ -41832,11 +47663,26 @@ _A__uMod_var_u32_u64:
 _A__Mod_var_u32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6950
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6950
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6950:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u32_u64
@@ -41861,13 +47707,26 @@ _A__uMod_param_u32_u64:
 _A__Mod_param_u32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6955
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6955
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6955:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u32_u16
@@ -41891,21 +47750,37 @@ _A__uMod_var_u32_u16:
 _A__Mod_var_u32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6960
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6960
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6960:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L6595
+	jl	L6961
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6596
-L6595:
+	jle	L6962
+L6961:
 	movl	$93345, %edi
 	call	__m3_fault
-L6596:
+L6962:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41931,22 +47806,38 @@ _A__uMod_param_u32_u16:
 _A__Mod_param_u32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movw	%si, -22(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	movswq	-22(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	movswq	-22(%rbp),%rax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6967
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6967
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6967:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L6601
+	jl	L6968
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6602
-L6601:
+	jle	L6969
+L6968:
 	movl	$93409, %edi
 	call	__m3_fault
-L6602:
+L6969:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -41971,18 +47862,34 @@ _A__uMod_var_u32_i32:
 _A__Mod_var_u32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rsi
+	cltq
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L6974
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6974
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L6974:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6607
+	jle	L6975
 	movl	$93473, %edi
 	call	__m3_fault
-L6607:
+L6975:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42008,19 +47915,35 @@ _A__uMod_param_u32_i32:
 _A__Mod_param_u32_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
 	movl	-20(%rbp), %eax
-	movslq	%eax,%rsi
-	mov	-24(%rbp), %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %eax
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L6980
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L6980
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L6980:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$2147483647, -16(%rbp)
-	jle	L6612
+	jle	L6981
 	movl	$93537, %edi
 	call	__m3_fault
-L6612:
+L6981:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42058,21 +47981,21 @@ _A__Mod_var_i8_i16:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L6617
+	je	L6986
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6617
+	jns	L6986
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L6617:
+L6986:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$255, -16(%rbp)
-	jle	L6618
+	jle	L6987
 	movl	$93601, %edi
 	call	__m3_fault
-L6618:
+L6987:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42110,21 +48033,21 @@ _A__Mod_param_i8_i16:
 	idivq	-32(%rbp)
 	movq	%rdx, -48(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L6623
+	je	L6992
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6623
+	jns	L6992
 	movq	-32(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L6623:
+L6992:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$255, -16(%rbp)
-	jle	L6624
+	jle	L6993
 	movl	$93665, %edi
 	call	__m3_fault
-L6624:
+L6993:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42159,14 +48082,14 @@ _A__Mod_var_i8_LC:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L6629
+	je	L6998
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6629
+	jns	L6998
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L6629:
+L6998:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -42202,14 +48125,14 @@ _A__Mod_param_i8_LC:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L6634
+	je	L7003
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6634
+	jns	L7003
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L6634:
+L7003:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -42233,11 +48156,26 @@ _A__uMod_var_i8_i64:
 _A__Mod_var_i8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7008
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7008
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7008:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i8_i64
@@ -42261,12 +48199,25 @@ _A__uMod_param_i8_i64:
 _A__Mod_param_i8_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7013
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7013
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7013:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i8_I
@@ -42289,20 +48240,36 @@ _A__uMod_var_i8_I:
 _A__Mod_var_i8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7018
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7018
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7018:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L6647
+	js	L7019
 	cmpq	$255, -16(%rbp)
-	jle	L6648
-L6647:
+	jle	L7020
+L7019:
 	movl	$93985, %edi
 	call	__m3_fault
-L6648:
+L7020:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42327,21 +48294,35 @@ _A__uMod_param_i8_I:
 _A__Mod_param_i8_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7025
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7025
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7025:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L6653
+	js	L7026
 	cmpq	$255, -16(%rbp)
-	jle	L6654
-L6653:
+	jle	L7027
+L7026:
 	movl	$94049, %edi
 	call	__m3_fault
-L6654:
+L7027:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42366,21 +48347,37 @@ _A__uMod_var_i8_u8:
 _A__Mod_var_i8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7032
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7032
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7032:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L6659
+	js	L7033
 	cmpq	$255, -16(%rbp)
-	jle	L6660
-L6659:
+	jle	L7034
+L7033:
 	movl	$94113, %edi
 	call	__m3_fault
-L6660:
+L7034:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42405,21 +48402,37 @@ _A__uMod_param_i8_u8:
 _A__Mod_param_i8_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movb	%sil, -18(%rbp)
-	movzbl	-17(%rbp), %esi
-	movsbq	-18(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movsbq	-18(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7039
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7039
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7039:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L6665
+	js	L7040
 	cmpq	$255, -16(%rbp)
-	jle	L6666
-L6665:
+	jle	L7041
+L7040:
 	movl	$94177, %edi
 	call	__m3_fault
-L6666:
+L7041:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42455,21 +48468,21 @@ _A__Mod_var_i8_C:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L6671
+	je	L7046
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6671
+	jns	L7046
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L6671:
+L7046:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$255, -16(%rbp)
-	jle	L6672
+	jle	L7047
 	movl	$94241, %edi
 	call	__m3_fault
-L6672:
+L7047:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42506,21 +48519,21 @@ _A__Mod_param_i8_C:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L6677
+	je	L7052
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6677
+	jns	L7052
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L6677:
+L7052:
 	movq	-56(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$255, -16(%rbp)
-	jle	L6678
+	jle	L7053
 	movl	$94305, %edi
 	call	__m3_fault
-L6678:
+L7053:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42545,21 +48558,37 @@ _A__uMod_var_i8_u32:
 _A__Mod_var_i8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7058
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7058
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7058:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L6683
+	js	L7059
 	cmpq	$255, -16(%rbp)
-	jle	L6684
-L6683:
+	jle	L7060
+L7059:
 	movl	$94369, %edi
 	call	__m3_fault
-L6684:
+L7060:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42585,22 +48614,38 @@ _A__uMod_param_i8_u32:
 _A__Mod_param_i8_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movl	%esi, -24(%rbp)
-	movzbl	-17(%rbp), %esi
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7065
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7065
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7065:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L6689
+	js	L7066
 	cmpq	$255, -16(%rbp)
-	jle	L6690
-L6689:
+	jle	L7067
+L7066:
 	movl	$94433, %edi
 	call	__m3_fault
-L6690:
+L7067:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42637,14 +48682,14 @@ _A__Mod_var_i8_i8:
 	idivq	-32(%rbp)
 	movq	%rdx, -24(%rbp)
 	cmpq	$0, -24(%rbp)
-	je	L6695
+	je	L7072
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6695
+	jns	L7072
 	movq	-32(%rbp), %rax
 	addq	%rax, -24(%rbp)
-L6695:
+L7072:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -42681,14 +48726,14 @@ _A__Mod_param_i8_i8:
 	idivq	-40(%rbp)
 	movq	%rdx, -32(%rbp)
 	cmpq	$0, -32(%rbp)
-	je	L6700
+	je	L7077
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6700
+	jns	L7077
 	movq	-40(%rbp), %rax
 	addq	%rax, -32(%rbp)
-L6700:
+L7077:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -42712,11 +48757,26 @@ _A__uMod_var_i8_L:
 _A__Mod_var_i8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7082
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7082
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7082:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i8_L
@@ -42740,12 +48800,25 @@ _A__uMod_param_i8_L:
 _A__Mod_param_i8_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7087
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7087
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7087:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i8_u64
@@ -42768,11 +48841,26 @@ _A__uMod_var_i8_u64:
 _A__Mod_var_i8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7092
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7092
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7092:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i8_u64
@@ -42796,12 +48884,25 @@ _A__uMod_param_i8_u64:
 _A__Mod_param_i8_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movb	%dil, -17(%rbp)
 	movq	%rsi, -32(%rbp)
-	movzbl	-17(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7097
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7097
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7097:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i8_u16
@@ -42825,21 +48926,37 @@ _A__uMod_var_i8_u16:
 _A__Mod_var_i8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %esi
+	movzbl	%al, %eax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7102
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7102
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7102:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L6721
+	js	L7103
 	cmpq	$255, -16(%rbp)
-	jle	L6722
-L6721:
+	jle	L7104
+L7103:
 	movl	$94881, %edi
 	call	__m3_fault
-L6722:
+L7104:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42864,21 +48981,37 @@ _A__uMod_param_i8_u16:
 _A__Mod_param_i8_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movb	%dil, -17(%rbp)
 	movw	%si, -20(%rbp)
-	movzbl	-17(%rbp), %esi
-	movswq	-20(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movzbl	-17(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7109
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7109
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7109:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L6727
+	js	L7110
 	cmpq	$255, -16(%rbp)
-	jle	L6728
-L6727:
+	jle	L7111
+L7110:
 	movl	$94945, %edi
 	call	__m3_fault
-L6728:
+L7111:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42916,21 +49049,21 @@ _A__Mod_var_i8_i32:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L6733
+	je	L7116
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6733
+	jns	L7116
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L6733:
+L7116:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$255, -16(%rbp)
-	jle	L6734
+	jle	L7117
 	movl	$95009, %edi
 	call	__m3_fault
-L6734:
+L7117:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -42968,21 +49101,21 @@ _A__Mod_param_i8_i32:
 	idivq	-32(%rbp)
 	movq	%rdx, -48(%rbp)
 	cmpq	$0, -48(%rbp)
-	je	L6739
+	je	L7122
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L6739
+	jns	L7122
 	movq	-32(%rbp), %rax
 	addq	%rax, -48(%rbp)
-L6739:
+L7122:
 	movq	-48(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	cmpq	$255, -16(%rbp)
-	jle	L6740
+	jle	L7123
 	movl	$95073, %edi
 	call	__m3_fault
-L6740:
+L7123:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -43007,11 +49140,26 @@ _A__uMod_var_L_i16:
 _A__Mod_var_L_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_modL
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7128
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7128
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7128:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_i16
@@ -43035,12 +49183,27 @@ _A__uMod_param_L_i16:
 _A__Mod_param_L_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7133
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7133
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7133:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_L_LC
@@ -43063,11 +49226,25 @@ _A__uMod_var_L_LC:
 _A__Mod_var_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7138
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7138
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7138:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_LC
@@ -43090,12 +49267,27 @@ _A__uMod_param_L_LC:
 _A__Mod_param_L_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7143
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7143
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7143:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_L_i64
@@ -43118,10 +49310,25 @@ _A__uMod_var_L_i64:
 _A__Mod_var_L_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7148
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7148
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7148:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_i64
@@ -43145,12 +49352,25 @@ _A__uMod_param_L_i64:
 _A__Mod_param_L_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7153
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7153
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7153:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_L_I
@@ -43173,10 +49393,25 @@ _A__uMod_var_L_I:
 _A__Mod_var_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7158
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7158
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7158:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_I
@@ -43200,12 +49435,25 @@ _A__uMod_param_L_I:
 _A__Mod_param_L_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7163
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7163
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7163:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_L_u8
@@ -43229,11 +49477,26 @@ _A__uMod_var_L_u8:
 _A__Mod_var_L_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7168
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7168
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7168:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_u8
@@ -43257,12 +49520,27 @@ _A__uMod_param_L_u8:
 _A__Mod_param_L_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movsbq	-25(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7173
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7173
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7173:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_L_C
@@ -43285,11 +49563,25 @@ _A__uMod_var_L_C:
 _A__Mod_var_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7178
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7178
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7178:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_C
@@ -43312,12 +49604,27 @@ _A__uMod_param_L_C:
 _A__Mod_param_L_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7183
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7183
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7183:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_L_u32
@@ -43341,11 +49648,26 @@ _A__uMod_var_L_u32:
 _A__Mod_var_L_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7188
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7188
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7188:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_u32
@@ -43370,13 +49692,28 @@ _A__uMod_param_L_u32:
 _A__Mod_param_L_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7193
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7193
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7193:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_L_i8
@@ -43400,11 +49737,26 @@ _A__uMod_var_L_i8:
 _A__Mod_var_L_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_modL
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7198
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7198
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7198:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_i8
@@ -43428,12 +49780,27 @@ _A__uMod_param_L_i8:
 _A__Mod_param_L_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7203
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7203
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7203:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_L_L
@@ -43456,10 +49823,25 @@ _A__uMod_var_L_L:
 _A__Mod_var_L_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7208
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7208
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7208:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_L
@@ -43483,12 +49865,25 @@ _A__uMod_param_L_L:
 _A__Mod_param_L_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7213
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7213
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7213:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_L_u64
@@ -43511,10 +49906,25 @@ _A__uMod_var_L_u64:
 _A__Mod_var_L_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7218
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7218
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7218:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_u64
@@ -43538,12 +49948,25 @@ _A__uMod_param_L_u64:
 _A__Mod_param_L_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7223
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7223
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7223:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_L_u16
@@ -43567,11 +49990,26 @@ _A__uMod_var_L_u16:
 _A__Mod_var_L_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7228
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7228
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7228:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_u16
@@ -43595,12 +50033,27 @@ _A__uMod_param_L_u16:
 _A__Mod_param_L_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movswq	-26(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7233
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7233
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7233:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_L_i32
@@ -43624,11 +50077,26 @@ _A__uMod_var_L_i32:
 _A__Mod_var_L_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	176+_MM_A(%rip), %rsi
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_modL
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7238
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7238
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7238:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_L_i32
@@ -43652,12 +50120,27 @@ _A__uMod_param_L_i32:
 _A__Mod_param_L_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	mov	-28(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7243
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7243
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7243:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_i16
@@ -43681,11 +50164,26 @@ _A__uMod_var_u64_i16:
 _A__Mod_var_u64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_modL
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7248
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7248
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7248:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_i16
@@ -43709,12 +50207,27 @@ _A__uMod_param_u64_i16:
 _A__Mod_param_u64_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movzwl	-26(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movzwl	-26(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7253
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7253
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7253:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_LC
@@ -43737,11 +50250,25 @@ _A__uMod_var_u64_LC:
 _A__Mod_var_u64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7258
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7258
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7258:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_LC
@@ -43764,12 +50291,27 @@ _A__uMod_param_u64_LC:
 _A__Mod_param_u64_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7263
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7263
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7263:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_i64
@@ -43792,10 +50334,25 @@ _A__uMod_var_u64_i64:
 _A__Mod_var_u64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7268
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7268
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7268:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_i64
@@ -43819,12 +50376,25 @@ _A__uMod_param_u64_i64:
 _A__Mod_param_u64_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7273
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7273
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7273:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_I
@@ -43847,10 +50417,25 @@ _A__uMod_var_u64_I:
 _A__Mod_var_u64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7278
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7278
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7278:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_I
@@ -43874,12 +50459,25 @@ _A__uMod_param_u64_I:
 _A__Mod_param_u64_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7283
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7283
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7283:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_u8
@@ -43903,11 +50501,26 @@ _A__uMod_var_u64_u8:
 _A__Mod_var_u64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7288
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7288
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7288:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_u8
@@ -43931,12 +50544,27 @@ _A__uMod_param_u64_u8:
 _A__Mod_param_u64_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movsbq	-25(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movsbq	-25(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7293
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7293
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7293:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_C
@@ -43959,11 +50587,25 @@ _A__uMod_var_u64_C:
 _A__Mod_var_u64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7298
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7298
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7298:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_C
@@ -43986,12 +50628,27 @@ _A__uMod_param_u64_C:
 _A__Mod_param_u64_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-32(%rbp), %rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movq	-32(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7303
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7303
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7303:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_u32
@@ -44015,11 +50672,26 @@ _A__uMod_var_u64_u32:
 _A__Mod_var_u64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7308
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7308
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7308:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_u32
@@ -44044,13 +50716,28 @@ _A__uMod_param_u64_u32:
 _A__Mod_param_u64_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
 	movl	-28(%rbp), %eax
-	movslq	%eax,%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	cltq
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rax
+	movq	%rax, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7313
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7313
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7313:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_i8
@@ -44074,11 +50761,26 @@ _A__uMod_var_u64_i8:
 _A__Mod_var_u64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_modL
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7318
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7318
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7318:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_i8
@@ -44102,12 +50804,27 @@ _A__uMod_param_u64_i8:
 _A__Mod_param_u64_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movb	%sil, -25(%rbp)
-	movzbl	-25(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movzbl	-25(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7323
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7323
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7323:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_L
@@ -44130,10 +50847,25 @@ _A__uMod_var_u64_L:
 _A__Mod_var_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7328
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7328
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7328:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_L
@@ -44157,12 +50889,25 @@ _A__uMod_param_u64_L:
 _A__Mod_param_u64_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7333
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7333
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7333:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_u64
@@ -44185,10 +50930,25 @@ _A__uMod_var_u64_u64:
 _A__Mod_var_u64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rdx
+	movq	%rdx, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7338
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7338
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7338:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_u64
@@ -44212,12 +50972,25 @@ _A__uMod_param_u64_u64:
 _A__Mod_param_u64_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movq	%rsi, -32(%rbp)
-	movq	-24(%rbp), %rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movq	-24(%rbp), %rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7343
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7343
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7343:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_u16
@@ -44241,11 +51014,26 @@ _A__uMod_var_u64_u16:
 _A__Mod_var_u64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7348
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7348
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7348:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_u16
@@ -44269,12 +51057,27 @@ _A__uMod_param_u64_u16:
 _A__Mod_param_u64_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movw	%si, -26(%rbp)
-	movswq	-26(%rbp),%rdi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	movswq	-26(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7353
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7353
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7353:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u64_i32
@@ -44298,11 +51101,26 @@ _A__uMod_var_u64_i32:
 _A__Mod_var_u64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
-	movq	184+_MM_A(%rip), %rsi
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_modL
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7358
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7358
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7358:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u64_i32
@@ -44326,12 +51144,27 @@ _A__uMod_param_u64_i32:
 _A__Mod_param_u64_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movq	%rdi, -24(%rbp)
 	movl	%esi, -28(%rbp)
-	mov	-28(%rbp), %edi
-	movq	-24(%rbp), %rsi
-	call	_m3_modL
+	mov	-28(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-24(%rbp), %rdx
+	movq	%rdx, -48(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7363
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7363
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7363:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u16_i16
@@ -44355,18 +51188,34 @@ _A__uMod_var_u16_i16:
 _A__Mod_var_u16_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movzwl	104+_MM_A(%rip), %eax
-	movzwl	%ax, %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movzwl	%ax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7368
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7368
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7368:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$32767, -16(%rbp)
-	jle	L6937
+	jle	L7369
 	movl	$98209, %edi
 	call	__m3_fault
-L6937:
+L7369:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -44391,18 +51240,34 @@ _A__uMod_param_u16_i16:
 _A__Mod_param_u16_i16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rsi
-	movzwl	-20(%rbp), %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movzwl	-20(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7374
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7374
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7374:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$32767, -16(%rbp)
-	jle	L6942
+	jle	L7375
 	movl	$98273, %edi
 	call	__m3_fault
-L6942:
+L7375:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -44426,12 +51291,26 @@ _A__uMod_var_u16_LC:
 _A__Mod_var_u16_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movq	112+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7380
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7380
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7380:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u16_LC
@@ -44454,12 +51333,27 @@ _A__uMod_param_u16_LC:
 _A__Mod_param_u16_LC:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7385
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7385
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7385:
+	movq	-56(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u16_i64
@@ -44482,11 +51376,26 @@ _A__uMod_var_u16_i64:
 _A__Mod_var_u16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7390
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7390
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7390:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u16_i64
@@ -44510,12 +51419,25 @@ _A__uMod_param_u16_i64:
 _A__Mod_param_u16_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7395
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7395
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7395:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u16_I
@@ -44538,20 +51460,36 @@ _A__uMod_var_u16_I:
 _A__Mod_var_u16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7400
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7400
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7400:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L6963
+	jl	L7401
 	cmpq	$32767, -16(%rbp)
-	jle	L6964
-L6963:
+	jle	L7402
+L7401:
 	movl	$98593, %edi
 	call	__m3_fault
-L6964:
+L7402:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -44576,21 +51514,35 @@ _A__uMod_param_u16_I:
 _A__Mod_param_u16_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7407
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7407
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7407:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L6969
+	jl	L7408
 	cmpq	$32767, -16(%rbp)
-	jle	L6970
-L6969:
+	jle	L7409
+L7408:
 	movl	$98657, %edi
 	call	__m3_fault
-L6970:
+L7409:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -44615,21 +51567,37 @@ _A__uMod_var_u16_u8:
 _A__Mod_var_u16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7414
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7414
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7414:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L6975
+	jl	L7415
 	cmpq	$32767, -16(%rbp)
-	jle	L6976
-L6975:
+	jle	L7416
+L7415:
 	movl	$98721, %edi
 	call	__m3_fault
-L6976:
+L7416:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -44654,21 +51622,37 @@ _A__uMod_param_u16_u8:
 _A__Mod_param_u16_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rsi
-	movsbq	-19(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movsbq	-19(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7421
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7421
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7421:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L6981
+	jl	L7422
 	cmpq	$32767, -16(%rbp)
-	jle	L6982
-L6981:
+	jle	L7423
+L7422:
 	movl	$98785, %edi
 	call	__m3_fault
-L6982:
+L7423:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -44692,18 +51676,33 @@ _A__uMod_var_u16_C:
 _A__Mod_var_u16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movq	152+_MM_A(%rip), %rax
-	movq	%rax, %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7428
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7428
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7428:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$32767, -16(%rbp)
-	jle	L6987
+	jle	L7429
 	movl	$98849, %edi
 	call	__m3_fault
-L6987:
+L7429:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -44727,18 +51726,34 @@ _A__uMod_param_u16_C:
 _A__Mod_param_u16_C:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -48(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, -40(%rbp)
+	movq	-48(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-40(%rbp)
+	movq	%rdx, -56(%rbp)
+	cmpq	$0, -56(%rbp)
+	je	L7434
+	movq	-48(%rbp), %rax
+	xorq	-40(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7434
+	movq	-40(%rbp), %rax
+	addq	%rax, -56(%rbp)
+L7434:
+	movq	-56(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$32767, -16(%rbp)
-	jle	L6992
+	jle	L7435
 	movl	$98913, %edi
 	call	__m3_fault
-L6992:
+L7435:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -44763,21 +51778,37 @@ _A__uMod_var_u16_u32:
 _A__Mod_var_u16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7440
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7440
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7440:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L6997
+	jl	L7441
 	cmpq	$32767, -16(%rbp)
-	jle	L6998
-L6997:
+	jle	L7442
+L7441:
 	movl	$98977, %edi
 	call	__m3_fault
-L6998:
+L7442:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -44803,22 +51834,38 @@ _A__uMod_param_u16_u32:
 _A__Mod_param_u16_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rsi
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7447
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7447
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7447:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L7003
+	jl	L7448
 	cmpq	$32767, -16(%rbp)
-	jle	L7004
-L7003:
+	jle	L7449
+L7448:
 	movl	$99041, %edi
 	call	__m3_fault
-L7004:
+L7449:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -44843,12 +51890,27 @@ _A__uMod_var_u16_i8:
 _A__Mod_var_u16_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movzbl	168+_MM_A(%rip), %eax
-	movzbl	%al, %edi
-	call	_m3_modL
+	movzbl	%al, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7454
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7454
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7454:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u16_i8
@@ -44872,12 +51934,27 @@ _A__uMod_param_u16_i8:
 _A__Mod_param_u16_i8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movb	%sil, -19(%rbp)
-	movswq	-18(%rbp),%rsi
-	movzbl	-19(%rbp), %edi
-	call	_m3_modL
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movzbl	-19(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7459
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7459
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7459:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u16_L
@@ -44900,11 +51977,26 @@ _A__uMod_var_u16_L:
 _A__Mod_var_u16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7464
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7464
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7464:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u16_L
@@ -44928,12 +52020,25 @@ _A__uMod_param_u16_L:
 _A__Mod_param_u16_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7469
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7469
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7469:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u16_u64
@@ -44956,11 +52061,26 @@ _A__uMod_var_u16_u64:
 _A__Mod_var_u16_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7474
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7474
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7474:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_u16_u64
@@ -44984,12 +52104,25 @@ _A__uMod_param_u16_u64:
 _A__Mod_param_u16_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movw	%di, -18(%rbp)
 	movq	%rsi, -32(%rbp)
-	movswq	-18(%rbp),%rsi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7479
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7479
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7479:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_u16_u16
@@ -45013,21 +52146,37 @@ _A__uMod_var_u16_u16:
 _A__Mod_var_u16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7484
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7484
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7484:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L7033
+	jl	L7485
 	cmpq	$32767, -16(%rbp)
-	jle	L7034
-L7033:
+	jle	L7486
+L7485:
 	movl	$99489, %edi
 	call	__m3_fault
-L7034:
+L7486:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45052,21 +52201,37 @@ _A__uMod_param_u16_u16:
 _A__Mod_param_u16_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movw	%si, -20(%rbp)
-	movswq	-18(%rbp),%rsi
-	movswq	-20(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	movswq	-20(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7491
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7491
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7491:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L7039
+	jl	L7492
 	cmpq	$32767, -16(%rbp)
-	jle	L7040
-L7039:
+	jle	L7493
+L7492:
 	movl	$99553, %edi
 	call	__m3_fault
-L7040:
+L7493:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45091,18 +52256,34 @@ _A__uMod_var_u16_i32:
 _A__Mod_var_u16_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rsi
+	movswq	%ax,%rax
+	movq	%rax, -32(%rbp)
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	mov	%eax, %eax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7498
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7498
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7498:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$32767, -16(%rbp)
-	jle	L7045
+	jle	L7499
 	movl	$99617, %edi
 	call	__m3_fault
-L7045:
+L7499:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45127,18 +52308,34 @@ _A__uMod_param_u16_i32:
 _A__Mod_param_u16_i32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movw	%di, -18(%rbp)
 	movl	%esi, -24(%rbp)
-	movswq	-18(%rbp),%rsi
-	mov	-24(%rbp), %edi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	-18(%rbp),%rax
+	movq	%rax, -40(%rbp)
+	mov	-24(%rbp), %edx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7504
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7504
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7504:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$32767, -16(%rbp)
-	jle	L7050
+	jle	L7505
 	movl	$99681, %edi
 	call	__m3_fault
-L7050:
+L7505:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45175,14 +52372,14 @@ _A__Mod_var_i32_i16:
 	idivq	-32(%rbp)
 	movq	%rdx, -24(%rbp)
 	cmpq	$0, -24(%rbp)
-	je	L7055
+	je	L7510
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L7055
+	jns	L7510
 	movq	-32(%rbp), %rax
 	addq	%rax, -24(%rbp)
-L7055:
+L7510:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -45219,14 +52416,14 @@ _A__Mod_param_i32_i16:
 	idivq	-40(%rbp)
 	movq	%rdx, -32(%rbp)
 	cmpq	$0, -32(%rbp)
-	je	L7060
+	je	L7515
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L7060
+	jns	L7515
 	movq	-40(%rbp), %rax
 	addq	%rax, -32(%rbp)
-L7060:
+L7515:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -45261,14 +52458,14 @@ _A__Mod_var_i32_LC:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L7065
+	je	L7520
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L7065
+	jns	L7520
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L7065:
+L7520:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -45304,14 +52501,14 @@ _A__Mod_param_i32_LC:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L7070
+	je	L7525
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L7070
+	jns	L7525
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L7070:
+L7525:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -45335,11 +52532,26 @@ _A__uMod_var_i32_i64:
 _A__Mod_var_i32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
-	movq	128+_MM_A(%rip), %rdi
-	call	_m3_modL
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movq	128+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7530
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7530
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7530:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i32_i64
@@ -45363,12 +52575,25 @@ _A__uMod_param_i32_i64:
 _A__Mod_param_i32_i64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7535
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7535
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7535:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i32_I
@@ -45391,21 +52616,37 @@ _A__uMod_var_i32_I:
 _A__Mod_var_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
-	movq	136+_MM_A(%rip), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movq	136+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7540
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7540
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7540:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L7083
+	js	L7541
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L7084
-L7083:
+	jle	L7542
+L7541:
 	movl	$100129, %edi
 	call	__m3_fault
-L7084:
+L7542:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45430,22 +52671,36 @@ _A__uMod_param_i32_I:
 _A__Mod_param_i32_I:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7547
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7547
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7547:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L7089
+	js	L7548
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L7090
-L7089:
+	jle	L7549
+L7548:
 	movl	$100193, %edi
 	call	__m3_fault
-L7090:
+L7549:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45470,22 +52725,38 @@ _A__uMod_var_i32_u8:
 _A__Mod_var_i32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
 	movzbl	144+_MM_A(%rip), %eax
-	movsbq	%al,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movsbq	%al,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7554
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7554
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7554:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L7095
+	js	L7555
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L7096
-L7095:
+	jle	L7556
+L7555:
 	movl	$100257, %edi
 	call	__m3_fault
-L7096:
+L7556:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45510,22 +52781,38 @@ _A__uMod_param_i32_u8:
 _A__Mod_param_i32_u8:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movb	%sil, -21(%rbp)
-	mov	-20(%rbp), %esi
-	movsbq	-21(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movsbq	-21(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7561
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7561
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7561:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L7101
+	js	L7562
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L7102
-L7101:
+	jle	L7563
+L7562:
 	movl	$100321, %edi
 	call	__m3_fault
-L7102:
+L7563:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45561,22 +52848,22 @@ _A__Mod_var_i32_C:
 	idivq	-24(%rbp)
 	movq	%rdx, -40(%rbp)
 	cmpq	$0, -40(%rbp)
-	je	L7107
+	je	L7568
 	movq	-32(%rbp), %rax
 	xorq	-24(%rbp), %rax
 	testq	%rax, %rax
-	jns	L7107
+	jns	L7568
 	movq	-24(%rbp), %rax
 	addq	%rax, -40(%rbp)
-L7107:
+L7568:
 	movq	-40(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L7108
+	jle	L7569
 	movl	$100385, %edi
 	call	__m3_fault
-L7108:
+L7569:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45613,22 +52900,22 @@ _A__Mod_param_i32_C:
 	idivq	-40(%rbp)
 	movq	%rdx, -56(%rbp)
 	cmpq	$0, -56(%rbp)
-	je	L7113
+	je	L7574
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L7113
+	jns	L7574
 	movq	-40(%rbp), %rax
 	addq	%rax, -56(%rbp)
-L7113:
+L7574:
 	movq	-56(%rbp), %rdx
 	movq	%rdx, -16(%rbp)
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L7114
+	jle	L7575
 	movl	$100449, %edi
 	call	__m3_fault
-L7114:
+L7575:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45653,22 +52940,38 @@ _A__uMod_var_i32_u32:
 _A__Mod_var_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
 	movl	164+_MM_A(%rip), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7580
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7580
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7580:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L7119
+	js	L7581
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L7120
-L7119:
+	jle	L7582
+L7581:
 	movl	$100513, %edi
 	call	__m3_fault
-L7120:
+L7582:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45694,23 +52997,39 @@ _A__uMod_param_i32_u32:
 _A__Mod_param_i32_u32:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movl	%esi, -24(%rbp)
-	mov	-20(%rbp), %esi
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
 	movl	-24(%rbp), %eax
-	movslq	%eax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	cltq
+	movq	%rax, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7587
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7587
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7587:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L7125
+	js	L7588
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L7126
-L7125:
+	jle	L7589
+L7588:
 	movl	$100577, %edi
 	call	__m3_fault
-L7126:
+L7589:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45747,14 +53066,14 @@ _A__Mod_var_i32_i8:
 	idivq	-32(%rbp)
 	movq	%rdx, -24(%rbp)
 	cmpq	$0, -24(%rbp)
-	je	L7131
+	je	L7594
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L7131
+	jns	L7594
 	movq	-32(%rbp), %rax
 	addq	%rax, -24(%rbp)
-L7131:
+L7594:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -45791,14 +53110,14 @@ _A__Mod_param_i32_i8:
 	idivq	-40(%rbp)
 	movq	%rdx, -32(%rbp)
 	cmpq	$0, -32(%rbp)
-	je	L7136
+	je	L7599
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L7136
+	jns	L7599
 	movq	-40(%rbp), %rax
 	addq	%rax, -32(%rbp)
-L7136:
+L7599:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -45822,11 +53141,26 @@ _A__uMod_var_i32_L:
 _A__Mod_var_i32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
-	movq	176+_MM_A(%rip), %rdi
-	call	_m3_modL
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movq	176+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7604
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7604
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7604:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i32_L
@@ -45850,12 +53184,25 @@ _A__uMod_param_i32_L:
 _A__Mod_param_i32_L:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7609
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7609
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7609:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i32_u64
@@ -45878,11 +53225,26 @@ _A__uMod_var_i32_u64:
 _A__Mod_var_i32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
-	movq	184+_MM_A(%rip), %rdi
-	call	_m3_modL
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
+	movq	184+_MM_A(%rip), %rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7614
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7614
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7614:
+	movq	-40(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_param_i32_u64
@@ -45906,12 +53268,25 @@ _A__uMod_param_i32_u64:
 _A__Mod_param_i32_u64:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
 	movl	%edi, -20(%rbp)
 	movq	%rsi, -32(%rbp)
-	mov	-20(%rbp), %esi
-	movq	-32(%rbp), %rdi
-	call	_m3_modL
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7619
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7619
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7619:
+	movq	-48(%rbp), %rax
 	leave
 	ret
 .globl _A__uMod_var_i32_u16
@@ -45935,22 +53310,38 @@ _A__uMod_var_i32_u16:
 _A__Mod_var_i32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$16, %rsp
+	subq	$48, %rsp
 	movl	196+_MM_A(%rip), %eax
-	mov	%eax, %esi
+	mov	%eax, %eax
+	movq	%rax, -32(%rbp)
 	movzwl	192+_MM_A(%rip), %eax
-	movswq	%ax,%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	movswq	%ax,%rax
+	movq	%rax, -24(%rbp)
+	movq	-32(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-24(%rbp)
+	movq	%rdx, -40(%rbp)
+	cmpq	$0, -40(%rbp)
+	je	L7624
+	movq	-32(%rbp), %rax
+	xorq	-24(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7624
+	movq	-24(%rbp), %rax
+	addq	%rax, -40(%rbp)
+L7624:
+	movq	-40(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L7157
+	js	L7625
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L7158
-L7157:
+	jle	L7626
+L7625:
 	movl	$101025, %edi
 	call	__m3_fault
-L7158:
+L7626:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -45975,22 +53366,38 @@ _A__uMod_param_i32_u16:
 _A__Mod_param_i32_u16:
 	pushq	%rbp
 	movq	%rsp, %rbp
-	subq	$32, %rsp
+	subq	$64, %rsp
 	movl	%edi, -20(%rbp)
 	movw	%si, -22(%rbp)
-	mov	-20(%rbp), %esi
-	movswq	-22(%rbp),%rdi
-	call	_m3_modL
-	movq	%rax, -16(%rbp)
+	mov	-20(%rbp), %eax
+	movq	%rax, -40(%rbp)
+	movswq	-22(%rbp),%rdx
+	movq	%rdx, -32(%rbp)
+	movq	-40(%rbp), %rdx
+	movq	%rdx, %rax
+	sarq	$63, %rdx
+	idivq	-32(%rbp)
+	movq	%rdx, -48(%rbp)
+	cmpq	$0, -48(%rbp)
+	je	L7631
+	movq	-40(%rbp), %rax
+	xorq	-32(%rbp), %rax
+	testq	%rax, %rax
+	jns	L7631
+	movq	-32(%rbp), %rax
+	addq	%rax, -48(%rbp)
+L7631:
+	movq	-48(%rbp), %rdx
+	movq	%rdx, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L7163
+	js	L7632
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L7164
-L7163:
+	jle	L7633
+L7632:
 	movl	$101089, %edi
 	call	__m3_fault
-L7164:
+L7633:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -46027,14 +53434,14 @@ _A__Mod_var_i32_i32:
 	idivq	-32(%rbp)
 	movq	%rdx, -24(%rbp)
 	cmpq	$0, -24(%rbp)
-	je	L7169
+	je	L7638
 	movq	-40(%rbp), %rax
 	xorq	-32(%rbp), %rax
 	testq	%rax, %rax
-	jns	L7169
+	jns	L7638
 	movq	-32(%rbp), %rax
 	addq	%rax, -24(%rbp)
-L7169:
+L7638:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -46071,14 +53478,14 @@ _A__Mod_param_i32_i32:
 	idivq	-40(%rbp)
 	movq	%rdx, -32(%rbp)
 	cmpq	$0, -32(%rbp)
-	je	L7174
+	je	L7643
 	movq	-48(%rbp), %rax
 	xorq	-40(%rbp), %rax
 	testq	%rax, %rax
-	jns	L7174
+	jns	L7643
 	movq	-40(%rbp), %rax
 	addq	%rax, -32(%rbp)
-L7174:
+L7643:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -62584,9 +69991,8 @@ _A__GT_param_f64_f64:
 	movq	%rsp, %rbp
 	movsd	%xmm0, -24(%rbp)
 	movsd	%xmm1, -32(%rbp)
-	movsd	-24(%rbp), %xmm1
-	movsd	-32(%rbp), %xmm0
-	ucomisd	%xmm0, %xmm1
+	movsd	-24(%rbp), %xmm0
+	ucomisd	-32(%rbp), %xmm0
 	seta	%al
 	movzbl	%al, %eax
 	leave
@@ -65119,9 +72525,8 @@ _A__GT_param_f32_f32:
 	movq	%rsp, %rbp
 	movss	%xmm0, -20(%rbp)
 	movss	%xmm1, -24(%rbp)
-	movss	-20(%rbp), %xmm1
-	movss	-24(%rbp), %xmm0
-	ucomiss	%xmm0, %xmm1
+	movss	-20(%rbp), %xmm0
+	ucomiss	-24(%rbp), %xmm0
 	seta	%al
 	movzbl	%al, %eax
 	leave
@@ -70200,9 +77605,8 @@ _A__GE_param_f64_f64:
 	movq	%rsp, %rbp
 	movsd	%xmm0, -24(%rbp)
 	movsd	%xmm1, -32(%rbp)
-	movsd	-24(%rbp), %xmm1
-	movsd	-32(%rbp), %xmm0
-	ucomisd	%xmm0, %xmm1
+	movsd	-24(%rbp), %xmm0
+	ucomisd	-32(%rbp), %xmm0
 	setae	%al
 	movzbl	%al, %eax
 	leave
@@ -72741,9 +80145,8 @@ _A__GE_param_f32_f32:
 	movq	%rsp, %rbp
 	movss	%xmm0, -20(%rbp)
 	movss	%xmm1, -24(%rbp)
-	movss	-20(%rbp), %xmm1
-	movss	-24(%rbp), %xmm0
-	ucomiss	%xmm0, %xmm1
+	movss	-20(%rbp), %xmm0
+	ucomiss	-24(%rbp), %xmm0
 	setae	%al
 	movzbl	%al, %eax
 	leave
@@ -87048,9 +94451,8 @@ _A__EQ_param_f64_f64:
 	movq	%rsp, %rbp
 	movsd	%xmm0, -24(%rbp)
 	movsd	%xmm1, -32(%rbp)
-	movsd	-24(%rbp), %xmm1
-	movsd	-32(%rbp), %xmm0
-	ucomisd	%xmm0, %xmm1
+	movsd	-24(%rbp), %xmm0
+	ucomisd	-32(%rbp), %xmm0
 	sete	%al
 	setnp	%dl
 	andl	%edx, %eax
@@ -88308,9 +95710,8 @@ _A__EQ_param_f32_f32:
 	movq	%rsp, %rbp
 	movss	%xmm0, -20(%rbp)
 	movss	%xmm1, -24(%rbp)
-	movss	-20(%rbp), %xmm1
-	movss	-24(%rbp), %xmm0
-	ucomiss	%xmm0, %xmm1
+	movss	-20(%rbp), %xmm0
+	ucomiss	-24(%rbp), %xmm0
 	sete	%al
 	setnp	%dl
 	andl	%edx, %eax
@@ -90815,9 +98216,8 @@ _A__NE_param_f64_f64:
 	movq	%rsp, %rbp
 	movsd	%xmm0, -24(%rbp)
 	movsd	%xmm1, -32(%rbp)
-	movsd	-24(%rbp), %xmm1
-	movsd	-32(%rbp), %xmm0
-	ucomisd	%xmm0, %xmm1
+	movsd	-24(%rbp), %xmm0
+	ucomisd	-32(%rbp), %xmm0
 	setne	%al
 	setp	%dl
 	orl	%edx, %eax
@@ -92075,9 +99475,8 @@ _A__NE_param_f32_f32:
 	movq	%rsp, %rbp
 	movss	%xmm0, -20(%rbp)
 	movss	%xmm1, -24(%rbp)
-	movss	-20(%rbp), %xmm1
-	movss	-24(%rbp), %xmm0
-	ucomiss	%xmm0, %xmm1
+	movss	-20(%rbp), %xmm0
+	ucomiss	-24(%rbp), %xmm0
 	setne	%al
 	setp	%dl
 	orl	%edx, %eax
@@ -93965,13 +101364,13 @@ _A__Not_var_i16_i16:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14715
+	js	L15184
 	cmpq	$65535, -16(%rbp)
-	jle	L14716
-L14715:
+	jle	L15185
+L15184:
 	movl	$222817, %edi
 	call	__m3_fault
-L14716:
+L15185:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -93998,13 +101397,13 @@ _A__Not_param_i16_i16:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14721
+	js	L15190
 	cmpq	$65535, -16(%rbp)
-	jle	L14722
-L14721:
+	jle	L15191
+L15190:
 	movl	$222881, %edi
 	call	__m3_fault
-L14722:
+L15191:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94171,13 +101570,13 @@ _A__Not_var_u8_u8:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L14755
+	jl	L15224
 	cmpq	$127, -16(%rbp)
-	jle	L14756
-L14755:
+	jle	L15225
+L15224:
 	movl	$223393, %edi
 	call	__m3_fault
-L14756:
+L15225:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94204,13 +101603,13 @@ _A__Not_param_u8_u8:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-128, -16(%rbp)
-	jl	L14761
+	jl	L15230
 	cmpq	$127, -16(%rbp)
-	jle	L14762
-L14761:
+	jle	L15231
+L15230:
 	movl	$223457, %edi
 	call	__m3_fault
-L14762:
+L15231:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94233,10 +101632,10 @@ _A__Not_var_C_C:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L14767
+	jns	L15236
 	movl	$223521, %edi
 	call	__m3_fault
-L14767:
+L15236:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94263,10 +101662,10 @@ _A__Not_param_C_C:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	jns	L14772
+	jns	L15241
 	movl	$223585, %edi
 	call	__m3_fault
-L14772:
+L15241:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94313,13 +101712,13 @@ _A__Not_var_u32_u32:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L14781
+	jl	L15250
 	cmpq	$2147483647, -16(%rbp)
-	jle	L14782
-L14781:
+	jle	L15251
+L15250:
 	movl	$223713, %edi
 	call	__m3_fault
-L14782:
+L15251:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94348,13 +101747,13 @@ _A__Not_param_u32_u32:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-2147483648, -16(%rbp)
-	jl	L14787
+	jl	L15256
 	cmpq	$2147483647, -16(%rbp)
-	jle	L14788
-L14787:
+	jle	L15257
+L15256:
 	movl	$223777, %edi
 	call	__m3_fault
-L14788:
+L15257:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94379,13 +101778,13 @@ _A__Not_var_i8_i8:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14793
+	js	L15262
 	cmpq	$255, -16(%rbp)
-	jle	L14794
-L14793:
+	jle	L15263
+L15262:
 	movl	$223841, %edi
 	call	__m3_fault
-L14794:
+L15263:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94412,13 +101811,13 @@ _A__Not_param_i8_i8:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14799
+	js	L15268
 	cmpq	$255, -16(%rbp)
-	jle	L14800
-L14799:
+	jle	L15269
+L15268:
 	movl	$223905, %edi
 	call	__m3_fault
-L14800:
+L15269:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94523,13 +101922,13 @@ _A__Not_var_u16_u16:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L14821
+	jl	L15290
 	cmpq	$32767, -16(%rbp)
-	jle	L14822
-L14821:
+	jle	L15291
+L15290:
 	movl	$224225, %edi
 	call	__m3_fault
-L14822:
+L15291:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94556,13 +101955,13 @@ _A__Not_param_u16_u16:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$-32768, -16(%rbp)
-	jl	L14827
+	jl	L15296
 	cmpq	$32767, -16(%rbp)
-	jle	L14828
-L14827:
+	jle	L15297
+L15296:
 	movl	$224289, %edi
 	call	__m3_fault
-L14828:
+L15297:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94587,14 +101986,14 @@ _A__Not_var_i32_i32:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14833
+	js	L15302
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L14834
-L14833:
+	jle	L15303
+L15302:
 	movl	$224353, %edi
 	call	__m3_fault
-L14834:
+L15303:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94621,14 +102020,14 @@ _A__Not_param_i32_i32:
 	negq	%rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14839
+	js	L15308
 	movl	$4294967295, %eax
 	cmpq	%rax, -16(%rbp)
-	jle	L14840
-L14839:
+	jle	L15309
+L15308:
 	movl	$224417, %edi
 	call	__m3_fault
-L14840:
+L15309:
 	movq	-16(%rbp), %rax
 	leave
 	ret
@@ -94641,24 +102040,24 @@ _A__uLeftShift_var_i16_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14843
+	js	L15312
 	cmpq	$63, -16(%rbp)
-	jle	L14844
-L14843:
+	jle	L15313
+L15312:
 	movl	$224545, %edi
 	call	__m3_fault
-L14844:
+L15313:
 	cmpq	$63, -16(%rbp)
-	jg	L14845
+	jg	L15314
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14846
-L14845:
+	jmp	L15315
+L15314:
 	movq	$0, -24(%rbp)
-L14846:
+L15315:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -94673,23 +102072,23 @@ _A__uLeftShift_param_i16_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14849
+	js	L15318
 	cmpq	$63, -16(%rbp)
-	jle	L14850
-L14849:
+	jle	L15319
+L15318:
 	movl	$224577, %edi
 	call	__m3_fault
-L14850:
+L15319:
 	cmpq	$63, -16(%rbp)
-	jg	L14851
+	jg	L15320
 	movzwl	-18(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14852
-L14851:
+	jmp	L15321
+L15320:
 	movq	$0, -40(%rbp)
-L14852:
+L15321:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -94702,21 +102101,21 @@ _A__uLeftShift_var_i16_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14855
+	jle	L15324
 	movl	$224609, %edi
 	call	__m3_fault
-L14855:
+L15324:
 	cmpq	$63, -16(%rbp)
-	jg	L14856
+	jg	L15325
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14857
-L14856:
+	jmp	L15326
+L15325:
 	movq	$0, -24(%rbp)
-L14857:
+L15326:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -94731,20 +102130,20 @@ _A__uLeftShift_param_i16_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14860
+	jle	L15329
 	movl	$224641, %edi
 	call	__m3_fault
-L14860:
+L15329:
 	cmpq	$63, -16(%rbp)
-	jg	L14861
+	jg	L15330
 	movzwl	-18(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14862
-L14861:
+	jmp	L15331
+L15330:
 	movq	$0, -40(%rbp)
-L14862:
+L15331:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -94757,23 +102156,23 @@ _A__uLeftShift_var_LC_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14865
+	js	L15334
 	cmpq	$63, -16(%rbp)
-	jle	L14866
-L14865:
+	jle	L15335
+L15334:
 	movl	$224673, %edi
 	call	__m3_fault
-L14866:
+L15335:
 	cmpq	$63, -16(%rbp)
-	jg	L14867
+	jg	L15336
 	movq	112+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14868
-L14867:
+	jmp	L15337
+L15336:
 	movq	$0, -24(%rbp)
-L14868:
+L15337:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -94788,23 +102187,23 @@ _A__uLeftShift_param_LC_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14871
+	js	L15340
 	cmpq	$63, -16(%rbp)
-	jle	L14872
-L14871:
+	jle	L15341
+L15340:
 	movl	$224705, %edi
 	call	__m3_fault
-L14872:
+L15341:
 	cmpq	$63, -16(%rbp)
-	jg	L14873
+	jg	L15342
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14874
-L14873:
+	jmp	L15343
+L15342:
 	movq	$0, -40(%rbp)
-L14874:
+L15343:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -94817,20 +102216,20 @@ _A__uLeftShift_var_LC_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14877
+	jle	L15346
 	movl	$224737, %edi
 	call	__m3_fault
-L14877:
+L15346:
 	cmpq	$63, -16(%rbp)
-	jg	L14878
+	jg	L15347
 	movq	112+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14879
-L14878:
+	jmp	L15348
+L15347:
 	movq	$0, -24(%rbp)
-L14879:
+L15348:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -94845,20 +102244,20 @@ _A__uLeftShift_param_LC_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14882
+	jle	L15351
 	movl	$224769, %edi
 	call	__m3_fault
-L14882:
+L15351:
 	cmpq	$63, -16(%rbp)
-	jg	L14883
+	jg	L15352
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14884
-L14883:
+	jmp	L15353
+L15352:
 	movq	$0, -40(%rbp)
-L14884:
+L15353:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -94871,23 +102270,23 @@ _A__uLeftShift_var_i64_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14887
+	js	L15356
 	cmpq	$63, -16(%rbp)
-	jle	L14888
-L14887:
+	jle	L15357
+L15356:
 	movl	$224801, %edi
 	call	__m3_fault
-L14888:
+L15357:
 	cmpq	$63, -16(%rbp)
-	jg	L14889
+	jg	L15358
 	movq	128+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14890
-L14889:
+	jmp	L15359
+L15358:
 	movq	$0, -24(%rbp)
-L14890:
+L15359:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -94902,23 +102301,23 @@ _A__uLeftShift_param_i64_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14893
+	js	L15362
 	cmpq	$63, -16(%rbp)
-	jle	L14894
-L14893:
+	jle	L15363
+L15362:
 	movl	$224833, %edi
 	call	__m3_fault
-L14894:
+L15363:
 	cmpq	$63, -16(%rbp)
-	jg	L14895
+	jg	L15364
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14896
-L14895:
+	jmp	L15365
+L15364:
 	movq	$0, -40(%rbp)
-L14896:
+L15365:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -94931,20 +102330,20 @@ _A__uLeftShift_var_i64_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14899
+	jle	L15368
 	movl	$224865, %edi
 	call	__m3_fault
-L14899:
+L15368:
 	cmpq	$63, -16(%rbp)
-	jg	L14900
+	jg	L15369
 	movq	128+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14901
-L14900:
+	jmp	L15370
+L15369:
 	movq	$0, -24(%rbp)
-L14901:
+L15370:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -94959,20 +102358,20 @@ _A__uLeftShift_param_i64_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14904
+	jle	L15373
 	movl	$224897, %edi
 	call	__m3_fault
-L14904:
+L15373:
 	cmpq	$63, -16(%rbp)
-	jg	L14905
+	jg	L15374
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14906
-L14905:
+	jmp	L15375
+L15374:
 	movq	$0, -40(%rbp)
-L14906:
+L15375:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -94985,23 +102384,23 @@ _A__uLeftShift_var_I_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14909
+	js	L15378
 	cmpq	$63, -16(%rbp)
-	jle	L14910
-L14909:
+	jle	L15379
+L15378:
 	movl	$224929, %edi
 	call	__m3_fault
-L14910:
+L15379:
 	cmpq	$63, -16(%rbp)
-	jg	L14911
+	jg	L15380
 	movq	136+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14912
-L14911:
+	jmp	L15381
+L15380:
 	movq	$0, -24(%rbp)
-L14912:
+L15381:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95016,23 +102415,23 @@ _A__uLeftShift_param_I_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14915
+	js	L15384
 	cmpq	$63, -16(%rbp)
-	jle	L14916
-L14915:
+	jle	L15385
+L15384:
 	movl	$224961, %edi
 	call	__m3_fault
-L14916:
+L15385:
 	cmpq	$63, -16(%rbp)
-	jg	L14917
+	jg	L15386
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14918
-L14917:
+	jmp	L15387
+L15386:
 	movq	$0, -40(%rbp)
-L14918:
+L15387:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95045,20 +102444,20 @@ _A__uLeftShift_var_I_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14921
+	jle	L15390
 	movl	$224993, %edi
 	call	__m3_fault
-L14921:
+L15390:
 	cmpq	$63, -16(%rbp)
-	jg	L14922
+	jg	L15391
 	movq	136+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14923
-L14922:
+	jmp	L15392
+L15391:
 	movq	$0, -24(%rbp)
-L14923:
+L15392:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95073,20 +102472,20 @@ _A__uLeftShift_param_I_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14926
+	jle	L15395
 	movl	$225025, %edi
 	call	__m3_fault
-L14926:
+L15395:
 	cmpq	$63, -16(%rbp)
-	jg	L14927
+	jg	L15396
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14928
-L14927:
+	jmp	L15397
+L15396:
 	movq	$0, -40(%rbp)
-L14928:
+L15397:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95099,24 +102498,24 @@ _A__uLeftShift_var_u8_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14931
+	js	L15400
 	cmpq	$63, -16(%rbp)
-	jle	L14932
-L14931:
+	jle	L15401
+L15400:
 	movl	$225057, %edi
 	call	__m3_fault
-L14932:
+L15401:
 	cmpq	$63, -16(%rbp)
-	jg	L14933
+	jg	L15402
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14934
-L14933:
+	jmp	L15403
+L15402:
 	movq	$0, -24(%rbp)
-L14934:
+L15403:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95131,23 +102530,23 @@ _A__uLeftShift_param_u8_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14937
+	js	L15406
 	cmpq	$63, -16(%rbp)
-	jle	L14938
-L14937:
+	jle	L15407
+L15406:
 	movl	$225089, %edi
 	call	__m3_fault
-L14938:
+L15407:
 	cmpq	$63, -16(%rbp)
-	jg	L14939
+	jg	L15408
 	movsbq	-17(%rbp),%rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14940
-L14939:
+	jmp	L15409
+L15408:
 	movq	$0, -40(%rbp)
-L14940:
+L15409:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95160,21 +102559,21 @@ _A__uLeftShift_var_u8_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14943
+	jle	L15412
 	movl	$225121, %edi
 	call	__m3_fault
-L14943:
+L15412:
 	cmpq	$63, -16(%rbp)
-	jg	L14944
+	jg	L15413
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14945
-L14944:
+	jmp	L15414
+L15413:
 	movq	$0, -24(%rbp)
-L14945:
+L15414:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95189,20 +102588,20 @@ _A__uLeftShift_param_u8_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14948
+	jle	L15417
 	movl	$225153, %edi
 	call	__m3_fault
-L14948:
+L15417:
 	cmpq	$63, -16(%rbp)
-	jg	L14949
+	jg	L15418
 	movsbq	-17(%rbp),%rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14950
-L14949:
+	jmp	L15419
+L15418:
 	movq	$0, -40(%rbp)
-L14950:
+L15419:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95215,23 +102614,23 @@ _A__uLeftShift_var_C_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14953
+	js	L15422
 	cmpq	$63, -16(%rbp)
-	jle	L14954
-L14953:
+	jle	L15423
+L15422:
 	movl	$225185, %edi
 	call	__m3_fault
-L14954:
+L15423:
 	cmpq	$63, -16(%rbp)
-	jg	L14955
+	jg	L15424
 	movq	152+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14956
-L14955:
+	jmp	L15425
+L15424:
 	movq	$0, -24(%rbp)
-L14956:
+L15425:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95246,23 +102645,23 @@ _A__uLeftShift_param_C_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14959
+	js	L15428
 	cmpq	$63, -16(%rbp)
-	jle	L14960
-L14959:
+	jle	L15429
+L15428:
 	movl	$225217, %edi
 	call	__m3_fault
-L14960:
+L15429:
 	cmpq	$63, -16(%rbp)
-	jg	L14961
+	jg	L15430
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14962
-L14961:
+	jmp	L15431
+L15430:
 	movq	$0, -40(%rbp)
-L14962:
+L15431:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95275,20 +102674,20 @@ _A__uLeftShift_var_C_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14965
+	jle	L15434
 	movl	$225249, %edi
 	call	__m3_fault
-L14965:
+L15434:
 	cmpq	$63, -16(%rbp)
-	jg	L14966
+	jg	L15435
 	movq	152+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14967
-L14966:
+	jmp	L15436
+L15435:
 	movq	$0, -24(%rbp)
-L14967:
+L15436:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95303,20 +102702,20 @@ _A__uLeftShift_param_C_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14970
+	jle	L15439
 	movl	$225281, %edi
 	call	__m3_fault
-L14970:
+L15439:
 	cmpq	$63, -16(%rbp)
-	jg	L14971
+	jg	L15440
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14972
-L14971:
+	jmp	L15441
+L15440:
 	movq	$0, -40(%rbp)
-L14972:
+L15441:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95329,24 +102728,24 @@ _A__uLeftShift_var_u32_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14975
+	js	L15444
 	cmpq	$63, -16(%rbp)
-	jle	L14976
-L14975:
+	jle	L15445
+L15444:
 	movl	$225313, %edi
 	call	__m3_fault
-L14976:
+L15445:
 	cmpq	$63, -16(%rbp)
-	jg	L14977
+	jg	L15446
 	movl	164+_MM_A(%rip), %eax
 	cltq
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14978
-L14977:
+	jmp	L15447
+L15446:
 	movq	$0, -24(%rbp)
-L14978:
+L15447:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95361,24 +102760,24 @@ _A__uLeftShift_param_u32_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14981
+	js	L15450
 	cmpq	$63, -16(%rbp)
-	jle	L14982
-L14981:
+	jle	L15451
+L15450:
 	movl	$225345, %edi
 	call	__m3_fault
-L14982:
+L15451:
 	cmpq	$63, -16(%rbp)
-	jg	L14983
+	jg	L15452
 	movl	-20(%rbp), %eax
 	cltq
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14984
-L14983:
+	jmp	L15453
+L15452:
 	movq	$0, -40(%rbp)
-L14984:
+L15453:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95391,21 +102790,21 @@ _A__uLeftShift_var_u32_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14987
+	jle	L15456
 	movl	$225377, %edi
 	call	__m3_fault
-L14987:
+L15456:
 	cmpq	$63, -16(%rbp)
-	jg	L14988
+	jg	L15457
 	movl	164+_MM_A(%rip), %eax
 	cltq
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L14989
-L14988:
+	jmp	L15458
+L15457:
 	movq	$0, -24(%rbp)
-L14989:
+L15458:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95420,21 +102819,21 @@ _A__uLeftShift_param_u32_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L14992
+	jle	L15461
 	movl	$225409, %edi
 	call	__m3_fault
-L14992:
+L15461:
 	cmpq	$63, -16(%rbp)
-	jg	L14993
+	jg	L15462
 	movl	-20(%rbp), %eax
 	cltq
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L14994
-L14993:
+	jmp	L15463
+L15462:
 	movq	$0, -40(%rbp)
-L14994:
+L15463:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95447,24 +102846,24 @@ _A__uLeftShift_var_i8_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L14997
+	js	L15466
 	cmpq	$63, -16(%rbp)
-	jle	L14998
-L14997:
+	jle	L15467
+L15466:
 	movl	$225441, %edi
 	call	__m3_fault
-L14998:
+L15467:
 	cmpq	$63, -16(%rbp)
-	jg	L14999
+	jg	L15468
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15000
-L14999:
+	jmp	L15469
+L15468:
 	movq	$0, -24(%rbp)
-L15000:
+L15469:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95479,23 +102878,23 @@ _A__uLeftShift_param_i8_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15003
+	js	L15472
 	cmpq	$63, -16(%rbp)
-	jle	L15004
-L15003:
+	jle	L15473
+L15472:
 	movl	$225473, %edi
 	call	__m3_fault
-L15004:
+L15473:
 	cmpq	$63, -16(%rbp)
-	jg	L15005
+	jg	L15474
 	movzbl	-17(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15006
-L15005:
+	jmp	L15475
+L15474:
 	movq	$0, -40(%rbp)
-L15006:
+L15475:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95508,21 +102907,21 @@ _A__uLeftShift_var_i8_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15009
+	jle	L15478
 	movl	$225505, %edi
 	call	__m3_fault
-L15009:
+L15478:
 	cmpq	$63, -16(%rbp)
-	jg	L15010
+	jg	L15479
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15011
-L15010:
+	jmp	L15480
+L15479:
 	movq	$0, -24(%rbp)
-L15011:
+L15480:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95537,20 +102936,20 @@ _A__uLeftShift_param_i8_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15014
+	jle	L15483
 	movl	$225537, %edi
 	call	__m3_fault
-L15014:
+L15483:
 	cmpq	$63, -16(%rbp)
-	jg	L15015
+	jg	L15484
 	movzbl	-17(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15016
-L15015:
+	jmp	L15485
+L15484:
 	movq	$0, -40(%rbp)
-L15016:
+L15485:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95563,23 +102962,23 @@ _A__uLeftShift_var_L_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15019
+	js	L15488
 	cmpq	$63, -16(%rbp)
-	jle	L15020
-L15019:
+	jle	L15489
+L15488:
 	movl	$225569, %edi
 	call	__m3_fault
-L15020:
+L15489:
 	cmpq	$63, -16(%rbp)
-	jg	L15021
+	jg	L15490
 	movq	176+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15022
-L15021:
+	jmp	L15491
+L15490:
 	movq	$0, -24(%rbp)
-L15022:
+L15491:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95594,23 +102993,23 @@ _A__uLeftShift_param_L_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15025
+	js	L15494
 	cmpq	$63, -16(%rbp)
-	jle	L15026
-L15025:
+	jle	L15495
+L15494:
 	movl	$225601, %edi
 	call	__m3_fault
-L15026:
+L15495:
 	cmpq	$63, -16(%rbp)
-	jg	L15027
+	jg	L15496
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15028
-L15027:
+	jmp	L15497
+L15496:
 	movq	$0, -40(%rbp)
-L15028:
+L15497:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95623,20 +103022,20 @@ _A__uLeftShift_var_L_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15031
+	jle	L15500
 	movl	$225633, %edi
 	call	__m3_fault
-L15031:
+L15500:
 	cmpq	$63, -16(%rbp)
-	jg	L15032
+	jg	L15501
 	movq	176+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15033
-L15032:
+	jmp	L15502
+L15501:
 	movq	$0, -24(%rbp)
-L15033:
+L15502:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95651,20 +103050,20 @@ _A__uLeftShift_param_L_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15036
+	jle	L15505
 	movl	$225665, %edi
 	call	__m3_fault
-L15036:
+L15505:
 	cmpq	$63, -16(%rbp)
-	jg	L15037
+	jg	L15506
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15038
-L15037:
+	jmp	L15507
+L15506:
 	movq	$0, -40(%rbp)
-L15038:
+L15507:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95677,23 +103076,23 @@ _A__uLeftShift_var_u64_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15041
+	js	L15510
 	cmpq	$63, -16(%rbp)
-	jle	L15042
-L15041:
+	jle	L15511
+L15510:
 	movl	$225697, %edi
 	call	__m3_fault
-L15042:
+L15511:
 	cmpq	$63, -16(%rbp)
-	jg	L15043
+	jg	L15512
 	movq	184+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15044
-L15043:
+	jmp	L15513
+L15512:
 	movq	$0, -24(%rbp)
-L15044:
+L15513:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95708,23 +103107,23 @@ _A__uLeftShift_param_u64_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15047
+	js	L15516
 	cmpq	$63, -16(%rbp)
-	jle	L15048
-L15047:
+	jle	L15517
+L15516:
 	movl	$225729, %edi
 	call	__m3_fault
-L15048:
+L15517:
 	cmpq	$63, -16(%rbp)
-	jg	L15049
+	jg	L15518
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15050
-L15049:
+	jmp	L15519
+L15518:
 	movq	$0, -40(%rbp)
-L15050:
+L15519:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95737,20 +103136,20 @@ _A__uLeftShift_var_u64_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15053
+	jle	L15522
 	movl	$225761, %edi
 	call	__m3_fault
-L15053:
+L15522:
 	cmpq	$63, -16(%rbp)
-	jg	L15054
+	jg	L15523
 	movq	184+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15055
-L15054:
+	jmp	L15524
+L15523:
 	movq	$0, -24(%rbp)
-L15055:
+L15524:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95765,20 +103164,20 @@ _A__uLeftShift_param_u64_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15058
+	jle	L15527
 	movl	$225793, %edi
 	call	__m3_fault
-L15058:
+L15527:
 	cmpq	$63, -16(%rbp)
-	jg	L15059
+	jg	L15528
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15060
-L15059:
+	jmp	L15529
+L15528:
 	movq	$0, -40(%rbp)
-L15060:
+L15529:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95791,24 +103190,24 @@ _A__uLeftShift_var_u16_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15063
+	js	L15532
 	cmpq	$63, -16(%rbp)
-	jle	L15064
-L15063:
+	jle	L15533
+L15532:
 	movl	$225825, %edi
 	call	__m3_fault
-L15064:
+L15533:
 	cmpq	$63, -16(%rbp)
-	jg	L15065
+	jg	L15534
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15066
-L15065:
+	jmp	L15535
+L15534:
 	movq	$0, -24(%rbp)
-L15066:
+L15535:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95823,23 +103222,23 @@ _A__uLeftShift_param_u16_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15069
+	js	L15538
 	cmpq	$63, -16(%rbp)
-	jle	L15070
-L15069:
+	jle	L15539
+L15538:
 	movl	$225857, %edi
 	call	__m3_fault
-L15070:
+L15539:
 	cmpq	$63, -16(%rbp)
-	jg	L15071
+	jg	L15540
 	movswq	-18(%rbp),%rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15072
-L15071:
+	jmp	L15541
+L15540:
 	movq	$0, -40(%rbp)
-L15072:
+L15541:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95852,21 +103251,21 @@ _A__uLeftShift_var_u16_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15075
+	jle	L15544
 	movl	$225889, %edi
 	call	__m3_fault
-L15075:
+L15544:
 	cmpq	$63, -16(%rbp)
-	jg	L15076
+	jg	L15545
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15077
-L15076:
+	jmp	L15546
+L15545:
 	movq	$0, -24(%rbp)
-L15077:
+L15546:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95881,20 +103280,20 @@ _A__uLeftShift_param_u16_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15080
+	jle	L15549
 	movl	$225921, %edi
 	call	__m3_fault
-L15080:
+L15549:
 	cmpq	$63, -16(%rbp)
-	jg	L15081
+	jg	L15550
 	movswq	-18(%rbp),%rax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15082
-L15081:
+	jmp	L15551
+L15550:
 	movq	$0, -40(%rbp)
-L15082:
+L15551:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95907,24 +103306,24 @@ _A__uLeftShift_var_i32_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15085
+	js	L15554
 	cmpq	$63, -16(%rbp)
-	jle	L15086
-L15085:
+	jle	L15555
+L15554:
 	movl	$225953, %edi
 	call	__m3_fault
-L15086:
+L15555:
 	cmpq	$63, -16(%rbp)
-	jg	L15087
+	jg	L15556
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15088
-L15087:
+	jmp	L15557
+L15556:
 	movq	$0, -24(%rbp)
-L15088:
+L15557:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95939,23 +103338,23 @@ _A__uLeftShift_param_i32_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15091
+	js	L15560
 	cmpq	$63, -16(%rbp)
-	jle	L15092
-L15091:
+	jle	L15561
+L15560:
 	movl	$225985, %edi
 	call	__m3_fault
-L15092:
+L15561:
 	cmpq	$63, -16(%rbp)
-	jg	L15093
+	jg	L15562
 	mov	-20(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15094
-L15093:
+	jmp	L15563
+L15562:
 	movq	$0, -40(%rbp)
-L15094:
+L15563:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -95968,21 +103367,21 @@ _A__uLeftShift_var_i32_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15097
+	jle	L15566
 	movl	$226017, %edi
 	call	__m3_fault
-L15097:
+L15566:
 	cmpq	$63, -16(%rbp)
-	jg	L15098
+	jg	L15567
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15099
-L15098:
+	jmp	L15568
+L15567:
 	movq	$0, -24(%rbp)
-L15099:
+L15568:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -95997,20 +103396,20 @@ _A__uLeftShift_param_i32_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15102
+	jle	L15571
 	movl	$226049, %edi
 	call	__m3_fault
-L15102:
+L15571:
 	cmpq	$63, -16(%rbp)
-	jg	L15103
+	jg	L15572
 	mov	-20(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	salq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15104
-L15103:
+	jmp	L15573
+L15572:
 	movq	$0, -40(%rbp)
-L15104:
+L15573:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96023,24 +103422,24 @@ _A__uRightShift_var_i16_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15107
+	js	L15576
 	cmpq	$63, -16(%rbp)
-	jle	L15108
-L15107:
+	jle	L15577
+L15576:
 	movl	$226177, %edi
 	call	__m3_fault
-L15108:
+L15577:
 	cmpq	$63, -16(%rbp)
-	jg	L15109
+	jg	L15578
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15110
-L15109:
+	jmp	L15579
+L15578:
 	movq	$0, -24(%rbp)
-L15110:
+L15579:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96055,23 +103454,23 @@ _A__uRightShift_param_i16_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15113
+	js	L15582
 	cmpq	$63, -16(%rbp)
-	jle	L15114
-L15113:
+	jle	L15583
+L15582:
 	movl	$226209, %edi
 	call	__m3_fault
-L15114:
+L15583:
 	cmpq	$63, -16(%rbp)
-	jg	L15115
+	jg	L15584
 	movzwl	-18(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15116
-L15115:
+	jmp	L15585
+L15584:
 	movq	$0, -40(%rbp)
-L15116:
+L15585:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96084,21 +103483,21 @@ _A__uRightShift_var_i16_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15119
+	jle	L15588
 	movl	$226241, %edi
 	call	__m3_fault
-L15119:
+L15588:
 	cmpq	$63, -16(%rbp)
-	jg	L15120
+	jg	L15589
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15121
-L15120:
+	jmp	L15590
+L15589:
 	movq	$0, -24(%rbp)
-L15121:
+L15590:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96113,20 +103512,20 @@ _A__uRightShift_param_i16_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15124
+	jle	L15593
 	movl	$226273, %edi
 	call	__m3_fault
-L15124:
+L15593:
 	cmpq	$63, -16(%rbp)
-	jg	L15125
+	jg	L15594
 	movzwl	-18(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15126
-L15125:
+	jmp	L15595
+L15594:
 	movq	$0, -40(%rbp)
-L15126:
+L15595:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96139,23 +103538,23 @@ _A__uRightShift_var_LC_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15129
+	js	L15598
 	cmpq	$63, -16(%rbp)
-	jle	L15130
-L15129:
+	jle	L15599
+L15598:
 	movl	$226305, %edi
 	call	__m3_fault
-L15130:
+L15599:
 	cmpq	$63, -16(%rbp)
-	jg	L15131
+	jg	L15600
 	movq	112+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15132
-L15131:
+	jmp	L15601
+L15600:
 	movq	$0, -24(%rbp)
-L15132:
+L15601:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96170,23 +103569,23 @@ _A__uRightShift_param_LC_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15135
+	js	L15604
 	cmpq	$63, -16(%rbp)
-	jle	L15136
-L15135:
+	jle	L15605
+L15604:
 	movl	$226337, %edi
 	call	__m3_fault
-L15136:
+L15605:
 	cmpq	$63, -16(%rbp)
-	jg	L15137
+	jg	L15606
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15138
-L15137:
+	jmp	L15607
+L15606:
 	movq	$0, -40(%rbp)
-L15138:
+L15607:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96199,20 +103598,20 @@ _A__uRightShift_var_LC_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15141
+	jle	L15610
 	movl	$226369, %edi
 	call	__m3_fault
-L15141:
+L15610:
 	cmpq	$63, -16(%rbp)
-	jg	L15142
+	jg	L15611
 	movq	112+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15143
-L15142:
+	jmp	L15612
+L15611:
 	movq	$0, -24(%rbp)
-L15143:
+L15612:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96227,20 +103626,20 @@ _A__uRightShift_param_LC_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15146
+	jle	L15615
 	movl	$226401, %edi
 	call	__m3_fault
-L15146:
+L15615:
 	cmpq	$63, -16(%rbp)
-	jg	L15147
+	jg	L15616
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15148
-L15147:
+	jmp	L15617
+L15616:
 	movq	$0, -40(%rbp)
-L15148:
+L15617:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96253,23 +103652,23 @@ _A__uRightShift_var_i64_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15151
+	js	L15620
 	cmpq	$63, -16(%rbp)
-	jle	L15152
-L15151:
+	jle	L15621
+L15620:
 	movl	$226433, %edi
 	call	__m3_fault
-L15152:
+L15621:
 	cmpq	$63, -16(%rbp)
-	jg	L15153
+	jg	L15622
 	movq	128+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15154
-L15153:
+	jmp	L15623
+L15622:
 	movq	$0, -24(%rbp)
-L15154:
+L15623:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96284,23 +103683,23 @@ _A__uRightShift_param_i64_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15157
+	js	L15626
 	cmpq	$63, -16(%rbp)
-	jle	L15158
-L15157:
+	jle	L15627
+L15626:
 	movl	$226465, %edi
 	call	__m3_fault
-L15158:
+L15627:
 	cmpq	$63, -16(%rbp)
-	jg	L15159
+	jg	L15628
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15160
-L15159:
+	jmp	L15629
+L15628:
 	movq	$0, -40(%rbp)
-L15160:
+L15629:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96313,20 +103712,20 @@ _A__uRightShift_var_i64_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15163
+	jle	L15632
 	movl	$226497, %edi
 	call	__m3_fault
-L15163:
+L15632:
 	cmpq	$63, -16(%rbp)
-	jg	L15164
+	jg	L15633
 	movq	128+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15165
-L15164:
+	jmp	L15634
+L15633:
 	movq	$0, -24(%rbp)
-L15165:
+L15634:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96341,20 +103740,20 @@ _A__uRightShift_param_i64_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15168
+	jle	L15637
 	movl	$226529, %edi
 	call	__m3_fault
-L15168:
+L15637:
 	cmpq	$63, -16(%rbp)
-	jg	L15169
+	jg	L15638
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15170
-L15169:
+	jmp	L15639
+L15638:
 	movq	$0, -40(%rbp)
-L15170:
+L15639:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96367,23 +103766,23 @@ _A__uRightShift_var_I_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15173
+	js	L15642
 	cmpq	$63, -16(%rbp)
-	jle	L15174
-L15173:
+	jle	L15643
+L15642:
 	movl	$226561, %edi
 	call	__m3_fault
-L15174:
+L15643:
 	cmpq	$63, -16(%rbp)
-	jg	L15175
+	jg	L15644
 	movq	136+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15176
-L15175:
+	jmp	L15645
+L15644:
 	movq	$0, -24(%rbp)
-L15176:
+L15645:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96398,23 +103797,23 @@ _A__uRightShift_param_I_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15179
+	js	L15648
 	cmpq	$63, -16(%rbp)
-	jle	L15180
-L15179:
+	jle	L15649
+L15648:
 	movl	$226593, %edi
 	call	__m3_fault
-L15180:
+L15649:
 	cmpq	$63, -16(%rbp)
-	jg	L15181
+	jg	L15650
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15182
-L15181:
+	jmp	L15651
+L15650:
 	movq	$0, -40(%rbp)
-L15182:
+L15651:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96427,20 +103826,20 @@ _A__uRightShift_var_I_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15185
+	jle	L15654
 	movl	$226625, %edi
 	call	__m3_fault
-L15185:
+L15654:
 	cmpq	$63, -16(%rbp)
-	jg	L15186
+	jg	L15655
 	movq	136+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15187
-L15186:
+	jmp	L15656
+L15655:
 	movq	$0, -24(%rbp)
-L15187:
+L15656:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96455,20 +103854,20 @@ _A__uRightShift_param_I_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15190
+	jle	L15659
 	movl	$226657, %edi
 	call	__m3_fault
-L15190:
+L15659:
 	cmpq	$63, -16(%rbp)
-	jg	L15191
+	jg	L15660
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15192
-L15191:
+	jmp	L15661
+L15660:
 	movq	$0, -40(%rbp)
-L15192:
+L15661:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96481,24 +103880,24 @@ _A__uRightShift_var_u8_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15195
+	js	L15664
 	cmpq	$63, -16(%rbp)
-	jle	L15196
-L15195:
+	jle	L15665
+L15664:
 	movl	$226689, %edi
 	call	__m3_fault
-L15196:
+L15665:
 	cmpq	$63, -16(%rbp)
-	jg	L15197
+	jg	L15666
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15198
-L15197:
+	jmp	L15667
+L15666:
 	movq	$0, -24(%rbp)
-L15198:
+L15667:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96513,23 +103912,23 @@ _A__uRightShift_param_u8_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15201
+	js	L15670
 	cmpq	$63, -16(%rbp)
-	jle	L15202
-L15201:
+	jle	L15671
+L15670:
 	movl	$226721, %edi
 	call	__m3_fault
-L15202:
+L15671:
 	cmpq	$63, -16(%rbp)
-	jg	L15203
+	jg	L15672
 	movsbq	-17(%rbp),%rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15204
-L15203:
+	jmp	L15673
+L15672:
 	movq	$0, -40(%rbp)
-L15204:
+L15673:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96542,21 +103941,21 @@ _A__uRightShift_var_u8_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15207
+	jle	L15676
 	movl	$226753, %edi
 	call	__m3_fault
-L15207:
+L15676:
 	cmpq	$63, -16(%rbp)
-	jg	L15208
+	jg	L15677
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15209
-L15208:
+	jmp	L15678
+L15677:
 	movq	$0, -24(%rbp)
-L15209:
+L15678:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96571,20 +103970,20 @@ _A__uRightShift_param_u8_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15212
+	jle	L15681
 	movl	$226785, %edi
 	call	__m3_fault
-L15212:
+L15681:
 	cmpq	$63, -16(%rbp)
-	jg	L15213
+	jg	L15682
 	movsbq	-17(%rbp),%rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15214
-L15213:
+	jmp	L15683
+L15682:
 	movq	$0, -40(%rbp)
-L15214:
+L15683:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96597,23 +103996,23 @@ _A__uRightShift_var_C_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15217
+	js	L15686
 	cmpq	$63, -16(%rbp)
-	jle	L15218
-L15217:
+	jle	L15687
+L15686:
 	movl	$226817, %edi
 	call	__m3_fault
-L15218:
+L15687:
 	cmpq	$63, -16(%rbp)
-	jg	L15219
+	jg	L15688
 	movq	152+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15220
-L15219:
+	jmp	L15689
+L15688:
 	movq	$0, -24(%rbp)
-L15220:
+L15689:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96628,23 +104027,23 @@ _A__uRightShift_param_C_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15223
+	js	L15692
 	cmpq	$63, -16(%rbp)
-	jle	L15224
-L15223:
+	jle	L15693
+L15692:
 	movl	$226849, %edi
 	call	__m3_fault
-L15224:
+L15693:
 	cmpq	$63, -16(%rbp)
-	jg	L15225
+	jg	L15694
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15226
-L15225:
+	jmp	L15695
+L15694:
 	movq	$0, -40(%rbp)
-L15226:
+L15695:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96657,20 +104056,20 @@ _A__uRightShift_var_C_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15229
+	jle	L15698
 	movl	$226881, %edi
 	call	__m3_fault
-L15229:
+L15698:
 	cmpq	$63, -16(%rbp)
-	jg	L15230
+	jg	L15699
 	movq	152+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15231
-L15230:
+	jmp	L15700
+L15699:
 	movq	$0, -24(%rbp)
-L15231:
+L15700:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96685,20 +104084,20 @@ _A__uRightShift_param_C_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15234
+	jle	L15703
 	movl	$226913, %edi
 	call	__m3_fault
-L15234:
+L15703:
 	cmpq	$63, -16(%rbp)
-	jg	L15235
+	jg	L15704
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15236
-L15235:
+	jmp	L15705
+L15704:
 	movq	$0, -40(%rbp)
-L15236:
+L15705:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96711,24 +104110,24 @@ _A__uRightShift_var_u32_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15239
+	js	L15708
 	cmpq	$63, -16(%rbp)
-	jle	L15240
-L15239:
+	jle	L15709
+L15708:
 	movl	$226945, %edi
 	call	__m3_fault
-L15240:
+L15709:
 	cmpq	$63, -16(%rbp)
-	jg	L15241
+	jg	L15710
 	movl	164+_MM_A(%rip), %eax
 	cltq
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15242
-L15241:
+	jmp	L15711
+L15710:
 	movq	$0, -24(%rbp)
-L15242:
+L15711:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96743,24 +104142,24 @@ _A__uRightShift_param_u32_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15245
+	js	L15714
 	cmpq	$63, -16(%rbp)
-	jle	L15246
-L15245:
+	jle	L15715
+L15714:
 	movl	$226977, %edi
 	call	__m3_fault
-L15246:
+L15715:
 	cmpq	$63, -16(%rbp)
-	jg	L15247
+	jg	L15716
 	movl	-20(%rbp), %eax
 	cltq
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15248
-L15247:
+	jmp	L15717
+L15716:
 	movq	$0, -40(%rbp)
-L15248:
+L15717:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96773,21 +104172,21 @@ _A__uRightShift_var_u32_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15251
+	jle	L15720
 	movl	$227009, %edi
 	call	__m3_fault
-L15251:
+L15720:
 	cmpq	$63, -16(%rbp)
-	jg	L15252
+	jg	L15721
 	movl	164+_MM_A(%rip), %eax
 	cltq
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15253
-L15252:
+	jmp	L15722
+L15721:
 	movq	$0, -24(%rbp)
-L15253:
+L15722:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96802,21 +104201,21 @@ _A__uRightShift_param_u32_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15256
+	jle	L15725
 	movl	$227041, %edi
 	call	__m3_fault
-L15256:
+L15725:
 	cmpq	$63, -16(%rbp)
-	jg	L15257
+	jg	L15726
 	movl	-20(%rbp), %eax
 	cltq
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15258
-L15257:
+	jmp	L15727
+L15726:
 	movq	$0, -40(%rbp)
-L15258:
+L15727:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96829,24 +104228,24 @@ _A__uRightShift_var_i8_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15261
+	js	L15730
 	cmpq	$63, -16(%rbp)
-	jle	L15262
-L15261:
+	jle	L15731
+L15730:
 	movl	$227073, %edi
 	call	__m3_fault
-L15262:
+L15731:
 	cmpq	$63, -16(%rbp)
-	jg	L15263
+	jg	L15732
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15264
-L15263:
+	jmp	L15733
+L15732:
 	movq	$0, -24(%rbp)
-L15264:
+L15733:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96861,23 +104260,23 @@ _A__uRightShift_param_i8_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15267
+	js	L15736
 	cmpq	$63, -16(%rbp)
-	jle	L15268
-L15267:
+	jle	L15737
+L15736:
 	movl	$227105, %edi
 	call	__m3_fault
-L15268:
+L15737:
 	cmpq	$63, -16(%rbp)
-	jg	L15269
+	jg	L15738
 	movzbl	-17(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15270
-L15269:
+	jmp	L15739
+L15738:
 	movq	$0, -40(%rbp)
-L15270:
+L15739:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96890,21 +104289,21 @@ _A__uRightShift_var_i8_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15273
+	jle	L15742
 	movl	$227137, %edi
 	call	__m3_fault
-L15273:
+L15742:
 	cmpq	$63, -16(%rbp)
-	jg	L15274
+	jg	L15743
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15275
-L15274:
+	jmp	L15744
+L15743:
 	movq	$0, -24(%rbp)
-L15275:
+L15744:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96919,20 +104318,20 @@ _A__uRightShift_param_i8_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15278
+	jle	L15747
 	movl	$227169, %edi
 	call	__m3_fault
-L15278:
+L15747:
 	cmpq	$63, -16(%rbp)
-	jg	L15279
+	jg	L15748
 	movzbl	-17(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15280
-L15279:
+	jmp	L15749
+L15748:
 	movq	$0, -40(%rbp)
-L15280:
+L15749:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -96945,23 +104344,23 @@ _A__uRightShift_var_L_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15283
+	js	L15752
 	cmpq	$63, -16(%rbp)
-	jle	L15284
-L15283:
+	jle	L15753
+L15752:
 	movl	$227201, %edi
 	call	__m3_fault
-L15284:
+L15753:
 	cmpq	$63, -16(%rbp)
-	jg	L15285
+	jg	L15754
 	movq	176+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15286
-L15285:
+	jmp	L15755
+L15754:
 	movq	$0, -24(%rbp)
-L15286:
+L15755:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -96976,23 +104375,23 @@ _A__uRightShift_param_L_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15289
+	js	L15758
 	cmpq	$63, -16(%rbp)
-	jle	L15290
-L15289:
+	jle	L15759
+L15758:
 	movl	$227233, %edi
 	call	__m3_fault
-L15290:
+L15759:
 	cmpq	$63, -16(%rbp)
-	jg	L15291
+	jg	L15760
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15292
-L15291:
+	jmp	L15761
+L15760:
 	movq	$0, -40(%rbp)
-L15292:
+L15761:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -97005,20 +104404,20 @@ _A__uRightShift_var_L_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15295
+	jle	L15764
 	movl	$227265, %edi
 	call	__m3_fault
-L15295:
+L15764:
 	cmpq	$63, -16(%rbp)
-	jg	L15296
+	jg	L15765
 	movq	176+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15297
-L15296:
+	jmp	L15766
+L15765:
 	movq	$0, -24(%rbp)
-L15297:
+L15766:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -97033,20 +104432,20 @@ _A__uRightShift_param_L_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15300
+	jle	L15769
 	movl	$227297, %edi
 	call	__m3_fault
-L15300:
+L15769:
 	cmpq	$63, -16(%rbp)
-	jg	L15301
+	jg	L15770
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15302
-L15301:
+	jmp	L15771
+L15770:
 	movq	$0, -40(%rbp)
-L15302:
+L15771:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -97059,23 +104458,23 @@ _A__uRightShift_var_u64_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15305
+	js	L15774
 	cmpq	$63, -16(%rbp)
-	jle	L15306
-L15305:
+	jle	L15775
+L15774:
 	movl	$227329, %edi
 	call	__m3_fault
-L15306:
+L15775:
 	cmpq	$63, -16(%rbp)
-	jg	L15307
+	jg	L15776
 	movq	184+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15308
-L15307:
+	jmp	L15777
+L15776:
 	movq	$0, -24(%rbp)
-L15308:
+L15777:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -97090,23 +104489,23 @@ _A__uRightShift_param_u64_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15311
+	js	L15780
 	cmpq	$63, -16(%rbp)
-	jle	L15312
-L15311:
+	jle	L15781
+L15780:
 	movl	$227361, %edi
 	call	__m3_fault
-L15312:
+L15781:
 	cmpq	$63, -16(%rbp)
-	jg	L15313
+	jg	L15782
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15314
-L15313:
+	jmp	L15783
+L15782:
 	movq	$0, -40(%rbp)
-L15314:
+L15783:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -97119,20 +104518,20 @@ _A__uRightShift_var_u64_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15317
+	jle	L15786
 	movl	$227393, %edi
 	call	__m3_fault
-L15317:
+L15786:
 	cmpq	$63, -16(%rbp)
-	jg	L15318
+	jg	L15787
 	movq	184+_MM_A(%rip), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15319
-L15318:
+	jmp	L15788
+L15787:
 	movq	$0, -24(%rbp)
-L15319:
+L15788:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -97147,20 +104546,20 @@ _A__uRightShift_param_u64_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15322
+	jle	L15791
 	movl	$227425, %edi
 	call	__m3_fault
-L15322:
+L15791:
 	cmpq	$63, -16(%rbp)
-	jg	L15323
+	jg	L15792
 	movq	-24(%rbp), %rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15324
-L15323:
+	jmp	L15793
+L15792:
 	movq	$0, -40(%rbp)
-L15324:
+L15793:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -97173,24 +104572,24 @@ _A__uRightShift_var_u16_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15327
+	js	L15796
 	cmpq	$63, -16(%rbp)
-	jle	L15328
-L15327:
+	jle	L15797
+L15796:
 	movl	$227457, %edi
 	call	__m3_fault
-L15328:
+L15797:
 	cmpq	$63, -16(%rbp)
-	jg	L15329
+	jg	L15798
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15330
-L15329:
+	jmp	L15799
+L15798:
 	movq	$0, -24(%rbp)
-L15330:
+L15799:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -97205,23 +104604,23 @@ _A__uRightShift_param_u16_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15333
+	js	L15802
 	cmpq	$63, -16(%rbp)
-	jle	L15334
-L15333:
+	jle	L15803
+L15802:
 	movl	$227489, %edi
 	call	__m3_fault
-L15334:
+L15803:
 	cmpq	$63, -16(%rbp)
-	jg	L15335
+	jg	L15804
 	movswq	-18(%rbp),%rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15336
-L15335:
+	jmp	L15805
+L15804:
 	movq	$0, -40(%rbp)
-L15336:
+L15805:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -97234,21 +104633,21 @@ _A__uRightShift_var_u16_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15339
+	jle	L15808
 	movl	$227521, %edi
 	call	__m3_fault
-L15339:
+L15808:
 	cmpq	$63, -16(%rbp)
-	jg	L15340
+	jg	L15809
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15341
-L15340:
+	jmp	L15810
+L15809:
 	movq	$0, -24(%rbp)
-L15341:
+L15810:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -97263,20 +104662,20 @@ _A__uRightShift_param_u16_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15344
+	jle	L15813
 	movl	$227553, %edi
 	call	__m3_fault
-L15344:
+L15813:
 	cmpq	$63, -16(%rbp)
-	jg	L15345
+	jg	L15814
 	movswq	-18(%rbp),%rax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15346
-L15345:
+	jmp	L15815
+L15814:
 	movq	$0, -40(%rbp)
-L15346:
+L15815:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -97289,24 +104688,24 @@ _A__uRightShift_var_i32_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15349
+	js	L15818
 	cmpq	$63, -16(%rbp)
-	jle	L15350
-L15349:
+	jle	L15819
+L15818:
 	movl	$227585, %edi
 	call	__m3_fault
-L15350:
+L15819:
 	cmpq	$63, -16(%rbp)
-	jg	L15351
+	jg	L15820
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15352
-L15351:
+	jmp	L15821
+L15820:
 	movq	$0, -24(%rbp)
-L15352:
+L15821:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -97321,23 +104720,23 @@ _A__uRightShift_param_i32_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15355
+	js	L15824
 	cmpq	$63, -16(%rbp)
-	jle	L15356
-L15355:
+	jle	L15825
+L15824:
 	movl	$227617, %edi
 	call	__m3_fault
-L15356:
+L15825:
 	cmpq	$63, -16(%rbp)
-	jg	L15357
+	jg	L15826
 	mov	-20(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15358
-L15357:
+	jmp	L15827
+L15826:
 	movq	$0, -40(%rbp)
-L15358:
+L15827:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -97350,21 +104749,21 @@ _A__uRightShift_var_i32_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15361
+	jle	L15830
 	movl	$227649, %edi
 	call	__m3_fault
-L15361:
+L15830:
 	cmpq	$63, -16(%rbp)
-	jg	L15362
+	jg	L15831
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L15363
-L15362:
+	jmp	L15832
+L15831:
 	movq	$0, -24(%rbp)
-L15363:
+L15832:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -97379,20 +104778,20 @@ _A__uRightShift_param_i32_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15366
+	jle	L15835
 	movl	$227681, %edi
 	call	__m3_fault
-L15366:
+L15835:
 	cmpq	$63, -16(%rbp)
-	jg	L15367
+	jg	L15836
 	mov	-20(%rbp), %eax
 	movq	-16(%rbp), %rcx
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15368
-L15367:
+	jmp	L15837
+L15836:
 	movq	$0, -40(%rbp)
-L15368:
+L15837:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -97407,38 +104806,38 @@ _A__uShift_var_i16_I:
 	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15371
+	js	L15840
 	cmpq	$63, -16(%rbp)
-	jg	L15372
+	jg	L15841
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15373
-L15372:
+	jmp	L15842
+L15841:
 	movq	$0, -48(%rbp)
-L15373:
+L15842:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15374
-L15371:
+	jmp	L15843
+L15840:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15375
+	jg	L15844
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15376
-L15375:
+	jmp	L15845
+L15844:
 	movq	$0, -40(%rbp)
-L15376:
+L15845:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15374:
+L15843:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -97454,38 +104853,38 @@ _A__uShift_param_i16_I:
 	movzwl	-34(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15379
+	js	L15848
 	cmpq	$63, -16(%rbp)
-	jg	L15380
+	jg	L15849
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15381
-L15380:
+	jmp	L15850
+L15849:
 	movq	$0, -64(%rbp)
-L15381:
+L15850:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15382
-L15379:
+	jmp	L15851
+L15848:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15383
+	jg	L15852
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15384
-L15383:
+	jmp	L15853
+L15852:
 	movq	$0, -56(%rbp)
-L15384:
+L15853:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15382:
+L15851:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -97500,38 +104899,38 @@ _A__uShift_var_i16_C:
 	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15387
+	js	L15856
 	cmpq	$63, -16(%rbp)
-	jg	L15388
+	jg	L15857
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15389
-L15388:
+	jmp	L15858
+L15857:
 	movq	$0, -48(%rbp)
-L15389:
+L15858:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15390
-L15387:
+	jmp	L15859
+L15856:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15391
+	jg	L15860
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15392
-L15391:
+	jmp	L15861
+L15860:
 	movq	$0, -40(%rbp)
-L15392:
+L15861:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15390:
+L15859:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -97547,38 +104946,38 @@ _A__uShift_param_i16_C:
 	movzwl	-34(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15395
+	js	L15864
 	cmpq	$63, -16(%rbp)
-	jg	L15396
+	jg	L15865
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15397
-L15396:
+	jmp	L15866
+L15865:
 	movq	$0, -64(%rbp)
-L15397:
+L15866:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15398
-L15395:
+	jmp	L15867
+L15864:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15399
+	jg	L15868
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15400
-L15399:
+	jmp	L15869
+L15868:
 	movq	$0, -56(%rbp)
-L15400:
+L15869:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15398:
+L15867:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -97592,38 +104991,38 @@ _A__uShift_var_LC_I:
 	movq	112+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15403
+	js	L15872
 	cmpq	$63, -16(%rbp)
-	jg	L15404
+	jg	L15873
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15405
-L15404:
+	jmp	L15874
+L15873:
 	movq	$0, -48(%rbp)
-L15405:
+L15874:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15406
-L15403:
+	jmp	L15875
+L15872:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15407
+	jg	L15876
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15408
-L15407:
+	jmp	L15877
+L15876:
 	movq	$0, -40(%rbp)
-L15408:
+L15877:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15406:
+L15875:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -97639,38 +105038,38 @@ _A__uShift_param_LC_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15411
+	js	L15880
 	cmpq	$63, -16(%rbp)
-	jg	L15412
+	jg	L15881
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15413
-L15412:
+	jmp	L15882
+L15881:
 	movq	$0, -64(%rbp)
-L15413:
+L15882:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15414
-L15411:
+	jmp	L15883
+L15880:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15415
+	jg	L15884
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15416
-L15415:
+	jmp	L15885
+L15884:
 	movq	$0, -56(%rbp)
-L15416:
+L15885:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15414:
+L15883:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -97684,38 +105083,38 @@ _A__uShift_var_LC_C:
 	movq	112+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15419
+	js	L15888
 	cmpq	$63, -16(%rbp)
-	jg	L15420
+	jg	L15889
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15421
-L15420:
+	jmp	L15890
+L15889:
 	movq	$0, -48(%rbp)
-L15421:
+L15890:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15422
-L15419:
+	jmp	L15891
+L15888:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15423
+	jg	L15892
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15424
-L15423:
+	jmp	L15893
+L15892:
 	movq	$0, -40(%rbp)
-L15424:
+L15893:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15422:
+L15891:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -97731,38 +105130,38 @@ _A__uShift_param_LC_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15427
+	js	L15896
 	cmpq	$63, -16(%rbp)
-	jg	L15428
+	jg	L15897
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15429
-L15428:
+	jmp	L15898
+L15897:
 	movq	$0, -64(%rbp)
-L15429:
+L15898:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15430
-L15427:
+	jmp	L15899
+L15896:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15431
+	jg	L15900
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15432
-L15431:
+	jmp	L15901
+L15900:
 	movq	$0, -56(%rbp)
-L15432:
+L15901:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15430:
+L15899:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -97776,38 +105175,38 @@ _A__uShift_var_i64_I:
 	movq	128+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15435
+	js	L15904
 	cmpq	$63, -16(%rbp)
-	jg	L15436
+	jg	L15905
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15437
-L15436:
+	jmp	L15906
+L15905:
 	movq	$0, -48(%rbp)
-L15437:
+L15906:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15438
-L15435:
+	jmp	L15907
+L15904:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15439
+	jg	L15908
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15440
-L15439:
+	jmp	L15909
+L15908:
 	movq	$0, -40(%rbp)
-L15440:
+L15909:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15438:
+L15907:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -97823,38 +105222,38 @@ _A__uShift_param_i64_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15443
+	js	L15912
 	cmpq	$63, -16(%rbp)
-	jg	L15444
+	jg	L15913
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15445
-L15444:
+	jmp	L15914
+L15913:
 	movq	$0, -64(%rbp)
-L15445:
+L15914:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15446
-L15443:
+	jmp	L15915
+L15912:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15447
+	jg	L15916
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15448
-L15447:
+	jmp	L15917
+L15916:
 	movq	$0, -56(%rbp)
-L15448:
+L15917:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15446:
+L15915:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -97868,38 +105267,38 @@ _A__uShift_var_i64_C:
 	movq	128+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15451
+	js	L15920
 	cmpq	$63, -16(%rbp)
-	jg	L15452
+	jg	L15921
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15453
-L15452:
+	jmp	L15922
+L15921:
 	movq	$0, -48(%rbp)
-L15453:
+L15922:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15454
-L15451:
+	jmp	L15923
+L15920:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15455
+	jg	L15924
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15456
-L15455:
+	jmp	L15925
+L15924:
 	movq	$0, -40(%rbp)
-L15456:
+L15925:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15454:
+L15923:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -97915,38 +105314,38 @@ _A__uShift_param_i64_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15459
+	js	L15928
 	cmpq	$63, -16(%rbp)
-	jg	L15460
+	jg	L15929
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15461
-L15460:
+	jmp	L15930
+L15929:
 	movq	$0, -64(%rbp)
-L15461:
+L15930:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15462
-L15459:
+	jmp	L15931
+L15928:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15463
+	jg	L15932
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15464
-L15463:
+	jmp	L15933
+L15932:
 	movq	$0, -56(%rbp)
-L15464:
+L15933:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15462:
+L15931:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -97960,38 +105359,38 @@ _A__uShift_var_I_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15467
+	js	L15936
 	cmpq	$63, -16(%rbp)
-	jg	L15468
+	jg	L15937
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15469
-L15468:
+	jmp	L15938
+L15937:
 	movq	$0, -48(%rbp)
-L15469:
+L15938:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15470
-L15467:
+	jmp	L15939
+L15936:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15471
+	jg	L15940
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15472
-L15471:
+	jmp	L15941
+L15940:
 	movq	$0, -40(%rbp)
-L15472:
+L15941:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15470:
+L15939:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -98007,38 +105406,38 @@ _A__uShift_param_I_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15475
+	js	L15944
 	cmpq	$63, -16(%rbp)
-	jg	L15476
+	jg	L15945
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15477
-L15476:
+	jmp	L15946
+L15945:
 	movq	$0, -64(%rbp)
-L15477:
+L15946:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15478
-L15475:
+	jmp	L15947
+L15944:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15479
+	jg	L15948
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15480
-L15479:
+	jmp	L15949
+L15948:
 	movq	$0, -56(%rbp)
-L15480:
+L15949:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15478:
+L15947:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -98052,38 +105451,38 @@ _A__uShift_var_I_C:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15483
+	js	L15952
 	cmpq	$63, -16(%rbp)
-	jg	L15484
+	jg	L15953
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15485
-L15484:
+	jmp	L15954
+L15953:
 	movq	$0, -48(%rbp)
-L15485:
+L15954:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15486
-L15483:
+	jmp	L15955
+L15952:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15487
+	jg	L15956
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15488
-L15487:
+	jmp	L15957
+L15956:
 	movq	$0, -40(%rbp)
-L15488:
+L15957:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15486:
+L15955:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -98099,38 +105498,38 @@ _A__uShift_param_I_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15491
+	js	L15960
 	cmpq	$63, -16(%rbp)
-	jg	L15492
+	jg	L15961
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15493
-L15492:
+	jmp	L15962
+L15961:
 	movq	$0, -64(%rbp)
-L15493:
+L15962:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15494
-L15491:
+	jmp	L15963
+L15960:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15495
+	jg	L15964
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15496
-L15495:
+	jmp	L15965
+L15964:
 	movq	$0, -56(%rbp)
-L15496:
+L15965:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15494:
+L15963:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -98145,38 +105544,38 @@ _A__uShift_var_u8_I:
 	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15499
+	js	L15968
 	cmpq	$63, -16(%rbp)
-	jg	L15500
+	jg	L15969
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15501
-L15500:
+	jmp	L15970
+L15969:
 	movq	$0, -48(%rbp)
-L15501:
+L15970:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15502
-L15499:
+	jmp	L15971
+L15968:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15503
+	jg	L15972
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15504
-L15503:
+	jmp	L15973
+L15972:
 	movq	$0, -40(%rbp)
-L15504:
+L15973:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15502:
+L15971:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -98192,38 +105591,38 @@ _A__uShift_param_u8_I:
 	movsbq	-33(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15507
+	js	L15976
 	cmpq	$63, -16(%rbp)
-	jg	L15508
+	jg	L15977
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15509
-L15508:
+	jmp	L15978
+L15977:
 	movq	$0, -64(%rbp)
-L15509:
+L15978:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15510
-L15507:
+	jmp	L15979
+L15976:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15511
+	jg	L15980
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15512
-L15511:
+	jmp	L15981
+L15980:
 	movq	$0, -56(%rbp)
-L15512:
+L15981:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15510:
+L15979:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -98238,38 +105637,38 @@ _A__uShift_var_u8_C:
 	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15515
+	js	L15984
 	cmpq	$63, -16(%rbp)
-	jg	L15516
+	jg	L15985
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15517
-L15516:
+	jmp	L15986
+L15985:
 	movq	$0, -48(%rbp)
-L15517:
+L15986:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15518
-L15515:
+	jmp	L15987
+L15984:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15519
+	jg	L15988
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15520
-L15519:
+	jmp	L15989
+L15988:
 	movq	$0, -40(%rbp)
-L15520:
+L15989:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15518:
+L15987:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -98285,38 +105684,38 @@ _A__uShift_param_u8_C:
 	movsbq	-33(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15523
+	js	L15992
 	cmpq	$63, -16(%rbp)
-	jg	L15524
+	jg	L15993
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15525
-L15524:
+	jmp	L15994
+L15993:
 	movq	$0, -64(%rbp)
-L15525:
+L15994:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15526
-L15523:
+	jmp	L15995
+L15992:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15527
+	jg	L15996
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15528
-L15527:
+	jmp	L15997
+L15996:
 	movq	$0, -56(%rbp)
-L15528:
+L15997:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15526:
+L15995:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -98330,38 +105729,38 @@ _A__uShift_var_C_I:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15531
+	js	L16000
 	cmpq	$63, -16(%rbp)
-	jg	L15532
+	jg	L16001
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15533
-L15532:
+	jmp	L16002
+L16001:
 	movq	$0, -48(%rbp)
-L15533:
+L16002:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15534
-L15531:
+	jmp	L16003
+L16000:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15535
+	jg	L16004
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15536
-L15535:
+	jmp	L16005
+L16004:
 	movq	$0, -40(%rbp)
-L15536:
+L16005:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15534:
+L16003:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -98377,38 +105776,38 @@ _A__uShift_param_C_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15539
+	js	L16008
 	cmpq	$63, -16(%rbp)
-	jg	L15540
+	jg	L16009
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15541
-L15540:
+	jmp	L16010
+L16009:
 	movq	$0, -64(%rbp)
-L15541:
+L16010:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15542
-L15539:
+	jmp	L16011
+L16008:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15543
+	jg	L16012
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15544
-L15543:
+	jmp	L16013
+L16012:
 	movq	$0, -56(%rbp)
-L15544:
+L16013:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15542:
+L16011:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -98422,38 +105821,38 @@ _A__uShift_var_C_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15547
+	js	L16016
 	cmpq	$63, -16(%rbp)
-	jg	L15548
+	jg	L16017
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15549
-L15548:
+	jmp	L16018
+L16017:
 	movq	$0, -48(%rbp)
-L15549:
+L16018:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15550
-L15547:
+	jmp	L16019
+L16016:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15551
+	jg	L16020
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15552
-L15551:
+	jmp	L16021
+L16020:
 	movq	$0, -40(%rbp)
-L15552:
+L16021:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15550:
+L16019:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -98469,38 +105868,38 @@ _A__uShift_param_C_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15555
+	js	L16024
 	cmpq	$63, -16(%rbp)
-	jg	L15556
+	jg	L16025
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15557
-L15556:
+	jmp	L16026
+L16025:
 	movq	$0, -64(%rbp)
-L15557:
+L16026:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15558
-L15555:
+	jmp	L16027
+L16024:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15559
+	jg	L16028
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15560
-L15559:
+	jmp	L16029
+L16028:
 	movq	$0, -56(%rbp)
-L15560:
+L16029:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15558:
+L16027:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -98515,38 +105914,38 @@ _A__uShift_var_u32_I:
 	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15563
+	js	L16032
 	cmpq	$63, -16(%rbp)
-	jg	L15564
+	jg	L16033
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15565
-L15564:
+	jmp	L16034
+L16033:
 	movq	$0, -48(%rbp)
-L15565:
+L16034:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15566
-L15563:
+	jmp	L16035
+L16032:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15567
+	jg	L16036
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15568
-L15567:
+	jmp	L16037
+L16036:
 	movq	$0, -40(%rbp)
-L15568:
+L16037:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15566:
+L16035:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -98563,38 +105962,38 @@ _A__uShift_param_u32_I:
 	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15571
+	js	L16040
 	cmpq	$63, -16(%rbp)
-	jg	L15572
+	jg	L16041
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15573
-L15572:
+	jmp	L16042
+L16041:
 	movq	$0, -64(%rbp)
-L15573:
+L16042:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15574
-L15571:
+	jmp	L16043
+L16040:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15575
+	jg	L16044
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15576
-L15575:
+	jmp	L16045
+L16044:
 	movq	$0, -56(%rbp)
-L15576:
+L16045:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15574:
+L16043:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -98609,38 +106008,38 @@ _A__uShift_var_u32_C:
 	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15579
+	js	L16048
 	cmpq	$63, -16(%rbp)
-	jg	L15580
+	jg	L16049
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15581
-L15580:
+	jmp	L16050
+L16049:
 	movq	$0, -48(%rbp)
-L15581:
+L16050:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15582
-L15579:
+	jmp	L16051
+L16048:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15583
+	jg	L16052
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15584
-L15583:
+	jmp	L16053
+L16052:
 	movq	$0, -40(%rbp)
-L15584:
+L16053:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15582:
+L16051:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -98657,38 +106056,38 @@ _A__uShift_param_u32_C:
 	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15587
+	js	L16056
 	cmpq	$63, -16(%rbp)
-	jg	L15588
+	jg	L16057
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15589
-L15588:
+	jmp	L16058
+L16057:
 	movq	$0, -64(%rbp)
-L15589:
+L16058:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15590
-L15587:
+	jmp	L16059
+L16056:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15591
+	jg	L16060
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15592
-L15591:
+	jmp	L16061
+L16060:
 	movq	$0, -56(%rbp)
-L15592:
+L16061:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15590:
+L16059:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -98703,38 +106102,38 @@ _A__uShift_var_i8_I:
 	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15595
+	js	L16064
 	cmpq	$63, -16(%rbp)
-	jg	L15596
+	jg	L16065
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15597
-L15596:
+	jmp	L16066
+L16065:
 	movq	$0, -48(%rbp)
-L15597:
+L16066:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15598
-L15595:
+	jmp	L16067
+L16064:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15599
+	jg	L16068
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15600
-L15599:
+	jmp	L16069
+L16068:
 	movq	$0, -40(%rbp)
-L15600:
+L16069:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15598:
+L16067:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -98750,38 +106149,38 @@ _A__uShift_param_i8_I:
 	movzbl	-33(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15603
+	js	L16072
 	cmpq	$63, -16(%rbp)
-	jg	L15604
+	jg	L16073
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15605
-L15604:
+	jmp	L16074
+L16073:
 	movq	$0, -64(%rbp)
-L15605:
+L16074:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15606
-L15603:
+	jmp	L16075
+L16072:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15607
+	jg	L16076
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15608
-L15607:
+	jmp	L16077
+L16076:
 	movq	$0, -56(%rbp)
-L15608:
+L16077:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15606:
+L16075:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -98796,38 +106195,38 @@ _A__uShift_var_i8_C:
 	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15611
+	js	L16080
 	cmpq	$63, -16(%rbp)
-	jg	L15612
+	jg	L16081
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15613
-L15612:
+	jmp	L16082
+L16081:
 	movq	$0, -48(%rbp)
-L15613:
+L16082:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15614
-L15611:
+	jmp	L16083
+L16080:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15615
+	jg	L16084
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15616
-L15615:
+	jmp	L16085
+L16084:
 	movq	$0, -40(%rbp)
-L15616:
+L16085:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15614:
+L16083:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -98843,38 +106242,38 @@ _A__uShift_param_i8_C:
 	movzbl	-33(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15619
+	js	L16088
 	cmpq	$63, -16(%rbp)
-	jg	L15620
+	jg	L16089
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15621
-L15620:
+	jmp	L16090
+L16089:
 	movq	$0, -64(%rbp)
-L15621:
+L16090:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15622
-L15619:
+	jmp	L16091
+L16088:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15623
+	jg	L16092
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15624
-L15623:
+	jmp	L16093
+L16092:
 	movq	$0, -56(%rbp)
-L15624:
+L16093:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15622:
+L16091:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -98888,38 +106287,38 @@ _A__uShift_var_L_I:
 	movq	176+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15627
+	js	L16096
 	cmpq	$63, -16(%rbp)
-	jg	L15628
+	jg	L16097
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15629
-L15628:
+	jmp	L16098
+L16097:
 	movq	$0, -48(%rbp)
-L15629:
+L16098:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15630
-L15627:
+	jmp	L16099
+L16096:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15631
+	jg	L16100
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15632
-L15631:
+	jmp	L16101
+L16100:
 	movq	$0, -40(%rbp)
-L15632:
+L16101:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15630:
+L16099:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -98935,38 +106334,38 @@ _A__uShift_param_L_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15635
+	js	L16104
 	cmpq	$63, -16(%rbp)
-	jg	L15636
+	jg	L16105
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15637
-L15636:
+	jmp	L16106
+L16105:
 	movq	$0, -64(%rbp)
-L15637:
+L16106:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15638
-L15635:
+	jmp	L16107
+L16104:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15639
+	jg	L16108
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15640
-L15639:
+	jmp	L16109
+L16108:
 	movq	$0, -56(%rbp)
-L15640:
+L16109:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15638:
+L16107:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -98980,38 +106379,38 @@ _A__uShift_var_L_C:
 	movq	176+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15643
+	js	L16112
 	cmpq	$63, -16(%rbp)
-	jg	L15644
+	jg	L16113
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15645
-L15644:
+	jmp	L16114
+L16113:
 	movq	$0, -48(%rbp)
-L15645:
+L16114:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15646
-L15643:
+	jmp	L16115
+L16112:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15647
+	jg	L16116
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15648
-L15647:
+	jmp	L16117
+L16116:
 	movq	$0, -40(%rbp)
-L15648:
+L16117:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15646:
+L16115:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -99027,38 +106426,38 @@ _A__uShift_param_L_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15651
+	js	L16120
 	cmpq	$63, -16(%rbp)
-	jg	L15652
+	jg	L16121
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15653
-L15652:
+	jmp	L16122
+L16121:
 	movq	$0, -64(%rbp)
-L15653:
+L16122:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15654
-L15651:
+	jmp	L16123
+L16120:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15655
+	jg	L16124
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15656
-L15655:
+	jmp	L16125
+L16124:
 	movq	$0, -56(%rbp)
-L15656:
+L16125:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15654:
+L16123:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -99072,38 +106471,38 @@ _A__uShift_var_u64_I:
 	movq	184+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15659
+	js	L16128
 	cmpq	$63, -16(%rbp)
-	jg	L15660
+	jg	L16129
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15661
-L15660:
+	jmp	L16130
+L16129:
 	movq	$0, -48(%rbp)
-L15661:
+L16130:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15662
-L15659:
+	jmp	L16131
+L16128:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15663
+	jg	L16132
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15664
-L15663:
+	jmp	L16133
+L16132:
 	movq	$0, -40(%rbp)
-L15664:
+L16133:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15662:
+L16131:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -99119,38 +106518,38 @@ _A__uShift_param_u64_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15667
+	js	L16136
 	cmpq	$63, -16(%rbp)
-	jg	L15668
+	jg	L16137
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15669
-L15668:
+	jmp	L16138
+L16137:
 	movq	$0, -64(%rbp)
-L15669:
+L16138:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15670
-L15667:
+	jmp	L16139
+L16136:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15671
+	jg	L16140
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15672
-L15671:
+	jmp	L16141
+L16140:
 	movq	$0, -56(%rbp)
-L15672:
+L16141:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15670:
+L16139:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -99164,38 +106563,38 @@ _A__uShift_var_u64_C:
 	movq	184+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15675
+	js	L16144
 	cmpq	$63, -16(%rbp)
-	jg	L15676
+	jg	L16145
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15677
-L15676:
+	jmp	L16146
+L16145:
 	movq	$0, -48(%rbp)
-L15677:
+L16146:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15678
-L15675:
+	jmp	L16147
+L16144:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15679
+	jg	L16148
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15680
-L15679:
+	jmp	L16149
+L16148:
 	movq	$0, -40(%rbp)
-L15680:
+L16149:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15678:
+L16147:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -99211,38 +106610,38 @@ _A__uShift_param_u64_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15683
+	js	L16152
 	cmpq	$63, -16(%rbp)
-	jg	L15684
+	jg	L16153
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15685
-L15684:
+	jmp	L16154
+L16153:
 	movq	$0, -64(%rbp)
-L15685:
+L16154:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15686
-L15683:
+	jmp	L16155
+L16152:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15687
+	jg	L16156
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15688
-L15687:
+	jmp	L16157
+L16156:
 	movq	$0, -56(%rbp)
-L15688:
+L16157:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15686:
+L16155:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -99257,38 +106656,38 @@ _A__uShift_var_u16_I:
 	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15691
+	js	L16160
 	cmpq	$63, -16(%rbp)
-	jg	L15692
+	jg	L16161
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15693
-L15692:
+	jmp	L16162
+L16161:
 	movq	$0, -48(%rbp)
-L15693:
+L16162:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15694
-L15691:
+	jmp	L16163
+L16160:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15695
+	jg	L16164
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15696
-L15695:
+	jmp	L16165
+L16164:
 	movq	$0, -40(%rbp)
-L15696:
+L16165:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15694:
+L16163:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -99304,38 +106703,38 @@ _A__uShift_param_u16_I:
 	movswq	-34(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15699
+	js	L16168
 	cmpq	$63, -16(%rbp)
-	jg	L15700
+	jg	L16169
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15701
-L15700:
+	jmp	L16170
+L16169:
 	movq	$0, -64(%rbp)
-L15701:
+L16170:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15702
-L15699:
+	jmp	L16171
+L16168:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15703
+	jg	L16172
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15704
-L15703:
+	jmp	L16173
+L16172:
 	movq	$0, -56(%rbp)
-L15704:
+L16173:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15702:
+L16171:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -99350,38 +106749,38 @@ _A__uShift_var_u16_C:
 	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15707
+	js	L16176
 	cmpq	$63, -16(%rbp)
-	jg	L15708
+	jg	L16177
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15709
-L15708:
+	jmp	L16178
+L16177:
 	movq	$0, -48(%rbp)
-L15709:
+L16178:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15710
-L15707:
+	jmp	L16179
+L16176:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15711
+	jg	L16180
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15712
-L15711:
+	jmp	L16181
+L16180:
 	movq	$0, -40(%rbp)
-L15712:
+L16181:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15710:
+L16179:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -99397,38 +106796,38 @@ _A__uShift_param_u16_C:
 	movswq	-34(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15715
+	js	L16184
 	cmpq	$63, -16(%rbp)
-	jg	L15716
+	jg	L16185
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15717
-L15716:
+	jmp	L16186
+L16185:
 	movq	$0, -64(%rbp)
-L15717:
+L16186:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15718
-L15715:
+	jmp	L16187
+L16184:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15719
+	jg	L16188
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15720
-L15719:
+	jmp	L16189
+L16188:
 	movq	$0, -56(%rbp)
-L15720:
+L16189:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15718:
+L16187:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -99443,38 +106842,38 @@ _A__uShift_var_i32_I:
 	mov	%eax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15723
+	js	L16192
 	cmpq	$63, -16(%rbp)
-	jg	L15724
+	jg	L16193
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15725
-L15724:
+	jmp	L16194
+L16193:
 	movq	$0, -48(%rbp)
-L15725:
+L16194:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15726
-L15723:
+	jmp	L16195
+L16192:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15727
+	jg	L16196
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15728
-L15727:
+	jmp	L16197
+L16196:
 	movq	$0, -40(%rbp)
-L15728:
+L16197:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15726:
+L16195:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -99490,38 +106889,38 @@ _A__uShift_param_i32_I:
 	mov	-36(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15731
+	js	L16200
 	cmpq	$63, -16(%rbp)
-	jg	L15732
+	jg	L16201
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15733
-L15732:
+	jmp	L16202
+L16201:
 	movq	$0, -64(%rbp)
-L15733:
+L16202:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15734
-L15731:
+	jmp	L16203
+L16200:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15735
+	jg	L16204
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15736
-L15735:
+	jmp	L16205
+L16204:
 	movq	$0, -56(%rbp)
-L15736:
+L16205:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15734:
+L16203:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -99536,38 +106935,38 @@ _A__uShift_var_i32_C:
 	mov	%eax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15739
+	js	L16208
 	cmpq	$63, -16(%rbp)
-	jg	L15740
+	jg	L16209
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L15741
-L15740:
+	jmp	L16210
+L16209:
 	movq	$0, -48(%rbp)
-L15741:
+L16210:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15742
-L15739:
+	jmp	L16211
+L16208:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15743
+	jg	L16212
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L15744
-L15743:
+	jmp	L16213
+L16212:
 	movq	$0, -40(%rbp)
-L15744:
+L16213:
 	movq	-40(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L15742:
+L16211:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -99583,38 +106982,38 @@ _A__uShift_param_i32_C:
 	mov	-36(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15747
+	js	L16216
 	cmpq	$63, -16(%rbp)
-	jg	L15748
+	jg	L16217
 	movq	-16(%rbp), %rcx
 	movq	-24(%rbp), %rax
 	salq	%cl, %rax
 	movq	%rax, -64(%rbp)
-	jmp	L15749
-L15748:
+	jmp	L16218
+L16217:
 	movq	$0, -64(%rbp)
-L15749:
+L16218:
 	movq	-64(%rbp), %rax
 	movq	%rax, -72(%rbp)
-	jmp	L15750
-L15747:
+	jmp	L16219
+L16216:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	cmpq	$63, %rax
-	jg	L15751
+	jg	L16220
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	negq	%rcx
 	movq	-24(%rbp), %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L15752
-L15751:
+	jmp	L16221
+L16220:
 	movq	$0, -56(%rbp)
-L15752:
+L16221:
 	movq	-56(%rbp), %rax
 	movq	%rax, -72(%rbp)
-L15750:
+L16219:
 	movq	-72(%rbp), %rax
 	leave
 	ret
@@ -99627,13 +107026,13 @@ _A__uLeftRotate_var_i16_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15755
+	js	L16224
 	cmpq	$63, -16(%rbp)
-	jle	L15756
-L15755:
+	jle	L16225
+L16224:
 	movl	$229441, %edi
 	call	__m3_fault
-L15756:
+L16225:
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %edx
 	movq	-16(%rbp), %rax
@@ -99654,13 +107053,13 @@ _A__uLeftRotate_param_i16_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15759
+	js	L16228
 	cmpq	$63, -16(%rbp)
-	jle	L15760
-L15759:
+	jle	L16229
+L16228:
 	movl	$229473, %edi
 	call	__m3_fault
-L15760:
+L16229:
 	movzwl	-18(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -99678,10 +107077,10 @@ _A__uLeftRotate_var_i16_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15763
+	jle	L16232
 	movl	$229505, %edi
 	call	__m3_fault
-L15763:
+L16232:
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %edx
 	movq	-16(%rbp), %rax
@@ -99702,10 +107101,10 @@ _A__uLeftRotate_param_i16_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15766
+	jle	L16235
 	movl	$229537, %edi
 	call	__m3_fault
-L15766:
+L16235:
 	movzwl	-18(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -99723,13 +107122,13 @@ _A__uLeftRotate_var_LC_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15769
+	js	L16238
 	cmpq	$63, -16(%rbp)
-	jle	L15770
-L15769:
+	jle	L16239
+L16238:
 	movl	$229569, %edi
 	call	__m3_fault
-L15770:
+L16239:
 	movq	112+_MM_A(%rip), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -99749,13 +107148,13 @@ _A__uLeftRotate_param_LC_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15773
+	js	L16242
 	cmpq	$63, -16(%rbp)
-	jle	L15774
-L15773:
+	jle	L16243
+L16242:
 	movl	$229601, %edi
 	call	__m3_fault
-L15774:
+L16243:
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
@@ -99772,10 +107171,10 @@ _A__uLeftRotate_var_LC_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15777
+	jle	L16246
 	movl	$229633, %edi
 	call	__m3_fault
-L15777:
+L16246:
 	movq	112+_MM_A(%rip), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -99795,10 +107194,10 @@ _A__uLeftRotate_param_LC_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15780
+	jle	L16249
 	movl	$229665, %edi
 	call	__m3_fault
-L15780:
+L16249:
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
@@ -99815,13 +107214,13 @@ _A__uLeftRotate_var_i64_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15783
+	js	L16252
 	cmpq	$63, -16(%rbp)
-	jle	L15784
-L15783:
+	jle	L16253
+L16252:
 	movl	$229697, %edi
 	call	__m3_fault
-L15784:
+L16253:
 	movq	128+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -99842,13 +107241,13 @@ _A__uLeftRotate_param_i64_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15787
+	js	L16256
 	cmpq	$63, -16(%rbp)
-	jle	L15788
-L15787:
+	jle	L16257
+L16256:
 	movl	$229729, %edi
 	call	__m3_fault
-L15788:
+L16257:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -99866,10 +107265,10 @@ _A__uLeftRotate_var_i64_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15791
+	jle	L16260
 	movl	$229761, %edi
 	call	__m3_fault
-L15791:
+L16260:
 	movq	128+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -99890,10 +107289,10 @@ _A__uLeftRotate_param_i64_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15794
+	jle	L16263
 	movl	$229793, %edi
 	call	__m3_fault
-L15794:
+L16263:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -99911,13 +107310,13 @@ _A__uLeftRotate_var_I_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15797
+	js	L16266
 	cmpq	$63, -16(%rbp)
-	jle	L15798
-L15797:
+	jle	L16267
+L16266:
 	movl	$229825, %edi
 	call	__m3_fault
-L15798:
+L16267:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -99938,13 +107337,13 @@ _A__uLeftRotate_param_I_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15801
+	js	L16270
 	cmpq	$63, -16(%rbp)
-	jle	L15802
-L15801:
+	jle	L16271
+L16270:
 	movl	$229857, %edi
 	call	__m3_fault
-L15802:
+L16271:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -99962,10 +107361,10 @@ _A__uLeftRotate_var_I_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15805
+	jle	L16274
 	movl	$229889, %edi
 	call	__m3_fault
-L15805:
+L16274:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -99986,10 +107385,10 @@ _A__uLeftRotate_param_I_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15808
+	jle	L16277
 	movl	$229921, %edi
 	call	__m3_fault
-L15808:
+L16277:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100007,13 +107406,13 @@ _A__uLeftRotate_var_u8_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15811
+	js	L16280
 	cmpq	$63, -16(%rbp)
-	jle	L15812
-L15811:
+	jle	L16281
+L16280:
 	movl	$229953, %edi
 	call	__m3_fault
-L15812:
+L16281:
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rdx
 	movq	-16(%rbp), %rax
@@ -100034,13 +107433,13 @@ _A__uLeftRotate_param_u8_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15815
+	js	L16284
 	cmpq	$63, -16(%rbp)
-	jle	L15816
-L15815:
+	jle	L16285
+L16284:
 	movl	$229985, %edi
 	call	__m3_fault
-L15816:
+L16285:
 	movsbq	-17(%rbp),%rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100058,10 +107457,10 @@ _A__uLeftRotate_var_u8_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15819
+	jle	L16288
 	movl	$230017, %edi
 	call	__m3_fault
-L15819:
+L16288:
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rdx
 	movq	-16(%rbp), %rax
@@ -100082,10 +107481,10 @@ _A__uLeftRotate_param_u8_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15822
+	jle	L16291
 	movl	$230049, %edi
 	call	__m3_fault
-L15822:
+L16291:
 	movsbq	-17(%rbp),%rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100103,13 +107502,13 @@ _A__uLeftRotate_var_C_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15825
+	js	L16294
 	cmpq	$63, -16(%rbp)
-	jle	L15826
-L15825:
+	jle	L16295
+L16294:
 	movl	$230081, %edi
 	call	__m3_fault
-L15826:
+L16295:
 	movq	152+_MM_A(%rip), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100129,13 +107528,13 @@ _A__uLeftRotate_param_C_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15829
+	js	L16298
 	cmpq	$63, -16(%rbp)
-	jle	L15830
-L15829:
+	jle	L16299
+L16298:
 	movl	$230113, %edi
 	call	__m3_fault
-L15830:
+L16299:
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
@@ -100152,10 +107551,10 @@ _A__uLeftRotate_var_C_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15833
+	jle	L16302
 	movl	$230145, %edi
 	call	__m3_fault
-L15833:
+L16302:
 	movq	152+_MM_A(%rip), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100175,10 +107574,10 @@ _A__uLeftRotate_param_C_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15836
+	jle	L16305
 	movl	$230177, %edi
 	call	__m3_fault
-L15836:
+L16305:
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
@@ -100195,13 +107594,13 @@ _A__uLeftRotate_var_u32_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15839
+	js	L16308
 	cmpq	$63, -16(%rbp)
-	jle	L15840
-L15839:
+	jle	L16309
+L16308:
 	movl	$230209, %edi
 	call	__m3_fault
-L15840:
+L16309:
 	movl	164+_MM_A(%rip), %eax
 	movslq	%eax,%rdx
 	movq	-16(%rbp), %rax
@@ -100222,13 +107621,13 @@ _A__uLeftRotate_param_u32_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15843
+	js	L16312
 	cmpq	$63, -16(%rbp)
-	jle	L15844
-L15843:
+	jle	L16313
+L16312:
 	movl	$230241, %edi
 	call	__m3_fault
-L15844:
+L16313:
 	movl	-20(%rbp), %eax
 	movslq	%eax,%rdx
 	movq	-16(%rbp), %rax
@@ -100247,10 +107646,10 @@ _A__uLeftRotate_var_u32_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15847
+	jle	L16316
 	movl	$230273, %edi
 	call	__m3_fault
-L15847:
+L16316:
 	movl	164+_MM_A(%rip), %eax
 	movslq	%eax,%rdx
 	movq	-16(%rbp), %rax
@@ -100271,10 +107670,10 @@ _A__uLeftRotate_param_u32_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15850
+	jle	L16319
 	movl	$230305, %edi
 	call	__m3_fault
-L15850:
+L16319:
 	movl	-20(%rbp), %eax
 	movslq	%eax,%rdx
 	movq	-16(%rbp), %rax
@@ -100293,13 +107692,13 @@ _A__uLeftRotate_var_i8_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15853
+	js	L16322
 	cmpq	$63, -16(%rbp)
-	jle	L15854
-L15853:
+	jle	L16323
+L16322:
 	movl	$230337, %edi
 	call	__m3_fault
-L15854:
+L16323:
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %edx
 	movq	-16(%rbp), %rax
@@ -100320,13 +107719,13 @@ _A__uLeftRotate_param_i8_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15857
+	js	L16326
 	cmpq	$63, -16(%rbp)
-	jle	L15858
-L15857:
+	jle	L16327
+L16326:
 	movl	$230369, %edi
 	call	__m3_fault
-L15858:
+L16327:
 	movzbl	-17(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100344,10 +107743,10 @@ _A__uLeftRotate_var_i8_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15861
+	jle	L16330
 	movl	$230401, %edi
 	call	__m3_fault
-L15861:
+L16330:
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %edx
 	movq	-16(%rbp), %rax
@@ -100368,10 +107767,10 @@ _A__uLeftRotate_param_i8_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15864
+	jle	L16333
 	movl	$230433, %edi
 	call	__m3_fault
-L15864:
+L16333:
 	movzbl	-17(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100389,13 +107788,13 @@ _A__uLeftRotate_var_L_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15867
+	js	L16336
 	cmpq	$63, -16(%rbp)
-	jle	L15868
-L15867:
+	jle	L16337
+L16336:
 	movl	$230465, %edi
 	call	__m3_fault
-L15868:
+L16337:
 	movq	176+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -100416,13 +107815,13 @@ _A__uLeftRotate_param_L_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15871
+	js	L16340
 	cmpq	$63, -16(%rbp)
-	jle	L15872
-L15871:
+	jle	L16341
+L16340:
 	movl	$230497, %edi
 	call	__m3_fault
-L15872:
+L16341:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100440,10 +107839,10 @@ _A__uLeftRotate_var_L_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15875
+	jle	L16344
 	movl	$230529, %edi
 	call	__m3_fault
-L15875:
+L16344:
 	movq	176+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -100464,10 +107863,10 @@ _A__uLeftRotate_param_L_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15878
+	jle	L16347
 	movl	$230561, %edi
 	call	__m3_fault
-L15878:
+L16347:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100485,13 +107884,13 @@ _A__uLeftRotate_var_u64_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15881
+	js	L16350
 	cmpq	$63, -16(%rbp)
-	jle	L15882
-L15881:
+	jle	L16351
+L16350:
 	movl	$230593, %edi
 	call	__m3_fault
-L15882:
+L16351:
 	movq	184+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -100512,13 +107911,13 @@ _A__uLeftRotate_param_u64_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15885
+	js	L16354
 	cmpq	$63, -16(%rbp)
-	jle	L15886
-L15885:
+	jle	L16355
+L16354:
 	movl	$230625, %edi
 	call	__m3_fault
-L15886:
+L16355:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100536,10 +107935,10 @@ _A__uLeftRotate_var_u64_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15889
+	jle	L16358
 	movl	$230657, %edi
 	call	__m3_fault
-L15889:
+L16358:
 	movq	184+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -100560,10 +107959,10 @@ _A__uLeftRotate_param_u64_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15892
+	jle	L16361
 	movl	$230689, %edi
 	call	__m3_fault
-L15892:
+L16361:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100581,13 +107980,13 @@ _A__uLeftRotate_var_u16_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15895
+	js	L16364
 	cmpq	$63, -16(%rbp)
-	jle	L15896
-L15895:
+	jle	L16365
+L16364:
 	movl	$230721, %edi
 	call	__m3_fault
-L15896:
+L16365:
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rdx
 	movq	-16(%rbp), %rax
@@ -100608,13 +108007,13 @@ _A__uLeftRotate_param_u16_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15899
+	js	L16368
 	cmpq	$63, -16(%rbp)
-	jle	L15900
-L15899:
+	jle	L16369
+L16368:
 	movl	$230753, %edi
 	call	__m3_fault
-L15900:
+L16369:
 	movswq	-18(%rbp),%rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100632,10 +108031,10 @@ _A__uLeftRotate_var_u16_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15903
+	jle	L16372
 	movl	$230785, %edi
 	call	__m3_fault
-L15903:
+L16372:
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rdx
 	movq	-16(%rbp), %rax
@@ -100656,10 +108055,10 @@ _A__uLeftRotate_param_u16_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15906
+	jle	L16375
 	movl	$230817, %edi
 	call	__m3_fault
-L15906:
+L16375:
 	movswq	-18(%rbp),%rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100677,13 +108076,13 @@ _A__uLeftRotate_var_i32_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15909
+	js	L16378
 	cmpq	$63, -16(%rbp)
-	jle	L15910
-L15909:
+	jle	L16379
+L16378:
 	movl	$230849, %edi
 	call	__m3_fault
-L15910:
+L16379:
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %edx
 	movq	-16(%rbp), %rax
@@ -100704,13 +108103,13 @@ _A__uLeftRotate_param_i32_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15913
+	js	L16382
 	cmpq	$63, -16(%rbp)
-	jle	L15914
-L15913:
+	jle	L16383
+L16382:
 	movl	$230881, %edi
 	call	__m3_fault
-L15914:
+L16383:
 	mov	-20(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100728,10 +108127,10 @@ _A__uLeftRotate_var_i32_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15917
+	jle	L16386
 	movl	$230913, %edi
 	call	__m3_fault
-L15917:
+L16386:
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %edx
 	movq	-16(%rbp), %rax
@@ -100752,10 +108151,10 @@ _A__uLeftRotate_param_i32_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15920
+	jle	L16389
 	movl	$230945, %edi
 	call	__m3_fault
-L15920:
+L16389:
 	mov	-20(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100773,13 +108172,13 @@ _A__uRightRotate_var_i16_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15923
+	js	L16392
 	cmpq	$63, -16(%rbp)
-	jle	L15924
-L15923:
+	jle	L16393
+L16392:
 	movl	$231073, %edi
 	call	__m3_fault
-L15924:
+L16393:
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %edx
 	movq	-16(%rbp), %rax
@@ -100800,13 +108199,13 @@ _A__uRightRotate_param_i16_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15927
+	js	L16396
 	cmpq	$63, -16(%rbp)
-	jle	L15928
-L15927:
+	jle	L16397
+L16396:
 	movl	$231105, %edi
 	call	__m3_fault
-L15928:
+L16397:
 	movzwl	-18(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100824,10 +108223,10 @@ _A__uRightRotate_var_i16_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15931
+	jle	L16400
 	movl	$231137, %edi
 	call	__m3_fault
-L15931:
+L16400:
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %edx
 	movq	-16(%rbp), %rax
@@ -100848,10 +108247,10 @@ _A__uRightRotate_param_i16_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15934
+	jle	L16403
 	movl	$231169, %edi
 	call	__m3_fault
-L15934:
+L16403:
 	movzwl	-18(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100869,13 +108268,13 @@ _A__uRightRotate_var_LC_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15937
+	js	L16406
 	cmpq	$63, -16(%rbp)
-	jle	L15938
-L15937:
+	jle	L16407
+L16406:
 	movl	$231201, %edi
 	call	__m3_fault
-L15938:
+L16407:
 	movq	112+_MM_A(%rip), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100895,13 +108294,13 @@ _A__uRightRotate_param_LC_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15941
+	js	L16410
 	cmpq	$63, -16(%rbp)
-	jle	L15942
-L15941:
+	jle	L16411
+L16410:
 	movl	$231233, %edi
 	call	__m3_fault
-L15942:
+L16411:
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
@@ -100918,10 +108317,10 @@ _A__uRightRotate_var_LC_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15945
+	jle	L16414
 	movl	$231265, %edi
 	call	__m3_fault
-L15945:
+L16414:
 	movq	112+_MM_A(%rip), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -100941,10 +108340,10 @@ _A__uRightRotate_param_LC_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15948
+	jle	L16417
 	movl	$231297, %edi
 	call	__m3_fault
-L15948:
+L16417:
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
@@ -100961,13 +108360,13 @@ _A__uRightRotate_var_i64_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15951
+	js	L16420
 	cmpq	$63, -16(%rbp)
-	jle	L15952
-L15951:
+	jle	L16421
+L16420:
 	movl	$231329, %edi
 	call	__m3_fault
-L15952:
+L16421:
 	movq	128+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -100988,13 +108387,13 @@ _A__uRightRotate_param_i64_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15955
+	js	L16424
 	cmpq	$63, -16(%rbp)
-	jle	L15956
-L15955:
+	jle	L16425
+L16424:
 	movl	$231361, %edi
 	call	__m3_fault
-L15956:
+L16425:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101012,10 +108411,10 @@ _A__uRightRotate_var_i64_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15959
+	jle	L16428
 	movl	$231393, %edi
 	call	__m3_fault
-L15959:
+L16428:
 	movq	128+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -101036,10 +108435,10 @@ _A__uRightRotate_param_i64_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15962
+	jle	L16431
 	movl	$231425, %edi
 	call	__m3_fault
-L15962:
+L16431:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101057,13 +108456,13 @@ _A__uRightRotate_var_I_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15965
+	js	L16434
 	cmpq	$63, -16(%rbp)
-	jle	L15966
-L15965:
+	jle	L16435
+L16434:
 	movl	$231457, %edi
 	call	__m3_fault
-L15966:
+L16435:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -101084,13 +108483,13 @@ _A__uRightRotate_param_I_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15969
+	js	L16438
 	cmpq	$63, -16(%rbp)
-	jle	L15970
-L15969:
+	jle	L16439
+L16438:
 	movl	$231489, %edi
 	call	__m3_fault
-L15970:
+L16439:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101108,10 +108507,10 @@ _A__uRightRotate_var_I_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15973
+	jle	L16442
 	movl	$231521, %edi
 	call	__m3_fault
-L15973:
+L16442:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -101132,10 +108531,10 @@ _A__uRightRotate_param_I_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15976
+	jle	L16445
 	movl	$231553, %edi
 	call	__m3_fault
-L15976:
+L16445:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101153,13 +108552,13 @@ _A__uRightRotate_var_u8_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15979
+	js	L16448
 	cmpq	$63, -16(%rbp)
-	jle	L15980
-L15979:
+	jle	L16449
+L16448:
 	movl	$231585, %edi
 	call	__m3_fault
-L15980:
+L16449:
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rdx
 	movq	-16(%rbp), %rax
@@ -101180,13 +108579,13 @@ _A__uRightRotate_param_u8_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15983
+	js	L16452
 	cmpq	$63, -16(%rbp)
-	jle	L15984
-L15983:
+	jle	L16453
+L16452:
 	movl	$231617, %edi
 	call	__m3_fault
-L15984:
+L16453:
 	movsbq	-17(%rbp),%rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101204,10 +108603,10 @@ _A__uRightRotate_var_u8_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15987
+	jle	L16456
 	movl	$231649, %edi
 	call	__m3_fault
-L15987:
+L16456:
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rdx
 	movq	-16(%rbp), %rax
@@ -101228,10 +108627,10 @@ _A__uRightRotate_param_u8_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L15990
+	jle	L16459
 	movl	$231681, %edi
 	call	__m3_fault
-L15990:
+L16459:
 	movsbq	-17(%rbp),%rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101249,13 +108648,13 @@ _A__uRightRotate_var_C_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15993
+	js	L16462
 	cmpq	$63, -16(%rbp)
-	jle	L15994
-L15993:
+	jle	L16463
+L16462:
 	movl	$231713, %edi
 	call	__m3_fault
-L15994:
+L16463:
 	movq	152+_MM_A(%rip), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101275,13 +108674,13 @@ _A__uRightRotate_param_C_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L15997
+	js	L16466
 	cmpq	$63, -16(%rbp)
-	jle	L15998
-L15997:
+	jle	L16467
+L16466:
 	movl	$231745, %edi
 	call	__m3_fault
-L15998:
+L16467:
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
@@ -101298,10 +108697,10 @@ _A__uRightRotate_var_C_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16001
+	jle	L16470
 	movl	$231777, %edi
 	call	__m3_fault
-L16001:
+L16470:
 	movq	152+_MM_A(%rip), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101321,10 +108720,10 @@ _A__uRightRotate_param_C_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16004
+	jle	L16473
 	movl	$231809, %edi
 	call	__m3_fault
-L16004:
+L16473:
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
@@ -101341,13 +108740,13 @@ _A__uRightRotate_var_u32_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16007
+	js	L16476
 	cmpq	$63, -16(%rbp)
-	jle	L16008
-L16007:
+	jle	L16477
+L16476:
 	movl	$231841, %edi
 	call	__m3_fault
-L16008:
+L16477:
 	movl	164+_MM_A(%rip), %eax
 	movslq	%eax,%rdx
 	movq	-16(%rbp), %rax
@@ -101368,13 +108767,13 @@ _A__uRightRotate_param_u32_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16011
+	js	L16480
 	cmpq	$63, -16(%rbp)
-	jle	L16012
-L16011:
+	jle	L16481
+L16480:
 	movl	$231873, %edi
 	call	__m3_fault
-L16012:
+L16481:
 	movl	-20(%rbp), %eax
 	movslq	%eax,%rdx
 	movq	-16(%rbp), %rax
@@ -101393,10 +108792,10 @@ _A__uRightRotate_var_u32_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16015
+	jle	L16484
 	movl	$231905, %edi
 	call	__m3_fault
-L16015:
+L16484:
 	movl	164+_MM_A(%rip), %eax
 	movslq	%eax,%rdx
 	movq	-16(%rbp), %rax
@@ -101417,10 +108816,10 @@ _A__uRightRotate_param_u32_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16018
+	jle	L16487
 	movl	$231937, %edi
 	call	__m3_fault
-L16018:
+L16487:
 	movl	-20(%rbp), %eax
 	movslq	%eax,%rdx
 	movq	-16(%rbp), %rax
@@ -101439,13 +108838,13 @@ _A__uRightRotate_var_i8_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16021
+	js	L16490
 	cmpq	$63, -16(%rbp)
-	jle	L16022
-L16021:
+	jle	L16491
+L16490:
 	movl	$231969, %edi
 	call	__m3_fault
-L16022:
+L16491:
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %edx
 	movq	-16(%rbp), %rax
@@ -101466,13 +108865,13 @@ _A__uRightRotate_param_i8_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16025
+	js	L16494
 	cmpq	$63, -16(%rbp)
-	jle	L16026
-L16025:
+	jle	L16495
+L16494:
 	movl	$232001, %edi
 	call	__m3_fault
-L16026:
+L16495:
 	movzbl	-17(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101490,10 +108889,10 @@ _A__uRightRotate_var_i8_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16029
+	jle	L16498
 	movl	$232033, %edi
 	call	__m3_fault
-L16029:
+L16498:
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %edx
 	movq	-16(%rbp), %rax
@@ -101514,10 +108913,10 @@ _A__uRightRotate_param_i8_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16032
+	jle	L16501
 	movl	$232065, %edi
 	call	__m3_fault
-L16032:
+L16501:
 	movzbl	-17(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101535,13 +108934,13 @@ _A__uRightRotate_var_L_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16035
+	js	L16504
 	cmpq	$63, -16(%rbp)
-	jle	L16036
-L16035:
+	jle	L16505
+L16504:
 	movl	$232097, %edi
 	call	__m3_fault
-L16036:
+L16505:
 	movq	176+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -101562,13 +108961,13 @@ _A__uRightRotate_param_L_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16039
+	js	L16508
 	cmpq	$63, -16(%rbp)
-	jle	L16040
-L16039:
+	jle	L16509
+L16508:
 	movl	$232129, %edi
 	call	__m3_fault
-L16040:
+L16509:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101586,10 +108985,10 @@ _A__uRightRotate_var_L_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16043
+	jle	L16512
 	movl	$232161, %edi
 	call	__m3_fault
-L16043:
+L16512:
 	movq	176+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -101610,10 +109009,10 @@ _A__uRightRotate_param_L_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16046
+	jle	L16515
 	movl	$232193, %edi
 	call	__m3_fault
-L16046:
+L16515:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101631,13 +109030,13 @@ _A__uRightRotate_var_u64_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16049
+	js	L16518
 	cmpq	$63, -16(%rbp)
-	jle	L16050
-L16049:
+	jle	L16519
+L16518:
 	movl	$232225, %edi
 	call	__m3_fault
-L16050:
+L16519:
 	movq	184+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -101658,13 +109057,13 @@ _A__uRightRotate_param_u64_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16053
+	js	L16522
 	cmpq	$63, -16(%rbp)
-	jle	L16054
-L16053:
+	jle	L16523
+L16522:
 	movl	$232257, %edi
 	call	__m3_fault
-L16054:
+L16523:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101682,10 +109081,10 @@ _A__uRightRotate_var_u64_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16057
+	jle	L16526
 	movl	$232289, %edi
 	call	__m3_fault
-L16057:
+L16526:
 	movq	184+_MM_A(%rip), %rax
 	movq	%rax, %rdx
 	movq	-16(%rbp), %rax
@@ -101706,10 +109105,10 @@ _A__uRightRotate_param_u64_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16060
+	jle	L16529
 	movl	$232321, %edi
 	call	__m3_fault
-L16060:
+L16529:
 	movq	-24(%rbp), %rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101727,13 +109126,13 @@ _A__uRightRotate_var_u16_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16063
+	js	L16532
 	cmpq	$63, -16(%rbp)
-	jle	L16064
-L16063:
+	jle	L16533
+L16532:
 	movl	$232353, %edi
 	call	__m3_fault
-L16064:
+L16533:
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rdx
 	movq	-16(%rbp), %rax
@@ -101754,13 +109153,13 @@ _A__uRightRotate_param_u16_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16067
+	js	L16536
 	cmpq	$63, -16(%rbp)
-	jle	L16068
-L16067:
+	jle	L16537
+L16536:
 	movl	$232385, %edi
 	call	__m3_fault
-L16068:
+L16537:
 	movswq	-18(%rbp),%rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101778,10 +109177,10 @@ _A__uRightRotate_var_u16_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16071
+	jle	L16540
 	movl	$232417, %edi
 	call	__m3_fault
-L16071:
+L16540:
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rdx
 	movq	-16(%rbp), %rax
@@ -101802,10 +109201,10 @@ _A__uRightRotate_param_u16_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16074
+	jle	L16543
 	movl	$232449, %edi
 	call	__m3_fault
-L16074:
+L16543:
 	movswq	-18(%rbp),%rdx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101823,13 +109222,13 @@ _A__uRightRotate_var_i32_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16077
+	js	L16546
 	cmpq	$63, -16(%rbp)
-	jle	L16078
-L16077:
+	jle	L16547
+L16546:
 	movl	$232481, %edi
 	call	__m3_fault
-L16078:
+L16547:
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %edx
 	movq	-16(%rbp), %rax
@@ -101850,13 +109249,13 @@ _A__uRightRotate_param_i32_I:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16081
+	js	L16550
 	cmpq	$63, -16(%rbp)
-	jle	L16082
-L16081:
+	jle	L16551
+L16550:
 	movl	$232513, %edi
 	call	__m3_fault
-L16082:
+L16551:
 	mov	-20(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101874,10 +109273,10 @@ _A__uRightRotate_var_i32_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16085
+	jle	L16554
 	movl	$232545, %edi
 	call	__m3_fault
-L16085:
+L16554:
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %edx
 	movq	-16(%rbp), %rax
@@ -101898,10 +109297,10 @@ _A__uRightRotate_param_i32_C:
 	movq	-32(%rbp), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$63, -16(%rbp)
-	jle	L16088
+	jle	L16557
 	movl	$232577, %edi
 	call	__m3_fault
-L16088:
+L16557:
 	mov	-20(%rbp), %edx
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
@@ -101921,15 +109320,15 @@ _A__uRotate_var_i16_I:
 	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16091
+	js	L16560
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16092
-L16091:
+	jmp	L16561
+L16560:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -101937,7 +109336,7 @@ L16091:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16092:
+L16561:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -101953,15 +109352,15 @@ _A__uRotate_param_i16_I:
 	movzwl	-34(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16095
+	js	L16564
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16096
-L16095:
+	jmp	L16565
+L16564:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -101969,7 +109368,7 @@ L16095:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16096:
+L16565:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -101984,15 +109383,15 @@ _A__uRotate_var_i16_C:
 	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16099
+	js	L16568
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16100
-L16099:
+	jmp	L16569
+L16568:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102000,7 +109399,7 @@ L16099:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16100:
+L16569:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102016,15 +109415,15 @@ _A__uRotate_param_i16_C:
 	movzwl	-34(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16103
+	js	L16572
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16104
-L16103:
+	jmp	L16573
+L16572:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102032,7 +109431,7 @@ L16103:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16104:
+L16573:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102046,15 +109445,15 @@ _A__uRotate_var_LC_I:
 	movq	112+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16107
+	js	L16576
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16108
-L16107:
+	jmp	L16577
+L16576:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102062,7 +109461,7 @@ L16107:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16108:
+L16577:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102078,15 +109477,15 @@ _A__uRotate_param_LC_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16111
+	js	L16580
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16112
-L16111:
+	jmp	L16581
+L16580:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102094,7 +109493,7 @@ L16111:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16112:
+L16581:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102108,15 +109507,15 @@ _A__uRotate_var_LC_C:
 	movq	112+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16115
+	js	L16584
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16116
-L16115:
+	jmp	L16585
+L16584:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102124,7 +109523,7 @@ L16115:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16116:
+L16585:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102140,15 +109539,15 @@ _A__uRotate_param_LC_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16119
+	js	L16588
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16120
-L16119:
+	jmp	L16589
+L16588:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102156,7 +109555,7 @@ L16119:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16120:
+L16589:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102170,15 +109569,15 @@ _A__uRotate_var_i64_I:
 	movq	128+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16123
+	js	L16592
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16124
-L16123:
+	jmp	L16593
+L16592:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102186,7 +109585,7 @@ L16123:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16124:
+L16593:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102202,15 +109601,15 @@ _A__uRotate_param_i64_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16127
+	js	L16596
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16128
-L16127:
+	jmp	L16597
+L16596:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102218,7 +109617,7 @@ L16127:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16128:
+L16597:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102232,15 +109631,15 @@ _A__uRotate_var_i64_C:
 	movq	128+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16131
+	js	L16600
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16132
-L16131:
+	jmp	L16601
+L16600:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102248,7 +109647,7 @@ L16131:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16132:
+L16601:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102264,15 +109663,15 @@ _A__uRotate_param_i64_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16135
+	js	L16604
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16136
-L16135:
+	jmp	L16605
+L16604:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102280,7 +109679,7 @@ L16135:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16136:
+L16605:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102294,15 +109693,15 @@ _A__uRotate_var_I_I:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16139
+	js	L16608
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16140
-L16139:
+	jmp	L16609
+L16608:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102310,7 +109709,7 @@ L16139:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16140:
+L16609:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102326,15 +109725,15 @@ _A__uRotate_param_I_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16143
+	js	L16612
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16144
-L16143:
+	jmp	L16613
+L16612:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102342,7 +109741,7 @@ L16143:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16144:
+L16613:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102356,15 +109755,15 @@ _A__uRotate_var_I_C:
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16147
+	js	L16616
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16148
-L16147:
+	jmp	L16617
+L16616:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102372,7 +109771,7 @@ L16147:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16148:
+L16617:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102388,15 +109787,15 @@ _A__uRotate_param_I_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16151
+	js	L16620
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16152
-L16151:
+	jmp	L16621
+L16620:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102404,7 +109803,7 @@ L16151:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16152:
+L16621:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102419,15 +109818,15 @@ _A__uRotate_var_u8_I:
 	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16155
+	js	L16624
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16156
-L16155:
+	jmp	L16625
+L16624:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102435,7 +109834,7 @@ L16155:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16156:
+L16625:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102451,15 +109850,15 @@ _A__uRotate_param_u8_I:
 	movsbq	-33(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16159
+	js	L16628
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16160
-L16159:
+	jmp	L16629
+L16628:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102467,7 +109866,7 @@ L16159:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16160:
+L16629:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102482,15 +109881,15 @@ _A__uRotate_var_u8_C:
 	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16163
+	js	L16632
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16164
-L16163:
+	jmp	L16633
+L16632:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102498,7 +109897,7 @@ L16163:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16164:
+L16633:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102514,15 +109913,15 @@ _A__uRotate_param_u8_C:
 	movsbq	-33(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16167
+	js	L16636
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16168
-L16167:
+	jmp	L16637
+L16636:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102530,7 +109929,7 @@ L16167:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16168:
+L16637:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102544,15 +109943,15 @@ _A__uRotate_var_C_I:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16171
+	js	L16640
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16172
-L16171:
+	jmp	L16641
+L16640:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102560,7 +109959,7 @@ L16171:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16172:
+L16641:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102576,15 +109975,15 @@ _A__uRotate_param_C_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16175
+	js	L16644
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16176
-L16175:
+	jmp	L16645
+L16644:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102592,7 +109991,7 @@ L16175:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16176:
+L16645:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102606,15 +110005,15 @@ _A__uRotate_var_C_C:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16179
+	js	L16648
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16180
-L16179:
+	jmp	L16649
+L16648:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102622,7 +110021,7 @@ L16179:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16180:
+L16649:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102638,15 +110037,15 @@ _A__uRotate_param_C_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16183
+	js	L16652
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16184
-L16183:
+	jmp	L16653
+L16652:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102654,7 +110053,7 @@ L16183:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16184:
+L16653:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102669,15 +110068,15 @@ _A__uRotate_var_u32_I:
 	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16187
+	js	L16656
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16188
-L16187:
+	jmp	L16657
+L16656:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102685,7 +110084,7 @@ L16187:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16188:
+L16657:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102702,15 +110101,15 @@ _A__uRotate_param_u32_I:
 	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16191
+	js	L16660
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16192
-L16191:
+	jmp	L16661
+L16660:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102718,7 +110117,7 @@ L16191:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16192:
+L16661:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102733,15 +110132,15 @@ _A__uRotate_var_u32_C:
 	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16195
+	js	L16664
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16196
-L16195:
+	jmp	L16665
+L16664:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102749,7 +110148,7 @@ L16195:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16196:
+L16665:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102766,15 +110165,15 @@ _A__uRotate_param_u32_C:
 	cltq
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16199
+	js	L16668
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16200
-L16199:
+	jmp	L16669
+L16668:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102782,7 +110181,7 @@ L16199:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16200:
+L16669:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102797,15 +110196,15 @@ _A__uRotate_var_i8_I:
 	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16203
+	js	L16672
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16204
-L16203:
+	jmp	L16673
+L16672:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102813,7 +110212,7 @@ L16203:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16204:
+L16673:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102829,15 +110228,15 @@ _A__uRotate_param_i8_I:
 	movzbl	-33(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16207
+	js	L16676
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16208
-L16207:
+	jmp	L16677
+L16676:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102845,7 +110244,7 @@ L16207:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16208:
+L16677:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102860,15 +110259,15 @@ _A__uRotate_var_i8_C:
 	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16211
+	js	L16680
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16212
-L16211:
+	jmp	L16681
+L16680:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102876,7 +110275,7 @@ L16211:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16212:
+L16681:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102892,15 +110291,15 @@ _A__uRotate_param_i8_C:
 	movzbl	-33(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16215
+	js	L16684
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16216
-L16215:
+	jmp	L16685
+L16684:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102908,7 +110307,7 @@ L16215:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16216:
+L16685:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102922,15 +110321,15 @@ _A__uRotate_var_L_I:
 	movq	176+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16219
+	js	L16688
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16220
-L16219:
+	jmp	L16689
+L16688:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102938,7 +110337,7 @@ L16219:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16220:
+L16689:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -102954,15 +110353,15 @@ _A__uRotate_param_L_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16223
+	js	L16692
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16224
-L16223:
+	jmp	L16693
+L16692:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -102970,7 +110369,7 @@ L16223:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16224:
+L16693:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -102984,15 +110383,15 @@ _A__uRotate_var_L_C:
 	movq	176+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16227
+	js	L16696
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16228
-L16227:
+	jmp	L16697
+L16696:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103000,7 +110399,7 @@ L16227:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16228:
+L16697:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -103016,15 +110415,15 @@ _A__uRotate_param_L_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16231
+	js	L16700
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16232
-L16231:
+	jmp	L16701
+L16700:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103032,7 +110431,7 @@ L16231:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16232:
+L16701:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -103046,15 +110445,15 @@ _A__uRotate_var_u64_I:
 	movq	184+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16235
+	js	L16704
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16236
-L16235:
+	jmp	L16705
+L16704:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103062,7 +110461,7 @@ L16235:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16236:
+L16705:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -103078,15 +110477,15 @@ _A__uRotate_param_u64_I:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16239
+	js	L16708
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16240
-L16239:
+	jmp	L16709
+L16708:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103094,7 +110493,7 @@ L16239:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16240:
+L16709:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -103108,15 +110507,15 @@ _A__uRotate_var_u64_C:
 	movq	184+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16243
+	js	L16712
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16244
-L16243:
+	jmp	L16713
+L16712:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103124,7 +110523,7 @@ L16243:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16244:
+L16713:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -103140,15 +110539,15 @@ _A__uRotate_param_u64_C:
 	movq	-40(%rbp), %rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16247
+	js	L16716
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16248
-L16247:
+	jmp	L16717
+L16716:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103156,7 +110555,7 @@ L16247:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16248:
+L16717:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -103171,15 +110570,15 @@ _A__uRotate_var_u16_I:
 	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16251
+	js	L16720
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16252
-L16251:
+	jmp	L16721
+L16720:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103187,7 +110586,7 @@ L16251:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16252:
+L16721:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -103203,15 +110602,15 @@ _A__uRotate_param_u16_I:
 	movswq	-34(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16255
+	js	L16724
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16256
-L16255:
+	jmp	L16725
+L16724:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103219,7 +110618,7 @@ L16255:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16256:
+L16725:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -103234,15 +110633,15 @@ _A__uRotate_var_u16_C:
 	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16259
+	js	L16728
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16260
-L16259:
+	jmp	L16729
+L16728:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103250,7 +110649,7 @@ L16259:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16260:
+L16729:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -103266,15 +110665,15 @@ _A__uRotate_param_u16_C:
 	movswq	-34(%rbp),%rax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16263
+	js	L16732
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16264
-L16263:
+	jmp	L16733
+L16732:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103282,7 +110681,7 @@ L16263:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16264:
+L16733:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -103297,15 +110696,15 @@ _A__uRotate_var_i32_I:
 	mov	%eax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16267
+	js	L16736
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16268
-L16267:
+	jmp	L16737
+L16736:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103313,7 +110712,7 @@ L16267:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16268:
+L16737:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -103329,15 +110728,15 @@ _A__uRotate_param_i32_I:
 	mov	-36(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16271
+	js	L16740
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16272
-L16271:
+	jmp	L16741
+L16740:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103345,7 +110744,7 @@ L16271:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16272:
+L16741:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -103360,15 +110759,15 @@ _A__uRotate_var_i32_C:
 	mov	%eax, %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16275
+	js	L16744
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -40(%rbp)
-	jmp	L16276
-L16275:
+	jmp	L16745
+L16744:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103376,7 +110775,7 @@ L16275:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -40(%rbp)
-L16276:
+L16745:
 	movq	-40(%rbp), %rax
 	leave
 	ret
@@ -103392,15 +110791,15 @@ _A__uRotate_param_i32_C:
 	mov	-36(%rbp), %eax
 	movq	%rax, -24(%rbp)
 	cmpq	$0, -16(%rbp)
-	js	L16279
+	js	L16748
 	movq	-16(%rbp), %rax
 	movq	%rax, %rcx
 	andl	$63, %ecx
 	movq	-24(%rbp), %rax
 	rolq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16280
-L16279:
+	jmp	L16749
+L16748:
 	movq	-16(%rbp), %rax
 	negq	%rax
 	movq	%rax, %rcx
@@ -103408,7 +110807,7 @@ L16279:
 	movq	-24(%rbp), %rax
 	rorq	%cl, %rax
 	movq	%rax, -56(%rbp)
-L16280:
+L16749:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -103424,26 +110823,26 @@ _A__uInsert_var_i16_i16:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16283
+	jle	L16752
 	movl	$234337, %edi
 	call	__m3_fault
-L16283:
+L16752:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16284
+	jne	L16753
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %eax
 	movq	%rax, -32(%rbp)
-	jmp	L16285
-L16284:
+	jmp	L16754
+L16753:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16286
+	jne	L16755
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %eax
 	movq	%rax, -24(%rbp)
-	jmp	L16287
-L16286:
+	jmp	L16756
+L16755:
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %esi
 	movq	208+_MM_A(%rip), %rax
@@ -103472,10 +110871,10 @@ L16286:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16287:
+L16756:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16285:
+L16754:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -103494,22 +110893,22 @@ _A__uInsert_param_i16_i16:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16290
+	jle	L16759
 	movl	$234369, %edi
 	call	__m3_fault
-L16290:
+L16759:
 	cmpq	$0, -40(%rbp)
-	jne	L16291
+	jne	L16760
 	movzwl	-18(%rbp), %eax
 	movq	%rax, -56(%rbp)
-	jmp	L16292
-L16291:
+	jmp	L16761
+L16760:
 	cmpq	$64, -40(%rbp)
-	jne	L16293
+	jne	L16762
 	movzwl	-20(%rbp), %eax
 	movq	%rax, -48(%rbp)
-	jmp	L16294
-L16293:
+	jmp	L16763
+L16762:
 	movzwl	-18(%rbp), %edx
 	movq	-40(%rbp), %rcx
 	movq	$-1, %rax
@@ -103530,10 +110929,10 @@ L16293:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -48(%rbp)
-L16294:
+L16763:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L16292:
+L16761:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -103549,24 +110948,24 @@ _A__uInsert_var_LC_LC:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16297
+	jle	L16766
 	movl	$234401, %edi
 	call	__m3_fault
-L16297:
+L16766:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16298
+	jne	L16767
 	movq	112+_MM_A(%rip), %rax
 	movq	%rax, -32(%rbp)
-	jmp	L16299
-L16298:
+	jmp	L16768
+L16767:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16300
+	jne	L16769
 	movq	112+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16301
-L16300:
+	jmp	L16770
+L16769:
 	movq	112+_MM_A(%rip), %rax
 	movq	%rax, %rsi
 	movq	208+_MM_A(%rip), %rax
@@ -103595,10 +110994,10 @@ L16300:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16301:
+L16770:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16299:
+L16768:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -103617,22 +111016,22 @@ _A__uInsert_param_LC_LC:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16304
+	jle	L16773
 	movl	$234433, %edi
 	call	__m3_fault
-L16304:
+L16773:
 	cmpq	$0, -48(%rbp)
-	jne	L16305
+	jne	L16774
 	movq	-24(%rbp), %rax
 	movq	%rax, -64(%rbp)
-	jmp	L16306
-L16305:
+	jmp	L16775
+L16774:
 	cmpq	$64, -48(%rbp)
-	jne	L16307
+	jne	L16776
 	movq	-32(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16308
-L16307:
+	jmp	L16777
+L16776:
 	movq	-48(%rbp), %rcx
 	movq	$-1, %rax
 	salq	%cl, %rax
@@ -103655,10 +111054,10 @@ L16307:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -56(%rbp)
-L16308:
+L16777:
 	movq	-56(%rbp), %rax
 	movq	%rax, -64(%rbp)
-L16306:
+L16775:
 	movq	-64(%rbp), %rax
 	leave
 	ret
@@ -103674,24 +111073,24 @@ _A__uInsert_var_i64_i64:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16311
+	jle	L16780
 	movl	$234465, %edi
 	call	__m3_fault
-L16311:
+L16780:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16312
+	jne	L16781
 	movq	128+_MM_A(%rip), %rax
 	movq	%rax, -32(%rbp)
-	jmp	L16313
-L16312:
+	jmp	L16782
+L16781:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16314
+	jne	L16783
 	movq	128+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16315
-L16314:
+	jmp	L16784
+L16783:
 	movq	128+_MM_A(%rip), %rsi
 	movq	208+_MM_A(%rip), %rax
 	movq	%rax, %rcx
@@ -103718,10 +111117,10 @@ L16314:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16315:
+L16784:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16313:
+L16782:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -103740,14 +111139,14 @@ _A__uInsert_param_i64_i64:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16318
+	jle	L16787
 	movl	$234497, %edi
 	call	__m3_fault
-L16318:
+L16787:
 	cmpq	$0, -48(%rbp)
-	je	L16319
+	je	L16788
 	cmpq	$64, -48(%rbp)
-	je	L16320
+	je	L16789
 	movq	-48(%rbp), %rcx
 	movq	$-1, %rax
 	salq	%cl, %rax
@@ -103766,18 +111165,18 @@ L16318:
 	salq	%cl, %rax
 	orq	%rdx, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16321
-L16320:
+	jmp	L16790
+L16789:
 	movq	-32(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L16321:
+L16790:
 	movq	-56(%rbp), %rax
 	movq	%rax, -64(%rbp)
-	jmp	L16322
-L16319:
+	jmp	L16791
+L16788:
 	movq	-24(%rbp), %rax
 	movq	%rax, -64(%rbp)
-L16322:
+L16791:
 	movq	-64(%rbp), %rax
 	leave
 	ret
@@ -103793,24 +111192,24 @@ _A__uInsert_var_I_I:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16325
+	jle	L16794
 	movl	$234529, %edi
 	call	__m3_fault
-L16325:
+L16794:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16326
+	jne	L16795
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -32(%rbp)
-	jmp	L16327
-L16326:
+	jmp	L16796
+L16795:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16328
+	jne	L16797
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16329
-L16328:
+	jmp	L16798
+L16797:
 	movq	136+_MM_A(%rip), %rsi
 	movq	208+_MM_A(%rip), %rax
 	movq	%rax, %rcx
@@ -103837,10 +111236,10 @@ L16328:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16329:
+L16798:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16327:
+L16796:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -103859,14 +111258,14 @@ _A__uInsert_param_I_I:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16332
+	jle	L16801
 	movl	$234561, %edi
 	call	__m3_fault
-L16332:
+L16801:
 	cmpq	$0, -48(%rbp)
-	je	L16333
+	je	L16802
 	cmpq	$64, -48(%rbp)
-	je	L16334
+	je	L16803
 	movq	-48(%rbp), %rcx
 	movq	$-1, %rax
 	salq	%cl, %rax
@@ -103885,18 +111284,18 @@ L16332:
 	salq	%cl, %rax
 	orq	%rdx, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16335
-L16334:
+	jmp	L16804
+L16803:
 	movq	-32(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L16335:
+L16804:
 	movq	-56(%rbp), %rax
 	movq	%rax, -64(%rbp)
-	jmp	L16336
-L16333:
+	jmp	L16805
+L16802:
 	movq	-24(%rbp), %rax
 	movq	%rax, -64(%rbp)
-L16336:
+L16805:
 	movq	-64(%rbp), %rax
 	leave
 	ret
@@ -103912,26 +111311,26 @@ _A__uInsert_var_u8_u8:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16339
+	jle	L16808
 	movl	$234593, %edi
 	call	__m3_fault
-L16339:
+L16808:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16340
+	jne	L16809
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -32(%rbp)
-	jmp	L16341
-L16340:
+	jmp	L16810
+L16809:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16342
+	jne	L16811
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rax
 	movq	%rax, -24(%rbp)
-	jmp	L16343
-L16342:
+	jmp	L16812
+L16811:
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rsi
 	movq	208+_MM_A(%rip), %rax
@@ -103960,10 +111359,10 @@ L16342:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16343:
+L16812:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16341:
+L16810:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -103982,22 +111381,22 @@ _A__uInsert_param_u8_u8:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16346
+	jle	L16815
 	movl	$234625, %edi
 	call	__m3_fault
-L16346:
+L16815:
 	cmpq	$0, -40(%rbp)
-	jne	L16347
+	jne	L16816
 	movsbq	-17(%rbp),%rax
 	movq	%rax, -56(%rbp)
-	jmp	L16348
-L16347:
+	jmp	L16817
+L16816:
 	cmpq	$64, -40(%rbp)
-	jne	L16349
+	jne	L16818
 	movsbq	-18(%rbp),%rax
 	movq	%rax, -48(%rbp)
-	jmp	L16350
-L16349:
+	jmp	L16819
+L16818:
 	movsbq	-17(%rbp),%rdx
 	movq	-40(%rbp), %rcx
 	movq	$-1, %rax
@@ -104018,10 +111417,10 @@ L16349:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -48(%rbp)
-L16350:
+L16819:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L16348:
+L16817:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -104037,24 +111436,24 @@ _A__uInsert_var_C_C:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16353
+	jle	L16822
 	movl	$234657, %edi
 	call	__m3_fault
-L16353:
+L16822:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16354
+	jne	L16823
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -32(%rbp)
-	jmp	L16355
-L16354:
+	jmp	L16824
+L16823:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16356
+	jne	L16825
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16357
-L16356:
+	jmp	L16826
+L16825:
 	movq	152+_MM_A(%rip), %rax
 	movq	%rax, %rsi
 	movq	208+_MM_A(%rip), %rax
@@ -104083,10 +111482,10 @@ L16356:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16357:
+L16826:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16355:
+L16824:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -104105,22 +111504,22 @@ _A__uInsert_param_C_C:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16360
+	jle	L16829
 	movl	$234689, %edi
 	call	__m3_fault
-L16360:
+L16829:
 	cmpq	$0, -48(%rbp)
-	jne	L16361
+	jne	L16830
 	movq	-24(%rbp), %rax
 	movq	%rax, -64(%rbp)
-	jmp	L16362
-L16361:
+	jmp	L16831
+L16830:
 	cmpq	$64, -48(%rbp)
-	jne	L16363
+	jne	L16832
 	movq	-32(%rbp), %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16364
-L16363:
+	jmp	L16833
+L16832:
 	movq	-48(%rbp), %rcx
 	movq	$-1, %rax
 	salq	%cl, %rax
@@ -104143,10 +111542,10 @@ L16363:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -56(%rbp)
-L16364:
+L16833:
 	movq	-56(%rbp), %rax
 	movq	%rax, -64(%rbp)
-L16362:
+L16831:
 	movq	-64(%rbp), %rax
 	leave
 	ret
@@ -104162,26 +111561,26 @@ _A__uInsert_var_u32_u32:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16367
+	jle	L16836
 	movl	$234721, %edi
 	call	__m3_fault
-L16367:
+L16836:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16368
+	jne	L16837
 	movl	164+_MM_A(%rip), %eax
 	cltq
 	movq	%rax, -32(%rbp)
-	jmp	L16369
-L16368:
+	jmp	L16838
+L16837:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16370
+	jne	L16839
 	movl	164+_MM_A(%rip), %eax
 	cltq
 	movq	%rax, -24(%rbp)
-	jmp	L16371
-L16370:
+	jmp	L16840
+L16839:
 	movl	164+_MM_A(%rip), %eax
 	movslq	%eax,%rsi
 	movq	208+_MM_A(%rip), %rax
@@ -104210,10 +111609,10 @@ L16370:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16371:
+L16840:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16369:
+L16838:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -104232,24 +111631,24 @@ _A__uInsert_param_u32_u32:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16374
+	jle	L16843
 	movl	$234753, %edi
 	call	__m3_fault
-L16374:
+L16843:
 	cmpq	$0, -40(%rbp)
-	jne	L16375
+	jne	L16844
 	movl	-20(%rbp), %eax
 	cltq
 	movq	%rax, -56(%rbp)
-	jmp	L16376
-L16375:
+	jmp	L16845
+L16844:
 	cmpq	$64, -40(%rbp)
-	jne	L16377
+	jne	L16846
 	movl	-24(%rbp), %eax
 	cltq
 	movq	%rax, -48(%rbp)
-	jmp	L16378
-L16377:
+	jmp	L16847
+L16846:
 	movl	-20(%rbp), %eax
 	movslq	%eax,%rdx
 	movq	-40(%rbp), %rcx
@@ -104272,10 +111671,10 @@ L16377:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -48(%rbp)
-L16378:
+L16847:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L16376:
+L16845:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -104291,26 +111690,26 @@ _A__uInsert_var_i8_i8:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16381
+	jle	L16850
 	movl	$234785, %edi
 	call	__m3_fault
-L16381:
+L16850:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16382
+	jne	L16851
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -32(%rbp)
-	jmp	L16383
-L16382:
+	jmp	L16852
+L16851:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16384
+	jne	L16853
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %eax
 	movq	%rax, -24(%rbp)
-	jmp	L16385
-L16384:
+	jmp	L16854
+L16853:
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %esi
 	movq	208+_MM_A(%rip), %rax
@@ -104339,10 +111738,10 @@ L16384:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16385:
+L16854:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16383:
+L16852:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -104361,22 +111760,22 @@ _A__uInsert_param_i8_i8:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16388
+	jle	L16857
 	movl	$234817, %edi
 	call	__m3_fault
-L16388:
+L16857:
 	cmpq	$0, -40(%rbp)
-	jne	L16389
+	jne	L16858
 	movzbl	-17(%rbp), %eax
 	movq	%rax, -56(%rbp)
-	jmp	L16390
-L16389:
+	jmp	L16859
+L16858:
 	cmpq	$64, -40(%rbp)
-	jne	L16391
+	jne	L16860
 	movzbl	-18(%rbp), %eax
 	movq	%rax, -48(%rbp)
-	jmp	L16392
-L16391:
+	jmp	L16861
+L16860:
 	movzbl	-17(%rbp), %edx
 	movq	-40(%rbp), %rcx
 	movq	$-1, %rax
@@ -104397,10 +111796,10 @@ L16391:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -48(%rbp)
-L16392:
+L16861:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L16390:
+L16859:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -104416,24 +111815,24 @@ _A__uInsert_var_L_L:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16395
+	jle	L16864
 	movl	$234849, %edi
 	call	__m3_fault
-L16395:
+L16864:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16396
+	jne	L16865
 	movq	176+_MM_A(%rip), %rax
 	movq	%rax, -32(%rbp)
-	jmp	L16397
-L16396:
+	jmp	L16866
+L16865:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16398
+	jne	L16867
 	movq	176+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16399
-L16398:
+	jmp	L16868
+L16867:
 	movq	176+_MM_A(%rip), %rsi
 	movq	208+_MM_A(%rip), %rax
 	movq	%rax, %rcx
@@ -104460,10 +111859,10 @@ L16398:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16399:
+L16868:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16397:
+L16866:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -104482,14 +111881,14 @@ _A__uInsert_param_L_L:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16402
+	jle	L16871
 	movl	$234881, %edi
 	call	__m3_fault
-L16402:
+L16871:
 	cmpq	$0, -48(%rbp)
-	je	L16403
+	je	L16872
 	cmpq	$64, -48(%rbp)
-	je	L16404
+	je	L16873
 	movq	-48(%rbp), %rcx
 	movq	$-1, %rax
 	salq	%cl, %rax
@@ -104508,18 +111907,18 @@ L16402:
 	salq	%cl, %rax
 	orq	%rdx, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16405
-L16404:
+	jmp	L16874
+L16873:
 	movq	-32(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L16405:
+L16874:
 	movq	-56(%rbp), %rax
 	movq	%rax, -64(%rbp)
-	jmp	L16406
-L16403:
+	jmp	L16875
+L16872:
 	movq	-24(%rbp), %rax
 	movq	%rax, -64(%rbp)
-L16406:
+L16875:
 	movq	-64(%rbp), %rax
 	leave
 	ret
@@ -104535,24 +111934,24 @@ _A__uInsert_var_u64_u64:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16409
+	jle	L16878
 	movl	$234913, %edi
 	call	__m3_fault
-L16409:
+L16878:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16410
+	jne	L16879
 	movq	184+_MM_A(%rip), %rax
 	movq	%rax, -32(%rbp)
-	jmp	L16411
-L16410:
+	jmp	L16880
+L16879:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16412
+	jne	L16881
 	movq	184+_MM_A(%rip), %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16413
-L16412:
+	jmp	L16882
+L16881:
 	movq	184+_MM_A(%rip), %rsi
 	movq	208+_MM_A(%rip), %rax
 	movq	%rax, %rcx
@@ -104579,10 +111978,10 @@ L16412:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16413:
+L16882:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16411:
+L16880:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -104601,14 +112000,14 @@ _A__uInsert_param_u64_u64:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16416
+	jle	L16885
 	movl	$234945, %edi
 	call	__m3_fault
-L16416:
+L16885:
 	cmpq	$0, -48(%rbp)
-	je	L16417
+	je	L16886
 	cmpq	$64, -48(%rbp)
-	je	L16418
+	je	L16887
 	movq	-48(%rbp), %rcx
 	movq	$-1, %rax
 	salq	%cl, %rax
@@ -104627,18 +112026,18 @@ L16416:
 	salq	%cl, %rax
 	orq	%rdx, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16419
-L16418:
+	jmp	L16888
+L16887:
 	movq	-32(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L16419:
+L16888:
 	movq	-56(%rbp), %rax
 	movq	%rax, -64(%rbp)
-	jmp	L16420
-L16417:
+	jmp	L16889
+L16886:
 	movq	-24(%rbp), %rax
 	movq	%rax, -64(%rbp)
-L16420:
+L16889:
 	movq	-64(%rbp), %rax
 	leave
 	ret
@@ -104654,26 +112053,26 @@ _A__uInsert_var_u16_u16:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16423
+	jle	L16892
 	movl	$234977, %edi
 	call	__m3_fault
-L16423:
+L16892:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16424
+	jne	L16893
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rax
 	movq	%rax, -32(%rbp)
-	jmp	L16425
-L16424:
+	jmp	L16894
+L16893:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16426
+	jne	L16895
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rax
 	movq	%rax, -24(%rbp)
-	jmp	L16427
-L16426:
+	jmp	L16896
+L16895:
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rsi
 	movq	208+_MM_A(%rip), %rax
@@ -104702,10 +112101,10 @@ L16426:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16427:
+L16896:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16425:
+L16894:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -104724,22 +112123,22 @@ _A__uInsert_param_u16_u16:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16430
+	jle	L16899
 	movl	$235009, %edi
 	call	__m3_fault
-L16430:
+L16899:
 	cmpq	$0, -40(%rbp)
-	jne	L16431
+	jne	L16900
 	movswq	-18(%rbp),%rax
 	movq	%rax, -56(%rbp)
-	jmp	L16432
-L16431:
+	jmp	L16901
+L16900:
 	cmpq	$64, -40(%rbp)
-	jne	L16433
+	jne	L16902
 	movswq	-20(%rbp),%rax
 	movq	%rax, -48(%rbp)
-	jmp	L16434
-L16433:
+	jmp	L16903
+L16902:
 	movswq	-18(%rbp),%rdx
 	movq	-40(%rbp), %rcx
 	movq	$-1, %rax
@@ -104760,10 +112159,10 @@ L16433:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -48(%rbp)
-L16434:
+L16903:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L16432:
+L16901:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -104779,26 +112178,26 @@ _A__uInsert_var_i32_i32:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16437
+	jle	L16906
 	movl	$235041, %edi
 	call	__m3_fault
-L16437:
+L16906:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	jne	L16438
+	jne	L16907
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %eax
 	movq	%rax, -32(%rbp)
-	jmp	L16439
-L16438:
+	jmp	L16908
+L16907:
 	movq	208+_MM_A(%rip), %rax
 	cmpq	$64, %rax
-	jne	L16440
+	jne	L16909
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %eax
 	movq	%rax, -24(%rbp)
-	jmp	L16441
-L16440:
+	jmp	L16910
+L16909:
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %esi
 	movq	208+_MM_A(%rip), %rax
@@ -104827,10 +112226,10 @@ L16440:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -24(%rbp)
-L16441:
+L16910:
 	movq	-24(%rbp), %rax
 	movq	%rax, -32(%rbp)
-L16439:
+L16908:
 	movq	-32(%rbp), %rax
 	leave
 	ret
@@ -104849,22 +112248,22 @@ _A__uInsert_param_i32_i32:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16444
+	jle	L16913
 	movl	$235073, %edi
 	call	__m3_fault
-L16444:
+L16913:
 	cmpq	$0, -40(%rbp)
-	jne	L16445
+	jne	L16914
 	mov	-20(%rbp), %eax
 	movq	%rax, -56(%rbp)
-	jmp	L16446
-L16445:
+	jmp	L16915
+L16914:
 	cmpq	$64, -40(%rbp)
-	jne	L16447
+	jne	L16916
 	mov	-24(%rbp), %eax
 	movq	%rax, -48(%rbp)
-	jmp	L16448
-L16447:
+	jmp	L16917
+L16916:
 	mov	-20(%rbp), %edx
 	movq	-40(%rbp), %rcx
 	movq	$-1, %rax
@@ -104885,10 +112284,10 @@ L16447:
 	salq	%cl, %rax
 	orq	%rsi, %rax
 	movq	%rax, -48(%rbp)
-L16448:
+L16917:
 	movq	-48(%rbp), %rax
 	movq	%rax, -56(%rbp)
-L16446:
+L16915:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -104904,13 +112303,13 @@ _A__uExtract_var_i16_i16:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16451
+	jle	L16920
 	movl	$235201, %edi
 	call	__m3_fault
-L16451:
+L16920:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16452
+	je	L16921
 	movzwl	104+_MM_A(%rip), %eax
 	movzwl	%ax, %esi
 	movq	208+_MM_A(%rip), %rax
@@ -104931,10 +112330,10 @@ L16451:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16453
-L16452:
+	jmp	L16922
+L16921:
 	movq	$0, -24(%rbp)
-L16453:
+L16922:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -104953,12 +112352,12 @@ _A__uExtract_param_i16_i16:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16456
+	jle	L16925
 	movl	$235233, %edi
 	call	__m3_fault
-L16456:
+L16925:
 	cmpq	$0, -40(%rbp)
-	je	L16457
+	je	L16926
 	movzwl	-18(%rbp), %esi
 	movq	-40(%rbp), %rdx
 	movl	$64, %eax
@@ -104976,10 +112375,10 @@ L16456:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L16458
-L16457:
+	jmp	L16927
+L16926:
 	movq	$0, -48(%rbp)
-L16458:
+L16927:
 	movq	-48(%rbp), %rax
 	leave
 	ret
@@ -104995,13 +112394,13 @@ _A__uExtract_var_LC_LC:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16461
+	jle	L16930
 	movl	$235265, %edi
 	call	__m3_fault
-L16461:
+L16930:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16462
+	je	L16931
 	movq	112+_MM_A(%rip), %rsi
 	movq	208+_MM_A(%rip), %rax
 	movq	%rax, %rdx
@@ -105021,10 +112420,10 @@ L16461:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16463
-L16462:
+	jmp	L16932
+L16931:
 	movq	$0, -24(%rbp)
-L16463:
+L16932:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -105043,12 +112442,12 @@ _A__uExtract_param_LC_LC:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16466
+	jle	L16935
 	movl	$235297, %edi
 	call	__m3_fault
-L16466:
+L16935:
 	cmpq	$0, -48(%rbp)
-	je	L16467
+	je	L16936
 	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
@@ -105067,10 +112466,10 @@ L16466:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16468
-L16467:
+	jmp	L16937
+L16936:
 	movq	$0, -56(%rbp)
-L16468:
+L16937:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -105086,13 +112485,13 @@ _A__uExtract_var_i64_i64:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16471
+	jle	L16940
 	movl	$235329, %edi
 	call	__m3_fault
-L16471:
+L16940:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16472
+	je	L16941
 	movq	128+_MM_A(%rip), %rax
 	movq	%rax, %rsi
 	movq	208+_MM_A(%rip), %rax
@@ -105113,10 +112512,10 @@ L16471:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16473
-L16472:
+	jmp	L16942
+L16941:
 	movq	$0, -24(%rbp)
-L16473:
+L16942:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -105135,12 +112534,12 @@ _A__uExtract_param_i64_i64:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16476
+	jle	L16945
 	movl	$235361, %edi
 	call	__m3_fault
-L16476:
+L16945:
 	cmpq	$0, -48(%rbp)
-	je	L16477
+	je	L16946
 	movq	-24(%rbp), %rsi
 	movq	-48(%rbp), %rdx
 	movl	$64, %eax
@@ -105158,10 +112557,10 @@ L16476:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16478
-L16477:
+	jmp	L16947
+L16946:
 	movq	$0, -56(%rbp)
-L16478:
+L16947:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -105177,13 +112576,13 @@ _A__uExtract_var_I_I:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16481
+	jle	L16950
 	movl	$235393, %edi
 	call	__m3_fault
-L16481:
+L16950:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16482
+	je	L16951
 	movq	136+_MM_A(%rip), %rax
 	movq	%rax, %rsi
 	movq	208+_MM_A(%rip), %rax
@@ -105204,10 +112603,10 @@ L16481:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16483
-L16482:
+	jmp	L16952
+L16951:
 	movq	$0, -24(%rbp)
-L16483:
+L16952:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -105226,12 +112625,12 @@ _A__uExtract_param_I_I:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16486
+	jle	L16955
 	movl	$235425, %edi
 	call	__m3_fault
-L16486:
+L16955:
 	cmpq	$0, -48(%rbp)
-	je	L16487
+	je	L16956
 	movq	-24(%rbp), %rsi
 	movq	-48(%rbp), %rdx
 	movl	$64, %eax
@@ -105249,10 +112648,10 @@ L16486:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16488
-L16487:
+	jmp	L16957
+L16956:
 	movq	$0, -56(%rbp)
-L16488:
+L16957:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -105268,13 +112667,13 @@ _A__uExtract_var_u8_u8:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16491
+	jle	L16960
 	movl	$235457, %edi
 	call	__m3_fault
-L16491:
+L16960:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16492
+	je	L16961
 	movzbl	144+_MM_A(%rip), %eax
 	movsbq	%al,%rsi
 	movq	208+_MM_A(%rip), %rax
@@ -105295,10 +112694,10 @@ L16491:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16493
-L16492:
+	jmp	L16962
+L16961:
 	movq	$0, -24(%rbp)
-L16493:
+L16962:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -105317,12 +112716,12 @@ _A__uExtract_param_u8_u8:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16496
+	jle	L16965
 	movl	$235489, %edi
 	call	__m3_fault
-L16496:
+L16965:
 	cmpq	$0, -40(%rbp)
-	je	L16497
+	je	L16966
 	movsbq	-17(%rbp),%rsi
 	movq	-40(%rbp), %rdx
 	movl	$64, %eax
@@ -105340,10 +112739,10 @@ L16496:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L16498
-L16497:
+	jmp	L16967
+L16966:
 	movq	$0, -48(%rbp)
-L16498:
+L16967:
 	movq	-48(%rbp), %rax
 	leave
 	ret
@@ -105359,13 +112758,13 @@ _A__uExtract_var_C_C:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16501
+	jle	L16970
 	movl	$235521, %edi
 	call	__m3_fault
-L16501:
+L16970:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16502
+	je	L16971
 	movq	152+_MM_A(%rip), %rsi
 	movq	208+_MM_A(%rip), %rax
 	movq	%rax, %rdx
@@ -105385,10 +112784,10 @@ L16501:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16503
-L16502:
+	jmp	L16972
+L16971:
 	movq	$0, -24(%rbp)
-L16503:
+L16972:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -105407,12 +112806,12 @@ _A__uExtract_param_C_C:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16506
+	jle	L16975
 	movl	$235553, %edi
 	call	__m3_fault
-L16506:
+L16975:
 	cmpq	$0, -48(%rbp)
-	je	L16507
+	je	L16976
 	movq	-48(%rbp), %rdx
 	movl	$64, %eax
 	movq	%rax, %rcx
@@ -105431,10 +112830,10 @@ L16506:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16508
-L16507:
+	jmp	L16977
+L16976:
 	movq	$0, -56(%rbp)
-L16508:
+L16977:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -105450,13 +112849,13 @@ _A__uExtract_var_u32_u32:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16511
+	jle	L16980
 	movl	$235585, %edi
 	call	__m3_fault
-L16511:
+L16980:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16512
+	je	L16981
 	movl	164+_MM_A(%rip), %eax
 	movslq	%eax,%rsi
 	movq	208+_MM_A(%rip), %rax
@@ -105477,10 +112876,10 @@ L16511:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16513
-L16512:
+	jmp	L16982
+L16981:
 	movq	$0, -24(%rbp)
-L16513:
+L16982:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -105499,12 +112898,12 @@ _A__uExtract_param_u32_u32:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16516
+	jle	L16985
 	movl	$235617, %edi
 	call	__m3_fault
-L16516:
+L16985:
 	cmpq	$0, -40(%rbp)
-	je	L16517
+	je	L16986
 	movl	-20(%rbp), %eax
 	movslq	%eax,%rsi
 	movq	-40(%rbp), %rdx
@@ -105523,10 +112922,10 @@ L16516:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L16518
-L16517:
+	jmp	L16987
+L16986:
 	movq	$0, -48(%rbp)
-L16518:
+L16987:
 	movq	-48(%rbp), %rax
 	leave
 	ret
@@ -105542,13 +112941,13 @@ _A__uExtract_var_i8_i8:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16521
+	jle	L16990
 	movl	$235649, %edi
 	call	__m3_fault
-L16521:
+L16990:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16522
+	je	L16991
 	movzbl	168+_MM_A(%rip), %eax
 	movzbl	%al, %esi
 	movq	208+_MM_A(%rip), %rax
@@ -105569,10 +112968,10 @@ L16521:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16523
-L16522:
+	jmp	L16992
+L16991:
 	movq	$0, -24(%rbp)
-L16523:
+L16992:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -105591,12 +112990,12 @@ _A__uExtract_param_i8_i8:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16526
+	jle	L16995
 	movl	$235681, %edi
 	call	__m3_fault
-L16526:
+L16995:
 	cmpq	$0, -40(%rbp)
-	je	L16527
+	je	L16996
 	movzbl	-17(%rbp), %esi
 	movq	-40(%rbp), %rdx
 	movl	$64, %eax
@@ -105614,10 +113013,10 @@ L16526:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L16528
-L16527:
+	jmp	L16997
+L16996:
 	movq	$0, -48(%rbp)
-L16528:
+L16997:
 	movq	-48(%rbp), %rax
 	leave
 	ret
@@ -105633,13 +113032,13 @@ _A__uExtract_var_L_L:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16531
+	jle	L17000
 	movl	$235713, %edi
 	call	__m3_fault
-L16531:
+L17000:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16532
+	je	L17001
 	movq	176+_MM_A(%rip), %rax
 	movq	%rax, %rsi
 	movq	208+_MM_A(%rip), %rax
@@ -105660,10 +113059,10 @@ L16531:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16533
-L16532:
+	jmp	L17002
+L17001:
 	movq	$0, -24(%rbp)
-L16533:
+L17002:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -105682,12 +113081,12 @@ _A__uExtract_param_L_L:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16536
+	jle	L17005
 	movl	$235745, %edi
 	call	__m3_fault
-L16536:
+L17005:
 	cmpq	$0, -48(%rbp)
-	je	L16537
+	je	L17006
 	movq	-24(%rbp), %rsi
 	movq	-48(%rbp), %rdx
 	movl	$64, %eax
@@ -105705,10 +113104,10 @@ L16536:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16538
-L16537:
+	jmp	L17007
+L17006:
 	movq	$0, -56(%rbp)
-L16538:
+L17007:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -105724,13 +113123,13 @@ _A__uExtract_var_u64_u64:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16541
+	jle	L17010
 	movl	$235777, %edi
 	call	__m3_fault
-L16541:
+L17010:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16542
+	je	L17011
 	movq	184+_MM_A(%rip), %rax
 	movq	%rax, %rsi
 	movq	208+_MM_A(%rip), %rax
@@ -105751,10 +113150,10 @@ L16541:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16543
-L16542:
+	jmp	L17012
+L17011:
 	movq	$0, -24(%rbp)
-L16543:
+L17012:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -105773,12 +113172,12 @@ _A__uExtract_param_u64_u64:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16546
+	jle	L17015
 	movl	$235809, %edi
 	call	__m3_fault
-L16546:
+L17015:
 	cmpq	$0, -48(%rbp)
-	je	L16547
+	je	L17016
 	movq	-24(%rbp), %rsi
 	movq	-48(%rbp), %rdx
 	movl	$64, %eax
@@ -105796,10 +113195,10 @@ L16546:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -56(%rbp)
-	jmp	L16548
-L16547:
+	jmp	L17017
+L17016:
 	movq	$0, -56(%rbp)
-L16548:
+L17017:
 	movq	-56(%rbp), %rax
 	leave
 	ret
@@ -105815,13 +113214,13 @@ _A__uExtract_var_u16_u16:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16551
+	jle	L17020
 	movl	$235841, %edi
 	call	__m3_fault
-L16551:
+L17020:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16552
+	je	L17021
 	movzwl	192+_MM_A(%rip), %eax
 	movswq	%ax,%rsi
 	movq	208+_MM_A(%rip), %rax
@@ -105842,10 +113241,10 @@ L16551:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16553
-L16552:
+	jmp	L17022
+L17021:
 	movq	$0, -24(%rbp)
-L16553:
+L17022:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -105864,12 +113263,12 @@ _A__uExtract_param_u16_u16:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16556
+	jle	L17025
 	movl	$235873, %edi
 	call	__m3_fault
-L16556:
+L17025:
 	cmpq	$0, -40(%rbp)
-	je	L16557
+	je	L17026
 	movswq	-18(%rbp),%rsi
 	movq	-40(%rbp), %rdx
 	movl	$64, %eax
@@ -105887,10 +113286,10 @@ L16556:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L16558
-L16557:
+	jmp	L17027
+L17026:
 	movq	$0, -48(%rbp)
-L16558:
+L17027:
 	movq	-48(%rbp), %rax
 	leave
 	ret
@@ -105906,13 +113305,13 @@ _A__uExtract_var_i32_i32:
 	leaq	(%rdx,%rax), %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16561
+	jle	L17030
 	movl	$235905, %edi
 	call	__m3_fault
-L16561:
+L17030:
 	movq	208+_MM_A(%rip), %rax
 	testq	%rax, %rax
-	je	L16562
+	je	L17031
 	movl	196+_MM_A(%rip), %eax
 	mov	%eax, %esi
 	movq	208+_MM_A(%rip), %rax
@@ -105933,10 +113332,10 @@ L16561:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -24(%rbp)
-	jmp	L16563
-L16562:
+	jmp	L17032
+L17031:
 	movq	$0, -24(%rbp)
-L16563:
+L17032:
 	movq	-24(%rbp), %rax
 	leave
 	ret
@@ -105955,12 +113354,12 @@ _A__uExtract_param_i32_i32:
 	addq	%rdx, %rax
 	movq	%rax, -16(%rbp)
 	cmpq	$64, -16(%rbp)
-	jle	L16566
+	jle	L17035
 	movl	$235937, %edi
 	call	__m3_fault
-L16566:
+L17035:
 	cmpq	$0, -40(%rbp)
-	je	L16567
+	je	L17036
 	mov	-20(%rbp), %esi
 	movq	-40(%rbp), %rdx
 	movl	$64, %eax
@@ -105978,10 +113377,10 @@ L16566:
 	movq	%rsi, %rax
 	shrq	%cl, %rax
 	movq	%rax, -48(%rbp)
-	jmp	L16568
-L16567:
+	jmp	L17037
+L17036:
 	movq	$0, -48(%rbp)
-L16568:
+L17037:
 	movq	-48(%rbp), %rax
 	leave
 	ret
