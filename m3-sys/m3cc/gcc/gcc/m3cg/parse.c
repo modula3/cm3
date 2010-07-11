@@ -3548,7 +3548,7 @@ m3cg_declare_procedure (void)
    * of unused nested functions. We need to preserve all functions because we
    * always reference all of them from globals. Always, all of them.
    */
-  TREE_PUBLIC (p) = 1;
+  TREE_PUBLIC (p) = ((lev == 0) || flag_unit_at_a_time);
   if (exported)
   {
    /* We really want to use VISIBILITY_PROTECTED here but we can't for
