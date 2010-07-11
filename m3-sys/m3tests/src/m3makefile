@@ -548,6 +548,7 @@ end
 
 p_test ("p2", "p240", "exact codegen")
 p_test ("p2", "p241", "Formatter crashes gcc backend if 'ter' optimimization enabled")
+p_test ("p2", "p242", "m3totex crashes gcc backend if 'pre' optimimization enabled")
 
 mixed_portability_test ("p2", "p227", "longint, word, add, insert, extract, etc. (slow)")
 p_test ("p2", "p226", "atomics")
