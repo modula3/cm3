@@ -3544,7 +3544,9 @@ m3cg_declare_procedure (void)
   TREE_STATIC (p) = 1;
 
   /* TREE_PUBLIC (p) should be 'exported', but that fails to keep any
-   * implementation of nonexported functions, even with TREE_ADDRESSABLE(p) = 1
+   * implementation of nonexported functions or, when optimizing,
+   * of unused nested functions. We need to preserve all functions because we
+   * always reference all of them from globals. Always, all of them.
    */
   TREE_PUBLIC (p) = 1;
   if (exported)
