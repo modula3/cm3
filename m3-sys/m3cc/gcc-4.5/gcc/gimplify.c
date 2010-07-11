@@ -1658,7 +1658,7 @@ canonicalize_component_ref (tree *expr_p)
      adjustment would be needed.  */
   if (TREE_TYPE (expr) != type)
     {
-#if 1
+#ifdef ENABLE_TYPES_CHECKING
       tree old_type = TREE_TYPE (expr);
 #endif
       int type_quals;
@@ -1673,7 +1673,7 @@ canonicalize_component_ref (tree *expr_p)
       /* Set the type of the COMPONENT_REF to the underlying type.  */
       TREE_TYPE (expr) = type;
 
-#if 1
+#ifdef ENABLE_TYPES_CHECKING
       /* It is now a FE error, if the conversion from the canonical
 	 type to the original expression type is not useless.  */
       gcc_assert (useless_type_conversion_p (old_type, type));
@@ -7570,7 +7570,7 @@ gimplify_body (tree *body_p, tree fndecl, bool do_parms)
   pop_gimplify_context (outer_bind);
   gcc_assert (gimplify_ctxp == NULL);
 
-#if 1
+#ifdef ENABLE_TYPES_CHECKING
   if (!errorcount && !sorrycount)
     verify_types_in_gimple_seq (gimple_bind_body (outer_bind));
 #endif
