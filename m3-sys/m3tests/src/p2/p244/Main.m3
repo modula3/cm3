@@ -1,12 +1,4 @@
-(* This program demonstrates a problem
- * porting to gcc 4.5.
- * Variables are being referenced as if they
- * are INTEGER instead of smaller types.
- * If optimizations not enable.
- * Or not?
- *
- * This also crashes if "fre" optimization is enabled.
- *)
+(* This program crashed gcc 4.5 backend if "fre" optimization enabled. *)
 
 MODULE Main;
 IMPORT Cstdint, Word, RTIO;
