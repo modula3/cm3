@@ -1379,6 +1379,10 @@ scan_quoted_string (long *length)
     result[x] = (char) get_byte ();
   }
   result[len] = 0;
+
+  if (option_trace_all)
+    fprintf(stderr, "  quoted_string:%s\n", result);
+
   return result;
 }
 
@@ -2083,7 +2087,6 @@ m3_language_function (void)
     {
         f = GGC_NEW (struct language_function);
         f->volatil = 0;
-        f->saved_flag_tree_pre = flag_tree_pre;
         DECL_STRUCT_FUNCTION(current_function_decl)->language = f;
     }
     return f;
@@ -3633,7 +3636,6 @@ m3cg_begin_procedure (void)
 static void
 m3cg_end_procedure (void)
 {
-  int saved_flag_tree_pre = { 0 };
   PROC (p);
 
   gcc_assert (current_function_decl == p);
@@ -3654,8 +3656,6 @@ m3cg_end_procedure (void)
   /* good line numbers for epilog */
   DECL_STRUCT_FUNCTION (p)->function_end_locus = input_location;
 
-  saved_flag_tree_pre = m3_language_function()->saved_flag_tree_pre;
-
   current_function_decl = DECL_CONTEXT (p);
 
   if (current_block)
@@ -3670,8 +3670,6 @@ m3cg_end_procedure (void)
       m3_gimplify_function (p);
       cgraph_finalize_function (p, false);
     }
-
-  flag_tree_pre = saved_flag_tree_pre;
 }
 
 static void
@@ -5077,46 +5075,16 @@ m3cg_index_address (void)
   EXPR_POP ();
 }
 
-/* RTHooks__PushEFrame */
-#define m3_is_pushframe(a) \
-  (   ((a)[ 0] == 'R') \
-   && ((a)[ 1] == 'T') \
-   && ((a)[ 2] == 'H') \
-   && ((a)[ 3] == 'o') \
-   && ((a)[ 4] == 'o') \
-   && ((a)[ 5] == 'k') \
-   && ((a)[ 6] == 's') \
-   && ((a)[ 7] == '_') \
-   && ((a)[ 8] == '_') \
-   && ((a)[ 9] == 'P') \
-   && ((a)[10] == 'u') \
-   && ((a)[11] == 's') \
-   && ((a)[12] == 'h') \
-   && ((a)[13] == 'E') \
-   && ((a)[14] == 'F') \
-   && ((a)[15] == 'r') \
-   && ((a)[16] == 'a') \
-   && ((a)[17] == 'm') \
-   && ((a)[18] == 'e') \
-   && ((a)[19] == 0))
-
 static void
 m3cg_start_call_direct (void)
 {
   PROC    (p);
   INTEGER (level);
   UNUSED_MTYPE2  (t, m3t);
-  const char* name = IDENTIFIER_POINTER(DECL_NAME(p));
 
   if (option_procs_trace)
     fprintf(stderr, "  start call procedure:%s, level:0x%lx, type:%s\n",
-            name, level, m3cg_typename(m3t));
-
-  if (m3_is_pushframe(name))
-  {
-    /* Partial redundancy elimination causes problems: sigsegv during compile. */
-    flag_tree_pre = 0;
-  }
+            IDENTIFIER_POINTER(DECL_NAME(p)), level, m3cg_typename(m3t));
 
   m3_start_call ();
 }
@@ -5739,29 +5707,18 @@ m3_post_options (const char **pfilename ATTRIBUTE_UNUSED)
   flag_reorder_blocks = 0;
   flag_reorder_blocks_and_partition = 0;
 
-  /* otherwise:
-MODULE Main;
-
-PROCEDURE F1() =
-
-    PROCEDURE NestedUnused1() =
-    BEGIN
-    END NestedUnused1;
-
-BEGIN
-  IF FALSE THEN
-    NestedUnused1();
-  END;
-END F1;
-
-BEGIN
-  F1();
-END Main.
-Undefined symbols:
-  "_Main__F1__NestedUnused1.496", referenced from:
-      _L_1 in Main.mo
+  /* causes unused functions to be removed, even
+     though we reference them from data
   */
   flag_unit_at_a_time = 0;
+
+  /* causes backend crashes in
+     m3totex
+     libm3/Formatter.m3
+     m3tests/p241
+     m3tests/p242
+  */
+  flag_tree_pre = 0;
 
 #if GCC45
   /* Excess precision other than "fast" requires front-end support.  */
